@@ -7,7 +7,7 @@ test "HWPX underline clone preserves namespace identity attributes and allocatio
     const source = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:f='urn:future'><h:charPr id='&#57;' height='1379' opaque='keep'><h:bold/><f:underline type='TOP'/><!--keep--><h:underline type='BOTTOM' shape='WAVE' color='#123456'/></h:charPr><h:charPr id='10'/></h:head>";
     var tree = try parse(a, source, .header, null, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, input: *const @import("xml_part_tree.zig").Tree) !void {
             const output = try clone(allocator, input, 1, 300, .center, 4096);
             defer allocator.free(output);

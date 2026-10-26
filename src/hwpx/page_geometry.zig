@@ -2,6 +2,7 @@ const std = @import("std");
 const document_xml = @import("document_xml.zig");
 const part_tree = @import("xml_part_tree.zig");
 const xml_values = @import("xml_values.zig");
+const direct_settings = @import("section_direct_settings.zig");
 
 pub const Orientation = enum { widely, narrowly };
 pub const GutterType = enum { left_only, left_right, top_bottom };
@@ -29,6 +30,8 @@ pub const Page = struct {
     gutter_type: ?GutterType = null,
     margin: ?Margin = null,
     duplicate_margins: usize = 0,
+    hide_first_empty_line: ?bool = null,
+    visibility_count: usize = 0,
 };
 
 pub const Report = struct {
@@ -95,6 +98,22 @@ fn readMargin(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usize, m
 /// retains its section position; missing attributes stay absent, not defaulted.
 /// This is geometry data, not a layout or whole-schema validity decision.
 pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: Options) !Report {
+    var settings = try direct_settings.inspect(a, sections, .{ .max_attribute_bytes = options.max_attribute_bytes });
+    defer settings.deinit(a);
+    const Owner = struct { section: usize, parent: usize };
+    const Visibility = struct { count: usize = 0, hide: ?bool = null };
+    var visibility: std.AutoHashMap(Owner, Visibility) = .init(a);
+    defer visibility.deinit();
+    for (settings.items) |*item| {
+        if (item.kind != .visibility) continue;
+        const entry = try visibility.getOrPut(.{ .section = item.section_ordinal, .parent = item.parent_element_index });
+        if (!entry.found_existing) entry.value_ptr.* = .{};
+        entry.value_ptr.count += 1;
+        entry.value_ptr.hide = if (entry.value_ptr.count == 1 and item.direct_children == 0)
+            if (item.get(.hide_first_empty_line)) |raw| try xml_values.boolean(raw) else null
+        else
+            null;
+    }
     var pages: std.ArrayList(Page) = .empty;
     errdefer pages.deinit(a);
     var without_page: usize = 0;
@@ -114,6 +133,10 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                 .height = try number(a, tree, index, "height", options.max_attribute_bytes),
                 .gutter_type = try gutterType(a, tree, index, options.max_attribute_bytes),
             };
+            if (visibility.get(.{ .section = section_ordinal, .parent = parent_index })) |source| {
+                page.hide_first_empty_line = source.hide;
+                page.visibility_count = source.count;
+            }
             var child = element.first_child;
             while (child) |child_index| : (child = tree.elements[child_index].next_sibling) {
                 if (!tree.elements[child_index].is(document_xml.paragraph_uri, "margin")) continue;

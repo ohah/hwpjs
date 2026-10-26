@@ -17,6 +17,7 @@ pub const Row = struct {
     column_start_declaration: ?@import("column_context.zig").Context = null,
     column_changes: []@import("column_current_context.zig").Change = &.{},
     note_context: ?@import("note_paragraph_context.zig").Context = null,
+    empty_line_eligible: bool = false,
 };
 
 fn freeRow(a: std.mem.Allocator, row: Row) void {
@@ -110,6 +111,7 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
         }
         initialized += 1;
         row.single_column = single_column;
+        row.empty_line_eligible = row.top_level and @import("empty_paragraph_source.zig").eligible(&section.tree, paragraph);
         row.host = try host(&section.tree, node);
         row.note_context = try @import("note_paragraph_context.zig").read(&section.tree, node);
         row.page_area = try @import("page_area_context.zig").read(a, &section.tree, node);
@@ -171,7 +173,7 @@ test "HWPX paragraph flow uses current merged column boundaries and continuation
     try std.testing.expectEqual(@as(usize, 3), internal[0].column_changes.len);
     try std.testing.expectEqual(@as(u32, 1968), internal[0].column_changes[2].unit);
     try std.testing.expectEqual(@as(?u32, 3), internal[0].column_changes[2].declaration.count);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, current: *const editor.Session) !void {
             const rows = try read(allocator, current, 0);
             defer free(allocator, rows);
@@ -193,7 +195,7 @@ test "HWPX paragraph flow reads hyperlink source columns without granting anchor
             try std.testing.expectEqual(@as(?u32, 1), rows[0].column_declaration.?.count);
             try std.testing.expectEqual(@as(usize, 1), rows[0].column_changes.len);
             try std.testing.expectEqual(@as(u32, 0), rows[0].column_changes[0].unit);
-            try std.testing.checkAllAllocationFailures(a, struct {
+            try @import("../testing/allocation_failures.zig").check(struct {
                 fn run(allocator: std.mem.Allocator, current: *const editor.Session) !void {
                     const output = try read(allocator, current, 0);
                     defer free(allocator, output);
@@ -254,7 +256,7 @@ test "HWPX paragraph flow actual split all allocation failures" {
     var session = try editor.open(a, input, .{});
     defer session.deinit();
     _ = try session.splitParagraphAnchored(0, 1, 1, 0);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             const rows = try read(allocator, source, 0);
             defer free(allocator, rows);

@@ -3,7 +3,7 @@ const std = @import("std");
 const editor = @import("editor_session.zig");
 const host = @import("line_display_host.zig");
 pub const Snapshot = struct { node: usize, paragraph: usize, anchor_node: usize, anchor_unit: usize, endpoints: @import("line_rendering_endpoints.zig").Endpoints, stroke: @import("line_stroke_values.zig").Values = .{} };
-pub const GeometrySnapshot = struct { node: usize, paragraph: usize, anchor_node: usize, anchor_unit: usize, endpoints: @import("line_rendering_endpoints.zig").Endpoints };
+pub const GeometrySnapshot = @import("line_display_geometry_values.zig").Values;
 
 pub fn nodes(a: std.mem.Allocator, session: *const editor.Session, section_index: usize) ![]u32 {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
@@ -26,8 +26,7 @@ pub fn readGeometry(a: std.mem.Allocator, session: *const editor.Session, sectio
     const section = &session.sections[section_index];
     var view = try @import("display_current_paragraphs.zig").read(a, section, session.options);
     defer view.deinit(a);
-    const paragraph = try host.currentOrdinal(&section.tree, view.paragraphs, section.first_paragraph, node);
-    return .{ .node = node, .paragraph = paragraph, .anchor_node = try host.sourceAnchor(&section.tree, node), .anchor_unit = try host.anchorUnit(a, &section.tree, &view.paragraphs[paragraph - section.first_paragraph], node), .endpoints = try @import("line_rendering_endpoints.zig").read(a, &section.tree, node, 1024) };
+    return @import("line_display_geometry_values.zig").readWithView(a, section, &view, node);
 }
 
 test "line geometry snapshot reads all decorated lines without changing paint policy" {

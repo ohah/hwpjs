@@ -12,6 +12,7 @@ pub fn hasEffects(patch: Patch) bool {
 pub fn validate(patch: Patch) !void {
     if (patch.size) |size| if (size < 0 or size > 409600) return error.InvalidCharacterSize;
     if (patch.underline_color) |color| try @import("rgb_color.zig").validate(color);
+    if (patch.strike_color) |color| try @import("rgb_color.zig").validate(color);
     if (patch.text_color) |color| try @import("rgb_color.zig").validate(color);
     if (patch.shade) |intent| _ = try @import("shade_color.zig").encodeHwp5(intent);
 }

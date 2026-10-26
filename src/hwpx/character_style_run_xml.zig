@@ -21,6 +21,7 @@ fn writePolicy(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").T
     if (spans.len == 0) return error.InvalidTextSites;
     const first = spans[0];
     if (first.site_index >= sites.items.len or first.start_unit != first.site_start_unit) return error.InvalidTextSites;
+    const identified = try @import("title_fragment_identity.zig").validateRun(spans);
     var cursor = first.start_unit;
     var site_count: usize = 0;
     var output: std.ArrayList(u8) = .empty;
@@ -34,7 +35,11 @@ fn writePolicy(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").T
         } else if (spans[index - 1].site_start_unit != span.site_start_unit) return error.SourceBindingMismatch;
         if (span.start_unit != cursor or span.end_unit < cursor) return error.InvalidTextSites;
         const ends_site = index + 1 == spans.len or spans[index + 1].site_index != span.site_index;
-        if (span.start_unit == span.end_unit and (!starts_site or !ends_site)) return error.InvalidTextSites;
+        if (span.start_unit == span.end_unit and (!starts_site or !ends_site)) {
+            const site = sites.items[span.site_index];
+            // 정확히 검증된 fragment의 빈 real text만 보존합니다. 파생 run 경계는 제외합니다.
+            if (!identified or site.missing_text or site.anchor_boundary) return error.InvalidTextSites;
+        }
         if (ends_site) {
             const byte_end = try @import("text_site_edit.zig").bytePosition(sites.items[span.site_index].text, std.math.cast(u32, span.end_unit - span.site_start_unit) orelse return error.LimitExceeded);
             if (byte_end != sites.items[span.site_index].text.len) return error.InvalidTextSites;

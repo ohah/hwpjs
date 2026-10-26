@@ -3,7 +3,7 @@ const std = @import("std");
 const model = @import("../../model/document.zig");
 const Version = @import("../version.zig").Version;
 const rules = @import("../body/control_rules.zig");
-pub const Kind = enum { section, column, header, footer };
+pub const Kind = enum { section, column, header, footer, bookmark };
 pub const Anchor = struct { kind: Kind, control_node: usize, paragraph: usize, source_unit: usize, current_unit: u32 };
 
 test "HWP5 structural anchors head foot move only in their current host and allocation failures" {
@@ -44,9 +44,14 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: Version, paragraphs:
     var out: std.ArrayList(Anchor) = .empty;
     errdefer out.deinit(a);
     for (links.items, 0..) |link, index| {
-        const kind: Kind = if (link.header_id == rules.section_id) .section else if (link.header_id == rules.column_id) .column else if (link.header_id == rules.id("head")) .header else if (link.header_id == rules.id("foot")) .footer else continue;
-        const expected_code: u16 = if (kind == .header or kind == .footer) 16 else 2;
+        const kind: Kind = if (link.header_id == rules.section_id) .section else if (link.header_id == rules.column_id) .column else if (link.header_id == rules.id("head")) .header else if (link.header_id == rules.id("foot")) .footer else if (link.header_id == rules.id("bokm")) .bookmark else continue;
+        const expected_code: u16 = switch (kind) {
+            .header, .footer => 16,
+            .bookmark => 22,
+            .section, .column => 2,
+        };
         if (link.code != expected_code) return error.UnsupportedStructuralAnchorControl;
+        if (kind == .bookmark) try @import("bookmark_anchor_policy.zig").validate(a, tree, link.control_node);
         const paragraph = owners.get(@intCast(link.paragraph_node)) orelse return error.MissingCurrentStructuralAnchorOwner;
         const unit = try @import("current_control_anchor.zig").position(links.items, index, paragraphs[paragraph]);
         try out.append(a, .{ .kind = kind, .control_node = link.control_node, .paragraph = paragraph, .source_unit = link.start_unit, .current_unit = unit });

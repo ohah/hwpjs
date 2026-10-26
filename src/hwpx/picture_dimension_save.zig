@@ -5,7 +5,7 @@ const fields = @import("table_xml_fields.zig");
 const Entry = @import("picture_dimension_edit_values.zig").Entry;
 
 fn identity(tree: *const Tree, node: usize) bool {
-    for ([_][]const u8{ "pic", "container", "tbl", "tr", "tc", "subList" }) |name| if (fields.childIs(tree, node, name)) return true;
+    if (@import("picture_source_identity.zig").isOwner(tree, node)) return true;
     if (tree.elements[node].parent) |owner| {
         if (fields.childIs(tree, owner, "pic")) {
             for (@import("picture_dimension_values.zig").names) |name| if (fields.childIs(tree, node, name)) return true;
@@ -46,7 +46,7 @@ test "HWPX picture dimension save composes shifted text and rejects changed obje
     var tree = try @import("section_tree.zig").parse(a, original, 0, 0, .{});
     defer tree.deinit(a);
     const entry: Entry = .{ .picture_node = 4, .update = .{ .display = .{ 9, 6 }, .current = .{ 9, 6 } } };
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree, text: []const u8, update: Entry) !void {
             const output = try write(allocator, source, text, &.{update}, 4096);
             defer allocator.free(output);

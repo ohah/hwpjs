@@ -66,7 +66,8 @@ pub fn build(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
     return buildMode(a, tree, sites, locations, paragraph, false);
 }
 
-/// Field policy and ownership must be validated before using zero-width bookmarks.
+/// Caller must first validate the field text policy and field ownership.
+/// Point bookmarks have zero display width; no source-record axis is inferred.
 pub fn buildForFieldText(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]Segment {
     return buildMode(a, tree, sites, locations, paragraph, true);
 }
@@ -79,28 +80,38 @@ fn buildMode(a: std.mem.Allocator, tree: *const tree_module.Tree, sites: *const 
     const owners = try a.alloc(bool, tree.elements.len);
     defer a.free(owners);
     @memset(owners, false);
+    var text_owners: std.ArrayList(usize) = .empty;
+    defer text_owners.deinit(a);
     var found = false;
     for (sites.items, locations, 0..) |site, location, index| {
         if (location.paragraph_ordinal != paragraph) continue;
         if (site.element_index >= tree.elements.len) return error.InvalidTextSites;
         if (tree.elements[site.element_index].is(uri, "run") and !site.missing_text) return error.UnsupportedTextPositionProjection;
-        owners[site.element_index] = true;
+        if (!owners[site.element_index]) {
+            try text_owners.append(a, site.element_index);
+            owners[site.element_index] = true;
+        }
         found = true;
         try segments.append(a, .{ .kind = .text, .index = index, .source_start = site.start });
     }
     if (!found) return error.MissingTextSite;
     const paragraph_owner = try @import("paragraph_site_owner.zig").resolve(tree, sites, locations, paragraph);
-    for (tree.elements, 0..) |element, index| {
-        const run = element.parent orelse continue;
-        if (tree.elements[run].parent != paragraph_owner or (!@import("retained_bookmark.zig").supported(tree, index) and !@import("retained_bookmark.zig").directSupported(tree, index))) continue;
-        if (field_text) continue;
-        var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
-        defer axis.deinit(a);
-        title_axis_validated = true;
-        break;
+    var run_child = tree.elements[paragraph_owner].first_child;
+    bookmark_search: while (run_child) |run| : (run_child = tree.elements[run].next_sibling) {
+        var direct_child = tree.elements[run].first_child;
+        while (direct_child) |index| : (direct_child = tree.elements[index].next_sibling) {
+            if (!@import("retained_bookmark.zig").supported(tree, index) and !@import("retained_bookmark.zig").directSupported(tree, index)) continue;
+            if (field_text) continue;
+            var axis = try @import("title_mark_axis.zig").build(a, tree, sites, locations, paragraph);
+            defer axis.deinit(a);
+            title_axis_validated = true;
+            break :bookmark_search;
+        }
     }
-    for (tree.elements, 0..) |text_element, text_index| {
-        if (!owners[text_index]) continue;
+    // Preserve the original tree-order traversal even for interleaved sites.
+    std.mem.sort(usize, text_owners.items, {}, std.sort.asc(usize));
+    for (text_owners.items) |text_index| {
+        const text_element = tree.elements[text_index];
         if (text_element.is(uri, "run")) continue;
         if (!text_element.is(uri, "t")) return error.UnsupportedTextPositionProjection;
         var child = text_element.first_child;
@@ -179,6 +190,31 @@ test "HWPX paragraph positions preserve tab gaps and follow current text" {
     defer a.free(changed);
     try std.testing.expectEqual(@as(usize, 4), changed[1].start_unit);
     try std.testing.expectEqualSlices(u8, source, tree.source);
+}
+
+test "HWPX paragraph positions local owner traversal preserves reversed split site order" {
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>A<p:tab/>B</p:t></p:run><p:run><p:t>😀<p:tab/>끝</p:t></p:run></p:p><p:p><p:run><p:t>unrelated<p:tab/></p:t></p:run></p:p></s:sec>";
+    var tree = try tree_module.parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var sites = try sites_module.collect(a, &tree, .{});
+    defer sites.deinit(a);
+    const locations = try @import("text_site_locations.zig").build(a, &tree, &sites, .{});
+    defer a.free(locations);
+    std.mem.reverse(sites_module.Site, sites.items);
+    std.mem.reverse(scanner.Location, locations);
+    const positions = try build(a, &tree, &sites, locations, 1);
+    defer a.free(positions);
+    var text: std.ArrayList(u8) = .empty;
+    defer text.deinit(a);
+    var tabs: usize = 0;
+    for (positions) |position| {
+        try text.appendSlice(a, segmentText(&sites, position));
+        if (position.kind == .tab) tabs += 1;
+    }
+    try std.testing.expectEqualStrings("A\tB😀\t끝", text.items);
+    try std.testing.expectEqual(@as(usize, 2), tabs);
+    try std.testing.expectEqual(@as(usize, 7), positions[positions.len - 1].end_unit);
 }
 
 test "HWPX paragraph positions span styled runs and release every failed allocation" {

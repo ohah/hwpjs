@@ -18,6 +18,15 @@ pub fn select(session: *const editor.Session, section: usize, paragraph: usize, 
 
 fn collect(session: *const editor.Session, section_index: usize, paragraph: usize, range: ?Range) ![]Target {
     const a = session.allocator;
+    if (section_index >= session.sections.len) return error.InvalidSectionIndex;
+    if (session.sections[section_index].structure_values != null) {
+        var current = try @import("formula_result_structural_view.zig").open(session, section_index);
+        defer current.deinit();
+        const rows = try collect(&current.rendered, section_index, paragraph, range);
+        errdefer a.free(rows);
+        for (rows) |*row| row.begin_element = std.math.cast(u32, try current.originalNode(row.begin_element)) orelse return error.LimitExceeded;
+        return rows;
+    }
     var view = (try @import("formula_result_projection.zig").prepare(session, section_index, paragraph)) orelse return a.alloc(Target, 0);
     defer view.deinit();
     return collectPrepared(&view, range);
@@ -90,6 +99,7 @@ fn actualChart(a: std.mem.Allocator) !void {
 test "HWPX formula result targets actual edited display uses current UTF16 ownership" {
     try @import("../testing/checked_allocator.zig").run(actualChart, .{});
 }
+
 test "HWPX formula result target queries retain live state at every allocation failure" {
     const a = std.testing.allocator;
     const input = try @import("test_formula_fixture.zig").zipWithSection(a, @import("test_formula_fixture.zig").section);

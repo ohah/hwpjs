@@ -1,67 +1,62 @@
-//! Select one current label using the existing mutation permission checks.
-const std = @import("std");
+//! Read-only command ownership: selection is based on setter permission, not width.
 const Target = @import("field_label_targets.zig").Target;
-
-pub fn select(session: anytype, section_index: usize, paragraph: usize, start: u32, end: u32) !?Target {
-    if (section_index >= session.sections.len) return error.InvalidSectionIndex;
-    const part = &session.sections[section_index];
-    if (paragraph < part.first_paragraph or paragraph > part.last_paragraph) return error.InvalidParagraphIndex;
+pub fn select(session: anytype, section: usize, paragraph: usize, start: u32, end: u32) !?Target {
     if (end < start) return error.InvalidTextPosition;
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    const selected_section = &session.sections[section];
+    if (paragraph < selected_section.first_paragraph or paragraph > selected_section.last_paragraph) return error.InvalidParagraphIndex;
     const a = session.allocator;
-    if (part.structure_values == null) {
+    if (selected_section.structure_values == null) {
         var source = try @import("source_field_analysis.zig").leaseForExterior(session);
         defer source.deinit(a);
         var in_section = false;
-        for (source.source.fields) |field| if (field.section == section_index) {
+        for (source.source.fields) |field| if (field.section == section) {
             in_section = true;
         };
         if (!in_section) return null;
-        const segments = @import("source_field_paragraph_positions.zig").build(session, section_index, paragraph) catch |err| switch (err) {
+        const segments = @import("source_field_paragraph_positions.zig").build(session, section, paragraph) catch |err| switch (err) {
             error.UnsupportedFieldLabelContent, error.UnsupportedInlineControl, error.MissingTextSite, error.UnsupportedTextPositionProjection => return null,
             else => return err,
         };
         defer a.free(segments);
         var intersects = false;
-        for (source.source.fields) |field| if (@import("field_text_positions.zig").project(field, section_index, segments) != null) {
+        for (source.source.fields) |field| if (@import("field_text_positions.zig").project(field, section, segments) != null) {
             intersects = true;
         };
         if (!intersects) return null;
     }
-    const labels = try session.fieldLabels(section_index, paragraph);
-    defer a.free(labels);
-    var result: ?Target = null;
-    for (labels) |label| {
-        if (start < label.start or end > label.end) continue;
-        validate(session, section_index, paragraph, label, start, end) catch |err| switch (err) {
-            error.ProtectedFieldRange, error.ProtectedInlineControl, error.MissingFieldTextSite, error.UnsupportedStructuralFieldEdit, error.UnsupportedInlineControl => continue,
+    const targets = try session.fieldLabels(section, paragraph);
+    defer a.free(targets);
+    var selected: ?Target = null;
+    for (targets) |target| {
+        if (start < target.start or end > target.end) continue;
+        if (selected_section.structure_values) |*current| {
+            const row = &current.paragraphs[paragraph - selected_section.first_paragraph];
+            if (row.field_positions != null) {
+                var source = try @import("source_field_analysis.zig").leaseForLabels(session, section);
+                defer source.deinit(a);
+                const field = find_field: {
+                    for (source.source.fields) |field| if (field.section == section and source.source.report.markers[field.begin_marker].element_index == target.begin_element) break :find_field field;
+                    return error.InvalidFieldElement;
+                };
+                const segments = @import("field_label_splice.zig").validateOwnedRange(a, &selected_section.tree, row, field, section, .{ .start_unit = target.start, .end_unit = target.end }, start, end) catch |err| switch (err) {
+                    error.ProtectedInlineControl, error.MissingFieldTextSite => continue,
+                    else => return err,
+                };
+                a.free(segments);
+                if (selected != null) return error.UnsupportedFieldLabelRange;
+                selected = target;
+                continue;
+            }
+        }
+        const prepared = try @import("field_label_session.zig").prepare(session, section, paragraph, target.begin_element);
+        defer prepared.deinit(a);
+        _ = @import("field_label_session.zig").validatePreparedRange(prepared, section, start, end) catch |err| switch (err) {
+            error.ProtectedFieldRange, error.ProtectedInlineControl, error.MissingFieldTextSite => continue,
             else => return err,
         };
-        if (result != null) return error.UnsupportedFieldLabelRange;
-        result = label;
+        if (selected != null) return error.UnsupportedFieldLabelRange;
+        selected = target;
     }
-    return result;
-}
-
-fn validate(session: anytype, section_index: usize, paragraph: usize, label: Target, start: u32, end: u32) !void {
-    const a = session.allocator;
-    const part = &session.sections[section_index];
-    if (part.structure_values) |*values| {
-        const row = &values.paragraphs[paragraph - part.first_paragraph];
-        if (row.field_positions != null) {
-            var analysis = try @import("source_field_analysis.zig").lease(session);
-            defer analysis.deinit(a);
-            const field = found: {
-                for (analysis.source.fields) |range| {
-                    if (range.section == section_index and analysis.source.report.markers[range.begin_marker].element_index == label.begin_element) break :found range;
-                }
-                return error.InvalidFieldElement;
-            };
-            const checked = try @import("field_label_splice.zig").validateOwnedRange(a, &part.tree, row, field, section_index, .{ .start_unit = label.start, .end_unit = label.end }, start, end - start);
-            defer checked.deinit(a);
-            return;
-        }
-    }
-    const prepared = try @import("field_label_session.zig").prepare(session, section_index, paragraph, label.begin_element);
-    defer prepared.deinit(a);
-    _ = try @import("field_label_session.zig").validatePreparedRange(prepared, section_index, start, end);
+    return selected;
 }

@@ -13,6 +13,7 @@ fn allocationCase(a: std.mem.Allocator) !void {
     try std.testing.expectEqualStrings("UNKNOWN", result.object_type.?);
     try std.testing.expectEqualStrings("CONTENT", result.draw_aspect.?);
     try std.testing.expectEqual(@as(?bool, false), result.has_moniker);
+    try std.testing.expectEqual(@as(?bool, null), result.transform_identity);
     try std.testing.expectEqualDeep([4]?bool{ null, true, false, null }, result.position.flags);
     try std.testing.expectEqual(@as(?u32, 1), result.flow.text_wrap);
     try std.testing.expectEqual(@as(?u32, 2), result.flow.text_flow);
@@ -61,6 +62,7 @@ test "HWPX OLE source actual numeric document retains metadata and current prote
     var source = try values.read(a, &session.sections[0].tree, before[0].ole_node);
     defer source.deinit(a);
     try std.testing.expectEqualStrings("ole3", source.binary_item_id.?);
+    try std.testing.expectEqual(@as(?bool, true), source.transform_identity);
     try std.testing.expectEqual(@as(?u32, 22677), source.geometry.width);
     try std.testing.expectEqualDeep([4]?i64{ 566, 566, 1417, 2267 }, source.flow.outside_margins);
     const baseline = try session.save();
@@ -97,4 +99,66 @@ test "HWPX OLE source detached strings outlive the source tree" {
     try std.testing.expectEqualStrings("ole3", result.binary_item_id.?);
     try std.testing.expectEqualStrings("FUTURE", result.object_type.?);
     try std.testing.expect(result.has_moniker == null);
+}
+
+test "HWPX OLE source transform proof rejects rotated missing and foreign matrices" {
+    const a = std.testing.allocator;
+    const rendering = "<p:renderingInfo xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><c:transMatrix e1='1' e2='0' e3='0' e4='0' e5='1' e6='0'/><c:scaMatrix e1='1' e2='0' e3='0' e4='0' e5='1' e6='0'/><c:rotMatrix e1='1' e2='0' e3='0' e4='0' e5='1' e6='0'/></p:renderingInfo>";
+    inline for (.{
+        .{ "<p:flip horizontal='0' vertical='0'/><p:rotationInfo angle='0'/>" ++ rendering, @as(?bool, true) },
+        .{ "<p:flip horizontal='0' vertical='0'/><p:rotationInfo angle='90'/>" ++ rendering, @as(?bool, false) },
+        .{ "<p:flip horizontal='1' vertical='0'/><p:rotationInfo angle='0'/>" ++ rendering, @as(?bool, false) },
+        .{ rendering, @as(?bool, null) },
+        .{ "<p:flip horizontal='0' vertical='0'/><p:rotationInfo angle='0'/><p:renderingInfo><x:transMatrix/><x:scaMatrix/><x:rotMatrix/></p:renderingInfo>", @as(?bool, null) },
+    }) |case| {
+        var tree = try parse(a, prefix ++ "<p:ole>" ++ case[0] ++ "</p:ole></s:sec>", 0, 0, .{});
+        defer tree.deinit(a);
+        var value = try values.read(a, &tree, 1);
+        defer value.deinit(a);
+        try std.testing.expectEqual(case[1], value.transform_identity);
+        if (case[1] == true) {
+            try @import("../testing/allocation_failures.zig").check(struct {
+                fn run(allocator: std.mem.Allocator, source_tree: *const @import("xml_part_tree.zig").Tree) !void {
+                    var result = try values.read(allocator, source_tree, 1);
+                    defer result.deinit(allocator);
+                    try std.testing.expectEqual(@as(?bool, true), result.transform_identity);
+                }
+            }.run, .{&tree});
+        }
+    }
+}
+
+test "HWPX OLE source switch alternative shares chart wrapper current anchor" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/chart/원형/2차원원형.hwpx", a, .limited(4_000_000));
+    defer a.free(input);
+    var session = try @import("editor_session.zig").open(a, input, .{});
+    defer session.deinit();
+    const sites_module = @import("ole_display_sites.zig");
+    const before = try sites_module.read(a, &session, 0);
+    defer a.free(before);
+    try std.testing.expectEqual(@as(usize, 1), before.len);
+    try std.testing.expect(before[0].error_name == null);
+    try std.testing.expect(before[0].chart_wrapper != null);
+    const charts = try @import("chart_display_sites.zig").read(a, &session, 0);
+    defer a.free(charts);
+    try std.testing.expectEqual(@as(usize, 1), charts.len);
+    try std.testing.expectEqual(before[0].chart_wrapper.?, charts[0].wrapper);
+    try std.testing.expectEqual(before[0].paragraph, charts[0].paragraph);
+    try std.testing.expectEqual(before[0].anchor_unit, charts[0].anchorUnit);
+    _ = try session.spliceAnchored(0, before[0].paragraph.?, 0, 0, "앞😀");
+    const after = try sites_module.read(a, &session, 0);
+    defer a.free(after);
+    try std.testing.expectEqual(before[0].anchor_unit.? + 3, after[0].anchor_unit.?);
+    try std.testing.expectEqual(before[0].chart_wrapper, after[0].chart_wrapper);
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try @import("editor_session.zig").open(a, saved, .{});
+    defer reopened.deinit();
+    const again = try sites_module.read(a, &reopened, 0);
+    defer a.free(again);
+    try std.testing.expectEqual(after[0].anchor_unit, again[0].anchor_unit);
+    const current_chart = try @import("chart_display_sites.zig").read(a, &reopened, 0);
+    defer a.free(current_chart);
+    try std.testing.expectEqual(again[0].chart_wrapper.?, current_chart[0].wrapper);
 }

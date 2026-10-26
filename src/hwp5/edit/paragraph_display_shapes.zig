@@ -12,6 +12,11 @@ pub const Shape = struct {
     legacy_spacing_kind: u2,
     legacy_spacing: i32,
     modern_spacing: ?@import("../docinfo/para_shape.zig").ModernSpacing,
+    heading_kind: u2 = 0,
+    heading_id: u16 = 0,
+    packed_heading_level: u3 = 0,
+    extended_heading_level: ?u32 = null,
+    heading_level: u32 = 0,
 };
 
 pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, expected_count: usize) ![]Shape {
@@ -25,6 +30,11 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
         if (count >= output.len) return error.ResourceCountMismatch;
         const shape = record.value.para_shape;
         output[count] = .{ .id = @intCast(count), .alignment = @truncate(shape.attributes >> 2), .left = shape.left, .right = shape.right, .indent = shape.indent, .before = shape.before, .after = shape.after, .legacy_spacing_kind = @truncate(shape.attributes), .legacy_spacing = shape.legacy_spacing, .modern_spacing = shape.modern_spacing };
+        output[count].heading_kind = @truncate(shape.attributes >> 23);
+        output[count].heading_id = shape.head_id;
+        output[count].packed_heading_level = @truncate(shape.attributes >> 25);
+        output[count].extended_heading_level = shape.level;
+        output[count].heading_level = shape.effectiveLevel();
         count += 1;
     }
     if (count != output.len) return error.ResourceCountMismatch;

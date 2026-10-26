@@ -7,6 +7,16 @@ const runs = @import("character_runs.zig");
 /// Caller must validate adjacency and logical LIST_HEADER/cell identity separately.
 /// Equal parent_node alone is not sufficient for sibling table cells.
 pub fn prepare(a: std.mem.Allocator, left: model.Paragraph, right: model.Paragraph, char_count: usize, max_bytes: usize) !model.Paragraph {
+    return prepareWith(a, left, right, char_count, max_bytes, false);
+}
+
+/// Caller must first resolve the complete immutable restart family and owner.
+pub fn prepareRestart(a: std.mem.Allocator, left: model.Paragraph, right: model.Paragraph, char_count: usize, max_bytes: usize) !model.Paragraph {
+    return prepareWith(a, left, right, char_count, max_bytes, true);
+}
+
+fn prepareWith(a: std.mem.Allocator, left: model.Paragraph, right: model.Paragraph, char_count: usize, max_bytes: usize, restart: bool) !model.Paragraph {
+    if (restart and (left.deferred_direct_records > 1 or right.deferred_direct_records > 1 or (left.deferred_direct_records == 1 and right.deferred_direct_records == 1))) return error.AmbiguousRestartSplit;
     if (left.parent_node != right.parent_node) return error.ParagraphOwnerMismatch;
     for ([_]model.Paragraph{ left, right }) |p| {
         if (p.field_attributes != null or p.formula_results != null) return error.UnsupportedStructuralControl;
@@ -16,8 +26,15 @@ pub fn prepare(a: std.mem.Allocator, left: model.Paragraph, right: model.Paragra
     defer a.free(first);
     const second = try content.editableTextBytes(a, right);
     defer a.free(second);
-    try content.validatePlain(first);
-    try content.validatePlain(second);
+    if (restart) {
+        for ([_][]const u8{ first, second }) |bytes| {
+            try @import("control_boundaries.zig").validateRetainedText(bytes);
+            try @import("control_boundaries.zig").validate(bytes, 0, 0);
+        }
+    } else {
+        try content.validatePlain(first);
+        try content.validatePlain(second);
+    }
     try runs.validate(left.character_runs, first, char_count);
     try runs.validate(right.character_runs, second, char_count);
     const length = std.math.add(usize, first.len - 2, second.len) catch return error.LimitExceeded;
@@ -45,6 +62,7 @@ pub fn prepare(a: std.mem.Allocator, left: model.Paragraph, right: model.Paragra
     result.range_tags = owned_ranges;
     result.text_present = true;
     result.declared_units = @intCast(length / 2);
+    if (restart) result.deferred_direct_records = left.deferred_direct_records + right.deferred_direct_records;
     return result;
 }
 

@@ -44,8 +44,10 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8
         const stop = @min(end, edit.end_unit);
         if (start >= stop) continue;
         const shape = shapes[run.char_shape_id];
-        if ((edit.properties.outline_kind == null or shape.outline_kind_raw == @import("character_outline_kind.zig").raw(edit.properties.outline_kind.?)) and @import("../../model/character_properties.zig").effectsMatch(edit.properties, shape.effects) and (edit.properties.shade == null or try @import("../../model/shade_color.zig").encodeHwp5(edit.properties.shade.?) == shape.shade_color_raw))
-            if ((edit.properties.strike_enabled == null or (shape.strike_kind_raw <= 1 and edit.properties.strike_enabled.? == (shape.strike_kind_raw == 1))) and (edit.properties.size == null or edit.properties.size.? == shape.height) and (edit.properties.bold == null or edit.properties.bold.? == shape.bold) and (edit.properties.italic == null or edit.properties.italic.? == shape.italic) and (edit.properties.underline_kind == null or @backingInt(edit.properties.underline_kind.?) == shape.underline_kind_raw) and (edit.properties.underline_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.underline_color.?) == shape.underline_color_raw) and (edit.properties.text_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.text_color.?) == shape.text_color_raw) and (edit.properties.font_ids == null or @import("../../model/character_fonts.zig").matches(@import("../../model/character_fonts.zig").fromHwp5(shape.font_ids), edit.properties.font_ids.?))) continue;
+        const decoration = @import("character_decoration_compat.zig").resolve(shape);
+        const strike_color_matches = edit.properties.strike_color == null or (shape.strike_kind_raw <= 1 and decoration.strike_color != null and @import("../../model/rgb_color.zig").hwp5(edit.properties.strike_color.?) == decoration.strike_color.?);
+        if (strike_color_matches and (edit.properties.outline_kind == null or shape.outline_kind_raw == @import("character_outline_kind.zig").raw(edit.properties.outline_kind.?)) and @import("../../model/character_properties.zig").effectsMatch(edit.properties, shape.effects) and (edit.properties.shade == null or try @import("../../model/shade_color.zig").encodeHwp5(edit.properties.shade.?) == shape.shade_color_raw))
+            if ((edit.properties.strike_enabled == null or edit.properties.strike_enabled.? == decoration.strike_enabled) and (edit.properties.size == null or edit.properties.size.? == shape.height) and (edit.properties.bold == null or edit.properties.bold.? == shape.bold) and (edit.properties.italic == null or edit.properties.italic.? == shape.italic) and (edit.properties.underline_kind == null or @backingInt(edit.properties.underline_kind.?) == decoration.underline_kind) and (edit.properties.underline_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.underline_color.?) == shape.underline_color_raw) and (edit.properties.text_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.text_color.?) == shape.text_color_raw) and (edit.properties.font_ids == null or @import("../../model/character_fonts.zig").matches(@import("../../model/character_fonts.zig").fromHwp5(shape.font_ids), edit.properties.font_ids.?))) continue;
         var source_id = run.char_shape_id;
         var properties: model.CharacterPropertyPatch = .{};
         if (source_id >= original_count) {
@@ -53,7 +55,7 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8
             source_id = intent.source_id;
             properties = intent.properties;
         }
-        properties = @import("../../model/character_properties.zig").merge(properties, edit.properties);
+        properties = try @import("character_decoration_patch_merge.zig").merge(shapes[source_id], shape, properties, edit.properties);
         const id = try pending.add(a, original_count, source_id, properties);
         try @import("character_format.zig").apply(a, source, version, &paragraph, .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = start, .end_unit = stop, .char_shape_id = id }, original_count + pending.entries.items.len);
         changed = true;

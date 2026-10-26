@@ -19,6 +19,7 @@ pub fn validateWithAnchors(tree: *const tree_module.Tree, sites: *const sites_mo
 pub fn validateForCharacterFormat(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !void {
     return validateMode(tree, sites, locations, paragraph, true, false, true);
 }
+
 pub fn validateForFieldText(tree: *const tree_module.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) !void {
     return validateMode(tree, sites, locations, paragraph, true, true, true);
 }
@@ -43,6 +44,8 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
             var run_child = element.first_child;
             while (run_child) |run_index| {
                 const content = tree.elements[run_index];
+                // Observed run-level annotations share the text marker's
+                // zero-width retention rule, never an editable object unit.
                 if (@import("retained_markpen_marker.zig").supported(tree, run_index)) {
                     run_child = content.next_sibling;
                     continue;
@@ -51,7 +54,7 @@ fn validateMode(tree: *const tree_module.Tree, sites: *const sites_module.Sites,
                 if (bookmark) has_bookmark = true;
                 const retained_field = allow_fields and @import("retained_field_marker.zig").supported(tree, run_index);
                 if (!content.is(uri, "t") and !bookmark and !retained_field and !content.is(uri, "secPr") and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_bookmark_unsupported = true;
-                if (!content.is(uri, "t") and !@import("retained_page_number.zig").supported(tree, run_index) and !@import("retained_number_restart.zig").supported(tree, run_index) and !@import("retained_bookmark.zig").supported(tree, run_index) and !@import("retained_run_metadata.zig").supported(tree, run_index) and !(allow_anchors and retained_field) and !(allow_anchors and allow_fields and content.is(uri, "secPr")) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_other_run_content = true;
+                if (!content.is(uri, "t") and !@import("retained_page_number.zig").supported(tree, run_index) and !@import("retained_number_restart.zig").supported(tree, run_index) and !@import("retained_bookmark.zig").supported(tree, run_index) and !@import("retained_run_metadata.zig").supported(tree, run_index) and !retained_field and !(allow_anchors and allow_fields and content.is(uri, "secPr")) and !(allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null)) has_other_run_content = true;
                 if (allow_anchors and @import("run_anchor.zig").kind(tree, run_index) != null) {
                     has_anchor = true;
                     run_child = content.next_sibling;

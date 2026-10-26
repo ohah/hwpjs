@@ -5,6 +5,11 @@ pub fn paragraph(left: model.Paragraph, right: model.Paragraph) bool {
     return equal(model.Paragraph, left, right);
 }
 
+/// Shared deep semantic comparison for adapter-owned values without unions.
+pub fn semantic(comptime T: type, left: T, right: T) bool {
+    return equal(T, left, right);
+}
+
 pub fn document(left: model.Document, right: model.Document) bool {
     inline for (@import("../reflection.zig").fields(model.Document)) |field| {
         if (comptime std.mem.eql(u8, field.name, "font_resources")) {

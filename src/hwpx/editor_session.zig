@@ -30,8 +30,10 @@ pub const Section = struct {
     cell_sizes: @import("table_cell_size_values.zig").Values = .empty,
     picture_dimensions: @import("picture_dimension_edit_values.zig").Values = .empty,
     picture_matrices: @import("picture_matrix_edit_values.zig").Values = .empty,
+    picture_frames: @import("picture_frame_values.zig").Values = .empty,
     checkbox_states: @import("form_checkbox_state_values.zig").Values = .empty,
     dutmal_texts: @import("dutmal_text_values.zig").Values = .{},
+    equation_scripts: @import("equation_script_values.zig").Values = .{},
     formula_definitions: @import("formula_definition_values.zig").Values = .{},
     formula_result_overrides: @import("formula_result_override_values.zig").Values = .{},
     created_tables: @import("created_table_values.zig").Values = .{},
@@ -60,8 +62,10 @@ pub const Section = struct {
         self.cell_sizes.deinit(a);
         self.picture_dimensions.deinit(a);
         self.picture_matrices.deinit(a);
+        self.picture_frames.deinit(a);
         self.checkbox_states.deinit(a);
         self.dutmal_texts.deinit(a);
+        self.equation_scripts.deinit(a);
         self.formula_definitions.deinit(a);
         self.formula_result_overrides.deinit(a);
         self.created_tables.deinit(a);
@@ -108,7 +112,7 @@ pub const Session = struct {
     }
 
     pub fn splitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-        try self.requireMutableParagraphStructure(section_index);
+        try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").split(self, section_index, paragraph, start, deleted);
     }
 
@@ -118,22 +122,27 @@ pub const Session = struct {
     }
 
     pub fn canSplitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-        self.requireMutableParagraphStructure(section_index) catch return false;
+        self.requireMutableHostPositions() catch return false;
         return @import("paragraph_split_session.zig").canSplit(self, section_index, paragraph, start, deleted);
     }
 
+    pub fn canSplitParagraphAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+        self.requireMutableHostPositions() catch return false;
+        return @import("paragraph_split_session.zig").canSplitAnchored(self, section_index, paragraph, start, deleted);
+    }
+
     pub fn splitParagraphAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-        try self.requireMutableParagraphStructure(section_index);
+        try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").splitAnchored(self, section_index, paragraph, start, deleted);
     }
 
     pub fn mergeParagraph(self: *Session, section_index: usize, paragraph: usize) !bool {
-        try self.requireMutableParagraphStructure(section_index);
+        try self.requireMutableHostPositions();
         return @import("paragraph_merge_session.zig").merge(self, section_index, paragraph);
     }
 
     pub fn mergeParagraphPair(self: *Session, section_index: usize, paragraph: usize, right: usize) !bool {
-        try self.requireMutableParagraphStructure(section_index);
+        try self.requireMutableHostPositions();
         return @import("paragraph_merge_session.zig").mergePair(self, section_index, paragraph, right);
     }
 
@@ -175,6 +184,8 @@ pub const Session = struct {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const selected = &self.sections[section_index];
         if (paragraph < selected.first_paragraph or paragraph > selected.last_paragraph) return error.InvalidParagraphIndex;
+        const inherited_guard = if (selected.structure_values != null) try @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, start, std.math.add(u32, start, deleted) catch return error.InvalidTextPosition, if (anchored) .whole_anchored else .splice) else null;
+        defer if (inherited_guard) |positions| self.allocator.free(positions);
         if (!anchored) if (try @import("runless_paragraph_session.zig").splice(self, section_index, paragraph, start, deleted, inserted)) |changed| return changed;
         if (anchored and selected.structure_values == null) {
             const field_positions = try @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, 0, 0, .whole_anchored);
@@ -186,6 +197,19 @@ pub const Session = struct {
             other_bytes += try section.textBytes(self.options.max_text_bytes -| other_bytes);
         }
         if (selected.structure_values) |*values| {
+            if (inherited_guard) |positions| {
+                const row = &values.paragraphs[paragraph - selected.first_paragraph];
+                if (row.column_boundaries != null or row.character_styles != null) return error.UnsupportedStructuralFieldEdit;
+                for (values.paragraphs, 0..) |other, j| {
+                    if (j == paragraph - selected.first_paragraph) continue;
+                    for (other.sites.items) |site| {
+                        if (site.text.len > self.options.max_text_bytes -| other_bytes) return error.LimitExceeded;
+                        other_bytes += site.text.len;
+                    }
+                }
+                const target = try @import("field_exterior_insertion_site.zig").fromSession(self, section_index, &row.sites, positions, start, deleted);
+                return @import("text_splice_transaction.zig").spliceProjected(self.allocator, &row.sites, positions, start, deleted, inserted, self.options.max_text_bytes - other_bytes, target);
+            }
             if (!anchored and try @import("formula_section_save.zig").hasFormula(self.allocator, &selected.tree)) {
                 if (try @import("structural_formula_exterior.zig").splice(self, section_index, paragraph, start, deleted, inserted, self.options.max_text_bytes -| other_bytes)) |changed| return changed;
             }
@@ -223,6 +247,13 @@ pub const Session = struct {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const section = &self.sections[section_index];
         if (paragraph < section.first_paragraph or paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
+        if (section.structure_values != null) {
+            const guard = @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, 0, 0, .whole_plain) catch |err| switch (err) {
+                error.ProtectedFieldRange => return false,
+                else => return err,
+            };
+            if (guard) |positions| self.allocator.free(positions);
+        }
         if (try @import("runless_paragraph_session.zig").eligible(self, section_index, paragraph)) return true;
         if (section.structure_values) |*values| {
             if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
@@ -294,7 +325,14 @@ pub const Session = struct {
             if (owned.protected_positions != null) return @import("paragraph_protected_positions.zig").text(self.allocator, &section.tree, owned, self.options.max_text_bytes);
             const locations = try @import("paragraph_structure_locations.zig").build(self.allocator, &section.tree, owned);
             defer self.allocator.free(locations);
-            return @import("current_anchor_text.zig").read(self.allocator, &section.tree, owned, locations, self.options.max_text_bytes);
+            const text = try @import("current_anchor_text.zig").read(self.allocator, &section.tree, owned, locations, self.options.max_text_bytes);
+            errdefer self.allocator.free(text);
+            const guard = @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, 0, 0, .whole_anchored) catch |err| switch (err) {
+                error.ProtectedFieldRange => return error.UnsupportedStructuralFieldEdit,
+                else => return err,
+            };
+            if (guard) |positions| self.allocator.free(positions);
+            return text;
         }
         const field_positions = @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, 0, 0, .whole_anchored) catch |err| switch (err) {
             error.ProtectedFieldRange => return error.UnsupportedStructuralFieldEdit,
@@ -341,16 +379,44 @@ pub const Session = struct {
     pub fn setDutmalText(self: *Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind, text: []const u8) !bool {
         return @import("dutmal_text_session.zig").set(self, section, node, kind, text);
     }
+    pub fn equationScript(self: *const Session, section: usize, node: usize) ![]u8 {
+        return @import("equation_script_session.zig").read(self, section, node);
+    }
+    pub fn setEquationScript(self: *Session, section: usize, node: usize, text: []const u8) !bool {
+        return @import("equation_script_session.zig").set(self, section, node, text);
+    }
     pub fn setFormulaDefinition(self: *Session, section_index: usize, begin: usize, formula: []const u8) !bool {
         try self.requireMutableHostPositions();
         return @import("formula_definition_edit.zig").set(self, section_index, begin, formula);
+    }
+    pub fn setManualFormulaResult(self: *Session, section_index: usize, begin: usize, display: []const u8) !bool {
+        return @import("formula_result_override_edit.zig").set(self, section_index, begin, display);
+    }
+    pub fn spliceManualFormulaResult(self: *Session, section_index: usize, begin: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        return @import("formula_result_override_splice.zig").splice(self, section_index, begin, start, deleted, inserted);
+    }
+    pub fn setChartNumericPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
+        return @import("chart_numeric_point_session.zig").set(self, section_index, wrapper, point, value);
+    }
+    pub fn setChartSeriesText(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
+        return @import("chart_series_text_session.zig").set(self, section, wrapper, ordinal, value);
+    }
+
+    pub fn setChartRichText(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
+        return @import("chart_rich_text_session.zig").set(self, section, wrapper, ordinal, value);
+    }
+    pub fn setChartPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
+        return @import("chart_point_session.zig").set(self, section_index, wrapper, point, value);
+    }
+    pub fn setChartPoints(self: *Session, section_index: usize, wrapper: usize, edits: []const @import("chart_point_write.zig").Edit) !bool {
+        return @import("chart_point_session.zig").setMany(self, section_index, wrapper, edits);
     }
     pub fn setPictureMatrix(self: *Session, section_index: usize, matrix_node: usize, values: [6]f64) !bool {
         return @import("picture_matrix_session.zig").set(self, section_index, matrix_node, values);
     }
     pub fn resizePicture(self: *Session, section_index: usize, picture_node: usize, size: [2]u32) !bool {
         const plan = try @import("picture_resize_plan.zig").build(self, section_index, picture_node, size);
-        return @import("picture_geometry_transaction.zig").apply(self, section_index, picture_node, plan.dimensions, &plan.matrices, self.options.max_output_bytes);
+        return @import("picture_geometry_transaction.zig").applyWithFrame(self, section_index, picture_node, plan.dimensions, &plan.matrices, plan.frame, self.options.max_output_bytes);
     }
     pub fn setCellSizeForList(self: *Session, section_index: usize, list_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
         const bindings = try @import("table_display_bindings.zig").read(self.allocator, self, section_index);
@@ -361,26 +427,11 @@ pub const Session = struct {
         return error.InvalidCellDisplayOwner;
     }
 
-    pub fn setManualFormulaResult(self: *Session, section_index: usize, begin: usize, display: []const u8) !bool {
-        return @import("formula_result_override_edit.zig").set(self, section_index, begin, display);
-    }
-    pub fn spliceManualFormulaResult(self: *Session, section_index: usize, begin: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
-        return @import("formula_result_override_splice.zig").splice(self, section_index, begin, start, deleted, inserted);
-    }
-
     /// Caller owns the result with Session.allocator. Save is side-effect free.
-    pub fn setChartNumericPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
-        return @import("chart_numeric_point_session.zig").set(self, section_index, wrapper, point, value);
-    }
-    pub fn setChartSeriesText(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
-        return @import("chart_series_text_session.zig").set(self, section, wrapper, ordinal, value);
-    }
-    pub fn setChartPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
-        return @import("chart_point_session.zig").set(self, section_index, wrapper, point, value);
-    }
-
     pub fn save(self: *const Session) ![]u8 {
+        try @import("inline_leaf_text_budget.zig").validate(self);
         for (self.sections) |section| if (section.dutmal_texts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedDutmalStructuralSave;
+        for (self.sections) |section| if (section.equation_scripts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedEquationStructuralSave;
         const a = self.allocator;
         const trees = try a.alloc(tree_module.Tree, self.sections.len);
         defer a.free(trees);
@@ -398,13 +449,15 @@ pub const Session = struct {
             xml_bytes += header.bytes.len;
         }
         for (self.sections, 0..) |*section, index| {
-            const dutmal_dirty = if (section.dutmal_texts.entries.items.len != 0) try @import("dutmal_field_dirty.zig").read(self, index) else null;
+            const dutmal_dirty = if (section.dutmal_texts.entries.items.len != 0 or section.equation_scripts.entries.items.len != 0) try @import("equation_script_session.zig").fieldDirty(self, index) else null;
             defer if (dutmal_dirty) |items| a.free(items);
             const dirty = dutmal_dirty orelse section.field_dirty.items;
             const base = if (section.structure_values) |*values| block: {
-                if (section.formula_result_overrides.entries.items.len != 0) return error.UnsupportedStructuralFormulaResultOverride;
                 if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
-                break :block try @import("paragraph_structure_save.zig").writeWithDefinitions(a, trees, index, values, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes);
+                const structured = try @import("paragraph_structure_save.zig").writeWithDefinitions(a, trees, index, values, siteOptions(self.options), section.field_dirty.items, &section.formula_definitions, self.options.max_xml_bytes -| xml_bytes);
+                if (section.formula_result_overrides.entries.items.len == 0) break :block structured;
+                defer a.free(structured);
+                break :block try @import("formula_result_structure_save.zig").write(a, trees, index, structured, siteOptions(self.options), &section.formula_result_overrides, self.options.max_xml_bytes -| xml_bytes);
             } else try @import("formula_section_save.zig").writeWithOverridesMode(a, trees, index, &section.sites, siteOptions(self.options), dirty, &section.formula_definitions, &section.formula_result_overrides, self.options.max_xml_bytes -| xml_bytes, true);
             const sized = if (section.cell_sizes.items.len == 0) base else block: {
                 defer a.free(base);
@@ -418,17 +471,35 @@ pub const Session = struct {
                 defer a.free(dimensions);
                 break :block try @import("picture_matrix_save.zig").write(a, &section.tree, dimensions, section.picture_matrices.items, self.options.max_xml_bytes -| xml_bytes);
             };
-            const checked = if (section.checkbox_states.items.len == 0) matrices else block: {
+            const positioned = if (section.picture_frames.items.len == 0) matrices else block: {
                 defer a.free(matrices);
-                break :block try @import("form_checkbox_state_save.zig").write(a, &section.tree, matrices, section.checkbox_states.items, self.options.max_xml_bytes -| xml_bytes);
+                break :block try @import("picture_frame_save.zig").write(a, &section.tree, matrices, section.picture_frames.items, self.options.max_xml_bytes -| xml_bytes);
+            };
+            const layout = if (section.picture_dimensions.items.len == 0 and section.picture_matrices.items.len == 0 and section.picture_frames.items.len == 0) positioned else block: {
+                defer a.free(positioned);
+                break :block try @import("picture_layout_cache_save.zig").write(a, &section.tree, positioned, .{
+                    .dimensions = section.picture_dimensions.items,
+                    .matrices = section.picture_matrices.items,
+                    .frames = section.picture_frames.items,
+                }, self.options.max_xml_bytes -| xml_bytes);
+            };
+            const checked = if (section.checkbox_states.items.len == 0) layout else block: {
+                defer a.free(layout);
+                break :block try @import("form_checkbox_state_save.zig").write(a, &section.tree, layout, section.checkbox_states.items, self.options.max_xml_bytes -| xml_bytes);
             };
             const dutmal = if (section.dutmal_texts.entries.items.len == 0) checked else block: {
                 defer a.free(checked);
                 break :block try @import("dutmal_text_save.zig").write(a, &section.tree, checked, section.dutmal_texts.entries.items, self.options.max_xml_bytes -| xml_bytes);
             };
-            const bytes = if (section.created_tables.entries.items.len == 0) dutmal else block: {
+            const equations = if (section.equation_scripts.entries.items.len == 0) dutmal else block: {
                 defer a.free(dutmal);
-                break :block try @import("created_table_section_save.zig").write(self, index, dutmal, self.options.max_xml_bytes -| xml_bytes);
+                var options = @import("equation_script_session.zig").options(self);
+                options.max_output_bytes = self.options.max_xml_bytes -| xml_bytes;
+                break :block try @import("equation_script_save.zig").write(a, &section.tree, dutmal, section.equation_scripts.entries.items, options);
+            };
+            const bytes = if (section.created_tables.entries.items.len == 0) equations else block: {
+                defer a.free(equations);
+                break :block try @import("created_table_section_save.zig").write(self, index, equations, self.options.max_xml_bytes -| xml_bytes);
             };
             errdefer a.free(bytes);
             try replacements.append(a, .{ .entry_index = section.entry_index, .bytes = bytes });
@@ -440,11 +511,6 @@ pub const Session = struct {
     // Temporary staging gate, removed only when host edits rebase table points.
     fn requireMutableHostPositions(self: *const Session) !void {
         if (@import("created_table_host_splice.zig").hasPending(self)) return error.UnsupportedCreatedTableHostEdit;
-    }
-    fn requireMutableParagraphStructure(self: *const Session, section: usize) !void {
-        try self.requireMutableHostPositions();
-        if (section >= self.sections.len) return error.InvalidSectionIndex;
-        if (self.sections[section].dutmal_texts.entries.items.len != 0) return error.UnsupportedDutmalStructuralSave;
     }
 };
 

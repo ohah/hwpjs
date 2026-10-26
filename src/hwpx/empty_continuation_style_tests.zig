@@ -126,6 +126,10 @@ fn contextSession(first: []const u8, last: []const u8, parent_style: bool, with_
     if (expected) |id| {
         // 선택한 carrier는 두 source site를 모두 보존하면서 numeric intent를 소유합니다.
         try t.expectEqual(@as(?u32, id), right.character_styles.?[0].char_shape_id);
+    } else if (parent_style) {
+        // The raw absent tail is now owned on the insertion carrier, not resolved to 0/5.
+        try t.expect(right.character_styles != null);
+        for (right.character_styles.?) |span| try t.expect(span.char_shape_id == null);
     } else try t.expect(right.character_styles == null);
     try t.expectEqual(@as(usize, 2), right.sites.items.len);
     const saved = try session.save();

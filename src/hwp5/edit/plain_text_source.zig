@@ -8,7 +8,11 @@ const Version = @import("../version.zig").Version;
 
 pub const validateSection = @import("source_policy.zig").validate;
 pub const Validation = struct { ranges: ?body.Ranges, preserved_direct_records: usize };
-const Purpose = enum { splice, formula_transaction, hyperlink_transaction, field_transaction, character_format };
+const Purpose = enum { splice, formula_transaction, hyperlink_transaction, field_transaction, character_format, structure_transaction, retained_company };
+
+pub fn validateStructureTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    return validateWith(a, source, version, p, char_count, .structure_transaction);
+}
 
 /// Caller must validate source-backed mixed bindings and formula protection.
 pub fn validateFieldTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
@@ -31,7 +35,15 @@ pub fn validateHyperlinkTransaction(a: std.mem.Allocator, source: []const u8, ve
 
 /// Formatting retains text positions, including formula and spanning fields.
 pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    // Reuse the exact Company source/link/owner policy; never widen generic fields.
+    if (try @import("company_source.zig").has(source))
+        return validateWith(a, source, version, p, char_count, .retained_company);
     return validateWith(a, source, version, p, char_count, .character_format);
+}
+
+/// Company source/binding 보호가 검증된 section draft 전용.
+pub fn validateRetainedCompanyTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    return validateWith(a, source, version, p, char_count, .retained_company);
 }
 
 fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, comptime purpose: Purpose) !Validation {
@@ -47,15 +59,23 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     const h = node.record.value.header;
     if (h.extra.len != 0 or (h.merge_tracking orelse 0) != 0) return error.UnsupportedParagraphExtension;
     if (h.control_mask & ~@import("control_boundaries.zig").retained_mask != 0) return error.UnsupportedTextControl;
-    switch (purpose) {
+    if (purpose == .structure_transaction) {
+        try @import("structure_source_policy.zig").validateParagraph(a, source, version, p, tree);
+    } else if (try @import("memo_source_retention.zig").target(a, tree, source_node, version) or
+        ((purpose == .splice or purpose == .character_format) and try @import("memo_body_retention.zig").target(a, source, version, source_node)))
+    {
+        try @import("source_policy.zig").validateMemoTransaction(a, source, version);
+    } else switch (purpose) {
         .formula_transaction => _ = try @import("source_policy.zig").hasFormulas(a, source, version),
         .character_format => {
             if (try @import("source_policy.zig").hasNamedFields(source)) {
                 try @import("source_policy.zig").validateCharacterFormat(a, source, version);
             } else _ = try @import("source_policy.zig").hasFormulas(a, source, version);
         },
+        .retained_company => try @import("company_source.zig").validateParagraph(a, source, version, p),
         .splice, .hyperlink_transaction => try validateSection(a, source, version),
         .field_transaction => try @import("source_policy.zig").validateFieldTextTransaction(a, source, version),
+        .structure_transaction => unreachable,
     }
     try @import("paragraph_owner.zig").validate(a, tree, source_node, version);
     var links_checked = false;
@@ -67,6 +87,14 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     while (child < node.subtree_end) {
         const entry = tree.nodes[child];
         if (entry.parent != source_node) return error.UnsupportedParagraphRecord;
+        if (entry.record.framing.tag == @backingInt(body.Tag.memo_list)) {
+            var groups = try @import("paragraph_owner.zig").inspectGroups(a, tree, version);
+            defer groups.deinit(a);
+            try @import("paragraph_owned_list.zig").validateMemoMarker(tree, groups, source_node, child);
+            preserved_direct_records += 1;
+            child = entry.subtree_end;
+            continue;
+        }
         if (entry.record.framing.tag == 72 or entry.record.framing.tag == 66) {
             var groups = try @import("paragraph_owner.zig").inspectGroups(a, tree, version);
             defer groups.deinit(a);
@@ -76,7 +104,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
             child = entry.subtree_end;
             continue;
         }
-        if (entry.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
+        if (entry.record.framing.tag == @backingInt(body.Tag.control_header)) {
             preserved_direct_records += 1;
             if (!links_checked) try @import("control_source.zig").validateWithSource(a, tree, source, version);
             links_checked = true;
@@ -85,16 +113,16 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
         }
         if (entry.subtree_end != child + 1) return error.UnsupportedParagraphRecord;
         switch (entry.record.framing.tag) {
-            @intFromEnum(body.Tag.paragraph_text) => {},
-            @intFromEnum(body.Tag.char_runs) => {
+            @backingInt(body.Tag.paragraph_text) => {},
+            @backingInt(body.Tag.char_runs) => {
                 if (runs != null) return error.DuplicateParagraphRecord;
                 runs = try body.Runs.parse(entry.record.framing.payload);
             },
-            @intFromEnum(body.Tag.range_tags) => {
+            @backingInt(body.Tag.range_tags) => {
                 if (ranges != null) return error.DuplicateParagraphRecord;
                 ranges = try body.Ranges.parse(entry.record.framing.payload);
             },
-            @intFromEnum(body.Tag.line_segments) => {
+            @backingInt(body.Tag.line_segments) => {
                 if (lines != null) return error.DuplicateParagraphRecord;
                 lines = try body.Segments.parse(entry.record.framing.payload);
             },
@@ -105,13 +133,31 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     try (body.Metadata{ .runs = runs, .ranges = ranges, .lines = lines }).validate(h, char_count);
     const parts = try children.collect(tree, source_node);
     const column_continuation = generated and preserved_direct_records != 0;
-    if (column_continuation) try @import("column_split_scope.zig").validateTemplate(tree, source_node);
+    var restart_count: ?usize = null;
+    if (p.restart_control_source != null) {
+        var links = try @import("../body/control_links.zig").Links.build(a, tree);
+        defer links.deinit(a);
+        const index = (try @import("page_restart_source.zig").forParagraph(links.items, p)) orelse return error.SourceBindingMismatch;
+        const unit = try @import("page_restart_current.zig").unit(a, tree, links.items, index, p);
+        restart_count = if (unit != null) 1 else 0;
+    }
+    if (column_continuation) @import("column_split_scope.zig").validateTemplate(tree, source_node) catch |err| switch (err) {
+        error.UnsupportedStructuralControl => {
+            var links = try @import("../body/control_links.zig").Links.build(a, tree);
+            defer links.deinit(a);
+            const index = @import("page_restart_source.zig").find(links.items, source_node) orelse return err;
+            const unit = try @import("page_restart_current.zig").unit(a, tree, links.items, index, p);
+            restart_count = if (unit != null) 1 else 0;
+        },
+        else => return err,
+    };
     if (parts.text_node) |text_node| {
         const text = tree.nodes[text_node].record.value.text;
         try text.validateCount(h);
-        if (generated and !column_continuation) try @import("plain_text_content.zig").validatePlain(text.raw);
+        if (generated and !column_continuation and restart_count == null) try @import("plain_text_content.zig").validatePlain(text.raw);
         switch (purpose) {
-            .formula_transaction => try @import("../body/field_span.zig").validateEditable(text.raw),
+            .retained_company => try @import("plain_text_content.zig").validatePlain(text.raw),
+            .formula_transaction, .structure_transaction => try @import("../body/field_span.zig").validateEditable(text.raw),
             .splice => try @import("hyperlink_source.zig").validate(text.raw),
             .hyperlink_transaction, .field_transaction, .character_format => {},
         }
@@ -131,9 +177,9 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
         if (p.range_tags) |value| if (value.len != 0) return error.UnsupportedRangeSemantics;
         const current = try @import("plain_text_content.zig").editableTextBytes(a, p);
         defer a.free(current);
-        try @import("plain_text_content.zig").validatePlain(current);
+        if (restart_count == null) try @import("plain_text_content.zig").validatePlain(current);
     }
-    return .{ .ranges = ranges, .preserved_direct_records = if (generated) 0 else preserved_direct_records };
+    return .{ .ranges = ranges, .preserved_direct_records = restart_count orelse (if (generated) @as(usize, 0) else preserved_direct_records) };
 }
 
 test "reference click source eligibility stays scoped to validated field transaction" {

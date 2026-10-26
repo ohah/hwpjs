@@ -2,6 +2,7 @@
 const std = @import("std");
 const model = @import("../../model/document.zig");
 const Draft = @import("paragraph_split.zig").Draft;
+const replace = @import("split_text_projection.zig").replace;
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, p: model.Paragraph, at: u32, id: u32, char_count: usize) !Draft {
     if (id == 0 or id == p.instance_id) return error.InvalidParagraphInstanceId;
     try @import("column_split_scope.zig").validate(a, source, version, p, at, char_count);
@@ -27,24 +28,6 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: @import("../ve
     right.deferred_direct_records = 0;
     return .{ .left = left, .right = right };
 }
-fn replace(a: std.mem.Allocator, p: *model.Paragraph, bytes: []const u8, start: u32, end: u32) !void {
-    // Non-null empty ranges mark a materialized text edit for the existing writer.
-    const ranges = try a.alloc(model.TextRange, 0);
-    errdefer a.free(ranges);
-    const runs = try @import("character_runs.zig").replace(a, p.character_runs, start, end, 0, null);
-    errdefer a.free(runs);
-    const tokens = try @import("token_ownership.zig").fromText(a, bytes);
-    for (p.tokens) |token| a.free(token.raw);
-    a.free(p.tokens);
-    a.free(p.character_runs);
-    if (p.range_tags) |old| a.free(old);
-    p.tokens = tokens;
-    p.character_runs = runs;
-    p.range_tags = ranges;
-    p.text_present = true;
-    p.declared_units = @intCast(bytes.len / 2);
-}
-
 test "HWP5 column split paired draft retains cold prefix plain suffix and allocation failures" {
     const a = std.testing.allocator;
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/multicolumns-widths.hwp", a, .limited(4_000_000));

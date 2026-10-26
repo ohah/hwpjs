@@ -5,11 +5,8 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, formula_result_splice, dutmal_text, chart_numeric_point, chart_point, chart_series_text } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
     section: usize = 0,
-    chart_node: usize = 0,
-    chart_point: usize = 0,
-    chart_text: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
     break_before: ?@import("../model/paragraph_break.zig").Kind = null,
@@ -35,7 +32,12 @@ pub const Command = struct {
     created_table: ?*const @import("../model/created_table.zig").Table = null,
     created_table_identity: u64 = 0,
     created_cell: [2]u32 = .{ 0, 0 },
+    chart_node: usize = 0,
+    chart_point: usize = 0,
+    chart_points: []const @import("chart_point_write.zig").Edit = &.{},
+    chart_text: usize = 0,
     dutmal_node: usize = 0,
+    equation_node: usize = 0,
     dutmal_kind: @import("dutmal_text_session.zig").Kind = .main_text,
 };
 pub const History = struct {
@@ -155,13 +157,17 @@ pub const History = struct {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidFormStateCommand;
                 break :block try session.setCheckBoxState(command.section, command.form_node, command.checkbox_state);
             },
-            .picture_resize => block: {
-                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidPictureResizeCommand;
-                break :block try session.resizePicture(command.section, command.picture_node, command.picture_size);
-            },
             .dutmal_text => block: {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidDutmalTextCommand;
                 break :block try session.setDutmalText(command.section, command.dutmal_node, command.dutmal_kind, command.inserted);
+            },
+            .equation_script => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidEquationScriptCommand;
+                break :block try session.setEquationScript(command.section, command.equation_node, command.inserted);
+            },
+            .picture_resize => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidPictureResizeCommand;
+                break :block try session.resizePicture(command.section, command.picture_node, command.picture_size);
             },
             .format => block: {
                 if (command.inserted.len != 0) return error.InvalidFormatCommand;
@@ -169,13 +175,21 @@ pub const History = struct {
                 break :block try session.setCharacterFormat(command.section, command.paragraph, command.start, end, command.char_shape_id);
             },
             .plain => try session.splice(command.section, command.paragraph, command.start, command.deleted, command.inserted),
+            .chart_numeric_point, .chart_point => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidChartPointCommand;
+                break :block if (command.kind == .chart_point) try session.setChartPoint(command.section, command.chart_node, command.chart_point, command.inserted) else try session.setChartNumericPoint(command.section, command.chart_node, command.chart_point, command.inserted);
+            },
+            .chart_points => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidChartPointCommand;
+                break :block try session.setChartPoints(command.section, command.chart_node, command.chart_points);
+            },
             .chart_series_text => block: {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidChartSeriesTextCommand;
                 break :block try session.setChartSeriesText(command.section, command.chart_node, command.chart_text, command.inserted);
             },
-            .chart_numeric_point, .chart_point => block: {
-                if (command.start != 0 or command.deleted != 0) return error.InvalidChartPointCommand;
-                break :block if (command.kind == .chart_point) try session.setChartPoint(command.section, command.chart_node, command.chart_point, command.inserted) else try session.setChartNumericPoint(command.section, command.chart_node, command.chart_point, command.inserted);
+            .chart_rich_text => block: {
+                if (command.start != 0 or command.deleted != 0) return error.InvalidChartRichTextCommand;
+                break :block try session.setChartRichText(command.section, command.chart_node, command.chart_text, command.inserted);
             },
             .anchored => try session.spliceAnchored(command.section, command.paragraph, command.start, command.deleted, command.inserted),
             .field => try session.spliceFieldLabel(command.section, command.paragraph, command.begin_element, command.start, command.deleted, command.inserted),

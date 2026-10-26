@@ -16,7 +16,7 @@ pub fn inspectCollected(a: std.mem.Allocator, bytes: []const u8, version: @impor
     var tree = try Tree.parse(a, bytes, version, options.framing);
     defer tree.deinit(a);
     const paras = try paragraphs.inspect(tree, .{ .char_shapes = counts.count(.char_shape), .para_shapes = counts.count(.para_shape), .styles = counts.count(.style) });
-    const definition = try definitions.inspect(tree, version, counts.count(.numbering), counts.count(.border_fill));
+    const definition = try definitions.inspectWithMemoShapes(tree, version, counts.count(.numbering), counts.count(.border_fill), counts.memo_shape_count);
     var links = try Links.build(a, tree);
     defer links.deinit(a);
     const controls = try control_types.inspect(links.items);

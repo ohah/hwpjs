@@ -7,6 +7,7 @@ pub fn read(bytes: []const u8, offset: usize, encoding: Encoding) !?Scalar {
     if (offset == bytes.len) return null;
     const rest = bytes[offset..];
     if (encoding == .utf8) {
+        if (rest[0] < 0x80) return .{ .value = rest[0], .start = offset, .end = offset + 1 };
         const n = std.unicode.utf8ByteSequenceLength(rest[0]) catch return error.InvalidUnicodeEncoding;
         if (n > rest.len) return error.UnexpectedEnd;
         const c = std.unicode.utf8Decode(rest[0..n]) catch return error.InvalidUnicodeEncoding;

@@ -10,7 +10,7 @@ pub fn hasNamedFields(source: []const u8) !bool {
     var found = false;
     var it = framing.Iterator.init(source, .{});
     while (try it.next()) |entry| {
-        if (entry.tag == @intFromEnum(body.Tag.control_header)) {
+        if (entry.tag == @backingInt(body.Tag.control_header)) {
             const id = (try body.ControlHeader.parse(entry.payload)).id;
             if (id == controls.id("%clk") or id == controls.id("%bmk") or id == controls.id("%xrf") or id == controls.id("%unk") or id == controls.id("%sig")) found = true;
         }
@@ -41,23 +41,73 @@ pub fn validate(a: std.mem.Allocator, source: []const u8, version: @import("../v
     _ = try inspect(a, source, version, false, false, false, false);
 }
 
-/// Unchanged sections retain only validated local named-field topology.
+/// Unchanged sections may retain validated local named fields. Formula and
+/// external/reference-result restrictions remain in force across sections.
 pub fn validateUnselectedSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
     _ = try inspect(a, source, version, false, true, false, false);
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validate(a, source, version);
+}
+
+/// Structure commands leave other sections byte-for-byte unchanged. Local
+/// named fields still require their existing immutable topology validation.
+pub fn validateUnselectedStructureSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    validateUnselectedStructureBase(a, source, version) catch |err| switch (err) {
+        error.UnsupportedSectionControl, error.UnsupportedSectionStructure => {
+            if (try @import("unselected_memo_retention.zig").validate(a, source, version)) return;
+            return err;
+        },
+        else => return err,
+    };
+}
+
+fn validateUnselectedStructureBase(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    if (try hasNamedFields(source)) {
+        try validateUnselectedSection(a, source, version);
+    } else _ = try hasFormulas(a, source, version);
+}
+
+test "unselected source allows validated click fields but keeps formula and unknown fields blocked" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue1891/80250_regulatory_analysis.hwpx", a, .limited(2_000_000));
+    defer a.free(input);
+    var original = try @import("../text_source.zig").Source.open(a, input);
+    defer original.deinit();
+    const bytes = try original.decodeSection(a, 0);
+    defer a.free(bytes);
+    try std.testing.expect(try hasNamedFields(bytes));
+    try validateUnselectedSection(a, bytes, original.header.version());
+    try validateUnselectedStructureSection(a, bytes, original.header.version());
+    for ([_]u32{ controls.id("%fmu"), controls.id("%usr"), controls.id("zzzz") }) |id| {
+        var source: [8]u8 = undefined;
+        std.mem.writeInt(u32, source[0..4], 71 | (@as(u32, 4) << 20), .little);
+        std.mem.writeInt(u32, source[4..8], id, .little);
+        try std.testing.expectError(error.UnsupportedSectionControl, validateUnselectedSection(a, &source, original.header.version()));
+        // Named-field routing must not make arbitrary controls admissible.
+        if (id != controls.id("%fmu")) try std.testing.expectError(error.UnsupportedSectionControl, validateUnselectedStructureSection(a, &source, original.header.version()));
+    }
 }
 
 /// Only for an isolated text splice in another section. This section's model
 /// is unchanged by that transaction, so retain local object-number fields with
 /// the existing position-preserving checks. Never grant target/structure edits.
 pub fn validateUnselectedTextSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, false, true, true, true);
+    _ = inspect(a, source, version, false, true, true, true) catch |err| switch (err) {
+        error.UnsupportedSectionControl, error.UnsupportedSectionStructure => {
+            if (try @import("unselected_memo_retention.zig").validate(a, source, version)) return;
+            return err;
+        },
+        else => return err,
+    };
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateText(a, source, version);
 }
 
 /// Formula-aware text/format callers and isolated body structure retain known fields.
 pub fn hasFormulas(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !bool {
-    return inspect(a, source, version, true, false, false, false);
+    return inspectDetailed(a, source, version, true, false, false, false, true, false);
+}
+
+pub fn validateMemoTransaction(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    _ = try inspectDetailed(a, source, version, true, false, false, false, true, false);
 }
 
 /// Only for section transactions that separately validate mixed field bindings.
@@ -80,12 +130,27 @@ pub fn validateCharacterFormat(a: std.mem.Allocator, source: []const u8, version
 
 /// Unselected sections are retained unchanged during character formatting only.
 pub fn validateUnselectedCharacterFormat(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
-    _ = try inspect(a, source, version, false, true, true, false);
+    _ = inspect(a, source, version, false, true, true, false) catch |err| switch (err) {
+        error.UnsupportedSectionControl, error.UnsupportedSectionStructure => {
+            if (try @import("unselected_memo_retention.zig").validate(a, source, version)) return;
+            return err;
+        },
+        else => return err,
+    };
     if (try hasNamedFields(source)) try @import("field_source_bindings.zig").validateCharacterFormat(a, source, version);
 }
 
+/// Company source 전용. 호출자는 retained_extended_field.read로 완전 binding도 검증해야 한다.
+pub fn validateCompanyTextSection(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version) !void {
+    _ = try inspectDetailed(a, source, version, false, false, false, false, false, true);
+}
+
 fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool, retain_revision_signs: bool) !bool {
+    return inspectDetailed(a, source, version, allow_formulas, allow_named_fields, retain_object_numbers, retain_revision_signs, false, false);
+}
+fn inspectDetailed(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool, retain_revision_signs: bool, retain_memos: bool, retain_company: bool) !bool {
     var formulas = false;
+    var memos_checked = false;
     var forms: ?@import("form_source_retention.zig").Report = null;
     defer if (forms) |*value| value.deinit(a);
     var tree: ?@import("../body/tree.zig").Tree = null;
@@ -117,6 +182,16 @@ fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../versio
                     continue;
                 }
                 const code = controls.expectedCode(header.id) orelse return error.UnsupportedSectionControl;
+                if (retain_company and header.id == controls.id("%usr")) {
+                    const classified = try @import("../body/retained_extended_field.zig").classify(header, version);
+                    if (classified.kind != .company) return error.UnsupportedSectionControl;
+                    continue;
+                }
+                if (retain_memos and try @import("memo_source_retention.zig").field(header)) {
+                    if (!memos_checked) try @import("memo_source_retention.zig").inspect(a, source, version);
+                    memos_checked = true;
+                    continue;
+                }
                 // Cross-reference/custom fields can carry unresolved external
                 // text positions. A local hyperlink alone is not that policy.
                 if (allow_named_fields and retain_revision_signs and try @import("revision_sign_text_retention.zig").header(header)) {
@@ -131,7 +206,11 @@ fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../versio
                     if (!(try @import("../body/cross_reference_name_result.zig").supports(view)) and !(retain_object_numbers and try @import("cross_reference_format_retention.zig").objectNumber(view))) return error.UnsupportedSectionControl;
                 } else if (code == 3 and header.id != controls.id("%hlk")) return error.UnsupportedSectionControl;
             },
-            .memo_list => return error.UnsupportedSectionStructure,
+            .memo_list => {
+                if (!retain_memos) return error.UnsupportedSectionStructure;
+                if (!memos_checked) try @import("memo_source_retention.zig").inspect(a, source, version);
+                memos_checked = true;
+            },
             else => {},
         }
     }

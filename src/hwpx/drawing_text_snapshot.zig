@@ -111,7 +111,7 @@ test "HWPX drawing text snapshot preserves actual separate caption with allocati
     try std.testing.expectEqual(@as(?i64, 850), value.caption.?.gap);
     try std.testing.expectEqual(@as(?u32, 11763), value.caption.?.last_width);
     try std.testing.expect(value.caption.?.list_node != value.text.list_node);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, state: *const editor.Session, index: usize, expected: Snapshot) !void {
             try std.testing.expectEqualDeep(expected, try read(allocator, state, 0, index));
         }

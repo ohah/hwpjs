@@ -28,14 +28,6 @@ pub fn set(session: *editor.Session, section: usize, node: usize, kind: Kind, te
     sections[section].dutmal_texts = values;
     var candidate = session.*;
     candidate.sections = sections;
-    var total: usize = 0;
-    for (candidate.sections) |other| {
-        total += try other.textBytes(session.options.max_text_bytes -| total);
-        for (other.dutmal_texts.entries.items) |entry| {
-            if (entry.text.len > session.options.max_text_bytes -| total) return error.LimitExceeded;
-            total += entry.text.len;
-        }
-    }
     const saved = try candidate.save();
     defer a.free(saved);
     std.mem.swap(@import("dutmal_text_values.zig").Values, &part.dutmal_texts, &values);

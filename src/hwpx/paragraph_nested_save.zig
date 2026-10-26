@@ -7,22 +7,38 @@ const writer = @import("xml_source_writer.zig");
 const sourceOffset = @import("paragraph_nested_source.zig").offset;
 
 pub fn fold(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, parent: usize, rendered: []const u8, limit: usize) ![]u8 {
-    return foldDepth(a, tree, current, original, parent, rendered, limit, 0, null, null, false);
+    return foldOptions(a, tree, current, original, parent, rendered, .{}, limit);
+}
+
+pub fn foldOptions(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, parent: usize, rendered: []const u8, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {
+    return foldDepth(a, tree, current, original, parent, rendered, limit, 0, null, null, false, options);
 }
 
 pub fn foldContinuation(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, parent: usize, rendered: []const u8, limit: usize) ![]u8 {
-    return foldDepth(a, tree, current, original, parent, rendered, limit, 0, null, null, true);
+    return foldContinuationOptions(a, tree, current, original, parent, rendered, .{}, limit);
+}
+
+pub fn foldContinuationOptions(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, parent: usize, rendered: []const u8, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {
+    return foldDepth(a, tree, current, original, parent, rendered, limit, 0, null, null, true, options);
 }
 
 pub fn foldJoined(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, joined: *const @import("paragraph_joined_values.zig").Joined, rendered: []const u8, limit: usize) ![]u8 {
+    return foldJoinedOptions(a, tree, current, original, joined, rendered, .{}, limit);
+}
+
+pub fn foldJoinedOptions(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, joined: *const @import("paragraph_joined_values.zig").Joined, rendered: []const u8, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {
     try joined.validate();
-    return foldDepth(a, tree, current, original, joined.pieces[0].template_element, rendered, limit, 0, joined, null, false);
+    return foldDepth(a, tree, current, original, joined.pieces[0].template_element, rendered, limit, 0, joined, null, false, options);
 }
 
 pub fn foldOwnedJoined(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, joined: *const @import("paragraph_joined_values.zig").Joined, owned: []const model.ProtectedPosition, rendered: []const u8, limit: usize) ![]u8 {
+    return foldOwnedJoinedOptions(a, tree, current, original, joined, owned, rendered, .{}, limit);
+}
+
+pub fn foldOwnedJoinedOptions(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, joined: *const @import("paragraph_joined_values.zig").Joined, owned: []const model.ProtectedPosition, rendered: []const u8, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {
     const positions = try @import("paragraph_joined_positions.zig").buildOwnedAnchors(a, tree, joined, owned);
     defer a.free(positions);
-    return foldDepth(a, tree, current, original, joined.pieces[0].template_element, rendered, limit, 0, joined, owned, false);
+    return foldDepth(a, tree, current, original, joined.pieces[0].template_element, rendered, limit, 0, joined, owned, false, options);
 }
 
 test "HWPX joined nested save binds duplicate child XML to each original host" {
@@ -136,7 +152,7 @@ test "HWPX joined nested save binds duplicate child XML to each original host" {
     try std.testing.expectEqualStrings(source, tree.source);
 }
 
-fn foldDepth(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, parent: usize, rendered: []const u8, limit: usize, depth: usize, joined: ?*const @import("paragraph_joined_values.zig").Joined, owned: ?[]const model.ProtectedPosition, continuation: bool) ![]u8 {
+fn foldDepth(a: std.mem.Allocator, tree: *const Tree, current: *const model.Values, original: *const model.Values, parent: usize, rendered: []const u8, limit: usize, depth: usize, joined: ?*const @import("paragraph_joined_values.zig").Joined, owned: ?[]const model.ProtectedPosition, continuation: bool, options: @import("text_sites.zig").Options) ![]u8 {
     if (depth >= 128) return error.LimitExceeded;
     var changes: std.ArrayList(writer.Change) = .empty;
     defer {
@@ -180,19 +196,19 @@ fn foldDepth(a: std.mem.Allocator, tree: *const Tree, current: *const model.Valu
         };
         const baseline = before orelse return error.SourceBindingMismatch;
         const own = if (group_end > child_index + 1)
-            try writeSplitGroup(a, tree, current.paragraphs[child_index..group_end], limit)
+            try writeSplitGroup(a, tree, current.paragraphs[child_index..group_end], options, limit)
         else if (child.joined()) |view|
-            try @import("paragraph_joined_xml.zig").write(a, tree, &view, .{}, limit)
+            try @import("paragraph_joined_xml.zig").write(a, tree, &view, options, limit)
         else if (child.column_boundaries != null)
-            try @import("column_boundary_current_xml.zig").write(a, tree, child, .{}, limit)
+            try @import("column_boundary_current_xml.zig").write(a, tree, child, options, limit)
         else if (child.character_styles != null)
-            try @import("character_style_paragraph_xml.zig").write(a, tree, child, limit)
+            try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, child, &.{}, options, limit)
         else
             try writeText(a, tree, baseline, child, limit);
         defer a.free(own);
         const formatted = if (group_end == child_index + 1 and child.paragraph_shape_id != null) try @import("paragraph_format_write.zig").writeCurrent(a, tree, child.template_element, own, child.paragraph_shape_id.?, limit) else null;
         defer if (formatted) |value| a.free(value);
-        const nested = try foldDepth(a, tree, current, original, child.template_element, formatted orelse own, limit, depth + 1, null, null, false);
+        const nested = try foldDepth(a, tree, current, original, child.template_element, formatted orelse own, limit, depth + 1, null, null, false, options);
         var nested_owned = true;
         defer if (nested_owned) a.free(nested);
         const raw = tree.sourceOf(child.template_element);
@@ -238,18 +254,18 @@ fn removedPageArea(tree: *const Tree, parent: usize, child: usize) bool {
     return false;
 }
 
-fn writeSplitGroup(a: std.mem.Allocator, tree: *const Tree, paragraphs: []const model.Paragraph, limit: usize) ![]u8 {
+fn writeSplitGroup(a: std.mem.Allocator, tree: *const Tree, paragraphs: []const model.Paragraph, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {
     var output: std.ArrayList(u8) = .empty;
     defer output.deinit(a);
     for (paragraphs) |*paragraph| {
         if (paragraph.protected_positions != null or paragraph.column_boundaries != null)
             return error.UnsupportedStructuralCharacterStyle;
         const xml = if (paragraph.joined()) |view|
-            try @import("paragraph_joined_xml.zig").write(a, tree, &view, .{}, limit -| output.items.len)
+            try @import("paragraph_joined_xml.zig").write(a, tree, &view, options, limit -| output.items.len)
         else if (paragraph.character_styles != null)
-            try @import("character_style_paragraph_xml.zig").write(a, tree, paragraph, limit -| output.items.len)
+            try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, paragraph, &.{}, options, limit -| output.items.len)
         else
-            try @import("paragraph_split_xml.zig").writeSites(a, tree, paragraph.template_element, &paragraph.sites, paragraph.generated_id != null, paragraph.generated_id orelse 0, limit -| output.items.len);
+            try @import("paragraph_split_xml.zig").writeSitesWithOptions(a, tree, paragraph.template_element, &paragraph.sites, options, paragraph.generated_id != null, paragraph.generated_id orelse 0, limit -| output.items.len);
         defer a.free(xml);
         const formatted = if (paragraph.paragraph_shape_id) |id| try @import("paragraph_format_write.zig").writeCurrent(a, tree, paragraph.template_element, xml, id, limit -| output.items.len) else null;
         defer if (formatted) |value| a.free(value);

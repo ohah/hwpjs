@@ -63,7 +63,7 @@ test "HWPX styled field continuation retains markers without duplicating section
     try std.testing.expect(std.mem.indexOf(u8, continuation, "colPr") == null);
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, continuation, "fieldBegin"));
     try std.testing.expectEqual(@as(usize, 1), std.mem.count(u8, continuation, "fieldEnd"));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const @import("xml_part_tree.zig").Tree, row: *const @import("paragraph_structure_values.zig").Paragraph) !void {
             const output = try @import("character_style_paragraph_xml.zig").write(allocator, parsed, row, 4000);
             defer allocator.free(output);

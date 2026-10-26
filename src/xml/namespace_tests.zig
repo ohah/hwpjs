@@ -2,6 +2,9 @@ const std = @import("std");
 const t = std.testing;
 const xml = @import("root.zig");
 const options: xml.document.Options = .{ .validate_namespaces = true };
+test {
+    _ = @import("namespace_scratch_tests.zig");
+}
 test "XML namespace QName and NCName share XML character rules" {
     for ([_][]const u8{ "a", "한글", "😀", "p:a", "한:😀", "xml:a", "XMLfoo:a" }) |raw| {
         const name = try xml.qname.parse(.{ .raw = raw, .encoding = .utf8 });

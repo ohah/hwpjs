@@ -12,6 +12,8 @@ pub const Span = struct {
     tab_element: ?usize = null,
     /// Protected direct run object, never a text site or tab.
     anchor_element: ?usize = null,
+    /// Identity of a canonical emitted title fragment; not a text owner.
+    canonical_fragment: ?usize = null,
 };
 
 pub fn fromProjection(a: std.mem.Allocator, input: []const @import("character_style_projection.zig").Span, limit: usize) ![]Span {
@@ -63,7 +65,7 @@ pub fn prepare(a: std.mem.Allocator, sites: *const Sites, current: []const Span,
 pub fn append(a: std.mem.Allocator, output: *std.ArrayList(Span), span: Span, limit: usize) !void {
     if (output.items.len > 0 and span.end_unit > span.start_unit) {
         const last = &output.items[output.items.len - 1];
-        if (last.end_unit > last.start_unit and last.end_unit == span.start_unit and last.site_index == span.site_index and last.site_start_unit == span.site_start_unit and last.run_element == span.run_element and last.char_shape_id == span.char_shape_id and last.tab_element == span.tab_element and last.anchor_element == span.anchor_element) {
+        if (last.end_unit > last.start_unit and last.end_unit == span.start_unit and last.site_index == span.site_index and last.site_start_unit == span.site_start_unit and last.run_element == span.run_element and last.char_shape_id == span.char_shape_id and last.tab_element == span.tab_element and last.anchor_element == span.anchor_element and last.canonical_fragment == span.canonical_fragment) {
             last.end_unit = span.end_unit;
             return;
         }

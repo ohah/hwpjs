@@ -123,6 +123,19 @@ pub fn readRectangle(a: std.mem.Allocator, tree: *const Tree, rectangle: usize, 
     if (rectangle >= tree.elements.len or !fields.childIs(tree, rectangle, "rect")) return error.InvalidDrawingTextNode;
     return readComponent(a, tree, rectangle, max_matrices);
 }
+pub fn readEllipse(a: std.mem.Allocator, tree: *const Tree, node: usize, max_matrices: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ellipse")) return error.InvalidEllipseGeometryNode;
+    return readComponent(a, tree, node, max_matrices);
+}
+pub fn readCurve(a: std.mem.Allocator, tree: *const Tree, node: usize, max_matrices: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "curve")) return error.InvalidCurveGeometryNode;
+    return readComponent(a, tree, node, max_matrices);
+}
+
+pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize, max_matrices: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
+    return readComponent(a, tree, node, max_matrices);
+}
 
 fn readComponent(a: std.mem.Allocator, tree: *const Tree, picture: usize, max_matrices: usize) !Values {
     var matrices: std.ArrayList(Matrix) = .empty;

@@ -4,6 +4,8 @@ const borrowed = @import("paragraph_display_shape.zig");
 pub const Measure = struct { value: ?i64, unit: ?[]u8 };
 pub const Shape = struct {
     id: u32,
+    tab_pr_id: ?u32 = null,
+    break_settings: ?@import("paragraph_break_settings.zig").Values = null,
     horizontal: ?[]u8 = null,
     spacing_type: ?[]u8 = null,
     spacing: ?Measure = null,
@@ -23,7 +25,7 @@ fn measure(a: std.mem.Allocator, value: borrowed.Measure) !Measure {
 }
 
 pub fn clone(a: std.mem.Allocator, source: borrowed.Shape) !Shape {
-    var result: Shape = .{ .id = source.id };
+    var result: Shape = .{ .id = source.id, .tab_pr_id = source.tab_pr_id, .break_settings = source.break_settings };
     errdefer result.deinit(a);
     if (source.horizontal) |value| result.horizontal = try value.toUtf8(a, 4096);
     if (source.spacing_type) |value| result.spacing_type = try value.toUtf8(a, 4096);
@@ -36,7 +38,7 @@ pub fn clone(a: std.mem.Allocator, source: borrowed.Shape) !Shape {
 
 test "HWPX paragraph display owned snapshot survives tree destruction and allocation failures" {
     const a = std.testing.allocator;
-    var tree = try @import("xml_part_tree.zig").parse(a, "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><h:paraPr id='9'><h:align horizontal='RIG&#72;T'/><h:lineSpacing type='PERCENT' value='0' unit='HWPUNIT'/><h:margin><c:intent value='-2' unit='HWPUNIT'/></h:margin></h:paraPr></h:head>", .header, null, 0, .{});
+    var tree = try @import("xml_part_tree.zig").parse(a, "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><h:paraPr id='9'><h:breakSetting keepWithNext='0' keepLines='1'/><h:align horizontal='RIG&#72;T'/><h:lineSpacing type='PERCENT' value='0' unit='HWPUNIT'/><h:margin><c:intent value='-2' unit='HWPUNIT'/></h:margin></h:paraPr></h:head>", .header, null, 0, .{});
     var tree_live = true;
     defer if (tree_live) tree.deinit(a);
     const source = try borrowed.read(a, &tree, 1);
@@ -53,6 +55,9 @@ test "HWPX paragraph display owned snapshot survives tree destruction and alloca
     tree_live = false;
     try std.testing.expectEqualStrings("RIGHT", result.horizontal.?);
     try std.testing.expectEqualStrings("PERCENT", result.spacing_type.?);
+    try std.testing.expectEqual(@as(?bool, false), result.break_settings.?.keep_with_next);
+    try std.testing.expectEqual(@as(?bool, true), result.break_settings.?.keep_lines);
+    try std.testing.expect(result.break_settings.?.widow_orphan == null);
     try std.testing.expectEqual(@as(?i64, 0), result.spacing.?.value);
     try std.testing.expectEqual(@as(?i64, -2), result.margins[0].?.value);
     try std.testing.expect(result.margins[1] == null);

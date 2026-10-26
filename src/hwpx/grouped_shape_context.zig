@@ -6,7 +6,7 @@ pub const Context = struct { parent_container: usize, root_anchor: usize, depth:
 pub fn read(tree: *const Tree, node: usize) !?Context {
     if (node >= tree.elements.len) return error.InvalidPartTree;
     const element = tree.elements[node];
-    if (!element.is(uri, "pic") and !element.is(uri, "rect") and !element.is(uri, "container")) return null;
+    if (!element.is(uri, "pic") and !element.is(uri, "rect") and !element.is(uri, "ellipse") and !element.is(uri, "curve") and !element.is(uri, "container")) return null;
     const parent = element.parent orelse return null;
     if (parent >= node) return error.InvalidPartTree;
     if (!tree.elements[parent].is(uri, "container")) return null;
@@ -32,6 +32,20 @@ test "HWPX grouped shape context distinguishes exact parent depth and namespace"
     try std.testing.expectEqualDeep((try read(&tree, 6)).?, (try read(&tree, 7)).?);
     try std.testing.expect(try read(&tree, 3) == null);
     try std.testing.expect(try read(&tree, 8) == null);
+    tree.elements[5].parent = 6;
+    try std.testing.expectError(error.InvalidPartTree, read(&tree, 6));
+}
+
+test "HWPX grouped ellipse context preserves nested root and exact namespace" {
+    const std = @import("std");
+    const a = std.testing.allocator;
+    var tree = try @import("section_tree.zig").parse(a, "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:f='urn:foreign'><p:p><p:run><p:container><p:ellipse/><p:container><p:ellipse/><f:ellipse/></p:container></p:container><p:ellipse/></p:run></p:p></s:sec>", 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectEqualDeep(Context{ .parent_container = 3, .root_anchor = 3, .depth = 1 }, (try read(&tree, 4)).?);
+    try std.testing.expectEqualDeep(Context{ .parent_container = 5, .root_anchor = 3, .depth = 2 }, (try read(&tree, 6)).?);
+    try std.testing.expect(try read(&tree, 7) == null);
+    try std.testing.expect(try read(&tree, 8) == null);
+    try std.testing.expectError(error.InvalidPartTree, read(&tree, tree.elements.len));
     tree.elements[5].parent = 6;
     try std.testing.expectError(error.InvalidPartTree, read(&tree, 6));
 }

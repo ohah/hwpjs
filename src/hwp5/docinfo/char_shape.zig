@@ -2,6 +2,12 @@ const Reader = @import("../../binary/reader.zig").Reader;
 const Version = @import("../version.zig").Version;
 pub const TailPolicy = enum { required, observed_unresolved_four_bytes };
 pub const CharShape = struct {
+    pub const attributes_offset: usize = 46;
+    pub const underline_color_offset: usize = 56;
+    pub const base_size: usize = 68;
+    pub const border_fill_offset: usize = 68;
+    pub const strike_color_offset: usize = 70;
+    pub const independent_strike_size: usize = 74;
     font_ids: [7]u16,
     ratios: [7]u8,
     spacing: [7]i8,
@@ -64,13 +70,16 @@ pub const CharShape = struct {
         for (&v.relative_sizes) |*x| x.* = try r.readInt(u8);
         for (&v.offsets) |*x| x.* = try r.readInt(i8);
         v.size = try r.readInt(i32);
+        @import("std").debug.assert(r.offset == attributes_offset);
         v.attributes = try r.readInt(u32);
         v.shadow_x = try r.readInt(i8);
         v.shadow_y = try r.readInt(i8);
         v.text_color = try r.readInt(u32);
+        @import("std").debug.assert(r.offset == underline_color_offset);
         v.underline_color = try r.readInt(u32);
         v.shade_color = try r.readInt(u32);
         v.shadow_color = try r.readInt(u32);
+        @import("std").debug.assert(r.offset == base_size);
         v.unresolved_tail = null;
         if (policy == .observed_unresolved_four_bytes and version.raw >= 0x05000300 and bytes.len - r.offset == 4) {
             v.unresolved_tail = try r.take(4);

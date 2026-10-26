@@ -43,7 +43,7 @@ pub fn splice(self: anytype, section_index: usize, index: usize, start: u32, del
             other += site.text.len;
         }
     }
-    if (current.paragraphs[index].character_styles != null) return @import("character_style_splice.zig").splicePositions(a, &current.paragraphs[index], segments, start, deleted, inserted, section_limit -| other);
+    if (current.paragraphs[index].character_styles != null) return @import("character_style_splice.zig").splicePositionsWithTree(a, &self.sections[section_index].tree, &current.paragraphs[index], segments, start, deleted, inserted, section_limit -| other);
     return @import("text_splice_transaction.zig").spliceProjected(a, &current.paragraphs[index].sites, segments, start, deleted, inserted, section_limit -| other, null);
 }
 

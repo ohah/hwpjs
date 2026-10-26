@@ -27,63 +27,6 @@ export fn hwpx_edit_output_ptr() usize {
 export fn hwpx_edit_output_len() usize {
     return if (output) |bytes| bytes.len else 0;
 }
-export fn hwpx_edit_chart_points(section: u32, wrapper: u32) u32 {
-    hwpx_edit_output_free();
-    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
-    var snapshot = @import("../hwpx/chart_current_snapshot.zig").read(a, session, section, wrapper) catch |err| return fail(err);
-    defer snapshot.deinit(a);
-    output = std.json.Stringify.valueAlloc(a, snapshot, .{}) catch |err| return fail(err);
-    return 1;
-}
-export fn hwpx_edit_chart_series_text(section: u32, wrapper: u32) u32 {
-    hwpx_edit_output_free();
-    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
-    var values = @import("../hwpx/chart_series_text_session.zig").read(a, session, section, wrapper) catch |err| return fail(err);
-    defer values.deinit(a);
-    output = std.json.Stringify.valueAlloc(a, .{ .kind = "direct_series", .values = values.items }, .{}) catch |err| return fail(err);
-    if (output.?.len > session.options.max_output_bytes) {
-        hwpx_edit_output_free();
-        return fail(error.LimitExceeded);
-    }
-    return 1;
-}
-export fn hwpx_edit_chart_series_text_max_bytes() u32 {
-    return @import("../hwpx/chart_series_text_values.zig").default_max_value_bytes;
-}
-export fn hwpx_edit_set_chart_series_text(section: u32, wrapper: u32, ordinal: u32, ptr: [*]const u8, size: usize) u32 {
-    if (size > hwpx_edit_chart_series_text_max_bytes()) return fail(error.LimitExceeded);
-    apply(.{ .kind = .chart_series_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_text = ordinal, .inserted = ptr[0..size] }) catch |err| return fail(err);
-    return 1;
-}
-export fn hwpx_edit_chart_nodes(section: u32) u32 {
-    hwpx_edit_output_free();
-    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
-    const nodes = @import("../hwpx/chart_current_snapshot.zig").nodes(a, session, section) catch |err| return fail(err);
-    defer a.free(nodes);
-    output = std.json.Stringify.valueAlloc(a, nodes, .{}) catch |err| return fail(err);
-    return 1;
-}
-export fn hwpx_edit_chart_sites(section: u32) u32 {
-    hwpx_edit_output_free();
-    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
-    const sites = @import("../hwpx/chart_display_sites.zig").read(a, session, section) catch |err| return fail(err);
-    defer a.free(sites);
-    output = std.json.Stringify.valueAlloc(a, sites, .{}) catch |err| return fail(err);
-    return 1;
-}
-export fn hwpx_edit_chart_point_max_bytes() u32 {
-    return @import("../hwpx/chart_point_write.zig").max_value_bytes;
-}
-export fn hwpx_edit_set_chart_numeric_point(section: u32, wrapper: u32, point: u32, ptr: [*]const u8, size: usize) u32 {
-    if (size > hwpx_edit_chart_point_max_bytes()) return fail(error.LimitExceeded);
-    apply(.{ .kind = .chart_numeric_point, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_point = point, .inserted = ptr[0..size] }) catch |err| return fail(err);
-    return 1;
-}
-export fn hwpx_edit_set_chart_point(section: u32, wrapper: u32, point: u32, ptr: [*]const u8, size: usize) u32 {
-    if (size > hwpx_edit_chart_point_max_bytes()) return fail(error.LimitExceeded);
-    apply(.{ .kind = .chart_point, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_point = point, .inserted = ptr[0..size] }) catch |err| return fail(err);
-    return 1;
-}
 export fn hwpx_edit_save_for_display() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -117,6 +60,13 @@ fn openWithChartPolicy(ptr: [*]const u8, size: usize, allow_observed_deviations:
     const next = editor.open(a, ptr[0..size], .{ .allow_observed_chart_ole_deviations = allow_observed_deviations }) catch |err| return fail(err);
     hwpx_edit_close();
     active = next;
+    return 1;
+}
+// Optional independent document capability; existing exports/signatures remain unchanged.
+export fn hwpx_edit_document_provenance() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/document_provenance.zig").encode(a, session) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_section_count() u32 {
@@ -172,8 +122,76 @@ export fn hwpx_edit_dutmal_display_text(section: u32, node: u32) u32 {
     output = @import("../hwpx/dutmal_display_sites.zig").text(session, section, node) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_field_label_display_text(section: u32, paragraph: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/field_label_display_text.zig").read(session, section, paragraph) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_dutmal_text_max_bytes() u32 {
     return @intCast((editor.Options{}).max_text_bytes);
+}
+export fn hwpx_edit_equation_script_max_bytes() u32 {
+    return @intCast((@import("../hwpx/equation.zig").Options{}).max_script_bytes);
+}
+export fn hwpx_edit_equation_sources(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/equation_script_sources.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_equation_sites(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const rows = @import("../hwpx/equation_display_sites.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_equation_styles(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var report = @import("../hwpx/equation_display_styles.zig").read(a, session, section) catch |err| return fail(err);
+    defer report.deinit();
+    output = std.json.Stringify.valueAlloc(a, report.rows, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_equation_scripts(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var report = @import("../hwpx/equation_script_snapshot.zig").read(a, session, section, .{}) catch |err| return fail(err);
+    defer report.deinit();
+    output = std.json.Stringify.valueAlloc(a, .{ .rows = report.rows, .script_bytes = report.script_bytes }, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_equation_script(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = session.equationScript(section, node) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_equation_script(section: u32, node: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_equation_script_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .equation_script, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = ptr[0..size], .equation_node = node }) catch |err| return fail(err);
+    return 1;
 }
 export fn hwpx_edit_dutmal_text(section: u32, node: u32, kind: u32) u32 {
     hwpx_edit_output_free();
@@ -278,6 +296,22 @@ export fn hwpx_edit_drawing_text_snapshot(section: u32, node: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_drawing_text_requested_max_nodes() u32 {
+    return @import("drawing_text_requested_wire.zig").max_nodes;
+}
+export fn hwpx_edit_drawing_text_requested(section: u32, ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (section >= session.sections.len) return fail(error.InvalidSectionIndex);
+    const wire = @import("drawing_text_requested_wire.zig");
+    if (size > wire.max_bytes) return fail(error.LimitExceeded);
+    const nodes = wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer a.free(nodes);
+    var report = @import("../hwpx/drawing_text_requested.zig").read(a, session, section, nodes) catch |err| return fail(err);
+    defer report.deinit(a);
+    output = wire.encode(a, &report) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_drawing_text_snapshots(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -314,6 +348,24 @@ export fn hwpx_edit_rectangle_rendering_sources(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_ellipse_sources(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/ellipse_sources.zig").encode(a, session, section) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_curve_geometry(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/curve_geometry_source.zig").encode(a, session, section, node) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_curve_owner(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/curve_display_owner.zig").encode(a, session, section, node) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_created_tables(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -347,6 +399,22 @@ export fn hwpx_edit_section_fill_brushes(section: u32) u32 {
     return 1;
 }
 
+export fn hwpx_edit_ole_bytes(section: u32, node: u32, allow_external_copy: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (allow_external_copy > 1) return fail(error.InvalidOleSourceOptions);
+    var value = @import("../hwpx/ole_source_bytes.zig").read(a, session, section, node, .{
+        .allow_external_packaged_copy = allow_external_copy == 1,
+        .max_bytes = @min(64 * 1024 * 1024, session.options.max_output_bytes -| 1),
+    }) catch |err| return fail(err);
+    defer value.deinit(a);
+    if (session.options.max_output_bytes == 0) return fail(error.LimitExceeded);
+    const framed = a.alloc(u8, value.bytes.len + 1) catch |err| return fail(err);
+    framed[0] = @intFromBool(value.declared_external);
+    @memcpy(framed[1..], value.bytes);
+    output = framed;
+    return 1;
+}
 export fn hwpx_edit_ole_sites(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -386,10 +454,6 @@ export fn hwpx_edit_picture_owners(section: u32) u32 {
     const rows = @import("../hwpx/picture_owner_batch_report.zig").read(a, session, section) catch |err| return fail(err);
     defer a.free(rows);
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
-    if (output.?.len > session.options.max_output_bytes) {
-        hwpx_edit_output_free();
-        return fail(error.LimitExceeded);
-    }
     return 1;
 }
 export fn hwpx_edit_line_nodes(section: u32) u32 {
@@ -435,6 +499,21 @@ export fn hwpx_edit_line_geometry(section: u32, node: u32) u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     const geometry = @import("../hwpx/line_display_snapshot.zig").readGeometry(a, session, section, node) catch |err| return fail(err);
     output = std.json.Stringify.valueAlloc(a, .{ .current = true, .coordinateSpace = "renderingInfo", .paintable = false, .geometry = geometry }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_line_display_batch_max_nodes() u32 {
+    return @import("line_display_batch.zig").max_nodes;
+}
+export fn hwpx_edit_line_display_batch(section: u32, ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const wire = @import("line_display_batch.zig");
+    if (size > wire.max_bytes) return fail(error.LimitExceeded);
+    const nodes = wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer a.free(nodes);
+    var report = @import("../hwpx/line_display_snapshots.zig").read(a, session, section, nodes) catch |err| return fail(err);
+    defer report.deinit(a);
+    output = wire.encode(a, &report) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_connector_rendering_source(section: u32, node: u32) u32 {
@@ -483,6 +562,29 @@ export fn hwpx_edit_table_pagination(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_table_border_sources(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var report = @import("../hwpx/table_border_sources.zig").read(a, session, section) catch |err| return fail(err);
+    defer report.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, .{ .sourceOnly = true, .cells = report.cells, .styles = report.styles }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_table_border_sources_batch_max_sections() u32 {
+    return @import("table_border_sources_batch.zig").max_sections;
+}
+export fn hwpx_edit_table_border_sources_batch(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const wire = @import("table_border_sources_batch.zig");
+    if (size > wire.max_bytes) return fail(error.LimitExceeded);
+    const sections = wire.decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer a.free(sections);
+    var report = @import("../hwpx/table_border_sources_batch.zig").read(a, session, sections) catch |err| return fail(err);
+    defer report.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, wire.Json{ .report = &report }, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_table_geometry(section: u32, node: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -511,6 +613,14 @@ export fn hwpx_edit_picture_caption_bindings(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     const bindings = @import("../hwpx/picture_caption_bindings.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(bindings);
+    output = std.json.Stringify.valueAlloc(a, bindings, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_container_caption_bindings(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const bindings = @import("../hwpx/container_caption_bindings.zig").read(a, session, section) catch |err| return fail(err);
     defer a.free(bindings);
     output = std.json.Stringify.valueAlloc(a, bindings, .{}) catch |err| return fail(err);
     return 1;
@@ -613,6 +723,12 @@ export fn hwpx_edit_picture_bytes(section: u32, picture: u32) u32 {
     output = @import("../hwpx/picture_source_bytes.zig").read(a, session, section, picture, 64 * 1024 * 1024) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_table_background_bytes(section: u32, list_node: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/table_background_source_bytes.zig").read(a, session, section, list_node, 64 * 1024 * 1024) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_picture_owner(section: u32, picture: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -649,15 +765,8 @@ export fn hwpx_edit_picture_geometry(section: u32, picture: u32) u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     if (section >= session.sections.len) return fail(error.InvalidSectionIndex);
     const tree = &session.sections[section].tree;
-    var values = @import("../hwpx/picture_geometry_values.zig").read(a, tree, picture) catch |err| return fail(err);
-    for (session.sections[section].picture_dimensions.items) |entry| {
-        if (entry.picture_node != picture) continue;
-        if (entry.update.display) |pair| {
-            values.width = pair[0];
-            values.height = pair[1];
-        }
-        break;
-    }
+    const current = &session.sections[section];
+    const values = @import("../hwpx/picture_current_geometry.zig").read(a, tree, &current.picture_dimensions, &current.picture_frames, picture) catch |err| return fail(err);
     output = @import("hwpx_picture_geometry_wire.zig").encode(a, values) catch |err| return fail(err);
     return 1;
 }
@@ -744,15 +853,6 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try value.apply(session, command);
     } else switch (command.kind) {
-        .chart_numeric_point, .chart_point => {
-            if (command.start != 0 or command.deleted != 0) return error.InvalidChartPointCommand;
-            _ = if (command.kind == .chart_point) try session.setChartPoint(command.section, command.chart_node, command.chart_point, command.inserted) else try session.setChartNumericPoint(command.section, command.chart_node, command.chart_point, command.inserted);
-        },
-        .chart_series_text => {
-            if (command.start != 0 or command.deleted != 0) return error.InvalidChartSeriesTextCommand;
-            _ = try session.setChartSeriesText(command.section, command.chart_node, command.chart_text, command.inserted);
-        },
-        .dutmal_text => _ = try session.setDutmalText(command.section, command.dutmal_node, command.dutmal_kind, command.inserted),
         .created_cell_text => {
             _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
         },
@@ -772,6 +872,22 @@ fn apply(command: histories.Command) !void {
         },
         .formula_result_splice => {
             _ = try session.spliceManualFormulaResult(command.section, command.begin_element, command.start, command.deleted, command.inserted);
+        },
+        .chart_series_text => {
+            if (command.start != 0 or command.deleted != 0) return error.InvalidChartSeriesTextCommand;
+            _ = try session.setChartSeriesText(command.section, command.chart_node, command.chart_text, command.inserted);
+        },
+        .chart_rich_text => {
+            if (command.start != 0 or command.deleted != 0) return error.InvalidChartRichTextCommand;
+            _ = try session.setChartRichText(command.section, command.chart_node, command.chart_text, command.inserted);
+        },
+        .chart_numeric_point, .chart_point => {
+            if (command.start != 0 or command.deleted != 0) return error.InvalidChartPointCommand;
+            _ = if (command.kind == .chart_point) try session.setChartPoint(command.section, command.chart_node, command.chart_point, command.inserted) else try session.setChartNumericPoint(command.section, command.chart_node, command.chart_point, command.inserted);
+        },
+        .chart_points => {
+            if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidChartPointCommand;
+            _ = try session.setChartPoints(command.section, command.chart_node, command.chart_points);
         },
         .character_properties => {
             if (command.inserted.len != 0) return error.InvalidFormatCommand;
@@ -798,6 +914,12 @@ fn apply(command: histories.Command) !void {
         },
         .check_box_state => {
             _ = try session.setCheckBoxState(command.section, command.form_node, command.checkbox_state);
+        },
+        .dutmal_text => {
+            _ = try session.setDutmalText(command.section, command.dutmal_node, command.dutmal_kind, command.inserted);
+        },
+        .equation_script => {
+            _ = try session.setEquationScript(command.section, command.equation_node, command.inserted);
         },
         .picture_resize => {
             _ = try session.resizePicture(command.section, command.picture_node, command.picture_size);
@@ -826,6 +948,15 @@ fn apply(command: histories.Command) !void {
             _ = if (command.right_paragraph) |right| try session.mergeParagraphPair(command.section, command.paragraph, right) else try session.mergeParagraph(command.section, command.paragraph);
         },
     }
+}
+export fn hwpx_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
+    const wire = @import("cell_size_batch.zig");
+    if (length > wire.max_cells * wire.stride) return fail(error.LimitExceeded);
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const commands = wire.build(.hwpx, a, ptr[0..length]) catch |err| return fail(err);
+    defer a.free(commands);
+    applyBatch(s, commands) catch |err| return fail(err);
+    return 1;
 }
 export fn hwpx_edit_set_cell_size(section: u32, list_node: u32, width: u32, height: u32) u32 {
     apply(.{ .kind = .cell_size, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .list_node = list_node, .cell_size = .{ .width = width, .height = height } }) catch |err| return fail(err);
@@ -1007,6 +1138,11 @@ export fn hwpx_edit_set_character_underline(section: u32, paragraph: u32, start:
 export fn hwpx_edit_set_character_underline_color(section: u32, paragraph: u32, start: u32, end: u32, color: u32) u32 {
     if (end < start) return fail(error.InvalidTextPosition);
     apply(.{ .kind = .character_properties, .section = section, .paragraph = paragraph, .start = start, .deleted = end - start, .inserted = "", .character_properties = .{ .underline_color = color } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_character_strike_color(section: u32, paragraph: u32, start: u32, end: u32, color: u32) u32 {
+    if (end < start) return fail(error.InvalidTextPosition);
+    apply(.{ .kind = .character_properties, .section = section, .paragraph = paragraph, .start = start, .deleted = end - start, .inserted = "", .character_properties = .{ .strike_color = color } }) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_set_character_text_color(section: u32, paragraph: u32, start: u32, end: u32, color: u32) u32 {
@@ -1381,6 +1517,27 @@ export fn hwpx_edit_character_ranges(section: u32, paragraph: u32) u32 {
     output = @import("../hwpx/character_style_wire.zig").encode(a, spans) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_tab_sources(section: u32, paragraph: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const snapshot = @import("../hwpx/tab_display_snapshot.zig");
+    const rows = snapshot.read(session, section, paragraph) catch |err| return fail(err);
+    defer snapshot.deinit(a, rows);
+    output = std.json.Stringify.valueAlloc(a, .{ .section = section, .paragraph = paragraph, .rows = rows }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_tab_definitions() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/tab_definition_snapshot.zig").encode(a, session) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_section_tabs() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/section_tab_snapshot.zig").encode(a, session) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_splice(section: u32, paragraph: u32, start: u32, deleted: u32, ptr: [*]const u8, size: usize) u32 {
     if (size > 4 * 1024 * 1024) return fail(error.LimitExceeded);
     apply(.{ .section = section, .paragraph = paragraph, .start = start, .deleted = deleted, .inserted = ptr[0..size] }) catch |err| return fail(err);
@@ -1409,6 +1566,104 @@ export fn hwpx_edit_set_formula_definition(section: u32, begin_element: u32, ptr
 }
 export fn hwpx_edit_manual_formula_result_max_bytes() u32 {
     return @import("../hwpx/formula_result_sites.zig").max_display_bytes;
+}
+export fn hwpx_edit_chart_points(section: u32, wrapper: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var snapshot = @import("../hwpx/chart_current_snapshot.zig").read(a, session, section, wrapper) catch |err| return fail(err);
+    defer snapshot.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, snapshot, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_nodes(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const nodes = @import("../hwpx/chart_current_snapshot.zig").nodes(a, session, section) catch |err| return fail(err);
+    defer a.free(nodes);
+    output = std.json.Stringify.valueAlloc(a, nodes, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_series_text(section: u32, wrapper: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var values = @import("../hwpx/chart_series_text_session.zig").read(a, session, section, wrapper) catch |err| return fail(err);
+    defer values.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, .{ .kind = "direct_series", .values = values.items }, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_chart_rich_text(section: u32, wrapper: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var values = @import("../hwpx/chart_rich_text_session.zig").read(a, session, section, wrapper) catch |err| return fail(err);
+    defer values.deinit(a);
+    output = std.json.Stringify.valueAlloc(a, .{ .kind = "rich_text", .values = values.items }, .{}) catch |err| return fail(err);
+    if (output.?.len > session.options.max_output_bytes) {
+        hwpx_edit_output_free();
+        return fail(error.LimitExceeded);
+    }
+    return 1;
+}
+export fn hwpx_edit_chart_display(section: u32, wrapper: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var snapshot = @import("../hwpx/chart_display_snapshot.zig").read(a, session, section, wrapper) catch |err| return fail(err);
+    defer snapshot.deinit(a);
+    output = @import("../hwpx/chart_display_wire.zig").encode(a, &snapshot, session.options.max_output_bytes) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_rich_text_max_bytes() u32 {
+    return @import("../hwpx/chart_rich_text_values.zig").default_max_value_bytes;
+}
+export fn hwpx_edit_set_chart_rich_text(section: u32, wrapper: u32, ordinal: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_chart_rich_text_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_rich_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_text = ordinal, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_series_text_max_bytes() u32 {
+    return @import("../hwpx/chart_series_text_values.zig").default_max_value_bytes;
+}
+export fn hwpx_edit_set_chart_series_text(section: u32, wrapper: u32, ordinal: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_chart_series_text_max_bytes()) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_series_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_text = ordinal, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_sites(section: u32) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const sites = @import("../hwpx/chart_display_sites.zig").read(a, session, section) catch |err| return fail(err);
+    defer a.free(sites);
+    output = std.json.Stringify.valueAlloc(a, sites, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_chart_numeric_point(section: u32, wrapper: u32, point: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > @import("../hwpx/chart_point_write.zig").max_value_bytes) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_numeric_point, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_point = point, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_chart_point_max_bytes() u32 {
+    return @import("../hwpx/chart_point_write.zig").max_value_bytes;
+}
+export fn hwpx_edit_chart_point_batch_max_bytes() u32 {
+    return @import("chart_point_batch.zig").max_bytes;
+}
+export fn hwpx_edit_chart_point_batch_max_edits() u32 {
+    return @import("chart_point_batch.zig").max_edits;
+}
+export fn hwpx_edit_set_chart_points(section: u32, wrapper: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > hwpx_edit_chart_point_batch_max_bytes()) return fail(error.LimitExceeded);
+    const edits = @import("chart_point_batch.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer a.free(edits);
+    apply(.{ .kind = .chart_points, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .chart_node = wrapper, .chart_points = edits }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_chart_point(section: u32, wrapper: u32, point: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > @import("../hwpx/chart_point_write.zig").max_value_bytes) return fail(error.LimitExceeded);
+    apply(.{ .kind = .chart_point, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .chart_node = wrapper, .chart_point = point, .inserted = ptr[0..size] }) catch |err| return fail(err);
+    return 1;
 }
 export fn hwpx_edit_set_manual_formula_result(section: u32, begin_element: u32, ptr: [*]const u8, size: usize) u32 {
     if (size > @import("../hwpx/formula_result_sites.zig").max_display_bytes) return fail(error.LimitExceeded);
@@ -1467,6 +1722,16 @@ export fn hwpx_edit_can_split(section: u32, paragraph: u32, start: u32, deleted:
         return 2;
     });
 }
+export fn hwpx_edit_can_split_anchored(section: u32, paragraph: u32, start: u32, deleted: u32) u32 {
+    const session = if (active) |*value| value else {
+        _ = fail(error.EditorNotOpen);
+        return 2;
+    };
+    return @intFromBool(session.canSplitParagraphAnchored(section, paragraph, start, deleted) catch |err| {
+        _ = fail(err);
+        return 2;
+    });
+}
 export fn hwpx_edit_can_edit_outside_field(section: u32, paragraph: u32, start: u32, end: u32) u32 {
     const session = if (active) |*value| value else {
         _ = fail(error.EditorNotOpen);
@@ -1495,12 +1760,6 @@ export fn hwpx_edit_field_range_target(section: u32, paragraph: u32, start: u32,
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     const target = @import("../hwpx/field_label_range_target.zig").select(session, section, paragraph, start, end) catch |err| return fail(err);
     return if (target) |value| publishFieldTargets(&.{value}) else publishFieldTargets(&.{});
-}
-export fn hwpx_edit_field_label_display_text(section: u32, paragraph: u32) u32 {
-    hwpx_edit_output_free();
-    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
-    output = @import("../hwpx/field_label_display_text.zig").read(session, section, paragraph) catch |err| return fail(err);
-    return 1;
 }
 fn publishFieldTargets(targets: []const @import("../hwpx/field_label_targets.zig").Target) u32 {
     const bytes = a.alloc(u8, 4 + targets.len * 12) catch |err| return fail(err);

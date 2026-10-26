@@ -4,6 +4,9 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const uri = @import("document_xml.zig").head_uri;
 const fields = @import("table_xml_fields.zig");
 pub fn write(a: std.mem.Allocator, tree: *const Tree, template: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize) ![]u8 {
+    return writeWithProfile(a, tree, template, id, properties, limit, .{});
+}
+pub fn writeWithProfile(a: std.mem.Allocator, tree: *const Tree, template: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
     if (template >= tree.elements.len) return error.InvalidElementIndex;
     const parent = tree.elements[template].parent orelse return error.InvalidCharacterResourceParent;
     if (!tree.elements[parent].is(uri, "charProperties")) return error.InvalidCharacterResourceParent;
@@ -21,7 +24,7 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, template: usize, id: u32, 
     if (actual != count) return error.CharacterResourceCountMismatch;
     const next_count = std.math.add(u32, count, 1) catch return error.LimitExceeded;
     const ending = tree.elements[parent].end_tag orelse return error.MissingCharacterResourceEndTag;
-    const fragment = try @import("character_resource_clone.zig").write(a, tree, template, id, properties, limit);
+    const fragment = try @import("character_resource_clone.zig").writeWithProfile(a, tree, template, id, properties, limit, profile);
     defer a.free(fragment);
     const count_text = try std.fmt.allocPrint(a, "{c}{d}{c}", .{ count_raw.raw[0], next_count, count_raw.raw[0] });
     defer a.free(count_text);

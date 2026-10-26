@@ -26,7 +26,10 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, current: *const Values, 
     }
     var bytes: usize = 0;
     for (current.paragraphs) |*paragraph| {
-        if (paragraph.joined()) |view| {
+        if (paragraph.protected_positions != null) {
+            const positions = try @import("paragraph_protected_positions.zig").build(a, tree, paragraph);
+            a.free(positions);
+        } else if (paragraph.joined()) |view| {
             const positions = try @import("paragraph_joined_positions.zig").build(a, tree, &view);
             a.free(positions);
         } else if (paragraph.sites.items.len != 0) {

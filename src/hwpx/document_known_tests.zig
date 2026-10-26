@@ -166,7 +166,7 @@ test "HWPX known inspections compose every currently exposed document report" {
     try std.testing.expectEqual(report.section_page_borders.items[0].element_index, report.section_page_borders.items[1].parent_element_index);
     try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.outline.resolved);
     try std.testing.expectEqual(@as(usize, 1), report.section_definition_references.memo.zero);
-    try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = report.page_geometry.pages[0].element_index, .orientation = .narrowly, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = 4252, .footer = 4252, .gutter = 0, .left = 8504, .right = 8504, .top = 5668, .bottom = 4252 } }, report.page_geometry.pages[0]);
+    try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = report.page_geometry.pages[0].element_index, .orientation = .narrowly, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = 4252, .footer = 4252, .gutter = 0, .left = 8504, .right = 8504, .top = 5668, .bottom = 4252 }, .hide_first_empty_line = false, .visibility_count = 1 }, report.page_geometry.pages[0]);
     try std.testing.expect(report.paragraph_metadata.paragraphs > 0);
 }
 
@@ -305,7 +305,7 @@ fn verifyActualPageGeometry(a: std.mem.Allocator) !void {
         defer report.deinit(a);
         try std.testing.expectEqual(@as(usize, 1), report.page_geometry.pages.len);
         const page = report.page_geometry.pages[0];
-        try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = page.element_index, .orientation = .widely, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = expected_header, .footer = expected_header, .gutter = 0, .left = expected_left, .right = expected_left, .top = expected_top, .bottom = expected_bottom } }, page);
+        try std.testing.expectEqual(package.PageGeometryPage{ .section_ordinal = 0, .element_index = page.element_index, .orientation = .widely, .width = 59528, .height = 84188, .gutter_type = .left_only, .margin = .{ .header = expected_header, .footer = expected_header, .gutter = 0, .left = expected_left, .right = expected_left, .top = expected_top, .bottom = expected_bottom }, .hide_first_empty_line = false, .visibility_count = 1 }, page);
         try std.testing.expectError(error.LimitExceeded, document.inspectKnown(a, .{ .page_geometry = .{ .max_pages = 0 } }));
     }
 }

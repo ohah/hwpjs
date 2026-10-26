@@ -36,9 +36,15 @@ pub fn prepare(a: std.mem.Allocator, trees: []const Tree, section: usize, curren
         row.sites = .{ .items = owned };
         if (left.character_styles != null or right.character_styles != null) {
             const Joined = @import("paragraph_joined_values.zig").Joined;
-            var one = try Joined.fromParagraph(a, left);
+            // The source plan validated the retained field positions above.
+            // These borrowed adapters carry only text and style projection.
+            var left_text = left.*;
+            left_text.field_positions = null;
+            var right_text = right.*;
+            right_text.field_positions = null;
+            var one = try Joined.fromParagraph(a, &left_text);
             defer one.deinit(a);
-            var two = try Joined.fromParagraph(a, right);
+            var two = try Joined.fromParagraph(a, &right_text);
             defer two.deinit(a);
             const styles = try @import("character_style_join.zig").prepareWithFields(a, &trees[section], &one, &two);
             if (row.character_styles) |previous| a.free(previous);

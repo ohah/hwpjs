@@ -131,6 +131,11 @@ fn wire(comptime ascii: []const u8) [ascii.len * 2]u8 {
 }
 
 test "formula BELOW excludes its owner and preserves boundary overflow checks" {
+    inline for (.{ "SUM", "AVG", "AVERAGE", "PRODUCT", "MIN", "MAX" }) |name| {
+        const direction = try Range.parse(&wire(name ++ "(BELOW)"));
+        try std.testing.expectEqualDeep(Rectangle{ .first = .{ .column = 2, .row = 3 }, .last = .{ .column = 2, .row = 5 } }, try direction.resolve(.{ .column = 2, .row = 2 }, 4, 6));
+        try std.testing.expectError(error.EmptyFormulaRange, direction.resolve(.{ .column = 2, .row = 5 }, 4, 6));
+    }
     const below = try Range.parse(&wire("SUM(BELOW)"));
     try std.testing.expectEqualDeep(Rectangle{ .first = .{ .column = 1, .row = 1 }, .last = .{ .column = 1, .row = 3 } }, try below.resolve(.{ .column = 1, .row = 0 }, 2, 4));
     try std.testing.expectError(error.EmptyFormulaRange, below.resolve(.{ .column = 0, .row = 0 }, 1, 1));

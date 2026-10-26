@@ -37,6 +37,7 @@ fn prepare(session: *editor.Session, section_index: usize, paragraph_index: usiz
     if (try @import("formula_section_save.zig").hasFormula(a, &section.tree)) try @import("character_style_formula_current.zig").prepare(session, section_index, &values, paragraph_index);
     const paragraph = &values.paragraphs[paragraph_index - section.first_paragraph];
     const synthesized = paragraph.synthesized_run_character_id != null;
+    if (!synthesized) try @import("character_style_field_positions.zig").retain(session, section_index, &values);
     const positions = if (synthesized)
         try a.alloc(@import("paragraph_text_positions.zig").Segment, 0)
     else if (paragraph.field_positions != null)
@@ -52,7 +53,9 @@ fn prepare(session: *editor.Session, section_index: usize, paragraph_index: usiz
             error.UnsupportedParagraphControl => break :block try @import("anchor_paragraph_edit.zig").segments(a, &section.tree, &paragraph.sites, locations, 1),
             else => return err,
         };
-        break :block try @import("paragraph_text_positions.zig").build(a, &section.tree, &paragraph.sites, locations, 1);
+        // The successful character-format policy already admits retained field controls.
+        // Keep their zero-width axis when a titleMark is present.
+        break :block try @import("paragraph_text_positions.zig").buildForFieldText(a, &section.tree, &paragraph.sites, locations, 1);
     };
     defer a.free(positions);
     var has_tabs = false;
@@ -97,9 +100,17 @@ fn prepare(session: *editor.Session, section_index: usize, paragraph_index: usiz
         if (!std.meta.eql(one, two)) same = false;
     };
     if (same) return false;
+    try @import("title_derived_gap.zig").prepareFormat(&section.tree, paragraph, painted);
     if (paragraph.character_styles) |styles| a.free(styles);
     paragraph.character_styles = painted;
     installed = true;
+    const title_owners = try @import("title_fragment_owner.zig").prepare(a, &section.tree, paragraph, painted);
+    if (paragraph.title_fragment_owners) |old| a.free(old);
+    paragraph.title_fragment_owners = title_owners;
+    try @import("title_fragment_identity.zig").assign(paragraph, painted);
+    const title_output = try @import("title_output_projection.zig").prepare(a, &section.tree, paragraph, editor.siteOptions(session.options), session.options.max_xml_bytes);
+    if (paragraph.title_output_projection) |*old| old.deinit(a);
+    paragraph.title_output_projection = title_output;
     const empty = try a.alloc(@import("text_sites.zig").Site, 0);
     var committed_empty = false;
     defer if (!committed_empty) a.free(empty);

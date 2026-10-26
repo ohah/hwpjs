@@ -12,29 +12,11 @@ pub fn read(session: *const @import("editor_session.zig").Session, section_index
         try output.append(a, value);
     }
     if (section.dutmal_texts.entries.items.len == 0) return output.toOwnedSlice(a);
-    var analysis = try @import("source_field_analysis.zig").leaseForDiagnostics(session);
+    var analysis = try @import("source_field_analysis.zig").leaseForExterior(session);
     defer analysis.deinit(a);
     for (section.dutmal_texts.entries.items) |entry| {
         const leaf = try @import("dutmal_text_changes.zig").target(&section.tree, entry.control, entry.kind);
-        const element = section.tree.elements[leaf];
-        for (analysis.source.report.markers) |marker| {
-            if (marker.section_ordinal != section_index or marker.kind != .begin or marker.matched_marker_index != null) continue;
-            const envelope = try @import("field_source_scope.zig").forBegin(&section.tree, marker.element_index);
-            if (envelope.contains(element.start_tag.start)) return error.ProtectedFieldRange;
-        }
-        for (analysis.source.fields) |field| {
-            if (field.section != section_index or field.content_end <= element.start_tag.start or element.end <= field.content_start) continue;
-            if (element.start_tag.start < field.content_start or element.end > field.content_end) return error.UnsupportedDutmalFieldEdit;
-            const marker = analysis.source.report.markers[field.begin_marker];
-            if (!@import("field_text_kind.zig").supported(marker.begin.?.type_raw orelse "")) return error.UnsupportedDutmalFieldEdit;
-            var found = false;
-            for (output.items) |*value| if (value.element_index == marker.element_index) {
-                value.dirty = true;
-                found = true;
-                break;
-            };
-            if (!found) try output.append(a, .{ .element_index = marker.element_index, .dirty = true });
-        }
+        try @import("field_leaf_invalidation.zig").note(a, &section.tree, section_index, &analysis.source, leaf, error.UnsupportedDutmalFieldEdit, &output);
     }
     return output.toOwnedSlice(a);
 }

@@ -2,6 +2,19 @@
 const std = @import("std");
 const model = @import("../../model/document.zig");
 
+/// Validate current metadata against the same canonical decoder used to own it.
+pub fn validate(p: model.Paragraph, bytes: []const u8) !void {
+    if (!p.text_present or p.declared_units != bytes.len / 2) return error.SourceBindingMismatch;
+    const text = try @import("../body/text.zig").Text.parse(bytes);
+    var iterator = text.tokens();
+    for (p.tokens) |actual| {
+        const expected = (try iterator.next()) orelse return error.SourceBindingMismatch;
+        const kind: @FieldType(model.Token, "kind") = if (expected.value == .text) .text else .control;
+        if (expected.start_unit != actual.start_unit or kind != actual.kind or actual.encoding != .utf16le or !std.mem.eql(u8, expected.raw, actual.raw)) return error.SourceBindingMismatch;
+    }
+    if (try iterator.next() != null) return error.SourceBindingMismatch;
+}
+
 pub fn fromText(a: std.mem.Allocator, bytes: []const u8) ![]model.Token {
     const text = try @import("../body/text.zig").Text.parse(bytes);
     var tokens: std.ArrayList(model.Token) = .empty;

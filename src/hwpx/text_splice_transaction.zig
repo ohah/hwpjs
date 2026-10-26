@@ -69,3 +69,15 @@ pub fn insertionSite(sites: *const sites_module.Sites, positions: []const @impor
     }
     return fallback;
 }
+
+/// Replacement inherits the first deleted text site, never a preceding run
+/// whose inclusive end shares this boundary. Pure insertion stays left-affine.
+/// Explicit field-label insertion_site always takes precedence at the caller.
+pub fn replacementInsertionSite(sites: *const sites_module.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32) ?usize {
+    if (deleted != 0) {
+        for (positions) |position| {
+            if (position.kind == .text and position.start_unit <= start and start < position.end_unit) return position.index;
+        }
+    }
+    return insertionSite(sites, positions, start);
+}

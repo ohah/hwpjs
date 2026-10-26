@@ -46,14 +46,18 @@ pub fn apply(a: std.mem.Allocator, tree: *const Tree, before: *const P, right: *
     defer a.free(original);
     // 양의 폭을 가진 가시 구간의 왼쪽 affinity. 빈 원본은 기존 첫 site 유지.
     var id: ?u32 = null;
+    var selected_span = false;
     for (original) |span| {
         if ((at == 0 and span.start_unit == 0) or (span.start_unit < at and at <= span.end_unit)) {
             id = span.char_shape_id;
+            selected_span = true;
             break;
         }
     }
-    const selected = id orelse return;
-    if (std.mem.indexOfScalar(u32, resource_ids, selected) == null) return error.InvalidResourceReference;
+    // No matching span and a selected absent reference are distinct states.
+    if (!selected_span) return;
+    const selected = id;
+    if (selected) |numeric| if (std.mem.indexOfScalar(u32, resource_ids, numeric) == null) return error.InvalidResourceReference;
     const right_positions = try positions(a, tree, right);
     defer a.free(right_positions);
     const target = @import("text_splice_transaction.zig").insertionSite(&right.sites, right_positions, 0) orelse return error.InvalidTextSites;
@@ -75,11 +79,7 @@ pub fn apply(a: std.mem.Allocator, tree: *const Tree, before: *const P, right: *
     right.character_styles = current;
 }
 pub fn eligible(before: *const P, right: *const P, at: u32, end: u32) bool {
-    if (at != end or right.generated_id == null or before.pieces != null or right.pieces != null or before.field_positions != null or right.field_positions != null or before.protected_positions != null or right.protected_positions != null or before.column_boundaries != null or right.column_boundaries != null or before.page_area_positions != null or right.page_area_positions != null) return false;
-    // HEAD has no output plan field; newer models retain their existing guard.
-    if (comptime @hasField(P, "title_output_projection")) {
-        if (before.title_output_projection != null or right.title_output_projection != null) return false;
-    }
+    if (at != end or right.generated_id == null or before.pieces != null or right.pieces != null or before.field_positions != null or right.field_positions != null or before.protected_positions != null or right.protected_positions != null or before.column_boundaries != null or right.column_boundaries != null or before.page_area_positions != null or right.page_area_positions != null or before.title_output_projection != null or right.title_output_projection != null) return false;
     if (before.title_positions) |titles| if (titles.len != 0) return false;
     if (right.title_positions) |titles| if (titles.len != 0) return false;
     for (right.sites.items) |site| if (site.text.len != 0) return false;

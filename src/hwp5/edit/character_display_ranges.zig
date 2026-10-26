@@ -10,7 +10,13 @@ pub fn read(a: std.mem.Allocator, p: model.Paragraph, count: usize) ![]Range {
 pub fn fromRaw(a: std.mem.Allocator, runs: []const model.CharacterRun, bytes: []const u8, count: usize) ![]Range {
     if (bytes.len % 2 != 0 or bytes.len > 8 * 1024 * 1024) return error.InvalidTextLength;
     const units: u32 = @intCast(bytes.len / 2);
-    if (units == 0) return a.alloc(Range, 0);
+    if (units == 0) {
+        if (runs.len == 0) return a.alloc(Range, 0);
+        try @import("character_runs.zig").validate(runs, bytes, count);
+        const output = try a.alloc(Range, 1);
+        output[0] = .{ .start_unit = 0, .end_unit = 0, .char_shape_id = runs[0].char_shape_id };
+        return output;
+    }
     if (runs.len == 0) {
         const output = try a.alloc(Range, 1);
         output[0] = .{ .start_unit = 0, .end_unit = units, .char_shape_id = null };

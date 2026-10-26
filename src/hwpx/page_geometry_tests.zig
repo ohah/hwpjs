@@ -6,6 +6,23 @@ const geometry = @import("page_geometry.zig");
 const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>";
 const suffix = "</s:sec>";
 
+test "HWPX page geometry binds empty line visibility to the exact section definition" {
+    const a = std.testing.allocator;
+    var report = try read(a, prefix ++
+        "<p:secPr><p:visibility hideFirstEmptyLine='1'/><p:pagePr/></p:secPr>" ++
+        "<p:secPr><p:visibility hideFirstEmptyLine='0'/><p:pagePr/></p:secPr>" ++
+        "<p:secPr><p:pagePr/></p:secPr>" ++
+        "<p:secPr><p:visibility hideFirstEmptyLine='1'/><p:visibility hideFirstEmptyLine='1'/><p:pagePr/></p:secPr>" ++
+        "<p:secPr><p:other><p:visibility hideFirstEmptyLine='1'/></p:other><p:pagePr/></p:secPr>" ++
+        "<p:secPr><p:visibility hideFirstEmptyLine='1'><p:other/></p:visibility><p:pagePr/></p:secPr>" ++ suffix, .{});
+    defer report.deinit(a);
+    try std.testing.expectEqual(@as(?bool, true), report.pages[0].hide_first_empty_line);
+    try std.testing.expectEqual(@as(?bool, false), report.pages[1].hide_first_empty_line);
+    for (report.pages[2..]) |page| try std.testing.expectEqual(@as(?bool, null), page.hide_first_empty_line);
+    try std.testing.expectEqual(@as(usize, 2), report.pages[3].visibility_count);
+    try std.testing.expectEqual(@as(usize, 0), report.pages[4].visibility_count);
+}
+
 fn read(a: std.mem.Allocator, bytes: []const u8, options: geometry.Options) !geometry.Report {
     var section = try section_tree.parse(a, bytes, 0, 0, .{});
     defer section.deinit(a);
@@ -62,12 +79,13 @@ test "HWPX page geometry rejects invalid scalars and enforces bounds" {
 }
 
 test "HWPX page geometry frees partial reports on allocation failure" {
-    const source = prefix ++ "<p:secPr><p:pagePr width='123' height='456'><p:margin left='1' right='2'/></p:pagePr><p:pagePr landscape='WIDELY' gutterType='TOP_BOTTOM'/></p:secPr>" ++ suffix;
+    const source = prefix ++ "<p:secPr><p:visibility hideFirstEmptyLine='1'/><p:pagePr width='123' height='456'><p:margin left='1' right='2'/></p:pagePr><p:pagePr landscape='WIDELY' gutterType='TOP_BOTTOM'/></p:secPr>" ++ suffix;
     try @import("../testing/allocation_failures.zig").check(struct {
         fn run(a: std.mem.Allocator, bytes: []const u8) !void {
             var report = try read(a, bytes, .{});
             defer report.deinit(a);
             try std.testing.expectEqual(@as(usize, 2), report.pages.len);
+            try std.testing.expectEqual(@as(?bool, true), report.pages[0].hide_first_empty_line);
         }
     }.run, .{source});
 }

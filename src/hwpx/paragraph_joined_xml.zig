@@ -66,7 +66,7 @@ fn writeMode(a: std.mem.Allocator, tree: *const Tree, current: *const Joined, op
     else if (allow_tabs)
         try @import("paragraph_split_xml.zig").writeSitesWithTabs(a, tree, &left, options, limit)
     else if (left_styles != null)
-        try @import("character_style_paragraph_xml.zig").write(a, tree, &left, limit)
+        try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, &left, &.{}, options, limit)
     else
         try @import("paragraph_split_xml.zig").writeSitesWithOptions(a, tree, left.template_element, &left.sites, options, left.generated_id != null, left.generated_id orelse 0, limit);
     defer a.free(serialized);

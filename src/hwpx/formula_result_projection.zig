@@ -35,7 +35,7 @@ pub fn prepareSection(session: *const editor.Session, section_index: usize) !?Vi
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     const a = session.allocator;
-    if (section.structure_values != null or section.created_tables.entries.items.len != 0) return null;
+    if (section.structure_values != null) return null;
     if (!try @import("formula_source_query.zig").hasFormula(a, &section.tree)) return null;
     var view = block: {
         var current = try @import("formula_current_snapshot.zig").readFlat(a, session, section_index);
@@ -72,6 +72,12 @@ pub fn selectParagraph(session: *const editor.Session, section_index: usize, par
 }
 
 pub fn readText(session: *const editor.Session, section: usize, paragraph: usize) ![]u8 {
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    if (session.sections[section].structure_values != null) {
+        var current = try @import("formula_result_structural_view.zig").open(session, section);
+        defer current.deinit();
+        return readText(&current.rendered, section, paragraph);
+    }
     var view = (try prepare(session, section, paragraph)) orelse return error.UnsupportedFormulaResultParagraph;
     defer view.deinit();
     return readPreparedText(&view, session.options.max_text_bytes);

@@ -3,18 +3,22 @@ const std = @import("std");
 const Tree = @import("xml_part_tree.zig").Tree;
 const UnderlineKind = @import("character_underline_values.zig").Kind;
 pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize) ![]u8 {
-    return compose(a, tree, node, id, properties, properties.underline_kind, limit);
+    return writeWithProfile(a, tree, node, id, properties, limit, .{});
+}
+pub fn writeWithProfile(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+    return compose(a, tree, node, id, properties, properties.underline_kind, limit, profile);
 }
 pub fn writeUnderline(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, kind: UnderlineKind, limit: usize) ![]u8 {
-    return compose(a, tree, node, id, .{}, kind, limit);
+    return compose(a, tree, node, id, .{}, kind, limit, .{});
 }
-fn compose(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, underline: ?UnderlineKind, limit: usize) ![]u8 {
+fn compose(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, underline: ?UnderlineKind, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
     try @import("../model/character_properties.zig").validate(properties);
     _ = try @import("character_shape_display.zig").read(a, tree, node, 4096);
     if (tree.source.len > limit) return error.LimitExceeded;
     var current = try a.dupe(u8, tree.source);
     defer a.free(current);
-    for (0..21) |step| {
+    for (0..22) |step| {
+        if (step == 21 and properties.strike_color == null) continue;
         if (step == 20 and properties.outline_kind == null) continue;
         if (step >= 16 and step < 20) {
             const present = switch (step) {
@@ -39,7 +43,7 @@ fn compose(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, proper
             3 => try @import("character_emphasis_patch.zig").write(a, &parsed, node, .bold, properties.bold.?, limit),
             4 => try @import("character_underline_patch.zig").write(a, &parsed, node, underline.?, limit),
             5 => try @import("character_underline_patch.zig").writeColor(a, &parsed, node, properties.underline_color.?, limit),
-            6 => try @import("character_color_patch.zig").write(a, &parsed, node, properties.text_color.?, limit),
+            6 => try @import("character_color_patch.zig").writeWithProfile(a, &parsed, node, properties.text_color.?, limit, profile),
             14 => try @import("character_strike_patch.zig").write(a, &parsed, node, properties.strike_enabled.?, limit),
             15 => try @import("character_shade_patch.zig").write(a, &parsed, node, properties.shade.?, limit),
             16 => try @import("character_emphasis_patch.zig").write(a, &parsed, node, .emboss, properties.emboss.?, limit),
@@ -47,7 +51,8 @@ fn compose(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, proper
             18 => try @import("character_emphasis_patch.zig").write(a, &parsed, node, .supscript, properties.superscript.?, limit),
             19 => try @import("character_emphasis_patch.zig").write(a, &parsed, node, .subscript, properties.subscript.?, limit),
             20 => try @import("character_outline_patch.zig").write(a, &parsed, node, properties.outline_kind.?, limit),
-            else => try @import("character_font_patch.zig").write(a, &parsed, node, @enumFromInt(step - 7), properties.font_ids.?[step - 7].?, limit),
+            21 => try @import("character_strike_color_patch.zig").write(a, &parsed, node, properties.strike_color.?, limit),
+            else => try @import("character_font_patch.zig").write(a, &parsed, node, @fromBackingInt(@intCast(step - 7)), properties.font_ids.?[step - 7].?, limit),
         };
         defer a.free(replacement);
         const next = try @import("xml_source_writer.zig").write(a, current, &.{.{ .start = parsed.elements[node].start_tag.start, .end = parsed.elements[node].end, .text = "", .serialized_xml = replacement }}, limit);

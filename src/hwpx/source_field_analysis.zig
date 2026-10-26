@@ -20,7 +20,7 @@ pub fn build(a: std.mem.Allocator, sections: anytype) !Source {
     return buildMode(a, sections, false);
 }
 
-/// Immutable raw diagnostics and known pairs; not strict editing permission.
+/// Own raw diagnostics and known links once; this does not grant strict access.
 pub fn buildForEditor(a: std.mem.Allocator, sections: anytype) !Source {
     return buildMode(a, sections, true);
 }
@@ -59,33 +59,27 @@ fn cachedLease(session: anytype) !?Lease {
     }
     return null;
 }
+
 pub fn lease(session: anytype) !Lease {
     if (try cachedLease(session)) |view| {
-        const report = view.source.report;
-        if (report.unmatched_begins != 0 or report.duplicate_begin_ids != 0 or report.unresolved_ends != 0 or report.non_lifo_closures != 0 or report.fieldid_mismatches != 0) return error.InvalidFieldLinks;
+        if (view.source.report.unmatched_begins != 0) return error.InvalidFieldLinks;
         return view;
     }
     return .{ .source = try build(session.allocator, session.sections), .owned = true };
 }
-pub fn hasFields(session: anytype, section: usize) !bool {
-    if (section >= session.sections.len) return error.InvalidSectionIndex;
-    if (try cachedLease(session)) |cached| {
-        var analysis = cached;
-        defer analysis.deinit(session.allocator);
-        return analysis.source.bindings[section].has_fields;
-    }
-    for (session.sections[section].tree.elements) |element| {
-        if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) return true;
-    }
-    return false;
+
+/// Exterior queries retain unresolved diagnostics; strict field APIs use lease.
+pub fn leaseForExterior(session: anytype) !Lease {
+    if (try cachedLease(session)) |view| return view;
+    return .{ .source = try buildMode(session.allocator, session.sections, true), .owned = true };
 }
 
-/// A label may use a validated pair outside unresolved list-local envelopes.
-/// No cache is rewritten and structural operations retain the strict lease.
+/// Known source labels may be inspected only when unresolved starts are list scoped.
+/// Per-label overlap protection remains mandatory; structural models stay strict.
 pub fn leaseForLabels(session: anytype, section: usize) !Lease {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
     if (session.sections[section].structure_values != null) return lease(session);
-    var view = try leaseForDiagnostics(session);
+    var view = try leaseForExterior(session);
     errdefer view.deinit(session.allocator);
     for (view.source.report.markers) |marker| {
         if (marker.section_ordinal != section or marker.kind != .begin or marker.matched_marker_index != null) continue;
@@ -94,15 +88,18 @@ pub fn leaseForLabels(session: anytype, section: usize) !Lease {
     }
     return view;
 }
-
-/// Borrow raw diagnostics and known pairs, not current editing permission.
-pub fn leaseForDiagnostics(session: anytype) !Lease {
-    if (try cachedLease(session)) |cached| return cached;
-    return .{ .source = try buildMode(session.allocator, session.sections, true), .owned = true };
+pub fn hasFields(session: anytype, section: usize) !bool {
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    if (session.source_fields != null) {
+        var analysis = try leaseForExterior(session);
+        defer analysis.deinit(session.allocator);
+        return analysis.source.bindings[section].has_fields;
+    }
+    for (session.sections[section].tree.elements) |element| {
+        if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) return true;
+    }
+    return false;
 }
-
-/// Raw known pairs only; exterior callers must protect unresolved source scopes.
-pub const leaseForExterior = leaseForDiagnostics;
 
 test "source field analysis owned build survives every allocation failure and borrowed queries match fresh analysis" {
     const a = std.testing.allocator;
@@ -174,4 +171,64 @@ test "source field analysis open owns failure cleanup and preserves malformed li
     var plain_proxy = plain_session;
     plain_proxy.source_fields = null;
     try std.testing.expect(!try hasFields(&plain_proxy, 0));
+}
+
+test "source field analysis exterior separates unresolved starts without guessing ends under OOM" {
+    const a = std.testing.allocator;
+    const xml = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p><p:run><p:t>before</p:t></p:run></p:p><p:p><p:run><p:ctrl><p:fieldBegin id='8' type='CLICK_HERE'/></p:ctrl><p:t>unknown</p:t></p:run></p:p><p:p><p:run><p:t>after</p:t></p:run></p:p></s:sec>";
+    const input = try @import("test_formula_fixture.zig").zipWithSection(a, xml);
+    defer a.free(input);
+    var session = try @import("editor_session.zig").open(a, input, .{});
+    defer session.deinit();
+    try std.testing.expect(try session.canEdit(0, 1));
+    try std.testing.expect(!try session.canEdit(0, 3));
+    try std.testing.expectError(error.ProtectedFieldRange, session.splice(0, 3, 0, 0, "X"));
+    try std.testing.expectError(error.InvalidFieldLinks, lease(&session));
+    try std.testing.expect(session.source_fields != null);
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, original: *const @import("editor_session.zig").Session) !void {
+            var proxy = original.*;
+            proxy.allocator = allocator;
+            proxy.source_fields = null;
+            var view = try leaseForExterior(&proxy);
+            defer view.deinit(allocator);
+            try std.testing.expectEqual(@as(usize, 1), view.source.report.unmatched_begins);
+            try std.testing.expectEqual(@as(usize, 0), view.source.fields.len);
+            try std.testing.expect(try proxy.canEdit(0, 1));
+            try std.testing.expect(!try proxy.canEdit(0, 3));
+            try std.testing.expect(proxy.source_fields == null);
+        }
+    }.run, .{&session});
+    var failing = std.testing.FailingAllocator.init(a, .{ .fail_index = 0 });
+    var borrowed = session;
+    borrowed.allocator = failing.allocator();
+    var view = try leaseForExterior(&borrowed);
+    defer view.deinit(borrowed.allocator);
+    try std.testing.expect(!view.owned);
+    try std.testing.expect(!failing.has_induced_failure);
+    try std.testing.expect(try hasFields(&borrowed, 0));
+    try std.testing.expectError(error.InvalidFieldLinks, lease(&borrowed));
+    var changed_sections = [_]@import("editor_session.zig").Section{session.sections[0]};
+    var changed = session;
+    changed.sections = &changed_sections;
+    changed.sections[0].tree.source = changed.sections[0].tree.source[0 .. changed.sections[0].tree.source.len - 1];
+    try std.testing.expectError(error.SourceBindingMismatch, leaseForExterior(&changed));
+    try std.testing.expectError(error.SourceBindingMismatch, lease(&changed));
+    try std.testing.expectError(error.SourceBindingMismatch, hasFields(&changed, 0));
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, bytes: []const u8) !void {
+            var current = try @import("editor_session.zig").open(allocator, bytes, .{});
+            defer current.deinit();
+            try std.testing.expect(current.source_fields != null);
+            try std.testing.expectEqual(@as(usize, 1), current.source_fields.?.report.unmatched_begins);
+        }
+    }.run, .{input});
+    try std.testing.expect(try session.splice(0, 1, 0, 0, "앞😀"));
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try @import("editor_session.zig").open(a, saved, .{});
+    defer reopened.deinit();
+    try std.testing.expectEqualStrings("앞😀before", reopened.sections[0].sites.items[0].text);
+    try std.testing.expectEqualStrings("unknown", reopened.sections[0].sites.items[1].text);
+    try std.testing.expectEqualStrings("after", reopened.sections[0].sites.items[2].text);
 }

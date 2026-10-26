@@ -16,11 +16,13 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, patch: Patch,
         for (replacements.items) |bytes| a.free(bytes);
         replacements.deinit(a);
     }
-    var margin: ?usize = null;
+    const targets = if (patch.indent != null or patch.left != null or patch.right != null or patch.before != null or patch.after != null)
+        try @import("paragraph_format_write_targets.zig").find(a, tree, node, "margin")
+    else
+        @import("paragraph_format_write_targets.zig").Targets{};
+    // Conditional unit conversion is not yet defined. Never leave a hidden override stale.
+    const margin: ?usize = if (targets.len == 1) targets.nodes[0] else null;
     var cursor = tree.elements[node].first_child;
-    while (cursor) |index| : (cursor = tree.elements[index].next_sibling) {
-        if (tree.elements[index].is(@import("document_xml.zig").head_uri, "margin")) margin = index;
-    }
     for (values, 0..) |maybe, field| {
         const value = maybe orelse continue;
         const parent = margin orelse return error.MissingParagraphMargin;
@@ -50,6 +52,18 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, patch: Patch,
         }
     }.less);
     return writer.write(a, fragment, changes.items, limit);
+}
+
+test "HWPX paragraph margin refuses hidden case override without changing original XML" {
+    const a = std.testing.allocator;
+    const source = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><h:paraPr id='9'><h:margin><c:left value='720' unit='HWPUNIT'/></h:margin><p:switch><p:case p:required-namespace='urn:future'><h:margin><c:left value='360' unit='HWPUNIT'/></h:margin></p:case><p:default/></p:switch></h:paraPr></h:head>";
+    var tree = try @import("xml_part_tree.zig").parse(a, source, .header, null, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectError(error.UnsupportedParagraphFormatBranch, write(a, &tree, 1, .{ .left = 1000 }, 4096));
+    const unchanged = try write(a, &tree, 1, .{}, 4096);
+    defer a.free(unchanged);
+    try std.testing.expectEqualStrings(tree.sourceOf(1), unchanged);
+    try std.testing.expectEqualStrings(source, tree.source);
 }
 
 test "HWPX paragraph margin patch preserves opaque XML and survives allocation failures" {

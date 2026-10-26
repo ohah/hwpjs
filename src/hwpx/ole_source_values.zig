@@ -14,6 +14,7 @@ pub const Values = struct {
     object_type: ?[]u8 = null,
     draw_aspect: ?[]u8 = null,
     has_moniker: ?bool = null,
+    transform_identity: ?bool = null,
 
     pub fn deinit(self: *Values, a: std.mem.Allocator) void {
         if (self.binary_item_id) |value| a.free(value);
@@ -35,6 +36,9 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
         .flow = try flow.readOle(a, tree, node),
     };
     errdefer result.deinit(a);
+    var transform = try @import("picture_transform_values.zig").readOle(a, tree, node, 1024);
+    defer transform.deinit(a);
+    result.transform_identity = @import("picture_transform_values.zig").rectangleIdentity(&transform);
     result.binary_item_id = try text(a, tree, node, "binaryItemIDRef");
     result.object_type = try text(a, tree, node, "objectType");
     result.draw_aspect = try text(a, tree, node, "drawAspect");

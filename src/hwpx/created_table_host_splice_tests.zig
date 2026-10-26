@@ -9,6 +9,49 @@ fn verifyFailedSplice(a: std.mem.Allocator, session: *const @import("editor_sess
     try std.testing.expectEqualSlices(u8, before, after);
     try std.testing.expectEqual(unit, session.sections[0].created_tables.entries.items[0].anchor.unit);
 }
+test "created table field style leaves unsupported source kinds in their original adapter" {
+    const a = std.testing.allocator;
+    const editor = @import("editor_session.zig");
+    const bytes = try @import("test_formula_fixture.zig").zipWithParagraphs(a, "<p:p><p:run><p:ctrl><p:fieldBegin id='8' type='DATE'/></p:ctrl><p:t>body</p:t><p:ctrl><p:fieldEnd beginIDRef='8'/></p:ctrl></p:run></p:p>");
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    var counters: @import("section_text.zig").Report = .{};
+    var values = try @import("paragraph_structure_collect.zig").collect(a, &session.sections[0].tree, &session.sections[0].sites, session.sections[0].locations, editor.siteOptions(session.options), &counters);
+    defer values.deinit(a);
+    try @import("character_style_field_positions.zig").retain(&session, 0, &values);
+    try std.testing.expect(values.paragraphs[0].field_positions == null);
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
+}
+test "created table field style ownership retains all linked rows under allocation failures" {
+    const a = std.testing.allocator;
+    const editor = @import("editor_session.zig");
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    var session = try editor.open(a, bytes, .{});
+    defer session.deinit();
+    var counters: @import("section_text.zig").Report = .{};
+    var values = try @import("paragraph_structure_collect.zig").collect(a, &session.sections[0].tree, &session.sections[0].sites, session.sections[0].locations, editor.siteOptions(session.options), &counters);
+    defer values.deinit(a);
+    try std.testing.checkAllAllocationFailures(a, struct {
+        fn run(allocator: std.mem.Allocator, original: *const editor.Session, initial: *const @import("paragraph_structure_values.zig").Values) !void {
+            var candidate = try initial.clone(allocator);
+            defer candidate.deinit(allocator);
+            var view = original.*;
+            view.allocator = allocator;
+            try @import("character_style_field_positions.zig").retain(&view, 0, &candidate);
+            for (candidate.paragraphs) |row| try std.testing.expect(row.field_positions != null);
+            for (initial.paragraphs) |row| try std.testing.expect(row.field_positions == null);
+            for (candidate.paragraphs) |*row| try std.testing.expect(try @import("field_original_passthrough.zig").unchanged(&original.sections[0].tree, row, &original.sections[0].sites));
+            const row = &candidate.paragraphs[0];
+            const old = row.sites.items[0].text[0];
+            row.sites.items[0].text[0] = if (old == 'X') 'Y' else 'X';
+            try std.testing.expect(!try @import("field_original_passthrough.zig").unchanged(&original.sections[0].tree, row, &original.sections[0].sites));
+            row.sites.items[0].text[0] = old;
+        }
+    }.run, .{ &session, &values });
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
+}
 test "created table field label allocation failure sweep restores complete saved state" {
     const a = std.testing.allocator;
     const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4000000));
@@ -96,6 +139,30 @@ test "created table source field exterior insertion and prefix preserve linked l
 
 test "created table flat formula inputs recalculate reopen and roll back invalid number" {
     try @import("../testing/checked_allocator.zig").run(verifyFlatFormulaInputs, .{});
+}
+
+test "created table pending body host permits existing formula result edits and reopened identity" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx", a, .limited(4000000));
+    defer a.free(bytes);
+    var session = try @import("editor_session.zig").open(a, bytes, .{});
+    defer session.deinit();
+    var table = try @import("created_table_prepare.zig").prepare(&session, 0, 1, 0, 1, 1, 100, 17, .{ .paragraph = 0, .character = 0, .style = 0, .border_fill = 1 });
+    defer table.deinit(a);
+    try std.testing.expect(try @import("created_table_session.zig").stage(&session, 0, 1, 0, &table));
+    const target = (try @import("formula_result_targets.zig").select(&session, 0, 24, 0, 0)).?;
+    try std.testing.expect(try session.spliceManualFormulaResult(0, target.begin_element, 0, 0, "표뒤😀<&"));
+    const text = try @import("formula_result_projection.zig").readText(&session, 0, 24);
+    defer a.free(text);
+    try std.testing.expectEqualStrings("표뒤😀<&67.5", text);
+    const saved = try session.save();
+    defer a.free(saved);
+    var reopened = try @import("editor_session.zig").open(a, saved, .{});
+    defer reopened.deinit();
+    var current = try @import("formula_current_snapshot.zig").read(a, &reopened, 0);
+    defer current.deinit(a);
+    try std.testing.expectEqualStrings(text, current.rows[0].values.last_result.?);
+    try std.testing.expectEqualSlices(u8, bytes, session.source);
 }
 
 fn verifyFlatFormulaInputs(a: std.mem.Allocator) !void {

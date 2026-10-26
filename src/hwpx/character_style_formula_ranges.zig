@@ -30,7 +30,7 @@ pub fn rebase(a: std.mem.Allocator, sites: *const Sites, current: []const paint.
         if (first.anchor_element != null or first.tab_element != null) {
             if (first.anchor_element != null and first.tab_element != null) return error.InvalidTextSites;
             if (first.end_unit - old_cursor != 1) return error.InvalidTextSites;
-            output[index] = .{ .start_unit = cursor, .end_unit = std.math.add(usize, cursor, 1) catch return error.LimitExceeded, .char_shape_id = first.char_shape_id };
+            output[index] = .{ .start_unit = cursor, .end_unit = std.math.add(usize, cursor, 1) catch return error.LimitExceeded, .char_shape_id = first.char_shape_id, .inline_element = first.tab_element };
             cursor = output[index].end_unit;
             old_cursor = first.end_unit;
             index += 1;
@@ -105,4 +105,29 @@ test "HWPX formula display ranges preserve protected units and Unicode suffix po
     var invalid = spans;
     invalid[2].end_unit = 3;
     try std.testing.expectError(error.SplitSurrogatePair, rebase(a, &sites, &invalid, &.{.{ .site_index = 0, .text = "100" }}, 10));
+}
+
+test "HWPX formula display ranges retain tab provenance after result expansion" {
+    var rows = [_]@import("text_sites.zig").Site{
+        .{ .element_index = 1, .start = 0, .end = 1, .text = @constCast("9") },
+        .{ .element_index = 3, .start = 1, .end = 6, .text = @constCast("😀Z") },
+    };
+    const sites: Sites = .{ .items = &rows };
+    const spans = [_]paint.Span{
+        .{ .start_unit = 0, .end_unit = 1, .site_start_unit = 0, .site_index = 0, .run_element = 0, .char_shape_id = 0 },
+        .{ .start_unit = 1, .end_unit = 2, .site_start_unit = 1, .site_index = std.math.maxInt(usize), .run_element = 0, .char_shape_id = null, .tab_element = 2 },
+        .{ .start_unit = 2, .end_unit = 5, .site_start_unit = 2, .site_index = 1, .run_element = 0, .char_shape_id = 7 },
+    };
+    const Probe = struct {
+        fn run(allocator: std.mem.Allocator, input: *const Sites, styles: []const paint.Span) !void {
+            const result = try rebase(allocator, input, styles, &.{.{ .site_index = 0, .text = "100😀" }}, 10);
+            defer allocator.free(result);
+            try std.testing.expectEqualDeep(&[_]Range{
+                .{ .start_unit = 0, .end_unit = 5, .char_shape_id = 0 },
+                .{ .start_unit = 5, .end_unit = 6, .char_shape_id = null, .inline_element = 2 },
+                .{ .start_unit = 6, .end_unit = 9, .char_shape_id = 7 },
+            }, result);
+        }
+    };
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &sites, &spans });
 }

@@ -11,6 +11,8 @@ pub const Node = struct {
 /// Owns nodes only. Record payloads continue to borrow the caller's input.
 pub const Tree = struct {
     nodes: []Node,
+    /// Exact decoder context; absent only for manually constructed test trees.
+    version: ?Version = null,
     pub fn deinit(self: *Tree, a: std.mem.Allocator) void {
         a.free(self.nodes);
         self.* = undefined;
@@ -50,6 +52,6 @@ pub const Tree = struct {
             depth -= 1;
             nodes.items[stack[depth]].subtree_end = nodes.items.len;
         }
-        return .{ .nodes = try nodes.toOwnedSlice(a) };
+        return .{ .nodes = try nodes.toOwnedSlice(a), .version = iterator.version };
     }
 };

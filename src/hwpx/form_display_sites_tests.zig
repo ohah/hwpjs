@@ -32,7 +32,7 @@ test "HWPX form current sites follow Unicode insertion split and undo without so
     defer a.free(restored);
     try std.testing.expectEqualDeep(inserted, restored);
     try std.testing.expectError(error.InvalidSectionIndex, subject.read(a, &session, 99));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             const rows = try subject.read(allocator, source, 0);
             defer allocator.free(rows);

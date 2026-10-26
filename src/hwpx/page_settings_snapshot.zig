@@ -15,7 +15,7 @@ test "HWPX page settings actual snapshot all allocation failures preserve source
     defer a.free(input);
     var session = try editor.open(a, input, .{});
     defer session.deinit();
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             var report = try read(allocator, source);
             defer report.deinit(allocator);

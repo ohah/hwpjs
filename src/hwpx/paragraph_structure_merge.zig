@@ -237,7 +237,7 @@ test "HWPX explicit merge pair retains actual note owners through host merge" {
     const saved = try session.save();
     defer a.free(saved);
     try std.testing.expectEqualSlices(u8, input, saved);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const @import("xml_part_tree.zig").Tree, values: *const model.Values) !void {
             var result = try preparePair(allocator, parsed, values, 0, 3, 4_000_000);
             defer result.deinit(allocator);

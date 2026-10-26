@@ -64,7 +64,7 @@ test "mixed declaration split plan partitions both arrays without changing sourc
         }
     };
     for ([_]u32{ 0, 1, 2, 3, 4, 5 }) |cut| try Probe.run(a, &section.tree, current, cut);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, current, @as(u32, 1) });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, current, @as(u32, 1) });
     try std.testing.expectError(error.LimitExceeded, prepare(a, &section.tree, current, 1, 1, 2));
     try std.testing.expectEqual(@as(u32, 0), current.column_boundaries.?[0].unit);
     for (current.page_area_positions.?) |area| try std.testing.expectEqual(@as(u32, 5), area.unit);

@@ -167,7 +167,7 @@ test "current run XML retains nested header footer sites and geometry" {
     defer a.free(continuation);
     try std.testing.expect(std.mem.indexOf(u8, continuation, "HEAD") == null);
     try std.testing.expect(std.mem.indexOf(u8, continuation, "앞😀") != null);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const Paragraph) !void {
             for ([_]bool{ false, true }) |generated| {
                 const output = try writeMode(allocator, parsed, current, 2, .{}, 10000, generated);

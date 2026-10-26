@@ -3,7 +3,7 @@ const trees = @import("xml_part_tree.zig");
 const gaps = @import("element_whitespace_gaps.zig");
 const uri = @import("document_xml.zig").paragraph_uri;
 
-pub const Kind = enum(u8) { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number, ole, ellipse, polygon, button, check_button, combo_box, radio_button, edit_box, connector_line, character_composition, conditional_object, dutmal = 20, unknown_object = 21 };
+pub const Kind = enum(u8) { table, picture, equation, rectangle, line, container, footnote, endnote, automatic_number, ole, ellipse, polygon, button, check_button, combo_box, radio_button, edit_box, connector_line, character_composition, conditional_object, dutmal, unknown_object = 21 };
 pub fn isForm(value: Kind) bool {
     return switch (value) {
         .button, .check_button, .combo_box, .radio_button, .edit_box => true,
@@ -59,6 +59,22 @@ test "HWPX connector line anchor is distinct and requires exact direct run owner
     try std.testing.expect(kind(&tree, 5) == null);
     try std.testing.expect(kind(&tree, 6) == null);
     try std.testing.expect(kind(&tree, tree.elements.len) == null);
+    try std.testing.expectEqualStrings(source, tree.source);
+}
+
+test "HWPX dutmal anchor retains separate payload and rejects foreign or nonrun ownership" {
+    const std = @import("std");
+    const a = std.testing.allocator;
+    const source = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:x='urn:foreign'><p:p><p:run><p:dutmal><p:mainText>본문</p:mainText><p:subText>덧말</p:subText></p:dutmal><x:dutmal/></p:run><p:dutmal/></p:p></s:sec>";
+    var tree = try @import("xml_part_tree.zig").parse(a, source, .section, 0, 0, .{});
+    defer tree.deinit(a);
+    var checked: usize = 0;
+    for (tree.elements, 0..) |element, index| {
+        if (!element.name.local.equals("dutmal", false)) continue;
+        if (checked == 0) try std.testing.expectEqual(Kind.dutmal, kind(&tree, index).?) else try std.testing.expect(kind(&tree, index) == null);
+        checked += 1;
+    }
+    try std.testing.expectEqual(@as(usize, 3), checked);
     try std.testing.expectEqualStrings(source, tree.source);
 }
 

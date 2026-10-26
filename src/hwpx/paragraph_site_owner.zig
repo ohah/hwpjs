@@ -6,10 +6,10 @@ const uri = @import("document_xml.zig").paragraph_uri;
 
 /// Nearest paragraph ownership, never a descendant-field search on a host.
 pub fn ownsFieldMarker(tree: *const tree_module.Tree, paragraph: usize) !bool {
-    if (paragraph >= tree.elements.len or !tree.elements[paragraph].is(uri, "p")) return error.InvalidTextSites;
-    for (tree.elements, 0..) |element, index| {
-        if (!element.is(uri, "fieldBegin") and !element.is(uri, "fieldEnd")) continue;
-        if (try ancestor(tree, index) == paragraph) return true;
+    var owned = try @import("paragraph_owned_elements.zig").Iterator.init(tree, paragraph);
+    while (try owned.next()) |index| {
+        const element = tree.elements[index];
+        if (element.is(uri, "fieldBegin") or element.is(uri, "fieldEnd")) return true;
     }
     return false;
 }
@@ -33,7 +33,7 @@ pub fn ancestor(tree: *const tree_module.Tree, element: usize) !usize {
     return (try optionalAncestor(tree, element)) orelse error.SourceBindingMismatch;
 }
 
-/// No paragraph owner is distinct from malformed indices or ancestor cycles.
+/// Absent paragraph ownership is distinct from invalid indices or cycles.
 pub fn optionalAncestor(tree: *const tree_module.Tree, element: usize) !?usize {
     if (element >= tree.elements.len) return error.InvalidTextSites;
     var parent = tree.elements[element].parent;

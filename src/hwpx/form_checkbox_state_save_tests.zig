@@ -10,7 +10,7 @@ test "HWPX checkbox state save binds shifted nodes and preserves all source unde
     const a = std.testing.allocator;
     var tree = try trees.parse(a, source, 0, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *@import("xml_part_tree.zig").Tree) !void {
             const output = try subject.write(allocator, parsed, shifted, &.{.{ .form_node = 3, .state = .unchecked }}, 4096);
             defer allocator.free(output);

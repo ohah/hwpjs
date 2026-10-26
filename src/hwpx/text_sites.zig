@@ -104,7 +104,8 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
             .empty_element = element.end_tag == null,
         });
     }
-    // Existing text and empty runs keep insertion affinity over metadata.
+    // Existing source text (including empty t) keeps insertion affinity.
+    // A metadata-only fallback belongs only to a paragraph with no text site.
     for (tree.elements, 0..) |_, index| {
         if (!frames[index].active or !isTextElement(tree, frames, index)) continue;
         if (try @import("paragraph_site_owner.zig").optionalAncestor(tree, index)) |owner| covered[owner] = true;

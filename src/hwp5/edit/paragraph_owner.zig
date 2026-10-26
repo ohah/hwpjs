@@ -24,6 +24,9 @@ pub fn inspectGroups(a: std.mem.Allocator, tree: Tree, version: Version) !Groups
         switch (record.tag) {
             @backingInt(body.Tag.control_header) => node.record.value = .{ .control_header = try body.ControlHeader.parse(record.payload) },
             @backingInt(body.Tag.list_header) => node.record.value = .{ .list_header = try body.ListHeader.parse(record.payload) },
+            @backingInt(body.Tag.memo_list) => node.record.value = .{ .memo_list = try body.memo_list.Header.parse(record.payload) },
+            // Ownership inspection preserves the original record. Recognize a
+            // wholly absent zone count without accepting a partial count/zone.
             @backingInt(body.Tag.table) => node.record.value = .{ .table = try body.Table.parseWithZoneCountPolicy(record.payload, version, .observed_absent) },
             else => {},
         }

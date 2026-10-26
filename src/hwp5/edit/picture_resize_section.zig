@@ -10,7 +10,7 @@ pub fn write(a: std.mem.Allocator, source: []const u8, version: Version, picture
     const control = tree.nodes[root].record;
     const properties = try @import("../body/object_common.zig").parseControl(control.value.control_header);
     if (properties.sizeProtected()) return error.PictureSizeProtected;
-    if ((properties.flags >> 15) & 7 != 4 or (properties.flags >> 18) & 3 != 2) return error.UnsupportedRelativePictureResize;
+    if (!@import("../body/object_common.zig").hasAbsoluteDimensions(properties.flags)) return error.UnsupportedRelativePictureResize;
     const component_node = tree.nodes[picture_node].parent.?;
     const layout = try @import("../body/shape_validation.zig").componentLayout(tree, component_node);
     const record = tree.nodes[component_node].record.framing;

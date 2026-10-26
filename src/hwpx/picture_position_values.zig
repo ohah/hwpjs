@@ -19,8 +19,27 @@ pub fn readLine(a: std.mem.Allocator, tree: *const Tree, line: usize) !Values {
     if (line >= tree.elements.len or !fields.childIs(tree, line, "line")) return error.InvalidLineGeometryNode;
     return readComponent(a, tree, line);
 }
+
+pub fn readChart(a: std.mem.Allocator, tree: *const Tree, chart: usize) !Values {
+    if (chart >= tree.elements.len or !fields.childIs(tree, chart, "chart")) return error.InvalidChartGeometryNode;
+    return readComponent(a, tree, chart);
+}
+pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
+    return readComponent(a, tree, node);
+}
 pub fn readConnector(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     if (node >= tree.elements.len or !fields.childIs(tree, node, "connectLine")) return error.InvalidConnectorGeometryNode;
+    return readComponent(a, tree, node);
+}
+
+pub fn readCurve(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "curve")) return error.InvalidCurveGeometryNode;
+    return readComponent(a, tree, node);
+}
+
+pub fn readEllipse(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ellipse")) return error.InvalidEllipseGeometryNode;
     return readComponent(a, tree, node);
 }
 
@@ -36,11 +55,6 @@ pub fn readContainer(a: std.mem.Allocator, tree: *const Tree, container: usize) 
 pub fn readForm(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     const kind = @import("run_anchor.zig").kind(tree, node) orelse return error.InvalidFormNode;
     if (!@import("run_anchor.zig").isForm(kind)) return error.InvalidFormNode;
-    return readComponent(a, tree, node);
-}
-
-pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
-    if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
     return readComponent(a, tree, node);
 }
 

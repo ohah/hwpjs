@@ -245,6 +245,10 @@ fn bind(state: *const State, a: std.mem.Allocator, owner: *const anyopaque, curr
 }
 
 fn validateProvenance(section: model.Section) !void {
+    if (section.form_values) |values| for (values, 0..) |value, i| {
+        if (value.source_node >= section.source_record_count or value.text.len % 2 != 0) return error.SourceBindingMismatch;
+        if (i > 0 and values[i - 1].source_node >= value.source_node) return error.SourceBindingMismatch;
+    };
     if (section.picture_current_sizes) |values| for (values) |value| {
         if (value.source_picture_node >= section.source_record_count) return error.SourceBindingMismatch;
     };
@@ -271,6 +275,10 @@ pub fn size(document: *const model.Document, limit: usize) !usize {
     try add(&total, document.font_resources.entries.capacity, @sizeOf(@import("../../model/font_face_value.zig").Value), limit);
     for (document.font_resources.entries.items) |font| if (font.name) |name| try add(&total, name.len, 1, limit);
     for (document.sections) |section| {
+        if (section.form_values) |values| {
+            try add(&total, values.len, @sizeOf(@import("../../model/form_values.zig").Value), limit);
+            for (values) |value| try add(&total, value.text.len, 1, limit);
+        }
         if (section.picture_current_sizes) |values| try add(&total, values.len, @sizeOf(model.PictureCurrentSize), limit);
         if (section.table_cell_sizes) |values| try add(&total, values.len, @sizeOf(model.TableCellSize), limit);
         try add(&total, section.paragraphs.len, @sizeOf(model.Paragraph), limit);

@@ -23,13 +23,28 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.
     defer links.deinit(a);
     var owners = try @import("current_paragraph_sources.zig").build(a, paragraphs);
     defer owners.deinit(a);
+    for (paragraphs) |p| if (p.restart_control_source != null) {
+        const index = (try @import("page_restart_source.zig").forParagraph(links.items, p)).?;
+        _ = try @import("page_restart_source.zig").token(tree, links.items, index);
+    };
     var out: std.ArrayList(Source) = .empty;
     errdefer out.deinit(a);
     for (links.items, 0..) |link, index| {
         const kind: @FieldType(Source, "kind") = if (link.header_id == rules.id("pgnp")) .position else if (link.header_id == rules.id("pghd")) .hide else if (link.header_id == rules.id("nwno")) .restart else if (link.header_id == rules.id("pgct")) .parity else continue;
         if (link.code != 21) return error.UnsupportedPageControlAnchor;
-        const paragraph = owners.get(@intCast(link.paragraph_node)) orelse return error.MissingPageControlOwner;
-        var row: Source = .{ .kind = kind, .control_node = link.control_node, .paragraph = paragraph, .source_unit = link.start_unit, .current_unit = try @import("current_control_anchor.zig").position(links.items, index, paragraphs[paragraph]) };
+        const paragraph = owners.get(@intCast(link.paragraph_node));
+        var continuation = false;
+        if (kind == .restart) for (paragraphs) |p| {
+            if ((p.source_node == null and p.header_template == @as(u32, @intCast(link.paragraph_node))) or p.restart_control_source == @as(u32, @intCast(link.control_node))) {
+                continuation = true;
+                break;
+            }
+        };
+        const anchor: @import("current_restart_anchor.zig").Anchor = if (continuation)
+            try @import("current_restart_anchor.zig").resolve(a, tree, links.items, index, paragraphs)
+        else
+            .{ .paragraph = paragraph orelse return error.MissingPageControlOwner, .unit = try @import("current_control_anchor.zig").position(links.items, index, paragraphs[paragraph.?]) };
+        var row: Source = .{ .kind = kind, .control_node = link.control_node, .paragraph = anchor.paragraph, .source_unit = link.start_unit, .current_unit = anchor.unit };
         const properties = tree.nodes[link.control_node].record.value.control_header.properties;
         const extra = switch (kind) {
             .position => blk: {
@@ -92,7 +107,7 @@ test "HWP5 page control sources actual distribution anchors shift and allocation
         try std.testing.expectEqual(before.current_unit + @as(u32, if (before.paragraph == 0) 3 else 0), after.current_unit);
     }
     try std.testing.expectError(error.InvalidSection, session.pageControlSources(a, 999));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, s: *const @import("style_preservation.zig").Session, expected: []const Source) !void {
             const actual = try s.pageControlSources(allocator, 0);
             defer allocator.free(actual);

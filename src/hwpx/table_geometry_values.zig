@@ -7,6 +7,7 @@ const specs = @import("shape_xml_fields.zig");
 const enums = @import("picture_enum_value.zig");
 pub const Values = struct {
     geometry: shared.Values,
+    z_order: ?i64 = null,
     text_wrap: ?u32 = null,
     text_flow: ?u32 = null,
     affect_line_spacing: ?bool = null,
@@ -45,6 +46,7 @@ fn margin(a: std.mem.Allocator, tree: *const Tree, table: usize, name: []const u
 
 pub fn read(a: std.mem.Allocator, tree: *const Tree, table: usize) !Values {
     var result = Values{ .geometry = try shared.readTable(a, tree, table) };
+    result.z_order = try @import("picture_flow_values.zig").readZOrder(a, tree, table);
     result.text_wrap = try enums.readExtended(a, tree, table, specs.table_specs[3]);
     result.text_flow = try enums.read(a, tree, table, specs.table_specs[4]);
     if (try child(tree, table, "pos")) |node| {
@@ -80,7 +82,7 @@ test "HWPX table complete placement actual values and allocation failures" {
         try std.testing.expectEqual(@as(?u32, 2), value.horizontal_relative);
         try std.testing.expectEqualDeep(@as(?[4]?i64, .{ 283, 283, 283, 283 }), value.out_margin);
         try std.testing.expectEqualDeep(@as(?[4]?i64, .{ 141, 141, 141, 141 }), value.in_margin);
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, expected: Values) !void {
                 try std.testing.expectEqualDeep(expected, try read(allocator, source, index));
             }
@@ -100,9 +102,28 @@ test "HWPX table complete placement distinguishes missing empty and duplicate ma
     try std.testing.expectEqual(@as(?bool, null), absent.flow_with_text);
     try std.testing.expectEqual(@as(?u32, null), absent.text_wrap);
     try std.testing.expectEqual(@as(?u32, null), absent.text_flow);
+    try std.testing.expectEqual(@as(?i64, null), absent.z_order);
     const empty = try read(a, &tree, 2);
     try std.testing.expectEqualDeep(@as(?[4]?i64, .{ null, null, null, null }), empty.in_margin);
     try std.testing.expectError(error.DuplicateTableGeometryChild, read(a, &tree, 4));
+}
+
+test "HWPX table complete placement preserves signed unsigned and absent source z order" {
+    const a = std.testing.allocator;
+    const prefix = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'>";
+    var tree = try @import("section_tree.zig").parse(a, prefix ++ "<p:tbl zOrder='0'/><p:tbl zOrder='-1'/><p:tbl zOrder='4294967295'/><p:tbl zOrder='-2147483649'/><p:tbl zOrder='4294967296'/></s:sec>", 0, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectEqual(@as(?i64, 0), (try read(a, &tree, 1)).z_order);
+    try std.testing.expectEqual(@as(?i64, -1), (try read(a, &tree, 2)).z_order);
+    try std.testing.expectEqual(@as(?i64, 4294967295), (try read(a, &tree, 3)).z_order);
+    try std.testing.expectError(error.InvalidSignedOrUnsigned32, read(a, &tree, 4));
+    try std.testing.expectError(error.InvalidSignedOrUnsigned32, read(a, &tree, 5));
+    const expected = try read(a, &tree, 3);
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, value: Values) !void {
+            try std.testing.expectEqualDeep(value, try read(allocator, source, index));
+        }
+    }.run, .{ &tree, @as(usize, 3), expected });
 }
 
 test "HWPX table complete placement reads wrap extensions and rejects unknown policy" {

@@ -11,6 +11,11 @@ pub fn find(bytes: []const u8, field_id: u32, ordinal: usize) !Span {
     return (try scan(bytes, field_id, ordinal, false, null)) orelse error.SourceBindingMismatch;
 }
 
+/// Structural local pairing only, without granting a field edit policy.
+pub fn validateLocal(bytes: []const u8) !void {
+    _ = try scan(bytes, 0, 0, false, null);
+}
+
 pub fn validateEditable(bytes: []const u8) !void {
     _ = try scan(bytes, 0, 0, true, null);
 }

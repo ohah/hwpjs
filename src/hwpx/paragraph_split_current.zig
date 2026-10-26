@@ -60,7 +60,7 @@ test "HWPX split current output preserves non-target edits and is atomic on ever
     try std.testing.expectEqualStrings("편집<&first", current.items[0].text);
     try std.testing.expectEqualStrings("😀AB", current.items[1].text);
     try std.testing.expectEqualStrings(source, tree.source);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed_tree: *const Tree, borrowed_sites: *const sites_mod.Sites, fields: []const Dirty) !void {
             const bytes = try write(allocator, borrowed_tree, borrowed_sites, .{}, fields, 2, 3, 3, 3, 2000);
             defer allocator.free(bytes);

@@ -17,6 +17,17 @@ pub fn canEdit(self: *const @import("editor_session.zig").Session, section_index
         }
     }
     const current = &(section.structure_values orelse return false);
+    if (paragraph - section.first_paragraph >= current.paragraphs.len) return error.InvalidParagraphIndex;
+    if (current.paragraphs[paragraph - section.first_paragraph].field_positions == null) {
+        const inherited = @import("field_source_outside_positions.zig").prepareAction(self, section_index, paragraph, start, end, .splice) catch |err| switch (err) {
+            error.ProtectedFieldRange, error.UnsupportedInlineControl, error.UnsupportedParagraphControl => return false,
+            else => return err,
+        };
+        if (inherited) |positions| {
+            self.allocator.free(positions);
+            return true;
+        }
+    }
     const has_formula = try @import("formula_section_save.zig").hasFormula(self.allocator, &section.tree);
     if (has_formula) {
         const plan = (@import("structural_formula_exterior.zig").prepare(self, section_index, paragraph, start, end) catch |err| switch (err) {
@@ -39,11 +50,12 @@ pub fn canEdit(self: *const @import("editor_session.zig").Session, section_index
     for (self.sections, trees) |part, *tree| tree.* = part.tree;
     var report = try @import("field_markers.zig").inspect(a, trees, .{});
     defer report.deinit();
-    const spans = @import("field_current_spans.zig").buildForExterior(a, trees, section_index, current, index, &report, 200000) catch |err| switch (err) {
+    var projection = @import("field_current_spans.zig").projectForExterior(a, trees, section_index, current, index, &report, @import("editor_session.zig").siteOptions(self.options), 200000) catch |err| switch (err) {
         error.UnsupportedStructuralFieldEdit => return false,
         else => return err,
     };
-    defer a.free(spans);
+    defer projection.deinit(a);
+    const spans = projection.spans;
     for (spans) |span| if (has_formula and span.paragraph_index == index) {
         const marker = for (report.markers) |entry| {
             if (entry.kind == .begin and entry.section_ordinal == section_index and entry.element_index == span.begin_element) break entry;
@@ -62,5 +74,9 @@ pub fn canEdit(self: *const @import("editor_session.zig").Session, section_index
     try text.validateRange(segments, start, end);
     try text.validateBoundary(&row.sites, segments, start);
     try text.validateBoundary(&row.sites, segments, end);
+    _ = @import("field_current_exterior_insertion_site.zig").selectProjected(a, trees, section_index, current, index, &report, start, end - start, &projection) catch |err| switch (err) {
+        error.UnsupportedStructuralFieldEdit, error.ProtectedFieldRange => return false,
+        else => return err,
+    };
     return true;
 }

@@ -24,14 +24,14 @@ pub fn prepare(a: std.mem.Allocator, trees: []const Tree, section: usize, curren
     const left = &current.paragraphs[index];
     const right = &current.paragraphs[right_index];
     for ([_]*const model.Paragraph{ left, right }) |row| {
-        if (row.source_ordinal == null or row.generated_id != null or row.pieces != null or row.field_positions != null or row.protected_positions != null or row.column_boundaries != null) return error.UnsupportedStructuralFieldEdit;
+        if (row.source_ordinal == null or row.generated_id != null or row.pieces != null or row.protected_positions != null or row.column_boundaries != null) return error.UnsupportedStructuralFieldEdit;
     }
     if (left.template_element == right.template_element) return error.SourceBindingMismatch;
     var report = try @import("field_markers.zig").inspect(a, trees, .{});
     defer report.deinit();
-    const one = try @import("field_source_positions.zig").build(a, trees, section, left, &report, limit);
+    const one = try @import("field_original_positions.zig").build(a, trees, section, left, &report, limit);
     defer a.free(one);
-    const two = try @import("field_source_positions.zig").build(a, trees, section, right, &report, limit);
+    const two = try @import("field_original_positions.zig").build(a, trees, section, right, &report, limit);
     defer a.free(two);
     var boundary: usize = 0;
     for (left.sites.items) |site| boundary = std.math.add(usize, boundary, try @import("text_site_edit.zig").utf16Length(site.text)) catch return error.LimitExceeded;
@@ -68,6 +68,57 @@ test "field source merge plan preserves actual cross-paragraph links without mut
     try std.testing.expectError(error.InvalidSectionIndex, prepare(a, &trees, 1, &current, 0, 1, 100));
     try std.testing.expectError(error.InvalidParagraphIndex, prepare(a, &trees, 0, &current, 1, 0, 100));
     try std.testing.expectError(error.LimitExceeded, prepare(a, &trees, 0, &current, 0, 1, 0));
+    const saved = try session.save();
+    defer a.free(saved);
+    try std.testing.expectEqualSlices(u8, input, saved);
+}
+
+test "field source merge plan validates retained original positions before merging" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwpx", a, .limited(4_000_000));
+    defer a.free(input);
+    var session = try @import("editor_session.zig").open(a, input, .{});
+    defer session.deinit();
+    const part = &session.sections[0];
+    const trees = [_]Tree{part.tree};
+    var counters: @import("section_text.zig").Report = .{};
+    var current = try @import("paragraph_structure_collect.zig").collect(a, &part.tree, &part.sites, part.locations, .{}, &counters);
+    defer current.deinit(a);
+    var original = try prepare(a, &trees, 0, &current, 0, 1, 100);
+    defer original.deinit(a);
+    var report = try @import("field_markers.zig").inspect(a, &trees, .{});
+    defer report.deinit();
+    for (current.paragraphs[0..2]) |*row| row.field_positions = try @import("field_source_positions.zig").build(a, &trees, 0, row, &report, 100);
+    var retained = try prepare(a, &trees, 0, &current, 0, 1, 100);
+    defer retained.deinit(a);
+    try std.testing.expectEqual(original.markers.len, retained.markers.len);
+    for (original.markers, retained.markers) |one, two| try std.testing.expect(std.meta.eql(one, two));
+    try @import("../testing/allocation_failures.zig").check(struct {
+        fn run(allocator: std.mem.Allocator, inputs: []const Tree, values: *const model.Values) !void {
+            var result = try prepare(allocator, inputs, 0, values, 0, 1, 100);
+            defer result.deinit(allocator);
+            try std.testing.expect(result.markers.len > 0);
+        }
+    }.run, .{ &trees, &current });
+    var mutations: usize = 0;
+    for (current.paragraphs[0..2]) |*row| {
+        if (row.field_positions.?.len == 0) continue;
+        const marker = &row.field_positions.?[0];
+        const valid = marker.*;
+        for (0..4) |kind| {
+            marker.* = valid;
+            switch (kind) {
+                0 => marker.unit += 1,
+                1 => marker.element_index += 1,
+                2 => marker.begin_element += 1,
+                else => marker.kind = if (valid.kind == .begin) .end else .begin,
+            }
+            try std.testing.expectError(error.InvalidFieldPositions, prepare(a, &trees, 0, &current, 0, 1, 100));
+            mutations += 1;
+        }
+        marker.* = valid;
+    }
+    try std.testing.expect(mutations >= 4);
     const saved = try session.save();
     defer a.free(saved);
     try std.testing.expectEqualSlices(u8, input, saved);

@@ -66,7 +66,7 @@ test "mixed declaration remerge candidate preserves source through allocation fa
         }
     };
     try Probe.run(a, &section.tree, source, 2);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, source, @as(usize, 2) });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, source, @as(usize, 2) });
     try std.testing.expectEqualDeep(snapshot, source.*);
     try std.testing.expectError(error.InvalidParagraphIndex, prepare(a, &section.tree, source, 0, 0, 4000000));
     try std.testing.expectError(error.InvalidParagraphAdjacency, prepare(a, &section.tree, source, 0, 2, 4000000));
@@ -82,6 +82,6 @@ test "mixed declaration remerge candidate preserves source through allocation fa
     var ordered_snapshot = try ordered_source.clone(a);
     defer ordered_snapshot.deinit(a);
     try Probe.run(a, &ordered_section.tree, ordered_source, 2);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &ordered_section.tree, ordered_source, @as(usize, 2) });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &ordered_section.tree, ordered_source, @as(usize, 2) });
     try std.testing.expectEqualDeep(ordered_snapshot, ordered_source.*);
 }

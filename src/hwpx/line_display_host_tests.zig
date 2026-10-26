@@ -33,7 +33,7 @@ test "HWPX line display host follows actual split input merge history and alloca
     try probe(a, &session, nodes[0], 1, 0);
     try probe(a, &session, nodes[1], 2, 0);
     try std.testing.expect(try history.apply(&session, .{ .kind = .anchored, .paragraph = 2, .start = 0, .deleted = 0, .inserted = "앞😀" }));
-    try std.testing.checkAllAllocationFailures(a, probe, .{ &session, nodes[1], 2, 3 });
+    try @import("../testing/allocation_failures.zig").check(probe, .{ &session, nodes[1], 2, 3 });
     try std.testing.expect(try history.apply(&session, .{ .kind = .merge, .paragraph = 1, .start = 0, .deleted = 0, .inserted = "" }));
     try probe(a, &session, nodes[0], 1, 0);
     try probe(a, &session, nodes[1], 1, 4);

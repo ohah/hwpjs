@@ -141,6 +141,6 @@ test "column joined character style candidate and save preserve source under all
         }
     };
     try Probe.run(a, tree, source);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ tree, source });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ tree, source });
     try Probe.unchanged(source);
 }

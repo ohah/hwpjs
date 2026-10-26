@@ -28,16 +28,28 @@ fn small(bytes: []const u8, maximum: u8) ?u8 {
     }
     return value;
 }
-fn flag(tree: Tree, report: schema.Report, field: schema.Field) Flag {
+pub fn flagObserved(tree: Tree, report: schema.Report, field: schema.Field) Flag {
     const p = report.get(tree, field) orelse return .missing;
     const n = small(p.value, 1) orelse return .unrecognized;
     return if (n == 0) .off else .on;
 }
+pub fn choiceObserved(bytes: []const u8, tri: Flag) Choice {
+    return switch (small(bytes, 2) orelse return .deferred) {
+        0 => .unchecked,
+        1 => .checked,
+        2 => switch (tri) {
+            .on => .indeterminate,
+            .off => .invalid,
+            else => .deferred,
+        },
+        else => unreachable,
+    };
+}
 /// Same parsed Tree/schema and stored reference result. Official UI semantics,
 /// applied to the explicit observed 0/1 wire model; no defaults or layout guesses.
 pub fn inspectObserved(tree: Tree, report: schema.Report, kind: Kind, stored: Resolution) Report {
-    const follow = flag(tree, report, .follow_context);
-    const tri = flag(tree, report, .tri_state);
+    const follow = flagObserved(tree, report, .follow_context);
+    const tri = flagObserved(tree, report, .tri_state);
     const source: CharSource = switch (follow) {
         .off => .explicit,
         .on => .surrounding,
@@ -52,16 +64,7 @@ pub fn inspectObserved(tree: Tree, report: schema.Report, kind: Kind, stored: Re
     if (kind == .check_box or kind == .radio_button) {
         choice = .deferred;
         if (report.get(tree, .value)) |p| {
-            if (small(p.value, 2)) |n| choice = switch (n) {
-                0 => .unchecked,
-                1 => .checked,
-                2 => switch (tri) {
-                    .on => .indeterminate,
-                    .off => .invalid,
-                    else => .deferred,
-                },
-                else => unreachable,
-            };
+            choice = choiceObserved(p.value, tri);
         }
     }
     return .{ .follow_context = follow, .char_source = source, .active_reference = active, .tri_state = tri, .choice = choice };

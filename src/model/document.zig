@@ -34,6 +34,9 @@ pub const Paragraph = struct {
     source_node: ?u32,
     /// Header template provenance for generated paragraphs, not an original node.
     header_template: ?u32 = null,
+    /// Immutable section CTRL_HEADER identity after cross-original merging.
+    /// Current text remains in tokens; no stored control values are cached here.
+    restart_control_source: ?u32 = null,
     /// Explicit new-continuation flow intent, never a copy of source flags.
     break_before: ?@import("paragraph_break.zig").Kind = null,
     /// Serialized paragraph ID; distinct from immutable source record index.
@@ -91,12 +94,14 @@ pub const Section = struct {
     source_record_count: usize,
     table_cell_sizes: ?[]TableCellSize = null,
     picture_current_sizes: ?[]PictureCurrentSize = null,
+    form_values: ?[]@import("form_values.zig").Value = null,
 
     pub fn deinit(self: *Section, a: std.mem.Allocator) void {
         for (self.paragraphs) |*paragraph| paragraph.deinit(a);
         a.free(self.paragraphs);
         if (self.table_cell_sizes) |values| a.free(values);
         if (self.picture_current_sizes) |values| a.free(values);
+        if (self.form_values) |values| @import("form_values.zig").deinit(a, values);
         self.* = undefined;
     }
 };
@@ -110,7 +115,7 @@ pub const ParagraphMarginPatch = struct {
 };
 pub const ParagraphSpacing = struct { kind: u32, value: i32 };
 pub const CharacterUnderlineKind = enum(u2) { none, bottom, center, top };
-pub const CharacterPropertyPatch = struct { size: ?i32 = null, bold: ?bool = null, italic: ?bool = null, emboss: ?bool = null, engrave: ?bool = null, superscript: ?bool = null, subscript: ?bool = null, outline_kind: ?@import("character_outline_kind.zig").Kind = null, strike_enabled: ?bool = null, underline_kind: ?CharacterUnderlineKind = null, underline_color: ?u32 = null, text_color: ?u32 = null, shade: ?@import("shade_color.zig").Intent = null, font_ids: ?@import("character_fonts.zig").Values = null };
+pub const CharacterPropertyPatch = struct { size: ?i32 = null, bold: ?bool = null, italic: ?bool = null, emboss: ?bool = null, engrave: ?bool = null, superscript: ?bool = null, subscript: ?bool = null, outline_kind: ?@import("character_outline_kind.zig").Kind = null, strike_enabled: ?bool = null, strike_color: ?u32 = null, underline_kind: ?CharacterUnderlineKind = null, underline_color: ?u32 = null, text_color: ?u32 = null, shade: ?@import("shade_color.zig").Intent = null, font_ids: ?@import("character_fonts.zig").Values = null };
 pub const CharacterResourceIntent = struct { source_id: u32, properties: CharacterPropertyPatch };
 pub const ParagraphResourceIntent = struct { source_id: u16, alignment: u3, margins: ParagraphMarginPatch = .{}, spacing: ?ParagraphSpacing = null };
 pub const Document = struct {

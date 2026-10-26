@@ -11,6 +11,7 @@ var output: ?[]u8 = null;
 var reflow: bool = false;
 var normalization: ?@import("../cfb/observed_repairs.zig").Deviations = null;
 var available_section_copy: ?@import("../hwp5/edit/available_section_copy.zig").Report = null;
+var view_epoch: @import("editor_view_epoch.zig").Epoch = .{};
 
 fn fail(err: anyerror) u32 {
     _ = errors.fail(err);
@@ -47,6 +48,7 @@ export fn hwp5_edit_reflow() u32 {
     return @intFromBool(reflow);
 }
 export fn hwp5_edit_close() void {
+    view_epoch.invalidate();
     hwp5_edit_output_free();
     if (history) |*value| value.deinit();
     history = null;
@@ -161,10 +163,15 @@ fn travel(redo: bool) u32 {
         _ = fail(error.HistoryNotEnabled);
         return 2;
     };
+    const next_epoch = view_epoch.next() catch |err| {
+        _ = fail(err);
+        return 2;
+    };
     const changed = (if (redo) value.redo(s) else value.undo(s)) catch |err| {
         _ = fail(err);
         return 2;
     };
+    if (changed) view_epoch.value = next_epoch;
     return @intFromBool(changed);
 }
 export fn hwp5_edit_undo() u32 {
@@ -175,14 +182,119 @@ export fn hwp5_edit_redo() u32 {
 }
 fn apply(command: edit.Command) !void {
     const s = try session();
+    const next_epoch = try view_epoch.next();
     if (history) |*value| {
-        _ = try value.apply(s, command);
-    } else try s.apply(command);
+        if (try value.apply(s, command)) view_epoch.value = next_epoch;
+    } else {
+        try s.apply(command);
+        view_epoch.value = next_epoch;
+    }
+}
+
+export fn hwp5_edit_current_references(section: u32, first: u32, count: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    output = @import("hwp5_current_snapshot.zig").write(a, s, epoch, section, first, count) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_current_source_references(section: u32, first: u32, count: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    output = @import("hwp5_current_snapshot.zig").writeSources(a, s, epoch, section, first, count) catch |err| return fail(err);
+    return 1;
+}
+
+export fn hwp5_edit_copy_current_text(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    const reference = @import("hwp5_current_reference.zig").decode(a, ptr[0..size], epoch) catch |err| return fail(err);
+    const section = switch (reference) {
+        .source => |r| r.section,
+        .created_cell => |r| r.section,
+    };
+    output = s.copyCurrentParagraphTextUtf16(a, section, reference) catch |err| return fail(err);
+    return 1;
+}
+
+export fn hwp5_edit_splice_current(ref_ptr: [*]const u8, ref_size: usize, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize) u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    if (text_size > 4 * 1024 * 1024) return fail(error.LimitExceeded);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    const reference = @import("hwp5_current_reference.zig").decode(a, ref_ptr[0..ref_size], epoch) catch |err| return fail(err);
+    const section = switch (reference) {
+        .source => |r| r.section,
+        .created_cell => |r| r.section,
+    };
+    apply(.{ .splice_current_paragraph = .{ .section = section, .reference = reference, .start_unit = start, .end_unit = end, .utf8 = text_ptr[0..text_size] } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_insert_table(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    var prepared = @import("hwp5_table_creation_request.zig").prepare(a, s, ptr[0..size]) catch |err| return fail(err);
+    defer prepared.deinit(a);
+    // Prepare the reply before commit: no allocation failure after mutation.
+    const identity = std.fmt.allocPrint(a, "{d}", .{prepared.table.identity}) catch |err| return fail(err);
+    defer a.free(identity);
+    const response = std.json.Stringify.valueAlloc(a, .{ .identity = identity }, .{}) catch |err| return fail(err);
+    apply(prepared.command()) catch |err| {
+        a.free(response);
+        return fail(err);
+    };
+    output = response;
+    return 1;
+}
+export fn hwp5_edit_created_tables(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.createdTables(a, section) catch |err| return fail(err);
+    defer @import("../hwp5/edit/created_table_snapshot.zig").deinit(a, rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_table_creation_resources() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    output = @import("hwp5_table_creation_resources.zig").write(a, s.createdTableResources()) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_current_text_preview() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    output = s.currentTextPreview(a) catch |err| return fail(err);
+    return 1;
 }
 export fn hwp5_edit_set_formula_definition(section: u32, source_node: u32, ptr: [*]const u8, size: usize) u32 {
     hwp5_edit_output_free();
     if (size > @import("../hwp5/edit/formula_definition_command.zig").max_expression_bytes) return fail(error.LimitExceeded);
     apply(.{ .set_formula_definition = .{ .section = section, .source_node = source_node, .formula = ptr[0..size] } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_select_form_radio(section: u32, form_node: u32) u32 {
+    hwp5_edit_output_free();
+    apply(.{ .select_form_radio = .{ .section = section, .form_node = form_node } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_radio_unnamed_singleton() u32 {
+    return 1;
+}
+export fn hwp5_edit_form_text_retains_layout_flags() u32 {
+    return 1;
+}
+export fn hwp5_edit_set_form_choice(section: u32, form_node: u32, state: u32) u32 {
+    hwp5_edit_output_free();
+    if (state > 2) return fail(error.InvalidFormChoiceState);
+    apply(.{ .set_form_choice = .{ .section = section, .form_node = form_node, .state = @intCast(state) } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_form_text(section: u32, form_node: u32, ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > 196605) return fail(error.LimitExceeded);
+    apply(.{ .set_form_text = .{ .section = section, .form_node = form_node, .text = ptr[0..size] } }) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_formula_sources(section: u32) u32 {
@@ -399,7 +511,10 @@ export fn hwp5_edit_character_strike_styles() u32 {
     const Row = @import("../model/character_strike_snapshot.zig").StyleRow;
     const rows = a.alloc(Row, shapes.len) catch |err| return fail(err);
     defer a.free(rows);
-    for (shapes, rows) |shape, *row| row.* = .{ .id = shape.id, .raw_style = shape.strike_style_raw, .raw_color = shape.strike_color_raw };
+    for (shapes, rows) |shape, *row| {
+        const effective = @import("../hwp5/edit/character_decoration_compat.zig").resolve(shape);
+        row.* = .{ .id = shape.id, .raw_style = effective.strike_style, .raw_color = effective.strike_color };
+    }
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
@@ -411,11 +526,7 @@ export fn hwp5_edit_character_strikes() u32 {
     const Row = @import("../model/character_strike_snapshot.zig").Row;
     const rows = a.alloc(Row, shapes.len) catch |err| return fail(err);
     defer a.free(rows);
-    for (shapes, rows) |shape, *row| row.* = .{ .id = shape.id, .enabled = switch (shape.strike_kind_raw) {
-        0 => false,
-        1 => true,
-        else => null,
-    } };
+    for (shapes, rows) |shape, *row| row.* = .{ .id = shape.id, .enabled = @import("../hwp5/edit/character_decoration_compat.zig").resolve(shape).strike_enabled };
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
@@ -427,7 +538,7 @@ export fn hwp5_edit_character_underlines() u32 {
     const Row = @import("../model/character_underline_snapshot.zig").Row;
     const rows = a.alloc(Row, shapes.len) catch |err| return fail(err);
     defer a.free(rows);
-    for (shapes, rows) |shape, *row| row.* = .{ .id = shape.id, .kind = switch (shape.underline_kind_raw) {
+    for (shapes, rows) |shape, *row| row.* = .{ .id = shape.id, .kind = switch (@import("../hwp5/edit/character_decoration_compat.zig").resolve(shape).underline_kind) {
         0 => .none,
         1 => .bottom,
         3 => .top,
@@ -462,6 +573,15 @@ export fn hwp5_edit_table_bindings(section: u32) u32 {
     const bindings = s.tableBindings(a, section) catch |err| return fail(err);
     defer a.free(bindings);
     output = @import("table_bindings_wire.zig").encode(a, bindings) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
+    const wire = @import("cell_size_batch.zig");
+    if (length > wire.max_cells * wire.stride) return fail(error.LimitExceeded);
+    const s = session() catch |err| return fail(err);
+    const commands = wire.build(.hwp5, a, ptr[0..length]) catch |err| return fail(err);
+    defer a.free(commands);
+    applyBatch(s, commands) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_set_cell_size(section: u32, list_node: u32, width: u32, height: u32) u32 {
@@ -500,6 +620,14 @@ export fn hwp5_edit_cell_layout_sources(section: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_border_fill_sources() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.borderFillSources(a) catch |err| return fail(err);
+    defer @import("../hwp5/edit/border_fill_sources.zig").deinit(a, rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_table_anchors(section: u32) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);
@@ -528,6 +656,30 @@ export fn hwp5_edit_caption_sources(section: u32) u32 {
     const s = session() catch |err| return fail(err);
     const rows = s.captionSources(a, section) catch |err| return fail(err);
     defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_form_sources(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.formSources(a, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_form_anchors(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.formAnchors(a, section) catch |err| return fail(err);
+    defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_form_properties(section: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const rows = s.formProperties(a, section) catch |err| return fail(err);
+    defer @import("../hwp5/edit/form_property_snapshot.zig").deinit(a, rows);
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
@@ -592,6 +744,32 @@ export fn hwp5_edit_drawing_rectangle_corners(section: u32) u32 {
     const s = session() catch |err| return fail(err);
     const rows = s.drawingRectangleCorners(a, section) catch |err| return fail(err);
     defer a.free(rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_drawing_curve_points(section: u32, layout_id: u32) u32 {
+    hwp5_edit_output_free();
+    const layout: @import("../hwp5/body/shape_curve.zig").Layout = switch (layout_id) {
+        0 => .specified_i16_axes,
+        1 => .observed_i32_points,
+        else => return fail(error.InvalidCurvePointLayout),
+    };
+    const s = session() catch |err| return fail(err);
+    const rows = s.drawingCurvePoints(a, section, layout) catch |err| return fail(err);
+    defer @import("../hwp5/edit/drawing_curve_points.zig").free(a, rows);
+    output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_drawing_polygon_points(section: u32, layout_id: u32) u32 {
+    hwp5_edit_output_free();
+    const layout: @import("../hwp5/body/shape_polygon.zig").Layout = switch (layout_id) {
+        0 => .specified_i16_axes,
+        1 => .observed_i32_points,
+        else => return fail(error.InvalidPolygonLayout),
+    };
+    const s = session() catch |err| return fail(err);
+    const rows = s.drawingPolygonPoints(a, section, layout) catch |err| return fail(err);
+    defer @import("../hwp5/edit/drawing_polygon_points.zig").free(a, rows);
     output = std.json.Stringify.valueAlloc(a, rows, .{}) catch |err| return fail(err);
     return 1;
 }
@@ -784,12 +962,13 @@ export fn hwp5_edit_set_character_properties_ranges(ptr: [*]const u8, length: us
     return 1;
 }
 fn applyBatch(s: *Session, commands: []const edit.Command) !void {
+    const next_epoch = try view_epoch.next();
     if (history) |*value| {
-        _ = try value.applyBatch(s, commands);
+        if (try value.applyBatch(s, commands)) view_epoch.value = next_epoch;
     } else {
         var temporary = try History.init(a, s, 1, 128 * 1024 * 1024);
         defer temporary.deinit();
-        _ = try temporary.applyBatch(s, commands);
+        if (try temporary.applyBatch(s, commands)) view_epoch.value = next_epoch;
     }
 }
 export fn hwp5_edit_set_character_font_ranges(ptr: [*]const u8, length: usize, language: u32, id: u32) u32 {
@@ -926,6 +1105,10 @@ export fn hwp5_edit_set_character_underline(section: u32, paragraph: u32, start:
 }
 export fn hwp5_edit_set_character_underline_color(section: u32, paragraph: u32, start: u32, end: u32, color: u32) u32 {
     apply(.{ .set_character_properties = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .properties = .{ .underline_color = color } } }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_character_strike_color(section: u32, paragraph: u32, start: u32, end: u32, color: u32) u32 {
+    apply(.{ .set_character_properties = .{ .section = section, .paragraph = paragraph, .start_unit = start, .end_unit = end, .properties = .{ .strike_color = color } } }) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_set_character_text_color(section: u32, paragraph: u32, start: u32, end: u32, color: u32) u32 {

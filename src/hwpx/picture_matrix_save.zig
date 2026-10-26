@@ -4,7 +4,7 @@ const fields = @import("table_xml_fields.zig");
 const writer = @import("xml_source_writer.zig");
 fn identity(tree: *const Tree, node: usize) bool {
     if (@import("picture_matrix_fields.zig").kind(tree, node) != null) return true;
-    for ([_][]const u8{ "pic", "renderingInfo", "container", "tbl", "tr", "tc", "subList" }) |name| if (fields.childIs(tree, node, name)) return true;
+    if (@import("picture_source_identity.zig").isOwner(tree, node) or fields.childIs(tree, node, "renderingInfo")) return true;
     return false;
 }
 pub fn write(a: std.mem.Allocator, source: *const Tree, xml: []const u8, entries: []const @import("picture_matrix_edit_values.zig").Entry, limit: usize) ![]u8 {

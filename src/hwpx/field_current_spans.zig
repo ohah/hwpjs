@@ -3,7 +3,30 @@ const std = @import("std");
 const Tree = @import("xml_part_tree.zig").Tree;
 const Values = @import("paragraph_structure_values.zig").Values;
 pub const Span = struct { begin_element: usize, paragraph_index: usize, start: usize, end: usize };
-const Point = struct { row: usize, unit: usize };
+pub const Point = struct {
+    row: usize,
+    unit: usize,
+    marker: @import("field_position.zig").Position,
+    inherited: bool,
+};
+/// spans와 marker 귀속은 같은 strict 검증 및 같은 현재 모델에서 만들어집니다.
+/// 호출 사이에 보관하거나 current/report 변경 뒤 재사용하지 않습니다.
+pub const Projection = struct {
+    spans: []Span,
+    points: std.AutoHashMapUnmanaged(usize, Point),
+    canonical: ?@import("field_canonical_bindings.zig").Inventory = null,
+    pub fn deinit(self: *Projection, a: std.mem.Allocator) void {
+        a.free(self.spans);
+        self.points.deinit(a);
+        if (self.canonical) |*inventory| inventory.deinit(a);
+        self.* = undefined;
+    }
+    fn takeSpans(self: *Projection) []Span {
+        const result = self.spans;
+        self.spans = &.{};
+        return result;
+    }
+};
 
 pub fn build(a: std.mem.Allocator, trees: []const Tree, section: usize, current: *const Values, report: *const @import("field_markers.zig").Report, limit: usize) ![]Span {
     return buildMode(a, trees, section, current, report, limit, false);
@@ -20,13 +43,29 @@ pub fn buildForExterior(a: std.mem.Allocator, trees: []const Tree, section: usiz
     return buildMode(a, trees, section, current, report, limit, positions != null and positions.?.len == 0);
 }
 
+/// 기존 exterior와 같은 정책으로 검증한 marker 투영도 함께 반환합니다.
+pub fn projectForExterior(a: std.mem.Allocator, trees: []const Tree, section: usize, current: *const Values, index: usize, report: *const @import("field_markers.zig").Report, options: @import("text_sites.zig").Options, limit: usize) !Projection {
+    if (index >= current.paragraphs.len) return error.InvalidParagraphIndex;
+    const positions = current.paragraphs[index].field_positions;
+    return projectMode(a, trees, section, current, report, limit, positions != null and positions.?.len == 0, options);
+}
+
 fn buildMode(a: std.mem.Allocator, trees: []const Tree, section: usize, current: *const Values, report: *const @import("field_markers.zig").Report, limit: usize, whole_formula: bool) ![]Span {
+    var projection = try projectMode(a, trees, section, current, report, limit, whole_formula, null);
+    defer projection.deinit(a);
+    return projection.takeSpans();
+}
+
+fn projectMode(a: std.mem.Allocator, trees: []const Tree, section: usize, current: *const Values, report: *const @import("field_markers.zig").Report, limit: usize, whole_formula: bool, canonical_options: ?@import("text_sites.zig").Options) !Projection {
     if (section >= trees.len) return error.InvalidSectionIndex;
     const tree = &trees[section];
     const ranges = try @import("field_text_ranges.zig").build(a, trees, report);
     defer a.free(ranges);
+    // Only the new request API opts in. Legacy build wrappers retain their policy.
+    var canonical: ?@import("field_canonical_bindings.zig").Inventory = if (canonical_options) |options| try @import("field_canonical_bindings.zig").Inventory.init(a, tree, options) else null;
+    errdefer if (canonical) |*inventory| inventory.deinit(a);
     var points: std.AutoHashMapUnmanaged(usize, Point) = .empty;
-    defer points.deinit(a);
+    errdefer points.deinit(a);
     const lengths = try a.alloc(?usize, current.paragraphs.len);
     defer a.free(lengths);
     @memset(lengths, null);
@@ -57,13 +96,17 @@ fn buildMode(a: std.mem.Allocator, trees: []const Tree, section: usize, current:
                 if (marker.section_ordinal == section and try @import("paragraph_site_owner.zig").ancestor(tree, marker.element_index) == row.template_element) has_marker = true;
             }
             if (!has_marker) continue;
+            if (canonical) |*inventory| {
+                if (row.pieces != null or row.generated_id != null or row.source_ordinal == null) return error.SourceBindingMismatch;
+                try inventory.validateRow(a, row);
+            }
             inherited = try @import("field_source_positions.zig").build(a, trees, section, row, report, limit);
             break :inherited_source inherited.?;
         };
         for (owned) |position| {
             const entry = try points.getOrPut(a, position.element_index);
             if (entry.found_existing) return error.SourceBindingMismatch;
-            entry.value_ptr.* = .{ .row = ordinal, .unit = position.unit };
+            entry.value_ptr.* = .{ .row = ordinal, .unit = position.unit, .marker = position, .inherited = row.field_positions == null };
         }
     }
     var spans: std.ArrayList(Span) = .empty;
@@ -80,7 +123,7 @@ fn buildMode(a: std.mem.Allocator, trees: []const Tree, section: usize, current:
             try spans.append(a, .{ .begin_element = begin_element, .paragraph_index = row, .start = if (row == begin.row) begin.unit else 0, .end = if (row == finish.row) finish.unit else lengths[row].? });
         }
     }
-    return spans.toOwnedSlice(a);
+    return .{ .spans = try spans.toOwnedSlice(a), .points = points, .canonical = canonical };
 }
 
 fn length(a: std.mem.Allocator, tree: *const Tree, row: *const @import("paragraph_structure_values.zig").Paragraph) !usize {

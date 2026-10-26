@@ -1,5 +1,6 @@
 const Reader = @import("../../binary/reader.zig").Reader;
 const Version = @import("../version.zig").Version;
+const extension = @import("section_extension.zig");
 pub const control_id = @import("control_rules.zig").section_id;
 /// Properties only; page/note/border records are children, not inline bytes.
 pub const Definition = struct {
@@ -15,6 +16,7 @@ pub const Definition = struct {
     equation_start: u16,
     language: ?u16,
     extra: []const u8,
+    observed_extension: ?extension.View = null,
     pub fn parse(bytes: []const u8, version: Version) !Definition {
         try version.requireSupported();
         var r: Reader = .{ .bytes = bytes };
@@ -31,6 +33,7 @@ pub const Definition = struct {
         d.equation_start = try r.readInt(u16);
         d.language = if (version.raw >= 0x05000105) try r.readInt(u16) else null;
         d.extra = bytes[r.offset..];
+        d.observed_extension = if (version.raw >= 0x05000105) try extension.observed(d.extra) else null;
         return d;
     }
 };

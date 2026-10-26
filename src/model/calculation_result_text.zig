@@ -7,7 +7,12 @@ pub fn render(a: std.mem.Allocator, value: f64, format: formats.Format) ![]u8 {
     if (format.precision) |p| if (p > 17) return error.UnsupportedCalculationResultPrecision;
     var buffer: [512]u8 = undefined;
     var text: []const u8 = undefined;
-    if (format.kind == .fixed) {
+    const implicit_grouped = format.kind == .general and format.grouping and format.precision == null;
+    if (implicit_grouped and value == @trunc(value)) {
+        // Observed grouped integer results preserve all integer positions.
+        // This does not change significant-digit policy for fractional values.
+        text = try std.fmt.float.render(&buffer, value, .{ .mode = .decimal, .precision = 0 });
+    } else if (format.kind == .fixed) {
         text = try std.fmt.float.render(&buffer, value, .{ .mode = .decimal, .precision = format.precision orelse 6 });
     } else {
         const precision: usize = @max(@as(usize, format.precision orelse 6), 1);
@@ -29,7 +34,7 @@ pub fn render(a: std.mem.Allocator, value: f64, format: formats.Format) ![]u8 {
             buffer[used] = '-';
             used += 1;
         }
-        if (exponent < -4 or exponent >= precision) {
+        if (exponent < -4 or (!implicit_grouped and exponent >= precision)) {
             buffer[used] = digits[0];
             used += 1;
             if (count > 1) {
@@ -103,7 +108,16 @@ test "HWPX calculation result text grouping precision and rounding boundaries" {
     try check(a, 659100, "%g,", "659,100");
     try check(a, 266, "%.2f,", "266.00");
     try check(a, -1234.5, "%.2f,", "-1,234.50");
-    try check(a, 999999.9, "%g,", "1e+06");
+    try check(a, 999999.9, "%g,", "1,000,000");
+    try check(a, 1000000, "%g,", "1,000,000");
+    try check(a, 1749831, "%g,", "1,749,831");
+    try check(a, 1000000, "%.6g,", "1e+06");
+    try check(a, -1749831.25, "%g,", "-1,749,830");
+    try check(a, 68991.2496, "%g,", "68,991.2");
+    try check(a, 9007199254740991, "%g,", "9,007,199,254,740,991");
+    try check(a, -9007199254740991, "%g,", "-9,007,199,254,740,991");
+    try check(a, -0.0, "%g,", "-0");
+    try check(a, 0.1 + 0.2, "%g,", "0.3");
     try check(a, 0.0001, "%g", "0.0001");
     try check(a, 0.00001, "%g", "1e-05");
     try check(a, 9.5, "%.0g", "1e+01");
@@ -125,5 +139,6 @@ test "HWPX calculation result text grouping precision and rounding boundaries" {
     try std.testing.expect(wide.len > 400 and wide.len < 512);
     try std.testing.expectError(error.InvalidCalculationCellValue, render(a, std.math.inf(f64), try formats.parse("%g")));
     try std.testing.checkAllAllocationFailures(a, check, .{ @as(f64, -1234.5), "%.2f,", "-1,234.50" });
-    try std.testing.checkAllAllocationFailures(a, check, .{ @as(f64, 999999.9), "%g,", "1e+06" });
+    try std.testing.checkAllAllocationFailures(a, check, .{ @as(f64, 999999.9), "%g,", "1,000,000" });
+    try std.testing.checkAllAllocationFailures(a, check, .{ @as(f64, 1749831), "%g,", "1,749,831" });
 }

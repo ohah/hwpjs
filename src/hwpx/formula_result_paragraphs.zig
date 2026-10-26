@@ -8,7 +8,11 @@ pub fn list(session: *const editor.Session, section_index: usize) ![]u32 {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     const a = session.allocator;
-    if (section.structure_values != null or section.created_tables.entries.items.len != 0) return a.alloc(u32, 0);
+    if (section.structure_values != null) {
+        var current = try @import("formula_result_structural_view.zig").open(session, section_index);
+        defer current.deinit();
+        return list(&current.rendered, section_index);
+    }
     if (!try @import("formula_source_query.zig").hasFormula(a, &section.tree)) return a.alloc(u32, 0);
     var current = try @import("formula_current_snapshot.zig").readFlat(a, session, section_index);
     defer current.deinit(a);

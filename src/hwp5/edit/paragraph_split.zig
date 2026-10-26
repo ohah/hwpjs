@@ -30,6 +30,10 @@ fn prepareWithFormulas(a: std.mem.Allocator, source: []const u8, version: Versio
 fn prepareSource(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, at: u32, new_id: u32, char_count: usize, formulas: bool) !Draft {
     const template = if (p.source_node == null) p.header_template orelse return error.MissingParagraphTemplate else try p.originalNode();
     if (new_id == 0 or new_id == p.instance_id) return error.InvalidParagraphInstanceId;
+    for (p.tokens) |token| {
+        if (token.kind == .control and token.raw.len == 16 and std.mem.readInt(u16, token.raw[0..2], .little) == 21 and std.mem.readInt(u32, token.raw[2..6], .little) == @import("../body/control_rules.zig").id("nwno"))
+            return @import("page_restart_split_draft.zig").prepare(a, source, version, p, at, new_id, char_count);
+    }
     if (p.source_node != null) {
         for (p.tokens) |token| {
             if (token.kind == .control and token.raw.len == 16 and std.mem.readInt(u16, token.raw[0..2], .little) == 2 and std.mem.readInt(u32, token.raw[2..6], .little) == @import("../body/column_def.zig").control_id)
@@ -81,7 +85,7 @@ fn prepareSource(a: std.mem.Allocator, source: []const u8, version: Version, p: 
 pub fn apply(a: std.mem.Allocator, section: *model.Section, source: []const u8, version: Version, paragraph: usize, at: u32, new_id: u32, char_count: usize) !void {
     if (paragraph >= section.paragraphs.len) return error.InvalidParagraphIndex;
     for (section.paragraphs) |p| if (p.instance_id == new_id) return error.InvalidParagraphInstanceId;
-    const formulas = try @import("source_policy.zig").hasFormulas(a, source, version);
+    const formulas = try @import("structure_source_policy.zig").inspect(a, source, version);
     if (formulas) try @import("formula_structure_scope.zig").validate(a, source, version, section.paragraphs[paragraph]);
     var draft = try prepareWithFormulas(a, source, version, section.paragraphs[paragraph], at, new_id, char_count, formulas);
     var transferred = false;

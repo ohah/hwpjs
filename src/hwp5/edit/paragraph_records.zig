@@ -32,12 +32,8 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), template: framing.R
     header[Header.style_id_offset] = p.style_id;
     header[Header.break_flags_offset] = try @import("paragraph_breaks.zig").current(true, parsed.break_flags, p.break_before);
     std.mem.writeInt(u32, header[Header.instance_id_offset..][0..4], p.instance_id, .little);
-    const runs = try a.alloc(u8, p.character_runs.len * 8);
+    const runs = try @import("character_run_payload.zig").encode(a, p.character_runs);
     defer a.free(runs);
-    for (p.character_runs, 0..) |run, i| {
-        std.mem.writeInt(u32, runs[i * 8 ..][0..4], run.start_unit, .little);
-        std.mem.writeInt(u32, runs[i * 8 + 4 ..][0..4], run.char_shape_id, .little);
-    }
     var draft: std.ArrayList(u8) = .empty;
     defer draft.deinit(a);
     try writer.append(a, &draft, 66, template.level, header, remaining);

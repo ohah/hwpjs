@@ -35,7 +35,7 @@ pub fn displayShapesSerialized(session: *const @import("editor_session.zig").Ses
         defer a.free(header.bytes);
         var tree = try @import("header_tree.zig").parse(a, header.bytes, 0, .{ .max_xml_bytes = session.options.max_xml_bytes });
         defer tree.deinit(a);
-        return collect(a, &tree, expected);
+        return normalizeColors(session, try collect(a, &tree, expected));
     }
     var document = try @import("package.zig").inspectDocument(a, session.source, .{});
     defer document.deinit(a);
@@ -44,7 +44,7 @@ pub fn displayShapesSerialized(session: *const @import("editor_session.zig").Ses
     var tree = try document.readHeaderTree(a, .{});
     defer tree.deinit(a);
     const expected = resources.table(.char_shape).ids.items;
-    return collect(a, &tree, expected);
+    return normalizeColors(session, try collect(a, &tree, expected));
 }
 fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, expected: []const u32) ![]@import("character_shape_display.zig").Shape {
     const Shape = @import("character_shape_display.zig").Shape;
@@ -78,7 +78,7 @@ pub fn displayShapesProjected(session: *const @import("editor_session.zig").Sess
     defer resources.deinit(a);
     var tree = try document.readHeaderTree(a, .{});
     defer tree.deinit(a);
-    const originals = try collect(a, &tree, resources.table(.char_shape).ids.items);
+    const originals = try normalizeColors(session, try collect(a, &tree, resources.table(.char_shape).ids.items));
     defer a.free(originals);
     const output = try a.alloc(Shape, try std.math.add(usize, originals.len, session.character_resources.entries.items.len));
     errdefer a.free(output);
@@ -96,6 +96,19 @@ pub fn displayShapesProjected(session: *const @import("editor_session.zig").Sess
     }.less);
     for (output, 0..) |shape, index| if (index != 0 and output[index - 1].id == shape.id) return error.DuplicateCharacterResourceId;
     return output;
+}
+
+// Session-level DTOs are canonical RGB; original header/XML readers stay raw.
+fn normalizeColors(session: *const @import("editor_session.zig").Session, shapes: []@import("character_shape_display.zig").Shape) ![]@import("character_shape_display.zig").Shape {
+    errdefer session.allocator.free(shapes);
+    if (for (shapes) |shape| {
+        if (shape.text_color != null) break false;
+    } else true) return shapes;
+    const selected_profile = try @import("document_provenance.zig").profile(session);
+    for (shapes) |*shape| if (shape.text_color) |raw| {
+        shape.text_color = try @import("source_color_profile.zig").decodeNumber(selected_profile, .character_text_color, raw);
+    };
+    return shapes;
 }
 
 test "HWPX projected shapes match serialized current header through mixed edits" {

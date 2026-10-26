@@ -16,7 +16,7 @@ pub fn build(a: std.mem.Allocator, trees: []const Tree, section: usize, paragrap
     const locations = try @import("paragraph_structure_locations.zig").build(a, tree, paragraph);
     defer a.free(locations);
     try @import("plain_paragraph_policy.zig").validateForCharacterFormat(tree, &paragraph.sites, locations, 1);
-    const positions = try @import("paragraph_text_positions.zig").build(a, tree, &paragraph.sites, locations, 1);
+    const positions = try @import("paragraph_text_positions.zig").buildForFieldText(a, tree, &paragraph.sites, locations, 1);
     defer a.free(positions);
     var output: std.ArrayList(Position) = .empty;
     defer output.deinit(a);

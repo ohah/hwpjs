@@ -5,7 +5,7 @@ const chart_uri = @import("chart_namespace.zig").uri;
 const drawing_uri = "http://schemas.openxmlformats.org/drawingml/2006/main";
 pub const default_max_value_bytes = 1024 * 1024;
 pub const Options = struct { max_values: usize = 100_000, max_value_bytes: usize = default_max_value_bytes, max_total_bytes: usize = 64 * 1024 * 1024 };
-pub const Value = struct { owner_node: usize, text_node: usize, rich_node: usize, paragraph_node: usize, run_node: usize, value_node: usize, text: []u8 };
+pub const Value = struct { owner_node: usize, text_node: usize, rich_node: usize, paragraph_node: usize, run_node: usize, value_node: usize, text: []u8, owner_role: @import("chart_rich_text_owner.zig").Role = .unclassified, plain_text_complete: bool = false };
 pub const Values = struct {
     items: []Value,
     source_sha256: [32]u8,
@@ -33,7 +33,7 @@ pub const Values = struct {
 };
 
 pub fn sameOwner(left: Value, right: Value) bool {
-    return left.owner_node == right.owner_node and left.text_node == right.text_node and
+    return left.plain_text_complete == right.plain_text_complete and left.owner_role == right.owner_role and left.owner_node == right.owner_node and left.text_node == right.text_node and
         left.rich_node == right.rich_node and left.paragraph_node == right.paragraph_node and
         left.run_node == right.run_node and left.value_node == right.value_node;
 }
@@ -52,6 +52,8 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, options: Options) !Value
     defer leaves.deinit(a);
     var runs: std.AutoHashMapUnmanaged(usize, void) = .empty;
     defer runs.deinit(a);
+    var rich_complete: std.AutoHashMapUnmanaged(usize, bool) = .empty;
+    defer rich_complete.deinit(a);
     for (tree.elements, 0..) |element, node| {
         if (!element.is(drawing_uri, "t")) continue;
         const run = element.parent orelse continue;
@@ -79,7 +81,9 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, options: Options) !Value
         if (values.items.len == options.max_values) return error.LimitExceeded;
         try leaves.put(a, node, values.items.len);
         try texts.append(a, .empty);
-        try values.append(a, .{ .owner_node = owner, .text_node = tx, .rich_node = rich, .paragraph_node = paragraph, .run_node = run, .value_node = node, .text = &.{} });
+        const complete = try rich_complete.getOrPut(a, rich);
+        if (!complete.found_existing) complete.value_ptr.* = @import("chart_rich_text_plain.zig").complete(tree, rich);
+        try values.append(a, .{ .owner_node = owner, .text_node = tx, .rich_node = rich, .paragraph_node = paragraph, .run_node = run, .value_node = node, .text = &.{}, .owner_role = @import("chart_rich_text_owner.zig").classify(tree, owner), .plain_text_complete = complete.value_ptr.* });
     }
     const Content = struct {
         allocator: std.mem.Allocator,

@@ -84,7 +84,7 @@ const Context = struct {
         const raw_embedded = try attrs.attribute(self.allocator, tag, scope, "isEmbeded", self.options.max_attribute_bytes);
         defer if (raw_embedded) |raw| self.allocator.free(raw);
         const embedded: ?bool = if (raw_embedded) |raw|
-            if (std.mem.eql(u8, raw, "0")) false else if (std.mem.eql(u8, raw, "1")) true else return error.InvalidEmbeddedValue
+            @import("xml_values.zig").boolean(raw) catch return error.InvalidEmbeddedValue
         else
             null;
         var entry_index: ?usize = null;

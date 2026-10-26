@@ -2,6 +2,10 @@ const Reader = @import("../../binary/reader.zig").Reader;
 const Version = @import("../version.zig").Version;
 pub const ModernSpacing = struct { attributes: u32, value: i32 };
 pub const ParaShape = struct {
+    pub const base_size: usize = 42;
+    pub const attributes2_offset: usize = 42;
+    pub const modern_spacing_offset: usize = 46;
+    pub const modern_size: usize = 54;
     attributes: u32,
     left: i32,
     right: i32,
@@ -18,6 +22,10 @@ pub const ParaShape = struct {
     /// Observed in 5.1 files; absent/zero kept distinct. Not used to override flags.
     level: ?u32,
     extra: []const u8,
+    /// Parsing gates the extension by version; an explicit zero is authoritative.
+    pub fn effectiveLevel(self: ParaShape) u32 {
+        return self.level orelse ((self.attributes >> 25) & 7);
+    }
     pub fn parse(bytes: []const u8, version: Version) !ParaShape {
         try version.requireSupported();
         var r: Reader = .{ .bytes = bytes };
@@ -33,6 +41,7 @@ pub const ParaShape = struct {
         v.head_id = try r.readInt(u16);
         v.border_fill_id = try r.readInt(u16);
         for (&v.border_spacing) |*x| x.* = try r.readInt(i16);
+        @import("std").debug.assert(r.offset == base_size);
         v.attributes2 = if (version.raw >= 0x05000107 and r.offset < bytes.len) try r.readInt(u32) else null;
         v.modern_spacing = if (version.raw >= 0x05000205 and r.offset < bytes.len) .{ .attributes = try r.readInt(u32), .value = try r.readInt(i32) } else null;
         v.level = if (version.raw >= 0x05010000 and r.offset < bytes.len) try r.readInt(u32) else null;

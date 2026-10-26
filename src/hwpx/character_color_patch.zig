@@ -4,6 +4,9 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const rgb = @import("../model/rgb_color.zig");
 
 pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, color: u32, limit: usize) ![]u8 {
+    return writeWithProfile(a, tree, node, color, limit, .{});
+}
+pub fn writeWithProfile(a: std.mem.Allocator, tree: *const Tree, node: usize, color: u32, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
     try rgb.validate(color);
     _ = try @import("character_shape_display.zig").read(a, tree, node, 4096);
     const fragment = tree.sourceOf(node);
@@ -12,9 +15,9 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, color: u32, l
     if (attribute) |raw| {
         const value = try raw.toUtf8(a, 4096);
         defer a.free(value);
-        if (rgb.xml(value) == color) return a.dupe(u8, fragment);
+        if (@import("source_color_profile.zig").decode(profile, .character_text_color, value) == color) return a.dupe(u8, fragment);
     }
-    const value = try rgb.format(a, color);
+    const value = try @import("source_color_profile.zig").encode(a, profile, .character_text_color, color);
     defer a.free(value);
     return @import("character_attribute_patch.zig").write(a, tree, node, "textColor", value, limit);
 }

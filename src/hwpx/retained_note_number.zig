@@ -21,5 +21,18 @@ pub fn supported(tree: *const trees.Tree, control_index: usize, paragraph_index:
     if (!number.is(uri, "autoNum") or number.next_sibling != null or !emptyGaps(tree, control_index)) return false;
     const format_index = number.first_child orelse return false;
     const format = tree.elements[format_index];
-    return format.is(uri, "autoNumFormat") and @import("retained_auto_number.zig").supported(tree, number_index);
+    if (!format.is(uri, "autoNumFormat") or !@import("retained_auto_number.zig").supported(tree, number_index)) return false;
+    // A retained prefix is outside editable coordinates only while it precedes
+    // every source object. A table inserted before it makes it an ordinary
+    // in-text anchor; reporting both anchors at unit zero loses ownership.
+    var sibling_run = paragraph.first_child;
+    while (sibling_run) |candidate_run| : (sibling_run = tree.elements[candidate_run].next_sibling) {
+        if (!tree.elements[candidate_run].is(uri, "run")) continue;
+        var child = tree.elements[candidate_run].first_child;
+        while (child) |candidate| : (child = tree.elements[candidate].next_sibling) {
+            if (candidate == control_index) return true;
+            if (@import("run_anchor.zig").kind(tree, candidate) != null) return false;
+        }
+    }
+    return false;
 }

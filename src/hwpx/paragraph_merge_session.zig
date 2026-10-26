@@ -33,6 +33,11 @@ fn mergeMode(session: *editor.Session, section_index: usize, paragraph: usize, r
         const trees = try a.alloc(@import("xml_part_tree.zig").Tree, session.sections.len);
         defer a.free(trees);
         for (session.sections, trees) |part, *tree| tree.* = part.tree;
+        const left_source = &current.paragraphs[index];
+        const right_source = &current.paragraphs[right_index];
+        if (left_source.source_ordinal != null and right_source.source_ordinal != null and left_source.generated_id == null and right_source.generated_id == null and left_source.pieces == null and right_source.pieces == null and left_source.template_element != right_source.template_element) {
+            if (try @import("field_merge_session_candidate.zig").prepare(a, trees, section_index, current, index, right_index, session.options.max_xml_bytes)) |source_candidate| break :block source_candidate;
+        }
         if (current.paragraphs[index].pieces != null or current.paragraphs[right_index].pieces != null)
             break :block try @import("field_joined_merge_values.zig").prepare(a, trees, section_index, current, index, right_index, session.options.max_xml_bytes);
         break :block try @import("field_current_merge.zig").prepare(a, trees, section_index, current, index, right_index, session.options.max_xml_bytes);

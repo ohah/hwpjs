@@ -4,7 +4,16 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const fields = @import("table_xml_fields.zig");
 pub const Values = struct { has_margin: ?bool = null, header: ?bool = null, margin: ?[4]?i64 = null };
 
-pub fn readList(a: std.mem.Allocator, tree: *const Tree, list: usize) !Values {
+pub const ListValues = struct {
+    has_margin: ?bool,
+    header: ?bool,
+    margin: ?[4]?i64,
+    text_direction: ?u32,
+    line_wrap: ?u32,
+    vertical_alignment: ?u32,
+};
+
+pub fn readList(a: std.mem.Allocator, tree: *const Tree, list: usize) !ListValues {
     if (list >= tree.elements.len or !fields.childIs(tree, list, "subList")) return error.InvalidTableCellMarginList;
     const cell = tree.elements[list].parent orelse return error.InvalidTableCellMarginList;
     if (!fields.childIs(tree, cell, "tc")) return error.InvalidTableCellMarginList;
@@ -12,7 +21,9 @@ pub fn readList(a: std.mem.Allocator, tree: *const Tree, list: usize) !Values {
     if (!fields.childIs(tree, row, "tr")) return error.InvalidTableCellMarginList;
     const table = tree.elements[row].parent orelse return error.InvalidTableCellMarginList;
     if (!fields.childIs(tree, table, "tbl")) return error.InvalidTableCellMarginList;
-    return read(a, tree, cell);
+    const margin = try read(a, tree, cell);
+    const flow = try @import("table_cell_text_flow_values.zig").read(a, tree, list);
+    return .{ .has_margin = margin.has_margin, .header = margin.header, .margin = margin.margin, .text_direction = flow.text_direction, .line_wrap = flow.line_wrap, .vertical_alignment = flow.vertical_alignment };
 }
 
 pub fn read(a: std.mem.Allocator, tree: *const Tree, cell: usize) !Values {

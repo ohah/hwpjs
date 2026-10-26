@@ -36,7 +36,7 @@ test "joined column splice preserves authority under every failed allocation" {
     defer a.free(group_xml);
     try std.testing.expect(std.mem.indexOf(u8, group_xml, "colCount='1'") != null);
     try std.testing.expect(std.mem.indexOf(u8, group_xml, "colCount='2'") != null);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const @import("paragraph_structure_values.zig").Values) !void {
             const output = try @import("paragraph_structure_save.zig").write(allocator, parsed, source, .{}, &.{}, 10000);
             defer allocator.free(output);
@@ -52,7 +52,7 @@ test "joined column splice preserves authority under every failed allocation" {
     try std.testing.expectEqual(@as(u32, 5), edited_group.paragraphs[1].column_boundaries.?[0].unit);
     const edited_xml = try @import("paragraph_structure_save.zig").write(a, &tree, &edited_group, .{}, &.{}, 10000);
     defer a.free(edited_xml);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const @import("paragraph_structure_values.zig").Values) !void {
             var candidate = try @import("paragraph_structure_split.zig").prepare(allocator, parsed, source, 0, 1, 1, 3, 10000);
             defer candidate.deinit(allocator);
@@ -63,7 +63,7 @@ test "joined column splice preserves authority under every failed allocation" {
     split.paragraphs[1].column_boundaries.?[0].source_element = split.paragraphs[0].column_boundaries.?[0].source_element;
     try std.testing.expectError(error.SourceBindingMismatch, @import("column_boundary_joined_group.zig").validate(a, &tree, split.paragraphs));
     split.paragraphs[1].column_boundaries.?[0].source_element = saved_source;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, group: []const Paragraph) !void {
             try @import("column_boundary_joined_group.zig").validate(allocator, parsed, group);
         }
@@ -78,7 +78,7 @@ test "joined column splice preserves authority under every failed allocation" {
     try expectUnchanged(before, &current);
     try std.testing.expect(!try edit.splice(a, &tree, &current, 0, 0, "", 10000));
     try expectUnchanged(before, &current);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, source: *const Paragraph) !void {
             var candidate = try source.clone(allocator);
             defer candidate.deinit(allocator);

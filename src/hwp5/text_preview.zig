@@ -4,7 +4,10 @@ const Source = @import("text_source.zig").Source;
 const Tree = @import("body/tree.zig").Tree;
 const children = @import("body/paragraph_children.zig");
 
-const max_output = 64 * 1024 * 1024;
+const wire = @import("text_preview_wire.zig");
+const append = wire.append;
+const word = wire.word;
+const cast = wire.cast;
 
 /// H5T1 + version + section count; section(index,count);
 /// paragraph(node,parent,declared units,text-present,count);
@@ -76,17 +79,4 @@ fn encodeSource(backing: std.mem.Allocator, source: *const Source) !Encoded {
         std.mem.writeInt(u32, out.items[count_pos..][0..4], count, .little);
     }
     return .{ .bytes = try backing.dupe(u8, out.items), .distribution = source.header.has(.distribution), .declared_sections = source.declared_section_count };
-}
-
-fn cast(value: usize) !u32 {
-    return std.math.cast(u32, value) orelse error.LimitExceeded;
-}
-fn word(a: std.mem.Allocator, out: *std.ArrayList(u8), value: u32) !void {
-    var bytes: [4]u8 = undefined;
-    std.mem.writeInt(u32, &bytes, value, .little);
-    try append(a, out, &bytes);
-}
-fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8) !void {
-    if (bytes.len > max_output - out.items.len) return error.LimitExceeded;
-    try out.appendSlice(a, bytes);
 }

@@ -15,14 +15,10 @@ pub fn read(session: *const editor.Session, section_index: usize, ordinal: usize
     const paragraph = if (section.structure_values) |*values| &values.paragraphs[ordinal - section.first_paragraph] else null;
     const template = if (paragraph) |value| value.template_element else try @import("paragraph_site_owner.zig").resolve(&section.tree, &section.sites, section.locations, ordinal);
     var found = false;
-    for (section.tree.elements, 0..) |element, index| {
+    var owned = try @import("paragraph_owned_elements.zig").Iterator.init(&section.tree, template);
+    while (try owned.next()) |index| {
+        const element = section.tree.elements[index];
         if (!element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin")) continue;
-        var ancestor = element.parent;
-        while (ancestor) |owner| {
-            if (section.tree.elements[owner].is(@import("document_xml.zig").paragraph_uri, "p")) break;
-            ancestor = section.tree.elements[owner].parent;
-        }
-        if (ancestor != template) continue;
         const raw = (try section.tree.attributeValue(a, index, "", "type")) orelse continue;
         const kind = try raw.toUtf8(a, 4096);
         defer a.free(kind);
@@ -43,7 +39,6 @@ pub fn read(session: *const editor.Session, section_index: usize, ordinal: usize
         for (prepared) |*field| field.deinit(a);
         a.free(prepared);
     }
-    if (prepared.len == 0) return null;
     var descriptors: std.ArrayList(sites_mod.Site) = .empty;
     defer descriptors.deinit(a);
     var locations: std.ArrayList(@import("section_text.zig").Location) = .empty;
@@ -64,9 +59,13 @@ pub fn read(session: *const editor.Session, section_index: usize, ordinal: usize
     var replacements: std.ArrayList(rebasing.Replacement) = .empty;
     defer replacements.deinit(a);
     for (prepared) |field| try @import("character_style_formula_bindings.zig").appendChanged(a, &replacements, input, &local, field.result.items);
-    if (replacements.items.len == 0) return null;
+    // An unchanged stored result still needs the formula-owned projection.
+    // Falling back to the plain/anchor edit policy rejects its field markers,
+    // including a valid table anchor next to the result after save/reopen.
     if (paragraph) |value| if (value.character_styles) |styles| return try rebasing.rebase(a, &local, styles, replacements.items, session.options.max_sites);
-    const positions = try @import("anchor_text_positions.zig").build(a, &section.tree, &local, locations.items, if (paragraph != null) 1 else ordinal);
+    // FORMULA discovery and formula_section_prepare above establish this field projection.
+    // This remains a display projection, never text-edit permission.
+    const positions = try @import("anchor_text_positions.zig").buildForFieldText(a, &section.tree, &local, locations.items, if (paragraph != null) 1 else ordinal);
     defer a.free(positions);
     const typed = try @import("character_style_anchor_projection.zig").build(a, &section.tree, &local, positions, session.options.max_sites);
     defer a.free(typed);

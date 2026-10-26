@@ -37,10 +37,19 @@ pub fn spliceProjected(a: std.mem.Allocator, trees: []const @import("xml_part_tr
 }
 
 pub fn spliceProjectedWithOverrides(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, current: *sites_mod.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize, definitions: ?*const @import("formula_definition_values.zig").Values, overrides: ?*@import("formula_result_override_values.zig").Values, source_options: sites_mod.Options) !bool {
+    return spliceProjectedWithInsertionSite(a, trees, section, current, positions, start, deleted, inserted, max_bytes, definitions, overrides, source_options, null);
+}
+
+/// Caller must validate field-exterior range before supplying its insertion owner.
+pub fn spliceProjectedWithOverridesAtSite(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, current: *sites_mod.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize, definitions: ?*const @import("formula_definition_values.zig").Values, overrides: ?*@import("formula_result_override_values.zig").Values, source_options: sites_mod.Options, target: usize) !bool {
+    return spliceProjectedWithInsertionSite(a, trees, section, current, positions, start, deleted, inserted, max_bytes, definitions, overrides, source_options, target);
+}
+
+fn spliceProjectedWithInsertionSite(a: std.mem.Allocator, trees: []const @import("xml_part_tree.zig").Tree, section: usize, current: *sites_mod.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize, definitions: ?*const @import("formula_definition_values.zig").Values, overrides: ?*@import("formula_result_override_values.zig").Values, source_options: sites_mod.Options, target: ?usize) !bool {
     if (section >= trees.len) return error.InvalidSectionIndex;
     var draft = try current.clone(a);
     defer draft.deinit(a);
-    if (!try @import("text_splice_transaction.zig").spliceProjected(a, &draft, positions, start, deleted, inserted, max_bytes, null)) return false;
+    if (!try @import("text_splice_transaction.zig").spliceProjected(a, &draft, positions, start, deleted, inserted, max_bytes, target)) return false;
     return prepareAndCommit(a, trees, section, current, &draft, definitions, overrides, source_options);
 }
 

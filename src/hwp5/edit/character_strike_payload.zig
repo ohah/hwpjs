@@ -2,8 +2,16 @@
 const std = @import("std");
 const Version = @import("../version.zig").Version;
 pub fn attributes(raw: u32, enabled: bool) !u32 {
+    if (@import("character_decoration_compat.zig").legacyStrike(@truncate(raw >> 2), @truncate(raw >> 18)))
+        return if (enabled) raw else raw & ~@as(u32, 3 << 2);
     if (((raw >> 18) & 7) > 1) return error.UnsupportedCharacterStrikeKind;
-    return (raw & ~@as(u32, 7 << 18)) | (@as(u32, @intFromBool(enabled)) << 18);
+    const result = (raw & ~@as(u32, 7 << 18)) | (@as(u32, @intFromBool(enabled)) << 18);
+    // Clearing the modern flag must not reinterpret an existing center bit
+    // pattern as the legacy strike representation.
+    return if (!enabled and @import("character_decoration_compat.zig").legacyStrike(@truncate(result >> 2), @truncate(result >> 18)))
+        result & ~@as(u32, 3 << 2)
+    else
+        result;
 }
 pub fn write(a: std.mem.Allocator, bytes: []const u8, version: Version, enabled: bool, limit: usize) ![]u8 {
     const shape = try @import("../docinfo/char_shape.zig").CharShape.parse(bytes, version);
@@ -23,7 +31,7 @@ test "HWP5 strike payload preserves style color version tails and allocation fai
         const length: usize = if (raw == 0x05000000) 68 else 74;
         if (length == 74) std.mem.writeInt(u32, bytes[70..74], 0x123456, .little);
         for (0..16) |style| {
-            const flags: u32 = (0xa5a55a5a & ~@as(u32, 7 << 18 | 15 << 26)) | (@as(u32, @intCast(style)) << 26);
+            const flags: u32 = (0xa5a55a5a & ~@as(u32, 7 << 18 | 15 << 26 | 3 << 2)) | (@as(u32, @intCast(style)) << 26);
             std.mem.writeInt(u32, bytes[46..50], flags, .little);
             const on = try write(a, bytes[0..length], .{ .raw = raw }, true, 100);
             defer a.free(on);

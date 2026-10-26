@@ -182,7 +182,7 @@ test "page area candidate mixed split preserves nested order through save histor
     const replayed = try session.save();
     defer a.free(replayed);
     try std.testing.expectEqualSlices(u8, edited, replayed);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, current: *const @import("paragraph_structure_values.zig").Values) !void {
             var output = @import("page_area_structure_merge.zig").prepare(allocator, tree, current, 1, 3, 4000000) catch |err| {
                 try std.testing.expectEqual(@as(usize, 5), current.paragraphs.len);

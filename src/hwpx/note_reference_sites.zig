@@ -83,7 +83,7 @@ test "HWPX note reference sites preserve exact current anchor ownership" {
         try std.testing.expectEqual(left.paragraph, right.paragraph);
         try std.testing.expectEqual(left.anchor_unit, right.anchor_unit);
     }
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, state: *const editor.Session, expected: []const Site) !void {
             const result = try read(allocator, state, 0);
             defer allocator.free(result);

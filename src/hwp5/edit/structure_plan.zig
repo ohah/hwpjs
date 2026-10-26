@@ -92,7 +92,7 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
         }
         if (owner) |list| {
             additions[list] = std.math.add(u16, additions[list], 1) catch return error.LimitExceeded;
-            _ = std.math.add(u16, tree.nodes[list].record.value.list_header.count_raw, additions[list]) catch return error.LimitExceeded;
+            _ = try (try @import("paragraph_list_count.zig").read(tree, list)).adjusted(additions[list], 0);
         }
         try insertions.append(a, .{ .paragraph = index, .template_node = template, .owner_list = owner, .last_in_owner = last });
     }
@@ -104,8 +104,18 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
     for (removals.items) |node| {
         const header = tree.nodes[node];
         if (header.record.value.header.extra.len != 0 or (header.record.value.header.merge_tracking orelse 0) != 0) return error.UnsupportedParagraphExtension;
+        var retained_restart = false;
+        for (section.paragraphs) |p| if (p.restart_control_source != null) {
+            var links = try @import("../body/control_links.zig").Links.build(a, tree);
+            defer links.deinit(a);
+            const index = (try @import("page_restart_source.zig").forParagraph(links.items, p)).?;
+            if (links.items[index].paragraph_node != node) continue;
+            _ = try @import("current_restart_anchor.zig").resolve(a, tree, links.items, index, section.paragraphs);
+            retained_restart = true;
+        };
         // Do not silently delete containers, controls or unrepresented content.
         for (tree.nodes[node + 1 .. header.subtree_end]) |child| {
+            if (retained_restart) continue; // Exact leaf scope was checked by resolver.
             if (child.parent != node) return error.UnsupportedStructuralControl;
             switch (child.record.framing.tag) {
                 67 => {
@@ -125,7 +135,7 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
     }
     for (removed_counts, 0..) |count, node| {
         if (count == 0) continue;
-        const total = @as(u32, tree.nodes[node].record.value.list_header.count_raw) + additions[node];
+        const total = try (try @import("paragraph_list_count.zig").read(tree, node)).adjusted(additions[node], 0);
         if (count >= total) return error.EmptyParagraphList;
     }
     const owned_insertions = try insertions.toOwnedSlice(a);

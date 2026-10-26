@@ -108,7 +108,7 @@ test "HWPX placement small fixture checks every allocation failure" {
     const expected = try read(a, &session, 0);
     defer a.free(expected);
     try std.testing.expect(expected.len > 0);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, state: *const editor.Session, reference: []const Placement) !void {
             const actual = try read(allocator, state, 0);
             defer allocator.free(actual);

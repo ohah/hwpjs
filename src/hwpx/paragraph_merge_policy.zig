@@ -170,7 +170,7 @@ test "HWPX page number merge candidate and XML allocation failures retain source
     var report: @import("section_text.zig").Report = .{};
     var current = try @import("paragraph_structure_collect.zig").collect(a, &tree, &sites, locations, .{}, &report);
     defer current.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree, before: *const @import("paragraph_structure_values.zig").Values) !void {
             const Joined = @import("paragraph_joined_values.zig").Joined;
             var left = try Joined.fromParagraph(allocator, &before.paragraphs[0]);

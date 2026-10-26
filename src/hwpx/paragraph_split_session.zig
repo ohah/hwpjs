@@ -16,8 +16,16 @@ pub fn splitAnchored(session: *editor.Session, section_index: usize, paragraph: 
 }
 
 pub fn canSplit(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
-    return splitMode(session, section_index, paragraph, start, deleted, false, false, null) catch |err| switch (err) {
-        error.ProtectedFieldRange, error.UnsupportedStructuralFieldEdit, error.UnsupportedFormulaCellParagraphs, error.UnsupportedParagraphControl, error.UnsupportedInlineControl => false,
+    return canSplitMode(session, section_index, paragraph, start, deleted, false);
+}
+
+pub fn canSplitAnchored(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+    return canSplitMode(session, section_index, paragraph, start, deleted, true);
+}
+
+fn canSplitMode(session: *editor.Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, anchored: bool) !bool {
+    return splitMode(session, section_index, paragraph, start, deleted, anchored, false, null) catch |err| switch (err) {
+        error.ProtectedInlineControl, error.UnsupportedAnchoredStructure, error.MissingTextSite, error.UnsupportedParagraphTracking, error.UnsupportedStructuralFormulaEdit, error.ProtectedFieldRange, error.UnsupportedStructuralFieldEdit, error.UnsupportedFormulaCellParagraphs, error.UnsupportedParagraphControl, error.UnsupportedInlineControl, error.UnsupportedDutmalStructuralSave, error.UnsupportedEquationStructuralSave => false,
         else => return err,
     };
 }
@@ -118,6 +126,10 @@ fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, s
     }
     candidate.paragraphs[selected_index].break_before = selected.break_before;
     candidate.paragraphs[split_right].break_before = intent;
+    var pending_resources = if (deleted == 0 and intent == null) try @import("paragraph_split_protection.zig").prepare(session, section_index, paragraph, &candidate.paragraphs[split_right]) else null;
+    defer if (!transferred) {
+        if (pending_resources) |*values| values.deinit(a);
+    };
     var dirty: ?std.ArrayList(@import("text_sites_save.zig").FieldDirty) = null;
     defer if (!transferred) {
         if (dirty) |*values| values.deinit(a);
@@ -136,10 +148,15 @@ fn splitMode(session: *editor.Session, section_index: usize, paragraph: usize, s
     try @import("paragraph_structure_budget.zig").validate(projected, session.options);
     var proxy = session.*;
     proxy.sections = projected;
+    if (pending_resources) |values| proxy.paragraph_resources = values;
     const checked_zip = try proxy.save();
     defer a.free(checked_zip);
     if (!publish) return true;
     // No allocation or fallible operation follows this commit boundary.
+    if (pending_resources) |values| {
+        session.paragraph_resources.deinit(a);
+        session.paragraph_resources = values;
+    }
     section.sites.deinit(a);
     section.sites = .{ .items = &.{} };
     if (section.structure_values) |*values| values.deinit(a);

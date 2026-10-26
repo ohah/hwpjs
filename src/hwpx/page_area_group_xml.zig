@@ -8,7 +8,7 @@ const Options = @import("text_sites.zig").Options;
 pub fn writeCurrent(a: std.mem.Allocator, source: *const Tree, paragraphs: []const Paragraph, current: *const @import("paragraph_structure_values.zig").Values, original: *const @import("paragraph_structure_values.zig").Values, options: Options, limit: usize) ![]u8 {
     const rendered = try write(a, source, paragraphs, options, limit);
     defer a.free(rendered);
-    return @import("paragraph_nested_save.zig").fold(a, source, current, original, paragraphs[0].template_element, rendered, limit);
+    return @import("paragraph_nested_save.zig").foldOptions(a, source, current, original, paragraphs[0].template_element, rendered, options, limit);
 }
 
 pub fn write(a: std.mem.Allocator, source: *const Tree, paragraphs: []const Paragraph, options: Options, limit: usize) ![]u8 {
@@ -22,7 +22,7 @@ pub fn writeWithColumnPageAreas(a: std.mem.Allocator, source: *const Tree, parag
 pub fn writeCurrentWithColumnPageAreas(a: std.mem.Allocator, source: *const Tree, paragraphs: []const Paragraph, current: *const @import("paragraph_structure_values.zig").Values, original: *const @import("paragraph_structure_values.zig").Values, options: Options, limit: usize) ![]u8 {
     const rendered = try writeWithColumnPageAreas(a, source, paragraphs, options, limit);
     defer a.free(rendered);
-    return @import("paragraph_nested_save.zig").foldJoined(a, source, current, original, &paragraphs[0].joined().?, rendered, limit);
+    return @import("paragraph_nested_save.zig").foldJoinedOptions(a, source, current, original, &paragraphs[0].joined().?, rendered, options, limit);
 }
 
 fn writeMode(a: std.mem.Allocator, source: *const Tree, paragraphs: []const Paragraph, options: Options, limit: usize, mixed: bool) ![]u8 {

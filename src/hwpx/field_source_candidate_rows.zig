@@ -6,7 +6,7 @@ const Paragraph = @import("paragraph_structure_values.zig").Paragraph;
 /// 반환 배열만 소유하며 각 행의 Sites는 후보에서 빌립니다.
 pub fn build(a: std.mem.Allocator, trees: []const Tree, section: usize, paragraph: *const Paragraph, report: *const @import("field_markers.zig").Report, limit: usize) ![]Paragraph {
     if (section >= trees.len) return error.InvalidSectionIndex;
-    if (paragraph.character_styles != null or paragraph.protected_positions != null or paragraph.column_boundaries != null) return error.UnsupportedStructuralFieldEdit;
+    if (paragraph.protected_positions != null or paragraph.column_boundaries != null) return error.UnsupportedStructuralFieldEdit;
     const joined = paragraph.joined() orelse return error.SourceBindingMismatch;
     try joined.validate();
     const owned = paragraph.field_positions orelse return error.SourceBindingMismatch;

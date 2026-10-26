@@ -44,7 +44,7 @@ fn writeMode(a: std.mem.Allocator, tree: *const Tree, paragraphs: []const Paragr
         } else if (joined != null)
             try @import("column_boundary_joined_xml.zig").writeBase(a, tree, &paragraph, options, limit -| base.items.len)
         else if (paragraph.character_styles != null)
-            try writeStyled(a, tree, &paragraph, limit -| base.items.len)
+            try writeStyled(a, tree, &paragraph, options, limit -| base.items.len)
         else if (index == 0 and paragraph.column_structure_changed)
             try @import("paragraph_split_xml.zig").writeColumnStructure(a, tree, paragraph.template_element, &paragraph.sites, options, limit -| base.items.len)
         else if (paragraph.title_positions != null)
@@ -54,7 +54,7 @@ fn writeMode(a: std.mem.Allocator, tree: *const Tree, paragraphs: []const Paragr
         defer a.free(xml);
         const formatted = if (paragraph.paragraph_shape_id) |id| try @import("paragraph_format_write.zig").writeCurrent(a, tree, paragraph.template_element, xml, id, limit -| base.items.len) else null;
         defer if (formatted) |bytes| a.free(bytes);
-        const composed = if (nested) |context| try @import("paragraph_nested_save.zig").foldOwnedJoined(a, tree, context.current, context.original, &paragraph.joined().?, paragraph.protected_positions.?, formatted orelse xml, limit -| base.items.len) else null;
+        const composed = if (nested) |context| try @import("paragraph_nested_save.zig").foldOwnedJoinedOptions(a, tree, context.current, context.original, &paragraph.joined().?, paragraph.protected_positions.?, formatted orelse xml, options, limit -| base.items.len) else null;
         defer if (composed) |bytes| a.free(bytes);
         const bytes = composed orelse formatted orelse xml;
         if (bytes.len > limit -| base.items.len) return error.LimitExceeded;
@@ -186,10 +186,10 @@ fn writeMode(a: std.mem.Allocator, tree: *const Tree, paragraphs: []const Paragr
     return a.dupe(u8, result);
 }
 
-fn writeStyled(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragraph, limit: usize) ![]u8 {
+fn writeStyled(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragraph, options: sites_mod.Options, limit: usize) ![]u8 {
     var source = paragraph.*;
     source.generated_id = null;
-    const xml = try @import("character_style_paragraph_xml.zig").write(a, tree, &source, limit);
+    const xml = try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, &source, &.{}, options, limit);
     if (paragraph.generated_id) |id| {
         defer a.free(xml);
         return @import("styled_continuation_xml.zig").paragraph(a, tree, xml, id, limit);

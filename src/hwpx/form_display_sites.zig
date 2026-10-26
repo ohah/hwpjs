@@ -1,7 +1,6 @@
 //! Current form anchors derived from authoritative paragraph/protected positions.
 const std = @import("std");
 const editor = @import("editor_session.zig");
-const hosts = @import("paragraph_display_host.zig");
 const protected = @import("protected_display_host.zig");
 pub const Site = struct {
     formNode: usize,
@@ -30,13 +29,7 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
         }
         const run = section.tree.elements[node.formNode].parent.?;
         const template = section.tree.elements[run].parent.?;
-        const ordinal = (block: {
-            for (current.paragraphs) |paragraph| {
-                if (!try hosts.matchesTemplate(&paragraph, template)) continue;
-                if (paragraph.protected_positions != null) break :block protected.currentOrdinal(current.paragraphs, section.first_paragraph, template, node.formNode);
-            }
-            break :block hosts.currentOrdinal(current.paragraphs, section.first_paragraph, template);
-        }) catch |err| switch (err) {
+        const ordinal = protected.currentAnchorOrdinal(current.paragraphs, section.first_paragraph, template, node.formNode) catch |err| switch (err) {
             error.MissingCurrentParagraphDisplayHost => {
                 try rows.append(a, .{ .formNode = node.formNode, .kind = node.kind, .state = .missing_host });
                 continue;

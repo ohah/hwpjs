@@ -39,32 +39,37 @@ fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
 }
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, false, false, false, false);
+    return applyWith(a, source, version, p, edit, char_count, false, false, false, false, false);
 }
 
 pub fn applyFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, true, false, false, false);
+    return applyWith(a, source, version, p, edit, char_count, true, false, false, false, false);
 }
 
 pub fn applyHyperlinkTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, false, true, false, false);
+    return applyWith(a, source, version, p, edit, char_count, false, true, false, false, false);
 }
 
 /// Private draft only; field_splice owns binding, dependent attributes and commit.
 pub fn applyFieldTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
-    return applyWith(a, source, version, p, edit, char_count, false, true, false, true);
+    return applyWith(a, source, version, p, edit, char_count, false, true, false, true, false);
 }
 
 /// Private-model projection used by the paired paragraph split transaction.
 pub fn applySplitProjection(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool) !void {
     if (edit.utf8.len != 0 or p.field_attributes != null or p.formula_results != null) return error.UnsupportedStructuralControl;
     if (p.range_tags) |ranges| if (ranges.len != 0) return error.UnsupportedRangeSemantics;
-    return applyWith(a, source, version, p, edit, char_count, formulas, false, true, false);
+    return applyWith(a, source, version, p, edit, char_count, formulas, false, true, false, false);
 }
 
-fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool, cross_fields: bool, partition: bool, field_mode: bool) !void {
+/// 비공개 draft만 변경한다. Company section transaction이 query와 같은 보호를 검증한다.
+pub fn applyRetainedCompanyTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
+    return applyWith(a, source, version, p, edit, char_count, false, false, false, false, true);
+}
+
+fn applyWith(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize, formulas: bool, cross_fields: bool, partition: bool, field_mode: bool, company_mode: bool) !void {
     const validator = @import("plain_text_source.zig");
-    const validated = if (field_mode) try validator.validateFieldTransaction(a, source, version, p.*, char_count) else if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else if (cross_fields) try validator.validateHyperlinkTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
+    const validated = if (company_mode) try validator.validateRetainedCompanyTransaction(a, source, version, p.*, char_count) else if (partition) try validator.validateStructureTransaction(a, source, version, p.*, char_count) else if (field_mode) try validator.validateFieldTransaction(a, source, version, p.*, char_count) else if (formulas) try validator.validateFormulaTransaction(a, source, version, p.*, char_count) else if (cross_fields) try validator.validateHyperlinkTransaction(a, source, version, p.*, char_count) else try validator.validate(a, source, version, p.*, char_count);
     if (partition and validated.preserved_direct_records != 0) return error.UnsupportedStructuralControl;
     const ranges = validated.ranges;
     if (partition) if (ranges) |value| if (value.count() != 0) return error.UnsupportedRangeSemantics;

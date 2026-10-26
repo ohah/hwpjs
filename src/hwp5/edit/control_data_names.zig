@@ -1,6 +1,6 @@
 //! Exact name-only CTRL_DATA schemas; caller must verify direct owner binding.
 const parameters = @import("../parameters/parser.zig");
-pub const Owner = enum { bookmark, shape, click_field, bookmark_field };
+pub const Owner = enum { bookmark, shape, click_field, bookmark_field, table };
 
 /// Exact direct-parent binding; no nearest-ancestor or previous-header guess.
 pub fn ownerForTree(tree: @import("../body/tree.zig").Tree, index: usize) !Owner {
@@ -10,7 +10,7 @@ pub fn ownerForTree(tree: @import("../body/tree.zig").Tree, index: usize) !Owner
     const parent = tree.nodes[parent_index];
     const body = @import("../body/reader.zig");
     const rules = @import("../body/control_rules.zig");
-    if (parent.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
+    if (parent.record.framing.tag == @backingInt(body.Tag.control_header)) {
         const header = try body.ControlHeader.parse(parent.record.framing.payload);
         if (header.id == rules.id("bokm")) return .bookmark;
         if (header.id == rules.id("%clk")) return .click_field;
@@ -103,7 +103,7 @@ pub fn name(doc: parameters.Document, owner: Owner) ![]const u8 {
     const root = doc.nodes[0];
     if (root.value != .set or root.value.set.id != 0x021b or root.value.set.count != 1 or root.value.set.reserved != 0) return error.UnsupportedControlData;
     const index: usize = switch (owner) {
-        .bookmark, .click_field, .bookmark_field => blk: {
+        .bookmark, .click_field, .bookmark_field, .table => blk: {
             if (doc.nodes.len != 2) return error.UnsupportedControlData;
             break :blk 1;
         },

@@ -26,12 +26,7 @@ pub fn read(a: std.mem.Allocator, session: *const editor.Session, section_index:
         .external => return error.ExternalPictureImage,
         .absent, .empty, .missing => return error.MissingPictureImage,
     }
-    const item = document.manifest.items[site.target.item_index orelse return error.InvalidImageLinkReport];
-    const entry_index = item.entry_index orelse return error.InvalidImageLinkReport;
-    if (entry_index >= document.archive.entries.len) return error.InvalidImageLinkReport;
-    const entry = document.archive.entries[entry_index];
-    if (!std.mem.eql(u8, entry.name, item.href)) return error.InvalidImageLinkReport;
-    return document.archive.decode(entry, max_bytes);
+    return @import("embedded_image_source_bytes.zig").read(document.archive, document.manifest, site.target.item_index orelse return error.InvalidImageLinkReport, max_bytes);
 }
 
 test "HWPX picture source bytes enforce limits and detached ownership" {

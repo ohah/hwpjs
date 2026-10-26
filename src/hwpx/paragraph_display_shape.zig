@@ -11,6 +11,8 @@ const child = @import("paragraph_display_children.zig").child;
 pub const Measure = struct { value: ?i64 = null, unit: ?Value = null };
 pub const Shape = struct {
     id: u32,
+    tab_pr_id: ?u32 = null,
+    break_settings: ?@import("paragraph_break_settings.zig").Values = null,
     horizontal: ?Value = null,
     spacing_type: ?Value = null,
     spacing: ?Measure = null,
@@ -32,6 +34,7 @@ pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize) !Sha
     if (!tree.elements[index].is(head, "paraPr")) return error.InvalidParagraphDisplayElement;
     const raw_id = (try tree.attributeValue(a, index, "", "id")) orelse return error.MissingParagraphShapeReference;
     var result: Shape = .{ .id = try fields.unsigned(a, raw_id, 4096) };
+    if (try tree.attributeValue(a, index, "", "tabPrIDRef")) |raw| result.tab_pr_id = try fields.unsigned(a, raw, 4096);
     if (try child(a, tree, index, head, "align")) |alignment_node| result.horizontal = try tree.attributeValue(a, alignment_node, "", "horizontal");
     if (try child(a, tree, index, head, "lineSpacing")) |spacing| {
         result.spacing_type = try tree.attributeValue(a, spacing, "", "type");
@@ -42,7 +45,29 @@ pub fn read(a: std.mem.Allocator, tree: *const tree_mod.Tree, index: usize) !Sha
             if (try child(a, tree, margin, core, name)) |node| result.margins[field] = try measure(a, tree, node);
         }
     }
+    result.break_settings = try @import("paragraph_break_settings.zig").read(a, tree, index);
     return result;
+}
+
+test "HWPX paragraph display tab reference preserves absent zero sparse and cloned identity" {
+    const a = std.testing.allocator;
+    var tree = try @import("xml_part_tree.zig").parse(a, "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:f='urn:future'>" ++
+        "<h:paraPr id='0'/><h:paraPr id='1' tabPrIDRef='&#48;'/><h:paraPr id='2' tabPrIDRef='300'/>" ++
+        "<h:paraPr id='3' f:tabPrIDRef='9'/></h:head>", .header, null, 0, .{});
+    defer tree.deinit(a);
+    const Probe = struct {
+        fn run(allocator: std.mem.Allocator, input: *const tree_mod.Tree) !void {
+            const expected = [_]?u32{ null, 0, 300, null };
+            for (expected, 1..) |id, node| {
+                const raw = try read(allocator, input, node);
+                try std.testing.expectEqual(id, raw.tab_pr_id);
+                var owned = try @import("paragraph_display_owned.zig").clone(allocator, raw);
+                defer owned.deinit(allocator);
+                try std.testing.expectEqual(id, owned.tab_pr_id);
+            }
+        }
+    };
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{&tree});
 }
 
 test "HWPX paragraph display reads fixture signed margins and borrowed alignment" {

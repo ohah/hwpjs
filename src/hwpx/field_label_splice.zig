@@ -4,39 +4,29 @@ const ranges = @import("field_text_ranges.zig");
 const positions = @import("paragraph_text_positions.zig");
 const sites_module = @import("text_sites.zig");
 
-pub const OwnedRange = struct {
-    segments: []positions.Segment,
-    end: u32,
-    target: usize,
-    pub fn deinit(self: OwnedRange, a: std.mem.Allocator) void {
-        a.free(self.segments);
-    }
-};
-
-/// Shared current projection and boundary checks; never clones or edits a row.
-pub fn validateOwnedRange(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, field: ranges.Range, section: usize, span: @import("field_text_positions.zig").Span, start: u32, deleted: u32) !OwnedRange {
+/// 분할 필드 입력 후보입니다. 호출자가 현재 범위와 필드 종류 권한을 검증합니다.
+/// 텍스트와 마커를 함께 복사하고 재투영하므로 원본 문단은 실패 때도 유지됩니다.
+pub fn validateOwnedRange(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, field: ranges.Range, section: usize, span: @import("field_text_positions.zig").Span, start: u32, end: u32) ![]positions.Segment {
     if (paragraph.field_positions == null or paragraph.protected_positions != null or paragraph.column_boundaries != null) return error.UnsupportedStructuralFieldEdit;
-    const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
-    if (span.end_unit < span.start_unit or start < span.start_unit or end > span.end_unit) return error.InvalidTextPosition;
+    if (end < start or span.end_unit < span.start_unit or start < span.start_unit or end > span.end_unit) return error.InvalidTextPosition;
     const before = try @import("field_owned_positions.zig").build(a, tree, paragraph);
     errdefer a.free(before);
     for (before) |segment| if (segment.kind != .text) return error.UnsupportedInlineControl;
-    const target = try @import("field_text_positions.zig").validateEdit(field, section, before, start, end);
+    _ = try @import("field_text_positions.zig").validateEdit(field, section, before, start, end);
     try positions.validateBoundary(&paragraph.sites, before, start);
     try positions.validateBoundary(&paragraph.sites, before, end);
-    return .{ .segments = before, .end = end, .target = target };
+    return before;
 }
 
-/// 분할 필드 입력 후보입니다. 호출자가 현재 범위와 필드 종류 권한을 검증합니다.
-/// 텍스트와 마커를 함께 복사하고 재투영하므로 원본 문단은 실패 때도 유지됩니다.
 pub fn prepareOwned(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, field: ranges.Range, section: usize, span: @import("field_text_positions.zig").Span, start: u32, deleted: u32, inserted: []const u8, max_bytes: usize) !?@import("paragraph_structure_values.zig").Paragraph {
-    const checked = try validateOwnedRange(a, tree, paragraph, field, section, span, start, deleted);
-    defer checked.deinit(a);
-    const before = checked.segments;
+    const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
+    const before = try validateOwnedRange(a, tree, paragraph, field, section, span, start, end);
+    defer a.free(before);
     var candidate = try paragraph.clone(a);
     errdefer candidate.deinit(a);
     const changed = if (candidate.character_styles != null) block: {
-        break :block try @import("character_style_splice.zig").splicePositionsAtSite(a, &candidate, before, start, deleted, inserted, max_bytes, checked.target);
+        const target = try @import("field_text_positions.zig").validateEdit(field, section, before, start, end);
+        break :block try @import("character_style_splice.zig").splicePositionsAtSiteWithTree(a, tree, &candidate, before, start, deleted, inserted, max_bytes, target);
     } else try splice(a, &candidate.sites, before, field, section, start, deleted, inserted, max_bytes);
     if (!changed) {
         candidate.deinit(a);

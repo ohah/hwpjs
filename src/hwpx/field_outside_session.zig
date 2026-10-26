@@ -11,8 +11,9 @@ pub fn splice(self: *@import("editor_session.zig").Session, section_index: usize
     for (self.sections, trees) |section, *tree| tree.* = section.tree;
     var report = try @import("field_markers.zig").inspect(a, trees, .{});
     defer report.deinit();
-    const spans = try @import("field_current_spans.zig").buildForExterior(a, trees, section_index, current, index, &report, 200000);
-    defer a.free(spans);
+    var projection = try @import("field_current_spans.zig").projectForExterior(a, trees, section_index, current, index, &report, @import("editor_session.zig").siteOptions(self.options), 200000);
+    defer projection.deinit(a);
+    const spans = projection.spans;
     var other: usize = 0;
     for (current.paragraphs, 0..) |row, ordinal| {
         if (ordinal == index) continue;
@@ -21,9 +22,10 @@ pub fn splice(self: *@import("editor_session.zig").Session, section_index: usize
             other += site.text.len;
         }
     }
+    const target = try @import("field_current_exterior_insertion_site.zig").selectProjected(a, trees, section_index, current, index, &report, start, deleted, &projection);
     var candidate = try current.clone(a);
     defer candidate.deinit(a);
-    const edited = (try @import("field_outside_splice.zig").prepare(a, &selected.tree, &candidate.paragraphs[index], spans, index, start, deleted, inserted, section_limit -| other)) orelse return false;
+    const edited = (try @import("field_outside_splice.zig").prepareAtSite(a, &selected.tree, &candidate.paragraphs[index], spans, index, start, deleted, inserted, section_limit -| other, target)) orelse return false;
     candidate.paragraphs[index].deinit(a);
     candidate.paragraphs[index] = edited;
     const verified = try @import("field_current_spans.zig").buildForExterior(a, trees, section_index, &candidate, index, &report, 200000);
@@ -53,7 +55,7 @@ test "field exterior session allocation failures preserve text markers and dirty
     try std.testing.expectEqual(@as(usize, 1), labels.len);
     try std.testing.expect(try session.spliceFieldLabel(0, 3, labels[0].begin_element, @intCast(labels[0].start), 0, "기존"));
     try std.testing.expectEqual(@as(usize, 1), session.sections[0].field_dirty.items.len);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             var proxy = source.*;
             proxy.allocator = allocator;
@@ -94,7 +96,7 @@ test "field exterior query allocation failures never change the current ZIP" {
     try std.testing.expect(try session.splitParagraph(0, 2, 0, 0));
     const before = try session.save();
     defer a.free(before);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             var proxy = source.*;
             proxy.allocator = allocator;

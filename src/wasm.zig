@@ -12,6 +12,8 @@ comptime {
     _ = @import("wasm/hwp5_password.zig");
     _ = @import("wasm/hwpx_edit.zig");
     _ = @import("wasm/hwp5_edit.zig");
+    _ = @import("wasm/equation.zig");
+    _ = @import("wasm/pcx.zig");
 }
 
 export fn hwpjs_abi_version() u32 {

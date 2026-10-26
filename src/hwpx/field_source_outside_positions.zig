@@ -9,7 +9,7 @@ pub fn prepareAction(self: *const @import("editor_session.zig").Session, section
     if (end < start) return error.InvalidTextPosition;
     if (section_index >= self.sections.len) return error.InvalidSectionIndex;
     const section = &self.sections[section_index];
-    if (section.structure_values != null) return null;
+    if (section.structure_values != null) return @import("inherited_field_exterior.zig").prepareAction(self, section_index, paragraph, start, end, action);
     const source_paragraph = try section.sourceParagraph(paragraph);
     const has_fields = try @import("source_field_analysis.zig").hasFields(self, section_index);
     if (!has_fields) return null;
@@ -29,6 +29,8 @@ pub fn prepareAction(self: *const @import("editor_session.zig").Session, section
     var analysis = try @import("source_field_analysis.zig").leaseForExterior(self);
     defer analysis.deinit(a);
     const report = &analysis.source.report;
+    // Keep unresolved content protected within its structural text list.
+    // Root starts still protect the section; no end marker is synthesized.
     for (report.markers) |marker| {
         if (marker.section_ordinal != section_index or marker.kind != .begin or marker.matched_marker_index != null) continue;
         if (marker.element_index >= section.tree.elements.len) return error.SourceBindingMismatch;
@@ -46,6 +48,10 @@ pub fn prepareAction(self: *const @import("editor_session.zig").Session, section
         count += 1;
     };
     if (count == 0) {
+        // A matched end marker can precede an empty text site. That site is
+        // outside the field, but plain policy still rejects the local marker.
+        // Keep the validated source plan for range edits only; formula splitting
+        // deliberately filters other field kinds and cannot use this exception.
         const owner = try @import("paragraph_site_owner.zig").resolve(&section.tree, &section.sites, section.locations, source_paragraph);
         if (action != .splice or !try @import("paragraph_site_owner.zig").ownsFieldMarker(&section.tree, owner)) {
             a.free(segments);
@@ -56,6 +62,8 @@ pub fn prepareAction(self: *const @import("editor_session.zig").Session, section
     if (action == .whole_plain or action == .whole_anchored) return error.ProtectedFieldRange;
     for (segments) |segment| {
         if (segment.kind == .text) continue;
+        // Range-only source projection validates anchors and retains their
+        // protected object units. Whole-paragraph and split policies stay strict.
         if (action == .splice and segment.kind == .anchor) continue;
         try @import("paragraph_text_positions.zig").validateInlineUnit(&section.tree, segment);
     }

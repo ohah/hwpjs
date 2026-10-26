@@ -40,12 +40,14 @@ pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: 
     if (!found) return error.InvalidParagraphShapeReference;
     if (unchanged) return false;
     var source_id = current;
+    var keep_lines: ?bool = null;
     var margins: @import("paragraph_margin_patch.zig").Patch = .{};
     var spacing: ?@import("paragraph_spacing_patch.zig").Spacing = null;
     for (session.paragraph_resources.entries.items) |entry| if (entry.id == current) {
         source_id = entry.source_id;
         margins = entry.margins;
         spacing = entry.spacing;
+        keep_lines = entry.keep_lines;
         break;
     };
     var original = session.*;
@@ -58,7 +60,7 @@ pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: 
         if (@field(patch, field.name)) |value| @field(margins, field.name) = value;
     }
     if (requested_spacing) |value| spacing = value;
-    const id = try pending.addWithProperties(a, ids, source_id, alignment.?, margins, spacing);
+    const id = try pending.addWithBreakProperties(a, ids, source_id, alignment.?, margins, spacing, keep_lines);
     std.mem.swap(@import("paragraph_resource_values.zig").Values, &pending, &session.paragraph_resources);
     const changed = session.setParagraphFormat(section, paragraph, id) catch |err| {
         std.mem.swap(@import("paragraph_resource_values.zig").Values, &pending, &session.paragraph_resources);

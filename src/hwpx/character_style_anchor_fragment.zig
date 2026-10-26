@@ -118,7 +118,7 @@ test "HWPX protected anchor fragment preserves actual object XML and allocation 
     for (spans) |span| switch (span.owner) {
         .anchor_element => {
             try Probe.run(a, &section.tree, span);
-            try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, span });
+            try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, span });
             try std.testing.expectError(error.LimitExceeded, write(a, &section.tree, span, 1));
             var invalid = span;
             invalid.owner = .{ .anchor_element = section.tree.elements.len };

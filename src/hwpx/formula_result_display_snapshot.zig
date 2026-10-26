@@ -15,6 +15,17 @@ pub fn free(a: std.mem.Allocator, rows: []Row) void {
 
 pub fn read(session: *const editor.Session, section: usize) ![]Row {
     const a = session.allocator;
+    if (section >= session.sections.len) return error.InvalidSectionIndex;
+    if (session.sections[section].structure_values != null) {
+        var current = try @import("formula_result_structural_view.zig").open(session, section);
+        defer current.deinit();
+        const rows = try read(&current.rendered, section);
+        errdefer free(a, rows);
+        for (rows) |row| {
+            for (row.targets) |*target| target.begin_element = std.math.cast(u32, try current.originalNode(target.begin_element)) orelse return error.LimitExceeded;
+        }
+        return rows;
+    }
     var view = (try projection.prepareSection(session, section)) orelse return a.alloc(Row, 0);
     defer view.deinit();
     const paragraphs = try @import("formula_result_paragraphs.zig").listPrepared(session, section, &view.current);

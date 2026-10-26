@@ -4,6 +4,11 @@ const Paragraph = @import("paragraph_structure_values.zig").Paragraph;
 const Tree = @import("xml_part_tree.zig").Tree;
 const Span = @import("field_current_spans.zig").Span;
 pub fn prepare(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragraph, spans: []const Span, index: usize, start: u32, deleted: u32, inserted: []const u8, limit: usize) !?Paragraph {
+    return prepareAtSite(a, tree, paragraph, spans, index, start, deleted, inserted, limit, null);
+}
+
+/// 전체 current 검증을 마친 field 소비자만 명시 site를 전달합니다.
+pub fn prepareAtSite(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragraph, spans: []const Span, index: usize, start: u32, deleted: u32, inserted: []const u8, limit: usize, target: ?usize) !?Paragraph {
     if (paragraph.field_positions == null or paragraph.protected_positions != null or paragraph.column_boundaries != null) return error.UnsupportedStructuralFieldEdit;
     try @import("field_outside_range.zig").validate(spans, index, start, deleted);
     const before = try @import("field_owned_positions.zig").build(a, tree, paragraph);
@@ -12,9 +17,9 @@ pub fn prepare(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragr
     var candidate = try paragraph.clone(a);
     errdefer candidate.deinit(a);
     const changed = if (candidate.character_styles != null)
-        try @import("character_style_splice.zig").splicePositions(a, &candidate, before, start, deleted, inserted, limit)
+        try @import("character_style_splice.zig").splicePositionsAtSiteWithTree(a, tree, &candidate, before, start, deleted, inserted, limit, target orelse (@import("text_splice_transaction.zig").insertionSite(&candidate.sites, before, start) orelse return error.InvalidTextPosition))
     else
-        try @import("text_splice_transaction.zig").spliceProjected(a, &candidate.sites, before, start, deleted, inserted, limit, null);
+        try @import("text_splice_transaction.zig").spliceProjected(a, &candidate.sites, before, start, deleted, inserted, limit, target);
     if (!changed) {
         candidate.deinit(a);
         return null;

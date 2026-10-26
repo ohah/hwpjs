@@ -39,7 +39,9 @@ pub fn section(a: std.mem.Allocator, source: model.Section) !model.Section {
     const sizes = if (source.table_cell_sizes) |values| try a.dupe(model.TableCellSize, values) else null;
     errdefer if (sizes) |values| a.free(values);
     const pictures = if (source.picture_current_sizes) |values| try a.dupe(model.PictureCurrentSize, values) else null;
-    return .{ .paragraphs = paragraphs, .source_record_count = source.source_record_count, .table_cell_sizes = sizes, .picture_current_sizes = pictures };
+    errdefer if (pictures) |values| a.free(values);
+    const forms = if (source.form_values) |values| try @import("form_values.zig").clone(a, values) else null;
+    return .{ .paragraphs = paragraphs, .source_record_count = source.source_record_count, .table_cell_sizes = sizes, .picture_current_sizes = pictures, .form_values = forms };
 }
 
 fn verifyAllocationFailures(a: std.mem.Allocator) !void {

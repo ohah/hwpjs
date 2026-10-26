@@ -4,9 +4,9 @@ const tree_module = @import("xml_part_tree.zig");
 pub const Prepared = struct {
     field: @import("field_text_ranges.zig").Range,
     segments: []@import("paragraph_text_positions.zig").Segment,
-    sites: *const @import("text_sites.zig").Sites,
     dirty_elements: []usize,
     protected_spans: []@import("field_current_spans.zig").Span,
+    sites: *const @import("text_sites.zig").Sites,
     pub fn deinit(self: Prepared, a: std.mem.Allocator) void {
         a.free(self.segments);
         a.free(self.dirty_elements);
@@ -17,10 +17,9 @@ pub const Prepared = struct {
 pub fn validatePreparedRange(prepared: Prepared, section: usize, start: u32, end: u32) !usize {
     if (end < start) return error.InvalidTextPosition;
     try @import("field_outside_range.zig").validate(prepared.protected_spans, 0, start, end - start);
-    const target = try @import("field_text_positions.zig").validateEdit(prepared.field, section, prepared.segments, start, end);
     try @import("paragraph_text_positions.zig").validateBoundary(prepared.sites, prepared.segments, start);
     try @import("paragraph_text_positions.zig").validateBoundary(prepared.sites, prepared.segments, end);
-    return target;
+    return @import("field_text_positions.zig").validateEdit(prepared.field, section, prepared.segments, start, end);
 }
 
 /// Shared validation and current positions for queries and mutations.
@@ -55,12 +54,14 @@ pub fn prepareLinked(self: anytype, section_index: usize, paragraph: usize, begi
         }
         return error.InvalidFieldElement;
     };
-    const local: ?LocalParagraph = if (selected.structure_values == null) .{
-        .sites = &selected.sites,
-        .locations = selected.locations,
-        .paragraph = try selected.sourceParagraph(paragraph),
-    } else null;
-    try validateLinkedAtParagraph(&selected.tree, field, report, ranges, frames, local);
+    const local_owner = if (selected.structure_values == null) try @import("paragraph_site_owner.zig").resolve(&selected.tree, &selected.sites, selected.locations, try selected.sourceParagraph(paragraph)) else null;
+    var inherited_owner: ?usize = null;
+    validateLinkedMode(&selected.tree, field, report, ranges, frames, selected.structure_values == null, local_owner) catch |err| {
+        if (err != error.UnsupportedFieldLabelContent) return err;
+        inherited_owner = try @import("inherited_field_row.zig").validate(self, section_index, paragraph, field, report, ranges, frames);
+        if (inherited_owner == null) return err;
+        try validateLinkedMode(&selected.tree, field, report, ranges, frames, true, inherited_owner);
+    };
     const segments = if (selected.structure_values) |*values| block: {
         if (selected.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
         const index = paragraph - selected.first_paragraph;
@@ -69,66 +70,54 @@ pub fn prepareLinked(self: anytype, section_index: usize, paragraph: usize, begi
         if (owned.generated_id != null or owned.pieces != null) return error.UnsupportedFieldLabel;
         const locations = try @import("paragraph_structure_locations.zig").build(a, &selected.tree, owned);
         defer a.free(locations);
-        break :block try @import("paragraph_text_positions.zig").buildForFieldText(a, &selected.tree, &owned.sites, locations, 1);
-    } else try @import("anchor_text_positions.zig").buildForFieldText(a, &selected.tree, &selected.sites, selected.locations, local.?.paragraph);
+        if (inherited_owner != null) {
+            break :block try @import("anchor_text_positions.zig").buildForFieldText(a, &selected.tree, &owned.sites, locations, 1);
+        }
+        break :block try @import("paragraph_text_positions.zig").build(a, &selected.tree, &owned.sites, locations, 1);
+    } else try @import("source_field_paragraph_positions.zig").build(self, section_index, paragraph);
     errdefer a.free(segments);
     const dirty_elements = try @import("field_nested_ownership.zig").dirtyOwners(a, field, ranges, report, 4096);
     errdefer a.free(dirty_elements);
     const protected_spans = try @import("field_nested_ownership.zig").descendantSpans(a, field, ranges, segments, report);
     const sites = if (selected.structure_values) |*values| &values.paragraphs[paragraph - selected.first_paragraph].sites else &selected.sites;
-    return .{ .field = field, .segments = segments, .sites = sites, .dirty_elements = dirty_elements, .protected_spans = protected_spans };
+    return .{ .field = field, .segments = segments, .dirty_elements = dirty_elements, .protected_spans = protected_spans, .sites = sites };
 }
 
 /// 조회와 입력이 공유하는 필드 종류/원문 내용/선택 소유자 정책입니다.
 pub fn validateLinked(tree: *const tree_module.Tree, field: @import("field_text_ranges.zig").Range, report: *const @import("field_markers.zig").Report, ranges: []const @import("field_text_ranges.zig").Range, frames: []const @import("xml_tree_selection.zig").Frame) !void {
-    return validateLinkedAtParagraph(tree, field, report, ranges, frames, null);
+    return validateLinkedMode(tree, field, report, ranges, frames, false, null);
 }
-
-const LocalParagraph = struct {
-    sites: *const @import("text_sites.zig").Sites,
-    locations: []const @import("section_text.zig").Location,
-    paragraph: usize,
-};
-
-fn validateLinkedAtParagraph(tree: *const tree_module.Tree, field: @import("field_text_ranges.zig").Range, report: *const @import("field_markers.zig").Report, ranges: []const @import("field_text_ranges.zig").Range, frames: []const @import("xml_tree_selection.zig").Frame, local: ?LocalParagraph) !void {
+fn validateLinkedMode(tree: *const tree_module.Tree, field: @import("field_text_ranges.zig").Range, report: *const @import("field_markers.zig").Report, ranges: []const @import("field_text_ranges.zig").Range, frames: []const @import("xml_tree_selection.zig").Frame, allow_nested: bool, local_owner: ?usize) !void {
     const begin = report.markers[field.begin_marker];
-    if (local) |paragraph| {
-        const owner = try @import("paragraph_site_owner.zig").resolve(tree, paragraph.sites, paragraph.locations, paragraph.paragraph);
-        for (report.markers) |marker| {
-            if (marker.section_ordinal != field.section or marker.kind != .begin or marker.matched_marker_index != null) continue;
-            const envelope = try @import("field_source_scope.zig").forBegin(tree, marker.element_index);
-            const start = tree.elements[owner].start_tag.start;
-            const end = tree.elements[owner].end;
-            if (envelope.contains(start) or (start < envelope.start and envelope.start < end)) return error.UnsupportedFieldLabel;
-        }
+    for (report.markers) |marker| {
+        if (marker.section_ordinal != field.section or marker.kind != .begin or marker.matched_marker_index != null) continue;
+        const envelope = try @import("field_source_scope.zig").forBegin(tree, marker.element_index);
+        const start = if (local_owner) |owner| tree.elements[owner].start_tag.start else field.content_start;
+        const end = if (local_owner) |owner| tree.elements[owner].end else field.content_end;
+        if (envelope.contains(start) or (start < envelope.start and envelope.start < end)) return error.UnsupportedFieldLabel;
     }
     for (ranges) |other| {
         if (other.section != field.section or other.begin_marker == field.begin_marker) continue;
         const relationship = try @import("field_nested_ownership.zig").relation(field, other);
-        if (relationship == .disjoint) continue;
-        if (@import("field_label_marker_policy.zig").isMemo(begin)) return error.UnsupportedNestedFieldLabel;
-        if (local == null) return error.UnsupportedNestedFieldLabel;
-        if (relationship == .ancestor or relationship == .descendant) {
-            const marker = report.markers[other.begin_marker];
-            if (!@import("field_text_kind.zig").supported(marker.begin.?.type_raw orelse "")) return error.UnsupportedNestedFieldLabel;
+        if (relationship != .disjoint and @import("field_label_marker_policy.zig").isMemo(begin)) return error.UnsupportedNestedFieldLabel;
+        if (!allow_nested and relationship != .disjoint) return error.UnsupportedNestedFieldLabel;
+        if (allow_nested) {
+            if (local_owner) |owner| {
+                const paragraph_node = tree.elements[owner];
+                if (other.content_end <= paragraph_node.start_tag.start or other.content_start >= paragraph_node.end) continue;
+            }
+            if (relationship == .ancestor or relationship == .descendant) {
+                const marker = report.markers[other.begin_marker];
+                if (!@import("field_text_kind.zig").supported(marker.begin.?.type_raw orelse "")) return error.UnsupportedNestedFieldLabel;
+            }
             try @import("field_nested_ownership.zig").validateNestedScope(tree, field, other, report);
         }
     }
-    const uri = @import("document_xml.zig").paragraph_uri;
-    if (local) |owner| {
-        @import("plain_paragraph_policy.zig").validateForFieldText(tree, owner.sites, owner.locations, owner.paragraph) catch |err| switch (err) {
-            error.UnsupportedParagraphControl => return error.UnsupportedFieldLabelContent,
-            else => return err,
-        };
-    } else {
-        for (tree.elements, 0..) |element, index| {
-            if (element.start_tag.start < field.content_start or element.start_tag.start >= field.content_end) continue;
-            if (element.is(uri, "p") or element.is(uri, "run") or element.is(uri, "t") or element.is(uri, "ctrl") or element.is(uri, "linesegarray") or element.is(uri, "lineseg")) continue;
-            if (@import("retained_inline_unit.zig").supported(tree, index)) continue;
+    if (local_owner == null) {
+        if (try @import("field_label_content_policy.zig").firstUnsupportedNode(tree, field, ranges, report, allow_nested) != null)
             return error.UnsupportedFieldLabelContent;
-        }
     }
-    if (!@import("field_label_marker_policy.zig").supported(begin, local != null)) return error.UnsupportedFieldLabel;
+    if (!@import("field_label_marker_policy.zig").supported(begin, local_owner != null)) return error.UnsupportedFieldLabel;
     _ = try @import("field_marker_ownership.zig").paragraph(tree, frames, begin.element_index);
     _ = try @import("field_marker_ownership.zig").paragraph(tree, frames, report.markers[field.end_marker].element_index);
 }
@@ -174,8 +163,8 @@ pub fn splice(self: anytype, section_index: usize, paragraph: usize, begin_eleme
     const styled = if (selected.structure_values) |*values| &values.paragraphs[paragraph - selected.first_paragraph] else null;
     const changed = if (styled != null and styled.?.character_styles != null) block: {
         const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
-        const target = try validatePreparedRange(prepared, section_index, start, end);
-        break :block try @import("character_style_splice.zig").splicePositionsAtSite(a, styled.?, segments, start, deleted, inserted, self.options.max_text_bytes - other_bytes, target);
+        const target = try @import("field_text_positions.zig").validateEdit(field, section_index, segments, start, end);
+        break :block try @import("character_style_splice.zig").splicePositionsAtSiteWithTree(a, &selected.tree, styled.?, segments, start, deleted, inserted, self.options.max_text_bytes - other_bytes, target);
     } else try @import("field_label_splice.zig").splice(a, sites, segments, field, section_index, start, deleted, inserted, self.options.max_text_bytes - other_bytes);
     if (changed) {
         for (prepared.dirty_elements) |element_index| {

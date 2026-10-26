@@ -9,12 +9,12 @@ fn displayPositions(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zi
         error.UnsupportedParagraphControl, error.UnsupportedInlineControl => return @import("anchor_paragraph_edit.zig").segments(a, tree, sites, locations, paragraph),
         else => return err,
     };
-    return @import("paragraph_text_positions.zig").build(a, tree, sites, locations, paragraph);
+    return @import("paragraph_text_positions.zig").buildForFieldText(a, tree, sites, locations, paragraph);
 }
 
 fn copyStyles(a: std.mem.Allocator, styles: []const @import("character_style_paint.zig").Span) ![]Span {
     const output = try a.alloc(Span, styles.len);
-    for (styles, output) |style, *row| row.* = .{ .start_unit = style.start_unit, .end_unit = style.end_unit, .char_shape_id = style.char_shape_id };
+    for (styles, output) |style, *row| row.* = .{ .start_unit = style.start_unit, .end_unit = style.end_unit, .char_shape_id = style.char_shape_id, .inline_element = style.tab_element };
     return output;
 }
 
@@ -39,6 +39,10 @@ pub fn read(session: *const editor.Session, section_index: usize, paragraph_inde
         return a.dupe(Span, &.{.{ .start_unit = 0, .end_unit = 0, .char_shape_id = id }});
     }
     if (try @import("character_style_formula_snapshot.zig").read(session, section_index, paragraph_index)) |ranges| return ranges;
+    if (paragraph.title_output_projection) |*plan| {
+        try plan.validate(paragraph);
+        return a.dupe(Span, plan.ranges);
+    }
     if (paragraph.character_styles) |styles| return copyStyles(a, styles);
     const positions = if (paragraph.field_positions != null)
         try @import("field_owned_positions.zig").build(a, &section.tree, paragraph)

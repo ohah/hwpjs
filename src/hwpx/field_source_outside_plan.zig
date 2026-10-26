@@ -55,22 +55,7 @@ fn prepareAction(session: *const @import("editor_session.zig").Session, section_
     return .{ .segments = original, .start = boundaries.start orelse try mapBoundary(current, original, start), .end = boundaries.end orelse try mapBoundary(current, original, end) };
 }
 
-fn mapBoundary(current: []const positions.Segment, original: []const positions.Segment, unit: u32) !u32 {
-    segment_loop: for (current) |segment| {
-        if (segment.kind != .text or unit < segment.start_unit or unit > segment.end_unit) continue;
-        for (original) |source| {
-            if (source.kind != .text or source.index != segment.index) continue;
-            // At shared boundaries choose unchanged exterior text, never
-            // a result site whose displayed width changed.
-            if (source.end_unit - source.start_unit != segment.end_unit - segment.start_unit) continue :segment_loop;
-            const local = unit - segment.start_unit;
-            if (local > source.end_unit - source.start_unit) return error.ProtectedFieldRange;
-            return std.math.cast(u32, source.start_unit + local) orelse error.LimitExceeded;
-        }
-        return error.SourceBindingMismatch;
-    }
-    return error.InvalidTextPosition;
-}
+const mapBoundary = @import("text_site_boundary_map.zig").map;
 
 test "formula exterior boundary mapping chooses unchanged suffix after growing and shrinking result" {
     const original = [_]positions.Segment{

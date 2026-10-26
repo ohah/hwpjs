@@ -16,6 +16,9 @@ pub const Flow = struct {
     column_break: bool,
     host: @import("paragraph_flow_host.zig").Host = .other,
     list_node: ?usize = null,
+    memo_index: ?u32 = null,
+    memo_node: ?usize = null,
+    empty_line_eligible: bool = false,
 };
 pub fn read(a: std.mem.Allocator, decoded: []const u8, version: Version, section: model.Section) ![]Flow {
     var tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, decoded, version, .{});
@@ -24,6 +27,12 @@ pub fn read(a: std.mem.Allocator, decoded: []const u8, version: Version, section
     defer plan.deinit(a);
     var groups = try @import("paragraph_owner.zig").inspectGroups(a, tree, version);
     defer groups.deinit(a);
+    _ = try @import("../body/memo_validation.zig").inspect(tree, groups.items);
+    var memos: std.AutoHashMapUnmanaged(usize, @import("../body/list_groups.zig").Group.Memo) = .empty;
+    defer memos.deinit(a);
+    for (groups.items) |group| if (group.memo) |memo| {
+        try memos.put(a, group.header_node, memo);
+    };
     var flows = try @import("../body/paragraph_flows.zig").Flows.build(a, tree, groups.items);
     defer flows.deinit(a);
     var lists: @import("../body/table_list_index.zig").Index = .{ .tree = tree };
@@ -42,8 +51,31 @@ pub fn read(a: std.mem.Allocator, decoded: []const u8, version: Version, section
         row.* = .{ .paragraph = index, .source_node = p.source_node, .template_node = template, .parent_node = parent, .generated = generated, .top_level = parent == null, .break_flags = flags, .section_break = flags & 1 != 0, .multicolumn_break = flags & 2 != 0, .page_break = flags & 4 != 0, .column_break = flags & 8 != 0 };
         row.host = context.host;
         row.list_node = context.list_node;
+        row.empty_line_eligible = @import("empty_paragraph_source.zig").eligible(tree, template, p);
+        if (context.list_node) |list| if (memos.get(list)) |memo| {
+            row.memo_node = memo.node;
+            row.memo_index = tree.nodes[memo.node].record.value.memo_list.memo_index;
+        };
     }
     return rows;
+}
+
+test "HWP5 current empty flow follows generated paragraph edits" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp", a, .limited(4_000_000));
+    defer a.free(input);
+    const session = try @import("style_preservation.zig").Session.open(a, input);
+    defer session.close();
+    const end = try session.editableTextLength(a, 0, 1);
+    try session.apply(.{ .split_paragraph = .{ .section = 0, .paragraph = 1, .at_unit = end } });
+    const empty = try session.paragraphFlow(a, 0);
+    defer a.free(empty);
+    try std.testing.expect(empty[2].generated);
+    try std.testing.expect(empty[2].empty_line_eligible);
+    try session.apply(.{ .splice_text = .{ .section = 0, .paragraph = 2, .start_unit = 0, .end_unit = 0, .utf8 = "x" } });
+    const text = try session.paragraphFlow(a, 0);
+    defer a.free(text);
+    try std.testing.expect(!text[2].empty_line_eligible);
 }
 
 test "HWP5 current paragraph flow actual split generated continuation and all allocation failures" {

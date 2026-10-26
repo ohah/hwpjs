@@ -3,9 +3,10 @@ const std = @import("std");
 pub const Entry = struct {
     source_id: u32,
     id: u32,
-    alignment: @import("paragraph_resource_clone.zig").Alignment,
+    alignment: ?@import("paragraph_resource_clone.zig").Alignment,
     margins: @import("paragraph_margin_patch.zig").Patch = .{},
     spacing: ?@import("paragraph_spacing_patch.zig").Spacing = null,
+    keep_lines: ?bool = null,
 };
 pub const Values = struct {
     entries: std.ArrayList(Entry) = .empty,
@@ -28,6 +29,9 @@ pub const Values = struct {
         return self.addWithProperties(a, original, source_id, alignment, margins, null);
     }
     pub fn addWithProperties(self: *Values, a: std.mem.Allocator, original: []const u32, source_id: u32, alignment: @import("paragraph_resource_clone.zig").Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing) !u32 {
+        return self.addWithBreakProperties(a, original, source_id, alignment, margins, spacing, null);
+    }
+    pub fn addWithBreakProperties(self: *Values, a: std.mem.Allocator, original: []const u32, source_id: u32, alignment: ?@import("paragraph_resource_clone.zig").Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing, keep_lines: ?bool) !u32 {
         if (spacing) |value| try @import("paragraph_spacing_patch.zig").validate(value);
         try @import("paragraph_style_resources.zig").requireExisting(original, source_id);
         var occupied: std.ArrayList(u32) = .empty;
@@ -35,12 +39,12 @@ pub const Values = struct {
         try occupied.appendSlice(a, original);
         for (self.entries.items) |entry| {
             // Reuse an identical intent; repeated application must not grow resources.
-            if (entry.source_id == source_id and entry.alignment == alignment and std.meta.eql(entry.margins, margins) and std.meta.eql(entry.spacing, spacing)) return entry.id;
+            if (entry.source_id == source_id and entry.alignment == alignment and std.meta.eql(entry.margins, margins) and std.meta.eql(entry.spacing, spacing) and entry.keep_lines == keep_lines) return entry.id;
             try occupied.append(a, entry.id);
         }
         std.mem.sort(u32, occupied.items, {}, std.sort.asc(u32));
         const id = try @import("resource_id_allocate.zig").next(occupied.items);
-        try self.entries.append(a, .{ .source_id = source_id, .id = id, .alignment = alignment, .margins = margins, .spacing = spacing });
+        try self.entries.append(a, .{ .source_id = source_id, .id = id, .alignment = alignment, .margins = margins, .spacing = spacing, .keep_lines = keep_lines });
         return id;
     }
 };

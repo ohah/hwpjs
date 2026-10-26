@@ -1,0 +1,24 @@
+//! Shared equation-language foundations, independent of document containers.
+pub const Lexer = @import("lexer.zig").Lexer;
+pub const Options = @import("lexer.zig").Options;
+pub const Token = @import("token.zig").Token;
+pub const Kind = @import("token.zig").Kind;
+pub const ast = @import("ast.zig");
+pub const parse = @import("parser.zig").parse;
+pub const ParseOptions = @import("parser.zig").Options;
+pub const commands = @import("commands.zig");
+pub const font = @import("font.zig");
+pub const script_context = @import("script_context.zig");
+pub const metrics = @import("layout_metrics.zig");
+pub const fraction_geometry = @import("fraction_geometry.zig");
+pub const script_geometry = @import("script_geometry.zig");
+pub const row_geometry = @import("row_geometry.zig");
+pub const symbols = @import("symbols.zig");
+pub const measurement_plan = @import("measurement_plan.zig");
+pub const measured_requests = @import("measured_requests.zig");
+pub const ast_layout = @import("ast_layout.zig");
+pub const radical_geometry = @import("radical_geometry.zig");
+pub const grid_geometry = @import("grid_geometry.zig");
+pub const decoration_geometry = @import("decoration_geometry.zig");
+pub const integral_geometry = @import("integral_geometry.zig");
+pub const limit_geometry = @import("limit_geometry.zig");

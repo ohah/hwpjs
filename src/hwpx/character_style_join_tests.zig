@@ -44,7 +44,7 @@ test "HWPX character style joined merge preserves rebound namespaces and atomic 
     defer rejoined.deinit(a);
     try std.testing.expectEqualStrings("A😀", rejoined.paragraphs[0].sites.items[0].text);
     try std.testing.expectEqualStrings("B", rejoined.paragraphs[0].sites.items[1].text);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, t: *const @import("xml_part_tree.zig").Tree, v: *const @import("paragraph_structure_values.zig").Values) !void {
             var candidate = try @import("paragraph_structure_merge.zig").prepare(allocator, t, v, 0, 10000);
             defer candidate.deinit(allocator);

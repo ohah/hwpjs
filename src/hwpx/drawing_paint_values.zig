@@ -23,6 +23,18 @@ fn child(tree: *const Tree, node: usize, name: []const u8) !?usize {
 
 pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     if (node >= tree.elements.len or !fields.childIs(tree, node, "rect")) return error.InvalidDrawingTextNode;
+    return readComponent(a, tree, node);
+}
+pub fn readCurve(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "curve")) return error.InvalidCurveGeometryNode;
+    return readComponent(a, tree, node);
+}
+
+pub fn readEllipse(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ellipse")) return error.InvalidEllipseGeometryNode;
+    return readComponent(a, tree, node);
+}
+fn readComponent(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     var result: Values = .{ .fill_node = try child(tree, node, "fillBrush"), .shadow_node = try child(tree, node, "shadow"), .shadow_type = null };
     if (result.shadow_node) |shadow| {
         if (try tree.attributeValue(a, shadow, "", "type")) |raw| {

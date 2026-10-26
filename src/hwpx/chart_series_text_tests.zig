@@ -65,10 +65,7 @@ test "direct chart series text refuses ambiguous choices nested values and surro
 
 test "direct chart series text reads and edits all ten observed issue6037 names without cache changes" {
     const a = std.testing.allocator;
-    const dir = std.Io.Dir.cwd().openDir(std.testing.io, "reference/rhwp/samples/issue6037", .{ .iterate = true }) catch |err| switch (err) {
-        error.FileNotFound => return error.SkipZigTest,
-        else => return err,
-    };
+    const dir = try std.Io.Dir.cwd().openDir(std.testing.io, "reference/rhwp/samples/issue6037", .{ .iterate = true });
     defer dir.close(std.testing.io);
     var walker = try dir.walk(a);
     defer walker.deinit();

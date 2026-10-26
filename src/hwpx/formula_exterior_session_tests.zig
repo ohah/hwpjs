@@ -18,7 +18,7 @@ test "HWPX plain eligibility rejects cross paragraph field continuation includin
         try std.testing.expectError(error.UnsupportedStructuralFieldEdit, session.anchorText(0, paragraph));
     }
     try std.testing.expect(try session.canEdit(0, 5));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const @import("editor_session.zig").Session) !void {
             var proxy = source.*;
             proxy.allocator = allocator;
@@ -48,7 +48,7 @@ test "HWPX formula section exterior allocation failures preserve every current s
     const editor = @import("editor_session.zig");
     var session = try editor.open(a, input, .{});
     defer session.deinit();
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, original: *const editor.Session) !void {
             var proxy = original.*;
             proxy.allocator = allocator;

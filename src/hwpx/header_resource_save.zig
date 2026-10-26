@@ -33,7 +33,21 @@ pub fn replacementWithFonts(a: std.mem.Allocator, source: []const u8, values: *c
         const next = try @import("header_tree.zig").parse(a, bytes, tree.item_index, .{ .max_xml_bytes = max_bytes });
         tree.deinit(a);
         tree = next;
+        if (intent.keep_lines) |value| {
+            var target: ?usize = null;
+            for (tree.elements, 0..) |element, index| {
+                if (!element.is(head, "paraPr")) continue;
+                const raw_id = (try tree.attributeValue(a, index, "", "id")) orelse continue;
+                if (try @import("table_xml_fields.zig").unsigned(a, raw_id, 4096) == intent.id) target = index;
+            }
+            const patched = try @import("paragraph_break_patch.zig").keepLines(a, &tree, target orelse return error.InvalidParagraphShapeReference, value, max_bytes);
+            defer a.free(patched);
+            const updated = try @import("header_tree.zig").parse(a, patched, tree.item_index, .{ .max_xml_bytes = max_bytes });
+            tree.deinit(a);
+            tree = updated;
+        }
     }
+    var source_profile: ?@import("source_color_profile.zig").Profile = null;
     if (characters) |list| for (list.entries.items) |intent| {
         if (std.mem.indexOfScalar(u32, inventory.table(.char_shape).ids.items, intent.source_id) == null) return error.InvalidCharacterShapeReference;
         var template: ?usize = null;
@@ -44,7 +58,14 @@ pub fn replacementWithFonts(a: std.mem.Allocator, source: []const u8, values: *c
             const raw = (try tree.attributeValue(a, index, "", "id")) orelse return error.MissingCharacterShapeReference;
             if (try @import("table_xml_fields.zig").unsigned(a, raw, 4096) == intent.source_id) template = index;
         }
-        const bytes = try @import("character_resource_insert.zig").write(a, &tree, template orelse return error.InvalidCharacterShapeReference, intent.id, intent.properties, max_bytes);
+        const selected_template = template orelse return error.InvalidCharacterShapeReference;
+        // Metadata is not a dependency for unrelated property writes.
+        if (intent.properties.text_color != null and source_profile == null) {
+            var producer = try @import("source_version_metadata.zig").readDocument(a, &document, .{});
+            defer producer.deinit(a);
+            source_profile = @import("source_color_profile.zig").classify(if (producer.sourceVersion) |*v| v else null);
+        }
+        const bytes = try @import("character_resource_insert.zig").writeWithProfile(a, &tree, selected_template, intent.id, intent.properties, max_bytes, source_profile orelse .{});
         defer a.free(bytes);
         const next = try @import("header_tree.zig").parse(a, bytes, tree.item_index, .{ .max_xml_bytes = max_bytes });
         tree.deinit(a);

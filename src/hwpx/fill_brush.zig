@@ -164,8 +164,14 @@ const Collector = struct {
     }
 
     fn scanTree(self: *Collector, tree: *const part_tree.Tree) !void {
+        return self.scanSelectedTree(tree, null);
+    }
+
+    fn scanSelectedTree(self: *Collector, tree: *const part_tree.Tree, selected: ?usize) !void {
         if (tree.elements.len == 0) return error.InvalidPartKind;
-        for (tree.elements, 0..) |element, element_index| {
+        const first = selected orelse 0;
+        const end = if (selected != null) first + 1 else tree.elements.len;
+        for (tree.elements[first..end], first..) |element, element_index| {
             if (!element.is(document_xml.core_uri, "fillBrush")) continue;
             if (self.brushes.items.len == self.options.max_brushes) return error.LimitExceeded;
             const brush_index = self.brushes.items.len;
@@ -264,6 +270,15 @@ test "HWPX section fill source actual brush variants and allocation failures" {
             defer allocator.free(json);
         }
     }.run, .{&session.sections[0].tree});
+}
+
+/// Decode one exact brush with the same field, child and budget rules as reports.
+pub fn inspectBrush(a: std.mem.Allocator, tree: *const part_tree.Tree, node: usize, options: Options) !Report {
+    if (node >= tree.elements.len or !tree.elements[node].is(document_xml.core_uri, "fillBrush")) return error.InvalidFillBrushNode;
+    var collector: Collector = .{ .a = a, .options = options };
+    errdefer collector.deinit();
+    try collector.scanSelectedTree(tree, node);
+    return collector.finish(1, 0);
 }
 
 pub fn inspect(a: std.mem.Allocator, header: *const part_tree.Tree, sections: []const part_tree.Tree, options: Options) !Report {

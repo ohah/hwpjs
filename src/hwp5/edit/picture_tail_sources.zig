@@ -1,6 +1,12 @@
 //! Explicit instance prefix + effects + selected additional properties, not a length heuristic.
 const std = @import("std");
 const AdditionalLayout = @import("../body/picture_additional.zig").Layout;
+pub const ShadowSource = struct {
+    properties: @import("../body/picture_effect_fields.zig").Shadow,
+    color_type: i32,
+    color_value: u32,
+    color_effect_count: usize,
+};
 pub const Source = struct {
     component_node: usize,
     owner_node: usize,
@@ -8,6 +14,7 @@ pub const Source = struct {
     border_opacity: u8,
     instance_id: u32,
     effects_flags: u32,
+    shadow: ?ShadowSource = null,
     image_width: ?u32,
     image_height: ?u32,
     image_alpha: ?i8,
@@ -27,9 +34,36 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.
         const picture = try @import("../body/shape_picture.zig").Picture.parse(node.record.framing.payload, .interleaved, .with_instance78);
         var reader: @import("../../binary/reader.zig").Reader = .{ .bytes = picture.extra };
         const tail = try @import("../body/picture_tail.zig").Tail.read(&reader, additional);
-        try out.append(a, .{ .component_node = component, .owner_node = owner, .picture_node = index, .border_opacity = picture.border_opacity.?, .instance_id = picture.instance_id.?, .effects_flags = tail.effects.flags, .image_width = if (tail.properties) |p| p.width else null, .image_height = if (tail.properties) |p| p.height else null, .image_alpha = if (tail.properties) |p| p.alpha else null, .extra_bytes = reader.bytes.len - reader.offset });
+        try out.append(a, .{ .component_node = component, .owner_node = owner, .picture_node = index, .border_opacity = picture.border_opacity.?, .instance_id = picture.instance_id.?, .effects_flags = tail.effects.flags, .shadow = if (tail.effects.shadow) |shadow| .{ .properties = shadow.properties, .color_type = shadow.color.type_raw, .color_value = shadow.color.value_raw, .color_effect_count = shadow.color.effects.count() } else null, .image_width = if (tail.properties) |p| p.width else null, .image_height = if (tail.properties) |p| p.height else null, .image_alpha = if (tail.properties) |p| p.alpha else null, .extra_bytes = reader.bytes.len - reader.offset });
     }
     return out.toOwnedSlice(a);
+}
+test "picture shadow source retains actual wire bits without borrowed effect slices" {
+    const a = std.testing.allocator;
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/aift.hwp", a, .limited(16_000_000));
+    defer a.free(input);
+    var document = try @import("../text_source.zig").Source.open(a, input);
+    defer document.deinit();
+    const raw = try document.decodeSection(a, 2);
+    defer a.free(raw);
+    const rows = try read(a, raw, document.header.version(), .with_alpha9);
+    defer a.free(rows);
+    try std.testing.expectEqual(18, rows.len);
+    var shadows: usize = 0;
+    for (rows) |row| {
+        if (row.shadow) |shadow| {
+            shadows += 1;
+            try std.testing.expectEqual(3641, row.component_node);
+            try std.testing.expectEqual(1, row.effects_flags);
+            try std.testing.expectEqual(@as(u32, 1061997773), shadow.properties.transparency_bits);
+            try std.testing.expectEqual(@as(u32, 1137180672), shadow.properties.blur_bits);
+            try std.testing.expectEqual(@as(u32, 1148846080), shadow.properties.distance_bits);
+            try std.testing.expectEqual(0, shadow.color_type);
+            try std.testing.expectEqual(0, shadow.color_value);
+            try std.testing.expectEqual(0, shadow.color_effect_count);
+        } else try std.testing.expectEqual(0, row.effects_flags);
+    }
+    try std.testing.expectEqual(1, shadows);
 }
 test "picture tail sources actual zero dimensions absence and allocation failures" {
     const a = std.testing.allocator;

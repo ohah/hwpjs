@@ -5,10 +5,10 @@ const clone = @import("paragraph_resource_clone.zig");
 const fields = @import("table_xml_fields.zig");
 const head = @import("document_xml.zig").head_uri;
 
-pub fn writeWithMargins(a: std.mem.Allocator, tree: *const Tree, template: usize, new_id: u32, alignment: clone.Alignment, margins: @import("paragraph_margin_patch.zig").Patch, max_bytes: usize) ![]u8 {
+pub fn writeWithMargins(a: std.mem.Allocator, tree: *const Tree, template: usize, new_id: u32, alignment: ?clone.Alignment, margins: @import("paragraph_margin_patch.zig").Patch, max_bytes: usize) ![]u8 {
     return writeWithProperties(a, tree, template, new_id, alignment, margins, null, max_bytes);
 }
-pub fn writeWithProperties(a: std.mem.Allocator, tree: *const Tree, template: usize, new_id: u32, alignment: clone.Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing, max_bytes: usize) ![]u8 {
+pub fn writeWithProperties(a: std.mem.Allocator, tree: *const Tree, template: usize, new_id: u32, alignment: ?clone.Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing, max_bytes: usize) ![]u8 {
     if (spacing == null and std.meta.eql(margins, @as(@import("paragraph_margin_patch.zig").Patch, .{}))) return write(a, tree, template, new_id, alignment, max_bytes);
     const fragment = try @import("paragraph_resource_patch.zig").write(a, tree, template, margins, spacing, max_bytes);
     defer a.free(fragment);
@@ -28,7 +28,7 @@ pub fn writeWithProperties(a: std.mem.Allocator, tree: *const Tree, template: us
     return @import("xml_source_writer.zig").write(a, result_tree.source, &.{.{ .start = restore_start, .end = restore_start + patched.len, .text = "", .serialized_xml = original }}, max_bytes);
 }
 
-pub fn write(a: std.mem.Allocator, tree: *const Tree, template: usize, new_id: u32, alignment: clone.Alignment, max_bytes: usize) ![]u8 {
+pub fn write(a: std.mem.Allocator, tree: *const Tree, template: usize, new_id: u32, alignment: ?clone.Alignment, max_bytes: usize) ![]u8 {
     if (template >= tree.elements.len) return error.InvalidElementIndex;
     const parent = tree.elements[template].parent orelse return error.InvalidParagraphResourceParent;
     if (!tree.elements[parent].is(head, "paraProperties")) return error.InvalidParagraphResourceParent;
@@ -80,7 +80,7 @@ test "HWPX margin resource insertion survives every allocation failure without c
     const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><h:refList><h:paraProperties itemCnt='1'><h:paraPr id='9'><h:align horizontal='RIGHT'/><h:margin><c:intent value='-2000'/><c:prev value='100' unit='HWPUNIT'/></h:margin><h:lineSpacing type='PERCENT' value='160'/></h:paraPr></h:paraProperties></h:refList></h:head>";
     var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree) !void {
             const output = try writeWithProperties(allocator, source, 3, 300, .CENTER, .{ .indent = -720, .before = 0 }, .{ .kind = 3, .value = 720 }, 4096);
             defer allocator.free(output);

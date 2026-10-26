@@ -27,7 +27,7 @@ pub fn spliceAnchored(a: std.mem.Allocator, tree: *const @import("xml_part_tree.
         if (segment.end_unit <= start) mapped_start -= 1;
         if (segment.end_unit <= end) mapped_end -= 1;
     }
-    return splicePositionsAtSite(a, paragraph, plain, mapped_start, mapped_end - mapped_start, inserted, limit, target);
+    return splicePositionsAtSiteWithTree(a, tree, paragraph, plain, mapped_start, mapped_end - mapped_start, inserted, limit, target);
 }
 pub fn splice(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *model.Paragraph, start: u32, deleted: u32, inserted: []const u8, limit: usize) !bool {
     if (paragraph.pieces != null) return error.UnsupportedStructuralCharacterStyle;
@@ -44,7 +44,7 @@ pub fn splice(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tr
         break :block try @import("paragraph_text_positions.zig").build(a, tree, &paragraph.sites, locations, 1);
     };
     defer a.free(positions);
-    return splicePositions(a, paragraph, positions, start, deleted, inserted, limit);
+    return splicePositionsWithTree(a, tree, paragraph, positions, start, deleted, inserted, limit);
 }
 
 pub fn splicePositions(a: std.mem.Allocator, paragraph: *model.Paragraph, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, limit: usize) !bool {
@@ -52,15 +52,30 @@ pub fn splicePositions(a: std.mem.Allocator, paragraph: *model.Paragraph, positi
     return splicePositionsAtSite(a, paragraph, positions, start, deleted, inserted, limit, target);
 }
 
+/// 기존 source binding을 소유한 tree를 명시하는 내부 경로입니다.
+pub fn splicePositionsWithTree(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *model.Paragraph, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, limit: usize) !bool {
+    const target = @import("text_splice_transaction.zig").insertionSite(&paragraph.sites, positions, start) orelse return error.InvalidTextPosition;
+    return splicePositionsAtSiteWithTree(a, tree, paragraph, positions, start, deleted, inserted, limit, target);
+}
+
 /// A field consumer supplies its validated inside-field insertion affinity.
 pub fn splicePositionsAtSite(a: std.mem.Allocator, paragraph: *model.Paragraph, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, limit: usize, target: usize) !bool {
+    return splicePositionsAtSiteContext(a, null, paragraph, positions, start, deleted, inserted, limit, target);
+}
+
+pub fn splicePositionsAtSiteWithTree(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *model.Paragraph, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, limit: usize, target: usize) !bool {
+    return splicePositionsAtSiteContext(a, tree, paragraph, positions, start, deleted, inserted, limit, target);
+}
+
+fn splicePositionsAtSiteContext(a: std.mem.Allocator, tree: ?*const @import("xml_part_tree.zig").Tree, paragraph: *model.Paragraph, positions: []const @import("paragraph_text_positions.zig").Segment, start: u32, deleted: u32, inserted: []const u8, limit: usize, target: usize) !bool {
+    if (paragraph.title_output_projection != null and tree == null) return error.SourceBindingMismatch;
     const current = paragraph.character_styles orelse return error.InvalidTextSites;
     const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
     var draft = try paragraph.clone(a);
     defer draft.deinit(a);
     if (!try @import("text_splice_transaction.zig").spliceProjected(a, &draft.sites, positions, start, deleted, inserted, limit, target)) return false;
     const inserted_units = try @import("text_site_edit.zig").utf16Length(inserted);
-    try @import("title_mark_splice_current.zig").apply(a, &draft, start, deleted, inserted_units);
+    var insertion_context: ?@import("title_fragment_owner.zig").Insertion = null;
     var output: std.ArrayList(paint.Span) = .empty;
     defer output.deinit(a);
     var index: usize = 0;
@@ -87,20 +102,31 @@ pub fn splicePositionsAtSite(a: std.mem.Allocator, paragraph: *model.Paragraph, 
         var cursor = new_base;
         var old_cursor = position.start_unit;
         var added = false;
+        const site_output_start = output.items.len;
         while (index < current.len and current[index].site_index == position.index) : (index += 1) {
             const span = current[index];
             if (span.tab_element != null or span.anchor_element != null or span.start_unit != old_cursor or span.end_unit < span.start_unit or span.end_unit > position.end_unit or span.run_element != first.run_element or span.site_start_unit != first.site_start_unit) return error.InvalidTextSites;
             _ = try @import("text_site_edit.zig").bytePosition(paragraph.sites.items[position.index].text, std.math.cast(u32, span.end_unit - position.start_unit) orelse return error.LimitExceeded);
+            const fragment_start = cursor;
             try emit(a, &output, span, new_base, &cursor, @min(span.end_unit, low) -| span.start_unit);
             if (!added and position.index == target and low >= span.start_unit and low <= span.end_unit) {
                 try emit(a, &output, span, new_base, &cursor, inserted_units);
+                // Exactly the validated span actually used for text/style insertion.
+                if (tree) |source_tree| insertion_context = .{ .tree = source_tree, .paragraph = paragraph, .span = span };
                 added = true;
             }
             try emit(a, &output, span, new_base, &cursor, span.end_unit -| @max(span.start_unit, high));
+            if (paragraph.title_output_projection != null and span.canonical_fragment != null and cursor == fragment_start) {
+                var empty = span;
+                empty.start_unit = cursor;
+                empty.end_unit = cursor;
+                empty.site_start_unit = new_base;
+                try paint.append(a, &output, empty, 1_000_000);
+            }
             old_cursor = span.end_unit;
         }
         if (old_cursor != position.end_unit or (position.index == target and !added)) return error.InvalidTextSites;
-        if (cursor == new_base) {
+        if (cursor == new_base and output.items.len == site_output_start) {
             var empty = first;
             empty.start_unit = new_base;
             empty.end_unit = new_base;
@@ -110,9 +136,19 @@ pub fn splicePositionsAtSite(a: std.mem.Allocator, paragraph: *model.Paragraph, 
         new_base = cursor;
     }
     if (index != current.len) return error.InvalidTextSites;
+    try @import("title_mark_splice_current.zig").applyAtInsertion(a, &draft, start, deleted, inserted_units, insertion_context);
     const styles = try output.toOwnedSlice(a);
     a.free(draft.character_styles.?);
     draft.character_styles = styles;
+    if (draft.title_output_projection != null) {
+        // field marker의 현재 좌표를 갱신한 후보만 writer에 전달합니다.
+        if (draft.field_positions) |owned| {
+            const current_positions = try @import("field_owned_positions.zig").build(a, tree.?, &draft);
+            defer a.free(current_positions);
+            try @import("field_position_refresh.zig").refresh(a, tree.?, owned, current_positions);
+        }
+        try @import("title_output_projection.zig").refresh(a, tree.?, &draft);
+    }
     std.mem.swap(model.Paragraph, paragraph, &draft);
     return true;
 }

@@ -10,7 +10,7 @@ pub fn splice(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tr
     var candidate = try paragraph.clone(a);
     defer candidate.deinit(a);
     const changed = if (candidate.character_styles != null)
-        try @import("character_style_splice.zig").splicePositions(a, &candidate, segments, start, deleted, inserted, limit)
+        try @import("character_style_splice.zig").splicePositionsWithTree(a, tree, &candidate, segments, start, deleted, inserted, limit)
     else
         try @import("text_splice_transaction.zig").spliceProjected(a, &candidate.sites, segments, start, deleted, inserted, limit, null);
     if (!changed) return false;

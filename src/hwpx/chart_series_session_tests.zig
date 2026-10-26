@@ -3,10 +3,7 @@ const names = @import("chart_series_text_session.zig");
 
 test "series string Session preserves point edits two-copy save and checkpoint exchange" {
     const a = std.testing.allocator;
-    const input = std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue6037/2차원원형-계열추가.hwpx", a, .limited(4_000_000)) catch |err| switch (err) {
-        error.FileNotFound => return error.SkipZigTest,
-        else => return err,
-    };
+    const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue6037/2차원원형-계열추가.hwpx", a, .limited(4_000_000));
     defer a.free(input);
     var session = try @import("editor_session.zig").open(a, input, .{ .allow_observed_chart_ole_deviations = true });
     defer session.deinit();

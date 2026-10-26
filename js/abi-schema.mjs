@@ -8,6 +8,10 @@ export const EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
   "hwp5_edit_splice", "hwp5_edit_format", "hwp5_edit_save", "hwp5_edit_output_ptr",
   "hwp5_edit_output_len", "hwp5_edit_output_free", "hwp5_edit_reflow",
 ]);
+// Optional HWPX provenance; intentionally not part of REQUIRED_FUNCTIONS.
+export const HWPX_DOCUMENT_PROVENANCE_FUNCTIONS = Object.freeze([
+  "hwpx_edit_document_provenance",
+]);
 export const DOCUMENT = Object.freeze({
   header_bytes: 8,
   node_bytes: 56,

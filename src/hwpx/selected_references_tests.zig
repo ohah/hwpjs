@@ -187,7 +187,7 @@ test "HWPX selected references reject invalid capability names and release on fa
     defer document.deinit(a);
     try std.testing.expectError(error.InvalidSupportedNamespace, document.inspectSelectedReferences(a, .{ .supported_namespaces = &.{"urn:bad uri"} }));
     try std.testing.expectError(error.LimitExceeded, document.inspectSelectedReferences(a, .{ .supported_namespaces = &.{chart_ns}, .chart = .{ .references = .{ .sections = .{ .max_attribute_bytes = 1 } } } }));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
             var doc = try package.inspectDocument(allocator, source, .{});
             defer doc.deinit(allocator);

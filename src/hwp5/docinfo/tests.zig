@@ -11,6 +11,14 @@ test "DocInfo wholly absent caret coordinates retain presence and partial coordi
     for (15..26) |length| try std.testing.expectError(error.UnexpectedEnd, d.Properties.parseWithCaretPolicy(bytes[0..length], .observed_absent));
     try std.testing.expect((try d.Properties.parseWithCaretPolicy(bytes[0..26], .observed_absent)).caret_present);
     try std.testing.expectEqual(@as(usize, 1), (try d.Properties.parseWithCaretPolicy(&bytes, .observed_absent)).extra.len);
+    const record = [_]u8{ 16, 0, 224, 0 } ++ @as([14]u8, @splat(0));
+    var iterator = try d.Iterator.init(&record, .{ .raw = 0x05000300 }, .{});
+    try std.testing.expectError(error.UnexpectedEnd, iterator.next());
+    try std.testing.expectEqual(@as(usize, 0), iterator.records.reader.offset);
+    iterator.caret_policy = .observed_absent;
+    const parsed = (try iterator.next()).?;
+    try std.testing.expect(!parsed.value.properties.caret_present);
+    try std.testing.expectEqualSlices(u8, &record, parsed.framing.raw);
 }
 
 test "DocInfo properties use 26 bytes and retain extension bytes" {

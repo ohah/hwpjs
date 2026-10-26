@@ -12,9 +12,13 @@ pub const TextSplice = @import("plain_text.zig").Splice;
 pub const CharacterFormat = @import("character_format.zig").Edit;
 const max_bytes = 64 * 1024 * 1024;
 const max_stream = 32 * 1024 * 1024;
+const created_table_limits: @import("created_table_records.zig").Limits = .{ .max_cells = 100000, .max_bytes = max_stream };
 
 pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_id: u8 };
 pub const Command = union(enum) {
+    stage_table: @import("created_table_stage.zig").Edit,
+    set_created_cell_text: @import("created_cell_text.zig").Edit,
+    splice_current_paragraph: @import("current_paragraph_edit.zig").Splice,
     set_style: struct { section: usize, paragraph: usize, style_id: u8 },
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
     delete_paragraph: struct { section: usize, paragraph: usize },
@@ -32,6 +36,9 @@ pub const Command = union(enum) {
     set_paragraph_margins: struct { section: usize, paragraph: usize, margins: model.ParagraphMarginPatch },
     set_paragraph_spacing: struct { section: usize, paragraph: usize, spacing: model.ParagraphSpacing },
     set_formula_definition: @import("formula_definition.zig").Edit,
+    set_form_text: @import("form_text_apply.zig").Edit,
+    set_form_choice: @import("form_choice_apply.zig").Edit,
+    select_form_radio: @import("form_radio_apply.zig").Edit,
 };
 pub const SaveOptions = struct {
     /// Byte-preservation experiments only; does not certify Hancom layout.
@@ -39,7 +46,7 @@ pub const SaveOptions = struct {
     max_output_bytes: usize = max_bytes,
 };
 pub const Saved = struct { bytes: []u8, layout_requires_reflow: bool };
-pub const Checkpoint = @import("editor_checkpoint.zig").Checkpoint;
+pub const Checkpoint = @import("table_checkpoint.zig").Checkpoint;
 
 // Allocated once; the public opaque pointer prevents direct model/sidecar writes.
 const State = struct {
@@ -47,10 +54,13 @@ const State = struct {
     source: Source,
     decoded: [][]u8,
     document: model.Document,
+    created_tables: []@import("created_table_values.zig").Values,
     style_offsets: [][]usize,
     style_count: usize,
     char_count: usize,
     para_count: usize,
+    border_count: usize,
+    memo_shape_count: usize,
     observed_docinfo: ?@import("observed_docinfo.zig").Diagnostics = null,
 
     fn deinit(self: *State) void {
@@ -58,6 +68,8 @@ const State = struct {
         for (self.style_offsets) |offsets| a.free(offsets);
         a.free(self.style_offsets);
         self.document.deinit(a);
+        for (self.created_tables) |*tables| tables.deinit(a);
+        a.free(self.created_tables);
         for (self.decoded) |bytes| a.free(bytes);
         a.free(self.decoded);
         self.source.deinit();
@@ -65,6 +77,81 @@ const State = struct {
 };
 
 pub const Session = opaque {
+    pub fn tableCreationLimits() @import("created_table_records.zig").Limits {
+        return created_table_limits;
+    }
+    /// Native planning only; current generated cells are not yet projected.
+    pub fn planTableIds(self: *const Session, cells: usize) !@import("created_table_ids.zig").Plan {
+        return self.planTableIdsWithAllocator(self.stateConst().allocator, cells);
+    }
+
+    pub fn planTableIdsWithAllocator(self: *const Session, allocator: std.mem.Allocator, cells: usize) !@import("created_table_ids.zig").Plan {
+        if (cells > created_table_limits.max_cells) return error.LimitExceeded;
+        const state = self.stateConst();
+        return @import("created_table_ids.zig").plan(allocator, state.decoded, state.source.header.version(), &state.document, state.created_tables, cells, 2_000_000);
+    }
+
+    pub fn pendingTableCount(self: *const Session, section: usize) !usize {
+        const state = self.stateConst();
+        if (section >= state.created_tables.len) return error.InvalidSection;
+        return state.created_tables[section].entries.len;
+    }
+
+    pub fn createdTables(self: *const Session, allocator: std.mem.Allocator, section: usize) ![]@import("created_table_snapshot.zig").Row {
+        const state = self.stateConst();
+        if (section >= state.created_tables.len) return error.InvalidSection;
+        return @import("created_table_snapshot.zig").read(allocator, &state.document.sections[section], &state.created_tables[section]);
+    }
+
+    pub fn currentTextPreview(self: *const Session, allocator: std.mem.Allocator) ![]u8 {
+        return @import("current_text_preview.zig").encode(allocator, &self.stateConst().document, self.fileVersion());
+    }
+
+    pub fn copyCreatedCellUtf8(self: *const Session, a: std.mem.Allocator, point: @import("created_cell_text.zig").Point) ![]u8 {
+        return @import("created_cell_text.zig").copyUtf8(a, self.stateConst().created_tables, point);
+    }
+
+    /// Read-only current view; does not change the existing paragraph ordinal ABI.
+    pub fn currentSourceParagraphReference(self: *const Session, section: usize, index: usize) !@import("created_table_paragraphs.zig").Reference {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const paragraphs = state.document.sections[section].paragraphs;
+        if (index >= paragraphs.len) return error.InvalidParagraph;
+        return .{ .source = .{ .section = section, .host = try @import("created_table_anchor.zig").identity(paragraphs[index]) } };
+    }
+
+    /// Full logical order, including cells of staged generated tables.
+    pub fn currentParagraphReferences(self: *const Session, a: std.mem.Allocator, section: usize, limit: usize) ![]@import("created_table_paragraphs.zig").Reference {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("created_table_paragraphs.zig").build(a, state.decoded[section], &state.document.sections[section], &state.created_tables[section], state.source.header.version(), section, limit);
+    }
+
+    pub fn copyCurrentParagraphTextUtf16(self: *const Session, a: std.mem.Allocator, section: usize, reference: @import("created_table_paragraphs.zig").Reference) ![]u8 {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return switch (reference) {
+            .source => |reference_source| block: {
+                if (reference_source.section != section) return error.SourceBindingMismatch;
+                break :block self.copyText(a, section, try @import("created_table_anchor.zig").resolve(a, &state.document.sections[section], .{ .host = reference_source.host, .unit = 0 }));
+            },
+            .created_cell => |point| block: {
+                if (point.section != section) return error.SourceBindingMismatch;
+                const utf8 = try self.copyCreatedCellUtf8(a, point);
+                defer a.free(utf8);
+                const units = std.unicode.calcUtf16LeLen(utf8) catch return error.InvalidTableCellText;
+                const byte_count = std.math.mul(usize, units, 2) catch return error.LimitExceeded;
+                const length = std.math.add(usize, byte_count, 2) catch return error.LimitExceeded;
+                if (length > max_stream) return error.LimitExceeded;
+                const utf16 = try std.unicode.utf8ToUtf16LeAlloc(a, utf8);
+                defer a.free(utf16);
+                const bytes = try a.alloc(u8, length);
+                @memcpy(bytes[0 .. length - 2], std.mem.sliceAsBytes(utf16));
+                std.mem.writeInt(u16, bytes[length - 2 ..][0..2], 13, .little);
+                break :block bytes;
+            },
+        };
+    }
     /// Checkpoint must represent the current model; history reserves first.
     pub fn applyCheckpointed(self: *Session, checkpoint: *Checkpoint, limit: usize, command: Command) !bool {
         return self.applyBatchCheckpointed(checkpoint, limit, &.{command});
@@ -74,13 +161,13 @@ pub const Session = opaque {
         if (!try self.matchesCheckpoint(checkpoint)) return error.SourceBindingMismatch;
         for (commands) |command| self.apply(command) catch |err| {
             const state = self.getState();
-            try @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document);
+            try @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables);
             return err;
         };
         if (try self.matchesCheckpoint(checkpoint)) return false;
         _ = self.checkpointSize(limit) catch |err| {
             const state = self.getState();
-            try @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document);
+            try @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables);
             return err;
         };
         return true;
@@ -88,21 +175,21 @@ pub const Session = opaque {
 
     pub fn matchesCheckpoint(self: *const Session, checkpoint: *const Checkpoint) !bool {
         const state = self.stateConst();
-        return @import("editor_checkpoint.zig").matches(checkpoint, state.allocator, self, &state.document);
+        return @import("table_checkpoint.zig").matches(checkpoint, state.allocator, self, &state.document, state.created_tables);
     }
 
     pub fn checkpointSize(self: *const Session, limit: usize) !usize {
-        return @import("editor_checkpoint.zig").size(&self.stateConst().document, limit);
+        return @import("table_checkpoint.zig").size(&self.stateConst().document, self.stateConst().created_tables, limit);
     }
 
     pub fn createCheckpoint(self: *const Session, max_checkpoint_bytes: usize) !*Checkpoint {
         const state = self.stateConst();
-        return @import("editor_checkpoint.zig").capture(state.allocator, self, &state.document, max_checkpoint_bytes);
+        return @import("table_checkpoint.zig").capture(state.allocator, self, &state.document, state.created_tables, max_checkpoint_bytes);
     }
 
     pub fn restoreCheckpoint(self: *Session, checkpoint: *Checkpoint) !void {
         const state = self.getState();
-        try @import("editor_checkpoint.zig").exchange(checkpoint, state.allocator, self, &state.document);
+        try @import("table_checkpoint.zig").exchange(checkpoint, state.allocator, self, &state.document, &state.created_tables);
     }
 
     pub fn open(a: std.mem.Allocator, input: []const u8) !*Session {
@@ -178,8 +265,11 @@ pub const Session = opaque {
             }
             if (paragraph_index != section.paragraphs.len) return error.SourceBindingMismatch;
         }
+        const created_tables = try a.alloc(@import("created_table_values.zig").Values, document.sections.len);
+        errdefer a.free(created_tables);
+        for (created_tables) |*tables| tables.* = .{};
         const owned = try a.create(State);
-        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape), .para_count = resources.count(.para_shape) };
+        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .created_tables = created_tables, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape), .para_count = resources.count(.para_shape), .border_count = resources.count(.border_fill), .memo_shape_count = resources.memo_shape_count };
         owned.observed_docinfo = observed;
         return @ptrCast(owned);
     }
@@ -262,6 +352,26 @@ pub const Session = opaque {
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("caption_sources.zig").read(a, state.decoded[section], state.source.header.version());
     }
+    pub fn formSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("form_sources.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("form_sources.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn formProperties(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("form_property_snapshot.zig").Row {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        if (state.document.sections[section].form_values) |values| {
+            const current = try @import("form_current_section.zig").writeAll(a, state.decoded[section], state.source.header.version(), values, max_stream);
+            defer a.free(current);
+            return @import("form_property_snapshot.zig").read(a, current, state.source.header.version());
+        }
+        return @import("form_property_snapshot.zig").read(a, state.decoded[section], state.source.header.version());
+    }
+    pub fn formAnchors(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("form_anchor_positions.zig").Anchor {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("form_anchor_positions.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section].paragraphs);
+    }
     pub fn drawingSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_sources.zig").Source {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
@@ -277,6 +387,11 @@ pub const Session = opaque {
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("drawing_object_extras.zig").read(a, state.decoded[section], state.source.header.version());
     }
+    pub fn formulaSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("formula_snapshot.zig").Row {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        return @import("formula_snapshot.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
+    }
     pub fn fieldSpans(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("field_span_snapshot.zig").Row {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
@@ -287,11 +402,6 @@ pub const Session = opaque {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
         return @import("local_field_spans.zig").inspectReadableBound(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
-    }
-    pub fn formulaSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("formula_snapshot.zig").Row {
-        const state = self.stateConst();
-        if (section >= state.document.sections.len) return error.InvalidSection;
-        return @import("formula_snapshot.zig").read(a, state.decoded[section], state.source.header.version(), state.document.sections[section]);
     }
     pub fn drawingComponentSources(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_component_sources.zig").Source {
         const state = self.stateConst();
@@ -333,6 +443,20 @@ pub const Session = opaque {
         const current = try self.currentDrawingSection(a, section);
         defer if (current) |bytes| a.free(bytes);
         return @import("drawing_rectangle_corners.zig").read(a, current orelse state.decoded[section], state.source.header.version());
+    }
+    pub fn drawingPolygonPoints(self: *const Session, a: std.mem.Allocator, section: usize, layout: @import("../body/shape_polygon.zig").Layout) ![]@import("drawing_polygon_points.zig").Polygon {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        return @import("drawing_polygon_points.zig").read(a, current orelse state.decoded[section], state.source.header.version(), layout);
+    }
+    pub fn drawingCurvePoints(self: *const Session, a: std.mem.Allocator, section: usize, layout: @import("../body/shape_curve.zig").Layout) ![]@import("drawing_curve_points.zig").Source {
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        const current = try self.currentDrawingSection(a, section);
+        defer if (current) |bytes| a.free(bytes);
+        return @import("drawing_curve_points.zig").read(a, current orelse state.decoded[section], state.source.header.version(), layout);
     }
     pub fn drawingLineEndpoints(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("drawing_line_endpoints.zig").Endpoints {
         const state = self.stateConst();
@@ -429,7 +553,9 @@ pub const Session = opaque {
     pub fn sectionSettings(self: *const Session, a: std.mem.Allocator, section: usize) !@import("section_settings_snapshot.zig").Setting {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
-        return @import("section_settings_snapshot.zig").read(a, state.decoded[section], state.source.header.version());
+        var setting = try @import("section_settings_snapshot.zig").read(a, state.decoded[section], state.source.header.version());
+        setting.memo_shape_count = state.memo_shape_count;
+        return setting;
     }
     pub fn paragraphFlow(self: *const Session, a: std.mem.Allocator, section: usize) ![]@import("paragraph_flow_snapshot.zig").Flow {
         const state = self.stateConst();
@@ -465,6 +591,16 @@ pub const Session = opaque {
 
     pub fn fontFaceMetadata(self: *const Session, a: std.mem.Allocator) ![]@import("font_face_snapshot.zig").Metadata {
         return self.fontSnapshot(a, true);
+    }
+
+    /// Current DocInfo resources; caller owns the rows and gradient arrays.
+    pub fn borderFillSources(self: *const Session, a: std.mem.Allocator) ![]@import("border_fill_sources.zig").Source {
+        const state = self.stateConst();
+        const decoded = try state.source.decodeDocInfo(a, max_stream);
+        defer a.free(decoded);
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        defer a.free(current);
+        return @import("border_fill_sources.zig").read(a, current, state.source.header.version(), 1_000_000);
     }
 
     fn fontSnapshot(self: *const Session, a: std.mem.Allocator, comptime metadata: bool) ![]if (metadata) @import("font_face_snapshot.zig").Metadata else @import("../../model/font_face_value.zig").Value {
@@ -535,7 +671,41 @@ pub const Session = opaque {
     }
 
     pub fn apply(self: *Session, command: Command) !void {
+        // Formula-definition label rebasing with pending objects is not wired.
         switch (command) {
+            .set_formula_definition => {
+                for (self.stateConst().created_tables) |tables| if (tables.entries.len != 0) return error.UnsupportedCreatedTableHostEdit;
+            },
+            else => {},
+        }
+        switch (command) {
+            .splice_current_paragraph => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                switch (edit.reference) {
+                    .source => |reference| {
+                        if (reference.section != edit.section) return error.SourceBindingMismatch;
+                        const index = try @import("created_table_anchor.zig").resolve(state.allocator, &state.document.sections[edit.section], .{ .host = reference.host, .unit = 0 });
+                        return self.apply(.{ .splice_text = .{ .section = edit.section, .paragraph = index, .start_unit = edit.start_unit, .end_unit = edit.end_unit, .utf8 = edit.utf8 } });
+                    },
+                    .created_cell => |point| {
+                        if (point.section != edit.section) return error.SourceBindingMismatch;
+                        const before = try self.copyCreatedCellUtf8(state.allocator, point);
+                        defer state.allocator.free(before);
+                        const next = try @import("../../text/utf8_utf16_splice.zig").replace(state.allocator, before, edit.start_unit, edit.end_unit, edit.utf8, max_stream);
+                        defer state.allocator.free(next);
+                        return self.apply(.{ .set_created_cell_text = .{ .point = point, .utf8 = next } });
+                    },
+                }
+            },
+            .stage_table => |edit| {
+                const state = self.getState();
+                try @import("created_table_stage.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+            },
+            .set_created_cell_text => |edit| {
+                const state = self.getState();
+                try @import("created_cell_text.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+            },
             .set_character_font_name => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 try @import("../../model/font_name.zig").validate(edit.name, 4096);
@@ -543,7 +713,7 @@ pub const Session = opaque {
                 const state = self.getState();
                 const checkpoint = try self.createCheckpoint(max_bytes);
                 defer checkpoint.deinit();
-                errdefer @import("editor_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document) catch unreachable;
+                errdefer @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables) catch unreachable;
                 const id = try self.ensureFont(edit.language, edit.name);
                 var ids: @import("../../model/character_fonts.zig").Values = @splat(null);
                 ids[@backingInt(edit.language)] = id;
@@ -579,6 +749,20 @@ pub const Session = opaque {
                 const state = self.getState();
                 try @import("paragraph_format.zig").apply(&state.document.sections[edit.section].paragraphs[edit.paragraph], edit.para_shape_id, self.paragraphShapeCount());
             },
+            .select_form_radio => |edit| {
+                const state = self.getState();
+                try @import("form_radio_apply.zig").apply(state.allocator, state.decoded, state.source.header.version(), state.document.sections, edit, max_stream);
+            },
+            .set_form_choice => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                try @import("form_choice_apply.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, max_stream);
+            },
+            .set_form_text => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                try @import("form_text_apply.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, max_stream);
+            },
             .set_formula_definition => |edit| {
                 const state = self.getState();
                 if (edit.section >= state.document.sections.len) return error.InvalidSection;
@@ -604,10 +788,16 @@ pub const Session = opaque {
             },
             .merge_paragraph => |merge| {
                 const state = self.getState();
+                for (state.created_tables) |tables| if (tables.entries.len != 0) {
+                    return @import("created_table_structure.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), .{ .merge = merge }, self.createdTableResources(), created_table_limits);
+                };
                 try @import("merge_session.zig").apply(state.allocator, state.decoded, &state.document, state.source.header.version(), merge, self.characterShapeCount(), max_stream);
             },
             .split_paragraph => |edit| {
                 const state = self.getState();
+                for (state.created_tables) |tables| if (tables.entries.len != 0) {
+                    return @import("created_table_structure.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), .{ .split = edit }, self.createdTableResources(), created_table_limits);
+                };
                 try @import("structure_session.zig").split(state.allocator, state.decoded, &state.document, state.source.header.version(), edit, self.characterShapeCount(), max_stream);
             },
             .set_style => |edit| {
@@ -624,13 +814,9 @@ pub const Session = opaque {
                 for (state.decoded, 0..) |bytes, index| {
                     if (index != edit.section) try @import("source_policy.zig").validateUnselectedTextSection(state.allocator, bytes, state.source.header.version());
                 }
-                if (try @import("source_policy.zig").hasNamedFields(state.decoded[edit.section])) {
-                    try @import("field_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
-                } else if (try @import("source_policy.zig").hasFormulas(state.allocator, state.decoded[edit.section], state.source.header.version())) {
-                    try @import("formula_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
-                } else if (try @import("hyperlink_splice.zig").hasCrossParagraph(state.allocator, state.document.sections[edit.section])) {
-                    try @import("hyperlink_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
-                } else try @import("plain_text.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section].paragraphs[edit.paragraph], edit, self.characterShapeCount());
+                if (state.created_tables[edit.section].entries.len != 0) {
+                    try @import("created_table_host_splice.zig").apply(state.allocator, state.decoded[edit.section], &state.document.sections[edit.section], &state.created_tables[edit.section], state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+                } else try @import("paragraph_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
             },
             .set_character_properties => |edit| {
                 const state = self.getState();
@@ -687,11 +873,17 @@ pub const Session = opaque {
                 structural = true;
                 break;
             };
-            const picture_source = if (section.picture_current_sizes) |sizes|
-                try @import("picture_current_size_section.zig").writeAll(scratch, state.decoded[index], state.source.header.version(), sizes, max_stream)
+            const form_source = if (section.form_values) |values|
+                try @import("form_current_section.zig").writeAll(scratch, state.decoded[index], state.source.header.version(), values, max_stream)
             else
                 state.decoded[index];
-            const decoded = if (structural)
+            const picture_source = if (section.picture_current_sizes) |sizes|
+                try @import("picture_current_size_section.zig").writeAll(scratch, form_source, state.source.header.version(), sizes, max_stream)
+            else
+                form_source;
+            const decoded = if (state.created_tables[index].entries.len != 0)
+                try @import("created_table_section.zig").write(scratch, picture_source, section, &state.created_tables[index], state.source.header.version(), self.createdTableResources(), created_table_limits)
+            else if (structural)
                 try @import("structure_section_writer.zig").writeWithDeletions(scratch, picture_source, section, state.source.header.version(), self.characterShapeCount(), max_stream, true)
             else
                 try @import("text_section_writer.zig").write(scratch, picture_source, section, state.source.header.version(), max_stream);
@@ -711,6 +903,11 @@ pub const Session = opaque {
         };
     }
 
+    pub fn createdTableResources(self: *const Session) @import("created_table_records.zig").Resources {
+        const state = self.stateConst();
+        return .{ .paragraphs = .{ .char_shapes = self.characterShapeCount(), .para_shapes = self.paragraphShapeCount(), .styles = state.style_count }, .border_count = state.border_count };
+    }
+
     fn getState(self: *Session) *State {
         return @ptrCast(@alignCast(self));
     }
@@ -720,6 +917,8 @@ pub const Session = opaque {
 };
 
 fn sectionChanged(state: *const State, index: usize, section: model.Section) bool {
+    if (section.form_values) |values| if (values.len != 0) return true;
+    if (state.created_tables[index].entries.len != 0) return true;
     if (section.picture_current_sizes) |sizes| if (sizes.len != 0) return true;
     if (section.table_cell_sizes) |sizes| if (sizes.len != 0) return true;
     if (section.paragraphs.len != state.style_offsets[index].len) return true;

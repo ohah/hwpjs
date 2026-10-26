@@ -78,6 +78,14 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, patch: P
     if (input.len > limit) return error.LimitExceeded;
     try validate(patch);
     const shape = try @import("../docinfo/char_shape.zig").CharShape.parse(input, version);
+    const legacy_strike = @import("character_decoration_compat.zig").legacyStrike(shape.underlineKindRaw(), shape.strikeKindRaw());
+    const strike_color_offset: ?usize = if (patch.strike_color != null) try @import("character_strike_color_payload.zig").colorOffset(shape) else null;
+    if (legacy_strike and patch.strike_color != null and patch.underline_color != null and patch.strike_color.? != patch.underline_color.?)
+        return error.ConflictingCharacterDecorationColors;
+    // Do not silently remove a legacy strike when adding an independent underline.
+    const changes_underline_color = if (patch.underline_color) |color| @import("../../model/rgb_color.zig").hwp5(color) != shape.underline_color else false;
+    if (legacy_strike and patch.strike_enabled != false and (changes_underline_color or (patch.underline_kind != null and patch.underline_kind.? != .none)))
+        return error.UnsupportedLegacyCharacterDecorations;
     if (patch.strike_enabled) |enabled| _ = try @import("character_strike_payload.zig").attributes(shape.attributes, enabled);
     const output = try a.dupe(u8, input);
     if (patch.font_ids) |ids| for (ids, 0..) |id, language| {
@@ -92,7 +100,7 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, patch: P
     if (patch.italic) |enabled| attributes = (attributes & ~@as(u32, 1)) | @as(u32, @intFromBool(enabled));
     if (patch.bold) |enabled| attributes = (attributes & ~@as(u32, 2)) | (@as(u32, @intFromBool(enabled)) << 1);
     if (patch.strike_enabled) |enabled| attributes = try @import("character_strike_payload.zig").attributes(attributes, enabled);
-    if (patch.underline_kind) |kind| {
+    if (patch.underline_kind) |kind| if (!(legacy_strike and kind == .none and patch.strike_enabled != false)) {
         const underline = @import("character_underline_payload.zig");
         const mapped: underline.Kind = switch (kind) {
             .none => .none,
@@ -101,9 +109,10 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, patch: P
             .center => unreachable,
         };
         attributes = underline.attributes(attributes, mapped);
-    }
+    };
     std.mem.writeInt(u32, output[46..50], attributes, .little);
     if (patch.underline_color) |color| std.mem.writeInt(u32, output[56..60], @import("../../model/rgb_color.zig").hwp5(color), .little);
+    if (patch.strike_color) |color| std.mem.writeInt(u32, output[strike_color_offset.?..][0..4], @import("../../model/rgb_color.zig").hwp5(color), .little);
     if (patch.text_color) |color| std.mem.writeInt(u32, output[52..56], @import("../../model/rgb_color.zig").hwp5(color), .little);
     if (patch.shade) |intent| std.mem.writeInt(u32, output[60..64], try @import("../../model/shade_color.zig").encodeHwp5(intent), .little);
     return output;

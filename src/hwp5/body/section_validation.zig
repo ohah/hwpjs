@@ -2,7 +2,7 @@ const body = @import("reader.zig");
 const Tree = @import("tree.zig").Tree;
 const Version = @import("../version.zig").Version;
 const rules = @import("../docinfo/reference_rules.zig");
-pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, note_shapes: usize = 0, columns: usize = 0 };
+pub const Report = struct { definitions: usize = 0, pages: usize = 0, borders: usize = 0, numbering_deferred: usize = 0, note_shapes: usize = 0, columns: usize = 0, memo_references: usize = 0, memo_references_deferred: usize = 0 };
 pub fn definitionOwner(tree: Tree) !usize {
     var first: ?usize = null;
     var owner: ?usize = null;
@@ -26,6 +26,10 @@ pub fn columnOwner(tree: Tree, index: usize) !usize {
     return parent;
 }
 pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_count: usize) !Report {
+    return inspectWithMemoShapes(tree, version, numbering_count, border_count, null);
+}
+/// A null count is uninspected, not an empty resource table.
+pub fn inspectWithMemoShapes(tree: Tree, version: Version, numbering_count: usize, border_count: usize, memo_shape_count: ?usize) !Report {
     var report: Report = .{};
     var section: ?usize = null;
     var first_paragraph: ?usize = null;
@@ -44,6 +48,12 @@ pub fn inspect(tree: Tree, version: Version, numbering_count: usize, border_coun
         if (d.numbering_id == 0) {
             report.numbering_deferred += 1;
         } else if (rules.resolve(.one_based, d.numbering_id, numbering_count) == .invalid) return error.InvalidResourceReference;
+        if (d.observed_extension) |extension| if (extension.memo_shape_id_ref != 0) {
+            report.memo_references += 1;
+            if (memo_shape_count) |count| {
+                if (rules.resolve(.optional_one_based, extension.memo_shape_id_ref, count) == .invalid) return error.InvalidResourceReference;
+            } else report.memo_references_deferred += 1;
+        };
         section = index;
         report.definitions += 1;
     }

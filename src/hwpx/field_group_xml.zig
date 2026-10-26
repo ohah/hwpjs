@@ -40,7 +40,7 @@ fn writePolicy(a: std.mem.Allocator, trees: []const Tree, section: usize, rows: 
             move.side = if (owned.contains(move.position.element_index) == continuation) .right else .left;
         }
         const xml = if (allow_styles and row.character_styles != null)
-            try @import("character_style_paragraph_xml.zig").writeFieldsDirty(a, tree, row, fields, limit -| output.items.len)
+            try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, row, fields, options, limit -| output.items.len)
         else
             try @import("paragraph_split_xml.zig").writeFieldsDirty(a, tree, row.template_element, &row.sites, options, continuation, row.generated_id orelse 0, planned, fields, limit -| output.items.len);
         defer a.free(xml);

@@ -7,7 +7,7 @@ pub fn writeCurrent(a: std.mem.Allocator, source: *const Tree, paragraph: *const
     const rendered = try write(a, source, paragraph, options, limit);
     defer a.free(rendered);
     const joined = paragraph.joined().?;
-    return @import("paragraph_nested_save.zig").foldJoined(a, source, current, original, &joined, rendered, limit);
+    return @import("paragraph_nested_save.zig").foldJoinedOptions(a, source, current, original, &joined, rendered, options, limit);
 }
 
 pub fn write(a: std.mem.Allocator, source: *const Tree, paragraph: *const Paragraph, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {

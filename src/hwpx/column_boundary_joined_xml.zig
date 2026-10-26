@@ -75,7 +75,7 @@ fn writeBaseMode(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Para
     var styled_source = first;
     styled_source.generated_id = null;
     const serialized_source = if (first_styles != null)
-        try @import("character_style_paragraph_xml.zig").write(a, tree, &styled_source, limit)
+        try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, &styled_source, &.{}, options, limit)
     else if (allow_tabs)
         try @import("paragraph_split_xml.zig").writeSitesWithTabs(a, tree, &first, options, limit)
     else

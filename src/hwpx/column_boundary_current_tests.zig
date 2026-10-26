@@ -42,7 +42,7 @@ test "column boundary current model save preserves all owned text and every fail
     values.paragraphs[0].column_boundaries.?[0].unit = 2;
     try std.testing.expectError(error.SplitSurrogatePair, @import("paragraph_structure_save.zig").write(a, &tree, &values, .{}, &.{}, 10000));
     values.paragraphs[0].column_boundaries.?[0].unit = 1;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, owned: *const Values) !void {
             const result = @import("paragraph_structure_save.zig").write(allocator, parsed, owned, .{}, &.{}, 10000) catch |err| {
                 try std.testing.expectEqual(@as(u32, 1), owned.paragraphs[0].column_boundaries.?[0].unit);
@@ -93,7 +93,7 @@ test "column boundary current model save preserves all owned text and every fail
     defer a.free(split_saved);
     try std.testing.expect(std.mem.indexOf(u8, split_saved, group) != null);
     try std.testing.expect(std.mem.indexOf(u8, split_saved, "changed") != null);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current_split: *const Values) !void {
             const bytes = @import("column_boundary_group_xml.zig").write(allocator, parsed, current_split.paragraphs[0..2], .{}, 10000) catch |err| {
                 try std.testing.expectEqual(@as(u32, 1), current_split.paragraphs[0].column_boundaries.?[0].unit);
@@ -104,7 +104,7 @@ test "column boundary current model save preserves all owned text and every fail
             defer allocator.free(bytes);
         }
     }.run, .{ &tree, &split });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, original_split: *const Values) !void {
             var copy = try original_split.clone(allocator);
             defer copy.deinit(allocator);
@@ -139,7 +139,7 @@ test "column boundary current model save preserves all owned text and every fail
     const repeated_saved = try @import("paragraph_structure_save.zig").write(a, &tree, &repeated, .{}, &.{}, 10000);
     defer a.free(repeated_saved);
     try std.testing.expect(std.mem.indexOf(u8, repeated_saved, "id='124'") != null);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, original: *const Values) !void {
             var candidate = @import("paragraph_structure_split.zig").prepare(allocator, parsed, original, 1, 3, 3, 124, 10000) catch |err| {
                 try std.testing.expectEqual(@as(usize, 3), original.paragraphs.len);
@@ -152,7 +152,7 @@ test "column boundary current model save preserves all owned text and every fail
     }.run, .{ &tree, &split });
     try std.testing.expectError(error.SplitSurrogatePair, @import("paragraph_structure_split.zig").prepare(a, &tree, &values, 0, 2, 2, 123, 10000));
     try std.testing.expectError(error.ProtectedColumnBoundary, @import("paragraph_structure_split.zig").prepare(a, &tree, &values, 0, 0, 3, 123, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, original: *const Values) !void {
             var result = @import("paragraph_structure_split.zig").prepare(allocator, parsed, original, 0, 3, 3, 123, 10000) catch |err| {
                 try std.testing.expectEqual(@as(u32, 1), original.paragraphs[0].column_boundaries.?[0].unit);
@@ -191,7 +191,7 @@ test "column boundary current model save preserves all owned text and every fail
     try std.testing.expectError(error.ProtectedColumnBoundary, splice(a, &tree, &values, 0, 0, 3, "", 10000));
     try std.testing.expectError(error.SplitSurrogatePair, splice(a, &tree, &values, 0, 2, 0, "X", 10000));
     try std.testing.expectError(error.InvalidXmlCharacter, splice(a, &tree, &values, 0, 0, 0, &.{0}, 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, original: *const Values) !void {
             var copy = try original.clone(allocator);
             defer copy.deinit(allocator);

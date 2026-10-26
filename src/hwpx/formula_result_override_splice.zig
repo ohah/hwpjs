@@ -4,14 +4,11 @@ const editor = @import("editor_session.zig");
 
 pub fn splice(session: *editor.Session, section_index: usize, begin: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
-    const section = &session.sections[section_index];
-    if (section.structure_values != null) return error.UnsupportedStructuralFormulaResultOverride;
-    if (section.created_tables.entries.items.len != 0) return error.UnsupportedCreatedTableFormulaResultOverride;
     const a = session.allocator;
-    var snapshot = try @import("formula_current_snapshot.zig").readFlat(a, session, section_index);
+    var snapshot = try @import("formula_current_snapshot.zig").read(a, session, section_index);
     defer snapshot.deinit(a);
-    const display = for (snapshot.prepared) |field| {
-        if (field.begin == begin) break field.display;
+    const display = for (snapshot.rows) |field| {
+        if (field.begin_element == begin) break field.values.last_result orelse return error.InvalidFormulaFieldNode;
     } else return error.InvalidFormulaFieldNode;
     const items = try a.alloc(@import("text_sites.zig").Site, 1);
     const owned = a.dupe(u8, display) catch |err| {

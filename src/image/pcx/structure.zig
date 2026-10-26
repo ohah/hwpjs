@@ -55,24 +55,8 @@ pub fn inspect(bytes: []const u8, options: Options) !Report {
     const palette = version == 5 and bits == 8 and planes == 1 and bytes.len >= 128 + 769 and bytes[bytes.len - 769] == 0x0c;
     const stream_end = if (palette) bytes.len - 769 else bytes.len;
 
-    var cursor: usize = 128;
-    var produced: usize = 0;
-    while (produced < decoded_bytes) {
-        if (cursor >= stream_end) return error.TruncatedPcxImage;
-        const code = bytes[cursor];
-        cursor += 1;
-        var count: usize = 1;
-        if (code & 0xc0 == 0xc0) {
-            count = code & 0x3f;
-            if (count == 0) return error.InvalidPcxRun;
-            if (cursor >= stream_end) return error.TruncatedPcxRun;
-            cursor += 1;
-        }
-        if (count > decoded_bytes - produced) return error.PcxRunOverrun;
-        if (count > scanline_bytes - produced % scanline_bytes) return error.PcxRunCrossesScanLine;
-        produced += count;
-    }
-    if (cursor != stream_end) return error.InvalidPcxTrailer;
+    var runs: @import("rle.zig").Iterator = .{ .bytes = bytes[128..stream_end], .decoded_bytes = decoded_bytes, .scanline_bytes = scanline_bytes };
+    while (try runs.next()) |_| {}
     return .{
         .version = version,
         .width = width,
@@ -81,7 +65,7 @@ pub fn inspect(bytes: []const u8, options: Options) !Report {
         .planes = planes,
         .bytes_per_line = bytes_per_line,
         .decoded_bytes = decoded_bytes,
-        .encoded_bytes = cursor - 128,
+        .encoded_bytes = runs.cursor,
         .has_vga_palette = palette,
     };
 }

@@ -17,6 +17,7 @@ pub fn writeCandidate(a: std.mem.Allocator, trees: []const Tree, section: usize,
     defer report.deinit();
     const rows = try @import("field_source_candidate_rows.zig").build(a, trees, section, paragraph, &report, 200_000);
     defer a.free(rows);
+    if (paragraph.character_styles != null) return writeOwnedRow(a, &trees[section], paragraph, &.{}, limit);
     return writeRows(a, &trees[section], rows, limit);
 }
 
@@ -60,6 +61,11 @@ fn writeRowsMode(a: std.mem.Allocator, tree: *const Tree, rows: []const @import(
         defer a.free(opening);
         try append(a, &output, opening, limit);
     } else try append(a, &output, tree.source[first.start_tag.start..first.start_tag.end], limit);
+    const has_text = for (rows) |row| {
+        if (for (row.sites.items) |site| {
+            if (site.text.len != 0) break true;
+        } else false) break true;
+    } else false;
     for (rows, 0..) |*row, side| {
         try @import("paragraph_structure_policy.zig").validate(a, tree, row.template_element);
         if (row.character_styles) |styles| for (styles) |span| {
@@ -75,6 +81,9 @@ fn writeRowsMode(a: std.mem.Allocator, tree: *const Tree, rows: []const @import(
             cursor = element.end;
             if (element.is(uri, "linesegarray")) continue;
             if (!element.is(uri, "run")) return error.UnsupportedMergeMetadata;
+            if (generated != null) if (owned) |markers| {
+                if (try @import("field_empty_outside_run.zig").omit(a, tree, row, element_index, markers, has_text)) continue;
+            };
             if (side == 1) {
                 var content = element.first_child;
                 while (content) |inner| : (content = tree.elements[inner].next_sibling) {
@@ -131,7 +140,7 @@ test "field source merge XML retains current paragraph shape through allocation 
     var current = try @import("paragraph_structure_collect.zig").collect(a, &tree, &sites, locations, .{}, &counters);
     defer current.deinit(a);
     current.paragraphs[0].paragraph_shape_id = 8;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, inputs: []const Tree, values: *const Values) !void {
             const result = try write(allocator, inputs, 0, values, 0, 1, 10000);
             defer allocator.free(result);

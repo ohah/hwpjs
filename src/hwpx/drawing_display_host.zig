@@ -6,7 +6,7 @@ const xml = @import("document_xml.zig");
 const protected = @import("protected_display_host.zig");
 pub const Policy = struct {
     local: []const u8,
-    kind: @import("run_anchor.zig").Kind,
+    kind: ?@import("run_anchor.zig").Kind,
     invalid_node: anyerror,
     switch_host: anyerror,
     missing_paragraph: anyerror,
@@ -29,7 +29,7 @@ pub fn sourceAnchor(tree: *const Tree, node: usize, policy: Policy) !usize {
     var candidate = node;
     while (true) {
         const kind = @import("run_anchor.zig").kind(tree, candidate);
-        if ((candidate == node and kind == policy.kind) or (candidate != node and kind == .container)) return candidate;
+        if ((candidate == node and policy.kind != null and kind == policy.kind) or (candidate != node and kind == .container)) return candidate;
         const parent = tree.elements[candidate].parent orelse return policy.unsupported_anchor;
         if (!tree.elements[parent].is(xml.paragraph_uri, "container")) return policy.unsupported_anchor;
         candidate = parent;

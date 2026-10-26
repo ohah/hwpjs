@@ -14,6 +14,7 @@ pub const Source = struct {
     prevent_page_break: i32,
     description_bytes: ?usize,
     object_extra_bytes: usize,
+    object_extra_u16: ?u16 = null,
     table_flags: u32,
     rows: u16,
     columns: u16,
@@ -34,7 +35,7 @@ pub fn read(a: std.mem.Allocator, raw: []const u8, version: @import("../version.
         const lists = try @import("../body/table_lists.zig").Iterator.init(tree, index);
         const table_record = lists.table_node;
         const table = tree.nodes[table_record].record.value.table;
-        try rows.append(a, .{ .table_node = index, .table_record_node = table_record, .object_flags = properties.flags, .offset_y = properties.offset_y, .offset_x = properties.offset_x, .width = properties.width, .height = properties.height, .z_order = properties.z_order, .outer_margins = properties.margins, .instance_id = properties.instance_id, .prevent_page_break = properties.prevent_page_break, .description_bytes = if (properties.description_utf16) |bytes| bytes.len else null, .object_extra_bytes = properties.extra.len, .table_flags = table.flags, .rows = table.row_count, .columns = table.column_count, .cell_spacing = table.cell_spacing, .inner_margins = table.margins, .border_fill_id = table.border_fill_id, .zone_count = if (table.zones) |zones| zones.count() else null, .table_extra_bytes = table.extra.len });
+        try rows.append(a, .{ .table_node = index, .table_record_node = table_record, .object_flags = properties.flags, .offset_y = properties.offset_y, .offset_x = properties.offset_x, .width = properties.width, .height = properties.height, .z_order = properties.z_order, .outer_margins = properties.margins, .instance_id = properties.instance_id, .prevent_page_break = properties.prevent_page_break, .description_bytes = if (properties.description_utf16) |bytes| bytes.len else null, .object_extra_bytes = properties.extra.len, .object_extra_u16 = properties.extraU16(), .table_flags = table.flags, .rows = table.row_count, .columns = table.column_count, .cell_spacing = table.cell_spacing, .inner_margins = table.margins, .border_fill_id = table.border_fill_id, .zone_count = if (table.zones) |zones| zones.count() else null, .table_extra_bytes = table.extra.len });
     }
     return rows.toOwnedSlice(a);
 }
@@ -56,4 +57,23 @@ test "HWP5 table layout source actual placement and policy allocation failures" 
             try std.testing.expectEqualDeep(values, result);
         }
     }.run, .{ raw, source.header.version(), expected });
+}
+
+test "HWP5 object extra u16 reaches actual table layout sources without changing wire" {
+    const a = std.testing.allocator;
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, "reference/rhwp/samples/issue1949_giant_cell_nested_tables_perf.hwp", a, .limited(4_000_000));
+    defer a.free(bytes);
+    var source = try @import("../text_source.zig").Source.open(a, bytes);
+    defer source.deinit();
+    const raw = try source.decodeSection(a, 0);
+    defer a.free(raw);
+    const before = std.hash.Wyhash.hash(0, raw);
+    const values = try read(a, raw, source.header.version());
+    defer a.free(values);
+    try std.testing.expectEqual(@as(usize, 14), values.len);
+    for (values) |value| {
+        try std.testing.expectEqual(@as(usize, 2), value.object_extra_bytes);
+        try std.testing.expectEqual(@as(?u16, 0), value.object_extra_u16);
+    }
+    try std.testing.expectEqual(before, std.hash.Wyhash.hash(0, raw));
 }

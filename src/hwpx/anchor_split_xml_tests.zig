@@ -32,7 +32,7 @@ test "HWPX anchored split current output preserves other edits and field dirty s
     defer a.free(right);
     try std.testing.expectEqualStrings("😀A", left);
     try std.testing.expectEqualStrings("\xef\xbf\xbcB", right);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const @import("xml_part_tree.zig").Tree, current: *const @import("text_sites.zig").Sites, flags: []const @import("text_sites_save.zig").FieldDirty) !void {
             const bytes = try @import("paragraph_split_current.zig").writeAnchored(allocator, parsed, current, .{}, flags, 2, 3, 3, 3, 10000);
             defer allocator.free(bytes);
@@ -81,7 +81,7 @@ test "HWPX anchored split XML retains each nested object once and preserves opaq
     try std.testing.expectError(error.ProtectedInlineControl, serializer.writeAnchored(a, &tree, &sites, locations, .{}, 1, 3, 4, true, 2, 10000));
     try std.testing.expectError(error.SplitSurrogatePair, serializer.writeAnchored(a, &tree, &sites, locations, .{}, 1, 2, 2, true, 2, 10000));
     try std.testing.expectError(error.LimitExceeded, serializer.writeAnchored(a, &tree, &sites, locations, .{}, 1, 3, 3, true, 2, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const @import("xml_part_tree.zig").Tree, current: *const @import("text_sites.zig").Sites, bound: []const @import("section_text.zig").Location) !void {
             const output = try serializer.writeAnchored(allocator, parsed, current, bound, .{}, 1, 3, 3, true, 2, 10000);
             defer allocator.free(output);

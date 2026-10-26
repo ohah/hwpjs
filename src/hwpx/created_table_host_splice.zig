@@ -20,7 +20,14 @@ pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: 
 
 pub fn supportsFieldLabelMode(session: *const editor.Session, section: usize) !bool {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
-    return session.sections[section].structure_values == null and try supportsMode(session, section, false);
+    if (!try supportsMode(session, section, false)) return false;
+    if (session.sections[section].structure_values) |current| {
+        if (!try @import("source_field_analysis.zig").hasFields(session, section)) return false;
+        for (current.paragraphs) |paragraph| {
+            if (paragraph.generated_id != null or paragraph.pieces != null or paragraph.protected_positions != null or paragraph.column_boundaries != null) return false;
+        }
+    }
+    return true;
 }
 
 pub fn applyWithArguments(session: *editor.Session, section: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8, anchored: bool, comptime operation: anytype, arguments: anytype) anyerror!bool {
@@ -32,7 +39,7 @@ pub fn applyWithArguments(session: *editor.Session, section: usize, paragraph: u
     defer candidate.deinit(a);
     for (candidate.entries.items) |*entry| {
         if (entry.anchor.section != section) return error.SourceBindingMismatch;
-        if (std.meta.eql(entry.anchor.paragraph, host.paragraph)) entry.anchor.unit = try @import("created_table_anchor_splice.zig").unit(entry.anchor.unit, start, deleted, inserted_units);
+        if (std.meta.eql(entry.anchor.paragraph, host.paragraph)) entry.anchor.unit = try @import("created_table_anchor_splice.zig").unit(entry.anchor.unit, host.unit, deleted, inserted_units);
     }
     var before = try @import("editor_checkpoint.zig").capture(session, session.options.max_output_bytes);
     defer before.deinit();

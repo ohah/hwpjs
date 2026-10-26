@@ -34,6 +34,11 @@ fn anchorNode(tree: *const @import("xml_part_tree.zig").Tree, node: usize) !usiz
     return if (group) |context| context.root_anchor else node;
 }
 
+// 배치도 single과 같은 anchor 선검사를 사용합니다.
+pub fn validateNode(tree: *const @import("xml_part_tree.zig").Tree, node: usize) !void {
+    _ = try anchorNode(tree, node);
+}
+
 pub fn readCurrent(a: std.mem.Allocator, section: *const editor.Section, paragraphs: []const @import("paragraph_structure_values.zig").Paragraph, node: usize) !Host {
     return resolve(a, section, paragraphs, try anchorNode(&section.tree, node));
 }

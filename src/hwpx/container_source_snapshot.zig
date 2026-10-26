@@ -22,6 +22,8 @@ pub const Snapshot = struct {
     flow: @import("picture_flow_values.zig").Values,
     transform: @import("picture_transform_values.zig").Values,
     children: []Child,
+    has_caption: bool,
+    caption: ?@import("table_caption_values.zig").Values,
 
     pub fn deinit(self: *Snapshot, a: std.mem.Allocator) void {
         self.transform.deinit(a);
@@ -36,6 +38,7 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize) !Snapshot {
     const position = try @import("picture_position_values.zig").readContainer(a, tree, node);
     const flow = try @import("picture_flow_values.zig").readContainer(a, tree, node);
     const context = try @import("grouped_shape_context.zig").read(tree, node);
+    const caption = try @import("table_caption_values.zig").readContainer(a, tree, node);
     var children: std.ArrayList(usize) = .empty;
     defer children.deinit(a);
     for (tree.elements, 0..) |element, index| {
@@ -61,6 +64,8 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize) !Snapshot {
         .flow = flow,
         .transform = try @import("picture_transform_values.zig").readContainer(a, tree, node, 1024),
         .children = child_sources,
+        .has_caption = caption != null,
+        .caption = caption,
     };
 }
 

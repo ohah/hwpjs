@@ -2,6 +2,9 @@ const std = @import("std");
 const t = std.testing;
 const xml = @import("root.zig");
 const doc = xml.document;
+test {
+    _ = @import("document_scratch_tests.zig");
+}
 test "XML document exact text byte budget stops before the following tag" {
     const result = try doc.inspect(t.allocator, "<r>A&#13;</r>", .{ .max_text_bytes = 6 });
     try t.expectEqual(@as(usize, 2), result.text_scalars);

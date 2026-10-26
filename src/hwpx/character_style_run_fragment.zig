@@ -81,10 +81,7 @@ fn writePolicy(a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, spa
     if (span.start_unit < span.site_start_unit or span.end_unit < span.start_unit) return error.InvalidTextPosition;
     const start = try @import("text_site_edit.zig").bytePosition(site.text, std.math.cast(u32, span.start_unit - span.site_start_unit) orelse return error.LimitExceeded);
     const end = try @import("text_site_edit.zig").bytePosition(site.text, std.math.cast(u32, span.end_unit - span.site_start_unit) orelse return error.LimitExceeded);
-    const opening = if (span.char_shape_id) |id|
-        try @import("character_style_tag.zig").write(a, tree, span.run_element, id, limit)
-    else
-        try a.dupe(u8, tree.source[run.start_tag.start..run.start_tag.end]);
+    const opening = try @import("character_style_tag.zig").writeSelected(a, tree, span.run_element, span.char_shape_id, limit);
     defer a.free(opening);
     const base = run.start_tag.start;
     const Change = @import("xml_source_writer.zig").Change;

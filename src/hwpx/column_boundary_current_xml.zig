@@ -28,7 +28,7 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, paragraph: *const Paragrap
     var base_paragraph = paragraph.*;
     base_paragraph.column_boundaries = null;
     const base = if (paragraph.character_styles != null)
-        try @import("character_style_paragraph_xml.zig").write(a, tree, &base_paragraph, limit)
+        try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, &base_paragraph, &.{}, options, limit)
     else if (paragraph.column_structure_changed)
         try @import("paragraph_split_xml.zig").writeColumnStructure(a, tree, paragraph.template_element, &paragraph.sites, options, limit)
     else

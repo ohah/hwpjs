@@ -60,13 +60,13 @@ test "joined column inventory keeps source piece order and global Unicode coordi
     try std.testing.expectEqual(@as(usize, 2), relocated_columns.len);
     try std.testing.expectEqual(@as(u32, 0), relocated_columns[0].unit);
     try std.testing.expectEqual(@as(u32, 4), relocated_columns[1].unit);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const @import("paragraph_structure_values.zig").Paragraph) !void {
             const bytes = try @import("column_boundary_joined_xml.zig").write(allocator, parsed, current, .{}, 10000);
             defer allocator.free(bytes);
         }
     }.run, .{ &tree, &owned_paragraph });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const @import("paragraph_structure_values.zig").Paragraph) !void {
             const bytes = try @import("column_boundary_joined_xml.zig").write(allocator, parsed, current, .{}, 10000);
             defer allocator.free(bytes);
@@ -77,7 +77,7 @@ test "joined column inventory keeps source piece order and global Unicode coordi
     cloned_paragraph.column_boundaries.?[1].unit = 2;
     try std.testing.expectError(error.SplitSurrogatePair, install(a, &tree, &cloned_paragraph, 0));
     try std.testing.expectEqual(@as(u32, 2), cloned_paragraph.column_boundaries.?[1].unit);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, view: *const Joined) !void {
             var candidate: @import("paragraph_structure_values.zig").Paragraph = .{ .template_element = view.pieces[0].template_element, .source_ordinal = 1, .sites = try view.sites.clone(allocator) };
             defer candidate.deinit(allocator);
@@ -114,7 +114,7 @@ test "joined column inventory keeps source piece order and global Unicode coordi
     @memcpy(owned, boundaries);
     owned[0].unit = 4;
     try std.testing.expectError(error.InvalidColumnBoundaryOrder, validate(a, &tree, &joined, owned));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const Joined, boundaries_now: []const @import("column_boundary_position.zig").Position) !void {
             try @import("column_boundary_joined_partition.zig").validate(allocator, parsed, current, boundaries_now);
         }
@@ -126,7 +126,7 @@ test "joined column inventory keeps source piece order and global Unicode coordi
     pieces[1].generated_id = 7;
     try std.testing.expectError(error.SourceBindingMismatch, collect(a, &tree, &joined, 10));
     pieces[1].generated_id = null;
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, current: *const Joined) !void {
             const result = try collect(allocator, parsed, current, 10);
             defer allocator.free(result);

@@ -4,13 +4,14 @@ pub fn splice(self: *@import("editor_session.zig").Session, section: usize, para
     const end = std.math.add(u32, start, deleted) catch return error.InvalidTextPosition;
     const plan = (try @import("field_source_outside_plan.zig").prepare(self, section, paragraph, start, end)) orelse return null;
     defer plan.deinit(self.allocator);
+    const target = try @import("field_exterior_insertion_site.zig").fromSession(self, section, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start);
     if (try @import("formula_section_save.zig").hasFormula(self.allocator, &self.sections[section].tree)) {
         const trees = try self.allocator.alloc(@import("xml_part_tree.zig").Tree, self.sections.len);
         defer self.allocator.free(trees);
         for (self.sections, trees) |part, *tree| tree.* = part.tree;
-        return try @import("formula_splice.zig").spliceProjectedWithOverrides(self.allocator, trees, section, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, &self.sections[section].formula_definitions, &self.sections[section].formula_result_overrides, @import("editor_session.zig").siteOptions(self.options));
+        return try @import("formula_splice.zig").spliceProjectedWithOverridesAtSite(self.allocator, trees, section, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, &self.sections[section].formula_definitions, &self.sections[section].formula_result_overrides, @import("editor_session.zig").siteOptions(self.options), target);
     }
-    return try @import("text_splice_transaction.zig").spliceProjected(self.allocator, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, null);
+    return try @import("text_splice_transaction.zig").spliceProjected(self.allocator, &self.sections[section].sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit, target);
 }
 test "source field exterior hyperlink query and splice agree after dirty label" {
     const a = std.testing.allocator;
@@ -57,7 +58,7 @@ test "source field exterior session allocation failures keep sites and existing 
     try std.testing.expectEqual(@as(usize, 1), session.sections[0].field_dirty.items.len);
     const baseline = try session.save();
     defer a.free(baseline);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             var proxy = source.*;
             proxy.allocator = allocator;

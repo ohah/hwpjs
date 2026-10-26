@@ -6,7 +6,11 @@ pub const Anchor = struct { section: usize, paragraph: refs.Reference, unit: u32
 pub const Resolved = struct { paragraph: usize, unit: u32 };
 
 fn boundary(a: std.mem.Allocator, section: *const editor.Section, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, unit: u32) !void {
-    const positions = if (paragraph.joined()) |joined|
+    const positions = if (paragraph.field_positions != null)
+        try @import("field_owned_positions.zig").build(a, &section.tree, paragraph)
+    else if (paragraph.protected_positions != null)
+        try @import("paragraph_protected_positions.zig").build(a, &section.tree, paragraph)
+    else if (paragraph.joined()) |joined|
         try @import("paragraph_joined_positions.zig").build(a, &section.tree, &joined)
     else block: {
         const locations = try @import("paragraph_structure_locations.zig").build(a, &section.tree, paragraph);
@@ -24,8 +28,9 @@ pub fn capture(a: std.mem.Allocator, session: *const editor.Session, section_ind
     defer current.deinit(a);
     if (ordinal < section.first_paragraph or ordinal - section.first_paragraph >= current.paragraphs.len) return error.InvalidParagraphIndex;
     const paragraph = &current.paragraphs[ordinal - section.first_paragraph];
-    try boundary(a, section, paragraph, unit);
-    return .{ .section = section_index, .paragraph = try refs.from(paragraph), .unit = unit };
+    const source_unit = try @import("formula_anchor_coordinates.zig").convert(a, session, section_index, ordinal, unit, .source);
+    try boundary(a, section, paragraph, source_unit);
+    return .{ .section = section_index, .paragraph = try refs.from(paragraph), .unit = source_unit };
 }
 
 pub fn resolve(a: std.mem.Allocator, session: *const editor.Session, anchor: Anchor) !Resolved {
@@ -35,7 +40,8 @@ pub fn resolve(a: std.mem.Allocator, session: *const editor.Session, anchor: Anc
     defer current.deinit(a);
     const position = try refs.index(current.paragraphs, anchor.paragraph);
     try boundary(a, section, &current.paragraphs[position], anchor.unit);
-    return .{ .paragraph = try refs.ordinal(current.paragraphs, section.first_paragraph, anchor.paragraph), .unit = anchor.unit };
+    const ordinal = try refs.ordinal(current.paragraphs, section.first_paragraph, anchor.paragraph);
+    return .{ .paragraph = ordinal, .unit = try @import("formula_anchor_coordinates.zig").convert(a, session, anchor.section, ordinal, anchor.unit, .display) };
 }
 
 test "created table anchor validates actual Unicode points and current order with allocation failures" {

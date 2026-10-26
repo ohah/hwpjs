@@ -226,6 +226,14 @@ fn writePrepared(a: std.mem.Allocator, tree: *const Tree, input: *const model.Va
         for (current.paragraphs[i..end]) |part| if (part.field_positions != null) {
             field_group = true;
         };
+        // Computed-field structural saves must not resurrect source line layout.
+        // Unrelated text fields keep their metadata-only passthrough behavior.
+        const owns_formula = if (field_context) |context| if (paragraph.field_positions) |positions| @import("formula_marker_kind.zig").owned(context.report, context.section, positions) else false else false;
+        if (field_group and end == i + 1 and !owns_formula and try @import("field_original_passthrough.zig").unchanged(tree, paragraph, &original)) {
+            const context = field_context orelse return error.UnsupportedStructuralFieldEdit;
+            try @import("field_partition.zig").validateStyled(a, context.trees, context.section, current.paragraphs[i..end], context.report, 200_000);
+            field_group = false;
+        }
         if (field_group) {
             const context = field_context orelse return error.UnsupportedStructuralFieldEdit;
             if (paragraph.pieces != null) {
@@ -322,11 +330,11 @@ fn writePrepared(a: std.mem.Allocator, tree: *const Tree, input: *const model.Va
                 else if (part.protected_positions != null and part.pieces != null)
                     (if (@import("paragraph_joined_anchor_mode.zig").has(tree, &part.joined().?)) try @import("paragraph_joined_xml.zig").writeOwnedAnchors(a, tree, &part.joined().?, options, limit -| bytes.items.len, part.protected_positions.?) else try @import("paragraph_joined_xml.zig").writeOwnedTabs(a, tree, &part.joined().?, options, limit -| bytes.items.len, part.protected_positions.?))
                 else if (part.protected_positions != null and part.character_styles != null)
-                    try @import("character_style_paragraph_xml.zig").write(a, tree, part, limit -| bytes.items.len)
+                    try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, part, &.{}, options, limit -| bytes.items.len)
                 else if (part.protected_positions != null)
                     try @import("paragraph_split_xml.zig").writeProtected(a, tree, part, options, limit -| bytes.items.len)
                 else if (part.character_styles != null and part.pieces == null)
-                    try @import("character_style_paragraph_xml.zig").write(a, tree, part, limit -| bytes.items.len)
+                    try @import("character_style_paragraph_xml.zig").writeFieldsDirtyOptions(a, tree, part, &.{}, options, limit -| bytes.items.len)
                 else if (part.joined()) |view|
                     try @import("paragraph_joined_xml.zig").write(a, tree, &view, options, limit -| bytes.items.len)
                 else if (part.title_positions != null)
@@ -341,15 +349,15 @@ fn writePrepared(a: std.mem.Allocator, tree: *const Tree, input: *const model.Va
                 const nested = if (part.joined()) |view|
                     (if (@import("paragraph_joined_anchor_mode.zig").has(tree, &view))
                         (if (part.protected_positions) |owned|
-                            try nested_writer.foldOwnedJoined(a, tree, current, &topology, &view, owned, formatted orelse xml, limit -| bytes.items.len)
+                            try nested_writer.foldOwnedJoinedOptions(a, tree, current, &topology, &view, owned, formatted orelse xml, options, limit -| bytes.items.len)
                         else
-                            try nested_writer.foldJoined(a, tree, current, &topology, &view, formatted orelse xml, limit -| bytes.items.len))
+                            try nested_writer.foldJoinedOptions(a, tree, current, &topology, &view, formatted orelse xml, options, limit -| bytes.items.len))
                     else
-                        try nested_writer.fold(a, tree, current, &topology, part.template_element, formatted orelse xml, limit -| bytes.items.len))
+                        try nested_writer.foldOptions(a, tree, current, &topology, part.template_element, formatted orelse xml, options, limit -| bytes.items.len))
                 else if (part.generated_id != null and part.protected_positions == null and part.column_boundaries == null)
-                    try nested_writer.foldContinuation(a, tree, current, &topology, part.template_element, formatted orelse xml, limit -| bytes.items.len)
+                    try nested_writer.foldContinuationOptions(a, tree, current, &topology, part.template_element, formatted orelse xml, options, limit -| bytes.items.len)
                 else
-                    try nested_writer.fold(a, tree, current, &topology, part.template_element, formatted orelse xml, limit -| bytes.items.len);
+                    try nested_writer.foldOptions(a, tree, current, &topology, part.template_element, formatted orelse xml, options, limit -| bytes.items.len);
                 defer a.free(nested);
                 try bytes.appendSlice(a, nested);
             }

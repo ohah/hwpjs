@@ -18,7 +18,7 @@ test "HWPX public field selection deletion keeps old dirty state on every alloca
     const labels = try session.fieldLabels(0, 1);
     defer a.free(labels);
     try session.sections[0].field_dirty.append(a, .{ .element_index = labels[0].begin_element, .dirty = false });
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const editor.Session) !void {
             var proxy = source.*;
             proxy.allocator = allocator;

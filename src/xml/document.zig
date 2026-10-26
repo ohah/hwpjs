@@ -100,8 +100,12 @@ pub fn visit(a: std.mem.Allocator, bytes: []const u8, options: Options, visitor:
         var local = options.tags;
         local.max_attributes = @min(local.max_attributes, options.max_attributes - report.attributes);
         local.max_references = @min(local.max_references, options.max_references - report.references);
-        var tag = try tags.parse(a, &opened.input, local);
-        defer tag.deinit(a);
+        // Attribute storage lives only until this synchronous event completes.
+        // Keep the owned public tag parser unchanged; large tags still use a.
+        var scratch = @import("../compat/stack_fallback.zig").stackFallback(4096, a);
+        const tag_allocator = scratch.get();
+        var tag = try tags.parse(tag_allocator, &opened.input, local);
+        defer tag.deinit(tag_allocator);
         if (tag.unresolved != 0) return error.UnresolvedXmlEntity;
         report.attributes += tag.attributes.len;
         report.references += tag.references;

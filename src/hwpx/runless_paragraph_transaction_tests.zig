@@ -39,7 +39,7 @@ test "runless first input transaction retains source and sole text owner on ever
             try std.testing.expectEqualSlices(u8, bytes, proxy.source);
         }
     };
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &original, input });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &original, input });
     try std.testing.expect(original.sections[0].structure_values == null);
     const saved = try original.save();
     defer a.free(saved);

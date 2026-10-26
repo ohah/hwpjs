@@ -1,12 +1,13 @@
-//! Current paragraph spelling shares the field command's segment ownership.
+//! Protected display spelling under the existing field-label eligibility policy.
 const std = @import("std");
+const editor = @import("editor_session.zig");
 
-pub fn read(session: anytype, section_index: usize, paragraph: usize) ![]u8 {
+pub fn read(session: *const editor.Session, section: usize, paragraph: usize) ![]u8 {
     const a = session.allocator;
-    const labels = try session.fieldLabels(section_index, paragraph);
+    const labels = try session.fieldLabels(section, paragraph);
     defer a.free(labels);
     if (labels.len == 0) return error.UnsupportedFieldLabelDisplay;
-    const part = &session.sections[section_index];
+    const part = &session.sections[section];
     if (part.structure_values) |*values| {
         if (part.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
         const index = paragraph - part.first_paragraph;
@@ -21,7 +22,7 @@ pub fn read(session: anytype, section_index: usize, paragraph: usize) ![]u8 {
             return spelling(a, &row.sites, positions, session.options.max_text_bytes);
         }
     }
-    const prepared = try @import("field_label_session.zig").prepare(session, section_index, paragraph, labels[0].begin_element);
+    const prepared = try @import("field_label_session.zig").prepare(session, section, paragraph, labels[0].begin_element);
     defer prepared.deinit(a);
     return spelling(a, prepared.sites, prepared.segments, session.options.max_text_bytes);
 }

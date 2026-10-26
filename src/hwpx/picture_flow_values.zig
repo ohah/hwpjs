@@ -21,9 +21,23 @@ pub fn readContainer(a: std.mem.Allocator, tree: *const Tree, container: usize) 
     return readComponent(a, tree, container);
 }
 
+pub fn readCurve(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "curve")) return error.InvalidCurveGeometryNode;
+    return readComponent(a, tree, node);
+}
+
+pub fn readEllipse(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ellipse")) return error.InvalidEllipseGeometryNode;
+    return readComponent(a, tree, node);
+}
+
 pub fn readRectangle(a: std.mem.Allocator, tree: *const Tree, rectangle: usize) !Values {
     if (rectangle >= tree.elements.len or !fields.childIs(tree, rectangle, "rect")) return error.InvalidDrawingTextNode;
     return readComponent(a, tree, rectangle);
+}
+pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
+    if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
+    return readComponent(a, tree, node);
 }
 pub fn readForm(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     const kind = @import("run_anchor.zig").kind(tree, node) orelse return error.InvalidFormNode;
@@ -31,16 +45,11 @@ pub fn readForm(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     return readComponent(a, tree, node);
 }
 
-pub fn readOle(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
-    if (node >= tree.elements.len or !fields.childIs(tree, node, "ole")) return error.InvalidOleDisplayNode;
-    return readComponent(a, tree, node);
-}
-
 fn readComponent(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     var value: Values = .{};
     value.text_wrap = try enums.readExtended(a, tree, node, specs[3]);
     value.text_flow = try enums.read(a, tree, node, specs[4]);
-    if (try tree.attributeValue(a, node, "", specs[1].name)) |raw| value.z_order = try fields.margin(a, raw, 4096);
+    value.z_order = try readZOrder(a, tree, node);
     var missing: usize = 0;
     var duplicate: usize = 0;
     const margins = fields.uniqueChild(tree, node, "outMargin", &missing, &duplicate);
@@ -51,6 +60,12 @@ fn readComponent(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
         }
     }
     return value;
+}
+
+/// Shared raw order for shape/table adapters; absent is not an implicit zero.
+pub fn readZOrder(a: std.mem.Allocator, tree: *const Tree, node: usize) !?i64 {
+    const raw = (try tree.attributeValue(a, node, "", specs[1].name)) orelse return null;
+    return try fields.margin(a, raw, 4096);
 }
 
 pub fn readLine(a: std.mem.Allocator, tree: *const Tree, line: usize) !Values {

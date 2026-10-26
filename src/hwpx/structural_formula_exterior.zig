@@ -20,26 +20,14 @@ pub fn prepare(session: *const editor.Session, section_index: usize, paragraph: 
     }
     if (owners != 1) return error.DuplicateCurrentTextOwner;
     const a = session.allocator;
-    var projection = try @import("paragraph_structure_projection.zig").collect(a, &section.tree, values, editor.siteOptions(session.options));
-    defer projection.deinit(a);
-    const locations = try @import("text_site_locations.zig").build(a, &section.tree, &projection, editor.siteOptions(session.options));
-    defer a.free(locations);
-    var proxy = session.*;
-    proxy.sections = try a.dupe(editor.Section, session.sections);
-    defer a.free(proxy.sections);
-    const flat = &proxy.sections[section_index];
-    flat.structure_values = null;
-    flat.sites = projection;
-    flat.locations = locations;
-    flat.first_paragraph = section.source_first_paragraph orelse section.first_paragraph;
-    flat.source_first_paragraph = null;
-    for (locations) |location| flat.last_paragraph = @max(flat.last_paragraph, location.paragraph_ordinal);
-    var plan = (try plan_mod.prepare(&proxy, section_index, ordinal, start, end)) orelse return null;
+    var flat = try @import("structural_source_view.zig").open(a, session, section_index);
+    defer flat.deinit();
+    var plan = (try plan_mod.prepare(&flat.session, section_index, ordinal, start, end)) orelse return null;
     errdefer plan.deinit(a);
     // Global projection indices are converted to the authoritative local owner.
     for (plan.segments) |*segment| {
-        if (segment.kind != .text or segment.index >= projection.items.len) return error.SourceBindingMismatch;
-        const source = projection.items[segment.index];
+        if (segment.kind != .text or segment.index >= flat.sites.items.len) return error.SourceBindingMismatch;
+        const source = flat.sites.items[segment.index];
         var found: ?usize = null;
         for (row.sites.items, 0..) |site, index| if (site.element_index == source.element_index and site.start == source.start and site.end == source.end) {
             if (found != null) return error.SourceBindingMismatch;
@@ -71,10 +59,11 @@ pub fn splice(session: *editor.Session, section_index: usize, paragraph: usize, 
     var draft = try current.clone(a);
     defer draft.deinit(a);
     const row = &draft.paragraphs[index];
+    const target = try @import("field_exterior_insertion_site.zig").fromSession(session, section_index, &row.sites, plan.segments, plan.start, plan.end - plan.start);
     const changed = if (row.character_styles != null)
-        try @import("character_style_splice.zig").splicePositions(a, row, plan.segments, plan.start, plan.end - plan.start, inserted, limit -| other)
+        try @import("character_style_splice.zig").splicePositionsAtSiteWithTree(a, &section.tree, row, plan.segments, plan.start, plan.end - plan.start, inserted, limit -| other, target)
     else
-        try @import("text_splice_transaction.zig").spliceProjected(a, &row.sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit -| other, null);
+        try @import("text_splice_transaction.zig").spliceProjected(a, &row.sites, plan.segments, plan.start, plan.end - plan.start, inserted, limit -| other, target);
     if (!changed) return false;
     var proxy = session.*;
     proxy.sections = try a.dupe(editor.Section, session.sections);

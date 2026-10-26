@@ -5,7 +5,7 @@ const Sites = @import("text_sites.zig").Sites;
 const Segment = @import("paragraph_text_positions.zig").Segment;
 const uri = @import("document_xml.zig").paragraph_uri;
 
-pub const Range = struct { start_unit: usize, end_unit: usize, char_shape_id: ?u32 };
+pub const Range = struct { start_unit: usize, end_unit: usize, char_shape_id: ?u32, inline_element: ?usize = null };
 
 pub fn build(a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, segments: []const Segment, limit: usize) ![]Range {
     if (segments.len > limit) return error.LimitExceeded;
@@ -32,7 +32,10 @@ pub fn build(a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, segme
         }
         const owner = run orelse return error.SourceBindingMismatch;
         const id = try @import("character_style_projection.zig").runId(a, tree, owner);
-        range.* = .{ .start_unit = segment.start_unit, .end_unit = segment.end_unit, .char_shape_id = id };
+        range.* = .{ .start_unit = segment.start_unit, .end_unit = segment.end_unit, .char_shape_id = id, .inline_element = switch (segment.kind) {
+            .tab, .nb_space, .fw_space, .line_break, .hypen => segment.index,
+            else => null,
+        } };
         cursor = segment.end_unit;
     }
     return output;

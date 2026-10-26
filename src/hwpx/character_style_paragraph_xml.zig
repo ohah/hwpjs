@@ -5,6 +5,21 @@ pub fn write(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tre
 }
 
 pub fn writeFieldsDirty(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, fields: []const @import("text_sites_save.zig").FieldDirty, limit: usize) ![]u8 {
+    return writeFieldsDirtyOptions(a, tree, paragraph, fields, .{}, limit);
+}
+
+/// field group이 이미 사용하는 canonical collector options를 그대로 소비합니다.
+pub fn writeFieldsDirtyOptions(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, fields: []const @import("text_sites_save.zig").FieldDirty, options: @import("text_sites.zig").Options, limit: usize) ![]u8 {
+    return writeImpl(a, tree, paragraph, fields, options, limit, null);
+}
+
+/// 이번 출력 호출에서 실제 fragment branch를 선택한 source run만 기록합니다.
+/// trace 배열은 호출자가 소유하고, 오류 시에도 호출자가 해제합니다.
+pub fn writeFieldsDirtyOptionsTrace(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, fields: []const @import("text_sites_save.zig").FieldDirty, options: @import("text_sites.zig").Options, limit: usize, fragmented_runs: *std.ArrayList(usize)) ![]u8 {
+    return writeImpl(a, tree, paragraph, fields, options, limit, fragmented_runs);
+}
+
+fn writeImpl(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, paragraph: *const @import("paragraph_structure_values.zig").Paragraph, fields: []const @import("text_sites_save.zig").FieldDirty, options: @import("text_sites.zig").Options, limit: usize, fragmented_runs: ?*std.ArrayList(usize)) ![]u8 {
     if (paragraph.pieces != null) return error.UnsupportedStructuralCharacterStyle;
     const spans = paragraph.character_styles orelse return error.InvalidTextSites;
     if (paragraph.template_element >= tree.elements.len) return error.InvalidParagraphElement;
@@ -55,7 +70,13 @@ pub fn writeFieldsDirty(a: std.mem.Allocator, tree: *const @import("xml_part_tre
                 previous_site = span.site_index;
             }
         }
-        const xml = if (has_anchor or paragraph.protected_positions != null)
+        const title_run = if (!has_anchor and !has_tab and paragraph.protected_positions == null)
+            try @import("character_style_source_title_run.zig").prepareOptions(a, tree, paragraph, spans[index..end], fields, options, limit)
+        else
+            null;
+        const xml = if (title_run) |value|
+            value.bytes
+        else if (has_anchor or paragraph.protected_positions != null)
             try @import("character_style_anchor_save.zig").writeRun(a, tree, paragraph, spans[index..end], first.run_element, limit)
         else if (has_tab)
             try @import("character_style_tab_save.zig").writeRun(a, tree, paragraph, spans[index..end], first.run_element, limit)
@@ -64,6 +85,15 @@ pub fn writeFieldsDirty(a: std.mem.Allocator, tree: *const @import("xml_part_tre
         else
             try @import("character_style_run_xml.zig").write(a, tree, &paragraph.sites, spans[index..end], limit);
         errdefer a.free(xml);
+        if (fragmented_runs) |trace| {
+            if (title_run) |emitted| {
+                if (emitted.per_span) {
+                    // trace 저장 뒤에 XML 소유권을 changes로 넘겨 실패 시 중복 해제를 피합니다.
+                    if (std.mem.indexOfScalar(usize, trace.items, first.run_element) != null) return error.SourceBindingMismatch;
+                    try trace.append(a, first.run_element);
+                }
+            }
+        }
         try changes.append(a, .{ .start = run.start_tag.start - node.start_tag.start, .end = run.end - node.start_tag.start, .text = "", .serialized_xml = xml });
         units = spans[end - 1].end_unit;
         site_index = next_site;

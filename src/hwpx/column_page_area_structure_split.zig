@@ -57,7 +57,7 @@ test "mixed declaration generated resplit candidate preserves group through allo
         }
     };
     try Probe.run(a, &section.tree, current);
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, current });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, current });
     try std.testing.expectEqualDeep(snapshot, current.*);
 }
 
@@ -88,7 +88,7 @@ test "mixed declaration split candidate orders nested rows by actual declaration
         }
     };
     for (0..6) |cut| try Probe.run(a, &section.tree, current, @intCast(cut));
-    try std.testing.checkAllAllocationFailures(a, Probe.run, .{ &section.tree, current, @as(u32, 1) });
+    try @import("../testing/allocation_failures.zig").check(Probe.run, .{ &section.tree, current, @as(u32, 1) });
     var relocated = try current.clone(a);
     defer relocated.deinit(a);
     relocated.paragraphs[0].page_area_positions.?[0].unit = 0;

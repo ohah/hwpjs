@@ -20,6 +20,10 @@ pub const Paragraph = struct {
     sites: Sites,
     /// Authoritative current style partition when materialized; never text/XML.
     character_styles: ?[]@import("character_style_paint.zig").Span = null,
+    /// 최초 서식 출력의 title fragment style. 현재 텍스트는 sites만 소유합니다.
+    title_fragment_owners: ?[]@import("title_fragment_owner.zig").Owner = null,
+    /// writer와 같은 출력 topology의 숫자 계획. getter는 갱신하지 않습니다.
+    title_output_projection: ?@import("title_output_projection.zig").Plan = null,
     /// When set, Sites remains the only text owner; pieces hold provenance only.
     pieces: ?[]@import("paragraph_joined_values.zig").Piece = null,
     /// null은 원본 귀속, 빈 배열은 현재 문단에 보호 개체가 없음을 나타냅니다.
@@ -40,6 +44,8 @@ pub const Paragraph = struct {
     }
     pub fn deinit(self: *Paragraph, a: std.mem.Allocator) void {
         if (self.character_styles) |styles| a.free(styles);
+        if (self.title_fragment_owners) |owners| a.free(owners);
+        if (self.title_output_projection) |*plan| plan.deinit(a);
         if (self.pieces) |pieces| a.free(pieces);
         if (self.protected_positions) |items| a.free(items);
         if (self.field_positions) |items| a.free(items);
@@ -52,6 +58,13 @@ pub const Paragraph = struct {
     pub fn clone(self: *const Paragraph, a: std.mem.Allocator) !Paragraph {
         const styles = if (self.character_styles) |items| try a.dupe(@import("character_style_paint.zig").Span, items) else null;
         errdefer if (styles) |items| a.free(items);
+        const title_fragment_owners = if (self.title_fragment_owners) |items| try a.dupe(@import("title_fragment_owner.zig").Owner, items) else null;
+        errdefer if (title_fragment_owners) |items| a.free(items);
+        const title_output_projection = if (self.title_output_projection) |*plan| try plan.clone(a) else null;
+        errdefer if (title_output_projection) |plan| {
+            var failed_plan = plan;
+            failed_plan.deinit(a);
+        };
         const pieces = if (self.pieces) |items| try a.dupe(@import("paragraph_joined_values.zig").Piece, items) else null;
         errdefer if (pieces) |items| a.free(items);
         const protected = if (self.protected_positions) |items| try a.dupe(ProtectedPosition, items) else null;
@@ -64,7 +77,7 @@ pub const Paragraph = struct {
         errdefer if (columns) |items| a.free(items);
         const areas = if (self.page_area_positions) |items| try a.dupe(@import("page_area_position.zig").Position, items) else null;
         errdefer if (areas) |items| a.free(items);
-        return .{ .template_element = self.template_element, .source_ordinal = self.source_ordinal, .generated_id = self.generated_id, .break_before = self.break_before, .paragraph_shape_id = self.paragraph_shape_id, .synthesized_run_character_id = self.synthesized_run_character_id, .sites = try self.sites.clone(a), .pieces = pieces, .character_styles = styles, .protected_positions = protected, .field_positions = field_positions, .title_positions = titles, .column_boundaries = columns, .page_area_positions = areas, .column_structure_changed = self.column_structure_changed };
+        return .{ .template_element = self.template_element, .source_ordinal = self.source_ordinal, .generated_id = self.generated_id, .break_before = self.break_before, .paragraph_shape_id = self.paragraph_shape_id, .synthesized_run_character_id = self.synthesized_run_character_id, .sites = try self.sites.clone(a), .pieces = pieces, .character_styles = styles, .title_fragment_owners = title_fragment_owners, .title_output_projection = title_output_projection, .protected_positions = protected, .field_positions = field_positions, .title_positions = titles, .column_boundaries = columns, .page_area_positions = areas, .column_structure_changed = self.column_structure_changed };
     }
 };
 
@@ -92,6 +105,19 @@ pub const Values = struct {
         var bytes = std.math.mul(usize, self.paragraphs.len, @sizeOf(Paragraph)) catch return error.LimitExceeded;
         if (bytes > limit) return error.LimitExceeded;
         for (self.paragraphs) |paragraph| {
+            if (paragraph.title_output_projection) |plan| {
+                const amount = std.math.mul(usize, plan.ranges.len, @sizeOf(@import("character_style_display_ranges.zig").Range)) catch return error.LimitExceeded;
+                if (amount > limit - bytes) return error.LimitExceeded;
+                bytes += amount;
+                const gap_amount = std.math.mul(usize, plan.derived_gaps.len, @sizeOf(@import("title_derived_gap.zig").Gap)) catch return error.LimitExceeded;
+                if (gap_amount > limit - bytes) return error.LimitExceeded;
+                bytes += gap_amount;
+            }
+            if (paragraph.title_fragment_owners) |items| {
+                const amount = std.math.mul(usize, items.len, @sizeOf(@import("title_fragment_owner.zig").Owner)) catch return error.LimitExceeded;
+                if (amount > limit - bytes) return error.LimitExceeded;
+                bytes += amount;
+            }
             if (paragraph.title_positions) |items| {
                 const amount = std.math.mul(usize, items.len, @sizeOf(@import("title_mark_position.zig").Position)) catch return error.LimitExceeded;
                 if (amount > limit - bytes) return error.LimitExceeded;

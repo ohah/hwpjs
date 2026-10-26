@@ -6,7 +6,7 @@ pub fn encode(a: std.mem.Allocator, row: Snapshot) ![]u8 {
     var ids: [4]u32 = undefined;
     for ([_]usize{ row.node, row.paragraph, row.anchor_node, row.anchor_unit }, &ids) |value, *id| id.* = std.math.cast(u32, value) orelse return error.LimitExceeded;
     for (row.endpoints) |point| for (point) |number| if (!std.math.isFinite(number)) return error.InvalidLineDisplay;
-    if ((row.stroke.color orelse 0) > 0xffffff or (row.stroke.style orelse 0) > 1) return error.InvalidLineDisplay;
+    if ((row.stroke.color orelse 0) > 0xffffff or (row.stroke.style orelse 0) > @import("../hwpx/line_stroke_values.zig").max_simple_style) return error.InvalidLineDisplay;
     const bytes = try a.alloc(u8, 72);
     @memset(bytes, 0);
     std.mem.writeInt(u32, bytes[0..4], 0x32444c48, .little);
@@ -50,4 +50,13 @@ test "HWPX line display wire validates scalars finite points and allocation fail
     try std.testing.expectError(error.InvalidLineDisplay, encode(a, .{ .node = 7, .paragraph = 0, .anchor_node = 7, .anchor_unit = 0, .endpoints = .{ .{ 0, 0 }, .{ 0, 0 } } }));
     try std.testing.expectError(error.InvalidLineDisplay, encode(a, .{ .node = 7, .paragraph = 1, .anchor_node = 7, .anchor_unit = 0, .endpoints = .{ .{ std.math.nan(f64), 0 }, .{ 0, 0 } } }));
     try std.testing.expectError(error.InvalidLineNodes, encodeNodes(a, &.{ 7, 7 }));
+    for (0..7) |style| {
+        const row: Snapshot = .{ .node = 7, .paragraph = 1, .anchor_node = 7, .anchor_unit = 0, .endpoints = .{ .{ 0, 0 }, .{ 10, 0 } }, .stroke = .{ .style = @intCast(style) } };
+        if (style <= @import("../hwpx/line_stroke_values.zig").max_simple_style) {
+            const bytes = try encode(a, row);
+            defer a.free(bytes);
+            try std.testing.expectEqual(@as(u32, @intCast(style)), std.mem.readInt(u32, bytes[68..72], .little));
+            try std.testing.expectEqual(@as(u32, 4), std.mem.readInt(u32, bytes[56..60], .little));
+        } else try std.testing.expectError(error.InvalidLineDisplay, encode(a, row));
+    }
 }

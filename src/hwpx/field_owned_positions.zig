@@ -6,5 +6,5 @@ pub fn build(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tre
     if (paragraph.joined()) |joined| return @import("paragraph_joined_positions.zig").buildWithFields(a, tree, &joined);
     const locations = try @import("paragraph_structure_locations.zig").build(a, tree, paragraph);
     defer a.free(locations);
-    return @import("paragraph_text_positions.zig").build(a, tree, &paragraph.sites, locations, 1);
+    return @import("paragraph_text_positions.zig").buildForFieldText(a, tree, &paragraph.sites, locations, 1);
 }

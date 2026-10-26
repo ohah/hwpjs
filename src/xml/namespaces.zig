@@ -80,13 +80,17 @@ pub const State = struct {
             if (declaration(name)) |prefix| try self.bind(a, prefix, attribute.value, options);
         }
         _ = try self.resolve(try qname.parse(tag.name), false);
+        // Duplicate detection is local to this tag; persistent bindings still
+        // use the caller allocator and are never stored in transient scratch.
+        var scratch = @import("../compat/stack_fallback.zig").stackFallback(2048, a);
+        const transient = scratch.get();
         var seen: std.HashMapUnmanaged(Expanded, void, ExpandedContext, 80) = .empty;
-        defer seen.deinit(a);
+        defer seen.deinit(transient);
         for (tag.attributes) |attribute| {
             const name = try qname.parse(attribute.name);
             if (declaration(name) != null) continue;
             const expanded = try self.resolve(name, true);
-            if ((try seen.getOrPut(a, expanded)).found_existing) return error.DuplicateXmlExpandedAttribute;
+            if ((try seen.getOrPut(transient, expanded)).found_existing) return error.DuplicateXmlExpandedAttribute;
         }
         return marker;
     }

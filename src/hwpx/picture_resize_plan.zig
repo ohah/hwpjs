@@ -6,13 +6,14 @@ pub const Plan = struct {
     grouped: bool,
     dimensions: @import("picture_dimension_write.zig").Update,
     matrices: [2]@import("picture_matrix_edit_values.zig").Entry,
+    frame: ?@import("picture_frame_write.zig").Update = null,
 };
 pub fn build(session: *const editor.Session, section_index: usize, picture: usize, target: [2]u32) !Plan {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const a = session.allocator;
     const section = &session.sections[section_index];
     const tree = &section.tree;
-    const geometry = try @import("picture_geometry_values.zig").read(a, tree, picture);
+    const geometry = try @import("picture_current_geometry.zig").read(a, tree, &section.picture_dimensions, &section.picture_frames, picture);
     const dimensions = try @import("picture_dimension_edit_values.zig").read(a, tree, &section.picture_dimensions, picture);
     const grouped = try @import("picture_resize_size_policy.zig").grouped(a, tree, picture, dimensions);
     if (!grouped and (geometry.width_relative != 4 or geometry.height_relative != 2)) return error.UnsupportedRelativePictureResize;
@@ -23,7 +24,9 @@ pub fn build(session: *const editor.Session, section_index: usize, picture: usiz
     const corners = try @import("picture_rendering_corners.zig").apply(rectangle, total);
     const axes = [2]f64{ std.math.hypot(corners[1][0] - corners[0][0], corners[1][1] - corners[0][1]), std.math.hypot(corners[3][0] - corners[0][0], corners[3][1] - corners[0][1]) };
     const declared = if (grouped) dimensions.current else dimensions.display;
-    const noop = declared[0] == target[0] and declared[1] == target[1] and @abs(axes[0] - @as(f64, @floatFromInt(target[0]))) <= 0.01 and @abs(axes[1] - @as(f64, @floatFromInt(target[1]))) <= 0.01;
+    const rotated = !grouped and (transform.angle orelse 0) != 0;
+    const tolerance: f64 = if (rotated) 0.5 else 0.01;
+    const noop = (if (rotated) @import("picture_rotated_resize_frame.zig").matches(corners, dimensions.display) else declared[0] == target[0] and declared[1] == target[1]) and @abs(axes[0] - @as(f64, @floatFromInt(target[0]))) <= tolerance and @abs(axes[1] - @as(f64, @floatFromInt(target[1]))) <= tolerance;
     const origin = [2]f64{ @floatFromInt(rectangle.points[0][0].?), @floatFromInt(rectangle.points[0][1].?) };
     const basis = [2][2]f64{
         .{ @as(f64, @floatFromInt(rectangle.points[1][0].?)) - origin[0], @as(f64, @floatFromInt(rectangle.points[1][1].?)) - origin[1] },
@@ -36,6 +39,18 @@ pub fn build(session: *const editor.Session, section_index: usize, picture: usiz
     translation[2] += desired[2] - unanchored[2];
     translation[5] += desired[5] - unanchored[5];
     const scale = try affine.multiply(try affine.required(transform.matrices[transform.matrices.len - 2]), change);
+    var frame: ?@import("picture_frame_write.zig").Update = null;
+    var display = target;
+    if (rotated and !noop) {
+        if (transform.flip[0] != false or transform.flip[1] != false or transform.reverse != false) return error.UnsupportedRotatedPictureResizeTransform;
+        const resized = try @import("picture_rendering_corners.zig").apply(rectangle, desired);
+        const position = try @import("picture_position_values.zig").read(a, tree, picture);
+        const fitted = try @import("picture_rotated_resize_frame.zig").build(resized, dimensions.display, geometry, position);
+        display = fitted.display;
+        frame = fitted.update;
+        translation[2] -= fitted.shift[0];
+        translation[5] -= fitted.shift[1];
+    }
     var missing: usize = 0;
     var duplicate: usize = 0;
     const rendering = @import("table_xml_fields.zig").uniqueChild(tree, picture, "renderingInfo", &missing, &duplicate) orelse return error.MissingPictureMatrix;
@@ -48,7 +63,7 @@ pub fn build(session: *const editor.Session, section_index: usize, picture: usiz
         if (kind == .scale) last_scale = node;
     }
     _ = try @import("../geometry/affine_row.zig").finite(translation);
-    return .{ .grouped = grouped, .dimensions = if (noop) .{} else .{ .display = if (grouped) null else target, .current = target }, .matrices = .{
+    return .{ .grouped = grouped, .frame = frame, .dimensions = if (noop) .{} else .{ .display = if (grouped) null else display, .current = target }, .matrices = .{
         .{ .matrix_node = first orelse return error.MissingPictureMatrix, .values = translation },
         .{ .matrix_node = last_scale orelse return error.MissingPictureMatrix, .values = scale },
     } };

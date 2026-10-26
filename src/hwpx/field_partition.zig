@@ -51,7 +51,7 @@ fn validateMode(a: std.mem.Allocator, trees: []const Tree, section: usize, rows:
         const owned = row.field_positions orelse return error.SourceBindingMismatch;
         const locations = try @import("paragraph_structure_locations.zig").build(a, tree, row);
         defer a.free(locations);
-        const positions = try @import("paragraph_text_positions.zig").build(a, tree, &row.sites, locations, 1);
+        const positions = try @import("paragraph_text_positions.zig").buildForFieldText(a, tree, &row.sites, locations, 1);
         defer a.free(positions);
         for (positions) |position| if (position.kind != .text) return error.UnsupportedInlineControl;
         var cursor: usize = 0;

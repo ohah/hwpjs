@@ -13,7 +13,7 @@ pub fn build(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_
     return buildMode(a, tree, sites, locations, paragraph, false);
 }
 
-/// Caller has validated field text policy and marker ownership.
+/// Projection only; field caller retains link, scope and permission validation.
 pub fn buildForFieldText(a: std.mem.Allocator, tree: *const trees.Tree, sites: *const sites_module.Sites, locations: []const scanner.Location, paragraph: usize) ![]positions.Segment {
     return buildMode(a, tree, sites, locations, paragraph, true);
 }
