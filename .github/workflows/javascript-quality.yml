@@ -21,6 +21,8 @@ jobs:
           bun-version-file: package.json
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Test public package JSX runtime compatibility
+        run: bun test ./tests/public-package-jsx-runtime.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts
