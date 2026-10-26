@@ -1,0 +1,14 @@
+/* Shared independently authored window chrome; no reference-product assets. */
+.hwp-dialog-layer{position:fixed;inset:0;margin:auto;width:min(520px,calc(100vw - 24px));height:max-content;max-height:calc(100dvh - 32px);padding:0;border:1px solid #9ba9cd;border-radius:4px;background:#fbfcff;color:#243044;box-shadow:0 8px 28px #152b4433;z-index:100;font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.hwp-dialog-layer::backdrop{background:#13243a26}
+.hwp-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 12px;border-bottom:1px solid #cbd4e6;background:#e9edf6;cursor:move;user-select:none;touch-action:none}
+.hwp-dialog-header h2{font-size:13px;font-weight:600;margin:0}
+.hwp-dialog-layer .hwp-dialog-dismiss{font-size:20px;line-height:20px;padding:0 5px;background:transparent;border:0;cursor:pointer;color:#43516b}
+.hwp-dialog-body{padding:14px;overflow:auto;max-height:calc(100dvh - 125px)}
+.hwp-dialog-footer{display:flex;justify-content:flex-end;gap:8px;padding:0 14px 14px}
+.hwp-dialog-layer button{font:inherit;border:1px solid #c7cfdf;border-radius:3px;background:#fff;color:inherit;padding:5px 12px;cursor:pointer}
+.hwp-dialog-layer button:hover:enabled{background:#edf3fc;border-color:#9cafcf}
+.hwp-dialog-layer button:disabled{opacity:.55;cursor:not-allowed}
+.hwp-dialog-layer :focus-visible{outline:2px solid #2463c4;outline-offset:2px}
+
+.hwp-dialog-layer [hidden]{display:none!important}

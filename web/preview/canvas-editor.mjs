@@ -46,6 +46,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
   };
   let target = null, committed = "", anchor = null, focus = null, pending = null, composing = false, drag = null;
   let preferredX = null, dragScale = 1;
+  let selectionOrigin = "canvas";
   const viewScale = () => renderer.viewScale?.() ?? 1;
   let pictureResizeAvailable = false;
   let typingFont = null;
@@ -169,7 +170,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     canvas.dataset.composing = String(composing);
     place();
     onComposition({ composing, pending: Boolean(pending || historyPending || inputIntents.size) });
-    if (!composing && !pending && !historyPending && !inputIntents.size && input.value === committed) onCommittedSelection(anchor && focus ? { anchor: { ...anchor }, focus: { ...focus } } : null);
+    if (!composing && !pending && !historyPending && !inputIntents.size && input.value === committed) onCommittedSelection(anchor && focus ? { anchor: { ...anchor }, focus: { ...focus } } : null, { origin: selectionOrigin });
   };
   const sync = () => {
     if (!target || multipleParagraphs()) return;
@@ -184,7 +185,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     updateReadOnly();
     paint();
   };
-  const setSelection = (a, f, nextX = null) => {
+  const setSelection = (a, f, nextX = null, origin = "canvas") => {
+    selectionOrigin = origin;
     if (draftSelection && !sameParagraph(draftSelection.focus, f)) draftSelection = null;
     if (typingFont && !sameParagraph(typingFont, f)) typingFont = null;
     if (typingProperties && !sameParagraph(typingProperties, f)) typingProperties = null;
@@ -274,6 +276,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       rangePermission.invalidate(); splitPermission.invalidate();
       typingFont = null; typingProperties = null; draftSelection = null;
+      selectionOrigin = "canvas";
       anchor = null; focus = null; target = null; drag = null;
       input.blur(); input.value = ""; committed = ""; input.disabled = true;
       renderer.selectPicture?.(picture.picture);
@@ -940,10 +943,10 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     && renderer.paragraph(target)?.selectionOwner === `section:${target.section}:body`
     && (textEditable() || Boolean(splitQueryAvailable && editRange() && splitPermission.allowed(editRange())));
   const canSetTypingProperties = () => Boolean(selectedRange()) && input.selectionStart === input.selectionEnd && textEditable() && renderer.characterPropertyTextAvailable?.() === true && (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true);
-  const resetExternalSelection = controller => {
+  const resetExternalSelection = (controller, origin = "canvas") => {
     if (historyRevision !== null && anchor && focus) historySelections.remember(historyRevision, { anchor, focus });
     const available = historyAvailable, structure = structureAvailable, merge = mergeAvailable, splitQuery = splitQueryAvailable, breaks = paragraphBreakAvailable;
-    controller.reset({ preserveHistory: true });
+    controller.reset({ preserveHistory: true, selectionOrigin: origin });
     historyAvailable = available; structureAvailable = structure; mergeAvailable = merge; splitQueryAvailable = splitQuery; paragraphBreakAvailable = breaks;
   };
   const settledSelection = (allowEmpty = false) => {
@@ -1017,7 +1020,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       return typeof clipboard?.writeText === "function" && settledSelection() !== null && (!cut || selectionTextEditAvailable());
     },
     transferSelection,
-    selectTextRange({ section, paragraph, startUnit, endUnit, affinity = "forward" }, { focusInput = true } = {}) {
+    selectTextRange({ section, paragraph, startUnit, endUnit, affinity = "forward" }, { focusInput = true, selectionOrigin: origin = "canvas" } = {}) {
       if (!["forward", "backward"].includes(affinity)) return false;
       if (composing || pending || historyPending || drag !== null || input.value !== committed || controls.busy()) return false;
       const next = { section, paragraph }, row = renderer.paragraph(next);
@@ -1025,7 +1028,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       if (snapUnit(row.text, startUnit) !== startUnit || snapUnit(row.text, endUnit) !== endUnit) return false;
       if (!caretGeometry(renderer.layout(), { ...next, unit: startUnit })) return false;
       target = next; committed = row.text; input.value = committed; input.disabled = false;
-      setSelection({ ...next, unit: affinity === "backward" ? endUnit : startUnit }, { ...next, unit: affinity === "backward" ? startUnit : endUnit });
+      setSelection({ ...next, unit: affinity === "backward" ? endUnit : startUnit }, { ...next, unit: affinity === "backward" ? startUnit : endUnit }, null, origin);
       if (focusInput) input.focus({ preventScroll: true }); paint(); reveal();
       return true;
     },
@@ -1237,7 +1240,8 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
     history: kind => !historyIntents.size && performHistory(kind),
     canRequestHistory,
     requestHistory: travel,
-    reset({ preserveHistory = false } = {}) {
+    reset({ preserveHistory = false, selectionOrigin: origin = "canvas" } = {}) {
+      selectionOrigin = origin;
       if (events.signal.aborted) return;
       historyIntents.clear(); deferredComposition = null; deferredReplies = [];
       if (!preserveHistory) pictureResizeAvailable = false;
@@ -1260,7 +1264,7 @@ export function createCanvasEditor({ canvas, viewport, input, renderer, controls
       if (events.signal.aborted) return;
       if (message.kind === "set-edit-window") return;
       if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) {
-        resetExternalSelection(this);
+        resetExternalSelection(this, message.origin === "core" ? "core" : "canvas");
       }
     },
     message(message) {

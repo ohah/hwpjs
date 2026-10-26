@@ -47,6 +47,7 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
   let frameObserver: ResizeObserver | undefined;
   let unsubscribe: (() => void) | undefined, bridge: ReturnType<typeof createControlBridge> | undefined;
   let displayed = '', selectionKey = '', observedStateVersion=-1;
+  let explicitClearPending: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   const status = (message: string) => { if (!closed) onStatus(message); };
   const note = { set textContent(value: string) { status(value); } };
   const alignFrame = (layout = renderer?.layout()) => {
@@ -81,25 +82,25 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
       if (!bridge?.busy() && nextSelectionKey !== selectionKey) {
         selectionKey = nextSelectionKey;
         if (selected) {
-          if (!direct?.selectTextRange(selected, { focusInput: false })) status('선택한 텍스트의 화면 위치를 표시할 수 없습니다.');
+          if (!direct?.selectTextRange(selected, { focusInput: false, selectionOrigin: "core" })) status('선택한 텍스트의 화면 위치를 표시할 수 없습니다.');
         } else direct?.external({ kind: 'external-update', origin: 'core' });
       }
       return;
     }
     const changedDocument = displayed.split(':').slice(0,-2).join(':') !== key.split(':').slice(0,-2).join(':');
-    if (changedDocument) { direct?.reset(); renderer.clear(); selectionKey = ''; }
+    if (changedDocument) { direct?.reset({ selectionOrigin: "core" }); renderer.clear(); selectionKey = ''; }
     const retained = !changedDocument && state.selection ? state.selection as SelectionTarget : undefined;
     if (!retained && !changedDocument && displayed && !bridge?.busy()) direct?.external({ kind: "external-update", origin: "core" });
     displayed = key;
     renderer.show(state.content, { preserveScroll: !changedDocument, resourceEpoch: `${state.documentId}:${state.generation}:${state.operationRevision}`, resourceDocument: `${state.documentId}:${state.generation}` });
     if (retained && !bridge?.busy()) {
       direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision });
-      if (!direct?.selectTextRange(retained, { focusInput: false })) direct?.external({ kind: "external-update", origin: "core" });
+      if (!direct?.selectTextRange(retained, { focusInput: false, selectionOrigin: "core" })) direct?.external({ kind: "external-update", origin: "core" });
     }
     if (changedDocument) direct?.initializeCapabilities({ ...(state.capabilities as object), historyRevision: state.nativeHistoryRevision });
   };
   const cleanup = () => {
-    closed = true; frameObserver?.disconnect(); bridge?.close(); unsubscribe?.();
+    closed = true; explicitClearPending = undefined; frameObserver?.disconnect(); bridge?.close(); unsubscribe?.();
     try { direct?.close(); } finally { try { lease?.release(); } finally { renderer?.close(); container.remove(); } }
   };
   try {
@@ -117,7 +118,7 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
       platform: realm.navigator.platform,
       historyAvailability: () => getHistoryAvailability(editor.getEditorState()),
       queryEditRange: (m: RuntimeMessage) => bridge!.request(m), querySplitRange: (m: RuntimeMessage) => bridge!.request(m),
-      onCommittedSelection(value: any) {
+      onCommittedSelection(value: any, observation?: { origin?: string }) {
         if (closed || !lease?.isActive()) return;
         const state = editor.getEditorState();
         if (state.status !== 'ready') return;
@@ -129,9 +130,16 @@ export function createCanvasSurface({ root, editor, environment = {}, onStatus =
           startUnit: Math.min(value.anchor.unit, value.focus.unit), endUnit: Math.max(value.anchor.unit, value.focus.unit),
           affinity: value.anchor.unit > value.focus.unit ? 'backward' : 'forward' } : null;
         const key = JSON.stringify(target);
-        if (key === selectionKey) return;
+        const projectedClear = observation?.origin === "core" && target === null && state.selection == null;
+        const explicitClear = observation?.origin === "canvas" && target === null && state.selection === undefined;
+        if (key === selectionKey && (!explicitClear || explicitClearPending === state)) return;
         selectionKey = key;
-        void lease.publishSelection(target).catch(error => { if (!closed) status(String(error)); });
+        if (projectedClear) return;
+        const clearingState = explicitClear ? state : undefined;
+        if (clearingState) explicitClearPending = clearingState;
+        void lease.publishSelection(target).catch(error => { if (!closed) status(String(error)); }).finally(() => {
+          if (clearingState && explicitClearPending === clearingState) explicitClearPending = undefined;
+        });
       },
     });
     const resource = async (kind: string, payload: Record<string, number>, field: string) => {

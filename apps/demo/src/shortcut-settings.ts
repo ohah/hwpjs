@@ -1,4 +1,4 @@
-import {DEFAULT_KEYMAP,mergeKeymap,parseKeymapConfig,resolveShortcutLabel,compileKeymap,type KeymapConfig,type KeymapPlatform} from '@hwpjs/core';
+import {DEFAULT_KEYMAP,mergeKeymap,parseKeymapConfig,resolveShortcutLabel,compileKeymap,resolveKeyboardShortcut,type KeymapConfig,type KeymapPlatform} from '@hwpjs/core';
 import {createKeyboardShortcuts} from '@hwpjs/vanilla';
 import {DEMO_COMMAND_REGISTRY} from './command-support.ts';
 import type {DemoAction,DemoCommand} from './shell-contract.ts';
@@ -30,5 +30,6 @@ export function mountShortcutSettings(options:{root:HTMLElement;surface:HTMLElem
   if(closed)return;
   const url=URL.createObjectURL(new Blob([JSON.stringify(config,null,2)],{type:'application/json'})),link=doc.createElement('a');link.href=url;link.download='hwpjs-keymap.json';details.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  details.append(summary,locale,label,reset,download,list);options.root.append(details);render();
- return {getConfig:()=>config,setConfig:apply,dispose(){if(closed)return;closed=true;generation++;keyboard.dispose();reset.onclick=null;download.onclick=null;file.removeEventListener('change',changed);locale.removeEventListener('change',render);details.remove();}};
+ const resolveCommand=(event:KeyboardEvent)=>resolveKeyboardShortcut(compileKeymap(config,platform),{code:event.code,ctrlKey:event.ctrlKey,metaKey:event.metaKey,altKey:event.altKey,shiftKey:event.shiftKey,isComposing:event.isComposing,keyCode:event.keyCode,repeat:false,altGraph:event.getModifierState?.('AltGraph')===true})?.command;
+ return {resolveCommand,getConfig:()=>config,setConfig:apply,dispose(){if(closed)return;closed=true;generation++;keyboard.dispose();reset.onclick=null;download.onclick=null;file.removeEventListener('change',changed);locale.removeEventListener('change',render);details.remove();}};
 }
