@@ -1,3 +1,4 @@
+import type { NativeHistoryStats } from './history-options.ts';
 /** Owned command data at the backend boundary; never an authoritative document model. */
 export interface RuntimeMessage {
   kind: string;
@@ -17,6 +18,8 @@ export interface RuntimeReply {
   content?: unknown;
   error?: string;
   applied?: boolean;
+  historyStats?: NativeHistoryStats;
+  historyPoisoned?: boolean;
   historyRevision?: number;
   historyRevisions?: readonly number[];
   meta?: {

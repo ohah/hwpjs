@@ -86,3 +86,30 @@ test('owned immutable history survives selection updates and does not alias runt
     await editor.dispose();
   }
 });
+
+test('poisoned Native history stats never authorize stored revision as live undo authority', () => {
+  const s = new EditorState({
+    editorId: 'e',
+    documentId: 'd',
+    generation: 1,
+    operationRevision: 1,
+    viewRevision: 1,
+    stateVersion: 1,
+    status: 'ready',
+    nativeHistoryRevision: 1,
+    nativeHistoryRevisions: [1, 0],
+    nativeHistoryStats: {
+      protocolVersion: 2,
+      requested: {},
+      resolved: {},
+      retainedBytes: null,
+      metadataOwnedBytes: null,
+      currentOwnedBytes: null,
+      undoOwnedBytes: null,
+      redoOwnedBytes: null,
+      evictedCount: null,
+      poisoned: true,
+    },
+  });
+  expect(getHistoryAvailability(s)).toEqual({ available: false, canUndo: false, canRedo: false });
+});

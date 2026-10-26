@@ -1,3 +1,4 @@
+import type { NativeHistoryStats } from '../history-options.ts';
 import type { SynchronousCallback } from './synchronous-callback.ts';
 import { ownObservation, discardPromise, isPromiseLike } from './owned.ts';
 export type EditorStatus = 'empty' | 'loading' | 'ready' | 'refresh-required' | 'disposed';
@@ -13,6 +14,8 @@ export interface StateData extends StateToken {
   readonly stateVersion: number;
   readonly content?: unknown;
   readonly capabilities?: unknown;
+  readonly historyRecoveryRequired?: boolean;
+  readonly nativeHistoryStats?: NativeHistoryStats;
   readonly nativeHistoryRevision?: number;
   readonly nativeHistoryRevisions?: readonly number[];
   readonly savedOperationRevision?: number;
@@ -26,9 +29,11 @@ export class EditorState {
   readonly operationRevision: number;
   readonly viewRevision: number;
   readonly stateVersion: number;
+  readonly historyRecoveryRequired: boolean;
   readonly status: EditorStatus;
   readonly nativeHistoryRevision?: number;
   readonly savedOperationRevision?: number;
+  #historyStats: () => NativeHistoryStats | undefined;
   #historyRevisions: () => readonly number[] | undefined;
   #content: () => unknown;
   #capabilities: () => unknown;
@@ -38,6 +43,7 @@ export class EditorState {
     data: StateData,
     read: <T>(callback: (state: EditorState) => T, state: EditorState) => T = localRead,
   ) {
+    this.historyRecoveryRequired = data.historyRecoveryRequired === true;
     this.editorId = data.editorId;
     this.documentId = data.documentId;
     this.generation = data.generation;
@@ -45,6 +51,7 @@ export class EditorState {
     this.viewRevision = data.viewRevision;
     this.stateVersion = data.stateVersion;
     this.status = data.status;
+    this.#historyStats = ownObservation(data.nativeHistoryStats);
     this.nativeHistoryRevision = data.nativeHistoryRevision;
     this.#historyRevisions = ownObservation(data.nativeHistoryRevisions);
     this.savedOperationRevision = data.savedOperationRevision;
@@ -53,6 +60,9 @@ export class EditorState {
     this.#selection = ownObservation(data.selection);
     this.#read = read;
     Object.freeze(this);
+  }
+  get nativeHistoryStats(): NativeHistoryStats | undefined {
+    return this.#historyStats();
   }
   get nativeHistoryRevisions(): readonly number[] | undefined {
     return this.#historyRevisions();

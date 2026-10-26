@@ -358,7 +358,7 @@ for (const format of ['hwp5', 'hwpx'] as const)
           readFileSync(
             `legacy/rust/crates/hwp-core/tests/fixtures/charshape.${format === 'hwp5' ? 'hwp' : 'hwpx'}`,
           ),
-          { format },
+          { format, history: { mode: 'legacy-v1', maxEntries: 16 } },
         );
         const row = (e.getEditorState().content as any).paragraphs.find(
           (r: any) => r.editable && r.text === '기울임진하게',
@@ -410,7 +410,7 @@ for (const format of ['hwp5', 'hwpx'] as const)
         await e.redo();
         expect(unit(e)).toBe(2);
         expect(e.getEditorState().nativeHistoryRevisions).not.toContain(discarded);
-        // Existing reader runtime retains 16 checkpoints plus the current revision.
+        // This explicitly selected V1 retains 16 checkpoints plus the current revision.
         // Exceed that real limit rather than simulating an eviction reply or changing policy.
         for (let i = 0; i < 18; i++) {
           await lease.publishSelection(target(2));

@@ -803,22 +803,35 @@ export fn hwpx_edit_picture_transform(section: u32, picture: u32) u32 {
     return 1;
 }
 export fn hwpx_edit_history_revision() u32 {
-    if (history) |*value| return value.stack.revision;
+    if (history) |*value| return value.revision();
     _ = fail(error.HistoryNotEnabled);
     return std.math.maxInt(u32);
 }
 export fn hwpx_edit_history_revision_count() u32 {
-    if (history) |*value| return @intCast(value.stack.revisionCount());
+    if (history) |*value| return @intCast(value.revisionCount());
     _ = fail(error.HistoryNotEnabled);
     return std.math.maxInt(u32);
 }
 export fn hwpx_edit_history_revision_at(index: u32) u32 {
-    if (history) |*value| return value.stack.revisionAt(index) orelse {
+    if (history) |*value| return value.revisionAt(index) orelse {
         _ = fail(error.InvalidHistoryRevisionIndex);
         return std.math.maxInt(u32);
     };
     _ = fail(error.HistoryNotEnabled);
     return std.math.maxInt(u32);
+}
+export fn hwpx_edit_history_enable_options(ptr: [*]const u8, size: usize) u32 {
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (history != null) return fail(error.HistoryAlreadyEnabled);
+    const options = @import("../model/history_policy.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
+    history = histories.History.initV2(s, options) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_history_stats() u32 {
+    hwpx_edit_output_free();
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    output = std.json.Stringify.valueAlloc(a, h.stats(), .{}) catch |err| return fail(err);
+    return 1;
 }
 export fn hwpx_edit_history_enable(entries: u32, checkpoint_bytes: u32) u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

@@ -187,6 +187,19 @@ pub const Session = opaque {
         return @import("table_checkpoint.zig").capture(state.allocator, self, &state.document, state.created_tables, max_checkpoint_bytes);
     }
 
+    /// V2 history storage only. The returned values may not be exchanged into live state.
+    pub fn createHistoryCheckpointIn(self: *const Session, storage: std.mem.Allocator, limit: usize) !*Checkpoint {
+        const state = self.stateConst();
+        return @import("table_checkpoint.zig").capture(storage, self, &state.document, state.created_tables, limit);
+    }
+    pub fn cloneHistoryCheckpointForRestore(self: *const Session, checkpoint: *const Checkpoint, limit: usize) !*Checkpoint {
+        return @import("table_checkpoint.zig").cloneTo(checkpoint, self.stateConst().allocator, self, limit);
+    }
+    pub fn rollbackHistoryCheckpoint(self: *Session, checkpoint: *Checkpoint) !void {
+        const state = self.getState();
+        try @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables);
+    }
+
     pub fn restoreCheckpoint(self: *Session, checkpoint: *Checkpoint) !void {
         const state = self.getState();
         try @import("table_checkpoint.zig").exchange(checkpoint, state.allocator, self, &state.document, &state.created_tables);

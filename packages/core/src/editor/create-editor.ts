@@ -1,3 +1,4 @@
+import type { HistoryOptions } from '../history-options.ts';
 import { EditorWritePolicy } from './write-policy.ts';
 import type { SynchronousCallback, UpdateCallback } from '../state/synchronous-callback.ts';
 import { SelectionHistory } from '../state/selection-history.ts';
@@ -83,6 +84,7 @@ export interface EditorError {
 }
 export interface LoadOptions {
   readonly format: 'hwp5' | 'hwpx';
+  readonly history?: HistoryOptions;
   readonly editable?: boolean;
   readonly password?: string;
   readonly allowObservedChartOleDeviations?: boolean;
@@ -281,6 +283,8 @@ export function createEditor(options: CreateEditorOptions) {
       status: state.status,
       content: state.content,
       capabilities: state.capabilities,
+      historyRecoveryRequired: state.historyRecoveryRequired,
+      nativeHistoryStats: state.nativeHistoryStats,
       nativeHistoryRevision: state.nativeHistoryRevision,
       nativeHistoryRevisions: state.nativeHistoryRevisions,
       savedOperationRevision: state.savedOperationRevision,
@@ -399,6 +403,11 @@ export function createEditor(options: CreateEditorOptions) {
     editable?: boolean,
   ): Partial<StateData> {
     if (reply.content === undefined) throw Error('SnapshotMissing');
+    const historyRecoveryRequired =
+      (inherit && state.historyRecoveryRequired) ||
+      reply.historyPoisoned === true ||
+      reply.historyStats?.poisoned === true;
+    const observedEditable = historyRecoveryRequired ? false : editable;
     const capabilities = reply.capabilities ?? {
       ...(inherit && state.documentId !== null ? (state.capabilities as object) : {}),
       ...Object.fromEntries(
@@ -415,13 +424,17 @@ export function createEditor(options: CreateEditorOptions) {
               'requestId',
               'historyRevision',
               'historyRevisions',
+              'historyStats',
+              'historyPoisoned',
             ].includes(key),
         ),
       ),
     };
     return {
-      content: ownObservation(writePolicy.observe(reply.content, editable))(),
-      capabilities: ownObservation(writePolicy.capabilities(capabilities, editable))(),
+      content: ownObservation(writePolicy.observe(reply.content, observedEditable))(),
+      capabilities: ownObservation(writePolicy.capabilities(capabilities, observedEditable))(),
+      historyRecoveryRequired,
+      nativeHistoryStats: reply.historyStats,
       nativeHistoryRevision: history(reply),
       nativeHistoryRevisions: reply.historyRevisions,
       selection: undefined,
@@ -446,6 +459,8 @@ export function createEditor(options: CreateEditorOptions) {
       verifyReply(reply, enableContext);
       if (reply.error) throw Error(reply.error);
     }
+    if (reply.historyPoisoned === true || reply.historyStats?.poisoned === true)
+      throw Error('HistoryReloadRequired');
     const patch = contentPatch(reply, false, editable);
     assertLive();
     guard();
@@ -492,6 +507,12 @@ export function createEditor(options: CreateEditorOptions) {
       throw TypeError('InvalidDocumentBytes');
     const owned = copyOwned(loadOptions);
     if (!owned || !['hwp5', 'hwpx'].includes(owned.format)) throw Error('InvalidDocumentFormat');
+    if (owned.history !== undefined && Object.hasOwn(owned.enableOptions ?? {}, 'history'))
+      throw Error('DuplicateHistoryOptions');
+    const enableOptions =
+      owned.history === undefined
+        ? owned.enableOptions
+        : { ...owned.enableOptions, history: owned.history };
     const sourceOptions = loadSourceOptions(owned);
     const cancellation = new CancellationFence();
     const job = { cancelled: false, fence: cancellation };
@@ -545,7 +566,7 @@ export function createEditor(options: CreateEditorOptions) {
                 message: { ...message, password: undefined },
                 context: ctx,
                 editable: owned.editable !== false,
-                enableOptions: owned.enableOptions,
+                enableOptions,
               };
               keepLocked = true;
             }
@@ -556,7 +577,7 @@ export function createEditor(options: CreateEditorOptions) {
             message,
             ctx,
             owned.editable !== false,
-            owned.enableOptions,
+            enableOptions,
             reply,
             guard,
           );
@@ -673,6 +694,8 @@ export function createEditor(options: CreateEditorOptions) {
   }
   function requireReady(token: StateToken, view = false) {
     assertLive();
+    if (state.historyRecoveryRequired || state.nativeHistoryStats?.poisoned === true)
+      throw Error('HistoryReloadRequired');
     if (!active || state.status !== 'ready')
       throw Error(state.status === 'refresh-required' ? 'RefreshRequired' : 'EditorNotReady');
     validateToken(token, state, view);
@@ -704,6 +727,25 @@ export function createEditor(options: CreateEditorOptions) {
           : reply.error && reply.applied === false
             ? 'unapplied'
             : undefined);
+      if (reply.historyPoisoned === true || reply.historyStats?.poisoned === true) {
+        install({
+          content: ownObservation(writePolicy.observe(state.content, false))(),
+          capabilities: ownObservation(writePolicy.capabilities(state.capabilities, false))(),
+          operationRevision: application === 'unapplied' ? state.operationRevision : reserved,
+          status: 'refresh-required',
+          historyRecoveryRequired: true,
+          nativeHistoryStats: reply.historyStats,
+          nativeHistoryRevision: history(reply),
+        });
+        const failure = reply.error ?? 'HistoryReloadRequired';
+        notifyError(failure, ctx, application === 'unapplied' ? false : 'unknown');
+        return result(
+          application === 'unapplied' ? 'rejected-unapplied' : 'committed-refresh-required',
+          ctx,
+          failure,
+          reply,
+        );
+      }
       if (application === 'unapplied') {
         if (reply.error) return reject(ctx, reply.error);
         return result('known-no-op', ctx, undefined, reply);
@@ -714,6 +756,7 @@ export function createEditor(options: CreateEditorOptions) {
         install({
           operationRevision: reserved,
           status: 'refresh-required',
+          nativeHistoryStats: reply.historyStats,
           nativeHistoryRevision: history(reply),
         });
         notifyError(
@@ -899,7 +942,16 @@ export function createEditor(options: CreateEditorOptions) {
         verifyReply(reply, ctx);
         if (reply.error) throw Error(reply.error);
         assertLive();
-        install({ ...contentPatch(reply), status: 'ready' }, true, ctx);
+        const poisoned =
+          state.historyRecoveryRequired ||
+          reply.historyPoisoned === true ||
+          reply.historyStats?.poisoned === true;
+        install(
+          { ...contentPatch(reply), status: poisoned ? 'refresh-required' : 'ready' },
+          true,
+          ctx,
+        );
+        if (poisoned) throw Error('HistoryReloadRequired');
         return state;
       } catch (error) {
         notifyError(error, ctx, false);
@@ -914,7 +966,10 @@ export function createEditor(options: CreateEditorOptions) {
       const token = owned.token ?? state.token;
       if (!active || state.documentId === null) throw Error('EditorNotReady');
       validateToken(token, state);
-      const stale = state.status === 'refresh-required';
+      const stale =
+        state.status === 'refresh-required' ||
+        state.historyRecoveryRequired ||
+        state.nativeHistoryStats?.poisoned === true;
       if (stale && !owned.recovery) throw Error('RecoverySaveRequired');
       if (!stale && state.status !== 'ready') throw Error('EditorNotReady');
       const ctx = context(token);
@@ -1195,6 +1250,8 @@ export function createEditor(options: CreateEditorOptions) {
         status: 'disposed',
         content: state.content,
         capabilities: state.capabilities,
+        historyRecoveryRequired: state.historyRecoveryRequired,
+        nativeHistoryStats: state.nativeHistoryStats,
         nativeHistoryRevision: state.nativeHistoryRevision,
         nativeHistoryRevisions: state.nativeHistoryRevisions,
         savedOperationRevision: state.savedOperationRevision,

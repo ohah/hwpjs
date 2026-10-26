@@ -213,6 +213,13 @@ pub fn capture(a: std.mem.Allocator, owner: *const anyopaque, source: *const mod
     return @ptrCast(state);
 }
 
+/// Storage allocator is deliberately independent from the live session allocator.
+pub fn cloneTo(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, limit: usize) !*Checkpoint {
+    const state: *const State = @ptrCast(@alignCast(checkpoint));
+    if (state.owner != owner) return error.SourceBindingMismatch;
+    return capture(a, owner, &state.document, limit);
+}
+
 /// Allocation-free swap, retaining replaced values for redo.
 pub fn exchange(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, current: *model.Document) !void {
     const state: *State = @ptrCast(@alignCast(checkpoint));

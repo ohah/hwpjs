@@ -13,6 +13,9 @@ pub const equation = @import("equation/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("model/history_budget_tests.zig");
+    _ = @import("testing/history_owned_format_tests.zig");
+    _ = @import("testing/history_owned_memory_tests.zig");
     _ = @import("hwpx/source_color_profile_tests.zig");
     _ = @import("hwpx/source_color_fill_extension_tests.zig");
     _ = @import("continuation_typing_style_tests.zig");

@@ -16,6 +16,8 @@ const unavailable: HistoryAvailability = Object.freeze({
  */
 export function getHistoryAvailability(state: EditorState): HistoryAvailability {
   if (
+    state.historyRecoveryRequired ||
+    state.nativeHistoryStats?.poisoned === true ||
     state.status !== 'ready' ||
     (state.capabilities as { readOnly?: boolean } | undefined)?.readOnly === true
   )

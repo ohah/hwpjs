@@ -4,7 +4,7 @@ import { createEditor, SPLICE_TEXT_COMMAND, getHistoryAvailability } from '../..
 import { createReaderRuntimeFactory } from '../../src/runtime.ts';
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
 for (const format of ['hwp5', 'hwpx'] as const)
-  test(`real ${format} history availability follows branch, eviction, no-op, and reload`, async () => {
+  test(`real ${format} explicit V1 history availability follows branch, 16-step eviction, no-op, and reload`, async () => {
     const factory = createReaderRuntimeFactory({ wasmModule: await WebAssembly.compile(wasm) });
     const editor = createEditor({ runtimeFactory: factory });
     const bytes = readFileSync(
@@ -42,7 +42,7 @@ for (const format of ['hwp5', 'hwpx'] as const)
       ).toBe('committed-with-snapshot');
     };
     try {
-      await editor.load(bytes, { format });
+      await editor.load(bytes, { format, history: { mode: 'legacy-v1', maxEntries: 16 } });
       availability(false, false);
       await splice();
       availability(true, false);
@@ -63,7 +63,7 @@ for (const format of ['hwp5', 'hwpx'] as const)
       availability(true, true);
       await splice();
       availability(true, false);
-      await editor.load(bytes, { format });
+      await editor.load(bytes, { format, history: { mode: 'legacy-v1', maxEntries: 16 } });
       availability(false, false);
     } finally {
       await editor.dispose();

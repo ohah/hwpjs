@@ -81,3 +81,11 @@ export type {
 export type { CompiledKeymap, NormalizedShortcutEvent } from './keymap/resolve.ts';
 
 export type { FindTextOptions } from './state/text-tools.ts';
+
+export type {
+  HistoryOptions,
+  HistoryBudgetOptions,
+  LegacyHistoryOptions,
+  NativeHistoryStats,
+  HistoryPolicyObservation,
+} from './history-options.ts';

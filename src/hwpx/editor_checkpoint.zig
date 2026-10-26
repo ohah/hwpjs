@@ -277,6 +277,28 @@ test "HWPX checkpoint font intents own names include budget and exchange allocat
     }.run, .{});
 }
 
+/// Copy the stored mutable values into the original session allocator without
+/// moving arena allocations into live state. Section views are borrowed only.
+pub fn cloneForRestore(self: *const Checkpoint, session: *const editor.Session, limit: usize) !Checkpoint {
+    if (self.source_pointer != session.source.ptr or self.source_len != session.source.len or self.states.len != session.sections.len) return error.SourceBindingMismatch;
+    const a = session.allocator;
+    const sections = try a.dupe(editor.Section, session.sections);
+    defer a.free(sections);
+    for (sections, self.states) |*section, state| {
+        inline for (@typeInfo(State).@"struct".field_names) |field| {
+            const name = if (comptime std.mem.eql(u8, field, "dirty")) "field_dirty" else field;
+            @field(section, name) = @field(state, field);
+        }
+    }
+    var view = session.*;
+    view.sections = sections;
+    view.paragraph_resources = self.paragraph_resources;
+    view.character_resources = self.character_resources;
+    view.chart_resources = self.chart_resources;
+    view.font_resources = self.font_resources;
+    return capture(&view, limit);
+}
+
 pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
     _ = try size(session, max_bytes);
     const a = session.allocator;
@@ -665,4 +687,12 @@ test "HWPX checkpoint transfers structural topology without duplicate text owner
     try std.testing.expectEqualSlices(u8, edited_zip, redone_zip);
     try after.exchange(&session);
     try std.testing.expectEqual(@as(?u32, id), section.structure_values.?.paragraphs[2].generated_id);
+}
+
+/// Compare every mutable captured field, including protected source coordinates.
+pub fn matches(snapshot: *const Checkpoint, session: *const editor.Session, limit: usize) !bool {
+    var live = try capture(session, limit);
+    defer live.deinit();
+    const eql = @import("../model/history_value_equal.zig").equal;
+    return snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and eql(@TypeOf(live.states), snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources);
 }

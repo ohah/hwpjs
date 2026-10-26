@@ -60,6 +60,28 @@ pub fn capture(a: std.mem.Allocator, owner: *const anyopaque, document: *const m
     return @ptrCast(state);
 }
 
+/// Immutable stored snapshot -> new Parent-owned values. Never transfer its arena.
+pub fn cloneTo(checkpoint: *const Checkpoint, a: std.mem.Allocator, owner: *const anyopaque, limit: usize) !*Checkpoint {
+    const state: *const State = @ptrCast(@alignCast(checkpoint));
+    if (state.owner != owner) return error.SourceBindingMismatch;
+    const document = try base.cloneTo(state.document, a, owner, limit);
+    errdefer document.deinit();
+    const tables = try a.alloc(Values, state.tables.len);
+    var initialized: usize = 0;
+    errdefer {
+        for (tables[0..initialized]) |*value| value.deinit(a);
+        a.free(tables);
+    }
+    for (state.tables, tables) |*source, *target| {
+        target.* = try source.clone(a, limit);
+        initialized += 1;
+    }
+    _ = try total(state.document_bytes, tables, limit);
+    const out = try a.create(State);
+    out.* = .{ .allocator = a, .owner = owner, .document = document, .document_bytes = state.document_bytes, .tables = tables, .limit = limit };
+    return @ptrCast(out);
+}
+
 fn bind(state: *const State, a: std.mem.Allocator, owner: *const anyopaque, document: *const model.Document, tables: []const Values) !void {
     if (state.owner != owner or state.allocator.ptr != a.ptr or state.allocator.vtable != a.vtable or tables.len != state.tables.len or tables.len != document.sections.len) return error.SourceBindingMismatch;
 }

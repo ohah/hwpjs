@@ -45,13 +45,33 @@ pub const History = struct {
     source_pointer: [*]const u8,
     max_checkpoint_bytes: usize,
     stack: Stacks,
+    owned: ?*@import("history_v2.zig").History = null,
 
     pub fn init(session: *const editor.Session, max_entries: usize, max_checkpoint_bytes: usize) !History {
         if (max_entries == 0 or max_checkpoint_bytes == 0) return error.LimitExceeded;
         _ = std.math.mul(usize, max_entries, max_checkpoint_bytes) catch return error.LimitExceeded;
         return .{ .allocator = session.allocator, .source_pointer = session.source.ptr, .max_checkpoint_bytes = max_checkpoint_bytes, .stack = try Stacks.init(session.allocator, max_entries) };
     }
+    pub fn initV2(session: *editor.Session, options: @import("../model/history_policy.zig").Options) !History {
+        const value = try @import("history_v2.zig").History.create(session.allocator, session, options);
+        errdefer value.deinit();
+        return .{ .allocator = session.allocator, .source_pointer = session.source.ptr, .max_checkpoint_bytes = value.stack.policy.max_checkpoint_bytes, .stack = try Stacks.init(session.allocator, 1), .owned = value };
+    }
+    pub fn revision(self: *const History) u32 {
+        return if (self.owned) |h| h.stack.current.revision else self.stack.revision;
+    }
+    pub fn revisionCount(self: *const History) usize {
+        return if (self.owned) |h| h.stack.revisionCount() else self.stack.revisionCount();
+    }
+    pub fn revisionAt(self: *const History, index: usize) ?u32 {
+        return if (self.owned) |h| h.stack.revisionAt(index) else self.stack.revisionAt(index);
+    }
+    pub fn stats(self: *const History) @import("../model/history_stats.zig").Stats {
+        const wire = @import("../model/history_stats.zig");
+        return if (self.owned) |h| wire.v2(h) else wire.v1(self);
+    }
     pub fn deinit(self: *History) void {
+        if (self.owned) |h| h.deinit();
         self.stack.deinit();
         self.* = undefined;
     }
@@ -62,6 +82,7 @@ pub const History = struct {
         return self.applyBatch(session, &.{command});
     }
     pub fn applyBatch(self: *History, session: *editor.Session, commands: []const Command) !bool {
+        if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
         var before = try checkpoints.capture(session, self.max_checkpoint_bytes);
@@ -94,6 +115,21 @@ pub const History = struct {
         self.stack.commit(before);
         transferred = true;
         return true;
+    }
+    /// V2 leaves all rollback to the common transaction owner. Never roll back twice.
+    pub fn applyCommandsUnchecked(session: *editor.Session, commands: []const Command, limit: usize) !bool {
+        for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
+        var changed = false;
+        const property_batch = commands.len > 1 and for (commands) |command| {
+            if (command.kind != .character_properties) break false;
+        } else true;
+        for (commands) |command| changed = (try (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command))) or changed;
+        if (changed and property_batch) {
+            const saved = try session.save();
+            session.allocator.free(saved);
+        }
+        if (changed) _ = try checkpoints.size(session, limit);
+        return changed;
     }
     fn applyDeferredProperty(session: *editor.Session, command: Command) !bool {
         if (command.inserted.len != 0) return error.InvalidFormatCommand;
@@ -206,10 +242,12 @@ pub const History = struct {
         };
     }
     pub fn undo(self: *History, session: *editor.Session) !bool {
+        if (self.owned) |h| return h.undo(session);
         try self.bind(session);
         return self.stack.move(false, session, exchange);
     }
     pub fn redo(self: *History, session: *editor.Session) !bool {
+        if (self.owned) |h| return h.redo(session);
         try self.bind(session);
         return self.stack.move(true, session, exchange);
     }

@@ -155,6 +155,7 @@ export function createReaderRuntime({
   let module, bytes, preview, editor, format;
   const displayResources = createDisplayResourceCache();
   let historyEnabled = false;
+  let historyPoisoned = false;
   let hwpxChartOlePolicy = false;
   let protectionRemoved = false;
   let hwp5StyleOpenError = null;
@@ -993,13 +994,14 @@ export function createReaderRuntime({
       origin: message.origin,
       kind: message.kind,
       applied,
+      ...(historyPoisoned ? { historyPoisoned: true } : {}),
       ...(message.requestId === undefined ? {} : { requestId: message.requestId }),
       error: error?.message || String(error),
     });
     const reply = (value) => {
       if (response !== undefined) throw new Error('DuplicateRuntimeReply');
       try {
-        let historyRevision, historyRevisions;
+        let historyRevision, historyRevisions, historyStats;
         if (
           historyEnabled &&
           editor &&
@@ -1018,9 +1020,12 @@ export function createReaderRuntime({
           )
         )
           historyRevisions = editor.historyRevisions();
+        if (historyEnabled && editor) historyStats = editor.historyStats();
         response = {
           origin: message.origin,
           ...value,
+          ...(historyPoisoned ? { historyPoisoned: true } : {}),
+          ...(historyStats === undefined ? {} : { historyStats }),
           ...(historyRevision === undefined ? {} : { historyRevision }),
           ...(historyRevisions === undefined ? {} : { historyRevisions }),
         };
@@ -1030,6 +1035,7 @@ export function createReaderRuntime({
       }
     };
     let applied = false;
+    let mutationUncertain = false;
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
       if (format === 'hwp5' && preview?.sectionInventory && message.kind !== 'load')
@@ -1214,6 +1220,7 @@ export function createReaderRuntime({
         bytes = undefined;
         module = undefined;
         historyEnabled = false;
+        historyPoisoned = false;
         hwp5StyleOpenError = null;
         documentWindow = null;
         hwpxCreatedTablesPending = false;
@@ -1337,6 +1344,7 @@ export function createReaderRuntime({
           preview = current;
           protectionRemoved = true;
           historyEnabled = false;
+          historyPoisoned = false;
           reply({ kind: 'unlock', content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         } catch (error) {
           next?.close();
@@ -2140,7 +2148,7 @@ export function createReaderRuntime({
             editor = next;
           }
           if (!historyEnabled) {
-            editor.enableHistory();
+            editor.enableHistoryDefault(message.history);
             historyEnabled = true;
           }
           const structureAvailable = WebAssembly.Module.exports(module).some(
@@ -2266,7 +2274,7 @@ export function createReaderRuntime({
           retainObservedDocInfo: message.retainObservedDocInfo ?? false,
         });
         if (!historyEnabled) {
-          editor.enableHistory();
+          editor.enableHistoryDefault(message.history);
           historyEnabled = true;
         }
         const structureAvailable = WebAssembly.Module.exports(module).some(
@@ -2537,6 +2545,10 @@ export function createReaderRuntime({
         reply({ kind: message.kind, content: hwp5Display() });
       } else throw new Error('UnknownPreviewCommand');
     } catch (error) {
+      mutationUncertain = ['MutationUncertain', 'HistoryMutationUncertain'].includes(
+        error?.message,
+      );
+      if (mutationUncertain) historyPoisoned = true;
       delete message.password;
       const availableSectionsPreviewAvailable =
         message.kind === 'load' &&
@@ -2643,7 +2655,14 @@ export function createReaderRuntime({
               : false;
       displayResources.finishRequest(Boolean(response.error));
       outcomes.set(response, {
-        application: applied && changed !== false ? 'applied' : 'unapplied',
+        application:
+          historyPoisoned ||
+          mutationUncertain ||
+          ['MutationUncertain', 'HistoryMutationUncertain'].includes(response.error)
+            ? 'unknown'
+            : applied && changed !== false
+              ? 'applied'
+              : 'unapplied',
         changed,
       });
       if (typeof revision === 'number') lastHistoryRevision = revision;
@@ -2664,7 +2683,12 @@ export function createReaderRuntime({
       if (protectionRemoved) bytes?.fill(0);
       module = bytes = preview = editor = format = undefined;
       lastHistoryRevision = undefined;
-      historyEnabled = hwpxChartOlePolicy = protectionRemoved = hwpxCreatedTablesPending = false;
+      historyPoisoned =
+        historyEnabled =
+        hwpxChartOlePolicy =
+        protectionRemoved =
+        hwpxCreatedTablesPending =
+          false;
       hwp5StyleOpenError = documentWindow = null;
     }
   }
