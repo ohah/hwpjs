@@ -25,8 +25,20 @@ mise exec -- bun run dev 8082
 - `test:core`는 core 범위만 실행하는 별도 root script입니다. `test:packages`는 core·vanilla·react·svelte 및 RN src unit 범위이며 RN fake-transport unit 성공을 실제 JSI/기기 성공으로 세지 않습니다. `HWPJS_TEST_WASM` 미지정 시 일부 테스트가 참조하는 로컬 verification WASM은 source-only clone에 자동 생성되지 않습니다.
 - 옛 parity 이름은 `hwp5: pre-extraction wire exact session-scope delta and frozen remainder`, `hwpx: pre-extraction full/window/edit/save/history wire baseline`입니다. `artifact !== baseline.artifact` 경로 문자열 비교로 skip되며 pass가 아닙니다. 독립 CFB oracle는 module import 외에도 HEAD의 `legacy/cfb.js` 파일을 읽습니다.
 - demo/dev는 private 4개 dist와 `apps/demo/dist`를 선행 입력으로 사용합니다. 공개 umbrella dist는 이 demo 경로의 필수 입력이 아니며 public producer는 private dist를 소비하지 않고 source에서 별도 출력합니다.
-- root `docs:build`는 문서 빌드만 실행합니다. `docs:typecheck`는 source에 연결된 예제 8개를 검사하며, `docs:check`는 예제 타입→빌드→링크→설치 license metadata→공개 출력 검사를 수행합니다. `apps/docs/`의 추적 파일 전체와 기존 `docs/public/editor` 정적 자산이 입력입니다. 새 umbrella producer가 그 정적 자산을 갱신하는 것은 아닙니다. CI의 정적 자산 확인은 `mise exec -- bun tools/build-pages-demo.mjs --verify`입니다.
+- root `docs:build`는 문서 빌드만 실행합니다. `docs:typecheck`는 source에 연결된 예제를 검사하며, `docs:check`는 예제 타입→빌드→링크→설치 license metadata→공개 출력 검사를 수행합니다. `apps/docs/`의 추적 파일 전체와 기존 `docs/public/editor` 정적 자산이 입력입니다. 새 umbrella producer가 그 정적 자산을 갱신하는 것은 아닙니다. CI의 정적 자산 확인은 `mise exec -- bun tools/build-pages-demo.mjs --verify`입니다.
 - Native shared-snapshot은 별도 ABI/archive/빌드 flag 계약입니다. 기능이 없는 binding은 `NativeSnapshotUnavailable`로 거부하며, plain-body snapshot 검증을 전체 Canvas·실기기·IME 완료로 표시하지 않습니다.
+
+
+## 데모 서버 실행 모드
+
+기존 `mise exec -- bun run dev 8082`는 dev/dist 모드를 유지합니다. 검증된 bundle을 제공할 때만 다음 옵션을 명시합니다. 예시 경로는 준비된 실제 bundle 경로로 바꿉니다.
+
+```sh
+mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/public-bundle
+mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/private-bundle --private-fixtures
+```
+
+모드별 검증·public 기준 manifest/동일 worker/WASM·라우팅·시작 시 snapshot과 **업데이트 후 재시작** 절차는 [데모 서버 모드](demo-server-modes.md)를 따릅니다. private catalog의 관측 개수는 정책 기본값이 아닙니다. bundle/문서 파일을 바꿔도 실행 중 서비스에 자동 반영되지 않습니다.
 
 
 WASM HTTP 압축 검사는 `mise exec -- node --test tests/hwpx/preview-wasm-compression.test.mjs`와 `mise exec -- bun test ./tests/hwpx/preview-wasm-compression.test.mjs`입니다. Bun 파일 인수의 `./`를 유지합니다. [전송 크기와 실측 범위](wasm-transfer.md)를 따릅니다.
