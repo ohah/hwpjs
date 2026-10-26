@@ -1510,6 +1510,7 @@ export function createCanvasEditor({
     return true;
   };
   listen(input, 'beforeinput', (event) => {
+    if (event.defaultPrevented) return;
     if (compositionInvalidated) {
       event.preventDefault();
       return;
@@ -1829,15 +1830,6 @@ export function createCanvasEditor({
       return;
     const navigation = navigationIntent(event, platform);
     const key = navigation?.key ?? event.key;
-    if (
-      (event.metaKey || event.ctrlKey) &&
-      !event.altKey &&
-      ['z', 'y'].includes(key.toLowerCase()) &&
-      event.repeat
-    ) {
-      event.preventDefault();
-      return;
-    }
     if (
       historyIntents.size &&
       navigation &&

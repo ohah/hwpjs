@@ -125,17 +125,17 @@ test('composing, AltGraph, unrelated modifiers and ordinary inputs preserve brow
   assert.deepEqual(f.calls, ['undo']);
   f.adapter.dispose();
 });
-test('repeat and disabled defaults cannot fall through to legacy Canvas command handlers', () => {
+test('history repeat executes once per event and disabled defaults cannot reach legacy handlers', () => {
   const f = fixture();
   const repeated = f.key({ repeat: true });
   assert.equal(repeated.stopped, true);
   assert.equal(repeated.defaultPrevented, true);
-  assert.deepEqual(f.calls, []);
+  assert.deepEqual(f.calls, ['undo']);
   f.adapter.setConfig(parseKeymapConfig({ version: 1, bindings: [] }));
   const removed = f.key();
   assert.equal(removed.stopped, true);
   assert.equal(removed.defaultPrevented, true);
-  assert.deepEqual(f.calls, []);
+  assert.deepEqual(f.calls, ['undo']);
   f.adapter.dispose();
 });
 test('disabled redo also suppresses browser history beforeinput without dispatching a command', () => {

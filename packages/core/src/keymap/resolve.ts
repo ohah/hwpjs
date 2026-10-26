@@ -48,8 +48,7 @@ export function resolveKeyboardShortcut(
 ): KeymapBinding | null {
   const index = compiledIndexes.get(compiled);
   if (!index) throw new TypeError('InvalidCompiledKeymap');
-  if (!event || event.isComposing || event.keyCode === 229 || event.altGraph || event.repeat)
-    return null;
+  if (!event || event.isComposing || event.keyCode === 229 || event.altGraph) return null;
   if (
     typeof event.code !== 'string' ||
     [event.ctrlKey, event.metaKey, event.altKey, event.shiftKey].some(
@@ -62,5 +61,8 @@ export function resolveKeyboardShortcut(
     (event.metaKey ? 2 : 0) |
     (event.altKey ? 4 : 0) |
     (event.shiftKey ? 8 : 0);
-  return index.get(`${event.code}:${mask}`) ?? null;
+  const binding = index.get(`${event.code}:${mask}`) ?? null;
+  // 이력 명령만 브라우저의 각 반복 keydown을 개별 명령으로 접수한다.
+  if (event.repeat && binding?.command !== 'undo' && binding?.command !== 'redo') return null;
+  return binding;
 }

@@ -17,7 +17,7 @@ test('Mod expands per explicit platform and every modifier matches exactly', () 
     expect(resolveKeyboardShortcut(compiled, { ...hit, code: 'KeyF' })).toBe(null);
   }
 });
-test('composition/229/repeat/AltGraph are ignored independently', () => {
+test('비이력 명령은 composition/229/repeat/AltGraph를 각각 거부한다', () => {
   const compiled = compileKeymap(config, 'windows'),
     hit = { ...event, ctrlKey: true };
   for (const guard of [
@@ -111,4 +111,58 @@ test('public keymap modules import and resolve without DOM/platform/fetch getter
   });
   expect(new TextDecoder().decode(child.stderr)).toBe('');
   expect(child.exitCode).toBe(0);
+});
+
+test('undo와 redo만 플랫폼 Mod의 각 repeat 이벤트에 매치한다', () => {
+  for (const platform of ['mac', 'windows', 'linux'] as KeymapPlatform[]) {
+    const compiled = compileKeymap(
+      {
+        version: 1,
+        bindings: [
+          { id: 'u', command: 'undo', code: 'KeyZ', modifiers: ['Mod'] },
+          { id: 'r', command: 'redo', code: 'KeyZ', modifiers: ['Mod', 'Shift'] },
+          { id: 'other', command: 'host.other', code: 'KeyB', modifiers: ['Mod'] },
+        ],
+      },
+      platform,
+    );
+    const hit = {
+      ...event,
+      code: 'KeyZ',
+      ctrlKey: platform !== 'mac',
+      metaKey: platform === 'mac',
+      repeat: true,
+    };
+    expect(resolveKeyboardShortcut(compiled, hit)?.command).toBe('undo');
+    expect(resolveKeyboardShortcut(compiled, { ...hit, shiftKey: true })?.command).toBe('redo');
+    expect(resolveKeyboardShortcut(compiled, { ...hit, code: 'KeyB' })).toBe(null);
+  }
+});
+test('이력 반복도 IME·229·AltGraph·비활성 및 정확한 수정키 가드를 우회하지 않는다', () => {
+  const compiled = compileKeymap(
+    {
+      version: 1,
+      bindings: [
+        { id: 'u', command: 'undo', code: 'KeyU', modifiers: ['Control'] },
+        { id: 'r', command: 'redo', code: 'KeyR', modifiers: ['Control'] },
+        { id: 'off', command: 'undo', code: 'KeyQ', modifiers: ['Control'], enabled: false },
+      ],
+    },
+    'mac',
+  );
+  for (const code of ['KeyU', 'KeyR']) {
+    const hit = { ...event, code, ctrlKey: true, repeat: true };
+    expect(resolveKeyboardShortcut(compiled, hit)?.command).toBe(code === 'KeyU' ? 'undo' : 'redo');
+    for (const guard of [
+      { isComposing: true },
+      { keyCode: 229 },
+      { altGraph: true },
+      { metaKey: true },
+      { altKey: true },
+    ])
+      expect(resolveKeyboardShortcut(compiled, { ...hit, ...guard })).toBe(null);
+  }
+  expect(
+    resolveKeyboardShortcut(compiled, { ...event, code: 'KeyQ', ctrlKey: true, repeat: true }),
+  ).toBe(null);
 });

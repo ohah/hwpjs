@@ -40,25 +40,25 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
       shiftKey: event.shiftKey,
       isComposing: event.isComposing,
       keyCode: event.keyCode,
-      repeat: false,
+      repeat: event.repeat,
       altGraph: event.getModifierState?.('AltGraph') === true,
     };
     const binding = resolveKeyboardShortcut(compiled, input);
     if (!binding) {
-      const original = fallback && resolveKeyboardShortcut(fallback, input);
+      // 반복을 허용하지 않는 명령과 해제된 기본 키는 기존 핸들러로 새지 않는다.
+      const initialInput = { ...input, repeat: false };
+      const original =
+        (event.repeat && resolveKeyboardShortcut(compiled, initialInput)) ||
+        (fallback && resolveKeyboardShortcut(fallback, initialInput));
       if (original) {
         event.stopPropagation();
-        if (['copy', 'cut', 'paste', 'undo', 'redo'].includes(original.command))
+        if (event.repeat || ['copy', 'cut', 'paste', 'undo', 'redo'].includes(original.command))
           event.preventDefault();
       }
       return;
     }
     // Capture before Canvas' built-in key handlers: one keypress means one public command.
     event.stopPropagation();
-    if (event.repeat) {
-      event.preventDefault();
-      return;
-    }
     try {
       if (!options.isAvailable(binding.command)) {
         event.preventDefault();

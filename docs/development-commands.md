@@ -643,3 +643,13 @@ mise exec -- bun test ./packages/vanilla/tests/renderer-ack-projection.test.mjs
 ```sh
 mise exec -- bun test ./tests/public-package-jsx-runtime.test.mjs
 ```
+
+## 이력 단축키 반복
+
+[브라우저 반복 이벤트와 이력 큐 계약](history-key-repeat.md)을 따릅니다. 내부 web 패키지의 현재 source가 dist로 재생성된 뒤, 다음 명시 테스트를 실행합니다.
+
+```sh
+mise exec -- bun test ./packages/vanilla/tests/shortcuts.test.ts ./packages/vanilla/tests/history-key-repeat.test.mjs
+```
+
+CDP의 trusted `autoRepeat` 검사는 실제 OS 키 반복이나 OS IME 검증과 구분합니다. 명시 테스트의 모의 비동기 ACK와 실제 Native·브라우저 검증도 별도 범위입니다.
