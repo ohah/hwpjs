@@ -1,3 +1,4 @@
+import { tableSemanticFillProjection } from "./table-semantic-fill-source.mjs";
 import { tableSemanticFaceFill } from "./table-semantic-face-fill.mjs";
 import { selectedTableImageFill } from "./table-image-fill.mjs";
 // 원본 선 종류와 단위를 Canvas 정책으로 변환합니다. 미지원 효과는 대체하지 않습니다.
@@ -10,14 +11,20 @@ export function tableBorderPaintPlan(style) {
   if (!style || style.unknown_children !== 0 || style.unknown_attributes !== 0) return fail();
   if (style.fill_node !== null) {
     const report=style.fill_report,b=report?.brushes?.[0];
-    if (report?.brushes?.length!==1 || b.part_kind!=="header" || b.section_ordinal!==null
+    if (report?.brushes?.length!==1 || !b || typeof b!=="object" || Array.isArray(b) || b.part_kind!=="header" || b.section_ordinal!==null
       || b.element_index!==style.fill_node || b.parent_element_index!==style.node || !Array.isArray(report.nodes)
-      || report.nodes.some(n=>n.brush_index!==0)) return fail();
+      || report.nodes.some(n=>!n || typeof n!=="object" || Array.isArray(n) || n.brush_index!==0)) return fail();
     const selected={state:"selected",brush:b,nodes:report.nodes,report};
-    fill=selectedFillPlan(selected);
+    const projection = tableSemanticFillProjection(style, selected);
+    if (projection.state === "unavailable") { fill = projection; return fail(); }
+    fill=selectedFillPlan(selected, projection.project);
     if(fill.state==="unavailable"){const image=selectedTableImageFill(selected);if(image.state==="image")fill=image;}
     if(!["solid","linear_gradient","pattern","image","none"].includes(fill.state)) return fail();
     if(fill.state==="none")fill=undefined;
+  }
+  if (style.fill_node === null && Object.hasOwn(style, "semantic_fill_colors")) {
+    const projection = tableSemanticFillProjection(style, null);
+    if (projection.state === "unavailable") { fill = projection; return fail(); }
   }
   fill = tableSemanticFaceFill(style, fill);
   if (fill?.state === "unavailable") return fail();
