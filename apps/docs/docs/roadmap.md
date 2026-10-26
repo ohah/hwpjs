@@ -8,10 +8,12 @@
 
 | 사용자 진입점 | 현재 확인한 범위 | 완료로 해석하면 안 되는 범위 |
 | --- | --- | --- |
-| [웹 Canvas 데모](./playground.mdx) · [API 직접 실행](./api/playground.mdx) | 공개 정적 배포는 b7 WASM을 사용합니다. API 실행에서 두 형식의 열기·선택·삽입·이력·저장·재열기를 확인했습니다 | 준비 중인 Company/Enter 후속 소스가 이 배포에 포함됐다는 뜻이 아니며, 모든 위치·명령·완전 조판의 증거도 아닙니다 |
+| [웹 Canvas 데모](./playground.mdx) · [API 직접 실행](./api/playground.mdx) | 현재 공개 정적 배포는 3fc WASM을 사용합니다. 과거 b7 API 검사에서 두 형식의 열기·선택·삽입·이력·저장·재열기를 확인한 기록과 현재 배포 확인은 별도입니다 | Company/Enter 후속 소스의 이 배포 포함 여부는 이 확인만으로 판정하지 않으며, 모든 위치·명령·완전 조판의 증거도 아닙니다 |
 | [새 canonical 패키지 예제](./guide/package-names.md) | 단일 `@ohah/hwpjs`와 `/runtime`, `/react`, `/svelte`, `/vanilla`, `/react-native` subpath 후보를 tarball로 검사했습니다 | 새 Zig/WASM API는 npm 미게시입니다. 현재 npm의 `0.1.0-rc.10`은 구 Rust 패키지이며, 패키지 소비 검증이 새 엔진 배포 완료를 뜻하지 않습니다 |
-| Company/Enter 후속 | 준비 소스·격리 후보의 개별 검증은 공개 b7와 별도입니다 | 소스 존재·commit·후보 빌드만으로 현재 웹 배포 반영이나 전체 corpus/형식 지원을 선언하지 않습니다 |
+| Company/Enter 후속 | 준비 소스·격리 후보의 개별 검증은 현재 공개 3fc 배포 및 과거 b7 감사와 별도입니다 | 소스 존재·commit·후보 빌드만으로 현재 웹 배포 반영이나 전체 corpus/형식 지원을 선언하지 않습니다 |
 | [RN](./frameworks/react-native.md) | provider/JSI 기반 및 제한된 iOS 시뮬레이터 저수준 진단 harness의 근거가 있습니다 | 정식 HeadlessEditor provider 연결·Native Canvas 전체 조판·Android/iOS 제품 release·실기기·OS IME는 미완료입니다 |
+
+현재 배포 지문은 공개 asset commit `9e208626`의 [실제 HTTP manifest](https://ohah.github.io/hwpjs/editor/manifest.json)로 확인했습니다. manifest SHA256은 `f9a4dd5c271c614a4f02153df7903c13df41434a6db6335199a0b7128de15ad0`, WASM SHA256은 `3fc519b22c4c3f69d7e64c5337247163fcf0b7f8175e80c124325b922effccf0`입니다. 이는 배포 식별이며 b7 전수감사의 재실행이나 아래 기능별 검증 결과의 현재 배포 계승을 뜻하지 않습니다.
 
 설치·pack·예제 검사는 [설치 안내](./guide/installation.md)의 선행 소스와 메타데이터 조건을 따릅니다. 현재 소스, 독립 tarball, 실제 웹 배포, npm registry, Native 기기 지원의 검증을 서로 계승하지 않습니다.
 
@@ -36,7 +38,7 @@
 | 빠른 실행 취소 | 3웹 호스트 × 2형식의 신뢰 키 입력 72사례, 이력 바닥 4사례, 독립 다운로드 2사례 | 세 검사축을 하나의 corpus 성공 수로 합치지 않음. 실제 OS IME와 pending 중 문서 세대 교체는 별도 |
 | 공개 기본 붙여넣기 | Vanilla/React/Svelte × HWP5/HWPX 6조합. 실제 paste 이벤트·한 번의 splice·연속 입력·키보드 이력·다운로드/재열기 | charshape 두 fixture의 macOS Chromium 경로. 모든 OS·rich clipboard·개체/여러 문단 붙여넣기 증거가 아님 |
 | RN 기반 | 별도 macOS host의 실제 Hermes/JSI → Native Context에서 두 형식 60개 검사와 pending 작업 중 엔진 종료 검사 | RN 앱 release 링크·네이티브 Canvas/Skia·iOS/Android IME·실기기 E2E 아님. b7 웹 감사와 다른 snapshot |
-| 과거 기능별 검사 | 개별 서식·필드·표·수식·Worker·페이지/Canvas 보고서에 한정된 증거가 있음 | 과거 fixture/후보 WASM의 성공을 현재 b7의 전체 gate로 소급하지 않음 |
+| 과거 기능별 검사 | 개별 서식·필드·표·수식·Worker·페이지/Canvas 보고서에 한정된 증거가 있음 | 과거 fixture/후보 WASM의 성공을 b7 감사의 전체 gate로 소급하지 않음 |
 
 b7 WASM SHA256은 `b7aec1c9c674dbbef96c8c88e29a39e675a7eb85da630fe8707e7e2ad230bcee`입니다. 감사 당시 core 배포본은 별도 보존되어 있습니다. 후속 UI·압축 배포와 감사의 verifier/Native 기준선을 혼동하지 않습니다.
 
@@ -69,7 +71,7 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | RN 네이티브 provider/JSI | `packages/react-native/src/index.ts`, `cpp/NativeContextJsi.cpp`, `src/native/abi.zig` | 실제 Hermes host 60 checks. fake transport와 syntax compile은 별도 | 부분 | 공통 display projection, 앱 등록·release 패키징, 네이티브 Canvas/JSI 연결·실기기 build/E2E |
 | 실제 OS 한글 IME | core input lease와 Canvas 조합 이벤트 기반 | fast-undo 보고서의 CDP 관측은 compositionend 신뢰 조건 미충족, osImeVerified=false | 미검증 | 실제 OS 입력기 조합·확정·취소·undo/redo와 플랫폼별 수명 검사 |
 | pending 중 파일 교체 | core admission과 `apps/demo/src/document-admission.ts` | 교체 요청이 기존 admission에서 차단되어 Native load 0건 관측 | 미검증 | 실제 새 세대 활성화·진행 작업 취소 E2E. 차단 관측을 교체 성공으로 계수하지 않음 |
-| Enter 상속·Company 보호 후속 | 준비 소스/격리 후보; 공개 b7와 분리 | 후보별 근거만 유효, 공개 정적 배포 반영 증거와 구분 | 미검증(공개 배포) | 정식 통합·배포와 동일 snapshot 독립 저장·UI 검증 |
+| Enter 상속·Company 보호 후속 | 준비 소스/격리 후보; 현재 공개 3fc 배포 및 과거 b7 감사와 분리 | 후보별 근거만 유효; 현재 배포 포함 여부·동일 snapshot 실행은 이 문서 조사에서 확인하지 않음 | 미검증(공개 배포의 해당 기능) | 정식 통합·배포와 동일 snapshot 독립 저장·UI 검증 |
 | 탭/머리말 oracle 보완 | 기존 verifier를 재사용한 격리 후보. Native/제품 코드 변경 아님 | `zig-out/verification/oracle-closure-current/REPORT.md`; 동결·미적용 | 미검증 | 부모의 정식 적용 검토 이후 새 verifier 결과로 기록. 기존 b7 oracle 미지원 132를 소급 변경하지 않음 |
 | 전체 HWP5/HWPX 의미·조판·편집 | 포맷 코어·모델·WASM·scene·Canvas를 단계적으로 연결 | `docs/fixture-editor-completion.md`와 b7 미완료 결과 | 부분 | 모든 필드·임의 위치·모든 명령·원본 한/글 조판 및 실제 UI 전수 증명 |
 | PDF/bitmap export·인쇄 | 전용 typed public 메서드 미제공. host 책임과 구분 | public export 정적 대조 | 미구현 | export 계약·폰트·페이지 조판·독립 비교 |

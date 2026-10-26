@@ -59,7 +59,9 @@
 
 실제 TypeScript view를 타입 제거만 거쳐 독립 sibling DOM으로 실행했습니다. 320/520/522px × CSS zoom100/125/150% × 찾기/바꾸기 18조건에서 표시된 input/action button 겹침은 원본12조건에서 후보0조건으로 줄었고, 후보의 필드 경계와 dialog 수평 overflow 검사도 통과했습니다. 동일 판정식은 원본1통과·3실패, 후보4통과·0실패입니다. 근거는 `zig-out/verification/find-input-overlap-independent/`의 `GEOMETRY-final.json`, `originalfails.log`, `fixedpasses.log`, `FINAL-RECEIPT.json`입니다.
 
-이 결과는 CSS view scale을 사용한 독립 Chromium geometry이며 브라우저 자체 페이지 줌, Native 동작 또는 통합 앱 E2E를 대신하지 않습니다. 공통 border-box로 다른 창의 외곽폭이 2px 줄거나 body 스크롤이 일찍 생길 수 있어 서식·예제·문서 통계 창의 실제 앱 회귀는 별도 확인 대상입니다. 이 기록만으로 공개 배포 반영을 확정하지 않습니다. 공개 배포는 미확인 상태로 구분합니다.
+이 독립 18조건은 CSS view scale 검증이며 브라우저 자체 페이지 줌이나 Native 검증을 대신하지 않습니다. 후속 실제 앱 G3에서는 320/520px의 찾기·바꾸기와 예제·글자·문단·통계 창 12조건에서 겹침·수평 overflow·대상 하단 버튼·닫기 포커스 경계를 확인했습니다(`file-open-modal-css-integration/20261026T160928/RESULTS.json`). G4에서는 찾기·바꾸기 4조건과 320px의 나머지 창 4조건만 다시 확인했습니다(`find-pending-g4-harness/20261026T161925/RESULTS.json`). 공통 border-box의 외곽폭·스크롤 변화에 대한 이 대상 범위의 회귀 증거이며, 완전한 조판·모든 형식·모든 프레임워크 검증은 아닙니다.
+
+공개 G4는 CI `40285971134`의 exact `9e208626` build/deploy 성공과 HTTPS28파일 SHA·bytes 일치, 찾기→Escape/닫기→재열기 2흐름을 확인했습니다(`format-dialog-production-candidate/generation4/live-9e208626/FINAL-RECEIPT.json`). 변경 요청0·HTTP/브라우저 오류0·private origin 유출0·브라우저 inactive도 이 범위에서 확인했습니다. 공개에서 18조건·12조건·8조건 전부를 다시 실행했다는 뜻은 아니며, 특정 reload timeout의 페이지 비활성 원인 분리와 검색 수명은 [헤드리스 텍스트 도구](headless-text-tools.md)를 따릅니다.
 
 ## 취소, 오류, 포커스
 

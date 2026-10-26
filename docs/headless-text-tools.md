@@ -16,6 +16,15 @@ clipboard 관측은 검증된 단일 문단 선택의 텍스트·타깃·읽기/
 
 코어 검사는 `packages/core/tests/state/text-tools.test.ts`와 `clipboard-state.test.ts`가 소유합니다. 공개 API만 사용하는 데모의 clipboard 권한 거부·지연 선택 변경은 `apps/demo/tests/clipboard-bridge.test.ts`, 찾기/바꾸기의 중복·닫기·dispose 경합은 `text-tools-bridge.test.ts`가 검사합니다. fake DOM 검사는 실제 Canvas·OS clipboard E2E를 대체하지 않습니다. 브라우저 증거와 배포 상태는 [통합 검증 기록](headless-editor-verification.md)을 따릅니다.
 
+<!-- text-tools-pending-presentation-20261026-933905ad -->
+## 검색 작업 종료와 메뉴 표시 수명
+
+2026-10-26 수정 `933905ad`는 검색 선택의 상태 이벤트가 `pending=true`일 때 shell을 갱신한 뒤, 작업 종료에서 메뉴를 다시 그리지 않아 찾기 버튼의 disabled·진행 중 title이 남던 문제를 고칩니다. CSS 겹침 수정과 별도 원인입니다. bridge는 `onPresentationChange`로 시작·settle·close의 표시 변경을 알리고, demo-controller가 `shell.update()`를 연결합니다. close는 epoch를 바꾸되 pending을 즉시 해제하지 않습니다. epoch가 달라진 작업도 settle에서는 살아 있는 bridge의 메뉴를 갱신하되, 후속 선택 접수·성공 안내는 기존 active 검사를 따릅니다. 이미 접수된 작업을 취소한다는 뜻은 아닙니다. dispose 뒤에는 알리지 않고, 동기 constructor 구독 중에는 shell 준비 전 콜백을 막습니다.
+
+정규 회귀는 `apps/demo/tests/text-tools-presentation.test.ts`와 전용 helper가 소유하며 tracked 공통 DOM fixture만 재사용합니다. 같은 9개 판정에서 수정 전 원본7실패→후보9통과·52expect를 확인했고, 실제 적용 후 단위14통과·0실패·52expect 및 대상 actual TypeScript 검사0을 확인했습니다. 독립 근거는 `zig-out/verification/text-tools-presentation-pending-candidate/`의 `closed-originalfails.log`, `closed-fixed.log`, `CLOSED-FOUR-PATHS-MANIFEST.json`입니다. 제어 transport·DOM 단위 검증은 실제 Native/브라우저 E2E와 구분합니다.
+
+실제 앱 G4의 원래4흐름·late2·CSS8 조건 통과는 해당 관측 범위만의 결과입니다. 별도 `zig-out/verification/find-pending-g4-harness/lifecycle-once/REPORT.json`의 1회 실험에서 초기 reload timeout 페이지는 hidden·focus=false·직접 rAF counter0이었고, 동일 실패 페이지에 CDP `Page.bringToFront`만 적용하자 visible·focus=true·rAF6·Canvas rows5/paintPending=false로 회복했습니다. Native ACK·fonts가 정상인 이 관측에서 앱 변경·재로드·재업로드 없이 해당 timeout을 페이지 비활성 수명 경로로 분리했습니다. `Page.setWebLifecycleState`는 이미 회복한 뒤의 보조 조작이므로 독립 인과 증거가 아닙니다. 새 target이 hidden이 된 세부 원인, G4의 모든 형식·흐름 완료, 일반 로딩 문제 전체 해결은 입증하지 않습니다. 후속 공개 검증은 `format-dialog-production-candidate/generation4/live-9e208626/FINAL-RECEIPT.json`에서 CI `40285971134`의 exact `9e208626` build/deploy 성공, HTTPS28파일의 SHA·bytes 일치, 찾기→Escape/닫기→재열기 2흐름과 선택·캐럿·포커스 유지, 변경 요청0·HTTP/브라우저 오류0·private origin 유출0·브라우저 inactive를 확인했습니다. 공개 반영 확인은 이 산출물과 2흐름 범위이며 모든 형식·프레임워크의 동작 완료를 뜻하지 않습니다.
+
 ## 방향 검색 검증
 
 2026-10-25 코어/bridge/독립 일치 목록 검사는29/29·566 assertions를 통과했습니다. `text-search-direction-oracle.test.ts`는 제품의 문단 방문 알고리즘을 복사하지 않고 모든 겹치는 부분 문자열 일치를 열거하여 방향/순환/origin 조합512개를 대조했습니다. 한글·emoji UTF-16 경계, 잘린/소유자 없는 행 제외, 역방향 인덱스0, 한 개뿐인 일치와 경계 null을 포함합니다. 쿼리·방향·선택 변경과 Escape/닫기/dispose 중 지연 작업의 거부도 검사했습니다.
