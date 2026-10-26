@@ -16,7 +16,7 @@ native 변경 후 표시 오류는 기존 fail-closed 경로를 사용합니다.
 
 2026-10-02 외부 preview 주소의 실제 Chromium에서 shapeline에 `이력😀`를 입력하고 Meta+Z·Meta+Shift+Z·Control+Z·Control+Y를 실행했습니다. 입력값·접근성 표시의 원본 복원/재적용을 확인했습니다. 실제 다운로드한 undo ZIP은 원본 fixture와 바이트 단위로 동일하며 redo ZIP은 native editor에서 재열어 앵커 문자열과 재저장 바이트가 일치합니다. `/private/tmp/hwpjs-history-e2e.png`를 캡처하고 화면을 확인했습니다. 화면 안내의 오래된 실행 취소 미지원 문구도 수정했습니다. 자동 Chromium 키 입력이며 실제 OS 한글 IME·한컴 조판 검증은 아닙니다.
 
-## V2 단계 배포 검증 후보
+## V2 이력 예산과 단계 배포
 
 V2를 제공하는 Native 엔진은 기본 이력 예산을 직접 결정하며 SDK는 options/stats 응답을 소비합니다. 현재 후보의 Native 기본값은 256 entries, checkpoint payload 8MiB, retained allocation request bytes 128MiB이고 checkpoint별 owned 한도 기본값은 별도 지정되지 않습니다. 이 수치는 JS heap·WASM 전체 메모리 상한이 아닙니다. 구 엔진은 협상된 V1을 유지하고 지원하지 않는 명시 V2 예산 요청은 거부합니다.
 
@@ -25,3 +25,7 @@ V2를 제공하는 Native 엔진은 기본 이력 예산을 직접 결정하며 
 이 후보는 16회 이력 제한 해소를 위한 단계이며 전체 입력 O(n) 완료가 아닙니다. standalone V2의 `history_budget_stack.plan`은 undo entry 전체를 순회하고, commit·travel의 debug recount와 oldest revision 조회에도 스택 순회가 남습니다. 여기서 R은 보존한 이력 수이며, 단일 편집의 O(R) 비용과 N회 누적 비용을 구분해야 합니다. 매 편집의 문서 projection·복제 비용까지 포함한 전체 파이프라인의 O(n) 상한도 보장하지 않습니다.
 
 r10 running ledger/Ring 후속은 이 순회를 줄이는 별도 후보입니다. 서로 다른 budget stack 구현의 회계·퇴출·복원 SSOT를 최종 통합해 검증해야 하며, 이 V2 단독 소스나 현재 fullgate에 새 최적화를 혼합하지 않았습니다. 사용자의 전체 O(n) 목표와 delta/atomic/RN 후속 목표는 계속 남아 있습니다.
+
+2026-10-27 `ac196c07`의 V2 SDK·Worker·WASM을 같은 세대로 묶어 React·Svelte·바닐라 × Noori HWP5·HWPX 6조합을 실제 Chromium에서 검사했습니다. 각 조합의 trusted 100입력·100undo·100redo, caret, 다운로드, 원본 undo 바이트 일치, redo·재열기 바이트 일치와 독립 CFB/전체 XML 검증을 확인했습니다. 공개 API 화면의 실제 컨트롤에서도 load·splice·undo·redo·save·reopen·read를 실행했습니다. 사용한 브라우저는 모두 종료했습니다. 이는 OS IME·한컴 조판 동치나 전체 API 지원 검증은 아닙니다.
+
+같은 검사에서 Noori HWPX의 100undo는 약 29초로, 대기 시간이 남았습니다. 다른 Native 검사와 브라우저가 병행된 관측이며 단독 성능 A/B로 일반화하지 않습니다. 이력 보존 제한 해소와 입력·이력 성능 개선은 별도 완료 기준으로 유지합니다. 정적 묶음의 검증·운영 전환·되돌리기 계약은 [데모 서버 모드](demo-server-modes.md)를 따릅니다.
