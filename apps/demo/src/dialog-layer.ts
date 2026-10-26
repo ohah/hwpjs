@@ -32,6 +32,15 @@ export function createDialogLayer(root:HTMLElement,options:DialogLayerOptions){
   const top=Math.max(8,Math.min((win?.innerHeight??768)-rect.height-8,drag.top+event.clientY-drag.y));
   element.style.inset='auto';element.style.margin='0';element.style.left=left+'px';element.style.top=top+'px';
  });
+ // A dragged window uses pixel offsets; recentering CSS no longer follows viewport resize.
+ const clampToViewport=()=>{
+  if(disposed||!element.open||!element.style.left)return;
+  const win=doc.defaultView,rect=element.getBoundingClientRect();if(!win)return;
+  const left=Math.max(8,Math.min(Math.max(8,win.innerWidth-rect.width-8),rect.left));
+  const top=Math.max(8,Math.min(Math.max(8,win.innerHeight-rect.height-8),rect.top));
+  element.style.left=left+'px';element.style.top=top+'px';
+ };
+ if(doc.defaultView)listen(doc.defaultView,'resize',clampToViewport);
  listen(header,'pointerup',stopDrag);listen(header,'pointercancel',stopDrag);listen(header,'lostpointercapture',()=>{drag=undefined;});
  return {element,body,footer,setTitle(value:string){title.textContent=value;element.setAttribute('aria-label',value);},show(focus?:HTMLElement){if(disposed)return;if(!element.parentElement)root.append(element);if(!element.open){if(options.mode==='modal')element.showModal();else element.show();}focus?.focus();},destroy(){if(disposed)return;disposed=true;stopDrag();for(const remove of removals.splice(0))remove();if(element.open)element.close();element.remove();}};
 }
