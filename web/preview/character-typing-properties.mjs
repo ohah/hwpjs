@@ -1,5 +1,5 @@
-import { characterPropertyArgs } from "../../js/character-property-args.mjs";
-import { isSourceCharacterSize } from "./character-size-selection.mjs";
+import { characterPropertyArgs } from '../../js/character-property-args.mjs';
+import { isSourceCharacterSize } from './character-size-selection.mjs';
 
 function scalarStart(text, unit) {
   const previous = text.charCodeAt(unit - 1),
@@ -11,7 +11,7 @@ function scalarStart(text, unit) {
 
 export function typingSourceSpan(text, unit) {
   if (
-    typeof text !== "string" ||
+    typeof text !== 'string' ||
     !text.length ||
     !Number.isInteger(unit) ||
     unit < 0 ||
@@ -33,23 +33,23 @@ export function mergeTypingProperties(previous, requested) {
 
 export function characterTypingState(text, unit, property, properties, read) {
   if (
-    !["bold", "italic"].includes(property) ||
-    typeof text !== "string" ||
+    !['bold', 'italic'].includes(property) ||
+    typeof text !== 'string' ||
     !Number.isInteger(unit) ||
     unit < 0 ||
     unit > text.length
   )
     return null;
-  if (typeof properties?.[property] === "boolean") return properties[property];
+  if (typeof properties?.[property] === 'boolean') return properties[property];
   if (text.length === 0) return false;
   const { start, end } = typingSourceSpan(text, unit);
   const state = read(start, end, property);
-  return typeof state === "boolean" ? state : null;
+  return typeof state === 'boolean' ? state : null;
 }
 
 /** 입력 크기는 현재 입력 서식을 우선하며 빈 원문의 기본값은 추정하지 않습니다. */
 export function characterTypingSize(text, unit, properties, read) {
-  if (typeof text !== "string" || !Number.isInteger(unit) || unit < 0 || unit > text.length)
+  if (typeof text !== 'string' || !Number.isInteger(unit) || unit < 0 || unit > text.length)
     return null;
   if (properties?.size !== undefined && properties.size !== null) {
     try {

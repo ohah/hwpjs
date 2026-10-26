@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 function input(rows, columns, sizes, cells) {
   const values = [rows, columns, ...sizes, ...cells.flat()];
   const b = Buffer.alloc(values.length * 2);
@@ -15,18 +15,18 @@ function expected(rows, columns, sizes, cells) {
   const starts = Array(rows).fill(0);
   for (const [y, x, h, w] of cells) {
     if (!h || !w || y >= rows || x >= columns || y + h > rows || x + w > columns)
-      return "InvalidCellSpan";
-    if (starts[y] >= sizes[y]) return "TableRowCellCountMismatch";
+      return 'InvalidCellSpan';
+    if (starts[y] >= sizes[y]) return 'TableRowCellCountMismatch';
     starts[y]++;
   }
-  if (starts.some((v, i) => v !== sizes[i])) return "TableRowCellCountMismatch";
+  if (starts.some((v, i) => v !== sizes[i])) return 'TableRowCellCountMismatch';
   const dense = new Uint16Array(rows * columns);
   for (const [y, x, h, w] of cells)
     for (let row = y; row < y + h; row++)
       for (let col = x; col < x + w; col++) {
-        if (dense[row * columns + col]++) return "OverlappingTableCells";
+        if (dense[row * columns + col]++) return 'OverlappingTableCells';
       }
-  return dense.some((v) => v === 0) ? "IncompleteTableGrid" : null;
+  return dense.some((v) => v === 0) ? 'IncompleteTableGrid' : null;
 }
 export function checkGrid(call, rows, columns, sizes, cells) {
   const error = expected(rows, columns, sizes, cells);
@@ -95,7 +95,7 @@ export function gridEdges(call) {
       wrong = [...sizes];
     wrong[source]--;
     wrong[target]++;
-    assert.equal(checkGrid(call, rows, columns, wrong, cells), "TableRowCellCountMismatch");
+    assert.equal(checkGrid(call, rows, columns, wrong, cells), 'TableRowCellCountMismatch');
   }
   const sizes = Array(65535).fill(0);
   sizes[0] = 1;

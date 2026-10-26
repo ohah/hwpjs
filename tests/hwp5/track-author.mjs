@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { loadMemoDocument } from "./memo-references.mjs";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { loadMemoDocument } from './memo-references.mjs';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -55,8 +55,8 @@ export function trackAuthorEdges(call) {
 export function trackAuthorDocument(call, cfb) {
   const actual = [];
   for (const [name, count] of [
-    ["issue5169_viewtext_changetracking.hwp", 4],
-    ["task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp", 1],
+    ['issue5169_viewtext_changetracking.hwp', 4],
+    ['task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp', 1],
   ]) {
     const x = loadMemoDocument(call, cfb, name),
       rows = documentRecords(x.doc),
@@ -67,7 +67,7 @@ export function trackAuthorDocument(call, cfb) {
     call(7, Buffer.concat([x.h.subarray(32, 36), x.doc]));
     actual.push({ name, count, sizes: authors.map((r) => r.end - r.start) });
   }
-  const x = loadMemoDocument(call, cfb, "issue5169_viewtext_changetracking.hwp"),
+  const x = loadMemoDocument(call, cfb, 'issue5169_viewtext_changetracking.hwp'),
     rs = documentRecords(x.doc),
     m = rs.find((r) => r.tag === 17),
     authors = rs.filter((r) => r.tag === 97),
@@ -79,7 +79,7 @@ export function trackAuthorDocument(call, cfb) {
   const reject = (doc, error) => {
     const file = cfb.write({
       nodes: x.nodes.map((n) =>
-        n.parent === 0 && n.name === "DocInfo"
+        n.parent === 0 && n.name === 'DocInfo'
           ? { ...n, content: x.h.readUInt32LE(36) & 1 ? deflateRawSync(doc) : doc }
           : n,
       ),

@@ -3,7 +3,7 @@ export function floatingDrawingAnchorUnits(content, paragraph, inlineObjects = [
   const anchors = content.floatingDrawingAnchors ?? [],
     units = new Set(),
     nodes = new Set();
-  if (!Array.isArray(anchors)) throw Error("InvalidFloatingDrawingAnchors");
+  if (!Array.isArray(anchors)) throw Error('InvalidFloatingDrawingAnchors');
   for (const anchor of anchors) {
     if (
       !anchor ||
@@ -11,15 +11,15 @@ export function floatingDrawingAnchorUnits(content, paragraph, inlineObjects = [
         (n) => Number.isSafeInteger(n) && n >= 0,
       )
     )
-      throw Error("InvalidFloatingDrawingAnchors");
+      throw Error('InvalidFloatingDrawingAnchors');
     if (anchor.section !== paragraph.section || anchor.paragraph !== paragraph.paragraph) continue;
     if (
-      paragraph.text[anchor.anchorUnit] !== "\ufffc" ||
+      paragraph.text[anchor.anchorUnit] !== '\ufffc' ||
       units.has(anchor.anchorUnit) ||
       nodes.has(anchor.node) ||
       inlineObjects.some((o) => o.objectNode === anchor.node || o.unit === anchor.anchorUnit)
     )
-      throw Error("AmbiguousFloatingDrawingAnchors");
+      throw Error('AmbiguousFloatingDrawingAnchors');
     units.add(anchor.anchorUnit);
     nodes.add(anchor.node);
   }

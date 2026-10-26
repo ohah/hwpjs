@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -6,7 +6,7 @@ const w = (n) => {
 };
 const frame = (tag, level, b) => Buffer.concat([w(tag | (level << 10) | (b.length << 20)), b]);
 export function revisionDeleteEdges(call) {
-  const command = Buffer.from("$RevisionDelete;", "utf16le");
+  const command = Buffer.from('$RevisionDelete;', 'utf16le');
   let accepted = 0,
     rejected = 0;
   const props = (c) => {

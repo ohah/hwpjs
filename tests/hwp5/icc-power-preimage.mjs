@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { paraInput } from "./icc-analytic.mjs";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { decode } from "./icc-power-preimage-wire.mjs";
-import { verify } from "./icc-power-preimage-reference.mjs";
+import assert from 'node:assert/strict';
+import { paraInput } from './icc-analytic.mjs';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { decode } from './icc-power-preimage-wire.mjs';
+import { verify } from './icc-power-preimage-reference.mjs';
 export function preimageInput(kind, raw, n, d, precision = 512, bits = 128) {
   const width = bits / 8,
     prefix = 4 + 2 * width;

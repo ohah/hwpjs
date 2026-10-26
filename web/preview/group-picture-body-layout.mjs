@@ -1,11 +1,11 @@
-import { layoutInlineGroupBody } from "./inline-group-body-layout.mjs";
-import { paginatePictureDocumentFlow } from "./picture-document-flow.mjs";
-import { inlinePictureIndex, picturePositionKey } from "./picture-inline.mjs";
-import { pictureTextMeasure } from "./picture-text-measurement.mjs";
-import { hasPictureSourceErrors, hasFinitePictureCrop } from "./picture-source-validation.mjs";
-import { picturePaintPlan } from "./picture-paint-plan.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
+import { layoutInlineGroupBody } from './inline-group-body-layout.mjs';
+import { paginatePictureDocumentFlow } from './picture-document-flow.mjs';
+import { inlinePictureIndex, picturePositionKey } from './picture-inline.mjs';
+import { pictureTextMeasure } from './picture-text-measurement.mjs';
+import { hasPictureSourceErrors, hasFinitePictureCrop } from './picture-source-validation.mjs';
+import { picturePaintPlan } from './picture-paint-plan.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { textMeasurement } from './text-measurement.mjs';
 
 /** Groups keep native dimensions; the shared picture solver owns wrapping. */
 export function layoutGroupPictureBody(
@@ -19,26 +19,26 @@ export function layoutGroupPictureBody(
   );
   if (!floating.length && firstPageTopInset === 0)
     return layoutInlineGroupBody(content, measure, maxRows);
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (!Number.isFinite(firstPageTopInset) || firstPageTopInset < 0)
-    return fail("InvalidGroupFirstPageInset");
+    return fail('InvalidGroupFirstPageInset');
   if (content.tables?.length || content.createdTables?.length)
-    return fail("UnsupportedGroupPictureTables");
+    return fail('UnsupportedGroupPictureTables');
   if (
     floating.some(
       (p) =>
         hasPictureSourceErrors(p) ||
         !hasFinitePictureCrop(p) ||
         p.caption != null ||
-        p.state !== "located" ||
+        p.state !== 'located' ||
         ![0, 1].includes(p.flow?.textWrap) ||
         p.position?.relations?.[2] !== 0 ||
         p.position?.flags?.[0] !== false ||
         signedInt32(p.flow?.zOrder) === null ||
-        picturePaintPlan(p).state === "unsupported_transform",
+        picturePaintPlan(p).state === 'unsupported_transform',
     )
   )
-    return fail("UnsupportedGroupPictureSource");
+    return fail('UnsupportedGroupPictureSource');
   const keys = new Set(),
     identities = new Set();
   for (const picture of floating) {
@@ -51,14 +51,14 @@ export function layoutGroupPictureBody(
       keys.has(key) ||
       identities.has(identity) ||
       hosts.length !== 1 ||
-      hosts[0].text[picture.anchorUnit] !== "\ufffc" ||
+      hosts[0].text[picture.anchorUnit] !== '\ufffc' ||
       picture.owner.paragraph !== picture.paragraph ||
       picture.owner.anchorUnit !== picture.anchorUnit ||
       hosts[0].tableCell ||
       hosts[0].drawingText ||
       hosts[0].drawingCaption
     )
-      return fail("AmbiguousGroupPictureOwner");
+      return fail('AmbiguousGroupPictureOwner');
     keys.add(key);
     identities.add(identity);
   }
@@ -77,17 +77,17 @@ export function layoutGroupPictureBody(
         objects.map((o) => [picturePositionKey(o.section, o.paragraph, o.unit), o]),
       );
       if (objects.some((o) => keys.has(picturePositionKey(o.section, o.paragraph, o.unit))))
-        return fail("AmbiguousGroupPictureOwner");
+        return fail('AmbiguousGroupPictureOwner');
       const currentMeasure = (text, p, unit, kind) => {
         const object =
-          kind === "text" &&
-          text !== "" &&
+          kind === 'text' &&
+          text !== '' &&
           byUnit.get(picturePositionKey(p.section, p.paragraph, unit));
         return object
           ? {
               width: object.width,
               height: object.height,
-              spacingBasisHeight: textMeasurement(measure("", p, unit, kind)).height,
+              spacingBasisHeight: textMeasurement(measure('', p, unit, kind)).height,
             }
           : pictureMeasure(text, p, unit, kind);
       };
@@ -97,9 +97,9 @@ export function layoutGroupPictureBody(
         floating,
         currentMeasure,
         flows,
-        { maxRows, edgePolicy: "inside-start-outside-end", firstPageTopInset },
+        { maxRows, edgePolicy: 'inside-start-outside-end', firstPageTopInset },
       );
-      if (page.state !== "paginated") return page;
+      if (page.state !== 'paginated') return page;
       return {
         ...page,
         flowPictures: page.pictureReservations.map((item) => {

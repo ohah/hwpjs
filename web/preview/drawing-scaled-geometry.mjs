@@ -1,4 +1,4 @@
-import { drawingQuadGeometry } from "./drawing-quad-geometry.mjs";
+import { drawingQuadGeometry } from './drawing-quad-geometry.mjs';
 
 // 선언 크기는 로컬 배치, 양의 축 배율은 표시 변환으로 분리합니다.
 export function drawingScaledGeometry(source) {
@@ -20,7 +20,7 @@ export function drawingScaledGeometry(source) {
     matrix[5] !== 0
   )
     return false;
-  if (drawingQuadGeometry(source, { x: 0, y: 0 }).state !== "mapped") return false;
+  if (drawingQuadGeometry(source, { x: 0, y: 0 }).state !== 'mapped') return false;
   const [a, b, c, d] = source.rendering_corners;
   if (
     a[0] !== 0 ||

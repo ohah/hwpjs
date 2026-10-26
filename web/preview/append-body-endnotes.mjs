@@ -1,9 +1,9 @@
-import { prepareEndnoteBodyFlow, projectEndnoteBodySlots } from "./endnote-body-flow.mjs";
-import { paginateBodyRows } from "./page-row-flow.mjs";
-import { pageSequenceReference } from "./page-sequence-reference.mjs";
-import { curveLayoutDiagnostics } from "./curve-layout-diagnostics.mjs";
-import { bodyPageOccupiedBottom } from "./body-footnote-projection.mjs";
-import { endnoteColumnPrefix } from "./endnote-column-prefix.mjs";
+import { prepareEndnoteBodyFlow, projectEndnoteBodySlots } from './endnote-body-flow.mjs';
+import { paginateBodyRows } from './page-row-flow.mjs';
+import { pageSequenceReference } from './page-sequence-reference.mjs';
+import { curveLayoutDiagnostics } from './curve-layout-diagnostics.mjs';
+import { bodyPageOccupiedBottom } from './body-footnote-projection.mjs';
+import { endnoteColumnPrefix } from './endnote-column-prefix.mjs';
 
 /** Continue after proven body occupancy without reflowing or copying its paint rows. */
 export function appendBodyEndnotes(
@@ -17,9 +17,9 @@ export function appendBodyEndnotes(
   columnBottom,
   endnoteContext,
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
-    body?.state !== "paginated" ||
+    body?.state !== 'paginated' ||
     body.limited ||
     !Array.isArray(body.pages) ||
     !body.pages.length ||
@@ -29,14 +29,14 @@ export function appendBodyEndnotes(
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
     !Array.isArray(sourceFlows) ||
-    (columnBottom !== undefined && typeof columnBottom !== "function")
+    (columnBottom !== undefined && typeof columnBottom !== 'function')
   )
-    return fail("InvalidEndnoteBodyLayout");
-  const multiple = endnoteContext?.state === "resolved" && endnoteContext.columns?.length > 1;
+    return fail('InvalidEndnoteBodyLayout');
+  const multiple = endnoteContext?.state === 'resolved' && endnoteContext.columns?.length > 1;
   const prepared = prepareEndnoteBodyFlow(notes, policy, separator, sourceFlows, {
     sceneColumns: multiple,
   });
-  if (prepared.state !== "prepared") return prepared;
+  if (prepared.state !== 'prepared') return prepared;
   const allIds = [
     ...sourceFlows.map((f) => f.paragraph),
     ...prepared.flows.map((f) => f.paragraph),
@@ -44,7 +44,7 @@ export function appendBodyEndnotes(
   ].filter(Number.isSafeInteger);
   const prefixParagraph = allIds.reduce((maximum, id) => Math.max(maximum, id), 0) + 1;
   if (!Number.isSafeInteger(prefixParagraph) || prefixParagraph > 0xffffffff)
-    return fail("EndnoteBodyIdentityLimit");
+    return fail('EndnoteBodyIdentityLimit');
   const prefix = [];
   if (multiple) {
     if (
@@ -53,22 +53,22 @@ export function appendBodyEndnotes(
           !Number.isFinite(note.width) || Math.abs(note.width - endnoteContext.width) > 1e-8,
       )
     )
-      return fail("MismatchedEndnoteColumnWidth");
+      return fail('MismatchedEndnoteColumnWidth');
     const planned = endnoteColumnPrefix(body, endnoteContext, setting, prefixParagraph, maxRows);
-    if (planned.state !== "prepared") return planned;
+    if (planned.state !== 'prepared') return planned;
     prefix.push(...planned.rows);
   } else
     for (const [index, page] of body.pages.entries()) {
       const expected = pageSequenceReference(setting, index);
       if (
-        expected.state !== "placed" ||
+        expected.state !== 'placed' ||
         page.ordinal !== index ||
         page.columns?.length !== 1 ||
-        ["x", "y", "width", "height"].some(
+        ['x', 'y', 'width', 'height'].some(
           (field) => page.columns[0]?.[field] !== page.page?.[field],
         ) ||
-        ["paper", "page"].some((key) =>
-          ["x", "y", "width", "height"].some(
+        ['paper', 'page'].some((key) =>
+          ['x', 'y', 'width', 'height'].some(
             (field) =>
               Math.abs(page[key]?.[field] - expected.boxes[key][field]) > 1e-8 ||
               !Number.isFinite(page[key]?.[field]),
@@ -76,24 +76,24 @@ export function appendBodyEndnotes(
         )
       )
         return {
-          ...fail("UnsupportedEndnoteBodyPages"),
-          layoutStage: "append-endnotes",
+          ...fail('UnsupportedEndnoteBodyPages'),
+          layoutStage: 'append-endnotes',
           pageOrdinal: index,
           bodyColumnCount: page.columns?.length,
           policyReason:
             page.columns?.length > 1
-              ? "endnote-column-flow-not-connected"
-              : "unproven-body-page-reference",
+              ? 'endnote-column-flow-not-connected'
+              : 'unproven-body-page-reference',
         };
       const occupied = bodyPageOccupiedBottom(body, page);
-      if (occupied.state !== "measured") return occupied;
+      if (occupied.state !== 'measured') return occupied;
       if (occupied.bottom > page.page.y + page.page.height + 1e-8)
-        return fail("UnsupportedEndnoteBodyOverflow");
+        return fail('UnsupportedEndnoteBodyOverflow');
       const height =
         index + 1 === body.pages.length ? occupied.bottom - page.page.y : page.page.height;
       if (height > 0)
         prefix.push({
-          kind: "gap",
+          kind: 'gap',
           section: policy.section,
           paragraph: prefixParagraph,
           height,
@@ -104,7 +104,7 @@ export function appendBodyEndnotes(
     {
       section: policy.section,
       paragraph: prefixParagraph,
-      host: "body",
+      host: 'body',
       top_level: true,
       page_break: false,
       column_break: false,
@@ -139,12 +139,12 @@ export function appendBodyEndnotes(
         : {}),
     },
   );
-  if (planned.state !== "paginated" || planned.limited) return planned;
+  if (planned.state !== 'paginated' || planned.limited) return planned;
   const projected = projectEndnoteBodySlots(
     { ...planned, rows: planned.rows.filter((row) => !row.endnoteBodyPrefix) },
     notes,
   );
-  if (projected.state !== "projected") return projected;
+  if (projected.state !== 'projected') return projected;
   if (
     body.rows.length +
       projected.rows.length +
@@ -152,7 +152,7 @@ export function appendBodyEndnotes(
       projected.numberPrefixes.length >
     maxRows
   )
-    return fail("NotePageLayoutLimit");
+    return fail('NotePageLayoutLimit');
   const pages = planned.pages.map(
     (page, index) => body.pages[index] ?? { ...page, section: policy.section },
   );

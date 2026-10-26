@@ -1,6 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { execFileSync, spawnSync } from "../../tools/oracle-process.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync, spawnSync } from '../../tools/oracle-process.mjs';
 
 const wrap = (body) =>
   `<s:sec xmlns:s="http://www.hancom.co.kr/hwpml/2011/section" xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph">${body}</s:sec>`;
@@ -9,49 +9,49 @@ const begin =
   "<p:p><p:run><p:ctrl><p:fieldBegin id='7' type='CLICK_HERE'/></p:ctrl><p:t>A</p:t></p:run></p:p>";
 const script =
   "import json,runpy,sys; f=runpy.run_path('tools/hwpx-unmatched-prefix-witness.py')['witnesses']; print(json.dumps([f(x) for x in json.load(sys.stdin)]))";
-test("unmatched source evidence stays within its nearest list and never invents an end", () => {
-  const row = (localParagraph) => ({ localParagraph, unmatchedBeginIds: ["7"] });
+test('unmatched source evidence stays within its nearest list and never invents an end', () => {
+  const row = (localParagraph) => ({ localParagraph, unmatchedBeginIds: ['7'] });
   const cases = [
     [
       wrap(
-        paragraph("before") +
-          "<p:subList>" +
+        paragraph('before') +
+          '<p:subList>' +
           begin +
-          paragraph("inside") +
-          "</p:subList>" +
-          paragraph("after"),
+          paragraph('inside') +
+          '</p:subList>' +
+          paragraph('after'),
       ),
       [row(2), row(3)],
     ],
-    [wrap(paragraph("before") + begin + paragraph("inside")), [row(2), row(3)]],
+    [wrap(paragraph('before') + begin + paragraph('inside')), [row(2), row(3)]],
     [
       wrap(
-        "<p:subList>" + begin + "</p:subList><p:subList>" + paragraph("sibling") + "</p:subList>",
+        '<p:subList>' + begin + '</p:subList><p:subList>' + paragraph('sibling') + '</p:subList>',
       ),
       [row(1)],
     ],
     [
       wrap(
-        begin.replace("<p:t>A</p:t>", "<p:t>A</p:t><p:ctrl><p:fieldEnd beginIDRef='7'/></p:ctrl>"),
+        begin.replace('<p:t>A</p:t>', "<p:t>A</p:t><p:ctrl><p:fieldEnd beginIDRef='7'/></p:ctrl>"),
       ),
       [],
     ],
     [
       wrap(
-        "<p:p><p:run><p:tbl><p:subList>" +
+        '<p:p><p:run><p:tbl><p:subList>' +
           begin +
-          "</p:subList></p:tbl><p:t>outer</p:t></p:run></p:p>",
+          '</p:subList></p:tbl><p:t>outer</p:t></p:run></p:p>',
       ),
       [row(2)],
     ],
     [wrap("<p:p><p:run><fieldBegin id='7'/><p:t>foreign</p:t></p:run></p:p>"), []],
   ];
-  for (const flags of [[], ["-O"]]) {
+  for (const flags of [[], ['-O']]) {
     assert.deepEqual(
       JSON.parse(
-        execFileSync("python3", [...flags, "-c", script], {
+        execFileSync('python3', [...flags, '-c', script], {
           input: JSON.stringify(cases.map(([xml]) => xml)),
-          encoding: "utf8",
+          encoding: 'utf8',
           timeout: 10000,
         }),
       ),
@@ -60,13 +60,13 @@ test("unmatched source evidence stays within its nearest list and never invents 
     for (const xml of [
       wrap(begin + begin.replace("id='7'", "id='0007'")),
       wrap(begin + "<p:fieldEnd beginIDRef='8'/>"),
-      wrap(begin).replace("2011/section", "foreign"),
+      wrap(begin).replace('2011/section', 'foreign'),
     ]) {
       assert.throws(
         () =>
-          execFileSync("python3", [...flags, "-c", script], {
+          execFileSync('python3', [...flags, '-c', script], {
             input: JSON.stringify([xml]),
-            encoding: "utf8",
+            encoding: 'utf8',
             timeout: 10000,
           }),
         (error) =>
@@ -77,16 +77,16 @@ test("unmatched source evidence stays within its nearest list and never invents 
   }
 });
 
-test("actual unresolved field witnesses include protected rows but exclude early exterior", () => {
+test('actual unresolved field witnesses include protected rows but exclude early exterior', () => {
   for (const [id, paragraph, beginId] of [
-    ["80168", 187, "1575661054"],
-    ["86712", 387, "1505851682"],
+    ['80168', 187, '1575661054'],
+    ['86712', 387, '1505851682'],
   ]) {
     const path = `reference/rhwp/samples/issue1891/${id}_regulatory_analysis.hwpx`;
-    for (const flags of [[], ["-O"]]) {
+    for (const flags of [[], ['-O']]) {
       const rows = JSON.parse(
-        execFileSync("python3", [...flags, "tools/hwpx-unmatched-prefix-witness.py", path], {
-          encoding: "utf8",
+        execFileSync('python3', [...flags, 'tools/hwpx-unmatched-prefix-witness.py', path], {
+          encoding: 'utf8',
           timeout: 30000,
         }),
       );
@@ -103,21 +103,21 @@ test("actual unresolved field witnesses include protected rows but exclude early
   }
 });
 
-test("actual audit classifies unresolved protection without accepting it as editable", (t) => {
+test('actual audit classifies unresolved protection without accepting it as editable', (t) => {
   if (!process.env.HWPJS_TEST_WASM) {
-    t.skip("explicit candidate WASM required");
+    t.skip('explicit candidate WASM required');
     return;
   }
   for (const [id, ranges] of [
     [
-      "80168",
+      '80168',
       [
         [2, 3],
         [186, 189],
       ],
     ],
     [
-      "86712",
+      '86712',
       [
         [2, 3],
         [386, 399],
@@ -130,19 +130,19 @@ test("actual audit classifies unresolved protection without accepting it as edit
       const result = spawnSync(
         process.execPath,
         [
-          "tools/hwpx-edit-corpus-audit.mjs",
+          'tools/hwpx-edit-corpus-audit.mjs',
           `--wasm=${process.env.HWPJS_TEST_WASM}`,
           `--fixture=reference/rhwp/samples/issue1891/${id}_regulatory_analysis.hwpx`,
           `--paragraphs=${start}:${end}`,
-          "--history",
+          '--history',
         ],
-        { encoding: "utf8", timeout: 30000 },
+        { encoding: 'utf8', timeout: 30000 },
       );
       assert.equal(result.error, undefined);
       assert.equal(result.signal, null);
       assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.stderr, "");
-      const rows = result.stdout.trim().split("\n").map(JSON.parse),
+      assert.equal(result.stderr, '');
+      const rows = result.stdout.trim().split('\n').map(JSON.parse),
         totals = rows.at(-1).totals;
       assert.equal(rows.at(-2).completeFixture, false);
       assert.equal(totals.paragraphs, end - start);
@@ -154,43 +154,43 @@ test("actual audit classifies unresolved protection without accepting it as edit
   }
 });
 
-test("actual truncated tail audit verifies its unresolved source witness instead of requiring valid labels", (t) => {
+test('actual truncated tail audit verifies its unresolved source witness instead of requiring valid labels', (t) => {
   if (!process.env.HWPJS_TEST_WASM) {
-    t.skip("explicit candidate WASM required");
+    t.skip('explicit candidate WASM required');
     return;
   }
-  for (const flags of [[], ["-O"]]) {
+  for (const flags of [[], ['-O']]) {
     const witness = JSON.parse(
       execFileSync(
-        "python3",
+        'python3',
         [
           ...flags,
-          "tools/hwpx-unmatched-prefix-witness.py",
-          "reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx",
+          'tools/hwpx-unmatched-prefix-witness.py',
+          'reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx',
         ],
-        { encoding: "utf8", timeout: 30000 },
+        { encoding: 'utf8', timeout: 30000 },
       ),
     );
     assert.deepEqual(witness, [
-      { section: 0, localParagraph: 32, unmatchedBeginIds: ["1854889790"] },
+      { section: 0, localParagraph: 32, unmatchedBeginIds: ['1854889790'] },
     ]);
   }
   const result = spawnSync(
     process.execPath,
     [
-      "tools/hwpx-edit-corpus-audit.mjs",
+      'tools/hwpx-edit-corpus-audit.mjs',
       `--wasm=${process.env.HWPJS_TEST_WASM}`,
-      "--fixture=reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx",
-      "--paragraphs=32:33",
-      "--history",
+      '--fixture=reference/rhwp/samples/issue5729/stacked_tac_band_om_top.hwpx',
+      '--paragraphs=32:33',
+      '--history',
     ],
-    { encoding: "utf8", timeout: 30000 },
+    { encoding: 'utf8', timeout: 30000 },
   );
   assert.equal(result.error, undefined);
   assert.equal(result.signal, null);
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, "");
-  const rows = result.stdout.trim().split("\n").map(JSON.parse),
+  assert.equal(result.stderr, '');
+  const rows = result.stdout.trim().split('\n').map(JSON.parse),
     totals = rows.at(-1).totals;
   assert.equal(rows.at(-2).completeFixture, false);
   assert.equal(totals.paragraphs, 1);

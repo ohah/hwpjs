@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-const names = ["VtChart\0", "VtDataGrid\0", "VtMatrix\0", "VtCollection\0", "VtObject\0"];
+import assert from 'node:assert/strict';
+const names = ['VtChart\0', 'VtDataGrid\0', 'VtMatrix\0', 'VtCollection\0', 'VtObject\0'];
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -27,8 +27,8 @@ export function chartGridCellsOracle(b) {
   const type = () => {
     const id = long();
     if (types.has(id)) return types.get(id);
-    const name = take(word()).toString("latin1");
-    assert.ok(name.endsWith("\0"));
+    const name = take(word()).toString('latin1');
+    assert.ok(name.endsWith('\0'));
     assert.equal(word(), 1);
     types.set(id, name);
     return name;
@@ -51,22 +51,22 @@ export function chartGridCellsOracle(b) {
     const name = type(),
       payloadStart = p;
     let raw, trailer, kind;
-    if (name === "VtString\0") {
+    if (name === 'VtString\0') {
       raw = take(word());
       trailer = take(1)[0];
       kind = 1;
       stringBytes += raw.length;
       maxString = Math.max(maxString, raw.length);
     } else {
-      assert.equal(name, "VtDouble\0");
+      assert.equal(name, 'VtDouble\0');
       raw = take(8);
       trailer = word();
       kind = 2;
     }
     const valueBase = p;
-    assert.equal(type(), "VtValue\0");
+    assert.equal(type(), 'VtValue\0');
     const objectBase = p;
-    assert.equal(type(), "VtObject\0");
+    assert.equal(type(), 'VtObject\0');
     cells.push({ id, kind, start, end: p, trailer, raw, payloadStart, valueBase, objectBase });
   }
   const wire = gridCellsWire({ rows, columns, cells, end: p, stringBytes }, types.size);

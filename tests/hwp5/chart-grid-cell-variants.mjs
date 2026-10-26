@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 // Byte-preserving value variants shared by isolated and whole-Contents tests.
 export function gridCellVariants(b, o) {
   const result = [],

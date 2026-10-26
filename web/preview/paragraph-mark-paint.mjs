@@ -1,15 +1,15 @@
-import { rowLeft, rowTop, rowTextTop, rowTextHeight } from "./row-geometry.mjs";
-import { paragraphSelectionOwner } from "./paragraph-selection.mjs";
+import { rowLeft, rowTop, rowTextTop, rowTextHeight } from './row-geometry.mjs';
+import { paragraphSelectionOwner } from './paragraph-selection.mjs';
 /** A complete observed body paragraph end; not the last visible row of a fragment. */
 export function paragraphMarkPlan(row, index, paragraph) {
   if (
     !row ||
-    row.kind !== "text" ||
+    row.kind !== 'text' ||
     row.lastLine !== true ||
     !paragraph ||
     paragraph.clipped ||
     (paragraph.textStartUnit ?? 0) !== 0 ||
-    typeof paragraph.text !== "string"
+    typeof paragraph.text !== 'string'
   )
     return null;
   if (
@@ -24,7 +24,7 @@ export function paragraphMarkPlan(row, index, paragraph) {
   if (
     !Number.isSafeInteger(row.startUnit) ||
     row.startUnit < 0 ||
-    typeof row.text !== "string" ||
+    typeof row.text !== 'string' ||
     row.endUnit < row.startUnit ||
     paragraph.text.slice(row.startUnit, row.endUnit) !== row.text
   )
@@ -58,7 +58,7 @@ export function paintParagraphMark(ctx, plan, scrollTop) {
   const { x, width: w, height: h } = plan,
     y = plan.y - scrollTop;
   ctx.save();
-  ctx.strokeStyle = "#4169E1";
+  ctx.strokeStyle = '#4169E1';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(x + w, y);

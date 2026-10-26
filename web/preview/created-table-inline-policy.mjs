@@ -1,9 +1,9 @@
-import { hwp5ObjectFlags } from "./hwp5-object-flags.mjs";
+import { hwp5ObjectFlags } from './hwp5-object-flags.mjs';
 
 // New HWPX tables have a fixed native authoring policy. HWP5 is explicit.
 export function createdTableInlinePolicy(table, format) {
-  if (format === "hwpx") return true;
-  if (format !== "hwp5") return false;
+  if (format === 'hwpx') return true;
+  if (format !== 'hwp5') return false;
   const { common, table: policy, cell } = table?.hwp5Policy ?? {};
   if (!common || !policy || !cell) return false;
   let flags;
@@ -30,7 +30,7 @@ export function createdTableInlinePolicy(table, format) {
     zeroInsets(policy.margins) &&
     cell.attributes === 0 &&
     zeroInsets(cell.margins) &&
-    ((cell.layout === "observed8" && cell.unknown === 0) ||
-      (cell.layout === "spec6" && cell.unknown === null))
+    ((cell.layout === 'observed8' && cell.unknown === 0) ||
+      (cell.layout === 'spec6' && cell.unknown === null))
   );
 }

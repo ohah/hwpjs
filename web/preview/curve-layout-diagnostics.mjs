@@ -4,7 +4,7 @@ export function curveLayoutDiagnostics(layout, warnings) {
     warnings: [...(layout.warnings ?? []), ...warnings],
     ...(warnings.length
       ? {
-          objectCoverage: "incomplete",
+          objectCoverage: 'incomplete',
           unrenderedObjects: [
             ...(layout.unrenderedObjects ?? []),
             ...warnings.map((w) => ({ ...w, error: w.code })),

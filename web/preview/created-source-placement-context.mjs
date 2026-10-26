@@ -4,7 +4,7 @@ export function bindCreatedSourcePlacements(
   boxes,
   { baseDepth = 0, positionOwnerTableNode } = {},
 ) {
-  const fail = () => ({ state: "unavailable", error: "InvalidCreatedSourcePlacement" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidCreatedSourcePlacement' });
   if (
     !Array.isArray(rows) ||
     !Array.isArray(boxes) ||
@@ -52,5 +52,5 @@ export function bindCreatedSourcePlacements(
       return fail();
     output.push({ ...row, depth, positionOwnerTableNode: owner });
   }
-  return { state: "bound", rows: output };
+  return { state: 'bound', rows: output };
 }

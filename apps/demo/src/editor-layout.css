@@ -100,7 +100,7 @@
   gap: 6px;
   border: 0;
 }
-#app .hwp-demo-file-popup input[type="file"],
+#app .hwp-demo-file-popup input[type='file'],
 #app .hwp-demo-file-popup select {
   width: 100%;
   max-width: 100%;

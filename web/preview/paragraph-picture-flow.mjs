@@ -1,12 +1,12 @@
-import { measurePictureCaptionFrame } from "./picture-caption-frame.mjs";
-import { placeFloatingPicture } from "./picture-placement.mjs";
-import { pictureParagraphFlow } from "./picture-paragraph-flow.mjs";
-import { TEXT_TOP, TEXT_LEFT, DEFAULT_ROW_HEIGHT } from "./row-geometry.mjs";
-import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { picturePaintPlan } from "./picture-paint-plan.mjs";
-import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
-import { pictureAnchorOnlyFlow } from "./picture-anchor-only-flow.mjs";
+import { measurePictureCaptionFrame } from './picture-caption-frame.mjs';
+import { placeFloatingPicture } from './picture-placement.mjs';
+import { pictureParagraphFlow } from './picture-paragraph-flow.mjs';
+import { TEXT_TOP, TEXT_LEFT, DEFAULT_ROW_HEIGHT } from './row-geometry.mjs';
+import { paragraphSpacePixels } from './paragraph-geometry.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { picturePaintPlan } from './picture-paint-plan.mjs';
+import { usesDocumentFontMetrics } from './font-layout-policy.mjs';
+import { pictureAnchorOnlyFlow } from './picture-anchor-only-flow.mjs';
 
 // 현재 논리 단/문단 기준의 그림만 연결합니다. 종이·페이지 기준은 보정하지 않습니다.
 export function paragraphPictureFlow(
@@ -43,15 +43,15 @@ export function paragraphPictureFlow(
     if (
       picture.section !== paragraph.section ||
       picture.paragraph !== paragraph.paragraph ||
-      picture.state !== "located" ||
-      picturePaintPlan(picture).state === "unsupported_transform" ||
+      picture.state !== 'located' ||
+      picturePaintPlan(picture).state === 'unsupported_transform' ||
       ![0, 1, 2, 3].includes(picture.flow?.textWrap)
     )
       continue;
     if (signedInt32(picture.flow.zOrder) === null) continue;
     if (
       !Number.isInteger(picture.anchorUnit) ||
-      paragraph.text[picture.anchorUnit] !== "\ufffc" ||
+      paragraph.text[picture.anchorUnit] !== '\ufffc' ||
       picture.crop?.clip?.length !== 4 ||
       !picture.crop.clip.every(Number.isFinite)
     )
@@ -71,7 +71,7 @@ export function paragraphPictureFlow(
       ...context?.references,
       paragraph: box,
     });
-    if (placement.state === "placed") {
+    if (placement.state === 'placed') {
       const item = {
         rectangle: placement.rectangle,
         flow: picture.flow,
@@ -90,7 +90,7 @@ export function paragraphPictureFlow(
           context.captionMeasure ?? measure,
           { maxRows: maxLines - added.reduce((n, p) => n + (p.captionRows?.length ?? 0), 0) },
         );
-        if (frame.state !== "measured") return null;
+        if (frame.state !== 'measured') return null;
         item.flowRectangle = frame.flowRectangle;
         item.captionRectangle = frame.captionRectangle;
         item.captionRows = frame.rows;
@@ -105,19 +105,19 @@ export function paragraphPictureFlow(
     { x: originX, y, width },
     added,
     pictures.filter((p) => !added.includes(p)),
-    (text, unit) => measure(text, paragraph, unit, "text"),
+    (text, unit) => measure(text, paragraph, unit, 'text'),
     maxLines,
     { includeTerminalAfter, compactTerminal },
   );
   if (anchorFlow)
-    return anchorFlow.state === "complete" ? { ...anchorFlow, pictures: added } : null;
+    return anchorFlow.state === 'complete' ? { ...anchorFlow, pictures: added } : null;
   const flow = pictureParagraphFlow(
     paragraph.text,
     { x: originX, y, width },
     pictures,
-    (text, unit) => measure(text, paragraph, unit, "text"),
+    (text, unit) => measure(text, paragraph, unit, 'text'),
     { paragraphShape: paragraph.paragraphShape, maxLines, includeTerminalAfter },
   );
-  if (flow.state !== "complete") return null;
+  if (flow.state !== 'complete') return null;
   return { ...flow, pictures: added };
 }

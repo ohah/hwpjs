@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { cmp } from "./icc-power-reference.mjs";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { linearPreimageReference, choiceReference } from "./icc-linear-preimage-reference.mjs";
+import assert from 'node:assert/strict';
+import { cmp } from './icc-power-reference.mjs';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { linearPreimageReference, choiceReference } from './icc-linear-preimage-reference.mjs';
 function input(line, y) {
   const out = Buffer.alloc(76);
   [...line.start, ...line.end].forEach((v, i) => out.writeBigUInt64BE(v, i * 8));
@@ -31,7 +31,7 @@ export function linearPreimageEdges(call) {
       expected = choiceReference(interval);
     } catch (e) {
       assert.throws(() => call(194, bytes), new RegExp(e.message));
-      if (e.message.startsWith("Unattained")) unattained++;
+      if (e.message.startsWith('Unattained')) unattained++;
       else rejected++;
       return;
     }

@@ -1,19 +1,19 @@
-import { chartPreviewTextLayout } from "./chart-preview-text-layout.mjs";
+import { chartPreviewTextLayout } from './chart-preview-text-layout.mjs';
 import {
   paintChartPreviewAnnotations,
   paintChartPreviewGrid,
-} from "./chart-preview-annotation-paint.mjs";
-import { paintChartLines } from "./chart-line-paint.mjs";
-import { paintChartScatter } from "./chart-scatter-paint.mjs";
-import { validChartMarker } from "./chart-marker-policy.mjs";
-import { validChartPie, paintChartPie } from "./chart-pie-paint.mjs";
-import { validChartOfPie, paintChartOfPie } from "./chart-of-pie-paint.mjs";
-import { validChartStock, paintChartStock } from "./chart-stock-paint.mjs";
-import { validChartCurvePaths } from "./chart-curve-paths.mjs";
-import { validChartBar3D, paintChartBar3D } from "./chart-bar-3d-paint.mjs";
-import { validChartPie3D, paintChartPie3D } from "./chart-pie-3d-paint.mjs";
-import { validEmptyCircularPreview } from "./chart-empty-circular.mjs";
-const palette = ["#4472c4", "#ed7d31", "#a5a5a5", "#ffc000", "#5b9bd5", "#70ad47"];
+} from './chart-preview-annotation-paint.mjs';
+import { paintChartLines } from './chart-line-paint.mjs';
+import { paintChartScatter } from './chart-scatter-paint.mjs';
+import { validChartMarker } from './chart-marker-policy.mjs';
+import { validChartPie, paintChartPie } from './chart-pie-paint.mjs';
+import { validChartOfPie, paintChartOfPie } from './chart-of-pie-paint.mjs';
+import { validChartStock, paintChartStock } from './chart-stock-paint.mjs';
+import { validChartCurvePaths } from './chart-curve-paths.mjs';
+import { validChartBar3D, paintChartBar3D } from './chart-bar-3d-paint.mjs';
+import { validChartPie3D, paintChartPie3D } from './chart-pie-3d-paint.mjs';
+import { validEmptyCircularPreview } from './chart-empty-circular.mjs';
+const palette = ['#4472c4', '#ed7d31', '#a5a5a5', '#ffc000', '#5b9bd5', '#70ad47'];
 /** Preview colors only. Source chart style, axes and labels are not applied yet. */
 export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
   if (
@@ -21,7 +21,7 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
     ![item.x, item.y, item.width, item.height, scrollTop].every(Number.isFinite) ||
     item.width <= 0 ||
     item.height <= 0 ||
-    item.primitives?.state !== "ready"
+    item.primitives?.state !== 'ready'
   )
     return false;
   const bars = item.primitives.bars ?? [],
@@ -32,7 +32,7 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
     (!validEmptyCircularPreview(empty) ||
       bars.length ||
       lines.length ||
-      ["pie", "pie_3d", "of_pie", "scatter", "stock", "bar_3d", "categories", "legend"].some(
+      ['pie', 'pie_3d', 'of_pie', 'scatter', 'stock', 'bar_3d', 'categories', 'legend'].some(
         (key) => item.primitives[key] !== undefined,
       ))
   )
@@ -63,7 +63,7 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
   const scatter = item.primitives.scatter;
   if (
     scatter &&
-    (!["line", "lineMarker", "marker", "smooth", "smoothMarker"].includes(scatter.style) ||
+    (!['line', 'lineMarker', 'marker', 'smooth', 'smoothMarker'].includes(scatter.style) ||
       !Array.isArray(scatter.rows) ||
       !scatter.rows.every(
         (row) =>
@@ -77,7 +77,7 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
     scatter?.rows.some(
       (row) =>
         (row.curves !== null && row.curves !== undefined && !validChartCurvePaths(row.curves)) ||
-        (["smooth", "smoothMarker"].includes(scatter.style) && row.curves === undefined),
+        (['smooth', 'smoothMarker'].includes(scatter.style) && row.curves === undefined),
     )
   )
     return false;
@@ -98,18 +98,18 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
     if (!series.has(row.series_node)) series.set(row.series_node, series.size);
   ctx.save();
   try {
-    ctx.font = "12px sans-serif";
+    ctx.font = '12px sans-serif';
     const presentation = chartPreviewTextLayout(item, (text) => ctx.measureText(text).width);
-    if (presentation.state !== "ready") return false;
+    if (presentation.state !== 'ready') return false;
     const plot = presentation.plot;
     ctx.beginPath();
     ctx.rect(item.x, item.y - scrollTop, item.width, item.height);
     ctx.clip();
     if (empty) {
-      ctx.fillStyle = "#666";
-      ctx.textAlign = "center";
+      ctx.fillStyle = '#666';
+      ctx.textAlign = 'center';
       ctx.fillText(
-        "표시 계열에 숫자 데이터 없음",
+        '표시 계열에 숫자 데이터 없음',
         item.x + item.width / 2,
         item.y - scrollTop + item.height / 2,
       );

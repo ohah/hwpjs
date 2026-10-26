@@ -1,15 +1,15 @@
-import { isHardLineBreak } from "./hard-line-break.mjs";
-import { paragraphAlignmentKey } from "./paragraph-alignments.mjs";
-import { lineVisibleEndUnit } from "./line-visible-end.mjs";
-import { automaticNumberText } from "./automatic-number-text.mjs";
-import { tabAlignmentPrefix } from "./tab-alignment-prefix.mjs";
-import { boundaryGlyphWidth } from "./text-line-width.mjs";
+import { isHardLineBreak } from './hard-line-break.mjs';
+import { paragraphAlignmentKey } from './paragraph-alignments.mjs';
+import { lineVisibleEndUnit } from './line-visible-end.mjs';
+import { automaticNumberText } from './automatic-number-text.mjs';
+import { tabAlignmentPrefix } from './tab-alignment-prefix.mjs';
+import { boundaryGlyphWidth } from './text-line-width.mjs';
 
 function slotsAfter(parts, visible, alignment, boundary) {
   const spaces = parts
     .slice(boundary, visible - 1)
-    .flatMap((part, index) => (part === " " ? [boundary + index + 1] : []));
-  return alignment === "DISTRIBUTE" || (alignment === "JUSTIFY" && !spaces.length)
+    .flatMap((part, index) => (part === ' ' ? [boundary + index + 1] : []));
+  return alignment === 'DISTRIBUTE' || (alignment === 'JUSTIFY' && !spaces.length)
     ? Array.from(
         { length: Math.max(0, visible - boundary - 1) },
         (_, index) => boundary + index + 1,
@@ -20,18 +20,18 @@ function slotsAfter(parts, visible, alignment, boundary) {
 /** Display spacing only; the native document and source offsets stay untouched. */
 export function alignTextRow(row, { lastLine = false, paragraph } = {}) {
   const alignment = paragraphAlignmentKey(row.paragraphShape?.alignment);
-  if (row.kind !== "text" || !["JUSTIFY", "DISTRIBUTE", "DISTRIBUTE_SPACE"].includes(alignment))
+  if (row.kind !== 'text' || !['JUSTIFY', 'DISTRIBUTE', 'DISTRIBUTE_SPACE'].includes(alignment))
     return row;
   const points = row.boundaries;
   const invalid = () => {
-    throw new RangeError("InvalidLineAlignmentGeometry");
+    throw new RangeError('InvalidLineAlignmentGeometry');
   };
   if (
     !Array.isArray(points) ||
     !points.length ||
     !Number.isFinite(row.width) ||
     row.width <= 0 ||
-    typeof row.text !== "string" ||
+    typeof row.text !== 'string' ||
     !Number.isSafeInteger(row.startUnit) ||
     row.startUnit < 0 ||
     row.endUnit !== row.startUnit + row.text.length ||
@@ -55,7 +55,7 @@ export function alignTextRow(row, { lastLine = false, paragraph } = {}) {
       row.text.slice(points[index].unit - row.startUnit, point.unit - row.startUnit),
     );
   const forced = parts.some(isHardLineBreak);
-  if (alignment !== "DISTRIBUTE" && (forced || (alignment === "JUSTIFY" && lastLine))) return row;
+  if (alignment !== 'DISTRIBUTE' && (forced || (alignment === 'JUSTIFY' && lastLine))) return row;
   const visibleEnd = lineVisibleEndUnit(row.text, row.startUnit);
   const visible = points.findIndex((point) => point.unit === visibleEnd);
   if (visible < 2) return row;
@@ -74,18 +74,18 @@ export function alignTextRow(row, { lastLine = false, paragraph } = {}) {
   if (!slots.length) return row;
   let unsupportedControl = false;
   for (let index = 0; index < row.text.length && !unsupportedControl; index++) {
-    if (row.text[index] !== "\ufffc") continue;
+    if (row.text[index] !== '\ufffc') continue;
     const text =
       paragraph && paragraph.section === row.section && paragraph.paragraph === row.paragraph
         ? automaticNumberText(paragraph, row.startUnit + index)
         : null;
-    if (typeof text !== "string" || text.length === 0) unsupportedControl = true;
+    if (typeof text !== 'string' || text.length === 0) unsupportedControl = true;
   }
-  if (unsupportedControl) return { ...row, alignmentUnavailable: "UnsupportedAlignmentControl" };
-  if (row.text.includes("\t")) {
+  if (unsupportedControl) return { ...row, alignmentUnavailable: 'UnsupportedAlignmentControl' };
+  if (row.text.includes('\t')) {
     const prefix = tabAlignmentPrefix(row, paragraph, parts);
-    if (prefix.state !== "bound")
-      return { ...row, alignmentUnavailable: "UnsupportedAlignmentControl" };
+    if (prefix.state !== 'bound')
+      return { ...row, alignmentUnavailable: 'UnsupportedAlignmentControl' };
     slots = slotsAfter(parts, visible, alignment, prefix.boundary);
     if (!slots.length) return row;
   }

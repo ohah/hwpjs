@@ -1,25 +1,25 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { chartLegendOracle } from "./chart-legend-oracle.mjs";
-import { observePlotPrefix } from "./chart-plot-evidence.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { chartLegendOracle } from './chart-legend-oracle.mjs';
+import { observePlotPrefix } from './chart-plot-evidence.mjs';
 
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [];
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const legend = chartLegendOracle(b);
     // These two base types were independently checked by the earlier grid oracle.
     const prior = new Map([
-      [3, { name: "VtCollection\0", version: 1 }],
-      [4, { name: "VtObject\0", version: 1 }],
+      [3, { name: 'VtCollection\0', version: 1 }],
+      [4, { name: 'VtObject\0', version: 1 }],
     ]);
     rows.push({ sha256: digest(b), ...observePlotPrefix(b, legend.end, prior) });
   });

@@ -1,4 +1,4 @@
-import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
+import { projectDraftAnchoredObjects } from './anchored-object-draft.mjs';
 
 // 일시적 소유 문단 이름만 변환합니다. 변경 구간 계산은 공통 구현에 둡니다.
 export function projectDraftDrawings(content, draft) {
@@ -6,7 +6,7 @@ export function projectDraftDrawings(content, draft) {
   const adapted = (content.drawings ?? []).map((drawing) => ({
     ...drawing,
     paragraph: drawing.hostParagraph,
-    state: "located",
+    state: 'located',
   }));
   return projectDraftAnchoredObjects(content, adapted, draft).map(
     ({ paragraph, state: _projectionState, ...drawing }) => ({

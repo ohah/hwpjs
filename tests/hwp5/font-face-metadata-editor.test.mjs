@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { expectedFontMetadata } from "./font-face-metadata-oracle.mjs";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
-import { attachCharacterFonts } from "../../web/preview/character-font-content.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { expectedFontMetadata } from './font-face-metadata-oracle.mjs';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
+import { attachCharacterFonts } from '../../web/preview/character-font-content.mjs';
 
 function plainCharacter(input) {
   const source = inspect(input);
@@ -21,12 +21,12 @@ function plainCharacter(input) {
       }
     }
   }
-  throw Error("MissingPlainCharacter");
+  throw Error('MissingPlainCharacter');
 }
 
-test("actual HWP5 metadata API matches independent resources and preserves save/history", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  for (const name of ["facename", "noori", "shapecontainer-2", "table-bug"]) {
+test('actual HWP5 metadata API matches independent resources and preserves save/history', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  for (const name of ['facename', 'noori', 'shapecontainer-2', 'table-bug']) {
     const bytes = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
     const editor = await createExperimentalHwp5Editor(wasm, bytes);
     try {
@@ -37,7 +37,7 @@ test("actual HWP5 metadata API matches independent resources and preserves save/
         expected.some((row) => row.substitute !== null),
         name,
       );
-      assert.ok(names.every((row) => Object.keys(row).sort().join() === "id,language,name"));
+      assert.ok(names.every((row) => Object.keys(row).sort().join() === 'id,language,name'));
       assert.deepEqual(Buffer.from(editor.save().bytes), bytes, name);
       const detached = editor.fontFaceMetadata();
       detached[0].attributes = 255;
@@ -45,8 +45,8 @@ test("actual HWP5 metadata API matches independent resources and preserves save/
       editor.enableHistory();
       editor.setCharacterFontName({
         ...plainCharacter(bytes),
-        language: "hangul",
-        name: "Metadata History Test",
+        language: 'hangul',
+        name: 'Metadata History Test',
       });
       const saved = editor.save({ allowStaleLayout: true }).bytes;
       const edited = editor.fontFaceMetadata();
@@ -63,40 +63,40 @@ test("actual HWP5 metadata API matches independent resources and preserves save/
   }
 });
 
-test("actual Worker carries optional metadata without replacing the existing font list", async (t) => {
+test('actual Worker carries optional metadata without replacing the existing font list', async (t) => {
   const oldSelf = globalThis.self,
     oldFetch = globalThis.fetch,
     replies = [];
   globalThis.self = { postMessage: (value) => replies.push(value) };
   globalThis.fetch = async () =>
-    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
   t.after(() => {
     globalThis.fetch = oldFetch;
     if (oldSelf === undefined) delete globalThis.self;
     else globalThis.self = oldSelf;
   });
   await import(`../../web/preview/reader-worker.mjs?font-metadata=${Date.now()}`);
-  const bytes = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/facename.hwp");
+  const bytes = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/facename.hwp');
   const send = async (data) => {
     await self.onmessage({ data });
     assert.equal(replies.length, 1);
     return replies.shift();
   };
-  assert.equal((await send({ kind: "load", bytes })).error, undefined);
-  const reply = await send({ kind: "enable" });
+  assert.equal((await send({ kind: 'load', bytes })).error, undefined);
+  const reply = await send({ kind: 'enable' });
   assert.equal(reply.error, undefined);
   assert.equal(reply.content.fontFaceMetadataError, null);
   assert.deepEqual(reply.content.fontFaceMetadata, expectedFontMetadata(bytes));
   assert.ok(
-    reply.content.fontFaces.every((row) => Object.keys(row).sort().join() === "id,language,name"),
+    reply.content.fontFaces.every((row) => Object.keys(row).sort().join() === 'id,language,name'),
   );
 });
 
 test(
-  "older WASM keeps names and save available when optional metadata ABI is absent",
-  { skip: !process.env.HWPJS_BASELINE_WASM && "HWPJS_BASELINE_WASM is not set" },
+  'older WASM keeps names and save available when optional metadata ABI is absent',
+  { skip: !process.env.HWPJS_BASELINE_WASM && 'HWPJS_BASELINE_WASM is not set' },
   async () => {
-    const bytes = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/facename.hwp");
+    const bytes = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/facename.hwp');
     const editor = await createExperimentalHwp5Editor(
       readFileSync(process.env.HWPJS_BASELINE_WASM),
       bytes,
@@ -107,7 +107,7 @@ test(
       const content = attachCharacterFonts(editor, {});
       assert.deepEqual(content.fontFaces, names);
       assert.equal(content.fontFaceMetadata, null);
-      assert.equal(content.fontFaceMetadataError, "Hwp5FontFaceMetadataAbiUnavailable");
+      assert.equal(content.fontFaceMetadataError, 'Hwp5FontFaceMetadataAbiUnavailable');
       assert.deepEqual(Buffer.from(editor.save().bytes), bytes);
     } finally {
       editor.close();

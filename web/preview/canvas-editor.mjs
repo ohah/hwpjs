@@ -1,48 +1,48 @@
-import { LINE_HEIGHT } from "./layout.mjs";
+import { LINE_HEIGHT } from './layout.mjs';
 import {
   canvasDocumentPoint,
   canvasDocumentBounds,
   canvasCaretScrollLeft,
-} from "./canvas-pointer-coordinates.mjs";
-import { structureErrorMessage } from "./structure-error-message.mjs";
+} from './canvas-pointer-coordinates.mjs';
+import { structureErrorMessage } from './structure-error-message.mjs';
 import {
   hitText,
   caretGeometry,
   sameParagraph,
   selectableText,
   paragraphTarget,
-} from "./text-geometry.mjs";
-import { textChange, snapUnit, wordBoundary } from "./text-input.mjs";
-import { navigateText, adjacentParagraphBoundary } from "./text-navigation.mjs";
-import { sourceTextChange } from "./text-offsets.mjs";
-import { normalizeParagraphReplacement } from "../../js/paragraph-replacement.mjs";
-import { paragraphSelectionEdge, paragraphSelectionRanges } from "./paragraph-selection.mjs";
-import { paragraphCompositionProjection } from "./paragraph-composition.mjs";
-import { navigationIntent } from "./navigation-intent.mjs";
-import { characterFontNameArgs } from "../../js/character-font-name-args.mjs";
-import { characterShadeArgs } from "../../js/character-shade-args.mjs";
-import { characterEffectArgs, characterEffectMode } from "../../js/character-effect-args.mjs";
-import { hwp5CharacterOutlineArg } from "../../js/character-outline-args.mjs";
-import { encodeCharacterRanges } from "../../js/character-range-batch.mjs";
+} from './text-geometry.mjs';
+import { textChange, snapUnit, wordBoundary } from './text-input.mjs';
+import { navigateText, adjacentParagraphBoundary } from './text-navigation.mjs';
+import { sourceTextChange } from './text-offsets.mjs';
+import { normalizeParagraphReplacement } from '../../js/paragraph-replacement.mjs';
+import { paragraphSelectionEdge, paragraphSelectionRanges } from './paragraph-selection.mjs';
+import { paragraphCompositionProjection } from './paragraph-composition.mjs';
+import { navigationIntent } from './navigation-intent.mjs';
+import { characterFontNameArgs } from '../../js/character-font-name-args.mjs';
+import { characterShadeArgs } from '../../js/character-shade-args.mjs';
+import { characterEffectArgs, characterEffectMode } from '../../js/character-effect-args.mjs';
+import { hwp5CharacterOutlineArg } from '../../js/character-outline-args.mjs';
+import { encodeCharacterRanges } from '../../js/character-range-batch.mjs';
 import {
   characterTypingState,
   characterTypingSize,
   mergeTypingProperties,
   typingSourceSpan,
-} from "./character-typing-properties.mjs";
-import { projectTypingDraftRanges } from "./typing-format-draft.mjs";
-import { createHistorySelectionStore } from "./history-selection.mjs";
-import { hitDrawingBoundary } from "./drawing-boundary-hit.mjs";
-import { hitTableBoundary } from "./table-boundary-geometry.mjs";
-import { appendQueuedText } from "./queued-input.mjs";
-import { createInputIntentQueue } from "./input-intent-queue.mjs";
-import { paragraphBreakShortcut } from "./paragraph-break-shortcut.mjs";
-import { paragraphBreakIntent } from "./paragraph-split-command.mjs";
-import { createSelectionEditPermission } from "./selection-edit-permission.mjs";
-import { pictureResizeTarget } from "./picture-resize-target.mjs";
-import { transferSelectedText, pasteClipboardText } from "./clipboard-transfer.mjs";
-import { installCanvasPointerFrameGate } from "./canvas-pointer-frame-gate.mjs";
-import { createHistoryInputIntentQueue } from "./history-input-intent-queue.mjs";
+} from './character-typing-properties.mjs';
+import { projectTypingDraftRanges } from './typing-format-draft.mjs';
+import { createHistorySelectionStore } from './history-selection.mjs';
+import { hitDrawingBoundary } from './drawing-boundary-hit.mjs';
+import { hitTableBoundary } from './table-boundary-geometry.mjs';
+import { appendQueuedText } from './queued-input.mjs';
+import { createInputIntentQueue } from './input-intent-queue.mjs';
+import { paragraphBreakShortcut } from './paragraph-break-shortcut.mjs';
+import { paragraphBreakIntent } from './paragraph-split-command.mjs';
+import { createSelectionEditPermission } from './selection-edit-permission.mjs';
+import { pictureResizeTarget } from './picture-resize-target.mjs';
+import { transferSelectedText, pasteClipboardText } from './clipboard-transfer.mjs';
+import { installCanvasPointerFrameGate } from './canvas-pointer-frame-gate.mjs';
+import { createHistoryInputIntentQueue } from './history-input-intent-queue.mjs';
 
 /** DOM draft and interaction only. Native acknowledgements own committed text. */
 export function createCanvasEditor({
@@ -63,7 +63,7 @@ export function createCanvasEditor({
   const ownerDocument = environment.ownerDocument ?? input.ownerDocument ?? globalThis.document;
   const realm = ownerDocument?.defaultView ?? globalThis;
   const AbortController = environment.AbortController ?? realm.AbortController;
-  platform ??= realm.navigator?.userAgentData?.platform ?? realm.navigator?.platform ?? "";
+  platform ??= realm.navigator?.userAgentData?.platform ?? realm.navigator?.platform ?? '';
   const clipboard = environment.clipboard ?? realm.navigator?.clipboard;
   const activeElement =
     environment.activeElement ??
@@ -77,7 +77,7 @@ export function createCanvasEditor({
     request: (message) => !events.signal.aborted && hostControls.request(message),
   };
   let target = null,
-    committed = "",
+    committed = '',
     anchor = null,
     focus = null,
     pending = null,
@@ -85,7 +85,7 @@ export function createCanvasEditor({
     drag = null;
   let preferredX = null,
     dragScale = 1;
-  let selectionOrigin = "canvas";
+  let selectionOrigin = 'canvas';
   const viewScale = () => renderer.viewScale?.() ?? 1;
   let pictureResizeAvailable = false;
   let typingFont = null;
@@ -102,7 +102,7 @@ export function createCanvasEditor({
     queuedInputCapture = compositionInputCapture = null;
   };
   const textPending = () =>
-    ["splice", "splice-font-name", "splice-character-properties", "created-cell-text"].includes(
+    ['splice', 'splice-font-name', 'splice-character-properties', 'created-cell-text'].includes(
       pending?.kind,
     );
   // Buffer only a draft descended from an active text edit. Native submission
@@ -141,7 +141,7 @@ export function createCanvasEditor({
   let paragraphBreakAvailable = false;
   const multipleParagraphs = () => Boolean(anchor && focus && !sameParagraph(anchor, focus));
   const rangePermission = createSelectionEditPermission();
-  const splitPermission = createSelectionEditPermission({ kind: "query-split-range" });
+  const splitPermission = createSelectionEditPermission({ kind: 'query-split-range' });
   const intentChange = (intent) => ({
     startUnit: intent.startUnit,
     endUnit: intent.endUnit,
@@ -174,7 +174,7 @@ export function createCanvasEditor({
     const range = change ?? {
       startUnit: Math.min(anchor.unit, focus.unit),
       endUnit: Math.max(anchor.unit, focus.unit),
-      text: "",
+      text: '',
     };
     const source = sourceTextChange(range, renderer.paragraph(target)?.sourceOffsets);
     return {
@@ -199,7 +199,7 @@ export function createCanvasEditor({
       !controls.ready() ||
       (!textEditable() && !multiCompositionAvailable() && !pendingDraftEditable());
     if (
-      typeof queryEditRange === "function" &&
+      typeof queryEditRange === 'function' &&
       controls.ready() &&
       !controls.busy() &&
       !pending &&
@@ -213,7 +213,7 @@ export function createCanvasEditor({
       if (request && queryEditRange(request) === false) rangePermission.invalidate();
     }
     if (
-      typeof querySplitRange === "function" &&
+      typeof querySplitRange === 'function' &&
       splitQueryAvailable &&
       controls.ready() &&
       !controls.busy() &&
@@ -258,7 +258,7 @@ export function createCanvasEditor({
     const paragraph = renderer.paragraph(focus);
     if (!paragraph) return null;
     // 선택을 접는 좌우 이동은 기존 선택의 끝점에서 멈춘다.
-    if (!extend && anchor.unit !== focus.unit && ["ArrowLeft", "ArrowRight"].includes(key)) {
+    if (!extend && anchor.unit !== focus.unit && ['ArrowLeft', 'ArrowRight'].includes(key)) {
       return navigateText(renderer.layout(), paragraph.text, anchor, focus, key);
     }
     const acceptRow = (row) =>
@@ -282,10 +282,10 @@ export function createCanvasEditor({
     if (
       (!paragraphEdge || word) &&
       next?.focus.unit === focus.unit &&
-      ["ArrowLeft", "ArrowRight"].includes(key)
+      ['ArrowLeft', 'ArrowRight'].includes(key)
     ) {
       if (!extend && renderer.adjacentParagraph) {
-        const point = renderer.adjacentParagraph(focus, key === "ArrowRight");
+        const point = renderer.adjacentParagraph(focus, key === 'ArrowRight');
         return point ? { anchor: point, focus: point } : null;
       }
       const point = adjacentParagraphBoundary(renderer.layout(), focus, key);
@@ -330,8 +330,8 @@ export function createCanvasEditor({
       active: activeElement() === input || drag !== null,
       composition,
     });
-    canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : "";
-    canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : "";
+    canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : '';
+    canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : '';
     canvas.dataset.composing = String(composing);
     place();
     onComposition({ composing, pending: Boolean(pending || historyPending || inputIntents.size) });
@@ -349,7 +349,7 @@ export function createCanvasEditor({
   };
   const sync = () => {
     if (!target || multipleParagraphs()) return;
-    const backward = input.selectionDirection === "backward";
+    const backward = input.selectionDirection === 'backward';
     const start = snapUnit(input.value, input.selectionStart),
       end = snapUnit(input.value, input.selectionEnd, true);
     const anchorUnit = backward ? end : start,
@@ -366,7 +366,7 @@ export function createCanvasEditor({
       anchor = {
         ...target,
         unit: anchorUnit,
-        affinity: anchor?.unit === anchorUnit ? anchor.affinity : "forward",
+        affinity: anchor?.unit === anchorUnit ? anchor.affinity : 'forward',
       };
     if (
       !(
@@ -379,12 +379,12 @@ export function createCanvasEditor({
       focus = {
         ...target,
         unit: focusUnit,
-        affinity: focus?.unit === focusUnit ? focus.affinity : "forward",
+        affinity: focus?.unit === focusUnit ? focus.affinity : 'forward',
       };
     updateReadOnly();
     paint();
   };
-  const setSelection = (a, f, nextX = null, origin = "canvas") => {
+  const setSelection = (a, f, nextX = null, origin = 'canvas') => {
     selectionOrigin = origin;
     if (draftSelection && !sameParagraph(draftSelection.focus, f)) draftSelection = null;
     if (typingFont && !sameParagraph(typingFont, f)) typingFont = null;
@@ -396,7 +396,7 @@ export function createCanvasEditor({
       input.setSelectionRange(
         Math.min(a.unit, f.unit),
         Math.max(a.unit, f.unit),
-        a.unit > f.unit ? "backward" : "forward",
+        a.unit > f.unit ? 'backward' : 'forward',
       );
     updateReadOnly();
     paint();
@@ -426,7 +426,7 @@ export function createCanvasEditor({
       input.value = committed;
       renderer.preview(null);
       sync();
-      report("대기 입력의 기준 문서를 확인할 수 없어 적용하지 않았습니다.");
+      report('대기 입력의 기준 문서를 확인할 수 없어 적용하지 않았습니다.');
       return;
     }
     if (!change) {
@@ -441,12 +441,12 @@ export function createCanvasEditor({
         : null;
     pending = {
       kind: target.createdCell
-        ? "created-cell-text"
+        ? 'created-cell-text'
         : font
-          ? "splice-font-name"
+          ? 'splice-font-name'
           : properties
-            ? "splice-character-properties"
-            : "splice",
+            ? 'splice-character-properties'
+            : 'splice',
       start: change.startUnit,
       end: change.endUnit,
       afterText:
@@ -463,7 +463,7 @@ export function createCanvasEditor({
     const request = target.createdCell
       ? {
           kind: pending.kind,
-          origin: "canvas",
+          origin: 'canvas',
           section: target.section,
           identity: target.createdCell.identity,
           row: target.createdCell.row,
@@ -472,7 +472,7 @@ export function createCanvasEditor({
         }
       : {
           kind: pending.kind,
-          origin: "canvas",
+          origin: 'canvas',
           section: target.section,
           paragraph: target.paragraph,
           ...command,
@@ -480,11 +480,11 @@ export function createCanvasEditor({
           ...(properties ? { properties } : {}),
         };
     const reference = renderer.paragraph(target)?.currentReference;
-    if (["splice", "created-cell-text"].includes(pending.kind) && reference)
+    if (['splice', 'created-cell-text'].includes(pending.kind) && reference)
       request.reference = reference;
     if (!controls.request(request)) pending = null;
     else if (queued) inputIntents.consume(committed);
-    input.setAttribute("aria-busy", String(Boolean(pending)));
+    input.setAttribute('aria-busy', String(Boolean(pending)));
   };
   const reveal = () => {
     const caret = caretGeometry(renderer.layout(), focus);
@@ -497,7 +497,7 @@ export function createCanvasEditor({
     else if (bounds.y + bounds.height > viewport.scrollTop + viewport.clientHeight)
       viewport.scrollTop = bounds.y + bounds.height - viewport.clientHeight;
     place();
-    input.scrollIntoView({ block: "nearest", inline: "nearest" });
+    input.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   };
   const draftPreview = () => {
     const change =
@@ -535,8 +535,8 @@ export function createCanvasEditor({
       if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
     },
     onBlocked(event) {
-      if (event.type === "pointerdown")
-        report("화면 갱신 중입니다. 갱신된 화면에서 다시 선택하세요.");
+      if (event.type === 'pointerdown')
+        report('화면 갱신 중입니다. 갱신된 화면에서 다시 선택하세요.');
     },
   });
   const point = (event, constrained = null) => {
@@ -548,8 +548,8 @@ export function createCanvasEditor({
       hitText(layout, x, y, constrained)
     );
   };
-  listen(canvas, "pointermove", (event) => {
-    canvas.style.cursor = point(event) ? "text" : "default";
+  listen(canvas, 'pointermove', (event) => {
+    canvas.style.cursor = point(event) ? 'text' : 'default';
     if (drag !== event.pointerId || !target) return;
     if (dragScale !== viewScale()) {
       release(event);
@@ -570,7 +570,7 @@ export function createCanvasEditor({
     const next = ranges ? free : point(event, target);
     if (next) setSelection(anchor, next);
   });
-  listen(canvas, "pointerdown", (event) => {
+  listen(canvas, 'pointerdown', (event) => {
     if (event.button !== 0) return;
     const location = coordinates(event);
     const picture =
@@ -582,7 +582,7 @@ export function createCanvasEditor({
     if (picture) {
       event.preventDefault();
       if (historyPending || composing || pending || input.value !== committed || controls.busy()) {
-        report("입력 반영 중에는 그림 선택을 변경할 수 없습니다.");
+        report('입력 반영 중에는 그림 선택을 변경할 수 없습니다.');
         return;
       }
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
@@ -591,20 +591,20 @@ export function createCanvasEditor({
       typingFont = null;
       typingProperties = null;
       draftSelection = null;
-      selectionOrigin = "canvas";
+      selectionOrigin = 'canvas';
       anchor = null;
       focus = null;
       target = null;
       drag = null;
       input.blur();
-      input.value = "";
-      committed = "";
+      input.value = '';
+      committed = '';
       input.disabled = true;
       renderer.selectPicture?.(picture.picture);
       paint();
-      report("그림을 선택했습니다. 지원되는 그림은 크기를 입력해 변경할 수 있습니다.");
+      report('그림을 선택했습니다. 지원되는 그림은 크기를 입력해 변경할 수 있습니다.');
       if (!controls.ready() && !controls.busy())
-        controls.request({ kind: "enable", origin: "canvas" });
+        controls.request({ kind: 'enable', origin: 'canvas' });
       return;
     }
     const next = point(event);
@@ -619,7 +619,7 @@ export function createCanvasEditor({
       composing ||
       ((pending || input.value !== committed) && !sameParagraph(next, target))
     ) {
-      report("입력 반영 중입니다. 같은 문단에서 이어서 입력하거나 잠시 기다리세요.");
+      report('입력 반영 중입니다. 같은 문단에서 이어서 입력하거나 잠시 기다리세요.');
       return;
     }
     renderer.selectPicture?.(null);
@@ -644,8 +644,8 @@ export function createCanvasEditor({
     canvas.setPointerCapture(drag);
     paint();
     if (!controls.ready() && !controls.busy()) {
-      report("편집 세션을 여는 중…");
-      controls.request({ kind: "enable", origin: "canvas" });
+      report('편집 세션을 여는 중…');
+      controls.request({ kind: 'enable', origin: 'canvas' });
     }
   });
   const release = (event) => {
@@ -655,13 +655,13 @@ export function createCanvasEditor({
       paint();
     }
   };
-  listen(canvas, "pointerup", release);
-  listen(canvas, "pointercancel", release);
-  listen(canvas, "lostpointercapture", release);
+  listen(canvas, 'pointerup', release);
+  listen(canvas, 'pointercancel', release);
+  listen(canvas, 'lostpointercapture', release);
   const performHistory = (kind) => {
-    if (!["undo", "redo"].includes(kind)) return false;
+    if (!['undo', 'redo'].includes(kind)) return false;
     if (!historyAvailable) {
-      report("이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다.");
+      report('이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다.');
       return false;
     }
     if (
@@ -673,23 +673,23 @@ export function createCanvasEditor({
       !controls.ready() ||
       controls.busy()
     ) {
-      report("입력 반영이 끝난 뒤 실행 취소/다시 실행하세요.");
+      report('입력 반영이 끝난 뒤 실행 취소/다시 실행하세요.');
       return false;
     }
     historyPending = true;
     if (historyRevision !== null && anchor && focus)
       historySelections.remember(historyRevision, { anchor, focus });
-    if (!controls.request({ kind, origin: "canvas" })) {
+    if (!controls.request({ kind, origin: 'canvas' })) {
       historyPending = false;
       updateReadOnly();
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const canRequestHistory = (kind) => {
     if (
-      !["undo", "redo"].includes(kind) ||
+      !['undo', 'redo'].includes(kind) ||
       !historyAvailable ||
       !controls.ready() ||
       !historyIntents.hasCapacity
@@ -707,7 +707,7 @@ export function createCanvasEditor({
         (target && input.value !== committed),
       ) ||
       !available ||
-      available[kind === "undo" ? "canUndo" : "canRedo"] === true
+      available[kind === 'undo' ? 'canUndo' : 'canRedo'] === true
     );
   };
   const travel = (kind) => {
@@ -716,7 +716,7 @@ export function createCanvasEditor({
   };
   const applyOrderedInput = ({ inputType, data }) => {
     if (!target || !anchor || !focus) return false;
-    if (inputType === "navigation") {
+    if (inputType === 'navigation') {
       const action = JSON.parse(data),
         next = extendedNavigation(action.key, action.paragraphEdge, action.extend, action.word);
       if (!next) return true;
@@ -729,26 +729,26 @@ export function createCanvasEditor({
       reveal();
       return true;
     }
-    if (["insertText", "insertReplacementText", "insertFromPaste"].includes(inputType))
+    if (['insertText', 'insertReplacementText', 'insertFromPaste'].includes(inputType))
       return replaceSelectedText(data);
-    if (["insertLineBreak", "insertParagraph"].includes(inputType)) return split() !== false;
+    if (['insertLineBreak', 'insertParagraph'].includes(inputType)) return split() !== false;
     if (
       [
-        "deleteContentBackward",
-        "deleteContentForward",
-        "deleteWordBackward",
-        "deleteWordForward",
-        "deleteByCut",
+        'deleteContentBackward',
+        'deleteContentForward',
+        'deleteWordBackward',
+        'deleteWordForward',
+        'deleteByCut',
       ].includes(inputType)
     ) {
       if (
         !multipleParagraphs() &&
         input.selectionStart === input.selectionEnd &&
-        inputType !== "deleteByCut"
+        inputType !== 'deleteByCut'
       ) {
         const unit = input.selectionStart;
-        const backward = inputType.endsWith("Backward");
-        const next = inputType.startsWith("deleteWord")
+        const backward = inputType.endsWith('Backward');
+        const next = inputType.startsWith('deleteWord')
           ? wordBoundary(committed, unit, !backward)
           : snapUnit(committed, unit + (backward ? -1 : 1), !backward);
         if (next === unit) {
@@ -760,42 +760,42 @@ export function createCanvasEditor({
           { ...target, unit: Math.max(unit, next) },
         );
       }
-      return replaceSelectedText("");
+      return replaceSelectedText('');
     }
     return false;
   };
-  const queueOrderedInput = (inputType, data = "") => {
+  const queueOrderedInput = (inputType, data = '') => {
     if (
       ![
-        "insertText",
-        "insertReplacementText",
-        "insertFromPaste",
-        "insertLineBreak",
-        "insertParagraph",
-        "deleteContentBackward",
-        "deleteContentForward",
-        "deleteWordBackward",
-        "deleteWordForward",
-        "deleteByCut",
-        "navigation",
+        'insertText',
+        'insertReplacementText',
+        'insertFromPaste',
+        'insertLineBreak',
+        'insertParagraph',
+        'deleteContentBackward',
+        'deleteContentForward',
+        'deleteWordBackward',
+        'deleteWordForward',
+        'deleteByCut',
+        'navigation',
       ].includes(inputType)
     )
       return false;
-    const accepted = historyIntents.input(inputType, data ?? "");
-    if (!accepted) report("대기 입력 한도에 도달했습니다. 명령 반영 후 이어서 입력하세요.");
+    const accepted = historyIntents.input(inputType, data ?? '');
+    if (!accepted) report('대기 입력 한도에 도달했습니다. 명령 반영 후 이어서 입력하세요.');
     return accepted;
   };
   const split = (breakBefore = null) => {
     if (breakBefore !== null && !paragraphBreakAvailable) {
-      report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다.");
+      report('수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다.');
       return false;
     }
     if (breakBefore !== null && multipleParagraphs()) {
-      report("쪽·단 나누기는 한 문단 안에서 선택한 범위에 적용하세요.");
+      report('쪽·단 나누기는 한 문단 안에서 선택한 범위에 적용하세요.');
       return false;
     }
     if (target?.createdCell) {
-      report("생성 셀의 여러 문단 편집은 아직 지원하지 않습니다.");
+      report('생성 셀의 여러 문단 편집은 아직 지원하지 않습니다.');
       return;
     }
     if (
@@ -805,13 +805,13 @@ export function createCanvasEditor({
       if (splitQueryAvailable && editRange())
         report(
           splitPermission.pending(editRange())
-            ? "문단 분할 범위를 확인 중입니다. 확인 후 Enter를 다시 누르세요."
-            : "이 범위는 문단을 분할할 수 없습니다.",
+            ? '문단 분할 범위를 확인 중입니다. 확인 후 Enter를 다시 누르세요.'
+            : '이 범위는 문단을 분할할 수 없습니다.',
         );
       return false;
     }
     if (!structureAvailable) {
-      report("이 문서 형식의 문단 분할은 아직 지원하지 않습니다.");
+      report('이 문서 형식의 문단 분할은 아직 지원하지 않습니다.');
       return false;
     }
     if (
@@ -823,17 +823,17 @@ export function createCanvasEditor({
       !controls.ready() ||
       controls.busy()
     ) {
-      report("입력 반영이 끝난 뒤 문단을 분할하세요.");
+      report('입력 반영이 끝난 뒤 문단을 분할하세요.');
       return false;
     }
     const unit = snapUnit(committed, input.selectionStart);
     const end = snapUnit(committed, input.selectionEnd, true);
     const position = sourceTextChange(
-      { startUnit: unit, endUnit: end, text: "" },
+      { startUnit: unit, endUnit: end, text: '' },
       renderer.paragraph(target)?.sourceOffsets,
     );
     structureTarget = {
-      kind: "split",
+      kind: 'split',
       ...paragraphTarget(target),
       paragraph: target.paragraph + 1,
     };
@@ -845,8 +845,8 @@ export function createCanvasEditor({
         : {};
     if (
       !controls.request({
-        kind: "split",
-        origin: "canvas",
+        kind: 'split',
+        origin: 'canvas',
         ...target,
         ...anchored,
         ...(breakBefore === null ? {} : { breakBefore }),
@@ -859,7 +859,7 @@ export function createCanvasEditor({
       updateReadOnly();
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const selectedCharacterPropertyRanges = () => {
@@ -880,11 +880,11 @@ export function createCanvasEditor({
     if (multipleParagraphs()) {
       const ranges = selectedCharacterPropertyRanges();
       if (!ranges?.length) return false;
-      pending = { kind: "character-properties-ranges", anchor: { ...anchor }, focus: { ...focus } };
+      pending = { kind: 'character-properties-ranges', anchor: { ...anchor }, focus: { ...focus } };
       if (
         !controls.request({
           kind: pending.kind,
-          origin: "canvas",
+          origin: 'canvas',
           ranges,
           properties: { ...properties },
         })
@@ -892,7 +892,7 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     }
     const range = selectedRange();
@@ -910,18 +910,18 @@ export function createCanvasEditor({
         return false;
       }
       typingProperties = { ...target, properties: merged };
-      report("다음 입력의 글자 속성을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.");
+      report('다음 입력의 글자 속성을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.');
       return true;
     }
     pending = {
-      kind: "character-properties",
+      kind: 'character-properties',
       start: input.selectionStart,
       end: input.selectionEnd,
     };
     if (
       !controls.request({
-        kind: "character-properties",
-        origin: "canvas",
+        kind: 'character-properties',
+        origin: 'canvas',
         ...range,
         properties: { ...properties },
       })
@@ -929,7 +929,7 @@ export function createCanvasEditor({
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const replaceSelection = (text) => {
@@ -937,7 +937,7 @@ export function createCanvasEditor({
       !target ||
       !anchor ||
       !focus ||
-      typeof text !== "string" ||
+      typeof text !== 'string' ||
       !text.isWellFormed() ||
       composing ||
       pending ||
@@ -952,7 +952,7 @@ export function createCanvasEditor({
       if (
         !textEditable() ||
         inputIntents.size ||
-        (normalized.includes("\n") && renderer.paragraph(target)?.softLineBreakAvailable !== true)
+        (normalized.includes('\n') && renderer.paragraph(target)?.softLineBreakAvailable !== true)
       )
         return false;
       sync();
@@ -966,21 +966,21 @@ export function createCanvasEditor({
       return Boolean(pending);
     }
     if (renderer.paragraphReplacementAvailable?.() === false) {
-      report("현재 WASM은 문단 교체를 지원하지 않습니다.");
+      report('현재 WASM은 문단 교체를 지원하지 않습니다.');
       return false;
     }
     const ranges = renderer.replacementRanges?.(anchor, focus);
     if (!ranges?.length || ranges.some((range) => renderer.paragraph(range)?.editable !== true))
       return false;
     const start = paragraphSelectionEdge(anchor, focus);
-    const lines = normalizeParagraphReplacement(text).split("\n");
+    const lines = normalizeParagraphReplacement(text).split('\n');
     const font = typingFont && sameParagraph(typingFont, target) ? typingFont : null;
     const properties =
       typingProperties && sameParagraph(typingProperties, target)
         ? { ...typingProperties.properties }
         : null;
     if (font && renderer.namedFontReplacementAvailable?.() !== true) {
-      report("현재 WASM은 지정 글꼴의 문단 교체를 지원하지 않습니다.");
+      report('현재 WASM은 지정 글꼴의 문단 교체를 지원하지 않습니다.');
       return false;
     }
     if (
@@ -989,11 +989,11 @@ export function createCanvasEditor({
         ? renderer.namedFontPropertyReplacementAvailable?.()
         : renderer.characterPropertyReplacementAvailable?.()) !== true
     ) {
-      report("현재 WASM은 입력 속성을 포함한 문단 교체를 지원하지 않습니다.");
+      report('현재 WASM은 입력 속성을 포함한 문단 교체를 지원하지 않습니다.');
       return false;
     }
     pending = {
-      kind: "replace-paragraph-ranges",
+      kind: 'replace-paragraph-ranges',
       font,
       properties,
       anchor: { ...anchor },
@@ -1004,7 +1004,7 @@ export function createCanvasEditor({
     if (
       !controls.request({
         kind: pending.kind,
-        origin: "canvas",
+        origin: 'canvas',
         ranges,
         text,
         ...(font ? { language: font.language, name: font.name } : {}),
@@ -1014,32 +1014,32 @@ export function createCanvasEditor({
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   // 후속 입력은 교체 성공 위치에만 적용하며 native 문서 값을 복제하지 않는다.
   const queueReplacementTyping = (text) => {
-    if (pending?.kind !== "replace-paragraph-ranges") return false;
+    if (pending?.kind !== 'replace-paragraph-ranges') return false;
     return queueTyping(pending, text);
   };
   const queueTyping = (request, text) => {
-    const queued = appendQueuedText(request.queuedText ?? "", text);
+    const queued = appendQueuedText(request.queuedText ?? '', text);
     if (!queued.accepted) return false;
     if (queued.overflow) {
-      report("대기 입력 한도에 도달했습니다. 반영 후 다시 입력하세요.");
+      report('대기 입력 한도에 도달했습니다. 반영 후 다시 입력하세요.');
       return true;
     }
     request.queuedText = queued.text;
     return true;
   };
   const queueSplitTyping = (text) =>
-    structureTarget?.kind === "split" && historyPending && queueTyping(structureTarget, text);
+    structureTarget?.kind === 'split' && historyPending && queueTyping(structureTarget, text);
   const selectedCharacterPropertyState = (property) => {
     if (multipleParagraphs()) {
       if (
-        !["bold", "italic", "underline", "strike"].includes(property) ||
-        (property === "strike" && renderer.characterStrikeRangesAvailable?.() !== true) ||
-        (property === "underline" && renderer.characterUnderlineRangesAvailable?.() !== true) ||
+        !['bold', 'italic', 'underline', 'strike'].includes(property) ||
+        (property === 'strike' && renderer.characterStrikeRangesAvailable?.() !== true) ||
+        (property === 'underline' && renderer.characterUnderlineRangesAvailable?.() !== true) ||
         composing ||
         pending ||
         historyPending ||
@@ -1051,7 +1051,7 @@ export function createCanvasEditor({
       return renderer.selectionCharacterState?.(anchor, focus, property) ?? null;
     }
     if (!selectedRange()) return null;
-    if (property === "strike" && input.selectionStart === input.selectionEnd) return null;
+    if (property === 'strike' && input.selectionStart === input.selectionEnd) return null;
     if (input.selectionStart === input.selectionEnd) {
       if (!canSetTypingProperties()) return null;
       const properties =
@@ -1089,28 +1089,28 @@ export function createCanvasEditor({
         return false;
       const ranges = renderer.selectionRanges?.(anchor, focus);
       if (!ranges?.length) return false;
-      pending = { kind: "character-underline-ranges", anchor: { ...anchor }, focus: { ...focus } };
-      if (!controls.request({ kind: pending.kind, origin: "canvas", ranges, underlineKind })) {
+      pending = { kind: 'character-underline-ranges', anchor: { ...anchor }, focus: { ...focus } };
+      if (!controls.request({ kind: pending.kind, origin: 'canvas', ranges, underlineKind })) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     }
     const range = selectedRange();
     if (!range || range.startUnit === range.endUnit) return false;
-    pending = { kind: "character-underline", start: input.selectionStart, end: input.selectionEnd };
+    pending = { kind: 'character-underline', start: input.selectionStart, end: input.selectionEnd };
     if (
-      !controls.request({ kind: "character-underline", origin: "canvas", ...range, underlineKind })
+      !controls.request({ kind: 'character-underline', origin: 'canvas', ...range, underlineKind })
     ) {
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const toggleCharacterProperty = (property) => {
-    if (property === "strike") {
+    if (property === 'strike') {
       if (
         composing ||
         pending ||
@@ -1125,11 +1125,11 @@ export function createCanvasEditor({
         const state = selectedCharacterPropertyState(property);
         const ranges = renderer.selectionRanges?.(anchor, focus);
         if (state === null || !ranges?.length) return false;
-        pending = { kind: "character-strike-ranges", anchor: { ...anchor }, focus: { ...focus } };
+        pending = { kind: 'character-strike-ranges', anchor: { ...anchor }, focus: { ...focus } };
         if (
           !controls.request({
             kind: pending.kind,
-            origin: "canvas",
+            origin: 'canvas',
             ranges,
             enabled: state !== true,
           })
@@ -1137,18 +1137,18 @@ export function createCanvasEditor({
           pending = null;
           return false;
         }
-        input.setAttribute("aria-busy", "true");
+        input.setAttribute('aria-busy', 'true');
         return true;
       }
       const range = selectedRange();
       if (!range || range.startUnit === range.endUnit) return false;
       const state = selectedCharacterPropertyState(property);
       if (state === null) return false;
-      pending = { kind: "character-strike", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'character-strike', start: input.selectionStart, end: input.selectionEnd };
       if (
         !controls.request({
           kind: pending.kind,
-          origin: "canvas",
+          origin: 'canvas',
           ...range,
           enabled: state !== true,
         })
@@ -1156,19 +1156,19 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     }
     if (multipleParagraphs()) {
       const state = selectedCharacterPropertyState(property);
       return state === null
         ? false
-        : property === "underline"
-          ? setCharacterUnderline(state === true ? "none" : "bottom")
+        : property === 'underline'
+          ? setCharacterUnderline(state === true ? 'none' : 'bottom')
           : setCharacterProperties({ [property]: state !== true });
     }
     if (!selectedRange()) return false;
-    if (input.selectionStart === input.selectionEnd && ["bold", "italic"].includes(property)) {
+    if (input.selectionStart === input.selectionEnd && ['bold', 'italic'].includes(property)) {
       const state = selectedCharacterPropertyState(property);
       return state === null ? false : setCharacterProperties({ [property]: !state });
     }
@@ -1179,26 +1179,26 @@ export function createCanvasEditor({
       property,
     );
     if (!properties) return false;
-    return property === "underline"
-      ? setCharacterUnderline(properties.underline ? "bottom" : "none")
+    return property === 'underline'
+      ? setCharacterUnderline(properties.underline ? 'bottom' : 'none')
       : setCharacterProperties(properties);
   };
   const setCharacterColor = (kind, color) => {
     const range = selectedRange();
     if (!range || range.startUnit === range.endUnit) return false;
     pending = { kind, start: input.selectionStart, end: input.selectionEnd };
-    if (!controls.request({ kind, origin: "canvas", ...range, color })) {
+    if (!controls.request({ kind, origin: 'canvas', ...range, color })) {
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const setCharacterUnderlineColor = (color) =>
-    setCharacterColor("character-underline-color", color);
+    setCharacterColor('character-underline-color', color);
   const setCharacterStrikeColor = (color) =>
     renderer.characterStrikeColorAvailable?.() === true &&
-    setCharacterColor("character-strike-color", color);
+    setCharacterColor('character-strike-color', color);
   const selectedShadeRanges = () => {
     if (!multipleParagraphs()) {
       const range = selectedRange();
@@ -1251,14 +1251,14 @@ export function createCanvasEditor({
       return null;
     if (multipleParagraphs())
       return selectedOutlineRanges()
-        ? (renderer[named ? "characterOutlineKindState" : "characterOutlineState"]?.(
+        ? (renderer[named ? 'characterOutlineKindState' : 'characterOutlineState']?.(
             anchor,
             focus,
           ) ?? null)
         : null;
     if (!selectedRange() || input.selectionStart === input.selectionEnd) return null;
     return (
-      renderer[named ? "characterOutlineKind" : "characterOutline"]?.(
+      renderer[named ? 'characterOutlineKind' : 'characterOutline']?.(
         target,
         snapUnit(committed, input.selectionStart),
         snapUnit(committed, input.selectionEnd, true),
@@ -1328,51 +1328,51 @@ export function createCanvasEditor({
       if (renderer.characterShadeRangesAvailable?.() !== true) return false;
       const ranges = selectedShadeRanges();
       if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
-      pending = { kind: "character-shade-ranges", anchor: { ...anchor }, focus: { ...focus } };
-      if (!controls.request({ kind: pending.kind, origin: "canvas", ranges, color })) {
+      pending = { kind: 'character-shade-ranges', anchor: { ...anchor }, focus: { ...focus } };
+      if (!controls.request({ kind: pending.kind, origin: 'canvas', ranges, color })) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     }
-    return setCharacterColor("character-shade", color);
+    return setCharacterColor('character-shade', color);
   };
   const setCharacterFont = (language, fontId) => {
     if (multipleParagraphs()) {
       const ranges = selectedFontRanges();
       if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
-      pending = { kind: "character-font-ranges", anchor: { ...anchor }, focus: { ...focus } };
-      if (!controls.request({ kind: pending.kind, origin: "canvas", ranges, language, fontId })) {
+      pending = { kind: 'character-font-ranges', anchor: { ...anchor }, focus: { ...focus } };
+      if (!controls.request({ kind: pending.kind, origin: 'canvas', ranges, language, fontId })) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     }
     if (renderer.characterFontAvailable?.() !== true) return false;
     const range = selectedRange();
     if (!range || range.startUnit === range.endUnit) return false;
-    pending = { kind: "character-font", start: input.selectionStart, end: input.selectionEnd };
+    pending = { kind: 'character-font', start: input.selectionStart, end: input.selectionEnd };
     if (
-      !controls.request({ kind: "character-font", origin: "canvas", ...range, language, fontId })
+      !controls.request({ kind: 'character-font', origin: 'canvas', ...range, language, fontId })
     ) {
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const setCharacterFontName = (language, name) => {
     if (multipleParagraphs()) {
       const ranges = selectedFontNameRanges();
       if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
-      pending = { kind: "character-font-name-ranges", anchor: { ...anchor }, focus: { ...focus } };
-      if (!controls.request({ kind: pending.kind, origin: "canvas", ranges, language, name })) {
+      pending = { kind: 'character-font-name-ranges', anchor: { ...anchor }, focus: { ...focus } };
+      if (!controls.request({ kind: pending.kind, origin: 'canvas', ranges, language, name })) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     }
     const range = selectedRange();
@@ -1386,16 +1386,16 @@ export function createCanvasEditor({
         return false;
       }
       typingFont = { ...target, language, name };
-      report("다음 입력의 글꼴을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.");
+      report('다음 입력의 글꼴을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.');
       return true;
     }
     if (renderer.characterFontNameAvailable?.() !== true) return false;
-    pending = { kind: "character-font-name", start: input.selectionStart, end: input.selectionEnd };
-    if (!controls.request({ kind: pending.kind, origin: "canvas", ...range, language, name })) {
+    pending = { kind: 'character-font-name', start: input.selectionStart, end: input.selectionEnd };
+    if (!controls.request({ kind: pending.kind, origin: 'canvas', ...range, language, name })) {
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const selectedFontRanges = () => {
@@ -1451,15 +1451,15 @@ export function createCanvasEditor({
     return renderer.selectionRanges?.(anchor, focus) ?? null;
   };
   const setCharacterTextColor = (color) => {
-    if (!multipleParagraphs()) return setCharacterColor("character-text-color", color);
+    if (!multipleParagraphs()) return setCharacterColor('character-text-color', color);
     const ranges = selectedTextColorRanges();
     if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
-    pending = { kind: "character-text-color-ranges", anchor: { ...anchor }, focus: { ...focus } };
-    if (!controls.request({ kind: pending.kind, origin: "canvas", ranges, color })) {
+    pending = { kind: 'character-text-color-ranges', anchor: { ...anchor }, focus: { ...focus } };
+    if (!controls.request({ kind: pending.kind, origin: 'canvas', ranges, color })) {
       pending = null;
       return false;
     }
-    input.setAttribute("aria-busy", "true");
+    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const mergeBoundary = (backward) => {
@@ -1492,13 +1492,13 @@ export function createCanvasEditor({
     const rightParagraph = backward ? target.paragraph : explicit ? neighbor : target.paragraph + 1;
     const paragraph = renderer.paragraph(left);
     if (!paragraph || !renderer.paragraph({ ...left, paragraph: rightParagraph })) return true;
-    structureTarget = { kind: "merge", ...left, unit: paragraph.text.length };
+    structureTarget = { kind: 'merge', ...left, unit: paragraph.text.length };
     historyPending = true;
     input.readOnly = true;
     if (
       !controls.request({
-        kind: "merge",
-        origin: "canvas",
+        kind: 'merge',
+        origin: 'canvas',
         ...left,
         ...(explicit ? { rightParagraph } : {}),
       })
@@ -1506,36 +1506,36 @@ export function createCanvasEditor({
       structureTarget = null;
       historyPending = false;
       updateReadOnly();
-    } else input.setAttribute("aria-busy", "true");
+    } else input.setAttribute('aria-busy', 'true');
     return true;
   };
-  listen(input, "beforeinput", (event) => {
+  listen(input, 'beforeinput', (event) => {
     if (compositionInvalidated) {
       event.preventDefault();
       return;
     }
     if (
-      ["historyUndo", "historyRedo"].includes(event.inputType) &&
+      ['historyUndo', 'historyRedo'].includes(event.inputType) &&
       !composing &&
       !event.isComposing
     ) {
       event.preventDefault();
-      travel(event.inputType === "historyUndo" ? "undo" : "redo");
+      travel(event.inputType === 'historyUndo' ? 'undo' : 'redo');
       return;
     }
     if (deferredComposition) return;
     if (historyIntents.size && !composing && !event.isComposing) {
       event.preventDefault();
       if (!queueOrderedInput(event.inputType, event.data))
-        report("현재 대기 명령 뒤에 이 입력을 적용할 수 없습니다.");
+        report('현재 대기 명령 뒤에 이 입력을 적용할 수 없습니다.');
       return;
     }
-    if (structureTarget?.kind === "split" && historyPending) {
+    if (structureTarget?.kind === 'split' && historyPending) {
       event.preventDefault();
       if (
         !event.isComposing &&
         !composing &&
-        ["insertText", "insertReplacementText"].includes(event.inputType)
+        ['insertText', 'insertReplacementText'].includes(event.inputType)
       )
         queueSplitTyping(event.data);
       return;
@@ -1544,14 +1544,14 @@ export function createCanvasEditor({
       event.preventDefault();
       return;
     }
-    if (["historyUndo", "historyRedo"].includes(event.inputType)) {
+    if (['historyUndo', 'historyRedo'].includes(event.inputType)) {
       event.preventDefault();
-      travel(event.inputType === "historyUndo" ? "undo" : "redo");
+      travel(event.inputType === 'historyUndo' ? 'undo' : 'redo');
       return;
     }
-    if (pending?.kind === "replace-paragraph-ranges" && !multipleParagraphs()) {
+    if (pending?.kind === 'replace-paragraph-ranges' && !multipleParagraphs()) {
       event.preventDefault();
-      if (!event.isComposing && !composing && event.inputType === "insertText")
+      if (!event.isComposing && !composing && event.inputType === 'insertText')
         queueReplacementTyping(event.data);
       return;
     }
@@ -1560,31 +1560,31 @@ export function createCanvasEditor({
       event.preventDefault();
       if (event.isComposing || composing) return;
       if (
-        ["insertText", "insertReplacementText", "insertFromPaste"].includes(event.inputType) &&
-        typeof event.data === "string"
+        ['insertText', 'insertReplacementText', 'insertFromPaste'].includes(event.inputType) &&
+        typeof event.data === 'string'
       ) {
-        if (event.inputType !== "insertText" || !queueReplacementTyping(event.data))
+        if (event.inputType !== 'insertText' || !queueReplacementTyping(event.data))
           replaceSelection(event.data);
-      } else if (["insertLineBreak", "insertParagraph"].includes(event.inputType))
-        replaceSelection("\n");
+      } else if (['insertLineBreak', 'insertParagraph'].includes(event.inputType))
+        replaceSelection('\n');
       else if (
-        ["deleteContentBackward", "deleteContentForward", "deleteByCut"].includes(event.inputType)
+        ['deleteContentBackward', 'deleteContentForward', 'deleteByCut'].includes(event.inputType)
       )
-        replaceSelection("");
+        replaceSelection('');
       return;
     }
     if (
-      event.inputType === "insertLineBreak" &&
+      event.inputType === 'insertLineBreak' &&
       target.createdCell &&
       renderer.paragraph(target)?.softLineBreakAvailable === true
     ) {
       event.preventDefault();
-      replaceSelection("\n");
+      replaceSelection('\n');
       return;
     }
     if (
-      event.inputType === "insertFromPaste" &&
-      typeof event.data === "string" &&
+      event.inputType === 'insertFromPaste' &&
+      typeof event.data === 'string' &&
       /[\r\n]/.test(event.data)
     ) {
       event.preventDefault();
@@ -1592,7 +1592,7 @@ export function createCanvasEditor({
       replaceSelection(event.data);
       return;
     }
-    if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) {
+    if (['insertLineBreak', 'insertParagraph'].includes(event.inputType)) {
       event.preventDefault();
       split();
       return;
@@ -1604,7 +1604,7 @@ export function createCanvasEditor({
     if (pendingDraftEditable() && !composing) {
       if (!inputIntents.hasCapacity) {
         event.preventDefault();
-        report("대기 입력 한도에 도달했습니다. 반영 후 이어서 입력하세요.");
+        report('대기 입력 한도에 도달했습니다. 반영 후 이어서 입력하세요.');
         return;
       }
       sync();
@@ -1623,18 +1623,18 @@ export function createCanvasEditor({
       draftSelection = { anchor: { ...anchor }, focus: { ...focus }, inputType: event.inputType };
     }
     if (
-      ["deleteContentBackward", "deleteContentForward"].includes(event.inputType) &&
-      mergeBoundary(event.inputType === "deleteContentBackward")
+      ['deleteContentBackward', 'deleteContentForward'].includes(event.inputType) &&
+      mergeBoundary(event.inputType === 'deleteContentBackward')
     ) {
       event.preventDefault();
       return;
     }
-    if (["insertLineBreak", "insertParagraph"].includes(event.inputType)) {
+    if (['insertLineBreak', 'insertParagraph'].includes(event.inputType)) {
       event.preventDefault();
       split();
     }
   });
-  listen(input, "input", () => {
+  listen(input, 'input', () => {
     if (compositionInvalidated) {
       input.value = committed;
       renderer.preview(null);
@@ -1646,7 +1646,7 @@ export function createCanvasEditor({
     if (multiComposition && composing) {
       const projected = compositionProjection();
       if (!projected) {
-        report("조합 문자열의 표시 경계를 확인할 수 없습니다.");
+        report('조합 문자열의 표시 경계를 확인할 수 없습니다.');
         return;
       }
       renderer.preview(projected.draft);
@@ -1655,7 +1655,7 @@ export function createCanvasEditor({
     }
     if (!textEditable() && !pendingDraftEditable()) {
       if (
-        typeof queryEditRange === "function" &&
+        typeof queryEditRange === 'function' &&
         renderer.paragraph(target)?.selectable &&
         !multipleParagraphs()
       ) {
@@ -1691,13 +1691,13 @@ export function createCanvasEditor({
     preview();
     if (!composing) pump();
   });
-  listen(input, "compositionstart", () => {
+  listen(input, 'compositionstart', () => {
     if (!target || !controls.ready()) return;
     compositionInvalidated = false;
     if (historyIntents.size) {
       const token = historyIntents.composition();
       if (!token) {
-        report("조합 입력을 위한 대기 공간이 없습니다.");
+        report('조합 입력을 위한 대기 공간이 없습니다.');
         return;
       }
       deferredComposition = {
@@ -1712,7 +1712,7 @@ export function createCanvasEditor({
     }
     if (historyPending) {
       input.readOnly = true;
-      report("문단 변경 반영 뒤 조합 입력을 시작하세요.");
+      report('문단 변경 반영 뒤 조합 입력을 시작하세요.');
       return;
     }
     if (multipleParagraphs()) {
@@ -1725,7 +1725,7 @@ export function createCanvasEditor({
       )
         return;
       multiComposition = { anchor: { ...anchor }, focus: { ...focus } };
-      input.value = "";
+      input.value = '';
       input.setSelectionRange(0, 0);
       composing = true;
       paint();
@@ -1748,7 +1748,7 @@ export function createCanvasEditor({
     composing = true;
     paint();
   });
-  listen(input, "compositionend", (event) => {
+  listen(input, 'compositionend', (event) => {
     if (compositionInvalidated) {
       compositionInvalidated = false;
       composing = false;
@@ -1762,12 +1762,12 @@ export function createCanvasEditor({
     if (deferredComposition) {
       const capture = deferredComposition;
       const data =
-        typeof event.data === "string"
+        typeof event.data === 'string'
           ? event.data
           : (textChange(capture.before, input.value, {
               startUnit: capture.start,
               endUnit: capture.end,
-            })?.text ?? "");
+            })?.text ?? '');
       deferredComposition = null;
       composing = false;
       input.value = capture.before;
@@ -1777,7 +1777,7 @@ export function createCanvasEditor({
       for (const reply of replies) controller.message(reply);
       if (!historyIntents.completeComposition(capture.token, data)) {
         historyIntents.clear();
-        report("조합 입력의 대기 문서를 확인할 수 없습니다.");
+        report('조합 입력의 대기 문서를 확인할 수 없습니다.');
       }
       historyIntents.wake();
       return;
@@ -1785,7 +1785,7 @@ export function createCanvasEditor({
     if (!composing) return;
     if (multiComposition) {
       const selected = multiComposition;
-      const text = typeof event.data === "string" ? event.data : input.value;
+      const text = typeof event.data === 'string' ? event.data : input.value;
       multiComposition = null;
       composing = false;
       input.value = committed;
@@ -1817,11 +1817,11 @@ export function createCanvasEditor({
     queueMicrotask(pump);
     historyIntents.wake();
   });
-  listen(input, "keydown", (event) => {
+  listen(input, 'keydown', (event) => {
     if (
       !target ||
       event.defaultPrevented ||
-      event.getModifierState?.("AltGraph") ||
+      event.getModifierState?.('AltGraph') ||
       composing ||
       event.isComposing ||
       event.keyCode === 229
@@ -1832,7 +1832,7 @@ export function createCanvasEditor({
     if (
       (event.metaKey || event.ctrlKey) &&
       !event.altKey &&
-      ["z", "y"].includes(key.toLowerCase()) &&
+      ['z', 'y'].includes(key.toLowerCase()) &&
       event.repeat
     ) {
       event.preventDefault();
@@ -1841,11 +1841,11 @@ export function createCanvasEditor({
     if (
       historyIntents.size &&
       navigation &&
-      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)
+      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)
     ) {
       event.preventDefault();
       queueOrderedInput(
-        "navigation",
+        'navigation',
         JSON.stringify({
           key,
           paragraphEdge: navigation.paragraphEdge,
@@ -1860,11 +1860,11 @@ export function createCanvasEditor({
       !event.altKey &&
       !event.metaKey &&
       !event.ctrlKey &&
-      ["Backspace", "Delete"].includes(key) &&
+      ['Backspace', 'Delete'].includes(key) &&
       multipleParagraphs()
     ) {
       event.preventDefault();
-      queueOrderedInput(key === "Backspace" ? "deleteContentBackward" : "deleteContentForward");
+      queueOrderedInput(key === 'Backspace' ? 'deleteContentBackward' : 'deleteContentForward');
       return;
     }
     if (
@@ -1872,10 +1872,10 @@ export function createCanvasEditor({
       !event.altKey &&
       !event.metaKey &&
       !event.ctrlKey &&
-      key === "Enter"
+      key === 'Enter'
     ) {
       event.preventDefault();
-      queueOrderedInput(event.shiftKey ? "insertLineBreak" : "insertParagraph");
+      queueOrderedInput(event.shiftKey ? 'insertLineBreak' : 'insertParagraph');
       return;
     }
     if (
@@ -1883,16 +1883,16 @@ export function createCanvasEditor({
       !event.metaKey &&
       !event.ctrlKey &&
       !event.altKey &&
-      (multipleParagraphs() || pending?.kind === "replace-paragraph-ranges") &&
+      (multipleParagraphs() || pending?.kind === 'replace-paragraph-ranges') &&
       Array.from(key).length === 1 &&
       key.isWellFormed()
     ) {
       event.preventDefault();
-      queueOrderedInput("insertText", key);
+      queueOrderedInput('insertText', key);
       return;
     }
     if (
-      structureTarget?.kind === "split" &&
+      structureTarget?.kind === 'split' &&
       historyPending &&
       !event.metaKey &&
       !event.ctrlKey &&
@@ -1905,7 +1905,7 @@ export function createCanvasEditor({
       return;
     }
     if (
-      (multipleParagraphs() || pending?.kind === "replace-paragraph-ranges") &&
+      (multipleParagraphs() || pending?.kind === 'replace-paragraph-ranges') &&
       !event.metaKey &&
       !event.ctrlKey &&
       !event.altKey &&
@@ -1921,25 +1921,25 @@ export function createCanvasEditor({
       !event.metaKey &&
       !event.ctrlKey &&
       !event.altKey &&
-      ["Backspace", "Delete"].includes(key)
+      ['Backspace', 'Delete'].includes(key)
     ) {
       event.preventDefault();
-      replaceSelection("");
+      replaceSelection('');
       return;
     }
     if (
       multipleParagraphs() &&
       (event.metaKey || event.ctrlKey) &&
       !event.altKey &&
-      ["c", "x"].includes(key.toLowerCase())
+      ['c', 'x'].includes(key.toLowerCase())
     ) {
       event.preventDefault();
-      transferSelection({ cut: key.toLowerCase() === "x" });
+      transferSelection({ cut: key.toLowerCase() === 'x' });
       return;
     }
     if (
       multipleParagraphs() &&
-      ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)
+      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)
     ) {
       if (!navigation) return;
       event.preventDefault();
@@ -1962,8 +1962,8 @@ export function createCanvasEditor({
         return;
       }
       const point =
-        key === "ArrowLeft" || key === "ArrowRight"
-          ? paragraphSelectionEdge(anchor, focus, key === "ArrowRight")
+        key === 'ArrowLeft' || key === 'ArrowRight'
+          ? paragraphSelectionEdge(anchor, focus, key === 'ArrowRight')
           : focus;
       if (!point || !renderer.paragraph(point)) return;
       target = paragraphTarget(point);
@@ -1982,15 +1982,15 @@ export function createCanvasEditor({
       !event.altKey &&
       !event.shiftKey &&
       !event.defaultPrevented &&
-      ["b", "i", "u"].includes(key.toLowerCase())
+      ['b', 'i', 'u'].includes(key.toLowerCase())
     ) {
       event.preventDefault();
       if (event.repeat) return;
-      toggleCharacterProperty({ b: "bold", i: "italic", u: "underline" }[key.toLowerCase()]);
+      toggleCharacterProperty({ b: 'bold', i: 'italic', u: 'underline' }[key.toLowerCase()]);
       return;
     }
     if (
-      key === "Tab" &&
+      key === 'Tab' &&
       !event.metaKey &&
       !event.ctrlKey &&
       !event.altKey &&
@@ -2004,7 +2004,7 @@ export function createCanvasEditor({
         controls.busy()
       ) {
         event.preventDefault();
-        report("입력 반영이 끝난 뒤 셀을 이동하세요.");
+        report('입력 반영이 끝난 뒤 셀을 이동하세요.');
         return;
       }
       const next = renderer.adjacentCell?.(target, event.shiftKey);
@@ -2022,7 +2022,7 @@ export function createCanvasEditor({
       (event.metaKey || event.ctrlKey) &&
       !event.altKey &&
       !event.shiftKey &&
-      key.toLowerCase() === "a"
+      key.toLowerCase() === 'a'
     ) {
       event.preventDefault();
       setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length });
@@ -2032,18 +2032,18 @@ export function createCanvasEditor({
     if (
       (event.metaKey || event.ctrlKey) &&
       !event.altKey &&
-      ["z", "y"].includes(key.toLowerCase())
+      ['z', 'y'].includes(key.toLowerCase())
     ) {
       event.preventDefault();
-      travel(key.toLowerCase() === "y" || event.shiftKey ? "redo" : "undo");
+      travel(key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo');
       return;
     }
-    if (key === "Enter") {
+    if (key === 'Enter') {
       event.preventDefault();
       if (event.metaKey || event.ctrlKey || event.altKey) {
         const intent = paragraphBreakShortcut(event);
         if (intent !== null) split(intent);
-        else report("수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다.");
+        else report('수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다.');
         return;
       }
       if (
@@ -2052,7 +2052,7 @@ export function createCanvasEditor({
           target?.createdCell &&
           renderer.paragraph(target)?.softLineBreakAvailable === true)
       )
-        replaceSelection("\n");
+        replaceSelection('\n');
       else split();
       return;
     }
@@ -2060,8 +2060,8 @@ export function createCanvasEditor({
       !event.metaKey &&
       !event.ctrlKey &&
       !event.altKey &&
-      ["Backspace", "Delete"].includes(key) &&
-      mergeBoundary(key === "Backspace")
+      ['Backspace', 'Delete'].includes(key) &&
+      mergeBoundary(key === 'Backspace')
     ) {
       event.preventDefault();
       return;
@@ -2083,15 +2083,15 @@ export function createCanvasEditor({
     setSelection(next.anchor, next.focus, next.preferredX);
     reveal();
   });
-  listen(input, "keyup", sync);
-  listen(input, "select", sync);
-  for (const kind of ["copy", "cut"])
+  listen(input, 'keyup', sync);
+  listen(input, 'select', sync);
+  for (const kind of ['copy', 'cut'])
     listen(input, kind, (event) => {
       if (!multipleParagraphs()) return;
       event.preventDefault();
       const text = renderer.selectionText?.(anchor, focus);
       if (
-        typeof text !== "string" ||
+        typeof text !== 'string' ||
         !event.clipboardData ||
         pending ||
         composing ||
@@ -2099,25 +2099,25 @@ export function createCanvasEditor({
         input.value !== committed
       )
         return;
-      event.clipboardData.setData("text/plain", text);
-      if (kind === "cut") replaceSelection("");
+      event.clipboardData.setData('text/plain', text);
+      if (kind === 'cut') replaceSelection('');
     });
-  listen(input, "paste", (event) => {
-    const text = event.clipboardData?.getData("text/plain");
-    if (historyIntents.size && typeof text === "string" && !composing) {
+  listen(input, 'paste', (event) => {
+    const text = event.clipboardData?.getData('text/plain');
+    if (historyIntents.size && typeof text === 'string' && !composing) {
       event.preventDefault();
-      queueOrderedInput("insertFromPaste", text);
+      queueOrderedInput('insertFromPaste', text);
       return;
     }
-    if (structureTarget?.kind === "split" && historyPending) {
+    if (structureTarget?.kind === 'split' && historyPending) {
       event.preventDefault();
-      if (!queueSplitTyping(text)) report("문단 분할 반영 뒤 여러 줄을 붙여넣으세요.");
+      if (!queueSplitTyping(text)) report('문단 분할 반영 뒤 여러 줄을 붙여넣으세요.');
       return;
     }
-    if (!multipleParagraphs() && (typeof text !== "string" || !/[\r\n]/.test(text))) return;
+    if (!multipleParagraphs() && (typeof text !== 'string' || !/[\r\n]/.test(text))) return;
     event.preventDefault();
     if (!multipleParagraphs()) sync();
-    if (typeof text === "string") replaceSelection(text);
+    if (typeof text === 'string') replaceSelection(text);
   });
   // A dialog/browser can restore an older textarea range while focusing it.
   // In a settled projection the Canvas anchor/focus is the view authority;
@@ -2141,7 +2141,7 @@ export function createCanvasEditor({
       input.setSelectionRange(
         Math.min(anchor.unit, focus.unit),
         Math.max(anchor.unit, focus.unit),
-        anchor.unit > focus.unit ? "backward" : "forward",
+        anchor.unit > focus.unit ? 'backward' : 'forward',
       );
     }
     paint();
@@ -2154,8 +2154,8 @@ export function createCanvasEditor({
     focusedSelection();
     return true;
   };
-  listen(input, "focus", focusedSelection);
-  listen(input, "blur", paint);
+  listen(input, 'focus', focusedSelection);
+  listen(input, 'blur', paint);
   const selectedRange = () => {
     if (target?.createdCell) return null;
     if (
@@ -2172,7 +2172,7 @@ export function createCanvasEditor({
     const startUnit = snapUnit(committed, input.selectionStart);
     const endUnit = snapUnit(committed, input.selectionEnd, true);
     const range = sourceTextChange(
-      { startUnit, endUnit, text: "" },
+      { startUnit, endUnit, text: '' },
       renderer.paragraph(target)?.sourceOffsets,
     );
     return {
@@ -2198,7 +2198,7 @@ export function createCanvasEditor({
     textEditable() &&
     renderer.characterPropertyTextAvailable?.() === true &&
     (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true);
-  const resetExternalSelection = (controller, origin = "canvas") => {
+  const resetExternalSelection = (controller, origin = 'canvas') => {
     if (historyRevision !== null && anchor && focus)
       historySelections.remember(historyRevision, { anchor, focus });
     const available = historyAvailable,
@@ -2232,7 +2232,7 @@ export function createCanvasEditor({
           snapUnit(committed, input.selectionStart),
           snapUnit(committed, input.selectionEnd, true),
         );
-    if (typeof text !== "string" || (!allowEmpty && !text)) return null;
+    if (typeof text !== 'string' || (!allowEmpty && !text)) return null;
     return {
       text,
       allowEmpty,
@@ -2269,7 +2269,7 @@ export function createCanvasEditor({
     );
   };
   const replaceSelectedText = (text) => {
-    if (typeof text !== "string" || !text.isWellFormed()) return false;
+    if (typeof text !== 'string' || !text.isWellFormed()) return false;
     if (/[\r\n]/.test(text) || multipleParagraphs()) return replaceSelection(text);
     if (
       !target ||
@@ -2311,7 +2311,7 @@ export function createCanvasEditor({
       text: saved.text,
       isCurrent: () => selectionCurrent(saved),
       cut,
-      remove: () => replaceSelectedText(""),
+      remove: () => replaceSelectedText(''),
       report,
     });
   };
@@ -2320,7 +2320,7 @@ export function createCanvasEditor({
     focusInput,
     canInsertParagraphBreak,
     insertParagraphBreak(kind) {
-      const intent = paragraphBreakIntent({ kind: "split", breakBefore: kind });
+      const intent = paragraphBreakIntent({ kind: 'split', breakBefore: kind });
       if (!canInsertParagraphBreak()) return false;
       const accepted = split(intent) === true;
       if (accepted) input.focus({ preventScroll: true });
@@ -2329,13 +2329,13 @@ export function createCanvasEditor({
     canDeleteSelection,
     deleteSelection() {
       if (!canDeleteSelection()) return false;
-      const accepted = replaceSelectedText("");
+      const accepted = replaceSelectedText('');
       if (accepted) input.focus({ preventScroll: true });
       return accepted;
     },
     canPasteSelection() {
       return (
-        typeof clipboard?.readText === "function" &&
+        typeof clipboard?.readText === 'function' &&
         settledSelection(true) !== null &&
         selectionTextEditAvailable()
       );
@@ -2356,17 +2356,17 @@ export function createCanvasEditor({
     },
     canTransferSelection(cut = false) {
       return (
-        typeof clipboard?.writeText === "function" &&
+        typeof clipboard?.writeText === 'function' &&
         settledSelection() !== null &&
         (!cut || selectionTextEditAvailable())
       );
     },
     transferSelection,
     selectTextRange(
-      { section, paragraph, startUnit, endUnit, affinity = "forward" },
-      { focusInput = true, selectionOrigin: origin = "canvas" } = {},
+      { section, paragraph, startUnit, endUnit, affinity = 'forward' },
+      { focusInput = true, selectionOrigin: origin = 'canvas' } = {},
     ) {
-      if (!["forward", "backward"].includes(affinity)) return false;
+      if (!['forward', 'backward'].includes(affinity)) return false;
       if (
         composing ||
         pending ||
@@ -2396,8 +2396,8 @@ export function createCanvasEditor({
       input.value = committed;
       input.disabled = false;
       setSelection(
-        { ...next, unit: affinity === "backward" ? endUnit : startUnit },
-        { ...next, unit: affinity === "backward" ? startUnit : endUnit },
+        { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
+        { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
         null,
         origin,
       );
@@ -2482,7 +2482,7 @@ export function createCanvasEditor({
       if (!paragraph || paragraph.clipped) return null;
       const unit = snapUnit(committed, input.selectionStart);
       const source = sourceTextChange(
-        { startUnit: unit, endUnit: unit, text: "" },
+        { startUnit: unit, endUnit: unit, text: '' },
         paragraph.sourceOffsets,
       );
       return { section: target.section, paragraph: target.paragraph, unit: source.startUnit };
@@ -2499,26 +2499,26 @@ export function createCanvasEditor({
       const selection = this.tableCreationSelection();
       if (!selection) return false;
       pending = {
-        kind: "insert-table",
+        kind: 'insert-table',
         start: input.selectionStart,
         end: input.selectionEnd,
         beforeSelection: { anchor: { ...anchor }, focus: { ...focus } },
       };
-      if (!controls.request({ kind: "insert-table", origin: "canvas", ...selection, options })) {
+      if (!controls.request({ kind: 'insert-table', origin: 'canvas', ...selection, options })) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     setParagraphFormat(paraShapeId) {
       const paragraph = this.selectedParagraphFormat();
       if (!paragraph) return false;
-      pending = { kind: "paragraph-format", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'paragraph-format', start: input.selectionStart, end: input.selectionEnd };
       if (
         !controls.request({
-          kind: "paragraph-format",
-          origin: "canvas",
+          kind: 'paragraph-format',
+          origin: 'canvas',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           paraShapeId,
@@ -2527,21 +2527,21 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     setParagraphAlignment(alignment) {
       const paragraph = this.selectedParagraphFormat();
       if (!paragraph) return false;
       pending = {
-        kind: "paragraph-alignment",
+        kind: 'paragraph-alignment',
         start: input.selectionStart,
         end: input.selectionEnd,
       };
       if (
         !controls.request({
-          kind: "paragraph-alignment",
-          origin: "canvas",
+          kind: 'paragraph-alignment',
+          origin: 'canvas',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           alignment,
@@ -2550,17 +2550,17 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     setParagraphSpacing(type, value) {
       const paragraph = this.selectedParagraphFormat();
       if (!paragraph) return false;
-      pending = { kind: "paragraph-spacing", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'paragraph-spacing', start: input.selectionStart, end: input.selectionEnd };
       if (
         !controls.request({
-          kind: "paragraph-spacing",
-          origin: "canvas",
+          kind: 'paragraph-spacing',
+          origin: 'canvas',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           type,
@@ -2570,17 +2570,17 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     setParagraphMargins(margins) {
       const paragraph = this.selectedParagraphFormat();
       if (!paragraph) return false;
-      pending = { kind: "paragraph-margins", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'paragraph-margins', start: input.selectionStart, end: input.selectionEnd };
       if (
         !controls.request({
-          kind: "paragraph-margins",
-          origin: "canvas",
+          kind: 'paragraph-margins',
+          origin: 'canvas',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           margins,
@@ -2589,18 +2589,18 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     formatSelection(charShapeId) {
       const range = selectedRange();
       if (!range || range.startUnit === range.endUnit) return false;
-      pending = { kind: "format", start: input.selectionStart, end: input.selectionEnd };
-      if (!controls.request({ kind: "format", origin: "canvas", ...range, charShapeId })) {
+      pending = { kind: 'format', start: input.selectionStart, end: input.selectionEnd };
+      if (!controls.request({ kind: 'format', origin: 'canvas', ...range, charShapeId })) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     setCharacterProperties,
@@ -2613,27 +2613,27 @@ export function createCanvasEditor({
       if (multipleParagraphs()) {
         const ranges = selectedOutlineRanges();
         if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
-        pending = { kind: "character-outline-ranges", anchor: { ...anchor }, focus: { ...focus } };
+        pending = { kind: 'character-outline-ranges', anchor: { ...anchor }, focus: { ...focus } };
         if (
-          !controls.request({ kind: pending.kind, origin: "canvas", ranges, outlineKind: kind })
+          !controls.request({ kind: pending.kind, origin: 'canvas', ranges, outlineKind: kind })
         ) {
           pending = null;
           return false;
         }
-        input.setAttribute("aria-busy", "true");
+        input.setAttribute('aria-busy', 'true');
         return true;
       }
       if (renderer.characterOutlineAvailable?.() !== true) return false;
       const range = selectedRange();
       if (!range || range.startUnit === range.endUnit) return false;
-      pending = { kind: "character-outline", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'character-outline', start: input.selectionStart, end: input.selectionEnd };
       if (
-        !controls.request({ kind: pending.kind, origin: "canvas", ...range, outlineKind: kind })
+        !controls.request({ kind: pending.kind, origin: 'canvas', ...range, outlineKind: kind })
       ) {
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     selectedCharacterOutline: () => selectedOutlineValue(),
@@ -2650,11 +2650,11 @@ export function createCanvasEditor({
       const ranges = selectedEffectRanges(exclusive);
       if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
       if (multipleParagraphs()) {
-        pending = { kind: "character-effect-ranges", anchor: { ...anchor }, focus: { ...focus } };
+        pending = { kind: 'character-effect-ranges', anchor: { ...anchor }, focus: { ...focus } };
         if (
           !controls.request({
             kind: pending.kind,
-            origin: "canvas",
+            origin: 'canvas',
             ranges,
             effect,
             enabled,
@@ -2664,15 +2664,15 @@ export function createCanvasEditor({
           pending = null;
           return false;
         }
-        input.setAttribute("aria-busy", "true");
+        input.setAttribute('aria-busy', 'true');
         return true;
       }
       const range = ranges[0];
-      pending = { kind: "character-effect", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'character-effect', start: input.selectionStart, end: input.selectionEnd };
       if (
         !controls.request({
           kind: pending.kind,
-          origin: "canvas",
+          origin: 'canvas',
           ...range,
           effect,
           enabled,
@@ -2682,7 +2682,7 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     selectedEffectRanges,
@@ -2793,11 +2793,11 @@ export function createCanvasEditor({
     setCellSize(width, height) {
       const cell = this.selectedCell();
       if (!cell) return false;
-      pending = { kind: "cell-size", start: input.selectionStart, end: input.selectionEnd };
+      pending = { kind: 'cell-size', start: input.selectionStart, end: input.selectionEnd };
       if (
         !controls.request({
-          kind: "cell-size",
-          origin: "canvas",
+          kind: 'cell-size',
+          origin: 'canvas',
           section: cell.section,
           listNode: cell.listNode,
           width,
@@ -2807,7 +2807,7 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     setTableColumnWidth(width, height) {
@@ -2818,14 +2818,14 @@ export function createCanvasEditor({
       const cell = renderer.cell?.(target, { includeTableNode: true });
       if (!cell || !Number.isInteger(cell.tableNode)) return false;
       pending = {
-        kind: "table-column-width",
+        kind: 'table-column-width',
         start: input.selectionStart,
         end: input.selectionEnd,
       };
       if (
         !controls.request({
-          kind: "table-column-width",
-          origin: "canvas",
+          kind: 'table-column-width',
+          origin: 'canvas',
           section: cell.section,
           tableNode: cell.tableNode,
           listNode: cell.listNode,
@@ -2837,7 +2837,7 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     selectedPicture() {
@@ -2862,11 +2862,11 @@ export function createCanvasEditor({
         )
       )
         return false;
-      pending = { kind: "picture-resize" };
+      pending = { kind: 'picture-resize' };
       if (
         !controls.request({
-          kind: "picture-resize",
-          origin: "canvas",
+          kind: 'picture-resize',
+          origin: 'canvas',
           section: picture.section,
           pictureNode: picture.resizeRecordNode ?? picture.pictureNode,
           width,
@@ -2876,20 +2876,20 @@ export function createCanvasEditor({
         pending = null;
         return false;
       }
-      input.setAttribute("aria-busy", "true");
+      input.setAttribute('aria-busy', 'true');
       return true;
     },
     initializeCapabilities(value = {}) {
-      this.message({ ...value, kind: "enable", origin: "surface-init" });
+      this.message({ ...value, kind: 'enable', origin: 'surface-init' });
     },
     flushComposition() {
       if (composing || pending || historyPending || inputIntents.size || historyIntents.size)
-        return "blocked";
+        return 'blocked';
       if (target && input.value !== committed) {
         pump();
-        return "blocked";
+        return 'blocked';
       }
-      return "unchanged";
+      return 'unchanged';
     },
     cancelComposition() {
       const capture = deferredComposition,
@@ -2927,7 +2927,7 @@ export function createCanvasEditor({
     history: (kind) => !historyIntents.size && performHistory(kind),
     canRequestHistory,
     requestHistory: travel,
-    reset({ preserveHistory = false, selectionOrigin: origin = "canvas" } = {}) {
+    reset({ preserveHistory = false, selectionOrigin: origin = 'canvas' } = {}) {
       selectionOrigin = origin;
       if (events.signal.aborted) return;
       historyIntents.clear();
@@ -2949,7 +2949,7 @@ export function createCanvasEditor({
       pending = null;
       anchor = null;
       focus = null;
-      committed = "";
+      committed = '';
       preferredX = null;
       historyAvailable = false;
       historyPending = false;
@@ -2962,19 +2962,19 @@ export function createCanvasEditor({
         historyRevision = null;
         historySelections.reset();
       }
-      input.value = "";
+      input.value = '';
       input.disabled = true;
-      input.setAttribute("aria-busy", "false");
-      canvas.style.cursor = "default";
-      report("");
+      input.setAttribute('aria-busy', 'false');
+      canvas.style.cursor = 'default';
+      report('');
       renderer.preview(null);
       paint();
     },
     external(message) {
       if (events.signal.aborted) return;
-      if (message.kind === "set-edit-window") return;
-      if (message.origin !== "canvas" && !["enable", "save"].includes(message.kind)) {
-        resetExternalSelection(this, message.origin === "core" ? "core" : "canvas");
+      if (message.kind === 'set-edit-window') return;
+      if (message.origin !== 'canvas' && !['enable', 'save'].includes(message.kind)) {
+        resetExternalSelection(this, message.origin === 'core' ? 'core' : 'canvas');
       }
     },
     message(message) {
@@ -2982,7 +2982,7 @@ export function createCanvasEditor({
       if (
         deferredComposition &&
         composing &&
-        !["enable", "save", "query-edit-range", "query-split-range", "set-edit-window"].includes(
+        !['enable', 'save', 'query-edit-range', 'query-split-range', 'set-edit-window'].includes(
           message.kind,
         )
       ) {
@@ -2991,23 +2991,23 @@ export function createCanvasEditor({
       }
       if (
         message.error &&
-        !["save", "query-edit-range", "query-split-range"].includes(message.kind)
+        !['save', 'query-edit-range', 'query-split-range'].includes(message.kind)
       )
         historyIntents.clear();
       historyIntents.wake();
-      if (message.kind === "set-edit-window") {
+      if (message.kind === 'set-edit-window') {
         if (!message.error) resetExternalSelection(this);
         return;
       }
-      if (message.kind === "enable" && !message.error)
+      if (message.kind === 'enable' && !message.error)
         pictureResizeAvailable = message.pictureResizeAvailable === true;
-      if (message.kind === "query-split-range") {
+      if (message.kind === 'query-split-range') {
         if (!splitPermission.accept(message) && !splitPermission.reject(message)) return;
         if (message.error) report(`문단 분할 범위를 확인하지 못했습니다: ${message.error}`);
         updateReadOnly();
         return;
       }
-      if (message.kind === "query-edit-range") {
+      if (message.kind === 'query-edit-range') {
         if (!rangePermission.accept(message) && !rangePermission.reject(message)) return;
         if (
           (!message.allowed || message.error) &&
@@ -3016,7 +3016,7 @@ export function createCanvasEditor({
           clearInputIntents();
           input.value = committed;
           sync();
-          report("이 범위는 편집할 수 없습니다.");
+          report('이 범위는 편집할 수 없습니다.');
         }
         if (message.error) report(`입력 범위를 확인하지 못했습니다: ${message.error}`);
         updateReadOnly();
@@ -3026,11 +3026,11 @@ export function createCanvasEditor({
         }
         return;
       }
-      if (message.kind !== "save") rangePermission.invalidate();
-      if (message.kind !== "save") splitPermission.invalidate();
+      if (message.kind !== 'save') rangePermission.invalidate();
+      if (message.kind !== 'save') splitPermission.invalidate();
       const revision = message.historyRevision;
       const versioned = Number.isInteger(revision) && revision >= 0 && revision < 0xffffffff;
-      const travelMessage = ["undo", "redo"].includes(message.kind);
+      const travelMessage = ['undo', 'redo'].includes(message.kind);
       const revisionChanged = versioned && revision !== historyRevision;
       if (versioned && !message.error) {
         try {
@@ -3047,7 +3047,7 @@ export function createCanvasEditor({
           mergeAvailable = merge;
           splitQueryAvailable = splitQuery;
           paragraphBreakAvailable = breaks;
-          report("문서 이력 응답의 선택 정보를 확인할 수 없습니다. 문단을 다시 선택하세요.");
+          report('문서 이력 응답의 선택 정보를 확인할 수 없습니다. 문단을 다시 선택하세요.');
           return;
         }
       }
@@ -3069,11 +3069,11 @@ export function createCanvasEditor({
         );
       }
       try {
-        if (["undo", "redo", "merge"].includes(message.kind)) {
+        if (['undo', 'redo', 'merge'].includes(message.kind)) {
           typingFont = null;
           typingProperties = null;
         }
-        if (message.kind === "save") {
+        if (message.kind === 'save') {
           pump();
           return;
         }
@@ -3082,18 +3082,18 @@ export function createCanvasEditor({
           return;
         }
         if (
-          message.origin === "canvas" &&
-          message.kind === "picture-resize" &&
-          pending?.kind === "picture-resize"
+          message.origin === 'canvas' &&
+          message.kind === 'picture-resize' &&
+          pending?.kind === 'picture-resize'
         ) {
           pending = null;
-          input.setAttribute("aria-busy", "false");
+          input.setAttribute('aria-busy', 'false');
           report(
-            message.error ? `그림 크기 변경 실패: ${message.error}` : "그림 크기를 변경했습니다.",
+            message.error ? `그림 크기 변경 실패: ${message.error}` : '그림 크기를 변경했습니다.',
           );
           return;
         }
-        if (message.kind === "enable") {
+        if (message.kind === 'enable') {
           if (!message.error) {
             historyAvailable = message.historyAvailable === true;
             structureAvailable = message.structureAvailable === true;
@@ -3105,36 +3105,36 @@ export function createCanvasEditor({
           report(
             message.error
               ? `편집 시작 실패: ${message.error}`
-              : "클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다.",
+              : '클릭·드래그 선택 후 입력하세요. 변경 후 재조판이 필요합니다.',
           );
           pump();
           return;
         }
         if (
-          message.origin === "canvas" &&
+          message.origin === 'canvas' &&
           structureTarget &&
           message.kind === structureTarget.kind
         ) {
-          const queued = structureTarget.queuedText ?? "";
+          const queued = structureTarget.queuedText ?? '';
           const next =
-            message.kind === "split" && message.splitTarget
+            message.kind === 'split' && message.splitTarget
               ? { ...structureTarget, ...message.splitTarget }
               : structureTarget;
           structureTarget = null;
           historyPending = false;
           updateReadOnly();
-          input.setAttribute("aria-busy", "false");
-          const operation = message.kind === "merge" ? "병합" : "분할";
+          input.setAttribute('aria-busy', 'false');
+          const operation = message.kind === 'merge' ? '병합' : '분할';
           if (message.error) {
             report(
               structureErrorMessage(operation, message.error) +
-                (queued ? " · 대기 입력은 적용되지 않았습니다." : ""),
+                (queued ? ' · 대기 입력은 적용되지 않았습니다.' : ''),
             );
             return;
           }
           if (
-            message.kind === "split" &&
-            Object.hasOwn(message, "splitTarget") &&
+            message.kind === 'split' &&
+            Object.hasOwn(message, 'splitTarget') &&
             (!message.splitTarget ||
               message.splitTarget.section !== target.section ||
               !Number.isInteger(message.splitTarget.paragraph) ||
@@ -3142,8 +3142,8 @@ export function createCanvasEditor({
           ) {
             this.reset();
             report(
-              "문단 분할은 적용됐지만 새 문단 위치를 확인할 수 없어 직접 입력을 중단했습니다." +
-                (queued ? " 대기 입력은 적용되지 않았습니다." : ""),
+              '문단 분할은 적용됐지만 새 문단 위치를 확인할 수 없어 직접 입력을 중단했습니다.' +
+                (queued ? ' 대기 입력은 적용되지 않았습니다.' : ''),
             );
             return;
           }
@@ -3151,18 +3151,18 @@ export function createCanvasEditor({
           if (!paragraph?.editable && !paragraph?.selectable) {
             this.reset();
             report(
-              `문단 ${operation}은 적용됐지만 표시 한도로 직접 입력을 중단했습니다.${queued ? " 대기 입력은 적용되지 않았습니다." : ""}`,
+              `문단 ${operation}은 적용됐지만 표시 한도로 직접 입력을 중단했습니다.${queued ? ' 대기 입력은 적용되지 않았습니다.' : ''}`,
             );
             return;
           }
-          if (message.kind === "split" && typingFont && sameParagraph(typingFont, target))
+          if (message.kind === 'split' && typingFont && sameParagraph(typingFont, target))
             typingFont = {
               ...paragraphTarget(next),
               language: typingFont.language,
               name: typingFont.name,
             };
           if (
-            message.kind === "split" &&
+            message.kind === 'split' &&
             typingProperties &&
             sameParagraph(typingProperties, target)
           )
@@ -3184,18 +3184,18 @@ export function createCanvasEditor({
             pump();
           }
           report(
-            `문단 ${operation} 적용 · 재조판 필요${queued && !textEditable() ? " · 보호된 문단의 대기 입력은 적용되지 않았습니다." : ""}`,
+            `문단 ${operation} 적용 · 재조판 필요${queued && !textEditable() ? ' · 보호된 문단의 대기 입력은 적용되지 않았습니다.' : ''}`,
           );
           return;
         }
         if (
-          ["undo", "redo"].includes(message.kind) &&
-          message.origin === "canvas" &&
+          ['undo', 'redo'].includes(message.kind) &&
+          message.origin === 'canvas' &&
           historyPending
         ) {
           historyPending = false;
           updateReadOnly();
-          input.setAttribute("aria-busy", "false");
+          input.setAttribute('aria-busy', 'false');
           if (message.error) {
             report(`실행 취소/다시 실행 실패: ${message.error}`);
             return;
@@ -3212,7 +3212,7 @@ export function createCanvasEditor({
                     [restoredParagraph],
                     restored.anchor,
                     restored.focus,
-                    () => "single",
+                    () => 'single',
                     { sourcePositions: false, includeEmpty: true },
                   )
               : renderer.selectionRanges?.(restored.anchor, restored.focus));
@@ -3229,7 +3229,7 @@ export function createCanvasEditor({
             renderer.preview(null);
             setSelection(restored.anchor, restored.focus);
             reveal();
-            report("실행 취소/다시 실행 적용 · 재조판 필요");
+            report('실행 취소/다시 실행 적용 · 재조판 필요');
             return;
           }
           if (versioned && message.changed) {
@@ -3245,15 +3245,15 @@ export function createCanvasEditor({
             splitQueryAvailable = splitQuery;
             paragraphBreakAvailable = breaks;
             report(
-              "이력은 적용됐지만 원래 선택 위치를 확인할 수 없습니다. 문단을 클릭해 입력을 이어가세요.",
+              '이력은 적용됐지만 원래 선택 위치를 확인할 수 없습니다. 문단을 클릭해 입력을 이어가세요.',
             );
             return;
           }
           if (!target) {
             report(
               message.changed
-                ? "실행 취소/다시 실행 적용 · 재조판 필요"
-                : "이동할 편집 이력이 없습니다.",
+                ? '실행 취소/다시 실행 적용 · 재조판 필요'
+                : '이동할 편집 이력이 없습니다.',
             );
             return;
           }
@@ -3279,28 +3279,28 @@ export function createCanvasEditor({
             );
           report(
             message.changed
-              ? "실행 취소/다시 실행 적용 · 재조판 필요"
-              : "이동할 편집 이력이 없습니다.",
+              ? '실행 취소/다시 실행 적용 · 재조판 필요'
+              : '이동할 편집 이력이 없습니다.',
           );
           return;
         }
-        if (message.origin !== "canvas" || !pending || !target || message.kind !== pending.kind)
+        if (message.origin !== 'canvas' || !pending || !target || message.kind !== pending.kind)
           return;
         const previous = pending;
         pending = null;
-        input.setAttribute("aria-busy", "false");
-        if (previous.kind === "replace-paragraph-ranges") {
+        input.setAttribute('aria-busy', 'false');
+        if (previous.kind === 'replace-paragraph-ranges') {
           if (message.error) {
             setSelection(previous.anchor, previous.focus);
             report(
-              `교체 실패: ${message.error}${previous.queuedText ? " · 대기 입력도 적용되지 않았습니다." : ""}`,
+              `교체 실패: ${message.error}${previous.queuedText ? ' · 대기 입력도 적용되지 않았습니다.' : ''}`,
             );
             return;
           }
           const paragraph = renderer.paragraph(previous.target);
           if (!paragraph?.editable || paragraph.clipped) {
             this.reset();
-            report("교체는 적용됐지만 표시 범위에서 입력을 계속할 수 없습니다.");
+            report('교체는 적용됐지만 표시 범위에서 입력을 계속할 수 없습니다.');
             return;
           }
           typingFont = previous.font
@@ -3316,7 +3316,7 @@ export function createCanvasEditor({
           const unit = snapUnit(committed, Math.min(previous.unit, committed.length));
           setSelection({ ...target, unit }, { ...target, unit });
           reveal();
-          report("선택 교체 적용 · 재조판 필요");
+          report('선택 교체 적용 · 재조판 필요');
           if (previous.queuedText) {
             input.value = committed.slice(0, unit) + previous.queuedText + committed.slice(unit);
             input.setSelectionRange(
@@ -3330,44 +3330,44 @@ export function createCanvasEditor({
         }
         if (
           [
-            "character-properties-ranges",
-            "character-outline-ranges",
-            "character-effect-ranges",
-            "character-strike-ranges",
-            "character-underline-ranges",
-            "character-text-color-ranges",
-            "character-shade-ranges",
-            "character-font-ranges",
-            "character-font-name-ranges",
+            'character-properties-ranges',
+            'character-outline-ranges',
+            'character-effect-ranges',
+            'character-strike-ranges',
+            'character-underline-ranges',
+            'character-text-color-ranges',
+            'character-shade-ranges',
+            'character-font-ranges',
+            'character-font-name-ranges',
           ].includes(previous.kind)
         ) {
           setSelection(previous.anchor, previous.focus);
           report(
             message.error
               ? `서식은 적용되지 않았습니다: ${message.error}`
-              : "여러 문단 서식 적용 · 재조판 필요",
+              : '여러 문단 서식 적용 · 재조판 필요',
           );
           return;
         }
         if (message.error) {
           clearInputIntents();
-          if (previous.kind === "splice-font-name") typingFont = null;
-          if (["splice-font-name", "splice-character-properties"].includes(previous.kind))
+          if (previous.kind === 'splice-font-name') typingFont = null;
+          if (['splice-font-name', 'splice-character-properties'].includes(previous.kind))
             typingProperties = null;
           if (
             [
-              "format",
-              "character-properties",
-              "character-outline",
-              "character-effect",
-              "character-strike",
-              "character-strike-color",
-              "character-underline",
-              "character-underline-color",
-              "character-text-color",
-              "character-shade",
-              "character-font",
-              "character-font-name",
+              'format',
+              'character-properties',
+              'character-outline',
+              'character-effect',
+              'character-strike',
+              'character-strike-color',
+              'character-underline',
+              'character-underline-color',
+              'character-text-color',
+              'character-shade',
+              'character-font',
+              'character-font-name',
             ].includes(previous.kind) &&
             input.value !== committed
           ) {
@@ -3386,7 +3386,7 @@ export function createCanvasEditor({
           report(`입력이 적용되지 않았습니다: ${message.error}`);
           return;
         }
-        if (previous.kind === "insert-table") {
+        if (previous.kind === 'insert-table') {
           const next = {
             section: target.section,
             createdCell: { identity: message.identity, row: 0, column: 0 },
@@ -3394,7 +3394,7 @@ export function createCanvasEditor({
           const cell = renderer.paragraph(next);
           if (!cell?.editable || !caretGeometry(renderer.layout(), { ...next, unit: 0 })) {
             resetExternalSelection(this);
-            report("표는 생성됐지만 현재 표시 위치에서는 셀 입력을 시작할 수 없습니다.");
+            report('표는 생성됐지만 현재 표시 위치에서는 셀 입력을 시작할 수 없습니다.');
             return;
           }
           target = next;
@@ -3403,14 +3403,14 @@ export function createCanvasEditor({
           setSelection({ ...next, unit: 0 }, { ...next, unit: 0 });
           input.focus({ preventScroll: true });
           reveal();
-          report("표 생성 · 첫 셀에서 입력할 수 있습니다.");
+          report('표 생성 · 첫 셀에서 입력할 수 있습니다.');
           return;
         }
         const paragraph = renderer.paragraph(target);
         if (!selectableText(paragraph)) {
           this.reset();
           report(
-            "표시 한도에 도달해 직접 입력을 중단했습니다. 적용된 변경은 native 모델에 유지됩니다.",
+            '표시 한도에 도달해 직접 입력을 중단했습니다. 적용된 변경은 native 모델에 유지됩니다.',
           );
           return;
         }
@@ -3423,11 +3423,11 @@ export function createCanvasEditor({
             input.value = committed;
             renderer.preview(null);
             sync();
-            report("대기 입력의 기준 문서를 확인할 수 없어 적용하지 않았습니다.");
+            report('대기 입력의 기준 문서를 확인할 수 없어 적용하지 않았습니다.');
             return;
           }
         }
-        report("변경 적용 · 재조판 필요");
+        report('변경 적용 · 재조판 필요');
         preview();
         pump();
       } finally {

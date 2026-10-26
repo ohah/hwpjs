@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { seriesLabelOracle } from "./chart-series-label-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { seriesLabelOracle } from './chart-series-label-oracle.mjs';
 const extent = (b) => {
   b.writeUInt32LE(b.length - 36, 32);
   return b;
 };
 export async function chartSeriesLabels(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     points = 0,
     accepted = 0,
@@ -17,10 +17,10 @@ export async function chartSeriesLabels(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       const e = seriesLabelOracle(b);
       roots++;
       points += e.c.points.length;
@@ -49,10 +49,10 @@ export async function chartSeriesLabels(call) {
       after.fill(255, e.end);
       accept(after);
       for (let cut = e.start; cut < e.end; cut++)
-        reject(extent(Buffer.from(b.subarray(0, cut))), "UnexpectedEnd");
-      reject(b, "LimitExceeded", e.c.label.objects.size - 1);
-      reject(b, "LimitExceeded", e.c.label.objects.size, b.length - 1);
-      reject(b, "LimitExceeded", e.c.label.objects.size, b.length, 33);
+        reject(extent(Buffer.from(b.subarray(0, cut))), 'UnexpectedEnd');
+      reject(b, 'LimitExceeded', e.c.label.objects.size - 1);
+      reject(b, 'LimitExceeded', e.c.label.objects.size, b.length - 1);
+      reject(b, 'LimitExceeded', e.c.label.objects.size, b.length, 33);
       const labels = [
         ...e.c.points.map((p) => ({ prefix: p.prefix, label: p.label })),
         { prefix: e.c.tail, label: e.c.label },
@@ -60,8 +60,8 @@ export async function chartSeriesLabels(call) {
       for (const { prefix, label } of labels) {
         for (const at of [prefix.label.start, label.text.fontOffset])
           for (const [id, error] of [
-            [0xffffffff, "UnsupportedChartObjectReference"],
-            [e.c.series.r.objectId, "DuplicateChartObjectId"],
+            [0xffffffff, 'UnsupportedChartObjectReference'],
+            [e.c.series.r.objectId, 'DuplicateChartObjectId'],
           ]) {
             const bad = Buffer.from(b);
             bad.writeUInt32LE(id, at);
@@ -77,7 +77,7 @@ export async function chartSeriesLabels(call) {
         accept(raw);
         const bad = Buffer.from(b);
         bad.writeUInt32LE(p.prefix.point.typeId, p.baseOffset);
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
       }
       const declarations = [
         ...e.c.tail.declarations,
@@ -86,8 +86,8 @@ export async function chartSeriesLabels(call) {
       ];
       for (const d of declarations)
         for (const [at, error] of [
-          [d.nameOffset, "UnsupportedChartClass"],
-          [d.versionOffset, "UnsupportedChartTypeVersion"],
+          [d.nameOffset, 'UnsupportedChartClass'],
+          [d.versionOffset, 'UnsupportedChartTypeVersion'],
         ]) {
           const bad = Buffer.from(b);
           bad[at] ^= 1;

@@ -1,27 +1,27 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { documentRecords } from './documents.mjs';
 // Framing inventory independent of shape hierarchy acceptance. No automatic layout choice.
 export function arcSurvey(call, cfb) {
-  const root = new URL("../../reference/rhwp/samples/", import.meta.url);
+  const root = new URL('../../reference/rhwp/samples/', import.meta.url);
   if (!existsSync(root)) return { skipped: true };
   const out = { files: 0, completed: 0, security: 0, sections: 0, failures: [], records: [] };
   for (const name of readdirSync(root, { recursive: true })
-    .filter((n) => n.endsWith(".hwp"))
+    .filter((n) => n.endsWith('.hwp'))
     .sort()) {
     out.files++;
-    let stage = "container";
+    let stage = 'container';
     try {
       cfb.parse(readFileSync(join(fileURLToPath(root), name)), { strict: true });
-      const h = Buffer.from(cfb.findExact("/FileHeader").content);
+      const h = Buffer.from(cfb.findExact('/FileHeader').content);
       if (h.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024)) {
         out.security++;
         continue;
       }
       const nodes = cfb.document().nodes,
-        body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+        body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
       assert.ok(body >= 0);
       const sections = nodes.filter((n) => n.parent === body && /^Section\d+$/.test(n.name));
       assert.ok(sections.length > 0);
@@ -42,6 +42,6 @@ export function arcSurvey(call, cfb) {
   assert.equal(out.files, out.completed + out.security + out.failures.length);
   assert.ok(out.sections > 0);
   // New actual arcs must trigger explicit layout/field verification, not silently count as tested.
-  assert.equal(out.records.length, 0, "New arc fixtures require explicit layout verification");
+  assert.equal(out.records.length, 0, 'New arc fixtures require explicit layout verification');
   return out;
 }

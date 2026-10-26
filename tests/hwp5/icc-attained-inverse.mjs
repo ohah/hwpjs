@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { endpoint } from "./icc-preimage-bounds.mjs";
-import { linearPreimageReference, choiceReference } from "./icc-linear-preimage-reference.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { endpoint } from './icc-preimage-bounds.mjs';
+import { linearPreimageReference, choiceReference } from './icc-linear-preimage-reference.mjs';
 export function attainedInverseEdges(call, bits = 128) {
   assert.ok(bits === 128 || bits === 512);
   const mode = bits === 128 ? 202 : 231,
@@ -40,7 +40,7 @@ export function attainedInverseEdges(call, bits = 128) {
         ]) {
           const raw = [65536, a, b, 0, 0];
           if (clamp(b) === clamp(a + b)) {
-            reject(3, raw, n, d, "ConstantIccCurve", precision);
+            reject(3, raw, n, d, 'ConstantIccCurve', precision);
             continue;
           }
           const interval = linearPreimageReference(
@@ -49,13 +49,13 @@ export function attainedInverseEdges(call, bits = 128) {
           );
           check(3, raw, n, d, interval ? choiceReference(interval) : null, precision);
         }
-    reject(4, [65536, 0, 0, 0, 32768, 65536, 0], 0n, 1n, "UnattainedIccPreimageMaximum", precision);
+    reject(4, [65536, 0, 0, 0, 32768, 65536, 0], 0n, 1n, 'UnattainedIccPreimageMaximum', precision);
     check(4, [65536, 0, 0, 0, 32768, 65536, 0], 1n, 1n, [1n, 2n], precision);
     check(4, [65536, 0, 0, 0, 32768, 65536, 0], 1n, 2n, null, precision);
     check(4, [65536, 0, 0, 65536, 32768, 65536, 0], 3n, 5n, null, precision);
     check(4, [65536, 0, 0, 0, 65536, 65536, 0], 1n, 1n, [1n, 1n], precision);
-    reject(3, [131072, 131072, -65536, 0, 0], 0n, 1n, "NonMonotonicIccCurve", precision);
-    reject(4, [131072, 131072, -65536, 0, 0, 65536, 0], 1n, 1n, "ConstantIccCurve", precision);
+    reject(3, [131072, 131072, -65536, 0, 0], 0n, 1n, 'NonMonotonicIccCurve', precision);
+    reject(4, [131072, 131072, -65536, 0, 0, 65536, 0], 1n, 1n, 'ConstantIccCurve', precision);
     check(0, [131072], 1n, 4n, [1n, 2n], precision);
     check(1, [65536, 65536, -32768], 0n, 1n, [1n, 2n], precision);
     check(1, [65536, 65536, -32768], 1n, 1n, null, precision);
@@ -101,9 +101,9 @@ export function attainedInverseEdges(call, bits = 128) {
     assert.throws(() => call(mode, b, l), e);
     rejected++;
   }
-  reject(0, [0], 1n, 0n, "InvalidIccCurveCoordinate");
-  reject(0, [0], 2n, 1n, "InvalidIccCurveCoordinate");
-  reject(0, [0], 1n, 1n, "UndefinedIccCurvePower");
+  reject(0, [0], 1n, 0n, 'InvalidIccCurveCoordinate');
+  reject(0, [0], 2n, 1n, 'InvalidIccCurveCoordinate');
+  reject(0, [0], 1n, 1n, 'UndefinedIccCurvePower');
   check(0, [65536], 1n, 3n, [1n, 3n]);
   return { selected, missing, rejected, undecided };
 }

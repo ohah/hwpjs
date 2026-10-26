@@ -1,9 +1,9 @@
 import {
   observeAxisPrefix,
   observeAxisPrefixNullableTitle,
-} from "./chart-axis-prefix-evidence.mjs";
-import { observeValueText } from "./chart-value-text-evidence.mjs";
-import { observeAxisTail } from "./chart-axis-tail-evidence.mjs";
+} from './chart-axis-prefix-evidence.mjs';
+import { observeValueText } from './chart-value-text-evidence.mjs';
+import { observeAxisTail } from './chart-axis-tail-evidence.mjs';
 
 // One selected Axis layout. State is copied; global non-string identity is not
 // validated by this research assembler. Future versions are not inferred.
@@ -36,7 +36,7 @@ function read(prefix, bytes, offset, priorTypes, priorStrings, priorNumbers) {
   const addValues = (vs) => {
     for (const v of vs)
       if (v) {
-        if (v.kind === "number") numbers.set(v.id, { bitsHex: v.bitsHex, trailer: v.trailer });
+        if (v.kind === 'number') numbers.set(v.id, { bitsHex: v.bitsHex, trailer: v.trailer });
         else strings.set(v.id, { hex: v.hex, trailer: v.trailer });
       }
   };
@@ -54,7 +54,7 @@ function read(prefix, bytes, offset, priorTypes, priorStrings, priorNumbers) {
       value.text.text,
     ]);
   }
-  const selector = Buffer.from(axis.rawFields[0].hex, "hex").readUInt16LE(6);
+  const selector = Buffer.from(axis.rawFields[0].hex, 'hex').readUInt16LE(6);
   const tail = observeAxisTail(bytes, value?.end ?? axis.end, selector, types);
   return { axis, value, tail, end: tail.end, types, strings, numbers };
 }

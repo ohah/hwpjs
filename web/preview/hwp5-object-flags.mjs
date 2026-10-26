@@ -6,7 +6,7 @@ export function hwp5UnsupportedObjectFlags(flags, { allowObservedLock = false } 
 }
 export function hwp5ObjectFlags(flags, options) {
   if (hwp5UnsupportedObjectFlags(flags, options) !== 0)
-    throw new Error("UnsupportedHwp5ObjectFlags");
+    throw new Error('UnsupportedHwp5ObjectFlags');
   const vertical_relative = (flags >>> 3) & 3,
     vertical_alignment = (flags >>> 5) & 7;
   const horizontal_relative = (flags >>> 8) & 3,
@@ -22,7 +22,7 @@ export function hwp5ObjectFlags(flags, options) {
     height_relative > 2 ||
     text_wrap > 3
   )
-    throw new Error("UnsupportedHwp5ObjectEnum");
+    throw new Error('UnsupportedHwp5ObjectEnum');
   const flow_with_text = Boolean(flags & (1 << 13));
   return {
     vertical_relative,

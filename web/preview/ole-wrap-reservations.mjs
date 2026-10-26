@@ -1,22 +1,22 @@
-import { projectFloatingOlePage } from "./ole-page-projection.mjs";
-import { resolveComponentWrapReservations } from "./component-wrap-reservations.mjs";
+import { projectFloatingOlePage } from './ole-page-projection.mjs';
+import { resolveComponentWrapReservations } from './component-wrap-reservations.mjs';
 
 /** Standalone OLE policy remains separate from shared geometric reservation. */
 export function resolveOleWrapReservations(oles, paragraphs, body, inventory) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(oles) ||
-    inventory?.state !== "collected" ||
+    inventory?.state !== 'collected' ||
     !Array.isArray(inventory.footprints)
   )
-    return fail("IncompleteOleCollisionInventory");
+    return fail('IncompleteOleCollisionInventory');
   for (const ole of oles) {
-    if (!ole || typeof ole !== "object") return fail("InvalidOlePageAnchor");
+    if (!ole || typeof ole !== 'object') return fail('InvalidOlePageAnchor');
     if (
       ole.chartWrapper != null ||
-      (ole.representation !== undefined && ole.representation !== "standalone")
+      (ole.representation !== undefined && ole.representation !== 'standalone')
     )
-      return fail("UnsupportedOleAlternateWrap");
+      return fail('UnsupportedOleAlternateWrap');
   }
   const result = resolveComponentWrapReservations(
     oles.map((ole) => ({ ...ole, node: ole.oleNode })),
@@ -24,9 +24,9 @@ export function resolveOleWrapReservations(oles, paragraphs, body, inventory) {
     body,
     inventory,
     projectFloatingOlePage,
-    "ole",
+    'ole',
   );
-  return result.state === "reserved"
+  return result.state === 'reserved'
     ? {
         ...result,
         reservations: result.reservations.map(({ node, ...row }) => ({ ...row, oleNode: node })),

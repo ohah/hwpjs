@@ -1,17 +1,17 @@
 // Independent Node oracle: no product parser offsets or model snapshots.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { runInNewContext } from "node:vm";
-import { inflateRawSync } from "node:zlib";
-import { decodeDistributionSection } from "../../../tools/hwp5-distribution-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { runInNewContext } from 'node:vm';
+import { inflateRawSync } from 'node:zlib';
+import { decodeDistributionSection } from '../../../tools/hwp5-distribution-oracle.mjs';
 const context = {
   module: { exports: {} },
   require: createRequire(import.meta.url),
   Buffer,
   process,
 };
-runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);
+runInNewContext(readFileSync('legacy/cfb.js', 'utf8'), context);
 const cfb = context.module.exports;
 
 export function records(bytes) {
@@ -66,8 +66,8 @@ export function readStreams(input) {
 
 export function inspect(input) {
   const { streams, metadata } = readContainer(input);
-  const compressed = Boolean(streams.get("FileHeader").readUInt32LE(36) & 1);
-  const distribution = Boolean(streams.get("FileHeader").readUInt32LE(36) & 4);
+  const compressed = Boolean(streams.get('FileHeader').readUInt32LE(36) & 1);
+  const distribution = Boolean(streams.get('FileHeader').readUInt32LE(36) & 4);
   const decode = (b) => (compressed ? inflateRawSync(b, { maxOutputLength: 32 * 1024 * 1024 }) : b);
   const pattern = distribution ? /^ViewText\/Section\d+$/ : /^BodyText\/Section\d+$/;
   const sections = [...streams]
@@ -109,9 +109,9 @@ export function expectedSection(
     own = owner.direct.filter((r) => r.level === owner.head.level + 1),
     originalText = own.find((r) => r.tag === 67);
   const declared = owner.head.payload.readUInt32LE(0) & 0x7fffffff;
-  assert(originalText || declared <= 1, "oracle cannot invent missing nonempty text");
-  const text = originalText?.payload.length ? originalText.payload : Buffer.from("\r", "utf16le");
-  const add = Buffer.from(utf8, "utf16le"),
+  assert(originalText || declared <= 1, 'oracle cannot invent missing nonempty text');
+  const text = originalText?.payload.length ? originalText.payload : Buffer.from('\r', 'utf16le');
+  const add = Buffer.from(utf8, 'utf16le'),
     output = Buffer.concat([text.subarray(0, start * 2), add, text.subarray(end * 2)]);
   if (output.equals(text)) return bytes;
   const fieldHeaders = own.filter(
@@ -127,7 +127,7 @@ export function expectedSection(
     if (code === 3) opened.push({ index: fieldIndex++, begin: unit + width });
     if (code === 4) {
       const field = opened.pop();
-      assert(field, "oracle missing field start");
+      assert(field, 'oracle missing field start');
       if (start === end ? start >= field.begin && start <= unit : start < unit && end > field.begin)
         modifiedFields.add(fieldHeaders[field.index]);
     }
@@ -218,7 +218,7 @@ export function verifyRaw(beforeBytes, afterBytes, section, paragraph, start, en
   assert.deepEqual(
     after.sections[section].bytes,
     expectedSection(target.bytes, paragraph, start, end, utf8, options),
-    "complete Section must match independent splice, styles, ranges and cache removal",
+    'complete Section must match independent splice, styles, ranges and cache removal',
   );
   for (const [path, bytes] of before.streams)
     if (path !== target.path)

@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { seriesCollectionFixture as fixture } from "./chart-series-collection-fixture.mjs";
-import { observeSeriesCollection } from "./chart-series-collection-evidence.mjs";
-import { incompleteSeriesCollection } from "./chart-series-collection-errors.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { seriesCollectionFixture as fixture } from './chart-series-collection-fixture.mjs';
+import { observeSeriesCollection } from './chart-series-collection-evidence.mjs';
+import { incompleteSeriesCollection } from './chart-series-collection-errors.mjs';
 const read = (f, b = f.bytes, count = f.count) =>
   observeSeriesCollection(b, f.offset, f.types, f.objects, f.strings, count);
-test("Series collection preserves ordered scope raw106 nullable fields and exact Title header boundary", () => {
+test('Series collection preserves ordered scope raw106 nullable fields and exact Title header boundary', () => {
   for (const offset of [0, 1, 17, 257])
     for (const count of [0, 1, 2])
       for (const points of [0, 1, 4])
@@ -25,7 +25,7 @@ test("Series collection preserves ordered scope raw106 nullable fields and exact
             assert.equal(s.start, f.rows[i].start);
             assert.equal(s.end, f.rows[i].end);
             assert.equal(s.trailerStart, f.rows[i].trailerStart);
-            assert.equal(s.raw106, f.bytes.subarray(s.trailerStart, s.end).toString("hex"));
+            assert.equal(s.raw106, f.bytes.subarray(s.trailerStart, s.end).toString('hex'));
             assert.equal(s.section.points.length, points);
             assert.equal(s.types.has(279), !newTitle);
             if (i) assert(!r.series[i - 1].objects.has(s.prefix.objectId));
@@ -35,10 +35,10 @@ test("Series collection preserves ordered scope raw106 nullable fields and exact
           f.types.clear();
           f.objects.clear();
           f.strings.clear();
-          if (count) assert.notEqual(r.series[0].raw106, "00".repeat(106));
+          if (count) assert.notEqual(r.series[0].raw106, '00'.repeat(106));
         }
 });
-test("Series collection all cuts count mismatch cross-series IDs and Title class/version errors", () => {
+test('Series collection all cuts count mismatch cross-series IDs and Title class/version errors', () => {
   for (const points of [0, 1, 4])
     for (const newTitle of [false, true]) {
       const f = fixture(17, 2, points, newTitle),
@@ -48,17 +48,17 @@ test("Series collection all cuts count mismatch cross-series IDs and Title class
       assert.throws(
         () => read(f, f.bytes, 1),
         (e) =>
-          e.constructor === Error && e.message === "UnsupportedChartTitleHeaderObservationType",
+          e.constructor === Error && e.message === 'UnsupportedChartTitleHeaderObservationType',
       );
       assert.throws(
         () => read(f, f.bytes, 3),
-        (e) => e.constructor === Error && e.message === "UnsupportedSeriesPrefixObservationType",
+        (e) => e.constructor === Error && e.message === 'UnsupportedSeriesPrefixObservationType',
       );
       const duplicate = Buffer.from(f.bytes);
       duplicate.writeUInt32LE(r.series[0].prefix.objectId, f.rows[1].start);
       assert.throws(
         () => read(f, duplicate),
-        (e) => e.constructor === Error && e.message === "UnsupportedSeriesPrefixObservationObject",
+        (e) => e.constructor === Error && e.message === 'UnsupportedSeriesPrefixObservationObject',
       );
       for (const id of [0xffffffff, r.series[0].prefix.objectId]) {
         const b = Buffer.from(f.bytes);
@@ -66,7 +66,7 @@ test("Series collection all cuts count mismatch cross-series IDs and Title class
         assert.throws(
           () => read(f, b),
           (e) =>
-            e.constructor === Error && e.message === "UnsupportedChartTitleHeaderObservationObject",
+            e.constructor === Error && e.message === 'UnsupportedChartTitleHeaderObservationObject',
         );
       }
       if (newTitle)
@@ -76,16 +76,16 @@ test("Series collection all cuts count mismatch cross-series IDs and Title class
           assert.throws(
             () => read(f, b),
             (e) =>
-              e.constructor === Error && e.message === "UnsupportedChartTitleHeaderObservationType",
+              e.constructor === Error && e.message === 'UnsupportedChartTitleHeaderObservationType',
           );
         }
       else {
         const types = new Map(f.types);
-        types.set(279, { name: "VtChartTitle\0", version: 99 });
+        types.set(279, { name: 'VtChartTitle\0', version: 99 });
         assert.throws(
           () => observeSeriesCollection(f.bytes, f.offset, types, f.objects, f.strings, 2),
           (e) =>
-            e.constructor === Error && e.message === "UnsupportedChartTitleHeaderObservationType",
+            e.constructor === Error && e.message === 'UnsupportedChartTitleHeaderObservationType',
         );
       }
       assert.deepEqual(read(f), r);
@@ -93,9 +93,9 @@ test("Series collection all cuts count mismatch cross-series IDs and Title class
   const f = fixture();
   for (const n of [-1, 0.5, NaN, 17]) assert.throws(() => read(f, f.bytes, n), RangeError);
 });
-test("Series collection incomplete classifier does not hide host exceptions", () => {
-  assert(incompleteSeriesCollection(Error("IncompleteSeriesTrailerObservation")));
+test('Series collection incomplete classifier does not hide host exceptions', () => {
+  assert(incompleteSeriesCollection(Error('IncompleteSeriesTrailerObservation')));
   for (const C of [WebAssembly.RuntimeError, TypeError, RangeError])
-    assert(!incompleteSeriesCollection(new C("IncompleteSeriesTrailerObservation")));
-  assert(!incompleteSeriesCollection(Error("UnsupportedChartTitleHeaderObservationType")));
+    assert(!incompleteSeriesCollection(new C('IncompleteSeriesTrailerObservation')));
+  assert(!incompleteSeriesCollection(Error('UnsupportedChartTitleHeaderObservationType')));
 });

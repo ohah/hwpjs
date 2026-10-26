@@ -1,12 +1,12 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { placeTablePagesHorizontally } from "../../web/preview/table-page-horizontal-placement.mjs";
-import { tableSourceHorizontalLayout } from "../../web/preview/table-source-horizontal-layout.mjs";
-import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
-import { pageReferenceBoxes } from "../../web/preview/page-reference-boxes.mjs";
-import { createTextStyle } from "../../web/preview/text-style.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { placeTablePagesHorizontally } from '../../web/preview/table-page-horizontal-placement.mjs';
+import { tableSourceHorizontalLayout } from '../../web/preview/table-source-horizontal-layout.mjs';
+import { measureTableCells } from '../../web/preview/table-cell-measurement.mjs';
+import { pageReferenceBoxes } from '../../web/preview/page-reference-boxes.mjs';
+import { createTextStyle } from '../../web/preview/text-style.mjs';
 
 function fixture() {
   const column = { x: 50, y: 20, width: 100, height: 200 },
@@ -31,7 +31,7 @@ function fixture() {
     },
   };
   const layout = {
-    state: "placed",
+    state: 'placed',
     rows: [{ tableNode: 2, x: 60, y: 30, height: 20 }],
     boxes: [
       {
@@ -49,26 +49,26 @@ function fixture() {
   return { table, layout, paragraph: { paragraphShape: { left: 0, right: 0, indent: 0 } } };
 }
 
-test("paragraph-relative source tables preserve offsets into paper margins without resizing", () => {
+test('paragraph-relative source tables preserve offsets into paper margins without resizing', () => {
   const f = fixture(),
     before = structuredClone(f);
   const placed = placeTablePagesHorizontally(f.table, f.layout, 5, f.paragraph);
-  assert.equal(placed.state, "placed", placed.error);
+  assert.equal(placed.state, 'placed', placed.error);
   assert.equal(placed.boxes[0].x, 70);
   assert.equal(placed.boxes[0].width, 90);
   assert.equal(placed.rows[0].x, 75);
-  assert.equal(placed.boxes[0].horizontalOverflowBoundary, "paper");
+  assert.equal(placed.boxes[0].horizontalOverflowBoundary, 'paper');
   assert.deepEqual(f, before);
 });
 
-test("paragraph-relative paper bounds retain outer margins and reject invalid or missing extents", () => {
+test('paragraph-relative paper bounds retain outer margins and reject invalid or missing extents', () => {
   const f = fixture();
   for (const offset of [-4500, 4500]) {
     const table = structuredClone(f.table);
     table.sourceGeometry.geometry.horizontal_offset = offset;
     assert.equal(
       placeTablePagesHorizontally(table, f.layout, 5, f.paragraph).error,
-      "TablePageWidthOverflow",
+      'TablePageWidthOverflow',
     );
   }
   for (const paper of [
@@ -80,32 +80,32 @@ test("paragraph-relative paper bounds retain outer margins and reject invalid or
     layout.boxes[0].referenceBoxes.paper = paper;
     assert.equal(
       placeTablePagesHorizontally(f.table, layout, 5, f.paragraph).error,
-      "TablePageWidthOverflow",
+      'TablePageWidthOverflow',
     );
   }
   const outside = structuredClone(f.layout);
   outside.boxes[0].width = 126;
   assert.equal(
     placeTablePagesHorizontally(f.table, outside, 5, f.paragraph).error,
-    "TablePageWidthOverflow",
+    'TablePageWidthOverflow',
   );
   for (const width of [0, -1, NaN, Infinity]) {
     const layout = structuredClone(f.layout);
     layout.boxes[0].width = width;
     assert.equal(
       placeTablePagesHorizontally(f.table, layout, 5, f.paragraph).error,
-      "TablePageWidthOverflow",
+      'TablePageWidthOverflow',
     );
   }
   const columnRelative = structuredClone(f.table);
   columnRelative.sourceGeometry.horizontal_relative = 2;
   assert.equal(
     placeTablePagesHorizontally(columnRelative, f.layout, 5, f.paragraph).error,
-    "TablePageWidthOverflow",
+    'TablePageWidthOverflow',
   );
 });
 
-test("paragraph-relative alignment and signed offsets obey independent physical boundary arithmetic", () => {
+test('paragraph-relative alignment and signed offsets obey independent physical boundary arithmetic', () => {
   const f = fixture();
   for (const alignment of [0, 1, 2])
     for (let offset = -100; offset <= 100; offset += 5) {
@@ -117,22 +117,22 @@ test("paragraph-relative alignment and signed offsets obey independent physical 
       const result = placeTablePagesHorizontally(table, f.layout, 5, f.paragraph);
       assert.equal(
         result.state,
-        fits ? "placed" : "unavailable",
+        fits ? 'placed' : 'unavailable',
         JSON.stringify({ alignment, offset }),
       );
       if (fits) assert.equal(result.boxes[0].x, expected);
-      else assert.equal(result.error, "TablePageWidthOverflow");
+      else assert.equal(result.error, 'TablePageWidthOverflow');
     }
 });
 
-test("actual copay source offset and cell widths remain exact when table extends beyond body", async (t) => {
-  const path = "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx";
+test('actual copay source offset and cell widths remain exact when table extends beyond body', async (t) => {
+  const path = 'reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx';
   const expected = JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-B",
-        "-c",
+        '-B',
+        '-c',
         `
 import json,sys,zipfile,xml.etree.ElementTree as E
 p="{http://www.hancom.co.kr/hwpml/2011/paragraph}"
@@ -146,10 +146,10 @@ print(json.dumps(dict(node=1497,width=int(sz.get("width")),offset=int(pos.get("h
 `,
         path,
       ],
-      { encoding: "utf8", timeout: 30000 },
+      { encoding: 'utf8', timeout: 30000 },
     ),
   );
-  assert.equal(expected.relative, "PARA");
+  assert.equal(expected.relative, 'PARA');
   assert.equal(expected.width, 46027);
   assert.equal(expected.offset, 2421);
   const previousSelf = globalThis.self,
@@ -159,14 +159,14 @@ print(json.dumps(dict(node=1497,width=int(sz.get("width")),offset=int(pos.get("h
   globalThis.fetch = async () => new Response(readFileSync(process.env.HWPJS_TEST_WASM));
   t.after(async () => {
     try {
-      await self.onmessage({ data: { kind: "load", format: "close-audit", bytes: [] } });
+      await self.onmessage({ data: { kind: 'load', format: 'close-audit', bytes: [] } });
     } finally {
       globalThis.self = previousSelf;
       globalThis.fetch = previousFetch;
     }
   });
-  await import("../../web/preview/reader-worker.mjs?paper-table=" + Date.now());
-  await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: readFileSync(path) } });
+  await import('../../web/preview/reader-worker.mjs?paper-table=' + Date.now());
+  await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: readFileSync(path) } });
   const reply = replies.shift();
   assert.equal(reply.error, undefined);
   const content = reply.content,
@@ -179,23 +179,23 @@ print(json.dumps(dict(node=1497,width=int(sz.get("width")),offset=int(pos.get("h
     expected.cellWidths,
   );
   const reference = pageReferenceBoxes(content.pageSettings[0], { x: 20, y: 20 });
-  assert.equal(reference.state, "placed");
+  assert.equal(reference.state, 'placed');
   const source = tableSourceHorizontalLayout(table),
-    style = createTextStyle(content, "16px sans-serif");
-  assert.equal(source.state, "resolved", source.error);
+    style = createTextStyle(content, '16px sans-serif');
+  assert.equal(source.state, 'resolved', source.error);
   const measured = measureTableCells(
     table,
     content.paragraphs,
     (text, p, unit, kind) => ({ width: text.length * 8, height: style.textHeight(p, unit, kind) }),
     {
       origin: { x: 0, y: 0 },
-      padding: "source",
+      padding: 'source',
       paragraphFlows: content.paragraphFlows,
       pictures: content.pictures,
       ...source.gridOptions,
     },
   );
-  assert.equal(measured.state, "measured", measured.error);
+  assert.equal(measured.state, 'measured', measured.error);
   const [left, right, top, bottom] = expected.margins.map((value) => value / 75);
   const origin = reference.boxes.page.x + left;
   const boxes = measured.grid.cells.map((cell) => ({
@@ -209,13 +209,13 @@ print(json.dumps(dict(node=1497,width=int(sz.get("width")),offset=int(pos.get("h
   }));
   const placed = placeTablePagesHorizontally(
     table,
-    { state: "placed", boxes, rows: [] },
+    { state: 'placed', boxes, rows: [] },
     { left, right, top, bottom },
     content.paragraphs.find(
       (p) => p.paragraph === table.hostParagraph && p.section === table.section,
     ),
   );
-  assert.equal(placed.state, "placed", placed.error);
+  assert.equal(placed.state, 'placed', placed.error);
   const x = Math.min(...placed.boxes.map((box) => box.x)),
     end = Math.max(...placed.boxes.map((box) => box.x + box.width));
   assert.ok(Math.abs(x - (reference.boxes.page.x + expected.offset / 75)) < 1e-8);

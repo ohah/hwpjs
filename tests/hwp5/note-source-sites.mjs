@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { documentRecords } from "./documents.mjs";
-import { controlLinkEvidence, linksActual } from "./links.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords } from './documents.mjs';
+import { controlLinkEvidence, linksActual } from './links.mjs';
 
 const noteIds = new Set([0x666e2020, 0x656e2020]);
 const word = (n) => {
@@ -38,13 +38,13 @@ export function noteSourceSitesActual(call, version, section, expectedSites) {
 }
 
 export const noteSiteFixtures = Object.freeze({
-  "footnote-endnote.hwp": [
+  'footnote-endnote.hwp': [
     [0, 1, 12, 20],
     [0, 1, 19, 28],
     [26, 27, 30, 4],
     [26, 27, 37, 12],
   ],
-  "footnote-01.hwp": [
+  'footnote-01.hwp': [
     [48, 49, 52, 7],
     [71, 72, 75, 6],
     [110, 111, 114, 20],
@@ -55,7 +55,7 @@ export const noteSiteFixtures = Object.freeze({
     [233, 234, 237, 6],
     [233, 234, 244, 22],
   ],
-  "endnote-01.hwp": [
+  'endnote-01.hwp': [
     [48, 49, 52, 7],
     [83, 84, 87, 6],
     [110, 111, 114, 20],
@@ -63,7 +63,7 @@ export const noteSiteFixtures = Object.freeze({
     [164, 165, 168, 38],
     [219, 220, 223, 6],
   ],
-  "footnote-tbox-01.hwp": [
+  'footnote-tbox-01.hwp': [
     [19, 20, 23, 6],
     [38, 39, 42, 2],
   ],

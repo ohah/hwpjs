@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { placeInlineTablePages } from "../../web/preview/inline-table-page-placement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { placeInlineTablePages } from '../../web/preview/inline-table-page-placement.mjs';
 
-test("cell-split inline table aligns each fragment at its actual column without mutating source", () => {
-  const table = { section: 0, tableNode: 2, pagination: { page_break: "cell" } };
+test('cell-split inline table aligns each fragment at its actual column without mutating source', () => {
+  const table = { section: 0, tableNode: 2, pagination: { page_break: 'cell' } };
   const paragraph = {
-    text: "\ufffc",
+    text: '\ufffc',
     paragraphShape: { alignment: 3, left: 0, right: 0, indent: 0 },
   };
   const boxes = [0, 1].map((pageOrdinal) => ({
@@ -31,14 +31,14 @@ test("cell-split inline table aligns each fragment at its actual column without 
   }));
   const other = { section: 1, tableNode: 2, pageOrdinal: 0, x: 17, y: 20, width: 30, height: 40 };
   const layout = {
-    state: "placed",
+    state: 'placed',
     boxes: [...boxes, other],
     rows: [...rows, other],
     flowPictures,
   };
   const before = structuredClone(layout),
     result = placeInlineTablePages(table, paragraph, layout, 10);
-  assert.equal(result.state, "placed", result.error);
+  assert.equal(result.state, 'placed', result.error);
   assert.deepEqual(
     result.boxes.slice(0, 2).map((box) => box.x),
     [80, 90],
@@ -72,7 +72,7 @@ test("cell-split inline table aligns each fragment at its actual column without 
     })),
   };
   const columns = placeInlineTablePages(table, paragraph, samePage, 10);
-  assert.equal(columns.state, "placed", columns.error);
+  assert.equal(columns.state, 'placed', columns.error);
   assert.deepEqual(
     columns.boxes.slice(0, 2).map((box) => box.x),
     [80, 90],
@@ -82,9 +82,9 @@ test("cell-split inline table aligns each fragment at its actual column without 
     [90, 100],
   );
   assert.equal(
-    placeInlineTablePages({ ...table, pagination: { page_break: "none" } }, paragraph, layout, 10)
+    placeInlineTablePages({ ...table, pagination: { page_break: 'none' } }, paragraph, layout, 10)
       .error,
-    "UnsupportedSplitInlineTable",
+    'UnsupportedSplitInlineTable',
   );
   assert.equal(
     placeInlineTablePages(
@@ -93,7 +93,7 @@ test("cell-split inline table aligns each fragment at its actual column without 
       { ...layout, rows: [{ ...rows[0], pageOrdinal: undefined }] },
       10,
     ).error,
-    "UnsupportedSplitInlineTable",
+    'UnsupportedSplitInlineTable',
   );
   const foreignNested = {
     section: 0,
@@ -110,7 +110,7 @@ test("cell-split inline table aligns each fragment at its actual column without 
       { ...layout, boxes: [...layout.boxes, foreignNested] },
       10,
     ).error,
-    "UnsupportedSplitInlineTable",
+    'UnsupportedSplitInlineTable',
   );
   for (const pageOrdinal of [-1, NaN, 0.5]) {
     const invalid = {
@@ -119,7 +119,7 @@ test("cell-split inline table aligns each fragment at its actual column without 
     };
     assert.equal(
       placeInlineTablePages(table, paragraph, invalid, 10).error,
-      "UnsupportedSplitInlineTable",
+      'UnsupportedSplitInlineTable',
     );
   }
   for (const columnOrdinal of [-1, NaN, 0.5]) {
@@ -129,7 +129,7 @@ test("cell-split inline table aligns each fragment at its actual column without 
     };
     assert.equal(
       placeInlineTablePages(table, paragraph, invalid, 10).error,
-      "UnsupportedSplitInlineTable",
+      'UnsupportedSplitInlineTable',
     );
   }
   const orphanPicture = { ...flowPictures[0], pageOrdinal: 9 };
@@ -140,6 +140,6 @@ test("cell-split inline table aligns each fragment at its actual column without 
       { ...layout, flowPictures: [...flowPictures, orphanPicture] },
       10,
     ).error,
-    "UnsupportedSplitInlineTable",
+    'UnsupportedSplitInlineTable',
   );
 });

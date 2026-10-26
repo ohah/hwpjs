@@ -1,6 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { validateHwp5WindowSelection } from "../../web/preview/hwp5-window-selection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { validateHwp5WindowSelection } from '../../web/preview/hwp5-window-selection.mjs';
 
 function content() {
   return {
@@ -20,7 +20,7 @@ function content() {
         windowContext: true,
         editable: false,
         selectable: false,
-        text: "context",
+        text: 'context',
       },
       {
         section: 1,
@@ -28,7 +28,7 @@ function content() {
         windowOrdinal: 50,
         windowContext: false,
         editable: true,
-        text: "first",
+        text: 'first',
       },
       {
         section: 1,
@@ -36,13 +36,13 @@ function content() {
         windowOrdinal: 51,
         windowContext: false,
         editable: true,
-        text: "second",
+        text: 'second',
       },
     ],
   };
 }
 
-test("window selection coverage retains sparse readonly context and does not mutate input", () => {
+test('window selection coverage retains sparse readonly context and does not mutate input', () => {
   const value = content(),
     before = structuredClone(value);
   assert.deepEqual(validateHwp5WindowSelection(value), {
@@ -54,7 +54,7 @@ test("window selection coverage retains sparse readonly context and does not mut
   assert.deepEqual(value, before);
 });
 
-test("window selection rejects gaps clipped text writable context and forged bounds", () => {
+test('window selection rejects gaps clipped text writable context and forged bounds', () => {
   for (const mutate of [
     (value) => {
       value.paragraphs[0].editable = true;
@@ -81,7 +81,7 @@ test("window selection rejects gaps clipped text writable context and forged bou
       value.window.paragraphOffset = 0;
     },
     (value) => {
-      value.window.requestedOffset = "50";
+      value.window.requestedOffset = '50';
     },
     (value) => {
       value.readOnly = true;

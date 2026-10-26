@@ -1,4 +1,4 @@
-import { failureMessage } from "./failure-message.mjs";
+import { failureMessage } from './failure-message.mjs';
 
 // Owns selected-file lifetime and stale replies for explicit load choices.
 export function createDocumentReopenChoice({
@@ -11,7 +11,7 @@ export function createDocumentReopenChoice({
   preparing,
   failed,
   confirm = () => true,
-  cancelled = "",
+  cancelled = '',
 }) {
   let source = null,
     generation = 0,
@@ -21,7 +21,7 @@ export function createDocumentReopenChoice({
     source = null;
     button.hidden = true;
     button.disabled = true;
-    note.textContent = "";
+    note.textContent = '';
   };
   const click = () => {
     if (closed || source === null || button.disabled) return;
@@ -46,7 +46,7 @@ export function createDocumentReopenChoice({
       reject(error);
     }
   };
-  button.addEventListener("click", click);
+  button.addEventListener('click', click);
   reset();
   return {
     reset,
@@ -61,12 +61,12 @@ export function createDocumentReopenChoice({
     },
     loaded(content) {
       reset();
-      if (!closed) note.textContent = summary(content) ?? "";
+      if (!closed) note.textContent = summary(content) ?? '';
     },
     close() {
       closed = true;
       reset();
-      button.removeEventListener("click", click);
+      button.removeEventListener('click', click);
     },
   };
 }

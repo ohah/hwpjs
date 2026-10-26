@@ -1,14 +1,14 @@
-import { createEquationEditState } from "./equation-edit-state.mjs";
-import { validateEquationSources } from "../../js/hwpx-equation-sources.mjs";
+import { createEquationEditState } from './equation-edit-state.mjs';
+import { validateEquationSources } from '../../js/hwpx-equation-sources.mjs';
 
 const pageSize = 64;
 const reasons = {
-  inactive: "비활성 분기",
-  inline_text_descendant: "텍스트 내부 구조",
-  unsupported_encoding: "편집 미지원 인코딩",
-  missing_script: "script 없음",
-  multiple_scripts: "script 중복",
-  nested_script: "script 하위 요소",
+  inactive: '비활성 분기',
+  inline_text_descendant: '텍스트 내부 구조',
+  unsupported_encoding: '편집 미지원 인코딩',
+  missing_script: 'script 없음',
+  multiple_scripts: 'script 중복',
+  nested_script: 'script 하위 요소',
 };
 export function createEquationControls({
   form,
@@ -32,14 +32,14 @@ export function createEquationControls({
     rows = [],
     page = 0,
     pendingList = null,
-    status = "";
+    status = '';
   let renderedDraft = null,
-    domBaseline = "";
+    domBaseline = '';
   let initialList = false,
     scheduled = false;
   let pendingTarget = null;
   let paintSnapshot = null;
-  const selected = () => (targets.value === "" ? null : (rows[Number(targets.value)] ?? null));
+  const selected = () => (targets.value === '' ? null : (rows[Number(targets.value)] ?? null));
   const sectionIndex = () => {
     const value = Number(section.value);
     return Number.isInteger(value) && value >= 1 && value <= sectionCount ? value - 1 : null;
@@ -60,7 +60,7 @@ export function createEquationControls({
     refresh.disabled =
       !canUse ||
       pendingList !== null ||
-      view.pending === "write" ||
+      view.pending === 'write' ||
       !selected() ||
       selected().issue !== null;
     if (view.draft !== renderedDraft) {
@@ -78,22 +78,22 @@ export function createEquationControls({
     const hint = paintError
       ? `Canvas 수식 미리보기 불가: ${paintError.error} · 대체 표식을 유지합니다.`
       : paintWarning
-        ? "구문 복구 표시: EOF의 닫히지 않은 그룹을 표시했습니다. 원문·저장값은 수정하지 않았습니다."
+        ? '구문 복구 표시: EOF의 닫히지 않은 그룹을 표시했습니다. 원문·저장값은 수정하지 않았습니다.'
         : paintSnapshot?.equationPaintAvailable
-          ? "지원 수식은 Canvas 미리보기를 갱신합니다. 원본 글꼴·도형 크기·기준선과의 동일성은 미검증입니다."
-          : "Canvas 수식 조판을 사용할 수 없습니다. 대체 표식을 유지합니다.";
+          ? '지원 수식은 Canvas 미리보기를 갱신합니다. 원본 글꼴·도형 크기·기준선과의 동일성은 미검증입니다.'
+          : 'Canvas 수식 조판을 사용할 수 없습니다. 대체 표식을 유지합니다.';
     note.textContent =
       status ||
       (view.error
         ? `수식 조회/변경 실패: ${view.error} · 상태가 바뀌었다면 현재값을 다시 조회하세요.`
         : view.pending
-          ? "수식 처리 중…"
+          ? '수식 처리 중…'
           : `수식 script 편집 · ${hint} 다시 조회하면 미적용 초안은 폐기됩니다.`);
   };
   const state = createEquationEditState({
     request: (message) => !closed && enabled && ready() && request(message),
     changed: (view) => {
-      status = "";
+      status = '';
       update(view);
     },
   });
@@ -102,8 +102,8 @@ export function createEquationControls({
     rows = [];
     page = 0;
     targets.replaceChildren();
-    targets.value = "";
-    pageNote.textContent = "";
+    targets.value = '';
+    pageNote.textContent = '';
     state.reset();
   };
   const pick = () => {
@@ -112,7 +112,7 @@ export function createEquationControls({
     if (!row || row.issue !== null || !ready()) {
       status = row?.issue
         ? `조회 불가: ${reasons[row.issue] ?? row.issue}`
-        : "목록과 현재값을 다시 조회하세요.";
+        : '목록과 현재값을 다시 조회하세요.';
       render();
       return false;
     }
@@ -123,22 +123,22 @@ export function createEquationControls({
       visible = rows.slice(start, start + pageSize);
     targets.replaceChildren(
       ...visible.map((row, index) => {
-        const option = form.ownerDocument.createElement("option");
+        const option = form.ownerDocument.createElement('option');
         option.value = String(start + index);
         option.disabled = row.issue !== null;
-        option.textContent = `수식 ${start + index + 1} · 원본 #${row.node}${row.issue === null ? "" : ` · ${reasons[row.issue] ?? row.issue}`}`;
+        option.textContent = `수식 ${start + index + 1} · 원본 #${row.node}${row.issue === null ? '' : ` · ${reasons[row.issue] ?? row.issue}`}`;
         return option;
       }),
     );
     const wanted = visible.findIndex((row) => row.node === preferred && row.issue === null);
     const first = wanted >= 0 ? wanted : visible.findIndex((row) => row.issue === null);
-    targets.value = visible.length ? String(start + Math.max(0, first)) : "";
+    targets.value = visible.length ? String(start + Math.max(0, first)) : '';
     pageNote.textContent = rows.length
       ? `${start + 1}–${Math.min(start + pageSize, rows.length)} / ${rows.length}`
-      : "수식 없음";
+      : '수식 없음';
     if (visible.length) return pick();
     else {
-      status = "이 구역에는 대상 수식이 없습니다.";
+      status = '이 구역에는 대상 수식이 없습니다.';
       render();
     }
   };
@@ -149,19 +149,19 @@ export function createEquationControls({
     pendingList = null;
     clearRows();
     if (chosen === null) {
-      status = "유효한 구역 번호를 입력하세요.";
+      status = '유효한 구역 번호를 입력하세요.';
       render();
       return false;
     }
     const requestId = serial;
     pendingList = { requestId, section: chosen };
-    if (!request({ kind: "equation-sources", requestId, section: chosen })) {
+    if (!request({ kind: 'equation-sources', requestId, section: chosen })) {
       pendingList = null;
       pendingTarget = null;
-      status = "수식 목록 조회를 시작할 수 없습니다.";
+      status = '수식 목록 조회를 시작할 수 없습니다.';
     } else {
       initialList = false;
-      status = "수식 목록 조회 중…";
+      status = '수식 목록 조회 중…';
     }
     render();
     return pendingList !== null;
@@ -186,7 +186,7 @@ export function createEquationControls({
     pendingTarget = null;
     pendingList = null;
     clearRows();
-    status = "새 구역의 목록을 조회하세요.";
+    status = '새 구역의 목록을 조회하세요.';
     render();
   };
   const listClicked = () => {
@@ -217,14 +217,14 @@ export function createEquationControls({
   const reload = () => {
     if (!refresh.disabled) state.refresh();
   };
-  list.addEventListener("click", listClicked);
-  section.addEventListener("input", sectionChanged);
-  targets.addEventListener("change", pick);
-  previous.addEventListener("click", goPrevious);
-  next.addEventListener("click", goNext);
-  refresh.addEventListener("click", reload);
-  input.addEventListener("input", edit);
-  form.addEventListener("submit", submit);
+  list.addEventListener('click', listClicked);
+  section.addEventListener('input', sectionChanged);
+  targets.addEventListener('change', pick);
+  previous.addEventListener('click', goPrevious);
+  next.addEventListener('click', goNext);
+  refresh.addEventListener('click', reload);
+  input.addEventListener('input', edit);
+  form.addEventListener('submit', submit);
   const reset = () => {
     serial++;
     enabled = false;
@@ -234,7 +234,7 @@ export function createEquationControls({
     pendingList = null;
     paintSnapshot = null;
     clearRows();
-    status = "";
+    status = '';
     render();
   };
   reset();
@@ -271,7 +271,7 @@ export function createEquationControls({
     },
     message(message) {
       if (closed) return;
-      if (message.kind === "enable") {
+      if (message.kind === 'enable') {
         reset();
         if (message.content) paintSnapshot = message.content;
         enabled =
@@ -282,7 +282,7 @@ export function createEquationControls({
         if (enabled) {
           sectionCount = message.equationSectionCount;
           section.max = String(sectionCount);
-          section.value = "1";
+          section.value = '1';
           initialList = true;
           scheduleInitialList();
         }
@@ -291,7 +291,7 @@ export function createEquationControls({
       }
       if (message.content) paintSnapshot = message.content;
       if (
-        message.kind === "equation-sources" &&
+        message.kind === 'equation-sources' &&
         pendingList &&
         message.requestId === pendingList.requestId &&
         message.section === pendingList.section
@@ -311,7 +311,7 @@ export function createEquationControls({
           }));
         } catch {
           pendingTarget = null;
-          status = "수식 목록 조회 실패: InvalidHwpxEquationSources";
+          status = '수식 목록 조회 실패: InvalidHwpxEquationSources';
           render();
           return;
         }
@@ -323,7 +323,7 @@ export function createEquationControls({
               row.section === target.section && row.node === target.node && row.issue === null,
           );
           if (index < 0) {
-            status = "선택한 수식이 현재 목록에 없거나 편집할 수 없습니다.";
+            status = '선택한 수식이 현재 목록에 없거나 편집할 수 없습니다.';
             render();
             return;
           }
@@ -341,14 +341,14 @@ export function createEquationControls({
       reset();
       closed = true;
       state.close();
-      list.removeEventListener("click", listClicked);
-      section.removeEventListener("input", sectionChanged);
-      targets.removeEventListener("change", pick);
-      previous.removeEventListener("click", goPrevious);
-      next.removeEventListener("click", goNext);
-      refresh.removeEventListener("click", reload);
-      input.removeEventListener("input", edit);
-      form.removeEventListener("submit", submit);
+      list.removeEventListener('click', listClicked);
+      section.removeEventListener('input', sectionChanged);
+      targets.removeEventListener('change', pick);
+      previous.removeEventListener('click', goPrevious);
+      next.removeEventListener('click', goNext);
+      refresh.removeEventListener('click', reload);
+      input.removeEventListener('input', edit);
+      form.removeEventListener('submit', submit);
       render();
     },
   };

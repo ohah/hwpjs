@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Stored HWP5 negative heights do not impose a positive track minimum. Keep
 // the unsigned wire value on the cell; content and sibling cells still size it.

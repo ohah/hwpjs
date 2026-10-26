@@ -1,6 +1,6 @@
-import { boundHwp5ColumnSources } from "./hwp5-column-window-dependencies.mjs";
-import { hwp5WindowFlows } from "./hwp5-window-flows.mjs";
-import { attachHwp5ColumnDisplay } from "./hwp5-column-display.mjs";
+import { boundHwp5ColumnSources } from './hwp5-column-window-dependencies.mjs';
+import { hwp5WindowFlows } from './hwp5-window-flows.mjs';
+import { attachHwp5ColumnDisplay } from './hwp5-column-display.mjs';
 
 export function attachHwp5WindowColumns(editor, content) {
   const { displayed, completeFlows } = hwp5WindowFlows(editor, content);

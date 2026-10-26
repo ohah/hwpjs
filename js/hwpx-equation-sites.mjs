@@ -1,12 +1,12 @@
-import { validateEquationSources } from "./hwpx-equation-sources.mjs";
+import { validateEquationSources } from './hwpx-equation-sources.mjs';
 
 export function decodeEquationSites(bytes) {
   const fail = () => {
-    throw new Error("InvalidHwpxEquationSites");
+    throw new Error('InvalidHwpxEquationSites');
   };
   let rows;
   try {
-    rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
     if (!Array.isArray(rows)) return fail();
     validateEquationSources(rows.map((row) => row?.source));
   } catch {
@@ -22,7 +22,7 @@ export function decodeEquationSites(bytes) {
       if (!paragraph(row.paragraph) || !uint(row.anchor_unit)) return fail();
     } else {
       if (
-        typeof row.error_name !== "string" ||
+        typeof row.error_name !== 'string' ||
         !/^[A-Za-z][A-Za-z0-9_]{0,127}$/.test(row.error_name) ||
         row.anchor_unit !== null ||
         (row.paragraph !== null && !paragraph(row.paragraph))

@@ -1,47 +1,47 @@
-import { watchProjectionFonts } from "./projection-measure-memo.mjs";
-import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from "./canvas-display-options.mjs";
-import { paragraphMarkPlan, paintParagraphMark } from "./paragraph-mark-paint.mjs";
-import { decodeTableImageTone } from "./table-image-tone.mjs";
+import { watchProjectionFonts } from './projection-measure-memo.mjs';
+import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from './canvas-display-options.mjs';
+import { paragraphMarkPlan, paintParagraphMark } from './paragraph-mark-paint.mjs';
+import { decodeTableImageTone } from './table-image-tone.mjs';
 import {
   tableBackgroundTargets,
   tableBackgroundCoverage,
   tableBoxPaintBounds,
-} from "./table-background-targets.mjs";
-import { paintTableBackground } from "./table-background-paint.mjs";
-import { FONT, displayRunText } from "./layout.mjs";
-import { createPreviewTextMeasure } from "./preview-text-measure.mjs";
-import { inlineHwp5FormIndex, formPositionKey } from "./hwp5-form-inline.mjs";
-import { paintHwp5Form } from "./hwp5-form-paint.mjs";
-import { visiblePictureTargets } from "./visible-picture-targets.mjs";
+} from './table-background-targets.mjs';
+import { paintTableBackground } from './table-background-paint.mjs';
+import { FONT, displayRunText } from './layout.mjs';
+import { createPreviewTextMeasure } from './preview-text-measure.mjs';
+import { inlineHwp5FormIndex, formPositionKey } from './hwp5-form-inline.mjs';
+import { paintHwp5Form } from './hwp5-form-paint.mjs';
+import { visiblePictureTargets } from './visible-picture-targets.mjs';
 import {
   tableBorderPaintIndex,
   tableBorderPlanForBox,
   tableBackgroundFillForSource,
-} from "./table-border-plan.mjs";
-import { paintTableBorder } from "./table-border-paint.mjs";
-import { createdTableWidthHint } from "./created-table-width-hint.mjs";
-import { dutmalAt, dutmalPaintPlan, paintDutmal } from "./dutmal-paint.mjs";
-import { dutmalAnchorAtPoint } from "./dutmal-anchor-geometry.mjs";
-import { equationAnchorAtPoint } from "./equation-anchor-geometry.mjs";
-import { equationPaintAt } from "./equation-render-content.mjs";
-import { paintEquation } from "./equation-paint.mjs";
-import { paintNoteSeparator } from "./note-separator-paint.mjs";
-import { tablePaintScene } from "./table-text-paint-order.mjs";
-import { hitPictureLayers } from "./picture-hit-test.mjs";
-import { chartAnchorAtPoint } from "./chart-anchor-geometry.mjs";
-import { paintPictureSelection } from "./picture-selection-paint.mjs";
-import { canvasViewportMetrics } from "./canvas-viewport-metrics.mjs";
-import { canvasHorizontalExtent } from "./canvas-horizontal-extent.mjs";
-import { pictureResizeHandles } from "./picture-resize-geometry.mjs";
-import { characterShadeRangesState } from "./character-shade-selection.mjs";
-import { characterEffectRangesState } from "./character-effect-selection.mjs";
+} from './table-border-plan.mjs';
+import { paintTableBorder } from './table-border-paint.mjs';
+import { createdTableWidthHint } from './created-table-width-hint.mjs';
+import { dutmalAt, dutmalPaintPlan, paintDutmal } from './dutmal-paint.mjs';
+import { dutmalAnchorAtPoint } from './dutmal-anchor-geometry.mjs';
+import { equationAnchorAtPoint } from './equation-anchor-geometry.mjs';
+import { equationPaintAt } from './equation-render-content.mjs';
+import { paintEquation } from './equation-paint.mjs';
+import { paintNoteSeparator } from './note-separator-paint.mjs';
+import { tablePaintScene } from './table-text-paint-order.mjs';
+import { hitPictureLayers } from './picture-hit-test.mjs';
+import { chartAnchorAtPoint } from './chart-anchor-geometry.mjs';
+import { paintPictureSelection } from './picture-selection-paint.mjs';
+import { canvasViewportMetrics } from './canvas-viewport-metrics.mjs';
+import { canvasHorizontalExtent } from './canvas-horizontal-extent.mjs';
+import { pictureResizeHandles } from './picture-resize-geometry.mjs';
+import { characterShadeRangesState } from './character-shade-selection.mjs';
+import { characterEffectRangesState } from './character-effect-selection.mjs';
 import {
   characterOutlineRangesState,
   characterOutlineRangesKind,
-} from "./character-outline-selection.mjs";
-import { paintCharacterRelief } from "./character-relief-style.mjs";
-import { paintCharacterOutline } from "./character-outline-paint.mjs";
-import { selectedFontIds } from "./character-font-selection.mjs";
+} from './character-outline-selection.mjs';
+import { paintCharacterRelief } from './character-relief-style.mjs';
+import { paintCharacterOutline } from './character-outline-paint.mjs';
+import { selectedFontIds } from './character-font-selection.mjs';
 import {
   rowAtY,
   rowLeft,
@@ -49,70 +49,70 @@ import {
   rowTop,
   rowTextTop,
   TEXT_LEFT,
-} from "./row-geometry.mjs";
+} from './row-geometry.mjs';
 import {
   caretGeometry,
   selectionRects,
   rowSelectionRects,
   selectionIntersectsText,
-} from "./text-geometry.mjs";
-import { createTextStyle, withDraftText } from "./text-style.mjs";
-import { canvasGlyphGeometry, paintCanvasGlyph } from "./canvas-glyph-geometry.mjs";
-import { layoutTableContent } from "./table-flow.mjs";
-import { attachCreatedTableFlow, createdCellParagraph } from "./created-table-flow.mjs";
-import { projectCreatedCellDraft } from "./created-cell-draft.mjs";
-import { adjacentCell } from "./table-navigation.mjs";
+} from './text-geometry.mjs';
+import { createTextStyle, withDraftText } from './text-style.mjs';
+import { canvasGlyphGeometry, paintCanvasGlyph } from './canvas-glyph-geometry.mjs';
+import { layoutTableContent } from './table-flow.mjs';
+import { attachCreatedTableFlow, createdCellParagraph } from './created-table-flow.mjs';
+import { projectCreatedCellDraft } from './created-cell-draft.mjs';
+import { adjacentCell } from './table-navigation.mjs';
 import {
   characterTogglePatch,
   characterSelectionState,
   characterRangesState,
-} from "./character-property-selection.mjs";
-import { characterSizeState, characterSizeRangesState } from "./character-size-selection.mjs";
-import { paragraphSelectionRanges, paragraphSelectionText } from "./paragraph-selection.mjs";
-import { adjacentOwnedParagraph } from "./paragraph-navigation.mjs";
-import { paintUnderline } from "./underline-paint.mjs";
-import { paintNumberPrefix } from "./number-prefix-paint.mjs";
-import { createPictureResources } from "./picture-resources.mjs";
-import { createChartDisplayResources } from "./chart-display-resources.mjs";
-import { projectChartSeries } from "./chart-series-data.mjs";
-import { chartBarPrimitives } from "./chart-bar-primitives.mjs";
-import { previewChartLayers } from "./chart-preview-layers.mjs";
-import { paintChartPreview } from "./chart-preview-paint.mjs";
-import { inlinePictureIndex, picturePositionKey, paintInlinePicture } from "./picture-inline.mjs";
-import { inlinePictureRowPlacement } from "./inline-picture-row-placement.mjs";
-import { layoutHwp5MemoFallback } from "./hwp5-memo-fallback-layout.mjs";
-import { paintMemoPane } from "./memo-pane-paint.mjs";
-import { inlineChartIndex } from "./chart-inline.mjs";
-import { pageLayoutFailureSummary } from "./page-layout-failure-summary.mjs";
-import { projectDraftPictures } from "./picture-draft.mjs";
-import { previewPictureLayers } from "./picture-layers.mjs";
-import { pictureLayoutCoverage } from "./picture-layout-coverage.mjs";
-import { paintPictureQuad } from "./picture-quad-paint.mjs";
-import { previewLineLayers } from "./line-layers.mjs";
-import { paintLine } from "./line-paint.mjs";
-import { previewDrawingOutlineLayers } from "./drawing-outline-layers.mjs";
-import { paintDrawingOutline } from "./drawing-outline-paint.mjs";
-import { layoutPageContent } from "./page-content-layout.mjs";
-import { layoutHwp5PageContent } from "./hwp5-page-layout.mjs";
-import { HWP5_WINDOW_LAYOUT_SCOPE, layoutHwp5WindowContent } from "./hwp5-window-page-layout.mjs";
-import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
-import { projectDraftDrawings } from "./drawing-draft.mjs";
-import { paintRowTransform } from "./row-transform-paint.mjs";
-import { paintTabLeader } from "./tab-leader-paint.mjs";
-import { paintDrawingFill } from "./drawing-fill-paint.mjs";
-import { drawingFillOccluder } from "./drawing-fill-occluder.mjs";
-import { previewRectangleLayers } from "./rectangle-layers.mjs";
-import { paintEllipse } from "./ellipse-paint.mjs";
-import { paintCurve } from "./curve-paint.mjs";
-import { groupedPaintOrder } from "./grouped-paint-order.mjs";
-import { groupedLayoutCoverage } from "./grouped-layout-coverage.mjs";
-import { paintPagePaper } from "./page-paper-paint.mjs";
-import { paintPageNumberGlyphs } from "./page-number-glyphs.mjs";
-import { checkBoxProxyBoxes, hitCheckBoxProxy } from "./checkbox-proxy-geometry.mjs";
-import { paintCheckBoxProxy } from "./checkbox-proxy-paint.mjs";
-import { rowPageClipContains } from "./row-page-clip.mjs";
-import { inlineCheckBoxIndex, checkBoxPositionKey } from "./checkbox-inline-layout.mjs";
-import { paintSourceCheckBox } from "./checkbox-source-paint.mjs";
+} from './character-property-selection.mjs';
+import { characterSizeState, characterSizeRangesState } from './character-size-selection.mjs';
+import { paragraphSelectionRanges, paragraphSelectionText } from './paragraph-selection.mjs';
+import { adjacentOwnedParagraph } from './paragraph-navigation.mjs';
+import { paintUnderline } from './underline-paint.mjs';
+import { paintNumberPrefix } from './number-prefix-paint.mjs';
+import { createPictureResources } from './picture-resources.mjs';
+import { createChartDisplayResources } from './chart-display-resources.mjs';
+import { projectChartSeries } from './chart-series-data.mjs';
+import { chartBarPrimitives } from './chart-bar-primitives.mjs';
+import { previewChartLayers } from './chart-preview-layers.mjs';
+import { paintChartPreview } from './chart-preview-paint.mjs';
+import { inlinePictureIndex, picturePositionKey, paintInlinePicture } from './picture-inline.mjs';
+import { inlinePictureRowPlacement } from './inline-picture-row-placement.mjs';
+import { layoutHwp5MemoFallback } from './hwp5-memo-fallback-layout.mjs';
+import { paintMemoPane } from './memo-pane-paint.mjs';
+import { inlineChartIndex } from './chart-inline.mjs';
+import { pageLayoutFailureSummary } from './page-layout-failure-summary.mjs';
+import { projectDraftPictures } from './picture-draft.mjs';
+import { previewPictureLayers } from './picture-layers.mjs';
+import { pictureLayoutCoverage } from './picture-layout-coverage.mjs';
+import { paintPictureQuad } from './picture-quad-paint.mjs';
+import { previewLineLayers } from './line-layers.mjs';
+import { paintLine } from './line-paint.mjs';
+import { previewDrawingOutlineLayers } from './drawing-outline-layers.mjs';
+import { paintDrawingOutline } from './drawing-outline-paint.mjs';
+import { layoutPageContent } from './page-content-layout.mjs';
+import { layoutHwp5PageContent } from './hwp5-page-layout.mjs';
+import { HWP5_WINDOW_LAYOUT_SCOPE, layoutHwp5WindowContent } from './hwp5-window-page-layout.mjs';
+import { projectDraftAnchoredObjects } from './anchored-object-draft.mjs';
+import { projectDraftDrawings } from './drawing-draft.mjs';
+import { paintRowTransform } from './row-transform-paint.mjs';
+import { paintTabLeader } from './tab-leader-paint.mjs';
+import { paintDrawingFill } from './drawing-fill-paint.mjs';
+import { drawingFillOccluder } from './drawing-fill-occluder.mjs';
+import { previewRectangleLayers } from './rectangle-layers.mjs';
+import { paintEllipse } from './ellipse-paint.mjs';
+import { paintCurve } from './curve-paint.mjs';
+import { groupedPaintOrder } from './grouped-paint-order.mjs';
+import { groupedLayoutCoverage } from './grouped-layout-coverage.mjs';
+import { paintPagePaper } from './page-paper-paint.mjs';
+import { paintPageNumberGlyphs } from './page-number-glyphs.mjs';
+import { checkBoxProxyBoxes, hitCheckBoxProxy } from './checkbox-proxy-geometry.mjs';
+import { paintCheckBoxProxy } from './checkbox-proxy-paint.mjs';
+import { rowPageClipContains } from './row-page-clip.mjs';
+import { inlineCheckBoxIndex, checkBoxPositionKey } from './checkbox-inline-layout.mjs';
+import { paintSourceCheckBox } from './checkbox-source-paint.mjs';
 export function createRenderer(
   canvas,
   viewportElement,
@@ -133,8 +133,8 @@ export function createRenderer(
   const Blob = environment.Blob ?? realm.Blob;
   const OffscreenCanvas = environment.OffscreenCanvas ?? realm.OffscreenCanvas;
   const viewport = viewportElement;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas2DUnavailable");
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas2DUnavailable');
   let content = { paragraphs: [], limited: false },
     layout = { rows: [], limited: false };
   let draft = null,
@@ -161,7 +161,7 @@ export function createRenderer(
     pictureWaitExpired = false;
   const pictureWaitMs = environment.pictureWaitMs ?? 250;
   if (!Number.isFinite(pictureWaitMs) || pictureWaitMs < 0)
-    throw new Error("InvalidPictureWaitTimeout");
+    throw new Error('InvalidPictureWaitTimeout');
   const stopPictureWait = () => {
     clearTimeout(pictureWaitTimer);
     pictureWaitTimer = 0;
@@ -176,14 +176,14 @@ export function createRenderer(
       total: 0,
       height: 0,
       exact: false,
-      mode: "preview-overlay",
+      mode: 'preview-overlay',
     },
     paintedCharts = [];
   const chartResources = createChartDisplayResources({
     read: (section, wrapper) =>
       chartReader
         ? chartReader(section, wrapper)
-        : Promise.reject(new Error("ChartDisplayReaderUnavailable")),
+        : Promise.reject(new Error('ChartDisplayReaderUnavailable')),
     onChange: () => reflow(),
   });
   let pictureLayers = { behind: [], front: [] };
@@ -203,17 +203,17 @@ export function createRenderer(
     read: (section, node) =>
       pictureReader
         ? pictureReader(section, node)
-        : Promise.reject(new Error("PictureReaderUnavailable")),
+        : Promise.reject(new Error('PictureReaderUnavailable')),
     readBackground: (section, node) =>
       tableBackgroundReader
         ? tableBackgroundReader(section, node)
-        : Promise.reject(new Error("TableBackgroundReaderUnavailable")),
+        : Promise.reject(new Error('TableBackgroundReaderUnavailable')),
     decodeIdentity: (source) =>
-      source.kind === "table-background"
+      source.kind === 'table-background'
         ? (tableBackgroundFillForSource(tableBorders, source.section, source.node).tone ?? null)
         : null,
     decode: (bytes, source) => {
-      if (source.kind === "table-background") {
+      if (source.kind === 'table-background') {
         const tone = source.identity;
         if (tone)
           return decodeTableImageTone(bytes, tone, {
@@ -228,7 +228,7 @@ export function createRenderer(
       schedule();
     },
   });
-  const pictureStatus = (section, node, kind = "picture") => {
+  const pictureStatus = (section, node, kind = 'picture') => {
     const entry = pictureResources.status(section, node, kind);
     return entry?.refreshing ? { ...entry, bitmap: null } : entry;
   };
@@ -283,24 +283,24 @@ export function createRenderer(
     blink = 0;
   };
   const publishLayoutDataset = () => {
-    const windowFragment = pictureDisplay.format === "hwp5" && Boolean(pictureDisplay.window);
+    const windowFragment = pictureDisplay.format === 'hwp5' && Boolean(pictureDisplay.window);
     canvas.dataset.horizontalExtentError =
       canvasHorizontalExtent(layout.pages, viewport.clientWidth, TEXT_LEFT, viewScale) === null
-        ? "InvalidPageScrollExtent"
-        : "";
+        ? 'InvalidPageScrollExtent'
+        : '';
     canvas.dataset.rows = String(layout.rows.length);
-    canvas.dataset.pageLayoutError = layout.pageLayoutError ?? "";
+    canvas.dataset.pageLayoutError = layout.pageLayoutError ?? '';
     canvas.dataset.memoPaneCount = String(layout.memoPaneBoxes?.length ?? 0);
-    canvas.dataset.memoPaneMode = layout.memoPaneMode ?? "";
-    canvas.dataset.memoPaneError = layout.memoPaneError ?? "";
+    canvas.dataset.memoPaneMode = layout.memoPaneMode ?? '';
+    canvas.dataset.memoPaneError = layout.memoPaneError ?? '';
     canvas.dataset.pageLayoutFailure = layout.pageLayoutFailure
       ? JSON.stringify(layout.pageLayoutFailure)
-      : "";
+      : '';
     canvas.dataset.pageLayoutTableNode =
-      layout.pageLayoutTableNode === undefined ? "" : String(layout.pageLayoutTableNode);
-    canvas.dataset.pageLayoutAnchorReason = layout.pageLayoutAnchorReason ?? "";
-    canvas.dataset.pageLayoutPolicyReason = layout.pageLayoutPolicyReason ?? "";
-    canvas.dataset.pageLayoutSourceCoverage = layout.sourceCoverage ?? "";
+      layout.pageLayoutTableNode === undefined ? '' : String(layout.pageLayoutTableNode);
+    canvas.dataset.pageLayoutAnchorReason = layout.pageLayoutAnchorReason ?? '';
+    canvas.dataset.pageLayoutPolicyReason = layout.pageLayoutPolicyReason ?? '';
+    canvas.dataset.pageLayoutSourceCoverage = layout.sourceCoverage ?? '';
     canvas.dataset.pageLayoutUnverifiedDrawings = JSON.stringify(
       layout.unverifiedDrawingSources ?? [],
     );
@@ -308,11 +308,11 @@ export function createRenderer(
     canvas.dataset.pageLayoutUnverifiedSections = JSON.stringify(
       layout.unverifiedSectionSources ?? [],
     );
-    canvas.dataset.pageLayoutMode = layout.pageLayoutMode ?? "logical-fallback";
+    canvas.dataset.pageLayoutMode = layout.pageLayoutMode ?? 'logical-fallback';
     canvas.dataset.pageLayoutScope =
-      layout.layoutScope ?? (windowFragment ? HWP5_WINDOW_LAYOUT_SCOPE : "document-preview");
+      layout.layoutScope ?? (windowFragment ? HWP5_WINDOW_LAYOUT_SCOPE : 'document-preview');
     canvas.dataset.documentPageNumbersExact =
-      windowFragment || layout.documentPageNumbersExact === false ? "false" : "unverified";
+      windowFragment || layout.documentPageNumbersExact === false ? 'false' : 'unverified';
     canvas.dataset.limited = String(layout.limited);
   };
   const prepareVisibleResources = (
@@ -342,7 +342,7 @@ export function createRenderer(
         pictureResources.backgrounds.load(target.section, target.listNode).catch(() => {}),
       );
     layout.tableBackgroundCoverage = tableBackgroundCoverage(backgrounds, {
-      status: (section, node) => pictureStatus(section, node, "table-background"),
+      status: (section, node) => pictureStatus(section, node, 'table-background'),
     });
     for (const picture of wantedPictures)
       pendingPictures.push(
@@ -377,7 +377,7 @@ export function createRenderer(
     canvas.dataset.picturePending = String(Boolean(resourcesPending));
     if (resourcesPending && !pictureWaitExpired) {
       holdingFrame = true;
-      canvas.dataset.paintPending = "true";
+      canvas.dataset.paintPending = 'true';
       if (!pictureWaitTimer)
         pictureWaitTimer = setTimeout(() => {
           pictureWaitTimer = 0;
@@ -392,7 +392,7 @@ export function createRenderer(
     stopPictureWait();
     holdingFrame = false;
     if (!resourcesPending) pictureWaitExpired = false;
-    canvas.dataset.paintPending = "false";
+    canvas.dataset.paintPending = 'false';
     paintedStamp = null;
     paintedCharts = [];
     let paintedParagraphMarks = 0;
@@ -408,7 +408,7 @@ export function createRenderer(
     canvas.width = pixelWidth;
     canvas.height = pixelHeight;
     ctx.setTransform(ratio * metrics.scale, 0, 0, ratio * metrics.scale, 0, 0);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     ctx.translate(-metrics.logicalScrollLeft, 0);
     paintPagePaper(ctx, layout.pages, viewport.scrollTop, width, height);
@@ -416,16 +416,16 @@ export function createRenderer(
       if (!pending) return;
       ctx.save();
       try {
-        ctx.fillStyle = "#eef2f5";
+        ctx.fillStyle = '#eef2f5';
         ctx.fillRect(x, y, item.width, item.height);
-        ctx.strokeStyle = "#9aa9b5";
+        ctx.strokeStyle = '#9aa9b5';
         ctx.strokeRect(x, y, item.width, item.height);
         ctx.beginPath();
         ctx.rect(x, y, item.width, item.height);
         ctx.clip();
-        ctx.fillStyle = "#536574";
-        ctx.font = "12px sans-serif";
-        ctx.fillText("그림 불러오는 중", x + 4, y + Math.min(16, item.height));
+        ctx.fillStyle = '#536574';
+        ctx.font = '12px sans-serif';
+        ctx.fillText('그림 불러오는 중', x + 4, y + Math.min(16, item.height));
       } finally {
         ctx.restore();
       }
@@ -443,12 +443,12 @@ export function createRenderer(
     const groupCommands = groupedPaintOrder(pictureDisplay, layout, rectangleLayers, pictureLayers);
     const groupTextKeys = new Set(
       groupCommands
-        .filter((c) => c.kind === "text" || c.kind === "curve")
+        .filter((c) => c.kind === 'text' || c.kind === 'curve')
         .map((c) => `${c.section}:${c.node}`),
     );
     const recordFill = (item) => {
       const occluder = drawingFillOccluder(item);
-      if (occluder) picturePaintOrder.push({ kind: "occluder", item: occluder });
+      if (occluder) picturePaintOrder.push({ kind: 'occluder', item: occluder });
     };
     const paintRectangles = (list) => {
       for (const item of list) {
@@ -458,11 +458,11 @@ export function createRenderer(
     };
     paintRectangles(rectangleLayers.behind);
     for (const item of (layout.placedEllipses ?? [])
-      .filter((p) => p.layer === "behind")
+      .filter((p) => p.layer === 'behind')
       .toSorted((a, b) => a.zOrder - b.zOrder))
       paintEllipse(ctx, item, viewport.scrollTop);
     for (const item of (layout.placedCurves ?? [])
-      .filter((p) => p.layer === "behind")
+      .filter((p) => p.layer === 'behind')
       .toSorted((a, b) => a.zOrder - b.zOrder || a.childOrder - b.childOrder))
       paintCurve(ctx, item, viewport.scrollTop);
     const paintPictures = (list, behind = false) => {
@@ -482,7 +482,7 @@ export function createRenderer(
           let painted = false;
           paintRowTransform(ctx, item, viewport.scrollTop, () => {
             painted =
-              item.paintPlan.state === "quad"
+              item.paintPlan.state === 'quad'
                 ? paintPictureQuad(ctx, bitmap, item.picture, item.paintPlan.corners, {
                     x: item.paintOrigin?.x ?? item.x,
                     y: (item.paintOrigin?.y ?? item.y) - viewport.scrollTop,
@@ -490,8 +490,8 @@ export function createRenderer(
                 : paintInlinePicture(ctx, bitmap, item, item.x, item.y - viewport.scrollTop);
           });
           if (painted) {
-            paintedPictures[behind ? "behind" : "front"].push(item);
-            picturePaintOrder.push({ kind: "picture", item, behind });
+            paintedPictures[behind ? 'behind' : 'front'].push(item);
+            picturePaintOrder.push({ kind: 'picture', item, behind });
           }
         } catch {
           /* 개별 그림 실패는 텍스트를 차단하지 않습니다. */
@@ -513,8 +513,8 @@ export function createRenderer(
       paintDrawingFill(ctx, drawing, viewport.scrollTop);
     }
     ctx.font = FONT;
-    ctx.textBaseline = "top";
-    ctx.fillStyle = "#7c8c99";
+    ctx.textBaseline = 'top';
+    ctx.fillStyle = '#7c8c99';
     layout.tableBorderCoverage = {
       none: 0,
       source: 0,
@@ -533,19 +533,19 @@ export function createRenderer(
         return;
       ctx.save();
       try {
-        ctx.fillStyle = "#7c8c99";
+        ctx.fillStyle = '#7c8c99';
         const border = tableBorderPlanForBox(tableBorders, box);
         const backgroundResource =
-          border.fill?.state === "image"
-            ? pictureStatus(box.section, box.listNode, "table-background")
+          border.fill?.state === 'image'
+            ? pictureStatus(box.section, box.listNode, 'table-background')
             : null;
         const bitmap = backgroundResource?.bitmap;
         if (backgroundResource?.refreshing)
           paintRowTransform(ctx, box, viewport.scrollTop, () =>
             paintPendingPicture(box, box.x, top, true),
           );
-        if (border.state !== "proxy") {
-          if (border.state === "unavailable") {
+        if (border.state !== 'proxy') {
+          if (border.state === 'unavailable') {
             // A known cell background is independent of an unsupported edge type.
             if (border.fill)
               paintRowTransform(ctx, box, viewport.scrollTop, () =>
@@ -564,7 +564,7 @@ export function createRenderer(
               paintTableBorder(ctx, box, border, viewport.scrollTop, { bitmap }),
             )
           ) {
-            layout.tableBorderCoverage[border.state === "none" ? "none" : "source"]++;
+            layout.tableBorderCoverage[border.state === 'none' ? 'none' : 'source']++;
           }
           return;
         }
@@ -579,9 +579,9 @@ export function createRenderer(
         ctx.restore();
       }
     };
-    ctx.fillStyle = "#bad9f4";
+    ctx.fillStyle = '#bad9f4';
     if (resizeGuide) {
-      ctx.fillStyle = "#145b96";
+      ctx.fillStyle = '#145b96';
       ctx.fillRect(
         resizeGuide.x + resizeGuide.width,
         resizeGuide.y - viewport.scrollTop,
@@ -594,7 +594,7 @@ export function createRenderer(
         resizeGuide.width,
         2,
       );
-      ctx.fillStyle = "#bad9f4";
+      ctx.fillStyle = '#bad9f4';
     }
     const displayRanges = paragraphSelectionRanges(
       content.paragraphs,
@@ -624,13 +624,13 @@ export function createRenderer(
             chartPaintFailures.push({
               section: item.target.section,
               wrapper: item.target.wrapper,
-              reason: "ChartPreviewPaintUnavailable",
+              reason: 'ChartPreviewPaintUnavailable',
             });
         } catch (error) {
           chartPaintFailures.push({
             section: item.target.section,
             wrapper: item.target.wrapper,
-            reason: error?.message || "ChartPreviewPaintFailed",
+            reason: error?.message || 'ChartPreviewPaintFailed',
           });
         }
       }
@@ -640,7 +640,7 @@ export function createRenderer(
         item.primitives.spacing?.overlap_defaulted === false,
     ).length;
     const sourcePagePlacement =
-      layout.pageLayoutMode === "measured-chart-body" &&
+      layout.pageLayoutMode === 'measured-chart-body' &&
       layout.chartWrapReservations?.length > 0 &&
       layout.chartWrapReservations.length === paintedCharts.length &&
       chartLayers.pending === 0 &&
@@ -660,11 +660,11 @@ export function createRenderer(
       unavailable: [...chartLayers.unavailable, ...chartPaintFailures],
       annotations: chartAnnotations,
       exact: false,
-      mode: "preview-overlay",
+      mode: 'preview-overlay',
     };
     canvas.dataset.chartPreviewCount = String(paintedCharts.length);
-    canvas.dataset.chartPreviewMode = "preview-overlay";
-    canvas.dataset.chartPagePlacement = sourcePagePlacement ? "source" : "preview";
+    canvas.dataset.chartPreviewMode = 'preview-overlay';
+    canvas.dataset.chartPagePlacement = sourcePagePlacement ? 'source' : 'preview';
     const paintedChartAnchors = new Set(
       paintedCharts.map((item) =>
         picturePositionKey(item.target.section, item.target.paragraph, item.target.anchorUnit),
@@ -675,7 +675,7 @@ export function createRenderer(
       ? 0
       : Math.max(0, rowAtY(layout, viewport.scrollTop - shadowInsets.bottom));
     const paintTextRow = (row, i) => {
-      if (row.kind === "gap") return;
+      if (row.kind === 'gap') return;
       if (
         row.transform === undefined &&
         rowTop(row, i) - shadowInsets.top >= viewport.scrollTop + height
@@ -687,7 +687,7 @@ export function createRenderer(
       )
         return;
       paintRowTransform(ctx, row, viewport.scrollTop, () => {
-        ctx.fillStyle = "#bad9f4";
+        ctx.fillStyle = '#bad9f4';
         for (const r of rowSelectionRects(
           row,
           i,
@@ -697,8 +697,8 @@ export function createRenderer(
         ))
           ctx.fillRect(r.x, r.y - viewport.scrollTop, r.width, r.height);
         ctx.font = FONT;
-        ctx.fillStyle = row.kind === "label" ? "#526d80" : "#172b3b";
-        if (row.kind === "text") {
+        ctx.fillStyle = row.kind === 'label' ? '#526d80' : '#172b3b';
+        if (row.kind === 'text') {
           const paragraph =
             createdCellParagraph(layout, row) ??
             display.paragraphs.find(
@@ -710,7 +710,7 @@ export function createRenderer(
             const start = row.boundaries[b],
               end = row.boundaries[b + 1];
             if (
-              row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === "\ufffc" &&
+              row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === '\ufffc' &&
               paintedChartAnchors.has(picturePositionKey(row.section, row.paragraph, start.unit))
             )
               continue;
@@ -726,7 +726,7 @@ export function createRenderer(
             if (
               layout.placedEllipses?.some(
                 (p) =>
-                  p.paintPlan.state === "planned" &&
+                  p.paintPlan.state === 'planned' &&
                   p.section === row.section &&
                   p.paragraph === row.paragraph &&
                   p.anchorUnit === start.unit,
@@ -736,7 +736,7 @@ export function createRenderer(
             if (
               layout.placedCurves?.some(
                 (p) =>
-                  p.paintPlan.state === "planned" &&
+                  p.paintPlan.state === 'planned' &&
                   p.section === row.section &&
                   p.hostParagraph === row.paragraph &&
                   p.anchorUnit === start.unit,
@@ -767,12 +767,12 @@ export function createRenderer(
             )
               continue;
             ctx.font = fontAt(paragraph, start.unit);
-            ctx.fillStyle = fontAt.color(paragraph, start.unit) ?? "#172b3b";
+            ctx.fillStyle = fontAt.color(paragraph, start.unit) ?? '#172b3b';
             const text = displayRunText(
               row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit),
               paragraph,
               start.unit,
-              "text",
+              'text',
               row.pageNumber,
             );
             const x = rowLeft(row) + start.x,
@@ -782,7 +782,7 @@ export function createRenderer(
             const form = inlineForms.get(formPositionKey(row.section, row.paragraph, start.unit));
             if (
               form &&
-              row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === "\ufffc" &&
+              row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === '\ufffc' &&
               paintHwp5Form(ctx, form, x, y)
             ) {
               paintedForms.add(formPositionKey(row.section, row.paragraph, start.unit));
@@ -853,7 +853,7 @@ export function createRenderer(
               picturePositionKey(row.section, row.paragraph, start.unit),
             );
             const inlinePlacement = picture && inlinePictureRowPlacement(picture, row, i);
-            if (picture && inlinePlacement.state === "placed") {
+            if (picture && inlinePlacement.state === 'placed') {
               const x = inlinePlacement.origin.x,
                 y = inlinePlacement.origin.y - viewport.scrollTop;
               const resource = pictureStatus(picture.picture.section, picture.picture.pictureNode),
@@ -865,7 +865,7 @@ export function createRenderer(
               if (bitmap) {
                 try {
                   const painted =
-                    picture.paintPlan.state === "quad"
+                    picture.paintPlan.state === 'quad'
                       ? paintPictureQuad(ctx, bitmap, picture.picture, picture.paintPlan.corners, {
                           x,
                           y,
@@ -881,7 +881,7 @@ export function createRenderer(
                       pageClip: row.pageClip,
                     };
                     paintedPictures.front.push(item);
-                    picturePaintOrder.push({ kind: "picture", item });
+                    picturePaintOrder.push({ kind: 'picture', item });
                     continue;
                   }
                 } catch {
@@ -890,7 +890,7 @@ export function createRenderer(
               }
             }
             if (
-              text === "\ufffc" &&
+              text === '\ufffc' &&
               paintedCharts.some(
                 (item) =>
                   item.target.section === row.section &&
@@ -900,7 +900,7 @@ export function createRenderer(
             )
               continue;
             const paintedLine =
-              row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === "\ufffc" &&
+              row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === '\ufffc' &&
               paintedLineAnchors.has(picturePositionKey(row.section, row.paragraph, start.unit));
             if (inlineCheckBoxes.get(checkBoxPositionKey(row.section, row.paragraph, start.unit)))
               continue;
@@ -914,16 +914,16 @@ export function createRenderer(
                 interaction.focus,
                 displayRanges,
               );
-              if (shade && !selected && text !== "\ufffc") {
+              if (shade && !selected && text !== '\ufffc') {
                 ctx.save();
                 ctx.fillStyle = shade;
                 ctx.fillRect(x, glyphY, end.x - start.x, fontAt.fontHeight(paragraph, start.unit));
                 ctx.restore();
               }
               const relief = fontAt.relief(paragraph, start.unit);
-              if (row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === "\t") {
+              if (row.text.slice(start.unit - row.startUnit, end.unit - row.startUnit) === '\t') {
                 const tab = row.tabPlacements?.find(
-                  (tab) => tab.unit === start.unit && tab.state === "placed",
+                  (tab) => tab.unit === start.unit && tab.state === 'placed',
                 );
                 if (tab)
                   paintTabLeader(
@@ -941,7 +941,7 @@ export function createRenderer(
                 fontAt,
                 paragraph,
                 start.unit,
-                "text",
+                'text',
                 text,
               );
               glyphMetrics = geometry.metrics;
@@ -1003,7 +1003,7 @@ export function createRenderer(
       sceneRows,
       first,
     )) {
-      if (command.kind === "box") {
+      if (command.kind === 'box') {
         paintTableBox(command.item);
         continue;
       }
@@ -1018,7 +1018,7 @@ export function createRenderer(
       const paragraph = display.paragraphs.find(
         (p) => p.section === prefix.section && p.paragraph === prefix.paragraph,
       );
-      ctx.fillStyle = "#172b3b";
+      ctx.fillStyle = '#172b3b';
       paintRowTransform(ctx, prefix, viewport.scrollTop, () =>
         paintNumberPrefix(ctx, prefix, 0, paragraph, fontAt, viewport.scrollTop),
       );
@@ -1030,13 +1030,13 @@ export function createRenderer(
       rectangleLayers.front.filter((item) => !groupCommands.some((c) => c.item === item)),
     );
     for (const item of (layout.placedEllipses ?? [])
-      .filter((p) => p.layer === "front")
+      .filter((p) => p.layer === 'front')
       .toSorted((a, b) => a.zOrder - b.zOrder))
       paintEllipse(ctx, item, viewport.scrollTop);
     for (const command of groupCommands) {
-      if (command.kind === "rectangle") paintRectangles([command.item]);
-      else if (command.kind === "picture") paintPictures([command.item]);
-      else if (command.kind === "curve") {
+      if (command.kind === 'rectangle') paintRectangles([command.item]);
+      else if (command.kind === 'picture') paintPictures([command.item]);
+      else if (command.kind === 'curve') {
         paintCurve(ctx, command.item, viewport.scrollTop);
         for (const [i, row] of layout.rows.entries())
           if (row.section === command.section && row.drawingNode === command.node)
@@ -1065,11 +1065,11 @@ export function createRenderer(
       )
         paintedCheckBoxes.push(box);
     }
-    let paintedCaret = "";
+    let paintedCaret = '';
     if (interaction.active && (caretVisible || interaction.composition)) {
       const caret = caretGeometry(layout, interaction.composition?.focus ?? interaction.focus);
       if (caret) {
-        ctx.fillStyle = "#145b96";
+        ctx.fillStyle = '#145b96';
         const r = caret.paintGeometry ?? caret;
         paintRowTransform(ctx, r, viewport.scrollTop, () =>
           ctx.fillRect(r.x, r.y - viewport.scrollTop, 2, r.height),
@@ -1079,7 +1079,7 @@ export function createRenderer(
       }
     }
     if (interaction.composition) {
-      ctx.fillStyle = "#145b96";
+      ctx.fillStyle = '#145b96';
       for (const r of selectionRects(
         layout,
         interaction.composition.anchor,
@@ -1103,7 +1103,7 @@ export function createRenderer(
     const resize = pictureResizeSelection?.();
     if (resize) {
       paintRowTransform(ctx, { pageClip: resize.pageClip }, viewport.scrollTop, () => {
-        ctx.fillStyle = "#145b96";
+        ctx.fillStyle = '#145b96';
         for (const handle of pictureResizeHandles(resize))
           ctx.fillRect(handle.point[0] - 4, handle.point[1] - viewport.scrollTop - 4, 8, 8);
       });
@@ -1119,7 +1119,7 @@ export function createRenderer(
         (basis.x[1] * size.width) / basis.width +
         (basis.y[1] * size.height) / basis.height;
       paintRowTransform(ctx, { pageClip: basis.pageClip }, viewport.scrollTop, () => {
-        ctx.fillStyle = "#145b96";
+        ctx.fillStyle = '#145b96';
         ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6);
       });
     }
@@ -1161,7 +1161,7 @@ export function createRenderer(
         .filter(
           (target) =>
             (content.hwp5FormTextEditAvailable === true &&
-              ["edit", "combo_box"].includes(target.form.form.source.kind)) ||
+              ['edit', 'combo_box'].includes(target.form.form.source.kind)) ||
             target.form.checkBox?.editable === true,
         )
         .map((target) => `${target.form.form.section}:${target.form.form.formNode}`),
@@ -1223,7 +1223,7 @@ export function createRenderer(
       lines: projectDraftAnchoredObjects(content, content.lines, draft),
       drawings: projectDraftDrawings(content, draft),
       rectangles: projectDraftDrawings({ ...content, drawings: content.rectangles }, draft),
-      checkBoxes: projectDraftAnchoredObjects(content, content.checkBoxes, draft, "siteState"),
+      checkBoxes: projectDraftAnchoredObjects(content, content.checkBoxes, draft, 'siteState'),
     };
     pictures = inlinePictureIndex(pictureDisplay);
     const inlineCharts = inlineChartIndex(pictureDisplay, (section, wrapper) =>
@@ -1239,9 +1239,9 @@ export function createRenderer(
       projectionMemo: true,
       stableContext: true,
     });
-    const windowFragment = pictureDisplay.format === "hwp5" && Boolean(pictureDisplay.window);
+    const windowFragment = pictureDisplay.format === 'hwp5' && Boolean(pictureDisplay.window);
     const pageLayout =
-      pictureDisplay.format === "hwp5"
+      pictureDisplay.format === 'hwp5'
         ? (windowFragment ? layoutHwp5WindowContent : layoutHwp5PageContent)(
             pictureDisplay,
             measure,
@@ -1251,11 +1251,11 @@ export function createRenderer(
           });
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
     const fallbackLayout =
-      pictureDisplay.format === "hwp5" && pictureDisplay.hwp5Memos?.length
+      pictureDisplay.format === 'hwp5' && pictureDisplay.hwp5Memos?.length
         ? layoutHwp5MemoFallback
         : layoutTableContent;
     layout =
-      pageLayout.state === "paginated"
+      pageLayout.state === 'paginated'
         ? pageLayout
         : {
             ...fallbackLayout(pictureDisplay, logicalWidth, measure),
@@ -1310,7 +1310,7 @@ export function createRenderer(
     onLayout(layout, content);
     schedule();
   };
-  viewport.addEventListener("scroll", schedule);
+  viewport.addEventListener('scroll', schedule);
   const stopFontWatch = watchProjectionFonts(canvas, () => {
     if (!closed) reflow();
   });
@@ -1463,7 +1463,7 @@ export function createRenderer(
       tableBackgroundReader = read;
     },
     pictureDecoder(decode) {
-      if (typeof decode !== "function") throw new Error("InvalidPictureDecoder");
+      if (typeof decode !== 'function') throw new Error('InvalidPictureDecoder');
       pictureDecoder = decode;
       resourceGeneration++;
       pictureResources.clear();
@@ -1488,7 +1488,7 @@ export function createRenderer(
         : null;
       canvas.dataset.selectedPicture = selectedPicture
         ? `${selectedPicture.section}:${selectedPicture.pictureNode}`
-        : "";
+        : '';
       schedule();
     },
     selectedPicture() {
@@ -1545,7 +1545,7 @@ export function createRenderer(
         stopPictureWait();
         pictureWaitExpired = false;
         paintedFrame = null;
-        canvas.dataset.paintedCaret = "";
+        canvas.dataset.paintedCaret = '';
         stopBlink();
         interaction = {};
         caretVisible = true;
@@ -1570,7 +1570,7 @@ export function createRenderer(
         }
       if (!preserveScroll) {
         selectedPicture = null;
-        canvas.dataset.selectedPicture = "";
+        canvas.dataset.selectedPicture = '';
         viewport.scrollTop = 0;
         viewport.scrollLeft = 0;
       }
@@ -1581,11 +1581,11 @@ export function createRenderer(
       stopPictureWait();
       pictureWaitExpired = false;
       paintedFrame = null;
-      canvas.dataset.paintedCaret = "";
+      canvas.dataset.paintedCaret = '';
       chartResources.clear();
       pictureResizeGuide = null;
       selectedPicture = null;
-      canvas.dataset.selectedPicture = "";
+      canvas.dataset.selectedPicture = '';
       pictureResources.clear();
       const resetWidth = canvas.width;
       canvas.width = resetWidth;
@@ -1654,9 +1654,9 @@ export function createRenderer(
     paragraphReplacementAvailable: () => content.paragraphReplacementAvailable === true,
     selectionText: (anchor, focus) => paragraphSelectionText(content.paragraphs, anchor, focus),
     selectionCharacterState: (anchor, focus, property) =>
-      (property === "strike"
+      (property === 'strike'
         ? content.characterStrikeRangesAvailable
-        : property === "underline"
+        : property === 'underline'
           ? content.characterUnderlineRangesAvailable
           : content.characterPropertiesRangesAvailable) === true
         ? characterRangesState(
@@ -1708,7 +1708,7 @@ export function createRenderer(
       ),
     tableCreationWidthHint: (point) => createdTableWidthHint(content, point),
     cell: (point, { includeTableNode = false } = {}) => {
-      if (content.format !== "hwpx" && content.format !== "hwp5") return null;
+      if (content.format !== 'hwpx' && content.format !== 'hwp5') return null;
       const p = content.paragraphs.find(
         (p) => p.section === point.section && p.paragraph === point.paragraph,
       );
@@ -1758,11 +1758,11 @@ export function createRenderer(
       stopBlink();
       resize.disconnect();
       stopFontWatch();
-      viewport.removeEventListener("scroll", schedule);
+      viewport.removeEventListener('scroll', schedule);
       cancelAnimationFrame(frame);
     },
   };
 }
-import { formulaAtParagraph } from "./formula-selection.mjs";
-import { isViewScale } from "./view-scale.mjs";
-import { findText } from "./text-search.mjs";
+import { formulaAtParagraph } from './formula-selection.mjs';
+import { isViewScale } from './view-scale.mjs';
+import { findText } from './text-search.mjs';

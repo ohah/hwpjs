@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 // Independent preimage construction: intersect every line segment with the target ordinate.
 export function inverseReference(values, y, denominator = 1n) {
-  if (values.length < 2) throw Error("InvalidIccInverseSamples");
+  if (values.length < 2) throw Error('InvalidIccInverseSamples');
   const sorted = [...values].sort((a, b) => a - b);
-  if (sorted[0] === sorted.at(-1)) throw Error("ConstantIccCurve");
+  if (sorted[0] === sorted.at(-1)) throw Error('ConstantIccCurve');
   if (
     !values.every((v, i) => v === sorted[i]) &&
     !values.every((v, i) => v === sorted[sorted.length - 1 - i])
   )
-    throw Error("NonMonotonicIccCurve");
+    throw Error('NonMonotonicIccCurve');
   const low = BigInt(sorted[0]) * denominator,
     high = BigInt(sorted.at(-1)) * denominator;
   const ordinate = BigInt(y),
@@ -38,7 +38,7 @@ export function inverseReference(values, y, denominator = 1n) {
 export function inverseInput(values, y) {
   const b = Buffer.alloc(14 + values.length * 2);
   b.writeUInt16BE(y);
-  b.write("curv", 2);
+  b.write('curv', 2);
   b.writeUInt32BE(values.length, 10);
   values.forEach((v, i) => b.writeUInt16BE(v, 14 + i * 2));
   return b;

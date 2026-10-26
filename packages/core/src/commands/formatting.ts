@@ -2,30 +2,30 @@ import type {
   SelectionTarget,
   SetCharacterPropertiesPayload,
   SetParagraphAlignmentPayload,
-} from "./commands.ts";
-import type { EditorState } from "../state/editor-state.ts";
-import { selectionMessage, validateSelection } from "./selection.ts";
+} from './commands.ts';
+import type { EditorState } from '../state/editor-state.ts';
+import { selectionMessage, validateSelection } from './selection.ts';
 // @ts-ignore Canonical native facade argument encoder; no independent bit definitions.
-import { characterPropertyArgs } from "../../../../js/character-property-args.mjs";
+import { characterPropertyArgs } from '../../../../js/character-property-args.mjs';
 // @ts-ignore Shared canonical display alignment validator; native ordinals stay in the facade.
-import { paragraphAlignmentValue } from "../../../../web/preview/paragraph-alignments.mjs";
+import { paragraphAlignmentValue } from '../../../../web/preview/paragraph-alignments.mjs';
 
 export type FormattingCapability =
-  | "characterPropertiesAvailable"
-  | "paragraphAlignmentAvailable"
-  | "characterUnderlineAvailable"
-  | "characterStrikeAvailable"
-  | "characterTextColorAvailable";
+  | 'characterPropertiesAvailable'
+  | 'paragraphAlignmentAvailable'
+  | 'characterUnderlineAvailable'
+  | 'characterStrikeAvailable'
+  | 'characterTextColorAvailable';
 export function validateFormattingTarget(
   target: SelectionTarget,
   state: EditorState,
   character: boolean,
   capability: FormattingCapability = character
-    ? "characterPropertiesAvailable"
-    : "paragraphAlignmentAvailable",
+    ? 'characterPropertiesAvailable'
+    : 'paragraphAlignmentAvailable',
 ) {
   const row = validateSelection(target, state, true);
-  if (row.createdCell) throw Error("CreatedCellRequiresSurfacePort");
+  if (row.createdCell) throw Error('CreatedCellRequiresSurfacePort');
   const position = character
     ? selectionMessage(target, state)
     : {
@@ -36,7 +36,7 @@ export function validateFormattingTarget(
         reference: undefined,
       };
   const content = state.content as Record<string, unknown>;
-  if (content[capability] !== true) throw Error("FormattingCapabilityUnavailable");
+  if (content[capability] !== true) throw Error('FormattingCapabilityUnavailable');
   // validateSelection proves the canonical object/list owner. Original nested
   // paragraphs use the same source ordinal ABI as original body text.
   if (
@@ -45,27 +45,27 @@ export function validateFormattingTarget(
     !row.drawingCaption &&
     target.owner !== `section:${target.section}:body`
   )
-    throw Error("UnsupportedFormattingOwner");
-  if (target.format === "hwp5") {
+    throw Error('UnsupportedFormattingOwner');
+  if (target.format === 'hwp5') {
     // attachHwp5CurrentReferences binds source ordinals to native current references.
     // These runtime commands ignore reference, so only a proven original source binding is accepted.
     const ref = row.currentReference as
       | { kind?: string; section?: number; id?: string }
       | undefined;
     if (
-      ref?.kind !== "original" ||
+      ref?.kind !== 'original' ||
       ref.section !== target.section ||
-      typeof ref.id !== "string" ||
+      typeof ref.id !== 'string' ||
       !/^(0|[1-9][0-9]*)$/.test(ref.id) ||
       BigInt(ref.id) > 0xffffffffn
     )
-      throw Error("UnsupportedFormattingReference");
+      throw Error('UnsupportedFormattingReference');
     // currentSourceParagraphReference indexes the same source paragraph array as
     // the native formatting ordinal ABI. ref.id is a node ID, never an ordinal.
   }
   // reference is deliberately not sent: the canonical commands do not consume it.
   const { reference: _, ...range } = position;
-  if (character && target.startUnit === target.endUnit) throw Error("EmptyCharacterSelection");
+  if (character && target.startUnit === target.endUnit) throw Error('EmptyCharacterSelection');
   return range;
 }
 
@@ -78,12 +78,12 @@ export function formattingMessage(
   if (character) {
     const properties = (payload as SetCharacterPropertiesPayload).properties;
     characterPropertyArgs(properties);
-    return { kind: "character-properties", ...range, properties };
+    return { kind: 'character-properties', ...range, properties };
   }
   const alignment = (payload as SetParagraphAlignmentPayload).alignment;
-  if (paragraphAlignmentValue(alignment) === undefined) throw Error("InvalidParagraphAlignment");
+  if (paragraphAlignmentValue(alignment) === undefined) throw Error('InvalidParagraphAlignment');
   return {
-    kind: "paragraph-alignment",
+    kind: 'paragraph-alignment',
     section: range.section,
     paragraph: range.paragraph,
     alignment,

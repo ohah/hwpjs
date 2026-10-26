@@ -1,26 +1,26 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { createSurfaceLifecycle } from "../src/lifecycle.ts";
-import type { CanvasSurface, CanvasSurfaceProps } from "../src/types.ts";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createSurfaceLifecycle } from '../src/lifecycle.ts';
+import type { CanvasSurface, CanvasSurfaceProps } from '../src/types.ts';
 const editor = () =>
   ({
     dispose() {
-      throw Error("ExternalEditorDisposed");
+      throw Error('ExternalEditorDisposed');
     },
-  }) as unknown as CanvasSurfaceProps["editor"];
+  }) as unknown as CanvasSurfaceProps['editor'];
 const surface = (dispose: () => Promise<void> = async () => {}) =>
   ({
     dispose,
     focus() {},
     setScale: () => true,
     getSelection: () => null,
-    flushComposition: async () => "unchanged" as const,
+    flushComposition: async () => 'unchanged' as const,
   }) satisfies CanvasSurface;
 const turn = async () => {
   for (let i = 0; i < 8; i++) await Promise.resolve();
 };
 
-test("callback update retains surface and uses newest callback", async () => {
+test('callback update retains surface and uses newest callback', async () => {
   const messages: string[] = [],
     ready: string[] = [];
   let creates = 0,
@@ -28,44 +28,44 @@ test("callback update retains surface and uses newest callback", async () => {
   const life = createSurfaceLifecycle({} as HTMLElement, (o) => {
     creates++;
     options = o;
-    o.onStatus?.("mount");
+    o.onStatus?.('mount');
     return surface();
   });
   const e = editor();
   life.update({
     editor: e,
-    onStatus: (m) => messages.push("old:" + m),
-    onReady: () => ready.push("old"),
+    onStatus: (m) => messages.push('old:' + m),
+    onReady: () => ready.push('old'),
   });
   await life.settled();
   life.update({
     editor: e,
-    onStatus: (m) => messages.push("new:" + m),
-    onReady: () => ready.push("new"),
+    onStatus: (m) => messages.push('new:' + m),
+    onReady: () => ready.push('new'),
   });
   await life.settled();
-  options.onStatus("changed");
+  options.onStatus('changed');
   assert.equal(creates, 1);
-  assert.deepEqual(messages, ["old:mount", "new:changed"]);
-  assert.deepEqual(ready, ["old"]);
+  assert.deepEqual(messages, ['old:mount', 'new:changed']);
+  assert.deepEqual(ready, ['old']);
   await life.destroy();
 });
-test("editor replacement waits for old async dispose; rapid replacement skips intermediate editor", async () => {
+test('editor replacement waits for old async dispose; rapid replacement skips intermediate editor', async () => {
   const events: string[] = [];
   let release!: () => void;
   const a = editor(),
     b = editor(),
     c = editor();
   const life = createSurfaceLifecycle({} as HTMLElement, (o) => {
-    events.push(o.editor === a ? "a" : o.editor === b ? "b" : "c");
+    events.push(o.editor === a ? 'a' : o.editor === b ? 'b' : 'c');
     return surface(
       o.editor === a
         ? () => {
-            events.push("dispose-a");
+            events.push('dispose-a');
             return new Promise((r) => (release = r));
           }
         : async () => {
-            events.push("dispose-c");
+            events.push('dispose-c');
           },
     );
   });
@@ -74,15 +74,15 @@ test("editor replacement waits for old async dispose; rapid replacement skips in
   life.update({ editor: b });
   await turn();
   life.update({ editor: c });
-  assert.deepEqual(events, ["a", "dispose-a"]);
+  assert.deepEqual(events, ['a', 'dispose-a']);
   release();
   await life.settled();
-  assert.deepEqual(events, ["a", "dispose-a", "c"]);
+  assert.deepEqual(events, ['a', 'dispose-a', 'c']);
   await life.destroy();
   await life.destroy();
-  assert.deepEqual(events, ["a", "dispose-a", "c", "dispose-c"]);
+  assert.deepEqual(events, ['a', 'dispose-a', 'c', 'dispose-c']);
 });
-test("unmount while factory resolves disposes late surface without ready callback", async () => {
+test('unmount while factory resolves disposes late surface without ready callback', async () => {
   let resolve!: (s: CanvasSurface) => void,
     disposed = 0,
     ready = 0;
@@ -100,13 +100,13 @@ test("unmount while factory resolves disposes late surface without ready callbac
   assert.equal(ready, 0);
   assert.equal(life.getSurface(), undefined);
 });
-test("failed disposal reports error and blocks overlapping replacement", async () => {
+test('failed disposal reports error and blocks overlapping replacement', async () => {
   let creates = 0;
   const errors: unknown[] = [];
   const life = createSurfaceLifecycle({} as HTMLElement, () => {
     creates++;
     return surface(async () => {
-      throw Error("DisposeFailed");
+      throw Error('DisposeFailed');
     });
   });
   life.update({ editor: editor(), onError: (e) => errors.push(e) });
@@ -119,7 +119,7 @@ test("failed disposal reports error and blocks overlapping replacement", async (
   assert.equal(errors.length, 1);
   await life.destroy();
 });
-test("separate roots have independent lifecycle and external editors remain owned by caller", async () => {
+test('separate roots have independent lifecycle and external editors remain owned by caller', async () => {
   const one = createSurfaceLifecycle({} as HTMLElement, () => surface()),
     two = createSurfaceLifecycle({} as HTMLElement, () => surface());
   one.update({ editor: editor() });
@@ -130,19 +130,19 @@ test("separate roots have independent lifecycle and external editors remain owne
   await two.destroy();
 });
 
-test("callback replacement while async setup is pending keeps the same surface", async () => {
+test('callback replacement while async setup is pending keeps the same surface', async () => {
   let resolve!: (s: CanvasSurface) => void,
     creates = 0,
     disposes = 0,
-    ready = "";
+    ready = '';
   const e = editor();
   const life = createSurfaceLifecycle({} as HTMLElement, () => {
     creates++;
     return new Promise((r) => (resolve = r));
   });
-  life.update({ editor: e, onReady: () => (ready = "old") });
+  life.update({ editor: e, onReady: () => (ready = 'old') });
   await turn();
-  life.update({ editor: e, onReady: () => (ready = "new") });
+  life.update({ editor: e, onReady: () => (ready = 'new') });
   resolve(
     surface(async () => {
       disposes++;
@@ -151,6 +151,6 @@ test("callback replacement while async setup is pending keeps the same surface",
   await life.settled();
   assert.equal(creates, 1);
   assert.equal(disposes, 0);
-  assert.equal(ready, "new");
+  assert.equal(ready, 'new');
   await life.destroy();
 });

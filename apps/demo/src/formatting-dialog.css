@@ -27,7 +27,7 @@
   margin-bottom: 12px;
   border-bottom: 1px solid #cbd4e6;
 }
-.hwp-format-tabs [aria-selected="true"] {
+.hwp-format-tabs [aria-selected='true'] {
   background: #e8effb;
   font-weight: 600;
 }
@@ -78,7 +78,7 @@
   font-size: 11px;
   color: #667187;
 }
-.hwp-format-modal [data-role="format-dialog-status"] {
+.hwp-format-modal [data-role='format-dialog-status'] {
   min-height: 1.5em;
   overflow-wrap: anywhere;
 }

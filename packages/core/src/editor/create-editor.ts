@@ -1,33 +1,33 @@
-import { EditorWritePolicy } from "./write-policy.ts";
-import type { SynchronousCallback, UpdateCallback } from "../state/synchronous-callback.ts";
-import { SelectionHistory } from "../state/selection-history.ts";
-import { loadSourceOptions } from "./load-source-options.ts";
-import { isWellFormedText } from "../state/text-scalar.ts";
+import { EditorWritePolicy } from './write-policy.ts';
+import type { SynchronousCallback, UpdateCallback } from '../state/synchronous-callback.ts';
+import { SelectionHistory } from '../state/selection-history.ts';
+import { loadSourceOptions } from './load-source-options.ts';
+import { isWellFormedText } from '../state/text-scalar.ts';
 import type {
   EditorRuntime,
   RuntimeFactory,
   RuntimeMessage,
   RuntimeReply,
   RuntimeRequestContext,
-} from "../contracts.ts";
-import { EditorState } from "../state/editor-state.ts";
-import type { StateData, StateToken } from "../state/editor-state.ts";
+} from '../contracts.ts';
+import { EditorState } from '../state/editor-state.ts';
+import type { StateData, StateToken } from '../state/editor-state.ts';
 import {
   copyOwned,
   discardPromise,
   freezeDTO,
   isPromiseLike,
   ownObservation,
-} from "../state/owned.ts";
+} from '../state/owned.ts';
 import type {
   InputSurfaceHooks,
   InputSurfaceLease,
   SurfaceRequestOptions,
-} from "../host-contracts.ts";
-import { surfaceOperation } from "../commands/surface-protocol.ts";
-import { CancellationFence, interruptible } from "../scheduler/cancellation.ts";
-import { FifoScheduler } from "../scheduler/fifo.ts";
-import { CommandRegistry } from "../commands/registry.ts";
+} from '../host-contracts.ts';
+import { surfaceOperation } from '../commands/surface-protocol.ts';
+import { CancellationFence, interruptible } from '../scheduler/cancellation.ts';
+import { FifoScheduler } from '../scheduler/fifo.ts';
+import { CommandRegistry } from '../commands/registry.ts';
 import {
   SPLICE_TEXT_COMMAND,
   UNDO_COMMAND,
@@ -37,7 +37,7 @@ import {
   SET_CHARACTER_UNDERLINE_COMMAND,
   SET_CHARACTER_STRIKE_COMMAND,
   SET_CHARACTER_TEXT_COLOR_COMMAND,
-} from "../commands/commands.ts";
+} from '../commands/commands.ts';
 import type {
   EditorCommand,
   SpliceTextPayload,
@@ -48,21 +48,21 @@ import type {
   SetCharacterUnderlinePayload,
   SetCharacterStrikePayload,
   SetCharacterTextColorPayload,
-} from "../commands/commands.ts";
-import { retryablePasswordReply, PasswordAttemptError } from "./unlock-policy.ts";
-import { formattingSelection } from "../state/formatting-selection.ts";
-import { formattingMessage } from "../commands/formatting.ts";
-import { underlineMessage } from "../commands/underline.ts";
-import { textColorMessage } from "../commands/text-color.ts";
-import { strikeMessage } from "../commands/strike.ts";
-import { selectionMessage, validateSelection, validateToken } from "../commands/selection.ts";
+} from '../commands/commands.ts';
+import { retryablePasswordReply, PasswordAttemptError } from './unlock-policy.ts';
+import { formattingSelection } from '../state/formatting-selection.ts';
+import { formattingMessage } from '../commands/formatting.ts';
+import { underlineMessage } from '../commands/underline.ts';
+import { textColorMessage } from '../commands/text-color.ts';
+import { strikeMessage } from '../commands/strike.ts';
+import { selectionMessage, validateSelection, validateToken } from '../commands/selection.ts';
 
 export type CommandStatus =
-  | "rejected-unapplied"
-  | "committed-with-snapshot"
-  | "committed-refresh-required"
-  | "known-no-op"
-  | "handled-without-runtime";
+  | 'rejected-unapplied'
+  | 'committed-with-snapshot'
+  | 'committed-refresh-required'
+  | 'known-no-op'
+  | 'handled-without-runtime';
 export interface CommandResult {
   readonly status: CommandStatus;
   readonly context: RuntimeRequestContext;
@@ -79,10 +79,10 @@ export interface UpdateResult {
 export interface EditorError {
   readonly error: unknown;
   readonly context?: RuntimeRequestContext;
-  readonly applied: boolean | "unknown";
+  readonly applied: boolean | 'unknown';
 }
 export interface LoadOptions {
-  readonly format: "hwp5" | "hwpx";
+  readonly format: 'hwp5' | 'hwpx';
   readonly editable?: boolean;
   readonly password?: string;
   readonly allowObservedChartOleDeviations?: boolean;
@@ -104,7 +104,7 @@ export interface SaveResult {
   readonly generation: number;
   readonly operationRevision: number;
   readonly nativeHistoryRevision?: number;
-  readonly format: "hwp5" | "hwpx";
+  readonly format: 'hwp5' | 'hwpx';
   readonly staleSnapshot: boolean;
   readonly layoutRequiresReflow?: boolean;
   readonly reply: RuntimeReply;
@@ -125,7 +125,7 @@ interface PendingCommand {
   command: EditorCommand<unknown>;
   payload: unknown;
   token: StateToken;
-  handlers: ReturnType<CommandRegistry["capture"]>;
+  handlers: ReturnType<CommandRegistry['capture']>;
 }
 let nextEditorId = 0;
 let nextEditorInstance = 0;
@@ -133,12 +133,12 @@ const usedRuntimes = new WeakSet<object>();
 const errorText = (error: unknown) => (error instanceof Error ? error.message : String(error));
 const isWellFormed = isWellFormedText;
 const isAsyncFunction = (callback: unknown) =>
-  Object.prototype.toString.call(callback) === "[object AsyncFunction]";
+  Object.prototype.toString.call(callback) === '[object AsyncFunction]';
 
 /** Headless controller. Native sessions remain the sole document/save/history authority. */
 export function createEditor(options: CreateEditorOptions) {
   const editorId = options.editorId ?? `hwpjs-editor-${++nextEditorId}`;
-  if (nextEditorInstance >= Number.MAX_SAFE_INTEGER) throw Error("EditorIdentityExhausted");
+  if (nextEditorInstance >= Number.MAX_SAFE_INTEGER) throw Error('EditorIdentityExhausted');
   const instanceId = String(++nextEditorInstance);
   const queue = new FifoScheduler(),
     admission = new FifoScheduler(),
@@ -181,14 +181,14 @@ export function createEditor(options: CreateEditorOptions) {
   let surface: SurfaceRecord | undefined;
   const disposedFence = new CancellationFence();
   const runRead = <T>(callback: (state: EditorState) => T, snapshot: EditorState): T => {
-    if (typeof callback !== "function") throw TypeError("InvalidReadCallback");
-    if (isAsyncFunction(callback)) throw Error("AsyncRead");
+    if (typeof callback !== 'function') throw TypeError('InvalidReadCallback');
+    if (isAsyncFunction(callback)) throw Error('AsyncRead');
     readDepth++;
     try {
       const result = callback(snapshot);
       if (isPromiseLike(result)) {
         discardPromise(result);
-        throw Error("AsyncRead");
+        throw Error('AsyncRead');
       }
       return result;
     } finally {
@@ -203,22 +203,22 @@ export function createEditor(options: CreateEditorOptions) {
       operationRevision: 0,
       viewRevision: 0,
       stateVersion: 0,
-      status: "empty",
+      status: 'empty',
     },
     runRead,
   );
   function assertPublicMutation() {
-    if (readDepth) throw Error("ReadMutation");
-    if (collecting) throw Error("CollectorOnly");
-    if (handling) throw Error("CommandHandlerMutation");
+    if (readDepth) throw Error('ReadMutation');
+    if (collecting) throw Error('CollectorOnly');
+    if (handling) throw Error('CommandHandlerMutation');
   }
   function assertLive() {
-    if (terminal) throw Error("EditorDisposed");
+    if (terminal) throw Error('EditorDisposed');
   }
   function notifyError(
     error: unknown,
     context?: RuntimeRequestContext,
-    applied: boolean | "unknown" = false,
+    applied: boolean | 'unknown' = false,
   ) {
     if (terminal) return;
     const event = Object.freeze({
@@ -303,16 +303,16 @@ export function createEditor(options: CreateEditorOptions) {
     };
   }
   function verifyReply(reply: RuntimeReply, ctx: RuntimeRequestContext) {
-    if (!reply || typeof reply !== "object" || typeof reply.kind !== "string")
-      throw Error("InvalidRuntimeReply");
+    if (!reply || typeof reply !== 'object' || typeof reply.kind !== 'string')
+      throw Error('InvalidRuntimeReply');
     const returned = reply.meta?.context;
     if (
       returned &&
-      (["editorId", "documentId", "generation", "requestId", "operationRevision"] as const).some(
+      (['editorId', 'documentId', 'generation', 'requestId', 'operationRevision'] as const).some(
         (key) => returned[key] !== ctx[key],
       )
     )
-      throw Error("MismatchedRuntimeReply");
+      throw Error('MismatchedRuntimeReply');
   }
   async function release(runtime: EditorRuntime | undefined) {
     if (!runtime || released.has(runtime)) return;
@@ -320,7 +320,7 @@ export function createEditor(options: CreateEditorOptions) {
     await runtime.dispose();
   }
   function enqueue<T>(task: () => Promise<T>): Promise<T> {
-    if (terminal) return Promise.reject(Error("EditorDisposed"));
+    if (terminal) return Promise.reject(Error('EditorDisposed'));
     return queue.enqueue(async () => {
       assertLive();
       return task();
@@ -328,29 +328,29 @@ export function createEditor(options: CreateEditorOptions) {
   }
   function assertSurface(record: SurfaceRecord) {
     assertLive();
-    if (!record.active || surface !== record) throw Error("InputSurfaceDetached");
+    if (!record.active || surface !== record) throw Error('InputSurfaceDetached');
   }
   function cancelComposition(
     record: SurfaceRecord,
-    reason: "detach" | "load" | "external-replace" | "dispose",
+    reason: 'detach' | 'load' | 'external-replace' | 'dispose',
   ) {
     try {
       record.hooks.cancelComposition(reason);
     } catch (error) {
       notifyError(error);
-      if (reason === "load" || reason === "external-replace") throw error;
+      if (reason === 'load' || reason === 'external-replace') throw error;
     }
   }
   /** Admission serializes external work, but never occupies Native's queue while flushing input. */
   function admit<T>(
     task: () => Promise<T>,
     settings: {
-      replace?: "load" | "external-replace";
+      replace?: 'load' | 'external-replace';
       abort?: CancellationFence;
       guard?: () => void;
     } = {},
   ): Promise<T> {
-    if (terminal) return Promise.reject(Error("EditorDisposed"));
+    if (terminal) return Promise.reject(Error('EditorDisposed'));
     return admission.enqueue(async () => {
       assertLive();
       settings.guard?.();
@@ -362,31 +362,31 @@ export function createEditor(options: CreateEditorOptions) {
           return record.hooks.commitComposition();
         });
         const interruptions = [
-          { fence: disposedFence, error: "EditorDisposed" },
-          { fence: record.fence, error: "InputSurfaceDetached" },
+          { fence: disposedFence, error: 'EditorDisposed' },
+          { fence: record.fence, error: 'InputSurfaceDetached' },
         ];
-        if (settings.abort) interruptions.push({ fence: settings.abort, error: "LoadCancelled" });
+        if (settings.abort) interruptions.push({ fence: settings.abort, error: 'LoadCancelled' });
         const outcome = await interruptible(settlement, interruptions);
         assertLive();
         assertSurface(record);
         settings.guard?.();
-        if (outcome !== "committed" && outcome !== "unchanged") throw Error("CompositionBlocked");
+        if (outcome !== 'committed' && outcome !== 'unchanged') throw Error('CompositionBlocked');
         if (settings.replace) cancelComposition(record, settings.replace);
       }
       assertLive();
       settings.guard?.();
       return enqueue(async () => {
         if (record) assertSurface(record);
-        else if (surface) throw Error("InputSurfaceChanged");
+        else if (surface) throw Error('InputSurfaceChanged');
         return task();
       });
     });
   }
   async function newRuntime() {
     const runtime = await options.runtimeFactory();
-    if (!runtime || typeof runtime.request !== "function" || typeof runtime.dispose !== "function")
-      throw Error("InvalidRuntime");
-    if (usedRuntimes.has(runtime)) throw Error("RuntimeAlreadyOwned");
+    if (!runtime || typeof runtime.request !== 'function' || typeof runtime.dispose !== 'function')
+      throw Error('InvalidRuntime');
+    if (usedRuntimes.has(runtime)) throw Error('RuntimeAlreadyOwned');
     usedRuntimes.add(runtime);
     return runtime;
   }
@@ -398,23 +398,23 @@ export function createEditor(options: CreateEditorOptions) {
     inherit = true,
     editable?: boolean,
   ): Partial<StateData> {
-    if (reply.content === undefined) throw Error("SnapshotMissing");
+    if (reply.content === undefined) throw Error('SnapshotMissing');
     const capabilities = reply.capabilities ?? {
       ...(inherit && state.documentId !== null ? (state.capabilities as object) : {}),
       ...Object.fromEntries(
         Object.entries(reply).filter(
           ([key]) =>
             ![
-              "content",
-              "kind",
-              "error",
-              "applied",
-              "bytes",
-              "meta",
-              "origin",
-              "requestId",
-              "historyRevision",
-              "historyRevisions",
+              'content',
+              'kind',
+              'error',
+              'applied',
+              'bytes',
+              'meta',
+              'origin',
+              'requestId',
+              'historyRevision',
+              'historyRevisions',
             ].includes(key),
         ),
       ),
@@ -442,7 +442,7 @@ export function createEditor(options: CreateEditorOptions) {
     if (reply.error) throw Error(reply.error);
     if (editable) {
       const enableContext = { ...ctx, requestId: ++requestId };
-      reply = await runtime.request({ ...enableOptions, kind: "enable" }, enableContext);
+      reply = await runtime.request({ ...enableOptions, kind: 'enable' }, enableContext);
       verifyReply(reply, enableContext);
       if (reply.error) throw Error(reply.error);
     }
@@ -457,7 +457,7 @@ export function createEditor(options: CreateEditorOptions) {
       generation: ctx.generation,
       operationRevision: nextRevision,
       savedOperationRevision: nextRevision,
-      status: "ready" as const,
+      status: 'ready' as const,
     };
     new EditorState(
       {
@@ -489,20 +489,20 @@ export function createEditor(options: CreateEditorOptions) {
     assertPublicMutation();
     const bytes = copyOwned(input);
     if (!(bytes instanceof Uint8Array) && !(bytes instanceof ArrayBuffer))
-      throw TypeError("InvalidDocumentBytes");
+      throw TypeError('InvalidDocumentBytes');
     const owned = copyOwned(loadOptions);
-    if (!owned || !["hwp5", "hwpx"].includes(owned.format)) throw Error("InvalidDocumentFormat");
+    if (!owned || !['hwp5', 'hwpx'].includes(owned.format)) throw Error('InvalidDocumentFormat');
     const sourceOptions = loadSourceOptions(owned);
     const cancellation = new CancellationFence();
     const job = { cancelled: false, fence: cancellation };
     loads.add(job);
     const guard = () => {
-      if (job.cancelled) throw Error("LoadCancelled");
+      if (job.cancelled) throw Error('LoadCancelled');
     };
     const tokenGeneration = ++nextGeneration,
       documentId = `${editorId}:instance:${instanceId}:document:${tokenGeneration}`;
     const message: RuntimeMessage = {
-      kind: "load",
+      kind: 'load',
       bytes,
       format: owned.format,
       ...sourceOptions,
@@ -514,7 +514,7 @@ export function createEditor(options: CreateEditorOptions) {
     return admit(
       async () => {
         const previousState = state;
-        install({ status: "loading" });
+        install({ status: 'loading' });
         let candidate: EditorRuntime | undefined,
           keepLocked = false;
         const ctx: RuntimeRequestContext = {
@@ -572,7 +572,7 @@ export function createEditor(options: CreateEditorOptions) {
           loads.delete(job);
         }
       },
-      { replace: "load", abort: cancellation, guard },
+      { replace: 'load', abort: cancellation, guard },
     ).finally(() => {
       loads.delete(job);
       if (bytes instanceof Uint8Array) bytes.fill(0);
@@ -585,17 +585,17 @@ export function createEditor(options: CreateEditorOptions) {
     unlockOptions: Readonly<Record<string, unknown>> = {},
   ): Promise<EditorState> {
     assertPublicMutation();
-    if (typeof password !== "string") throw TypeError("InvalidPassword");
+    if (typeof password !== 'string') throw TypeError('InvalidPassword');
     const owned = copyOwned(unlockOptions);
     return admit(
       async () => {
         const candidate = locked;
-        if (!candidate) throw Error("NoLockedCandidate");
+        if (!candidate) throw Error('NoLockedCandidate');
         const ctx = { ...candidate.context, requestId: ++requestId };
         let retryable = false;
         try {
           const reply = await candidate.runtime.request(
-            { ...owned, kind: "unlock", password },
+            { ...owned, kind: 'unlock', password },
             ctx,
           );
           verifyReply(reply, ctx);
@@ -612,7 +612,7 @@ export function createEditor(options: CreateEditorOptions) {
             candidate.enableOptions,
             reply,
             () => {
-              if (candidate.cancelled) throw Error("LoadCancelled");
+              if (candidate.cancelled) throw Error('LoadCancelled');
             },
           );
           locked = undefined;
@@ -629,7 +629,7 @@ export function createEditor(options: CreateEditorOptions) {
           throw error;
         }
       },
-      { replace: "external-replace" },
+      { replace: 'external-replace' },
     );
   }
   function cancelLoad(): Promise<void> {
@@ -655,7 +655,7 @@ export function createEditor(options: CreateEditorOptions) {
     try {
       if (reply !== undefined) ownedReply = freezeDTO(copyOwned(reply, true));
     } catch (metadataError) {
-      notifyError(metadataError, ctx, status.startsWith("committed"));
+      notifyError(metadataError, ctx, status.startsWith('committed'));
     }
     const answer = {
       status,
@@ -669,12 +669,12 @@ export function createEditor(options: CreateEditorOptions) {
   }
   function reject(ctx: RuntimeRequestContext, error: unknown) {
     notifyError(error, ctx, false);
-    return result("rejected-unapplied", ctx, error);
+    return result('rejected-unapplied', ctx, error);
   }
   function requireReady(token: StateToken, view = false) {
     assertLive();
-    if (!active || state.status !== "ready")
-      throw Error(state.status === "refresh-required" ? "RefreshRequired" : "EditorNotReady");
+    if (!active || state.status !== 'ready')
+      throw Error(state.status === 'refresh-required' ? 'RefreshRequired' : 'EditorNotReady');
     validateToken(token, state, view);
   }
   async function mutate(
@@ -693,61 +693,61 @@ export function createEditor(options: CreateEditorOptions) {
         reply = await active!.request(message, ctx);
         verifyReply(reply, ctx);
       } catch (error) {
-        install({ operationRevision: reserved, status: "refresh-required" });
-        notifyError(error, ctx, "unknown");
-        return result("committed-refresh-required", ctx, error);
+        install({ operationRevision: reserved, status: 'refresh-required' });
+        notifyError(error, ctx, 'unknown');
+        return result('committed-refresh-required', ctx, error);
       }
       const application =
         reply.meta?.application ??
         (reply.applied === true
-          ? "applied"
+          ? 'applied'
           : reply.error && reply.applied === false
-            ? "unapplied"
+            ? 'unapplied'
             : undefined);
-      if (application === "unapplied") {
+      if (application === 'unapplied') {
         if (reply.error) return reject(ctx, reply.error);
-        return result("known-no-op", ctx, undefined, reply);
+        return result('known-no-op', ctx, undefined, reply);
       }
       const noOp = !reply.error && (reply.meta?.changed === false || reply.changed === false);
-      if (noOp) return result("known-no-op", ctx, undefined, reply);
+      if (noOp) return result('known-no-op', ctx, undefined, reply);
       if (reply.error || reply.content === undefined) {
         install({
           operationRevision: reserved,
-          status: "refresh-required",
+          status: 'refresh-required',
           nativeHistoryRevision: history(reply),
         });
         notifyError(
-          reply.error ?? "SnapshotMissing",
+          reply.error ?? 'SnapshotMissing',
           ctx,
-          application === "applied" ? true : "unknown",
+          application === 'applied' ? true : 'unknown',
         );
-        return result("committed-refresh-required", ctx, reply.error ?? "SnapshotMissing", reply);
+        return result('committed-refresh-required', ctx, reply.error ?? 'SnapshotMissing', reply);
       }
       try {
         const patch = contentPatch(reply);
         let selection: SelectionTarget | null | undefined = preserveFormattingSelection
           ? formattingSelection(state, patch, reserved)
           : undefined;
-        if (message.kind === "undo" || message.kind === "redo") {
+        if (message.kind === 'undo' || message.kind === 'redo') {
           const provisional = new EditorState(
             {
               ...state.token,
               ...patch,
               operationRevision: reserved,
               stateVersion: state.stateVersion + 1,
-              status: "ready",
+              status: 'ready',
             },
             runRead,
           );
           selection = selectionHistory.restore(provisional);
         }
-        install({ ...patch, selection, operationRevision: reserved, status: "ready" }, true, ctx);
+        install({ ...patch, selection, operationRevision: reserved, status: 'ready' }, true, ctx);
       } catch (error) {
-        install({ operationRevision: reserved, status: "refresh-required" });
+        install({ operationRevision: reserved, status: 'refresh-required' });
         notifyError(error, ctx, true);
-        return result("committed-refresh-required", ctx, error);
+        return result('committed-refresh-required', ctx, error);
       }
-      return result("committed-with-snapshot", ctx, undefined, reply);
+      return result('committed-with-snapshot', ctx, undefined, reply);
     } catch (error) {
       return reject(ctx, error);
     }
@@ -757,7 +757,7 @@ export function createEditor(options: CreateEditorOptions) {
     payload: T,
     snapshot: EditorState = state,
   ): PendingCommand {
-    if (!command || typeof command.id !== "symbol") throw Error("InvalidCommand");
+    if (!command || typeof command.id !== 'symbol') throw Error('InvalidCommand');
     const owned = copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
@@ -781,7 +781,7 @@ export function createEditor(options: CreateEditorOptions) {
         handling = false;
       }
       assertLive();
-      if (handled) return result("handled-without-runtime", ctx);
+      if (handled) return result('handled-without-runtime', ctx);
       writePolicy.assertWritable();
       if (pending.command.id === SPLICE_TEXT_COMMAND.id) {
         const payload = pending.payload as SpliceTextPayload;
@@ -789,11 +789,11 @@ export function createEditor(options: CreateEditorOptions) {
           payload.selectionVersion !== undefined &&
           payload.selectionVersion !== state.stateVersion
         )
-          throw Error("StaleClipboardSelection");
-        if (typeof payload.text !== "string" || !isWellFormed(payload.text))
-          throw Error("InvalidText");
+          throw Error('StaleClipboardSelection');
+        if (typeof payload.text !== 'string' || !isWellFormed(payload.text))
+          throw Error('InvalidText');
         const position = selectionMessage(payload.target, state);
-        return await mutate({ kind: "splice", ...position, text: payload.text }, payload.target);
+        return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
       }
       if (pending.command.id === SET_CHARACTER_TEXT_COLOR_COMMAND.id) {
         const payload = pending.payload as SetCharacterTextColorPayload;
@@ -825,11 +825,11 @@ export function createEditor(options: CreateEditorOptions) {
         const payload = pending.payload as HistoryPayload;
         validateToken(payload.token, state);
         return await mutate(
-          { kind: pending.command.id === UNDO_COMMAND.id ? "undo" : "redo" },
+          { kind: pending.command.id === UNDO_COMMAND.id ? 'undo' : 'redo' },
           payload.token,
         );
       }
-      return reject(ctx, "UnsupportedCommand");
+      return reject(ctx, 'UnsupportedCommand');
     } catch (error) {
       return reject(ctx, error);
     }
@@ -842,18 +842,18 @@ export function createEditor(options: CreateEditorOptions) {
   function update<T>(
     callback: UpdateCallback<[UpdateCollector, EditorState], T>,
   ): Promise<UpdateResult> {
-    if (readDepth) throw Error("ReadMutation");
-    if (collecting) throw Error("NestedUpdate");
-    if (handling) throw Error("CommandHandlerMutation");
+    if (readDepth) throw Error('ReadMutation');
+    if (collecting) throw Error('NestedUpdate');
+    if (handling) throw Error('CommandHandlerMutation');
     assertLive();
-    if (typeof callback !== "function") throw TypeError("InvalidUpdateCallback");
-    if (isAsyncFunction(callback)) throw Error("AsyncUpdate");
+    if (typeof callback !== 'function') throw TypeError('InvalidUpdateCallback');
+    if (isAsyncFunction(callback)) throw Error('AsyncUpdate');
     const snapshot = state,
       pending: PendingCommand[] = [];
     let open = true;
     const collector = Object.freeze({
       dispatchCommand<T>(command: EditorCommand<T>, payload: T) {
-        if (!open) throw Error("CollectorClosed");
+        if (!open) throw Error('CollectorClosed');
         pending.push(capture(command, payload, snapshot));
       },
     });
@@ -862,9 +862,9 @@ export function createEditor(options: CreateEditorOptions) {
       const returned = callback(collector, snapshot);
       if (isPromiseLike(returned)) {
         discardPromise(returned);
-        throw Error("AsyncUpdate");
+        throw Error('AsyncUpdate');
       }
-      if (returned !== undefined) throw Error("InvalidUpdateReturn");
+      if (returned !== undefined) throw Error('InvalidUpdateReturn');
     } finally {
       collecting = false;
       open = false;
@@ -877,8 +877,8 @@ export function createEditor(options: CreateEditorOptions) {
         const answer = await execute(command);
         results.push(answer);
         if (
-          answer.status === "rejected-unapplied" ||
-          answer.status === "committed-refresh-required"
+          answer.status === 'rejected-unapplied' ||
+          answer.status === 'committed-refresh-required'
         ) {
           stoppedIndex = index;
           break;
@@ -891,15 +891,15 @@ export function createEditor(options: CreateEditorOptions) {
     assertPublicMutation();
     const token = state.token;
     return enqueue(async () => {
-      if (!active || state.status !== "refresh-required") throw Error("RefreshNotRequired");
+      if (!active || state.status !== 'refresh-required') throw Error('RefreshNotRequired');
       validateToken(token, state);
       const ctx = context(token);
       try {
-        const reply = await active.request({ kind: "refresh" }, ctx);
+        const reply = await active.request({ kind: 'refresh' }, ctx);
         verifyReply(reply, ctx);
         if (reply.error) throw Error(reply.error);
         assertLive();
-        install({ ...contentPatch(reply), status: "ready" }, true, ctx);
+        install({ ...contentPatch(reply), status: 'ready' }, true, ctx);
         return state;
       } catch (error) {
         notifyError(error, ctx, false);
@@ -912,18 +912,18 @@ export function createEditor(options: CreateEditorOptions) {
     const owned = copyOwned(saveOptions);
     return admit(async () => {
       const token = owned.token ?? state.token;
-      if (!active || state.documentId === null) throw Error("EditorNotReady");
+      if (!active || state.documentId === null) throw Error('EditorNotReady');
       validateToken(token, state);
-      const stale = state.status === "refresh-required";
-      if (stale && !owned.recovery) throw Error("RecoverySaveRequired");
-      if (!stale && state.status !== "ready") throw Error("EditorNotReady");
+      const stale = state.status === 'refresh-required';
+      if (stale && !owned.recovery) throw Error('RecoverySaveRequired');
+      if (!stale && state.status !== 'ready') throw Error('EditorNotReady');
       const ctx = context(token);
       const format = (state.content as { format?: unknown })?.format;
-      if (format !== "hwp5" && format !== "hwpx") throw Error("UnknownDocumentFormat");
+      if (format !== 'hwp5' && format !== 'hwpx') throw Error('UnknownDocumentFormat');
       try {
         const reply = await active.request(
           {
-            kind: "save",
+            kind: 'save',
             allowStaleLayout: owned.allowStaleLayout ?? false,
             allowUnprotectedOutput: owned.allowUnprotectedOutput ?? false,
           },
@@ -931,7 +931,7 @@ export function createEditor(options: CreateEditorOptions) {
         );
         verifyReply(reply, ctx);
         if (reply.error) throw Error(reply.error);
-        if (!(reply.bytes instanceof Uint8Array)) throw Error("SaveBytesMissing");
+        if (!(reply.bytes instanceof Uint8Array)) throw Error('SaveBytesMissing');
         const bytes = reply.bytes.slice();
         assertLive();
         install({ savedOperationRevision: token.operationRevision });
@@ -944,7 +944,7 @@ export function createEditor(options: CreateEditorOptions) {
           format,
           staleSnapshot: stale,
           layoutRequiresReflow:
-            typeof reply.layoutRequiresReflow === "boolean"
+            typeof reply.layoutRequiresReflow === 'boolean'
               ? reply.layoutRequiresReflow
               : undefined,
           reply: freezeDTO(copyOwned(reply, true)),
@@ -962,16 +962,16 @@ export function createEditor(options: CreateEditorOptions) {
     assertPublicMutation();
     const owned = copyOwned(message),
       settings = copyOwned(experimental);
-    if (!owned || typeof owned.kind !== "string" || typeof settings.mutation !== "boolean")
-      throw Error("InvalidExperimentalRequest");
+    if (!owned || typeof owned.kind !== 'string' || typeof settings.mutation !== 'boolean')
+      throw Error('InvalidExperimentalRequest');
     if (
-      ["load", "unlock", "enable", "save", "refresh", "undo", "redo", "splice"].includes(owned.kind)
+      ['load', 'unlock', 'enable', 'save', 'refresh', 'undo', 'redo', 'splice'].includes(owned.kind)
     )
-      throw Error("UseTypedEditorOperation");
+      throw Error('UseTypedEditorOperation');
     const operation = surfaceOperation(owned.kind);
-    if (operation && settings.mutation !== (operation === "mutation"))
-      throw Error("OperationClassificationMismatch");
-    if (!settings.mutation && operation !== "read") throw Error("UnsafeExperimentalQuery");
+    if (operation && settings.mutation !== (operation === 'mutation'))
+      throw Error('OperationClassificationMismatch');
+    if (!settings.mutation && operation !== 'read') throw Error('UnsafeExperimentalQuery');
     return (settings.mutation ? admit : enqueue)(async () => {
       if (settings.mutation) return mutate(owned, settings.token);
       requireReady(settings.token);
@@ -996,18 +996,18 @@ export function createEditor(options: CreateEditorOptions) {
       settings = copyOwned(options);
     if (
       !settings ||
-      typeof settings !== "object" ||
+      typeof settings !== 'object' ||
       Array.isArray(settings) ||
-      Object.keys(settings).some((key) => key !== "stateVersion") ||
+      Object.keys(settings).some((key) => key !== 'stateVersion') ||
       (settings.stateVersion !== undefined &&
         (!Number.isSafeInteger(settings.stateVersion) || settings.stateVersion < 0))
     )
-      throw Error("InvalidSelectionOptions");
+      throw Error('InvalidSelectionOptions');
     const version = settings.stateVersion;
     return admit(async () => {
       requireReady(owned ?? state.token);
       if (version !== undefined && version !== state.stateVersion)
-        throw Error("StaleSelectionObservation");
+        throw Error('StaleSelectionObservation');
       if (owned) validateSelection(owned, state);
       install({ selection: owned });
       return state;
@@ -1053,24 +1053,24 @@ export function createEditor(options: CreateEditorOptions) {
       expected = copyOwned(
         requestOptions === undefined
           ? state.token
-          : "token" in requestOptions
+          : 'token' in requestOptions
             ? requestOptions.token
             : requestOptions,
       );
-    if (surfaceOperation(owned.kind) !== "read")
-      return Promise.reject(Error("UnsupportedReadOperation"));
+    if (surfaceOperation(owned.kind) !== 'read')
+      return Promise.reject(Error('UnsupportedReadOperation'));
     return enqueue(() => readRequest(owned, expected));
   }
   function acquireInputSurface(hooks: InputSurfaceHooks): InputSurfaceLease {
     assertPublicMutation();
     assertLive();
-    if (surface) throw Error("InputSurfaceAlreadyAttached");
+    if (surface) throw Error('InputSurfaceAlreadyAttached');
     if (
       !hooks ||
-      typeof hooks.commitComposition !== "function" ||
-      typeof hooks.cancelComposition !== "function"
+      typeof hooks.commitComposition !== 'function' ||
+      typeof hooks.cancelComposition !== 'function'
     )
-      throw Error("InvalidInputSurfaceHooks");
+      throw Error('InvalidInputSurfaceHooks');
     const fence = new CancellationFence();
     const generation = ++surfaceEpoch;
     const record: SurfaceRecord = {
@@ -1100,18 +1100,18 @@ export function createEditor(options: CreateEditorOptions) {
           assertSurface(record);
           owned = copyOwned(message);
           expected = copyOwned(requestOptions);
-          if (expected.coordinates !== "legacy-native") throw Error("InvalidSurfaceCoordinates");
+          if (expected.coordinates !== 'legacy-native') throw Error('InvalidSurfaceCoordinates');
           operation = surfaceOperation(owned.kind);
-          if (!operation) throw Error("UnsupportedSurfaceOperation");
+          if (!operation) throw Error('UnsupportedSurfaceOperation');
         } catch (error) {
           return Promise.reject(error);
         }
         return enqueue(async () => {
           assertSurface(record);
           requireReady(expected.token, true);
-          if (operation === "read")
+          if (operation === 'read')
             return readRequest(owned, expected.token, () => assertSurface(record));
-          if (operation === "view") {
+          if (operation === 'view') {
             const ctx = context(expected.token);
             const reply = await active!.request(owned, ctx);
             verifyReply(reply, ctx);
@@ -1154,13 +1154,13 @@ export function createEditor(options: CreateEditorOptions) {
           surface = undefined;
           install({ selection: null });
         }
-        cancelComposition(record, "detach");
+        cancelComposition(record, 'detach');
       },
     });
   }
   function register<T>(set: Set<T>, listener: T): () => void {
     assertLive();
-    if (typeof listener !== "function") throw TypeError("InvalidListener");
+    if (typeof listener !== 'function') throw TypeError('InvalidListener');
     set.add(listener);
     let attached = true;
     return () => {
@@ -1182,7 +1182,7 @@ export function createEditor(options: CreateEditorOptions) {
       surface = undefined;
       detached.active = false;
       detached.fence.cancel();
-      cancelComposition(detached, "dispose");
+      cancelComposition(detached, 'dispose');
     }
     state = new EditorState(
       {
@@ -1192,7 +1192,7 @@ export function createEditor(options: CreateEditorOptions) {
         operationRevision: state.operationRevision,
         viewRevision: state.viewRevision,
         stateVersion: ++stateVersion,
-        status: "disposed",
+        status: 'disposed',
         content: state.content,
         capabilities: state.capabilities,
         nativeHistoryRevision: state.nativeHistoryRevision,
@@ -1218,7 +1218,7 @@ export function createEditor(options: CreateEditorOptions) {
         } catch (error) {
           failures.push(error);
         }
-      if (failures.length) throw new AggregateError(failures, "RuntimeDisposeFailed");
+      if (failures.length) throw new AggregateError(failures, 'RuntimeDisposeFailed');
     });
     disposePromise = Promise.all([nativeDisposal, admission.drain()]).then(() => {});
     return disposePromise;

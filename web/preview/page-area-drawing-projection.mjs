@@ -1,21 +1,21 @@
-import { drawingColumnContext } from "./drawing-column-context.mjs";
-import { projectDrawingTextPage } from "./drawing-text-page-projection.mjs";
-import { drawingFillPlan } from "./drawing-fill-plan.mjs";
-import { drawingPagePolicyError } from "./drawing-page-policy.mjs";
-import { drawingPagePlacementOptions } from "./drawing-placement.mjs";
-import { restrictDrawingLayout } from "./drawing-restricted-layout.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { selectMasterPages } from "./master-page-selection.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { inlinePictureIndex, picturePositionKey } from "./picture-inline.mjs";
+import { drawingColumnContext } from './drawing-column-context.mjs';
+import { projectDrawingTextPage } from './drawing-text-page-projection.mjs';
+import { drawingFillPlan } from './drawing-fill-plan.mjs';
+import { drawingPagePolicyError } from './drawing-page-policy.mjs';
+import { drawingPagePlacementOptions } from './drawing-placement.mjs';
+import { restrictDrawingLayout } from './drawing-restricted-layout.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { selectMasterPages } from './master-page-selection.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { inlinePictureIndex, picturePositionKey } from './picture-inline.mjs';
 const sameBox = (a, b) =>
-  a && b && ["x", "y", "width", "height"].every((field) => a[field] === b[field]);
+  a && b && ['x', 'y', 'width', 'height'].every((field) => a[field] === b[field]);
 
 /** Complete one explicit area instance without borrowing the body COLUMN box. */
 export function projectPageAreaDrawings(content, area, tables, page, measure, maxRows = 20000) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
-    tables?.state !== "tables-projected" ||
+    tables?.state !== 'tables-projected' ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
     !Number.isSafeInteger(page?.ordinal) ||
@@ -33,7 +33,7 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
       area?.drawings,
     ].every(Array.isArray)
   )
-    return fail("InvalidPageAreaDrawingProjection");
+    return fail('InvalidPageAreaDrawingProjection');
   try {
     if (!selectMasterPages(area.area, [page]).length) {
       if (
@@ -46,8 +46,8 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
           tables.overflow,
         ].some((rows) => rows.length)
       )
-        return fail("ConflictingPageAreaSelection");
-      return { ...tables, state: "objects-projected", rows: [], placedDrawings: [] };
+        return fail('ConflictingPageAreaSelection');
+      return { ...tables, state: 'objects-projected', rows: [], placedDrawings: [] };
     }
     const hosts = [...tables.anchorRows, ...tables.rows],
       prepared = [];
@@ -67,10 +67,10 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
           box.pageArea !== area.host,
       )
     )
-      return fail("ConflictingPageAreaInstance");
+      return fail('ConflictingPageAreaInstance');
     for (const drawing of area.drawings) {
       const fill = drawingFillPlan(content, drawing);
-      if (fill.state === "unavailable") return fill;
+      if (fill.state === 'unavailable') return fill;
       const policy = drawingPagePolicyError(
         drawing.source,
         drawing.source,
@@ -80,9 +80,9 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
       );
       if (policy) return fail(policy);
       if (drawing.source.group_context !== null || drawing.source.caption !== null)
-        return fail("UnsupportedPageAreaDrawingOwner");
+        return fail('UnsupportedPageAreaDrawingOwner');
       const columns = drawingColumnContext(drawing, area.paragraphs, area.paragraphFlows);
-      if (columns.state !== "selected") return columns;
+      if (columns.state !== 'selected') return columns;
       const result = projectDrawingTextPage(
         drawing,
         [],
@@ -90,12 +90,12 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
         columns.declaration,
         hosts,
         measure,
-        { ...drawingPagePlacementOptions, maxRows: maxRows - hosts.length, overflow: "reject" },
+        { ...drawingPagePlacementOptions, maxRows: maxRows - hosts.length, overflow: 'reject' },
       );
-      if (result.state !== "placed")
+      if (result.state !== 'placed')
         return {
           ...result,
-          layoutStage: "page-area-drawing-text",
+          layoutStage: 'page-area-drawing-text',
           section: drawing.section,
           paragraph: drawing.hostParagraph,
           drawingNode: drawing.drawingNode,
@@ -103,7 +103,7 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
         };
       const host = hosts.find(
         (row) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === drawing.section &&
           row.paragraph === drawing.hostParagraph &&
           row.startUnit <= drawing.anchorUnit &&
@@ -116,7 +116,7 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
         margins.length !== 4 ||
         !margins.every((v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff)
       )
-        return fail("MissingPageAreaDrawingReference");
+        return fail('MissingPageAreaDrawingReference');
       const [left, right, top, bottom] = margins.map(hwpUnitPixels),
         r = result.rectangle;
       prepared.push({
@@ -127,7 +127,7 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
         footprint: {
           section: drawing.section,
           node: drawing.drawingNode,
-          kind: "drawing",
+          kind: 'drawing',
           pageOrdinal: page.ordinal,
           rectangle: {
             x: r.x - left,
@@ -147,7 +147,7 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
           other.host.listNode === item.host.listNode,
       );
       const inventory = {
-        state: "collected",
+        state: 'collected',
         footprints: siblings.map((other) => other.footprint),
       };
       const result =
@@ -159,10 +159,10 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
               item.host.referenceBoxes.column,
             )
           : item.result;
-      if (result.state !== "placed")
+      if (result.state !== 'placed')
         return {
           ...result,
-          layoutStage: "page-area-drawing-restriction",
+          layoutStage: 'page-area-drawing-restriction',
           section: item.drawing.section,
           paragraph: item.drawing.hostParagraph,
           drawingNode: item.drawing.drawingNode,
@@ -182,15 +182,15 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
         pageArea: area.host,
         fill: item.fill,
       });
-      if (rows.length > maxRows) return fail("PageAreaDrawingProjectionLimit");
+      if (rows.length > maxRows) return fail('PageAreaDrawingProjectionLimit');
     }
     const coverage = pageParagraphCoverage(area.paragraphs, rows);
-    if (coverage.state !== "complete") return coverage;
+    if (coverage.state !== 'complete') return coverage;
     const pictures = inlinePictureIndex(area);
     for (const picture of area.pictures ?? []) {
       const hosts = rows.filter(
         (row) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === picture.section &&
           row.paragraph === picture.paragraph &&
           row.startUnit <= picture.anchorUnit &&
@@ -205,14 +205,14 @@ export function projectPageAreaDrawings(content, area, tables, page, measure, ma
             ).length === 1;
       if (!placed || hosts.length !== 1)
         return {
-          ...fail("IncompletePageAreaPictures"),
+          ...fail('IncompletePageAreaPictures'),
           section: picture.section,
           pictureNode: picture.pictureNode,
           paragraph: picture.paragraph,
           pageOrdinal: page.ordinal,
         };
     }
-    return { ...tables, state: "objects-projected", rows, placedDrawings };
+    return { ...tables, state: 'objects-projected', rows, placedDrawings };
   } catch (error) {
     return fail(error.message);
   }

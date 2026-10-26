@@ -5,8 +5,8 @@ export function paragraphCompositionProjection(paragraph, start, text) {
     !start ||
     paragraph.section !== start.section ||
     paragraph.paragraph !== start.paragraph ||
-    typeof paragraph.text !== "string" ||
-    typeof text !== "string" ||
+    typeof paragraph.text !== 'string' ||
+    typeof text !== 'string' ||
     !text.isWellFormed() ||
     text.length > 4194304 ||
     !Number.isSafeInteger(start.unit) ||
@@ -20,7 +20,7 @@ export function paragraphCompositionProjection(paragraph, start, text) {
     section: start.section,
     paragraph: start.paragraph,
     unit: start.unit,
-    affinity: "forward",
+    affinity: 'forward',
   };
   return {
     draft: { section: start.section, paragraph: start.paragraph, text: prefix + text },

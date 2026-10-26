@@ -1,11 +1,11 @@
-import { validateEquationSources } from "./hwpx-equation-sources.mjs";
+import { validateEquationSources } from './hwpx-equation-sources.mjs';
 export function decodeEquationScripts(bytes) {
   const fail = () => {
-    throw new Error("InvalidHwpxEquationScripts");
+    throw new Error('InvalidHwpxEquationScripts');
   };
   let value;
   try {
-    value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }
@@ -29,7 +29,7 @@ export function decodeEquationScripts(bytes) {
       if (row.value !== null) return fail();
       continue;
     }
-    if (typeof row.value !== "string" || !row.value.isWellFormed()) return fail();
+    if (typeof row.value !== 'string' || !row.value.isWellFormed()) return fail();
     const count = encode.encode(row.value).length;
     if (count > 0xffffffff - total) return fail();
     total += count;

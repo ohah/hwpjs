@@ -1,12 +1,12 @@
 // Read-only policy evidence. Clearing bit 2 below is test-only isolation of the
 // existing decoded inspector, never a product acceptance path or file rewrite.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { inflateRawSync } from "node:zlib";
-import { distributionSamples } from "./distribution.mjs";
-import { distributionOracle, word } from "./distribution-oracle.mjs";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { inflateRawSync } from 'node:zlib';
+import { distributionSamples } from './distribution.mjs';
+import { distributionOracle, word } from './distribution-oracle.mjs';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
 const expected = [
   {
     flags: 5,
@@ -41,18 +41,18 @@ const expected = [
     viewRecords: 706,
   },
 ];
-const digest = (b) => createHash("sha256").update(b).digest("hex");
+const digest = (b) => createHash('sha256').update(b).digest('hex');
 export function distributionPolicyEvidence(call, cfb) {
   return distributionSamples.map((name, index) => {
-    const file = readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url));
+    const file = readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url));
     cfb.parse(file, { strict: true });
     const nodes = cfb.document().nodes,
-      h = Buffer.from(cfb.findExact("/FileHeader").content),
+      h = Buffer.from(cfb.findExact('/FileHeader').content),
       original = Buffer.from(h),
       flags = h.readUInt32LE(36);
     assert.equal(flags, expected[index].flags);
     const decode = (b) => (flags & 1 ? inflateRawSync(b) : Buffer.from(b));
-    const doc = decode(cfb.findExact("/DocInfo").content);
+    const doc = decode(cfb.findExact('/DocInfo').content);
     const sections = (root) => {
       const parent = nodes.findIndex((n) => n.parent === 0 && n.name === root);
       assert.ok(parent >= 0);
@@ -60,8 +60,8 @@ export function distributionPolicyEvidence(call, cfb) {
         .filter((n) => n.parent === parent && /^Section\d+$/.test(n.name))
         .map((n) => {
           const raw = Buffer.from(n.content);
-          const bytes = root === "ViewText" ? distributionOracle(raw) : decode(raw);
-          if (root === "ViewText")
+          const bytes = root === 'ViewText' ? distributionOracle(raw) : decode(raw);
+          if (root === 'ViewText')
             assert.deepEqual(
               call(
                 99,
@@ -78,8 +78,8 @@ export function distributionPolicyEvidence(call, cfb) {
         })
         .sort((a, b) => a.index - b.index);
     };
-    const body = sections("BodyText"),
-      view = sections("ViewText");
+    const body = sections('BodyText'),
+      view = sections('ViewText');
     const shape = {
       flags,
       bodyBytes: body.reduce((n, s) => n + s.bytes.length, 0),
@@ -98,17 +98,17 @@ export function distributionPolicyEvidence(call, cfb) {
     if (index === 2)
       assert.throws(
         () => call(24, decodedDocumentInput(diagnosticHeader, doc, body)),
-        (e) => e?.constructor === Error && e.message === "SectionCountMismatch",
+        (e) => e?.constructor === Error && e.message === 'SectionCountMismatch',
       );
     else call(24, decodedDocumentInput(diagnosticHeader, doc, body));
     if (flags & 4)
       assert.throws(
         () => call(25, Buffer.concat([word(67108864), file])),
-        (e) => e?.constructor === Error && e.message === "UnsupportedDistribution",
+        (e) => e?.constructor === Error && e.message === 'UnsupportedDistribution',
       );
     else call(25, Buffer.concat([word(67108864), file]));
     assert.deepEqual(h, original);
-    assert.deepEqual(Buffer.from(cfb.findExact("/FileHeader").content), original);
+    assert.deepEqual(Buffer.from(cfb.findExact('/FileHeader').content), original);
     return {
       name,
       sha256: digest(file),

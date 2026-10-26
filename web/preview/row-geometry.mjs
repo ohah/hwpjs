@@ -1,8 +1,8 @@
 /** Shared CSS-pixel row geometry, with compatibility for numeric-only layouts. */
-import { affinePoint, inverseAffine } from "./affine-point-geometry.mjs";
-import { rowPageClipContains } from "./row-page-clip.mjs";
-import { sameCreatedCell } from "./created-cell-address.mjs";
-import { topTablePaintRowIndex } from "./table-text-paint-order.mjs";
+import { affinePoint, inverseAffine } from './affine-point-geometry.mjs';
+import { rowPageClipContains } from './row-page-clip.mjs';
+import { sameCreatedCell } from './created-cell-address.mjs';
+import { topTablePaintRowIndex } from './table-text-paint-order.mjs';
 
 export const DEFAULT_ROW_HEIGHT = 28;
 export const DEFAULT_TEXT_HEIGHT = 20;
@@ -14,15 +14,15 @@ export const rowTextHeight = (row) => row.textHeight ?? DEFAULT_TEXT_HEIGHT;
 export const rowTextTop = (row) => row.textTop ?? TEXT_TOP;
 // Ink/input extent is independent of the distance to the following line.
 export const rowVisualHeight = (row) =>
-  row.kind === "text"
+  row.kind === 'text'
     ? Math.max(rowHeight(row), rowTextTop(row) + rowTextHeight(row))
     : rowHeight(row);
 export const rowLeft = (row) => (row.x ?? TEXT_LEFT) + (row.paragraphX ?? 0);
 
 export function isZeroAdvanceTextAnchor(row) {
   return (
-    row?.kind === "text" &&
-    row.text === "" &&
+    row?.kind === 'text' &&
+    row.text === '' &&
     !row.numberPrefix &&
     row.height === 0 &&
     Number.isSafeInteger(row.startUnit) &&
@@ -55,7 +55,7 @@ export function rowAtPoint(layout, x, y) {
     const point = rowLocalPoint(row, x, y);
     return (
       point &&
-      row.kind === "text" &&
+      row.kind === 'text' &&
       point[0] >= rowLeft(row) &&
       point[0] < rowLeft(row) + row.width &&
       point[1] >= rowTop(row, index) &&
@@ -101,7 +101,7 @@ export function rowAtPoint(layout, x, y) {
     if (!rowPageClipContains(row, x, y)) continue;
     if ((cell.createdCell || row.createdCell) && !sameCreatedCell(row, cell)) continue;
     if (
-      row.kind !== "text" ||
+      row.kind !== 'text' ||
       !(row.editable || row.selectable) ||
       row.section !== cell.section ||
       row.tableNode !== cell.tableNode ||

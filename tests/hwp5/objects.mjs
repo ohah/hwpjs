@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { checkBody } from "./body.mjs";
+import assert from 'node:assert/strict';
+import { checkBody } from './body.mjs';
 const ids = [0x74626c20, 0x67736f20, 0x65716564];
 const word = (n) => {
   const b = Buffer.alloc(4);

@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { xmlNamePattern, xmlReferenceExpected } from "./xml-reference.mjs";
-import { xmlTagEvidence } from "./xml-tag-evidence.mjs";
+import assert from 'node:assert/strict';
+import { xmlNamePattern, xmlReferenceExpected } from './xml-reference.mjs';
+import { xmlTagEvidence } from './xml-tag-evidence.mjs';
 // Independent whole-document traversal; reuses only the existing JS token oracles.
 export function xmlDocumentEvidence(original, byteLength, hooks = {}) {
-  const text = original.replace(/\r\n?/g, "\n"),
+  const text = original.replace(/\r\n?/g, '\n'),
     stack = [];
   let at = 0,
     root = false,
@@ -18,39 +18,39 @@ export function xmlDocumentEvidence(original, byteLength, hooks = {}) {
     pi = 0,
     depth = 0;
   if (/^<\?xml[ \t\n]/.test(text)) {
-    const end = text.indexOf("?>");
+    const end = text.indexOf('?>');
     assert.ok(end >= 0);
     at = end + 2;
   }
   while (at < text.length) {
     events++;
-    if (text.startsWith("<!--", at)) {
-      const end = text.indexOf("-->", at + 4);
+    if (text.startsWith('<!--', at)) {
+      const end = text.indexOf('-->', at + 4);
       assert.ok(end >= 0);
       const body = text.slice(at + 4, end);
-      assert.ok(!body.includes("--") && !body.endsWith("-"));
+      assert.ok(!body.includes('--') && !body.endsWith('-'));
       comments++;
       at = end + 3;
-    } else if (text.startsWith("<![CDATA[", at)) {
+    } else if (text.startsWith('<![CDATA[', at)) {
       assert.ok(stack.length);
-      const end = text.indexOf("]]>", at + 9);
+      const end = text.indexOf(']]>', at + 9);
       assert.ok(end >= 0);
       // oxlint-disable-next-line unicorn/no-useless-spread -- CDATA 문자의 Unicode scalar 수를 계산하므로 UTF-16 코드유닛 length로 바꾸지 않는다.
       scalars += [...text.slice(at + 9, end)].length;
       cdata++;
       at = end + 3;
-    } else if (text.startsWith("<?", at)) {
-      const end = text.indexOf("?>", at + 2);
+    } else if (text.startsWith('<?', at)) {
+      const end = text.indexOf('?>', at + 2);
       assert.ok(end >= 0);
       const body = text.slice(at + 2, end),
         name = xmlNamePattern.exec(body)?.[0];
-      assert.ok(name && name.toLowerCase() !== "xml");
+      assert.ok(name && name.toLowerCase() !== 'xml');
       assert.ok(body.length === name.length || /[ \t\n]/.test(body[name.length]));
       hooks.pi?.(name);
       pi++;
       at = end + 2;
-    } else if (text[at] === "<") {
-      assert.ok(!text.startsWith("<!", at));
+    } else if (text[at] === '<') {
+      assert.ok(!text.startsWith('<!', at));
       const tag = xmlTagEvidence(text.slice(at), 0);
       assert.equal(tag.unresolved, 0);
       hooks.tag?.(tag);
@@ -70,24 +70,24 @@ export function xmlDocumentEvidence(original, byteLength, hooks = {}) {
       }
       at += tag.units;
     } else {
-      let end = text.indexOf("<", at);
+      let end = text.indexOf('<', at);
       if (end < 0) end = text.length;
       const body = text.slice(at, end);
       if (!stack.length) assert.ok(/^[ \t\n]*$/.test(body));
       else {
         let i = 0;
         while (i < body.length) {
-          if (body[i] === "&") {
+          if (body[i] === '&') {
             const ref = xmlReferenceExpected(body.slice(i));
             assert.notEqual(ref.kind, 3);
             references++;
             scalars++;
             i += ref.token.length;
           } else {
-            let next = body.indexOf("&", i);
+            let next = body.indexOf('&', i);
             if (next < 0) next = body.length;
             const literal = body.slice(i, next);
-            assert.ok(!literal.includes("]]>"));
+            assert.ok(!literal.includes(']]>'));
             scalars += [...literal].length;
             i = next;
           }

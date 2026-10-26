@@ -1,16 +1,16 @@
-export function decodeTablePlacements(bytes, format = "hwpx") {
+export function decodeTablePlacements(bytes, format = 'hwpx') {
   const fail = () => {
-    throw new Error("InvalidTablePlacements");
+    throw new Error('InvalidTablePlacements');
   };
-  if (!["hwp5", "hwpx"].includes(format) || !(bytes instanceof Uint8Array) || bytes.length < 8)
+  if (!['hwp5', 'hwpx'].includes(format) || !(bytes instanceof Uint8Array) || bytes.length < 8)
     return fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),
     count = view.getUint32(4, true);
   const magic = view.getUint32(0, true),
-    hasAnchor = format === "hwpx" && magic === 0x32505448,
+    hasAnchor = format === 'hwpx' && magic === 0x32505448,
     stride = hasAnchor ? 28 : 20;
   if (
-    (!hasAnchor && magic !== (format === "hwp5" ? 0x35505448 : 0x31505448)) ||
+    (!hasAnchor && magic !== (format === 'hwp5' ? 0x35505448 : 0x31505448)) ||
     count > 100000 ||
     bytes.length !== 8 + count * stride
   )
@@ -21,7 +21,7 @@ export function decodeTablePlacements(bytes, format = "hwpx") {
       values = Array.from({ length: 5 }, (_, column) => view.getUint32(at + column * 4, true));
     const [tableNode, paragraph, parentTable, parentList, flags] = values;
     if (
-      (format === "hwpx" && !paragraph) ||
+      (format === 'hwpx' && !paragraph) ||
       flags > 1 ||
       seen.has(tableNode) ||
       (!flags && (parentTable || parentList)) ||

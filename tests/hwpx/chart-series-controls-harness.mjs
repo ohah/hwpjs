@@ -1,7 +1,7 @@
-import { createChartControls } from "../../web/preview/chart-controls.mjs";
+import { createChartControls } from '../../web/preview/chart-controls.mjs';
 export function chartSeriesControlsHarness() {
   const element = () => ({
-    value: "",
+    value: '',
     listeners: new Map(),
     addEventListener(kind, fn) {
       this.listeners.set(kind, fn);
@@ -11,7 +11,7 @@ export function chartSeriesControlsHarness() {
     },
     replaceChildren(...children) {
       this.children = children;
-      this.value = children[0]?.value ?? "";
+      this.value = children[0]?.value ?? '';
     },
   });
   const form = element(),
@@ -21,7 +21,7 @@ export function chartSeriesControlsHarness() {
     kinds = element(),
     input = element(),
     note = element();
-  kinds.value = "points";
+  kinds.value = 'points';
   form.ownerDocument = { createElement: element };
   const requests = [],
     state = { ready: true };

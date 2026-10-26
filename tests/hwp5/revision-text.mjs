@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { paragraphEvidence, rangeFilteredCandidate } from "./line-cache-evidence.mjs";
-import { revisionGroupEvidence } from "./revision-groups.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { paragraphEvidence, rangeFilteredCandidate } from './line-cache-evidence.mjs';
+import { revisionGroupEvidence } from './revision-groups.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -76,7 +76,7 @@ function expected(bytes) {
 export { input as revisionTextInput, expected as revisionTextEvidence };
 function para(level, s, merge = 0, remove = false) {
   const h = Buffer.alloc(24),
-    b = Buffer.from(s, "utf16le");
+    b = Buffer.from(s, 'utf16le');
   h.writeUInt32LE(s.length);
   h.writeUInt16LE(merge, 22);
   if (remove) h.writeUInt16LE(1, 14);
@@ -90,11 +90,11 @@ function para(level, s, merge = 0, remove = false) {
 }
 export function revisionTextEdges(call) {
   const b = Buffer.concat([
-      para(0, "A\r", 0, true),
+      para(0, 'A\r', 0, true),
       frame(72, 1, Buffer.concat([w(2), w(0)])),
-      para(1, "X\r", 0, true),
-      para(1, "Y\r", 1),
-      para(0, "B\r", 1),
+      para(1, 'X\r', 0, true),
+      para(1, 'Y\r', 1),
+      para(0, 'B\r', 1),
     ]),
     e = expected(b);
   let accepted = 0,
@@ -154,7 +154,7 @@ export function revisionTextEdges(call) {
   const shifted = Buffer.concat([frame(255, 0, Buffer.alloc(0)), b]);
   assert.deepEqual(call(102, input(shifted)), expected(shifted).wire);
   accepted++;
-  for (const bytes of [para(0, "\r", 0, true), para(0, "")]) {
+  for (const bytes of [para(0, '\r', 0, true), para(0, '')]) {
     const e = expected(bytes);
     assert.deepEqual(
       call(102, input(bytes, undefined, { input: e.inputBytes, output: 0, ranges: e.ranges })),
@@ -167,21 +167,21 @@ export function revisionTextEdges(call) {
 export function revisionTextActual(call, cfb) {
   const results = [];
   for (const name of [
-    "issue5169_viewtext_changetracking.hwp",
-    "task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+    'issue5169_viewtext_changetracking.hwp',
+    'task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
   ]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const version = cfb.findExact("/FileHeader").content.readUInt32LE(32),
-      read = (kind) => inflateRawSync(cfb.findExact("/" + kind + "/Section0").content);
-    const bodyRoots = paragraphEvidence(read("BodyText")).filter((p) => p.level === 0);
-    for (const kind of ["BodyText", "ViewText"]) {
+    const version = cfb.findExact('/FileHeader').content.readUInt32LE(32),
+      read = (kind) => inflateRawSync(cfb.findExact('/' + kind + '/Section0').content);
+    const bodyRoots = paragraphEvidence(read('BodyText')).filter((p) => p.level === 0);
+    for (const kind of ['BodyText', 'ViewText']) {
       const b = read(kind),
         e = expected(b),
         wire = input(b, version, { cr: 1 }),
         out = call(102, wire);
-      assert.deepEqual(out, e.wire, name + "/" + kind);
+      assert.deepEqual(out, e.wire, name + '/' + kind);
       assert.deepEqual(
         call(
           102,
@@ -195,20 +195,20 @@ export function revisionTextActual(call, cfb) {
         out,
       );
       for (const [key, value, error] of [
-        ["input", e.inputBytes, /RevisionProjectionInputLimit/],
-        ["output", e.outputBytes, /RevisionProjectionOutputLimit/],
-        ["ranges", e.ranges, /RevisionProjectionRangeLimit/],
+        ['input', e.inputBytes, /RevisionProjectionInputLimit/],
+        ['output', e.outputBytes, /RevisionProjectionOutputLimit/],
+        ['ranges', e.ranges, /RevisionProjectionRangeLimit/],
       ])
         if (value > 0) {
           assert.throws(() => call(102, input(b, version, { cr: 1, [key]: value - 1 })), error);
           assert.deepEqual(call(102, wire), out);
         }
-      if (name.startsWith("issue5169") && kind === "ViewText") {
+      if (name.startsWith('issue5169') && kind === 'ViewText') {
         const roots = e.groups.filter((g) => g.flow === 0);
         assert.equal(roots.length, 99);
         assert.equal(bodyRoots.length, 99);
         roots.forEach((g, i) =>
-          assert.deepEqual(g.text, bodyRoots[i].text ?? Buffer.from("\r", "utf16le")),
+          assert.deepEqual(g.text, bodyRoots[i].text ?? Buffer.from('\r', 'utf16le')),
         );
       }
       results.push({

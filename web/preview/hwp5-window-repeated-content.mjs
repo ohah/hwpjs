@@ -1,8 +1,8 @@
-import { hwp5WindowFlows } from "./hwp5-window-flows.mjs";
-import { validateHwp5PageAreaSources } from "../../js/hwp5-page-area-sources.mjs";
-import { validateHwp5MasterPageSources } from "../../js/hwp5-master-page-sources.mjs";
-import { attachHwp5PageAreas } from "./hwp5-page-area-content.mjs";
-import { attachHwp5MasterPages } from "./hwp5-master-page-content.mjs";
+import { hwp5WindowFlows } from './hwp5-window-flows.mjs';
+import { validateHwp5PageAreaSources } from '../../js/hwp5-page-area-sources.mjs';
+import { validateHwp5MasterPageSources } from '../../js/hwp5-master-page-sources.mjs';
+import { attachHwp5PageAreas } from './hwp5-page-area-content.mjs';
+import { attachHwp5MasterPages } from './hwp5-master-page-content.mjs';
 
 export function attachHwp5WindowRepeatedAreas(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
@@ -14,7 +14,7 @@ export function attachHwp5WindowRepeatedAreas(editor, content) {
     const masterPages = validateHwp5MasterPageSources(editor.masterPageSources(section));
     for (const source of [
       ...pageAreas,
-      ...masterPages.map((row) => ({ ...row, kind: "master_page" })),
+      ...masterPages.map((row) => ({ ...row, kind: 'master_page' })),
     ]) {
       const members = flows.filter(
         (row) =>
@@ -26,7 +26,7 @@ export function attachHwp5WindowRepeatedAreas(editor, content) {
         (source.paragraph_count !== 0 && !members.length) ||
         members.some((row) => !displayed.has(`${section}:${row.paragraph}`))
       )
-        throw new Error("MissingHwp5WindowRepeatedBody");
+        throw new Error('MissingHwp5WindowRepeatedBody');
     }
     areas.set(section, pageAreas);
     masters.set(section, masterPages);

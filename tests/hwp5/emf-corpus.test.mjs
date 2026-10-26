@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { deflateRawSync, inflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync, inflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
 import {
   decodeEmfReport,
   emfSignature,
   observeHwpEmf,
   summarizeEmfCorpus,
-} from "./emf-corpus-evidence.mjs";
+} from './emf-corpus-evidence.mjs';
 
 function emf() {
   const b = Buffer.alloc(604);
@@ -78,7 +78,7 @@ function emf() {
 
 async function probes() {
   const module = await WebAssembly.compile(
-    readFileSync(process.env.HWPJS_TEST_HWP5_PROBE ?? "zig-out/bin/hwp5-probe.wasm"),
+    readFileSync(process.env.HWPJS_TEST_HWP5_PROBE ?? 'zig-out/bin/hwp5-probe.wasm'),
   );
   const { exports: w } = await WebAssembly.instantiate(module, {});
   return {
@@ -98,46 +98,46 @@ async function probes() {
   };
 }
 
-function replaceFirstJpeg(cfb, source, decoded, extension = "emf") {
+function replaceFirstJpeg(cfb, source, decoded, extension = 'emf') {
   cfb.parse(source, { strict: true });
   const model = cfb.document();
   cfb.close();
-  const doc = model.nodes.find((n) => n.parent === 0 && n.name === "DocInfo"),
+  const doc = model.nodes.find((n) => n.parent === 0 && n.name === 'DocInfo'),
     plain = inflateRawSync(doc.content);
-  const jpg = Buffer.from("jpg", "utf16le"),
+  const jpg = Buffer.from('jpg', 'utf16le'),
     at = plain.indexOf(jpg);
   assert.notEqual(at, -1);
-  Buffer.from(extension, "utf16le").copy(plain, at);
+  Buffer.from(extension, 'utf16le').copy(plain, at);
   doc.content = deflateRawSync(plain);
-  const parent = model.nodes.findIndex((n) => n.kind === 1 && n.name === "BinData");
-  const target = model.nodes.find((n) => n.parent === parent && n.name === "BIN0001.jpg");
+  const parent = model.nodes.findIndex((n) => n.kind === 1 && n.name === 'BinData');
+  const target = model.nodes.find((n) => n.parent === parent && n.name === 'BIN0001.jpg');
   assert.ok(target);
   target.name = `BIN0001.${extension}`;
   target.content = deflateRawSync(decoded);
   return cfb.write(model);
 }
 
-test("EMF signature and report framing reject near misses", () => {
+test('EMF signature and report framing reject near misses', () => {
   const bytes = emf();
   assert.equal(emfSignature(bytes), true);
   for (let n = 0; n < 44; n++) assert.equal(emfSignature(bytes.subarray(0, n)), false);
   const bad = Buffer.from(bytes);
   bad[40] ^= 1;
   assert.equal(emfSignature(bad), false);
-  assert.throws(() => emfSignature("x"), TypeError);
+  assert.throws(() => emfSignature('x'), TypeError);
   for (const report of [Buffer.alloc(0), Buffer.alloc(67), Buffer.alloc(69)])
     assert.throws(() => decodeEmfReport(report), /InvalidEmfReport/);
 });
 
-test("real HWP CFB and compressed BinData carry EMF into the Zig validator", async () => {
+test('real HWP CFB and compressed BinData carry EMF into the Zig validator', async () => {
   const cfb = await createCfbReader(
-      readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+      readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
     ),
     probe = await probes();
   try {
-    const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/sample-5017-pics.hwp");
+    const source = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/sample-5017-pics.hwp');
     const original = observeHwpEmf(cfb, source, (b) => probe.call(b));
-    assert.equal(original.state, "observed");
+    assert.equal(original.state, 'observed');
     assert.deepEqual(original.evidence.items, []);
     const embedded = observeHwpEmf(cfb, replaceFirstJpeg(cfb, source, emf()), (b) => probe.call(b));
     assert.equal(embedded.evidence.items.length, 1);
@@ -184,27 +184,27 @@ test("real HWP CFB and compressed BinData carry EMF into the Zig validator", asy
   }
 });
 
-test("declared EMF without its exact signature survives the real HWP path as rejection evidence", async () => {
+test('declared EMF without its exact signature survives the real HWP path as rejection evidence', async () => {
   const cfb = await createCfbReader(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   try {
-    const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/sample-5017-pics.hwp");
+    const source = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/sample-5017-pics.hwp');
     cfb.parse(source, { strict: true });
-    const original = Buffer.from(cfb.findExact("/BinData/BIN0001.jpg").content);
+    const original = Buffer.from(cfb.findExact('/BinData/BIN0001.jpg').content);
     cfb.close();
     const result = observeHwpEmf(cfb, replaceFirstJpeg(cfb, source, inflateRawSync(original)), () =>
-      assert.fail("invalid signature reached Zig parser"),
+      assert.fail('invalid signature reached Zig parser'),
     );
     assert.equal(result.evidence.binData, 2);
     assert.equal(result.evidence.items.length, 1);
     assert.deepEqual(result.evidence.items[0], {
-      path: "/BinData/BIN0001.emf",
-      extension: "emf",
+      path: '/BinData/BIN0001.emf',
+      extension: 'emf',
       bytes: 15895,
       signature: false,
       declared: true,
-      error: "InvalidEmfSignature",
+      error: 'InvalidEmfSignature',
     });
     assert.equal(summarizeEmfCorpus([{ result }]).declaredWithoutSignature, 1);
   } finally {

@@ -1,6 +1,6 @@
-import { layoutContent } from "./layout.mjs";
-import { tableGrid, hwpUnitsToPixels } from "./table-grid.mjs";
-import { tableInsets } from "./table-insets.mjs";
+import { layoutContent } from './layout.mjs';
+import { tableGrid, hwpUnitsToPixels } from './table-grid.mjs';
+import { tableInsets } from './table-insets.mjs';
 
 // Local display flow; identity addresses never become source node indices.
 export function layoutCreatedTable(
@@ -8,15 +8,15 @@ export function layoutCreatedTable(
   measure,
   { x = 20, y = 0, maxRows = 20000, compactLines, minimumRowHeight } = {},
 ) {
-  if (typeof table?.identity !== "string" || !Number.isInteger(table.section) || table.section < 0)
-    throw new Error("InvalidCreatedTableLayout");
-  if (!Number.isInteger(maxRows) || maxRows < 1) throw new Error("InvalidCreatedTableLayout");
-  const native = ["hwp5", "hwpx"].includes(table.displayFormat),
+  if (typeof table?.identity !== 'string' || !Number.isInteger(table.section) || table.section < 0)
+    throw new Error('InvalidCreatedTableLayout');
+  if (!Number.isInteger(maxRows) || maxRows < 1) throw new Error('InvalidCreatedTableLayout');
+  const native = ['hwp5', 'hwpx'].includes(table.displayFormat),
     insets = tableInsets(native ? table.displayInsets : 6),
     minimumRow = minimumRowHeight ?? (native ? 0 : 1),
     compact = compactLines ?? true;
-  if (!insets || typeof compact !== "boolean" || !Number.isFinite(minimumRow) || minimumRow < 0)
-    throw new Error("InvalidCreatedTableLayout");
+  if (!insets || typeof compact !== 'boolean' || !Number.isFinite(minimumRow) || minimumRow < 0)
+    throw new Error('InvalidCreatedTableLayout');
   const cells = table.cells.map((cell) => ({ ...cell, rowSpan: 1, columnSpan: 1 }));
   const columnWidths = cells.slice(0, table.columns).map((cell) => hwpUnitsToPixels(cell.width));
   tableGrid({ ...table, cells }, { x, y, columnWidths, minColumn: 1, minRow: 1 });
@@ -31,13 +31,13 @@ export function layoutCreatedTable(
     text: cell.text,
     editable: true,
     selectable: true,
-    label: "",
+    label: '',
     characterRanges: [{ start: 0, end: cell.text.length, charShapeId: table.resources.character }],
   }));
   const flows = [];
   let count = 0;
   for (const [index, paragraph] of paragraphs.entries()) {
-    if (count === maxRows) throw new Error("CreatedTableLayoutRowBudgetExceeded");
+    if (count === maxRows) throw new Error('CreatedTableLayoutRowBudgetExceeded');
     const flow = layoutContent(
       { paragraphs: [paragraph], limited: false },
       Math.max(1, columnWidths[cells[index].column] - insets.left - insets.right),
@@ -45,9 +45,9 @@ export function layoutCreatedTable(
       maxRows - count,
       { compactLines: compact, documentBody: true, includeTerminalAfter: false },
     );
-    const textRows = native ? flow.rows : flow.rows.filter((row) => row.kind === "text");
+    const textRows = native ? flow.rows : flow.rows.filter((row) => row.kind === 'text');
     if (flow.limited || count + textRows.length > maxRows)
-      throw new Error("CreatedTableLayoutRowBudgetExceeded");
+      throw new Error('CreatedTableLayoutRowBudgetExceeded');
     count += textRows.length;
     flows.push({ ...flow, rows: textRows });
   }
@@ -94,6 +94,6 @@ export function layoutCreatedTable(
     height: grid.height,
     limited: false,
     spatialRows: true,
-    mode: "created-table-local-flow",
+    mode: 'created-table-local-flow',
   };
 }

@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { decodedDocumentInput } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { decodedDocumentInput } from './documents.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -13,13 +13,13 @@ const exactError = (name) => (e) => e?.constructor === Error && e.message === na
 
 export function videoValidationActual(call, cfb) {
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/20250130-hongbo.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/20250130-hongbo.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const nodes = cfb.document().nodes;
-  const header = Buffer.from(cfb.findExact("/FileHeader").content);
-  const info = inflateRawSync(cfb.findExact("/DocInfo").content);
-  const body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+  const header = Buffer.from(cfb.findExact('/FileHeader').content);
+  const info = inflateRawSync(cfb.findExact('/DocInfo').content);
+  const body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const sections = nodes
     .filter((n) => n.parent === body && /^Section\d+$/.test(n.name))
     .map((n) => ({ index: Number(n.name.slice(7)), bytes: inflateRawSync(n.content) }));
@@ -67,7 +67,7 @@ export function videoValidationActual(call, cfb) {
       accepted++;
       assert.throws(
         () => call(mode, Buffer.concat([Buffer.of(3), input])),
-        exactError("InvalidMode"),
+        exactError('InvalidMode'),
       );
       rejected++;
     }
@@ -76,7 +76,7 @@ export function videoValidationActual(call, cfb) {
       for (const [mode, input] of inputs(payload.subarray(0, cut))) {
         assert.throws(
           () => call(mode, Buffer.concat([selection, input])),
-          exactError("UnexpectedEnd"),
+          exactError('UnexpectedEnd'),
         );
         rejected++;
         assert.deepEqual(call(302, original), empty);

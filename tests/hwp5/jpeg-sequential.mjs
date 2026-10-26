@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { unstuff, huffmanCodewords, encodeCodes } from "./jpeg-codec.mjs";
-import { jpegFrameFixture } from "./jpeg-headers.mjs";
+import assert from 'node:assert/strict';
+import { unstuff, huffmanCodewords, encodeCodes } from './jpeg-codec.mjs';
+import { jpegFrameFixture } from './jpeg-headers.mjs';
 
 const sized = (b) => {
   const n = Buffer.alloc(2);
@@ -32,18 +32,18 @@ export function jpegCoefficientReader(raw, skip = 0) {
     const s = read(width);
     return width === 0
       ? 0
-      : s[0] === "1"
+      : s[0] === '1'
         ? parseInt(s, 2)
-        : -parseInt([...s].map((n) => (n === "0" ? "1" : "0")).join(""), 2);
+        : -parseInt([...s].map((n) => (n === '0' ? '1' : '0')).join(''), 2);
   };
   const lookup = (t) => new Map(huffmanCodewords(t).map((c) => [c.bits, c.symbol]));
   const symbol = (map) => {
-    let prefix = "";
+    let prefix = '';
     for (let n = 0; n < 16; n++) {
       prefix += read(1);
       if (map.has(prefix)) return map.get(prefix);
     }
-    assert.fail("invalid prefix");
+    assert.fail('invalid prefix');
   };
   const cache = new Map(),
     codes = (t) => {
@@ -131,8 +131,8 @@ export function jpegSequentialEdges(call) {
     for (let width = 0; width <= precision + 3; width++) {
       const dc = single(0, width);
       for (let value = 0; value < 2 ** width; value++) {
-        const magnitude = width ? value.toString(2).padStart(width, "0") : "";
-        check(encodeCodes(["0", magnitude, "0"]), {
+        const magnitude = width ? value.toString(2).padStart(width, '0') : '';
+        check(encodeCodes(['0', magnitude, '0']), {
           frame,
           code,
           dc,
@@ -148,11 +148,11 @@ export function jpegSequentialEdges(call) {
         width = rs % 16;
       const options = { frame, code, dc: dc0, ac, finish: true };
       if (width === 0 || width > precision + 2) {
-        reject(encodeCodes(["0", "00", "0".repeat(width), "01"]), options, /InvalidJpegAcSymbol/);
+        reject(encodeCodes(['0', '00', '0'.repeat(width), '01']), options, /InvalidJpegAcSymbol/);
         continue;
       }
-      for (const magnitude of ["0".repeat(width), "1".repeat(width)])
-        check(encodeCodes(["0", "00", magnitude, "01"]), options);
+      for (const magnitude of ['0'.repeat(width), '1'.repeat(width)])
+        check(encodeCodes(['0', '00', magnitude, '01']), options);
     }
     for (let category = precision + 4; category < 256; category++)
       reject(
@@ -165,16 +165,16 @@ export function jpegSequentialEdges(call) {
   const ac = Buffer.from([16, 0, 0, 4, ...Array(13).fill(0), 0, 1, 240, 225]);
   for (let skip = 0; skip < 8; skip++) {
     for (const codes of [
-      ["00", "000"],
-      ["01", "1", "010", "010", "010", "011", "0"],
-      ["00", "010", "010", "011", "1", "010"],
+      ['00', '000'],
+      ['01', '1', '010', '010', '010', '011', '0'],
+      ['00', '010', '010', '011', '1', '010'],
     ])
       check(encodeCodes(codes, skip), { dc, ac, skip, predictor: -19, finish: true });
   }
-  reject(encodeCodes(["00", "010", "010", "010", "010"]), { dc, ac }, /InvalidJpegAcRun/);
-  reject(encodeCodes(["01", "1"]), { dc, ac, predictor: 2147483647 }, /InvalidJpegDcPredictor/);
-  reject(encodeCodes(["01", "0"]), { dc, ac, predictor: -2147483648 }, /InvalidJpegDcPredictor/);
-  const complete = encodeCodes(["01", "1", "010", "010", "010", "011", "0"]);
+  reject(encodeCodes(['00', '010', '010', '010', '010']), { dc, ac }, /InvalidJpegAcRun/);
+  reject(encodeCodes(['01', '1']), { dc, ac, predictor: 2147483647 }, /InvalidJpegDcPredictor/);
+  reject(encodeCodes(['01', '0']), { dc, ac, predictor: -2147483648 }, /InvalidJpegDcPredictor/);
+  const complete = encodeCodes(['01', '1', '010', '010', '010', '011', '0']);
   for (let n = 0; n < complete.length; n++)
     reject(complete.subarray(0, n), { dc, ac }, /UnexpectedEnd/);
   for (let n = 0; n < 9; n++)

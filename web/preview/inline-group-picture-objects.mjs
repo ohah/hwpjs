@@ -1,13 +1,13 @@
-import { inlinePictureIndex, picturePositionKey } from "./picture-inline.mjs";
-import { hasPictureSourceErrors } from "./picture-source-validation.mjs";
-import { selectInlineGroupLayeredPictures } from "./inline-group-layered-pictures.mjs";
-import { sourceInlineCellPictureOwnership } from "./source-inline-cell-picture-ownership.mjs";
+import { inlinePictureIndex, picturePositionKey } from './picture-inline.mjs';
+import { hasPictureSourceErrors } from './picture-source-validation.mjs';
+import { selectInlineGroupLayeredPictures } from './inline-group-layered-pictures.mjs';
+import { sourceInlineCellPictureOwnership } from './source-inline-cell-picture-ownership.mjs';
 
 // Standalone inline pictures share body reservation; grouped pictures keep their root.
 export function inlineGroupPictureObjects(content, section, { sourceTables } = {}) {
   const fail = (picture, policyReason) => ({
-    state: "unavailable",
-    error: "UnsupportedInlineGroupPictures",
+    state: 'unavailable',
+    error: 'UnsupportedInlineGroupPictures',
     policyReason,
     section: picture?.section,
     paragraph: picture?.paragraph,
@@ -18,11 +18,11 @@ export function inlineGroupPictureObjects(content, section, { sourceTables } = {
   );
   const cells =
     sourceTables === undefined
-      ? { state: "selected", byNode: new Map(), remaining: standalone }
+      ? { state: 'selected', byNode: new Map(), remaining: standalone }
       : sourceInlineCellPictureOwnership(content, standalone, section, sourceTables);
-  if (cells.state !== "selected") return cells;
+  if (cells.state !== 'selected') return cells;
   const layered = selectInlineGroupLayeredPictures(content, cells.remaining, section);
-  if (layered.state !== "selected") return layered;
+  if (layered.state !== 'selected') return layered;
   const pictures = layered.remaining;
   const index = inlinePictureIndex({ ...content, pictures }),
     byNode = new Map(),
@@ -34,8 +34,8 @@ export function inlineGroupPictureObjects(content, section, { sourceTables } = {
     return fail(
       picture,
       picture?.geometry?.treatAsCharacter === false
-        ? "FloatingStandalonePicture"
-        : "MissingOrAmbiguousInlinePicture",
+        ? 'FloatingStandalonePicture'
+        : 'MissingOrAmbiguousInlinePicture',
     );
   }
   for (const { picture, width, height } of index.values()) {
@@ -48,7 +48,7 @@ export function inlineGroupPictureObjects(content, section, { sourceTables } = {
       picture.owner.anchorUnit !== picture.anchorUnit ||
       byNode.has(picture.pictureNode)
     )
-      return fail(picture, "InvalidInlinePictureOwnershipOrSource");
+      return fail(picture, 'InvalidInlinePictureOwnershipOrSource');
     const object = { objectNode: picture.pictureNode, unit: picture.anchorUnit, width, height };
     byNode.set(picture.pictureNode, { picture, object });
     const entries = hosts.get(picture.paragraph) ?? [];
@@ -56,7 +56,7 @@ export function inlineGroupPictureObjects(content, section, { sourceTables } = {
     hosts.set(picture.paragraph, entries);
   }
   return {
-    state: "measured",
+    state: 'measured',
     byNode,
     hosts,
     cellByNode: cells.byNode,

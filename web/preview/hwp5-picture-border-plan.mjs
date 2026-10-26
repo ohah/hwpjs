@@ -1,10 +1,10 @@
-import { colorrefCss } from "./colorref-css.mjs";
+import { colorrefCss } from './colorref-css.mjs';
 
 // Raw picture units are retained until the painter maps the border rectangle.
 export function hwp5PictureBorderPlan(picture) {
   const source = picture?.source;
-  if (!source || source.border_width === undefined) return { state: "none" };
-  if (source.border_width === 0 && source.border_attributes === 0) return { state: "none" };
+  if (!source || source.border_width === undefined) return { state: 'none' };
+  if (source.border_width === 0 && source.border_attributes === 0) return { state: 'none' };
   // NONE leaves stored width and arrow defaults inactive. Only known cap/size
   // declarations with no arrow shapes are accepted; raw values remain intact.
   const raw = source.border_attributes;
@@ -21,8 +21,8 @@ export function hwp5PictureBorderPlan(picture) {
     source.border_width >= 0 &&
     source.border_width <= 0x7fffffff
   )
-    return { state: "none" };
-  const fail = () => ({ state: "unavailable", error: "UnsupportedHwp5PictureBorder" });
+    return { state: 'none' };
+  const fail = () => ({ state: 'unavailable', error: 'UnsupportedHwp5PictureBorder' });
   const attributes = source.border_attributes;
   if (
     !Number.isInteger(attributes) ||
@@ -65,7 +65,7 @@ export function hwp5PictureBorderPlan(picture) {
   // Both specified caps paint the same closed rectangle. Arrow fill bits are
   // inactive when neither endpoint declares an arrow shape.
   return {
-    state: "solid",
+    state: 'solid',
     color: colorrefCss(source.border_color),
     width: source.border_width,
     rectangleWidth: right,

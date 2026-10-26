@@ -1,6 +1,6 @@
-import { hwp5TableGeometry, hwp5TablePagination } from "./hwp5-table-geometry.mjs";
-import { hwp5TableFlags } from "./hwp5-table-flags.mjs";
-import { hasObservedZeroTableObjectTail } from "./hwp5-table-object-tail.mjs";
+import { hwp5TableGeometry, hwp5TablePagination } from './hwp5-table-geometry.mjs';
+import { hwp5TableFlags } from './hwp5-table-flags.mjs';
+import { hasObservedZeroTableObjectTail } from './hwp5-table-object-tail.mjs';
 // A derived preview projection only. Native values and strict source reports stay intact.
 export function projectOpaqueHwp5Tables(content) {
   const unverified = [],
@@ -8,7 +8,7 @@ export function projectOpaqueHwp5Tables(content) {
   if (
     !Array.isArray(content.tables) ||
     !Array.isArray(content.tableGeometryErrors) ||
-    content.tableGeometryErrors.some((error) => !error || typeof error !== "object")
+    content.tableGeometryErrors.some((error) => !error || typeof error !== 'object')
   )
     return { content, unverified };
   const sourceErrors = new Map();
@@ -44,7 +44,7 @@ export function projectOpaqueHwp5Tables(content) {
       const error = sourceErrors.get(`${table.section}:${table.tableNode}`);
       if (
         !error ||
-        error.error !== "UnsupportedHwp5TableExtension" ||
+        error.error !== 'UnsupportedHwp5TableExtension' ||
         error.rawTableFlags !== source.table_flags ||
         error.unknownTableFlags !== unknown
       )

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { urls } from "./download.mjs";
-import { issueReasons } from "./inspect.mjs";
+import assert from 'node:assert/strict';
+import { urls } from './download.mjs';
+import { issueReasons } from './inspect.mjs';
 function keys(value, expected) {
-  assert.ok(value && typeof value === "object" && !Array.isArray(value));
+  assert.ok(value && typeof value === 'object' && !Array.isArray(value));
   assert.deepEqual(Object.keys(value).sort(), [...expected].sort());
 }
 function uint(value, min = 0, max = 0xffffffff) {
@@ -10,13 +10,13 @@ function uint(value, min = 0, max = 0xffffffff) {
 }
 // Fail closed on unknown fields so contact columns cannot accidentally be persisted.
 export function validateSnapshot(snapshot) {
-  keys(snapshot, ["schemaVersion", "sources", "missingDeviceManufacturers"]);
+  keys(snapshot, ['schemaVersion', 'sources', 'missingDeviceManufacturers']);
   assert.equal(snapshot.schemaVersion, 1);
   assert.ok(Array.isArray(snapshot.sources));
   assert.equal(snapshot.sources.length, 3);
   snapshot.sources.forEach((s, index) => {
     const kind = Object.keys(urls)[index];
-    keys(s, ["url", "byteLength", "sha256", "kind", "sourceRows", "entries", "issues", "complete"]);
+    keys(s, ['url', 'byteLength', 'sha256', 'kind', 'sourceRows', 'entries', 'issues', 'complete']);
     assert.equal(s.kind, kind);
     assert.equal(s.url, urls[kind]);
     uint(s.byteLength, 1, 4 * 1024 * 1024);
@@ -27,7 +27,7 @@ export function validateSnapshot(snapshot) {
     assert.equal(s.complete, s.issues.length === 0);
     s.entries.forEach((entry, i) => {
       assert.ok(Array.isArray(entry));
-      assert.equal(entry.length, kind === "device" ? 2 : 1);
+      assert.equal(entry.length, kind === 'device' ? 2 : 1);
       entry.forEach((v) => uint(v, 1));
       if (i) {
         const previous = s.entries[i - 1];
@@ -35,14 +35,14 @@ export function validateSnapshot(snapshot) {
       }
     });
     s.issues.forEach((issue, i) => {
-      keys(issue, ["row", "reason", "ids"]);
+      keys(issue, ['row', 'reason', 'ids']);
       uint(issue.row, 2, s.sourceRows + 1);
       if (i) assert.ok(issue.row > s.issues[i - 1].row);
       assert.ok(issueReasons.includes(issue.reason));
       assert.ok(Array.isArray(issue.ids));
-      assert.equal(issue.ids.length, kind === "manufacturer" ? 1 : 2);
+      assert.equal(issue.ids.length, kind === 'manufacturer' ? 1 : 2);
       for (const id of issue.ids)
-        assert.ok(typeof id === "string" && id.length <= 1024 * 1024 && !id.includes("\0"));
+        assert.ok(typeof id === 'string' && id.length <= 1024 * 1024 && !id.includes('\0'));
     });
   });
   const parents = new Set(snapshot.sources[1].entries.map((e) => e[0]));

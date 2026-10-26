@@ -1,6 +1,6 @@
 // Display snapshots only; native current values remain authoritative.
-import { hwpxParagraphGeometry } from "./hwpx-paragraph-geometry.mjs";
-import { paragraphFormatOptions } from "./paragraph-format-options.mjs";
+import { hwpxParagraphGeometry } from './hwpx-paragraph-geometry.mjs';
+import { paragraphFormatOptions } from './paragraph-format-options.mjs';
 export function attachHwpxParagraphFormats(editor, content, available) {
   content.paragraphFormatAvailable = false;
   for (const paragraph of content.paragraphs) delete paragraph.tabDefinitionId;
@@ -9,7 +9,7 @@ export function attachHwpxParagraphFormats(editor, content, available) {
   content.paragraphShapeIds = ids;
   content.paragraphShapeCount = ids.length;
   let shapes = null;
-  if (typeof editor.paragraphShapes === "function") {
+  if (typeof editor.paragraphShapes === 'function') {
     try {
       shapes = new Map(editor.paragraphShapes().map((shape) => [shape.id, shape]));
     } catch (error) {
@@ -29,11 +29,11 @@ export function attachHwpxParagraphFormats(editor, content, available) {
       sections.set(paragraph.section, editor.paragraphShapeRefs(paragraph.section));
     const refs = sections.get(paragraph.section),
       index = paragraph.paragraph + 1 - refs.firstParagraph;
-    if (index < 0 || index >= refs.ids.length) throw new Error("ParagraphDisplayBindingMismatch");
+    if (index < 0 || index >= refs.ids.length) throw new Error('ParagraphDisplayBindingMismatch');
     paragraph.paraShapeId = refs.ids[index];
     if (shapes) {
       const shape = shapes.get(paragraph.paraShapeId);
-      if (!shape) throw new Error("ParagraphDisplayResourceMismatch");
+      if (!shape) throw new Error('ParagraphDisplayResourceMismatch');
       paragraph.paragraphShape = hwpxParagraphGeometry(shape);
       paragraph.tabDefinitionId = shape.tab_pr_id;
     }

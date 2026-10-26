@@ -1,13 +1,13 @@
-import { pictureFlowLine } from "./picture-flow-line.mjs";
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
-import { displayRunText } from "./text-measurement.mjs";
-import { isHardLineBreak } from "./hard-line-break.mjs";
-import { alignPictureFragment } from "./picture-fragment-alignment.mjs";
-import { measureAutomaticNumberPrefix } from "./automatic-number-prefix.mjs";
-import { selectPicturePageReservations } from "./picture-page-selection.mjs";
-import { equationPaintAt } from "./equation-render-content.mjs";
-import { paragraphLineProbeHeight } from "./paragraph-line-probe-height.mjs";
-import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
+import { pictureFlowLine } from './picture-flow-line.mjs';
+import { paragraphLineGeometry } from './paragraph-geometry.mjs';
+import { displayRunText } from './text-measurement.mjs';
+import { isHardLineBreak } from './hard-line-break.mjs';
+import { alignPictureFragment } from './picture-fragment-alignment.mjs';
+import { measureAutomaticNumberPrefix } from './automatic-number-prefix.mjs';
+import { selectPicturePageReservations } from './picture-page-selection.mjs';
+import { equationPaintAt } from './equation-render-content.mjs';
+import { paragraphLineProbeHeight } from './paragraph-line-probe-height.mjs';
+import { usesDocumentFontMetrics } from './font-layout-policy.mjs';
 
 // 기존 그림 영역/문자 분할을 페이지 소속과 현재 문단에 연결합니다.
 export function measurePicturePageTextLine(
@@ -21,13 +21,13 @@ export function measurePicturePageTextLine(
 ) {
   if (
     !paragraph ||
-    typeof paragraph.text !== "string" ||
+    typeof paragraph.text !== 'string' ||
     !Number.isSafeInteger(pageOrdinal) ||
     pageOrdinal < 0 ||
     !Array.isArray(reservations) ||
-    typeof measure !== "function"
+    typeof measure !== 'function'
   )
-    return { state: "unavailable", error: "InvalidPicturePageTextLine" };
+    return { state: 'unavailable', error: 'InvalidPicturePageTextLine' };
   if (
     !line ||
     ![line.x, line.y, line.width, line.height, line.x + line.width, line.y + line.height].every(
@@ -36,16 +36,16 @@ export function measurePicturePageTextLine(
     line.width <= 0 ||
     line.height <= 0
   )
-    return { state: "unavailable", error: "InvalidPicturePageTextLine" };
+    return { state: 'unavailable', error: 'InvalidPicturePageTextLine' };
   if (!Number.isSafeInteger(paragraphEndUnit) || paragraphEndUnit < paragraph.text.length)
-    return { state: "unavailable", error: "InvalidPicturePageTextLine" };
+    return { state: 'unavailable', error: 'InvalidPicturePageTextLine' };
   for (const item of reservations) {
     if (!item || !Number.isSafeInteger(item.pageOrdinal) || item.pageOrdinal < 0)
-      return { state: "unavailable", error: "InvalidPicturePageTextLine" };
+      return { state: 'unavailable', error: 'InvalidPicturePageTextLine' };
   }
   const numberPrefix = measureAutomaticNumberPrefix(paragraph, startUnit, measure);
   if (startUnit === 0 && paragraph.automaticNumberPrefixes?.length && numberPrefix === null)
-    return { state: "unavailable", error: "UnsupportedPictureLineNumberPrefix" };
+    return { state: 'unavailable', error: 'UnsupportedPictureLineNumberPrefix' };
   const horizontal = paragraphLineGeometry(
     { ...paragraph.paragraphShape, alignment: 0 },
     line.width,
@@ -53,7 +53,7 @@ export function measurePicturePageTextLine(
     startUnit === 0,
   );
   const selected = selectPicturePageReservations(line, pageOrdinal, reservations);
-  if (selected === null) return { state: "unavailable", error: "InvalidPicturePageTextLine" };
+  if (selected === null) return { state: 'unavailable', error: 'InvalidPicturePageTextLine' };
   const equation = equationPaintAt(paragraph, startUnit);
   const owners = paragraph.equations?.filter((source) => source.unit === startUnit) ?? [];
   const allowFirstOverflow =
@@ -64,7 +64,7 @@ export function measurePicturePageTextLine(
     equation.layout.box.width > horizontal.width;
   const probeHeight = paragraphLineProbeHeight(
     paragraph.paragraphShape,
-    (text, unit) => measure(text, paragraph, unit, "text"),
+    (text, unit) => measure(text, paragraph, unit, 'text'),
     startUnit,
     line.height,
   );
@@ -73,12 +73,12 @@ export function measurePicturePageTextLine(
     startUnit,
     { ...line, height: probeHeight, x: line.x + horizontal.x, width: horizontal.width },
     selected,
-    (text, unit) => measure(displayRunText(text, paragraph, unit, "text"), paragraph, unit, "text"),
+    (text, unit) => measure(displayRunText(text, paragraph, unit, 'text'), paragraph, unit, 'text'),
     paragraph.paragraphShape,
     undefined,
     { numberPrefix, allowFirstOverflow },
   );
-  if (result.state !== "available") return result;
+  if (result.state !== 'available') return result;
   const terminal =
     startUnit === paragraph.text.length &&
     (!paragraph.text.length || isHardLineBreak(paragraph.text.slice(-1)));
@@ -90,7 +90,7 @@ export function measurePicturePageTextLine(
       ? [
           {
             ...result.regions.find((region) => region.width > 0),
-            text: "",
+            text: '',
             startUnit,
             endUnit: startUnit,
             boundaries: [{ unit: startUnit, x: 0 }],
@@ -107,7 +107,7 @@ export function measurePicturePageTextLine(
           paragraph.paragraphShape,
           fragment.endUnit === paragraphEndUnit,
         ),
-        kind: "text",
+        kind: 'text',
         section: paragraph.section,
         paragraph: paragraph.paragraph,
         paragraphX: 0,

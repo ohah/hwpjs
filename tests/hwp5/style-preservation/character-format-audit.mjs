@@ -1,8 +1,8 @@
 // Unit-wise style oracle independent of the product's boundary mapper.
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { spawnSync } from "node:child_process";
-import { join } from "node:path";
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
 import {
   inspect,
   records,
@@ -10,7 +10,7 @@ import {
   encodeRecord,
   rust,
   verify as verifySplice,
-} from "./text-oracle.mjs";
+} from './text-oracle.mjs';
 
 function expected(bytes, paragraph, start, end, id) {
   const p = paragraphRecords(bytes, paragraph),
@@ -56,7 +56,7 @@ function verify(before, after, paragraph, start, end, id) {
   assert.deepEqual(
     current.sections[0].bytes,
     expected(old.sections[0].bytes, paragraph, start, end, id),
-    "character format complete Section",
+    'character format complete Section',
   );
   for (const [path, bytes] of old.streams)
     if (path !== old.sections[0].path) assert.deepEqual(current.streams.get(path), bytes);
@@ -74,7 +74,7 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
     refused = 0,
     counterexamples = 0,
     serial = 0;
-  const run = (path, p, s, e, id, error, layout = "allow-stale-layout", section = 0) => {
+  const run = (path, p, s, e, id, error, layout = 'allow-stale-layout', section = 0) => {
     const output = join(artifacts, `character-format-${serial++}.hwp`);
     const result = spawnSync(
       probe,
@@ -86,10 +86,10 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
         String(s),
         String(e),
         String(id),
-        "char-shape",
+        'char-shape',
         layout,
       ],
-      { encoding: "utf8", timeout: 30000 },
+      { encoding: 'utf8', timeout: 30000 },
     );
     if (result.error) throw result.error;
     assert.equal(result.signal, null);
@@ -107,7 +107,7 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
     edits++;
     return { bytes: after, path: output };
   };
-  for (const name of ["charshape", "parashape", "linespacing", "facename", "underline-styles"]) {
+  for (const name of ['charshape', 'parashape', 'linespacing', 'facename', 'underline-styles']) {
     const path = `legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`,
       b = readFileSync(path);
     const section = inspect(b).sections[0].bytes;
@@ -137,30 +137,30 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
         run(path, p, s, e, 0);
     }
   }
-  const path = "legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp",
+  const path = 'legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp',
     base = readFileSync(path);
   for (let s = 0; s <= 6; s++)
     for (let e = s; e <= 6; e++) for (const id of [0, 1, 2]) run(path, 1, s, e, id);
   const first = run(path, 1, 1, 5, 0);
   const second = run(first.path, 1, 2, 4, 1);
   const merged = run(second.path, 1, 0, 6, 0);
-  const stable = run(merged.path, 1, 0, 6, 0, null, "require-layout");
+  const stable = run(merged.path, 1, 0, 6, 0, null, 'require-layout');
   assert.deepEqual(stable.bytes, merged.bytes);
-  const splicePath = join(artifacts, "format-then-splice.hwp");
+  const splicePath = join(artifacts, 'format-then-splice.hwp');
   const spliced = spawnSync(
     probe,
-    [second.path, splicePath, "0", "1", "2", "2", "😀", "reject", "allow-stale-layout"],
-    { encoding: "utf8" },
+    [second.path, splicePath, '0', '1', '2', '2', '😀', 'reject', 'allow-stale-layout'],
+    { encoding: 'utf8' },
   );
   assert.equal(spliced.status, 0, spliced.stderr);
-  verifySplice(second.bytes, readFileSync(splicePath), 0, 1, 2, 2, "😀");
+  verifySplice(second.bytes, readFileSync(splicePath), 0, 1, 2, 2, '😀');
   run(splicePath, 1, 2, 4, 0);
   run(splicePath, 1, 3, 4, 0, /SplitSurrogatePair/);
   run(path, 1, 2, 1, 0, /InvalidTextPosition/);
   run(path, 1, 0, 7, 0, /InvalidTextPosition/);
   run(path, 1, 0, 1, 0xffffffff, /InvalidResourceReference/);
-  run(path, 1, 0, 1, 0, /LayoutReflowRequired/, "require-layout");
-  run(path, 1, 0, 1, 0, /InvalidSection/, "allow-stale-layout", 99);
+  run(path, 1, 0, 1, 0, /LayoutReflowRequired/, 'require-layout');
+  run(path, 1, 0, 1, 0, /InvalidSection/, 'allow-stale-layout', 99);
   run(path, 9999, 0, 1, 0, /InvalidParagraph/);
   run(path, 0, 0, 1, 0, /UnsupportedTextControl|UnsupportedParagraphRecord/);
   const rangeFixture = fixture(
@@ -186,34 +186,34 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
         ...p.all.slice(p.end).map((r) => r.raw),
       ]);
     },
-    "format-ranges",
+    'format-ranges',
   );
   run(rangeFixture.path, 1, 1, 5, 0);
   for (const [name, error] of [
-    ["unknown-root", /UnsupportedSectionRecord/],
-    ["unknown-child", /UnsupportedSectionRecord/],
-    ["header-tail", /UnsupportedParagraphExtension/],
-    ["opaque-control", /UnsupportedSectionControl/],
-    ["stale-count", /ParagraphTextCountMismatch/],
-    ["stale-lines", /ParagraphMetadataCountMismatch/],
-    ["missing-text", /UnsupportedMissingText/],
-    ["invalid-unicode", /InvalidUnicodeEncoding/],
-    ["duplicate-runs", /AmbiguousCharacterRuns/],
-    ["invalid-shape", /InvalidResourceReference/],
+    ['unknown-root', /UnsupportedSectionRecord/],
+    ['unknown-child', /UnsupportedSectionRecord/],
+    ['header-tail', /UnsupportedParagraphExtension/],
+    ['opaque-control', /UnsupportedSectionControl/],
+    ['stale-count', /ParagraphTextCountMismatch/],
+    ['stale-lines', /ParagraphMetadataCountMismatch/],
+    ['missing-text', /UnsupportedMissingText/],
+    ['invalid-unicode', /InvalidUnicodeEncoding/],
+    ['duplicate-runs', /AmbiguousCharacterRuns/],
+    ['invalid-shape', /InvalidResourceReference/],
   ])
     run(join(artifacts, `${name}-input.hwp`), 1, 0, 1, 0, error);
-  const nestedPath = "legacy/rust/crates/hwp-core/tests/fixtures/software.hwp";
+  const nestedPath = 'legacy/rust/crates/hwp-core/tests/fixtures/software.hwp';
   const nested = 2;
   assert(
     paragraphRecords(inspect(readFileSync(nestedPath)).sections[0].bytes, nested).head.level > 0,
   );
   // Nested formatting uses the independent raw Section oracle. Rust's root
   // paragraph JSON index is not the flat nested index used by this API.
-  const nestedOut = join(artifacts, "nested-character-format.hwp");
+  const nestedOut = join(artifacts, 'nested-character-format.hwp');
   const nestedRun = spawnSync(
     probe,
-    [nestedPath, nestedOut, "0", String(nested), "0", "1", "0", "char-shape", "allow-stale-layout"],
-    { encoding: "utf8", timeout: 30000 },
+    [nestedPath, nestedOut, '0', String(nested), '0', '1', '0', 'char-shape', 'allow-stale-layout'],
+    { encoding: 'utf8', timeout: 30000 },
   );
   assert.equal(nestedRun.status, 0, nestedRun.stderr);
   const beforeNested = inspect(readFileSync(nestedPath)),
@@ -233,9 +233,9 @@ export function auditCharacterFormat(probe, artifacts, fixture) {
       Buffer.concat([
         bytes,
         encodeRecord(73, 0, Buffer.alloc(40)),
-        encodeRecord(67, 1, Buffer.from("WITNESS\r", "utf16le"), true),
+        encodeRecord(67, 1, Buffer.from('WITNESS\r', 'utf16le'), true),
       ]),
-    "format-foreign-root",
+    'format-foreign-root',
   );
   const last = records(inspect(base).sections[0].bytes).filter((r) => r.tag === 66).length - 1;
   run(foreign.path, last, 0, 1, 0);

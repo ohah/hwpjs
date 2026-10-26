@@ -5,7 +5,7 @@ export function validGroupContext(value, node) {
   if (value === null) return true;
   return Boolean(
     value &&
-    typeof value === "object" &&
+    typeof value === 'object' &&
     !Array.isArray(value) &&
     [value.parent_container, value.root_anchor, value.depth].every(uint) &&
     value.depth >= 1 &&

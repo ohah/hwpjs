@@ -1,17 +1,17 @@
-import { object, uint, field, oneOf } from "./chart-display-fields.mjs";
+import { object, uint, field, oneOf } from './chart-display-fields.mjs';
 const symbols = [
-  "auto",
-  "circle",
-  "dash",
-  "diamond",
-  "dot",
-  "none",
-  "picture",
-  "plus",
-  "square",
-  "star",
-  "triangle",
-  "x",
+  'auto',
+  'circle',
+  'dash',
+  'diamond',
+  'dot',
+  'none',
+  'picture',
+  'plus',
+  'square',
+  'star',
+  'triangle',
+  'x',
 ];
 /** Wire ownership validation only; native code owns XML and absent defaults. */
 export function validChartSeriesSettings(values, plots, series, occupied = null) {
@@ -24,22 +24,22 @@ export function validChartSeriesSettings(values, plots, series, occupied = null)
       !object(row) ||
       row.series_node !== node ||
       row.plot_node !== plotNode ||
-      !field(row.smooth, (v) => typeof v === "boolean", node)
+      !field(row.smooth, (v) => typeof v === 'boolean', node)
     )
       return false;
     if (!field(row.index, uint, node) || !field(row.order, uint, node)) return false;
-    const line = ["lineChart", "line3DChart", "stockChart", "scatterChart"].includes(kind);
+    const line = ['lineChart', 'line3DChart', 'stockChart', 'scatterChart'].includes(kind);
     if (row.smooth !== null && !line) return false;
     if (!field(row.explosion, uint, node)) return false;
     if (
       row.explosion !== null &&
-      !["pieChart", "pie3DChart", "ofPieChart", "doughnutChart"].includes(kind)
+      !['pieChart', 'pie3DChart', 'ofPieChart', 'doughnutChart'].includes(kind)
     )
       return false;
     const marker = row.marker;
     if (
       marker !== null &&
-      ((!line && kind !== "radarChart") ||
+      ((!line && kind !== 'radarChart') ||
         !object(marker) ||
         !uint(marker.node) ||
         marker.node <= node ||

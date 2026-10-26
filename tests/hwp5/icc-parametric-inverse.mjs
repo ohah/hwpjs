@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { trendReference } from "./icc-parametric-trend-reference.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { referenceLinearSource } from "./icc-parametric-range.mjs";
-import { reference as linearRange } from "./icc-linear-range.mjs";
-import { reference as nearest } from "./icc-nearest-range.mjs";
-import { linearPreimageReference, choiceReference } from "./icc-linear-preimage-reference.mjs";
-import { endpoint } from "./icc-preimage-bounds.mjs";
-import { verify } from "./icc-power-range.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { trendReference } from './icc-parametric-trend-reference.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { referenceLinearSource } from './icc-parametric-range.mjs';
+import { reference as linearRange } from './icc-linear-range.mjs';
+import { reference as nearest } from './icc-nearest-range.mjs';
+import { linearPreimageReference, choiceReference } from './icc-linear-preimage-reference.mjs';
+import { endpoint } from './icc-preimage-bounds.mjs';
+import { verify } from './icc-power-range.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { cmp } from './icc-power-reference.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n];
 export function parametricInverseEdges(call, bits = 128) {
@@ -35,8 +35,8 @@ export function parametricInverseEdges(call, bits = 128) {
     let active, offset, expected, x;
     try {
       const trend = trendReference(kind, raw);
-      if (trend === 0) throw Error("ConstantIccCurve");
-      if (trend === 3) throw Error("NonMonotonicIccCurve");
+      if (trend === 0) throw Error('ConstantIccCurve');
+      if (trend === 3) throw Error('NonMonotonicIccCurve');
       assert.ok(trend === 1 || trend === 2);
       active = domain(kind, raw);
       offset = kind === 2 ? raw[3] : kind === 4 ? raw[5] : 0;

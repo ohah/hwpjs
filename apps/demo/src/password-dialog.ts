@@ -6,25 +6,25 @@ export function askDocumentPassword(
 ): Promise<string | undefined> {
   if (signal.aborted) return Promise.resolve(undefined);
   const doc = root.ownerDocument,
-    dialog = doc.createElement("dialog"),
-    form = doc.createElement("form");
-  const label = doc.createElement("label"),
-    input = doc.createElement("input");
-  const submit = doc.createElement("button"),
-    cancel = doc.createElement("button");
-  label.textContent = "문서 암호 ";
-  input.type = "password";
-  input.autocomplete = "off";
+    dialog = doc.createElement('dialog'),
+    form = doc.createElement('form');
+  const label = doc.createElement('label'),
+    input = doc.createElement('input');
+  const submit = doc.createElement('button'),
+    cancel = doc.createElement('button');
+  label.textContent = '문서 암호 ';
+  input.type = 'password';
+  input.autocomplete = 'off';
   input.required = true;
-  input.setAttribute("aria-label", "문서 암호");
+  input.setAttribute('aria-label', '문서 암호');
   label.append(input);
-  submit.type = "submit";
-  submit.textContent = "문서 열기";
-  cancel.type = "button";
-  cancel.textContent = "취소";
+  submit.type = 'submit';
+  submit.textContent = '문서 열기';
+  cancel.type = 'button';
+  cancel.textContent = '취소';
   if (message) {
-    const error = doc.createElement("p");
-    error.setAttribute("role", "alert");
+    const error = doc.createElement('p');
+    error.setAttribute('role', 'alert');
     error.textContent = message;
     form.append(error);
   }
@@ -36,20 +36,20 @@ export function askDocumentPassword(
     const finish = (value?: string) => {
       if (settled) return;
       settled = true;
-      input.value = "";
-      signal.removeEventListener("abort", aborted);
+      input.value = '';
+      signal.removeEventListener('abort', aborted);
       dialog.close();
       dialog.remove();
       resolve(value);
     };
     const aborted = () => finish();
-    signal.addEventListener("abort", aborted, { once: true });
-    cancel.addEventListener("click", () => finish());
-    dialog.addEventListener("cancel", (event) => {
+    signal.addEventListener('abort', aborted, { once: true });
+    cancel.addEventListener('click', () => finish());
+    dialog.addEventListener('cancel', (event) => {
       event.preventDefault();
       finish();
     });
-    form.addEventListener("submit", (event) => {
+    form.addEventListener('submit', (event) => {
       event.preventDefault();
       finish(input.value);
     });

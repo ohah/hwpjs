@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { identifiersWire, valuesWire, v2ValuesWire } from "./icc-semantics-evidence.mjs";
+import assert from 'node:assert/strict';
+import { identifiersWire, valuesWire, v2ValuesWire } from './icc-semantics-evidence.mjs';
 export function semanticHeader(major = 4) {
   const b = Buffer.alloc(128);
   b[8] = major;
   b[9] = 0x40;
-  b.write("mntr", 12);
-  b.write("RGB ", 16);
-  b.write("XYZ ", 20);
-  b.write("acsp", 36);
+  b.write('mntr', 12);
+  b.write('RGB ', 16);
+  b.write('XYZ ', 20);
+  b.write('acsp', 36);
   [2026, 9, 7, 23, 59, 59].forEach((v, i) => b.writeUInt16BE(v, 24 + 2 * i));
   [63190, 65536, 54061].forEach((v, i) => b.writeInt32BE(v, 68 + 4 * i));
   return b;
@@ -56,14 +56,14 @@ export function iccSemanticEdges(call) {
         ids(b, edition);
         identifierMutations++;
       }
-    for (const kind of ["scnr", "mntr", "prtr", "link", "spac", "abst", "nmcl"])
-      for (const pcs of ["XYZ ", "Lab ", "CMYK", "GRAY", "FCLR", "nope"]) {
+    for (const kind of ['scnr', 'mntr', 'prtr', 'link', 'spac', 'abst', 'nmcl'])
+      for (const pcs of ['XYZ ', 'Lab ', 'CMYK', 'GRAY', 'FCLR', 'nope']) {
         const b = Buffer.from(h);
         b.write(kind, 12);
         b.write(pcs, 20);
         ids(b, edition);
       }
-    for (const p of ["TGNT", "MSFT", "sgI "]) {
+    for (const p of ['TGNT', 'MSFT', 'sgI ']) {
       const b = Buffer.from(h);
       b.write(p, 40);
       ids(b, edition);

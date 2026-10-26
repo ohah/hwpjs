@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { controlLinkEvidence } from "./links.mjs";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { controlLinkEvidence } from './links.mjs';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
-const wide = (s) => Buffer.from(s, "utf16le");
+const wide = (s) => Buffer.from(s, 'utf16le');
 const id = 0x666f726d;
 const frame = (tag, level, b) =>
   Buffer.concat([
@@ -26,7 +26,7 @@ const token = (value = id, code = 11) => {
 };
 const ctrl = (level, value = id) => frame(71, level, Buffer.concat([w(value), Buffer.alloc(40)]));
 const object = (level) =>
-  frame(91, level, Buffer.concat([Buffer.from("tbp+tbp+"), Buffer.alloc(6)]));
+  frame(91, level, Buffer.concat([Buffer.from('tbp+tbp+'), Buffer.alloc(6)]));
 const input = (b, v = 0x05000300) => Buffer.concat([w(v), b]);
 function expected(bytes) {
   const rows = controlLinkEvidence(bytes)
@@ -54,7 +54,7 @@ export function formLinkEdges(call) {
   // Same IDs, outer sibling emitted before nested control by generic Links.build.
   const nested = Buffer.concat([
     head(0),
-    frame(67, 1, Buffer.concat([wide("😀"), token(0, 9), token(), token(), wide("\r")])),
+    frame(67, 1, Buffer.concat([wide('😀'), token(0, 9), token(), token(), wide('\r')])),
     ctrl(1),
     object(2),
     head(2),
@@ -129,12 +129,12 @@ export function formLinkEdges(call) {
 }
 export function formLinkActual(call, cfb) {
   const result = [];
-  for (const name of ["form-01.hwp", "form-02.hwp"]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+  for (const name of ['form-01.hwp', 'form-02.hwp']) {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const version = cfb.findExact("/FileHeader").content.readUInt32LE(32),
-      bytes = inflateRawSync(cfb.findExact("/BodyText/Section0").content),
+    const version = cfb.findExact('/FileHeader').content.readUInt32LE(32),
+      bytes = inflateRawSync(cfb.findExact('/BodyText/Section0').content),
       e = expected(bytes),
       records = documentRecords(bytes);
     const check = () => assert.deepEqual(call(107, input(bytes, version)), e.wire);
@@ -147,18 +147,18 @@ export function formLinkActual(call, cfb) {
     let rejected = 0;
     for (const row of e.rows) {
       const start = records[row[1]].start + row[3] * 2;
-      for (const kind of ["code", "id", "missing"]) {
+      for (const kind of ['code', 'id', 'missing']) {
         const b = Buffer.from(bytes);
-        if (kind === "code") {
+        if (kind === 'code') {
           b.writeUInt16LE(12, start);
           b.writeUInt16LE(12, start + 14);
-        } else if (kind === "id") b.writeUInt32LE(0x12345678, start + 2);
-        else wide("        ").copy(b, start);
+        } else if (kind === 'id') b.writeUInt32LE(0x12345678, start + 2);
+        else wide('        ').copy(b, start);
         assert.throws(
           () => call(107, input(b, version)),
-          kind === "code"
+          kind === 'code'
             ? /FormControlCodeMismatch/
-            : kind === "id"
+            : kind === 'id'
               ? /ControlIdMismatch/
               : /MissingControlToken/,
         );

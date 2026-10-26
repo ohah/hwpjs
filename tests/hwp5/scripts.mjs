@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { inflateRawSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { inflateRawSync } from 'node:zlib';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -11,7 +11,7 @@ export const scriptFixture = (
 const run = (call, kind, b) => call(28, Buffer.concat([Buffer.from([kind]), b]));
 export function scriptsActual(call, cfb, h, used) {
   const result = Array(10).fill(0);
-  for (const [kind, name] of ["JScriptVersion", "DefaultJScript"].entries()) {
+  for (const [kind, name] of ['JScriptVersion', 'DefaultJScript'].entries()) {
     const path = `/Scripts/${name}`,
       entry = cfb.findExact(path);
     if (!entry) continue;
@@ -45,8 +45,8 @@ export function scriptEdges(call) {
   const good = scriptFixture([
     Buffer.from([0, 0xd8]),
     Buffer.from([0, 0]),
-    Buffer.from("pre", "utf16le"),
-    Buffer.from("post", "utf16le"),
+    Buffer.from('pre', 'utf16le'),
+    Buffer.from('post', 'utf16le'),
   ]);
   const reject = (kind, b, re) => {
     assert.throws(() => run(call, kind, b), re);

@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -113,22 +113,22 @@ export function revisionGroupEdges(call) {
 export function revisionGroupActual(call, cfb) {
   const results = [];
   for (const name of [
-    "issue5169_viewtext_changetracking.hwp",
-    "task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+    'issue5169_viewtext_changetracking.hwp',
+    'task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
   ]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content);
-    for (const kind of ["BodyText", "ViewText"]) {
-      const b = inflateRawSync(cfb.findExact("/" + kind + "/Section0").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content);
+    for (const kind of ['BodyText', 'ViewText']) {
+      const b = inflateRawSync(cfb.findExact('/' + kind + '/Section0').content),
         oracle = expected(b),
         input = Buffer.concat([h.subarray(32, 36), b]);
       const out = call(101, input);
-      assert.deepEqual(out, oracle.out, name + "/" + kind);
-      const counts = name.startsWith("task2070/")
+      assert.deepEqual(out, oracle.out, name + '/' + kind);
+      const counts = name.startsWith('task2070/')
         ? [53448, 53448]
-        : kind === "BodyText"
+        : kind === 'BodyText'
           ? [228, 228]
           : [590, 524];
       assert.deepEqual([oracle.paragraphs, oracle.groups], counts);
@@ -156,7 +156,7 @@ export function revisionGroupActual(call, cfb) {
         /OrphanRevisionMerge/,
       );
       assert.deepEqual(call(101, input), out);
-      if (name.startsWith("issue5169") && kind === "ViewText") assert.equal(nestedContinuations, 1);
+      if (name.startsWith('issue5169') && kind === 'ViewText') assert.equal(nestedContinuations, 1);
       results.push({
         name,
         kind,

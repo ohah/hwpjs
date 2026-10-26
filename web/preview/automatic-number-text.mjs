@@ -1,10 +1,10 @@
-import { formatNumber } from "./number-format.mjs";
-export function automaticNumberSource(paragraph, unit, kind = "text") {
-  if (kind === "number-prefix") {
+import { formatNumber } from './number-format.mjs';
+export function automaticNumberSource(paragraph, unit, kind = 'text') {
+  if (kind === 'number-prefix') {
     const rows = paragraph?.automaticNumberPrefixes;
     return unit === 0 && rows?.length === 1 ? rows[0].source : null;
   }
-  if (kind !== "text" || paragraph?.text?.[unit] !== "\ufffc") return null;
+  if (kind !== 'text' || paragraph?.text?.[unit] !== '\ufffc') return null;
   const rows = paragraph?.automaticNumbers?.filter((number) => number.unit === unit) ?? [];
   return rows.length === 1 ? rows[0].source : null;
 }
@@ -24,9 +24,9 @@ export function storedAutomaticNumberText(source) {
     !values?.type_known ||
     !format?.type_known ||
     !Array.isArray(format.raw) ||
-    typeof format.supscript !== "boolean" ||
-    typeof format.raw[2] !== "string" ||
-    typeof format.raw[3] !== "string"
+    typeof format.supscript !== 'boolean' ||
+    typeof format.raw[2] !== 'string' ||
+    typeof format.raw[3] !== 'string'
   )
     return null;
   const text = formatNumber(values.num, format.raw[0], format.raw[1]);

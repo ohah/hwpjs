@@ -1,32 +1,32 @@
-import assert from "node:assert/strict";
-import { iccWireMajor } from "./icc-header-evidence.mjs";
-const classes = ["scnr", "mntr", "prtr", "link", "spac", "abst", "nmcl"];
+import assert from 'node:assert/strict';
+import { iccWireMajor } from './icc-header-evidence.mjs';
+const classes = ['scnr', 'mntr', 'prtr', 'link', 'spac', 'abst', 'nmcl'];
 const spaces = new Map([
-  ["XYZ ", 3],
-  ["Lab ", 3],
-  ["Luv ", 3],
-  ["YCbr", 3],
-  ["Yxy ", 3],
-  ["RGB ", 3],
-  ["GRAY", 1],
-  ["HSV ", 3],
-  ["HLS ", 3],
-  ["CMYK", 4],
-  ["CMY ", 3],
-  ["2CLR", 2],
-  ["3CLR", 3],
-  ["4CLR", 4],
-  ["5CLR", 5],
-  ["6CLR", 6],
-  ["7CLR", 7],
-  ["8CLR", 8],
-  ["9CLR", 9],
-  ["ACLR", 10],
-  ["BCLR", 11],
-  ["CCLR", 12],
-  ["DCLR", 13],
-  ["ECLR", 14],
-  ["FCLR", 15],
+  ['XYZ ', 3],
+  ['Lab ', 3],
+  ['Luv ', 3],
+  ['YCbr', 3],
+  ['Yxy ', 3],
+  ['RGB ', 3],
+  ['GRAY', 1],
+  ['HSV ', 3],
+  ['HLS ', 3],
+  ['CMYK', 4],
+  ['CMY ', 3],
+  ['2CLR', 2],
+  ['3CLR', 3],
+  ['4CLR', 4],
+  ['5CLR', 5],
+  ['6CLR', 6],
+  ['7CLR', 7],
+  ['8CLR', 8],
+  ['9CLR', 9],
+  ['ACLR', 10],
+  ['BCLR', 11],
+  ['CCLR', 12],
+  ['DCLR', 13],
+  ['ECLR', 14],
+  ['FCLR', 15],
 ]);
 function wire(values) {
   const out = Buffer.alloc(values.length * 4);
@@ -40,15 +40,15 @@ export function identifiersWire(input, limit = input.length) {
   const b = input.subarray(4),
     major = iccWireMajor(b);
   assert.equal(major, edition === 0 ? 2 : 4);
-  const kind = classes.indexOf(b.toString("latin1", 12, 16)),
-    data = spaces.get(b.toString("latin1", 16, 20)),
-    pcsName = b.toString("latin1", 20, 24),
+  const kind = classes.indexOf(b.toString('latin1', 12, 16)),
+    data = spaces.get(b.toString('latin1', 16, 20)),
+    pcsName = b.toString('latin1', 20, 24),
     pcs = spaces.get(pcsName);
   assert.ok(kind >= 0 && data !== undefined && pcs !== undefined);
-  assert.ok(kind === 3 || ["XYZ ", "Lab "].includes(pcsName));
+  assert.ok(kind === 3 || ['XYZ ', 'Lab '].includes(pcsName));
   assert.ok(
-    ["\0\0\0\0", "APPL", "MSFT", "SGI ", "SUNW", ...(edition === 0 ? ["TGNT"] : [])].includes(
-      b.toString("latin1", 40, 44),
+    ['\0\0\0\0', 'APPL', 'MSFT', 'SGI ', 'SUNW', ...(edition === 0 ? ['TGNT'] : [])].includes(
+      b.toString('latin1', 40, 44),
     ),
   );
   return wire([kind, data, pcs, [4, 48, 52, 80].filter((at) => b.readUInt32BE(at) !== 0).length]);

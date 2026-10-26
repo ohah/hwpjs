@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // COLUMN is an anchor, not an absolute-size clamp. Narrow columns remain scoped.
 function declaredFullWidthColumnOverflow(table, reference, measuredWidth) {

@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { verifyHwpxInsertion } from "../../tools/hwpx-insertion-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { verifyHwpxInsertion } from '../../tools/hwpx-insertion-oracle.mjs';
 function fixtures(kind) {
   return JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         String.raw`
 import io,zipfile,base64,json,sys
 kind=sys.argv[1]
@@ -28,35 +28,35 @@ print(json.dumps({k:package(v) for k,v in [('before',inner),('good',good),('wron
 `,
         kind,
       ],
-      { encoding: "utf8" },
+      { encoding: 'utf8' },
     ),
   );
 }
-for (const kind of ["markpen", "bookmark"])
+for (const kind of ['markpen', 'bookmark'])
   test(`${kind} independent source slot rejects wrong location metadata and non-target payload`, () => {
     const f = fixtures(kind),
       request = {
-        before: Buffer.from(f.before, "base64"),
-        after: Buffer.from(f.good, "base64"),
+        before: Buffer.from(f.before, 'base64'),
+        after: Buffer.from(f.good, 'base64'),
         section: 0,
         sectionIndex: 0,
         startUnit: 0,
-        text: "검증😀",
+        text: '검증😀',
       };
     const result = verifyHwpxInsertion(request);
-    assert.equal(result.state, "verified");
+    assert.equal(result.state, 'verified');
     assert.equal(result.kind, `${kind}-owned-prefix`);
     assert(result.controls.every((r) => r.wrongExpectedRejected));
-    for (const bad of ["wrong", "badmetadata", "badother"])
+    for (const bad of ['wrong', 'badmetadata', 'badother'])
       assert.equal(
-        verifyHwpxInsertion({ ...request, after: Buffer.from(f[bad], "base64") }).state,
-        "mismatch",
+        verifyHwpxInsertion({ ...request, after: Buffer.from(f[bad], 'base64') }).state,
+        'mismatch',
         bad,
       );
-    assert.equal(verifyHwpxInsertion({ ...request, text: "WRONG" }).state, "mismatch");
+    assert.equal(verifyHwpxInsertion({ ...request, text: 'WRONG' }).state, 'mismatch');
     const unsupported = verifyHwpxInsertion({
       ...request,
-      before: Buffer.from(f.invalid, "base64"),
+      before: Buffer.from(f.invalid, 'base64'),
     });
-    assert.equal(unsupported.state, "unsupported");
+    assert.equal(unsupported.state, 'unsupported');
   });

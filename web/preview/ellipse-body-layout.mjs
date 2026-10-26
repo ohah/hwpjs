@@ -1,10 +1,10 @@
-import { projectEllipsePage } from "./ellipse-page-projection.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { ellipsePaintPlan, ellipsePaintGeometry } from "./ellipse-paint.mjs";
-import { projectGroupedEllipse } from "./grouped-ellipse-page-projection.mjs";
-import { validGroupContext } from "../../js/hwpx-group-context.mjs";
+import { projectEllipsePage } from './ellipse-page-projection.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { ellipsePaintPlan, ellipsePaintGeometry } from './ellipse-paint.mjs';
+import { projectGroupedEllipse } from './grouped-ellipse-page-projection.mjs';
+import { validGroupContext } from '../../js/hwpx-group-context.mjs';
 export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const anchors = [],
     nodes = new Set(),
     units = new Set();
@@ -32,11 +32,11 @@ export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
         owner.drawingCaption ||
         !Number.isSafeInteger(unit) ||
         unit < 0 ||
-        owner.text[unit] !== "\ufffc" ||
+        owner.text[unit] !== '\ufffc' ||
         row.sourceOnly !== true ||
         nodes.has(`${section}:${row.node}`)
       )
-        return fail("UnsupportedEllipseGroupOwner");
+        return fail('UnsupportedEllipseGroupOwner');
       const key = `${section}:${group.root_anchor}`,
         previous = groupOwners.get(key),
         root = roots[0];
@@ -45,7 +45,7 @@ export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
         (root.hostParagraph !== undefined && root.hostParagraph !== paragraph) ||
         (root.anchorUnit !== undefined && root.anchorUnit !== unit)
       )
-        return fail("AmbiguousEllipseGroupOwner");
+        return fail('AmbiguousEllipseGroupOwner');
       groupOwners.set(key, { paragraph, unit });
       nodes.add(`${section}:${row.node}`);
       continue;
@@ -60,9 +60,9 @@ export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
       owner.drawingCaption ||
       !Number.isSafeInteger(unit) ||
       unit < 0 ||
-      owner.text[unit] !== "\ufffc"
+      owner.text[unit] !== '\ufffc'
     )
-      return fail("UnsupportedEllipseBodyOwner");
+      return fail('UnsupportedEllipseBodyOwner');
     const key = `${section}:${row.node}`,
       position = `${section}:${paragraph}:${unit}`;
     if (
@@ -80,7 +80,7 @@ export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
           (a.node === row.node || (a.paragraph === paragraph && a.anchorUnit === unit)),
       )
     )
-      return fail("AmbiguousEllipseBodyAnchor");
+      return fail('AmbiguousEllipseBodyAnchor');
     nodes.add(key);
     units.add(position);
     anchors.push({ section, paragraph, anchorUnit: unit, node: row.node });
@@ -96,11 +96,11 @@ export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
     floatingDrawingAnchors: [...(content.floatingDrawingAnchors ?? []), ...anchors],
   };
   const measured = (text, p, unit, kind) =>
-    kind === "text" && text === "\ufffc" && units.has(`${p.section}:${p.paragraph}:${unit}`)
-      ? { width: 0, height: textMeasurement(measure("", p, unit, kind)).height }
+    kind === 'text' && text === '\ufffc' && units.has(`${p.section}:${p.paragraph}:${unit}`)
+      ? { width: 0, height: textMeasurement(measure('', p, unit, kind)).height }
       : measure(text, p, unit, kind);
   const result = layoutBody(body, measured, maxRows);
-  if (result.state !== "paginated") return result;
+  if (result.state !== 'paginated') return result;
   const placements = [];
   for (const item of content.ellipses) {
     const group = item.source.common.group_context;
@@ -115,25 +115,25 @@ export function layoutEllipseBody(content, measure, maxRows, layoutBody) {
           result.rows,
         )
       : projectEllipsePage(item.section, item.source, content.paragraphs, result.rows);
-    if (placed.state !== "placed") return placed;
+    if (placed.state !== 'placed') return placed;
     const paintPlan = ellipsePaintGeometry(placed)
       ? ellipsePaintPlan(content, item)
-      : { state: "unavailable", error: "UnsupportedEllipseShearPaint" };
+      : { state: 'unavailable', error: 'UnsupportedEllipseShearPaint' };
     placements.push({ ...placed, paintPlan });
   }
-  const pending = placements.filter((p) => p.paintPlan.state !== "planned");
+  const pending = placements.filter((p) => p.paintPlan.state !== 'planned');
   return {
     ...result,
     placedEllipses: placements,
     ...(pending.length
       ? {
-          objectCoverage: "incomplete",
+          objectCoverage: 'incomplete',
           unrenderedObjects: [
             ...(result.unrenderedObjects ?? []),
             ...pending.map((p) => ({
               section: p.section,
               ellipseNode: p.node,
-              error: p.paintPlan.error ?? "UnsupportedEllipseShearPaint",
+              error: p.paintPlan.error ?? 'UnsupportedEllipseShearPaint',
             })),
           ],
         }

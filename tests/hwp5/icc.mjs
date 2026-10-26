@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { deflateSync, gzipSync, deflateRawSync } from "node:zlib";
-import { iccHeaderWire, iccDigest } from "./icc-header-evidence.mjs";
-import { iccTableWire } from "./icc-table-evidence.mjs";
-import { profileEnvelopeWire } from "./png-profile-evidence.mjs";
-import { iccFixture } from "./icc-fixture.mjs";
+import assert from 'node:assert/strict';
+import { deflateSync, gzipSync, deflateRawSync } from 'node:zlib';
+import { iccHeaderWire, iccDigest } from './icc-header-evidence.mjs';
+import { iccTableWire } from './icc-table-evidence.mjs';
+import { profileEnvelopeWire } from './png-profile-evidence.mjs';
+import { iccFixture } from './icc-fixture.mjs';
 export function expectedOracleError(e) {
   return (
     e instanceof assert.AssertionError ||
-    (e instanceof Error && typeof e.code === "string" && e.code.startsWith("Z_")) ||
-    (e instanceof RangeError && e.code === "ERR_BUFFER_TOO_LARGE")
+    (e instanceof Error && typeof e.code === 'string' && e.code.startsWith('Z_')) ||
+    (e instanceof RangeError && e.code === 'ERR_BUFFER_TOO_LARGE')
   );
 }
 export function expectedProbeError(e) {
@@ -32,7 +32,7 @@ export function iccEdges(call) {
     } catch (e) {
       assert.ok(
         expectedOracleError(e),
-        `independent ICC oracle failed unexpectedly: ${e?.constructor?.name} ${e?.code ?? ""}`,
+        `independent ICC oracle failed unexpectedly: ${e?.constructor?.name} ${e?.code ?? ''}`,
       );
     }
     if (expected) {
@@ -94,8 +94,8 @@ export function iccEdges(call) {
   head(Buffer.concat([base, Buffer.from([0])]));
   const ordered = iccFixture(
     [
-      ["zzzz", 168, 12],
-      ["aaaa", 156, 12],
+      ['zzzz', 168, 12],
+      ['aaaa', 156, 12],
     ],
     180,
   );
@@ -113,20 +113,20 @@ export function iccEdges(call) {
     for (const length of [132, 136]) table(iccFixture([], length), policy, 0);
     for (const entries of [
       [
-        ["aTag", 156, 24],
-        ["bTag", 168, 8],
+        ['aTag', 156, 24],
+        ['bTag', 168, 8],
       ],
       [
-        ["aTag", 156, 24],
-        ["bTag", 156, 8],
+        ['aTag', 156, 24],
+        ['bTag', 156, 8],
       ],
       [
-        ["aTag", 156, 24],
-        ["bTag", 156, 24],
+        ['aTag', 156, 24],
+        ['bTag', 156, 24],
       ],
       [
-        ["aTag", 156, 24],
-        ["aTag", 156, 24],
+        ['aTag', 156, 24],
+        ['aTag', 156, 24],
       ],
     ])
       table(iccFixture(entries, 180), policy);
@@ -136,7 +136,7 @@ export function iccEdges(call) {
       [148, 8, 160],
       [144, 8, 156],
     ])
-      table(iccFixture([["aTag", offset, size]], length), policy);
+      table(iccFixture([['aTag', offset, size]], length), policy);
     for (const field of [128, 136, 140])
       for (const value of [
         0, 1, 7, 8, 12, 128, 132, 144, 156, 180, 0x7fffffff, 0xfffffffc, 0xffffffff,
@@ -147,7 +147,7 @@ export function iccEdges(call) {
       }
   }
   const binary = Buffer.from(Array.from({ length: 256 }, (_, i) => i)),
-    payload = Buffer.concat([Buffer.from("Profile\0\0"), deflateSync(binary)]);
+    payload = Buffer.concat([Buffer.from('Profile\0\0'), deflateSync(binary)]);
   assert.ok(envelope(payload, 256));
   envelope(payload, 255);
   envelope(payload, 256, payload.length - 1);
@@ -169,13 +169,13 @@ export function iccEdges(call) {
     deflateRawSync(binary),
     Buffer.concat([deflateSync(binary), Buffer.from([0])]),
   ])
-    envelope(Buffer.concat([Buffer.from("K\0\0"), compressed]), 256);
-  assert.ok(envelope(Buffer.concat([Buffer.from("K\0\0"), deflateSync(Buffer.alloc(0))]), 0));
+    envelope(Buffer.concat([Buffer.from('K\0\0'), compressed]), 256);
+  assert.ok(envelope(Buffer.concat([Buffer.from('K\0\0'), deflateSync(Buffer.alloc(0))]), 0));
   for (const key of [
     Buffer.alloc(79, 255),
     Buffer.alloc(80, 65),
-    Buffer.from(" Leading"),
-    Buffer.from("Two  spaces"),
+    Buffer.from(' Leading'),
+    Buffer.from('Two  spaces'),
     Buffer.from([160]),
   ])
     envelope(Buffer.concat([key, Buffer.from([0, 0]), deflateSync(binary)]), 256);

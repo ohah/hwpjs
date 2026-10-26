@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Only the source table's empty outer bottom margin is discardable. Captions,
 // floating references and caller-invented insets keep their complete extent.

@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function srgbEvidence({ chunks }, fixed) {
-  const indexes = chunks.map((c, i) => (c.name === "sRGB" ? i : -1)).filter((i) => i >= 0);
+  const indexes = chunks.map((c, i) => (c.name === 'sRGB' ? i : -1)).filter((i) => i >= 0);
   assert.ok(indexes.length <= 1);
   if (!indexes.length) return { present: 0, intent: 0 };
   const i = indexes[0],
     payload = chunks[i].payload;
   assert.equal(payload.length, 1);
   assert.ok(payload[0] <= 3);
-  assert.ok(i < chunks.findIndex((c) => c.name === "PLTE" || c.name === "IDAT"));
+  assert.ok(i < chunks.findIndex((c) => c.name === 'PLTE' || c.name === 'IDAT'));
   if (fixed.fields[0]) assert.equal(fixed.fields[1], 45455);
   if (fixed.fields[2])
     assert.deepEqual(

@@ -1,28 +1,28 @@
-import assert from "node:assert/strict";
-import { endpoint } from "./icc-preimage-bounds.mjs";
-import { writeUnsigned as writeUnsignedBE } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { endpoint } from './icc-preimage-bounds.mjs';
+import { writeUnsigned as writeUnsignedBE } from './icc-wide-fraction-wire.mjs';
 
 export function trcInverseInput(
   name,
   target,
   values,
-  kind = "curv",
+  kind = 'curv',
   fn = 0,
   precision = 512,
   bits = 128,
 ) {
   const width = bits / 8,
     prefix = 4 + 2 * width;
-  const b = Buffer.alloc(prefix + 16 + values.length * (kind === "curv" ? 2 : 4));
+  const b = Buffer.alloc(prefix + 16 + values.length * (kind === 'curv' ? 2 : 4));
   b.writeUInt32BE(precision);
   writeUnsignedBE(b, 4, target[0], width);
   writeUnsignedBE(b, 4 + width, target[1], width);
   b.write(name, prefix);
   b.write(kind, prefix + 4);
-  if (kind === "curv") b.writeUInt32BE(values.length, prefix + 12);
+  if (kind === 'curv') b.writeUInt32BE(values.length, prefix + 12);
   else b.writeUInt16BE(fn, prefix + 12);
   values.forEach((v, i) =>
-    kind === "curv"
+    kind === 'curv'
       ? b.writeUInt16BE(v, prefix + 16 + i * 2)
       : b.writeInt32BE(v, prefix + 16 + i * 4),
   );
@@ -63,8 +63,8 @@ export function trcInverseEdges(call, bits = 128) {
   const max = (1n << BigInt(bits)) - 1n;
   for (const mode of modes)
     for (const precision of [128, 256, 512, 1024]) {
-      for (const [channel, name] of ["rTRC", "gTRC", "bTRC", "kTRC"].entries()) {
-        const input = (t, values, kind = "curv", fn = 0) =>
+      for (const [channel, name] of ['rTRC', 'gTRC', 'bTRC', 'kTRC'].entries()) {
+        const input = (t, values, kind = 'curv', fn = 0) =>
           inputFor(name, t, values, kind, fn, precision);
         for (const t of [
           [0n, 1n],
@@ -105,7 +105,7 @@ export function trcInverseEdges(call, bits = 128) {
         }
         check(mode, input([0n, 1n], [100, 200]), channel, [0n, 1n]);
         check(mode, input([1n, 1n], [100, 200]), channel, [1n, 1n]);
-        const para = input([1n, 4n], [131072], "para");
+        const para = input([1n, 4n], [131072], 'para');
         if (mode === v2) reject(mode, para, /InvalidIccTrcType/);
         else check(mode, para, channel, [1n, 2n]);
         reject(mode, input([0n, 1n], [0]), /NonInvertibleIccGamma/);
@@ -117,7 +117,7 @@ export function trcInverseEdges(call, bits = 128) {
     [[3n, 5n], [65536, 0, 0, 65536, 32768, 65536, 0], 0, 4],
     [[1n, 2n], [65536, 0, 0, 0, 32768, 65536, 0], 4, bits === 128 ? 152 : 216],
   ]) {
-    const out = inspect(v4, inputFor("rTRC", t, values, "para", 4), 0);
+    const out = inspect(v4, inputFor('rTRC', t, values, 'para', 4), 0);
     assert.equal(out.readUInt32LE(), status);
     assert.equal(out.length, length);
     if (status === 0) unattained++;
@@ -126,10 +126,10 @@ export function trcInverseEdges(call, bits = 128) {
   const unknown = inspect(
     v4,
     inputFor(
-      "kTRC",
+      'kTRC',
       [(65537n * 65537n) << BigInt(bits - 64), max],
       [131072, 65537, 0, 0, 1],
-      "para",
+      'para',
       3,
       128,
     ),
@@ -138,7 +138,7 @@ export function trcInverseEdges(call, bits = 128) {
   assert.deepEqual(unknown, Buffer.from([1, 0, 0, 0]));
   undecided++;
   for (const mode of modes) {
-    const good = inputFor("gTRC", [1n, 4n], [512]);
+    const good = inputFor('gTRC', [1n, 4n], [512]);
     for (let n = 0; n < good.length; n++)
       reject(mode, good.subarray(0, n), /InvalidProbeInput|InvalidIcc/);
     reject(mode, good, /LimitExceeded/, good.length - 1);
@@ -147,9 +147,9 @@ export function trcInverseEdges(call, bits = 128) {
       [0n, 0n],
       [2n, 1n],
     ])
-      reject(mode, inputFor("rTRC", t, []), /InvalidIccCurveCoordinate/);
-    reject(mode, inputFor("RTRC", [0n, 1n], []), /UnhandledIccTrc/);
-    reject(mode, inputFor("rTRC", [0n, 1n], [], "curv", 0, 64), /InvalidIccComparisonPrecision/);
+      reject(mode, inputFor('rTRC', t, []), /InvalidIccCurveCoordinate/);
+    reject(mode, inputFor('RTRC', [0n, 1n], []), /UnhandledIccTrc/);
+    reject(mode, inputFor('rTRC', [0n, 1n], [], 'curv', 0, 64), /InvalidIccComparisonPrecision/);
     check(mode, good, 1, [1n, 2n]);
   }
   return { selected, rejected, unattained, ambiguous, undecided };

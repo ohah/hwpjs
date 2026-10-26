@@ -9,20 +9,20 @@ export function createRenderer() {
     pictureReader() {},
     tableBackgroundReader() {},
     chartReader() {},
-    paragraph: () => ({ selectionOwner: "section:0:body" }),
+    paragraph: () => ({ selectionOwner: 'section:0:body' }),
     setViewScale: () => true,
   };
 }
 export function createCanvasEditor(options) {
   const w = globalThis.__surfaceOwnerWitness;
-  w.emit = (value, meta = { origin: "canvas" }) => options.onCommittedSelection(value, meta);
+  w.emit = (value, meta = { origin: 'canvas' }) => options.onCommittedSelection(value, meta);
   const clear = (origin) => {
     w.emit(null, { origin });
     w.frames.push(() => w.emit(null, { origin }));
   };
   return {
-    reset: (options) => clear(options?.selectionOrigin ?? "canvas"),
-    external: (message) => clear(message.origin ?? "canvas"),
+    reset: (options) => clear(options?.selectionOrigin ?? 'canvas'),
+    external: (message) => clear(message.origin ?? 'canvas'),
     initializeCapabilities() {},
     selectTextRange() {
       return true;
@@ -32,7 +32,7 @@ export function createCanvasEditor(options) {
       w.emit(null);
     },
     flushComposition() {
-      return "unchanged";
+      return 'unchanged';
     },
     settled() {
       return true;

@@ -22,7 +22,7 @@ export function attachTableCaptions(editor, sections, content) {
         content.tableCaptionBindingErrors.push({
           section: index,
           paragraph: id,
-          error: "MissingCaptionTable",
+          error: 'MissingCaptionTable',
         });
         continue;
       }

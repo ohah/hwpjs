@@ -1,18 +1,18 @@
-import { getSelectionFormatting, type HeadlessEditor } from "@hwpjs/core";
+import { getSelectionFormatting, type HeadlessEditor } from '@hwpjs/core';
 import type {
   createFormattingBridge,
   FormattingDialogObservation,
   FormattingDialogPatch,
-} from "./formatting-bridge.ts";
+} from './formatting-bridge.ts';
 import {
   createFormattingDialogView,
   type FormattingDialogField,
-} from "./formatting-dialog-view.ts";
-import type { DemoAction, DemoCommand, ActionAvailability } from "./shell-contract.ts";
-type State = ReturnType<HeadlessEditor["getEditorState"]>;
+} from './formatting-dialog-view.ts';
+import type { DemoAction, DemoCommand, ActionAvailability } from './shell-contract.ts';
+type State = ReturnType<HeadlessEditor['getEditorState']>;
 export interface FormattingDialogControllerOptions {
   readonly root: HTMLElement;
-  readonly port: Pick<ReturnType<typeof createFormattingBridge>, "captureDialog" | "applyDialog">;
+  readonly port: Pick<ReturnType<typeof createFormattingBridge>, 'captureDialog' | 'applyDialog'>;
   readonly getState: () => State;
   readonly subscribe: (listener: (state: State) => void) => () => void;
   readonly onStatus: (message: string) => void;
@@ -41,8 +41,8 @@ export function createFormattingDialogController({
   let properties: { size?: number; bold?: boolean; italic?: boolean } = {},
     alignment: string | undefined;
   const sameRange = (
-    a: ReturnType<typeof getSelectionFormatting>["target"],
-    b: ReturnType<typeof getSelectionFormatting>["target"],
+    a: ReturnType<typeof getSelectionFormatting>['target'],
+    b: ReturnType<typeof getSelectionFormatting>['target'],
   ) =>
     !!a &&
     !!b &&
@@ -55,11 +55,11 @@ export function createFormattingDialogController({
     const latest = getState();
     return (
       !closed &&
-      latest.status === "ready" &&
+      latest.status === 'ready' &&
       latest.documentId === captured.state.documentId &&
       latest.generation === captured.state.generation &&
       sameRange(captured.formatting.target, getSelectionFormatting(latest).target) &&
-      !root.ownerDocument.querySelector("dialog:modal")
+      !root.ownerDocument.querySelector('dialog:modal')
     );
   };
   const notify = () => {
@@ -80,7 +80,7 @@ export function createFormattingDialogController({
   const dismiss = () => {
     if (view?.isComposing()) return;
     if (pending) {
-      view?.setStatus("확인을 접수했습니다. 적용 결과를 기다려주세요.");
+      view?.setStatus('확인을 접수했습니다. 적용 결과를 기다려주세요.');
       return;
     }
     close(true);
@@ -90,7 +90,7 @@ export function createFormattingDialogController({
     value: number | boolean | string | undefined,
   ) => {
     if (!observation || pending || stale || closed) return;
-    if (field === "alignment")
+    if (field === 'alignment')
       alignment =
         value === undefined || value === observation.fields.alignment.value
           ? undefined
@@ -98,7 +98,7 @@ export function createFormattingDialogController({
     else if (value === undefined || value === observation.fields[field].value)
       delete properties[field];
     else (properties as Record<string, unknown>)[field] = value;
-    view?.setStatus("확인을 누르면 변경한 항목을 적용합니다.");
+    view?.setStatus('확인을 누르면 변경한 항목을 적용합니다.');
   };
   const apply = async () => {
     if (closed || pending || stale || !view || !observation || view.isComposing()) return;
@@ -106,42 +106,42 @@ export function createFormattingDialogController({
       captured = observation;
     pending = true;
     view.setPending(true);
-    view.setStatus("고정한 대상에 적용 중…");
+    view.setStatus('고정한 대상에 적용 중…');
     const patch: FormattingDialogPatch =
-      captured.kind === "character"
-        ? { kind: "character", properties: { ...properties } }
-        : { kind: "paragraph", ...(alignment === undefined ? {} : { alignment }) };
+      captured.kind === 'character'
+        ? { kind: 'character', properties: { ...properties } }
+        : { kind: 'paragraph', ...(alignment === undefined ? {} : { alignment }) };
     try {
       const request = port.applyDialog(captured, patch);
       notify();
       const answer = await request;
       if (closed || epoch !== currentEpoch) return;
-      if (answer.kind === "unchanged") {
-        onStatus("변경한 서식이 없습니다.");
+      if (answer.kind === 'unchanged') {
+        onStatus('변경한 서식이 없습니다.');
         close(true);
         return;
       }
-      if (answer.kind === "rejected") {
+      if (answer.kind === 'rejected') {
         view?.setStatus(answer.error);
         if (getState() !== captured.state) {
           stale = true;
-          view?.setStale("선택 또는 문서 상태가 바뀌었습니다. 닫고 다시 열어주세요.");
+          view?.setStale('선택 또는 문서 상태가 바뀌었습니다. 닫고 다시 열어주세요.');
         }
         return;
       }
       const result = answer.result;
-      if (result.status === "committed-with-snapshot" || result.status === "known-no-op") {
+      if (result.status === 'committed-with-snapshot' || result.status === 'known-no-op') {
         onStatus(
-          result.status === "known-no-op"
-            ? "서식이 이미 같습니다."
-            : "고정한 선택 범위에 서식을 적용했습니다.",
+          result.status === 'known-no-op'
+            ? '서식이 이미 같습니다.'
+            : '고정한 선택 범위에 서식을 적용했습니다.',
         );
         close(true);
       } else {
         view?.setStatus(result.error ?? result.status);
-        if (result.status === "committed-refresh-required" || getState() !== captured.state) {
+        if (result.status === 'committed-refresh-required' || getState() !== captured.state) {
           stale = true;
-          view?.setStale("적용 결과를 다시 조회해야 합니다. 닫고 문서 상태를 확인해주세요.");
+          view?.setStale('적용 결과를 다시 조회해야 합니다. 닫고 문서 상태를 확인해주세요.');
         }
       }
     } catch (error) {
@@ -158,46 +158,46 @@ export function createFormattingDialogController({
   const unsubscribe = subscribe((state) => {
     if (closed || pending || !view || !observation || state === observation.state) return;
     stale = true;
-    view.setStale("선택 또는 문서 상태가 바뀌었습니다. 닫고 다시 열어주세요.");
+    view.setStale('선택 또는 문서 상태가 바뀌었습니다. 닫고 다시 열어주세요.');
     notify();
   });
   const presentation = (): Partial<Record<DemoCommand, ActionAvailability>> => {
-    const captured = port.captureDialog("character");
+    const captured = port.captureDialog('character');
     const reason = closed
-      ? "FormattingDialogDisposed"
+      ? 'FormattingDialogDisposed'
       : view
-        ? "FormattingDialogOpen"
-        : captured.state.status !== "ready"
-          ? "EditorNotReady"
+        ? 'FormattingDialogOpen'
+        : captured.state.status !== 'ready'
+          ? 'EditorNotReady'
           : !captured.formatting.target
-            ? "MissingSelection"
+            ? 'MissingSelection'
             : undefined;
     // A readonly/caret target may open an honest disabled observation dialog.
     return {
-      "character-properties": { enabled: !reason, reason },
-      "paragraph-properties": { enabled: !reason, reason },
+      'character-properties': { enabled: !reason, reason },
+      'paragraph-properties': { enabled: !reason, reason },
     };
   };
   return {
     presentation,
     action(action: DemoAction): boolean {
-      if (action.command !== "character-properties" && action.command !== "paragraph-properties")
+      if (action.command !== 'character-properties' && action.command !== 'paragraph-properties')
         return false;
       if (closed) return true;
       if (view) {
         view.focus();
         return true;
       }
-      if (root.ownerDocument.querySelector("dialog:modal")) {
-        onStatus("다른 대화상자를 먼저 닫아주세요.");
+      if (root.ownerDocument.querySelector('dialog:modal')) {
+        onStatus('다른 대화상자를 먼저 닫아주세요.');
         return true;
       }
       if (!presentation()[action.command]?.enabled) {
-        onStatus(presentation()[action.command]?.reason ?? "MissingSelection");
+        onStatus(presentation()[action.command]?.reason ?? 'MissingSelection');
         return true;
       }
       observation = port.captureDialog(
-        action.command === "character-properties" ? "character" : "paragraph",
+        action.command === 'character-properties' ? 'character' : 'paragraph',
       );
       epoch++;
       stale = false;

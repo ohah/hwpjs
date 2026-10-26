@@ -1,16 +1,16 @@
-import { chartSeriesInput } from "./chart-plot-input.mjs";
-const kinds = new Set(["pieChart", "pie3DChart", "ofPieChart", "doughnutChart"]);
-const unavailable = (reason) => ({ state: "unavailable", reason });
+import { chartSeriesInput } from './chart-plot-input.mjs';
+const kinds = new Set(['pieChart', 'pie3DChart', 'ofPieChart', 'doughnutChart']);
+const unavailable = (reason) => ({ state: 'unavailable', reason });
 
 /** Axis-free source data only; no inferred angles, explosion, rings or split policy. */
 export function chartCircularData(display, plotNode) {
   const plot = display.plots.find((plot) => plot.node === plotNode);
-  if (!plot) return unavailable("MissingChartPlot");
-  if (!kinds.has(plot.kind)) return unavailable("UnsupportedCircularPlotKind");
+  if (!plot) return unavailable('MissingChartPlot');
+  if (!kinds.has(plot.kind)) return unavailable('UnsupportedCircularPlotKind');
   if (display.axis_links.some((link) => link.plot_node === plotNode))
-    return unavailable("UnexpectedCircularAxes");
+    return unavailable('UnexpectedCircularAxes');
   const input = chartSeriesInput(display, plotNode);
-  if (input.state !== "ready") return input;
+  if (input.state !== 'ready') return input;
   const plotSettings = display.plot_settings?.[input.index];
   const settings = new Map((display.series_settings ?? []).map((row) => [row.series_node, row]));
   if (
@@ -18,19 +18,19 @@ export function chartCircularData(display, plotNode) {
     plotSettings.first_slice_angle === undefined ||
     !Array.isArray(display.point_settings)
   )
-    return unavailable("MissingCircularSettings");
+    return unavailable('MissingCircularSettings');
   const copyField = (value) => (value === null ? null : { ...value });
   const rows = [];
   for (const series of input.series) {
     const setting = settings.get(series.node);
-    if (!setting || setting.explosion === undefined) return unavailable("MissingCircularSettings");
-    if (["x", "y", "bubble_size"].some((role) => series.roles[role].length))
-      return unavailable("UnsupportedCircularRoles");
-    if (!series.points.length) return unavailable("EmptyCircularData");
+    if (!setting || setting.explosion === undefined) return unavailable('MissingCircularSettings');
+    if (['x', 'y', 'bubble_size'].some((role) => series.roles[role].length))
+      return unavailable('UnsupportedCircularRoles');
+    if (!series.points.length) return unavailable('EmptyCircularData');
     const points = [];
     for (const point of series.points) {
-      if (point.value && point.value.number?.kind !== "finite")
-        return unavailable("NonNumericChartValue");
+      if (point.value && point.value.number?.kind !== 'finite')
+        return unavailable('NonNumericChartValue');
       points.push({
         index: point.index,
         category: point.category?.value ?? null,
@@ -51,11 +51,11 @@ export function chartCircularData(display, plotNode) {
     });
   }
   return {
-    state: "ready",
+    state: 'ready',
     kind: plot.kind,
     first_slice_angle: copyField(plotSettings.first_slice_angle),
     rows,
     exact: false,
-    mode: "source-data-only",
+    mode: 'source-data-only',
   };
 }

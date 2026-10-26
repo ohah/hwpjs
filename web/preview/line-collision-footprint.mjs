@@ -1,6 +1,6 @@
-import { linePaintPoints } from "./line-paint.mjs";
-import { decoratedLineBounds } from "./decorated-line-bounds.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { linePaintPoints } from './line-paint.mjs';
+import { decoratedLineBounds } from './decorated-line-bounds.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 /** Bounds use the existing painter coordinates; page ownership must be explicit. */
 export function lineCollisionFootprint(line, placement) {
@@ -22,7 +22,7 @@ export function lineCollisionFootprint(line, placement) {
   )
     return null;
   let bounds;
-  if (line.state === "reference_located") {
+  if (line.state === 'reference_located') {
     const local = decoratedLineBounds(line.referencePlan);
     if (!local) return null;
     bounds = {
@@ -31,7 +31,7 @@ export function lineCollisionFootprint(line, placement) {
       top: placement.origin.y + local.top,
       bottom: placement.origin.y + local.bottom,
     };
-  } else if (line.state === "located") {
+  } else if (line.state === 'located') {
     const points = linePaintPoints(line, placement.origin);
     if (!points) return null;
     const half = hwpUnitPixels(line.stroke.width) / 2;
@@ -63,7 +63,7 @@ export function lineCollisionFootprint(line, placement) {
   )
     return null;
   return {
-    kind: "line",
+    kind: 'line',
     section: line.section,
     node: line.lineNode,
     pageOrdinal: placement.pageOrdinal,

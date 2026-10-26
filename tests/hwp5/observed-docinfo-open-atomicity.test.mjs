@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createMemory } from "../../js/wasm-memory.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createMemory } from '../../js/wasm-memory.mjs';
 
 test(
-  "failed observed DocInfo ABI opens keep the active text history diagnostics and save baseline",
+  'failed observed DocInfo ABI opens keep the active text history diagnostics and save baseline',
   { skip: !process.env.HWPJS_TEST_WASM },
   async () => {
     const module = await WebAssembly.compile(readFileSync(process.env.HWPJS_TEST_WASM));
     const { exports: wasm } = await WebAssembly.instantiate(module, {}),
       memory = createMemory(wasm);
-    const source = readFileSync("reference/rhwp/samples/20250130-hongbo_saved.hwp");
+    const source = readFileSync('reference/rhwp/samples/20250130-hongbo_saved.hwp');
     const output = (action) => {
       try {
         assert.equal(action(), 1, memory.error().message);
@@ -32,7 +32,7 @@ test(
       const original = output(() => wasm.hwp5_edit_copy_text(0, 2)),
         baseline = output(() => wasm.hwp5_edit_save(0));
       const before = diagnostics();
-      const marker = new TextEncoder().encode("원자😀");
+      const marker = new TextEncoder().encode('원자😀');
       assert.equal(
         memory.withBytes(marker, (ptr, size) => wasm.hwp5_edit_splice(0, 2, 0, 0, ptr, size, 0)),
         1,
@@ -80,6 +80,6 @@ test(
       wasm.hwp5_edit_close();
     }
     assert.equal(wasm.hwp5_edit_observed_docinfo_diagnostics(), 0);
-    assert.equal(memory.error().message, "EditorNotOpen");
+    assert.equal(memory.error().message, 'EditorNotOpen');
   },
 );

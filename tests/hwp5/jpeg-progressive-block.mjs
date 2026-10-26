@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { unstuff, huffmanCodewords, encodeCodes } from "./jpeg-codec.mjs";
-import { jpegFrameFixture } from "./jpeg-headers.mjs";
+import assert from 'node:assert/strict';
+import { unstuff, huffmanCodewords, encodeCodes } from './jpeg-codec.mjs';
+import { jpegFrameFixture } from './jpeg-headers.mjs';
 
 const sized = (b) => {
   const n = Buffer.alloc(2);
@@ -73,7 +73,7 @@ export function progressiveBlockOracle(
   let at = skip;
   assert.ok(at <= text.length);
   const read = (n) => {
-    assert.ok(at + n <= text.length, "truncated bits");
+    assert.ok(at + n <= text.length, 'truncated bits');
     const s = text.slice(at, at + n);
     at += n;
     return n ? parseInt(s, 2) : 0;
@@ -89,15 +89,15 @@ export function progressiveBlockOracle(
     assert.equal(table[0] >> 4, start === 0 ? 0 : 1);
   }
   const symbol = () => {
-    let prefix = "";
+    let prefix = '';
     for (let n = 0; n < 16; n++) {
       prefix += String(read(1));
       if (map.has(prefix)) return map.get(prefix);
     }
-    assert.fail("bad code");
+    assert.fail('bad code');
   };
   const integer = (v) => {
-    assert.ok(Number.isInteger(v) && v >= -2147483648 && v <= 2147483647, "i32 overflow");
+    assert.ok(Number.isInteger(v) && v >= -2147483648 && v <= 2147483647, 'i32 overflow');
     return v;
   };
   const step = 2 ** al,
@@ -151,7 +151,7 @@ export function progressiveBlockOracle(
               (k) => b[k] === 0,
             );
             const target = zeros[size ? run : 15];
-            assert.notEqual(target, undefined, "AC run beyond band");
+            assert.notEqual(target, undefined, 'AC run beyond band');
             correction(cursor, target);
             if (size) b[target] = sign * step;
             cursor = target + 1;
@@ -204,20 +204,20 @@ export function progressiveBlockEdges(call) {
       const frame = jpegFrameFixture({ precision });
       for (let size = 0; size <= precision + 3; size++)
         for (const value of [0, 2 ** size - 1]) {
-          const raw = encodeCodes(["0", size ? value.toString(2).padStart(size, "0") : ""]);
+          const raw = encodeCodes(['0', size ? value.toString(2).padStart(size, '0') : '']);
           check(raw, { frame, al, predictor: 7, table: progressiveSingle(0, size), finish: true });
         }
       for (let rs = 0; rs < 256; rs++) {
         const size = rs % 16,
           run = rs >> 4,
           options = { frame, start: 1, end: 63, al, table: progressiveSingle(16, rs) };
-        if (!size && run !== 15) check(encodeCodes(["0", "1".repeat(run)]), options);
+        if (!size && run !== 15) check(encodeCodes(['0', '1'.repeat(run)]), options);
         else if (!size)
-          check(encodeCodes(["0", "0", "0", "0"]), { ...options, end: 16, finish: false });
-        else if (size > precision + 2) reject(encodeCodes(["0"]), options, /InvalidJpegAcSymbol/);
+          check(encodeCodes(['0', '0', '0', '0']), { ...options, end: 16, finish: false });
+        else if (size > precision + 2) reject(encodeCodes(['0']), options, /InvalidJpegAcSymbol/);
         else
           for (const sign of [0, 1])
-            check(encodeCodes(["0", String(sign).repeat(size)]), {
+            check(encodeCodes(['0', String(sign).repeat(size)]), {
               ...options,
               end: 1 + run,
               finish: true,
@@ -237,7 +237,7 @@ export function progressiveBlockEdges(call) {
           b = progressiveZero();
         b[1] = signs[0] * 4 * step;
         b[18] = signs[1] * 4 * step;
-        check(encodeCodes(["011", "1", "000", "1"], skip), {
+        check(encodeCodes(['011', '1', '000', '1'], skip), {
           start: 1,
           end: 18,
           ah: al + 1,
@@ -249,7 +249,7 @@ export function progressiveBlockEdges(call) {
         });
         const dc = progressiveZero();
         dc[0] = signs[0] * 4 * step;
-        check(encodeCodes(["1"], skip), { ah: al + 1, al, blocks: [dc], skip, finish: true });
+        check(encodeCodes(['1'], skip), { ah: al + 1, al, blocks: [dc], skip, finish: true });
       }
   const prior = progressiveZero();
   prior[1] = -4;
@@ -261,7 +261,7 @@ export function progressiveBlockEdges(call) {
         al = (start + end) % 13;
       const b = progressiveZero();
       b[0] = 91;
-      check(encodeCodes(["00".repeat(Math.floor(distance / 16)), "01", String(start % 2)]), {
+      check(encodeCodes(['00'.repeat(Math.floor(distance / 16)), '01', String(start % 2)]), {
         start,
         end,
         al,
@@ -275,7 +275,7 @@ export function progressiveBlockEdges(call) {
           b[k] = (k % 2 ? -2 : 2) * 2 ** al;
           correction.push(String(k % 2));
         }
-      check(encodeCodes(["0", ...correction]), {
+      check(encodeCodes(['0', ...correction]), {
         start,
         end,
         ah: al + 1,
@@ -294,12 +294,12 @@ export function progressiveBlockEdges(call) {
           target = zeros[run];
         const before = Array.from({ length: target - 1 }, (_, i) => i + 1)
           .filter((k) => b[k] !== 0)
-          .map(() => "1");
+          .map(() => '1');
         const after = Array.from({ length: 63 - target }, (_, i) => target + 1 + i)
           .filter((k) => b[k] !== 0)
-          .map(() => "1");
+          .map(() => '1');
         const table = Buffer.from([16, 0, 2, ...Array(14).fill(0), run * 16 + 1, 0]);
-        check(encodeCodes(["00", String(sign), ...before, "01", ...after]), {
+        check(encodeCodes(['00', String(sign), ...before, '01', ...after]), {
           start: 1,
           end: 63,
           ah: al + 1,
@@ -309,7 +309,7 @@ export function progressiveBlockEdges(call) {
           finish: true,
         });
       }
-  check(encodeCodes(["001", "0", "1", "000", "1"]), {
+  check(encodeCodes(['001', '0', '1', '000', '1']), {
     start: 1,
     end: 4,
     ah: 1,
@@ -323,7 +323,7 @@ export function progressiveBlockEdges(call) {
     b[1] = n;
     return b;
   });
-  check(encodeCodes(["010", "1", "0", "1", "1"]), {
+  check(encodeCodes(['010', '1', '0', '1', '1']), {
     start: 1,
     end: 1,
     ah: 1,
@@ -332,7 +332,7 @@ export function progressiveBlockEdges(call) {
     finish: true,
   });
   const max = progressiveSingle(16, 224),
-    run = encodeCodes(["0", "1".repeat(14)]);
+    run = encodeCodes(['0', '1'.repeat(14)]);
   check(run, {
     start: 1,
     end: 63,
@@ -343,11 +343,11 @@ export function progressiveBlockEdges(call) {
   reject(run, { start: 1, end: 63, table: max, finish: true }, /UnfinishedJpegEobRun/);
   for (let size = 2; size < 16; size++)
     reject(
-      encodeCodes(["0"]),
+      encodeCodes(['0']),
       { start: 1, end: 63, ah: 1, table: progressiveSingle(16, size) },
       /InvalidJpegAcRefinementSymbol/,
     );
-  const good = encodeCodes(["001", "0", "1", "000", "1"]),
+  const good = encodeCodes(['001', '0', '1', '000', '1']),
     options = { start: 1, end: 4, ah: 1, table: ac, blocks: [prior], finish: true };
   for (let n = 0; n < good.length; n++) reject(good.subarray(0, n), options, /UnexpectedEnd/);
   reject(good, options, /LimitExceeded/, 275);

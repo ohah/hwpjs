@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { rootOrderReference, orderedRootSigns } from "./icc-root-compare.mjs";
+import assert from 'node:assert/strict';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { rootOrderReference, orderedRootSigns } from './icc-root-compare.mjs';
 import {
   cmp,
   sign,
@@ -9,14 +9,14 @@ import {
   base,
   levelOrder,
   valueOrder,
-} from "./icc-power-reference.mjs";
+} from './icc-power-reference.mjs';
 const O = [1n, 1n];
 export function verify(plan, active, offset) {
   assert.equal(plan.status, 2);
   const s = plan.source;
   assert.equal(cmp(s.start, active.start), 0);
   assert.equal(cmp(s.end, O), 0);
-  for (const key of ["a", "b", "g"]) assert.equal(s[key], active[key]);
+  for (const key of ['a', 'b', 'g']) assert.equal(s[key], active[key]);
   assert.equal(s.offset, BigInt(offset));
   function toPoint(b, x) {
     if (b.x) return cmp(b.x, x);
@@ -51,7 +51,7 @@ export function verify(plan, active, offset) {
       else return x;
       d *= 2n;
     }
-    throw Error("Independent interior isolation budget exceeded");
+    throw Error('Independent interior isolation budget exceeded');
   }
   const all = plan.pieces.flatMap((p) => [p.start, p.end]);
   for (const boundary of all) {
@@ -120,14 +120,14 @@ export function verify(plan, active, offset) {
         if (toPoint(candidate, s.start) >= 0 && toPoint(candidate, O) <= 0)
           assert.ok(
             all.some((b) => boundaries(candidate, b) === 0),
-            "missing level boundary",
+            'missing level boundary',
           );
       }
     const zero = F(-s.b, s.a);
     if (cmp(zero, s.start) >= 0 && cmp(zero, O) <= 0)
       assert.ok(
         all.some((b) => boundaries(b, { x: zero }) === 0),
-        "missing base-zero boundary",
+        'missing base-zero boundary',
       );
   }
   return plan.pieces.length;

@@ -1,6 +1,6 @@
-import type { EditorState, SelectionTarget } from "@hwpjs/core";
+import type { EditorState, SelectionTarget } from '@hwpjs/core';
 // @ts-ignore Existing shared owner projection; no parallel owner/coordinate model.
-import { paragraphSelectionOwner } from "../../../web/preview/paragraph-selection.mjs";
+import { paragraphSelectionOwner } from '../../../web/preview/paragraph-selection.mjs';
 /** Recover only the verified single-paragraph result. Never retoken an old selection blindly. */
 export function replacementCaret(
   before: EditorState,
@@ -16,7 +16,7 @@ export function replacementCaret(
     )
       return null;
     if (
-      after.status !== "ready" ||
+      after.status !== 'ready' ||
       after.selection ||
       before.editorId !== after.editorId ||
       before.documentId !== after.documentId ||
@@ -40,7 +40,7 @@ export function replacementCaret(
     if (previous.length !== 1 || next.length !== 1) return null;
     const old = previous[0],
       row = next[0];
-    if (old.clipped || row.clipped || typeof old.text !== "string" || typeof row.text !== "string")
+    if (old.clipped || row.clipped || typeof old.text !== 'string' || typeof row.text !== 'string')
       return null;
     if (
       row.text !== old.text.slice(0, target.startUnit) + text + old.text.slice(target.endUnit) ||
@@ -48,21 +48,21 @@ export function replacementCaret(
       paragraphSelectionOwner(row) !== target.owner
     )
       return null;
-    for (const key of ["tableCell", "drawingText", "drawingCaption", "createdCell"])
+    for (const key of ['tableCell', 'drawingText', 'drawingCaption', 'createdCell'])
       if (JSON.stringify(old[key]) !== JSON.stringify(row[key])) return null;
     const identity = (value: any) => {
       if (
         !value ||
-        typeof value !== "object" ||
-        value.kind !== "original" ||
-        typeof value.scope !== "string" ||
-        typeof value.id !== "string"
+        typeof value !== 'object' ||
+        value.kind !== 'original' ||
+        typeof value.scope !== 'string' ||
+        typeof value.id !== 'string'
       )
         return null;
-      return Object.fromEntries(Object.entries(value).filter(([key]) => key !== "epoch"));
+      return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'epoch'));
     };
     if (old.currentReference === undefined && row.currentReference === undefined) {
-      if (target.format !== "hwpx") return null;
+      if (target.format !== 'hwpx') return null;
     } else {
       const oldIdentity = identity(old.currentReference),
         newIdentity = identity(row.currentReference);
@@ -75,8 +75,8 @@ export function replacementCaret(
       const a = old.currentReference.epoch,
         b = row.currentReference.epoch;
       if (
-        typeof a !== "string" ||
-        typeof b !== "string" ||
+        typeof a !== 'string' ||
+        typeof b !== 'string' ||
         !/^\d+$/.test(a) ||
         !/^\d+$/.test(b) ||
         BigInt(b) !== BigInt(a) + 1n
@@ -86,14 +86,14 @@ export function replacementCaret(
     const unit = target.startUnit + text.length;
     return {
       ...after.token,
-      coordinateSpace: "display",
+      coordinateSpace: 'display',
       format: target.format,
       owner: paragraphSelectionOwner(row),
       section: row.section,
       paragraph: row.paragraph,
       startUnit: unit,
       endUnit: unit,
-      affinity: "forward",
+      affinity: 'forward',
     };
   } catch {
     return null;

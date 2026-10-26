@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function sampleMetadataEvidence({ chunks, fields }) {
   const found = (name) => chunks.map((c, i) => (c.name === name ? i : -1)).filter((i) => i >= 0);
-  const p = found("pHYs"),
-    s = found("sBIT"),
-    idat = found("IDAT")[0],
-    plte = found("PLTE")[0];
+  const p = found('pHYs'),
+    s = found('sBIT'),
+    idat = found('IDAT')[0],
+    plte = found('PLTE')[0];
   assert.ok(p.length <= 1 && s.length <= 1);
   let physical = null,
     bits = null,

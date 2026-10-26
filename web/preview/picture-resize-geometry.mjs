@@ -1,6 +1,6 @@
-import { pictureQuadTransform } from "./picture-quad-transform.mjs";
-import { affinePoint } from "./affine-point-geometry.mjs";
-import { pageContainsPoint } from "./page-visible-rectangle.mjs";
+import { pictureQuadTransform } from './picture-quad-transform.mjs';
+import { affinePoint } from './affine-point-geometry.mjs';
+import { pageContainsPoint } from './page-visible-rectangle.mjs';
 
 export function pictureResizeBasis(item, target, { allowPartialHandles = false } = {}) {
   if (
@@ -12,19 +12,19 @@ export function pictureResizeBasis(item, target, { allowPartialHandles = false }
   )
     return null;
   let points;
-  if (item.paintPlan?.state === "quad") {
+  if (item.paintPlan?.state === 'quad') {
     const mapped = pictureQuadTransform(
       item.paintPlan.corners,
       item.paintOrigin ?? { x: item.x, y: item.y },
     );
-    if (mapped.state !== "mapped") return null;
+    if (mapped.state !== 'mapped') return null;
     const [a, b, c, d, e, f] = mapped.matrix;
     points = [
       [e, f],
       [e + a, f + b],
       [e + c, f + d],
     ];
-  } else if (item.paintPlan?.state === "plain") {
+  } else if (item.paintPlan?.state === 'plain') {
     if (
       ![item.x, item.y, item.width, item.height].every(Number.isFinite) ||
       item.width <= 0 ||

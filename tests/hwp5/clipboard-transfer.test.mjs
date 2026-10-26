@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { transferSelectedText, pasteClipboardText } from "../../web/preview/clipboard-transfer.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { transferSelectedText, pasteClipboardText } from '../../web/preview/clipboard-transfer.mjs';
 
-test("clipboard read denial offers keyboard fallback only for the still-current selection", async () => {
+test('clipboard read denial offers keyboard fallback only for the still-current selection', async () => {
   for (const stale of [false, true]) {
     let reject,
       current = true,
@@ -17,7 +17,7 @@ test("clipboard read denial offers keyboard fallback only for the still-current 
       },
       isCurrent: () => current,
       replace() {
-        throw new Error("must not edit");
+        throw new Error('must not edit');
       },
       report() {
         reported++;
@@ -27,14 +27,14 @@ test("clipboard read denial offers keyboard fallback only for the still-current 
       },
     });
     current = !stale;
-    reject(new Error("denied"));
+    reject(new Error('denied'));
     assert.equal(await pending, false);
     assert.equal(focused, stale ? 0 : 1);
     assert.equal(reported, stale ? 0 : 1);
   }
 });
 
-test("clipboard paste requires fresh selection after reading and preserves multiline Unicode", async () => {
+test('clipboard paste requires fresh selection after reading and preserves multiline Unicode', async () => {
   for (const stale of [false, true]) {
     let complete,
       current = true;
@@ -54,28 +54,28 @@ test("clipboard paste requires fresh selection after reading and preserves multi
       report() {},
     });
     current = !stale;
-    complete("한😀\r\n\n끝");
+    complete('한😀\r\n\n끝');
     assert.equal(await pending, !stale);
-    assert.deepEqual(calls, stale ? [] : ["한😀\r\n\n끝"]);
+    assert.deepEqual(calls, stale ? [] : ['한😀\r\n\n끝']);
   }
 });
 
-test("clipboard paste rejects absent API permission empty invalid text and refused command", async () => {
+test('clipboard paste rejects absent API permission empty invalid text and refused command', async () => {
   for (const clipboard of [
     null,
     {
       readText: async () => {
-        throw new Error("denied");
+        throw new Error('denied');
       },
     },
-    ...["", "\ud800", null].map((text) => ({ readText: async () => text })),
+    ...['', '\ud800', null].map((text) => ({ readText: async () => text })),
   ]) {
     assert.equal(
       await pasteClipboardText({
         clipboard,
         isCurrent: () => true,
         replace() {
-          throw new Error("must not edit");
+          throw new Error('must not edit');
         },
         report() {},
       }),
@@ -84,7 +84,7 @@ test("clipboard paste rejects absent API permission empty invalid text and refus
   }
   assert.equal(
     await pasteClipboardText({
-      clipboard: { readText: async () => "a" },
+      clipboard: { readText: async () => 'a' },
       isCurrent: () => true,
       replace: () => false,
       report() {},
@@ -93,7 +93,7 @@ test("clipboard paste rejects absent API permission empty invalid text and refus
   );
 });
 
-test("clipboard writes before deleting and refuses stale asynchronous completion", async () => {
+test('clipboard writes before deleting and refuses stale asynchronous completion', async () => {
   for (const cut of [false, true])
     for (const stale of [false, true]) {
       let complete,
@@ -110,7 +110,7 @@ test("clipboard writes before deleting and refuses stale asynchronous completion
             });
           },
         },
-        text: "가😀\n나",
+        text: '가😀\n나',
         isCurrent: () => current,
         cut,
         remove() {
@@ -119,7 +119,7 @@ test("clipboard writes before deleting and refuses stale asynchronous completion
         },
         report: (text) => reports.push(text),
       });
-      assert.deepEqual(written, ["가😀\n나"]);
+      assert.deepEqual(written, ['가😀\n나']);
       assert.equal(removed, 0);
       current = !stale;
       complete();
@@ -129,21 +129,21 @@ test("clipboard writes before deleting and refuses stale asynchronous completion
     }
 });
 
-test("clipboard failures empty selections and refused deletion never claim success", async () => {
+test('clipboard failures empty selections and refused deletion never claim success', async () => {
   for (const clipboard of [
     null,
     {
       writeText() {
-        throw new Error("denied");
+        throw new Error('denied');
       },
     },
-    { writeText: () => Promise.reject(new Error("denied")) },
+    { writeText: () => Promise.reject(new Error('denied')) },
   ]) {
     let removed = false;
     assert.equal(
       await transferSelectedText({
         clipboard,
-        text: "a",
+        text: 'a',
         isCurrent: () => true,
         cut: true,
         remove() {
@@ -159,10 +159,10 @@ test("clipboard failures empty selections and refused deletion never claim succe
     await transferSelectedText({
       clipboard: {
         writeText() {
-          throw new Error("must not write");
+          throw new Error('must not write');
         },
       },
-      text: "",
+      text: '',
       isCurrent: () => true,
     }),
     false,
@@ -170,7 +170,7 @@ test("clipboard failures empty selections and refused deletion never claim succe
   assert.equal(
     await transferSelectedText({
       clipboard: { writeText: async () => {} },
-      text: "a",
+      text: 'a',
       isCurrent: () => true,
       cut: true,
       remove: () => false,

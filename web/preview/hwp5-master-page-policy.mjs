@@ -1,9 +1,9 @@
-import { validateHwp5MasterPageSources } from "../../js/hwp5-master-page-sources.mjs";
+import { validateHwp5MasterPageSources } from '../../js/hwp5-master-page-sources.mjs';
 
 /** Single-profile compatibility entry; paired source contracts remain below. */
 export function hwp5MasterPageProfile(section, sources) {
   const profiles = hwp5MasterPageProfiles(section, sources);
-  if (profiles.length !== 1) throw new Error("UnsupportedHwp5MasterPageProfile");
+  if (profiles.length !== 1) throw new Error('UnsupportedHwp5MasterPageProfile');
   return profiles[0];
 }
 
@@ -16,15 +16,15 @@ export function hwp5MasterPageProfiles(section, sources) {
     section.flags === 0x20000000 &&
     sources.length === 1
   )
-    applies = ["both"];
+    applies = ['both'];
   else if (
     section?.fileVersion === 0x05010100 &&
     section.flags === 0xc0000000 &&
     sources.length === 2 &&
     sources[0].list_node < sources[1].list_node
   )
-    applies = ["even", "odd"];
-  else throw new Error("UnsupportedHwp5MasterPageProfile");
+    applies = ['even', 'odd'];
+  else throw new Error('UnsupportedHwp5MasterPageProfile');
   return sources.map((source, index) => {
     if (
       source.owner_node !== section.source_node ||
@@ -37,7 +37,7 @@ export function hwp5MasterPageProfiles(section, sources) {
       source.extra_bytes !== 16 ||
       source.extra_nonzero !== false
     )
-      throw new Error("UnsupportedHwp5MasterPageProfile");
+      throw new Error('UnsupportedHwp5MasterPageProfile');
     return {
       apply: applies[index],
       width: source.width,

@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
-import { verifySplit } from "./style-preservation/structure-record-oracle.mjs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
+import { verifySplit } from './style-preservation/structure-record-oracle.mjs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
 function independent(bytes) {
   const result = [],
     parents = [],
@@ -74,13 +74,13 @@ function independent(bytes) {
   }
   return result;
 }
-test("actual HWP5 column source fields and parents match independent CFB Node oracle", async () => {
+test('actual HWP5 column source fields and parents match independent CFB Node oracle', async () => {
   let checked = 0;
   for (const name of [
-    "multicolumns",
-    "multicolumns-widths",
-    "multicolumns-in-common-controls",
-    "multicolumns-layout",
+    'multicolumns',
+    'multicolumns-widths',
+    'multicolumns-in-common-controls',
+    'multicolumns-layout',
   ]) {
     const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`),
       before = Buffer.from(input),
@@ -105,7 +105,7 @@ test("actual HWP5 column source fields and parents match independent CFB Node or
       }
       assert.deepEqual(Buffer.from(editor.save().bytes), before);
       assert.deepEqual(input, before);
-      if (["multicolumns", "multicolumns-widths"].includes(name)) {
+      if (['multicolumns', 'multicolumns-widths'].includes(name)) {
         editor.enableHistory();
         const original = editor.columnSources(0);
         const flow = editor.paragraphFlow(0);
@@ -129,7 +129,7 @@ test("actual HWP5 column source fields and parents match independent CFB Node or
           false,
         );
         const suffix = editor.text(0, 2),
-          prefix = "단후속😀";
+          prefix = '단후속😀';
         editor.splice({ section: 0, paragraph: 2, startUnit: 0, endUnit: 0, text: prefix });
         assert.equal(editor.text(0, 2), prefix + suffix);
         assert.deepEqual(editor.columnSources(0), expected);
@@ -145,7 +145,7 @@ test("actual HWP5 column source fields and parents match independent CFB Node or
           assert.equal(
             reopened.text(0, 1),
             expectedLeftText,
-            "saved left must reflect the split rather than retain original source text",
+            'saved left must reflect the split rather than retain original source text',
           );
         } finally {
           reopened.close();

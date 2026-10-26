@@ -1,5 +1,5 @@
-import { groupShapeChildren } from "./group-shape-children.mjs";
-import { objectCollisionBox } from "./object-collision-box.mjs";
+import { groupShapeChildren } from './group-shape-children.mjs';
+import { objectCollisionBox } from './object-collision-box.mjs';
 
 const validBox = (b) =>
   b &&
@@ -8,7 +8,7 @@ const validBox = (b) =>
   b.height > 0;
 // A root's declared size is not proof that all children fit inside it.
 export function groupRootCollisionFootprint(root, containers, placement, children, captions = []) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !root ||
     root.source?.group_context !== null ||
@@ -25,46 +25,46 @@ export function groupRootCollisionFootprint(root, containers, placement, childre
     placement.pageOrdinal < 0 ||
     !validBox(placement.rectangle)
   )
-    return fail("InvalidGroupCollisionRoot");
+    return fail('InvalidGroupCollisionRoot');
   const nodes = new Map(),
     expected = new Set(),
     expectedCaptions = new Map(),
     visited = new Set(),
     pending = [root];
   for (const c of containers.filter((c) => c?.section === root.section)) {
-    if (nodes.has(c.containerNode)) return fail("AmbiguousGroupCollisionContainer");
+    if (nodes.has(c.containerNode)) return fail('AmbiguousGroupCollisionContainer');
     nodes.set(c.containerNode, c);
   }
-  if (nodes.get(root.containerNode) !== root) return fail("MissingGroupCollisionRoot");
+  if (nodes.get(root.containerNode) !== root) return fail('MissingGroupCollisionRoot');
   try {
     while (pending.length) {
       const current = pending.pop();
-      if (visited.has(current.containerNode)) return fail("RepeatedGroupCollisionContainer");
+      if (visited.has(current.containerNode)) return fail('RepeatedGroupCollisionContainer');
       visited.add(current.containerNode);
       for (const child of groupShapeChildren(current.source, { allowCaptions: true })) {
-        if (child.kind === "metadata") continue;
-        if (child.kind === "caption") {
-          if (expectedCaptions.has(child.node)) return fail("RepeatedGroupCollisionCaption");
+        if (child.kind === 'metadata') continue;
+        if (child.kind === 'caption') {
+          if (expectedCaptions.has(child.node)) return fail('RepeatedGroupCollisionCaption');
           expectedCaptions.set(child.node, current);
           continue;
         }
-        if (child.kind === "unsupported") return fail("UnsupportedGroupCollisionChild");
-        if (child.kind === "container") {
+        if (child.kind === 'unsupported') return fail('UnsupportedGroupCollisionChild');
+        if (child.kind === 'container') {
           const nested = nodes.get(child.node);
           if (
             !nested ||
             nested.source?.group_context?.root_anchor !== root.containerNode ||
             nested.source.group_context.parent_container !== current.containerNode
           )
-            return fail("MissingGroupCollisionContainer");
+            return fail('MissingGroupCollisionContainer');
           pending.push(nested);
         } else {
-          if (expected.has(child.node)) return fail("RepeatedGroupCollisionChild");
+          if (expected.has(child.node)) return fail('RepeatedGroupCollisionChild');
           expected.add(child.node);
         }
       }
     }
-    if (children.length !== expected.size) return fail("IncompleteGroupCollisionChildren");
+    if (children.length !== expected.size) return fail('IncompleteGroupCollisionChildren');
     let left = placement.rectangle.x,
       top = placement.rectangle.y;
     let right = left + placement.rectangle.width,
@@ -79,14 +79,14 @@ export function groupRootCollisionFootprint(root, containers, placement, childre
         seen.has(child.node) ||
         !validBox(child.rectangle)
       )
-        return fail("InvalidGroupCollisionChildPlacement");
+        return fail('InvalidGroupCollisionChildPlacement');
       seen.add(child.node);
       left = Math.min(left, child.rectangle.x);
       top = Math.min(top, child.rectangle.y);
       right = Math.max(right, child.rectangle.x + child.rectangle.width);
       bottom = Math.max(bottom, child.rectangle.y + child.rectangle.height);
     }
-    if (captions.length !== expectedCaptions.size) return fail("IncompleteGroupCollisionCaptions");
+    if (captions.length !== expectedCaptions.size) return fail('IncompleteGroupCollisionCaptions');
     const seenCaptions = new Set();
     for (const caption of captions) {
       const owner = expectedCaptions.get(caption?.captionNode);
@@ -99,7 +99,7 @@ export function groupRootCollisionFootprint(root, containers, placement, childre
         caption.pageOrdinal !== placement.pageOrdinal ||
         !validBox(caption.rectangle)
       )
-        return fail("InvalidGroupCollisionCaptionPlacement");
+        return fail('InvalidGroupCollisionCaptionPlacement');
       seenCaptions.add(caption.captionNode);
       left = Math.min(left, caption.rectangle.x);
       top = Math.min(top, caption.rectangle.y);
@@ -110,14 +110,14 @@ export function groupRootCollisionFootprint(root, containers, placement, childre
       { x: left, y: top, width: right - left, height: bottom - top },
       root.source.flow?.outside_margins,
     );
-    if (!validBox(rectangle)) return fail("InvalidGroupCollisionBounds");
+    if (!validBox(rectangle)) return fail('InvalidGroupCollisionBounds');
     return {
-      state: "collected",
+      state: 'collected',
       footprint: {
         section: root.section,
         pageOrdinal: placement.pageOrdinal,
         node: root.containerNode,
-        kind: "group",
+        kind: 'group',
         rectangle,
       },
     };

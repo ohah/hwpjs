@@ -1,4 +1,4 @@
-import { paragraphAlignmentKey, paragraphAlignmentValue } from "./paragraph-alignments.mjs";
+import { paragraphAlignmentKey, paragraphAlignmentValue } from './paragraph-alignments.mjs';
 
 export function createParagraphFormatControls({
   form,
@@ -25,7 +25,7 @@ export function createParagraphFormatControls({
     for (const button of alignmentButtons) {
       button.disabled = !paragraph || !alignmentEnabled;
       button.setAttribute(
-        "aria-pressed",
+        'aria-pressed',
         String(alignment !== null && button.dataset.alignment === alignment),
       );
     }
@@ -33,7 +33,7 @@ export function createParagraphFormatControls({
       ? `${paragraph.section}:${paragraph.paragraph}:${paragraph.paraShapeId}`
       : null;
     if (key !== previous) {
-      id.value = paragraph ? String(paragraph.paraShapeId) : "";
+      id.value = paragraph ? String(paragraph.paraShapeId) : '';
       previous = key;
     }
     if (choices) choices.value = id.value;
@@ -42,7 +42,7 @@ export function createParagraphFormatControls({
     );
   };
   for (const button of alignmentButtons)
-    button.addEventListener("click", () => {
+    button.addEventListener('click', () => {
       if (
         !enabled ||
         !alignmentEnabled ||
@@ -52,10 +52,10 @@ export function createParagraphFormatControls({
         return;
       if (requestAlignment?.(button.dataset.alignment)) fields.disabled = true;
     });
-  choices?.addEventListener("change", () => {
+  choices?.addEventListener('change', () => {
     id.value = choices.value;
   });
-  id.addEventListener?.("input", () => {
+  id.addEventListener?.('input', () => {
     if (choices) choices.value = id.value;
   });
   const options = () => {
@@ -64,13 +64,13 @@ export function createParagraphFormatControls({
     if (!enabled) return;
     const byId = new Map(labels.map((row) => [row.value, row.label]));
     for (const value of ids ?? Array.from({ length: count }, (_, index) => index)) {
-      const option = choices.ownerDocument.createElement("option");
+      const option = choices.ownerDocument.createElement('option');
       option.value = String(value);
       option.textContent = byId.get(String(value)) ?? `ID ${value}`;
       choices.append(option);
     }
   };
-  form.addEventListener("submit", (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (!enabled || !selected() || !form.reportValidity()) return;
     const value = Number(id.value);
@@ -87,16 +87,16 @@ export function createParagraphFormatControls({
       enabled = false;
       alignmentEnabled = false;
       previous = null;
-      id.value = "";
-      note.textContent = "";
+      id.value = '';
+      note.textContent = '';
       options();
       update();
     },
     message(value) {
-      if (value.kind === "load") alignmentEnabled = false;
+      if (value.kind === 'load') alignmentEnabled = false;
       if (value.content && !value.error)
         alignmentEnabled = value.content.paragraphAlignmentAvailable === true;
-      if (value.kind === "load") {
+      if (value.kind === 'load') {
         enabled = false;
         labels = [];
         previous = null;
@@ -109,12 +109,12 @@ export function createParagraphFormatControls({
         enabled = value.content.paragraphFormatAvailable === true && count > 0;
         options();
       }
-      if (value.kind === "paragraph-format")
+      if (value.kind === 'paragraph-format')
         note.textContent = value.error
           ? `문단 서식 변경 실패: ${value.error}`
-          : "문단 모양 참조 적용 · 원본 조판 재계산 필요";
-      if (value.kind === "paragraph-alignment")
-        note.textContent = value.error ? `문단 정렬 변경 실패: ${value.error}` : "문단 정렬 적용";
+          : '문단 모양 참조 적용 · 원본 조판 재계산 필요';
+      if (value.kind === 'paragraph-alignment')
+        note.textContent = value.error ? `문단 정렬 변경 실패: ${value.error}` : '문단 정렬 적용';
       update();
     },
   };

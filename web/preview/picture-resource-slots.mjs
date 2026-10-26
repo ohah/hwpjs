@@ -16,7 +16,7 @@ export function createPictureResourceSlots(limit) {
       return new Promise((resolve) => waiters.add(resolve));
     },
     release() {
-      if (active < 1) throw new Error("UnbalancedPictureResourceSlot");
+      if (active < 1) throw new Error('UnbalancedPictureResourceSlot');
       active--;
       wake();
     },

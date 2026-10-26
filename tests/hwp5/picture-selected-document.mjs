@@ -1,26 +1,26 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
-import { pictureOwnerActual, pictureOwnerRun } from "./picture-validation.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
+import { pictureOwnerActual, pictureOwnerRun } from './picture-validation.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
 export function pictureSelectedDocument(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/투명도0-50.hwp", import.meta.url);
+  const path = new URL('../../reference/rhwp/samples/투명도0-50.hwp', import.meta.url);
   if (!existsSync(path)) return { skipped: true };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32);
   const decode = (path) => call(3, Buffer.concat([h, Buffer.from(cfb.findExact(path).content)]));
-  const doc = decode("/DocInfo"),
-    b = decode("/BodyText/Section0"),
+  const doc = decode('/DocInfo'),
+    b = decode('/BodyText/Section0'),
     nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const records = documentRecords(b).filter((r) => r.tag === 85);
   assert.equal(records.length, 2);
   const input = (bytes) => decodedDocumentInput(h, doc, [{ index: 0, bytes }]);
@@ -45,7 +45,7 @@ export function pictureSelectedDocument(call, cfb) {
           Buffer.from(
             cfb.write({
               nodes: nodes.map((n) =>
-                n.parent === body && n.name === "Section0"
+                n.parent === body && n.name === 'Section0'
                   ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes }
                   : n,
               ),
@@ -74,7 +74,7 @@ export function pictureSelectedDocument(call, cfb) {
       0,
     ]);
     expected.forEach((n, i) =>
-      assert.equal(report.readUInt32LE(sectionFieldOffset(0, "pictures", i)), n),
+      assert.equal(report.readUInt32LE(sectionFieldOffset(0, 'pictures', i)), n),
     );
     assert.deepEqual(container.subarray(0, report.length), report);
     if (mode === 0) {
@@ -128,8 +128,8 @@ export function pictureSelectedDocument(call, cfb) {
       call(80, Buffer.concat([Buffer.from([mode]), decodedDocumentInput(h, info, sections)]));
     const canonical = ordered(parts);
     assert.deepEqual(ordered([...parts].reverse()), canonical);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, "pictures", 1)), 0);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, "pictures", 1)), 1);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, 'pictures', 1)), 0);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, 'pictures', 1)), 1);
     ordering++;
   }
   for (const probe of [80, 81])

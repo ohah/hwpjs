@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 /** Shared conservative collision footprint for known nonnegative outer margins. */
 export function objectCollisionBox(rectangle, margins) {

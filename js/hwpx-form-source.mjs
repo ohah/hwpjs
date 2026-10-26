@@ -1,15 +1,15 @@
 // Validate wire types without duplicating native attribute names or XML rules.
-import { validShapeLayoutValues } from "./hwpx-shape-layout-values.mjs";
-const kinds = new Set(["button", "check_button", "combo_box", "radio_button", "edit_box"]);
+import { validShapeLayoutValues } from './hwpx-shape-layout-values.mjs';
+const kinds = new Set(['button', 'check_button', 'combo_box', 'radio_button', 'edit_box']);
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 function decode(bytes, maximum) {
   if (!(bytes instanceof Uint8Array) || bytes.length > maximum)
-    throw new Error("InvalidFormSource");
+    throw new Error('InvalidFormSource');
   try {
-    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
-    throw new Error("InvalidFormSource");
+    throw new Error('InvalidFormSource');
   }
 }
 export function decodeFormSourceNodes(bytes) {
@@ -27,7 +27,7 @@ export function decodeFormSourceNodes(bytes) {
         (i === 0 || row.formNode > value.nodes[i - 1].formNode),
     )
   )
-    throw new Error("InvalidFormSource");
+    throw new Error('InvalidFormSource');
   return value;
 }
 export function decodeFormSourceAttributes(bytes) {
@@ -46,14 +46,14 @@ export function decodeFormSourceAttributes(bytes) {
     !group(
       value.strings,
       (item) =>
-        typeof item === "string" &&
+        typeof item === 'string' &&
         item.isWellFormed() &&
         new TextEncoder().encode(item).length <= 65536,
     ) ||
-    !group(value.booleans, (item) => typeof item === "boolean") ||
+    !group(value.booleans, (item) => typeof item === 'boolean') ||
     !group(value.integers, uint)
   )
-    throw new Error("InvalidFormSource");
+    throw new Error('InvalidFormSource');
   return value;
 }
 export function decodeFormSites(bytes) {
@@ -69,23 +69,23 @@ export function decodeFormSites(bytes) {
         (i > 0 && site.formNode <= sites[i - 1].formNode)
       )
         return false;
-      if (site.state === "located")
+      if (site.state === 'located')
         return uint(site.paragraph) && site.paragraph > 0 && uint(site.anchorUnit);
-      if (site.state === "unsupported_anchor")
+      if (site.state === 'unsupported_anchor')
         return uint(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
       return (
-        ["conditional", "missing_host", "ambiguous_host"].includes(site.state) &&
+        ['conditional', 'missing_host', 'ambiguous_host'].includes(site.state) &&
         site.paragraph === null &&
         site.anchorUnit === null
       );
     })
   )
-    throw new Error("InvalidFormSource");
+    throw new Error('InvalidFormSource');
   return sites;
 }
 export function decodeFormSourceLayout(bytes) {
   const value = decode(bytes, 65536);
-  const bool = (value) => value === null || typeof value === "boolean";
+  const bool = (value) => value === null || typeof value === 'boolean';
   if (
     !object(value) ||
     value.sourceOnly !== true ||
@@ -101,6 +101,6 @@ export function decodeFormSourceLayout(bytes) {
       value.sizeProtected,
     ].every(bool)
   )
-    throw new Error("InvalidFormSource");
+    throw new Error('InvalidFormSource');
   return value;
 }

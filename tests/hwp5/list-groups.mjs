@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);

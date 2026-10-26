@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createDialogLayer } from "../src/dialog-layer.ts";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createDialogLayer } from '../src/dialog-layer.ts';
 function fixture() {
   class Realm extends EventTarget {
     innerWidth = 1280;
     innerHeight = 633;
     listeners = 0;
     addEventListener(t: string, f: any, o?: any) {
-      if (t === "resize") this.listeners++;
+      if (t === 'resize') this.listeners++;
       super.addEventListener(t, f, o);
     }
     removeEventListener(t: string, f: any, o?: any) {
-      if (t === "resize") this.listeners--;
+      if (t === 'resize') this.listeners--;
       super.removeEventListener(t, f, o);
     }
   }
@@ -23,8 +23,8 @@ function fixture() {
     dataset: any = {};
     style: any = {};
     open = false;
-    value = "";
-    textContent = "";
+    value = '';
+    textContent = '';
     attributes = new Map();
     captured: number | undefined;
     constructor(readonly ownerDocument: any) {
@@ -78,13 +78,13 @@ function fixture() {
   doc.createElement = () => new Node(doc);
   const root = new Node(doc),
     layer = createDialogLayer(root as any, {
-      role: "test-window",
-      title: "찾기",
-      mode: "modeless",
+      role: 'test-window',
+      title: '찾기',
+      mode: 'modeless',
       onDismiss() {},
     }),
     input = new Node(doc);
-  input.value = "ㅎ";
+  input.value = 'ㅎ';
   layer.body.append(input as any);
   layer.show(input as any);
   const header = (layer.element as any).children[0];
@@ -96,14 +96,14 @@ function fixture() {
   };
   const drag = () => {
     const rect = layer.element.getBoundingClientRect();
-    fire("pointerdown", {
+    fire('pointerdown', {
       button: 0,
       pointerId: 1,
       clientX: rect.left + 20,
       clientY: rect.top + 10,
     });
-    fire("pointermove", { pointerId: 1, clientX: 1100, clientY: 200 });
-    fire("pointerup", { pointerId: 1 });
+    fire('pointermove', { pointerId: 1, clientX: 1100, clientY: 200 });
+    fire('pointerup', { pointerId: 1 });
   };
   return {
     win,
@@ -114,11 +114,11 @@ function fixture() {
     resize(w: number, h: number) {
       win.innerWidth = w;
       win.innerHeight = h;
-      win.dispatchEvent(new Event("resize"));
+      win.dispatchEvent(new Event('resize'));
     },
   };
 }
-test("right-drag at 1280 then resize960 keeps the whole window inside viewport", () => {
+test('right-drag at 1280 then resize960 keeps the whole window inside viewport', () => {
   const f = fixture();
   try {
     f.drag();
@@ -128,12 +128,12 @@ test("right-drag at 1280 then resize960 keeps the whole window inside viewport",
     assert(rect.left >= 8);
     assert(rect.right <= 952);
     assert.equal(f.doc.activeElement, f.input);
-    assert.equal(f.input.value, "ㅎ");
+    assert.equal(f.input.value, 'ㅎ');
   } finally {
     f.layer.destroy();
   }
 });
-test("shrinking both viewport axes respects responsive CSS size and safe margins", () => {
+test('shrinking both viewport axes respects responsive CSS size and safe margins', () => {
   const f = fixture();
   try {
     f.drag();
@@ -145,7 +145,7 @@ test("shrinking both viewport axes respects responsive CSS size and safe margins
     f.layer.destroy();
   }
 });
-test("undragged window keeps CSS centering instead of pinning pixel offsets", () => {
+test('undragged window keeps CSS centering instead of pinning pixel offsets', () => {
   const f = fixture();
   try {
     f.resize(960, 633);
@@ -154,7 +154,7 @@ test("undragged window keeps CSS centering instead of pinning pixel offsets", ()
     f.layer.destroy();
   }
 });
-test("dispose unregisters resize listener and no later resize mutates the detached window", () => {
+test('dispose unregisters resize listener and no later resize mutates the detached window', () => {
   const f = fixture();
   f.drag();
   assert.equal(f.win.listeners, 1);

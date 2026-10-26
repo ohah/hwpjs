@@ -1,45 +1,45 @@
-import assert from "node:assert/strict";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { documentRecords } from "./documents.mjs";
-import { inspectDrawingSection } from "./drawing-section-evidence.mjs";
-import { drawingStyleActual } from "./drawing-style.mjs";
-import { lineActual } from "./shape-line.mjs";
-import { groupInfoActual } from "./group-info.mjs";
-import { groupActual } from "./group-validation.mjs";
-import { memoShapeActual } from "./memo-shape.mjs";
-import { connectorActual } from "./shape-connector.mjs";
-import { lineOwnerActual } from "./line-validation.mjs";
-import { rectangleActual } from "./shape-rectangle.mjs";
-import { rectangleOwnerActual } from "./rectangle-validation.mjs";
-import { ellipseActual } from "./shape-ellipse.mjs";
-import { ellipseOwnerActual } from "./ellipse-validation.mjs";
-import { arcOwnerActual } from "./arc-validation.mjs";
-import { polygonActual } from "./shape-polygon.mjs";
-import { polygonOwnerActual } from "./polygon-validation.mjs";
-import { curveActual } from "./shape-curve.mjs";
-import { curveOwnerActual } from "./curve-validation.mjs";
-import { pictureOwnerActual } from "./picture-validation.mjs";
-import { pictureActual, pictureRun } from "./shape-picture.mjs";
-import { colorActual } from "./picture-color.mjs";
-import { effectsActual } from "./picture-effects.mjs";
-import { additionalActual, additionalRun, tailActual, tailRun } from "./picture-additional.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { documentRecords } from './documents.mjs';
+import { inspectDrawingSection } from './drawing-section-evidence.mjs';
+import { drawingStyleActual } from './drawing-style.mjs';
+import { lineActual } from './shape-line.mjs';
+import { groupInfoActual } from './group-info.mjs';
+import { groupActual } from './group-validation.mjs';
+import { memoShapeActual } from './memo-shape.mjs';
+import { connectorActual } from './shape-connector.mjs';
+import { lineOwnerActual } from './line-validation.mjs';
+import { rectangleActual } from './shape-rectangle.mjs';
+import { rectangleOwnerActual } from './rectangle-validation.mjs';
+import { ellipseActual } from './shape-ellipse.mjs';
+import { ellipseOwnerActual } from './ellipse-validation.mjs';
+import { arcOwnerActual } from './arc-validation.mjs';
+import { polygonActual } from './shape-polygon.mjs';
+import { polygonOwnerActual } from './polygon-validation.mjs';
+import { curveActual } from './shape-curve.mjs';
+import { curveOwnerActual } from './curve-validation.mjs';
+import { pictureOwnerActual } from './picture-validation.mjs';
+import { pictureActual, pictureRun } from './shape-picture.mjs';
+import { colorActual } from './picture-color.mjs';
+import { effectsActual } from './picture-effects.mjs';
+import { additionalActual, additionalRun, tailActual, tailRun } from './picture-additional.mjs';
 
 // Inventory only: failures remain visible and never authorize a fallback layout.
 export function drawingStyleSurvey(call, cfb) {
-  const root = new URL("../../reference/rhwp/samples/", import.meta.url);
+  const root = new URL('../../reference/rhwp/samples/', import.meta.url);
   if (!existsSync(root)) return { skipped: true };
   const out = { files: 0, hierarchyCompleted: 0, security: 0, failures: [], kinds: {} };
   // Explicit per-fixture experiment, NOT version inference or production fallback.
   const olderFixtures = new Map([
     [
-      "issue2559/1341000_research_report_footnotes.hwp",
-      { count: 17, bytes: 21, version: "5000107" },
+      'issue2559/1341000_research_report_footnotes.hwp',
+      { count: 17, bytes: 21, version: '5000107' },
     ],
     [
-      "issue5714/1490000-200800034_vietnam_labor_report.hwp",
-      { count: 1, bytes: 51, version: "5000006" },
+      'issue5714/1490000-200800034_vietnam_labor_report.hwp',
+      { count: 1, bytes: 51, version: '5000006' },
     ],
   ]);
   out.fillOnly = { parsed: 0, rejectedPrefixes: 0 };
@@ -128,29 +128,29 @@ export function drawingStyleSurvey(call, cfb) {
     alphaNonzero: 0,
     reservedExamples: [],
   };
-  const drawingIds = new Set(["$lin", "$rec", "$ell", "$arc", "$pol", "$cur"]);
+  const drawingIds = new Set(['$lin', '$rec', '$ell', '$arc', '$pol', '$cur']);
   for (const name of readdirSync(root, { recursive: true })
-    .filter((n) => n.endsWith(".hwp"))
+    .filter((n) => n.endsWith('.hwp'))
     .sort()) {
     out.files++;
     let sections, header, binItems;
     try {
       cfb.parse(readFileSync(join(fileURLToPath(root), name)), { strict: true });
-      header = Buffer.from(cfb.findExact("/FileHeader").content);
+      header = Buffer.from(cfb.findExact('/FileHeader').content);
       if (header.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024)) {
         out.security++;
         continue;
       }
-      const info = call(3, Buffer.concat([header, Buffer.from(cfb.findExact("/DocInfo").content)]));
+      const info = call(3, Buffer.concat([header, Buffer.from(cfb.findExact('/DocInfo').content)]));
       for (const r of documentRecords(info).filter((r) => r.tag === 92)) {
         const p = memoShapeActual(call, info.subarray(r.start, r.end));
         out.memoShapes.parsed++;
         out.memoShapes.rejected += p.rejected;
         for (const [key, value] of [
-          ["kinds", p.kind],
-          ["widths", p.width],
-          ["unknown", p.unknown],
-          ["extras", p.extra],
+          ['kinds', p.kind],
+          ['widths', p.width],
+          ['unknown', p.unknown],
+          ['extras', p.extra],
         ])
           out.memoShapes[key][value] = (out.memoShapes[key][value] ?? 0) + 1;
         out.memoShapes.files[name] = (out.memoShapes.files[name] ?? 0) + 1;
@@ -159,15 +159,15 @@ export function drawingStyleSurvey(call, cfb) {
         .filter((r) => r.tag === 18)
         .map((r) => info.subarray(r.start, r.end));
       const nodes = cfb.document().nodes;
-      const body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
-      assert.ok(body >= 0, "missing BodyText");
+      const body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
+      assert.ok(body >= 0, 'missing BodyText');
       sections = nodes
         .filter((n) => n.parent === body && /^Section\d+$/.test(n.name))
         .map((n) => ({ name: n.name, raw: Buffer.from(n.content) }));
-      assert.ok(sections.length > 0, "missing sections");
+      assert.ok(sections.length > 0, 'missing sections');
     } catch (e) {
       if (e instanceof WebAssembly.RuntimeError) throw e;
-      out.failures.push({ name, stage: "container", error: e.message });
+      out.failures.push({ name, stage: 'container', error: e.message });
       continue;
     }
     let failed = false;
@@ -180,7 +180,7 @@ export function drawingStyleSurvey(call, cfb) {
         out.failures.push({
           name,
           section: section.name,
-          stage: "shape hierarchy",
+          stage: 'shape hierarchy',
           error: e.message,
         });
         failed = true;
@@ -300,9 +300,9 @@ export function drawingStyleSurvey(call, cfb) {
             parent?.tag === 76
               ? Buffer.from(bytes.subarray(parent.start, parent.start + 4))
                   .reverse()
-                  .toString("latin1")
-              : "other";
-          if (owner === "$cur") {
+                  .toString('latin1')
+              : 'other';
+          if (owner === '$cur') {
             const curve = curveActual(call, bytes.subarray(record.start, record.end));
             out.curves.parsed++;
             out.curves.rejected += curve.rejected;
@@ -320,9 +320,9 @@ export function drawingStyleSurvey(call, cfb) {
             parent?.tag === 76
               ? Buffer.from(bytes.subarray(parent.start, parent.start + 4))
                   .reverse()
-                  .toString("latin1")
-              : "other";
-          if (owner === "$pol") {
+                  .toString('latin1')
+              : 'other';
+          if (owner === '$pol') {
             const polygon = polygonActual(call, bytes.subarray(record.start, record.end));
             out.polygons.parsed++;
             out.polygons.rejected += polygon.rejected;
@@ -338,9 +338,9 @@ export function drawingStyleSurvey(call, cfb) {
             parent?.tag === 76
               ? Buffer.from(bytes.subarray(parent.start, parent.start + 4))
                   .reverse()
-                  .toString("latin1")
-              : "other";
-          if (owner === "$ell") {
+                  .toString('latin1')
+              : 'other';
+          if (owner === '$ell') {
             const ellipse = ellipseActual(call, bytes.subarray(record.start, record.end));
             out.ellipses.parsed++;
             out.ellipses.rejected += ellipse.rejected;
@@ -356,13 +356,13 @@ export function drawingStyleSurvey(call, cfb) {
             parent?.tag === 76
               ? Buffer.from(bytes.subarray(parent.start, parent.start + 4))
                   .reverse()
-                  .toString("latin1")
-              : "other";
-          if (owner === "$rec") {
+                  .toString('latin1')
+              : 'other';
+          if (owner === '$rec') {
             const rect = rectangleActual(call, bytes.subarray(record.start, record.end));
             out.rectangles.parsed++;
             out.rectangles.rejected += rect.rejected;
-            if (name === "group-drawing-02.hwp") out.rectangles.groupDrawingRects++;
+            if (name === 'group-drawing-02.hwp') out.rectangles.groupDrawingRects++;
             out.rectangles.rounds[rect.round] = (out.rectangles.rounds[rect.round] ?? 0) + 1;
             out.rectangles.extras[rect.extra] = (out.rectangles.extras[rect.extra] ?? 0) + 1;
           } else
@@ -374,19 +374,19 @@ export function drawingStyleSurvey(call, cfb) {
             parent?.tag === 76
               ? Buffer.from(bytes.subarray(parent.start, parent.start + 4))
                   .reverse()
-                  .toString("latin1")
-              : "other";
-          if (owner === "$lin") {
+                  .toString('latin1')
+              : 'other';
+          if (owner === '$lin') {
             const line = lineActual(call, bytes.subarray(record.start, record.end));
             out.lines.parsed++;
             out.lines.rejected += line.rejected;
-            if (name === "group-drawing-02.hwp") out.lines.groupDrawingLines++;
+            if (name === 'group-drawing-02.hwp') out.lines.groupDrawingLines++;
             out.lines.attributes[line.attributes] =
               (out.lines.attributes[line.attributes] ?? 0) + 1;
             out.lines.extras[line.extra] = (out.lines.extras[line.extra] ?? 0) + 1;
           } else {
             out.lines.deferredOwners[owner] = (out.lines.deferredOwners[owner] ?? 0) + 1;
-            if (owner === "$col") {
+            if (owner === '$col') {
               const p = connectorActual(call, bytes.subarray(record.start, record.end));
               out.connectors.parsed++;
               out.connectors.rejected += p.rejected;
@@ -399,8 +399,8 @@ export function drawingStyleSurvey(call, cfb) {
         }
         if (record.tag === 76) {
           const p = bytes.subarray(record.start, record.end);
-          const id = Buffer.from(p.subarray(0, 4)).reverse().toString("latin1");
-          if (id === "$con") {
+          const id = Buffer.from(p.subarray(0, 4)).reverse().toString('latin1');
+          if (id === '$con') {
             const base = (stack[level - 1]?.tag === 71 ? 8 : 4) + 42,
               start = base + 50 + p.readUInt16LE(base) * 96;
             const tail = p.subarray(start),
@@ -455,7 +455,7 @@ export function drawingStyleSurvey(call, cfb) {
               failed: 0,
               fillOnly: 0,
             });
-            if (olderFixtures.has(name) && id === "$rec") {
+            if (olderFixtures.has(name) && id === '$rec') {
               const parsed = drawingStyleActual(call, style, 3);
               assert.equal(parsed.known, true);
               assert.equal(parsed.extra, 0);
@@ -483,7 +483,7 @@ export function drawingStyleSurvey(call, cfb) {
                 version: header.readUInt32LE(32).toString(16),
                 localVersion: p.readUInt16LE(start - 32),
                 bytes: style.length,
-                hex: style.subarray(0, 64).toString("hex"),
+                hex: style.subarray(0, 64).toString('hex'),
                 error: e.message,
               });
             }
@@ -523,8 +523,8 @@ export function drawingStyleSurvey(call, cfb) {
                   offset: record.offset,
                   id: parsed.imageId,
                 });
-              stats[parsed.known ? "known" : "unknown"]++;
-              versionStats[parsed.known ? "full" : "unknown"]++;
+              stats[parsed.known ? 'known' : 'unknown']++;
+              versionStats[parsed.known ? 'full' : 'unknown']++;
               stats.flags[parsed.flags] = (stats.flags[parsed.flags] ?? 0) + 1;
               stats.extras[parsed.extra] = (stats.extras[parsed.extra] ?? 0) + 1;
             }
@@ -546,31 +546,31 @@ export function drawingStyleSurvey(call, cfb) {
   for (const [name, { count, bytes, version }] of olderFixtures) {
     if (!existsSync(join(fileURLToPath(root), name))) continue;
     expectedParsed += count;
-    assert.ok(!out.failures.some((f) => f.name === name), "regression fixture must reach styles");
+    assert.ok(!out.failures.some((f) => f.name === name), 'regression fixture must reach styles');
     const failures = out.kinds.$rec.errors.filter((e) => e.name === name);
     assert.equal(failures.length, count);
     for (const failure of failures) {
       assert.equal(failure.bytes, bytes);
       assert.equal(failure.version, version);
-      assert.equal(failure.error, "UnexpectedEnd");
+      assert.equal(failure.error, 'UnexpectedEnd');
     }
   }
   assert.equal(out.fillOnly.parsed, expectedParsed);
-  if (existsSync(join(fileURLToPath(root), "group-drawing-02.hwp")))
+  if (existsSync(join(fileURLToPath(root), 'group-drawing-02.hwp')))
     assert.equal(out.lines.groupDrawingLines, 4);
-  if (existsSync(join(fileURLToPath(root), "group-drawing-02.hwp")))
+  if (existsSync(join(fileURLToPath(root), 'group-drawing-02.hwp')))
     assert.equal(out.rectangles.groupDrawingRects, 30);
-  if (existsSync(join(fileURLToPath(root), "basic/KTX.hwp")))
-    assert.equal(out.ellipses.files["basic/KTX.hwp"], 19);
-  if (existsSync(join(fileURLToPath(root), "basic/KTX.hwp")))
-    assert.equal(out.polygons.files["basic/KTX.hwp"], 21);
-  if (existsSync(join(fileURLToPath(root), "2025 행정업무운영 편람(최종).hwp")))
-    assert.equal(out.curves.files["2025 행정업무운영 편람(최종).hwp"], 2);
+  if (existsSync(join(fileURLToPath(root), 'basic/KTX.hwp')))
+    assert.equal(out.ellipses.files['basic/KTX.hwp'], 19);
+  if (existsSync(join(fileURLToPath(root), 'basic/KTX.hwp')))
+    assert.equal(out.polygons.files['basic/KTX.hwp'], 21);
+  if (existsSync(join(fileURLToPath(root), '2025 행정업무운영 편람(최종).hwp')))
+    assert.equal(out.curves.files['2025 행정업무운영 편람(최종).hwp'], 2);
   const versions = Object.values(out.versions);
   const kinds = Object.values(out.kinds);
   for (const [versionField, kindField] of [
-    ["full", "known"],
-    ["unknown", "unknown"],
+    ['full', 'known'],
+    ['unknown', 'unknown'],
   ]) {
     assert.equal(
       versions.reduce((n, v) => n + v[versionField], 0),
@@ -586,10 +586,10 @@ export function drawingStyleSurvey(call, cfb) {
     out.fillOnly.parsed,
   );
   // The same local version occurs in both layouts: it cannot select a tail by itself.
-  if (expectedParsed > 0 && existsSync(join(fileURLToPath(root), "group-drawing-02.hwp"))) {
-    assert.ok(Object.entries(out.versions).some(([key, v]) => key.endsWith("/1") && v.full > 0));
+  if (expectedParsed > 0 && existsSync(join(fileURLToPath(root), 'group-drawing-02.hwp'))) {
+    assert.ok(Object.entries(out.versions).some(([key, v]) => key.endsWith('/1') && v.full > 0));
     assert.ok(
-      Object.entries(out.versions).some(([key, v]) => key.endsWith("/1") && v.fillOnly > 0),
+      Object.entries(out.versions).some(([key, v]) => key.endsWith('/1') && v.fillOnly > 0),
     );
   }
   return out;

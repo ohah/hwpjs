@@ -1,4 +1,4 @@
-import { observeTextBlockBase } from "./chart-axis-prefix-evidence.mjs";
+import { observeTextBlockBase } from './chart-axis-prefix-evidence.mjs';
 // Shared base body plus full preceding identity scope. Keep the historical
 // SeriesLabel error name stable for existing observation consumers.
 export function observeScopedTextBody(bytes, offset, priorTypes, priorObjects, priorStrings) {
@@ -10,7 +10,7 @@ export function observeScopedTextBody(bytes, offset, priorTypes, priorObjects, p
   for (const at of text.objectOffsets) {
     const id = b.readUInt32LE(at);
     if (id === 0xffffffff || objects.has(id))
-      throw Error("UnsupportedSeriesLabelObservationObject");
+      throw Error('UnsupportedSeriesLabelObservationObject');
     objects.add(id);
   }
   for (const d of text.declarations) types.set(d.id, { name: d.name, version: d.version });

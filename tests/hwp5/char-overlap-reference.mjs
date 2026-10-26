@@ -1,23 +1,23 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { overlapActual, overlapInput } from "./char-overlap.mjs";
-import { memoReference } from "./memo-identity-reference.mjs";
-import { documentRecords, documentActual } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { overlapActual, overlapInput } from './char-overlap.mjs';
+import { memoReference } from './memo-identity-reference.mjs';
+import { documentRecords, documentActual } from './documents.mjs';
 export function overlapReference(call, cfb) {
   const results = [];
   for (const [path, mode] of [
-    ["aift.hwp", 1],
-    ["basic/issue2007_nested_cell_pagination_42065.hwp", 0],
+    ['aift.hwp', 1],
+    ['basic/issue2007_nested_cell_pagination_42065.hwp', 0],
   ]) {
-    const url = new URL("../../reference/rhwp/samples/" + path, import.meta.url);
+    const url = new URL('../../reference/rhwp/samples/' + path, import.meta.url);
     if (!existsSync(url)) {
-      results.push({ path, skipped: "reference fixture unavailable" });
+      results.push({ path, skipped: 'reference fixture unavailable' });
       continue;
     }
     const file = readFileSync(url);
     cfb.parse(file, { strict: true });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       v = h.readUInt32LE(32),
       flags = h.readUInt32LE(36);
     assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
@@ -27,8 +27,8 @@ export function overlapReference(call, cfb) {
       assert.deepEqual(call(3, Buffer.concat([h, raw]), b.length), b);
       return b;
     };
-    const b = decode("/BodyText/Section0"),
-      doc = decode("/DocInfo"),
+    const b = decode('/BodyText/Section0'),
+      doc = decode('/DocInfo'),
       count = documentRecords(doc).filter((r) => r.tag === 21).length;
     const stats = overlapActual(call, v, b, count, mode);
     assert.ok(stats[0] > 0);
@@ -59,10 +59,10 @@ export function overlapReference(call, cfb) {
     const nodes = cfb.document().nodes;
     const sections = mode
       ? nodes
-          .filter((n) => /^Section\d+$/.test(n.name) && nodes[n.parent]?.name === "BodyText")
+          .filter((n) => /^Section\d+$/.test(n.name) && nodes[n.parent]?.name === 'BodyText')
           .map((n) => ({
             index: Number(n.name.slice(7)),
-            bytes: decode("/BodyText/" + n.name),
+            bytes: decode('/BodyText/' + n.name),
           }))
       : [];
     let documentReport = null;

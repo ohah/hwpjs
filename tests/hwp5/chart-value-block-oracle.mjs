@@ -1,13 +1,13 @@
-import { integer, textBodyWire } from "./chart-text-body-oracle.mjs";
+import { integer, textBodyWire } from './chart-text-body-oracle.mjs';
 const number = (n) => {
   const b = Buffer.alloc(8);
-  b.writeBigUInt64LE(BigInt("0x" + n.bitsHex));
+  b.writeBigUInt64LE(BigInt('0x' + n.bitsHex));
   return b;
 };
 const string = (s) =>
   Buffer.concat([
     ...[s.id, s.hex.length / 2, s.trailer, Number(s.introduced)].map((n) => integer(n)),
-    Buffer.from(s.hex, "hex"),
+    Buffer.from(s.hex, 'hex'),
   ]);
 export function valueBlockCase(bytes, result, prior) {
   const p = result.value.prefix,
@@ -20,7 +20,7 @@ export function valueBlockCase(bytes, result, prior) {
   for (const d of result.axis.declarations) types.set(d.id, { name: d.name, version: d.version });
   for (const s of [result.axis.fontName, result.axis.text]) if (s) strings.set(s.id, s);
   const fields = [
-    p.reference?.kind === "number" ? null : p.reference,
+    p.reference?.kind === 'number' ? null : p.reference,
     p.format?.code,
     p.label,
     t.fontName,
@@ -35,17 +35,17 @@ export function valueBlockCase(bytes, result, prior) {
     strings.size +
     numbers.size +
     fields.filter((s) => s.introduced).length +
-    Number(p.reference?.kind === "number" && p.reference.introduced) +
+    Number(p.reference?.kind === 'number' && p.reference.introduced) +
     Number(p.format !== null) +
     1 +
     (t.background ? 3 : 0);
   const scope = [];
   for (const [id, v] of types) {
-    const raw = Buffer.from(v.name, "latin1");
+    const raw = Buffer.from(v.name, 'latin1');
     scope.push(integer(id), integer(raw.length, 2), raw, integer(v.version, 2));
   }
   for (const [id, v] of strings) {
-    const raw = Buffer.from(v.hex, "hex");
+    const raw = Buffer.from(v.hex, 'hex');
     scope.push(integer(id), integer(raw.length), raw, integer(v.trailer, 1));
   }
   for (const [id, v] of numbers) scope.push(integer(id), number(v), integer(v.trailer, 2));
@@ -82,10 +82,10 @@ export function valueBlockWire(value, start, objects, stored) {
     ...[p.headerWord, p.rawBeforeLabel, t.end - start, Number(p.format !== null)].map((n) =>
       integer(n),
     ),
-    Buffer.from(value.rawSuffix, "hex"),
+    Buffer.from(value.rawSuffix, 'hex'),
   ];
   if (!p.reference) out.push(integer(0));
-  else if (p.reference.kind === "number") {
+  else if (p.reference.kind === 'number') {
     const r = p.reference;
     out.push(
       ...[2, r.id, r.trailer, Number(r.introduced)].map((n) => integer(n)),

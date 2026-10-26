@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { inflateRawSync } from "node:zlib";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { sectionCountFixtures } from "./section-count-fixtures.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { inflateRawSync } from 'node:zlib';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { sectionCountFixtures } from './section-count-fixtures.mjs';
 
-const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const inspect = (input) =>
   JSON.parse(
-    execFileSync("python3", ["tools/hwp5-section-count-oracle.py"], {
+    execFileSync('python3', ['tools/hwp5-section-count-oracle.py'], {
       input,
       timeout: 30000,
       maxBuffer: 64 * 1024 * 1024,
@@ -23,7 +23,7 @@ for (const [name, version, declared, available, digest, paragraphs] of sectionCo
     const cli = process.env.HWPJS_SECTION_COPY_CLI;
     const path = `reference/rhwp/samples/${name}`;
     if (!cli || !existsSync(path)) {
-      t.skip("Explicit native copy CLI and reference fixture required");
+      t.skip('Explicit native copy CLI and reference fixture required');
       return;
     }
     const input = readFileSync(path);
@@ -42,13 +42,13 @@ for (const [name, version, declared, available, digest, paragraphs] of sectionCo
       before.streams.map((row) => row.path),
     );
     for (const row of before.streams) {
-      if (row.path !== "DocInfo")
+      if (row.path !== 'DocInfo')
         assert.deepEqual(
           after.streams.find((item) => item.path === row.path),
           row,
         );
     }
-    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
     const cfb = await createCfbReader(wasm),
       reader = await createHwp5Reader(wasm);
     try {
@@ -63,14 +63,14 @@ for (const [name, version, declared, available, digest, paragraphs] of sectionCo
       const expected = Buffer.from(original);
       expected.writeUInt16LE(available, before.properties.offset);
       const actual = decodedInfo(output, true);
-      assert.deepEqual(actual, expected, "Only the source-bound section counter may change");
+      assert.deepEqual(actual, expected, 'Only the source-bound section counter may change');
       const wrong = Buffer.from(original);
       wrong.writeUInt16LE(available + 1, before.properties.offset);
-      assert.notDeepEqual(actual, wrong, "Wrong count negative control");
+      assert.notDeepEqual(actual, wrong, 'Wrong count negative control');
       const wrongOffset = Buffer.from(original);
       wrongOffset.writeUInt16LE(available, before.properties.offset + 2);
-      assert.notDeepEqual(actual, wrongOffset, "Wrong offset negative control");
-      assert.throws(() => reader.readText(input), { message: "SectionCountMismatch" });
+      assert.notDeepEqual(actual, wrongOffset, 'Wrong offset negative control');
+      assert.throws(() => reader.readText(input), { message: 'SectionCountMismatch' });
       const result = reader.readText(output);
       assert.equal(result.sections.length, available);
       assert.equal(

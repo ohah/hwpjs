@@ -1,18 +1,18 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { hwp5LineSpacing, roundedMulDiv } from "../../web/preview/hwp5-line-spacing.mjs";
-import { paragraphLineAdvance, paragraphSpacing } from "../../web/preview/paragraph-geometry.mjs";
-import { currentParagraphSpacing } from "../../web/preview/paragraph-spacing-source.mjs";
-import { hwpxParagraphGeometry } from "../../web/preview/hwpx-paragraph-geometry.mjs";
-import { layoutContent } from "../../web/preview/layout.mjs";
-import { rowAtY, rowVisualHeight } from "../../web/preview/row-geometry.mjs";
-import { caretGeometry } from "../../web/preview/text-geometry.mjs";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
-import { layoutDrawingText } from "../../web/preview/drawing-text-layout.mjs";
-import { measureInlineObjectParagraph } from "../../web/preview/inline-object-paragraph-measurement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { hwp5LineSpacing, roundedMulDiv } from '../../web/preview/hwp5-line-spacing.mjs';
+import { paragraphLineAdvance, paragraphSpacing } from '../../web/preview/paragraph-geometry.mjs';
+import { currentParagraphSpacing } from '../../web/preview/paragraph-spacing-source.mjs';
+import { hwpxParagraphGeometry } from '../../web/preview/hwpx-paragraph-geometry.mjs';
+import { layoutContent } from '../../web/preview/layout.mjs';
+import { rowAtY, rowVisualHeight } from '../../web/preview/row-geometry.mjs';
+import { caretGeometry } from '../../web/preview/text-geometry.mjs';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
+import { layoutDrawingText } from '../../web/preview/drawing-text-layout.mjs';
+import { measureInlineObjectParagraph } from '../../web/preview/inline-object-paragraph-measurement.mjs';
 
-test("round 1 arithmetic: signed ties, integer steps and exact counterexamples", () => {
+test('round 1 arithmetic: signed ties, integer steps and exact counterexamples', () => {
   assert.equal(roundedMulDiv(1, 1, 2), 1);
   assert.equal(roundedMulDiv(-1, 1, 2), -1);
   assert.equal(roundedMulDiv(2147483647, 2147483647, 2147483647), 2147483647);
@@ -32,12 +32,12 @@ test("round 1 arithmetic: signed ties, integer steps and exact counterexamples",
     }
 });
 
-test("round 2 hostile inputs: no coercion, overflow, fabricated font basis or raw mutation", () => {
-  for (const v of [undefined, null, "160", NaN, Infinity, -1, 1.5, 2147483648]) {
+test('round 2 hostile inputs: no coercion, overflow, fabricated font basis or raw mutation', () => {
+  for (const v of [undefined, null, '160', NaN, Infinity, -1, 1.5, 2147483648]) {
     assert.equal(hwp5LineSpacing(0, v, 1000), null);
     assert.equal(hwp5LineSpacing(0, 160, v), null);
   }
-  for (const kind of [-1, 4, 16, 31, "0", null])
+  for (const kind of [-1, 4, 16, 31, '0', null])
     assert.equal(hwp5LineSpacing(kind, 160, 1000), null);
   assert.equal(hwp5LineSpacing(0, 2147483647, 2147483647), null);
   assert.equal(hwp5LineSpacing(1, 2001, 1000), null);
@@ -54,9 +54,9 @@ test("round 2 hostile inputs: no coercion, overflow, fabricated font basis or ra
   for (const modernSpacing of [
     false,
     0,
-    "0",
+    '0',
     [],
-    { attributes: "0", value: 160 },
+    { attributes: '0', value: 160 },
     { attributes: 0, value: NaN },
   ]) {
     const malformed = { ...shape, modernSpacing };
@@ -67,15 +67,15 @@ test("round 2 hostile inputs: no coercion, overflow, fabricated font basis or ra
   assert.equal(paragraphLineAdvance({ legacySpacingKind: 1, legacySpacing: 2001 }, 20, 28), 28);
 });
 
-test("round 3 format isolation: HWPX is not halved and source absence is not zero", () => {
+test('round 3 format isolation: HWPX is not halved and source absence is not zero', () => {
   for (const [type, expected] of [
-    ["FIXED", 40],
-    ["BETWEEN_LINES", 60],
-    ["AT_LEAST", 40],
+    ['FIXED', 40],
+    ['BETWEEN_LINES', 60],
+    ['AT_LEAST', 40],
   ]) {
     const shape = hwpxParagraphGeometry({
       spacing_type: type,
-      spacing: { value: 3000, unit: "HWPUNIT" },
+      spacing: { value: 3000, unit: 'HWPUNIT' },
       margins: [],
     });
     assert.equal(paragraphLineAdvance(shape, 20, 28), expected);
@@ -85,7 +85,7 @@ test("round 3 format isolation: HWPX is not halved and source absence is not zer
   assert.equal(paragraphLineAdvance({}, 20, 28), 28);
   assert.equal(
     paragraphLineAdvance(
-      hwpxParagraphGeometry({ spacing_type: "PERCENT", spacing: { value: 0 }, margins: [] }),
+      hwpxParagraphGeometry({ spacing_type: 'PERCENT', spacing: { value: 0 }, margins: [] }),
       20,
       28,
     ),
@@ -94,8 +94,8 @@ test("round 3 format isolation: HWPX is not halved and source absence is not zer
   assert.equal(
     paragraphLineAdvance(
       hwpxParagraphGeometry({
-        spacing_type: "FIXED",
-        spacing: { value: 3000, unit: "future" },
+        spacing_type: 'FIXED',
+        spacing: { value: 3000, unit: 'future' },
         margins: [],
       }),
       20,
@@ -113,12 +113,12 @@ test("round 3 format isolation: HWPX is not halved and source absence is not zer
   );
 });
 
-test("round 4 actual linespacing fixture: independent offsets, cached extra and unchanged input", () => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/linespacing.hwp"),
+test('round 4 actual linespacing fixture: independent offsets, cached extra and unchanged input', () => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/linespacing.hwp'),
     before = Buffer.from(input);
   const doc = inspect(input),
-    version = doc.streams.get("FileHeader").readUInt32LE(32);
-  const shapes = records(doc.decode(doc.streams.get("DocInfo")))
+    version = doc.streams.get('FileHeader').readUInt32LE(32);
+  const shapes = records(doc.decode(doc.streams.get('DocInfo')))
     .filter((r) => r.tag === 25)
     .map(({ payload: p }) => {
       const legacySpacingKind = p.readUInt32LE(0) & 3,
@@ -164,12 +164,12 @@ test("round 4 actual linespacing fixture: independent offsets, cached extra and 
   assert.deepEqual(input, before);
 });
 
-test("round 5 flow: zero advance terminates, ink stays selectable and basis excludes tall objects", () => {
+test('round 5 flow: zero advance terminates, ink stays selectable and basis excludes tall objects', () => {
   const paragraph = {
     section: 0,
     paragraph: 0,
-    label: "",
-    text: "abcd",
+    label: '',
+    text: 'abcd',
     editable: true,
     paragraphShape: { legacySpacingKind: 0, legacySpacing: 0 },
   };
@@ -206,7 +206,7 @@ test("round 5 flow: zero advance terminates, ink stays selectable and basis excl
   );
 });
 
-test("round 5 drawing: zero advance cannot hide ink overflow or bypass row limits", () => {
+test('round 5 drawing: zero advance cannot hide ink overflow or bypass row limits', () => {
   const drawing = {
     section: 0,
     drawingNode: 2,
@@ -224,7 +224,7 @@ test("round 5 drawing: zero advance cannot hide ink overflow or bypass row limit
   const paragraph = {
     section: 0,
     paragraph: 1,
-    text: "abcd",
+    text: 'abcd',
     editable: true,
     paragraphShape: { legacySpacingKind: 0, legacySpacing: 0 },
     drawingText: { drawingNode: 2, listNode: 4 },
@@ -233,49 +233,49 @@ test("round 5 drawing: zero advance cannot hide ink overflow or bypass row limit
     count: 1,
     same_size: true,
     gap: 0,
-    direction: "left",
-    kind: "newspaper",
+    direction: 'left',
+    kind: 'newspaper',
     ambiguous: false,
   };
   const measure = () => ({ width: 10, height: 20 });
   const box = { x: 0, y: 0, width: 20, height: 28 };
   const result = layoutDrawingText(drawing, [paragraph], declaration, box, measure);
-  assert.equal(result.state, "placed");
+  assert.equal(result.state, 'placed');
   assert.deepEqual(
     result.rows.map((row) => row.y),
     [0, 0],
   );
   assert.equal(
     layoutDrawingText(drawing, [paragraph], declaration, { ...box, height: 27 }, measure).error,
-    "DrawingTextOverflow",
+    'DrawingTextOverflow',
   );
   assert.equal(
     layoutDrawingText(drawing, [paragraph], declaration, box, measure, { maxRows: 1 }).error,
-    "DrawingTextLayoutLimit",
+    'DrawingTextLayoutLimit',
   );
 });
 
-test("round 5 negative controls reject naive multiplication, doubled units and minimum clamps", async () => {
-  const sourceUrl = new URL("../../web/preview/hwp5-line-spacing.mjs", import.meta.url);
-  const source = readFileSync(sourceUrl, "utf8");
+test('round 5 negative controls reject naive multiplication, doubled units and minimum clamps', async () => {
+  const sourceUrl = new URL('../../web/preview/hwp5-line-spacing.mjs', import.meta.url);
+  const source = readFileSync(sourceUrl, 'utf8');
   const dependency = '"./integer-mul-div.mjs"';
   assert.ok(source.includes(dependency));
   // A data URL has no hierarchical base; keep the real shared dependency.
   const linked = source.replaceAll(
     dependency,
-    JSON.stringify(new URL("./integer-mul-div.mjs", sourceUrl).href),
+    JSON.stringify(new URL('./integer-mul-div.mjs', sourceUrl).href),
   );
   const mutants = [
     [
-      "Math.trunc(basisHeight / 4)",
-      "basisHeight / 4",
+      'Math.trunc(basisHeight / 4)',
+      'basisHeight / 4',
       [0, 160, 1003],
       { extra: 600, advance: 1603 },
     ],
-    ["Math.trunc(value / 2)", "value", [1, 4000, 1000], { extra: 1000, advance: 2000 }],
+    ['Math.trunc(value / 2)', 'value', [1, 4000, 1000], { extra: 1000, advance: 2000 }],
     [
-      "const advance = height + extra",
-      "const advance = Math.max(height, height + extra)",
+      'const advance = height + extra',
+      'const advance = Math.max(height, height + extra)',
       [0, 0, 1000],
       { extra: -1000, advance: 0 },
     ],
@@ -283,18 +283,18 @@ test("round 5 negative controls reject naive multiplication, doubled units and m
   for (const [from, to, args, expected] of mutants) {
     assert.ok(source.includes(from));
     const candidate = await import(
-      `data:text/javascript;base64,${Buffer.from(linked.replace(from, to)).toString("base64")}`
+      `data:text/javascript;base64,${Buffer.from(linked.replace(from, to)).toString('base64')}`
     );
     assert.notDeepEqual(candidate.hwp5LineSpacing(...args), expected);
     assert.deepEqual(hwp5LineSpacing(...args), expected);
   }
 });
 
-test("round 5 inline object: signed spacing is not clamped back to object height", () => {
+test('round 5 inline object: signed spacing is not clamped back to object height', () => {
   const paragraph = {
     section: 0,
     paragraph: 0,
-    text: "\ufffca",
+    text: '\ufffca',
     paragraphShape: { legacySpacingKind: 0, legacySpacing: 0 },
   };
   const before = structuredClone(paragraph);
@@ -304,7 +304,7 @@ test("round 5 inline object: signed spacing is not clamped back to object height
     100,
     () => ({ width: 10, height: 1000 / 75 }),
   );
-  assert.equal(result.state, "measured");
+  assert.equal(result.state, 'measured');
   assert.equal(result.rows[0].height, 9000 / 75);
   assert.equal(result.anchors[0].height, 10000 / 75);
   assert.deepEqual(paragraph, before);

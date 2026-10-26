@@ -6,7 +6,7 @@ export function attachRectangleSources(editor, content) {
   for (const section of new Set(content.paragraphs.map((p) => p.section))) {
     let batch = null;
     // Older WASM and any refused inventory retain per-node diagnostics.
-    if (typeof editor.rectangleRenderingSources === "function") {
+    if (typeof editor.rectangleRenderingSources === 'function') {
       try {
         batch = new Map(
           editor.rectangleRenderingSources(section).map((row) => [row.rectangle_node, row]),
@@ -29,7 +29,7 @@ export function attachRectangleSources(editor, content) {
           value.rectangle_node !== node ||
           !paragraphs.has(`${section}:${value.owner.paragraph - 1}`)
         )
-          throw new Error("RectangleDisplayBindingMismatch");
+          throw new Error('RectangleDisplayBindingMismatch');
         content.rectangles.push({
           section,
           drawingNode: node,

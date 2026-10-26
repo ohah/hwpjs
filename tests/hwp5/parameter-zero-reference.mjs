@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { sectionXml } from "./fixture-xml.mjs";
-import { deflateRawSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { sectionXml } from './fixture-xml.mjs';
+import { deflateRawSync } from 'node:zlib';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -14,8 +14,8 @@ export function parameterZeroReference(call, cfb) {
     skipped = 0,
     truncated = 0;
   for (const [name, offset, bins, flagOffset] of [
-    ["복학원서.hwp", 246, 2, 234],
-    ["hwp3-sample16-hwp5.hwp", 230, 7, 26],
+    ['복학원서.hwp', 246, 2, 234],
+    ['hwp3-sample16-hwp5.hwp', 230, 7, 26],
   ]) {
     const path = new URL(`../../reference/rhwp/samples/${name}`, import.meta.url);
     if (!existsSync(path)) {
@@ -24,11 +24,11 @@ export function parameterZeroReference(call, cfb) {
     }
     const file = readFileSync(path);
     cfb.parse(file, { strict: true });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       v = h.readUInt32LE(32);
     const decode = (path) => call(3, Buffer.concat([h, Buffer.from(cfb.findExact(path).content)]));
-    const d = decode("/DocInfo"),
-      b = decode("/BodyText/Section0");
+    const d = decode('/DocInfo'),
+      b = decode('/BodyText/Section0');
     assert.equal(documentRecords(d).filter((r) => r.tag === 18).length, bins);
     const refs = call(7, Buffer.concat([w(v), d]));
     assert.equal(refs.readUInt32LE(4), 0);
@@ -46,8 +46,8 @@ export function parameterZeroReference(call, cfb) {
     const xml = sectionXml(
       readFileSync(
         new URL(
-          name.replace(/\.hwp$/, ".hwpx"),
-          new URL("../../reference/rhwp/samples/", import.meta.url),
+          name.replace(/\.hwp$/, '.hwpx'),
+          new URL('../../reference/rhwp/samples/', import.meta.url),
         ),
       ),
     );
@@ -98,9 +98,9 @@ export function parameterZeroReference(call, cfb) {
     assert.throws(() => bodyRun(active), /InvalidResourceReference/);
     assert.throws(() => call(24, input(active)), /InvalidResourceReference/);
     const nodes = cfb.document().nodes,
-      body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+      body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
     const altered = nodes.map((n) =>
-      n.parent === body && n.name === "Section0"
+      n.parent === body && n.name === 'Section0'
         ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(active) : active }
         : n,
     );

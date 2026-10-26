@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
 function input(bits, n, d) {
   const w = bits / 8,
     b = Buffer.alloc(4 + 2 * w);
@@ -28,7 +28,7 @@ export function extendedFractionFloatEdges(call) {
       const delta = vn * d - n * vd;
       assert.ok(
         (delta < 0n ? -delta : delta) * (1n << 48n) <= n * vd,
-        "lossy conversion relative error",
+        'lossy conversion relative error',
       );
     }
     comparisons++;

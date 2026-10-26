@@ -1,11 +1,11 @@
-import { ownedShapeDocument } from "./owned-shape-document.mjs";
-import { polygonOwnerActual, polygonOwnerRun } from "./polygon-validation.mjs";
+import { ownedShapeDocument } from './owned-shape-document.mjs';
+import { polygonOwnerActual, polygonOwnerRun } from './polygon-validation.mjs';
 export function polygonDocumentReference(call, cfb) {
   const { objects, ...rest } = ownedShapeDocument(call, cfb, {
-    file: "shape-001.hwp",
+    file: 'shape-001.hwp',
     tag: 82,
     count: 2,
-    group: "polygons",
+    group: 'polygons',
     field: 2,
     minimum: (b, r) => 4 + b.readInt32LE(r.start) * 8,
     actual: polygonOwnerActual,

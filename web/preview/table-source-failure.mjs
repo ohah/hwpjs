@@ -1,15 +1,15 @@
-import { pageLayoutFailureSummary } from "./page-layout-failure-summary.mjs";
+import { pageLayoutFailureSummary } from './page-layout-failure-summary.mjs';
 const TABLE_SOURCES = Object.freeze([
-  "structuralAnchorErrors",
-  "tableAnchorErrors",
-  "tableGeometryErrors",
-  "cellLayoutSourceErrors",
+  'structuralAnchorErrors',
+  'tableAnchorErrors',
+  'tableGeometryErrors',
+  'cellLayoutSourceErrors',
 ]);
 const CAPTION_SOURCES = Object.freeze([
-  "tableCaptionErrors",
-  "tableCaptionBindingErrors",
-  "hwp5CaptionErrors",
-  "hwp5CaptionGeometryErrors",
+  'tableCaptionErrors',
+  'tableCaptionBindingErrors',
+  'hwp5CaptionErrors',
+  'hwp5CaptionGeometryErrors',
 ]);
 // Keep refusal policy unchanged while retaining bounded source identity and cause.
 export function tableSourceFailure(content, { includeCaptions = false } = {}) {
@@ -18,11 +18,11 @@ export function tableSourceFailure(content, { includeCaptions = false } = {}) {
     if (!errors?.length) continue;
     const first = errors[0];
     return {
-      state: "unavailable",
+      state: 'unavailable',
       ...pageLayoutFailureSummary({
         ...first,
-        state: "unavailable",
-        error: "IncompleteTableSources",
+        state: 'unavailable',
+        error: 'IncompleteTableSources',
         sourceError: first?.error,
       }),
     };

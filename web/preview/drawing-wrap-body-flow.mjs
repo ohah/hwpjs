@@ -1,9 +1,9 @@
-import { drawingPageReference } from "./drawing-page-reference.mjs";
-import { placeFloatingDrawing, drawingPagePlacementOptions } from "./drawing-placement.mjs";
-import { intersectPictureLineRegions } from "./picture-line-intersections.mjs";
-import { paginateReservedBodyRows } from "./reserved-body-pagination.mjs";
-import { drawingHasOwnWrap } from "./drawing-own-wrap.mjs";
-import { rowLeft, isZeroAdvanceTextAnchor } from "./row-geometry.mjs";
+import { drawingPageReference } from './drawing-page-reference.mjs';
+import { placeFloatingDrawing, drawingPagePlacementOptions } from './drawing-placement.mjs';
+import { intersectPictureLineRegions } from './picture-line-intersections.mjs';
+import { paginateReservedBodyRows } from './reserved-body-pagination.mjs';
+import { drawingHasOwnWrap } from './drawing-own-wrap.mjs';
+import { rowLeft, isZeroAdvanceTextAnchor } from './row-geometry.mjs';
 
 // 반복마다 원본 본문을 재조판합니다. 이전 출력 행을 직접 이동하지 않습니다.
 export function layoutDrawingWrapBody(
@@ -12,27 +12,27 @@ export function layoutDrawingWrapBody(
   layoutBody,
   { maxIterations = 32, measure, resolveReservations } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (!Number.isSafeInteger(maxIterations) || maxIterations < 1 || maxIterations > 1000)
-    return unavailable("InvalidDrawingWrapBudget");
+    return unavailable('InvalidDrawingWrapBudget');
   const wrapped = drawings.filter(drawingHasOwnWrap);
   const square = wrapped.some((drawing) => drawing.source.flow.text_wrap === 0);
   if (
-    (square && typeof measure !== "function") ||
-    (resolveReservations !== undefined && typeof resolveReservations !== "function")
+    (square && typeof measure !== 'function') ||
+    (resolveReservations !== undefined && typeof resolveReservations !== 'function')
   )
-    return unavailable("InvalidDrawingWrapMeasurement");
+    return unavailable('InvalidDrawingWrapMeasurement');
   let body = layoutBody({});
-  if (!wrapped.length || body.state !== "paginated" || body.limited) return body;
+  if (!wrapped.length || body.state !== 'paginated' || body.limited) return body;
   const reservations = (layout) => {
     if (resolveReservations) return resolveReservations(layout);
     const rows = layout.rows;
     const result = [];
     for (const drawing of wrapped) {
       const reference = drawingPageReference(drawing, paragraphs, rows);
-      if (reference.state !== "selected") return reference;
+      if (reference.state !== 'selected') return reference;
       const placed = placeFloatingDrawing(drawing, reference.boxes, drawingPagePlacementOptions);
-      if (placed.state !== "placed") return unavailable(placed.state);
+      if (placed.state !== 'placed') return unavailable(placed.state);
       const flow = drawing.source.flow;
       result.push({
         section: drawing.section,
@@ -46,10 +46,10 @@ export function layoutDrawingWrapBody(
         },
       });
     }
-    return { state: "reserved", reservations: result };
+    return { state: 'reserved', reservations: result };
   };
   let reserved = reservations(body);
-  if (reserved.state !== "reserved") return reserved;
+  if (reserved.state !== 'reserved') return reserved;
   const signature = (value) => JSON.stringify(value.reservations);
   const anchorPages = new Map();
   for (let iteration = 0; iteration < maxIterations; iteration++) {
@@ -85,7 +85,7 @@ export function layoutDrawingWrapBody(
             (item) => item.section === row.section && item.pageOrdinal === context.pageOrdinal,
           )
           .map((item) =>
-            row.kind === "gap" && item.flow?.textWrap === 0
+            row.kind === 'gap' && item.flow?.textWrap === 0
               ? { ...item, flow: { ...item.flow, textWrap: 1 } }
               : item,
           );
@@ -94,31 +94,31 @@ export function layoutDrawingWrapBody(
             { x: context.column.x, y, width: context.column.width, height: row.height },
             local,
           );
-          if (region.state !== "available") {
+          if (region.state !== 'available') {
             failure = region.state;
             return NaN;
           }
           if (region.regions.length) return y;
           if (!Number.isFinite(region.nextY) || region.nextY <= y) {
-            failure = "InvalidDrawingWrapAdvance";
+            failure = 'InvalidDrawingWrapAdvance';
             return NaN;
           }
           y = region.nextY;
         }
-        failure = "DrawingWrapAdvanceLimit";
+        failure = 'DrawingWrapAdvanceLimit';
         return NaN;
       },
     });
     if (failure) return unavailable(failure);
-    if (body.state !== "paginated" || body.limited) return body;
+    if (body.state !== 'paginated' || body.limited) return body;
     const next = reservations(body);
-    if (next.state !== "reserved") return next;
+    if (next.state !== 'reserved') return next;
     if (signature(next) === signature(reserved)) {
       // 재조판 하위 경로가 옵션을 무시했거나 표의 후속 배치가 예약을 침범하면
       // 성공으로 승격하지 않습니다. 본문 행과 표의 외곽을 모두 검사합니다.
       const occupied = [
         ...body.rows.filter(
-          (row) => (row.kind === "text" || row.kind === "gap") && !isZeroAdvanceTextAnchor(row),
+          (row) => (row.kind === 'text' || row.kind === 'gap') && !isZeroAdvanceTextAnchor(row),
         ),
         ...(body.tableCollisionFootprints ?? []).map((item) => ({
           ...item.rectangle,
@@ -127,13 +127,13 @@ export function layoutDrawingWrapBody(
         })),
       ];
       for (const row of occupied) {
-        if (row.transform !== undefined) return unavailable("UnsupportedDrawingWrapBodyTransform");
+        if (row.transform !== undefined) return unavailable('UnsupportedDrawingWrapBodyTransform');
         const local = next.reservations.filter(
           (item) => item.section === row.section && item.pageOrdinal === row.pageOrdinal,
         );
         // 문단 간격 행은 잉크 폭이 없지만 배치된 단 전체를 예약합니다.
         const bounds =
-          row.kind === "gap"
+          row.kind === 'gap'
             ? {
                 x: row.referenceBoxes?.column?.x,
                 y: row.y,
@@ -143,13 +143,13 @@ export function layoutDrawingWrapBody(
             : { x: rowLeft(row), y: row.y, width: row.width, height: row.height };
         const region = intersectPictureLineRegions(bounds, local);
         if (
-          region.state !== "available" ||
+          region.state !== 'available' ||
           region.regions.length !== 1 ||
           Math.abs(region.regions[0].x - bounds.x) > 1e-8 ||
           Math.abs(region.regions[0].width - bounds.width) > 1e-8
         )
           return {
-            ...unavailable("IncompleteDrawingWrapFlow"),
+            ...unavailable('IncompleteDrawingWrapFlow'),
             section: row.section,
             paragraph: row.paragraph,
             pageOrdinal: row.pageOrdinal,
@@ -166,7 +166,7 @@ export function layoutDrawingWrapBody(
     reserved = next;
   }
   return {
-    ...unavailable("DrawingWrapConvergenceLimit"),
+    ...unavailable('DrawingWrapConvergenceLimit'),
     drawingWrapIterations: maxIterations,
     drawingWrapReservations: reserved.reservations,
   };

@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { bmpLayoutOracle, bmpPixelsOracle, bmpWords } from "./bmp-oracle.mjs";
-import { bmpRleOracle } from "./bmp-rle-oracle.mjs";
+import assert from 'node:assert/strict';
+import { bmpLayoutOracle, bmpPixelsOracle, bmpWords } from './bmp-oracle.mjs';
+import { bmpRleOracle } from './bmp-rle-oracle.mjs';
 export function bmpRleRgbaOracle(
   raw,
   { rleEnabled = 1, fill = 2, fileTrailing = false, ...options } = {},

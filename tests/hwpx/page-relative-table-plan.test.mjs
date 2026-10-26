@@ -1,19 +1,19 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
-import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
-import { planMultipleTablePages } from "../../web/preview/multiple-table-page-plan.mjs";
-import { prepareTablePageBands } from "../../web/preview/table-page-bands.mjs";
-import { layoutTableBodyContent } from "../../web/preview/table-body-content-layout.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { workerCanvasHarness } from '../canvas/worker-harness.mjs';
+import { measureTableCells } from '../../web/preview/table-cell-measurement.mjs';
+import { planMultipleTablePages } from '../../web/preview/multiple-table-page-plan.mjs';
+import { prepareTablePageBands } from '../../web/preview/table-page-bands.mjs';
+import { layoutTableBodyContent } from '../../web/preview/table-body-content-layout.mjs';
 
-test("actual page-bottom table reserves a fixed whole-table page fragment", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit field display candidate required");
+test('actual page-bottom table reserves a fixed whole-table page fragment', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit field display candidate required');
   const h = await workerCanvasHarness(t);
   const input = readFileSync(
-    "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx",
+    'reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx',
   );
-  const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
+  const loaded = await h.send({ kind: 'load', format: 'hwpx', bytes: input });
   assert.equal(loaded.error, undefined);
   const table = loaded.content.tables.find((table) => table.tableNode === 381);
   const before = structuredClone(table);
@@ -21,18 +21,18 @@ test("actual page-bottom table reserves a fixed whole-table page fragment", asyn
     table,
     loaded.content.paragraphs,
     (text) => ({ width: text.length * 8, height: 12 }),
-    { origin: { x: 0, y: 0 }, padding: "source", maxRows: 20000 },
+    { origin: { x: 0, y: 0 }, padding: 'source', maxRows: 20000 },
   );
-  assert.equal(measured.state, "measured", measured.error);
-  const bands = prepareTablePageBands(table, measured.grid.rows, "whole", 0);
-  assert.equal(bands.state, "prepared");
+  assert.equal(measured.state, 'measured', measured.error);
+  const bands = prepareTablePageBands(table, measured.grid.rows, 'whole', 0);
+  assert.equal(bands.state, 'prepared');
   assert.equal(bands.rows[0].tableVerticalSource, table.sourceGeometry);
   assert.equal(
-    prepareTablePageBands(table, measured.grid.rows, "row-bands", 0).error,
-    "UnsupportedSplitTableVerticalFlow",
+    prepareTablePageBands(table, measured.grid.rows, 'row-bands', 0).error,
+    'UnsupportedSplitTableVerticalFlow',
   );
   const entries = [
-    { table, measured, rowHeights: measured.grid.rows, splitMode: "whole", outerInsets: 0 },
+    { table, measured, rowHeights: measured.grid.rows, splitMode: 'whole', outerInsets: 0 },
   ];
   const flows = loaded.content.paragraphFlows.filter(
     (flow) => flow.section === table.section && flow.paragraph === table.hostParagraph,
@@ -43,7 +43,7 @@ test("actual page-bottom table reserves a fixed whole-table page fragment", asyn
     loaded.content.pageSettings[0],
     flows,
   );
-  assert.equal(plan.state, "planned", plan.error);
+  assert.equal(plan.state, 'planned', plan.error);
   const [fragment] = plan.plans[0].fragments;
   assert(fragment);
   const page = fragment.referenceBoxes.page;
@@ -67,7 +67,7 @@ test("actual page-bottom table reserves a fixed whole-table page fragment", asyn
     (text) => ({ width: text.length * 8, height: 12 }),
     20000,
   );
-  if (result.state !== "paginated")
+  if (result.state !== 'paginated')
     t.diagnostic(
       JSON.stringify({
         error: result.error,
@@ -76,7 +76,7 @@ test("actual page-bottom table reserves a fixed whole-table page fragment", asyn
         reference: fragment.referenceBoxes.page,
       }),
     );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.equal(result.boxes.length, table.cells.length);
   assert.equal(result.tableAnchors[0].tableNode, table.tableNode);
   const beyondPaper = structuredClone(slice);
@@ -84,7 +84,7 @@ test("actual page-bottom table reserves a fixed whole-table page fragment", asyn
   assert.equal(
     layoutTableBodyContent(beyondPaper, (text) => ({ width: text.length * 8, height: 12 }), 20000)
       .error,
-    "TablePageWidthOverflow",
+    'TablePageWidthOverflow',
   );
   assert.deepEqual(table, before);
   t.diagnostic(

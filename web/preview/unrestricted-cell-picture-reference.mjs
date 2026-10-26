@@ -2,7 +2,7 @@
 // take-place picture in an unrestricted inline-table cell reserves the outer
 // host line while its native paragraph/anchor remain inside that cell.
 export function unrestrictedCellPictureReferences(content) {
-  const fail = () => ({ state: "unavailable", error: "AmbiguousUnrestrictedCellPictureOwner" });
+  const fail = () => ({ state: 'unavailable', error: 'AmbiguousUnrestrictedCellPictureOwner' });
   if (
     !Array.isArray(content?.paragraphs) ||
     !Array.isArray(content.tables) ||
@@ -16,7 +16,7 @@ export function unrestrictedCellPictureReferences(content) {
       p.flow?.textWrap === 1,
   );
   const references = new Map();
-  if (!candidates.length) return { state: "selected", references };
+  if (!candidates.length) return { state: 'selected', references };
   const paragraphs = new Map(),
     tables = new Map(),
     cellOwners = new Map();
@@ -41,11 +41,11 @@ export function unrestrictedCellPictureReferences(content) {
     if (
       table.parentTableNode != null ||
       table.sourceGeometry?.geometry?.treat_as_character !== true ||
-      picture.state !== "located" ||
+      picture.state !== 'located' ||
       picture.anchorUnit !== 0 ||
       table.anchorUnit !== 0 ||
-      owner.text !== "\ufffc" ||
-      host.text !== "\ufffc" ||
+      owner.text !== '\ufffc' ||
+      host.text !== '\ufffc' ||
       picture.caption ||
       picture.captionPartial ||
       (picture.owner != null && picture.owner.anchorNode !== picture.pictureNode) ||
@@ -83,5 +83,5 @@ export function unrestrictedCellPictureReferences(content) {
       anchorUnit: table.anchorUnit,
     });
   }
-  return { state: "selected", references };
+  return { state: 'selected', references };
 }

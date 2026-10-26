@@ -1,6 +1,6 @@
-import { test, expect } from "bun:test";
-import { createDocumentOpenUI } from "../src/document-open-ui.ts";
-import { documentFixture, fire, Element } from "./formatting-dialog-test-dom.ts";
+import { test, expect } from 'bun:test';
+import { createDocumentOpenUI } from '../src/document-open-ui.ts';
+import { documentFixture, fire, Element } from './formatting-dialog-test-dom.ts';
 function setup() {
   const dom = documentFixture();
   const originalCreate = dom.doc.createElement;
@@ -17,8 +17,8 @@ function setup() {
     return node;
   };
   let state: any = {
-      title: "",
-      status: "",
+      title: '',
+      status: '',
       openFile: { enabled: true },
       openFixture: { enabled: true },
     },
@@ -26,12 +26,12 @@ function setup() {
   const files: File[] = [],
     fixtures: string[] = [];
   const entries = [
-    { id: "one", name: "first.hwp" },
-    { id: "missing", name: "missing.hwpx", available: false },
-    { id: "two", name: "second.hwpx" },
+    { id: 'one', name: 'first.hwp' },
+    { id: 'missing', name: 'missing.hwpx', available: false },
+    { id: 'two', name: 'second.hwpx' },
   ];
   const ui = createDocumentOpenUI(dom.root as any, {
-    id: "test",
+    id: 'test',
     fixtures: entries,
     getState: () => state,
     fileConnected: true,
@@ -58,132 +58,132 @@ function setup() {
     },
   };
 }
-test("explicit action calls the same hidden file input synchronously; no callback before selection", () => {
+test('explicit action calls the same hidden file input synchronously; no callback before selection', () => {
   const f = setup();
   expect(f.ui.file.hidden).toBe(true);
-  expect(f.ui.file.accept).toBe(".hwp,.hwpx");
-  expect(f.ui.fileAction.textContent).toBe("열기…");
-  fire(f.ui.fileAction, "click");
+  expect(f.ui.file.accept).toBe('.hwp,.hwpx');
+  expect(f.ui.fileAction.textContent).toBe('열기…');
+  fire(f.ui.fileAction, 'click');
   expect((f.ui.file as any).clicks).toBe(1);
   expect(f.files.length).toBe(0);
   expect(f.selected).toBe(0);
   f.ui.destroy();
 });
-test("chooser cancel and empty change are callback/load neutral", () => {
+test('chooser cancel and empty change are callback/load neutral', () => {
   const f = setup();
-  fire(f.ui.fileAction, "click");
-  fire(f.ui.file, "cancel");
+  fire(f.ui.fileAction, 'click');
+  fire(f.ui.file, 'cancel');
   (f.ui.file as any).files = [];
-  fire(f.ui.file, "change");
+  fire(f.ui.file, 'change');
   expect(f.files).toEqual([]);
   expect(f.fixtures).toEqual([]);
   expect(f.selected).toBe(0);
-  expect(f.ui.file.value).toBe("");
+  expect(f.ui.file.value).toBe('');
   f.ui.destroy();
 });
-test("same File object/name can be selected twice after value reset", () => {
+test('same File object/name can be selected twice after value reset', () => {
   const f = setup(),
-    file = { name: "같은 이름.hwp" } as File;
+    file = { name: '같은 이름.hwp' } as File;
   for (let n = 0; n < 2; n++) {
     (f.ui.file as any).files = [file];
-    f.ui.file.value = "fake-selected";
-    fire(f.ui.file, "change");
-    expect(f.ui.file.value).toBe("");
+    f.ui.file.value = 'fake-selected';
+    fire(f.ui.file, 'change');
+    expect(f.ui.file.value).toBe('');
   }
   expect(f.files.length).toBe(2);
   expect(f.files[0]).toBe(file);
   expect(f.files[1]).toBe(file);
-  expect(f.files[0].name).toBe("같은 이름.hwp");
+  expect(f.files[0].name).toBe('같은 이름.hwp');
   expect(f.selected).toBe(2);
   f.ui.destroy();
 });
-test("availability is rechecked after chooser launch and stale disposed input cannot act", () => {
+test('availability is rechecked after chooser launch and stale disposed input cannot act', () => {
   const f = setup();
-  fire(f.ui.fileAction, "click");
+  fire(f.ui.fileAction, 'click');
   f.setState({ busy: true });
   expect(f.ui.fileAction.disabled).toBe(true);
-  fire(f.ui.fileAction, "click");
+  fire(f.ui.fileAction, 'click');
   expect((f.ui.file as any).clicks).toBe(1);
-  (f.ui.file as any).files = [{ name: "late.hwpx" }];
-  fire(f.ui.file, "change");
+  (f.ui.file as any).files = [{ name: 'late.hwpx' }];
+  fire(f.ui.file, 'change');
   expect(f.files.length).toBe(0);
   expect(f.selected).toBe(0);
   f.setState({ busy: false });
   f.ui.destroy();
-  fire(f.ui.file, "change");
-  fire(f.ui.fileAction, "click");
+  fire(f.ui.file, 'change');
+  fire(f.ui.fileAction, 'click');
   expect(f.files.length).toBe(0);
   expect((f.ui.file as any).clicks).toBe(1);
 });
-test("example view is separate modal; cancel never invokes either file or example callback", () => {
+test('example view is separate modal; cancel never invokes either file or example callback', () => {
   const f = setup();
   f.ui.examplesAction.focus();
-  fire(f.ui.examplesAction, "click");
-  expect(f.role("example-documents").open).toBe(true);
-  expect(f.role("fixture-picker").children.length).toBe(3);
-  expect(f.ui.containsExampleTarget(f.role("fixture-picker") as any)).toBe(true);
+  fire(f.ui.examplesAction, 'click');
+  expect(f.role('example-documents').open).toBe(true);
+  expect(f.role('fixture-picker').children.length).toBe(3);
+  expect(f.ui.containsExampleTarget(f.role('fixture-picker') as any)).toBe(true);
   expect(f.ui.containsExampleTarget(f.ui.fileAction)).toBe(false);
-  fire(f.role("cancel-examples"), "click");
-  expect(f.role("example-documents").open).toBe(false);
+  fire(f.role('cancel-examples'), 'click');
+  expect(f.role('example-documents').open).toBe(false);
   expect(f.selected).toBe(0);
   expect(f.files.length).toBe(0);
   expect(f.fixtures.length).toBe(0);
   f.ui.destroy();
 });
-test("missing example cannot be opened; selected IDs and value reset retain original contract", () => {
+test('missing example cannot be opened; selected IDs and value reset retain original contract', () => {
   const f = setup(),
-    select = f.role("fixture-picker");
+    select = f.role('fixture-picker');
   expect(select.children[1].disabled).toBe(true);
-  select.value = "missing";
-  fire(select, "change");
-  expect(f.role("open-selected-example").disabled).toBe(true);
-  fire(f.role("open-selected-example"), "click");
+  select.value = 'missing';
+  fire(select, 'change');
+  expect(f.role('open-selected-example').disabled).toBe(true);
+  fire(f.role('open-selected-example'), 'click');
   expect(f.fixtures.length).toBe(0);
-  select.value = "two";
-  fire(select, "change");
-  f.ui.file.value = "old";
-  fire(f.role("open-selected-example"), "click");
-  expect(f.fixtures).toEqual(["two"]);
+  select.value = 'two';
+  fire(select, 'change');
+  f.ui.file.value = 'old';
+  fire(f.role('open-selected-example'), 'click');
+  expect(f.fixtures).toEqual(['two']);
   expect(f.files.length).toBe(0);
-  expect(f.ui.file.value).toBe("");
+  expect(f.ui.file.value).toBe('');
   expect(f.selected).toBe(1);
   f.ui.destroy();
 });
-test("catalog refresh preserves selection/fallback; invalid list does not partially replace it", () => {
+test('catalog refresh preserves selection/fallback; invalid list does not partially replace it', () => {
   const f = setup(),
-    select = f.role("fixture-picker");
-  select.value = "two";
+    select = f.role('fixture-picker');
+  select.value = 'two';
   f.ui.setFixtures([
-    { id: "two", name: "two" },
-    { id: "one", name: "one" },
+    { id: 'two', name: 'two' },
+    { id: 'one', name: 'one' },
   ]);
-  expect(select.value).toBe("two");
+  expect(select.value).toBe('two');
   expect(() =>
     f.ui.setFixtures([
-      { id: "bad", name: "bad" },
-      { id: "bad", name: "bad" },
+      { id: 'bad', name: 'bad' },
+      { id: 'bad', name: 'bad' },
     ]),
-  ).toThrow("InvalidDemoFixtureCatalog");
-  expect(select.value).toBe("two");
+  ).toThrow('InvalidDemoFixtureCatalog');
+  expect(select.value).toBe('two');
   f.ui.setFixtures([
-    { id: "two", name: "two", available: false },
-    { id: "one", name: "one" },
+    { id: 'two', name: 'two', available: false },
+    { id: 'one', name: 'one' },
   ]);
-  expect(select.value).toBe("one");
+  expect(select.value).toBe('one');
   f.ui.setFixtures([]);
   expect(select.children.length).toBe(0);
   expect(f.ui.examplesAction.disabled).toBe(true);
-  expect(f.role("open-selected-example").disabled).toBe(true);
+  expect(f.role('open-selected-example').disabled).toBe(true);
   f.ui.destroy();
 });
-test("fresh fixture availability and disposal block late example clicks", () => {
+test('fresh fixture availability and disposal block late example clicks', () => {
   const f = setup(),
-    open = f.role("open-selected-example");
-  f.setState({ openFixture: { enabled: false, reason: "검사 중" } });
-  fire(open, "click");
+    open = f.role('open-selected-example');
+  f.setState({ openFixture: { enabled: false, reason: '검사 중' } });
+  fire(open, 'click');
   expect(f.fixtures.length).toBe(0);
   f.ui.destroy();
-  fire(open, "click");
-  f.ui.setFixtures([{ id: "other", name: "other" }]);
+  fire(open, 'click');
+  f.ui.setFixtures([{ id: 'other', name: 'other' }]);
   expect(f.fixtures.length).toBe(0);
 });

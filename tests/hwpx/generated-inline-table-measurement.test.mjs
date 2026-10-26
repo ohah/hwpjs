@@ -1,26 +1,26 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { measureInlineTableParagraph } from "../../web/preview/inline-table-paragraph-measurement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { measureInlineTableParagraph } from '../../web/preview/inline-table-paragraph-measurement.mjs';
 
-const paragraph = { section: 0, paragraph: 1, text: "전😀\ufffc중\ufffc후", editable: true };
+const paragraph = { section: 0, paragraph: 1, text: '전😀\ufffc중\ufffc후', editable: true };
 const measure = (text) => ({ width: [...text].length * 8, height: 16 });
 const entries = [
   { tableNode: 9, unit: 3, width: 30, height: 32 },
-  { createdTableIdentity: "9", unit: 5, width: 40, height: 48 },
+  { createdTableIdentity: '9', unit: 5, width: 40, height: 48 },
 ];
 
-test("text anchors cannot alias generated objects or hidden controls", () => {
-  const host = { section: 0, paragraph: 1, text: "\ufffc\ufffcX" };
-  const objects = [{ createdTableIdentity: "1", unit: 1, width: 30, height: 32 }];
+test('text anchors cannot alias generated objects or hidden controls', () => {
+  const host = { section: 0, paragraph: 1, text: '\ufffc\ufffcX' };
+  const objects = [{ createdTableIdentity: '1', unit: 1, width: 30, height: 32 }];
   const valid = measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: [0] });
-  assert.equal(valid.state, "measured", valid.error);
+  assert.equal(valid.state, 'measured', valid.error);
   assert.equal(valid.anchors.length, 1);
   assert.equal(valid.anchors[0].unit, 1);
-  assert.equal(valid.rows.map((row) => row.text).join(""), host.text);
-  for (const units of [null, [0, 0], [-1], [2], [0.5], ["0"]]) {
+  assert.equal(valid.rows.map((row) => row.text).join(''), host.text);
+  for (const units of [null, [0, 0], [-1], [2], [0.5], ['0']]) {
     assert.equal(
       measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: units }).error,
-      "InvalidInlineTableAnchorPosition",
+      'InvalidInlineTableAnchorPosition',
     );
   }
   assert.equal(
@@ -28,27 +28,27 @@ test("text anchors cannot alias generated objects or hidden controls", () => {
       textAnchorUnits: [0],
       zeroWidthUnits: [0],
     }).error,
-    "InvalidInlineTableAnchorPosition",
+    'InvalidInlineTableAnchorPosition',
   );
   assert.equal(
     measureInlineTableParagraph(host, objects, 500, measure, { textAnchorUnits: [1] }).error,
-    "InvalidInlineTableAnchorPosition",
+    'InvalidInlineTableAnchorPosition',
   );
   assert.equal(
     measureInlineTableParagraph(host, objects, 500, measure).error,
-    "AmbiguousInlineTableAnchors",
+    'AmbiguousInlineTableAnchors',
   );
 });
 
-test("source and generated inline tables share text measurement without aliasing node IDs", () => {
+test('source and generated inline tables share text measurement without aliasing node IDs', () => {
   const before = structuredClone({ paragraph, entries });
   const result = measureInlineTableParagraph(paragraph, entries, 500, measure);
-  assert.equal(result.state, "measured", result.error);
-  assert.equal(result.rows.map((row) => row.text).join(""), paragraph.text);
+  assert.equal(result.state, 'measured', result.error);
+  assert.equal(result.rows.map((row) => row.text).join(''), paragraph.text);
   assert.equal(result.anchors[0].tableNode, 9);
-  assert.equal(result.anchors[1].createdTableIdentity, "9");
-  assert.equal(Object.hasOwn(result.anchors[1], "tableNode"), false);
-  assert.equal(Object.hasOwn(result.anchors[1], "objectNode"), false);
+  assert.equal(result.anchors[1].createdTableIdentity, '9');
+  assert.equal(Object.hasOwn(result.anchors[1], 'tableNode'), false);
+  assert.equal(Object.hasOwn(result.anchors[1], 'objectNode'), false);
   assert.deepEqual(
     result.anchors.map((anchor) => anchor.unit),
     [3, 5],
@@ -56,15 +56,15 @@ test("source and generated inline tables share text measurement without aliasing
   assert.deepEqual({ paragraph, entries }, before);
   const large = measureInlineTableParagraph(
     paragraph,
-    [entries[0], { ...entries[1], createdTableIdentity: "18446744073709551615" }],
+    [entries[0], { ...entries[1], createdTableIdentity: '18446744073709551615' }],
     500,
     measure,
   );
-  assert.equal(large.anchors[1].createdTableIdentity, "18446744073709551615");
+  assert.equal(large.anchors[1].createdTableIdentity, '18446744073709551615');
 });
 
-test("generated inline table measurement rejects ambiguous or lossy identities", () => {
-  for (const value of [0, 9, "0", "09", "", "18446744073709551616", null]) {
+test('generated inline table measurement rejects ambiguous or lossy identities', () => {
+  for (const value of [0, 9, '0', '09', '', '18446744073709551616', null]) {
     assert.equal(
       measureInlineTableParagraph(
         paragraph,
@@ -72,7 +72,7 @@ test("generated inline table measurement rejects ambiguous or lossy identities",
         500,
         measure,
       ).error,
-      "InvalidInlineTableMeasurement",
+      'InvalidInlineTableMeasurement',
     );
   }
   for (const tableNode of [undefined, 0, 9]) {
@@ -83,12 +83,12 @@ test("generated inline table measurement rejects ambiguous or lossy identities",
         500,
         measure,
       ).error,
-      "InvalidInlineTableMeasurement",
+      'InvalidInlineTableMeasurement',
     );
   }
   const duplicates = [{ ...entries[1], unit: 3 }, entries[1]];
   assert.equal(
     measureInlineTableParagraph(paragraph, duplicates, 500, measure).error,
-    "InvalidInlineTableMeasurement",
+    'InvalidInlineTableMeasurement',
   );
 });

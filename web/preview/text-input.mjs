@@ -1,8 +1,8 @@
 let segments, words;
 function createSegmenter(granularity) {
   const Segmenter = globalThis.Intl?.Segmenter;
-  if (typeof Segmenter !== "function") throw Error("IntlSegmenterUnavailable");
-  return new Segmenter("ko", { granularity });
+  if (typeof Segmenter !== 'function') throw Error('IntlSegmenterUnavailable');
+  return new Segmenter('ko', { granularity });
 }
 const splitScalar = (text, unit) =>
   unit > 0 &&
@@ -24,8 +24,8 @@ export function textChange(before, after, selection = null) {
   ) {
     if (first === last && after.length < before.length) {
       const removed = before.length - after.length;
-      if (selection.inputType === "deleteContentBackward") first -= removed;
-      else if (selection.inputType === "deleteContentForward") last += removed;
+      if (selection.inputType === 'deleteContentBackward') first -= removed;
+      else if (selection.inputType === 'deleteContentForward') last += removed;
     }
     const inserted = after.length - (before.length - (last - first)),
       end = first + inserted;
@@ -59,14 +59,14 @@ export function textChange(before, after, selection = null) {
   return { startUnit: start, endUnit: oldEnd, text: after.slice(start, newEnd) };
 }
 export function graphemeUnits(text) {
-  return [...(segments ??= createSegmenter("grapheme")).segment(text)]
+  return [...(segments ??= createSegmenter('grapheme')).segment(text)]
     .map((s) => s.index)
     .concat(text.length);
 }
 /** 공백과 구두점을 건너뛴 단어 시작점으로 이동한다. */
 export function wordBoundary(text, unit, forward) {
   let previous = 0;
-  for (const part of (words ??= createSegmenter("word")).segment(text)) {
+  for (const part of (words ??= createSegmenter('word')).segment(text)) {
     if (!part.isWordLike) continue;
     if (forward && part.index > unit) return part.index;
     if (!forward && part.index >= unit) break;

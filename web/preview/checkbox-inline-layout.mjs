@@ -1,7 +1,7 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { createTextStyle } from "./text-style.mjs";
-import { FONT } from "./layout.mjs";
-import { validShapeLayoutValues } from "../../js/hwpx-shape-layout-values.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { createTextStyle } from './text-style.mjs';
+import { FONT } from './layout.mjs';
+import { validShapeLayoutValues } from '../../js/hwpx-shape-layout-values.mjs';
 export const checkBoxPositionKey = (section, paragraph, unit) => `${section}:${paragraph}:${unit}`;
 export function inlineCheckBoxIndex(content) {
   const result = new Map(),
@@ -19,8 +19,8 @@ export function inlineCheckBoxIndex(content) {
     const fail = (reason) => {
       result.unavailable.push({ section: row.section, formNode: row.formNode, reason });
     };
-    if (row.siteState !== "located" || paragraph?.text[row.anchorUnit] !== "\ufffc") {
-      fail("MissingFormDisplayAnchor");
+    if (row.siteState !== 'located' || paragraph?.text[row.anchorUnit] !== '\ufffc') {
+      fail('MissingFormDisplayAnchor');
       continue;
     }
     if (
@@ -30,15 +30,15 @@ export function inlineCheckBoxIndex(content) {
       g.height_relative !== 2 ||
       ![g.width, g.height].every((n) => Number.isInteger(n) && n > 0 && n <= 0xffffffff)
     ) {
-      fail("UnsupportedFormDimensions");
+      fail('UnsupportedFormDimensions');
       continue;
     }
     if (!validShapeLayoutValues(source)) {
-      fail("InvalidFormLayoutSnapshot");
+      fail('InvalidFormLayoutSnapshot');
       continue;
     }
     if (p.relations.some((value, index) => value !== [2, 2, 0, 0][index])) {
-      fail("UnsupportedFormPlacement");
+      fail('UnsupportedFormPlacement');
       continue;
     }
     if (
@@ -47,20 +47,20 @@ export function inlineCheckBoxIndex(content) {
       ![g.horizontal_offset, g.vertical_offset].every((n) => n === 0) ||
       source.flow.outside_margins.some((n) => n !== 0)
     ) {
-      fail("UnsupportedFormPlacement");
+      fail('UnsupportedFormPlacement');
       continue;
     }
-    if (!c || c.auto_size !== false || c.word_wrap !== false || typeof row.caption !== "string") {
-      fail("UnsupportedFormCaptionLayout");
+    if (!c || c.auto_size !== false || c.word_wrap !== false || typeof row.caption !== 'string') {
+      fail('UnsupportedFormCaptionLayout');
       continue;
     }
     if (
       ![row.foreColor, row.backColor].every(
-        (value) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value),
+        (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value),
       ) ||
-      !["OPAQUE", "TRANSPARENT"].includes(row.backStyle)
+      !['OPAQUE', 'TRANSPARENT'].includes(row.backStyle)
     ) {
-      fail("UnsupportedFormColor");
+      fail('UnsupportedFormColor');
       continue;
     }
     let font;
@@ -79,14 +79,14 @@ export function inlineCheckBoxIndex(content) {
         0,
       );
     else {
-      fail("MissingFormCharacterStyle");
+      fail('MissingFormCharacterStyle');
       continue;
     }
     const key = checkBoxPositionKey(row.section, row.paragraph, row.anchorUnit);
     if (result.has(key)) {
       result.set(key, null);
       result.blocked.add(key);
-      fail("AmbiguousFormDisplayAnchor");
+      fail('AmbiguousFormDisplayAnchor');
       continue;
     }
     result.set(key, {

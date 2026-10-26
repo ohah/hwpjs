@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export const summaryStatsWords = 10;
 const hwpPlaceholder = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
 const w = (n) => {
@@ -9,7 +9,7 @@ const w = (n) => {
 export function summaryFixture(rows) {
   const header = Buffer.alloc(48);
   header.writeUInt16LE(0xfffe);
-  Buffer.from("60b6a29f6110d411b4c6006097c09d8c", "hex").copy(header, 28);
+  Buffer.from('60b6a29f6110d411b4c6006097c09d8c', 'hex').copy(header, 28);
   header.writeUInt32LE(1, 24);
   header.writeUInt32LE(48, 44);
   let offset = 8 + rows.length * 8;
@@ -69,7 +69,7 @@ export function summaryActual(call, b) {
   return stats;
 }
 export function summaryEdges(call) {
-  const string = Buffer.concat([w(31), w(2), Buffer.from("A\0", "utf16le")]);
+  const string = Buffer.concat([w(31), w(2), Buffer.from('A\0', 'utf16le')]);
   const good = summaryFixture([
     [2, string],
     [14, Buffer.concat([w(3), w(0xffffffff)])],

@@ -1,7 +1,7 @@
 // 표시 배열의 소유권만 검사하며 원문 모델을 수정하거나 기본값으로 보정하지 않습니다.
 export function validateNestedTableOwnership(content) {
   const fail = () => {
-    throw new Error("InvalidNestedTableFlow");
+    throw new Error('InvalidNestedTableFlow');
   };
   const paragraphs = new Map(),
     tables = new Map(),

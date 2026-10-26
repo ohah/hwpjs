@@ -5,9 +5,9 @@ export class Element extends EventTarget {
   dataset: any = {};
   attributes = new Map<string, string>();
   style: any = {};
-  className = "";
-  textContent = "";
-  value = "";
+  className = '';
+  textContent = '';
+  value = '';
   disabled = false;
   hidden = false;
   open = false;
@@ -15,7 +15,7 @@ export class Element extends EventTarget {
   tabIndex = 0;
   classList = {
     add: (name: string) => {
-      this.className += " " + name;
+      this.className += ' ' + name;
     },
   };
   constructor(
@@ -65,14 +65,14 @@ export class Element extends EventTarget {
     return [{}];
   }
   querySelector(selector: string): any {
-    if (selector === "dialog:modal")
-      return all(this).find((n) => n.tagName === "DIALOG" && n.open && n.modal) ?? null;
+    if (selector === 'dialog:modal')
+      return all(this).find((n) => n.tagName === 'DIALOG' && n.open && n.modal) ?? null;
     const match = /data-role=([^\]]+)/.exec(selector);
     return match ? (all(this).find((n) => n.dataset.role === match[1]) ?? null) : null;
   }
   querySelectorAll(_selector: string): any[] {
     return all(this).filter(
-      (n) => ["BUTTON", "INPUT", "SELECT", "TEXTAREA"].includes(n.tagName) && !n.disabled,
+      (n) => ['BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(n.tagName) && !n.disabled,
     );
   }
 }
@@ -81,11 +81,11 @@ export function documentFixture() {
   const doc: any = { activeElement: null };
   doc.createElement = (name: string) => new Element(doc, name.toUpperCase());
   doc.createTextNode = (text: string) => {
-    const n = new Element(doc, "TEXT");
+    const n = new Element(doc, 'TEXT');
     n.textContent = text;
     return n;
   };
-  const root = new Element(doc, "MAIN");
+  const root = new Element(doc, 'MAIN');
   doc.querySelector = (s: string) => root.querySelector(s);
   return {
     doc,
@@ -94,7 +94,7 @@ export function documentFixture() {
     text: () =>
       all(root)
         .map((n) => n.textContent)
-        .join(" "),
+        .join(' '),
   };
 }
 export function fire(node: EventTarget, type: string, values: Record<string, unknown> = {}) {

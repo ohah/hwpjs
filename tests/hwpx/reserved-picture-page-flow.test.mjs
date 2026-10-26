@@ -1,19 +1,19 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { paginateReservedPictureRows } from "../../web/preview/reserved-picture-page-flow.mjs";
-import { pictureTextMeasure } from "../../web/preview/picture-text-measurement.mjs";
-import { layoutContent } from "../../web/preview/layout.mjs";
-import { pageParagraphCoverage } from "../../web/preview/page-paragraph-coverage.mjs";
-import { intersectPictureLineRegions } from "../../web/preview/picture-line-intersections.mjs";
-import { rowLeft } from "../../web/preview/row-geometry.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { paginateReservedPictureRows } from '../../web/preview/reserved-picture-page-flow.mjs';
+import { pictureTextMeasure } from '../../web/preview/picture-text-measurement.mjs';
+import { layoutContent } from '../../web/preview/layout.mjs';
+import { pageParagraphCoverage } from '../../web/preview/page-paragraph-coverage.mjs';
+import { intersectPictureLineRegions } from '../../web/preview/picture-line-intersections.mjs';
+import { rowLeft } from '../../web/preview/row-geometry.mjs';
 
 function fixture(wrap = 0) {
   const paragraphs = [
-    { section: 0, paragraph: 0, text: "\ufffc" },
-    { section: 0, paragraph: 1, text: "\ufffc" + "a".repeat(60), editable: true },
+    { section: 0, paragraph: 0, text: '\ufffc' },
+    { section: 0, paragraph: 1, text: '\ufffc' + 'a'.repeat(60), editable: true },
   ];
   const picture = {
-    state: "located",
+    state: 'located',
     section: 0,
     paragraph: 1,
     pictureNode: 3,
@@ -34,7 +34,7 @@ function fixture(wrap = 0) {
     width: text.length * 8,
     height: 20,
   }));
-  const band = { kind: "gap", section: 0, paragraph: 0, tableIndex: 0, bandOrdinal: 0, height: 40 };
+  const band = { kind: 'gap', section: 0, paragraph: 0, tableIndex: 0, bandOrdinal: 0, height: 40 };
   const rows = [
     band,
     ...layoutContent({ paragraphs: [paragraphs[1]], limited: false }, 200, measure, 100, {
@@ -45,8 +45,8 @@ function fixture(wrap = 0) {
     section_ordinal: 0,
     width: 15000,
     height: 22500,
-    orientation: "widely",
-    gutter_type: "left_only",
+    orientation: 'widely',
+    gutter_type: 'left_only',
     duplicate_margins: 0,
     margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
   };
@@ -61,7 +61,7 @@ function fixture(wrap = 0) {
   return { paragraphs, picture, rows, setting, flows, measure };
 }
 
-test("reserved pagination converges with square fragments and preserves preceding table identity", () => {
+test('reserved pagination converges with square fragments and preserves preceding table identity', () => {
   const f = fixture(),
     before = structuredClone({ rows: f.rows, picture: f.picture, paragraphs: f.paragraphs });
   const result = paginateReservedPictureRows(
@@ -73,13 +73,13 @@ test("reserved pagination converges with square fragments and preserves precedin
     f.measure,
     { maxRows: 100 },
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.equal(result.rows[0].tableIndex, 0);
   assert.equal(result.rows[0].height, 40);
   assert.equal(result.pictureReservations[0].rectangle.y, 60);
   const body = result.rows.filter((r) => r.paragraph === 1);
   assert.ok(body.filter((r) => r.y === 60).length === 2);
-  assert.equal(pageParagraphCoverage([f.paragraphs[1]], body).state, "complete");
+  assert.equal(pageParagraphCoverage([f.paragraphs[1]], body).state, 'complete');
   for (const row of body) {
     const x = rowLeft(row);
     assert.deepEqual(
@@ -91,7 +91,7 @@ test("reserved pagination converges with square fragments and preserves precedin
   assert.deepEqual({ rows: f.rows, picture: f.picture, paragraphs: f.paragraphs }, before);
 });
 
-test("top-bottom reservation moves body but retains its original paragraph anchor", () => {
+test('top-bottom reservation moves body but retains its original paragraph anchor', () => {
   const f = fixture(1);
   const result = paginateReservedPictureRows(
     f.rows,
@@ -102,12 +102,12 @@ test("top-bottom reservation moves body but retains its original paragraph ancho
     f.measure,
     { maxRows: 100 },
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.equal(result.pictureReservations[0].rectangle.y, 60);
   assert.equal(result.rows.find((r) => r.paragraph === 1).y, 100);
 });
 
-test("reserved pagination rejects callback replacement and non-monotone outer positioning", () => {
+test('reserved pagination rejects callback replacement and non-monotone outer positioning', () => {
   const f = fixture();
   for (const options of [{ measurePositionedRow() {} }, { maxIterations: 0 }, { rowY: 1 }]) {
     assert.equal(
@@ -120,7 +120,7 @@ test("reserved pagination rejects callback replacement and non-monotone outer po
         f.measure,
         options,
       ).error,
-      "InvalidReservedPictureFlow",
+      'InvalidReservedPictureFlow',
     );
   }
   const result = paginateReservedPictureRows(
@@ -132,10 +132,10 @@ test("reserved pagination rejects callback replacement and non-monotone outer po
     f.measure,
     { rowY: (_row, context) => context.y - 1 },
   );
-  assert.equal(result.state, "unavailable");
+  assert.equal(result.state, 'unavailable');
 });
 
-test("caption rows remain separate from body consumption and count against the total budget", () => {
+test('caption rows remain separate from body consumption and count against the total budget', () => {
   const f = fixture();
   f.picture.caption = {
     caption_node: 7,
@@ -152,7 +152,7 @@ test("caption rows remain separate from body consumption and count against the t
   const caption = {
     section: 0,
     paragraph: 2,
-    text: "설명",
+    text: '설명',
     editable: true,
     drawingCaption: { drawingNode: 3, captionNode: 7, listNode: 8 },
   };
@@ -166,10 +166,10 @@ test("caption rows remain separate from body consumption and count against the t
     f.measure,
     options,
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.equal(result.pictureReservations[0].rectangle.height, 40);
   assert.equal(result.pictureReservations[0].flowRectangle.height, 73);
-  assert.equal(result.pictureCaptionRows.map((r) => r.text).join(""), caption.text);
+  assert.equal(result.pictureCaptionRows.map((r) => r.text).join(''), caption.text);
   assert.equal(
     result.rows.some((r) => r.paragraph === 2),
     false,
@@ -179,7 +179,7 @@ test("caption rows remain separate from body consumption and count against the t
       [f.paragraphs[1], caption],
       [...result.rows.filter((r) => r.paragraph === 1), ...result.pictureCaptionRows],
     ).state,
-    "complete",
+    'complete',
   );
   const limited = paginateReservedPictureRows(
     f.rows,
@@ -190,10 +190,10 @@ test("caption rows remain separate from body consumption and count against the t
     f.measure,
     { ...options, maxRows: result.rows.length },
   );
-  assert.equal(limited.state, "unavailable");
+  assert.equal(limited.state, 'unavailable');
 });
 
-test("caption frame overflow advances its source anchor instead of publishing an off-paper success", () => {
+test('caption frame overflow advances its source anchor instead of publishing an off-paper success', () => {
   const f = fixture();
   f.rows[0].height = 240;
   f.picture.caption = {
@@ -211,7 +211,7 @@ test("caption frame overflow advances its source anchor instead of publishing an
   const caption = {
     section: 0,
     paragraph: 2,
-    text: "설명",
+    text: '설명',
     editable: true,
     drawingCaption: { drawingNode: 3, captionNode: 7, listNode: 8 },
   };
@@ -225,7 +225,7 @@ test("caption frame overflow advances its source anchor instead of publishing an
     f.measure,
     { maxRows: 100, captionParagraphs: [...f.paragraphs, caption] },
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   const placed = result.pictureReservations[0],
     paper = result.pages[placed.pageOrdinal].paper;
   assert.equal(placed.pageOrdinal, 1);

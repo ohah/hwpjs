@@ -1,13 +1,13 @@
 // Independent, read-only record evidence. No normalization of source text.
-import assert from "node:assert/strict";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords } from './documents.mjs';
 
 export function paragraphEvidence(bytes) {
   const stack = [],
     paragraphs = new Map();
   for (const [index, r] of documentRecords(bytes).entries()) {
     const level = (bytes.readUInt32LE(r.offset) >>> 10) & 1023;
-    assert.ok(level <= stack.length, "missing record parent");
+    assert.ok(level <= stack.length, 'missing record parent');
     stack.length = level;
     const owner = paragraphs.get(stack[level - 1]);
     if (r.tag === 66) {
@@ -27,19 +27,19 @@ export function paragraphEvidence(bytes) {
       });
     }
     if (owner && r.tag === 67) {
-      assert.equal(owner.text, null, "duplicate direct text");
+      assert.equal(owner.text, null, 'duplicate direct text');
       assert.equal((r.end - r.start) % 2, 0);
       owner.text = bytes.subarray(r.start, r.end);
       owner.textUnits = (r.end - r.start) / 2;
     }
     if (owner && r.tag === 69) {
-      assert.equal(owner.lineBytes, null, "duplicate direct lines");
+      assert.equal(owner.lineBytes, null, 'duplicate direct lines');
       assert.equal((r.end - r.start) % 36, 0);
       owner.lineBytes = bytes.subarray(r.start, r.end);
       for (let at = r.start; at < r.end; at += 36) owner.starts.push(bytes.readUInt32LE(at));
     }
     if (owner && r.tag === 70) {
-      assert.equal(owner.ranges, null, "duplicate direct ranges");
+      assert.equal(owner.ranges, null, 'duplicate direct ranges');
       assert.equal((r.end - r.start) % 12, 0);
       owner.ranges = [];
       for (let at = r.start; at < r.end; at += 12)
@@ -75,9 +75,9 @@ export function rootMergeGroups(paragraphs) {
   const groups = [];
   for (const p of paragraphs)
     if (p.level === 0) {
-      assert.ok(p.merge === 0 || p.merge === 1, "unproven merge value");
+      assert.ok(p.merge === 0 || p.merge === 1, 'unproven merge value');
       if (p.merge === 1) {
-        assert.ok(groups.length > 0, "orphan merged paragraph");
+        assert.ok(groups.length > 0, 'orphan merged paragraph');
         groups.at(-1).push(p);
       } else groups.push([p]);
     }
@@ -91,11 +91,11 @@ export function rangeFilteredCandidate(members, kind) {
   for (const p of members) {
     // The investigated missing-text paragraphs declare exactly one CR unit.
     // Never allocate an arbitrary declared size or silently fill missing text.
-    if (p.text === null) assert.equal(p.units, 1, "unproven missing-text representation");
-    const b = p.text ?? Buffer.from("\r", "utf16le");
+    if (p.text === null) assert.equal(p.units, 1, 'unproven missing-text representation');
+    const b = p.text ?? Buffer.from('\r', 'utf16le');
     assert.equal(b.length / 2, p.units);
     const selected = (p.ranges ?? []).filter((r) => r.kind === kind);
-    for (const r of selected) assert.ok(r.start <= r.end && r.end <= p.units, "range bounds");
+    for (const r of selected) assert.ok(r.start <= r.end && r.end <= p.units, 'range bounds');
     for (let n = 0; n < p.units; n++)
       if (!selected.some((r) => r.start <= n && n < r.end))
         pieces.push(b.subarray(n * 2, n * 2 + 2));

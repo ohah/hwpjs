@@ -1,5 +1,5 @@
-import { affinePoint, inverseAffine } from "./affine-point-geometry.mjs";
-import { rowPageClipContains } from "./row-page-clip.mjs";
+import { affinePoint, inverseAffine } from './affine-point-geometry.mjs';
+import { rowPageClipContains } from './row-page-clip.mjs';
 export function hitTransformedBox(boxes, x, y) {
   if (![x, y].every(Number.isFinite)) return null;
   for (const box of boxes.toReversed()) {

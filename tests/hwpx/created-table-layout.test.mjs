@@ -1,19 +1,19 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { layoutCreatedTable } from "../../web/preview/created-table-layout.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { layoutCreatedTable } from '../../web/preview/created-table-layout.mjs';
 const table = {
   section: 0,
-  identity: "9007199254740993",
+  identity: '9007199254740993',
   rows: 1,
   columns: 2,
   resources: { character: 7 },
   cells: [
-    { row: 0, column: 0, width: 7200, height: 1000, text: "가😀" },
-    { row: 0, column: 1, width: 7200, height: 1000, text: "" },
+    { row: 0, column: 0, width: 7200, height: 1000, text: '가😀' },
+    { row: 0, column: 1, width: 7200, height: 1000, text: '' },
   ],
 };
 const measure = (text) => ({ width: [...text].length * 8, height: 16 });
-test("created table local flow uses shared units and explicit identity cell ownership", () => {
+test('created table local flow uses shared units and explicit identity cell ownership', () => {
   const before = structuredClone(table);
   const result = layoutCreatedTable(table, measure, { x: 30, y: 40 });
   assert.equal(result.width, 192);
@@ -30,7 +30,7 @@ test("created table local flow uses shared units and explicit identity cell owne
   assert.equal(result.paragraphs[0].characterRanges[0].charShapeId, 7);
   assert.deepEqual(table, before);
 });
-test("created table local flow refuses row truncation", () => {
+test('created table local flow refuses row truncation', () => {
   assert.equal(layoutCreatedTable(table, measure, { maxRows: 2 }).rows.length, 2);
   assert.throws(
     () => layoutCreatedTable(table, measure, { maxRows: 1 }),

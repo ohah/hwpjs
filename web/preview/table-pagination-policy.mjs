@@ -2,12 +2,12 @@
 export function tablePaginationPolicy(table) {
   const stored = table?.pagination?.page_break;
   const inline = table?.sourceGeometry?.geometry?.treat_as_character;
-  if (!["none", "table", "cell"].includes(stored) || typeof inline !== "boolean")
-    return { state: "unavailable", error: "UnprovedTablePaginationPolicy" };
+  if (!['none', 'table', 'cell'].includes(stored) || typeof inline !== 'boolean')
+    return { state: 'unavailable', error: 'UnprovedTablePaginationPolicy' };
   return {
-    state: "resolved",
+    state: 'resolved',
     storedPageBreak: stored,
-    effectivePageBreak: inline ? "none" : stored,
-    reason: inline ? "inline-object" : "source-page-break",
+    effectivePageBreak: inline ? 'none' : stored,
+    reason: inline ? 'inline-object' : 'source-page-break',
   };
 }

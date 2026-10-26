@@ -1,47 +1,47 @@
-import { chartStockData } from "./chart-stock-data.mjs";
-import { createChartValueScale } from "./chart-value-scale.mjs";
-import { chartMarkerPolicy, chartMarkerSettings } from "./chart-marker-policy.mjs";
-const unavailable = (reason) => ({ state: "unavailable", reason });
+import { chartStockData } from './chart-stock-data.mjs';
+import { createChartValueScale } from './chart-value-scale.mjs';
+import { chartMarkerPolicy, chartMarkerSettings } from './chart-marker-policy.mjs';
+const unavailable = (reason) => ({ state: 'unavailable', reason });
 
 /** Source high/low extrema and ordered first/last bodies, not inferred price names. */
 export function chartStockPrimitives(display, plotNode) {
   const data = chartStockData(display, plotNode);
-  if (data.state !== "source-rows") return data;
-  if (data.ordering.state !== "ready") return data.ordering;
+  if (data.state !== 'source-rows') return data;
+  if (data.ordering.state !== 'ready') return data.ordering;
   const settings = data.settings;
-  if (!settings) return unavailable("MissingStockSettings");
+  if (!settings) return unavailable('MissingStockSettings');
   if (settings.up_down_node !== null && data.empty_value_series_nodes.length)
-    return unavailable("UnsupportedStockBlankSeriesWithBodies");
-  const warnings = ["PreviewStockEndpoints", "SourceStylesNotApplied", ...data.blank_warnings],
+    return unavailable('UnsupportedStockBlankSeriesWithBodies');
+  const warnings = ['PreviewStockEndpoints', 'SourceStylesNotApplied', ...data.blank_warnings],
     highLow = [],
     bodies = [],
     lines = [];
   let gap = null;
   if (settings.up_down_node !== null) {
-    if (settings.gap_width?.value === null) return unavailable("MissingStockGapValue");
+    if (settings.gap_width?.value === null) return unavailable('MissingStockGapValue');
     gap = settings.gap_width?.value ?? 150;
-    if (!Number.isInteger(gap) || gap < 0 || gap > 500) return unavailable("InvalidStockGapValue");
-    if (settings.gap_width === null) warnings.push("PreviewDefaultStockGap");
+    if (!Number.isInteger(gap) || gap < 0 || gap > 500) return unavailable('InvalidStockGapValue');
+    if (settings.gap_width === null) warnings.push('PreviewDefaultStockGap');
   }
   const scale = createChartValueScale(
     data.rows.flatMap((row) => row.values.map((point) => point.value)),
     data.value_scaling,
     { includeZero: false },
   );
-  if (scale.state !== "ready") return scale;
+  if (scale.state !== 'ready') return scale;
   const seriesSettings = chartMarkerSettings(display),
     markers = new Map();
   const sourceLines = new Map();
   for (const row of data.ordering.rows) {
     const setting = seriesSettings.get(row.series_node);
     if (setting?.stroke === undefined) {
-      if (data.series.length > 4) return unavailable("MissingStockStrokeSettings");
-      warnings.push("SourceStockSeriesLinesNotApplied");
+      if (data.series.length > 4) return unavailable('MissingStockStrokeSettings');
+      warnings.push('SourceStockSeriesLinesNotApplied');
     }
     const visible = setting?.stroke !== undefined && setting.stroke?.no_fill_node == null;
     sourceLines.set(row.series_node, visible);
     const marker = chartMarkerPolicy(seriesSettings.get(row.series_node), false);
-    if (marker.state !== "ready") return marker;
+    if (marker.state !== 'ready') return marker;
     markers.set(row.series_node, marker);
     warnings.push(...marker.warnings);
     lines.push({ series_node: row.series_node, marker, paths: visible ? [[]] : [] });
@@ -59,7 +59,7 @@ export function chartStockPrimitives(display, plotNode) {
       point ? { ...point, x, y: project(point.value), index: row.index } : null,
     );
     if (points.some((point) => point && !Number.isFinite(point.y)))
-      return unavailable("InvalidChartCoordinate");
+      return unavailable('InvalidChartCoordinate');
     for (const [index, point] of points.entries()) {
       if (!point) {
         const paths = lines[index].paths;
@@ -76,7 +76,7 @@ export function chartStockPrimitives(display, plotNode) {
         maximum = Math.max(maximum, point.value);
       }
       if (minimum !== maximum && project(minimum) === project(maximum))
-        return unavailable("UnrepresentableStockRange");
+        return unavailable('UnrepresentableStockRange');
       highLow.push({
         index: row.index,
         x,
@@ -91,14 +91,14 @@ export function chartStockPrimitives(display, plotNode) {
         last = points.at(-1),
         width = 1 / data.rows.length / (1 + gap / 100);
       if (first.value !== last.value && first.y === last.y)
-        return unavailable("UnrepresentableStockBody");
+        return unavailable('UnrepresentableStockBody');
       bodies.push({
         index: row.index,
         first_ordinal: first.value_ordinal,
         last_ordinal: last.value_ordinal,
         first_y: first.y,
         last_y: last.y,
-        direction: last.value > first.value ? "up" : last.value < first.value ? "down" : "equal",
+        direction: last.value > first.value ? 'up' : last.value < first.value ? 'down' : 'equal',
         rectangle: {
           x: x - width / 2,
           y: Math.min(first.y, last.y),
@@ -111,14 +111,14 @@ export function chartStockPrimitives(display, plotNode) {
   if (
     !highLow.length &&
     !bodies.length &&
-    [...markers.values()].every((marker) => marker.symbol === "none") &&
+    [...markers.values()].every((marker) => marker.symbol === 'none') &&
     !lines.some((line) => line.paths.some((path) => path.length > 1))
   )
-    return unavailable("EmptyStockGeometry");
+    return unavailable('EmptyStockGeometry');
   return {
-    state: "ready",
+    state: 'ready',
     exact: false,
-    direction: "col",
+    direction: 'col',
     minimum: scale.minimum,
     maximum: scale.maximum,
     value_reversed: scale.reversed,

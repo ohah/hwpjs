@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { gammaInput } from "./icc-analytic.mjs";
+import assert from 'node:assert/strict';
+import { gammaInput } from './icc-analytic.mjs';
 export function gammaInverseEdges(call) {
   let comparisons = 0,
     rejected = 0;
@@ -42,7 +42,7 @@ export function gammaInverseEdges(call) {
   for (const count of [0, 2]) {
     const b = Buffer.alloc(20 + 2 * count);
     b.writeDoubleBE(0.5);
-    b.write("curv", 8);
+    b.write('curv', 8);
     b.writeUInt32BE(count, 16);
     reject(b, /InvalidIccGammaCurve/);
   }

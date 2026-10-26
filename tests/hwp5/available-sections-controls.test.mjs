@@ -1,14 +1,14 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createAvailableSectionsControls } from "../../web/preview/available-sections-controls.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createAvailableSectionsControls } from '../../web/preview/available-sections-controls.mjs';
 import {
   availableSectionsRequest,
   availableSectionsSummary,
-} from "../../web/preview/hwp5-available-preview.mjs";
-import { sectionInventory, checkedSectionInventory } from "../../js/hwp5-section-inventory.mjs";
+} from '../../web/preview/hwp5-available-preview.mjs';
+import { sectionInventory, checkedSectionInventory } from '../../js/hwp5-section-inventory.mjs';
 
 const content = {
-  format: "hwp5",
+  format: 'hwp5',
   readOnly: true,
   availableSectionsOnly: true,
   sectionInventory: sectionInventory(2, 1),
@@ -26,55 +26,55 @@ function harness(reopen) {
         handlers.delete(kind);
       },
       click() {
-        handlers.get("click")?.();
+        handlers.get('click')?.();
       },
     },
-    note = { textContent: "" };
+    note = { textContent: '' };
   const controls = createAvailableSectionsControls({ button, note, reopen });
   return { controls, button, note, handlers };
 }
 
-test("available-section offer requires the precise load failure and complete native capability and never retries automatically", () => {
+test('available-section offer requires the precise load failure and complete native capability and never retries automatically', () => {
   const calls = [],
-    source = Object.freeze({ name: "source.hwp" }),
+    source = Object.freeze({ name: 'source.hwp' }),
     h = harness((file) => calls.push(file));
   assert(h.button.hidden && h.button.disabled);
   for (const reply of [
-    { kind: "save", error: "SectionCountMismatch", availableSectionsPreviewAvailable: true },
-    { kind: "load", error: "InvalidFat", availableSectionsPreviewAvailable: true },
-    { kind: "load", error: "SectionCountMismatch" },
-    { kind: "load", error: "SectionCountMismatch", availableSectionsPreviewAvailable: "true" },
+    { kind: 'save', error: 'SectionCountMismatch', availableSectionsPreviewAvailable: true },
+    { kind: 'load', error: 'InvalidFat', availableSectionsPreviewAvailable: true },
+    { kind: 'load', error: 'SectionCountMismatch' },
+    { kind: 'load', error: 'SectionCountMismatch', availableSectionsPreviewAvailable: 'true' },
   ])
     assert.equal(h.controls.offer(source, reply), false);
   assert.deepEqual(calls, []);
   assert.equal(
     h.controls.offer(source, {
-      kind: "load",
-      error: "SectionCountMismatch",
+      kind: 'load',
+      error: 'SectionCountMismatch',
       availableSectionsPreviewAvailable: true,
     }),
     true,
   );
   assert(!h.button.hidden && !h.button.disabled);
-  assert(h.note.textContent.includes("원본을 수정하지 않고"));
+  assert(h.note.textContent.includes('원본을 수정하지 않고'));
   assert.deepEqual(calls, []);
   h.button.click();
   h.button.click();
   assert.deepEqual(calls, [source]);
   assert(h.button.hidden && h.button.disabled);
   h.controls.loaded(content);
-  assert(h.note.textContent.includes("선언 2구역"));
-  assert(h.note.textContent.includes("저장된 1구역"));
-  assert(h.note.textContent.includes("편집·다운로드를 허용하지 않습니다"));
+  assert(h.note.textContent.includes('선언 2구역'));
+  assert(h.note.textContent.includes('저장된 1구역'));
+  assert(h.note.textContent.includes('편집·다운로드를 허용하지 않습니다'));
   h.controls.reset();
   h.button.click();
-  assert.equal(h.note.textContent, "");
+  assert.equal(h.note.textContent, '');
   assert.equal(calls.length, 1);
   h.controls.close();
   assert.equal(h.handlers.size, 0);
 });
 
-test("late preview errors cannot overwrite a different selected document or survive close", async () => {
+test('late preview errors cannot overwrite a different selected document or survive close', async () => {
   let reject;
   const h = harness(
     () =>
@@ -85,42 +85,42 @@ test("late preview errors cannot overwrite a different selected document or surv
   const offer = () =>
     h.controls.offer(
       {},
-      { kind: "load", error: "SectionCountMismatch", availableSectionsPreviewAvailable: true },
+      { kind: 'load', error: 'SectionCountMismatch', availableSectionsPreviewAvailable: true },
     );
   offer();
   h.button.click();
-  h.controls.loaded({ format: "hwpx" });
-  reject(new Error("old"));
+  h.controls.loaded({ format: 'hwpx' });
+  reject(new Error('old'));
   await Promise.resolve();
-  assert.equal(h.note.textContent, "");
+  assert.equal(h.note.textContent, '');
   offer();
   h.button.click();
-  reject(new Error("current"));
+  reject(new Error('current'));
   await Promise.resolve();
-  assert(h.note.textContent.includes("current"));
+  assert(h.note.textContent.includes('current'));
   offer();
   h.button.click();
   h.controls.close();
-  reject(new Error("closed"));
+  reject(new Error('closed'));
   await Promise.resolve();
-  assert.equal(h.note.textContent, "");
+  assert.equal(h.note.textContent, '');
   assert.equal(offer(), false);
 });
 
-test("available preview policy and shared metadata validation reject coercion and inconsistent inventory", () => {
+test('available preview policy and shared metadata validation reject coercion and inconsistent inventory', () => {
   assert.equal(availableSectionsRequest({}), false);
   assert.equal(availableSectionsRequest({ availableSectionsOnly: true }), true);
-  assert.equal(availableSectionsRequest({ format: "hwpx", availableSectionsOnly: false }), false);
-  for (const value of [null, 0, 1, "true", {}, []])
+  assert.equal(availableSectionsRequest({ format: 'hwpx', availableSectionsOnly: false }), false);
+  for (const value of [null, 0, 1, 'true', {}, []])
     assert.throws(
       () => availableSectionsRequest({ availableSectionsOnly: value }),
       /InvalidAvailableSectionsPolicy/,
     );
   assert.throws(
-    () => availableSectionsRequest({ format: "hwpx", availableSectionsOnly: true }),
+    () => availableSectionsRequest({ format: 'hwpx', availableSectionsOnly: true }),
     /UnsupportedAvailableSectionsFormat/,
   );
-  for (const value of [0, -1, 1025, 0.5, Infinity, NaN, true, "2"]) {
+  for (const value of [0, -1, 1025, 0.5, Infinity, NaN, true, '2']) {
     assert.throws(() => sectionInventory(value, 1), /InvalidSectionInventory/);
     assert.throws(() => sectionInventory(1, value), /InvalidSectionInventory/);
   }
@@ -137,7 +137,7 @@ test("available preview policy and shared metadata validation reject coercion an
     /InvalidAvailableSectionsPreview/,
   );
   assert.throws(
-    () => availableSectionsSummary({ ...content, format: "hwpx" }),
+    () => availableSectionsSummary({ ...content, format: 'hwpx' }),
     /InvalidAvailableSectionsPreview/,
   );
 });

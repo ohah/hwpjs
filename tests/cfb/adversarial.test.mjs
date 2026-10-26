@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import test from "node:test";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { v4File } from "./contract-fixtures.mjs";
-import { runInNewContext } from "node:vm";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import test from 'node:test';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { v4File } from './contract-fixtures.mjs';
+import { runInNewContext } from 'node:vm';
 
 const module = await WebAssembly.compile(
-  readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+  readFileSync(new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url)),
 );
 
-test("FILETIME uses unsigned i64 bits at the JS boundary", async () => {
+test('FILETIME uses unsigned i64 bits at the JS boundary', async () => {
   const api = await createCfbReader(module);
   try {
     for (const ticks of [0x7fffffffffffffffn, 0x8000000000000000n, 0xffffffffffffffffn]) {
@@ -24,36 +24,36 @@ test("FILETIME uses unsigned i64 bits at the JS boundary", async () => {
   }
 });
 
-test("invalid byte values and unsupported encodings are not silently coerced", async () => {
+test('invalid byte values and unsupported encodings are not silently coerced', async () => {
   const api = await createCfbReader(module);
   try {
-    for (const value of [321, -1, NaN, Infinity, 1.5, "65", undefined]) {
+    for (const value of [321, -1, NaN, Infinity, 1.5, '65', undefined]) {
       const bytes = Array.from(v4File());
       bytes[12288] = value;
       assert.throws(() => api.parse(bytes), TypeError, String(value));
     }
     assert.throws(() => api.parse(Uint16Array.from(v4File())), TypeError);
-    const binary = v4File().toString("binary");
+    const binary = v4File().toString('binary');
     assert.throws(
       () =>
-        api.read(binary.slice(0, 12288) + "\u0141" + binary.slice(12289), {
-          type: "binary",
+        api.read(binary.slice(0, 12288) + '\u0141' + binary.slice(12289), {
+          type: 'binary',
         }),
       TypeError,
     );
-    assert.throws(() => api.read(v4File(), { type: "typo" }), TypeError);
+    assert.throws(() => api.read(v4File(), { type: 'typo' }), TypeError);
   } finally {
     api.close();
   }
 });
 
-test("cross-realm ArrayBuffer and byte views preserve their bytes", async () => {
+test('cross-realm ArrayBuffer and byte views preserve their bytes', async () => {
   const api = await createCfbReader(module);
   try {
     const source = v4File();
     for (let i = 12288; i < source.length; i++) source[i] = i % 251;
     const bytes = Array.from(source);
-    for (const expression of ["Uint8Array.from(bytes).buffer", "Uint8Array.from(bytes)"]) {
+    for (const expression of ['Uint8Array.from(bytes).buffer', 'Uint8Array.from(bytes)']) {
       const foreign = runInNewContext(expression, { bytes });
       assert.deepEqual(
         Buffer.from(api.parse(foreign).FileIndex[1].content),
@@ -65,29 +65,29 @@ test("cross-realm ArrayBuffer and byte views preserve their bytes", async () => 
   }
 });
 
-test("a leading U+FEFF in root and stream names is data, not a text transport BOM", async () => {
+test('a leading U+FEFF in root and stream names is data, not a text transport BOM', async () => {
   const api = await createCfbReader(module);
   try {
     const bytes = v4File();
     for (const [offset, name] of [
-      [8192, "\ufeffRoot"],
-      [8320, "\ufeffData"],
+      [8192, '\ufeffRoot'],
+      [8320, '\ufeffData'],
     ]) {
       bytes.fill(0, offset, offset + 64);
-      const encoded = Buffer.from(name + "\0", "utf16le");
+      const encoded = Buffer.from(name + '\0', 'utf16le');
       encoded.copy(bytes, offset);
       bytes.writeUInt16LE(encoded.length, offset + 64);
     }
     const saved = api.parse(bytes);
-    assert.equal(saved.FileIndex[0].name, "\ufeffRoot");
-    assert.equal(saved.FileIndex[1].name, "\ufeffData");
-    assert.equal(saved.FullPaths[1], "\ufeffRoot/\ufeffData");
-    for (const phase of ["active", "replaced", "closed"]) {
-      if (phase === "replaced") api.parse(v4File());
-      if (phase === "closed") api.close();
-      assert.equal(api.find(saved, "\ufeffData"), saved.FileIndex[1], phase);
-      assert.equal(api.find(saved, "Data"), null, phase);
-      assert.equal(api.find(saved, "/\ufeffData"), saved.FileIndex[1], phase);
+    assert.equal(saved.FileIndex[0].name, '\ufeffRoot');
+    assert.equal(saved.FileIndex[1].name, '\ufeffData');
+    assert.equal(saved.FullPaths[1], '\ufeffRoot/\ufeffData');
+    for (const phase of ['active', 'replaced', 'closed']) {
+      if (phase === 'replaced') api.parse(v4File());
+      if (phase === 'closed') api.close();
+      assert.equal(api.find(saved, '\ufeffData'), saved.FileIndex[1], phase);
+      assert.equal(api.find(saved, 'Data'), null, phase);
+      assert.equal(api.find(saved, '/\ufeffData'), saved.FileIndex[1], phase);
     }
   } finally {
     api.close();
@@ -95,29 +95,29 @@ test("a leading U+FEFF in root and stream names is data, not a text transport BO
 });
 
 for (const [name, mutate, message] of [
-  ["used stream marked free", (b) => b.writeUInt32LE(0xffffffff, 4104), "UnallocatedSector"],
+  ['used stream marked free', (b) => b.writeUInt32LE(0xffffffff, 4104), 'UnallocatedSector'],
   [
-    "stream child references root",
+    'stream child references root',
     (b) => b.writeUInt32LE(0, 8320 + 76),
-    "InvalidDirectoryReference",
+    'InvalidDirectoryReference',
   ],
   [
-    "root sibling references itself",
+    'root sibling references itself',
     (b) => b.writeUInt32LE(0, 8192 + 68),
-    "InvalidDirectoryReference",
+    'InvalidDirectoryReference',
   ],
   [
-    "directory color outside its domain",
+    'directory color outside its domain',
     (b) => {
       b[8320 + 67] = 2;
     },
-    "InvalidDirectory",
+    'InvalidDirectory',
   ],
-  ["missing name terminator", (b) => b.writeUInt16LE(2, 8320 + 64), "InvalidName"],
-  ["live entry without a name field", (b) => b.writeUInt16LE(0, 8320 + 64), "InvalidName"],
-  ["slash in a single entry name", (b) => b.writeUInt16LE(47, 8320), "InvalidName"],
+  ['missing name terminator', (b) => b.writeUInt16LE(2, 8320 + 64), 'InvalidName'],
+  ['live entry without a name field', (b) => b.writeUInt16LE(0, 8320 + 64), 'InvalidName'],
+  ['slash in a single entry name', (b) => b.writeUInt16LE(47, 8320), 'InvalidName'],
   [
-    "NUL separating an invalid surrogate pair",
+    'NUL separating an invalid surrogate pair',
     (b) => {
       b.writeUInt16LE(0xd800, 8320);
       b.writeUInt16LE(0, 8322);
@@ -125,7 +125,7 @@ for (const [name, mutate, message] of [
       b.writeUInt16LE(0, 8326);
       b.writeUInt16LE(8, 8320 + 64);
     },
-    "ExpectedSecondSurrogateHalf",
+    'ExpectedSecondSurrogateHalf',
   ],
 ])
   test(`reject ${name} and recover on the next open`, async () => {
@@ -133,7 +133,7 @@ for (const [name, mutate, message] of [
     try {
       const bytes = v4File();
       mutate(bytes);
-      assert.throws(() => api.parse(bytes), { name: "Error", message });
+      assert.throws(() => api.parse(bytes), { name: 'Error', message });
       assert.equal(api.parse(v4File()).FileIndex[1].content.length, 4096);
     } finally {
       api.close();

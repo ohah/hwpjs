@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function lastDocumentEvidence(bytes) {
   assert.equal(bytes[0], 49);
   const size = bytes.readUInt32LE(1);

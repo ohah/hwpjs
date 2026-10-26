@@ -1,5 +1,5 @@
-import { measureEquationRequests } from "./equation-font-measure.mjs";
-import { equationDisplayStyle } from "./equation-display-style.mjs";
+import { measureEquationRequests } from './equation-font-measure.mjs';
+import { equationDisplayStyle } from './equation-display-style.mjs';
 
 // Explicit preview policy, not original Hancom font metrics or layout constants.
 const options = {
@@ -18,10 +18,10 @@ export const EQUATION_PREVIEW_MAX_PLANS = 4096;
 let context;
 function hostContext() {
   if (!context) {
-    if (typeof OffscreenCanvas !== "function")
-      throw new Error("EquationFontMeasurementUnavailable");
-    context = new OffscreenCanvas(1, 1).getContext("2d");
-    if (!context) throw new Error("EquationFontMeasurementUnavailable");
+    if (typeof OffscreenCanvas !== 'function')
+      throw new Error('EquationFontMeasurementUnavailable');
+    context = new OffscreenCanvas(1, 1).getContext('2d');
+    if (!context) throw new Error('EquationFontMeasurementUnavailable');
   }
   return context;
 }
@@ -51,7 +51,7 @@ export function attachEquationRendering(
       const { section } = paragraph,
         { node, unit } = anchor;
       try {
-        if (++addresses > 65536) throw new Error("EquationPreviewLimitExceeded");
+        if (++addresses > 65536) throw new Error('EquationPreviewLimitExceeded');
         if (!snapshots.has(section))
           snapshots.set(
             section,
@@ -63,27 +63,27 @@ export function attachEquationRendering(
             new Map(editor.equationStyles(section).map((row) => [row.node, row])),
           );
         const row = snapshots.get(section).get(node);
-        if (!row || row.source.issue !== null || typeof row.value !== "string")
-          throw new Error("EquationScriptUnavailable");
+        if (!row || row.source.issue !== null || typeof row.value !== 'string')
+          throw new Error('EquationScriptUnavailable');
         const style = sourceStyles ? styles.get(section).get(node) : null;
-        if (sourceStyles && !style) throw new Error("EquationStyleUnavailable");
+        if (sourceStyles && !style) throw new Error('EquationStyleUnavailable');
         const { settings, family, color, sourceStyle } = equationDisplayStyle(style);
         bytes += encoder.encode(row.value).length;
-        if (bytes > 1024 * 1024) throw new Error("EquationPreviewLimitExceeded");
+        if (bytes > 1024 * 1024) throw new Error('EquationPreviewLimitExceeded');
         const key = JSON.stringify([row.value, settings, family]);
         let cached = layouts.get(key);
         if (!cached) {
-          if (++count > EQUATION_PREVIEW_MAX_PLANS) throw new Error("EquationPreviewLimitExceeded");
+          if (++count > EQUATION_PREVIEW_MAX_PLANS) throw new Error('EquationPreviewLimitExceeded');
           cached = { plan: editor.measureEquation(row.value, settings), settings };
           layouts.set(key, cached);
           if (
             !cached.plan.ready &&
             cached.plan.open_group_recovery === true &&
             cached.plan.blockers?.length &&
-            cached.plan.blockers.every((b) => b.kind === "unclosed_group")
+            cached.plan.blockers.every((b) => b.kind === 'unclosed_group')
           ) {
             if (++count > EQUATION_PREVIEW_MAX_PLANS) {
-              cached.error = "EquationPreviewLimitExceeded";
+              cached.error = 'EquationPreviewLimitExceeded';
               throw new Error(cached.error);
             }
             cached.settings = { ...settings, allow_unclosed_groups: true };
@@ -101,13 +101,13 @@ export function attachEquationRendering(
           content.equationPaintErrors.push({
             section,
             node,
-            error: "UnsupportedEquationLayout",
+            error: 'UnsupportedEquationLayout',
             blockers: plan.blockers,
           });
           continue;
         }
         requests += plan.requests.length;
-        if (requests > 65536) throw new Error("EquationPreviewLimitExceeded");
+        if (requests > 65536) throw new Error('EquationPreviewLimitExceeded');
         if (!cached.layout) {
           const values = measureEquationRequests(getContext(), plan.requests, family);
           const layoutOptions = { ...options };
@@ -133,7 +133,7 @@ export function attachEquationRendering(
           content.equationPaintWarnings.push({
             section,
             node,
-            warning: "UnclosedEquationGroupAtEnd",
+            warning: 'UnclosedEquationGroupAtEnd',
             recoveredOpenGroups: plan.recovered_open_groups,
             diagnostics: plan.recovery_diagnostics,
           });
@@ -145,7 +145,7 @@ export function attachEquationRendering(
 }
 
 export function equationPaintAt(paragraph, unit) {
-  if (paragraph?.text?.[unit] !== "\ufffc") return null;
+  if (paragraph?.text?.[unit] !== '\ufffc') return null;
   const rows = paragraph.equationPaint?.filter((row) => row.unit === unit) ?? [];
   return rows.length === 1 ? rows[0] : null;
 }

@@ -46,7 +46,7 @@ for (const [name, count] of Object.entries(groups)) {
 }
 function index(value) {
   if (!Number.isSafeInteger(value) || value < 0 || value > 65535)
-    throw new RangeError("Invalid section index");
+    throw new RangeError('Invalid section index');
 }
 export function reportBytes(sectionCount) {
   index(sectionCount);
@@ -55,6 +55,6 @@ export function reportBytes(sectionCount) {
 export function sectionFieldOffset(sectionIndex, group, field = 0) {
   index(sectionIndex);
   if (!offsets.has(group) || !Number.isInteger(field) || field < 0 || field >= groups[group])
-    throw new RangeError("Invalid report field");
+    throw new RangeError('Invalid report field');
   return documentPrefixBytes + sectionIndex * sectionReportBytes + offsets.get(group) + field * 4;
 }

@@ -1,10 +1,10 @@
-import { pictureQuadTransform } from "./picture-quad-transform.mjs";
-import { paintInlinePicture } from "./picture-inline.mjs";
+import { pictureQuadTransform } from './picture-quad-transform.mjs';
+import { paintInlinePicture } from './picture-inline.mjs';
 
 // 모서리는 자르기 뒤 표시할 사각형의 확정된 변환 결과를 호출자가 제공합니다.
 export function paintPictureQuad(ctx, bitmap, picture, corners, origin) {
   const placement = pictureQuadTransform(corners, origin);
-  if (placement.state !== "mapped") return false;
+  if (placement.state !== 'mapped') return false;
   ctx.save();
   try {
     ctx.transform(...placement.matrix);

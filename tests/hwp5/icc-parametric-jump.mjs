@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { paraInput } from "./icc-analytic.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { cmp, base, rationalPowerOrder } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { paraInput } from './icc-analytic.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { cmp, base, rationalPowerOrder } from './icc-power-reference.mjs';
 const counts = [1, 3, 4, 5, 7];
 function input(kind, raw, precision) {
   const para = paraInput(kind, raw.slice(0, counts[kind]), 0).subarray(8),

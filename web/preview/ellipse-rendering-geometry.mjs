@@ -1,13 +1,13 @@
-import { affinePoint, hwpRenderingMatrix } from "./affine-point-geometry.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { affinePoint, hwpRenderingMatrix } from './affine-point-geometry.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // A transformed ellipse is a center plus two radius vectors, not a rectangle.
 export function ellipseRenderingGeometry(row) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const local = row?.geometry,
     rendering = row?.common?.rendering;
-  if (local?.has_arc_properties !== "0" || local.arc_type !== "NORMAL")
-    return fail("UnsupportedEllipseArcProfile");
+  if (local?.has_arc_properties !== '0' || local.arc_type !== 'NORMAL')
+    return fail('UnsupportedEllipseArcProfile');
   if (
     !rendering ||
     rendering.matrix_error !== null ||
@@ -20,17 +20,17 @@ export function ellipseRenderingGeometry(row) {
     rendering.flip.length !== 2 ||
     !Array.from(rendering.flip).every((value) => value === false)
   )
-    return fail("UnsupportedEllipseRendering");
+    return fail('UnsupportedEllipseRendering');
   const points = local.points?.slice(0, 3);
   if (
     points?.length !== 3 ||
     !Array.from(points).every((p) => p && [p.x, p.y].every(Number.isFinite))
   )
-    return fail("MissingEllipseAxes");
+    return fail('MissingEllipseAxes');
   // HWP matrix row order -> shared Canvas affine order, without reinterpreting offsets.
   const matrix = hwpRenderingMatrix(rendering.matrix);
   const mapped = points.map((p) => affinePoint(matrix, [p.x, p.y]));
-  if (mapped.some((p) => !p)) return fail("InvalidEllipseRendering");
+  if (mapped.some((p) => !p)) return fail('InvalidEllipseRendering');
   const [center, axis1, axis2] = mapped.map((p) => p.map(hwpUnitPixels));
   const u = [axis2[0] - center[0], axis2[1] - center[1]],
     v = [center[0] - axis1[0], center[1] - axis1[1]];
@@ -44,6 +44,6 @@ export function ellipseRenderingGeometry(row) {
     rx <= 0 ||
     ry <= 0
   )
-    return fail("DegenerateEllipseAxes");
-  return { state: "resolved", center, u, v, bounds };
+    return fail('DegenerateEllipseAxes');
+  return { state: 'resolved', center, u, v, bounds };
 }

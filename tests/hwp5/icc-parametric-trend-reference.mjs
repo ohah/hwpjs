@@ -1,7 +1,7 @@
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { jumpReference } from "./icc-parametric-jump.mjs";
-import { cmp, levelOrder, valueOrder } from "./icc-power-reference.mjs";
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { jumpReference } from './icc-parametric-jump.mjs';
+import { cmp, levelOrder, valueOrder } from './icc-power-reference.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n];
 const clipped = (value) => (cmp(value, Z) <= 0 ? Z : cmp(value, O) >= 0 ? O : value);

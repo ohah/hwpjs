@@ -12,18 +12,18 @@ export function planCellPageCuts(
     fragmentCapacity,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     ![height, capacity].every((value) => Number.isFinite(value) && value > 0) ||
     !Array.isArray(textBands) ||
     !Number.isSafeInteger(maxPages) ||
     maxPages < 1
   )
-    return unavailable("InvalidTableCellCuts");
+    return unavailable('InvalidTableCellCuts');
   if (!Number.isFinite(firstCapacity) || firstCapacity < 0 || firstCapacity > capacity)
-    return unavailable("InvalidTableCellCuts");
-  if (fragmentCapacity !== undefined && typeof fragmentCapacity !== "function")
-    return unavailable("InvalidTablePageCapacities");
+    return unavailable('InvalidTableCellCuts');
+  if (fragmentCapacity !== undefined && typeof fragmentCapacity !== 'function')
+    return unavailable('InvalidTablePageCapacities');
   const variable = pageCapacities !== undefined || fragmentCapacity !== undefined;
   if (
     pageCapacities !== undefined &&
@@ -34,7 +34,7 @@ export function planCellPageCuts(
         (value) => !Number.isFinite(value) || value < 0 || value > capacity,
       ))
   )
-    return unavailable("InvalidTablePageCapacities");
+    return unavailable('InvalidTablePageCapacities');
   const maximum =
     pageCapacities === undefined
       ? capacity
@@ -43,13 +43,13 @@ export function planCellPageCuts(
             Math.max(max, index === 0 ? Math.min(value, firstCapacity) : value),
           0,
         );
-  if (!Array.isArray(mandatoryCuts)) return unavailable("InvalidTableCellPageBreak");
+  if (!Array.isArray(mandatoryCuts)) return unavailable('InvalidTableCellPageBreak');
   const required = new Set();
   for (const cut of mandatoryCuts) {
     if (!Number.isFinite(cut) || cut < 0 || cut >= height)
-      return unavailable("InvalidTableCellPageBreak");
+      return unavailable('InvalidTableCellPageBreak');
     required.add(cut);
-    if (required.size > maxPages) return unavailable("TableCellPageLimit");
+    if (required.size > maxPages) return unavailable('TableCellPageLimit');
   }
   const cuts = [...required].sort((a, b) => a - b);
   const bands = [];
@@ -61,10 +61,10 @@ export function planCellPageCuts(
       band.end <= band.start ||
       band.end > height
     )
-      return unavailable("InvalidTableCellCuts");
+      return unavailable('InvalidTableCellCuts');
     if (band.end - band.start > maximum)
       return {
-        ...unavailable("TableCellLineTooTall"),
+        ...unavailable('TableCellLineTooTall'),
         cellBandStart: band.start,
         cellBandEnd: band.end,
         cellCapacity: maximum,
@@ -83,7 +83,7 @@ export function planCellPageCuts(
     for (const band of intervals) {
       if (band.end - band.start > maximum)
         return {
-          ...unavailable("TableCellLineTooTall"),
+          ...unavailable('TableCellLineTooTall'),
           cellBandStart: band.start,
           cellBandEnd: band.end,
           cellCapacity: maximum,
@@ -94,7 +94,7 @@ export function planCellPageCuts(
     while (cutBand < intervals.length && intervals[cutBand].end <= cut) cutBand++;
     if (intervals[cutBand]?.start < cut && cut < intervals[cutBand].end)
       return {
-        ...unavailable("TableCellPageBreakIntersectsContent"),
+        ...unavailable('TableCellPageBreakIntersectsContent'),
         cellCut: cut,
         cellBandStart: intervals[cutBand].start,
         cellBandEnd: intervals[cutBand].end,
@@ -121,9 +121,9 @@ export function planCellPageCuts(
   const pageOffsets = [];
   while (start < height) {
     if ((variable ? pageIndex : fragments.length + Number(firstPageSkipped)) >= maxPages)
-      return unavailable("TableCellPageLimit");
+      return unavailable('TableCellPageLimit');
     if (pageCapacities !== undefined && pageIndex >= pageCapacities.length)
-      return unavailable("IncompleteTablePageCapacities");
+      return unavailable('IncompleteTablePageCapacities');
     let available = pageCapacities === undefined ? capacity : pageCapacities[pageIndex];
     if (variable ? pageIndex === 0 : fragments.length === 0 && !firstPageSkipped)
       available = Math.min(available, firstCapacity);
@@ -145,14 +145,14 @@ export function planCellPageCuts(
       for (const probe of probes) {
         const reduced = fragmentCapacity({ start, end: probe, pageIndex, available });
         if (!Number.isFinite(reduced) || reduced < 0 || reduced > available)
-          return unavailable("InvalidTablePageCapacities");
+          return unavailable('InvalidTablePageCapacities');
         let candidate = Math.min(probe, start + reduced);
         const band = containingBand(candidate);
         if (band) candidate = band.start;
         if (candidate <= best) continue;
         const final = fragmentCapacity({ start, end: candidate, pageIndex, available });
         if (!Number.isFinite(final) || final < 0 || final > available)
-          return unavailable("InvalidTablePageCapacities");
+          return unavailable('InvalidTablePageCapacities');
         if (candidate - start <= final) best = candidate;
       }
       end = best;
@@ -168,14 +168,14 @@ export function planCellPageCuts(
         firstPageSkipped = true;
         continue;
       }
-      return unavailable("TableCellLineTooTall");
+      return unavailable('TableCellLineTooTall');
     }
     fragments.push({ start, end, height: end - start });
     if (variable) pageOffsets.push(pageIndex++);
     start = end;
   }
   return {
-    state: "planned",
+    state: 'planned',
     fragments,
     ...(variable
       ? { pageOffsets, pageCount: pageIndex }

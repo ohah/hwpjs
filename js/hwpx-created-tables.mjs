@@ -1,12 +1,12 @@
-import { createdTableIdentity } from "./created-table-identity.mjs";
+import { createdTableIdentity } from './created-table-identity.mjs';
 export function decodeCreatedTables(bytes) {
   const fail = () => {
-    throw new Error("InvalidCreatedTables");
+    throw new Error('InvalidCreatedTables');
   };
   if (!(bytes instanceof Uint8Array)) return fail();
   let rows;
   try {
-    rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }
@@ -16,14 +16,14 @@ export function decodeCreatedTables(bytes) {
 // Geometry/text schema is shared; host ordinal bases remain format-specific.
 export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
   const fail = () => {
-    throw new Error("InvalidCreatedTables");
+    throw new Error('InvalidCreatedTables');
   };
   if (hostBase !== 0 && hostBase !== 1) return fail();
   if (!Array.isArray(rows) || rows.length > 100000) return fail();
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   const keys = (value, names) =>
     value &&
-    typeof value === "object" &&
+    typeof value === 'object' &&
     !Array.isArray(value) &&
     Object.keys(value).length === names.length &&
     names.every((name) => Object.hasOwn(value, name));
@@ -33,16 +33,16 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
   for (const row of rows) {
     if (
       !keys(row, [
-        "identity",
-        "instance_id",
-        "host_paragraph",
-        "anchor_unit",
-        "rows",
-        "columns",
-        "width",
-        "height",
-        "resources",
-        "cells",
+        'identity',
+        'instance_id',
+        'host_paragraph',
+        'anchor_unit',
+        'rows',
+        'columns',
+        'width',
+        'height',
+        'resources',
+        'cells',
       ])
     )
       return fail();
@@ -75,7 +75,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
       return fail();
     instances.add(row.instance_id);
     if (
-      !keys(row.resources, ["paragraph", "character", "style", "border_fill"]) ||
+      !keys(row.resources, ['paragraph', 'character', 'style', 'border_fill']) ||
       !Object.values(row.resources).every(uint)
     )
       return fail();
@@ -86,7 +86,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
     for (let index = 0; index < count; index++) {
       const cell = row.cells[index];
       if (
-        !keys(cell, ["paragraph_id", "row", "column", "x", "y", "width", "height", "text"]) ||
+        !keys(cell, ['paragraph_id', 'row', 'column', 'x', 'y', 'width', 'height', 'text']) ||
         ![cell.paragraph_id, cell.row, cell.column, cell.x, cell.y, cell.width, cell.height].every(
           uint,
         )
@@ -101,7 +101,7 @@ export function validateCreatedTables(rows, { hostBase = 1 } = {}) {
         !cell.width ||
         cell.height !== height ||
         cell.y !== cell.row * height ||
-        typeof cell.text !== "string" ||
+        typeof cell.text !== 'string' ||
         !cell.text.isWellFormed()
       )
         return fail();

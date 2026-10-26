@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -60,7 +60,7 @@ export function bookmarkExpected(b) {
           }
         } else if (type === 1) {
           const size = word() * 2;
-          if (o + size > p.length) throw Error("UnexpectedEnd");
+          if (o + size > p.length) throw Error('UnexpectedEnd');
           if (depth === 1 && id === 0x4000) names.push(p.subarray(o, o + size));
           o += size;
         } else if (type >= 2 && type <= 9) {
@@ -68,8 +68,8 @@ export function bookmarkExpected(b) {
         } else if (type === 0) {
         } else if (type === 0x8002) {
           o += 2;
-        } else throw Error("UnsupportedParameterType");
-        if (o > p.length) throw Error("UnexpectedEnd");
+        } else throw Error('UnsupportedParameterType');
+        if (o > p.length) throw Error('UnexpectedEnd');
       }
       try {
         value(0x8000, 0, null);
@@ -80,7 +80,7 @@ export function bookmarkExpected(b) {
           stats[3] += names[0].length / 2;
         } else stats[4]++;
       } catch (e) {
-        if (e.message !== "UnsupportedParameterType") throw e;
+        if (e.message !== 'UnsupportedParameterType') throw e;
         stats[6]++;
       }
     }
@@ -124,7 +124,7 @@ export function bookmarkEdges(call) {
   assert.deepEqual(check(wrap(set([], 99))), [1, 1, 0, 0, 0, 1, 0, 0]);
   check(wrap(Buffer.concat([good, Buffer.from([7, 8, 9])])));
   // A nested same-ID string is not the root name; order and other items vary.
-  check(wrap(set([item(8, 0x8000, good), item(9, 2, w(123)), name(Buffer.from("ab", "utf16le"))])));
+  check(wrap(set([item(8, 0x8000, good), item(9, 2, w(123)), name(Buffer.from('ab', 'utf16le'))])));
   assert.equal(check(wrap(set([item(8, 0x8000, good)])))[4], 1);
   for (const b of [
     set([name(Buffer.alloc(0)), name(Buffer.alloc(0))]),

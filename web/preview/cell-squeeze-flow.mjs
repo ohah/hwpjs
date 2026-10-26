@@ -1,5 +1,5 @@
-import { layoutContent } from "./layout.mjs";
-import { squeezeCaptionRow } from "./caption-squeeze-row.mjs";
+import { layoutContent } from './layout.mjs';
+import { squeezeCaptionRow } from './caption-squeeze-row.mjs';
 
 /** Plain source cells share the existing glyph-preserving spacing projection. */
 export function measureCellSqueezeFlow(paragraphs, width, measure, maxRows, compactLines) {
@@ -12,6 +12,6 @@ export function measureCellSqueezeFlow(paragraphs, width, measure, maxRows, comp
   });
   const rows = flow.rows.map(squeezeCaptionRow);
   if (rows.some((row) => row === null))
-    return { state: "unavailable", error: "UnsupportedTableCellSqueezeWidth" };
+    return { state: 'unavailable', error: 'UnsupportedTableCellSqueezeWidth' };
   return { ...flow, rows };
 }

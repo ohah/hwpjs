@@ -1,12 +1,12 @@
-import { ownedShapeDocument } from "./owned-shape-document.mjs";
-import { ellipseOwnerActual, ellipseOwnerRun } from "./ellipse-validation.mjs";
+import { ownedShapeDocument } from './owned-shape-document.mjs';
+import { ellipseOwnerActual, ellipseOwnerRun } from './ellipse-validation.mjs';
 export function ellipseDocumentReference(call, cfb) {
   const { objects, ...rest } = ownedShapeDocument(call, cfb, {
-    file: "basic/KTX-003.hwp",
+    file: 'basic/KTX-003.hwp',
     tag: 80,
     count: 19,
     minimum: 60,
-    group: "ellipses",
+    group: 'ellipses',
     field: 3,
     actual: ellipseOwnerActual,
     run: ellipseOwnerRun,

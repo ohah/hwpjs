@@ -1,11 +1,11 @@
-import { affinePoint, hwpRenderingMatrix } from "./affine-point-geometry.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { curveSamplePath } from "./curve-sample-path.mjs";
-import { curveSplinePath } from "./curve-spline-path.mjs";
+import { affinePoint, hwpRenderingMatrix } from './affine-point-geometry.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { curveSamplePath } from './curve-sample-path.mjs';
+import { curveSplinePath } from './curve-spline-path.mjs';
 import {
   curveCommandBounds as commandBounds,
   mapCurveCommands,
-} from "./curve-command-geometry.mjs";
+} from './curve-command-geometry.mjs';
 
 export function validCurveCommands(commands) {
   return commandBounds(commands) !== null;
@@ -13,14 +13,14 @@ export function validCurveCommands(commands) {
 
 // 월드 이동 후의 뺄셈 반올림만 허용합니다. 원본 기하 검사의 정확 비교는 유지합니다.
 export function offsetPlacedCurveGeometry(geometry, offset) {
-  const fail = () => ({ state: "unavailable", error: "InvalidCurvePageGeometry" });
-  if (geometry?.state !== "placed") return fail();
+  const fail = () => ({ state: 'unavailable', error: 'InvalidCurvePageGeometry' });
+  if (geometry?.state !== 'placed') return fail();
   const measured = commandBounds(geometry.commands),
     bounds = geometry.bounds;
   if (!measured || !bounds || bounds.width < 0 || bounds.height < 0) return fail();
   const scale = Math.max(1, ...Object.values(measured).map(Math.abs));
   if (
-    !["x", "y", "width", "height"].every(
+    !['x', 'y', 'width', 'height'].every(
       (key) =>
         Number.isFinite(bounds[key]) &&
         Math.abs(bounds[key] - measured[key]) <= 8 * Number.EPSILON * scale,
@@ -28,10 +28,10 @@ export function offsetPlacedCurveGeometry(geometry, offset) {
   )
     return fail();
   const moved = translateCurveGeometry(
-    { ...geometry, state: "resolved", bounds: measured },
+    { ...geometry, state: 'resolved', bounds: measured },
     offset,
   );
-  if (moved.state !== "placed") return moved;
+  if (moved.state !== 'placed') return moved;
   const movedBounds = commandBounds(moved.commands);
   return movedBounds ? { ...moved, bounds: movedBounds } : fail();
 }
@@ -52,24 +52,24 @@ export function curveRenderingMatrix(source) {
 
 // Rendering matrices already target the root group frame; do not apply parent matrices again.
 export function curveRenderingGeometry(source) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const path =
     Array.isArray(source?.segments) &&
     source.segments.length &&
-    source.segments.every((s) => s?.kind === "CURVE")
+    source.segments.every((s) => s?.kind === 'CURVE')
       ? curveSplinePath(source)
       : curveSamplePath(source);
-  if (path.state !== "ready") return path;
+  if (path.state !== 'ready') return path;
   const matrix = curveRenderingMatrix(source);
-  if (!matrix) return fail("UnsupportedCurveRendering");
+  if (!matrix) return fail('UnsupportedCurveRendering');
   const commands = mapCurveCommands(path.commands, (point) =>
     affinePoint(matrix, point)?.map(hwpUnitPixels),
   );
-  if (!commands) return fail("InvalidCurveRendering");
+  if (!commands) return fail('InvalidCurveRendering');
   const bounds = commandBounds(commands);
-  if (!bounds) return fail("InvalidCurveRendering");
+  if (!bounds) return fail('InvalidCurveRendering');
   return {
-    state: "resolved",
+    state: 'resolved',
     interpretation: path.interpretation,
     node: source.node,
     commands,
@@ -78,9 +78,9 @@ export function curveRenderingGeometry(source) {
 }
 
 export function translateCurveGeometry(geometry, origin) {
-  const fail = () => ({ state: "unavailable", error: "InvalidCurvePageGeometry" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidCurvePageGeometry' });
   if (
-    geometry?.state !== "resolved" ||
+    geometry?.state !== 'resolved' ||
     !Array.isArray(origin) ||
     origin.length !== 2 ||
     !Array.from(origin).every(Number.isFinite) ||
@@ -92,7 +92,7 @@ export function translateCurveGeometry(geometry, origin) {
   if (
     !measured ||
     !geometry.bounds ||
-    !["x", "y", "width", "height"].every((key) => measured[key] === geometry.bounds[key])
+    !['x', 'y', 'width', 'height'].every((key) => measured[key] === geometry.bounds[key])
   )
     return fail();
   const commands = mapCurveCommands(geometry.commands, (point) => [
@@ -108,5 +108,5 @@ export function translateCurveGeometry(geometry, origin) {
     ![bounds.x, bounds.y, bounds.x + bounds.width, bounds.y + bounds.height].every(Number.isFinite)
   )
     return fail();
-  return { ...geometry, state: "placed", commands, bounds };
+  return { ...geometry, state: 'placed', commands, bounds };
 }

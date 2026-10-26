@@ -9,7 +9,7 @@
   border-bottom: 1px solid var(--rp-c-divider-light);
 }
 .hwpjs-home-hero::before {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   z-index: -2;
@@ -21,7 +21,7 @@
   mask-image: linear-gradient(#000 15%, #0009 72%, transparent);
 }
 .hwpjs-home-hero::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: -10% -15% 0 35%;
   z-index: -1;

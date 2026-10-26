@@ -1,4 +1,4 @@
-const names = ["left", "right", "indent", "before", "after"];
+const names = ['left', 'right', 'indent', 'before', 'after'];
 
 export function createParagraphMarginControls({ form, fields, inputs, note, selected, request }) {
   let enabled = false,
@@ -19,7 +19,7 @@ export function createParagraphMarginControls({ form, fields, inputs, note, sele
     if (key !== previous) {
       for (const name of names)
         inputs[name].value =
-          paragraph?.paragraphShape?.[name] == null ? "" : String(paragraph.paragraphShape[name]);
+          paragraph?.paragraphShape?.[name] == null ? '' : String(paragraph.paragraphShape[name]);
       previous = key;
     }
   };
@@ -32,7 +32,7 @@ export function createParagraphMarginControls({ form, fields, inputs, note, sele
       if (!raw) continue;
       const value = Number(raw);
       if (!Number.isInteger(value) || value < -2147483648 || value > 2147483647) {
-        note.textContent = "여백은 signed i32 범위의 정수 HWPUNIT으로 입력하세요.";
+        note.textContent = '여백은 signed i32 범위의 정수 HWPUNIT으로 입력하세요.';
         return;
       }
       margins[name] = value;
@@ -42,33 +42,33 @@ export function createParagraphMarginControls({ form, fields, inputs, note, sele
       fields.disabled = true;
     }
   };
-  form.addEventListener("submit", submit);
+  form.addEventListener('submit', submit);
   return {
     update,
     reset() {
       enabled = false;
       pending = false;
       previous = null;
-      for (const name of names) inputs[name].value = "";
-      note.textContent = "";
+      for (const name of names) inputs[name].value = '';
+      note.textContent = '';
       update();
     },
     message(value) {
-      if (value.kind === "load") {
+      if (value.kind === 'load') {
         enabled = false;
         pending = false;
         previous = null;
       }
-      if (value.kind === "paragraph-margins") pending = false;
+      if (value.kind === 'paragraph-margins') pending = false;
       if (value.content && !value.error) enabled = value.content.paragraphMarginsAvailable === true;
-      if (value.kind === "paragraph-margins")
+      if (value.kind === 'paragraph-margins')
         note.textContent = value.error
           ? `문단 여백 변경 실패: ${value.error}`
-          : "문단 여백 적용 · 원본 조판 재계산 필요";
+          : '문단 여백 적용 · 원본 조판 재계산 필요';
       update();
     },
     close() {
-      form.removeEventListener("submit", submit);
+      form.removeEventListener('submit', submit);
     },
   };
 }

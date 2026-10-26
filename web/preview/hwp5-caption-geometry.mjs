@@ -14,7 +14,7 @@ export function hwp5CaptionGeometry(source) {
     source.gap < -32768 ||
     source.gap > 32767
   )
-    throw new Error("UnsupportedHwp5CaptionGeometry");
+    throw new Error('UnsupportedHwp5CaptionGeometry');
   return {
     caption_node: source.list_node,
     list_node: source.list_node,
@@ -49,7 +49,7 @@ export function attachHwp5CaptionGeometry(content) {
           (row) => row.section === section && row.tableNode === table.tableNode,
         );
         if (table.sourceGeometry.has_caption !== present)
-          throw new Error("Hwp5CaptionPresenceMismatch");
+          throw new Error('Hwp5CaptionPresenceMismatch');
       }
       const prepared = [],
         seenTables = new Set(),
@@ -60,7 +60,7 @@ export function attachHwp5CaptionGeometry(content) {
           (row) => row.section === section && row.tableNode === caption.tableNode,
         );
         if (tables.length !== 1 || seenTables.has(caption.tableNode))
-          throw new Error("AmbiguousHwp5TableCaption");
+          throw new Error('AmbiguousHwp5TableCaption');
         const table = tables[0],
           source = hwp5CaptionGeometry(caption.source),
           paragraphs = [];
@@ -74,7 +74,7 @@ export function attachHwp5CaptionGeometry(content) {
             matches[0].tableCell ||
             seenParagraphs.has(id)
           )
-            throw new Error("InvalidHwp5CaptionParagraph");
+            throw new Error('InvalidHwp5CaptionParagraph');
           seenParagraphs.add(id);
           paragraphs.push(matches[0]);
         }
@@ -93,12 +93,12 @@ export function attachHwp5CaptionGeometry(content) {
       }
     } catch (error) {
       const evidence = {};
-      if (error.message === "UnsupportedHwp5CaptionGeometry" && currentCaption) {
+      if (error.message === 'UnsupportedHwp5CaptionGeometry' && currentCaption) {
         for (const [key, value] of [
-          ["tableNode", currentCaption.tableNode],
-          ["listNode", currentCaption.listNode],
-          ["rawCaptionFlags", currentCaption.source?.flags],
-          ["rawCaptionAttributes", currentCaption.source?.attributes],
+          ['tableNode', currentCaption.tableNode],
+          ['listNode', currentCaption.listNode],
+          ['rawCaptionFlags', currentCaption.source?.flags],
+          ['rawCaptionAttributes', currentCaption.source?.attributes],
         ]) {
           if (Number.isInteger(value) && value >= 0 && value <= 0xffffffff) evidence[key] = value;
         }

@@ -1,33 +1,33 @@
 // One real-browser reference roundtrip. Uses the CLI, not a second browser driver.
-import assert from "node:assert/strict";
-import { spawn, execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { resolve, dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
-import { createHash } from "node:crypto";
-import { once } from "node:events";
-import { clickBrowserTarget } from "./browser/click-target.mjs";
-import { moveBrowserInputToStart } from "./browser/input-origin.mjs";
-import { closeOwnedBrowser } from "./browser/session-close.mjs";
-import { clickHwp5BlankCell } from "./browser/hwp5-blank-cell-pointer.mjs";
-import { exerciseHwp5BlankCellSequence } from "./browser/hwp5-blank-cell-sequence.mjs";
-import { hwp5BrowserReferenceCase } from "./browser/hwp5-reference-cases.mjs";
-import { openBrowserRibbonPage } from "./browser/ribbon-page.mjs";
-import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
-import { inspect, verifyRaw } from "../tests/hwp5/style-preservation/text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { spawn, execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve, dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import { once } from 'node:events';
+import { clickBrowserTarget } from './browser/click-target.mjs';
+import { moveBrowserInputToStart } from './browser/input-origin.mjs';
+import { closeOwnedBrowser } from './browser/session-close.mjs';
+import { clickHwp5BlankCell } from './browser/hwp5-blank-cell-pointer.mjs';
+import { exerciseHwp5BlankCellSequence } from './browser/hwp5-blank-cell-sequence.mjs';
+import { hwp5BrowserReferenceCase } from './browser/hwp5-reference-cases.mjs';
+import { openBrowserRibbonPage } from './browser/ribbon-page.mjs';
+import { createExperimentalHwp5Editor } from '../js/hwp5-editor.mjs';
+import { inspect, verifyRaw } from '../tests/hwp5/style-preservation/text-record-oracle.mjs';
 
 const options = {};
 for (const argument of process.argv.slice(2)) {
   const match = /^--(root|port|paragraph|occurrence|case|cell-sequence)=(.+)$/.exec(argument);
-  if (!match || options[match[1]] !== undefined) throw Error("InvalidBrowserAuditArgument");
+  if (!match || options[match[1]] !== undefined) throw Error('InvalidBrowserAuditArgument');
   options[match[1]] = match[2];
 }
 const root = resolve(options.root ?? dirname(dirname(fileURLToPath(import.meta.url))));
 const port = Number(options.port ?? 58851);
-if (!Number.isSafeInteger(port) || port < 1 || port > 65535) throw Error("InvalidBrowserAuditPort");
+if (!Number.isSafeInteger(port) || port < 1 || port > 65535) throw Error('InvalidBrowserAuditPort');
 const selectedCase = hwp5BrowserReferenceCase(options.case);
-const marker = "브라우저검증😀",
+const marker = '브라우저검증😀',
   section = selectedCase.section,
   paragraph = Number(options.paragraph ?? selectedCase.paragraph),
   occurrence = Number(options.occurrence ?? selectedCase.occurrence);
@@ -38,21 +38,21 @@ if (
   occurrence < 1 ||
   occurrence > 100
 )
-  throw Error("InvalidBrowserAuditSelection");
+  throw Error('InvalidBrowserAuditSelection');
 if (selectedCase.window && paragraph !== selectedCase.paragraph)
-  throw Error("InvalidBrowserAuditSelection");
+  throw Error('InvalidBrowserAuditSelection');
 if (
-  options["cell-sequence"] !== undefined &&
-  (options["cell-sequence"] !== "all" || !selectedCase.blankCell || paragraph !== 1)
+  options['cell-sequence'] !== undefined &&
+  (options['cell-sequence'] !== 'all' || !selectedCase.blankCell || paragraph !== 1)
 )
-  throw Error("InvalidBlankCellSequence");
-assert(process.env.HWPJS_TEST_WASM, "Explicit browser candidate required");
+  throw Error('InvalidBlankCellSequence');
+assert(process.env.HWPJS_TEST_WASM, 'Explicit browser candidate required');
 const wasmPath = resolve(process.env.HWPJS_TEST_WASM),
   wasm = readFileSync(wasmPath);
-const fixture = resolve(root, "reference/rhwp/samples", selectedCase.fixture),
+const fixture = resolve(root, 'reference/rhwp/samples', selectedCase.fixture),
   input = readFileSync(fixture);
-const output = mkdtempSync(join(tmpdir(), "hwpjs-reference-browser-"));
-const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const output = mkdtempSync(join(tmpdir(), 'hwpjs-reference-browser-'));
+const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const baselineEditor = await createExperimentalHwp5Editor(wasm, input, {
   distribution: selectedCase.distribution,
   normalizeObservedCfb: selectedCase.normalize,
@@ -66,19 +66,19 @@ try {
 } finally {
   baselineEditor.close();
 }
-const displayOriginal = original.replace(/\r$/, "");
+const displayOriginal = original.replace(/\r$/, '');
 const session = execFileSync(
-  "agent-browser",
-  ["session", "id", "--scope", "worktree", "--prefix", "hwpjs-reference-roundtrip"],
-  { cwd: root, encoding: "utf8", timeout: 10000 },
+  'agent-browser',
+  ['session', 'id', '--scope', 'worktree', '--prefix', 'hwpjs-reference-roundtrip'],
+  { cwd: root, encoding: 'utf8', timeout: 10000 },
 ).trim();
 assert(/^[a-zA-Z0-9_-]+$/.test(session));
 const command = (...args) => {
   const timeoutMs = selectedCase.timeoutMs ?? 25000;
   const result = JSON.parse(
-    execFileSync("agent-browser", ["--json", "--session", session, ...args], {
+    execFileSync('agent-browser', ['--json', '--session', session, ...args], {
       cwd: root,
-      encoding: "utf8",
+      encoding: 'utf8',
       timeout: timeoutMs + 10000,
       maxBuffer: 4 * 1024 * 1024,
       env: { ...process.env, AGENT_BROWSER_DEFAULT_TIMEOUT: String(timeoutMs) },
@@ -88,31 +88,31 @@ const command = (...args) => {
   return result.data;
 };
 const evaluate = (expression) => {
-  const result = command("eval", expression);
-  if (!result || !Object.hasOwn(result, "result")) throw Error("InvalidBrowserEvalResponse");
+  const result = command('eval', expression);
+  if (!result || !Object.hasOwn(result, 'result')) throw Error('InvalidBrowserEvalResponse');
   return result.result;
 };
 const enableSelector = selectedCase.observedDocInfo
-  ? "#enable-observed-docinfo-edit"
-  : "#enable-edit";
+  ? '#enable-observed-docinfo-edit'
+  : '#enable-edit';
 let observedNormalizationPrompt = false;
 let normalizationPrompt = false;
 const driver = {
   command,
   evaluate,
   afterClick(selector) {
-    if (selector === "#enable-observed-docinfo-edit") {
-      command("dialog", "accept");
-      if (observedNormalizationPrompt) command("dialog", "accept");
-    } else if (selector === "#enable-edit" && normalizationPrompt) command("dialog", "accept");
+    if (selector === '#enable-observed-docinfo-edit') {
+      command('dialog', 'accept');
+      if (observedNormalizationPrompt) command('dialog', 'accept');
+    } else if (selector === '#enable-edit' && normalizationPrompt) command('dialog', 'accept');
   },
 };
 const click = (selector) => {
-  if (selector === "#enable-observed-docinfo-edit")
+  if (selector === '#enable-observed-docinfo-edit')
     observedNormalizationPrompt = evaluate(
       'window.__hwpAudit.findLast(r=>r.direction==="reply"&&r.kind==="load")?.normalization===true',
     );
-  if (selector === "#enable-edit")
+  if (selector === '#enable-edit')
     normalizationPrompt =
       selectedCase.normalize &&
       evaluate(
@@ -120,25 +120,25 @@ const click = (selector) => {
       );
   return clickBrowserTarget(driver, selector);
 };
-const wait = (expression) => command("wait", "--fn", expression);
+const wait = (expression) => command('wait', '--fn', expression);
 const snapshot = (label) => {
   if (
     evaluate(
       '!document.querySelector("#canvas-input").disabled && document.querySelector("#canvas-input").getBoundingClientRect().width > 0',
     )
   )
-    command("scrollintoview", "#canvas-input");
-  command("screenshot", join(output, label + ".png"));
+    command('scrollintoview', '#canvas-input');
+  command('screenshot', join(output, label + '.png'));
 };
 const phase = (name) =>
-  console.log(JSON.stringify({ kind: "browser-phase", name, session, output }));
+  console.log(JSON.stringify({ kind: 'browser-phase', name, session, output }));
 const selectWindow = (expectedText) => {
-  openBrowserRibbonPage(driver, "view");
+  openBrowserRibbonPage(driver, 'view');
   if (!evaluate('document.querySelector("#document-window-options").open'))
-    click("#document-window-options > summary");
-  command("fill", "#document-window-start", String(selectedCase.window.offset + 1));
-  command("fill", "#document-window-count", String(selectedCase.window.count));
-  click("#document-window-apply");
+    click('#document-window-options > summary');
+  command('fill', '#document-window-start', String(selectedCase.window.offset + 1));
+  command('fill', '#document-window-count', String(selectedCase.window.count));
+  click('#document-window-apply');
   wait(
     'window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "set-edit-window" && !r.error)',
   );
@@ -160,31 +160,31 @@ let server,
   browserClosed = false,
   roundtripVerified = false;
 try {
-  assert.equal(command("session", "info").active, false, "Refuse to take over an active session");
+  assert.equal(command('session', 'info').active, false, 'Refuse to take over an active session');
   server = spawn(
     process.execPath,
-    [resolve(root, "tools/serve-preview.mjs"), String(port), wasmPath],
-    { cwd: root, stdio: ["ignore", "pipe", "pipe"] },
+    [resolve(root, 'tools/serve-preview.mjs'), String(port), wasmPath],
+    { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] },
   );
   await new Promise((accept, reject) => {
-    const timer = setTimeout(() => reject(Error("BrowserAuditServerStartTimeout")), 10000);
-    server.once("error", (error) => {
+    const timer = setTimeout(() => reject(Error('BrowserAuditServerStartTimeout')), 10000);
+    server.once('error', (error) => {
       clearTimeout(timer);
       reject(error);
     });
-    server.once("exit", (code) => {
+    server.once('exit', (code) => {
       clearTimeout(timer);
       reject(Error(`BrowserAuditServerExited:${code}`));
     });
-    server.stdout.once("data", (bytes) => {
+    server.stdout.once('data', (bytes) => {
       clearTimeout(timer);
       if (String(bytes).includes(`127.0.0.1:${port}/web/preview/index.html`)) accept();
-      else reject(Error("UnexpectedBrowserAuditServer"));
+      else reject(Error('UnexpectedBrowserAuditServer'));
     });
   });
   ownedBrowser = true;
-  command("open", `http://127.0.0.1:${port}/web/preview/index.html`);
-  command("snapshot", "-i");
+  command('open', `http://127.0.0.1:${port}/web/preview/index.html`);
+  command('snapshot', '-i');
   evaluate(`(() => {
     window.__hwpAudit = [];
     const watched = new WeakSet(), post = Worker.prototype.postMessage;
@@ -202,9 +202,9 @@ try {
     };
   })()`);
   wait('!document.querySelector("#file").disabled');
-  command("upload", "#file", fixture);
+  command('upload', '#file', fixture);
   wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "load")');
-  phase("loaded");
+  phase('loaded');
   if (!selectedCase.normalize && !selectedCase.observedDocInfo) {
     assert.equal(
       evaluate('document.querySelector("#enable-observed-docinfo-edit")?.hidden ?? true'),
@@ -239,32 +239,32 @@ try {
   }
   if (selectedCase.window) {
     selectWindow(displayOriginal);
-    phase("window-selected");
+    phase('window-selected');
   }
   if (selectedCase.blankCell) {
-    assert.equal(displayOriginal, "");
+    assert.equal(displayOriginal, '');
     const point = clickHwp5BlankCell(driver, { section, paragraph });
     assert.equal(point.pages, 2);
-    phase("trusted-blank-cell-pointer");
+    phase('trusted-blank-cell-pointer');
   } else {
-    click("details:has(#find-input) > summary");
-    command("fill", "#find-input", displayOriginal);
+    click('details:has(#find-input) > summary');
+    command('fill', '#find-input', displayOriginal);
     for (let index = 0; index < occurrence; index++) click('#find-form button[type="submit"]');
   }
   assert.equal(evaluate('document.querySelector("#canvas-input").value'), displayOriginal);
   if (selectedCase.observedDocInfo) {
-    command("scrollintoview", "#canvas-input");
+    command('scrollintoview', '#canvas-input');
     const point = evaluate(
       '(() => {const r=document.querySelector("#canvas-input").getBoundingClientRect(),x=Math.round(r.left+1),y=Math.round(r.top+r.height/2);return {x,y,canvas:document.elementFromPoint(x,y)===document.querySelector("#canvas")};})()',
     );
-    assert.equal(point.canvas, true, "EditingCaretMustHitCanvas");
+    assert.equal(point.canvas, true, 'EditingCaretMustHitCanvas');
     evaluate(
       'window.__observedPointer=false;document.querySelector("#canvas").addEventListener("pointerdown",e=>window.__observedPointer=e.isTrusted,{once:true})',
     );
-    command("mouse", "move", String(point.x), String(point.y));
-    command("mouse", "down");
-    command("mouse", "up");
-    assert.equal(evaluate("window.__observedPointer"), true);
+    command('mouse', 'move', String(point.x), String(point.y));
+    command('mouse', 'down');
+    command('mouse', 'up');
+    assert.equal(evaluate('window.__observedPointer'), true);
     assert.ok(
       evaluate('document.querySelector("#canvas").dataset.caret').startsWith(
         `${section}:${paragraph}:`,
@@ -275,13 +275,13 @@ try {
     'window.__hwpTrustedInput = []; for (const type of ["beforeinput", "input"]) document.querySelector("#canvas-input").addEventListener(type, event => window.__hwpTrustedInput.push({ type, trusted: event.isTrusted }))',
   );
   moveBrowserInputToStart(driver);
-  command("keyboard", "inserttext", marker);
+  command('keyboard', 'inserttext', marker);
   wait(
     'window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "splice" && r.revision === 1)',
   );
   assert.deepEqual(
-    evaluate("window.__hwpTrustedInput.filter(row => row.trusted).map(row => row.type)"),
-    ["beforeinput", "input"],
+    evaluate('window.__hwpTrustedInput.filter(row => row.trusted).map(row => row.type)'),
+    ['beforeinput', 'input'],
   );
   assert.equal(
     evaluate(
@@ -308,29 +308,29 @@ try {
     0,
   );
   assert.equal(evaluate('document.querySelector("#canvas-input").value'), marker + displayOriginal);
-  snapshot("edited");
-  phase("input-verified");
-  click("#undo");
+  snapshot('edited');
+  phase('input-verified');
+  click('#undo');
   wait(
     'window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "undo" && r.changed && r.revision === 0)',
   );
   assert.equal(evaluate('document.querySelector("#canvas-input").value'), displayOriginal);
-  snapshot("undone");
-  click("#redo");
+  snapshot('undone');
+  click('#redo');
   wait(
     'window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "redo" && r.changed && r.revision === 1)',
   );
   assert.equal(evaluate('document.querySelector("#canvas-input").value'), marker + displayOriginal);
-  click("#allow-stale-layout");
+  click('#allow-stale-layout');
   assert.equal(evaluate('document.querySelector("#allow-stale-layout").checked'), true);
-  command("scrollintoview", "#download");
-  let downloaded = join(output, "edited.hwp");
-  command("download", "#download", downloaded);
+  command('scrollintoview', '#download');
+  let downloaded = join(output, 'edited.hwp');
+  command('download', '#download', downloaded);
   let saved = readFileSync(downloaded);
   verifyRaw(baseline, saved, section, paragraph, 0, 0, marker, { fieldIds: [0x25787266] });
   assert.throws(
     () =>
-      verifyRaw(baseline, saved, section, paragraph, 0, 0, marker.replace("검증", "검진"), {
+      verifyRaw(baseline, saved, section, paragraph, 0, 0, marker.replace('검증', '검진'), {
         fieldIds: [0x25787266],
       }),
     assert.AssertionError,
@@ -342,22 +342,22 @@ try {
   });
   // This empty fixture has no PARA_TEXT record; insertion materializes its CR.
   const expectedNativeText =
-    selectedCase.blankCell && original === "" ? marker + "\r" : marker + original;
+    selectedCase.blankCell && original === '' ? marker + '\r' : marker + original;
   try {
     assert.equal(reopened.text(section, paragraph), expectedNativeText);
   } finally {
     reopened.close();
   }
-  phase("independent-download-verified");
+  phase('independent-download-verified');
   let sequence;
-  if (options["cell-sequence"] === "all") {
+  if (options['cell-sequence'] === 'all') {
     sequence = await exerciseHwp5BlankCellSequence(driver, { wasm, bytes: saved, output, marker });
     saved = sequence.bytes;
     downloaded = sequence.path;
-    phase("four-cell-paragraph-sequence-verified");
+    phase('four-cell-paragraph-sequence-verified');
   }
-  evaluate("window.__hwpAudit = []");
-  command("upload", "#file", downloaded);
+  evaluate('window.__hwpAudit = []');
+  command('upload', '#file', downloaded);
   if (selectedCase.window || selectedCase.observedDocInfo) {
     wait('window.__hwpAudit.some(r => r.direction === "reply" && r.kind === "load" && !r.error)');
     click(enableSelector);
@@ -366,8 +366,8 @@ try {
     );
     if (selectedCase.window) selectWindow(marker + displayOriginal);
     if (!evaluate('document.querySelector("details:has(#find-input)").open'))
-      click("details:has(#find-input) > summary");
-    command("fill", "#find-input", marker + displayOriginal);
+      click('details:has(#find-input) > summary');
+    command('fill', '#find-input', marker + displayOriginal);
     click('#find-form button[type="submit"]');
     assert.equal(
       evaluate('document.querySelector("#canvas-input").value'),
@@ -375,7 +375,7 @@ try {
     );
   }
   wait(
-    `window.__hwpAudit.some(r => r.direction === "reply" && r.kind === ${JSON.stringify(selectedCase.window ? "set-edit-window" : "load")} && r.text === ${JSON.stringify(marker + displayOriginal)})`,
+    `window.__hwpAudit.some(r => r.direction === "reply" && r.kind === ${JSON.stringify(selectedCase.window ? 'set-edit-window' : 'load')} && r.text === ${JSON.stringify(marker + displayOriginal)})`,
   );
   if (sequence)
     for (const [owner, text] of sequence.expected) {
@@ -386,23 +386,23 @@ try {
         text,
       );
     }
-  snapshot("reuploaded");
+  snapshot('reuploaded');
   if (sequence) {
     click(enableSelector);
     wait('window.__hwpAudit.some(r=>r.direction==="reply"&&r.kind==="enable"&&r.revision===0)');
     if (!evaluate('document.querySelector("details:has(#find-input)").open'))
-      click("details:has(#find-input) > summary");
-    command("fill", "#find-input", marker);
+      click('details:has(#find-input) > summary');
+    command('fill', '#find-input', marker);
     click('#find-form button[type="submit"]');
     assert.equal(evaluate('document.querySelector("#canvas-input").value'), marker);
-    assert(evaluate('document.querySelector("#canvas").dataset.caret').startsWith("0:1:"));
-    snapshot("reuploaded-first-cell");
+    assert(evaluate('document.querySelector("#canvas").dataset.caret').startsWith('0:1:'));
+    snapshot('reuploaded-first-cell');
   }
   assert.equal(digest(readFileSync(fixture)), digest(input));
   roundtripVerified = true;
   console.log(
     JSON.stringify({
-      kind: "browser-roundtrip",
+      kind: 'browser-roundtrip',
       verified: true,
       fixture: selectedCase.fixture,
       wasmSha256: digest(wasm),
@@ -412,7 +412,7 @@ try {
       paragraph,
       output,
       scope:
-        "one reference, trusted targeted clicks, real input/history/download/reupload and independent full Section/streams/metadata",
+        'one reference, trusted targeted clicks, real input/history/download/reupload and independent full Section/streams/metadata',
     }),
   );
 } finally {
@@ -423,9 +423,9 @@ try {
     }
   } finally {
     if (server?.pid && server.exitCode === null && server.signalCode === null) {
-      const exited = once(server, "exit");
-      const timer = setTimeout(() => server.kill("SIGKILL"), 3000);
-      server.kill("SIGTERM");
+      const exited = once(server, 'exit');
+      const timer = setTimeout(() => server.kill('SIGKILL'), 3000);
+      server.kill('SIGTERM');
       try {
         await exited;
       } finally {
@@ -433,10 +433,10 @@ try {
       }
     }
     const serverExited = !server?.pid || server.exitCode !== null || server.signalCode !== null;
-    console.log(JSON.stringify({ kind: "browser-cleanup", session, browserClosed, serverExited }));
+    console.log(JSON.stringify({ kind: 'browser-cleanup', session, browserClosed, serverExited }));
     console.log(
       JSON.stringify({
-        kind: "browser-audit-complete",
+        kind: 'browser-audit-complete',
         success: roundtripVerified && browserClosed && serverExited,
       }),
     );

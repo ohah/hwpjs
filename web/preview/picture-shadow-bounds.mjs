@@ -1,7 +1,7 @@
 // Visual raster envelope, not text-wrap margins or a change to object geometry.
 export function pictureShadowBounds(plan, borderWidth = 0) {
   if (
-    plan?.state !== "outer" ||
+    plan?.state !== 'outer' ||
     ![plan.width, plan.height, plan.blur, plan.offsetX, plan.offsetY, borderWidth].every(
       Number.isFinite,
     ) ||

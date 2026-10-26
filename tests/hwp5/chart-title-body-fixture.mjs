@@ -1,25 +1,25 @@
 const definitions = [
-  "VtChartText",
-  "VtTextBlock",
-  "VtFont",
-  "VtString",
-  "VtValue",
-  "VtObject",
-  "VtChartSection",
-  "VtBackdrop",
-  "VtFill",
-  "VtPicture",
-].map((name, i) => [31 + 37 * i, { name: name + "\0", version: i === 1 ? 2 : 1 }]);
+  'VtChartText',
+  'VtTextBlock',
+  'VtFont',
+  'VtString',
+  'VtValue',
+  'VtObject',
+  'VtChartSection',
+  'VtBackdrop',
+  'VtFill',
+  'VtPicture',
+].map((name, i) => [31 + 37 * i, { name: name + '\0', version: i === 1 ? 2 : 1 }]);
 export function titleBodyFixture(
   offset = 0,
   known = false,
-  text = "alias",
+  text = 'alias',
   freshName = true,
   background = false,
 ) {
   const types = new Map(known ? definitions : []),
     objects = new Set([997, 999]),
-    strings = new Map([[997, { hex: "ff8001", trailer: 173 }]]),
+    strings = new Map([[997, { hex: 'ff8001', trailer: 173 }]]),
     parts = [Buffer.alloc(offset, 165)],
     seen = new Set(),
     declarations = [],
@@ -41,7 +41,7 @@ export function titleBodyFixture(
       const start = p,
         b = Buffer.from(Array.from({ length: n }, (_, i) => (i * 19 + p * 3 + 129) & 255));
       add(b);
-      rawFields.push({ start, n, hex: b.toString("hex") });
+      rawFields.push({ start, n, hex: b.toString('hex') });
     };
   const type = (i) => {
     const [id, d] = definitions[i];
@@ -105,10 +105,10 @@ export function titleBodyFixture(
   type(5);
   raw(24);
   const textOffset = p;
-  if (text === "null") int(0xffffffff);
-  else if (text === "empty") string(0);
-  else if (text === "fresh") string(5);
-  else if (text === "font") int(fontName);
+  if (text === 'null') int(0xffffffff);
+  else if (text === 'empty') string(0);
+  else if (text === 'fresh') string(5);
+  else if (text === 'font') int(fontName);
   else int(997);
   raw(26);
   type(5);

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { admissible } from "./icc-power-level.mjs";
-import { expected as rootOrder } from "./icc-normalized-root-compare.mjs";
-import { base, cmp, sign, rationalPowerOrder } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { admissible } from './icc-power-level.mjs';
+import { expected as rootOrder } from './icc-normalized-root-compare.mjs';
+import { base, cmp, sign, rationalPowerOrder } from './icc-power-reference.mjs';
 const O = [1n, 1n];
 // Independent critical-cell decomposition, not the product's flat-plus-point collection.
 export function verify(set, active, offset, n, d) {
@@ -10,7 +10,7 @@ export function verify(set, active, offset, n, d) {
   const source = set.source;
   assert.equal(cmp(source.start, active.start), 0);
   assert.equal(cmp(source.end, O), 0);
-  for (const key of ["a", "b", "g"]) assert.equal(source[key], active[key]);
+  for (const key of ['a', 'b', 'g']) assert.equal(source[key], active[key]);
   assert.equal(source.offset, BigInt(offset));
   const target = F(n, d),
     difference = F(65536n * n - BigInt(offset) * d, 65536n * d);
@@ -141,7 +141,7 @@ export function verify(set, active, offset, n, d) {
       }
       den *= 2n;
     }
-    assert.ok(found, "Independent critical-cell isolation budget exceeded");
+    assert.ok(found, 'Independent critical-cell isolation budget exceeded');
   }
   return membershipChecks;
 }

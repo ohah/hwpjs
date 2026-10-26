@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { decodeCharacterFontMetrics } from "../../js/character-font-metrics.mjs";
-import { attachCharacterFonts } from "../../web/preview/character-font-content.mjs";
-import { expectedCharacterFontMetrics as hwp5Expected } from "./character-font-metrics-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { decodeCharacterFontMetrics } from '../../js/character-font-metrics.mjs';
+import { attachCharacterFonts } from '../../web/preview/character-font-content.mjs';
+import { expectedCharacterFontMetrics as hwp5Expected } from './character-font-metrics-oracle.mjs';
 
 function plainPosition(bytes) {
   const source = inspect(bytes);
@@ -24,17 +24,17 @@ function plainPosition(bytes) {
       }
     }
   }
-  throw Error("MissingPlainCharacter");
+  throw Error('MissingPlainCharacter');
 }
 const hwpxExpected = (bytes) =>
   JSON.parse(
-    execFileSync("python3", ["tests/hwpx/character-font-metrics-oracle.py", "-"], {
+    execFileSync('python3', ['tests/hwpx/character-font-metrics-oracle.py', '-'], {
       input: bytes,
-      encoding: "utf8",
+      encoding: 'utf8',
     }),
   );
 
-test("raw font metric decoder separates source formats, signs, absent and explicit zero", () => {
+test('raw font metric decoder separates source formats, signs, absent and explicit zero', () => {
   const encoded = (wire) => new TextEncoder().encode(JSON.stringify(wire));
   const values = {
     ratio: [255, 0, 100, 100, 100, 100, 100],
@@ -42,29 +42,29 @@ test("raw font metric decoder separates source formats, signs, absent and explic
     relativeSize: Array(7).fill(0),
     offset: Array(7).fill(0),
   };
-  const wire = { version: 1, format: "hwp5", shapes: [{ id: 4, values }] };
-  assert.deepEqual(decodeCharacterFontMetrics(encoded(wire), "hwp5"), wire.shapes);
+  const wire = { version: 1, format: 'hwp5', shapes: [{ id: 4, values }] };
+  assert.deepEqual(decodeCharacterFontMetrics(encoded(wire), 'hwp5'), wire.shapes);
   const invalid = [
-    { ...wire, format: "hwpx" },
+    { ...wire, format: 'hwpx' },
     { ...wire, version: 2 },
     { ...wire, shapes: [...wire.shapes, ...wire.shapes] },
   ];
   for (const [key, bad] of [
-    ["ratio", null],
-    ["ratio", Array(7).fill(256)],
-    ["spacing", Array(7).fill(-129)],
-    ["offset", Array(7).fill(null)],
-    ["relativeSize", [0]],
+    ['ratio', null],
+    ['ratio', Array(7).fill(256)],
+    ['spacing', Array(7).fill(-129)],
+    ['offset', Array(7).fill(null)],
+    ['relativeSize', [0]],
   ])
     invalid.push({ ...wire, shapes: [{ id: 4, values: { ...values, [key]: bad } }] });
   for (const bad of invalid)
     assert.throws(
-      () => decodeCharacterFontMetrics(encoded(bad), "hwp5"),
+      () => decodeCharacterFontMetrics(encoded(bad), 'hwp5'),
       /InvalidCharacterFontMetrics/,
     );
   const xml = {
     version: 1,
-    format: "hwpx",
+    format: 'hwpx',
     shapes: [
       {
         id: 9,
@@ -77,54 +77,54 @@ test("raw font metric decoder separates source formats, signs, absent and explic
       },
     ],
   };
-  assert.deepEqual(decodeCharacterFontMetrics(encoded(xml), "hwpx"), xml.shapes);
+  assert.deepEqual(decodeCharacterFontMetrics(encoded(xml), 'hwpx'), xml.shapes);
   assert.throws(
-    () => decodeCharacterFontMetrics(new Uint8Array([0xff]), "hwpx"),
+    () => decodeCharacterFontMetrics(new Uint8Array([0xff]), 'hwpx'),
     /InvalidCharacterFontMetrics/,
   );
 });
 
-for (const format of ["hwp5", "hwpx"]) {
+for (const format of ['hwp5', 'hwpx']) {
   test(`actual ${format} raw font metrics match independent source without changing old shapes or save`, async () => {
-    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-    for (const name of ["facename", "charshape", "linespacing"]) {
-      const path = `legacy/rust/crates/hwp-core/tests/fixtures/${name}.${format === "hwp5" ? "hwp" : "hwpx"}`;
+    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+    for (const name of ['facename', 'charshape', 'linespacing']) {
+      const path = `legacy/rust/crates/hwp-core/tests/fixtures/${name}.${format === 'hwp5' ? 'hwp' : 'hwpx'}`;
       const bytes = readFileSync(path);
-      const expected = format === "hwp5" ? hwp5Expected(bytes) : hwpxExpected(bytes);
+      const expected = format === 'hwp5' ? hwp5Expected(bytes) : hwpxExpected(bytes);
       const editor =
-        format === "hwp5"
+        format === 'hwp5'
           ? await createExperimentalHwp5Editor(wasm, bytes)
           : await createHwpxEditor(wasm);
       try {
-        if (format === "hwpx") editor.open(bytes);
+        if (format === 'hwpx') editor.open(bytes);
         const old = editor.characterShapes();
-        assert.ok(old.every((row) => Object.keys(row).sort().join() === "bold,height,id,italic"));
+        assert.ok(old.every((row) => Object.keys(row).sort().join() === 'bold,height,id,italic'));
         assert.deepEqual(editor.characterFontMetrics(), expected, name);
         assert.deepEqual(editor.characterShapes(), old, name);
         assert.deepEqual(attachCharacterFonts(editor, {}).characterFontMetrics, expected, name);
         const saved = editor.save();
-        assert.deepEqual(Buffer.from(format === "hwp5" ? saved.bytes : saved), bytes, name);
+        assert.deepEqual(Buffer.from(format === 'hwp5' ? saved.bytes : saved), bytes, name);
         const detached = editor.characterFontMetrics();
         detached[0].values.ratio = null;
         assert.deepEqual(editor.characterFontMetrics(), expected, name);
-        if (name === "facename") {
+        if (name === 'facename') {
           editor.enableHistory();
           const position =
-            format === "hwp5"
+            format === 'hwp5'
               ? plainPosition(bytes)
               : { section: 0, paragraph: 1, startUnit: 0, endUnit: 1 };
           editor.setCharacterFontName({
             ...position,
-            language: "hangul",
-            name: "Raw Metrics History Font",
+            language: 'hangul',
+            name: 'Raw Metrics History Font',
           });
           const currentSave = editor.save({ allowStaleLayout: true });
-          const currentBytes = format === "hwp5" ? currentSave.bytes : currentSave;
+          const currentBytes = format === 'hwp5' ? currentSave.bytes : currentSave;
           const current = editor.characterFontMetrics();
           assert.ok(current.length > expected.length);
           assert.deepEqual(
             current,
-            format === "hwp5" ? hwp5Expected(currentBytes) : hwpxExpected(currentBytes),
+            format === 'hwp5' ? hwp5Expected(currentBytes) : hwpxExpected(currentBytes),
           );
           assert.equal(editor.undo(), true);
           assert.deepEqual(editor.characterFontMetrics(), expected);
@@ -139,23 +139,23 @@ for (const format of ["hwp5", "hwpx"]) {
   });
   test(
     `older ${format} WASM keeps old shapes and save when metric ABI is absent`,
-    { skip: !process.env.HWPJS_METRICS_BASELINE_WASM && "HWPJS_METRICS_BASELINE_WASM is not set" },
+    { skip: !process.env.HWPJS_METRICS_BASELINE_WASM && 'HWPJS_METRICS_BASELINE_WASM is not set' },
     async () => {
       const wasm = readFileSync(process.env.HWPJS_METRICS_BASELINE_WASM);
       const bytes = readFileSync(
-        `legacy/rust/crates/hwp-core/tests/fixtures/facename.${format === "hwp5" ? "hwp" : "hwpx"}`,
+        `legacy/rust/crates/hwp-core/tests/fixtures/facename.${format === 'hwp5' ? 'hwp' : 'hwpx'}`,
       );
       const editor =
-        format === "hwp5"
+        format === 'hwp5'
           ? await createExperimentalHwp5Editor(wasm, bytes)
           : await createHwpxEditor(wasm);
       try {
-        if (format === "hwpx") editor.open(bytes);
+        if (format === 'hwpx') editor.open(bytes);
         const shapes = editor.characterShapes();
         assert.throws(() => editor.characterFontMetrics(), /CharacterFontMetricsAbiUnavailable/);
         assert.deepEqual(editor.characterShapes(), shapes);
         const saved = editor.save();
-        assert.deepEqual(Buffer.from(format === "hwp5" ? saved.bytes : saved), bytes);
+        assert.deepEqual(Buffer.from(format === 'hwp5' ? saved.bytes : saved), bytes);
       } finally {
         editor.close();
       }
@@ -163,28 +163,28 @@ for (const format of ["hwp5", "hwpx"]) {
   );
 }
 
-test("unavailable font metrics remain an isolated optional display error", () => {
+test('unavailable font metrics remain an isolated optional display error', () => {
   const content = attachCharacterFonts(
     {
       fontFaces: () => [],
       characterFontMetrics: () => {
-        throw Error("Hwp5CharacterFontMetricsAbiUnavailable");
+        throw Error('Hwp5CharacterFontMetricsAbiUnavailable');
       },
     },
     {},
   );
   assert.deepEqual(content.fontFaces, []);
   assert.equal(content.characterFontMetrics, null);
-  assert.equal(content.characterFontMetricsError, "Hwp5CharacterFontMetricsAbiUnavailable");
+  assert.equal(content.characterFontMetricsError, 'Hwp5CharacterFontMetricsAbiUnavailable');
 });
 
-test("actual Worker transports both source formats without treating metric availability as editing support", async (t) => {
+test('actual Worker transports both source formats without treating metric availability as editing support', async (t) => {
   const oldSelf = globalThis.self,
     oldFetch = globalThis.fetch,
     replies = [];
   globalThis.self = { postMessage: (value) => replies.push(value) };
   globalThis.fetch = async () =>
-    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
   t.after(() => {
     globalThis.fetch = oldFetch;
     if (oldSelf === undefined) delete globalThis.self;
@@ -196,17 +196,17 @@ test("actual Worker transports both source formats without treating metric avail
     assert.equal(replies.length, 1);
     return replies.shift();
   };
-  for (const format of ["hwp5", "hwpx"]) {
+  for (const format of ['hwp5', 'hwpx']) {
     const bytes = readFileSync(
-      `legacy/rust/crates/hwp-core/tests/fixtures/facename.${format === "hwp5" ? "hwp" : "hwpx"}`,
+      `legacy/rust/crates/hwp-core/tests/fixtures/facename.${format === 'hwp5' ? 'hwp' : 'hwpx'}`,
     );
-    assert.equal((await send({ kind: "load", format, bytes })).error, undefined);
-    const reply = await send({ kind: "enable" });
+    assert.equal((await send({ kind: 'load', format, bytes })).error, undefined);
+    const reply = await send({ kind: 'enable' });
     assert.equal(reply.error, undefined);
     assert.equal(reply.content.characterFontMetricsError, null);
     assert.deepEqual(
       reply.content.characterFontMetrics,
-      format === "hwp5" ? hwp5Expected(bytes) : hwpxExpected(bytes),
+      format === 'hwp5' ? hwp5Expected(bytes) : hwpxExpected(bytes),
     );
   }
 });

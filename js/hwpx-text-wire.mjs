@@ -1,34 +1,34 @@
 const kinds = [
-  "paragraph_start",
-  "paragraph_end",
-  "run_start",
-  "run_end",
-  "text_start",
-  "text_end",
-  "content",
-  "inline_start",
-  "inline_end",
-  "inline_empty",
+  'paragraph_start',
+  'paragraph_end',
+  'run_start',
+  'run_end',
+  'text_start',
+  'text_end',
+  'content',
+  'inline_start',
+  'inline_end',
+  'inline_empty',
 ];
 const inlineKinds = [
-  "tab",
-  "fw_space",
-  "nb_space",
-  "line_break",
-  "title_mark",
-  "markpen_begin",
-  "markpen_end",
-  "hypen",
-  "unknown",
+  'tab',
+  'fw_space',
+  'nb_space',
+  'line_break',
+  'title_mark',
+  'markpen_begin',
+  'markpen_end',
+  'hypen',
+  'unknown',
 ];
-const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 
 /** Private HXT1 transport. Source tags and decoded content remain distinct. */
 export function decodeHwpxText(bytes) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let offset = 0;
   const invalid = () => {
-    throw new Error("InvalidHwpxTextWire");
+    throw new Error('InvalidHwpxTextWire');
   };
   const word = () => {
     if (offset + 4 > bytes.length) invalid();
@@ -90,5 +90,5 @@ export function decodeHwpxText(bytes) {
     });
   }
   if (offset !== bytes.length || starts !== paragraphCount || ends !== paragraphCount) invalid();
-  return { format: "hwpx", branchPolicy: "selected_default", sectionCount, paragraphCount, events };
+  return { format: 'hwpx', branchPolicy: 'selected_default', sectionCount, paragraphCount, events };
 }

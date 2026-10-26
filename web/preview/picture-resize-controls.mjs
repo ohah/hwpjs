@@ -2,9 +2,9 @@ import {
   pictureResizeBasis,
   pictureResizeHandles,
   resizedPicture,
-} from "./picture-resize-geometry.mjs";
-import { pageContainsPoint } from "./page-visible-rectangle.mjs";
-import { canvasDocumentPoint } from "./canvas-pointer-coordinates.mjs";
+} from './picture-resize-geometry.mjs';
+import { pageContainsPoint } from './page-visible-rectangle.mjs';
+import { canvasDocumentPoint } from './canvas-pointer-coordinates.mjs';
 
 export function createPictureResizeControls({
   canvas,
@@ -41,10 +41,10 @@ export function createPictureResizeControls({
       : null;
   const same = (current, previous) =>
     current &&
-    ["section", "pictureNode", "resizeRecordNode", "width", "height"].every(
+    ['section', 'pictureNode', 'resizeRecordNode', 'width', 'height'].every(
       (key) => current[key] === previous[key],
     ) &&
-    ["origin", "x", "y"].every((key) =>
+    ['origin', 'x', 'y'].every((key) =>
       current[key].every((value, index) => value === previous[key][index]),
     );
   const visible = (value, position) =>
@@ -59,13 +59,13 @@ export function createPictureResizeControls({
   const reset = () => {
     const previous = drag;
     drag = null;
-    if (cursor && canvas.style.cursor === cursor) canvas.style.cursor = "default";
+    if (cursor && canvas.style.cursor === cursor) canvas.style.cursor = 'default';
     cursor = null;
     renderer.pictureResizeGuide?.(null);
     if (previous && canvas.hasPointerCapture(previous.id))
       canvas.releasePointerCapture(previous.id);
   };
-  listen("pointerdown", (event) => {
+  listen('pointerdown', (event) => {
     if (event.button !== 0 || drag) return;
     const value = basis(),
       position = point(event);
@@ -93,7 +93,7 @@ export function createPictureResizeControls({
       preserveAspect: event.shiftKey === true,
     });
   };
-  listen("pointermove", (event) => {
+  listen('pointermove', (event) => {
     if (!drag) {
       const value = basis(),
         position = point(event);
@@ -113,16 +113,16 @@ export function createPictureResizeControls({
         const angle = ((Math.atan2(vector[1], vector[0]) * 180) / Math.PI + 180) % 180;
         cursor =
           angle < 22.5 || angle >= 157.5
-            ? "ew-resize"
+            ? 'ew-resize'
             : angle < 67.5
-              ? "nwse-resize"
+              ? 'nwse-resize'
               : angle < 112.5
-                ? "ns-resize"
-                : "nesw-resize";
+                ? 'ns-resize'
+                : 'nesw-resize';
         canvas.style.cursor = cursor;
         event.stopImmediatePropagation();
       } else if (cursor) {
-        if (canvas.style.cursor === cursor) canvas.style.cursor = "default";
+        if (canvas.style.cursor === cursor) canvas.style.cursor = 'default';
         cursor = null;
       }
       return;
@@ -134,7 +134,7 @@ export function createPictureResizeControls({
     }
     if (!same(basis(), drag.basis)) {
       reset();
-      note.textContent = "편집 상태나 레이아웃이 바뀌어 그림 크기 변경을 취소했습니다.";
+      note.textContent = '편집 상태나 레이아웃이 바뀌어 그림 크기 변경을 취소했습니다.';
       return;
     }
     event.preventDefault();
@@ -145,7 +145,7 @@ export function createPictureResizeControls({
       note.textContent = `그림 크기 ${size.width} × ${size.height} HWPUNIT · 놓으면 적용, Esc로 취소`;
     }
   });
-  listen("pointerup", (event) => {
+  listen('pointerup', (event) => {
     if (!drag || drag.id !== event.pointerId) return;
     if (drag.scale !== viewScale()) {
       reset();
@@ -158,24 +158,24 @@ export function createPictureResizeControls({
     reset();
     const current = basis();
     if (!size || !same(current, previous)) {
-      note.textContent = "선택이나 편집 상태가 바뀌어 그림 크기 변경을 취소했습니다.";
+      note.textContent = '선택이나 편집 상태가 바뀌어 그림 크기 변경을 취소했습니다.';
       return;
     }
     if (size.width === previous.width && size.height === previous.height) return;
     if (!request(size.width, size.height))
-      note.textContent = "그림 크기 변경을 적용할 수 없습니다.";
+      note.textContent = '그림 크기 변경을 적용할 수 없습니다.';
   });
-  for (const type of ["pointercancel", "lostpointercapture"])
+  for (const type of ['pointercancel', 'lostpointercapture'])
     listen(type, (event) => {
       if (drag?.id === event.pointerId) reset();
     });
   window.addEventListener(
-    "keydown",
+    'keydown',
     (event) => {
-      if (event.key === "Escape" && drag) {
+      if (event.key === 'Escape' && drag) {
         event.preventDefault();
         reset();
-        note.textContent = "그림 크기 변경을 취소했습니다.";
+        note.textContent = '그림 크기 변경을 취소했습니다.';
       }
     },
     { signal: events.signal },
@@ -187,11 +187,11 @@ export function createPictureResizeControls({
     },
     message(value) {
       if (closed) return;
-      if (value.kind === "load" || (value.applied && value.error)) {
+      if (value.kind === 'load' || (value.applied && value.error)) {
         available = false;
         reset();
       }
-      if (value.kind === "enable")
+      if (value.kind === 'enable')
         available = !value.error && value.pictureResizeAvailable === true;
     },
     close() {

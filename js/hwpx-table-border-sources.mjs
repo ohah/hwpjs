@@ -1,15 +1,15 @@
 /** 원본 셀/리소스의 분리된 wire 검증이며 테두리 표시 정책은 아닙니다. */
-import { decodeFillBrushes } from "./hwpx-fill-brushes.mjs";
+import { decodeFillBrushes } from './hwpx-fill-brushes.mjs';
 export function decodeTableBorderSources(bytes) {
-  const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   const fail = () => {
-    throw new Error("InvalidTableBorderSources");
+    throw new Error('InvalidTableBorderSources');
   };
   const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
   const optionalUint = (v) => v === null || uint(v);
-  const text = (v) => v === null || (typeof v === "string" && v.length <= 4096);
+  const text = (v) => v === null || (typeof v === 'string' && v.length <= 4096);
   const edge = (v) =>
-    v === null || (v && !Array.isArray(v) && ["style", "width", "color"].every((k) => text(v[k])));
+    v === null || (v && !Array.isArray(v) && ['style', 'width', 'color'].every((k) => text(v[k])));
   if (
     !value ||
     value.sourceOnly !== true ||
@@ -32,8 +32,8 @@ export function decodeTableBorderSources(bytes) {
       style.edges.length !== 4 ||
       !style.edges.every(edge) ||
       !edge(style.diagonal) ||
-      !["slash", "back_slash", "three_d", "shadow", "center_line"].every((k) => text(style[k])) ||
-      !["slash_node", "back_slash_node", "fill_node"].every((k) => optionalUint(style[k])) ||
+      !['slash', 'back_slash', 'three_d', 'shadow', 'center_line'].every((k) => text(style[k])) ||
+      !['slash_node', 'back_slash_node', 'fill_node'].every((k) => optionalUint(style[k])) ||
       !uint(style.unknown_children) ||
       (style.unknown_attributes !== undefined && !uint(style.unknown_attributes))
     )
@@ -44,7 +44,7 @@ export function decodeTableBorderSources(bytes) {
       const report = decodeFillBrushes(new TextEncoder().encode(JSON.stringify(style.fill_report)));
       if (
         report.brushes.length !== 1 ||
-        report.brushes[0].part_kind !== "header" ||
+        report.brushes[0].part_kind !== 'header' ||
         report.brushes[0].section_ordinal !== null ||
         report.brushes[0].element_index !== style.fill_node ||
         report.brushes[0].parent_element_index !== style.node

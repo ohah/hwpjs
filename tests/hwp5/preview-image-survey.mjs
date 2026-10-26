@@ -1,11 +1,11 @@
 // Explicit read-only corpus survey; names are corpus-relative, payloads are never logged.
-import { readFileSync, readdirSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { digest, observePreviewFile, summarizePreviewEvidence } from "./preview-image-evidence.mjs";
+import { readFileSync, readdirSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { digest, observePreviewFile, summarizePreviewEvidence } from './preview-image-evidence.mjs';
 
 const roots = process.argv.slice(2);
-if (!roots.length) roots.push("legacy/rust/crates/hwp-core/tests/fixtures");
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+if (!roots.length) roots.push('legacy/rust/crates/hwp-core/tests/fixtures');
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
 const rows = [];
 try {
   for (const root of roots) {
@@ -24,7 +24,7 @@ try {
   console.log(
     JSON.stringify(
       {
-        scope: "direct-child HWP-named files; signature evidence only",
+        scope: 'direct-child HWP-named files; signature evidence only',
         summary: summarizePreviewEvidence(rows),
         rows,
       },

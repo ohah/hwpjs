@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { sectionXml } from "./fixture-xml.mjs";
+import assert from 'node:assert/strict';
+import { sectionXml } from './fixture-xml.mjs';
 // Existing MIT legacy ZIP reader is a test oracle only, never a product dependency.
 export function notePair(call, section, hwpx) {
   const xml = sectionXml(hwpx);
@@ -26,10 +26,10 @@ export function notePair(call, section, hwpx) {
     const spacing = blocks[i].match(/<hp:noteSpacing\b[^>]*>/)[0];
     const attr = (text, key) => Number(text.match(new RegExp(`\\b${key}="(-?\\d+)"`))[1]);
     const expected = [
-      attr(line, "length"),
-      attr(spacing, "aboveLine"),
-      attr(spacing, "belowLine"),
-      attr(spacing, "betweenNotes"),
+      attr(line, 'length'),
+      attr(spacing, 'aboveLine'),
+      attr(spacing, 'belowLine'),
+      attr(spacing, 'betweenNotes'),
     ];
     const out = call(12, notes[i]);
     const actual = Array.from({ length: 4 }, (_, j) => out.readInt32LE(j * 4));

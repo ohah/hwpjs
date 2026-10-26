@@ -1,6 +1,6 @@
 // System-font preview policy, not the source application's ruby shaping.
 export function dutmalAt(paragraph, unit) {
-  if (paragraph?.text?.[unit] !== "\ufffc") return null;
+  if (paragraph?.text?.[unit] !== '\ufffc') return null;
   const rows = paragraph.dutmal?.filter((row) => row.unit === unit) ?? [];
   return rows.length === 1 ? rows[0] : null;
 }
@@ -9,14 +9,14 @@ export function dutmalPaintPlan(row, font, height, measure) {
   const attributes = row?.sourceAttributes;
   if (
     !row ||
-    typeof row.mainText !== "string" ||
-    typeof row.subText !== "string" ||
-    !["TOP", "BOTTOM"].includes(attributes?.pos_type) ||
-    !["LEFT", "CENTER", "RIGHT"].includes(attributes?.alignment)
+    typeof row.mainText !== 'string' ||
+    typeof row.subText !== 'string' ||
+    !['TOP', 'BOTTOM'].includes(attributes?.pos_type) ||
+    !['LEFT', 'CENTER', 'RIGHT'].includes(attributes?.alignment)
   )
     return null;
   const raw = attributes.sz_ratio;
-  if (typeof raw !== "string" || !/^\d{1,3}$/.test(raw)) return null;
+  if (typeof raw !== 'string' || !/^\d{1,3}$/.test(raw)) return null;
   const ratio = Number(raw) === 0 ? 0.5 : Number(raw) / 100;
   if (ratio <= 0 || ratio > 2 || !Number.isFinite(height) || height <= 0) return null;
   const match = /(?:^|\s)(\d+(?:\.\d+)?)(px|pt)(?=\s)/.exec(font);
@@ -29,9 +29,9 @@ export function dutmalPaintPlan(row, font, height, measure) {
     subHeight = row.subText ? height * ratio : 0;
   const gap = subHeight ? 2 : 0;
   const offset = (advance) =>
-    attributes.alignment === "LEFT"
+    attributes.alignment === 'LEFT'
       ? 0
-      : attributes.alignment === "RIGHT"
+      : attributes.alignment === 'RIGHT'
         ? width - advance
         : (width - advance) / 2;
   return {
@@ -42,13 +42,13 @@ export function dutmalPaintPlan(row, font, height, measure) {
       text: row.mainText,
       font,
       x: offset(mainWidth),
-      y: attributes.pos_type === "TOP" ? subHeight + gap : 0,
+      y: attributes.pos_type === 'TOP' ? subHeight + gap : 0,
     },
     sub: {
       text: row.subText,
       font: subFont,
       x: offset(subWidth),
-      y: attributes.pos_type === "TOP" ? 0 : height + gap,
+      y: attributes.pos_type === 'TOP' ? 0 : height + gap,
     },
   };
 }

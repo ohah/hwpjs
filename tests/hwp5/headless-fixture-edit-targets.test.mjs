@@ -1,30 +1,30 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { fixtureEditCandidates } from "../../tools/headless-fixture-edit-targets.mjs";
-import { paragraphSelectionOwner } from "../../web/preview/paragraph-selection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { fixtureEditCandidates } from '../../tools/headless-fixture-edit-targets.mjs';
+import { paragraphSelectionOwner } from '../../web/preview/paragraph-selection.mjs';
 
 const row = (paragraph, extra = {}) => ({
   section: 0,
   paragraph,
-  text: "본문😀",
+  text: '본문😀',
   editable: true,
-  selectionOwner: "section:0:body",
-  currentReference: { kind: "original", section: 0, id: String(paragraph), epoch: "1", scope: "1" },
+  selectionOwner: 'section:0:body',
+  currentReference: { kind: 'original', section: 0, id: String(paragraph), epoch: '1', scope: '1' },
   ...extra,
 });
-const candidates = (paragraphs, format = "hwp5") => fixtureEditCandidates({ format, paragraphs });
+const candidates = (paragraphs, format = 'hwp5') => fixtureEditCandidates({ format, paragraphs });
 
-test("stable body, known nested, anchored, empty priority; canonical owners", () => {
+test('stable body, known nested, anchored, empty priority; canonical owners', () => {
   const rows = [
-    row(0, { text: "" }),
-    row(1, { text: "\ufffc😀글" }),
+    row(0, { text: '' }),
+    row(1, { text: '\ufffc😀글' }),
     row(2, { tableCell: { tableNode: 3, listNode: 4 }, selectionOwner: null }),
     row(3),
     row(4, { drawingText: { drawingNode: 5, listNode: 6 } }),
     row(5, { drawingCaption: { drawingNode: 5, listNode: 7 } }),
     row(6),
-    row(7, { text: "\t\ufffc\ufffc😀" }),
-    row(8, { text: "" }),
+    row(7, { text: '\t\ufffc\ufffc😀' }),
+    row(8, { text: '' }),
   ];
   const result = candidates(rows);
   assert.deepEqual(
@@ -41,13 +41,13 @@ test("stable body, known nested, anchored, empty priority; canonical owners", ()
   }
 });
 
-test("malformed content, unknown formats and unsafe coordinates are excluded", () => {
+test('malformed content, unknown formats and unsafe coordinates are excluded', () => {
   for (const input of [
     null,
     [],
     {},
-    { format: "hwp5", paragraphs: {} },
-    { format: "other", paragraphs: [row(0)] },
+    { format: 'hwp5', paragraphs: {} },
+    { format: 'other', paragraphs: [row(0)] },
   ])
     assert.deepEqual(fixtureEditCandidates(input), []);
   for (const value of [
@@ -57,7 +57,7 @@ test("malformed content, unknown formats and unsafe coordinates are excluded", (
     Infinity,
     Number.MAX_SAFE_INTEGER + 1,
     0x100000000,
-    "0",
+    '0',
     null,
   ]) {
     assert.deepEqual(candidates([row(0, { section: value })]), []);
@@ -66,13 +66,13 @@ test("malformed content, unknown formats and unsafe coordinates are excluded", (
   assert.equal(candidates([row(0xffffffff)]).length, 1);
   const edge = row(0, {
     section: 0xffffffff,
-    selectionOwner: "section:4294967295:body",
-    currentReference: { kind: "original", section: 0xffffffff },
+    selectionOwner: 'section:4294967295:body',
+    currentReference: { kind: 'original', section: 0xffffffff },
   });
   assert.equal(candidates([edge]).length, 1);
 });
 
-test("reject unavailable, generated, unknown and conflicting owners without synthesizing body", () => {
+test('reject unavailable, generated, unknown and conflicting owners without synthesizing body', () => {
   const bad = [
     null,
     [],
@@ -81,7 +81,7 @@ test("reject unavailable, generated, unknown and conflicting owners without synt
     row(2, { clipped: true }),
     row(3, { createdCell: {} }),
     row(4, { selectionOwner: null }),
-    row(5, { selectionOwner: "section:0:unknown:list:2" }),
+    row(5, { selectionOwner: 'section:0:unknown:list:2' }),
     row(6, { tableCell: { tableNode: 2 } }),
     row(7, { tableCell: {} }),
     row(8, {
@@ -98,22 +98,22 @@ test("reject unavailable, generated, unknown and conflicting owners without synt
   assert.deepEqual(candidates(bad), []);
 });
 
-test("HWP5 requires attached original reference; HWPX does not guess one", () => {
+test('HWP5 requires attached original reference; HWPX does not guess one', () => {
   for (const currentReference of [
     undefined,
     null,
     {},
-    { kind: "cell", section: 0 },
-    { kind: "generated", section: 0 },
-    { kind: "original", section: 1 },
+    { kind: 'cell', section: 0 },
+    { kind: 'generated', section: 0 },
+    { kind: 'original', section: 1 },
   ])
     assert.deepEqual(candidates([row(0, { currentReference })]), []);
   const original = row(0, { currentReference: undefined });
-  assert.equal(candidates([original], "hwpx")[0].row, original);
+  assert.equal(candidates([original], 'hwpx')[0].row, original);
   assert.equal(original.currentReference, undefined);
 });
 
-test("duplicate identities exclude all matches even if one is otherwise ineligible", () => {
+test('duplicate identities exclude all matches even if one is otherwise ineligible', () => {
   assert.deepEqual(candidates([row(0), row(0, { clipped: true })]), []);
   assert.deepEqual(candidates([row(0), row(0, { tableCell: { tableNode: 2, listNode: 3 } })]), []);
   assert.equal(
@@ -121,26 +121,26 @@ test("duplicate identities exclude all matches even if one is otherwise ineligib
       row(0),
       row(0, {
         section: 1,
-        selectionOwner: "section:1:body",
-        currentReference: { kind: "original", section: 1 },
+        selectionOwner: 'section:1:body',
+        currentReference: { kind: 'original', section: 1 },
       }),
     ]).length,
     2,
   );
 });
 
-test("well formed scalar strings and leading anchors produce safe collapsed offsets", () => {
-  for (const text of [undefined, null, 12, "\ud800", "\udc00", "a\ud800", "\ufffc😀\udc00"])
+test('well formed scalar strings and leading anchors produce safe collapsed offsets', () => {
+  for (const text of [undefined, null, 12, '\ud800', '\udc00', 'a\ud800', '\ufffc😀\udc00'])
     assert.deepEqual(candidates([row(0, { text })]), []);
-  for (const text of ["\ufffc", "\ufffc\t", "\t", "\u0001\ufffc"])
+  for (const text of ['\ufffc', '\ufffc\t', '\t', '\u0001\ufffc'])
     assert.equal(candidates([row(0, { text })])[0].startUnit, text.length);
   for (const [text, start] of [
-    ["😀", 0],
-    ["\ufffc\ufffc😀x", 2],
-    ["\t😀", 1],
-    ["\u0001\t\ufffc𐀀", 3],
-    ["", 0],
-    [" text", 0],
+    ['😀', 0],
+    ['\ufffc\ufffc😀x', 2],
+    ['\t😀', 1],
+    ['\u0001\t\ufffc𐀀', 3],
+    ['', 0],
+    [' text', 0],
   ]) {
     const target = candidates([row(0, { text })])[0];
     assert.equal(target.startUnit, start);
@@ -148,15 +148,15 @@ test("well formed scalar strings and leading anchors produce safe collapsed offs
   }
 });
 
-test("borrowed complete row and metadata remain unchanged, including frozen inputs", () => {
+test('borrowed complete row and metadata remain unchanged, including frozen inputs', () => {
   const original = row(0, {
-    metadata: { nested: ["keep"] },
+    metadata: { nested: ['keep'] },
     sourceOffsets: [{ at: 1, source: 8 }],
   });
-  const content = { format: "hwp5", paragraphs: [original], metadata: { untouched: true } };
+  const content = { format: 'hwp5', paragraphs: [original], metadata: { untouched: true } };
   const before = structuredClone(content);
   function freeze(value) {
-    if (value && typeof value === "object") {
+    if (value && typeof value === 'object') {
       Object.values(value).forEach(freeze);
       Object.freeze(value);
     }
@@ -166,11 +166,11 @@ test("borrowed complete row and metadata remain unchanged, including frozen inpu
   assert.equal(target.row, original);
   assert.equal(target.row.currentReference, original.currentReference);
   assert.equal(target.row.metadata, original.metadata);
-  assert.deepEqual(Object.keys(target), ["row", "startUnit", "owner"]);
+  assert.deepEqual(Object.keys(target), ['row', 'startUnit', 'owner']);
   assert.deepEqual(content, before);
 });
 
-test("large inventories are not silently truncated", () => {
+test('large inventories are not silently truncated', () => {
   const rows = Array.from({ length: 20001 }, (_, i) => row(i));
   const result = candidates(rows);
   assert.equal(result.length, rows.length);

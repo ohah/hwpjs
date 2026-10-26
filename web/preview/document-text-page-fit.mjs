@@ -2,10 +2,10 @@
 // only its measured ink must fit; placement still consumes the full advance.
 export function plainDocumentTextInkHeight(row) {
   if (
-    row?.kind !== "text" ||
+    row?.kind !== 'text' ||
     row.textTop !== 0 ||
-    typeof row.text !== "string" ||
-    row.text.includes("\ufffc") ||
+    typeof row.text !== 'string' ||
+    row.text.includes('\ufffc') ||
     row.inlineTables ||
     row.sourceObjectAnchor ||
     row.positionedFragments ||
@@ -26,5 +26,5 @@ export function plainDocumentTextInkHeight(row) {
 // HWPX's general policy keeps the full advance. Explicit break context is
 // derived separately by the body paginator.
 export function documentTextPageFitHeight(row) {
-  return row?.paragraphShape?.spacingFormat === "hwp5" ? plainDocumentTextInkHeight(row) : null;
+  return row?.paragraphShape?.spacingFormat === 'hwp5' ? plainDocumentTextInkHeight(row) : null;
 }

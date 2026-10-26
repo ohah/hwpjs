@@ -1,18 +1,18 @@
-import { readEmptyPictureFields } from "./chart-empty-picture-fields-evidence.mjs";
+import { readEmptyPictureFields } from './chart-empty-picture-fields-evidence.mjs';
 // Shared observed ChartSection order. Callers own bounds, scope, diagnostics
 // and raw representation. No leading ChartSection object identity.
 export function readChartSectionFields({ type, object, raw, long, word, base, reject }) {
-  type("VtChartSection");
+  type('VtChartSection');
   const raw26 = raw(26),
     backdropId = object();
-  type("VtBackdrop");
+  type('VtBackdrop');
   const raw50 = raw(50),
     fillId = object();
-  type("VtFill");
+  type('VtFill');
   const raw34 = raw(34);
   const picture = readEmptyPictureFields({
     object,
-    type: (name) => (name === "VtObject" ? base() : type(name)),
+    type: (name) => (name === 'VtObject' ? base() : type(name)),
     raw,
     long,
     reject,

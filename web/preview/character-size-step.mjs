@@ -1,5 +1,5 @@
-import { characterPropertyArgs } from "../../js/character-property-args.mjs";
-import { isSourceCharacterSize } from "./character-size-selection.mjs";
+import { characterPropertyArgs } from '../../js/character-property-args.mjs';
+import { isSourceCharacterSize } from './character-size-selection.mjs';
 
 /** One-point step from current native size, never from an uncommitted draft. */
 export function steppedCharacterSize(current, direction) {

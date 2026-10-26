@@ -4,14 +4,14 @@ export function observationRows(rows) {
   if (!Array.isArray(rows)) return null;
   const map = new Map();
   for (const row of rows) {
-    if (!row || typeof row !== "object" || !uint(row.id) || map.has(row.id)) return null;
+    if (!row || typeof row !== 'object' || !uint(row.id) || map.has(row.id)) return null;
     map.set(row.id, row);
   }
   return map;
 }
 export function observationSpans(paragraph) {
   const spans = paragraph?.characterRanges;
-  if (typeof paragraph?.text !== "string" || !Array.isArray(spans)) return null;
+  if (typeof paragraph?.text !== 'string' || !Array.isArray(spans)) return null;
   let previous = 0;
   for (const span of spans) {
     if (

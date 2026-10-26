@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { loadMemoDocument } from "./memo-references.mjs";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { loadMemoDocument } from './memo-references.mjs';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
 const words = (b) => Array.from({ length: b.length / 4 }, (_, i) => b.readUInt32LE(i * 4));
 // Raw record/token oracle: no product Links, Flows, memo-field or memo-end probe.
 function events(sections) {
@@ -37,7 +37,7 @@ function events(sections) {
               scope: scopes.get(parent),
               paragraph: parent,
               unit: at / 2,
-              kind: "end",
+              kind: 'end',
               id: p.readUInt32LE(at + 10),
               idAt: r.start + at + 10,
             });
@@ -46,8 +46,8 @@ function events(sections) {
       }
       if (r.tag === 71 && p.length >= 15) {
         const end = 11 + 2 * p.readUInt16LE(9),
-          command = p.subarray(11, end).toString("utf16le");
-        if (command.startsWith("MEMO/")) {
+          command = p.subarray(11, end).toString('utf16le');
+        if (command.startsWith('MEMO/')) {
           const unit = pending.get(parent)?.shift();
           assert.notEqual(unit, undefined);
           result.push({
@@ -55,7 +55,7 @@ function events(sections) {
             scope: scopes.get(parent),
             paragraph: parent,
             unit,
-            kind: "start",
+            kind: 'start',
             id: p.length >= end + 8 ? p.readUInt32LE(end + 4) : null,
           });
         }
@@ -71,7 +71,7 @@ function oracle(rows) {
   const report = Array(9).fill(0),
     flows = new Map();
   for (const e of rows) {
-    const key = e.scope === 0 ? "root" : `${e.section}/${e.scope}`,
+    const key = e.scope === 0 ? 'root' : `${e.section}/${e.scope}`,
       flow = flows.get(key) ?? [];
     flow.push(e);
     flows.set(key, flow);
@@ -80,7 +80,7 @@ function oracle(rows) {
     flow.sort((a, b) => a.section - b.section || a.paragraph - b.paragraph || a.unit - b.unit);
     const stack = [];
     for (const e of flow) {
-      if (e.kind === "start") {
+      if (e.kind === 'start') {
         report[0]++;
         stack.push(e);
         continue;
@@ -104,12 +104,12 @@ function oracle(rows) {
 export function memoRangesActual(call, cfb) {
   const results = [];
   for (const [name, n, cross] of [
-    ["aift.hwp", 2, 0],
-    ["issue5169_viewtext_changetracking.hwp", 0, 0],
-    ["basic/NewYear_s_Day.hwp", 9, 0],
-    ["basic/english.hwp", 15, 0],
-    ["issue5866/memo_field_hwp5.hwp", 1, 1],
-    ["task2287/1342000_edu_curriculum_map.hwp", 1, 0],
+    ['aift.hwp', 2, 0],
+    ['issue5169_viewtext_changetracking.hwp', 0, 0],
+    ['basic/NewYear_s_Day.hwp', 9, 0],
+    ['basic/english.hwp', 15, 0],
+    ['issue5866/memo_field_hwp5.hwp', 1, 1],
+    ['task2287/1342000_edu_curriculum_map.hwp', 1, 0],
   ]) {
     const x = loadMemoDocument(call, cfb, name),
       expected = oracle(events(x.sections));
@@ -125,11 +125,11 @@ export function memoRangesActual(call, cfb) {
   return results;
 }
 export function memoRangeMutations(call, cfb) {
-  const x = loadMemoDocument(call, cfb, "basic/english.hwp");
+  const x = loadMemoDocument(call, cfb, 'basic/english.hwp');
   assert.equal(x.sections.length, 1);
   const b = x.sections[0].bytes,
     rows = events(x.sections),
-    ends = rows.filter((e) => e.kind === "end");
+    ends = rows.filter((e) => e.kind === 'end');
   assert.equal(ends.length, 15);
   assert.notEqual(ends[0].id, ends[1].id);
   const input = (bytes) => decodedDocumentInput(x.h, x.doc, [{ index: 0, bytes }]),
@@ -154,7 +154,7 @@ export function memoRangeMutations(call, cfb) {
   unknown.writeUInt32LE(0, ends[0].idAt - 8);
   check(unknown, [15, 14, 14, 0, 0, 0, 0, 0, 1]);
   const first = ends[0],
-    start = rows.find((e) => e.kind === "start" && e.id === first.id);
+    start = rows.find((e) => e.kind === 'start' && e.id === first.id);
   assert.equal(start.paragraph, first.paragraph);
   const records = documentRecords(b),
     text = records.find((r) => r.tag === 67 && first.idAt >= r.start && first.idAt < r.end),
@@ -170,8 +170,8 @@ export function memoRangeMutations(call, cfb) {
       r.tag === 71 &&
       b
         .subarray(r.start + 11, r.start + 11 + 2 * b.readUInt16LE(r.start + 9))
-        .toString("utf16le")
-        .startsWith("MEMO/"),
+        .toString('utf16le')
+        .startsWith('MEMO/'),
   );
   const at = field.start + 15 + 2 * b.readUInt16LE(field.start + 9);
   assert.equal(field.end - at, 4);

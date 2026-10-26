@@ -3,7 +3,7 @@ import {
   keymapModifierMask,
   type KeymapBinding,
   type KeymapPlatform,
-} from "./config.ts";
+} from './config.ts';
 export interface CompiledKeymap {
   readonly platform: KeymapPlatform;
   readonly bindings: readonly KeymapBinding[];
@@ -22,13 +22,13 @@ export interface NormalizedShortcutEvent {
 // Private lookup: mutating a public Map cannot manufacture or replace a binding.
 const compiledIndexes = new WeakMap<CompiledKeymap, ReadonlyMap<string, KeymapBinding>>();
 export function compileKeymap(config: unknown, platform: KeymapPlatform): CompiledKeymap {
-  if (!["mac", "windows", "linux"].includes(platform)) throw new TypeError("InvalidKeymapPlatform");
+  if (!['mac', 'windows', 'linux'].includes(platform)) throw new TypeError('InvalidKeymapPlatform');
   const owned = validateKeymapConfig(config);
   const bindings = Object.freeze(
     owned.bindings.filter(
       (binding) =>
         binding.enabled !== false &&
-        (!binding.platform || binding.platform === "all" || binding.platform === platform),
+        (!binding.platform || binding.platform === 'all' || binding.platform === platform),
     ),
   );
   const index = new Map(
@@ -47,13 +47,13 @@ export function resolveKeyboardShortcut(
   event: NormalizedShortcutEvent,
 ): KeymapBinding | null {
   const index = compiledIndexes.get(compiled);
-  if (!index) throw new TypeError("InvalidCompiledKeymap");
+  if (!index) throw new TypeError('InvalidCompiledKeymap');
   if (!event || event.isComposing || event.keyCode === 229 || event.altGraph || event.repeat)
     return null;
   if (
-    typeof event.code !== "string" ||
+    typeof event.code !== 'string' ||
     [event.ctrlKey, event.metaKey, event.altKey, event.shiftKey].some(
-      (value) => typeof value !== "boolean",
+      (value) => typeof value !== 'boolean',
     )
   )
     return null;

@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
-import { noteDocument } from "./note-document.mjs";
-import { noteSourceSitesActual, noteSiteFixtures } from "./note-source-sites.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
+import { noteDocument } from './note-document.mjs';
+import { noteSourceSitesActual, noteSiteFixtures } from './note-source-sites.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -46,9 +46,9 @@ export function noteControlReference(call, cfb) {
   const files = [],
     skipped = [];
   for (const [name, expected] of [
-    ["footnote-01.hwp", 9],
-    ["endnote-01.hwp", 6],
-    ["footnote-tbox-01.hwp", 2],
+    ['footnote-01.hwp', 9],
+    ['endnote-01.hwp', 6],
+    ['footnote-tbox-01.hwp', 2],
   ]) {
     const path = new URL(`../../reference/rhwp/samples/${name}`, import.meta.url);
     if (!existsSync(path)) {
@@ -56,10 +56,10 @@ export function noteControlReference(call, cfb) {
       continue;
     }
     cfb.parse(readFileSync(path), { strict: true });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content);
+    const h = Buffer.from(cfb.findExact('/FileHeader').content);
     assert.equal(h.readUInt32LE(32), 0x05000300);
     assert.equal(h.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024), 0);
-    const raw = Buffer.from(cfb.findExact("/BodyText/Section0").content);
+    const raw = Buffer.from(cfb.findExact('/BodyText/Section0').content);
     const body = h.readUInt32LE(36) & 1 ? inflateRawSync(raw) : raw;
     assert.deepEqual(call(3, Buffer.concat([h, raw]), body.length), body);
     let count = 0;

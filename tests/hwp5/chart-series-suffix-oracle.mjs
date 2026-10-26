@@ -1,6 +1,6 @@
-import { seriesLabelContext } from "./chart-series-label-context.mjs";
-import { observeSeriesSuffix } from "./chart-series-suffix-evidence.mjs";
-import { integer, textBodyWire } from "./chart-text-body-oracle.mjs";
+import { seriesLabelContext } from './chart-series-label-context.mjs';
+import { observeSeriesSuffix } from './chart-series-suffix-evidence.mjs';
+import { integer, textBodyWire } from './chart-text-body-oracle.mjs';
 const stored = (s) => [...s.values()].reduce((n, v) => n + v.hex.length / 2, 0);
 export function seriesSuffixOracle(b) {
   const prior = seriesLabelContext(b),
@@ -19,7 +19,7 @@ export function seriesSuffixOracle(b) {
   for (const state of r.formats) {
     const f = state.format,
       s = f.code,
-      raw = Buffer.from(s?.hex ?? "", "hex");
+      raw = Buffer.from(s?.hex ?? '', 'hex');
     parts.push(
       ...[
         f.headerWord,

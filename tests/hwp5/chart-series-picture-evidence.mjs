@@ -1,10 +1,10 @@
-import { readEmptyPictureFields } from "./chart-empty-picture-fields-evidence.mjs";
+import { readEmptyPictureFields } from './chart-empty-picture-fields-evidence.mjs';
 // Selected raw40 / empty Picture only. Following bytes are not a proven base
 // type or Series end and must not be consumed as either.
 export function observeSeriesPicture(bytes, offset, priorTypes, priorObjects) {
   const b = Buffer.from(bytes);
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > b.length)
-    throw new RangeError("InvalidObservationOffset");
+    throw new RangeError('InvalidObservationOffset');
   let p = offset;
   const types = new Map(priorTypes),
     objects = new Set(priorObjects),
@@ -12,7 +12,7 @@ export function observeSeriesPicture(bytes, offset, priorTypes, priorObjects) {
     references = [],
     rawFields = [];
   const take = (n) => {
-    if (n > b.length - p) throw Error("IncompleteSeriesPictureObservation");
+    if (n > b.length - p) throw Error('IncompleteSeriesPictureObservation');
     const v = b.subarray(p, p + n);
     p += n;
     return v;
@@ -22,7 +22,7 @@ export function observeSeriesPicture(bytes, offset, priorTypes, priorObjects) {
   const object = () => {
     const id = long();
     if (id === 0xffffffff || objects.has(id))
-      throw Error("UnsupportedSeriesPictureObservationObject");
+      throw Error('UnsupportedSeriesPictureObservationObject');
     objects.add(id);
     return id;
   };
@@ -32,20 +32,20 @@ export function observeSeriesPicture(bytes, offset, priorTypes, priorObjects) {
     if (!types.has(id)) {
       const n = word(),
         nameOffset = p,
-        raw = take(n).toString("latin1"),
+        raw = take(n).toString('latin1'),
         versionOffset = p,
         version = word();
       types.set(id, { name: raw, version });
       declarations.push({ id, nameOffset, versionOffset, name: raw, version });
     }
     const d = types.get(id);
-    if (d.name !== name + "\0" || d.version !== 1)
-      throw Error("UnsupportedSeriesPictureObservationType");
+    if (d.name !== name + '\0' || d.version !== 1)
+      throw Error('UnsupportedSeriesPictureObservationType');
     return id;
   };
   const raw = (n) => {
     const start = p,
-      hex = take(n).toString("hex");
+      hex = take(n).toString('hex');
     rawFields.push({ start, n, hex });
     return hex;
   };
@@ -57,7 +57,7 @@ export function observeSeriesPicture(bytes, offset, priorTypes, priorObjects) {
       raw,
       long,
       reject: () => {
-        throw Error("UnsupportedSeriesPictureObservationData");
+        throw Error('UnsupportedSeriesPictureObservationData');
       },
     }),
     pictureEnd = p;

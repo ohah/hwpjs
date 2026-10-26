@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { hwp5ColumnWindowDependencies } from "../../web/preview/hwp5-column-window-dependencies.mjs";
-import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { hwp5ColumnWindowDependencies } from '../../web/preview/hwp5-column-window-dependencies.mjs';
+import { planParagraphDependencies } from '../../web/preview/paragraph-dependency-plan.mjs';
 
 function fixture() {
   const projection = { sections: [{ index: 0, paragraphs: [{}, {}, {}, {}, {}] }] };
@@ -12,11 +12,11 @@ function fixture() {
     paragraph,
     source_node: 100 + paragraph,
     generated: false,
-    host: "body",
+    host: 'body',
     parent_node: null,
     list_node: null,
   }));
-  flows[1] = { ...flows[1], host: "table_cell", parent_node: 9, list_node: 10 };
+  flows[1] = { ...flows[1], host: 'table_cell', parent_node: 9, list_node: 10 };
   const columns = [0, 1, 2].map((current_paragraph) => ({
     current_paragraph,
     paragraph_node: 100 + current_paragraph,
@@ -29,7 +29,7 @@ function fixture() {
   };
 }
 
-test("column windows retain preceding declarations without crossing logical lists", () => {
+test('column windows retain preceding declarations without crossing logical lists', () => {
   const { projection, flows, columns, editor } = fixture(),
     before = structuredClone({ flows, columns });
   const found = hwp5ColumnWindowDependencies(editor, projection);
@@ -43,7 +43,7 @@ test("column windows retain preceding declarations without crossing logical list
   assert.deepEqual({ flows, columns }, before);
 });
 
-test("column windows refuse generated forged duplicate and missing declaration owners", () => {
+test('column windows refuse generated forged duplicate and missing declaration owners', () => {
   for (const mutate of [
     ({ flows }) => {
       flows[0].generated = true;
@@ -70,9 +70,9 @@ test("column windows refuse generated forged duplicate and missing declaration o
   }
 });
 
-test("actual multi-column declarations retain their complete prior owner chain", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/multicolumns-layout.hwp");
+test('actual multi-column declarations retain their complete prior owner chain', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/multicolumns-layout.hwp');
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);
   try {

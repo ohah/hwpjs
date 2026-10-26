@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { axesOracle, axisWire } from "./chart-axes-oracle.mjs";
-import { observeSurfacePrefix } from "./chart-surface-evidence.mjs";
-import { observeAxisNullableTitle } from "./chart-axis-evidence.mjs";
-import { integer } from "./chart-text-body-oracle.mjs";
+import assert from 'node:assert/strict';
+import { axesOracle, axisWire } from './chart-axes-oracle.mjs';
+import { observeSurfacePrefix } from './chart-surface-evidence.mjs';
+import { observeAxisNullableTitle } from './chart-axis-evidence.mjs';
+import { integer } from './chart-text-body-oracle.mjs';
 const ints = (values) => Buffer.concat(values.map((n) => integer(n)));
 export function nullableTitleOracle(b) {
   const prior = axesOracle(b),
@@ -16,7 +16,7 @@ export function nullableTitleOracle(b) {
   assert.equal(r.value, null);
   const add = (id) => {
     assert.notEqual(id, 0xffffffff);
-    assert(!seen.has(id), "duplicate observed object ID");
+    assert(!seen.has(id), 'duplicate observed object ID');
     seen.add(id);
   };
   add(surface.objectId);

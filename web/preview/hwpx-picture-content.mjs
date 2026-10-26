@@ -17,13 +17,13 @@ export function attachHwpxPictures(editor, content) {
     let owners = null,
       ownerBatchError = null;
     if (
-      typeof editor.pictureOwners === "function" &&
-      sites.some((site) => site.state === "located" || site.state === "unsupported_anchor")
+      typeof editor.pictureOwners === 'function' &&
+      sites.some((site) => site.state === 'located' || site.state === 'unsupported_anchor')
     ) {
       try {
         owners = new Map(editor.pictureOwners(section).map((row) => [row.pictureNode, row]));
       } catch (error) {
-        if (error.message !== "HwpxPictureOwnersAbiUnavailable") ownerBatchError = error.message;
+        if (error.message !== 'HwpxPictureOwnersAbiUnavailable') ownerBatchError = error.message;
       }
     }
     for (const site of sites) {
@@ -48,18 +48,18 @@ export function attachHwpxPictures(editor, content) {
         renderingCorners: null,
         renderingCornersError: null,
       };
-      if (site.state === "located" || site.state === "unsupported_anchor") {
+      if (site.state === 'located' || site.state === 'unsupported_anchor') {
         try {
           if (ownerBatchError) throw new Error(ownerBatchError);
           let owner;
           if (owners) {
             const row = owners.get(site.pictureNode);
-            if (!row) throw new Error("MissingPictureOwnerBatchRow");
+            if (!row) throw new Error('MissingPictureOwnerBatchRow');
             if (row.error !== null) throw new Error(row.error);
             owner = row.owner;
           } else {
-            if (typeof editor.pictureOwner !== "function")
-              throw new Error("HwpxPictureOwnerAbiUnavailable");
+            if (typeof editor.pictureOwner !== 'function')
+              throw new Error('HwpxPictureOwnerAbiUnavailable');
             owner = editor.pictureOwner(section, site.pictureNode);
           }
           picture.owner = { ...owner, paragraph: owner.paragraph - 1 };
@@ -69,17 +69,17 @@ export function attachHwpxPictures(editor, content) {
       }
       const host = picture.owner?.paragraph ?? picture.paragraph;
       if (displayed && host !== null && !displayed.has(`${section}:${host}`)) continue;
-      if (site.state === "located" || picture.owner !== null) {
+      if (site.state === 'located' || picture.owner !== null) {
         try {
-          if (typeof editor.pictureFlow !== "function")
-            throw new Error("HwpxPictureFlowAbiUnavailable");
+          if (typeof editor.pictureFlow !== 'function')
+            throw new Error('HwpxPictureFlowAbiUnavailable');
           picture.flow = editor.pictureFlow(section, site.pictureNode);
         } catch (error) {
           picture.flowError = error.message;
         }
         try {
-          if (typeof editor.picturePosition !== "function")
-            throw new Error("HwpxPicturePositionAbiUnavailable");
+          if (typeof editor.picturePosition !== 'function')
+            throw new Error('HwpxPicturePositionAbiUnavailable');
           picture.position = editor.picturePosition(section, site.pictureNode);
         } catch (error) {
           picture.positionError = error.message;
@@ -90,8 +90,8 @@ export function attachHwpxPictures(editor, content) {
           picture.geometryError = error.message;
         }
         try {
-          if (typeof editor.pictureSizeProtection !== "function")
-            throw new Error("HwpxPictureSizeProtectionAbiUnavailable");
+          if (typeof editor.pictureSizeProtection !== 'function')
+            throw new Error('HwpxPictureSizeProtectionAbiUnavailable');
           picture.sizeProtected = editor.pictureSizeProtection(section, site.pictureNode);
         } catch (error) {
           picture.sizeProtectionError = error.message;
@@ -107,8 +107,8 @@ export function attachHwpxPictures(editor, content) {
           picture.transformError = error.message;
         }
         try {
-          if (typeof editor.pictureRenderingCorners !== "function")
-            throw new Error("HwpxPictureCornersAbiUnavailable");
+          if (typeof editor.pictureRenderingCorners !== 'function')
+            throw new Error('HwpxPictureCornersAbiUnavailable');
           picture.renderingCorners = editor.pictureRenderingCorners(section, site.pictureNode);
         } catch (error) {
           picture.renderingCornersError = error.message;
@@ -118,8 +118,8 @@ export function attachHwpxPictures(editor, content) {
       picture.groupResizeError = null;
       if (picture.owner && picture.owner.anchorNode !== site.pictureNode) {
         try {
-          if (typeof editor.groupedPictureResizeAvailable !== "function")
-            throw new Error("HwpxGroupedPictureResizeAbiUnavailable");
+          if (typeof editor.groupedPictureResizeAvailable !== 'function')
+            throw new Error('HwpxGroupedPictureResizeAbiUnavailable');
           picture.groupResizeAvailable =
             editor.groupedPictureResizeAvailable(section, site.pictureNode) === true;
         } catch (error) {

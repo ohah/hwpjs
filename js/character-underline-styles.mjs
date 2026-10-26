@@ -1,12 +1,12 @@
-import { decodeCharacterSnapshot } from "./character-snapshot-json.mjs";
+import { decodeCharacterSnapshot } from './character-snapshot-json.mjs';
 export function decodeCharacterUnderlineStyles(bytes) {
   const rows = decodeCharacterSnapshot(
     bytes,
-    ["id", "raw_style", "raw_color", "shape", "color"],
-    "InvalidCharacterUnderlineStyles",
+    ['id', 'raw_style', 'raw_color', 'shape', 'color'],
+    'InvalidCharacterUnderlineStyles',
   );
   const text = (value) =>
-    value === null || (typeof value === "string" && new TextEncoder().encode(value).length <= 4096);
+    value === null || (typeof value === 'string' && new TextEncoder().encode(value).length <= 4096);
   for (const row of rows) {
     const raw = row.raw_style !== null;
     if (
@@ -21,7 +21,7 @@ export function decodeCharacterUnderlineStyles(bytes) {
           row.color !== null)) ||
       (!raw && (row.raw_color !== null || !text(row.shape) || !text(row.color)))
     )
-      throw new Error("InvalidCharacterUnderlineStyles");
+      throw new Error('InvalidCharacterUnderlineStyles');
   }
   return rows;
 }

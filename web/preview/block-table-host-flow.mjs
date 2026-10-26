@@ -1,8 +1,8 @@
-import { layoutContent } from "./layout.mjs";
-import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
-import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
+import { layoutContent } from './layout.mjs';
+import { paragraphSpacePixels } from './paragraph-geometry.mjs';
+import { structuralAnchorUnits } from './structural-anchor-units.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { inlineTableHostAnchors } from './inline-table-host-anchors.mjs';
 
 // 블록 표 사이의 호스트 텍스트도 원래 UTF-16 좌표로 조판합니다.
 export function measureBlockTableHost(
@@ -13,7 +13,7 @@ export function measureBlockTableHost(
   maxRows,
   { overlays = [], textAnchors = [] } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(entries) ||
     !entries.length ||
@@ -27,9 +27,9 @@ export function measureBlockTableHost(
     ) ||
     new Set(entries.map((entry) => entry.tableIndex)).size !== entries.length
   )
-    return unavailable("InvalidBlockTableAnchorPosition");
-  if (typeof paragraph?.text !== "string" || !Number.isSafeInteger(maxRows) || maxRows < 1)
-    return unavailable("TablePagePlanLimit");
+    return unavailable('InvalidBlockTableAnchorPosition');
+  if (typeof paragraph?.text !== 'string' || !Number.isSafeInteger(maxRows) || maxRows < 1)
+    return unavailable('TablePagePlanLimit');
   const anchors = entries.map(({ table, tableIndex }) => ({ unit: table.anchorUnit, tableIndex }));
   let structural;
   try {
@@ -48,7 +48,7 @@ export function measureBlockTableHost(
     overlays,
     textAnchors,
   );
-  if (ownership.state !== "resolved") return unavailable("InvalidBlockTableAnchorPosition");
+  if (ownership.state !== 'resolved') return unavailable('InvalidBlockTableAnchorPosition');
   const zeroWidth = new Set(ownership.zeroWidthUnits);
   anchors.sort((a, b) => a.unit - b.unit);
   const sequence = [];
@@ -58,8 +58,8 @@ export function measureBlockTableHost(
     const height = paragraphSpacePixels(value);
     if (height > 0) {
       sequence.push({
-        kind: "gap",
-        text: "",
+        kind: 'gap',
+        text: '',
         section: paragraph.section,
         paragraph: paragraph.paragraph,
         height,
@@ -87,8 +87,8 @@ export function measureBlockTableHost(
       { paragraphs: [slice], limited: false },
       width,
       (value, _paragraph, unit, kind) =>
-        kind === "text" && value !== "" && zeroWidth.has(unit)
-          ? { width: 0, height: textMeasurement(measure("", paragraph, unit, kind)).height }
+        kind === 'text' && value !== '' && zeroWidth.has(unit)
+          ? { width: 0, height: textMeasurement(measure('', paragraph, unit, kind)).height }
           : measure(value, paragraph, unit, kind),
       maxRows - rows,
       { documentBody: true },
@@ -100,12 +100,12 @@ export function measureBlockTableHost(
   };
   gap(paragraph.paragraphShape?.before);
   for (const anchor of anchors) {
-    if (!text(anchor.unit)) return unavailable("TablePagePlanLimit");
+    if (!text(anchor.unit)) return unavailable('TablePagePlanLimit');
     sequence.push({ tableIndex: anchor.tableIndex });
     cursor = anchor.unit + 1;
   }
-  if (!text(paragraph.text.length)) return unavailable("TablePagePlanLimit");
+  if (!text(paragraph.text.length)) return unavailable('TablePagePlanLimit');
   gap(paragraph.paragraphShape?.after);
-  if (rows > maxRows) return unavailable("TablePagePlanLimit");
-  return { state: "measured", sequence, rowCount: rows };
+  if (rows > maxRows) return unavailable('TablePagePlanLimit');
+  return { state: 'measured', sequence, rowCount: rows };
 }

@@ -1,40 +1,40 @@
-import { layoutContent } from "./layout.mjs";
-import { layoutCreatedTable } from "./created-table-layout.mjs";
-import { measureCreatedTableHost } from "./created-table-host-measurement.mjs";
-import { createdTableInlinePolicy } from "./created-table-inline-policy.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { layoutContent } from './layout.mjs';
+import { layoutCreatedTable } from './created-table-layout.mjs';
+import { measureCreatedTableHost } from './created-table-host-measurement.mjs';
+import { createdTableInlinePolicy } from './created-table-inline-policy.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
 
 // Local note coordinates; physical note reservation stays with the note engine.
 export function measureCreatedNoteBody(paragraphs, tables, format, width, measure, maxRows) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(paragraphs) ||
     !paragraphs.length ||
     !Array.isArray(tables) ||
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !Number.isFinite(width) ||
     width <= 0 ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return unavailable("InvalidCreatedNoteBodyMeasurement");
+    return unavailable('InvalidCreatedNoteBodyMeasurement');
   const groups = new Map(),
     cellFlows = new Map();
   let remaining = maxRows;
   for (const table of tables) {
-    if (!table) return unavailable("InvalidCreatedNoteBodyMeasurement");
+    if (!table) return unavailable('InvalidCreatedNoteBodyMeasurement');
     if (!createdTableInlinePolicy(table, format) || cellFlows.has(table.identity))
-      return unavailable("UnsupportedCreatedTableInlinePolicy");
-    if (remaining < 1) return unavailable("NoteBodyMeasurementLimit");
+      return unavailable('UnsupportedCreatedTableInlinePolicy');
+    if (remaining < 1) return unavailable('NoteBodyMeasurementLimit');
     let flow;
     try {
       flow = layoutCreatedTable(table, measure, { x: 0, y: 0, maxRows: remaining });
     } catch (error) {
       if (
         [
-          "InvalidTableGrid",
-          "InvalidCreatedTableLayout",
-          "CreatedTableLayoutRowBudgetExceeded",
+          'InvalidTableGrid',
+          'InvalidCreatedTableLayout',
+          'CreatedTableLayoutRowBudgetExceeded',
         ].includes(error.message)
       )
         return unavailable(error.message);
@@ -53,7 +53,7 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
     usedHosts = new Set();
   let height = 0;
   for (const paragraph of paragraphs) {
-    if (remaining < 1) return unavailable("NoteBodyMeasurementLimit");
+    if (remaining < 1) return unavailable('NoteBodyMeasurementLimit');
     const key = `${paragraph.section}:${paragraph.paragraph}`,
       entries = groups.get(key);
     if (!entries) {
@@ -64,7 +64,7 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
         remaining,
         { documentBody: true },
       );
-      if (flow.limited) return unavailable("NoteBodyMeasurementLimit");
+      if (flow.limited) return unavailable('NoteBodyMeasurementLimit');
       rows.push(...flow.rows.map((row) => ({ ...row, x: row.x ?? 0, y: row.y + height })));
       remaining -= flow.rows.length;
       height += flow.height;
@@ -74,7 +74,7 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
     const host = measureCreatedTableHost(paragraph, entries, width, measure, {
       maxRows: remaining,
     });
-    if (host.state !== "measured") return host;
+    if (host.state !== 'measured') return host;
     rows.push(...host.rows.map((row) => ({ ...row, x: (row.x ?? 20) - 20, y: row.y + height })));
     numberPrefixes.push(
       ...host.numberPrefixes.map((prefix) => ({
@@ -89,7 +89,7 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
         x = anchor.x,
         y = height + anchor.y;
       if (x < 0 || x + flow.width > width + 1e-8)
-        return unavailable("CreatedTablePageWidthOverflow");
+        return unavailable('CreatedTablePageWidthOverflow');
       boxes.push(...flow.boxes.map((box) => ({ ...box, x: box.x + x, y: box.y + y })));
       rows.push(
         ...flow.rows.map((row) => ({
@@ -103,21 +103,21 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
     height += host.height;
   }
   if (usedHosts.size !== groups.size || rows.length + numberPrefixes.length > maxRows)
-    return unavailable("NoteBodyMeasurementLimit");
+    return unavailable('NoteBodyMeasurementLimit');
   const texts = new Map(paragraphs.map((p) => [`${p.section}:${p.paragraph}`, p.text]));
   const coverage = pageParagraphCoverage(
     paragraphs,
     rows.filter(
       (row) =>
         !row.createdCell &&
-        (row.kind !== "text" ||
+        (row.kind !== 'text' ||
           row.startUnit < row.endUnit ||
-          texts.get(`${row.section}:${row.paragraph}`) === ""),
+          texts.get(`${row.section}:${row.paragraph}`) === ''),
     ),
   );
-  if (coverage.state !== "complete") return coverage;
+  if (coverage.state !== 'complete') return coverage;
   return {
-    state: "measured",
+    state: 'measured',
     rows,
     boxes,
     numberPrefixes,

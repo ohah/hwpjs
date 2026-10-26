@@ -2,20 +2,20 @@ import {
   createProjectionFontCache,
   createProjectionRangeIndex,
   paragraphCharacterRange,
-} from "./projection-measure-memo.mjs";
+} from './projection-measure-memo.mjs';
 /** Native size/emphasis with system fonts; not original font or page shaping. */
-import { underlineStyle } from "./underline-style.mjs";
-import { strikeStyle } from "./strike-style.mjs";
-import { createCharacterFontDisplay } from "./character-font-display.mjs";
-import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
-import { createCharacterFontMetricDisplay } from "./character-font-metric-display.mjs";
-import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
-import { characterScriptStyle } from "./character-script-style.mjs";
-import { characterReliefStyle } from "./character-relief-style.mjs";
-import { automaticNumberSource, storedAutomaticNumberText } from "./automatic-number-text.mjs";
-import { characterOutlineStyle } from "./character-outline-style.mjs";
-import { createHancomLineSymbol } from "./hancom-line-symbol.mjs";
-import { createMeasuredFontWidth } from "./measured-font-width.mjs";
+import { underlineStyle } from './underline-style.mjs';
+import { strikeStyle } from './strike-style.mjs';
+import { createCharacterFontDisplay } from './character-font-display.mjs';
+import { usesDocumentFontMetrics } from './font-layout-policy.mjs';
+import { createCharacterFontMetricDisplay } from './character-font-metric-display.mjs';
+import { projectDraftAnchoredObjects } from './anchored-object-draft.mjs';
+import { characterScriptStyle } from './character-script-style.mjs';
+import { characterReliefStyle } from './character-relief-style.mjs';
+import { automaticNumberSource, storedAutomaticNumberText } from './automatic-number-text.mjs';
+import { characterOutlineStyle } from './character-outline-style.mjs';
+import { createHancomLineSymbol } from './hancom-line-symbol.mjs';
+import { createMeasuredFontWidth } from './measured-font-width.mjs';
 export function withDraftText(paragraph, text) {
   const projectEquationRows = (rows) =>
     rows
@@ -26,11 +26,11 @@ export function withDraftText(paragraph, text) {
             section: paragraph.section,
             paragraph: paragraph.paragraph,
             anchorUnit: row.unit,
-            state: "located",
+            state: 'located',
           })),
           { section: paragraph.section, paragraph: paragraph.paragraph, text },
         )
-          .filter((row) => row.state === "located")
+          .filter((row) => row.state === 'located')
           .map(
             ({
               anchorUnit,
@@ -55,7 +55,7 @@ export function withDraftText(paragraph, text) {
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           anchorUnit: row.unit,
-          state: "located",
+          state: 'located',
         })),
         { section: paragraph.section, paragraph: paragraph.paragraph, text },
       ).map(
@@ -79,7 +79,7 @@ export function withDraftText(paragraph, text) {
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           anchorUnit: number.unit,
-          state: "located",
+          state: 'located',
         })),
         { section: paragraph.section, paragraph: paragraph.paragraph, text },
       ).map(
@@ -99,7 +99,7 @@ export function withDraftText(paragraph, text) {
     ...paragraph,
     text,
     characterRanges: text === paragraph.text ? paragraph.characterRanges : null,
-    ...(Object.hasOwn(paragraph, "tabSources")
+    ...(Object.hasOwn(paragraph, 'tabSources')
       ? { tabSources: text === paragraph.text ? paragraph.tabSources : null }
       : {}),
     ...(numbers ? { automaticNumbers } : {}),
@@ -128,48 +128,48 @@ export function createTextStyle(content, baseFont, { projectionMemo = false } = 
   const strikes = new Map((content.characterStrikes ?? []).map((row) => [row.id, row.enabled]));
   const strikeStyles = new Map((content.characterStrikeStyles ?? []).map((row) => [row.id, row]));
   const shapeAt = (paragraph, unit, kind) => {
-    if (kind !== "text" && kind !== "number-prefix") return null;
+    if (kind !== 'text' && kind !== 'number-prefix') return null;
     const range = rangeAt(paragraph, unit);
     return range?.charShapeId === null ? null : shapes.get(range?.charShapeId);
   };
   const points = (shape) =>
     Number.isInteger(shape?.height) && shape.height > 0 ? shape.height / 100 : null;
-  const baseResolve = (paragraph, unit, kind = "text") => {
+  const baseResolve = (paragraph, unit, kind = 'text') => {
     const shape = shapeAt(paragraph, unit, kind),
       nominal = points(shape);
     const size =
-      nominal === null || kind !== "text"
+      nominal === null || kind !== 'text'
         ? nominal
         : metrics.relativeHeight(shape?.id, paragraph?.text, unit, shape.height) / 100;
     const family =
-      kind === "text" || kind === "number-prefix"
+      kind === 'text' || kind === 'number-prefix'
         ? documentFont(shape?.id, paragraph?.text, unit)
         : null;
     const build = () => {
       let font = size === null ? baseFont : baseFont.replace(/\d+(?:\.\d+)?px/, `${size}pt`);
       if (family)
         font = font.replace(/(\d+(?:\.\d+)?(?:px|pt)\s+)/, (_, prefix) => `${prefix}${family}, `);
-      return `${shape?.italic ? "italic " : ""}${shape?.bold ? "bold " : ""}${font}`;
+      return `${shape?.italic ? 'italic ' : ''}${shape?.bold ? 'bold ' : ''}${font}`;
     };
     return fontCache
       ? fontCache.get(size, family, Boolean(shape?.bold), Boolean(shape?.italic), build)
       : build();
   };
-  const script = (paragraph, unit, kind = "text") => {
+  const script = (paragraph, unit, kind = 'text') => {
     const source = automaticNumberSource(paragraph, unit, kind);
     if (source && storedAutomaticNumberText(source) !== null)
       return characterScriptStyle(
         { superscript: source.format.supscript, subscript: false },
         baseResolve(paragraph, unit, kind),
       );
-    return kind !== "text" || paragraph?.text?.[unit] === "\ufffc"
+    return kind !== 'text' || paragraph?.text?.[unit] === '\ufffc'
       ? null
       : characterScriptStyle(
           effects.get(shapeAt(paragraph, unit, kind)?.id),
           baseResolve(paragraph, unit, kind),
         );
   };
-  const resolve = (paragraph, unit, kind = "text") =>
+  const resolve = (paragraph, unit, kind = 'text') =>
     script(paragraph, unit, kind)?.font ?? baseResolve(paragraph, unit, kind);
   resolve.displayGlyph = (paragraph, unit, kind, text) =>
     hancomLineSymbol(shapeAt, resolve, paragraph, unit, kind, text);
@@ -177,32 +177,32 @@ export function createTextStyle(content, baseFont, { projectionMemo = false } = 
     measuredWidth(shapeAt(paragraph, unit, kind), paragraph, unit, kind, text, () =>
       resolve(paragraph, unit, kind),
     );
-  resolve.horizontalScale = (paragraph, unit, kind = "text") =>
-    kind !== "text"
+  resolve.horizontalScale = (paragraph, unit, kind = 'text') =>
+    kind !== 'text'
       ? 1
       : metrics.horizontalScale(shapeAt(paragraph, unit, kind)?.id, paragraph?.text, unit);
   resolve.characterAdvance = (paragraph, unit, kind, width) =>
-    kind !== "text"
+    kind !== 'text'
       ? width
       : metrics.characterAdvance(shapeAt(paragraph, unit, kind)?.id, paragraph?.text, unit, width);
   resolve.script = script;
-  resolve.relief = (paragraph, unit, kind = "text") =>
-    kind !== "text" || paragraph?.text?.[unit] === "\ufffc"
+  resolve.relief = (paragraph, unit, kind = 'text') =>
+    kind !== 'text' || paragraph?.text?.[unit] === '\ufffc'
       ? null
       : characterReliefStyle(
           effects.get(shapeAt(paragraph, unit, kind)?.id),
           resolve(paragraph, unit, kind),
         );
-  resolve.outlineStyle = (paragraph, unit, kind = "text") =>
-    kind !== "text" || paragraph?.text?.[unit] === "\ufffc"
+  resolve.outlineStyle = (paragraph, unit, kind = 'text') =>
+    kind !== 'text' || paragraph?.text?.[unit] === '\ufffc'
       ? null
       : characterOutlineStyle(
           outlines.get(shapeAt(paragraph, unit, kind)?.id),
           resolve(paragraph, unit, kind),
         );
-  resolve.outline = (paragraph, unit, kind = "text") =>
+  resolve.outline = (paragraph, unit, kind = 'text') =>
     resolve.outlineStyle(paragraph, unit, kind)?.kind ?? null;
-  resolve.fontHeight = (paragraph, unit, kind = "text") => {
+  resolve.fontHeight = (paragraph, unit, kind = 'text') => {
     const size = points(shapeAt(paragraph, unit, kind));
     return size === null
       ? 20
@@ -210,30 +210,30 @@ export function createTextStyle(content, baseFont, { projectionMemo = false } = 
         ? size * (96 / 72)
         : Math.max(20, size * (96 / 72) * 1.25);
   };
-  resolve.textHeight = (paragraph, unit, kind = "text") =>
+  resolve.textHeight = (paragraph, unit, kind = 'text') =>
     resolve.fontHeight(paragraph, unit, kind) +
-    (kind === "text" && resolve.underline(paragraph, unit)?.kind === "bottom" ? 9 : 0);
-  resolve.color = (paragraph, unit, kind = "text") => {
+    (kind === 'text' && resolve.underline(paragraph, unit)?.kind === 'bottom' ? 9 : 0);
+  resolve.color = (paragraph, unit, kind = 'text') => {
     const color = colors.get(shapeAt(paragraph, unit, kind)?.id);
     return Number.isInteger(color) && color >= 0 && color <= 0xffffff
-      ? `#${color.toString(16).padStart(6, "0")}`
+      ? `#${color.toString(16).padStart(6, '0')}`
       : null;
   };
   resolve.underline = (paragraph, unit) => {
-    const id = shapeAt(paragraph, unit, "text")?.id;
+    const id = shapeAt(paragraph, unit, 'text')?.id;
     return underlineStyle(underlines.get(id), underlineStyles.get(id));
   };
-  resolve.shade = (paragraph, unit, kind = "text") => {
+  resolve.shade = (paragraph, unit, kind = 'text') => {
     const shade = shades.get(shapeAt(paragraph, unit, kind)?.id);
-    return shade?.state === "color" &&
+    return shade?.state === 'color' &&
       Number.isInteger(shade.color) &&
       shade.color >= 0 &&
       shade.color <= 0xffffff
-      ? `#${shade.color.toString(16).padStart(6, "0")}`
+      ? `#${shade.color.toString(16).padStart(6, '0')}`
       : null;
   };
   resolve.strike = (paragraph, unit) => {
-    const id = shapeAt(paragraph, unit, "text")?.id;
+    const id = shapeAt(paragraph, unit, 'text')?.id;
     return strikeStyle(strikes.get(id), strikeStyles.get(id));
   };
   return resolve;

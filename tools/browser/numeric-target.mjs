@@ -6,8 +6,8 @@ export function numericBrowserTargetMatches(state, expected) {
     expected.section < 0 ||
     !Number.isSafeInteger(expected.paragraph) ||
     expected.paragraph < 0 ||
-    typeof expected.text !== "string" ||
-    typeof state?.caret !== "string"
+    typeof expected.text !== 'string' ||
+    typeof state?.caret !== 'string'
   )
     return false;
   const caret = /^(0|[1-9]\d*):(0|[1-9]\d*):(0|[1-9]\d*)$/.exec(state.caret);

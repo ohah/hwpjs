@@ -1,11 +1,11 @@
 export const FONT_LANGUAGES = Object.freeze([
-  "hangul",
-  "latin",
-  "hanja",
-  "japanese",
-  "other",
-  "symbol",
-  "user",
+  'hangul',
+  'latin',
+  'hanja',
+  'japanese',
+  'other',
+  'symbol',
+  'user',
 ]);
 
 /** IDs are ordered within language partitions, never globally. */

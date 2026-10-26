@@ -1,15 +1,15 @@
-import { paginateBodyRows } from "./page-row-flow.mjs";
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { planMeasuredCellCuts } from "./table-measured-cell-cuts.mjs";
-import { paragraphCellOffset } from "./paragraph-cell-offset-policy.mjs";
-import { paragraphTableStart } from "./paragraph-table-start.mjs";
-import { frameMeasuredCellTable } from "./table-cell-outer-frame.mjs";
+import { paginateBodyRows } from './page-row-flow.mjs';
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { planMeasuredCellCuts } from './table-measured-cell-cuts.mjs';
+import { paragraphCellOffset } from './paragraph-cell-offset-policy.mjs';
+import { paragraphTableStart } from './paragraph-table-start.mjs';
+import { frameMeasuredCellTable } from './table-cell-outer-frame.mjs';
 import {
   isFootnoteColumnReservation,
   hasCellFootnoteReferences,
-} from "./footnote-column-reservation.mjs";
-import { footnoteCellPageCapacities } from "./footnote-cell-page-capacities.mjs";
-import { createCellFootnoteFragmentCapacity } from "./cell-footnote-fragment-capacity.mjs";
+} from './footnote-column-reservation.mjs';
+import { footnoteCellPageCapacities } from './footnote-cell-page-capacities.mjs';
+import { createCellFootnoteFragmentCapacity } from './cell-footnote-fragment-capacity.mjs';
 
 // Share the body cursor with CELL fragments; source float policy stays upstream.
 export function planCellTableBodyPages(
@@ -31,12 +31,12 @@ export function planCellTableBodyPages(
     ...pageOptions
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
-  if (paginateRows !== undefined && typeof paginateRows !== "function")
-    return unavailable("InvalidPageFlowBounds");
+  const unavailable = (error) => ({ state: 'unavailable', error });
+  if (paginateRows !== undefined && typeof paginateRows !== 'function')
+    return unavailable('InvalidPageFlowBounds');
   const paginate = paginateRows ?? paginateBodyRows;
   if (!Number.isFinite(prefixHeight) || prefixHeight < 0)
-    return unavailable("InvalidTableHeaderReservation");
+    return unavailable('InvalidTableHeaderReservation');
   if (
     !table ||
     !hostFlow ||
@@ -44,13 +44,13 @@ export function planCellTableBodyPages(
     hostFlow.section !== table.section ||
     hostFlow.paragraph !== table.hostParagraph
   )
-    return unavailable("UnsupportedTablePageHost");
+    return unavailable('UnsupportedTablePageHost');
   if (
     ![beforeRows, afterRows, bodyFlows].every(Array.isArray) ||
     bodyFlows.some((flow) => !flow) ||
     [...beforeRows, ...afterRows].some((row) => !row || row.cellFragment !== undefined)
   )
-    return unavailable("InvalidTableBodyRows");
+    return unavailable('InvalidTableBodyRows');
   if (
     pageOptions.columnDeclaration !== undefined ||
     pageOptions.columnZones ||
@@ -59,22 +59,22 @@ export function planCellTableBodyPages(
       (flow) => flow?.single_column === false || flow?.column_break === true,
     )
   )
-    return unavailable("UnsupportedCellTableColumns");
+    return unavailable('UnsupportedCellTableColumns');
   const flows = [...bodyFlows],
     existing = flows.find(
       (flow) => flow.section === hostFlow.section && flow.paragraph === hostFlow.paragraph,
     );
   if (existing && JSON.stringify(existing) !== JSON.stringify(hostFlow))
-    return unavailable("AmbiguousTablePageHost");
+    return unavailable('AmbiguousTablePageHost');
   if (!existing) flows.push(hostFlow);
   const prefix = paginate(beforeRows, setting, flows, pageOptions);
-  if (!prefix || typeof prefix !== "object") return unavailable("InvalidCellBodyPagination");
-  if (prefix.state !== "paginated") return prefix;
+  if (!prefix || typeof prefix !== 'object') return unavailable('InvalidCellBodyPagination');
+  if (prefix.state !== 'paginated') return prefix;
   if (!Array.isArray(prefix.rows) || !Array.isArray(prefix.pages))
-    return unavailable("InvalidCellBodyPagination");
-  if (prefix.limited) return unavailable("TablePagePlanLimit");
+    return unavailable('InvalidCellBodyPagination');
+  if (prefix.limited) return unavailable('TablePagePlanLimit');
   const reference = pageReferenceBoxes(setting, { x: pageOptions.x ?? 20, y: pageOptions.y ?? 20 });
-  if (reference.state !== "placed") return unavailable(reference.state);
+  if (reference.state !== 'placed') return unavailable(reference.state);
   const last = prefix.rows.at(-1),
     body = last?.referenceBoxes.page ?? reference.boxes.page;
   const forceBreak =
@@ -82,7 +82,7 @@ export function planCellTableBodyPages(
     hostFlow.page_break === true &&
     (last.section !== hostFlow.section || last.paragraph !== hostFlow.paragraph);
   const capacity = body.height - prefixHeight;
-  if (capacity <= 0) return unavailable("RepeatedHeaderTooTall");
+  if (capacity <= 0) return unavailable('RepeatedHeaderTooTall');
   let firstCapacity =
     last && !forceBreak
       ? Math.max(
@@ -106,7 +106,7 @@ export function planCellTableBodyPages(
         gap: pageOptions.gap,
       },
     );
-    if (reserved.state !== "planned") return reserved;
+    if (reserved.state !== 'planned') return reserved;
     pageCapacities = reserved.pageCapacities;
     firstCapacity = reserved.firstCapacity;
   }
@@ -124,7 +124,7 @@ export function planCellTableBodyPages(
   let leadingGap = offset === null ? 0 : paragraphTableStart(anchor, occupied, body.y, offset).gap;
   const framed = (gap) => {
     const result = frameMeasuredCellTable(measured, { top: gap, bottom: 0 });
-    return result.state !== "framed"
+    return result.state !== 'framed'
       ? result
       : {
           ...result,
@@ -138,7 +138,7 @@ export function planCellTableBodyPages(
         };
   };
   let current = framed(leadingGap);
-  if (current.state !== "framed") return current;
+  if (current.state !== 'framed') return current;
   let cellNotes = null;
   const cut = (first) => {
     if (
@@ -163,7 +163,7 @@ export function planCellTableBodyPages(
           gap: pageOptions.gap,
         },
       );
-      if (cellNotes.state !== "ready") return cellNotes;
+      if (cellNotes.state !== 'ready') return cellNotes;
     }
     return planMeasuredCellCuts(table, current.measured, capacity, {
       origin,
@@ -180,21 +180,21 @@ export function planCellTableBodyPages(
   let cuts = cut(firstCapacity);
   if (
     offset !== null &&
-    cuts.state === "planned" &&
+    cuts.state === 'planned' &&
     (cuts.firstPageSkipped || cuts.pageOffsets?.[0] > 0)
   ) {
     leadingGap = paragraphTableStart(body.y, body.y, body.y, offset).gap;
     current = framed(leadingGap);
-    if (current.state !== "framed") return current;
+    if (current.state !== 'framed') return current;
     cuts = cut(0);
   }
-  if (cuts.state !== "planned") return cuts;
+  if (cuts.state !== 'planned') return cuts;
   const placeholders = [];
   for (const [cellFragment, fragment] of cuts.fragments.entries()) {
-    if (fragment.end > fragment.start + capacity) return unavailable("InvalidTableCellCuts");
+    if (fragment.end > fragment.start + capacity) return unavailable('InvalidTableCellCuts');
     // Endpoints are already bounded; subtract/add roundoff must not fabricate an oversized reservation.
     placeholders.push({
-      kind: "gap",
+      kind: 'gap',
       section: table.section,
       paragraph: table.hostParagraph,
       height: Math.min(body.height, fragment.height + prefixHeight),
@@ -223,11 +223,11 @@ export function planCellTableBodyPages(
     ...pageOptions,
     minimumRowPage,
   });
-  if (!layout || typeof layout !== "object") return unavailable("InvalidCellBodyPagination");
-  if (layout.state !== "paginated") return layout;
+  if (!layout || typeof layout !== 'object') return unavailable('InvalidCellBodyPagination');
+  if (layout.state !== 'paginated') return layout;
   if (!Array.isArray(layout.rows) || !Array.isArray(layout.pages))
-    return unavailable("InvalidCellBodyPagination");
-  if (layout.limited) return unavailable("TablePagePlanLimit");
+    return unavailable('InvalidCellBodyPagination');
+  if (layout.limited) return unavailable('TablePagePlanLimit');
   const fragments = layout.rows.filter((row) => row.cellFragment !== undefined);
   if (
     fragments.length !== placeholders.length ||
@@ -239,7 +239,7 @@ export function planCellTableBodyPages(
         row.paragraph !== table.hostParagraph,
     )
   )
-    return unavailable("InvalidCellBodyPagination");
+    return unavailable('InvalidCellBodyPagination');
   if (
     (cuts.pageOffsets || paginateRows) &&
     fragments.some(
@@ -247,9 +247,9 @@ export function planCellTableBodyPages(
         row.pageOrdinal !== firstPage + (cuts.pageOffsets?.[row.cellFragment] ?? row.cellFragment),
     )
   )
-    return unavailable("TablePageCapacityPlacementMismatch");
+    return unavailable('TablePageCapacityPlacementMismatch');
   return {
-    state: "planned",
+    state: 'planned',
     cuts,
     measured: current.measured,
     frameInsets: current.frameInsets,

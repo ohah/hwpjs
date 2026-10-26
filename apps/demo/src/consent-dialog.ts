@@ -12,16 +12,16 @@ export function askConsent(
 ): Promise<boolean> {
   if (signal.aborted) return Promise.resolve(false);
   const doc = root.ownerDocument,
-    dialog = doc.createElement("dialog");
+    dialog = doc.createElement('dialog');
   dialog.dataset.role = options.role;
-  dialog.setAttribute("aria-label", options.label);
-  const message = doc.createElement("p"),
-    accept = doc.createElement("button"),
-    cancel = doc.createElement("button");
+  dialog.setAttribute('aria-label', options.label);
+  const message = doc.createElement('p'),
+    accept = doc.createElement('button'),
+    cancel = doc.createElement('button');
   message.textContent = options.message;
-  accept.type = cancel.type = "button";
+  accept.type = cancel.type = 'button';
   accept.textContent = options.accept;
-  cancel.textContent = "취소";
+  cancel.textContent = '취소';
   accept.dataset.role = options.acceptRole;
   cancel.dataset.role = options.cancelRole;
   dialog.append(message, accept, cancel);
@@ -31,16 +31,16 @@ export function askConsent(
     const finish = (accepted = false) => {
       if (settled) return;
       settled = true;
-      signal.removeEventListener("abort", aborted);
+      signal.removeEventListener('abort', aborted);
       dialog.close();
       dialog.remove();
       resolve(accepted);
     };
     const aborted = () => finish();
-    signal.addEventListener("abort", aborted, { once: true });
-    accept.addEventListener("click", () => finish(true));
-    cancel.addEventListener("click", () => finish());
-    dialog.addEventListener("cancel", (event) => {
+    signal.addEventListener('abort', aborted, { once: true });
+    accept.addEventListener('click', () => finish(true));
+    cancel.addEventListener('click', () => finish());
+    dialog.addEventListener('cancel', (event) => {
       event.preventDefault();
       finish();
     });

@@ -1,4 +1,4 @@
-import { isFootnoteColumnReservation } from "./footnote-column-reservation.mjs";
+import { isFootnoteColumnReservation } from './footnote-column-reservation.mjs';
 
 export function cellCutBodyOptionsError(options) {
   return options.columnZones ||
@@ -6,6 +6,6 @@ export function cellCutBodyOptionsError(options) {
     options.measureRow !== undefined ||
     options.rowY !== undefined ||
     (options.columnBottom !== undefined && !isFootnoteColumnReservation(options.columnBottom))
-    ? "custom-body-flow"
+    ? 'custom-body-flow'
     : null;
 }

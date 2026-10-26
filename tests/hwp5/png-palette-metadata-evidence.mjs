@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function paletteMetadataEvidence(structure) {
   const { chunks, fields } = structure,
     [, , depth, color] = fields,
     entries = fields[8];
-  const palette = chunks.findIndex((c) => c.name === "PLTE"),
-    data = chunks.findIndex((c) => c.name === "IDAT");
+  const palette = chunks.findIndex((c) => c.name === 'PLTE'),
+    data = chunks.findIndex((c) => c.name === 'IDAT');
   let validatedChunks = 0,
     validatedBytes = 0,
     kind = 0,
@@ -12,14 +12,14 @@ export function paletteMetadataEvidence(structure) {
   const raw = [0, 0, 0],
     values = [0, 0, 0];
   let frequencies = null;
-  for (const name of ["bKGD", "hIST"]) {
+  for (const name of ['bKGD', 'hIST']) {
     const positions = chunks.map((c, i) => (c.name === name ? i : -1)).filter((i) => i >= 0);
     assert.ok(positions.length <= 1);
     if (!positions.length) continue;
     const at = positions[0],
       bytes = chunks[at].payload;
     assert.ok(at < data && (palette < 0 || palette < at));
-    if (name === "bKGD") {
+    if (name === 'bKGD') {
       if (color === 3) {
         assert.ok(palette >= 0);
         assert.equal(bytes.length, 1);

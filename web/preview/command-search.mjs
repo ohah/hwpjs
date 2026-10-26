@@ -2,39 +2,39 @@
 export function createCommandSearch({ registry, document, keyboard = document.defaultView, host }) {
   if (
     !registry ||
-    typeof registry.commands !== "function" ||
-    typeof registry.execute !== "function" ||
+    typeof registry.commands !== 'function' ||
+    typeof registry.execute !== 'function' ||
     !host
   )
-    throw new Error("InvalidCommandSearch");
+    throw new Error('InvalidCommandSearch');
   const events = new AbortController();
-  const button = document.createElement("button");
-  button.type = "button";
-  button.id = "command-search-open";
-  button.textContent = "명령 검색";
-  button.title = "Ctrl/⌘+Shift+P";
-  const dialog = document.createElement("dialog");
-  dialog.id = "command-search";
-  dialog.setAttribute("aria-label", "문서 명령 검색");
-  const label = document.createElement("label");
-  label.textContent = "명령 검색";
-  const input = document.createElement("input");
-  input.type = "search";
-  input.id = "command-search-query";
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.id = 'command-search-open';
+  button.textContent = '명령 검색';
+  button.title = 'Ctrl/⌘+Shift+P';
+  const dialog = document.createElement('dialog');
+  dialog.id = 'command-search';
+  dialog.setAttribute('aria-label', '문서 명령 검색');
+  const label = document.createElement('label');
+  label.textContent = '명령 검색';
+  const input = document.createElement('input');
+  input.type = 'search';
+  input.id = 'command-search-query';
   input.maxLength = 256;
   label.htmlFor = input.id;
-  const list = document.createElement("div");
-  list.id = "command-search-results";
-  const note = document.createElement("p");
-  note.id = "command-search-status";
-  note.setAttribute("role", "status");
-  const cancel = document.createElement("button");
-  cancel.type = "button";
-  cancel.textContent = "닫기";
+  const list = document.createElement('div');
+  list.id = 'command-search-results';
+  const note = document.createElement('p');
+  note.id = 'command-search-status';
+  note.setAttribute('role', 'status');
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.textContent = '닫기';
   dialog.append(label, input, list, note, cancel);
-  const style = document.createElement("link");
-  style.rel = "stylesheet";
-  style.href = new URL("./command-search.css", import.meta.url).href;
+  const style = document.createElement('link');
+  style.rel = 'stylesheet';
+  style.href = new URL('./command-search.css', import.meta.url).href;
   document.head.append(style);
   document.body.append(dialog);
   host.append(button);
@@ -59,14 +59,14 @@ export function createCommandSearch({ registry, document, keyboard = document.de
       );
     list.replaceChildren();
     for (const command of commands) {
-      const item = document.createElement("button");
-      item.type = "button";
+      const item = document.createElement('button');
+      item.type = 'button';
       item.dataset.commandId = command.id;
-      item.textContent = `${command.label}${command.enabled ? "" : " · 현재 사용 불가"}`;
+      item.textContent = `${command.label}${command.enabled ? '' : ' · 현재 사용 불가'}`;
       item.disabled = !command.enabled;
       list.append(item);
     }
-    note.textContent = commands.length ? `${commands.length}개 명령` : "일치하는 명령이 없습니다.";
+    note.textContent = commands.length ? `${commands.length}개 명령` : '일치하는 명령이 없습니다.';
     if (focused) {
       const replacement = [...list.children].find(
         (item) => item.dataset.commandId === focused && !item.disabled,
@@ -77,7 +77,7 @@ export function createCommandSearch({ registry, document, keyboard = document.de
   const open = () => {
     if (closed || dialog.open) return;
     previous = document.activeElement;
-    input.value = "";
+    input.value = '';
     render();
     dialog.showModal();
     input.focus();
@@ -86,19 +86,19 @@ export function createCommandSearch({ registry, document, keyboard = document.de
     if (closed || !dialog.open) return;
     if (!registry.commands().some((c) => c.id === id && c.enabled)) {
       render();
-      note.textContent = "현재 사용할 수 없는 명령입니다.";
+      note.textContent = '현재 사용할 수 없는 명령입니다.';
       return;
     }
     finish();
     if (!registry.execute(id)) {
       open();
-      note.textContent = "상태가 변경되어 명령을 실행하지 않았습니다.";
+      note.textContent = '상태가 변경되어 명령을 실행하지 않았습니다.';
     }
   };
-  button.addEventListener("click", open, { signal: events.signal });
-  cancel.addEventListener("click", finish, { signal: events.signal });
+  button.addEventListener('click', open, { signal: events.signal });
+  cancel.addEventListener('click', finish, { signal: events.signal });
   dialog.addEventListener(
-    "cancel",
+    'cancel',
     (e) => {
       e.preventDefault();
       finish();
@@ -106,9 +106,9 @@ export function createCommandSearch({ registry, document, keyboard = document.de
     { signal: events.signal },
   );
   dialog.addEventListener(
-    "keydown",
+    'keydown',
     (e) => {
-      if (!e.defaultPrevented && !e.isComposing && e.keyCode !== 229 && e.key === "Escape") {
+      if (!e.defaultPrevented && !e.isComposing && e.keyCode !== 229 && e.key === 'Escape') {
         e.preventDefault();
         finish();
       }
@@ -116,45 +116,45 @@ export function createCommandSearch({ registry, document, keyboard = document.de
     { signal: events.signal },
   );
   list.addEventListener(
-    "click",
+    'click',
     (e) => {
-      const item = e.target.closest?.("button[data-command-id]");
+      const item = e.target.closest?.('button[data-command-id]');
       if (item && list.contains(item) && !item.disabled) run(item.dataset.commandId);
     },
     { signal: events.signal },
   );
   list.addEventListener(
-    "keydown",
+    'keydown',
     (e) => {
       if (
         e.defaultPrevented ||
         e.isComposing ||
         e.keyCode === 229 ||
-        !["ArrowDown", "ArrowUp"].includes(e.key)
+        !['ArrowDown', 'ArrowUp'].includes(e.key)
       )
         return;
       e.preventDefault();
       const enabled = [...list.children].filter((c) => !c.disabled),
         index = enabled.indexOf(document.activeElement);
-      if (e.key === "ArrowUp" && index <= 0) input.focus();
+      if (e.key === 'ArrowUp' && index <= 0) input.focus();
       else
         enabled[
-          Math.min(enabled.length - 1, Math.max(0, index + (e.key === "ArrowDown" ? 1 : -1)))
+          Math.min(enabled.length - 1, Math.max(0, index + (e.key === 'ArrowDown' ? 1 : -1)))
         ]?.focus();
     },
     { signal: events.signal },
   );
-  input.addEventListener("input", render, { signal: events.signal });
+  input.addEventListener('input', render, { signal: events.signal });
   input.addEventListener(
-    "keydown",
+    'keydown',
     (e) => {
       if (e.defaultPrevented || e.isComposing || e.keyCode === 229) return;
-      if (e.key === "Enter") {
+      if (e.key === 'Enter') {
         e.preventDefault();
         render();
         const first = [...list.children].find((c) => !c.disabled);
         if (first) run(first.dataset.commandId);
-      } else if (e.key === "ArrowDown") {
+      } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         [...list.children].find((c) => !c.disabled)?.focus();
       }
@@ -162,7 +162,7 @@ export function createCommandSearch({ registry, document, keyboard = document.de
     { signal: events.signal },
   );
   keyboard.addEventListener(
-    "keydown",
+    'keydown',
     (e) => {
       if (
         e.defaultPrevented ||
@@ -172,7 +172,7 @@ export function createCommandSearch({ registry, document, keyboard = document.de
         e.altKey ||
         !(e.ctrlKey || e.metaKey) ||
         !e.shiftKey ||
-        e.key.toLowerCase() !== "p"
+        e.key.toLowerCase() !== 'p'
       )
         return;
       e.preventDefault();
@@ -181,7 +181,7 @@ export function createCommandSearch({ registry, document, keyboard = document.de
     { signal: events.signal },
   );
   const unsubscribe =
-    typeof registry.subscribe === "function"
+    typeof registry.subscribe === 'function'
       ? registry.subscribe(() => {
           if (!closed && dialog.open) render();
         })

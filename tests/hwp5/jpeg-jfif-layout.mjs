@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { jpegJfifFixture, jpegJfifOracle } from "./jpeg-jfif.mjs";
-import { jpegJfxxFixture, jpegJfxxOracle } from "./jpeg-jfxx.mjs";
-import { jpegJfxxJpegFixture } from "./jpeg-jfxx-jpeg.mjs";
-import { segment } from "./jpeg-structure.mjs";
+import assert from 'node:assert/strict';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { jpegJfifFixture, jpegJfifOracle } from './jpeg-jfif.mjs';
+import { jpegJfxxFixture, jpegJfxxOracle } from './jpeg-jfxx.mjs';
+import { jpegJfxxJpegFixture } from './jpeg-jfxx-jpeg.mjs';
+import { segment } from './jpeg-structure.mjs';
 
 // Collect marker ordinals first; verify positions by array relationships rather
 // than reproducing the product's streaming phase machine.
@@ -22,18 +22,18 @@ function markerList(raw) {
       return result;
     }
   }
-  throw Error("Missing EOI");
+  throw Error('Missing EOI');
 }
 const signature = (m, s) =>
-  m.code === 224 && m.payload.subarray(0, 5).equals(Buffer.from(s + "\0"));
+  m.code === 224 && m.payload.subarray(0, 5).equals(Buffer.from(s + '\0'));
 export function jpegJfifLayoutOracle(raw) {
   const list = markerList(raw);
   assert.equal(list[0].code, 216);
-  const headers = list.flatMap((m, i) => (signature(m, "JFIF") ? [i] : []));
+  const headers = list.flatMap((m, i) => (signature(m, 'JFIF') ? [i] : []));
   assert.deepEqual(headers, [1]);
   const h = list[1].payload;
   jpegJfifOracle(h);
-  const extensions = list.flatMap((m, i) => (signature(m, "JFXX") ? [i] : []));
+  const extensions = list.flatMap((m, i) => (signature(m, 'JFXX') ? [i] : []));
   assert.deepEqual(
     extensions,
     extensions.map((_, i) => i + 2),
@@ -48,7 +48,7 @@ export function jpegJfifLayoutOracle(raw) {
     else if (![17, 19].includes(p[5])) unknown++;
   }
   for (const m of list) {
-    if (m.code >= 224 && m.code <= 239 && !signature(m, "JFIF") && !signature(m, "JFXX")) {
+    if (m.code >= 224 && m.code <= 239 && !signature(m, 'JFIF') && !signature(m, 'JFXX')) {
       apps++;
       if (m.code === 224) assert.ok(m.payload.includes(0));
     }
@@ -103,7 +103,7 @@ export function jpegJfifLayoutEdges(call) {
   };
   const jfif = segment(224, jpegJfifFixture()),
     xx = segment(224, jpegJfxxFixture(255)),
-    app = segment(224, Buffer.from("acme\0"));
+    app = segment(224, Buffer.from('acme\0'));
   for (let code = 0; code < 256; code++)
     check(jpegJfifLayoutFixture({}, [segment(224, jpegJfxxFixture(code)), xx]));
   for (const width of [1, 8, 17])
@@ -116,7 +116,7 @@ export function jpegJfifLayoutEdges(call) {
       jpegJfifLayoutFixture(
         {},
         [xx],
-        [segment(code, Buffer.from("acme\0")), segment(code, Buffer.of(0))],
+        [segment(code, Buffer.from('acme\0')), segment(code, Buffer.of(0))],
       ),
     );
   const good = jpegJfifLayoutFixture({}, [xx]);
@@ -150,7 +150,7 @@ export function jpegJfifLayoutEdges(call) {
   }
   reject(jpegJfifLayoutFixture({}, [xx, app, xx]), /InvalidJfxxPosition/);
   reject(
-    jpegJfifLayoutFixture({}, [], [segment(224, Buffer.from("acme"))]),
+    jpegJfifLayoutFixture({}, [], [segment(224, Buffer.from('acme'))]),
     /UnterminatedJfifApplicationId/,
   );
   for (let n = 0; n < good.length; n++) reject(good.subarray(0, n));

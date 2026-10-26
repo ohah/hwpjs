@@ -1,6 +1,6 @@
 // Independent expected records, shared by native-API and real-browser audits.
-import assert from "node:assert/strict";
-import { inspect, records, encodeRecord } from "./text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { inspect, records, encodeRecord } from './text-record-oracle.mjs';
 
 export function verifyParagraphProperty(
   input,
@@ -10,14 +10,14 @@ export function verifyParagraphProperty(
   const original = inspect(Buffer.from(input)),
     edited = inspect(Buffer.from(saved));
   const source = original.sections[section];
-  assert(source, "MissingSection");
+  assert(source, 'MissingSection');
   const head = records(source.bytes).filter((row) => row.tag === 66)[paragraph];
-  assert(head, "MissingParagraph");
-  const info = original.decode(original.streams.get("DocInfo")),
+  assert(head, 'MissingParagraph');
+  const info = original.decode(original.streams.get('DocInfo')),
     entries = records(info),
     shapes = entries.filter((row) => row.tag === 25);
   const template = shapes[head.payload.readUInt16LE(8)];
-  assert(template, "MissingParagraphShape");
+  assert(template, 'MissingParagraphShape');
   const added = Buffer.from(template.payload),
     count = shapes.length;
   assert(count < 65536);
@@ -41,13 +41,13 @@ export function verifyParagraphProperty(
     assert(Number.isInteger(kind) && kind >= 0 && kind <= 3);
     assert(Number.isInteger(value) && value >= -2147483648 && value <= 2147483647);
     const modern =
-      original.streams.get("FileHeader").readUInt32LE(32) >= 0x05000205 && added.length >= 54;
+      original.streams.get('FileHeader').readUInt32LE(32) >= 0x05000205 && added.length >= 54;
     if (modern) {
       added.writeUInt32LE(((added.readUInt32LE(46) & ~31) | kind) >>> 0, 46);
       added.writeInt32LE(value, 50);
     }
     if (!modern || kind === 0) {
-      assert(modern || kind !== 3, "MissingModernMinimumSpacing");
+      assert(modern || kind !== 3, 'MissingModernMinimumSpacing');
       added.writeUInt32LE(((added.readUInt32LE(0) & ~3) | kind) >>> 0, 0);
       added.writeInt32LE(value, 24);
     }
@@ -65,21 +65,21 @@ export function verifyParagraphProperty(
     mapping.start + mapping.raw.length - mapping.payload.length + 52,
   );
   assert.deepEqual(
-    edited.decode(edited.streams.get("DocInfo")),
+    edited.decode(edited.streams.get('DocInfo')),
     Buffer.concat([
       expectedInfo.subarray(0, at),
       encodeRecord(25, 1, added),
       expectedInfo.subarray(at),
     ]),
-    "ExactDocInfo",
+    'ExactDocInfo',
   );
   const expectedSection = Buffer.from(source.bytes);
   expectedSection.writeUInt16LE(count, head.start + head.raw.length - head.payload.length + 8);
-  assert.deepEqual(edited.sections[section].bytes, expectedSection, "ExactTargetSection");
-  assert.deepEqual(edited.metadata, original.metadata, "ContainerMetadata");
+  assert.deepEqual(edited.sections[section].bytes, expectedSection, 'ExactTargetSection');
+  assert.deepEqual(edited.metadata, original.metadata, 'ContainerMetadata');
   assert.deepEqual([...edited.streams.keys()].sort(), [...original.streams.keys()].sort());
   for (const [name, bytes] of original.streams)
-    if (name !== "DocInfo" && name !== source.path)
+    if (name !== 'DocInfo' && name !== source.path)
       assert.deepEqual(edited.streams.get(name), bytes, name);
   return true;
 }

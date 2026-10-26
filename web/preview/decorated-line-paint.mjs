@@ -1,10 +1,10 @@
-import { paintArrowHead } from "./arrow-head-paint.mjs";
-import { arrowHeadGeometry } from "./arrow-head-geometry.mjs";
-import { decoratedLineBounds } from "./decorated-line-bounds.mjs";
+import { paintArrowHead } from './arrow-head-paint.mjs';
+import { arrowHeadGeometry } from './arrow-head-geometry.mjs';
+import { decoratedLineBounds } from './decorated-line-bounds.mjs';
 export function paintDecoratedLine(ctx, plan, origin, scrollTop = 0) {
   if (
-    plan?.state !== "planned" ||
-    plan.policy !== "rhwp_reference" ||
+    plan?.state !== 'planned' ||
+    plan.policy !== 'rhwp_reference' ||
     ![origin?.x, origin?.y, scrollTop].every(Number.isFinite)
   )
     return false;
@@ -29,7 +29,7 @@ export function paintDecoratedLine(ctx, plan, origin, scrollTop = 0) {
   for (const arrow of plan.arrows) {
     if (
       !arrow ||
-      typeof arrow.fill !== "boolean" ||
+      typeof arrow.fill !== 'boolean' ||
       !Array.isArray(arrow.tip) ||
       arrow.tip.length !== 2
     )
@@ -45,9 +45,9 @@ export function paintDecoratedLine(ctx, plan, origin, scrollTop = 0) {
   }
   ctx.save();
   try {
-    ctx.strokeStyle = `#${plan.color.toString(16).padStart(6, "0")}`;
+    ctx.strokeStyle = `#${plan.color.toString(16).padStart(6, '0')}`;
     ctx.lineWidth = plan.strokeWidth;
-    ctx.lineCap = "butt";
+    ctx.lineCap = 'butt';
     ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(...endpoints[0]);

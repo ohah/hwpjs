@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync, readdirSync } from "node:fs";
-import { createRequire } from "node:module";
-import { runInNewContext } from "node:vm";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { v4File } from "./contract-fixtures.mjs";
-import { miniContainer } from "./structured-fixtures.mjs";
-import { assertExactResult } from "./exact-result.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync, readdirSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { runInNewContext } from 'node:vm';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { v4File } from './contract-fixtures.mjs';
+import { miniContainer } from './structured-fixtures.mjs';
+import { assertExactResult } from './exact-result.mjs';
 
 const context = {
   module: { exports: {} },
@@ -14,17 +14,17 @@ const context = {
   Buffer,
   process,
 };
-runInNewContext(readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"), context);
+runInNewContext(readFileSync(new URL('../../legacy/cfb.js', import.meta.url), 'utf8'), context);
 const CFB = context.module.exports;
 const module = await WebAssembly.compile(
-  readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+  readFileSync(new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url)),
 );
 
-test("exact return shape: all real HWP fixtures including unused entries and blob methods", async () => {
+test('exact return shape: all real HWP fixtures including unused entries and blob methods', async () => {
   const api = await createCfbReader(module);
-  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
+  const dir = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
   try {
-    for (const name of readdirSync(dir).filter((n) => n.endsWith(".hwp"))) {
+    for (const name of readdirSync(dir).filter((n) => n.endsWith('.hwp'))) {
       const bytes = readFileSync(new URL(name, dir));
       assertExactResult(api.parse(bytes), CFB.parse(bytes), name);
     }
@@ -33,7 +33,7 @@ test("exact return shape: all real HWP fixtures including unused entries and blo
   }
 });
 
-test("exact return shape: empty, MiniFAT and regular streams across input representations", async () => {
+test('exact return shape: empty, MiniFAT and regular streams across input representations', async () => {
   const api = await createCfbReader(module);
   try {
     for (const bytes of [
@@ -45,7 +45,7 @@ test("exact return shape: empty, MiniFAT and regular streams across input repres
       for (const input of [bytes, new Uint8Array(bytes), Array.from(bytes)]) {
         assertExactResult(api.parse(input, { raw: true }), CFB.parse(input, { raw: true }));
       }
-      for (const type of ["binary", "base64"]) {
+      for (const type of ['binary', 'base64']) {
         const input = bytes.toString(type);
         assertExactResult(
           api.read(input, { type, raw: true }),
@@ -58,7 +58,7 @@ test("exact return shape: empty, MiniFAT and regular streams across input repres
   }
 });
 
-test("exact blob cursor operations on copied output", async () => {
+test('exact blob cursor operations on copied output', async () => {
   const api = await createCfbReader(module);
   try {
     for (const asArray of [false, true]) {
@@ -67,7 +67,7 @@ test("exact blob cursor operations on copied output", async () => {
       const input = asArray ? Array.from(bytes) : bytes;
       const a = api.parse(input).FileIndex[1].content;
       const e = CFB.parse(input).FileIndex[1].content;
-      for (const [size, type] of [[1], [2], [2, "i"], [4], [16], [3]]) {
+      for (const [size, type] of [[1], [2], [2, 'i'], [4], [16], [3]]) {
         assert.equal(a.read_shift(size, type), e.read_shift(size, type));
         assert.equal(a.l, e.l);
       }
@@ -76,25 +76,25 @@ test("exact blob cursor operations on copied output", async () => {
         [2, 0xfedc],
         [4, 0xdeadbeef],
         [-4, -321],
-        [4, "01234567", "hex"],
-        [6, "가A", "utf16le"],
+        [4, '01234567', 'hex'],
+        [6, '가A', 'utf16le'],
       ]) {
         assert.equal(a.write_shift(...args), a);
         e.write_shift(...args);
-        assertExactResult(a, e, "written cursor");
+        assertExactResult(a, e, 'written cursor');
       }
       a.l = e.l = 0;
-      const hex = Buffer.from(e.slice(0, 4)).toString("hex");
-      a.chk(hex, "prefix ");
-      e.chk(hex, "prefix ");
+      const hex = Buffer.from(e.slice(0, 4)).toString('hex');
+      a.chk(hex, 'prefix ');
+      e.chk(hex, 'prefix ');
       assert.equal(a.l, e.l);
       let expectedError;
       try {
-        e.chk("ffff", "marker ");
+        e.chk('ffff', 'marker ');
       } catch (err) {
         expectedError = err.message;
       }
-      assert.throws(() => a.chk("ffff", "marker "), { message: expectedError });
+      assert.throws(() => a.chk('ffff', 'marker '), { message: expectedError });
       assert.equal(a.l, e.l);
     }
   } finally {
@@ -102,7 +102,7 @@ test("exact blob cursor operations on copied output", async () => {
   }
 });
 
-test("exact accepted header metadata, FILETIME bits and nullable options", async () => {
+test('exact accepted header metadata, FILETIME bits and nullable options', async () => {
   const api = await createCfbReader(module);
   try {
     for (const version of [3, 4]) {
@@ -125,8 +125,8 @@ test("exact accepted header metadata, FILETIME bits and nullable options", async
         bytes.fill(0xcd, directory + 128 + 80, directory + 128 + 96);
         assertExactResult(api.parse(bytes, null), CFB.parse(bytes, null));
         assertExactResult(
-          api.read(bytes.toString("base64"), null),
-          CFB.read(bytes.toString("base64"), null),
+          api.read(bytes.toString('base64'), null),
+          CFB.read(bytes.toString('base64'), null),
         );
       }
     }
@@ -135,7 +135,7 @@ test("exact accepted header metadata, FILETIME bits and nullable options", async
   }
 });
 
-test("exact header failure messages from the same validation branches", async () => {
+test('exact header failure messages from the same validation branches', async () => {
   const api = await createCfbReader(module);
   try {
     const cases = [Buffer.alloc(0), Buffer.alloc(511)];
@@ -162,8 +162,8 @@ test("exact header failure messages from the same validation branches", async ()
       } catch (e) {
         message = e.message;
       }
-      assert.equal(typeof message, "string", "reference must reject the targeted header");
-      assert.throws(() => api.parse(bytes), { name: "Error", message });
+      assert.equal(typeof message, 'string', 'reference must reject the targeted header');
+      assert.throws(() => api.parse(bytes), { name: 'Error', message });
       assertExactResult(api.parse(v4File()), CFB.parse(v4File()));
     }
   } finally {
@@ -171,7 +171,7 @@ test("exact header failure messages from the same validation branches", async ()
   }
 });
 
-test("empty content presence is not inferred from size or entry kind", async () => {
+test('empty content presence is not inferred from size or entry kind', async () => {
   const api = await createCfbReader(module);
   try {
     for (const version of [3, 4]) {
@@ -183,11 +183,11 @@ test("empty content presence is not inferred from size or entry kind", async () 
         const actual = api.parse(bytes),
           expected = CFB.parse(bytes);
         assertExactResult(actual, expected);
-        assert.equal(Object.hasOwn(actual.FileIndex[1], "content"), start === 0);
+        assert.equal(Object.hasOwn(actual.FileIndex[1], 'content'), start === 0);
         assert.equal(
-          Object.hasOwn(actual.FileIndex[2], "content"),
+          Object.hasOwn(actual.FileIndex[2], 'content'),
           true,
-          "unused slot with mini stream backing",
+          'unused slot with mini stream backing',
         );
       }
     }

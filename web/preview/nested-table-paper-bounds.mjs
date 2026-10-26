@@ -2,17 +2,17 @@
 // Cell bounds are not paper bounds; visible overflow is never silently clipped.
 export function nestedTablePaperBounds(boxes) {
   if (!Array.isArray(boxes))
-    return { state: "unavailable", error: "InvalidNestedTablePaperBounds" };
+    return { state: 'unavailable', error: 'InvalidNestedTablePaperBounds' };
   for (const box of boxes) {
     if (
       !box ||
-      typeof box !== "object" ||
+      typeof box !== 'object' ||
       Array.isArray(box) ||
       (box.depth !== undefined && (!Number.isSafeInteger(box.depth) || box.depth < 0))
     )
       return {
-        state: "unavailable",
-        error: "InvalidNestedTablePaperBounds",
+        state: 'unavailable',
+        error: 'InvalidNestedTablePaperBounds',
         tableNode: box?.tableNode,
       };
     if ((box.depth ?? 0) === 0) continue;
@@ -39,8 +39,8 @@ export function nestedTablePaperBounds(boxes) {
       paper.height <= 0
     )
       return {
-        state: "unavailable",
-        error: "InvalidNestedTablePaperBounds",
+        state: 'unavailable',
+        error: 'InvalidNestedTablePaperBounds',
         tableNode: box.tableNode,
       };
     if (
@@ -50,13 +50,13 @@ export function nestedTablePaperBounds(boxes) {
       box.y + box.height > paper.y + paper.height + 1e-8
     )
       return {
-        state: "unavailable",
-        error: "NestedTablePaperOverflow",
+        state: 'unavailable',
+        error: 'NestedTablePaperOverflow',
         tableNode: box.tableNode,
         listNode: box.listNode,
         rectangle: { x: box.x, y: box.y, width: box.width, height: box.height },
         paper,
       };
   }
-  return { state: "contained" };
+  return { state: 'contained' };
 }

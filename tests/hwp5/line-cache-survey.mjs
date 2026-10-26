@@ -1,16 +1,16 @@
 // Read-only evidence for merged revision paragraphs; not a product validator.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
 import {
   paragraphEvidence,
   textCandidates,
   rangeFilteredCandidate,
   rootMergeGroups,
-} from "./line-cache-evidence.mjs";
-import { declaredLineCandidates, lineAvailability } from "./line-cache-coordinate-evidence.mjs";
-import { revisionGroupEvidence } from "./revision-groups.mjs";
+} from './line-cache-evidence.mjs';
+import { declaredLineCandidates, lineAvailability } from './line-cache-coordinate-evidence.mjs';
+import { revisionGroupEvidence } from './revision-groups.mjs';
 
 function allFlowCoordinateSummary(bytes, paragraphs) {
   const index = revisionGroupEvidence(bytes),
@@ -24,7 +24,7 @@ function allFlowCoordinateSummary(bytes, paragraphs) {
     // A continuation with its own cache needs another explicit axis hypothesis.
     assert.ok(
       members.slice(1).every((p) => p.starts.length === 0),
-      "continuation cache needs separate evidence",
+      'continuation cache needs separate evidence',
     );
     const result = declaredLineCandidates(members);
     lines += result.lines.length;
@@ -96,28 +96,28 @@ function survey(paragraphs, bodyParagraphs) {
   };
 }
 
-const cfb = await createCfbReader(readFileSync(process.argv[2] ?? "zig-out/bin/hwpjs.wasm"));
+const cfb = await createCfbReader(readFileSync(process.argv[2] ?? 'zig-out/bin/hwpjs.wasm'));
 try {
   cfb.parse(
     readFileSync(
       new URL(
-        "../../reference/rhwp/samples/issue5169_viewtext_changetracking.hwp",
+        '../../reference/rhwp/samples/issue5169_viewtext_changetracking.hwp',
         import.meta.url,
       ),
     ),
     { strict: true },
   );
-  const header = cfb.findExact("/FileHeader").content;
+  const header = cfb.findExact('/FileHeader').content;
   assert.equal(header.readUInt32LE(32) >= 0x05000302, true);
   assert.equal(header.readUInt32LE(36), 16385);
   const result = {},
     paragraphs = {},
     decoded = {};
-  for (const kind of ["BodyText", "ViewText"]) {
-    decoded[kind] = inflateRawSync(cfb.findExact("/" + kind + "/Section0").content);
+  for (const kind of ['BodyText', 'ViewText']) {
+    decoded[kind] = inflateRawSync(cfb.findExact('/' + kind + '/Section0').content);
     paragraphs[kind] = paragraphEvidence(decoded[kind]);
   }
-  for (const kind of ["BodyText", "ViewText"])
+  for (const kind of ['BodyText', 'ViewText'])
     result[kind] = survey(paragraphs[kind], paragraphs.BodyText);
   assert.equal(result.BodyText.allFlowOverruns, 0);
   assert.equal(result.ViewText.allFlowOverruns, 9);
@@ -162,7 +162,7 @@ try {
     if (expected.text === null) assert.equal(expected.units, 1);
     assert.deepEqual(
       rangeFilteredCandidate(g, 0x11),
-      expected.text ?? Buffer.from("\r", "utf16le"),
+      expected.text ?? Buffer.from('\r', 'utf16le'),
       `ordered root pair ${i}`,
     );
   }
@@ -228,7 +228,7 @@ try {
   cfb.parse(
     readFileSync(
       new URL(
-        "../../reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+        '../../reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
         import.meta.url,
       ),
     ),
@@ -236,8 +236,8 @@ try {
   );
   result.task2070LineAvailability = {};
   result.task2070AllFlowCoordinateCandidates = {};
-  for (const kind of ["BodyText", "ViewText"]) {
-    const bytes = inflateRawSync(cfb.findExact("/" + kind + "/Section0").content),
+  for (const kind of ['BodyText', 'ViewText']) {
+    const bytes = inflateRawSync(cfb.findExact('/' + kind + '/Section0').content),
       ps = paragraphEvidence(bytes);
     result.task2070LineAvailability[kind] = lineAvailability(ps);
     result.task2070AllFlowCoordinateCandidates[kind] = allFlowCoordinateSummary(bytes, ps);

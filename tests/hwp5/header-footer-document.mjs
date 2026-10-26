@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -25,7 +25,7 @@ export function headerFooterDocumentEdges(call, cfb, h, doc, sections) {
   const container = (ss) => {
     const modified = nodes.map((n) => ({ ...n }));
     for (const s of ss) {
-      const body = modified.findIndex((n) => n.name === "BodyText" && n.kind === 1);
+      const body = modified.findIndex((n) => n.name === 'BodyText' && n.kind === 1);
       const node = modified.find((n) => n.parent === body && n.name === `Section${s.index}`);
       assert.ok(node);
       node.content = h.readUInt32LE(36) & 1 ? deflateRawSync(s.bytes) : s.bytes;
@@ -73,7 +73,7 @@ export function headerFooterDocumentEdges(call, cfb, h, doc, sections) {
       const reserved = Buffer.from(s.bytes);
       reserved.writeUInt32LE((reserved.readUInt32LE(r.start + 4) | 3) >>> 0, r.start + 4);
       const changed = decoded(mutate(reserved));
-      const stat = sectionFieldOffset(s.index, "header_footer", 3);
+      const stat = sectionFieldOffset(s.index, 'header_footer', 3);
       assert.equal(changed.readUInt32LE(stat), good.readUInt32LE(stat) + 1);
       // Container serializes the same document prefix, including the previously unobserved report.
       assert.deepEqual(container(mutate(reserved)).subarray(0, changed.length), changed);

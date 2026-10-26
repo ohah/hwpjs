@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { drawingPageReference } from "../../web/preview/drawing-page-reference.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { drawingPageReference } from '../../web/preview/drawing-page-reference.mjs';
 
-test("drawing paragraph frame follows its validated anchor page while requiring every source unit", () => {
+test('drawing paragraph frame follows its validated anchor page while requiring every source unit', () => {
   const drawing = {
     section: 0,
     drawingNode: 7,
@@ -10,14 +10,14 @@ test("drawing paragraph frame follows its validated anchor page while requiring 
     anchorUnit: 1,
     source: { position: { relations: [2, 3, 0, 0] } },
   };
-  const paragraphs = [{ section: 0, paragraph: 3, text: "앞\ufffc끝" }];
+  const paragraphs = [{ section: 0, paragraph: 3, text: '앞\ufffc끝' }];
   const rows = [0, 1].map((pageOrdinal) => ({
-    kind: "text",
+    kind: 'text',
     section: 0,
     paragraph: 3,
     startUnit: pageOrdinal,
     endUnit: pageOrdinal === 0 ? 1 : 3,
-    text: pageOrdinal === 0 ? "앞" : "\ufffc끝",
+    text: pageOrdinal === 0 ? '앞' : '\ufffc끝',
     pageOrdinal,
     columnOrdinal: 0,
     x: 20,
@@ -29,7 +29,7 @@ test("drawing paragraph frame follows its validated anchor page while requiring 
   }));
   const before = structuredClone({ drawing, paragraphs, rows });
   const selected = drawingPageReference(drawing, paragraphs, rows);
-  assert.equal(selected.state, "selected", selected.error);
+  assert.equal(selected.state, 'selected', selected.error);
   assert.equal(selected.host.pageOrdinal, 1);
   assert.deepEqual(selected.boxes.paragraph, {
     section: 0,
@@ -41,18 +41,18 @@ test("drawing paragraph frame follows its validated anchor page while requiring 
   });
   assert.equal(
     drawingPageReference(drawing, paragraphs, rows.slice(1)).error,
-    "MissingDrawingParagraphReference",
+    'MissingDrawingParagraphReference',
   );
   assert.equal(
     drawingPageReference(drawing, paragraphs, [rows[1], rows[1]]).error,
-    "AmbiguousDrawingPageAnchor",
+    'AmbiguousDrawingPageAnchor',
   );
   assert.equal(
     drawingPageReference(drawing, paragraphs, [
       rows[0],
       { ...rows[1], transform: [1, 0, 0, 1, 0, 0] },
     ]).error,
-    "MissingDrawingParagraphReference",
+    'MissingDrawingParagraphReference',
   );
   assert.deepEqual({ drawing, paragraphs, rows }, before);
 });

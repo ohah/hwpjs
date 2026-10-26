@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { seriesCollectionOracle } from "./chart-series-collection-oracle.mjs";
-import { observeChartTitleBody } from "./chart-title-body-evidence.mjs";
-import { incompleteTitleBody } from "./chart-title-body-errors.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { seriesCollectionOracle } from './chart-series-collection-oracle.mjs';
+import { observeChartTitleBody } from './chart-title-body-evidence.mjs';
+import { incompleteTitleBody } from './chart-title-body-errors.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   ids = 0,
   types = 0,
@@ -17,10 +17,10 @@ let cuts = 0,
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const c = seriesCollectionOracle(b).r,
       read = (bytes) => observeChartTitleBody(bytes, c.end, c.types, c.objects, c.strings),
       r = read(b);
@@ -41,15 +41,15 @@ try {
           (e) =>
             e.constructor === Error &&
             [
-              "UnsupportedChartTitleBodyObservationObject",
-              "UnsupportedSeriesLabelObservationObject",
-              "UnsupportedAxisObservationObject",
-              "UnsupportedChartSectionObservationObject",
+              'UnsupportedChartTitleBodyObservationObject',
+              'UnsupportedSeriesLabelObservationObject',
+              'UnsupportedAxisObservationObject',
+              'UnsupportedChartSectionObservationObject',
             ].includes(e.message),
         );
         ids++;
       }
-      const base = [...c.types].find(([, d]) => d.name === "VtObject\0")[0];
+      const base = [...c.types].find(([, d]) => d.name === 'VtObject\0')[0];
       for (const at of [...r.references, ...r.body.text.references, ...r.section.references]) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(b.readUInt32LE(at) === base ? r.typeId : base, at);
@@ -58,9 +58,9 @@ try {
           (e) =>
             e.constructor === Error &&
             [
-              "UnsupportedChartTitleBodyObservationType",
-              "UnsupportedAxisObservationType",
-              "UnsupportedChartSectionObservationType",
+              'UnsupportedChartTitleBodyObservationType',
+              'UnsupportedAxisObservationType',
+              'UnsupportedChartSectionObservationType',
             ].includes(e.message),
         );
         types++;
@@ -70,7 +70,7 @@ try {
         bad.writeUInt32LE(id, r.section.dataOffset);
         assert.throws(
           () => read(bad),
-          (e) => e.constructor === Error && e.message === "UnsupportedChartSectionObservationData",
+          (e) => e.constructor === Error && e.message === 'UnsupportedChartSectionObservationData',
         );
         data++;
       }
@@ -83,13 +83,13 @@ try {
           ...r.section,
           section: {
             ...r.section.section,
-            raw26: "ff".repeat(26),
-            raw50: "ff".repeat(50),
-            raw34: "ff".repeat(34),
-            raw4: "ff".repeat(4),
+            raw26: 'ff'.repeat(26),
+            raw50: 'ff'.repeat(50),
+            raw34: 'ff'.repeat(34),
+            raw4: 'ff'.repeat(4),
             suffix: 65535,
           },
-          rawFields: r.section.rawFields.map((f) => ({ ...f, hex: "ff".repeat(f.n) })),
+          rawFields: r.section.rawFields.map((f) => ({ ...f, hex: 'ff'.repeat(f.n) })),
         },
       });
       raws++;

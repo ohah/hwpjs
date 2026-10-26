@@ -1,25 +1,25 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { distributionSamples } from "./distribution.mjs";
-import { distributionOracle, word } from "./distribution-oracle.mjs";
-import { decodedDocumentInput } from "./documents.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { distributionSamples } from './distribution.mjs';
+import { distributionOracle, word } from './distribution-oracle.mjs';
+import { decodedDocumentInput } from './documents.mjs';
+import { containerTotals } from './container-report-wire.mjs';
 export const distributionContainerInput = (file, policy = 1, cap = 67108864) =>
   Buffer.concat([Buffer.from([policy]), word(cap), Buffer.from(file)]);
 const exactError = (name) => (e) => e?.constructor === Error && e.message === name;
 export function distributionContainerActual(call, cfb) {
   return distributionSamples.map((name) => {
-    const file = readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url));
+    const file = readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url));
     cfb.parse(file, { strict: true });
     const nodes = cfb.document().nodes,
-      h = Buffer.from(cfb.findExact("/FileHeader").content),
+      h = Buffer.from(cfb.findExact('/FileHeader').content),
       flags = h.readUInt32LE(36),
       selected = !!(flags & 4);
-    const doc = inflateRawSync(cfb.findExact("/DocInfo").content);
-    const body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText"),
-      view = nodes.findIndex((n) => n.parent === 0 && n.name === "ViewText"),
-      scripts = nodes.findIndex((n) => n.parent === 0 && n.name === "Scripts");
+    const doc = inflateRawSync(cfb.findExact('/DocInfo').content);
+    const body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText'),
+      view = nodes.findIndex((n) => n.parent === 0 && n.name === 'ViewText'),
+      scripts = nodes.findIndex((n) => n.parent === 0 && n.name === 'Scripts');
     assert.ok(body >= 0 && view >= 0);
     const sections = nodes
       .filter((n) => n.parent === (selected ? view : body) && /^Section\d+$/.test(n.name))
@@ -34,11 +34,11 @@ export function distributionContainerActual(call, cfb) {
     if (selected) {
       assert.throws(
         () => call(298, distributionContainerInput(file, 0)),
-        exactError("UnsupportedDistribution"),
+        exactError('UnsupportedDistribution'),
       );
       assert.throws(
         () => call(299, Buffer.concat([Buffer.of(0), decoded.subarray(1)])),
-        exactError("UnsupportedDistribution"),
+        exactError('UnsupportedDistribution'),
       );
       const normalizedHeader = Buffer.from(h);
       normalizedHeader.writeUInt32LE(flags & ~4, 36);
@@ -46,10 +46,10 @@ export function distributionContainerActual(call, cfb) {
       // The original BodyText is retained under an auxiliary storage name.
       const normalized = cfb.write({
         nodes: nodes.map((n, i) => {
-          if (n.parent === 0 && n.name === "FileHeader") return { ...n, content: normalizedHeader };
-          if (i === body) return { ...n, name: "AuxiliaryBody" };
-          if (i === view) return { ...n, name: "BodyText" };
-          if (n.parent === scripts && ["JScriptVersion", "DefaultJScript"].includes(n.name))
+          if (n.parent === 0 && n.name === 'FileHeader') return { ...n, content: normalizedHeader };
+          if (i === body) return { ...n, name: 'AuxiliaryBody' };
+          if (i === view) return { ...n, name: 'BodyText' };
+          if (n.parent === scripts && ['JScriptVersion', 'DefaultJScript'].includes(n.name))
             return { ...n, content: deflateRawSync(distributionOracle(Buffer.from(n.content))) };
           if (n.parent === view && /^Section\d+$/.test(n.name))
             return {
@@ -77,13 +77,13 @@ export function distributionContainerActual(call, cfb) {
     );
     assert.throws(
       () => call(298, distributionContainerInput(file, 1, totals.decoded_bytes - 1), records),
-      exactError("LimitExceeded"),
+      exactError('LimitExceeded'),
     );
     assert.throws(
       () => call(298, distributionContainerInput(file, 1, totals.decoded_bytes), records - 1),
-      exactError("LimitExceeded"),
+      exactError('LimitExceeded'),
     );
-    assert.throws(() => call(298, distributionContainerInput(file, 2)), exactError("InvalidMode"));
+    assert.throws(() => call(298, distributionContainerInput(file, 2)), exactError('InvalidMode'));
     assert.deepEqual(call(298, distributionContainerInput(file)), full);
     return {
       name,

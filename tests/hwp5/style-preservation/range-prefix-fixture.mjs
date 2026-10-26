@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../../js/hwp5-editor.mjs";
-import { inspect, records, verifyRaw } from "./text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../../js/hwp5-editor.mjs';
+import { inspect, records, verifyRaw } from './text-record-oracle.mjs';
 
 export async function verifyRangePrefixes(
   path,
@@ -10,7 +10,7 @@ export async function verifyRangePrefixes(
   expectedDisjoint = 0,
 ) {
   const input = readFileSync(path);
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   const sites = [];
   inspect(input).sections.forEach((section, sectionIndex) => {
     let paragraph = -1;
@@ -29,7 +29,7 @@ export async function verifyRangePrefixes(
   assert.equal(
     sites.filter((site) => site.disjoint).length,
     expectedDisjoint,
-    "independent strict-prefix inventory must not shrink",
+    'independent strict-prefix inventory must not shrink',
   );
   const editor = await createExperimentalHwp5Editor(wasm, input, options);
   try {
@@ -43,20 +43,20 @@ export async function verifyRangePrefixes(
         paragraph: site.paragraph,
         startUnit: 0,
         endUnit: 0,
-        text: "범위😀",
+        text: '범위😀',
       };
       if (site.disjoint) editor.splice(command);
       else {
         assert.throws(() => editor.splice(command), /UnsupportedRangeSemantics/);
         assert.deepEqual(editor.save().bytes, baseline);
-        editor.splice({ ...command, rangePolicy: "half-open" });
+        editor.splice({ ...command, rangePolicy: 'half-open' });
       }
       const saved = editor.save({ allowStaleLayout: true }).bytes;
       verifyRaw(baseline, saved, site.section, site.paragraph, 0, 0, command.text, {
         preserveEmptyRanges: site.disjoint,
       });
       assert.throws(
-        () => verifyRaw(baseline, saved, site.section, site.paragraph, 0, 0, "틀림"),
+        () => verifyRaw(baseline, saved, site.section, site.paragraph, 0, 0, '틀림'),
         /complete Section must match/,
       );
       const reopened = await createExperimentalHwp5Editor(wasm, saved);

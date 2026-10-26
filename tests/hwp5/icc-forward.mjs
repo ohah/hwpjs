@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { inverseInput } from "./icc-inverse.mjs";
+import assert from 'node:assert/strict';
+import { inverseInput } from './icc-inverse.mjs';
 const maxDen = ((1n << 64n) - 1n) / 65535n;
 export function forwardInput(values, n, d) {
   const b = Buffer.alloc(28 + values.length * 2);
   b.writeBigUInt64BE(n, 0);
   b.writeBigUInt64BE(d, 8);
-  b.write("curv", 16);
+  b.write('curv', 16);
   b.writeUInt32BE(values.length, 24);
   values.forEach((v, i) => b.writeUInt16BE(v, 28 + i * 2));
   return b;
@@ -21,7 +21,7 @@ export function forwardReference(values, n, d) {
         d * 65535n,
       ];
     }
-  throw Error("NoSegment");
+  throw Error('NoSegment');
 }
 export function iccForwardEdges(call) {
   let comparisons = 0,

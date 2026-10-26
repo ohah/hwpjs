@@ -1,15 +1,15 @@
 // Independent Node crypto/zlib byte decoder for observed compressed ViewText.
 // Does not call the product WASM or claim support for other distribution formats.
-import assert from "node:assert/strict";
-import { createDecipheriv } from "node:crypto";
-import { inflateRawSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { createDecipheriv } from 'node:crypto';
+import { inflateRawSync } from 'node:zlib';
 
 export function decodeDistribution(encoded) {
   return decodeDistributionSection(encoded, true);
 }
 
 export function decodeDistributionSection(encoded, compressed) {
-  assert.equal(typeof compressed, "boolean");
+  assert.equal(typeof compressed, 'boolean');
   const bytes = Buffer.from(encoded);
   assert(bytes.length >= 260);
   const bits = bytes.readUInt32LE(0);
@@ -34,7 +34,7 @@ export function decodeDistributionSection(encoded, compressed) {
     remaining--;
   }
   const offset = 4 + (data[0] & 15);
-  const cipher = createDecipheriv("aes-128-ecb", data.subarray(offset, offset + 16), null);
+  const cipher = createDecipheriv('aes-128-ecb', data.subarray(offset, offset + 16), null);
   cipher.setAutoPadding(false);
   const plain = Buffer.concat([cipher.update(bytes.subarray(start + 256)), cipher.final()]);
   return compressed ? inflateRawSync(plain, { maxOutputLength: 32 * 1024 * 1024 }) : plain;

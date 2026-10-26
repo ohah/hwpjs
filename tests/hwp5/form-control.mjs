@@ -1,21 +1,21 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
-import { formPropertyEvidence } from "./form-property.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
+import { formPropertyEvidence } from './form-property.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
-const wide = (s) => Buffer.from(s, "utf16le");
+const wide = (s) => Buffer.from(s, 'utf16le');
 const formId = 0x666f726d,
   kinds = new Map([
-    ["tbp+", 1],
-    ["tbc+", 2],
-    ["boc+", 3],
-    ["tbr+", 4],
-    ["tde+", 5],
+    ['tbp+', 1],
+    ['tbc+', 2],
+    ['boc+', 3],
+    ['tbr+', 4],
+    ['tde+', 5],
   ]);
 const frame = (tag, level, p) =>
   Buffer.concat([
@@ -38,15 +38,15 @@ function control(level, o = {}) {
   const desc =
     o.description === null
       ? Buffer.alloc(0)
-      : Buffer.concat([Buffer.alloc(2), wide(o.description ?? "")]);
+      : Buffer.concat([Buffer.alloc(2), wide(o.description ?? '')]);
   if (desc.length) desc.writeUInt16LE((desc.length - 2) / 2);
   return frame(71, level, Buffer.concat([b, desc, o.extra ?? Buffer.alloc(0)]));
 }
-function object(level, s = "A:int:1 ", o = {}) {
+function object(level, s = 'A:int:1 ', o = {}) {
   const b = Buffer.alloc(14),
     p = wide(s);
-  b.write(o.type ?? "tbp+", 0, 4, "latin1");
-  b.write(o.secondary ?? o.type ?? "tbp+", 4, 4, "latin1");
+  b.write(o.type ?? 'tbp+', 0, 4, 'latin1');
+  b.write(o.secondary ?? o.type ?? 'tbp+', 4, 4, 'latin1');
   b.writeUInt32LE(o.length ?? p.length / 2, 8);
   b.writeUInt16LE(p.length / 2, 12);
   return frame(91, level, Buffer.concat([b, p, o.extra ?? Buffer.alloc(0)]));
@@ -110,7 +110,7 @@ function evidence(bytes) {
       n.index,
       obj.index,
       kids.length - 1,
-      kinds.get(b.subarray(0, 4).toString("latin1")) ?? 0,
+      kinds.get(b.subarray(0, 4).toString('latin1')) ?? 0,
       props.rows.length,
       c.readUInt32LE(4),
       c.readInt32LE(8),
@@ -173,16 +173,16 @@ export function formControlEdges(call) {
     object(2),
     frame(255, 2, Buffer.alloc(0)),
     header(3),
-    control(4, { description: "😀", extra: Buffer.from([0xa5]) }),
-    object(5, "B:bool:-1 ", {
-      type: "????",
-      secondary: "tde+",
+    control(4, { description: '😀', extra: Buffer.from([0xa5]) }),
+    object(5, 'B:bool:-1 ', {
+      type: '????',
+      secondary: 'tde+',
       length: 0xffffffff,
       extra: Buffer.from([0xff]),
     }),
     header(0),
     control(1, { description: null }),
-    object(2, ""),
+    object(2, ''),
   ]);
   for (const b of [Buffer.alloc(0), frame(255, 0, Buffer.alloc(0)), one, nested]) {
     check(b);
@@ -215,7 +215,7 @@ export function formControlEdges(call) {
     [Buffer.concat([one, frame(255, 2, Buffer.alloc(0)), object(3)]), /InvalidFormObjectOwner/],
     [Buffer.concat([header(0), control(1), one]), /MissingFormObject/],
     [
-      Buffer.concat([header(0), control(1), object(2, "G:set:6:A:int: 1")]),
+      Buffer.concat([header(0), control(1), object(2, 'G:set:6:A:int: 1')]),
       /InvalidFormPropertyNumber/,
     ],
   ]) {
@@ -235,7 +235,7 @@ export function formControlEdges(call) {
     );
   }
   check(one);
-  const set = Buffer.concat([header(0), control(1), object(2, "G:set:8:A:int:1 ")]);
+  const set = Buffer.concat([header(0), control(1), object(2, 'G:set:8:A:int:1 ')]);
   check(set, { depth: 1 });
   bad(set, /FormPropertyDepthLimit/, { depth: 0 });
   check(set);
@@ -243,12 +243,12 @@ export function formControlEdges(call) {
 }
 export function formControlActual(call, cfb) {
   const results = [];
-  for (const name of ["form-01.hwp", "form-02.hwp"]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+  for (const name of ['form-01.hwp', 'form-02.hwp']) {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const version = cfb.findExact("/FileHeader").content.readUInt32LE(32),
-      bytes = inflateRawSync(cfb.findExact("/BodyText/Section0").content),
+    const version = cfb.findExact('/FileHeader').content.readUInt32LE(32),
+      bytes = inflateRawSync(cfb.findExact('/BodyText/Section0').content),
       e = evidence(bytes);
     const check = () => assert.deepEqual(call(106, input(bytes, { version })), e.wire);
     check();

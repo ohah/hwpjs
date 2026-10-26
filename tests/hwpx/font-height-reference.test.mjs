@@ -1,29 +1,29 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { createTextStyle } from "../../web/preview/text-style.mjs";
-import { layoutContent } from "../../web/preview/layout.mjs";
-const base = "legacy/rust/crates/hwp-core/tests/fixtures/";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { createTextStyle } from '../../web/preview/text-style.mjs';
+import { layoutContent } from '../../web/preview/layout.mjs';
+const base = 'legacy/rust/crates/hwp-core/tests/fixtures/';
 for (const [name, count] of [
-  ["facename", 13],
-  ["charshape", 7],
-  ["linespacing", 26],
+  ['facename', 13],
+  ['charshape', 7],
+  ['linespacing', 26],
 ]) {
   test(`HWPX ${name}: nominal height agrees with stored XML and paired HTML boxes`, () => {
     const source = JSON.parse(
       execFileSync(
-        "python3",
-        ["tests/hwpx/font-height-reference-oracle.py", `${base}${name}.hwpx`],
-        { encoding: "utf8" },
+        'python3',
+        ['tests/hwpx/font-height-reference-oracle.py', `${base}${name}.hwpx`],
+        { encoding: 'utf8' },
       ),
     );
     const style = createTextStyle(
-      { format: "hwpx", characterShapes: source.shapes },
-      "16px sans-serif",
+      { format: 'hwpx', characterShapes: source.shapes },
+      '16px sans-serif',
     );
     const boxes = [
-      ...readFileSync(`${base}${name}.html`, "utf8").matchAll(
+      ...readFileSync(`${base}${name}.html`, 'utf8').matchAll(
         /<div class="hls [^"]*" style="([^"]*)"/g,
       ),
     ].map((m) => Number(/(?:^|;)height:([\d.]+)mm;/.exec(m[1])?.[1]));
@@ -34,7 +34,7 @@ for (const [name, count] of [
       const height = Math.max(
         ...line.ids.map((id) =>
           style.fontHeight(
-            { text: "x", characterRanges: [{ start: 0, end: 1, charShapeId: id }] },
+            { text: 'x', characterRanges: [{ start: 0, end: 1, charShapeId: id }] },
             0,
           ),
         ),
@@ -48,23 +48,23 @@ for (const [name, count] of [
   });
 }
 
-test("HWPX measured body uses each row font, including smaller and empty rows", () => {
+test('HWPX measured body uses each row font, including smaller and empty rows', () => {
   const paragraph = {
     section: 0,
     paragraph: 1,
-    text: "ab",
-    label: "",
+    text: 'ab',
+    label: '',
     editable: true,
-    paragraphShape: { spacingFormat: "hwpx", modernSpacing: { attributes: 0, value: 100 } },
+    paragraphShape: { spacingFormat: 'hwpx', modernSpacing: { attributes: 0, value: 100 } },
   };
-  const content = { format: "hwpx", paragraphs: [paragraph] };
+  const content = { format: 'hwpx', paragraphs: [paragraph] };
   const measure = (_, paragraph, unit) => ({ width: 10, height: unit === 0 ? 40 : 12 });
   const result = layoutContent(content, 10, measure, 20, { documentBody: true });
   assert.deepEqual(
     result.rows.map((row) => row.textHeight),
     [40, 12],
   );
-  for (const text of ["", "\n", "a\n"]) {
+  for (const text of ['', '\n', 'a\n']) {
     const rows = layoutContent(
       { ...content, paragraphs: [{ ...paragraph, text }] },
       100,

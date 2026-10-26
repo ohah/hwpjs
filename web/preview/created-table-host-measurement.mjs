@@ -1,9 +1,9 @@
-import { projectCreatedTableHost } from "./created-table-host-projection.mjs";
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
-import { projectCreatedHostTextAnchors } from "./created-host-text-anchors.mjs";
-import { displayRunText } from "./text-measurement.mjs";
+import { projectCreatedTableHost } from './created-table-host-projection.mjs';
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { storedAutomaticNumberText } from './automatic-number-text.mjs';
+import { projectCreatedHostTextAnchors } from './created-host-text-anchors.mjs';
+import { displayRunText } from './text-measurement.mjs';
 
 // Measured dimensions are derived from native cell values by the caller.
 export function measureCreatedTableHost(
@@ -22,7 +22,7 @@ export function measureCreatedTableHost(
     includeTerminalAfter = true,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(entries) ||
     !Array.isArray(sourceTables) ||
@@ -31,11 +31,11 @@ export function measureCreatedTableHost(
     (!entries.length && !sourceTables.length && !sourcePictures.length && !sourceObjects.length) ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
-    typeof measure !== "function"
+    typeof measure !== 'function'
   )
-    return unavailable("InvalidCreatedTableHostMeasurement");
-  if (typeof allowSourceTableOverflow !== "boolean")
-    return unavailable("InvalidCreatedTableHostMeasurement");
+    return unavailable('InvalidCreatedTableHostMeasurement');
+  if (typeof allowSourceTableOverflow !== 'boolean')
+    return unavailable('InvalidCreatedTableHostMeasurement');
   if (
     sourceObjects.some(
       (object) =>
@@ -50,7 +50,7 @@ export function measureCreatedTableHost(
         object.createdTableIdentity !== undefined,
     )
   )
-    return unavailable("InvalidCreatedTableHostMeasurement");
+    return unavailable('InvalidCreatedTableHostMeasurement');
   const sourceUnits = [...sourceTables, ...sourcePictures, ...sourceObjects].map(
     (object) => object?.unit,
   );
@@ -61,7 +61,7 @@ export function measureCreatedTableHost(
       entries.map((entry) => entry?.table),
     );
   } catch (error) {
-    if (error.message === "InvalidCreatedTableHostProjection") return unavailable(error.message);
+    if (error.message === 'InvalidCreatedTableHostProjection') return unavailable(error.message);
     throw error;
   }
   let retained;
@@ -74,7 +74,7 @@ export function measureCreatedTableHost(
       sourceZeroWidthAnchorUnits,
     );
   } catch (error) {
-    if (error.message === "UnsupportedCreatedTableHostControls") return unavailable(error.message);
+    if (error.message === 'UnsupportedCreatedTableHostControls') return unavailable(error.message);
     throw error;
   }
   if (
@@ -82,7 +82,7 @@ export function measureCreatedTableHost(
     (source.automaticNumberPrefixes.length !== 1 ||
       storedAutomaticNumberText(source.automaticNumberPrefixes[0].source) === null)
   )
-    return unavailable("UnsupportedCreatedTableHostNumberPrefix");
+    return unavailable('UnsupportedCreatedTableHostNumberPrefix');
   const byIdentity = new Map(entries.map((entry) => [entry.table.identity, entry]));
   const objects = projection.anchors.map((anchor) => ({
     createdTableIdentity: anchor.createdTableIdentity,
@@ -93,19 +93,19 @@ export function measureCreatedTableHost(
   objects.push(
     ...sourceTables.map((table) => ({
       ...table,
-      unit: projection.viewUnitForSource(table.unit, "after"),
+      unit: projection.viewUnitForSource(table.unit, 'after'),
     })),
   );
   objects.push(
     ...sourcePictures.map((picture) => ({
       ...picture,
-      unit: projection.viewUnitForSource(picture.unit, "after"),
+      unit: projection.viewUnitForSource(picture.unit, 'after'),
     })),
   );
   objects.push(
     ...sourceObjects.map((object) => ({
       ...object,
-      unit: projection.viewUnitForSource(object.unit, "after"),
+      unit: projection.viewUnitForSource(object.unit, 'after'),
     })),
   );
   const first = source.textStartUnit ?? 0;
@@ -145,10 +145,10 @@ export function measureCreatedTableHost(
         sourceObjects.length === 0,
     },
   );
-  if (measuredObjects.state !== "measured")
+  if (measuredObjects.state !== 'measured')
     return {
       ...measuredObjects,
-      error: measuredObjects.error.replace("InlineObject", "InlineTable"),
+      error: measuredObjects.error.replace('InlineObject', 'InlineTable'),
     };
   const nonTableNodes = new Set([
     ...sourcePictures.map((picture) => picture.pictureNode),
@@ -170,12 +170,12 @@ export function measureCreatedTableHost(
   );
   if (prefixOverflow)
     return {
-      ...unavailable("InlineTableLineWidthOverflow"),
+      ...unavailable('InlineTableLineWidthOverflow'),
       section: source.section,
       paragraph: source.paragraph,
       availableWidth: prefixOverflow.width,
       measuredWidth: prefixOverflow.boundaries.at(-1).x,
-      overflowStage: "number-prefix",
+      overflowStage: 'number-prefix',
     };
   const numberPrefixes = measured.rows.flatMap((row, lineOrdinal) =>
     row.numberPrefix
@@ -228,7 +228,7 @@ export function measureCreatedTableHost(
     return true;
   };
   for (const [lineOrdinal, row] of measured.rows.entries()) {
-    if (row.kind !== "text") {
+    if (row.kind !== 'text') {
       rows.push({ ...row, lineOrdinal });
       continue;
     }
@@ -236,7 +236,7 @@ export function measureCreatedTableHost(
     for (const run of runs) {
       const cuts = new Set([run.viewStart, run.viewEnd]);
       for (const unit of sourceUnits) {
-        const at = projection.viewUnitForSource(unit, "after");
+        const at = projection.viewUnitForSource(unit, 'after');
         if (at >= run.viewStart && at < run.viewEnd) {
           cuts.add(at);
           cuts.add(at + 1);
@@ -260,12 +260,12 @@ export function measureCreatedTableHost(
             lineOrdinal,
           )
         )
-          return unavailable("InvalidCreatedTableHostBoundaries");
+          return unavailable('InvalidCreatedTableHostBoundaries');
       }
     }
     if (
       row.startUnit === row.endUnit ||
-      (source.text === "" && lineOrdinal === measured.rows.length - 1)
+      (source.text === '' && lineOrdinal === measured.rows.length - 1)
     ) {
       const unit = projection.sourceUnitForView(row.endUnit);
       if (
@@ -276,23 +276,23 @@ export function measureCreatedTableHost(
             viewEnd: row.endUnit,
             sourceStart: unit,
             sourceEnd: unit,
-            text: "",
+            text: '',
           },
           lineOrdinal,
         )
       )
-        return unavailable("InvalidCreatedTableHostBoundaries");
+        return unavailable('InvalidCreatedTableHostBoundaries');
     }
   }
   if (rows.length + numberPrefixes.length > maxRows)
-    return unavailable("CreatedTableHostProjectionLimit");
+    return unavailable('CreatedTableHostProjectionLimit');
   const covered = rows
-    .filter((row) => row.kind !== "text" || source.text === "" || row.startUnit < row.endUnit)
+    .filter((row) => row.kind !== 'text' || source.text === '' || row.startUnit < row.endUnit)
     .map((row) => ({ ...row, startUnit: row.startUnit - first, endUnit: row.endUnit - first }));
   const coverage = pageParagraphCoverage([source], covered);
-  if (coverage.state !== "complete") return coverage;
+  if (coverage.state !== 'complete') return coverage;
   return {
-    state: "measured",
+    state: 'measured',
     rows,
     numberPrefixes,
     height: measured.height,

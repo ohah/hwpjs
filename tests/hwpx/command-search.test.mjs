@@ -1,7 +1,7 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createCommandSearch } from "../../web/preview/command-search.mjs";
-import { createDocumentMenuControls } from "../../web/preview/document-menu-controls.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createCommandSearch } from '../../web/preview/command-search.mjs';
+import { createDocumentMenuControls } from '../../web/preview/document-menu-controls.mjs';
 
 function harness(menuState = null) {
   const document = { activeElement: null, defaultView: new EventTarget() };
@@ -12,7 +12,7 @@ function harness(menuState = null) {
     }
     children = [];
     dataset = {};
-    value = "";
+    value = '';
     open = false;
     setAttribute() {}
     append(...nodes) {
@@ -46,19 +46,19 @@ function harness(menuState = null) {
       return false;
     }
     closest() {
-      return this.tag === "button" && this.dataset.commandId ? this : null;
+      return this.tag === 'button' && this.dataset.commandId ? this : null;
     }
   }
   document.createElement = (tag) => new Node(tag);
-  document.head = new Node("head");
-  document.body = new Node("body");
-  const host = new Node("nav"),
-    editor = new Node("textarea");
+  document.head = new Node('head');
+  document.body = new Node('body');
+  const host = new Node('nav'),
+    editor = new Node('textarea');
   document.body.append(host, editor);
   editor.focus();
   const state = [
-    { id: "menu-save", label: "저장", enabled: false },
-    { id: "menu-undo", label: "실행 취소", enabled: true },
+    { id: 'menu-save', label: '저장', enabled: false },
+    { id: 'menu-undo', label: '실행 취소', enabled: true },
   ];
   const calls = [],
     subscribers = new Set(),
@@ -77,10 +77,10 @@ function harness(menuState = null) {
   const menu =
     menuState &&
     createDocumentMenuControls(
-      ["page", "column"].map((kind) => ({
+      ['page', 'column'].map((kind) => ({
         button: Object.assign(new EventTarget(), {
           id: `menu-insert-${kind}-break`,
-          textContent: kind === "page" ? "쪽 나누기" : "단 나누기",
+          textContent: kind === 'page' ? '쪽 나누기' : '단 나누기',
         }),
         target: {
           get disabled() {
@@ -94,10 +94,10 @@ function harness(menuState = null) {
       })),
     );
   const control = createCommandSearch({ registry: menu ?? registry, document, host });
-  const dialog = document.body.children.find((n) => n.id === "command-search");
-  const input = dialog.children.find((n) => n.id === "command-search-query"),
-    list = dialog.children.find((n) => n.id === "command-search-results");
-  const send = (target, values, type = "keydown") => {
+  const dialog = document.body.children.find((n) => n.id === 'command-search');
+  const input = dialog.children.find((n) => n.id === 'command-search-query'),
+    list = dialog.children.find((n) => n.id === 'command-search-results');
+  const send = (target, values, type = 'keydown') => {
     const event = new Event(type, { cancelable: true });
     Object.assign(event, values);
     target.dispatchEvent(event);
@@ -120,8 +120,8 @@ function harness(menuState = null) {
 }
 
 for (const [kind, query] of [
-  ["page", "쪽 나누기"],
-  ["column", "단 나누기"],
+  ['page', '쪽 나누기'],
+  ['column', '단 나누기'],
 ]) {
   test(`search delegates ${kind} break to the real menu registry once and blocks pending execution`, (t) => {
     const state = { ready: true, calls: [] },
@@ -132,45 +132,45 @@ for (const [kind, query] of [
     });
     h.control.open();
     h.input.value = query;
-    h.send(h.input, { key: "Enter" });
+    h.send(h.input, { key: 'Enter' });
     assert.deepEqual(state.calls, [kind]);
     assert.equal(h.dialog.open, false);
     assert.equal(h.document.activeElement, h.editor);
     h.control.open();
     h.input.value = query;
-    h.send(h.input, { key: "Enter" });
+    h.send(h.input, { key: 'Enter' });
     assert(h.dialog.open);
     assert.equal(h.list.children.length, 1);
     assert.equal(h.list.children[0].disabled, true);
     assert.deepEqual(state.calls, [kind]);
     state.ready = true;
     h.menu.close();
-    h.send(h.input, { key: "Enter" });
+    h.send(h.input, { key: 'Enter' });
     assert.deepEqual(state.calls, [kind]);
   });
 }
 
-test("search opens with shortcut, filters current DOM value on Enter and delegates once", () => {
+test('search opens with shortcut, filters current DOM value on Enter and delegates once', () => {
   const h = harness();
-  const event = h.send(h.document.defaultView, { key: "P", ctrlKey: true, shiftKey: true });
+  const event = h.send(h.document.defaultView, { key: 'P', ctrlKey: true, shiftKey: true });
   assert(event.defaultPrevented);
   assert(h.dialog.open);
   assert.equal(h.document.activeElement, h.input);
   assert.equal(h.list.children[0].disabled, true);
-  h.input.value = "취소"; // No input event: submit must use the actual value.
-  h.send(h.input, { key: "Enter" });
-  assert.deepEqual(h.calls, ["menu-undo"]);
+  h.input.value = '취소'; // No input event: submit must use the actual value.
+  h.send(h.input, { key: 'Enter' });
+  assert.deepEqual(h.calls, ['menu-undo']);
   assert.equal(h.dialog.open, false);
   assert.equal(h.document.activeElement, h.editor);
   h.control.close();
   h.control.close();
   assert.equal(h.host.children.length, 0);
   assert.equal(h.document.head.children.length, 0);
-  h.send(h.document.defaultView, { key: "p", metaKey: true, shiftKey: true });
+  h.send(h.document.defaultView, { key: 'p', metaKey: true, shiftKey: true });
   assert.equal(h.dialog.open, false);
 });
 
-test("late disabled command, unknown query, IME and Escape cannot execute a command", () => {
+test('late disabled command, unknown query, IME and Escape cannot execute a command', () => {
   const h = harness();
   for (const values of [
     { isComposing: true },
@@ -179,7 +179,7 @@ test("late disabled command, unknown query, IME and Escape cannot execute a comm
     { altKey: true },
   ]) {
     const e = h.send(h.document.defaultView, {
-      key: "p",
+      key: 'p',
       ctrlKey: true,
       shiftKey: true,
       ...values,
@@ -190,36 +190,36 @@ test("late disabled command, unknown query, IME and Escape cannot execute a comm
   h.control.open();
   const item = h.list.children[1];
   h.state[1].enabled = false;
-  const click = new Event("click");
-  Object.defineProperty(click, "target", { value: item });
+  const click = new Event('click');
+  Object.defineProperty(click, 'target', { value: item });
   h.list.dispatchEvent(click);
   assert(h.dialog.open);
   assert.deepEqual(h.calls, []);
-  h.input.value = "unknown";
-  h.send(h.input, {}, "input");
+  h.input.value = 'unknown';
+  h.send(h.input, {}, 'input');
   assert.equal(h.list.children.length, 0);
-  h.send(h.input, { key: "Enter" });
+  h.send(h.input, { key: 'Enter' });
   assert.deepEqual(h.calls, []);
-  h.send(h.dialog, { key: "Escape" });
+  h.send(h.dialog, { key: 'Escape' });
   assert.equal(h.dialog.open, false);
   assert.equal(h.document.activeElement, h.editor);
   h.control.close();
 });
 
-test("arrow navigation skips disabled commands and returns to search", () => {
+test('arrow navigation skips disabled commands and returns to search', () => {
   const h = harness();
   h.control.open();
-  h.send(h.input, { key: "ArrowDown" });
+  h.send(h.input, { key: 'ArrowDown' });
   assert.equal(h.document.activeElement, h.list.children[1]);
-  h.send(h.list, { key: "ArrowUp" });
+  h.send(h.list, { key: 'ArrowUp' });
   assert.equal(h.document.activeElement, h.input);
   h.control.close();
 });
 
-test("open search reflects async registry state and preserves logical focus without executing", () => {
+test('open search reflects async registry state and preserves logical focus without executing', () => {
   const h = harness();
   h.control.open();
-  h.send(h.input, { key: "ArrowDown" });
+  h.send(h.input, { key: 'ArrowDown' });
   h.state[0].enabled = true;
   for (const listener of h.subscribers) listener();
   assert.equal(h.list.children[0].disabled, false);

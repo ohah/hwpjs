@@ -11,7 +11,7 @@
   padding: 7px 18px;
   color: #667183;
 }
-.hwp-search-tabs button[aria-selected="true"] {
+.hwp-search-tabs button[aria-selected='true'] {
   color: #1f55a5;
   border-bottom: 2px solid #2463c4;
   font-weight: 600;
@@ -62,7 +62,7 @@
   flex-direction: column;
   gap: 8px;
 }
-.hwp-search-actions [data-role="close-text-tool"] {
+.hwp-search-actions [data-role='close-text-tool'] {
   margin-top: auto;
 }
 .hwp-search-message {

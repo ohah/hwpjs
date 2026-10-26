@@ -1,23 +1,23 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { observeAxis } from "./chart-axis-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { observeAxis } from './chart-axis-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [];
-const verify = process.argv.includes("--verify");
+const verify = process.argv.includes('--verify');
 let cuts = 0,
   selectorMutations = 0,
   baseMutations = 0;
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const context = chartAxisContext(b);
     let offset = context.plot.end,
       state = { types: context.types, strings: context.strings, numbers: new Map() };
@@ -32,9 +32,9 @@ try {
             (e) =>
               e.constructor === Error &&
               [
-                "IncompleteAxisObservation",
-                "IncompleteValueObservation",
-                "IncompleteAxisTail",
+                'IncompleteAxisObservation',
+                'IncompleteValueObservation',
+                'IncompleteAxisTail',
               ].includes(e.message),
           );
           cuts++;
@@ -43,14 +43,14 @@ try {
         wrongSelector[result.axis.rawFields[0].start + 6] ^= 1;
         assert.throws(
           () => observeAxis(wrongSelector, offset, state.types, state.strings, state.numbers),
-          (e) => e.constructor === Error && e.message === "UnsupportedAxisTailType",
+          (e) => e.constructor === Error && e.message === 'UnsupportedAxisTailType',
         );
         selectorMutations++;
         const wrongBase = Buffer.from(b);
         wrongBase.writeUInt32LE(0xffffffff, result.tail.baseOffset);
         assert.throws(
           () => observeAxis(wrongBase, offset, state.types, state.strings, state.numbers),
-          (e) => e.constructor === Error && e.message === "UnsupportedAxisTailType",
+          (e) => e.constructor === Error && e.message === 'UnsupportedAxisTailType',
         );
         baseMutations++;
         assert.deepEqual(
@@ -70,13 +70,13 @@ try {
       state = result;
     } while (
       b.length - offset >= 8 &&
-      state.types.get(b.readUInt32LE(offset + 4))?.name === "VtAxis\0"
+      state.types.get(b.readUInt32LE(offset + 4))?.name === 'VtAxis\0'
     );
     rows.push({
       sha256: digest(b),
       axes,
       end: offset,
-      nextBytes: b.subarray(offset, offset + 32).toString("hex"),
+      nextBytes: b.subarray(offset, offset + 32).toString('hex'),
     });
     assert.equal(axes.length, 4);
   });

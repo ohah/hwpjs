@@ -4,7 +4,7 @@ import {
   all,
   fire,
   type Element,
-} from "./formatting-dialog-test-dom.ts";
+} from './formatting-dialog-test-dom.ts';
 export { all, fire };
 export function documentFixture() {
   const fixture = baseFixture(),
@@ -14,7 +14,7 @@ export function documentFixture() {
   doc.removeEventListener = events.removeEventListener.bind(events);
   doc.dispatchEvent = events.dispatchEvent.bind(events);
   const decorate = (node: Element) => {
-    Object.defineProperty(node, "childElementCount", { get: () => node.children.length });
+    Object.defineProperty(node, 'childElementCount', { get: () => node.children.length });
     Object.assign(node, {
       removeAttribute(name: string) {
         node.attributes.delete(name);
@@ -22,7 +22,7 @@ export function documentFixture() {
       replaceChildren(...nodes: Element[]) {
         // remove()가 배열을 바꾸므로 기존 자식 목록의 사본을 순회합니다.
         for (const child of node.children.slice()) child.remove();
-        node.textContent = "";
+        node.textContent = '';
         node.append(...nodes);
       },
     });

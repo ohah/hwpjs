@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { containerBmpProfileInput, containerBmpProfileActual } from "./container-bmp-profile.mjs";
-import { imageContainerFixture } from "./container-images.mjs";
-import { consumeContainerStreams } from "./container-report-wire.mjs";
-import { gifOracle, gifWords as words } from "./gif-oracle.mjs";
-import { gifFixture, gifControl, gifComment, gifApplication, gifText } from "./gif-fixture.mjs";
-import { profilePng } from "./png-profile.mjs";
-import { jpegJfifLayoutFixture } from "./jpeg-jfif-layout.mjs";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { expectBmpError } from "./bmp-errors.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { containerBmpProfileInput, containerBmpProfileActual } from './container-bmp-profile.mjs';
+import { imageContainerFixture } from './container-images.mjs';
+import { consumeContainerStreams } from './container-report-wire.mjs';
+import { gifOracle, gifWords as words } from './gif-oracle.mjs';
+import { gifFixture, gifControl, gifComment, gifApplication, gifText } from './gif-fixture.mjs';
+import { profilePng } from './png-profile.mjs';
+import { jpegJfifLayoutFixture } from './jpeg-jfif-layout.mjs';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { expectBmpError } from './bmp-errors.mjs';
 
 export function previewImageInput(raw, o = {}) {
   const base = containerBmpProfileInput(raw, o);
@@ -32,20 +32,20 @@ export function previewImageInput(raw, o = {}) {
 export function previewImageFixture(
   cfb,
   payload,
-  { name = "PrvImage", nested = false, compressed = false, kind = 2, absent = false } = {},
+  { name = 'PrvImage', nested = false, compressed = false, kind = 2, absent = false } = {},
 ) {
   const header = Buffer.alloc(256);
-  header.write("HWP Document File");
+  header.write('HWP Document File');
   header.writeUInt32LE(0x05000107, 32);
   header[36] = +compressed;
   const record = (tag, raw) => Buffer.concat([words([tag | (raw.length << 20)]), raw]);
   const doc = Buffer.concat([record(16, Buffer.alloc(26)), record(17, Buffer.alloc(60))]);
   const nodes = [
-    { name: "Root Entry", kind: 5 },
-    { name: "FileHeader", parent: 0, content: header },
-    { name: "DocInfo", parent: 0, content: compressed ? deflateRawSync(doc) : doc },
-    { name: "BodyText", parent: 0, kind: 1 },
-    { name: "Nested", parent: 0, kind: 1 },
+    { name: 'Root Entry', kind: 5 },
+    { name: 'FileHeader', parent: 0, content: header },
+    { name: 'DocInfo', parent: 0, content: compressed ? deflateRawSync(doc) : doc },
+    { name: 'BodyText', parent: 0, kind: 1 },
+    { name: 'Nested', parent: 0, kind: 1 },
   ];
   if (!absent) nodes.push({ name, parent: nested ? 4 : 0, kind, content: payload });
   return cfb.write({ nodes });
@@ -61,12 +61,12 @@ export function previewImageActual(call, cfb, bytes, payload, o = {}) {
       nonempty = present && payload.length !== 0;
     const extension =
       nonempty && payload.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
-        ? "png"
+        ? 'png'
         : nonempty && payload[0] === 255 && payload[1] === 216
-          ? "jpg"
-          : nonempty && payload.subarray(0, 2).toString() === "BM"
-            ? "bmp"
-            : "dat";
+          ? 'jpg'
+          : nonempty && payload.subarray(0, 2).toString() === 'BM'
+            ? 'bmp'
+            : 'dat';
     const synthetic = imageContainerFixture(
       cfb,
       payload ?? Buffer.alloc(0),
@@ -78,7 +78,7 @@ export function previewImageActual(call, cfb, bytes, payload, o = {}) {
     containerBmpProfileActual(call, synthetic, entries, o);
     const image = Buffer.from(call(294, containerBmpProfileInput(synthetic, o)).subarray(-212));
     let gif = Array(14).fill(0);
-    if (nonempty && o.gif !== 0 && payload.subarray(0, 3).toString() === "GIF") {
+    if (nonempty && o.gif !== 0 && payload.subarray(0, 3).toString() === 'GIF') {
       const reference = gifOracle(payload, { trailing: !!o.gifTrailing }).wire;
       const n = (i) => reference.readUInt32LE(i * 4);
       gif = [1, n(7), n(10), n(11), n(8), n(9), n(12), n(13), n(14), n(15), n(16), n(18), n(19), 0];
@@ -117,13 +117,13 @@ export function previewImageEdges(call, cfb) {
     jpegJfifLayoutFixture(),
     bmpFixture(),
     Buffer.alloc(0),
-    Buffer.from("unknown"),
+    Buffer.from('unknown'),
   ];
   for (const payload of samples)
     for (const compressed of [false, true]) {
       const bytes = check(payload, { compressed });
       check(payload, { compressed }, { preview: 0 });
-      check(payload, { compressed, name: "prvimage" });
+      check(payload, { compressed, name: 'prvimage' });
       check(payload, { compressed, nested: true });
       check(payload, { compressed, absent: true });
       if (payload.length) {
@@ -131,7 +131,7 @@ export function previewImageEdges(call, cfb) {
         reject(bytes, /LimitExceeded/, { documentBytes: 350 + payload.length - 1 });
       }
       if (!payload.length) reject(bytes, /EmptyPreviewImage/, { empty: 1 });
-      if (payload.toString() === "unknown")
+      if (payload.toString() === 'unknown')
         reject(bytes, /UnsupportedPreviewImage/, { unhandled: 1 });
     }
   const g = gifFixture(),
@@ -154,7 +154,7 @@ export function previewImageEdges(call, cfb) {
     const raw = previewImageFixture(cfb, g.subarray(0, n));
     reject(raw, /^(UnexpectedEnd|MissingGifEndCode|IncompleteGifPixels|InvalidGif.*)$/);
   }
-  reject(previewImageFixture(cfb, Buffer.from("GIF88a")), /UnsupportedGifVersion/);
+  reject(previewImageFixture(cfb, Buffer.from('GIF88a')), /UnsupportedGifVersion/);
   reject(previewImageFixture(cfb, Buffer.alloc(0), { kind: 1 }), /InvalidHwpEntryKind/);
   const tail = Buffer.concat([g, Buffer.of(99)]);
   check(tail, {}, { gifTrailing: true });

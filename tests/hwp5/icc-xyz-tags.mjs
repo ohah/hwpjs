@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-const kinds = ["rXYZ", "gXYZ", "bXYZ", "lumi", "wtpt"];
-const classes = ["scnr", "mntr", "prtr", "link", "spac", "abst", "nmcl"];
+import assert from 'node:assert/strict';
+const kinds = ['rXYZ', 'gXYZ', 'bXYZ', 'lumi', 'wtpt'];
+const classes = ['scnr', 'mntr', 'prtr', 'link', 'spac', 'abst', 'nmcl'];
 export function iccXyzTagEdges(call) {
   let comparisons = 0,
     rejected = 0;
@@ -8,7 +8,7 @@ export function iccXyzTagEdges(call) {
     const b = Buffer.alloc(16 + values.length * 4);
     b.write(cls, 0);
     b.write(name, 4);
-    b.write("XYZ ", 8);
+    b.write('XYZ ', 8);
     values.forEach((v, i) => b.writeInt32BE(v, 16 + i * 4));
     return b;
   }
@@ -21,7 +21,7 @@ export function iccXyzTagEdges(call) {
       expected = Buffer.alloc(24),
       kind = kinds.indexOf(name);
     if (kind >= 0) {
-      const displayWhite = cls === "mntr" && name === "wtpt";
+      const displayWhite = cls === 'mntr' && name === 'wtpt';
       // Independent exact integer interval oracle for four-decimal rounding.
       if (
         displayWhite &&
@@ -38,7 +38,7 @@ export function iccXyzTagEdges(call) {
       expected.writeUInt32LE(kind, 4);
       values.forEach((v, i) => expected.writeInt32LE(v, 8 + i * 4));
       expected.writeUInt32LE(
-        (displayWhite ? 0 : 1) | (name === "lumi" && (values[0] !== 0 || values[2] !== 0) ? 2 : 0),
+        (displayWhite ? 0 : 1) | (name === 'lumi' && (values[0] !== 0 || values[2] !== 0) ? 2 : 0),
         20,
       );
     }
@@ -58,13 +58,13 @@ export function iccXyzTagEdges(call) {
     for (let delta = -12; delta <= 12; delta++) {
       const values = [63190, 65536, 54061];
       values[axis] += delta;
-      check("mntr", "wtpt", values);
+      check('mntr', 'wtpt', values);
     }
-  for (const name of ["RXYZ", "bkpt", "abcd"]) check("mntr", name, []);
+  for (const name of ['RXYZ', 'bkpt', 'abcd']) check('mntr', name, []);
   for (const name of kinds) {
     for (const values of [[], Array(6).fill(0)])
-      reject(input("scnr", name, values), /InvalidIccXyzTagCount/);
-    const b = input("scnr", name, [1, 2, 3]);
+      reject(input('scnr', name, values), /InvalidIccXyzTagCount/);
+    const b = input('scnr', name, [1, 2, 3]);
     for (let size = 0; size < b.length; size++)
       reject(
         b.subarray(0, size),
@@ -80,7 +80,7 @@ export function iccXyzTagEdges(call) {
     }
     reject(b, /LimitExceeded/, b.length - 1);
   }
-  reject(input("????", "wtpt", [63190, 65536, 54061]), /InvalidIccProfileClass/);
-  check("mntr", "wtpt", [63190, 65536, 54061]);
+  reject(input('????', 'wtpt', [63190, 65536, 54061]), /InvalidIccProfileClass/);
+  check('mntr', 'wtpt', [63190, 65536, 54061]);
   return { comparisons, rejected };
 }

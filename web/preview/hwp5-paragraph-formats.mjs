@@ -1,6 +1,6 @@
 // 현재 문단 모양의 표시용 복사본이며 편집 모델이 아닙니다.
-import { paragraphFormatOptions } from "./paragraph-format-options.mjs";
-import { hwp5ParagraphGeometry } from "./hwp5-paragraph-geometry.mjs";
+import { paragraphFormatOptions } from './paragraph-format-options.mjs';
+import { hwp5ParagraphGeometry } from './hwp5-paragraph-geometry.mjs';
 export function attachHwp5ParagraphFormats(editor, content, available) {
   content.paragraphFormatAvailable = false;
   if (!editor || content.readOnly || !available) return content;

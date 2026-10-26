@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { identityActual } from "./links.mjs";
+import assert from 'node:assert/strict';
+import { identityActual } from './links.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -30,7 +30,7 @@ export function memoEdges(call) {
       frame(71, 1, Buffer.concat([w(headId), p])),
     ]);
   };
-  const good = field(Buffer.from("MEMO/", "utf16le"));
+  const good = field(Buffer.from('MEMO/', 'utf16le'));
   let accepted = 0,
     rejected = 0;
   const check = (b) => {
@@ -43,8 +43,8 @@ export function memoEdges(call) {
     check(make(good));
   };
   for (let n = 0; n < good.length; n++) reject(make(good.subarray(0, n)), /UnexpectedEnd/);
-  for (const s of ["", "M", "MEMO", "memo/", "XMEMO/", "MEMO\u0000/", "ＭＥＭＯ/"])
-    reject(make(field(Buffer.from(s, "utf16le"))));
+  for (const s of ['', 'M', 'MEMO', 'memo/', 'XMEMO/', 'MEMO\u0000/', 'ＭＥＭＯ/'])
+    reject(make(field(Buffer.from(s, 'utf16le'))));
   for (const [token, head, code] of [
     [0x25756e6b, 0x25256d65, 3],
     [0x25686c6b, 0x25756e6b, 3],
@@ -57,7 +57,7 @@ export function memoEdges(call) {
     Buffer.from([0, 0, 0, 216, 255, 254]),
     Buffer.alloc((65535 - 5) * 2, 255),
   ])
-    check(make(field(Buffer.concat([Buffer.from("MEMO/", "utf16le"), suffix]))));
+    check(make(field(Buffer.concat([Buffer.from('MEMO/', 'utf16le'), suffix]))));
   for (let n = 0; n < 4; n++) check(make(Buffer.concat([good, Buffer.alloc(n, 7)])));
   return { accepted, rejected };
 }

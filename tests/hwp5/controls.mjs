@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { checkBody } from "./body.mjs";
+import assert from 'node:assert/strict';
+import { checkBody } from './body.mjs';
 export function controlEdges(call) {
   const version = Buffer.from([7, 3, 0, 5]);
   const frame = (tag, bytes) => {

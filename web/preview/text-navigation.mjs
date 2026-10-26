@@ -1,12 +1,12 @@
-import { rowTop, TEXT_TOP } from "./row-geometry.mjs";
-import { caretGeometry, hitText, sameParagraph, selectableText } from "./text-geometry.mjs";
-import { graphemeUnits, wordBoundary } from "./text-input.mjs";
-import { affinePoint } from "./affine-point-geometry.mjs";
+import { rowTop, TEXT_TOP } from './row-geometry.mjs';
+import { caretGeometry, hitText, sameParagraph, selectableText } from './text-geometry.mjs';
+import { graphemeUnits, wordBoundary } from './text-input.mjs';
+import { affinePoint } from './affine-point-geometry.mjs';
 
 /** 문단 경계 후보만 계산한다. 소유권 검사는 호출자가 수행한다. */
 export function adjacentParagraphBoundary(layout, focus, key) {
-  if (!focus || !["ArrowLeft", "ArrowRight"].includes(key)) return null;
-  const paragraph = focus.paragraph + (key === "ArrowLeft" ? -1 : 1);
+  if (!focus || !['ArrowLeft', 'ArrowRight'].includes(key)) return null;
+  const paragraph = focus.paragraph + (key === 'ArrowLeft' ? -1 : 1);
   if (!Number.isSafeInteger(paragraph) || paragraph < 0) return null;
   const rows = layout.rows.filter(
     (row) =>
@@ -17,12 +17,12 @@ export function adjacentParagraphBoundary(layout, focus, key) {
         (row.pageArea === focus.pageArea && row.pageOrdinal === focus.pageOrdinal)),
   );
   if (!rows.length) return null;
-  const row = key === "ArrowLeft" ? rows.at(-1) : rows[0];
+  const row = key === 'ArrowLeft' ? rows.at(-1) : rows[0];
   return {
     ...focus,
     paragraph,
-    unit: key === "ArrowLeft" ? row.endUnit : row.startUnit,
-    affinity: key === "ArrowLeft" ? "backward" : "forward",
+    unit: key === 'ArrowLeft' ? row.endUnit : row.startUnit,
+    affinity: key === 'ArrowLeft' ? 'backward' : 'forward',
   };
 }
 
@@ -45,21 +45,21 @@ export function navigateText(
   if (
     !focus ||
     !anchor ||
-    !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(key)
+    !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)
   )
     return null;
   let unit = focus.unit,
-    affinity = "forward",
+    affinity = 'forward',
     nextX = null;
-  if (key === "ArrowLeft" || key === "ArrowRight") {
+  if (key === 'ArrowLeft' || key === 'ArrowRight') {
     if (!extend && anchor.unit !== focus.unit)
       unit =
-        key === "ArrowLeft" ? Math.min(anchor.unit, focus.unit) : Math.max(anchor.unit, focus.unit);
-    else if (word) unit = wordBoundary(text, unit, key === "ArrowRight");
+        key === 'ArrowLeft' ? Math.min(anchor.unit, focus.unit) : Math.max(anchor.unit, focus.unit);
+    else if (word) unit = wordBoundary(text, unit, key === 'ArrowRight');
     else {
       const bounds = graphemeUnits(text);
       unit =
-        key === "ArrowLeft"
+        key === 'ArrowLeft'
           ? (bounds.filter((b) => b < unit).at(-1) ?? 0)
           : (bounds.find((b) => b > unit) ?? text.length);
     }
@@ -67,17 +67,17 @@ export function navigateText(
     const caret = caretGeometry(layout, focus),
       row = caret && layout.rows[caret.row];
     if (!row) return null;
-    if (key === "Home" || key === "End") {
+    if (key === 'Home' || key === 'End') {
       unit = paragraphEdge
-        ? key === "Home"
+        ? key === 'Home'
           ? 0
           : text.length
-        : key === "Home"
+        : key === 'Home'
           ? row.startUnit
           : row.endUnit;
-      affinity = key === "End" ? "backward" : "forward";
+      affinity = key === 'End' ? 'backward' : 'forward';
     } else {
-      const direction = key === "ArrowUp" ? -1 : 1;
+      const direction = key === 'ArrowUp' ? -1 : 1;
       nextX = Number.isFinite(preferredX) ? preferredX : (caret.paintGeometry ?? caret).x;
       const currentY = rowTop(row, caret.row);
       const candidates = layout.rows.flatMap((candidate, index) => {

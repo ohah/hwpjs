@@ -1,7 +1,7 @@
 export function seriesPictureFixture(offset = 0, known = false) {
   const definitions = [
-      [51, { name: "VtPicture\0", version: 1 }],
-      [97, { name: "VtObject\0", version: 1 }],
+      [51, { name: 'VtPicture\0', version: 1 }],
+      [97, { name: 'VtObject\0', version: 1 }],
     ],
     types = new Map(known ? definitions : []),
     parts = [Buffer.alloc(offset, 0xa5)],
@@ -38,7 +38,7 @@ export function seriesPictureFixture(offset = 0, known = false) {
     const start = p,
       b = Buffer.from(Array.from({ length: n }, (_, i) => (i * 19 + start * 3 + 129) & 255));
     add(b);
-    rawFields.push({ start, n, hex: b.toString("hex") });
+    rawFields.push({ start, n, hex: b.toString('hex') });
   };
   raw(40);
   const pictureStart = p;

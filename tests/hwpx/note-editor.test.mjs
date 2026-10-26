@@ -1,16 +1,16 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { createHwpxReader } from "../../js/hwpx.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { createHwpxReader } from '../../js/hwpx.mjs';
 
-test("public HWPX four note bodies edit with independent complete XML and ZIP comparison", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
+test('public HWPX four note bodies edit with independent complete XML and ZIP comparison', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx');
   const editor = await createHwpxEditor(wasm),
     reader = await createHwpxReader(wasm);
-  const inserted = "검증😀<&";
+  const inserted = '검증😀<&';
   const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
 d=json.load(sys.stdin)
 a=zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before'])))
@@ -36,12 +36,12 @@ print('four bodies and all remaining XML unchanged')`;
       editor.splice(0, paragraph, 0, 0, inserted);
     }
     const saved = editor.save();
-    for (const flags of [[], ["-O"]]) {
+    for (const flags of [[], ['-O']]) {
       assert.match(
-        execFileSync("python3", [...flags, "-c", oracle], {
+        execFileSync('python3', [...flags, '-c', oracle], {
           input: JSON.stringify({
-            before: input.toString("base64"),
-            after: Buffer.from(saved).toString("base64"),
+            before: input.toString('base64'),
+            after: Buffer.from(saved).toString('base64'),
             inserted,
           }),
           timeout: 30000,
@@ -65,37 +65,37 @@ for kind in ('number','body','payload'):
  variants.append(base64.b64encode(stream.getvalue()).decode())
 print(json.dumps(variants))`;
     const variants = JSON.parse(
-      execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString(),
+      execFileSync('python3', ['-c', mutations], { input: saved, timeout: 30000 }).toString(),
     );
     for (const [index, after] of variants.entries())
-      for (const flags of [[], ["-O"]]) {
+      for (const flags of [[], ['-O']]) {
         assert.throws(
           () =>
-            execFileSync("python3", [...flags, "-c", oracle], {
-              input: JSON.stringify({ before: input.toString("base64"), after, inserted }),
+            execFileSync('python3', [...flags, '-c', oracle], {
+              input: JSON.stringify({ before: input.toString('base64'), after, inserted }),
               timeout: 30000,
             }),
           (error) =>
             error.status === 1 &&
             error.signal === null &&
             String(error.stderr).includes(
-              `ValueError: ${index === 2 ? "mimetype" : "complete XML mismatch"}`,
+              `ValueError: ${index === 2 ? 'mimetype' : 'complete XML mismatch'}`,
             ),
         );
       }
     for (const paragraph of paragraphs) {
       const text = reader
         .readTextEvents(saved)
-        .events.filter((e) => e.kind === "content" && e.paragraph === paragraph)
+        .events.filter((e) => e.kind === 'content' && e.paragraph === paragraph)
         .map((e) => e.value)
-        .join("");
+        .join('');
       assert(text.startsWith(inserted));
     }
     assert(!editor.canEdit(0, 1));
-    assert.throws(() => editor.splice(0, 1, 0, 0, "x"), { message: "UnsupportedParagraphControl" });
-    assert.throws(() => editor.splice(0, 2, 3, 0, "x"), { message: "SplitSurrogatePair" });
+    assert.throws(() => editor.splice(0, 1, 0, 0, 'x'), { message: 'UnsupportedParagraphControl' });
+    assert.throws(() => editor.splice(0, 2, 3, 0, 'x'), { message: 'SplitSurrogatePair' });
     assert.deepEqual(editor.save(), saved);
-    for (const paragraph of paragraphs) editor.splice(0, paragraph, 0, inserted.length, "");
+    for (const paragraph of paragraphs) editor.splice(0, paragraph, 0, inserted.length, '');
     assert.deepEqual(Buffer.from(editor.save()), input);
     editor.open(saved);
     assert.deepEqual(editor.save(), saved);
@@ -105,9 +105,9 @@ print(json.dumps(variants))`;
   }
 });
 
-test("public HWPX note body delete all reopen and reinput keeps numbering", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
+test('public HWPX note body delete all reopen and reinput keeps numbering', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx');
   const editor = await createHwpxEditor(wasm),
     reader = await createHwpxReader(wasm);
   try {
@@ -116,28 +116,28 @@ test("public HWPX note body delete all reopen and reinput keeps numbering", asyn
       const contents = (bytes) =>
         reader
           .readTextEvents(bytes)
-          .events.filter((e) => e.kind === "content" && e.paragraph === paragraph)
+          .events.filter((e) => e.kind === 'content' && e.paragraph === paragraph)
           .map((e) => e.value)
-          .join("");
+          .join('');
       const original = contents(input);
-      editor.splice(0, paragraph, 0, original.length, "");
+      editor.splice(0, paragraph, 0, original.length, '');
       const empty = editor.save();
-      assert.equal(contents(empty), "");
+      assert.equal(contents(empty), '');
       editor.open(empty);
       assert(editor.canEdit(0, paragraph));
-      editor.splice(0, paragraph, 0, 0, "재입력😀");
+      editor.splice(0, paragraph, 0, 0, '재입력😀');
       const saved = editor.save();
-      assert.equal(contents(saved), "재입력😀");
+      assert.equal(contents(saved), '재입력😀');
       const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
 d=json.load(sys.stdin); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 def numbers(key):
  root=E.fromstring(zipfile.ZipFile(io.BytesIO(base64.b64decode(d[key]))).read('Contents/section0.xml'))
  return [E.tostring(e) for e in root.iter(p+'autoNum')]
 if numbers('before')!=numbers('after'): raise ValueError('number changed')`;
-      execFileSync("python3", ["-c", oracle], {
+      execFileSync('python3', ['-c', oracle], {
         input: JSON.stringify({
-          before: input.toString("base64"),
-          after: Buffer.from(saved).toString("base64"),
+          before: input.toString('base64'),
+          after: Buffer.from(saved).toString('base64'),
         }),
       });
     }

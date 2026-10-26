@@ -1,6 +1,6 @@
-import type { EditorState } from "./editor-state.ts";
-import type { SelectionTarget } from "../commands/commands.ts";
-import { validateSelection, selectionMessage } from "../commands/selection.ts";
+import type { EditorState } from './editor-state.ts';
+import type { SelectionTarget } from '../commands/commands.ts';
+import { validateSelection, selectionMessage } from '../commands/selection.ts';
 
 export interface SelectionClipboard {
   readonly target: SelectionTarget | null;
@@ -19,10 +19,10 @@ export function getSelectionClipboard(state: EditorState): SelectionClipboard {
       editReason: reason,
       stateVersion: state.stateVersion,
     });
-  if (!state.documentId || state.status === "empty") return unavailable("NoDocument");
-  if (state.status !== "ready")
-    return unavailable(state.status === "refresh-required" ? "RefreshRequired" : "EditorNotReady");
-  if (state.selection == null) return unavailable("MissingSelection");
+  if (!state.documentId || state.status === 'empty') return unavailable('NoDocument');
+  if (state.status !== 'ready')
+    return unavailable(state.status === 'refresh-required' ? 'RefreshRequired' : 'EditorNotReady');
+  if (state.selection == null) return unavailable('MissingSelection');
   try {
     const selected = state.selection as SelectionTarget;
     const row = validateSelection(selected, state);
@@ -38,7 +38,7 @@ export function getSelectionClipboard(state: EditorState): SelectionClipboard {
       affinity: selected.affinity,
     });
     const text = row.text.slice(target.startUnit, target.endUnit);
-    if (text.includes("\ufffc")) return unavailable("ClipboardObjectSelectionUnsupported");
+    if (text.includes('\ufffc')) return unavailable('ClipboardObjectSelectionUnsupported');
     let editReason: string | null = null;
     try {
       selectionMessage(target, state);
@@ -48,7 +48,7 @@ export function getSelectionClipboard(state: EditorState): SelectionClipboard {
     return Object.freeze({
       target,
       text,
-      copyReason: text.length ? null : "EmptyClipboardSelection",
+      copyReason: text.length ? null : 'EmptyClipboardSelection',
       editReason,
       stateVersion: state.stateVersion,
     });

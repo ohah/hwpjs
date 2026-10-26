@@ -1,15 +1,15 @@
 // Menu entries delegate to existing controls; they never own native commands.
-import { createMenuDisclosures } from "./document-menu-disclosures.mjs";
-import { createMenuPopupLayer } from "./document-menu-popup-layer.mjs";
-import { navigateDocumentMenu, navigateDocumentMenuBar } from "./document-menu-keyboard.mjs";
-import { documentMenuMnemonic } from "./document-menu-mnemonic.mjs";
+import { createMenuDisclosures } from './document-menu-disclosures.mjs';
+import { createMenuPopupLayer } from './document-menu-popup-layer.mjs';
+import { navigateDocumentMenu, navigateDocumentMenuBar } from './document-menu-keyboard.mjs';
+import { documentMenuMnemonic } from './document-menu-mnemonic.mjs';
 export function createDocumentMenuControls(entries) {
   let closed = false;
   const ids = entries.map(({ button }, index) =>
-    typeof button.id === "string" && button.id ? button.id : `menu-entry-${index}`,
+    typeof button.id === 'string' && button.id ? button.id : `menu-entry-${index}`,
   );
-  if (new Set(ids).size !== ids.length) throw new Error("AmbiguousDocumentMenuCommand");
-  const disabled = (target) => target.disabled === true || target.matches?.(":disabled") === true;
+  if (new Set(ids).size !== ids.length) throw new Error('AmbiguousDocumentMenuCommand');
+  const disabled = (target) => target.disabled === true || target.matches?.(':disabled') === true;
   const subscribers = new Set();
   let published = [];
   const snapshot = () =>
@@ -22,16 +22,16 @@ export function createDocumentMenuControls(entries) {
     if (closed) return;
     for (const { button, target } of entries) {
       button.disabled = disabled(target);
-      const key = button.getAttribute?.("data-menu-key");
-      if (typeof key === "string" && /^[a-z0-9]$/i.test(key))
-        button.setAttribute?.("aria-keyshortcuts", key.toUpperCase());
-      else button.removeAttribute?.("aria-keyshortcuts");
-      for (const attribute of ["aria-expanded", "aria-pressed"]) {
+      const key = button.getAttribute?.('data-menu-key');
+      if (typeof key === 'string' && /^[a-z0-9]$/i.test(key))
+        button.setAttribute?.('aria-keyshortcuts', key.toUpperCase());
+      else button.removeAttribute?.('aria-keyshortcuts');
+      for (const attribute of ['aria-expanded', 'aria-pressed']) {
         const value = target.getAttribute?.(attribute);
         if (
-          value === "true" ||
-          value === "false" ||
-          (attribute === "aria-pressed" && value === "mixed")
+          value === 'true' ||
+          value === 'false' ||
+          (attribute === 'aria-pressed' && value === 'mixed')
         )
           button.setAttribute?.(attribute, value);
         else button.removeAttribute?.(attribute);
@@ -58,21 +58,21 @@ export function createDocumentMenuControls(entries) {
         return false;
       }
       target.click();
-      const popup = button.closest?.("details");
+      const popup = button.closest?.('details');
       if (popup) popup.open = false;
       refresh();
       return true;
     };
-    button.addEventListener("click", click);
+    button.addEventListener('click', click);
     return { button, click };
   });
   const popups = [
-    ...new Set(entries.map(({ button }) => button.closest?.("details")).filter(Boolean)),
+    ...new Set(entries.map(({ button }) => button.closest?.('details')).filter(Boolean)),
   ];
   const disclosures = createMenuDisclosures(popups);
   const popupLayer = createMenuPopupLayer(popups);
   const popupListeners = popups
-    .filter((popup) => typeof popup.addEventListener === "function")
+    .filter((popup) => typeof popup.addEventListener === 'function')
     .map((popup) => {
       const keydown = (event) => {
         if (closed) return;
@@ -82,7 +82,7 @@ export function createDocumentMenuControls(entries) {
         const buttons = entries
           .filter(
             ({ button, target }) =>
-              button.closest?.("details") === popup && !button.disabled && !disabled(target),
+              button.closest?.('details') === popup && !button.disabled && !disabled(target),
           )
           .map(({ button }) => button);
         if (
@@ -102,16 +102,16 @@ export function createDocumentMenuControls(entries) {
           event.defaultPrevented ||
           event.isComposing ||
           event.keyCode === 229 ||
-          event.key !== "Escape" ||
+          event.key !== 'Escape' ||
           !popup.open
         )
           return;
         event.preventDefault();
         popup.open = false;
-        popup.querySelector("summary")?.focus();
+        popup.querySelector('summary')?.focus();
       };
-      popup.addEventListener("keydown", keydown);
-      popup.addEventListener("toggle", refresh);
+      popup.addEventListener('keydown', keydown);
+      popup.addEventListener('toggle', refresh);
       return { popup, keydown };
     });
   refresh();
@@ -122,7 +122,7 @@ export function createDocumentMenuControls(entries) {
       return snapshot();
     },
     subscribe(listener) {
-      if (typeof listener !== "function") throw new Error("InvalidDocumentMenuSubscription");
+      if (typeof listener !== 'function') throw new Error('InvalidDocumentMenuSubscription');
       if (closed) return () => {};
       subscribers.add(listener);
       return () => subscribers.delete(listener);
@@ -140,12 +140,12 @@ export function createDocumentMenuControls(entries) {
       popupLayer.close();
       disclosures.close();
       for (const { button, click } of listeners) {
-        button.removeEventListener("click", click);
+        button.removeEventListener('click', click);
         button.disabled = true;
       }
       for (const { popup, keydown } of popupListeners) {
-        popup.removeEventListener("keydown", keydown);
-        popup.removeEventListener("toggle", refresh);
+        popup.removeEventListener('keydown', keydown);
+        popup.removeEventListener('toggle', refresh);
       }
       for (const popup of popups) popup.open = false;
     },

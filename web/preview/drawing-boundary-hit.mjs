@@ -20,7 +20,7 @@ export function hitDrawingBoundary(layout, x, y, target = null) {
     if (
       !layout.rows.some(
         (row) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === drawing.section &&
           row.paragraph === drawing.hostParagraph &&
           row.editable === true,
@@ -44,7 +44,7 @@ export function hitDrawingBoundary(layout, x, y, target = null) {
       section: drawing.section,
       paragraph: drawing.hostParagraph,
       unit: drawing.anchorUnit + Number(after),
-      affinity: after ? "backward" : "forward",
+      affinity: after ? 'backward' : 'forward',
       drawingNode: drawing.drawingNode,
     };
   }

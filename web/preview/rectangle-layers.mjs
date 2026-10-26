@@ -1,12 +1,12 @@
-import { drawingPageReference } from "./drawing-page-reference.mjs";
-import { placeFloatingDrawing, drawingPagePlacementOptions } from "./drawing-placement.mjs";
-import { drawingAxisGeometry } from "./drawing-axis-geometry.mjs";
-import { drawingFillPlan } from "./drawing-fill-plan.mjs";
-import { drawingOutlinePoints } from "./drawing-outline-paint.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { projectGroupedRectangle } from "./grouped-rectangle-page-projection.mjs";
-import { groupedPaintLayer } from "./grouped-paint-layer.mjs";
-import { drawingHasNoShadow } from "./drawing-shadow-policy.mjs";
+import { drawingPageReference } from './drawing-page-reference.mjs';
+import { placeFloatingDrawing, drawingPagePlacementOptions } from './drawing-placement.mjs';
+import { drawingAxisGeometry } from './drawing-axis-geometry.mjs';
+import { drawingFillPlan } from './drawing-fill-plan.mjs';
+import { drawingOutlinePoints } from './drawing-outline-paint.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { projectGroupedRectangle } from './grouped-rectangle-page-projection.mjs';
+import { groupedPaintLayer } from './grouped-paint-layer.mjs';
+import { drawingHasNoShadow } from './drawing-shadow-policy.mjs';
 
 export function previewRectangleLayers(content, layout) {
   const result = { behind: [], front: [], unavailable: [] };
@@ -28,7 +28,7 @@ export function previewRectangleLayers(content, layout) {
         )
       : [];
     if (grouped && roots.length !== 1) {
-      reject("AmbiguousRectangleGroupRoot");
+      reject('AmbiguousRectangleGroupRoot');
       continue;
     }
     const root = roots[0]?.source;
@@ -36,43 +36,43 @@ export function previewRectangleLayers(content, layout) {
     const layer = grouped
       ? groupedPaintLayer(root)
       : flow.text_wrap === 2
-        ? "behind"
+        ? 'behind'
         : flow.text_wrap === 3
-          ? "front"
+          ? 'front'
           : null;
     if (
       (!grouped && !drawingAxisGeometry(source)) ||
       !drawingHasNoShadow(source.paint) ||
       layer === null
     ) {
-      reject("UnsupportedRectangleLayerPolicy");
+      reject('UnsupportedRectangleLayerPolicy');
       continue;
     }
     const zOrder = signedInt32(flow.z_order);
     if (zOrder === null) {
-      reject("MissingRectanglePaintOrder");
+      reject('MissingRectanglePaintOrder');
       continue;
     }
     const selected = drawingPageReference(drawing, content.paragraphs, layout.rows);
-    if (selected.state !== "selected") {
+    if (selected.state !== 'selected') {
       reject(selected.error);
       continue;
     }
     const placement = grouped
       ? projectGroupedRectangle(drawing, root, content.paragraphs, layout.rows)
       : placeFloatingDrawing(drawing, selected.boxes, drawingPagePlacementOptions);
-    if (placement.state !== "placed") {
+    if (placement.state !== 'placed') {
       reject(placement.state);
       continue;
     }
     const fill = drawingFillPlan(content, drawing);
-    if (fill.state === "unavailable") {
+    if (fill.state === 'unavailable') {
       reject(fill.error);
       continue;
     }
     const origin = placement.origin ?? placement.rectangle;
     if (source.stroke?.style !== 0 && !drawingOutlinePoints(source, origin)) {
-      reject(source.stroke_error ?? "UnsupportedRectangleOutline");
+      reject(source.stroke_error ?? 'UnsupportedRectangleOutline');
       continue;
     }
     result[layer].push({

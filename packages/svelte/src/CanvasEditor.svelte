@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { canvasSurface } from "./action.ts";
-  import type { CanvasEditorProps } from "./types.ts";
+  import { canvasSurface } from './action.ts';
+  import type { CanvasEditorProps } from './types.ts';
 
   let {
     editor,
@@ -11,7 +11,7 @@
     onReady,
     class: className,
     style,
-    "aria-label": label = "Document editor",
+    'aria-label': label = 'Document editor',
   }: CanvasEditorProps = $props();
 </script>
 

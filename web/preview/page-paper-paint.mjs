@@ -11,10 +11,10 @@ export function paintPagePaper(ctx, pages, scrollTop, width, height) {
   ctx.save();
   let painted = 0;
   try {
-    ctx.fillStyle = "#e8edf2";
+    ctx.fillStyle = '#e8edf2';
     ctx.fillRect(0, 0, width, height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = "#bbcbd6";
+    ctx.strokeStyle = '#bbcbd6';
     for (const page of pages) {
       const box = page?.paper;
       if (
@@ -26,7 +26,7 @@ export function paintPagePaper(ctx, pages, scrollTop, width, height) {
         continue;
       const y = box.y - scrollTop;
       if (y + box.height < 0 || y > height || box.x + box.width < 0 || box.x > width) continue;
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(box.x, y, box.width, box.height);
       ctx.strokeRect(box.x, y, box.width, box.height);
       painted++;

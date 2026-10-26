@@ -1,329 +1,329 @@
-import assert from "node:assert/strict";
-import { videoEdges } from "./video-data.mjs";
-import { memoShapeEdges } from "./memo-shape.mjs";
-import { memoShapePair } from "./memo-shape-pair.mjs";
-import { memoResourceEdges, memoResourceDocument } from "./memo-resource.mjs";
-import { memoListEdges, memoListReference, memoListDocument } from "./memo-list.mjs";
-import { memoListGroupEdges } from "./memo-list-groups.mjs";
-import { memoOwnerEdges } from "./memo-owner.mjs";
-import { memoFieldEdges, memoFieldReference, memoFieldDocument } from "./memo-field.mjs";
-import { memoReferencesActual, memoReferenceDocument } from "./memo-references.mjs";
-import { memoRangesActual, memoRangeMutations } from "./memo-ranges.mjs";
-import { forbiddenCharEdges, forbiddenCharActual } from "./forbidden-chars.mjs";
-import { forbiddenDocument } from "./forbidden-document.mjs";
-import { trackAuthorEdges, trackAuthorDocument } from "./track-author.mjs";
-import { trackChangeEdges, trackChangeDocument } from "./track-change.mjs";
-import { viewTextDocument } from "./view-text.mjs";
-import { viewSemanticActual } from "./view-semantic.mjs";
-import { distributionEdges, distributionActual } from "./distribution.mjs";
-import { distributionContainerActual } from "./distribution-container.mjs";
-import { distributionContainerEdges } from "./distribution-container-edges.mjs";
-import { distributionPolicyEvidence } from "./distribution-policy-evidence.mjs";
-import { revisionDeleteEdges } from "./revision-delete.mjs";
-import { revisionSignEdges, revisionSignActual } from "./revision-sign.mjs";
-import { revisionProjectionEdges, revisionProjectionActual } from "./revision-projection.mjs";
-import { revisionGroupEdges, revisionGroupActual } from "./revision-groups.mjs";
-import { revisionTextEdges, revisionTextActual } from "./revision-text.mjs";
-import { revisionCoordinateEdges, revisionCoordinateActual } from "./revision-coordinates.mjs";
-import { formObjectEdges, formObjectActual } from "./form-object.mjs";
-import { formPropertyEdges, formPropertyActual } from "./form-property.mjs";
-import { formControlEdges, formControlActual } from "./form-control.mjs";
-import { formLinkEdges, formLinkActual } from "./form-links.mjs";
-import { formSchemaEdges, formSchemaActual } from "./form-schema.mjs";
-import { formDocumentActual } from "./form-document.mjs";
-import { formSemanticsEdges } from "./form-semantics.mjs";
-import { formMaxLengthEdges, formMaxLengthActual } from "./form-max-length.mjs";
-import { memoEndEdges, memoEndActual } from "./memo-end.mjs";
-import { paragraphFlowEdges, paragraphFlowActual } from "./paragraph-flows.mjs";
-import { groupInfoEdges } from "./group-info.mjs";
-import { groupInfoPair } from "./group-info-pair.mjs";
-import { groupOwnerEdges, groupDocumentReference } from "./group-validation.mjs";
-import { connectorEdges } from "./shape-connector.mjs";
-import { connectorPair } from "./connector-pair.mjs";
-import { connectorOwnerEdges, connectorDocumentReference } from "./connector-validation.mjs";
-import { documentActual, documentEdges } from "./documents.mjs";
-import { containerActual, containerEdges } from "./containers.mjs";
-import { containerImagesEdges, containerImagesActual } from "./container-images.mjs";
-import { containerJpegEdges } from "./container-jpeg.mjs";
-import { containerBmpEdges } from "./container-bmp.mjs";
-import { bmpEdges } from "./bmp.mjs";
-import { bmpRleEdges } from "./bmp-rle.mjs";
-import { bmpRleRgbaEdges } from "./bmp-rle-rgba.mjs";
-import { bmpProfileEdges } from "./bmp-profile.mjs";
-import { gifEdges, gifActual } from "./gif.mjs";
-import { previewImageEdges, previewImageActual } from "./preview-image.mjs";
-import { imageSignature } from "./preview-image-evidence.mjs";
-import { containerBmpProfileEdges } from "./container-bmp-profile.mjs";
-import { containerBmpRleEdges } from "./container-bmp-rle.mjs";
-import { jpegFramingEdges } from "./jpeg-framing.mjs";
-import { jpegHeaderEdges } from "./jpeg-headers.mjs";
-import { jpegTablesEdges } from "./jpeg-tables.mjs";
-import { jpegStoreEdges } from "./jpeg-store.mjs";
-import { jpegProgressiveEdges } from "./jpeg-progressive.mjs";
-import { jpegStructureEdges } from "./jpeg-structure.mjs";
-import { jpegCodecEdges } from "./jpeg-codec.mjs";
-import { jpegSequentialEdges } from "./jpeg-sequential.mjs";
-import { jpegScanEdges } from "./jpeg-scan.mjs";
-import { jpegFrameEdges } from "./jpeg-frame.mjs";
-import { jpegDequantEdges } from "./jpeg-dequant.mjs";
-import { jpegIdctEdges } from "./jpeg-idct.mjs";
-import { jpegFrameSamplesEdges } from "./jpeg-frame-samples.mjs";
-import { jpegPlanesEdges } from "./jpeg-planes.mjs";
-import { jpegJfifEdges } from "./jpeg-jfif.mjs";
-import { jpegJfxxEdges } from "./jpeg-jfxx.mjs";
-import { jpegJfxxJpegEdges } from "./jpeg-jfxx-jpeg.mjs";
-import { jpegJfifLayoutEdges } from "./jpeg-jfif-layout.mjs";
-import { jpegJfifColourEdges } from "./jpeg-jfif-colour.mjs";
-import { jpegUpsamplingEdges } from "./jpeg-upsampling.mjs";
-import { jpegIccEdges } from "./jpeg-icc.mjs";
-import { jpegAdobeEdges } from "./jpeg-adobe.mjs";
-import { jpegRgbEdges } from "./jpeg-rgb.mjs";
-import { progressiveBlockEdges } from "./jpeg-progressive-block.mjs";
-import { progressiveScanEdges } from "./jpeg-progressive-scan.mjs";
-import { progressiveFrameEdges } from "./jpeg-progressive-frame-cases.mjs";
-import { progressiveSamplesEdges } from "./jpeg-progressive-samples.mjs";
-import { progressiveRgbEdges } from "./jpeg-progressive-rgb.mjs";
-import { jpegFrameDequantEdges } from "./jpeg-frame-dequant.mjs";
-import { previewEdges } from "./preview.mjs";
-import { summaryEdges, summaryStatsWords } from "./summary.mjs";
-import { codepageEdges } from "./codepage.mjs";
-import { scriptEdges } from "./scripts.mjs";
-import { xmlTemplateEdges } from "./xml-template.mjs";
-import { optionalSurvey } from "./optional-survey.mjs";
-import { historyEdges, historyActual } from "./history.mjs";
-import { historyDateEdges, historyDateActual } from "./history-date.mjs";
-import { historyContainerActual } from "./history-container.mjs";
-import { xmlTemplateContainerEdges } from "./xml-template-container.mjs";
-import { historyLastDocumentEdges } from "./history-last-document.mjs";
-import { xmlInputEdges } from "./xml-input.mjs";
-import { xmlPrologEdges } from "./xml-prolog.mjs";
-import { xmlReferenceEdges } from "./xml-reference.mjs";
-import { xmlTagEdges } from "./xml-tag.mjs";
-import { xmlDocumentEdges } from "./xml-document.mjs";
-import { xmlNamespaceEdges } from "./xml-namespace.mjs";
-import { xmlContainerEdges } from "./xml-container.mjs";
-import { pngStructureEdges } from "./png-structure.mjs";
-import { zlibEdges } from "./zlib.mjs";
-import { pngFilterEdges } from "./png-filter.mjs";
-import { pngPixelsEdges } from "./png-pixels.mjs";
-import { pngTransparencyEdges } from "./png-transparency.mjs";
-import { pngPaletteMetadataEdges } from "./png-palette-metadata.mjs";
-import { pngSampleMetadataEdges } from "./png-sample-metadata.mjs";
-import { pngTimestampEdges } from "./png-timestamp.mjs";
-import { pngTextEdges } from "./png-text.mjs";
-import { pngCompressedTextEdges } from "./png-compressed-text.mjs";
-import { bcp47Edges } from "./bcp47.mjs";
-import { registryEdges } from "./bcp47-registry.mjs";
-import { pngInternationalEdges } from "./png-international.mjs";
-import { pngSuggestedEdges } from "./png-suggested.mjs";
-import { pngColorFixedEdges } from "./png-color-fixed.mjs";
-import { pngSrgbEdges } from "./png-srgb.mjs";
-import { pngProfileEdges } from "./png-profile.mjs";
-import { pngRequiredEdges } from "./png-required-inspection.mjs";
-import { pngPayloadEdges } from "./png-payload-inspection.mjs";
-import { pngV2TextEdges } from "./png-v2-text.mjs";
-import { pngV2UnicodeEdges } from "./png-v2-unicode.mjs";
-import { iccEdges } from "./icc.mjs";
-import { iccSemanticEdges } from "./icc-semantics.mjs";
-import { iccRegistryEdges } from "./icc-registry.mjs";
-import { iccXyzEdges } from "./icc-xyz.mjs";
-import { iccXyzTagEdges } from "./icc-xyz-tags.mjs";
-import { iccCurveEdges } from "./icc-curve.mjs";
-import { iccParametricEdges } from "./icc-parametric.mjs";
-import { iccTrcEdges } from "./icc-trc.mjs";
-import { iccInverseEdges } from "./icc-inverse.mjs";
-import { iccForwardEdges } from "./icc-forward.mjs";
-import { iccAnalyticEdges } from "./icc-analytic.mjs";
-import { iccTrcForwardEdges } from "./icc-trc-forward.mjs";
-import { iccRequiredEdges } from "./icc-required.mjs";
-import { iccMlucEdges } from "./icc-mluc.mjs";
-import { iccUnicodeEdges } from "./icc-unicode.mjs";
-import { iccSelectionEdges } from "./icc-selection.mjs";
-import { iccSelectionIanaEdges } from "./icc-selection-iana.mjs";
-import { adaptationEdges } from "./icc-adaptation.mjs";
-import { matrixEdges } from "./icc-matrix.mjs";
-import { fractionMatrixInverseEdges } from "./icc-fraction-matrix-inverse.mjs";
-import { wideLinearTargetEdges } from "./icc-wide-linear-target.mjs";
-import { modelEdges } from "./icc-model.mjs";
-import { modelForwardEdges } from "./icc-model-forward.mjs";
-import { normalizedInverseEdges } from "./icc-normalized-inverse.mjs";
-import { sampledWideInverseEdges } from "./icc-sampled-wide-inverse.mjs";
-import { gammaInverseEdges } from "./icc-gamma-inverse.mjs";
-import { parametricDomainEdges } from "./icc-parametric-domain.mjs";
-import { parametricTopologyEdges } from "./icc-parametric-topology.mjs";
-import { segmentEdges } from "./icc-segments.mjs";
-import { partitionEdges } from "./icc-partition.mjs";
-import { powerLevelEdges } from "./icc-power-level.mjs";
-import { rootCompareEdges } from "./icc-root-compare.mjs";
-import { rootLocationsEdges } from "./icc-root-locations.mjs";
-import { powerOrderEdges } from "./icc-power-order.mjs";
-import { rationalPowerEdges } from "./icc-rational-power.mjs";
-import { parametricJumpEdges } from "./icc-parametric-jump.mjs";
-import { parametricTrendEdges } from "./icc-parametric-trend.mjs";
-import { linearPreimageEdges } from "./icc-linear-preimage.mjs";
-import { normalizedPowerLevelEdges } from "./icc-normalized-power-level.mjs";
-import { gammaWideInverseEdges } from "./icc-gamma-wide-inverse.mjs";
-import { widePowerLevelEdges } from "./icc-wide-power-level.mjs";
-import { extendedRootCompareEdges } from "./icc-extended-root-compare.mjs";
-import { extendedLocationsEdges } from "./icc-extended-locations.mjs";
-import { extendedLinearPreimageEdges } from "./icc-extended-linear-preimage.mjs";
-import { extendedFractionFloatEdges } from "./icc-extended-fraction-float.mjs";
-import { normalizedRootCompareEdges } from "./icc-normalized-root-compare.mjs";
-import { normalizedLocationsEdges } from "./icc-normalized-locations.mjs";
-import { powerPreimageEdges } from "./icc-power-preimage.mjs";
-import { parametricPreimageEdges } from "./icc-parametric-preimage.mjs";
-import { preimageBoundsEdges } from "./icc-preimage-bounds.mjs";
-import { extendedRootOrderEdges } from "./icc-extended-root-order.mjs";
-import { attainedInverseEdges } from "./icc-attained-inverse.mjs";
-import { nearestRangeEdges } from "./icc-nearest-range.mjs";
-import { linearRangeEdges } from "./icc-linear-range.mjs";
-import { powerRangeEdges } from "./icc-power-range.mjs";
-import { parametricRangeEdges } from "./icc-parametric-range.mjs";
-import { ordinateOrderEdges } from "./icc-ordinate-order.mjs";
-import { powerNearestEdges } from "./icc-power-nearest.mjs";
-import { ordinateDistanceEdges } from "./icc-ordinate-distance.mjs";
-import { parametricNearestEdges } from "./icc-parametric-nearest.mjs";
-import { parametricInverseEdges } from "./icc-parametric-inverse.mjs";
-import { trcInverseEdges } from "./icc-trc-inverse.mjs";
-import { modelInverseEdges } from "./icc-model-inverse.mjs";
-import { fractionModelInverseEdges } from "./icc-fraction-model-inverse.mjs";
-import { powerClipEdges } from "./icc-power-clip.mjs";
-import { modelParametricEdges } from "./icc-model-parametric.mjs";
-import { iso639Edges } from "./iso639.mjs";
-import { languageHistoryEdges } from "./language-history.mjs";
-import { compatibilityEdges } from "./compatibility.mjs";
-import { headerFooterActual, headerFooterEdges } from "./header-footer.mjs";
-import { headerFooterDocumentEdges } from "./header-footer-document.mjs";
-import { numberControlEdges } from "./number-controls.mjs";
-import { numberDocumentEdges } from "./number-control-document.mjs";
-import { pageNumberEdges, pageNumberDocumentEdges } from "./page-number.mjs";
-import { indexMarkEdges } from "./index-mark.mjs";
-import { indexMarkReference } from "./index-mark-reference.mjs";
-import { visibilityEdges, visibilityReference } from "./page-visibility.mjs";
-import { bookmarkEdges } from "./bookmarks.mjs";
-import { bookmarkReference } from "./bookmark-reference.mjs";
-import { overlapEdges } from "./char-overlap.mjs";
-import { overlapReference } from "./char-overlap-reference.mjs";
-import { memoEdges } from "./memo-identity.mjs";
-import { fieldEdges } from "./fields.mjs";
-import { fieldDocumentEdges } from "./field-document.mjs";
-import { rubyEdges } from "./ruby.mjs";
-import { rubyDocumentEdges } from "./ruby-document.mjs";
-import { hiddenEdges } from "./hidden-comment.mjs";
-import { hiddenReference } from "./hidden-comment-reference.mjs";
-import { noteControlEdges, noteControlReference } from "./note-control.mjs";
-import { noteValidationEdges } from "./note-validation.mjs";
-import { equationEdges, equationReference } from "./equation.mjs";
-import { equationValidationEdges } from "./equation-validation.mjs";
-import { oleEdges, oleReference } from "./ole.mjs";
-import { oleValidationEdges } from "./ole-validation.mjs";
-import { storageEdges } from "./storage-extension.mjs";
-import { oleReferenceEvidence } from "./ole-reference-evidence.mjs";
-import { oleReferencePolicyActual } from "./ole-reference-policy.mjs";
-import { oleContainers } from "./ole-container.mjs";
-import { oleBinaries } from "./ole-binaries.mjs";
-import { chartDeclarations } from "./chart-declarations.mjs";
-import { chartTypeTables } from "./chart-type-tables.mjs";
-import { chartGridPreludes } from "./chart-grid-preludes.mjs";
-import { chartGridCells } from "./chart-grid-cells.mjs";
-import { chartValueObjects } from "./chart-value-objects.mjs";
-import { chartTextFormats } from "./chart-text-formats.mjs";
-import { chartValueBlocks } from "./chart-value-blocks.mjs";
-import { chartAxes } from "./chart-axes.mjs";
-import { chartNullableTitles } from "./chart-nullable-titles.mjs";
-import { chartLineItems } from "./chart-line-items.mjs";
-import { chartPostLines } from "./chart-post-lines.mjs";
-import { chartSeriesPrefixes } from "./chart-series-prefixes.mjs";
-import { chartSeriesLabels } from "./chart-series-labels.mjs";
-import { chartSeriesSuffixes } from "./chart-series-suffixes.mjs";
-import { chartSeriesPictures } from "./chart-series-pictures.mjs";
-import { chartSeriesCollections } from "./chart-series-collections.mjs";
-import { chartTitleBodies } from "./chart-title-bodies.mjs";
-import { chartTails } from "./chart-tails.mjs";
-import { chartObservedContentsSmoke } from "./chart-observed-contents-smoke.mjs";
-import { chartObservedContentsGuards } from "./chart-observed-contents-guards.mjs";
-import { chartPlotSurfacePrefixes } from "./chart-plot-surface-prefixes.mjs";
-import { chartStrings } from "./chart-strings.mjs";
-import { chartBackdrops } from "./chart-backdrops.mjs";
-import { chartTextBlocks } from "./chart-text-blocks.mjs";
-import { chartFootnotes } from "./chart-footnotes.mjs";
-import { chartLegends } from "./chart-legends.mjs";
-import { chartLights } from "./chart-lights.mjs";
-import { chartTextBlockObjects } from "./chart-text-block-objects.mjs";
-import { chartTextBodies } from "./chart-text-bodies.mjs";
-import { shapeComponentEdges, shapeComponentReference } from "./shape-component.mjs";
-import { shapeValidationEdges } from "./shape-validation.mjs";
-import { shapeBorderEdges, shapeBorderReference } from "./shape-border.mjs";
-import { drawingStyleEdges } from "./drawing-style.mjs";
-import { drawingStyleSurvey } from "./drawing-style-survey.mjs";
-import { videoValidationActual } from "./video-validation.mjs";
-import { styleDocumentReference } from "./drawing-style-document.mjs";
-import { lineEdges } from "./shape-line.mjs";
-import { lineOwnerEdges } from "./line-validation.mjs";
-import { lineDocumentReference } from "./line-document.mjs";
-import { rectangleEdges } from "./shape-rectangle.mjs";
-import { rectanglePair } from "./rectangle-pair.mjs";
-import { rectangleOwnerEdges } from "./rectangle-validation.mjs";
-import { rectangleDocumentReference } from "./rectangle-document.mjs";
-import { ellipseEdges } from "./shape-ellipse.mjs";
-import { arcEdges } from "./shape-arc.mjs";
-import { polygonEdges } from "./shape-polygon.mjs";
-import { polygonPair } from "./polygon-pair.mjs";
-import { curveEdges } from "./shape-curve.mjs";
-import { curvePair } from "./curve-pair.mjs";
-import { pictureEdges } from "./shape-picture.mjs";
-import { picturePair } from "./picture-pair.mjs";
-import { colorEdges } from "./picture-color.mjs";
-import { effectsEdges } from "./picture-effects.mjs";
-import { additionalEdges } from "./picture-additional.mjs";
-import { pictureOwnerEdges } from "./picture-validation.mjs";
-import { pictureDocumentReference } from "./picture-document.mjs";
-import { pictureSelectedDocument } from "./picture-selected-document.mjs";
-import { pictureReferenceEdges, pictureReferenceDocuments } from "./picture-references.mjs";
-import { curveOwnerEdges } from "./curve-validation.mjs";
-import { curveDocumentReference } from "./curve-document.mjs";
-import { curveLayoutDocument } from "./curve-layout-document.mjs";
-import { polygonOwnerEdges } from "./polygon-validation.mjs";
-import { polygonDocumentReference } from "./polygon-document.mjs";
-import { polygonLayoutDocument } from "./polygon-layout-document.mjs";
-import { arcOwnerEdges } from "./arc-validation.mjs";
-import { arcDocumentEdges } from "./arc-document.mjs";
-import { arcSurvey } from "./arc-survey.mjs";
-import { ellipsePair } from "./ellipse-pair.mjs";
-import { ellipseOwnerEdges } from "./ellipse-validation.mjs";
-import { ellipseDocumentReference } from "./ellipse-document.mjs";
-import { parameterZeroReference } from "./parameter-zero-reference.mjs";
-import { presentationReferenceEdges } from "./presentation-reference.mjs";
-import { reportWireEdges, reportOrderingEdges } from "./document-report-edges.mjs";
-import { readFileSync, readdirSync, existsSync } from "node:fs";
-import { deflateRawSync, inflateRawSync, deflateSync, gzipSync, constants } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { checkDocinfo, checkDocinfoEdges } from "./docinfo.mjs";
-import { resourceEdges, resourceActual } from "./resources.mjs";
-import { shapeEdges, shapeMutations } from "./shapes.mjs";
-import { referenceEdges, referenceActual } from "./references.mjs";
-import { checkBody, bodyEdges, bodyMutations } from "./body.mjs";
-import { metadataActual, metadataEdges } from "./metadata.mjs";
-import { controlEdges } from "./controls.mjs";
-import { treeActual, treeEdges } from "./tree.mjs";
-import { sectionActual, sectionEdges } from "./sections.mjs";
-import { notePair } from "./note-pair.mjs";
-import { linksActual, linkEdges } from "./links.mjs";
+import assert from 'node:assert/strict';
+import { videoEdges } from './video-data.mjs';
+import { memoShapeEdges } from './memo-shape.mjs';
+import { memoShapePair } from './memo-shape-pair.mjs';
+import { memoResourceEdges, memoResourceDocument } from './memo-resource.mjs';
+import { memoListEdges, memoListReference, memoListDocument } from './memo-list.mjs';
+import { memoListGroupEdges } from './memo-list-groups.mjs';
+import { memoOwnerEdges } from './memo-owner.mjs';
+import { memoFieldEdges, memoFieldReference, memoFieldDocument } from './memo-field.mjs';
+import { memoReferencesActual, memoReferenceDocument } from './memo-references.mjs';
+import { memoRangesActual, memoRangeMutations } from './memo-ranges.mjs';
+import { forbiddenCharEdges, forbiddenCharActual } from './forbidden-chars.mjs';
+import { forbiddenDocument } from './forbidden-document.mjs';
+import { trackAuthorEdges, trackAuthorDocument } from './track-author.mjs';
+import { trackChangeEdges, trackChangeDocument } from './track-change.mjs';
+import { viewTextDocument } from './view-text.mjs';
+import { viewSemanticActual } from './view-semantic.mjs';
+import { distributionEdges, distributionActual } from './distribution.mjs';
+import { distributionContainerActual } from './distribution-container.mjs';
+import { distributionContainerEdges } from './distribution-container-edges.mjs';
+import { distributionPolicyEvidence } from './distribution-policy-evidence.mjs';
+import { revisionDeleteEdges } from './revision-delete.mjs';
+import { revisionSignEdges, revisionSignActual } from './revision-sign.mjs';
+import { revisionProjectionEdges, revisionProjectionActual } from './revision-projection.mjs';
+import { revisionGroupEdges, revisionGroupActual } from './revision-groups.mjs';
+import { revisionTextEdges, revisionTextActual } from './revision-text.mjs';
+import { revisionCoordinateEdges, revisionCoordinateActual } from './revision-coordinates.mjs';
+import { formObjectEdges, formObjectActual } from './form-object.mjs';
+import { formPropertyEdges, formPropertyActual } from './form-property.mjs';
+import { formControlEdges, formControlActual } from './form-control.mjs';
+import { formLinkEdges, formLinkActual } from './form-links.mjs';
+import { formSchemaEdges, formSchemaActual } from './form-schema.mjs';
+import { formDocumentActual } from './form-document.mjs';
+import { formSemanticsEdges } from './form-semantics.mjs';
+import { formMaxLengthEdges, formMaxLengthActual } from './form-max-length.mjs';
+import { memoEndEdges, memoEndActual } from './memo-end.mjs';
+import { paragraphFlowEdges, paragraphFlowActual } from './paragraph-flows.mjs';
+import { groupInfoEdges } from './group-info.mjs';
+import { groupInfoPair } from './group-info-pair.mjs';
+import { groupOwnerEdges, groupDocumentReference } from './group-validation.mjs';
+import { connectorEdges } from './shape-connector.mjs';
+import { connectorPair } from './connector-pair.mjs';
+import { connectorOwnerEdges, connectorDocumentReference } from './connector-validation.mjs';
+import { documentActual, documentEdges } from './documents.mjs';
+import { containerActual, containerEdges } from './containers.mjs';
+import { containerImagesEdges, containerImagesActual } from './container-images.mjs';
+import { containerJpegEdges } from './container-jpeg.mjs';
+import { containerBmpEdges } from './container-bmp.mjs';
+import { bmpEdges } from './bmp.mjs';
+import { bmpRleEdges } from './bmp-rle.mjs';
+import { bmpRleRgbaEdges } from './bmp-rle-rgba.mjs';
+import { bmpProfileEdges } from './bmp-profile.mjs';
+import { gifEdges, gifActual } from './gif.mjs';
+import { previewImageEdges, previewImageActual } from './preview-image.mjs';
+import { imageSignature } from './preview-image-evidence.mjs';
+import { containerBmpProfileEdges } from './container-bmp-profile.mjs';
+import { containerBmpRleEdges } from './container-bmp-rle.mjs';
+import { jpegFramingEdges } from './jpeg-framing.mjs';
+import { jpegHeaderEdges } from './jpeg-headers.mjs';
+import { jpegTablesEdges } from './jpeg-tables.mjs';
+import { jpegStoreEdges } from './jpeg-store.mjs';
+import { jpegProgressiveEdges } from './jpeg-progressive.mjs';
+import { jpegStructureEdges } from './jpeg-structure.mjs';
+import { jpegCodecEdges } from './jpeg-codec.mjs';
+import { jpegSequentialEdges } from './jpeg-sequential.mjs';
+import { jpegScanEdges } from './jpeg-scan.mjs';
+import { jpegFrameEdges } from './jpeg-frame.mjs';
+import { jpegDequantEdges } from './jpeg-dequant.mjs';
+import { jpegIdctEdges } from './jpeg-idct.mjs';
+import { jpegFrameSamplesEdges } from './jpeg-frame-samples.mjs';
+import { jpegPlanesEdges } from './jpeg-planes.mjs';
+import { jpegJfifEdges } from './jpeg-jfif.mjs';
+import { jpegJfxxEdges } from './jpeg-jfxx.mjs';
+import { jpegJfxxJpegEdges } from './jpeg-jfxx-jpeg.mjs';
+import { jpegJfifLayoutEdges } from './jpeg-jfif-layout.mjs';
+import { jpegJfifColourEdges } from './jpeg-jfif-colour.mjs';
+import { jpegUpsamplingEdges } from './jpeg-upsampling.mjs';
+import { jpegIccEdges } from './jpeg-icc.mjs';
+import { jpegAdobeEdges } from './jpeg-adobe.mjs';
+import { jpegRgbEdges } from './jpeg-rgb.mjs';
+import { progressiveBlockEdges } from './jpeg-progressive-block.mjs';
+import { progressiveScanEdges } from './jpeg-progressive-scan.mjs';
+import { progressiveFrameEdges } from './jpeg-progressive-frame-cases.mjs';
+import { progressiveSamplesEdges } from './jpeg-progressive-samples.mjs';
+import { progressiveRgbEdges } from './jpeg-progressive-rgb.mjs';
+import { jpegFrameDequantEdges } from './jpeg-frame-dequant.mjs';
+import { previewEdges } from './preview.mjs';
+import { summaryEdges, summaryStatsWords } from './summary.mjs';
+import { codepageEdges } from './codepage.mjs';
+import { scriptEdges } from './scripts.mjs';
+import { xmlTemplateEdges } from './xml-template.mjs';
+import { optionalSurvey } from './optional-survey.mjs';
+import { historyEdges, historyActual } from './history.mjs';
+import { historyDateEdges, historyDateActual } from './history-date.mjs';
+import { historyContainerActual } from './history-container.mjs';
+import { xmlTemplateContainerEdges } from './xml-template-container.mjs';
+import { historyLastDocumentEdges } from './history-last-document.mjs';
+import { xmlInputEdges } from './xml-input.mjs';
+import { xmlPrologEdges } from './xml-prolog.mjs';
+import { xmlReferenceEdges } from './xml-reference.mjs';
+import { xmlTagEdges } from './xml-tag.mjs';
+import { xmlDocumentEdges } from './xml-document.mjs';
+import { xmlNamespaceEdges } from './xml-namespace.mjs';
+import { xmlContainerEdges } from './xml-container.mjs';
+import { pngStructureEdges } from './png-structure.mjs';
+import { zlibEdges } from './zlib.mjs';
+import { pngFilterEdges } from './png-filter.mjs';
+import { pngPixelsEdges } from './png-pixels.mjs';
+import { pngTransparencyEdges } from './png-transparency.mjs';
+import { pngPaletteMetadataEdges } from './png-palette-metadata.mjs';
+import { pngSampleMetadataEdges } from './png-sample-metadata.mjs';
+import { pngTimestampEdges } from './png-timestamp.mjs';
+import { pngTextEdges } from './png-text.mjs';
+import { pngCompressedTextEdges } from './png-compressed-text.mjs';
+import { bcp47Edges } from './bcp47.mjs';
+import { registryEdges } from './bcp47-registry.mjs';
+import { pngInternationalEdges } from './png-international.mjs';
+import { pngSuggestedEdges } from './png-suggested.mjs';
+import { pngColorFixedEdges } from './png-color-fixed.mjs';
+import { pngSrgbEdges } from './png-srgb.mjs';
+import { pngProfileEdges } from './png-profile.mjs';
+import { pngRequiredEdges } from './png-required-inspection.mjs';
+import { pngPayloadEdges } from './png-payload-inspection.mjs';
+import { pngV2TextEdges } from './png-v2-text.mjs';
+import { pngV2UnicodeEdges } from './png-v2-unicode.mjs';
+import { iccEdges } from './icc.mjs';
+import { iccSemanticEdges } from './icc-semantics.mjs';
+import { iccRegistryEdges } from './icc-registry.mjs';
+import { iccXyzEdges } from './icc-xyz.mjs';
+import { iccXyzTagEdges } from './icc-xyz-tags.mjs';
+import { iccCurveEdges } from './icc-curve.mjs';
+import { iccParametricEdges } from './icc-parametric.mjs';
+import { iccTrcEdges } from './icc-trc.mjs';
+import { iccInverseEdges } from './icc-inverse.mjs';
+import { iccForwardEdges } from './icc-forward.mjs';
+import { iccAnalyticEdges } from './icc-analytic.mjs';
+import { iccTrcForwardEdges } from './icc-trc-forward.mjs';
+import { iccRequiredEdges } from './icc-required.mjs';
+import { iccMlucEdges } from './icc-mluc.mjs';
+import { iccUnicodeEdges } from './icc-unicode.mjs';
+import { iccSelectionEdges } from './icc-selection.mjs';
+import { iccSelectionIanaEdges } from './icc-selection-iana.mjs';
+import { adaptationEdges } from './icc-adaptation.mjs';
+import { matrixEdges } from './icc-matrix.mjs';
+import { fractionMatrixInverseEdges } from './icc-fraction-matrix-inverse.mjs';
+import { wideLinearTargetEdges } from './icc-wide-linear-target.mjs';
+import { modelEdges } from './icc-model.mjs';
+import { modelForwardEdges } from './icc-model-forward.mjs';
+import { normalizedInverseEdges } from './icc-normalized-inverse.mjs';
+import { sampledWideInverseEdges } from './icc-sampled-wide-inverse.mjs';
+import { gammaInverseEdges } from './icc-gamma-inverse.mjs';
+import { parametricDomainEdges } from './icc-parametric-domain.mjs';
+import { parametricTopologyEdges } from './icc-parametric-topology.mjs';
+import { segmentEdges } from './icc-segments.mjs';
+import { partitionEdges } from './icc-partition.mjs';
+import { powerLevelEdges } from './icc-power-level.mjs';
+import { rootCompareEdges } from './icc-root-compare.mjs';
+import { rootLocationsEdges } from './icc-root-locations.mjs';
+import { powerOrderEdges } from './icc-power-order.mjs';
+import { rationalPowerEdges } from './icc-rational-power.mjs';
+import { parametricJumpEdges } from './icc-parametric-jump.mjs';
+import { parametricTrendEdges } from './icc-parametric-trend.mjs';
+import { linearPreimageEdges } from './icc-linear-preimage.mjs';
+import { normalizedPowerLevelEdges } from './icc-normalized-power-level.mjs';
+import { gammaWideInverseEdges } from './icc-gamma-wide-inverse.mjs';
+import { widePowerLevelEdges } from './icc-wide-power-level.mjs';
+import { extendedRootCompareEdges } from './icc-extended-root-compare.mjs';
+import { extendedLocationsEdges } from './icc-extended-locations.mjs';
+import { extendedLinearPreimageEdges } from './icc-extended-linear-preimage.mjs';
+import { extendedFractionFloatEdges } from './icc-extended-fraction-float.mjs';
+import { normalizedRootCompareEdges } from './icc-normalized-root-compare.mjs';
+import { normalizedLocationsEdges } from './icc-normalized-locations.mjs';
+import { powerPreimageEdges } from './icc-power-preimage.mjs';
+import { parametricPreimageEdges } from './icc-parametric-preimage.mjs';
+import { preimageBoundsEdges } from './icc-preimage-bounds.mjs';
+import { extendedRootOrderEdges } from './icc-extended-root-order.mjs';
+import { attainedInverseEdges } from './icc-attained-inverse.mjs';
+import { nearestRangeEdges } from './icc-nearest-range.mjs';
+import { linearRangeEdges } from './icc-linear-range.mjs';
+import { powerRangeEdges } from './icc-power-range.mjs';
+import { parametricRangeEdges } from './icc-parametric-range.mjs';
+import { ordinateOrderEdges } from './icc-ordinate-order.mjs';
+import { powerNearestEdges } from './icc-power-nearest.mjs';
+import { ordinateDistanceEdges } from './icc-ordinate-distance.mjs';
+import { parametricNearestEdges } from './icc-parametric-nearest.mjs';
+import { parametricInverseEdges } from './icc-parametric-inverse.mjs';
+import { trcInverseEdges } from './icc-trc-inverse.mjs';
+import { modelInverseEdges } from './icc-model-inverse.mjs';
+import { fractionModelInverseEdges } from './icc-fraction-model-inverse.mjs';
+import { powerClipEdges } from './icc-power-clip.mjs';
+import { modelParametricEdges } from './icc-model-parametric.mjs';
+import { iso639Edges } from './iso639.mjs';
+import { languageHistoryEdges } from './language-history.mjs';
+import { compatibilityEdges } from './compatibility.mjs';
+import { headerFooterActual, headerFooterEdges } from './header-footer.mjs';
+import { headerFooterDocumentEdges } from './header-footer-document.mjs';
+import { numberControlEdges } from './number-controls.mjs';
+import { numberDocumentEdges } from './number-control-document.mjs';
+import { pageNumberEdges, pageNumberDocumentEdges } from './page-number.mjs';
+import { indexMarkEdges } from './index-mark.mjs';
+import { indexMarkReference } from './index-mark-reference.mjs';
+import { visibilityEdges, visibilityReference } from './page-visibility.mjs';
+import { bookmarkEdges } from './bookmarks.mjs';
+import { bookmarkReference } from './bookmark-reference.mjs';
+import { overlapEdges } from './char-overlap.mjs';
+import { overlapReference } from './char-overlap-reference.mjs';
+import { memoEdges } from './memo-identity.mjs';
+import { fieldEdges } from './fields.mjs';
+import { fieldDocumentEdges } from './field-document.mjs';
+import { rubyEdges } from './ruby.mjs';
+import { rubyDocumentEdges } from './ruby-document.mjs';
+import { hiddenEdges } from './hidden-comment.mjs';
+import { hiddenReference } from './hidden-comment-reference.mjs';
+import { noteControlEdges, noteControlReference } from './note-control.mjs';
+import { noteValidationEdges } from './note-validation.mjs';
+import { equationEdges, equationReference } from './equation.mjs';
+import { equationValidationEdges } from './equation-validation.mjs';
+import { oleEdges, oleReference } from './ole.mjs';
+import { oleValidationEdges } from './ole-validation.mjs';
+import { storageEdges } from './storage-extension.mjs';
+import { oleReferenceEvidence } from './ole-reference-evidence.mjs';
+import { oleReferencePolicyActual } from './ole-reference-policy.mjs';
+import { oleContainers } from './ole-container.mjs';
+import { oleBinaries } from './ole-binaries.mjs';
+import { chartDeclarations } from './chart-declarations.mjs';
+import { chartTypeTables } from './chart-type-tables.mjs';
+import { chartGridPreludes } from './chart-grid-preludes.mjs';
+import { chartGridCells } from './chart-grid-cells.mjs';
+import { chartValueObjects } from './chart-value-objects.mjs';
+import { chartTextFormats } from './chart-text-formats.mjs';
+import { chartValueBlocks } from './chart-value-blocks.mjs';
+import { chartAxes } from './chart-axes.mjs';
+import { chartNullableTitles } from './chart-nullable-titles.mjs';
+import { chartLineItems } from './chart-line-items.mjs';
+import { chartPostLines } from './chart-post-lines.mjs';
+import { chartSeriesPrefixes } from './chart-series-prefixes.mjs';
+import { chartSeriesLabels } from './chart-series-labels.mjs';
+import { chartSeriesSuffixes } from './chart-series-suffixes.mjs';
+import { chartSeriesPictures } from './chart-series-pictures.mjs';
+import { chartSeriesCollections } from './chart-series-collections.mjs';
+import { chartTitleBodies } from './chart-title-bodies.mjs';
+import { chartTails } from './chart-tails.mjs';
+import { chartObservedContentsSmoke } from './chart-observed-contents-smoke.mjs';
+import { chartObservedContentsGuards } from './chart-observed-contents-guards.mjs';
+import { chartPlotSurfacePrefixes } from './chart-plot-surface-prefixes.mjs';
+import { chartStrings } from './chart-strings.mjs';
+import { chartBackdrops } from './chart-backdrops.mjs';
+import { chartTextBlocks } from './chart-text-blocks.mjs';
+import { chartFootnotes } from './chart-footnotes.mjs';
+import { chartLegends } from './chart-legends.mjs';
+import { chartLights } from './chart-lights.mjs';
+import { chartTextBlockObjects } from './chart-text-block-objects.mjs';
+import { chartTextBodies } from './chart-text-bodies.mjs';
+import { shapeComponentEdges, shapeComponentReference } from './shape-component.mjs';
+import { shapeValidationEdges } from './shape-validation.mjs';
+import { shapeBorderEdges, shapeBorderReference } from './shape-border.mjs';
+import { drawingStyleEdges } from './drawing-style.mjs';
+import { drawingStyleSurvey } from './drawing-style-survey.mjs';
+import { videoValidationActual } from './video-validation.mjs';
+import { styleDocumentReference } from './drawing-style-document.mjs';
+import { lineEdges } from './shape-line.mjs';
+import { lineOwnerEdges } from './line-validation.mjs';
+import { lineDocumentReference } from './line-document.mjs';
+import { rectangleEdges } from './shape-rectangle.mjs';
+import { rectanglePair } from './rectangle-pair.mjs';
+import { rectangleOwnerEdges } from './rectangle-validation.mjs';
+import { rectangleDocumentReference } from './rectangle-document.mjs';
+import { ellipseEdges } from './shape-ellipse.mjs';
+import { arcEdges } from './shape-arc.mjs';
+import { polygonEdges } from './shape-polygon.mjs';
+import { polygonPair } from './polygon-pair.mjs';
+import { curveEdges } from './shape-curve.mjs';
+import { curvePair } from './curve-pair.mjs';
+import { pictureEdges } from './shape-picture.mjs';
+import { picturePair } from './picture-pair.mjs';
+import { colorEdges } from './picture-color.mjs';
+import { effectsEdges } from './picture-effects.mjs';
+import { additionalEdges } from './picture-additional.mjs';
+import { pictureOwnerEdges } from './picture-validation.mjs';
+import { pictureDocumentReference } from './picture-document.mjs';
+import { pictureSelectedDocument } from './picture-selected-document.mjs';
+import { pictureReferenceEdges, pictureReferenceDocuments } from './picture-references.mjs';
+import { curveOwnerEdges } from './curve-validation.mjs';
+import { curveDocumentReference } from './curve-document.mjs';
+import { curveLayoutDocument } from './curve-layout-document.mjs';
+import { polygonOwnerEdges } from './polygon-validation.mjs';
+import { polygonDocumentReference } from './polygon-document.mjs';
+import { polygonLayoutDocument } from './polygon-layout-document.mjs';
+import { arcOwnerEdges } from './arc-validation.mjs';
+import { arcDocumentEdges } from './arc-document.mjs';
+import { arcSurvey } from './arc-survey.mjs';
+import { ellipsePair } from './ellipse-pair.mjs';
+import { ellipseOwnerEdges } from './ellipse-validation.mjs';
+import { ellipseDocumentReference } from './ellipse-document.mjs';
+import { parameterZeroReference } from './parameter-zero-reference.mjs';
+import { presentationReferenceEdges } from './presentation-reference.mjs';
+import { reportWireEdges, reportOrderingEdges } from './document-report-edges.mjs';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { deflateRawSync, inflateRawSync, deflateSync, gzipSync, constants } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { checkDocinfo, checkDocinfoEdges } from './docinfo.mjs';
+import { resourceEdges, resourceActual } from './resources.mjs';
+import { shapeEdges, shapeMutations } from './shapes.mjs';
+import { referenceEdges, referenceActual } from './references.mjs';
+import { checkBody, bodyEdges, bodyMutations } from './body.mjs';
+import { metadataActual, metadataEdges } from './metadata.mjs';
+import { controlEdges } from './controls.mjs';
+import { treeActual, treeEdges } from './tree.mjs';
+import { sectionActual, sectionEdges } from './sections.mjs';
+import { notePair } from './note-pair.mjs';
+import { linksActual, linkEdges } from './links.mjs';
 import {
   noteSourceSiteEdges,
   noteSourceSitesActual,
   noteSiteFixtures,
-} from "./note-source-sites.mjs";
-import { columnEdges, columnPair } from "./columns.mjs";
-import { listsActual, listEdges } from "./list-groups.mjs";
-import { typeActual, typeEdges } from "./control-types.mjs";
-import { objectActual, objectEdges } from "./objects.mjs";
-import { tablesActual, tableEdges, tableZonePair, tableCellLists } from "./tables.mjs";
-import { cellPair, cellEdges } from "./cell-extensions.mjs";
-import { gridEdges } from "./grid.mjs";
-import { parameterActual, parameterEdges } from "./parameters.mjs";
-import { parameterSourceActual, parameterSourceEdges } from "./parameter-sources.mjs";
-import { formattingEdges, formattingCounts, formattingMutations } from "./formatting.mjs";
+} from './note-source-sites.mjs';
+import { columnEdges, columnPair } from './columns.mjs';
+import { listsActual, listEdges } from './list-groups.mjs';
+import { typeActual, typeEdges } from './control-types.mjs';
+import { objectActual, objectEdges } from './objects.mjs';
+import { tablesActual, tableEdges, tableZonePair, tableCellLists } from './tables.mjs';
+import { cellPair, cellEdges } from './cell-extensions.mjs';
+import { gridEdges } from './grid.mjs';
+import { parameterActual, parameterEdges } from './parameters.mjs';
+import { parameterSourceActual, parameterSourceEdges } from './parameter-sources.mjs';
+import { formattingEdges, formattingCounts, formattingMutations } from './formatting.mjs';
 
 const module = await WebAssembly.compile(readFileSync(process.argv[2]));
 assert.equal(WebAssembly.Module.imports(module).length, 0);
@@ -345,7 +345,7 @@ function call(mode, bytes, limit = 64 * 1024 * 1024) {
 }
 function header(version = 0x05000307, flags = 0) {
   const b = Buffer.alloc(256);
-  b.write("HWP Document File");
+  b.write('HWP Document File');
   b.writeUInt32LE(version, 32);
   b.writeUInt32LE(flags, 36);
   return b;
@@ -435,15 +435,15 @@ for (let bit = 0; bit < 32; bit++) {
 for (const v of [0x04000000, 0x05020000, 0x06000000])
   assert.throws(() => call(3, header(v)), /UnsupportedVersion/);
 for (const [flag, error] of [
-  [2, "Encryption"],
-  [4, "Distribution"],
-  [16, "Drm"],
-  [256, "Encryption"],
-  [1024, "Drm"],
+  [2, 'Encryption'],
+  [4, 'Distribution'],
+  [16, 'Drm'],
+  [256, 'Encryption'],
+  [1024, 'Drm'],
 ])
   assert.throws(
     () => call(3, Buffer.concat([header(0x05000000, flag | 1), Buffer.from([7])])),
-    new RegExp("Unsupported" + error),
+    new RegExp('Unsupported' + error),
   );
 rounds.push({ round: 1, checks: checks - begin });
 begin = checks;
@@ -468,12 +468,12 @@ for (const n of [0, 1, 2, 3, 63, 64, 4095, 4096, 32767, 32768, 32769, 131072]) {
             n,
             options,
             cut,
-            hex: compressed.subarray(0, cut).toString("hex"),
+            hex: compressed.subarray(0, cut).toString('hex'),
           }),
         );
   }
 }
-for (const b of [Buffer.from([7]), deflateSync(Buffer.from("abc")), gzipSync(Buffer.from("abc"))])
+for (const b of [Buffer.from([7]), deflateSync(Buffer.from('abc')), gzipSync(Buffer.from('abc'))])
   assert.throws(() => call(1, b), /InvalidDeflate|TrailingData/);
 rounds.push({ round: 2, checks: checks - begin, compressionCases });
 begin = checks;
@@ -496,9 +496,9 @@ rounds.push({ round: 3, checks: checks - begin });
 begin = checks;
 // Round 4: actual HWP CFB -> header -> DocInfo/BodyText -> raw framing vs Node zlib.
 const cfb = await createCfbReader(
-  readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+  readFileSync(new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url)),
 );
-const fixtures = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
+const fixtures = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
 let files = 0,
   streams = 0,
   records = 0,
@@ -742,7 +742,7 @@ assert.deepEqual(
     viewRecords,
   })),
   [
-    { strict: "InvalidLinePosition", controlBytes: 988, viewBytes: 105182, viewRecords: 2814 },
+    { strict: 'InvalidLinePosition', controlBytes: 988, viewBytes: 105182, viewRecords: 2814 },
     { strict: 988, controlBytes: 988, viewBytes: 8015903, viewRecords: 265451 },
   ],
 );
@@ -935,12 +935,12 @@ const drawingStyleSurveyResults = drawingStyleSurvey(call, cfb);
 if (!drawingStyleSurveyResults.skipped) {
   assert.ok(
     Array.isArray(drawingStyleSurveyResults.videoRecords),
-    "drawing survey did not report VIDEO_DATA inventory",
+    'drawing survey did not report VIDEO_DATA inventory',
   );
   assert.equal(
     drawingStyleSurveyResults.videoRecords.length,
     0,
-    "drawing survey found VIDEO_DATA records",
+    'drawing survey found VIDEO_DATA records',
   );
 }
 const videoValidationResults = videoValidationActual(call, cfb);
@@ -1005,17 +1005,17 @@ const jpegFrameDequantResults = jpegFrameDequantEdges(call);
 const containerImageFiles = { files: 0, png: 0, unhandled: 0 };
 const documentEdgeResults = { files: 0, rejected: 0, recoveries: 0 };
 try {
-  for (const name of readdirSync(fixtures).filter((n) => n.endsWith(".hwp"))) {
+  for (const name of readdirSync(fixtures).filter((n) => n.endsWith('.hwp'))) {
     const fileBytes = readFileSync(new URL(name, fixtures));
     cfb.parse(fileBytes, { strict: true });
-    const hdr = Buffer.from(cfb.findExact("/FileHeader").content);
+    const hdr = Buffer.from(cfb.findExact('/FileHeader').content);
     assert.deepEqual(call(0, hdr).subarray(0, 16), hdr.subarray(32, 48));
     versions.add(hdr.readUInt32LE(32).toString(16));
     files++;
-    const previewImage = cfb.findExact("/PrvImage");
+    const previewImage = cfb.findExact('/PrvImage');
     if (previewImage?.type === 2) {
       const raw = Buffer.from(previewImage.content ?? []);
-      if (["gif87a", "gif89a"].includes(imageSignature(raw))) {
+      if (['gif87a', 'gif89a'].includes(imageSignature(raw))) {
         const decoded = gifActual(call, raw);
         gifPreviewResults.files++;
         gifPreviewResults.frames += decoded.frames.length;
@@ -1040,12 +1040,12 @@ try {
     previewImageResults.inspected += Number(
       previewReport.readUInt32LE(previewReport.length - 276) === 2,
     );
-    const docBytes = Buffer.from(cfb.findExact("/DocInfo").content);
+    const docBytes = Buffer.from(cfb.findExact('/DocInfo').content);
     const docPlain = hdr.readUInt32LE(36) & 1 ? inflateRawSync(docBytes) : docBytes;
     const shapeCount = formattingCounts(docPlain).charShape;
     const decodedSections = [];
     for (const entry of cfb.document().nodes) {
-      if (entry.kind !== 2 || !(entry.name === "DocInfo" || /^Section\d+$/.test(entry.name)))
+      if (entry.kind !== 2 || !(entry.name === 'DocInfo' || /^Section\d+$/.test(entry.name)))
         continue;
       const b = Buffer.from(entry.content);
       const plain = hdr.readUInt32LE(36) & 1 ? inflateRawSync(b) : b;
@@ -1059,11 +1059,11 @@ try {
         call,
         hdr.readUInt32LE(32),
         docPlain,
-        entry.name === "DocInfo" ? null : plain,
+        entry.name === 'DocInfo' ? null : plain,
       ).forEach((n, i) => {
         parameterSourceReport[i] += n;
       });
-      parameterActual(call, plain, entry.name === "DocInfo" ? 27 : 87).forEach((n, i) => {
+      parameterActual(call, plain, entry.name === 'DocInfo' ? 27 : 87).forEach((n, i) => {
         parameterReport[i] += n;
       });
       if (/^Section\d+$/.test(entry.name)) {
@@ -1078,19 +1078,19 @@ try {
           cellTails[tail === 4 ? 0 : 1]++;
           if (tail >= 5 && raw[38] === 255) cellTails[2]++;
         }
-        const pairedPath = new URL(name.replace(/\.hwp$/, ".hwpx"), fixtures);
-        if (entry.name === "Section0" && rawCells.length && existsSync(pairedPath)) {
+        const pairedPath = new URL(name.replace(/\.hwp$/, '.hwpx'), fixtures);
+        if (entry.name === 'Section0' && rawCells.length && existsSync(pairedPath)) {
           cellPair(call, rawCells, readFileSync(pairedPath)).forEach((n, i) => {
             cellPairResults[i] += n;
           });
           cellPairs++;
         }
-        if (name === "borderfill.hwp" && entry.name === "Section0")
+        if (name === 'borderfill.hwp' && entry.name === 'Section0')
           tableZonePairResult = tableZonePair(
             call,
             hdr.readUInt32LE(32),
             plain,
-            readFileSync(new URL("borderfill.hwpx", fixtures)),
+            readFileSync(new URL('borderfill.hwpx', fixtures)),
           );
         headerFooterActual(call, hdr.readUInt32LE(32), plain).forEach(
           (n, i) => (headerFooterReport[i] += n),
@@ -1100,23 +1100,23 @@ try {
         });
         typeActual(call, hdr.readUInt32LE(32), plain).forEach((n, i) => (typeReport[i] += n));
         listsActual(call, hdr.readUInt32LE(32), plain).forEach((n, i) => (listReport[i] += n));
-        if (name === "multicolumns-widths.hwp" && entry.name === "Section0")
+        if (name === 'multicolumns-widths.hwp' && entry.name === 'Section0')
           pairedColumns += columnPair(
             call,
             plain,
-            readFileSync(new URL("multicolumns-widths.hwpx", fixtures)),
+            readFileSync(new URL('multicolumns-widths.hwpx', fixtures)),
           );
         linkedControls += linksActual(call, hdr.readUInt32LE(32), plain);
-        if (name === "footnote-endnote.hwp" && entry.name === "Section0")
+        if (name === 'footnote-endnote.hwp' && entry.name === 'Section0')
           assert.equal(
             noteSourceSitesActual(call, hdr.readUInt32LE(32), plain, noteSiteFixtures[name]),
             4,
           );
-        if (name === "footnote-endnote.hwp" && entry.name === "Section0")
+        if (name === 'footnote-endnote.hwp' && entry.name === 'Section0')
           notePairResult = notePair(
             call,
             plain,
-            readFileSync(new URL("footnote-endnote.hwpx", fixtures)),
+            readFileSync(new URL('footnote-endnote.hwpx', fixtures)),
           );
         const counts = formattingCounts(docPlain);
         tablesActual(call, hdr.readUInt32LE(32), counts.borderFill, plain).forEach((n, i) => {
@@ -1141,13 +1141,13 @@ try {
         for (const [key, n] of Object.entries(checkBody(call, hdr.readUInt32LE(32), plain, true)))
           body[key] += n;
       }
-      if (entry.name === "DocInfo") {
+      if (entry.name === 'DocInfo') {
         checkDocinfo(call, hdr.readUInt32LE(32), plain);
         referenceActual(call, hdr.readUInt32LE(32), plain).forEach((n, i) => (references[i] += n));
         for (const [key, count] of Object.entries(formattingCounts(plain)))
           formatting[key] += count;
         const result = resourceActual(call, hdr, plain, cfb);
-        for (const key of ["binData", "faceNames", "decoded"]) resources[key] += result[key];
+        for (const key of ['binData', 'faceNames', 'decoded']) resources[key] += result[key];
         if (result.mismatch) resources.mismatches.push(name);
         for (const path of result.missing) resources.missing.push({ file: name, path });
       }

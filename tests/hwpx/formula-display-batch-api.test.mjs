@@ -1,19 +1,19 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { decodeFormulaResultDisplaySnapshot } from "../../js/formula-result-display-snapshot.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { decodeFormulaResultDisplaySnapshot } from '../../js/formula-result-display-snapshot.mjs';
 const encode = (value) => new TextEncoder().encode(JSON.stringify(value));
 
-test("formula display snapshot wire keeps ordered one-based paragraphs and UTF16 target ranges", () => {
+test('formula display snapshot wire keeps ordered one-based paragraphs and UTF16 target ranges', () => {
   assert.deepEqual(
     decodeFormulaResultDisplaySnapshot(
-      encode([{ paragraph: 2, text: "앞😀2", targets: [{ begin_element: 5, start: 0, end: 4 }] }]),
+      encode([{ paragraph: 2, text: '앞😀2', targets: [{ begin_element: 5, start: 0, end: 4 }] }]),
     ),
-    [{ paragraph: 2, text: "앞😀2", targets: [{ beginElement: 5, start: 0, end: 4 }] }],
+    [{ paragraph: 2, text: '앞😀2', targets: [{ beginElement: 5, start: 0, end: 4 }] }],
   );
   assert.deepEqual(decodeFormulaResultDisplaySnapshot(encode([])), []);
-  const row = { paragraph: 2, text: "x", targets: [{ begin_element: 5, start: 0, end: 1 }] };
+  const row = { paragraph: 2, text: 'x', targets: [{ begin_element: 5, start: 0, end: 1 }] };
   for (const bad of [
     null,
     {},
@@ -33,11 +33,11 @@ test("formula display snapshot wire keeps ordered one-based paragraphs and UTF16
 });
 
 for (const path of [
-  "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx",
-  "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx",
+  'legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx',
+  'reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx',
 ])
   test(
-    "section display snapshot equals every old query and exact save: " + path,
+    'section display snapshot equals every old query and exact save: ' + path,
     { skip: !process.env.HWPJS_TEST_WASM },
     async (t) => {
       const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM)),
@@ -65,11 +65,11 @@ for (const path of [
         assert.deepEqual(Buffer.from(editor.save()), input);
         assert.throws(() => editor.manualFormulaResultDisplaySnapshot(999), /InvalidSectionIndex/);
         assert.throws(() => editor.manualFormulaResultDisplaySnapshot(-1));
-        if (path.endsWith("/chart.hwpx")) {
+        if (path.endsWith('/chart.hwpx')) {
           const first = actual[0],
             target = first.targets[0],
             saved = editor.save();
-          editor.spliceManualFormulaResult(0, target.beginElement, 0, 0, "앞😀");
+          editor.spliceManualFormulaResult(0, target.beginElement, 0, 0, '앞😀');
           const changed = editor.manualFormulaResultDisplaySnapshot(0);
           assert.notDeepEqual(changed, actual);
           assert.deepEqual(editor.manualFormulaResultDisplaySnapshot(0), changed);
@@ -88,12 +88,12 @@ for (const path of [
   );
 
 test(
-  "old WASM keeps an explicit snapshot capability refusal",
+  'old WASM keeps an explicit snapshot capability refusal',
   { skip: !process.env.HWPJS_BASELINE_WASM },
   async () => {
     const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_BASELINE_WASM));
     try {
-      editor.open(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx"));
+      editor.open(readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx'));
       assert.throws(
         () => editor.manualFormulaResultDisplaySnapshot(0),
         /HwpxFormulaResultSnapshotAbiUnavailable/,

@@ -1,6 +1,6 @@
 // Select only caption paragraphs backed by a measured whole-table reservation.
 export function sourceInlineCaptionOwnership(source, paragraphs) {
-  const fail = () => ({ state: "unavailable", error: "InvalidSourceInlineCaptionOwner" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidSourceInlineCaptionOwner' });
   if (!(source?.tables instanceof Map) || !Array.isArray(paragraphs)) return fail();
   const expected = new Map(),
     seen = new Set();
@@ -8,7 +8,7 @@ export function sourceInlineCaptionOwnership(source, paragraphs) {
     if (!entry?.table) return fail();
     const { table, captionReservation } = entry;
     if (!table?.sourceCaption) continue;
-    if (captionReservation?.state !== "reserved" || !Array.isArray(table.captionParagraphs))
+    if (captionReservation?.state !== 'reserved' || !Array.isArray(table.captionParagraphs))
       return fail();
     if (
       ![
@@ -45,5 +45,5 @@ export function sourceInlineCaptionOwnership(source, paragraphs) {
       return fail();
     seen.add(key);
   }
-  return seen.size === expected.size ? { state: "selected", paragraphs: seen } : fail();
+  return seen.size === expected.size ? { state: 'selected', paragraphs: seen } : fail();
 }

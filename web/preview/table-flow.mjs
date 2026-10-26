@@ -1,14 +1,14 @@
-import { layoutContent } from "./layout.mjs";
-import { tableGrid } from "./table-grid.mjs";
-import { layoutNestedTables } from "./nested-table-flow.mjs";
-import { TEXT_LEFT } from "./row-geometry.mjs";
+import { layoutContent } from './layout.mjs';
+import { tableGrid } from './table-grid.mjs';
+import { layoutNestedTables } from './nested-table-flow.mjs';
+import { TEXT_LEFT } from './row-geometry.mjs';
 
 // 소속 문단을 알면 재귀 배치하고, 조회 실패 시 첫 셀 문단의 평면 배치를 사용합니다.
 // 두 경로 모두 실험용 블록 흐름이며 원본 쪽 배치나 인라인 위치를 재현하지 않습니다.
 export function layoutTableContent(content, width, measure, maxRows = 20000) {
   if (!content.tables?.length) return layoutContent(content, width, measure, maxRows);
   if (!Number.isFinite(width) || width <= 0 || !Number.isInteger(maxRows) || maxRows < 1)
-    throw new RangeError("InvalidLayoutBounds");
+    throw new RangeError('InvalidLayoutBounds');
   if (content.tables.every((table) => Number.isInteger(table.hostParagraph)))
     return layoutNestedTables(content, width, measure, maxRows);
   const rows = [],
@@ -93,12 +93,12 @@ export function layoutTableContent(content, width, measure, maxRows = 20000) {
         continue;
       }
       const flow = layoutContent(
-        { paragraphs: members.map((p) => ({ ...p, label: "" })), limited: false },
+        { paragraphs: members.map((p) => ({ ...p, label: '' })), limited: false },
         cellWidth,
         measure,
         maxRows - rows.length - prepared + 2,
       );
-      const kept = flow.rows.filter((row) => row.kind !== "label");
+      const kept = flow.rows.filter((row) => row.kind !== 'label');
       let cellHeight = 0;
       for (const row of kept) {
         row.y = cellHeight;

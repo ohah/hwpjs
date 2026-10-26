@@ -1,4 +1,4 @@
-import { integer } from "./chart-text-body-oracle.mjs";
+import { integer } from './chart-text-body-oracle.mjs';
 // Fixed observed corpus layout; not a variable-version format recognizer.
 export function gridPreludeWire(b, { typeCount = 5, nameBytes = 50 } = {}) {
   return Buffer.concat([

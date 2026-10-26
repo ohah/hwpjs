@@ -15,9 +15,9 @@ export function createSaveControls({
     }
     return request();
   };
-  button.addEventListener("click", save, { signal: events.signal });
+  button.addEventListener('click', save, { signal: events.signal });
   keyboard.addEventListener(
-    "keydown",
+    'keydown',
     (event) => {
       if (
         event.defaultPrevented ||
@@ -25,7 +25,7 @@ export function createSaveControls({
         event.altKey ||
         event.shiftKey ||
         !(event.ctrlKey || event.metaKey) ||
-        event.key?.toLowerCase() !== "s"
+        event.key?.toLowerCase() !== 's'
       )
         return;
       // Never open the browser's HTML-save dialog for an active document, even

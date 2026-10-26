@@ -1,12 +1,12 @@
-import { test, expect } from "bun:test";
-import { getSelectionFormatting } from "@hwpjs/core";
-import { createFormattingDialogController } from "../src/formatting-dialog-controller.ts";
-import { documentFixture, fire } from "./formatting-dialog-test-dom.ts";
+import { test, expect } from 'bun:test';
+import { getSelectionFormatting } from '@hwpjs/core';
+import { createFormattingDialogController } from '../src/formatting-dialog-controller.ts';
+import { documentFixture, fire } from './formatting-dialog-test-dom.ts';
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 function state(options: any = {}) {
   const token = {
-    editorId: "test",
-    documentId: options.doc ?? "doc",
+    editorId: 'test',
+    documentId: options.doc ?? 'doc',
     generation: 1,
     operationRevision: 0,
     viewRevision: 0,
@@ -14,21 +14,21 @@ function state(options: any = {}) {
   return {
     ...token,
     token,
-    status: "ready",
+    status: 'ready',
     stateVersion: options.version ?? 1,
     selection: {
       ...token,
-      coordinateSpace: "display",
-      format: "hwpx",
-      owner: "section:0:body",
+      coordinateSpace: 'display',
+      format: 'hwpx',
+      owner: 'section:0:body',
       section: 0,
       paragraph: 0,
       startUnit: options.start ?? 0,
       endUnit: options.end ?? 2,
-      affinity: "forward",
+      affinity: 'forward',
     },
     content: {
-      format: "hwpx",
+      format: 'hwpx',
       characterPropertiesAvailable: true,
       paragraphAlignmentAvailable: true,
       characterShapes: [{ id: 0, bold: true, italic: false, height: 1200 }],
@@ -36,9 +36,9 @@ function state(options: any = {}) {
         {
           section: 0,
           paragraph: 0,
-          text: "AB",
+          text: 'AB',
           editable: !options.readonly,
-          selectionOwner: "section:0:body",
+          selectionOwner: 'section:0:body',
           characterRanges: [{ start: 0, end: 2, charShapeId: 0 }],
           paragraphShape: { alignment: 1 },
         },
@@ -74,7 +74,7 @@ function fixture(options: any = {}) {
     captureDialog: capture,
     applyDialog: async (_observation: any, patch: any) => {
       calls.push(patch);
-      return options.apply ? options.apply(patch) : { kind: "unchanged" };
+      return options.apply ? options.apply(patch) : { kind: 'unchanged' };
     },
   };
   controller = createFormattingDialogController({
@@ -90,7 +90,7 @@ function fixture(options: any = {}) {
       focus++;
     },
     onPresentationChange: () =>
-      notifications.push(controller.presentation()["character-properties"].enabled),
+      notifications.push(controller.presentation()['character-properties'].enabled),
   });
   return {
     ...dom,
@@ -98,9 +98,9 @@ function fixture(options: any = {}) {
     calls,
     statuses,
     notifications,
-    open: (kind = "character") =>
+    open: (kind = 'character') =>
       controller.action({
-        command: kind === "character" ? "character-properties" : "paragraph-properties",
+        command: kind === 'character' ? 'character-properties' : 'paragraph-properties',
       }),
     get focus() {
       return focus;
@@ -112,84 +112,84 @@ function fixture(options: any = {}) {
     dispose: () => controller.dispose(),
   };
 }
-test("open/dirty0 close updates shell presentation separately from focus", async () => {
+test('open/dirty0 close updates shell presentation separately from focus', async () => {
   const f = fixture();
   f.open();
   expect(f.notifications).toEqual([false]);
-  fire(f.role("format-confirm"), "click");
+  fire(f.role('format-confirm'), 'click');
   await tick();
-  expect(f.calls).toEqual([{ kind: "character", properties: {} }]);
-  expect(f.role("formatting-dialog")).toBeUndefined();
+  expect(f.calls).toEqual([{ kind: 'character', properties: {} }]);
+  expect(f.role('formatting-dialog')).toBeUndefined();
   expect(f.notifications.at(-1)).toBe(true);
   expect(f.focus).toBe(1);
   f.dispose();
 });
-test("changed then restored size and booleans produce sparse dirty0, never defaults", async () => {
+test('changed then restored size and booleans produce sparse dirty0, never defaults', async () => {
   const f = fixture();
   f.open();
-  for (const v of ["24", "12"]) {
-    f.role("format-size").value = v;
-    fire(f.role("format-size"), "input");
+  for (const v of ['24', '12']) {
+    f.role('format-size').value = v;
+    fire(f.role('format-size'), 'input');
   }
-  for (const v of ["false", "true"]) {
-    f.role("format-bold").value = v;
-    fire(f.role("format-bold"), "change");
+  for (const v of ['false', 'true']) {
+    f.role('format-bold').value = v;
+    fire(f.role('format-bold'), 'change');
   }
-  fire(f.role("format-confirm"), "click");
+  fire(f.role('format-confirm'), 'click');
   await tick();
-  expect(f.calls[0]).toEqual({ kind: "character", properties: {} });
+  expect(f.calls[0]).toEqual({ kind: 'character', properties: {} });
   f.dispose();
 });
-test("one confirm forwards all three dirty fields exactly once", async () => {
+test('one confirm forwards all three dirty fields exactly once', async () => {
   const f = fixture();
   f.open();
-  f.role("format-size").value = "24";
-  fire(f.role("format-size"), "input");
+  f.role('format-size').value = '24';
+  fire(f.role('format-size'), 'input');
   for (const [role, value] of [
-    ["format-bold", "false"],
-    ["format-italic", "true"],
+    ['format-bold', 'false'],
+    ['format-italic', 'true'],
   ]) {
     f.role(role).value = value;
-    fire(f.role(role), "change");
+    fire(f.role(role), 'change');
   }
-  fire(f.role("format-confirm"), "click");
+  fire(f.role('format-confirm'), 'click');
   await tick();
   expect(f.calls).toEqual([
-    { kind: "character", properties: { size: 2400, bold: false, italic: true } },
+    { kind: 'character', properties: { size: 2400, bold: false, italic: true } },
   ]);
   f.dispose();
 });
-test("readonly and collapsed character dialogs are observation/cancel only", () => {
+test('readonly and collapsed character dialogs are observation/cancel only', () => {
   for (const opts of [{ readonly: true }, { end: 0 }]) {
     const f = fixture(opts);
     f.open();
-    expect(f.role("format-confirm").disabled).toBe(true);
-    expect(f.role("format-cancel").disabled).toBe(false);
-    fire(f.role("format-confirm"), "click");
+    expect(f.role('format-confirm').disabled).toBe(true);
+    expect(f.role('format-cancel').disabled).toBe(false);
+    fire(f.role('format-confirm'), 'click');
     expect(f.calls.length).toBe(0);
-    fire(f.role("format-cancel"), "click");
-    expect(f.role("formatting-dialog")).toBeUndefined();
+    fire(f.role('format-cancel'), 'click');
+    expect(f.role('formatting-dialog')).toBeUndefined();
     f.dispose();
   }
 });
-test("stale document/selection blocks confirm, close notifies without focus stealing", () => {
+test('stale document/selection blocks confirm, close notifies without focus stealing', () => {
   for (const next of [
-    { doc: "other", version: 2 },
+    { doc: 'other', version: 2 },
     { start: 1, version: 2 },
   ]) {
     const f = fixture();
     f.open();
     f.publish(next);
-    expect(f.role("format-confirm").disabled).toBe(true);
-    fire(f.role("format-confirm"), "click");
+    expect(f.role('format-confirm').disabled).toBe(true);
+    fire(f.role('format-confirm'), 'click');
     expect(f.calls.length).toBe(0);
-    fire(f.role("format-cancel"), "click");
+    fire(f.role('format-cancel'), 'click');
     expect(f.focus).toBe(0);
     expect(f.notifications.at(-1)).toBe(true);
     f.dispose();
   }
 });
-test("pending blocks duplicate confirm/Escape/native cancel; settled close re-enables menu", async () => {
+test('pending blocks duplicate confirm/Escape/native cancel; settled close re-enables menu', async () => {
   let settle: any;
   const f = fixture({
     apply: () =>
@@ -198,22 +198,22 @@ test("pending blocks duplicate confirm/Escape/native cancel; settled close re-en
       }),
   });
   f.open();
-  f.role("format-size").value = "24";
-  fire(f.role("format-size"), "input");
-  const layer = f.role("formatting-dialog");
-  fire(f.role("format-confirm"), "click");
-  fire(f.role("format-confirm"), "click");
-  fire(layer, "keydown", { key: "Escape", keyCode: 27 });
-  expect(fire(layer, "cancel").defaultPrevented).toBe(true);
+  f.role('format-size').value = '24';
+  fire(f.role('format-size'), 'input');
+  const layer = f.role('formatting-dialog');
+  fire(f.role('format-confirm'), 'click');
+  fire(f.role('format-confirm'), 'click');
+  fire(layer, 'keydown', { key: 'Escape', keyCode: 27 });
+  expect(fire(layer, 'cancel').defaultPrevented).toBe(true);
   expect(f.calls.length).toBe(1);
   expect(layer.open).toBe(true);
-  settle({ kind: "unchanged" });
+  settle({ kind: 'unchanged' });
   await tick();
-  expect(f.role("formatting-dialog")).toBeUndefined();
+  expect(f.role('formatting-dialog')).toBeUndefined();
   expect(f.notifications.at(-1)).toBe(true);
   f.dispose();
 });
-test("dispose during pending has no late status/presentation/focus callback", async () => {
+test('dispose during pending has no late status/presentation/focus callback', async () => {
   let settle: any;
   const f = fixture({
     apply: () =>
@@ -222,85 +222,85 @@ test("dispose during pending has no late status/presentation/focus callback", as
       }),
   });
   f.open();
-  fire(f.role("format-confirm"), "click");
+  fire(f.role('format-confirm'), 'click');
   f.dispose();
   const counts = [f.statuses.length, f.notifications.length, f.focus];
-  settle({ kind: "unchanged" });
+  settle({ kind: 'unchanged' });
   await tick();
   expect([f.statuses.length, f.notifications.length, f.focus]).toEqual(counts);
 });
-test("local composition guards flagless Escape/native cancel, Enter and 229", async () => {
+test('local composition guards flagless Escape/native cancel, Enter and 229', async () => {
   const f = fixture();
   f.open();
-  const layer = f.role("formatting-dialog");
-  fire(layer, "compositionstart");
+  const layer = f.role('formatting-dialog');
+  fire(layer, 'compositionstart');
   for (const event of [
-    { key: "Escape", keyCode: 27 },
-    { key: "Enter", keyCode: 13 },
-    { key: "Enter", keyCode: 229 },
+    { key: 'Escape', keyCode: 27 },
+    { key: 'Enter', keyCode: 13 },
+    { key: 'Enter', keyCode: 229 },
   ])
-    fire(layer, "keydown", event);
-  fire(layer, "cancel");
+    fire(layer, 'keydown', event);
+  fire(layer, 'cancel');
   expect(layer.open).toBe(true);
   expect(f.calls.length).toBe(0);
   expect(f.focus).toBe(0);
-  fire(layer, "compositionend");
-  fire(layer, "keydown", { key: "Enter", keyCode: 13 });
+  fire(layer, 'compositionend');
+  fire(layer, 'keydown', { key: 'Enter', keyCode: 13 });
   await tick();
   expect(f.calls.length).toBe(1);
-  expect(f.role("formatting-dialog")).toBeUndefined();
+  expect(f.role('formatting-dialog')).toBeUndefined();
   f.dispose();
 });
-test("Tab endpoints trap focus; composition arrows do not switch tabs", () => {
+test('Tab endpoints trap focus; composition arrows do not switch tabs', () => {
   const f = fixture();
   f.open();
-  const layer = f.role("formatting-dialog"),
-    first = f.role("dialog-dismiss"),
-    tab = f.role("format-tab-basic"),
-    last = f.role("format-cancel");
+  const layer = f.role('formatting-dialog'),
+    first = f.role('dialog-dismiss'),
+    tab = f.role('format-tab-basic'),
+    last = f.role('format-cancel');
   last.focus();
-  fire(layer, "keydown", { key: "Tab" });
+  fire(layer, 'keydown', { key: 'Tab' });
   expect(f.doc.activeElement.dataset.role).toBe(first.dataset.role);
-  fire(layer, "keydown", { key: "Tab", shiftKey: true });
+  fire(layer, 'keydown', { key: 'Tab', shiftKey: true });
   expect(f.doc.activeElement.dataset.role).toBe(last.dataset.role);
-  fire(layer, "compositionstart");
-  fire(tab, "keydown", { key: "ArrowRight", keyCode: 229 });
-  expect(tab.getAttribute("aria-selected")).toBe("true");
-  fire(layer, "compositionend");
-  fire(tab, "keydown", { key: "ArrowRight" });
-  expect(f.role("format-tab-extension").getAttribute("aria-selected")).toBe("true");
+  fire(layer, 'compositionstart');
+  fire(tab, 'keydown', { key: 'ArrowRight', keyCode: 229 });
+  expect(tab.getAttribute('aria-selected')).toBe('true');
+  fire(layer, 'compositionend');
+  fire(tab, 'keydown', { key: 'ArrowRight' });
+  expect(f.role('format-tab-extension').getAttribute('aria-selected')).toBe('true');
   f.dispose();
 });
-test("0.001pt is rejected without rounding or applying last valid draft", () => {
+test('0.001pt is rejected without rounding or applying last valid draft', () => {
   const f = fixture();
   f.open();
-  f.role("format-size").value = "0.001";
-  fire(f.role("format-size"), "input");
-  fire(f.role("format-confirm"), "click");
+  f.role('format-size').value = '0.001';
+  fire(f.role('format-size'), 'input');
+  fire(f.role('format-confirm'), 'click');
   expect(f.calls.length).toBe(0);
-  expect(f.role("formatting-dialog").open).toBe(true);
+  expect(f.role('formatting-dialog').open).toBe(true);
   f.dispose();
 });
-test("all six alignment enum choices stay one sparse paragraph request", async () => {
-  for (const value of ["JUSTIFY", "LEFT", "RIGHT", "CENTER", "DISTRIBUTE", "DISTRIBUTE_SPACE"]) {
+test('all six alignment enum choices stay one sparse paragraph request', async () => {
+  for (const value of ['JUSTIFY', 'LEFT', 'RIGHT', 'CENTER', 'DISTRIBUTE', 'DISTRIBUTE_SPACE']) {
     const f = fixture();
-    f.open("paragraph");
-    f.role("format-alignment").value = value;
-    fire(f.role("format-alignment"), "change");
-    fire(f.role("format-confirm"), "click");
+    f.open('paragraph');
+    f.role('format-alignment').value = value;
+    fire(f.role('format-alignment'), 'change');
+    fire(f.role('format-confirm'), 'click');
     await tick();
     expect(f.calls.length).toBe(1);
     expect(f.calls[0]).toEqual(
-      value === "LEFT" ? { kind: "paragraph" } : { kind: "paragraph", alignment: value },
+      value === 'LEFT' ? { kind: 'paragraph' } : { kind: 'paragraph', alignment: value },
     );
     f.dispose();
   }
 });
-test("view exposes current values and remaining fields without development jargon", () => {
+test('view exposes current values and remaining fields without development jargon', () => {
   const f = fixture();
   f.open();
-  expect(f.text()).toContain("12pt");
-  expect(f.text()).toContain("준비 중");
+  expect(f.text()).toContain('12pt');
+  expect(f.text()).toContain('준비 중');
   expect(f.text()).not.toMatch(/Native|공개 관측|원자.*계약|임시 연속|1차 연결/);
   f.dispose();
 });

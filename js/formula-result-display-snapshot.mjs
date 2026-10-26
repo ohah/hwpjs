@@ -1,9 +1,9 @@
-import { validateFieldTargets } from "./hwpx-field-target-wire.mjs";
+import { validateFieldTargets } from './hwpx-field-target-wire.mjs';
 
 export function decodeFormulaResultDisplaySnapshot(bytes) {
-  const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  const rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   const invalid = () => {
-    throw new Error("InvalidFormulaResultDisplaySnapshot");
+    throw new Error('InvalidFormulaResultDisplaySnapshot');
   };
   if (!Array.isArray(rows) || rows.length > 100000) invalid();
   let previous = 0;
@@ -13,7 +13,7 @@ export function decodeFormulaResultDisplaySnapshot(bytes) {
       !Number.isInteger(row.paragraph) ||
       row.paragraph <= previous ||
       row.paragraph > 0xffffffff ||
-      typeof row.text !== "string" ||
+      typeof row.text !== 'string' ||
       !Array.isArray(row.targets) ||
       !row.targets.length
     )

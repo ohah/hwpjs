@@ -1,7 +1,7 @@
 // Browser-test guard: coordinates alone do not prove that a click reached its target.
 export function targetHitProbe(selector) {
-  if (typeof selector !== "string" || !selector.trim())
-    throw new Error("InvalidBrowserClickSelector");
+  if (typeof selector !== 'string' || !selector.trim())
+    throw new Error('InvalidBrowserClickSelector');
   return `(() => {
     const target = document.querySelector(${JSON.stringify(selector)});
     if (!target) return { exists: false };
@@ -14,15 +14,15 @@ export function targetHitProbe(selector) {
 }
 
 export function assertTargetHit(result) {
-  if (result?.exists !== true) throw new Error("BrowserClickTargetMissing");
-  if (result.enabled !== true) throw new Error("BrowserClickTargetDisabled");
+  if (result?.exists !== true) throw new Error('BrowserClickTargetMissing');
+  if (result.enabled !== true) throw new Error('BrowserClickTargetDisabled');
   if (result.positiveRect !== true || result.inViewport !== true)
-    throw new Error("BrowserClickTargetNotVisible");
-  if (result.hitMatches !== true) throw new Error("BrowserClickTargetCovered");
+    throw new Error('BrowserClickTargetNotVisible');
+  if (result.hitMatches !== true) throw new Error('BrowserClickTargetCovered');
 }
 
 export function clickBrowserTarget({ command, evaluate, afterClick }, selector) {
-  command("scrollintoview", selector);
+  command('scrollintoview', selector);
   assertTargetHit(evaluate(targetHitProbe(selector)));
   evaluate(`(() => {
     window.__hwpClickCleanup?.();
@@ -34,12 +34,12 @@ export function clickBrowserTarget({ command, evaluate, afterClick }, selector) 
     document.addEventListener("click", listener, { capture: true, once: true });
   })()`);
   try {
-    command("click", selector);
+    command('click', selector);
     afterClick?.(selector);
-    const proof = evaluate("window.__hwpClickProof");
+    const proof = evaluate('window.__hwpClickProof');
     if (proof?.trusted !== true || proof.matches !== true)
-      throw new Error("BrowserClickDidNotReachTarget");
+      throw new Error('BrowserClickDidNotReachTarget');
   } finally {
-    evaluate("window.__hwpClickCleanup?.()");
+    evaluate('window.__hwpClickCleanup?.()');
   }
 }

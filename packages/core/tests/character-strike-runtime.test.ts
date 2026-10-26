@@ -1,28 +1,28 @@
-import test, { type TestContext } from "node:test";
-import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { createHash } from "node:crypto";
-import { spawnSync } from "node:child_process";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
+import test, { type TestContext } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
 import {
   createEditor,
   getSelectionFormatting,
   SET_CHARACTER_STRIKE_COMMAND,
   type HeadlessEditor,
   type SelectionTarget,
-} from "../src/index.ts";
-import { createReaderRuntimeFactory } from "../src/runtime.ts";
+} from '../src/index.ts';
+import { createReaderRuntimeFactory } from '../src/runtime.ts';
 
-type Format = "hwp5" | "hwpx";
-const root = fileURLToPath(new URL("../../../", import.meta.url));
-const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+type Format = 'hwp5' | 'hwpx';
+const root = fileURLToPath(new URL('../../../', import.meta.url));
+const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 let compiled: Promise<WebAssembly.Module> | undefined;
 // WASM/기존 두 fixture가 없는 checkout은 이유를 출력하고 skip합니다. 다른 엔진으로 대체하지 않습니다.
 async function setup(t: TestContext, format: Format) {
   const path = process.env.HWPJS_TEST_WASM;
   if (!path) {
-    t.skip("명시적 HWPJS_TEST_WASM 필요");
+    t.skip('명시적 HWPJS_TEST_WASM 필요');
     return;
   }
   let wasm: Uint8Array, bytes: Uint8Array;
@@ -30,12 +30,12 @@ async function setup(t: TestContext, format: Format) {
     wasm = await readFile(path);
     bytes = await readFile(
       root +
-        "legacy/rust/crates/hwp-core/tests/fixtures/charshape." +
-        (format === "hwp5" ? "hwp" : "hwpx"),
+        'legacy/rust/crates/hwp-core/tests/fixtures/charshape.' +
+        (format === 'hwp5' ? 'hwp' : 'hwpx'),
     );
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      t.skip("지정 WASM 또는 기존 charshape fixture가 checkout에 없음");
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      t.skip('지정 WASM 또는 기존 charshape fixture가 checkout에 없음');
       return;
     }
     throw error;
@@ -70,13 +70,13 @@ function target(e: HeadlessEditor, start = 0, end = 1): SelectionTarget {
   return {
     ...s.token,
     format: content.format,
-    coordinateSpace: "display",
+    coordinateSpace: 'display',
     owner: row.selectionOwner,
     section: 0,
     paragraph: 2,
     startUnit: start,
     endUnit: end,
-    affinity: "forward",
+    affinity: 'forward',
   };
 }
 async function select(e: HeadlessEditor, start = 0, end = 1) {
@@ -90,7 +90,7 @@ async function toggle(e: HeadlessEditor, enabled: boolean) {
   const f = await select(e);
   return e.dispatchCommand(SET_CHARACTER_STRIKE_COMMAND, { target: f.target!, enabled });
 }
-for (const format of ["hwp5", "hwpx"] as const) {
+for (const format of ['hwp5', 'hwpx'] as const) {
   test(`${format}: 실제 취소선 저장·history·새 세션 재열기`, async (t) => {
     const s = await setup(t, format);
     if (!s) return;
@@ -99,7 +99,7 @@ for (const format of ["hwp5", "hwpx"] as const) {
       await e.load(bytes, { format, editable: true });
       assert.equal((await select(e)).strike, false);
       const before = await save(e);
-      assert.equal((await toggle(e, true)).status, "committed-with-snapshot");
+      assert.equal((await toggle(e, true)).status, 'committed-with-snapshot');
       assert.equal(getSelectionFormatting(e.getEditorState()).strike, true);
       const on = await save(e);
       await e.undo();
@@ -112,7 +112,7 @@ for (const format of ["hwp5", "hwpx"] as const) {
       try {
         await reopened.load(on, { format, editable: true });
         assert.equal((await select(reopened)).strike, true);
-        assert.equal((await toggle(reopened, false)).status, "committed-with-snapshot");
+        assert.equal((await toggle(reopened, false)).status, 'committed-with-snapshot');
         const off = await save(reopened);
         await reopened.load(off, { format, editable: true });
         assert.equal((await select(reopened)).strike, false);
@@ -130,17 +130,17 @@ for (const format of ["hwp5", "hwpx"] as const) {
     try {
       await e.load(bytes, { format, editable: false });
       const f = await select(e);
-      assert.equal(f.strikeAvailableReason, "SelectionNotEditable");
+      assert.equal(f.strikeAvailableReason, 'SelectionNotEditable');
       const revision = e.getEditorState().operationRevision,
-        count = trace.filter((x) => x === "character-strike").length;
+        count = trace.filter((x) => x === 'character-strike').length;
       const result = await e.dispatchCommand(SET_CHARACTER_STRIKE_COMMAND, {
         target: target(e),
         enabled: true,
       });
-      assert.equal(result.status, "rejected-unapplied");
-      assert.equal(result.error, "ReadOnlyDocument");
+      assert.equal(result.status, 'rejected-unapplied');
+      assert.equal(result.error, 'ReadOnlyDocument');
       assert.equal(e.getEditorState().operationRevision, revision);
-      assert.equal(trace.filter((x) => x === "character-strike").length, count);
+      assert.equal(trace.filter((x) => x === 'character-strike').length, count);
     } finally {
       await e.dispose();
     }
@@ -154,16 +154,16 @@ for (const format of ["hwp5", "hwpx"] as const) {
       await select(e);
       const before = hash(await save(e)),
         revision = e.getEditorState().operationRevision,
-        count = trace.filter((x) => x === "character-strike").length;
-      for (const enabled of [0, 1, "false", null, undefined]) {
+        count = trace.filter((x) => x === 'character-strike').length;
+      for (const enabled of [0, 1, 'false', null, undefined]) {
         const result = await e.dispatchCommand(SET_CHARACTER_STRIKE_COMMAND, {
           target: target(e),
           enabled: enabled as unknown as boolean,
         });
-        assert.equal(result.status, "rejected-unapplied");
-        assert.equal(result.error, "InvalidCharacterStrikeEnabled");
+        assert.equal(result.status, 'rejected-unapplied');
+        assert.equal(result.error, 'InvalidCharacterStrikeEnabled');
       }
-      assert.equal(trace.filter((x) => x === "character-strike").length, count);
+      assert.equal(trace.filter((x) => x === 'character-strike').length, count);
       assert.equal(e.getEditorState().operationRevision, revision);
       assert.equal(hash(await save(e)), before);
     } finally {
@@ -177,14 +177,14 @@ for (const format of ["hwp5", "hwpx"] as const) {
     try {
       await e.load(bytes, { format, editable: true });
       const f = await select(e, 0, 0);
-      assert.equal(f.strikeAvailableReason, "EmptyCharacterSelection");
-      const count = trace.filter((x) => x === "character-strike").length;
+      assert.equal(f.strikeAvailableReason, 'EmptyCharacterSelection');
+      const count = trace.filter((x) => x === 'character-strike').length;
       const r = await e.dispatchCommand(SET_CHARACTER_STRIKE_COMMAND, {
         target: target(e, 0, 0),
         enabled: true,
       });
-      assert.equal(r.error, "EmptyCharacterSelection");
-      assert.equal(trace.filter((x) => x === "character-strike").length, count);
+      assert.equal(r.error, 'EmptyCharacterSelection');
+      assert.equal(trace.filter((x) => x === 'character-strike').length, count);
     } finally {
       await e.dispose();
     }
@@ -195,16 +195,16 @@ for (const format of ["hwp5", "hwpx"] as const) {
     const { editor: e, bytes, wasm } = s;
     try {
       let mutant: Uint8Array;
-      if (format === "hwp5") {
+      if (format === 'hwp5') {
         // 독립 record 경계로 제어 입력만 만듭니다. 제품 취소선 정책은 복제하지 않습니다.
-        const { createCfbReader } = await import("../../../js/cfb.mjs");
+        const { createCfbReader } = await import('../../../js/cfb.mjs');
         const { records } =
-          await import("../../../tests/hwp5/style-preservation/text-record-oracle.mjs");
+          await import('../../../tests/hwp5/style-preservation/text-record-oracle.mjs');
         const cfb = await createCfbReader(wasm);
         try {
           cfb.parse(bytes, { strict: true });
           const nodes = cfb.document().nodes,
-            entry = nodes.find((n: any) => n.parent === 0 && n.name === "DocInfo");
+            entry = nodes.find((n: any) => n.parent === 0 && n.name === 'DocInfo');
           assert(entry);
           const info = inflateRawSync(entry.content),
             record = records(info).filter((r: any) => r.tag === 21)[0];
@@ -220,9 +220,9 @@ for (const format of ["hwp5", "hwpx"] as const) {
         }
       } else {
         const py = spawnSync(
-          "python3",
+          'python3',
           [
-            "-c",
+            '-c',
             `import io,sys,zipfile,xml.etree.ElementTree as E
 src=io.BytesIO(sys.stdin.buffer.read());dst=io.BytesIO()
 with zipfile.ZipFile(src) as a,zipfile.ZipFile(dst,'w') as b:
@@ -237,8 +237,8 @@ sys.stdout.buffer.write(dst.getvalue())`,
           ],
           { input: bytes, maxBuffer: 8 * 1024 * 1024 },
         );
-        if (py.error && (py.error as NodeJS.ErrnoException).code === "ENOENT") {
-          t.skip("unknown HWPX 제어 입력 생성에 Python3 필요");
+        if (py.error && (py.error as NodeJS.ErrnoException).code === 'ENOENT') {
+          t.skip('unknown HWPX 제어 입력 생성에 Python3 필요');
           return;
         }
         assert.equal(py.status, 0, py.stderr.toString());
@@ -247,17 +247,17 @@ sys.stdout.buffer.write(dst.getvalue())`,
       await e.load(mutant, { format, editable: true });
       const f = await select(e);
       assert.equal(f.strike, null);
-      assert.equal(f.strikeAvailableReason, "UnknownCharacterStrike");
+      assert.equal(f.strikeAvailableReason, 'UnknownCharacterStrike');
       const before = hash(await save(e));
       for (const enabled of [false, true]) {
         const r = await e.dispatchCommand(SET_CHARACTER_STRIKE_COMMAND, {
           target: target(e),
           enabled,
         });
-        assert.equal(r.status, "rejected-unapplied");
+        assert.equal(r.status, 'rejected-unapplied');
         assert.equal(
           r.error,
-          format === "hwp5" ? "UnsupportedCharacterStrikeKind" : "UnsupportedCharacterStrikeShape",
+          format === 'hwp5' ? 'UnsupportedCharacterStrikeKind' : 'UnsupportedCharacterStrikeShape',
         );
         assert.equal(hash(await save(e)), before);
       }

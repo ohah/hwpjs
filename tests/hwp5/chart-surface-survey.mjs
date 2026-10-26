@@ -1,22 +1,22 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { axesOracle } from "./chart-axes-oracle.mjs";
-import { observeSurfacePrefix } from "./chart-surface-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { axesOracle } from './chart-axes-oracle.mjs';
+import { observeSurfacePrefix } from './chart-surface-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   versions = 0;
 try {
   const corpus = await oleContainerSurvey((env, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const a = axesOracle(b),
       types = a.rows.at(-1).result.types,
       r = observeSurfacePrefix(b, a.end, types);
@@ -24,7 +24,7 @@ try {
       for (let cut = a.end; cut < r.end; cut++) {
         assert.throws(
           () => observeSurfacePrefix(b.subarray(0, cut), a.end, types),
-          (e) => e.constructor === Error && e.message === "IncompleteSurfaceObservation",
+          (e) => e.constructor === Error && e.message === 'IncompleteSurfaceObservation',
         );
         cuts++;
       }
@@ -33,7 +33,7 @@ try {
         bad[d.versionOffset] ^= 1;
         assert.throws(
           () => observeSurfacePrefix(bad, a.end, types),
-          (e) => e.constructor === Error && e.message === "UnsupportedSurfaceObservationType",
+          (e) => e.constructor === Error && e.message === 'UnsupportedSurfaceObservationType',
         );
         versions++;
       }
@@ -46,7 +46,7 @@ try {
     rows.push({
       sha256: digest(b),
       result: r,
-      nextBytes: b.subarray(r.end, r.end + 32).toString("hex"),
+      nextBytes: b.subarray(r.end, r.end + 32).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);

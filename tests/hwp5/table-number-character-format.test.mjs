@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
 import {
   inspect,
   records,
   paragraphRecords,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
-import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
-import { tableNumberSourceOracle } from "./table-number-source-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+} from './style-preservation/text-record-oracle.mjs';
+import { verifyCharacterProperties } from './style-preservation/character-property-oracle.mjs';
+import { tableNumberSourceOracle } from './table-number-source-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
 function declarations(bytes) {
   const source = tableNumberSourceOracle(bytes);
@@ -24,14 +24,14 @@ function declarations(bytes) {
   };
 }
 
-for (const name of ["hwpspec.hwp", "hwp-3.0-HWPML.hwp"]) {
+for (const name of ['hwpspec.hwp', 'hwp-3.0-HWPML.hwp']) {
   test(`${name}: formatting and isolated text retain table references and protected-section redo`, async (t) => {
     const path = `reference/rhwp/samples/${name}`;
     if (!existsSync(path)) {
-      t.skip("RHWP reference fixture is unavailable");
+      t.skip('RHWP reference fixture is unavailable');
       return;
     }
-    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
     const input = readFileSync(path),
       parsed = inspect(input);
     const paragraph = records(parsed.sections[0].bytes)
@@ -46,7 +46,7 @@ for (const name of ["hwpspec.hwp", "hwp-3.0-HWPML.hwp"]) {
     assert(paragraph >= 0);
     const owner = paragraphRecords(parsed.sections[0].bytes, paragraph);
     const shapeId = owner.direct.find((row) => row.tag === 68).payload.readUInt32LE(4);
-    const shape = records(parsed.decode(parsed.streams.get("DocInfo"))).filter(
+    const shape = records(parsed.decode(parsed.streams.get('DocInfo'))).filter(
       (row) => row.tag === 21,
     )[shapeId];
     const bold = !(shape.payload.readUInt32LE(46) & 2);
@@ -84,17 +84,17 @@ for (const name of ["hwpspec.hwp", "hwp-3.0-HWPML.hwp"]) {
             paragraph: protectedSpan.begin.paragraph,
             startUnit: protectedSpan.begin.unit,
             endUnit: protectedSpan.begin.unit,
-            text: "보호",
+            text: '보호',
           }),
         /ReadOnlyCrossReferenceResult/,
       );
       assert.equal(editor.redo(), true);
       assert.deepEqual(Buffer.from(editor.save({ allowStaleLayout: true }).bytes), saved);
       const originalText = editor.text(0, paragraph);
-      editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "보존😀" });
+      editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: '보존😀' });
       const textSaved = editor.save({ allowStaleLayout: true }).bytes;
-      verifyRaw(saved, textSaved, 0, paragraph, 0, 0, "보존😀");
-      assert.equal(editor.text(0, paragraph), "보존😀" + originalText);
+      verifyRaw(saved, textSaved, 0, paragraph, 0, 0, '보존😀');
+      assert.equal(editor.text(0, paragraph), '보존😀' + originalText);
       assert.deepEqual(declarations(textSaved), declarations(input));
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save({ allowStaleLayout: true }).bytes), saved);

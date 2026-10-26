@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { signs, where } from "./icc-normalized-locations.mjs";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { paraInput } from "./icc-analytic.mjs";
+import assert from 'node:assert/strict';
+import { signs, where } from './icc-normalized-locations.mjs';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { paraInput } from './icc-analytic.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n],
   H = [1n, 2n];

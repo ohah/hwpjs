@@ -8,7 +8,7 @@ export function planParagraphDependencies({ total, offset, count, dependencies, 
     count > total - offset ||
     !(dependencies instanceof Map)
   )
-    throw new RangeError("InvalidParagraphWindow");
+    throw new RangeError('InvalidParagraphWindow');
   const valid = (ordinal) => Number.isSafeInteger(ordinal) && ordinal >= 0 && ordinal < total;
   for (const [ordinal, required] of dependencies) {
     if (
@@ -17,14 +17,14 @@ export function planParagraphDependencies({ total, offset, count, dependencies, 
       required.some((value) => !valid(value)) ||
       new Set(required).size !== required.length
     )
-      throw new RangeError("InvalidParagraphDependencies");
+      throw new RangeError('InvalidParagraphDependencies');
   }
-  if (count > maxParagraphs) throw new RangeError("ParagraphWindowBudgetExceeded");
+  if (count > maxParagraphs) throw new RangeError('ParagraphWindowBudgetExceeded');
   const selected = new Set(),
     queue = [];
   const add = (ordinal) => {
     if (selected.has(ordinal)) return;
-    if (selected.size >= maxParagraphs) throw new RangeError("ParagraphWindowBudgetExceeded");
+    if (selected.size >= maxParagraphs) throw new RangeError('ParagraphWindowBudgetExceeded');
     selected.add(ordinal);
     queue.push(ordinal);
   };

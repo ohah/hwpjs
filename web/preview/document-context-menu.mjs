@@ -4,46 +4,46 @@ export function createDocumentContextMenu({
   document,
   targets,
   commandIds = [
-    "menu-undo",
-    "menu-redo",
-    "menu-copy",
-    "menu-cut",
-    "menu-paste",
-    "menu-delete",
-    "menu-bold",
-    "menu-italic",
-    "menu-underline",
-    "menu-strike",
-    "menu-properties",
+    'menu-undo',
+    'menu-redo',
+    'menu-copy',
+    'menu-cut',
+    'menu-paste',
+    'menu-delete',
+    'menu-bold',
+    'menu-italic',
+    'menu-underline',
+    'menu-strike',
+    'menu-properties',
   ],
 }) {
   if (
     !registry ||
-    typeof registry.commands !== "function" ||
-    typeof registry.execute !== "function" ||
+    typeof registry.commands !== 'function' ||
+    typeof registry.execute !== 'function' ||
     !document?.body ||
     !document.head ||
-    typeof document.createElement !== "function" ||
+    typeof document.createElement !== 'function' ||
     !document.defaultView ||
     !Array.isArray(targets) ||
     !targets.length ||
     targets.some(
       (target) =>
-        typeof target?.addEventListener !== "function" ||
-        typeof target.getBoundingClientRect !== "function",
+        typeof target?.addEventListener !== 'function' ||
+        typeof target.getBoundingClientRect !== 'function',
     ) ||
     new Set(targets).size !== targets.length ||
     !Array.isArray(commandIds) ||
     !commandIds.length ||
-    commandIds.some((id) => typeof id !== "string" || !id) ||
+    commandIds.some((id) => typeof id !== 'string' || !id) ||
     new Set(commandIds).size !== commandIds.length
   )
-    throw new Error("InvalidDocumentContextMenu");
-  const menu = document.createElement("div"),
-    style = document.createElement("style");
-  menu.className = "hwpjs-document-context-menu";
-  menu.setAttribute("role", "menu");
-  menu.setAttribute("aria-label", "문서 편집");
+    throw new Error('InvalidDocumentContextMenu');
+  const menu = document.createElement('div'),
+    style = document.createElement('style');
+  menu.className = 'hwpjs-document-context-menu';
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', '문서 편집');
   menu.tabIndex = -1;
   menu.hidden = true;
   style.textContent =
@@ -74,18 +74,18 @@ export function createDocumentContextMenu({
       for (const commandId of commandIds) {
         const command = commands.find((row) => row.id === commandId);
         if (!command) continue;
-        const button = document.createElement("button");
-        button.type = "button";
+        const button = document.createElement('button');
+        button.type = 'button';
         button.dataset.commandId = command.id;
         button.textContent = command.label;
         button.disabled = !command.enabled;
-        if (!command.enabled && typeof command.reason === "string" && command.reason) {
+        if (!command.enabled && typeof command.reason === 'string' && command.reason) {
           button.title = command.reason;
-          button.setAttribute("aria-description", command.reason);
+          button.setAttribute('aria-description', command.reason);
         }
-        const checked = ["true", "false", "mixed"].includes(command.pressed);
-        button.setAttribute("role", checked ? "menuitemcheckbox" : "menuitem");
-        if (checked) button.setAttribute("aria-checked", command.pressed);
+        const checked = ['true', 'false', 'mixed'].includes(command.pressed);
+        button.setAttribute('role', checked ? 'menuitemcheckbox' : 'menuitem');
+        if (checked) button.setAttribute('aria-checked', command.pressed);
         button.tabIndex = -1;
         buttons.push(button);
       }
@@ -129,13 +129,13 @@ export function createDocumentContextMenu({
     // Native right-button focus runs before contextmenu. Keep the existing
     // editor selection/focus rather than remembering a newly focused Canvas.
     target.addEventListener(
-      "pointerdown",
+      'pointerdown',
       (event) => {
         if (
           !closed &&
           !event.defaultPrevented &&
           event.button === 2 &&
-          event.pointerType !== "touch" &&
+          event.pointerType !== 'touch' &&
           target.disabled !== true &&
           rows().length
         )
@@ -144,7 +144,7 @@ export function createDocumentContextMenu({
       { signal: events.signal },
     );
     target.addEventListener(
-      "contextmenu",
+      'contextmenu',
       (event) => {
         if (event.defaultPrevented || event.isComposing || target.disabled === true) return;
         const box = target.getBoundingClientRect();
@@ -155,7 +155,7 @@ export function createDocumentContextMenu({
       { signal: events.signal },
     );
     target.addEventListener(
-      "keydown",
+      'keydown',
       (event) => {
         if (
           event.defaultPrevented ||
@@ -169,8 +169,8 @@ export function createDocumentContextMenu({
         )
           return;
         if (
-          !(event.key === "ContextMenu" && !event.shiftKey) &&
-          !(event.key === "F10" && event.shiftKey)
+          !(event.key === 'ContextMenu' && !event.shiftKey) &&
+          !(event.key === 'F10' && event.shiftKey)
         )
           return;
         const box = target.getBoundingClientRect();
@@ -180,15 +180,15 @@ export function createDocumentContextMenu({
     );
   }
   menu.addEventListener(
-    "click",
+    'click',
     (event) => {
-      const button = event.target.closest?.("button[data-command-id]");
+      const button = event.target.closest?.('button[data-command-id]');
       if (button && menu.contains(button) && !button.disabled) run(button.dataset.commandId);
     },
     { signal: events.signal },
   );
   menu.addEventListener(
-    "keydown",
+    'keydown',
     (event) => {
       if (
         menu.hidden ||
@@ -200,26 +200,26 @@ export function createDocumentContextMenu({
         event.metaKey
       )
         return;
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         event.preventDefault();
         event.stopPropagation();
         finish(true);
         return;
       }
-      if (event.key === "Tab") {
+      if (event.key === 'Tab') {
         finish(true);
         return;
       }
-      if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
       event.preventDefault();
       const buttons = enabled(),
         index = buttons.indexOf(document.activeElement);
       const next =
-        event.key === "Home"
+        event.key === 'Home'
           ? 0
-          : event.key === "End"
+          : event.key === 'End'
             ? buttons.length - 1
-            : event.key === "ArrowDown"
+            : event.key === 'ArrowDown'
               ? (index + 1) % buttons.length
               : index <= 0
                 ? buttons.length - 1
@@ -228,8 +228,8 @@ export function createDocumentContextMenu({
     },
     { signal: events.signal },
   );
-  const inside = (node) => typeof node?.nodeType === "number" && menu.contains(node);
-  for (const type of ["pointerdown", "focusin"])
+  const inside = (node) => typeof node?.nodeType === 'number' && menu.contains(node);
+  for (const type of ['pointerdown', 'focusin'])
     document.addEventListener(
       type,
       (event) => {
@@ -238,16 +238,16 @@ export function createDocumentContextMenu({
       },
       { signal: events.signal },
     );
-  document.defaultView.addEventListener("resize", () => finish(false), { signal: events.signal });
+  document.defaultView.addEventListener('resize', () => finish(false), { signal: events.signal });
   document.addEventListener(
-    "scroll",
+    'scroll',
     (event) => {
       if (!inside(event.target)) finish(false);
     },
     { signal: events.signal, capture: true },
   );
   const unsubscribe =
-    typeof registry.subscribe === "function"
+    typeof registry.subscribe === 'function'
       ? registry.subscribe(() => {
           if (!menu.hidden) render();
         })

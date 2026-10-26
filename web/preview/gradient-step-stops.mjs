@@ -12,23 +12,23 @@ export function gradientStepStops(colors, steps, centerPercent) {
     centerPercent < 0 ||
     centerPercent > 100
   )
-    throw new Error("InvalidGradientStepStops");
+    throw new Error('InvalidGradientStepStops');
   if (steps === 0) return [];
-  if (steps === 1) throw new Error("UnsupportedSingleGradientStep");
+  if (steps === 1) throw new Error('UnsupportedSingleGradientStep');
   const rgb = colors.map((c) => [1, 3, 5].map((i) => Number.parseInt(c.slice(i, i + 2), 16)));
   const colorAt = (position) => {
     const coordinate = position * (rgb.length - 1),
       index = Math.min(Math.floor(coordinate), rgb.length - 2),
       fraction = coordinate - index;
     return (
-      "#" +
+      '#' +
       rgb[index]
         .map((channel, axis) =>
           Math.round(channel + (rgb[index + 1][axis] - channel) * fraction)
             .toString(16)
-            .padStart(2, "0"),
+            .padStart(2, '0'),
         )
-        .join("")
+        .join('')
     );
   };
   const center = centerPercent / 100;

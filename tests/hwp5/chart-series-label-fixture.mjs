@@ -1,18 +1,18 @@
 export function seriesLabelFixture(
   offset = 0,
-  kind = "null",
+  kind = 'null',
   freshName = false,
   freshBodyTypes = false,
 ) {
   const definitions = [
-    "VtSeriesPoint",
-    "VtSeriesLabel",
-    "VtTextBlock",
-    "VtFont",
-    "VtObject",
-    "VtString",
-    "VtValue",
-  ].map((name, i) => [51 + 19 * i, { name: name + "\0", version: i === 2 ? 2 : 1 }]);
+    'VtSeriesPoint',
+    'VtSeriesLabel',
+    'VtTextBlock',
+    'VtFont',
+    'VtObject',
+    'VtString',
+    'VtValue',
+  ].map((name, i) => [51 + 19 * i, { name: name + '\0', version: i === 2 ? 2 : 1 }]);
   const types = new Map(freshBodyTypes ? definitions.slice(0, 2) : definitions),
     declared = new Set(types.keys());
   const parts = [Buffer.alloc(offset, 0xa5)];
@@ -63,9 +63,9 @@ export function seriesLabelFixture(
   raw(14);
   type(4);
   raw(24);
-  if (kind === "null") int(0xffffffff);
-  else if (kind === "alias") int(99);
-  else string(13, kind === "empty");
+  if (kind === 'null') int(0xffffffff);
+  else if (kind === 'alias') int(99);
+  else string(13, kind === 'empty');
   raw(26);
   type(4);
   const bodyEnd = p;
@@ -82,6 +82,6 @@ export function seriesLabelFixture(
     fontOffset,
     types,
     objects: new Set([99, 999]),
-    strings: new Map([[99, { hex: "ff80", trailer: 173 }]]),
+    strings: new Map([[99, { hex: 'ff80', trailer: 173 }]]),
   };
 }

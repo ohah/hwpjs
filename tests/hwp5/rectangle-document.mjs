@@ -1,11 +1,11 @@
-import { ownedShapeDocument } from "./owned-shape-document.mjs";
-import { rectangleOwnerActual, rectangleOwnerRun } from "./rectangle-validation.mjs";
+import { ownedShapeDocument } from './owned-shape-document.mjs';
+import { rectangleOwnerActual, rectangleOwnerRun } from './rectangle-validation.mjs';
 export function rectangleDocumentReference(call, cfb) {
   const { objects, ...rest } = ownedShapeDocument(call, cfb, {
     tag: 79,
     count: 30,
     minimum: 33,
-    group: "rectangles",
+    group: 'rectangles',
     field: 1,
     actual: rectangleOwnerActual,
     run: rectangleOwnerRun,

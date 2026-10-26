@@ -1,5 +1,5 @@
-import { pictureLineRegions } from "./picture-line-regions.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { pictureLineRegions } from './picture-line-regions.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 /** Tables have a rectangular outline: tight wrapping excludes that rectangle. */
 export function tableLineRegions(
@@ -10,9 +10,9 @@ export function tableLineRegions(
 ) {
   const source = table?.sourceGeometry;
   if (!source || source.geometry?.treat_as_character !== false)
-    return { state: "unsupported_table_wrap" };
-  if (![0, 1, 4].includes(source.text_wrap)) return { state: "unsupported_table_wrap" };
-  if (![0, 1, 2, 3].includes(source.text_flow)) return { state: "unsupported_table_flow" };
+    return { state: 'unsupported_table_wrap' };
+  if (![0, 1, 4].includes(source.text_wrap)) return { state: 'unsupported_table_wrap' };
+  if (![0, 1, 2, 3].includes(source.text_flow)) return { state: 'unsupported_table_flow' };
   if (
     !Array.isArray(source.out_margin) ||
     source.out_margin.length !== 4 ||
@@ -20,7 +20,7 @@ export function tableLineRegions(
       (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0x7fffffff,
     )
   )
-    return { state: "invalid_table_margins" };
+    return { state: 'invalid_table_margins' };
   const fragmented = fragmentOrdinal !== undefined || fragmentCount !== undefined;
   if (
     fragmented &&
@@ -30,7 +30,7 @@ export function tableLineRegions(
       fragmentOrdinal < 0 ||
       fragmentOrdinal >= fragmentCount)
   )
-    return { state: "invalid_table_footprint" };
+    return { state: 'invalid_table_footprint' };
   const effectiveMargins = source.out_margin.map((value, index) =>
     (index === 2 && fragmented && fragmentOrdinal > 0) ||
     (index === 3 && fragmented && fragmentOrdinal < fragmentCount - 1)
@@ -51,7 +51,7 @@ export function tableLineRegions(
       footprint.width <= 0 ||
       footprint.height <= 0)
   )
-    return { state: "invalid_table_footprint" };
+    return { state: 'invalid_table_footprint' };
   if (footprint !== undefined) {
     if (
       !rectangle ||
@@ -66,7 +66,7 @@ export function tableLineRegions(
       rectangle.width <= 0 ||
       rectangle.height <= 0
     )
-      return { state: "invalid_table_footprint" };
+      return { state: 'invalid_table_footprint' };
     const [left, right, top, bottom] = effectiveMargins.map(hwpUnitPixels);
     if (
       footprint.x > rectangle.x - left + 1e-8 ||
@@ -74,7 +74,7 @@ export function tableLineRegions(
       footprint.x + footprint.width < rectangle.x + rectangle.width + right - 1e-8 ||
       footprint.y + footprint.height < rectangle.y + rectangle.height + bottom - 1e-8
     )
-      return { state: "invalid_table_footprint" };
+      return { state: 'invalid_table_footprint' };
   }
   // This selects the rectangle exclusion primitive, not a new source wrap value.
   const flow = {

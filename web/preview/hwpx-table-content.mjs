@@ -1,6 +1,6 @@
-import { attachTables } from "./table-content.mjs";
-import { attachTablePlacements } from "./table-placements-content.mjs";
-import { attachTableCaptions } from "./table-caption-content.mjs";
+import { attachTables } from './table-content.mjs';
+import { attachTablePlacements } from './table-placements-content.mjs';
+import { attachTableCaptions } from './table-caption-content.mjs';
 
 export function attachHwpxTables(editor, content) {
   const sections = [...new Set(content.paragraphs.map((p) => p.section))].map((index) => ({

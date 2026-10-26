@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -11,7 +11,7 @@ export function xmlTemplateEdges(call) {
   let rejected = 0,
     accepted = 0;
   const run = (fields, limit) => call(29, wire(fields), limit);
-  const good = [string(Buffer.from("<x/>", "utf16le")), null, string(Buffer.alloc(0))];
+  const good = [string(Buffer.from('<x/>', 'utf16le')), null, string(Buffer.alloc(0))];
   const check = (fields) => {
     const total = fields.reduce((n, b) => n + (b?.length ?? 0), 0);
     const extra = fields.reduce((n, b) => n + (b ? b.length - 4 - 2 * b.readUInt32LE(0) : 0), 0);
@@ -51,11 +51,11 @@ export function xmlTemplateEdges(call) {
     // XML syntax is not this parser's claim: DOCTYPE, external entity and malformed XML remain raw.
     for (const text of [
       '<!DOCTYPE x SYSTEM "https://invalid.invalid/a"><x/>',
-      "<x>&unknown;</y>",
-      "\0\ud800",
+      '<x>&unknown;</y>',
+      '\0\ud800',
     ]) {
       const f = [null, null, null];
-      f[field] = string(Buffer.from(text, "utf16le"));
+      f[field] = string(Buffer.from(text, 'utf16le'));
       check(f);
     }
   }

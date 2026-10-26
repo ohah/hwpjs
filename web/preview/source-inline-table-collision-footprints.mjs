@@ -1,4 +1,4 @@
-import { tableCollisionFootprints } from "./table-collision-footprints.mjs";
+import { tableCollisionFootprints } from './table-collision-footprints.mjs';
 
 // Publish final source-table bounds; unsupported inventory stays explicit.
 export function sourceInlineTableCollisionFootprints(source, layout, content) {
@@ -6,7 +6,7 @@ export function sourceInlineTableCollisionFootprints(source, layout, content) {
     errors = [...(layout.tableCollisionFootprintErrors ?? [])];
   for (const { table, outerInsets } of source.tables.values()) {
     const collected = tableCollisionFootprints(table, layout, outerInsets, content);
-    if (collected.state !== "collected") {
+    if (collected.state !== 'collected') {
       errors.push({ section: table.section, tableNode: table.tableNode, error: collected.error });
       continue;
     }
@@ -21,14 +21,14 @@ export function sourceInlineTableCollisionFootprints(source, layout, content) {
             existing.filter(
               (e) =>
                 e.pageOrdinal === p.pageOrdinal &&
-                ["x", "y", "width", "height"].every((k) => e.rectangle?.[k] === p.rectangle[k]),
+                ['x', 'y', 'width', 'height'].every((k) => e.rectangle?.[k] === p.rectangle[k]),
             ).length !== 1,
         )
       )
         errors.push({
           section: table.section,
           tableNode: table.tableNode,
-          error: "AmbiguousSourceInlineTableCollision",
+          error: 'AmbiguousSourceInlineTableCollision',
         });
     } else footprints.push(...collected.footprints);
   }

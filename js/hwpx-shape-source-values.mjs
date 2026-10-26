@@ -1,7 +1,7 @@
 /** Shared nullable scalar contract for JSON shape geometry, position and flow. */
 export function validateShapeSourceValues(value) {
   const fail = () => {
-    throw new Error("InvalidShapeSourceValues");
+    throw new Error('InvalidShapeSourceValues');
   };
   const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
   const signed = (v) => Number.isSafeInteger(v) && v >= -2147483648 && v <= 4294967295;
@@ -16,7 +16,7 @@ export function validateShapeSourceValues(value) {
     ![geometry.horizontal_offset, geometry.vertical_offset].every((v) => optional(v, signed))
   )
     fail();
-  if (Object.hasOwn(value, "position")) {
+  if (Object.hasOwn(value, 'position')) {
     const p = value.position;
     if (
       !p ||
@@ -29,7 +29,7 @@ export function validateShapeSourceValues(value) {
     )
       fail();
   }
-  if (Object.hasOwn(value, "flow")) {
+  if (Object.hasOwn(value, 'flow')) {
     const f = value.flow;
     if (
       !f ||

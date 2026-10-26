@@ -1,21 +1,21 @@
 // Public opt-in anchored edit coverage, separate from legacy plain offsets.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { createHwpxEditor } from "../js/hwpx-editor.mjs";
-import { createHwpxReader } from "../js/hwpx.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHwpxEditor } from '../js/hwpx-editor.mjs';
+import { createHwpxReader } from '../js/hwpx.mjs';
 
-const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync('zig-out/bin/hwpjs.wasm');
 const editor = await createHwpxEditor(wasm),
   reader = await createHwpxReader(wasm);
-const files = execFileSync("git", ["ls-files", "-z"])
+const files = execFileSync('git', ['ls-files', '-z'])
   .toString()
-  .split("\0")
-  .filter((path) => path.includes("/fixtures/") && path.endsWith(".hwpx"));
-const prefix = "검증😀";
-const leadingBoundary = process.argv.includes("--leading-boundary");
+  .split('\0')
+  .filter((path) => path.includes('/fixtures/') && path.endsWith('.hwpx'));
+const prefix = '검증😀';
+const leadingBoundary = process.argv.includes('--leading-boundary');
 const totals = {
-  boundary: leadingBoundary ? "leading" : "after-leading-anchors",
+  boundary: leadingBoundary ? 'leading' : 'after-leading-anchors',
   files: files.length,
   encrypted: 0,
   candidates: 0,
@@ -28,13 +28,13 @@ try {
     try {
       editor.open(input);
     } catch (error) {
-      assert.equal(error.message, "EncryptedDocument");
+      assert.equal(error.message, 'EncryptedDocument');
       totals.encrypted++;
       continue;
     }
     const paragraphs = reader
       .readTextEvents(input)
-      .events.filter((e) => e.kind === "paragraph_start");
+      .events.filter((e) => e.kind === 'paragraph_start');
     let accepted = 0;
     for (const paragraph of paragraphs) {
       editor.open(input);
@@ -46,17 +46,17 @@ try {
         before = editor.anchorText(paragraph.section, paragraph.paragraph);
         // Choose the boundary after leading protected anchors, not an
         // unmaterialized position before an object-only run.
-        if (!leadingBoundary) while (before[start] === "\ufffc") start++;
+        if (!leadingBoundary) while (before[start] === '\ufffc') start++;
         editor.spliceAnchored(paragraph.section, paragraph.paragraph, start, 0, prefix);
       } catch (error) {
         assert(
           [
-            "UnsupportedParagraphControl",
-            "UnsupportedInlineControl",
-            "MissingTextSite",
-            "SourceBindingMismatch",
-            "InvalidTextPosition",
-            "InvalidFormulaNumber",
+            'UnsupportedParagraphControl',
+            'UnsupportedInlineControl',
+            'MissingTextSite',
+            'SourceBindingMismatch',
+            'InvalidTextPosition',
+            'InvalidFormulaNumber',
           ].includes(error.message),
           `${path}: ${error.message}`,
         );
@@ -75,7 +75,7 @@ try {
       } finally {
         reopened.close();
       }
-      editor.spliceAnchored(paragraph.section, paragraph.paragraph, start, prefix.length, "");
+      editor.spliceAnchored(paragraph.section, paragraph.paragraph, start, prefix.length, '');
       assert.deepEqual(Buffer.from(editor.save()), input);
       totals.accepted++;
       accepted++;

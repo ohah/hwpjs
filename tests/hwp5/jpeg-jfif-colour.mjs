@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 // Decimal equations in T.871, evaluated independently of the product's
 // combined integer coefficients. Epsilon only resolves exact rational ties;

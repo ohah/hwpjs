@@ -1,7 +1,7 @@
-import { prepareTablePageBands } from "./table-page-bands.mjs";
-import { planMeasuredCellCuts } from "./table-measured-cell-cuts.mjs";
-import { pageRowFitHeight } from "./page-row-extents.mjs";
-import { inlineTablePageFitHeight } from "./inline-table-page-fit.mjs";
+import { prepareTablePageBands } from './table-page-bands.mjs';
+import { planMeasuredCellCuts } from './table-measured-cell-cuts.mjs';
+import { pageRowFitHeight } from './page-row-extents.mjs';
+import { inlineTablePageFitHeight } from './inline-table-page-fit.mjs';
 
 // 개체만 있는 인라인 호스트를 셀 병합 경계를 지킨 페이지 band로 확장합니다.
 export function prepareSplitInlineTableHost(
@@ -10,47 +10,47 @@ export function prepareSplitInlineTableHost(
   entry,
   { capacity, zeroWidthUnits = [] } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (capacity !== undefined && (!Number.isFinite(capacity) || capacity <= 0))
-    return unavailable("InvalidInlineTableSplitCapacity");
+    return unavailable('InvalidInlineTableSplitCapacity');
   const reasons = [];
   const hostRows = Array.isArray(measuredHost?.rows) ? measuredHost.rows : [];
-  const textRows = hostRows.filter((row) => row?.kind === "text");
+  const textRows = hostRows.filter((row) => row?.kind === 'text');
   const unit = entry?.table?.anchorUnit;
   const validZeroWidth =
     Array.isArray(zeroWidthUnits) &&
     new Set(zeroWidthUnits).size === zeroWidthUnits.length &&
     zeroWidthUnits.every(
       (at) =>
-        Number.isSafeInteger(at) && at >= 0 && at !== unit && paragraph?.text?.[at] === "\ufffc",
+        Number.isSafeInteger(at) && at >= 0 && at !== unit && paragraph?.text?.[at] === '\ufffc',
     );
   if (
     !validZeroWidth ||
-    typeof paragraph?.text !== "string" ||
+    typeof paragraph?.text !== 'string' ||
     paragraph.text.length !== zeroWidthUnits.length + 1 ||
     [...paragraph.text].some(
-      (text, at) => text !== "\ufffc" || (at !== unit && !zeroWidthUnits.includes(at)),
+      (text, at) => text !== '\ufffc' || (at !== unit && !zeroWidthUnits.includes(at)),
     )
   )
-    reasons.push("HostText");
+    reasons.push('HostText');
   if (
     measuredHost?.anchors?.length !== 1 ||
     textRows?.length !== 1 ||
     hostRows.some(
       (row) =>
         !row ||
-        (row.kind !== "text" &&
-          (row.kind !== "gap" || !Number.isFinite(row.height) || row.height < 0)),
+        (row.kind !== 'text' &&
+          (row.kind !== 'gap' || !Number.isFinite(row.height) || row.height < 0)),
     )
   )
-    reasons.push("HostRows");
-  if (!Number.isSafeInteger(unit) || unit < 0 || paragraph?.text?.[unit] !== "\ufffc")
-    reasons.push("AnchorPosition");
-  if (entry?.table?.pagination?.page_break !== "cell") reasons.push("SourcePageBreak");
-  if (entry?.captionReservation || entry?.table?.sourceCaption) reasons.push("TableCaption");
+    reasons.push('HostRows');
+  if (!Number.isSafeInteger(unit) || unit < 0 || paragraph?.text?.[unit] !== '\ufffc')
+    reasons.push('AnchorPosition');
+  if (entry?.table?.pagination?.page_break !== 'cell') reasons.push('SourcePageBreak');
+  if (entry?.captionReservation || entry?.table?.sourceCaption) reasons.push('TableCaption');
   if (reasons.length)
     return {
-      ...unavailable("UnsupportedSplitInlineTableHost"),
+      ...unavailable('UnsupportedSplitInlineTableHost'),
       section: paragraph?.section,
       paragraph: paragraph?.paragraph,
       tableNode: entry?.table?.tableNode,
@@ -63,16 +63,16 @@ export function prepareSplitInlineTableHost(
     anchor.unit !== unit ||
     !Number.isFinite(anchor.x)
   )
-    return unavailable("UnsupportedSplitInlineTableHost");
+    return unavailable('UnsupportedSplitInlineTableHost');
   if (!Array.isArray(entry.measured?.grid?.rows))
-    return unavailable("UnsupportedSplitInlineTableHost");
+    return unavailable('UnsupportedSplitInlineTableHost');
   const prepared = prepareTablePageBands(
     entry.table,
     entry.measured.grid.rows,
-    "row-bands",
+    'row-bands',
     entry.margins,
   );
-  if (prepared.state !== "prepared") return prepared;
+  if (prepared.state !== 'prepared') return prepared;
   const source = textRows[0];
   const { pageFitHeight: _wholeFit, ...sourceFragment } = source;
   if (
@@ -82,10 +82,10 @@ export function prepareSplitInlineTableHost(
     source.endUnit !== paragraph.text.length ||
     source.text !== paragraph.text
   )
-    return unavailable("UnsupportedSplitInlineTableHost");
+    return unavailable('UnsupportedSplitInlineTableHost');
   const reserved = prepared.rows.reduce((sum, row) => sum + row.height, 0);
   if (!Number.isFinite(source.height) || source.height <= 0 || !Number.isFinite(reserved))
-    return unavailable("UnsupportedSplitInlineTableHost");
+    return unavailable('UnsupportedSplitInlineTableHost');
   const trailing = Math.max(0, source.height - reserved),
     sourceIndex = hostRows.indexOf(source);
   const finish = (rows) => [
@@ -94,7 +94,7 @@ export function prepareSplitInlineTableHost(
     ...(trailing > 0
       ? [
           {
-            kind: "gap",
+            kind: 'gap',
             section: paragraph.section,
             paragraph: paragraph.paragraph,
             height: trailing,
@@ -104,15 +104,15 @@ export function prepareSplitInlineTableHost(
     ...hostRows.slice(sourceIndex + 1),
   ];
   if (capacity !== undefined && prepared.rows.some((row) => pageRowFitHeight(row) > capacity)) {
-    if (prepared.repeatedHeader) return unavailable("UnsupportedSplitInlineCellHeader");
+    if (prepared.repeatedHeader) return unavailable('UnsupportedSplitInlineCellHeader');
     const available = capacity - prepared.margins.top - prepared.margins.bottom;
     const cuts = planMeasuredCellCuts(entry.table, entry.measured, available, {
       origin: { x: 0, y: 0 },
-      padding: "source",
+      padding: 'source',
     });
-    if (cuts.state !== "planned") return cuts;
+    if (cuts.state !== 'planned') return cuts;
     const slicedRows = cuts.fragments.map((fragment, index) => ({
-      kind: "gap",
+      kind: 'gap',
       section: paragraph.section,
       paragraph: paragraph.paragraph,
       splitInlineTableNode: entry.table.tableNode,
@@ -128,7 +128,7 @@ export function prepareSplitInlineTableHost(
     const last = slicedRows.at(-1),
       fit = inlineTablePageFitHeight(entry.table, last.height, prepared.margins);
     if (fit < last.height) last.pageFitHeight = fit;
-    return { state: "prepared", prepared, cuts, rows: finish(slicedRows), anchorX: anchor.x };
+    return { state: 'prepared', prepared, cuts, rows: finish(slicedRows), anchorX: anchor.x };
   }
   const rows = prepared.rows.map((row, index) => ({
     ...row,
@@ -142,5 +142,5 @@ export function prepareSplitInlineTableHost(
         }
       : {}),
   }));
-  return { state: "prepared", prepared, rows: finish(rows), anchorX: anchor.x };
+  return { state: 'prepared', prepared, rows: finish(rows), anchorX: anchor.x };
 }

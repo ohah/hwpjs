@@ -1,19 +1,19 @@
-import { drawingPageReference } from "./drawing-page-reference.mjs";
-import { placeGroupedShape } from "./grouped-shape-placement.mjs";
-import { pictureQuadTransform } from "./picture-quad-transform.mjs";
-import { groupShapeChildren } from "./group-shape-children.mjs";
-import { groupedPaintLayer } from "./grouped-paint-layer.mjs";
+import { drawingPageReference } from './drawing-page-reference.mjs';
+import { placeGroupedShape } from './grouped-shape-placement.mjs';
+import { pictureQuadTransform } from './picture-quad-transform.mjs';
+import { groupShapeChildren } from './group-shape-children.mjs';
+import { groupedPaintLayer } from './grouped-paint-layer.mjs';
 
 export function projectGroupedPicturePage(picture, containers, paragraphs, rows) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   const owner = picture?.owner;
   if (!owner || owner.anchorNode === picture.pictureNode)
-    return unavailable("InvalidGroupedPictureOwner");
+    return unavailable('InvalidGroupedPictureOwner');
   const roots = (containers ?? []).filter(
     (c) => c.section === picture.section && c.containerNode === owner.anchorNode,
   );
   if (roots.length !== 1 || roots[0].source.group_context !== null)
-    return unavailable("AmbiguousGroupedPictureRoot");
+    return unavailable('AmbiguousGroupedPictureRoot');
   const root = roots[0].source;
   let children;
   try {
@@ -21,19 +21,19 @@ export function projectGroupedPicturePage(picture, containers, paragraphs, rows)
   } catch (error) {
     return unavailable(error.message);
   }
-  if (children.filter((c) => c.node === picture.pictureNode && c.kind === "picture").length !== 1)
-    return unavailable("UnsupportedNestedGroupedPicture");
+  if (children.filter((c) => c.node === picture.pictureNode && c.kind === 'picture').length !== 1)
+    return unavailable('UnsupportedNestedGroupedPicture');
   const transform = picture.transform;
   if (
     [
-      "ownerError",
-      "geometryError",
-      "positionError",
-      "flowError",
-      "cropError",
-      "transformError",
-      "renderingCornersError",
-      "paintError",
+      'ownerError',
+      'geometryError',
+      'positionError',
+      'flowError',
+      'cropError',
+      'transformError',
+      'renderingCornersError',
+      'paintError',
     ].some((k) => picture[k] != null) ||
     !transform ||
     transform.angle !== 0 ||
@@ -47,7 +47,7 @@ export function projectGroupedPicturePage(picture, containers, paragraphs, rows)
     picture.crop.clip[1] <= picture.crop.clip[0] ||
     picture.crop.clip[3] <= picture.crop.clip[2]
   )
-    return unavailable("UnsupportedGroupedPictureSource");
+    return unavailable('UnsupportedGroupedPictureSource');
   const selected = drawingPageReference(
     {
       section: picture.section,
@@ -58,19 +58,19 @@ export function projectGroupedPicturePage(picture, containers, paragraphs, rows)
     paragraphs,
     rows,
   );
-  if (selected.state !== "selected") return selected;
+  if (selected.state !== 'selected') return selected;
   const placement = placeGroupedShape(root, picture.renderingCorners, selected.boxes, {
     host: selected.host,
     anchor: { section: picture.section, paragraph: owner.paragraph, unit: owner.anchorUnit },
   });
-  if (placement.state !== "placed") return placement;
+  if (placement.state !== 'placed') return placement;
   const origin = { x: placement.rectangle.x, y: placement.rectangle.y };
   const mapped = pictureQuadTransform(picture.renderingCorners, origin);
-  if (mapped.state !== "mapped") return unavailable(mapped.state);
+  if (mapped.state !== 'mapped') return unavailable(mapped.state);
   const xs = placement.points.map((p) => p[0]),
     ys = placement.points.map((p) => p[1]);
   return {
-    state: "placed",
+    state: 'placed',
     origin,
     rectangle: {
       x: Math.min(...xs),
@@ -81,6 +81,6 @@ export function projectGroupedPicturePage(picture, containers, paragraphs, rows)
     pageOrdinal: selected.host.pageOrdinal,
     flow: root.flow,
     paintLayer: groupedPaintLayer(root, selected.host.reservedGroupRoot === roots[0].containerNode),
-    paintPlan: { state: "quad", corners: picture.renderingCorners },
+    paintPlan: { state: 'quad', corners: picture.renderingCorners },
   };
 }

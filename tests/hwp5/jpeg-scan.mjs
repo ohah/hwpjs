@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { jpegCoefficientReader } from "./jpeg-sequential.mjs";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { jpegStoreOracle } from "./jpeg-store.mjs";
-import { encodeCodes } from "./jpeg-codec.mjs";
+import assert from 'node:assert/strict';
+import { jpegCoefficientReader } from './jpeg-sequential.mjs';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { jpegStoreOracle } from './jpeg-store.mjs';
+import { encodeCodes } from './jpeg-codec.mjs';
 
 export const headerBytes = 24,
   blockBytes = 272;
@@ -227,7 +227,7 @@ export function jpegScanFixture({
       parts.push(encodeCodes(bits), Buffer.from([255, 208 + ((mcu / interval - 1) % 8)]));
       bits = [];
     }
-    for (let i = 0; i < g.perMcu; i++) bits.push(i % 2 ? "000" : "010");
+    for (let i = 0; i < g.perMcu; i++) bits.push(i % 2 ? '000' : '010');
   }
   parts.push(encodeCodes(bits), Buffer.from([255, 217]));
   return {

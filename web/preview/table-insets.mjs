@@ -1,7 +1,7 @@
 /** Explicit display insets in pixels; missing source values have no defaults. */
 export function tableInsets(value) {
   const insets =
-    typeof value === "number" ? { left: value, right: value, top: value, bottom: value } : value;
+    typeof value === 'number' ? { left: value, right: value, top: value, bottom: value } : value;
   if (
     !insets ||
     ![insets.left, insets.right, insets.top, insets.bottom].every(

@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { summaryFixture, summaryActual } from "./summary.mjs";
+import assert from 'node:assert/strict';
+import { summaryFixture, summaryActual } from './summary.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -21,7 +21,7 @@ function dict(entries, unicode) {
 }
 export function codepageEdges(call) {
   const good = summaryFixture([
-    [2, text(Buffer.from("A\0"))],
+    [2, text(Buffer.from('A\0'))],
     [1, cp(1252)],
   ]);
   let rejected = 0;
@@ -32,7 +32,7 @@ export function codepageEdges(call) {
   };
   // Code page comes after dependent text/dictionary, not necessarily first.
   for (const page of [949, 1252, 1200, 65001]) {
-    const bytes = Buffer.from("A\0B\0", page === 1200 ? "utf16le" : "utf8");
+    const bytes = Buffer.from('A\0B\0', page === 1200 ? 'utf16le' : 'utf8');
     for (const rows of [
       [
         [2, text(bytes)],
@@ -53,8 +53,8 @@ export function codepageEdges(call) {
     );
     const names =
       page === 1200
-        ? [Buffer.from("A\0", "utf16le"), Buffer.from("BB\0", "utf16le")]
-        : [Buffer.from("AA\0"), Buffer.from("B\0")];
+        ? [Buffer.from('A\0', 'utf16le'), Buffer.from('BB\0', 'utf16le')]
+        : [Buffer.from('AA\0'), Buffer.from('B\0')];
     const dictionary = dict(
       [
         [2, names[0]],
@@ -145,7 +145,7 @@ export function codepageEdges(call) {
       [0, Buffer.from([1])],
     ]),
   );
-  const badPad = text(Buffer.from("A\0"));
+  const badPad = text(Buffer.from('A\0'));
   summaryActual(
     call,
     summaryFixture([
@@ -156,7 +156,7 @@ export function codepageEdges(call) {
   summaryActual(
     call,
     summaryFixture([
-      [2, text(Buffer.from("😀\0", "utf8"))],
+      [2, text(Buffer.from('😀\0', 'utf8'))],
       [1, cp(65001)],
     ]),
   );

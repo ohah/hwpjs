@@ -1,10 +1,10 @@
-const decoder = new TextDecoder("utf-8", { fatal: true });
+const decoder = new TextDecoder('utf-8', { fatal: true });
 export function decodeTableCreationResources(bytes) {
   const value = JSON.parse(decoder.decode(bytes));
-  const keys = ["paragraph", "character", "style", "border_fill"];
+  const keys = ['paragraph', 'character', 'style', 'border_fill'];
   if (
     !value ||
-    typeof value !== "object" ||
+    typeof value !== 'object' ||
     Array.isArray(value) ||
     Object.keys(value).length !== keys.length ||
     !keys.every(
@@ -17,6 +17,6 @@ export function decodeTableCreationResources(bytes) {
         ),
     )
   )
-    throw new Error("InvalidTableCreationResources");
+    throw new Error('InvalidTableCreationResources');
   return value;
 }

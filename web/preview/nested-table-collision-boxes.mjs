@@ -1,11 +1,11 @@
-import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { createdTableIdentity } from "../../js/created-table-identity.mjs";
+import { validateNestedTableOwnership } from './nested-table-ownership.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { createdTableIdentity } from '../../js/created-table-identity.mjs';
 
 export function nestedTableCollisionBoxes(root, layout, content) {
   const validated = validateNestedTableOwnership(content);
   if (validated.tables.get(`${root.section}:${root.tableNode}`) !== root)
-    throw new Error("InvalidNestedTableCollisionOwner");
+    throw new Error('InvalidNestedTableCollisionOwner');
   const children = new Map();
   for (const table of content.tables) {
     if (table.section !== root.section || table === root) continue;
@@ -54,7 +54,7 @@ export function nestedTableCollisionBoxes(root, layout, content) {
       !table.cells.length ||
       table.cells.some((c) => !Number.isSafeInteger(c.listNode) || c.listNode < 0)
     )
-      throw new Error("InvalidNestedTableCollisionOwner");
+      throw new Error('InvalidNestedTableCollisionOwner');
     const captions = table.sourceCaption
       ? (layout.tableCaptionBounds ?? []).filter(
           (bound) =>
@@ -65,14 +65,14 @@ export function nestedTableCollisionBoxes(root, layout, content) {
         )
       : [];
     if (table.sourceCaption && captions.length !== 1)
-      throw new Error("UnsupportedNestedTableCaptionCollision");
+      throw new Error('UnsupportedNestedTableCaptionCollision');
     const margins = table.sourceGeometry?.out_margin;
     if (
       !Array.isArray(margins) ||
       margins.length !== 4 ||
       !margins.every((v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff)
     )
-      throw new Error("MissingNestedTableCollisionMargins");
+      throw new Error('MissingNestedTableCollisionMargins');
     const expected = new Set(table.cells.map((c) => c.listNode)),
       seen = new Set(),
       groups = new Map();
@@ -91,16 +91,16 @@ export function nestedTableCollisionBoxes(root, layout, content) {
         box.width <= 0 ||
         box.height <= 0
       )
-        throw new Error("IncompleteNestedTableCollisionBoxes");
+        throw new Error('IncompleteNestedTableCollisionBoxes');
       const group = groups.get(box.pageOrdinal) ?? { boxes: [], ids: new Set() };
-      if (group.ids.has(box.listNode)) throw new Error("AmbiguousNestedTableCollisionBoxes");
+      if (group.ids.has(box.listNode)) throw new Error('AmbiguousNestedTableCollisionBoxes');
       group.ids.add(box.listNode);
       group.boxes.push(box);
       groups.set(box.pageOrdinal, group);
       seen.add(box.listNode);
     }
-    if (seen.size !== expected.size) throw new Error("IncompleteNestedTableCollisionBoxes");
-    if (groups.size !== 1) throw new Error("UnsupportedSplitNestedTableCollision");
+    if (seen.size !== expected.size) throw new Error('IncompleteNestedTableCollisionBoxes');
+    if (groups.size !== 1) throw new Error('UnsupportedSplitNestedTableCollision');
     const [leftMargin, rightMargin, topMargin, bottomMargin] = margins.map(hwpUnitPixels);
     for (const [pageOrdinal, group] of groups) {
       let left = Infinity,
@@ -135,7 +135,7 @@ export function nestedTableCollisionBoxes(root, layout, content) {
           extent.width <= 0 ||
           extent.height <= 0
         )
-          throw new Error("UnsupportedNestedTableCaptionCollision");
+          throw new Error('UnsupportedNestedTableCaptionCollision');
         left = Math.min(left, extent.x);
         top = Math.min(top, extent.y);
         right = Math.max(right, extent.x + extent.width);
@@ -154,6 +154,6 @@ export function nestedTableCollisionBoxes(root, layout, content) {
         !generatedOwner(b),
     )
   )
-    throw new Error("InvalidNestedTableCollisionOwner");
+    throw new Error('InvalidNestedTableCollisionOwner');
   return bounds;
 }

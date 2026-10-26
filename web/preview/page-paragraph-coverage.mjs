@@ -1,8 +1,8 @@
 // 화면 순서가 아닌 현재 UTF-16 범위로 전체 문단 텍스트 보존을 검사합니다.
-import { isHardLineBreak } from "./hard-line-break.mjs";
-import { isUtf16Boundary } from "./utf16-boundary.mjs";
+import { isHardLineBreak } from './hard-line-break.mjs';
+import { isUtf16Boundary } from './utf16-boundary.mjs';
 export function pageParagraphCoverage(paragraphs, rows) {
-  const unavailable = () => ({ state: "unavailable", error: "IncompletePageParagraphCoverage" });
+  const unavailable = () => ({ state: 'unavailable', error: 'IncompletePageParagraphCoverage' });
   if (!Array.isArray(paragraphs) || !Array.isArray(rows)) return unavailable();
   const owners = new Map(),
     groups = new Map();
@@ -13,7 +13,7 @@ export function pageParagraphCoverage(paragraphs, rows) {
       paragraph.section < 0 ||
       !Number.isSafeInteger(paragraph.paragraph) ||
       paragraph.paragraph < 0 ||
-      typeof paragraph.text !== "string"
+      typeof paragraph.text !== 'string'
     )
       return unavailable();
     const key = `${paragraph.section}:${paragraph.paragraph}`;
@@ -22,7 +22,7 @@ export function pageParagraphCoverage(paragraphs, rows) {
   }
   for (const row of rows) {
     if (!row) return unavailable();
-    if (row.kind !== "text") continue;
+    if (row.kind !== 'text') continue;
     const key = `${row.section}:${row.paragraph}`,
       owner = owners.get(key);
     if (
@@ -57,5 +57,5 @@ export function pageParagraphCoverage(paragraphs, rows) {
     }
     if (end !== owner.text.length) return unavailable();
   }
-  return { state: "complete", paragraphs: owners.size };
+  return { state: 'complete', paragraphs: owners.size };
 }

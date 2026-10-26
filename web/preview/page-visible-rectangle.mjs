@@ -20,14 +20,14 @@ export function pageContainsPoint(page, x, y) {
 }
 export function pageVisibleRectangle(rectangle, page) {
   if (!validBox(rectangle) || !validBox(page) || page.width <= 0 || page.height <= 0)
-    return { state: "invalid_page_clip" };
+    return { state: 'invalid_page_clip' };
   const x = Math.max(rectangle.x, page.x),
     y = Math.max(rectangle.y, page.y);
   const right = Math.min(rectangle.x + rectangle.width, page.x + page.width);
   const bottom = Math.min(rectangle.y + rectangle.height, page.y + page.height);
-  if (right <= x || bottom <= y) return { state: "hidden", rectangle: null };
+  if (right <= x || bottom <= y) return { state: 'hidden', rectangle: null };
   return {
-    state: "visible",
+    state: 'visible',
     rectangle: { x, y, width: right - x, height: bottom - y },
     clipped:
       x !== rectangle.x ||

@@ -4,7 +4,7 @@ export function pictureAnchorRows(rows, cell) {
   const index = new Map();
   for (const row of rows) {
     if (!row) return null;
-    if (row.kind !== "text" || row.startUnit === row.endUnit) continue;
+    if (row.kind !== 'text' || row.startUnit === row.endUnit) continue;
     if (
       ![row.startUnit, row.endUnit].every((v) => Number.isSafeInteger(v) && v >= 0) ||
       row.endUnit <= row.startUnit

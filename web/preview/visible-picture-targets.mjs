@@ -1,5 +1,5 @@
-import { inlinePictureRowPlacement } from "./inline-picture-row-placement.mjs";
-import { pictureVisualBounds } from "./picture-visual-bounds.mjs";
+import { inlinePictureRowPlacement } from './inline-picture-row-placement.mjs';
+import { pictureVisualBounds } from './picture-visual-bounds.mjs';
 
 // 비트맵 소유권만 선택합니다. 원본 그림/전체 배치 목록은 바꾸지 않습니다.
 export function visiblePictureTargets(index, layers, rows, viewport) {
@@ -31,11 +31,11 @@ export function visiblePictureTargets(index, layers, rows, viewport) {
       byParagraph.set(id, list);
     }
   for (const [ordinal, row] of rows.entries())
-    if (row.kind === "text") {
+    if (row.kind === 'text') {
       for (const item of byParagraph.get(`${row.section}:${row.paragraph}`) ?? []) {
         const placement = inlinePictureRowPlacement(item, row, ordinal);
         if (
-          placement.state === "placed" &&
+          placement.state === 'placed' &&
           intersects(pictureVisualBounds(item.picture, placement.rectangle))
         )
           add(item.picture);

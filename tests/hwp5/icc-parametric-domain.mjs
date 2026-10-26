@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { paraInput } from "./icc-analytic.mjs";
+import assert from 'node:assert/strict';
+import { paraInput } from './icc-analytic.mjs';
 const counts = [1, 3, 4, 5, 7];
 function fraction(n, d) {
   return d < 0n ? [-n, -d] : [n, d];
@@ -14,7 +14,7 @@ export function reference(kind, raw) {
   const [g, ra, rb, , d] = raw.map(BigInt),
     a = kind === 0 ? 65536n : ra,
     b = kind === 0 ? 0n : rb;
-  if ((kind === 1 || kind === 2) && a === 0n) throw Error("UndefinedIccCurveThreshold");
+  if ((kind === 1 || kind === 2) && a === 0n) throw Error('UndefinedIccCurveThreshold');
   const threshold = kind === 0 ? [0n, 1n] : kind <= 2 ? fraction(-b, a) : [d, 65536n];
   const points = [[0n, 1n], [1n, 1n], threshold];
   if (a !== 0n) points.push(fraction(-b, a));
@@ -22,7 +22,7 @@ export function reference(kind, raw) {
     if (compare(x, [0n, 1n]) < 0 || compare(x, [1n, 1n]) > 0 || compare(x, threshold) < 0) continue;
     const base = a * x[0] + b * x[1];
     if ((base < 0n && g % 65536n !== 0n) || (base === 0n && g <= 0n))
-      throw Error("UndefinedIccCurvePower");
+      throw Error('UndefinedIccCurvePower');
   }
   if (compare(threshold, [1n, 1n]) > 0) return null;
   return { start: compare(threshold, [0n, 1n]) < 0 ? [0n, 1n] : threshold, a, b, g };

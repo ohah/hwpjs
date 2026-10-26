@@ -1,14 +1,14 @@
-import { tableCollisionFootprints } from "./table-collision-footprints.mjs";
+import { tableCollisionFootprints } from './table-collision-footprints.mjs';
 
 // Check complete source-table extents, including outer margins, after placement.
 export function sourceInlineTablePaperBounds(tables, layout, content) {
-  const fail = () => ({ state: "unavailable", error: "InvalidSourceInlineTablePaperBounds" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidSourceInlineTablePaperBounds' });
   if (!(tables instanceof Map) || !Array.isArray(layout?.boxes)) return fail();
   for (const entry of tables.values()) {
-    if (!entry || typeof entry !== "object") return fail();
+    if (!entry || typeof entry !== 'object') return fail();
     const { table, margins } = entry;
     const collected = tableCollisionFootprints(table, layout, margins, content);
-    if (collected.state !== "collected") return collected;
+    if (collected.state !== 'collected') return collected;
     for (const footprint of collected.footprints) {
       const boxes = layout.boxes.filter(
         (box) =>
@@ -31,7 +31,7 @@ export function sourceInlineTablePaperBounds(tables, layout, content) {
         paper.width <= 0 ||
         paper.height <= 0 ||
         boxes.some((box) =>
-          ["x", "y", "width", "height"].some(
+          ['x', 'y', 'width', 'height'].some(
             (key) => box.referenceBoxes?.paper?.[key] !== paper[key],
           ),
         )
@@ -44,8 +44,8 @@ export function sourceInlineTablePaperBounds(tables, layout, content) {
         rectangle.y + rectangle.height > paper.y + paper.height + 1e-8
       )
         return {
-          state: "unavailable",
-          error: "SourceInlineTablePaperOverflow",
+          state: 'unavailable',
+          error: 'SourceInlineTablePaperOverflow',
           section: table.section,
           tableNode: table.tableNode,
           pageOrdinal: footprint.pageOrdinal,
@@ -54,5 +54,5 @@ export function sourceInlineTablePaperBounds(tables, layout, content) {
         };
     }
   }
-  return { state: "contained" };
+  return { state: 'contained' };
 }

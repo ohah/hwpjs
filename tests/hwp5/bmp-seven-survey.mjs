@@ -1,22 +1,22 @@
 // Independent real-HWP BinData/BMP census and RGBA oracle. Local rhwp clone only.
-import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { crc32, inflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { documentRecords } from "./documents.mjs";
-import { observeHwpFile, streamBytes } from "./hwp-corpus-evidence.mjs";
-import { bmpLayoutOracle, bmpPixelsOracle } from "./bmp-oracle.mjs";
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { crc32, inflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { documentRecords } from './documents.mjs';
+import { observeHwpFile, streamBytes } from './hwp-corpus-evidence.mjs';
+import { bmpLayoutOracle, bmpPixelsOracle } from './bmp-oracle.mjs';
 
-const file = "reference/rhwp/samples/hwpx/hancom-hwp/hang_job_01.hwp";
+const file = 'reference/rhwp/samples/hwpx/hancom-hwp/hang_job_01.hwp';
 const source = readFileSync(file);
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
 try {
   const observed = observeHwpFile(cfb, source, (reader) => {
-    const header = Buffer.from(streamBytes(reader.findExact("/FileHeader")));
+    const header = Buffer.from(streamBytes(reader.findExact('/FileHeader')));
     const flags = header.readUInt32LE(36);
     assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
-    const rawDoc = Buffer.from(streamBytes(reader.findExact("/DocInfo")));
+    const rawDoc = Buffer.from(streamBytes(reader.findExact('/DocInfo')));
     const doc = flags & 1 ? inflateRawSync(rawDoc, { maxOutputLength: 64 * 1024 * 1024 }) : rawDoc;
     const entries = [];
     for (const record of documentRecords(doc)) {
@@ -28,9 +28,9 @@ try {
       const id = payload.readUInt16LE(2),
         units = payload.readUInt16LE(4);
       assert.ok(6 + units * 2 <= payload.length);
-      const ext = payload.subarray(6, 6 + units * 2).toString("utf16le");
-      if (ext.toLowerCase() !== "bmp") continue;
-      const path = `/BinData/BIN${id.toString(16).toUpperCase().padStart(4, "0")}.${ext}`;
+      const ext = payload.subarray(6, 6 + units * 2).toString('utf16le');
+      if (ext.toLowerCase() !== 'bmp') continue;
+      const path = `/BinData/BIN${id.toString(16).toUpperCase().padStart(4, '0')}.${ext}`;
       const entry = reader.findExact(path);
       assert.ok(entry && entry.type === 2, path);
       const stored = Buffer.from(streamBytes(entry));
@@ -57,7 +57,7 @@ try {
       entries.push({
         path,
         encodedBytes: bytes.length,
-        sha256: createHash("sha256").update(bytes).digest("hex"),
+        sha256: createHash('sha256').update(bytes).digest('hex'),
         width: layout.width,
         height: layout.height,
         bits: layout.bits,
@@ -67,9 +67,9 @@ try {
         highByte,
       });
     }
-    return { state: "decoded", entries };
+    return { state: 'decoded', entries };
   });
-  assert.equal(observed.state, "observed");
+  assert.equal(observed.state, 'observed');
   const entries = observed.evidence.entries;
   assert.equal(entries.length, 7);
   assert.equal(
@@ -88,8 +88,8 @@ try {
       { zero: 0, opaque: 14_042, other: 423 },
     ],
   );
-  const fileSha256 = createHash("sha256").update(source).digest("hex");
-  assert.equal(fileSha256, "c8b091cc9edf63433a7d21729d675f8fad7f68fc8f09d74b6c0f138fb91de46f");
+  const fileSha256 = createHash('sha256').update(source).digest('hex');
+  assert.equal(fileSha256, 'c8b091cc9edf63433a7d21729d675f8fad7f68fc8f09d74b6c0f138fb91de46f');
   assert.deepEqual(
     entries.map(({ path, encodedBytes, rgbaBytes, rgbaCrc32, bits, compression }) => ({
       path,
@@ -101,7 +101,7 @@ try {
     })),
     [
       {
-        path: "/BinData/BIN0002.bmp",
+        path: '/BinData/BIN0002.bmp',
         encodedBytes: 3_912_246,
         rgbaBytes: 3_912_192,
         rgbaCrc32: 3_328_180_045,
@@ -109,7 +109,7 @@ try {
         compression: 0,
       },
       {
-        path: "/BinData/BIN0005.bmp",
+        path: '/BinData/BIN0005.bmp',
         encodedBytes: 43_214,
         rgbaBytes: 43_160,
         rgbaCrc32: 3_238_137_512,
@@ -117,7 +117,7 @@ try {
         compression: 0,
       },
       {
-        path: "/BinData/BIN0006.bmp",
+        path: '/BinData/BIN0006.bmp',
         encodedBytes: 48_598,
         rgbaBytes: 48_544,
         rgbaCrc32: 2_316_897_933,
@@ -125,7 +125,7 @@ try {
         compression: 0,
       },
       {
-        path: "/BinData/BIN0007.bmp",
+        path: '/BinData/BIN0007.bmp',
         encodedBytes: 69_398,
         rgbaBytes: 69_344,
         rgbaCrc32: 3_207_307_936,
@@ -133,7 +133,7 @@ try {
         compression: 0,
       },
       {
-        path: "/BinData/BIN0008.bmp",
+        path: '/BinData/BIN0008.bmp',
         encodedBytes: 59_694,
         rgbaBytes: 59_640,
         rgbaCrc32: 543_781_140,
@@ -141,7 +141,7 @@ try {
         compression: 0,
       },
       {
-        path: "/BinData/BIN0009.bmp",
+        path: '/BinData/BIN0009.bmp',
         encodedBytes: 78_954,
         rgbaBytes: 78_900,
         rgbaCrc32: 1_962_280_315,
@@ -149,7 +149,7 @@ try {
         compression: 0,
       },
       {
-        path: "/BinData/BIN000A.bmp",
+        path: '/BinData/BIN000A.bmp',
         encodedBytes: 57_914,
         rgbaBytes: 57_860,
         rgbaCrc32: 1_926_907_482,

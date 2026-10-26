@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createChartControls } from "../../web/preview/chart-controls.mjs";
-import { createChartCanvasControls } from "../../web/preview/chart-canvas-controls.mjs";
-import { chartAnchorAtPoint } from "../../web/preview/chart-anchor-geometry.mjs";
-import { createChartOlePolicyControls } from "../../web/preview/chart-ole-policy-controls.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createChartControls } from '../../web/preview/chart-controls.mjs';
+import { createChartCanvasControls } from '../../web/preview/chart-canvas-controls.mjs';
+import { chartAnchorAtPoint } from '../../web/preview/chart-anchor-geometry.mjs';
+import { createChartOlePolicyControls } from '../../web/preview/chart-ole-policy-controls.mjs';
 
-test("chart controls disable charts without supported points and reject invalid selections", async () => {
+test('chart controls disable charts without supported points and reject invalid selections', async () => {
   const element = () => ({
-    value: "",
+    value: '',
     listeners: new Map(),
     addEventListener(kind, fn) {
       this.listeners.set(kind, fn);
@@ -17,7 +17,7 @@ test("chart controls disable charts without supported points and reject invalid 
     },
     replaceChildren(...children) {
       this.children = children;
-      this.value = children[0]?.value ?? "";
+      this.value = children[0]?.value ?? '';
     },
   });
   const form = element(),
@@ -43,46 +43,46 @@ test("chart controls disable charts without supported points and reject invalid 
   });
   const load = async (values) => {
     controls.message({
-      kind: "enable",
+      kind: 'enable',
       content: { chartEditAvailable: true, chartTargets: [{ section: 0, wrapper: 9 }] },
     });
     await Promise.resolve();
     controls.message({ ...requests.shift(), chart: { values: { points: values } } });
   };
   await load([]);
-  assert.equal(fields.disabled, true, "a chart with no values has no editable selection");
-  await load([{ kind: "string_cache", index: 0, value: "title" }]);
-  assert.equal(fields.disabled, true, "numeric-only ABI must not enable a string-only chart");
-  await load([{ kind: "numeric_cache", index: 0, value: "4.30" }]);
+  assert.equal(fields.disabled, true, 'a chart with no values has no editable selection');
+  await load([{ kind: 'string_cache', index: 0, value: 'title' }]);
+  assert.equal(fields.disabled, true, 'numeric-only ABI must not enable a string-only chart');
+  await load([{ kind: 'numeric_cache', index: 0, value: '4.30' }]);
   assert.equal(fields.disabled, false);
-  for (const value of ["", "-1", "0.5", "NaN", "Infinity", "5"]) {
+  for (const value of ['', '-1', '0.5', 'NaN', 'Infinity', '5']) {
     points.value = value;
-    points.listeners.get("change")();
+    points.listeners.get('change')();
     assert.equal(fields.disabled, true, `invalid selected ordinal ${JSON.stringify(value)}`);
-    form.listeners.get("submit")({ preventDefault() {} });
+    form.listeners.get('submit')({ preventDefault() {} });
     assert.equal(requests.length, 0);
   }
   controls.close();
 });
 
-test("chart policy change permits same-file reselection without requesting session mutation", () => {
+test('chart policy change permits same-file reselection without requesting session mutation', () => {
   const checkbox = new EventTarget(),
-    file = { value: "selected.hwpx" },
-    note = { textContent: "" };
+    file = { value: 'selected.hwpx' },
+    note = { textContent: '' };
   const controls = createChartOlePolicyControls({ checkbox, file, note });
-  checkbox.dispatchEvent(new Event("change"));
-  assert.equal(file.value, "");
+  checkbox.dispatchEvent(new Event('change'));
+  assert.equal(file.value, '');
   assert.match(note.textContent, /현재 편집 세션은 바뀌지 않았습니다/);
   controls.close();
   controls.close();
-  file.value = "kept.hwpx";
-  checkbox.dispatchEvent(new Event("change"));
-  assert.equal(file.value, "kept.hwpx");
+  file.value = 'kept.hwpx';
+  checkbox.dispatchEvent(new Event('change'));
+  assert.equal(file.value, 'kept.hwpx');
 });
 
-test("chart string textarea preserves untouched CR spelling and commits explicit multiline drafts", async () => {
+test('chart string textarea preserves untouched CR spelling and commits explicit multiline drafts', async () => {
   const element = () => ({
-    value: "",
+    value: '',
     listeners: new Map(),
     addEventListener(kind, fn) {
       this.listeners.set(kind, fn);
@@ -92,7 +92,7 @@ test("chart string textarea preserves untouched CR spelling and commits explicit
     },
     replaceChildren(...children) {
       this.children = children;
-      this.value = children[0]?.value ?? "";
+      this.value = children[0]?.value ?? '';
     },
   });
   const form = element(),
@@ -102,11 +102,11 @@ test("chart string textarea preserves untouched CR spelling and commits explicit
     input = element(),
     note = element();
   form.ownerDocument = { createElement: element };
-  let visible = "";
-  Object.defineProperty(input, "value", {
+  let visible = '';
+  Object.defineProperty(input, 'value', {
     get: () => visible,
     set: (value) => {
-      visible = value.replaceAll("\r\n", "\n").replaceAll("\r", "\n");
+      visible = value.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
     },
   });
   const requests = [];
@@ -124,7 +124,7 @@ test("chart string textarea preserves untouched CR spelling and commits explicit
     },
   });
   controls.message({
-    kind: "enable",
+    kind: 'enable',
     content: {
       chartEditAvailable: true,
       chartStringEditAvailable: true,
@@ -134,39 +134,39 @@ test("chart string textarea preserves untouched CR spelling and commits explicit
   await Promise.resolve();
   const query = requests.shift();
   const chart = {
-    values: { points: [{ kind: "string_cache", index: 0, cache_node: 2, value: "a\r\nb" }] },
+    values: { points: [{ kind: 'string_cache', index: 0, cache_node: 2, value: 'a\r\nb' }] },
   };
   controls.message({ ...query, chart });
   assert.equal(points.children.length, 1);
-  assert.equal(input.value, "a\nb");
-  const submit = () => form.listeners.get("submit")({ preventDefault() {} });
+  assert.equal(input.value, 'a\nb');
+  const submit = () => form.listeners.get('submit')({ preventDefault() {} });
   submit();
   assert.equal(
     requests.shift().value,
-    "a\r\nb",
-    "untouched textarea normalization must not rewrite canonical value",
+    'a\r\nb',
+    'untouched textarea normalization must not rewrite canonical value',
   );
-  input.value = "x\ny";
-  input.listeners.get("input")();
+  input.value = 'x\ny';
+  input.listeners.get('input')();
   submit();
   assert.deepEqual(requests.shift(), {
-    kind: "chart-point",
+    kind: 'chart-point',
     section: 0,
     wrapper: 9,
     point: 0,
-    value: "x\ny",
+    value: 'x\ny',
   });
-  assert.equal(chart.values.points[0].value, "a\r\nb");
+  assert.equal(chart.values.points[0].value, 'a\r\nb');
   controls.close();
   assert.equal(input.listeners.size, 0);
 });
 
-test("chart glyph hits respect source spelling, affine rotation, clip and singular matrices", () => {
+test('chart glyph hits respect source spelling, affine rotation, clip and singular matrices', () => {
   const chart = { section: 0, wrapper: 9, paragraph: 0, anchorUnit: 0, error_name: null };
   const content = {
     chartEditAvailable: true,
     chartTargets: [chart],
-    paragraphs: [{ section: 0, paragraph: 0, text: "\ufffc" }],
+    paragraphs: [{ section: 0, paragraph: 0, text: '\ufffc' }],
   };
   const row = {
     section: 0,
@@ -208,7 +208,7 @@ test("chart glyph hits respect source spelling, affine rotation, clip and singul
   );
   assert.equal(
     chartAnchorAtPoint(
-      { ...content, paragraphs: [{ section: 0, paragraph: 0, text: "A" }] },
+      { ...content, paragraphs: [{ section: 0, paragraph: 0, text: 'A' }] },
       { rows: [row] },
       14,
       24,
@@ -221,7 +221,7 @@ test("chart glyph hits respect source spelling, affine rotation, clip and singul
   );
   assert.equal(
     chartAnchorAtPoint(
-      { ...content, chartTargets: [{ ...chart, error_name: "MissingProtectedDisplayAnchor" }] },
+      { ...content, chartTargets: [{ ...chart, error_name: 'MissingProtectedDisplayAnchor' }] },
       { rows: [row] },
       14,
       24,
@@ -231,7 +231,7 @@ test("chart glyph hits respect source spelling, affine rotation, clip and singul
   assert.equal(chartAnchorAtPoint(content, { rows: [row] }, NaN, 24), null);
 });
 
-test("chart canvas maps zoom and scroll, ignores modified clicks and detaches", () => {
+test('chart canvas maps zoom and scroll, ignores modified clicks and detaches', () => {
   const canvas = new EventTarget();
   canvas.getBoundingClientRect = () => ({ left: 10, top: 20 });
   const viewport = { scrollTop: 100, scrollLeft: 40 };
@@ -259,7 +259,7 @@ test("chart canvas maps zoom and scroll, ignores modified clicks and detaches", 
     },
   });
   const click = (extra = {}) => {
-    const event = new Event("pointerdown", { cancelable: true });
+    const event = new Event('pointerdown', { cancelable: true });
     Object.assign(event, { button: 0, clientX: 30, clientY: 40, ...extra });
     canvas.dispatchEvent(event);
     return event;
@@ -274,9 +274,9 @@ test("chart canvas maps zoom and scroll, ignores modified clicks and detaches", 
   assert.equal(calls, 1);
 });
 
-test("chart drafts reject stale queries, wait for readiness and detach listeners", async () => {
+test('chart drafts reject stale queries, wait for readiness and detach listeners', async () => {
   const element = () => ({
-    value: "",
+    value: '',
     listeners: new Map(),
     addEventListener(kind, fn) {
       this.listeners.set(kind, fn);
@@ -286,7 +286,7 @@ test("chart drafts reject stale queries, wait for readiness and detach listeners
     },
     replaceChildren(...children) {
       this.children = children;
-      this.value = children[0]?.value ?? "";
+      this.value = children[0]?.value ?? '';
     },
   });
   const form = element(),
@@ -312,18 +312,18 @@ test("chart drafts reject stale queries, wait for readiness and detach listeners
     },
   });
   controls.message({
-    kind: "enable",
+    kind: 'enable',
     content: { chartEditAvailable: true, chartTargets: [{ section: 0, wrapper: 9 }] },
   });
   await Promise.resolve();
   const query = requests.shift();
-  assert.equal(query.kind, "chart-points");
+  assert.equal(query.kind, 'chart-points');
   const chart = {
     values: {
       points: [
-        { kind: "string_cache", index: 0, value: "title" },
-        { kind: "numeric_cache", index: 0, value: "4.30" },
-        { kind: "numeric_cache", index: 1, value: "9.20" },
+        { kind: 'string_cache', index: 0, value: 'title' },
+        { kind: 'numeric_cache', index: 0, value: '4.30' },
+        { kind: 'numeric_cache', index: 1, value: '9.20' },
       ],
     },
   };
@@ -331,28 +331,28 @@ test("chart drafts reject stale queries, wait for readiness and detach listeners
   assert.equal(fields.disabled, true);
   controls.message({ ...query, chart });
   assert.equal(points.children.length, 2);
-  assert.equal(points.value, "1");
-  assert.equal(input.value, "4.30");
-  input.value = "6.70";
-  const submit = () => form.listeners.get("submit")({ preventDefault() {} });
+  assert.equal(points.value, '1');
+  assert.equal(input.value, '4.30');
+  input.value = '6.70';
+  const submit = () => form.listeners.get('submit')({ preventDefault() {} });
   ready = false;
   submit();
   assert.equal(requests.length, 0);
   ready = true;
   submit();
   assert.deepEqual(requests.shift(), {
-    kind: "chart-numeric-point",
+    kind: 'chart-numeric-point',
     section: 0,
     wrapper: 9,
     point: 1,
-    value: "6.70",
+    value: '6.70',
   });
-  assert.equal(chart.values.points[1].value, "4.30", "draft does not mutate canonical response");
-  points.value = "2";
-  points.listeners.get("change")();
-  assert.equal(input.value, "9.20");
+  assert.equal(chart.values.points[1].value, '4.30', 'draft does not mutate canonical response');
+  points.value = '2';
+  points.listeners.get('change')();
+  assert.equal(input.value, '9.20');
   controls.message({
-    kind: "chart-numeric-point",
+    kind: 'chart-numeric-point',
     content: { chartEditAvailable: true, chartTargets: [{ section: 0, wrapper: 9 }] },
   });
   await Promise.resolve();
@@ -362,13 +362,13 @@ test("chart drafts reject stale queries, wait for readiness and detach listeners
     chart: {
       values: {
         points: chart.values.points.map((row, index) =>
-          index === 2 ? { ...row, value: "7.70" } : row,
+          index === 2 ? { ...row, value: '7.70' } : row,
         ),
       },
     },
   });
-  assert.equal(points.value, "2", "refresh retains selected point, not first numeric value");
-  assert.equal(input.value, "7.70");
+  assert.equal(points.value, '2', 'refresh retains selected point, not first numeric value');
+  assert.equal(input.value, '7.70');
   controls.close();
   assert.equal(form.listeners.size + targets.listeners.size + points.listeners.size, 0);
   assert.equal(form.hidden, true);

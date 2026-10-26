@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   characterTextColorState,
   characterTextColorObservation,
-} from "../../src/state/text-color-state.ts";
+} from '../../src/state/text-color-state.ts';
 const row = () => ({
   section: 0,
   paragraph: 1,
-  text: "a😀b",
+  text: 'a😀b',
   characterRanges: [{ start: 0, end: 4, charShapeId: 0 }],
 });
 function run(colors: unknown = [{ id: 0, color: 0 }], p: any = row(), start = 0, end = 4) {
@@ -18,7 +18,7 @@ function run(colors: unknown = [{ id: 0, color: 0 }], p: any = row(), start = 0,
     end,
   );
 }
-test("missing/fractional/out-of-range resource IDs remain unknown", () => {
+test('missing/fractional/out-of-range resource IDs remain unknown', () => {
   for (const id of [undefined, null, -1, 0.5, 0x100000000, NaN])
     assert.equal(
       run([{ id, color: 0 }], {
@@ -36,7 +36,7 @@ test("missing/fractional/out-of-range resource IDs remain unknown", () => {
     null,
   );
 });
-test("malformed rows and non-arrays do not throw or manufacture black", () => {
+test('malformed rows and non-arrays do not throw or manufacture black', () => {
   for (const colors of [
     {},
     null,
@@ -45,7 +45,7 @@ test("malformed rows and non-arrays do not throw or manufacture black", () => {
     [{}],
     [{ id: 0 }],
     [{ id: 0, color: undefined }],
-    [{ id: 0, color: "black" }],
+    [{ id: 0, color: 'black' }],
   ])
     assert.equal(run(colors), null);
   for (const ranges of [
@@ -57,7 +57,7 @@ test("malformed rows and non-arrays do not throw or manufacture black", () => {
   ])
     assert.equal(run(undefined, { ...row(), characterRanges: ranges }), null);
 });
-test("incomplete/overlapping/invalid coverage remains unknown", () => {
+test('incomplete/overlapping/invalid coverage remains unknown', () => {
   for (const characterRanges of [
     [{ start: 1, end: 4, charShapeId: 0 }],
     [{ start: 0, end: 3, charShapeId: 0 }],
@@ -71,16 +71,16 @@ test("incomplete/overlapping/invalid coverage remains unknown", () => {
   ])
     assert.equal(run(undefined, { ...row(), characterRanges }), null);
 });
-test("surrogate boundaries/empty/clipped targets are not valid selections", () => {
+test('surrogate boundaries/empty/clipped targets are not valid selections', () => {
   assert.equal(run(undefined, row(), 1, 2), null);
   assert.equal(run(undefined, row(), 2, 3), null);
   assert.equal(run(undefined, row(), 0, 0), null);
   assert.equal(run(undefined, { ...row(), clipped: true }), null);
-  assert.equal(run(undefined, row(), 1, 3), "#000000");
+  assert.equal(run(undefined, row(), 1, 3), '#000000');
 });
-test("real RGB black/white/mixed differ from unknown and missing capability", () => {
-  assert.equal(run(), "#000000");
-  assert.equal(run([{ id: 0, color: 0xffffff }]), "#ffffff");
+test('real RGB black/white/mixed differ from unknown and missing capability', () => {
+  assert.equal(run(), '#000000');
+  assert.equal(run([{ id: 0, color: 0xffffff }]), '#ffffff');
   assert.equal(run([{ id: 0, color: null }]), null);
   assert.equal(run([{ id: 0, color: 0xffffffff }]), null);
   assert.equal(
@@ -97,7 +97,7 @@ test("real RGB black/white/mixed differ from unknown and missing capability", ()
         ],
       },
     ),
-    "mixed",
+    'mixed',
   );
   assert.equal(
     characterTextColorState(
@@ -110,8 +110,8 @@ test("real RGB black/white/mixed differ from unknown and missing capability", ()
   );
 });
 
-test("typed color accepts scalar boundaries inside combining/Jamo graphemes and style spans", () => {
-  for (const text of ["A\u0301B", "한X"]) {
+test('typed color accepts scalar boundaries inside combining/Jamo graphemes and style spans', () => {
+  for (const text of ['A\u0301B', '한X']) {
     const p = {
       section: 0,
       paragraph: 1,
@@ -132,7 +132,7 @@ test("typed color accepts scalar boundaries inside combining/Jamo graphemes and 
         1,
         2,
       ),
-      "#12a4e7",
+      '#12a4e7',
     );
     assert.equal(
       run(
@@ -144,12 +144,12 @@ test("typed color accepts scalar boundaries inside combining/Jamo graphemes and 
         0,
         text.length,
       ),
-      "mixed",
+      'mixed',
     );
   }
 });
 
-test("valid unknown source value is readable as null and supports explicit replacement binding", () => {
+test('valid unknown source value is readable as null and supports explicit replacement binding', () => {
   const p = row(),
     c = {
       paragraphs: [p],
@@ -182,7 +182,7 @@ test("valid unknown source value is readable as null and supports explicit repla
     { value: null, bindingValid: true },
   );
 });
-test("missing resource binding stays distinct from valid unknown value", () => {
+test('missing resource binding stays distinct from valid unknown value', () => {
   const p = row(),
     base = { paragraphs: [p], characterTextColorAvailable: true };
   for (const characterTextColors of [

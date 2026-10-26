@@ -1,8 +1,8 @@
-import { HWP5_STRUCTURAL_ANCHOR_KINDS } from "../../js/hwp5-structural-anchors.mjs";
+import { HWP5_STRUCTURAL_ANCHOR_KINDS } from '../../js/hwp5-structural-anchors.mjs';
 /** Protected display coordinates; never removes units from the editing text. */
 export function structuralAnchorUnits(paragraph) {
   const anchors = paragraph.structuralAnchors ?? [];
-  if (!Array.isArray(anchors)) throw new Error("InvalidStructuralAnchorUnits");
+  if (!Array.isArray(anchors)) throw new Error('InvalidStructuralAnchorUnits');
   const units = new Set(),
     controls = new Set();
   for (const anchor of anchors) {
@@ -16,9 +16,9 @@ export function structuralAnchorUnits(paragraph) {
       !Number.isSafeInteger(anchor.unit) ||
       anchor.unit < 0 ||
       units.has(anchor.unit) ||
-      paragraph.text[anchor.unit] !== "\ufffc"
+      paragraph.text[anchor.unit] !== '\ufffc'
     )
-      throw new Error("InvalidStructuralAnchorUnits");
+      throw new Error('InvalidStructuralAnchorUnits');
     controls.add(anchor.control_node);
     units.add(anchor.unit);
   }

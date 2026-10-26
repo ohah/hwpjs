@@ -8,13 +8,13 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
-} from "react";
-import type { ComponentPropsWithoutRef } from "react";
-import type { HeadlessEditor } from "@hwpjs/core";
-import { createCanvasSurface } from "@hwpjs/vanilla";
+} from 'react';
+import type { ComponentPropsWithoutRef } from 'react';
+import type { HeadlessEditor } from '@hwpjs/core';
+import { createCanvasSurface } from '@hwpjs/vanilla';
 
 export type CanvasSurfaceInstance = ReturnType<typeof createCanvasSurface>;
-export type CanvasSurfaceEnvironment = Parameters<typeof createCanvasSurface>[0]["environment"];
+export type CanvasSurfaceEnvironment = Parameters<typeof createCanvasSurface>[0]['environment'];
 export interface UseCanvasSurfaceOptions {
   /** Externally owned. This adapter never loads, replaces or disposes it. */
   editor: HeadlessEditor;
@@ -30,8 +30,8 @@ export interface CanvasSurfaceHandle {
   readonly surface: CanvasSurfaceInstance | null;
   focus(): boolean;
   setScale(value: number): boolean;
-  getSelection(): ReturnType<CanvasSurfaceInstance["getSelection"]>;
-  flushComposition(): ReturnType<CanvasSurfaceInstance["flushComposition"]>;
+  getSelection(): ReturnType<CanvasSurfaceInstance['getSelection']>;
+  flushComposition(): ReturnType<CanvasSurfaceInstance['flushComposition']>;
 }
 
 /** Client mount boundary only. Every effect setup constructs a fresh surface.
@@ -74,7 +74,7 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
         return surfaceRef.current?.getSelection() ?? null;
       },
       flushComposition() {
-        return surfaceRef.current?.flushComposition() ?? Promise.resolve("blocked" as const);
+        return surfaceRef.current?.flushComposition() ?? Promise.resolve('blocked' as const);
       },
     }),
     [],
@@ -121,7 +121,7 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
     const start = () => {
       if (!current()) return;
       if (failedDisposal.current) {
-        report(Error("CanvasSurfaceDisposalFailed"));
+        report(Error('CanvasSurfaceDisposalFailed'));
         return;
       }
       try {
@@ -172,7 +172,7 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
 export interface CanvasSurfaceProps
   extends
     UseCanvasSurfaceOptions,
-    Omit<ComponentPropsWithoutRef<"div">, "children" | "dangerouslySetInnerHTML" | "onError"> {}
+    Omit<ComponentPropsWithoutRef<'div'>, 'children' | 'dangerouslySetInnerHTML' | 'onError'> {}
 
 /** React owns this one empty host div; vanilla exclusively owns its descendants.
  * ref is an imperative surface handle, not the externally owned editor.
@@ -192,17 +192,17 @@ export const CanvasSurface = forwardRef<CanvasSurfaceHandle, CanvasSurfaceProps>
     useImperativeHandle(ref, () => handle, [handle]);
     // TypeScript excludes these, but JS consumers must not insert React-owned
     // children or HTML into vanilla's exclusively owned host subtree either.
-    Reflect.deleteProperty(attributes, "children");
-    Reflect.deleteProperty(attributes, "dangerouslySetInnerHTML");
-    return createElement("div", {
+    Reflect.deleteProperty(attributes, 'children');
+    Reflect.deleteProperty(attributes, 'dangerouslySetInnerHTML');
+    return createElement('div', {
       ...attributes,
       ref: mountRef,
-      "data-hwpjs-react-surface": "",
-      style: { ...style, height: "100%", minHeight: 0 },
+      'data-hwpjs-react-surface': '',
+      style: { ...style, height: '100%', minHeight: 0 },
     });
   },
 );
-CanvasSurface.displayName = "CanvasSurface";
+CanvasSurface.displayName = 'CanvasSurface';
 
 /** Observations only: getEditorState has stable identity at an unchanged version.
  * The same snapshot getter supplies SSR and hydration's server snapshot.

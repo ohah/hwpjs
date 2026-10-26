@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createDisplayResourceCache } from "../../web/preview/display-resource-cache.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createDisplayResourceCache } from '../../web/preview/display-resource-cache.mjs';
 const plain = (cache, editor) =>
-  cache.beginRequest({ kind: "splice" }, { format: "hwpx", editor, historyEnabled: true });
+  cache.beginRequest({ kind: 'splice' }, { format: 'hwpx', editor, historyEnabled: true });
 
-test("header snapshots are privately owned; text ranges and arguments always read native", () => {
+test('header snapshots are privately owned; text ranges and arguments always read native', () => {
   const cache = createDisplayResourceCache();
   let reads = 0,
     ranges = 0;
@@ -36,28 +36,28 @@ test("header snapshots are privately owned; text ranges and arguments always rea
   assert.equal(view.characterShapes()[0].id, 1);
 });
 
-test("all mutation, lifecycle, unknown and failed boundaries invalidate, including caught getter failure", () => {
+test('all mutation, lifecycle, unknown and failed boundaries invalidate, including caught getter failure', () => {
   for (const kind of [
-    "font",
-    "character-properties",
-    "paragraph-alignment",
-    "split",
-    "merge",
-    "undo",
-    "redo",
-    "load",
-    "enable",
-    "unlock",
-    "refresh",
-    "save",
-    "unknown-external",
+    'font',
+    'character-properties',
+    'paragraph-alignment',
+    'split',
+    'merge',
+    'undo',
+    'redo',
+    'load',
+    'enable',
+    'unlock',
+    'refresh',
+    'save',
+    'unknown-external',
   ]) {
     const cache = createDisplayResourceCache();
     let n = 0;
     const editor = { fontFaces: () => [{ id: ++n }] };
     const view = cache.view(editor);
     view.fontFaces();
-    cache.beginRequest({ kind }, { format: "hwpx", editor, historyEnabled: true });
+    cache.beginRequest({ kind }, { format: 'hwpx', editor, historyEnabled: true });
     assert.equal(view.fontFaces()[0].id, 2, kind);
   }
   const cache = createDisplayResourceCache();
@@ -66,7 +66,7 @@ test("all mutation, lifecycle, unknown and failed boundaries invalidate, includi
   const editor = {
     fontFaces: () => [{ id: ++n }],
     characterShapes() {
-      if (fail) throw Error("query failed");
+      if (fail) throw Error('query failed');
       return [];
     },
   };
@@ -83,45 +83,45 @@ test("all mutation, lifecycle, unknown and failed boundaries invalidate, includi
   assert.equal(view.fontFaces()[0].id, 4);
 });
 
-test("source identity, disposal and independent runtimes cannot reuse another native owner", () => {
+test('source identity, disposal and independent runtimes cannot reuse another native owner', () => {
   const cache = createDisplayResourceCache(),
-    a = { fontFaces: () => ["a"] },
-    b = { fontFaces: () => ["b"] };
+    a = { fontFaces: () => ['a'] },
+    b = { fontFaces: () => ['b'] };
   const av = cache.view(a);
-  assert.deepEqual(av.fontFaces(), ["a"]);
-  assert.deepEqual(cache.view(b).fontFaces(), ["b"]);
+  assert.deepEqual(av.fontFaces(), ['a']);
+  assert.deepEqual(cache.view(b).fontFaces(), ['b']);
   assert.throws(() => av.fontFaces(), /StaleDisplayResourceOwner/);
   cache.reset();
-  assert.deepEqual(cache.view(a).fontFaces(), ["a"]);
+  assert.deepEqual(cache.view(a).fontFaces(), ['a']);
   const other = createDisplayResourceCache();
-  assert.deepEqual(other.view(b).fontFaces(), ["b"]);
+  assert.deepEqual(other.view(b).fontFaces(), ['b']);
 });
 
-test("read-only resource requests preserve values; unenabled/non-HWPX splice does not", () => {
+test('read-only resource requests preserve values; unenabled/non-HWPX splice does not', () => {
   for (const kind of [
-    "picture-bytes",
-    "table-background-bytes",
-    "query-edit-range",
-    "query-split-range",
+    'picture-bytes',
+    'table-background-bytes',
+    'query-edit-range',
+    'query-split-range',
   ]) {
     let n = 0;
     const cache = createDisplayResourceCache(),
       editor = { fontFaces: () => [++n] },
       v = cache.view(editor);
     v.fontFaces();
-    cache.beginRequest({ kind }, { format: "hwpx", editor, historyEnabled: true });
+    cache.beginRequest({ kind }, { format: 'hwpx', editor, historyEnabled: true });
     assert.deepEqual(v.fontFaces(), [1]);
   }
   for (const options of [
-    { format: "hwpx", historyEnabled: false },
-    { format: "hwp5", historyEnabled: true },
+    { format: 'hwpx', historyEnabled: false },
+    { format: 'hwp5', historyEnabled: true },
   ]) {
     let n = 0;
     const cache = createDisplayResourceCache(),
       editor = { fontFaces: () => [++n] },
       v = cache.view(editor);
     v.fontFaces();
-    cache.beginRequest({ kind: "splice" }, { ...options, editor });
+    cache.beginRequest({ kind: 'splice' }, { ...options, editor });
     assert.deepEqual(v.fontFaces(), [2]);
   }
 });

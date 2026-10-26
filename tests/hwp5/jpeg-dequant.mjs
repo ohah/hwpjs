@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { jpegTablesOracle, quantizationFixture } from "./jpeg-tables.mjs";
+import assert from 'node:assert/strict';
+import { jpegTablesOracle, quantizationFixture } from './jpeg-tables.mjs';
 
 // Independent diagonal enumeration instead of the product's Figure A.6 table.
 const raster = [],

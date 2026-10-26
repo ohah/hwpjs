@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);

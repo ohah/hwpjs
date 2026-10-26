@@ -1,5 +1,5 @@
-import { validateHwp5FieldSpans } from "../../js/hwp5-field-spans.mjs";
-import { validateHwp5FieldTopology } from "../../js/hwp5-field-topology.mjs";
+import { validateHwp5FieldSpans } from '../../js/hwp5-field-spans.mjs';
+import { validateHwp5FieldTopology } from '../../js/hwp5-field-topology.mjs';
 
 // Display discovery only: never replace strict field bindings for transactions.
 export function readHwp5WindowFields(editor, section) {
@@ -7,7 +7,7 @@ export function readHwp5WindowFields(editor, section) {
     return { spans: validateHwp5FieldSpans(editor.fieldSpans(section)), unresolved: [] };
   } catch (error) {
     if (
-      error?.message !== "UnsupportedCrossParagraphField" ||
+      error?.message !== 'UnsupportedCrossParagraphField' ||
       editor.supportsFieldTopology?.() !== true
     )
       throw error;

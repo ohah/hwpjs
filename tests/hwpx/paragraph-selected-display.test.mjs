@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
 
 // Independent ZIP/expanded-name traversal, without product selection helpers.
 const oracle = (path) =>
   JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-B",
-        "-c",
+        '-B',
+        '-c',
         `
 import json,sys,zipfile,xml.etree.ElementTree as E
 h="{http://www.hancom.co.kr/hwpml/2011/head}"
@@ -48,15 +48,15 @@ print(json.dumps(sorted(rows,key=lambda row:row["id"])))
 `,
         path,
       ],
-      { encoding: "utf8", timeout: 30000 },
+      { encoding: 'utf8', timeout: 30000 },
     ),
   );
 
 for (const path of [
-  "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",
-  "reference/rhwp/samples/hwpx/exam_social.hwpx",
+  'reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx',
+  'reference/rhwp/samples/hwpx/exam_social.hwpx',
 ])
-  test("selected paragraph display matches independent header XML: " + path, async (t) => {
+  test('selected paragraph display matches independent header XML: ' + path, async (t) => {
     const input = readFileSync(path),
       before = Buffer.from(input);
     const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
@@ -67,7 +67,7 @@ for (const path of [
       const actual = editor.paragraphShapes();
       assert.equal(actual.length, expected.length);
       for (const [index, row] of expected.entries())
-        assert.deepEqual(actual[index], row, "paragraph shape " + row.id);
+        assert.deepEqual(actual[index], row, 'paragraph shape ' + row.id);
       t.diagnostic(JSON.stringify({ path, resources: expected.length }));
       assert.deepEqual(Buffer.from(editor.save()), before);
       assert.deepEqual(input, before);

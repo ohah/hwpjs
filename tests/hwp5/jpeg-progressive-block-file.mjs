@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { jpegScanGeometry } from "./jpeg-scan.mjs";
+import assert from 'node:assert/strict';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { jpegScanGeometry } from './jpeg-scan.mjs';
 import {
   progressiveBlockInput,
   progressiveBlockOracle,
   progressiveZero,
-} from "./jpeg-progressive-block.mjs";
+} from './jpeg-progressive-block.mjs';
 
 // Test-only scheduling of blocks from real files. This is not a product frame
 // decoder. The product block primitive is checked against independent expected
@@ -32,7 +32,7 @@ export function jpegProgressiveBlocksFileActual(call, raw, verify = null, scanCh
     if (marker.code === 194) {
       assert.equal(frame, null);
       frame = p;
-      assert.ok(frame.readUInt16BE(1) > 0, "test walker requires declared height");
+      assert.ok(frame.readUInt16BE(1) > 0, 'test walker requires declared height');
       for (let i = 0; i < frame[5]; i++) levels.push(Array(64).fill(-1));
     }
     if (marker.code === 196)
@@ -54,7 +54,7 @@ export function jpegProgressiveBlocksFileActual(call, raw, verify = null, scanCh
         ah = scan[3 + 2 * n] >> 4,
         al = scan[3 + 2 * n] & 15;
       kinds[
-        start === 0 ? (ah === 0 ? "dcFirst" : "dcRefine") : ah === 0 ? "acFirst" : "acRefine"
+        start === 0 ? (ah === 0 ? 'dcFirst' : 'dcRefine') : ah === 0 ? 'acFirst' : 'acRefine'
       ]++;
       const g = jpegScanGeometry(frame, scan, frame.readUInt16BE(1));
       assert.ok(g.columns * g.rows * g.perMcu <= 4000000);

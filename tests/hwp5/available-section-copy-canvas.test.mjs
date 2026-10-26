@@ -1,31 +1,31 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { workerCanvasHarness, dispatchCanvasEvent } from '../canvas/worker-harness.mjs';
 import {
   inspect,
   expectedSection,
   paragraphRecords,
-} from "./style-preservation/text-record-oracle.mjs";
-import { sectionCountFixtures } from "./section-count-fixtures.mjs";
+} from './style-preservation/text-record-oracle.mjs';
+import { sectionCountFixtures } from './section-count-fixtures.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit section-copy candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit section-copy candidate required');
 for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures.entries()) {
   for (let section = 0; section < available; section++)
     test(`section-copy Canvas retained anchors and queued input preserve complete source: ${name} section ${section}`, async (t) => {
       const path = `reference/rhwp/samples/${name}`;
       if (!existsSync(path)) {
-        t.skip("Reference fixture unavailable");
+        t.skip('Reference fixture unavailable');
         return;
       }
       const input = readFileSync(path);
-      assert.equal(createHash("sha256").update(input).digest("hex"), digest);
+      assert.equal(createHash('sha256').update(input).digest('hex'), digest);
       const h = await workerCanvasHarness(t);
-      const loaded = await h.send({ kind: "load", bytes: input, availableSectionCopy: true });
+      const loaded = await h.send({ kind: 'load', bytes: input, availableSectionCopy: true });
       assert.equal(loaded.error, undefined);
-      assert.equal((await h.send({ kind: "enable" })).error, undefined);
-      const baselineReply = await h.send({ kind: "save" });
+      assert.equal((await h.send({ kind: 'enable' })).error, undefined);
+      const baselineReply = await h.send({ kind: 'save' });
       assert.equal(baselineReply.error, undefined);
       const baseline = Buffer.from(baselineReply.bytes),
         before = inspect(baseline);
@@ -44,7 +44,7 @@ for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures
         (row) => row.section === section && row.paragraph === 0,
       );
       assert.equal(original.editable, true);
-      assert.equal(original.text.slice(0, codes.length), "\ufffc".repeat(codes.length));
+      assert.equal(original.text.slice(0, codes.length), '\ufffc'.repeat(codes.length));
       // The oldest fixture begins with a combining enclosing square. Its
       // grapheme joins the preceding placeholder, so the first visible caret
       // boundary is after that mark, not inside the grapheme.
@@ -69,15 +69,15 @@ for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures
       );
       const start = h.requests.length;
       const steps = [
-        { display: displayBoundary, source: sourceBoundary, text: "😀" },
-        { display: 0, source: 0, text: "앞" },
-        { display: displayBoundary + 1, source: sourceBoundary + 1, text: "가" },
+        { display: displayBoundary, source: sourceBoundary, text: '😀' },
+        { display: 0, source: 0, text: '앞' },
+        { display: displayBoundary + 1, source: sourceBoundary + 1, text: '가' },
       ];
       let draft = original.text;
       for (const step of steps) {
         h.input.setSelectionRange(step.display, step.display);
         assert.equal(
-          dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: step.text })
+          dispatchCanvasEvent(h.input, 'beforeinput', { inputType: 'insertText', data: step.text })
             .defaultPrevented,
           false,
         );
@@ -85,19 +85,19 @@ for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures
         step.after = draft;
         h.input.value = draft;
         h.input.setSelectionRange(step.display + step.text.length, step.display + step.text.length);
-        dispatchCanvasEvent(h.input, "input");
+        dispatchCanvasEvent(h.input, 'input');
       }
       assert.equal(
         h.requests.length,
         start + 1,
-        "Only the first pending edit may be sent before a reply",
+        'Only the first pending edit may be sent before a reply',
       );
       for (const step of steps) assert.equal((await h.flush()).error, undefined, step.after);
       assert.deepEqual(
         h.requests.slice(start),
         steps.map((step) => ({
-          kind: "splice",
-          origin: "canvas",
+          kind: 'splice',
+          origin: 'canvas',
           section,
           paragraph: 0,
           startUnit: step.source,
@@ -106,13 +106,13 @@ for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures
         })),
       );
       assert.equal(h.input.value, draft);
-      const saved = await h.send({ kind: "save", allowStaleLayout: true });
+      const saved = await h.send({ kind: 'save', allowStaleLayout: true });
       assert.equal(saved.error, undefined);
       const after = inspect(saved.bytes);
       let expected = before.sections[section].bytes;
       for (const step of steps)
         expected = expectedSection(expected, 0, step.source, step.source, step.text);
-      assert.deepEqual(after.sections[section].bytes, expected, "Independent full Section oracle");
+      assert.deepEqual(after.sections[section].bytes, expected, 'Independent full Section oracle');
       assert.deepEqual(after.metadata, before.metadata);
       for (const [path, bytes] of before.streams)
         if (path !== before.sections[section].path)
@@ -124,18 +124,18 @@ for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures
           0,
           step.source,
           step.source,
-          step.text === "가" ? "나" : step.text,
+          step.text === '가' ? '나' : step.text,
         );
       assert.notDeepEqual(
         after.sections[section].bytes,
         wrong,
-        "Wrong inserted value must fail exact comparison",
+        'Wrong inserted value must fail exact comparison',
       );
 
-      assert.equal(h.controller.history("undo"), true);
+      assert.equal(h.controller.history('undo'), true);
       const undone = await h.flush();
       assert.equal(undone.error, undefined);
-      const undoBytes = (await h.send({ kind: "save", allowStaleLayout: true })).bytes;
+      const undoBytes = (await h.send({ kind: 'save', allowStaleLayout: true })).bytes;
       assert.equal(
         h.controller.selectTextRange({
           section,
@@ -145,38 +145,38 @@ for (const [fixtureIndex, [name, , , available, digest]] of sectionCountFixtures
         }),
         true,
       );
-      h.controller.replaceSelection("");
+      h.controller.replaceSelection('');
       const rejected = await h.flush();
-      assert.equal(rejected.error, "UnsupportedControlDeletion");
+      assert.equal(rejected.error, 'UnsupportedControlDeletion');
       assert.equal(rejected.applied, false);
-      assert.deepEqual((await h.send({ kind: "save", allowStaleLayout: true })).bytes, undoBytes);
+      assert.deepEqual((await h.send({ kind: 'save', allowStaleLayout: true })).bytes, undoBytes);
       assert.deepEqual(rejected.historyRevisions, undone.historyRevisions);
-      assert.equal(h.controller.history("redo"), true);
+      assert.equal(h.controller.history('redo'), true);
       assert.equal((await h.flush()).error, undefined);
-      assert.deepEqual((await h.send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
+      assert.deepEqual((await h.send({ kind: 'save', allowStaleLayout: true })).bytes, saved.bytes);
       for (let unit = 2; unit < 9; unit++) {
         const bad = await h.send({
-          kind: "splice",
+          kind: 'splice',
           section,
           paragraph: 0,
           startUnit: unit,
           endUnit: unit,
-          text: "bad",
+          text: 'bad',
         });
-        assert.equal(bad.error, "SplitControlToken");
+        assert.equal(bad.error, 'SplitControlToken');
         assert.equal(bad.applied, false);
       }
-      assert.deepEqual((await h.send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
+      assert.deepEqual((await h.send({ kind: 'save', allowStaleLayout: true })).bytes, saved.bytes);
       for (let index = steps.length - 1; index >= 0; index--) {
-        assert.equal(h.controller.history("undo"), true);
+        assert.equal(h.controller.history('undo'), true);
         assert.equal((await h.flush()).error, undefined);
       }
-      assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), baseline);
+      assert.deepEqual(Buffer.from((await h.send({ kind: 'save' })).bytes), baseline);
       for (let redoIndex = 0; redoIndex < steps.length; redoIndex++) {
-        assert.equal(h.controller.history("redo"), true);
+        assert.equal(h.controller.history('redo'), true);
         assert.equal((await h.flush()).error, undefined);
       }
-      const reopened = await h.send({ kind: "load", bytes: saved.bytes });
+      const reopened = await h.send({ kind: 'load', bytes: saved.bytes });
       assert.equal(reopened.error, undefined);
       assert.equal(
         reopened.content.paragraphs.find((row) => row.section === section && row.paragraph === 0)

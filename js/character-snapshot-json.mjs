@@ -6,7 +6,7 @@ export function decodeCharacterSnapshot(bytes, keys, errorName) {
   if (!(bytes instanceof Uint8Array)) return fail();
   let rows;
   try {
-    rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }
@@ -15,7 +15,7 @@ export function decodeCharacterSnapshot(bytes, keys, errorName) {
   for (const row of rows) {
     if (
       !row ||
-      typeof row !== "object" ||
+      typeof row !== 'object' ||
       Array.isArray(row) ||
       Object.keys(row).length !== keys.length ||
       keys.some((key) => !Object.hasOwn(row, key)) ||

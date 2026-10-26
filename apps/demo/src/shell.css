@@ -8,7 +8,7 @@
   font:
     13px/1.45 -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
   display: flex;
   flex-direction: column;
@@ -55,8 +55,8 @@
   outline: 2px solid var(--hwp-blue);
   outline-offset: 2px;
 }
-.hwp-demo button[aria-pressed="true"],
-.hwp-demo button[aria-pressed="mixed"] {
+.hwp-demo button[aria-pressed='true'],
+.hwp-demo button[aria-pressed='mixed'] {
   background: #e8f0fd;
   border-color: #c6d9f6;
   color: #174b99;
@@ -103,7 +103,7 @@
 .hwp-demo-frameworks a:hover {
   background: #f1f4f8;
 }
-.hwp-demo-frameworks a[aria-current="page"] {
+.hwp-demo-frameworks a[aria-current='page'] {
   background: #eaf1fd;
   color: #194e9d;
   font-weight: 600;
@@ -220,7 +220,7 @@
 .hwp-demo-size input {
   width: 64px;
 }
-.hwp-demo input:not([type="file"]),
+.hwp-demo input:not([type='file']),
 .hwp-demo select {
   background: white;
   border: 1px solid #cdd3dd;
@@ -239,7 +239,7 @@
 .hwp-demo-file-label {
   color: var(--hwp-muted);
 }
-.hwp-demo-picker input[type="file"] {
+.hwp-demo-picker input[type='file'] {
   width: 245px;
   max-width: 100%;
 }
@@ -396,21 +396,21 @@
   max-width: 1050px;
   margin: 0 auto;
 }
-.hwp-demo [data-role="shortcut-settings"] {
+.hwp-demo [data-role='shortcut-settings'] {
   position: relative;
   font-size: 12px;
 }
-.hwp-demo [data-role="shortcut-settings"] > ul {
+.hwp-demo [data-role='shortcut-settings'] > ul {
   max-height: 35vh;
   overflow: auto;
   padding-inline-start: 20px;
 }
-.hwp-demo [data-role="text-search"] fieldset {
+.hwp-demo [data-role='text-search'] fieldset {
   display: flex;
   gap: 16px;
   margin-block: 12px;
 }
-.hwp-demo [data-role="text-search"] fieldset label {
+.hwp-demo [data-role='text-search'] fieldset label {
   display: flex;
   align-items: center;
   gap: 4px;

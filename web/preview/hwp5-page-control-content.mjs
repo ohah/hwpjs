@@ -1,5 +1,5 @@
-import { validateHwp5PageControlSources } from "../../js/hwp5-page-control-sources.mjs";
-import { sourceDisplayPosition } from "./text-offsets.mjs";
+import { validateHwp5PageControlSources } from '../../js/hwp5-page-control-sources.mjs';
+import { sourceDisplayPosition } from './text-offsets.mjs';
 
 // Diagnostics do not grant permission to ignore or apply page control semantics.
 export function attachHwp5PageControls(editor, content) {
@@ -15,7 +15,7 @@ export function attachHwp5PageControls(editor, content) {
           (p) => p.section === section && p.paragraph === row.paragraph,
         );
         if (owners.length !== 1 || owners[0].clipped)
-          throw new Error("Hwp5PageControlOwnerMismatch");
+          throw new Error('Hwp5PageControlOwnerMismatch');
         const paragraph = owners[0],
           unit = sourceDisplayPosition(
             row.current_unit,
@@ -27,8 +27,8 @@ export function attachHwp5PageControls(editor, content) {
           paragraph.sourceOffsets,
           paragraph.text.length,
         );
-        if (end !== unit + 1 || paragraph.text[unit] !== "\ufffc")
-          throw new Error("Hwp5PageControlAnchorMismatch");
+        if (end !== unit + 1 || paragraph.text[unit] !== '\ufffc')
+          throw new Error('Hwp5PageControlAnchorMismatch');
         return { ...row, section, unit };
       });
       content.pageControlSources.push(...projected);

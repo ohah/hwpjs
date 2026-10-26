@@ -1,10 +1,10 @@
-import { projectFloatingDrawing } from "./drawing-page-projection.mjs";
-import { layoutGroupedDrawingText } from "./grouped-drawing-text-layout.mjs";
+import { projectFloatingDrawing } from './drawing-page-projection.mjs';
+import { layoutGroupedDrawingText } from './grouped-drawing-text-layout.mjs';
 
 export function drawingRootSource(drawing, containers = []) {
   const group = drawing?.source?.group_context;
-  if (group === null) return { state: "selected", source: drawing.source, grouped: false };
-  if (!group) return { state: "unavailable", error: "MissingDrawingGroupContext" };
+  if (group === null) return { state: 'selected', source: drawing.source, grouped: false };
+  if (!group) return { state: 'unavailable', error: 'MissingDrawingGroupContext' };
   const roots = containers.filter(
     (c) => c.section === drawing.section && c.containerNode === group.root_anchor,
   );
@@ -13,8 +13,8 @@ export function drawingRootSource(drawing, containers = []) {
     roots[0].source.container_node !== group.root_anchor ||
     roots[0].source.group_context !== null
   )
-    return { state: "unavailable", error: "AmbiguousDrawingGroupRoot" };
-  return { state: "selected", source: roots[0].source, grouped: true };
+    return { state: 'unavailable', error: 'AmbiguousDrawingGroupRoot' };
+  return { state: 'selected', source: roots[0].source, grouped: true };
 }
 
 export function projectDrawingTextPage(
@@ -27,7 +27,7 @@ export function projectDrawingTextPage(
   options,
 ) {
   const root = drawingRootSource(drawing, containers);
-  if (root.state !== "selected") return root;
+  if (root.state !== 'selected') return root;
   return root.grouped
     ? layoutGroupedDrawingText(
         drawing,

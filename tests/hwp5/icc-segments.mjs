@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { reference } from "./icc-parametric-domain.mjs";
-import { paraInput } from "./icc-analytic.mjs";
+import assert from 'node:assert/strict';
+import { reference } from './icc-parametric-domain.mjs';
+import { paraInput } from './icc-analytic.mjs';
 export function segmentEdges(call) {
   let comparisons = 0,
     rejected = 0;

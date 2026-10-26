@@ -1,9 +1,9 @@
 /** Wire validation only; raw resource colors and absent alpha remain distinct. */
 export function decodeHwp5BorderFillSources(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length > 64 * 1024 * 1024)
-    throw new Error("InvalidHwp5BorderFillSources");
+    throw new Error('InvalidHwp5BorderFillSources');
   return validateHwp5BorderFillSources(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }
 export function validateHwp5BorderFillSources(rows) {
@@ -13,7 +13,7 @@ export function validateHwp5BorderFillSources(rows) {
     signed = (v) => integer(v, -2147483648, 2147483647);
   const optional = (v, check) => v === null || check(v),
     fail = () => {
-      throw new Error("InvalidHwp5BorderFillSources");
+      throw new Error('InvalidHwp5BorderFillSources');
     };
   if (!Array.isArray(rows) || rows.length > 1_000_000) fail();
   for (const [i, r] of rows.entries()) {
@@ -28,7 +28,7 @@ export function validateHwp5BorderFillSources(rows) {
       r.borders.length !== 5 ||
       !Array.from(r.borders).every((b) => b && byte(b.kind) && byte(b.width) && uint(b.color)) ||
       !uint(r.fill_flags) ||
-      typeof r.fill_known !== "boolean" ||
+      typeof r.fill_known !== 'boolean' ||
       r.fill_known !== ((r.fill_flags & ~7) === 0)
     )
       fail();
@@ -50,7 +50,7 @@ export function validateHwp5BorderFillSources(rows) {
     }
     if (
       r.unknown_fill_bytes !== null ||
-      typeof r.additional_present !== "boolean" ||
+      typeof r.additional_present !== 'boolean' ||
       !uint(r.additional_bytes) ||
       !uint(r.extra_bytes) ||
       (!r.additional_present && (r.additional_bytes !== 0 || r.fill_flags > 1)) ||
@@ -67,7 +67,7 @@ export function validateHwp5BorderFillSources(rows) {
       g !== null &&
       (!g ||
         !byte(g.kind) ||
-        !["angle", "center_x", "center_y", "blur"].every((k) => uint(g[k])) ||
+        !['angle', 'center_x', 'center_y', 'blur'].every((k) => uint(g[k])) ||
         !optional(g.blur_center, byte) ||
         !Array.isArray(g.colors) ||
         g.colors.length > 1_000_000 ||
@@ -95,9 +95,9 @@ export function validateHwp5BorderFillSources(rows) {
         r.extra_bytes !== 0 ||
         r.fill_flags === 0 ||
         ![
-          ["pattern", 1],
-          ["gradient", 4],
-          ["image", 2],
+          ['pattern', 1],
+          ['gradient', 4],
+          ['image', 2],
         ].every(([k, flag]) => (r.fill_flags & flag ? byte(r.alpha[k]) : r.alpha[k] === null)))
     )
       fail();

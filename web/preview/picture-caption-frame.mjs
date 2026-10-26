@@ -1,4 +1,4 @@
-import { layoutPictureCaption } from "./picture-caption-layout.mjs";
+import { layoutPictureCaption } from './picture-caption-layout.mjs';
 
 // Image paint geometry and the caption's occupied region have separate owners.
 export function measurePictureCaptionFrame(
@@ -21,13 +21,13 @@ export function measurePictureCaptionFrame(
     rectangle.width <= 0 ||
     rectangle.height <= 0
   )
-    return { state: "unavailable", error: "InvalidPictureCaptionRectangle" };
+    return { state: 'unavailable', error: 'InvalidPictureCaptionRectangle' };
   if (!Number.isSafeInteger(maxRows) || maxRows < 1)
-    return { state: "unavailable", error: "PictureCaptionRowLimit" };
+    return { state: 'unavailable', error: 'PictureCaptionRowLimit' };
   const result = layoutPictureCaption(picture, paragraphs, rectangle, measure, { maxRows });
-  if (result.state !== "positioned") return result;
+  if (result.state !== 'positioned') return result;
   return {
-    state: "measured",
+    state: 'measured',
     rectangle: { ...rectangle },
     flowRectangle: result.bounds,
     captionRectangle: result.captionRectangle,

@@ -1,9 +1,9 @@
-import { chartPointGroupLabel } from "./chart-point-label.mjs";
+import { chartPointGroupLabel } from './chart-point-label.mjs';
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 // Display projection only. Every cell retains native edit ordinals, not row offsets.
 export function chartPointGridModel(chart) {
   const points = chart?.values?.points ?? [];
-  if (!Array.isArray(points)) throw new Error("InvalidChartGridPoints");
+  if (!Array.isArray(points)) throw new Error('InvalidChartGridPoints');
   const columns = [],
     columnKeys = new Map(),
     byIndex = new Map(),
@@ -15,7 +15,7 @@ export function chartPointGridModel(chart) {
       !uint(point.cache_node) ||
       (point.level_node != null && !uint(point.level_node))
     )
-      throw new Error("InvalidChartGridPoint");
+      throw new Error('InvalidChartGridPoint');
     const binding = chart.bindings?.[ordinal];
     const owner = binding?.point === ordinal ? binding : null;
     const key = JSON.stringify([

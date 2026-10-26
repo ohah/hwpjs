@@ -1,10 +1,10 @@
-import { tableSourceFailure } from "./table-source-failure.mjs";
-import { measureNestedTable } from "./nested-table-measurement.mjs";
-import { projectOverlayTablePage } from "./overlay-table-page.mjs";
-import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { tableAnchorCoverage } from "./table-anchor-coverage.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { tableSourceFailure } from './table-source-failure.mjs';
+import { measureNestedTable } from './nested-table-measurement.mjs';
+import { projectOverlayTablePage } from './overlay-table-page.mjs';
+import { projectFloatingPicturePage } from './picture-page-projection.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { tableAnchorCoverage } from './table-anchor-coverage.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
 
 export const isOverlayTable = (table) =>
   table?.parentTableNode == null &&
@@ -19,21 +19,21 @@ export function layoutOverlayTableBody(
   layoutBody,
   { minimumCellHeight } = {},
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
-    typeof measure !== "function" ||
-    typeof layoutBody !== "function" ||
+    typeof measure !== 'function' ||
+    typeof layoutBody !== 'function' ||
     !Array.isArray(content?.tables) ||
     !Array.isArray(content.paragraphs)
   )
-    return fail("InvalidOverlayTableBody");
+    return fail('InvalidOverlayTableBody');
   const sourceFailure = tableSourceFailure(content);
   if (sourceFailure) return sourceFailure;
   const roots = content.tables.filter(isOverlayTable),
     removed = new Set(roots.map((t) => `${t.section}:${t.tableNode}`));
-  if (!roots.length) return fail("MissingOverlayTableSources");
+  if (!roots.length) return fail('MissingOverlayTableSources');
   for (let size = -1; size !== removed.size;) {
     size = removed.size;
     for (const table of content.tables)
@@ -53,7 +53,7 @@ export function layoutOverlayTableBody(
       (p) => local.has(`${p.section}:${p.paragraph}`) && p.geometry?.treatAsCharacter !== true,
     )
   )
-    return fail("UnsupportedOverlayTableDrawings");
+    return fail('UnsupportedOverlayTableDrawings');
   const anchors = roots.map((t) => ({
     section: t.section,
     paragraph: t.hostParagraph,
@@ -68,9 +68,9 @@ export function layoutOverlayTableBody(
       owners.length !== 1 ||
       owners[0].tableCell ||
       !Number.isSafeInteger(anchor.anchorUnit) ||
-      owners[0].text?.[anchor.anchorUnit] !== "\ufffc"
+      owners[0].text?.[anchor.anchorUnit] !== '\ufffc'
     )
-      return fail("InvalidOverlayTableHost");
+      return fail('InvalidOverlayTableHost');
   }
   const body = {
     ...content,
@@ -83,19 +83,19 @@ export function layoutOverlayTableBody(
     floatingDrawingAnchors: [...(content.floatingDrawingAnchors ?? []), ...anchors],
   };
   const bodyMeasure = (text, paragraph, unit, kind) =>
-    kind === "text" &&
+    kind === 'text' &&
     anchors.some(
       (a) =>
         a.section === paragraph.section &&
         a.paragraph === paragraph.paragraph &&
         a.anchorUnit === unit,
     )
-      ? { width: 0, height: textMeasurement(measure("", paragraph, unit, kind)).height }
+      ? { width: 0, height: textMeasurement(measure('', paragraph, unit, kind)).height }
       : measure(text, paragraph, unit, kind);
   const base = layoutBody(body, bodyMeasure, maxRows);
-  if (base?.state !== "paginated") return base;
+  if (base?.state !== 'paginated') return base;
   if (base.limited || !Array.isArray(base.rows) || !Array.isArray(base.pages))
-    return fail("IncompleteOverlayTableBody");
+    return fail('IncompleteOverlayTableBody');
   const result = {
     ...base,
     rows: base.rows.map((row) => {
@@ -126,7 +126,7 @@ export function layoutOverlayTableBody(
     // Reuse the same current UTF-16 owner and paragraph-fragment reference policy as floating shapes.
     const reference = projectFloatingPicturePage(
       {
-        state: "located",
+        state: 'located',
         section: table.section,
         paragraph: table.hostParagraph,
         pictureNode: table.tableNode,
@@ -152,15 +152,15 @@ export function layoutOverlayTableBody(
       content.paragraphs,
       base.rows,
     );
-    if (reference.state !== "placed") return { ...reference, tableNode: table.tableNode };
+    if (reference.state !== 'placed') return { ...reference, tableNode: table.tableNode };
     const remaining = maxRows - result.rows.length;
-    if (remaining < 1) return fail("OverlayTableLayoutLimit");
+    if (remaining < 1) return fail('OverlayTableLayoutLimit');
     const measured = measureNestedTable(content, table, measure, {
       maxRows: remaining,
-      overflow: "visible",
+      overflow: 'visible',
       minimumCellHeight,
     });
-    if (measured.state !== "measured") return { ...measured, tableNode: table.tableNode };
+    if (measured.state !== 'measured') return { ...measured, tableNode: table.tableNode };
     const host = base.rows.find(
       (row) =>
         row.section === table.section &&
@@ -173,7 +173,7 @@ export function layoutOverlayTableBody(
       columnOrdinal: host?.columnOrdinal ?? 0,
       maxRows: remaining,
     });
-    if (placed.state !== "placed") return { ...placed, tableNode: table.tableNode };
+    if (placed.state !== 'placed') return { ...placed, tableNode: table.tableNode };
     result.rows.push(...placed.rows);
     result.boxes.push(...placed.boxes);
     result.flowPictures.push(...(placed.flowPictures ?? []));
@@ -185,9 +185,9 @@ export function layoutOverlayTableBody(
     });
   }
   const controls = tableAnchorCoverage(content, result);
-  if (controls.state !== "covered") return controls;
+  if (controls.state !== 'covered') return controls;
   const coverage = pageParagraphCoverage(content.paragraphs, [...result.rows, ...controls.rows]);
-  if (coverage.state !== "complete") return coverage;
+  if (coverage.state !== 'complete') return coverage;
   return {
     ...result,
     rows: result.rows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x),

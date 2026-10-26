@@ -5,7 +5,7 @@ export function createEquationEditState({ request, changed = () => {} }) {
     selection = null,
     baseline = null,
     revision = null,
-    draft = "",
+    draft = '',
     pending = null,
     error = null,
     closed = false;
@@ -29,13 +29,13 @@ export function createEquationEditState({ request, changed = () => {} }) {
   const query = () => {
     if (closed || !selection) return false;
     baseline = revision = null;
-    draft = "";
+    draft = '';
     error = null;
-    pending = "query";
-    const accepted = request({ kind: "equation-script-query", ...selection, requestId: ++serial });
+    pending = 'query';
+    const accepted = request({ kind: 'equation-script-query', ...selection, requestId: ++serial });
     if (!accepted) {
       pending = null;
-      error = "EquationQueryUnavailable";
+      error = 'EquationQueryUnavailable';
     }
     publish();
     return accepted;
@@ -45,13 +45,13 @@ export function createEquationEditState({ request, changed = () => {} }) {
     select(value) {
       if (closed) return false;
       if (!value || !uint(value.section) || !uint(value.node))
-        throw new Error("InvalidEquationSelection");
+        throw new Error('InvalidEquationSelection');
       selection = { section: value.section, node: value.node };
       return query();
     },
     refresh: query,
     edit(value) {
-      if (!snapshot().canSubmit || typeof value !== "string") return false;
+      if (!snapshot().canSubmit || typeof value !== 'string') return false;
       draft = value;
       publish();
       return true;
@@ -60,7 +60,7 @@ export function createEquationEditState({ request, changed = () => {} }) {
       if (!snapshot().canSubmit) return false;
       if (draft === baseline) return true;
       const accepted = request({
-        kind: "equation-script-set",
+        kind: 'equation-script-set',
         ...selection,
         requestId: ++serial,
         before: baseline,
@@ -68,7 +68,7 @@ export function createEquationEditState({ request, changed = () => {} }) {
         value: draft,
       });
       if (accepted) {
-        pending = "write";
+        pending = 'write';
         error = null;
         publish();
       }
@@ -77,10 +77,10 @@ export function createEquationEditState({ request, changed = () => {} }) {
     message(message) {
       if (closed) return false;
       const expected =
-        pending === "query"
-          ? "equation-script-query"
-          : pending === "write"
-            ? "equation-script-set"
+        pending === 'query'
+          ? 'equation-script-query'
+          : pending === 'write'
+            ? 'equation-script-set'
             : null;
       if (expected && message.kind === expected && message.requestId === serial) {
         const identity = message.error ? message : message.equation;
@@ -91,11 +91,11 @@ export function createEquationEditState({ request, changed = () => {} }) {
           error = message.error;
           if (
             message.applied ||
-            ["EquationRevisionMismatch", "EquationScriptMismatch"].includes(error)
+            ['EquationRevisionMismatch', 'EquationScriptMismatch'].includes(error)
           )
             baseline = revision = null;
         } else {
-          if (typeof identity.value !== "string" || !uint(identity.revision)) return false;
+          if (typeof identity.value !== 'string' || !uint(identity.revision)) return false;
           pending = null;
           error = null;
           baseline = draft = identity.value;
@@ -106,9 +106,9 @@ export function createEquationEditState({ request, changed = () => {} }) {
       }
       if (
         selection &&
-        (message.content || (["undo", "redo"].includes(message.kind) && !message.error))
+        (message.content || (['undo', 'redo'].includes(message.kind) && !message.error))
       ) {
-        invalidate("EquationContextChanged");
+        invalidate('EquationContextChanged');
         return true;
       }
       return false;
@@ -118,7 +118,7 @@ export function createEquationEditState({ request, changed = () => {} }) {
       serial++;
       selection = null;
       baseline = revision = pending = error = null;
-      draft = "";
+      draft = '';
       publish();
     },
     close() {
@@ -126,7 +126,7 @@ export function createEquationEditState({ request, changed = () => {} }) {
       serial++;
       selection = null;
       baseline = revision = pending = error = null;
-      draft = "";
+      draft = '';
       closed = true;
       publish();
     },

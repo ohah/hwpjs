@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { reference } from "./icc-normalized-power-level.mjs";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { reference } from './icc-normalized-power-level.mjs';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
 export function widePowerInput(g, offset, n, d) {
   const b = Buffer.alloc(136);
   b.writeInt32BE(g);

@@ -1,8 +1,8 @@
 // Display-only minimum-size constraints, not an HWP page-layout engine.
-export { hwpUnitPixels as hwpUnitsToPixels } from "./hwp-units.mjs";
-import { hwpUnitPixels as hwpUnitsToPixels } from "./hwp-units.mjs";
-import { sourceTableRowHorizontals as resolveSourceRows } from "./source-table-row-horizontals.mjs";
-import { tableSourceCellMinimumHeight } from "./table-source-cell-size.mjs";
+export { hwpUnitPixels as hwpUnitsToPixels } from './hwp-units.mjs';
+import { hwpUnitPixels as hwpUnitsToPixels } from './hwp-units.mjs';
+import { sourceTableRowHorizontals as resolveSourceRows } from './source-table-row-horizontals.mjs';
+import { tableSourceCellMinimumHeight } from './table-source-cell-size.mjs';
 
 export function tableGrid(
   table,
@@ -30,21 +30,21 @@ export function tableGrid(
     table.columns > 10000 ||
     table.cells.length > 100000
   )
-    throw new RangeError("InvalidTableGrid");
+    throw new RangeError('InvalidTableGrid');
   if (
     columnWidths !== undefined &&
     (!Array.isArray(columnWidths) ||
       columnWidths.length !== table.columns ||
       Array.from(columnWidths).some((value) => !positive(value)))
   )
-    throw new RangeError("InvalidTableGrid");
+    throw new RangeError('InvalidTableGrid');
   if (
-    typeof sourceRowHorizontals !== "boolean" ||
+    typeof sourceRowHorizontals !== 'boolean' ||
     (sourceRowHorizontals && columnWidths !== undefined)
   )
-    throw new RangeError("InvalidTableGrid");
+    throw new RangeError('InvalidTableGrid');
   const sourceRows = sourceRowHorizontals ? resolveSourceRows(table) : null;
-  if (sourceRows && sourceRows.state !== "resolved") throw new RangeError(sourceRows.error);
+  if (sourceRows && sourceRows.state !== 'resolved') throw new RangeError(sourceRows.error);
   const columns = columnWidths?.slice() ?? Array(table.columns).fill(minColumn),
     rows = Array(table.rows).fill(minRow);
   const sizes = table.cells.map((cell) => {
@@ -59,17 +59,17 @@ export function tableGrid(
         span < 1 ||
         start > bound - span
       )
-        throw new RangeError("InvalidTableGrid");
+        throw new RangeError('InvalidTableGrid');
     }
     if (
       ![cell.width, cell.height].every(
         (value) => value === null || (Number.isInteger(value) && value >= 0 && value <= 0xffffffff),
       )
     )
-      throw new RangeError("InvalidTableGrid");
+      throw new RangeError('InvalidTableGrid');
     const size = contentSize(cell);
     if (![size.width, size.height].every((value) => Number.isFinite(value) && value >= 0))
-      throw new RangeError("InvalidTableGrid");
+      throw new RangeError('InvalidTableGrid');
     return {
       cell,
       width: Math.max(cell.width === null ? 0 : hwpUnitsToPixels(cell.width), size.width),
@@ -87,7 +87,7 @@ export function tableGrid(
   if (sourceRows) {
     for (const [index, { width }] of sizes.entries())
       if (hwpUnitsToPixels(sourceRows.cells[index].width) + 1e-8 < width)
-        throw new RangeError("InvalidTableGrid");
+        throw new RangeError('InvalidTableGrid');
   } else if (columnWidths === undefined) {
     for (const { cell, width } of [...sizes].sort(
       (a, b) =>
@@ -103,7 +103,7 @@ export function tableGrid(
           1e-8 <
         width
       )
-        throw new RangeError("InvalidTableGrid");
+        throw new RangeError('InvalidTableGrid');
   }
   for (const { cell, height } of [...sizes].sort(
     (a, b) => a.cell.rowSpan - b.cell.rowSpan || a.cell.row - b.cell.row || a.height - b.height,
@@ -119,7 +119,7 @@ export function tableGrid(
     );
   const xs = offsets(columns, x),
     ys = offsets(rows, y);
-  if (![...xs, ...ys].every(Number.isFinite)) throw new RangeError("InvalidTableGrid");
+  if (![...xs, ...ys].every(Number.isFinite)) throw new RangeError('InvalidTableGrid');
   const result = {
     width: sourceRows
       ? hwpUnitsToPixels(sourceRows.width)
@@ -145,6 +145,6 @@ export function tableGrid(
       (cell) => ![cell.x, cell.y, cell.x + cell.width, cell.y + cell.height].every(Number.isFinite),
     )
   )
-    throw new RangeError("InvalidTableGrid");
+    throw new RangeError('InvalidTableGrid');
   return result;
 }

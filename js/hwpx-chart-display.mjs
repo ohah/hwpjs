@@ -7,60 +7,60 @@ import {
   field,
   scaling,
   number,
-} from "./chart-display-fields.mjs";
-import { validateChartSeriesText } from "./hwpx-chart-series-text.mjs";
-import { validateChartRichText } from "./hwpx-chart-rich-text.mjs";
-import { chartDisplayHost } from "./chart-display-host.mjs";
-import { validChartSeriesSettings } from "./chart-series-settings.mjs";
-import { validChartPointSettings } from "./chart-point-settings.mjs";
-import { validChartStockSettings } from "./chart-stock-settings.mjs";
-import { validChartView3D } from "./chart-view-3d.mjs";
-import { validChartSpatialSettings } from "./chart-spatial-settings.mjs";
+} from './chart-display-fields.mjs';
+import { validateChartSeriesText } from './hwpx-chart-series-text.mjs';
+import { validateChartRichText } from './hwpx-chart-rich-text.mjs';
+import { chartDisplayHost } from './chart-display-host.mjs';
+import { validChartSeriesSettings } from './chart-series-settings.mjs';
+import { validChartPointSettings } from './chart-point-settings.mjs';
+import { validChartStockSettings } from './chart-stock-settings.mjs';
+import { validChartView3D } from './chart-view-3d.mjs';
+import { validChartSpatialSettings } from './chart-spatial-settings.mjs';
 const plotKinds = new Set([
-  "areaChart",
-  "area3DChart",
-  "lineChart",
-  "line3DChart",
-  "stockChart",
-  "radarChart",
-  "scatterChart",
-  "pieChart",
-  "pie3DChart",
-  "doughnutChart",
-  "barChart",
-  "bar3DChart",
-  "ofPieChart",
-  "surfaceChart",
-  "surface3DChart",
-  "bubbleChart",
+  'areaChart',
+  'area3DChart',
+  'lineChart',
+  'line3DChart',
+  'stockChart',
+  'radarChart',
+  'scatterChart',
+  'pieChart',
+  'pie3DChart',
+  'doughnutChart',
+  'barChart',
+  'bar3DChart',
+  'ofPieChart',
+  'surfaceChart',
+  'surface3DChart',
+  'bubbleChart',
 ]);
 const pointKinds = new Set([
-  "numeric_cache",
-  "numeric_literal",
-  "string_cache",
-  "string_literal",
-  "multilevel_cache",
+  'numeric_cache',
+  'numeric_literal',
+  'string_cache',
+  'string_literal',
+  'multilevel_cache',
 ]);
-const roles = new Set(["name", "category", "value", "x", "y", "bubble_size", "unclassified"]);
+const roles = new Set(['name', 'category', 'value', 'x', 'y', 'bubble_size', 'unclassified']);
 const fail = () => {
-  throw new Error("InvalidChartDisplay");
+  throw new Error('InvalidChartDisplay');
 };
 const require = (condition) => {
   if (!condition) fail();
 };
 
 export function decodeChartDisplay(bytes) {
-  const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  require(object(value) && value.kind === "chart_display");
+  const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+  require(object(value) && value.kind === 'chart_display');
   for (const name of [
-    "plots",
-    "plot_settings",
-    "axes",
-    "axis_links",
-    "points",
-    "bindings",
-    "series_text",
-    "rich_text",
+    'plots',
+    'plot_settings',
+    'axes',
+    'axis_links',
+    'points',
+    'bindings',
+    'series_text',
+    'rich_text',
   ])
     require(Array.isArray(value[name]));
   const pair = value.pair;
@@ -72,7 +72,7 @@ export function decodeChartDisplay(bytes) {
       pair.ole_path.length > 0 &&
       uint(pair.wrapper_node) &&
       uint(pair.section_ordinal) &&
-      typeof pair.declared_external === "boolean" &&
+      typeof pair.declared_external === 'boolean' &&
       Array.isArray(pair.section_sha256) &&
       pair.section_sha256.length === 32 &&
       pair.section_sha256.every((n) => uint(n) && n <= 255),
@@ -113,13 +113,13 @@ export function decodeChartDisplay(bytes) {
     const settings = value.plot_settings[index];
     require(
       object(settings) &&
-        field(settings.direction, oneOf(["bar", "col"]), plot.node) &&
+        field(settings.direction, oneOf(['bar', 'col']), plot.node) &&
         field(
           settings.grouping,
-          oneOf(["standard", "clustered", "stacked", "percentStacked"]),
+          oneOf(['standard', 'clustered', 'stacked', 'percentStacked']),
           plot.node,
         ) &&
-        field(settings.vary_colors, (v) => typeof v === "boolean", plot.node) &&
+        field(settings.vary_colors, (v) => typeof v === 'boolean', plot.node) &&
         Array.isArray(settings.axis_references),
     );
     require(
@@ -129,18 +129,18 @@ export function decodeChartDisplay(bytes) {
     require(
       field(
         settings.scatter_style,
-        oneOf(["line", "lineMarker", "marker", "smooth", "smoothMarker"]),
+        oneOf(['line', 'lineMarker', 'marker', 'smooth', 'smoothMarker']),
         plot.node,
       ),
     );
-    if (settings.scatter_style !== null) require(plot.kind === "scatterChart");
+    if (settings.scatter_style !== null) require(plot.kind === 'scatterChart');
     require(field(settings.first_slice_angle, (v) => uint(v) && v <= 360, plot.node));
     if (settings.first_slice_angle !== null)
-      require(["pieChart", "doughnutChart"].includes(plot.kind));
+      require(['pieChart', 'doughnutChart'].includes(plot.kind));
     require(
-      field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) &&
+      field(settings.of_pie_type, oneOf(['pie', 'bar']), plot.node) &&
         field(settings.second_pie_size, (v) => uint(v) && v >= 5 && v <= 200, plot.node) &&
-        field(settings.split_type, oneOf(["auto", "cust", "percent", "pos", "val"]), plot.node) &&
+        field(settings.split_type, oneOf(['auto', 'cust', 'percent', 'pos', 'val']), plot.node) &&
         field(settings.split_position, number, plot.node) &&
         nullableUint(settings.custom_split_node) &&
         (settings.custom_split_node === null || settings.custom_split_node > plot.node),
@@ -154,15 +154,15 @@ export function decodeChartDisplay(bytes) {
         settings.custom_split_node,
       ].some((value) => value !== null)
     )
-      require(plot.kind === "ofPieChart");
-    const bar = ["barChart", "bar3DChart"].includes(plot.kind);
+      require(plot.kind === 'ofPieChart');
+    const bar = ['barChart', 'bar3DChart'].includes(plot.kind);
     if (settings.direction !== null) require(bar);
     if (settings.grouping !== null)
-      require(bar || ["lineChart", "line3DChart", "areaChart", "area3DChart"].includes(plot.kind));
-    if (!bar && settings.grouping?.value === "clustered") fail();
+      require(bar || ['lineChart', 'line3DChart', 'areaChart', 'area3DChart'].includes(plot.kind));
+    if (!bar && settings.grouping?.value === 'clustered') fail();
     if (settings.gap_width !== null)
-      require(["barChart", "bar3DChart", "ofPieChart"].includes(plot.kind));
-    if (settings.overlap !== null) require(plot.kind === "barChart");
+      require(['barChart', 'bar3DChart', 'ofPieChart'].includes(plot.kind));
+    if (settings.overlap !== null) require(plot.kind === 'barChart');
     const leaves = new Set();
     for (const leaf of [
       settings.direction,
@@ -188,7 +188,7 @@ export function decodeChartDisplay(bytes) {
     for (const node of leaves) occupied?.add(node);
     for (const reference of settings.axis_references) {
       require(reference !== null && field(reference, uint, plot.node));
-      const key = plot.node + ":" + reference.node;
+      const key = plot.node + ':' + reference.node;
       require(!references.has(key));
       references.set(key, reference.value);
     }
@@ -204,11 +204,11 @@ export function decodeChartDisplay(bytes) {
         !axes.has(axis.node) &&
         uint(axis.area_node) &&
         axis.area_node < axis.node &&
-        ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) &&
+        ['catAx', 'valAx', 'dateAx', 'serAx'].includes(axis.kind) &&
         field(axis.id, uint, axis.node) &&
         field(axis.cross_axis, uint, axis.node) &&
-        field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) &&
-        field(axis.deleted, (v) => typeof v === "boolean", axis.node) &&
+        field(axis.position, oneOf(['b', 'l', 'r', 't']), axis.node) &&
+        field(axis.deleted, (v) => typeof v === 'boolean', axis.node) &&
         scaling(axis.scaling, axis.node),
     );
     axes.set(axis.node, axis);
@@ -231,7 +231,7 @@ export function decodeChartDisplay(bytes) {
     ])
       if (leaf !== null) occupied?.add(leaf.node);
     if (axis.id?.value !== null && axis.id?.value !== undefined) {
-      const key = axis.area_node + ":" + axis.id.value;
+      const key = axis.area_node + ':' + axis.id.value;
       const rows = definitions.get(key) ?? [];
       rows.push(axis.node);
       definitions.set(key, rows);
@@ -248,24 +248,24 @@ export function decodeChartDisplay(bytes) {
         nullableUint(link.id) &&
         object(link.target),
     );
-    const key = link.plot_node + ":" + link.reference_node;
+    const key = link.plot_node + ':' + link.reference_node;
     require(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
     seenLinks.add(key);
     const matches =
       link.id === null
         ? []
-        : (definitions.get(plots.get(link.plot_node).area_node + ":" + link.id) ?? []);
+        : (definitions.get(plots.get(link.plot_node).area_node + ':' + link.id) ?? []);
     const status =
       link.id === null
-        ? "missing_value"
+        ? 'missing_value'
         : matches.length === 0
-          ? "missing_definition"
+          ? 'missing_definition'
           : matches.length > 1
-            ? "ambiguous"
-            : "resolved";
+            ? 'ambiguous'
+            : 'resolved';
     require(
       link.target.status === status &&
-        link.target.node === (status === "resolved" ? matches[0] : null),
+        link.target.node === (status === 'resolved' ? matches[0] : null),
     );
   }
   require(value.bindings.length === value.points.length);
@@ -284,7 +284,7 @@ export function decodeChartDisplay(bytes) {
         nullableUint(point.level_node) &&
         (point.level_node === null ||
           (point.cache_node < point.level_node && point.level_node < point.point_node)) &&
-        (point.kind === "multilevel_cache") === (point.level_node !== null),
+        (point.kind === 'multilevel_cache') === (point.level_node !== null),
     );
     previousLeaf = point.value_node;
     pointNodes.add(point.point_node);
@@ -301,19 +301,19 @@ export function decodeChartDisplay(bytes) {
       if (node !== null) occupied?.add(node);
     if (binding.series_node === null)
       require(
-        binding.plot_node === null && binding.role_node === null && binding.role === "unclassified",
+        binding.plot_node === null && binding.role_node === null && binding.role === 'unclassified',
       );
     else {
       require(binding.plot_node !== null);
       if (series.has(binding.series_node))
         require(series.get(binding.series_node) === binding.plot_node);
-      if (binding.role_node === null) require(binding.role === "unclassified");
+      if (binding.role_node === null) require(binding.role === 'unclassified');
       else require(binding.role_node > binding.series_node && binding.role_node < point.cache_node);
     }
   }
   try {
-    validateChartSeriesText({ kind: "direct_series", values: value.series_text });
-    validateChartRichText({ kind: "rich_text", values: value.rich_text });
+    validateChartSeriesText({ kind: 'direct_series', values: value.series_text });
+    validateChartRichText({ kind: 'rich_text', values: value.rich_text });
   } catch {
     fail();
   }
@@ -340,7 +340,7 @@ export function decodeChartDisplay(bytes) {
     }
   if (value.blank_policy !== undefined && value.blank_policy !== null) {
     require(
-      field(value.blank_policy, oneOf(["gap", "zero", "span"]), 0) &&
+      field(value.blank_policy, oneOf(['gap', 'zero', 'span']), 0) &&
         !occupied.has(value.blank_policy.node),
     );
     occupied.add(value.blank_policy.node);

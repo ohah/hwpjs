@@ -1,5 +1,5 @@
-import { hwp5WindowFlows } from "./hwp5-window-flows.mjs";
-import { attachHwp5Drawings } from "./hwp5-drawing-content.mjs";
+import { hwp5WindowFlows } from './hwp5-window-flows.mjs';
+import { attachHwp5Drawings } from './hwp5-drawing-content.mjs';
 
 // Native decoders validate full source inventories before window selection.
 export function attachHwp5WindowDrawings(editor, content) {
@@ -39,20 +39,20 @@ export function attachHwp5WindowDrawings(editor, content) {
         .get(section)
         .filter(
           (row) =>
-            row.host === "drawing" &&
+            row.host === 'drawing' &&
             row.parent_node === source.owner_node &&
             row.list_node === source.list_node,
         );
       if (members.some((row) => !displayed.has(`${section}:${row.paragraph}`)))
-        throw new Error("MissingHwp5DrawingBodyParagraph");
+        throw new Error('MissingHwp5DrawingBodyParagraph');
     }
     return rows;
   };
   for (const name of [
-    "drawingMatrixSources",
-    "drawingLocalTransforms",
-    "drawingRectangleCorners",
-    "drawingStyleSources",
+    'drawingMatrixSources',
+    'drawingLocalTransforms',
+    'drawingRectangleCorners',
+    'drawingStyleSources',
   ]) {
     scoped[name] = (section, ...options) =>
       editor[name](section, ...options).filter((row) =>

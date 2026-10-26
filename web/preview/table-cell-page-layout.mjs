@@ -1,7 +1,7 @@
-import { measureTableCells } from "./table-cell-measurement.mjs";
-import { planMeasuredCellCuts } from "./table-measured-cell-cuts.mjs";
-import { projectCellPageCuts } from "./table-cell-page-projection.mjs";
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
+import { measureTableCells } from './table-cell-measurement.mjs';
+import { planMeasuredCellCuts } from './table-measured-cell-cuts.mjs';
+import { projectCellPageCuts } from './table-cell-page-projection.mjs';
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
 
 // Caller supplies the effective anchor and source padding; no float inference.
 export function layoutCellTablePages(
@@ -19,7 +19,7 @@ export function layoutCellTablePages(
     maxPages = 2000,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !firstOrigin ||
     ![firstOrigin.x, firstOrigin.y, gap].every(Number.isFinite) ||
@@ -28,12 +28,12 @@ export function layoutCellTablePages(
     maxPages < 1 ||
     table?.section !== setting?.section_ordinal
   )
-    return unavailable("InvalidCellTablePageLayout");
+    return unavailable('InvalidCellTablePageLayout');
   const reference = pageReferenceBoxes(setting, paperOrigin);
-  if (reference.state !== "placed") return unavailable(reference.state);
+  if (reference.state !== 'placed') return unavailable(reference.state);
   const body = reference.boxes.page;
   if (firstOrigin.x < body.x || firstOrigin.y < body.y || firstOrigin.y > body.y + body.height)
-    return unavailable("InvalidCellTablePageAnchor");
+    return unavailable('InvalidCellTablePageAnchor');
   const origin = { x: 0, y: 0 };
   const measured = measureTableCells(table, paragraphs, measure, {
     origin,
@@ -41,9 +41,9 @@ export function layoutCellTablePages(
     maxRows,
     paragraphFlows,
   });
-  if (measured.state !== "measured") return measured;
+  if (measured.state !== 'measured') return measured;
   if (firstOrigin.x + measured.grid.width > body.x + body.width + 1e-8)
-    return unavailable("CellTablePageWidthOverflow");
+    return unavailable('CellTablePageWidthOverflow');
   // The anchor is already bounded above; clamp only arithmetic roundoff.
   const firstCapacity = Math.max(0, Math.min(body.height, body.height - (firstOrigin.y - body.y)));
   const cuts = planMeasuredCellCuts(table, measured, body.height, {
@@ -53,7 +53,7 @@ export function layoutCellTablePages(
     maxPages,
     firstCapacity,
   });
-  if (cuts.state !== "planned") return cuts;
+  if (cuts.state !== 'planned') return cuts;
   const count = cuts.fragments.length + Number(Boolean(cuts.firstPageSkipped)),
     pages = [],
     placements = [];
@@ -62,7 +62,7 @@ export function layoutCellTablePages(
       x: paperOrigin.x,
       y: paperOrigin.y + ordinal * (reference.boxes.paper.height + gap),
     });
-    if (placed.state !== "placed") return unavailable(placed.state);
+    if (placed.state !== 'placed') return unavailable(placed.state);
     pages.push({ ordinal, section: table.section, ...placed.boxes, columns: [placed.boxes.page] });
   }
   for (let index = 0; index < cuts.fragments.length; index++) {
@@ -81,11 +81,11 @@ export function layoutCellTablePages(
     maxRows,
     maxFragments: maxPages,
   });
-  if (projected.state !== "placed") return projected;
+  if (projected.state !== 'placed') return projected;
   return {
     ...projected,
     pages,
     height: pages.at(-1).paper.y + pages.at(-1).paper.height,
-    pageLayoutMode: "measured-body",
+    pageLayoutMode: 'measured-body',
   };
 }

@@ -9,5 +9,5 @@ export function writeUnsigned(bytes, offset, value, width = 32) {
     bytes.writeBigUInt64BE(value & ((1n << 64n) - 1n), offset + i * 8);
     value >>= 64n;
   }
-  if (value !== 0n) throw Error("Wide wire overflow");
+  if (value !== 0n) throw Error('Wide wire overflow');
 }

@@ -97,11 +97,11 @@ export function createProjectionCanvasMetrics(ctx, limit = LIMIT, { stableContex
 export function watchProjectionFonts(canvas, invalidate) {
   const fonts = canvas.ownerDocument?.fonts;
   if (!fonts?.addEventListener) return () => {};
-  fonts.addEventListener("loadingdone", invalidate);
-  fonts.addEventListener("loadingerror", invalidate);
+  fonts.addEventListener('loadingdone', invalidate);
+  fonts.addEventListener('loadingerror', invalidate);
   return () => {
-    fonts.removeEventListener("loadingdone", invalidate);
-    fonts.removeEventListener("loadingerror", invalidate);
+    fonts.removeEventListener('loadingdone', invalidate);
+    fonts.removeEventListener('loadingerror', invalidate);
   };
 }
 function rangeIndex(ranges, unit) {
@@ -121,7 +121,7 @@ function selectedRange(ranges, index, unit, length) {
 }
 export function paragraphCharacterRange(paragraph, unit) {
   const ranges = paragraph?.characterRanges ?? [];
-  const length = typeof paragraph?.text === "string" ? paragraph.text.length : null;
+  const length = typeof paragraph?.text === 'string' ? paragraph.text.length : null;
   return selectedRange(ranges, rangeIndex(ranges, unit), unit, length);
 }
 export function createProjectionRangeIndex(limit = LIMIT) {
@@ -142,10 +142,10 @@ export function createProjectionRangeIndex(limit = LIMIT) {
         ranges.every(
           (row, index) =>
             row &&
-            typeof row === "object" &&
+            typeof row === 'object' &&
             Object.isFrozen(row) &&
-            ["start", "end", "charShapeId"].every((key) =>
-              Object.hasOwn(Object.getOwnPropertyDescriptor(row, key) ?? {}, "value"),
+            ['start', 'end', 'charShapeId'].every((key) =>
+              Object.hasOwn(Object.getOwnPropertyDescriptor(row, key) ?? {}, 'value'),
             ) &&
             Number.isSafeInteger(row.start) &&
             Number.isSafeInteger(row.end) &&
@@ -179,7 +179,7 @@ export function createProjectionRangeIndex(limit = LIMIT) {
     }
     entry.lastUnit = unit;
     // 문단은 mutable 사본일 수 있으므로 text 길이를 identity에 저장하지 않습니다.
-    const length = typeof paragraph?.text === "string" ? paragraph.text.length : null;
+    const length = typeof paragraph?.text === 'string' ? paragraph.text.length : null;
     return selectedRange(ranges, entry.index, unit, length);
   };
 }

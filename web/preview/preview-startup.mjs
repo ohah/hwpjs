@@ -5,17 +5,17 @@ export async function startPreview({
   setTimer = setTimeout,
   clearTimer = clearTimeout,
 }) {
-  notify({ kind: "loading" });
+  notify({ kind: 'loading' });
   let settled = false;
   const timer = setTimer(() => {
-    if (!settled) notify({ kind: "slow" });
+    if (!settled) notify({ kind: 'slow' });
   }, 15000);
   try {
     await load();
-    notify({ kind: "ready" });
+    notify({ kind: 'ready' });
     return true;
   } catch (error) {
-    notify({ kind: "failed", error });
+    notify({ kind: 'failed', error });
     return false;
   } finally {
     settled = true;

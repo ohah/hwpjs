@@ -15,7 +15,7 @@ export function attachTablePlacements(editor, sections, content, paragraphOffset
       const table = tables.get(placement.tableNode);
       if (!table) continue;
       table.hostParagraph = placement.paragraph + paragraphOffset;
-      if (Object.hasOwn(placement, "anchorUnit")) table.anchorUnit = placement.anchorUnit;
+      if (Object.hasOwn(placement, 'anchorUnit')) table.anchorUnit = placement.anchorUnit;
       table.parentTableNode = placement.parentTableNode;
       table.parentListNode = placement.parentListNode;
     }

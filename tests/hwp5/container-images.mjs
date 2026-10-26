@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { profilePng } from "./png-profile.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { profilePng } from './png-profile.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -28,9 +28,9 @@ export function containerImagesActual(call, bytes) {
   assert.equal(r.readUInt32LE(40), 1);
   return { png: r.readUInt32LE(8), unhandled: r.readUInt32LE(12) };
 }
-export function imageContainerFixture(cfb, payload, refs, compressed, extension = "png") {
+export function imageContainerFixture(cfb, payload, refs, compressed, extension = 'png') {
   const header = Buffer.alloc(256);
-  header.write("HWP Document File");
+  header.write('HWP Document File');
   header.writeUInt32LE(0x05000107, 32);
   const frame = (tag, b, level = 0) =>
     Buffer.concat([w(tag | (level << 10) | (b.length << 20)), b]);
@@ -38,7 +38,7 @@ export function imageContainerFixture(cfb, payload, refs, compressed, extension 
   map.writeUInt32LE(refs);
   const item = Buffer.concat([
     Buffer.from([compressed ? 0x11 : 0x21, 0, 9, 0, extension.length, 0]),
-    Buffer.from(extension, "utf16le"),
+    Buffer.from(extension, 'utf16le'),
   ]);
   const doc = Buffer.concat([
     frame(16, Buffer.alloc(26)),
@@ -47,11 +47,11 @@ export function imageContainerFixture(cfb, payload, refs, compressed, extension 
   ]);
   return cfb.write({
     nodes: [
-      { name: "Root Entry", kind: 5 },
-      { name: "FileHeader", parent: 0, content: header },
-      { name: "DocInfo", parent: 0, content: doc },
-      { name: "BodyText", parent: 0, kind: 1 },
-      { name: "BinData", parent: 0, kind: 1 },
+      { name: 'Root Entry', kind: 5 },
+      { name: 'FileHeader', parent: 0, content: header },
+      { name: 'DocInfo', parent: 0, content: doc },
+      { name: 'BodyText', parent: 0, kind: 1 },
+      { name: 'BinData', parent: 0, kind: 1 },
       {
         name: `BIN0009.${extension}`,
         parent: 4,
@@ -87,7 +87,7 @@ export function containerImagesEdges(call, cfb) {
       }
     }
   for (const compressed of [false, true]) {
-    const bytes = imageContainerFixture(cfb, Buffer.from("bad"), 2, compressed);
+    const bytes = imageContainerFixture(cfb, Buffer.from('bad'), 2, compressed);
     call(244, imageContainerInput(bytes, 0));
     comparisons++;
     assert.throws(() => call(244, imageContainerInput(bytes)), /UnexpectedEnd/);

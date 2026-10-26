@@ -1,21 +1,21 @@
-import { layoutInlineGroupBody } from "./inline-group-body-layout.mjs";
+import { layoutInlineGroupBody } from './inline-group-body-layout.mjs';
 import {
   measureCreatedBodyFlow,
   projectCreatedBodyFlow,
-} from "./created-body-flow-measurement.mjs";
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { inlineGroupObject } from "./inline-group-object.mjs";
-import { measureSourceInlineTables } from "./source-table-inline-measurement.mjs";
-import { sourceInlineTablePaperBounds } from "./source-inline-table-paper-bounds.mjs";
-import { inlineGroupPictureObjects } from "./inline-group-picture-objects.mjs";
-import { floatingPolygonAnchorUnits } from "./floating-polygon-anchor-units.mjs";
+} from './created-body-flow-measurement.mjs';
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { inlineGroupObject } from './inline-group-object.mjs';
+import { measureSourceInlineTables } from './source-table-inline-measurement.mjs';
+import { sourceInlineTablePaperBounds } from './source-inline-table-paper-bounds.mjs';
+import { inlineGroupPictureObjects } from './inline-group-picture-objects.mjs';
+import { floatingPolygonAnchorUnits } from './floating-polygon-anchor-units.mjs';
 
 // Pending cells keep their native identities; source groups retain their own flow.
 export function layoutCreatedGroupBody(content, measure, maxRows) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (content.pageSettings?.length !== 1) return fail("UnsupportedCreatedGroupScope");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (content.pageSettings?.length !== 1) return fail('UnsupportedCreatedGroupScope');
   const source = measureSourceInlineTables(content, measure, maxRows);
-  if (source.state !== "measured") return source;
+  if (source.state !== 'measured') return source;
   const keys = new Set(
     content.createdTables.map((table) => `${table.section}:${table.hostParagraph}`),
   );
@@ -27,7 +27,7 @@ export function layoutCreatedGroupBody(content, measure, maxRows) {
     content.pageSettings[0].section_ordinal,
     { sourceTables: source },
   );
-  if (selectedPictures.state !== "measured") return selectedPictures;
+  if (selectedPictures.state !== 'measured') return selectedPictures;
   const pictures = new Map(),
     zeroWidthAnchors = new Map();
   for (const { picture, object } of selectedPictures.byNode.values()) {
@@ -48,7 +48,7 @@ export function layoutCreatedGroupBody(content, measure, maxRows) {
       measure,
       maxRows,
     });
-    if (object.state !== "measured") return object;
+    if (object.state !== 'measured') return object;
     const key = `${root.section}:${root.hostParagraph}`,
       entries = objects.get(key) ?? [];
     entries.push(object);
@@ -68,9 +68,9 @@ export function layoutCreatedGroupBody(content, measure, maxRows) {
     return fail(error.message);
   }
   if (paragraphs.some((p) => p.tableCell || p.drawingText || p.drawingCaption))
-    return fail("UnsupportedCreatedGroupScope");
+    return fail('UnsupportedCreatedGroupScope');
   const references = pageReferenceBoxes(content.pageSettings[0], { x: 20, y: 20 });
-  if (references.state !== "placed") return references;
+  if (references.state !== 'placed') return references;
   const width = references.boxes.page.width;
   const prepared = measureCreatedBodyFlow(
     { ...content, paragraphs, tables: [] },
@@ -79,7 +79,7 @@ export function layoutCreatedGroupBody(content, measure, maxRows) {
     maxRows,
     { ...source, objects, pictures, zeroWidthAnchors },
   );
-  if (prepared.state !== "measured") return prepared;
+  if (prepared.state !== 'measured') return prepared;
   const rowsByHost = new Map();
   for (const row of prepared.rows) {
     const key = `${row.section}:${row.paragraph}`,
@@ -92,15 +92,15 @@ export function layoutCreatedGroupBody(content, measure, maxRows) {
     measureBodyParagraph(paragraph, availableWidth) {
       const rows = rowsByHost.get(`${paragraph.section}:${paragraph.paragraph}`);
       if (!rows) return null;
-      if (availableWidth !== width) return fail("UnsupportedCreatedGroupColumns");
-      return { state: "measured", rows, limited: false };
+      if (availableWidth !== width) return fail('UnsupportedCreatedGroupColumns');
+      return { state: 'measured', rows, limited: false };
     },
     completeBody(page) {
       const projected = projectCreatedBodyFlow(prepared, page.rows, maxRows);
-      if (projected.state !== "projected") return projected;
-      const completed = { ...page, ...projected, state: "paginated", createdTablesPaginated: true };
+      if (projected.state !== 'projected') return projected;
+      const completed = { ...page, ...projected, state: 'paginated', createdTablesPaginated: true };
       const bounds = sourceInlineTablePaperBounds(source.tables, completed, content);
-      return bounds.state === "contained" ? completed : bounds;
+      return bounds.state === 'contained' ? completed : bounds;
     },
   });
 }

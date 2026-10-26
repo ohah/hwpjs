@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { fileURLToPath } from "node:url";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   compareWasmRuntime,
   stripWasmDebug,
   wasmRuntimeSections,
-} from "../../tools/wasm-runtime-parity.mjs";
+} from '../../tools/wasm-runtime-parity.mjs';
 
 const header = [0, 97, 115, 109, 1, 0, 0, 0];
 const custom = (name, payload = []) => {
@@ -27,12 +27,12 @@ const fn = (value) =>
     [10, 6, 1, 4, 0, 65, value, 11],
   );
 
-test("runtime comparison permits only DWARF and optional name changes", () => {
+test('runtime comparison permits only DWARF and optional name changes', () => {
   const plain = fn(1),
     before = Uint8Array.from([
       ...plain,
-      ...custom(".debug_info", [1, 2]),
-      ...custom("name", [0, 1, 0]),
+      ...custom('.debug_info', [1, 2]),
+      ...custom('name', [0, 1, 0]),
     ]);
   assert.equal(compareWasmRuntime(before, plain).identicalRuntime, true);
   assert.equal(wasmRuntimeSections(before).debug.length, 2);
@@ -43,19 +43,19 @@ test("runtime comparison permits only DWARF and optional name changes", () => {
   );
 });
 
-test("non-debug custom sections and their order are never ignored", () => {
-  const a = custom("target_features", [0]),
-    b = custom("vendor", [1]);
+test('non-debug custom sections and their order are never ignored', () => {
+  const a = custom('target_features', [0]),
+    b = custom('vendor', [1]);
   assert.equal(compareWasmRuntime(moduleBytes(a, b), moduleBytes(a, b)).identicalRuntime, true);
   assert.equal(compareWasmRuntime(moduleBytes(a, b), moduleBytes(b, a)).identicalRuntime, false);
   assert.equal(compareWasmRuntime(moduleBytes(a), moduleBytes()).identicalRuntime, false);
   assert.equal(
-    compareWasmRuntime(moduleBytes(custom(".debugger", [1])), moduleBytes()).identicalRuntime,
+    compareWasmRuntime(moduleBytes(custom('.debugger', [1])), moduleBytes()).identicalRuntime,
     false,
   );
 });
 
-test("runtime comparison rejects malformed and truncated input", () => {
+test('runtime comparison rejects malformed and truncated input', () => {
   for (const bytes of [
     [],
     header.slice(0, 7),
@@ -69,13 +69,13 @@ test("runtime comparison rejects malformed and truncated input", () => {
   }
 });
 
-test("debug stripping retains exact runtime bytes, source ownership, and custom sections", async () => {
+test('debug stripping retains exact runtime bytes, source ownership, and custom sections', async () => {
   const plain = fn(42),
-    runtime = Uint8Array.from([...plain, ...custom("vendor", [2])]);
+    runtime = Uint8Array.from([...plain, ...custom('vendor', [2])]);
   const input = Uint8Array.from([
     ...runtime,
-    ...custom(".debug_line", [1, 2, 3]),
-    ...custom("name", [0, 1, 0]),
+    ...custom('.debug_line', [1, 2, 3]),
+    ...custom('name', [0, 1, 0]),
   ]);
   const before = input.slice(),
     stripped = stripWasmDebug(input);
@@ -90,14 +90,14 @@ test("debug stripping retains exact runtime bytes, source ownership, and custom 
   assert.deepEqual(input, before);
 });
 
-test("strip CLI refuses existing outputs and invalid modules without writing", (t) => {
-  const root = mkdtempSync(join(tmpdir(), "hwpjs-strip-cli-"));
+test('strip CLI refuses existing outputs and invalid modules without writing', (t) => {
+  const root = mkdtempSync(join(tmpdir(), 'hwpjs-strip-cli-'));
   t.after(() => rmSync(root, { recursive: true, force: true }));
-  const input = join(root, "input.wasm"),
-    output = join(root, "output.wasm");
-  const cli = fileURLToPath(new URL("../../tools/strip-wasm-debug.mjs", import.meta.url));
-  const run = (...args) => spawnSync(process.execPath, [cli, ...args], { encoding: "utf8" });
-  const source = Uint8Array.from([...fn(42), ...custom(".debug_info", [1])]);
+  const input = join(root, 'input.wasm'),
+    output = join(root, 'output.wasm');
+  const cli = fileURLToPath(new URL('../../tools/strip-wasm-debug.mjs', import.meta.url));
+  const run = (...args) => spawnSync(process.execPath, [cli, ...args], { encoding: 'utf8' });
+  const source = Uint8Array.from([...fn(42), ...custom('.debug_info', [1])]);
   writeFileSync(input, source);
   assert.equal(run(input, input).status, 1);
   assert.deepEqual(readFileSync(input), Buffer.from(source));
@@ -108,6 +108,6 @@ test("strip CLI refuses existing outputs and invalid modules without writing", (
   assert.equal(run(input, output).status, 1);
   assert.deepEqual(readFileSync(output), saved);
   writeFileSync(input, Uint8Array.of(0));
-  assert.equal(run(input, join(root, "invalid.wasm")).status, 1);
-  assert.throws(() => readFileSync(join(root, "invalid.wasm")), { code: "ENOENT" });
+  assert.equal(run(input, join(root, 'invalid.wasm')).status, 1);
+  assert.throws(() => readFileSync(join(root, 'invalid.wasm')), { code: 'ENOENT' });
 });

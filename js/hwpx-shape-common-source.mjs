@@ -1,17 +1,17 @@
-import { validShapeLayoutValues } from "./hwpx-shape-layout-values.mjs";
-import { validShapePaintValues } from "./hwpx-shape-paint-values.mjs";
-const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+import { validShapeLayoutValues } from './hwpx-shape-layout-values.mjs';
+import { validShapePaintValues } from './hwpx-shape-paint-values.mjs';
+const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 const coordinate = (value) =>
   value === null || (Number.isInteger(value) && value >= -0x80000000 && value <= 0xffffffff);
-const optionalBoolean = (value) => value === null || typeof value === "boolean";
+const optionalBoolean = (value) => value === null || typeof value === 'boolean';
 export function validShapeCommonSource(value) {
   if (!validShapeLayoutValues(value)) return false;
-  if (Object.hasOwn(value, "component_sizes")) {
+  if (Object.hasOwn(value, 'component_sizes')) {
     const sizes = value.component_sizes;
     if (
       !object(sizes) ||
-      !["original", "current"].every(
+      !['original', 'current'].every(
         (key) =>
           sizes[key] === null ||
           (object(sizes[key]) &&
@@ -21,14 +21,14 @@ export function validShapeCommonSource(value) {
       return false;
   }
   if (
-    Object.hasOwn(value, "stroke_style") &&
+    Object.hasOwn(value, 'stroke_style') &&
     !(value.stroke_style === null || (uint(value.stroke_style) && value.stroke_style <= 17))
   )
     return false;
   if (value.stroke && value.stroke_style !== undefined && value.stroke_style !== value.stroke.style)
     return false;
   if (
-    ["stroke", "stroke_error", "paint"].some((key) => Object.hasOwn(value, key)) &&
+    ['stroke', 'stroke_error', 'paint'].some((key) => Object.hasOwn(value, key)) &&
     !validShapePaintValues(value)
   )
     return false;
@@ -48,9 +48,9 @@ export function validShapeCommonSource(value) {
     return false;
   return r.matrix === null
     ? [
-        "UnsupportedPictureMatrixSequence",
-        "IncompletePictureMatrix",
-        "NonFinitePictureMatrix",
+        'UnsupportedPictureMatrixSequence',
+        'IncompletePictureMatrix',
+        'NonFinitePictureMatrix',
       ].includes(r.matrix_error)
     : Array.isArray(r.matrix) &&
         r.matrix.length === 6 &&

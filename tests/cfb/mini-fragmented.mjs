@@ -1,10 +1,10 @@
 /** Produce an independently rearranged MiniFAT chain using legacy output as a seed. */
 export function miniFragmented(CFB) {
   const container = CFB.utils.cfb_new();
-  CFB.utils.cfb_add(container, "/Fragmented", Buffer.from(Array.from({ length: 65 }, (_, i) => i)));
-  const bytes = CFB.write(container, { type: "buffer" });
-  const parsed = CFB.read(bytes, { type: "buffer" });
-  const entry = CFB.find(parsed, "Fragmented"),
+  CFB.utils.cfb_add(container, '/Fragmented', Buffer.from(Array.from({ length: 65 }, (_, i) => i)));
+  const bytes = CFB.write(container, { type: 'buffer' });
+  const parsed = CFB.read(bytes, { type: 'buffer' });
+  const entry = CFB.find(parsed, 'Fragmented'),
     index = parsed.FileIndex.indexOf(entry);
   const miniFatOffset = (bytes.readUInt32LE(60) + 1) * 512;
   const first = entry.start,

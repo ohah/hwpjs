@@ -9,15 +9,15 @@ export function paragraphKeepRows(rows, flows, capacity) {
       key = `${rows[i].section}:${rows[i].paragraph}`;
     while (i < rows.length && `${rows[i].section}:${rows[i].paragraph}` === key) i++;
     const part = rows.slice(start, i),
-      text = part.filter((r) => r.kind === "text"),
+      text = part.filter((r) => r.kind === 'text'),
       flow = byKey.get(key);
     const eligible =
       flow?.top_level === true &&
       text.length > 0 &&
-      text.every((r) => typeof r.text === "string" && r.paragraphShape?.spacingFormat === "hwpx") &&
+      text.every((r) => typeof r.text === 'string' && r.paragraphShape?.spacingFormat === 'hwpx') &&
       part.every(
         (r) =>
-          ["text", "gap"].includes(r.kind) &&
+          ['text', 'gap'].includes(r.kind) &&
           Number.isFinite(r.height) &&
           r.height > 0 &&
           r.keepNextHeight === undefined &&
@@ -27,7 +27,7 @@ export function paragraphKeepRows(rows, flows, capacity) {
           !r.transform &&
           r.tableNode === undefined &&
           r.splitInlineTableNode === undefined &&
-          !r.text?.includes("\ufffc"),
+          !r.text?.includes('\ufffc'),
       );
     groups.push({
       start,
@@ -76,7 +76,7 @@ export function paragraphKeepRows(rows, flows, capacity) {
   for (const group of groups) {
     if (!group.eligible || group.settings?.widow_orphan !== true || group.text.length < 2) continue;
     const indices = group.part.flatMap((row, index) =>
-      row.kind === "text" ? [group.start + index] : [],
+      row.kind === 'text' ? [group.start + index] : [],
     );
     connectSpan(indices[0], indices[1]);
     connectSpan(indices.at(-2), indices.at(-1));
@@ -92,7 +92,7 @@ export function paragraphKeepRows(rows, flows, capacity) {
       next.flow.column_break === true
     )
       continue;
-    const firstText = next.start + next.part.findIndex((r) => r.kind === "text");
+    const firstText = next.start + next.part.findIndex((r) => r.kind === 'text');
     connectSpan(current.end - 1, firstText);
   }
   let result = rows;

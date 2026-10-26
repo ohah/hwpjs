@@ -1,6 +1,6 @@
-import { tableBorderPaintIndex, tableBorderPlanForBox } from "./table-border-plan.mjs";
-import { rowLeft, rowVisualHeight } from "./row-geometry.mjs";
-import { textBoundaryExtent } from "./text-line-width.mjs";
+import { tableBorderPaintIndex, tableBorderPlanForBox } from './table-border-plan.mjs';
+import { rowLeft, rowVisualHeight } from './row-geometry.mjs';
+import { textBoundaryExtent } from './text-line-width.mjs';
 const key = (value) => `${value.section}:${value.tableNode}`;
 export function sourceNoteOverflowTables(content, source, width) {
   const index = tableBorderPaintIndex(content),
@@ -17,18 +17,18 @@ export function sourceNoteOverflowTables(content, source, width) {
               section: table.section,
               tableNode: table.tableNode,
               listNode: cell.listNode,
-            }).state !== "none",
+            }).state !== 'none',
         )
       )
-        return { state: "unavailable", error: "UnprovenSourceNoteOverflowStyle" };
+        return { state: 'unavailable', error: 'UnprovenSourceNoteOverflowStyle' };
       allowed.add(key(table));
     }
-  return { state: "selected", tables: allowed };
+  return { state: 'selected', tables: allowed };
 }
 // 승인한 것은 빈 외곽뿐입니다. 실제 측정된 내용은 단 안에 있어야 합니다.
 export function sourceNoteOverflowBounds(layout, tables, columnFor) {
   const boxes = new Set();
-  const fail = () => ({ state: "unavailable", error: "SourceNoteTableInkOverflow" });
+  const fail = () => ({ state: 'unavailable', error: 'SourceNoteTableInkOverflow' });
   for (const box of layout.boxes ?? [])
     if (tables.has(key(box))) {
       const column = columnFor(box.pageOrdinal);
@@ -57,7 +57,7 @@ export function sourceNoteOverflowBounds(layout, tables, columnFor) {
       boxes.add(box);
     }
   for (const row of layout.rows)
-    if (tables.has(key(row)) && row.kind === "text") {
+    if (tables.has(key(row)) && row.kind === 'text') {
       const column = columnFor(row.pageOrdinal),
         points = row.boundaries;
       if (
@@ -101,5 +101,5 @@ export function sourceNoteOverflowBounds(layout, tables, columnFor) {
       )
         return fail();
     }
-  return { state: "contained", nonPaintingBoxes: boxes };
+  return { state: 'contained', nonPaintingBoxes: boxes };
 }

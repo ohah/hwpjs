@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
-import { formPropertyEvidence } from "./form-property.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
+import { formPropertyEvidence } from './form-property.mjs';
 const fields =
-  "Name ForeColor BackColor GroupName TabStop TabOrder Enabled BorderType DrawFrame Command Editable Printable CharShapeID FollowContext AutoSize WordWrap Caption Value TriState BackStyle RadioGroupName ListBoxRows Text ListBoxWidth EditEnable MultiLine PasswordChar MaxLength ScrollBars TabKeyBehavior Number ReadOnly AlignText".split(
-    " ",
+  'Name ForeColor BackColor GroupName TabStop TabOrder Enabled BorderType DrawFrame Command Editable Printable CharShapeID FollowContext AutoSize WordWrap Caption Value TriState BackStyle RadioGroupName ListBoxRows Text ListBoxWidth EditEnable MultiLine PasswordChar MaxLength ScrollBars TabKeyBehavior Number ReadOnly AlignText'.split(
+    ' ',
   );
 const common = {
   Name: 1,
@@ -26,12 +26,12 @@ const button = { Caption: 1 },
   choice = { ...button, Value: 2, TriState: 3, BackStyle: 2 };
 const typeGroups = [
   null,
-  ["ButtonSet", button],
-  ["ButtonSet", choice],
-  ["ComboBoxSet", { ListBoxRows: 2, Text: 1, ListBoxWidth: 2, EditEnable: 3 }],
-  ["ButtonSet", { ...choice, RadioGroupName: 1 }],
+  ['ButtonSet', button],
+  ['ButtonSet', choice],
+  ['ComboBoxSet', { ListBoxRows: 2, Text: 1, ListBoxWidth: 2, EditEnable: 3 }],
+  ['ButtonSet', { ...choice, RadioGroupName: 1 }],
   [
-    "EditSet",
+    'EditSet',
     {
       Text: 1,
       MultiLine: 3,
@@ -55,9 +55,9 @@ const w = (n) => {
   return b;
 };
 const set = (key, body) => `${key}:set:${body.length}:${body}`;
-const scalar = (key, kind, value = "1") =>
-  `${key}:${["set", "wstring", "int", "bool"][kind]}:${kind < 2 ? value.length + ":" : ""}${value} `;
-const wide = (s) => Buffer.from(s, "utf16le");
+const scalar = (key, kind, value = '1') =>
+  `${key}:${['set', 'wstring', 'int', 'bool'][kind]}:${kind < 2 ? value.length + ':' : ''}${value} `;
+const wide = (s) => Buffer.from(s, 'utf16le');
 function oracle(bytes, kind, count) {
   const { rows } = formPropertyEvidence(bytes),
     known = groups(kind),
@@ -66,7 +66,7 @@ function oracle(bytes, kind, count) {
   let checked = 0;
   rows.forEach((root, ri) => {
     if (root.parent !== null) return;
-    const name = root.key.toString("utf16le"),
+    const name = root.key.toString('utf16le'),
       spec = Object.hasOwn(known, name) ? known[name] : null;
     if (!spec) return;
     assert.equal(root.kind, 0);
@@ -75,7 +75,7 @@ function oracle(bytes, kind, count) {
     checked++;
     rows.forEach((node, i) => {
       if (node.parent !== ri) return;
-      const key = node.key.toString("utf16le");
+      const key = node.key.toString('utf16le');
       if (!Object.hasOwn(spec, key)) return;
       assert.equal(node.kind, spec[key]);
       const fi = fields.indexOf(key);
@@ -87,7 +87,7 @@ function oracle(bytes, kind, count) {
   let tag = 0,
     ordinal = 0xffffffff;
   if (indexes[12] !== 0xffffffff) {
-    const s = rows[indexes[12]].value.toString("utf16le");
+    const s = rows[indexes[12]].value.toString('utf16le');
     assert.match(s, /^[0-9]+$/);
     const n = BigInt(s);
     assert.ok(n <= 0xffffffffn);
@@ -102,12 +102,12 @@ function oracle(bytes, kind, count) {
   };
 }
 const input = (s, kind, count) =>
-  Buffer.concat([w(kind), w(count), typeof s === "string" ? wide(s) : s]);
+  Buffer.concat([w(kind), w(count), typeof s === 'string' ? wide(s) : s]);
 export function formSchemaEdges(call) {
   let accepted = 0,
     rejected = 0;
   const check = (s, kind = 5, count = 2) => {
-    const b = typeof s === "string" ? wide(s) : s,
+    const b = typeof s === 'string' ? wide(s) : s,
       before = Buffer.from(b);
     assert.deepEqual(call(108, input(b, kind, count)), oracle(b, kind, count).wire);
     assert.deepEqual(b, before);
@@ -118,10 +118,10 @@ export function formSchemaEdges(call) {
     rejected++;
   };
   for (let kind = 1; kind <= 5; kind++) {
-    check("", kind);
-    let all = "";
+    check('', kind);
+    let all = '';
     for (const [group, spec] of Object.entries(groups(kind))) {
-      let body = "";
+      let body = '';
       for (const [key, type] of Object.entries(spec)) {
         const prop = scalar(key, type);
         check(set(group, prop), kind);
@@ -129,47 +129,47 @@ export function formSchemaEdges(call) {
         bad(set(group, scalar(key, type === 1 ? 2 : 1)), /FormSchemaTypeMismatch/, kind);
         bad(set(group, prop + prop), /DuplicateFormSchemaField/, kind);
       }
-      all += set(group, body) + " ";
-      bad(set(group, "") + " " + set(group, ""), /DuplicateFormSchemaSet/, kind);
-      bad(scalar(group, 1, ""), /FormSchemaTypeMismatch/, kind);
+      all += set(group, body) + ' ';
+      bad(set(group, '') + ' ' + set(group, ''), /DuplicateFormSchemaSet/, kind);
+      bad(scalar(group, 1, ''), /FormSchemaTypeMismatch/, kind);
     }
     check(all, kind);
-    check(set("Unknown", all) + " " + all, kind);
+    check(set('Unknown', all) + ' ' + all, kind);
   }
   for (const s of [
-    set("CommonSet", set("Unknown", scalar("Name", 2))) + " " + scalar("CharShapeID", 2, "-1"),
-    set("CharShapeSet", scalar("CharShapeId", 1, "invalid")),
-    set("Other", set("CharShapeSet", scalar("CharShapeID", 2, "-1"))),
-    set("CharShapeSet", scalar("FollowContext", 3, "-999")),
-    set("EditSet", scalar("Text", 1, "😀\0 :\ud800")),
+    set('CommonSet', set('Unknown', scalar('Name', 2))) + ' ' + scalar('CharShapeID', 2, '-1'),
+    set('CharShapeSet', scalar('CharShapeId', 1, 'invalid')),
+    set('Other', set('CharShapeSet', scalar('CharShapeID', 2, '-1'))),
+    set('CharShapeSet', scalar('FollowContext', 3, '-999')),
+    set('EditSet', scalar('Text', 1, '😀\0 :\ud800')),
   ])
     check(s);
   check(
-    set("CharShapeSet", scalar("CharShapeID", 1, "invalid")) + " " + set("CharShapeSet", ""),
+    set('CharShapeSet', scalar('CharShapeID', 1, 'invalid')) + ' ' + set('CharShapeSet', ''),
     0,
   );
-  check(set("ButtonSet", scalar("Value", 1, "future")), 1);
+  check(set('ButtonSet', scalar('Value', 1, 'future')), 1);
   check(
-    set("__proto__", set("CharShapeSet", scalar("CharShapeID", 2, "-1"))) +
-      " " +
-      set("constructor", scalar("Name", 1)),
+    set('__proto__', set('CharShapeSet', scalar('CharShapeID', 2, '-1'))) +
+      ' ' +
+      set('constructor', scalar('Name', 1)),
   );
   for (const [value, count] of [
-    ["0", 0],
-    ["0", 1],
-    ["0001", 2],
-    ["1", 1],
-    ["4294967295", 0xffffffff],
-    ["0000000000000000000001", 2],
+    ['0', 0],
+    ['0', 1],
+    ['0001', 2],
+    ['1', 1],
+    ['4294967295', 0xffffffff],
+    ['0000000000000000000001', 2],
   ])
-    check(set("CharShapeSet", scalar("CharShapeID", 2, value)), 5, count);
-  for (const value of ["-0", "-1", "4294967296", "18446744073709551616"])
+    check(set('CharShapeSet', scalar('CharShapeID', 2, value)), 5, count);
+  for (const value of ['-0', '-1', '4294967296', '18446744073709551616'])
     bad(
-      set("CharShapeSet", scalar("CharShapeID", 2, value)),
-      value[0] === "-" ? /InvalidFormCharShapeId/ : /FormCharShapeIdOverflow/,
+      set('CharShapeSet', scalar('CharShapeID', 2, value)),
+      value[0] === '-' ? /InvalidFormCharShapeId/ : /FormCharShapeIdOverflow/,
     );
-  bad("", /InvalidFormKind/, 6);
-  check("");
+  bad('', /InvalidFormKind/, 6);
+  check('');
   return { accepted, rejected };
 }
 function rewrite(rows, changed) {
@@ -182,27 +182,27 @@ function rewrite(rows, changed) {
     (children.get(parent) ?? [])
       .map((i) => {
         const r = rows[i],
-          key = r.key.toString("utf16le");
+          key = r.key.toString('utf16le');
         return changed.has(i)
           ? changed.get(i)
           : r.kind === 0
-            ? set(key, write(i)) + " "
-            : scalar(key, r.kind, r.value.toString("utf16le"));
+            ? set(key, write(i)) + ' '
+            : scalar(key, r.kind, r.value.toString('utf16le'));
       })
-      .join("");
+      .join('');
   return write(null);
 }
 export { oracle as formSchemaEvidence, rewrite as rewriteFormProperties };
 export function formSchemaActual(call, cfb) {
   const results = [],
-    ids = ["????", "tbp+", "tbc+", "boc+", "tbr+", "tde+"];
-  for (const name of ["form-01.hwp", "form-02.hwp"]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    ids = ['????', 'tbp+', 'tbc+', 'boc+', 'tbr+', 'tde+'];
+  for (const name of ['form-01.hwp', 'form-02.hwp']) {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const doc = inflateRawSync(cfb.findExact("/DocInfo").content),
+    const doc = inflateRawSync(cfb.findExact('/DocInfo').content),
       count = documentRecords(doc).filter((r) => r.tag === 21).length,
-      body = inflateRawSync(cfb.findExact("/BodyText/Section0").content);
+      body = inflateRawSync(cfb.findExact('/BodyText/Section0').content);
     let forms = 0,
       known = 0,
       deferred = 0,
@@ -220,8 +220,8 @@ export function formSchemaActual(call, cfb) {
       check();
       assert.equal(e.wire.readUInt32LE(8), 1);
       assert.equal(e.wire.readUInt32LE(12), 0);
-      const ci = e.rows.findIndex((n) => n.key.toString("utf16le") === "CharShapeID");
-      const past = rewrite(e.rows, new Map([[ci, scalar("CharShapeID", 2, String(count))]]));
+      const ci = e.rows.findIndex((n) => n.key.toString('utf16le') === 'CharShapeID');
+      const past = rewrite(e.rows, new Map([[ci, scalar('CharShapeID', 2, String(count))]]));
       const out = call(108, input(past, kind, count));
       assert.deepEqual(out, oracle(wide(past), kind, count).wire);
       assert.equal(out.readUInt32LE(8), 2);
@@ -231,16 +231,16 @@ export function formSchemaActual(call, cfb) {
         if (n.kind === 0) continue;
         const wrong = rewrite(
           e.rows,
-          new Map([[i, scalar(n.key.toString("utf16le"), n.kind === 1 ? 2 : 1)]]),
+          new Map([[i, scalar(n.key.toString('utf16le'), n.kind === 1 ? 2 : 1)]]),
         );
         assert.throws(() => call(108, input(wrong, kind, count)), /FormSchemaTypeMismatch/);
         rejected++;
         check();
       }
       const shifted =
-        set("Future", set("CharShapeSet", scalar("CharShapeID", 2, "-1"))) +
-        " " +
-        bytes.toString("utf16le");
+        set('Future', set('CharShapeSet', scalar('CharShapeID', 2, '-1'))) +
+        ' ' +
+        bytes.toString('utf16le');
       assert.deepEqual(
         call(108, input(shifted, kind, count)),
         oracle(wide(shifted), kind, count).wire,

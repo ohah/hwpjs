@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, expectedSection, records } from "./style-preservation/text-record-oracle.mjs";
-import { controlLinkEvidence } from "./links.mjs";
-import { formSourceFixtures } from "./form-source-fixtures.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, expectedSection, records } from './style-preservation/text-record-oracle.mjs';
+import { controlLinkEvidence } from './links.mjs';
+import { formSourceFixtures } from './form-source-fixtures.mjs';
 
-test("observed form documents retain complete independent sections through every paragraph prefix", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit form-retention candidate required");
+test('observed form documents retain complete independent sections through every paragraph prefix', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit form-retention candidate required');
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
   let verified = 0;
   for (const { name, paragraphs: paragraphCount, forms: formCount } of formSourceFixtures) {
@@ -35,7 +35,7 @@ test("observed form documents retain complete independent sections through every
         formStart = form[3];
       assert(formParagraph >= 0);
       for (let paragraph = 0; paragraph < paragraphCount; paragraph++) {
-        const text = "양식검증😀";
+        const text = '양식검증😀';
         editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text });
         const saved = editor.save({ allowStaleLayout: true }).bytes,
           after = inspect(saved);
@@ -49,7 +49,7 @@ test("observed form documents retain complete independent sections through every
         );
         assert.notDeepEqual(
           after.sections[0].bytes,
-          expectedSection(before.sections[0].bytes, paragraph, 0, 0, "wrong", {
+          expectedSection(before.sections[0].bytes, paragraph, 0, 0, 'wrong', {
             fieldIds: [0x25636c6b],
           }),
         );
@@ -77,18 +77,18 @@ test("observed form documents retain complete independent sections through every
         assert.equal(editor.undo(), true);
         assert.deepEqual(Buffer.from(editor.save().bytes), input);
         for (const [startUnit, endUnit, error] of [
-          [formStart, formStart + 8, "UnsupportedControlDeletion"],
-          [formStart + 1, formStart + 1, "SplitControlToken"],
+          [formStart, formStart + 8, 'UnsupportedControlDeletion'],
+          [formStart + 1, formStart + 1, 'SplitControlToken'],
         ]) {
           assert.throws(
             () =>
-              editor.splice({ section: 0, paragraph: formParagraph, startUnit, endUnit, text: "" }),
+              editor.splice({ section: 0, paragraph: formParagraph, startUnit, endUnit, text: '' }),
             (failure) => failure.message === error,
           );
           assert.deepEqual(
             Buffer.from(editor.save().bytes),
             input,
-            "rejected form-token edit must preserve source and redo",
+            'rejected form-token edit must preserve source and redo',
           );
         }
         assert.equal(editor.redo(), true);
@@ -103,6 +103,6 @@ test("observed form documents retain complete independent sections through every
   }
   assert.equal(verified, 1446);
   t.diagnostic(
-    "7 original documents, 214 form objects, 1446 complete independent Section/CFB/history checkpoints; no layout proof",
+    '7 original documents, 214 form objects, 1446 complete independent Section/CFB/history checkpoints; no layout proof',
   );
 });

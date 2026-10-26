@@ -7,7 +7,7 @@ export function combineDrawingPictureFootprints(footprints, bindings) {
     b.width > 0 &&
     b.height > 0;
   if (!Array.isArray(footprints) || !Array.isArray(bindings))
-    return { state: "unavailable", error: "InvalidDrawingPictureFootprint" };
+    return { state: 'unavailable', error: 'InvalidDrawingPictureFootprint' };
   const removed = new Set(),
     parents = new Map();
   for (const binding of bindings) {
@@ -17,11 +17,11 @@ export function combineDrawingPictureFootprints(footprints, bindings) {
         (n) => Number.isSafeInteger(n) && n >= 0,
       )
     )
-      return { state: "unavailable", error: "InvalidDrawingPictureFootprint" };
+      return { state: 'unavailable', error: 'InvalidDrawingPictureFootprint' };
     const matches = (kind, node) =>
       footprints.filter((f) => f.kind === kind && f.section === binding.section && f.node === node);
-    const own = matches("drawing", binding.drawingNode),
-      child = matches("picture", binding.pictureNode);
+    const own = matches('drawing', binding.drawingNode),
+      child = matches('picture', binding.pictureNode);
     if (
       own.length !== 1 ||
       child.length !== 1 ||
@@ -32,7 +32,7 @@ export function combineDrawingPictureFootprints(footprints, bindings) {
       !validBox(own[0].rectangle) ||
       !validBox(child[0].rectangle)
     )
-      return { state: "unavailable", error: "AmbiguousDrawingPictureFootprint", ...binding };
+      return { state: 'unavailable', error: 'AmbiguousDrawingPictureFootprint', ...binding };
     removed.add(child[0]);
     const current = parents.get(own[0]) ?? own[0],
       a = current.rectangle,
@@ -50,11 +50,11 @@ export function combineDrawingPictureFootprints(footprints, bindings) {
       rectangle.width <= 0 ||
       rectangle.height <= 0
     )
-      return { state: "unavailable", error: "InvalidDrawingPictureFootprint", ...binding };
+      return { state: 'unavailable', error: 'InvalidDrawingPictureFootprint', ...binding };
     parents.set(own[0], { ...own[0], rectangle });
   }
   return {
-    state: "collected",
+    state: 'collected',
     footprints: footprints.filter((f) => !removed.has(f)).map((f) => parents.get(f) ?? f),
   };
 }

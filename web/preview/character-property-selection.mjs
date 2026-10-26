@@ -1,16 +1,16 @@
-import { uint, observationRows, observationSpans } from "./observation-structure.mjs";
+import { uint, observationRows, observationSpans } from './observation-structure.mjs';
 /** Derive a toggle from the current native display projection, never cached UI state. */
 export function characterSelectionState(content, paragraph, start, end, property) {
-  const underline = property === "underline";
-  const strike = property === "strike";
+  const underline = property === 'underline';
+  const strike = property === 'strike';
   if (
-    typeof paragraph?.text !== "string" ||
+    typeof paragraph?.text !== 'string' ||
     (strike
       ? content?.characterStrikeAvailable
       : underline
         ? content?.characterUnderlineAvailable
         : content?.characterPropertiesAvailable) !== true ||
-    !["bold", "italic", "underline", "strike"].includes(property) ||
+    !['bold', 'italic', 'underline', 'strike'].includes(property) ||
     paragraph?.clipped ||
     !Number.isInteger(start) ||
     !Number.isInteger(end) ||
@@ -37,16 +37,16 @@ export function characterSelectionState(content, paragraph, start, end, property
     const enabled = strike
       ? strikes.get(span.charShapeId)?.enabled
       : underline
-        ? ["none", "bottom", "center", "top"].includes(kind)
-          ? kind !== "none"
+        ? ['none', 'bottom', 'center', 'top'].includes(kind)
+          ? kind !== 'none'
           : null
         : shape?.[property];
-    if (low !== cursor || typeof enabled !== "boolean") return null;
+    if (low !== cursor || typeof enabled !== 'boolean') return null;
     allEnabled &&= enabled;
     anyEnabled ||= enabled;
     cursor = high;
   }
-  return cursor === end ? (allEnabled ? true : anyEnabled ? "mixed" : false) : null;
+  return cursor === end ? (allEnabled ? true : anyEnabled ? 'mixed' : false) : null;
 }
 
 export function characterTogglePatch(content, paragraph, start, end, property) {
@@ -59,7 +59,7 @@ export function characterRangesState(content, ranges, property) {
     !Array.isArray(ranges) ||
     !ranges.length ||
     !Array.isArray(content?.paragraphs) ||
-    content.paragraphs.some((row) => !row || typeof row !== "object") ||
+    content.paragraphs.some((row) => !row || typeof row !== 'object') ||
     ranges.some((range) => !range)
   )
     return null;
@@ -76,5 +76,5 @@ export function characterRangesState(content, ranges, property) {
   );
   if (states.some((state) => state === null)) return null;
   if (states.every((state) => state === true)) return true;
-  return states.every((state) => state === false) ? false : "mixed";
+  return states.every((state) => state === false) ? false : 'mixed';
 }

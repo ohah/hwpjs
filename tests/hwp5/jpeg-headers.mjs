@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const words = (ns) => {
   const b = Buffer.alloc(ns.length * 4);
   ns.forEach((n, i) => b.writeUInt32LE(n, i * 4));

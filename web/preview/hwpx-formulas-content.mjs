@@ -1,10 +1,10 @@
 // Current formulas are a native projection, never a mutable UI cache.
 export function attachHwpxFormulas(editor, content) {
   if (content.window && !Array.isArray(content.tables))
-    throw new Error("MissingWindowTableOwnership");
+    throw new Error('MissingWindowTableOwnership');
   content.formulas = [];
   content.formulaErrors = [];
-  content.formulaDefinitionAvailable = typeof editor.setFormulaDefinition === "function";
+  content.formulaDefinitionAvailable = typeof editor.setFormulaDefinition === 'function';
   const sections = [...new Set(content.paragraphs.map((paragraph) => paragraph.section))];
   for (const section of sections) {
     try {

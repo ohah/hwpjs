@@ -1,5 +1,5 @@
-import { layoutContent } from "./layout.mjs";
-import { squeezeCaptionRow } from "./caption-squeeze-row.mjs";
+import { layoutContent } from './layout.mjs';
+import { squeezeCaptionRow } from './caption-squeeze-row.mjs';
 
 /** Measure current caption text at an explicitly resolved pixel width. */
 export function measureTableCaption(
@@ -8,23 +8,23 @@ export function measureTableCaption(
   measure,
   { width, maxRows = 20000, squeeze = false } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !table?.sourceCaption ||
     !Array.isArray(table.captionParagraphs) ||
     !Array.isArray(paragraphs) ||
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !Number.isFinite(width) ||
     width <= 0 ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return unavailable("InvalidTableCaptionMeasurement");
-  if (table.partial) return unavailable("IncompleteTableCaptionContent");
+    return unavailable('InvalidTableCaptionMeasurement');
+  if (table.partial) return unavailable('IncompleteTableCaptionContent');
   const members = new Map();
   for (const paragraph of paragraphs) {
     const key = `${paragraph.section}:${paragraph.paragraph}`;
-    if (members.has(key)) return unavailable("AmbiguousTableCaptionParagraph");
+    if (members.has(key)) return unavailable('AmbiguousTableCaptionParagraph');
     members.set(key, paragraph);
   }
   const selected = [],
@@ -41,7 +41,7 @@ export function measureTableCaption(
       owner.listNode !== table.sourceCaption?.list_node ||
       paragraph.tableCell
     )
-      return unavailable("AmbiguousTableCaptionParagraph");
+      return unavailable('AmbiguousTableCaptionParagraph');
     seen.add(id);
     selected.push(paragraph);
   }
@@ -49,11 +49,11 @@ export function measureTableCaption(
     documentBody: true,
     noWrap: squeeze,
   });
-  if (flow.limited) return unavailable("TableCaptionMeasurementLimit");
+  if (flow.limited) return unavailable('TableCaptionMeasurementLimit');
   const rows = [];
   for (const source of flow.rows) {
     const row = squeeze ? squeezeCaptionRow(source) : source;
-    if (!row) return unavailable("UnsupportedTableCaptionSqueezeWidth");
+    if (!row) return unavailable('UnsupportedTableCaptionSqueezeWidth');
     rows.push({
       ...row,
       tableNode: table.tableNode,
@@ -61,5 +61,5 @@ export function measureTableCaption(
       listNode: table.sourceCaption.list_node,
     });
   }
-  return { state: "measured", width, height: flow.height, rows };
+  return { state: 'measured', width, height: flow.height, rows };
 }

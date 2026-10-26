@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { cmp } from "./icc-power-reference.mjs";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { validateInterval } from "./icc-linear-preimage-reference.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { reference as nearestReference, nearestRangeInput } from "./icc-nearest-range.mjs";
+import assert from 'node:assert/strict';
+import { cmp } from './icc-power-reference.mjs';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { validateInterval } from './icc-linear-preimage-reference.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { reference as nearestReference, nearestRangeInput } from './icc-nearest-range.mjs';
 export function linearRangeInput(line) {
   const out = Buffer.alloc(44);
   [...line.start, ...line.end].forEach((v, i) => out.writeBigUInt64BE(v, 8 * i));

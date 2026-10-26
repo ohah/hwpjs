@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createFormulaResultDisplayLookup } from "../../web/preview/formula-result-display-lookup.mjs";
-import { trackedHwpxFiles } from "../../tools/hwpx-corpus-files.mjs";
-const names = new Set(["hwpx_edit_manual_formula_result_display_snapshot"]);
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createFormulaResultDisplayLookup } from '../../web/preview/formula-result-display-lookup.mjs';
+import { trackedHwpxFiles } from '../../tools/hwpx-corpus-files.mjs';
+const names = new Set(['hwpx_edit_manual_formula_result_display_snapshot']);
 
-test("display lookup is request-local and only aggregate limit errors use old bounded queries", () => {
+test('display lookup is request-local and only aggregate limit errors use old bounded queries', () => {
   let calls = 0,
-    text = "before";
+    text = 'before';
   const editor = {
     manualFormulaResultDisplaySnapshot: () => {
       calls++;
@@ -15,19 +15,19 @@ test("display lookup is request-local and only aggregate limit errors use old bo
     },
   };
   const first = createFormulaResultDisplayLookup(editor, names);
-  assert.equal(first.get(0, 1).text, "before");
+  assert.equal(first.get(0, 1).text, 'before');
   assert.equal(first.get(0, 2), null);
   assert.equal(calls, 1);
-  text = "after";
-  assert.equal(createFormulaResultDisplayLookup(editor, names).get(0, 1).text, "after");
+  text = 'after';
+  assert.equal(createFormulaResultDisplayLookup(editor, names).get(0, 1).text, 'after');
   assert.equal(calls, 2);
-  assert.equal(first.get(0, 1).text, "before");
+  assert.equal(first.get(0, 1).text, 'before');
   let limited = 0;
   const fallback = createFormulaResultDisplayLookup(
     {
       manualFormulaResultDisplaySnapshot() {
         limited++;
-        throw Error("LimitExceeded");
+        throw Error('LimitExceeded');
       },
     },
     names,
@@ -38,7 +38,7 @@ test("display lookup is request-local and only aggregate limit errors use old bo
   const malformed = createFormulaResultDisplayLookup(
     {
       manualFormulaResultDisplaySnapshot() {
-        throw Error("InvalidFieldLinks");
+        throw Error('InvalidFieldLinks');
       },
     },
     names,
@@ -47,7 +47,7 @@ test("display lookup is request-local and only aggregate limit errors use old bo
   assert.equal(createFormulaResultDisplayLookup(editor, new Set()).available, false);
 });
 
-test("display lookup isolates sections, empty results and retryable failures", () => {
+test('display lookup isolates sections, empty results and retryable failures', () => {
   const calls = new Map();
   let fail = true;
   const lookup = createFormulaResultDisplayLookup(
@@ -55,15 +55,15 @@ test("display lookup isolates sections, empty results and retryable failures", (
       manualFormulaResultDisplaySnapshot(section) {
         calls.set(section, (calls.get(section) ?? 0) + 1);
         if (section === 2) return [];
-        if (section === 3) throw Error("LimitExceeded");
-        if (section === 4 && fail) throw Error("InvalidFieldLinks");
+        if (section === 3) throw Error('LimitExceeded');
+        if (section === 4 && fail) throw Error('InvalidFieldLinks');
         return [{ paragraph: 1, text: String(section), targets: [] }];
       },
     },
     names,
   );
-  assert.equal(lookup.get(0, 1).text, "0");
-  assert.equal(lookup.get(1, 1).text, "1");
+  assert.equal(lookup.get(0, 1).text, '0');
+  assert.equal(lookup.get(1, 1).text, '1');
   assert.equal(lookup.get(0, 2), null);
   assert.equal(lookup.get(2, 1), null);
   assert.equal(lookup.get(2, 2), null);
@@ -71,8 +71,8 @@ test("display lookup isolates sections, empty results and retryable failures", (
   assert.equal(lookup.get(3, 2), undefined);
   assert.throws(() => lookup.get(4, 1), /InvalidFieldLinks/);
   fail = false;
-  assert.equal(lookup.get(4, 1).text, "4");
-  assert.equal(lookup.get(1, 1).text, "1");
+  assert.equal(lookup.get(4, 1).text, '4');
+  assert.equal(lookup.get(1, 1).text, '1');
   assert.deepEqual(
     [...calls],
     [
@@ -96,7 +96,7 @@ test("display lookup isolates sections, empty results and retryable failures", (
 });
 
 test(
-  "actual Worker batch and legacy paths publish identical content and refresh after edit history",
+  'actual Worker batch and legacy paths publish identical content and refresh after edit history',
   { skip: !process.env.HWPJS_TEST_WASM },
   async (t) => {
     const originalSelf = globalThis.self,
@@ -106,13 +106,13 @@ test(
       replies = [];
     assert.ok(
       originalExports(new WebAssembly.Module(wasm)).some(
-        (entry) => entry.name === "hwpx_edit_manual_formula_result_display_snapshot",
+        (entry) => entry.name === 'hwpx_edit_manual_formula_result_display_snapshot',
       ),
     );
     let legacy = true;
     WebAssembly.Module.exports = (module) =>
       originalExports(module).filter(
-        (entry) => !legacy || entry.name !== "hwpx_edit_manual_formula_result_display_snapshot",
+        (entry) => !legacy || entry.name !== 'hwpx_edit_manual_formula_result_display_snapshot',
       );
     globalThis.self = { postMessage: (reply) => replies.push(reply) };
     globalThis.fetch = async () => new Response(wasm);
@@ -121,7 +121,7 @@ test(
       globalThis.self = originalSelf;
       globalThis.fetch = originalFetch;
     });
-    await import("../../web/preview/reader-worker.mjs?formula-batch=" + Date.now());
+    await import('../../web/preview/reader-worker.mjs?formula-batch=' + Date.now());
     const send = async (data) => {
       await self.onmessage({ data });
       assert.equal(replies.length, 1);
@@ -131,64 +131,64 @@ test(
     };
     try {
       for (const path of [
-        "legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx",
-        "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx",
+        'legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx',
+        'reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx',
       ]) {
         const input = readFileSync(path);
         legacy = true;
         const start = performance.now();
-        const old = (await send({ kind: "load", format: "hwpx", bytes: input })).content;
+        const old = (await send({ kind: 'load', format: 'hwpx', bytes: input })).content;
         const legacyMs = performance.now() - start;
         legacy = false;
         const begin = performance.now();
-        const current = (await send({ kind: "load", format: "hwpx", bytes: input })).content;
+        const current = (await send({ kind: 'load', format: 'hwpx', bytes: input })).content;
         const batchMs = performance.now() - begin;
         assert.deepEqual(current, old);
         const reverse = performance.now();
-        const batchFirst = (await send({ kind: "load", format: "hwpx", bytes: input })).content;
+        const batchFirst = (await send({ kind: 'load', format: 'hwpx', bytes: input })).content;
         const reverseBatchMs = performance.now() - reverse;
         legacy = true;
         const reverseStart = performance.now();
-        const legacySecond = (await send({ kind: "load", format: "hwpx", bytes: input })).content;
+        const legacySecond = (await send({ kind: 'load', format: 'hwpx', bytes: input })).content;
         const reverseLegacyMs = performance.now() - reverseStart;
         assert.deepEqual(batchFirst, old);
         assert.deepEqual(legacySecond, old);
         legacy = false;
         t.diagnostic(JSON.stringify({ path, legacyMs, batchMs, reverseLegacyMs, reverseBatchMs }));
-        const baseline = (await send({ kind: "enable" })).content;
+        const baseline = (await send({ kind: 'enable' })).content;
         const owner = baseline.paragraphs.find((p) => p.manualFormulaResults?.length > 0);
         assert.ok(owner);
         const changed = (
           await send({
-            kind: "splice",
-            origin: "canvas",
+            kind: 'splice',
+            origin: 'canvas',
             section: owner.section,
             paragraph: owner.paragraph,
             startUnit: owner.manualFormulaResults[0].start,
             endUnit: owner.manualFormulaResults[0].start,
-            text: "앞😀",
+            text: '앞😀',
           })
         ).content;
         assert.notDeepEqual(changed, baseline);
-        assert.deepEqual((await send({ kind: "undo" })).content, baseline);
-        assert.deepEqual((await send({ kind: "redo" })).content, changed);
-        const saved = (await send({ kind: "save" })).bytes;
-        await send({ kind: "load", format: "hwpx", bytes: saved });
-        const reopened = (await send({ kind: "enable" })).content;
+        assert.deepEqual((await send({ kind: 'undo' })).content, baseline);
+        assert.deepEqual((await send({ kind: 'redo' })).content, changed);
+        const saved = (await send({ kind: 'save' })).bytes;
+        await send({ kind: 'load', format: 'hwpx', bytes: saved });
+        const reopened = (await send({ kind: 'enable' })).content;
         assert.deepEqual(
           reopened.paragraphs.map((p) => [p.paragraph, p.text, p.manualFormulaResults]),
           changed.paragraphs.map((p) => [p.paragraph, p.text, p.manualFormulaResults]),
         );
       }
     } finally {
-      await self.onmessage({ data: { kind: "load", format: "close-audit", bytes: [] } });
+      await self.onmessage({ data: { kind: 'load', format: 'close-audit', bytes: [] } });
       replies.length = 0;
     }
   },
 );
 
 test(
-  "all tracked HWPX loads keep exact content with and without the batch export",
+  'all tracked HWPX loads keep exact content with and without the batch export',
   { skip: !process.env.HWPJS_TEST_WASM },
   async (t) => {
     const originalSelf = globalThis.self,
@@ -199,7 +199,7 @@ test(
       paths = trackedHwpxFiles();
     assert.ok(
       originalExports(new WebAssembly.Module(wasm)).some(
-        (entry) => entry.name === "hwpx_edit_manual_formula_result_display_snapshot",
+        (entry) => entry.name === 'hwpx_edit_manual_formula_result_display_snapshot',
       ),
     );
     let legacy = true,
@@ -207,7 +207,7 @@ test(
       refused = 0;
     WebAssembly.Module.exports = (module) =>
       originalExports(module).filter(
-        (entry) => !legacy || entry.name !== "hwpx_edit_manual_formula_result_display_snapshot",
+        (entry) => !legacy || entry.name !== 'hwpx_edit_manual_formula_result_display_snapshot',
       );
     globalThis.self = { postMessage: (reply) => replies.push(reply) };
     globalThis.fetch = async () => new Response(wasm);
@@ -216,14 +216,14 @@ test(
       globalThis.self = originalSelf;
       globalThis.fetch = originalFetch;
     });
-    await import("../../web/preview/reader-worker.mjs?formula-batch-corpus=" + Date.now());
+    await import('../../web/preview/reader-worker.mjs?formula-batch-corpus=' + Date.now());
     try {
       for (const path of paths) {
         const input = readFileSync(path),
           source = Buffer.from(input);
         const load = async (old) => {
           legacy = old;
-          await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: input } });
+          await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: input } });
           assert.equal(replies.length, 1);
           return replies.shift();
         };
@@ -233,7 +233,7 @@ test(
         assert.equal(current.error, old.error, path);
         assert.equal(current.passwordRequired, old.passwordRequired, path);
         if (current.error) {
-          assert.equal(current.error, "EncryptedDocument", path);
+          assert.equal(current.error, 'EncryptedDocument', path);
           refused++;
         } else {
           assert.ok(current.content);
@@ -243,7 +243,7 @@ test(
       }
       t.diagnostic(JSON.stringify({ files: paths.length, loaded, refused }));
     } finally {
-      await self.onmessage({ data: { kind: "load", format: "close-audit", bytes: [] } });
+      await self.onmessage({ data: { kind: 'load', format: 'close-audit', bytes: [] } });
       replies.length = 0;
     }
   },

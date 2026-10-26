@@ -1,9 +1,9 @@
-import { placeFloatingPicture } from "./picture-placement.mjs";
+import { placeFloatingPicture } from './picture-placement.mjs';
 
 // Native shape source mapping is shared; callers establish transform/host policy.
 export function placeFloatingComponentSource(source, boxes, options) {
   const geometry = source?.geometry;
-  if (!geometry) return { state: "missing_geometry" };
+  if (!geometry) return { state: 'missing_geometry' };
   return placeFloatingPicture(
     {
       geometry: {

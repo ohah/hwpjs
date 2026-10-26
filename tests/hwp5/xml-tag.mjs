@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { xmlEncode, xmlTagEvidence } from "./xml-tag-evidence.mjs";
-import { historyXmlPayloads } from "./history-xml-source.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { xmlEncode, xmlTagEvidence } from './xml-tag-evidence.mjs';
+import { historyXmlPayloads } from './history-xml-source.mjs';
 function prefix(raw, e, caps = [65536, 4096, 4096, 65536, 4096, 4096]) {
   const b = Buffer.alloc(25);
   b[0] = e;
@@ -48,8 +48,8 @@ export function xmlTagEdges(call, cfb) {
         if (
           (cp >= 32 || cp === 9 || cp === 10 || cp === 13) &&
           c !== quote &&
-          c !== "<" &&
-          c !== "&"
+          c !== '<' &&
+          c !== '&'
         )
           good(text, e);
         else {
@@ -64,10 +64,10 @@ export function xmlTagEdges(call, cfb) {
     );
     rejected++;
     for (const text of [
-      "<x>",
-      "</x >",
-      "<x/>tail",
-      "<x/>\0",
+      '<x>',
+      '</x >',
+      '<x/>tail',
+      '<x/>\0',
       "<x a='' b='> /' A='1'/>",
       '<한글:😀 a=" \t\r\n&#9;&#10;&#13;&lt;&amp;&quot;&apos; " b="&custom;"/>',
       "<x p:x='1' q:x='2'/>",
@@ -76,23 +76,23 @@ export function xmlTagEdges(call, cfb) {
       good(text, e);
     }
     for (const text of [
-      "",
-      "<",
-      "<>",
-      "< x>",
-      "<x",
-      "<x / >",
-      "</x/>",
+      '',
+      '<',
+      '<>',
+      '< x>',
+      '<x',
+      '<x / >',
+      '</x/>',
       "</x a='1'>",
-      "<x a=1>",
+      '<x a=1>',
       "<x a='1'b='2'>",
       "<x a='1' a='2'>",
       "<x a='<'/>",
       "<x a='&amp'/>",
       "<x a='&#0;'/>",
       "<x a='unterminated",
-      "<?xml?>",
-      "<!--x-->",
+      '<?xml?>',
+      '<!--x-->',
     ]) {
       assert.throws(() => call(122, prefix(xmlEncode(text, e), e)));
       rejected++;
@@ -123,12 +123,12 @@ export function xmlTagEdges(call, cfb) {
   }
   cfb.parse(
     readFileSync(
-      new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+      new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
     ),
     { strict: true },
   );
   for (const p of historyXmlPayloads(cfb).payloads) {
-    const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(p.bytes);
+    const text = new TextDecoder('utf-16le', { fatal: true, ignoreBOM: true }).decode(p.bytes);
     const result = good(text, 1);
     actual.push({
       kind: p.kind,
@@ -137,6 +137,6 @@ export function xmlTagEdges(call, cfb) {
       attributes: result.attributes,
     });
   }
-  good("<recovered/>", 0);
+  good('<recovered/>', 0);
   return { accepted, rejected, actual, wholeXmlDocumentValidated: false };
 }

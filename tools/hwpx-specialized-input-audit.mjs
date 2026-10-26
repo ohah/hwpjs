@@ -1,29 +1,29 @@
 // Specialized prefix routes complement, never replace, the plain-input audit.
-import assert from "node:assert/strict";
-import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
-import { readFileSync } from "node:fs";
-import { trackedHwpxFiles } from "./hwpx-corpus-files.mjs";
-import { insertPrefix } from "./hwpx-prefix-edit-probe.mjs";
-import { createHwpxEditor } from "../js/hwpx-editor.mjs";
-import { createHwpxReader } from "../js/hwpx.mjs";
-import { execFileSync } from "./oracle-process.mjs";
-import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
-import { createHash } from "node:crypto";
-import { verifyRefusalHistory } from "./hwpx-refusal-history.mjs";
-import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
-import { selectFieldPrefixOracle } from "./hwpx-field-prefix-oracle.mjs";
+import assert from 'node:assert/strict';
+import { hwpxParagraphCoordinates } from './hwpx-paragraph-coordinates.mjs';
+import { readFileSync } from 'node:fs';
+import { trackedHwpxFiles } from './hwpx-corpus-files.mjs';
+import { insertPrefix } from './hwpx-prefix-edit-probe.mjs';
+import { createHwpxEditor } from '../js/hwpx-editor.mjs';
+import { createHwpxReader } from '../js/hwpx.mjs';
+import { execFileSync } from './oracle-process.mjs';
+import { parseEditAuditOptions } from './hwpx-edit-audit-options.mjs';
+import { createHash } from 'node:crypto';
+import { verifyRefusalHistory } from './hwpx-refusal-history.mjs';
+import { captureInputIdentity, verifyInputIdentity } from './audit-input-identity.mjs';
+import { selectFieldPrefixOracle } from './hwpx-field-prefix-oracle.mjs';
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
 const wasm = readFileSync(options.wasm);
 const wasmIdentity = captureInputIdentity(wasm);
 console.log(
   JSON.stringify({
-    kind: "start",
+    kind: 'start',
     scope:
       options.fixture !== undefined
-        ? "one explicit fixture; specialized prefix routes"
-        : "all tracked fixtures; specialized prefix routes",
-    wasmSha256: createHash("sha256").update(wasm).digest("hex"),
+        ? 'one explicit fixture; specialized prefix routes'
+        : 'all tracked fixtures; specialized prefix routes',
+    wasmSha256: createHash('sha256').update(wasm).digest('hex'),
   }),
 );
 const module = await WebAssembly.compile(wasm);
@@ -40,20 +40,20 @@ const totals = {
   examples: [],
 };
 const allowedRefusals = new Set([
-  "UnsupportedFieldLabelRange",
-  "UnsupportedFieldLabel",
-  "UnsupportedParagraphControl",
-  "UnsupportedInlineControl",
-  "MissingTextSite",
-  "ProtectedFieldRange",
-  "UnsupportedAnchoredStructure",
-  "UnsupportedTextPositionProjection",
+  'UnsupportedFieldLabelRange',
+  'UnsupportedFieldLabel',
+  'UnsupportedParagraphControl',
+  'UnsupportedInlineControl',
+  'MissingTextSite',
+  'ProtectedFieldRange',
+  'UnsupportedAnchoredStructure',
+  'UnsupportedTextPositionProjection',
 ]);
 const text = (projection, section, paragraph) =>
   projection.events
-    .filter((e) => e.kind === "content" && e.section === section && e.paragraph === paragraph)
+    .filter((e) => e.kind === 'content' && e.section === section && e.paragraph === paragraph)
     .map((e) => e.value)
-    .join("");
+    .join('');
 try {
   for (const path of options.fixture !== undefined ? [options.fixture] : trackedHwpxFiles()) {
     verifyInputIdentity(wasm, wasmIdentity, options.wasm);
@@ -63,7 +63,7 @@ try {
     try {
       editor.open(input);
     } catch (error) {
-      if (error.message !== "EncryptedDocument") throw error;
+      if (error.message !== 'EncryptedDocument') throw error;
       verifyInputIdentity(input, inputIdentity, path);
       totals.encrypted++;
       continue;
@@ -87,12 +87,12 @@ try {
         anchorError = error.message;
         assert(
           [
-            "UnsupportedParagraphControl",
-            "UnsupportedInlineControl",
-            "MissingTextSite",
-            "SourceBindingMismatch",
-            "UnsupportedFieldLabel",
-            "UnsupportedStructuralFieldEdit",
+            'UnsupportedParagraphControl',
+            'UnsupportedInlineControl',
+            'MissingTextSite',
+            'SourceBindingMismatch',
+            'UnsupportedFieldLabel',
+            'UnsupportedStructuralFieldEdit',
           ].includes(error.message),
         );
       }
@@ -100,10 +100,10 @@ try {
       let fieldTarget = null;
       try {
         fieldTarget =
-          typeof editor.fieldRangeTarget === "function"
+          typeof editor.fieldRangeTarget === 'function'
             ? editor.fieldRangeTarget(p.section, p.paragraph, 0, 0)
             : null;
-        insertPrefix(editor, p.section, p.paragraph, "경로😀<&");
+        insertPrefix(editor, p.section, p.paragraph, '경로😀<&');
       } catch (error) {
         assert(
           allowedRefusals.has(error.message),
@@ -129,17 +129,17 @@ try {
       const saved = editor.save();
       if (anchored && fieldTarget === null) {
         try {
-          for (const flags of [[], ["-O"]])
-            execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], {
+          for (const flags of [[], ['-O']])
+            execFileSync('python3', [...flags, 'tools/hwpx-anchor-prefix-oracle.py'], {
               input: JSON.stringify({
-                mode: "anchored",
-                before: input.toString("base64"),
-                after: Buffer.from(saved).toString("base64"),
+                mode: 'anchored',
+                before: input.toString('base64'),
+                after: Buffer.from(saved).toString('base64'),
                 section: p.section,
                 paragraph: p.localParagraph,
-                text: "경로😀<&",
+                text: '경로😀<&',
               }),
-              encoding: "utf8",
+              encoding: 'utf8',
               timeout: 30000,
             });
         } catch (error) {
@@ -150,23 +150,23 @@ try {
         totals.xmlVerified++;
       } else {
         const { oracle, beginId } = selectFieldPrefixOracle({
-          before: input.toString("base64"),
+          before: input.toString('base64'),
           section: p.section,
           paragraph: p.localParagraph,
           beginElement: fieldTarget?.beginElement ?? null,
         });
-        for (const flags of [[], ["-O"]])
-          execFileSync("python3", [...flags, oracle], {
+        for (const flags of [[], ['-O']])
+          execFileSync('python3', [...flags, oracle], {
             input: JSON.stringify({
-              mode: "prefix",
-              before: input.toString("base64"),
-              after: Buffer.from(saved).toString("base64"),
+              mode: 'prefix',
+              before: input.toString('base64'),
+              after: Buffer.from(saved).toString('base64'),
               beginId,
               section: p.section,
               paragraph: p.localParagraph,
-              text: "경로😀<&",
+              text: '경로😀<&',
             }),
-            encoding: "utf8",
+            encoding: 'utf8',
             timeout: 30000,
           });
         totals.xmlVerified++;
@@ -174,7 +174,7 @@ try {
       }
       assert.equal(
         text(reader.readTextEvents(saved), p.section, p.paragraph),
-        "경로😀<&" + text(original, p.section, p.paragraph),
+        '경로😀<&' + text(original, p.section, p.paragraph),
       );
       const reopened = await createHwpxEditor(module);
       try {

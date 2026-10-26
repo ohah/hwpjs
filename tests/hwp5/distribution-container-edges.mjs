@@ -1,25 +1,25 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { distributionSamples } from "./distribution.mjs";
-import { distributionOracle, makeDistribution, word } from "./distribution-oracle.mjs";
-import { distributionContainerInput } from "./distribution-container.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { distributionSamples } from './distribution.mjs';
+import { distributionOracle, makeDistribution, word } from './distribution-oracle.mjs';
+import { distributionContainerInput } from './distribution-container.mjs';
 const exactError = (name) => (e) => e?.constructor === Error && e.message === name;
 export function distributionContainerEdges(call, cfb) {
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/" + distributionSamples[0], import.meta.url),
+    new URL('../../reference/rhwp/samples/' + distributionSamples[0], import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const nodes = cfb.document().nodes;
-  const body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
-  const view = nodes.findIndex((n) => n.parent === 0 && n.name === "ViewText");
-  const scripts = nodes.findIndex((n) => n.parent === 0 && n.name === "Scripts");
+  const body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
+  const view = nodes.findIndex((n) => n.parent === 0 && n.name === 'ViewText');
+  const scripts = nodes.findIndex((n) => n.parent === 0 && n.name === 'Scripts');
   assert.ok(body >= 0 && view >= 0 && scripts >= 0);
   const targets = nodes
     .map((n, i) => ({ n, i }))
     .filter(
       ({ n }) =>
-        (n.parent === view && n.name === "Section0") ||
-        (n.parent === scripts && ["JScriptVersion", "DefaultJScript"].includes(n.name)),
+        (n.parent === view && n.name === 'Section0') ||
+        (n.parent === scripts && ['JScriptVersion', 'DefaultJScript'].includes(n.name)),
     );
   assert.equal(targets.length, 3);
   const baseline = call(298, distributionContainerInput(file));
@@ -39,11 +39,11 @@ export function distributionContainerEdges(call, cfb) {
     for (const cut of [0, 259, 260, raw.length - 1])
       reject(
         rebuild(i, raw.subarray(0, cut)),
-        cut < 260 ? "UnexpectedEnd" : "InvalidDistributionBlockSize",
+        cut < 260 ? 'UnexpectedEnd' : 'InvalidDistributionBlockSize',
       );
     const badTag = Buffer.from(raw);
     badTag.writeUInt32LE((badTag.readUInt32LE(0) & 0xfffffc00) | 29, 0);
-    reject(rebuild(i, badTag), "InvalidDistributionRecord");
+    reject(rebuild(i, badTag), 'InvalidDistributionRecord');
     reject(
       rebuild(
         i,
@@ -53,16 +53,16 @@ export function distributionContainerEdges(call, cfb) {
           },
         }),
       ),
-      "InvalidChecksum",
+      'InvalidChecksum',
     );
     // Valid record framing is still not a distribution envelope.
     reject(
       rebuild(i, Buffer.concat([word(999 | (1 << 20)), Buffer.of(0)])),
-      "InvalidDistributionRecord",
+      'InvalidDistributionRecord',
     );
     reject(
       rebuild(i, makeDistribution(Buffer.alloc(0))),
-      n.parent === view ? "EmptyViewTextSection" : "UnexpectedEnd",
+      n.parent === view ? 'EmptyViewTextSection' : 'UnexpectedEnd',
     );
     assert.deepEqual(
       call(298, distributionContainerInput(rebuild(i, makeDistribution(decoded)))),
@@ -72,24 +72,24 @@ export function distributionContainerEdges(call, cfb) {
     recover();
   }
   reject(
-    cfb.write({ nodes: nodes.map((n, i) => (i === view ? { ...n, name: "OtherView" } : n)) }),
-    "MissingViewText",
+    cfb.write({ nodes: nodes.map((n, i) => (i === view ? { ...n, name: 'OtherView' } : n)) }),
+    'MissingViewText',
   );
   const target = targets.find(({ n }) => n.parent === view).i;
   reject(
-    cfb.write({ nodes: nodes.map((n, i) => (i === target ? { ...n, name: "Section1" } : n)) }),
-    "InvalidSectionIndex",
+    cfb.write({ nodes: nodes.map((n, i) => (i === target ? { ...n, name: 'Section1' } : n)) }),
+    'InvalidSectionIndex',
   );
   for (const [bit, error] of [
-    [2, "UnsupportedEncryption"],
-    [256, "UnsupportedEncryption"],
-    [16, "UnsupportedDrm"],
-    [1024, "UnsupportedDrm"],
+    [2, 'UnsupportedEncryption'],
+    [256, 'UnsupportedEncryption'],
+    [16, 'UnsupportedDrm'],
+    [1024, 'UnsupportedDrm'],
   ]) {
     reject(
       cfb.write({
         nodes: nodes.map((n) => {
-          if (n.parent !== 0 || n.name !== "FileHeader") return n;
+          if (n.parent !== 0 || n.name !== 'FileHeader') return n;
           const h = Buffer.from(n.content);
           h.writeUInt32LE(h.readUInt32LE(36) | bit, 36);
           return { ...n, content: h };
@@ -99,7 +99,7 @@ export function distributionContainerEdges(call, cfb) {
     );
   }
   // Auxiliary BodyText is not parsed or used as recovery input.
-  const auxiliary = nodes.findIndex((n) => n.parent === body && n.name === "Section0");
+  const auxiliary = nodes.findIndex((n) => n.parent === body && n.name === 'Section0');
   assert.ok(auxiliary >= 0);
   assert.deepEqual(
     call(298, distributionContainerInput(rebuild(auxiliary, Buffer.of(255)))),
@@ -107,7 +107,7 @@ export function distributionContainerEdges(call, cfb) {
   );
   accepted++;
   const renamed = cfb.write({
-    nodes: nodes.map((n, i) => (i === body ? { ...n, name: "UnusedBody" } : n)),
+    nodes: nodes.map((n, i) => (i === body ? { ...n, name: 'UnusedBody' } : n)),
   });
   assert.deepEqual(call(298, distributionContainerInput(renamed)), baseline);
   accepted++;

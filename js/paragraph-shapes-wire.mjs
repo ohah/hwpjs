@@ -1,7 +1,7 @@
 /** HPS1/HPS2 resources; raw absence and effective heading levels stay distinct. */
 export function decodeParagraphShapes(bytes) {
   const fail = () => {
-    throw new Error("InvalidParagraphShapes");
+    throw new Error('InvalidParagraphShapes');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length < 8) return fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

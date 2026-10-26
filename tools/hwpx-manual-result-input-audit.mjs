@@ -1,36 +1,36 @@
 // Explicit native result routes; no fixture writes or fallback to another position.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { createHwpxEditor } from "../js/hwpx-editor.mjs";
-import { createHwpxReader } from "../js/hwpx.mjs";
-import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
-import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
-import { trackedHwpxFiles } from "./hwpx-corpus-files.mjs";
-import { execFileSync } from "./oracle-process.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createHwpxEditor } from '../js/hwpx-editor.mjs';
+import { createHwpxReader } from '../js/hwpx.mjs';
+import { hwpxParagraphCoordinates } from './hwpx-paragraph-coordinates.mjs';
+import { parseEditAuditOptions } from './hwpx-edit-audit-options.mjs';
+import { trackedHwpxFiles } from './hwpx-corpus-files.mjs';
+import { execFileSync } from './oracle-process.mjs';
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
 const wasm = readFileSync(options.wasm),
-  digest = (value) => createHash("sha256").update(value).digest("hex");
+  digest = (value) => createHash('sha256').update(value).digest('hex');
 const wasmSha256 = digest(wasm);
 const module = await WebAssembly.compile(wasm);
 const editor = await createHwpxEditor(module),
   reader = await createHwpxReader(module);
 const refused = new Set([
-  "UnsupportedStructuralFieldEdit",
-  "UnsupportedParagraphControl",
-  "UnsupportedAnchoredStructure",
-  "UnsupportedInlineControl",
-  "UnsupportedFormulaResultStructure",
+  'UnsupportedStructuralFieldEdit',
+  'UnsupportedParagraphControl',
+  'UnsupportedAnchoredStructure',
+  'UnsupportedInlineControl',
+  'UnsupportedFormulaResultStructure',
 ]);
 const totals = { files: 0, encrypted: 0, fields: 0, verified: 0, refusals: {}, failures: 0 };
 console.log(
   JSON.stringify({
-    kind: "start",
+    kind: 'start',
     wasmSha256,
     scope: options.fixture
-      ? "one explicit fixture; every native source formula"
-      : "tracked HWPX fixtures; every native source formula",
+      ? 'one explicit fixture; every native source formula'
+      : 'tracked HWPX fixtures; every native source formula',
   }),
 );
 try {
@@ -41,16 +41,16 @@ try {
     try {
       editor.open(input);
     } catch (error) {
-      if (error.message !== "EncryptedDocument") throw error;
-      assert.equal(digest(input), inputHash, "AuditInputBufferChanged");
-      assert.equal(digest(readFileSync(path)), inputHash, "AuditInputChanged");
+      if (error.message !== 'EncryptedDocument') throw error;
+      assert.equal(digest(input), inputHash, 'AuditInputBufferChanged');
+      assert.equal(digest(readFileSync(path)), inputHash, 'AuditInputChanged');
       totals.encrypted++;
       console.log(
         JSON.stringify({
-          kind: "file",
+          kind: 'file',
           path,
           inputSha256: inputHash,
-          status: "encrypted_document_refused",
+          status: 'encrypted_document_refused',
           error: error.message,
         }),
       );
@@ -59,9 +59,9 @@ try {
     editor.enableHistory({ maxEntries: 4, maxCheckpointBytes: 16 * 1024 * 1024 });
     const rows = hwpxParagraphCoordinates(reader.readTextEvents(input).events);
     const inventory = JSON.parse(
-      execFileSync("python3", ["tools/hwpx-manual-result-inventory.py"], {
+      execFileSync('python3', ['tools/hwpx-manual-result-inventory.py'], {
         input,
-        encoding: "utf8",
+        encoding: 'utf8',
         timeout: 30000,
       }),
     );
@@ -71,12 +71,12 @@ try {
           (row) => row.section === entry.section && row.localParagraph === entry.localParagraph,
         ),
       ),
-      "IndependentFormulaParagraphMissing",
+      'IndependentFormulaParagraphMissing',
     );
     for (const section of new Set(rows.map((row) => row.section))) {
       const sources = editor.formulaSources(section);
       const observed = inventory.filter((entry) => entry.section === section);
-      assert.equal(sources.length, observed.length, "IndependentFormulaInventoryMismatch");
+      assert.equal(sources.length, observed.length, 'IndependentFormulaInventoryMismatch');
       if (!sources.length) continue;
       const targets = new Map();
       // Independent XML identifies candidate paragraphs; native API still grants ownership.
@@ -85,14 +85,14 @@ try {
         (row) => row.section === section && paragraphs.has(row.localParagraph),
       )) {
         for (const target of editor.manualFormulaResultTargets(section, row.paragraph)) {
-          assert(!targets.has(target.beginElement), "AmbiguousNativeResultOwner");
+          assert(!targets.has(target.beginElement), 'AmbiguousNativeResultOwner');
           targets.set(target.beginElement, { row, target });
         }
       }
       for (const [ordinal, source] of sources.entries()) {
         totals.fields++;
         const result = {
-          kind: "field",
+          kind: 'field',
           path,
           inputSha256: inputHash,
           section,
@@ -107,31 +107,31 @@ try {
           if (!target) {
             // Exercise the setter too: a missing query target is not sufficient refusal proof.
             assert.throws(
-              () => editor.setManualFormulaResult(section, source.begin_element, "감사😀<&"),
+              () => editor.setManualFormulaResult(section, source.begin_element, '감사😀<&'),
               (error) => refused.has(error.message),
             );
-            result.status = "native_result_route_refused";
+            result.status = 'native_result_route_refused';
             totals.refusals[result.status] = (totals.refusals[result.status] ?? 0) + 1;
             assert.equal(editor.historyRevision(), revision);
             assert.deepEqual(Buffer.from(editor.save()), input);
           } else {
             const original = editor.manualFormulaResultDisplayText(section, targetRow.paragraph);
-            const display = "감사😀<&" + original.slice(target.start, target.end);
-            editor.spliceManualFormulaResult(section, source.begin_element, 0, 0, "감사😀<&");
+            const display = '감사😀<&' + original.slice(target.start, target.end);
+            editor.spliceManualFormulaResult(section, source.begin_element, 0, 0, '감사😀<&');
             applied = true;
             const saved = Buffer.from(editor.save());
-            for (const flags of [[], ["-O"]])
-              execFileSync("python3", [...flags, "tools/hwpx-manual-result-save-oracle.py"], {
+            for (const flags of [[], ['-O']])
+              execFileSync('python3', [...flags, 'tools/hwpx-manual-result-save-oracle.py'], {
                 input: JSON.stringify({
-                  before: input.toString("base64"),
-                  after: saved.toString("base64"),
+                  before: input.toString('base64'),
+                  after: saved.toString('base64'),
                   section,
                   ordinal,
                   display,
                 }),
                 timeout: 30000,
               });
-            assert.deepEqual(editor.formulaSources(section), sources, "SourceFormulaCacheChanged");
+            assert.deepEqual(editor.formulaSources(section), sources, 'SourceFormulaCacheChanged');
             assert.equal(
               editor.manualFormulaResultDisplayText(section, targetRow.paragraph),
               original.slice(0, target.start) + display + original.slice(target.end),
@@ -153,17 +153,17 @@ try {
             assert.deepEqual(Buffer.from(editor.save()), saved);
             assert.equal(editor.undo(), true);
             assert.deepEqual(Buffer.from(editor.save()), input);
-            result.status = "prefix_xml_reopen_history_verified";
+            result.status = 'prefix_xml_reopen_history_verified';
             totals.verified++;
           }
         } catch (error) {
-          result.status = "verification_failed";
+          result.status = 'verification_failed';
           result.error = error.message;
           totals.failures++;
           process.exitCode = 1;
           if (!applied) {
-            assert.equal(editor.historyRevision(), revision, "RejectedResultChangedHistory");
-            assert.deepEqual(Buffer.from(editor.save()), input, "RejectedResultChangedDocument");
+            assert.equal(editor.historyRevision(), revision, 'RejectedResultChangedHistory');
+            assert.deepEqual(Buffer.from(editor.save()), input, 'RejectedResultChangedDocument');
             result.failedEditStatePreserved = true;
           }
           // Start subsequent independent fields from the original, not a failed transaction.
@@ -175,21 +175,21 @@ try {
         console.log(JSON.stringify(result));
       }
     }
-    assert.equal(digest(input), inputHash, "AuditInputBufferChanged");
-    assert.equal(digest(readFileSync(path)), inputHash, "AuditInputChanged");
+    assert.equal(digest(input), inputHash, 'AuditInputBufferChanged');
+    assert.equal(digest(readFileSync(path)), inputHash, 'AuditInputChanged');
   }
 } finally {
   editor.close();
   reader.close();
 }
-assert.equal(digest(wasm), wasmSha256, "AuditArtifactBufferChanged");
-assert.equal(digest(readFileSync(options.wasm)), wasmSha256, "AuditArtifactChanged");
+assert.equal(digest(wasm), wasmSha256, 'AuditArtifactBufferChanged');
+assert.equal(digest(readFileSync(options.wasm)), wasmSha256, 'AuditArtifactChanged');
 console.log(
   JSON.stringify({
-    kind: "summary",
+    kind: 'summary',
     wasmSha256,
     ...totals,
     scope:
-      "manual formula result prefix XML ZIP reopening and history only; refusals are not support; not all edits or layout",
+      'manual formula result prefix XML ZIP reopening and history only; refusals are not support; not all edits or layout',
   }),
 );

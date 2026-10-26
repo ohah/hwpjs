@@ -1,9 +1,9 @@
-import { drawingAxisGeometry } from "./drawing-axis-geometry.mjs";
-import { drawingScaledGeometry } from "./drawing-scaled-geometry.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { drawingAxisGeometry } from './drawing-axis-geometry.mjs';
+import { drawingScaledGeometry } from './drawing-scaled-geometry.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 export function inlineDrawingGeometry(source) {
-  const fail = () => ({ state: "unavailable", error: "UnsupportedInlineDrawingGeometry" });
+  const fail = () => ({ state: 'unavailable', error: 'UnsupportedInlineDrawingGeometry' });
   if (source?.geometry?.treat_as_character !== true) return fail();
   const axis = drawingAxisGeometry(source);
   if (!axis && !drawingScaledGeometry(source)) return fail();
@@ -13,5 +13,5 @@ export function inlineDrawingGeometry(source) {
   // Positive axis resize changes the text area, not document font/table sizes.
   // Rounding differences between declared size and corners must not switch
   // the text coordinate system or multiply owned tables a second time.
-  return { state: "selected", mode: "axis", rectangle: { x: 0, y: 0, width, height } };
+  return { state: 'selected', mode: 'axis', rectangle: { x: 0, y: 0, width, height } };
 }

@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { unicodeFixture } from "./icc-unicode.mjs";
+import assert from 'node:assert/strict';
+import { unicodeFixture } from './icc-unicode.mjs';
 
 export function selectionInput(
   locales,
@@ -13,7 +13,7 @@ export function selectionInput(
   payload.writeUInt32BE(stride, 12);
   locales.forEach((locale, i) => {
     const o = 16 + i * stride;
-    Buffer.from(locale, "latin1").copy(payload, o);
+    Buffer.from(locale, 'latin1').copy(payload, o);
     payload.writeUInt32BE(2, o + 4);
     payload.writeUInt32BE(start, o + 8);
   });
@@ -25,7 +25,7 @@ export function selectionInput(
   preferences.forEach((p, i) => {
     const o = 12 + 5 * i;
     input[o] = p.length === 4 ? 1 : 0;
-    Buffer.from(p, "latin1").copy(input, o + 1);
+    Buffer.from(p, 'latin1').copy(input, o + 1);
   });
   payload.copy(input, 12 + 5 * preferences.length);
   return input;
@@ -49,18 +49,18 @@ export function selectionReference(locales, preferences) {
 export function iccSelectionEdges(call) {
   let comparisons = 0,
     rejected = 0;
-  const locales = ["enUS", "enGB", "koKR", "frFR"];
+  const locales = ['enUS', 'enGB', 'koKR', 'frFR'];
   const preferences = [
     [],
-    ["enUS"],
-    ["enAU"],
-    ["en"],
-    ["deDE"],
-    ["deDE", "koKR"],
-    ["enAU", "koKR"],
-    ["koKR", "enUS"],
-    ["ENUS"],
-    ["en\0\0"],
+    ['enUS'],
+    ['enAU'],
+    ['en'],
+    ['deDE'],
+    ['deDE', 'koKR'],
+    ['enAU', 'koKR'],
+    ['koKR', 'enUS'],
+    ['ENUS'],
+    ['en\0\0'],
   ];
   function check(ls, ps, options) {
     assert.deepEqual(call(167, selectionInput(ls, ps, options)), selectionReference(ls, ps));
@@ -77,22 +77,22 @@ export function iccSelectionEdges(call) {
       for (const ps of preferences) check(ls, ps);
     }
   for (const stride of [12, 13, 16, 32])
-    for (const gap of [0, 1, 3]) check(["enGB", "koKR", "enUS", "enUS"], ["enUS"], { stride, gap });
-  check(["\0\0\0\0", "ENUS", "enUS"], ["\0\0\0\0"]);
-  check(["enUS"], Array(32).fill("deDE"));
+    for (const gap of [0, 1, 3]) check(['enGB', 'koKR', 'enUS', 'enUS'], ['enUS'], { stride, gap });
+  check(['\0\0\0\0', 'ENUS', 'enUS'], ['\0\0\0\0']);
+  check(['enUS'], Array(32).fill('deDE'));
   function reject(input, pattern, limit) {
     assert.throws(() => call(167, input, limit), pattern);
     rejected++;
   }
-  reject(selectionInput(["enUS"], Array(33).fill("enUS")), /LimitExceeded/);
-  reject(selectionInput(["enUS"], [], { maxRecords: 0 }), /LimitExceeded/);
-  reject(selectionInput([], ["enUS"], { maxPreferences: 0 }), /LimitExceeded/);
-  const good = selectionInput(["enUS"], ["enUS"]);
+  reject(selectionInput(['enUS'], Array(33).fill('enUS')), /LimitExceeded/);
+  reject(selectionInput(['enUS'], [], { maxRecords: 0 }), /LimitExceeded/);
+  reject(selectionInput([], ['enUS'], { maxPreferences: 0 }), /LimitExceeded/);
+  const good = selectionInput(['enUS'], ['enUS']);
   for (let n = 0; n < good.length; n++) reject(good.subarray(0, n), /InvalidProbeInput|InvalidIcc/);
   const bad = Buffer.from(good);
   bad[12] = 2;
   reject(bad, /InvalidProbeInput/);
   reject(good, /LimitExceeded/, good.length - 1);
-  check(["koKR"], ["koKR"]);
+  check(['koKR'], ['koKR']);
   return { comparisons, rejected };
 }

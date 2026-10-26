@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { checkBody } from "./body.mjs";
-import { sectionXml } from "./fixture-xml.mjs";
-import { checkGrid } from "./grid.mjs";
-import { cellActual } from "./cell-extensions.mjs";
+import assert from 'node:assert/strict';
+import { checkBody } from './body.mjs';
+import { sectionXml } from './fixture-xml.mjs';
+import { checkGrid } from './grid.mjs';
+import { cellActual } from './cell-extensions.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -251,7 +251,7 @@ export function tableEdges(call) {
 export function tableZonePair(call, v, bytes, hwpx) {
   const xml = sectionXml(hwpx);
   const expected = [...xml.matchAll(/<hp:cellzone\b([^>]*)\/>/g)].flatMap((m) =>
-    ["startRowAddr", "startColAddr", "endRowAddr", "endColAddr"].map((key) =>
+    ['startRowAddr', 'startColAddr', 'endRowAddr', 'endColAddr'].map((key) =>
       Number(m[1].match(new RegExp(`\\b${key}="(\\d+)"`))[1]),
     ),
   );

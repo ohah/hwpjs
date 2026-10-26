@@ -6,7 +6,7 @@ export function encodeSnapshot(container) {
     encoder.encode(container.FullPaths[i]),
   ]);
   const size = 4 + parts.reduce((total, part) => total + 4 + part.length, 0);
-  if (size > 0xffffffff) throw new RangeError("Search snapshot exceeds ABI size");
+  if (size > 0xffffffff) throw new RangeError('Search snapshot exceeds ABI size');
   const bytes = new Uint8Array(size);
   const view = new DataView(bytes.buffer);
   view.setUint32(0, container.FileIndex.length, true);

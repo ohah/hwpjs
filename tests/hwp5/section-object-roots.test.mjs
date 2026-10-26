@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { sectionObjectContent } from "../../web/preview/section-object-content.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { sectionObjectContent } from '../../web/preview/section-object-content.mjs';
 
-test("section projection retains only its own original HWP5 drawing roots", () => {
+test('section projection retains only its own original HWP5 drawing roots', () => {
   const roots = [0, 1].map((section) => ({ section, componentNode: 34 }));
   const input = {
     hwp5Drawings: roots,
@@ -22,10 +22,10 @@ test("section projection retains only its own original HWP5 drawing roots", () =
   assert.deepEqual(input, before);
 });
 
-test("section projection validates original root ownership before filtering", () => {
+test('section projection validates original root ownership before filtering', () => {
   for (const roots of [null, {}, [null], [{}], [{ section: -1 }], [{ section: 0.5 }]])
     assert.throws(() => sectionObjectContent({ hwp5Drawings: roots }, 0), {
-      message: "AmbiguousSectionObjects",
+      message: 'AmbiguousSectionObjects',
     });
   assert.throws(
     () =>
@@ -37,6 +37,6 @@ test("section projection validates original root ownership before filtering", ()
           [1, {}],
         ]),
       ),
-    { message: "UnsupportedPageSections" },
+    { message: 'UnsupportedPageSections' },
   );
 });

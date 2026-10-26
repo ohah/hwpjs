@@ -1,7 +1,7 @@
-import type { InputSurfaceLease } from "@hwpjs/core";
-import type { EditorState, StateToken } from "@hwpjs/core";
-import type { RuntimeMessage, RuntimeReply } from "@hwpjs/core";
-import type { CommandResult } from "@hwpjs/core";
+import type { InputSurfaceLease } from '@hwpjs/core';
+import type { EditorState, StateToken } from '@hwpjs/core';
+import type { RuntimeMessage, RuntimeReply } from '@hwpjs/core';
+import type { CommandResult } from '@hwpjs/core';
 
 /** Admission and acknowledgement only; the editor owns the document queue. */
 export function createControlBridge(options: {
@@ -23,25 +23,25 @@ export function createControlBridge(options: {
     );
   };
   return {
-    ready: () => !closed && options.lease.isActive() && options.state().status === "ready",
-    busy: () => closed || pending || options.state().status !== "ready",
+    ready: () => !closed && options.lease.isActive() && options.state().status === 'ready',
+    busy: () => closed || pending || options.state().status !== 'ready',
     request(message: RuntimeMessage): boolean {
-      if (closed || pending || !options.lease.isActive() || options.state().status !== "ready")
+      if (closed || pending || !options.lease.isActive() || options.state().status !== 'ready')
         return false;
       // Enabling is a typed load policy; a ready surface is initialized from capabilities.
-      if (message.kind === "enable") return false;
+      if (message.kind === 'enable') return false;
       const owned = structuredClone(message);
       const token = options.state().token;
       pending = true;
       task = Promise.resolve()
         .then(() => {
           if (!current(token)) return undefined;
-          return options.lease.request(owned, { token, coordinates: "legacy-native" });
+          return options.lease.request(owned, { token, coordinates: 'legacy-native' });
         })
         .then((answer) => {
           pending = false;
           if (!answer || !current(token)) return;
-          if ("status" in answer && "state" in answer) {
+          if ('status' in answer && 'state' in answer) {
             const result = answer as CommandResult;
             if (options.state().operationRevision !== result.state.operationRevision) return;
             options.acknowledge(
@@ -52,8 +52,8 @@ export function createControlBridge(options: {
                 origin: message.origin,
                 ...(result.error ? { error: result.error } : {}),
                 applied:
-                  result.status === "committed-refresh-required" ||
-                  result.status === "committed-with-snapshot",
+                  result.status === 'committed-refresh-required' ||
+                  result.status === 'committed-with-snapshot',
               },
               result.state,
             );

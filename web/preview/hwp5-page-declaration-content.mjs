@@ -14,7 +14,7 @@ export function attachHwp5PageDeclarations(editor, content, selectedSections = n
       try {
         fileVersion = editor.fileVersion?.();
       } catch (error) {
-        if (error.message !== "Hwp5FileVersionAbiUnavailable") throw error;
+        if (error.message !== 'Hwp5FileVersionAbiUnavailable') throw error;
       }
       content.sectionSources.push({
         section,

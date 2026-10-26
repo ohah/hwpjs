@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
+import assert from 'node:assert/strict';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
 
 export async function oleContainers(call) {
   let accepted = 0,
@@ -20,24 +20,24 @@ export async function oleContainers(call) {
     ]) {
       assert.deepEqual(call(306, input(layout, bytes), bytes.length), payload);
       accepted++;
-      reject(input(layout, bytes), bytes.length - 1, "LimitExceeded");
+      reject(input(layout, bytes), bytes.length - 1, 'LimitExceeded');
     }
     for (let byte = 0; byte < 4; byte++) {
       const broken = Buffer.from(envelope);
       broken[byte] ^= 1;
-      reject(input(1, broken), broken.length, "InvalidOleEnvelopeSize");
+      reject(input(1, broken), broken.length, 'InvalidOleEnvelopeSize');
     }
     for (let cut = 0; cut < 4; cut++)
-      reject(input(1, envelope.subarray(0, cut)), envelope.length, "UnexpectedEnd");
+      reject(input(1, envelope.subarray(0, cut)), envelope.length, 'UnexpectedEnd');
     reject(
       input(1, envelope.subarray(0, envelope.length - 1)),
       envelope.length,
-      "InvalidOleEnvelopeSize",
+      'InvalidOleEnvelopeSize',
     );
-    reject(input(2, envelope), envelope.length, "InvalidMode");
+    reject(input(2, envelope), envelope.length, 'InvalidMode');
     const reserved = Buffer.from(envelope);
     reserved[12] = 1;
-    reject(input(1, reserved), reserved.length, "InvalidHeader");
+    reject(input(1, reserved), reserved.length, 'InvalidHeader');
     assert.deepEqual(call(306, input(1, envelope), envelope.length), payload);
   });
   assert.equal(survey.items, 52);

@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export const bmpWords = (values) => {
   const out = Buffer.alloc(values.length * 4);
   values.forEach((v, i) => out.writeUInt32LE(v >>> 0, i * 4));
@@ -75,7 +75,7 @@ function channels(raw, bits) {
   });
 }
 export function bmpLayoutOracle(raw, { trailing = false } = {}) {
-  assert.equal(raw.subarray(0, 2).toString(), "BM");
+  assert.equal(raw.subarray(0, 2).toString(), 'BM');
   assert.equal(raw.readUInt32LE(6), 0);
   const size = raw.readUInt32LE(2),
     offset = raw.readUInt32LE(10);

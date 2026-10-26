@@ -1,5 +1,5 @@
-import { tableCellReferenceBox } from "./table-cell-reference-box.mjs";
-import { textBoundaryExtent } from "./text-line-width.mjs";
+import { tableCellReferenceBox } from './table-cell-reference-box.mjs';
+import { textBoundaryExtent } from './text-line-width.mjs';
 
 /** Caption identity survives parent-cell translation; it is not a child cell. */
 export function projectNestedInlineCaption(
@@ -10,11 +10,11 @@ export function projectNestedInlineCaption(
   fragment,
   maxRows = 20000,
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const source = table?.sourceCaption;
   if (
     !source ||
-    projection?.state !== "placed" ||
+    projection?.state !== 'placed' ||
     !Array.isArray(projection.rows) ||
     !Array.isArray(projection.tableCaptionBounds) ||
     table.section !== parent?.section ||
@@ -25,7 +25,7 @@ export function projectNestedInlineCaption(
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return fail("InvalidNestedCaptionOwner");
+    return fail('InvalidNestedCaptionOwner');
   if (
     ![
       table.section,
@@ -38,9 +38,9 @@ export function projectNestedInlineCaption(
     projection.rows.some((row) => !row) ||
     projection.tableCaptionBounds.some((bound) => !bound)
   )
-    return fail("InvalidNestedCaptionOwner");
+    return fail('InvalidNestedCaptionOwner');
   const inner = tableCellReferenceBox(parent, insets, {}, undefined);
-  if (!inner) return fail("InvalidNestedCaptionBounds");
+  if (!inner) return fail('InvalidNestedCaptionBounds');
   const matches = projection.tableCaptionBounds.filter(
     (bound) =>
       bound.section === table.section &&
@@ -48,7 +48,7 @@ export function projectNestedInlineCaption(
       bound.captionNode === source.caption_node &&
       bound.listNode === source.list_node,
   );
-  if (matches.length !== 1) return fail("MissingNestedCaptionPlacement");
+  if (matches.length !== 1) return fail('MissingNestedCaptionPlacement');
   const shift = (box) => box && { ...box, x: inner.x + box.x, y: inner.y + box.y };
   const valid = (box) =>
     box &&
@@ -67,7 +67,7 @@ export function projectNestedInlineCaption(
     bounds.x + bounds.width > inner.x + inner.width + 1e-8 ||
     bounds.y + bounds.height > inner.y + inner.height + 1e-8
   )
-    return fail("NestedCaptionParentOverflow");
+    return fail('NestedCaptionParentOverflow');
   const selected = projection.rows.filter(
     (row) =>
       row.section === table.section &&
@@ -75,7 +75,7 @@ export function projectNestedInlineCaption(
       row.captionNode === source.caption_node &&
       row.listNode === source.list_node,
   );
-  if (!selected.length || selected.length > maxRows) return fail("NestedCaptionProjectionLimit");
+  if (!selected.length || selected.length > maxRows) return fail('NestedCaptionProjectionLimit');
   const rows = [];
   for (const row of selected) {
     if (
@@ -83,7 +83,7 @@ export function projectNestedInlineCaption(
       ![row.x, row.y, row.height, row.width ?? 0].every(Number.isFinite) ||
       row.height <= 0
     )
-      return fail("InvalidNestedCaptionRow");
+      return fail('InvalidNestedCaptionRow');
     const current = {
       ...row,
       x: inner.x + row.x,
@@ -94,14 +94,14 @@ export function projectNestedInlineCaption(
       referenceBoxes: { ...fragment.referenceBoxes, column: rectangle },
     };
     if (
-      row.kind === "text" &&
+      row.kind === 'text' &&
       (!Array.isArray(row.boundaries) ||
         !row.boundaries.length ||
         row.boundaries.some((boundary) => !Number.isFinite(boundary?.x)))
     )
-      return fail("InvalidNestedCaptionRow");
-    const extent = row.kind === "text" ? textBoundaryExtent(row.boundaries) : { left: 0, right: 0 };
-    if (!extent) return fail("InvalidNestedCaptionRow");
+      return fail('InvalidNestedCaptionRow');
+    const extent = row.kind === 'text' ? textBoundaryExtent(row.boundaries) : { left: 0, right: 0 };
+    if (!extent) return fail('InvalidNestedCaptionRow');
     const left = current.x + (current.paragraphX ?? 0) + extent.left;
     const right = current.x + (current.paragraphX ?? 0) + extent.right;
     if (
@@ -111,11 +111,11 @@ export function projectNestedInlineCaption(
       current.y < rectangle.y - 1e-8 ||
       current.y + current.height > rectangle.y + rectangle.height + 1e-8
     )
-      return fail("InvalidNestedCaptionRow");
+      return fail('InvalidNestedCaptionRow');
     rows.push(current);
   }
   return {
-    state: "placed",
+    state: 'placed',
     rows,
     tableCaptionBounds: [
       {

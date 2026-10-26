@@ -1,8 +1,8 @@
-import { isFootnoteColumnReservation } from "./footnote-column-reservation.mjs";
-import { pageSequenceReference } from "./page-sequence-reference.mjs";
-import { tableCellBand } from "./table-cell-band.mjs";
-import { tableCellInsets } from "./table-insets.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
+import { isFootnoteColumnReservation } from './footnote-column-reservation.mjs';
+import { pageSequenceReference } from './page-sequence-reference.mjs';
+import { tableCellBand } from './table-cell-band.mjs';
+import { tableCellInsets } from './table-insets.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
 
 export function createCellFootnoteFragmentCapacity(
   table,
@@ -11,7 +11,7 @@ export function createCellFootnoteFragmentCapacity(
   columnBottom,
   { origin, padding, prefixRows, firstPage, x = 20, y = 20, gap = 20 },
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !isFootnoteColumnReservation(columnBottom) ||
     !Array.isArray(prefixRows) ||
@@ -23,21 +23,21 @@ export function createCellFootnoteFragmentCapacity(
     ![origin.x, origin.y].every(Number.isFinite) ||
     !Number.isSafeInteger(firstPage) ||
     firstPage < 0 ||
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     !(measured.flows instanceof Map) ||
     !Number.isFinite(measured.grid?.height) ||
     measured.grid.height <= 0 ||
     !Array.isArray(measured.grid.cells) ||
     measured.grid.cells.length !== table.cells.length
   )
-    return fail("InvalidCellFootnoteSources");
-  const resolved = padding === "source" ? resolveTablePadding(table, padding) : padding;
-  if (resolved == null) return fail("InvalidCellFootnoteSources");
+    return fail('InvalidCellFootnoteSources');
+  const resolved = padding === 'source' ? resolveTablePadding(table, padding) : padding;
+  if (resolved == null) return fail('InvalidCellFootnoteSources');
   const bands = [];
   const lists = new Set();
   for (const [index, cell] of table.cells.entries()) {
     if (!cell || !Array.isArray(cell.paragraphs) || lists.has(cell.listNode))
-      return fail("InvalidCellFootnoteSources");
+      return fail('InvalidCellFootnoteSources');
     lists.add(cell.listNode);
     const box = measured.grid?.cells?.[index],
       flow = measured.flows.get(cell.listNode),
@@ -51,10 +51,10 @@ export function createCellFootnoteFragmentCapacity(
       flow.boxes?.length ||
       flow.floatingTables?.length
     )
-      return fail("UnsupportedCellFootnoteReferenceFlow");
+      return fail('UnsupportedCellFootnoteReferenceFlow');
     for (const row of flow.rows) {
-      if (row.createdHost !== undefined) return fail("UnsupportedCellFootnoteReferenceFlow");
-      if (row.kind !== "text") continue;
+      if (row.createdHost !== undefined) return fail('UnsupportedCellFootnoteReferenceFlow');
+      if (row.kind !== 'text') continue;
       const band = tableCellBand(box.y - origin.y + inset.top, row);
       if (
         row.section !== table.section ||
@@ -68,11 +68,11 @@ export function createCellFootnoteFragmentCapacity(
         !Number.isSafeInteger(row.endUnit) ||
         row.endUnit < row.startUnit
       )
-        return fail("InvalidCellFootnoteSources");
+        return fail('InvalidCellFootnoteSources');
       bands.push({
         ...band,
         row: {
-          kind: "text",
+          kind: 'text',
           section: row.section,
           paragraph: row.paragraph,
           startUnit: row.startUnit,
@@ -86,14 +86,14 @@ export function createCellFootnoteFragmentCapacity(
   const fragmentCapacity = ({ start, end, pageIndex, available }) => {
     const pageOrdinal = firstPage + pageIndex,
       reference = pageSequenceReference(setting, pageOrdinal, { x, y, gap });
-    if (reference.state !== "placed") return NaN;
+    if (reference.state !== 'placed') return NaN;
     const context = {
       column: reference.boxes.page,
       pageOrdinal,
       columnOrdinal: 0,
       placedRows: prefixRows,
     };
-    const empty = { kind: "gap", section: table.section, paragraph: table.hostParagraph };
+    const empty = { kind: 'gap', section: table.section, paragraph: table.hostParagraph };
     const baseline = columnBottom(empty, context);
     const bottom = columnBottom(
       {
@@ -108,5 +108,5 @@ export function createCellFootnoteFragmentCapacity(
       ? Math.max(0, available - Math.max(0, baseline - bottom))
       : NaN;
   };
-  return { state: "ready", fragmentCapacity, referencesFor };
+  return { state: 'ready', fragmentCapacity, referencesFor };
 }

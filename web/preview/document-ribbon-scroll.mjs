@@ -1,7 +1,7 @@
 // The real sticky tab height owns the scroll inset; CSS provides the fallback.
 export function synchronizeRibbonScrollInset(root, tabs) {
-  if (!root?.style || typeof tabs?.getBoundingClientRect !== "function") return { close() {} };
-  const property = "--document-ribbon-tabs-height";
+  if (!root?.style || typeof tabs?.getBoundingClientRect !== 'function') return { close() {} };
+  const property = '--document-ribbon-tabs-height';
   const previous = root.style.getPropertyValue(property),
     priority = root.style.getPropertyPriority(property);
   let closed = false;
@@ -12,7 +12,7 @@ export function synchronizeRibbonScrollInset(root, tabs) {
   };
   update();
   const Observer = root.ownerDocument?.defaultView?.ResizeObserver;
-  const observer = typeof Observer === "function" ? new Observer(update) : null;
+  const observer = typeof Observer === 'function' ? new Observer(update) : null;
   observer?.observe(tabs);
   return {
     close() {

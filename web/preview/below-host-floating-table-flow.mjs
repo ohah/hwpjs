@@ -1,22 +1,22 @@
-import { paragraphCellOffset } from "./paragraph-cell-offset-policy.mjs";
-import { plainDocumentTextInkHeight } from "./document-text-page-fit.mjs";
+import { paragraphCellOffset } from './paragraph-cell-offset-policy.mjs';
+import { plainDocumentTextInkHeight } from './document-text-page-fit.mjs';
 
 // A floating table keeps its paragraph anchor. Only complete text lines above
 // its top are consumed before the existing CELL planner reserves the table.
 export function belowHostFloatingTableFlow(paragraph, entries, flow, { columns = false } = {}) {
   if (
     columns ||
-    flow?.state !== "measured" ||
+    flow?.state !== 'measured' ||
     !Array.isArray(flow.sequence) ||
     entries?.length !== 1 ||
     !entries[0] ||
-    typeof entries[0] !== "object" ||
-    paragraph?.paragraphShape?.spacingFormat !== "hwpx" ||
+    typeof entries[0] !== 'object' ||
+    paragraph?.paragraphShape?.spacingFormat !== 'hwpx' ||
     (paragraph.paragraphShape.before ?? 0) !== 0 ||
     (paragraph.paragraphShape.after ?? 0) !== 0 ||
-    typeof paragraph.text !== "string" ||
-    !paragraph.text.startsWith("\ufffc") ||
-    paragraph.text.lastIndexOf("\ufffc") !== 0
+    typeof paragraph.text !== 'string' ||
+    !paragraph.text.startsWith('\ufffc') ||
+    paragraph.text.lastIndexOf('\ufffc') !== 0
   )
     return flow;
   const { table, tableIndex } = entries[0],

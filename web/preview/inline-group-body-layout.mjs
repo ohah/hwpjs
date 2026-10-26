@@ -1,38 +1,38 @@
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { pageRowFitHeight } from "./page-row-extents.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { layoutContent } from "./layout.mjs";
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
-import { projectInlineObjectPages } from "./inline-object-page-projection.mjs";
-import { paginateSplitInlineTables } from "./split-inline-table-pagination.mjs";
-import { prepareSplitInlineTableHost } from "./split-inline-table-host.mjs";
-import { fitAtomicInlineTable } from "./atomic-inline-table-fit.mjs";
-import { projectSplitInlineTables } from "./split-inline-table-projection.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { drawingColumnContext } from "./drawing-column-context.mjs";
-import { projectDrawingTextPage } from "./drawing-text-page-projection.mjs";
-import { drawingFillPlan } from "./drawing-fill-plan.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
-import { measureSourceInlineTables } from "./source-table-inline-measurement.mjs";
-import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
-import { inlineGroupObject } from "./inline-group-object.mjs";
-import { projectInlineObjectSourceRows } from "./inline-object-source-row-projection.mjs";
-import { inlineGroupPictureObjects } from "./inline-group-picture-objects.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { floatingPolygonAnchorUnits } from "./floating-polygon-anchor-units.mjs";
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { pageRowFitHeight } from './page-row-extents.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { layoutContent } from './layout.mjs';
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
+import { projectInlineObjectPages } from './inline-object-page-projection.mjs';
+import { paginateSplitInlineTables } from './split-inline-table-pagination.mjs';
+import { prepareSplitInlineTableHost } from './split-inline-table-host.mjs';
+import { fitAtomicInlineTable } from './atomic-inline-table-fit.mjs';
+import { projectSplitInlineTables } from './split-inline-table-projection.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { drawingColumnContext } from './drawing-column-context.mjs';
+import { projectDrawingTextPage } from './drawing-text-page-projection.mjs';
+import { drawingFillPlan } from './drawing-fill-plan.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { structuralAnchorUnits } from './structural-anchor-units.mjs';
+import { measureSourceInlineTables } from './source-table-inline-measurement.mjs';
+import { layoutInlineTablePageContent } from './inline-table-page-content.mjs';
+import { inlineGroupObject } from './inline-group-object.mjs';
+import { projectInlineObjectSourceRows } from './inline-object-source-row-projection.mjs';
+import { inlineGroupPictureObjects } from './inline-group-picture-objects.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { floatingPolygonAnchorUnits } from './floating-polygon-anchor-units.mjs';
 import {
   groupCaptionParagraphKeys,
   projectInlineGroupCaption,
-} from "./inline-group-caption-projection.mjs";
-import { projectInlineGroupCurves } from "./inline-group-curve-content.mjs";
-import { curveLayoutDiagnostics } from "./curve-layout-diagnostics.mjs";
-import { drawingHasNoShadow } from "./drawing-shadow-policy.mjs";
-import { sourceInlineCaptionOwnership } from "./source-inline-caption-ownership.mjs";
-import { projectInlineGroupLayeredPictures } from "./inline-group-layered-pictures.mjs";
-import { validateSourceInlineCellPictureProjection } from "./source-inline-cell-picture-ownership.mjs";
-import { sourceInlineTableCollisionFootprints } from "./source-inline-table-collision-footprints.mjs";
-import { floatingDrawingAnchorUnits } from "./floating-drawing-anchor-units.mjs";
+} from './inline-group-caption-projection.mjs';
+import { projectInlineGroupCurves } from './inline-group-curve-content.mjs';
+import { curveLayoutDiagnostics } from './curve-layout-diagnostics.mjs';
+import { drawingHasNoShadow } from './drawing-shadow-policy.mjs';
+import { sourceInlineCaptionOwnership } from './source-inline-caption-ownership.mjs';
+import { projectInlineGroupLayeredPictures } from './inline-group-layered-pictures.mjs';
+import { validateSourceInlineCellPictureProjection } from './source-inline-cell-picture-ownership.mjs';
+import { sourceInlineTableCollisionFootprints } from './source-inline-table-collision-footprints.mjs';
+import { floatingDrawingAnchorUnits } from './floating-drawing-anchor-units.mjs';
 
 // Body reservation owns the root rectangle; existing group projections own
 // child geometry/text. No source geometry or native editing value is rewritten.
@@ -50,23 +50,23 @@ export function layoutInlineGroupBody(
     minimumRowPage,
   } = {},
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
-    (rowY !== undefined && typeof rowY !== "function") ||
-    (minimumRowPage !== undefined && typeof minimumRowPage !== "function") ||
+    (rowY !== undefined && typeof rowY !== 'function') ||
+    (minimumRowPage !== undefined && typeof minimumRowPage !== 'function') ||
     (paginateSourceBody && (rowY !== undefined || minimumRowPage !== undefined))
   )
-    return fail("InvalidInlineGroupCallbacks");
+    return fail('InvalidInlineGroupCallbacks');
   if (
-    (measureBodyParagraph !== undefined && typeof measureBodyParagraph !== "function") ||
-    (completeBody !== undefined && typeof completeBody !== "function")
+    (measureBodyParagraph !== undefined && typeof measureBodyParagraph !== 'function') ||
+    (completeBody !== undefined && typeof completeBody !== 'function')
   )
-    return fail("InvalidInlineGroupCallbacks");
+    return fail('InvalidInlineGroupCallbacks');
   if (
-    (paginateSourceBody !== undefined && typeof paginateSourceBody !== "function") ||
-    (additionalZeroWidthUnits !== undefined && typeof additionalZeroWidthUnits !== "function")
+    (paginateSourceBody !== undefined && typeof paginateSourceBody !== 'function') ||
+    (additionalZeroWidthUnits !== undefined && typeof additionalZeroWidthUnits !== 'function')
   )
-    return fail("InvalidInlineGroupCallbacks");
+    return fail('InvalidInlineGroupCallbacks');
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
@@ -74,12 +74,12 @@ export function layoutInlineGroupBody(
     content.limited ||
     content.createdTables?.length
   )
-    return fail("UnsupportedInlineGroupContent");
+    return fail('UnsupportedInlineGroupContent');
   const roots = (content.containers ?? []).filter((row) => row.source?.group_context === null);
-  if (!roots.length) return fail("MissingInlineGroupRoots");
+  if (!roots.length) return fail('MissingInlineGroupRoots');
   const setting = content.pageSettings[0],
     reference = pageReferenceBoxes(setting, { x: 20, y: 20 });
-  if (reference.state !== "placed") return reference;
+  if (reference.state !== 'placed') return reference;
   const byNode = new Map(),
     byParagraph = new Map(),
     objectsByNode = new Map();
@@ -89,8 +89,8 @@ export function layoutInlineGroupBody(
       measure,
       maxRows,
     });
-    if (object.state !== "measured" || byNode.has(root.containerNode))
-      return fail("UnsupportedInlineGroupSource");
+    if (object.state !== 'measured' || byNode.has(root.containerNode))
+      return fail('UnsupportedInlineGroupSource');
     byNode.set(root.containerNode, root);
     objectsByNode.set(root.containerNode, object);
     const entries = byParagraph.get(root.hostParagraph) ?? [];
@@ -104,16 +104,16 @@ export function layoutInlineGroupBody(
   }
   if (
     preparedSourceTables !== undefined &&
-    (preparedSourceTables?.state !== "measured" ||
+    (preparedSourceTables?.state !== 'measured' ||
       !(preparedSourceTables.tables instanceof Map) ||
       !(preparedSourceTables.hosts instanceof Map) ||
       preparedSourceTables.tables.size !== (content.tables?.length ?? 0))
   )
-    return fail("InvalidInlineGroupSourceTables");
+    return fail('InvalidInlineGroupSourceTables');
   const sourceTables = preparedSourceTables ?? measureSourceInlineTables(content, measure, maxRows);
-  if (sourceTables.state !== "measured") return sourceTables;
+  if (sourceTables.state !== 'measured') return sourceTables;
   for (const entry of sourceTables.tables.values()) {
-    if (byNode.has(entry.table.tableNode)) return fail("AmbiguousInlineGroupObjects");
+    if (byNode.has(entry.table.tableNode)) return fail('AmbiguousInlineGroupObjects');
     const key = `${entry.table.section}:${entry.table.hostParagraph}`;
     const objects = sourceTables.hosts
       .get(key)
@@ -125,10 +125,10 @@ export function layoutInlineGroupBody(
     byParagraph.set(entry.table.hostParagraph, entries);
   }
   const pictures = inlineGroupPictureObjects(content, setting.section_ordinal, { sourceTables });
-  if (pictures.state !== "measured") return pictures;
+  if (pictures.state !== 'measured') return pictures;
   for (const [node, { picture, object }] of pictures.byNode) {
     if (byNode.has(node) || sourceTables.tables.has(node))
-      return fail("AmbiguousInlineGroupObjects");
+      return fail('AmbiguousInlineGroupObjects');
     const entries = byParagraph.get(picture.paragraph) ?? [];
     entries.push(object);
     byParagraph.set(picture.paragraph, entries);
@@ -142,17 +142,17 @@ export function layoutInlineGroupBody(
   );
   if (unsupportedDrawing)
     return {
-      ...fail("UnsupportedInlineGroupChildren"),
+      ...fail('UnsupportedInlineGroupChildren'),
       section: unsupportedDrawing.section,
       drawingNode: unsupportedDrawing.drawingNode,
       paragraph: unsupportedDrawing.hostParagraph,
       policyReason: !byNode.has(unsupportedDrawing.source?.group_context?.root_anchor)
-        ? "UnselectedDrawingRoot"
+        ? 'UnselectedDrawingRoot'
         : unsupportedDrawing.section !== setting.section_ordinal
-          ? "DrawingSectionMismatch"
+          ? 'DrawingSectionMismatch'
           : unsupportedDrawing.source?.caption != null
-            ? "DrawingCaption"
-            : "DrawingShadow",
+            ? 'DrawingCaption'
+            : 'DrawingShadow',
     };
   const unsupportedPicture = (content.pictures ?? []).find(
     (row) =>
@@ -165,14 +165,14 @@ export function layoutInlineGroupBody(
   );
   if (unsupportedPicture)
     return {
-      ...fail("UnsupportedInlineGroupChildren"),
+      ...fail('UnsupportedInlineGroupChildren'),
       section: unsupportedPicture.section,
       paragraph: unsupportedPicture.paragraph,
       pictureNode: unsupportedPicture.pictureNode,
-      policyReason: "UnselectedOrInvalidPicture",
+      policyReason: 'UnselectedOrInvalidPicture',
     };
   const tableCaptions = sourceInlineCaptionOwnership(sourceTables, content.paragraphs);
-  if (tableCaptions.state !== "selected") return tableCaptions;
+  if (tableCaptions.state !== 'selected') return tableCaptions;
   const body = content.paragraphs.filter(
     (row) => !row.drawingText && !row.drawingCaption && !row.tableCell && !row.tableCaption,
   );
@@ -180,15 +180,15 @@ export function layoutInlineGroupBody(
     content.paragraphs.some((row) => row.clipped) ||
     groupCaptionParagraphKeys(roots, content.paragraphs) === null
   )
-    return fail("UnsupportedInlineGroupOwnership");
+    return fail('UnsupportedInlineGroupOwnership');
   const flows = (content.paragraphFlows ?? []).filter((row) =>
     body.some((p) => p.section === row.section && p.paragraph === row.paragraph),
   );
   if (
     flows.length !== body.length ||
-    flows.some((row) => row.host !== "body" || row.top_level !== true)
+    flows.some((row) => row.host !== 'body' || row.top_level !== true)
   )
-    return fail("UnsupportedInlineGroupFlow");
+    return fail('UnsupportedInlineGroupFlow');
   const rows = [],
     measurements = [],
     seen = new Set(),
@@ -202,33 +202,33 @@ export function layoutInlineGroupBody(
       paragraph.section !== setting.section_ordinal ||
       rows.length >= maxRows
     )
-      return fail("InvalidInlineGroupFlow");
+      return fail('InvalidInlineGroupFlow');
     const columns = columnReferenceBoxes(reference.boxes.page, matches[0].column_declaration);
-    if (columns.state !== "placed") return columns;
+    if (columns.state !== 'placed') return columns;
     const entries = byParagraph.get(paragraph.paragraph);
     let zeroWidthUnits;
     try {
       zeroWidthUnits = [...structuralAnchorUnits(paragraph)];
       for (const unit of floatingDrawingAnchorUnits(content, paragraph, entries ?? [])) {
-        if (zeroWidthUnits.includes(unit)) return fail("AmbiguousInlineGroupZeroWidthAnchor");
+        if (zeroWidthUnits.includes(unit)) return fail('AmbiguousInlineGroupZeroWidthAnchor');
         zeroWidthUnits.push(unit);
       }
       for (const unit of pictures.zeroWidthAnchors.get(
         `${paragraph.section}:${paragraph.paragraph}`,
       ) ?? []) {
-        if (zeroWidthUnits.includes(unit)) return fail("AmbiguousInlineGroupZeroWidthAnchor");
+        if (zeroWidthUnits.includes(unit)) return fail('AmbiguousInlineGroupZeroWidthAnchor');
         zeroWidthUnits.push(unit);
       }
       for (const unit of additionalZeroWidthUnits?.(paragraph) ?? []) {
-        if (zeroWidthUnits.includes(unit)) return fail("AmbiguousInlineGroupZeroWidthAnchor");
+        if (zeroWidthUnits.includes(unit)) return fail('AmbiguousInlineGroupZeroWidthAnchor');
         zeroWidthUnits.push(unit);
       }
       for (const unit of floatingPolygonAnchorUnits(content, paragraph)) {
-        if (zeroWidthUnits.includes(unit)) return fail("UnsupportedInlineGroupPolygonAnchor");
+        if (zeroWidthUnits.includes(unit)) return fail('UnsupportedInlineGroupPolygonAnchor');
         zeroWidthUnits.push(unit);
       }
     } catch {
-      return fail("InvalidInlineGroupHostAnchors");
+      return fail('InvalidInlineGroupHostAnchors');
     }
     let measured =
       measureBodyParagraph?.(paragraph, columns.boxes[0].width) ??
@@ -242,15 +242,15 @@ export function layoutInlineGroupBody(
             { paragraphs: [paragraph], limited: false },
             columns.boxes[0].width,
             (text, p, unit, kind) =>
-              kind === "text" && zeroWidthUnits.includes(unit)
-                ? { width: 0, height: textMeasurement(measure("", p, unit, kind)).height }
+              kind === 'text' && zeroWidthUnits.includes(unit)
+                ? { width: 0, height: textMeasurement(measure('', p, unit, kind)).height }
                 : measure(text, p, unit, kind),
             maxRows - rows.length,
             { documentBody: true },
           ));
-    if (measured.state === "unavailable" || (entries && measured.state !== "measured"))
+    if (measured.state === 'unavailable' || (entries && measured.state !== 'measured'))
       return { ...measured, section: paragraph.section, paragraph: paragraph.paragraph };
-    if (measured.limited) return fail("InlineGroupLayoutLimit");
+    if (measured.limited) return fail('InlineGroupLayoutLimit');
     if (entries?.length === 1 && sourceTables.tables.has(entries[0].objectNode))
       measured = fitAtomicInlineTable(
         paragraph,
@@ -265,13 +265,13 @@ export function layoutInlineGroupBody(
       measured.rows.some((row) => pageRowFitHeight(row) > reference.boxes.page.height)
     ) {
       if (completeBody || paginateSourceBody || measureBodyParagraph)
-        return fail("UnsupportedInlineGroupSplitCallbacks");
+        return fail('UnsupportedInlineGroupSplitCallbacks');
       const entry = sourceTables.tables.get(entries[0].objectNode);
       const split = prepareSplitInlineTableHost(paragraph, measured, entry, {
         capacity: reference.boxes.page.height,
         zeroWidthUnits,
       });
-      if (split.state !== "prepared")
+      if (split.state !== 'prepared')
         return {
           ...split,
           rowHeight: measured.rows.find(
@@ -279,7 +279,7 @@ export function layoutInlineGroupBody(
           )?.height,
           pageHeight: reference.boxes.page.height,
         };
-      if (rows.length + split.rows.length > maxRows) return fail("InlineGroupLayoutLimit");
+      if (rows.length + split.rows.length > maxRows) return fail('InlineGroupLayoutLimit');
       rows.push(...split.rows);
       splitTables.set(entry.table.tableNode, { entry, split });
       seen.add(paragraph.paragraph);
@@ -304,7 +304,7 @@ export function layoutInlineGroupBody(
   }
   if (seen.size !== byParagraph.size)
     return {
-      ...fail("MissingInlineGroupHost"),
+      ...fail('MissingInlineGroupHost'),
       section: setting.section_ordinal,
       missingHosts: [...byParagraph.keys()]
         .filter((id) => !seen.has(id))
@@ -334,10 +334,10 @@ export function layoutInlineGroupBody(
         rowY,
         minimumRowPage,
       });
-  if (page.state !== "paginated" || page.limited) return page;
+  if (page.state !== 'paginated' || page.limited) return page;
   if (completeBody) {
     page = completeBody(page);
-    if (page?.state !== "paginated") return page ?? fail("InvalidInlineGroupCompletion");
+    if (page?.state !== 'paginated') return page ?? fail('InvalidInlineGroupCompletion');
   }
   const placedContainers = [],
     tableRows = [],
@@ -348,7 +348,7 @@ export function layoutInlineGroupBody(
   const splitProjection = projectSplitInlineTables(splitTables, page, {
     maxRows: maxRows - page.rows.length,
   });
-  if (splitProjection.state !== "placed") return splitProjection;
+  if (splitProjection.state !== 'placed') return splitProjection;
   const bodyRows = splitProjection.bodyRows.map((row) => ({ ...row }));
   tableRows.push(...splitProjection.rows);
   boxes.push(...splitProjection.boxes);
@@ -368,7 +368,7 @@ export function layoutInlineGroupBody(
         ]
       : measurements.map((measured) => projectInlineObjectPages(measured, bodyRows));
   for (const projected of projections) {
-    if (projected.state !== "placed") return projected;
+    if (projected.state !== 'placed') return projected;
     for (const placement of projected.objects) {
       const root = byNode.get(placement.objectNode),
         paper = placement.referenceBoxes?.paper,
@@ -390,11 +390,11 @@ export function layoutInlineGroupBody(
         box.x + box.width > paper.x + paper.width + 1e-8 ||
         box.y + box.height > paper.y + paper.height + 1e-8
       )
-        return fail("InlineGroupPaperOverflow");
+        return fail('InlineGroupPaperOverflow');
       if (!root) {
         if (pictures.byNode.has(placement.objectNode)) continue;
         const entry = sourceTables.tables.get(placement.objectNode);
-        if (!entry) return fail("AmbiguousInlineGroupObjects");
+        if (!entry) return fail('AmbiguousInlineGroupObjects');
         const projected = layoutInlineTablePageContent(
           entry.table,
           entry.measured,
@@ -405,7 +405,7 @@ export function layoutInlineGroupBody(
             captionReservation: entry.captionReservation,
           },
         );
-        if (projected.state !== "placed") return projected;
+        if (projected.state !== 'placed') return projected;
         tableRows.push(...projected.rows);
         boxes.push(...projected.boxes);
         flowPictures.push(...(projected.flowPictures ?? []));
@@ -414,14 +414,14 @@ export function layoutInlineGroupBody(
       }
       const hosts = bodyRows.filter(
         (row) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === placement.section &&
           row.paragraph === placement.paragraph &&
           row.startUnit <= placement.unit &&
           placement.unit < row.endUnit &&
           row.pageOrdinal === placement.pageOrdinal,
       );
-      if (hosts.length !== 1) return fail("AmbiguousInlineGroupHost");
+      if (hosts.length !== 1) return fail('AmbiguousInlineGroupHost');
       const object = objectsByNode.get(root.containerNode),
         { left, top } = object;
       const current = {
@@ -442,19 +442,19 @@ export function layoutInlineGroupBody(
       const caption = projectInlineGroupCaption(root, object, placement, {
         maxRows: maxRows - bodyRows.length - tableRows.length - captionRows.length,
       });
-      if (caption.state !== "placed") return caption;
+      if (caption.state !== 'placed') return caption;
       captionRows.push(...caption.rows);
     }
   }
   const resultRows = [...bodyRows, ...tableRows, ...captionRows],
     placedDrawings = [];
-  if (resultRows.length > maxRows) return fail("InlineGroupLayoutLimit");
+  if (resultRows.length > maxRows) return fail('InlineGroupLayoutLimit');
   for (const drawing of content.drawings ?? []) {
     const columns = drawingColumnContext(drawing, content.paragraphs, content.paragraphFlows);
-    if (columns.state !== "selected") return columns;
+    if (columns.state !== 'selected') return columns;
     const fill = drawingFillPlan(content, drawing);
-    if (fill.state === "unavailable") return fill;
-    if (resultRows.length >= maxRows) return fail("InlineGroupLayoutLimit");
+    if (fill.state === 'unavailable') return fill;
+    if (resultRows.length >= maxRows) return fail('InlineGroupLayoutLimit');
     const text = projectDrawingTextPage(
       drawing,
       content.containers,
@@ -462,12 +462,12 @@ export function layoutInlineGroupBody(
       columns.declaration,
       bodyRows,
       measure,
-      { maxRows: maxRows - resultRows.length, overflow: "extend-last-column" },
+      { maxRows: maxRows - resultRows.length, overflow: 'extend-last-column' },
     );
-    if (text.state !== "placed") return text;
+    if (text.state !== 'placed') return text;
     const hosts = bodyRows.filter(
       (row) =>
-        row.kind === "text" &&
+        row.kind === 'text' &&
         row.section === drawing.section &&
         row.paragraph === drawing.hostParagraph &&
         row.startUnit <= drawing.anchorUnit &&
@@ -482,7 +482,7 @@ export function layoutInlineGroupBody(
       )
     )
       return {
-        ...fail("InlineGroupTextReservationOverflow"),
+        ...fail('InlineGroupTextReservationOverflow'),
         section: drawing.section,
         drawingNode: drawing.drawingNode,
         hostParagraph: drawing.hostParagraph,
@@ -501,7 +501,7 @@ export function layoutInlineGroupBody(
       };
     resultRows.push(
       ...text.rows.map((row) =>
-        text.overflowed === true ? { ...row, drawingTextOverflow: "extend-last-column" } : row,
+        text.overflowed === true ? { ...row, drawingTextOverflow: 'extend-last-column' } : row,
       ),
     );
     placedDrawings.push({
@@ -515,7 +515,7 @@ export function layoutInlineGroupBody(
     });
   }
   const curves = projectInlineGroupCurves(content, bodyRows, measure, maxRows - resultRows.length);
-  if (curves.state !== "placed") return curves;
+  if (curves.state !== 'placed') return curves;
   resultRows.push(...curves.rows);
   const sourceTexts = new Map(
     content.paragraphs.map((p) => [`${p.section}:${p.paragraph}`, p.text]),
@@ -524,25 +524,25 @@ export function layoutInlineGroupBody(
     ? resultRows.filter(
         (row) =>
           !row.createdCell &&
-          (row.kind !== "text" ||
+          (row.kind !== 'text' ||
             row.startUnit < row.endUnit ||
-            sourceTexts.get(`${row.section}:${row.paragraph}`) === ""),
+            sourceTexts.get(`${row.section}:${row.paragraph}`) === ''),
       )
     : resultRows;
   const coverage = pageParagraphCoverage(content.paragraphs, coverageRows);
-  if (coverage.state !== "complete") return coverage;
+  if (coverage.state !== 'complete') return coverage;
   const layered = projectInlineGroupLayeredPictures(
     pictures.layeredByNode,
     content.paragraphs,
     bodyRows,
   );
-  if (layered.state !== "projected") return layered;
+  if (layered.state !== 'projected') return layered;
   const cellPictures = validateSourceInlineCellPictureProjection(
     pictures.cellByNode,
     flowPictures,
     resultRows,
   );
-  if (cellPictures.state !== "complete") return cellPictures;
+  if (cellPictures.state !== 'complete') return cellPictures;
   const repeated = {
     repeatedTableHeaderRows: [
       ...(page.repeatedTableHeaderRows ?? []),
@@ -554,7 +554,7 @@ export function layoutInlineGroupBody(
     ],
   };
   if (resultRows.length + repeated.repeatedTableHeaderRows.length > maxRows)
-    return fail("InlineGroupLayoutLimit");
+    return fail('InlineGroupLayoutLimit');
   const collisions = sourceInlineTableCollisionFootprints(
     sourceTables,
     { ...page, ...repeated, boxes, tableCaptionBounds },
@@ -575,7 +575,7 @@ export function layoutInlineGroupBody(
     ...curveLayoutDiagnostics(page, curves.warnings),
     spatialRows: true,
     pageLayoutMode: page.createdTablesPaginated
-      ? "measured-inline-group-created-body"
-      : "measured-inline-group-body",
+      ? 'measured-inline-group-created-body'
+      : 'measured-inline-group-body',
   };
 }

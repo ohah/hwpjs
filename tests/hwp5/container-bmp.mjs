@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { containerJpegInput } from "./container-jpeg.mjs";
-import { imageContainerFixture } from "./container-images.mjs";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { bmpPixelsOracle, bmpWords } from "./bmp-oracle.mjs";
-import { profilePng } from "./png-profile.mjs";
-import { jpegJfifLayoutFixture } from "./jpeg-jfif-layout.mjs";
+import assert from 'node:assert/strict';
+import { containerJpegInput } from './container-jpeg.mjs';
+import { imageContainerFixture } from './container-images.mjs';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { bmpPixelsOracle, bmpWords } from './bmp-oracle.mjs';
+import { profilePng } from './png-profile.mjs';
+import { jpegJfifLayoutFixture } from './jpeg-jfif-layout.mjs';
 
 export function containerBmpInput(
   bytes,
@@ -37,16 +37,16 @@ export function containerBmpOracle(entries, { enabled = 1, trailing = false } = 
 export function selectedBmpEntries(entries, { enabled = 1 } = {}) {
   return entries.filter(({ raw, extension }) => {
     if (
-      /^png$/i.test(extension ?? "") ||
+      /^png$/i.test(extension ?? '') ||
       raw.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
     )
       return false;
     if (
       enabled &&
-      (/^(jpg|jpeg)$/i.test(extension ?? "") || raw.subarray(0, 2).equals(Buffer.of(255, 216)))
+      (/^(jpg|jpeg)$/i.test(extension ?? '') || raw.subarray(0, 2).equals(Buffer.of(255, 216)))
     )
       return false;
-    return /^bmp$/i.test(extension ?? "") || raw.subarray(0, 2).equals(Buffer.from("BM"));
+    return /^bmp$/i.test(extension ?? '') || raw.subarray(0, 2).equals(Buffer.from('BM'));
   });
 }
 export function containerBmpActual(call, bytes, entries, options = {}) {
@@ -66,7 +66,7 @@ export function containerBmpActual(call, bytes, entries, options = {}) {
 export function containerBmpEdges(call, cfb) {
   let comparisons = 0,
     rejected = 0;
-  const check = (raw, refs, compressed, extension = "bmp", options = {}) => {
+  const check = (raw, refs, compressed, extension = 'bmp', options = {}) => {
     const bytes = imageContainerFixture(cfb, raw, refs, compressed, extension),
       entries = Array.from({ length: refs }, () => ({ raw, extension }));
     const old = call(284, containerJpegInput(bytes, options));
@@ -96,7 +96,7 @@ export function containerBmpEdges(call, cfb) {
             after: 5,
             declared: bits % 2 === 0,
           });
-          const { bytes, entries } = check(raw, refs, compressed, "BmP", {
+          const { bytes, entries } = check(raw, refs, compressed, 'BmP', {
             rgba: 24 * refs,
             perImage: 24,
             png: 0,
@@ -112,11 +112,11 @@ export function containerBmpEdges(call, cfb) {
   for (const kind of [40, 108, 124])
     for (const bits of [16, 32])
       for (const top of [false, true]) {
-        check(bmpFixture({ kind, bits, top, compression: 3 }), 2, true, "ole");
+        check(bmpFixture({ kind, bits, top, compression: 3 }), 2, true, 'ole');
       }
   const raw = bmpFixture({ width: 2, height: 2 });
   for (let n = 0; n < raw.length; n++)
-    reject(imageContainerFixture(cfb, raw.subarray(0, n), 1, n % 2 === 0, "bmp"), /UnexpectedEnd/);
+    reject(imageContainerFixture(cfb, raw.subarray(0, n), 1, n % 2 === 0, 'bmp'), /UnexpectedEnd/);
   for (const [compression, bits] of [
     [1, 8],
     [2, 4],
@@ -124,28 +124,28 @@ export function containerBmpEdges(call, cfb) {
     [5, 0],
   ])
     reject(
-      imageContainerFixture(cfb, bmpFixture({ compression, bits }), 2, true, "bmp"),
+      imageContainerFixture(cfb, bmpFixture({ compression, bits }), 2, true, 'bmp'),
       /UnsupportedBmpPixelCompression/,
     );
   const broken = bmpFixture({ bits: 8, used: 2 });
   broken[broken.readUInt32LE(10)] = 2;
-  reject(imageContainerFixture(cfb, broken, 1, true, "bmp"), /InvalidBmpPaletteIndex/);
+  reject(imageContainerFixture(cfb, broken, 1, true, 'bmp'), /InvalidBmpPaletteIndex/);
   const tail = Buffer.concat([raw, Buffer.of(7)]),
-    tailBytes = imageContainerFixture(cfb, tail, 2, false, "bmp");
+    tailBytes = imageContainerFixture(cfb, tail, 2, false, 'bmp');
   reject(tailBytes, /TrailingBmpBytes/);
-  check(tail, 2, true, "bmp", { trailing: true });
+  check(tail, 2, true, 'bmp', { trailing: true });
   // Image signatures precede the BMP hint; contradictory older hints still fail.
-  check(profilePng(2), 2, true, "bmp");
+  check(profilePng(2), 2, true, 'bmp');
   check(
     jpegJfifLayoutFixture({ width: 1, height: 1, sampling: [17], groups: [[0]] }),
     2,
     false,
-    "bmp",
+    'bmp',
   );
-  check(raw, 1, false, "jpg", { enabled: 0 });
-  reject(imageContainerFixture(cfb, raw, 1, false, "jpg"), /InvalidJpegMarker/);
-  reject(imageContainerFixture(cfb, raw, 1, false, "png"), /InvalidPngSignature/);
-  const bytes = imageContainerFixture(cfb, raw, 1, false, "bmp");
+  check(raw, 1, false, 'jpg', { enabled: 0 });
+  reject(imageContainerFixture(cfb, raw, 1, false, 'jpg'), /InvalidJpegMarker/);
+  reject(imageContainerFixture(cfb, raw, 1, false, 'png'), /InvalidPngSignature/);
+  const bytes = imageContainerFixture(cfb, raw, 1, false, 'bmp');
   for (const at of [16, 25]) {
     const input = containerBmpInput(bytes);
     input[at] = 2;

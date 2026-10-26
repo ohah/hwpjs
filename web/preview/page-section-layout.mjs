@@ -1,30 +1,30 @@
-import { sectionObjectContent } from "./section-object-content.mjs";
-import { moveSectionBox, moveSectionRow, moveSectionPlacement } from "./section-layout-offset.mjs";
+import { sectionObjectContent } from './section-object-content.mjs';
+import { moveSectionBox, moveSectionRow, moveSectionPlacement } from './section-layout-offset.mjs';
 
 // Join independently laid-out sections without changing their source identities.
 export function layoutPageSections(content, measure, maxRows, layoutSection) {
-  const unavailable = (error) => ({ state: "unavailable", error });
-  if (!Number.isSafeInteger(maxRows) || maxRows < 1) return unavailable("InvalidPageFlowBounds");
+  const unavailable = (error) => ({ state: 'unavailable', error });
+  if (!Number.isSafeInteger(maxRows) || maxRows < 1) return unavailable('InvalidPageFlowBounds');
   if (
     !Array.isArray(content?.pageSettings) ||
     !Array.isArray(content.paragraphs) ||
     (content.paragraphFlows !== undefined && !Array.isArray(content.paragraphFlows)) ||
-    typeof layoutSection !== "function" ||
-    typeof measure !== "function"
+    typeof layoutSection !== 'function' ||
+    typeof measure !== 'function'
   )
-    return unavailable("InvalidSectionLayoutSources");
+    return unavailable('InvalidSectionLayoutSources');
   const settings = new Map();
   for (const setting of content.pageSettings) {
     const section = setting?.section_ordinal;
     if (!Number.isSafeInteger(section) || section < 0 || settings.has(section))
-      return unavailable("AmbiguousPageSettings");
+      return unavailable('AmbiguousPageSettings');
     settings.set(section, setting);
   }
   if (
     content.paragraphs.some((row) => !row || !settings.has(row.section)) ||
     content.paragraphFlows?.some((row) => !row || !settings.has(row.section))
   )
-    return unavailable("UnsupportedPageSections");
+    return unavailable('UnsupportedPageSections');
   const rows = [],
     pages = [],
     overflow = [];
@@ -63,13 +63,13 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
       measure,
       maxRows - usedRows,
     );
-    if (!part) return unavailable("InvalidSectionLayout");
-    if (part.state !== "paginated") return part;
+    if (!part) return unavailable('InvalidSectionLayout');
+    if (part.state !== 'paginated') return part;
     if (
       part.createdTablesPaginated !== undefined &&
-      typeof part.createdTablesPaginated !== "boolean"
+      typeof part.createdTablesPaginated !== 'boolean'
     )
-      return unavailable("InvalidSectionLayout");
+      return unavailable('InvalidSectionLayout');
     createdTablesPaginated ||= part.createdTablesPaginated === true;
     if (part.createdCellParagraphs !== undefined) {
       if (
@@ -79,7 +79,7 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
           (row) => !row || row.section !== section || !row.createdCell,
         )
       )
-        return unavailable("InvalidSectionLayout");
+        return unavailable('InvalidSectionLayout');
       createdCellParagraphs.push(...part.createdCellParagraphs);
     }
     if (
@@ -107,41 +107,41 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
           row.pageOrdinal >= part.pages.length,
       )
     )
-      return unavailable("InvalidSectionLayout");
+      return unavailable('InvalidSectionLayout');
     if (part.pageAreaSelectionPolicy !== undefined) {
-      if (typeof part.pageAreaSelectionPolicy !== "string" || !part.pageAreaSelectionPolicy.length)
-        return unavailable("InvalidSectionPageAreaPolicy");
+      if (typeof part.pageAreaSelectionPolicy !== 'string' || !part.pageAreaSelectionPolicy.length)
+        return unavailable('InvalidSectionPageAreaPolicy');
       if (areaPolicy !== undefined && areaPolicy !== part.pageAreaSelectionPolicy)
-        return unavailable("ConflictingSectionPageAreaPolicy");
+        return unavailable('ConflictingSectionPageAreaPolicy');
       areaPolicy = part.pageAreaSelectionPolicy;
     }
-    if (pageCount + part.pages.length > 2000) return unavailable("PageFlowLimit");
+    if (pageCount + part.pages.length > 2000) return unavailable('PageFlowLimit');
     for (const key of [
-      "placedDrawings",
-      "placedContainers",
-      "flowPictures",
-      "groupReservations",
-      "pageNumberGlyphs",
-      "boxes",
-      "tableAnchors",
-      "flowAnchors",
-      "tableCollisionFootprints",
-      "tableCollisionFootprintErrors",
-      "tableColumnEvidence",
-      "tableCaptionBounds",
-      "pageAreaDeclarationPages",
-      "hostNumberPrefixes",
-      "repeatedTableHeaderRows",
-      "repeatedTableHeaderBoxes",
-      "noteSeparators",
-      "pageAreaOverflow",
+      'placedDrawings',
+      'placedContainers',
+      'flowPictures',
+      'groupReservations',
+      'pageNumberGlyphs',
+      'boxes',
+      'tableAnchors',
+      'flowAnchors',
+      'tableCollisionFootprints',
+      'tableCollisionFootprintErrors',
+      'tableColumnEvidence',
+      'tableCaptionBounds',
+      'pageAreaDeclarationPages',
+      'hostNumberPrefixes',
+      'repeatedTableHeaderRows',
+      'repeatedTableHeaderBoxes',
+      'noteSeparators',
+      'pageAreaOverflow',
     ]) {
       if (!part[key]) continue;
       if (
         !Array.isArray(part[key]) ||
         part[key].some((item) => !item || (item.section !== undefined && item.section !== section))
       )
-        return unavailable("InvalidSectionLayout");
+        return unavailable('InvalidSectionLayout');
     }
     let center;
     for (const { paper } of part.pages) {
@@ -160,9 +160,9 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
         paper.width <= 0 ||
         paper.height <= 0
       )
-        return unavailable("InvalidSectionLayout");
+        return unavailable('InvalidSectionLayout');
       if (center !== undefined && Math.abs(center - nextCenter) > 1e-7)
-        return unavailable("UnsupportedSectionPaperCenters");
+        return unavailable('UnsupportedSectionPaperCenters');
       center = nextCenter;
       left = Math.min(left, paper.x);
       right = Math.max(right, edge);
@@ -193,23 +193,23 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
         });
       for (const row of part.rows) rows.push(moveSectionRow(row, offset, ordinal, xOffset));
       for (const key of [
-        "placedDrawings",
-        "placedContainers",
-        "flowPictures",
-        "groupReservations",
-        "pageNumberGlyphs",
-        "boxes",
-        "tableAnchors",
-        "flowAnchors",
-        "tableCollisionFootprints",
-        "tableCollisionFootprintErrors",
-        "tableColumnEvidence",
-        "tableCaptionBounds",
-        "pageAreaDeclarationPages",
-        "hostNumberPrefixes",
-        "repeatedTableHeaderRows",
-        "repeatedTableHeaderBoxes",
-        "noteSeparators",
+        'placedDrawings',
+        'placedContainers',
+        'flowPictures',
+        'groupReservations',
+        'pageNumberGlyphs',
+        'boxes',
+        'tableAnchors',
+        'flowAnchors',
+        'tableCollisionFootprints',
+        'tableCollisionFootprintErrors',
+        'tableColumnEvidence',
+        'tableCaptionBounds',
+        'pageAreaDeclarationPages',
+        'hostNumberPrefixes',
+        'repeatedTableHeaderRows',
+        'repeatedTableHeaderBoxes',
+        'noteSeparators',
       ]) {
         if (!part[key]) continue;
         if (
@@ -218,12 +218,12 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
             (item) => !item || (item.section !== undefined && item.section !== section),
           )
         )
-          return unavailable("InvalidSectionLayout");
+          return unavailable('InvalidSectionLayout');
         if (
-          key === "flowAnchors" &&
+          key === 'flowAnchors' &&
           part[key].some(
             (item) =>
-              item.kind !== "anchor" ||
+              item.kind !== 'anchor' ||
               item.section !== section ||
               item.height !== 0 ||
               !Number.isSafeInteger(item.pageOrdinal) ||
@@ -231,10 +231,10 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
               item.pageOrdinal >= part.pages.length,
           )
         )
-          return unavailable("InvalidSectionLayout");
+          return unavailable('InvalidSectionLayout');
         (placements[key] ??= []).push(
           ...part[key].map((item) =>
-            ["boxes", "repeatedTableHeaderRows", "repeatedTableHeaderBoxes"].includes(key)
+            ['boxes', 'repeatedTableHeaderRows', 'repeatedTableHeaderBoxes'].includes(key)
               ? moveSectionRow(item, offset, ordinal, xOffset)
               : moveSectionPlacement(item, offset, ordinal, xOffset),
           ),
@@ -246,7 +246,7 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
     try {
       for (const item of part.pageAreaOverflow ?? []) {
         if (!item || (item.section !== undefined && item.section !== section))
-          return unavailable("InvalidSectionLayout");
+          return unavailable('InvalidSectionLayout');
         overflow.push({ ...moveSectionPlacement(item, offset, ordinal, xOffset), section });
       }
     } catch (error) {
@@ -257,13 +257,13 @@ export function layoutPageSections(content, measure, maxRows, layoutSection) {
     if (part.limited) break;
   }
   return {
-    state: "paginated",
+    state: 'paginated',
     rows,
     pages,
     height,
     limited,
     spatialRows: true,
-    pageLayoutMode: "measured-body",
+    pageLayoutMode: 'measured-body',
     ...placements,
     ...(createdTablesPaginated ? { createdTablesPaginated, createdCellParagraphs } : {}),
     ...(areaPolicy !== undefined ? { pageAreaSelectionPolicy: areaPolicy } : {}),

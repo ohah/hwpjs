@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -14,13 +14,13 @@ const expected = (version) => {
   out.writeUInt32LE(8);
   out.writeUInt16LE(version, 4);
   out.writeUInt32LE(56, 6);
-  out.set(Buffer.from("VtChart\0"), 10);
+  out.set(Buffer.from('VtChart\0'), 10);
   return out;
 };
 
 export async function chartDeclarations(call) {
   const cfb = await createCfbReader(
-    readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+    readFileSync(new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url)),
   );
   let roots = 0,
     accepted = 0,
@@ -29,10 +29,10 @@ export async function chartDeclarations(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry)),
-        marker = b.indexOf(Buffer.from("VtChart\0"));
+        marker = b.indexOf(Buffer.from('VtChart\0'));
       if (marker < 0) {
         nonMarkerContents++;
         return;
@@ -59,15 +59,15 @@ export async function chartDeclarations(call) {
         rejected++;
         assert.deepEqual(call(308, input(b)), expected(6));
       };
-      for (let cut = 44; cut < 56; cut++) reject(input(b.subarray(0, cut)), "UnexpectedEnd");
-      reject(input(b, 44, 7), "LimitExceeded");
-      reject(input(b, 0xffffffff), "UnexpectedEnd");
+      for (let cut = 44; cut < 56; cut++) reject(input(b.subarray(0, cut)), 'UnexpectedEnd');
+      reject(input(b, 44, 7), 'LimitExceeded');
+      reject(input(b, 0xffffffff), 'UnexpectedEnd');
       const bad = Buffer.from(b);
       bad[53] = 1;
-      reject(input(bad), "InvalidChartTypeName");
+      reject(input(bad), 'InvalidChartTypeName');
       bad[53] = 0;
       bad.writeUInt16LE(0, 44);
-      reject(input(bad), "InvalidChartTypeName");
+      reject(input(bad), 'InvalidChartTypeName');
     });
   } finally {
     cfb.close();

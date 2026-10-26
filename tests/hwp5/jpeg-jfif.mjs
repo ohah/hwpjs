@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { jpegMarkerOracle } from "./jpeg-framing.mjs";
+import assert from 'node:assert/strict';
+import { jpegMarkerOracle } from './jpeg-framing.mjs';
 
 const words = (values) => {
   const b = Buffer.alloc(values.length * 4);
@@ -8,7 +8,7 @@ const words = (values) => {
 };
 export function jpegJfifFixture(width = 0, height = 0) {
   const b = Buffer.alloc(14 + width * height * 3);
-  b.write("JFIF\0", 0, "ascii");
+  b.write('JFIF\0', 0, 'ascii');
   b.writeUInt16BE(258, 5);
   b[7] = 1;
   b.writeUInt16BE(300, 8);
@@ -21,7 +21,7 @@ export function jpegJfifFixture(width = 0, height = 0) {
 export function jpegJfifOracle(b) {
   assert.ok(b.length <= 65533);
   assert.ok(b.length >= 14);
-  assert.deepEqual(b.subarray(0, 5), Buffer.from("JFIF\0"));
+  assert.deepEqual(b.subarray(0, 5), Buffer.from('JFIF\0'));
   assert.equal(b[5], 1);
   assert.ok(b[7] <= 2);
   const h = b[8] * 256 + b[9],
@@ -48,7 +48,7 @@ export function jpegJfifFileActual(call, raw) {
       payload = m.wire.subarray(20);
     at += m.consumed;
     if (m.code === 218) break;
-    if (m.code === 224 && payload.subarray(0, 5).equals(Buffer.from("JFIF\0"))) {
+    if (m.code === 224 && payload.subarray(0, 5).equals(Buffer.from('JFIF\0'))) {
       jpegJfifActual(call, payload);
       headers++;
     }

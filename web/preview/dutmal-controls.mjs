@@ -1,4 +1,4 @@
-import { createDutmalEditState } from "./dutmal-edit-state.mjs";
+import { createDutmalEditState } from './dutmal-edit-state.mjs';
 
 export function createDutmalControls({
   form,
@@ -22,8 +22,8 @@ export function createDutmalControls({
       note.textContent = value.error
         ? `덧말 조회/변경 실패: ${value.error}`
         : value.pending
-          ? "덧말 처리 중…"
-          : "덧말 문자열 편집 · 원본 조판 재계산은 별도입니다.";
+          ? '덧말 처리 중…'
+          : '덧말 문자열 편집 · 원본 조판 재계산은 별도입니다.';
     },
   });
   const pick = () => {
@@ -39,10 +39,10 @@ export function createDutmalControls({
     }
   };
   const edit = () => state.edit(input.value);
-  targets.addEventListener("change", pick);
-  textKind.addEventListener("change", pick);
-  input.addEventListener("input", edit);
-  form.addEventListener("submit", submit);
+  targets.addEventListener('change', pick);
+  textKind.addEventListener('change', pick);
+  input.addEventListener('input', edit);
+  form.addEventListener('submit', submit);
   const reset = () => {
     serial++;
     enabled = false;
@@ -62,13 +62,13 @@ export function createDutmalControls({
       );
       if (index < 0) return false;
       targets.value = String(index);
-      textKind.value = "mainText";
+      textKind.value = 'mainText';
       pick();
       return true;
     },
     message(message) {
       if (closed) return;
-      if (message.kind === "enable") {
+      if (message.kind === 'enable') {
         enabled = !message.error && message.dutmalTextAvailable === true;
         if (!enabled) {
           reset();
@@ -78,32 +78,32 @@ export function createDutmalControls({
           const requestId = ++serial;
           queueMicrotask(() => {
             if (!closed && enabled && requestId === serial && ready())
-              request({ kind: "inline-string-sources", requestId });
+              request({ kind: 'inline-string-sources', requestId });
           });
         }
       }
-      if (message.kind === "inline-string-sources" && message.requestId === serial) {
+      if (message.kind === 'inline-string-sources' && message.requestId === serial) {
         if (message.error) {
           form.hidden = false;
           note.textContent = `덧말 목록 조회 실패: ${message.error}`;
           return;
         }
         rows = message.sources.controls
-          .filter((row) => row.kind === "dutmal")
+          .filter((row) => row.kind === 'dutmal')
           .map((row) => ({ section: row.section_ordinal, node: row.element_index }));
         targets.replaceChildren(
           ...rows.map((row, index) => {
-            const option = form.ownerDocument.createElement("option");
+            const option = form.ownerDocument.createElement('option');
             option.value = String(index);
             option.textContent = `구역 ${row.section + 1} · 덧말 ${index + 1}`;
             return option;
           }),
         );
-        targets.value = "0";
+        targets.value = '0';
         form.hidden = !rows.length;
         queueMicrotask(pick);
       }
-      if (["undo", "redo"].includes(message.kind))
+      if (['undo', 'redo'].includes(message.kind))
         queueMicrotask(() => {
           if (!closed) state.message(message);
         });
@@ -117,10 +117,10 @@ export function createDutmalControls({
       state.close();
       form.hidden = true;
       fields.disabled = true;
-      targets.removeEventListener("change", pick);
-      textKind.removeEventListener("change", pick);
-      input.removeEventListener("input", edit);
-      form.removeEventListener("submit", submit);
+      targets.removeEventListener('change', pick);
+      textKind.removeEventListener('change', pick);
+      input.removeEventListener('input', edit);
+      form.removeEventListener('submit', submit);
     },
   };
 }

@@ -1,10 +1,10 @@
-import { placeFloatingPicture } from "./picture-placement.mjs";
-import { rowLeft, rowTop, rowHeight, TEXT_TOP, TEXT_LEFT } from "./row-geometry.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { picturePaintPlan } from "./picture-paint-plan.mjs";
-import { projectGroupedPicturePage } from "./grouped-picture-page-projection.mjs";
-import { inlinePictureIndex } from "./picture-inline.mjs";
-import { pictureVisualBounds, inlinePictureShadowExtent } from "./picture-visual-bounds.mjs";
+import { placeFloatingPicture } from './picture-placement.mjs';
+import { rowLeft, rowTop, rowHeight, TEXT_TOP, TEXT_LEFT } from './row-geometry.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { picturePaintPlan } from './picture-paint-plan.mjs';
+import { projectGroupedPicturePage } from './grouped-picture-page-projection.mjs';
+import { inlinePictureIndex } from './picture-inline.mjs';
+import { pictureVisualBounds, inlinePictureShadowExtent } from './picture-visual-bounds.mjs';
 
 // 현재 세로 텍스트 미리보기의 논리 영역입니다. 원본 페이지/다단 영역은 아닙니다.
 export function previewPictureLayers(content, layout, columnWidth) {
@@ -25,7 +25,7 @@ export function previewPictureLayers(content, layout, columnWidth) {
         layout.rows,
       );
       const order = signedInt32(grouped.flow?.z_order);
-      if (grouped.state !== "placed" || order === null || grouped.paintLayer === null) continue;
+      if (grouped.state !== 'placed' || order === null || grouped.paintLayer === null) continue;
       const visualBounds = pictureVisualBounds(picture, grouped.rectangle);
       if (!visualBounds) continue;
       result[grouped.paintLayer].push({
@@ -61,8 +61,8 @@ export function previewPictureLayers(content, layout, columnWidth) {
     for (const flowed of instances.length ? instances : [null]) {
       let paintPlan = picturePaintPlan(picture);
       if (
-        picture.state !== "located" ||
-        paintPlan.state === "unsupported_transform" ||
+        picture.state !== 'located' ||
+        paintPlan.state === 'unsupported_transform' ||
         !([2, 3].includes(picture.flow?.textWrap) || flowed) ||
         picture.crop?.clip?.length !== 4 ||
         !picture.crop.clip.every(Number.isFinite)
@@ -76,14 +76,14 @@ export function previewPictureLayers(content, layout, columnWidth) {
         (paragraph.tableCell && !flowed) ||
         paragraph.clipped ||
         !Number.isInteger(picture.anchorUnit) ||
-        paragraph.text?.[picture.anchorUnit] !== "\ufffc"
+        paragraph.text?.[picture.anchorUnit] !== '\ufffc'
       )
         continue;
       const rows = layout.rows
         .map((row, index) => ({ row, index }))
         .filter(
           ({ row }) =>
-            row.kind === "text" &&
+            row.kind === 'text' &&
             row.section === picture.section &&
             row.paragraph === picture.paragraph &&
             (flowed?.pageOrdinal === undefined || row.pageOrdinal === flowed.pageOrdinal) &&
@@ -114,9 +114,9 @@ export function previewPictureLayers(content, layout, columnWidth) {
         },
       };
       const placement = flowed
-        ? { state: "placed", rectangle: flowed.rectangle }
+        ? { state: 'placed', rectangle: flowed.rectangle }
         : placeFloatingPicture(picture, boxes);
-      if (placement.state !== "placed") continue;
+      if (placement.state !== 'placed') continue;
       const { rectangle } = placement;
       if (
         !rectangle ||
@@ -133,7 +133,7 @@ export function previewPictureLayers(content, layout, columnWidth) {
       )
         continue;
       if (
-        paintPlan.state === "quad" &&
+        paintPlan.state === 'quad' &&
         (picture.geometry?.widthRelative !== 4 || picture.geometry?.heightRelative !== 2)
       ) {
         const sx = rectangle.width / paintPlan.width,
@@ -144,7 +144,7 @@ export function previewPictureLayers(content, layout, columnWidth) {
       }
       const visualBounds = pictureVisualBounds(picture, rectangle);
       if (!visualBounds) continue;
-      result[picture.flow.textWrap === 2 ? "behind" : "front"].push({
+      result[picture.flow.textWrap === 2 ? 'behind' : 'front'].push({
         picture,
         paintPlan,
         zOrder,

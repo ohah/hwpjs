@@ -1,34 +1,34 @@
-import { pageSequenceReference } from "./page-sequence-reference.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { measureTableCells } from "./table-cell-measurement.mjs";
-import { tableFlowLine } from "./table-paragraph-flow.mjs";
-import { paragraphLineGeometry, paragraphSpacePixels } from "./paragraph-geometry.mjs";
-import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
-import { alignTextRow } from "./line-alignment.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { measureNestedTable } from "./nested-table-measurement.mjs";
-import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
-import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
-import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { tableSourceHorizontalLayout } from "./table-source-horizontal-layout.mjs";
-import { mixedInlineTablePolicy } from "./mixed-inline-table-policy.mjs";
+import { pageSequenceReference } from './page-sequence-reference.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { measureTableCells } from './table-cell-measurement.mjs';
+import { tableFlowLine } from './table-paragraph-flow.mjs';
+import { paragraphLineGeometry, paragraphSpacePixels } from './paragraph-geometry.mjs';
+import { inlineTableHostAnchors } from './inline-table-host-anchors.mjs';
+import { alignTextRow } from './line-alignment.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { measureNestedTable } from './nested-table-measurement.mjs';
+import { validateNestedTableOwnership } from './nested-table-ownership.mjs';
+import { nestedTablePaperBounds } from './nested-table-paper-bounds.mjs';
+import { layoutInlineTablePageContent } from './inline-table-page-content.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { tableSourceHorizontalLayout } from './table-source-horizontal-layout.mjs';
+import { mixedInlineTablePolicy } from './mixed-inline-table-policy.mjs';
 import {
   floatingTableBodyExclusions,
   floatingTableAnchorCursor,
-} from "./floating-table-body-reservations.mjs";
-import { floatingTableInlinePictures } from "./floating-table-inline-pictures.mjs";
-import { floatingTableHostIndex } from "./floating-table-host-index.mjs";
-import { inlineObjectAnchorIndex } from "./inline-object-anchor-index.mjs";
-import { floatingInlineTableLine } from "./floating-inline-table-line.mjs";
-import { singleCellPictureColumn } from "./single-cell-picture-column.mjs";
-import { inspectFloatingTablePlacement } from "./floating-table-placement-conflicts.mjs";
-import { planFloatingTablePlacement } from "./floating-table-placement-plan.mjs";
-import { tableHostProfile } from "./table-host-profile.mjs";
+} from './floating-table-body-reservations.mjs';
+import { floatingTableInlinePictures } from './floating-table-inline-pictures.mjs';
+import { floatingTableHostIndex } from './floating-table-host-index.mjs';
+import { inlineObjectAnchorIndex } from './inline-object-anchor-index.mjs';
+import { floatingInlineTableLine } from './floating-inline-table-line.mjs';
+import { singleCellPictureColumn } from './single-cell-picture-column.mjs';
+import { inspectFloatingTablePlacement } from './floating-table-placement-conflicts.mjs';
+import { planFloatingTablePlacement } from './floating-table-placement-plan.mjs';
+import { tableHostProfile } from './table-host-profile.mjs';
 import {
   floatingTablePictureGroups,
   placeFloatingTablePictureGroup,
-} from "./floating-table-picture-groups.mjs";
+} from './floating-table-picture-groups.mjs';
 
 /** Whole rectangular floating table and single-column body, with real page spill. */
 export function layoutFloatingTableBody(
@@ -38,22 +38,22 @@ export function layoutFloatingTableBody(
   { measureCellFlow, completeLayout, pictureReferences } = {},
 ) {
   if (pictureReferences === undefined) pictureReferences = singleCellPictureColumn;
-  const unavailable = (error) => ({ state: "unavailable", error });
-  if (measureCellFlow !== undefined && typeof measureCellFlow !== "function")
-    return unavailable("InvalidTableCellMeasurement");
-  if (completeLayout !== undefined && typeof completeLayout !== "function")
-    return unavailable("InvalidTableLayoutCompletion");
+  const unavailable = (error) => ({ state: 'unavailable', error });
+  if (measureCellFlow !== undefined && typeof measureCellFlow !== 'function')
+    return unavailable('InvalidTableCellMeasurement');
+  if (completeLayout !== undefined && typeof completeLayout !== 'function')
+    return unavailable('InvalidTableLayoutCompletion');
   const inlineAnchors = inlineObjectAnchorIndex(content);
-  if (inlineAnchors.state !== "indexed") return inlineAnchors;
+  if (inlineAnchors.state !== 'indexed') return inlineAnchors;
   if (inlineAnchors.index.size && !completeLayout)
-    return unavailable("InvalidTableLayoutCompletion");
+    return unavailable('InvalidTableLayoutCompletion');
   if (
     content.structuralAnchorErrors?.length ||
     content.tableAnchorErrors?.length ||
     content.tableGeometryErrors?.length ||
     content.cellLayoutSourceErrors?.length
   )
-    return unavailable("IncompleteFloatingTableSources");
+    return unavailable('IncompleteFloatingTableSources');
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
@@ -65,15 +65,15 @@ export function layoutFloatingTableBody(
     content.lines?.length ||
     content.drawings?.length
   )
-    return unavailable("UnsupportedFloatingTableBody");
+    return unavailable('UnsupportedFloatingTableBody');
   const pictureGroups = floatingTablePictureGroups(content);
-  if (pictureGroups.state !== "prepared") return pictureGroups;
+  if (pictureGroups.state !== 'prepared') return pictureGroups;
   const pictures = floatingTableInlinePictures(
     { ...content, pictures: pictureGroups.pictures },
     measure,
     { pictureReferences },
   );
-  if (pictures.state !== "prepared") return pictures;
+  if (pictures.state !== 'prepared') return pictures;
   measure = pictures.measure;
   const setting = content.pageSettings[0];
   const nested = content.tables.some((table) => table?.parentTableNode != null);
@@ -81,28 +81,28 @@ export function layoutFloatingTableBody(
     try {
       validateNestedTableOwnership(content);
     } catch {
-      return unavailable("InvalidNestedTableFlow");
+      return unavailable('InvalidNestedTableFlow');
     }
   }
   const indexed = floatingTableHostIndex(content.tables, setting.section_ordinal);
-  if (indexed.state !== "indexed") return indexed;
+  if (indexed.state !== 'indexed') return indexed;
   const { owners, hosts } = indexed;
   for (const { table } of owners.values()) {
     const policyReason =
       table.parentTableNode !== null
-        ? "nested-table"
+        ? 'nested-table'
         : table.sourceCaption
-          ? "caption"
+          ? 'caption'
           : table.pagination?.cell_spacing !== 0
-            ? "cell-spacing"
-            : table.cells.some((cell) => typeof cell.sourceMargin?.header !== "boolean")
-              ? "cell-header"
+            ? 'cell-spacing'
+            : table.cells.some((cell) => typeof cell.sourceMargin?.header !== 'boolean')
+              ? 'cell-header'
               : content.paragraphs.some((p) => p.tableCaption)
-                ? "caption-paragraph"
+                ? 'caption-paragraph'
                 : null;
     if (policyReason)
       return {
-        ...unavailable("UnsupportedFloatingTablePolicy"),
+        ...unavailable('UnsupportedFloatingTablePolicy'),
         section: table.section,
         tableNode: table.tableNode,
         policyReason,
@@ -112,7 +112,7 @@ export function layoutFloatingTableBody(
         whole: true,
         diagnostics: content.tableGeometryErrors ?? [],
       });
-      if (policy.state !== "supported") return policy;
+      if (policy.state !== 'supported') return policy;
     }
   }
   const body = content.paragraphs.filter((p) => !p.tableCell),
@@ -120,21 +120,21 @@ export function layoutFloatingTableBody(
   for (const flow of content.paragraphFlows ?? []) {
     if (!flow.top_level) continue;
     if (
-      flow.host !== "body" ||
+      flow.host !== 'body' ||
       flow.section !== setting.section_ordinal ||
       flow.column_break === true ||
       flows.has(flow.paragraph)
     )
-      return unavailable("UnsupportedFloatingTableFlow");
+      return unavailable('UnsupportedFloatingTableFlow');
     flows.set(flow.paragraph, flow);
   }
   if (
     flows.size !== body.length ||
     body.some((p) => p.section !== setting.section_ordinal || !flows.has(p.paragraph))
   )
-    return unavailable("UnsupportedFloatingTableFlow");
+    return unavailable('UnsupportedFloatingTableFlow');
   const first = pageSequenceReference(setting, 0);
-  if (first.state !== "placed") return unavailable(first.state);
+  if (first.state !== 'placed') return unavailable(first.state);
   for (const flow of flows.values()) {
     const declarations = [
       flow.column_start_declaration,
@@ -142,11 +142,11 @@ export function layoutFloatingTableBody(
       ...(flow.column_changes ?? []).map((change) => change.declaration),
     ].filter((value) => value != null);
     if (!declarations.length && flow.single_column !== true)
-      return unavailable("UnsupportedFloatingTableColumns");
+      return unavailable('UnsupportedFloatingTableColumns');
     for (const declaration of declarations) {
       const columns = columnReferenceBoxes(first.boxes.page, declaration);
-      if (columns.state !== "placed" || columns.boxes.length !== 1)
-        return unavailable("UnsupportedFloatingTableColumns");
+      if (columns.state !== 'placed' || columns.boxes.length !== 1)
+        return unavailable('UnsupportedFloatingTableColumns');
     }
   }
   for (const owner of owners.values()) {
@@ -154,9 +154,9 @@ export function layoutFloatingTableBody(
     if (
       !owner.host ||
       !Number.isSafeInteger(owner.table.anchorUnit) ||
-      owner.host.text[owner.table.anchorUnit] !== "\ufffc"
+      owner.host.text[owner.table.anchorUnit] !== '\ufffc'
     )
-      return unavailable("InvalidFloatingTableAnchor");
+      return unavailable('InvalidFloatingTableAnchor');
   }
   const zeroWidthAnchors = new Map();
   for (const paragraph of body) {
@@ -195,10 +195,10 @@ export function layoutFloatingTableBody(
       ...pictureAnchors,
       ...delegated,
     ]);
-    if (anchors.state !== "resolved")
+    if (anchors.state !== 'resolved')
       return {
         ...unavailable(
-          anchors.anchorUnit === undefined ? anchors.error : "UnsupportedFloatingTableBodyControl",
+          anchors.anchorUnit === undefined ? anchors.error : 'UnsupportedFloatingTableBodyControl',
         ),
         section: paragraph.section,
         paragraph: paragraph.paragraph,
@@ -208,24 +208,24 @@ export function layoutFloatingTableBody(
   }
   let measurementRows = 0;
   for (const owner of owners.values()) {
-    if (measurementRows >= maxRows) return unavailable("TableCellMeasurementLimit");
+    if (measurementRows >= maxRows) return unavailable('TableCellMeasurementLimit');
     const hasChildren = content.tables.some(
       (table) =>
         table.section === owner.table.section && table.parentTableNode === owner.table.tableNode,
     );
     const sourceColumns = hasChildren ? null : tableSourceHorizontalLayout(owner.table);
-    if (sourceColumns && sourceColumns.state !== "resolved")
+    if (sourceColumns && sourceColumns.state !== 'resolved')
       return { ...sourceColumns, section: owner.table.section, tableNode: owner.table.tableNode };
     owner.measured = hasChildren
       ? measureNestedTable(content, owner.table, measure, {
           maxRows: maxRows - measurementRows,
-          overflow: "visible",
+          overflow: 'visible',
           measureCellFlow,
           pictureReferences,
         })
       : measureTableCells(owner.table, content.paragraphs, measure, {
           origin: { x: 0, y: 0 },
-          padding: "source",
+          padding: 'source',
           maxRows: maxRows - measurementRows,
           paragraphFlows: content.paragraphFlows,
           pictures: content.pictures ?? [],
@@ -233,7 +233,7 @@ export function layoutFloatingTableBody(
           pictureReferences,
           ...sourceColumns.gridOptions,
         });
-    if (owner.measured.state !== "measured") return owner.measured;
+    if (owner.measured.state !== 'measured') return owner.measured;
     owner.inline = owner.table.sourceGeometry?.geometry?.treat_as_character === true;
     const raw = owner.table.sourceGeometry?.out_margin;
     if (
@@ -241,7 +241,7 @@ export function layoutFloatingTableBody(
       raw.length !== 4 ||
       !raw.every((value) => Number.isSafeInteger(value) && value >= 0 && value <= 0x7fffffff)
     )
-      return unavailable("InvalidTableOuterInsets");
+      return unavailable('InvalidTableOuterInsets');
     const [left, right, top, bottom] = raw.map(hwpUnitPixels);
     owner.insets = { left, right, top, bottom };
     owner.width = owner.measured.grid.width + left + right;
@@ -264,7 +264,7 @@ export function layoutFloatingTableBody(
       ...placement.boxes,
       ...(placement.repeatedTableHeaderBoxes ?? []),
     ]);
-    if (contained.state !== "contained") return contained;
+    if (contained.state !== 'contained') return contained;
     const collected = inspectFloatingTablePlacement(
       table,
       placement,
@@ -273,7 +273,7 @@ export function layoutFloatingTableBody(
       placements,
       groupReservations,
     );
-    if (collected.state !== "collected") return collected;
+    if (collected.state !== 'collected') return collected;
     for (const [fragmentOrdinal, entry] of collected.footprints.entries()) {
       const footprint = entry.rectangle,
         ordinal = entry.pageOrdinal;
@@ -303,13 +303,13 @@ export function layoutFloatingTableBody(
     flowPictures.push(...(placement.flowPictures ?? []));
     repeatedTableHeaderRows.push(...(placement.repeatedTableHeaderRows ?? []));
     repeatedTableHeaderBoxes.push(...(placement.repeatedTableHeaderBoxes ?? []));
-    return { state: "registered" };
+    return { state: 'registered' };
   };
   const ensurePage = (ordinal) => {
     if (!Number.isSafeInteger(ordinal) || ordinal < 0 || ordinal >= 2000) return false;
     while (pages.length <= ordinal) {
       const ref = pageSequenceReference(setting, pages.length);
-      if (ref.state !== "placed") return false;
+      if (ref.state !== 'placed') return false;
       pages.push({
         ordinal: pages.length,
         section: setting.section_ordinal,
@@ -326,7 +326,7 @@ export function layoutFloatingTableBody(
     cursor = current.page.y;
     return true;
   };
-  if (!nextPage()) return unavailable("PageFlowLimit");
+  if (!nextPage()) return unavailable('PageFlowLimit');
   const space = (amount) => {
     if (amount > current.page.height) return false;
     if (cursor + amount > current.page.y + current.page.height && !nextPage()) return false;
@@ -349,14 +349,14 @@ export function layoutFloatingTableBody(
       owner = group.find((owner) => !owner.inline),
       table = owner?.table;
     if (flows.get(paragraph.paragraph).page_break === true && rows.length && !nextPage())
-      return unavailable("PageFlowLimit");
+      return unavailable('PageFlowLimit');
     if (!space(paragraphSpacePixels(paragraph.paragraphShape?.before)))
-      return unavailable("UnsupportedPageSpacing");
+      return unavailable('UnsupportedPageSpacing');
     const pictureGroup = pictureGroups.hosts.get(paragraph.paragraph);
     if (pictureGroup) {
-      if (!advanceTableAnchor()) return unavailable("FloatingTableCursorLimit");
+      if (!advanceTableAnchor()) return unavailable('FloatingTableCursorLimit');
       if (rows.length + flowAnchors.length + repeatedTableHeaderRows.length >= maxRows)
-        return unavailable("TablePageProjectionLimit");
+        return unavailable('TablePageProjectionLimit');
       let placed;
       for (;;) {
         placed = placeFloatingTablePictureGroup(
@@ -367,20 +367,20 @@ export function layoutFloatingTableBody(
           placements,
           groupReservations,
         );
-        if (placed.state !== "next-page") break;
-        if (!nextPage()) return unavailable("PageFlowLimit");
+        if (placed.state !== 'next-page') break;
+        if (!nextPage()) return unavailable('PageFlowLimit');
       }
-      if (placed.state !== "placed")
+      if (placed.state !== 'placed')
         return { ...placed, section: paragraph.section, rootNode: pictureGroup.root.containerNode };
       rows.push(placed.row);
       groupReservations.push(placed.reservation);
       cursor = placed.bottom;
       if (!space(paragraphSpacePixels(paragraph.paragraphShape?.after)))
-        return unavailable("UnsupportedPageSpacing");
+        return unavailable('UnsupportedPageSpacing');
       continue;
     }
     if (owner && !owner.inline) {
-      if (!advanceTableAnchor()) return unavailable("FloatingTableCursorLimit");
+      if (!advanceTableAnchor()) return unavailable('FloatingTableCursorLimit');
       const planned = planFloatingTablePlacement(
         table,
         owner.measured,
@@ -392,19 +392,19 @@ export function layoutFloatingTableBody(
         groupReservations,
         { pageOrdinal: current.ordinal, anchorY: cursor, maxRows: maxRows - rows.length },
       );
-      if (planned.state !== "planned") return planned;
+      if (planned.state !== 'planned') return planned;
       const placement = planned.placement;
       if (!ensurePage(placement.pages?.at(-1).ordinal ?? planned.pageOrdinal))
-        return unavailable("PageFlowLimit");
+        return unavailable('PageFlowLimit');
       current = pages[planned.pageOrdinal];
       cursor = planned.anchorY;
       const registered = registerPlacement(owner, placement);
-      if (registered.state !== "registered") return registered;
+      if (registered.state !== 'registered') return registered;
       if (tableHostProfile(paragraph, table)?.tableOnly === true) {
         if (rows.length + flowAnchors.length >= maxRows)
-          return unavailable("TablePageProjectionLimit");
+          return unavailable('TablePageProjectionLimit');
         flowAnchors.push({
-          kind: "anchor",
+          kind: 'anchor',
           height: 0,
           section: table.section,
           tableNode: table.tableNode,
@@ -416,7 +416,7 @@ export function layoutFloatingTableBody(
           y: cursor,
         });
         if (!space(paragraphSpacePixels(paragraph.paragraphShape?.after)))
-          return unavailable("UnsupportedPageSpacing");
+          return unavailable('UnsupportedPageSpacing');
         continue;
       }
     }
@@ -424,7 +424,7 @@ export function layoutFloatingTableBody(
       empty = paragraph.text.length === 0;
     while (unit < paragraph.text.length || empty) {
       if (rows.length + flowAnchors.length >= maxRows)
-        return unavailable("TablePageProjectionLimit");
+        return unavailable('TablePageProjectionLimit');
       const exclusions = floatingTableBodyExclusions(placements, current);
       const geometry = paragraphLineGeometry(
         { ...paragraph.paragraphShape, alignment: 0 },
@@ -445,12 +445,12 @@ export function layoutFloatingTableBody(
         const item = group.find((item) => position === item.table.anchorUnit);
         if (!item) return value;
         if (item.inline) {
-          const glyph = textMeasurement(measure("", p, position, kind));
+          const glyph = textMeasurement(measure('', p, position, kind));
           return { width: item.width, height: item.height, spacingBasisHeight: glyph.height };
         }
-        return typeof value === "number" ? 0 : { ...value, width: 0 };
+        return typeof value === 'number' ? 0 : { ...value, width: 0 };
       });
-      if (result.state !== "available") return unavailable(result.state);
+      if (result.state !== 'available') return unavailable(result.state);
       if (
         owner &&
         !owner.inline &&
@@ -458,16 +458,16 @@ export function layoutFloatingTableBody(
         result.endUnit > unit &&
         result.endUnit <= table.anchorUnit
       )
-        return unavailable("UnsupportedMultiLineFloatingTableAnchor");
-      if (result.height > current.page.height) return unavailable("UnsupportedPageRow");
+        return unavailable('UnsupportedMultiLineFloatingTableAnchor');
+      if (result.height > current.page.height) return unavailable('UnsupportedPageRow');
       if (cursor + result.height > current.page.y + current.page.height) {
-        if (!nextPage()) return unavailable("PageFlowLimit");
+        if (!nextPage()) return unavailable('PageFlowLimit');
         continue;
       }
       if ((!empty && result.endUnit === unit) || (empty && !result.regions.length)) {
         if (!Number.isFinite(result.nextY) || result.nextY <= cursor)
           return {
-            ...unavailable("NoFittingTableTextRegion"),
+            ...unavailable('NoFittingTableTextRegion'),
             section: paragraph.section,
             paragraph: paragraph.paragraph,
             tableNode: table?.tableNode,
@@ -484,7 +484,7 @@ export function layoutFloatingTableBody(
               })),
           };
         if (result.nextY + result.height > current.page.y + current.page.height) {
-          if (!nextPage()) return unavailable("PageFlowLimit");
+          if (!nextPage()) return unavailable('PageFlowLimit');
         } else cursor = result.nextY;
         continue;
       }
@@ -494,7 +494,7 @@ export function layoutFloatingTableBody(
           ? [
               {
                 ...result.regions[0],
-                text: "",
+                text: '',
                 startUnit: unit,
                 endUnit: unit,
                 boundaries: [{ unit, x: 0 }],
@@ -504,7 +504,7 @@ export function layoutFloatingTableBody(
           : [];
       for (const fragment of fragments) {
         if (rows.length + flowAnchors.length >= maxRows)
-          return unavailable("TablePageProjectionLimit");
+          return unavailable('TablePageProjectionLimit');
         const alignment = paragraphLineGeometry(
           { alignment: paragraph.paragraphShape?.alignment },
           fragment.width,
@@ -516,7 +516,7 @@ export function layoutFloatingTableBody(
             ...fragment,
             x: fragment.x + alignment.x,
             width: fragment.width - alignment.x,
-            kind: "text",
+            kind: 'text',
             y: cursor,
             height: result.height,
             section: paragraph.section,
@@ -546,7 +546,7 @@ export function layoutFloatingTableBody(
         )) {
           const table = owner.table;
           const boundary = row.boundaries.find((boundary) => boundary.unit === table.anchorUnit);
-          if (!boundary) return unavailable("MissingInlineTableBoundary");
+          if (!boundary) return unavailable('MissingInlineTableBoundary');
           const rectangle = {
             x: row.x + boundary.x,
             y: cursor,
@@ -569,9 +569,9 @@ export function layoutFloatingTableBody(
             owner.insets,
             { maxRows: maxRows - rows.length - 1 },
           );
-          if (projected.state !== "placed") return projected;
+          if (projected.state !== 'placed') return projected;
           const registered = registerPlacement(owner, { ...projected, rectangle });
-          if (registered.state !== "registered") return registered;
+          if (registered.state !== 'registered') return registered;
         }
         rows.push(row);
       }
@@ -580,7 +580,7 @@ export function layoutFloatingTableBody(
       cursor += result.height;
     }
     if (!space(paragraphSpacePixels(paragraph.paragraphShape?.after)))
-      return unavailable("UnsupportedPageSpacing");
+      return unavailable('UnsupportedPageSpacing');
   }
   const placedTables = new Map(
     placements.map((placement) => [placement.table.tableNode, placement.table]),
@@ -592,22 +592,22 @@ export function layoutFloatingTableBody(
       ).length !== 1
     )
       return {
-        ...unavailable("MissingFloatingTableCellPicturePlacement"),
+        ...unavailable('MissingFloatingTableCellPicturePlacement'),
         section: picture.section,
         pictureNode: picture.pictureNode,
       };
   if (rows.length + flowAnchors.length + repeatedTableHeaderRows.length > maxRows)
-    return unavailable("TablePageProjectionLimit");
-  if (placedTables.size !== owners.size) return unavailable("MissingFloatingTablePlacement");
+    return unavailable('TablePageProjectionLimit');
+  if (placedTables.size !== owners.size) return unavailable('MissingFloatingTablePlacement');
   let result = {
-    state: "paginated",
+    state: 'paginated',
     rows: rows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x),
     boxes,
     pages,
     height: pages.at(-1).paper.y + pages.at(-1).paper.height,
     spatialRows: true,
     limited: false,
-    pageLayoutMode: "measured-body",
+    pageLayoutMode: 'measured-body',
     ...(flowAnchors.length ? { flowAnchors } : {}),
     ...(flowPictures.length ? { flowPictures } : {}),
     ...(groupReservations.length ? { groupReservations } : {}),
@@ -622,24 +622,24 @@ export function layoutFloatingTableBody(
     })),
   };
   if (completeLayout) {
-    const completed = completeLayout({ ...result, state: "placed" });
-    if (completed?.state === "unavailable") return completed;
+    const completed = completeLayout({ ...result, state: 'placed' });
+    if (completed?.state === 'unavailable') return completed;
     if (
-      completed?.state !== "placed" ||
+      completed?.state !== 'placed' ||
       !Array.isArray(completed.rows) ||
       !Array.isArray(completed.boxes)
     )
-      return unavailable("InvalidTableLayoutCompletion");
+      return unavailable('InvalidTableLayoutCompletion');
     if (
       completed.rows.length +
         flowAnchors.length +
         (completed.repeatedTableHeaderRows?.length ?? 0) >
       maxRows
     )
-      return unavailable("TablePageProjectionLimit");
+      return unavailable('TablePageProjectionLimit');
     const contained = nestedTablePaperBounds(completed.boxes);
-    if (contained.state !== "contained") return contained;
-    result = { ...completed, state: "paginated" };
+    if (contained.state !== 'contained') return contained;
+    result = { ...completed, state: 'paginated' };
   }
   return result;
 }

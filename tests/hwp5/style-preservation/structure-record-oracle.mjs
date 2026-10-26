@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 import {
   inspect,
   records,
   paragraphRecords,
   expectedSection,
   encodeRecord,
-} from "./text-record-oracle.mjs";
+} from './text-record-oracle.mjs';
 
 // Independent framing ancestry and sibling LIST_HEADER scope; never import product offsets.
 export function scopes(all) {
@@ -28,9 +28,9 @@ export function expectedSplitSection(sections, section, paragraph, atUnit, endUn
   const source =
     endUnit === atUnit
       ? sections[section].bytes
-      : expectedSection(sections[section].bytes, paragraph, atUnit, endUnit, "");
+      : expectedSection(sections[section].bytes, paragraph, atUnit, endUnit, '');
   const original = paragraphRecords(source, paragraph);
-  const text = original.direct.find((r) => r.tag === 67)?.payload ?? Buffer.from("\r", "utf16le");
+  const text = original.direct.find((r) => r.tag === 67)?.payload ?? Buffer.from('\r', 'utf16le');
   const end = text.length / 2 - 1;
   assert(atUnit >= 0 && atUnit <= end);
   const used = new Set(
@@ -48,11 +48,11 @@ export function expectedSplitSection(sections, section, paragraph, atUnit, endUn
     (r, i) =>
       i > original.at && r.tag === 66 && parents[i] === parents[original.at] && owners[i] === owner,
   );
-  const leftBytes = expectedSection(source, paragraph, atUnit, end, "");
+  const leftBytes = expectedSection(source, paragraph, atUnit, end, '');
   const left = paragraphRecords(leftBytes, paragraph);
-  const right = paragraphRecords(expectedSection(source, paragraph, 0, atUnit, ""), paragraph);
+  const right = paragraphRecords(expectedSection(source, paragraph, 0, atUnit, ''), paragraph);
   const header = Buffer.from(right.head.payload);
-  const rightText = right.direct.find((r) => r.tag === 67)?.payload ?? Buffer.from("\r", "utf16le");
+  const rightText = right.direct.find((r) => r.tag === 67)?.payload ?? Buffer.from('\r', 'utf16le');
   const shapes = right.direct.find((r) => r.tag === 68).payload;
   header.writeUInt32LE(((last ? 0x80000000 : 0) | (rightText.length / 2)) >>> 0, 0);
   header[11] = 0;
@@ -91,7 +91,7 @@ export function verifySplit(input, output, section, paragraph, atUnit, endUnit =
   assert.deepEqual(
     after.sections[section].bytes,
     expectedSplitSection(before.sections, section, paragraph, atUnit, endUnit),
-    "whole split Section differs from independent expected records",
+    'whole split Section differs from independent expected records',
   );
   for (const [path, bytes] of before.streams)
     if (path !== before.sections[section].path)

@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { postLineOracle } from "./chart-post-line-oracle.mjs";
-import { observeSeriesPrefix as observe } from "./chart-series-prefix-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { postLineOracle } from './chart-post-line-oracle.mjs';
+import { observeSeriesPrefix as observe } from './chart-series-prefix-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   typeRejects = 0,
   ids = 0,
@@ -16,17 +16,17 @@ const err = (name) => (e) => e.constructor === Error && e.message === name;
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const prior = postLineOracle(b),
       r = observe(b, prior.end, prior.r.types, prior.r.objects);
     if (verify) {
       for (let cut = prior.end; cut < r.end; cut++) {
         assert.throws(
           () => observe(b.subarray(0, cut), prior.end, prior.r.types, prior.r.objects),
-          err("IncompleteSeriesPrefixObservation"),
+          err('IncompleteSeriesPrefixObservation'),
         );
         cuts++;
       }
@@ -36,7 +36,7 @@ try {
           bad[at] ^= 1;
           assert.throws(
             () => observe(bad, prior.end, prior.r.types, prior.r.objects),
-            err("UnsupportedSeriesPrefixObservationType"),
+            err('UnsupportedSeriesPrefixObservationType'),
           );
           typeRejects++;
         }
@@ -46,7 +46,7 @@ try {
           wrong.set(id, { ...wrong.get(id), version: 99 });
           assert.throws(
             () => observe(b, prior.end, wrong, prior.r.objects),
-            err("UnsupportedSeriesPrefixObservationType"),
+            err('UnsupportedSeriesPrefixObservationType'),
           );
           typeRejects++;
         }
@@ -56,7 +56,7 @@ try {
           bad.writeUInt32LE(id, at);
           assert.throws(
             () => observe(bad, prior.end, prior.r.types, prior.r.objects),
-            err("UnsupportedSeriesPrefixObservationObject"),
+            err('UnsupportedSeriesPrefixObservationObject'),
           );
           ids++;
         }
@@ -64,7 +64,7 @@ try {
       repeat.writeUInt32LE(r.objectId, r.array.start);
       assert.throws(
         () => observe(repeat, prior.end, prior.r.types, prior.r.objects),
-        err("UnsupportedSeriesPrefixObservationObject"),
+        err('UnsupportedSeriesPrefixObservationObject'),
       );
       ids++;
       assert.deepEqual(observe(b.subarray(0, r.end), prior.end, prior.r.types, prior.r.objects), r);
@@ -75,7 +75,7 @@ try {
       raw.fill(0xff, r.rawStart, r.array.start);
       assert.deepEqual(observe(raw, prior.end, prior.r.types, prior.r.objects), {
         ...r,
-        raw66: "ff".repeat(66),
+        raw66: 'ff'.repeat(66),
       });
       variants++;
       const words = Buffer.from(b);
@@ -91,7 +91,7 @@ try {
     rows.push({
       sha256: digest(b),
       ...view,
-      nextBytes: b.subarray(r.end, r.end + 32).toString("hex"),
+      nextBytes: b.subarray(r.end, r.end + 32).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);
@@ -101,7 +101,7 @@ try {
         corpus,
         charts: rows.length,
         lengths: [...new Set(rows.map((r) => r.end - r.start))],
-        words: [...new Set(rows.map((r) => r.array.first + "/" + r.array.second))],
+        words: [...new Set(rows.map((r) => r.array.first + '/' + r.array.second))],
         rawVariants: new Set(rows.map((r) => r.raw66)).size,
         verification: verify ? { cuts, typeRejects, ids, variants } : null,
         rows,

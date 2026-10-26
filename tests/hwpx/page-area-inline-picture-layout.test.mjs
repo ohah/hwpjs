@@ -1,24 +1,24 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { layoutPageAreaInlinePictures } from "../../web/preview/page-area-inline-picture-layout.mjs";
-import { inlinePictureIndex } from "../../web/preview/picture-inline.mjs";
-import { inlinePictureRowPlacement } from "../../web/preview/inline-picture-row-placement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { layoutPageAreaInlinePictures } from '../../web/preview/page-area-inline-picture-layout.mjs';
+import { inlinePictureIndex } from '../../web/preview/picture-inline.mjs';
+import { inlinePictureRowPlacement } from '../../web/preview/inline-picture-row-placement.mjs';
 
 function fixture() {
   return {
-    paragraphs: [{ section: 0, paragraph: 3, text: "A\ufffcB" }],
+    paragraphs: [{ section: 0, paragraph: 3, text: 'A\ufffcB' }],
     paragraphFlows: [
       {
         section: 0,
         paragraph: 3,
-        host: "footer",
+        host: 'footer',
         page_area: {
           owner_node: 10,
           list_node: 11,
-          apply: "both",
+          apply: 'both',
           width: 15000,
           height: 7500,
-          vertical_alignment: "top",
+          vertical_alignment: 'top',
         },
       },
     ],
@@ -32,7 +32,7 @@ function fixture() {
         paragraph: 3,
         anchorUnit: 1,
         pictureNode: 12,
-        state: "located",
+        state: 'located',
         transform: { identity: true },
         geometry: {
           width: 1500,
@@ -56,16 +56,16 @@ const page = (ordinal) => ({
   footer: { x: 20, y: ordinal * 500 + 320, width: 240, height: 100 },
 });
 
-test("one source inline footer picture has distinct page-local placements without source mutation", () => {
+test('one source inline footer picture has distinct page-local placements without source mutation', () => {
   const area = fixture(),
     before = structuredClone(area),
     item = [...inlinePictureIndex(area).values()][0];
   const placements = [0, 1].map((ordinal) => {
     const layout = layoutPageAreaInlinePictures(area, page(ordinal), measure, 100);
-    assert.equal(layout.state, "placed", layout.error);
+    assert.equal(layout.state, 'placed', layout.error);
     const row = layout.rows.find((row) => row.startUnit <= 1 && row.endUnit > 1);
     const placement = inlinePictureRowPlacement(item, row, layout.rows.indexOf(row));
-    assert.equal(placement.state, "placed", placement.error);
+    assert.equal(placement.state, 'placed', placement.error);
     assert.equal(placement.pageOrdinal, ordinal);
     assert.ok(row.height >= item.height);
     return placement;
@@ -75,7 +75,7 @@ test("one source inline footer picture has distinct page-local placements withou
   assert.deepEqual(area, before);
 });
 
-test("unsupported or ambiguous inline footer sources are refused rather than silently omitted", () => {
+test('unsupported or ambiguous inline footer sources are refused rather than silently omitted', () => {
   for (const change of [
     (area) => {
       area.pictures[0].geometry.treatAsCharacter = false;
@@ -90,23 +90,23 @@ test("unsupported or ambiguous inline footer sources are refused rather than sil
       area.pictures[0].caption = {};
     },
     (area) => {
-      area.paragraphs[0].text = "ABC";
+      area.paragraphs[0].text = 'ABC';
     },
   ]) {
     const area = fixture();
     change(area);
-    assert.equal(layoutPageAreaInlinePictures(area, page(0), measure, 100).state, "unavailable");
+    assert.equal(layoutPageAreaInlinePictures(area, page(0), measure, 100).state, 'unavailable');
   }
-  assert.equal(layoutPageAreaInlinePictures(fixture(), page(0), measure, 0).state, "unavailable");
+  assert.equal(layoutPageAreaInlinePictures(fixture(), page(0), measure, 0).state, 'unavailable');
 });
 
-test("repeated footer measurement is order independent across revisited pages", () => {
+test('repeated footer measurement is order independent across revisited pages', () => {
   const area = fixture(),
     before = structuredClone(area);
   const snapshots = new Map();
   for (const ordinal of [0, 9, 1, 19, 9, 0, 19, 1]) {
     const layout = layoutPageAreaInlinePictures(area, page(ordinal), measure, 100);
-    assert.equal(layout.state, "placed", layout.error);
+    assert.equal(layout.state, 'placed', layout.error);
     assert.ok(layout.rows.length > 0);
     assert.ok(layout.rows.every((row) => row.pageOrdinal === ordinal));
     if (snapshots.has(ordinal)) assert.deepEqual(layout, snapshots.get(ordinal));

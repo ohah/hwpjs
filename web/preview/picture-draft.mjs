@@ -1,4 +1,4 @@
-import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
+import { projectDraftAnchoredObjects } from './anchored-object-draft.mjs';
 
 // 임시 입력의 위치만 투영합니다. 원본 그림과 native 문서 값은 변경하지 않습니다.
 export function projectDraftPictures(content, draft) {
@@ -11,7 +11,7 @@ export function projectDraftPictures(content, draft) {
       ...picture,
       paragraph: picture.owner.paragraph,
       anchorUnit: picture.owner.anchorUnit,
-      state: "located",
+      state: 'located',
     };
   });
   return projectDraftAnchoredObjects(content, adapted, draft).map((picture) => {

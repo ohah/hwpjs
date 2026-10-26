@@ -1,9 +1,9 @@
-import { documentTextPageFitHeight } from "./document-text-page-fit.mjs";
+import { documentTextPageFitHeight } from './document-text-page-fit.mjs';
 // Placement consumes the full advance. Explicit fit extents cover discardable
 // outer spacing and source atomic tables whose complete ink fits the paper.
 export function pageRowFitHeight(row) {
   if (!row || !Number.isFinite(row.height) || row.height < 0) return null;
-  if (!Object.hasOwn(row, "pageFitHeight")) return documentTextPageFitHeight(row) ?? row.height;
+  if (!Object.hasOwn(row, 'pageFitHeight')) return documentTextPageFitHeight(row) ?? row.height;
   return Number.isFinite(row.pageFitHeight) &&
     row.pageFitHeight > 0 &&
     row.pageFitHeight <= row.height &&

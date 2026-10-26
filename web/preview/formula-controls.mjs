@@ -1,5 +1,5 @@
 // The form edits a draft; native Worker responses own current definitions.
-import { createFormulaResultControls } from "./formula-result-controls.mjs";
+import { createFormulaResultControls } from './formula-result-controls.mjs';
 export function createFormulaControls({
   form,
   fields,
@@ -28,11 +28,11 @@ export function createFormulaControls({
     resultControls?.update();
   };
   const select = (refreshResult = true) => {
-    input.value = selected()?.formula ?? "";
+    input.value = selected()?.formula ?? '';
     if (refreshResult) resultControls?.select(selected());
     update();
   };
-  choices.addEventListener("change", select);
+  choices.addEventListener('change', select);
   const submit = (event) => {
     event.preventDefault();
     update();
@@ -41,28 +41,28 @@ export function createFormulaControls({
     update();
     if (fields.disabled || !available || selected() !== row) return;
     if (new TextEncoder().encode(input.value).length > 4096) {
-      note.textContent = "수식은 UTF-8 4096바이트 이하여야 합니다.";
+      note.textContent = '수식은 UTF-8 4096바이트 이하여야 합니다.';
       return;
     }
     note.textContent = request({
-      kind: "formula-definition",
-      origin: "formula",
+      kind: 'formula-definition',
+      origin: 'formula',
       section: row.section,
       beginElement: row.beginElement,
       formula: input.value,
     })
-      ? "수식 반영 중…"
-      : "입력 반영이 끝난 뒤 적용하세요.";
+      ? '수식 반영 중…'
+      : '입력 반영이 끝난 뒤 적용하세요.';
     update();
   };
-  form.addEventListener("submit", submit);
+  form.addEventListener('submit', submit);
   const reset = () => {
     rows = [];
     enabled = false;
     available = false;
     choices.replaceChildren();
-    input.value = "";
-    note.textContent = "";
+    input.value = '';
+    note.textContent = '';
     resultControls?.reset();
     update();
   };
@@ -73,8 +73,8 @@ export function createFormulaControls({
       if (closed) return;
       closed = true;
       resultControls?.close();
-      choices.removeEventListener("change", select);
-      form.removeEventListener("submit", submit);
+      choices.removeEventListener('change', select);
+      form.removeEventListener('submit', submit);
       reset();
     },
     selectCanvas(row) {
@@ -94,8 +94,8 @@ export function createFormulaControls({
     },
     message(message) {
       if (closed) return;
-      if (message.kind === "load" || message.kind === "unlock") reset();
-      if (message.kind === "enable" && !message.error) enabled = true;
+      if (message.kind === 'load' || message.kind === 'unlock') reset();
+      if (message.kind === 'enable' && !message.error) enabled = true;
       if (message.content) {
         available = message.content.formulaDefinitionAvailable === true;
         const previous = choices.value;
@@ -104,9 +104,9 @@ export function createFormulaControls({
         rows = message.content.formulas ?? [];
         choices.replaceChildren(
           ...rows.map((row) => {
-            const option = choices.ownerDocument.createElement("option");
+            const option = choices.ownerDocument.createElement('option');
             option.value = `${row.section}:${row.beginElement}`;
-            option.textContent = `구역 ${row.section + 1} · 수식 ${row.beginElement} · ${row.last_result ?? ""}`;
+            option.textContent = `구역 ${row.section + 1} · 수식 ${row.beginElement} · ${row.last_result ?? ''}`;
             return option;
           }),
         );
@@ -114,13 +114,13 @@ export function createFormulaControls({
           choices.value = previous;
         select(false);
         const authoritative =
-          ["load", "unlock", "enable", "undo", "redo"].includes(message.kind) ||
-          (message.kind === "formula-definition" && !message.error);
+          ['load', 'unlock', 'enable', 'undo', 'redo'].includes(message.kind) ||
+          (message.kind === 'formula-definition' && !message.error);
         if (!authoritative && choices.value === previous && selected()?.formula === previousFormula)
           input.value = draft;
       }
-      if (message.kind === "formula-definition")
-        note.textContent = message.error ? `수식 변경 실패: ${message.error}` : "수식 적용 완료";
+      if (message.kind === 'formula-definition')
+        note.textContent = message.error ? `수식 변경 실패: ${message.error}` : '수식 적용 완료';
       resultControls?.message(message, selected());
       update();
     },

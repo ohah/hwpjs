@@ -1,6 +1,6 @@
 export function decodePictureCrop(bytes) {
   const fail = () => {
-    throw new Error("InvalidPictureCrop");
+    throw new Error('InvalidPictureCrop');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length !== 48) fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength),

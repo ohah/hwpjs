@@ -1,18 +1,18 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { drawingPictureScope } from "../../web/preview/drawing-picture-scope.mjs";
-import { pictureTextMeasure } from "../../web/preview/picture-text-measurement.mjs";
-import { layoutDrawingBodyContent } from "../../web/preview/drawing-body-content-layout.mjs";
-import { paginateBodyRows } from "../../web/preview/page-row-flow.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { drawingPictureScope } from '../../web/preview/drawing-picture-scope.mjs';
+import { pictureTextMeasure } from '../../web/preview/picture-text-measurement.mjs';
+import { layoutDrawingBodyContent } from '../../web/preview/drawing-body-content-layout.mjs';
+import { paginateBodyRows } from '../../web/preview/page-row-flow.mjs';
 
 function fixture() {
   const paragraphs = [
-    { section: 0, paragraph: 0, text: "\ufffc" },
-    { section: 0, paragraph: 1, text: "\ufffc", drawingText: { drawingNode: 10, listNode: 11 } },
+    { section: 0, paragraph: 0, text: '\ufffc' },
+    { section: 0, paragraph: 1, text: '\ufffc', drawingText: { drawingNode: 10, listNode: 11 } },
   ];
   const picture = {
-    state: "located",
+    state: 'located',
     section: 0,
     paragraph: 1,
     pictureNode: 12,
@@ -34,33 +34,33 @@ function fixture() {
   };
 }
 
-test("drawing-local inline pictures are measured in their owner, not the filtered body", () => {
+test('drawing-local inline pictures are measured in their owner, not the filtered body', () => {
   const content = fixture(),
     before = structuredClone(content);
   const scope = drawingPictureScope(content, [content.paragraphs[0]]);
-  assert.equal(scope.state, "scoped", scope.error);
+  assert.equal(scope.state, 'scoped', scope.error);
   assert.deepEqual(
     scope.bodyPictures.map((p) => p.pictureNode),
     [20],
   );
-  assert.deepEqual([...scope.localIds], ["0:12"]);
+  assert.deepEqual([...scope.localIds], ['0:12']);
   const measure = pictureTextMeasure(scope.inlineIndex, [], () => ({ width: 8, height: 20 }));
-  assert.deepEqual(measure("\ufffc", content.paragraphs[1], 0, "text"), { width: 20, height: 30 });
-  assert.deepEqual(measure("\ufffc", content.paragraphs[0], 0, "text"), { width: 8, height: 20 });
+  assert.deepEqual(measure('\ufffc', content.paragraphs[1], 0, 'text'), { width: 20, height: 30 });
+  assert.deepEqual(measure('\ufffc', content.paragraphs[0], 0, 'text'), { width: 8, height: 20 });
   assert.deepEqual(content, before);
 });
 
-test("drawing picture ownership rejects ambiguous, unsupported, and damaged local pictures", () => {
+test('drawing picture ownership rejects ambiguous, unsupported, and damaged local pictures', () => {
   for (const [mutate, error] of [
-    [(c) => c.paragraphs.push({ ...c.paragraphs[1] }), "AmbiguousDrawingPictureOwner"],
-    [(c) => c.pictures.push({ ...c.pictures[0] }), "AmbiguousDrawingPictureOwner"],
+    [(c) => c.paragraphs.push({ ...c.paragraphs[1] }), 'AmbiguousDrawingPictureOwner'],
+    [(c) => c.pictures.push({ ...c.pictures[0] }), 'AmbiguousDrawingPictureOwner'],
     [
       (c) => (c.pictures[0].geometry.treatAsCharacter = false),
-      "UnsupportedDrawingLocalFloatingPicture",
+      'UnsupportedDrawingLocalFloatingPicture',
     ],
-    [(c) => (c.pictures[0].caption = {}), "UnsupportedDrawingLocalPictureCaption"],
-    [(c) => (c.pictures[0].cropError = "InvalidCrop"), "InvalidDrawingLocalPicture"],
-    [(c) => (c.pictures[0].anchorUnit = 1), "InvalidDrawingLocalPicture"],
+    [(c) => (c.pictures[0].caption = {}), 'UnsupportedDrawingLocalPictureCaption'],
+    [(c) => (c.pictures[0].cropError = 'InvalidCrop'), 'InvalidDrawingLocalPicture'],
+    [(c) => (c.pictures[0].anchorUnit = 1), 'InvalidDrawingLocalPicture'],
   ]) {
     const content = fixture();
     mutate(content);
@@ -68,14 +68,14 @@ test("drawing picture ownership rejects ambiguous, unsupported, and damaged loca
   }
 });
 
-test("drawing body integration retains and measures a local inline picture without root projection", () => {
+test('drawing body integration retains and measures a local inline picture without root projection', () => {
   const content = fixture();
   content.pictures.pop();
   const setting = {
     width: 15000,
     height: 22500,
-    orientation: "widely",
-    gutter_type: "left_only",
+    orientation: 'widely',
+    gutter_type: 'left_only',
     duplicate_margins: 0,
     margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
   };
@@ -89,7 +89,7 @@ test("drawing body integration retains and measures a local inline picture witho
       page_break: false,
       column_break: false,
     },
-    { section: 0, paragraph: 1, top_level: false, host: "drawing", column_declaration: null },
+    { section: 0, paragraph: 1, top_level: false, host: 'drawing', column_declaration: null },
   ];
   content.drawings = [
     {
@@ -143,7 +143,7 @@ test("drawing body integration retains and measures a local inline picture witho
       ]);
       const rows = body.paragraphs.map((p) => ({
         ...p,
-        kind: "text",
+        kind: 'text',
         startUnit: 0,
         endUnit: p.text.length,
         width: 200,
@@ -153,22 +153,22 @@ test("drawing body integration retains and measures a local inline picture witho
       return { ...page, pages: page.pages.map((p) => ({ ...p, section: 0 })) };
     },
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   const local = result.rows.find((row) => row.paragraph === 1);
-  assert.equal(local.text, "\ufffc");
+  assert.equal(local.text, '\ufffc');
   assert.equal(local.textHeight, 30);
   assert.equal(local.boundaries.at(-1).x - local.boundaries[0].x, 20);
   assert.equal(result.flowPictures.length, 0);
   assert.deepEqual(content, before);
 });
 
-test("actual reference drawing picture ownership excludes nested inline pictures from the body", async (t) => {
+test('actual reference drawing picture ownership excludes nested inline pictures from the body', async (t) => {
   const files = [
-    "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",
-    "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx",
+    'reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx',
+    'reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx',
   ];
   if (files.some((file) => !existsSync(file))) {
-    t.skip("reference fixtures unavailable");
+    t.skip('reference fixtures unavailable');
     return;
   }
   const priorSelf = globalThis.self,
@@ -176,14 +176,14 @@ test("actual reference drawing picture ownership excludes nested inline pictures
     replies = [];
   globalThis.self = { postMessage: (value) => replies.push(value) };
   globalThis.fetch = async () =>
-    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
   t.after(() => {
     globalThis.self = priorSelf;
     globalThis.fetch = priorFetch;
   });
   await import(`../../web/preview/reader-worker.mjs?drawing-picture-scope=${Date.now()}`);
   for (const [index, file] of files.entries()) {
-    await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: readFileSync(file) } });
+    await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: readFileSync(file) } });
     assert.equal(replies.length, 1);
     const reply = replies.shift();
     assert.equal(reply.error, undefined);
@@ -191,8 +191,8 @@ test("actual reference drawing picture ownership excludes nested inline pictures
       before = JSON.stringify(content);
     const body = content.paragraphs.filter((p) => !p.drawingText && !p.drawingCaption);
     const scope = drawingPictureScope(content, body);
-    assert.equal(scope.state, "scoped", scope.error);
-    assert.deepEqual([...scope.localIds], index === 0 ? ["0:2187", "0:2211"] : ["0:615", "0:639"]);
+    assert.equal(scope.state, 'scoped', scope.error);
+    assert.deepEqual([...scope.localIds], index === 0 ? ['0:2187', '0:2211'] : ['0:615', '0:639']);
     assert.equal(scope.inlineIndex.size, 2);
     assert.ok(
       scope.bodyPictures.every((p) =>

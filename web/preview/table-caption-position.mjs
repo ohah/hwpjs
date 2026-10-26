@@ -1,12 +1,12 @@
 /** Place a measured caption relative to an explicit table rectangle. */
 export function positionTableCaption(rectangle, measured, { side, gap, verticalAlignment } = {}) {
-  const fail = () => ({ state: "unavailable", error: "InvalidTableCaptionPosition" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidTableCaptionPosition' });
   if (
     !rectangle ||
     ![rectangle.x, rectangle.y, rectangle.width, rectangle.height].every(Number.isFinite) ||
     rectangle.width <= 0 ||
     rectangle.height < 0 ||
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     ![measured.width, measured.height].every(Number.isFinite) ||
     measured.width <= 0 ||
     measured.height < 0 ||
@@ -42,7 +42,7 @@ export function positionTableCaption(rectangle, measured, { side, gap, verticalA
     height = Math.max(bottom, tableBottom) - top;
   if (![width, height].every(Number.isFinite)) return fail();
   return {
-    state: "positioned",
+    state: 'positioned',
     captionRectangle: { x, y, width: measured.width, height: measured.height },
     bounds: { x: left, y: top, width, height },
     rows,

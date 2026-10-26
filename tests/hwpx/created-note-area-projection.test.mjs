@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { placeFootnoteArea } from "../../web/preview/footnote-area-placement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { placeFootnoteArea } from '../../web/preview/footnote-area-placement.mjs';
 
 const policy = {
-  state: "selected",
+  state: 'selected',
   section: 0,
-  kind: "footnote",
+  kind: 'footnote',
   aboveLine: 2,
   belowLine: 3,
   betweenNotes: 4,
@@ -16,33 +16,33 @@ function note() {
   return {
     section: 0,
     noteNode: 1,
-    kind: "footnote",
+    kind: 'footnote',
     width: 100,
     height: 30,
     rows: [
       {
-        kind: "text",
+        kind: 'text',
         x: 11,
         y: 6,
         height: 16,
-        createdCell: { identity: "1", row: 0, column: 0 },
+        createdCell: { identity: '1', row: 0, column: 0 },
         pageClip: { x: 5, y: 0, width: 50, height: 30 },
       },
     ],
     boxes: [
-      { x: 5, y: 0, width: 50, height: 30, createdCell: { identity: "1", row: 0, column: 0 } },
+      { x: 5, y: 0, width: 50, height: 30, createdCell: { identity: '1', row: 0, column: 0 } },
     ],
     numberPrefixes: [
-      { x: 0, y: 0, height: 20, numberPrefix: { text: "1)", width: 8, height: 16 } },
+      { x: 0, y: 0, height: 20, numberPrefix: { text: '1)', width: 8, height: 16 } },
     ],
   };
 }
 
-test("footnote area translates generated boxes clips and prefixes once without mutation", () => {
+test('footnote area translates generated boxes clips and prefixes once without mutation', () => {
   const input = note(),
     before = structuredClone(input);
   const result = placeFootnoteArea([input], policy, column, 40, 1, 2);
-  assert.equal(result.state, "placed", result.error);
+  assert.equal(result.state, 'placed', result.error);
   assert.equal(result.boxes.length, 1);
   assert.equal(result.numberPrefixes.length, 1);
   assert.equal(result.rows[0].pageClip.x, result.boxes[0].x);
@@ -53,7 +53,7 @@ test("footnote area translates generated boxes clips and prefixes once without m
   assert.deepEqual(input, before);
 });
 
-test("footnote projection budgets include earlier prefixes and reject invalid boxes", () => {
+test('footnote projection budgets include earlier prefixes and reject invalid boxes', () => {
   const second = {
     ...note(),
     noteNode: 2,
@@ -66,12 +66,12 @@ test("footnote projection budgets include earlier prefixes and reject invalid bo
   };
   assert.equal(
     placeFootnoteArea([note(), second], policy, column, 40, 1, 3).error,
-    "FootnoteAreaLimit",
+    'FootnoteAreaLimit',
   );
   const wide = note();
   wide.boxes[0].width = 101;
-  assert.equal(placeFootnoteArea([wide], policy, column, 40, 1).error, "InvalidFootnoteArea");
+  assert.equal(placeFootnoteArea([wide], policy, column, 40, 1).error, 'InvalidFootnoteArea');
   const missing = note();
   delete missing.boxes[0].width;
-  assert.equal(placeFootnoteArea([missing], policy, column, 40, 1).error, "InvalidFootnoteArea");
+  assert.equal(placeFootnoteArea([missing], policy, column, 40, 1).error, 'InvalidFootnoteArea');
 });

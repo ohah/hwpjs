@@ -1,6 +1,6 @@
-import { tableBindings } from "./table-binding-oracle.mjs";
-import { paragraphRecords } from "./text-record-oracle.mjs";
-import { variedScalarSites } from "./scalar-sites.mjs";
+import { tableBindings } from './table-binding-oracle.mjs';
+import { paragraphRecords } from './text-record-oracle.mjs';
+import { variedScalarSites } from './scalar-sites.mjs';
 
 // Representative native UTF-16 range from independent raw cell/list ownership.
 export function firstTableCellScalar(raw, tableNode) {

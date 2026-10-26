@@ -1,9 +1,9 @@
 // 같은 줄의 분리된 영역을 순서대로 소비합니다.
-import { isHardLineBreak } from "./hard-line-break.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { createTabRowState } from "./tab-row-state.mjs";
-import { createTextLineWidth } from "./text-line-width.mjs";
-import { trailingSpaceStart, hangsTrailingSpace } from "./trailing-space-flow.mjs";
+import { isHardLineBreak } from './hard-line-break.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { createTabRowState } from './tab-row-state.mjs';
+import { createTextLineWidth } from './text-line-width.mjs';
+import { trailingSpaceStart, hangsTrailingSpace } from './trailing-space-flow.mjs';
 export function regionTextFragments(
   text,
   startUnit,
@@ -17,20 +17,20 @@ export function regionTextFragments(
   } = {},
 ) {
   if (!Number.isFinite(minimumTextHeight) || minimumTextHeight < 0)
-    throw new RangeError("InvalidTextMeasurement");
+    throw new RangeError('InvalidTextMeasurement');
   if (
-    typeof text !== "string" ||
+    typeof text !== 'string' ||
     !Number.isInteger(startUnit) ||
     startUnit < 0 ||
     startUnit > text.length
   )
-    throw new RangeError("InvalidFragmentStart");
-  const segments = new Intl.Segmenter("ko", { granularity: "grapheme" });
+    throw new RangeError('InvalidFragmentStart');
+  const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' });
   if (
     startUnit !== text.length &&
     segments.segment(text).containing(startUnit)?.index !== startUnit
   )
-    throw new RangeError("InvalidFragmentStart");
+    throw new RangeError('InvalidFragmentStart');
   let previousEnd = -Infinity;
   for (const region of regions) {
     if (
@@ -38,7 +38,7 @@ export function regionTextFragments(
       region.width < 0 ||
       region.x < previousEnd
     )
-      throw new RangeError("InvalidFragmentRegions");
+      throw new RangeError('InvalidFragmentRegions');
     previousEnd = region.x + region.width;
   }
   const pending = segments.segment(text.slice(startUnit))[Symbol.iterator]();
@@ -47,19 +47,19 @@ export function regionTextFragments(
   let unit = startUnit;
   if (
     numberPrefix !== null &&
-    (typeof numberPrefix.text !== "string" ||
+    (typeof numberPrefix.text !== 'string' ||
       !Number.isFinite(numberPrefix.width) ||
       numberPrefix.width < 0 ||
       !Number.isFinite(numberPrefix.height) ||
       numberPrefix.height <= 0)
   )
-    throw new RangeError("InvalidTextMeasurement");
+    throw new RangeError('InvalidTextMeasurement');
   let pendingPrefix = startUnit === 0 ? numberPrefix : null;
   const trailingStart = trailingSpaceStart(text);
   for (const region of regions) {
     const prefix = pendingPrefix;
     if (prefix && prefix.width > region.width) continue;
-    let value = "",
+    let value = '',
       textHeight = prefix?.height ?? 0,
       spacingBasisHeight = prefix?.height ?? 0,
       inlineSpacing = false;
@@ -83,7 +83,7 @@ export function regionTextFragments(
     });
     while (!current.done) {
       if (isHardLineBreak(current.value.segment)) {
-        const emptyHeight = textMeasurement(measure("", unit)).height;
+        const emptyHeight = textMeasurement(measure('', unit)).height;
         textHeight = Math.max(textHeight, emptyHeight);
         spacingBasisHeight = Math.max(spacingBasisHeight, emptyHeight);
         value += current.value.segment;
@@ -94,13 +94,13 @@ export function regionTextFragments(
       }
       const segment = current.value.segment,
         measured = measure(segment, unit);
-      const width = typeof measured === "number" ? measured : measured?.width;
-      const height = typeof measured === "number" ? 20 : measured?.height;
-      if (!Number.isFinite(width) || width < 0) throw new RangeError("InvalidTextMeasurement");
-      if (!Number.isFinite(height) || height <= 0) throw new RangeError("InvalidTextMeasurement");
+      const width = typeof measured === 'number' ? measured : measured?.width;
+      const height = typeof measured === 'number' ? 20 : measured?.height;
+      if (!Number.isFinite(width) || width < 0) throw new RangeError('InvalidTextMeasurement');
+      if (!Number.isFinite(height) || height <= 0) throw new RangeError('InvalidTextMeasurement');
       const basis =
         measured?.spacingBasisHeight === undefined ? height : measured.spacingBasisHeight;
-      if (!Number.isFinite(basis) || basis <= 0) throw new RangeError("InvalidTextMeasurement");
+      if (!Number.isFinite(basis) || basis <= 0) throw new RangeError('InvalidTextMeasurement');
       const occupied = lineWidth.probe(measured);
       const hanging =
         region.x + region.width === hangingRightEdge &&

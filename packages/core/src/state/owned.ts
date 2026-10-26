@@ -2,26 +2,26 @@
 export function copyOwned<T>(value: T, observation = false, seen = new Set<object>()): T {
   if (
     value === null ||
-    typeof value === "string" ||
-    typeof value === "boolean" ||
-    typeof value === "undefined"
+    typeof value === 'string' ||
+    typeof value === 'boolean' ||
+    typeof value === 'undefined'
   )
     return value;
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) throw new TypeError("InvalidNumber");
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw new TypeError('InvalidNumber');
     return value;
   }
-  if (typeof value !== "object") throw new TypeError("UnsupportedPayload");
+  if (typeof value !== 'object') throw new TypeError('UnsupportedPayload');
   if (
-    typeof SharedArrayBuffer !== "undefined" &&
+    typeof SharedArrayBuffer !== 'undefined' &&
     (value instanceof SharedArrayBuffer ||
       (ArrayBuffer.isView(value) && value.buffer instanceof SharedArrayBuffer))
   )
-    throw new TypeError("SharedBufferUnsupported");
+    throw new TypeError('SharedBufferUnsupported');
   if (value instanceof Uint8Array)
     return new Uint8Array(value.buffer, value.byteOffset, value.byteLength).slice() as T;
   if (value instanceof ArrayBuffer) return value.slice(0) as T;
-  if (seen.has(value)) throw new TypeError("CyclicPayload");
+  if (seen.has(value)) throw new TypeError('CyclicPayload');
   seen.add(value);
   try {
     if (observation && value instanceof Map)
@@ -32,12 +32,12 @@ export function copyOwned<T>(value: T, observation = false, seen = new Set<objec
       return new Set([...value].map((v) => copyOwned(v, true, seen))) as T;
     if (Array.isArray(value)) return value.map((v) => copyOwned(v, observation, seen)) as T;
     const proto = Object.getPrototypeOf(value);
-    if (proto !== Object.prototype && proto !== null) throw new TypeError("UnsupportedPayload");
+    if (proto !== Object.prototype && proto !== null) throw new TypeError('UnsupportedPayload');
     const result: Record<string, unknown> = Object.create(null);
     for (const key of Reflect.ownKeys(value)) {
-      if (typeof key !== "string") throw new TypeError("UnsupportedPayload");
+      if (typeof key !== 'string') throw new TypeError('UnsupportedPayload');
       const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
-      if (!("value" in descriptor)) throw new TypeError("AccessorPayloadUnsupported");
+      if (!('value' in descriptor)) throw new TypeError('AccessorPayloadUnsupported');
       if (observation && /^(password|plaintext|decryptedBytes)$/i.test(key)) continue;
       result[key] = copyOwned(descriptor.value, observation, seen);
     }
@@ -49,7 +49,7 @@ export function copyOwned<T>(value: T, observation = false, seen = new Set<objec
 export function freezeDTO<T>(value: T): T {
   if (
     value &&
-    typeof value === "object" &&
+    typeof value === 'object' &&
     !(value instanceof ArrayBuffer) &&
     !ArrayBuffer.isView(value) &&
     !(value instanceof Map) &&
@@ -63,8 +63,8 @@ export function freezeDTO<T>(value: T): T {
 export function isPromiseLike(value: unknown): value is PromiseLike<unknown> {
   return (
     !!value &&
-    (typeof value === "object" || typeof value === "function") &&
-    typeof (value as { then?: unknown }).then === "function"
+    (typeof value === 'object' || typeof value === 'function') &&
+    typeof (value as { then?: unknown }).then === 'function'
   );
 }
 /** Consume rejections from prohibited async callbacks without awaiting them. */
@@ -75,7 +75,7 @@ export function discardPromise(value: unknown): void {
 const immutableObservations = new WeakSet<object>();
 /** Stable plain DTOs with copy-on-access leaves for mutable built-in containers. */
 export function ownObservation<T>(value: T): () => T {
-  if (value && typeof value === "object" && immutableObservations.has(value)) return () => value;
+  if (value && typeof value === 'object' && immutableObservations.has(value)) return () => value;
   const owned = copyOwned(value, true);
   const mutable = (item: unknown) =>
     item instanceof ArrayBuffer ||
@@ -83,7 +83,7 @@ export function ownObservation<T>(value: T): () => T {
     item instanceof Map ||
     item instanceof Set;
   const build = (item: unknown): unknown => {
-    if (item === null || typeof item !== "object") return item;
+    if (item === null || typeof item !== 'object') return item;
     const node: Record<string, unknown> | unknown[] = Array.isArray(item)
       ? // oxlint-disable-next-line unicorn/no-new-array -- 소유 DTO 복제 시 원래 배열 길이와 희소 슬롯을 그대로 보존한다.
         new Array(item.length)

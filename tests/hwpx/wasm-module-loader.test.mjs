@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createPreviewWasmModuleLoader } from "../../web/preview/wasm-module-loader.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createPreviewWasmModuleLoader } from '../../web/preview/wasm-module-loader.mjs';
 
-test("parallel and later document loads share one fetched compiled module", async () => {
+test('parallel and later document loads share one fetched compiled module', async () => {
   let fetches = 0,
     compilations = 0;
   const module = {};
   const load = createPreviewWasmModuleLoader({
-    url: "/candidate.wasm",
+    url: '/candidate.wasm',
     fetchImpl: async (url, options) => {
       fetches++;
-      assert.equal(url, "/candidate.wasm");
-      assert.equal(options.cache, "no-cache");
+      assert.equal(url, '/candidate.wasm');
+      assert.equal(options.cache, 'no-cache');
       return new Response(new Uint8Array([1]));
     },
     compile: async (bytes) => {
@@ -28,29 +28,29 @@ test("parallel and later document loads share one fetched compiled module", asyn
   assert.equal(compilations, 1);
 });
 
-test("HTTP and compilation failures clear the pending module and can retry", async () => {
-  for (const phase of ["http", "compile"]) {
+test('HTTP and compilation failures clear the pending module and can retry', async () => {
+  for (const phase of ['http', 'compile']) {
     let attempts = 0;
     const load = createPreviewWasmModuleLoader({
       fetchImpl: async () => {
         attempts++;
         return new Response(new Uint8Array([1]), {
-          status: phase === "http" && attempts === 1 ? 503 : 200,
+          status: phase === 'http' && attempts === 1 ? 503 : 200,
         });
       },
       compile: async () => {
-        if (phase === "compile" && attempts === 1) throw Error("CompileFailed");
-        return "ready";
+        if (phase === 'compile' && attempts === 1) throw Error('CompileFailed');
+        return 'ready';
       },
     });
-    await assert.rejects(load(), phase === "http" ? /WASM HTTP 503/ : /CompileFailed/);
-    assert.equal(await load(), "ready");
+    await assert.rejects(load(), phase === 'http' ? /WASM HTTP 503/ : /CompileFailed/);
+    assert.equal(await load(), 'ready');
     assert.equal(attempts, 2);
   }
 });
 
-test("stalled headers or body time out, abort transport, and permit a fresh retry", async () => {
-  for (const phase of ["headers", "body"]) {
+test('stalled headers or body time out, abort transport, and permit a fresh retry', async () => {
+  for (const phase of ['headers', 'body']) {
     let expire,
       signal,
       finish,
@@ -72,11 +72,11 @@ test("stalled headers or body time out, abort transport, and permit a fresh retr
       fetchImpl: async (_, options) => {
         signal = options.signal;
         if (++attempts > 1) return new Response(new Uint8Array([1]));
-        return phase === "headers" ? stalled : { ok: true, arrayBuffer: () => stalled };
+        return phase === 'headers' ? stalled : { ok: true, arrayBuffer: () => stalled };
       },
       compile: async () => {
         compilations++;
-        return "ready";
+        return 'ready';
       },
     });
     const first = load();
@@ -87,17 +87,17 @@ test("stalled headers or body time out, abort transport, and permit a fresh retr
     await rejected;
     assert.equal(signal.aborted, true);
     assert.equal(clears, 1);
-    assert.equal(await load(), "ready");
-    finish(phase === "headers" ? new Response(new Uint8Array([2])) : new ArrayBuffer(1));
+    assert.equal(await load(), 'ready');
+    finish(phase === 'headers' ? new Response(new Uint8Array([2])) : new ArrayBuffer(1));
     await new Promise((resolve) => setImmediate(resolve));
     assert.equal(compilations, 1);
     assert.equal(clears, 2);
-    assert.equal(await load(), "ready");
+    assert.equal(await load(), 'ready');
     assert.equal(attempts, 2);
   }
 });
 
-test("download deadline is cleared before slow compilation and invalid limits fail early", async () => {
+test('download deadline is cleared before slow compilation and invalid limits fail early', async () => {
   for (const timeoutMs of [0, -1, NaN, Infinity, 1.5]) {
     assert.throws(() => createPreviewWasmModuleLoader({ timeoutMs }), /InvalidWasmDownloadTimeout/);
   }
@@ -119,6 +119,6 @@ test("download deadline is cleared before slow compilation and invalid limits fa
   const result = load();
   while (!finish) await new Promise((resolve) => setImmediate(resolve));
   assert.equal(load(), result);
-  finish("compiled");
-  assert.equal(await result, "compiled");
+  finish('compiled');
+  assert.equal(await result, 'compiled');
 });

@@ -1,11 +1,11 @@
-import { createMemory } from "./wasm-memory.mjs";
-import { decodeEntry } from "./cfb-entry.mjs";
-import { createFinder } from "./cfb-find.mjs";
-import { validateAbi } from "./abi.mjs";
-import { inputBytes, decodeInput } from "./input.mjs";
-import { outputBytes } from "./output-bytes.mjs";
-import { encodeDocument, decodeDocument } from "./cfb-document.mjs";
-export { removeNode } from "./cfb-document.mjs";
+import { createMemory } from './wasm-memory.mjs';
+import { decodeEntry } from './cfb-entry.mjs';
+import { createFinder } from './cfb-find.mjs';
+import { validateAbi } from './abi.mjs';
+import { inputBytes, decodeInput } from './input.mjs';
+import { outputBytes } from './output-bytes.mjs';
+import { encodeDocument, decodeDocument } from './cfb-document.mjs';
+export { removeNode } from './cfb-document.mjs';
 
 /** Browser/Node CFB memory API. Returned arrays own their data. */
 export async function createCfbReader(source) {
@@ -53,8 +53,8 @@ export async function createCfbReader(source) {
     }
   }
   function read(data, options = {}) {
-    const type = options?.type || "base64";
-    if (type === "file") throw new Error("Use cfb-node.mjs for filesystem input");
+    const type = options?.type || 'base64';
+    if (type === 'file') throw new Error('Use cfb-node.mjs for filesystem input');
     return parse(decodeInput(data, type), options);
   }
   return {
@@ -77,7 +77,7 @@ export async function createCfbReader(source) {
       }
     },
     findExact(path) {
-      if (typeof path !== "string" || !path.isWellFormed()) throw new TypeError("InvalidName");
+      if (typeof path !== 'string' || !path.isWellFormed()) throw new TypeError('InvalidName');
       return memory.withBytes(new TextEncoder().encode(path), (ptr, size) => {
         const index = wasm.cfb_find_exact(ptr, size);
         if (index === -2) throw memory.error();

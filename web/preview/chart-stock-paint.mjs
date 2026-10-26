@@ -1,4 +1,4 @@
-import { clipChartLineSegment } from "./chart-line-clip.mjs";
+import { clipChartLineSegment } from './chart-line-clip.mjs';
 
 export function validChartStock(stock) {
   return (
@@ -10,7 +10,7 @@ export function validChartStock(stock) {
     ) &&
     stock.bodies.every(
       (row) =>
-        ["up", "down", "equal"].includes(row.direction) &&
+        ['up', 'down', 'equal'].includes(row.direction) &&
         row.rectangle &&
         [row.first_y, row.last_y].every(Number.isFinite) &&
         row.rectangle.y === Math.min(row.first_y, row.last_y) &&
@@ -40,7 +40,7 @@ export function paintChartStock(ctx, stock, plot, x, y) {
     ctx.beginPath();
     ctx.rect(x, y, plot.width, plot.height);
     ctx.clip();
-    ctx.strokeStyle = "#444444";
+    ctx.strokeStyle = '#444444';
     ctx.lineWidth = 1;
     for (const row of stock.high_low) {
       const segment = clipChartLineSegment({ x: row.x, y: row.y1 }, { x: row.x, y: row.y2 });
@@ -60,7 +60,7 @@ export function paintChartStock(ctx, stock, plot, x, y) {
       const left = x + r.x * plot.width,
         top = y + start * plot.height,
         height = (end - start) * plot.height;
-      ctx.fillStyle = row.direction === "down" ? "#444444" : "#ffffff";
+      ctx.fillStyle = row.direction === 'down' ? '#444444' : '#ffffff';
       ctx.fillRect(left, top, r.width * plot.width, height);
       if (r.height === 0) {
         ctx.beginPath();

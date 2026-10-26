@@ -1,11 +1,11 @@
-import { ownedShapeDocument } from "./owned-shape-document.mjs";
-import { curveOwnerActual, curveOwnerRun } from "./curve-validation.mjs";
+import { ownedShapeDocument } from './owned-shape-document.mjs';
+import { curveOwnerActual, curveOwnerRun } from './curve-validation.mjs';
 export function curveDocumentReference(call, cfb) {
   const { objects, ...rest } = ownedShapeDocument(call, cfb, {
-    file: "3-09월_교육_통합_2022.hwp",
+    file: '3-09월_교육_통합_2022.hwp',
     tag: 83,
     count: 1,
-    group: "curves",
+    group: 'curves',
     field: 4,
     maxDecodedBytes: 128 * 1024 * 1024,
     minimum: (b, r) => {

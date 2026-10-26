@@ -6,9 +6,9 @@ export function bindFileInput(input, onChange) {
       return onChange(event);
     } finally {
       // The loader has captured the File; permit the same path next time.
-      if (selected && input.files?.[0] === selected) input.value = "";
+      if (selected && input.files?.[0] === selected) input.value = '';
     }
   };
-  input.addEventListener("change", change);
+  input.addEventListener('change', change);
   if (input.files?.length) change();
 }

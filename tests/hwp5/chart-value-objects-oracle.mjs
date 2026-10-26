@@ -1,4 +1,4 @@
-import { chartGridCellsOracle } from "./chart-grid-cells-oracle.mjs";
+import { chartGridCellsOracle } from './chart-grid-cells-oracle.mjs';
 export const integer = (n, size = 4) => {
   const b = Buffer.alloc(size);
   b.writeUIntLE(n, 0, size);

@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { checkDocinfo } from "./docinfo.mjs";
+import assert from 'node:assert/strict';
+import { checkDocinfo } from './docinfo.mjs';
 const version = 0x05010001;
 function word(n) {
   const b = Buffer.alloc(4);
@@ -112,7 +112,7 @@ export function shapeMutations(call) {
           error = e;
         }
         if (error) {
-          assert.equal(error.message, "UnexpectedEnd");
+          assert.equal(error.message, 'UnexpectedEnd');
           rejected++;
         } else {
           checkDocinfo(call, version, frame(tag, b));

@@ -9,7 +9,7 @@ class Node extends EventTarget {
     this.nodeType = type;
     this.childNodes = [];
     this.parentNode = null;
-    this.namespaceURI = "http://www.w3.org/1999/xhtml";
+    this.namespaceURI = 'http://www.w3.org/1999/xhtml';
     this.attributes = new Map();
     this.style = {
       setProperty(name, value) {
@@ -19,7 +19,7 @@ class Node extends EventTarget {
         delete this[name];
       },
     };
-    this._text = "";
+    this._text = '';
   }
   get firstChild() {
     return this.childNodes[0] ?? null;
@@ -61,7 +61,7 @@ class Node extends EventTarget {
     return this.attributes.get(name) ?? null;
   }
   get textContent() {
-    return this._text + this.childNodes.map((node) => node.textContent).join("");
+    return this._text + this.childNodes.map((node) => node.textContent).join('');
   }
   set textContent(value) {
     this._text = String(value);
@@ -80,18 +80,18 @@ class Node extends EventTarget {
 }
 export function installDOM() {
   const previous = Object.getOwnPropertyDescriptors(globalThis);
-  const document = new Node("#document", null, 9);
+  const document = new Node('#document', null, 9);
   document.ownerDocument = document;
   document.createElement = (name) => new Node(name, document);
   document.createElementNS = (_, name) => document.createElement(name);
   document.createTextNode = (text) => {
-    const node = new Node("#text", document, 3);
+    const node = new Node('#text', document, 3);
     node.nodeValue = text;
     node.textContent = text;
     return node;
   };
-  document.documentElement = document.createElement("html");
-  document.body = document.createElement("body");
+  document.documentElement = document.createElement('html');
+  document.body = document.createElement('body');
   document.documentElement.appendChild(document.body);
   document.appendChild(document.documentElement);
   document.activeElement = document.body;
@@ -101,7 +101,7 @@ export function installDOM() {
     HTMLElement: Node,
     HTMLIFrameElement: class {},
     event: undefined,
-    location: { protocol: "http:" },
+    location: { protocol: 'http:' },
   };
   document.defaultView = window;
   for (const [name, value] of Object.entries({
@@ -112,18 +112,18 @@ export function installDOM() {
     IS_REACT_ACT_ENVIRONMENT: true,
   }))
     Object.defineProperty(globalThis, name, { value, configurable: true, writable: true });
-  const container = document.createElement("div");
+  const container = document.createElement('div');
   document.body.appendChild(container);
   return {
     document,
     container,
     restore() {
       for (const name of [
-        "window",
-        "document",
-        "Node",
-        "HTMLElement",
-        "IS_REACT_ACT_ENVIRONMENT",
+        'window',
+        'document',
+        'Node',
+        'HTMLElement',
+        'IS_REACT_ACT_ENVIRONMENT',
       ]) {
         if (previous[name]) Object.defineProperty(globalThis, name, previous[name]);
         else delete globalThis[name];

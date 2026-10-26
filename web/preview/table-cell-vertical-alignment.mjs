@@ -1,7 +1,7 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
 /** Align measured flat content inside the final cell box, after row-span sizing. */
 export function alignTableCellFlow(flow, cellHeight, insets, alignment = 0) {
-  if (![0, 1, 2].includes(alignment)) throw new Error("UnsupportedCellVerticalAlignment");
+  if (![0, 1, 2].includes(alignment)) throw new Error('UnsupportedCellVerticalAlignment');
   if (
     !flow ||
     !Array.isArray(flow.rows) ||
@@ -11,15 +11,15 @@ export function alignTableCellFlow(flow, cellHeight, insets, alignment = 0) {
     insets.top < 0 ||
     insets.bottom < 0
   )
-    throw new Error("InvalidCellVerticalAlignment");
+    throw new Error('InvalidCellVerticalAlignment');
   // Top alignment adds no translation; retain existing projection overflow checks.
   if (alignment === 0) return flow;
   // Use the same addition order as grid content sizing; subtraction can lose an ulp.
   const required = flow.height + insets.top + insets.bottom;
   if (!Number.isFinite(required) || required > cellHeight)
-    throw new Error("CellVerticalAlignmentOverflow");
+    throw new Error('CellVerticalAlignmentOverflow');
   const shift = ((cellHeight - required) * alignment) / 2;
-  if (!Number.isFinite(shift + flow.height)) throw new Error("InvalidCellVerticalAlignment");
+  if (!Number.isFinite(shift + flow.height)) throw new Error('InvalidCellVerticalAlignment');
   // 이미 영역을 채운 중첩 흐름은 이동할 필요가 없습니다.
   if (shift === 0) return flow;
   if (
@@ -29,7 +29,7 @@ export function alignTableCellFlow(flow, cellHeight, insets, alignment = 0) {
         (row) => row && Number.isFinite(row.y) && row.y >= 0 && row.y <= flow.height,
       ))
   )
-    throw new Error("InvalidTableCellPageBreak");
+    throw new Error('InvalidTableCellPageBreak');
   if (
     flow.floatingDrawings !== undefined &&
     (!Array.isArray(flow.floatingDrawings) ||
@@ -46,7 +46,7 @@ export function alignTableCellFlow(flow, cellHeight, insets, alignment = 0) {
           ),
       ))
   )
-    throw new Error("InvalidCellFloatingDrawingReservation");
+    throw new Error('InvalidCellFloatingDrawingReservation');
   // Floating tables are positioned later from their host paragraph rows. Moving
   // those rows here moves the table once; its source descriptor stays unchanged.
   if (
@@ -71,10 +71,10 @@ export function alignTableCellFlow(flow, cellHeight, insets, alignment = 0) {
             box.y + box.height > flow.height + 1e-8,
         )))
   )
-    throw new Error("UnsupportedNestedCellVerticalAlignment");
+    throw new Error('UnsupportedNestedCellVerticalAlignment');
   const movePicture = (picture) => {
     const moved = translatePicturePlacement(picture, 0, shift);
-    if (moved.state !== "translated") throw new Error("InvalidCellVerticalAlignment");
+    if (moved.state !== 'translated') throw new Error('InvalidCellVerticalAlignment');
     return moved.picture;
   };
   return {

@@ -1,20 +1,20 @@
 // Requests only; current state remains native/Worker-owned until its response.
-import { canvasDocumentPoint } from "./canvas-pointer-coordinates.mjs";
+import { canvasDocumentPoint } from './canvas-pointer-coordinates.mjs';
 export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note, ready, request }) {
   let pending = false,
     selected = null,
     closed = false;
-  const baseLabel = canvas.getAttribute?.("aria-label") ?? "문서 내용 Canvas";
+  const baseLabel = canvas.getAttribute?.('aria-label') ?? '문서 내용 Canvas';
   const label = (row) =>
     canvas.setAttribute(
-      "aria-label",
-      `${row.caption ?? "체크박스"} · ${row.state} · ${row.editable ? "Space로 상태 변경" : "읽기 전용"}`,
+      'aria-label',
+      `${row.caption ?? '체크박스'} · ${row.state} · ${row.editable ? 'Space로 상태 변경' : '읽기 전용'}`,
     );
   const reset = () => {
     pending = false;
     selected = null;
-    note.textContent = "";
-    canvas.setAttribute("aria-label", baseLabel);
+    note.textContent = '';
+    canvas.setAttribute('aria-label', baseLabel);
   };
   const current = () =>
     renderer
@@ -27,13 +27,13 @@ export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note,
   const apply = (row) => {
     if (closed || pending || !ready() || row?.editable !== true) return false;
     const cycle = row.triState
-      ? ["UNCHECKED", "CHECKED", "INDETERMINATE"]
-      : ["UNCHECKED", "CHECKED"];
+      ? ['UNCHECKED', 'CHECKED', 'INDETERMINATE']
+      : ['UNCHECKED', 'CHECKED'];
     const at = cycle.indexOf(row.state),
       state =
         at < 0
-          ? row.state === "INDETERMINATE"
-            ? "CHECKED"
+          ? row.state === 'INDETERMINATE'
+            ? 'CHECKED'
             : null
           : cycle[(at + 1) % cycle.length];
     if (state === null) return false;
@@ -41,8 +41,8 @@ export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note,
     try {
       if (
         !request({
-          kind: "checkbox-state",
-          origin: "checkbox",
+          kind: 'checkbox-state',
+          origin: 'checkbox',
           section: row.section,
           formNode: row.formNode,
           state,
@@ -56,7 +56,7 @@ export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note,
       note.textContent = `체크박스 요청 실패: ${error.message}`;
       return false;
     }
-    note.textContent = "체크박스 상태 반영 중…";
+    note.textContent = '체크박스 상태 반영 중…';
     return true;
   };
   const hit = (event) => {
@@ -85,13 +85,13 @@ export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note,
     if (event.buttons) return;
     const row = hit(event);
     if (row?.editable && ready() && !pending) {
-      canvas.style.cursor = "pointer";
+      canvas.style.cursor = 'pointer';
       event.stopImmediatePropagation();
     }
   };
   const key = (event) => {
     if (
-      event.key !== " " ||
+      event.key !== ' ' ||
       event.repeat ||
       event.ctrlKey ||
       event.metaKey ||
@@ -105,13 +105,13 @@ export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note,
     event.stopImmediatePropagation();
     apply(row);
   };
-  canvas.addEventListener("pointerdown", pointer, { capture: true });
-  canvas.addEventListener("pointermove", hover, { capture: true });
-  canvas.addEventListener("keydown", key, { capture: true });
+  canvas.addEventListener('pointerdown', pointer, { capture: true });
+  canvas.addEventListener('pointermove', hover, { capture: true });
+  canvas.addEventListener('keydown', key, { capture: true });
   return {
     reset,
     message(message) {
-      if (message.kind === "load" || message.kind === "unlock") reset();
+      if (message.kind === 'load' || message.kind === 'unlock') reset();
       if (message.content && selected) {
         const row = message.content.checkBoxes?.find(
           (value) => value.section === selected.section && value.formNode === selected.formNode,
@@ -119,22 +119,22 @@ export function createCheckBoxCanvasControls({ canvas, viewport, renderer, note,
         if (row) label(row);
         else {
           selected = null;
-          canvas.setAttribute("aria-label", baseLabel);
+          canvas.setAttribute('aria-label', baseLabel);
         }
       }
-      if (message.kind === "checkbox-state") {
+      if (message.kind === 'checkbox-state') {
         pending = false;
         note.textContent = message.error
           ? `체크박스 변경 실패: ${message.error}`
-          : "체크박스 상태를 적용했습니다.";
+          : '체크박스 상태를 적용했습니다.';
       }
     },
     close() {
       if (closed) return;
       closed = true;
-      canvas.removeEventListener("pointerdown", pointer, { capture: true });
-      canvas.removeEventListener("pointermove", hover, { capture: true });
-      canvas.removeEventListener("keydown", key, { capture: true });
+      canvas.removeEventListener('pointerdown', pointer, { capture: true });
+      canvas.removeEventListener('pointermove', hover, { capture: true });
+      canvas.removeEventListener('keydown', key, { capture: true });
       reset();
     },
   };

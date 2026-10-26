@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { checkBody } from "./body.mjs";
+import assert from 'node:assert/strict';
+import { checkBody } from './body.mjs';
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);

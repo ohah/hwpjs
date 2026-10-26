@@ -1,18 +1,18 @@
-import { validateHwp5DrawingStyleSources } from "../../js/hwp5-drawing-style-sources.mjs";
-import { gradientStepStops } from "./gradient-step-stops.mjs";
-import { hwp5DrawingPaintTail } from "./hwp5-drawing-paint-tail.mjs";
-import { colorrefCss } from "./colorref-css.mjs";
-import { hwp5StrokeDisplay } from "./hwp5-stroke-display.mjs";
-const hatches = ["HORIZONTAL", "VERTICAL", "BACK_SLASH", "SLASH", "CROSS", "CROSS_DIAGONAL"];
+import { validateHwp5DrawingStyleSources } from '../../js/hwp5-drawing-style-sources.mjs';
+import { gradientStepStops } from './gradient-step-stops.mjs';
+import { hwp5DrawingPaintTail } from './hwp5-drawing-paint-tail.mjs';
+import { colorrefCss } from './colorref-css.mjs';
+import { hwp5StrokeDisplay } from './hwp5-stroke-display.mjs';
+const hatches = ['HORIZONTAL', 'VERTICAL', 'BACK_SLASH', 'SLASH', 'CROSS', 'CROSS_DIAGONAL'];
 export function hwp5DrawingPaintPlan(style) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   try {
     validateHwp5DrawingStyleSources([style]);
   } catch (error) {
     return fail(error.message);
   }
   const tail = hwp5DrawingPaintTail(style);
-  if (tail.state !== "selected") return tail;
+  if (tail.state !== 'selected') return tail;
   const color = colorrefCss;
   const line = style.border.attributes.raw & 63;
   const cap = (style.border.attributes.raw >>> 6) & 15;
@@ -24,36 +24,36 @@ export function hwp5DrawingPaintPlan(style) {
     ((style.border.attributes.raw >>> 16) & 63) !== 0 ||
     style.border.outline !== 0
   )
-    return fail("UnsupportedHwp5DrawingStroke");
+    return fail('UnsupportedHwp5DrawingStroke');
   let fill;
-  if (style.fill_flags === 0 && style.additional_bytes === 0) fill = { state: "none" };
+  if (style.fill_flags === 0 && style.additional_bytes === 0) fill = { state: 'none' };
   else if (style.fill_flags === 1 && style.additional_bytes === 0 && style.alpha.pattern === 0) {
     const pattern = style.pattern,
       background = color(pattern.background),
       foreground = color(pattern.foreground);
-    if (!background || !foreground) return fail("UnsupportedHwp5DrawingFillColor");
-    if (pattern.kind === -1) fill = { state: "solid", color: background };
+    if (!background || !foreground) return fail('UnsupportedHwp5DrawingFillColor');
+    if (pattern.kind === -1) fill = { state: 'solid', color: background };
     else if (hatches[pattern.kind])
       fill = {
-        state: "pattern",
+        state: 'pattern',
         background,
         color: foreground,
         kind: hatches[pattern.kind],
-        rasterParity: "unverified",
+        rasterParity: 'unverified',
       };
-    else return fail("UnsupportedHwp5DrawingHatch");
+    else return fail('UnsupportedHwp5DrawingHatch');
   } else if (style.fill_flags === 4 && style.additional_bytes === 1 && style.alpha.gradient === 0) {
     const g = style.gradient;
     if (!g || g.kind !== 1 || g.positions.length !== 0 || g.blur_center === null)
-      return fail("UnsupportedHwp5DrawingGradient");
+      return fail('UnsupportedHwp5DrawingGradient');
     try {
       const stops = gradientStepStops(g.colors.map(color), g.blur, g.blur_center);
       fill = stops.length
-        ? { state: "linear_gradient", angle: g.angle, stops, rasterParity: "unverified" }
-        : { state: "none" };
+        ? { state: 'linear_gradient', angle: g.angle, stops, rasterParity: 'unverified' }
+        : { state: 'none' };
     } catch (error) {
       return fail(error.message);
     }
-  } else return fail("UnsupportedHwp5DrawingFill");
-  return { state: "planned", stroke, fill, shadowType: tail.shadowType, tailPolicy: tail.policy };
+  } else return fail('UnsupportedHwp5DrawingFill');
+  return { state: 'planned', stroke, fill, shadowType: tail.shadowType, tailPolicy: tail.policy };
 }

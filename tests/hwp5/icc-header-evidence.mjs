@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 export function iccExtent(bytes, limit = 64 * 1024 * 1024) {
   assert.ok(bytes.length <= limit && bytes.length >= 132);
   assert.equal(bytes.readUInt32BE(0), bytes.length);
@@ -12,7 +12,7 @@ export function iccWireMajor(bytes) {
   assert.ok(major === 2 || major === 4);
   assert.equal(bytes[10], 0);
   assert.equal(bytes[11], 0);
-  assert.equal(bytes.toString("latin1", 36, 40), "acsp");
+  assert.equal(bytes.toString('latin1', 36, 40), 'acsp');
   return major;
 }
 export function iccDigest(bytes) {
@@ -20,7 +20,7 @@ export function iccDigest(bytes) {
   copy.fill(0, 44, 48);
   copy.fill(0, 64, 68);
   copy.fill(0, 84, 100);
-  return createHash("md5").update(copy).digest();
+  return createHash('md5').update(copy).digest();
 }
 export function iccHeaderWire(bytes, limit) {
   const major = iccExtent(bytes, limit),

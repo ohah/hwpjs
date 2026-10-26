@@ -1,20 +1,20 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
 import {
   inspect,
   records,
   paragraphRecords,
   expectedSection,
   encodeRecord,
-} from "./style-preservation/text-record-oracle.mjs";
-import { generalNumber } from "./style-preservation/general-number-oracle.mjs";
-import { verifyChartFormulas } from "./style-preservation/formula-record-oracle.mjs";
+} from './style-preservation/text-record-oracle.mjs';
+import { generalNumber } from './style-preservation/general-number-oracle.mjs';
+import { verifyChartFormulas } from './style-preservation/formula-record-oracle.mjs';
 
-test("all thirteen HWP5 formula fields save independent MIN MAX arithmetic and exact history", async () => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+test('all thirteen HWP5 formula fields save independent MIN MAX arithmetic and exact history', async () => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp');
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   const probe = await createExperimentalHwp5Editor(wasm, input);
   let rows;
   try {
@@ -25,11 +25,11 @@ test("all thirteen HWP5 formula fields save independent MIN MAX arithmetic and e
   assert.equal(rows.length, 13);
   const before = inspect(input);
   for (const row of rows)
-    for (const operation of ["MIN", "MAX"]) {
+    for (const operation of ['MIN', 'MAX']) {
       const editor = await createExperimentalHwp5Editor(wasm, input);
       try {
         editor.enableHistory();
-        const formula = row.formula.replace(/^=(SUM|AVG)/, "=" + operation);
+        const formula = row.formula.replace(/^=(SUM|AVG)/, '=' + operation);
         assert.notEqual(formula, row.formula);
         editor.setFormulaDefinition({ section: 0, sourceNode: row.source_node, formula });
         const saved = editor.save({ allowStaleLayout: true }).bytes,
@@ -56,38 +56,38 @@ test("all thirteen HWP5 formula fields save independent MIN MAX arithmetic and e
     }
 });
 
-test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic through history and reopen", async () => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+test('public HWP5 definitions preserve PRODUCT and repeated reference arithmetic through history and reopen', async () => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp');
   const original = inspect(input),
     section = original.sections[0].bytes;
   const values = [19, 20, 21, 22].map((index) =>
     Number(
       paragraphRecords(section, index)
         .direct.find((row) => row.tag === 67)
-        .payload.toString("utf16le")
-        .replace(/\r$/, ""),
+        .payload.toString('utf16le')
+        .replace(/\r$/, ''),
     ),
   );
   assert.deepEqual(values, [11.2, 24.7, 16.3, 15.3]);
   const [b, c] = values;
   for (const [formula, value] of [
-    ["=PRODUCT(B?:E?)", values.reduce((total, n) => total * n, 1)],
-    ["=PRODUCT(B?,C?,B?)", b * c * b],
-    ["=SUM(B?,C?,B?)", b + c + b],
-    ["=AVG(B?,C?,B?)", (b + c + b) / 3],
-    ["=AVERAGE(B?,C?,B?)", (b + c + b) / 3],
-    ["=SUM(B?)", b],
-    ["=MIN(B?:E?)", Math.min(...values)],
-    ["=MAX(B?,C?,B?)", Math.max(b, c, b)],
+    ['=PRODUCT(B?:E?)', values.reduce((total, n) => total * n, 1)],
+    ['=PRODUCT(B?,C?,B?)', b * c * b],
+    ['=SUM(B?,C?,B?)', b + c + b],
+    ['=AVG(B?,C?,B?)', (b + c + b) / 3],
+    ['=AVERAGE(B?,C?,B?)', (b + c + b) / 3],
+    ['=SUM(B?)', b],
+    ['=MIN(B?:E?)', Math.min(...values)],
+    ['=MAX(B?,C?,B?)', Math.max(b, c, b)],
     [
-      "=SUM(" + Array(32).fill("B?").join(",") + ")",
+      '=SUM(' + Array(32).fill('B?').join(',') + ')',
       Array(32)
         .fill(b)
         .reduce((total, n) => total + n, 0),
     ],
   ]) {
     const editor = await createExperimentalHwp5Editor(
-      readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+      readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
       input,
     );
     try {
@@ -101,7 +101,7 @@ test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic
         );
       const length = field.payload.readUInt16LE(9) * 2;
       assert.equal(
-        field.payload.subarray(11, 11 + length).toString("utf16le"),
+        field.payload.subarray(11, 11 + length).toString('utf16le'),
         `${formula}??%g,;;${generalNumber(value)}`,
       );
       for (const [path, bytes] of original.streams)
@@ -111,7 +111,7 @@ test("public HWP5 definitions preserve PRODUCT and repeated reference arithmetic
       assert.equal(editor.redo(), true);
       assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
       const reopened = await createExperimentalHwp5Editor(
-        readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+        readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
         saved,
       );
       try {
@@ -134,8 +134,8 @@ function expectedDefinition(input) {
   assert.equal(field.payload.readUInt32LE(0), 0x25666d75);
   const oldLength = field.payload.readUInt16LE(9) * 2;
   assert.equal(
-    field.payload.subarray(11, 11 + oldLength).toString("utf16le"),
-    "=SUM(B?:E?)??%g,;;67.5",
+    field.payload.subarray(11, 11 + oldLength).toString('utf16le'),
+    '=SUM(B?:E?)??%g,;;67.5',
   );
   const text = paragraphRecords(section, 23).direct.find((row) => row.tag === 67).payload;
   let start, end;
@@ -152,11 +152,11 @@ function expectedDefinition(input) {
     }
     unit += width;
   }
-  assert.equal(text.subarray(start * 2, end * 2).toString("utf16le"), "67.5");
-  const projected = expectedSection(section, 23, start, end, "16.875", {
+  assert.equal(text.subarray(start * 2, end * 2).toString('utf16le'), '67.5');
+  const projected = expectedSection(section, 23, start, end, '16.875', {
     skipLocalFieldAttributes: true,
   });
-  const command = Buffer.from("=AVG(B?:E?)??%g,;;16.875", "utf16le"),
+  const command = Buffer.from('=AVG(B?:E?)??%g,;;16.875', 'utf16le'),
     tail = field.payload.subarray(11 + oldLength);
   const payload = Buffer.concat([field.payload.subarray(0, 11), command, tail]);
   payload.writeUInt32LE(field.payload.readUInt32LE(4) | 0x8000, 4);
@@ -176,19 +176,19 @@ function expectedDefinition(input) {
   return { before, expected };
 }
 
-test("HWP5 extrema use current negative inputs and recalculate after a later numeric edit", async () => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+test('HWP5 extrema use current negative inputs and recalculate after a later numeric edit', async () => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp');
   const editor = await createExperimentalHwp5Editor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
     input,
   );
   try {
     editor.enableHistory();
     for (const [paragraph, value] of [
-      [19, "-11.2"],
-      [20, "-24.7"],
-      [21, "-16.3"],
-      [22, "-15.3"],
+      [19, '-11.2'],
+      [20, '-24.7'],
+      [21, '-16.3'],
+      [22, '-15.3'],
     ]) {
       editor.splice({
         section: 0,
@@ -198,24 +198,24 @@ test("HWP5 extrema use current negative inputs and recalculate after a later num
         text: value,
       });
     }
-    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=MAX(B?:E?)" });
-    assert.equal(editor.formulaSources(0)[0].last_result, "-11.2");
-    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=MIN(B?:E?)" });
-    assert.equal(editor.formulaSources(0)[0].last_result, "-24.7");
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: '=MAX(B?:E?)' });
+    assert.equal(editor.formulaSources(0)[0].last_result, '-11.2');
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: '=MIN(B?:E?)' });
+    assert.equal(editor.formulaSources(0)[0].last_result, '-24.7');
     const before = editor.save({ allowStaleLayout: true }).bytes;
-    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 5, text: "-100" });
-    assert.equal(editor.formulaSources(0)[0].last_result, "-100");
+    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 5, text: '-100' });
+    assert.equal(editor.formulaSources(0)[0].last_result, '-100');
     const saved = editor.save({ allowStaleLayout: true }).bytes;
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, before);
     assert.equal(editor.redo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
     const reopened = await createExperimentalHwp5Editor(
-      readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+      readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
       saved,
     );
     try {
-      assert.equal(reopened.formulaSources(0)[0].last_result, "-100");
+      assert.equal(reopened.formulaSources(0)[0].last_result, '-100');
     } finally {
       reopened.close();
     }
@@ -224,36 +224,36 @@ test("HWP5 extrema use current negative inputs and recalculate after a later num
   }
 });
 
-test("AVERAGE alias remains an owned lexical definition when AVG has the same numeric result", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+test('AVERAGE alias remains an owned lexical definition when AVG has the same numeric result', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   const editor = await createExperimentalHwp5Editor(
     wasm,
-    readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"),
+    readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp'),
   );
   try {
     editor.enableHistory();
-    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" });
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: '=AVG(B?:E?)' });
     const average = editor.save({ allowStaleLayout: true }).bytes;
-    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=AVERAGE(B?:E?)" });
-    assert.equal(editor.formulaSources(0)[0].formula, "=AVERAGE(B?:E?)");
-    assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
+    editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: '=AVERAGE(B?:E?)' });
+    assert.equal(editor.formulaSources(0)[0].formula, '=AVERAGE(B?:E?)');
+    assert.equal(editor.formulaSources(0)[0].last_result, '16.875');
     const alias = editor.save({ allowStaleLayout: true }).bytes;
     assert.notDeepEqual(alias, average);
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, average);
     assert.equal(editor.redo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, alias);
-    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 4, text: "12.2" });
-    assert.equal(editor.formulaSources(0)[0].formula, "=AVERAGE(B?:E?)");
-    assert.equal(editor.formulaSources(0)[0].last_result, "17.125");
+    editor.splice({ section: 0, paragraph: 19, startUnit: 0, endUnit: 4, text: '12.2' });
+    assert.equal(editor.formulaSources(0)[0].formula, '=AVERAGE(B?:E?)');
+    assert.equal(editor.formulaSources(0)[0].last_result, '17.125');
   } finally {
     editor.close();
   }
 });
 
-test("HWP5 definition public API matches complete independent section and untouched streams through history and reopen", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"),
+test('HWP5 definition public API matches complete independent section and untouched streams through history and reopen', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp'),
     immutable = Buffer.from(input);
   const { before, expected } = expectedDefinition(input);
   const editor = await createExperimentalHwp5Editor(wasm, input);
@@ -264,32 +264,32 @@ test("HWP5 definition public API matches complete independent section and untouc
     assert.deepEqual(originalRows[0], {
       source_node: 118,
       paragraph: 23,
-      formula: "=SUM(B?:E?)",
-      last_result: "67.5",
+      formula: '=SUM(B?:E?)',
+      last_result: '67.5',
       derived: false,
     });
-    const edit = { section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" };
+    const edit = { section: 0, sourceNode: 118, formula: '=AVG(B?:E?)' };
     editor.setFormulaDefinition(edit);
     assert.deepEqual(editor.formulaSources(0)[0], {
       source_node: 118,
       paragraph: 23,
-      formula: "=AVG(B?:E?)",
-      last_result: "16.875",
+      formula: '=AVG(B?:E?)',
+      last_result: '16.875',
       derived: true,
     });
-    assert.equal(originalRows[0].formula, "=SUM(B?:E?)");
+    assert.equal(originalRows[0].formula, '=SUM(B?:E?)');
     const queryCopy = editor.formulaSources(0);
-    queryCopy[0].formula = "=OTHER(A1)";
-    assert.equal(editor.formulaSources(0)[0].formula, "=AVG(B?:E?)");
-    assert.throws(() => editor.formulaSources(99), { message: "InvalidSection" });
+    queryCopy[0].formula = '=OTHER(A1)';
+    assert.equal(editor.formulaSources(0)[0].formula, '=AVG(B?:E?)');
+    assert.throws(() => editor.formulaSources(99), { message: 'InvalidSection' });
     const saved = editor.save({ allowStaleLayout: true }).bytes,
       after = inspect(saved);
     assert.deepEqual(after.sections[0].bytes, expected);
     const mutant = Buffer.from(after.sections[0].bytes);
-    const at = mutant.indexOf(Buffer.from("=AVG(B?:E?)", "utf16le"));
+    const at = mutant.indexOf(Buffer.from('=AVG(B?:E?)', 'utf16le'));
     assert(at >= 0);
-    Buffer.from("=SUM(B?:E?)", "utf16le").copy(mutant, at);
-    assert.throws(() => assert.deepEqual(mutant, expected), { code: "ERR_ASSERTION" });
+    Buffer.from('=SUM(B?:E?)', 'utf16le').copy(mutant, at);
+    assert.throws(() => assert.deepEqual(mutant, expected), { code: 'ERR_ASSERTION' });
     assert.deepEqual(after.metadata, before.metadata);
     for (const [path, bytes] of before.streams)
       if (path !== before.sections[0].path) assert.deepEqual(after.streams.get(path), bytes, path);
@@ -300,16 +300,16 @@ test("HWP5 definition public API matches complete independent section and untouc
         (row) =>
           row.tag === 71 &&
           row.payload.readUInt32LE(0) === 0x25666d75 &&
-          row.payload.subarray(11, 11 + row.payload.readUInt16LE(9) * 2).toString("utf16le") ===
-            "=AVG(B?:E?)??%g,;;16.875",
+          row.payload.subarray(11, 11 + row.payload.readUInt16LE(9) * 2).toString('utf16le') ===
+            '=AVG(B?:E?)??%g,;;16.875',
       );
       assert(reopenedNode >= 0);
       reopened.setFormulaDefinition({
         section: 0,
         sourceNode: reopenedNode,
-        formula: "=SUM(B?:E?)",
+        formula: '=SUM(B?:E?)',
       });
-      assert(reopened.text(0, 23).includes("67.5"));
+      assert(reopened.text(0, 23).includes('67.5'));
     } finally {
       reopened.close();
     }
@@ -318,36 +318,36 @@ test("HWP5 definition public API matches complete independent section and untouc
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
     assert.equal(editor.undo(), false);
     for (const [patch, message] of [
-      [{ section: 99 }, "InvalidSection"],
-      [{ sourceNode: 0 }, "InvalidFormulaField"],
-      [{ formula: "=SUM(Z999:Z1000)" }, "FormulaReferenceOutOfBounds"],
-      [{ formula: "AVG(B?:E?)" }, "UnsupportedFormulaExpression"],
-      [{ formula: "=SUM(??)" }, "UnsupportedFormulaCellDependency"],
-      [{ formula: "=SUM(B?,)" }, "InvalidFormulaReference"],
-      [{ formula: "=SUM(" + Array(33).fill("B?").join(",") + ")" }, "LimitExceeded"],
-      [{ formula: "=SUM(E?:B?)" }, "UnsupportedReversedFormulaRange"],
-      [{ formula: "=UNKNOWN(B?:E?)" }, "UnsupportedFormulaExpression"],
-      [{ formula: "=" + "X".repeat(4096) }, "LimitExceeded"],
-      [{ formula: "=" + "X".repeat(2100) }, "LimitExceeded"],
-      [{ sourceNode: -1 }, "Invalid sourceNode"],
-      [{ sourceNode: NaN }, "Invalid sourceNode"],
-      [{ formula: "\ud800" }, "InvalidUnicodeEncoding"],
-      [{ formula: null }, "Formula must be a string"],
+      [{ section: 99 }, 'InvalidSection'],
+      [{ sourceNode: 0 }, 'InvalidFormulaField'],
+      [{ formula: '=SUM(Z999:Z1000)' }, 'FormulaReferenceOutOfBounds'],
+      [{ formula: 'AVG(B?:E?)' }, 'UnsupportedFormulaExpression'],
+      [{ formula: '=SUM(??)' }, 'UnsupportedFormulaCellDependency'],
+      [{ formula: '=SUM(B?,)' }, 'InvalidFormulaReference'],
+      [{ formula: '=SUM(' + Array(33).fill('B?').join(',') + ')' }, 'LimitExceeded'],
+      [{ formula: '=SUM(E?:B?)' }, 'UnsupportedReversedFormulaRange'],
+      [{ formula: '=UNKNOWN(B?:E?)' }, 'UnsupportedFormulaExpression'],
+      [{ formula: '=' + 'X'.repeat(4096) }, 'LimitExceeded'],
+      [{ formula: '=' + 'X'.repeat(2100) }, 'LimitExceeded'],
+      [{ sourceNode: -1 }, 'Invalid sourceNode'],
+      [{ sourceNode: NaN }, 'Invalid sourceNode'],
+      [{ formula: '\ud800' }, 'InvalidUnicodeEncoding'],
+      [{ formula: null }, 'Formula must be a string'],
     ]) {
       assert.throws(() => editor.setFormulaDefinition({ ...edit, ...patch }), { message });
       assert.deepEqual(Buffer.from(editor.save().bytes), input);
     }
     assert.equal(editor.redo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
-    editor.splice({ section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: "2" });
-    assert(editor.text(0, 23).includes("17.125"));
+    editor.splice({ section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: '2' });
+    assert(editor.text(0, 23).includes('17.125'));
     const numericSaved = editor.save({ allowStaleLayout: true }).bytes;
     const commands = records(inspect(numericSaved).sections[0].bytes)
       .filter((row) => row.tag === 71 && row.payload.readUInt32LE(0) === 0x25666d75)
       .map((row) =>
-        row.payload.subarray(11, 11 + row.payload.readUInt16LE(9) * 2).toString("utf16le"),
+        row.payload.subarray(11, 11 + row.payload.readUInt16LE(9) * 2).toString('utf16le'),
       );
-    assert(commands.includes("=AVG(B?:E?)??%g,;;17.125"));
+    assert(commands.includes('=AVG(B?:E?)??%g,;;17.125'));
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
     assert.equal(editor.redo(), true);
@@ -357,32 +357,32 @@ test("HWP5 definition public API matches complete independent section and untouc
     editor.close();
   }
   assert.throws(
-    () => editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" }),
+    () => editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: '=AVG(B?:E?)' }),
     /EditorClosed/,
   );
 });
 
-test("missing optional definition export cannot mutate the document or discard redo", async () => {
-  const bytes = Buffer.from(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
-  const name = "hwp5_edit_set_formula_definition",
+test('missing optional definition export cannot mutate the document or discard redo', async () => {
+  const bytes = Buffer.from(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
+  const name = 'hwp5_edit_set_formula_definition',
     at = bytes.indexOf(Buffer.from(name));
   assert(at >= 0);
-  bytes[at] = "x".charCodeAt(0);
+  bytes[at] = 'x'.charCodeAt(0);
   const module = await WebAssembly.compile(bytes);
   assert.equal(
     WebAssembly.Module.exports(module).some((row) => row.name === name),
     false,
   );
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"),
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp'),
     editor = await createExperimentalHwp5Editor(module, input);
   try {
     editor.enableHistory();
-    editor.splice({ section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: "2" });
+    editor.splice({ section: 0, paragraph: 19, startUnit: 1, endUnit: 2, text: '2' });
     const changed = editor.save({ allowStaleLayout: true }).bytes;
     assert.equal(editor.undo(), true);
     assert.throws(
-      () => editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: "=AVG(B?:E?)" }),
-      { message: "Hwp5FormulaDefinitionAbiUnavailable" },
+      () => editor.setFormulaDefinition({ section: 0, sourceNode: 118, formula: '=AVG(B?:E?)' }),
+      { message: 'Hwp5FormulaDefinitionAbiUnavailable' },
     );
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
     assert.equal(editor.redo(), true);
@@ -392,9 +392,9 @@ test("missing optional definition export cannot mutate the document or discard r
   }
 });
 
-test("generated body paragraph does not steal original formula headers and definition edits survive structural history", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp"),
+test('generated body paragraph does not steal original formula headers and definition edits survive structural history', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp'),
     editor = await createExperimentalHwp5Editor(wasm, input);
   try {
     editor.enableHistory();
@@ -414,10 +414,10 @@ test("generated body paragraph does not steal original formula headers and defin
     editor.setFormulaDefinition({
       section: 0,
       sourceNode: rows[0].source_node,
-      formula: "=AVG(B?:E?)",
+      formula: '=AVG(B?:E?)',
     });
     const edited = editor.save({ allowStaleLayout: true }).bytes;
-    assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
+    assert.equal(editor.formulaSources(0)[0].last_result, '16.875');
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, split);
     assert.throws(
@@ -425,9 +425,9 @@ test("generated body paragraph does not steal original formula headers and defin
         editor.setFormulaDefinition({
           section: 0,
           sourceNode: rows[0].source_node,
-          formula: "=AVG(Z?:Z?)",
+          formula: '=AVG(Z?:Z?)',
         }),
-      { message: "FormulaReferenceOutOfBounds" },
+      { message: 'FormulaReferenceOutOfBounds' },
     );
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, split);
     assert.equal(editor.undo(), true);
@@ -437,7 +437,7 @@ test("generated body paragraph does not steal original formula headers and defin
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, edited);
     const reopened = await createExperimentalHwp5Editor(wasm, edited);
     try {
-      assert.equal(reopened.formulaSources(0)[0].formula, "=AVG(B?:E?)");
+      assert.equal(reopened.formulaSources(0)[0].formula, '=AVG(B?:E?)');
     } finally {
       reopened.close();
     }
@@ -446,9 +446,9 @@ test("generated body paragraph does not steal original formula headers and defin
   }
 });
 
-test("deleted body paragraph keeps formula identity and atomic definition history", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+test('deleted body paragraph keeps formula identity and atomic definition history', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp');
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
     editor.enableHistory();
@@ -467,10 +467,10 @@ test("deleted body paragraph keeps formula identity and atomic definition histor
     editor.setFormulaDefinition({
       section: 0,
       sourceNode: rows[0].source_node,
-      formula: "=AVG(B?:E?)",
+      formula: '=AVG(B?:E?)',
     });
     const edited = editor.save({ allowStaleLayout: true }).bytes;
-    assert.equal(editor.formulaSources(0)[0].last_result, "16.875");
+    assert.equal(editor.formulaSources(0)[0].last_result, '16.875');
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, merged);
     editor.setFormulaDefinition({
@@ -483,7 +483,7 @@ test("deleted body paragraph keeps formula identity and atomic definition histor
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, edited);
     const reopened = await createExperimentalHwp5Editor(wasm, edited);
     try {
-      assert.equal(reopened.formulaSources(0)[0].formula, "=AVG(B?:E?)");
+      assert.equal(reopened.formulaSources(0)[0].formula, '=AVG(B?:E?)');
     } finally {
       reopened.close();
     }

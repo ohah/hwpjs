@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
-import { equationDocument } from "./equation-document.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
+import { equationDocument } from './equation-document.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -75,9 +75,9 @@ export function equationReference(call, cfb) {
   let equations = 0,
     rejected = 0;
   for (const [name, mode, count] of [
-    ["atop-equation-01.hwp", 0, 3],
-    ["equation-lim.hwp", 1, 1],
-    ["math-001.hwp", 1, 44],
+    ['atop-equation-01.hwp', 0, 3],
+    ['equation-lim.hwp', 1, 1],
+    ['math-001.hwp', 1, 44],
   ]) {
     const path = new URL(`../../reference/rhwp/samples/${name}`, import.meta.url);
     if (!existsSync(path)) {
@@ -85,10 +85,10 @@ export function equationReference(call, cfb) {
       continue;
     }
     cfb.parse(readFileSync(path), { strict: true });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       flags = h.readUInt32LE(36);
     assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
-    const raw = Buffer.from(cfb.findExact("/BodyText/Section0").content),
+    const raw = Buffer.from(cfb.findExact('/BodyText/Section0').content),
       b = flags & 1 ? inflateRawSync(raw) : raw;
     assert.deepEqual(call(3, Buffer.concat([h, raw]), b.length), b);
     const records = documentRecords(b).filter((r) => r.tag === 88);

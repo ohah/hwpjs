@@ -1,36 +1,36 @@
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { pageRowFitHeight } from "./page-row-extents.mjs";
-import { inlineTablePageFitHeight } from "./inline-table-page-fit.mjs";
-import { drawingHasNoShadow } from "./drawing-shadow-policy.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { layoutContent } from "./layout.mjs";
-import { paginateSplitInlineTables } from "./split-inline-table-pagination.mjs";
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
-import { projectInlineObjectPages } from "./inline-object-page-projection.mjs";
-import { measureTableCells } from "./table-cell-measurement.mjs";
-import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
-import { layoutInlineDrawingPageContent } from "./inline-drawing-page-content.mjs";
-import { drawingColumnContext } from "./drawing-column-context.mjs";
-import { inlineDrawingGeometry } from "./inline-drawing-geometry.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { mixedInlineTablePolicy } from "./mixed-inline-table-policy.mjs";
-import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
-import { measureNestedTable } from "./nested-table-measurement.mjs";
-import { prepareSplitInlineTableHost } from "./split-inline-table-host.mjs";
-import { fitAtomicInlineTable } from "./atomic-inline-table-fit.mjs";
-import { projectSplitInlineTables } from "./split-inline-table-projection.mjs";
-import { measureInlineDrawingContent } from "./inline-drawing-measurement.mjs";
-import { drawingFillPlan } from "./drawing-fill-plan.mjs";
-import { nestedTablePaperBounds } from "./nested-table-paper-bounds.mjs";
-import { drawingPictureScope } from "./drawing-picture-scope.mjs";
-import { pictureTextMeasure } from "./picture-text-measurement.mjs";
-import { layoutMixedTableDrawingBody } from "./mixed-table-drawing-body.mjs";
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { pageRowFitHeight } from './page-row-extents.mjs';
+import { inlineTablePageFitHeight } from './inline-table-page-fit.mjs';
+import { drawingHasNoShadow } from './drawing-shadow-policy.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { layoutContent } from './layout.mjs';
+import { paginateSplitInlineTables } from './split-inline-table-pagination.mjs';
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
+import { projectInlineObjectPages } from './inline-object-page-projection.mjs';
+import { measureTableCells } from './table-cell-measurement.mjs';
+import { layoutInlineTablePageContent } from './inline-table-page-content.mjs';
+import { layoutInlineDrawingPageContent } from './inline-drawing-page-content.mjs';
+import { drawingColumnContext } from './drawing-column-context.mjs';
+import { inlineDrawingGeometry } from './inline-drawing-geometry.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { mixedInlineTablePolicy } from './mixed-inline-table-policy.mjs';
+import { validateNestedTableOwnership } from './nested-table-ownership.mjs';
+import { measureNestedTable } from './nested-table-measurement.mjs';
+import { prepareSplitInlineTableHost } from './split-inline-table-host.mjs';
+import { fitAtomicInlineTable } from './atomic-inline-table-fit.mjs';
+import { projectSplitInlineTables } from './split-inline-table-projection.mjs';
+import { measureInlineDrawingContent } from './inline-drawing-measurement.mjs';
+import { drawingFillPlan } from './drawing-fill-plan.mjs';
+import { nestedTablePaperBounds } from './nested-table-paper-bounds.mjs';
+import { drawingPictureScope } from './drawing-picture-scope.mjs';
+import { pictureTextMeasure } from './picture-text-measurement.mjs';
+import { layoutMixedTableDrawingBody } from './mixed-table-drawing-body.mjs';
 
 // 혼합 인라인 문서의 조립만 소유합니다. 측정·다단·셀·도형 배치는 공통 모듈에 위임합니다.
 export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
@@ -42,7 +42,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     content.tableCaptionErrors?.length ||
     content.tableCaptionBindingErrors?.length
   )
-    return unavailable("UnsupportedMixedInlineContent");
+    return unavailable('UnsupportedMixedInlineContent');
   const cellHosts = new Set(
     content.paragraphs.filter((p) => p.tableCell).map((p) => `${p.section}:${p.paragraph}`),
   );
@@ -62,12 +62,12 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
   if (content.drawings?.some((d) => d.source?.caption))
     return layoutMixedTableDrawingBody(content, measure, maxRows);
   const pictures = content.pictures ?? [];
-  if (!Array.isArray(pictures)) return unavailable("UnsupportedMixedInlinePictures");
+  if (!Array.isArray(pictures)) return unavailable('UnsupportedMixedInlinePictures');
   const pictureScope = drawingPictureScope(
     content,
     content.paragraphs.filter((p) => !p.drawingText && !p.drawingCaption),
   );
-  if (pictureScope.state !== "scoped") return pictureScope;
+  if (pictureScope.state !== 'scoped') return pictureScope;
   // Delegate body-owned pictures to the existing table/picture paginator;
   // drawing-local pictures remain owned and painted by their drawing rows.
   if (
@@ -87,7 +87,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
   );
   if (pictureScope.localIds.size !== pictures.length || unsupportedPicture)
     return {
-      ...unavailable("UnsupportedMixedInlinePictures"),
+      ...unavailable('UnsupportedMixedInlinePictures'),
       ...(unsupportedPicture
         ? {
             section: unsupportedPicture.section,
@@ -101,7 +101,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
   if (pictures.length) measure = pictureTextMeasure(pictureScope.inlineIndex, [], measure);
   const setting = content.pageSettings[0],
     reference = pageReferenceBoxes(setting, { x: 20, y: 20 });
-  if (reference.state !== "placed") return reference;
+  if (reference.state !== 'placed') return reference;
   const groups = new Map(),
     measuredTables = new Map(),
     measuredDrawings = new Map(),
@@ -112,7 +112,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     try {
       ownership = validateNestedTableOwnership(content);
     } catch {
-      return unavailable("InvalidNestedTableFlow");
+      return unavailable('InvalidNestedTableFlow');
     }
   }
   let remaining = maxRows;
@@ -127,24 +127,24 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
   for (const table of content.tables ?? []) {
     if (table.parentTableNode != null) continue;
     const policy = mixedInlineTablePolicy(table, { diagnostics: content.tableGeometryErrors });
-    if (policy.state !== "supported") return policy;
+    if (policy.state !== 'supported') return policy;
     const raw = table.sourceGeometry.out_margin;
     if (
       !Array.isArray(raw) ||
       raw.length !== 4 ||
       !raw.every((value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff)
     )
-      return unavailable("MissingTableOuterInsets");
-    if (remaining < 1) return unavailable("MixedInlineLayoutLimit");
+      return unavailable('MissingTableOuterInsets');
+    if (remaining < 1) return unavailable('MixedInlineLayoutLimit');
     const measured = hasNested
-      ? measureNestedTable(content, table, measure, { maxRows: remaining, overflow: "visible" })
+      ? measureNestedTable(content, table, measure, { maxRows: remaining, overflow: 'visible' })
       : measureTableCells(table, content.paragraphs, measure, {
           origin: { x: 0, y: 0 },
-          padding: "source",
+          padding: 'source',
           maxRows: remaining,
           paragraphFlows: content.paragraphFlows,
         });
-    if (measured.state !== "measured") return measured;
+    if (measured.state !== 'measured') return measured;
     remaining -= measured.rowCount;
     const [left, right, top, bottom] = raw.map(hwpUnitPixels);
     measuredTables.set(table.tableNode, { table, measured, margins: { left, right, top, bottom } });
@@ -159,21 +159,21 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
         ...(pageFitHeight < height ? { pageFitHeight } : {}),
       })
     )
-      return unavailable("AmbiguousMixedInlineObjects");
+      return unavailable('AmbiguousMixedInlineObjects');
   }
   for (const drawing of content.drawings ?? []) {
     const source = drawing.source;
     if (
-      inlineDrawingGeometry(source).state !== "selected" ||
+      inlineDrawingGeometry(source).state !== 'selected' ||
       source.caption ||
-      drawingFillPlan(content, drawing).state !== "none" ||
+      drawingFillPlan(content, drawing).state !== 'none' ||
       !drawingHasNoShadow(source.paint) ||
       signedInt32(source.flow?.z_order) === null
     )
-      return unavailable("UnsupportedMixedInlineDrawing");
+      return unavailable('UnsupportedMixedInlineDrawing');
     const context = drawingColumnContext(drawing, content.paragraphs, content.paragraphFlows);
-    if (context.state !== "selected") return context;
-    if (remaining < 1) return unavailable("MixedInlineLayoutLimit");
+    if (context.state !== 'selected') return context;
+    if (remaining < 1) return unavailable('MixedInlineLayoutLimit');
     const measured = measureInlineDrawingContent(
       drawing,
       content.paragraphs,
@@ -181,7 +181,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
       measure,
       { maxRows: remaining },
     );
-    if (measured.state !== "measured") return measured;
+    if (measured.state !== 'measured') return measured;
     measuredDrawings.set(drawing.drawingNode, measured);
     if (
       !add(drawing.section, drawing.hostParagraph, {
@@ -191,7 +191,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
         height: measured.height,
       })
     )
-      return unavailable("AmbiguousMixedInlineObjects");
+      return unavailable('AmbiguousMixedInlineObjects');
   }
   for (const paragraph of content.paragraphs) {
     if (
@@ -199,7 +199,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
       paragraph.drawingCaption ||
       (paragraph.tableCell && paragraph.drawingText)
     )
-      return unavailable("AmbiguousMixedInlineOwnership");
+      return unavailable('AmbiguousMixedInlineOwnership');
     if (paragraph.tableCell) {
       const owner =
         ownership?.tables.get(`${paragraph.section}:${paragraph.tableCell.tableNode}`) ??
@@ -209,7 +209,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
         owner.section !== paragraph.section ||
         !owner.cells.some((cell) => cell.listNode === paragraph.tableCell.listNode)
       )
-        return unavailable("AmbiguousMixedInlineOwnership");
+        return unavailable('AmbiguousMixedInlineOwnership');
     }
     if (paragraph.drawingText) {
       const owners = (content.drawings ?? []).filter(
@@ -218,7 +218,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
           d.drawingNode === paragraph.drawingText.drawingNode &&
           d.source?.text?.list_node === paragraph.drawingText.listNode,
       );
-      if (owners.length !== 1) return unavailable("AmbiguousMixedInlineOwnership");
+      if (owners.length !== 1) return unavailable('AmbiguousMixedInlineOwnership');
     }
   }
   const body = content.paragraphs.filter(
@@ -229,13 +229,13 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
   );
   if (
     flows.length !== body.length ||
-    flows.some((flow) => flow.host !== "body" || flow.top_level !== true)
+    flows.some((flow) => flow.host !== 'body' || flow.top_level !== true)
   )
-    return unavailable("UnsupportedMixedInlineFlow");
+    return unavailable('UnsupportedMixedInlineFlow');
   const flowByParagraph = new Map();
   for (const flow of flows) {
     const key = `${flow.section}:${flow.paragraph}`;
-    if (flowByParagraph.has(key)) return unavailable("UnsupportedMixedInlineFlow");
+    if (flowByParagraph.has(key)) return unavailable('UnsupportedMixedInlineFlow');
     flowByParagraph.set(key, flow);
   }
   const rows = [],
@@ -244,11 +244,11 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     splitTables = new Map();
   for (const paragraph of body) {
     if (paragraph.clipped || paragraph.section !== setting.section_ordinal || remaining < 1)
-      return unavailable("MixedInlineLayoutLimit");
+      return unavailable('MixedInlineLayoutLimit');
     const flow = flowByParagraph.get(`${paragraph.section}:${paragraph.paragraph}`);
-    if (!flow) return unavailable("UnsupportedMixedInlineFlow");
+    if (!flow) return unavailable('UnsupportedMixedInlineFlow');
     const columns = columnReferenceBoxes(reference.boxes.page, flow.column_declaration);
-    if (columns.state !== "placed") return columns;
+    if (columns.state !== 'placed') return columns;
     const entries = groups.get(paragraph.paragraph);
     let measured = entries
       ? measureInlineObjectParagraph(paragraph, entries, columns.boxes[0].width, measure, {
@@ -262,8 +262,8 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
           remaining,
           { documentBody: true },
         );
-    if (entries && measured.state !== "measured") return measured;
-    if (measured.limited) return unavailable("MixedInlineLayoutLimit");
+    if (entries && measured.state !== 'measured') return measured;
+    if (measured.limited) return unavailable('MixedInlineLayoutLimit');
     if (entries?.length === 1 && measuredTables.has(entries[0].objectNode))
       measured = fitAtomicInlineTable(
         paragraph,
@@ -281,8 +281,8 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
       const split = prepareSplitInlineTableHost(paragraph, measured, entry, {
         capacity: reference.boxes.page.height,
       });
-      if (split.state !== "prepared") return split;
-      if (split.rows.length > remaining) return unavailable("MixedInlineLayoutLimit");
+      if (split.state !== 'prepared') return split;
+      if (split.rows.length > remaining) return unavailable('MixedInlineLayoutLimit');
       remaining -= split.rows.length;
       rows.push(...split.rows);
       splitTables.set(entry.table.tableNode, { entry, split });
@@ -307,11 +307,11 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
       seen.add(paragraph.paragraph);
     }
   }
-  if (seen.size !== groups.size) return unavailable("AmbiguousMixedInlineObjects");
+  if (seen.size !== groups.size) return unavailable('AmbiguousMixedInlineObjects');
   const oversized = rows.find((row) => pageRowFitHeight(row) > reference.boxes.page.height);
   if (oversized)
     return {
-      ...unavailable("UnsupportedPageRow"),
+      ...unavailable('UnsupportedPageRow'),
       section: oversized.section,
       paragraph: oversized.paragraph,
       rowHeight: oversized.height,
@@ -331,19 +331,19 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     columnZones: true,
     maxRows,
   });
-  if (page.state !== "paginated" || page.limited) return page;
+  if (page.state !== 'paginated' || page.limited) return page;
   const placedDrawings = [];
   const splitProjection = projectSplitInlineTables(splitTables, page, {
     maxRows: maxRows - page.rows.length,
   });
-  if (splitProjection.state !== "placed") return splitProjection;
+  if (splitProjection.state !== 'placed') return splitProjection;
   const resultRows = [...splitProjection.bodyRows, ...splitProjection.rows],
     boxes = [...splitProjection.boxes];
   const flowPictures = [...splitProjection.flowPictures],
     tableCaptionBounds = [...splitProjection.tableCaptionBounds];
   for (const measured of measurements) {
     const projected = projectInlineObjectPages(measured, page.rows);
-    if (projected.state !== "placed") return projected;
+    if (projected.state !== 'placed') return projected;
     for (const placement of projected.objects) {
       const paper = placement.referenceBoxes?.paper,
         rectangle = placement.rectangle;
@@ -365,7 +365,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
         rectangle.y + rectangle.height > paper.y + paper.height + 1e-8
       )
         return {
-          ...unavailable("MixedInlinePaperOverflow"),
+          ...unavailable('MixedInlinePaperOverflow'),
           section: placement.section,
           paragraph: placement.paragraph,
           objectNode: placement.objectNode,
@@ -386,7 +386,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
       else {
         const drawing = content.drawings.find((d) => d.drawingNode === placement.objectNode);
         const context = drawingColumnContext(drawing, content.paragraphs, content.paragraphFlows);
-        if (context.state !== "selected") return context;
+        if (context.state !== 'selected') return context;
         result = layoutInlineDrawingPageContent(
           drawing,
           content.paragraphs,
@@ -407,7 +407,7 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
           pageOrdinal: placement.pageOrdinal,
         });
       }
-      if (result.state !== "placed") return result;
+      if (result.state !== 'placed') return result;
       resultRows.push(...result.rows);
       boxes.push(...(result.boxes ?? []));
       flowPictures.push(...(result.flowPictures ?? []));
@@ -415,11 +415,11 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     }
   }
   const coverage = pageParagraphCoverage(content.paragraphs, resultRows);
-  if (coverage.state !== "complete") return coverage;
+  if (coverage.state !== 'complete') return coverage;
   const nestedBounds = nestedTablePaperBounds(boxes);
-  if (nestedBounds.state !== "contained") return nestedBounds;
+  if (nestedBounds.state !== 'contained') return nestedBounds;
   if (resultRows.length + splitProjection.repeatedTableHeaderRows.length > maxRows)
-    return unavailable("MixedInlineLayoutLimit");
+    return unavailable('MixedInlineLayoutLimit');
   return {
     ...page,
     rows: resultRows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x),
@@ -430,6 +430,6 @@ export function layoutMixedInlineBody(content, measure, maxRows = 20000) {
     repeatedTableHeaderRows: splitProjection.repeatedTableHeaderRows,
     repeatedTableHeaderBoxes: splitProjection.repeatedTableHeaderBoxes,
     spatialRows: true,
-    pageLayoutMode: "measured-mixed-inline-body",
+    pageLayoutMode: 'measured-mixed-inline-body',
   };
 }

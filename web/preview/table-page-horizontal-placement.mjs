@@ -1,34 +1,34 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
-import { placeFloatingTable } from "./table-placement.mjs";
-import { tableInsets } from "./table-insets.mjs";
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
+import { placeFloatingTable } from './table-placement.mjs';
+import { tableInsets } from './table-insets.mjs';
+import { paragraphLineGeometry } from './paragraph-geometry.mjs';
 import {
   tableHorizontalOverflowBoundary,
   tableHorizontalBoundsContain,
-} from "./table-horizontal-overflow-boundary.mjs";
+} from './table-horizontal-overflow-boundary.mjs';
 
 // Horizontal source anchors over already paginated, single-column fragments.
 export function placeTablePagesHorizontally(table, layout, outerInsets, paragraph) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   const margins = tableInsets(outerInsets),
     relative = table?.sourceGeometry?.horizontal_relative;
   if (
     !margins ||
     ![0, 1, 2, 3].includes(relative) ||
-    layout?.state !== "placed" ||
+    layout?.state !== 'placed' ||
     (relative === 3 && !paragraph)
   )
-    return unavailable("UnsupportedTablePageAnchor");
+    return unavailable('UnsupportedTablePageAnchor');
   const shifts = new Map(),
     boundaries = new Map();
   for (const box of layout.boxes) {
     if (box.tableNode !== table.tableNode) continue;
     if (![box.x, box.width, box.x + box.width].every(Number.isFinite) || box.width <= 0)
-      return unavailable("TablePageWidthOverflow");
+      return unavailable('TablePageWidthOverflow');
     const reference = box.referenceBoxes,
       key = box.pageOrdinal;
     if (shifts.has(key)) continue;
-    const name = ["paper", "page", "column", "paragraph"][relative];
+    const name = ['paper', 'page', 'column', 'paragraph'][relative];
     let horizontal = reference?.[name];
     if (relative === 3 && reference?.column) {
       const line = paragraphLineGeometry(
@@ -40,7 +40,7 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
       horizontal = { ...reference.column, x: reference.column.x + line.x, width: line.width };
     }
     if (!horizontal || horizontal.width <= margins.left + margins.right)
-      return unavailable("TablePageWidthOverflow");
+      return unavailable('TablePageWidthOverflow');
     const boxes = {
       ...reference,
       paragraph: reference.column,
@@ -54,9 +54,9 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
             },
     };
     const placement = placeFloatingTable(table, boxes);
-    if (placement.state !== "placed") return unavailable("UnsupportedTablePageAnchor");
+    if (placement.state !== 'placed') return unavailable('UnsupportedTablePageAnchor');
     const shift = placement.rectangle.x - (reference.column.x + margins.left);
-    if (!Number.isFinite(shift)) return unavailable("UnsupportedTablePageAnchor");
+    if (!Number.isFinite(shift)) return unavailable('UnsupportedTablePageAnchor');
     shifts.set(key, shift);
     const own = layout.boxes.filter(
       (item) => item.tableNode === table.tableNode && item.pageOrdinal === key,
@@ -76,7 +76,7 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
           x: box.x + shifts.get(box.pageOrdinal),
           ...(box.tableNode === table.tableNode &&
           boundaries.get(box.pageOrdinal) !== box.referenceBoxes.column
-            ? { horizontalOverflowBoundary: "paper" }
+            ? { horizontalOverflowBoundary: 'paper' }
             : {}),
         }
       : box,
@@ -89,14 +89,14 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
         return !tableHorizontalBoundsContain(table, box, box.referenceBoxes, margins, boundary);
       })
   )
-    return unavailable("TablePageWidthOverflow");
+    return unavailable('TablePageWidthOverflow');
   const rows = layout.rows.map((row) =>
     ownsPosition(row) ? { ...row, x: row.x + shifts.get(row.pageOrdinal) } : row,
   );
   const repeated = {};
-  for (const key of ["repeatedTableHeaderRows", "repeatedTableHeaderBoxes"])
+  for (const key of ['repeatedTableHeaderRows', 'repeatedTableHeaderBoxes'])
     if (layout[key]) {
-      if (!Array.isArray(layout[key])) return unavailable("UnsupportedTablePageAnchor");
+      if (!Array.isArray(layout[key])) return unavailable('UnsupportedTablePageAnchor');
       repeated[key] = layout[key].map((item) =>
         ownsPosition(item) ? { ...item, x: item.x + shifts.get(item.pageOrdinal) } : item,
       );
@@ -105,7 +105,7 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
           (item) => !Number.isFinite(item.x) || !Number.isFinite(item.x + (item.width ?? 0)),
         )
       )
-        return unavailable("UnsupportedTablePageAnchor");
+        return unavailable('UnsupportedTablePageAnchor');
     }
   const flowPictures = layout.flowPictures?.map((picture) =>
     (picture.cell?.tableNode === table.tableNode ||
@@ -123,13 +123,13 @@ export function placeTablePagesHorizontally(table, layout, outerInsets, paragrap
         !Number.isFinite(picture.rectangle.x + picture.rectangle.width),
     )
   )
-    return unavailable("UnsupportedTablePageAnchor");
+    return unavailable('UnsupportedTablePageAnchor');
   if (
     rows.some(
       (row) =>
         !Number.isFinite(row.x) || (row.width !== undefined && !Number.isFinite(row.x + row.width)),
     )
   )
-    return unavailable("UnsupportedTablePageAnchor");
+    return unavailable('UnsupportedTablePageAnchor');
   return { ...layout, boxes, rows, ...repeated, ...(flowPictures ? { flowPictures } : {}) };
 }

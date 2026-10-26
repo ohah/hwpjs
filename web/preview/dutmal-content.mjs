@@ -1,4 +1,4 @@
-import { HWPX_DISPLAY_BOUNDS } from "./hwpx-content.mjs";
+import { HWPX_DISPLAY_BOUNDS } from './hwpx-content.mjs';
 // Current native values and positions, never text reconstructed from raw XML.
 export function attachDutmal(editor, content, available) {
   content.dutmalAvailable = available;
@@ -14,7 +14,7 @@ export function attachDutmal(editor, content, available) {
   }
   const controls = new Map(
     sources.controls
-      .filter((row) => row.kind === "dutmal")
+      .filter((row) => row.kind === 'dutmal')
       .map((row) => [`${row.section_ordinal}:${row.element_index}`, row]),
   );
   const paragraphs = new Map(
@@ -29,21 +29,21 @@ export function attachDutmal(editor, content, available) {
         const source = controls.get(`${section}:${site.node}`);
         const projected = editor.dutmalDisplayText(section, site.node);
         if (projected.length > HWPX_DISPLAY_BOUNDS.maxUnits - units + paragraph.text.length)
-          throw new Error("DutmalDisplayBudgetExceeded");
-        if (source && projected[site.anchor_unit] === "\ufffc") {
+          throw new Error('DutmalDisplayBudgetExceeded');
+        if (source && projected[site.anchor_unit] === '\ufffc') {
           units += projected.length - paragraph.text.length;
           paragraph.text = projected;
         }
-        if (!source || projected[site.anchor_unit] !== "\ufffc") {
-          content.dutmalErrors.push({ section, node: site.node, error: "DutmalBindingMismatch" });
+        if (!source || projected[site.anchor_unit] !== '\ufffc') {
+          content.dutmalErrors.push({ section, node: site.node, error: 'DutmalBindingMismatch' });
           continue;
         }
         try {
           paragraph.dutmal.push({
             node: site.node,
             unit: site.anchor_unit,
-            mainText: editor.dutmalText(section, site.node, "mainText"),
-            subText: editor.dutmalText(section, site.node, "subText"),
+            mainText: editor.dutmalText(section, site.node, 'mainText'),
+            subText: editor.dutmalText(section, site.node, 'subText'),
             sourceAttributes: { ...source.attributes },
           });
         } catch (error) {

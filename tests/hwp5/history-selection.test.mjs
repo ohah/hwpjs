@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createHistorySelectionStore } from "../../web/preview/history-selection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createHistorySelectionStore } from '../../web/preview/history-selection.mjs';
 
-test("selection metadata follows explicit revisions without maintaining another undo stack", () => {
+test('selection metadata follows explicit revisions without maintaining another undo stack', () => {
   const store = createHistorySelectionStore(3);
   const before = {
     anchor: { section: 0, paragraph: 5, unit: 0 },
@@ -30,14 +30,14 @@ test("selection metadata follows explicit revisions without maintaining another 
   assert.equal(
     store.selection(1).focus.paragraph,
     7,
-    "invalid revision does not evict existing metadata",
+    'invalid revision does not evict existing metadata',
   );
   store.reset();
   assert.equal(store.selection(1), null);
   assert.throws(() => createHistorySelectionStore(0));
 });
 
-test("native reachable revision reconciliation removes stale branches without evicting deep undo metadata", () => {
+test('native reachable revision reconciliation removes stale branches without evicting deep undo metadata', () => {
   const store = createHistorySelectionStore(4);
   store.remember(0, { focus: { paragraph: 5 } });
   store.remember(1, { focus: { paragraph: 7 } });
@@ -61,6 +61,6 @@ test("native reachable revision reconciliation removes stale branches without ev
   assert.equal(
     store.selection(149).focus.paragraph,
     9,
-    "failed current revision validation is atomic",
+    'failed current revision validation is atomic',
   );
 });

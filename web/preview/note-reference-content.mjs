@@ -3,7 +3,7 @@ export function attachNoteReferences(editor, content) {
   content.noteReferenceErrors = [];
   for (const paragraph of content.paragraphs)
     paragraph.automaticNumbers = (paragraph.automaticNumbers ?? []).filter(
-      (row) => row.kind !== "note-reference",
+      (row) => row.kind !== 'note-reference',
     );
   for (const section of new Set(content.paragraphs.map((p) => p.section))) {
     try {
@@ -18,14 +18,14 @@ export function attachNoteReferences(editor, content) {
         const source = sources.get(site.number_node);
         if (
           !source ||
-          !["FOOTNOTE", "ENDNOTE"].includes(source.values?.raw?.[1]) ||
-          paragraph.text[site.anchor_unit] !== "\ufffc" ||
+          !['FOOTNOTE', 'ENDNOTE'].includes(source.values?.raw?.[1]) ||
+          paragraph.text[site.anchor_unit] !== '\ufffc' ||
           paragraph.automaticNumbers.some((row) => row.unit === site.anchor_unit)
         ) {
           content.noteReferenceErrors.push({
             section,
             noteNode: site.note_node,
-            error: "NoteReferenceBindingMismatch",
+            error: 'NoteReferenceBindingMismatch',
           });
           continue;
         }
@@ -35,7 +35,7 @@ export function attachNoteReferences(editor, content) {
           noteNode: site.note_node,
           unit: site.anchor_unit,
           source,
-          kind: "note-reference",
+          kind: 'note-reference',
         });
       }
     } catch (error) {

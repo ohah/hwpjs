@@ -1,5 +1,5 @@
-import { sourceTableCellInsets } from "./table-source-insets.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { sourceTableCellInsets } from './table-source-insets.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // UI suggestion only: never changes a submitted width or grants edit permission.
 export function createdTableWidthHint(content, point) {

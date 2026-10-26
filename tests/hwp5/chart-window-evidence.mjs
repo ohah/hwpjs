@@ -4,13 +4,13 @@
 export function observeWindow(bytes, offset, priorTypes) {
   const b = Buffer.from(bytes);
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > b.length)
-    throw new RangeError("InvalidObservationOffset");
+    throw new RangeError('InvalidObservationOffset');
   const types = new Map(priorTypes),
     declarations = [],
     references = [];
   let p = offset;
   const take = (n) => {
-      if (n > b.length - p) throw Error("IncompleteWindowObservation");
+      if (n > b.length - p) throw Error('IncompleteWindowObservation');
       const v = b.subarray(p, p + n);
       p += n;
       return v;
@@ -23,19 +23,19 @@ export function observeWindow(bytes, offset, priorTypes) {
     if (!types.has(id)) {
       const n = word(),
         nameOffset = p,
-        raw = take(n).toString("latin1"),
+        raw = take(n).toString('latin1'),
         versionOffset = p,
         v = word();
       types.set(id, { name: raw, version: v });
       declarations.push({ id, nameOffset, versionOffset, name: raw, version: v });
     }
     const d = types.get(id);
-    if (d.name !== name + "\0" || d.version !== version)
-      throw Error("UnsupportedWindowObservationType");
+    if (d.name !== name + '\0' || d.version !== version)
+      throw Error('UnsupportedWindowObservationType');
     return id;
   };
-  const typeId = type("VtWindow", 2),
-    baseTypeId = type("VtObject", 1),
+  const typeId = type('VtWindow', 2),
+    baseTypeId = type('VtObject', 1),
     wordOffset = p,
     rawWord = word();
   return {

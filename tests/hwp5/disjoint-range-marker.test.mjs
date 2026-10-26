@@ -1,19 +1,19 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
 import {
   inspect,
   paragraphRecords,
   encodeRecord,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
+} from './style-preservation/text-record-oracle.mjs';
 
-test("derived empty range marker survives disjoint input and current-boundary refusal preserves redo", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp");
+test('derived empty range marker survives disjoint input and current-boundary refusal preserves redo', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp');
   const source = inspect(input),
     section = source.sections[0];
   const owner = paragraphRecords(section.bytes, 1);
@@ -40,7 +40,7 @@ test("derived empty range marker survives disjoint input and current-boundary re
   try {
     cfb.parse(input, { strict: true });
     const document = cfb.document();
-    const node = document.nodes.find((n) => n.kind === 2 && n.name === "Section0");
+    const node = document.nodes.find((n) => n.kind === 2 && n.name === 'Section0');
     assert(node);
     node.content = source.compressed ? deflateRawSync(changed) : changed;
     derived = cfb.write(document);
@@ -58,16 +58,16 @@ test("derived empty range marker survives disjoint input and current-boundary re
       assert.deepEqual(editor.save().bytes, derived);
       assert.equal(editor.undo(), false);
     }
-    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "한😀" });
+    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: '한😀' });
     const saved = editor.save({ allowStaleLayout: true }).bytes;
     assert.throws(
       () => editor.splitParagraph({ section: 0, paragraph: 1, atUnit: 0 }),
       /UnsupportedRangeSemantics/,
     );
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
-    verifyRaw(derived, saved, 0, 1, 0, 0, "한😀", { preserveEmptyRanges: true });
+    verifyRaw(derived, saved, 0, 1, 0, 0, '한😀', { preserveEmptyRanges: true });
     assert.throws(
-      () => verifyRaw(derived, saved, 0, 1, 0, 0, "한😀"),
+      () => verifyRaw(derived, saved, 0, 1, 0, 0, '한😀'),
       /complete Section must match/,
     );
     const reopened = await createExperimentalHwp5Editor(wasm, saved);
@@ -83,7 +83,7 @@ test("derived empty range marker survives disjoint input and current-boundary re
           paragraph: 1,
           startUnit: point + 3,
           endUnit: point + 3,
-          text: "접촉",
+          text: '접촉',
         }),
       /UnsupportedRangeSemantics/,
     );
@@ -92,7 +92,7 @@ test("derived empty range marker survives disjoint input and current-boundary re
     assert.deepEqual(editor.save().bytes, derived);
     assert.throws(
       () =>
-        editor.splice({ section: 0, paragraph: 1, startUnit: point, endUnit: point, text: "접촉" }),
+        editor.splice({ section: 0, paragraph: 1, startUnit: point, endUnit: point, text: '접촉' }),
       /UnsupportedRangeSemantics/,
     );
     assert.equal(editor.redo(), true);

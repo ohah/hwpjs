@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Relative dimensions are hundredths of one percent, not HWPUNIT lengths.
 export function resolvePictureSize(geometry, boxes) {
@@ -12,15 +12,15 @@ export function resolvePictureSize(geometry, boxes) {
     const value = base * (raw / 10000);
     return Number.isFinite(value) && value > 0 ? value : null;
   };
-  const width = dimension(geometry?.width, geometry?.widthRelative, "width", 4, [
-    "paper",
-    "page",
-    "column",
-    "paragraph",
+  const width = dimension(geometry?.width, geometry?.widthRelative, 'width', 4, [
+    'paper',
+    'page',
+    'column',
+    'paragraph',
   ]);
-  const height = dimension(geometry?.height, geometry?.heightRelative, "height", 2, [
-    "paper",
-    "page",
+  const height = dimension(geometry?.height, geometry?.heightRelative, 'height', 2, [
+    'paper',
+    'page',
   ]);
   return width === null || height === null ? null : { width, height };
 }

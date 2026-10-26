@@ -1,24 +1,24 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createCfbReader } from "../../js/cfb.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createCfbReader } from '../../js/cfb.mjs';
 import {
   inspect,
   records,
   encodeRecord,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
+} from './style-preservation/text-record-oracle.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit unselected-field candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit unselected-field candidate required');
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
-const path = "reference/rhwp/samples/hwpspec.hwp";
+const path = 'reference/rhwp/samples/hwpspec.hwp';
 const options = { normalizeObservedCfb: true, distribution: true };
 
-test("actual spec text splice preserves all unselected table-number fields and prior formatting", async (t) => {
+test('actual spec text splice preserves all unselected table-number fields and prior formatting', async (t) => {
   if (!existsSync(path)) {
-    t.skip("Reference fixture unavailable");
+    t.skip('Reference fixture unavailable');
     return;
   }
   const input = readFileSync(path),
@@ -35,10 +35,10 @@ test("actual spec text splice preserves all unselected table-number fields and p
     editor.setParagraphFormat({ section: 2, paragraph: 271, paraShapeId: (old + 1) % count });
     const formatted = editor.save({ allowStaleLayout: true }).bytes;
     const original = editor.text(0, 6);
-    editor.splice({ section: 0, paragraph: 6, startUnit: 0, endUnit: 0, text: "참조보존😀" });
+    editor.splice({ section: 0, paragraph: 6, startUnit: 0, endUnit: 0, text: '참조보존😀' });
     const saved = editor.save({ allowStaleLayout: true }).bytes;
-    verifyRaw(formatted, saved, 0, 6, 0, 0, "참조보존😀");
-    assert.equal(editor.text(0, 6), "참조보존😀" + original);
+    verifyRaw(formatted, saved, 0, 6, 0, 0, '참조보존😀');
+    assert.equal(editor.text(0, 6), '참조보존😀' + original);
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, formatted);
     assert.equal(editor.redo(), true);
@@ -66,15 +66,15 @@ async function counterControl(command) {
     cfb.parse(input);
     const doc = cfb.document();
     doc.nodes[0].created = 0n;
-    const header = doc.nodes.find((row) => row.parent === 0 && row.name === "FileHeader");
+    const header = doc.nodes.find((row) => row.parent === 0 && row.name === 'FileHeader');
     const flags = Buffer.from(header.content);
     flags.writeUInt32LE(flags.readUInt32LE(36) & ~4, 36);
     header.content = flags;
-    let storage = doc.nodes.findIndex((row) => row.parent === 0 && row.name === "BodyText");
+    let storage = doc.nodes.findIndex((row) => row.parent === 0 && row.name === 'BodyText');
     if (storage < 0) {
-      storage = doc.nodes.findIndex((row) => row.parent === 0 && row.name === "ViewText");
+      storage = doc.nodes.findIndex((row) => row.parent === 0 && row.name === 'ViewText');
       assert(storage >= 0);
-      doc.nodes[storage].name = "BodyText";
+      doc.nodes[storage].name = 'BodyText';
     }
     let changed = false;
     for (const [section, row] of before.sections.entries()) {
@@ -83,9 +83,9 @@ async function counterControl(command) {
           if (changed || record.tag !== 71 || record.payload.readUInt32LE(0) !== 0x25787266)
             return record.raw;
           const oldUnits = record.payload.readUInt16LE(9),
-            text = record.payload.subarray(11, 11 + oldUnits * 2).toString("utf16le");
+            text = record.payload.subarray(11, 11 + oldUnits * 2).toString('utf16le');
           assert.match(text, /^\?#\d+;0;1;1;0;$/);
-          const replacement = Buffer.from(command(text), "utf16le");
+          const replacement = Buffer.from(command(text), 'utf16le');
           const payload = Buffer.concat([
             record.payload.subarray(0, 11),
             replacement,
@@ -97,12 +97,12 @@ async function counterControl(command) {
         }),
       );
       const target = doc.nodes.find(
-        (row) => row.parent === storage && row.name === "Section" + section,
+        (row) => row.parent === storage && row.name === 'Section' + section,
       );
       if (target) target.content = deflateRawSync(content);
       else
         doc.nodes.push({
-          name: "Section" + section,
+          name: 'Section' + section,
           parent: storage,
           content: deflateRawSync(content),
         });
@@ -117,14 +117,14 @@ async function counterControl(command) {
 }
 
 for (const [name, change] of [
-  ["external document", (text) => "not-opened.hwp" + text],
-  ["page result", (text) => text.replace(";0;1;1;0;", ";0;0;1;0;")],
-  ["text result", (text) => text.replace(";0;1;1;0;", ";0;2;1;0;")],
-  ["relative position", (text) => text.replace(";0;1;1;0;", ";0;3;1;0;")],
+  ['external document', (text) => 'not-opened.hwp' + text],
+  ['page result', (text) => text.replace(';0;1;1;0;', ';0;0;1;0;')],
+  ['text result', (text) => text.replace(';0;1;1;0;', ';0;2;1;0;')],
+  ['relative position', (text) => text.replace(';0;1;1;0;', ';0;3;1;0;')],
 ])
   test(`unselected ${name} is not silently granted by local-number retention`, async (t) => {
     if (!existsSync(path)) {
-      t.skip("Reference fixture unavailable");
+      t.skip('Reference fixture unavailable');
       return;
     }
     // A memory-only, explicitly unprotected BodyText counter-control. The real
@@ -142,7 +142,7 @@ for (const [name, change] of [
       assert.throws(() => editor.validateTextSourcePolicy(0), /UnsupportedSectionControl/);
       assert.throws(
         () =>
-          editor.splice({ section: 0, paragraph: 6, startUnit: 0, endUnit: 0, text: "forbidden" }),
+          editor.splice({ section: 0, paragraph: 6, startUnit: 0, endUnit: 0, text: 'forbidden' }),
         /UnsupportedSectionControl/,
       );
       assert.deepEqual(editor.save().bytes, input);

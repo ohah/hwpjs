@@ -1,23 +1,23 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { withoutNormalizationExport } from "./normalization-export-fixture.mjs";
-import { inspect } from "./style-preservation/text-record-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { withoutNormalizationExport } from './normalization-export-fixture.mjs';
+import { inspect } from './style-preservation/text-record-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit field-span candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit field-span candidate required');
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
 
-test("missing optional field-span ABI preserves text editing and pending redo", async () => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp");
+test('missing optional field-span ABI preserves text editing and pending redo', async () => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp');
   const editor = await createExperimentalHwp5Editor(
-    withoutNormalizationExport(wasm, "hwp5_edit_field_spans"),
+    withoutNormalizationExport(wasm, 'hwp5_edit_field_spans'),
     input,
   );
   try {
     editor.enableHistory();
-    editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "선택😀" });
+    editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: '선택😀' });
     const saved = editor.save({ allowStaleLayout: true }).bytes;
     assert.equal(editor.undo(), true);
     assert.throws(() => editor.fieldSpans(0), /Hwp5FieldSpansAbiUnavailable/);
@@ -30,9 +30,9 @@ test("missing optional field-span ABI preserves text editing and pending redo", 
   assert.throws(() => editor.fieldSpans(0), /EditorClosed/);
 });
 
-test("current picture-number spans match independent records in all seven sections", async () => {
+test('current picture-number spans match independent records in all seven sections', async () => {
   const input = readFileSync(
-    "reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp",
+    'reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp',
   );
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
@@ -45,7 +45,7 @@ test("current picture-number spans match independent records in all seven sectio
       assert.deepEqual(original, independentFieldSpans(inspect(bytes).sections[section].bytes));
       count += original.length;
       referenceCount += original.filter((row) => row.field_id === 0x25787266).length;
-      editor.splice({ section, paragraph: 0, startUnit: 0, endUnit: 0, text: "위치😀" });
+      editor.splice({ section, paragraph: 0, startUnit: 0, endUnit: 0, text: '위치😀' });
       const saved = editor.save({ allowStaleLayout: true }).bytes;
       const semantic = (rows) =>
         rows.map(({ source_node: _serializationSourceNode, ...row }) => row);

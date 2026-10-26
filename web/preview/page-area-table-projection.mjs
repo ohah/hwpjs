@@ -1,17 +1,17 @@
-import { layoutContent } from "./layout.mjs";
-import { placeFloatingTable } from "./table-placement.mjs";
-import { prepareTablePageBands, tablePageBandFragment } from "./table-page-bands.mjs";
-import { projectTablePageFragments } from "./table-page-fragments.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
-import { alignedReferenceCoordinate } from "./picture-placement.mjs";
-import { selectMasterPages } from "./master-page-selection.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { tableCellInsets } from "./table-insets.mjs";
-import { tableCellReferenceBox } from "./table-cell-reference-box.mjs";
-import { pageAreaInlineTableAnchor } from "./page-area-inline-table-anchor.mjs";
-import { measurePageAreaFloatingTableHosts } from "./page-area-floating-table-host-flow.mjs";
+import { layoutContent } from './layout.mjs';
+import { placeFloatingTable } from './table-placement.mjs';
+import { prepareTablePageBands, tablePageBandFragment } from './table-page-bands.mjs';
+import { projectTablePageFragments } from './table-page-fragments.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
+import { paragraphLineGeometry } from './paragraph-geometry.mjs';
+import { alignedReferenceCoordinate } from './picture-placement.mjs';
+import { selectMasterPages } from './master-page-selection.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { tableCellInsets } from './table-insets.mjs';
+import { tableCellReferenceBox } from './table-cell-reference-box.mjs';
+import { pageAreaInlineTableAnchor } from './page-area-inline-table-anchor.mjs';
+import { measurePageAreaFloatingTableHosts } from './page-area-floating-table-host-flow.mjs';
 const validBox = (box) =>
   box &&
   [box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(
@@ -22,9 +22,9 @@ const validBox = (box) =>
 
 /** Explicit-page table projection; neither source sizes nor area overflow are hidden. */
 export function projectPageAreaTables(area, measured, page, measure, maxRows = 20000) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
-    measured?.state !== "tables-measured" ||
+    measured?.state !== 'tables-measured' ||
     !Array.isArray(measured.entries) ||
     !Number.isSafeInteger(page?.ordinal) ||
     page.ordinal < 0 ||
@@ -37,11 +37,11 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
     !validBox(page.page) ||
     !validBox(page[area?.host])
   )
-    return fail("InvalidPageAreaTableProjection");
+    return fail('InvalidPageAreaTableProjection');
   try {
     if (!selectMasterPages(area.area, [page]).length)
       return {
-        state: "tables-projected",
+        state: 'tables-projected',
         rows: [],
         anchorRows: [],
         boxes: [],
@@ -50,15 +50,15 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         tableAnchors: [],
       };
     if (
-      area.area.vertical_alignment !== "top" ||
+      area.area.vertical_alignment !== 'top' ||
       ![area.area.width, area.area.height].every(
         (v) => Number.isInteger(v) && v > 0 && v <= 0xffffffff,
       )
     )
-      return fail("UnsupportedPageAreaTableAlignment");
+      return fail('UnsupportedPageAreaTableAlignment');
     const physical = page[area.host],
       width = hwpUnitPixels(area.area.width);
-    if (width > physical.width + 1e-9) return fail("PageAreaOverflow");
+    if (width > physical.width + 1e-9) return fail('PageAreaOverflow');
     const box = {
       ...physical,
       width,
@@ -72,8 +72,8 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
       tableAnchors = [],
       seen = new Set();
     const hosts = measurePageAreaFloatingTableHosts(area, measured, box.width, measure, maxRows);
-    if (hosts.state === "unavailable") return hosts;
-    const shared = hosts.state === "shared" ? hosts.layout : null;
+    if (hosts.state === 'unavailable') return hosts;
+    const shared = hosts.state === 'shared' ? hosts.layout : null;
     if (shared)
       anchorRows.push(
         ...shared.rows.map((row) => ({
@@ -103,7 +103,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         source.text_flow !== 0 ||
         source.flow_with_text !== true ||
         source.allow_overlap !== false ||
-        cells?.state !== "measured" ||
+        cells?.state !== 'measured' ||
         offset === null ||
         ![0, 1, 2].includes(source.vertical_relative) ||
         ![0, 1, 2].includes(source.vertical_alignment) ||
@@ -113,7 +113,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         !source.out_margin.every((v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff)
       )
         return {
-          ...fail("UnsupportedPageAreaTablePolicy"),
+          ...fail('UnsupportedPageAreaTablePolicy'),
           section: table.section,
           paragraph: table.hostParagraph,
           tableNode: table.tableNode,
@@ -127,7 +127,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
           },
         };
       const identity = `${table.section}:${table.tableNode}`;
-      if (seen.has(identity)) return fail("AmbiguousPageAreaTableProjection");
+      if (seen.has(identity)) return fail('AmbiguousPageAreaTableProjection');
       seen.add(identity);
       const margins = source.out_margin.map(hwpUnitPixels),
         [left, right, top, bottom] = margins;
@@ -138,7 +138,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         );
         if (roots.length !== 1 || roots[0] !== host)
           return {
-            ...fail("UnsupportedPageAreaInlineTableSequence"),
+            ...fail('UnsupportedPageAreaInlineTableSequence'),
             section: table.section,
             paragraph: table.hostParagraph,
             tableNode: table.tableNode,
@@ -152,7 +152,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
           measure,
           maxRows,
         );
-        if (inline.state !== "selected")
+        if (inline.state !== 'selected')
           return {
             ...inline,
             section: table.section,
@@ -178,11 +178,11 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
             );
         const anchors = hostLayout.rows.filter(
           (row) =>
-            row.kind === "text" &&
+            row.kind === 'text' &&
             row.startUnit <= table.anchorUnit &&
             table.anchorUnit < row.endUnit,
         );
-        if (hostLayout.limited || anchors.length !== 1) return fail("MissingPageAreaTableAnchor");
+        if (hostLayout.limited || anchors.length !== 1) return fail('MissingPageAreaTableAnchor');
         const line = paragraphLineGeometry(
           { ...host.paragraphShape, alignment: 0 },
           hwpUnitPixels(area.area.width),
@@ -196,7 +196,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
           height: anchors[0].height,
         };
         const references = { paper: page.paper, page: page.page, column: box, paragraph };
-        const name = ["paper", "page", "column", "paragraph"][source.horizontal_relative];
+        const name = ['paper', 'page', 'column', 'paragraph'][source.horizontal_relative];
         const horizontal = references[name];
         if (source.horizontal_relative !== 3)
           references[name] = {
@@ -205,7 +205,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
             width: horizontal.width - left - right,
           };
         const placed = placeFloatingTable(table, references);
-        if (placed.state !== "placed") return fail("UnsupportedPageAreaTableAnchor");
+        if (placed.state !== 'placed') return fail('UnsupportedPageAreaTableAnchor');
         const vertical = [page.paper, page.page, paragraph][source.vertical_relative];
         const y =
           alignedReferenceCoordinate(
@@ -229,7 +229,7 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         rectangle.y - top < page.paper.y ||
         rectangle.y + rectangle.height + bottom > page.paper.y + page.paper.height
       )
-        return fail("PageAreaTablePaperOverflow");
+        return fail('PageAreaTablePaperOverflow');
       if (
         rectangle.x - left < box.x ||
         rectangle.x + rectangle.width + right > box.x + box.width ||
@@ -243,13 +243,13 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
           pageArea: area.host,
           rectangle,
         });
-      const prepared = prepareTablePageBands(table, cells.grid.rows, "whole", {
+      const prepared = prepareTablePageBands(table, cells.grid.rows, 'whole', {
         left,
         right,
         top,
         bottom,
       });
-      if (prepared.state !== "prepared") return prepared;
+      if (prepared.state !== 'prepared') return prepared;
       const fragment = tablePageBandFragment(prepared, {
         x: rectangle.x - left,
         y: rectangle.y - top,
@@ -262,14 +262,14 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         table,
         cells.grid,
         cells.flows,
-        { state: "planned", pages: [page], fragments: [fragment] },
+        { state: 'planned', pages: [page], fragments: [fragment] },
         {
           origin: { x: 0, y: 0 },
-          padding: resolveTablePadding(table, "source"),
+          padding: resolveTablePadding(table, 'source'),
           maxRows: maxRows - rows.length - anchorRows.length,
         },
       );
-      if (projected.state !== "placed") return projected;
+      if (projected.state !== 'placed') return projected;
       for (const row of projected.rows) {
         const cell = table.cells.find((cell) => cell.listNode === row.listNode);
         const cellBox = projected.boxes.find(
@@ -277,11 +277,11 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
         );
         const column = tableCellReferenceBox(
           cellBox,
-          tableCellInsets(resolveTablePadding(table, "source"), cell),
+          tableCellInsets(resolveTablePadding(table, 'source'), cell),
           cells.flows.get(row.listNode),
           row.cellColumnOrdinal,
         );
-        if (!column) return fail("MissingPageAreaCellReference");
+        if (!column) return fail('MissingPageAreaCellReference');
         rows.push({
           ...row,
           pageArea: area.host,
@@ -312,10 +312,10 @@ export function projectPageAreaTables(area, measured, page, measure, maxRows = 2
             referenceBoxes: { paper: page.paper, page: page.page, column: box },
           })),
         );
-      if (rows.length + anchorRows.length > maxRows) return fail("PageAreaTableProjectionLimit");
+      if (rows.length + anchorRows.length > maxRows) return fail('PageAreaTableProjectionLimit');
     }
     return {
-      state: "tables-projected",
+      state: 'tables-projected',
       rows,
       anchorRows,
       boxes,

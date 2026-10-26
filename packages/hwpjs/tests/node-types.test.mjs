@@ -1,42 +1,42 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { writeFileSync, mkdtempSync, mkdirSync, lstatSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { execFileSync, spawnSync } from "node:child_process";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { writeFileSync, mkdtempSync, mkdirSync, lstatSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { execFileSync, spawnSync } from 'node:child_process';
 /** Independent tenth consumer condition: Node declarations without a DOM library. */
-test("10 packed core declarations support strict ES2023 + Node without DOM", () => {
-  assert(process.env.HWPJS_TEST_TARBALL, "ExplicitTarballRequired");
+test('10 packed core declarations support strict ES2023 + Node without DOM', () => {
+  assert(process.env.HWPJS_TEST_TARBALL, 'ExplicitTarballRequired');
   const archive = resolve(process.env.HWPJS_TEST_TARBALL),
-    tree = mkdtempSync(join(tmpdir(), "hwpjs-node-types-")),
-    out = resolve("zig-out/verification/public-package-node-types");
+    tree = mkdtempSync(join(tmpdir(), 'hwpjs-node-types-')),
+    out = resolve('zig-out/verification/public-package-node-types');
   mkdirSync(out, { recursive: true });
-  const bun = execFileSync("mise", ["which", "bun"], { encoding: "utf8" }).trim(),
+  const bun = execFileSync('mise', ['which', 'bun'], { encoding: 'utf8' }).trim(),
     env = { ...process.env };
   delete env.NODE_PATH;
   delete env.NODE_OPTIONS;
   writeFileSync(
-    join(tree, "package.json"),
+    join(tree, 'package.json'),
     JSON.stringify({
-      name: "node-types-consumer",
+      name: 'node-types-consumer',
       private: true,
-      type: "module",
+      type: 'module',
       dependencies: {
-        "@ohah/hwpjs": "file:" + archive,
-        typescript: "7.0.2",
-        "@types/node": "26.6.5",
+        '@ohah/hwpjs': 'file:' + archive,
+        typescript: '7.0.2',
+        '@types/node': '26.6.5',
       },
     }),
   );
-  const install = spawnSync(bun, ["install", "--ignore-scripts", "--linker", "hoisted"], {
+  const install = spawnSync(bun, ['install', '--ignore-scripts', '--linker', 'hoisted'], {
     cwd: tree,
     env,
-    encoding: "utf8",
+    encoding: 'utf8',
     timeout: 120000,
   });
   assert.equal(install.status, 0, install.stderr);
   writeFileSync(
-    join(tree, "core.ts"),
+    join(tree, 'core.ts'),
     `import {createEditor,type HeadlessEditor,type EditorState} from '@ohah/hwpjs';
 const e:HeadlessEditor=createEditor({runtimeFactory:()=>({async request(message){return {kind:message.kind};},dispose(){}})});
 const state:EditorState=e.getEditorState();void state;
@@ -46,42 +46,42 @@ void document;
 `,
   );
   writeFileSync(
-    join(tree, "tsconfig.json"),
+    join(tree, 'tsconfig.json'),
     JSON.stringify({
       compilerOptions: {
-        target: "ES2023",
-        lib: ["ES2023"],
-        module: "NodeNext",
-        moduleResolution: "NodeNext",
+        target: 'ES2023',
+        lib: ['ES2023'],
+        module: 'NodeNext',
+        moduleResolution: 'NodeNext',
         strict: true,
         skipLibCheck: false,
-        types: ["node"],
+        types: ['node'],
         noEmit: true,
       },
-      files: ["core.ts"],
+      files: ['core.ts'],
     }),
   );
-  const compiler = join(tree, "node_modules/.bin/tsc"),
-    r = spawnSync(compiler, ["-p", "tsconfig.json"], { cwd: tree, env, encoding: "utf8" }),
-    list = spawnSync(compiler, ["-p", "tsconfig.json", "--listFilesOnly"], {
+  const compiler = join(tree, 'node_modules/.bin/tsc'),
+    r = spawnSync(compiler, ['-p', 'tsconfig.json'], { cwd: tree, env, encoding: 'utf8' }),
+    list = spawnSync(compiler, ['-p', 'tsconfig.json', '--listFilesOnly'], {
       cwd: tree,
       env,
-      encoding: "utf8",
+      encoding: 'utf8',
     });
-  writeFileSync(join(out, "compiler.log"), r.stdout + r.stderr);
-  writeFileSync(join(out, "files.log"), list.stdout + list.stderr);
+  writeFileSync(join(out, 'compiler.log'), r.stdout + r.stderr);
+  writeFileSync(join(out, 'files.log'), list.stdout + list.stderr);
   const result = {
     status: r.status,
     tree,
     tarball: archive,
-    noDOMLibrary: !list.stdout.includes("lib.dom."),
-    noRootPackageSymlink: !lstatSync(join(tree, "node_modules/@ohah/hwpjs")).isSymbolicLink(),
+    noDOMLibrary: !list.stdout.includes('lib.dom.'),
+    noRootPackageSymlink: !lstatSync(join(tree, 'node_modules/@ohah/hwpjs')).isSymbolicLink(),
     strict: true,
     skipLibCheck: false,
-    lib: ["ES2023"],
-    types: ["node"],
+    lib: ['ES2023'],
+    types: ['node'],
   };
-  writeFileSync(join(out, "report.json"), JSON.stringify(result, null, 2));
+  writeFileSync(join(out, 'report.json'), JSON.stringify(result, null, 2));
   assert.equal(r.status, 0, r.stdout + r.stderr);
   assert(result.noDOMLibrary);
   assert(result.noRootPackageSymlink);

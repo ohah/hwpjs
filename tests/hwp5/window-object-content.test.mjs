@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { projectHwp5OwnedWindow } from "../../web/preview/hwp5-window-projection.mjs";
-import { attachHwp5WindowObjects } from "../../web/preview/hwp5-window-object-content.mjs";
-import { verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-import { queryHwp5WindowContent } from "../../web/preview/hwp5-window-query-content.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { projectHwp5OwnedWindow } from '../../web/preview/hwp5-window-projection.mjs';
+import { attachHwp5WindowObjects } from '../../web/preview/hwp5-window-object-content.mjs';
+import { verifyRaw } from './style-preservation/text-record-oracle.mjs';
+import { queryHwp5WindowContent } from '../../web/preview/hwp5-window-query-content.mjs';
 
-test("window object preparation shares one flow query per render without persistent caching", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+test('window object preparation shares one flow query per render without persistent caching', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   for (const [name, offset] of [
-    ["table-caption", 1],
-    ["footnote-endnote", 1],
-    ["textbox", 1],
-    ["shapecontainer-2", 1],
-    ["sample-5017-pics", 0],
+    ['table-caption', 1],
+    ['footnote-endnote', 1],
+    ['textbox', 1],
+    ['shapecontainer-2', 1],
+    ['sample-5017-pics', 0],
   ]) {
     const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
     const editor = await createExperimentalHwp5Editor(wasm, input),
@@ -34,16 +34,16 @@ test("window object preparation shares one flow query per render without persist
         attachHwp5WindowObjects(counted, preview, content);
         assert.equal(calls - before, 1, name);
         for (const key of [
-          "tableBindingsErrors",
-          "tableLayoutSourceErrors",
-          "cellLayoutSourceErrors",
-          "tableAnchorErrors",
-          "hwp5NoteErrors",
-          "hwp5CaptionErrors",
-          "hwp5DrawingErrors",
-          "hwp5DrawingBodyErrors",
-          "hwp5PictureErrors",
-          "hwp5PictureTailErrors",
+          'tableBindingsErrors',
+          'tableLayoutSourceErrors',
+          'cellLayoutSourceErrors',
+          'tableAnchorErrors',
+          'hwp5NoteErrors',
+          'hwp5CaptionErrors',
+          'hwp5DrawingErrors',
+          'hwp5DrawingBodyErrors',
+          'hwp5PictureErrors',
+          'hwp5PictureTailErrors',
         ])
           assert.deepEqual(content[key], [], `${name}:${key}`);
       }
@@ -55,9 +55,9 @@ test("window object preparation shares one flow query per render without persist
   }
 });
 
-test("window preparation refreshes text and flow after edit and undo", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp");
+test('window preparation refreshes text and flow after edit and undo', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp');
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);
   try {
@@ -68,8 +68,8 @@ test("window preparation refreshes text and flow after edit and undo", async () 
       return attachHwp5WindowObjects(editor, preview, content);
     };
     const before = render().paragraphs[0].text;
-    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "갱신😀" });
-    assert.equal(render().paragraphs[0].text, "갱신😀" + before);
+    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: '갱신😀' });
+    assert.equal(render().paragraphs[0].text, '갱신😀' + before);
     assert.equal(editor.undo(), true);
     assert.equal(render().paragraphs[0].text, before);
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
@@ -79,9 +79,9 @@ test("window preparation refreshes text and flow after edit and undo", async () 
   }
 });
 
-test("complete window query shares flow discovery once and refreshes on every request", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp");
+test('complete window query shares flow discovery once and refreshes on every request', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp');
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);
   try {
@@ -103,9 +103,9 @@ test("complete window query shares flow discovery once and refreshes on every re
   }
 });
 
-test("actual cell and grouped drawing body windows refresh edited ownership and independent save", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  for (const name of ["table-caption", "textbox", "shapecontainer-2"]) {
+test('actual cell and grouped drawing body windows refresh edited ownership and independent save', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  for (const name of ['table-caption', 'textbox', 'shapecontainer-2']) {
     const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
     const editor = await createExperimentalHwp5Editor(wasm, input),
       reader = await createHwp5Reader(wasm);
@@ -113,7 +113,7 @@ test("actual cell and grouped drawing body windows refresh edited ownership and 
       editor.enableHistory();
       const member = editor
         .paragraphFlow(0)
-        .find((row) => row.host === (name === "table-caption" ? "table_cell" : "drawing"));
+        .find((row) => row.host === (name === 'table-caption' ? 'table_cell' : 'drawing'));
       assert(member);
       const render = () => {
         const saved = editor.save({ allowStaleLayout: true }).bytes,
@@ -126,7 +126,7 @@ test("actual cell and grouped drawing body windows refresh edited ownership and 
         return { saved, content };
       };
       const original = render(),
-        text = "본문😀";
+        text = '본문😀';
       editor.splice({ section: 0, paragraph: member.paragraph, startUnit: 0, endUnit: 0, text });
       const changed = render();
       assert.equal(
@@ -134,10 +134,10 @@ test("actual cell and grouped drawing body windows refresh edited ownership and 
         text + original.content.paragraphs.find((row) => row.paragraph === member.paragraph).text,
       );
       for (const key of [
-        "tableAnchorErrors",
-        "hwp5DrawingErrors",
-        "hwp5DrawingBodyErrors",
-        "hwp5CaptionErrors",
+        'tableAnchorErrors',
+        'hwp5DrawingErrors',
+        'hwp5DrawingBodyErrors',
+        'hwp5CaptionErrors',
       ])
         assert.deepEqual(changed.content[key], [], `${name}:${key}`);
       verifyRaw(input, changed.saved, 0, member.paragraph, 0, 0, text);
@@ -154,10 +154,10 @@ test("actual cell and grouped drawing body windows refresh edited ownership and 
           changed.content.paragraphs.find((row) => row.paragraph === member.paragraph).text,
         );
         for (const key of [
-          "tableAnchorErrors",
-          "hwp5DrawingErrors",
-          "hwp5DrawingBodyErrors",
-          "hwp5CaptionErrors",
+          'tableAnchorErrors',
+          'hwp5DrawingErrors',
+          'hwp5DrawingBodyErrors',
+          'hwp5CaptionErrors',
         ])
           assert.deepEqual(content[key], [], `${name}:reopened:${key}`);
       } finally {

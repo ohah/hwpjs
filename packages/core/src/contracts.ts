@@ -20,7 +20,7 @@ export interface RuntimeReply {
   historyRevision?: number;
   historyRevisions?: readonly number[];
   meta?: {
-    application?: "unapplied" | "applied" | "unknown";
+    application?: 'unapplied' | 'applied' | 'unknown';
     changed?: boolean | null;
     context?: RuntimeRequestContext;
   };

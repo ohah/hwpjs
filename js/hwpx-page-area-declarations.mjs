@@ -1,8 +1,8 @@
 // Current coordinates and immutable source identities, not an activation policy.
 export function decodePageAreaDeclarations(bytes) {
-  const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  const rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   const invalid = () => {
-    throw Error("InvalidPageAreaDeclarations");
+    throw Error('InvalidPageAreaDeclarations');
   };
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   if (!Array.isArray(rows) || rows.length > 100000) invalid();
@@ -15,7 +15,7 @@ export function decodePageAreaDeclarations(bytes) {
       row.paragraph < 1 ||
       row.paragraph < previousParagraph ||
       row.source_control >= row.source_element ||
-      !["left", "right"].includes(row.affinity) ||
+      !['left', 'right'].includes(row.affinity) ||
       owners.has(row.source_element)
     )
       invalid();

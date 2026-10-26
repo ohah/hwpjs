@@ -1,12 +1,12 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { sourceTableRowHorizontals } from "../../web/preview/source-table-row-horizontals.mjs";
-import { sourceTableColumns } from "../../web/preview/table-source-columns.mjs";
-import { existsSync } from "node:fs";
-import { sourceRowTableOracle } from "./source-row-table-oracle.mjs";
-import { tableGrid } from "../../web/preview/table-grid.mjs";
-import { tableSourceHorizontalLayout } from "../../web/preview/table-source-horizontal-layout.mjs";
-import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { sourceTableRowHorizontals } from '../../web/preview/source-table-row-horizontals.mjs';
+import { sourceTableColumns } from '../../web/preview/table-source-columns.mjs';
+import { existsSync } from 'node:fs';
+import { sourceRowTableOracle } from './source-row-table-oracle.mjs';
+import { tableGrid } from '../../web/preview/table-grid.mjs';
+import { tableSourceHorizontalLayout } from '../../web/preview/table-source-horizontal-layout.mjs';
+import { measureTableCells } from '../../web/preview/table-cell-measurement.mjs';
 
 const cell = (listNode, row, column, width, rowSpan = 1, columnSpan = 1) => ({
   listNode,
@@ -22,7 +22,7 @@ const fixture = () => ({
   cells: [cell(1, 0, 0, 100), cell(2, 0, 1, 200), cell(3, 1, 0, 100), cell(4, 1, 1, 300)],
 });
 
-test("positive row-local cells survive nonpositive derived common columns without accepting malformed source widths", () => {
+test('positive row-local cells survive nonpositive derived common columns without accepting malformed source widths', () => {
   for (const mergedWidth of [100, 150]) {
     const table = {
       rows: 2,
@@ -35,25 +35,25 @@ test("positive row-local cells survive nonpositive derived common columns withou
       ],
     };
     const common = sourceTableColumns(table);
-    assert.equal(common.error, "InvalidSourceTableColumns");
-    assert.equal(common.reason, "NonPositiveSourceColumnSolution");
+    assert.equal(common.error, 'InvalidSourceTableColumns');
+    assert.equal(common.reason, 'NonPositiveSourceColumnSolution');
     const selected = tableSourceHorizontalLayout(table);
-    assert.equal(selected.state, "resolved", selected.error);
+    assert.equal(selected.state, 'resolved', selected.error);
     assert.deepEqual(selected.gridOptions, { sourceRowHorizontals: true });
     const invalid = structuredClone(table);
     invalid.cells[0].width = -1;
     const rejected = tableSourceHorizontalLayout(invalid);
-    assert.equal(rejected.error, "InvalidSourceTableColumns");
+    assert.equal(rejected.error, 'InvalidSourceTableColumns');
     assert.equal(rejected.reason, undefined);
   }
 });
 
-test("row-local source boundaries preserve different cell widths without changing strict uniform columns", () => {
+test('row-local source boundaries preserve different cell widths without changing strict uniform columns', () => {
   const table = fixture(),
     before = structuredClone(table);
-  assert.equal(sourceTableColumns(table).error, "ConflictingSourceTableColumns");
+  assert.equal(sourceTableColumns(table).error, 'ConflictingSourceTableColumns');
   const result = sourceTableRowHorizontals(table);
-  assert.equal(result.state, "resolved", result.error);
+  assert.equal(result.state, 'resolved', result.error);
   assert.deepEqual(result.rowWidths, [300, 400]);
   assert.deepEqual(result.cells, [
     { listNode: 1, x: 0, width: 100 },
@@ -70,7 +70,7 @@ test("row-local source boundaries preserve different cell widths without changin
   );
 });
 
-test("merged rows use exact source widths and spanning cells must keep the same physical position", () => {
+test('merged rows use exact source widths and spanning cells must keep the same physical position', () => {
   const table = {
     rows: 2,
     columns: 3,
@@ -82,7 +82,7 @@ test("merged rows use exact source widths and spanning cells must keep the same 
     ],
   };
   const result = sourceTableRowHorizontals(table);
-  assert.equal(result.state, "resolved");
+  assert.equal(result.state, 'resolved');
   assert.deepEqual(result.rowWidths, [400, 450]);
   assert.deepEqual(result.cells.at(-1), { listNode: 4, x: 300, width: 150 });
   const moved = {
@@ -90,14 +90,14 @@ test("merged rows use exact source widths and spanning cells must keep the same 
     columns: 2,
     cells: [cell(1, 0, 0, 100), cell(2, 0, 1, 200, 2), cell(3, 1, 0, 150)],
   };
-  assert.equal(sourceTableRowHorizontals(moved).error, "ConflictingSourceSpanningCellPosition");
+  assert.equal(sourceTableRowHorizontals(moved).error, 'ConflictingSourceSpanningCellPosition');
 });
 
-test("row-local grid and both cell measurement passes preserve the same physical source widths", () => {
+test('row-local grid and both cell measurement passes preserve the same physical source widths', () => {
   const table = { ...fixture(), section: 0, tableNode: 9 };
   table.cells = table.cells.map((cell, index) => ({ ...cell, height: 750, paragraphs: [index] }));
   const source = tableSourceHorizontalLayout(table);
-  assert.equal(source.state, "resolved", source.error);
+  assert.equal(source.state, 'resolved', source.error);
   assert.deepEqual(source.gridOptions, { sourceRowHorizontals: true });
   const grid = tableGrid(table, { x: 30, ...source.gridOptions });
   assert.equal(grid.columns, null);
@@ -109,7 +109,7 @@ test("row-local grid and both cell measurement passes preserve the same physical
   const paragraphs = table.cells.map((cell, index) => ({
     section: 0,
     paragraph: index,
-    text: "a",
+    text: 'a',
     editable: true,
     tableCell: { tableNode: 9, listNode: cell.listNode },
   }));
@@ -118,14 +118,14 @@ test("row-local grid and both cell measurement passes preserve the same physical
     padding: 0,
     ...source.gridOptions,
   });
-  assert.equal(measured.state, "measured", measured.error);
+  assert.equal(measured.state, 'measured', measured.error);
   for (const [index, cell] of table.cells.entries()) {
     assert.equal(measured.grid.cells[index].width, cell.width / 75);
     assert.equal(measured.flows.get(cell.listNode).rows[0].width, cell.width / 75);
   }
 });
 
-test("row-local boundaries reject missing overlap null dimensions identity collisions and excessive span work", () => {
+test('row-local boundaries reject missing overlap null dimensions identity collisions and excessive span work', () => {
   for (const mutate of [
     (t) => t.cells.pop(),
     (t) => t.cells.push({ ...t.cells[0], listNode: 5 }),
@@ -138,28 +138,28 @@ test("row-local boundaries reject missing overlap null dimensions identity colli
   ]) {
     const table = fixture();
     mutate(table);
-    assert.equal(sourceTableRowHorizontals(table).state, "unavailable");
+    assert.equal(sourceTableRowHorizontals(table).state, 'unavailable');
   }
   assert.equal(
     sourceTableRowHorizontals(fixture(), { maxCoveredCells: 3 }).error,
-    "SourceTableRowHorizontalLimit",
+    'SourceTableRowHorizontalLimit',
   );
   assert.equal(
     sourceTableRowHorizontals({ ...fixture(), pagination: { cell_spacing: 1 } }).error,
-    "UnsupportedSourceTableRowSpacing",
+    'UnsupportedSourceTableRowSpacing',
   );
 });
 
-test("actual reference row resizing preserves every independent XML cell width", (t) => {
-  const path = "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx";
+test('actual reference row resizing preserves every independent XML cell width', (t) => {
+  const path = 'reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx';
   if (!existsSync(path)) {
-    t.skip("reference fixture unavailable");
+    t.skip('reference fixture unavailable');
     return;
   }
-  const table = sourceRowTableOracle(path, "1295981299");
-  assert.equal(sourceTableColumns(table).error, "ConflictingSourceTableColumns");
+  const table = sourceRowTableOracle(path, '1295981299');
+  assert.equal(sourceTableColumns(table).error, 'ConflictingSourceTableColumns');
   const result = sourceTableRowHorizontals(table);
-  assert.equal(result.state, "resolved", JSON.stringify(result));
+  assert.equal(result.state, 'resolved', JSON.stringify(result));
   assert.equal(result.width, 48013);
   assert.equal(result.width, table.declaredWidth);
   assert.deepEqual(result.rowWidths, [...Array(19).fill(46598), 48013, 48013]);

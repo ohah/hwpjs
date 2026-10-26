@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { CommandRegistry } from "../../src/commands/registry.ts";
-import { createCommand } from "../../src/commands/commands.ts";
-import { copyOwned } from "../../src/state/owned.ts";
-test("priority ties use registration order, captured handler set survives unregister and payloads are isolated", () => {
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { CommandRegistry } from '../../src/commands/registry.ts';
+import { createCommand } from '../../src/commands/commands.ts';
+import { copyOwned } from '../../src/state/owned.ts';
+test('priority ties use registration order, captured handler set survives unregister and payloads are isolated', () => {
   const r = new CommandRegistry(),
-    command = createCommand<{ data: Uint8Array }>("x");
+    command = createCommand<{ data: Uint8Array }>('x');
   const trace: number[] = [];
   let off = () => {};
   r.register(
@@ -47,9 +47,9 @@ test("priority ties use registration order, captured handler set survives unregi
   assert.deepEqual(trace, [1, 2, 3]);
 });
 
-test("syntactically async command handler is rejected before its body can enqueue side effects", () => {
+test('syntactically async command handler is rejected before its body can enqueue side effects', () => {
   const r = new CommandRegistry(),
-    command = createCommand<null>("async");
+    command = createCommand<null>('async');
   let called = false;
   r.register(
     command,

@@ -1,7 +1,7 @@
-const states = ["located", "conditional", "unsupported_anchor", "missing_host", "ambiguous_host"];
+const states = ['located', 'conditional', 'unsupported_anchor', 'missing_host', 'ambiguous_host'];
 export function decodePictureSites(bytes) {
   const fail = () => {
-    throw new Error("InvalidPictureSites");
+    throw new Error('InvalidPictureSites');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length < 8) fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

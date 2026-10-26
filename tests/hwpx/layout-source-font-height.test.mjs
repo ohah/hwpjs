@@ -1,22 +1,22 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { layoutContent } from "../../web/preview/layout.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { layoutContent } from '../../web/preview/layout.mjs';
 
-test("explicit paragraph format retains document font heights through a sectionless cell projection", () => {
+test('explicit paragraph format retains document font heights through a sectionless cell projection', () => {
   const paragraphs = [
     {
       section: 0,
       paragraph: 0,
-      text: "abc",
+      text: 'abc',
       paragraphShape: {
-        spacingFormat: "hwpx",
+        spacingFormat: 'hwpx',
         legacySpacingKind: 0,
         legacySpacing: 145,
       },
     },
   ];
   const measure = () => ({ width: 10, height: (13 * 96) / 72 });
-  const tagged = layoutContent({ format: "hwpx", paragraphs }, 20, measure, 100, {
+  const tagged = layoutContent({ format: 'hwpx', paragraphs }, 20, measure, 100, {
     documentBody: true,
   });
   const cell = layoutContent({ paragraphs }, 20, measure, 100, { documentBody: true });

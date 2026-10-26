@@ -11,7 +11,7 @@ export function attachEllipses(editor, content, available) {
           (p) => p.section === section && p.paragraph === source.owner.paragraph - 1,
         );
         if (!owner && content.window) continue;
-        if (!owner) throw new Error("EllipseDisplayBindingMismatch");
+        if (!owner) throw new Error('EllipseDisplayBindingMismatch');
         content.ellipses.push({ section, source });
       }
     } catch (error) {

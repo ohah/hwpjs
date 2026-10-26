@@ -1,9 +1,9 @@
-import { validateHwp5PageControlSources } from "../../js/hwp5-page-control-sources.mjs";
-import { hwp5NumberFormat } from "./number-format.mjs";
+import { validateHwp5PageControlSources } from '../../js/hwp5-page-control-sources.mjs';
+import { hwp5NumberFormat } from './number-format.mjs';
 
 // Plan from already paginated current rows; never manufacture missing page anchors.
 export function planHwp5PageControls(controls, paragraphs, rows, pages, startPage, section = 0) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   try {
     validateHwp5PageControlSources(controls);
     if (
@@ -19,20 +19,20 @@ export function planHwp5PageControls(controls, paragraphs, rows, pages, startPag
       startPage > 0xffffffff ||
       pages.some((page, index) => page.ordinal !== index)
     )
-      return fail("InvalidHwp5PageControlPages");
+      return fail('InvalidHwp5PageControlPages');
     const anchored = [];
     for (const control of controls) {
       if (control.section !== section || control.extra_bytes !== 0)
-        return fail("UnsupportedHwp5PageControlSource");
+        return fail('UnsupportedHwp5PageControlSource');
       const owners = paragraphs.filter(
         (p) => p.section === control.section && p.paragraph === control.paragraph,
       );
-      if (owners.length !== 1 || owners[0].clipped || owners[0].text?.[control.unit] !== "\ufffc")
-        return fail("InvalidHwp5PageControlOwner");
+      if (owners.length !== 1 || owners[0].clipped || owners[0].text?.[control.unit] !== '\ufffc')
+        return fail('InvalidHwp5PageControlOwner');
       const members = rows
         .filter(
           (row) =>
-            row.kind === "text" &&
+            row.kind === 'text' &&
             row.section === control.section &&
             row.paragraph === control.paragraph,
         )
@@ -51,19 +51,19 @@ export function planHwp5PageControls(controls, paragraphs, rows, pages, startPag
           row.pageOrdinal < previousPage ||
           row.pageOrdinal >= pages.length
         )
-          return fail("MissingHwp5PageControlPage");
+          return fail('MissingHwp5PageControlPage');
         end = row.endUnit;
         previousPage = row.pageOrdinal;
       }
       if (!members.length || end !== owners[0].text.length || members[0].pageOrdinal < 0)
-        return fail("MissingHwp5PageControlPage");
-      if (control.kind === "parity") return fail("UnsupportedHwp5PageParityControl");
-      if (control.kind === "restart" && (control.attributes !== 0 || control.number < 1))
-        return fail("UnsupportedHwp5PageRestart");
-      if (control.kind === "hide" && (control.attributes & ~63) !== 0)
-        return fail("UnsupportedHwp5PageHide");
+        return fail('MissingHwp5PageControlPage');
+      if (control.kind === 'parity') return fail('UnsupportedHwp5PageParityControl');
+      if (control.kind === 'restart' && (control.attributes !== 0 || control.number < 1))
+        return fail('UnsupportedHwp5PageRestart');
+      if (control.kind === 'hide' && (control.attributes & ~63) !== 0)
+        return fail('UnsupportedHwp5PageHide');
       if (
-        control.kind === "position" &&
+        control.kind === 'position' &&
         ((control.attributes & ~0xfff) !== 0 ||
           hwp5NumberFormat(control.attributes & 255) === null ||
           ((control.attributes >>> 8) & 15) > 10 ||
@@ -71,14 +71,14 @@ export function planHwp5PageControls(controls, paragraphs, rows, pages, startPag
             (unit) => unit >= 0xd800 && unit <= 0xdfff,
           ))
       )
-        return fail("UnsupportedHwp5PageNumberPosition");
+        return fail('UnsupportedHwp5PageNumberPosition');
       anchored.push({ control, page: members[0].pageOrdinal });
     }
     anchored.sort(
       (a, b) => a.control.paragraph - b.control.paragraph || a.control.unit - b.control.unit,
     );
-    const positions = anchored.filter((row) => row.control.kind === "position"),
-      restarts = anchored.filter((row) => row.control.kind === "restart");
+    const positions = anchored.filter((row) => row.control.kind === 'position'),
+      restarts = anchored.filter((row) => row.control.kind === 'restart');
     const position = positions.at(-1)?.control ?? null;
     let counter = startPage,
       started = restarts.length === 0;
@@ -90,9 +90,9 @@ export function planHwp5PageControls(controls, paragraphs, rows, pages, startPag
         started = true;
       }
       if (!Number.isSafeInteger(counter) || counter < 1 || counter > 0xffffffff)
-        return fail("Hwp5PageNumberOverflow");
+        return fail('Hwp5PageNumberOverflow');
       const hide =
-        anchored.find((row) => row.control.kind === "hide" && row.page === page.ordinal)?.control
+        anchored.find((row) => row.control.kind === 'hide' && row.page === page.ordinal)?.control
           .attributes ?? 0;
       planned.push({
         ...page,
@@ -108,7 +108,7 @@ export function planHwp5PageControls(controls, paragraphs, rows, pages, startPag
       });
       counter++;
     }
-    return { state: "planned", pages: planned };
+    return { state: 'planned', pages: planned };
   } catch (error) {
     return fail(error.message);
   }

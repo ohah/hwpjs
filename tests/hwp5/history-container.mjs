@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
-import { historyContainerEvidence } from "./history-container-evidence.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
+import { historyContainerEvidence } from './history-container-evidence.mjs';
+import { containerTotals } from './container-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -16,11 +16,11 @@ export const historyContainerPrefix = (o = {}) =>
   ]);
 export function historyContainerActual(call, cfb) {
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const original = cfb.document(),
-    root = original.nodes.findIndex((n) => n.name === "DocHistory" && n.parent === 0);
+    root = original.nodes.findIndex((n) => n.name === 'DocHistory' && n.parent === 0);
   assert.ok(root >= 0);
   const logs = original.nodes
     .map((n, i) => [n, i])
@@ -93,7 +93,7 @@ export function historyContainerActual(call, cfb) {
     reject(bytes, {}, /InvalidChecksum|TrailingData|UnexpectedEnd|Invalid/);
     assert.deepEqual(run(bytes, { mode: 0 }), Buffer.concat([ordinary(bytes), w(0)]));
   }
-  for (const name of ["VersionLog", "VersionLog00", "VersionLog-1", "VersionLog4294967296"])
+  for (const name of ['VersionLog', 'VersionLog00', 'VersionLog-1', 'VersionLog4294967296'])
     reject(cfb.write(changed(last, { name })), {}, /InvalidHistoryStreamName/);
   reject(cfb.write(changed(last, { kind: 1, content: undefined })), {}, /InvalidHwpEntryKind/);
   const rawModel = {
@@ -148,7 +148,7 @@ export function historyContainerActual(call, cfb) {
   const short = Buffer.from(inflateRawSync(original.nodes[last].content)).subarray(0, 3);
   reject(cfb.write(changed(last, { content: deflateRawSync(short) })), {}, /UnexpectedEnd/);
   // Canonical numeric ordering, sparse indices, case folding, distinct per-item sizes.
-  const names = ["VersionLog4294967295", "versionlog10", "VersionLog2", "VERSIONLOG0"];
+  const names = ['VersionLog4294967295', 'versionlog10', 'VersionLog2', 'VERSIONLOG0'];
   check({
     ...original,
     nodes: original.nodes.map((n, i) => {
@@ -157,23 +157,23 @@ export function historyContainerActual(call, cfb) {
     }),
   });
   // Moving the whole storage retains its children but removes the recognized root.
-  check(changed(root, { name: "UnselectedHistory" }), { items: 0, bytes: 0, records: 0 });
+  check(changed(root, { name: 'UnselectedHistory' }), { items: 0, bytes: 0, records: 0 });
   const absent = {
     ...original,
-    nodes: original.nodes.map((n, i) => (i === root ? { ...n, name: "Elsewhere" } : n)),
+    nodes: original.nodes.map((n, i) => (i === root ? { ...n, name: 'Elsewhere' } : n)),
   };
   reject(
     cfb.write({
       ...absent,
       nodes: [
         ...absent.nodes,
-        { name: "DocHistory", parent: 0, kind: 2, content: Buffer.from([1]) },
+        { name: 'DocHistory', parent: 0, kind: 2, content: Buffer.from([1]) },
       ],
     }),
     {},
     /InvalidHwpEntryKind/,
   );
-  const lastDoc = original.nodes.findIndex((n) => n.parent === root && n.name === "HistoryLastDoc");
+  const lastDoc = original.nodes.findIndex((n) => n.parent === root && n.name === 'HistoryLastDoc');
   assert.ok(lastDoc >= 0);
   check(changed(lastDoc, { content: Buffer.from([0xff, 1, 2]) })); // Remains opaque/unconsumed.
   reject(cfb.write(changed(lastDoc, { kind: 1, content: undefined })), {}, /InvalidHwpEntryKind/);
@@ -182,34 +182,34 @@ export function historyContainerActual(call, cfb) {
     ...original,
     nodes: [
       ...original.nodes,
-      { name: "Future", parent: root, kind: 1 },
-      { name: "VersionLog", parent: nestedRoot, kind: 2, content: Buffer.from([255]) },
-      { name: "Unrecognized", parent: root, kind: 2, content: Buffer.from([255]) },
+      { name: 'Future', parent: root, kind: 1 },
+      { name: 'VersionLog', parent: nestedRoot, kind: 2, content: Buffer.from([255]) },
+      { name: 'Unrecognized', parent: root, kind: 2, content: Buffer.from([255]) },
     ],
   });
   check({
     ...original,
     nodes: [
       ...original.nodes,
-      { name: "VersionLog0", parent: 0, kind: 2, content: Buffer.from([255]) },
+      { name: 'VersionLog0', parent: 0, kind: 2, content: Buffer.from([255]) },
     ],
   });
-  const headerNode = original.nodes.findIndex((n) => n.parent === 0 && n.name === "FileHeader"),
+  const headerNode = original.nodes.findIndex((n) => n.parent === 0 && n.name === 'FileHeader'),
     header = Buffer.from(original.nodes[headerNode].content);
   header.writeUInt32LE(header.readUInt32LE(36) & ~64, 36);
   check(changed(headerNode, { content: header }));
   // BodyText + ViewText + history share the global record budget.
-  assert.ok(!original.nodes.some((n) => n.parent === 0 && n.name === "ViewText"));
-  const bodyRoot = original.nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText"),
-    body = original.nodes.find((n) => n.parent === bodyRoot && n.name === "Section0");
+  assert.ok(!original.nodes.some((n) => n.parent === 0 && n.name === 'ViewText'));
+  const bodyRoot = original.nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText'),
+    body = original.nodes.find((n) => n.parent === bodyRoot && n.name === 'Section0');
   assert.ok(body);
   const viewRoot = original.nodes.length,
     withView = {
       ...original,
       nodes: [
         ...original.nodes,
-        { name: "ViewText", kind: 1, parent: 0 },
-        { name: "Section0", kind: 2, parent: viewRoot, content: body.content },
+        { name: 'ViewText', kind: 1, parent: 0 },
+        { name: 'Section0', kind: 2, parent: viewRoot, content: body.content },
       ],
     };
   const v = check(withView),

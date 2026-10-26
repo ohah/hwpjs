@@ -1,12 +1,12 @@
-import { groupShapeChildren } from "./group-shape-children.mjs";
-import { drawingPageReference } from "./drawing-page-reference.mjs";
-import { placeGroupedRoot } from "./grouped-root-placement.mjs";
-import { projectGroupedPicturePage } from "./grouped-picture-page-projection.mjs";
-import { paragraphReferenceGeometry, paragraphLineAdvance } from "./paragraph-geometry.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { rectanglesOverlap } from "./rectangles-overlap.mjs";
-import { DEFAULT_ROW_HEIGHT, TEXT_TOP } from "./row-geometry.mjs";
+import { groupShapeChildren } from './group-shape-children.mjs';
+import { drawingPageReference } from './drawing-page-reference.mjs';
+import { placeGroupedRoot } from './grouped-root-placement.mjs';
+import { projectGroupedPicturePage } from './grouped-picture-page-projection.mjs';
+import { paragraphReferenceGeometry, paragraphLineAdvance } from './paragraph-geometry.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { rectanglesOverlap } from './rectangles-overlap.mjs';
+import { DEFAULT_ROW_HEIGHT, TEXT_TOP } from './row-geometry.mjs';
 
 // Preserve this compositor's exact supported ownership before selecting an outer one.
 export function floatingTableOwnsPictureGroups(content) {
@@ -15,7 +15,7 @@ export function floatingTableOwnsPictureGroups(content) {
   )
     return false;
   const prepared = floatingTablePictureGroups(content);
-  if (prepared.state !== "prepared") return false;
+  if (prepared.state !== 'prepared') return false;
   const roots = (content.containers ?? []).filter((root) => root.source?.group_context === null);
   const selected = new Set([...prepared.hosts.values()].map((entry) => entry.root));
   return (
@@ -25,10 +25,10 @@ export function floatingTableOwnsPictureGroups(content) {
 
 // Picture-only, standalone TOP_BOTTOM roots. Child geometry stays grouped.
 export function floatingTablePictureGroups(content) {
-  const fail = (error) => ({ state: "unavailable", error }),
+  const fail = (error) => ({ state: 'unavailable', error }),
     hosts = new Map(),
     children = new Set();
-  if (content.containerSourceErrors?.length) return fail("IncompleteFloatingTablePictureGroup");
+  if (content.containerSourceErrors?.length) return fail('IncompleteFloatingTablePictureGroup');
   for (const picture of content.pictures ?? []) {
     if (!picture?.owner || picture.owner.anchorNode === picture.pictureNode) continue;
     const key = `${picture.section}:${picture.owner.anchorNode}`;
@@ -36,7 +36,7 @@ export function floatingTablePictureGroups(content) {
     const roots = (content.containers ?? []).filter(
       (root) => root.section === picture.section && root.containerNode === picture.owner.anchorNode,
     );
-    if (roots.length !== 1) return fail("InvalidFloatingTableInlinePictures");
+    if (roots.length !== 1) return fail('InvalidFloatingTableInlinePictures');
     const root = roots[0],
       source = root.source,
       owner = picture.owner;
@@ -54,7 +54,7 @@ export function floatingTablePictureGroups(content) {
       !Array.isArray(source.position.flags) ||
       ![true, false].includes(source.position.flags[1]) ||
       members.length !== 1 ||
-      host.text !== "\ufffc" ||
+      host.text !== '\ufffc' ||
       owner.anchorUnit !== 0 ||
       host.tableCell ||
       host.drawingText ||
@@ -65,13 +65,13 @@ export function floatingTablePictureGroups(content) {
       )
     )
       return {
-        ...fail("UnsupportedFloatingTableGroupedPicture"),
+        ...fail('UnsupportedFloatingTableGroupedPicture'),
         section: root.section,
         rootNode: root.containerNode,
       };
     let selected;
     try {
-      selected = groupShapeChildren(source).filter((child) => child.kind !== "metadata");
+      selected = groupShapeChildren(source).filter((child) => child.kind !== 'metadata');
     } catch (error) {
       return fail(error.message);
     }
@@ -80,20 +80,20 @@ export function floatingTablePictureGroups(content) {
     );
     if (
       !selected.length ||
-      selected.some((child) => child.kind !== "picture") ||
+      selected.some((child) => child.kind !== 'picture') ||
       new Set(selected.map((child) => child.node)).size !== selected.length ||
       pictures.length !== selected.length ||
       selected.some((child) => pictures.filter((p) => p.pictureNode === child.node).length !== 1) ||
       pictures.some((p) => p.owner.paragraph !== host.paragraph || p.owner.anchorUnit !== 0)
     )
-      return fail("IncompleteFloatingTablePictureGroup");
+      return fail('IncompleteFloatingTablePictureGroup');
     hosts.set(host.paragraph, { root, host, pictures });
     children.add(key);
   }
   const pictures = (content.pictures ?? []).filter(
     (p) => !p?.owner || !children.has(`${p.section}:${p.owner.anchorNode}`),
   );
-  return { state: "prepared", hosts, pictures };
+  return { state: 'prepared', hosts, pictures };
 }
 
 export function placeFloatingTablePictureGroup(
@@ -105,9 +105,9 @@ export function placeFloatingTablePictureGroup(
   previous = [],
 ) {
   const { root, host, pictures } = entry,
-    fail = (error) => ({ state: "unavailable", error });
+    fail = (error) => ({ state: 'unavailable', error });
   const geometry = paragraphReferenceGeometry(host.paragraphShape, page.page.width);
-  const font = textMeasurement(measure("", host, 0, "text")),
+  const font = textMeasurement(measure('', host, 0, 'text')),
     height = Math.max(
       DEFAULT_ROW_HEIGHT,
       paragraphLineAdvance(
@@ -117,10 +117,10 @@ export function placeFloatingTablePictureGroup(
       ),
     );
   if (!Number.isFinite(height) || height <= 0 || height > page.page.height)
-    return fail("UnsupportedFloatingGroupAnchorRow");
-  if (cursor + height > page.page.y + page.page.height) return { state: "next-page" };
+    return fail('UnsupportedFloatingGroupAnchorRow');
+  if (cursor + height > page.page.y + page.page.height) return { state: 'next-page' };
   const row = {
-    kind: "text",
+    kind: 'text',
     section: host.section,
     paragraph: host.paragraph,
     text: host.text,
@@ -150,20 +150,20 @@ export function placeFloatingTablePictureGroup(
     source: root.source,
   };
   const reference = drawingPageReference(drawing, [host], [row]);
-  if (reference.state !== "selected") return reference;
+  if (reference.state !== 'selected') return reference;
   const placed = placeGroupedRoot(root.source, reference.boxes, reference.host, {
     section: host.section,
     paragraph: host.paragraph,
     unit: 0,
   });
-  if (placed.state !== "placed") return fail(placed.error ?? placed.state);
+  if (placed.state !== 'placed') return fail(placed.error ?? placed.state);
   const margins = root.source.flow.outside_margins;
   if (
     !Array.isArray(margins) ||
     margins.length !== 4 ||
     !margins.every((v) => Number.isSafeInteger(v) && v >= 0 && v <= 0x7fffffff)
   )
-    return fail("InvalidFloatingGroupMargins");
+    return fail('InvalidFloatingGroupMargins');
   const [left, right, top, bottom] = margins.map(hwpUnitPixels),
     r = placed.rectangle;
   const footprint = {
@@ -184,10 +184,10 @@ export function placeFloatingTablePictureGroup(
     root.source.position.flags[1] === true &&
     (footprint.y < page.page.y || footprint.y + footprint.height > page.page.y + page.page.height)
   ) {
-    if (footprint.height > page.page.height) return fail("FloatingGroupPageHeightOverflow");
-    return { state: "next-page" };
+    if (footprint.height > page.page.height) return fail('FloatingGroupPageHeightOverflow');
+    return { state: 'next-page' };
   }
-  if (!insidePaper(footprint)) return fail("FloatingGroupPaperOverflow");
+  if (!insidePaper(footprint)) return fail('FloatingGroupPaperOverflow');
   if (
     placements.some(
       (p) => p.pageOrdinal === page.ordinal && rectanglesOverlap(p.footprint, footprint),
@@ -196,14 +196,14 @@ export function placeFloatingTablePictureGroup(
       (p) => p.pageOrdinal === page.ordinal && rectanglesOverlap(p.footprint, footprint),
     )
   )
-    return fail("FloatingGroupTableCollision");
+    return fail('FloatingGroupTableCollision');
   for (const picture of pictures) {
     const child = projectGroupedPicturePage(picture, [root], [host], [row]);
-    if (child.state !== "placed") return fail(child.error ?? child.state);
-    if (!insidePaper(child.rectangle)) return fail("FloatingGroupChildPaperOverflow");
+    if (child.state !== 'placed') return fail(child.error ?? child.state);
+    if (!insidePaper(child.rectangle)) return fail('FloatingGroupChildPaperOverflow');
   }
   return {
-    state: "placed",
+    state: 'placed',
     row,
     reservation: {
       section: host.section,

@@ -1,4 +1,4 @@
-import { canvasDocumentPoint } from "./canvas-pointer-coordinates.mjs";
+import { canvasDocumentPoint } from './canvas-pointer-coordinates.mjs';
 export function createChartCanvasControls({ canvas, viewport, renderer, ready, select }) {
   let closed = false;
   const pointer = (event) => {
@@ -24,11 +24,11 @@ export function createChartCanvasControls({ canvas, viewport, renderer, ready, s
     event.preventDefault();
     event.stopImmediatePropagation();
   };
-  canvas.addEventListener("pointerdown", pointer, { capture: true });
+  canvas.addEventListener('pointerdown', pointer, { capture: true });
   return {
     close() {
       closed = true;
-      canvas.removeEventListener("pointerdown", pointer, { capture: true });
+      canvas.removeEventListener('pointerdown', pointer, { capture: true });
     },
   };
 }

@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { attachHwp5Tables } from "../../web/preview/hwp5-table-content.mjs";
-import { displayContent } from "../../web/preview/content.mjs";
-import { inspect } from "./style-preservation/text-record-oracle.mjs";
-import { tableBindings } from "./style-preservation/table-binding-oracle.mjs";
-import { tableGrid, hwpUnitsToPixels } from "../../web/preview/table-grid.mjs";
-import { layoutTableContent } from "../../web/preview/table-flow.mjs";
-import { caretGeometry, hitText } from "../../web/preview/text-geometry.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { attachHwp5Tables } from '../../web/preview/hwp5-table-content.mjs';
+import { displayContent } from '../../web/preview/content.mjs';
+import { inspect } from './style-preservation/text-record-oracle.mjs';
+import { tableBindings } from './style-preservation/table-binding-oracle.mjs';
+import { tableGrid, hwpUnitsToPixels } from '../../web/preview/table-grid.mjs';
+import { layoutTableContent } from '../../web/preview/table-flow.mjs';
+import { caretGeometry, hitText } from '../../web/preview/text-geometry.mjs';
 
 const binding = (paragraph) => ({
   paragraph,
@@ -24,7 +24,7 @@ const binding = (paragraph) => ({
   height: 5678,
 });
 
-test("table display grouping separates sections, retains cell paragraphs and clears stale ownership", () => {
+test('table display grouping separates sections, retains cell paragraphs and clears stale ownership', () => {
   const preview = { sections: [{ index: 0 }, { index: 1 }] };
   const content = {
     paragraphs: [0, 1].flatMap((section) =>
@@ -47,20 +47,20 @@ test("table display grouping separates sections, retains cell paragraphs and cle
   assert(content.paragraphs.every((p) => !p.tableCell && p.editable));
 });
 
-test("table diagnostics do not disable editing and clipped or omitted cell content is partial", () => {
+test('table diagnostics do not disable editing and clipped or omitted cell content is partial', () => {
   const preview = { sections: [{ index: 0 }, { index: 1 }] };
   const content = { paragraphs: [{ section: 1, paragraph: 0, editable: true, clipped: true }] };
   attachHwp5Tables(
     {
       tableBindings(section) {
-        if (!section) throw new Error("InvalidTable");
+        if (!section) throw new Error('InvalidTable');
         return [binding(0), { ...binding(1), listNode: 10 }];
       },
     },
     preview,
     content,
   );
-  assert.deepEqual(content.tableBindingsErrors, [{ section: 0, error: "InvalidTable" }]);
+  assert.deepEqual(content.tableBindingsErrors, [{ section: 0, error: 'InvalidTable' }]);
   assert.equal(content.paragraphs[0].editable, true);
   assert.equal(content.tables[0].partial, true);
   assert.deepEqual(
@@ -73,20 +73,20 @@ test("table diagnostics do not disable editing and clipped or omitted cell conte
       {
         index: 0,
         paragraphs: [
-          { text: "A😀B", textPresent: true, declaredUnits: 4, parentNodeIndex: null, tokens: [] },
+          { text: 'A😀B', textPresent: true, declaredUnits: 4, parentNodeIndex: null, tokens: [] },
         ],
       },
     ],
   };
   const clipped = displayContent(source, { maxUnits: 2 });
-  assert.equal(clipped.paragraphs[0].text, "A");
+  assert.equal(clipped.paragraphs[0].text, 'A');
   assert.equal(clipped.paragraphs[0].clipped, true);
   assert.equal(clipped.paragraphs[0].editable, false);
   attachHwp5Tables({ tableBindings: () => [binding(0)] }, source, clipped);
   assert.equal(clipped.tables[0].partial, true);
 });
 
-test("actual Worker table ownership matches all fixture records and refreshes split input history", async (t) => {
+test('actual Worker table ownership matches all fixture records and refreshes split input history', async (t) => {
   const previousSelf = globalThis.self,
     previousFetch = globalThis.fetch,
     replies = [];
@@ -96,7 +96,7 @@ test("actual Worker table ownership matches all fixture records and refreshes sp
     },
   };
   globalThis.fetch = async () =>
-    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
   t.after(() => {
     globalThis.fetch = previousFetch;
     if (previousSelf === undefined) delete globalThis.self;
@@ -112,17 +112,17 @@ test("actual Worker table ownership matches all fixture records and refreshes sp
   };
   let files = 0,
     count = 0;
-  for (const path of execFileSync("git", ["ls-files", "-z"])
+  for (const path of execFileSync('git', ['ls-files', '-z'])
     .toString()
-    .split("\0")
+    .split('\0')
     .filter(
       (p) =>
-        p.includes("/fixtures/") &&
-        p.endsWith(".hwp") &&
+        p.includes('/fixtures/') &&
+        p.endsWith('.hwp') &&
         !/(?:password-12345|distribution|viewtext)\.hwp$/.test(p),
     )) {
     const bytes = readFileSync(path),
-      content = (await send({ kind: "load", bytes })).content;
+      content = (await send({ kind: 'load', bytes })).content;
     assert.deepEqual(content.tableBindingsErrors, [], path);
     assert.deepEqual(content.tablePlacementsErrors, [], path);
     for (const table of content.tables) {
@@ -156,10 +156,10 @@ test("actual Worker table ownership matches all fixture records and refreshes sp
     }
     for (const p of content.paragraphs) {
       const textRows = flow.rows.filter(
-        (row) => row.kind === "text" && row.section === p.section && row.paragraph === p.paragraph,
+        (row) => row.kind === 'text' && row.section === p.section && row.paragraph === p.paragraph,
       );
       assert(textRows.length > 0, `${path}:${p.paragraph}`);
-      assert.equal(textRows.map((row) => row.text).join(""), p.text, `${path}:${p.paragraph}`);
+      assert.equal(textRows.map((row) => row.text).join(''), p.text, `${path}:${p.paragraph}`);
       if (p.editable) {
         const caret = caretGeometry(flow, { section: p.section, paragraph: p.paragraph, unit: 0 });
         assert(caret, `${path}:${p.paragraph}`);
@@ -212,29 +212,29 @@ test("actual Worker table ownership matches all fixture records and refreshes sp
   assert.equal(files, 45);
   assert.equal(count, 723);
   const loaded = await send({
-    kind: "load",
-    bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table.hwp"),
+    kind: 'load',
+    bytes: readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/table.hwp'),
   });
   const target = loaded.content.paragraphs.find((p) => p.tableCell),
     index = target.paragraph;
-  await send({ kind: "enable" });
-  const split = await send({ kind: "split", section: 0, paragraph: index, atUnit: 0 });
+  await send({ kind: 'enable' });
+  const split = await send({ kind: 'split', section: 0, paragraph: index, atUnit: 0 });
   for (const paragraph of [index, index + 1])
     assert.deepEqual(
       split.content.paragraphs.find((p) => p.paragraph === paragraph).tableCell,
       target.tableCell,
     );
   const typed = await send({
-    kind: "splice",
+    kind: 'splice',
     section: 0,
     paragraph: index + 1,
     startUnit: 0,
     endUnit: 0,
-    text: "셀😀",
+    text: '셀😀',
   });
   assert.deepEqual(typed.content.tables, split.content.tables);
-  assert.deepEqual((await send({ kind: "undo" })).content.tables, split.content.tables);
-  assert.deepEqual((await send({ kind: "undo" })).content.tables, loaded.content.tables);
-  assert.deepEqual((await send({ kind: "redo" })).content.tables, split.content.tables);
-  assert.deepEqual((await send({ kind: "redo" })).content.tables, typed.content.tables);
+  assert.deepEqual((await send({ kind: 'undo' })).content.tables, split.content.tables);
+  assert.deepEqual((await send({ kind: 'undo' })).content.tables, loaded.content.tables);
+  assert.deepEqual((await send({ kind: 'redo' })).content.tables, split.content.tables);
+  assert.deepEqual((await send({ kind: 'redo' })).content.tables, typed.content.tables);
 });

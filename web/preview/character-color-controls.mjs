@@ -1,4 +1,4 @@
-import { characterColorArg } from "../../js/character-color-args.mjs";
+import { characterColorArg } from '../../js/character-color-args.mjs';
 /** Staged explicit color request, not a cached current document color. */
 export function createCharacterColorControls({
   input,
@@ -34,29 +34,29 @@ export function createCharacterColorControls({
     try {
       characterColorArg(input.value);
     } catch {
-      note.textContent = "색은 #RRGGBB 형식으로 지정하세요.";
+      note.textContent = '색은 #RRGGBB 형식으로 지정하세요.';
       return;
     }
     if (request(input.value)) update();
   };
-  apply.addEventListener("click", click);
+  apply.addEventListener('click', click);
   return {
     update,
     reset() {
       available = false;
-      input.value = "#000000";
-      note.textContent = "";
+      input.value = '#000000';
+      note.textContent = '';
       update();
     },
     message(message) {
-      if (message.kind === "load") this.reset();
+      if (message.kind === 'load') this.reset();
       if (message.content && !message.error) available = message.content[availability] === true;
       if (message.kind === kind || additionalKinds.includes(message.kind))
         note.textContent = message.error ? `${label} 변경 실패: ${message.error}` : success;
       update();
     },
     close() {
-      apply.removeEventListener("click", click);
+      apply.removeEventListener('click', click);
     },
   };
 }

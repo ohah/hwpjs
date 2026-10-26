@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { expected as rootOrder } from "./icc-normalized-root-compare.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { expected as rootOrder } from './icc-normalized-root-compare.mjs';
+import { cmp } from './icc-power-reference.mjs';
 
 export function endpoint(bytes, x, attained, width = 32) {
   assert.equal(bytes.length, 28 + 2 * width);

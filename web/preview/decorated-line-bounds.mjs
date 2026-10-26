@@ -1,9 +1,9 @@
-import { arrowHeadGeometry } from "./arrow-head-geometry.mjs";
+import { arrowHeadGeometry } from './arrow-head-geometry.mjs';
 export function decoratedLineBounds(plan) {
   if (!Number.isInteger(plan?.color) || plan.color < 0 || plan.color > 0xffffff) return null;
   if (
-    plan?.state !== "planned" ||
-    plan.policy !== "rhwp_reference" ||
+    plan?.state !== 'planned' ||
+    plan.policy !== 'rhwp_reference' ||
     !Number.isFinite(plan.strokeWidth) ||
     plan.strokeWidth <= 0 ||
     !Array.isArray(plan.endpoints) ||
@@ -16,7 +16,7 @@ export function decoratedLineBounds(plan) {
   const points = [...plan.endpoints];
   let strokedHead = false;
   for (const arrow of plan.arrows) {
-    if (!arrow || typeof arrow.fill !== "boolean") return null;
+    if (!arrow || typeof arrow.fill !== 'boolean') return null;
     const shape = arrowHeadGeometry(arrow);
     if (!shape) return null;
     if (!shape.closed || !arrow.fill) strokedHead = true;

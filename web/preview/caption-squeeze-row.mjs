@@ -1,8 +1,8 @@
-import { boundaryGlyphWidth, textBoundaryExtent } from "./text-line-width.mjs";
+import { boundaryGlyphWidth, textBoundaryExtent } from './text-line-width.mjs';
 
 // Bounded prototype spacing projection; glyphs keep their original font size.
 export function squeezeCaptionRow(row) {
-  if (row.kind !== "text") return row;
+  if (row.kind !== 'text') return row;
   const boundaries = row.boundaries;
   if (
     !Number.isFinite(row.width) ||

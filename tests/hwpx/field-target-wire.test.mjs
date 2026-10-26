@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { decodeFieldTargets } from "../../js/hwpx-field-target-wire.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { decodeFieldTargets } from '../../js/hwpx-field-target-wire.mjs';
 
-test("field target decoder shares exact bounded list wire and honors byte offsets", () => {
+test('field target decoder shares exact bounded list wire and honors byte offsets', () => {
   const data = new Uint8Array(20),
     bytes = data.subarray(2, 18);
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

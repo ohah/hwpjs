@@ -1,6 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { previewPictureLayers } from "../../web/preview/picture-layers.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { previewPictureLayers } from '../../web/preview/picture-layers.mjs';
 
 function fixture() {
   const picture = {
@@ -8,7 +8,7 @@ function fixture() {
     paragraph: 3,
     pictureNode: 9,
     anchorUnit: 0,
-    state: "located",
+    state: 'located',
     transform: { identity: true },
     geometry: {
       treatAsCharacter: false,
@@ -21,13 +21,13 @@ function fixture() {
     crop: { clip: [0, 1500, 0, 1500] },
   };
   const content = {
-    paragraphs: [{ section: 0, paragraph: 3, text: "\ufffc", tableCell: { tableNode: 4 } }],
+    paragraphs: [{ section: 0, paragraph: 3, text: '\ufffc', tableCell: { tableNode: 4 } }],
     pictures: [picture],
   };
   const layout = {
     height: 1000,
     rows: [0, 1].map((pageOrdinal) => ({
-      kind: "text",
+      kind: 'text',
       section: 0,
       paragraph: 3,
       pageOrdinal,
@@ -50,7 +50,7 @@ function fixture() {
   return { content, layout };
 }
 
-test("one source picture paints every explicit repeated page instance", () => {
+test('one source picture paints every explicit repeated page instance', () => {
   const { content, layout } = fixture(),
     before = structuredClone({ content, layout });
   const layers = previewPictureLayers(content, layout, 200);
@@ -62,7 +62,7 @@ test("one source picture paints every explicit repeated page instance", () => {
   assert.deepEqual({ content, layout }, before);
 });
 
-test("repeated pictures cannot borrow an anchor row from a different page", () => {
+test('repeated pictures cannot borrow an anchor row from a different page', () => {
   const { content, layout } = fixture();
   layout.rows.pop();
   assert.deepEqual(
@@ -71,7 +71,7 @@ test("repeated pictures cannot borrow an anchor row from a different page", () =
   );
 });
 
-test("same-page columns retain separate picture instances and ambiguous instances fail closed", () => {
+test('same-page columns retain separate picture instances and ambiguous instances fail closed', () => {
   const { content, layout } = fixture();
   for (const rows of [layout.rows, layout.flowPictures])
     rows.forEach((item, i) => {
@@ -87,7 +87,7 @@ test("same-page columns retain separate picture instances and ambiguous instance
   assert.equal(previewPictureLayers(content, layout, 200).front.length, 0);
 });
 
-test("invalid repeated rectangle is not emitted as a successful paint layer", () => {
+test('invalid repeated rectangle is not emitted as a successful paint layer', () => {
   const { content, layout } = fixture();
   layout.flowPictures[1].rectangle.width = Infinity;
   assert.deepEqual(

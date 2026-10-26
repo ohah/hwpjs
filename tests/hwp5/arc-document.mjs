@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
-import { arcOwnerActual, arcOwnerRun } from "./arc-validation.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
+import { arcOwnerActual, arcOwnerRun } from './arc-validation.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -11,17 +11,17 @@ const w = (n) => {
 };
 // Synthetic arcs in a real container. This is NOT an actual arc fixture.
 export function arcDocumentEdges(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/group-drawing-02.hwp", import.meta.url);
+  const path = new URL('../../reference/rhwp/samples/group-drawing-02.hwp', import.meta.url);
   if (!existsSync(path)) return { skipped: true };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32);
   const decode = (path) => call(3, Buffer.concat([h, Buffer.from(cfb.findExact(path).content)]));
-  const doc = decode("/DocInfo"),
-    original = decode("/BodyText/Section0");
+  const doc = decode('/DocInfo'),
+    original = decode('/BodyText/Section0');
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const stack = [];
   let target;
   for (const record of documentRecords(original)) {
@@ -78,7 +78,7 @@ export function arcDocumentEdges(call, cfb) {
       Buffer.from(
         cfb.write({
           nodes: nodes.map((n) =>
-            n.parent === body && n.name === "Section0"
+            n.parent === body && n.name === 'Section0'
               ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes }
               : n,
           ),
@@ -99,7 +99,7 @@ export function arcDocumentEdges(call, cfb) {
       expected = arcOwnerActual(call, v, good, mode);
     assert.deepEqual(container.subarray(0, report.length), report);
     expected.forEach((n, i) =>
-      assert.equal(report.readUInt32LE(sectionFieldOffset(0, "arcs", i)), n),
+      assert.equal(report.readUInt32LE(sectionFieldOffset(0, 'arcs', i)), n),
     );
     if (mode === 2) {
       assert.deepEqual(call(24, input(good)), report);
@@ -128,8 +128,8 @@ export function arcDocumentEdges(call, cfb) {
       if (mode !== 2) reject(short, /UnexpectedEnd/);
       else {
         const deferred = run(short);
-        assert.equal(deferred.readUInt32LE(sectionFieldOffset(0, "arcs", 1)), 0);
-        assert.equal(deferred.readUInt32LE(sectionFieldOffset(0, "arcs", 3)), n);
+        assert.equal(deferred.readUInt32LE(sectionFieldOffset(0, 'arcs', 1)), 0);
+        assert.equal(deferred.readUInt32LE(sectionFieldOffset(0, 'arcs', 3)), n);
         assert.deepEqual(full(short).subarray(0, deferred.length), deferred);
         unselected++;
       }
@@ -147,14 +147,14 @@ export function arcDocumentEdges(call, cfb) {
     assert.deepEqual(ordered([...pair].reverse()), canonical);
     const field = mode === 2 ? 3 : 4,
       base = mode === 2 ? p.length : 3;
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, "arcs", field)), base);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, "arcs", field)), base + 1);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, 'arcs', field)), base);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, 'arcs', field)), base + 1);
     ordering++;
   }
   const shared = make(Buffer.alloc(28));
   for (const mode of [0, 1]) {
     const result = call(64, Buffer.concat([Buffer.from([mode]), input(shared)]));
-    assert.equal(result.readUInt32LE(sectionFieldOffset(0, "arcs", 4)), mode === 0 ? 0 : 3);
+    assert.equal(result.readUInt32LE(sectionFieldOffset(0, 'arcs', 4)), mode === 0 ? 0 : 3);
   }
   for (const mode of [3, 255])
     for (const probe of [64, 65]) {

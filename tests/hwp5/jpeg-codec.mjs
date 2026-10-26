@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { huffmanFixture, jpegTablesOracle } from "./jpeg-tables.mjs";
+import assert from 'node:assert/strict';
+import { huffmanFixture, jpegTablesOracle } from './jpeg-tables.mjs';
 const words = (ns) => {
   const b = Buffer.alloc(ns.length * 4);
   ns.forEach((n, i) => b.writeUInt32LE(n, i * 4));
@@ -19,7 +19,7 @@ export function unstuff(raw) {
     data.push(n);
     ends.push(i + 1);
   }
-  return { text: data.map((n) => n.toString(2).padStart(8, "0")).join(""), ends };
+  return { text: data.map((n) => n.toString(2).padStart(8, '0')).join(''), ends };
 }
 export function jpegCodecInput(
   raw,
@@ -44,7 +44,7 @@ export function huffmanCodewords(table) {
     const unit = 2 ** (16 - length);
     for (let n = 0; n < table[length]; n++) {
       codes.push({
-        bits: (occupied / unit).toString(2).padStart(length, "0"),
+        bits: (occupied / unit).toString(2).padStart(length, '0'),
         symbol: table[at++],
       });
       occupied += unit;
@@ -54,10 +54,10 @@ export function huffmanCodewords(table) {
   return codes;
 }
 export function encodeCodes(codes, skip = 0) {
-  const bits = "0".repeat(skip) + codes.join("");
+  const bits = '0'.repeat(skip) + codes.join('');
   return stuff(
     Buffer.from(
-      (bits + "1".repeat((8 - (bits.length % 8)) % 8)).match(/.{8}/g)?.map((n) => parseInt(n, 2)) ??
+      (bits + '1'.repeat((8 - (bits.length % 8)) % 8)).match(/.{8}/g)?.map((n) => parseInt(n, 2)) ??
         [],
     ),
   );
@@ -79,7 +79,7 @@ export function jpegCodecOracle(
   } else {
     const codes = new Map(huffmanCodewords(table).map((c) => [c.bits, c.symbol]));
     for (let i = 0; i < count; i++) {
-      let prefix = "",
+      let prefix = '',
         found = false;
       for (let length = 1; length <= 16; length++) {
         assert.ok(at < text.length);
@@ -155,7 +155,7 @@ export function jpegCodecEdges(call) {
       bits[length - 1] = 1;
       const table = huffmanFixture(bits);
       table[17] = symbol;
-      const raw = encodeCodes(["0".repeat(length)]);
+      const raw = encodeCodes(['0'.repeat(length)]);
       check(raw, { table, count: 1, finish: true });
     }
   const table = huffmanFixture([0, 2, 3, 1, ...Array(12).fill(0)]),

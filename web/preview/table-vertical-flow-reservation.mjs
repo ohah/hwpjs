@@ -1,12 +1,12 @@
-import { signedInt32 } from "./signed-int32.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { tableVerticalReference } from "./table-vertical-reference.mjs";
-import { paragraphTableStart } from "./paragraph-table-start.mjs";
+import { signedInt32 } from './signed-int32.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { tableVerticalReference } from './table-vertical-reference.mjs';
+import { paragraphTableStart } from './paragraph-table-start.mjs';
 
 // Resolve paragraph-flow or fixed page-relative non-overlapping reservations.
 // The caller owns the current paragraph anchor and occupied content boundary.
 export function reserveTableVerticalFlow(source, bounds) {
-  if (!bounds) return { state: "unavailable", error: "InvalidTableVerticalFlow" };
+  if (!bounds) return { state: 'unavailable', error: 'InvalidTableVerticalFlow' };
   const { anchorY, occupiedBottom, height, pageTop, pageBottom } = bounds;
   const geometry = source?.geometry;
   const pageRelative =
@@ -17,7 +17,7 @@ export function reserveTableVerticalFlow(source, bounds) {
     ![true, false].includes(source.flow_with_text) ||
     source.allow_overlap !== false
   )
-    return { state: "unavailable", error: "UnsupportedTableVerticalFlow" };
+    return { state: 'unavailable', error: 'UnsupportedTableVerticalFlow' };
   const offset = signedInt32(geometry.vertical_offset);
   if (
     offset === null ||
@@ -30,22 +30,22 @@ export function reserveTableVerticalFlow(source, bounds) {
     occupiedBottom > pageBottom ||
     !Number.isFinite(pageBottom - pageTop)
   )
-    return { state: "unavailable", error: "InvalidTableVerticalFlow" };
+    return { state: 'unavailable', error: 'InvalidTableVerticalFlow' };
   if (height > pageBottom - pageTop)
-    return { state: "unavailable", error: "TableVerticalFlowHeightOverflow" };
+    return { state: 'unavailable', error: 'TableVerticalFlowHeightOverflow' };
   if (pageRelative) {
     const reference = tableVerticalReference(source, bounds);
-    if (reference.state !== "resolved")
-      return { state: "unavailable", error: "InvalidTableVerticalFlow" };
+    if (reference.state !== 'resolved')
+      return { state: 'unavailable', error: 'InvalidTableVerticalFlow' };
     const requestedY = reference.y,
       bottom = reference.bottom;
     if (source.vertical_relative === 0 && reference.outsideBody)
-      return { state: "unavailable", error: "UnsupportedPaperTableFlowOutsideBody" };
+      return { state: 'unavailable', error: 'UnsupportedPaperTableFlowOutsideBody' };
     if (![requestedY, bottom].every(Number.isFinite) || requestedY < pageTop || bottom > pageBottom)
-      return { state: "unavailable", error: "TablePageAnchorOverflow" };
-    if (requestedY < occupiedBottom) return { state: "next-page", requestedY, height };
+      return { state: 'unavailable', error: 'TablePageAnchorOverflow' };
+    if (requestedY < occupiedBottom) return { state: 'next-page', requestedY, height };
     return {
-      state: "reserved",
+      state: 'reserved',
       requestedY,
       y: requestedY,
       bottom,
@@ -61,25 +61,25 @@ export function reserveTableVerticalFlow(source, bounds) {
   const y = source.flow_with_text ? confinedY : requestedY;
   const bottom = y + height;
   if (![requestedY, y, bottom].every(Number.isFinite))
-    return { state: "unavailable", error: "InvalidTableVerticalFlow" };
+    return { state: 'unavailable', error: 'InvalidTableVerticalFlow' };
   if (!source.flow_with_text) {
     if (y < pageTop || bottom > pageBottom)
       return {
-        state: "unavailable",
-        error: "UnsupportedUnconfinedTableBodyOverflow",
+        state: 'unavailable',
+        error: 'UnsupportedUnconfinedTableBodyOverflow',
         requestedY,
         bottom,
         height,
       };
     if (y < occupiedBottom)
       return {
-        state: "unavailable",
-        error: "UnsupportedUnconfinedTableBackwardFlow",
+        state: 'unavailable',
+        error: 'UnsupportedUnconfinedTableBackwardFlow',
         requestedY,
         occupiedBottom,
         height,
       };
   }
-  if (bottom > pageBottom) return { state: "next-page", requestedY, height };
-  return { state: "reserved", requestedY, y, bottom, gap: y - occupiedBottom };
+  if (bottom > pageBottom) return { state: 'next-page', requestedY, height };
+  return { state: 'reserved', requestedY, y, bottom, gap: y - occupiedBottom };
 }

@@ -1,19 +1,19 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { observedContentsCase } from "./chart-observed-contents-oracle.mjs";
-import { axisTitleVariants } from "./chart-axis-title-variants.mjs";
-import { axisExtraTailVariant } from "./chart-axis-tail-variant.mjs";
-import { lightSourceCountVariant } from "./chart-light-source-variant.mjs";
-import { gridCellVariants } from "./chart-grid-cell-variants.mjs";
-import { gridPreludeRawVariant } from "./chart-grid-prelude-variant.mjs";
-import { stringLengthVariant } from "./chart-string-length-variant.mjs";
-import { backdropRawVariant } from "./chart-backdrop-variant.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { observedContentsCase } from './chart-observed-contents-oracle.mjs';
+import { axisTitleVariants } from './chart-axis-title-variants.mjs';
+import { axisExtraTailVariant } from './chart-axis-tail-variant.mjs';
+import { lightSourceCountVariant } from './chart-light-source-variant.mjs';
+import { gridCellVariants } from './chart-grid-cell-variants.mjs';
+import { gridPreludeRawVariant } from './chart-grid-prelude-variant.mjs';
+import { stringLengthVariant } from './chart-string-length-variant.mjs';
+import { backdropRawVariant } from './chart-backdrop-variant.mjs';
 // Whole-assembly boundary checks; still not a comparison of all returned fields.
 export async function chartObservedContentsSmoke(call, { allCuts = false } = {}) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     accepted = 0,
     rejected = 0,
@@ -21,10 +21,10 @@ export async function chartObservedContentsSmoke(call, { allCuts = false } = {})
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const {
         title,
@@ -54,15 +54,15 @@ export async function chartObservedContentsSmoke(call, { allCuts = false } = {})
       };
       const extra = Buffer.concat([b, Buffer.alloc(1)]);
       extra.writeUInt32LE(extra.length - 36, 32);
-      reject(extra, "UnexpectedChartTrailingBytes");
+      reject(extra, 'UnexpectedChartTrailingBytes');
       for (let at = allCuts ? 0 : b.length - 1; at < b.length; at++) {
         const cut = Buffer.from(b.subarray(0, at));
         if (at >= 36) cut.writeUInt32LE(at - 36, 32);
-        reject(cut, "UnexpectedEnd");
+        reject(cut, 'UnexpectedEnd');
         cuts++;
       }
-      reject(b, "LimitExceeded", tail.objects.size - 1);
-      reject(b, "LimitExceeded", tail.objects.size, b.length - 1);
+      reject(b, 'LimitExceeded', tail.objects.size - 1);
+      reject(b, 'LimitExceeded', tail.objects.size, b.length - 1);
       // Opaque bytes must survive assembly, not merely preserve final counts.
       const raw = Buffer.from(b);
       for (const s of title.prior.r.series) raw.fill(255, s.trailerStart, s.end);
@@ -77,12 +77,12 @@ export async function chartObservedContentsSmoke(call, { allCuts = false } = {})
         const x = observedContentsCase(variant.bytes),
           text = x.secondary.r.axis.text;
         assert(text !== null);
-        if (variant.kind === "alias") {
+        if (variant.kind === 'alias') {
           assert.equal(text.introduced, false);
           assert.equal(text.id, secondary.r.axis.fontName.id);
         } else {
           assert.equal(text.introduced, true);
-          assert.equal(text.hex, variant.text.toString("hex"));
+          assert.equal(text.hex, variant.text.toString('hex'));
         }
         assert.deepEqual(call(336, x.input(), variant.bytes.length), x.wire);
         accepted++;
@@ -91,7 +91,7 @@ export async function chartObservedContentsSmoke(call, { allCuts = false } = {})
         const previous = observedContentsCase(bytes),
           extra = axisExtraTailVariant(bytes, previous.secondary.r),
           x = observedContentsCase(extra);
-        assert.equal(x.secondary.r.tail.extra, "a5".repeat(24));
+        assert.equal(x.secondary.r.tail.extra, 'a5'.repeat(24));
         assert.deepEqual(call(336, x.input(), extra.length), x.wire);
         accepted++;
       }
@@ -173,8 +173,8 @@ export async function chartObservedContentsSmoke(call, { allCuts = false } = {})
       const duplicateId = axes.seen.values().next().value;
       for (const at of idOffsets)
         for (const [id, error] of [
-          [0xffffffff, "UnsupportedChartObjectReference"],
-          [duplicateId, "DuplicateChartObjectId"],
+          [0xffffffff, 'UnsupportedChartObjectReference'],
+          [duplicateId, 'DuplicateChartObjectId'],
         ]) {
           const bytes = Buffer.from(b);
           bytes.writeUInt32LE(id, at);
@@ -196,10 +196,10 @@ export async function chartObservedContentsSmoke(call, { allCuts = false } = {})
           reject(
             bytes,
             first !== second
-              ? "UnsupportedChartArrayLayout"
+              ? 'UnsupportedChartArrayLayout'
               : isSurface
-                ? "LimitExceeded"
-                : "UnsupportedChartInitialArray",
+                ? 'LimitExceeded'
+                : 'UnsupportedChartInitialArray',
           );
         }
       for (const bytes of gridCellVariants(b, grid)) {

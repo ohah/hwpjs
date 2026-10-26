@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { historyContainerPrefix } from "./history-container.mjs";
-import { historyContainerEvidence } from "./history-container-evidence.mjs";
-import { xmlTemplateContainerEvidence } from "./xml-template-container-evidence.mjs";
-import { historyXmlPayloads } from "./history-xml-source.mjs";
-import { xmlNamespaceEvidence } from "./xml-namespace-evidence.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { historyContainerPrefix } from './history-container.mjs';
+import { historyContainerEvidence } from './history-container-evidence.mjs';
+import { xmlTemplateContainerEvidence } from './xml-template-container-evidence.mjs';
+import { historyXmlPayloads } from './history-xml-source.mjs';
+import { xmlNamespaceEvidence } from './xml-namespace-evidence.mjs';
+import { containerTotals } from './container-report-wire.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -45,7 +45,7 @@ function expected(base, model, payloads, o) {
       last_document: o.last ?? 1,
     }),
     t = xmlTemplateContainerEvidence(base, model, o.template ?? 1);
-  const root = model.nodes.findIndex((n) => n.parent === 0 && n.name === "XMLTemplate");
+  const root = model.nodes.findIndex((n) => n.parent === 0 && n.name === 'XMLTemplate');
   const templateStreams =
     o.template === 0
       ? 0
@@ -53,7 +53,7 @@ function expected(base, model, payloads, o) {
           (n) =>
             root >= 0 &&
             n.parent === root &&
-            ["_SchemaName", "Schema", "Instance"].includes(n.name),
+            ['_SchemaName', 'Schema', 'Instance'].includes(n.name),
         ).length;
   const totals = containerTotals(base),
     tail = [
@@ -65,18 +65,18 @@ function expected(base, model, payloads, o) {
     ];
   if (o.enabled === 0) return { wire: Buffer.concat([word(0), ...tail.map(word)]), caps: null };
   const selected = payloads.filter((p) =>
-    p.kind === "schema" || p.kind === "instance"
+    p.kind === 'schema' || p.kind === 'instance'
       ? o.template !== 0
-      : o.history !== 0 && (p.kind === "diff" || o.last !== 0),
+      : o.history !== 0 && (p.kind === 'diff' || o.last !== 0),
   );
   const sums = Array(13).fill(0);
   sums[12] = 1;
   for (const p of selected) {
-    const r = xmlNamespaceEvidence(p.bytes.toString("utf16le"), p.bytes.length).wire;
+    const r = xmlNamespaceEvidence(p.bytes.toString('utf16le'), p.bytes.length).wire;
     for (let i = 0; i < 11; i++) sums[i] += r.readUInt32LE(i * 4);
     sums[11] = Math.max(sums[11], r.readUInt32LE(44));
   }
-  const counts = ["schema", "instance", "diff", "last"].map(
+  const counts = ['schema', 'instance', 'diff', 'last'].map(
     (kind) => selected.filter((p) => p.kind === kind).length,
   );
   return {
@@ -113,14 +113,14 @@ export function xmlContainerEdges(call, cfb) {
     return want;
   };
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const original = cfb.document(),
     real = historyXmlPayloads(cfb).payloads;
   const actual = verify(file, original, real, {}, true);
-  const root = original.nodes.findIndex((n) => n.parent === 0 && n.name === "DocHistory");
-  const tinyText = Buffer.from('<r xmlns:p="urn:a" p:a="&amp;"/>', "utf16le");
+  const root = original.nodes.findIndex((n) => n.parent === 0 && n.name === 'DocHistory');
+  const tinyText = Buffer.from('<r xmlns:p="urn:a" p:a="&amp;"/>', 'utf16le');
   const templateRoot = original.nodes.length;
   const small = {
     ...original,
@@ -128,33 +128,33 @@ export function xmlContainerEdges(call, cfb) {
       ...original.nodes.map((n) =>
         n.parent === root && /^VersionLog[0-9]+$/.test(n.name)
           ? { ...n, content: deflateRawSync(log(tinyText)) }
-          : n.parent === root && n.name === "HistoryLastDoc"
+          : n.parent === root && n.name === 'HistoryLastDoc'
             ? { ...n, content: deflateRawSync(record(49, tinyText)) }
             : n,
       ),
-      { name: "XMLTemplate", kind: 1, parent: 0 },
+      { name: 'XMLTemplate', kind: 1, parent: 0 },
       {
-        name: "_SchemaName",
+        name: '_SchemaName',
         kind: 2,
         parent: templateRoot,
         content: envelope(Buffer.from([0, 0xd8])),
       },
-      { name: "Schema", kind: 2, parent: templateRoot, content: envelope(tinyText) },
-      { name: "Instance", kind: 2, parent: templateRoot, content: envelope(tinyText) },
+      { name: 'Schema', kind: 2, parent: templateRoot, content: envelope(tinyText) },
+      { name: 'Instance', kind: 2, parent: templateRoot, content: envelope(tinyText) },
     ],
   };
   const payloads = [
-    ...Array.from({ length: 4 }, () => ({ kind: "diff", bytes: tinyText })),
-    { kind: "last", bytes: tinyText },
-    { kind: "schema", bytes: tinyText },
-    { kind: "instance", bytes: tinyText },
+    ...Array.from({ length: 4 }, () => ({ kind: 'diff', bytes: tinyText })),
+    { kind: 'last', bytes: tinyText },
+    { kind: 'schema', bytes: tinyText },
+    { kind: 'instance', bytes: tinyText },
   ];
   const smallBytes = cfb.write(small);
   verify(smallBytes, small, payloads, {}, true);
   const extra = {
     ...small,
     nodes: small.nodes.map((n) =>
-      n.parent === templateRoot && n.name === "Schema"
+      n.parent === templateRoot && n.name === 'Schema'
         ? { ...n, content: Buffer.concat([n.content, Buffer.from([255])]) }
         : n,
     ),
@@ -170,22 +170,22 @@ export function xmlContainerEdges(call, cfb) {
     verify(smallBytes, small, payloads, o);
   const indices = small.nodes
     .map((n, i) => [n, i])
-    .filter(([n]) => n.parent === root || (n.parent === templateRoot && n.name !== "_SchemaName"));
+    .filter(([n]) => n.parent === root || (n.parent === templateRoot && n.name !== '_SchemaName'));
   for (const [node, index] of indices)
     for (const text of [
-      "",
-      "<r>",
-      "<p:r/>",
-      "<!DOCTYPE r><r/>",
-      "<r>&unknown;</r>",
-      "<r/>\0",
+      '',
+      '<r>',
+      '<p:r/>',
+      '<!DOCTYPE r><r/>',
+      '<r>&unknown;</r>',
+      '<r/>\0',
       '<?xml version="1.0" encoding="UTF-8"?><r/>',
     ]) {
-      const raw = Buffer.from(text, "utf16le"),
+      const raw = Buffer.from(text, 'utf16le'),
         content =
           node.parent === templateRoot
             ? envelope(raw)
-            : deflateRawSync(node.name === "HistoryLastDoc" ? record(49, raw) : log(raw));
+            : deflateRawSync(node.name === 'HistoryLastDoc' ? record(49, raw) : log(raw));
       const modified = {
           ...small,
           nodes: small.nodes.map((n, i) => (i === index ? { ...n, content } : n)),
@@ -197,7 +197,7 @@ export function xmlContainerEdges(call, cfb) {
       const skip =
         node.parent === templateRoot
           ? { template: 0 }
-          : node.name === "HistoryLastDoc"
+          : node.name === 'HistoryLastDoc'
             ? { last: 0 }
             : { history: 0 };
       verify(bytes, modified, payloads, skip);

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { jpegSequentialScans, jpegScanOracle } from "./jpeg-scan.mjs";
-import { jpegFrameInput, jpegFrameOracle, jpegFrameFixture } from "./jpeg-frame.mjs";
-import { jpegQuantizers, jpegDequantizedMatrix } from "./jpeg-dequant.mjs";
-import { segment } from "./jpeg-structure.mjs";
+import assert from 'node:assert/strict';
+import { jpegSequentialScans, jpegScanOracle } from './jpeg-scan.mjs';
+import { jpegFrameInput, jpegFrameOracle, jpegFrameFixture } from './jpeg-frame.mjs';
+import { jpegQuantizers, jpegDequantizedMatrix } from './jpeg-dequant.mjs';
+import { segment } from './jpeg-structure.mjs';
 
 export function jpegFrameDequantOracle(raw) {
   const header = jpegFrameOracle(raw).subarray(0, 36),

@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { segment } from "./jpeg-structure.mjs";
-import { jpegJfxxJpegFixture } from "./jpeg-jfxx-jpeg.mjs";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { iccFixture } from "./icc-fixture.mjs";
-import { iccHeaderWire, iccDigest } from "./icc-header-evidence.mjs";
-import { iccTableWire } from "./icc-table-evidence.mjs";
-const signature = Buffer.from("ICC_PROFILE\0"),
+import assert from 'node:assert/strict';
+import { segment } from './jpeg-structure.mjs';
+import { jpegJfxxJpegFixture } from './jpeg-jfxx-jpeg.mjs';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { iccFixture } from './icc-fixture.mjs';
+import { iccHeaderWire, iccDigest } from './icc-header-evidence.mjs';
+import { iccTableWire } from './icc-table-evidence.mjs';
+const signature = Buffer.from('ICC_PROFILE\0'),
   maximum = 16707345;
 const words = (values) => {
   const b = Buffer.alloc(values.length * 4);
@@ -140,7 +140,7 @@ export function jpegIccEdges(call) {
   comparisons++;
   for (const major of [2, 4])
     for (const policy of [0, 1]) {
-      const profile = iccFixture([["text", 144, 12]], 156, major);
+      const profile = iccFixture([['text', 144, 12]], 156, major);
       if (major === 4) iccDigest(profile).copy(profile, 84);
       for (const split of [0, 1, 4, 83, 84, 100, 128, 144, 155, 156]) {
         const parts = [

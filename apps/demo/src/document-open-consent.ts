@@ -1,8 +1,8 @@
 /** Explicit UI cancellation is an outcome, not a transport/runtime failure. */
 export class DocumentOpenCancelledError extends Error {
   constructor() {
-    super("문서 열기를 취소했습니다. 기존 문서는 유지됩니다.");
-    this.name = "DocumentOpenCancelledError";
+    super('문서 열기를 취소했습니다. 기존 문서는 유지됩니다.');
+    this.name = 'DocumentOpenCancelledError';
   }
 }
 

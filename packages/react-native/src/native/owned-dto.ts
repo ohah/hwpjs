@@ -7,25 +7,25 @@ export function copyTransportDTO<T>(value: T, seen = new Set<object>()): T {
   if (
     value === null ||
     value === undefined ||
-    typeof value === "string" ||
-    typeof value === "boolean"
+    typeof value === 'string' ||
+    typeof value === 'boolean'
   )
     return value;
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) throw TypeError("NativeInvalidNumber");
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) throw TypeError('NativeInvalidNumber');
     return value;
   }
-  if (typeof value !== "object") throw TypeError("NativeUnsupportedPayload");
+  if (typeof value !== 'object') throw TypeError('NativeUnsupportedPayload');
   if (
-    typeof SharedArrayBuffer !== "undefined" &&
+    typeof SharedArrayBuffer !== 'undefined' &&
     (value instanceof SharedArrayBuffer ||
       (ArrayBuffer.isView(value) && value.buffer instanceof SharedArrayBuffer))
   )
-    throw TypeError("NativeSharedBufferUnsupported");
+    throw TypeError('NativeSharedBufferUnsupported');
   if (value instanceof Uint8Array)
     return new Uint8Array(value.buffer, value.byteOffset, value.byteLength).slice() as T;
   if (value instanceof ArrayBuffer) return value.slice(0) as T;
-  if (seen.has(value)) throw TypeError("NativeCyclicPayload");
+  if (seen.has(value)) throw TypeError('NativeCyclicPayload');
   seen.add(value);
   try {
     if (Array.isArray(value)) {
@@ -33,10 +33,10 @@ export function copyTransportDTO<T>(value: T, seen = new Set<object>()): T {
       // oxlint-disable-next-line unicorn/no-new-array -- 소유 DTO 복제 시 원래 배열 길이와 희소 슬롯을 그대로 보존한다.
       const result: unknown[] = new Array(value.length);
       for (const key of Reflect.ownKeys(value)) {
-        if (key === "length") continue;
-        if (typeof key !== "string") throw TypeError("NativeUnsupportedPayload");
+        if (key === 'length') continue;
+        if (typeof key !== 'string') throw TypeError('NativeUnsupportedPayload');
         const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
-        if (!("value" in descriptor)) throw TypeError("NativeAccessorPayloadUnsupported");
+        if (!('value' in descriptor)) throw TypeError('NativeAccessorPayloadUnsupported');
         Object.defineProperty(result, key, {
           value: copyTransportDTO(descriptor.value, seen),
           enumerable: true,
@@ -47,12 +47,12 @@ export function copyTransportDTO<T>(value: T, seen = new Set<object>()): T {
       return result as T;
     }
     if (Object.getPrototypeOf(value) !== Object.prototype && Object.getPrototypeOf(value) !== null)
-      throw TypeError("NativeUnsupportedPayload");
+      throw TypeError('NativeUnsupportedPayload');
     const result: Record<string, unknown> = Object.create(null);
     for (const key of Reflect.ownKeys(value)) {
-      if (typeof key !== "string") throw TypeError("NativeUnsupportedPayload");
+      if (typeof key !== 'string') throw TypeError('NativeUnsupportedPayload');
       const descriptor = Object.getOwnPropertyDescriptor(value, key)!;
-      if (!("value" in descriptor)) throw TypeError("NativeAccessorPayloadUnsupported");
+      if (!('value' in descriptor)) throw TypeError('NativeAccessorPayloadUnsupported');
       result[key] = copyTransportDTO(descriptor.value, seen);
     }
     return result as T;

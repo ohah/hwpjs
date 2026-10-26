@@ -1,10 +1,10 @@
-import { drawingPageAnchor } from "./drawing-page-anchor.mjs";
-import { nestedParagraphReference } from "./nested-paragraph-reference.mjs";
+import { drawingPageAnchor } from './drawing-page-anchor.mjs';
+import { nestedParagraphReference } from './nested-paragraph-reference.mjs';
 
 // 예약과 실제 도형 배치는 같은 현재 앵커·문단 기준 영역을 사용합니다.
 export function drawingPageReference(drawing, paragraphs, pageRows) {
   const selected = drawingPageAnchor(drawing, paragraphs, pageRows);
-  if (selected.state !== "selected") return selected;
+  if (selected.state !== 'selected') return selected;
   const host = selected.host,
     relations = drawing.source?.position?.relations;
   let boxes = host.referenceBoxes;
@@ -25,7 +25,7 @@ export function drawingPageReference(drawing, paragraphs, pageRows) {
     if ([0, 1].includes(drawing.source?.flow?.text_wrap)) {
       const members = anchoredRows.filter(
         (row) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === drawing.section &&
           row.paragraph === drawing.hostParagraph &&
           row.pageOrdinal === host.pageOrdinal &&
@@ -41,7 +41,7 @@ export function drawingPageReference(drawing, paragraphs, pageRows) {
             (row) => row.flowParagraphBox?.x !== box.x || row.flowParagraphBox?.width !== box.width,
           )
         )
-          return { state: "unavailable", error: "InvalidDrawingParagraphBounds" };
+          return { state: 'unavailable', error: 'InvalidDrawingParagraphBounds' };
         const selectedRows = new Set(members);
         anchoredRows = anchoredRows.map((row) =>
           selectedRows.has(row)
@@ -56,13 +56,13 @@ export function drawingPageReference(drawing, paragraphs, pageRows) {
       { x: 0, y: 0 },
       { pageOrdinal: host.pageOrdinal, columnOrdinal: host.columnOrdinal },
     );
-    if (reference.state !== "referenced")
+    if (reference.state !== 'referenced')
       return {
-        state: "unavailable",
-        error: "MissingDrawingParagraphReference",
+        state: 'unavailable',
+        error: 'MissingDrawingParagraphReference',
         referenceError: reference.error,
       };
     boxes = { ...boxes, paragraph: reference.rectangle };
   }
-  return { state: "selected", host, boxes };
+  return { state: 'selected', host, boxes };
 }

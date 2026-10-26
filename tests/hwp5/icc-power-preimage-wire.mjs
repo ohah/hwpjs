@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { boundary } from "./icc-power-clip-wire.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { boundary } from './icc-power-clip-wire.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
 export function decode(out, rootWidth = 32) {
   assert.ok(rootWidth === 32 || rootWidth === 128);
   const stride = 16 + 2 * rootWidth;

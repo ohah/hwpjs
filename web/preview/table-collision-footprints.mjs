@@ -1,5 +1,5 @@
-import { tableInsets } from "./table-insets.mjs";
-import { nestedTableCollisionBoxes } from "./nested-table-collision-boxes.mjs";
+import { tableInsets } from './table-insets.mjs';
+import { nestedTableCollisionBoxes } from './nested-table-collision-boxes.mjs';
 const boxValid = (b) =>
   b &&
   [b.x, b.y, b.width, b.height, b.x + b.width, b.y + b.height].every(Number.isFinite) &&
@@ -8,13 +8,13 @@ const boxValid = (b) =>
 
 /** Final placed cell bounds, with explicit margins and complete cell identity. */
 export function tableCollisionFootprints(table, layout, outerInsets, content = null) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const margins = tableInsets(outerInsets);
   if (
     layout?.repeatedTableHeaderBoxes !== undefined &&
     !Array.isArray(layout.repeatedTableHeaderBoxes)
   )
-    return fail("InvalidTableCollisionFootprint");
+    return fail('InvalidTableCollisionFootprint');
   if (
     !margins ||
     !table ||
@@ -26,8 +26,8 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
     !table.cells.length ||
     !Array.isArray(layout?.boxes)
   )
-    return fail("InvalidTableCollisionFootprint");
-  if (table.parentTableNode != null) return fail("UnsupportedTableCollisionOwnership");
+    return fail('InvalidTableCollisionFootprint');
+  if (table.parentTableNode != null) return fail('UnsupportedTableCollisionOwnership');
   let childBounds = [];
   if (content) {
     try {
@@ -43,13 +43,13 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
         box.tableNode !== table.tableNode,
     )
   )
-    return fail("UnsupportedTableCollisionOwnership");
+    return fail('UnsupportedTableCollisionOwnership');
   const expected = new Set(table.cells.map((cell) => cell?.listNode));
   if (
     expected.size !== table.cells.length ||
     [...expected].some((id) => !Number.isSafeInteger(id) || id < 0)
   )
-    return fail("InvalidTableCollisionFootprint");
+    return fail('InvalidTableCollisionFootprint');
   const groups = new Map(),
     seen = new Set();
   for (const box of [...layout.boxes, ...(layout.repeatedTableHeaderBoxes ?? [])].filter(
@@ -65,20 +65,20 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
       box.pageOrdinal < 0 ||
       !boxValid(reference)
     )
-      return fail("IncompleteTableCollisionFootprint");
+      return fail('IncompleteTableCollisionFootprint');
     const group = groups.get(box.pageOrdinal) ?? { boxes: [], column: reference, ids: new Set() };
-    if (group.ids.has(box.listNode)) return fail("AmbiguousTableCollisionFootprint");
-    if (["x", "y", "width", "height"].some((key) => group.column[key] !== reference[key]))
-      return fail("UnsupportedTableCollisionColumns");
+    if (group.ids.has(box.listNode)) return fail('AmbiguousTableCollisionFootprint');
+    if (['x', 'y', 'width', 'height'].some((key) => group.column[key] !== reference[key]))
+      return fail('UnsupportedTableCollisionColumns');
     group.ids.add(box.listNode);
     group.boxes.push(box);
     seen.add(box.listNode);
     groups.set(box.pageOrdinal, group);
   }
-  if (seen.size !== expected.size) return fail("IncompleteTableCollisionFootprint");
+  if (seen.size !== expected.size) return fail('IncompleteTableCollisionFootprint');
   for (const box of childBounds) {
     if (!boxValid(box) || !groups.has(box.pageOrdinal))
-      return fail("IncompleteNestedTableCollisionBoxes");
+      return fail('IncompleteNestedTableCollisionBoxes');
   }
   let caption = null;
   if (table.sourceCaption) {
@@ -99,7 +99,7 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
       !boxValid(matches[0].rectangle) ||
       !boxValid(matches[0].bounds)
     )
-      return fail("IncompleteTableCaptionCollisionFootprint");
+      return fail('IncompleteTableCaptionCollisionFootprint');
     caption = matches[0];
   }
   const fragments = [...groups].sort(([a], [b]) => a - b),
@@ -132,8 +132,8 @@ export function tableCollisionFootprints(table, layout, outerInsets, content = n
       bottom = Math.max(bottom, caption.bounds.y + caption.bounds.height);
     }
     const rectangle = { x: left, y: top, width: right - left, height: bottom - top };
-    if (!boxValid(rectangle)) return fail("InvalidTableCollisionFootprint");
+    if (!boxValid(rectangle)) return fail('InvalidTableCollisionFootprint');
     footprints.push({ section: table.section, tableNode: table.tableNode, pageOrdinal, rectangle });
   }
-  return { state: "collected", footprints };
+  return { state: 'collected', footprints };
 }

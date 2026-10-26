@@ -1,6 +1,6 @@
-import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
-import { measureNestedTable, MAX_NESTED_TABLE_DEPTH } from "./nested-table-measurement.mjs";
-import { measureNestedInlineTableObject } from "./nested-inline-table-object-measurement.mjs";
+import { validateNestedTableOwnership } from './nested-table-ownership.mjs';
+import { measureNestedTable, MAX_NESTED_TABLE_DEPTH } from './nested-table-measurement.mjs';
+import { measureNestedInlineTableObject } from './nested-inline-table-object-measurement.mjs';
 
 // Reuse source ownership and measurement without rewriting a child's parent.
 export function prepareCreatedCellSourceTables(
@@ -8,7 +8,7 @@ export function prepareCreatedCellSourceTables(
   input,
   { measureCellFlow, maxDepth = MAX_NESTED_TABLE_DEPTH } = {},
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const tables = new Map(),
     hosts = new Map();
   const children = content.tables.filter(
@@ -16,12 +16,12 @@ export function prepareCreatedCellSourceTables(
       table.section === input.table.section &&
       input.paragraphs.some((p) => p.paragraph === table.hostParagraph),
   );
-  if (!children.length) return { state: "measured", tables, hosts, rowCount: 0 };
+  if (!children.length) return { state: 'measured', tables, hosts, rowCount: 0 };
   let ownership;
   try {
     ownership = validateNestedTableOwnership(content);
   } catch {
-    return fail("InvalidNestedTableFlow");
+    return fail('InvalidNestedTableFlow');
   }
   const inside = (section, paragraph, table) => {
     const row = ownership.paragraphs.get(`${section}:${paragraph}`);
@@ -43,11 +43,11 @@ export function prepareCreatedCellSourceTables(
       table.parentTableNode !== input.table.tableNode ||
       table.parentListNode !== input.cell.listNode
     )
-      return fail("InvalidNestedTableFlow");
+      return fail('InvalidNestedTableFlow');
     let ancestor = table,
       sourceDepth = 0;
     while (ancestor.parentTableNode != null) {
-      if (++sourceDepth > MAX_NESTED_TABLE_DEPTH) return fail("NestedTableMeasurementLimit");
+      if (++sourceDepth > MAX_NESTED_TABLE_DEPTH) return fail('NestedTableMeasurementLimit');
       ancestor = ownership.tables.get(`${ancestor.section}:${ancestor.parentTableNode}`);
     }
     if (
@@ -56,18 +56,18 @@ export function prepareCreatedCellSourceTables(
         (child) => child.section === table.section && child.parentTableNode === table.tableNode,
       )
     )
-      return fail("NestedTableMeasurementLimit");
+      return fail('NestedTableMeasurementLimit');
     if (
       !measureCellFlow &&
       (content.createdTables ?? []).some((created) =>
         inside(created.section, created.hostParagraph, table),
       )
     )
-      return fail("UnsupportedNestedCreatedTableDepth");
+      return fail('UnsupportedNestedCreatedTableDepth');
     if (
       (content.pictures ?? []).some((picture) => inside(picture.section, picture.paragraph, table))
     )
-      return fail("UnsupportedCreatedSourceCellObjects");
+      return fail('UnsupportedCreatedSourceCellObjects');
     if (
       content.tables.some(
         (child) =>
@@ -76,25 +76,25 @@ export function prepareCreatedCellSourceTables(
           child.sourceGeometry?.geometry?.treat_as_character !== true,
       )
     )
-      return fail("UnsupportedCreatedSourceCellObjects");
+      return fail('UnsupportedCreatedSourceCellObjects');
     const host = input.paragraphs.find((p) => p.paragraph === table.hostParagraph);
     if (
       !host ||
       !Number.isSafeInteger(table.anchorUnit) ||
-      host.text[table.anchorUnit] !== "\ufffc"
+      host.text[table.anchorUnit] !== '\ufffc'
     )
-      return fail("InvalidInlineTableAnchorPosition");
+      return fail('InvalidInlineTableAnchorPosition');
     if (table.sourceGeometry?.geometry?.treat_as_character !== true)
-      return fail("UnsupportedCreatedSourceCellObjects");
-    if (rowCount >= input.maxRows) return fail("TableCellMeasurementLimit");
+      return fail('UnsupportedCreatedSourceCellObjects');
+    if (rowCount >= input.maxRows) return fail('TableCellMeasurementLimit');
     const remainingDepth = Math.max(1, Math.min(maxDepth, MAX_NESTED_TABLE_DEPTH - sourceDepth));
     const measured = measureNestedTable(content, table, input.measure, {
       maxRows: input.maxRows - rowCount,
       maxDepth: remainingDepth,
-      overflow: "visible",
+      overflow: 'visible',
       measureCellFlow,
     });
-    if (measured.state !== "measured") return measured;
+    if (measured.state !== 'measured') return measured;
     const object = measureNestedInlineTableObject(
       table,
       measured,
@@ -102,7 +102,7 @@ export function prepareCreatedCellSourceTables(
       input.measure,
       input.maxRows - rowCount,
     );
-    if (object.state !== "object-measured") return object;
+    if (object.state !== 'object-measured') return object;
     rowCount += object.rowCount;
     tables.set(table.tableNode, {
       table,
@@ -120,5 +120,5 @@ export function prepareCreatedCellSourceTables(
     });
     hosts.set(key, entries);
   }
-  return { state: "measured", tables, hosts, rowCount };
+  return { state: 'measured', tables, hosts, rowCount };
 }

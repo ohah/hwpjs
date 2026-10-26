@@ -1,32 +1,32 @@
 // Actual Chromium input and independent ZIP/XML; never a replacement for corpus coverage.
-import assert from "node:assert/strict";
-import { spawn, execFileSync as cli } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { resolve, join } from "node:path";
-import { once } from "node:events";
-import { createHash } from "node:crypto";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { execFileSync as oracle } from "../oracle-process.mjs";
-import { clickBrowserTarget } from "./click-target.mjs";
-import { moveBrowserInputToStart } from "./input-origin.mjs";
-import { closeOwnedBrowser } from "./session-close.mjs";
-import { writeAuditRow } from "../audit-jsonl-output.mjs";
+import assert from 'node:assert/strict';
+import { spawn, execFileSync as cli } from 'node:child_process';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve, join } from 'node:path';
+import { once } from 'node:events';
+import { createHash } from 'node:crypto';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { execFileSync as oracle } from '../oracle-process.mjs';
+import { clickBrowserTarget } from './click-target.mjs';
+import { moveBrowserInputToStart } from './input-origin.mjs';
+import { closeOwnedBrowser } from './session-close.mjs';
+import { writeAuditRow } from '../audit-jsonl-output.mjs';
 
-import { fieldLabelBrowserCases } from "./field-label-cases.mjs";
+import { fieldLabelBrowserCases } from './field-label-cases.mjs';
 
 export async function runFieldLabelBrowserAudit(caseName) {
-  assert(Object.hasOwn(fieldLabelBrowserCases, caseName), "UnknownFieldLabelBrowserCase");
+  assert(Object.hasOwn(fieldLabelBrowserCases, caseName), 'UnknownFieldLabelBrowserCase');
   const config = fieldLabelBrowserCases[caseName];
-  assert(process.env.HWPJS_TEST_WASM, "ExplicitBrowserCandidateRequired");
-  if (process.argv.length !== 2) throw Error("UnexpectedBrowserAuditArguments");
-  const root = resolve("."),
+  assert(process.env.HWPJS_TEST_WASM, 'ExplicitBrowserCandidateRequired');
+  if (process.argv.length !== 2) throw Error('UnexpectedBrowserAuditArguments');
+  const root = resolve('.'),
     { port, section, paragraph, marker, fixturePath, oraclePath, oracleParagraph, beginId } =
       config;
   const session = cli(
-    "agent-browser",
-    ["session", "id", "--scope", "worktree", "--prefix", config.sessionPrefix],
-    { cwd: root, encoding: "utf8", timeout: 10000 },
+    'agent-browser',
+    ['session', 'id', '--scope', 'worktree', '--prefix', config.sessionPrefix],
+    { cwd: root, encoding: 'utf8', timeout: 10000 },
   ).trim();
   assert(/^[a-zA-Z0-9_-]+$/.test(session));
   const wasmPath = resolve(process.env.HWPJS_TEST_WASM),
@@ -34,7 +34,7 @@ export async function runFieldLabelBrowserAudit(caseName) {
   const fixture = resolve(fixturePath),
     input = readFileSync(fixture);
   const output = mkdtempSync(join(tmpdir(), config.outputPrefix));
-  const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
+  const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
   const editor = await createHwpxEditor(wasm);
   let original;
   try {
@@ -47,37 +47,37 @@ export async function runFieldLabelBrowserAudit(caseName) {
   }
   const command = (...args) => {
     const result = JSON.parse(
-      cli("agent-browser", ["--json", "--session", session, ...args], {
+      cli('agent-browser', ['--json', '--session', session, ...args], {
         cwd: root,
-        encoding: "utf8",
+        encoding: 'utf8',
         timeout: 60000,
         maxBuffer: 8 * 1024 * 1024,
-        env: { ...process.env, AGENT_BROWSER_DEFAULT_TIMEOUT: "55000" },
+        env: { ...process.env, AGENT_BROWSER_DEFAULT_TIMEOUT: '55000' },
       }),
     );
     if (result.success !== true) throw Error(JSON.stringify(result.error ?? result));
     return result.data;
   };
   const evaluate = (expression) => {
-    const value = command("eval", expression);
-    assert(value && Object.hasOwn(value, "result"));
+    const value = command('eval', expression);
+    assert(value && Object.hasOwn(value, 'result'));
     return value.result;
   };
   const driver = { command, evaluate },
     click = (selector) => clickBrowserTarget(driver, selector);
-  const wait = (expression) => command("wait", "--fn", expression);
-  let lastPhase = "preflight";
+  const wait = (expression) => command('wait', '--fn', expression);
+  let lastPhase = 'preflight';
   const phase = (name) => {
     lastPhase = name;
     writeAuditRow({ kind: config.phaseKind, name, session, output });
   };
   const selectWindow = (expected) => {
     if (!evaluate('document.querySelector("#document-window-options").open'))
-      click("#document-window-options > summary");
-    command("fill", "#document-window-start", String(paragraph + 1));
-    command("fill", "#document-window-count", "1");
-    evaluate("window.__fieldLabelAudit = []");
-    click("#document-window-apply");
+      click('#document-window-options > summary');
+    command('fill', '#document-window-start', String(paragraph + 1));
+    command('fill', '#document-window-count', '1');
+    evaluate('window.__fieldLabelAudit = []');
+    click('#document-window-apply');
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "set-edit-window" && !r.error)',
     );
@@ -96,8 +96,8 @@ export async function runFieldLabelBrowserAudit(caseName) {
   };
   const find = (text) => {
     if (!evaluate('document.querySelector("details:has(#find-input)").open'))
-      click("details:has(#find-input) > summary");
-    command("fill", "#find-input", text);
+      click('details:has(#find-input) > summary');
+    command('fill', '#find-input', text);
     click('#find-form button[type="submit"]');
     wait(
       '!document.querySelector("#canvas-input").disabled && !document.querySelector("#canvas-input").readOnly',
@@ -109,35 +109,35 @@ export async function runFieldLabelBrowserAudit(caseName) {
     closed = false,
     verified = false;
   try {
-    assert.equal(command("session", "info").active, false, "RefuseActiveSession");
-    server = spawn(process.execPath, [resolve("tools/serve-preview.mjs"), String(port), wasmPath], {
+    assert.equal(command('session', 'info').active, false, 'RefuseActiveSession');
+    server = spawn(process.execPath, [resolve('tools/serve-preview.mjs'), String(port), wasmPath], {
       cwd: root,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     await new Promise((accept, reject) => {
-      const timer = setTimeout(() => reject(Error("ServerStartTimeout")), 10000);
-      server.once("error", (error) => {
+      const timer = setTimeout(() => reject(Error('ServerStartTimeout')), 10000);
+      server.once('error', (error) => {
         clearTimeout(timer);
         reject(error);
       });
-      server.once("exit", (code) => {
+      server.once('exit', (code) => {
         clearTimeout(timer);
         reject(Error(`ServerExited:${code}`));
       });
-      server.stdout.once("data", (bytes) => {
+      server.stdout.once('data', (bytes) => {
         clearTimeout(timer);
         if (String(bytes).includes(`127.0.0.1:${port}/web/preview/index.html`)) accept();
-        else reject(Error("UnexpectedServer"));
+        else reject(Error('UnexpectedServer'));
       });
     });
     const response = await fetch(`http://127.0.0.1:${port}/zig-out/bin/hwpjs.wasm`, {
       signal: AbortSignal.timeout(10000),
     });
     assert.equal(response.status, 200);
-    assert.equal(hash(Buffer.from(await response.arrayBuffer())), hash(wasm), "ServedWasmMismatch");
+    assert.equal(hash(Buffer.from(await response.arrayBuffer())), hash(wasm), 'ServedWasmMismatch');
     owned = true;
-    command("open", `http://127.0.0.1:${port}/web/preview/index.html`);
-    command("snapshot", "-i");
+    command('open', `http://127.0.0.1:${port}/web/preview/index.html`);
+    command('snapshot', '-i');
     evaluate(`(() => {
       window.__fieldLabelAudit = []; const watched = new WeakSet(), post = Worker.prototype.postMessage;
       Worker.prototype.postMessage = function(message, ...rest) {
@@ -150,29 +150,29 @@ export async function runFieldLabelBrowserAudit(caseName) {
       };
     })()`);
     wait('!document.querySelector("#file").disabled');
-    command("upload", "#file", fixture);
+    command('upload', '#file', fixture);
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "load" && !r.error)',
     );
-    phase("loaded");
-    click("#enable-edit");
+    phase('loaded');
+    click('#enable-edit');
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "enable" && r.revision === 0 && !r.error)',
     );
     selectWindow(original);
     find(original);
-    phase("field-selected");
+    phase('field-selected');
     evaluate(
       'window.__fieldLabelTrusted = []; for (const type of ["beforeinput","input"]) document.querySelector("#canvas-input").addEventListener(type,event => window.__fieldLabelTrusted.push({type,trusted:event.isTrusted}))',
     );
     moveBrowserInputToStart(driver);
-    command("keyboard", "inserttext", marker);
+    command('keyboard', 'inserttext', marker);
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "splice" && r.revision === 1 && !r.error)',
     );
     assert.deepEqual(
-      evaluate("window.__fieldLabelTrusted.filter(r => r.trusted).map(r => r.type)"),
-      ["beforeinput", "input"],
+      evaluate('window.__fieldLabelTrusted.filter(r => r.trusted).map(r => r.type)'),
+      ['beforeinput', 'input'],
     );
     const sent = evaluate(
       'window.__fieldLabelAudit.find(r => r.direction === "request" && r.kind === "splice")',
@@ -182,49 +182,49 @@ export async function runFieldLabelBrowserAudit(caseName) {
       [section, paragraph, 0, 0],
     );
     assert.equal(evaluate('document.querySelector("#canvas-input").value'), marker + original);
-    command("scrollintoview", "#canvas-input");
-    command("screenshot", join(output, "edited.png"));
-    phase("trusted-input");
-    click("#undo");
+    command('scrollintoview', '#canvas-input');
+    command('screenshot', join(output, 'edited.png'));
+    phase('trusted-input');
+    click('#undo');
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "undo" && r.changed && r.revision === 0)',
     );
     assert.equal(evaluate('document.querySelector("#canvas-input").value'), original);
-    phase("undo-complete");
-    click("#redo");
+    phase('undo-complete');
+    click('#redo');
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "redo" && r.changed && r.revision === 1)',
     );
     assert.equal(evaluate('document.querySelector("#canvas-input").value'), marker + original);
-    phase("redo-complete");
-    command("scrollintoview", "#download");
-    const downloaded = join(output, "edited.hwpx");
-    command("download", "#download", downloaded);
+    phase('redo-complete');
+    command('scrollintoview', '#download');
+    const downloaded = join(output, 'edited.hwpx');
+    command('download', '#download', downloaded);
     const saved = readFileSync(downloaded);
     const request = {
-      before: input.toString("base64"),
-      after: saved.toString("base64"),
+      before: input.toString('base64'),
+      after: saved.toString('base64'),
       section,
       paragraph: oracleParagraph,
       beginId,
       text: marker,
     };
-    for (const flags of [[], ["-O"]])
-      oracle("python3", [...flags, oraclePath], { input: JSON.stringify(request), timeout: 30000 });
-    phase("independent-download");
-    evaluate("window.__fieldLabelAudit = []");
-    command("upload", "#file", downloaded);
+    for (const flags of [[], ['-O']])
+      oracle('python3', [...flags, oraclePath], { input: JSON.stringify(request), timeout: 30000 });
+    phase('independent-download');
+    evaluate('window.__fieldLabelAudit = []');
+    command('upload', '#file', downloaded);
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "load" && !r.error)',
     );
-    click("#enable-edit");
+    click('#enable-edit');
     wait(
       'window.__fieldLabelAudit.some(r => r.direction === "reply" && r.kind === "enable" && r.revision === 0 && !r.error)',
     );
     selectWindow(marker + original);
     find(marker + original);
-    command("scrollintoview", "#canvas-input");
-    command("screenshot", join(output, "reuploaded.png"));
+    command('scrollintoview', '#canvas-input');
+    command('screenshot', join(output, 'reuploaded.png'));
     assert.equal(hash(readFileSync(fixture)), hash(input));
     verified = true;
     writeAuditRow({
@@ -241,17 +241,17 @@ export async function runFieldLabelBrowserAudit(caseName) {
       observationError = null,
       sessionInfo = null;
     try {
-      observations = evaluate("window.__fieldLabelAudit.slice(-12)");
+      observations = evaluate('window.__fieldLabelAudit.slice(-12)');
     } catch (failure) {
       observationError = failure.message;
     }
     try {
-      sessionInfo = command("session", "info");
+      sessionInfo = command('session', 'info');
     } catch (failure) {
       observationError ??= failure.message;
     }
     writeAuditRow({
-      kind: "field-label-browser-failure",
+      kind: 'field-label-browser-failure',
       caseName,
       lastPhase,
       error: error.message,
@@ -268,9 +268,9 @@ export async function runFieldLabelBrowserAudit(caseName) {
       }
     } finally {
       if (server?.pid && server.exitCode === null && server.signalCode === null) {
-        const ended = once(server, "exit"),
-          timer = setTimeout(() => server.kill("SIGKILL"), 3000);
-        server.kill("SIGTERM");
+        const ended = once(server, 'exit'),
+          timer = setTimeout(() => server.kill('SIGKILL'), 3000);
+        server.kill('SIGTERM');
         try {
           await ended;
         } finally {

@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { historyXmlPayloads } from "./history-xml-source.mjs";
-import { xmlInputExpected } from "./xml-input.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { historyXmlPayloads } from './history-xml-source.mjs';
+import { xmlInputExpected } from './xml-input.mjs';
 const signatures = [Buffer.from([239, 187, 191]), Buffer.from([255, 254]), Buffer.from([254, 255])];
 const encode = (text, e) =>
   e === 0
     ? Buffer.from(text)
     : e === 1
-      ? Buffer.from(text, "utf16le")
-      : Buffer.from(text, "utf16le").swap16();
+      ? Buffer.from(text, 'utf16le')
+      : Buffer.from(text, 'utf16le').swap16();
 const wire = (raw, external = 0, maxDecl = 4096, maxBytes = raw.length) => {
   const b = Buffer.alloc(9);
   b[0] = external;
@@ -36,7 +36,7 @@ export function xmlPrologEdges(call, cfb) {
       declBytes,
       match ? match[2].length : 0,
       match?.[4]?.length ?? 0,
-      match?.[6] === "yes" ? 2 : match?.[6] === "no" ? 1 : 0,
+      match?.[6] === 'yes' ? 2 : match?.[6] === 'no' ? 1 : 0,
       start,
     ].forEach((v, i) => header.writeUInt32LE(v, i * 4));
     const digest = xmlInputExpected(encode(body, e), e);
@@ -44,7 +44,7 @@ export function xmlPrologEdges(call, cfb) {
     const want = Buffer.concat([header, digest]);
     assert.deepEqual(call(119, wire(raw, external)), want);
     accepted++;
-    const count = [...decl.replace(/\r\n?/g, "\n")].length + digest.readUInt32LE(0);
+    const count = [...decl.replace(/\r\n?/g, '\n')].length + digest.readUInt32LE(0);
     assert.deepEqual(call(119, wire(raw, external, declBytes), count), want);
     if (count) {
       assert.throws(() => call(119, wire(raw, external), count - 1), /LimitExceeded/);
@@ -61,17 +61,17 @@ export function xmlPrologEdges(call, cfb) {
   };
   for (let e = 0; e < 3; e++)
     for (const bom of [false, true])
-      for (const version of ["1.0", "1.123", "1.00"])
+      for (const version of ['1.0', '1.123', '1.00'])
         for (const quote of ['"', "'"]) {
-          const decl = `<?xml\r\nversion = ${quote}${version}${quote} encoding=${quote}${["uTf-8", "UTF-16LE", "utf-16be"][e]}${quote} standalone='yes' ?>`,
-            body = "<한글>😀\r\n</한글>";
+          const decl = `<?xml\r\nversion = ${quote}${version}${quote} encoding=${quote}${['uTf-8', 'UTF-16LE', 'utf-16be'][e]}${quote} standalone='yes' ?>`,
+            body = '<한글>😀\r\n</한글>';
           const sig = bom ? signatures[e] : Buffer.alloc(0),
             raw = Buffer.concat([sig, encode(decl + body, e)]);
           good(raw, e, sig.length, decl, body);
           good(raw, e, sig.length, decl, body, e + 1);
         }
-  for (let e = 0; e < 3; e++) good(encode("<x/>", e), e, 0, "", "<x/>", e + 1);
-  good(Buffer.alloc(0), 0, 0, "", ""); // Prefix/character layer does not require a root element.
+  for (let e = 0; e < 3; e++) good(encode('<x/>', e), e, 0, '', '<x/>', e + 1);
+  good(Buffer.alloc(0), 0, 0, '', ''); // Prefix/character layer does not require a root element.
   for (const source of [
     "<?xml version='1.0'encoding='UTF-8'?>",
     "<?xml encoding='UTF-8'?>",
@@ -110,14 +110,14 @@ export function xmlPrologEdges(call, cfb) {
   );
   rejected++;
   assert.deepEqual(
-    call(119, wire(Buffer.from("<x/>"), 0, 0xffffffff, 0xffffffff), 0xffffffff),
-    call(119, wire(Buffer.from("<x/>"))),
+    call(119, wire(Buffer.from('<x/>'), 0, 0xffffffff, 0xffffffff), 0xffffffff),
+    call(119, wire(Buffer.from('<x/>'))),
   );
   for (let e = 0; e < 3; e++)
     for (let other = 0; other < 3; other++)
       if (e !== other) {
         assert.throws(
-          () => call(119, wire(Buffer.concat([signatures[e], encode("<x/>", e)]), other + 1)),
+          () => call(119, wire(Buffer.concat([signatures[e], encode('<x/>', e)]), other + 1)),
           /XmlEncodingMismatch/,
         );
         rejected++;
@@ -133,16 +133,16 @@ export function xmlPrologEdges(call, cfb) {
   const actual = [];
   cfb.parse(
     readFileSync(
-      new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+      new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
     ),
     { strict: true },
   );
   for (const p of historyXmlPayloads(cfb).payloads) {
-    const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(p.bytes);
-    assert.ok(!text.startsWith("<?xml") && !text.startsWith("\ufeff"));
-    good(p.bytes, 1, 0, "", text, 2);
+    const text = new TextDecoder('utf-16le', { fatal: true, ignoreBOM: true }).decode(p.bytes);
+    assert.ok(!text.startsWith('<?xml') && !text.startsWith('\ufeff'));
+    good(p.bytes, 1, 0, '', text, 2);
     actual.push({ kind: p.kind, index: p.index, bytes: p.bytes.length, declaration: false });
   }
-  good(Buffer.from("<recovered/>"), 0, 0, "", "<recovered/>");
+  good(Buffer.from('<recovered/>'), 0, 0, '', '<recovered/>');
   return { accepted, rejected, actual, xmlGrammarValidated: false };
 }

@@ -6,7 +6,7 @@ export function inlineObjectAnchorIndex(content) {
   const values = content.inlineObjectAnchors === undefined ? [] : content.inlineObjectAnchors,
     index = new Map(),
     identities = new Set();
-  const invalid = () => ({ state: "unavailable", error: "InvalidInlineObjectAnchors" });
+  const invalid = () => ({ state: 'unavailable', error: 'InvalidInlineObjectAnchors' });
   if (!Array.isArray(values) || values.length > 10000) return invalid();
   for (const anchor of values) {
     if (
@@ -25,7 +25,7 @@ export function inlineObjectAnchorIndex(content) {
       identities.has(id) ||
       index.has(key) ||
       owners?.length !== 1 ||
-      owners[0].text?.[anchor.anchorUnit] !== "\ufffc" ||
+      owners[0].text?.[anchor.anchorUnit] !== '\ufffc' ||
       content.tables?.some(
         (table) =>
           table.section === anchor.section &&
@@ -37,5 +37,5 @@ export function inlineObjectAnchorIndex(content) {
     identities.add(id);
     index.set(key, anchor);
   }
-  return { state: "indexed", index };
+  return { state: 'indexed', index };
 }

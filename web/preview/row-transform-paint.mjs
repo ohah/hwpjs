@@ -1,11 +1,11 @@
-import { inverseAffine } from "./affine-point-geometry.mjs";
-import { pageVisibleRectangle } from "./page-visible-rectangle.mjs";
+import { inverseAffine } from './affine-point-geometry.mjs';
+import { pageVisibleRectangle } from './page-visible-rectangle.mjs';
 
 // 기존 그리기 함수는 이미 scrollTop을 뺀 좌표를 사용합니다.
 export function paintRowTransform(ctx, row, scrollTop, paint) {
-  if (!Number.isFinite(scrollTop) || typeof paint !== "function") return false;
+  if (!Number.isFinite(scrollTop) || typeof paint !== 'function') return false;
   const clip = row.pageClip;
-  if (clip !== undefined && pageVisibleRectangle(clip, clip).state !== "visible") return false;
+  if (clip !== undefined && pageVisibleRectangle(clip, clip).state !== 'visible') return false;
   if (row.transform === undefined && clip === undefined) {
     paint();
     return true;

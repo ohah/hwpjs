@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const u16 = (n) => {
   const b = Buffer.alloc(2);
   b.writeUInt16LE(n);
@@ -17,7 +17,7 @@ function oracle(b, mode) {
   let p = 0;
   const report = [0, 0, 0, 0, 0, 0, 0]; // nodes, sets, arrays, ints, strings, binary IDs, nulls
   const take = (n) => {
-    if (n > b.length - p) throw Error("UnexpectedEnd");
+    if (n > b.length - p) throw Error('UnexpectedEnd');
     const start = p;
     p += n;
     return b.subarray(start, p);
@@ -25,11 +25,11 @@ function oracle(b, mode) {
   const word = () => take(2).readUInt16LE();
   const count = () => {
     const n = word();
-    if (n > 32767) throw Error("NegativeParameterCount");
+    if (n > 32767) throw Error('NegativeParameterCount');
     return n;
   };
   function value(type, depth) {
-    if (depth > 32) throw Error("ParameterDepthLimit");
+    if (depth > 32) throw Error('ParameterDepthLimit');
     report[0]++;
     if (type === 0) {
       report[6]++;
@@ -57,7 +57,7 @@ function oracle(b, mode) {
       const n = count();
       if (n) word();
       for (let i = 0; i < n; i++) value(word(), depth + 1);
-    } else throw Error("UnsupportedParameterType");
+    } else throw Error('UnsupportedParameterType');
   }
   value(0x8000, 0);
   return { report, consumed: p };

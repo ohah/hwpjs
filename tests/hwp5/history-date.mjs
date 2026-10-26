@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { historyDateEvidence } from "./history-date-evidence.mjs";
-import { historyExpected, historyRun } from "./history.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { historyDateEvidence } from './history-date-evidence.mjs';
+import { historyExpected, historyRun } from './history.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -117,7 +117,7 @@ export function historyDateEdges(call) {
 }
 export function historyDateActual(call, cfb) {
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const expected = [
@@ -129,7 +129,7 @@ export function historyDateActual(call, cfb) {
     results = [];
   let rejected = 0;
   for (let i = 0; i < 4; i++) {
-    const b = inflateRawSync(cfb.findExact("/DocHistory/VersionLog" + i).content),
+    const b = inflateRawSync(cfb.findExact('/DocHistory/VersionLog' + i).content),
       before = Buffer.from(b);
     const selected = historyRun(call, b, 4);
     assert.deepEqual(selected, historyExpected(b, 4));

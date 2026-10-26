@@ -1,5 +1,5 @@
-import { observeSeries } from "./chart-series-evidence.mjs";
-import { observeChartTitleHeader } from "./chart-title-header-evidence.mjs";
+import { observeSeries } from './chart-series-evidence.mjs';
+import { observeChartTitleHeader } from './chart-title-header-evidence.mjs';
 // Explicit caller-selected count. The bound is a research work limit, not a
 // product Array policy. Do not scan/resynchronize after a failed Series.
 export function observeSeriesCollection(
@@ -11,7 +11,7 @@ export function observeSeriesCollection(
   count,
 ) {
   if (!Number.isSafeInteger(count) || count < 0 || count > 16)
-    throw new RangeError("InvalidSeriesCollectionObservationCount");
+    throw new RangeError('InvalidSeriesCollectionObservationCount');
   const b = Buffer.from(bytes),
     series = [];
   let p = offset,

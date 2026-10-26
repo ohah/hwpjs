@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { parametricReference } from "./icc-analytic.mjs";
-import { modelProfile } from "./icc-model.mjs";
-import { pointEntries, pointInput } from "./icc-model-forward.mjs";
+import assert from 'node:assert/strict';
+import { parametricReference } from './icc-analytic.mjs';
+import { modelProfile } from './icc-model.mjs';
+import { pointEntries, pointInput } from './icc-model-forward.mjs';
 const coefficients = [65536, -32768, 16384, 8192, 131072, -65536, -65536, 0, 196608];
 function profile(fn, values, channel, matrix = coefficients) {
   const entries = pointEntries(matrix, [0, 0, 0]),
     b = Buffer.alloc(12 + values.length * 4);
-  b.write("para");
+  b.write('para');
   b.writeUInt16BE(fn, 8);
   values.forEach((v, i) => b.writeInt32BE(v, 12 + i * 4));
   entries[3 + channel][1] = b;

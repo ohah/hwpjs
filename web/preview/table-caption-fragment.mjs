@@ -4,8 +4,8 @@ export function supportsSplitTableCaption(table) {
 }
 
 export function tableCaptionFragment(table, boxes) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (!boxes.length) return fail("UnsupportedSplitTableCaption");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (!boxes.length) return fail('UnsupportedSplitTableCaption');
   const groups = new Map();
   for (const box of boxes) {
     if (
@@ -19,7 +19,7 @@ export function tableCaptionFragment(table, boxes) {
       box.width <= 0 ||
       box.height < 0
     )
-      return fail("InvalidTableCaptionPageProjection");
+      return fail('InvalidTableCaptionPageProjection');
     const key = `${box.pageOrdinal}:${box.columnOrdinal ?? 0}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(box);
@@ -30,7 +30,7 @@ export function tableCaptionFragment(table, boxes) {
   );
   const split = ordered.length > 1,
     side = table.sourceCaption?.side;
-  if (split && !supportsSplitTableCaption(table)) return fail("UnsupportedSplitTableCaption");
+  if (split && !supportsSplitTableCaption(table)) return fail('UnsupportedSplitTableCaption');
   const selected = split && side === 3 ? ordered.at(-1) : ordered[0];
   let x = Infinity,
     y = Infinity,
@@ -43,7 +43,7 @@ export function tableCaptionFragment(table, boxes) {
     bottom = Math.max(bottom, box.y + box.height);
   }
   return {
-    state: "selected",
+    state: 'selected',
     boxes: selected,
     split,
     rectangle: { x, y, width: right - x, height: bottom - y },

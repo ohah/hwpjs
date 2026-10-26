@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { ordinateOrderInput } from "./icc-ordinate-order.mjs";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { ordinateOrderInput } from './icc-ordinate-order.mjs';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { cmp } from './icc-power-reference.mjs';
 export function ordinateDistanceInput(value, r, target, precision = 512, bits = 128) {
   const prefix = 72 + bits / 4;
   const out = Buffer.alloc(prefix + 64);

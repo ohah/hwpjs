@@ -22,7 +22,7 @@
   border: 1px solid #acb9cb;
   border-radius: 3px;
 }
-.hwp-example-dialog [role="status"] {
+.hwp-example-dialog [role='status'] {
   font-size: 12px;
   min-height: 1.5em;
   color: #596679;

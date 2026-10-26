@@ -1,12 +1,12 @@
 // Explicit reference-compatible policy; no claim of Hancom pagination equivalence.
 const uint = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff;
-const ownerKey = (section, owner) => section + ":" + owner;
-const slotKey = (section, host, apply) => section + ":" + host + ":" + apply;
+const ownerKey = (section, owner) => section + ':' + owner;
+const slotKey = (section, host, apply) => section + ':' + host + ':' + apply;
 
 export function createPageAreaDeclarationSelection(areas, binding) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (!Array.isArray(areas) || binding?.state !== "bound" || !Array.isArray(binding.declarations))
-    return fail("MissingPageAreaDeclarationBinding");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (!Array.isArray(areas) || binding?.state !== 'bound' || !Array.isArray(binding.declarations))
+    return fail('MissingPageAreaDeclarationBinding');
   const owners = new Map(),
     timelines = new Map(),
     seen = new Set();
@@ -16,12 +16,12 @@ export function createPageAreaDeclarationSelection(areas, binding) {
       !uint(group.section) ||
       !uint(group.area?.owner_node) ||
       !uint(group.area?.list_node) ||
-      !["header", "footer"].includes(group.host) ||
-      !["both", "odd", "even"].includes(group.area.apply)
+      !['header', 'footer'].includes(group.host) ||
+      !['both', 'odd', 'even'].includes(group.area.apply)
     )
-      return fail("InvalidPageAreaDeclarationGroup");
+      return fail('InvalidPageAreaDeclarationGroup');
     const key = ownerKey(group.section, group.area.owner_node);
-    if (owners.has(key)) return fail("AmbiguousPageAreaDeclarationGroup");
+    if (owners.has(key)) return fail('AmbiguousPageAreaDeclarationGroup');
     owners.set(key, group);
   }
   for (const [sequence, declaration] of binding.declarations.entries()) {
@@ -35,17 +35,17 @@ export function createPageAreaDeclarationSelection(areas, binding) {
         declaration.unit,
       ].every(uint)
     )
-      return fail("InvalidPageAreaDeclaration");
+      return fail('InvalidPageAreaDeclaration');
     const key = ownerKey(declaration.section, declaration.sourceElement),
       group = owners.get(key);
-    if (!group || seen.has(key)) return fail("AmbiguousPageAreaDeclarationGroup");
+    if (!group || seen.has(key)) return fail('AmbiguousPageAreaDeclarationGroup');
     seen.add(key);
     const slot = slotKey(group.section, group.host, group.area.apply);
     const entries = timelines.get(slot) ?? [];
     entries.push({ page: declaration.pageOrdinal, sequence, group });
     timelines.set(slot, entries);
   }
-  if (seen.size !== owners.size) return fail("MissingPageAreaDeclaration");
+  if (seen.size !== owners.size) return fail('MissingPageAreaDeclaration');
   for (const entries of timelines.values())
     entries.sort((a, b) => a.page - b.page || a.sequence - b.sequence);
   const latest = (section, host, apply, ordinal) => {
@@ -60,8 +60,8 @@ export function createPageAreaDeclarationSelection(areas, binding) {
     return entries[low - 1]?.group;
   };
   return {
-    state: "prepared",
-    policy: "rhwp-declaration-start",
+    state: 'prepared',
+    policy: 'rhwp-declaration-start',
     select(page) {
       if (
         !page ||
@@ -70,19 +70,19 @@ export function createPageAreaDeclarationSelection(areas, binding) {
         !uint(page.number) ||
         page.number < 1
       )
-        return fail("InvalidPageAreaDeclarationPage");
+        return fail('InvalidPageAreaDeclarationPage');
       const selected = [];
-      for (const host of ["header", "footer"]) {
+      for (const host of ['header', 'footer']) {
         const hide =
-          host === "header"
+          host === 'header'
             ? page.hideHeader || page.hideFirstHeader
             : page.hideFooter || page.hideFirstFooter;
         if (hide) continue;
-        const specific = latest(page.section, host, page.number % 2 ? "odd" : "even", page.ordinal);
-        const group = specific ?? latest(page.section, host, "both", page.ordinal);
+        const specific = latest(page.section, host, page.number % 2 ? 'odd' : 'even', page.ordinal);
+        const group = specific ?? latest(page.section, host, 'both', page.ordinal);
         if (group) selected.push(group);
       }
-      return { state: "selected", areas: selected };
+      return { state: 'selected', areas: selected };
     },
   };
 }

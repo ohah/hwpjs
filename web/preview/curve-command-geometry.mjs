@@ -35,24 +35,24 @@ export function curveCommandBounds(commands) {
     right = -Infinity,
     bottom = -Infinity;
   for (const c of commands) {
-    if (c?.kind === "closePath") {
+    if (c?.kind === 'closePath') {
       if (!start || !edges || end[0] !== start[0] || end[1] !== start[1]) return null;
       start = null;
       continue;
     }
     if (
-      !["moveTo", "lineTo", "bezierCurveTo"].includes(c?.kind) ||
+      !['moveTo', 'lineTo', 'bezierCurveTo'].includes(c?.kind) ||
       ![c.x, c.y].every(Number.isFinite)
     )
       return null;
-    if (c.kind === "moveTo") {
+    if (c.kind === 'moveTo') {
       if (start && !edges) return null;
       start = [c.x, c.y];
       edges = 0;
     } else {
       if (!start) return null;
       edges++;
-      if (c.kind === "bezierCurveTo") {
+      if (c.kind === 'bezierCurveTo') {
         if (![c.cp1x, c.cp1y, c.cp2x, c.cp2y].every(Number.isFinite)) return null;
         const xs = [end[0], c.cp1x, c.cp2x, c.x],
           ys = [end[1], c.cp1y, c.cp2y, c.y];
@@ -81,21 +81,21 @@ export function curveCommandBounds(commands) {
   return Object.values(bounds).every(Number.isFinite) ? bounds : null;
 }
 export function mapCurveCommands(commands, mapPoint) {
-  if (typeof mapPoint !== "function" || !curveCommandBounds(commands)) return null;
+  if (typeof mapPoint !== 'function' || !curveCommandBounds(commands)) return null;
   const result = [];
   for (const c of commands) {
-    if (c.kind === "closePath") {
-      result.push({ kind: "closePath" });
+    if (c.kind === 'closePath') {
+      result.push({ kind: 'closePath' });
       continue;
     }
     const output = { kind: c.kind };
-    for (const [xKey, yKey] of c.kind === "bezierCurveTo"
+    for (const [xKey, yKey] of c.kind === 'bezierCurveTo'
       ? [
-          ["cp1x", "cp1y"],
-          ["cp2x", "cp2y"],
-          ["x", "y"],
+          ['cp1x', 'cp1y'],
+          ['cp2x', 'cp2y'],
+          ['x', 'y'],
         ]
-      : [["x", "y"]]) {
+      : [['x', 'y']]) {
       const point = mapPoint([c[xKey], c[yKey]]);
       if (!Array.isArray(point) || point.length !== 2 || !Array.from(point).every(Number.isFinite))
         return null;

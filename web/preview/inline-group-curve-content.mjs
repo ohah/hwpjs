@@ -1,21 +1,21 @@
-import { layoutGroupedCurveText } from "./grouped-curve-text-layout.mjs";
-import { curvePaintPlan } from "./curve-paint.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { layoutGroupedCurveText } from './grouped-curve-text-layout.mjs';
+import { curvePaintPlan } from './curve-paint.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
 
 // 기존 본문 예약을 소비하며 원문·앵커·프레임을 다시 만들지 않습니다.
 export function projectInlineGroupCurves(content, bodyRows, measure, maxRows) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (!Number.isSafeInteger(maxRows) || maxRows < 0 || !Array.isArray(bodyRows))
-    return fail("InlineGroupLayoutLimit");
+    return fail('InlineGroupLayoutLimit');
   if (content.curveTextSourceErrors?.length || content.groupCurveOwnerErrors?.length)
-    return fail("IncompleteCurveTextSources");
+    return fail('IncompleteCurveTextSources');
   const rows = [],
     placedCurves = [],
     warnings = [],
     seen = new Set();
   for (const typed of content.curveTextSources ?? []) {
     const key = `${typed.section}:${typed.curveNode}`;
-    if (seen.has(key)) return fail("AmbiguousInlineGroupCurveSource");
+    if (seen.has(key)) return fail('AmbiguousInlineGroupCurveSource');
     seen.add(key);
     const matches = (content.groupCurves ?? []).filter(
       (item) => item.section === typed.section && item.curveNode === typed.curveNode,
@@ -26,18 +26,18 @@ export function projectInlineGroupCurves(content, bodyRows, measure, maxRows) {
       matches[0].hostParagraph !== typed.hostParagraph ||
       matches[0].anchorUnit !== typed.anchorUnit
     )
-      return fail("AmbiguousInlineGroupCurveSource");
+      return fail('AmbiguousInlineGroupCurveSource');
     const item = matches[0],
       paintPlan = curvePaintPlan(content, item);
-    if (paintPlan.state !== "planned") return paintPlan;
-    if (rows.length >= maxRows) return fail("InlineGroupLayoutLimit");
+    if (paintPlan.state !== 'planned') return paintPlan;
+    if (rows.length >= maxRows) return fail('InlineGroupLayoutLimit');
     const text = layoutGroupedCurveText(item, content, bodyRows, measure, {
       maxRows: maxRows - rows.length,
     });
-    if (text.state !== "placed") return text;
+    if (text.state !== 'placed') return text;
     const hosts = bodyRows.filter(
       (row) =>
-        row.kind === "text" &&
+        row.kind === 'text' &&
         row.section === item.section &&
         row.paragraph === typed.hostParagraph &&
         row.startUnit <= typed.anchorUnit &&
@@ -57,7 +57,7 @@ export function projectInlineGroupCurves(content, bodyRows, measure, maxRows) {
       )
     )
       return {
-        ...fail("InlineGroupTextReservationOverflow"),
+        ...fail('InlineGroupTextReservationOverflow'),
         section: item.section,
         drawingNode: item.curveNode,
         hostParagraph: typed.hostParagraph,
@@ -66,12 +66,12 @@ export function projectInlineGroupCurves(content, bodyRows, measure, maxRows) {
       (p) => p.section === item.section && p.drawingText?.drawingNode === item.curveNode,
     );
     const coverage = pageParagraphCoverage(members, text.rows);
-    if (!members.length || coverage.state !== "complete")
-      return fail("IncompleteCurveTextCoverage");
-    if (rows.length + text.rows.length > maxRows) return fail("InlineGroupLayoutLimit");
+    if (!members.length || coverage.state !== 'complete')
+      return fail('IncompleteCurveTextCoverage');
+    if (rows.length + text.rows.length > maxRows) return fail('InlineGroupLayoutLimit');
     rows.push(
       ...text.rows.map((row) =>
-        text.overflowed ? { ...row, drawingTextOverflow: "extend-last-column" } : row,
+        text.overflowed ? { ...row, drawingTextOverflow: 'extend-last-column' } : row,
       ),
     );
     placedCurves.push({
@@ -82,5 +82,5 @@ export function projectInlineGroupCurves(content, bodyRows, measure, maxRows) {
     });
     warnings.push(...text.warnings);
   }
-  return { state: "placed", rows, placedCurves, warnings };
+  return { state: 'placed', rows, placedCurves, warnings };
 }

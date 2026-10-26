@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function lineActual(call, bytes) {
   assert.ok(bytes.length >= 18);
   const extra = Buffer.alloc(4);

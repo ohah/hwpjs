@@ -1,17 +1,17 @@
-import assert from "node:assert/strict";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { fieldsActual } from "./fields.mjs";
-import { fieldIds } from "./control-types.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
-import { deflateRawSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { fieldsActual } from './fields.mjs';
+import { fieldIds } from './control-types.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
+import { deflateRawSync } from 'node:zlib';
 export function fieldDocumentEdges(call, h, doc, sections, cfb) {
   const total = Array(6).fill(0);
   let rejected = 0,
     diagnostics = 0,
     containerRejected = 0;
   const nodes = cfb.document().nodes;
-  assert.deepEqual(Buffer.from(cfb.findExact("/FileHeader").content), h);
-  const body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0);
+  assert.deepEqual(Buffer.from(cfb.findExact('/FileHeader').content), h);
+  const body = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0);
   const base = call(24, decodedDocumentInput(h, doc, sections));
   for (const section of sections) {
     const b = section.bytes;
@@ -70,7 +70,7 @@ export function fieldDocumentEdges(call, h, doc, sections, cfb) {
           const changed = Buffer.from(b);
           changed.writeUInt32LE(attrs, r.start + 4);
           const want = Buffer.from(base),
-            offset = sectionFieldOffset(section.index, "fields", field);
+            offset = sectionFieldOffset(section.index, 'fields', field);
           want.writeUInt32LE(want.readUInt32LE(offset) + (before ? -1 : 1), offset);
           assert.deepEqual(run(changed), want);
           diagnostics++;

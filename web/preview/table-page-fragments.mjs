@@ -1,8 +1,8 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
-import { tableCellInsets } from "./table-insets.mjs";
-import { projectNestedTableCellContent } from "./nested-table-cell-projection.mjs";
-import { projectNestedFloatingCellContent } from "./nested-floating-cell-content.mjs";
-import { tableCellRowExtent, isZeroAdvanceCellAnchor } from "./table-cell-band.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
+import { tableCellInsets } from './table-insets.mjs';
+import { projectNestedTableCellContent } from './nested-table-cell-projection.mjs';
+import { projectNestedFloatingCellContent } from './nested-floating-cell-content.mjs';
+import { tableCellRowExtent, isZeroAdvanceCellAnchor } from './table-cell-band.mjs';
 /** Project already measured cell rows into an explicit table page plan. */
 export function projectTablePageFragments(
   table,
@@ -11,9 +11,9 @@ export function projectTablePageFragments(
   plan,
   { origin, padding, maxRows = 20000 } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
-    plan?.state !== "planned" ||
+    plan?.state !== 'planned' ||
     !Array.isArray(plan.fragments) ||
     !Array.isArray(table?.cells) ||
     table.cells.some((cell) => !cell || !tableCellInsets(padding, cell)) ||
@@ -25,9 +25,9 @@ export function projectTablePageFragments(
     maxRows < 1 ||
     grid.cells.length !== table.cells.length
   )
-    return unavailable("InvalidTablePageProjection");
+    return unavailable('InvalidTablePageProjection');
   if (plan.bodyRows !== undefined && !Array.isArray(plan.bodyRows))
-    return unavailable("InvalidTablePageProjection");
+    return unavailable('InvalidTablePageProjection');
   const bodyRows = plan.bodyRows ?? [];
   if (
     bodyRows.some(
@@ -39,12 +39,12 @@ export function projectTablePageFragments(
         row.pageOrdinal < 0,
     )
   )
-    return unavailable("InvalidTablePageProjection");
-  if (bodyRows.length > maxRows) return unavailable("TablePageProjectionLimit");
+    return unavailable('InvalidTablePageProjection');
+  if (bodyRows.length > maxRows) return unavailable('TablePageProjectionLimit');
   for (const flow of cellFlows.values())
     if (flow?.cellPageBreaks !== undefined) {
-      if (!Array.isArray(flow.cellPageBreaks)) return unavailable("InvalidTableCellPageBreak");
-      if (flow.cellPageBreaks.length) return unavailable("UnsupportedTableCellPageBreakProjection");
+      if (!Array.isArray(flow.cellPageBreaks)) return unavailable('InvalidTableCellPageBreak');
+      if (flow.cellPageBreaks.length) return unavailable('UnsupportedTableCellPageBreakProjection');
     }
   const rows = [...bodyRows],
     boxes = [],
@@ -63,7 +63,7 @@ export function projectTablePageFragments(
       !Number.isSafeInteger(fragment.pageOrdinal) ||
       fragment.pageOrdinal < 0
     )
-      return unavailable("InvalidTablePageProjection");
+      return unavailable('InvalidTablePageProjection');
     if (fragment.columnOrdinal !== undefined) {
       const page = Array.isArray(plan.pages)
         ? plan.pages.find((page) => page?.ordinal === fragment.pageOrdinal)
@@ -74,7 +74,7 @@ export function projectTablePageFragments(
         (page?.columns !== undefined &&
           (!Array.isArray(page.columns) || fragment.columnOrdinal >= page.columns.length))
       )
-        return unavailable("InvalidTablePageProjection");
+        return unavailable('InvalidTablePageProjection');
     }
     for (const index of fragment.cells) {
       if (
@@ -83,7 +83,7 @@ export function projectTablePageFragments(
         index >= table.cells.length ||
         emitted.has(index)
       )
-        return unavailable("InvalidTablePageProjection");
+        return unavailable('InvalidTablePageProjection');
       emitted.add(index);
       const cell = table.cells[index],
         sourceBox = grid.cells[index],
@@ -99,7 +99,7 @@ export function projectTablePageFragments(
         cell.row + cell.rowSpan > fragment.endRow ||
         sourceBox.listNode !== cell.listNode
       )
-        return unavailable("IncompleteTablePageCell");
+        return unavailable('IncompleteTablePageCell');
       const box = {
         ...sourceBox,
         x: fragment.x + sourceBox.x - origin.x,
@@ -117,7 +117,7 @@ export function projectTablePageFragments(
         box.width <= insets.left + insets.right ||
         box.height < insets.top + insets.bottom
       )
-        return unavailable("InvalidTablePageProjection");
+        return unavailable('InvalidTablePageProjection');
       boxes.push(box);
       if (flow.floatingTables !== undefined) {
         const floating = projectNestedFloatingCellContent(
@@ -131,7 +131,7 @@ export function projectTablePageFragments(
           },
           { insets, maxRows: maxRows - rows.length },
         );
-        if (floating.state !== "placed") return floating;
+        if (floating.state !== 'placed') return floating;
         rows.push(...floating.rows);
         boxes.push(...floating.boxes);
         flowPictures.push(...(floating.flowPictures ?? []));
@@ -144,13 +144,13 @@ export function projectTablePageFragments(
           picture.section !== table.section ||
           !picture.rectangle
         )
-          return unavailable("InvalidTablePagePicture");
+          return unavailable('InvalidTablePagePicture');
         const moved = translatePicturePlacement(picture, box.x + insets.left, box.y + insets.top, {
           pageOrdinal: fragment.pageOrdinal,
           columnOrdinal: fragment.columnOrdinal,
           referenceBoxes: fragment.referenceBoxes,
         });
-        if (moved.state !== "translated") return unavailable("InvalidTablePagePicture");
+        if (moved.state !== 'translated') return unavailable('InvalidTablePagePicture');
         flowPictures.push(moved.picture);
       }
       if (flow.boxes?.length) {
@@ -161,7 +161,7 @@ export function projectTablePageFragments(
           fragment,
           maxRows - rows.length,
         );
-        if (nested.state !== "placed") return nested;
+        if (nested.state !== 'placed') return nested;
         rows.push(...nested.rows);
         boxes.push(...nested.boxes);
         flowPictures.push(...(nested.flowPictures ?? []));
@@ -169,7 +169,7 @@ export function projectTablePageFragments(
         continue;
       }
       for (const row of flow.rows) {
-        if (rows.length >= maxRows) return unavailable("TablePageProjectionLimit");
+        if (rows.length >= maxRows) return unavailable('TablePageProjectionLimit');
         const extent = tableCellRowExtent(row);
         if (
           !row ||
@@ -178,7 +178,7 @@ export function projectTablePageFragments(
           (extent <= 0 && !isZeroAdvanceCellAnchor(row)) ||
           row.y + extent > box.height - insets.top - insets.bottom + 1e-8
         )
-          return unavailable("TablePageCellOverflow");
+          return unavailable('TablePageCellOverflow');
         const projected = {
           ...row,
           ...(flow.columns ? { cellColumnOrdinal: row.columnOrdinal } : {}),
@@ -198,14 +198,14 @@ export function projectTablePageFragments(
               row.width < 0 ||
               !Number.isFinite(projected.x + row.width)))
         )
-          return unavailable("InvalidTablePageProjection");
+          return unavailable('InvalidTablePageProjection');
         rows.push(projected);
       }
     }
   }
-  if (emitted.size !== table.cells.length) return unavailable("IncompleteTablePageCell");
+  if (emitted.size !== table.cells.length) return unavailable('IncompleteTablePageCell');
   return {
-    state: "placed",
+    state: 'placed',
     rows: rows.toSorted(
       (a, b) =>
         a.pageOrdinal - b.pageOrdinal ||
@@ -219,7 +219,7 @@ export function projectTablePageFragments(
     pages: plan.pages,
     height: plan.height,
     spatialRows: true,
-    pageLayoutMode: "measured-body",
+    pageLayoutMode: 'measured-body',
     limited: false,
   };
 }

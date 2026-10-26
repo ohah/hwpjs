@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { postLineOracle } from "./chart-post-line-oracle.mjs";
-import { observeSeriesCollection } from "./chart-series-collection-evidence.mjs";
-import { incompleteSeriesCollection as incomplete } from "./chart-series-collection-errors.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { postLineOracle } from './chart-post-line-oracle.mjs';
+import { observeSeriesCollection } from './chart-series-collection-evidence.mjs';
+import { incompleteSeriesCollection as incomplete } from './chart-series-collection-errors.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   ids = 0,
   types = 0,
@@ -17,10 +17,10 @@ let cuts = 0,
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const c = postLineOracle(b),
       { first, second } = c.r.array;
     assert.equal(first, second);
@@ -38,8 +38,8 @@ try {
       after.fill(255, r.end);
       assert.deepEqual(read(after), r);
       for (const [n, error] of [
-        [first - 1, "UnsupportedChartTitleHeaderObservationType"],
-        [first + 1, "UnsupportedSeriesPrefixObservationType"],
+        [first - 1, 'UnsupportedChartTitleHeaderObservationType'],
+        [first + 1, 'UnsupportedSeriesPrefixObservationType'],
       ]) {
         assert.throws(
           () => read(b, n),
@@ -55,8 +55,8 @@ try {
           (e) =>
             e.constructor === Error &&
             [
-              "UnsupportedSeriesPrefixObservationObject",
-              "UnsupportedChartTitleHeaderObservationObject",
+              'UnsupportedSeriesPrefixObservationObject',
+              'UnsupportedChartTitleHeaderObservationObject',
             ].includes(e.message),
         );
         ids++;
@@ -68,7 +68,7 @@ try {
           assert.throws(
             () => read(bad),
             (e) =>
-              e.constructor === Error && e.message === "UnsupportedChartTitleHeaderObservationType",
+              e.constructor === Error && e.message === 'UnsupportedChartTitleHeaderObservationType',
           );
           types++;
         }
@@ -76,7 +76,7 @@ try {
       for (const s of r.series) raw.fill(255, s.trailerStart, s.end);
       assert.deepEqual(read(raw), {
         ...r,
-        series: r.series.map((s) => ({ ...s, raw106: "ff".repeat(106) })),
+        series: r.series.map((s) => ({ ...s, raw106: 'ff'.repeat(106) })),
       });
       raws += r.series.length;
       assert.deepEqual(read(b), r);

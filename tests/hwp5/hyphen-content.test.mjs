@@ -1,36 +1,36 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import assert from 'node:assert/strict';
+import test from 'node:test';
 import {
   retainedTextView,
   sourceTextChange,
   sourceDisplayPosition,
-} from "../../web/preview/text-offsets.mjs";
-import { displayContent } from "../../web/preview/content.mjs";
-import { readFileSync } from "node:fs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
+} from '../../web/preview/text-offsets.mjs';
+import { displayContent } from '../../web/preview/content.mjs';
+import { readFileSync } from 'node:fs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
 
-test("hyphen display retains a distinct soft-hyphen source unit and both edit boundaries", () => {
+test('hyphen display retains a distinct soft-hyphen source unit and both edit boundaries', () => {
   const paragraph = {
     textPresent: true,
-    text: "ab",
+    text: 'ab',
     declaredUnits: 4,
     parentNodeIndex: null,
     tokens: [
-      { type: "text", startUnit: 0, text: "a", raw: new Uint8Array([97, 0]) },
-      { type: "control", startUnit: 1, code: 24, raw: new Uint8Array([24, 0]) },
-      { type: "text", startUnit: 2, text: "b", raw: new Uint8Array([98, 0]) },
-      { type: "control", startUnit: 3, code: 13, raw: new Uint8Array([13, 0]) },
+      { type: 'text', startUnit: 0, text: 'a', raw: new Uint8Array([97, 0]) },
+      { type: 'control', startUnit: 1, code: 24, raw: new Uint8Array([24, 0]) },
+      { type: 'text', startUnit: 2, text: 'b', raw: new Uint8Array([98, 0]) },
+      { type: 'control', startUnit: 3, code: 13, raw: new Uint8Array([13, 0]) },
     ],
   };
   const original = structuredClone(paragraph);
   const view = retainedTextView(paragraph);
-  assert.equal(view.text, "a\u00adb");
-  assert.notEqual(view.text, "a-b");
+  assert.equal(view.text, 'a\u00adb');
+  assert.notEqual(view.text, 'a-b');
   for (let unit = 0; unit <= 3; unit++) {
     assert.equal(sourceDisplayPosition(unit, view.offsets, 3), unit);
     assert.deepEqual(
-      sourceTextChange({ startUnit: unit, endUnit: unit, text: "검증" }, view.offsets),
-      { startUnit: unit, endUnit: unit, text: "검증" },
+      sourceTextChange({ startUnit: unit, endUnit: unit, text: '검증' }, view.offsets),
+      { startUnit: unit, endUnit: unit, text: '검증' },
     );
   }
   const result = { version: [5, 0, 0, 0], sections: [{ index: 0, paragraphs: [paragraph] }] };
@@ -51,11 +51,11 @@ test("hyphen display retains a distinct soft-hyphen source unit and both edit bo
   assert.deepEqual(paragraph, original);
 });
 
-test("actual hyphen fixture becomes an editable display candidate without losing native units", async () => {
-  const input = readFileSync("reference/rhwp/samples/HWP5-nopassword-123456.hwp");
+test('actual hyphen fixture becomes an editable display candidate without losing native units', async () => {
+  const input = readFileSync('reference/rhwp/samples/HWP5-nopassword-123456.hwp');
   const original = Buffer.from(input);
   const reader = await createHwp5Reader(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   try {
     const result = reader.readText(input);

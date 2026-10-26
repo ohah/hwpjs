@@ -1,18 +1,18 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { sectionXml } from "./fixture-xml.mjs";
-import { documentRecords } from "./documents.mjs";
-import { rectangleActual } from "./shape-rectangle.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { sectionXml } from './fixture-xml.mjs';
+import { documentRecords } from './documents.mjs';
+import { rectangleActual } from './shape-rectangle.mjs';
 export function rectanglePair(call, cfb) {
-  const base = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
-  const hwp = new URL("shapecontainer-2.hwp", base),
-    hwpx = new URL("shapecontainer-2.hwpx", base);
+  const base = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
+  const hwp = new URL('shapecontainer-2.hwp', base),
+    hwpx = new URL('shapecontainer-2.hwpx', base);
   if (!existsSync(hwp) || !existsSync(hwpx)) return { skipped: true };
   cfb.parse(readFileSync(hwp), { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content);
+  const h = Buffer.from(cfb.findExact('/FileHeader').content);
   const bytes = call(
     3,
-    Buffer.concat([h, Buffer.from(cfb.findExact("/BodyText/Section0").content)]),
+    Buffer.concat([h, Buffer.from(cfb.findExact('/BodyText/Section0').content)]),
   );
   const rects = documentRecords(bytes).filter((r) => r.tag === 79);
   const xml = sectionXml(readFileSync(hwpx));
@@ -30,7 +30,7 @@ export function rectanglePair(call, cfb) {
     for (const m of matches) {
       const index = Number(m[1]);
       assert.equal(points[index], undefined);
-      points[index] = ["x", "y"].map((key) =>
+      points[index] = ['x', 'y'].map((key) =>
         Number(m[2].match(new RegExp(`\\b${key}="(-?\\d+)"`))[1]),
       );
     }

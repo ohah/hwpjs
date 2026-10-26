@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { loadMemoDocument } from "./memo-references.mjs";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { loadMemoDocument } from './memo-references.mjs';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
   return b;
 };
 export function forbiddenDocument(call, cfb) {
-  const x = loadMemoDocument(call, cfb, "issue5866/memo_field_hwp5.hwp"),
+  const x = loadMemoDocument(call, cfb, 'issue5866/memo_field_hwp5.hwp'),
     r = documentRecords(x.doc).find((r) => r.tag === 94);
   assert.ok(r);
   assert.equal(r.end - r.start, 16);
@@ -24,7 +24,7 @@ export function forbiddenDocument(call, cfb) {
   const run = (mode, doc) => {
     const file = cfb.write({
       nodes: x.nodes.map((n) =>
-        n.parent === 0 && n.name === "DocInfo"
+        n.parent === 0 && n.name === 'DocInfo'
           ? { ...n, content: x.h.readUInt32LE(36) & 1 ? deflateRawSync(doc) : doc }
           : n,
       ),

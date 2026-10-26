@@ -1,20 +1,20 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { attachCharacterFonts } from "../../web/preview/character-font-content.mjs";
-const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/facename.hwpx";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { attachCharacterFonts } from '../../web/preview/character-font-content.mjs';
+const fixture = 'legacy/rust/crates/hwp-core/tests/fixtures/facename.hwpx';
 const expected = () =>
   JSON.parse(
-    execFileSync("python3", ["tests/hwpx/font-face-metadata-oracle.py", fixture], {
-      encoding: "utf8",
+    execFileSync('python3', ['tests/hwpx/font-face-metadata-oracle.py', fixture], {
+      encoding: 'utf8',
     }),
   );
 
 test(
-  "older HWPX WASM keeps names and save when metadata ABI is absent",
-  { skip: !process.env.HWPJS_HWPX_BASELINE_WASM && "HWPJS_HWPX_BASELINE_WASM is not set" },
+  'older HWPX WASM keeps names and save when metadata ABI is absent',
+  { skip: !process.env.HWPJS_HWPX_BASELINE_WASM && 'HWPJS_HWPX_BASELINE_WASM is not set' },
   async () => {
     const bytes = readFileSync(fixture);
     const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_HWPX_BASELINE_WASM));
@@ -25,7 +25,7 @@ test(
       const content = attachCharacterFonts(editor, {});
       assert.deepEqual(content.fontFaces, names);
       assert.equal(content.fontFaceMetadata, null);
-      assert.equal(content.fontFaceMetadataError, "HwpxFontFaceMetadataAbiUnavailable");
+      assert.equal(content.fontFaceMetadataError, 'HwpxFontFaceMetadataAbiUnavailable');
       assert.deepEqual(Buffer.from(editor.save()), bytes);
     } finally {
       editor.close();
@@ -33,11 +33,11 @@ test(
   },
 );
 
-test("actual HWPX metadata preserves optional XML values and current resource history", async () => {
+test('actual HWPX metadata preserves optional XML values and current resource history', async () => {
   const bytes = readFileSync(fixture),
     source = expected();
   const editor = await createHwpxEditor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   try {
     editor.open(bytes);
@@ -54,13 +54,13 @@ test("actual HWPX metadata preserves optional XML values and current resource hi
       paragraph: 1,
       startUnit: 0,
       endUnit: 1,
-      language: "hangul",
-      name: "HWPX Metadata Font",
+      language: 'hangul',
+      name: 'HWPX Metadata Font',
     });
     const current = editor.fontFaceMetadata();
-    const appended = current.find((row) => row.font.face === "HWPX Metadata Font");
+    const appended = current.find((row) => row.font.face === 'HWPX Metadata Font');
     assert.ok(appended);
-    assert.equal(appended.font.type, "TTF");
+    assert.equal(appended.font.type, 'TTF');
     assert.equal(appended.substitute, null);
     assert.equal(appended.typeInfo, null);
     assert.equal(editor.undo(), true);
@@ -74,13 +74,13 @@ test("actual HWPX metadata preserves optional XML values and current resource hi
   assert.throws(() => editor.fontFaceMetadata(), /EditorClosed/);
 });
 
-test("actual HWPX Worker transports source-specific metadata without replacing names", async (t) => {
+test('actual HWPX Worker transports source-specific metadata without replacing names', async (t) => {
   const oldSelf = globalThis.self,
     oldFetch = globalThis.fetch,
     replies = [];
   globalThis.self = { postMessage: (value) => replies.push(value) };
   globalThis.fetch = async () =>
-    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
   t.after(() => {
     globalThis.fetch = oldFetch;
     if (oldSelf === undefined) delete globalThis.self;
@@ -93,10 +93,10 @@ test("actual HWPX Worker transports source-specific metadata without replacing n
     return replies.shift();
   };
   assert.equal(
-    (await send({ kind: "load", format: "hwpx", bytes: readFileSync(fixture) })).error,
+    (await send({ kind: 'load', format: 'hwpx', bytes: readFileSync(fixture) })).error,
     undefined,
   );
-  const reply = await send({ kind: "enable" });
+  const reply = await send({ kind: 'enable' });
   assert.equal(reply.error, undefined);
   assert.equal(reply.content.fontFaceMetadataError, null);
   assert.deepEqual(reply.content.fontFaceMetadata, expected());

@@ -1,4 +1,4 @@
-import { queryCurveOwner } from "./curve-owner-content.mjs";
+import { queryCurveOwner } from './curve-owner-content.mjs';
 /** Native container sources only; no coordinate inheritance or page placement. */
 export function attachGroupedShapeSources(editor, content) {
   content.containers = [];
@@ -28,7 +28,7 @@ export function attachGroupedShapeSources(editor, content) {
     if (current) return { rectangle_node: current.drawingNode, source: current.source };
     if (!rectangleBatches.has(section)) {
       let batch = null;
-      if (typeof editor.rectangleRenderingSources === "function") {
+      if (typeof editor.rectangleRenderingSources === 'function') {
         try {
           batch = new Map(
             editor.rectangleRenderingSources(section).map((row) => [row.rectangle_node, row]),
@@ -87,13 +87,13 @@ export function attachGroupedShapeSources(editor, content) {
     if (visited.has(key)) continue;
     visited.add(key);
     try {
-      if (typeof editor.containerSourceSnapshot !== "function")
-        throw new Error("HwpxContainerSourceAbiUnavailable");
+      if (typeof editor.containerSourceSnapshot !== 'function')
+        throw new Error('HwpxContainerSourceAbiUnavailable');
       const source = editor.containerSourceSnapshot(section, node);
-      if (source.container_node !== node) throw new Error("ContainerSourceBindingMismatch");
+      if (source.container_node !== node) throw new Error('ContainerSourceBindingMismatch');
       const ownerKey = `${section}:${source.group_context?.root_anchor ?? node}`;
       if (owners.has(ownerKey) && owners.get(ownerKey) === null)
-        throw new Error("ConflictingGroupOwner");
+        throw new Error('ConflictingGroupOwner');
       const owner = owners.get(ownerKey);
       content.containers.push({
         section,
@@ -104,12 +104,12 @@ export function attachGroupedShapeSources(editor, content) {
       if (source.group_context)
         pending.push({ section, node: source.group_context.parent_container });
       for (const child of source.children) {
-        if (child.namespace_uri !== "http://www.hancom.co.kr/hwpml/2011/paragraph") continue;
-        if (child.local_name === "container") pending.push({ section, node: child.node });
-        if (child.local_name === "curve") {
+        if (child.namespace_uri !== 'http://www.hancom.co.kr/hwpml/2011/paragraph') continue;
+        if (child.local_name === 'container') pending.push({ section, node: child.node });
+        if (child.local_name === 'curve') {
           try {
-            if (typeof editor.curveGeometry !== "function")
-              throw new Error("HwpxCurveGeometryAbiUnavailable");
+            if (typeof editor.curveGeometry !== 'function')
+              throw new Error('HwpxCurveGeometryAbiUnavailable');
             const current = currentCurves.get(`${section}:${child.node}`);
             const geometry = current?.source ?? editor.curveGeometry(section, child.node);
             if (
@@ -117,9 +117,9 @@ export function attachGroupedShapeSources(editor, content) {
               geometry.sourceOnly !== true ||
               (geometry.common && geometry.common.group_context?.parent_container !== node)
             )
-              throw new Error("GroupCurveBindingMismatch");
+              throw new Error('GroupCurveBindingMismatch');
             const binding = current
-              ? { state: "bound", owner: current.owner }
+              ? { state: 'bound', owner: current.owner }
               : queryCurveOwner(
                   editor,
                   section,
@@ -129,16 +129,16 @@ export function attachGroupedShapeSources(editor, content) {
             const rootKey = `${section}:${geometry.common?.group_context?.root_anchor}`,
               known = owners.get(rootKey);
             if (
-              binding.state === "bound" &&
+              binding.state === 'bound' &&
               (known === null ||
                 (known &&
                   (known.paragraph !== binding.owner.paragraph - 1 ||
                     known.unit !== binding.owner.anchor_unit)))
             ) {
-              binding.state = "unavailable";
-              binding.error = "CurveOwnerBindingMismatch";
+              binding.state = 'unavailable';
+              binding.error = 'CurveOwnerBindingMismatch';
             }
-            if (binding.state === "bound")
+            if (binding.state === 'bound')
               addOwner(
                 section,
                 binding.owner.anchor_node,
@@ -156,7 +156,7 @@ export function attachGroupedShapeSources(editor, content) {
               curveNode: child.node,
               parentContainer: node,
               source: geometry,
-              ...(binding.state === "bound"
+              ...(binding.state === 'bound'
                 ? {
                     owner: binding.owner,
                     hostParagraph: binding.owner.paragraph - 1,
@@ -168,11 +168,11 @@ export function attachGroupedShapeSources(editor, content) {
             content.groupCurveErrors.push({ section, curveNode: child.node, error: error.message });
           }
         }
-        if (child.local_name !== "rect") continue;
+        if (child.local_name !== 'rect') continue;
         try {
           const rendering = rectangleSource(section, child.node);
           if (rendering.rectangle_node !== child.node)
-            throw new Error("GroupRectangleBindingMismatch");
+            throw new Error('GroupRectangleBindingMismatch');
           content.groupRectangles.push({
             section,
             rectangleNode: child.node,

@@ -26,6 +26,6 @@ body {
   height: 0;
   min-height: 0;
 }
-#app .hwp-demo[data-framework="headless"] .hwp-demo-workspace {
+#app .hwp-demo[data-framework='headless'] .hwp-demo-workspace {
   overflow: auto;
 }

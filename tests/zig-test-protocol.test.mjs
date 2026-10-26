@@ -1,23 +1,23 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   request,
   metadata,
   result,
   frameParser,
   protocolForVersion,
-} from "../tools/zig-test-protocol.mjs";
+} from '../tools/zig-test-protocol.mjs';
 
-test("only inspected standard runner versions share the wire parser", () => {
-  for (const version of ["0.16.0", "0.17.0"]) {
+test('only inspected standard runner versions share the wire parser', () => {
+  for (const version of ['0.16.0', '0.17.0']) {
     assert.deepEqual(protocolForVersion(version), { request, metadata, result, frameParser });
   }
-  for (const version of ["0.15.2", "0.17.0-dev.1", "0.18.0", "0.17.0\0", ""]) {
+  for (const version of ['0.15.2', '0.17.0-dev.1', '0.18.0', '0.17.0\0', '']) {
     assert.throws(() => protocolForVersion(version), /UnsupportedTestProtocolVersion/);
   }
 });
 
-test("native requests and results retain indexes and all failure flags", () => {
+test('native requests and results retain indexes and all failure flags', () => {
   assert.deepEqual([...request(4)], [4, 0, 0, 0, 0, 0, 0, 0]);
   assert.equal(request(5, 42).readUInt32LE(8), 42);
   const bytes = Buffer.alloc(12);
@@ -37,15 +37,15 @@ test("native requests and results retain indexes and all failure flags", () => {
   assert.throws(() => result(bytes.subarray(0, 11)), /InvalidTestResult/);
 });
 
-test("native metadata rejects missing names malformed lengths and panic profiles", () => {
-  const strings = Buffer.from("\0root.test_0\0field.test_one\0"),
+test('native metadata rejects missing names malformed lengths and panic profiles', () => {
+  const strings = Buffer.from('\0root.test_0\0field.test_one\0'),
     bytes = Buffer.alloc(8 + 16 + strings.length);
   bytes.writeUInt32LE(strings.length);
   bytes.writeUInt32LE(2, 4);
   bytes.writeUInt32LE(1, 8);
   bytes.writeUInt32LE(13, 12);
   strings.copy(bytes, 24);
-  assert.deepEqual(metadata(bytes), ["root.test_0", "field.test_one"]);
+  assert.deepEqual(metadata(bytes), ['root.test_0', 'field.test_one']);
   for (const length of [0, 7, bytes.length - 1])
     assert.throws(() => metadata(bytes.subarray(0, length)), /InvalidTestMetadata/);
   const missing = Buffer.from(bytes);
@@ -59,7 +59,7 @@ test("native metadata rejects missing names malformed lengths and panic profiles
   assert.throws(() => metadata(invalidUtf8), TypeError);
 });
 
-test("native frames preserve split headers and bodies without accepting truncated output", () => {
+test('native frames preserve split headers and bodies without accepting truncated output', () => {
   const frames = [],
     parser = frameParser((value) => frames.push(value));
   const a = request(3, 99),

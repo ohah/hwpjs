@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, verifyRaw } from './style-preservation/text-record-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
-const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
 
-test("explicit normalized distribution opens the actual repaired five-section fixture without changing streams", async (t) => {
-  const path = "reference/rhwp/samples/hwp-3.0-HWPML.hwp";
+test('explicit normalized distribution opens the actual repaired five-section fixture without changing streams', async (t) => {
+  const path = 'reference/rhwp/samples/hwp-3.0-HWPML.hwp';
   if (!existsSync(path)) {
-    t.skip("RHWP reference fixture is unavailable");
+    t.skip('RHWP reference fixture is unavailable');
     return;
   }
   const input = readFileSync(path);
@@ -28,7 +28,7 @@ test("explicit normalized distribution opens the actual repaired five-section fi
   });
   try {
     assert.equal(editor.normalizationInfo().normalized, true);
-    assert.equal(editor.normalizationInfo().historyBaseline, "normalized");
+    assert.equal(editor.normalizationInfo().historyBaseline, 'normalized');
     assert.deepEqual(
       Array.from({ length: editor.sectionCount() }, (_, section) => editor.paragraphCount(section)),
       [197, 13, 3321, 5262, 16],
@@ -47,15 +47,15 @@ test("explicit normalized distribution opens the actual repaired five-section fi
           paragraph: protectedSpan.begin.paragraph,
           startUnit: protectedSpan.begin.unit,
           endUnit: protectedSpan.begin.unit,
-          text: "보호😀",
+          text: '보호😀',
         }),
       /ReadOnlyCrossReferenceResult/,
     );
     assert.deepEqual(editor.save().bytes, baseline);
     assert.equal(editor.undo(), false);
-    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "배포😀" });
+    editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: '배포😀' });
     const edited = editor.save({ allowStaleLayout: true }).bytes;
-    verifyRaw(baseline, edited, 0, 1, 0, 0, "배포😀");
+    verifyRaw(baseline, edited, 0, 1, 0, 0, '배포😀');
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.save().bytes, baseline);
     assert.equal(editor.redo(), true);
@@ -72,8 +72,8 @@ test("explicit normalized distribution opens the actual repaired five-section fi
   assert.deepEqual(readFileSync(path), input);
 });
 
-test("normalized distribution strict fast path preserves independent editing and original history", async () => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/viewtext.hwp");
+test('normalized distribution strict fast path preserves independent editing and original history', async () => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/viewtext.hwp');
   const editor = await createExperimentalHwp5Editor(wasm, input, {
     distribution: true,
     normalizeObservedCfb: true,
@@ -81,10 +81,10 @@ test("normalized distribution strict fast path preserves independent editing and
   try {
     assert.equal(editor.normalizationInfo().normalized, false);
     editor.enableHistory();
-    editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "배포😀" });
+    editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: '배포😀' });
     const saved = editor.save({ allowStaleLayout: true }).bytes;
-    verifyRaw(input, saved, 0, 0, 0, 0, "배포😀");
-    assert.throws(() => verifyRaw(input, saved, 0, 0, 0, 0, "틀림"), /complete Section must match/);
+    verifyRaw(input, saved, 0, 0, 0, 0, '배포😀');
+    assert.throws(() => verifyRaw(input, saved, 0, 0, 0, 0, '틀림'), /complete Section must match/);
     const reopened = await createExperimentalHwp5Editor(wasm, saved, { distribution: true });
     try {
       assert.equal(reopened.text(0, 0), editor.text(0, 0));

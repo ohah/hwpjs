@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { containerBmpInput, selectedBmpEntries } from "./container-bmp.mjs";
-import { bmpRleSelection } from "./bmp-rle-rgba.mjs";
-import { bmpRleRgbaOracle } from "./bmp-rle-rgba-oracle.mjs";
-import { bmpWords } from "./bmp-oracle.mjs";
-import { bmpRleFixture, rleAbsolute } from "./bmp-rle-fixture.mjs";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { imageContainerFixture } from "./container-images.mjs";
-import { expectBmpError } from "./bmp-errors.mjs";
+import assert from 'node:assert/strict';
+import { containerBmpInput, selectedBmpEntries } from './container-bmp.mjs';
+import { bmpRleSelection } from './bmp-rle-rgba.mjs';
+import { bmpRleRgbaOracle } from './bmp-rle-rgba-oracle.mjs';
+import { bmpWords } from './bmp-oracle.mjs';
+import { bmpRleFixture, rleAbsolute } from './bmp-rle-fixture.mjs';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { imageContainerFixture } from './container-images.mjs';
+import { expectBmpError } from './bmp-errors.mjs';
 export function containerBmpRleInput(bytes, options = {}) {
   const old = containerBmpInput(bytes, { ...options, trailing: options.fileTrailing ?? false });
   return Buffer.concat([old.subarray(0, 26), bmpRleSelection(options), old.subarray(26)]);
@@ -62,8 +62,8 @@ export function containerBmpRleEdges(call, cfb) {
       for (const refs of [1, 2, 5])
         for (const fill of [1, 2]) {
           const raw = bmpRleFixture({ bits }),
-            bytes = imageContainerFixture(cfb, raw, refs, compressed, "BmP"),
-            entries = Array.from({ length: refs }, () => ({ raw, extension: "BmP" }));
+            bytes = imageContainerFixture(cfb, raw, refs, compressed, 'BmP'),
+            entries = Array.from({ length: refs }, () => ({ raw, extension: 'BmP' }));
           const options = { fill, rgba: 512 * refs, perImage: 512, binaries: refs, png: 0, rgb: 0 };
           containerBmpRleActual(call, bytes, entries, options);
           comparisons++;
@@ -85,23 +85,23 @@ export function containerBmpRleEdges(call, cfb) {
         height: 1,
         commands: Buffer.concat([rleAbsolute(bits, [0, 1, 2, 3, 4]), Buffer.of(0, 1)]),
       });
-      const bytes = imageContainerFixture(cfb, raw, 2, true, "ole");
+      const bytes = imageContainerFixture(cfb, raw, 2, true, 'ole');
       containerBmpRleActual(
         call,
         bytes,
         [
-          { raw, extension: "ole" },
-          { raw, extension: "ole" },
+          { raw, extension: 'ole' },
+          { raw, extension: 'ole' },
         ],
         { fill, full: true },
       );
       comparisons++;
     }
   const raw = bmpFixture(),
-    bytes = imageContainerFixture(cfb, raw, 2, false, "bmp"),
+    bytes = imageContainerFixture(cfb, raw, 2, false, 'bmp'),
     entries = [
-      { raw, extension: "bmp" },
-      { raw, extension: "bmp" },
+      { raw, extension: 'bmp' },
+      { raw, extension: 'bmp' },
     ];
   containerBmpRleActual(call, bytes, entries);
   comparisons++;
@@ -116,10 +116,10 @@ export function containerBmpRleEdges(call, cfb) {
       const commands = Buffer.from([1, 0, 0, 1, ...(hasRleTail ? [99] : [])]),
         base = bmpRleFixture({ width: 1, height: 1, commands });
       const raw = hasFileTail ? Buffer.concat([base, Buffer.of(7)]) : base;
-      const document = imageContainerFixture(cfb, raw, 2, true, "bmp"),
+      const document = imageContainerFixture(cfb, raw, 2, true, 'bmp'),
         entries = [
-          { raw, extension: "bmp" },
-          { raw, extension: "bmp" },
+          { raw, extension: 'bmp' },
+          { raw, extension: 'bmp' },
         ];
       for (const fileTrailing of [false, true])
         for (const trailing of [false, true]) {

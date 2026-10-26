@@ -1,26 +1,26 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
-import { polygonBytes } from "./shape-polygon.mjs";
-import { polygonOwnerActual, polygonOwnerRun } from "./polygon-validation.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
+import { polygonBytes } from './shape-polygon.mjs';
+import { polygonOwnerActual, polygonOwnerRun } from './polygon-validation.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
 export function polygonLayoutDocument(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/shape-001.hwp", import.meta.url);
+  const path = new URL('../../reference/rhwp/samples/shape-001.hwp', import.meta.url);
   if (!existsSync(path)) return { skipped: true };
   cfb.parse(readFileSync(path), { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32);
   const decode = (path) => call(3, Buffer.concat([h, Buffer.from(cfb.findExact(path).content)]));
-  const doc = decode("/DocInfo"),
-    original = decode("/BodyText/Section0");
+  const doc = decode('/DocInfo'),
+    original = decode('/BodyText/Section0');
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const frame = (b, r, p) =>
     Buffer.concat([w((b.readUInt32LE(r.offset) & 0xfffff) | (p.length << 20)), p]);
   const variant = (mode) =>
@@ -54,7 +54,7 @@ export function polygonLayoutDocument(call, cfb) {
           Buffer.from(
             cfb.write({
               nodes: nodes.map((n) =>
-                n.parent === body && n.name === "Section0"
+                n.parent === body && n.name === 'Section0'
                   ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes }
                   : n,
               ),
@@ -68,7 +68,7 @@ export function polygonLayoutDocument(call, cfb) {
     assert.deepEqual(expected, [2, 8, 0, 8]);
     assert.deepEqual(container.subarray(0, report.length), report);
     expected.forEach((n, i) =>
-      assert.equal(report.readUInt32LE(sectionFieldOffset(0, "polygons", i)), n),
+      assert.equal(report.readUInt32LE(sectionFieldOffset(0, 'polygons', i)), n),
     );
     if (mode === 1) assert.deepEqual(call(24, input(b)), report);
     const reject = (bytes, error) => {
@@ -112,13 +112,13 @@ export function polygonLayoutDocument(call, cfb) {
       call(68, Buffer.concat([Buffer.from([mode]), decodedDocumentInput(h, info, parts)]));
     const canonical = ordered(pair);
     assert.deepEqual(ordered([...pair].reverse()), canonical);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, "polygons", 2)), 0);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, "polygons", 2)), 1);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, 'polygons', 2)), 0);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, 'polygons', 2)), 1);
     ordering++;
   }
   // Different selected layouts may both fit; extra diagnostics must still reflect the selection.
   const specifiedOnOriginal = call(68, Buffer.concat([Buffer.from([0]), input(original)]));
-  assert.equal(specifiedOnOriginal.readUInt32LE(sectionFieldOffset(0, "polygons", 3)), 12);
+  assert.equal(specifiedOnOriginal.readUInt32LE(sectionFieldOffset(0, 'polygons', 3)), 12);
   for (const mode of [2, 255])
     for (const probe of [68, 69]) {
       assert.throws(() => call(probe, Buffer.from([mode])), /InvalidMode/);

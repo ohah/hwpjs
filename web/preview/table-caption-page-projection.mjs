@@ -1,33 +1,33 @@
-import { tableCaptionFragment } from "./table-caption-fragment.mjs";
+import { tableCaptionFragment } from './table-caption-fragment.mjs';
 
 // Translate a premeasured caption after the owning physical fragment is placed.
 export function projectTablePageCaption(table, reservation, layout, { maxRows = 20000 } = {}) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
-    reservation?.state !== "reserved" ||
-    layout?.state !== "placed" ||
+    reservation?.state !== 'reserved' ||
+    layout?.state !== 'placed' ||
     !Array.isArray(layout.boxes) ||
     !Array.isArray(layout.rows) ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return unavailable("InvalidTableCaptionPageProjection");
+    return unavailable('InvalidTableCaptionPageProjection');
   const fragment = tableCaptionFragment(
     table,
     layout.boxes.filter(
       (box) => box.section === table.section && box.tableNode === table.tableNode,
     ),
   );
-  if (fragment.state !== "selected") return fragment;
+  if (fragment.state !== 'selected') return fragment;
   const boxes = fragment.boxes,
     { x, y } = fragment.rectangle;
   const caption = reservation.caption;
   const reference = boxes[0].referenceBoxes,
     column = reference?.column;
-  if (!column) return unavailable("InvalidTableCaptionPageProjection");
+  if (!column) return unavailable('InvalidTableCaptionPageProjection');
   const origin = reservation.rectangle;
   if (!origin || ![origin.x, origin.y].every(Number.isFinite))
-    return unavailable("InvalidTableCaptionPageProjection");
+    return unavailable('InvalidTableCaptionPageProjection');
   const dx = x - origin.x,
     dy =
       y -
@@ -61,7 +61,7 @@ export function projectTablePageCaption(table, reservation, layout, { maxRows = 
       };
   const horizontal =
     table.sourceGeometry?.geometry?.treat_as_character === true ||
-    boxes.every((box) => box.horizontalOverflowBoundary === "paper")
+    boxes.every((box) => box.horizontalOverflowBoundary === 'paper')
       ? (reference.paper ?? column)
       : column;
   if (
@@ -71,9 +71,9 @@ export function projectTablePageCaption(table, reservation, layout, { maxRows = 
     bounds.x + bounds.width > horizontal.x + horizontal.width + 1e-8 ||
     bounds.y + bounds.height > column.y + column.height + 1e-8
   )
-    return unavailable("TableCaptionPageOverflow");
+    return unavailable('TableCaptionPageOverflow');
   if (layout.rows.length + caption.rows.length > maxRows)
-    return unavailable("TableCaptionPageProjectionLimit");
+    return unavailable('TableCaptionPageProjectionLimit');
   const columnIdentity =
     boxes[0].columnOrdinal === undefined ? {} : { columnOrdinal: boxes[0].columnOrdinal };
   const rows = caption.rows.map((row) => ({
@@ -85,7 +85,7 @@ export function projectTablePageCaption(table, reservation, layout, { maxRows = 
     referenceBoxes: reference,
   }));
   if (rows.some((row) => ![row.x, row.y, row.height].every(Number.isFinite)))
-    return unavailable("InvalidTableCaptionPageProjection");
+    return unavailable('InvalidTableCaptionPageProjection');
   const placed = {
     section: table.section,
     tableNode: table.tableNode,

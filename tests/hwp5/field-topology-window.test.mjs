@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { readHwp5WindowFields } from "../../web/preview/hwp5-field-window-topology.mjs";
-import { hwp5FieldWindowDependencies } from "../../web/preview/hwp5-field-window-dependencies.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { readHwp5WindowFields } from '../../web/preview/hwp5-field-window-topology.mjs';
+import { hwp5FieldWindowDependencies } from '../../web/preview/hwp5-field-window-dependencies.mjs';
 import {
   projectHwp5DependencyWindow,
   projectHwp5FieldOwnedWindow,
-} from "../../web/preview/hwp5-window-projection.mjs";
-import { linkHwp5UnresolvedFieldOwners } from "../../web/preview/hwp5-unresolved-field-dependencies.mjs";
+} from '../../web/preview/hwp5-window-projection.mjs';
+import { linkHwp5UnresolvedFieldOwners } from '../../web/preview/hwp5-unresolved-field-dependencies.mjs';
 
-test("unresolved owner closure groups repeated markers once per native scope", () => {
+test('unresolved owner closure groups repeated markers once per native scope', () => {
   const { projection, editor } = fixture(),
     flows = editor.paragraphFlow(0);
   const markers = [marker(), { ...marker(), position: { paragraph: 2, unit: 8 } }];
@@ -35,10 +35,10 @@ test("unresolved owner closure groups repeated markers once per native scope", (
 });
 
 const refusal = () => {
-  throw new Error("UnsupportedCrossParagraphField");
+  throw new Error('UnsupportedCrossParagraphField');
 };
 const marker = () => ({
-  kind: "unclosed_start",
+  kind: 'unclosed_start',
   position: { paragraph: 0, unit: 8 },
   marker_id: 0x25636c6b,
   ordinal: 0,
@@ -46,7 +46,7 @@ const marker = () => ({
 });
 const flow = (paragraph, list_node) => ({
   paragraph,
-  host: list_node === null ? "body" : "table_cell",
+  host: list_node === null ? 'body' : 'table_cell',
   parent_node: list_node === null ? null : 10,
   list_node,
 });
@@ -57,7 +57,7 @@ function fixture() {
       {
         index: 0,
         paragraphs: [0, 1, 2].map(() => ({
-          text: "선택",
+          text: '선택',
           textPresent: true,
           declaredUnits: 10,
           parentNodeIndex: null,
@@ -74,7 +74,7 @@ function fixture() {
   };
   return { projection, editor };
 }
-test("unresolved field display retains its entire owner and closes permission without guessing an end", () => {
+test('unresolved field display retains its entire owner and closes permission without guessing an end', () => {
   const { editor, projection } = fixture();
   const content = projectHwp5DependencyWindow(
     editor,
@@ -90,7 +90,7 @@ test("unresolved field display retains its entire owner and closes permission wi
   assert.equal(content.readOnly, true);
   assert(
     content.paragraphs.every(
-      (row) => !row.editable && row.fieldTopologyError === "UnresolvedFieldMarkers",
+      (row) => !row.editable && row.fieldTopologyError === 'UnresolvedFieldMarkers',
     ),
   );
   assert.equal(content.paragraphs[0].selectable, false);
@@ -107,7 +107,7 @@ test("unresolved field display retains its entire owner and closes permission wi
     /ParagraphWindowBudgetExceeded/,
   );
 });
-test("diagnostic display refuses missing ABI unknown failures empty fallback and forged owner or units", () => {
+test('diagnostic display refuses missing ABI unknown failures empty fallback and forged owner or units', () => {
   const { editor, projection } = fixture();
   assert.throws(
     () => readHwp5WindowFields({ ...editor, supportsFieldTopology: () => false }, 0),
@@ -119,7 +119,7 @@ test("diagnostic display refuses missing ABI unknown failures empty fallback and
         {
           ...editor,
           fieldSpans: () => {
-            throw new Error("OutOfMemory");
+            throw new Error('OutOfMemory');
           },
         },
         0,
@@ -154,10 +154,10 @@ test("diagnostic display refuses missing ABI unknown failures empty fallback and
     );
   }
 });
-test("actual unclosed regulatory field window is readable while strict edits remain refused", async () => {
-  assert(process.env.HWPJS_TEST_WASM, "Explicit topology candidate required");
+test('actual unclosed regulatory field window is readable while strict edits remain refused', async () => {
+  assert(process.env.HWPJS_TEST_WASM, 'Explicit topology candidate required');
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM),
-    path = "reference/rhwp/samples/issue1921/59043_regulatory_analysis.hwp",
+    path = 'reference/rhwp/samples/issue1921/59043_regulatory_analysis.hwp',
     input = readFileSync(path);
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);

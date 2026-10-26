@@ -1,14 +1,14 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { workerReopenProjection } from "./worker-reopen-projection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { workerReopenProjection } from './worker-reopen-projection.mjs';
 
-test("reopen projection detects other text, missing objects, duplicate owners and clipped content", () => {
+test('reopen projection detects other text, missing objects, duplicate owners and clipped content', () => {
   const original = {
-    format: "hwpx",
+    format: 'hwpx',
     limited: false,
     paragraphs: [
-      { section: 0, paragraph: 0, text: "edited😀" },
-      { section: 0, paragraph: 1, text: "other" },
+      { section: 0, paragraph: 0, text: 'edited😀' },
+      { section: 0, paragraph: 1, text: 'other' },
     ],
     tables: [{}],
     drawings: [],
@@ -19,7 +19,7 @@ test("reopen projection detects other text, missing objects, duplicate owners an
   assert.deepEqual(workerReopenProjection(structuredClone(original)), expected);
   for (const mutate of [
     (value) => {
-      value.paragraphs[1].text = "lost";
+      value.paragraphs[1].text = 'lost';
     },
     (value) => {
       value.paragraphs.pop();

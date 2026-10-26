@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { pictureReferenceRun, pictureOwnerActual } from "./picture-validation.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
-import { sectionXml } from "./fixture-xml.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { pictureReferenceRun, pictureOwnerActual } from './picture-validation.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
+import { sectionXml } from './fixture-xml.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -37,28 +37,28 @@ export function pictureReferenceEdges(call) {
   return { accepted, rejected };
 }
 export function pictureReferenceDocuments(call, cfb) {
-  const root = new URL("../../reference/rhwp/samples/", import.meta.url),
+  const root = new URL('../../reference/rhwp/samples/', import.meta.url),
     files = [];
   let rejected = 0;
-  for (const name of ["pic-crop-01", "task1749/saved_bounds_cumulative_page_break"]) {
-    const path = new URL(name + ".hwp", root);
+  for (const name of ['pic-crop-01', 'task1749/saved_bounds_cumulative_page_break']) {
+    const path = new URL(name + '.hwp', root);
     if (!existsSync(path)) {
       files.push({ name, skipped: true });
       continue;
     }
     const file = readFileSync(path);
     cfb.parse(file, { strict: true });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       v = h.readUInt32LE(32);
     const decode = (path) => call(3, Buffer.concat([h, Buffer.from(cfb.findExact(path).content)]));
-    const doc = decode("/DocInfo"),
-      b = decode("/BodyText/Section0"),
+    const doc = decode('/DocInfo'),
+      b = decode('/BodyText/Section0'),
       bins = documentRecords(doc).filter((r) => r.tag === 18),
       pictures = documentRecords(b).filter((r) => r.tag === 85);
     assert.equal(bins.length, 1);
     assert.equal(pictures.length, 2);
     const nodes = cfb.document().nodes,
-      body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+      body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
     const input = (bytes) => decodedDocumentInput(h, doc, [{ index: 0, bytes }]);
     const full = (bytes) =>
       call(
@@ -68,7 +68,7 @@ export function pictureReferenceDocuments(call, cfb) {
           Buffer.from(
             cfb.write({
               nodes: nodes.map((n) =>
-                n.parent === body && n.name === "Section0"
+                n.parent === body && n.name === 'Section0'
                   ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes }
                   : n,
               ),
@@ -81,18 +81,18 @@ export function pictureReferenceDocuments(call, cfb) {
       stats = pictureOwnerActual(call, v, b, 0, 1);
     assert.deepEqual(container.subarray(0, original.length), original);
     stats.forEach((n, i) =>
-      assert.equal(original.readUInt32LE(sectionFieldOffset(0, "pictures", i)), n),
+      assert.equal(original.readUInt32LE(sectionFieldOffset(0, 'pictures', i)), n),
     );
-    if (name === "pic-crop-01") {
+    if (name === 'pic-crop-01') {
       assert.deepEqual(
         pictures.map((r) => b.readUInt16LE(r.start + 71)),
         [1, 1],
       );
       assert.equal(doc.readUInt16LE(bins[0].start + 2), 3);
-      assert.ok(cfb.findExact("/BinData/BIN0003.jpg"));
-      assert.ok(cfb.findExact("/BinData/BIN0001.jpg"));
+      assert.ok(cfb.findExact('/BinData/BIN0003.jpg'));
+      assert.ok(cfb.findExact('/BinData/BIN0001.jpg'));
       const moved = cfb.write({
-        nodes: nodes.map((n) => (n.name === "BIN0003.jpg" ? { ...n, name: "BIN0004.jpg" } : n)),
+        nodes: nodes.map((n) => (n.name === 'BIN0003.jpg' ? { ...n, name: 'BIN0004.jpg' } : n)),
       });
       assert.throws(
         () => call(25, Buffer.concat([w(64 * 1024 * 1024), Buffer.from(moved)])),
@@ -106,10 +106,10 @@ export function pictureReferenceDocuments(call, cfb) {
         [0, 1],
       );
       assert.equal(stats[8], 1);
-      const xml = sectionXml(readFileSync(new URL(name + ".hwpx", root)));
+      const xml = sectionXml(readFileSync(new URL(name + '.hwpx', root)));
       assert.deepEqual(
         [...xml.matchAll(/<hc:img\b[^>]*binaryItemIDRef="([^"]*)"[^>]*>/g)].map((m) => m[1]),
-        ["", "image1"],
+        ['', 'image1'],
       );
     }
     for (const r of pictures)

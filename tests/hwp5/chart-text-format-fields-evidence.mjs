@@ -3,8 +3,8 @@
 export function readTextFormatFields({ offset, long, type, word, string }) {
   const start = offset(),
     headerWord = long(),
-    typeId = type("VtTextFormat");
-  type("VtObject");
+    typeId = type('VtTextFormat');
+  type('VtObject');
   const rawWord = word(),
     codeStart = offset(),
     code = string(),

@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createdTableInlinePolicy } from "../../web/preview/created-table-inline-policy.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createdTableInlinePolicy } from '../../web/preview/created-table-inline-policy.mjs';
 
-test("HWP5 generated inline policy reads native option fields and rejects unsupported geometry", () => {
+test('HWP5 generated inline policy reads native option fields and rejects unsupported geometry', () => {
   // Independent specimen of the native default creation snapshot.
   const policy = {
     common: {
@@ -14,11 +14,11 @@ test("HWP5 generated inline policy reads native option fields and rejects unsupp
       margins: [0, 0, 0, 0],
     },
     table: { page_break: 1, repeat_header: false, cell_spacing: 0, margins: [0, 0, 0, 0] },
-    cell: { layout: "observed8", unknown: 0, attributes: 0, margins: [0, 0, 0, 0] },
+    cell: { layout: 'observed8', unknown: 0, attributes: 0, margins: [0, 0, 0, 0] },
   };
   const table = { hwp5Policy: policy },
     before = structuredClone(table);
-  assert.equal(createdTableInlinePolicy(table, "hwp5"), true);
+  assert.equal(createdTableInlinePolicy(table, 'hwp5'), true);
   const changes = [
     (value) => {
       value.common.flags &= ~1;
@@ -63,9 +63,9 @@ test("HWP5 generated inline policy reads native option fields and rejects unsupp
   for (const change of changes) {
     const current = structuredClone(policy);
     change(current);
-    assert.equal(createdTableInlinePolicy({ hwp5Policy: current }, "hwp5"), false);
+    assert.equal(createdTableInlinePolicy({ hwp5Policy: current }, 'hwp5'), false);
   }
-  assert.equal(createdTableInlinePolicy({}, "hwp5"), false);
-  assert.equal(createdTableInlinePolicy(table, "unknown"), false);
+  assert.equal(createdTableInlinePolicy({}, 'hwp5'), false);
+  assert.equal(createdTableInlinePolicy(table, 'unknown'), false);
   assert.deepEqual(table, before);
 });

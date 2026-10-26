@@ -1,17 +1,17 @@
 export function decodeFillBrushes(bytes) {
   const fail = () => {
-    throw new Error("InvalidFillBrushes");
+    throw new Error('InvalidFillBrushes');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length > 128 * 1024 * 1024) return fail();
   let v;
   try {
-    v = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    v = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }
   const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
   const optionalUint = (n) => n === null || uint(n);
-  const kinds = ["win_brush", "gradation", "img_brush", "color", "image"];
+  const kinds = ['win_brush', 'gradation', 'img_brush', 'color', 'image'];
   if (
     !v ||
     !Array.isArray(v.brushes) ||
@@ -22,20 +22,20 @@ export function decodeFillBrushes(bytes) {
   )
     return fail();
   for (const key of [
-    "header_and_sections",
-    "master_pages",
-    "other_attributes",
-    "unknown_enums",
-    "non_six_hex_colors",
-    "attribute_bytes",
-    "direct_children",
-    "color_count_mismatch",
+    'header_and_sections',
+    'master_pages',
+    'other_attributes',
+    'unknown_enums',
+    'non_six_hex_colors',
+    'attribute_bytes',
+    'direct_children',
+    'color_count_mismatch',
   ])
     if (!uint(v[key])) return fail();
   for (const b of v.brushes) {
     if (
       !b ||
-      !["header", "section", "master_page"].includes(b.part_kind) ||
+      !['header', 'section', 'master_page'].includes(b.part_kind) ||
       ![b.part_item_index, b.element_index, b.other_attributes, b.direct_children].every(uint) ||
       !optionalUint(b.section_ordinal) ||
       !optionalUint(b.parent_element_index) ||
@@ -65,7 +65,7 @@ export function decodeFillBrushes(bytes) {
       ].every(uint) ||
       !Array.isArray(n.raw) ||
       n.raw.length !== 19 ||
-      !n.raw.every((s) => s === null || typeof s === "string")
+      !n.raw.every((s) => s === null || typeof s === 'string')
     )
       return fail();
     if (n.parent_node_index !== null && v.nodes[n.parent_node_index].brush_index !== n.brush_index)

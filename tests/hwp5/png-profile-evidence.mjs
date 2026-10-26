@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { inflateSync } from "node:zlib";
-import { keywordPrefixEvidence } from "./png-text-evidence.mjs";
+import assert from 'node:assert/strict';
+import { inflateSync } from 'node:zlib';
+import { keywordPrefixEvidence } from './png-text-evidence.mjs';
 export function profileEnvelopeWire(
   payload,
   maxProfile = 64 * 1024 * 1024,

@@ -6,14 +6,14 @@ export function validateHwp5OwnedColumnBreak(
   { allowCellPageBreak = false } = {},
 ) {
   const names =
-    host === "drawing"
-      ? ["UnsupportedHwp5DrawingBreak", "MissingHwp5DrawingColumnDeclaration"]
-      : host === "table_cell"
-        ? ["UnsupportedHwp5CellBreak", "MissingHwp5CellColumnDeclaration"]
+    host === 'drawing'
+      ? ['UnsupportedHwp5DrawingBreak', 'MissingHwp5DrawingColumnDeclaration']
+      : host === 'table_cell'
+        ? ['UnsupportedHwp5CellBreak', 'MissingHwp5CellColumnDeclaration']
         : null;
-  if (!names) throw new Error("InvalidHwp5OwnedColumnHost");
-  if (typeof allowCellPageBreak !== "boolean" || (allowCellPageBreak && host !== "table_cell"))
-    throw new Error("InvalidHwp5OwnedColumnHost");
+  if (!names) throw new Error('InvalidHwp5OwnedColumnHost');
+  if (typeof allowCellPageBreak !== 'boolean' || (allowCellPageBreak && host !== 'table_cell'))
+    throw new Error('InvalidHwp5OwnedColumnHost');
   if (
     !Number.isInteger(flags) ||
     flags < 0 ||

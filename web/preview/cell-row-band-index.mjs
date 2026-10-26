@@ -1,6 +1,6 @@
-import { tableCellBand } from "./table-cell-band.mjs";
+import { tableCellBand } from './table-cell-band.mjs';
 
-const unavailable = (error) => ({ state: "unavailable", error });
+const unavailable = (error) => ({ state: 'unavailable', error });
 
 /**
  * Immutable geometry snapshot borrowing row identities, never modifying rows.
@@ -17,23 +17,23 @@ const unavailable = (error) => ({ state: "unavailable", error });
  */
 export function createCellRowBandIndex(rows, offset = 0) {
   if (!Array.isArray(rows) || !Number.isFinite(offset))
-    return unavailable("InvalidCellRowBandIndex");
+    return unavailable('InvalidCellRowBandIndex');
   const bands = [];
   for (let order = 0; order < rows.length; order++) {
     const row = rows[order];
     if (
       !row ||
-      typeof row !== "object" ||
+      typeof row !== 'object' ||
       Array.isArray(row) ||
       !Number.isFinite(row.y) ||
       row.y < 0 ||
       !Number.isFinite(row.height) ||
       row.height < 0
     )
-      return unavailable("InvalidCellRowBandIndex");
+      return unavailable('InvalidCellRowBandIndex');
     const { start, end } = tableCellBand(offset, row);
     if (!Number.isFinite(start) || !Number.isFinite(end) || end < start)
-      return unavailable("InvalidCellRowBandIndex");
+      return unavailable('InvalidCellRowBandIndex');
     bands.push({ start, end, row, order });
   }
   bands.sort((a, b) => a.start - b.start || a.order - b.order);
@@ -42,11 +42,11 @@ export function createCellRowBandIndex(rows, offset = 0) {
   for (const band of bands) prefixMaxEnd.push((maximum = Math.max(maximum, band.end)));
 
   return Object.freeze({
-    state: "prepared",
+    state: 'prepared',
     inspections: bands.length,
     select(start, end) {
       if (!Number.isFinite(start) || !Number.isFinite(end) || end < start)
-        return unavailable("InvalidCellRowBandQuery");
+        return unavailable('InvalidCellRowBandQuery');
       let inspections = 0,
         low = 0,
         high = bands.length;
@@ -73,7 +73,7 @@ export function createCellRowBandIndex(rows, offset = 0) {
         if (bands[index].end >= start) selected.push(bands[index]);
       }
       selected.sort((a, b) => a.order - b.order);
-      return { state: "selected", rows: selected.map((band) => band.row), inspections };
+      return { state: 'selected', rows: selected.map((band) => band.row), inspections };
     },
   });
 }

@@ -2,7 +2,7 @@
 import {
   retainedClickProtection,
   restoreRetainedWindowCandidate,
-} from "./hwp5-retained-click-policy.mjs";
+} from './hwp5-retained-click-policy.mjs';
 // A successful section query never overrides paragraph/range protections.
 export function attachHwp5TextSourcePolicy(editor, content) {
   content.textSourcePolicyAvailable = editor?.supportsTextSourcePolicy?.() === true;
@@ -15,18 +15,18 @@ export function attachHwp5TextSourcePolicy(editor, content) {
       try {
         editor.validateTextSourcePolicy(paragraph.section);
       } catch (failure) {
-        error = failure instanceof Error ? failure.message : "TextSourcePolicyQueryFailed";
+        error = failure instanceof Error ? failure.message : 'TextSourcePolicyQueryFailed';
       }
       if (error !== null) {
         try {
           protection = retainedClickProtection(editor, paragraph.section, error);
           if (protection) {
             error = null;
-            if (protection.mode === "retained_memo") content.retainedMemoProtection = true;
+            if (protection.mode === 'retained_memo') content.retainedMemoProtection = true;
             else content.retainedClickFieldProtection = true;
           }
         } catch (failure) {
-          error = failure instanceof Error ? failure.message : "TextSourceProtectionQueryFailed";
+          error = failure instanceof Error ? failure.message : 'TextSourceProtectionQueryFailed';
         }
       }
       sections.set(paragraph.section, { error, protection });
@@ -38,7 +38,7 @@ export function attachHwp5TextSourcePolicy(editor, content) {
         paragraph.paragraph < 0 ||
         paragraph.paragraph >= state.protection.protected_paragraphs.length)
     ) {
-      paragraph.textSourcePolicyError = "InvalidHwp5TextSourceProtection";
+      paragraph.textSourcePolicyError = 'InvalidHwp5TextSourceProtection';
       paragraph.editable = false;
       continue;
     }
@@ -46,9 +46,9 @@ export function attachHwp5TextSourcePolicy(editor, content) {
     const error =
       state.error ??
       (protectedRow === true
-        ? state.protection?.mode === "retained_memo"
-          ? "OutsideEditableMemo"
-          : "UnsupportedCrossParagraphField"
+        ? state.protection?.mode === 'retained_memo'
+          ? 'OutsideEditableMemo'
+          : 'UnsupportedCrossParagraphField'
         : null);
     if (state.protection && protectedRow === false) restoreRetainedWindowCandidate(paragraph);
     paragraph.textSourcePolicyError = error;

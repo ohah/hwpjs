@@ -1,11 +1,11 @@
-import { placeFloatingDrawing, drawingPagePlacementOptions } from "./drawing-placement.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { placeFloatingDrawing, drawingPagePlacementOptions } from './drawing-placement.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Inline groups use the one rectangle reserved by the body paginator. Their
 // children never derive another origin from offsets or the viewport.
 export function placeGroupedRoot(root, boxes, host, anchor) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (!root || root.group_context !== null) return fail("InvalidRootContainerSource");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (!root || root.group_context !== null) return fail('InvalidRootContainerSource');
   if (root.geometry?.treat_as_character !== true)
     return placeFloatingDrawing({ source: root }, boxes, drawingPagePlacementOptions);
   if (
@@ -18,12 +18,12 @@ export function placeGroupedRoot(root, boxes, host, anchor) {
     !Number.isSafeInteger(host.pageOrdinal) ||
     host.pageOrdinal < 0
   )
-    return fail("MissingInlineGroupPlacement");
-  if (!Array.isArray(host.inlineGroupPlacements)) return fail("MissingInlineGroupPlacement");
+    return fail('MissingInlineGroupPlacement');
+  if (!Array.isArray(host.inlineGroupPlacements)) return fail('MissingInlineGroupPlacement');
   const matches = host.inlineGroupPlacements.filter(
     (row) => row?.objectNode === root.container_node,
   );
-  if (matches.length !== 1) return fail("AmbiguousInlineGroupPlacement");
+  if (matches.length !== 1) return fail('AmbiguousInlineGroupPlacement');
   const placed = matches[0],
     rectangle = placed.rectangle,
     geometry = root.geometry;
@@ -49,6 +49,6 @@ export function placeGroupedRoot(root, boxes, host, anchor) {
     rectangle.width !== hwpUnitPixels(geometry.width) ||
     rectangle.height !== hwpUnitPixels(geometry.height)
   )
-    return fail("InvalidInlineGroupPlacement");
-  return { state: "placed", rectangle: { ...rectangle } };
+    return fail('InvalidInlineGroupPlacement');
+  return { state: 'placed', rectangle: { ...rectangle } };
 }

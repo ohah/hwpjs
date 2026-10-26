@@ -1,9 +1,9 @@
-import { alignedReferenceCoordinate } from "./picture-placement.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { prepareTablePageBands } from "./table-page-bands.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
-import { projectTablePageFragments } from "./table-page-fragments.mjs";
+import { alignedReferenceCoordinate } from './picture-placement.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { prepareTablePageBands } from './table-page-bands.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
+import { projectTablePageFragments } from './table-page-fragments.mjs';
 
 const validBox = (box) =>
   box &&
@@ -20,7 +20,7 @@ export function projectOverlayTablePage(
   reference,
   { pageOrdinal, columnOrdinal = 0, maxRows = 20000 } = {},
 ) {
-  const refuse = (error) => ({ state: "unavailable", error });
+  const refuse = (error) => ({ state: 'unavailable', error });
   const source = table?.sourceGeometry,
     geometry = source?.geometry;
   if (
@@ -29,20 +29,20 @@ export function projectOverlayTablePage(
     geometry.width_relative !== 4 ||
     geometry.height_relative !== 2 ||
     source.text_flow !== 0 ||
-    table.pagination?.page_break !== "none" ||
+    table.pagination?.page_break !== 'none' ||
     source.allow_overlap !== false ||
     table.sourceCaption ||
     ![geometry.width, geometry.height].every(
       (value) => Number.isInteger(value) && value > 0 && value <= 0xffffffff,
     )
   )
-    return refuse("UnsupportedOverlayTableSource");
+    return refuse('UnsupportedOverlayTableSource');
   if (
     !Number.isSafeInteger(source.z_order) ||
     source.z_order < -2147483648 ||
     source.z_order > 4294967295
   )
-    return refuse("MissingOverlayTableOrder");
+    return refuse('MissingOverlayTableOrder');
   if (
     !Number.isSafeInteger(pageOrdinal) ||
     pageOrdinal < 0 ||
@@ -50,15 +50,15 @@ export function projectOverlayTablePage(
     columnOrdinal < 0 ||
     !validBox(reference?.page)
   )
-    return refuse("InvalidOverlayTableReference");
+    return refuse('InvalidOverlayTableReference');
   if (![source.vertical_relative, source.horizontal_relative].every(Number.isInteger))
-    return refuse("InvalidOverlayTableReference");
-  const vertical = ["paper", "page", "paragraph"][source.vertical_relative];
-  const horizontal = ["paper", "page", "column", "paragraph"][source.horizontal_relative];
+    return refuse('InvalidOverlayTableReference');
+  const vertical = ['paper', 'page', 'paragraph'][source.vertical_relative];
+  const horizontal = ['paper', 'page', 'column', 'paragraph'][source.horizontal_relative];
   const vbox = reference?.[vertical],
     hbox = reference?.[horizontal];
   if (!vertical || !horizontal || !validBox(vbox) || !validBox(hbox))
-    return refuse("InvalidOverlayTableReference");
+    return refuse('InvalidOverlayTableReference');
   const dx = signedInt32(geometry.horizontal_offset),
     dy = signedInt32(geometry.vertical_offset);
   if (
@@ -67,25 +67,25 @@ export function projectOverlayTablePage(
     ![0, 1, 2].includes(source.vertical_alignment) ||
     ![0, 1, 2].includes(source.horizontal_alignment)
   )
-    return refuse("UnsupportedOverlayTablePosition");
+    return refuse('UnsupportedOverlayTablePosition');
   if (
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     ![measured.grid?.width, measured.grid?.height].every(
       (value) => Number.isFinite(value) && value > 0,
     )
   )
-    return refuse("InvalidOverlayTableMeasurement");
+    return refuse('InvalidOverlayTableMeasurement');
   // Nonzero outer-inset alignment needs a distinct source policy, not block reservation.
   if (
     !Array.isArray(source.out_margin) ||
     source.out_margin.length !== 4 ||
     !Array.from(source.out_margin).every((value) => value === 0)
   )
-    return refuse("UnsupportedOverlayTableInsets");
-  const prepared = prepareTablePageBands(table, measured.grid.rows, "whole", 0);
-  if (prepared.state !== "prepared") return prepared;
-  const padding = resolveTablePadding(table, "source");
-  if (!padding) return refuse("MissingTableSourceInsets");
+    return refuse('UnsupportedOverlayTableInsets');
+  const prepared = prepareTablePageBands(table, measured.grid.rows, 'whole', 0);
+  if (prepared.state !== 'prepared') return prepared;
+  const padding = resolveTablePadding(table, 'source');
+  if (!padding) return refuse('MissingTableSourceInsets');
   const { width, height } = measured.grid;
   const x = alignedReferenceCoordinate(
     hbox.x,
@@ -102,7 +102,7 @@ export function projectOverlayTablePage(
     source.vertical_alignment,
   );
   if (![x, y, x + width, y + height].every(Number.isFinite))
-    return refuse("InvalidOverlayTablePosition");
+    return refuse('InvalidOverlayTablePosition');
   const fragment = {
     ...prepared.selected[0],
     x,
@@ -115,14 +115,14 @@ export function projectOverlayTablePage(
     table,
     measured.grid,
     measured.flows,
-    { state: "planned", fragments: [fragment] },
+    { state: 'planned', fragments: [fragment] },
     { origin: { x: 0, y: 0 }, padding, maxRows },
   );
-  if (projected.state !== "placed") return projected;
+  if (projected.state !== 'placed') return projected;
   if (projected.boxes.some((box) => box.tableNode !== table.tableNode))
-    return refuse("UnsupportedNestedOverlayTableScene");
+    return refuse('UnsupportedNestedOverlayTableScene');
   const layer = {
-    tablePaintLayer: source.text_wrap === 2 ? "behind" : "front",
+    tablePaintLayer: source.text_wrap === 2 ? 'behind' : 'front',
     tablePaintZOrder: source.z_order,
     positionOwnerTableNode: table.tableNode,
   };

@@ -1,8 +1,8 @@
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
-import { layoutContent } from "./layout.mjs";
-import { inlinePictureIndex } from "./picture-inline.mjs";
-import { pictureTextMeasure } from "./picture-text-measurement.mjs";
-import { hasPictureSourceErrors } from "./picture-source-validation.mjs";
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
+import { layoutContent } from './layout.mjs';
+import { inlinePictureIndex } from './picture-inline.mjs';
+import { pictureTextMeasure } from './picture-text-measurement.mjs';
+import { hasPictureSourceErrors } from './picture-source-validation.mjs';
 
 // Only host rows enter the cell flow. Drawing text remains a measured owned
 // descriptor and is projected after the real cell page is selected.
@@ -15,7 +15,7 @@ export function measureInlineDrawingCellFlow(input, entries, content) {
   );
   if (!selected.length) return null;
   const fail = (error) => ({
-    state: "unavailable",
+    state: 'unavailable',
     error,
     section: input.table.section,
     tableNode: input.table.tableNode,
@@ -31,7 +31,7 @@ export function measureInlineDrawingCellFlow(input, entries, content) {
         t.parentListNode === input.cell.listNode,
     )
   )
-    return fail("UnsupportedCellInlineDrawingCombination");
+    return fail('UnsupportedCellInlineDrawingCombination');
   if (
     !Array.isArray(input.pictures) ||
     Array.from(input.pictures).some(
@@ -50,14 +50,14 @@ export function measureInlineDrawingCellFlow(input, entries, content) {
         p.owner.anchorUnit !== p.anchorUnit,
     )
   )
-    return fail("UnsupportedCellInlineDrawingPictures");
+    return fail('UnsupportedCellInlineDrawingPictures');
   const pictures = inlinePictureIndex({ paragraphs: input.paragraphs, pictures: input.pictures });
   if (
     pictures.size !== input.pictures.length ||
     new Set(input.pictures.map((p) => p.pictureNode)).size !== input.pictures.length ||
     [...pictures.values()].some((item) => !item)
   )
-    return fail("InvalidCellInlineDrawingPictures");
+    return fail('InvalidCellInlineDrawingPictures');
   const measure = pictureTextMeasure(pictures, [], input.measure);
   const rows = [],
     descriptors = [];
@@ -70,7 +70,7 @@ export function measureInlineDrawingCellFlow(input, entries, content) {
       0,
     );
     const budget = input.maxRows - rows.length - internalRows;
-    if (budget < 1) return fail("TableCellMeasurementLimit");
+    if (budget < 1) return fail('TableCellMeasurementLimit');
     const measured = local.length
       ? measureInlineObjectParagraph(
           paragraph,
@@ -109,13 +109,13 @@ export function measureInlineDrawingCellFlow(input, entries, content) {
             includeTerminalAfter: paragraph !== input.paragraphs.at(-1),
           },
         );
-    if (measured.state === "unavailable") return measured;
+    if (measured.state === 'unavailable') return measured;
     if (measured.limited || !Number.isFinite(height + measured.height))
-      return fail("TableCellMeasurementLimit");
+      return fail('TableCellMeasurementLimit');
     rows.push(...measured.rows.map((row) => ({ ...row, y: row.y + height })));
     descriptors.push(...local);
     height += measured.height;
   }
-  if (descriptors.length !== selected.length) return fail("AmbiguousCellInlineDrawingOwner");
+  if (descriptors.length !== selected.length) return fail('AmbiguousCellInlineDrawingOwner');
   return { rows, height, width: input.width, limited: false, inlineDrawings: descriptors };
 }

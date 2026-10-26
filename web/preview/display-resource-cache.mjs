@@ -1,27 +1,27 @@
 // Header display values only. The owning native session remains authoritative.
 const HEADER_READS = new Set([
-  "characterShapes",
-  "characterUnderlines",
-  "characterUnderlineStyles",
-  "characterStrikes",
-  "characterStrikeStyles",
-  "characterTextColors",
-  "characterShades",
-  "characterEffects",
-  "characterOutlines",
-  "fontFaces",
-  "fontFaceMetadata",
-  "characterFontReferences",
-  "characterFontMetrics",
-  "paragraphShapeIds",
-  "paragraphShapes",
-  "tabDefinitions",
+  'characterShapes',
+  'characterUnderlines',
+  'characterUnderlineStyles',
+  'characterStrikes',
+  'characterStrikeStyles',
+  'characterTextColors',
+  'characterShades',
+  'characterEffects',
+  'characterOutlines',
+  'fontFaces',
+  'fontFaceMetadata',
+  'characterFontReferences',
+  'characterFontMetrics',
+  'paragraphShapeIds',
+  'paragraphShapes',
+  'tabDefinitions',
 ]);
 const READ_ONLY_REQUESTS = new Set([
-  "picture-bytes",
-  "table-background-bytes",
-  "query-edit-range",
-  "query-split-range",
+  'picture-bytes',
+  'table-background-bytes',
+  'query-edit-range',
+  'query-split-range',
 ]);
 
 export function createDisplayResourceCache() {
@@ -35,7 +35,7 @@ export function createDisplayResourceCache() {
     beginRequest(message, { format, editor, historyEnabled }) {
       failed = false;
       if (
-        !(format === "hwpx" && editor && historyEnabled && message.kind === "splice") &&
+        !(format === 'hwpx' && editor && historyEnabled && message.kind === 'splice') &&
         !READ_ONLY_REQUESTS.has(message.kind)
       )
         invalidate();
@@ -59,10 +59,10 @@ export function createDisplayResourceCache() {
         facade = new Proxy(Object.create(null), {
           get(_, key) {
             const method = Reflect.get(editor, key, editor);
-            if (typeof method !== "function") return method;
+            if (typeof method !== 'function') return method;
             if (!HEADER_READS.has(key)) return method.bind(editor);
             return (...args) => {
-              if (owner !== editor) throw new Error("StaleDisplayResourceOwner");
+              if (owner !== editor) throw new Error('StaleDisplayResourceOwner');
               if (args.length) return method.apply(editor, args);
               try {
                 if (!values.has(key)) values.set(key, structuredClone(method.call(editor)));

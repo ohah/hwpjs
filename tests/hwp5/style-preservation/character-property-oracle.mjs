@@ -1,14 +1,14 @@
 // Independent raw-byte expectation, not product resource or run snapshots.
-import assert from "node:assert/strict";
-import { inspect, records, paragraphRecords, encodeRecord } from "./text-record-oracle.mjs";
-import { deflateRawSync } from "node:zlib";
-import { decodeDistributionSection } from "../../../tools/hwp5-distribution-oracle.mjs";
+import assert from 'node:assert/strict';
+import { inspect, records, paragraphRecords, encodeRecord } from './text-record-oracle.mjs';
+import { deflateRawSync } from 'node:zlib';
+import { decodeDistributionSection } from '../../../tools/hwp5-distribution-oracle.mjs';
 
 function inspectCharacterDocument(input) {
   const parsed = inspect(input),
-    flags = parsed.streams.get("FileHeader").readUInt32LE(36);
+    flags = parsed.streams.get('FileHeader').readUInt32LE(36);
   if (flags & 4) {
-    assert.equal(flags & 2, 0, "password distribution is outside this oracle");
+    assert.equal(flags & 2, 0, 'password distribution is outside this oracle');
     parsed.sections = [...parsed.streams]
       .filter(([path]) => /^ViewText\/Section\d+$/.test(path))
       .sort((a, b) => Number(a[0].slice(16)) - Number(b[0].slice(16)))
@@ -16,7 +16,7 @@ function inspectCharacterDocument(input) {
         path,
         bytes: decodeDistributionSection(bytes, parsed.compressed),
       }));
-    assert(parsed.sections.length > 0, "distribution oracle requires ViewText");
+    assert(parsed.sections.length > 0, 'distribution oracle requires ViewText');
   }
   return parsed;
 }
@@ -53,8 +53,8 @@ export function verifyCharacterPropertyBatch(before, after, requests) {
     for (const id of planned.createdResourceIds) reusable.add(id);
   }
   assert.deepEqual(
-    saved.decode(saved.streams.get("DocInfo")),
-    planned.decode(planned.streams.get("DocInfo")),
+    saved.decode(saved.streams.get('DocInfo')),
+    planned.decode(planned.streams.get('DocInfo')),
   );
   assert.deepEqual(
     saved.sections.map((row) => row.path),
@@ -64,7 +64,7 @@ export function verifyCharacterPropertyBatch(before, after, requests) {
     assert.deepEqual(saved.sections[section].bytes, planned.sections[section].bytes);
   assert.deepEqual([...saved.streams.keys()].sort(), [...original.streams.keys()].sort());
   const changed = new Set([
-    "DocInfo",
+    'DocInfo',
     ...requests.map((request) => original.sections[request.section].path),
   ]);
   for (const [path, bytes] of original.streams)
@@ -84,7 +84,7 @@ function planCharacterProperties(
     fontResource = null,
   },
 ) {
-  const info = original.decode(original.streams.get("DocInfo"));
+  const info = original.decode(original.streams.get('DocInfo'));
   const entries = records(info),
     resources = entries.filter((row) => row.tag === 21);
   const target = paragraphRecords(original.sections[section].bytes, paragraph);
@@ -123,20 +123,20 @@ function planCharacterProperties(
           dot: 2,
           thick: 3,
           dash: 4,
-          "dash-dot": 5,
-          "dash-dot-dot": 6,
+          'dash-dot': 5,
+          'dash-dot-dot': 6,
         };
         assert(Object.hasOwn(codes, properties.outlineKind));
         flags = ((flags & ~(7 << 8)) | (codes[properties.outlineKind] << 8)) >>> 0;
       }
       for (const [name, bit] of [
-        ["emboss", 13],
-        ["engrave", 14],
-        ["superscript", 15],
-        ["subscript", 16],
+        ['emboss', 13],
+        ['engrave', 14],
+        ['superscript', 15],
+        ['subscript', 16],
       ]) {
         if (Object.hasOwn(properties, name)) {
-          assert.equal(typeof properties[name], "boolean");
+          assert.equal(typeof properties[name], 'boolean');
           flags = ((flags & ~(1 << bit)) | (properties[name] ? 1 << bit : 0)) >>> 0;
         }
       }
@@ -144,7 +144,7 @@ function planCharacterProperties(
       if (properties.italic != null) flags = ((flags & ~1) | (properties.italic ? 1 : 0)) >>> 0;
       if (properties.underlineKind != null) {
         const raw = { none: 0, bottom: 1, top: 3 }[properties.underlineKind];
-        assert.notEqual(raw, undefined, "unsupported HWP5 underline oracle request");
+        assert.notEqual(raw, undefined, 'unsupported HWP5 underline oracle request');
         flags = ((flags & ~12) | (raw << 2)) >>> 0;
       }
       payload.writeUInt32LE(flags, 46);
@@ -156,7 +156,7 @@ function planCharacterProperties(
           52,
         );
       }
-      if (Object.hasOwn(properties, "shadeColor")) {
+      if (Object.hasOwn(properties, 'shadeColor')) {
         const color = properties.shadeColor;
         assert(color === null || (Number.isInteger(color) && color >= 0 && color <= 0xffffff));
         payload.writeUInt32LE(
@@ -193,7 +193,7 @@ function planCharacterProperties(
   }
   assert(
     [...replacements].some(([source, replacement]) => source !== replacement),
-    "oracle case must change properties",
+    'oracle case must change properties',
   );
   const last = entries.lastIndexOf(resources.at(-1));
   let insertion = resources.at(-1).start + resources.at(-1).raw.length;
@@ -214,7 +214,7 @@ function planCharacterProperties(
     assert(Number.isInteger(language) && language >= 0 && language < 7);
     const infoRows = records(composedInfo),
       fontRows = infoRows.filter((row) => row.tag === 19);
-    assert(fontRows.length > 0, "font oracle requires existing font list");
+    assert(fontRows.length > 0, 'font oracle requires existing font list');
     const map = infoRows.find((row) => row.tag === 17);
     const slot = (1 + language) * 4;
     const count = map.payload.readInt32LE(slot);
@@ -232,9 +232,9 @@ function planCharacterProperties(
       )
         at = infoRows[i].start + infoRows[i].raw.length;
     }
-    const fontPayload = Buffer.alloc(3 + Buffer.byteLength(name, "utf16le"));
+    const fontPayload = Buffer.alloc(3 + Buffer.byteLength(name, 'utf16le'));
     fontPayload.writeUInt16LE(name.length, 1);
-    fontPayload.write(name, 3, "utf16le");
+    fontPayload.write(name, 3, 'utf16le');
     composedInfo.writeInt32LE(count + 1, map.start + map.raw.length - map.payload.length + slot);
     composedInfo = Buffer.concat([
       composedInfo.subarray(0, at),
@@ -274,7 +274,7 @@ function planCharacterProperties(
   ]);
   const streams = new Map(original.streams),
     encode = (bytes) => (original.compressed ? deflateRawSync(bytes) : bytes);
-  streams.set("DocInfo", encode(composedInfo));
+  streams.set('DocInfo', encode(composedInfo));
   streams.set(original.sections[section].path, encode(expectedSection));
   return {
     ...original,

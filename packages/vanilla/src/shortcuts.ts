@@ -3,7 +3,7 @@ import {
   resolveKeyboardShortcut,
   type KeymapConfig,
   type KeymapPlatform,
-} from "@hwpjs/core";
+} from '@hwpjs/core';
 export interface KeyboardShortcutsOptions {
   readonly root: HTMLElement;
   readonly config: KeymapConfig;
@@ -27,9 +27,9 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
     const target = event.target as Element | null;
     if (
       target &&
-      typeof target.closest === "function" &&
-      target.closest("input,textarea,select,[contenteditable]") &&
-      !target.closest("[data-hwpjs-document-input]")
+      typeof target.closest === 'function' &&
+      target.closest('input,textarea,select,[contenteditable]') &&
+      !target.closest('[data-hwpjs-document-input]')
     )
       return;
     const input = {
@@ -41,14 +41,14 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
       isComposing: event.isComposing,
       keyCode: event.keyCode,
       repeat: false,
-      altGraph: event.getModifierState?.("AltGraph") === true,
+      altGraph: event.getModifierState?.('AltGraph') === true,
     };
     const binding = resolveKeyboardShortcut(compiled, input);
     if (!binding) {
       const original = fallback && resolveKeyboardShortcut(fallback, input);
       if (original) {
         event.stopPropagation();
-        if (["copy", "cut", "paste", "undo", "redo"].includes(original.command))
+        if (['copy', 'cut', 'paste', 'undo', 'redo'].includes(original.command))
           event.preventDefault();
       }
       return;
@@ -66,12 +66,12 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         return;
       }
       const primary =
-        options.platform === "mac"
+        options.platform === 'mac'
           ? input.metaKey && !input.ctrlKey
           : input.ctrlKey && !input.metaKey;
       if (
-        binding.command === "paste" &&
-        input.code === "KeyV" &&
+        binding.command === 'paste' &&
+        input.code === 'KeyV' &&
         primary &&
         !input.altKey &&
         !input.shiftKey &&
@@ -87,7 +87,7 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
       }
       event.preventDefault();
       const result = options.execute(binding.command);
-      if (result && typeof result.then === "function")
+      if (result && typeof result.then === 'function')
         void result.catch((error) => {
           if (!closed) options.onError?.(error);
         });
@@ -96,17 +96,17 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
       if (!closed) options.onError?.(error);
     }
   };
-  options.root.addEventListener("keydown", keyboard, true);
+  options.root.addEventListener('keydown', keyboard, true);
   return {
     setConfig(config: KeymapConfig) {
-      if (closed) throw Error("KeyboardShortcutsDisposed");
+      if (closed) throw Error('KeyboardShortcutsDisposed');
       const next = compileKeymap(config, options.platform);
       compiled = next;
     },
     dispose() {
       if (closed) return;
       closed = true;
-      options.root.removeEventListener("keydown", keyboard, true);
+      options.root.removeEventListener('keydown', keyboard, true);
     },
   };
 }

@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { documentRecords } from "./documents.mjs";
-import { ownedShapeDocument } from "./owned-shape-document.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords } from './documents.mjs';
+import { ownedShapeDocument } from './owned-shape-document.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -116,7 +116,7 @@ export function groupDocumentReference(call, cfb) {
   return ownedShapeDocument(call, cfb, {
     tag: 76,
     count: 2,
-    group: "shape_groups",
+    group: 'shape_groups',
     field: 2,
     actual: groupActual,
     run: groupRun,

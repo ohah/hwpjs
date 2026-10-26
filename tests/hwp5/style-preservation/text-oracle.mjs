@@ -1,10 +1,10 @@
 // Rust JSON oracle for root paragraphs; raw nested verification lives separately.
-import assert from "node:assert/strict";
-import { createRequire } from "node:module";
-import { inspect, paragraphRecords, expectedSection, verifyRaw } from "./text-record-oracle.mjs";
-export * from "./text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { inspect, paragraphRecords, expectedSection, verifyRaw } from './text-record-oracle.mjs';
+export * from './text-record-oracle.mjs';
 export const rust = createRequire(import.meta.url)(
-  "../../../legacy/rust/packages/hwpjs/dist/index.js",
+  '../../../legacy/rust/packages/hwpjs/dist/index.js',
 );
 
 export function verify(beforeBytes, afterBytes, section, paragraph, start, end, utf8) {
@@ -14,15 +14,15 @@ export function verify(beforeBytes, afterBytes, section, paragraph, start, end, 
     newJson = JSON.parse(rust.toJson(afterBytes));
   const oldP = oldJson.body_text.sections[section].paragraphs[paragraph],
     newP = newJson.body_text.sections[section].paragraphs[paragraph];
-  assert(oldP && newP, "root paragraph must be visible in Rust JSON");
+  assert(oldP && newP, 'root paragraph must be visible in Rust JSON');
   const expectedText = paragraphRecords(
     expectedSection(target.bytes, paragraph, start, end, utf8),
     paragraph,
   ).direct.find((r) => r.tag === 67).payload;
   assert.equal(newP.para_header.text_char_count, expectedText.length / 2);
   assert.equal(
-    newP.records.find((r) => r.type === "para_text").text,
-    expectedText.subarray(0, -2).toString("utf16le"),
+    newP.records.find((r) => r.type === 'para_text').text,
+    expectedText.subarray(0, -2).toString('utf16le'),
   );
   const header = {
     ...oldP.para_header,
@@ -33,5 +33,5 @@ export function verify(beforeBytes, afterBytes, section, paragraph, start, end, 
   };
   assert.deepEqual(newP.para_header, header);
   oldJson.body_text.sections[section].paragraphs[paragraph] = newP;
-  assert.deepEqual(newJson, oldJson, "Rust JSON outside the selected paragraph must remain equal");
+  assert.deepEqual(newJson, oldJson, 'Rust JSON outside the selected paragraph must remain equal');
 }

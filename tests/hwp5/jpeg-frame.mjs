@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { jpegSequentialScans, jpegScanOracle, jpegScanFixture } from "./jpeg-scan.mjs";
-import { jpegStructureOracle, segment } from "./jpeg-structure.mjs";
+import assert from 'node:assert/strict';
+import { jpegSequentialScans, jpegScanOracle, jpegScanFixture } from './jpeg-scan.mjs';
+import { jpegStructureOracle, segment } from './jpeg-structure.mjs';
 
 export function jpegFrameInput(
   raw,

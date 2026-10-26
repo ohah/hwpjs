@@ -1,19 +1,19 @@
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { documentRecords } from "./documents.mjs";
-import { headerXml } from "./fixture-xml.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { documentRecords } from './documents.mjs';
+import { headerXml } from './fixture-xml.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
   return b;
 };
 function oracle(b) {
-  if (b.length < 16) throw new RangeError("short header");
+  if (b.length < 16) throw new RangeError('short header');
   let at = 16;
   const lists = [];
   for (let i = 0; i < 4; i++) {
     const n = b.readUInt32LE(i * 4);
-    if (n > (b.length - at) / 2) throw new RangeError("short list");
+    if (n > (b.length - at) / 2) throw new RangeError('short list');
     lists.push(b.subarray(at, at + 2 * n));
     at += 2 * n;
   }
@@ -36,7 +36,7 @@ export function forbiddenCharEdges(call) {
     rejected = 0;
   const good = Buffer.concat([
     ...[1, 2, 3, 4].map(word),
-    Buffer.from("00d8000000dc00ff0123456789abcdef10203040", "hex"),
+    Buffer.from('00d8000000dc00ff0123456789abcdef10203040', 'hex'),
     Buffer.from([255]),
   ]);
   assert.equal(good.length, 37);
@@ -85,7 +85,7 @@ export function forbiddenCharEdges(call) {
   return { accepted, rejected };
 }
 export function forbiddenCharActual(call, cfb) {
-  const root = new URL("../../reference/rhwp/samples/", import.meta.url),
+  const root = new URL('../../reference/rhwp/samples/', import.meta.url),
     errors = {},
     nonempty = new Map();
   let files = 0,
@@ -94,13 +94,13 @@ export function forbiddenCharActual(call, cfb) {
     empty = 0;
   const owners = {},
     sizes = {};
-  for (const name of readdirSync(root, { recursive: true }).filter((n) => n.endsWith(".hwp"))) {
+  for (const name of readdirSync(root, { recursive: true }).filter((n) => n.endsWith('.hwp'))) {
     files++;
     let b;
     try {
       cfb.parse(readFileSync(new URL(name, root)), { strict: true });
-      const h = Buffer.from(cfb.findExact("/FileHeader").content);
-      b = call(3, Buffer.concat([h, Buffer.from(cfb.findExact("/DocInfo").content)]));
+      const h = Buffer.from(cfb.findExact('/FileHeader').content);
+      b = call(3, Buffer.concat([h, Buffer.from(cfb.findExact('/DocInfo').content)]));
     } catch (e) {
       errors[e.message] = (errors[e.message] ?? 0) + 1;
       continue;
@@ -132,15 +132,15 @@ export function forbiddenCharActual(call, cfb) {
   let identicalNonempty = 0,
     emptySpaceDifferences = 0;
   for (const [hwp, hwpx, counts] of [
-    ["pr-1674.hwp", "hwpx/pr-1674.hwpx", [0, 0, 90, 0]],
+    ['pr-1674.hwp', 'hwpx/pr-1674.hwpx', [0, 0, 90, 0]],
     [
-      "task1749/saved_bounds_cumulative_page_break.hwp",
-      "task1749/saved_bounds_cumulative_page_break.hwpx",
+      'task1749/saved_bounds_cumulative_page_break.hwp',
+      'task1749/saved_bounds_cumulative_page_break.hwpx',
       [0, 0, 92, 51],
     ],
     [
-      "task1749/saved_bounds_cumulative_vpos.hwp",
-      "task1749/saved_bounds_cumulative_vpos.hwpx",
+      'task1749/saved_bounds_cumulative_vpos.hwp',
+      'task1749/saved_bounds_cumulative_vpos.hwpx',
       [0, 0, 92, 51],
     ],
   ]) {
@@ -156,7 +156,7 @@ export function forbiddenCharActual(call, cfb) {
       );
     assert.ok(block);
     const lists = [...block[1].matchAll(/<hh:forbiddenWord>([\s\S]*?)<\/hh:forbiddenWord>/g)].map(
-      (m) => Buffer.from(m[1], "base64"),
+      (m) => Buffer.from(m[1], 'base64'),
     );
     assert.equal(lists.length, 4);
     for (let i = 0; i < 4; i++) {

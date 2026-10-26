@@ -1,29 +1,29 @@
-import { validateShapeSourceValues } from "./hwpx-shape-source-values.mjs";
+import { validateShapeSourceValues } from './hwpx-shape-source-values.mjs';
 
 const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
 const errors = new Set([
-  "UnsupportedOleDisplayHost",
-  "MissingCurrentParagraphDisplayHost",
-  "AmbiguousParagraphDisplayHost",
-  "MissingProtectedDisplayAnchor",
-  "UnsupportedJoinedParagraphLocations",
-  "UnsupportedInlineControl",
-  "UnsupportedTextPositionProjection",
-  "MissingTextSite",
+  'UnsupportedOleDisplayHost',
+  'MissingCurrentParagraphDisplayHost',
+  'AmbiguousParagraphDisplayHost',
+  'MissingProtectedDisplayAnchor',
+  'UnsupportedJoinedParagraphLocations',
+  'UnsupportedInlineControl',
+  'UnsupportedTextPositionProjection',
+  'MissingTextSite',
 ]);
 function parse(bytes, maxBytes, message) {
   if (!(bytes instanceof Uint8Array) || bytes.length > maxBytes) throw new Error(message);
   try {
-    return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     throw new Error(message);
   }
 }
 export function decodeOleSites(bytes) {
   const fail = () => {
-    throw new Error("InvalidOleSites");
+    throw new Error('InvalidOleSites');
   };
-  const value = parse(bytes, 16 * 1024 * 1024, "InvalidOleSites"),
+  const value = parse(bytes, 16 * 1024 * 1024, 'InvalidOleSites'),
     seen = new Set();
   if (!Array.isArray(value) || value.length > 100000) fail();
   for (const row of value) {
@@ -36,7 +36,7 @@ export function decodeOleSites(bytes) {
     )
       fail();
     if (
-      Object.hasOwn(row, "chart_wrapper") &&
+      Object.hasOwn(row, 'chart_wrapper') &&
       row.chart_wrapper !== null &&
       !uint(row.chart_wrapper)
     )
@@ -53,20 +53,20 @@ export function decodeOleSites(bytes) {
 }
 export function decodeOleSource(bytes) {
   const fail = () => {
-    throw new Error("InvalidOleSource");
+    throw new Error('InvalidOleSource');
   };
-  const value = parse(bytes, 65536, "InvalidOleSource");
-  if (!value || !Object.hasOwn(value, "position") || !Object.hasOwn(value, "flow")) fail();
+  const value = parse(bytes, 65536, 'InvalidOleSource');
+  if (!value || !Object.hasOwn(value, 'position') || !Object.hasOwn(value, 'flow')) fail();
   try {
     validateShapeSourceValues(value);
   } catch {
     fail();
   }
-  for (const name of ["binary_item_id", "object_type", "draw_aspect"]) {
+  for (const name of ['binary_item_id', 'object_type', 'draw_aspect']) {
     const text = value[name];
     if (
       text !== null &&
-      (typeof text !== "string" ||
+      (typeof text !== 'string' ||
         !text.isWellFormed() ||
         new TextEncoder().encode(text).length > 4096)
     )
@@ -75,7 +75,7 @@ export function decodeOleSource(bytes) {
   if (![null, false, true].includes(value.has_moniker)) fail();
   // Older optional source ABI omits this proof; absence is never identity.
   if (
-    Object.hasOwn(value, "transform_identity") &&
+    Object.hasOwn(value, 'transform_identity') &&
     ![null, false, true].includes(value.transform_identity)
   )
     fail();
@@ -89,7 +89,7 @@ export function decodeOleBytes(bytes) {
     bytes.length > 64 * 1024 * 1024 + 1 ||
     bytes[0] > 1
   ) {
-    throw new Error("InvalidOleBytes");
+    throw new Error('InvalidOleBytes');
   }
   return { declaredExternal: bytes[0] === 1, bytes: bytes.slice(1) };
 }

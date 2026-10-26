@@ -1,11 +1,11 @@
 export function decodePictureOwners(bytes) {
   const fail = () => {
-    throw new Error("InvalidPictureOwners");
+    throw new Error('InvalidPictureOwners');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length > 32 * 1024 * 1024) fail();
   let rows;
   try {
-    rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     fail();
   }
@@ -16,7 +16,7 @@ export function decodePictureOwners(bytes) {
     if (!row || !uint(row.picture_node) || seen.has(row.picture_node)) fail();
     seen.add(row.picture_node);
     if (row.owner === null) {
-      if (typeof row.failure !== "string" || !/^[A-Za-z][A-Za-z0-9]{0,127}$/.test(row.failure))
+      if (typeof row.failure !== 'string' || !/^[A-Za-z][A-Za-z0-9]{0,127}$/.test(row.failure))
         fail();
       return { pictureNode: row.picture_node, owner: null, error: row.failure };
     }

@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { referenceChartFixturePaths } from "./chart-fixture-paths.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { referenceChartFixturePaths } from './chart-fixture-paths.mjs';
 
-test("all original chart query packets and current value history match the explicit baseline", async (t) => {
+test('all original chart query packets and current value history match the explicit baseline', async (t) => {
   if (!process.env.HWPJS_BASELINE_WASM) {
-    t.skip("explicit baseline WASM is required");
+    t.skip('explicit baseline WASM is required');
     return;
   }
-  if (!existsSync("reference/rhwp/samples/chart")) {
-    t.skip("RHWP chart reference fixtures are unavailable");
+  if (!existsSync('reference/rhwp/samples/chart')) {
+    t.skip('RHWP chart reference fixtures are unavailable');
     return;
   }
   const baseline = await createHwpxEditor(readFileSync(process.env.HWPJS_BASELINE_WASM));
   const candidate = await createHwpxEditor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   let files = 0,
     edits = 0;
@@ -30,12 +30,12 @@ test("all original chart query packets and current value history match the expli
       assert.deepEqual(candidate.chartNodes(0), wrappers);
       assert.deepEqual(candidate.chartSites(0), baseline.chartSites(0));
       assert.equal(candidate.anchorText(0, 1), baseline.anchorText(0, 1));
-      for (const editor of [baseline, candidate]) editor.spliceAnchored(0, 1, 0, 0, "기능유지😀");
+      for (const editor of [baseline, candidate]) editor.spliceAnchored(0, 1, 0, 0, '기능유지😀');
       assert.equal(candidate.anchorText(0, 1), baseline.anchorText(0, 1));
       assert.deepEqual(
         candidate.chartSites(0),
         baseline.chartSites(0),
-        "host input retains current chart anchor identity and position",
+        'host input retains current chart anchor identity and position',
       );
       for (const wrapper of wrappers) {
         const original = baseline.chartPoints(0, wrapper);
@@ -49,13 +49,13 @@ test("all original chart query packets and current value history match the expli
         for (const numeric of [true, false]) {
           const point = original.values.points.findIndex((row) =>
             numeric
-              ? row.kind === "numeric_cache" || row.kind === "numeric_literal"
-              : row.kind === "string_cache" || row.kind === "string_literal",
+              ? row.kind === 'numeric_cache' || row.kind === 'numeric_literal'
+              : row.kind === 'string_cache' || row.kind === 'string_literal',
           );
           if (point < 0) continue;
           for (const editor of [baseline, candidate]) {
-            if (numeric) editor.setChartNumericPoint(0, wrapper, point, "31.4159");
-            else editor.setChartPoint(0, wrapper, point, "호환😀<&");
+            if (numeric) editor.setChartNumericPoint(0, wrapper, point, '31.4159');
+            else editor.setChartPoint(0, wrapper, point, '호환😀<&');
           }
           compare();
           for (const editor of [baseline, candidate]) assert.equal(editor.undo(), true);
@@ -76,7 +76,7 @@ test("all original chart query packets and current value history match the expli
         hostEdits: files,
         edits,
         scope:
-          "chart nodes sites host text and complete point packets before edit after edit undo and redo; not every API or wire signature",
+          'chart nodes sites host text and complete point packets before edit after edit undo and redo; not every API or wire signature',
       }),
     );
   } finally {

@@ -1,11 +1,11 @@
 // Explicit read-only direct-child corpus survey. Embedded paths/payloads are not logged.
-import { readFileSync, readdirSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { digest, observeHwpFile } from "./hwp-corpus-evidence.mjs";
-import { docOptionsEvidence } from "./doc-options-evidence.mjs";
+import { readFileSync, readdirSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { digest, observeHwpFile } from './hwp-corpus-evidence.mjs';
+import { docOptionsEvidence } from './doc-options-evidence.mjs';
 const roots = process.argv.slice(2);
-if (!roots.length) roots.push("legacy/rust/crates/hwp-core/tests/fixtures");
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+if (!roots.length) roots.push('legacy/rust/crates/hwp-core/tests/fixtures');
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
 const rows = [];
 try {
   for (const root of roots)
@@ -21,7 +21,7 @@ try {
     }
   console.log(
     JSON.stringify(
-      { scope: "direct-child HWP-named files; DocOptions observations only", rows },
+      { scope: 'direct-child HWP-named files; DocOptions observations only', rows },
       null,
       2,
     ),

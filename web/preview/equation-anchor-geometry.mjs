@@ -1,5 +1,5 @@
-import { selectionRects } from "./text-geometry.mjs";
-import { hitTransformedBox } from "./transformed-box-hit.mjs";
+import { selectionRects } from './text-geometry.mjs';
+import { hitTransformedBox } from './transformed-box-hit.mjs';
 
 export function equationAnchorAtPoint(content, layout, x, y) {
   if (content.equationAvailable !== true || ![x, y].every(Number.isFinite)) return null;
@@ -16,7 +16,7 @@ export function equationAnchorAtPoint(content, layout, x, y) {
         !Number.isInteger(row.unit) ||
         row.unit < 0 ||
         counts.get(row.unit) !== 1 ||
-        paragraph.text[row.unit] !== "\ufffc"
+        paragraph.text[row.unit] !== '\ufffc'
       )
         continue;
       const point = { section: paragraph.section, paragraph: paragraph.paragraph, unit: row.unit };

@@ -6,13 +6,13 @@ import {
   rowHeight,
   rowTextHeight,
   rowTextTop,
-} from "./row-geometry.mjs";
-import { rowPageClipContains } from "./row-page-clip.mjs";
-import { affinePoint, affineBox, inverseAffine } from "./affine-point-geometry.mjs";
-import { tableBoundaryCaret } from "./table-boundary-geometry.mjs";
-import { sameCreatedCell } from "./created-cell-address.mjs";
-export { TEXT_TOP } from "./row-geometry.mjs";
-export { TEXT_LEFT } from "./row-geometry.mjs";
+} from './row-geometry.mjs';
+import { rowPageClipContains } from './row-page-clip.mjs';
+import { affinePoint, affineBox, inverseAffine } from './affine-point-geometry.mjs';
+import { tableBoundaryCaret } from './table-boundary-geometry.mjs';
+import { sameCreatedCell } from './created-cell-address.mjs';
+export { TEXT_TOP } from './row-geometry.mjs';
+export { TEXT_LEFT } from './row-geometry.mjs';
 export const sameParagraph = (a, b) =>
   a?.createdCell || b?.createdCell
     ? sameCreatedCell(a, b)
@@ -100,7 +100,7 @@ export function hitText(layout, x, y, target = null) {
     ...paragraphTarget(row),
     unit: boundary.unit,
     affinity:
-      row.startUnit !== row.endUnit && boundary.unit === row.endUnit ? "backward" : "forward",
+      row.startUnit !== row.endUnit && boundary.unit === row.endUnit ? 'backward' : 'forward',
   };
 }
 
@@ -116,7 +116,7 @@ export function caretGeometry(layout, point) {
       ? [{ row, index }]
       : [],
   );
-  const item = point.affinity === "backward" ? candidates[0] : candidates.at(-1);
+  const item = point.affinity === 'backward' ? candidates[0] : candidates.at(-1);
   if (!item) return tableBoundaryCaret(layout, point);
   const boundary = item.row.boundaries.find((b) => b.unit === point.unit);
   if (!boundary) return null;

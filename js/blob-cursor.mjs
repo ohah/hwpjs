@@ -1,13 +1,13 @@
 // Adapted from SheetJS CFB 1.2.0, Copyright (C) 2013-present SheetJS.
 // Apache-2.0; see licenses/SheetJS-Apache-2.0.txt and THIRD_PARTY_NOTICES.md.
 // JS compatibility cursor on copied bytes, not a CFB parser or container writer.
-import { nodeBuffer } from "./output-bytes.mjs";
+import { nodeBuffer } from './output-bytes.mjs';
 
 function hex(bytes, start, length) {
-  if (nodeBuffer?.isBuffer(bytes)) return bytes.toString("hex", start, start + length);
+  if (nodeBuffer?.isBuffer(bytes)) return bytes.toString('hex', start, start + length);
   const out = [];
-  for (let i = start; i < start + length; i++) out.push(("0" + bytes[i].toString(16)).slice(-2));
-  return out.join("");
+  for (let i = start; i < start + length; i++) out.push(('0' + bytes[i].toString(16)).slice(-2));
+  return out.join('');
 }
 function readShift(size, type) {
   let value;
@@ -18,7 +18,7 @@ function readShift(size, type) {
       break;
     case 2:
       value = this[i + 1] * 256 + this[i];
-      if (type === "i" && !(value < 0x8000)) value = -(0xffff - value + 1);
+      if (type === 'i' && !(value < 0x8000)) value = -(0xffff - value + 1);
       break;
     case 4:
       value = (this[i + 3] << 24) + (this[i + 2] << 16) + (this[i + 1] << 8) + this[i];
@@ -31,12 +31,12 @@ function readShift(size, type) {
   return value;
 }
 function writeShift(size, value, format) {
-  if (format === "hex") {
+  if (format === 'hex') {
     for (let i = 0; i < size; i++)
       this[this.l++] = parseInt(value.slice(2 * i, 2 * i + 2), 16) || 0;
     return this;
   }
-  if (format === "utf16le") {
+  if (format === 'utf16le') {
     const end = this.l + size;
     for (let i = 0; i < Math.min(value.length, size); i++) {
       const c = value.charCodeAt(i);
@@ -68,7 +68,7 @@ function writeShift(size, value, format) {
 }
 function checkField(expected, field) {
   const actual = hex(this, this.l, expected.length >> 1);
-  if (actual !== expected) throw new Error(field + "Expected " + expected + " saw " + actual);
+  if (actual !== expected) throw new Error(field + 'Expected ' + expected + ' saw ' + actual);
   this.l += expected.length >> 1;
 }
 export function attachCursor(bytes) {

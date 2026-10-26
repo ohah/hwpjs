@@ -1,10 +1,10 @@
-import { paragraphReferenceGeometry } from "./paragraph-geometry.mjs";
+import { paragraphReferenceGeometry } from './paragraph-geometry.mjs';
 
 // TOP/LEFT 문단 시작 앵커는 문단 높이에 의존하지 않습니다. 다른 정렬은 별도 의미 검증이 필요합니다.
 export function pictureParagraphPageFragment(picture, paragraph, members, host) {
   const fail = () => ({
-    state: "unavailable",
-    error: "UnsupportedPictureParagraphPages",
+    state: 'unavailable',
+    error: 'UnsupportedPictureParagraphPages',
     section: picture.section,
     paragraph: picture.paragraph,
     pictureNode: picture.pictureNode,
@@ -49,5 +49,5 @@ export function pictureParagraphPageFragment(picture, paragraph, members, host) 
     )
   )
     return fail();
-  return { state: "selected", members: local, box };
+  return { state: 'selected', members: local, box };
 }

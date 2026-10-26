@@ -1,5 +1,5 @@
-import { uint, observationSpans } from "./observation-structure.mjs";
-import { snapUnit } from "./text-input.mjs";
+import { uint, observationSpans } from './observation-structure.mjs';
+import { snapUnit } from './text-input.mjs';
 
 const graphemeBoundary = (text, unit, end = false) => snapUnit(text, unit, end) === unit;
 /** Shared display coverage. Default web policy stays grapheme-safe; explicit callers may supply scalar boundaries. */
@@ -11,7 +11,7 @@ export function characterRangeValues(
 ) {
   if (
     !Array.isArray(content?.paragraphs) ||
-    content.paragraphs.some((row) => !row || typeof row !== "object") ||
+    content.paragraphs.some((row) => !row || typeof row !== 'object') ||
     !Array.isArray(ranges) ||
     !ranges.length
   )
@@ -26,7 +26,7 @@ export function characterRangeValues(
     if (
       !paragraph ||
       paragraph.clipped ||
-      typeof paragraph.text !== "string" ||
+      typeof paragraph.text !== 'string' ||
       !Number.isInteger(start) ||
       !Number.isInteger(end) ||
       start < 0 ||

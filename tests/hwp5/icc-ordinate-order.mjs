@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { rationalPowerOrder, exponent, cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { rationalPowerOrder, exponent, cmp } from './icc-power-reference.mjs';
 export function ordinateOrderInput(value, target, precision = 512, bits = 128) {
   const width = bits / 8,
     prefix = 4 + 2 * width;

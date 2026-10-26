@@ -2,18 +2,18 @@
 export function createParagraphBreakControls({ registry, page, column }) {
   if (
     !registry ||
-    typeof registry.commands !== "function" ||
-    typeof registry.execute !== "function" ||
-    typeof registry.subscribe !== "function" ||
+    typeof registry.commands !== 'function' ||
+    typeof registry.execute !== 'function' ||
+    typeof registry.subscribe !== 'function' ||
     !page?.addEventListener ||
     !column?.addEventListener ||
     page === column
   )
-    throw new Error("InvalidParagraphBreakControls");
+    throw new Error('InvalidParagraphBreakControls');
   const events = new AbortController();
   const entries = [
-    [page, "menu-insert-page-break"],
-    [column, "menu-insert-column-break"],
+    [page, 'menu-insert-page-break'],
+    [column, 'menu-insert-column-break'],
   ];
   const refresh = () => {
     const commands = registry.commands();
@@ -24,7 +24,7 @@ export function createParagraphBreakControls({ registry, page, column }) {
   };
   for (const [button, id] of entries)
     button.addEventListener(
-      "click",
+      'click',
       () => {
         if (events.signal.aborted) return;
         refresh();

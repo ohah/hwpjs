@@ -1,6 +1,6 @@
 export function decodePictureTransform(bytes) {
   const fail = () => {
-    throw new Error("InvalidPictureTransform");
+    throw new Error('InvalidPictureTransform');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length < 24) fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -35,7 +35,7 @@ export function decodePictureTransform(bytes) {
       if (!present && value !== 0) fail();
       return present ? value : null;
     });
-    matrices.push({ kind: ["translation", "scale", "rotation"][kind], values });
+    matrices.push({ kind: ['translation', 'scale', 'rotation'][kind], values });
   }
   return {
     flip: booleans.slice(0, 2),

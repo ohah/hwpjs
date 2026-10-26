@@ -1,7 +1,7 @@
 /** HTB1 read-only cell source bindings. Sizes are raw HWP units, not pixels. */
 export function decodeTableBindings(bytes) {
   const fail = () => {
-    throw new Error("InvalidTableBindings");
+    throw new Error('InvalidTableBindings');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length < 8) return fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -15,17 +15,17 @@ export function decodeTableBindings(bytes) {
   return Array.from({ length: count }, (_, index) => {
     const row = {};
     for (const [column, field] of [
-      "paragraph",
-      "tableNode",
-      "listNode",
-      "rows",
-      "columns",
-      "row",
-      "column",
-      "rowSpan",
-      "columnSpan",
-      "width",
-      "height",
+      'paragraph',
+      'tableNode',
+      'listNode',
+      'rows',
+      'columns',
+      'row',
+      'column',
+      'rowSpan',
+      'columnSpan',
+      'width',
+      'height',
     ].entries())
       row[field] = view.getUint32(8 + index * stride + column * 4, true);
     if (optional) {

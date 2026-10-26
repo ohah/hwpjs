@@ -1,4 +1,4 @@
-import type { CanvasSurface, CanvasSurfaceProps, SurfaceFactory } from "./types.ts";
+import type { CanvasSurface, CanvasSurfaceProps, SurfaceFactory } from './types.ts';
 
 /** Serial surface replacement, never a second document/command queue. */
 export function createSurfaceLifecycle(root: HTMLElement, create: SurfaceFactory) {

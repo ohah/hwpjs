@@ -1,11 +1,11 @@
-import { hwp5NumberingNoteUnits } from "./hwp5-numbering-note-units.mjs";
+import { hwp5NumberingNoteUnits } from './hwp5-numbering-note-units.mjs';
 
 // Known object markers are not page-number controls. Never exempt unknown markers.
 export function hwp5NumberingObjectUnits(content, paragraph) {
   const units = new Set(),
     identities = new Set();
   const fail = () => {
-    throw new Error("AmbiguousHwp5NumberingObjectAnchor");
+    throw new Error('AmbiguousHwp5NumberingObjectAnchor');
   };
   const add = (kind, node, unit) => {
     if (
@@ -14,7 +14,7 @@ export function hwp5NumberingObjectUnits(content, paragraph) {
       node > 0xffffffff ||
       !Number.isInteger(unit) ||
       unit < 0 ||
-      paragraph.text[unit] !== "\ufffc" ||
+      paragraph.text[unit] !== '\ufffc' ||
       units.has(unit) ||
       identities.has(`${kind}:${node}`)
     )
@@ -30,13 +30,13 @@ export function hwp5NumberingObjectUnits(content, paragraph) {
       drawing.source?.component_node !== drawing.componentNode
     )
       fail();
-    add("drawing", drawing.controlNode, drawing.anchorUnit);
+    add('drawing', drawing.controlNode, drawing.anchorUnit);
   }
   for (const table of content.tables ?? []) {
     if (table.section !== paragraph.section || table.hostParagraph !== paragraph.paragraph)
       continue;
-    add("table", table.tableNode, table.anchorUnit);
+    add('table', table.tableNode, table.anchorUnit);
   }
-  for (const [node, unit] of hwp5NumberingNoteUnits(content, paragraph)) add("note", node, unit);
+  for (const [node, unit] of hwp5NumberingNoteUnits(content, paragraph)) add('note', node, unit);
   return units;
 }

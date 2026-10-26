@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { crc32 } from "node:zlib";
-import { iccExtent } from "./icc-header-evidence.mjs";
+import assert from 'node:assert/strict';
+import { crc32 } from 'node:zlib';
+import { iccExtent } from './icc-header-evidence.mjs';
 export function iccTableWire(bytes, policy, maxTags = 100000, limit = 64 * 1024 * 1024) {
   iccExtent(bytes, limit);
   assert.ok(policy === 0 || policy === 1);
@@ -14,8 +14,8 @@ export function iccTableWire(bytes, policy, maxTags = 100000, limit = 64 * 1024 
       name = bytes.subarray(at, at + 4),
       offset = bytes.readUInt32BE(at + 4),
       size = bytes.readUInt32BE(at + 8);
-    assert.ok(!names.has(name.toString("hex")));
-    names.add(name.toString("hex"));
+    assert.ok(!names.has(name.toString('hex')));
+    names.add(name.toString('hex'));
     assert.ok(offset >= end && offset % 4 === 0 && size >= 8 && offset + size <= bytes.length);
     const data = bytes.subarray(offset, offset + size);
     assert.ok(data.subarray(4, 8).every((b) => b === 0));

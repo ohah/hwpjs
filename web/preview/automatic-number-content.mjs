@@ -1,10 +1,10 @@
-import { createAutomaticNumberDisplaySnapshot } from "./automatic-number-display-snapshot.mjs";
+import { createAutomaticNumberDisplaySnapshot } from './automatic-number-display-snapshot.mjs';
 function retainedNoteSource(source, site) {
   return (
     source &&
     source.anchor_node === site.anchor_node &&
     site.anchor_unit === 0 &&
-    ["FOOTNOTE", "ENDNOTE"].includes(source.values?.raw?.[1])
+    ['FOOTNOTE', 'ENDNOTE'].includes(source.values?.raw?.[1])
   );
 }
 
@@ -17,7 +17,7 @@ export function retainedAutomaticNumberPlainText(
   anchored,
   snapshot = createAutomaticNumberDisplaySnapshot(editor),
 ) {
-  if (!anchored.startsWith("\ufffc")) return anchored;
+  if (!anchored.startsWith('\ufffc')) return anchored;
   const { sources, sites } = snapshot(section);
   for (const site of sites) {
     if (site.paragraph === paragraph && retainedNoteSource(sources.get(site.number_node), site)) {
@@ -58,7 +58,7 @@ export function attachAutomaticNumbers(
           retainedNoteSource(source, site) &&
           paragraph.plainEditable &&
           editor.canEdit(section, site.paragraph) &&
-          editor.anchorText(section, site.paragraph) === "\ufffc" + paragraph.text
+          editor.anchorText(section, site.paragraph) === '\ufffc' + paragraph.text
         ) {
           paragraph.automaticNumberPrefixes.push({
             numberNode: site.number_node,
@@ -70,12 +70,12 @@ export function attachAutomaticNumbers(
         if (
           !source ||
           source.anchor_node !== site.anchor_node ||
-          paragraph.text[site.anchor_unit] !== "\ufffc"
+          paragraph.text[site.anchor_unit] !== '\ufffc'
         ) {
           content.automaticNumberErrors.push({
             section,
             numberNode: site.number_node,
-            error: "AutomaticNumberBindingMismatch",
+            error: 'AutomaticNumberBindingMismatch',
           });
           continue;
         }

@@ -7,11 +7,11 @@ export function createHistoryControls({ undo, redo, canRequest, request }) {
     redo.disabled = !enabled;
   };
   for (const [button, kind] of [
-    [undo, "undo"],
-    [redo, "redo"],
+    [undo, 'undo'],
+    [redo, 'redo'],
   ]) {
     button.addEventListener(
-      "click",
+      'click',
       () => {
         update();
         if (!button.disabled) request(kind);

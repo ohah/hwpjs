@@ -4,8 +4,8 @@ import type {
   RuntimeMessage,
   RuntimeRequestContext,
   RuntimeReply,
-} from "../contracts.ts";
-import { createReaderRuntime } from "../../../../web/preview/reader-runtime.mjs";
+} from '../contracts.ts';
+import { createReaderRuntime } from '../../../../web/preview/reader-runtime.mjs';
 
 export interface ReaderRuntimeOptions {
   wasmModule?: WebAssembly.Module;

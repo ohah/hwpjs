@@ -1,22 +1,22 @@
-import { tablePageBandFragment } from "./table-page-bands.mjs";
-import { projectTablePageFragments } from "./table-page-fragments.mjs";
-import { projectCellPageCuts } from "./table-cell-page-projection.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
-import { projectRepeatedTableHeaders } from "./repeated-table-header-projection.mjs";
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
+import { tablePageBandFragment } from './table-page-bands.mjs';
+import { projectTablePageFragments } from './table-page-fragments.mjs';
+import { projectCellPageCuts } from './table-cell-page-projection.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
+import { projectRepeatedTableHeaders } from './repeated-table-header-projection.mjs';
+import { paragraphLineGeometry } from './paragraph-geometry.mjs';
 
 // The group and mixed-drawing routes share the same physical cell projection.
 export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !(tables instanceof Map) ||
-    page?.state !== "paginated" ||
+    page?.state !== 'paginated' ||
     !Array.isArray(page.rows) ||
     page.rows.some((row) => !row) ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 0
   )
-    return fail("InvalidSplitInlineTableProjection");
+    return fail('InvalidSplitInlineTableProjection');
   const rows = [],
     boxes = [],
     flowPictures = [],
@@ -29,25 +29,25 @@ export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {})
       (row) => row.splitInlineTableNode !== undefined && !tables.has(row.splitInlineTableNode),
     )
   )
-    return fail("InvalidSplitInlineTableProjection");
+    return fail('InvalidSplitInlineTableProjection');
   for (const [node, value] of tables) {
     const { entry, split } = value ?? {};
     if (
       node !== entry?.table?.tableNode ||
-      entry?.measured?.state !== "measured" ||
-      split?.state !== "prepared" ||
+      entry?.measured?.state !== 'measured' ||
+      split?.state !== 'prepared' ||
       !Array.isArray(split.prepared?.selected) ||
       !Array.isArray(split.prepared?.rows) ||
       !split.prepared.margins ||
       (split.cuts !== undefined && !Array.isArray(split.cuts?.fragments))
     )
-      return fail("InvalidSplitInlineTableProjection");
+      return fail('InvalidSplitInlineTableProjection');
     const placed = page.rows.filter(
       (row) => row.splitInlineTableNode === node && row.section === entry.table.section,
     );
     const canonical = placed.filter((row) => row.repeatedTableHeader !== true),
       repeated = placed.filter((row) => row.repeatedTableHeader === true);
-    const source = split.rows?.find((row) => row.kind === "text"),
+    const source = split.rows?.find((row) => row.kind === 'text'),
       points = source?.boundaries?.filter((point) => point.unit === entry.table.anchorUnit);
     const textWidth = source?.boundaries?.at(-1)?.x;
     if (
@@ -56,10 +56,10 @@ export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {})
       !Number.isFinite(textWidth) ||
       textWidth <= 0
     )
-      return fail("InvalidSplitInlineTableProjection");
+      return fail('InvalidSplitInlineTableProjection');
     const horizontal = new Map();
     const count = split.cuts?.fragments.length ?? split.prepared.selected.length,
-      key = split.cuts ? "cellCutOrdinal" : "bandOrdinal";
+      key = split.cuts ? 'cellCutOrdinal' : 'bandOrdinal';
     if (
       canonical.length !== count ||
       canonical.some(
@@ -80,15 +80,15 @@ export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {})
           row.height !== split.prepared.repeatedHeader?.height,
       )
     )
-      return fail("InvalidSplitInlineTableProjection");
+      return fail('InvalidSplitInlineTableProjection');
     for (const row of placed) {
       const column = row.referenceBoxes?.column;
       if (!column || !Number.isFinite(column.width) || column.width <= 0)
-        return fail("InvalidSplitInlineTableProjection");
+        return fail('InvalidSplitInlineTableProjection');
       const line = paragraphLineGeometry(source.paragraphShape, column.width, textWidth, true),
         anchorX = line.x + points[0].x;
       horizontal.set(row, anchorX);
-      if (row.kind === "text")
+      if (row.kind === 'text')
         bodyReplacements.set(row, {
           ...row,
           paragraphX: line.x,
@@ -129,14 +129,14 @@ export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {})
         row.y < paper.y ||
         row.y + row.height > paper.y + paper.height + 1e-8
       )
-        return fail("SplitInlineTablePaperOverflow");
+        return fail('SplitInlineTablePaperOverflow');
     }
     const options = {
       origin: { x: 0, y: 0 },
-      padding: resolveTablePadding(entry.table, "source"),
+      padding: resolveTablePadding(entry.table, 'source'),
       maxRows: maxRows - rows.length - repeatedTableHeaderRows.length,
     };
-    if (options.maxRows < 1) return fail("TablePageProjectionLimit");
+    if (options.maxRows < 1) return fail('TablePageProjectionLimit');
     const fragment = (row) =>
       tablePageBandFragment(split.prepared, { ...row, x: row.x + horizontal.get(row) });
     const result = split.cuts
@@ -155,10 +155,10 @@ export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {})
           entry.table,
           entry.measured.grid,
           entry.measured.flows,
-          { state: "planned", fragments: canonical.map(fragment), pages: page.pages },
+          { state: 'planned', fragments: canonical.map(fragment), pages: page.pages },
           options,
         );
-    if (result.state !== "placed") return result;
+    if (result.state !== 'placed') return result;
     rows.push(...result.rows);
     boxes.push(...result.boxes);
     flowPictures.push(...(result.flowPictures ?? []));
@@ -169,12 +169,12 @@ export function projectSplitInlineTables(tables, page, { maxRows = 20000 } = {})
       repeated.map((row) => ({ ...fragment(row), y: row.y })),
       { ...options, maxRows: maxRows - rows.length - repeatedTableHeaderRows.length },
     );
-    if (headers.state !== "placed") return headers;
+    if (headers.state !== 'placed') return headers;
     repeatedTableHeaderRows.push(...headers.rows);
     repeatedTableHeaderBoxes.push(...headers.boxes);
   }
   return {
-    state: "placed",
+    state: 'placed',
     rows,
     boxes,
     flowPictures,

@@ -19,7 +19,7 @@ export function linkHwp5UnresolvedFieldOwners(section, flows, markers, resolve, 
       owner.list_node !== marker.list_node ||
       marker.position.unit > units
     )
-      throw new Error("WindowDependencyBindingMismatch");
+      throw new Error('WindowDependencyBindingMismatch');
     const identity = key(owner);
     if (linked.has(identity)) continue;
     linked.add(identity);

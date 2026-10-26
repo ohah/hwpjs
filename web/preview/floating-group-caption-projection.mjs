@@ -1,8 +1,8 @@
-import { layoutDrawingCaption } from "./drawing-caption-layout.mjs";
+import { layoutDrawingCaption } from './drawing-caption-layout.mjs';
 
 // Caption policy stays shared with drawings; only physical group ownership is adapted.
 export function projectFloatingGroupCaption(root, placement, paragraphs, measure, options = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !root ||
     root.source?.group_context !== null ||
@@ -26,11 +26,11 @@ export function projectFloatingGroupCaption(root, placement, paragraphs, measure
     placement.rectangle.width <= 0 ||
     placement.rectangle.height <= 0
   )
-    return fail("InvalidFloatingGroupCaptionPlacement");
+    return fail('InvalidFloatingGroupCaptionPlacement');
   if (root.source.has_caption !== (root.source.caption !== null))
-    return fail("InvalidFloatingGroupCaptionSource");
+    return fail('InvalidFloatingGroupCaptionSource');
   if (!root.source.has_caption)
-    return { state: "positioned", rows: [], bounds: { ...placement.rectangle } };
+    return { state: 'positioned', rows: [], bounds: { ...placement.rectangle } };
   const caption = layoutDrawingCaption(
     { ...root, drawingNode: root.containerNode },
     paragraphs,
@@ -38,7 +38,7 @@ export function projectFloatingGroupCaption(root, placement, paragraphs, measure
     measure,
     options,
   );
-  if (caption.state !== "positioned") return caption;
+  if (caption.state !== 'positioned') return caption;
   return {
     ...caption,
     rows: caption.rows.map((row) => ({

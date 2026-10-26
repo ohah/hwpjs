@@ -1,12 +1,12 @@
-import { equationPaintAt } from "./equation-render-content.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
+import { equationPaintAt } from './equation-render-content.mjs';
+import { textMeasurement } from './text-measurement.mjs';
 
 function emptyNativeLayout(paint) {
   return (
     paint.layout.box.width === 0 &&
     Array.isArray(paint.plan.requests) &&
     paint.plan.requests.length === 0 &&
-    ["glyphs", "rules", "paths", "rectangles", "curves"].every(
+    ['glyphs', 'rules', 'paths', 'rectangles', 'curves'].every(
       (key) => Array.isArray(paint.layout[key]) && paint.layout[key].length === 0,
     )
   );
@@ -15,7 +15,7 @@ function emptyNativeLayout(paint) {
 export function equationTextMeasure(measure) {
   return (text, paragraph, unit, kind) => {
     const measured = textMeasurement(measure(text, paragraph, unit, kind));
-    const paint = kind === "text" && text !== "" ? equationPaintAt(paragraph, unit) : null;
+    const paint = kind === 'text' && text !== '' ? equationPaintAt(paragraph, unit) : null;
     return paint
       ? {
           ...measured,
@@ -29,18 +29,18 @@ export function equationTextMeasure(measure) {
 // A source marker becomes a measured text atom only with its own ready native layout.
 export function equationTextAnchors(paragraph) {
   const fail = (source) => ({
-    state: "unavailable",
-    error: "UnavailableEquationTextAnchor",
+    state: 'unavailable',
+    error: 'UnavailableEquationTextAnchor',
     ...(Number.isSafeInteger(source?.node) && source.node >= 0
       ? { equationNode: source.node }
       : {}),
   });
-  if (paragraph?.equations === undefined) return { state: "resolved", anchors: [] };
+  if (paragraph?.equations === undefined) return { state: 'resolved', anchors: [] };
   if (!Array.isArray(paragraph.equations) || !Array.isArray(paragraph.equationPaint ?? []))
     return fail();
   if (paragraph.automaticNumbers !== undefined && !Array.isArray(paragraph.automaticNumbers))
     return fail();
-  if (paragraph.equationPaint?.some((row) => !row || typeof row !== "object")) return fail();
+  if (paragraph.equationPaint?.some((row) => !row || typeof row !== 'object')) return fail();
   const anchors = [],
     nodes = new Set(),
     units = new Set();
@@ -53,7 +53,7 @@ export function equationTextAnchors(paragraph) {
       source.unit < 0 ||
       nodes.has(source.node) ||
       units.has(source.unit) ||
-      paragraph.text?.[source.unit] !== "\ufffc"
+      paragraph.text?.[source.unit] !== '\ufffc'
     )
       return fail(source);
     if (paragraph.automaticNumbers?.some((number) => number?.unit === source.unit))
@@ -78,5 +78,5 @@ export function equationTextAnchors(paragraph) {
       anchorUnit: source.unit,
     });
   }
-  return { state: "resolved", anchors };
+  return { state: 'resolved', anchors };
 }

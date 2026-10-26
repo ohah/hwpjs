@@ -1,18 +1,18 @@
-import { isPositionedBodySource } from "./positioned-row-fragments.mjs";
-import { graphemeUnits } from "./text-input.mjs";
-import { isHardLineBreak } from "./hard-line-break.mjs";
+import { isPositionedBodySource } from './positioned-row-fragments.mjs';
+import { graphemeUnits } from './text-input.mjs';
+import { isHardLineBreak } from './hard-line-break.mjs';
 
 // 기존 줄 나눔만 합칩니다. 표·간격·단 선언과 원본에서 빠진 구간은 합성하지 않습니다.
 export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(rows) ||
     !Array.isArray(paragraphs) ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return fail("InvalidBodyRowSources");
-  if (rows.length > maxRows) return fail("BodyRowSourceLimit");
+    return fail('InvalidBodyRowSources');
+  if (rows.length > maxRows) return fail('BodyRowSourceLimit');
   const owners = new Map(),
     bounds = new Map(),
     ends = new Map(),
@@ -25,11 +25,11 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
       p.section < 0 ||
       !Number.isSafeInteger(p.paragraph) ||
       p.paragraph < 0 ||
-      typeof p.text !== "string"
+      typeof p.text !== 'string'
     )
-      return fail("InvalidBodyRowSources");
+      return fail('InvalidBodyRowSources');
     const key = `${p.section}:${p.paragraph}`;
-    if (owners.has(key)) return fail("AmbiguousBodyRowOwner");
+    if (owners.has(key)) return fail('AmbiguousBodyRowOwner');
     owners.set(key, p);
   }
   for (const row of rows) {
@@ -38,12 +38,12 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
     if (
       !row ||
       !p ||
-      !["text", "gap", "anchor"].includes(row.kind) ||
-      ["pageOrdinal", "columnOrdinal", "referenceBoxes", "transform", "pageClip"].some(
+      !['text', 'gap', 'anchor'].includes(row.kind) ||
+      ['pageOrdinal', 'columnOrdinal', 'referenceBoxes', 'transform', 'pageClip'].some(
         (field) => row[field] !== undefined,
       )
     )
-      return fail("InvalidBodyRowSources");
+      return fail('InvalidBodyRowSources');
     if (!isPositionedBodySource(row)) {
       result.push(row);
       continue;
@@ -56,7 +56,7 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
       p.drawingCaption ||
       (p.textStartUnit ?? 0) !== 0
     )
-      return fail("UnsupportedBodyRowOwner");
+      return fail('UnsupportedBodyRowOwner');
     let boundary = bounds.get(key);
     if (!boundary) {
       boundary = new Set(graphemeUnits(p.text));
@@ -73,7 +73,7 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
       row.height <= 0 ||
       row.startUnit < (ends.get(key) ?? 0)
     )
-      return fail("InvalidBodyRowSourceRange");
+      return fail('InvalidBodyRowSourceRange');
     const empty = row.startUnit === row.endUnit;
     const last = result.at(-1);
     if (empty) {
@@ -82,7 +82,7 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
         row.endUnit !== p.text.length ||
         (p.text.length && !isHardLineBreak(p.text.slice(-1)))
       )
-        return fail("InvalidBodyRowSourceRange");
+        return fail('InvalidBodyRowSourceRange');
       terminal.add(key);
       if (
         last?.paragraphSource === p &&
@@ -92,7 +92,7 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
         last.keepNextHeight === row.keepNextHeight
       )
         continue;
-      if (p.text.length) return fail("UnsupportedBodySourceInsertion");
+      if (p.text.length) return fail('UnsupportedBodySourceInsertion');
     }
     ends.set(key, row.endUnit);
     if (
@@ -107,20 +107,20 @@ export function bodyRowSources(rows, paragraphs, { maxRows = 20000 } = {}) {
     }
     const carrier = { ...row, paragraphSource: p, paragraphShape: p.paragraphShape };
     for (const field of [
-      "x",
-      "y",
-      "boundaries",
-      "paragraphX",
-      "paragraphReferenceX",
-      "width",
-      "textHeight",
-      "textTop",
-      "numberPrefix",
-      "flowAnchorY",
-      "flowParagraphBox",
+      'x',
+      'y',
+      'boundaries',
+      'paragraphX',
+      'paragraphReferenceX',
+      'width',
+      'textHeight',
+      'textTop',
+      'numberPrefix',
+      'flowAnchorY',
+      'flowParagraphBox',
     ])
       delete carrier[field];
     result.push(carrier);
   }
-  return { state: "prepared", rows: result };
+  return { state: 'prepared', rows: result };
 }

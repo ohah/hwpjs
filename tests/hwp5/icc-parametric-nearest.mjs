@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { referenceRange, verify } from "./icc-power-range.mjs";
-import { referenceLinearRange } from "./icc-parametric-range.mjs";
-import { reference as nearest } from "./icc-nearest-range.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { referenceRange, verify } from './icc-power-range.mjs';
+import { referenceLinearRange } from './icc-parametric-range.mjs';
+import { reference as nearest } from './icc-nearest-range.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { cmp } from './icc-power-reference.mjs';
 export function parametricNearestEdges(call, bits = 128) {
   const mode = bits === 128 ? 211 : 234,
     width = bits === 128 ? 32 : 64,

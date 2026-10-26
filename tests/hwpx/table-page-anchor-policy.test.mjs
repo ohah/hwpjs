@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   tablePageAnchorSupported,
   tablePageAnchorError,
-} from "../../web/preview/table-page-anchor-policy.mjs";
+} from '../../web/preview/table-page-anchor-policy.mjs';
 
-test("inline anchors ignore floating declarations without weakening floating guards", () => {
+test('inline anchors ignore floating declarations without weakening floating guards', () => {
   const source = {
     geometry: {
       width_relative: 4,
@@ -24,12 +24,12 @@ test("inline anchors ignore floating declarations without weakening floating gua
   };
   assert.equal(tablePageAnchorSupported(source), true);
   for (const [name, value] of [
-    ["text_wrap", 0],
-    ["text_flow", 1],
-    ["flow_with_text", false],
-    ["allow_overlap", true],
-    ["vertical_relative", 0],
-    ["horizontal_alignment", 4],
+    ['text_wrap', 0],
+    ['text_flow', 1],
+    ['flow_with_text', false],
+    ['allow_overlap', true],
+    ['vertical_relative', 0],
+    ['horizontal_alignment', 4],
   ]) {
     const changed = structuredClone(source);
     changed[name] = value;
@@ -47,7 +47,7 @@ test("inline anchors ignore floating declarations without weakening floating gua
   assert.equal(tablePageAnchorSupported(null), false);
 });
 
-test("table anchor diagnostics apply explicit page and paragraph policies without type coercion", () => {
+test('table anchor diagnostics apply explicit page and paragraph policies without type coercion', () => {
   const base = {
     geometry: {
       width_relative: 4,
@@ -85,9 +85,9 @@ test("table anchor diagnostics apply explicit page and paragraph policies withou
       [0, 1, 2].includes(source.horizontal_alignment)
     );
   };
-  for (const inline of [true, false, null, 0, "false"]) {
+  for (const inline of [true, false, null, 0, 'false']) {
     for (const key of [
-      ...Object.keys(base).filter((key) => key !== "geometry"),
+      ...Object.keys(base).filter((key) => key !== 'geometry'),
       ...Object.keys(base.geometry),
     ]) {
       for (const value of [
@@ -101,7 +101,7 @@ test("table anchor diagnostics apply explicit page and paragraph policies withou
         2,
         3,
         4,
-        "1",
+        '1',
         0xffffffff,
         0x100000000,
         NaN,
@@ -117,6 +117,6 @@ test("table anchor diagnostics apply explicit page and paragraph policies withou
   assert.equal(tablePageAnchorError({ ...base, vertical_relative: 1 }), null);
   assert.equal(
     tablePageAnchorError({ ...base, vertical_alignment: 2 }),
-    "UnsupportedTableVerticalAlignment",
+    'UnsupportedTableVerticalAlignment',
   );
 });

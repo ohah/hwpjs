@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { sectionXml } from "./fixture-xml.mjs";
+import assert from 'node:assert/strict';
+import { sectionXml } from './fixture-xml.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -27,7 +27,7 @@ export function cellPair(call, rawCells, hwpx) {
   assert.equal(blocks.length, rawCells.length);
   const positive = [0, 0, 0, 0];
   rawCells.forEach((raw, i) => {
-    const expected = ["hasMargin", "protect", "header", "editable"].map((key) => {
+    const expected = ['hasMargin', 'protect', 'header', 'editable'].map((key) => {
       const m = blocks[i][1].match(new RegExp(`\\b${key}="([01])"`));
       assert.ok(m);
       return Number(m[1]);

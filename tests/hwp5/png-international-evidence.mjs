@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { inflateSync } from "node:zlib";
-import { keywordPrefixEvidence, textEvidence } from "./png-text-evidence.mjs";
-import { compressedTextEvidence } from "./png-compressed-text-evidence.mjs";
-import { registryEvidence } from "./bcp47-registry-evidence.mjs";
-const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+import assert from 'node:assert/strict';
+import { inflateSync } from 'node:zlib';
+import { keywordPrefixEvidence, textEvidence } from './png-text-evidence.mjs';
+import { compressedTextEvidence } from './png-compressed-text-evidence.mjs';
+import { registryEvidence } from './bcp47-registry-evidence.mjs';
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 function utf8(bytes) {
   assert.ok(!bytes.includes(0));
   const text = decoder.decode(bytes);
@@ -26,7 +26,7 @@ export function internationalEvidence(
     fields = Array(9).fill(0);
   let payloadBytes = 0;
   for (const { name, payload } of chunks) {
-    if (name !== "iTXt") continue;
+    if (name !== 'iTXt') continue;
     const { key, remaining: r } = keywordPrefixEvidence(payload);
     assert.ok(r.length >= 2);
     const flag = r[0],

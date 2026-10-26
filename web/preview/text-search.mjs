@@ -1,9 +1,9 @@
-import { graphemeUnits } from "./text-input.mjs";
+import { graphemeUnits } from './text-input.mjs';
 
 // Search the current display snapshot; returned UTF-16 positions never own text.
 export function findText(paragraphs, query, limit = 1000) {
-  if (typeof query !== "string" || !query.isWellFormed() || !Number.isInteger(limit) || limit < 1)
-    throw new TypeError("InvalidTextSearch");
+  if (typeof query !== 'string' || !query.isWellFormed() || !Number.isInteger(limit) || limit < 1)
+    throw new TypeError('InvalidTextSearch');
   const matches = [];
   if (!query) return { matches, limited: false };
   for (const paragraph of paragraphs) {

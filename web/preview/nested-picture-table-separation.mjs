@@ -1,6 +1,6 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { pictureLineRegions } from "./picture-line-regions.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { pictureLineRegions } from './picture-line-regions.mjs';
+import { signedInt32 } from './signed-int32.mjs';
 
 // An earlier, fully consumed picture need not block a later paragraph's table.
 // Concurrent anchors and backwards table references still need joint solving.
@@ -13,8 +13,8 @@ export function nestedPictureTableSeparation(
   width,
 ) {
   const fail = (reason) => ({
-    state: "unavailable",
-    error: "UnsupportedNestedFloatingPictureTables",
+    state: 'unavailable',
+    error: 'UnsupportedNestedFloatingPictureTables',
     nestedFlowReason: reason,
   });
   if (
@@ -27,13 +27,13 @@ export function nestedPictureTableSeparation(
     height < 0 ||
     width <= 0
   )
-    return fail("invalid-separation-input");
+    return fail('invalid-separation-input');
   if (
     currentPictures.some(
       (p) => p?.section === paragraph.section && p.paragraph === paragraph.paragraph,
     )
   )
-    return fail("same-paragraph-picture-table");
+    return fail('same-paragraph-picture-table');
   let leadingMargin = 0;
   for (const entry of tables) {
     const source = entry?.table?.sourceGeometry;
@@ -46,7 +46,7 @@ export function nestedPictureTableSeparation(
       offset < 0 ||
       margin === null
     )
-      return fail("backward-table-reference");
+      return fail('backward-table-reference');
     leadingMargin = Math.max(leadingMargin, hwpUnitPixels(margin));
   }
   const boundary = height - leadingMargin;
@@ -58,18 +58,18 @@ export function nestedPictureTableSeparation(
       ![rectangle.y, rectangle.height, rectangle.y + rectangle.height].every(Number.isFinite) ||
       rectangle.y + rectangle.height > boundary
     )
-      return fail("active-previous-picture");
+      return fail('active-previous-picture');
     const probe = pictureLineRegions({ x: 0, y: boundary, width, height: 1 }, rectangle, {
       ...picture.flow,
       textWrap: 1,
     });
     if (
-      probe.state !== "available" ||
+      probe.state !== 'available' ||
       probe.regions.length !== 1 ||
       probe.regions[0].x !== 0 ||
       probe.regions[0].width !== width
     )
-      return fail("previous-picture-margin");
+      return fail('previous-picture-margin');
   }
-  return { state: "separated" };
+  return { state: 'separated' };
 }

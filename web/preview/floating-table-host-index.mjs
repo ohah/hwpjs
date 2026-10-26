@@ -3,14 +3,14 @@
 export function floatingTableHostIndex(tables, section) {
   const owners = new Map(),
     hosts = new Map();
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   for (const table of tables) {
     if (table?.parentTableNode != null) continue;
     if (!table || table.section !== section || owners.has(table.tableNode))
-      return unavailable("AmbiguousFloatingTableOwner");
+      return unavailable('AmbiguousFloatingTableOwner');
     const siblings = hosts.get(table.hostParagraph) ?? [];
     if (siblings.some((owner) => owner.table.anchorUnit === table.anchorUnit))
-      return unavailable("AmbiguousFloatingTableOwner");
+      return unavailable('AmbiguousFloatingTableOwner');
     const owner = { table };
     siblings.push(owner);
     hosts.set(table.hostParagraph, siblings);
@@ -23,6 +23,6 @@ export function floatingTableHostIndex(tables, section) {
           .length > 1,
     )
   )
-    return unavailable("UnsupportedMultipleFloatingTableAnchors");
-  return { state: "indexed", owners, hosts };
+    return unavailable('UnsupportedMultipleFloatingTableAnchors');
+  return { state: 'indexed', owners, hosts };
 }

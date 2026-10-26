@@ -1,5 +1,5 @@
-import { objectCollisionBox } from "./object-collision-box.mjs";
-import { restrictDrawingPlacement } from "./drawing-restricted-placement.mjs";
+import { objectCollisionBox } from './object-collision-box.mjs';
+import { restrictDrawingPlacement } from './drawing-restricted-placement.mjs';
 
 // Geometry only. The caller proves representation ownership before this solver.
 export function resolveComponentWrapReservations(
@@ -10,23 +10,23 @@ export function resolveComponentWrapReservations(
   project,
   kind,
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(components) ||
-    inventory?.state !== "collected" ||
+    inventory?.state !== 'collected' ||
     !Array.isArray(inventory.footprints)
   )
-    return fail("IncompleteOleCollisionInventory");
+    return fail('IncompleteOleCollisionInventory');
   const prepared = [],
     keys = new Set(),
     anchors = new Set();
   for (const component of components) {
-    if (!component || typeof component !== "object") return fail("InvalidOlePageAnchor");
+    if (!component || typeof component !== 'object') return fail('InvalidOlePageAnchor');
     const key = `${component.section}:${component.node}`;
-    if (keys.has(key)) return fail("AmbiguousOleWrapIdentity");
+    if (keys.has(key)) return fail('AmbiguousOleWrapIdentity');
     keys.add(key);
     const anchor = `${component.section}:${component.paragraph}:${component.anchorUnit}`;
-    if (anchors.has(anchor)) return fail("AmbiguousOleWrapAnchor");
+    if (anchors.has(anchor)) return fail('AmbiguousOleWrapAnchor');
     anchors.add(anchor);
     const flow = component.source?.flow,
       flags = component.source?.position?.flags;
@@ -34,15 +34,15 @@ export function resolveComponentWrapReservations(
       ![0, 1].includes(flow?.text_wrap) ||
       ![0, 1, 2, 3].includes(flow?.text_flow) ||
       !Array.isArray(flags) ||
-      typeof flags[1] !== "boolean" ||
-      typeof flags[2] !== "boolean" ||
+      typeof flags[1] !== 'boolean' ||
+      typeof flags[2] !== 'boolean' ||
       (flags[1] && component.source.position.relations?.[0] !== 2)
     )
-      return fail("UnsupportedOleWrapPolicy");
+      return fail('UnsupportedOleWrapPolicy');
     const placed = project(component, paragraphs, body);
-    if (placed.state !== "placed") return placed;
+    if (placed.state !== 'placed') return placed;
     const footprint = objectCollisionBox(placed.rectangle, flow.outside_margins);
-    if (!footprint) return fail("InvalidOleCollisionMargins");
+    if (!footprint) return fail('InvalidOleCollisionMargins');
     prepared.push({ component, placed, footprint });
   }
   if (
@@ -50,7 +50,7 @@ export function resolveComponentWrapReservations(
       (item) => item?.kind === kind || keys.has(`${item?.section}:${item?.node}`),
     )
   )
-    return fail("AmbiguousOleCollisionInventory");
+    return fail('AmbiguousOleCollisionInventory');
   for (const item of prepared) {
     const occupied = [
       ...inventory.footprints,
@@ -74,7 +74,7 @@ export function resolveComponentWrapReservations(
         allowOverlap: flags[2],
       },
     );
-    if (restricted.state !== "placed") return restricted;
+    if (restricted.state !== 'placed') return restricted;
     const shift = restricted.rectangle.y - item.footprint.y;
     item.footprint = restricted.rectangle;
     item.placed = {
@@ -83,7 +83,7 @@ export function resolveComponentWrapReservations(
     };
   }
   return {
-    state: "reserved",
+    state: 'reserved',
     reservations: prepared.map(({ component, placed, footprint }) => ({
       section: component.section,
       node: component.node,

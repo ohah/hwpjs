@@ -1,18 +1,18 @@
-import assert from "node:assert/strict";
-import { keywordPrefixEvidence } from "./png-text-evidence.mjs";
+import assert from 'node:assert/strict';
+import { keywordPrefixEvidence } from './png-text-evidence.mjs';
 export function suggestedEvidence({ chunks }) {
   const entries = [],
     names = new Set(),
     fields = Array(8).fill(0),
-    idat = chunks.findIndex((c) => c.name === "IDAT");
+    idat = chunks.findIndex((c) => c.name === 'IDAT');
   chunks.forEach(({ name, payload }, index) => {
-    if (name !== "sPLT") return;
+    if (name !== 'sPLT') return;
     assert.ok(index < idat);
     const { key, remaining: r } = keywordPrefixEvidence(payload);
     assert.ok(r.length >= 1);
     const depth = r[0];
     assert.ok(depth === 8 || depth === 16);
-    const identity = key.toString("hex");
+    const identity = key.toString('hex');
     assert.ok(!names.has(identity));
     names.add(identity);
     const width = depth === 8 ? 6 : 10,

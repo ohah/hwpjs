@@ -1,8 +1,8 @@
-import { readChartSectionFields } from "./chart-section-fields-evidence.mjs";
+import { readChartSectionFields } from './chart-section-fields-evidence.mjs';
 export function observeChartSection(bytes, offset, priorTypes, priorObjects) {
   const b = Buffer.from(bytes);
   if (!Number.isSafeInteger(offset) || offset < 0 || offset > b.length)
-    throw new RangeError("InvalidObservationOffset");
+    throw new RangeError('InvalidObservationOffset');
   const types = new Map(priorTypes),
     objects = new Set(priorObjects),
     declarations = [],
@@ -12,7 +12,7 @@ export function observeChartSection(bytes, offset, priorTypes, priorObjects) {
   let p = offset,
     dataOffset;
   const take = (n) => {
-      if (n > b.length - p) throw Error("IncompleteChartSectionObservation");
+      if (n > b.length - p) throw Error('IncompleteChartSectionObservation');
       const v = b.subarray(p, p + n);
       p += n;
       return v;
@@ -25,28 +25,28 @@ export function observeChartSection(bytes, offset, priorTypes, priorObjects) {
     if (!types.has(id)) {
       const n = word(),
         nameOffset = p,
-        raw = take(n).toString("latin1"),
+        raw = take(n).toString('latin1'),
         versionOffset = p,
         version = word();
       types.set(id, { name: raw, version });
       declarations.push({ id, nameOffset, versionOffset, name: raw, version });
     }
     const d = types.get(id);
-    if (d.name !== name + "\0" || d.version !== 1)
-      throw Error("UnsupportedChartSectionObservationType");
+    if (d.name !== name + '\0' || d.version !== 1)
+      throw Error('UnsupportedChartSectionObservationType');
   };
   const object = () => {
     const at = p,
       id = long();
     if (id === 0xffffffff || objects.has(id))
-      throw Error("UnsupportedChartSectionObservationObject");
+      throw Error('UnsupportedChartSectionObservationObject');
     objects.add(id);
     objectOffsets.push(at);
     return id;
   };
   const raw = (n) => {
     const start = p,
-      hex = take(n).toString("hex");
+      hex = take(n).toString('hex');
     rawFields.push({ start, n, hex });
     return hex;
   };
@@ -63,9 +63,9 @@ export function observeChartSection(bytes, offset, priorTypes, priorObjects) {
       suffixOffset = p;
       return word();
     },
-    base: () => type("VtObject"),
+    base: () => type('VtObject'),
     reject: () => {
-      throw Error("UnsupportedChartSectionObservationData");
+      throw Error('UnsupportedChartSectionObservationData');
     },
   });
   return {

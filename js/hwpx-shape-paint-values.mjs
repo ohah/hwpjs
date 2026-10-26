@@ -5,9 +5,9 @@ export function validShapePaintValues(source) {
   if (source?.stroke === null) {
     if (
       ![
-        "UnsupportedLineStrokeDecoration",
-        "UnsupportedLineStrokeColor",
-        "UnsupportedLineStrokeStyle",
+        'UnsupportedLineStrokeDecoration',
+        'UnsupportedLineStrokeColor',
+        'UnsupportedLineStrokeStyle',
       ].includes(source.stroke_error)
     )
       return false;

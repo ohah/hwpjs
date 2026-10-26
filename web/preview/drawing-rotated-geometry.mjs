@@ -1,4 +1,4 @@
-import { drawingQuadGeometry } from "./drawing-quad-geometry.mjs";
+import { drawingQuadGeometry } from './drawing-quad-geometry.mjs';
 
 // 선언 크기와 변환 외곽은 분리합니다. 스키마는 두 값의 일치를 요구하지 않습니다.
 export function drawingRotatedGeometry(source) {
@@ -13,7 +13,7 @@ export function drawingRotatedGeometry(source) {
     !Array.from(rendering.flip).every((value) => value === false)
   )
     return false;
-  if (drawingQuadGeometry(source, { x: 0, y: 0 }).state !== "mapped") return false;
+  if (drawingQuadGeometry(source, { x: 0, y: 0 }).state !== 'mapped') return false;
   return (
     Number.isFinite(source.geometry?.width) &&
     source.geometry.width > 0 &&

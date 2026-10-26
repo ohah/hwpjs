@@ -1,11 +1,11 @@
-import { hwp5ObjectFlags } from "./hwp5-object-flags.mjs";
-import { hwp5CaptionGeometry } from "./hwp5-caption-geometry.mjs";
+import { hwp5ObjectFlags } from './hwp5-object-flags.mjs';
+import { hwp5CaptionGeometry } from './hwp5-caption-geometry.mjs';
 
 // Bind ownership only. Caption measurement and page reservation belong elsewhere.
 export function bindHwp5RootGroupCaptions(content, containers, bindings) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (!Array.isArray(containers) || !Array.isArray(bindings))
-    return fail("InvalidHwp5GroupCaptionInputs");
+    return fail('InvalidHwp5GroupCaptionInputs');
   try {
     const projected = new Map(),
       lists = new Set();
@@ -22,7 +22,7 @@ export function bindHwp5RootGroupCaptions(content, containers, bindings) {
         (row) =>
           row.section === root.section &&
           (row.drawingNode === root.componentNode ||
-            (row.kind === "caption" && row.controlNode === root.controlNode)),
+            (row.kind === 'caption' && row.controlNode === root.controlNode)),
       );
       if (
         projected.has(key) ||
@@ -30,19 +30,19 @@ export function bindHwp5RootGroupCaptions(content, containers, bindings) {
         owned.length > 1 ||
         owned.some(
           (row) =>
-            row.kind !== "caption" ||
+            row.kind !== 'caption' ||
             row.drawingNode !== root.componentNode ||
             row.controlNode !== root.controlNode,
         ) ||
         matches[0].source.component?.owner_node !== root.controlNode
       )
-        return fail("AmbiguousHwp5GroupCaptionOwnership");
+        return fail('AmbiguousHwp5GroupCaptionOwnership');
       const present = owned.length === 1;
       if (
         hwp5ObjectFlags(root.source.flags).has_caption !== present ||
         matches[0].source.has_caption !== present
       )
-        return fail("Hwp5GroupCaptionPresenceMismatch");
+        return fail('Hwp5GroupCaptionPresenceMismatch');
       let caption = null;
       if (present) {
         const binding = owned[0],
@@ -53,12 +53,12 @@ export function bindHwp5RootGroupCaptions(content, containers, bindings) {
         if (
           lists.has(listKey) ||
           bodies.length !== 1 ||
-          bodies[0].kind !== "caption" ||
+          bodies[0].kind !== 'caption' ||
           bodies[0].controlNode !== root.controlNode ||
           bodies[0].source.control_node !== root.controlNode ||
           bodies[0].source.list_node !== binding.listNode
         )
-          return fail("Hwp5GroupCaptionSourceMismatch");
+          return fail('Hwp5GroupCaptionSourceMismatch');
         const body = bodies[0];
         caption = hwp5CaptionGeometry({
           ...body.source.caption,
@@ -69,15 +69,15 @@ export function bindHwp5RootGroupCaptions(content, containers, bindings) {
           !binding.caption ||
           Object.keys(caption).some((key) => caption[key] !== binding.caption[key])
         )
-          return fail("Hwp5GroupCaptionSourceMismatch");
+          return fail('Hwp5GroupCaptionSourceMismatch');
         lists.add(listKey);
       }
       projected.set(key, { ...matches[0], source: { ...matches[0].source, caption } });
     }
     if (containers.filter((row) => row.source.group_context === null).length !== projected.size)
-      return fail("MissingHwp5GroupCaptionRoot");
+      return fail('MissingHwp5GroupCaptionRoot');
     return {
-      state: "projected",
+      state: 'projected',
       rootCount: projected.size,
       captionCount: lists.size,
       containers: containers.map((row) =>

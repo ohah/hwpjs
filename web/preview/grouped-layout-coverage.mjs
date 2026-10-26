@@ -1,6 +1,6 @@
-import { groupShapeChildren } from "./group-shape-children.mjs";
-import { validCurveCommands } from "./curve-rendering-geometry.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { groupShapeChildren } from './group-shape-children.mjs';
+import { validCurveCommands } from './curve-rendering-geometry.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
 
 // 배치 후보의 구조적 완전성입니다. 비트맵 디코딩이나 픽셀 동치를 뜻하지 않습니다.
 export function groupedLayoutCoverage(
@@ -35,7 +35,7 @@ export function groupedLayoutCoverage(
     if (
       sources.length === 1 &&
       sources[0].source.common?.group_context &&
-      item.paintPlan?.state === "planned"
+      item.paintPlan?.state === 'planned'
     )
       add(item.section, item.node);
   }
@@ -46,8 +46,8 @@ export function groupedLayoutCoverage(
     if (
       sources.length === 1 &&
       sources[0].source?.common?.group_context?.root_anchor === item.rootNode &&
-      item.state === "placed" &&
-      item.paintPlan?.state === "planned" &&
+      item.state === 'placed' &&
+      item.paintPlan?.state === 'planned' &&
       validCurveCommands(item.commands)
     )
       add(item.section, item.curveNode);
@@ -61,11 +61,11 @@ export function groupedLayoutCoverage(
         visited = new Set(),
         pending = [root];
       if (containers.get(key(root.section, root.containerNode)).length !== 1)
-        errors.push({ node: root.containerNode, error: "DuplicateGroupRoot" });
+        errors.push({ node: root.containerNode, error: 'DuplicateGroupRoot' });
       while (pending.length) {
         const current = pending.pop();
         if (visited.has(current.containerNode)) {
-          errors.push({ node: current.containerNode, error: "RepeatedGroupContainer" });
+          errors.push({ node: current.containerNode, error: 'RepeatedGroupContainer' });
           continue;
         }
         visited.add(current.containerNode);
@@ -77,8 +77,8 @@ export function groupedLayoutCoverage(
           continue;
         }
         for (const child of children) {
-          if (child.kind === "metadata") continue;
-          if (child.kind === "caption") {
+          if (child.kind === 'metadata') continue;
+          if (child.kind === 'caption') {
             const caption = current.source.caption;
             const paragraphs = (content.paragraphs ?? []).filter(
               (p) =>
@@ -104,26 +104,26 @@ export function groupedLayoutCoverage(
               ) ||
               placements.length !== 1 ||
               rows.some((row) => row.pageOrdinal !== placements[0].pageOrdinal) ||
-              pageParagraphCoverage(paragraphs, rows).state !== "complete"
+              pageParagraphCoverage(paragraphs, rows).state !== 'complete'
             )
-              errors.push({ node: child.node, error: "UnplacedGroupCaption" });
+              errors.push({ node: child.node, error: 'UnplacedGroupCaption' });
             continue;
           }
-          if (child.kind === "unsupported") {
-            errors.push({ node: child.node, error: "UnsupportedGroupChild" });
+          if (child.kind === 'unsupported') {
+            errors.push({ node: child.node, error: 'UnsupportedGroupChild' });
             continue;
           }
-          if (child.kind === "container") {
+          if (child.kind === 'container') {
             const matches = containers.get(key(root.section, child.node)) ?? [];
             if (
               matches.length !== 1 ||
               matches[0].source.group_context?.parent_container !== current.containerNode ||
               matches[0].source.group_context?.root_anchor !== root.containerNode
             )
-              errors.push({ node: child.node, error: "MissingGroupContainerBinding" });
+              errors.push({ node: child.node, error: 'MissingGroupContainerBinding' });
             else pending.push(matches[0]);
           } else if (expectedNodes.has(child.node))
-            errors.push({ node: child.node, error: "RepeatedGroupChild" });
+            errors.push({ node: child.node, error: 'RepeatedGroupChild' });
           else {
             expectedNodes.add(child.node);
             expected.push(child.node);
@@ -135,7 +135,7 @@ export function groupedLayoutCoverage(
         if (count !== 1)
           errors.push({
             node,
-            error: count === 0 ? "UnplacedGroupChild" : "DuplicateGroupChildPlacement",
+            error: count === 0 ? 'UnplacedGroupChild' : 'DuplicateGroupChildPlacement',
           });
       }
       return {

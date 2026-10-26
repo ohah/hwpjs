@@ -1,5 +1,5 @@
-import { sourceDisplayPosition } from "./text-offsets.mjs";
-import { hwp5CreatedCellDisplay } from "./hwp5-created-cell-display.mjs";
+import { sourceDisplayPosition } from './text-offsets.mjs';
+import { hwp5CreatedCellDisplay } from './hwp5-created-cell-display.mjs';
 
 // Read-only native values; ordinary paragraph addresses never include these cells.
 export function attachHwp5CreatedTables(
@@ -24,24 +24,24 @@ export function attachHwp5CreatedTables(
       if (paragraphShapes === undefined) {
         try {
           paragraphShapes =
-            typeof editor.paragraphShapes === "function" ? editor.paragraphShapes() : null;
+            typeof editor.paragraphShapes === 'function' ? editor.paragraphShapes() : null;
         } catch (error) {
           paragraphShapes = null;
           content.createdTableParagraphDisplayError = error.message;
         }
       }
       const first = editor.currentSourceReferences(section, { first: 0, count: 1 }).references[0];
-      if (!first) throw new Error("MissingCreatedTableHost");
+      if (!first) throw new Error('MissingCreatedTableHost');
       for (const { table, options } of snapshots) {
         const host = visible.get(`${section}:${table.host_paragraph}`);
         if (!host) continue;
         const cells = table.cells.map((cell) => {
           units += cell.text.length;
-          if (units > maxUnits) throw new Error("CreatedTableDisplayTextBudgetExceeded");
+          if (units > maxUnits) throw new Error('CreatedTableDisplayTextBudgetExceeded');
           const currentReference = Object.freeze({
             epoch: first.epoch,
             scope: first.scope,
-            kind: "cell",
+            kind: 'cell',
             section,
             id: table.identity,
             row: cell.row,

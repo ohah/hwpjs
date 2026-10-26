@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
 const sign = (n) => (n < 0n ? -1 : n > 0n ? 1 : 0);
 const abs = (n) => (n < 0n ? -n : n);
 function gcd(a, b) {

@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 // Independent reduced-rational domain/sign analysis, not a copy of root construction.
 export function admissible(g, ordinate) {

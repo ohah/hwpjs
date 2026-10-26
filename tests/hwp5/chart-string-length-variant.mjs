@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 // Replace owned inline String payloads from the end so earlier offsets survive.
 export function stringLengthVariant(bytes, strings, length) {
   assert(Number.isInteger(length) && length >= 0 && length <= 65535);

@@ -7,8 +7,8 @@ export function tableGeometryFailureEvidence(table, diagnostics = []) {
   if (matches.length !== 1) return {};
   const row = matches[0],
     evidence = {};
-  if (typeof row.error === "string") evidence.sourceError = row.error.slice(0, 256);
-  for (const key of ["rawTableFlags", "unknownTableFlags"])
+  if (typeof row.error === 'string') evidence.sourceError = row.error.slice(0, 256);
+  for (const key of ['rawTableFlags', 'unknownTableFlags'])
     if (Number.isInteger(row[key]) && row[key] >= 0 && row[key] <= 0xffffffff)
       evidence[key] = row[key];
   return evidence;

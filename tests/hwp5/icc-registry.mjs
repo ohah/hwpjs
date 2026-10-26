@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 const source = JSON.parse(
-  readFileSync(new URL("../../src/image/icc/registry/source.json", import.meta.url), "utf8"),
+  readFileSync(new URL('../../src/image/icc/registry/source.json', import.meta.url), 'utf8'),
 );
 const cmm = new Set(source.sources[0].entries.map((e) => e[0])),
   manufacturers = new Set(source.sources[1].entries.map((e) => e[0])),
-  devices = new Set(source.sources[2].entries.map((e) => e.join(":")));
+  devices = new Set(source.sources[2].entries.map((e) => e.join(':')));
 function status(key, set, complete) {
   return key === 0 ? 0 : set.has(key) ? 1 : complete ? 2 : 3;
 }
@@ -36,7 +36,7 @@ export function iccRegistryEdges(call) {
   function check(c = 0, parent = 0, model = 0, creator = 0, major = 4) {
     const b = Buffer.alloc(128);
     b[8] = major;
-    b.write("acsp", 36);
+    b.write('acsp', 36);
     [c, parent, model, creator].forEach((v, i) => b.writeUInt32BE(v, [4, 48, 52, 80][i]));
     assert.deepEqual(call(149, b, 128), registryWire(c, parent, model, creator));
     comparisons++;

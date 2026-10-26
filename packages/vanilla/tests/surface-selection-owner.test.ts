@@ -1,20 +1,20 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { EditorState, createEditor } from "@hwpjs/core";
-import { createCanvasSurface } from "../src/surface.ts";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { EditorState, createEditor } from '@hwpjs/core';
+import { createCanvasSurface } from '../src/surface.ts';
 // Controlled projection callbacks test the ownership boundary; actual Canvas evidence is separate.
 function fixture(realEditor?: any, rejectFirst = false) {
   const witness: any = { frames: [], emit: undefined };
   (globalThis as any).__surfaceOwnerWitness = witness;
   let state = new EditorState({
-      editorId: "e",
-      documentId: "d",
+      editorId: 'e',
+      documentId: 'd',
       generation: 1,
       operationRevision: 1,
       viewRevision: 1,
       stateVersion: 1,
-      status: "ready",
-      content: { format: "hwpx", paragraphs: [] },
+      status: 'ready',
+      content: { format: 'hwpx', paragraphs: [] },
     }),
     listener: any,
     active = false,
@@ -22,7 +22,7 @@ function fixture(realEditor?: any, rejectFirst = false) {
   const publications: any[] = [];
   const doc: any = {
     defaultView: {
-      navigator: { platform: "MacIntel" },
+      navigator: { platform: 'MacIntel' },
       ResizeObserver: class {
         observe() {}
         disconnect() {}
@@ -55,7 +55,7 @@ function fixture(realEditor?: any, rejectFirst = false) {
       stateVersion: state.stateVersion + 1,
       operationRevision: state.operationRevision + Number(revision),
       viewRevision: state.viewRevision + Number(revision),
-      status: "ready",
+      status: 'ready',
       content: state.content,
       selection,
     });
@@ -72,7 +72,7 @@ function fixture(realEditor?: any, rejectFirst = false) {
             publishSelection(value: any) {
               publications.push(value);
               if (rejectFirst && publications.length === 1)
-                return Promise.reject(Error("ControlledSelectionReject"));
+                return Promise.reject(Error('ControlledSelectionReject'));
               return lease.publishSelection(value);
             },
             release() {
@@ -99,7 +99,7 @@ function fixture(realEditor?: any, rejectFirst = false) {
               return install(value);
             },
             request: async () => {
-              throw Error("UnexpectedNative");
+              throw Error('UnexpectedNative');
             },
             release() {
               active = false;
@@ -108,7 +108,7 @@ function fixture(realEditor?: any, rejectFirst = false) {
           };
         },
         readResource: async () => {
-          throw Error("UnexpectedResource");
+          throw Error('UnexpectedResource');
         },
       };
   const surface = createCanvasSurface({ root: root as any, editor });
@@ -130,7 +130,7 @@ function fixture(realEditor?: any, rejectFirst = false) {
     },
   };
 }
-test("own ACK projection echo does not add stateVersion, including delayed paint", async () => {
+test('own ACK projection echo does not add stateVersion, including delayed paint', async () => {
   const f = fixture();
   try {
     f.witness.emit(f.point);
@@ -145,7 +145,7 @@ test("own ACK projection echo does not add stateVersion, including delayed paint
     await f.surface.dispose();
   }
 });
-test("selected to null user clear publishes exactly once; repeat null deduplicates", async () => {
+test('selected to null user clear publishes exactly once; repeat null deduplicates', async () => {
   const f = fixture();
   try {
     f.witness.emit(f.point);
@@ -159,7 +159,7 @@ test("selected to null user clear publishes exactly once; repeat null deduplicat
     await f.surface.dispose();
   }
 });
-test("first user clear while undefined remains an explicit clear, not projection echo", async () => {
+test('first user clear while undefined remains an explicit clear, not projection echo', async () => {
   const f = fixture();
   try {
     assert.equal(f.state.selection, undefined);
@@ -170,7 +170,7 @@ test("first user clear while undefined remains an explicit clear, not projection
     await f.surface.dispose();
   }
 });
-test("nonnull reselection after empty core is published normally", async () => {
+test('nonnull reselection after empty core is published normally', async () => {
   const f = fixture();
   try {
     f.install(undefined, true);
@@ -182,11 +182,11 @@ test("nonnull reselection after empty core is published normally", async () => {
     await f.surface.dispose();
   }
 });
-test("new document projection stays local; dispose/release stays one and rejects old callback", async () => {
+test('new document projection stays local; dispose/release stays one and rejects old callback', async () => {
   const f = fixture();
   f.witness.emit(f.point);
   const count = f.publications.length;
-  f.install(undefined, true, "another");
+  f.install(undefined, true, 'another');
   for (const frame of f.witness.frames.splice(0)) frame();
   assert.equal(f.publications.length, count);
   await f.surface.dispose();
@@ -199,15 +199,15 @@ async function realCore() {
   return createEditor({
     runtimeFactory: () => ({
       async request(m: any) {
-        return { kind: m.kind, content: { format: "hwpx", paragraphs: [] } };
+        return { kind: m.kind, content: { format: 'hwpx', paragraphs: [] } };
       },
       dispose() {},
     }),
   });
 }
-test("real async surface lease accepts same-stack explicit clear once", async () => {
+test('real async surface lease accepts same-stack explicit clear once', async () => {
   const e = await realCore();
-  await e.load(new Uint8Array([1]), { format: "hwpx" });
+  await e.load(new Uint8Array([1]), { format: 'hwpx' });
   const f = fixture(e);
   try {
     const version = e.getEditorState().stateVersion;
@@ -222,9 +222,9 @@ test("real async surface lease accepts same-stack explicit clear once", async ()
     await e.dispose();
   }
 });
-test("rejected explicit clear releases its own pending identity and can retry", async () => {
+test('rejected explicit clear releases its own pending identity and can retry', async () => {
   const e = await realCore();
-  await e.load(new Uint8Array([1]), { format: "hwpx" });
+  await e.load(new Uint8Array([1]), { format: 'hwpx' });
   const f = fixture(e, true);
   try {
     f.witness.emit(null);

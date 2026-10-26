@@ -1,17 +1,17 @@
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { deflateSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 import {
   signature,
   png,
   pngChunk as chunk,
   pngHeader as header,
   pngStructureEvidence,
-} from "./png-structure-evidence.mjs";
-import { transparencyEvidence } from "./png-transparency-evidence.mjs";
-import { srgbWire } from "./png-srgb-evidence.mjs";
-import { colorFixedWire } from "./png-color-fixed-evidence.mjs";
-import { pngPixelsEvidence } from "./png-pixels-evidence.mjs";
+} from './png-structure-evidence.mjs';
+import { transparencyEvidence } from './png-transparency-evidence.mjs';
+import { srgbWire } from './png-srgb-evidence.mjs';
+import { colorFixedWire } from './png-color-fixed-evidence.mjs';
+import { pngPixelsEvidence } from './png-pixels-evidence.mjs';
 export function pngSrgbEdges(call, cfb) {
   let accepted = 0,
     rejected = 0,
@@ -25,12 +25,12 @@ export function pngSrgbEdges(call, cfb) {
   };
   const gamma = ints([45455]),
     chroma = ints([31270, 32900, 64000, 33000, 30000, 60000, 15000, 6000]);
-  const g = chunk("gAMA", gamma),
-    c = chunk("cHRM", chroma),
-    s = chunk("sRGB", Buffer.from([0]));
-  const h = chunk("IHDR", header(8, 0)),
-    id = chunk("IDAT", deflateSync(Buffer.from([0, 0]))),
-    end = chunk("IEND");
+  const g = chunk('gAMA', gamma),
+    c = chunk('cHRM', chroma),
+    s = chunk('sRGB', Buffer.from([0]));
+  const h = chunk('IHDR', header(8, 0)),
+    id = chunk('IDAT', deflateSync(Buffer.from([0, 0]))),
+    end = chunk('IEND');
   const check = (bytes) => {
     let t;
     try {
@@ -52,8 +52,8 @@ export function pngSrgbEdges(call, cfb) {
     rejected++;
   };
   for (let intent = 0; intent < 256; intent++)
-    check(png(h, chunk("sRGB", Buffer.from([intent])), id, end));
-  for (let size = 0; size <= 8; size++) check(png(h, chunk("sRGB", Buffer.alloc(size)), id, end));
+    check(png(h, chunk('sRGB', Buffer.from([intent])), id, end));
+  for (let size = 0; size <= 8; size++) check(png(h, chunk('sRGB', Buffer.alloc(size)), id, end));
   const permutations = (items) =>
     items.length
       ? items.flatMap((v, i) =>
@@ -63,8 +63,8 @@ export function pngSrgbEdges(call, cfb) {
   for (const items of [[], [s], [s, g], [s, c], [s, g, c]])
     for (const order of permutations(items)) assert.ok(check(png(h, ...order, id, end)));
   for (const [name, base] of [
-    ["gAMA", gamma],
-    ["cHRM", chroma],
+    ['gAMA', gamma],
+    ['cHRM', chroma],
   ])
     for (let pos = 0; pos < base.length; pos++)
       for (let value = 0; value < 256; value++) {
@@ -78,8 +78,8 @@ export function pngSrgbEdges(call, cfb) {
           check(png(h, ...order, id, end));
         mutations++;
       }
-  const indexed = chunk("IHDR", header(8, 3)),
-    palette = chunk("PLTE", Buffer.alloc(3));
+  const indexed = chunk('IHDR', header(8, 3)),
+    palette = chunk('PLTE', Buffer.alloc(3));
   for (const order of permutations([s, g, c, palette, id])) check(png(indexed, ...order, end));
   for (const order of [
     [s, s],
@@ -92,14 +92,14 @@ export function pngSrgbEdges(call, cfb) {
   for (const color of [0, 2, 3, 4, 6])
     for (let intent = 0; intent < 4; intent++) {
       const channels = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[color],
-        hd = chunk("IHDR", header(8, color));
+        hd = chunk('IHDR', header(8, color));
       const bytes = png(
         hd,
-        chunk("sRGB", Buffer.from([intent])),
+        chunk('sRGB', Buffer.from([intent])),
         g,
         c,
         ...(color === 3 ? [palette] : []),
-        chunk("IDAT", deflateSync(Buffer.alloc(1 + channels))),
+        chunk('IDAT', deflateSync(Buffer.alloc(1 + channels))),
         end,
       );
       assert.ok(check(bytes));
@@ -112,18 +112,18 @@ export function pngSrgbEdges(call, cfb) {
   const profile = Buffer.alloc(132);
   profile.writeUInt32BE(132);
   profile[8] = 4;
-  profile.write("GRAY", 16);
-  profile.write("acsp", 36);
+  profile.write('GRAY', 16);
+  profile.write('acsp', 36);
   const iccp = Buffer.concat([Buffer.from([80, 0, 0]), deflateSync(profile)]);
-  for (const other of ["iCCP", "cICP", "vpAg"])
+  for (const other of ['iCCP', 'cICP', 'vpAg'])
     for (const order of [
-      [s, chunk(other, other === "iCCP" ? iccp : Buffer.from([1, 2]))],
-      [chunk(other, other === "iCCP" ? iccp : Buffer.from([1, 2])), s],
+      [s, chunk(other, other === 'iCCP' ? iccp : Buffer.from([1, 2]))],
+      [chunk(other, other === 'iCCP' ? iccp : Buffer.from([1, 2])), s],
     ]) {
       const r = check(png(h, ...order, id, end));
       assert.equal(r.readUInt32LE(16), 1);
       assert.equal(r.readUInt32LE(20), 1);
-      assert.equal(r.readUInt32LE(24), other === "iCCP" ? iccp.length : 2);
+      assert.equal(r.readUInt32LE(24), other === 'iCCP' ? iccp.length : 2);
     }
   const absent = check(png(h, id, end));
   assert.equal(absent.readUInt32LE(0), 0);
@@ -133,10 +133,10 @@ export function pngSrgbEdges(call, cfb) {
   assert.equal(alone.readUInt32LE(8), 0);
   assert.equal(alone.readUInt32LE(12), 0);
   assert.equal(alone.readUInt32LE(16), 1);
-  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
-  for (const name of readdirSync(dir).filter((n) => n.endsWith(".hwp"))) {
+  const dir = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
+  for (const name of readdirSync(dir).filter((n) => n.endsWith('.hwp'))) {
     cfb.parse(readFileSync(new URL(name, dir)), { strict: true });
-    const entry = cfb.findExact("/PrvImage");
+    const entry = cfb.findExact('/PrvImage');
     if (!entry) continue;
     const bytes = Buffer.from(entry.content);
     if (!bytes.subarray(0, 8).equals(signature)) continue;

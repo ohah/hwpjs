@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { referenceRange, verify } from "./icc-power-range.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { referenceRange, verify } from './icc-power-range.mjs';
+import { cmp } from './icc-power-reference.mjs';
 const u128 = (b, p) => b.readBigUInt64LE(p) + (b.readBigUInt64LE(p + 8) << 64n);
 export function powerNearestEdges(call) {
   let targets = 0,

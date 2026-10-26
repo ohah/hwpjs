@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { jpegUpsamplingInput, jpegUpsamplingOracle } from "./jpeg-upsampling.mjs";
-import { jpegJfifColourOracle } from "./jpeg-jfif-colour.mjs";
-import { jpegPlanesOracle } from "./jpeg-planes.mjs";
-import { jpegSequentialScans } from "./jpeg-scan.mjs";
-import { jpegJfifLayoutFixture, jpegJfifLayoutOracle } from "./jpeg-jfif-layout.mjs";
-import { jpegJfxxJpegFixture } from "./jpeg-jfxx-jpeg.mjs";
-import { adobePayload, adobeParts } from "./jpeg-adobe.mjs";
-import { jpegIccChunk, jpegIccParts, jpegIccOracle } from "./jpeg-icc.mjs";
-import { segment } from "./jpeg-structure.mjs";
+import assert from 'node:assert/strict';
+import { jpegUpsamplingInput, jpegUpsamplingOracle } from './jpeg-upsampling.mjs';
+import { jpegJfifColourOracle } from './jpeg-jfif-colour.mjs';
+import { jpegPlanesOracle } from './jpeg-planes.mjs';
+import { jpegSequentialScans } from './jpeg-scan.mjs';
+import { jpegJfifLayoutFixture, jpegJfifLayoutOracle } from './jpeg-jfif-layout.mjs';
+import { jpegJfxxJpegFixture } from './jpeg-jfxx-jpeg.mjs';
+import { adobePayload, adobeParts } from './jpeg-adobe.mjs';
+import { jpegIccChunk, jpegIccParts, jpegIccOracle } from './jpeg-icc.mjs';
+import { segment } from './jpeg-structure.mjs';
 
 const words = (ns) => {
   const b = Buffer.alloc(ns.length * 4);

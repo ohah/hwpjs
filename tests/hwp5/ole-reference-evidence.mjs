@@ -1,24 +1,24 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { createHash } from "node:crypto";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { documentRecords, documentActual } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { oleActual } from "./ole-validation.mjs";
-import { olePairedEvidence } from "./ole-paired-evidence.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { createHash } from 'node:crypto';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { documentRecords, documentActual } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { oleActual } from './ole-validation.mjs';
+import { olePairedEvidence } from './ole-paired-evidence.mjs';
 
 // A counterexample to equating the OLE ID, DocInfo ordinal and physical storage ID.
 // Inspect data only; do not activate OLE or execute chart content.
 export async function oleReferenceEvidence(call, cfb) {
   const path = new URL(
-    "../../reference/rhwp/samples/chart/분산형/곡선이있는분산형.hwp",
+    '../../reference/rhwp/samples/chart/분산형/곡선이있는분산형.hwp',
     import.meta.url,
   );
-  if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
+  if (!existsSync(path)) return { skipped: 'reference fixture unavailable' };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content);
+  const h = Buffer.from(cfb.findExact('/FileHeader').content);
   assert.equal(h.readUInt32LE(32), 0x05010100);
   const flags = h.readUInt32LE(36);
   assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
@@ -28,12 +28,12 @@ export async function oleReferenceEvidence(call, cfb) {
     assert.deepEqual(call(3, Buffer.concat([h, raw]), plain.length), plain);
     return plain;
   };
-  const doc = decode("/DocInfo"),
-    body = decode("/BodyText/Section0");
+  const doc = decode('/DocInfo'),
+    body = decode('/BodyText/Section0');
   const bins = documentRecords(doc).filter((r) => r.tag === 18);
   assert.equal(bins.length, 1);
   const bin = doc.subarray(bins[0].start, bins[0].end);
-  assert.deepEqual(bin, Buffer.from("0200030003004f004c004500", "hex"));
+  assert.deepEqual(bin, Buffer.from('0200030003004f004c004500', 'hex'));
   const oleRecords = documentRecords(body).filter((r) => r.tag === 84);
   assert.equal(oleRecords.length, 1);
   const p = body.subarray(oleRecords[0].start, oleRecords[0].end);
@@ -46,23 +46,23 @@ export async function oleReferenceEvidence(call, cfb) {
   const document = documentActual(call, h, doc, sections);
   const container = containerActual(call, file, cfb, h, doc, sections);
   const inner = await createCfbReader(
-    readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+    readFileSync(new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url)),
   );
   const streams = [];
   try {
     for (const [name, style] of [
-      ["BIN0001.OLE", "smooth"],
-      ["BIN0002.OLE", "lineMarker"],
-      ["BIN0003.OLE", "smoothMarker"],
+      ['BIN0001.OLE', 'smooth'],
+      ['BIN0002.OLE', 'lineMarker'],
+      ['BIN0003.OLE', 'smoothMarker'],
     ]) {
       const raw = Buffer.from(cfb.findExact(`/BinData/${name}`).content);
       const bytes = flags & 1 ? inflateRawSync(raw) : raw;
       // This fixture uses a four-byte size envelope followed by an independent CFB.
       assert.equal(bytes.readUInt32LE(0), bytes.length - 4);
       inner.parse(bytes.subarray(4), { strict: true });
-      const xml = Buffer.from(inner.findExact("/OOXMLChartContents").content).toString("utf8");
+      const xml = Buffer.from(inner.findExact('/OOXMLChartContents').content).toString('utf8');
       assert.ok(xml.includes(`<c:scatterStyle val="${style}"/>`));
-      streams.push({ name, style, sha256: createHash("sha256").update(bytes).digest("hex") });
+      streams.push({ name, style, sha256: createHash('sha256').update(bytes).digest('hex') });
     }
   } finally {
     inner.close();
@@ -79,6 +79,6 @@ export async function oleReferenceEvidence(call, cfb) {
     streams,
     paired,
     interpretation:
-      "pending: paired XML supports ordinal for this fixture; no universal rule or Hancom execution",
+      'pending: paired XML supports ordinal for this fixture; no universal rule or Hancom execution',
   };
 }

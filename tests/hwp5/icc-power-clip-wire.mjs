@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function boundary(out, at) {
   const type = out.readUInt32LE(at);
   if (type === 0) {

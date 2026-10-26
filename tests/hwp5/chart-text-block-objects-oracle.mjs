@@ -1,5 +1,5 @@
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { observeAxisPrefix } from "./chart-axis-prefix-evidence.mjs";
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { observeAxisPrefix } from './chart-axis-prefix-evidence.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -13,9 +13,9 @@ const u16 = (n) => {
 export function chartTextBlockObjectsOracle(b) {
   const context = chartAxisContext(b),
     e = observeAxisPrefix(b, context.plot.end, context.types, context.strings);
-  const name = Buffer.from(e.fontName.hex, "hex"),
-    text = Buffer.from(e.text.hex, "hex"),
-    raw = e.rawFields.filter((r) => r.start >= e.blockStart).map((r) => Buffer.from(r.hex, "hex"));
+  const name = Buffer.from(e.fontName.hex, 'hex'),
+    text = Buffer.from(e.text.hex, 'hex'),
+    raw = e.rawFields.filter((r) => r.start >= e.blockStart).map((r) => Buffer.from(r.hex, 'hex'));
   const objects =
     context.legend.objectCount +
     4 +

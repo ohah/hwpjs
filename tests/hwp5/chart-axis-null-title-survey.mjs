@@ -1,29 +1,29 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { axesOracle } from "./chart-axes-oracle.mjs";
-import { observeSurfacePrefix } from "./chart-surface-evidence.mjs";
-import { observeAxis, observeAxisNullableTitle as observe } from "./chart-axis-evidence.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { axesOracle } from './chart-axes-oracle.mjs';
+import { observeSurfacePrefix } from './chart-surface-evidence.mjs';
+import { observeAxis, observeAxisNullableTitle as observe } from './chart-axis-evidence.mjs';
 const int = (n, size = 4) => {
   const b = Buffer.alloc(size);
   b.writeUIntLE(n, 0, size);
   return b;
 };
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   versions = 0,
   variants = 0;
 try {
   const corpus = await oleContainerSurvey((env, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const a = axesOracle(b),
       prior = a.rows.at(-1).result,
       s = observeSurfacePrefix(b, a.end, prior.types),
@@ -34,7 +34,7 @@ try {
     assert.equal(r.value, null);
     assert.throws(
       () => observeAxis(b, s.end, types, prior.strings, prior.numbers),
-      (e) => e.constructor === Error && e.message === "UnsupportedAxisObservationObject",
+      (e) => e.constructor === Error && e.message === 'UnsupportedAxisObservationObject',
     );
     if (verify) {
       for (let cut = s.end; cut < r.end; cut++) {
@@ -42,7 +42,7 @@ try {
           () => observe(b.subarray(0, cut), s.end, types, prior.strings, prior.numbers),
           (e) =>
             e.constructor === Error &&
-            ["IncompleteAxisObservation", "IncompleteAxisTail"].includes(e.message),
+            ['IncompleteAxisObservation', 'IncompleteAxisTail'].includes(e.message),
         );
         cuts++;
       }
@@ -55,7 +55,7 @@ try {
           () => observe(b, s.end, wrong, prior.strings, prior.numbers),
           (e) =>
             e.constructor === Error &&
-            ["UnsupportedAxisObservationType", "UnsupportedAxisTailType"].includes(e.message),
+            ['UnsupportedAxisObservationType', 'UnsupportedAxisTailType'].includes(e.message),
         );
         versions++;
       }
@@ -76,18 +76,18 @@ try {
       assert.equal(aliasResult.axis.text.introduced, false);
       assert.equal(aliasResult.end, r.end);
       variants++;
-      const type = (name) => [...types].find(([, v]) => v.name === name + "\0")[0];
+      const type = (name) => [...types].find(([, v]) => v.name === name + '\0')[0];
       const empty = Buffer.concat([
         int(0xfffffffe),
-        int(type("VtString")),
+        int(type('VtString')),
         int(0, 2),
         int(255, 1),
-        int(type("VtValue")),
-        int(type("VtObject")),
+        int(type('VtValue')),
+        int(type('VtObject')),
       ]);
       const changed = Buffer.concat([b.subarray(0, at), empty, b.subarray(at + 4)]),
         emptyResult = observe(changed, s.end, types, prior.strings, prior.numbers);
-      assert.equal(emptyResult.axis.text.hex, "");
+      assert.equal(emptyResult.axis.text.hex, '');
       assert.equal(emptyResult.axis.text.introduced, true);
       assert.equal(emptyResult.end, r.end + empty.length - 4);
       variants++;
@@ -101,7 +101,7 @@ try {
       text: r.axis.text,
       scale: r.value,
       tail: r.tail,
-      nextBytes: b.subarray(r.end, r.end + 32).toString("hex"),
+      nextBytes: b.subarray(r.end, r.end + 32).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);

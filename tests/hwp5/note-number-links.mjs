@@ -1,6 +1,6 @@
 // Test-side oracle: reconstruct parentage from raw record levels. It does not
 // consume the Zig tree, Groups, note parser, or serialized report fields.
-export function noteNumberLinksActual(section, layout = "observed12") {
+export function noteNumberLinksActual(section, layout = 'observed12') {
   const nodes = [],
     ancestors = [];
   for (let offset = 0; offset < section.length;) {
@@ -33,7 +33,7 @@ export function noteNumberLinksActual(section, layout = "observed12") {
           out[0]++;
           const kind = section.readUInt32LE(field.start + 4) & 15;
           out[kind === (name === 0x666e2020 ? 1 : 2) ? 3 : 4]++;
-          if (layout === "spec8") out[7]++;
+          if (layout === 'spec8') out[7]++;
           else {
             const number = section.readUInt16LE(field.start + 8);
             out[number === section.readUInt32LE(owner.start + 4) ? 5 : 6]++;

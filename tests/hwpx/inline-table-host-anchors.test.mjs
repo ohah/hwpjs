@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { inlineTableHostAnchors } from "../../web/preview/inline-table-host-anchors.mjs";
-import { measureInlineTableParagraph } from "../../web/preview/inline-table-paragraph-measurement.mjs";
-import { layoutTableBodyContent } from "../../web/preview/table-body-content-layout.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { inlineTableHostAnchors } from '../../web/preview/inline-table-host-anchors.mjs';
+import { measureInlineTableParagraph } from '../../web/preview/inline-table-paragraph-measurement.mjs';
+import { layoutTableBodyContent } from '../../web/preview/table-body-content-layout.mjs';
 
 const anchor = (node, anchorUnit) => ({ section: 0, paragraph: 42, node, anchorUnit });
 
@@ -14,7 +14,7 @@ async function workerReplies(t) {
     replies = [];
   globalThis.self = { postMessage: (value) => replies.push(value) };
   globalThis.fetch = async () =>
-    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    new Response(readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'));
   t.after(() => {
     globalThis.self = previousSelf;
     globalThis.fetch = previousFetch;
@@ -23,13 +23,13 @@ async function workerReplies(t) {
   return replies;
 }
 
-test("inline table and floating drawing anchors retain separate source units", () => {
-  const paragraph = { section: 0, paragraph: 42, text: "\ufffc\ufffc\ufffc" };
+test('inline table and floating drawing anchors retain separate source units', () => {
+  const paragraph = { section: 0, paragraph: 42, text: '\ufffc\ufffc\ufffc' };
   const tables = [anchor(10, 0), anchor(30, 2)],
     overlays = [anchor(20, 1)];
   const before = structuredClone({ paragraph, tables, overlays });
   const partition = inlineTableHostAnchors(paragraph, tables, overlays);
-  assert.equal(partition.state, "resolved");
+  assert.equal(partition.state, 'resolved');
   assert.deepEqual(partition.zeroWidthUnits, [1]);
   const result = measureInlineTableParagraph(
     paragraph,
@@ -41,7 +41,7 @@ test("inline table and floating drawing anchors retain separate source units", (
     () => ({ width: 8, height: 20 }),
     partition,
   );
-  assert.equal(result.state, "measured", result.error);
+  assert.equal(result.state, 'measured', result.error);
   assert.deepEqual(
     result.anchors.map((a) => [a.tableNode, a.unit, a.x]),
     [
@@ -51,16 +51,16 @@ test("inline table and floating drawing anchors retain separate source units", (
   );
   assert.equal(
     result.rows
-      .filter((r) => r.kind === "text")
+      .filter((r) => r.kind === 'text')
       .map((r) => r.text)
-      .join(""),
+      .join(''),
     paragraph.text,
   );
   assert.deepEqual({ paragraph, tables, overlays }, before);
 });
 
-test("inline host anchor partition refuses unknown, duplicate and foreign sources", () => {
-  const p = { section: 0, paragraph: 42, text: "\ufffc\ufffc\ufffc" };
+test('inline host anchor partition refuses unknown, duplicate and foreign sources', () => {
+  const p = { section: 0, paragraph: 42, text: '\ufffc\ufffc\ufffc' };
   for (const overlays of [
     [],
     [anchor(20, 0)],
@@ -71,37 +71,37 @@ test("inline host anchor partition refuses unknown, duplicate and foreign source
   ]) {
     assert.equal(
       inlineTableHostAnchors(p, [anchor(10, 0), anchor(30, 2)], overlays).state,
-      "unavailable",
+      'unavailable',
     );
   }
   const retained = inlineTableHostAnchors(p, [anchor(10, 0)], [anchor(20, 1)], [anchor(30, 2)]);
   assert.deepEqual(retained.textAnchorUnits, [2]);
   assert.equal(
     inlineTableHostAnchors(p, [anchor(10, 0)], [anchor(20, 1)], [anchor(30, 1)]).state,
-    "unavailable",
+    'unavailable',
   );
 });
 
-test("real carried-anchor source independently contains table, rectangle, table in one paragraph", async (t) => {
-  const file = "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx";
+test('real carried-anchor source independently contains table, rectangle, table in one paragraph', async (t) => {
+  const file = 'reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx';
   if (!existsSync(file)) {
-    t.skip("reference fixture unavailable");
+    t.skip('reference fixture unavailable');
     return;
   }
   const tags = JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         "import sys,json,zipfile,xml.etree.ElementTree as E; n='{http://www.hancom.co.kr/hwpml/2011/paragraph}'; r=E.fromstring(zipfile.ZipFile(sys.argv[1]).read('Contents/section0.xml')); p=list(r.iter(n+'p'))[42]; print(json.dumps([c.tag.split('}')[-1] for run in p if run.tag==n+'run' for c in run]))",
         file,
       ],
-      { encoding: "utf8" },
+      { encoding: 'utf8' },
     ),
   );
-  assert.deepEqual(tags, ["tbl", "rect", "tbl", "t"]);
+  assert.deepEqual(tags, ['tbl', 'rect', 'tbl', 't']);
   const replies = await workerReplies(t);
-  await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: readFileSync(file) } });
+  await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: readFileSync(file) } });
   assert.equal(replies.length, 1);
   const reply = replies.shift();
   assert.equal(reply.error, undefined);
@@ -123,20 +123,20 @@ test("real carried-anchor source independently contains table, rectangle, table 
     [1],
   );
   assert.deepEqual(inlineTableHostAnchors(p, tables, drawings), {
-    state: "resolved",
+    state: 'resolved',
     zeroWidthUnits: [1],
     textAnchorUnits: [],
   });
   assert.equal(JSON.stringify(content), before);
 });
 
-test("tracked table-derived inline scene retains an additional zero-width drawing anchor without moving cells", async (t) => {
+test('tracked table-derived inline scene retains an additional zero-width drawing anchor without moving cells', async (t) => {
   const replies = await workerReplies(t);
   await self.onmessage({
     data: {
-      kind: "load",
-      format: "hwpx",
-      bytes: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table2.hwpx"),
+      kind: 'load',
+      format: 'hwpx',
+      bytes: readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/table2.hwpx'),
     },
   });
   const tableReply = replies.shift();
@@ -144,28 +144,28 @@ test("tracked table-derived inline scene retains an additional zero-width drawin
   const scene = tableReply.content;
   for (const table of scene.tables) table.sourceGeometry.geometry.treat_as_character = true;
   const baseline = layoutTableBodyContent(scene, () => 8, 20000);
-  assert.equal(baseline.state, "paginated", baseline.error);
+  assert.equal(baseline.state, 'paginated', baseline.error);
   const table = scene.tables[0],
     host = scene.paragraphs.find(
       (p) => p.section === table.section && p.paragraph === table.hostParagraph,
     );
   const unit = host.text.length;
-  host.text += "\ufffc";
+  host.text += '\ufffc';
   scene.floatingDrawingAnchors = [
     { section: host.section, paragraph: host.paragraph, anchorUnit: unit, node: 1000000 },
   ];
   const mixedBefore = JSON.stringify(scene);
   const mixed = layoutTableBodyContent(scene, () => 8, 20000);
-  assert.equal(mixed.state, "paginated", mixed.error);
+  assert.equal(mixed.state, 'paginated', mixed.error);
   assert.deepEqual(
     mixed.boxes.map((b) => [b.tableNode, b.x, b.y, b.width, b.height]),
     baseline.boxes.map((b) => [b.tableNode, b.x, b.y, b.width, b.height]),
   );
   assert.equal(
     mixed.rows
-      .filter((r) => r.paragraph === host.paragraph && r.kind === "text")
+      .filter((r) => r.paragraph === host.paragraph && r.kind === 'text')
       .map((r) => r.text)
-      .join(""),
+      .join(''),
     host.text,
   );
   assert.equal(JSON.stringify(scene), mixedBefore);

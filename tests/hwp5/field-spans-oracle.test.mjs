@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
-test("native field spans match independent CFB record/list markers for real mixed ownership", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+test('native field spans match independent CFB record/list markers for real mixed ownership', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   for (const path of [
-    "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwp",
-    "reference/rhwp/samples/추진일정.hwp",
-    "reference/rhwp/samples/issue1891/76076_regulatory_analysis.hwpx",
+    'legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwp',
+    'reference/rhwp/samples/추진일정.hwp',
+    'reference/rhwp/samples/issue1891/76076_regulatory_analysis.hwpx',
   ]) {
     const input = readFileSync(path),
       source = inspect(input),
@@ -29,8 +29,8 @@ test("native field spans match independent CFB record/list markers for real mixe
   }
 });
 
-test("independent field oracle rejects forged header and end identities", () => {
-  const source = inspect(readFileSync("reference/rhwp/samples/추진일정.hwp")).sections[0].bytes;
+test('independent field oracle rejects forged header and end identities', () => {
+  const source = inspect(readFileSync('reference/rhwp/samples/추진일정.hwp')).sections[0].bytes;
   const spans = independentFieldSpans(source),
     all = records(source),
     header = all[spans[0].source_node];

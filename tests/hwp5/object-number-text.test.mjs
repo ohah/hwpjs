@@ -1,22 +1,22 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
 import {
   inspect,
   records,
   paragraphRecords,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
-import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
-import { changeFirstObjectNumber } from "./object-reference-derivative.mjs";
+} from './style-preservation/text-record-oracle.mjs';
+import { verifyCharacterProperties } from './style-preservation/character-property-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
+import { changeFirstObjectNumber } from './object-reference-derivative.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit object-number candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit object-number candidate required');
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
 
-test("actual mixed table and picture number references retain every section during text edits", async () => {
-  const path = "reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp",
+test('actual mixed table and picture number references retain every section during text edits', async () => {
+  const path = 'reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp',
     input = readFileSync(path);
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
@@ -30,17 +30,17 @@ test("actual mixed table and picture number references retain every section duri
             row.payload.readUInt32LE(0) === 0x25787266,
         )
         .map((row) =>
-          row.payload.subarray(11, 11 + row.payload.readUInt16LE(9) * 2).toString("utf16le"),
+          row.payload.subarray(11, 11 + row.payload.readUInt16LE(9) * 2).toString('utf16le'),
         ),
     );
     assert.equal(commands.length, 18);
     assert(
       commands.some((text) => /^\?#\d+;1;1;/.test(text)),
-      "Actual picture-number fields required",
+      'Actual picture-number fields required',
     );
     assert(
       commands.some((text) => /^\?#\d+;0;1;/.test(text)),
-      "Actual table-number fields required",
+      'Actual table-number fields required',
     );
     editor.enableHistory({ maxEntries: 4, maxCheckpointBytes: 32 * 1024 * 1024 });
     for (let section = 0; section < 7; section++) {
@@ -67,7 +67,7 @@ test("actual mixed table and picture number references retain every section duri
                 paragraph: position.paragraph,
                 startUnit: position.unit,
                 endUnit: position.unit,
-                text: "거부",
+                text: '거부',
               }),
             /ReadOnlyCrossReferenceResult/,
           );
@@ -91,14 +91,14 @@ test("actual mixed table and picture number references retain every section duri
   }
 });
 
-test("actual page references do not inherit object-number retention", async () => {
-  const input = readFileSync("reference/rhwp/samples/pic-in-head-01.hwp"),
+test('actual page references do not inherit object-number retention', async () => {
+  const input = readFileSync('reference/rhwp/samples/pic-in-head-01.hwp'),
     editor = await createExperimentalHwp5Editor(wasm, input);
   try {
     editor.enableHistory();
     assert.throws(() => editor.validateTextSourcePolicy(0), /UnsupportedSectionControl/);
     assert.throws(
-      () => editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "거부" }),
+      () => editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: '거부' }),
       /UnsupportedSectionControl/,
     );
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
@@ -109,8 +109,8 @@ test("actual page references do not inherit object-number retention", async () =
   }
 });
 
-test("actual picture-reference text formatting preserves every record at beginning middle and end", async () => {
-  const path = "reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp",
+test('actual picture-reference text formatting preserves every record at beginning middle and end', async () => {
+  const path = 'reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp',
     input = readFileSync(path);
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
@@ -121,7 +121,7 @@ test("actual picture-reference text formatting preserves every record at beginni
     assert.equal(
       text.charCodeAt(text.length - 1),
       13,
-      "Raw paragraph terminator is not editable text",
+      'Raw paragraph terminator is not editable text',
     );
     assert.throws(
       () =>
@@ -137,7 +137,7 @@ test("actual picture-reference text formatting preserves every record at beginni
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
     const owner = paragraphRecords(source.sections[0].bytes, 5);
     const runs = owner.direct.find((row) => row.tag === 68).payload;
-    const shapes = records(source.decode(source.streams.get("DocInfo"))).filter(
+    const shapes = records(source.decode(source.streams.get('DocInfo'))).filter(
       (row) => row.tag === 21,
     );
     for (const startUnit of [0, Math.floor((text.length - 1) / 2), text.length - 2]) {
@@ -182,20 +182,20 @@ test("actual picture-reference text formatting preserves every record at beginni
 });
 
 function slot(text, index, value) {
-  const parts = text.split(";");
+  const parts = text.split(';');
   parts[index] = String(value);
-  return parts.join(";");
+  return parts.join(';');
 }
 for (const [name, change] of [
-  ["external document", (text) => "not-opened.hwp" + text],
-  ["page", (text) => slot(text, 2, 0)],
-  ["text", (text) => slot(text, 2, 2)],
-  ["relative position", (text) => slot(text, 2, 3)],
-  ["note index", (text) => slot(text, 1, 3)],
+  ['external document', (text) => 'not-opened.hwp' + text],
+  ['page', (text) => slot(text, 2, 0)],
+  ['text', (text) => slot(text, 2, 2)],
+  ['relative position', (text) => slot(text, 2, 3)],
+  ['note index', (text) => slot(text, 1, 3)],
 ])
   test(`picture-number ${name} counter-control preserves bytes and prior redo`, async () => {
     const original = readFileSync(
-      "reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp",
+      'reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp',
     );
     const input = await changeFirstObjectNumber(wasm, original, change),
       editor = await createExperimentalHwp5Editor(wasm, input);
@@ -210,7 +210,7 @@ for (const [name, change] of [
       for (const section of [0, 1, 5, 6]) {
         assert.throws(() => editor.validateTextSourcePolicy(section), /UnsupportedSectionControl/);
         assert.throws(
-          () => editor.splice({ section, paragraph: 0, startUnit: 0, endUnit: 0, text: "거부" }),
+          () => editor.splice({ section, paragraph: 0, startUnit: 0, endUnit: 0, text: '거부' }),
           /UnsupportedSectionControl/,
         );
         assert.deepEqual(Buffer.from(editor.save().bytes), input);

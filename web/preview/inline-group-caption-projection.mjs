@@ -35,14 +35,14 @@ export function groupCaptionParagraphKeys(roots, paragraphs) {
 }
 
 export function projectInlineGroupCaption(root, object, placement, { maxRows = 20000 } = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (!root?.source || !object || !placement) return fail("InlineGroupCaptionReservationMismatch");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (!root?.source || !object || !placement) return fail('InlineGroupCaptionReservationMismatch');
   const reserved = object.captionReservation;
   if (!root.source.caption)
-    return reserved ? fail("InlineGroupCaptionReservationMismatch") : { state: "placed", rows: [] };
+    return reserved ? fail('InlineGroupCaptionReservationMismatch') : { state: 'placed', rows: [] };
   if (
-    reserved?.state !== "reserved" ||
-    reserved.caption?.state !== "positioned" ||
+    reserved?.state !== 'reserved' ||
+    reserved.caption?.state !== 'positioned' ||
     object.objectNode !== root.containerNode ||
     placement.objectNode !== root.containerNode ||
     placement.section !== root.section ||
@@ -64,7 +64,7 @@ export function projectInlineGroupCaption(root, object, placement, { maxRows = 2
       Number.isFinite,
     )
   )
-    return fail("InlineGroupCaptionReservationMismatch");
+    return fail('InlineGroupCaptionReservationMismatch');
   if (
     Array.from(reserved.caption.rows).some(
       (row) =>
@@ -75,7 +75,7 @@ export function projectInlineGroupCaption(root, object, placement, { maxRows = 2
         row.listNode !== root.source.caption.list_node,
     )
   )
-    return fail("InlineGroupCaptionReservationMismatch");
+    return fail('InlineGroupCaptionReservationMismatch');
   const x = placement.rectangle.x + object.left,
     y = placement.rectangle.y + object.top;
   const rows = reserved.caption.rows.map((row) => ({
@@ -93,10 +93,10 @@ export function projectInlineGroupCaption(root, object, placement, { maxRows = 2
           row.x,
           row.y,
           row.y + row.height,
-          ...(row.kind === "gap" ? [] : [row.x + row.width]),
+          ...(row.kind === 'gap' ? [] : [row.x + row.width]),
         ].every(Number.isFinite),
     )
   )
-    return fail("InvalidInlineGroupCaptionPosition");
-  return { state: "placed", rows };
+    return fail('InvalidInlineGroupCaptionPosition');
+  return { state: 'placed', rows };
 }

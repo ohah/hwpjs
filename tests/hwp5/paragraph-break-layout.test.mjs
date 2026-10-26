@@ -1,9 +1,9 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { decodeHwp5ParagraphFlow } from "../../js/hwp5-flow-sources.mjs";
-import { paginateBodyRows } from "../../web/preview/page-row-flow.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { decodeHwp5ParagraphFlow } from '../../js/hwp5-flow-sources.mjs';
+import { paginateBodyRows } from '../../web/preview/page-row-flow.mjs';
 
-test("HWP5 generated flow admits only explicit body page or column break intent", () => {
+test('HWP5 generated flow admits only explicit body page or column break intent', () => {
   const encode = (rows) => new TextEncoder().encode(JSON.stringify(rows));
   const base = {
     paragraph: 0,
@@ -32,16 +32,16 @@ test("HWP5 generated flow admits only explicit body page or column break intent"
   }
 });
 
-test("explicit known single column break advances to a fresh page without guessing missing declarations", () => {
+test('explicit known single column break advances to a fresh page without guessing missing declarations', () => {
   const setting = {
     width: 7200,
     height: 7200,
-    orientation: "widely",
-    gutter_type: "left_only",
+    orientation: 'widely',
+    gutter_type: 'left_only',
     duplicate_margins: 0,
     margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
   };
-  const row = (paragraph) => ({ kind: "text", section: 0, paragraph, height: 48, text: "text" });
+  const row = (paragraph) => ({ kind: 'text', section: 0, paragraph, height: 48, text: 'text' });
   const flow = (paragraph) => ({
     section: 0,
     paragraph,
@@ -53,8 +53,8 @@ test("explicit known single column break advances to a fresh page without guessi
     count: 1,
     gap: 720,
     same_size: true,
-    direction: "left",
-    kind: "newspaper",
+    direction: 'left',
+    kind: 'newspaper',
     ambiguous: false,
   };
   const rows = [row(0), row(1), row(1)];
@@ -65,7 +65,7 @@ test("explicit known single column break advances to a fresh page without guessi
     column_declaration: declaration,
   };
   const layout = paginateBodyRows(rows, setting, [flow(0), known]);
-  assert.equal(layout.state, "paginated", layout.error);
+  assert.equal(layout.state, 'paginated', layout.error);
   assert.deepEqual(
     layout.rows.map((item) => item.pageOrdinal),
     [0, 1, 1],
@@ -79,7 +79,7 @@ test("explicit known single column break advances to a fresh page without guessi
   ]) {
     assert.equal(
       paginateBodyRows(rows, setting, [flow(0), { ...known, ...change }]).error,
-      "UnsupportedPageFlow",
+      'UnsupportedPageFlow',
     );
   }
 });

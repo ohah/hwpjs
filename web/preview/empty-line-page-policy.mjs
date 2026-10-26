@@ -17,8 +17,8 @@ function followsPaperContainedInlineTable(context) {
   return (
     context.allowAtomicOverflow === true &&
     (atomic || inline) &&
-    row.kind === "text" &&
-    row.text === "\ufffc" &&
+    row.kind === 'text' &&
+    row.text === '\ufffc' &&
     row.startUnit === 0 &&
     row.endUnit === 1 &&
     row.pageOrdinal === context.pageOrdinal &&
@@ -48,8 +48,8 @@ export function canHideOverflowEmptyLine(row, flow, setting, context) {
     context.cursor >= context.top &&
     (context.cursor <= context.bottom || followsPaperContainedInlineTable(context)) &&
     context.cursor + row.height > context.bottom &&
-    row.kind === "text" &&
-    row.text === "" &&
+    row.kind === 'text' &&
+    row.text === '' &&
     row.startUnit === 0 &&
     row.endUnit === 0 &&
     row.height > 0 &&
@@ -61,6 +61,6 @@ export function canHideOverflowEmptyLine(row, flow, setting, context) {
     row.tableVerticalSource === undefined &&
     row.positionedFragments === undefined &&
     row.pageFitHeight === undefined &&
-    (row.paragraphSource === undefined || row.paragraphSource.text === "")
+    (row.paragraphSource === undefined || row.paragraphSource.text === '')
   );
 }

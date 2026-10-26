@@ -1,29 +1,29 @@
-import assert from "node:assert/strict";
-import { iccFixture } from "./icc-fixture.mjs";
+import assert from 'node:assert/strict';
+import { iccFixture } from './icc-fixture.mjs';
 function xyz(values) {
   const b = Buffer.alloc(20);
-  b.write("XYZ ");
+  b.write('XYZ ');
   values.forEach((v, i) => b.writeInt32BE(v, 8 + i * 4));
   return b;
 }
 function curve(values) {
   const b = Buffer.alloc(12 + values.length * 2);
-  b.write("curv");
+  b.write('curv');
   b.writeUInt32BE(values.length, 8);
   values.forEach((v, i) => b.writeUInt16BE(v, 12 + i * 2));
   return b;
 }
 export function modelEntries() {
   return [
-    ["rXYZ", xyz([1, 2, 3])],
-    ["gXYZ", xyz([4, 5, 6])],
-    ["bXYZ", xyz([7, 8, 9])],
-    ["rTRC", curve([])],
-    ["gTRC", curve([512])],
-    ["bTRC", curve([0, 12345, 65535])],
+    ['rXYZ', xyz([1, 2, 3])],
+    ['gXYZ', xyz([4, 5, 6])],
+    ['bXYZ', xyz([7, 8, 9])],
+    ['rTRC', curve([])],
+    ['gTRC', curve([512])],
+    ['bTRC', curve([0, 12345, 65535])],
   ];
 }
-export function modelProfile(entries, cls = "mntr", space = "RGB ", pcs = "XYZ ") {
+export function modelProfile(entries, cls = 'mntr', space = 'RGB ', pcs = 'XYZ ') {
   let offset = 132 + 12 * entries.length;
   const descriptors = entries.map(([name, payload]) => {
     const e = [name, offset, payload.length];
@@ -41,15 +41,15 @@ export function modelReference(entries) {
   const map = new Map(entries),
     out = Buffer.alloc(44);
   let chunks = [out];
-  ["rXYZ", "gXYZ", "bXYZ"].forEach((name, c) => {
+  ['rXYZ', 'gXYZ', 'bXYZ'].forEach((name, c) => {
     const b = map.get(name);
     for (let r = 0; r < 3; r++) out.writeInt32LE(b.readInt32BE(8 + r * 4), (r * 3 + c) * 4);
   });
   out.writeUInt32LE(1, 36);
   out.writeUInt32LE(1, 40);
-  for (const name of ["rTRC", "gTRC", "bTRC"]) {
+  for (const name of ['rTRC', 'gTRC', 'bTRC']) {
     const b = map.get(name),
-      param = b.toString("ascii", 0, 4) === "para",
+      param = b.toString('ascii', 0, 4) === 'para',
       fn = param ? b.readUInt16BE(8) : 0,
       n = param ? [1, 3, 4, 5, 7][fn] : b.readUInt32BE(8),
       part = Buffer.alloc(8 + 4 * n);
@@ -85,7 +85,7 @@ export function modelEdges(call) {
     );
     rejected++;
     const bad = entries.map(([name, b]) => [name, Buffer.from(b)]);
-    bad[i][1].write("oops");
+    bad[i][1].write('oops');
     assert.throws(() => call(175, modelProfile(bad)), /InvalidIcc/);
     rejected++;
   }
@@ -93,23 +93,23 @@ export function modelEdges(call) {
     for (let channel = 3; channel < 6; channel++) {
       const n = [1, 3, 4, 5, 7][fn],
         b = Buffer.alloc(12 + 4 * n);
-      b.write("para");
+      b.write('para');
       b.writeUInt16BE(fn, 8);
       for (let i = 0; i < n; i++) b.writeInt32BE(i % 2 ? -i : i + 65536, 12 + i * 4);
       const changed = entries.map((e, i) => (i === channel ? [e[0], b] : e));
       assert.deepEqual(call(175, modelProfile(changed)), modelReference(changed));
       comparisons++;
     }
-  for (const cls of ["scnr", "mntr"])
-    for (const space of ["RGB ", "3CLR", "CMY "]) {
+  for (const cls of ['scnr', 'mntr'])
+    for (const space of ['RGB ', '3CLR', 'CMY ']) {
       assert.deepEqual(call(175, modelProfile(entries, cls, space)), expected);
       comparisons++;
     }
   for (const [cls, space, pcs] of [
-    ["prtr", "RGB ", "XYZ "],
-    ["mntr", "CMYK", "XYZ "],
-    ["mntr", "RGB ", "Lab "],
-    ["link", "RGB ", "XYZ "],
+    ['prtr', 'RGB ', 'XYZ '],
+    ['mntr', 'CMYK', 'XYZ '],
+    ['mntr', 'RGB ', 'Lab '],
+    ['link', 'RGB ', 'XYZ '],
   ]) {
     assert.throws(
       () => call(175, modelProfile(entries, cls, space, pcs)),

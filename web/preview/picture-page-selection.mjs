@@ -13,7 +13,7 @@ export function selectPicturePageReservations(line, pageOrdinal, reservations) {
     reservations.some(
       (item) =>
         !item ||
-        typeof item !== "object" ||
+        typeof item !== 'object' ||
         (item.columnBox !== undefined &&
           (!item.columnBox ||
             ![

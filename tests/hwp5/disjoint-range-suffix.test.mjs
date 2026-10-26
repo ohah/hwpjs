@@ -1,25 +1,25 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
 import {
   inspect,
   records,
   paragraphRecords,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
+} from './style-preservation/text-record-oracle.mjs';
 
 for (const [name, expected] of [
-  ["21_언어_기출_편집가능본.hwp", 43],
-  ["basic/treatise sample.hwp", 8],
-  ["exam_math.hwp", 46],
-  ["exam_math_no.hwp", 46],
-  ["h-pen-01.hwp", 1],
+  ['21_언어_기출_편집가능본.hwp', 43],
+  ['basic/treatise sample.hwp', 8],
+  ['exam_math.hwp', 46],
+  ['exam_math_no.hwp', 46],
+  ['h-pen-01.hwp', 1],
 ])
   test(`actual strict suffix insertion and deletion preserve ranges: ${name}`, async () => {
     const path = `reference/rhwp/samples/${name}`,
       input = readFileSync(path);
-    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
     const sites = [];
     inspect(input).sections.forEach((section, sectionIndex) => {
       const count = records(section.bytes).filter((r) => r.tag === 66).length;
@@ -41,7 +41,7 @@ for (const [name, expected] of [
           sites.push({ section: sectionIndex, paragraph, at });
       }
     });
-    assert.equal(sites.length, expected, "independent suffix inventory must not shrink");
+    assert.equal(sites.length, expected, 'independent suffix inventory must not shrink');
     const editor = await createExperimentalHwp5Editor(wasm, input, { normalizeObservedCfb: true });
     try {
       const baseline = editor.save().bytes;
@@ -52,15 +52,15 @@ for (const [name, expected] of [
           paragraph: site.paragraph,
           startUnit: site.at,
           endUnit: site.at,
-          text: "뒤😀",
+          text: '뒤😀',
         });
         const saved = editor.save({ allowStaleLayout: true }).bytes;
-        verifyRaw(baseline, saved, site.section, site.paragraph, site.at, site.at, "뒤😀", {
+        verifyRaw(baseline, saved, site.section, site.paragraph, site.at, site.at, '뒤😀', {
           preserveEmptyRanges: true,
         });
         assert.throws(
           () =>
-            verifyRaw(baseline, saved, site.section, site.paragraph, site.at, site.at, "틀림", {
+            verifyRaw(baseline, saved, site.section, site.paragraph, site.at, site.at, '틀림', {
               preserveEmptyRanges: true,
             }),
           /complete Section must match/,
@@ -70,10 +70,10 @@ for (const [name, expected] of [
           paragraph: site.paragraph,
           startUnit: site.at,
           endUnit: site.at + 3,
-          text: "",
+          text: '',
         });
         const deleted = editor.save({ allowStaleLayout: true }).bytes;
-        verifyRaw(saved, deleted, site.section, site.paragraph, site.at, site.at + 3, "", {
+        verifyRaw(saved, deleted, site.section, site.paragraph, site.at, site.at + 3, '', {
           preserveEmptyRanges: true,
         });
         const reopened = await createExperimentalHwp5Editor(wasm, deleted);

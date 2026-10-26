@@ -1,5 +1,5 @@
-import { readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readdirSync } from 'node:fs';
+import { join } from 'node:path';
 
 function inventory(root, allDocuments) {
   const files = [];
@@ -13,7 +13,7 @@ function inventory(root, allDocuments) {
   }
   walk(root);
   files.sort();
-  if (!files.length) throw new Error("EmptyFixtureInventory");
+  if (!files.length) throw new Error('EmptyFixtureInventory');
   return files;
 }
 

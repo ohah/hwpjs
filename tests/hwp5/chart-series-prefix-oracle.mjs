@@ -1,6 +1,6 @@
-import { postLineOracle } from "./chart-post-line-oracle.mjs";
-import { observeSeriesPrefix } from "./chart-series-prefix-evidence.mjs";
-import { integer } from "./chart-text-body-oracle.mjs";
+import { postLineOracle } from './chart-post-line-oracle.mjs';
+import { observeSeriesPrefix } from './chart-series-prefix-evidence.mjs';
+import { integer } from './chart-text-body-oracle.mjs';
 export function seriesPrefixOracle(b) {
   const prior = postLineOracle(b),
     r = observeSeriesPrefix(b, prior.end, prior.r.types, prior.r.objects);
@@ -15,7 +15,7 @@ export function seriesPrefixOracle(b) {
       r.types.size,
       r.objects.size,
     ].map((n) => integer(n)),
-    Buffer.from(r.raw66, "hex"),
+    Buffer.from(r.raw66, 'hex'),
   ]);
   const input = (bytes = b, maxObjects = r.objects.size) =>
     Buffer.concat([integer(maxObjects), bytes]);

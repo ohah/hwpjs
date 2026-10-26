@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { tableCellReferenceBox } from "../../web/preview/table-cell-reference-box.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { tableCellReferenceBox } from '../../web/preview/table-cell-reference-box.mjs';
 
-test("cell reference uses explicit inner margins and selected cell column without outer-column fallback", () => {
+test('cell reference uses explicit inner margins and selected cell column without outer-column fallback', () => {
   const box = { x: 100, y: 200, width: 100, height: 50 },
     insets = { left: 2, right: 3, top: 4, bottom: 5 };
   const flow = {
@@ -24,7 +24,7 @@ test("cell reference uses explicit inner margins and selected cell column withou
     width: 55,
     height: 41,
   });
-  for (const ordinal of [undefined, null, -1, 0.5, 2, "1"])
+  for (const ordinal of [undefined, null, -1, 0.5, 2, '1'])
     assert.equal(tableCellReferenceBox(box, insets, flow, ordinal), null);
   assert.equal(tableCellReferenceBox(box, insets, {}, 0), null);
   assert.equal(tableCellReferenceBox(box, { ...insets, left: 100 }, flow, 0), null);

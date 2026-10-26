@@ -1,5 +1,5 @@
-import { measureColumnContent } from "./column-content-layout.mjs";
-import { nextTextRow } from "./next-text-row.mjs";
+import { measureColumnContent } from './column-content-layout.mjs';
+import { nextTextRow } from './next-text-row.mjs';
 
 /** Existing column measurement owns text width; table bands retain their dimensions. */
 export function measureTableColumnParagraph(paragraph, flow, reference, measure, maxRows) {
@@ -13,7 +13,7 @@ export function measureTableColumnParagraph(paragraph, flow, reference, measure,
 }
 
 export function remeasureTableColumnRow(source, width, measure) {
-  if (source.kind !== "text" || !source.paragraphSource) return source;
+  if (source.kind !== 'text' || !source.paragraphSource) return source;
   return nextTextRow(source.paragraphSource, source.startUnit, width, measure, {
     endUnit: source.endUnit,
   });

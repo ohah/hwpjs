@@ -1,18 +1,18 @@
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
-import { observeHwpFile, streamBytes } from "./hwp-corpus-evidence.mjs";
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
+import { observeHwpFile, streamBytes } from './hwp-corpus-evidence.mjs';
 
 export const emfSignature = (bytes) => {
-  if (!(bytes instanceof Uint8Array)) throw new TypeError("ExpectedBytes");
+  if (!(bytes instanceof Uint8Array)) throw new TypeError('ExpectedBytes');
   return bytes.length >= 44 && Buffer.from(bytes).readUInt32LE(40) === 0x464d4520;
 };
 
 export function decodeEmfReport(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length < 68 || bytes.length % 4)
-    throw new Error("InvalidEmfReport");
+    throw new Error('InvalidEmfReport');
   const b = Buffer.from(bytes),
     records = b.readUInt32LE(0);
-  if (b.length !== (17 + records) * 4) throw new Error("InvalidEmfReport");
+  if (b.length !== (17 + records) * 4) throw new Error('InvalidEmfReport');
   return {
     records,
     handles: b.readUInt32LE(4),
@@ -36,28 +36,28 @@ export function decodeEmfReport(bytes) {
 }
 
 function extension(payload, type) {
-  if (type !== 1 && payload.length === 4) return "";
-  if (payload.length < 6) throw new Error("UnexpectedEnd");
+  if (type !== 1 && payload.length === 4) return '';
+  if (payload.length < 6) throw new Error('UnexpectedEnd');
   const units = payload.readUInt16LE(4),
     end = 6 + units * 2;
-  if (end > payload.length) throw new Error("UnexpectedEnd");
-  return payload.subarray(6, end).toString("utf16le");
+  if (end > payload.length) throw new Error('UnexpectedEnd');
+  return payload.subarray(6, end).toString('utf16le');
 }
 
 export function observeHwpEmf(cfb, bytes, inspect) {
   return observeHwpFile(cfb, bytes, (r) => {
-    const h = Buffer.from(streamBytes(r.findExact("/FileHeader"))),
+    const h = Buffer.from(streamBytes(r.findExact('/FileHeader'))),
       flags = h.readUInt32LE(36);
     if (flags & (2 | 4 | 16 | 256 | 1024))
-      return { state: "unsupported_security", flags, binData: 0, extensions: {}, items: [] };
-    const rawDoc = Buffer.from(streamBytes(r.findExact("/DocInfo")));
+      return { state: 'unsupported_security', flags, binData: 0, extensions: {}, items: [] };
+    const rawDoc = Buffer.from(streamBytes(r.findExact('/DocInfo')));
     const doc = flags & 1 ? inflateRawSync(rawDoc, { maxOutputLength: 64 * 1024 * 1024 }) : rawDoc;
     const items = [],
       extensions = {};
     let binData = 0;
     for (const record of documentRecords(doc).filter((value) => value.tag === 18)) {
       const payload = doc.subarray(record.start, record.end);
-      if (payload.length < 4) throw new Error("UnexpectedEnd");
+      if (payload.length < 4) throw new Error('UnexpectedEnd');
       const attributes = payload.readUInt16LE(),
         type = attributes & 15;
       if (type !== 1 && type !== 2) continue;
@@ -65,25 +65,25 @@ export function observeHwpEmf(cfb, bytes, inspect) {
         id = payload.readUInt16LE(2);
       binData++;
       extensions[ext.toLowerCase()] = (extensions[ext.toLowerCase()] ?? 0) + 1;
-      const path = `/BinData/BIN${id.toString(16).toUpperCase().padStart(4, "0")}${ext ? "." + ext : ""}`;
+      const path = `/BinData/BIN${id.toString(16).toUpperCase().padStart(4, '0')}${ext ? '.' + ext : ''}`;
       const entry = r.findExact(path);
-      if (!entry || entry.type !== 2) throw new Error("MissingBinDataStream");
+      if (!entry || entry.type !== 2) throw new Error('MissingBinDataStream');
       const compression = (attributes >> 4) & 3;
-      if (compression === 3) throw new Error("UnsupportedCompression");
+      if (compression === 3) throw new Error('UnsupportedCompression');
       const stored = Buffer.from(streamBytes(entry));
       const decoded =
         compression === 1 || (compression === 0 && flags & 1)
           ? inflateRawSync(stored, { maxOutputLength: 64 * 1024 * 1024 })
           : stored;
       const signature = emfSignature(decoded),
-        declared = ext.toLowerCase() === "emf";
+        declared = ext.toLowerCase() === 'emf';
       if (!signature && !declared) continue;
       const item = { path, extension: ext, bytes: decoded.length, signature, declared };
       if (signature) item.report = decodeEmfReport(inspect(decoded));
-      else item.error = "InvalidEmfSignature";
+      else item.error = 'InvalidEmfSignature';
       items.push(item);
     }
-    return { state: "decoded", flags, binData, extensions, items };
+    return { state: 'decoded', flags, binData, extensions, items };
   });
 }
 

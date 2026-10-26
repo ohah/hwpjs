@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { bmpLayoutOracle, bmpWords } from "./bmp-oracle.mjs";
-import { iccFixture } from "./icc-fixture.mjs";
-import { iccHeaderWire } from "./icc-header-evidence.mjs";
-import { iccTableWire } from "./icc-table-evidence.mjs";
-import { expectBmpError } from "./bmp-errors.mjs";
+import assert from 'node:assert/strict';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { bmpLayoutOracle, bmpWords } from './bmp-oracle.mjs';
+import { iccFixture } from './icc-fixture.mjs';
+import { iccHeaderWire } from './icc-header-evidence.mjs';
+import { iccTableWire } from './icc-table-evidence.mjs';
+import { expectBmpError } from './bmp-errors.mjs';
 export function bmpProfileFixture({
   kind = 0x4d424544,
   data = Buffer.from([7, 8, 9]),
@@ -180,7 +180,7 @@ export function bmpProfileEdges(call) {
   for (const major of [2, 4])
     for (const layout of [0, 1])
       for (const gap of [0, 3, 17]) {
-        const data = iccFixture([["text", 144, 12]], 156, major),
+        const data = iccFixture([['text', 144, 12]], 156, major),
           raw = bmpProfileFixture({ data, gap, tail: 5 });
         check(raw, { layout }, true);
         reject(raw, /LimitExceeded/, { tags: 0 }, true);

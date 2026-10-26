@@ -1,4 +1,4 @@
-import { horizontalGlyphWidth, paintHorizontalGlyph } from "./glyph-horizontal-scale.mjs";
+import { horizontalGlyphWidth, paintHorizontalGlyph } from './glyph-horizontal-scale.mjs';
 
 // The exact same source-width calibration is used for measurement and paint.
 // Vertical metrics remain those of the actual Canvas font, not an outline claim.
@@ -9,7 +9,7 @@ export function canvasGlyphGeometry(ctx, fontAt, paragraph, unit, kind, text, me
     scale = fontAt.horizontalScale(paragraph, unit, kind);
   const measured = projection?.width ?? fontAt.measuredWidth?.(paragraph, unit, kind, text) ?? null;
   if (measured !== null && (!Number.isFinite(measured) || measured <= 0))
-    throw new RangeError("InvalidMeasuredFontWidth");
+    throw new RangeError('InvalidMeasuredFontWidth');
   const candidate = measured !== null && metrics.width > 0 ? measured / metrics.width : 1;
   const calibrated =
     measured !== null &&
@@ -34,7 +34,7 @@ export function paintCanvasGlyph(ctx, geometry, x, y, paint) {
     geometry.calibration < 0.125 ||
     geometry.calibration > 8
   )
-    throw new RangeError("InvalidMeasuredFontWidth");
+    throw new RangeError('InvalidMeasuredFontWidth');
   return paintHorizontalGlyph(ctx, geometry.horizontalScale, x, y, (px, py) => {
     if (geometry.calibration === 1) return paint(px, py, geometry.paintText);
     ctx.save();

@@ -1,10 +1,10 @@
 export function decodeDutmalSites(bytes) {
   const fail = () => {
-    throw new Error("InvalidHwpxDutmalSites");
+    throw new Error('InvalidHwpxDutmalSites');
   };
   let rows;
   try {
-    rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }

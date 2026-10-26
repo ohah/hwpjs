@@ -18,14 +18,14 @@ export function attachHwpxPictureCaptions(editor, content, available) {
     claimed = new Set();
   const paragraphs = new Map(content.paragraphs.map((p) => [`${p.section}:${p.paragraph}`, p]));
   if (paragraphs.size !== content.paragraphs.length) {
-    content.pictureCaptionErrors.push({ error: "AmbiguousPictureCaptionParagraphs" });
+    content.pictureCaptionErrors.push({ error: 'AmbiguousPictureCaptionParagraphs' });
     return content;
   }
   for (const section of new Set((content.pictures ?? []).map((p) => p.section))) {
     try {
       const pictures = content.pictures.filter((p) => p.section === section);
       const byNode = new Map(pictures.map((p) => [p.pictureNode, p]));
-      if (byNode.size !== pictures.length) throw new Error("AmbiguousPictureCaptionOwner");
+      if (byNode.size !== pictures.length) throw new Error('AmbiguousPictureCaptionOwner');
       const bindings = editor.pictureCaptionBindings(section);
       for (const picture of pictures)
         picture.caption = editor.pictureCaption(section, picture.pictureNode);
@@ -38,7 +38,7 @@ export function attachHwpxPictureCaptions(editor, content, available) {
           caption.caption_node !== binding.owner.caption_node ||
           caption.list_node !== binding.owner.list_node
         )
-          throw new Error("PictureCaptionBindingMismatch");
+          throw new Error('PictureCaptionBindingMismatch');
         const key = `${section}:${binding.paragraph - 1}`,
           paragraph = paragraphs.get(key);
         if (!paragraph && content.window) {
@@ -53,7 +53,7 @@ export function attachHwpxPictureCaptions(editor, content, available) {
           paragraph.tableCaption ||
           claimed.has(key)
         )
-          throw new Error("PictureCaptionParagraphMismatch");
+          throw new Error('PictureCaptionParagraphMismatch');
         claimed.add(key);
         pending.push({
           paragraph,

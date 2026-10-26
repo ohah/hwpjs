@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 export function pageNumberActual(call, b) {
   const stats = [0, 0, 0, 0];
   for (const r of documentRecords(b))
@@ -64,14 +64,14 @@ export function pageNumberDocumentEdges(call, h, doc, sections) {
       const reserved = Buffer.from(s.bytes);
       reserved.writeUInt32LE((reserved.readUInt32LE(r.start + 4) | 0xf00) >>> 0, r.start + 4);
       const out = invoke(reserved),
-        offset = sectionFieldOffset(s.index, "page_number", 1);
+        offset = sectionFieldOffset(s.index, 'page_number', 1);
       assert.equal(out.readUInt32LE(offset), good.readUInt32LE(offset) + 1);
       const toggled = Buffer.from(s.bytes),
         dash = r.start + 14;
       const wasDash = toggled.readUInt16LE(dash) === 45;
       toggled.writeUInt16LE(wasDash ? 0 : 45, dash);
       const result = invoke(toggled),
-        diagnostic = sectionFieldOffset(s.index, "page_number", 2);
+        diagnostic = sectionFieldOffset(s.index, 'page_number', 2);
       assert.equal(
         result.readUInt32LE(diagnostic),
         good.readUInt32LE(diagnostic) + (wasDash ? 1 : -1),

@@ -1,16 +1,16 @@
-import assert from "node:assert/strict";
-import { containerBmpRleInput, containerBmpRleActual } from "./container-bmp-rle.mjs";
-import { selectedBmpEntries } from "./container-bmp.mjs";
-import { bmpProfileFixture, bmpProfileOracle } from "./bmp-profile.mjs";
-import { bmpRleFixture } from "./bmp-rle-fixture.mjs";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { bmpWords } from "./bmp-oracle.mjs";
-import { iccFixture } from "./icc-fixture.mjs";
-import { iccDigest } from "./icc-header-evidence.mjs";
-import { imageContainerFixture } from "./container-images.mjs";
-import { expectBmpError } from "./bmp-errors.mjs";
-import { profilePng } from "./png-profile.mjs";
-import { jpegJfifLayoutFixture } from "./jpeg-jfif-layout.mjs";
+import assert from 'node:assert/strict';
+import { containerBmpRleInput, containerBmpRleActual } from './container-bmp-rle.mjs';
+import { selectedBmpEntries } from './container-bmp.mjs';
+import { bmpProfileFixture, bmpProfileOracle } from './bmp-profile.mjs';
+import { bmpRleFixture } from './bmp-rle-fixture.mjs';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { bmpWords } from './bmp-oracle.mjs';
+import { iccFixture } from './icc-fixture.mjs';
+import { iccDigest } from './icc-header-evidence.mjs';
+import { imageContainerFixture } from './container-images.mjs';
+import { expectBmpError } from './bmp-errors.mjs';
+import { profilePng } from './png-profile.mjs';
+import { jpegJfifLayoutFixture } from './jpeg-jfif-layout.mjs';
 export function containerBmpProfileInput(
   raw,
   {
@@ -75,9 +75,9 @@ export function bmpProfileStats(
   if (semantics) {
     // This semantic fixture oracle intentionally covers only one unknown text tag.
     const data = view.subarray(32);
-    assert.equal(data.toString("latin1", 12, 24), "mntrRGB XYZ ");
+    assert.equal(data.toString('latin1', 12, 24), 'mntrRGB XYZ ');
     assert.equal(data.readUInt32BE(128), 1);
-    assert.equal(data.toString("latin1", 132, 136), "text");
+    assert.equal(data.toString('latin1', 132, 136), 'text');
     r[9] = 1;
     r[10] = 9;
     r[11] = 1;
@@ -101,8 +101,8 @@ export function containerBmpProfileEdges(call, cfb) {
   let comparisons = 0,
     rejected = 0;
   const check = (raw, refs = 1, compressed = false, options = {}) => {
-    const bytes = imageContainerFixture(cfb, raw, refs, compressed, "bmp"),
-      entries = Array.from({ length: refs }, () => ({ raw, extension: "bmp" }));
+    const bytes = imageContainerFixture(cfb, raw, refs, compressed, 'bmp'),
+      entries = Array.from({ length: refs }, () => ({ raw, extension: 'bmp' }));
     containerBmpProfileActual(call, bytes, entries, options);
     comparisons++;
     return bytes;
@@ -115,7 +115,7 @@ export function containerBmpProfileEdges(call, cfb) {
     for (const compressed of [false, true])
       for (const refs of [1, 2, 5])
         for (const content of [0, 1, 2]) {
-          const data = iccFixture([["text", 144, 12]], 156, major);
+          const data = iccFixture([['text', 144, 12]], 156, major);
           if (major === 4) iccDigest(data).copy(data, 84);
           const raw = bmpProfileFixture({ data, gap: 3, tail: 7 }),
             bytes = check(raw, refs, compressed, {
@@ -143,7 +143,7 @@ export function containerBmpProfileEdges(call, cfb) {
         reject(bytes, /UnwrittenBmpRlePixels/, { fill: 0 });
         reject(bytes, /LimitExceeded/, { fill, rgba: 1023 });
       }
-  const link = bmpProfileFixture({ kind: 0x4c494e4b, data: Buffer.from("C:\\p.icc\0") });
+  const link = bmpProfileFixture({ kind: 0x4c494e4b, data: Buffer.from('C:\\p.icc\0') });
   for (const compressed of [false, true])
     for (const content of [0, 1, 2]) {
       const bytes = check(link, 2, compressed, { content, profileTotal: 18, linkMaximum: 9 });
@@ -151,8 +151,8 @@ export function containerBmpProfileEdges(call, cfb) {
       reject(bytes, /LimitExceeded/, { content, linkMaximum: 8 });
       reject(bytes, /LimitExceeded/, { content, profileTotal: 17 });
     }
-  const data = iccFixture([["text", 144, 12]], 156);
-  data.write("mntrRGB XYZ ", 12, "latin1");
+  const data = iccFixture([['text', 144, 12]], 156);
+  data.write('mntrRGB XYZ ', 12, 'latin1');
   check(bmpProfileFixture({ data }), 2, true, { semantics: 1 });
   const empty = bmpProfileFixture({ data: Buffer.alloc(0) }),
     emptyDoc = check(empty, 2, false, { content: 0, profileTotal: 0 });

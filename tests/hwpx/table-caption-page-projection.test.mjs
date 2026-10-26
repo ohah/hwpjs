@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { reserveTableCaptionSpace } from "../../web/preview/table-caption-page-reservation.mjs";
-import { projectTablePageCaption } from "../../web/preview/table-caption-page-projection.mjs";
-import { tableCollisionFootprints } from "../../web/preview/table-collision-footprints.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { reserveTableCaptionSpace } from '../../web/preview/table-caption-page-reservation.mjs';
+import { projectTablePageCaption } from '../../web/preview/table-caption-page-projection.mjs';
+import { tableCollisionFootprints } from '../../web/preview/table-collision-footprints.mjs';
 
-test("caption page projection preserves paragraph identity and rejects split overflow and budget", () => {
+test('caption page projection preserves paragraph identity and rejects split overflow and budget', () => {
   const table = {
     section: 0,
     tableNode: 2,
@@ -25,8 +25,8 @@ test("caption page projection preserves paragraph identity and rejects split ove
     {
       section: 0,
       paragraph: 5,
-      label: "",
-      text: "caption",
+      label: '',
+      text: 'caption',
       editable: true,
       tableCaption: { tableNode: 2, captionNode: 3, listNode: 4 },
     },
@@ -40,7 +40,7 @@ test("caption page projection preserves paragraph identity and rejects split ove
   );
   const referenceBoxes = { column: { x: 0, y: 0, width: 400, height: 400 } };
   const layout = {
-    state: "placed",
+    state: 'placed',
     rows: [],
     boxes: [
       {
@@ -57,7 +57,7 @@ test("caption page projection preserves paragraph identity and rejects split ove
     ],
   };
   const result = projectTablePageCaption(table, reservation, layout);
-  assert.equal(result.state, "placed");
+  assert.equal(result.state, 'placed');
   assert.equal(result.rows.length, reservation.rowCount);
   assert.equal(result.rows[0].x, 40);
   assert.equal(result.rows[0].y, 110);
@@ -68,11 +68,11 @@ test("caption page projection preserves paragraph identity and rejects split ove
   assert.equal(result.tableCaptionBounds[0].captionNode, 3);
   assert.equal(result.tableCaptionBounds[0].listNode, 4);
   const footprint = tableCollisionFootprints(table, result, 0);
-  assert.equal(footprint.state, "collected", footprint.error);
+  assert.equal(footprint.state, 'collected', footprint.error);
   assert.deepEqual(footprint.footprints[0].rectangle, { x: 40, y: 50, width: 80, height: 88 });
   assert.equal(
     tableCollisionFootprints(table, { ...result, tableCaptionBounds: [] }, 0).error,
-    "IncompleteTableCaptionCollisionFootprint",
+    'IncompleteTableCaptionCollisionFootprint',
   );
   assert.equal(
     tableCollisionFootprints(
@@ -80,7 +80,7 @@ test("caption page projection preserves paragraph identity and rejects split ove
       { ...result, tableCaptionBounds: [{ ...result.tableCaptionBounds[0], listNode: 99 }] },
       0,
     ).error,
-    "IncompleteTableCaptionCollisionFootprint",
+    'IncompleteTableCaptionCollisionFootprint',
   );
   assert.deepEqual(layout.rows, []);
   assert.equal(
@@ -90,25 +90,25 @@ test("caption page projection preserves paragraph identity and rejects split ove
       { ...layout, rows: [{ pageOrdinal: 0, x: 0, y: 0 }] },
       { maxRows: reservation.rowCount },
     ).error,
-    "TableCaptionPageProjectionLimit",
+    'TableCaptionPageProjectionLimit',
   );
   assert.equal(
     projectTablePageCaption(table, reservation, {
       ...layout,
       boxes: [...layout.boxes, { ...layout.boxes[0], pageOrdinal: 2 }],
     }).error,
-    "UnsupportedSplitTableCaption",
+    'UnsupportedSplitTableCaption',
   );
   assert.equal(
     projectTablePageCaption(table, reservation, {
       ...layout,
       boxes: [{ ...layout.boxes[0], y: 390 }],
     }).error,
-    "TableCaptionPageOverflow",
+    'TableCaptionPageOverflow',
   );
   assert.equal(
     projectTablePageCaption(table, reservation, { ...layout, boxes: [] }).error,
-    "UnsupportedSplitTableCaption",
+    'UnsupportedSplitTableCaption',
   );
   const inline = { ...table, sourceGeometry: { geometry: { treat_as_character: true } } };
   const narrow = {
@@ -125,14 +125,14 @@ test("caption page projection preserves paragraph identity and rejects split ove
   };
   assert.equal(
     projectTablePageCaption(table, reservation, narrow).error,
-    "TableCaptionPageOverflow",
+    'TableCaptionPageOverflow',
   );
-  assert.equal(projectTablePageCaption(inline, reservation, narrow).state, "placed");
+  assert.equal(projectTablePageCaption(inline, reservation, narrow).state, 'placed');
   assert.equal(
     projectTablePageCaption(inline, reservation, {
       ...narrow,
       boxes: [{ ...narrow.boxes[0], x: 150 }],
     }).error,
-    "TableCaptionPageOverflow",
+    'TableCaptionPageOverflow',
   );
 });

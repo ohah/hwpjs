@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { jpegIdctRationalBlock } from "./jpeg-idct-rational.mjs";
+import assert from 'node:assert/strict';
+import { jpegIdctRationalBlock } from './jpeg-idct-rational.mjs';
 
 export function jpegIdctInput(precision, values, transform = true) {
   assert.equal(values.length, 64);

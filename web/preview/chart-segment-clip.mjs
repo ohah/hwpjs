@@ -12,8 +12,8 @@ export function clipChartSegment(a, b) {
     if (first & last) return null;
     const outside = first || last,
       vertical = Boolean(outside & 12),
-      axis = vertical ? "y" : "x",
-      other = vertical ? "x" : "y";
+      axis = vertical ? 'y' : 'x',
+      other = vertical ? 'x' : 'y';
     const boundary = outside & (vertical ? 4 : 1) ? 0 : 1;
     const magnitude = Math.max(Math.abs(a[axis]), Math.abs(b[axis]), 1);
     const fraction =

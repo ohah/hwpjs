@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { imageContainerInput, imageContainerFixture } from "./container-images.mjs";
-import { jpegJfifLayoutFixture } from "./jpeg-jfif-layout.mjs";
-import { progressiveRgbFixture, progressiveRgbOracle } from "./jpeg-progressive-rgb.mjs";
-import { jpegRgbOracle } from "./jpeg-rgb.mjs";
-import { jpegSequentialScans } from "./jpeg-scan.mjs";
-import { segment } from "./jpeg-structure.mjs";
-import { adobePayload } from "./jpeg-adobe.mjs";
-import { jpegIccChunk } from "./jpeg-icc.mjs";
+import assert from 'node:assert/strict';
+import { imageContainerInput, imageContainerFixture } from './container-images.mjs';
+import { jpegJfifLayoutFixture } from './jpeg-jfif-layout.mjs';
+import { progressiveRgbFixture, progressiveRgbOracle } from './jpeg-progressive-rgb.mjs';
+import { jpegRgbOracle } from './jpeg-rgb.mjs';
+import { jpegSequentialScans } from './jpeg-scan.mjs';
+import { segment } from './jpeg-structure.mjs';
+import { adobePayload } from './jpeg-adobe.mjs';
+import { jpegIccChunk } from './jpeg-icc.mjs';
 
 const words = (values) => {
   const out = Buffer.alloc(values.length * 4);
@@ -72,7 +72,7 @@ export function containerJpegActual(call, bytes, entries, options = {}) {
 export function containerJpegEdges(call, cfb) {
   let comparisons = 0,
     rejected = 0;
-  const check = (raw, refs, compressed, extension = "jpg", options = {}) => {
+  const check = (raw, refs, compressed, extension = 'jpg', options = {}) => {
     const bytes = imageContainerFixture(cfb, raw, refs, compressed, extension);
     const entries = Array.from({ length: refs }, () => ({ raw, extension }));
     const old = call(244, imageContainerInput(bytes));
@@ -102,7 +102,7 @@ export function containerJpegEdges(call, cfb) {
               interval: 1,
               dnl: true,
             });
-            const { bytes, entries } = check(raw, refs, compressed, "JpEg", {
+            const { bytes, entries } = check(raw, refs, compressed, 'JpEg', {
               method,
               rgb: 27 * refs,
               png: 0,
@@ -120,7 +120,7 @@ export function containerJpegEdges(call, cfb) {
     refine: false,
     ac: false,
   });
-  const partial = check(raw, 2, true, "bmp", { full: false });
+  const partial = check(raw, 2, true, 'bmp', { full: false });
   reject(partial.bytes, /IncompleteJpegProgressiveCoefficients/);
   const seq = jpegJfifLayoutFixture({ width: 1, height: 1, sampling: [17], groups: [[0]] });
   const late = (parts) => Buffer.concat([seq.subarray(0, -2), ...parts, seq.subarray(-2)]);
@@ -131,27 +131,27 @@ export function containerJpegEdges(call, cfb) {
     [good, bad],
     [bad, good],
   ])
-    reject(imageContainerFixture(cfb, late(parts), 1, false, "jpg"), /ConflictingJfifAdobeColour/);
+    reject(imageContainerFixture(cfb, late(parts), 1, false, 'jpg'), /ConflictingJfifAdobeColour/);
   reject(
     imageContainerFixture(
       cfb,
       late([segment(226, jpegIccChunk(1, 2, Buffer.of(9)))]),
       1,
       true,
-      "jpg",
+      'jpg',
     ),
     /MissingJpegIccChunk/,
   );
   for (let n = 0; n < seq.length; n++)
     reject(
-      imageContainerFixture(cfb, seq.subarray(0, n), 1, n % 2 === 0, "jpg"),
+      imageContainerFixture(cfb, seq.subarray(0, n), 1, n % 2 === 0, 'jpg'),
       /UnexpectedEnd|MissingJpegSoi|MissingJpegFrame|MissingJpegScan|MissingJpegEoi/,
     );
   const broken = Buffer.from(seq);
   broken[broken.length - 3] &= 0xfe;
-  reject(imageContainerFixture(cfb, broken, 2, true, "jpg"), /InvalidJpegEntropyPadding/);
+  reject(imageContainerFixture(cfb, broken, 2, true, 'jpg'), /InvalidJpegEntropyPadding/);
   reject(
-    imageContainerFixture(cfb, Buffer.concat([seq, Buffer.of(7)]), 1, false, "jpg"),
+    imageContainerFixture(cfb, Buffer.concat([seq, Buffer.of(7)]), 1, false, 'jpg'),
     /TrailingJpegBytes/,
   );
   reject(
@@ -160,11 +160,11 @@ export function containerJpegEdges(call, cfb) {
       Buffer.concat([seq.subarray(0, 2), seq.subarray(20)]),
       1,
       false,
-      "jpg",
+      'jpg',
     ),
     /MissingJfifHeader/,
   );
-  const bytes = imageContainerFixture(cfb, seq, 1, false, "jpg");
+  const bytes = imageContainerFixture(cfb, seq, 1, false, 'jpg');
   for (let method = 2; method < 256; method++)
     reject(bytes, /InvalidInterpolationMethod/, { method });
   const input = containerJpegInput(bytes);

@@ -1,6 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { decodeParagraphShapes } from "../../js/paragraph-shapes-wire.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { decodeParagraphShapes } from '../../js/paragraph-shapes-wire.mjs';
 function wire(version = 2, count = 1) {
   const stride = version === 1 ? 48 : 72,
     bytes = new Uint8Array(8 + stride * count),
@@ -26,15 +26,15 @@ function set(bytes, offset, value) {
   new DataView(bytes.buffer).setUint32(8 + offset, value, true);
   return bytes;
 }
-test("HPS1 retains signed values and absent modern spacing without inventing heading fields", () => {
+test('HPS1 retains signed values and absent modern spacing without inventing heading fields', () => {
   const [shape] = decodeParagraphShapes(wire(1));
   assert.equal(shape.alignment, 3);
   assert.equal(shape.left, -120);
   assert.equal(shape.legacySpacing, -160);
   assert.equal(shape.modernSpacing, null);
-  assert.equal(Object.hasOwn(shape, "headingLevel"), false);
+  assert.equal(Object.hasOwn(shape, 'headingLevel'), false);
 });
-test("HPS2 keeps packed and extended heading levels distinct including present zero", () => {
+test('HPS2 keeps packed and extended heading levels distinct including present zero', () => {
   const [packed] = decodeParagraphShapes(wire());
   assert.equal(packed.headingLevel, 7);
   assert.equal(packed.extendedHeadingLevel, null);
@@ -58,7 +58,7 @@ test("HPS2 keeps packed and extended heading levels distinct including present z
     value: -1,
   });
 });
-test("both versions accept exact empty windows and reject unknown, short, extra and excessive framing", () => {
+test('both versions accept exact empty windows and reject unknown, short, extra and excessive framing', () => {
   for (const version of [1, 2]) {
     assert.deepEqual(decodeParagraphShapes(wire(version, 0)), []);
     const source = wire(version);
@@ -77,7 +77,7 @@ test("both versions accept exact empty windows and reject unknown, short, extra 
   assert.throws(() => decodeParagraphShapes(huge), /InvalidParagraphShapes/);
   assert.throws(() => decodeParagraphShapes(new ArrayBuffer(8)), /InvalidParagraphShapes/);
 });
-test("reject mismatched identity, invalid enums, absent payloads and inconsistent effective heading", () => {
+test('reject mismatched identity, invalid enums, absent payloads and inconsistent effective heading', () => {
   const patches = [
     [0, 1],
     [4, 8],

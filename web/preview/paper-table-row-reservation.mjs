@@ -1,8 +1,8 @@
-import { tableBodyIntersection } from "./table-body-intersection.mjs";
+import { tableBodyIntersection } from './table-body-intersection.mjs';
 
 /** Advance only colliding body rows; table footprints remain in physical coordinates. */
 export function reservePaperTableRow(row, context, reservations) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Number.isFinite(row?.height) ||
     row.height <= 0 ||
@@ -11,22 +11,22 @@ export function reservePaperTableRow(row, context, reservations) {
     context.pageOrdinal < 0 ||
     !Array.isArray(reservations)
   )
-    return fail("InvalidPaperTableReservation");
+    return fail('InvalidPaperTableReservation');
   const column = context.column;
   if (
     !column ||
-    tableBodyIntersection(column, column).state !== "intersecting" ||
+    tableBodyIntersection(column, column).state !== 'intersecting' ||
     context.y < column.y ||
     !Number.isFinite(context.y + row.height)
   )
-    return fail("InvalidPaperTableReservation");
+    return fail('InvalidPaperTableReservation');
   for (const item of reservations)
     if (
       !Number.isSafeInteger(item?.pageOrdinal) ||
       item.pageOrdinal < 0 ||
-      tableBodyIntersection(item.footprint, column).state === "unavailable"
+      tableBodyIntersection(item.footprint, column).state === 'unavailable'
     )
-      return fail("InvalidPaperTableReservation");
+      return fail('InvalidPaperTableReservation');
   let y = context.y;
   for (let attempt = 0; attempt <= reservations.length; attempt++) {
     let next = y;
@@ -34,12 +34,12 @@ export function reservePaperTableRow(row, context, reservations) {
     for (const item of reservations) {
       if (item.pageOrdinal !== context.pageOrdinal) continue;
       const overlap = tableBodyIntersection(item.footprint, line);
-      if (overlap.state === "unavailable") return fail("InvalidPaperTableReservation");
-      if (overlap.state === "intersecting")
+      if (overlap.state === 'unavailable') return fail('InvalidPaperTableReservation');
+      if (overlap.state === 'intersecting')
         next = Math.max(next, item.footprint.y + item.footprint.height);
     }
-    if (next === y) return { state: "reserved", y };
+    if (next === y) return { state: 'reserved', y };
     y = next;
   }
-  return fail("PaperTableReservationLimit");
+  return fail('PaperTableReservationLimit');
 }

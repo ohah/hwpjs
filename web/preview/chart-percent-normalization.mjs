@@ -1,4 +1,4 @@
-import { createChartAbsoluteTotal } from "./chart-absolute-total.mjs";
+import { createChartAbsoluteTotal } from './chart-absolute-total.mjs';
 /** Group ownership only; common absolute-total arithmetic owns scaling. */
 export function chartPercentNormalization(series) {
   const totals = new Map();
@@ -7,8 +7,8 @@ export function chartPercentNormalization(series) {
   for (const row of series)
     for (const point of row.points)
       if (point.value) {
-        if (point.value.number?.kind !== "finite")
-          return { state: "unavailable", reason: "NonNumericChartValue" };
+        if (point.value.number?.kind !== 'finite')
+          return { state: 'unavailable', reason: 'NonNumericChartValue' };
         const value = point.value.number.value;
         positive ||= value > 0;
         negative ||= value < 0;
@@ -18,11 +18,11 @@ export function chartPercentNormalization(series) {
       }
   for (const [index, values] of totals) {
     const total = createChartAbsoluteTotal(values);
-    if (!total) return { state: "unavailable", reason: "NonNumericChartValue" };
+    if (!total) return { state: 'unavailable', reason: 'NonNumericChartValue' };
     totals.set(index, total);
   }
   return {
-    state: "ready",
+    state: 'ready',
     domain: [negative ? -1 : 0, positive || !negative ? 1 : 0],
     share(index, value) {
       return totals.get(index).share(value);

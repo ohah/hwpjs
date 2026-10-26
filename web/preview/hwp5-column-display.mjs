@@ -1,4 +1,4 @@
-import { sourceDisplayPosition } from "./text-offsets.mjs";
+import { sourceDisplayPosition } from './text-offsets.mjs';
 /** Display-only boundaries derived from native current coordinates. */
 export function attachHwp5ColumnDisplay(content) {
   content.columnDisplaySources = [];
@@ -10,7 +10,7 @@ export function attachHwp5ColumnDisplay(content) {
     try {
       const paragraph = paragraphs.get(`${source.section}:${source.current_paragraph}`);
       if (!paragraph || paragraph.clipped || !Array.isArray(paragraph.sourceOffsets))
-        throw new Error("MissingColumnDisplaySource");
+        throw new Error('MissingColumnDisplaySource');
       const unit = sourceDisplayPosition(
         source.current_unit,
         paragraph.sourceOffsets,
@@ -21,8 +21,8 @@ export function attachHwp5ColumnDisplay(content) {
         paragraph.sourceOffsets,
         paragraph.text.length,
       );
-      if (end !== unit + 1 || paragraph.text[unit] !== "\ufffc")
-        throw new Error("ColumnDisplayAnchorMismatch");
+      if (end !== unit + 1 || paragraph.text[unit] !== '\ufffc')
+        throw new Error('ColumnDisplayAnchorMismatch');
       content.columnDisplaySources.push({ ...source, display_unit: unit, display_end: end });
     } catch (error) {
       content.columnDisplayErrors.push({

@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { xmlNamePattern, xmlReferenceExpected } from "./xml-reference.mjs";
+import assert from 'node:assert/strict';
+import { xmlNamePattern, xmlReferenceExpected } from './xml-reference.mjs';
 export const xmlEncode = (text, e) =>
   e === 0
     ? Buffer.from(text)
     : e === 1
-      ? Buffer.from(text, "utf16le")
-      : Buffer.from(text, "utf16le").swap16();
+      ? Buffer.from(text, 'utf16le')
+      : Buffer.from(text, 'utf16le').swap16();
 const words = (...values) => {
   const out = Buffer.alloc(values.length * 4);
   values.forEach((v, i) => out.writeUInt32LE(v, i * 4));
@@ -32,8 +32,8 @@ export function xmlTagEvidence(source, e, limit = 67108864) {
     at += n.length;
     return n;
   };
-  eat("<");
-  if (source[at] === "/") {
+  eat('<');
+  if (source[at] === '/') {
     at++;
     kind = 1;
   }
@@ -41,14 +41,14 @@ export function xmlTagEvidence(source, e, limit = 67108864) {
   while (true) {
     const separated = space();
     assert.ok(at < source.length);
-    if (source[at] === ">") {
+    if (source[at] === '>') {
       at++;
       break;
     }
     assert.notEqual(kind, 1);
-    if (source[at] === "/") {
+    if (source[at] === '/') {
       at++;
-      eat(">");
+      eat('>');
       kind = 2;
       break;
     }
@@ -57,7 +57,7 @@ export function xmlTagEvidence(source, e, limit = 67108864) {
     assert.ok(!seen.has(n));
     seen.add(n);
     space();
-    eat("=");
+    eat('=');
     space();
     const start = at,
       quote = source[at++];
@@ -69,8 +69,8 @@ export function xmlTagEvidence(source, e, limit = 67108864) {
         at++;
         break;
       }
-      assert.notEqual(source[at], "<");
-      if (source[at] === "&") {
+      assert.notEqual(source[at], '<');
+      if (source[at] === '&') {
         const ref = xmlReferenceExpected(source.slice(at));
         at += ref.token.length;
         parts.push(ref);
@@ -79,7 +79,7 @@ export function xmlTagEvidence(source, e, limit = 67108864) {
       let cp = source.codePointAt(at);
       at += String.fromCodePoint(cp).length;
       if (cp === 13) {
-        if (source[at] === "\n") at++;
+        if (source[at] === '\n') at++;
         cp = 32;
       } else if (cp === 9 || cp === 10) cp = 32;
       assert.ok(cp >= 32 || cp === 9 || cp === 10 || cp === 13);
@@ -93,7 +93,7 @@ export function xmlTagEvidence(source, e, limit = 67108864) {
   }
   const raw = xmlEncode(source.slice(0, at), e),
     nameBytes = xmlEncode(tagName, e),
-    characters = [...source.slice(0, at).replace(/\r\n?/g, "\n")].length;
+    characters = [...source.slice(0, at).replace(/\r\n?/g, '\n')].length;
   const out = [
     words(
       kind,

@@ -10,10 +10,10 @@ export function memoHwp5WindowFlows(editor) {
 }
 
 export function hwp5WindowFlows(editor, content) {
-  if (!content.window) throw new Error("MissingParagraphWindow");
+  if (!content.window) throw new Error('MissingParagraphWindow');
   const displayed = new Set(content.paragraphs.map((row) => `${row.section}:${row.paragraph}`));
   if (displayed.size !== content.paragraphs.length)
-    throw new Error("WindowDependencyBindingMismatch");
+    throw new Error('WindowDependencyBindingMismatch');
   const completeFlows = new Map(),
     selectedFlows = [];
   for (const section of new Set(content.paragraphs.map((row) => row.section))) {
@@ -22,7 +22,7 @@ export function hwp5WindowFlows(editor, content) {
       flows.length !== editor.paragraphCount(section) ||
       flows.some((row, index) => row.paragraph !== index)
     )
-      throw new Error("WindowDependencyBindingMismatch");
+      throw new Error('WindowDependencyBindingMismatch');
     completeFlows.set(section, flows);
     selectedFlows.push(
       ...flows
@@ -30,6 +30,6 @@ export function hwp5WindowFlows(editor, content) {
         .map((row) => ({ ...row, section })),
     );
   }
-  if (selectedFlows.length !== displayed.size) throw new Error("WindowDependencyBindingMismatch");
+  if (selectedFlows.length !== displayed.size) throw new Error('WindowDependencyBindingMismatch');
   return { displayed, completeFlows, selectedFlows };
 }

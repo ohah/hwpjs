@@ -1,6 +1,6 @@
-import { validateHwp5CaptionSources } from "../../js/hwp5-caption-sources.mjs";
-import { attachHwp5Captions } from "./hwp5-caption-content.mjs";
-import { hwp5WindowFlows } from "./hwp5-window-flows.mjs";
+import { validateHwp5CaptionSources } from '../../js/hwp5-caption-sources.mjs';
+import { attachHwp5Captions } from './hwp5-caption-content.mjs';
+import { hwp5WindowFlows } from './hwp5-window-flows.mjs';
 
 export function attachHwp5WindowCaptions(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
@@ -18,12 +18,12 @@ export function attachHwp5WindowCaptions(editor, content) {
         .get(section)
         .filter(
           (row) =>
-            row.host === "table_caption" &&
+            row.host === 'table_caption' &&
             row.parent_node === source.control_node &&
             row.list_node === source.list_node,
         );
       if (members.some((row) => !displayed.has(`${section}:${row.paragraph}`)))
-        throw new Error("MissingHwp5CaptionBody");
+        throw new Error('MissingHwp5CaptionBody');
     }
     return rows;
   };

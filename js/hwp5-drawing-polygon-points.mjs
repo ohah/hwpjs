@@ -1,6 +1,6 @@
-import { countedPointLayoutArg } from "./hwp5-counted-point-layout.mjs";
+import { countedPointLayoutArg } from './hwp5-counted-point-layout.mjs';
 export function polygonLayoutArg(layout) {
-  return countedPointLayoutArg(layout, "InvalidPolygonLayout");
+  return countedPointLayoutArg(layout, 'InvalidPolygonLayout');
 }
 export function validateHwp5DrawingPolygonPoints(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
@@ -8,7 +8,7 @@ export function validateHwp5DrawingPolygonPoints(rows) {
     Array.isArray(value) && value.length === 2 && Array.from(value).every(valid);
   const components = new Set(),
     polygons = new Set();
-  if (!Array.isArray(rows)) throw new Error("InvalidHwp5DrawingPolygonPoints");
+  if (!Array.isArray(rows)) throw new Error('InvalidHwp5DrawingPolygonPoints');
   for (const row of rows) {
     if (
       !row ||
@@ -26,7 +26,7 @@ export function validateHwp5DrawingPolygonPoints(rows) {
       ) ||
       !Array.from(row.points).every((p) => pair(p, Number.isFinite))
     )
-      throw new Error("InvalidHwp5DrawingPolygonPoints");
+      throw new Error('InvalidHwp5DrawingPolygonPoints');
     components.add(row.component_node);
     polygons.add(row.polygon_node);
   }
@@ -34,6 +34,6 @@ export function validateHwp5DrawingPolygonPoints(rows) {
 }
 export function decodeHwp5DrawingPolygonPoints(bytes) {
   return validateHwp5DrawingPolygonPoints(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

@@ -1,4 +1,4 @@
-import { inlineTableRowFitsPaper } from "./inline-table-row-fit.mjs";
+import { inlineTableRowFitsPaper } from './inline-table-row-fit.mjs';
 
 // Only a leading owned inline table can extend its line into physical paper.
 // Unknown controls, ordinary prefix text and floating exclusions retain their

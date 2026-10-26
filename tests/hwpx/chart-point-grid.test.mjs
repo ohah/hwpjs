@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { chartPointGridModel } from "../../web/preview/chart-point-grid-model.mjs";
-import { createChartPointGrid } from "../../web/preview/chart-point-grid.mjs";
-import { createChartControls } from "../../web/preview/chart-controls.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { chartPointGridModel } from '../../web/preview/chart-point-grid-model.mjs';
+import { createChartPointGrid } from '../../web/preview/chart-point-grid.mjs';
+import { createChartControls } from '../../web/preview/chart-controls.mjs';
 
 const point = (index, cache_node = 10, level_node = null) => ({
   index,
   cache_node,
   level_node,
-  kind: level_node === null ? "numeric_cache" : "multilevel_cache",
+  kind: level_node === null ? 'numeric_cache' : 'multilevel_cache',
   value: String(index),
 });
 const source = (points) => ({
@@ -20,10 +20,10 @@ const source = (points) => ({
     plot_node: 2,
     series_node: 3,
     role_node: 4,
-    role: "value",
+    role: 'value',
   })),
 });
-test("grid preserves sparse source indices duplicates distinct caches and levels without merging edit ordinals", () => {
+test('grid preserves sparse source indices duplicates distinct caches and levels without merging edit ordinals', () => {
   const chart = source([point(0xffffffff), point(7), point(7), point(7, 11), point(7, 10, 12)]),
     before = structuredClone(chart);
   const model = chartPointGridModel(chart);
@@ -37,7 +37,7 @@ test("grid preserves sparse source indices duplicates distinct caches and levels
   assert.deepEqual(model.rows[0].cells.get(2), [4]);
   assert.deepEqual(model.locations.get(0), { index: 0xffffffff, column: 0, row: 1 });
   assert.deepEqual(chart, before);
-  for (const index of [-1, 0.5, "7", 0x100000000, null])
+  for (const index of [-1, 0.5, '7', 0x100000000, null])
     assert.throws(() => chartPointGridModel(source([point(index)])), /InvalidChartGridPoint/);
   // oxlint-disable-next-line no-sparse-arrays -- 희소 배열 입력을 거부하는 음성 oracle이며 배열 구멍을 undefined 값으로 대체하지 않는다.
   assert.throws(() => chartPointGridModel(source([, point(1)])), /InvalidChartGridPoint/);
@@ -45,13 +45,13 @@ test("grid preserves sparse source indices duplicates distinct caches and levels
 });
 
 class Element extends EventTarget {
-  constructor(tag = "div") {
+  constructor(tag = 'div') {
     super();
     this.tag = tag;
     this.children = [];
     this.style = {};
     this.dataset = {};
-    this.value = "";
+    this.value = '';
     this.attributes = new Map();
     this.ownerDocument = { createElement: (tag) => new Element(tag) };
   }
@@ -65,7 +65,7 @@ class Element extends EventTarget {
     for (const child of this.children) child.parent = null;
     this.children = [];
     this.append(...children);
-    this.value = children[0]?.value ?? "";
+    this.value = children[0]?.value ?? '';
   }
   setAttribute(name, value) {
     this.attributes.set(name, String(value));
@@ -78,7 +78,7 @@ class Element extends EventTarget {
     return false;
   }
   closest(selector) {
-    return this.tag === "button" && this.dataset.chartGridPoint !== undefined
+    return this.tag === 'button' && this.dataset.chartGridPoint !== undefined
       ? this
       : this.parent?.closest(selector);
   }
@@ -87,18 +87,18 @@ class Element extends EventTarget {
   }
 }
 const click = (body, target) => {
-  const event = new Event("click");
-  Object.defineProperty(event, "target", { value: target });
+  const event = new Event('click');
+  Object.defineProperty(event, 'target', { value: target });
   body.dispatchEvent(event);
 };
 function gridElements() {
   return Object.fromEntries(
-    ["head", "body", "previousRows", "nextRows", "previousColumns", "nextColumns", "note"].map(
+    ['head', 'body', 'previousRows', 'nextRows', 'previousColumns', 'nextColumns', 'note'].map(
       (key) => [key, new Element()],
     ),
   );
 }
-test("grid paginates rows and columns reveals canonical selection and rejects busy stale forged and closed picks", () => {
+test('grid paginates rows and columns reveals canonical selection and rejects busy stale forged and closed picks', () => {
   const elements = gridElements(),
     picks = [];
   let chart = source(Array.from({ length: 340 }, (_, i) => point(i % 34, 10 + Math.floor(i / 34)))),
@@ -118,8 +118,8 @@ test("grid paginates rows and columns reveals canonical selection and rejects bu
   assert.equal(elements.head.children[0].children.length, 3);
   assert.equal(elements.body.children.length, 2);
   const button = elements.body.children[1].children[2].children[0];
-  assert.equal(button.dataset.chartGridPoint, "339");
-  assert.equal(button.getAttribute("aria-current"), "true");
+  assert.equal(button.dataset.chartGridPoint, '339');
+  assert.equal(button.getAttribute('aria-current'), 'true');
   click(elements.body, button);
   assert.deepEqual(picks, [339]);
   ready = false;
@@ -129,15 +129,15 @@ test("grid paginates rows and columns reveals canonical selection and rejects bu
   ready = true;
   grid.refresh();
   click(elements.body, button);
-  assert.deepEqual(picks, [339], "detached button is stale");
+  assert.deepEqual(picks, [339], 'detached button is stale');
   const current = elements.body.children[1].children[2].children[0];
-  for (const forged of ["-1", "0.5", "00", "Infinity", "999999"]) {
+  for (const forged of ['-1', '0.5', '00', 'Infinity', '999999']) {
     current.dataset.chartGridPoint = forged;
     click(elements.body, current);
   }
   assert.deepEqual(picks, [339]);
-  elements.previousRows.dispatchEvent(new Event("click"));
-  elements.previousColumns.dispatchEvent(new Event("click"));
+  elements.previousRows.dispatchEvent(new Event('click'));
+  elements.previousColumns.dispatchEvent(new Event('click'));
   assert.equal(elements.body.children.length, 32);
   assert.equal(elements.head.children[0].children.length, 9);
   chart = source([point(-1)]);
@@ -154,7 +154,7 @@ test("grid paginates rows and columns reveals canonical selection and rejects bu
   assert.deepEqual(picks, [339]);
 });
 
-test("grid selection uses the existing canonical form and never submits drafts or stale values", async (t) => {
+test('grid selection uses the existing canonical form and never submits drafts or stale values', async (t) => {
   const form = new Element(),
     fields = new Element(),
     targets = new Element(),
@@ -163,15 +163,15 @@ test("grid selection uses the existing canonical form and never submits drafts o
     note = new Element(),
     nodes = gridElements(),
     kinds = new Element();
-  kinds.value = "points";
+  kinds.value = 'points';
   const selectors = {
-    "[data-chart-grid-body]": nodes.body,
-    "[data-chart-grid-head]": nodes.head,
-    "[data-chart-grid-previous-rows]": nodes.previousRows,
-    "[data-chart-grid-next-rows]": nodes.nextRows,
-    "[data-chart-grid-previous-columns]": nodes.previousColumns,
-    "[data-chart-grid-next-columns]": nodes.nextColumns,
-    "[data-chart-grid-page]": nodes.note,
+    '[data-chart-grid-body]': nodes.body,
+    '[data-chart-grid-head]': nodes.head,
+    '[data-chart-grid-previous-rows]': nodes.previousRows,
+    '[data-chart-grid-next-rows]': nodes.nextRows,
+    '[data-chart-grid-previous-columns]': nodes.previousColumns,
+    '[data-chart-grid-next-columns]': nodes.nextColumns,
+    '[data-chart-grid-page]': nodes.note,
   };
   form.querySelector = (selector) => selectors[selector] ?? null;
   const requests = [],
@@ -191,7 +191,7 @@ test("grid selection uses the existing canonical form and never submits drafts o
     });
   t.after(() => controls.close());
   controls.message({
-    kind: "enable",
+    kind: 'enable',
     content: {
       chartEditAvailable: true,
       chartStringEditAvailable: true,
@@ -206,47 +206,47 @@ test("grid selection uses the existing canonical form and never submits drafts o
   controls.message({ ...query, chart });
   const button = nodes.body.children[0].children[1].children[0];
   click(nodes.body, button);
-  assert.equal(points.value, "1");
-  assert.equal(input.value, "7");
+  assert.equal(points.value, '1');
+  assert.equal(input.value, '7');
   assert.equal(requests.length, 0);
-  input.value = "123.40";
-  input.dispatchEvent(new Event("input"));
-  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  input.value = '123.40';
+  input.dispatchEvent(new Event('input'));
+  form.dispatchEvent(new Event('submit', { cancelable: true }));
   assert.deepEqual(requests.shift(), {
-    kind: "chart-point",
+    kind: 'chart-point',
     section: 0,
     wrapper: 9,
     point: 1,
-    value: "123.40",
+    value: '123.40',
   });
   assert.deepEqual(chart, before);
-  kinds.value = "series";
-  kinds.dispatchEvent(new Event("change"));
-  assert.equal(requests.shift().kind, "chart-series-text");
+  kinds.value = 'series';
+  kinds.dispatchEvent(new Event('change'));
+  assert.equal(requests.shift().kind, 'chart-series-text');
   assert.equal(nodes.body.children.length, 0);
   controls.message({ ...query, chart });
   assert.equal(
     nodes.body.children.length,
     0,
-    "obsolete point reply cannot restore grid in series mode",
+    'obsolete point reply cannot restore grid in series mode',
   );
-  controls.message({ kind: "load" });
+  controls.message({ kind: 'load' });
   click(nodes.body, button);
   assert.equal(requests.length, 0);
   assert.equal(nodes.body.children.length, 0);
 });
 
-test("grid addresses every native point on all 28 originals and follows edits and undo without changing saved bytes", async () => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
+test('grid addresses every native point on all 28 originals and follows edits and undo without changing saved bytes', async () => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit candidate required');
   const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
-  const root = "reference/rhwp/samples/chart",
+  const root = 'reference/rhwp/samples/chart',
     paths = readdirSync(root, { recursive: true })
-      .filter((path) => path.endsWith(".hwpx"))
+      .filter((path) => path.endsWith('.hwpx'))
       .sort();
   assert.equal(paths.length, 28);
   try {
     for (const path of paths) {
-      const original = readFileSync(root + "/" + path);
+      const original = readFileSync(root + '/' + path);
       editor.open(original);
       editor.enableHistory();
       const wrapper = editor.chartNodes(0)[0],
@@ -276,18 +276,18 @@ test("grid addresses every native point on all 28 originals and follows edits an
         }
       }
       const ordinal = chart.values.points.findIndex((p) =>
-        ["numeric_cache", "numeric_literal"].includes(p.kind),
+        ['numeric_cache', 'numeric_literal'].includes(p.kind),
       );
       assert(ordinal >= 0);
-      editor.setChartPoint(0, wrapper, ordinal, "314.159");
+      editor.setChartPoint(0, wrapper, ordinal, '314.159');
       const current = editor.chartPoints(0, wrapper),
         location = chartPointGridModel(current).locations.get(ordinal);
       assert.deepEqual(location, model.locations.get(ordinal));
-      assert.equal(current.values.points[ordinal].value, "314.159");
+      assert.equal(current.values.points[ordinal].value, '314.159');
       editor.undo();
       assert.deepEqual(editor.chartPoints(0, wrapper), chart);
       assert.deepEqual(Buffer.from(editor.save()), original);
-      assert.deepEqual(readFileSync(root + "/" + path), original);
+      assert.deepEqual(readFileSync(root + '/' + path), original);
     }
   } finally {
     editor.close();

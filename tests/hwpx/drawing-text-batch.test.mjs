@@ -1,17 +1,17 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { attachDrawingTextBindings } from "../../web/preview/drawing-text-content.mjs";
-import { decodeDrawingTextSnapshots } from "../../js/hwpx-drawing-text-snapshots.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { attachDrawingTextBindings } from '../../web/preview/drawing-text-content.mjs';
+import { decodeDrawingTextSnapshots } from '../../js/hwpx-drawing-text-snapshots.mjs';
 
-test("drawing snapshot batch is fresh and refused batch keeps individual errors", () => {
+test('drawing snapshot batch is fresh and refused batch keeps individual errors', () => {
   let calls = 0,
     anchor = 0;
   const source = () => ({ drawing_node: 7, paragraph: 1, anchor_unit: anchor });
   const editor = {
     drawingTextBindings: () => [
-      { paragraph: 2, drawingNode: 7, textNode: 8, listNode: 9, kind: "text" },
+      { paragraph: 2, drawingNode: 7, textNode: 8, listNode: 9, kind: 'text' },
     ],
     drawingTextSnapshots: () => [source()],
     drawingTextSnapshot: () => {
@@ -32,24 +32,24 @@ test("drawing snapshot batch is fresh and refused batch keeps individual errors"
   attachDrawingTextBindings(editor, content);
   assert.equal(content.drawings[0].anchorUnit, 3);
   editor.drawingTextSnapshots = () => {
-    throw new Error("BatchRefused");
+    throw new Error('BatchRefused');
   };
   editor.drawingTextSnapshot = () => {
     calls++;
-    throw new Error("MissingDrawingText");
+    throw new Error('MissingDrawingText');
   };
   attachDrawingTextBindings(editor, content);
   assert.equal(calls, 1);
   assert.deepEqual(content.drawingTextSnapshotErrors, [
-    { section: 0, drawingNode: 7, error: "MissingDrawingText" },
+    { section: 0, drawingNode: 7, error: 'MissingDrawingText' },
   ]);
 });
 
-test("actual grouped and caption drawing batches equal singles with history", async () => {
+test('actual grouped and caption drawing batches equal singles with history', async () => {
   const module = await WebAssembly.compile(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
-  for (const name of ["shapecontainer-2", "textbox", "multicolumns-layout"]) {
+  for (const name of ['shapecontainer-2', 'textbox', 'multicolumns-layout']) {
     const editor = await createHwpxEditor(module);
     try {
       const bytes = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwpx`);
@@ -72,7 +72,7 @@ test("actual grouped and caption drawing batches equal singles with history", as
       const before = check();
       assert.deepEqual(Buffer.from(editor.save()), bytes);
       editor.enableHistory();
-      editor.spliceAnchored(0, before[0].paragraph, 0, 0, "앞😀");
+      editor.spliceAnchored(0, before[0].paragraph, 0, 0, '앞😀');
       const after = check();
       assert.equal(after[0].anchor_unit, before[0].anchor_unit + 3);
       assert(editor.undo());

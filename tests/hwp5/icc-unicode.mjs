@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-const decoder = new TextDecoder("utf-16be", { fatal: true, ignoreBOM: true });
+import assert from 'node:assert/strict';
+const decoder = new TextDecoder('utf-16be', { fatal: true, ignoreBOM: true });
 export function unicodeInput(payload, maxBytes = 67108864, maxRecords = 100000) {
   const b = Buffer.alloc(8 + payload.length);
   b.writeUInt32BE(maxBytes);
@@ -10,12 +10,12 @@ export function unicodeInput(payload, maxBytes = 67108864, maxRecords = 100000) 
 export function unicodeFixture(units, copies = 1) {
   const start = 16 + 12 * copies,
     b = Buffer.alloc(start + units.length * 2);
-  b.write("mluc");
+  b.write('mluc');
   b.writeUInt32BE(copies, 8);
   b.writeUInt32BE(12, 12);
   for (let i = 0; i < copies; i++) {
     const o = 16 + 12 * i;
-    b.write("enUS", o);
+    b.write('enUS', o);
     b.writeUInt32BE(units.length * 2, o + 4);
     b.writeUInt32BE(start, o + 8);
   }
@@ -43,10 +43,10 @@ export function unicodeReference(payload) {
     const s = decoder.decode(payload.subarray(start, start + n));
     for (const c of s) {
       scalars++;
-      if (c === "\0") nuls++;
-      if (c === "\ufeff") boms++;
+      if (c === '\0') nuls++;
+      if (c === '\ufeff') boms++;
     }
-    if (s.endsWith("\0")) terminated++;
+    if (s.endsWith('\0')) terminated++;
   }
   const out = Buffer.alloc(48);
   out.writeUInt32LE(count);

@@ -1,9 +1,9 @@
-import { layoutPictureBodyContent } from "./picture-body-content-layout.mjs";
-import { notePageScenes } from "./note-page-scenes.mjs";
-import { notePlanningFrame, columnNotePictureReference } from "./note-planning-frame.mjs";
-import { previewPictureLayers } from "./picture-layers.mjs";
-import { equationTextAnchors, equationTextMeasure } from "./equation-text-anchors.mjs";
-import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
+import { layoutPictureBodyContent } from './picture-body-content-layout.mjs';
+import { notePageScenes } from './note-page-scenes.mjs';
+import { notePlanningFrame, columnNotePictureReference } from './note-planning-frame.mjs';
+import { previewPictureLayers } from './picture-layers.mjs';
+import { equationTextAnchors, equationTextMeasure } from './equation-text-anchors.mjs';
+import { structuralAnchorUnits } from './structural-anchor-units.mjs';
 
 /** Scope independent note pictures before adapting their proven list to body flow. */
 export function measurePictureNoteBody(
@@ -22,18 +22,18 @@ export function measurePictureNoteBody(
     (p) => p.section === note.section && ids.has(p.paragraph),
   );
   if (!pictures.length || tables.length || createdTables.length) return null;
-  const fail = (error) => ({ state: "unavailable", error });
-  if (content.pageSettings?.length !== 1) return fail("UnsupportedPictureNoteScope");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (content.pageSettings?.length !== 1) return fail('UnsupportedPictureNoteScope');
   for (const [key, host] of [
-    ["drawings", "hostParagraph"],
-    ["containers", "hostParagraph"],
-    ["lines", "paragraph"],
-    ["rectangles", "hostParagraph"],
-    ["polygons", "paragraph"],
-    ["ellipses", "paragraph"],
+    ['drawings', 'hostParagraph'],
+    ['containers', 'hostParagraph'],
+    ['lines', 'paragraph'],
+    ['rectangles', 'hostParagraph'],
+    ['polygons', 'paragraph'],
+    ['ellipses', 'paragraph'],
   ])
     if (content[key]?.some((item) => item.section === note.section && ids.has(item[host])))
-      return fail("UnsupportedPictureNoteObjects");
+      return fail('UnsupportedPictureNoteObjects');
   const pictureIds = new Set(),
     positions = new Set();
   for (const p of pictures) {
@@ -49,12 +49,12 @@ export function measurePictureNoteBody(
       p.owner?.anchorNode !== p.pictureNode ||
       p.owner.paragraph !== p.paragraph ||
       p.owner.anchorUnit !== p.anchorUnit ||
-      host.text[p.anchorUnit] !== "\ufffc" ||
+      host.text[p.anchorUnit] !== '\ufffc' ||
       p.caption != null ||
       pictureIds.has(p.pictureNode) ||
       positions.has(key)
     )
-      return fail("InvalidPictureNoteOwner");
+      return fail('InvalidPictureNoteOwner');
     pictureIds.add(p.pictureNode);
     positions.add(key);
   }
@@ -74,11 +74,11 @@ export function measurePictureNoteBody(
       flow.note_context?.kind !== note.kind ||
       (flow.column_declaration !== null && flow.column_declaration?.count !== 1)
     )
-      return fail("InvalidPictureNoteOwner");
+      return fail('InvalidPictureNoteOwner');
     const equations = equationTextAnchors(p);
-    if (equations.state !== "resolved")
+    if (equations.state !== 'resolved')
       return {
-        ...fail("UnsupportedPictureNoteEquation"),
+        ...fail('UnsupportedPictureNoteEquation'),
         section: p.section,
         paragraph: p.paragraph,
         equationNode: equations.equationNode,
@@ -87,7 +87,7 @@ export function measurePictureNoteBody(
     try {
       structural = structuralAnchorUnits(p);
     } catch {
-      return fail("InvalidPictureNoteAnchor");
+      return fail('InvalidPictureNoteAnchor');
     }
     structuralByParagraph.set(p.paragraph, structural);
     const anchors = [
@@ -98,19 +98,19 @@ export function measurePictureNoteBody(
     ];
     if (
       new Set(anchors).size !== anchors.length ||
-      anchors.some((unit) => p.text[unit] !== "\ufffc")
+      anchors.some((unit) => p.text[unit] !== '\ufffc')
     )
-      return fail("InvalidPictureNoteAnchor");
+      return fail('InvalidPictureNoteAnchor');
     for (let unit = 0; unit < p.text.length; unit++)
-      if (p.text[unit] === "\ufffc" && !anchors.includes(unit))
-        return fail("UnsupportedPictureNoteAnchor");
-    flows.push({ ...flow, host: "body", top_level: true, single_column: true });
+      if (p.text[unit] === '\ufffc' && !anchors.includes(unit))
+        return fail('UnsupportedPictureNoteAnchor');
+    flows.push({ ...flow, host: 'body', top_level: true, single_column: true });
   }
   const frame = notePlanningFrame(content, note, width, endnoteContext);
-  if (frame.state !== "selected")
-    return { ...fail("UnsupportedPictureNoteWidth"), sourceError: frame.error };
+  if (frame.state !== 'selected')
+    return { ...fail('UnsupportedPictureNoteWidth'), sourceError: frame.error };
   if (frame.localColumn && pictures.some((p) => !columnNotePictureReference(p)))
-    return fail("UnsupportedNoteColumnPictureReference");
+    return fail('UnsupportedNoteColumnPictureReference');
   const view = {
     ...content,
     pageSettings: [frame.setting],
@@ -131,15 +131,15 @@ export function measurePictureNoteBody(
   const layout = layoutPictureBodyContent(
     view,
     (text, p, unit, kind) =>
-      kind === "text" && text !== "" && structuralByParagraph.get(p.paragraph).has(unit)
-        ? { ...baseMeasure("", p, unit, kind), width: 0 }
+      kind === 'text' && text !== '' && structuralByParagraph.get(p.paragraph).has(unit)
+        ? { ...baseMeasure('', p, unit, kind), width: 0 }
         : baseMeasure(text, p, unit, kind),
     maxRows,
     { firstPageTopInset: frame.localColumn ? (endnoteContext.firstPageTopInset ?? 0) : 0 },
   );
-  if (layout.state !== "paginated") return { ...layout, noteNode: note.noteNode };
-  if (note.kind === "footnote" && layout.pages.length !== 1)
-    return fail("UnsupportedPictureFootnoteContinuation");
+  if (layout.state !== 'paginated') return { ...layout, noteNode: note.noteNode };
+  if (note.kind === 'footnote' && layout.pages.length !== 1)
+    return fail('UnsupportedPictureFootnoteContinuation');
   const layers = previewPictureLayers(view, layout, width);
   const scenes = notePageScenes(
     { ...layout, boxes: layout.boxes ?? [], placedDrawings: [], placedContainers: [] },
@@ -147,7 +147,7 @@ export function measurePictureNoteBody(
     layers,
     width,
   );
-  if (scenes.state !== "measured") return scenes;
+  if (scenes.state !== 'measured') return scenes;
   return {
     ...scenes,
     ...(scenes.scenePages.length === 1 ? { scenePages: undefined } : {}),

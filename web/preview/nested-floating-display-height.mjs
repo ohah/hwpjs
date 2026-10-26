@@ -1,5 +1,5 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { placeFloatingTable } from "./table-placement.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { placeFloatingTable } from './table-placement.mjs';
 
 // Current measured display height; never rewrite the source table size.
 export function nestedFloatingDisplayHeight({ table, measured }) {
@@ -9,7 +9,7 @@ export function nestedFloatingDisplayHeight({ table, measured }) {
   const declared = hwpUnitPixels(g.height);
   if (measured === undefined) return declared;
   if (
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     ![measured.grid?.width, measured.grid?.height].every((v) => Number.isFinite(v) && v > 0)
   )
     return null;
@@ -36,14 +36,14 @@ export function nestedFloatingDisplayHeight({ table, measured }) {
 
 export function placeMeasuredNestedFloatingTable(entry, references) {
   const placed = placeFloatingTable(entry.table, references);
-  if (placed.state !== "placed") return placed;
+  if (placed.state !== 'placed') return placed;
   const height = nestedFloatingDisplayHeight(entry);
-  if (height === null) return { state: "invalid_size" };
+  if (height === null) return { state: 'invalid_size' };
   if (
     height <= hwpUnitPixels(entry.table.sourceGeometry.geometry.height) ||
     height <= placed.rectangle.height
   )
     return placed;
-  if (!Number.isFinite(placed.rectangle.y + height)) return { state: "invalid_bounds" };
+  if (!Number.isFinite(placed.rectangle.y + height)) return { state: 'invalid_bounds' };
   return { ...placed, rectangle: { ...placed.rectangle, height } };
 }

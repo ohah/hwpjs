@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { decode as powerDecode } from "./icc-power-preimage-wire.mjs";
-import { verify as powerVerify } from "./icc-power-preimage-reference.mjs";
-import { linearPreimageReference, validateInterval } from "./icc-linear-preimage-reference.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { decode as powerDecode } from './icc-power-preimage-wire.mjs';
+import { verify as powerVerify } from './icc-power-preimage-reference.mjs';
+import { linearPreimageReference, validateInterval } from './icc-linear-preimage-reference.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { cmp } from './icc-power-reference.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n];
 export function decode(out, width = 32) {

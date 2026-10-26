@@ -1,4 +1,4 @@
-import type { EditorState } from "./editor-state.ts";
+import type { EditorState } from './editor-state.ts';
 export interface HistoryAvailability {
   readonly available: boolean;
   readonly canUndo: boolean;
@@ -16,14 +16,14 @@ const unavailable: HistoryAvailability = Object.freeze({
  */
 export function getHistoryAvailability(state: EditorState): HistoryAvailability {
   if (
-    state.status !== "ready" ||
+    state.status !== 'ready' ||
     (state.capabilities as { readOnly?: boolean } | undefined)?.readOnly === true
   )
     return unavailable;
   const current = state.nativeHistoryRevision,
     reachable = state.nativeHistoryRevisions;
   const valid = (value: unknown): value is number =>
-    typeof value === "number" && Number.isInteger(value) && value >= 0 && value < 0xffffffff;
+    typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < 0xffffffff;
   if (
     !valid(current) ||
     !Array.isArray(reachable) ||

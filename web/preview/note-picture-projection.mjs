@@ -1,19 +1,19 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
 /** Move only proven local picture rectangles; source/cell identities are unchanged. */
 export function projectNoteFlowPictures(pictures, x, y, physical = {}, bounds = null) {
-  const fail = () => ({ state: "unavailable", error: "InvalidNotePicturePlacement" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidNotePicturePlacement' });
   if (!Array.isArray(pictures) || ![x, y].every(Number.isFinite)) return fail();
   if (
     !physical ||
-    typeof physical !== "object" ||
-    ["pageOrdinal", "columnOrdinal"].some(
+    typeof physical !== 'object' ||
+    ['pageOrdinal', 'columnOrdinal'].some(
       (key) =>
         physical[key] !== undefined && (!Number.isSafeInteger(physical[key]) || physical[key] < 0),
     )
   )
     return fail();
   const target = Object.fromEntries(
-    ["pageOrdinal", "columnOrdinal", "referenceBoxes"]
+    ['pageOrdinal', 'columnOrdinal', 'referenceBoxes']
       .filter((key) => physical[key] !== undefined)
       .map((key) => [key, physical[key]]),
   );
@@ -62,8 +62,8 @@ export function projectNoteFlowPictures(pictures, x, y, physical = {}, bounds = 
       return fail();
     identities.add(key);
     const moved = translatePicturePlacement(picture, x, y, target);
-    if (moved.state !== "translated") return fail();
+    if (moved.state !== 'translated') return fail();
     result.push(moved.picture);
   }
-  return { state: "projected", pictures: result };
+  return { state: 'projected', pictures: result };
 }

@@ -1,22 +1,22 @@
-import { tableRowBands } from "./table-row-bands.mjs";
-import { tableInsets } from "./table-insets.mjs";
-import { selectRepeatedTableHeader } from "./table-repeated-header.mjs";
-import { paragraphCellOffset } from "./paragraph-cell-offset-policy.mjs";
-import { inlineTablePageFitHeight } from "./inline-table-page-fit.mjs";
+import { tableRowBands } from './table-row-bands.mjs';
+import { tableInsets } from './table-insets.mjs';
+import { selectRepeatedTableHeader } from './table-repeated-header.mjs';
+import { paragraphCellOffset } from './paragraph-cell-offset-policy.mjs';
+import { inlineTablePageFitHeight } from './inline-table-page-fit.mjs';
 
 // Shared explicit band selection and outer-space reservation.
 export function prepareTablePageBands(table, rowHeights, splitMode, outerInsets = 0) {
-  if (!["whole", "row-bands"].includes(splitMode))
-    return { state: "unavailable", error: "MissingTableSplitMode" };
+  if (!['whole', 'row-bands'].includes(splitMode))
+    return { state: 'unavailable', error: 'MissingTableSplitMode' };
   const margins = tableInsets(outerInsets);
-  if (!margins) return { state: "unavailable", error: "InvalidTableOuterInsets" };
+  if (!margins) return { state: 'unavailable', error: 'InvalidTableOuterInsets' };
   let bands;
   try {
     bands = tableRowBands(table, rowHeights);
   } catch (error) {
-    if (!(error instanceof RangeError) || error.message !== "InvalidTableRowBands") throw error;
+    if (!(error instanceof RangeError) || error.message !== 'InvalidTableRowBands') throw error;
     return {
-      state: "unavailable",
+      state: 'unavailable',
       error: error.message,
       section: table?.section,
       tableNode: table?.tableNode,
@@ -27,9 +27,9 @@ export function prepareTablePageBands(table, rowHeights, splitMode, outerInsets 
     };
   }
   const header = selectRepeatedTableHeader(table, rowHeights);
-  if (header.state === "unavailable") return header;
+  if (header.state === 'unavailable') return header;
   let selected =
-    splitMode === "whole"
+    splitMode === 'whole'
       ? [
           {
             startRow: 0,
@@ -40,14 +40,14 @@ export function prepareTablePageBands(table, rowHeights, splitMode, outerInsets 
           },
         ]
       : bands;
-  const repeatedHeader = splitMode === "row-bands" && header.state === "selected" ? header : null;
+  const repeatedHeader = splitMode === 'row-bands' && header.state === 'selected' ? header : null;
   if (repeatedHeader)
     selected = [
       { startRow: 0, endRow: header.endRow, offset: 0, height: header.height, cells: header.cells },
       ...bands.filter((band) => band.startRow >= header.endRow),
     ];
   const rows = selected.map((band, bandOrdinal) => ({
-    kind: "gap",
+    kind: 'gap',
     section: table.section,
     paragraph: table.hostParagraph,
     height:
@@ -66,12 +66,12 @@ export function prepareTablePageBands(table, rowHeights, splitMode, outerInsets 
     (table.sourceGeometry.geometry.vertical_offset !== 0 ||
       [0, 1].includes(table.sourceGeometry.vertical_relative))
   ) {
-    if (splitMode !== "whole" && paragraphCellOffset(table) === null)
-      return { state: "unavailable", error: "UnsupportedSplitTableVerticalFlow" };
-    if (splitMode === "whole") rows[0].tableVerticalSource = table.sourceGeometry;
+    if (splitMode !== 'whole' && paragraphCellOffset(table) === null)
+      return { state: 'unavailable', error: 'UnsupportedSplitTableVerticalFlow' };
+    if (splitMode === 'whole') rows[0].tableVerticalSource = table.sourceGeometry;
   }
   return {
-    state: "prepared",
+    state: 'prepared',
     selected,
     margins,
     rows,

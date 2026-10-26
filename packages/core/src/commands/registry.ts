@@ -1,5 +1,5 @@
-import type { EditorCommand } from "./commands.ts";
-import { discardPromise, isPromiseLike } from "../state/owned.ts";
+import type { EditorCommand } from './commands.ts';
+import { discardPromise, isPromiseLike } from '../state/owned.ts';
 type Handler = { priority: number; order: number; callback: (payload: unknown) => boolean };
 export class CommandRegistry {
   #handlers = new Map<symbol, Handler[]>();
@@ -9,7 +9,7 @@ export class CommandRegistry {
     callback: (payload: T) => boolean,
     priority: number,
   ): () => void {
-    if (!Number.isFinite(priority)) throw Error("InvalidPriority");
+    if (!Number.isFinite(priority)) throw Error('InvalidPriority');
     const row: Handler = {
       priority,
       order: this.#order++,
@@ -34,14 +34,14 @@ export class CommandRegistry {
   }
   run(handlers: readonly Handler[], payload: unknown, copy: (v: unknown) => unknown): boolean {
     for (const handler of handlers) {
-      if (Object.prototype.toString.call(handler.callback) === "[object AsyncFunction]")
-        throw Error("AsyncCommandHandler");
+      if (Object.prototype.toString.call(handler.callback) === '[object AsyncFunction]')
+        throw Error('AsyncCommandHandler');
       const value = handler.callback(copy(payload));
       if (isPromiseLike(value)) {
         discardPromise(value);
-        throw Error("AsyncCommandHandler");
+        throw Error('AsyncCommandHandler');
       }
-      if (typeof value !== "boolean") throw Error("InvalidCommandHandlerResult");
+      if (typeof value !== 'boolean') throw Error('InvalidCommandHandlerResult');
       if (value) return true;
     }
     return false;

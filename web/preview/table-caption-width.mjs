@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Resolve width from current table geometry, not the stored lastWidth cache.
 export function tableCaptionWidth(table, rectangle) {
@@ -15,7 +15,7 @@ export function tableCaptionWidth(table, rectangle) {
       return null;
     return { width: hwpUnitPixels(caption.width), offsetX: 0 };
   }
-  if (typeof caption.full_size !== "boolean") return null;
+  if (typeof caption.full_size !== 'boolean') return null;
   if (!caption.full_size) return { width: rectangle.width, offsetX: 0 };
   const margin = table.sourceGeometry?.out_margin;
   if (

@@ -1,17 +1,17 @@
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { observeHwpEmf, summarizeEmfCorpus } from "./emf-corpus-evidence.mjs";
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { observeHwpEmf, summarizeEmfCorpus } from './emf-corpus-evidence.mjs';
 
 const [cfbWasm, probeWasm, ...givenRoots] = process.argv.slice(2);
 if (!cfbWasm || !probeWasm)
-  throw new Error("Usage: emf-corpus-survey <cfb.wasm> <probe.wasm> [roots...]");
+  throw new Error('Usage: emf-corpus-survey <cfb.wasm> <probe.wasm> [roots...]');
 const cfb = await createCfbReader(readFileSync(cfbWasm));
 const module = await WebAssembly.compile(readFileSync(probeWasm)),
   { exports: w } = await WebAssembly.instantiate(module, {});
 const inspect = (bytes) => {
   const p = w.alloc(bytes.length);
-  if (!p) throw Error("OutOfMemory");
+  if (!p) throw Error('OutOfMemory');
   try {
     new Uint8Array(w.memory.buffer, p, bytes.length).set(bytes);
     if (!w.probe(337, p, bytes.length, 64 * 1024 * 1024))
@@ -24,7 +24,7 @@ const inspect = (bytes) => {
 };
 const roots = givenRoots.length
     ? givenRoots
-    : ["legacy/rust/crates/hwp-core/tests/fixtures", "reference/rhwp/samples"],
+    : ['legacy/rust/crates/hwp-core/tests/fixtures', 'reference/rhwp/samples'],
   rows = [];
 try {
   for (const root of roots)
@@ -38,7 +38,7 @@ try {
   console.log(
     JSON.stringify(
       {
-        scope: "recursive HWP corpus; DocInfo-resolved and compression-aware BinData only",
+        scope: 'recursive HWP corpus; DocInfo-resolved and compression-aware BinData only',
         summary: summarizeEmfCorpus(rows),
         candidates: rows.flatMap((row) =>
           (row.result.evidence?.items ?? []).map((item) => ({ file: row.file, ...item })),

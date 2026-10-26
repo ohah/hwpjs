@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function iccXyzEdges(call) {
   let comparisons = 0,
     rejected = 0,
@@ -7,7 +7,7 @@ export function iccXyzEdges(call) {
   function check(values) {
     const input = Buffer.alloc(8 + values.length * 4),
       expected = Buffer.alloc(values.length * 4);
-    input.write("XYZ ");
+    input.write('XYZ ');
     values.forEach((value, i) => {
       input.writeInt32BE(value, 8 + i * 4);
       expected.writeInt32LE(value, i * 4);

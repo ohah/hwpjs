@@ -1,12 +1,12 @@
 export function validateHwp5DrawingAnchors(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-  if (!Array.isArray(rows)) throw new Error("InvalidHwp5DrawingAnchors");
+  if (!Array.isArray(rows)) throw new Error('InvalidHwp5DrawingAnchors');
   const controls = new Set(),
     components = new Set();
   for (const row of rows) {
     if (
       !row ||
-      !["control_node", "component_node", "paragraph", "source_unit", "current_unit"].every((key) =>
+      !['control_node', 'component_node', 'paragraph', 'source_unit', 'current_unit'].every((key) =>
         uint(row[key]),
       ) ||
       row.control_node >= row.component_node ||
@@ -15,7 +15,7 @@ export function validateHwp5DrawingAnchors(rows) {
       controls.has(row.control_node) ||
       components.has(row.component_node)
     )
-      throw new Error("InvalidHwp5DrawingAnchors");
+      throw new Error('InvalidHwp5DrawingAnchors');
     controls.add(row.control_node);
     components.add(row.component_node);
   }
@@ -23,6 +23,6 @@ export function validateHwp5DrawingAnchors(rows) {
 }
 export function decodeHwp5DrawingAnchors(bytes) {
   return validateHwp5DrawingAnchors(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { documentRecords } from "./documents.mjs";
-import { sectionXml } from "./fixture-xml.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { documentRecords } from './documents.mjs';
+import { sectionXml } from './fixture-xml.mjs';
 export function groupInfoPair(call, cfb) {
-  const root = new URL("../../reference/rhwp/samples/", import.meta.url),
-    name = "2025 행정업무운영 편람(최종)";
-  const file = new URL(name + ".hwp", root);
+  const root = new URL('../../reference/rhwp/samples/', import.meta.url),
+    name = '2025 행정업무운영 편람(최종)';
+  const file = new URL(name + '.hwp', root);
   if (!existsSync(file)) return { skipped: true };
   cfb.parse(readFileSync(file), { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content);
-  const b = call(3, Buffer.concat([h, Buffer.from(cfb.findExact("/BodyText/Section0").content)])),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content);
+  const b = call(3, Buffer.concat([h, Buffer.from(cfb.findExact('/BodyText/Section0').content)])),
     stack = [],
     actual = [];
   for (const r of documentRecords(b)) {
@@ -26,7 +26,7 @@ export function groupInfoPair(call, cfb) {
     }
     stack.push(r);
   }
-  const xml = sectionXml(readFileSync(new URL(name + ".hwpx", root)));
+  const xml = sectionXml(readFileSync(new URL(name + '.hwpx', root)));
   const expected = [...xml.matchAll(/<hp:container\b[^>]*\binstid="(\d+)"[^>]*>/g)].map((m) =>
     Number(m[1]),
   );

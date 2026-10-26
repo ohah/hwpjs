@@ -4,9 +4,9 @@ import type {
   RuntimeMessage,
   RuntimeReply,
   RuntimeRequestContext,
-} from "./contracts.ts";
-import { createWasmModuleLoader } from "./wasm-module-loader.ts";
-import { copyOwned } from "./state/owned.ts";
+} from './contracts.ts';
+import { createWasmModuleLoader } from './wasm-module-loader.ts';
+import { copyOwned } from './state/owned.ts';
 const ownedWorkers = new WeakSet<object>();
 let workerScopeSequence = 0;
 
@@ -27,12 +27,12 @@ export type WorkerRuntimeFactory = RuntimeFactory & { preload(): Promise<WebAsse
 
 /** Browser transport only. Its worker owns exactly one candidate/active runtime. */
 export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): EditorRuntime {
-  if (workerScopeSequence >= Number.MAX_SAFE_INTEGER) throw Error("WorkerIdentityExhausted");
+  if (workerScopeSequence >= Number.MAX_SAFE_INTEGER) throw Error('WorkerIdentityExhausted');
   const referenceScope = `worker:${++workerScopeSequence}`;
   const worker = options.workerFactory
-    ? options.workerFactory(options.workerURL ?? new URL("./worker.js", import.meta.url))
-    : new Worker(options.workerURL ?? new URL("./worker.js", import.meta.url), { type: "module" });
-  if (ownedWorkers.has(worker)) throw Error("WorkerAlreadyOwned");
+    ? options.workerFactory(options.workerURL ?? new URL('./worker.js', import.meta.url))
+    : new Worker(options.workerURL ?? new URL('./worker.js', import.meta.url), { type: 'module' });
+  if (ownedWorkers.has(worker)) throw Error('WorkerAlreadyOwned');
   ownedWorkers.add(worker);
   let closed = false,
     sequence = 0,
@@ -51,9 +51,9 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     const item = pending.get(value.id);
     if (!item) return;
     pending.delete(value.id);
-    if (typeof value.transportError === "string") item.reject(Error(value.transportError));
-    else if (!value.reply || typeof value.reply.kind !== "string")
-      item.reject(Error("MalformedWorkerReply"));
+    if (typeof value.transportError === 'string') item.reject(Error(value.transportError));
+    else if (!value.reply || typeof value.reply.kind !== 'string')
+      item.reject(Error('MalformedWorkerReply'));
     else item.resolve(value.reply);
   };
   const shutdown = (reason: Error) => {
@@ -61,19 +61,19 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     closed = true;
     failure = reason;
     rejectAll(reason);
-    worker.removeEventListener("message", receive);
-    worker.removeEventListener("error", failed);
-    worker.removeEventListener("messageerror", failed);
+    worker.removeEventListener('message', receive);
+    worker.removeEventListener('error', failed);
+    worker.removeEventListener('messageerror', failed);
     worker.terminate();
   };
-  const failed = () => shutdown(Error("WorkerRuntimeFailed"));
-  worker.addEventListener("message", receive);
-  worker.addEventListener("error", failed);
-  worker.addEventListener("messageerror", failed);
+  const failed = () => shutdown(Error('WorkerRuntimeFailed'));
+  worker.addEventListener('message', receive);
+  worker.addEventListener('error', failed);
+  worker.addEventListener('messageerror', failed);
   const send = (message: unknown): Promise<RuntimeReply> =>
     new Promise((resolve, reject) => {
       if (closed) {
-        reject(failure ?? Error("RuntimeDisposed"));
+        reject(failure ?? Error('RuntimeDisposed'));
         return;
       }
       const id = ++sequence;
@@ -92,7 +92,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       : createWasmModuleLoader({ url: options.wasmURL }));
   const ready = Promise.resolve()
     .then(load)
-    .then((module) => send({ kind: "initialize-runtime", wasmModule: module, referenceScope }));
+    .then((module) => send({ kind: 'initialize-runtime', wasmModule: module, referenceScope }));
   void ready.catch((error) => shutdown(error instanceof Error ? error : Error(String(error))));
   return {
     async request(message: RuntimeMessage, context?: RuntimeRequestContext) {
@@ -104,7 +104,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       return { ...reply, meta: { ...reply.meta, ...(captured ? { context: captured } : {}) } };
     },
     dispose() {
-      shutdown(Error("RuntimeDisposed"));
+      shutdown(Error('RuntimeDisposed'));
     },
   };
 }

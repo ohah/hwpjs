@@ -18,7 +18,7 @@ export function hwp5SectionDisplayFlags(source, content, hasMasterPage = false) 
   if (
     !flows?.length ||
     content.flowSourceErrors?.some((row) => row.section === source.section) ||
-    flows.some((row) => typeof row.empty_line_eligible !== "boolean")
+    flows.some((row) => typeof row.empty_line_eligible !== 'boolean')
   )
     return { supported: false };
   return { supported: true, hideFirstEmptyLine: true };

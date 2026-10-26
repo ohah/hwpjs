@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { executeOracle } from "../../tools/oracle-process-async.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { executeOracle } from '../../tools/oracle-process-async.mjs';
 
-test("all ladder numeric inputs update direct and downstream SUM XML while preserving history", async () => {
-  assert(process.env.HWPJS_TEST_WASM, "ExplicitNumericCandidateRequired");
-  const path = "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx",
+test('all ladder numeric inputs update direct and downstream SUM XML while preserving history', async () => {
+  assert(process.env.HWPJS_TEST_WASM, 'ExplicitNumericCandidateRequired');
+  const path = 'reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx',
     input = readFileSync(path);
-  const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
-  assert.equal(digest(input), "6adca8d39bdcf51e8791d8afa1e584b9570eb8b15df901e74ce61cfd500cdb4a");
+  const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
+  assert.equal(digest(input), '6adca8d39bdcf51e8791d8afa1e584b9570eb8b15df901e74ce61cfd500cdb4a');
   const targets = JSON.parse(
     await executeOracle(
-      "python3",
-      ["tools/hwpx-cascaded-sum-input-oracle.py", "--inventory", path],
-      { encoding: "utf8", timeout: 30000 },
+      'python3',
+      ['tools/hwpx-cascaded-sum-input-oracle.py', '--inventory', path],
+      { encoding: 'utf8', timeout: 30000 },
     ),
   );
   assert.equal(targets.length, 28);
@@ -33,23 +33,23 @@ test("all ladder numeric inputs update direct and downstream SUM XML while prese
         editor.paragraphTextSnapshot(0).find((row) => row.paragraph === target.paragraph).text,
         target.text,
       );
-      const text = target.text.replaceAll(",", "") === "1" ? "2" : "1";
+      const text = target.text.replaceAll(',', '') === '1' ? '2' : '1';
       editor.splice(0, target.paragraph, 0, target.text.length, text);
       const saved = Buffer.from(editor.save());
       assert(!saved.equals(input));
       let result;
-      for (const flags of [[], ["-O"]]) {
+      for (const flags of [[], ['-O']]) {
         const request = {
-          before: input.toString("base64"),
-          after: saved.toString("base64"),
+          before: input.toString('base64'),
+          after: saved.toString('base64'),
           paragraph: target.paragraph,
           text,
           selfTest: index === 0,
         };
         const current = JSON.parse(
-          await executeOracle("python3", [...flags, "tools/hwpx-cascaded-sum-input-oracle.py"], {
+          await executeOracle('python3', [...flags, 'tools/hwpx-cascaded-sum-input-oracle.py'], {
             input: JSON.stringify(request),
-            encoding: "utf8",
+            encoding: 'utf8',
             timeout: 30000,
           }),
         );
@@ -60,14 +60,14 @@ test("all ladder numeric inputs update direct and downstream SUM XML while prese
           for (const [patch, message] of [
             [{ paragraph: target.paragraph + 1 }, /Complete cascaded SUM XML mismatch/],
             [{ paragraph: true }, /Explicit ladder input/],
-            [{ text: "0" }, /Explicit ladder input/],
-            [{ before: "" }, /Observed ladder source bytes/],
+            [{ text: '0' }, /Explicit ladder input/],
+            [{ before: '' }, /Observed ladder source bytes/],
           ]) {
             await assert.rejects(
               () =>
-                executeOracle("python3", [...flags, "tools/hwpx-cascaded-sum-input-oracle.py"], {
+                executeOracle('python3', [...flags, 'tools/hwpx-cascaded-sum-input-oracle.py'], {
                   input: JSON.stringify({ ...request, ...patch, selfTest: false }),
-                  encoding: "utf8",
+                  encoding: 'utf8',
                   timeout: 30000,
                 }),
               (error) =>
@@ -81,8 +81,8 @@ test("all ladder numeric inputs update direct and downstream SUM XML while prese
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save()), input);
       const revision = editor.historyRevision();
-      assert.throws(() => editor.splice(0, target.paragraph, 0, 0, "bad"), {
-        message: "InvalidFormulaNumber",
+      assert.throws(() => editor.splice(0, target.paragraph, 0, 0, 'bad'), {
+        message: 'InvalidFormulaNumber',
       });
       assert.equal(editor.historyRevision(), revision);
       assert.deepEqual(Buffer.from(editor.save()), input);
@@ -99,11 +99,11 @@ test("all ladder numeric inputs update direct and downstream SUM XML while prese
     assert.deepEqual(readFileSync(path), input);
   } finally {
     editor.close();
-    assert.equal(digest(wasm), wasmHash, "candidate buffer changed during verification");
+    assert.equal(digest(wasm), wasmHash, 'candidate buffer changed during verification');
     assert.equal(
       digest(readFileSync(process.env.HWPJS_TEST_WASM)),
       wasmHash,
-      "candidate file changed during verification",
+      'candidate file changed during verification',
     );
   }
 });

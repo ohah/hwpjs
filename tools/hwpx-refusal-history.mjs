@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 // Called only after the caller has independently classified a refused command.
 export function verifyRefusalHistory(editor, { original, previousEdited, revision, context }) {

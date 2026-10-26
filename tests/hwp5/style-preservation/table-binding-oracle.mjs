@@ -1,6 +1,6 @@
 // Independent raw framing + logical sibling lists; no product tree/model.
-import assert from "node:assert/strict";
-import { records } from "./text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { records } from './text-record-oracle.mjs';
 export function tableBindings(bytes) {
   const stack = [],
     tables = new Map(),
@@ -57,7 +57,7 @@ export function tablePlacements(bytes) {
     if (record.tag === 66) paragraphs.set(index, ++ordinal);
     if (record.tag === 77) {
       const header = [...stack].reverse().find((node) => paragraphs.has(node));
-      assert.notEqual(header, undefined, "table without paragraph host");
+      assert.notEqual(header, undefined, 'table without paragraph host');
       const paragraph = paragraphs.get(header),
         parent = cells.get(paragraph);
       output.push({

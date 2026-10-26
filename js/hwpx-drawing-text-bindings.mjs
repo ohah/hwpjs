@@ -1,11 +1,11 @@
 export function decodeDrawingTextBindings(bytes) {
   const fail = () => {
-    throw new Error("InvalidDrawingTextBindings");
+    throw new Error('InvalidDrawingTextBindings');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length > 16000000) return fail();
   let rows;
   try {
-    rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }
@@ -23,13 +23,13 @@ export function decodeDrawingTextBindings(bytes) {
     )
       return fail();
     const owner = row.owner;
-    if (Object.hasOwn(owner, "kind") && !["text", "caption"].includes(owner.kind)) return fail();
+    if (Object.hasOwn(owner, 'kind') && !['text', 'caption'].includes(owner.kind)) return fail();
     if (
       ![owner.drawing_node, owner.text_node, owner.list_node].every(integer) ||
       !(owner.drawing_node < owner.text_node && owner.text_node < owner.list_node)
     )
       return fail();
-    const key = `${owner.drawing_node}:${owner.text_node}:${owner.kind ?? "text"}`;
+    const key = `${owner.drawing_node}:${owner.text_node}:${owner.kind ?? 'text'}`;
     if (owners.has(owner.list_node) && owners.get(owner.list_node) !== key) return fail();
     owners.set(owner.list_node, key);
     seen.add(row.paragraph);
@@ -38,7 +38,7 @@ export function decodeDrawingTextBindings(bytes) {
       drawingNode: owner.drawing_node,
       textNode: owner.text_node,
       listNode: owner.list_node,
-      ...(Object.hasOwn(owner, "kind") ? { kind: owner.kind } : {}),
+      ...(Object.hasOwn(owner, 'kind') ? { kind: owner.kind } : {}),
     };
   });
 }

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import test from "node:test";
-import { fileURLToPath } from "node:url";
-import { rawParagraphTexts } from "../../tools/hwp5-preview-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { rawParagraphTexts } from '../../tools/hwp5-preview-record-oracle.mjs';
 
 function record(tag, level, payload) {
   const out = Buffer.alloc(4 + payload.length);
@@ -11,7 +11,7 @@ function record(tag, level, payload) {
   return out;
 }
 
-test("preview oracle preserves missing text and ignores unrelated records", () => {
+test('preview oracle preserves missing text and ignores unrelated records', () => {
   const bytes = Buffer.concat([
     record(66, 0, [0]),
     record(77, 1, [1]),
@@ -21,7 +21,7 @@ test("preview oracle preserves missing text and ignores unrelated records", () =
   assert.deepEqual(rawParagraphTexts(bytes), [null, Buffer.from([65, 0])]);
 });
 
-test("preview oracle rejects truncated framing and invalid text ownership", () => {
+test('preview oracle rejects truncated framing and invalid text ownership', () => {
   assert.throws(() => rawParagraphTexts(Buffer.of(1)), /truncated header/);
   assert.throws(
     () => rawParagraphTexts(Buffer.concat([record(66, 0, [0]), Buffer.of(67, 4, 32, 0, 0)])),
@@ -37,15 +37,15 @@ test("preview oracle rejects truncated framing and invalid text ownership", () =
   );
 });
 
-test("preview corpus audit classifies tracked fixtures and checks every accepted paragraph", () => {
+test('preview corpus audit classifies tracked fixtures and checks every accepted paragraph', () => {
   const fixtureRoot = fileURLToPath(
-    new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url),
+    new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url),
   );
   const script = fileURLToPath(
-    new URL("../../tools/hwp5-preview-corpus-audit.mjs", import.meta.url),
+    new URL('../../tools/hwp5-preview-corpus-audit.mjs', import.meta.url),
   );
   const result = JSON.parse(
-    execFileSync(process.execPath, [script, fixtureRoot], { encoding: "utf8" }),
+    execFileSync(process.execPath, [script, fixtureRoot], { encoding: 'utf8' }),
   );
   assert.equal(result.paths, 48);
   assert.deepEqual(result.categories, {

@@ -12,10 +12,10 @@ export class EditorWritePolicy {
     }
   }
   assertWritable(): void {
-    if (!this.editable) throw Error("ReadOnlyDocument");
+    if (!this.editable) throw Error('ReadOnlyDocument');
   }
   observe(content: unknown, editable = this.editable): unknown {
-    if (editable || !content || typeof content !== "object" || Array.isArray(content))
+    if (editable || !content || typeof content !== 'object' || Array.isArray(content))
       return content;
     const observed = content as Record<string, unknown>;
     return {
@@ -24,7 +24,7 @@ export class EditorWritePolicy {
       ...(Array.isArray(observed.paragraphs)
         ? {
             paragraphs: observed.paragraphs.map((row) =>
-              row && typeof row === "object" ? { ...row, editable: false } : row,
+              row && typeof row === 'object' ? { ...row, editable: false } : row,
             ),
           }
         : {}),
@@ -34,7 +34,7 @@ export class EditorWritePolicy {
     return editable
       ? value
       : {
-          ...(value && typeof value === "object" ? value : {}),
+          ...(value && typeof value === 'object' ? value : {}),
           readOnly: true,
           historyAvailable: false,
         };

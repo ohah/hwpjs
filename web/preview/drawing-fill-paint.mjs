@@ -1,6 +1,6 @@
-import { validDrawingFill } from "./drawing-fill-validation.mjs";
-import { createDrawingPattern } from "./drawing-pattern-fill.mjs";
-import { drawingPathPoints, traceDrawingPath } from "./drawing-path-points.mjs";
+import { validDrawingFill } from './drawing-fill-validation.mjs';
+import { createDrawingPattern } from './drawing-pattern-fill.mjs';
+import { drawingPathPoints, traceDrawingPath } from './drawing-path-points.mjs';
 export function paintDrawingFill(ctx, drawing, scrollTop) {
   if (!validDrawingFill(drawing.fill)) return false;
   const r = drawing.rectangle;
@@ -23,8 +23,8 @@ export function paintDrawingFill(ctx, drawing, scrollTop) {
       traceDrawingPath(ctx, polygon);
       ctx.clip();
     }
-    if (drawing.fill.state === "solid") ctx.fillStyle = drawing.fill.color;
-    else if (drawing.fill.state === "pattern") {
+    if (drawing.fill.state === 'solid') ctx.fillStyle = drawing.fill.color;
+    else if (drawing.fill.state === 'pattern') {
       const pattern = createDrawingPattern(ctx, drawing.fill);
       if (!pattern) return false;
       ctx.fillStyle = pattern;

@@ -1,17 +1,17 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { historyGeneratorEdges } from "./language-history-generator.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { historyGeneratorEdges } from './language-history-generator.mjs';
 const catalog = JSON.parse(
-  readFileSync(new URL("../../src/text/bcp47/data/source.json", import.meta.url), "utf8"),
+  readFileSync(new URL('../../src/text/bcp47/data/source.json', import.meta.url), 'utf8'),
 );
 const groups = Object.fromEntries(
-  ["language", "region"].map((kind) => [kind, catalog[kind].split(" ")]),
+  ['language', 'region'].map((kind) => [kind, catalog[kind].split(' ')]),
 );
 export function languageHistoryReference(kind, bytes) {
-  const key = bytes.toString("latin1").toLowerCase();
+  const key = bytes.toString('latin1').toLowerCase();
   const registered = groups[kind].some((entry) => {
-    if (!entry.includes("..")) return entry === key;
-    const [lo, hi] = entry.split("..");
+    if (!entry.includes('..')) return entry === key;
+    const [lo, hi] = entry.split('..');
     return key.length === lo.length && key >= lo && key <= hi;
   });
   const out = Buffer.alloc(32);
@@ -19,11 +19,11 @@ export function languageHistoryReference(kind, bytes) {
   const entry = registered ? catalog.alpha2_history[kind][key] : null;
   if (entry?.deprecated) {
     out.writeUInt32LE(entry.deprecated.length, 4);
-    out.write(entry.deprecated, 8, "ascii");
+    out.write(entry.deprecated, 8, 'ascii');
   }
   if (entry?.preferred) {
     out.writeUInt32LE(entry.preferred.length, 20);
-    out.write(entry.preferred, 24, "ascii");
+    out.write(entry.preferred, 24, 'ascii');
   }
   return out;
 }
@@ -33,7 +33,7 @@ export function languageHistoryEdges(call) {
   const metadata = [0, 0],
     registered = [0, 0];
   const generator = historyGeneratorEdges(catalog);
-  for (const [mode, kind] of ["language", "region"].entries())
+  for (const [mode, kind] of ['language', 'region'].entries())
     for (let code = 0; code < 65536; code++) {
       const b = Buffer.alloc(3);
       b[0] = mode;
@@ -58,7 +58,7 @@ export function languageHistoryEdges(call) {
   const good = Buffer.from([0, 105, 119]);
   assert.throws(() => call(169, good, 2), /LimitExceeded/);
   rejected++;
-  assert.deepEqual(call(169, good), languageHistoryReference("language", good.subarray(1)));
+  assert.deepEqual(call(169, good), languageHistoryReference('language', good.subarray(1)));
   comparisons++;
   assert.deepEqual(metadata, [24, 44]);
   return { comparisons, rejected, registered, metadata, generator };

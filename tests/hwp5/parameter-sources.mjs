@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { parameterActual } from "./parameters.mjs";
-import { tableCellLists } from "./tables.mjs";
+import assert from 'node:assert/strict';
+import { parameterActual } from './parameters.mjs';
+import { tableCellLists } from './tables.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);

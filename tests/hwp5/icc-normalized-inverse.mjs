@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { inverseInput, inverseReference } from "./icc-inverse.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { inverseInput, inverseReference } from './icc-inverse.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
 function input(values, n, d) {
   const out = Buffer.concat([Buffer.alloc(32), inverseInput(values, 0).subarray(2)]);
   for (const [offset, value] of [

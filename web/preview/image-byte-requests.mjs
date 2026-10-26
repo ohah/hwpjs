@@ -25,7 +25,7 @@ export function createImageByteRequests(
       });
     },
     message(message) {
-      if (!String(message.origin ?? "").startsWith(`${prefix}:`)) return false;
+      if (!String(message.origin ?? '').startsWith(`${prefix}:`)) return false;
       const request = pending.get(message.origin);
       if (request) {
         pending.delete(message.origin);

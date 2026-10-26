@@ -1,16 +1,16 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 import {
   progressiveFrameInput,
   progressiveFrameOracle,
   progressiveFramePlanes,
-} from "./jpeg-progressive-frame.mjs";
+} from './jpeg-progressive-frame.mjs';
 import {
   progressiveFrameFixture,
   progressiveSharedQuantizationFixture,
   progressiveWideQuantizationFixture,
-} from "./jpeg-progressive-frame-cases.mjs";
-import { jpegDequantizedMatrix } from "./jpeg-dequant.mjs";
-import { jpegIdctReference, jpegRestoredSample } from "./jpeg-idct.mjs";
+} from './jpeg-progressive-frame-cases.mjs';
+import { jpegDequantizedMatrix } from './jpeg-dequant.mjs';
+import { jpegIdctReference, jpegRestoredSample } from './jpeg-idct.mjs';
 
 export function progressiveSamplesInput(raw, { samples = 64000000, ...frame } = {}) {
   const head = Buffer.alloc(4);
@@ -29,7 +29,7 @@ export function progressiveSamplesOracle(raw, options = {}) {
   const parts = [header];
   let samples = 0;
   for (const p of planes) {
-    assert.ok(p.quantizers, "unseen component cannot be reconstructed");
+    assert.ok(p.quantizers, 'unseen component cannot be reconstructed');
     const blocks = new Map();
     for (let y = 0; y < Math.ceil(p.height / 8); y++)
       for (let x = 0; x < Math.ceil(p.width / 8); x++) {

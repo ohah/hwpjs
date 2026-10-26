@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -10,20 +10,20 @@ const w = (n) => {
 };
 export function ownedShapeDocument(call, cfb, config) {
   const path = new URL(
-    `../../reference/rhwp/samples/${config.file ?? "group-drawing-02.hwp"}`,
+    `../../reference/rhwp/samples/${config.file ?? 'group-drawing-02.hwp'}`,
     import.meta.url,
   );
   if (!existsSync(path)) return { skipped: true };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32),
     flags = h.readUInt32LE(36);
   const decode = (raw) => call(3, Buffer.concat([h, Buffer.from(raw)]));
-  const doc = decode(cfb.findExact("/DocInfo").content),
-    b = decode(cfb.findExact("/BodyText/Section0").content);
+  const doc = decode(cfb.findExact('/DocInfo').content),
+    b = decode(cfb.findExact('/BodyText/Section0').content);
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const input = (bytes) => decodedDocumentInput(h, doc, [{ index: 0, bytes }]);
   const original = call(24, input(b));
   const expected = config.documentActual
@@ -47,7 +47,7 @@ export function ownedShapeDocument(call, cfb, config) {
     assert.throws(() => call(24, input(changed)), error);
     rejected++;
     const altered = nodes.map((n) =>
-      n.parent === body && n.name === "Section0"
+      n.parent === body && n.name === 'Section0'
         ? { ...n, content: flags & 1 ? deflateRawSync(changed) : changed }
         : n,
     );
@@ -66,7 +66,7 @@ export function ownedShapeDocument(call, cfb, config) {
     reject(Buffer.concat([before, afterSubtree]), config.missing);
     reject(Buffer.concat([before, record, record, afterSubtree]), config.duplicate);
     const short =
-        (typeof config.minimum === "function" ? config.minimum(b, r) : config.minimum) - 1,
+        (typeof config.minimum === 'function' ? config.minimum(b, r) : config.minimum) - 1,
       header = w((b.readUInt32LE(r.offset) & 0xfffff) | (short << 20));
     reject(
       Buffer.concat([before, header, b.subarray(r.start, r.start + short), after]),

@@ -1,6 +1,6 @@
 /** Independent CFB/record-level table-caption census; no native tree or cached field output. */
-import { createHash } from "node:crypto";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
+import { createHash } from 'node:crypto';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
 export function tableNumberSourceOracle(bytes) {
   const source = inspect(bytes),
     objects = [],
@@ -38,25 +38,25 @@ export function tableNumberSourceOracle(bytes) {
         tables.push({ object, values });
       } else if (id === 0x25787266) {
         const units = row.payload.readUInt16LE(9),
-          command = row.payload.subarray(11, 11 + units * 2).toString("utf16le");
+          command = row.payload.subarray(11, 11 + units * 2).toString('utf16le');
         const match = /^\?#([0-9]+);0;1;[01];[012];?$/.exec(command);
         references.push({ command, target: match ? Number(match[1]) : null });
       }
     });
   });
-  const digest = createHash("sha256");
+  const digest = createHash('sha256');
   for (const reference of references) {
     const matches = objects.filter((row) => row.instance === reference.target);
-    if (reference.target === null) reference.state = "unsupported-command";
-    else if (matches.length === 0) reference.state = "unresolved-target";
-    else if (matches.length !== 1) reference.state = "ambiguous-target";
-    else if (matches[0].id !== 0x74626c20) reference.state = "wrong-object-kind";
+    if (reference.target === null) reference.state = 'unsupported-command';
+    else if (matches.length === 0) reference.state = 'unresolved-target';
+    else if (matches.length !== 1) reference.state = 'ambiguous-target';
+    else if (matches[0].id !== 0x74626c20) reference.state = 'wrong-object-kind';
     else {
       const table = tables.find((row) => row.object === matches[0]);
-      if (table.values.length !== 1) reference.state = "missing-or-ambiguous-caption-number";
-      else if ((table.values[0].attributes & 15) !== 4) reference.state = "wrong-number-kind";
+      if (table.values.length !== 1) reference.state = 'missing-or-ambiguous-caption-number';
+      else if ((table.values[0].attributes & 15) !== 4) reference.state = 'wrong-number-kind';
       else {
-        reference.state = "resolved-declaration";
+        reference.state = 'resolved-declaration';
         reference.number = table.values[0].number;
         const pair = Buffer.alloc(6);
         pair.writeUInt32LE(reference.target, 0);
@@ -65,5 +65,5 @@ export function tableNumberSourceOracle(bytes) {
       }
     }
   }
-  return { objects, tables, references, resolvedDigest: digest.digest("hex") };
+  return { objects, tables, references, resolvedDigest: digest.digest('hex') };
 }

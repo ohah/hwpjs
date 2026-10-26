@@ -4,14 +4,14 @@ export function createMenuPopupLayer(details, view = globalThis.window) {
   const rows = details
     .map((detail) => ({
       detail,
-      summary: detail.querySelector?.("summary"),
-      panel: detail.querySelector?.(".document-menu-popup"),
+      summary: detail.querySelector?.('summary'),
+      panel: detail.querySelector?.('.document-menu-popup'),
     }))
     .filter(
       (row) =>
         row.summary &&
-        typeof row.panel?.showPopover === "function" &&
-        typeof row.panel?.hidePopover === "function",
+        typeof row.panel?.showPopover === 'function' &&
+        typeof row.panel?.hidePopover === 'function',
     );
   const place = ({ summary, panel }) => {
     const anchor = summary.getBoundingClientRect(),
@@ -34,18 +34,18 @@ export function createMenuPopupLayer(details, view = globalThis.window) {
     row.sync = () => {
       if (closed) return;
       if (!row.detail.open) {
-        if (row.panel.matches(":popover-open")) row.panel.hidePopover();
+        if (row.panel.matches(':popover-open')) row.panel.hidePopover();
         return;
       }
-      if (!row.panel.matches(":popover-open")) row.panel.showPopover();
+      if (!row.panel.matches(':popover-open')) row.panel.showPopover();
       place(row);
     };
     row.panelToggle = (event) => {
-      if (!closed && event.newState === "closed" && !row.panel.matches(":popover-open"))
+      if (!closed && event.newState === 'closed' && !row.panel.matches(':popover-open'))
         row.detail.open = false;
     };
-    row.detail.addEventListener("toggle", row.sync);
-    row.panel.addEventListener("toggle", row.panelToggle);
+    row.detail.addEventListener('toggle', row.sync);
+    row.panel.addEventListener('toggle', row.panelToggle);
     row.sync();
   }
   const resize = () => {
@@ -59,8 +59,8 @@ export function createMenuPopupLayer(details, view = globalThis.window) {
       return;
     for (const row of rows) row.detail.open = false;
   };
-  view?.addEventListener("resize", resize);
-  view?.addEventListener("scroll", scroll, true);
+  view?.addEventListener('resize', resize);
+  view?.addEventListener('scroll', scroll, true);
   return {
     refresh() {
       if (!closed) for (const row of rows) row.sync();
@@ -68,12 +68,12 @@ export function createMenuPopupLayer(details, view = globalThis.window) {
     close() {
       if (closed) return;
       closed = true;
-      view?.removeEventListener("resize", resize);
-      view?.removeEventListener("scroll", scroll, true);
+      view?.removeEventListener('resize', resize);
+      view?.removeEventListener('scroll', scroll, true);
       for (const row of rows) {
-        row.detail.removeEventListener("toggle", row.sync);
-        row.panel.removeEventListener("toggle", row.panelToggle);
-        if (row.panel.matches(":popover-open")) row.panel.hidePopover();
+        row.detail.removeEventListener('toggle', row.sync);
+        row.panel.removeEventListener('toggle', row.panelToggle);
+        if (row.panel.matches(':popover-open')) row.panel.hidePopover();
         row.detail.open = false;
       }
     },

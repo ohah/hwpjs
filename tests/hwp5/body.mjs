@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -90,7 +90,7 @@ export function checkBody(call, v, bytes, pairCounts = false) {
       stats.texts++;
       stats.units += n / 2;
       for (const row of tokens)
-        stats[["textRuns", "characterControls", "inlineControls", "extendedControls"][row[2]]]++;
+        stats[['textRuns', 'characterControls', 'inlineControls', 'extendedControls'][row[2]]]++;
       if (pairCounts) {
         assert.ok(parents[level - 1]);
         assert.equal(parents[level - 1].paired, false);

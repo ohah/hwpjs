@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { xmlEncode } from "./xml-tag-evidence.mjs";
-import { xmlDocumentPrefix } from "./xml-document.mjs";
-import { xmlNamespaceEvidence } from "./xml-namespace-evidence.mjs";
-import { historyXmlPayloads } from "./history-xml-source.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { xmlEncode } from './xml-tag-evidence.mjs';
+import { xmlDocumentPrefix } from './xml-document.mjs';
+import { xmlNamespaceEvidence } from './xml-namespace-evidence.mjs';
+import { historyXmlPayloads } from './history-xml-source.mjs';
 export function xmlNamespacePrefix(raw, e, { bindings = 65536, uriBytes = 16777216 } = {}) {
   const base = xmlDocumentPrefix(raw, e),
     extra = Buffer.alloc(8);
@@ -12,11 +12,11 @@ export function xmlNamespacePrefix(raw, e, { bindings = 65536, uriBytes = 167772
   return Buffer.concat([base.subarray(0, 45), extra, raw]);
 }
 export const namespaceGood = [
-  "<r/>",
+  '<r/>',
   "<p:r p:a='1' xmlns:p='urn:a'/>",
   "<r xml:lang='ko'/>",
-  "<xml:r/>",
-  "<xmlns/>",
+  '<xml:r/>',
+  '<xmlns/>',
   "<r xmlns:xml='http://www.w3.org/XML/1998/namespace'/>",
   "<r xmlns:XMLfoo='urn:a' XMLfoo:a='1'/>",
   "<r xmlns:XML='urn:a' XML:a='1'/>",
@@ -28,12 +28,12 @@ export const namespaceGood = [
   "<한:문서 xmlns:한='urn:한글' 한:속성='1'/>",
   "<😀:r xmlns:😀='urn:a'/>",
   "<r xmlns:p='urn:&#x61;' p:a='1'/>",
-  "<r><?xml-stylesheet?></r>",
+  '<r><?xml-stylesheet?></r>',
 ];
 export const namespaceBad = [
-  "<p:r/>",
+  '<p:r/>',
   "<r p:a='1'/>",
-  "<xmlns:r/>",
+  '<xmlns:r/>',
   "<r xmlns:xmlns='urn:a'/>",
   "<r xmlns:xml='urn:a'/>",
   "<r xmlns:xml=''/>",
@@ -47,13 +47,13 @@ export const namespaceBad = [
   "<r><a xmlns:p='urn:a'/><p:b/></r>",
   "<r xmlns:p='urn:a' xmlns:q='urn:a'><a xmlns:p='urn:b' p:x='1' q:x='2'/><b p:x='1' q:x='2'/></r>",
   "<p:r xmlns:p='urn:a' xmlns:q='urn:a'></q:r>",
-  "<:r/>",
-  "<r:/>",
-  "<p:r:s/>",
+  '<:r/>',
+  '<r:/>',
+  '<p:r:s/>',
   "<r :a='1'/>",
   "<r xmlns:p:q='urn:a'/>",
-  "<?p:q?><r/>",
-  "<r><?p:q data?></r>",
+  '<?p:q?><r/>',
+  '<r><?p:q data?></r>',
 ];
 export function xmlNamespaceEdges(call, cfb) {
   let accepted = 0,
@@ -66,7 +66,7 @@ export function xmlNamespaceEdges(call, cfb) {
     accepted++;
     const caps = { bindings: want.maxBindings, uriBytes: want.maxUriBytes };
     assert.deepEqual(call(124, xmlNamespacePrefix(raw, e, caps)), want.wire);
-    for (const key of ["bindings", "uriBytes"])
+    for (const key of ['bindings', 'uriBytes'])
       if (caps[key]) {
         assert.throws(
           () => call(124, xmlNamespacePrefix(raw, e, { ...caps, [key]: caps[key] - 1 })),
@@ -83,9 +83,9 @@ export function xmlNamespaceEdges(call, cfb) {
   for (let e = 0; e < 3; e++) {
     namespaceGood.forEach((s) => good(s, e));
     namespaceBad.forEach((s) => bad(s, e));
-    for (const prefix of ["p", "한", "😀"])
-      for (const local of ["a", "한", "😀"])
-        for (const uri of ["urn:a", "urn:&#97;", "urn:a&amp;b"]) {
+    for (const prefix of ['p', '한', '😀'])
+      for (const local of ['a', '한', '😀'])
+        for (const uri of ['urn:a', 'urn:&#97;', 'urn:a&amp;b']) {
           good(`<${prefix}:r ${prefix}:${local}='1' xmlns:${prefix}='${uri}'/>`, e);
           bad(
             `<r xmlns:${prefix}='${uri}' xmlns:q='${uri}' ${prefix}:${local}='1' q:${local}='2'/>`,
@@ -104,14 +104,14 @@ export function xmlNamespaceEdges(call, cfb) {
   }
   cfb.parse(
     readFileSync(
-      new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+      new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
     ),
     { strict: true },
   );
   for (const p of historyXmlPayloads(cfb).payloads) {
-    good(p.bytes.toString("utf16le"), 1);
+    good(p.bytes.toString('utf16le'), 1);
     actual++;
   }
-  good("<recovered/>", 0);
+  good('<recovered/>', 0);
   return { accepted, rejected, actual, namespacesValidated: true, uriSyntaxValidated: false };
 }

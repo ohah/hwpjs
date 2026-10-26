@@ -1,14 +1,14 @@
 export function drawingStyleLayoutArgs(options) {
   if (
     !options ||
-    typeof options !== "object" ||
+    typeof options !== 'object' ||
     Array.isArray(options) ||
-    Object.keys(options).some((key) => !["border", "tail"].includes(key))
+    Object.keys(options).some((key) => !['border', 'tail'].includes(key))
   )
-    throw new Error("InvalidDrawingStyleLayout");
-  const border = ["spec11", "observed13"].indexOf(options.border);
-  const tail = ["fill_only", "alpha_shadow", "alpha_shadow_metadata"].indexOf(options.tail);
-  if (border < 0 || tail < 0) throw new Error("InvalidDrawingStyleLayout");
+    throw new Error('InvalidDrawingStyleLayout');
+  const border = ['spec11', 'observed13'].indexOf(options.border);
+  const tail = ['fill_only', 'alpha_shadow', 'alpha_shadow_metadata'].indexOf(options.tail);
+  if (border < 0 || tail < 0) throw new Error('InvalidDrawingStyleLayout');
   return [border, tail];
 }
 export function validateHwp5DrawingStyleSources(rows) {
@@ -18,7 +18,7 @@ export function validateHwp5DrawingStyleSources(rows) {
   const signed = (value) => integer(value, -2147483648, 2147483647);
   const optional = (value, check) => value === null || check(value);
   const fail = () => {
-    throw new Error("InvalidHwp5DrawingStyleSources");
+    throw new Error('InvalidHwp5DrawingStyleSources');
   };
   if (!Array.isArray(rows)) fail();
   const seen = new Set();
@@ -36,7 +36,7 @@ export function validateHwp5DrawingStyleSources(rows) {
       !uint(b.attributes?.raw) ||
       !byte(b.outline) ||
       !uint(row.fill_flags) ||
-      typeof row.fill_known !== "boolean" ||
+      typeof row.fill_known !== 'boolean' ||
       !uint(row.extra_bytes)
     )
       fail();
@@ -82,7 +82,7 @@ export function validateHwp5DrawingStyleSources(rows) {
     )
       fail();
     if ((row.alpha === null) !== (row.shadow === null)) fail();
-    if (Object.hasOwn(row, "gradient")) {
+    if (Object.hasOwn(row, 'gradient')) {
       const g = row.gradient;
       if (
         g === null
@@ -91,7 +91,7 @@ export function validateHwp5DrawingStyleSources(rows) {
             !row.fill_known ||
             !(row.fill_flags & 4) ||
             !byte(g.kind) ||
-            !["angle", "center_x", "center_y", "blur"].every((key) => uint(g[key])) ||
+            !['angle', 'center_x', 'center_y', 'blur'].every((key) => uint(g[key])) ||
             !optional(g.blur_center, byte) ||
             !Array.isArray(g.colors) ||
             g.colors.length !== row.gradient_colors ||
@@ -106,9 +106,9 @@ export function validateHwp5DrawingStyleSources(rows) {
       const alpha = row.alpha;
       if (!alpha) fail();
       for (const [key, mask] of [
-        ["pattern", 1],
-        ["gradient", 4],
-        ["image", 2],
+        ['pattern', 1],
+        ['gradient', 4],
+        ['image', 2],
       ]) {
         if (!optional(alpha[key], byte) || (alpha[key] !== null) !== !!(row.fill_flags & mask))
           fail();
@@ -130,6 +130,6 @@ export function validateHwp5DrawingStyleSources(rows) {
 }
 export function decodeHwp5DrawingStyleSources(bytes) {
   return validateHwp5DrawingStyleSources(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

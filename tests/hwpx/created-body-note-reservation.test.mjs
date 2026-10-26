@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createFootnoteColumnReservation } from "../../web/preview/footnote-column-reservation.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createFootnoteColumnReservation } from '../../web/preview/footnote-column-reservation.mjs';
 
-test("generated body line reserves only its original note references on its physical page", () => {
+test('generated body line reserves only its original note references on its physical page', () => {
   const notes = [4, 5].map((anchorUnit, index) => ({
     section: 0,
-    kind: "footnote",
+    kind: 'footnote',
     hostParagraph: 0,
     anchorUnit,
     noteNode: index,
     width: 100,
     height: 20,
-    rows: [{ kind: "text", text: "주", y: 0, height: 20 }],
+    rows: [{ kind: 'text', text: '주', y: 0, height: 20 }],
   }));
   const policy = {
-    state: "selected",
-    kind: "footnote",
+    state: 'selected',
+    kind: 'footnote',
     section: 0,
     aboveLine: 2,
     belowLine: 3,
@@ -23,13 +23,13 @@ test("generated body line reserves only its original note references on its phys
     beneathText: false,
   };
   const reservation = createFootnoteColumnReservation(notes, policy, 1);
-  assert.equal(reservation.state, "ready");
-  const source = { kind: "text", section: 0, paragraph: 0, startUnit: 4, endUnit: 5 };
+  assert.equal(reservation.state, 'ready');
+  const source = { kind: 'text', section: 0, paragraph: 0, startUnit: 4, endUnit: 5 };
   const slot = {
-    kind: "gap",
+    kind: 'gap',
     section: 0,
     paragraph: 0,
-    createdHost: "0:0",
+    createdHost: '0:0',
     referenceRows: [source],
     pageOrdinal: 1,
     columnOrdinal: 0,

@@ -1,10 +1,10 @@
-import { intersectPictureLineRegions } from "./picture-line-intersections.mjs";
-import { regionTextFragments } from "./region-text-fragments.mjs";
-import { TEXT_TOP } from "./row-geometry.mjs";
-import { paragraphLineAdvance } from "./paragraph-geometry.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { inlineObjectLineAdvance } from "./inline-object-line-advance.mjs";
-import { usesDocumentFontMetrics } from "./font-layout-policy.mjs";
+import { intersectPictureLineRegions } from './picture-line-intersections.mjs';
+import { regionTextFragments } from './region-text-fragments.mjs';
+import { TEXT_TOP } from './row-geometry.mjs';
+import { paragraphLineAdvance } from './paragraph-geometry.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { inlineObjectLineAdvance } from './inline-object-line-advance.mjs';
+import { usesDocumentFontMetrics } from './font-layout-policy.mjs';
 
 export function pictureFlowLine(
   text,
@@ -21,7 +21,7 @@ export function pictureFlowLine(
     minimum = documentMetrics ? 0 : 20;
   for (let attempt = 0; attempt < 32; attempt++) {
     const regions = lineRegions({ ...line, height }, pictures, { includeNextEvent: true });
-    if (regions.state !== "available") return regions;
+    if (regions.state !== 'available') return regions;
     const result = regionTextFragments(text, unit, regions.regions, measure, {
       numberPrefix,
       minimumTextHeight: minimum,
@@ -35,7 +35,7 @@ export function pictureFlowLine(
     const emptyHeight =
       (documentMetrics && result.fragments.length === 0) ||
       (text.length > 0 && unit === text.length)
-        ? Math.max(minimum, textMeasurement(measure("", unit)).height)
+        ? Math.max(minimum, textMeasurement(measure('', unit)).height)
         : minimum;
     const textHeight = result.fragments.reduce(
       (value, fragment) => Math.max(value, fragment.textHeight),
@@ -61,10 +61,10 @@ export function pictureFlowLine(
           Math.max(line.height, textHeight + TEXT_TOP),
         );
     const required = Math.max(height, advance);
-    if (!Number.isFinite(required) || required <= 0) return { state: "invalid_line_height" };
+    if (!Number.isFinite(required) || required <= 0) return { state: 'invalid_line_height' };
     if (required === height)
       return {
-        state: "available",
+        state: 'available',
         regions: regions.regions,
         nextY: regions.nextY,
         ...result,
@@ -83,5 +83,5 @@ export function pictureFlowLine(
       };
     height = required;
   }
-  return { state: "unstable_line_height" };
+  return { state: 'unstable_line_height' };
 }

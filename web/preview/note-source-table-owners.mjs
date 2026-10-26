@@ -1,10 +1,10 @@
-import { mixedInlineTablePolicy } from "./mixed-inline-table-policy.mjs";
+import { mixedInlineTablePolicy } from './mixed-inline-table-policy.mjs';
 
 /** Resolve source body/note table ownership before measuring or binding notes. */
 export function selectNoteSourceTables(content, { floatingNotes = false } = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (!content || typeof content !== "object") return fail("InvalidNoteSourceBodyTables");
-  if (typeof floatingNotes !== "boolean") return fail("InvalidNoteSourceBodyTables");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (!content || typeof content !== 'object') return fail('InvalidNoteSourceBodyTables');
+  if (typeof floatingNotes !== 'boolean') return fail('InvalidNoteSourceBodyTables');
   const tables = content.tables ?? [],
     cells = new Set(),
     bodyCells = new Set(),
@@ -13,7 +13,7 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
     noteTables = [],
     noteTablesByNote = new Map();
   const selected = () => ({
-    state: "selected",
+    state: 'selected',
     cellParagraphs: cells,
     bodyCellParagraphs: bodyCells,
     noteCellParagraphs: noteCells,
@@ -22,17 +22,17 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
     noteTablesByNote,
     hasTables: tables.length > 0,
   });
-  if (!Array.isArray(tables)) return fail("InvalidNoteSourceBodyTables");
+  if (!Array.isArray(tables)) return fail('InvalidNoteSourceBodyTables');
   if (!tables.length) return selected();
   if (
-    !["hwpx", "hwp5"].includes(content.format) ||
+    !['hwpx', 'hwp5'].includes(content.format) ||
     !Array.isArray(content.paragraphs) ||
     !Array.isArray(content.paragraphFlows) ||
     content.pageSettings?.length !== 1
   )
-    return fail("UnsupportedNoteSourceBodyTables");
+    return fail('UnsupportedNoteSourceBodyTables');
   const section = content.pageSettings[0]?.section_ordinal;
-  if (!Number.isSafeInteger(section) || section < 0) return fail("InvalidNoteSourceBodyTables");
+  if (!Number.isSafeInteger(section) || section < 0) return fail('InvalidNoteSourceBodyTables');
   const group = (rows) => {
     const result = new Map();
     for (const row of rows) {
@@ -54,7 +54,7 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
   const paragraphs = group(content.paragraphs),
     flows = group(content.paragraphFlows),
     tableIds = new Set();
-  if (!paragraphs || !flows) return fail("InvalidNoteSourceBodyTables");
+  if (!paragraphs || !flows) return fail('InvalidNoteSourceBodyTables');
   for (const table of tables) {
     if (
       !table ||
@@ -66,7 +66,7 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
       !table.cells.length ||
       table.cells.some((cell) => !cell)
     )
-      return fail("InvalidNoteSourceBodyTables");
+      return fail('InvalidNoteSourceBodyTables');
     tableIds.add(table.tableNode);
     const hosts = flows.get(`${section}:${table.hostParagraph}`) ?? [];
     const policy = mixedInlineTablePolicy(table, {
@@ -76,15 +76,15 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
     const floatingNote =
       floatingNotes &&
       policy.reasons?.length === 1 &&
-      policy.reasons[0] === "FloatingTable" &&
+      policy.reasons[0] === 'FloatingTable' &&
       hosts.length === 1 &&
-      ["footnote", "endnote"].includes(hosts[0].host);
-    if (policy.state !== "supported" && !floatingNote) {
+      ['footnote', 'endnote'].includes(hosts[0].host);
+    if (policy.state !== 'supported' && !floatingNote) {
       const host = hosts.length === 1 ? hosts[0] : null,
         context = host?.note_context;
       return {
         ...policy,
-        ...(["footnote", "endnote"].includes(host?.host) &&
+        ...(['footnote', 'endnote'].includes(host?.host) &&
         host.top_level === false &&
         context?.kind === host.host &&
         Number.isSafeInteger(context.note_node) &&
@@ -100,13 +100,13 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
           : {}),
       };
     }
-    if (hosts.length !== 1) return fail("UnsupportedNoteSourceTableOwner");
+    if (hosts.length !== 1) return fail('UnsupportedNoteSourceTableOwner');
     const host = hosts[0],
-      body = host.host === "body";
+      body = host.host === 'body';
     if (
       body
         ? host.top_level !== true
-        : !["footnote", "endnote"].includes(host.host) ||
+        : !['footnote', 'endnote'].includes(host.host) ||
           host.top_level !== false ||
           host.note_context?.kind !== host.host ||
           !Number.isSafeInteger(host.note_context.note_node) ||
@@ -114,7 +114,7 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
           !Number.isSafeInteger(host.note_context.list_node) ||
           host.note_context.list_node < 0
     )
-      return fail("UnsupportedNoteSourceTableOwner");
+      return fail('UnsupportedNoteSourceTableOwner');
     (body ? bodyTables : noteTables).push(table);
     if (!body) {
       const key = `${section}:${host.note_context.note_node}`,
@@ -124,7 +124,7 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
     }
     for (const cell of table.cells) {
       if (!cell || !Array.isArray(cell.paragraphs) || !cell.paragraphs.length)
-        return fail("InvalidNoteSourceBodyTables");
+        return fail('InvalidNoteSourceBodyTables');
       for (const paragraph of cell.paragraphs) {
         const owners = paragraphs.get(`${section}:${paragraph}`) ?? [];
         const cellFlows = flows.get(`${section}:${paragraph}`) ?? [];
@@ -135,11 +135,11 @@ export function selectNoteSourceTables(content, { floatingNotes = false } = {}) 
           owners[0].tableCell?.listNode !== cell.listNode ||
           cellFlows.length !== 1 ||
           cellFlows[0].host !==
-            (content.format === "hwp5" ? "table_cell" : body ? "other" : host.host) ||
+            (content.format === 'hwp5' ? 'table_cell' : body ? 'other' : host.host) ||
           cellFlows[0].top_level !== false ||
           cellFlows[0].note_context != null
         )
-          return fail("InvalidNoteSourceTableCellOwner");
+          return fail('InvalidNoteSourceTableCellOwner');
         cells.add(paragraph);
         (body ? bodyCells : noteCells).add(paragraph);
       }

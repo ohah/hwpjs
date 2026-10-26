@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { paraInput } from "./icc-analytic.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { orderedRootSigns } from "./icc-root-compare.mjs";
-import { levelOrder, cmp, exponent, integerPower } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { paraInput } from './icc-analytic.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { orderedRootSigns } from './icc-root-compare.mjs';
+import { levelOrder, cmp, exponent, integerPower } from './icc-power-reference.mjs';
 export function powerOrderEdges(call) {
   let values = 0,
     roots = 0,
@@ -35,9 +35,9 @@ export function powerOrderEdges(call) {
                 const invalid =
                   error ??
                   (!active
-                    ? "InactiveIccPowerBranch"
+                    ? 'InactiveIccPowerBranch'
                     : cmp(x, active.start) < 0
-                      ? "OutsideIccPowerInterval"
+                      ? 'OutsideIccPowerInterval'
                       : null);
                 if (invalid) {
                   assert.throws(() => call(187, bytes), new RegExp(invalid));

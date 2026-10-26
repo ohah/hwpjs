@@ -1,5 +1,5 @@
-import { characterFontNameArgs } from "./character-font-name-args.mjs";
-import { textTransactionArgs } from "./text-transaction-args.mjs";
+import { characterFontNameArgs } from './character-font-name-args.mjs';
+import { textTransactionArgs } from './text-transaction-args.mjs';
 
 export function namedFontTextArgs({
   section,

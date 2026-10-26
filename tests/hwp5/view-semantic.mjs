@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { loadMemoDocument } from "./memo-references.mjs";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { documentPrefixBytes } from "./document-report-wire.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { loadMemoDocument } from './memo-references.mjs';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { documentPrefixBytes } from './document-report-wire.mjs';
+import { containerTotals } from './container-report-wire.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -18,11 +18,11 @@ const exactError = (name) => (err) => err?.constructor === Error && err.message 
 export function viewSemanticActual(call, cfb) {
   const results = [];
   for (const name of [
-    "issue5169_viewtext_changetracking.hwp",
-    "task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+    'issue5169_viewtext_changetracking.hwp',
+    'task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
   ]) {
     const x = loadMemoDocument(call, cfb, name);
-    const parent = x.nodes.findIndex((n) => n.parent === 0 && n.name === "ViewText");
+    const parent = x.nodes.findIndex((n) => n.parent === 0 && n.name === 'ViewText');
     assert.ok(parent >= 0);
     const view = x.nodes
       .filter((n) => n.parent === parent && /^Section\d+$/.test(n.name))
@@ -60,20 +60,20 @@ export function viewSemanticActual(call, cfb) {
       assert.deepEqual(call(297, viewSemanticInput(file, 1, t.decoded_bytes), recordCap), expected);
       assert.throws(
         () => call(297, viewSemanticInput(file, 1, t.decoded_bytes - 1), recordCap),
-        exactError("LimitExceeded"),
+        exactError('LimitExceeded'),
       );
       assert.throws(
         () => call(297, viewSemanticInput(file, 1, t.decoded_bytes), recordCap - 1),
-        exactError("LimitExceeded"),
+        exactError('LimitExceeded'),
       );
       assert.deepEqual(call(297, viewSemanticInput(file)), expected);
       return expected.length;
     };
     let strict;
-    if (name.startsWith("issue5169")) {
-      assert.throws(() => call(297, viewSemanticInput(x.file)), exactError("InvalidLinePosition"));
+    if (name.startsWith('issue5169')) {
+      assert.throws(() => call(297, viewSemanticInput(x.file)), exactError('InvalidLinePosition'));
       assert.deepEqual(call(297, viewSemanticInput(x.file, 0)), offExpected);
-      strict = "InvalidLinePosition";
+      strict = 'InvalidLinePosition';
     } else strict = check(x.file, view);
     // Connection control: change only ViewText streams to already validated BodyText.
     const rebuilt = cfb.write({
@@ -84,7 +84,7 @@ export function viewSemanticActual(call, cfb) {
       }),
     });
     const controlBytes = check(rebuilt, x.sections);
-    assert.throws(() => call(297, viewSemanticInput(x.file, 2)), exactError("InvalidMode"));
+    assert.throws(() => call(297, viewSemanticInput(x.file, 2)), exactError('InvalidMode'));
     results.push({
       name,
       strict,

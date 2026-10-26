@@ -1,5 +1,5 @@
-import { characterRangeValues } from "./character-range-values.mjs";
-import { HWP5_CHARACTER_OUTLINE_KINDS } from "../../js/character-outline-args.mjs";
+import { characterRangeValues } from './character-range-values.mjs';
+import { HWP5_CHARACTER_OUTLINE_KINDS } from '../../js/character-outline-args.mjs';
 function outlineValues(content, ranges, read) {
   if (!Array.isArray(content?.characterOutlines)) return null;
   const rows = new Map();
@@ -13,20 +13,20 @@ function outlineValues(content, ranges, read) {
     ? null
     : values.every((value) => value === values[0])
       ? values[0]
-      : "mixed";
+      : 'mixed';
 }
 export function characterOutlineRangesState(content, ranges) {
   return outlineValues(content, ranges, (row) =>
-    ["absent", "none", "solid", "other"].includes(row?.state) ? row.state : null,
+    ['absent', 'none', 'solid', 'other'].includes(row?.state) ? row.state : null,
   );
 }
 export function characterOutlineRangesKind(content, ranges) {
   return outlineValues(content, ranges, (row) => {
     if (!row) return null;
     if (row.rawKind === null)
-      return ["absent", "none", "solid"].includes(row.state) ? row.state : null;
+      return ['absent', 'none', 'solid'].includes(row.state) ? row.state : null;
     if (!Number.isInteger(row.rawKind) || row.rawKind < 0 || row.rawKind > 6) return null;
-    const expected = row.rawKind === 0 ? "none" : row.rawKind === 1 ? "solid" : "other";
+    const expected = row.rawKind === 0 ? 'none' : row.rawKind === 1 ? 'solid' : 'other';
     return row.state === expected ? HWP5_CHARACTER_OUTLINE_KINDS[row.rawKind] : null;
   });
 }

@@ -1,4 +1,4 @@
-import { tableInsets } from "./table-insets.mjs";
+import { tableInsets } from './table-insets.mjs';
 
 // Union caption bounds with existing outer space, never reserve either twice.
 export function captionBoundsInsets(rectangle, bounds, outerInsets) {

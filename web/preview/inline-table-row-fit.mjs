@@ -1,4 +1,4 @@
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
+import { paragraphLineGeometry } from './paragraph-geometry.mjs';
 
 /** Original inline width may exceed a column, but cannot exceed physical paper. */
 export function inlineTableRowFitsPaper(row, context) {

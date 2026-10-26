@@ -1,5 +1,5 @@
-import { selectionRects } from "./text-geometry.mjs";
-import { hitTransformedBox } from "./transformed-box-hit.mjs";
+import { selectionRects } from './text-geometry.mjs';
+import { hitTransformedBox } from './transformed-box-hit.mjs';
 
 export function dutmalAnchorAtPoint(content, layout, x, y) {
   if (content.dutmalAvailable !== true || ![x, y].every(Number.isFinite)) return null;
@@ -11,7 +11,7 @@ export function dutmalAnchorAtPoint(content, layout, x, y) {
         !Number.isInteger(row.node) ||
         !Number.isInteger(row.unit) ||
         row.unit < 0 ||
-        paragraph.text[row.unit] !== "\ufffc"
+        paragraph.text[row.unit] !== '\ufffc'
       )
         continue;
       if (paragraph.dutmal.filter((other) => other.unit === row.unit).length !== 1) continue;

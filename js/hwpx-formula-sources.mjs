@@ -1,7 +1,7 @@
 /** Source commands/caches, not current evaluation or mutable model handles. */
 export function decodeFormulaSources(bytes, { current = false } = {}) {
-  const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  if (!Array.isArray(rows) || rows.length > 4096) throw new Error("InvalidFormulaSources");
+  const rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+  if (!Array.isArray(rows) || rows.length > 4096) throw new Error('InvalidFormulaSources');
   let previous = -1;
   for (const row of rows) {
     if (
@@ -10,11 +10,11 @@ export function decodeFormulaSources(bytes, { current = false } = {}) {
       row.begin_element <= previous ||
       row.begin_element > 0xffffffff ||
       !row.values ||
-      !["command", "formula", "result_format", "last_result"].every(
-        (key) => row.values[key] === null || typeof row.values[key] === "string",
+      !['command', 'formula', 'result_format', 'last_result'].every(
+        (key) => row.values[key] === null || typeof row.values[key] === 'string',
       )
     )
-      throw new Error("InvalidFormulaSources");
+      throw new Error('InvalidFormulaSources');
     previous = row.begin_element;
     if (current) {
       const owner = row.owner;
@@ -34,7 +34,7 @@ export function decodeFormulaSources(bytes, { current = false } = {}) {
         owner.origin.column >= owner.columns ||
         owner.origin.row >= owner.rows
       )
-        throw new Error("InvalidFormulaSources");
+        throw new Error('InvalidFormulaSources');
     }
   }
   return rows;

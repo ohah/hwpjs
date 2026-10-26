@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 // Receives the independent style oracle's absolute image-ID offset; no duplicate Fill parser.
 export function imageReferenceEdges(call, h, doc, sections, s, at, mode, checkCfbMutation) {
   const count = documentRecords(doc).filter((r) => r.tag === 18).length;
@@ -23,7 +23,7 @@ export function imageReferenceEdges(call, h, doc, sections, s, at, mode, checkCf
     assert.throws(() => selected(input), /InvalidShapeImageReference/);
     rejected++;
     const unselected = call(24, input);
-    assert.equal(unselected.readUInt32LE(sectionFieldOffset(s.index, "drawing_styles", 6)), 0);
+    assert.equal(unselected.readUInt32LE(sectionFieldOffset(s.index, 'drawing_styles', 6)), 0);
     checkCfbMutation?.(s.index, changed, /InvalidShapeImageReference/);
     assert.deepEqual(selected(normal), baseline);
   }

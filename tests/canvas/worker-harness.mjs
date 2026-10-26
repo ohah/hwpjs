@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createRenderer } from "../../web/preview/renderer.mjs";
-import { createCanvasEditor } from "../../web/preview/canvas-editor.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRenderer } from '../../web/preview/renderer.mjs';
+import { createCanvasEditor } from '../../web/preview/canvas-editor.mjs';
 let sequence = 0;
 export function dispatchCanvasEvent(node, type, values = {}) {
   const event = new Event(type, { cancelable: true });
@@ -16,14 +16,14 @@ export async function workerCanvasHarness(
   { paintFrames = false, bitmapSize = null, rangeQueries = false } = {},
 ) {
   const keys = [
-    "self",
-    "fetch",
-    "document",
-    "window",
-    "ResizeObserver",
-    "requestAnimationFrame",
-    "cancelAnimationFrame",
-    "createImageBitmap",
+    'self',
+    'fetch',
+    'document',
+    'window',
+    'ResizeObserver',
+    'requestAnimationFrame',
+    'cancelAnimationFrame',
+    'createImageBitmap',
   ];
   const globals = new Map(
     keys.map((key) => [key, { present: Object.hasOwn(globalThis, key), value: globalThis[key] }]),
@@ -32,7 +32,7 @@ export async function workerCanvasHarness(
     queue = [],
     requests = [],
     document = { activeElement: null };
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   globalThis.self = { postMessage: (message) => replies.push(message) };
   globalThis.fetch = async () => new Response(wasm);
   globalThis.document = document;
@@ -68,7 +68,7 @@ export async function workerCanvasHarness(
     dispatchEvent(event) {
       if (!paintFrames) return super.dispatchEvent(event);
       let stopped = false;
-      const own = Object.hasOwn(event, "stopImmediatePropagation"),
+      const own = Object.hasOwn(event, 'stopImmediatePropagation'),
         previous = event.stopImmediatePropagation;
       event.stopImmediatePropagation = function () {
         stopped = true;
@@ -84,23 +84,23 @@ export async function workerCanvasHarness(
     }
     style = {};
     dataset = {};
-    value = "";
+    value = '';
     selectionStart = 0;
     selectionEnd = 0;
-    selectionDirection = "forward";
+    selectionDirection = 'forward';
     setAttribute() {}
-    setSelectionRange(start, end, direction = "forward") {
+    setSelectionRange(start, end, direction = 'forward') {
       this.selectionStart = start;
       this.selectionEnd = end;
       this.selectionDirection = direction;
     }
     focus() {
       document.activeElement = this;
-      dispatchCanvasEvent(this, "focus");
+      dispatchCanvasEvent(this, 'focus');
     }
     blur() {
       document.activeElement = null;
-      dispatchCanvasEvent(this, "blur");
+      dispatchCanvasEvent(this, 'blur');
     }
     getBoundingClientRect() {
       return { top: 0, left: 0, bottom: 900 };
@@ -136,7 +136,7 @@ export async function workerCanvasHarness(
     renderer,
     controller;
   const send = async (message, publish = true) => {
-    if (publish && message.kind === "load") {
+    if (publish && message.kind === 'load') {
       assert.equal(queue.length, 0);
       ready = false;
       busy = false;
@@ -148,8 +148,8 @@ export async function workerCanvasHarness(
     const reply = replies.shift();
     if (publish) {
       busy = false;
-      if (reply.kind === "enable" && !reply.error) ready = true;
-      if (reply.content) renderer.show(reply.content, { preserveScroll: reply.kind !== "load" });
+      if (reply.kind === 'enable' && !reply.error) ready = true;
+      if (reply.content) renderer.show(reply.content, { preserveScroll: reply.kind !== 'load' });
       controller.message(reply);
     }
     return reply;
@@ -170,7 +170,7 @@ export async function workerCanvasHarness(
     renderer?.close();
     try {
       if (globalThis.self?.onmessage)
-        await send({ kind: "load", format: "test-close", bytes: [] }, false);
+        await send({ kind: 'load', format: 'test-close', bytes: [] }, false);
     } finally {
       for (const [key, old] of globals) {
         if (old.present) globalThis[key] = old.value;
@@ -188,8 +188,8 @@ export async function workerCanvasHarness(
     input,
     renderer,
     controls,
-    note: { textContent: "" },
-    platform: "",
+    note: { textContent: '' },
+    platform: '',
     queryEditRange: rangeQueries ? (message) => controls.request(message) : null,
   });
   controller.reset();
@@ -206,7 +206,7 @@ export async function workerCanvasHarness(
     paint() {
       let count = 0;
       while (frames.length) {
-        assert(++count <= 100, "UnexpectedAnimationLoop");
+        assert(++count <= 100, 'UnexpectedAnimationLoop');
         frames.shift()();
       }
     },
@@ -216,8 +216,8 @@ export async function workerCanvasHarness(
     },
     async flushQueries() {
       let count = 0;
-      while (queue[0]?.kind === "query-edit-range") {
-        assert(++count <= 100, "UnexpectedPermissionQueryLoop");
+      while (queue[0]?.kind === 'query-edit-range') {
+        assert(++count <= 100, 'UnexpectedPermissionQueryLoop');
         const reply = await send(queue.shift());
         assert.equal(reply.error, undefined);
       }

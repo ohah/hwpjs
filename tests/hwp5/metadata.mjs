@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { checkBody } from "./body.mjs";
+import assert from 'node:assert/strict';
+import { checkBody } from './body.mjs';
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);
@@ -39,7 +39,7 @@ export function metadataActual(call, v, bytes, shapes) {
     } else if (tag >= 68 && tag <= 70) {
       assert.ok(parents[level - 1], `orphan metadata at ${start}`);
       parents[level - 1].records.push(bytes.subarray(start, p));
-      totals[["runs", "lines", "ranges"][tag - 68]] += n / [8, 36, 12][tag - 68];
+      totals[['runs', 'lines', 'ranges'][tag - 68]] += n / [8, 36, 12][tag - 68];
     }
   }
   for (const h of paragraphs) {

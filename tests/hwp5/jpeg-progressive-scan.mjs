@@ -1,19 +1,19 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 import {
   jpegScanInput,
   jpegScanGeometry,
   jpegScanFixture,
   headerBytes,
   blockBytes,
-} from "./jpeg-scan.mjs";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { jpegStoreOracle } from "./jpeg-store.mjs";
+} from './jpeg-scan.mjs';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { jpegStoreOracle } from './jpeg-store.mjs';
 import {
   progressiveBlockOracle,
   progressiveZero,
   progressiveSingle,
-} from "./jpeg-progressive-block.mjs";
-import { encodeCodes } from "./jpeg-codec.mjs";
+} from './jpeg-progressive-block.mjs';
+import { encodeCodes } from './jpeg-codec.mjs';
 
 export function progressiveScanInput(raw, options) {
   const rows = options.prior,
@@ -141,11 +141,11 @@ export function progressiveScanActual(call, raw, options) {
 }
 
 export function progressiveScanFixture(options = {}) {
-  const { kind = "dcFirst", al = 0, ...geometry } = options;
+  const { kind = 'dcFirst', al = 0, ...geometry } = options;
   const base = jpegScanFixture(geometry).options,
     scan = Buffer.from(base.scan),
-    dc = kind.startsWith("dc"),
-    refine = kind.endsWith("Refine");
+    dc = kind.startsWith('dc'),
+    refine = kind.endsWith('Refine');
   scan[scan.length - 3] = dc ? 0 : 1;
   scan[scan.length - 2] = dc ? 0 : 63;
   scan[scan.length - 1] = (refine ? al + 1 : 0) * 16 + al;
@@ -169,10 +169,10 @@ export function progressiveScanFixture(options = {}) {
         else for (let k = 1; k <= 63; k++) if (k % 3 === 0) b[k] = (k % 2 ? -4 : 4) * 2 ** al;
       }
       prior.push(b);
-      if (dc) bits.push(refine ? String((mcu + i) % 2) : "0" + String(sign > 0 ? 1 : 0));
+      if (dc) bits.push(refine ? String((mcu + i) % 2) : '0' + String(sign > 0 ? 1 : 0));
       else if (refine)
-        bits.push("0" + Array.from({ length: 21 }, (_, k) => String((k + mcu) % 2)).join(""));
-      else bits.push("0");
+        bits.push('0' + Array.from({ length: 21 }, (_, k) => String((k + mcu) % 2)).join(''));
+      else bits.push('0');
     }
   }
   parts.push(encodeCodes(bits), Buffer.from([255, 217]));
@@ -205,8 +205,8 @@ export function progressiveScanEdges(call) {
         for (const sampling of [[17], [68], [34, 17, 17], [33, 18, 17]])
           for (const selected of [sampling.map((_, i) => i), [sampling.length - 1]])
             for (const interval of [0, 1, 2, 7])
-              for (const kind of ["dcFirst", "dcRefine", "acFirst", "acRefine"]) {
-                if (kind.startsWith("ac") && selected.length !== 1) continue;
+              for (const kind of ['dcFirst', 'dcRefine', 'acFirst', 'acRefine']) {
+                if (kind.startsWith('ac') && selected.length !== 1) continue;
                 check(
                   progressiveScanFixture({
                     precision,
@@ -221,7 +221,7 @@ export function progressiveScanEdges(call) {
                 );
               }
   // Wrap all eight RST codes, include fill before RST and a short final interval.
-  for (const kind of ["dcFirst", "dcRefine", "acFirst", "acRefine"])
+  for (const kind of ['dcFirst', 'dcRefine', 'acFirst', 'acRefine'])
     check(progressiveScanFixture({ width: 257, height: 8, sampling: [17], interval: 3, kind }));
   const restart = progressiveScanFixture({ width: 16, height: 8, sampling: [17], interval: 1 });
   for (let n = 0; n < restart.raw.length; n++)
@@ -261,7 +261,7 @@ export function progressiveScanEdges(call) {
   check({ ...simple, options: { ...simple.options, frame: noHeight, height: 8 } });
   for (const code of [192, 193, 202])
     reject({ ...simple, options: { ...simple.options, code } }, /UnsupportedJpegProgressiveScan/);
-  const ac = progressiveScanFixture({ width: 16, height: 8, sampling: [17], kind: "acFirst" });
+  const ac = progressiveScanFixture({ width: 16, height: 8, sampling: [17], kind: 'acFirst' });
   check({
     ...ac,
     raw: Buffer.from([0x3f, 255, 217]),
@@ -293,7 +293,7 @@ export function progressiveScanEdges(call) {
       scan[scan.length - 1] = refine ? 16 : 0;
       check({
         ...ac,
-        raw: Buffer.concat([encodeCodes(["01", "00"]), Buffer.from([255, 217])]),
+        raw: Buffer.concat([encodeCodes(['01', '00']), Buffer.from([255, 217])]),
         options: { ...ac.options, scan, h: progressiveSingle(16, 1) },
       });
     }
@@ -301,7 +301,7 @@ export function progressiveScanEdges(call) {
       width: 24,
       height: 8,
       sampling: [17],
-      kind: "acRefine",
+      kind: 'acRefine',
     }),
     scan = Buffer.from(refinement.options.scan);
   scan[scan.length - 2] = 1;
@@ -319,7 +319,7 @@ export function progressiveScanEdges(call) {
   const maxScan = Buffer.from([1, 9, 0, 1, 63, 0]),
     maxCount = 32767;
   check({
-    raw: Buffer.concat([encodeCodes(["0", "1".repeat(14)]), Buffer.from([255, 217])]),
+    raw: Buffer.concat([encodeCodes(['0', '1'.repeat(14)]), Buffer.from([255, 217])]),
     options: {
       frame: maxFrame,
       scan: maxScan,

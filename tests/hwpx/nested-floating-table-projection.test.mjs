@@ -1,12 +1,12 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { measureTableCells } from "../../web/preview/table-cell-measurement.mjs";
-import { positionNestedFloatingTable } from "../../web/preview/nested-floating-table-position.mjs";
-import { projectNestedFloatingTable } from "../../web/preview/nested-floating-table-projection.mjs";
-import { projectNestedFloatingCellContent } from "../../web/preview/nested-floating-cell-content.mjs";
-import { projectTablePageFragments } from "../../web/preview/table-page-fragments.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { measureTableCells } from '../../web/preview/table-cell-measurement.mjs';
+import { positionNestedFloatingTable } from '../../web/preview/nested-floating-table-position.mjs';
+import { projectNestedFloatingTable } from '../../web/preview/nested-floating-table-projection.mjs';
+import { projectNestedFloatingCellContent } from '../../web/preview/nested-floating-cell-content.mjs';
+import { projectTablePageFragments } from '../../web/preview/table-page-fragments.mjs';
 
-test("floating nested cells retain text and source size at the explicit page position", () => {
+test('floating nested cells retain text and source size at the explicit page position', () => {
   const table = {
     section: 0,
     tableNode: 2,
@@ -48,15 +48,15 @@ test("floating nested cells retain text and source size at the explicit page pos
     ],
   };
   const paragraphs = [
-    { section: 0, paragraph: 4, text: "X😀", tableCell: { tableNode: 2, listNode: 12 } },
+    { section: 0, paragraph: 4, text: 'X😀', tableCell: { tableNode: 2, listNode: 12 } },
   ];
   const measured = measureTableCells(
     table,
     paragraphs,
     (text) => ({ width: text.length * 4, height: 12 }),
-    { origin: { x: 0, y: 0 }, padding: "source", columnWidths: [20] },
+    { origin: { x: 0, y: 0 }, padding: 'source', columnWidths: [20] },
   );
-  assert.equal(measured.state, "measured");
+  assert.equal(measured.state, 'measured');
   const paper = { x: 0, y: 0, width: 600, height: 800 };
   const parent = { section: 0, tableNode: 1, listNode: 11, x: 50, y: 100, width: 200, height: 300 };
   const paragraph = { section: 0, paragraph: 3, x: 50, y: 200, width: 200, height: 16 };
@@ -64,18 +64,18 @@ test("floating nested cells retain text and source size at the explicit page pos
   const original = structuredClone(table);
   const page = { pageOrdinal: 0, referenceBoxes: { paper } };
   const output = projectNestedFloatingTable(table, measured, position, page);
-  assert.equal(output.state, "placed", output.error);
+  assert.equal(output.state, 'placed', output.error);
   assert.equal(output.boxes.length, 1);
   assert.equal(output.boxes[0].x, 50);
   assert.equal(output.boxes[0].y, 116);
   assert.equal(
     output.rows
-      .filter((row) => row.kind === "text")
+      .filter((row) => row.kind === 'text')
       .map((row) => row.text)
-      .join(""),
-    "X😀",
+      .join(''),
+    'X😀',
   );
-  assert.equal(output.paintLayer, "behind");
+  assert.equal(output.paintLayer, 'behind');
   assert.deepEqual(output.rectangle, position.rectangle);
   assert.equal(
     projectNestedFloatingTable(
@@ -84,7 +84,7 @@ test("floating nested cells retain text and source size at the explicit page pos
       { ...position, rectangle: { ...position.rectangle, height: 1 } },
       page,
     ).error,
-    "NestedFloatingTableMeasuredOverflow",
+    'NestedFloatingTableMeasuredOverflow',
   );
   assert.equal(
     projectNestedFloatingTable(
@@ -93,34 +93,34 @@ test("floating nested cells retain text and source size at the explicit page pos
       { ...position, owner: { ...position.owner, parentListNode: 99 } },
       page,
     ).error,
-    "InvalidNestedFloatingTableOwner",
+    'InvalidNestedFloatingTableOwner',
   );
   assert.equal(
     projectNestedFloatingTable(table, measured, position, { ...page, columnOrdinal: -1 }).error,
-    "InvalidNestedFloatingTableProjection",
+    'InvalidNestedFloatingTableProjection',
   );
   assert.equal(
     projectNestedFloatingTable(table, measured, position, {
       ...page,
       referenceBoxes: { paper: { ...paper, x: Number.MAX_VALUE, width: Number.MAX_VALUE } },
     }).error,
-    "NestedFloatingTablePaperOverflow",
+    'NestedFloatingTablePaperOverflow',
   );
   assert.deepEqual(table, original);
   const currentParagraph = {
     ...paragraph,
-    text: "\ufffc",
+    text: '\ufffc',
     tableCell: { tableNode: 1, listNode: 11 },
   };
   const parentFlow = {
     rows: [
       {
-        kind: "text",
+        kind: 'text',
         section: 0,
         paragraph: 3,
         startUnit: 0,
         endUnit: 1,
-        text: "\ufffc",
+        text: '\ufffc',
         x: 0,
         y: 100,
         textTop: 0,
@@ -132,12 +132,12 @@ test("floating nested cells retain text and source size at the explicit page pos
   const entry = { table, paragraph: currentParagraph, measured };
   const options = { insets: { left: 0, right: 0, top: 0, bottom: 0 }, maxRows: 20000 };
   const composed = projectNestedFloatingCellContent(parent, parentFlow, [entry], page, options);
-  assert.equal(composed.state, "placed", composed.error);
+  assert.equal(composed.state, 'placed', composed.error);
   assert.equal(composed.boxes[0].y, 116);
-  assert.equal(composed.rows[0].tablePaintLayer, "behind");
+  assert.equal(composed.rows[0].tablePaintLayer, 'behind');
   assert.equal(
     projectNestedFloatingCellContent(parent, parentFlow, [entry, entry], page, options).error,
-    "InvalidNestedFloatingTableOwner",
+    'InvalidNestedFloatingTableOwner',
   );
   assert.equal(
     projectNestedFloatingCellContent(
@@ -147,17 +147,17 @@ test("floating nested cells retain text and source size at the explicit page pos
       page,
       options,
     ).error,
-    "InvalidNestedFloatingTableOwner",
+    'InvalidNestedFloatingTableOwner',
   );
   assert.equal(
     projectNestedFloatingCellContent(
       parent,
       parentFlow,
-      [{ ...entry, paragraph: { ...currentParagraph, text: "X" } }],
+      [{ ...entry, paragraph: { ...currentParagraph, text: 'X' } }],
       page,
       options,
     ).error,
-    "InvalidNestedFloatingTableOwner",
+    'InvalidNestedFloatingTableOwner',
   );
   const outerTable = { section: 0, tableNode: 1, cells: [{ listNode: 11, row: 0, rowSpan: 1 }] };
   const outerGrid = { cells: [{ listNode: 11, x: 0, y: 0, width: 200, height: 300 }] };
@@ -167,7 +167,7 @@ test("floating nested cells retain text and source size at the explicit page pos
     floatingTables: [entry],
   };
   const plan = {
-    state: "planned",
+    state: 'planned',
     fragments: [
       {
         cells: [0],
@@ -188,7 +188,7 @@ test("floating nested cells retain text and source size at the explicit page pos
     plan,
     { origin: { x: 0, y: 0 }, padding: 0 },
   );
-  assert.equal(projectedParent.state, "placed", projectedParent.error);
+  assert.equal(projectedParent.state, 'placed', projectedParent.error);
   assert.deepEqual(
     projectedParent.boxes.map((box) => box.tableNode),
     [1, 2],
@@ -197,8 +197,8 @@ test("floating nested cells retain text and source size at the explicit page pos
     projectedParent.rows
       .filter((row) => row.tableNode === 2)
       .map((row) => row.text)
-      .join(""),
-    "X😀",
+      .join(''),
+    'X😀',
   );
   assert.equal(
     projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, {
@@ -206,7 +206,7 @@ test("floating nested cells retain text and source size at the explicit page pos
       padding: 0,
       maxRows: 1,
     }).error,
-    "TablePageProjectionLimit",
+    'TablePageProjectionLimit',
   );
   assert.deepEqual(table, original);
   const pictured = {
@@ -235,7 +235,7 @@ test("floating nested cells retain text and source size at the explicit page pos
     page,
     options,
   );
-  assert.equal(pictureContent.state, "placed");
+  assert.equal(pictureContent.state, 'placed');
   assert.equal(pictureContent.flowPictures.length, 1);
   assert.equal(pictureContent.flowPictures[0].positionOwnerTableNode, 1);
   assert.equal(pictureContent.flowPictures[0].rectangle.x, 50);

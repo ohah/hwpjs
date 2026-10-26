@@ -1,4 +1,4 @@
-import { documentRecords } from "./documents.mjs";
+import { documentRecords } from './documents.mjs';
 
 // Inventory framing before optional semantic validation. Neither stage catches
 // failures: the caller owns exclusion reporting, and traps remain failures.

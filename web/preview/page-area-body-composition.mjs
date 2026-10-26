@@ -1,7 +1,7 @@
-import { partitionPageAreaOwnership } from "./page-area-ownership.mjs";
-import { layoutPageAreaInstances } from "./page-area-instance-layout.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { layoutDeclaredPageAreas } from "./page-area-declaration-flow.mjs";
+import { partitionPageAreaOwnership } from './page-area-ownership.mjs';
+import { layoutPageAreaInstances } from './page-area-instance-layout.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { layoutDeclaredPageAreas } from './page-area-declaration-flow.mjs';
 
 /** Paginate body objects first; only then repeat explicitly owned page areas. */
 export function composePageAreaBody(
@@ -11,22 +11,22 @@ export function composePageAreaBody(
   layoutBody,
   { pageNumbers, ...bodyOptions } = {},
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
-    typeof measure !== "function" ||
-    typeof layoutBody !== "function" ||
+    typeof measure !== 'function' ||
+    typeof layoutBody !== 'function' ||
     !Array.isArray(content?.pageSettings) ||
     content.pageSettings.length !== 1
   )
-    return fail("InvalidPageAreaComposition");
+    return fail('InvalidPageAreaComposition');
   const partition = partitionPageAreaOwnership(content);
-  if (partition.state !== "partitioned") return partition;
-  if (!partition.areas.length) return fail("MissingPageAreaOwner");
+  if (partition.state !== 'partitioned') return partition;
+  if (!partition.areas.length) return fail('MissingPageAreaOwner');
   const body = layoutBody(partition.body, measure, maxRows, bodyOptions);
-  if (body.state !== "paginated") return body;
-  if (body.limited || body.rows?.length === maxRows) return fail("PageAreaOverflow");
+  if (body.state !== 'paginated') return body;
+  if (body.limited || body.rows?.length === maxRows) return fail('PageAreaOverflow');
   if (
     !Array.isArray(body.pages) ||
     !body.pages.length ||
@@ -34,8 +34,8 @@ export function composePageAreaBody(
     body.rows.length > maxRows ||
     !Number.isFinite(body.height)
   )
-    return fail("InvalidPageAreaComposition");
-  const flows = content.paragraphFlows.filter((flow) => ["header", "footer"].includes(flow.host));
+    return fail('InvalidPageAreaComposition');
+  const flows = content.paragraphFlows.filter((flow) => ['header', 'footer'].includes(flow.host));
   const numbering = flows[0].page_number_source;
   if (
     pageNumbers === undefined &&
@@ -50,16 +50,16 @@ export function composePageAreaBody(
     pageNumbers.length !== body.pages.length ||
     pageNumbers.some((number) => !Number.isInteger(number) || number < 1 || number > 0xffffffff)
   )
-    return fail("MissingEffectivePageNumber");
+    return fail('MissingEffectivePageNumber');
   const setting = content.pageSettings[0];
   if (
     body.pages.some(
       (page) => page?.section !== undefined && page.section !== setting.section_ordinal,
     )
   )
-    return fail("UnsupportedPageAreaSections");
+    return fail('UnsupportedPageAreaSections');
   if (body.pages.some((page, index) => !page || page.ordinal !== index))
-    return fail("AmbiguousPageAreaInstance");
+    return fail('AmbiguousPageAreaInstance');
   const pages = body.pages.map((page, index) => ({
     ...page,
     section: setting.section_ordinal,
@@ -80,12 +80,12 @@ export function composePageAreaBody(
     },
   }));
   const declared =
-    Object.hasOwn(content, "pageAreaDeclarations") ||
-    Object.hasOwn(content, "pageAreaDeclarationErrors");
+    Object.hasOwn(content, 'pageAreaDeclarations') ||
+    Object.hasOwn(content, 'pageAreaDeclarationErrors');
   const repeated = declared
     ? layoutDeclaredPageAreas(content, partition, body, pages, measure, maxRows - body.rows.length)
     : layoutPageAreaInstances(content, partition, pages, measure, maxRows - body.rows.length);
-  if (repeated.state !== "placed") return repeated;
+  if (repeated.state !== 'placed') return repeated;
   return {
     ...body,
     rows: [...body.rows, ...repeated.rows].toSorted((a, b) => a.y - b.y),

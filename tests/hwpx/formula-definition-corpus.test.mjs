@@ -1,64 +1,64 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { spawnSync } from "../../tools/oracle-process.mjs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { spawnSync } from '../../tools/oracle-process.mjs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
 
-test("actual HWPX PRODUCT and explicit repeated references preserve XML and saved history", async () => {
-  const original = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
+test('actual HWPX PRODUCT and explicit repeated references preserve XML and saved history', async () => {
+  const original = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx');
   const editor = await createHwpxEditor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   try {
     for (const formula of [
-      "=PRODUCT(B?:E?)",
-      "=PRODUCT(B?,C?,B?)",
-      "=SUM(B?,C?,B?)",
-      "=AVG(B?,C?,B?)",
-      "=AVERAGE(B?,C?,B?)",
-      "=SUM(B?)",
-      "=MIN(B?:E?)",
-      "=MAX(B?,C?,B?)",
+      '=PRODUCT(B?:E?)',
+      '=PRODUCT(B?,C?,B?)',
+      '=SUM(B?,C?,B?)',
+      '=AVG(B?,C?,B?)',
+      '=AVERAGE(B?,C?,B?)',
+      '=SUM(B?)',
+      '=MIN(B?:E?)',
+      '=MAX(B?,C?,B?)',
     ]) {
       editor.open(original);
       editor.enableHistory();
       const row = editor.formulaSources(0)[0];
       editor.setFormulaDefinition(0, row.begin_element, formula);
       const saved = Buffer.from(editor.save());
-      for (const flags of [[], ["-O"]]) {
-        const result = spawnSync("python3", [...flags, "tools/hwpx-formula-definition-oracle.py"], {
+      for (const flags of [[], ['-O']]) {
+        const result = spawnSync('python3', [...flags, 'tools/hwpx-formula-definition-oracle.py'], {
           input: JSON.stringify({
-            before: original.toString("base64"),
-            after: saved.toString("base64"),
+            before: original.toString('base64'),
+            after: saved.toString('base64'),
             ordinal: 0,
             formula,
           }),
-          encoding: "utf8",
+          encoding: 'utf8',
           timeout: 30000,
         });
         assert.equal(result.status, 0, String(result.error ?? result.stderr));
-        if (formula.startsWith("=PRODUCT(")) {
-          const wrong = spawnSync("python3", ["tests/hwpx/formula-result-mutation.py"], {
+        if (formula.startsWith('=PRODUCT(')) {
+          const wrong = spawnSync('python3', ['tests/hwpx/formula-result-mutation.py'], {
             input: JSON.stringify({
-              bytes: saved.toString("base64"),
+              bytes: saved.toString('base64'),
               ordinal: 0,
-              display: formula.includes(",") ? "276.64" : "67.5",
+              display: formula.includes(',') ? '276.64' : '67.5',
             }),
-            encoding: "utf8",
+            encoding: 'utf8',
             timeout: 30000,
           });
           assert.equal(wrong.status, 0, String(wrong.error ?? wrong.stderr));
           const rejected = spawnSync(
-            "python3",
-            [...flags, "tools/hwpx-formula-definition-oracle.py"],
+            'python3',
+            [...flags, 'tools/hwpx-formula-definition-oracle.py'],
             {
               input: JSON.stringify({
-                before: original.toString("base64"),
+                before: original.toString('base64'),
                 after: wrong.stdout.trim(),
                 ordinal: 0,
                 formula,
               }),
-              encoding: "utf8",
+              encoding: 'utf8',
               timeout: 30000,
             },
           );
@@ -81,10 +81,10 @@ test("actual HWPX PRODUCT and explicit repeated references preserve XML and save
   }
 });
 
-test("all chart formula definitions edit with independent arithmetic XML and history", async (t) => {
-  const original = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
+test('all chart formula definitions edit with independent arithmetic XML and history', async (t) => {
+  const original = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx');
   const editor = await createHwpxEditor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   try {
     editor.open(original);
@@ -92,37 +92,37 @@ test("all chart formula definitions edit with independent arithmetic XML and his
     assert.equal(rows.length, 13);
     for (const [ordinal, row] of rows.entries()) {
       const opposite = row.values.formula
-        .replace(/^=SUM/, "=TEMP")
-        .replace(/^=AVG/, "=SUM")
-        .replace(/^=TEMP/, "=AVG");
+        .replace(/^=SUM/, '=TEMP')
+        .replace(/^=AVG/, '=SUM')
+        .replace(/^=TEMP/, '=AVG');
       for (const formula of [
         opposite,
-        row.values.formula.replace(/^=(SUM|AVG)/, "=MIN"),
-        row.values.formula.replace(/^=(SUM|AVG)/, "=MAX"),
+        row.values.formula.replace(/^=(SUM|AVG)/, '=MIN'),
+        row.values.formula.replace(/^=(SUM|AVG)/, '=MAX'),
       ]) {
         editor.open(original);
         editor.enableHistory();
         editor.setFormulaDefinition(0, row.begin_element, formula);
         const saved = Buffer.from(editor.save());
-        for (const flags of [[], ["-O"]]) {
+        for (const flags of [[], ['-O']]) {
           const oracle = spawnSync(
-            "python3",
-            [...flags, "tools/hwpx-formula-definition-oracle.py"],
+            'python3',
+            [...flags, 'tools/hwpx-formula-definition-oracle.py'],
             {
               input: JSON.stringify({
-                before: original.toString("base64"),
-                after: saved.toString("base64"),
+                before: original.toString('base64'),
+                after: saved.toString('base64'),
                 ordinal,
                 formula,
               }),
-              encoding: "utf8",
+              encoding: 'utf8',
               timeout: 30000,
             },
           );
           assert.equal(
             oracle.status,
             0,
-            `${ordinal} ${flags.join(" ")}: ${oracle.error ?? oracle.stderr}`,
+            `${ordinal} ${flags.join(' ')}: ${oracle.error ?? oracle.stderr}`,
           );
         }
         assert.equal(editor.undo(), true);

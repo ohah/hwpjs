@@ -1,30 +1,30 @@
 // Every field-owned prefix in one explicit single-closed-field-per-section file.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../js/hwpx-editor.mjs";
-import { createHwpxReader } from "../js/hwpx.mjs";
-import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
-import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
-import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
-import { queryPrefixRoute } from "./hwpx-prefix-route-query.mjs";
-import { insertPrefix } from "./hwpx-prefix-edit-probe.mjs";
-import { execFileSync } from "./oracle-process.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../js/hwpx-editor.mjs';
+import { createHwpxReader } from '../js/hwpx.mjs';
+import { parseEditAuditOptions } from './hwpx-edit-audit-options.mjs';
+import { captureInputIdentity, verifyInputIdentity } from './audit-input-identity.mjs';
+import { hwpxParagraphCoordinates } from './hwpx-paragraph-coordinates.mjs';
+import { queryPrefixRoute } from './hwpx-prefix-route-query.mjs';
+import { insertPrefix } from './hwpx-prefix-edit-probe.mjs';
+import { execFileSync } from './oracle-process.mjs';
 
 const options = parseEditAuditOptions(process.argv.slice(2), { requireWasm: true });
-if (!options.fixture) throw new Error("MissingAuditFixture");
+if (!options.fixture) throw new Error('MissingAuditFixture');
 const input = readFileSync(options.fixture),
   wasm = readFileSync(options.wasm);
 const inputSha256 = captureInputIdentity(input),
   wasmSha256 = captureInputIdentity(wasm);
-const oraclePath = "tools/hwpx-container-field-prefix-oracle.py";
+const oraclePath = 'tools/hwpx-container-field-prefix-oracle.py';
 const oracleBytes = readFileSync(oraclePath),
   oracleSha256 = captureInputIdentity(oracleBytes);
-const before = input.toString("base64");
+const before = input.toString('base64');
 const fields = JSON.parse(
   execFileSync(
-    "python3",
+    'python3',
     [
-      "-c",
+      '-c',
       String.raw`
 import base64,io,json,re,sys,zipfile,xml.etree.ElementTree as E
 d=json.load(sys.stdin);P='{http://www.hancom.co.kr/hwpml/2011/paragraph}';out={}
@@ -39,7 +39,7 @@ with zipfile.ZipFile(io.BytesIO(base64.b64decode(d['before']))) as z:
 print(json.dumps(out))
 `,
     ],
-    { input: JSON.stringify({ before }), encoding: "utf8", timeout: 30000 },
+    { input: JSON.stringify({ before }), encoding: 'utf8', timeout: 30000 },
   ),
 );
 const module = await WebAssembly.compile(wasm);
@@ -53,24 +53,24 @@ const totals = {
   negativeControls: 0,
   failures: [],
 };
-const text = "전수😀<&";
+const text = '전수😀<&';
 const paragraphText = (projection, p) =>
   projection.events
-    .filter((e) => e.kind === "content" && e.section === p.section && e.paragraph === p.paragraph)
+    .filter((e) => e.kind === 'content' && e.section === p.section && e.paragraph === p.paragraph)
     .map((e) => e.value)
-    .join("");
+    .join('');
 const restore = () => {
   editor.open(input);
   editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 16 * 1024 * 1024 });
 };
 console.log(
   JSON.stringify({
-    kind: "start",
+    kind: 'start',
     path: options.fixture,
     inputSha256,
     wasmSha256,
     oracleSha256,
-    scope: "all field-owned prefixes; full XML/ZIP history reopen; other routes not edited",
+    scope: 'all field-owned prefixes; full XML/ZIP history reopen; other routes not edited',
   }),
 );
 try {
@@ -79,39 +79,39 @@ try {
   for (const p of hwpxParagraphCoordinates(original.events)) {
     totals.paragraphs++;
     verifyInputIdentity(oracleBytes, oracleSha256, oraclePath);
-    let phase = "query";
+    let phase = 'query';
     try {
       const revision = editor.historyRevision();
       const route = queryPrefixRoute(editor, p.section, p.paragraph);
       assert.equal(editor.historyRevision(), revision);
-      if (route !== "field") {
+      if (route !== 'field') {
         totals.skipped[route] = (totals.skipped[route] ?? 0) + 1;
         continue;
       }
       totals.attempts++;
-      assert.equal(typeof fields[p.section], "string", "independent source field ID required");
-      phase = "edit";
+      assert.equal(typeof fields[p.section], 'string', 'independent source field ID required');
+      phase = 'edit';
       insertPrefix(editor, p.section, p.paragraph, text);
       const saved = Buffer.from(editor.save());
-      phase = "oracle";
+      phase = 'oracle';
       const payload = {
         before,
-        after: saved.toString("base64"),
+        after: saved.toString('base64'),
         section: p.section,
         paragraph: p.localParagraph,
         beginId: fields[p.section],
         text,
       };
-      for (const flags of [[], ["-O"]]) {
+      for (const flags of [[], ['-O']]) {
         const check = (data) =>
-          execFileSync("python3", [...flags, oraclePath], {
+          execFileSync('python3', [...flags, oraclePath], {
             input: JSON.stringify(data),
             timeout: 30000,
           });
         check(payload);
         if (totals.verified === 0) {
           assert.throws(
-            () => check({ ...payload, text: "wrong" }),
+            () => check({ ...payload, text: 'wrong' }),
             (e) =>
               e.status === 1 && e.signal === null && /complete XML mismatch/.test(String(e.stderr)),
           );
@@ -119,12 +119,12 @@ try {
         }
       }
       verifyInputIdentity(oracleBytes, oracleSha256, oraclePath);
-      phase = "projection";
+      phase = 'projection';
       assert.equal(
         paragraphText(reader.readTextEvents(saved), p),
         text + paragraphText(original, p),
       );
-      phase = "reopen";
+      phase = 'reopen';
       const reopened = await createHwpxEditor(module);
       try {
         reopened.open(saved);
@@ -132,7 +132,7 @@ try {
       } finally {
         reopened.close();
       }
-      phase = "history";
+      phase = 'history';
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save()), input);
       assert.equal(editor.redo(), true);
@@ -143,7 +143,7 @@ try {
       if (totals.verified % 50 === 0)
         console.log(
           JSON.stringify({
-            kind: "progress",
+            kind: 'progress',
             path: options.fixture,
             verified: totals.verified,
             failures: totals.failures.length,
@@ -157,7 +157,7 @@ try {
         ...(error.stderr ? { stderr: String(error.stderr).slice(-1000) } : {}),
       };
       totals.failures.push(failure);
-      console.log(JSON.stringify({ kind: "failure", ...failure }));
+      console.log(JSON.stringify({ kind: 'failure', ...failure }));
       restore();
     }
   }
@@ -171,10 +171,10 @@ try {
   verifyInputIdentity(input, inputSha256, options.fixture);
   verifyInputIdentity(wasm, wasmSha256, options.wasm);
   verifyInputIdentity(oracleBytes, oracleSha256, oraclePath);
-  assert(totals.verified > 0, "positive field edit control required");
+  assert(totals.verified > 0, 'positive field edit control required');
   console.log(
     JSON.stringify({
-      kind: "summary",
+      kind: 'summary',
       path: options.fixture,
       totals,
       inputSha256,

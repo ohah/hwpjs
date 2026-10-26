@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { inflateRawSync, inflateSync } from "node:zlib";
-import { rawParagraphTexts } from "./hwp5-preview-record-oracle.mjs";
-import { decodeDistribution } from "./hwp5-distribution-oracle.mjs";
+import assert from 'node:assert/strict';
+import { inflateRawSync, inflateSync } from 'node:zlib';
+import { rawParagraphTexts } from './hwp5-preview-record-oracle.mjs';
+import { decodeDistribution } from './hwp5-distribution-oracle.mjs';
 
-export const marker = "검증😀";
+export const marker = '검증😀';
 
 // Inventory comes from Git, not a hand-picked list of successful examples.
 export function fixturePaths(paths, { allTracked = false } = {}) {
@@ -17,22 +17,22 @@ export function fixturePaths(paths, { allTracked = false } = {}) {
 }
 
 export function sectionTexts(streams) {
-  const header = streams.get("FileHeader");
-  assert(header?.length >= 40, "oracle FileHeader missing or truncated");
+  const header = streams.get('FileHeader');
+  assert(header?.length >= 40, 'oracle FileHeader missing or truncated');
   const result = new Map();
   const distribution = Boolean(header.readUInt32LE(36) & 4);
   for (const [path, encoded] of streams) {
-    const prefix = distribution ? "ViewText/Section" : "BodyText/Section";
+    const prefix = distribution ? 'ViewText/Section' : 'BodyText/Section';
     if (!path.startsWith(prefix) || !/^\d+$/.test(path.slice(prefix.length))) continue;
     let raw = encoded;
     if (distribution) {
-      assert(header[36] & 1, "uncompressed distribution oracle unsupported");
+      assert(header[36] & 1, 'uncompressed distribution oracle unsupported');
       raw = decodeDistribution(encoded);
     } else if (header[36] & 1) {
       try {
         raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
       } catch (error) {
-        if (error.code !== "Z_DATA_ERROR") throw error;
+        if (error.code !== 'Z_DATA_ERROR') throw error;
         raw = inflateSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
       }
     }
@@ -47,18 +47,18 @@ export function verifySaved(beforeStreams, afterStreams, expected) {
   assert.deepEqual(
     [...afterStreams.keys()].sort(),
     [...beforeStreams.keys()].sort(),
-    "stream inventory changed",
+    'stream inventory changed',
   );
   const actual = sectionTexts(afterStreams);
   assert.deepEqual(
     [...actual.keys()].sort(),
     [...expected.keys()].sort(),
-    "section inventory changed",
+    'section inventory changed',
   );
   for (const [section, texts] of expected)
     assert.deepEqual(actual.get(section), texts, `section ${section} paragraph text bytes`);
   for (const [path, bytes] of beforeStreams) {
-    const distribution = Boolean(beforeStreams.get("FileHeader").readUInt32LE(36) & 4);
+    const distribution = Boolean(beforeStreams.get('FileHeader').readUInt32LE(36) & 4);
     if (!(distribution ? /^ViewText\/Section\d+$/ : /^BodyText\/Section\d+$/).test(path))
       assert.deepEqual(afterStreams.get(path), bytes, `unselected stream ${path}`);
   }
@@ -71,12 +71,12 @@ export function exerciseEditor(editor, expected, { history = false } = {}) {
   let historyVerified = 0;
   if (history) editor.enableHistory();
   let attempted = 0;
-  assert.equal(editor.sectionCount(), expected.size, "editor section count differs from oracle");
+  assert.equal(editor.sectionCount(), expected.size, 'editor section count differs from oracle');
   for (const [section, texts] of expected) {
     assert.equal(
       editor.paragraphCount(section),
       texts.length,
-      "editor paragraph count differs from oracle",
+      'editor paragraph count differs from oracle',
     );
     for (let paragraph = 0; paragraph < texts.length; paragraph++) {
       attempted++;
@@ -92,7 +92,7 @@ export function exerciseEditor(editor, expected, { history = false } = {}) {
       assert.deepEqual(
         before,
         texts[paragraph] ?? Buffer.alloc(0),
-        "source text differs from independent oracle",
+        'source text differs from independent oracle',
       );
       const prior = history ? editor.save({ allowStaleLayout: true }) : null;
       try {
@@ -101,46 +101,46 @@ export function exerciseEditor(editor, expected, { history = false } = {}) {
         assert.deepEqual(
           Buffer.from(editor.copyText(section, paragraph)),
           before,
-          "refused edit mutated paragraph",
+          'refused edit mutated paragraph',
         );
         if (history)
           assert.deepEqual(
             editor.save({ allowStaleLayout: true }),
             prior,
-            "refused edit changed document or layout state",
+            'refused edit changed document or layout state',
           );
         failures[error.message] = (failures[error.message] ?? 0) + 1;
         failureSites.push({ section, paragraph, error: error.message });
         continue;
       }
       const after = Buffer.concat([
-        Buffer.from(marker, "utf16le"),
-        before.length ? before : Buffer.from("\r", "utf16le"),
+        Buffer.from(marker, 'utf16le'),
+        before.length ? before : Buffer.from('\r', 'utf16le'),
       ]);
       assert.deepEqual(
         Buffer.from(editor.copyText(section, paragraph)),
         after,
-        "accepted edit did not insert marker",
+        'accepted edit did not insert marker',
       );
       if (history) {
         const changed = editor.save({ allowStaleLayout: true });
-        assert.equal(editor.undo(), true, "accepted command missing undo");
+        assert.equal(editor.undo(), true, 'accepted command missing undo');
         assert.deepEqual(
           editor.save({ allowStaleLayout: true }),
           prior,
-          "undo differs from previous complete document",
+          'undo differs from previous complete document',
         );
         if (edits.length === 0)
           assert.deepEqual(
             editor.save(),
             prior,
-            "first undo failed to restore strict layout state",
+            'first undo failed to restore strict layout state',
           );
-        assert.equal(editor.redo(), true, "accepted command missing redo");
+        assert.equal(editor.redo(), true, 'accepted command missing redo');
         assert.deepEqual(
           editor.save({ allowStaleLayout: true }),
           changed,
-          "redo differs from edited complete document",
+          'redo differs from edited complete document',
         );
         historyVerified++;
       }
@@ -148,12 +148,12 @@ export function exerciseEditor(editor, expected, { history = false } = {}) {
       edits.push({ section, paragraph });
     }
   }
-  if (edits.length) assert.throws(() => editor.save(), { message: "LayoutReflowRequired" });
+  if (edits.length) assert.throws(() => editor.save(), { message: 'LayoutReflowRequired' });
   const saved = editor.save({ allowStaleLayout: true });
   assert.equal(
     saved.layoutRequiresReflow,
     edits.length > 0,
-    "save reflow status differs from applied edits",
+    'save reflow status differs from applied edits',
   );
   return {
     attempted,

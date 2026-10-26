@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { inspect, paragraphRecords, encodeRecord } from "./text-record-oracle.mjs";
-import { scopes } from "./structure-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { inspect, paragraphRecords, encodeRecord } from './text-record-oracle.mjs';
+import { scopes } from './structure-record-oracle.mjs';
 
 export function expectedMergeSection(source, paragraph) {
   const left = paragraphRecords(source, paragraph),
@@ -14,9 +14,9 @@ export function expectedMergeSection(source, paragraph) {
     if (payload?.length) return payload;
     assert(
       (paragraph.head.payload.readUInt32LE(0) & 0x7fffffff) <= 1,
-      "oracle cannot invent missing nonempty text",
+      'oracle cannot invent missing nonempty text',
     );
-    return Buffer.from("\r", "utf16le");
+    return Buffer.from('\r', 'utf16le');
   };
   const first = textOf(left),
     second = textOf(right);
@@ -84,7 +84,7 @@ export function verifyMerge(input, output, section, paragraph) {
   assert.deepEqual(
     after.sections[section].bytes,
     expectedMergeSection(before.sections[section].bytes, paragraph),
-    "whole merged Section differs from independent expected records",
+    'whole merged Section differs from independent expected records',
   );
   assert.deepEqual([...after.streams.keys()].sort(), [...before.streams.keys()].sort());
   for (const [path, bytes] of before.streams)

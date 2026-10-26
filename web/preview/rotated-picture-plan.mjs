@@ -1,4 +1,4 @@
-import { pictureQuadTransform } from "./picture-quad-transform.mjs";
+import { pictureQuadTransform } from './picture-quad-transform.mjs';
 
 // Native corners already contain renderingInfo rotation. The integer source
 // size is its bounding box, not another rotation to apply during painting.
@@ -15,7 +15,7 @@ export function rotatedPicturePlan(picture) {
   )
     return null;
   const mapped = pictureQuadTransform(picture.renderingCorners);
-  if (mapped.state !== "mapped") return null;
+  if (mapped.state !== 'mapped') return null;
   const [a, b, c, d] = mapped.matrix,
     det = a * d - b * c;
   if (det <= 0 || Math.abs(a * c + b * d) > 1e-8 * Math.hypot(a, b) * Math.hypot(c, d)) return null;
@@ -36,7 +36,7 @@ export function rotatedPicturePlan(picture) {
   )
     return null;
   return {
-    state: "quad",
+    state: 'quad',
     corners: picture.renderingCorners,
     width: g.width / 75,
     height: g.height / 75,

@@ -18,7 +18,7 @@ export function textBodyCase(bytes, result, prior) {
     result.value.prefix.label,
   ])
     if (s) {
-      if (s.kind === "number") numbers.set(s.id, s);
+      if (s.kind === 'number') numbers.set(s.id, s);
       else strings.set(s.id, s);
     }
   const t = result.value.text,
@@ -26,8 +26,8 @@ export function textBodyCase(bytes, result, prior) {
     text = t.text,
     start = t.start,
     body = Buffer.from(bytes.subarray(start, t.end));
-  const nameBytes = Buffer.from(name.hex, "hex"),
-    textBytes = Buffer.from(text?.hex ?? "", "hex");
+  const nameBytes = Buffer.from(name.hex, 'hex'),
+    textBytes = Buffer.from(text?.hex ?? '', 'hex');
   const per = Math.max(nameBytes.length, textBytes.length),
     total = nameBytes.length + textBytes.length;
   const objects =
@@ -43,11 +43,11 @@ export function textBodyCase(bytes, result, prior) {
     (text?.introduced ? textBytes.length : 0);
   const scope = [];
   for (const [id, v] of types) {
-    const raw = Buffer.from(v.name, "latin1");
+    const raw = Buffer.from(v.name, 'latin1');
     scope.push(integer(id), integer(raw.length, 2), raw, integer(v.version, 2));
   }
   for (const [id, v] of strings) {
-    const raw = Buffer.from(v.hex, "hex");
+    const raw = Buffer.from(v.hex, 'hex');
     scope.push(integer(id), integer(raw.length), raw, integer(v.trailer, 1));
   }
   for (const id of numbers.keys()) scope.push(integer(id));
@@ -81,8 +81,8 @@ export function textBodyCase(bytes, result, prior) {
 export function textBodyWire(t, start, objects, stored) {
   const name = t.fontName,
     text = t.text,
-    nameBytes = Buffer.from(name.hex, "hex"),
-    textBytes = Buffer.from(text?.hex ?? "", "hex");
+    nameBytes = Buffer.from(name.hex, 'hex'),
+    textBytes = Buffer.from(text?.hex ?? '', 'hex');
   const out = [
     t.end - start,
     t.fontId,
@@ -102,7 +102,7 @@ export function textBodyWire(t, start, objects, stored) {
     stored,
   ].map((n) => integer(n));
   for (const size of [12, 14, 24, 26])
-    out.push(Buffer.from(t.rawFields.find((r) => r.n === size).hex, "hex"));
+    out.push(Buffer.from(t.rawFields.find((r) => r.n === size).hex, 'hex'));
   if (t.background) {
     out.push(
       ...t.background.ids.map((n) => integer(n)),
@@ -110,7 +110,7 @@ export function textBodyWire(t, start, objects, stored) {
       integer(t.background.suffix, 2),
     );
     for (const size of [50, 34, 4])
-      out.push(Buffer.from(t.rawFields.find((r) => r.n === size).hex, "hex"));
+      out.push(Buffer.from(t.rawFields.find((r) => r.n === size).hex, 'hex'));
   }
   out.push(nameBytes, textBytes);
   return Buffer.concat(out);

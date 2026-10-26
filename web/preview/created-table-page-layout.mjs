@@ -1,7 +1,7 @@
-import { createdTableIdentity } from "../../js/created-table-identity.mjs";
-import { layoutCreatedTable } from "./created-table-layout.mjs";
-import { planTablePages } from "./table-page-plan.mjs";
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
+import { createdTableIdentity } from '../../js/created-table-identity.mjs';
+import { layoutCreatedTable } from './created-table-layout.mjs';
+import { planTablePages } from './table-page-plan.mjs';
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
 
 // Explicit whole/row-band planning; no fabricated source table/list node IDs.
 export function layoutCreatedTablePages(
@@ -11,11 +11,11 @@ export function layoutCreatedTablePages(
   measure,
   { splitMode, maxRows = 20000, ...pageOptions } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   try {
     createdTableIdentity(table?.identity);
   } catch {
-    return unavailable("InvalidCreatedTablePageLayout");
+    return unavailable('InvalidCreatedTablePageLayout');
   }
   if (
     !Number.isSafeInteger(maxRows) ||
@@ -34,25 +34,25 @@ export function layoutCreatedTablePages(
         cell.column !== index % table.columns,
     )
   )
-    return unavailable("InvalidCreatedTablePageLayout");
+    return unavailable('InvalidCreatedTablePageLayout');
   const reference = pageReferenceBoxes(setting, { x: pageOptions.x ?? 20, y: pageOptions.y ?? 20 });
-  if (reference.state !== "placed") return unavailable(reference.state);
+  if (reference.state !== 'placed') return unavailable(reference.state);
   let measured;
   try {
     measured = layoutCreatedTable(table, measure, { x: 0, y: 0, maxRows });
   } catch (error) {
     if (
       [
-        "InvalidTableGrid",
-        "InvalidCreatedTableLayout",
-        "CreatedTableLayoutRowBudgetExceeded",
+        'InvalidTableGrid',
+        'InvalidCreatedTableLayout',
+        'CreatedTableLayoutRowBudgetExceeded',
       ].includes(error.message)
     )
       return unavailable(error.message);
     throw error;
   }
   if (measured.width > reference.boxes.page.width)
-    return unavailable("CreatedTablePageWidthOverflow");
+    return unavailable('CreatedTablePageWidthOverflow');
   const geometry = {
     ...table,
     cells: table.cells.map((cell) => ({ ...cell, rowSpan: 1, columnSpan: 1 })),
@@ -66,7 +66,7 @@ export function layoutCreatedTablePages(
     splitMode,
     maxRows,
   });
-  if (plan.state !== "planned") return plan;
+  if (plan.state !== 'planned') return plan;
   const cellRows = Array.from({ length: table.cells.length }, () => []);
   for (const row of measured.rows)
     cellRows[row.createdCell.row * table.columns + row.createdCell.column].push(row);
@@ -76,8 +76,8 @@ export function layoutCreatedTablePages(
   for (const fragment of plan.fragments)
     for (const index of fragment.cells) {
       if (measured.width > fragment.referenceBoxes.column.width)
-        return unavailable("CreatedTablePageWidthOverflow");
-      if (emitted.has(index)) return unavailable("DuplicateCreatedTablePageCell");
+        return unavailable('CreatedTablePageWidthOverflow');
+      if (emitted.has(index)) return unavailable('DuplicateCreatedTablePageCell');
       emitted.add(index);
       const sourceBox = measured.boxes[index];
       const placement = {
@@ -89,10 +89,10 @@ export function layoutCreatedTablePages(
         dy = fragment.y - fragment.offset;
       const box = { ...sourceBox, x: sourceBox.x + dx, y: sourceBox.y + dy, ...placement };
       if (![box.x, box.y, box.x + box.width, box.y + box.height].every(Number.isFinite))
-        return unavailable("InvalidCreatedTablePageProjection");
+        return unavailable('InvalidCreatedTablePageProjection');
       boxes.push(box);
       for (const row of cellRows[index]) {
-        if (rows.length >= maxRows) return unavailable("CreatedTablePageProjectionLimit");
+        if (rows.length >= maxRows) return unavailable('CreatedTablePageProjectionLimit');
         rows.push({
           ...row,
           x: row.x + dx,
@@ -102,7 +102,7 @@ export function layoutCreatedTablePages(
         });
       }
     }
-  if (emitted.size !== table.cells.length) return unavailable("IncompleteCreatedTablePageCells");
+  if (emitted.size !== table.cells.length) return unavailable('IncompleteCreatedTablePageCells');
   rows.sort(
     (a, b) =>
       a.pageOrdinal - b.pageOrdinal ||
@@ -111,7 +111,7 @@ export function layoutCreatedTablePages(
       a.x - b.x,
   );
   return {
-    state: "placed",
+    state: 'placed',
     rows,
     boxes,
     pages: plan.pages,
@@ -119,6 +119,6 @@ export function layoutCreatedTablePages(
     spatialRows: true,
     limited: false,
     createdCellParagraphs: measured.paragraphs,
-    pageLayoutMode: "measured-created-table-row-bands",
+    pageLayoutMode: 'measured-created-table-row-bands',
   };
 }

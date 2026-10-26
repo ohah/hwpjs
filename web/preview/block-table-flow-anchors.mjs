@@ -1,6 +1,6 @@
 // Bind a block table's source anchor to its first actually paginated band.
 export function blockTableFlowAnchors(entries, rows) {
-  const fail = () => ({ state: "unavailable", error: "InvalidBlockTableFlowAnchor" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidBlockTableFlowAnchor' });
   if (!Array.isArray(entries) || !Array.isArray(rows)) return fail();
   const anchors = [],
     firstBands = new Map();
@@ -25,8 +25,8 @@ export function blockTableFlowAnchors(entries, rows) {
       ) ||
       entry.host.section !== table.section ||
       entry.host.paragraph !== table.hostParagraph ||
-      typeof entry.host?.text !== "string" ||
-      entry.host.text[table.anchorUnit] !== "\ufffc"
+      typeof entry.host?.text !== 'string' ||
+      entry.host.text[table.anchorUnit] !== '\ufffc'
     )
       return fail();
     const row = firstBands.get(index);
@@ -40,7 +40,7 @@ export function blockTableFlowAnchors(entries, rows) {
     )
       return fail();
     anchors.push({
-      kind: "anchor",
+      kind: 'anchor',
       height: 0,
       section: table.section,
       paragraph: table.hostParagraph,
@@ -53,5 +53,5 @@ export function blockTableFlowAnchors(entries, rows) {
       referenceBoxes: row.referenceBoxes,
     });
   }
-  return { state: "bound", anchors };
+  return { state: 'bound', anchors };
 }

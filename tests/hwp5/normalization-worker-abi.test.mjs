@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { withoutNormalizationExport } from "./normalization-export-fixture.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { withoutNormalizationExport } from './normalization-export-fixture.mjs';
 
-test("Worker never grants normalized editing without the normalization metadata ABI", async (t) => {
+test('Worker never grants normalized editing without the normalization metadata ABI', async (t) => {
   const wasm = withoutNormalizationExport(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
-    "hwp5_edit_normalization_info",
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
+    'hwp5_edit_normalization_info',
   );
   const input = Buffer.from(
-    readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp"),
+    readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp'),
   );
   const sectorSize = 2 ** input.readUInt16LE(30),
     root = (input.readUInt32LE(48) + 1) * sectorSize;
@@ -35,13 +35,13 @@ test("Worker never grants normalized editing without the normalization metadata 
     assert.equal(replies.length, 1);
     return replies.shift();
   };
-  const loaded = await send({ kind: "load", bytes: input });
+  const loaded = await send({ kind: 'load', bytes: input });
   assert.equal(loaded.error, undefined);
   assert.equal(loaded.content.normalizationEditingAvailable, false);
   assert.equal(
-    (await send({ kind: "enable", normalizeObservedCfb: true })).error,
-    "Hwp5NormalizationAbiUnavailable",
+    (await send({ kind: 'enable', normalizeObservedCfb: true })).error,
+    'Hwp5NormalizationAbiUnavailable',
   );
-  assert.equal((await send({ kind: "save" })).error, "EditorNotOpen");
+  assert.equal((await send({ kind: 'save' })).error, 'EditorNotOpen');
   assert.deepEqual(input, before);
 });

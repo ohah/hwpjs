@@ -1,23 +1,23 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { measureInlineObjectParagraph } from "../../web/preview/inline-object-paragraph-measurement.mjs";
-import { readFileSync } from "node:fs";
-import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
-import { layoutTableBodyContent } from "../../web/preview/table-body-content-layout.mjs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { measureNestedTable } from "../../web/preview/nested-table-measurement.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { measureInlineObjectParagraph } from '../../web/preview/inline-object-paragraph-measurement.mjs';
+import { readFileSync } from 'node:fs';
+import { workerCanvasHarness } from '../canvas/worker-harness.mjs';
+import { layoutTableBodyContent } from '../../web/preview/table-body-content-layout.mjs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { measureNestedTable } from '../../web/preview/nested-table-measurement.mjs';
 
-test("explicit overlay anchors keep UTF16 units without inline width or height", () => {
-  const paragraph = { section: 0, paragraph: 0, text: "😀\ufffcA\ufffcB" };
+test('explicit overlay anchors keep UTF16 units without inline width or height', () => {
+  const paragraph = { section: 0, paragraph: 0, text: '😀\ufffcA\ufffcB' };
   const entry = { objectNode: 7, unit: 4, width: 40, height: 50 };
-  const measure = (text) => ({ width: text.length * 4, height: text === "\ufffc" ? 999 : 12 });
+  const measure = (text) => ({ width: text.length * 4, height: text === '\ufffc' ? 999 : 12 });
   const before = structuredClone(paragraph);
   const result = measureInlineObjectParagraph(paragraph, [entry], 200, measure, {
     compactLines: true,
     zeroWidthUnits: [2],
   });
-  assert.equal(result.state, "measured", result.error);
-  assert.equal(result.rows.map((row) => row.text).join(""), paragraph.text);
+  assert.equal(result.state, 'measured', result.error);
+  assert.equal(result.rows.map((row) => row.text).join(''), paragraph.text);
   const row = result.rows[0];
   assert.equal(
     row.boundaries.find((b) => b.unit === 2).x,
@@ -26,31 +26,31 @@ test("explicit overlay anchors keep UTF16 units without inline width or height",
   assert.equal(result.anchors.length, 1);
   assert.equal(result.anchors[0].unit, 4);
   assert.equal(result.anchors[0].width, 40);
-  assert(result.height < 999, "overlay placeholder must not increase line height");
+  assert(result.height < 999, 'overlay placeholder must not increase line height');
   assert.deepEqual(paragraph, before);
   for (const zeroWidthUnits of [[2, 2], [1], [-1], [NaN], [4], null]) {
     assert.equal(
       measureInlineObjectParagraph(paragraph, [entry], 200, measure, { zeroWidthUnits }).state,
-      "unavailable",
+      'unavailable',
     );
   }
   assert.equal(
     measureInlineObjectParagraph(paragraph, [entry], 200, measure).error,
-    "AmbiguousInlineObjectAnchors",
+    'AmbiguousInlineObjectAnchors',
   );
 });
 
-test("actual mixed nested host preserves oversized width in visible page placement", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit field display candidate required");
+test('actual mixed nested host preserves oversized width in visible page placement', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit field display candidate required');
   const h = await workerCanvasHarness(t);
   const input = readFileSync(
-    "reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx",
+    'reference/rhwp/samples/issue5712/3184241_medical_exam_equipment.hwpx',
   );
   const independent = JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         `import base64,io,json,sys,zipfile,xml.etree.ElementTree as E
 n='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 with zipfile.ZipFile(io.BytesIO(base64.b64decode(json.load(sys.stdin)['bytes']))) as z:r=E.fromstring(z.read('Contents/section0.xml'))
@@ -65,22 +65,22 @@ outer=child.find(n+'outMargin')
 print(json.dumps({'cellWidth':int(cell.find(n+'cellSz').get('width')),'cellHasMargin':cell.get('hasMargin'),'cellLeft':int(margin.get('left')),'cellRight':int(margin.get('right')),'childWidth':int(child.find(n+'sz').get('width')),'childLeft':int(outer.get('left')),'childRight':int(outer.get('right'))}))`,
       ],
       {
-        input: JSON.stringify({ bytes: input.toString("base64") }),
-        encoding: "utf8",
+        input: JSON.stringify({ bytes: input.toString('base64') }),
+        encoding: 'utf8',
         timeout: 30000,
       },
     ),
   );
   assert.deepEqual(independent, {
     cellWidth: 47730,
-    cellHasMargin: "0",
+    cellHasMargin: '0',
     cellLeft: 283,
     cellRight: 283,
     childWidth: 48008,
     childLeft: 141,
     childRight: 141,
   });
-  const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
+  const loaded = await h.send({ kind: 'load', format: 'hwpx', bytes: input });
   assert.equal(loaded.error, undefined);
   const before = structuredClone(loaded.content);
   const nested = loaded.content.tables.filter((table) => table.parentTableNode !== null);
@@ -98,7 +98,7 @@ print(json.dumps({'cellWidth':int(cell.find(n+'cellSz').get('width')),'cellHasMa
   );
   const measure = (text) => ({ width: text.length * 4, height: 12 });
   const result = measureNestedTable(loaded.content, loaded.content.tables[0], measure);
-  assert.equal(result.error, "InlineObjectLineWidthOverflow");
+  assert.equal(result.error, 'InlineObjectLineWidthOverflow');
   assert.equal(result.paragraph, 38);
   assert.equal(result.objects.length, 1);
   assert.equal(result.objects[0].objectNode, 1064);
@@ -115,9 +115,9 @@ print(json.dumps({'cellWidth':int(cell.find(n+'cellSz').get('width')),'cellHasMa
     ) < 1e-8,
   );
   assert(result.objects[0].width > result.availableWidth);
-  assert.equal(result.rows, undefined, "no partially successful layout for a refused document");
+  assert.equal(result.rows, undefined, 'no partially successful layout for a refused document');
   const visible = layoutTableBodyContent(loaded.content, measure, 20000);
-  assert.equal(visible.state, "paginated", visible.error);
+  assert.equal(visible.state, 'paginated', visible.error);
   assert.equal(
     visible.boxes.length,
     loaded.content.tables.reduce((sum, table) => sum + table.cells.length, 0),
@@ -136,7 +136,7 @@ print(json.dumps({'cellWidth':int(cell.find(n+'cellSz').get('width')),'cellHasMa
   );
   assert(
     childBoxes.every((box) => box.pageClip === undefined),
-    "visible overflow must not acquire a cell clip",
+    'visible overflow must not acquire a cell clip',
   );
   for (const box of visible.boxes.filter((box) => box.depth > 0)) {
     const paper = box.referenceBoxes.paper;

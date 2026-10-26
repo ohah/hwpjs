@@ -10,10 +10,10 @@ export function floatingPolygonAnchorUnits(content, paragraph) {
       ![2, 3].includes(polygon.source.text_wrap) ||
       polygon.source.affect_line_spacing !== false ||
       !Number.isSafeInteger(polygon.anchorUnit) ||
-      paragraph.text[polygon.anchorUnit] !== "\ufffc" ||
+      paragraph.text[polygon.anchorUnit] !== '\ufffc' ||
       units.has(polygon.anchorUnit)
     )
-      throw new Error("UnsupportedInlineGroupPolygonAnchor");
+      throw new Error('UnsupportedInlineGroupPolygonAnchor');
     units.add(polygon.anchorUnit);
   }
   return [...units];

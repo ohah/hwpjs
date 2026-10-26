@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { inverseReference } from "./icc-matrix-reference.mjs";
-import { writeUnsigned, readWide } from "./icc-wide-fraction-wire.mjs";
-import { pointInput, pointEntries, checkPoint } from "./icc-model-forward.mjs";
-import { modelProfile } from "./icc-model.mjs";
+import assert from 'node:assert/strict';
+import { inverseReference } from './icc-matrix-reference.mjs';
+import { writeUnsigned, readWide } from './icc-wide-fraction-wire.mjs';
+import { pointInput, pointEntries, checkPoint } from './icc-model-forward.mjs';
+import { modelProfile } from './icc-model.mjs';
 export function fractionMatrixInput(matrix, numerators, denominator) {
   const b = Buffer.alloc(164);
   matrix.forEach((v, i) => b.writeInt32BE(v, i * 4));

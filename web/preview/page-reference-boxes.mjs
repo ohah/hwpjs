@@ -1,8 +1,8 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 /** Build physical reference boxes from one explicit declaration, never a viewport. */
 export function pageReferenceBoxes(setting, origin, pageOrdinal = 0) {
-  const invalid = { state: "unsupported_page_geometry" };
+  const invalid = { state: 'unsupported_page_geometry' };
   if (
     !setting ||
     !origin ||
@@ -32,14 +32,14 @@ export function pageReferenceBoxes(setting, origin, pageOrdinal = 0) {
     return invalid;
   // Nonzero/asymmetric mirrored binding still requires binding-side ownership.
   const symmetricMirrored =
-    gutterType === "left_right" && margin.gutter === 0 && margin.left === margin.right;
+    gutterType === 'left_right' && margin.gutter === 0 && margin.left === margin.right;
   if (
-    !["widely", "narrowly"].includes(orientation) ||
-    (gutterType !== "left_only" && !symmetricMirrored)
+    !['widely', 'narrowly'].includes(orientation) ||
+    (gutterType !== 'left_only' && !symmetricMirrored)
   )
     return invalid;
   let [width, height, left, right, top, bottom, gutter, header, footer] = units.map(hwpUnitPixels);
-  if (orientation === "narrowly") [width, height] = [height, width];
+  if (orientation === 'narrowly') [width, height] = [height, width];
   left += gutter;
   top += header;
   bottom += footer;
@@ -60,5 +60,5 @@ export function pageReferenceBoxes(setting, origin, pageOrdinal = 0) {
     ].every(Number.isFinite)
   )
     return invalid;
-  return { state: "placed", boxes: { paper, page } };
+  return { state: 'placed', boxes: { paper, page } };
 }

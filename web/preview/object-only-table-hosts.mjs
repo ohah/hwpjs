@@ -5,7 +5,7 @@ export function objectOnlyTableHostKeys(content, layout) {
   for (const paragraph of content.paragraphs ?? []) {
     if (
       !paragraph ||
-      typeof paragraph.text !== "string" ||
+      typeof paragraph.text !== 'string' ||
       !/^\ufffc+$/.test(paragraph.text) ||
       paragraph.clipped
     )
@@ -19,7 +19,7 @@ export function objectOnlyTableHostKeys(content, layout) {
       else covered.add(unit);
     };
     for (const anchor of paragraph.structuralAnchors ?? []) {
-      if (!anchor || !["section", "column"].includes(anchor.kind)) {
+      if (!anchor || !['section', 'column'].includes(anchor.kind)) {
         valid = false;
         break;
       }

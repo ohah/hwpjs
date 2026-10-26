@@ -1,6 +1,6 @@
-import { clipChartSegment } from "./chart-segment-clip.mjs";
-import { paintChartMarker } from "./chart-marker-paint.mjs";
-import { validChartCurvePaths } from "./chart-curve-paths.mjs";
+import { clipChartSegment } from './chart-segment-clip.mjs';
+import { paintChartMarker } from './chart-marker-paint.mjs';
+import { validChartCurvePaths } from './chart-curve-paths.mjs';
 /** Plot-clipped XY straight/cubic paths and explicitly labelled preview markers. */
 export function paintChartScatter(ctx, scatter, plot, x, y, color) {
   const pixels = (segment) => [
@@ -14,7 +14,7 @@ export function paintChartScatter(ctx, scatter, plot, x, y, color) {
     segment.end.y * plot.height + y,
   ];
   for (const row of scatter.rows) {
-    if (["smooth", "smoothMarker"].includes(scatter.style) && row.curves === undefined)
+    if (['smooth', 'smoothMarker'].includes(scatter.style) && row.curves === undefined)
       return false;
     if (row.curves !== null && row.curves !== undefined) {
       if (!validChartCurvePaths(row.curves)) return false;
@@ -31,7 +31,7 @@ export function paintChartScatter(ctx, scatter, plot, x, y, color) {
     for (const row of scatter.rows) {
       ctx.strokeStyle = color(row.series_node);
       ctx.fillStyle = color(row.series_node);
-      if (scatter.style !== "marker") {
+      if (scatter.style !== 'marker') {
         ctx.beginPath();
         if (row.curves)
           for (const path of row.curves) {
@@ -53,7 +53,7 @@ export function paintChartScatter(ctx, scatter, plot, x, y, color) {
         ctx.stroke();
       }
       const marker = row.marker ?? {
-        symbol: ["line", "smooth"].includes(scatter.style) ? "none" : "circle",
+        symbol: ['line', 'smooth'].includes(scatter.style) ? 'none' : 'circle',
         radius: 3,
       };
       for (const point of row.points) {

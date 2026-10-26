@@ -1,26 +1,26 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { trackedHwpxFiles } from "../../tools/hwpx-corpus-files.mjs";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { workerReopenProjection } from "./worker-reopen-projection.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { trackedHwpxFiles } from '../../tools/hwpx-corpus-files.mjs';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { workerReopenProjection } from './worker-reopen-projection.mjs';
 
-test("actual Worker advertises all HWPX channels and edits every anchor and field candidate with history", async (t) => {
+test('actual Worker advertises all HWPX channels and edits every anchor and field candidate with history', async (t) => {
   const previousSelf = globalThis.self,
     previousFetch = globalThis.fetch,
     replies = [];
-  const wasmBytes = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const wasmBytes = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   const nativeExports = new Set(
     WebAssembly.Module.exports(await WebAssembly.compile(wasmBytes))
-      .filter((row) => row.kind === "function")
+      .filter((row) => row.kind === 'function')
       .map((row) => row.name),
   );
   const resultAvailable = [
-    "hwpx_edit_splice_manual_formula_result",
-    "hwpx_edit_manual_formula_result_max_bytes",
-    "hwpx_edit_manual_formula_result_targets",
-    "hwpx_edit_manual_formula_result_range_target",
-    "hwpx_edit_manual_formula_result_display_text",
+    'hwpx_edit_splice_manual_formula_result',
+    'hwpx_edit_manual_formula_result_max_bytes',
+    'hwpx_edit_manual_formula_result_targets',
+    'hwpx_edit_manual_formula_result_range_target',
+    'hwpx_edit_manual_formula_result_display_text',
   ].every((name) => nativeExports.has(name));
   globalThis.self = {
     postMessage(value) {
@@ -61,24 +61,24 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
   };
   const reopen = async (bytes, source, expected, origin) => {
     const before = Buffer.from(bytes);
-    const loaded = await send({ kind: "load", format: "hwpx", bytes, origin });
+    const loaded = await send({ kind: 'load', format: 'hwpx', bytes, origin });
     assert.deepEqual(workerReopenProjection(loaded.content), expected);
     assert.deepEqual(Buffer.from(bytes), before);
-    await send({ kind: "enable" });
-    assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), before);
-    await send({ kind: "load", format: "hwpx", bytes: source, origin });
-    await send({ kind: "enable" });
+    await send({ kind: 'enable' });
+    assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), before);
+    await send({ kind: 'load', format: 'hwpx', bytes: source, origin });
+    await send({ kind: 'enable' });
   };
   for (const path of paths) {
     const source = readFileSync(path),
       before = Buffer.from(source);
-    await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: source, origin: path } });
+    await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: source, origin: path } });
     assert.equal(replies.length, 1);
     const reply = replies.shift();
     assert.equal(reply.origin, path);
     assert.deepEqual(source, before);
-    if (path.endsWith("/password-12345.hwpx")) {
-      assert.equal(reply.error, "EncryptedDocument");
+    if (path.endsWith('/password-12345.hwpx')) {
+      assert.equal(reply.error, 'EncryptedDocument');
       assert.equal(reply.passwordRequired, true);
       totals.encrypted++;
       continue;
@@ -101,13 +101,13 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
       else if (paragraph.fieldLabels.length) totals.field++;
       else if (wholeFormula(paragraph)) {
         totals.formula++;
-        assert(path.endsWith("/chart.hwpx"));
+        assert(path.endsWith('/chart.hwpx'));
         assert(
           [23, 29, 35, 64, 70, 76, 129, 130, 131, 132, 156, 162, 168].includes(paragraph.paragraph),
         );
       } else {
         totals.protected++;
-        assert(path.endsWith("/chart.hwpx"));
+        assert(path.endsWith('/chart.hwpx'));
         assert(
           [23, 29, 35, 64, 70, 76, 129, 130, 131, 132, 156, 162, 168].includes(paragraph.paragraph),
         );
@@ -121,12 +121,12 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
       (p) => !p.plainEditable && !p.anchorEditable && !p.fieldLabels.length && wholeFormula(p),
     );
     if (fields.length || anchors.length || formulas.length) {
-      await send({ kind: "enable" });
+      await send({ kind: 'enable' });
       const inventory = formulas.length
         ? JSON.parse(
-            execFileSync("python3", ["tools/hwpx-manual-result-inventory.py"], {
+            execFileSync('python3', ['tools/hwpx-manual-result-inventory.py'], {
               input: source,
-              encoding: "utf8",
+              encoding: 'utf8',
               timeout: 30000,
             }),
           )
@@ -136,11 +136,11 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
           (row) =>
             row.section === paragraph.section && row.localParagraph === paragraph.paragraph + 1,
         );
-        assert.equal(independent.length, 1, "IndependentFormulaOwnerMissing");
-        const marker = "Worker결과😀<&",
+        assert.equal(independent.length, 1, 'IndependentFormulaOwnerMissing');
+        const marker = 'Worker결과😀<&',
           display = marker + paragraph.text;
         const edited = await send({
-          kind: "splice",
+          kind: 'splice',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           startUnit: 0,
@@ -153,13 +153,13 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
           ).text,
           display,
         );
-        const changed = Buffer.from((await send({ kind: "save" })).bytes);
+        const changed = Buffer.from((await send({ kind: 'save' })).bytes);
         assert.notDeepEqual(changed, source);
-        for (const flags of [[], ["-O"]])
-          execFileSync("python3", [...flags, "tools/hwpx-manual-result-save-oracle.py"], {
+        for (const flags of [[], ['-O']])
+          execFileSync('python3', [...flags, 'tools/hwpx-manual-result-save-oracle.py'], {
             input: JSON.stringify({
-              before: source.toString("base64"),
-              after: changed.toString("base64"),
+              before: source.toString('base64'),
+              after: changed.toString('base64'),
               section: paragraph.section,
               ordinal: independent[0].ordinal,
               display,
@@ -167,30 +167,30 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
             }),
             timeout: 30000,
           });
-        assert.equal((await send({ kind: "undo" })).changed, true);
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
-        assert.equal((await send({ kind: "redo" })).changed, true);
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), changed);
-        assert.equal((await send({ kind: "undo" })).changed, true);
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
-        const reopened = await send({ kind: "load", format: "hwpx", bytes: changed, origin: path });
+        assert.equal((await send({ kind: 'undo' })).changed, true);
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), source);
+        assert.equal((await send({ kind: 'redo' })).changed, true);
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), changed);
+        assert.equal((await send({ kind: 'undo' })).changed, true);
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), source);
+        const reopened = await send({ kind: 'load', format: 'hwpx', bytes: changed, origin: path });
         assert.equal(
           reopened.content.paragraphs.find(
             (p) => p.section === paragraph.section && p.paragraph === paragraph.paragraph,
           ).text,
           display,
         );
-        await send({ kind: "enable" });
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), changed);
-        await send({ kind: "load", format: "hwpx", bytes: source, origin: path });
-        await send({ kind: "enable" });
+        await send({ kind: 'enable' });
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), changed);
+        await send({ kind: 'load', format: 'hwpx', bytes: source, origin: path });
+        await send({ kind: 'enable' });
         formulaCommands++;
       }
       for (const paragraph of fields) {
         const label = paragraph.fieldLabels[0],
-          marker = "Worker필드😀";
+          marker = 'Worker필드😀';
         const edited = await send({
-          kind: "splice",
+          kind: 'splice',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           startUnit: label.start,
@@ -202,24 +202,24 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
             .find((p) => p.section === paragraph.section && p.paragraph === paragraph.paragraph)
             .text.includes(marker),
         );
-        const changed = await send({ kind: "save" });
+        const changed = await send({ kind: 'save' });
         assert.notDeepEqual(Buffer.from(changed.bytes), source);
-        const undo = await send({ kind: "undo" });
+        const undo = await send({ kind: 'undo' });
         assert.equal(undo.changed, true);
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
-        const redo = await send({ kind: "redo" });
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), source);
+        const redo = await send({ kind: 'redo' });
         assert.equal(redo.changed, true);
-        assert.deepEqual((await send({ kind: "save" })).bytes, changed.bytes);
-        await send({ kind: "undo" });
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
+        assert.deepEqual((await send({ kind: 'save' })).bytes, changed.bytes);
+        await send({ kind: 'undo' });
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), source);
         await reopen(changed.bytes, source, workerReopenProjection(edited.content), path);
         fieldCommands++;
       }
       for (const paragraph of anchors) {
-        const marker = "Worker앵커😀",
+        const marker = 'Worker앵커😀',
           end = paragraph.text.length;
         const edited = await send({
-          kind: "splice",
+          kind: 'splice',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           startUnit: end,
@@ -232,14 +232,14 @@ test("actual Worker advertises all HWPX channels and edits every anchor and fiel
           ).text,
           paragraph.text + marker,
         );
-        const changed = await send({ kind: "save" });
+        const changed = await send({ kind: 'save' });
         assert.notDeepEqual(Buffer.from(changed.bytes), source);
-        assert.equal((await send({ kind: "undo" })).changed, true);
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
-        assert.equal((await send({ kind: "redo" })).changed, true);
-        assert.deepEqual((await send({ kind: "save" })).bytes, changed.bytes);
-        await send({ kind: "undo" });
-        assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), source);
+        assert.equal((await send({ kind: 'undo' })).changed, true);
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), source);
+        assert.equal((await send({ kind: 'redo' })).changed, true);
+        assert.deepEqual((await send({ kind: 'save' })).bytes, changed.bytes);
+        await send({ kind: 'undo' });
+        assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), source);
         await reopen(changed.bytes, source, workerReopenProjection(edited.content), path);
         anchorCommands++;
       }

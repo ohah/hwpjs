@@ -1,5 +1,5 @@
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { layoutContent } from "./layout.mjs";
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { layoutContent } from './layout.mjs';
 
 // 셀 내부 측정 높이만 결정합니다. 본문 페이지와 표 행 높이는 호출자가 소유합니다.
 export function measureTableCellColumns(
@@ -10,16 +10,16 @@ export function measureTableCellColumns(
   measure,
   maxRows,
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (!Number.isFinite(minimumHeight) || minimumHeight < 0 || !Array.isArray(paragraphs))
-    return unavailable("InvalidTableCellColumns");
-  if (declaration?.same_size !== true || declaration.kind !== "newspaper")
-    return unavailable("UnsupportedTableCellColumns");
+    return unavailable('InvalidTableCellColumns');
+  if (declaration?.same_size !== true || declaration.kind !== 'newspaper')
+    return unavailable('UnsupportedTableCellColumns');
   const geometry = columnReferenceBoxes(
     { x: 0, y: 0, width, height: Math.max(1, minimumHeight) },
     declaration,
   );
-  if (geometry.state !== "placed") return geometry;
+  if (geometry.state !== 'placed') return geometry;
   const measured = layoutContent(
     { paragraphs, limited: false },
     geometry.boxes[0].width,
@@ -27,14 +27,14 @@ export function measureTableCellColumns(
     maxRows,
     { documentBody: true, includeTerminalAfter: false },
   );
-  if (measured.limited) return unavailable("TableCellMeasurementLimit");
+  if (measured.limited) return unavailable('TableCellMeasurementLimit');
   if (
     !measured.rows.length ||
     measured.rows.some((row) => !Number.isFinite(row.height) || row.height <= 0)
   )
-    return unavailable("InvalidTableCellColumns");
+    return unavailable('InvalidTableCellColumns');
   const total = measured.rows.reduce((sum, row) => sum + row.height, 0);
-  if (!Number.isFinite(total)) return unavailable("InvalidTableCellColumns");
+  if (!Number.isFinite(total)) return unavailable('InvalidTableCellColumns');
   const pack = (height) => {
     let column = 0,
       y = 0;
@@ -63,10 +63,10 @@ export function measureTableCellColumns(
     }
     rows = pack(high);
   }
-  if (!rows) return unavailable("TableCellColumnPackingFailed");
+  if (!rows) return unavailable('TableCellColumnPackingFailed');
   return {
     ...measured,
-    state: "measured",
+    state: 'measured',
     rows,
     height: high,
     spatialRows: true,

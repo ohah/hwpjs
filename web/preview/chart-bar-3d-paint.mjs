@@ -3,7 +3,7 @@ export function validChartBar3D(value) {
   for (const face of value.faces) {
     if (
       !face ||
-      !["front", "side", "cap"].includes(face.kind) ||
+      !['front', 'side', 'cap'].includes(face.kind) ||
       !Number.isFinite(face.depth) ||
       !Array.isArray(face.points) ||
       face.points.length !== 4
@@ -34,8 +34,8 @@ export function paintChartBar3D(ctx, value, plot, x, y, color) {
       for (const point of face.pixels.slice(1)) ctx.lineTo(point.x, point.y);
       ctx.closePath();
       ctx.fill();
-      if (face.kind !== "front") {
-        ctx.fillStyle = face.kind === "cap" ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.25)";
+      if (face.kind !== 'front') {
+        ctx.fillStyle = face.kind === 'cap' ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)';
         ctx.fill();
       }
     }

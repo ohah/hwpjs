@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { loadMemoDocument } from "./memo-references.mjs";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { loadMemoDocument } from './memo-references.mjs';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -10,7 +10,7 @@ const w = (n) => {
 };
 const frame = (tag, level, p) => Buffer.concat([w(tag | (level << 10) | (p.length << 20)), p]);
 export function revisionSignEdges(call) {
-  const command = Buffer.from("$RevisionSign;1;", "utf16le");
+  const command = Buffer.from('$RevisionSign;1;', 'utf16le');
   let accepted = 0,
     rejected = 0;
   const props = (c) => {
@@ -53,14 +53,14 @@ export function revisionSignEdges(call) {
       rejected++;
     }
   for (const text of [
-    "$RevisionSign;0;",
-    "$RevisionSign;2;",
-    "$RevisionSign;1",
-    "$RevisionSign;1;;",
-    "$RevisionSign;1;\0",
-    "$RevisionDelete;",
+    '$RevisionSign;0;',
+    '$RevisionSign;2;',
+    '$RevisionSign;1',
+    '$RevisionSign;1;;',
+    '$RevisionSign;1;\0',
+    '$RevisionDelete;',
   ]) {
-    assert.throws(() => run(props(Buffer.from(text, "utf16le"))), /ControlIdMismatch/);
+    assert.throws(() => run(props(Buffer.from(text, 'utf16le'))), /ControlIdMismatch/);
     rejected++;
   }
   for (const args of [
@@ -81,22 +81,22 @@ export function revisionSignActual(call, cfb) {
   const x = loadMemoDocument(
       call,
       cfb,
-      "task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+      'task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
     ),
     v = x.h.subarray(32, 36),
-    cmd = Buffer.from("$RevisionSign;1;", "utf16le"),
+    cmd = Buffer.from('$RevisionSign;1;', 'utf16le'),
     result = [];
   const wholeInput = Buffer.concat([w(67108864), x.file]),
     whole = call(25, wholeInput);
   for (const [kind, paragraph] of [
-    ["BodyText", 34377],
-    ["ViewText", 43359],
+    ['BodyText', 34377],
+    ['ViewText', 43359],
   ]) {
-    const raw = cfb.findExact("/" + kind + "/Section0").content,
+    const raw = cfb.findExact('/' + kind + '/Section0').content,
       b = call(3, Buffer.concat([x.h, Buffer.from(raw)]));
     const input = decodedDocumentInput(x.h, x.doc, [{ index: 0, bytes: b }]),
       original = call(24, input);
-    assert.equal(original.readUInt32LE(sectionFieldOffset(0, "observed_field_links")), 1);
+    assert.equal(original.readUInt32LE(sectionFieldOffset(0, 'observed_field_links')), 1);
     const links = call(38, Buffer.concat([v, b])),
       observed = [];
     for (let at = 0; at < links.length; at += 32)
@@ -113,7 +113,7 @@ export function revisionSignActual(call, cfb) {
     assert.equal(text.tag, 67);
     assert.deepEqual(b.subarray(header.start + 11, header.start + 11 + cmd.length), cmd);
     const changed = Buffer.from(b);
-    changed.writeUInt16LE("2".charCodeAt(0), header.start + 11 + cmd.length - 4);
+    changed.writeUInt16LE('2'.charCodeAt(0), header.start + 11 + cmd.length - 4);
     assert.throws(() => call(38, Buffer.concat([v, changed])), /ControlIdMismatch/);
     assert.deepEqual(call(38, Buffer.concat([v, b])), links);
     assert.throws(
@@ -121,11 +121,11 @@ export function revisionSignActual(call, cfb) {
       /ControlIdMismatch/,
     );
     assert.deepEqual(call(24, input), original);
-    if (kind === "BodyText") {
+    if (kind === 'BodyText') {
       const parent = x.nodes.findIndex((n) => n.parent === 0 && n.name === kind),
         file = cfb.write({
           nodes: x.nodes.map((n) =>
-            n.parent === parent && n.name === "Section0"
+            n.parent === parent && n.name === 'Section0'
               ? { ...n, content: deflateRawSync(changed) }
               : n,
           ),

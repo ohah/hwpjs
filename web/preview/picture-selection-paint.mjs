@@ -1,13 +1,13 @@
-import { pictureQuadTransform } from "./picture-quad-transform.mjs";
+import { pictureQuadTransform } from './picture-quad-transform.mjs';
 
 export function paintPictureSelection(ctx, item, scrollTop) {
   let corners;
-  if (item.paintPlan?.state === "quad") {
+  if (item.paintPlan?.state === 'quad') {
     const mapped = pictureQuadTransform(
       item.paintPlan.corners,
       item.paintOrigin ?? { x: item.x, y: item.y },
     );
-    if (mapped.state !== "mapped") return false;
+    if (mapped.state !== 'mapped') return false;
     const [a, b, c, d, e, f] = mapped.matrix;
     corners = [
       [e, f],
@@ -15,7 +15,7 @@ export function paintPictureSelection(ctx, item, scrollTop) {
       [e + a + c, f + b + d],
       [e + c, f + d],
     ];
-  } else if (item.paintPlan?.state === "plain") {
+  } else if (item.paintPlan?.state === 'plain') {
     corners = [
       [item.x, item.y],
       [item.x + item.width, item.y],
@@ -26,7 +26,7 @@ export function paintPictureSelection(ctx, item, scrollTop) {
   if (!Number.isFinite(scrollTop) || !corners.flat().every(Number.isFinite)) return false;
   ctx.save();
   try {
-    ctx.strokeStyle = "#145b96";
+    ctx.strokeStyle = '#145b96';
     ctx.lineWidth = 1;
     ctx.setLineDash([]);
     ctx.beginPath();

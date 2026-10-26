@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { spawnSync } from "node:child_process";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { spawnSync } from 'node:child_process';
 
 // Python owns ZIP/XML mutation controls; no WASM or product build is involved.
 const controls = String.raw`
@@ -84,10 +84,10 @@ reject({**patch, 'paragraph_order':'raw'})
 print('section metadata controls: %d positive, %d negative' % (positive, negative))
 `;
 
-for (const flags of [[], ["-O"]]) {
-  test(`section metadata whole-tree controls Python ${flags.join(" ") || "normal"}`, () => {
-    const result = spawnSync("nice", ["-n", "19", "python3", ...flags, "-c", controls], {
-      encoding: "utf8",
+for (const flags of [[], ['-O']]) {
+  test(`section metadata whole-tree controls Python ${flags.join(' ') || 'normal'}`, () => {
+    const result = spawnSync('nice', ['-n', '19', 'python3', ...flags, '-c', controls], {
+      encoding: 'utf8',
       timeout: 30000,
     });
     assert.equal(result.status, 0, result.stderr);

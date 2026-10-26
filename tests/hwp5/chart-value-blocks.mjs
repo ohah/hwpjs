@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { observeAxis } from "./chart-axis-evidence.mjs";
-import { valueBlockCase } from "./chart-value-block-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { observeAxis } from './chart-axis-evidence.mjs';
+import { valueBlockCase } from './chart-value-block-oracle.mjs';
 export async function chartValueBlocks(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     blocks = 0,
     numbers = 0,
@@ -16,10 +16,10 @@ export async function chartValueBlocks(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const context = chartAxisContext(b);
       let offset = context.plot.end,
@@ -28,7 +28,7 @@ export async function chartValueBlocks(call) {
         const result = observeAxis(b, offset, state.types, state.strings, state.numbers);
         if (result.value) {
           blocks++;
-          if (result.value.prefix.reference?.kind === "number") numbers++;
+          if (result.value.prefix.reference?.kind === 'number') numbers++;
           const c = valueBlockCase(b, result, state),
             { body, input, wire } = c;
           const accept = (data = body, expected = wire) => {
@@ -69,19 +69,19 @@ export async function chartValueBlocks(call) {
             changedCase = valueBlockCase(changed, changedResult, state);
           accept(changedCase.body, changedCase.wire);
           for (let cut = 0; cut < body.length; cut++)
-            reject(body.subarray(0, cut), "UnexpectedEnd");
-          if (c.per) reject(body, "LimitExceeded", { per: c.per - 1 });
-          if (c.total) reject(body, "LimitExceeded", { total: c.total - 1 });
-          if (c.stored) reject(body, "LimitExceeded", { stored: c.stored - 1 });
-          reject(body, "LimitExceeded", { objects: c.objects - 1 });
-          reject(body, "LimitExceeded", {}, input().length - 1);
+            reject(body.subarray(0, cut), 'UnexpectedEnd');
+          if (c.per) reject(body, 'LimitExceeded', { per: c.per - 1 });
+          if (c.total) reject(body, 'LimitExceeded', { total: c.total - 1 });
+          if (c.stored) reject(body, 'LimitExceeded', { stored: c.stored - 1 });
+          reject(body, 'LimitExceeded', { objects: c.objects - 1 });
+          reject(body, 'LimitExceeded', {}, input().length - 1);
           for (const d of [
             ...result.value.prefix.declarations,
             ...result.value.text.declarations,
           ]) {
             const wrong = Buffer.from(body);
             wrong[d.versionOffset - c.start] ^= 1;
-            reject(wrong, "UnsupportedChartTypeVersion");
+            reject(wrong, 'UnsupportedChartTypeVersion');
           }
         }
         state = result;

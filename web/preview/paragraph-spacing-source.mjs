@@ -4,7 +4,7 @@ export function currentParagraphSpacing(shape) {
   const hasModern = modern !== undefined && modern !== null;
   if (
     hasModern &&
-    (typeof modern !== "object" ||
+    (typeof modern !== 'object' ||
       Array.isArray(modern) ||
       !Number.isInteger(modern.attributes) ||
       modern.attributes < 0 ||
@@ -17,7 +17,7 @@ export function currentParagraphSpacing(shape) {
   if (hasModern && (!Number.isInteger(value) || value < -2147483648 || value > 2147483647))
     return null;
   if (
-    shape?.spacingFormat !== "hwpx" &&
+    shape?.spacingFormat !== 'hwpx' &&
     hasModern &&
     kind === 0 &&
     Number.isInteger(shape?.legacySpacingKind) &&
@@ -34,4 +34,4 @@ export function currentParagraphSpacing(shape) {
   }
   return { kind, value };
 }
-import { paragraphSpacingArgs, paragraphSpacingTypes } from "../../js/paragraph-spacing-args.mjs";
+import { paragraphSpacingArgs, paragraphSpacingTypes } from '../../js/paragraph-spacing-args.mjs';

@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { seriesLabelContext } from "./chart-series-label-context.mjs";
-import { observeSeriesSuffix } from "./chart-series-suffix-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { seriesLabelContext } from './chart-series-label-context.mjs';
+import { observeSeriesSuffix } from './chart-series-suffix-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   ids = 0,
   types = 0,
@@ -15,10 +15,10 @@ let cuts = 0,
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const c = seriesLabelContext(b),
       read = (bytes) =>
         observeSeriesSuffix(bytes, c.end, c.label.types, c.label.objects, c.label.strings),
@@ -30,9 +30,9 @@ try {
           (e) =>
             e.constructor === Error &&
             [
-              "IncompleteSeriesSuffixObservation",
-              "IncompleteAxisObservation",
-              "IncompleteTextFormatObservation",
+              'IncompleteSeriesSuffixObservation',
+              'IncompleteAxisObservation',
+              'IncompleteTextFormatObservation',
             ].includes(e.message),
         );
         cuts++;
@@ -50,8 +50,8 @@ try {
             (e) =>
               e.constructor === Error &&
               [
-                "UnsupportedSeriesSuffixObservationObject",
-                "UnsupportedTextFormatObservationObject",
+                'UnsupportedSeriesSuffixObservationObject',
+                'UnsupportedTextFormatObservationObject',
               ].includes(e.message),
           );
           ids++;
@@ -64,7 +64,7 @@ try {
             () => read(bad),
             (e) =>
               e.constructor === Error &&
-              ["UnsupportedAxisObservationType", "UnsupportedTextFormatObservationType"].includes(
+              ['UnsupportedAxisObservationType', 'UnsupportedTextFormatObservationType'].includes(
                 e.message,
               ),
           );
@@ -79,7 +79,7 @@ try {
             () => observeSeriesSuffix(b, c.end, wrong, c.label.objects, c.label.strings),
             (e) =>
               e.constructor === Error &&
-              ["UnsupportedAxisObservationType", "UnsupportedTextFormatObservationType"].includes(
+              ['UnsupportedAxisObservationType', 'UnsupportedTextFormatObservationType'].includes(
                 e.message,
               ),
           );
@@ -105,7 +105,7 @@ try {
           ...r.body,
           text: {
             ...r.body.text,
-            rawFields: r.body.text.rawFields.map((f) => ({ ...f, hex: "ff".repeat(f.n) })),
+            rawFields: r.body.text.rawFields.map((f) => ({ ...f, hex: 'ff'.repeat(f.n) })),
           },
         },
       });
@@ -125,7 +125,7 @@ try {
         introduced: f.code?.introduced ?? false,
       })),
       end: r.end,
-      next: b.subarray(r.end, r.end + 48).toString("hex"),
+      next: b.subarray(r.end, r.end + 48).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);

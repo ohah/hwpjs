@@ -8,7 +8,7 @@ export function validateHwp5DrawingLineEndpoints(rows) {
     );
   const components = new Set(),
     lines = new Set();
-  if (!Array.isArray(rows)) throw new Error("InvalidHwp5DrawingLineEndpoints");
+  if (!Array.isArray(rows)) throw new Error('InvalidHwp5DrawingLineEndpoints');
   for (const row of rows) {
     if (
       !row ||
@@ -18,7 +18,7 @@ export function validateHwp5DrawingLineEndpoints(rows) {
       row.owner_node >= row.component_node ||
       row.component_node >= row.line_node ||
       row.attributes > 65535 ||
-      typeof row.extra_nonzero !== "boolean" ||
+      typeof row.extra_nonzero !== 'boolean' ||
       (row.extra_bytes === 0 && row.extra_nonzero) ||
       !pair(row.points, Number.isFinite) ||
       !pair(
@@ -28,7 +28,7 @@ export function validateHwp5DrawingLineEndpoints(rows) {
       components.has(row.component_node) ||
       lines.has(row.line_node)
     )
-      throw new Error("InvalidHwp5DrawingLineEndpoints");
+      throw new Error('InvalidHwp5DrawingLineEndpoints');
     components.add(row.component_node);
     lines.add(row.line_node);
   }
@@ -36,6 +36,6 @@ export function validateHwp5DrawingLineEndpoints(rows) {
 }
 export function decodeHwp5DrawingLineEndpoints(bytes) {
   return validateHwp5DrawingLineEndpoints(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

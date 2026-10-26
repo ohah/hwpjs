@@ -1,4 +1,4 @@
-import { displayHwpxContent } from "./hwpx-content.mjs";
+import { displayHwpxContent } from './hwpx-content.mjs';
 
 // Source relationships only: no edit values, fallback guesses, or layout state.
 export function hwpxWindowDependencies(editor, projection) {
@@ -9,7 +9,7 @@ export function hwpxWindowDependencies(editor, projection) {
     stack = [],
     groups = [];
   for (const event of projection.events) {
-    if (event.kind === "paragraph_start") {
+    if (event.kind === 'paragraph_start') {
       const ordinal = ordinals.size;
       ordinals.set(`${event.section}:${event.paragraph}`, ordinal);
       sections.add(event.section);
@@ -18,11 +18,11 @@ export function hwpxWindowDependencies(editor, projection) {
         groups.push([stack.at(-1), ordinal]);
       }
       stack.push(ordinal);
-    } else if (event.kind === "paragraph_end") stack.pop();
+    } else if (event.kind === 'paragraph_end') stack.pop();
   }
   const resolve = (section, paragraph) => {
     const ordinal = ordinals.get(`${section}:${paragraph}`);
-    if (ordinal === undefined) throw new Error("WindowDependencyBindingMismatch");
+    if (ordinal === undefined) throw new Error('WindowDependencyBindingMismatch');
     return ordinal;
   };
   for (const section of sections) {
@@ -43,7 +43,7 @@ export function hwpxWindowDependencies(editor, projection) {
       if (!drawings.has(row.drawingNode)) drawings.set(row.drawingNode, new Set());
       const ordinal = resolve(section, row.paragraph);
       const host = parents.get(ordinal);
-      if (host === undefined) throw new Error("MissingWindowDrawingHost");
+      if (host === undefined) throw new Error('MissingWindowDrawingHost');
       drawings.get(row.drawingNode).add(ordinal);
       drawings.get(row.drawingNode).add(host);
     }

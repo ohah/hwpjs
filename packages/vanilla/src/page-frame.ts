@@ -1,7 +1,7 @@
 // @ts-ignore Canonical paper extent and padding; no second layout model.
-import { canvasHorizontalExtent } from "../../../web/preview/canvas-horizontal-extent.mjs";
+import { canvasHorizontalExtent } from '../../../web/preview/canvas-horizontal-extent.mjs';
 // @ts-ignore Shared renderer geometry constant.
-import { TEXT_LEFT } from "../../../web/preview/row-geometry.mjs";
+import { TEXT_LEFT } from '../../../web/preview/row-geometry.mjs';
 
 interface PageLayout {
   state?: string;
@@ -24,7 +24,7 @@ export function canvasSurfacePageFrame(
     !Number.isFinite(scrollbarWidth) ||
     scrollbarWidth < 0 ||
     scrollbarWidth >= available ||
-    layout?.state !== "paginated" ||
+    layout?.state !== 'paginated' ||
     !Array.isArray(layout.pages) ||
     !layout.pages.length
   )

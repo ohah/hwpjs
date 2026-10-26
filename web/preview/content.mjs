@@ -1,5 +1,5 @@
 // A bounded display projection, never a mutable document or save input.
-import { retainedTextView } from "./text-offsets.mjs";
+import { retainedTextView } from './text-offsets.mjs';
 export function clipText(text, maxUnits) {
   let end = Math.min(text.length, maxUnits);
   if (
@@ -20,7 +20,7 @@ export function displayContent(
       (value) => Number.isSafeInteger(value) && value >= 0,
     )
   )
-    throw new RangeError("InvalidDisplayBounds");
+    throw new RangeError('InvalidDisplayBounds');
   const total = result.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
   if (
     paragraphOrdinals !== null &&
@@ -34,9 +34,9 @@ export function displayContent(
           (index > 0 && value <= paragraphOrdinals[index - 1]),
       ))
   )
-    throw new RangeError("InvalidDisplayBounds");
+    throw new RangeError('InvalidDisplayBounds');
   if (paragraphOrdinals !== null && paragraphOrdinals.length > maxParagraphs)
-    throw new RangeError("ParagraphWindowBudgetExceeded");
+    throw new RangeError('ParagraphWindowBudgetExceeded');
   const selected = paragraphOrdinals === null ? null : new Set(paragraphOrdinals);
   const paragraphs = [];
   let units = 0,
@@ -63,7 +63,7 @@ export function displayContent(
         limited = true;
       }
       units += text.length;
-      const controls = p.tokens.filter((t) => t.type === "control").length;
+      const controls = p.tokens.filter((t) => t.type === 'control').length;
       // This is a display candidate, not an independently reimplemented native
       // ownership policy. The native command validates logical list membership.
       const empty = !p.textPresent && p.declaredUnits <= 1;
@@ -71,13 +71,13 @@ export function displayContent(
         !result.readOnly &&
         (p.textPresent || empty) &&
         text.length === fullText.length &&
-        (retainedView !== null || p.tokens.every((t) => t.type !== "control" || t.code === 13));
+        (retainedView !== null || p.tokens.every((t) => t.type !== 'control' || t.code === 13));
       paragraphs.push({
         section: section.index,
         paragraph: index,
         editable,
-        label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? " · 중첩" : ""}${empty ? " · 빈 문단" : ""}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ""}`,
-        text: p.textPresent || empty ? text : "[직접 텍스트 없음]",
+        label: `구역 ${section.index + 1} · 문단 ${index + 1}${p.parentNodeIndex !== null ? ' · 중첩' : ''}${empty ? ' · 빈 문단' : ''}${controls ? ` · 제어 표식 ${controls}개 (표시 의미 미적용)` : ''}`,
+        text: p.textPresent || empty ? text : '[직접 텍스트 없음]',
       });
       if (text.length !== fullText.length) paragraphs.at(-1).clipped = true;
       paragraphs.at(-1).selectionOwner =
@@ -88,8 +88,8 @@ export function displayContent(
     }
   }
   return {
-    format: "hwp5",
-    version: result.version.join("."),
+    format: 'hwp5',
+    version: result.version.join('.'),
     paragraphs,
     totalParagraphs,
     limited,

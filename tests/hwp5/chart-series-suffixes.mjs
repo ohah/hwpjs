@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { seriesSuffixOracle } from "./chart-series-suffix-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { seriesSuffixOracle } from './chart-series-suffix-oracle.mjs';
 const extent = (b) => {
   b.writeUInt32LE(b.length - 36, 32);
   return b;
 };
 export async function chartSeriesSuffixes(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     formats = 0,
     nullCodes = 0,
@@ -18,10 +18,10 @@ export async function chartSeriesSuffixes(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       const e = seriesSuffixOracle(b);
       roots++;
       formats += 2;
@@ -45,17 +45,17 @@ export async function chartSeriesSuffixes(call) {
       after.fill(255, e.end);
       accept(after);
       for (let cut = e.start; cut < e.end; cut++)
-        reject(extent(Buffer.from(b.subarray(0, cut))), "UnexpectedEnd");
-      reject(b, "LimitExceeded", e.r.objects.size - 1);
-      reject(b, "LimitExceeded", e.r.objects.size, b.length - 1);
+        reject(extent(Buffer.from(b.subarray(0, cut))), 'UnexpectedEnd');
+      reject(b, 'LimitExceeded', e.r.objects.size - 1);
+      reject(b, 'LimitExceeded', e.r.objects.size, b.length - 1);
       for (const at of [
         e.start,
         e.r.body.text.fontOffset,
         ...e.r.formats.map((f) => f.format.start),
       ])
         for (const [id, error] of [
-          [0xffffffff, "UnsupportedChartObjectReference"],
-          [e.prior.tail.label.id, "DuplicateChartObjectId"],
+          [0xffffffff, 'UnsupportedChartObjectReference'],
+          [e.prior.tail.label.id, 'DuplicateChartObjectId'],
         ]) {
           const bad = Buffer.from(b);
           bad.writeUInt32LE(id, at);
@@ -66,8 +66,8 @@ export async function chartSeriesSuffixes(call) {
         ...e.r.formats.flatMap((f) => f.declarations),
       ])
         for (const [at, error] of [
-          [d.nameOffset, "UnsupportedChartClass"],
-          [d.versionOffset, "UnsupportedChartTypeVersion"],
+          [d.nameOffset, 'UnsupportedChartClass'],
+          [d.versionOffset, 'UnsupportedChartTypeVersion'],
         ]) {
           const bad = Buffer.from(b);
           bad[at] ^= 1;
@@ -83,7 +83,7 @@ export async function chartSeriesSuffixes(call) {
         const at = f.code?.start ?? f.end - 4,
           own = Buffer.from(b);
         own.writeUInt32LE(f.headerWord, at);
-        reject(own, "UnsupportedChartObjectReference");
+        reject(own, 'UnsupportedChartObjectReference');
         const alias = Buffer.alloc(4);
         alias.writeUInt32LE(e.r.body.text.fontName.id);
         accept(extent(Buffer.concat([b.subarray(0, at), alias, b.subarray(f.code?.end ?? f.end)])));

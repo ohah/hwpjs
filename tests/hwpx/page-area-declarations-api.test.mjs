@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { decodePageAreaDeclarations } from "../../js/hwpx-page-area-declarations.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { decodePageAreaDeclarations } from '../../js/hwpx-page-area-declarations.mjs';
 const encode = (value) => new TextEncoder().encode(JSON.stringify(value));
-const fixture = "legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx";
+const fixture = 'legacy/rust/crates/hwp-core/tests/fixtures/headerfooter.hwpx';
 
-test("page area declaration wire validates current order, source identity and coordinates", () => {
-  const row = { paragraph: 2, source_element: 9, source_control: 8, unit: 0, affinity: "left" };
+test('page area declaration wire validates current order, source identity and coordinates', () => {
+  const row = { paragraph: 2, source_element: 9, source_control: 8, unit: 0, affinity: 'left' };
   assert.deepEqual(decodePageAreaDeclarations(encode([row])), [
-    { paragraph: 2, sourceElement: 9, sourceControl: 8, unit: 0, affinity: "left" },
+    { paragraph: 2, sourceElement: 9, sourceControl: 8, unit: 0, affinity: 'left' },
   ]);
   assert.deepEqual(decodePageAreaDeclarations(encode([])), []);
   for (const bad of [
@@ -30,7 +30,7 @@ test("page area declaration wire validates current order, source identity and co
 });
 
 test(
-  "actual declarations refresh through owner split history and saved reopen",
+  'actual declarations refresh through owner split history and saved reopen',
   { skip: !process.env.HWPJS_TEST_WASM },
   async () => {
     const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM)),
@@ -68,13 +68,13 @@ test(
 );
 
 test(
-  "actual nested table declaration hosts remain distinct from area text owners",
+  'actual nested table declaration hosts remain distinct from area text owners',
   { skip: !process.env.HWPJS_TEST_WASM },
   async () => {
     const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
     try {
       const input = readFileSync(
-        "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",
+        'reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx',
       );
       editor.open(input);
       const rows = editor.pageAreaDeclarations(0);
@@ -94,7 +94,7 @@ test(
 );
 
 test(
-  "old WASM refuses declaration capability explicitly",
+  'old WASM refuses declaration capability explicitly',
   { skip: !process.env.HWPJS_BASELINE_WASM },
   async () => {
     const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_BASELINE_WASM));

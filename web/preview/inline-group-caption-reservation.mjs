@@ -1,10 +1,10 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { layoutDrawingCaption } from "./drawing-caption-layout.mjs";
-import { captionBoundsInsets } from "./caption-bounds-insets.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { layoutDrawingCaption } from './drawing-caption-layout.mjs';
+import { captionBoundsInsets } from './caption-bounds-insets.mjs';
 
 // Root group origin is unchanged; the caller owns the final page placement.
 export function reserveInlineGroupCaption(root, paragraphs, measure, { maxRows = 20000 } = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const source = root?.source;
   if (
     !source ||
@@ -15,7 +15,7 @@ export function reserveInlineGroupCaption(root, paragraphs, measure, { maxRows =
     source.has_caption !== true ||
     !source.caption ||
     !Array.isArray(paragraphs) ||
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
     ![source.geometry?.width, source.geometry?.height].every(
@@ -27,7 +27,7 @@ export function reserveInlineGroupCaption(root, paragraphs, measure, { maxRows =
       (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff,
     )
   )
-    return fail("InvalidInlineGroupCaptionSource");
+    return fail('InvalidInlineGroupCaptionSource');
   const rectangle = {
     x: 0,
     y: 0,
@@ -41,16 +41,16 @@ export function reserveInlineGroupCaption(root, paragraphs, measure, { maxRows =
     measure,
     { maxRows },
   );
-  if (caption.state !== "positioned") return caption;
+  if (caption.state !== 'positioned') return caption;
   const [left, right, top, bottom] = source.flow.outside_margins.map(hwpUnitPixels);
   const insets = captionBoundsInsets(rectangle, caption.bounds, { left, right, top, bottom });
-  if (!insets) return fail("InvalidInlineGroupCaptionReservation");
+  if (!insets) return fail('InvalidInlineGroupCaptionReservation');
   const width = rectangle.width + insets.left + insets.right,
     height = rectangle.height + insets.top + insets.bottom;
   if (![width, height].every((value) => Number.isFinite(value) && value > 0))
-    return fail("InvalidInlineGroupCaptionReservation");
+    return fail('InvalidInlineGroupCaptionReservation');
   return {
-    state: "reserved",
+    state: 'reserved',
     rectangle,
     caption,
     outerInsets: insets,

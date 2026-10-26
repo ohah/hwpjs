@@ -1,7 +1,7 @@
-import { nestedParagraphReference } from "./nested-paragraph-reference.mjs";
-import { positionNestedFloatingTable } from "./nested-floating-table-position.mjs";
-import { projectNestedFloatingTable } from "./nested-floating-table-projection.mjs";
-import { validateNestedFloatingCellOwners } from "./nested-floating-cell-owners.mjs";
+import { nestedParagraphReference } from './nested-paragraph-reference.mjs';
+import { positionNestedFloatingTable } from './nested-floating-table-position.mjs';
+import { projectNestedFloatingTable } from './nested-floating-table-projection.mjs';
+import { validateNestedFloatingCellOwners } from './nested-floating-cell-owners.mjs';
 
 // Compose owned current cell rows and measured children at a real page origin.
 export function projectNestedFloatingCellContent(
@@ -11,7 +11,7 @@ export function projectNestedFloatingCellContent(
   page,
   { insets, maxRows = 20000 } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(entries) ||
     entries.length > 10000 ||
@@ -23,9 +23,9 @@ export function projectNestedFloatingCellContent(
       (value) => Number.isFinite(value) && value >= 0,
     )
   )
-    return unavailable("InvalidNestedFloatingCellContent");
+    return unavailable('InvalidNestedFloatingCellContent');
   const ownership = validateNestedFloatingCellOwners(parent, entries);
-  if (ownership.state !== "verified") return ownership;
+  if (ownership.state !== 'verified') return ownership;
   const rows = [],
     boxes = [],
     flowPictures = [],
@@ -35,7 +35,7 @@ export function projectNestedFloatingCellContent(
     const table = entry?.table,
       paragraph = entry?.paragraph;
     const reference = nestedParagraphReference(paragraph, flow, origin);
-    if (reference.state !== "referenced") return reference;
+    if (reference.state !== 'referenced') return reference;
     const column = {
       x: origin.x,
       y: origin.y,
@@ -49,12 +49,12 @@ export function projectNestedFloatingCellContent(
       { ...page?.referenceBoxes, column },
       { measured: entry.measured },
     );
-    if (position.state !== "positioned") return position;
-    if (rows.length >= maxRows) return unavailable("TablePageProjectionLimit");
+    if (position.state !== 'positioned') return position;
+    if (rows.length >= maxRows) return unavailable('TablePageProjectionLimit');
     const projected = projectNestedFloatingTable(table, entry.measured, position, page, {
       maxRows: maxRows - rows.length,
     });
-    if (projected.state !== "placed") return projected;
+    if (projected.state !== 'placed') return projected;
     rows.push(
       ...projected.rows.map((row) => ({
         ...row,
@@ -78,7 +78,7 @@ export function projectNestedFloatingCellContent(
     placements.push({ ...position, paragraph: paragraph.paragraph });
   }
   return {
-    state: "placed",
+    state: 'placed',
     rows,
     boxes,
     placements,

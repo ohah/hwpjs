@@ -1,5 +1,5 @@
-import { sourceDisplayPosition } from "./text-offsets.mjs";
-import { HWP5_STRUCTURAL_ANCHOR_KINDS } from "../../js/hwp5-structural-anchors.mjs";
+import { sourceDisplayPosition } from './text-offsets.mjs';
+import { HWP5_STRUCTURAL_ANCHOR_KINDS } from '../../js/hwp5-structural-anchors.mjs';
 
 /** Metadata only: preserve text and editing coordinates until layout projection. */
 export function attachHwp5StructuralAnchors(editor, content) {
@@ -24,7 +24,7 @@ export function attachHwp5StructuralAnchors(editor, content) {
           controls.has(row.control_node) ||
           !HWP5_STRUCTURAL_ANCHOR_KINDS.includes(row.kind)
         )
-          throw new Error("StructuralDisplayAnchorBindingMismatch");
+          throw new Error('StructuralDisplayAnchorBindingMismatch');
         const unit = sourceDisplayPosition(
           row.current_unit,
           paragraph.sourceOffsets,
@@ -36,8 +36,8 @@ export function attachHwp5StructuralAnchors(editor, content) {
           paragraph.text.length,
         );
         const key = `${row.paragraph}:${unit}`;
-        if (end !== unit + 1 || paragraph.text[unit] !== "\ufffc" || positions.has(key))
-          throw new Error("StructuralDisplayAnchorMismatch");
+        if (end !== unit + 1 || paragraph.text[unit] !== '\ufffc' || positions.has(key))
+          throw new Error('StructuralDisplayAnchorMismatch');
         controls.add(row.control_node);
         positions.add(key);
         prepared.push({ paragraph, anchor: { ...row, unit } });

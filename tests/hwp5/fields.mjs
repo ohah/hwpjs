@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { documentRecords } from "./documents.mjs";
-import { fieldIds } from "./control-types.mjs";
+import assert from 'node:assert/strict';
+import { documentRecords } from './documents.mjs';
+import { fieldIds } from './control-types.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);

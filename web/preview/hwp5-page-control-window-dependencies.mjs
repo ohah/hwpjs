@@ -1,5 +1,5 @@
-import { hwp5WindowIdentities } from "./hwp5-window-identities.mjs";
-import { validateHwp5PageControlSources } from "../../js/hwp5-page-control-sources.mjs";
+import { hwp5WindowIdentities } from './hwp5-window-identities.mjs';
+import { validateHwp5PageControlSources } from '../../js/hwp5-page-control-sources.mjs';
 
 // Retain actual page-control hosts; do not infer counters from cached page numbers.
 export function hwp5PageControlWindowDependencies(editor, projection) {
@@ -11,7 +11,7 @@ export function hwp5PageControlWindowDependencies(editor, projection) {
       flows.length !== section.paragraphs.length ||
       flows.some((row, index) => row.paragraph !== index)
     )
-      throw new Error("WindowDependencyBindingMismatch");
+      throw new Error('WindowDependencyBindingMismatch');
     const hosts = [
       ...new Set(
         validateHwp5PageControlSources(editor.pageControlSources(section.index)).map((row) =>
@@ -20,7 +20,7 @@ export function hwp5PageControlWindowDependencies(editor, projection) {
       ),
     ];
     for (const row of flows)
-      if (row.host === "body") {
+      if (row.host === 'body') {
         const child = resolve(section.index, row.paragraph),
           parents = hosts.filter((host) => host !== child);
         if (parents.length) dependencies.set(child, parents);

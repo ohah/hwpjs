@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { jpegFrameFixture } from "./jpeg-frame.mjs";
-import { jpegPlanesInput, jpegPlanesOracle } from "./jpeg-planes.mjs";
-import { segment } from "./jpeg-structure.mjs";
+import assert from 'node:assert/strict';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { jpegFrameFixture } from './jpeg-frame.mjs';
+import { jpegPlanesInput, jpegPlanesOracle } from './jpeg-planes.mjs';
+import { segment } from './jpeg-structure.mjs';
 
 function markers(raw) {
   let at = 0,
@@ -56,7 +56,7 @@ export function jpegJfxxJpegOracle(raw) {
     }
     if (m.code === 224)
       assert.ok(
-        !["JFIF\0", "JFXX\0"].includes(raw.subarray(m.payload, m.payload + 5).toString("latin1")),
+        !['JFIF\0', 'JFXX\0'].includes(raw.subarray(m.payload, m.payload + 5).toString('latin1')),
       );
   }
   return jpegPlanesOracle(raw);
@@ -95,13 +95,13 @@ export function jpegJfxxJpegEdges(call) {
                 }),
               );
   const raw = jpegJfxxJpegFixture({ width: 1, height: 1, sampling: [17], groups: [[0]] });
-  for (const name of ["JFIF\0", "JFXX\0"])
+  for (const name of ['JFIF\0', 'JFXX\0'])
     for (const at of [2, raw.length - 2])
       reject(
         Buffer.concat([raw.subarray(0, at), segment(224, Buffer.from(name)), raw.subarray(at)]),
         /ForbiddenJfxxNestedMarker/,
       );
-  check(Buffer.concat([raw.subarray(0, 2), segment(224, Buffer.from("acme\0")), raw.subarray(2)]));
+  check(Buffer.concat([raw.subarray(0, 2), segment(224, Buffer.from('acme\0')), raw.subarray(2)]));
   const sof = markers(raw).find((m) => m.code === 192);
   for (const code of [193, 194, 195, 201, 202, 203]) {
     const bad = Buffer.from(raw);

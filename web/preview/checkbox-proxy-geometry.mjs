@@ -1,17 +1,17 @@
 // Semantic state adornment at the native protected unit, not original form layout.
-import { selectionRects } from "./text-geometry.mjs";
-import { inlineCheckBoxIndex, checkBoxPositionKey } from "./checkbox-inline-layout.mjs";
-const states = new Set(["CHECKED", "UNCHECKED", "INDETERMINATE"]);
+import { selectionRects } from './text-geometry.mjs';
+import { inlineCheckBoxIndex, checkBoxPositionKey } from './checkbox-inline-layout.mjs';
+const states = new Set(['CHECKED', 'UNCHECKED', 'INDETERMINATE']);
 export function checkBoxProxyBoxes(content, layout) {
   if (content.checkBoxStateAvailable !== true) return [];
   const result = [];
   const sourceBoxes = inlineCheckBoxIndex(content);
   for (const checkBox of content.checkBoxes ?? []) {
-    if (checkBox.siteState !== "located" || !states.has(checkBox.state)) continue;
+    if (checkBox.siteState !== 'located' || !states.has(checkBox.state)) continue;
     const paragraph = content.paragraphs.find(
       (p) => p.section === checkBox.section && p.paragraph === checkBox.paragraph,
     );
-    if (!paragraph || paragraph.text[checkBox.anchorUnit] !== "\ufffc") continue;
+    if (!paragraph || paragraph.text[checkBox.anchorUnit] !== '\ufffc') continue;
     const point = {
       section: checkBox.section,
       paragraph: checkBox.paragraph,
@@ -53,4 +53,4 @@ export function checkBoxProxyBoxes(content, layout) {
   }
   return result;
 }
-export { hitTransformedBox as hitCheckBoxProxy } from "./transformed-box-hit.mjs";
+export { hitTransformedBox as hitCheckBoxProxy } from './transformed-box-hit.mjs';

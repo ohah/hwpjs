@@ -1,8 +1,8 @@
-import { seriesLabelFixture } from "./chart-series-label-fixture.mjs";
-export function seriesSuffixFixture(offset = 0, known = false, first = "fresh", second = "first") {
-  const source = seriesLabelFixture(0, "alias"),
+import { seriesLabelFixture } from './chart-series-label-fixture.mjs';
+export function seriesSuffixFixture(offset = 0, known = false, first = 'fresh', second = 'first') {
+  const source = seriesLabelFixture(0, 'alias'),
     types = new Map(source.types);
-  if (known) types.set(501, { name: "VtTextFormat\0", version: 1 });
+  if (known) types.set(501, { name: 'VtTextFormat\0', version: 1 });
   const parts = [Buffer.alloc(offset, 0xa5)],
     formats = [];
   let p = offset,
@@ -31,7 +31,7 @@ export function seriesSuffixFixture(offset = 0, known = false, first = "fresh", 
       versionOffset = null;
     if (!declared) {
       declared = true;
-      const n = Buffer.from("VtTextFormat\0");
+      const n = Buffer.from('VtTextFormat\0');
       int(n.length, 2);
       nameOffset = p;
       add(n);
@@ -42,14 +42,14 @@ export function seriesSuffixFixture(offset = 0, known = false, first = "fresh", 
     const rawOffset = p;
     int(0xaa55, 2);
     const codeOffset = p;
-    if (kind === "null") int(0xffffffff);
-    else if (kind === "alias") int(99);
-    else if (kind === "first") int(40);
+    if (kind === 'null') int(0xffffffff);
+    else if (kind === 'alias') int(99);
+    else if (kind === 'first') int(40);
     else {
       int(40 + i);
       int(146);
-      int(kind === "empty" ? 0 : 2, 2);
-      if (kind !== "empty") add(Buffer.from([255, 128]));
+      int(kind === 'empty' ? 0 : 2, 2);
+      if (kind !== 'empty') add(Buffer.from([255, 128]));
       int(173, 1);
       int(165);
       int(127);

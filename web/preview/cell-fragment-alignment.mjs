@@ -1,4 +1,4 @@
-import { alignTableCellFlow } from "./table-cell-vertical-alignment.mjs";
+import { alignTableCellFlow } from './table-cell-vertical-alignment.mjs';
 
 // Sorted mandatory cuts are in the same grid coordinate system as the cell.
 export function cellCrossesMandatoryCut(top, bottom, cuts) {
@@ -17,7 +17,7 @@ export function cellCrossesMandatoryCut(top, bottom, cuts) {
 export function alignCellFragmentFlow(flow, top, start, finish, insets) {
   if (flow.fragmentVerticalAlignment === undefined) return flow;
   if (![0, 1, 2].includes(flow.fragmentVerticalAlignment))
-    throw Error("UnsupportedCellVerticalAlignment");
+    throw Error('UnsupportedCellVerticalAlignment');
   if (
     ![top, start, finish, flow.height, insets?.top, insets?.bottom].every(Number.isFinite) ||
     start < top ||
@@ -26,7 +26,7 @@ export function alignCellFragmentFlow(flow, top, start, finish, insets) {
     insets.top < 0 ||
     insets.bottom < 0
   )
-    throw Error("InvalidCellVerticalAlignment");
+    throw Error('InvalidCellVerticalAlignment');
   if (start !== top || flow.height + insets.top + insets.bottom > finish - start) return flow;
   return alignTableCellFlow(flow, finish - start, insets, flow.fragmentVerticalAlignment);
 }

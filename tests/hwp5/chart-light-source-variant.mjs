@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { integer } from "./chart-text-body-oracle.mjs";
+import assert from 'node:assert/strict';
+import { integer } from './chart-text-body-oracle.mjs';
 // Selected zero/extended-source fixtures; not automatic count inference.
 export function lightSourceCountVariant(bytes, e, count) {
   const b = Buffer.from(bytes);

@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { nestedParagraphReference } from "../../web/preview/nested-paragraph-reference.mjs";
-import { positionNestedFloatingTable } from "../../web/preview/nested-floating-table-position.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { nestedParagraphReference } from '../../web/preview/nested-paragraph-reference.mjs';
+import { positionNestedFloatingTable } from '../../web/preview/nested-floating-table-position.mjs';
 
-test("floating paragraph reference uses covered current rows rather than flow height", () => {
-  const paragraph = { section: 0, paragraph: 3, text: "😀" };
+test('floating paragraph reference uses covered current rows rather than flow height', () => {
+  const paragraph = { section: 0, paragraph: 3, text: '😀' };
   const row = {
-    kind: "text",
+    kind: 'text',
     section: 0,
     paragraph: 3,
     startUnit: 0,
     endUnit: 2,
-    text: "😀",
+    text: '😀',
     x: 0,
     y: 0,
     width: 200,
@@ -24,7 +24,7 @@ test("floating paragraph reference uses covered current rows rather than flow he
   const before = structuredClone(flow);
   const reference = nestedParagraphReference(paragraph, flow, origin);
   assert.deepEqual(reference, {
-    state: "referenced",
+    state: 'referenced',
     rectangle: { section: 0, paragraph: 3, x: 50, y: 200, width: 200, height: 16 },
   });
   const table = {
@@ -62,28 +62,28 @@ test("floating paragraph reference uses covered current rows rather than flow he
     { rows: [{ ...row, paragraphX: 99, paragraphReferenceX: 0 }] },
     origin,
   );
-  assert.equal(centered.rectangle.x, 50, "glyph centering is not paragraph reference origin");
+  assert.equal(centered.rectangle.x, 50, 'glyph centering is not paragraph reference origin');
   for (const change of [
-    { text: "wrong" },
+    { text: 'wrong' },
     { endUnit: 1 },
     { textHeight: NaN },
     { transform: [1, 0, 0, 1, 0, 0] },
   ])
     assert.equal(
       nestedParagraphReference(paragraph, { rows: [{ ...row, ...change }] }, origin).state,
-      "unavailable",
+      'unavailable',
     );
   assert.equal(
     nestedParagraphReference(paragraph, { rows: [row, row] }, origin).error,
-    "IncompleteNestedParagraphReference",
+    'IncompleteNestedParagraphReference',
   );
   assert.deepEqual(flow, before);
 });
 
-test("explicit anchor page selects a fragment only after full paragraph coverage is proven", () => {
-  const paragraph = { section: 0, paragraph: 3, text: "abcd" };
+test('explicit anchor page selects a fragment only after full paragraph coverage is proven', () => {
+  const paragraph = { section: 0, paragraph: 3, text: 'abcd' };
   const rows = [0, 1].map((pageOrdinal) => ({
-    kind: "text",
+    kind: 'text',
     section: 0,
     paragraph: 3,
     pageOrdinal,
@@ -102,13 +102,13 @@ test("explicit anchor page selects a fragment only after full paragraph coverage
     origin = { x: 0, y: 0 };
   assert.equal(
     nestedParagraphReference(paragraph, { rows }, origin).error,
-    "UnsupportedNestedParagraphReference",
+    'UnsupportedNestedParagraphReference',
   );
   const selected = nestedParagraphReference(paragraph, { rows }, origin, {
     pageOrdinal: 1,
     columnOrdinal: 0,
   });
-  assert.equal(selected.state, "referenced");
+  assert.equal(selected.state, 'referenced');
   assert.equal(selected.rectangle.y, 500);
   assert.equal(selected.rectangle.height, 16);
   assert.equal(
@@ -116,29 +116,29 @@ test("explicit anchor page selects a fragment only after full paragraph coverage
       pageOrdinal: 1,
       columnOrdinal: 0,
     }).error,
-    "IncompleteNestedParagraphReference",
+    'IncompleteNestedParagraphReference',
   );
   assert.equal(
     nestedParagraphReference(paragraph, { rows }, origin, { pageOrdinal: 2, columnOrdinal: 0 })
       .state,
-    "unavailable",
+    'unavailable',
   );
   assert.equal(
     nestedParagraphReference(paragraph, { rows }, origin, { pageOrdinal: 1, columnOrdinal: -1 })
       .state,
-    "unavailable",
+    'unavailable',
   );
   assert.deepEqual(rows, before);
 });
 
-test("picture fragments retain the unaligned reference box for LEFT RIGHT CENTER and malformed widths", async () => {
-  const { alignPictureFragment } = await import("../../web/preview/picture-fragment-alignment.mjs");
-  const paragraph = { section: 0, paragraph: 3, text: "ab" };
+test('picture fragments retain the unaligned reference box for LEFT RIGHT CENTER and malformed widths', async () => {
+  const { alignPictureFragment } = await import('../../web/preview/picture-fragment-alignment.mjs');
+  const paragraph = { section: 0, paragraph: 3, text: 'ab' };
   const fragment = {
     x: 19,
     y: 0,
     width: 200,
-    text: "ab",
+    text: 'ab',
     startUnit: 0,
     endUnit: 2,
     textHeight: 16,
@@ -152,9 +152,9 @@ test("picture fragments retain the unaligned reference box for LEFT RIGHT CENTER
   };
   for (const alignment of [1, 2, 3]) {
     const aligned = alignPictureFragment(fragment, { alignment }, true);
-    const row = { ...aligned, kind: "text", section: 0, paragraph: 3 };
+    const row = { ...aligned, kind: 'text', section: 0, paragraph: 3 };
     const reference = nestedParagraphReference(paragraph, { rows: [row] }, { x: 100, y: 200 });
-    assert.equal(reference.state, "referenced", reference.error);
+    assert.equal(reference.state, 'referenced', reference.error);
     assert.equal(reference.rectangle.x, 119);
     assert.equal(reference.rectangle.width, 200);
     for (const width of [NaN, Infinity, 0, -1])
@@ -164,7 +164,7 @@ test("picture fragments retain the unaligned reference box for LEFT RIGHT CENTER
           { rows: [{ ...row, paragraphReferenceWidth: width }] },
           { x: 0, y: 0 },
         ).state,
-        "unavailable",
+        'unavailable',
       );
   }
   assert.equal(fragment.x, 19);

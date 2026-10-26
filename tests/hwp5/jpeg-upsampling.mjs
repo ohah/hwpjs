@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 function weights(reference, source, x) {
   assert.ok(reference > 0 && source > 0 && source <= reference && x < reference);

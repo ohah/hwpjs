@@ -1,20 +1,20 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createCfbReader } from "../../js/cfb.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createCfbReader } from '../../js/cfb.mjs';
 import {
   inspect,
   records,
   paragraphRecords,
   encodeRecord,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
-const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-const source = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/software.hwp");
+} from './style-preservation/text-record-oracle.mjs';
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+const source = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/software.hwp');
 
-test("nested software cell splices preserve the complete independent Section and every other stream", async () => {
+test('nested software cell splices preserve the complete independent Section and every other stream', async () => {
   const raw = inspect(source).sections[0].bytes;
   const candidates = records(raw)
     .filter((r) => r.tag === 66)
@@ -34,9 +34,9 @@ test("nested software cell splices preserve the complete independent Section and
     const text = paragraphRecords(raw, paragraph).direct.find((r) => r.tag === 67).payload;
     const units = text.length / 2 - 1;
     for (const [start, end, addition] of [
-      [0, 0, "한😀"],
-      [units, units, "끝"],
-      [0, units, ""],
+      [0, 0, '한😀'],
+      [units, units, '끝'],
+      [0, units, ''],
     ]) {
       const editor = await createExperimentalHwp5Editor(wasm, source);
       try {
@@ -56,7 +56,7 @@ test("nested software cell splices preserve the complete independent Section and
   }
 });
 
-test("nested list count mismatch is rejected atomically, not bypassed by display candidate", async () => {
+test('nested list count mismatch is rejected atomically, not bypassed by display candidate', async () => {
   const writer = await createCfbReader(wasm);
   let damaged;
   try {
@@ -70,7 +70,7 @@ test("nested list count mismatch is rejected atomically, not bypassed by display
     const payload = Buffer.from(list.payload);
     payload.writeUInt16LE(payload.readUInt16LE(0) + 1, 0);
     const section = doc.nodes.find(
-      (n) => n.name === "Section0" && doc.nodes[n.parent]?.name === "BodyText",
+      (n) => n.name === 'Section0' && doc.nodes[n.parent]?.name === 'BodyText',
     );
     section.content = deflateRawSync(
       Buffer.concat(all.map((r) => (r === list ? encodeRecord(r.tag, r.level, payload) : r.raw))),
@@ -83,8 +83,8 @@ test("nested list count mismatch is rejected atomically, not bypassed by display
   try {
     const before = editor.copyText(0, 2);
     assert.throws(
-      () => editor.splice({ section: 0, paragraph: 2, startUnit: 0, endUnit: 0, text: "X" }),
-      { message: "ListParagraphCountMismatch" },
+      () => editor.splice({ section: 0, paragraph: 2, startUnit: 0, endUnit: 0, text: 'X' }),
+      { message: 'ListParagraphCountMismatch' },
     );
     assert.deepEqual(editor.copyText(0, 2), before);
     assert.deepEqual(editor.save().bytes, damaged);
@@ -93,7 +93,7 @@ test("nested list count mismatch is rejected atomically, not bypassed by display
   }
 });
 
-test("nested ownership rejects missing list/table and duplicate table markers without changing source", async (t) => {
+test('nested ownership rejects missing list/table and duplicate table markers without changing source', async (t) => {
   const raw = inspect(source).sections[0].bytes,
     all = records(raw),
     title = paragraphRecords(raw, 2);
@@ -101,16 +101,16 @@ test("nested ownership rejects missing list/table and duplicate table markers wi
     table = all.find((r) => r.tag === 77);
   for (const [label, change, error] of [
     [
-      "missing list",
+      'missing list',
       (r) => (r === list ? [encodeRecord(73, r.level, r.payload)] : [r.raw]),
-      "OrphanListParagraph",
+      'OrphanListParagraph',
     ],
     [
-      "missing table",
+      'missing table',
       (r) => (r === table ? [encodeRecord(73, r.level, r.payload)] : [r.raw]),
-      "MissingTableRecord",
+      'MissingTableRecord',
     ],
-    ["duplicate table", (r) => (r === table ? [r.raw, r.raw] : [r.raw]), "DuplicateTableRecord"],
+    ['duplicate table', (r) => (r === table ? [r.raw, r.raw] : [r.raw]), 'DuplicateTableRecord'],
   ])
     await t.test(label, async () => {
       const writer = await createCfbReader(wasm);
@@ -119,7 +119,7 @@ test("nested ownership rejects missing list/table and duplicate table markers wi
         writer.parse(source, { strict: true });
         const doc = writer.document();
         const section = doc.nodes.find(
-          (n) => n.name === "Section0" && doc.nodes[n.parent]?.name === "BodyText",
+          (n) => n.name === 'Section0' && doc.nodes[n.parent]?.name === 'BodyText',
         );
         section.content = deflateRawSync(Buffer.concat(all.flatMap(change)));
         bytes = writer.write(doc);
@@ -129,7 +129,7 @@ test("nested ownership rejects missing list/table and duplicate table markers wi
       const editor = await createExperimentalHwp5Editor(wasm, bytes);
       try {
         assert.throws(
-          () => editor.splice({ section: 0, paragraph: 2, startUnit: 0, endUnit: 0, text: "X" }),
+          () => editor.splice({ section: 0, paragraph: 2, startUnit: 0, endUnit: 0, text: 'X' }),
           { message: error },
         );
         assert.deepEqual(editor.save().bytes, bytes);
@@ -139,10 +139,10 @@ test("nested ownership rejects missing list/table and duplicate table markers wi
     });
 });
 
-test("direct caption and master-page lists reject broken payload, count and missing owner atomically", async (t) => {
+test('direct caption and master-page lists reject broken payload, count and missing owner atomically', async (t) => {
   for (const [name, shortLength] of [
-    ["textbox", 21],
-    ["table-bug", 17],
+    ['textbox', 21],
+    ['table-bug', 17],
   ]) {
     const original = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
     const all = records(inspect(original).sections[0].bytes);
@@ -151,18 +151,18 @@ test("direct caption and master-page lists reject broken payload, count and miss
     assert(list);
     assert.equal(list.level, caption.head.level);
     for (const [label, payload, tag, expected] of [
-      ["short area", list.payload.subarray(0, shortLength), 72, "UnexpectedEnd"],
+      ['short area', list.payload.subarray(0, shortLength), 72, 'UnexpectedEnd'],
       [
-        "wrong count",
+        'wrong count',
         (() => {
           const b = Buffer.from(list.payload);
           b.writeUInt16LE(b.readUInt16LE(0) + 1, 0);
           return b;
         })(),
         72,
-        "ListParagraphCountMismatch",
+        'ListParagraphCountMismatch',
       ],
-      ["missing list", list.payload, 73, "OrphanListParagraph"],
+      ['missing list', list.payload, 73, 'OrphanListParagraph'],
     ])
       await t.test(`${name}: ${label}`, async () => {
         const writer = await createCfbReader(wasm);
@@ -171,7 +171,7 @@ test("direct caption and master-page lists reject broken payload, count and miss
           writer.parse(original, { strict: true });
           const doc = writer.document();
           const section = doc.nodes.find(
-            (n) => n.name === "Section0" && doc.nodes[n.parent]?.name === "BodyText",
+            (n) => n.name === 'Section0' && doc.nodes[n.parent]?.name === 'BodyText',
           );
           section.content = deflateRawSync(
             Buffer.concat(
@@ -186,7 +186,7 @@ test("direct caption and master-page lists reject broken payload, count and miss
         try {
           const before = editor.copyText(0, 1);
           assert.throws(
-            () => editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "X" }),
+            () => editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: 'X' }),
             { message: expected },
           );
           assert.deepEqual(editor.copyText(0, 1), before);
@@ -197,13 +197,13 @@ test("direct caption and master-page lists reject broken payload, count and miss
       });
   }
 });
-test("nested full-record oracle catches ignored edit and a change in a different cell", async () => {
-  assert.throws(() => verifyRaw(source, source, 0, 2, 0, 0, "X"), /complete Section/);
+test('nested full-record oracle catches ignored edit and a change in a different cell', async () => {
+  assert.throws(() => verifyRaw(source, source, 0, 2, 0, 0, 'X'), /complete Section/);
   const editor = await createExperimentalHwp5Editor(wasm, source);
   try {
-    editor.splice({ section: 0, paragraph: 4, startUnit: 0, endUnit: 0, text: "X" });
+    editor.splice({ section: 0, paragraph: 4, startUnit: 0, endUnit: 0, text: 'X' });
     assert.throws(
-      () => verifyRaw(source, editor.save({ allowStaleLayout: true }).bytes, 0, 2, 0, 0, "X"),
+      () => verifyRaw(source, editor.save({ allowStaleLayout: true }).bytes, 0, 2, 0, 0, 'X'),
       /complete Section/,
     );
   } finally {

@@ -1,4 +1,4 @@
-import { sourceDisplayPosition } from "./text-offsets.mjs";
+import { sourceDisplayPosition } from './text-offsets.mjs';
 /** Current protected placeholder boundaries, not raw source offsets. */
 export function attachHwp5TableAnchors(editor, content) {
   content.tableAnchorErrors = [];
@@ -16,10 +16,10 @@ export function attachHwp5TableAnchors(editor, content) {
         tables = content.tables.filter((row) => row.section === section),
         byNode = new Map();
       for (const row of anchors) {
-        if (byNode.has(row.table_record_node)) throw new Error("AmbiguousTableDisplayAnchor");
+        if (byNode.has(row.table_record_node)) throw new Error('AmbiguousTableDisplayAnchor');
         byNode.set(row.table_record_node, row);
       }
-      if (anchors.length !== tables.length) throw new Error("IncompleteTableDisplayAnchors");
+      if (anchors.length !== tables.length) throw new Error('IncompleteTableDisplayAnchors');
       const prepared = [];
       for (const table of tables) {
         const row = byNode.get(table.tableNode),
@@ -31,7 +31,7 @@ export function attachHwp5TableAnchors(editor, content) {
           !paragraph ||
           paragraph.clipped
         )
-          throw new Error("TableDisplayAnchorBindingMismatch");
+          throw new Error('TableDisplayAnchorBindingMismatch');
         const unit = sourceDisplayPosition(
           row.current_unit,
           paragraph.sourceOffsets,
@@ -42,8 +42,8 @@ export function attachHwp5TableAnchors(editor, content) {
           paragraph.sourceOffsets,
           paragraph.text.length,
         );
-        if (end !== unit + 1 || paragraph.text[unit] !== "\ufffc")
-          throw new Error("TableDisplayAnchorMismatch");
+        if (end !== unit + 1 || paragraph.text[unit] !== '\ufffc')
+          throw new Error('TableDisplayAnchorMismatch');
         prepared.push({ table, row, unit });
       }
       for (const { table, row, unit } of prepared) {

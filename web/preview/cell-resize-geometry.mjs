@@ -1,4 +1,4 @@
-import { hwpUnitsToPixels } from "./table-grid.mjs";
+import { hwpUnitsToPixels } from './table-grid.mjs';
 
 // 선택한 셀의 오른쪽/아래 경계만 사용해 공유 경계의 소유권을 고정합니다.
 export function cellResizeHandle(layout, selected, x, y, tolerance = 5) {
@@ -19,7 +19,7 @@ export function cellResizeHandle(layout, selected, x, y, tolerance = 5) {
 }
 
 export function resizedCell(handle, x, y) {
-  if (!handle || ![x, y].every(Number.isFinite)) throw new RangeError("InvalidCellResize");
+  if (!handle || ![x, y].every(Number.isFinite)) throw new RangeError('InvalidCellResize');
   const scale = hwpUnitsToPixels(1);
   const size = (value, delta) =>
     Math.min(0xffffffff, Math.max(0, Math.round(value + delta / scale)));

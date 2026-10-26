@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, verifyRaw } from './style-preservation/text-record-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit selected-field candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit selected-field candidate required');
 const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
 for (const [name, section] of [
-  ["hwpspec.hwp", 2],
-  ["hwpspec.hwp", 3],
-  ["hwp-3.0-HWPML.hwp", 2],
+  ['hwpspec.hwp', 2],
+  ['hwpspec.hwp', 3],
+  ['hwp-3.0-HWPML.hwp', 2],
 ])
   test(`${name} selected table-number section ${section}: exterior text preserves labels and result rejection preserves redo`, async () => {
     const path = `reference/rhwp/samples/${name}`,
@@ -28,7 +28,7 @@ for (const [name, section] of [
       );
       assert(fields.length > 0);
       const paragraph = 0,
-        text = "표참조구역😀",
+        text = '표참조구역😀',
         oldText = editor.text(section, paragraph);
       editor.splice({ section, paragraph, startUnit: 0, endUnit: 0, text });
       const saved = editor.save({ allowStaleLayout: true }).bytes;
@@ -53,7 +53,7 @@ for (const [name, section] of [
                 paragraph: position.paragraph,
                 startUnit: position.unit,
                 endUnit: position.unit,
-                text: "거부",
+                text: '거부',
               }),
             /ReadOnlyCrossReferenceResult/,
           );
@@ -62,7 +62,7 @@ for (const [name, section] of [
       const label = fields.find(
         (span) => span.begin.paragraph === span.end.paragraph && span.begin.unit < span.end.unit,
       );
-      assert(label, "Fixture must include a nonempty derived result");
+      assert(label, 'Fixture must include a nonempty derived result');
       assert.throws(
         () =>
           editor.splice({
@@ -70,7 +70,7 @@ for (const [name, section] of [
             paragraph: label.begin.paragraph,
             startUnit: label.begin.unit,
             endUnit: label.end.unit,
-            text: "",
+            text: '',
           }),
         /ReadOnlyCrossReferenceResult/,
       );
@@ -90,15 +90,15 @@ for (const [name, section] of [
     }
   });
 
-test("object-number retention does not grant actual page-reference kinds", async () => {
-  for (const path of ["pic-in-head-01.hwp"]) {
+test('object-number retention does not grant actual page-reference kinds', async () => {
+  for (const path of ['pic-in-head-01.hwp']) {
     const input = readFileSync(`reference/rhwp/samples/${path}`);
     const editor = await createExperimentalHwp5Editor(wasm, input);
     try {
       editor.enableHistory();
       assert.throws(() => editor.validateTextSourcePolicy(0), /UnsupportedSectionControl/);
       assert.throws(
-        () => editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: "거부" }),
+        () => editor.splice({ section: 0, paragraph: 0, startUnit: 0, endUnit: 0, text: '거부' }),
         /UnsupportedSectionControl/,
       );
       assert.deepEqual(Buffer.from(editor.save().bytes), input);

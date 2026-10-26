@@ -7,7 +7,7 @@ export function createMemoNavigationControls({ panel, form, list, button, note, 
     list.replaceChildren();
     list.disabled = button.disabled = true;
     panel.hidden = true;
-    note.textContent = "";
+    note.textContent = '';
   };
   const submit = (event) => {
     event.preventDefault();
@@ -17,10 +17,10 @@ export function createMemoNavigationControls({ panel, form, list, button, note, 
     note.textContent =
       select({ section: entry.section, paragraph: entry.paragraph, startUnit: 0, endUnit: 0 }) ===
       true
-        ? "Canvas 메모를 선택했습니다."
-        : "현재 표시 범위에 없거나 입력 반영 중입니다.";
+        ? 'Canvas 메모를 선택했습니다.'
+        : '현재 표시 범위에 없거나 입력 반영 중입니다.';
   };
-  form.addEventListener("submit", submit);
+  form.addEventListener('submit', submit);
   reset();
   return {
     reset,
@@ -29,7 +29,7 @@ export function createMemoNavigationControls({ panel, form, list, button, note, 
       const previous = list.value;
       reset();
       if (
-        content?.format !== "hwp5" ||
+        content?.format !== 'hwp5' ||
         content.hwp5MemoErrors?.length ||
         !Array.isArray(content.hwp5Memos)
       )
@@ -47,7 +47,7 @@ export function createMemoNavigationControls({ panel, form, list, button, note, 
           return;
         }
         entries.set(key, { section: memo.section, paragraph });
-        const option = list.ownerDocument.createElement("option");
+        const option = list.ownerDocument.createElement('option');
         option.value = key;
         option.textContent = `구역 ${memo.section + 1} · 메모 ${memo.memoIndex} · ${row.text.slice(0, 60)}`;
         list.append(option);
@@ -61,7 +61,7 @@ export function createMemoNavigationControls({ panel, form, list, button, note, 
     close() {
       if (closed) return;
       closed = true;
-      form.removeEventListener("submit", submit);
+      form.removeEventListener('submit', submit);
       reset();
     },
   };

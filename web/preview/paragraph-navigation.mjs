@@ -1,8 +1,8 @@
-import { paragraphSelectionOwner } from "./paragraph-selection.mjs";
+import { paragraphSelectionOwner } from './paragraph-selection.mjs';
 
 /** Collapsed caret only: source order within one owner, never a selection range. */
 export function adjacentOwnedParagraph(paragraphs, point, forward) {
-  if (!Array.isArray(paragraphs) || !point || point.createdCell || typeof forward !== "boolean")
+  if (!Array.isArray(paragraphs) || !point || point.createdCell || typeof forward !== 'boolean')
     return null;
   const identities = new Set();
   for (const paragraph of paragraphs) {
@@ -12,7 +12,7 @@ export function adjacentOwnedParagraph(paragraphs, point, forward) {
       paragraph.section < 0 ||
       !Number.isSafeInteger(paragraph.paragraph) ||
       paragraph.paragraph < 0 ||
-      typeof paragraph.text !== "string"
+      typeof paragraph.text !== 'string'
     )
       return null;
     const identity = `${paragraph.section}:${paragraph.paragraph}`;
@@ -34,7 +34,7 @@ export function adjacentOwnedParagraph(paragraphs, point, forward) {
       ...point,
       paragraph: paragraph.paragraph,
       unit: forward ? 0 : paragraph.text.length,
-      affinity: forward ? "forward" : "backward",
+      affinity: forward ? 'forward' : 'backward',
     };
   }
   return null;

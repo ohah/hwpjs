@@ -1,33 +1,33 @@
-import assert from "node:assert/strict";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { noteNumberLinksActual } from "./note-number-links.mjs";
+import assert from 'node:assert/strict';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { noteNumberLinksActual } from './note-number-links.mjs';
 import {
   documentPrefixBytes,
   sectionReportBytes,
   reportBytes,
   sectionFieldOffset,
-} from "./document-report-wire.mjs";
+} from './document-report-wire.mjs';
 export function reportWireEdges() {
   assert.equal(documentPrefixBytes, 132);
   assert.equal(sectionReportBytes, 832);
-  assert.equal(sectionFieldOffset(0, "header_footer"), 280);
-  assert.equal(sectionFieldOffset(0, "notes"), 500);
-  assert.equal(sectionFieldOffset(0, "note_number_links"), 528);
-  assert.equal(sectionFieldOffset(0, "note_number_links", 7), 556);
-  assert.equal(sectionFieldOffset(1, "number_controls", 2), 1140);
-  assert.equal(sectionFieldOffset(0, "forms"), 852);
-  assert.equal(sectionFieldOffset(1, "forms", 27), 1792);
+  assert.equal(sectionFieldOffset(0, 'header_footer'), 280);
+  assert.equal(sectionFieldOffset(0, 'notes'), 500);
+  assert.equal(sectionFieldOffset(0, 'note_number_links'), 528);
+  assert.equal(sectionFieldOffset(0, 'note_number_links', 7), 556);
+  assert.equal(sectionFieldOffset(1, 'number_controls', 2), 1140);
+  assert.equal(sectionFieldOffset(0, 'forms'), 852);
+  assert.equal(sectionFieldOffset(1, 'forms', 27), 1792);
   assert.equal(reportBytes(2), 1796);
   for (const index of [-1, 1.5, NaN, Infinity, 65536])
     assert.throws(() => reportBytes(index), RangeError);
   for (const [group, field] of [
-    ["unknown", 0],
-    ["__proto__", 0],
-    ["header_footer", 5],
-    ["number_controls", -1],
-    ["note_number_links", 8],
-    ["records", NaN],
-    ["forms", 28],
+    ['unknown', 0],
+    ['__proto__', 0],
+    ['header_footer', 5],
+    ['number_controls', -1],
+    ['note_number_links', 8],
+    ['records', NaN],
+    ['forms', 28],
   ])
     assert.throws(() => sectionFieldOffset(0, group, field), RangeError);
 }
@@ -41,10 +41,10 @@ export function reportOrderingEdges(call, h, doc, sections) {
     if (!r) continue;
     const numbering = s.bytes.readUInt32LE(r.start) === 0x61746e6f;
     const original = call(24, decodedDocumentInput(h, doc, sections));
-    const begin = sectionFieldOffset(s.index, "records");
+    const begin = sectionFieldOffset(s.index, 'records');
     const first = original.subarray(begin, begin + sectionReportBytes);
     const second = Buffer.from(first);
-    const group = numbering ? "number_controls" : "header_footer",
+    const group = numbering ? 'number_controls' : 'header_footer',
       field = numbering ? 2 : 3;
     const local = sectionFieldOffset(0, group, field) - documentPrefixBytes;
     second.writeUInt32LE(second.readUInt32LE(local) + 1, local);
@@ -54,7 +54,7 @@ export function reportOrderingEdges(call, h, doc, sections) {
       r.start + 4,
     );
     if (numbering) {
-      const noteBase = sectionFieldOffset(0, "note_number_links") - documentPrefixBytes;
+      const noteBase = sectionFieldOffset(0, 'note_number_links') - documentPrefixBytes;
       noteNumberLinksActual(changed).forEach((value, i) =>
         second.writeUInt32LE(value, noteBase + 4 * i),
       );

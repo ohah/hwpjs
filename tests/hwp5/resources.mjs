@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { deflateRawSync, inflateRawSync } from "node:zlib";
-import { checkDocinfo } from "./docinfo.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync, inflateRawSync } from 'node:zlib';
+import { checkDocinfo } from './docinfo.mjs';
 const word = (n, size = 4) => {
   const b = Buffer.alloc(size);
   b.writeUIntLE(n >>> 0, 0, size);
@@ -84,12 +84,12 @@ export function resourceEdges(call) {
     () => call(5, Buffer.concat([word(version), table, frame(17, mappings, 0)])),
     /DuplicateIdMappings/,
   );
-  const plain = Buffer.from("binary payload"),
+  const plain = Buffer.from('binary payload'),
     packed = deflateRawSync(plain);
   for (const defaultCompressed of [0, 1])
     for (let mode = 0; mode < 4; mode++) {
       const hdr = Buffer.alloc(256);
-      hdr.write("HWP Document File");
+      hdr.write('HWP Document File');
       hdr.writeUInt32LE(version, 32);
       hdr[36] = defaultCompressed;
       const item = Buffer.from([2 | (mode << 4), 0, 1, 0]);
@@ -123,8 +123,8 @@ export function resourceActual(call, hdr, docinfo, cfb) {
       type = flags & 15;
     if (type !== 1 && type !== 2) continue;
     const id = p.readUInt16LE(2);
-    const ext = type === 1 ? p.subarray(6, 6 + p.readUInt16LE(4) * 2).toString("utf16le") : "";
-    const path = `/BinData/BIN${id.toString(16).padStart(4, "0")}${ext ? "." + ext : ""}`;
+    const ext = type === 1 ? p.subarray(6, 6 + p.readUInt16LE(4) * 2).toString('utf16le') : '';
+    const path = `/BinData/BIN${id.toString(16).padStart(4, '0')}${ext ? '.' + ext : ''}`;
     const entry = cfb.findExact(path);
     if (!entry) {
       missing.push(path);

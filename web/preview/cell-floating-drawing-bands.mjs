@@ -1,7 +1,7 @@
 // Whole floating drawings and their complete anchor paragraphs travel together.
 export function cellFloatingDrawingBands(table, cell, flow) {
-  const fail = () => ({ state: "unavailable", error: "InvalidCellFloatingDrawingReservation" });
-  if (flow.floatingDrawings === undefined) return { state: "prepared", bands: [] };
+  const fail = () => ({ state: 'unavailable', error: 'InvalidCellFloatingDrawingReservation' });
+  if (flow.floatingDrawings === undefined) return { state: 'prepared', bands: [] };
   if (!Array.isArray(flow.floatingDrawings) || !Array.isArray(flow.rows)) return fail();
   const nodes = new Set(),
     bands = [];
@@ -35,12 +35,12 @@ export function cellFloatingDrawingBands(table, cell, flow) {
     )
       return fail();
     const rows = flow.rows.filter(
-      (r) => r.kind === "text" && r.section === item.section && r.paragraph === item.paragraph,
+      (r) => r.kind === 'text' && r.section === item.section && r.paragraph === item.paragraph,
     );
     if (!rows.length || rows.some((r) => r.y < item.start || r.y + r.height > item.end + 1e-8))
       return fail();
     nodes.add(item.drawingNode);
     bands.push({ start: item.start, end: item.end, drawingNode: item.drawingNode });
   }
-  return { state: "prepared", bands };
+  return { state: 'prepared', bands };
 }

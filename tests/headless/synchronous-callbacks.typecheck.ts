@@ -7,7 +7,7 @@ import {
   type HeadlessEditor,
   type EditorStatus,
   type StateData,
-} from "../../packages/core/src/index.ts";
+} from '../../packages/core/src/index.ts';
 declare const e: HeadlessEditor;
 // 1. Primitive/object inference.
 const status: EditorStatus = e.read((s) => s.status);
@@ -49,10 +49,10 @@ e.read(asyncOverload);
 const absent: undefined = e.read(() => undefined);
 const nil: null = e.read(() => null);
 const neverValue: never = e.read(() => {
-  throw Error("never");
+  throw Error('never');
 });
 e.update(() => {
-  throw Error("never");
+  throw Error('never');
 });
 // @ts-expect-error null is not a collector's undefined/void result
 e.update(() => null);

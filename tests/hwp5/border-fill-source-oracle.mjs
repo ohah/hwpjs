@@ -1,10 +1,10 @@
 // Independent CFB.js + Node zlib/framing oracle; no product source offsets.
-import assert from "node:assert/strict";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
 
 export function borderFillSourceOracle(bytes) {
   const container = inspect(bytes),
-    docinfo = container.decode(container.streams.get("DocInfo"));
+    docinfo = container.decode(container.streams.get('DocInfo'));
   const rows = [];
   for (const [record_index, record] of records(docinfo).entries()) {
     if (record.tag !== 20) continue;

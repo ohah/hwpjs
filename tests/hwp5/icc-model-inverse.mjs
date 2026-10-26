@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { modelProfile } from "./icc-model.mjs";
-import { pointEntries } from "./icc-model-forward.mjs";
-import { inverseReference, checkVector } from "./icc-matrix-reference.mjs";
-import { inverseReference as sampled } from "./icc-inverse.mjs";
-import { endpoint } from "./icc-preimage-bounds.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { trcInverseInput } from "./icc-trc-inverse.mjs";
+import assert from 'node:assert/strict';
+import { modelProfile } from './icc-model.mjs';
+import { pointEntries } from './icc-model-forward.mjs';
+import { inverseReference, checkVector } from './icc-matrix-reference.mjs';
+import { inverseReference as sampled } from './icc-inverse.mjs';
+import { endpoint } from './icc-preimage-bounds.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { trcInverseInput } from './icc-trc-inverse.mjs';
 
 export function inverseModelInput(profile, xyz, precision = 512) {
   const prefix = Buffer.alloc(16);
@@ -97,17 +97,17 @@ export function modelInverseEdges(call) {
   // Different channel states in one evaluation must not short-circuit each other.
   const entries = pointEntries(identity, [0, 0, 0]);
   entries[3][1] = trcInverseInput(
-    "rTRC",
+    'rTRC',
     [0n, 1n],
     [65536, 0, 0, 0, 32768, 65536, 0],
-    "para",
+    'para',
     4,
   ).subarray(40);
   entries[4][1] = trcInverseInput(
-    "gTRC",
+    'gTRC',
     [0n, 1n],
     [65536, 0, 0, 65536, 32768, 65536, 0],
-    "para",
+    'para',
     4,
   ).subarray(40);
   const xyz = [32768, 40960, 16384];
@@ -129,7 +129,7 @@ export function modelInverseEdges(call) {
   assert.equal(parts[2].readUInt32LE(), 5);
   endpoint(parts[2].subarray(4), [1n, 4n], true);
   comparisons++;
-  entries[5][1] = trcInverseInput("bTRC", [0n, 1n], [0]).subarray(40);
+  entries[5][1] = trcInverseInput('bTRC', [0n, 1n], [0]).subarray(40);
   assert.throws(
     () => call(215, inverseModelInput(modelProfile(entries), xyz)),
     /NonInvertibleIccGamma/,

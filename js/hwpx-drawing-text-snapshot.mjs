@@ -1,14 +1,14 @@
-import { validateTableCaption } from "./hwpx-table-caption.mjs";
-import { validateShapeSourceValues } from "./hwpx-shape-source-values.mjs";
-import { validDrawingTextValues } from "./hwpx-drawing-text-values.mjs";
+import { validateTableCaption } from './hwpx-table-caption.mjs';
+import { validateShapeSourceValues } from './hwpx-shape-source-values.mjs';
+import { validDrawingTextValues } from './hwpx-drawing-text-values.mjs';
 export function decodeDrawingTextSnapshot(bytes) {
   const fail = () => {
-    throw new Error("InvalidDrawingTextSnapshot");
+    throw new Error('InvalidDrawingTextSnapshot');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length > 65536) return fail();
   let value;
   try {
-    value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   } catch {
     return fail();
   }
@@ -40,7 +40,7 @@ export function decodeDrawingTextSnapshot(bytes) {
   } catch {
     return fail();
   }
-  if (Object.hasOwn(value, "caption")) {
+  if (Object.hasOwn(value, 'caption')) {
     try {
       validateTableCaption(value.caption);
     } catch {
@@ -49,11 +49,11 @@ export function decodeDrawingTextSnapshot(bytes) {
     if (value.caption !== null && value.caption.caption_node <= value.drawing_node) return fail();
   }
   if (
-    Object.hasOwn(value, "transform_identity") &&
+    Object.hasOwn(value, 'transform_identity') &&
     ![null, false, true].includes(value.transform_identity)
   )
     return fail();
-  if (Object.hasOwn(value, "rendering")) {
+  if (Object.hasOwn(value, 'rendering')) {
     const r = value.rendering;
     if (
       !r ||
@@ -65,20 +65,20 @@ export function decodeDrawingTextSnapshot(bytes) {
     )
       return fail();
     if (
-      Object.hasOwn(r, "center") &&
+      Object.hasOwn(r, 'center') &&
       (!Array.isArray(r.center) ||
         r.center.length !== 2 ||
         !r.center.every((v) => optional(v, signed)))
     )
       return fail();
-    if (Object.hasOwn(r, "rotate_image") && ![null, false, true].includes(r.rotate_image))
+    if (Object.hasOwn(r, 'rotate_image') && ![null, false, true].includes(r.rotate_image))
       return fail();
     if (r.matrix === null) {
       if (
         ![
-          "UnsupportedPictureMatrixSequence",
-          "IncompletePictureMatrix",
-          "NonFinitePictureMatrix",
+          'UnsupportedPictureMatrixSequence',
+          'IncompletePictureMatrix',
+          'NonFinitePictureMatrix',
         ].includes(r.matrix_error)
       )
         return fail();
@@ -90,11 +90,11 @@ export function decodeDrawingTextSnapshot(bytes) {
     )
       return fail();
   }
-  if (Object.hasOwn(value, "rectangle")) {
+  if (Object.hasOwn(value, 'rectangle')) {
     const r = value.rectangle;
     if (
       !r ||
-      typeof r.present !== "boolean" ||
+      typeof r.present !== 'boolean' ||
       !uint(r.unknown_children) ||
       !Array.isArray(r.points) ||
       r.points.length !== 4 ||
@@ -103,7 +103,7 @@ export function decodeDrawingTextSnapshot(bytes) {
       ) ||
       !Array.isArray(r.point_present) ||
       r.point_present.length !== 4 ||
-      !r.point_present.every((v) => typeof v === "boolean")
+      !r.point_present.every((v) => typeof v === 'boolean')
     )
       return fail();
     if (
@@ -112,13 +112,13 @@ export function decodeDrawingTextSnapshot(bytes) {
     )
       return fail();
   }
-  if (Object.hasOwn(value, "stroke")) {
+  if (Object.hasOwn(value, 'stroke')) {
     if (value.stroke === null) {
       if (
         ![
-          "UnsupportedLineStrokeDecoration",
-          "UnsupportedLineStrokeColor",
-          "UnsupportedLineStrokeStyle",
+          'UnsupportedLineStrokeDecoration',
+          'UnsupportedLineStrokeColor',
+          'UnsupportedLineStrokeStyle',
         ].includes(value.stroke_error)
       )
         return fail();
@@ -135,7 +135,7 @@ export function decodeDrawingTextSnapshot(bytes) {
     }
   }
   if (
-    Object.hasOwn(value, "rendering_corners") &&
+    Object.hasOwn(value, 'rendering_corners') &&
     value.rendering_corners !== null &&
     (!Array.isArray(value.rendering_corners) ||
       value.rendering_corners.length !== 4 ||
@@ -144,7 +144,7 @@ export function decodeDrawingTextSnapshot(bytes) {
       ))
   )
     return fail();
-  if (Object.hasOwn(value, "paint")) {
+  if (Object.hasOwn(value, 'paint')) {
     const p = value.paint;
     if (
       !p ||

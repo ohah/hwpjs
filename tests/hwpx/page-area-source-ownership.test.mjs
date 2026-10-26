@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { partitionPageAreaOwnership } from "../../web/preview/page-area-ownership.mjs";
-import { layoutPageAreas } from "../../web/preview/page-area-flow.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { partitionPageAreaOwnership } from '../../web/preview/page-area-ownership.mjs';
+import { layoutPageAreas } from '../../web/preview/page-area-flow.mjs';
 
 test(
-  "actual nested page-area declarations retain independent XML owners and never select a duplicate footer arbitrarily",
+  'actual nested page-area declarations retain independent XML owners and never select a duplicate footer arbitrarily',
   { skip: !process.env.HWPJS_TEST_WASM },
   async (t) => {
-    const path = "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx";
+    const path = 'reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx';
     const expected = JSON.parse(
       execFileSync(
-        "python3",
+        'python3',
         [
-          "-B",
-          "-c",
+          '-B',
+          '-c',
           `
 import json,sys,zipfile,xml.etree.ElementTree as E
 p="{http://www.hancom.co.kr/hwpml/2011/paragraph}"
@@ -37,11 +37,11 @@ print(json.dumps(rows))
 `,
           path,
         ],
-        { encoding: "utf8", timeout: 30000 },
+        { encoding: 'utf8', timeout: 30000 },
       ),
     );
     assert.equal(expected.length, 3);
-    assert.equal(expected.filter((row) => row.host === "footer").length, 2);
+    assert.equal(expected.filter((row) => row.host === 'footer').length, 2);
     assert.deepEqual(
       expected.map((row) => row.declarationParagraph),
       [17, 955, 962],
@@ -56,15 +56,15 @@ print(json.dumps(rows))
       globalThis.self = previousSelf;
       globalThis.fetch = previousFetch;
     });
-    await import("../../web/preview/reader-worker.mjs?page-area-source=" + Date.now());
+    await import('../../web/preview/reader-worker.mjs?page-area-source=' + Date.now());
     try {
-      await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: readFileSync(path) } });
+      await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: readFileSync(path) } });
       assert.equal(replies.length, 1);
       const reply = replies.shift();
       assert.equal(reply.error, undefined);
       const before = JSON.stringify(reply.content),
         partition = partitionPageAreaOwnership(reply.content);
-      assert.equal(partition.state, "partitioned", partition.error);
+      assert.equal(partition.state, 'partitioned', partition.error);
       assert.equal(partition.areas.length, expected.length);
       for (const source of expected) {
         const area = partition.areas.find((area) => area.area.owner_node === source.owner);
@@ -89,11 +89,11 @@ print(json.dumps(rows))
         [{ number: 1, ordinal: 0, header: box, footer: box }],
         (text) => ({ width: text.length * 8, height: 16 }),
       );
-      assert.equal(repeated.error, "AmbiguousPageAreaOwner");
+      assert.equal(repeated.error, 'AmbiguousPageAreaOwner');
       assert.equal(JSON.stringify(reply.content), before);
     } finally {
-      await self.onmessage({ data: { kind: "load", format: "close-audit", bytes: [] } });
-      assert.equal(replies.shift()?.error, "UnknownDocumentFormat");
+      await self.onmessage({ data: { kind: 'load', format: 'close-audit', bytes: [] } });
+      assert.equal(replies.shift()?.error, 'UnknownDocumentFormat');
     }
   },
 );

@@ -1,2 +1,2 @@
-import { runDocumentMenuBrowserAudit } from "./browser/document-menu-roundtrip.mjs";
-await runDocumentMenuBrowserAudit("unknown-object");
+import { runDocumentMenuBrowserAudit } from './browser/document-menu-roundtrip.mjs';
+await runDocumentMenuBrowserAudit('unknown-object');

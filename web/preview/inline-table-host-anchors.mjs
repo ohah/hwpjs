@@ -1,11 +1,11 @@
-import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
-import { validateHwp5PageControlSources } from "../../js/hwp5-page-control-sources.mjs";
-import { equationTextAnchors } from "./equation-text-anchors.mjs";
+import { structuralAnchorUnits } from './structural-anchor-units.mjs';
+import { validateHwp5PageControlSources } from '../../js/hwp5-page-control-sources.mjs';
+import { equationTextAnchors } from './equation-text-anchors.mjs';
 
 // 모든 placeholder를 표로 세지 않고 확인된 소유자별로 나눕니다.
 export function inlineTableHostAnchors(paragraph, tables, overlays = [], textAnchors = []) {
-  const fail = () => ({ state: "unavailable", error: "InvalidInlineTableHostAnchors" });
-  if (typeof paragraph?.text !== "string" || ![tables, overlays, textAnchors].every(Array.isArray))
+  const fail = () => ({ state: 'unavailable', error: 'InvalidInlineTableHostAnchors' });
+  if (typeof paragraph?.text !== 'string' || ![tables, overlays, textAnchors].every(Array.isArray))
     return fail();
   let structural;
   try {
@@ -24,7 +24,7 @@ export function inlineTableHostAnchors(paragraph, tables, overlays = [], textAnc
         control.paragraph !== paragraph.paragraph ||
         !Number.isSafeInteger(control.unit) ||
         control.unit < 0 ||
-        paragraph.text[control.unit] !== "\ufffc" ||
+        paragraph.text[control.unit] !== '\ufffc' ||
         used.has(control.unit) ||
         nodes.has(control.control_node)
       )
@@ -37,7 +37,7 @@ export function inlineTableHostAnchors(paragraph, tables, overlays = [], textAnc
     return fail();
   }
   const equations = equationTextAnchors(paragraph);
-  if (equations.state !== "resolved") return fail();
+  if (equations.state !== 'resolved') return fail();
   for (const [items, target] of [
     [tables, null],
     [overlays, zeroWidthUnits],
@@ -55,7 +55,7 @@ export function inlineTableHostAnchors(paragraph, tables, overlays = [], textAnc
         nodes.has(node) ||
         !Number.isSafeInteger(unit) ||
         unit < 0 ||
-        paragraph.text[unit] !== "\ufffc" ||
+        paragraph.text[unit] !== '\ufffc' ||
         used.has(unit)
       )
         return fail();
@@ -65,7 +65,7 @@ export function inlineTableHostAnchors(paragraph, tables, overlays = [], textAnc
     }
   }
   for (let unit = 0; unit < paragraph.text.length; unit++)
-    if (paragraph.text[unit] === "\ufffc" && !used.has(unit))
+    if (paragraph.text[unit] === '\ufffc' && !used.has(unit))
       return { ...fail(), anchorUnit: unit };
-  return { state: "resolved", zeroWidthUnits, textAnchorUnits };
+  return { state: 'resolved', zeroWidthUnits, textAnchorUnits };
 }

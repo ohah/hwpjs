@@ -1,9 +1,9 @@
-import { inlineTableHostAnchors } from "./inline-table-host-anchors.mjs";
-import { measureInlineTableParagraph } from "./inline-table-paragraph-measurement.mjs";
-import { layoutContent } from "./layout.mjs";
-import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
-import { tableInsets } from "./table-insets.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
+import { inlineTableHostAnchors } from './inline-table-host-anchors.mjs';
+import { measureInlineTableParagraph } from './inline-table-paragraph-measurement.mjs';
+import { layoutContent } from './layout.mjs';
+import { paragraphSpacePixels } from './paragraph-geometry.mjs';
+import { tableInsets } from './table-insets.mjs';
+import { textMeasurement } from './text-measurement.mjs';
 
 // Block anchors end inline runs; offsets and source object types stay intact.
 export function measureMixedTableHost(
@@ -14,9 +14,9 @@ export function measureMixedTableHost(
   maxRows,
   { overlays = [], textAnchors = [] } = {},
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
-    typeof paragraph?.text !== "string" ||
+    typeof paragraph?.text !== 'string' ||
     (paragraph.textStartUnit ?? 0) !== 0 ||
     !Array.isArray(entries) ||
     !entries.length ||
@@ -28,9 +28,9 @@ export function measureMixedTableHost(
     maxRows < 1 ||
     !Number.isFinite(width) ||
     width <= 0 ||
-    typeof measure !== "function"
+    typeof measure !== 'function'
   )
-    return fail("InvalidMixedTableHost");
+    return fail('InvalidMixedTableHost');
   const anchors = inlineTableHostAnchors(
     paragraph,
     entries.map(({ entry: { table } }) => ({
@@ -42,13 +42,13 @@ export function measureMixedTableHost(
     overlays,
     textAnchors,
   );
-  if (anchors.state !== "resolved") return anchors;
-  for (const part of new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(paragraph.text))
-    if (part.segment.includes("\ufffc") && part.segment.length !== 1)
-      return fail("UnsupportedMixedTableHostGrapheme");
+  if (anchors.state !== 'resolved') return anchors;
+  for (const part of new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(paragraph.text))
+    if (part.segment.includes('\ufffc') && part.segment.length !== 1)
+      return fail('UnsupportedMixedTableHostGrapheme');
   const ordered = entries.toSorted((a, b) => a.entry.table.anchorUnit - b.entry.table.anchorUnit);
   if (!ordered.some((e) => e.entry.inline) || !ordered.some((e) => !e.entry.inline))
-    return fail("InvalidMixedTableHost");
+    return fail('InvalidMixedTableHost');
   const sequence = [],
     inlineFlows = [];
   let cursor = 0,
@@ -57,8 +57,8 @@ export function measureMixedTableHost(
     const height = paragraphSpacePixels(value);
     if (height > 0) {
       sequence.push({
-        kind: "gap",
-        text: "",
+        kind: 'gap',
+        text: '',
         section: paragraph.section,
         paragraph: paragraph.paragraph,
         height,
@@ -78,10 +78,10 @@ export function measureMixedTableHost(
       paragraphShape: { ...paragraph.paragraphShape, before: 0, after: 0 },
     };
     const budget = maxRows - rowCount;
-    if (budget < 1) return fail("TablePagePlanLimit");
+    if (budget < 1) return fail('TablePagePlanLimit');
     if (local.length) {
-      if (local.some((e) => e.entry.splitMode !== "whole"))
-        return fail("UnsupportedMixedInlineTableSplit");
+      if (local.some((e) => e.entry.splitMode !== 'whole'))
+        return fail('UnsupportedMixedInlineTableSplit');
       const objects = [];
       for (const { entry } of local) {
         const margins = tableInsets(entry.outerInsets ?? 0);
@@ -91,7 +91,7 @@ export function measureMixedTableHost(
             (v) => Number.isFinite(v) && v > 0,
           )
         )
-          return fail("InvalidMixedTableHost");
+          return fail('InvalidMixedTableHost');
         objects.push({
           tableNode: entry.table.tableNode,
           unit: entry.table.anchorUnit,
@@ -111,7 +111,7 @@ export function measureMixedTableHost(
           textAnchorUnits: anchors.textAnchorUnits.filter((u) => cursor <= u && u < end),
         },
       );
-      if (flow.state !== "measured") return flow;
+      if (flow.state !== 'measured') return flow;
       rowCount += flow.rows.length;
       const indices = local.map((e) => e.tableIndex);
       inlineFlows.push({ indices, flow });
@@ -122,13 +122,13 @@ export function measureMixedTableHost(
         { paragraphs: [slice], limited: false },
         width,
         (text, _slice, unit, kind) =>
-          kind === "text" && zero.has(unit)
-            ? { ...textMeasurement(measure("", paragraph, unit, kind)), width: 0 }
+          kind === 'text' && zero.has(unit)
+            ? { ...textMeasurement(measure('', paragraph, unit, kind)), width: 0 }
             : measure(text, paragraph, unit, kind),
         budget,
         { documentBody: true },
       );
-      if (flow.limited) return fail("TablePagePlanLimit");
+      if (flow.limited) return fail('TablePagePlanLimit');
       sequence.push(...flow.rows);
       rowCount += flow.rows.length;
     }
@@ -145,6 +145,6 @@ export function measureMixedTableHost(
   if (failure) return failure;
   gap(paragraph.paragraphShape?.after);
   return rowCount > maxRows
-    ? fail("TablePagePlanLimit")
-    : { state: "measured", sequence, inlineFlows, rowCount };
+    ? fail('TablePagePlanLimit')
+    : { state: 'measured', sequence, inlineFlows, rowCount };
 }

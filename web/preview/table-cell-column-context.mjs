@@ -1,6 +1,6 @@
 // 본문 선언이 아니라 해당 셀 목록의 현재 문단 흐름만 선택합니다.
 export function tableCellColumnContext(table, cell, paragraphs, flows) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !table ||
     !cell ||
@@ -8,7 +8,7 @@ export function tableCellColumnContext(table, cell, paragraphs, flows) {
     !Array.isArray(paragraphs) ||
     !Array.isArray(flows)
   )
-    return unavailable("InvalidTableCellColumnContext");
+    return unavailable('InvalidTableCellColumnContext');
   let declaration, signature;
   const pageBreakParagraphs = [];
   for (const id of cell.paragraphs) {
@@ -18,31 +18,31 @@ export function tableCellColumnContext(table, cell, paragraphs, flows) {
       owners[0].tableCell?.tableNode !== table.tableNode ||
       owners[0].tableCell?.listNode !== cell.listNode
     )
-      return unavailable("AmbiguousTableCellColumnContext");
+      return unavailable('AmbiguousTableCellColumnContext');
     const candidates = flows.filter((f) => f.section === table.section && f.paragraph === id);
     if (
       candidates.length !== 1 ||
       candidates[0].top_level !== false ||
       candidates[0].column_declaration === undefined
     )
-      return unavailable("AmbiguousTableCellColumnContext");
-    if (candidates[0].page_break != null && typeof candidates[0].page_break !== "boolean")
-      return unavailable("InvalidTableCellPageBreak");
+      return unavailable('AmbiguousTableCellColumnContext');
+    if (candidates[0].page_break != null && typeof candidates[0].page_break !== 'boolean')
+      return unavailable('InvalidTableCellPageBreak');
     if (candidates[0].page_break === true) pageBreakParagraphs.push(id);
     const current = JSON.stringify(candidates[0].column_declaration);
     if (signature !== undefined && signature !== current)
-      return unavailable("UnsupportedTableCellColumnChange");
+      return unavailable('UnsupportedTableCellColumnChange');
     signature = current;
     declaration = candidates[0].column_declaration;
   }
-  if (declaration === undefined) return unavailable("MissingTableCellColumnContext");
+  if (declaration === undefined) return unavailable('MissingTableCellColumnContext');
   if (
     pageBreakParagraphs.length &&
-    (table.pagination?.page_break !== "cell" || (declaration !== null && declaration.count !== 1))
+    (table.pagination?.page_break !== 'cell' || (declaration !== null && declaration.count !== 1))
   )
-    return unavailable("UnsupportedTableCellPageBreakPolicy");
+    return unavailable('UnsupportedTableCellPageBreakPolicy');
   return {
-    state: "selected",
+    state: 'selected',
     ...(pageBreakParagraphs.length ? { pageBreakParagraphs } : {}),
     declaration:
       declaration === null
@@ -50,8 +50,8 @@ export function tableCellColumnContext(table, cell, paragraphs, flows) {
             count: 1,
             same_size: true,
             gap: 0,
-            direction: "left",
-            kind: "newspaper",
+            direction: 'left',
+            kind: 'newspaper',
             ambiguous: false,
           }
         : structuredClone(declaration),

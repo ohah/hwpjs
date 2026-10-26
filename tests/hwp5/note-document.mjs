@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { noteActual, noteRun } from "./note-validation.mjs";
+import assert from 'node:assert/strict';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { documentRecords, documentActual, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { noteActual, noteRun } from './note-validation.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -11,15 +11,15 @@ const w = (n) => {
 export function noteDocument(call, cfb, file, h, b) {
   const flags = h.readUInt32LE(36),
     version = h.readUInt32LE(32);
-  const raw = Buffer.from(cfb.findExact("/DocInfo").content),
+  const raw = Buffer.from(cfb.findExact('/DocInfo').content),
     doc = flags & 1 ? inflateRawSync(raw) : raw;
   const sections = [{ index: 0, bytes: b }];
   const stats = noteActual(call, version, b);
   const document = documentActual(call, h, doc, sections);
   const container = containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes;
-  const bodyIndex = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0);
-  const sectionIndex = nodes.findIndex((n) => n.name === "Section0" && n.parent === bodyIndex);
+  const bodyIndex = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0);
+  const sectionIndex = nodes.findIndex((n) => n.name === 'Section0' && n.parent === bodyIndex);
   assert.ok(sectionIndex >= 0);
   const full = (plain) => {
     const copy = nodes.map((n) => ({ ...n }));

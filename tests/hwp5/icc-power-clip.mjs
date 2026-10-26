@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { paraInput } from "./icc-analytic.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { decode } from "./icc-power-clip-wire.mjs";
-import { verify } from "./icc-power-clip-reference.mjs";
+import assert from 'node:assert/strict';
+import { paraInput } from './icc-analytic.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { decode } from './icc-power-clip-wire.mjs';
+import { verify } from './icc-power-clip-reference.mjs';
 export function clipInput(kind, raw, precision = 256) {
   const para = paraInput(kind, raw.slice(0, [1, 3, 4, 5, 7][kind]), 0).subarray(8),
     bytes = Buffer.alloc(4 + para.length);

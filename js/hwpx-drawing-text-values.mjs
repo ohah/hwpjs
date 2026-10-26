@@ -6,14 +6,14 @@ export function validDrawingTextValues(text, drawingNode) {
   const optional = (value, check) => value === null || check(value);
   return Boolean(
     text &&
-    typeof text === "object" &&
+    typeof text === 'object' &&
     !Array.isArray(text) &&
     uint(drawingNode) &&
     uint(text.node) &&
     text.node > drawingNode &&
     optional(text.list_node, uint) &&
     (text.list_node === null || text.list_node > text.node) &&
-    typeof text.margin_present === "boolean" &&
+    typeof text.margin_present === 'boolean' &&
     Array.isArray(text.margins) &&
     text.margins.length === 4 &&
     Array.from(text.margins).every((value) => optional(value, signed)) &&

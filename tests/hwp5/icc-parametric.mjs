@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const counts = [1, 3, 4, 5, 7];
 export function iccParametricEdges(call) {
   let comparisons = 0,
     rejected = 0;
   function input(kind, values) {
     const b = Buffer.alloc(12 + values.length * 4);
-    b.write("para");
+    b.write('para');
     b.writeUInt16BE(kind, 8);
     values.forEach((v, i) => b.writeInt32BE(v, 12 + i * 4));
     return b;

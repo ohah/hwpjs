@@ -1,6 +1,6 @@
-import { cellResizeHandle, resizedCell } from "./cell-resize-geometry.mjs";
-import { hwpUnitsToPixels } from "./table-grid.mjs";
-import { canvasDocumentPoint, canvasDragPoint } from "./canvas-pointer-coordinates.mjs";
+import { cellResizeHandle, resizedCell } from './cell-resize-geometry.mjs';
+import { hwpUnitsToPixels } from './table-grid.mjs';
+import { canvasDocumentPoint, canvasDragPoint } from './canvas-pointer-coordinates.mjs';
 
 // 드래그는 임시 안내선만 소유하고 pointerup에서 native 명령을 한 번 요청합니다.
 export function createCellResizeControls({ canvas, viewport, renderer, selected, request, note }) {
@@ -26,13 +26,13 @@ export function createCellResizeControls({ canvas, viewport, renderer, selected,
     const previous = drag;
     drag = null;
     if (resizeCursor !== null && canvas.style.cursor === resizeCursor)
-      canvas.style.cursor = "default";
+      canvas.style.cursor = 'default';
     resizeCursor = null;
     renderer.cellResizeGuide?.(null);
     if (previous && canvas.hasPointerCapture(previous.id))
       canvas.releasePointerCapture(previous.id);
   };
-  listen("pointerdown", (event) => {
+  listen('pointerdown', (event) => {
     if (event.button !== 0 || drag || !available) return;
     const point = position(event),
       handle = cellResizeHandle(renderer.layout(), selected(), point.x, point.y);
@@ -48,7 +48,7 @@ export function createCellResizeControls({ canvas, viewport, renderer, selected,
     };
     canvas.setPointerCapture(event.pointerId);
   });
-  listen("pointermove", (event) => {
+  listen('pointermove', (event) => {
     const point = position(event);
     if (!drag) {
       if (!available) return;
@@ -56,10 +56,10 @@ export function createCellResizeControls({ canvas, viewport, renderer, selected,
       if (handle) {
         resizeCursor =
           handle.horizontal && handle.vertical
-            ? "nwse-resize"
+            ? 'nwse-resize'
             : handle.horizontal
-              ? "ew-resize"
-              : "ns-resize";
+              ? 'ew-resize'
+              : 'ns-resize';
         canvas.style.cursor = resizeCursor;
         event.stopImmediatePropagation();
       }
@@ -80,7 +80,7 @@ export function createCellResizeControls({ canvas, viewport, renderer, selected,
     });
     note.textContent = `셀 크기 ${size.width} × ${size.height} HWPUNIT · 놓으면 적용, Esc로 취소`;
   });
-  listen("pointerup", (event) => {
+  listen('pointerup', (event) => {
     if (!drag || drag.id !== event.pointerId) return;
     if (drag.scale !== viewScale()) {
       reset();
@@ -101,31 +101,31 @@ export function createCellResizeControls({ canvas, viewport, renderer, selected,
       current.width !== handle.width ||
       current.height !== handle.height
     ) {
-      note.textContent = "선택이나 편집 상태가 바뀌어 크기 변경을 취소했습니다.";
+      note.textContent = '선택이나 편집 상태가 바뀌어 크기 변경을 취소했습니다.';
       return;
     }
     if (!request(size.width, size.height))
-      note.textContent = "입력 반영이 끝난 뒤 크기를 변경하세요.";
+      note.textContent = '입력 반영이 끝난 뒤 크기를 변경하세요.';
   });
-  for (const type of ["pointercancel", "lostpointercapture"])
+  for (const type of ['pointercancel', 'lostpointercapture'])
     listen(type, (event) => {
       if (drag?.id === event.pointerId) reset();
     });
   const cancel = (event) => {
-    if (event.key === "Escape" && drag) {
+    if (event.key === 'Escape' && drag) {
       event.preventDefault();
       reset();
-      note.textContent = "셀 크기 변경을 취소했습니다.";
+      note.textContent = '셀 크기 변경을 취소했습니다.';
     }
   };
-  globalThis.window.addEventListener("keydown", cancel, { signal: events.signal });
+  globalThis.window.addEventListener('keydown', cancel, { signal: events.signal });
   return {
     reset() {
       available = false;
       reset();
     },
     message(value) {
-      if (value.kind === "enable") available = value.cellSizeAvailable === true;
+      if (value.kind === 'enable') available = value.cellSizeAvailable === true;
     },
     close() {
       reset();

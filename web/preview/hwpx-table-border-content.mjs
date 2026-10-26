@@ -5,13 +5,13 @@ export function attachHwpxTableBorders(editor, content, available) {
   content.tableBorderSourceErrors = [];
   const sections = new Set((content.tables ?? []).map((table) => table.section));
   let batch;
-  if (typeof editor.tableBorderSourcesBatch === "function") {
+  if (typeof editor.tableBorderSourcesBatch === 'function') {
     batch = new Map();
     const selected = [...sections],
       limit = editor.tableBorderSourcesBatchMaxSections ?? Math.max(1, selected.length);
     if (!Number.isInteger(limit) || limit < 1) {
       for (const section of selected)
-        batch.set(section, { section, error: "InvalidTableBorderBatchLimit" });
+        batch.set(section, { section, error: 'InvalidTableBorderBatchLimit' });
     } else
       for (let start = 0; start < selected.length; start += limit) {
         const chunk = selected.slice(start, start + limit);
@@ -26,7 +26,7 @@ export function attachHwpxTableBorders(editor, content, available) {
   for (const section of sections) {
     try {
       const entry = batch?.get(section);
-      if (batch && !entry) throw new Error("MissingTableBorderBatchSection");
+      if (batch && !entry) throw new Error('MissingTableBorderBatchSection');
       if (entry?.error) throw new Error(entry.error);
       const report = entry ? entry.value : editor.tableBorderSources(section);
       const selected = [];
@@ -40,7 +40,7 @@ export function attachHwpxTableBorders(editor, content, available) {
         for (const cell of table.cells) {
           const key = `${table.tableNode}:${cell.listNode}`,
             row = byList.get(key);
-          if (!row || used.has(key)) throw new Error("TableBorderSourceOwnerMismatch");
+          if (!row || used.has(key)) throw new Error('TableBorderSourceOwnerMismatch');
           used.add(key);
           selected.push(row);
         }

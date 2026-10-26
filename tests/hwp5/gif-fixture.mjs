@@ -40,7 +40,7 @@ export const gifControl = (flags = 1, delay = 123, index = 1) =>
   Buffer.from([33, 249, 4, flags, delay & 255, delay >> 8, index, 0]);
 export const gifComment = () => Buffer.from([33, 254, 3, 65, 66, 67, 0]);
 export const gifApplication = () =>
-  Buffer.concat([Buffer.of(33, 255, 11), Buffer.from("NETSCAPE2.0"), Buffer.from([3, 1, 0, 0, 0])]);
+  Buffer.concat([Buffer.of(33, 255, 11), Buffer.from('NETSCAPE2.0'), Buffer.from([3, 1, 0, 0, 0])]);
 export const gifText = () =>
   Buffer.concat([Buffer.of(33, 1, 12), Buffer.alloc(12), Buffer.of(1, 65, 0)]);
 export function gifFixture({
@@ -63,7 +63,7 @@ export function gifFixture({
 } = {}) {
   const f = (palette) => (palette ? 128 | (Math.log2(palette.length / 3) - 1) : 0);
   const header = Buffer.concat([
-    Buffer.from("GIF" + version + "a"),
+    Buffer.from('GIF' + version + 'a'),
     u(screenWidth),
     u(screenHeight),
     Buffer.of(f(global), 0, aspect),

@@ -1,4 +1,4 @@
-import { placeMeasuredNestedFloatingTable } from "./nested-floating-display-height.mjs";
+import { placeMeasuredNestedFloatingTable } from './nested-floating-display-height.mjs';
 
 const validBox = (box) =>
   box &&
@@ -16,7 +16,7 @@ export function positionNestedFloatingTable(
   references,
   { measured } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   if (
     ![
@@ -32,7 +32,7 @@ export function positionNestedFloatingTable(
       paragraph?.paragraph,
     ].every(uint)
   )
-    return unavailable("InvalidNestedFloatingTableOwner");
+    return unavailable('InvalidNestedFloatingTableOwner');
   if (
     !table ||
     !parent ||
@@ -43,19 +43,19 @@ export function positionNestedFloatingTable(
     paragraph.section !== table.section ||
     paragraph.paragraph !== table.hostParagraph
   )
-    return unavailable("InvalidNestedFloatingTableOwner");
+    return unavailable('InvalidNestedFloatingTableOwner');
   if (!validBox(parent) || !validBox(paragraph) || !validBox(references?.paper))
-    return unavailable("MissingNestedFloatingTableBounds");
+    return unavailable('MissingNestedFloatingTableBounds');
   const source = table.sourceGeometry;
   if (!source || ![0, 1, 2, 3, 4].includes(source.text_wrap))
-    return unavailable("UnsupportedNestedFloatingTableWrap");
+    return unavailable('UnsupportedNestedFloatingTableWrap');
   const placement = placeMeasuredNestedFloatingTable(
     { table, measured },
     { ...references, paragraph },
   );
-  if (placement.state !== "placed")
+  if (placement.state !== 'placed')
     return {
-      ...unavailable("UnsupportedNestedFloatingTablePosition"),
+      ...unavailable('UnsupportedNestedFloatingTablePosition'),
       placementState: placement.state,
     };
   const rectangle = placement.rectangle,
@@ -67,7 +67,7 @@ export function positionNestedFloatingTable(
     rectangle.y + rectangle.height > paper.y + paper.height
   )
     return {
-      ...unavailable("NestedFloatingTablePaperOverflow"),
+      ...unavailable('NestedFloatingTablePaperOverflow'),
       tableNode: table.tableNode,
       parentTableNode: parent.tableNode,
       rectangle,
@@ -75,9 +75,9 @@ export function positionNestedFloatingTable(
       paragraphBounds: { ...paragraph },
     };
   return {
-    state: "positioned",
+    state: 'positioned',
     rectangle,
-    paintLayer: source.text_wrap === 2 ? "behind" : "front",
+    paintLayer: source.text_wrap === 2 ? 'behind' : 'front',
     textWrap: source.text_wrap,
     outsideParentCell:
       rectangle.x < parent.x ||

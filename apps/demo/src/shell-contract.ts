@@ -2,56 +2,56 @@
  * No snapshot is a command target. The bridge must capture/revalidate the core
  * selection token at dispatch, including pending composition and revision gates.
  */
-export type DemoFramework = "headless" | "vanilla" | "react" | "svelte";
+export type DemoFramework = 'headless' | 'vanilla' | 'react' | 'svelte';
 export type DemoCommand =
-  | "save"
-  | "undo"
-  | "redo"
-  | "cut"
-  | "copy"
-  | "paste"
-  | "find"
-  | "replace"
-  | "format-copy"
-  | "insert-shape"
-  | "insert-image"
-  | "insert-table"
-  | "insert-chart"
-  | "insert-footnote"
-  | "insert-endnote"
-  | "insert-link"
-  | "insert-symbol"
-  | "character-properties"
-  | "paragraph-properties"
-  | "object-properties"
-  | "insert-header"
-  | "insert-footer"
-  | "toggle-marks"
-  | "toggle-grid"
-  | "insert-comment"
-  | "word-count"
-  | "bold"
-  | "italic"
-  | "underline"
-  | "strike"
-  | "align-left"
-  | "align-center"
-  | "align-right"
-  | "align-justify"
-  | "toggle-paragraph-marks"
-  | "set-font-size"
-  | "set-zoom"
-  | "zoom-in"
-  | "zoom-out";
+  | 'save'
+  | 'undo'
+  | 'redo'
+  | 'cut'
+  | 'copy'
+  | 'paste'
+  | 'find'
+  | 'replace'
+  | 'format-copy'
+  | 'insert-shape'
+  | 'insert-image'
+  | 'insert-table'
+  | 'insert-chart'
+  | 'insert-footnote'
+  | 'insert-endnote'
+  | 'insert-link'
+  | 'insert-symbol'
+  | 'character-properties'
+  | 'paragraph-properties'
+  | 'object-properties'
+  | 'insert-header'
+  | 'insert-footer'
+  | 'toggle-marks'
+  | 'toggle-grid'
+  | 'insert-comment'
+  | 'word-count'
+  | 'bold'
+  | 'italic'
+  | 'underline'
+  | 'strike'
+  | 'align-left'
+  | 'align-center'
+  | 'align-right'
+  | 'align-justify'
+  | 'toggle-paragraph-marks'
+  | 'set-font-size'
+  | 'set-zoom'
+  | 'zoom-in'
+  | 'zoom-out';
 export type DemoAction =
-  | { readonly command: Exclude<DemoCommand, "set-font-size" | "set-zoom"> }
-  | { readonly command: "set-font-size"; readonly points: number }
-  | { readonly command: "set-zoom"; readonly percent: number };
+  | { readonly command: Exclude<DemoCommand, 'set-font-size' | 'set-zoom'> }
+  | { readonly command: 'set-font-size'; readonly points: number }
+  | { readonly command: 'set-zoom'; readonly percent: number };
 export interface ActionAvailability {
   readonly enabled: boolean;
   /** Required explanation when unavailable; the shell supplies a fallback. */
   readonly reason?: string;
-  readonly pressed?: boolean | "mixed";
+  readonly pressed?: boolean | 'mixed';
 }
 /** A presentation projection supplied by the app, not a second editor state. */
 export interface DemoShellState {

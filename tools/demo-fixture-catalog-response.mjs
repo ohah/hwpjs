@@ -1,9 +1,9 @@
-import { access, realpath, stat } from "node:fs/promises";
-import { constants } from "node:fs";
-import { resolve } from "node:path";
-import { demoFixtures } from "../web/preview/fixture-catalog.mjs";
+import { access, realpath, stat } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { resolve } from 'node:path';
+import { demoFixtures } from '../web/preview/fixture-catalog.mjs';
 
-export const demoFixtureCatalogPath = "/demo-fixture-catalog.json";
+export const demoFixtureCatalogPath = '/demo-fixture-catalog.json';
 
 /** File availability only, never a Native capability/support declaration.
  * Keep the exact resolved-path equality policy of demo-fixture-response.mjs.
@@ -17,8 +17,8 @@ export async function respondDemoFixtureCatalog(
   io = { access, realpath, stat },
 ) {
   if (path !== demoFixtureCatalogPath) return false;
-  if (method !== "GET" && method !== "HEAD") {
-    response.writeHead(405, { Allow: "GET, HEAD", "Cache-Control": "no-store" });
+  if (method !== 'GET' && method !== 'HEAD') {
+    response.writeHead(405, { Allow: 'GET, HEAD', 'Cache-Control': 'no-store' });
     response.end();
     return true;
   }
@@ -38,7 +38,7 @@ export async function respondDemoFixtureCatalog(
               const after = await io.stat(expected);
               available =
                 after.isFile() &&
-                ["dev", "ino", "mode", "ctimeMs"].every((key) => before[key] === after[key]);
+                ['dev', 'ino', 'mode', 'ctimeMs'].every((key) => before[key] === after[key]);
             }
           }
         }
@@ -55,11 +55,11 @@ export async function respondDemoFixtureCatalog(
   );
   const body = Buffer.from(JSON.stringify(fixtures));
   response.writeHead(200, {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "X-Content-Type-Options": "nosniff",
-    "Content-Length": body.length,
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Length': body.length,
   });
-  response.end(method === "HEAD" ? undefined : body);
+  response.end(method === 'HEAD' ? undefined : body);
   return true;
 }

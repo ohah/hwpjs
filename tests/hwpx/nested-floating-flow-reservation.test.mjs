@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { reserveNestedFloatingFlow } from "../../web/preview/nested-floating-flow-reservation.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { reserveNestedFloatingFlow } from '../../web/preview/nested-floating-flow-reservation.mjs';
 
-test("empty-anchor host reserves TOP_AND_BOTTOM extent but not behind overlays", () => {
-  const paragraph = { section: 0, paragraph: 3, text: "\ufffc" };
+test('empty-anchor host reserves TOP_AND_BOTTOM extent but not behind overlays', () => {
+  const paragraph = { section: 0, paragraph: 3, text: '\ufffc' };
   const flow = {
     height: 16,
     rows: [
       {
-        kind: "text",
+        kind: 'text',
         section: 0,
         paragraph: 3,
-        text: "\ufffc",
+        text: '\ufffc',
         startUnit: 0,
         endUnit: 1,
         x: 0,
@@ -38,7 +38,7 @@ test("empty-anchor host reserves TOP_AND_BOTTOM extent but not behind overlays",
   };
   const original = structuredClone({ paragraph, flow, table });
   assert.deepEqual(reserveNestedFloatingFlow(paragraph, flow, [{ table }], { x: 0, y: 40 }), {
-    state: "reserved",
+    state: 'reserved',
     bottom: 160,
   });
   assert.equal(
@@ -52,7 +52,7 @@ test("empty-anchor host reserves TOP_AND_BOTTOM extent but not behind overlays",
   );
   assert.equal(
     reserveNestedFloatingFlow(paragraph, flow, [null], { x: 0, y: 0 }).error,
-    "InvalidNestedFloatingFlow",
+    'InvalidNestedFloatingFlow',
   );
   assert.equal(
     reserveNestedFloatingFlow(
@@ -61,7 +61,7 @@ test("empty-anchor host reserves TOP_AND_BOTTOM extent but not behind overlays",
       [{ table: { ...table, sourceGeometry: { ...table.sourceGeometry, vertical_alignment: 2 } } }],
       { x: 0, y: 0 },
     ).error,
-    "UnsupportedNestedFloatingBlockFlow",
+    'UnsupportedNestedFloatingBlockFlow',
   );
   assert.deepEqual({ paragraph, flow, table }, original);
 });

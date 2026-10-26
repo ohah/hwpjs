@@ -1,29 +1,29 @@
-import { drawingColumnContext } from "./drawing-column-context.mjs";
-import { drawingRootSource, projectDrawingTextPage } from "./drawing-text-page-projection.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { drawingPagePolicyError } from "./drawing-page-policy.mjs";
-import { drawingPagePlacementOptions } from "./drawing-placement.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { affineBox } from "./affine-point-geometry.mjs";
-import { rowLeft } from "./row-geometry.mjs";
-import { drawingFillPlan } from "./drawing-fill-plan.mjs";
-import { projectGroupedPicturePage } from "./grouped-picture-page-projection.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { objectOnlyTableHostKeys } from "./object-only-table-hosts.mjs";
-import { projectRootPicturePage } from "./root-picture-page-projection.mjs";
-import { drawingCollisionInventory } from "./drawing-collision-inventory.mjs";
-import { restrictDrawingLayout } from "./drawing-restricted-layout.mjs";
-import { drawingCellCollisionScope } from "./drawing-cell-collision-scope.mjs";
-import { tableAnchorCoverage } from "./table-anchor-coverage.mjs";
-import { drawingCellHeightRequest } from "./drawing-cell-height-request.mjs";
-import { layoutWithCellHeightRetries } from "./cell-height-layout-retry.mjs";
-import { layoutDrawingWrapBody } from "./drawing-wrap-body-flow.mjs";
-import { drawingPictureScope } from "./drawing-picture-scope.mjs";
-import { pictureTextMeasure } from "./picture-text-measurement.mjs";
-import { resolveDrawingWrapReservations } from "./drawing-wrap-reservations.mjs";
-import { withInlineDrawingCollisionSources } from "./inline-drawing-collision-sources.mjs";
-import { retainedGroupDrawingOwnership } from "./retained-group-drawing-ownership.mjs";
-import { drawingNeedsCollision } from "./drawing-collision-policy.mjs";
+import { drawingColumnContext } from './drawing-column-context.mjs';
+import { drawingRootSource, projectDrawingTextPage } from './drawing-text-page-projection.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { drawingPagePolicyError } from './drawing-page-policy.mjs';
+import { drawingPagePlacementOptions } from './drawing-placement.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { affineBox } from './affine-point-geometry.mjs';
+import { rowLeft } from './row-geometry.mjs';
+import { drawingFillPlan } from './drawing-fill-plan.mjs';
+import { projectGroupedPicturePage } from './grouped-picture-page-projection.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { objectOnlyTableHostKeys } from './object-only-table-hosts.mjs';
+import { projectRootPicturePage } from './root-picture-page-projection.mjs';
+import { drawingCollisionInventory } from './drawing-collision-inventory.mjs';
+import { restrictDrawingLayout } from './drawing-restricted-layout.mjs';
+import { drawingCellCollisionScope } from './drawing-cell-collision-scope.mjs';
+import { tableAnchorCoverage } from './table-anchor-coverage.mjs';
+import { drawingCellHeightRequest } from './drawing-cell-height-request.mjs';
+import { layoutWithCellHeightRetries } from './cell-height-layout-retry.mjs';
+import { layoutDrawingWrapBody } from './drawing-wrap-body-flow.mjs';
+import { drawingPictureScope } from './drawing-picture-scope.mjs';
+import { pictureTextMeasure } from './picture-text-measurement.mjs';
+import { resolveDrawingWrapReservations } from './drawing-wrap-reservations.mjs';
+import { withInlineDrawingCollisionSources } from './inline-drawing-collision-sources.mjs';
+import { retainedGroupDrawingOwnership } from './retained-group-drawing-ownership.mjs';
+import { drawingNeedsCollision } from './drawing-collision-policy.mjs';
 
 // 본문 페이지 계산은 기존 경로에 위임하고 도형 내부 목록은 별도로 조판합니다.
 export function layoutDrawingBodyContent(
@@ -54,23 +54,23 @@ function layoutDrawingBodyAttempt(
   retainedDrawings,
   retainedContainers,
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   const retained = retainedGroupDrawingOwnership(content, retainedDrawings, retainedContainers);
-  if (retained.state !== "selected") return retained;
+  if (retained.state !== 'selected') return retained;
   const { owners: retainedOwners, anchors: retainedAnchors } = retained;
   const retainedText = (p) => retainedOwners.has(`${p.section}:${p.drawingText?.drawingNode}`);
   const retainedCaption = (p) =>
     retainedOwners.has(`${p.section}:${p.drawingCaption?.drawingNode}`);
   if (content.pictures?.some((p) => !p.owner) || content.pageSettings?.length !== 1)
-    return unavailable("UnsupportedDrawingPageObjects");
+    return unavailable('UnsupportedDrawingPageObjects');
   if (content.drawingTextBindingErrors?.length || content.drawingTextSnapshotErrors?.length)
-    return unavailable("AmbiguousDrawingPageContent");
+    return unavailable('AmbiguousDrawingPageContent');
   const roots = new Map();
   for (const drawing of content.drawings) {
     const root = drawingRootSource(drawing, content.containers);
-    if (root.state !== "selected") return root;
+    if (root.state !== 'selected') return root;
     if (signedInt32(root.source.flow?.z_order) === null)
-      return unavailable("MissingDrawingPaintOrder");
+      return unavailable('MissingDrawingPaintOrder');
     roots.set(drawing, root);
   }
   const drawings = content.drawings.toSorted(
@@ -80,11 +80,11 @@ function layoutDrawingBodyAttempt(
   const ids = new Set();
   for (const drawing of drawings) {
     const key = `${drawing.section}:${drawing.drawingNode}`;
-    if (ids.has(key)) return unavailable("AmbiguousDrawingPageContent");
+    if (ids.has(key)) return unavailable('AmbiguousDrawingPageContent');
     ids.add(key);
     const source = drawing.source;
     const fill = drawingFillPlan(content, drawing);
-    if (fill.state === "unavailable") return fill;
+    if (fill.state === 'unavailable') return fill;
     const root = roots.get(drawing);
     const placementSource = root.source;
     const policyReason = drawingPagePolicyError(
@@ -97,7 +97,7 @@ function layoutDrawingBodyAttempt(
     );
     if (policyReason)
       return {
-        ...unavailable("UnsupportedDrawingPagePolicy"),
+        ...unavailable('UnsupportedDrawingPagePolicy'),
         section: drawing.section,
         drawingNode: drawing.drawingNode,
         policyReason,
@@ -107,7 +107,7 @@ function layoutDrawingBodyAttempt(
     (p) => (!p.drawingText || retainedText(p)) && (!p.drawingCaption || retainedCaption(p)),
   );
   const pictureScope = drawingPictureScope(content, bodyParagraphs, { retainedAnchors });
-  if (pictureScope.state !== "scoped") return pictureScope;
+  if (pictureScope.state !== 'scoped') return pictureScope;
   const { bodyPictures } = pictureScope;
   const localMeasure = pictureTextMeasure(pictureScope.inlineIndex, [], measure);
   const bodyPictureIds = new Set(
@@ -122,9 +122,9 @@ function layoutDrawingBodyAttempt(
     pictureIds.size !==
     (content.pictures ?? []).filter((p) => p.owner.anchorNode === p.pictureNode).length
   )
-    return unavailable("AmbiguousDrawingPageContent");
+    return unavailable('AmbiguousDrawingPageContent');
   if ([...pictureIds].some((key) => ids.has(key)))
-    return unavailable("AmbiguousDrawingPageContent");
+    return unavailable('AmbiguousDrawingPageContent');
   if (
     content.paragraphs.some(
       (p) =>
@@ -137,7 +137,7 @@ function layoutDrawingBodyAttempt(
           !pictureIds.has(`${p.section}:${p.drawingCaption.drawingNode}`)),
     )
   )
-    return unavailable("AmbiguousDrawingPageContent");
+    return unavailable('AmbiguousDrawingPageContent');
   const bodySourceParagraphs = content.paragraphs.filter(
     (p) =>
       (!p.drawingText || retainedText(p)) &&
@@ -147,7 +147,7 @@ function layoutDrawingBodyAttempt(
   );
   const bodyIds = new Set(bodySourceParagraphs.map((p) => `${p.section}:${p.paragraph}`));
   const bodyMeasure = (text, paragraph, unit, kind) =>
-    kind === "text" &&
+    kind === 'text' &&
     (drawings.some(
       (d) =>
         d.section === paragraph.section &&
@@ -162,7 +162,7 @@ function layoutDrawingBodyAttempt(
           p.paragraph === paragraph.paragraph &&
           p.anchorUnit === unit,
       ))
-      ? { width: 0, height: textMeasurement(measure("", paragraph, unit, kind)).height }
+      ? { width: 0, height: textMeasurement(measure('', paragraph, unit, kind)).height }
       : measure(text, paragraph, unit, kind);
   const flowAnchors = new Map();
   for (const drawing of drawings) {
@@ -174,7 +174,7 @@ function layoutDrawingBodyAttempt(
       previous &&
       (previous.paragraph !== drawing.hostParagraph || previous.anchorUnit !== drawing.anchorUnit)
     )
-      return unavailable("AmbiguousDrawingFlowAnchor");
+      return unavailable('AmbiguousDrawingFlowAnchor');
     flowAnchors.set(key, {
       section: drawing.section,
       paragraph: drawing.hostParagraph,
@@ -211,8 +211,8 @@ function layoutDrawingBodyAttempt(
         resolveDrawingWrapReservations(bodyDrawings, bodyParagraphs, layout, content),
     },
   );
-  if (body.state !== "paginated") return { ...body, layoutStage: "drawing-body" };
-  if (body.limited) return unavailable("DrawingPageLayoutLimit");
+  if (body.state !== 'paginated') return { ...body, layoutStage: 'drawing-body' };
+  if (body.limited) return unavailable('DrawingPageLayoutLimit');
   for (const drawing of bodyContent.cellFloatingDrawingSources)
     if (
       body.cellFloatingDrawingReservations?.filter(
@@ -220,7 +220,7 @@ function layoutDrawingBodyAttempt(
       ).length !== 1
     )
       return {
-        ...unavailable("MissingCellFloatingDrawingReservation"),
+        ...unavailable('MissingCellFloatingDrawingReservation'),
         section: drawing.section,
         drawingNode: drawing.drawingNode,
       };
@@ -236,10 +236,10 @@ function layoutDrawingBodyAttempt(
       const placed = projectRootPicturePage(picture, content.paragraphs, body.rows, localMeasure, {
         maxRows: maxRows - body.rows.length - pictureRows.length,
       });
-      if (placed.state !== "placed")
+      if (placed.state !== 'placed')
         return {
           ...placed,
-          layoutStage: "root-picture",
+          layoutStage: 'root-picture',
           section: picture.section,
           paragraph: picture.paragraph,
           pictureNode: picture.pictureNode,
@@ -262,22 +262,22 @@ function layoutDrawingBodyAttempt(
       content.paragraphs,
       body.rows,
     );
-    if (placed.state !== "placed") return placed;
+    if (placed.state !== 'placed') return placed;
     if (![2, 3].includes(placed.flow.text_wrap))
-      return unavailable("UnsupportedGroupedPictureFlow");
+      return unavailable('UnsupportedGroupedPictureFlow');
   }
   const rows = [...body.rows, ...pictureRows],
     placedDrawings = [],
     preparedDrawings = [];
   for (const drawing of drawings) {
     const columns = drawingColumnContext(drawing, content.paragraphs, content.paragraphFlows);
-    if (columns.state !== "selected") return columns;
+    if (columns.state !== 'selected') return columns;
     const remaining = maxRows - rows.length;
-    if (remaining < 1) return unavailable("DrawingPageLayoutLimit");
+    if (remaining < 1) return unavailable('DrawingPageLayoutLimit');
     const root = roots.get(drawing);
     // 미리보기 정책: 그룹도 저장된 도형 크기를 바꾸지 않고 넘친 텍스트를 표시합니다.
     const overflow =
-      root.source.geometry?.treat_as_character === false ? "extend-last-column" : "reject";
+      root.source.geometry?.treat_as_character === false ? 'extend-last-column' : 'reject';
     const result = projectDrawingTextPage(
       drawing,
       content.containers,
@@ -287,10 +287,10 @@ function layoutDrawingBodyAttempt(
       localMeasure,
       { ...drawingPagePlacementOptions, maxRows: remaining, overflow },
     );
-    if (result.state !== "placed")
+    if (result.state !== 'placed')
       return {
         ...result,
-        layoutStage: "drawing-text",
+        layoutStage: 'drawing-text',
         section: drawing.section,
         paragraph: drawing.hostParagraph,
         drawingNode: drawing.drawingNode,
@@ -298,7 +298,7 @@ function layoutDrawingBodyAttempt(
     preparedDrawings.push({ drawing, result });
     rows.push(
       ...result.rows.map((row) =>
-        result.overflowed === true ? { ...row, drawingTextOverflow: "extend-last-column" } : row,
+        result.overflowed === true ? { ...row, drawingTextOverflow: 'extend-last-column' } : row,
       ),
     );
     placedDrawings.push({
@@ -322,42 +322,42 @@ function layoutDrawingBodyAttempt(
       placedDrawings: [...(body.placedDrawings ?? []), ...placedDrawings],
       flowPictures: [...(body.flowPictures ?? []), ...flowPictures],
     });
-    if (inventory.state !== "collected") return inventory;
+    if (inventory.state !== 'collected') return inventory;
     for (const [index, item] of preparedDrawings.entries()) {
       if (!drawingNeedsCollision(item.drawing.source)) continue;
       const page = body.pages.find(
         (page) => page.ordinal === item.result.pageOrdinal && page.section === item.drawing.section,
       );
-      if (!page) return unavailable("IncompleteRestrictedDrawingLayout");
+      if (!page) return unavailable('IncompleteRestrictedDrawingLayout');
       const scope = drawingCellCollisionScope(
         item.drawing,
         collisionContent,
         { ...body, rows, placedDrawings: [...(body.placedDrawings ?? []), ...placedDrawings] },
         inventory,
       );
-      if (scope.state !== "scoped") return scope;
+      if (scope.state !== 'scoped') return scope;
       const restricted = restrictDrawingLayout(
         item.drawing,
         item.result,
         scope.inventory,
         scope.body,
       );
-      if (restricted.state !== "placed") {
+      if (restricted.state !== 'placed') {
         const request = drawingCellHeightRequest(scope, restricted);
         return {
           ...restricted,
-          layoutStage: "drawing-restriction",
+          layoutStage: 'drawing-restriction',
           section: item.drawing.section,
           paragraph: item.drawing.hostParagraph,
           drawingNode: item.drawing.drawingNode,
-          ...(request.state === "requested" ? { cellHeightRequest: request } : {}),
+          ...(request.state === 'requested' ? { cellHeightRequest: request } : {}),
         };
       }
       item.result = restricted;
       placedDrawings[index] = { ...placedDrawings[index], rectangle: restricted.rectangle };
       const own = inventory.footprints.find(
         (f) =>
-          f.kind === "drawing" &&
+          f.kind === 'drawing' &&
           f.section === item.drawing.section &&
           f.node === item.drawing.drawingNode,
       );
@@ -369,7 +369,7 @@ function layoutDrawingBodyAttempt(
       for (const row of item.result.rows)
         rows.push(
           item.result.overflowed === true
-            ? { ...row, drawingTextOverflow: "extend-last-column" }
+            ? { ...row, drawingTextOverflow: 'extend-last-column' }
             : row,
         );
   }
@@ -381,11 +381,11 @@ function layoutDrawingBodyAttempt(
     if (
       placed.length !== 1 ||
       placed[0].pageOrdinal !== reserved.pageOrdinal ||
-      ["x", "y", "width", "height"].some(
+      ['x', 'y', 'width', 'height'].some(
         (key) => Math.abs(placed[0].rectangle[key] - reserved.rectangle[key]) > 1e-8,
       )
     )
-      return unavailable("UnresolvedDrawingWrapPlacement");
+      return unavailable('UnresolvedDrawingWrapPlacement');
   }
   for (const row of rows) {
     const bounds =
@@ -398,7 +398,7 @@ function layoutDrawingBodyAttempt(
             height: row.height,
           });
     if (!bounds || !Number.isFinite(bounds.y + bounds.height))
-      return unavailable("InvalidDrawingTextTransform");
+      return unavailable('InvalidDrawingTextTransform');
     bottoms.push(bounds.y + bounds.height);
   }
   const coverageContent = withInlineDrawingCollisionSources(content, body);
@@ -407,13 +407,13 @@ function layoutDrawingBodyAttempt(
     (p) => !objectOnlyTableHosts.has(`${p.section}:${p.paragraph}`),
   );
   const anchors = tableAnchorCoverage(coverageContent, { ...body, rows });
-  if (anchors.state !== "covered") return anchors;
+  if (anchors.state !== 'covered') return anchors;
   const coverageRows = [
     ...rows,
     ...anchors.rows.filter((row) => !objectOnlyTableHosts.has(`${row.section}:${row.paragraph}`)),
   ];
   const coverage = pageParagraphCoverage(coverageOwners, coverageRows);
-  if (coverage.state !== "complete") {
+  if (coverage.state !== 'complete') {
     const grouped = new Map();
     for (const row of coverageRows) {
       const key = `${row.section}:${row.paragraph}`,
@@ -424,17 +424,17 @@ function layoutDrawingBodyAttempt(
     const coverageFailures = [];
     for (const owner of coverageOwners) {
       const members = grouped.get(`${owner.section}:${owner.paragraph}`) ?? [];
-      if (pageParagraphCoverage([owner], members).state !== "complete")
+      if (pageParagraphCoverage([owner], members).state !== 'complete')
         coverageFailures.push({
           section: owner.section,
           paragraph: owner.paragraph,
           length: owner.text.length,
           intervals: members
-            .filter((row) => row.kind === "text")
+            .filter((row) => row.kind === 'text')
             .map((row) => [row.startUnit, row.endUnit]),
         });
     }
-    return { ...coverage, layoutStage: "drawing-coverage", coverageFailures };
+    return { ...coverage, layoutStage: 'drawing-coverage', coverageFailures };
   }
   return {
     ...body,
@@ -443,6 +443,6 @@ function layoutDrawingBodyAttempt(
     flowPictures: [...(body.flowPictures ?? []), ...flowPictures],
     spatialRows: true,
     height: Math.max(body.height, ...bottoms),
-    pageLayoutMode: "measured-drawing-body",
+    pageLayoutMode: 'measured-drawing-body',
   };
 }

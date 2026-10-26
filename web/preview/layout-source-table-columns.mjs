@@ -1,9 +1,9 @@
-import { sourceTableColumns } from "./table-source-columns.mjs";
+import { sourceTableColumns } from './table-source-columns.mjs';
 
 /** Explicit observed display profile; strict source constraints remain unchanged. */
 export function layoutSourceTableColumns(table) {
   const strict = sourceTableColumns(table);
-  if (strict.error !== "ConflictingSourceTableColumns") return strict;
+  if (strict.error !== 'ConflictingSourceTableColumns') return strict;
   if (table.cells.some((cell) => cell.width === null)) return strict;
   const columns = Array(table.columns).fill(null);
   for (const cell of table.cells) {
@@ -38,10 +38,10 @@ export function layoutSourceTableColumns(table) {
   }
   if (!deficits.length) return strict;
   return {
-    state: "resolved",
+    state: 'resolved',
     columns,
     positions,
     width,
-    evidence: { kind: "observed-merged-width-deficit", deficits },
+    evidence: { kind: 'observed-merged-width-deficit', deficits },
   };
 }

@@ -1,5 +1,5 @@
 /** Derived bitmap ownership only. Native remains the document authority. */
-import { createPictureResourceSlots } from "./picture-resource-slots.mjs";
+import { createPictureResourceSlots } from './picture-resource-slots.mjs';
 export function createPictureResources({
   read,
   readBackground,
@@ -15,10 +15,10 @@ export function createPictureResources({
   maxEncodedBytes = 64 * 1024 * 1024,
 }) {
   if (
-    (readBackground !== undefined && typeof readBackground !== "function") ||
-    typeof read !== "function" ||
-    typeof decode !== "function" ||
-    typeof decodeIdentity !== "function" ||
+    (readBackground !== undefined && typeof readBackground !== 'function') ||
+    typeof read !== 'function' ||
+    typeof decode !== 'function' ||
+    typeof decodeIdentity !== 'function' ||
     ![
       maxPixels,
       maxTotalPixels,
@@ -29,7 +29,7 @@ export function createPictureResources({
       maxEncodedBytes,
     ].every((value) => Number.isSafeInteger(value) && value >= 1)
   )
-    throw new Error("InvalidPictureResources");
+    throw new Error('InvalidPictureResources');
   const slots = createPictureResourceSlots(maxConcurrent);
   let epoch = 0,
     closed = false,
@@ -50,7 +50,7 @@ export function createPictureResources({
     }
   };
   let retained = null;
-  const key = (section, node, kind = "picture") => `${kind}:${section}:${node}`;
+  const key = (section, node, kind = 'picture') => `${kind}:${section}:${node}`;
   const release = (entry) => {
     releaseSource(entry);
     if (entry.bitmap) {
@@ -70,32 +70,32 @@ export function createPictureResources({
     slots.wake();
   };
   const resources = {
-    get(section, pictureNode, kind = "picture") {
+    get(section, pictureNode, kind = 'picture') {
       return entries.get(key(section, pictureNode, kind)) ?? null;
     },
-    status(section, pictureNode, kind = "picture") {
+    status(section, pictureNode, kind = 'picture') {
       const entry = entries.get(key(section, pictureNode, kind));
       if (entry) return entry;
-      if (closed) return { bitmap: null, error: "PictureResourcesClosed" };
+      if (closed) return { bitmap: null, error: 'PictureResourcesClosed' };
       if (retained !== null && !retained.has(key(section, pictureNode, kind)))
         return { bitmap: null, error: null, deferred: true };
       if (entries.size >= maxEntries)
-        return { bitmap: null, error: "PictureResourceCountLimitExceeded" };
+        return { bitmap: null, error: 'PictureResourceCountLimitExceeded' };
       return null;
     },
-    async load(section, pictureNode, kind = "picture") {
-      if (closed) throw new Error("PictureResourcesClosed");
+    async load(section, pictureNode, kind = 'picture') {
+      if (closed) throw new Error('PictureResourcesClosed');
       if (
-        !["picture", "table-background"].includes(kind) ||
+        !['picture', 'table-background'].includes(kind) ||
         ![section, pictureNode].every(
           (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff,
         )
       )
-        throw new Error("InvalidPictureResourceKey");
+        throw new Error('InvalidPictureResourceKey');
       const id = key(section, pictureNode, kind);
       if (entries.get(id)?.pending) return entries.get(id).pending;
       if (!entries.has(id) && entries.size >= maxEntries)
-        throw new Error("PictureResourceCountLimitExceeded");
+        throw new Error('PictureResourceCountLimitExceeded');
       const generation = epoch,
         entry = entries.get(id) ?? { bitmap: null, error: null, pending: null };
       const version = (versions.get(entry) ?? 0) + 1;
@@ -116,13 +116,13 @@ export function createPictureResources({
           while (alive() && !slots.take()) await slots.changed();
           if (!alive()) return;
           acquired = true;
-          const reader = kind === "picture" ? read : readBackground;
-          if (!reader) throw new Error("TableBackgroundReaderUnavailable");
+          const reader = kind === 'picture' ? read : readBackground;
+          if (!reader) throw new Error('TableBackgroundReaderUnavailable');
           const identity = decodeIdentity({ kind, section, node: pictureNode });
           const bytes = await reader(section, pictureNode);
           if (!alive()) return;
           if (!(bytes instanceof Uint8Array) || bytes.length > maxBytes)
-            throw new Error("PictureBytesLimitExceeded");
+            throw new Error('PictureBytesLimitExceeded');
           const previous = sources.get(entry);
           if (
             entry.bitmap &&
@@ -134,9 +134,9 @@ export function createPictureResources({
             return;
           release(entry);
           if (bytes.length > maxEncodedBytes - encodedBytes)
-            throw new Error("PictureTotalEncodedBytesLimitExceeded");
+            throw new Error('PictureTotalEncodedBytesLimitExceeded');
           if (bytes.length > maxTotalBytes - decodingBytes)
-            throw new Error("PictureTotalBytesLimitExceeded");
+            throw new Error('PictureTotalBytesLimitExceeded');
           // Own the comparison bytes: readers and decoders may reuse or mutate their buffers.
           sources.set(entry, bytes.slice());
           identities.set(entry, identity);
@@ -157,13 +157,13 @@ export function createPictureResources({
           ) {
             bitmap.close();
             bitmap = null;
-            throw new Error("PicturePixelsLimitExceeded");
+            throw new Error('PicturePixelsLimitExceeded');
           }
           const amount = bitmap.width * bitmap.height;
           if (amount > maxTotalPixels - pixels) {
             bitmap.close();
             bitmap = null;
-            throw new Error("PictureTotalPixelsLimitExceeded");
+            throw new Error('PictureTotalPixelsLimitExceeded');
           }
           pixels += amount;
           costs.set(entry, amount);
@@ -184,7 +184,7 @@ export function createPictureResources({
       return entry.pending;
     },
     retain(targets, backgrounds = []) {
-      if (closed) throw new Error("PictureResourcesClosed");
+      if (closed) throw new Error('PictureResourcesClosed');
       if (
         !Array.isArray(targets) ||
         targets.some(
@@ -195,7 +195,7 @@ export function createPictureResources({
             ),
         )
       )
-        throw new Error("InvalidPictureResourceKey");
+        throw new Error('InvalidPictureResourceKey');
       if (
         !Array.isArray(backgrounds) ||
         backgrounds.some(
@@ -204,10 +204,10 @@ export function createPictureResources({
             ![p.section, p.listNode].every((n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff),
         )
       )
-        throw new Error("InvalidPictureResourceKey");
+        throw new Error('InvalidPictureResourceKey');
       retained = new Set([
         ...targets.map((p) => key(p.section, p.pictureNode)),
-        ...backgrounds.map((p) => key(p.section, p.listNode, "table-background")),
+        ...backgrounds.map((p) => key(p.section, p.listNode, 'table-background')),
       ]);
       for (const [id, entry] of entries)
         if (!retained.has(id)) {
@@ -218,7 +218,7 @@ export function createPictureResources({
     },
     // Operation revision only. Document replacement must still call clear().
     refresh() {
-      if (closed) throw new Error("PictureResourcesClosed");
+      if (closed) throw new Error('PictureResourcesClosed');
       for (const entry of entries.values()) {
         versions.set(entry, (versions.get(entry) ?? 0) + 1);
         entry.pending = null;
@@ -245,17 +245,17 @@ export function createPictureResources({
   };
   resources.backgrounds = {
     clear() {
-      if (closed) throw new Error("PictureResourcesClosed");
+      if (closed) throw new Error('PictureResourcesClosed');
       for (const [id, entry] of entries)
-        if (id.startsWith("table-background:")) {
+        if (id.startsWith('table-background:')) {
           entries.delete(id);
           release(entry);
         }
       slots.wake();
     },
-    get: (section, listNode) => resources.get(section, listNode, "table-background"),
-    status: (section, listNode) => resources.status(section, listNode, "table-background"),
-    load: (section, listNode) => resources.load(section, listNode, "table-background"),
+    get: (section, listNode) => resources.get(section, listNode, 'table-background'),
+    status: (section, listNode) => resources.status(section, listNode, 'table-background'),
+    load: (section, listNode) => resources.load(section, listNode, 'table-background'),
   };
   return resources;
 }

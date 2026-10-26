@@ -1,9 +1,9 @@
-import { tableAnchorPage } from "./table-anchor-page.mjs";
-import { tableHostStructuralCoverage } from "./table-host-structural-coverage.mjs";
+import { tableAnchorPage } from './table-anchor-page.mjs';
+import { tableHostStructuralCoverage } from './table-host-structural-coverage.mjs';
 
 /** Nonpainted intervals require both an exact source anchor and placed table cells. */
 export function tableAnchorCoverage(content, layout) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const tableSources = content?.tables === undefined ? [] : content.tables;
   const boxes = layout?.boxes === undefined ? [] : layout.boxes;
   if (
@@ -15,14 +15,14 @@ export function tableAnchorCoverage(content, layout) {
     (layout.flowAnchors !== undefined &&
       (!Array.isArray(layout.flowAnchors) || layout.flowAnchors.some((row) => !row)))
   )
-    return fail("InvalidTableAnchorCoverage");
+    return fail('InvalidTableAnchorCoverage');
   if (
     tableSources.some((table) => !table) ||
     content.paragraphs.some((p) => !p) ||
     layout.rows.some((row) => !row) ||
     boxes.some((box) => !box)
   )
-    return fail("InvalidTableAnchorCoverage");
+    return fail('InvalidTableAnchorCoverage');
   const rows = [],
     identities = new Set(),
     sites = new Set();
@@ -33,10 +33,10 @@ export function tableAnchorCoverage(content, layout) {
         (v) => Number.isSafeInteger(v) && v >= 0,
       )
     )
-      return fail("InvalidTableAnchorCoverage");
+      return fail('InvalidTableAnchorCoverage');
     const identity = `${anchor.section}:${anchor.tableNode}`,
       site = `${anchor.section}:${anchor.hostParagraph}:${anchor.anchorUnit}`;
-    if (identities.has(identity) || sites.has(site)) return fail("AmbiguousTableAnchorCoverage");
+    if (identities.has(identity) || sites.has(site)) return fail('AmbiguousTableAnchorCoverage');
     identities.add(identity);
     sites.add(site);
     const tables = tableSources.filter(
@@ -45,7 +45,7 @@ export function tableAnchorCoverage(content, layout) {
     const owners = content.paragraphs.filter(
       (p) => p.section === anchor.section && p.paragraph === anchor.hostParagraph,
     );
-    if (tables.length !== 1 || owners.length !== 1) return fail("MissingTableAnchorCoverageOwner");
+    if (tables.length !== 1 || owners.length !== 1) return fail('MissingTableAnchorCoverageOwner');
     const table = tables[0],
       owner = owners[0];
     if (
@@ -53,13 +53,13 @@ export function tableAnchorCoverage(content, layout) {
       table.anchorUnit !== anchor.anchorUnit ||
       ![true, false].includes(table.sourceGeometry?.geometry?.treat_as_character) ||
       owner.clipped ||
-      typeof owner.text !== "string" ||
-      owner.text[anchor.anchorUnit] !== "\ufffc" ||
+      typeof owner.text !== 'string' ||
+      owner.text[anchor.anchorUnit] !== '\ufffc' ||
       !Array.isArray(table.cells) ||
       !table.cells.length ||
       table.cells.some((cell) => !cell || !Number.isSafeInteger(cell.listNode) || cell.listNode < 0)
     )
-      return fail("InvalidTableAnchorCoverage");
+      return fail('InvalidTableAnchorCoverage');
     const placed = boxes.filter(
       (box) => box.section === table.section && box.tableNode === table.tableNode,
     );
@@ -79,14 +79,14 @@ export function tableAnchorCoverage(content, layout) {
           ),
       )
     )
-      return fail("MissingTableAnchorCoveragePlacement");
+      return fail('MissingTableAnchorCoveragePlacement');
     const structural = tableHostStructuralCoverage(owner, table, anchor, layout, placed);
-    if (structural.state !== "covered") return structural;
+    if (structural.state !== 'covered') return structural;
     rows.push(...structural.rows);
     if (
       layout.rows.some(
         (row) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === owner.section &&
           row.paragraph === owner.paragraph &&
           row.startUnit <= anchor.anchorUnit &&
@@ -101,7 +101,7 @@ export function tableAnchorCoverage(content, layout) {
       return fail(error.message);
     }
     rows.push({
-      kind: "text",
+      kind: 'text',
       section: owner.section,
       paragraph: owner.paragraph,
       startUnit: anchor.anchorUnit,
@@ -111,5 +111,5 @@ export function tableAnchorCoverage(content, layout) {
       ...(pageOrdinal !== undefined ? { pageOrdinal } : {}),
     });
   }
-  return { state: "covered", rows };
+  return { state: 'covered', rows };
 }

@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { hwp5FieldWindowDependencies } from "../../web/preview/hwp5-field-window-dependencies.mjs";
-import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
-import { projectHwp5FieldOwnedWindow } from "../../web/preview/hwp5-window-projection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { hwp5FieldWindowDependencies } from '../../web/preview/hwp5-field-window-dependencies.mjs';
+import { planParagraphDependencies } from '../../web/preview/paragraph-dependency-plan.mjs';
+import { projectHwp5FieldOwnedWindow } from '../../web/preview/hwp5-window-projection.mjs';
 
-test("actual cross-paragraph hyperlink window retains both field endpoints", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+test('actual cross-paragraph hyperlink window retains both field endpoints', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   const input = readFileSync(
-    "legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwp",
+    'legacy/rust/crates/hwp-core/tests/fixtures/issue144-fields-crossing-lineseg-boundary.hwp',
   );
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);
@@ -40,7 +40,7 @@ test("actual cross-paragraph hyperlink window retains both field endpoints", asy
           {
             ...editor,
             fieldSpans: () => {
-              throw new Error("Hwp5FieldSpansAbiUnavailable");
+              throw new Error('Hwp5FieldSpansAbiUnavailable');
             },
           },
           projection,
@@ -55,12 +55,12 @@ test("actual cross-paragraph hyperlink window retains both field endpoints", asy
   }
 });
 
-test("field windows exclude interleaved foreign lists and reject mismatched endpoints", () => {
+test('field windows exclude interleaved foreign lists and reject mismatched endpoints', () => {
   const projection = { sections: [{ index: 0, paragraphs: [{}, {}, {}] }] };
   const flows = [
-    { paragraph: 0, host: "body", parent_node: null, list_node: null },
-    { paragraph: 1, host: "table_cell", parent_node: 10, list_node: 11 },
-    { paragraph: 2, host: "body", parent_node: null, list_node: null },
+    { paragraph: 0, host: 'body', parent_node: null, list_node: null },
+    { paragraph: 1, host: 'table_cell', parent_node: 10, list_node: 11 },
+    { paragraph: 2, host: 'body', parent_node: null, list_node: null },
   ];
   const span = {
     source_node: 7,
@@ -90,9 +90,9 @@ test("field windows exclude interleaved foreign lists and reject mismatched endp
   );
 });
 
-test("reference regulatory fields retain each observed cross-paragraph list", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("reference/rhwp/samples/issue1891/76076_regulatory_analysis.hwpx");
+test('reference regulatory fields retain each observed cross-paragraph list', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('reference/rhwp/samples/issue1891/76076_regulatory_analysis.hwpx');
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);
   try {

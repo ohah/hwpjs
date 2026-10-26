@@ -1,15 +1,15 @@
-import { chartCircularData } from "./chart-circular-data.mjs";
-import { chartFirstCircularSeries } from "./chart-circular-series.mjs";
-import { chartBlankPolicy } from "./chart-blank-policy.mjs";
+import { chartCircularData } from './chart-circular-data.mjs';
+import { chartFirstCircularSeries } from './chart-circular-series.mjs';
+import { chartBlankPolicy } from './chart-blank-policy.mjs';
 
 // Explicit no-data preview, never substitute later series or invent zeroes.
 export function emptyCircularPreview(display, plotNode, rejected) {
-  if (!["MissingPieValue", "MissingOfPieValue"].includes(rejected?.reason)) return rejected;
+  if (!['MissingPieValue', 'MissingOfPieValue'].includes(rejected?.reason)) return rejected;
   const data = chartCircularData(display, plotNode);
-  if (data.state !== "ready") return rejected;
+  if (data.state !== 'ready') return rejected;
   const selected = chartFirstCircularSeries(data),
     policy = chartBlankPolicy(display);
-  if (selected.state !== "selected" || policy.state !== "selected" || policy.value !== "gap")
+  if (selected.state !== 'selected' || policy.state !== 'selected' || policy.value !== 'gap')
     return rejected;
   const row = selected.row;
   if (
@@ -18,7 +18,7 @@ export function emptyCircularPreview(display, plotNode, rejected) {
   )
     return rejected;
   return {
-    state: "ready",
+    state: 'ready',
     exact: false,
     empty_circular: {
       series_node: row.series_node,
@@ -28,8 +28,8 @@ export function emptyCircularPreview(display, plotNode, rejected) {
     warnings: [
       ...selected.warnings,
       ...policy.warnings,
-      "PreviewEmptyCircularSeries",
-      "SourceStylesNotApplied",
+      'PreviewEmptyCircularSeries',
+      'SourceStylesNotApplied',
     ],
   };
 }

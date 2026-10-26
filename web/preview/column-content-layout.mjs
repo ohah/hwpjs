@@ -1,12 +1,12 @@
-import { layoutContent } from "./layout.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { nextTextRow } from "./next-text-row.mjs";
-import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
-import { columnTextSpans } from "./column-text-spans.mjs";
+import { layoutContent } from './layout.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { nextTextRow } from './next-text-row.mjs';
+import { paragraphSpacePixels } from './paragraph-geometry.mjs';
+import { columnTextSpans } from './column-text-spans.mjs';
 
 /** Measure source paragraphs at their effective column width; pagination owns y. */
 export function measureColumnContent(content, body, flows, measure, maxRows) {
-  if (!Number.isInteger(maxRows) || maxRows < 1) throw new RangeError("InvalidLayoutBounds");
+  if (!Number.isInteger(maxRows) || maxRows < 1) throw new RangeError('InvalidLayoutBounds');
   const byParagraph = new Map(flows.map((flow) => [flow.paragraph, flow]));
   const rows = [];
   const deferred = flows.some(
@@ -22,23 +22,23 @@ export function measureColumnContent(content, body, flows, measure, maxRows) {
     }
     const flow = byParagraph.get(paragraph.paragraph);
     if (!flow || flow.section !== paragraph.section || flow.top_level !== true)
-      return { state: "unavailable", error: "UnsupportedPageFlow" };
+      return { state: 'unavailable', error: 'UnsupportedPageFlow' };
     let spans;
     try {
       spans = columnTextSpans(paragraph, flow);
     } catch (error) {
       return {
-        state: "unavailable",
+        state: 'unavailable',
         error:
-          error.message === "UnsupportedColumnSpans" ? "UnsupportedPageColumns" : error.message,
+          error.message === 'UnsupportedColumnSpans' ? 'UnsupportedPageColumns' : error.message,
       };
     }
     const columns = columnReferenceBoxes(body, spans[0]?.declaration);
-    if (columns.state !== "placed")
-      return { state: "unavailable", error: "UnsupportedPageColumns" };
+    if (columns.state !== 'placed')
+      return { state: 'unavailable', error: 'UnsupportedPageColumns' };
     if (deferred) {
       const gap = (height, declaration) => ({
-        kind: "gap",
+        kind: 'gap',
         section: paragraph.section,
         paragraph: paragraph.paragraph,
         height,
@@ -49,7 +49,7 @@ export function measureColumnContent(content, body, flows, measure, maxRows) {
       if (before) rows.push(gap(before, spans[0].declaration));
       for (const span of spans)
         rows.push({
-          kind: "text",
+          kind: 'text',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           startUnit: span.startUnit,
@@ -72,13 +72,13 @@ export function measureColumnContent(content, body, flows, measure, maxRows) {
     if (measured.limited) break;
   }
   return {
-    state: "measured",
+    state: 'measured',
     rows,
     limited,
     ...(deferred
       ? {
           measureRow: (source, width) =>
-            source.kind === "gap"
+            source.kind === 'gap'
               ? source
               : nextTextRow(source.paragraphSource, source.startUnit, width, measure, {
                   endUnit: source.endUnit,

@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { gifOracle, gifWords } from "./gif-oracle.mjs";
-import { gifFixture, gifControl, gifComment, gifApplication, gifText } from "./gif-fixture.mjs";
+import assert from 'node:assert/strict';
+import { gifOracle, gifWords } from './gif-oracle.mjs';
+import { gifFixture, gifControl, gifComment, gifApplication, gifText } from './gif-fixture.mjs';
 export function gifInput(
   raw,
   {

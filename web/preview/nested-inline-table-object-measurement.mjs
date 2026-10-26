@@ -1,12 +1,12 @@
-import { reserveTableCaptionSpace } from "./table-caption-page-reservation.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { reserveTableCaptionSpace } from './table-caption-page-reservation.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 /** Table cells and caption share one measured inline footprint and row budget. */
 export function measureNestedInlineTableObject(table, measured, paragraphs, measure, maxRows) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     table?.sourceGeometry?.geometry?.treat_as_character !== true ||
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     ![measured.grid?.width, measured.grid?.height].every((v) => Number.isFinite(v) && v > 0) ||
     !Number.isSafeInteger(measured.rowCount) ||
     measured.rowCount < 0 ||
@@ -14,19 +14,19 @@ export function measureNestedInlineTableObject(table, measured, paragraphs, meas
     maxRows < 1 ||
     measured.rowCount > maxRows
   )
-    return fail("InvalidNestedInlineTableMeasurement");
+    return fail('InvalidNestedInlineTableMeasurement');
   const raw = table.sourceGeometry.out_margin;
   if (
     !Array.isArray(raw) ||
     raw.length !== 4 ||
     !raw.every((v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff)
   )
-    return fail("MissingTableOuterInsets");
+    return fail('MissingTableOuterInsets');
   const [left, right, top, bottom] = raw.map(hwpUnitPixels);
   let outerInsets = { left, right, top, bottom },
     captionReservation;
   if (table.sourceCaption) {
-    if (measured.rowCount === maxRows) return fail("TableCaptionMeasurementLimit");
+    if (measured.rowCount === maxRows) return fail('TableCaptionMeasurementLimit');
     captionReservation = reserveTableCaptionSpace(
       table,
       paragraphs,
@@ -35,7 +35,7 @@ export function measureNestedInlineTableObject(table, measured, paragraphs, meas
       outerInsets,
       { maxRows: maxRows - measured.rowCount },
     );
-    if (captionReservation.state !== "reserved") return captionReservation;
+    if (captionReservation.state !== 'reserved') return captionReservation;
     captionReservation = {
       ...captionReservation,
       owner: {
@@ -50,9 +50,9 @@ export function measureNestedInlineTableObject(table, measured, paragraphs, meas
   const width = measured.grid.width + outerInsets.left + outerInsets.right;
   const height = measured.grid.height + outerInsets.top + outerInsets.bottom;
   if (![width, height].every((v) => Number.isFinite(v) && v > 0))
-    return fail("InvalidNestedInlineTableMeasurement");
+    return fail('InvalidNestedInlineTableMeasurement');
   return {
-    state: "object-measured",
+    state: 'object-measured',
     width,
     height,
     outerInsets,

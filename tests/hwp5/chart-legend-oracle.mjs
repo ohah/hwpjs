@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { chartGridCellsOracle } from "./chart-grid-cells-oracle.mjs";
-import { chartBackdropOracle } from "./chart-backdrops.mjs";
-import { chartFootnoteOracle } from "./chart-footnote-oracle.mjs";
+import assert from 'node:assert/strict';
+import { chartGridCellsOracle } from './chart-grid-cells-oracle.mjs';
+import { chartBackdropOracle } from './chart-backdrops.mjs';
+import { chartFootnoteOracle } from './chart-footnote-oracle.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -60,14 +60,14 @@ export function chartLegendOracle(b) {
     if (!types.has(id)) {
       const length = word(),
         nameOffset = p,
-        actual = take(length).toString("latin1"),
+        actual = take(length).toString('latin1'),
         versionOffset = p;
       assert.equal(word(), 1);
-      assert.equal(actual, name + "\0");
+      assert.equal(actual, name + '\0');
       types.set(id, actual);
       declarations.push({ idOffset, nameOffset, versionOffset });
     }
-    assert.equal(types.get(id), name + "\0");
+    assert.equal(types.get(id), name + '\0');
   };
   const object = () => {
     objectOffsets.push(p);
@@ -80,23 +80,23 @@ export function chartLegendOracle(b) {
     return take(n);
   };
   const id = object();
-  type("VtChartLegend");
+  type('VtChartLegend');
   const fontId = object();
-  type("VtFont");
+  type('VtFont');
   const nameOffset = p,
     nameId = long();
   const introduced = !objects.has(nameId);
   let name;
   if (introduced) {
-    type("VtString");
+    type('VtString');
     const lengthOffset = p,
       length = word(),
       payloadOffset = p,
       bytes = take(length),
       trailerOffset = p,
       trailer = take(1)[0];
-    type("VtValue");
-    type("VtObject");
+    type('VtValue');
+    type('VtObject');
     name = { bytes, trailer, lengthOffset, payloadOffset, trailerOffset };
     register(nameId, name);
   } else {
@@ -105,16 +105,16 @@ export function chartLegendOracle(b) {
   }
   const nameEnd = p,
     fontRaw = raw(14);
-  type("VtObject");
+  type('VtObject');
   const layout = raw(10);
-  type("VtChartSection");
+  type('VtChartSection');
   const section = raw(26),
     ids = [],
     background = [];
   for (const [className, n] of [
-    ["VtBackdrop", 50],
-    ["VtFill", 34],
-    ["VtPicture", 4],
+    ['VtBackdrop', 50],
+    ['VtFill', 34],
+    ['VtPicture', 4],
   ]) {
     ids.push(object());
     type(className);
@@ -122,12 +122,12 @@ export function chartLegendOracle(b) {
   }
   const picture = p;
   assert.equal(long(), 0xffffffff);
-  type("VtObject");
+  type('VtObject');
   const suffixOffset = p,
     suffix = take(2);
-  type("VtObject");
-  type("VtObject");
-  type("VtObject");
+  type('VtObject');
+  type('VtObject');
+  type('VtObject');
   const stored = [...objects.values()].reduce((n, v) => n + (v?.bytes.length ?? 0), 0);
   const r = {
     start,

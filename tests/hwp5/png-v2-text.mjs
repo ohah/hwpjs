@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { profile, payloadInput } from "./png-payload-inspection.mjs";
+import assert from 'node:assert/strict';
+import { profile, payloadInput } from './png-payload-inspection.mjs';
 export function description(ascii = 1, units = 0, script = 0, tail = 0) {
   const b = Buffer.alloc(90 + ascii + 2 * units + tail);
-  b.write("desc");
+  b.write('desc');
   b.writeUInt32BE(ascii, 8);
   b.fill(65, 12, 12 + ascii - 1);
   const u = 12 + ascii;
@@ -23,8 +23,8 @@ export function pngV2TextEdges(call) {
     payloadInput(
       profile(
         [
-          ["desc", d],
-          ["cprt", copyright],
+          ['desc', d],
+          ['cprt', copyright],
         ],
         2,
       ),
@@ -96,8 +96,8 @@ export function pngV2TextEdges(call) {
   }
   const raw = profile(
     [
-      ["desc", good],
-      ["cprt", copyright],
+      ['desc', good],
+      ['cprt', copyright],
     ],
     2,
   );

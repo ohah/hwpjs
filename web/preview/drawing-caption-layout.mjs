@@ -1,17 +1,17 @@
-import { layoutSourceTableCaption } from "./table-caption-source-layout.mjs";
+import { layoutSourceTableCaption } from './table-caption-source-layout.mjs';
 
 // Adapt ownership only; caption width, measurement and positioning stay shared.
 export function layoutDrawingCaption(drawing, paragraphs, rectangle, measure, options = {}) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   const source = drawing?.source?.caption;
-  if (!source || !Array.isArray(paragraphs) || typeof measure !== "function")
-    return unavailable("MissingDrawingCaptionSource");
+  if (!source || !Array.isArray(paragraphs) || typeof measure !== 'function')
+    return unavailable('MissingDrawingCaptionSource');
   const members = paragraphs.filter(
     (paragraph) =>
       paragraph.section === drawing.section &&
       paragraph.drawingCaption?.drawingNode === drawing.drawingNode,
   );
-  if (!members.length) return unavailable("MissingDrawingCaptionContent");
+  if (!members.length) return unavailable('MissingDrawingCaptionContent');
   if (
     members.some(
       (paragraph) =>
@@ -21,7 +21,7 @@ export function layoutDrawingCaption(drawing, paragraphs, rectangle, measure, op
         paragraph.tableCell,
     )
   )
-    return unavailable("DrawingCaptionBindingMismatch");
+    return unavailable('DrawingCaptionBindingMismatch');
   const originals = new Map(members.map((paragraph) => [paragraph.paragraph, paragraph]));
   const adapted = members.map((paragraph) => ({
     ...paragraph,
@@ -44,7 +44,7 @@ export function layoutDrawingCaption(drawing, paragraphs, rectangle, measure, op
     (text, paragraph, unit, kind) => measure(text, originals.get(paragraph.paragraph), unit, kind),
     options,
   );
-  if (result.state !== "positioned") return result;
+  if (result.state !== 'positioned') return result;
   return {
     ...result,
     rows: result.rows.map((row) => {

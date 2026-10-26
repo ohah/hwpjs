@@ -1,11 +1,11 @@
 // Deterministic malformed-input sweep. Never feed mutated files to the legacy parser.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { runInNewContext } from "node:vm";
-import { v4File } from "./contract-fixtures.mjs";
-import { miniFragmented } from "./mini-fragmented.mjs";
-const root = new URL("../../", import.meta.url);
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { runInNewContext } from 'node:vm';
+import { v4File } from './contract-fixtures.mjs';
+import { miniFragmented } from './mini-fragmented.mjs';
+const root = new URL('../../', import.meta.url);
 const context = {
   module: { exports: {} },
   require: createRequire(import.meta.url),
@@ -13,18 +13,18 @@ const context = {
   process,
   console,
 };
-runInNewContext(readFileSync(new URL("legacy/cfb.js", root), "utf8"), context);
+runInNewContext(readFileSync(new URL('legacy/cfb.js', root), 'utf8'), context);
 const seeds = [
   v4File(),
   miniFragmented(context.module.exports),
-  readFileSync(new URL("legacy/rust/crates/hwp-core/tests/fixtures/example.hwp", root)),
+  readFileSync(new URL('legacy/rust/crates/hwp-core/tests/fixtures/example.hwp', root)),
 ];
 const { instance } = await WebAssembly.instantiate(
-  readFileSync(new URL("zig-out/bin/hwpjs.wasm", root)),
+  readFileSync(new URL('zig-out/bin/hwpjs.wasm', root)),
   {},
 );
 const wasm = instance.exports;
-const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
+const decoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: true });
 let state = Number(process.env.CFB_MUTATION_SEED ?? 0xc0ffee) >>> 0;
 const initialSeed = state;
 const random = () => {
@@ -46,7 +46,7 @@ function check(bytes, required = false) {
     if (!ok) {
       assert.equal(wasm.cfb_count(), 0);
       assert.ok(wasm.cfb_error_len() > 0);
-      assert.ok(!required, "known-good seed must recover");
+      assert.ok(!required, 'known-good seed must recover');
       return false;
     }
     const count = wasm.cfb_count();

@@ -1,6 +1,6 @@
-import { validateHwp5NoteSources } from "../../js/hwp5-note-sources.mjs";
-import { sourceDisplayPosition } from "./text-offsets.mjs";
-import { attachHwp5NoteShapes } from "./hwp5-note-shape-content.mjs";
+import { validateHwp5NoteSources } from '../../js/hwp5-note-sources.mjs';
+import { sourceDisplayPosition } from './text-offsets.mjs';
+import { attachHwp5NoteShapes } from './hwp5-note-shape-content.mjs';
 
 /** Current note body membership and reference boundary, without inventing page policy. */
 export function attachHwp5Notes(editor, content) {
@@ -9,7 +9,7 @@ export function attachHwp5Notes(editor, content) {
   if (!editor) return attachHwp5NoteShapes(editor, content);
   const flows = content.currentParagraphFlows ?? [];
   for (const section of new Set(
-    flows.filter((row) => ["footnote", "endnote"].includes(row.host)).map((row) => row.section),
+    flows.filter((row) => ['footnote', 'endnote'].includes(row.host)).map((row) => row.section),
   )) {
     try {
       const sources = validateHwp5NoteSources(editor.noteSources(section)),
@@ -17,19 +17,19 @@ export function attachHwp5Notes(editor, content) {
         positions = new Map(),
         paragraphIds = new Set();
       for (const paragraph of content.paragraphs.filter((row) => row.section === section)) {
-        if (paragraphIds.has(paragraph.paragraph)) throw new Error("AmbiguousHwp5NoteParagraph");
+        if (paragraphIds.has(paragraph.paragraph)) throw new Error('AmbiguousHwp5NoteParagraph');
         paragraphIds.add(paragraph.paragraph);
       }
       const members = flows.filter(
-        (row) => row.section === section && ["footnote", "endnote"].includes(row.host),
+        (row) => row.section === section && ['footnote', 'endnote'].includes(row.host),
       );
       if (new Set(members.map((row) => row.paragraph)).size !== members.length)
-        throw new Error("AmbiguousHwp5NoteBody");
+        throw new Error('AmbiguousHwp5NoteBody');
       for (const source of sources) {
         const paragraph = content.paragraphs.find(
           (row) => row.section === section && row.paragraph === source.paragraph,
         );
-        if (!paragraph || paragraph.clipped) throw new Error("MissingHwp5NoteReferenceParagraph");
+        if (!paragraph || paragraph.clipped) throw new Error('MissingHwp5NoteReferenceParagraph');
         const unit = sourceDisplayPosition(
           source.current_unit,
           paragraph.sourceOffsets,
@@ -40,12 +40,12 @@ export function attachHwp5Notes(editor, content) {
           paragraph.sourceOffsets,
           paragraph.text.length,
         );
-        if (end !== unit + 1 || paragraph.text[unit] !== "\ufffc")
-          throw new Error("Hwp5NoteReferenceMismatch");
+        if (end !== unit + 1 || paragraph.text[unit] !== '\ufffc')
+          throw new Error('Hwp5NoteReferenceMismatch');
         const key = `${source.paragraph}:${unit}`,
           owner = positions.get(key);
         if (owner !== undefined && owner !== source.control_node)
-          throw new Error("AmbiguousHwp5NoteReference");
+          throw new Error('AmbiguousHwp5NoteReference');
         positions.set(key, source.control_node);
         const body = members.filter(
           (row) =>
@@ -62,7 +62,7 @@ export function attachHwp5Notes(editor, content) {
               ),
           )
         )
-          throw new Error("MissingHwp5NoteBody");
+          throw new Error('MissingHwp5NoteBody');
         prepared.push({
           section,
           kind: source.kind,
@@ -85,7 +85,7 @@ export function attachHwp5Notes(editor, content) {
             ),
         )
       )
-        throw new Error("IncompleteHwp5NoteSources");
+        throw new Error('IncompleteHwp5NoteSources');
       content.hwp5Notes.push(...prepared);
     } catch (error) {
       content.hwp5NoteErrors.push({ section, error: error.message });

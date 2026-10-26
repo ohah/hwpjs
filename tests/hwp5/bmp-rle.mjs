@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { bmpWords } from "./bmp-oracle.mjs";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { bmpRleFixture, rleExample4, rleExample8, rleAbsolute } from "./bmp-rle-fixture.mjs";
-import { bmpRleOracle } from "./bmp-rle-oracle.mjs";
-import { expectBmpError as parserError, isBmpOracleRejection } from "./bmp-errors.mjs";
+import assert from 'node:assert/strict';
+import { bmpWords } from './bmp-oracle.mjs';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { bmpRleFixture, rleExample4, rleExample8, rleAbsolute } from './bmp-rle-fixture.mjs';
+import { bmpRleOracle } from './bmp-rle-oracle.mjs';
+import { expectBmpError as parserError, isBmpOracleRejection } from './bmp-errors.mjs';
 export function bmpRleInput(
   raw,
   {
@@ -25,9 +25,9 @@ export function bmpRleEdges(call) {
   let comparisons = 0,
     rejected = 0;
   for (const error of [
-    new WebAssembly.RuntimeError("UnexpectedEnd"),
-    new RangeError("UnexpectedEnd"),
-    new TypeError("UnexpectedEnd"),
+    new WebAssembly.RuntimeError('UnexpectedEnd'),
+    new RangeError('UnexpectedEnd'),
+    new TypeError('UnexpectedEnd'),
   ]) {
     assert.throws(
       () =>

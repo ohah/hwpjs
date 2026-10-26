@@ -1,5 +1,5 @@
-import { paginatePictureDocument } from "./picture-document-pages.mjs";
-import { picturePageReservations } from "./picture-page-reservations.mjs";
+import { paginatePictureDocument } from './picture-document-pages.mjs';
+import { picturePageReservations } from './picture-page-reservations.mjs';
 
 // 매번 원문 문단에서 다시 측정해 이전 결과의 이동이 누적되지 않게 합니다.
 export function paginatePictureDocumentFlow(
@@ -17,14 +17,14 @@ export function paginatePictureDocumentFlow(
     ...options
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (!Number.isSafeInteger(maxIterations) || maxIterations < 1 || maxIterations > 1000)
-    return unavailable("InvalidPictureFlowBudget");
+    return unavailable('InvalidPictureFlowBudget');
   let page = paginatePictureDocument(paragraphs, setting, [], measure, flows, options);
-  if (page.state !== "paginated") return page;
+  if (page.state !== 'paginated') return page;
   const reservationOptions = { edgePolicy, captionMeasure, captionParagraphs, maxCaptionRows };
   let reserved = picturePageReservations(pictures, paragraphs, page.rows, reservationOptions);
-  if (reserved.state !== "reserved") return reserved;
+  if (reserved.state !== 'reserved') return reserved;
   const signature = (value) => JSON.stringify(value.reservations);
   let previousReservations;
   const anchorPages = new Map();
@@ -56,9 +56,9 @@ export function paginatePictureDocumentFlow(
         return minimum;
       },
     });
-    if (page.state !== "paginated") return page;
+    if (page.state !== 'paginated') return page;
     const next = picturePageReservations(pictures, paragraphs, page.rows, reservationOptions);
-    if (next.state !== "reserved") return next;
+    if (next.state !== 'reserved') return next;
     if (signature(next) === signature(reserved))
       return {
         ...page,
@@ -70,7 +70,7 @@ export function paginatePictureDocumentFlow(
     reserved = next;
   }
   return {
-    ...unavailable("PictureFlowConvergenceLimit"),
+    ...unavailable('PictureFlowConvergenceLimit'),
     pictureFlowIterations: maxIterations,
     previousPictureReservations: previousReservations,
     pictureReservations: reserved.reservations,

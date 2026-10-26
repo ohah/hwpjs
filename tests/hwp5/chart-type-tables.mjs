@@ -1,19 +1,19 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
   return b;
 };
 const types = [
-  { offset: 40, end: 56, name: "VtChart", version: 6 },
-  { offset: 60, end: 79, name: "VtDataGrid", version: 1 },
-  { offset: 79, end: 96, name: "VtMatrix", version: 1 },
-  { offset: 96, end: 117, name: "VtCollection", version: 1 },
-  { offset: 119, end: 136, name: "VtObject", version: 1 },
+  { offset: 40, end: 56, name: 'VtChart', version: 6 },
+  { offset: 60, end: 79, name: 'VtDataGrid', version: 1 },
+  { offset: 79, end: 96, name: 'VtMatrix', version: 1 },
+  { offset: 96, end: 117, name: 'VtCollection', version: 1 },
+  { offset: 119, end: 136, name: 'VtObject', version: 1 },
 ];
 const input = (b, order, caps = [5, 13, 50]) => {
   const count = Buffer.alloc(2);
@@ -26,7 +26,7 @@ const expected = (order) => {
   for (const id of order) {
     const t = types[id],
       fresh = !seen.has(id),
-      name = Buffer.from(t.name + "\0"),
+      name = Buffer.from(t.name + '\0'),
       version = Buffer.alloc(2);
     version.writeUInt16LE(t.version);
     rows.push(
@@ -49,7 +49,7 @@ const expected = (order) => {
 };
 export async function chartTypeTables(call) {
   const cfb = await createCfbReader(
-    readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+    readFileSync(new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url)),
   );
   let roots = 0,
     accepted = 0,
@@ -59,14 +59,14 @@ export async function chartTypeTables(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       for (const [id, t] of types.entries()) {
         assert.equal(b.readUInt32LE(t.offset), id);
         assert.equal(b.readUInt16LE(t.offset + 4), t.name.length + 1);
-        assert.deepEqual(b.subarray(t.offset + 6, t.end - 2), Buffer.from(t.name + "\0"));
+        assert.deepEqual(b.subarray(t.offset + 6, t.end - 2), Buffer.from(t.name + '\0'));
         assert.equal(b.readUInt16LE(t.end - 2), t.version);
       }
       roots++;
@@ -87,12 +87,12 @@ export async function chartTypeTables(call) {
         [5, 12, 50],
         [5, 13, 49],
       ])
-        reject(input(b, order, caps), "LimitExceeded");
-      reject(input(b, order), "LimitExceeded", order.length - 1);
-      reject(input(b.subarray(0, 124), order), "UnexpectedEnd");
+        reject(input(b, order, caps), 'LimitExceeded');
+      reject(input(b, order), 'LimitExceeded', order.length - 1);
+      reject(input(b.subarray(0, 124), order), 'UnexpectedEnd');
       const broken = Buffer.from(b);
       broken[133] = 1;
-      reject(input(broken, order), "InvalidChartTypeName");
+      reject(input(broken, order), 'InvalidChartTypeName');
     });
   } finally {
     cfb.close();

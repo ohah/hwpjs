@@ -1,6 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { spawnSync } from "../../tools/oracle-process.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from '../../tools/oracle-process.mjs';
 const code = String.raw`
 import base64, io, runpy, warnings, zipfile
 verify=runpy.run_path('tools/hwpx-anchor-prefix-oracle.py')['verify']
@@ -36,10 +36,10 @@ reject(dict(before=package(xml,duplicate=True),after=package(edited,duplicate=Tr
 reject(dict(before=request['before']+'!'))
 print('prefix and ZIP controls passed')
 `;
-for (const flags of [[], ["-O"]])
-  test(`prefix whole-tree and ZIP metadata controls ${flags.join(" ") || "normal"}`, () => {
-    const result = spawnSync("nice", ["-n", "19", "python3", ...flags, "-c", code], {
-      encoding: "utf8",
+for (const flags of [[], ['-O']])
+  test(`prefix whole-tree and ZIP metadata controls ${flags.join(' ') || 'normal'}`, () => {
+    const result = spawnSync('nice', ['-n', '19', 'python3', ...flags, '-c', code], {
+      encoding: 'utf8',
       timeout: 30000,
     });
     assert.equal(result.status, 0, result.stderr);

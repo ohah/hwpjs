@@ -1,18 +1,18 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { paginatePictureRows } from "../../web/preview/picture-page-flow.mjs";
-import { picturePageLineRegions } from "../../web/preview/picture-page-reservations.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { paginatePictureRows } from '../../web/preview/picture-page-flow.mjs';
+import { picturePageLineRegions } from '../../web/preview/picture-page-reservations.mjs';
 
-test("top-bottom reservations retain explicit edge alignment through convergence", () => {
+test('top-bottom reservations retain explicit edge alignment through convergence', () => {
   const setting = {
     width: 15000,
     height: 22500,
-    orientation: "widely",
-    gutter_type: "left_only",
+    orientation: 'widely',
+    gutter_type: 'left_only',
     duplicate_margins: 0,
     margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
   };
-  const paragraphs = [{ section: 0, paragraph: 0, text: "\ufffc" }];
+  const paragraphs = [{ section: 0, paragraph: 0, text: '\ufffc' }];
   const flows = [
     {
       section: 0,
@@ -25,10 +25,10 @@ test("top-bottom reservations retain explicit edge alignment through convergence
   ];
   const rows = [
     {
-      kind: "text",
+      kind: 'text',
       section: 0,
       paragraph: 0,
-      text: "\ufffc",
+      text: '\ufffc',
       startUnit: 0,
       endUnit: 1,
       height: 20,
@@ -36,7 +36,7 @@ test("top-bottom reservations retain explicit edge alignment through convergence
     },
   ];
   const picture = {
-    state: "located",
+    state: 'located',
     section: 0,
     paragraph: 0,
     anchorUnit: 0,
@@ -56,11 +56,11 @@ test("top-bottom reservations retain explicit edge alignment through convergence
   const run = (options) =>
     paginatePictureRows(rows, setting, flows, [picture], paragraphs, options);
   const before = structuredClone({ setting, paragraphs, flows, rows, picture });
-  assert.equal(run().error, "unsupported_alignment");
+  assert.equal(run().error, 'unsupported_alignment');
   for (const alignment of [3, 4]) {
     picture.position.relations[3] = alignment;
-    const result = run({ edgePolicy: "inside-start-outside-end" });
-    assert.equal(result.state, "paginated", result.error);
+    const result = run({ edgePolicy: 'inside-start-outside-end' });
+    assert.equal(result.state, 'paginated', result.error);
     assert.equal(result.pictureFlowIterations, 1);
     const reservation = result.pictureReservations[0];
     assert.equal(reservation.rectangle.x, alignment === 3 ? 20 : 200);
@@ -73,7 +73,7 @@ test("top-bottom reservations retain explicit edge alignment through convergence
       1,
     );
     assert.equal(row.text, paragraphs[0].text);
-    assert.equal(run({ edgePolicy: "unknown" }).error, "unsupported_alignment");
+    assert.equal(run({ edgePolicy: 'unknown' }).error, 'unsupported_alignment');
   }
   picture.position.relations[3] = 3;
   assert.deepEqual({ setting, paragraphs, flows, rows, picture }, before);

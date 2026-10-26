@@ -1,20 +1,20 @@
 // Move an already measured picture frame without changing its source ownership.
 export function translatePicturePlacement(picture, x, y, physical = {}) {
-  const fail = () => ({ state: "unavailable", error: "InvalidPicturePlacementTranslation" });
-  if (!picture || ![x, y].every(Number.isFinite) || !physical || typeof physical !== "object")
+  const fail = () => ({ state: 'unavailable', error: 'InvalidPicturePlacementTranslation' });
+  if (!picture || ![x, y].every(Number.isFinite) || !physical || typeof physical !== 'object')
     return fail();
-  for (const key of ["pageOrdinal", "columnOrdinal"])
+  for (const key of ['pageOrdinal', 'columnOrdinal'])
     if (physical[key] !== undefined && (!Number.isSafeInteger(physical[key]) || physical[key] < 0))
       return fail();
   const target = Object.fromEntries(
-    ["pageOrdinal", "columnOrdinal", "referenceBoxes"]
+    ['pageOrdinal', 'columnOrdinal', 'referenceBoxes']
       .filter((key) => physical[key] !== undefined)
       .map((key) => [key, physical[key]]),
   );
   const result = { ...picture, ...target };
-  for (const key of ["rectangle", "flowRectangle", "captionRectangle"]) {
+  for (const key of ['rectangle', 'flowRectangle', 'captionRectangle']) {
     const r = picture[key];
-    if (r === undefined && key !== "rectangle") continue;
+    if (r === undefined && key !== 'rectangle') continue;
     if (
       !r ||
       ![
@@ -58,7 +58,7 @@ export function translatePicturePlacement(picture, x, y, physical = {}) {
     for (const row of picture.captionRows) {
       if (
         !row ||
-        !["text", "gap"].includes(row.kind) ||
+        !['text', 'gap'].includes(row.kind) ||
         row.section !== picture.section ||
         row.pictureNode !== picture.pictureNode ||
         ![row.captionNode, row.listNode].every((n) => Number.isSafeInteger(n) && n >= 0) ||
@@ -74,5 +74,5 @@ export function translatePicturePlacement(picture, x, y, physical = {}) {
     }
     result.captionRows = rows;
   }
-  return { state: "translated", picture: result };
+  return { state: 'translated', picture: result };
 }

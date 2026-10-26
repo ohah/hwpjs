@@ -27,9 +27,9 @@ export function attachEquations(editor, content, available) {
         if (!paragraph || paragraph.clipped) continue;
         if (
           counts.get(`${row.paragraph}:${row.anchor_unit}`) !== 1 ||
-          paragraph.text[row.anchor_unit] !== "\ufffc"
+          paragraph.text[row.anchor_unit] !== '\ufffc'
         ) {
-          content.equationErrors.push({ section, node, error: "EquationBindingMismatch" });
+          content.equationErrors.push({ section, node, error: 'EquationBindingMismatch' });
           continue;
         }
         paragraph.equations.push({ node, unit: row.anchor_unit });

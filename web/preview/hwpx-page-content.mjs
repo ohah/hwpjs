@@ -1,9 +1,9 @@
-import { bindSourceNoteBodies } from "./note-body-bindings.mjs";
-import { selectNoteSourceTables } from "./note-source-table-owners.mjs";
-import { attachGroupedShapeSources } from "./grouped-shape-content.mjs";
-import { attachContainerCaptions } from "./container-caption-content.mjs";
-import { attachFillBrushSources } from "./fill-brush-content.mjs";
-import { attachRectangleSources } from "./rectangle-content.mjs";
+import { bindSourceNoteBodies } from './note-body-bindings.mjs';
+import { selectNoteSourceTables } from './note-source-table-owners.mjs';
+import { attachGroupedShapeSources } from './grouped-shape-content.mjs';
+import { attachContainerCaptions } from './container-caption-content.mjs';
+import { attachFillBrushSources } from './fill-brush-content.mjs';
+import { attachRectangleSources } from './rectangle-content.mjs';
 /** Source page declarations and note ownership; no physical page count. */
 export function attachHwpxPageSettings(editor, content) {
   const sections = new Set(content.paragraphs.map((row) => row.section));
@@ -24,8 +24,8 @@ export function attachHwpxPageSettings(editor, content) {
   }
   content.pageSettingsError = null;
   try {
-    if (typeof editor.pageSettings !== "function")
-      throw new Error("HwpxPageSettingsAbiUnavailable");
+    if (typeof editor.pageSettings !== 'function')
+      throw new Error('HwpxPageSettingsAbiUnavailable');
     content.pageSettings = editor.pageSettings();
     if (displayed)
       content.pageSettings = content.pageSettings.filter((row) =>
@@ -38,8 +38,8 @@ export function attachHwpxPageSettings(editor, content) {
   content.paragraphFlowErrors = [];
   for (const section of sections) {
     try {
-      if (typeof editor.paragraphFlow !== "function")
-        throw new Error("HwpxParagraphFlowAbiUnavailable");
+      if (typeof editor.paragraphFlow !== 'function')
+        throw new Error('HwpxParagraphFlowAbiUnavailable');
       for (const row of editor.paragraphFlow(section)) {
         if (displayed && !displayed.has(`${section}:${row.paragraph - 1}`)) continue;
         content.paragraphFlows.push({ ...row, section, paragraph: row.paragraph - 1 });
@@ -51,9 +51,9 @@ export function attachHwpxPageSettings(editor, content) {
   const sourceTables = content.tables?.length ? selectNoteSourceTables(content) : null;
   const notes = bindSourceNoteBodies(
     content,
-    sourceTables?.state === "selected" ? sourceTables : null,
+    sourceTables?.state === 'selected' ? sourceTables : null,
   );
-  content.noteBodies = notes.state === "bound" ? notes.notes : [];
-  content.noteBodyBindingError = notes.state === "bound" ? null : notes.error;
+  content.noteBodies = notes.state === 'bound' ? notes.notes : [];
+  content.noteBodyBindingError = notes.state === 'bound' ? null : notes.error;
   return content;
 }

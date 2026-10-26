@@ -1,11 +1,11 @@
-import { VIEW_SCALES, isViewScale } from "./view-scale.mjs";
+import { VIEW_SCALES, isViewScale } from './view-scale.mjs';
 
 // DOM projection only. The renderer owns the current presentation scale.
 export function createViewScaleControls({ node, renderer, ready }) {
   let closed = false;
   node.replaceChildren(
     ...VIEW_SCALES.map((scale) => {
-      const option = node.ownerDocument.createElement("option");
+      const option = node.ownerDocument.createElement('option');
       option.value = String(scale);
       option.textContent = `${scale * 100}%`;
       return option;
@@ -23,14 +23,14 @@ export function createViewScaleControls({ node, renderer, ready }) {
       renderer.setViewScale(value);
     refresh();
   };
-  node.addEventListener("change", change);
+  node.addEventListener('change', change);
   refresh();
   return {
     refresh,
     close() {
       if (closed) return;
       closed = true;
-      node.removeEventListener("change", change);
+      node.removeEventListener('change', change);
       node.disabled = true;
     },
   };

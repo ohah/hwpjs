@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const version = 0x05010001;
 const word = (n) => {
   const b = Buffer.alloc(4);

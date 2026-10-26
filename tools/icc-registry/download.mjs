@@ -1,8 +1,8 @@
-import { createHash } from "node:crypto";
-import { inspectRegistry } from "./inspect.mjs";
+import { createHash } from 'node:crypto';
+import { inspectRegistry } from './inspect.mjs';
 export const urls = Object.freeze(
   Object.fromEntries(
-    ["cmm", "manufacturer", "device"].map((kind) => [
+    ['cmm', 'manufacturer', 'device'].map((kind) => [
       kind,
       `https://registry.color.org/${kind}-signatures/${kind}-signatures.csv`,
     ]),
@@ -10,12 +10,12 @@ export const urls = Object.freeze(
 );
 // Bounds are enforced while streaming, even without Content-Length.
 export async function readBounded(response, maxBytes) {
-  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw Error("InvalidDownloadLimit");
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw Error('InvalidDownloadLimit');
   if (!response.ok) {
     await response.body?.cancel();
-    throw Error("RegistryHttpFailure");
+    throw Error('RegistryHttpFailure');
   }
-  if (!response.body) throw Error("MissingRegistryBody");
+  if (!response.body) throw Error('MissingRegistryBody');
   const reader = response.body.getReader();
   let buffer = Buffer.alloc(0),
     total = 0,
@@ -27,7 +27,7 @@ export async function readBounded(response, maxBytes) {
         finished = true;
         break;
       }
-      if (value.byteLength > maxBytes - total) throw Error("RegistryDownloadLimit");
+      if (value.byteLength > maxBytes - total) throw Error('RegistryDownloadLimit');
       if (value.byteLength === 0) continue;
       const needed = total + value.byteLength;
       if (needed > buffer.length) {
@@ -50,21 +50,21 @@ export async function fetchSnapshot({
   maxBytes = 4 * 1024 * 1024,
   timeoutMs = 20000,
 } = {}) {
-  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw Error("InvalidDownloadLimit");
-  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw Error("InvalidDownloadTimeout");
+  if (!Number.isSafeInteger(maxBytes) || maxBytes < 0) throw Error('InvalidDownloadLimit');
+  if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1) throw Error('InvalidDownloadTimeout');
   const sources = [];
   for (const [kind, url] of Object.entries(urls)) {
     const response = await fetchImpl(url, {
       signal: AbortSignal.timeout(timeoutMs),
-      redirect: "error",
+      redirect: 'error',
     });
     const bytes = await readBounded(response, maxBytes),
-      text = new TextDecoder("utf8", { fatal: true }).decode(bytes);
+      text = new TextDecoder('utf8', { fatal: true }).decode(bytes);
     const report = inspectRegistry(kind, text);
     sources.push({
       url,
       byteLength: bytes.length,
-      sha256: createHash("sha256").update(bytes).digest("hex"),
+      sha256: createHash('sha256').update(bytes).digest('hex'),
       ...report,
     });
   }

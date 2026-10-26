@@ -1,10 +1,10 @@
-import { chartPreviewPrimitives } from "./chart-preview-primitives.mjs";
-import { placeFloatingPicture } from "./picture-placement.mjs";
-import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
-import { rowLeft, rowTop, rowHeight, TEXT_LEFT } from "./row-geometry.mjs";
-import { inlineChartIndex } from "./chart-inline.mjs";
-import { picturePositionKey } from "./picture-inline.mjs";
-import { inlinePictureRowPlacement } from "./inline-picture-row-placement.mjs";
+import { chartPreviewPrimitives } from './chart-preview-primitives.mjs';
+import { placeFloatingPicture } from './picture-placement.mjs';
+import { projectFloatingPicturePage } from './picture-page-projection.mjs';
+import { rowLeft, rowTop, rowHeight, TEXT_LEFT } from './row-geometry.mjs';
+import { inlineChartIndex } from './chart-inline.mjs';
+import { picturePositionKey } from './picture-inline.mjs';
+import { inlinePictureRowPlacement } from './inline-picture-row-placement.mjs';
 
 /** Explicit preview overlay. Does not claim source wrapping or z-order. */
 export function previewChartLayers(content, layout, columnWidth, read) {
@@ -15,7 +15,7 @@ export function previewChartLayers(content, layout, columnWidth, read) {
     total: 0,
     height: layout.height,
     exact: false,
-    mode: "preview-overlay",
+    mode: 'preview-overlay',
   };
   if (content.chartDisplayAvailable !== true) return output;
   const inline = inlineChartIndex(content, read);
@@ -42,7 +42,7 @@ export function previewChartLayers(content, layout, columnWidth, read) {
     }
     const value = resource.value;
     const primitives = chartPreviewPrimitives(value);
-    if (primitives.state !== "ready") {
+    if (primitives.state !== 'ready') {
       refuse(primitives.reason);
       continue;
     }
@@ -53,15 +53,15 @@ export function previewChartLayers(content, layout, columnWidth, read) {
       owners.length !== 1 ||
       owners[0].clipped ||
       owners[0].tableCell ||
-      owners[0].text?.[target.anchorUnit] !== "\ufffc"
+      owners[0].text?.[target.anchorUnit] !== '\ufffc'
     ) {
-      refuse("UnsupportedChartPreviewOwner");
+      refuse('UnsupportedChartPreviewOwner');
       continue;
     }
     const g = value.host.geometry;
     const picture = {
       ...target,
-      state: "located",
+      state: 'located',
       geometry: {
         width: g.width,
         height: g.height,
@@ -84,45 +84,45 @@ export function previewChartLayers(content, layout, columnWidth, read) {
           r.paintable === true,
       );
       if (reserved.length !== 1) {
-        refuse("MissingChartPageReservation");
+        refuse('MissingChartPageReservation');
         continue;
       }
-      placement = { state: "placed", rectangle: reserved[0].rectangle };
+      placement = { state: 'placed', rectangle: reserved[0].rectangle };
     } else if (g.treat_as_character === true) {
       const key = picturePositionKey(target.section, target.paragraph, target.anchorUnit);
       const item = inline.get(key);
       if (!item) {
-        refuse(inline.has(key) ? "AmbiguousInlineChartAnchor" : "UnsupportedInlineChartSize");
+        refuse(inline.has(key) ? 'AmbiguousInlineChartAnchor' : 'UnsupportedInlineChartSize');
         continue;
       }
       const hosts = layout.rows
         .map((row, index) => ({ row, index }))
         .filter(
           ({ row }) =>
-            row.kind === "text" &&
+            row.kind === 'text' &&
             row.section === target.section &&
             row.paragraph === target.paragraph &&
             row.startUnit <= target.anchorUnit &&
             row.endUnit > target.anchorUnit,
         );
       if (hosts.length !== 1) {
-        refuse("AmbiguousInlineChartAnchor");
+        refuse('AmbiguousInlineChartAnchor');
         continue;
       }
       const { row, index } = hosts[0];
       if (row.transform !== undefined) {
-        refuse("UnsupportedInlineChartTransform");
+        refuse('UnsupportedInlineChartTransform');
         continue;
       }
       placement = inlinePictureRowPlacement(item, row, index);
-    } else if (layout.state === "paginated")
+    } else if (layout.state === 'paginated')
       placement = projectFloatingPicturePage(picture, content.paragraphs, layout.rows);
     else {
       const rows = layout.rows
         .map((row, index) => ({ row, index }))
         .filter(
           ({ row }) =>
-            row.kind === "text" &&
+            row.kind === 'text' &&
             row.section === target.section &&
             row.paragraph === target.paragraph,
         )
@@ -137,7 +137,7 @@ export function previewChartLayers(content, layout, columnWidth, read) {
           return true;
         });
       if (!complete || end !== owners[0].text.length) {
-        refuse("IncompleteChartPreviewParagraph");
+        refuse('IncompleteChartPreviewParagraph');
         continue;
       }
       const first = rows[0],
@@ -153,7 +153,7 @@ export function previewChartLayers(content, layout, columnWidth, read) {
         },
       });
     }
-    if (placement.state !== "placed") {
+    if (placement.state !== 'placed') {
       refuse(placement.error ?? placement.state);
       continue;
     }

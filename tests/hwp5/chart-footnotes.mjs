@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartFootnoteOracle } from "./chart-footnote-oracle.mjs";
-import { stringLengthVariant } from "./chart-string-length-variant.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartFootnoteOracle } from './chart-footnote-oracle.mjs';
+import { stringLengthVariant } from './chart-string-length-variant.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -12,17 +12,17 @@ const u32 = (n) => {
 };
 const input = (b, s, t) => Buffer.concat([u32(s), u32(t), b]);
 export async function chartFootnotes(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     accepted = 0,
     rejected = 0;
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const e = chartFootnoteOracle(b),
         max = Math.max(...e.block.strings.map((s) => s.bytes.length)),
@@ -57,43 +57,43 @@ export async function chartFootnotes(call) {
       // The independently located next declaration is evidence, not the end rule.
       const nextLength = b.readUInt16LE(e.end + 8);
       assert.equal(
-        b.subarray(e.end + 10, e.end + 10 + nextLength).toString("latin1"),
-        "VtChartLegend\0",
+        b.subarray(e.end + 10, e.end + 10 + nextLength).toString('latin1'),
+        'VtChartLegend\0',
       );
       for (let cut = e.start; cut < e.end; cut++) {
         const bad = Buffer.from(b.subarray(0, cut));
         bad.writeUInt32LE(cut - 36, 32);
-        reject(bad, "UnexpectedEnd");
+        reject(bad, 'UnexpectedEnd');
       }
-      reject(b, "LimitExceeded", max - 1);
-      reject(b, "LimitExceeded", max, total - 1);
-      reject(b, "LimitExceeded", max, total, b.length - 1);
+      reject(b, 'LimitExceeded', max - 1);
+      reject(b, 'LimitExceeded', max, total - 1);
+      reject(b, 'LimitExceeded', max, total, b.length - 1);
       for (const d of e.declarations) {
         let bad = Buffer.from(b);
         bad[d.nameOffset] = 88;
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
         bad = Buffer.from(b);
         bad[d.versionOffset]++;
-        reject(bad, "UnsupportedChartTypeVersion");
+        reject(bad, 'UnsupportedChartTypeVersion');
       }
       for (const [i, offset] of e.objectOffsets.entries()) {
         let bad = Buffer.from(b);
         bad.writeUInt32LE(0xffffffff, offset);
-        reject(bad, "UnsupportedChartObjectReference");
+        reject(bad, 'UnsupportedChartObjectReference');
         for (const prior of e.objectOffsets.slice(0, i)) {
           bad = Buffer.from(b);
           bad.writeUInt32LE(b.readUInt32LE(prior), offset);
-          reject(bad, "UnsupportedChartObjectReference");
+          reject(bad, 'UnsupportedChartObjectReference');
         }
       }
       for (const offset of [...e.references, ...e.bases]) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(0, offset);
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
       }
       let bad = Buffer.from(b);
       bad.writeUInt32LE(0, e.picture);
-      reject(bad, "UnsupportedChartPictureData");
+      reject(bad, 'UnsupportedChartPictureData');
       bad = Buffer.from(b);
       for (const [offset, length] of e.rawOffsets) bad.fill(0xa5, offset, offset + length);
       bad.writeUInt16LE(65535, e.suffixOffset);

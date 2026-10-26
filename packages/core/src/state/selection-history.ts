@@ -1,18 +1,18 @@
-import { EditorState } from "./editor-state.ts";
-import type { SelectionTarget } from "../commands/commands.ts";
-import { validateSelection } from "../commands/selection.ts";
-import { getHistoryAvailability } from "./history-state.ts";
+import { EditorState } from './editor-state.ts';
+import type { SelectionTarget } from '../commands/commands.ts';
+import { validateSelection } from '../commands/selection.ts';
+import { getHistoryAvailability } from './history-state.ts';
 
 type Location = Pick<
   SelectionTarget,
-  | "coordinateSpace"
-  | "format"
-  | "owner"
-  | "section"
-  | "paragraph"
-  | "startUnit"
-  | "endUnit"
-  | "affinity"
+  | 'coordinateSpace'
+  | 'format'
+  | 'owner'
+  | 'section'
+  | 'paragraph'
+  | 'startUnit'
+  | 'endUnit'
+  | 'affinity'
 >;
 /** Auxiliary view locations only. Native revisions/content remain authoritative.
  * This helper is private to each editor; never serialize it as document history.
@@ -37,11 +37,11 @@ export class SelectionHistory {
       this.#documentId = state.documentId;
       this.#generation = state.generation;
     }
-    if (state.status === "disposed") {
+    if (state.status === 'disposed') {
       this.clear();
       return;
     }
-    if (state.status !== "ready" || !state.documentId) return;
+    if (state.status !== 'ready' || !state.documentId) return;
     const reachable = this.#reachable(state);
     if (!reachable) {
       this.#locations.clear();
@@ -80,7 +80,7 @@ export class SelectionHistory {
   /** Call only for a successful Native undo/redo snapshot, with its new tokens. */
   restore(state: EditorState): SelectionTarget | null | undefined {
     if (
-      state.status !== "ready" ||
+      state.status !== 'ready' ||
       !state.documentId ||
       state.documentId !== this.#documentId ||
       state.generation !== this.#generation

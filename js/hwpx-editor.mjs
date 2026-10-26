@@ -1,116 +1,116 @@
-import { drawingTextRequest, decodeDrawingTextRequested } from "./hwpx-drawing-text-requested.mjs";
-import { encodeLineDisplayNodes, decodeLineDisplayBatch } from "./hwpx-line-display-batch.mjs";
-import { encodeTableBorderSections, decodeTableBorderBatch } from "./hwpx-table-border-batch.mjs";
-import { createMemory } from "./wasm-memory.mjs";
-import { decodeTableBorderSources } from "./hwpx-table-border-sources.mjs";
-import { decodeCurveGeometry } from "./hwpx-curve-geometry.mjs";
-import { decodeCurveOwner } from "./hwpx-curve-owner.mjs";
-import { decodeTabSources } from "./hwpx-tab-sources.mjs";
-import { decodeTabDefinitions } from "./hwpx-tab-definitions.mjs";
-import { decodeSectionTabs } from "./hwpx-section-tabs.mjs";
-import { encodeCellSizes } from "./cell-size-batch.mjs";
-import { decodeCharacterFontMetrics } from "./character-font-metrics.mjs";
-import { createEquationEngine } from "./equation-engine.mjs";
-import { decodeEquationStyles } from "./hwpx-equation-styles.mjs";
-import { createHwpxChartApi } from "./hwpx-chart-api.mjs";
-import { decodePictureOwners } from "./hwpx-picture-owners.mjs";
-import { decodeInlineStringSources } from "./hwpx-inline-string-sources.mjs";
-import { dutmalKind } from "./hwpx-dutmal-kind.mjs";
-import { decodeDutmalSites } from "./hwpx-dutmal-sites.mjs";
-import { decodeEquationSources } from "./hwpx-equation-sources.mjs";
-import { decodeEquationScripts } from "./hwpx-equation-scripts.mjs";
-import { decodeEquationSites } from "./hwpx-equation-sites.mjs";
-import { decodeFieldTargets } from "./hwpx-field-target-wire.mjs";
-import { decodeFormulaResultParagraphs } from "./formula-result-paragraphs.mjs";
-import { decodeFormulaResultDisplaySnapshot } from "./formula-result-display-snapshot.mjs";
-import { decodePageAreaDeclarations } from "./hwpx-page-area-declarations.mjs";
-import { decodeCreatedTables } from "./hwpx-created-tables.mjs";
-import { decodeTableCreationResources } from "./table-creation-resources.mjs";
-import { createdTableIdentity } from "./created-table-identity.mjs";
+import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-text-requested.mjs';
+import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
+import { encodeTableBorderSections, decodeTableBorderBatch } from './hwpx-table-border-batch.mjs';
+import { createMemory } from './wasm-memory.mjs';
+import { decodeTableBorderSources } from './hwpx-table-border-sources.mjs';
+import { decodeCurveGeometry } from './hwpx-curve-geometry.mjs';
+import { decodeCurveOwner } from './hwpx-curve-owner.mjs';
+import { decodeTabSources } from './hwpx-tab-sources.mjs';
+import { decodeTabDefinitions } from './hwpx-tab-definitions.mjs';
+import { decodeSectionTabs } from './hwpx-section-tabs.mjs';
+import { encodeCellSizes } from './cell-size-batch.mjs';
+import { decodeCharacterFontMetrics } from './character-font-metrics.mjs';
+import { createEquationEngine } from './equation-engine.mjs';
+import { decodeEquationStyles } from './hwpx-equation-styles.mjs';
+import { createHwpxChartApi } from './hwpx-chart-api.mjs';
+import { decodePictureOwners } from './hwpx-picture-owners.mjs';
+import { decodeInlineStringSources } from './hwpx-inline-string-sources.mjs';
+import { dutmalKind } from './hwpx-dutmal-kind.mjs';
+import { decodeDutmalSites } from './hwpx-dutmal-sites.mjs';
+import { decodeEquationSources } from './hwpx-equation-sources.mjs';
+import { decodeEquationScripts } from './hwpx-equation-scripts.mjs';
+import { decodeEquationSites } from './hwpx-equation-sites.mjs';
+import { decodeFieldTargets } from './hwpx-field-target-wire.mjs';
+import { decodeFormulaResultParagraphs } from './formula-result-paragraphs.mjs';
+import { decodeFormulaResultDisplaySnapshot } from './formula-result-display-snapshot.mjs';
+import { decodePageAreaDeclarations } from './hwpx-page-area-declarations.mjs';
+import { decodeCreatedTables } from './hwpx-created-tables.mjs';
+import { decodeTableCreationResources } from './table-creation-resources.mjs';
+import { createdTableIdentity } from './created-table-identity.mjs';
 import {
   decodeFormSourceNodes,
   decodeFormSourceAttributes,
   decodeFormSites,
   decodeFormSourceLayout,
-} from "./hwpx-form-source.mjs";
-import { decodeCharacterEffects } from "./character-effects.mjs";
-import { characterEffectArgs, characterEffectMode } from "./character-effect-args.mjs";
-import { characterOutlineArg } from "./character-outline-args.mjs";
-import { decodeCharacterOutlines } from "./character-outlines.mjs";
-import { paragraphSpacingArgs } from "./paragraph-spacing-args.mjs";
-import { characterPropertyArgs } from "./character-property-args.mjs";
-import { encodeCharacterRanges } from "./character-range-batch.mjs";
-import { encodeParagraphReplacement } from "./paragraph-replacement.mjs";
-import { characterUnderlineArg } from "./character-underline-args.mjs";
-import { characterColorArg } from "./character-color-args.mjs";
-import { characterShadeArgs } from "./character-shade-args.mjs";
-import { decodeCharacterShades } from "./character-shades.mjs";
-import { characterFontArgs } from "./character-font-args.mjs";
-import { characterFontNameArgs } from "./character-font-name-args.mjs";
-import { namedFontTextArgs } from "./named-font-text-args.mjs";
-import { textTransactionArgs } from "./text-transaction-args.mjs";
-import { decodeCharacterUnderlines } from "./character-underlines.mjs";
-import { decodeCharacterStrikes } from "./character-strikes.mjs";
-import { decodeCharacterStrikeStyles } from "./character-strike-styles.mjs";
-import { decodeDocumentProvenance } from "./hwpx-document-provenance.mjs";
-import { decodeCharacterTextColors } from "./character-text-colors.mjs";
-import { decodeFontFaces } from "./font-faces.mjs";
-import { decodeHwpxFontFaceMetadata } from "./hwpx-font-face-metadata.mjs";
-import { decodeCharacterFontReferences } from "./character-font-references.mjs";
-import { decodeCharacterUnderlineStyles } from "./character-underline-styles.mjs";
-import { decodeHwpxParagraphShapes } from "./hwpx-paragraph-shapes.mjs";
-import { decodeTableBindings } from "./table-bindings-wire.mjs";
-import { decodeTablePlacements } from "./table-placements-wire.mjs";
-import { decodeDrawingTextBindings } from "./hwpx-drawing-text-bindings.mjs";
-import { decodeDrawingTextSnapshot } from "./hwpx-drawing-text-snapshot.mjs";
-import { decodeDrawingTextSnapshots } from "./hwpx-drawing-text-snapshots.mjs";
-import { decodeContainerSource } from "./hwpx-container-source.mjs";
-import { decodeRectangleRenderingSource } from "./hwpx-rectangle-rendering-source.mjs";
-import { decodeRectangleRenderingSources } from "./hwpx-rectangle-rendering-sources.mjs";
-import { decodeEllipseSources } from "./hwpx-ellipse-sources.mjs";
-import { decodeFillBrushes } from "./hwpx-fill-brushes.mjs";
-import { decodePictureSites } from "./hwpx-picture-sites-wire.mjs";
-import { decodeOleSites, decodeOleSource, decodeOleBytes } from "./hwpx-ole-source.mjs";
-import { decodePictureOwner } from "./hwpx-picture-owner-wire.mjs";
-import { decodePictureRenderingCorners } from "./hwpx-picture-corners-wire.mjs";
-import { decodePicturePosition } from "./hwpx-picture-position-wire.mjs";
-import { decodePictureFlow } from "./hwpx-picture-flow-wire.mjs";
-import { decodePictureGeometry } from "./hwpx-picture-geometry-wire.mjs";
+} from './hwpx-form-source.mjs';
+import { decodeCharacterEffects } from './character-effects.mjs';
+import { characterEffectArgs, characterEffectMode } from './character-effect-args.mjs';
+import { characterOutlineArg } from './character-outline-args.mjs';
+import { decodeCharacterOutlines } from './character-outlines.mjs';
+import { paragraphSpacingArgs } from './paragraph-spacing-args.mjs';
+import { characterPropertyArgs } from './character-property-args.mjs';
+import { encodeCharacterRanges } from './character-range-batch.mjs';
+import { encodeParagraphReplacement } from './paragraph-replacement.mjs';
+import { characterUnderlineArg } from './character-underline-args.mjs';
+import { characterColorArg } from './character-color-args.mjs';
+import { characterShadeArgs } from './character-shade-args.mjs';
+import { decodeCharacterShades } from './character-shades.mjs';
+import { characterFontArgs } from './character-font-args.mjs';
+import { characterFontNameArgs } from './character-font-name-args.mjs';
+import { namedFontTextArgs } from './named-font-text-args.mjs';
+import { textTransactionArgs } from './text-transaction-args.mjs';
+import { decodeCharacterUnderlines } from './character-underlines.mjs';
+import { decodeCharacterStrikes } from './character-strikes.mjs';
+import { decodeCharacterStrikeStyles } from './character-strike-styles.mjs';
+import { decodeDocumentProvenance } from './hwpx-document-provenance.mjs';
+import { decodeCharacterTextColors } from './character-text-colors.mjs';
+import { decodeFontFaces } from './font-faces.mjs';
+import { decodeHwpxFontFaceMetadata } from './hwpx-font-face-metadata.mjs';
+import { decodeCharacterFontReferences } from './character-font-references.mjs';
+import { decodeCharacterUnderlineStyles } from './character-underline-styles.mjs';
+import { decodeHwpxParagraphShapes } from './hwpx-paragraph-shapes.mjs';
+import { decodeTableBindings } from './table-bindings-wire.mjs';
+import { decodeTablePlacements } from './table-placements-wire.mjs';
+import { decodeDrawingTextBindings } from './hwpx-drawing-text-bindings.mjs';
+import { decodeDrawingTextSnapshot } from './hwpx-drawing-text-snapshot.mjs';
+import { decodeDrawingTextSnapshots } from './hwpx-drawing-text-snapshots.mjs';
+import { decodeContainerSource } from './hwpx-container-source.mjs';
+import { decodeRectangleRenderingSource } from './hwpx-rectangle-rendering-source.mjs';
+import { decodeRectangleRenderingSources } from './hwpx-rectangle-rendering-sources.mjs';
+import { decodeEllipseSources } from './hwpx-ellipse-sources.mjs';
+import { decodeFillBrushes } from './hwpx-fill-brushes.mjs';
+import { decodePictureSites } from './hwpx-picture-sites-wire.mjs';
+import { decodeOleSites, decodeOleSource, decodeOleBytes } from './hwpx-ole-source.mjs';
+import { decodePictureOwner } from './hwpx-picture-owner-wire.mjs';
+import { decodePictureRenderingCorners } from './hwpx-picture-corners-wire.mjs';
+import { decodePicturePosition } from './hwpx-picture-position-wire.mjs';
+import { decodePictureFlow } from './hwpx-picture-flow-wire.mjs';
+import { decodePictureGeometry } from './hwpx-picture-geometry-wire.mjs';
 import {
   decodeLineNodes,
   decodeLineDisplay,
   decodeLinePlacement,
-} from "./hwpx-line-display-wire.mjs";
+} from './hwpx-line-display-wire.mjs';
 import {
   decodeConnectorNodes,
   decodeConnectorSource,
   decodeConnectorOwner,
   decodeConnectorRenderingSource,
-} from "./hwpx-connector-source.mjs";
-import { decodeDrawingStrokeSource } from "./hwpx-drawing-stroke-source.mjs";
-import { decodeLineGeometry } from "./hwpx-line-geometry.mjs";
-import { decodeDrawingPlacement } from "./hwpx-drawing-placement-wire.mjs";
-import { decodePageSettings, decodeParagraphFlow } from "./hwpx-page-settings.mjs";
-import { decodeNoteShapes } from "./hwpx-note-shapes.mjs";
-import { decodeTablePagination } from "./hwpx-table-pagination.mjs";
-import { decodeTableGeometry } from "./hwpx-table-geometry.mjs";
-import { decodeTableCaption } from "./hwpx-table-caption.mjs";
-import { decodeTableCaptionBindings } from "./hwpx-table-caption-bindings.mjs";
-import { decodeCaptionBindings } from "./caption-bindings-wire.mjs";
-import { decodeAutomaticNumberSites } from "./hwpx-automatic-number-sites.mjs";
-import { decodeAutomaticNumberSources } from "./hwpx-automatic-number-sources.mjs";
-import { decodeNoteReferenceSites } from "./hwpx-note-reference-sites.mjs";
-import { decodeParagraphTextSnapshot } from "./hwpx-paragraph-text-snapshot.mjs";
-import { decodeFormulaFieldSources } from "./hwpx-formula-field-sources.mjs";
-import { decodeTableCellMargin } from "./hwpx-table-cell-margin.mjs";
-import { decodeFormulaSources } from "./hwpx-formula-sources.mjs";
-import { decodePictureCrop } from "./hwpx-picture-crop-wire.mjs";
-import { decodePictureTransform } from "./hwpx-picture-transform-wire.mjs";
-import { decodeCharacterShapes, decodeCharacterRanges } from "./hwpx-character-shapes-wire.mjs";
-import { validateAbi } from "./abi.mjs";
-import { createParagraphBreakApi } from "./paragraph-break-api.mjs";
-import { inputBytes } from "./input.mjs";
-import { createHistoryApi } from "./editor-history.mjs";
+} from './hwpx-connector-source.mjs';
+import { decodeDrawingStrokeSource } from './hwpx-drawing-stroke-source.mjs';
+import { decodeLineGeometry } from './hwpx-line-geometry.mjs';
+import { decodeDrawingPlacement } from './hwpx-drawing-placement-wire.mjs';
+import { decodePageSettings, decodeParagraphFlow } from './hwpx-page-settings.mjs';
+import { decodeNoteShapes } from './hwpx-note-shapes.mjs';
+import { decodeTablePagination } from './hwpx-table-pagination.mjs';
+import { decodeTableGeometry } from './hwpx-table-geometry.mjs';
+import { decodeTableCaption } from './hwpx-table-caption.mjs';
+import { decodeTableCaptionBindings } from './hwpx-table-caption-bindings.mjs';
+import { decodeCaptionBindings } from './caption-bindings-wire.mjs';
+import { decodeAutomaticNumberSites } from './hwpx-automatic-number-sites.mjs';
+import { decodeAutomaticNumberSources } from './hwpx-automatic-number-sources.mjs';
+import { decodeNoteReferenceSites } from './hwpx-note-reference-sites.mjs';
+import { decodeParagraphTextSnapshot } from './hwpx-paragraph-text-snapshot.mjs';
+import { decodeFormulaFieldSources } from './hwpx-formula-field-sources.mjs';
+import { decodeTableCellMargin } from './hwpx-table-cell-margin.mjs';
+import { decodeFormulaSources } from './hwpx-formula-sources.mjs';
+import { decodePictureCrop } from './hwpx-picture-crop-wire.mjs';
+import { decodePictureTransform } from './hwpx-picture-transform-wire.mjs';
+import { decodeCharacterShapes, decodeCharacterRanges } from './hwpx-character-shapes-wire.mjs';
+import { validateAbi } from './abi.mjs';
+import { createParagraphBreakApi } from './paragraph-break-api.mjs';
+import { inputBytes } from './input.mjs';
+import { createHistoryApi } from './editor-history.mjs';
 
 /** Experimental plain-paragraph editing; paragraph numbers are document-wide, 1-based. */
 export async function createHwpxEditor(source) {
@@ -118,53 +118,53 @@ export async function createHwpxEditor(source) {
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
   validateAbi(wasm);
   for (const suffix of [
-    "open",
-    "close",
-    "section_count",
-    "can_edit",
-    "splice",
-    "save",
-    "output_ptr",
-    "output_len",
-    "output_free",
+    'open',
+    'close',
+    'section_count',
+    'can_edit',
+    'splice',
+    'save',
+    'output_ptr',
+    'output_len',
+    'output_free',
   ])
-    if (typeof wasm[`hwpx_edit_${suffix}`] !== "function")
-      throw new Error("HwpxEditAbiUnavailable");
+    if (typeof wasm[`hwpx_edit_${suffix}`] !== 'function')
+      throw new Error('HwpxEditAbiUnavailable');
   const memory = createMemory(wasm);
   let closed = false;
   function ready() {
-    if (closed) throw new Error("EditorClosed");
+    if (closed) throw new Error('EditorClosed');
   }
   function uint(value) {
     if (!Number.isInteger(value) || value < 0 || value > 0xffffffff)
-      throw new RangeError("InvalidInteger");
+      throw new RangeError('InvalidInteger');
     return value;
   }
   function encodedText(text) {
-    if (typeof text !== "string" || !text.isWellFormed()) throw new TypeError("InvalidText");
+    if (typeof text !== 'string' || !text.isWellFormed()) throw new TypeError('InvalidText');
     const bytes = new TextEncoder().encode(text);
-    if (bytes.length > 4 * 1024 * 1024) throw new RangeError("LimitExceeded");
+    if (bytes.length > 4 * 1024 * 1024) throw new RangeError('LimitExceeded');
     return bytes;
   }
   function manualFormulaResultBytes(text, action, unavailable) {
     if (
-      typeof wasm[action] !== "function" ||
-      typeof wasm.hwpx_edit_manual_formula_result_max_bytes !== "function"
+      typeof wasm[action] !== 'function' ||
+      typeof wasm.hwpx_edit_manual_formula_result_max_bytes !== 'function'
     )
       throw new Error(unavailable);
     const maxBytes = wasm.hwpx_edit_manual_formula_result_max_bytes();
     if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff)
-      throw new Error("InvalidManualFormulaResultLimit");
+      throw new Error('InvalidManualFormulaResultLimit');
     const bytes = encodedText(text);
-    if (bytes.length > maxBytes) throw new Error("LimitExceeded");
+    if (bytes.length > maxBytes) throw new Error('LimitExceeded');
     return bytes;
   }
   function fieldLabels(section, paragraph) {
     ready();
     uint(section);
     uint(paragraph);
-    if (typeof wasm.hwpx_edit_field_labels !== "function")
-      throw new Error("HwpxFieldEditAbiUnavailable");
+    if (typeof wasm.hwpx_edit_field_labels !== 'function')
+      throw new Error('HwpxFieldEditAbiUnavailable');
     try {
       if (!wasm.hwpx_edit_field_labels(section, paragraph)) throw memory.error();
       return decodeFieldTargets(
@@ -178,12 +178,12 @@ export async function createHwpxEditor(source) {
     ready();
     args.forEach(uint);
     const action = wasm[`hwpx_edit_${suffix}`];
-    if (typeof action !== "function") throw new Error("HwpxParagraphFormatAbiUnavailable");
+    if (typeof action !== 'function') throw new Error('HwpxParagraphFormatAbiUnavailable');
     try {
       if (!action(...args)) throw memory.error();
       const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
-      if (bytes.length % 4 || (suffix === "paragraph_shape_id" && bytes.length !== 4))
-        throw new Error("InvalidParagraphShapeIds");
+      if (bytes.length % 4 || (suffix === 'paragraph_shape_id' && bytes.length !== 4))
+        throw new Error('InvalidParagraphShapeIds');
       const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
       return Array.from({ length: bytes.length / 4 }, (_, index) =>
         view.getUint32(index * 4, true),
@@ -198,17 +198,17 @@ export async function createHwpxEditor(source) {
       memory,
       check: ready,
       uint,
-      prefix: "hwpx_edit",
+      prefix: 'hwpx_edit',
       endAsCount: true,
-      unavailable: "HwpxParagraphBreakAbiUnavailable",
+      unavailable: 'HwpxParagraphBreakAbiUnavailable',
     }),
     paragraphShapeIds() {
-      return paragraphIds("paragraph_shape_ids");
+      return paragraphIds('paragraph_shape_ids');
     },
     paragraphNeighbors(section) {
-      const values = paragraphIds("paragraph_neighbors", [section]);
+      const values = paragraphIds('paragraph_neighbors', [section]);
       if (values.length < 2 || values[0] < 1 || values[1] !== values.length - 2)
-        throw new Error("InvalidParagraphNeighbors");
+        throw new Error('InvalidParagraphNeighbors');
       const firstParagraph = values[0],
         next = values.slice(2);
       for (const [index, value] of next.entries())
@@ -216,23 +216,23 @@ export async function createHwpxEditor(source) {
           value !== 0 &&
           (value <= firstParagraph + index || value >= firstParagraph + next.length)
         )
-          throw new Error("InvalidParagraphNeighbors");
+          throw new Error('InvalidParagraphNeighbors');
       return { firstParagraph, next: next.map((value) => (value === 0 ? null : value)) };
     },
     paragraphShapeRefs(section) {
-      const values = paragraphIds("paragraph_shape_refs", [section]);
+      const values = paragraphIds('paragraph_shape_refs', [section]);
       if (values.length < 2 || values[0] < 1 || values[1] !== values.length - 2)
-        throw new Error("InvalidParagraphShapeIds");
+        throw new Error('InvalidParagraphShapeIds');
       return { firstParagraph: values[0], ids: values.slice(2) };
     },
     paragraphShapeId(section, paragraph) {
-      return paragraphIds("paragraph_shape_id", [section, paragraph])[0];
+      return paragraphIds('paragraph_shape_id', [section, paragraph])[0];
     },
     setParagraphFormat({ section, paragraph, paraShapeId }) {
       ready();
       [section, paragraph, paraShapeId].forEach(uint);
-      if (typeof wasm.hwpx_edit_set_paragraph_format !== "function")
-        throw new Error("HwpxParagraphFormatAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_paragraph_format !== 'function')
+        throw new Error('HwpxParagraphFormatAbiUnavailable');
       if (!wasm.hwpx_edit_set_paragraph_format(section, paragraph, paraShapeId))
         throw memory.error();
     },
@@ -240,32 +240,32 @@ export async function createHwpxEditor(source) {
       ready();
       [section, paragraph].forEach(uint);
       const value = [
-        "LEFT",
-        "RIGHT",
-        "CENTER",
-        "JUSTIFY",
-        "DISTRIBUTE",
-        "DISTRIBUTE_SPACE",
+        'LEFT',
+        'RIGHT',
+        'CENTER',
+        'JUSTIFY',
+        'DISTRIBUTE',
+        'DISTRIBUTE_SPACE',
       ].indexOf(alignment);
-      if (value < 0) throw new RangeError("InvalidParagraphAlignment");
-      if (typeof wasm.hwpx_edit_set_paragraph_alignment !== "function")
-        throw new Error("HwpxParagraphAlignmentAbiUnavailable");
+      if (value < 0) throw new RangeError('InvalidParagraphAlignment');
+      if (typeof wasm.hwpx_edit_set_paragraph_alignment !== 'function')
+        throw new Error('HwpxParagraphAlignmentAbiUnavailable');
       if (!wasm.hwpx_edit_set_paragraph_alignment(section, paragraph, value)) throw memory.error();
     },
     setParagraphMargins({ section, paragraph, margins }) {
       ready();
       [section, paragraph].forEach(uint);
       const args = paragraphMarginArgs(margins);
-      if (typeof wasm.hwpx_edit_set_paragraph_margins !== "function")
-        throw new Error("HwpxParagraphMarginsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_paragraph_margins !== 'function')
+        throw new Error('HwpxParagraphMarginsAbiUnavailable');
       if (!wasm.hwpx_edit_set_paragraph_margins(section, paragraph, ...args)) throw memory.error();
     },
     setParagraphSpacing({ section, paragraph, type, value }) {
       ready();
       [section, paragraph].forEach(uint);
       const args = paragraphSpacingArgs(type, value);
-      if (typeof wasm.hwpx_edit_set_paragraph_spacing !== "function")
-        throw new Error("HwpxParagraphSpacingAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_paragraph_spacing !== 'function')
+        throw new Error('HwpxParagraphSpacingAbiUnavailable');
       if (!wasm.hwpx_edit_set_paragraph_spacing(section, paragraph, ...args)) throw memory.error();
     },
     ...createHistoryApi({
@@ -273,14 +273,14 @@ export async function createHwpxEditor(source) {
       memory,
       check: ready,
       uint,
-      prefix: "hwpx_edit",
-      unavailable: "HwpxHistoryAbiUnavailable",
+      prefix: 'hwpx_edit',
+      unavailable: 'HwpxHistoryAbiUnavailable',
     }),
     canEditOutsideField(section, paragraph, startUnit, endUnit) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (typeof wasm.hwpx_edit_can_edit_outside_field !== "function")
-        throw new Error("HwpxOutsideFieldQueryAbiUnavailable");
+      if (typeof wasm.hwpx_edit_can_edit_outside_field !== 'function')
+        throw new Error('HwpxOutsideFieldQueryAbiUnavailable');
       const result = wasm.hwpx_edit_can_edit_outside_field(section, paragraph, startUnit, endUnit);
       if (result > 1) throw memory.error();
       return result === 1;
@@ -288,8 +288,8 @@ export async function createHwpxEditor(source) {
     createdTableHostMode(section, anchored = false) {
       ready();
       uint(section);
-      if (typeof anchored !== "boolean") throw new TypeError("InvalidCreatedTableHostMode");
-      if (typeof wasm.hwpx_edit_created_table_host_mode !== "function") return false;
+      if (typeof anchored !== 'boolean') throw new TypeError('InvalidCreatedTableHostMode');
+      if (typeof wasm.hwpx_edit_created_table_host_mode !== 'function') return false;
       const result = wasm.hwpx_edit_created_table_host_mode(section, Number(anchored));
       if (result > 1) throw memory.error();
       return result === 1;
@@ -297,7 +297,7 @@ export async function createHwpxEditor(source) {
     createdTableFieldLabelMode(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_created_table_field_label_mode !== "function") return false;
+      if (typeof wasm.hwpx_edit_created_table_field_label_mode !== 'function') return false;
       const result = wasm.hwpx_edit_created_table_field_label_mode(section);
       if (result > 1) throw memory.error();
       return result === 1;
@@ -313,22 +313,22 @@ export async function createHwpxEditor(source) {
     canSplitParagraph({ section, paragraph, atUnit, endUnit = atUnit }) {
       ready();
       [section, paragraph, atUnit, endUnit].forEach(uint);
-      if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_can_split !== "function")
-        throw new Error("HwpxSplitQueryAbiUnavailable");
+      if (endUnit < atUnit) throw new RangeError('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_can_split !== 'function')
+        throw new Error('HwpxSplitQueryAbiUnavailable');
       const result = wasm.hwpx_edit_can_split(section, paragraph, atUnit, endUnit - atUnit);
       if (result > 1) throw memory.error();
       return result === 1;
     },
     supportsAnchoredSplitQuery() {
-      return typeof wasm.hwpx_edit_can_split_anchored === "function";
+      return typeof wasm.hwpx_edit_can_split_anchored === 'function';
     },
     canSplitParagraphAnchored({ section, paragraph, atUnit, endUnit = atUnit }) {
       ready();
       [section, paragraph, atUnit, endUnit].forEach(uint);
-      if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_can_split_anchored !== "function")
-        throw new Error("HwpxAnchoredSplitQueryAbiUnavailable");
+      if (endUnit < atUnit) throw new RangeError('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_can_split_anchored !== 'function')
+        throw new Error('HwpxAnchoredSplitQueryAbiUnavailable');
       const result = wasm.hwpx_edit_can_split_anchored(
         section,
         paragraph,
@@ -340,17 +340,17 @@ export async function createHwpxEditor(source) {
     },
     open(data, options = {}) {
       ready();
-      if (!options || typeof options !== "object" || Array.isArray(options))
-        throw new TypeError("InvalidEditorOptions");
+      if (!options || typeof options !== 'object' || Array.isArray(options))
+        throw new TypeError('InvalidEditorOptions');
       const allow =
         options.allowObservedChartOleDeviations === undefined
           ? false
           : options.allowObservedChartOleDeviations;
-      if (typeof allow !== "boolean") throw new TypeError("InvalidChartOlePolicy");
-      if (allow && typeof wasm.hwpx_edit_open_with_chart_ole_policy !== "function")
-        throw new Error("HwpxChartOlePolicyAbiUnavailable");
+      if (typeof allow !== 'boolean') throw new TypeError('InvalidChartOlePolicy');
+      if (allow && typeof wasm.hwpx_edit_open_with_chart_ole_policy !== 'function')
+        throw new Error('HwpxChartOlePolicyAbiUnavailable');
       const bytes = inputBytes(data);
-      if (bytes.length > 64 * 1024 * 1024) throw new RangeError("LimitExceeded");
+      if (bytes.length > 64 * 1024 * 1024) throw new RangeError('LimitExceeded');
       memory.withBytes(bytes, (ptr, size) => {
         const result = allow
           ? wasm.hwpx_edit_open_with_chart_ole_policy(ptr, size, 1)
@@ -371,50 +371,50 @@ export async function createHwpxEditor(source) {
     splitParagraph({ section, paragraph, atUnit, endUnit = atUnit }) {
       ready();
       [section, paragraph, atUnit, endUnit].forEach(uint);
-      if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_split !== "function")
-        throw new Error("HwpxStructureAbiUnavailable");
+      if (endUnit < atUnit) throw new RangeError('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_split !== 'function')
+        throw new Error('HwpxStructureAbiUnavailable');
       if (!wasm.hwpx_edit_split(section, paragraph, atUnit, endUnit - atUnit)) throw memory.error();
     },
     splitParagraphAnchored({ section, paragraph, atUnit, endUnit = atUnit }) {
       ready();
       [section, paragraph, atUnit, endUnit].forEach(uint);
-      if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_split_anchored !== "function")
-        throw new Error("HwpxStructureAbiUnavailable");
+      if (endUnit < atUnit) throw new RangeError('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_split_anchored !== 'function')
+        throw new Error('HwpxStructureAbiUnavailable');
       if (!wasm.hwpx_edit_split_anchored(section, paragraph, atUnit, endUnit - atUnit))
         throw memory.error();
     },
     mergeParagraph({ section, paragraph }) {
       ready();
       [section, paragraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_merge !== "function")
-        throw new Error("HwpxStructureAbiUnavailable");
+      if (typeof wasm.hwpx_edit_merge !== 'function')
+        throw new Error('HwpxStructureAbiUnavailable');
       if (!wasm.hwpx_edit_merge(section, paragraph)) throw memory.error();
     },
     mergeParagraphPair({ section, paragraph, rightParagraph }) {
       ready();
       [section, paragraph, rightParagraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_merge_pair !== "function")
-        throw new Error("HwpxStructureAbiUnavailable");
+      if (typeof wasm.hwpx_edit_merge_pair !== 'function')
+        throw new Error('HwpxStructureAbiUnavailable');
       if (!wasm.hwpx_edit_merge_pair(section, paragraph, rightParagraph)) throw memory.error();
     },
     setCharacterFormat({ section, paragraph, startUnit, endUnit, charShapeId }) {
       ready();
       [section, paragraph, startUnit, endUnit, charShapeId].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_set_character_format !== "function")
-        throw new Error("HwpxCharacterFormatAbiUnavailable");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_set_character_format !== 'function')
+        throw new Error('HwpxCharacterFormatAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_format(section, paragraph, startUnit, endUnit, charShapeId))
         throw memory.error();
     },
     setCharacterProperties({ section, paragraph, startUnit, endUnit, properties }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const args = characterPropertyArgs(properties);
-      if (typeof wasm.hwpx_edit_set_character_properties !== "function")
-        throw new Error("HwpxCharacterPropertiesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_properties !== 'function')
+        throw new Error('HwpxCharacterPropertiesAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_properties(section, paragraph, startUnit, endUnit, ...args))
         throw memory.error();
     },
@@ -427,11 +427,11 @@ export async function createHwpxEditor(source) {
       const action = args
         ? wasm.hwpx_edit_replace_paragraph_ranges_font_name_properties
         : wasm.hwpx_edit_replace_paragraph_ranges_font_name;
-      if (typeof action !== "function")
+      if (typeof action !== 'function')
         throw new Error(
           args
-            ? "HwpxNamedFontPropertyReplacementAbiUnavailable"
-            : "HwpxNamedFontReplacementAbiUnavailable",
+            ? 'HwpxNamedFontPropertyReplacementAbiUnavailable'
+            : 'HwpxNamedFontReplacementAbiUnavailable',
         );
       memory.withBytes(bytes, (ptr, size) =>
         memory.withBytes(inserted, (tp, ts) =>
@@ -450,9 +450,9 @@ export async function createHwpxEditor(source) {
       const action = args
         ? wasm.hwpx_edit_replace_paragraph_ranges_properties
         : wasm.hwpx_edit_replace_paragraph_ranges;
-      if (typeof action !== "function")
+      if (typeof action !== 'function')
         throw new Error(
-          args ? "HwpxPropertyReplacementAbiUnavailable" : "HwpxParagraphReplacementAbiUnavailable",
+          args ? 'HwpxPropertyReplacementAbiUnavailable' : 'HwpxParagraphReplacementAbiUnavailable',
         );
       memory.withBytes(bytes, (ptr, size) =>
         memory.withBytes(inserted, (tp, ts) => {
@@ -463,9 +463,9 @@ export async function createHwpxEditor(source) {
     setCharacterStrikeRanges({ ranges, enabled }) {
       ready();
       const bytes = encodeCharacterRanges(ranges);
-      if (typeof enabled !== "boolean") throw new TypeError("InvalidCharacterProperties");
-      if (typeof wasm.hwpx_edit_set_character_strike_ranges !== "function")
-        throw new Error("HwpxCharacterStrikeRangesAbiUnavailable");
+      if (typeof enabled !== 'boolean') throw new TypeError('InvalidCharacterProperties');
+      if (typeof wasm.hwpx_edit_set_character_strike_ranges !== 'function')
+        throw new Error('HwpxCharacterStrikeRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_strike_ranges(ptr, size, Number(enabled)))
           throw memory.error();
@@ -475,8 +475,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges),
         value = characterUnderlineArg(kind);
-      if (typeof wasm.hwpx_edit_set_character_underline_ranges !== "function")
-        throw new Error("HwpxCharacterUnderlineRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_underline_ranges !== 'function')
+        throw new Error('HwpxCharacterUnderlineRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_underline_ranges(ptr, size, value)) throw memory.error();
       });
@@ -485,8 +485,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges);
       const args = characterPropertyArgs(properties);
-      if (typeof wasm.hwpx_edit_set_character_properties_ranges !== "function")
-        throw new Error("HwpxCharacterPropertiesRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_properties_ranges !== 'function')
+        throw new Error('HwpxCharacterPropertiesRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_properties_ranges(ptr, size, ...args))
           throw memory.error();
@@ -496,8 +496,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges),
         args = characterFontNameArgs(language, name);
-      if (typeof wasm.hwpx_edit_set_character_font_name_ranges !== "function")
-        throw new Error("HwpxCharacterFontNameRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_font_name_ranges !== 'function')
+        throw new Error('HwpxCharacterFontNameRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) =>
         memory.withBytes(args.bytes, (namePtr, nameSize) => {
           if (
@@ -517,8 +517,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges),
         args = characterFontArgs(language, fontId);
-      if (typeof wasm.hwpx_edit_set_character_font_ranges !== "function")
-        throw new Error("HwpxCharacterFontRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_font_ranges !== 'function')
+        throw new Error('HwpxCharacterFontRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_font_ranges(ptr, size, ...args)) throw memory.error();
       });
@@ -527,8 +527,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges),
         value = characterColorArg(color);
-      if (typeof wasm.hwpx_edit_set_character_text_color_ranges !== "function")
-        throw new Error("HwpxCharacterTextColorRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_text_color_ranges !== 'function')
+        throw new Error('HwpxCharacterTextColorRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_text_color_ranges(ptr, size, value)) throw memory.error();
       });
@@ -537,8 +537,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges),
         args = characterShadeArgs(color);
-      if (typeof wasm.hwpx_edit_set_character_shade_ranges !== "function")
-        throw new Error("HwpxCharacterShadeRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_shade_ranges !== 'function')
+        throw new Error('HwpxCharacterShadeRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_shade_ranges(ptr, size, ...args)) throw memory.error();
       });
@@ -550,11 +550,11 @@ export async function createHwpxEditor(source) {
       const method = characterEffectMode(exclusive)
         ? wasm.hwpx_edit_set_character_effect_ranges_exclusive
         : wasm.hwpx_edit_set_character_effect_ranges;
-      if (typeof method !== "function")
+      if (typeof method !== 'function')
         throw new Error(
           exclusive
-            ? "HwpxCharacterEffectRangesExclusiveAbiUnavailable"
-            : "HwpxCharacterEffectRangesAbiUnavailable",
+            ? 'HwpxCharacterEffectRangesExclusiveAbiUnavailable'
+            : 'HwpxCharacterEffectRangesAbiUnavailable',
         );
       memory.withBytes(bytes, (ptr, size) => {
         if (!method(ptr, size, ...args)) throw memory.error();
@@ -564,8 +564,8 @@ export async function createHwpxEditor(source) {
       ready();
       const bytes = encodeCharacterRanges(ranges),
         value = characterOutlineArg(kind);
-      if (typeof wasm.hwpx_edit_set_character_outline_ranges !== "function")
-        throw new Error("HwpxCharacterOutlineRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_outline_ranges !== 'function')
+        throw new Error('HwpxCharacterOutlineRangesAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_character_outline_ranges(ptr, size, value)) throw memory.error();
       });
@@ -573,10 +573,10 @@ export async function createHwpxEditor(source) {
     setCharacterStrike({ section, paragraph, startUnit, endUnit, enabled }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
-      if (typeof enabled !== "boolean") throw new TypeError("InvalidCharacterProperties");
-      if (typeof wasm.hwpx_edit_set_character_strike !== "function")
-        throw new Error("HwpxCharacterStrikeAbiUnavailable");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
+      if (typeof enabled !== 'boolean') throw new TypeError('InvalidCharacterProperties');
+      if (typeof wasm.hwpx_edit_set_character_strike !== 'function')
+        throw new Error('HwpxCharacterStrikeAbiUnavailable');
       if (
         !wasm.hwpx_edit_set_character_strike(
           section,
@@ -591,30 +591,30 @@ export async function createHwpxEditor(source) {
     setCharacterUnderline({ section, paragraph, startUnit, endUnit, kind }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const value = characterUnderlineArg(kind);
-      if (typeof wasm.hwpx_edit_set_character_underline !== "function")
-        throw new Error("HwpxCharacterUnderlineAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_underline !== 'function')
+        throw new Error('HwpxCharacterUnderlineAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_underline(section, paragraph, startUnit, endUnit, value))
         throw memory.error();
     },
     setCharacterStrikeColor({ section, paragraph, startUnit, endUnit, color }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const value = characterColorArg(color);
-      if (typeof wasm.hwpx_edit_set_character_strike_color !== "function")
-        throw new Error("HwpxCharacterStrikeColorAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_strike_color !== 'function')
+        throw new Error('HwpxCharacterStrikeColorAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_strike_color(section, paragraph, startUnit, endUnit, value))
         throw memory.error();
     },
     setCharacterUnderlineColor({ section, paragraph, startUnit, endUnit, color }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const value = characterColorArg(color);
-      if (typeof wasm.hwpx_edit_set_character_underline_color !== "function")
-        throw new Error("HwpxCharacterUnderlineColorAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_underline_color !== 'function')
+        throw new Error('HwpxCharacterUnderlineColorAbiUnavailable');
       if (
         !wasm.hwpx_edit_set_character_underline_color(section, paragraph, startUnit, endUnit, value)
       )
@@ -626,10 +626,10 @@ export async function createHwpxEditor(source) {
         if (!Number.isInteger(value) || value < 0 || value > 0xffffffff)
           throw new RangeError(`Invalid ${name}`);
       }
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const args = characterFontArgs(language, fontId);
-      if (typeof wasm.hwpx_edit_set_character_font !== "function")
-        throw new Error("HwpxCharacterFontAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_font !== 'function')
+        throw new Error('HwpxCharacterFontAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_font(section, paragraph, startUnit, endUnit, ...args))
         throw memory.error();
     },
@@ -639,10 +639,10 @@ export async function createHwpxEditor(source) {
         if (!Number.isInteger(value) || value < 0 || value > 0xffffffff)
           throw new RangeError(`Invalid ${key}`);
       }
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const args = characterFontNameArgs(language, name);
-      if (typeof wasm.hwpx_edit_set_character_font_name !== "function")
-        throw new Error("HwpxCharacterFontNameAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_font_name !== 'function')
+        throw new Error('HwpxCharacterFontNameAbiUnavailable');
       memory.withBytes(args.bytes, (ptr, size) => {
         if (
           !wasm.hwpx_edit_set_character_font_name(
@@ -662,47 +662,47 @@ export async function createHwpxEditor(source) {
       ready();
       const { positions, bytes } = textTransactionArgs(input);
       const properties = characterPropertyArgs(input.properties);
-      const mode = input.textMode ?? "plain";
-      if (!["plain", "anchored", "field"].includes(mode)) throw new RangeError("InvalidTextKind");
+      const mode = input.textMode ?? 'plain';
+      if (!['plain', 'anchored', 'field'].includes(mode)) throw new RangeError('InvalidTextKind');
       const begin = input.beginElement ?? 0;
       uint(begin);
       const action =
-        mode === "plain"
+        mode === 'plain'
           ? wasm.hwpx_edit_splice_character_properties
           : wasm.hwpx_edit_splice_character_properties_protected;
-      if (typeof action !== "function") throw new Error("HwpxCharacterPropertyTextAbiUnavailable");
+      if (typeof action !== 'function') throw new Error('HwpxCharacterPropertyTextAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
-        const extra = mode === "plain" ? [] : [mode === "anchored" ? 1 : 2, begin];
+        const extra = mode === 'plain' ? [] : [mode === 'anchored' ? 1 : 2, begin];
         if (!action(...positions, ptr, size, ...properties, ...extra)) throw memory.error();
       });
     },
     spliceWithFontName(input) {
       ready();
       const { positions, bytes, font } = namedFontTextArgs(input);
-      const mode = input.textMode ?? "plain",
+      const mode = input.textMode ?? 'plain',
         begin = input.beginElement ?? 0;
-      if (!["plain", "anchored", "field"].includes(mode)) throw new RangeError("InvalidTextKind");
+      if (!['plain', 'anchored', 'field'].includes(mode)) throw new RangeError('InvalidTextKind');
       uint(begin);
       const properties =
         input.properties === undefined ? null : characterPropertyArgs(input.properties);
       const action = properties
         ? wasm.hwpx_edit_splice_font_name_properties
-        : mode === "plain"
+        : mode === 'plain'
           ? wasm.hwpx_edit_splice_font_name
           : wasm.hwpx_edit_splice_font_name_protected;
-      if (typeof action !== "function")
+      if (typeof action !== 'function')
         throw new Error(
           properties
-            ? "HwpxNamedFontPropertyTextAbiUnavailable"
-            : "HwpxNamedFontTextAbiUnavailable",
+            ? 'HwpxNamedFontPropertyTextAbiUnavailable'
+            : 'HwpxNamedFontTextAbiUnavailable',
         );
       memory.withBytes(bytes, (ptr, size) =>
         memory.withBytes(font.bytes, (namePtr, nameSize) => {
           const extra = properties
-            ? [...properties, mode === "plain" ? 0 : mode === "anchored" ? 1 : 2, begin]
-            : mode === "plain"
+            ? [...properties, mode === 'plain' ? 0 : mode === 'anchored' ? 1 : 2, begin]
+            : mode === 'plain'
               ? []
-              : [mode === "anchored" ? 1 : 2, begin];
+              : [mode === 'anchored' ? 1 : 2, begin];
           if (!action(...positions, ptr, size, font.language, namePtr, nameSize, ...extra))
             throw memory.error();
         }),
@@ -711,20 +711,20 @@ export async function createHwpxEditor(source) {
     setCharacterTextColor({ section, paragraph, startUnit, endUnit, color }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const value = characterColorArg(color);
-      if (typeof wasm.hwpx_edit_set_character_text_color !== "function")
-        throw new Error("HwpxCharacterTextColorAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_text_color !== 'function')
+        throw new Error('HwpxCharacterTextColorAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_text_color(section, paragraph, startUnit, endUnit, value))
         throw memory.error();
     },
     setCharacterShade({ section, paragraph, startUnit, endUnit, color }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const args = characterShadeArgs(color);
-      if (typeof wasm.hwpx_edit_set_character_shade !== "function")
-        throw new Error("HwpxCharacterShadeAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_shade !== 'function')
+        throw new Error('HwpxCharacterShadeAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_shade(section, paragraph, startUnit, endUnit, ...args))
         throw memory.error();
     },
@@ -739,41 +739,41 @@ export async function createHwpxEditor(source) {
     }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const args = characterEffectArgs(effect, enabled);
       const method = characterEffectMode(exclusive)
         ? wasm.hwpx_edit_set_character_effect_exclusive
         : wasm.hwpx_edit_set_character_effect;
-      if (typeof method !== "function")
+      if (typeof method !== 'function')
         throw new Error(
           exclusive
-            ? "HwpxCharacterEffectExclusiveAbiUnavailable"
-            : "HwpxCharacterEffectAbiUnavailable",
+            ? 'HwpxCharacterEffectExclusiveAbiUnavailable'
+            : 'HwpxCharacterEffectAbiUnavailable',
         );
       if (!method(section, paragraph, startUnit, endUnit, ...args)) throw memory.error();
     },
     setCharacterOutline({ section, paragraph, startUnit, endUnit, kind }) {
       ready();
       [section, paragraph, startUnit, endUnit].forEach(uint);
-      if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+      if (endUnit < startUnit) throw new RangeError('InvalidTextPosition');
       const value = characterOutlineArg(kind);
-      if (typeof wasm.hwpx_edit_set_character_outline !== "function")
-        throw new Error("HwpxCharacterOutlineAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_character_outline !== 'function')
+        throw new Error('HwpxCharacterOutlineAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_outline(section, paragraph, startUnit, endUnit, value))
         throw memory.error();
     },
     setCellSize({ section, listNode, width, height }) {
       ready();
       [section, listNode, width, height].forEach(uint);
-      if (typeof wasm.hwpx_edit_set_cell_size !== "function")
-        throw new Error("HwpxCellSizeAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_cell_size !== 'function')
+        throw new Error('HwpxCellSizeAbiUnavailable');
       if (!wasm.hwpx_edit_set_cell_size(section, listNode, width, height)) throw memory.error();
     },
     setCellSizes(cells) {
       ready();
       const bytes = encodeCellSizes(cells);
-      if (typeof wasm.hwpx_edit_set_cell_sizes !== "function")
-        throw new Error("HwpxCellSizeBatchAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_cell_sizes !== 'function')
+        throw new Error('HwpxCellSizeBatchAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_cell_sizes(ptr, size)) throw memory.error();
       });
@@ -789,7 +789,7 @@ export async function createHwpxEditor(source) {
           continue;
         }
         if (!Array.isArray(pair) || pair.length !== 2)
-          throw new TypeError("InvalidPictureDimensionPair");
+          throw new TypeError('InvalidPictureDimensionPair');
         const width = pair[0],
           height = pair[1];
         uint(width);
@@ -797,36 +797,36 @@ export async function createHwpxEditor(source) {
         mask |= 1 << index;
         values.push(width, height);
       }
-      if (typeof wasm.hwpx_edit_set_picture_dimensions !== "function")
-        throw new Error("HwpxPictureDimensionsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_picture_dimensions !== 'function')
+        throw new Error('HwpxPictureDimensionsAbiUnavailable');
       if (!wasm.hwpx_edit_set_picture_dimensions(section, pictureNode, mask, ...values))
         throw memory.error();
     },
     resizePicture({ section, pictureNode, width, height }) {
       ready();
       [section, pictureNode, width, height].forEach(uint);
-      if (width === 0 || height === 0) throw new RangeError("InvalidResizeAxisSize");
-      if (typeof wasm.hwpx_edit_resize_picture !== "function")
-        throw new Error("HwpxPictureResizeAbiUnavailable");
+      if (width === 0 || height === 0) throw new RangeError('InvalidResizeAxisSize');
+      if (typeof wasm.hwpx_edit_resize_picture !== 'function')
+        throw new Error('HwpxPictureResizeAbiUnavailable');
       if (!wasm.hwpx_edit_resize_picture(section, pictureNode, width, height)) throw memory.error();
     },
     groupedPictureResizeAvailable(section, pictureNode) {
       ready();
       [section, pictureNode].forEach(uint);
-      if (typeof wasm.hwpx_edit_group_picture_resize_available !== "function")
-        throw new Error("HwpxGroupedPictureResizeAbiUnavailable");
+      if (typeof wasm.hwpx_edit_group_picture_resize_available !== 'function')
+        throw new Error('HwpxGroupedPictureResizeAbiUnavailable');
       if (!wasm.hwpx_edit_group_picture_resize_available(section, pictureNode))
         throw memory.error();
       return true;
     },
     characterShapeIds() {
       ready();
-      if (typeof wasm.hwpx_edit_character_shape_ids !== "function")
-        throw new Error("HwpxCharacterFormatAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_shape_ids !== 'function')
+        throw new Error('HwpxCharacterFormatAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_shape_ids()) throw memory.error();
         const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
-        if (bytes.length % 4 !== 0) throw new Error("InvalidCharacterShapeIds");
+        if (bytes.length % 4 !== 0) throw new Error('InvalidCharacterShapeIds');
         const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
         return Array.from({ length: bytes.length / 4 }, (_, index) =>
           view.getUint32(index * 4, true),
@@ -837,8 +837,8 @@ export async function createHwpxEditor(source) {
     },
     paragraphShapes() {
       ready();
-      if (typeof wasm.hwpx_edit_paragraph_shapes !== "function")
-        throw new Error("HwpxParagraphShapesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_paragraph_shapes !== 'function')
+        throw new Error('HwpxParagraphShapesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_paragraph_shapes()) throw memory.error();
         return decodeHwpxParagraphShapes(
@@ -850,8 +850,8 @@ export async function createHwpxEditor(source) {
     },
     characterShapes() {
       ready();
-      if (typeof wasm.hwpx_edit_character_shapes !== "function")
-        throw new Error("HwpxCharacterShapesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_shapes !== 'function')
+        throw new Error('HwpxCharacterShapesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_shapes()) throw memory.error();
         return decodeCharacterShapes(
@@ -863,8 +863,8 @@ export async function createHwpxEditor(source) {
     },
     characterFontReferences() {
       ready();
-      if (typeof wasm.hwpx_edit_character_font_references !== "function")
-        throw new Error("HwpxCharacterFontReferencesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_font_references !== 'function')
+        throw new Error('HwpxCharacterFontReferencesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_font_references()) throw memory.error();
         return decodeCharacterFontReferences(
@@ -876,8 +876,8 @@ export async function createHwpxEditor(source) {
     },
     fontFaces() {
       ready();
-      if (typeof wasm.hwpx_edit_font_faces !== "function")
-        throw new Error("HwpxFontFacesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_font_faces !== 'function')
+        throw new Error('HwpxFontFacesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_font_faces()) throw memory.error();
         return decodeFontFaces(
@@ -889,8 +889,8 @@ export async function createHwpxEditor(source) {
     },
     fontFaceMetadata() {
       ready();
-      if (typeof wasm.hwpx_edit_font_face_metadata !== "function")
-        throw new Error("HwpxFontFaceMetadataAbiUnavailable");
+      if (typeof wasm.hwpx_edit_font_face_metadata !== 'function')
+        throw new Error('HwpxFontFaceMetadataAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_font_face_metadata()) throw memory.error();
         return decodeHwpxFontFaceMetadata(
@@ -902,25 +902,25 @@ export async function createHwpxEditor(source) {
     },
     characterFontMetrics() {
       ready();
-      if (typeof wasm.hwpx_edit_character_font_metrics !== "function")
-        throw new Error("HwpxCharacterFontMetricsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_font_metrics !== 'function')
+        throw new Error('HwpxCharacterFontMetricsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_font_metrics()) throw memory.error();
         return decodeCharacterFontMetrics(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
-          "hwpx",
+          'hwpx',
         );
       } finally {
         wasm.hwpx_edit_output_free();
       }
     },
     supportsDocumentProvenance() {
-      return typeof wasm.hwpx_edit_document_provenance === "function";
+      return typeof wasm.hwpx_edit_document_provenance === 'function';
     },
     documentProvenance() {
       ready();
-      if (typeof wasm.hwpx_edit_document_provenance !== "function")
-        throw new Error("HwpxDocumentProvenanceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_document_provenance !== 'function')
+        throw new Error('HwpxDocumentProvenanceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_document_provenance()) throw memory.error();
         return decodeDocumentProvenance(
@@ -932,8 +932,8 @@ export async function createHwpxEditor(source) {
     },
     characterTextColors() {
       ready();
-      if (typeof wasm.hwpx_edit_character_text_colors !== "function")
-        throw new Error("HwpxCharacterTextColorsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_text_colors !== 'function')
+        throw new Error('HwpxCharacterTextColorsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_text_colors()) throw memory.error();
         return decodeCharacterTextColors(
@@ -945,8 +945,8 @@ export async function createHwpxEditor(source) {
     },
     characterShades() {
       ready();
-      if (typeof wasm.hwpx_edit_character_shades !== "function")
-        throw new Error("HwpxCharacterShadesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_shades !== 'function')
+        throw new Error('HwpxCharacterShadesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_shades()) throw memory.error();
         return decodeCharacterShades(
@@ -958,8 +958,8 @@ export async function createHwpxEditor(source) {
     },
     characterEffects() {
       ready();
-      if (typeof wasm.hwpx_edit_character_effects !== "function")
-        throw new Error("HwpxCharacterEffectsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_effects !== 'function')
+        throw new Error('HwpxCharacterEffectsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_effects()) throw memory.error();
         return decodeCharacterEffects(
@@ -971,8 +971,8 @@ export async function createHwpxEditor(source) {
     },
     characterOutlines() {
       ready();
-      if (typeof wasm.hwpx_edit_character_outlines !== "function")
-        throw new Error("HwpxCharacterOutlinesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_outlines !== 'function')
+        throw new Error('HwpxCharacterOutlinesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_outlines()) throw memory.error();
         return decodeCharacterOutlines(
@@ -984,8 +984,8 @@ export async function createHwpxEditor(source) {
     },
     characterStrikeStyles() {
       ready();
-      if (typeof wasm.hwpx_edit_character_strike_styles !== "function")
-        throw new Error("HwpxCharacterStrikeStylesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_strike_styles !== 'function')
+        throw new Error('HwpxCharacterStrikeStylesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_strike_styles()) throw memory.error();
         return decodeCharacterStrikeStyles(
@@ -997,8 +997,8 @@ export async function createHwpxEditor(source) {
     },
     characterStrikes() {
       ready();
-      if (typeof wasm.hwpx_edit_character_strikes !== "function")
-        throw new Error("HwpxCharacterStrikesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_strikes !== 'function')
+        throw new Error('HwpxCharacterStrikesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_strikes()) throw memory.error();
         return decodeCharacterStrikes(
@@ -1010,8 +1010,8 @@ export async function createHwpxEditor(source) {
     },
     characterUnderlines() {
       ready();
-      if (typeof wasm.hwpx_edit_character_underlines !== "function")
-        throw new Error("HwpxCharacterUnderlinesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_underlines !== 'function')
+        throw new Error('HwpxCharacterUnderlinesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_underlines()) throw memory.error();
         return decodeCharacterUnderlines(
@@ -1023,8 +1023,8 @@ export async function createHwpxEditor(source) {
     },
     characterUnderlineStyles() {
       ready();
-      if (typeof wasm.hwpx_edit_character_underline_styles !== "function")
-        throw new Error("HwpxCharacterUnderlineStylesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_underline_styles !== 'function')
+        throw new Error('HwpxCharacterUnderlineStylesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_underline_styles()) throw memory.error();
         return decodeCharacterUnderlineStyles(
@@ -1037,8 +1037,8 @@ export async function createHwpxEditor(source) {
     tableBindings(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_table_bindings !== "function")
-        throw new Error("HwpxTableBindingsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_bindings !== 'function')
+        throw new Error('HwpxTableBindingsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_bindings(section)) throw memory.error();
         return decodeTableBindings(
@@ -1051,8 +1051,8 @@ export async function createHwpxEditor(source) {
     tablePlacements(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_table_placements !== "function")
-        throw new Error("HwpxTablePlacementsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_placements !== 'function')
+        throw new Error('HwpxTablePlacementsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_placements(section)) throw memory.error();
         return decodeTablePlacements(
@@ -1065,8 +1065,8 @@ export async function createHwpxEditor(source) {
     drawingTextBindings(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_drawing_text_bindings !== "function")
-        throw new Error("HwpxDrawingTextBindingsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_drawing_text_bindings !== 'function')
+        throw new Error('HwpxDrawingTextBindingsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_drawing_text_bindings(section)) throw memory.error();
         return decodeDrawingTextBindings(
@@ -1080,8 +1080,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(drawingNode);
-      if (typeof wasm.hwpx_edit_drawing_text_snapshot !== "function")
-        throw new Error("HwpxDrawingTextSnapshotAbiUnavailable");
+      if (typeof wasm.hwpx_edit_drawing_text_snapshot !== 'function')
+        throw new Error('HwpxDrawingTextSnapshotAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_drawing_text_snapshot(section, drawingNode)) throw memory.error();
         return decodeDrawingTextSnapshot(
@@ -1091,8 +1091,8 @@ export async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
-    ...(typeof wasm.hwpx_edit_drawing_text_requested === "function" &&
-    typeof wasm.hwpx_edit_drawing_text_requested_max_nodes === "function"
+    ...(typeof wasm.hwpx_edit_drawing_text_requested === 'function' &&
+    typeof wasm.hwpx_edit_drawing_text_requested_max_nodes === 'function'
       ? {
           drawingTextRequestedMaxNodes: wasm.hwpx_edit_drawing_text_requested_max_nodes(),
           drawingTextRequested(section, nodes) {
@@ -1120,8 +1120,8 @@ export async function createHwpxEditor(source) {
     drawingTextSnapshots(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_drawing_text_snapshots !== "function")
-        throw new Error("HwpxDrawingTextSnapshotsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_drawing_text_snapshots !== 'function')
+        throw new Error('HwpxDrawingTextSnapshotsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_drawing_text_snapshots(section)) throw memory.error();
         return decodeDrawingTextSnapshots(
@@ -1134,8 +1134,8 @@ export async function createHwpxEditor(source) {
     sectionFillBrushes(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_section_fill_brushes !== "function")
-        throw new Error("HwpxFillBrushesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_section_fill_brushes !== 'function')
+        throw new Error('HwpxFillBrushesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_section_fill_brushes(section)) throw memory.error();
         return decodeFillBrushes(
@@ -1148,12 +1148,12 @@ export async function createHwpxEditor(source) {
     rectangleNodes(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_rectangle_nodes !== "function")
-        throw new Error("HwpxRectangleNodesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_rectangle_nodes !== 'function')
+        throw new Error('HwpxRectangleNodesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_rectangle_nodes(section)) throw memory.error();
         const nodes = JSON.parse(
-          new TextDecoder("utf-8", { fatal: true }).decode(
+          new TextDecoder('utf-8', { fatal: true }).decode(
             memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
           ),
         );
@@ -1164,7 +1164,7 @@ export async function createHwpxEditor(source) {
               Number.isInteger(n) && n >= 0 && n <= 0xffffffff && (i === 0 || n > nodes[i - 1]),
           )
         )
-          throw new Error("InvalidRectangleNodes");
+          throw new Error('InvalidRectangleNodes');
         return nodes;
       } finally {
         wasm.hwpx_edit_output_free();
@@ -1174,8 +1174,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(rectangleNode);
-      if (typeof wasm.hwpx_edit_rectangle_rendering_source !== "function")
-        throw new Error("HwpxRectangleRenderingSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_rectangle_rendering_source !== 'function')
+        throw new Error('HwpxRectangleRenderingSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_rectangle_rendering_source(section, rectangleNode))
           throw memory.error();
@@ -1189,8 +1189,8 @@ export async function createHwpxEditor(source) {
     rectangleRenderingSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_rectangle_rendering_sources !== "function")
-        throw new Error("HwpxRectangleRenderingSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_rectangle_rendering_sources !== 'function')
+        throw new Error('HwpxRectangleRenderingSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_rectangle_rendering_sources(section)) throw memory.error();
         return decodeRectangleRenderingSources(
@@ -1203,8 +1203,8 @@ export async function createHwpxEditor(source) {
     ellipseSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_ellipse_sources !== "function")
-        throw new Error("HwpxEllipseSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_ellipse_sources !== 'function')
+        throw new Error('HwpxEllipseSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_ellipse_sources(section)) throw memory.error();
         return decodeEllipseSources(
@@ -1218,14 +1218,14 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_curve_geometry !== "function")
-        throw new Error("HwpxCurveGeometryAbiUnavailable");
+      if (typeof wasm.hwpx_edit_curve_geometry !== 'function')
+        throw new Error('HwpxCurveGeometryAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_curve_geometry(section, node)) throw memory.error();
         const value = decodeCurveGeometry(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
-        if (value.node !== node) throw new Error("CurveGeometryNodeMismatch");
+        if (value.node !== node) throw new Error('CurveGeometryNodeMismatch');
         return value;
       } finally {
         wasm.hwpx_edit_output_free();
@@ -1235,14 +1235,14 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_curve_owner !== "function")
-        throw new Error("HwpxCurveOwnerAbiUnavailable");
+      if (typeof wasm.hwpx_edit_curve_owner !== 'function')
+        throw new Error('HwpxCurveOwnerAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_curve_owner(section, node)) throw memory.error();
         const value = decodeCurveOwner(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
-        if (value.node !== node) throw new Error("CurveOwnerNodeMismatch");
+        if (value.node !== node) throw new Error('CurveOwnerNodeMismatch');
         return value;
       } finally {
         wasm.hwpx_edit_output_free();
@@ -1252,15 +1252,15 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(paragraph);
-      if (typeof wasm.hwpx_edit_tab_sources !== "function")
-        throw new Error("HwpxTabSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_tab_sources !== 'function')
+        throw new Error('HwpxTabSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_tab_sources(section, paragraph)) throw memory.error();
         const value = decodeTabSources(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
         if (value.section !== section || value.paragraph !== paragraph)
-          throw new Error("TabSourcesParagraphMismatch");
+          throw new Error('TabSourcesParagraphMismatch');
         return value;
       } finally {
         wasm.hwpx_edit_output_free();
@@ -1268,8 +1268,8 @@ export async function createHwpxEditor(source) {
     },
     tabDefinitions() {
       ready();
-      if (typeof wasm.hwpx_edit_tab_definitions !== "function")
-        throw new Error("HwpxTabDefinitionsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_tab_definitions !== 'function')
+        throw new Error('HwpxTabDefinitionsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_tab_definitions()) throw memory.error();
         return decodeTabDefinitions(
@@ -1281,8 +1281,8 @@ export async function createHwpxEditor(source) {
     },
     sectionTabSources() {
       ready();
-      if (typeof wasm.hwpx_edit_section_tabs !== "function")
-        throw new Error("HwpxSectionTabsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_section_tabs !== 'function')
+        throw new Error('HwpxSectionTabsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_section_tabs()) throw memory.error();
         return decodeSectionTabs(
@@ -1294,14 +1294,14 @@ export async function createHwpxEditor(source) {
     },
     supportsCreatedCellSoftLineBreaks() {
       return (
-        typeof wasm.hwpx_edit_created_cell_soft_line_breaks === "function" &&
+        typeof wasm.hwpx_edit_created_cell_soft_line_breaks === 'function' &&
         wasm.hwpx_edit_created_cell_soft_line_breaks() === 1
       );
     },
     tableCreationResources() {
       ready();
-      if (typeof wasm.hwpx_edit_table_creation_resources !== "function")
-        throw new Error("HwpxTableCreationResourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_creation_resources !== 'function')
+        throw new Error('HwpxTableCreationResourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_creation_resources()) throw memory.error();
         return decodeTableCreationResources(
@@ -1315,7 +1315,7 @@ export async function createHwpxEditor(source) {
       ready();
       try {
         const save =
-          typeof wasm.hwpx_edit_save_for_display === "function"
+          typeof wasm.hwpx_edit_save_for_display === 'function'
             ? wasm.hwpx_edit_save_for_display
             : wasm.hwpx_edit_save;
         if (!save()) throw memory.error();
@@ -1327,11 +1327,11 @@ export async function createHwpxEditor(source) {
     insertTable(section, paragraph, unit, options) {
       ready();
       [section, paragraph, unit].forEach(uint);
-      if (!options || typeof options !== "object" || Array.isArray(options))
-        throw new TypeError("InvalidTableCreationOptions");
+      if (!options || typeof options !== 'object' || Array.isArray(options))
+        throw new TypeError('InvalidTableCreationOptions');
       const { rows, columns, width, rowHeight, resources } = options;
-      if (!resources || typeof resources !== "object" || Array.isArray(resources))
-        throw new TypeError("InvalidTableCreationResources");
+      if (!resources || typeof resources !== 'object' || Array.isArray(resources))
+        throw new TypeError('InvalidTableCreationResources');
       const args = [
         rows,
         columns,
@@ -1343,12 +1343,12 @@ export async function createHwpxEditor(source) {
         resources.border_fill,
       ];
       args.forEach(uint);
-      if (typeof wasm.hwpx_edit_insert_table !== "function")
-        throw new Error("HwpxTableCreationAbiUnavailable");
+      if (typeof wasm.hwpx_edit_insert_table !== 'function')
+        throw new Error('HwpxTableCreationAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_insert_table(section, paragraph, unit, ...args)) throw memory.error();
         const identity = JSON.parse(
-          new TextDecoder("utf-8", { fatal: true }).decode(
+          new TextDecoder('utf-8', { fatal: true }).decode(
             memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
           ),
         );
@@ -1361,8 +1361,8 @@ export async function createHwpxEditor(source) {
     createdTables(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_created_tables !== "function")
-        throw new Error("HwpxCreatedTablesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_created_tables !== 'function')
+        throw new Error('HwpxCreatedTablesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_created_tables(section)) throw memory.error();
         return decodeCreatedTables(
@@ -1377,8 +1377,8 @@ export async function createHwpxEditor(source) {
       [section, row, column].forEach(uint);
       const id = createdTableIdentity(identity);
       const bytes = encodedText(text);
-      if (typeof wasm.hwpx_edit_set_created_cell_text !== "function")
-        throw new Error("HwpxCreatedCellTextAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_created_cell_text !== 'function')
+        throw new Error('HwpxCreatedCellTextAbiUnavailable');
       memory.withBytes(bytes, (ptr, size) => {
         if (
           !wasm.hwpx_edit_set_created_cell_text(
@@ -1398,8 +1398,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(containerNode);
-      if (typeof wasm.hwpx_edit_container_source_snapshot !== "function")
-        throw new Error("HwpxContainerSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_container_source_snapshot !== 'function')
+        throw new Error('HwpxContainerSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_container_source_snapshot(section, containerNode)) throw memory.error();
         return decodeContainerSource(
@@ -1412,14 +1412,14 @@ export async function createHwpxEditor(source) {
     containerCaptionBindings(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_container_caption_bindings !== "function")
-        throw new Error("HwpxContainerCaptionBindingsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_container_caption_bindings !== 'function')
+        throw new Error('HwpxContainerCaptionBindingsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_container_caption_bindings(section)) throw memory.error();
         return decodeCaptionBindings(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
-          "container_node",
-          "InvalidContainerCaptionBindings",
+          'container_node',
+          'InvalidContainerCaptionBindings',
         );
       } finally {
         wasm.hwpx_edit_output_free();
@@ -1429,10 +1429,10 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(oleNode);
-      if (typeof allowExternalPackagedCopy !== "boolean")
-        throw new Error("InvalidOleSourceOptions");
-      if (typeof wasm.hwpx_edit_ole_bytes !== "function")
-        throw new Error("HwpxOleBytesAbiUnavailable");
+      if (typeof allowExternalPackagedCopy !== 'boolean')
+        throw new Error('InvalidOleSourceOptions');
+      if (typeof wasm.hwpx_edit_ole_bytes !== 'function')
+        throw new Error('HwpxOleBytesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_ole_bytes(section, oleNode, Number(allowExternalPackagedCopy)))
           throw memory.error();
@@ -1446,8 +1446,8 @@ export async function createHwpxEditor(source) {
     oleSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_ole_sites !== "function")
-        throw new Error("HwpxOleSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_ole_sites !== 'function')
+        throw new Error('HwpxOleSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_ole_sites(section)) throw memory.error();
         return decodeOleSites(
@@ -1461,8 +1461,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(oleNode);
-      if (typeof wasm.hwpx_edit_ole_source !== "function")
-        throw new Error("HwpxOleSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_ole_source !== 'function')
+        throw new Error('HwpxOleSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_ole_source(section, oleNode)) throw memory.error();
         return decodeOleSource(
@@ -1475,8 +1475,8 @@ export async function createHwpxEditor(source) {
     pictureSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_picture_sites !== "function")
-        throw new Error("HwpxPictureSitesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_sites !== 'function')
+        throw new Error('HwpxPictureSitesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_sites(section)) throw memory.error();
         return decodePictureSites(
@@ -1490,8 +1490,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_flow !== "function")
-        throw new Error("HwpxPictureFlowAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_flow !== 'function')
+        throw new Error('HwpxPictureFlowAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_flow(section, pictureNode)) throw memory.error();
         return decodePictureFlow(
@@ -1505,8 +1505,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_position !== "function")
-        throw new Error("HwpxPicturePositionAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_position !== 'function')
+        throw new Error('HwpxPicturePositionAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_position(section, pictureNode)) throw memory.error();
         return decodePicturePosition(
@@ -1520,8 +1520,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_rendering_corners !== "function")
-        throw new Error("HwpxPictureCornersAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_rendering_corners !== 'function')
+        throw new Error('HwpxPictureCornersAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_rendering_corners(section, pictureNode)) throw memory.error();
         return decodePictureRenderingCorners(
@@ -1535,8 +1535,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_owner !== "function")
-        throw new Error("HwpxPictureOwnerAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_owner !== 'function')
+        throw new Error('HwpxPictureOwnerAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_owner(section, pictureNode)) throw memory.error();
         return decodePictureOwner(
@@ -1549,8 +1549,8 @@ export async function createHwpxEditor(source) {
     pictureOwners(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_picture_owners !== "function")
-        throw new Error("HwpxPictureOwnersAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_owners !== 'function')
+        throw new Error('HwpxPictureOwnersAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_owners(section)) throw memory.error();
         return decodePictureOwners(
@@ -1563,8 +1563,8 @@ export async function createHwpxEditor(source) {
     lineNodes(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_line_nodes !== "function")
-        throw new Error("HwpxLineDisplayAbiUnavailable");
+      if (typeof wasm.hwpx_edit_line_nodes !== 'function')
+        throw new Error('HwpxLineDisplayAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_line_nodes(section)) throw memory.error();
         return decodeLineNodes(
@@ -1578,8 +1578,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_line_geometry !== "function")
-        throw new Error("HwpxLineGeometryAbiUnavailable");
+      if (typeof wasm.hwpx_edit_line_geometry !== 'function')
+        throw new Error('HwpxLineGeometryAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_line_geometry(section, node)) throw memory.error();
         return decodeLineGeometry(
@@ -1593,8 +1593,8 @@ export async function createHwpxEditor(source) {
     connectorNodes(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_connector_nodes !== "function")
-        throw new Error("HwpxConnectorSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_connector_nodes !== 'function')
+        throw new Error('HwpxConnectorSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_connector_nodes(section)) throw memory.error();
         return decodeConnectorNodes(
@@ -1608,8 +1608,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_connector_geometry_source !== "function")
-        throw new Error("HwpxConnectorSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_connector_geometry_source !== 'function')
+        throw new Error('HwpxConnectorSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_connector_geometry_source(section, node)) throw memory.error();
         return decodeConnectorSource(
@@ -1623,8 +1623,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_drawing_stroke_source !== "function")
-        throw new Error("HwpxDrawingStrokeSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_drawing_stroke_source !== 'function')
+        throw new Error('HwpxDrawingStrokeSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_drawing_stroke_source(section, node)) throw memory.error();
         return decodeDrawingStrokeSource(
@@ -1639,8 +1639,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_connector_owner !== "function")
-        throw new Error("HwpxConnectorOwnerAbiUnavailable");
+      if (typeof wasm.hwpx_edit_connector_owner !== 'function')
+        throw new Error('HwpxConnectorOwnerAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_connector_owner(section, node)) throw memory.error();
         return decodeConnectorOwner(
@@ -1655,8 +1655,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_connector_rendering_source !== "function")
-        throw new Error("HwpxConnectorRenderingSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_connector_rendering_source !== 'function')
+        throw new Error('HwpxConnectorRenderingSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_connector_rendering_source(section, node)) throw memory.error();
         return decodeConnectorRenderingSource(
@@ -1671,15 +1671,15 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(node);
-      if (typeof wasm.hwpx_edit_connector_placement_source !== "function")
-        throw new Error("HwpxConnectorPlacementSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_connector_placement_source !== 'function')
+        throw new Error('HwpxConnectorPlacementSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_connector_placement_source(section, node)) throw memory.error();
         return {
           sourceOnly: true,
           ...decodeDrawingPlacement(
             memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
-            "InvalidConnectorPlacementSource",
+            'InvalidConnectorPlacementSource',
           ),
         };
       } finally {
@@ -1688,8 +1688,8 @@ export async function createHwpxEditor(source) {
     },
     pageSettings() {
       ready();
-      if (typeof wasm.hwpx_edit_page_settings !== "function")
-        throw new Error("HwpxPageSettingsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_page_settings !== 'function')
+        throw new Error('HwpxPageSettingsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_page_settings()) throw memory.error();
         return decodePageSettings(
@@ -1701,8 +1701,8 @@ export async function createHwpxEditor(source) {
     },
     noteShapes() {
       ready();
-      if (typeof wasm.hwpx_edit_note_shapes !== "function")
-        throw new Error("HwpxNoteShapesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_note_shapes !== 'function')
+        throw new Error('HwpxNoteShapesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_note_shapes()) throw memory.error();
         return decodeNoteShapes(
@@ -1715,8 +1715,8 @@ export async function createHwpxEditor(source) {
     paragraphFlow(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_paragraph_flow !== "function")
-        throw new Error("HwpxParagraphFlowAbiUnavailable");
+      if (typeof wasm.hwpx_edit_paragraph_flow !== 'function')
+        throw new Error('HwpxParagraphFlowAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_paragraph_flow(section)) throw memory.error();
         return decodeParagraphFlow(
@@ -1729,8 +1729,8 @@ export async function createHwpxEditor(source) {
     tablePagination(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_table_pagination !== "function")
-        throw new Error("HwpxTablePaginationAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_pagination !== 'function')
+        throw new Error('HwpxTablePaginationAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_pagination(section)) throw memory.error();
         return decodeTablePagination(
@@ -1740,8 +1740,8 @@ export async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
-    ...(typeof wasm.hwpx_edit_line_display_batch === "function" &&
-    typeof wasm.hwpx_edit_line_display_batch_max_nodes === "function"
+    ...(typeof wasm.hwpx_edit_line_display_batch === 'function' &&
+    typeof wasm.hwpx_edit_line_display_batch_max_nodes === 'function'
       ? {
           lineDisplayBatchMaxNodes: wasm.hwpx_edit_line_display_batch_max_nodes(),
           lineDisplayBatch(section, nodes) {
@@ -1765,8 +1765,8 @@ export async function createHwpxEditor(source) {
           },
         }
       : {}),
-    ...(typeof wasm.hwpx_edit_table_border_sources_batch === "function" &&
-    typeof wasm.hwpx_edit_table_border_sources_batch_max_sections === "function"
+    ...(typeof wasm.hwpx_edit_table_border_sources_batch === 'function' &&
+    typeof wasm.hwpx_edit_table_border_sources_batch_max_sections === 'function'
       ? {
           tableBorderSourcesBatchMaxSections:
             wasm.hwpx_edit_table_border_sources_batch_max_sections(),
@@ -1793,8 +1793,8 @@ export async function createHwpxEditor(source) {
     tableBorderSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_table_border_sources !== "function")
-        throw new Error("HwpxTableBorderSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_border_sources !== 'function')
+        throw new Error('HwpxTableBorderSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_border_sources(section)) throw memory.error();
         return decodeTableBorderSources(
@@ -1808,8 +1808,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(tableNode);
-      if (typeof wasm.hwpx_edit_table_geometry !== "function")
-        throw new Error("HwpxTableGeometryAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_geometry !== 'function')
+        throw new Error('HwpxTableGeometryAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_geometry(section, tableNode)) throw memory.error();
         return decodeTableGeometry(
@@ -1822,8 +1822,8 @@ export async function createHwpxEditor(source) {
     automaticNumberSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_automatic_number_sources !== "function")
-        throw new Error("HwpxAutomaticNumberSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_automatic_number_sources !== 'function')
+        throw new Error('HwpxAutomaticNumberSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_automatic_number_sources(section)) throw memory.error();
         return decodeAutomaticNumberSources(
@@ -1836,8 +1836,8 @@ export async function createHwpxEditor(source) {
     automaticNumberSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_automatic_number_sites !== "function")
-        throw new Error("HwpxAutomaticNumberSitesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_automatic_number_sites !== 'function')
+        throw new Error('HwpxAutomaticNumberSitesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_automatic_number_sites(section)) throw memory.error();
         return decodeAutomaticNumberSites(
@@ -1850,8 +1850,8 @@ export async function createHwpxEditor(source) {
     noteReferenceSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_note_reference_sites !== "function")
-        throw new Error("HwpxNoteReferenceSitesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_note_reference_sites !== 'function')
+        throw new Error('HwpxNoteReferenceSitesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_note_reference_sites(section)) throw memory.error();
         return decodeNoteReferenceSites(
@@ -1864,8 +1864,8 @@ export async function createHwpxEditor(source) {
     paragraphTextSnapshot(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_paragraph_text_snapshot !== "function")
-        throw new Error("HwpxParagraphTextSnapshotAbiUnavailable");
+      if (typeof wasm.hwpx_edit_paragraph_text_snapshot !== 'function')
+        throw new Error('HwpxParagraphTextSnapshotAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_paragraph_text_snapshot(section)) throw memory.error();
         return decodeParagraphTextSnapshot(
@@ -1878,8 +1878,8 @@ export async function createHwpxEditor(source) {
     formulaFieldSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_formula_field_sources !== "function")
-        throw new Error("HwpxFormulaFieldSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_formula_field_sources !== 'function')
+        throw new Error('HwpxFormulaFieldSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_formula_field_sources(section)) throw memory.error();
         return decodeFormulaFieldSources(
@@ -1892,8 +1892,8 @@ export async function createHwpxEditor(source) {
     tableCaptionBindings(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_table_caption_bindings !== "function")
-        throw new Error("HwpxTableCaptionBindingsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_caption_bindings !== 'function')
+        throw new Error('HwpxTableCaptionBindingsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_caption_bindings(section)) throw memory.error();
         return decodeTableCaptionBindings(
@@ -1907,8 +1907,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(tableNode);
-      if (typeof wasm.hwpx_edit_table_caption !== "function")
-        throw new Error("HwpxTableCaptionAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_caption !== 'function')
+        throw new Error('HwpxTableCaptionAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_caption(section, tableNode)) throw memory.error();
         return decodeTableCaption(
@@ -1921,14 +1921,14 @@ export async function createHwpxEditor(source) {
     pictureCaptionBindings(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_picture_caption_bindings !== "function")
-        throw new Error("HwpxPictureCaptionBindingsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_caption_bindings !== 'function')
+        throw new Error('HwpxPictureCaptionBindingsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_caption_bindings(section)) throw memory.error();
         return decodeCaptionBindings(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
-          "picture_node",
-          "InvalidPictureCaptionBindings",
+          'picture_node',
+          'InvalidPictureCaptionBindings',
         );
       } finally {
         wasm.hwpx_edit_output_free();
@@ -1938,8 +1938,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_caption !== "function")
-        throw new Error("HwpxPictureCaptionAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_caption !== 'function')
+        throw new Error('HwpxPictureCaptionAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_caption(section, pictureNode)) throw memory.error();
         return decodeTableCaption(
@@ -1953,8 +1953,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(listNode);
-      if (typeof wasm.hwpx_edit_table_cell_margin !== "function")
-        throw new Error("HwpxTableCellMarginAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_cell_margin !== 'function')
+        throw new Error('HwpxTableCellMarginAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_cell_margin(section, listNode)) throw memory.error();
         return decodeTableCellMargin(
@@ -1967,8 +1967,8 @@ export async function createHwpxEditor(source) {
     formulaSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_formula_sources !== "function")
-        throw new Error("HwpxFormulaSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_formula_sources !== 'function')
+        throw new Error('HwpxFormulaSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_formula_sources(section)) throw memory.error();
         return decodeFormulaSources(
@@ -1981,8 +1981,8 @@ export async function createHwpxEditor(source) {
     formulaCurrent(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_formula_current !== "function")
-        throw new Error("HwpxFormulaCurrentAbiUnavailable");
+      if (typeof wasm.hwpx_edit_formula_current !== 'function')
+        throw new Error('HwpxFormulaCurrentAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_formula_current(section)) throw memory.error();
         return decodeFormulaSources(
@@ -1997,8 +1997,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(lineNode);
-      if (typeof wasm.hwpx_edit_line_placement !== "function")
-        throw new Error("HwpxLinePlacementAbiUnavailable");
+      if (typeof wasm.hwpx_edit_line_placement !== 'function')
+        throw new Error('HwpxLinePlacementAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_line_placement(section, lineNode)) throw memory.error();
         return decodeLinePlacement(
@@ -2012,8 +2012,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(lineNode);
-      if (typeof wasm.hwpx_edit_line_display !== "function")
-        throw new Error("HwpxLineDisplayAbiUnavailable");
+      if (typeof wasm.hwpx_edit_line_display !== 'function')
+        throw new Error('HwpxLineDisplayAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_line_display(section, lineNode)) throw memory.error();
         return decodeLineDisplay(
@@ -2027,8 +2027,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(listNode);
-      if (typeof wasm.hwpx_edit_table_background_bytes !== "function")
-        throw new Error("HwpxTableBackgroundBytesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_table_background_bytes !== 'function')
+        throw new Error('HwpxTableBackgroundBytesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_table_background_bytes(section, listNode)) throw memory.error();
         return memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
@@ -2040,8 +2040,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_bytes !== "function")
-        throw new Error("HwpxPictureBytesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_bytes !== 'function')
+        throw new Error('HwpxPictureBytesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_bytes(section, pictureNode)) throw memory.error();
         return memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
@@ -2053,8 +2053,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_geometry !== "function")
-        throw new Error("HwpxPictureGeometryAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_geometry !== 'function')
+        throw new Error('HwpxPictureGeometryAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_geometry(section, pictureNode)) throw memory.error();
         return decodePictureGeometry(
@@ -2068,19 +2068,19 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_size_protection !== "function")
-        throw new Error("HwpxPictureSizeProtectionAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_size_protection !== 'function')
+        throw new Error('HwpxPictureSizeProtectionAbiUnavailable');
       const value = wasm.hwpx_edit_picture_size_protection(section, pictureNode);
       if (value === 3) throw memory.error();
-      if (![0, 1, 2].includes(value)) throw new Error("InvalidPictureSizeProtection");
+      if (![0, 1, 2].includes(value)) throw new Error('InvalidPictureSizeProtection');
       return value === 0 ? null : value === 2;
     },
     pictureCrop(section, pictureNode) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_crop !== "function")
-        throw new Error("HwpxPictureCropAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_crop !== 'function')
+        throw new Error('HwpxPictureCropAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_crop(section, pictureNode)) throw memory.error();
         return decodePictureCrop(
@@ -2094,8 +2094,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(pictureNode);
-      if (typeof wasm.hwpx_edit_picture_transform !== "function")
-        throw new Error("HwpxPictureTransformAbiUnavailable");
+      if (typeof wasm.hwpx_edit_picture_transform !== 'function')
+        throw new Error('HwpxPictureTransformAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_picture_transform(section, pictureNode)) throw memory.error();
         return decodePictureTransform(
@@ -2109,8 +2109,8 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(paragraph);
-      if (typeof wasm.hwpx_edit_character_ranges !== "function")
-        throw new Error("HwpxCharacterRangesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_character_ranges !== 'function')
+        throw new Error('HwpxCharacterRangesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_character_ranges(section, paragraph)) throw memory.error();
         return decodeCharacterRanges(
@@ -2124,11 +2124,11 @@ export async function createHwpxEditor(source) {
       ready();
       uint(section);
       uint(paragraph);
-      if (typeof wasm.hwpx_edit_anchor_text !== "function")
-        throw new Error("HwpxAnchorEditAbiUnavailable");
+      if (typeof wasm.hwpx_edit_anchor_text !== 'function')
+        throw new Error('HwpxAnchorEditAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_anchor_text(section, paragraph)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2138,8 +2138,8 @@ export async function createHwpxEditor(source) {
     spliceAnchored(section, paragraph, start, deleted, text) {
       ready();
       [section, paragraph, start, deleted].forEach(uint);
-      if (typeof wasm.hwpx_edit_splice_anchored !== "function")
-        throw new Error("HwpxAnchorEditAbiUnavailable");
+      if (typeof wasm.hwpx_edit_splice_anchored !== 'function')
+        throw new Error('HwpxAnchorEditAbiUnavailable');
       const bytes = encodedText(text);
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_splice_anchored(section, paragraph, start, deleted, ptr, size))
@@ -2149,8 +2149,8 @@ export async function createHwpxEditor(source) {
     spliceFieldLabel(section, paragraph, beginElement, start, deleted, text) {
       ready();
       [section, paragraph, beginElement, start, deleted].forEach(uint);
-      if (typeof wasm.hwpx_edit_splice_field_label !== "function")
-        throw new Error("HwpxFieldEditAbiUnavailable");
+      if (typeof wasm.hwpx_edit_splice_field_label !== 'function')
+        throw new Error('HwpxFieldEditAbiUnavailable');
       const bytes = encodedText(text);
       memory.withBytes(bytes, (ptr, size) => {
         if (
@@ -2170,10 +2170,10 @@ export async function createHwpxEditor(source) {
     setFormulaDefinition(section, beginElement, formula) {
       ready();
       [section, beginElement].forEach(uint);
-      if (typeof wasm.hwpx_edit_set_formula_definition !== "function")
-        throw new Error("HwpxFormulaEditAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_formula_definition !== 'function')
+        throw new Error('HwpxFormulaEditAbiUnavailable');
       const bytes = encodedText(formula);
-      if (bytes.length > 4096) throw new Error("LimitExceeded");
+      if (bytes.length > 4096) throw new Error('LimitExceeded');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_formula_definition(section, beginElement, ptr, size))
           throw memory.error();
@@ -2184,8 +2184,8 @@ export async function createHwpxEditor(source) {
       [section, beginElement].forEach(uint);
       const bytes = manualFormulaResultBytes(
         display,
-        "hwpx_edit_set_manual_formula_result",
-        "HwpxManualFormulaResultAbiUnavailable",
+        'hwpx_edit_set_manual_formula_result',
+        'HwpxManualFormulaResultAbiUnavailable',
       );
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_manual_formula_result(section, beginElement, ptr, size))
@@ -2197,8 +2197,8 @@ export async function createHwpxEditor(source) {
       [section, beginElement, start, deleted].forEach(uint);
       const bytes = manualFormulaResultBytes(
         text,
-        "hwpx_edit_splice_manual_formula_result",
-        "HwpxManualFormulaResultSpliceAbiUnavailable",
+        'hwpx_edit_splice_manual_formula_result',
+        'HwpxManualFormulaResultSpliceAbiUnavailable',
       );
       memory.withBytes(bytes, (ptr, size) => {
         if (
@@ -2218,8 +2218,8 @@ export async function createHwpxEditor(source) {
     formSourceNodes(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_form_source_nodes !== "function")
-        throw new Error("HwpxFormSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_form_source_nodes !== 'function')
+        throw new Error('HwpxFormSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_form_source_nodes(section)) throw memory.error();
         return decodeFormSourceNodes(
@@ -2231,8 +2231,8 @@ export async function createHwpxEditor(source) {
     },
     inlineStringSources() {
       ready();
-      if (typeof wasm.hwpx_edit_inline_string_sources !== "function")
-        throw new Error("HwpxInlineStringSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_inline_string_sources !== 'function')
+        throw new Error('HwpxInlineStringSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_inline_string_sources()) throw memory.error();
         return decodeInlineStringSources(
@@ -2246,11 +2246,11 @@ export async function createHwpxEditor(source) {
       ready();
       [section, node].forEach(uint);
       const selected = dutmalKind(kind);
-      if (typeof wasm.hwpx_edit_dutmal_text !== "function")
-        throw new Error("HwpxDutmalTextAbiUnavailable");
+      if (typeof wasm.hwpx_edit_dutmal_text !== 'function')
+        throw new Error('HwpxDutmalTextAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_dutmal_text(section, node, selected)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2260,11 +2260,11 @@ export async function createHwpxEditor(source) {
     equationScript(section, node) {
       ready();
       [section, node].forEach(uint);
-      if (typeof wasm.hwpx_edit_equation_script !== "function")
-        throw new Error("HwpxEquationScriptAbiUnavailable");
+      if (typeof wasm.hwpx_edit_equation_script !== 'function')
+        throw new Error('HwpxEquationScriptAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_equation_script(section, node)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2278,8 +2278,8 @@ export async function createHwpxEditor(source) {
     equationStyles(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_equation_styles !== "function")
-        throw new Error("HwpxEquationStylesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_equation_styles !== 'function')
+        throw new Error('HwpxEquationStylesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_equation_styles(section)) throw memory.error();
         return decodeEquationStyles(
@@ -2296,8 +2296,8 @@ export async function createHwpxEditor(source) {
     equationSources(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_equation_sources !== "function")
-        throw new Error("HwpxEquationSourcesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_equation_sources !== 'function')
+        throw new Error('HwpxEquationSourcesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_equation_sources(section)) throw memory.error();
         return decodeEquationSources(
@@ -2310,8 +2310,8 @@ export async function createHwpxEditor(source) {
     equationScripts(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_equation_scripts !== "function")
-        throw new Error("HwpxEquationSnapshotAbiUnavailable");
+      if (typeof wasm.hwpx_edit_equation_scripts !== 'function')
+        throw new Error('HwpxEquationSnapshotAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_equation_scripts(section)) throw memory.error();
         return decodeEquationScripts(
@@ -2325,15 +2325,15 @@ export async function createHwpxEditor(source) {
       ready();
       [section, node].forEach(uint);
       if (
-        typeof wasm.hwpx_edit_set_equation_script !== "function" ||
-        typeof wasm.hwpx_edit_equation_script_max_bytes !== "function"
+        typeof wasm.hwpx_edit_set_equation_script !== 'function' ||
+        typeof wasm.hwpx_edit_equation_script_max_bytes !== 'function'
       )
-        throw new Error("HwpxEquationScriptAbiUnavailable");
+        throw new Error('HwpxEquationScriptAbiUnavailable');
       const maxBytes = wasm.hwpx_edit_equation_script_max_bytes();
       if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff)
-        throw new Error("InvalidEquationScriptLimit");
+        throw new Error('InvalidEquationScriptLimit');
       const bytes = encodedText(value);
-      if (bytes.length > maxBytes) throw new Error("LimitExceeded");
+      if (bytes.length > maxBytes) throw new Error('LimitExceeded');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_equation_script(section, node, ptr, size)) throw memory.error();
       });
@@ -2341,8 +2341,8 @@ export async function createHwpxEditor(source) {
     equationSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_equation_sites !== "function")
-        throw new Error("HwpxEquationSitesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_equation_sites !== 'function')
+        throw new Error('HwpxEquationSitesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_equation_sites(section)) throw memory.error();
         return decodeEquationSites(
@@ -2355,8 +2355,8 @@ export async function createHwpxEditor(source) {
     dutmalSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_dutmal_sites !== "function")
-        throw new Error("HwpxDutmalSitesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_dutmal_sites !== 'function')
+        throw new Error('HwpxDutmalSitesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_dutmal_sites(section)) throw memory.error();
         return decodeDutmalSites(
@@ -2369,11 +2369,11 @@ export async function createHwpxEditor(source) {
     dutmalDisplayText(section, node) {
       ready();
       [section, node].forEach(uint);
-      if (typeof wasm.hwpx_edit_dutmal_display_text !== "function")
-        throw new Error("HwpxDutmalDisplayTextAbiUnavailable");
+      if (typeof wasm.hwpx_edit_dutmal_display_text !== 'function')
+        throw new Error('HwpxDutmalDisplayTextAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_dutmal_display_text(section, node)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2383,11 +2383,11 @@ export async function createHwpxEditor(source) {
     fieldLabelDisplayText(section, paragraph) {
       ready();
       [section, paragraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_field_label_display_text !== "function")
-        throw new Error("HwpxFieldLabelDisplayTextAbiUnavailable");
+      if (typeof wasm.hwpx_edit_field_label_display_text !== 'function')
+        throw new Error('HwpxFieldLabelDisplayTextAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_field_label_display_text(section, paragraph)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2399,15 +2399,15 @@ export async function createHwpxEditor(source) {
       [section, node].forEach(uint);
       const selected = dutmalKind(kind);
       if (
-        typeof wasm.hwpx_edit_set_dutmal_text !== "function" ||
-        typeof wasm.hwpx_edit_dutmal_text_max_bytes !== "function"
+        typeof wasm.hwpx_edit_set_dutmal_text !== 'function' ||
+        typeof wasm.hwpx_edit_dutmal_text_max_bytes !== 'function'
       )
-        throw new Error("HwpxDutmalTextAbiUnavailable");
+        throw new Error('HwpxDutmalTextAbiUnavailable');
       const maxBytes = wasm.hwpx_edit_dutmal_text_max_bytes();
       if (!Number.isInteger(maxBytes) || maxBytes <= 0 || maxBytes > 0xffffffff)
-        throw new Error("InvalidDutmalTextLimit");
+        throw new Error('InvalidDutmalTextLimit');
       const bytes = encodedText(value);
-      if (bytes.length > maxBytes) throw new Error("LimitExceeded");
+      if (bytes.length > maxBytes) throw new Error('LimitExceeded');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_dutmal_text(section, node, selected, ptr, size))
           throw memory.error();
@@ -2416,8 +2416,8 @@ export async function createHwpxEditor(source) {
     formSites(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_form_sites !== "function")
-        throw new Error("HwpxFormSitesAbiUnavailable");
+      if (typeof wasm.hwpx_edit_form_sites !== 'function')
+        throw new Error('HwpxFormSitesAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_form_sites(section)) throw memory.error();
         return decodeFormSites(
@@ -2430,8 +2430,8 @@ export async function createHwpxEditor(source) {
     formSourceAttributes(section, formNode) {
       ready();
       [section, formNode].forEach(uint);
-      if (typeof wasm.hwpx_edit_form_source_attributes !== "function")
-        throw new Error("HwpxFormSourceAbiUnavailable");
+      if (typeof wasm.hwpx_edit_form_source_attributes !== 'function')
+        throw new Error('HwpxFormSourceAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_form_source_attributes(section, formNode)) throw memory.error();
         return decodeFormSourceAttributes(
@@ -2444,11 +2444,11 @@ export async function createHwpxEditor(source) {
     checkBoxState(section, formNode) {
       ready();
       [section, formNode].forEach(uint);
-      if (typeof wasm.hwpx_edit_checkbox_state !== "function")
-        throw new Error("HwpxCheckBoxStateAbiUnavailable");
+      if (typeof wasm.hwpx_edit_checkbox_state !== 'function')
+        throw new Error('HwpxCheckBoxStateAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_checkbox_state(section, formNode)) throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2458,8 +2458,8 @@ export async function createHwpxEditor(source) {
     formSourceLayout(section, formNode) {
       ready();
       [section, formNode].forEach(uint);
-      if (typeof wasm.hwpx_edit_form_source_layout !== "function")
-        throw new Error("HwpxFormLayoutAbiUnavailable");
+      if (typeof wasm.hwpx_edit_form_source_layout !== 'function')
+        throw new Error('HwpxFormLayoutAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_form_source_layout(section, formNode)) throw memory.error();
         return decodeFormSourceLayout(
@@ -2472,10 +2472,10 @@ export async function createHwpxEditor(source) {
     setCheckBoxState(section, formNode, state) {
       ready();
       [section, formNode].forEach(uint);
-      if (typeof wasm.hwpx_edit_set_checkbox_state !== "function")
-        throw new Error("HwpxCheckBoxStateAbiUnavailable");
+      if (typeof wasm.hwpx_edit_set_checkbox_state !== 'function')
+        throw new Error('HwpxCheckBoxStateAbiUnavailable');
       const bytes = encodedText(state);
-      if (bytes.length > 32) throw new RangeError("LimitExceeded");
+      if (bytes.length > 32) throw new RangeError('LimitExceeded');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
       });
@@ -2484,8 +2484,8 @@ export async function createHwpxEditor(source) {
     manualFormulaResultDisplaySnapshot(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_manual_formula_result_display_snapshot !== "function")
-        throw new Error("HwpxFormulaResultSnapshotAbiUnavailable");
+      if (typeof wasm.hwpx_edit_manual_formula_result_display_snapshot !== 'function')
+        throw new Error('HwpxFormulaResultSnapshotAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_manual_formula_result_display_snapshot(section)) throw memory.error();
         return decodeFormulaResultDisplaySnapshot(
@@ -2498,8 +2498,8 @@ export async function createHwpxEditor(source) {
     pageAreaDeclarations(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_page_area_declarations !== "function")
-        throw new Error("HwpxPageAreaDeclarationsAbiUnavailable");
+      if (typeof wasm.hwpx_edit_page_area_declarations !== 'function')
+        throw new Error('HwpxPageAreaDeclarationsAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_page_area_declarations(section)) throw memory.error();
         return decodePageAreaDeclarations(
@@ -2512,8 +2512,8 @@ export async function createHwpxEditor(source) {
     manualFormulaResultParagraphs(section) {
       ready();
       uint(section);
-      if (typeof wasm.hwpx_edit_manual_formula_result_paragraphs !== "function")
-        throw new Error("HwpxManualFormulaResultParagraphAbiUnavailable");
+      if (typeof wasm.hwpx_edit_manual_formula_result_paragraphs !== 'function')
+        throw new Error('HwpxManualFormulaResultParagraphAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_manual_formula_result_paragraphs(section)) throw memory.error();
         return decodeFormulaResultParagraphs(
@@ -2526,8 +2526,8 @@ export async function createHwpxEditor(source) {
     manualFormulaResultTargets(section, paragraph) {
       ready();
       [section, paragraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_manual_formula_result_targets !== "function")
-        throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
+      if (typeof wasm.hwpx_edit_manual_formula_result_targets !== 'function')
+        throw new Error('HwpxManualFormulaResultTargetAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_manual_formula_result_targets(section, paragraph)) throw memory.error();
         return decodeFieldTargets(
@@ -2540,12 +2540,12 @@ export async function createHwpxEditor(source) {
     manualFormulaResultDisplayText(section, paragraph) {
       ready();
       [section, paragraph].forEach(uint);
-      if (typeof wasm.hwpx_edit_manual_formula_result_display_text !== "function")
-        throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
+      if (typeof wasm.hwpx_edit_manual_formula_result_display_text !== 'function')
+        throw new Error('HwpxManualFormulaResultTargetAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_manual_formula_result_display_text(section, paragraph))
           throw memory.error();
-        return new TextDecoder("utf-8", { fatal: true }).decode(
+        return new TextDecoder('utf-8', { fatal: true }).decode(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
@@ -2555,16 +2555,16 @@ export async function createHwpxEditor(source) {
     manualFormulaResultRangeTarget(section, paragraph, start, end) {
       ready();
       [section, paragraph, start, end].forEach(uint);
-      if (end < start) throw new Error("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_manual_formula_result_range_target !== "function")
-        throw new Error("HwpxManualFormulaResultTargetAbiUnavailable");
+      if (end < start) throw new Error('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_manual_formula_result_range_target !== 'function')
+        throw new Error('HwpxManualFormulaResultTargetAbiUnavailable');
       try {
         if (!wasm.hwpx_edit_manual_formula_result_range_target(section, paragraph, start, end))
           throw memory.error();
         const targets = decodeFieldTargets(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
-        if (targets.length > 1) throw new Error("InvalidFieldTargets");
+        if (targets.length > 1) throw new Error('InvalidFieldTargets');
         return targets[0] ?? null;
       } finally {
         wasm.hwpx_edit_output_free();
@@ -2573,13 +2573,13 @@ export async function createHwpxEditor(source) {
     fieldRangeTarget(section, paragraph, start, end) {
       ready();
       [section, paragraph, start, end].forEach(uint);
-      if (end < start) throw new Error("InvalidTextPosition");
-      if (typeof wasm.hwpx_edit_field_range_target !== "function") {
+      if (end < start) throw new Error('InvalidTextPosition');
+      if (typeof wasm.hwpx_edit_field_range_target !== 'function') {
         // Older artifacts retain their unique-label policy, never first-match.
         const targets = fieldLabels(section, paragraph).filter(
           (t) => start >= t.start && end <= t.end,
         );
-        if (targets.length > 1) throw new Error("UnsupportedFieldLabelRange");
+        if (targets.length > 1) throw new Error('UnsupportedFieldLabelRange');
         return targets[0] ?? null;
       }
       try {
@@ -2588,7 +2588,7 @@ export async function createHwpxEditor(source) {
         const targets = decodeFieldTargets(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
-        if (targets.length > 1) throw new Error("InvalidFieldTargets");
+        if (targets.length > 1) throw new Error('InvalidFieldTargets');
         return targets[0] ?? null;
       } finally {
         wasm.hwpx_edit_output_free();
@@ -2609,4 +2609,4 @@ export async function createHwpxEditor(source) {
     },
   };
 }
-import { paragraphMarginArgs } from "./paragraph-margin-args.mjs";
+import { paragraphMarginArgs } from './paragraph-margin-args.mjs';

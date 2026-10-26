@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { jpegFrameFixture } from "./jpeg-headers.mjs";
-import { jpegTablesOracle, quantizationFixture, huffmanFixture } from "./jpeg-tables.mjs";
+import assert from 'node:assert/strict';
+import { jpegFrameFixture } from './jpeg-headers.mjs';
+import { jpegTablesOracle, quantizationFixture, huffmanFixture } from './jpeg-tables.mjs';
 const words = (ns) => {
   const b = Buffer.alloc(ns.length * 4);
   ns.forEach((n, i) => b.writeUInt32LE(n, i * 4));

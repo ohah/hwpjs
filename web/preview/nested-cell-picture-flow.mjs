@@ -1,35 +1,35 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
-import { inlinePictureIndex } from "./picture-inline.mjs";
-import { pictureReferenceSpace } from "./picture-reference-space.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { layoutContent } from "./layout.mjs";
-import { compactTerminalTextFlow } from "./terminal-text-flow.mjs";
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
+import { inlinePictureIndex } from './picture-inline.mjs';
+import { pictureReferenceSpace } from './picture-reference-space.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { layoutContent } from './layout.mjs';
+import { compactTerminalTextFlow } from './terminal-text-flow.mjs';
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
 
 // Ownership stays on the source cell; paragraph-local flow only shifts references.
 export function inspectNestedCellPictureSources(input) {
   const fail = (reason, picture) => ({
-    state: "unavailable",
-    error: "UnsupportedNestedCellPictureSource",
+    state: 'unavailable',
+    error: 'UnsupportedNestedCellPictureSource',
     nestedCellPictureReason: reason,
     ...(picture ? { pictureNode: picture.pictureNode, paragraph: picture.paragraph } : {}),
   });
   for (const picture of input.pictures) {
-    if (picture.state !== "located") return fail("unlocated-picture", picture);
-    if (picture.captionPartial) return fail("incomplete-caption", picture);
+    if (picture.state !== 'located') return fail('unlocated-picture', picture);
+    if (picture.captionPartial) return fail('incomplete-caption', picture);
     if (
       picture.caption &&
       (picture.geometry?.treatAsCharacter !== false || picture.caption.side !== 3)
     )
-      return fail("caption-flow", picture);
-    if (picture.owner?.anchorNode !== picture.pictureNode) return fail("anchor-owner", picture);
+      return fail('caption-flow', picture);
+    if (picture.owner?.anchorNode !== picture.pictureNode) return fail('anchor-owner', picture);
     if (![true, false].includes(picture.geometry?.treatAsCharacter))
-      return fail("missing-inline-policy", picture);
+      return fail('missing-inline-policy', picture);
   }
   const inline = input.pictures.filter((p) => p.geometry.treatAsCharacter === true);
   const pictures = inlinePictureIndex({ paragraphs: input.paragraphs, pictures: inline });
   if (pictures.size !== inline.length || [...pictures.values()].some((p) => !p))
-    return fail("inline-picture-index");
+    return fail('inline-picture-index');
   const floating = input.pictures.filter((p) => p.geometry.treatAsCharacter === false);
   const units = new Set();
   for (const picture of input.pictures) {
@@ -40,18 +40,18 @@ export function inspectNestedCellPictureSources(input) {
     if (
       owners.length !== 1 ||
       (owners[0].textStartUnit ?? 0) !== 0 ||
-      owners[0].text[picture.anchorUnit] !== "\ufffc"
+      owners[0].text[picture.anchorUnit] !== '\ufffc'
     )
-      return fail("paragraph-anchor", picture);
-    if (units.has(key)) return fail("duplicate-anchor", picture);
+      return fail('paragraph-anchor', picture);
+    if (units.has(key)) return fail('duplicate-anchor', picture);
     units.add(key);
   }
-  return { state: "indexed", pictures, floating };
+  return { state: 'indexed', pictures, floating };
 }
 
 export function nestedCellPictureSources(input) {
   const result = inspectNestedCellPictureSources(input);
-  return result.state === "indexed"
+  return result.state === 'indexed'
     ? { pictures: result.pictures, floating: result.floating }
     : null;
 }
@@ -70,11 +70,11 @@ export function measureNestedCellPictureParagraph(
     (p) => p.section === paragraph.section && p.paragraph === paragraph.paragraph,
   );
   const references = pictureReferenceSpace(input.pictureReferences, { x: 0, y: height });
-  if (references.state !== "mapped")
-    return { state: "unavailable", error: "InvalidTableCellPictureReferences" };
+  if (references.state !== 'mapped')
+    return { state: 'unavailable', error: 'InvalidTableCellPictureReferences' };
   const shiftedPrevious = previous.map((p) => translatePicturePlacement(p, 0, -height));
-  if (shiftedPrevious.some((p) => p.state !== "translated"))
-    return { state: "unavailable", error: "InvalidNestedPictureProjection" };
+  if (shiftedPrevious.some((p) => p.state !== 'translated'))
+    return { state: 'unavailable', error: 'InvalidNestedPictureProjection' };
   const pictureFlow =
     current.length || previous.length
       ? {
@@ -90,13 +90,13 @@ export function measureNestedCellPictureParagraph(
       : null;
   const overlays = [...zeroWidthUnits, ...current.map((p) => p.anchorUnit)];
   const measure = (text, owner, unit, kind) =>
-    kind === "text" && overlays.includes(unit) && text !== ""
-      ? { ...textMeasurement(input.measure("", owner, unit, kind)), width: 0 }
+    kind === 'text' && overlays.includes(unit) && text !== ''
+      ? { ...textMeasurement(input.measure('', owner, unit, kind)), width: 0 }
       : input.measure(text, owner, unit, kind);
   let flow = entries.length
     ? measureInlineObjectParagraph(paragraph, entries, input.width, measure, {
         maxRows: input.maxRows,
-        allowLineOverflow: overflow !== "reject",
+        allowLineOverflow: overflow !== 'reject',
         compactLines: true,
         includeTerminalAfter: paragraph !== input.paragraphs.at(-1),
         zeroWidthUnits: overlays,
@@ -111,12 +111,12 @@ export function measureNestedCellPictureParagraph(
           { documentBody: true, includeTerminalAfter: paragraph !== input.paragraphs.at(-1) },
         ),
       );
-  if (flow.state === "unavailable")
-    return flow.error === "UnsupportedInlinePictureFlow"
-      ? { ...flow, error: "UnsupportedNestedCellPictureSource" }
+  if (flow.state === 'unavailable')
+    return flow.error === 'UnsupportedInlinePictureFlow'
+      ? { ...flow, error: 'UnsupportedNestedCellPictureSource' }
       : flow;
   if (pictureFlow && !flow.spatialRows)
-    return { state: "unavailable", error: "UnsupportedNestedCellPictureSource" };
+    return { state: 'unavailable', error: 'UnsupportedNestedCellPictureSource' };
   const added = (flow.flowPictures ?? []).filter(
     (p) => p.paragraph === paragraph.paragraph && p.section === paragraph.section,
   );
@@ -129,10 +129,10 @@ export function measureNestedCellPictureParagraph(
         ).length !== 1,
     )
   )
-    return { state: "unavailable", error: "UnsupportedNestedCellPictureSource" };
+    return { state: 'unavailable', error: 'UnsupportedNestedCellPictureSource' };
   const shifted = added.map((p) => translatePicturePlacement(p, 0, height));
-  if (shifted.some((p) => p.state !== "translated"))
-    return { state: "unavailable", error: "InvalidNestedPictureProjection" };
+  if (shifted.some((p) => p.state !== 'translated'))
+    return { state: 'unavailable', error: 'InvalidNestedPictureProjection' };
   const occupiedBottom = added.reduce(
     (end, p) =>
       [0, 1].includes(p.flow?.textWrap)

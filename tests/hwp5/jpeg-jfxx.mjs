@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 export function jpegJfxxFixture(code, width = 1, height = 1) {
   if (code !== 17 && code !== 19) return Buffer.from([74, 70, 88, 88, 0, code, 0, 255, 17, 128]);
@@ -9,7 +9,7 @@ export function jpegJfxxFixture(code, width = 1, height = 1) {
 }
 export function jpegJfxxOracle(b) {
   assert.ok(b.length >= 6 && b.length <= 65533);
-  assert.deepEqual(b.subarray(0, 5), Buffer.from("JFXX\0"));
+  assert.deepEqual(b.subarray(0, 5), Buffer.from('JFXX\0'));
   const code = b[5],
     known = code === 17 || code === 19,
     w = known ? b[6] : 0,

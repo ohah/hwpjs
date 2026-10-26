@@ -1,4 +1,4 @@
-import { validChartPie } from "./chart-pie-paint.mjs";
+import { validChartPie } from './chart-pie-paint.mjs';
 export function validChartPie3D(value) {
   if (
     !value ||
@@ -76,7 +76,7 @@ export function paintChartPie3D(ctx, value, plot, x, y, color) {
       ctx.ellipse(cx, cy + thickness, radius, ry, 0, wall.end_angle, wall.start_angle, true);
       ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
       ctx.fill();
     }
     for (const { slice, cx, cy, radius } of rows) {

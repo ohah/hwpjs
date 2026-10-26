@@ -11,9 +11,9 @@ export function gradientStepPosition(position, steps, centerPercent) {
     centerPercent < 0 ||
     centerPercent > 100
   )
-    throw new Error("InvalidGradientStepPosition");
+    throw new Error('InvalidGradientStepPosition');
   if (steps === 0) return null;
-  if (steps === 1) throw new Error("UnsupportedSingleGradientStep");
+  if (steps === 1) throw new Error('UnsupportedSingleGradientStep');
   const center = centerPercent / 100;
   const shaped =
     position === 0

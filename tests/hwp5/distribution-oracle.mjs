@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { createCipheriv, createDecipheriv } from "node:crypto";
-import { deflateRawSync, inflateRawSync, crc32 } from "node:zlib";
+import assert from 'node:assert/strict';
+import { createCipheriv, createDecipheriv } from 'node:crypto';
+import { deflateRawSync, inflateRawSync, crc32 } from 'node:zlib';
 export const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -29,8 +29,8 @@ function key(data) {
 }
 function aes(plain, k, decrypt) {
   const c = decrypt
-    ? createDecipheriv("aes-128-ecb", k, null)
-    : createCipheriv("aes-128-ecb", k, null);
+    ? createDecipheriv('aes-128-ecb', k, null)
+    : createCipheriv('aes-128-ecb', k, null);
   c.setAutoPadding(false);
   return Buffer.concat([c.update(plain), c.final()]);
 }

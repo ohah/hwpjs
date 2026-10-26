@@ -1,12 +1,12 @@
-import { decodeCharacterSnapshot } from "./character-snapshot-json.mjs";
+import { decodeCharacterSnapshot } from './character-snapshot-json.mjs';
 export function decodeCharacterStrikeStyles(bytes) {
   const rows = decodeCharacterSnapshot(
     bytes,
-    ["id", "raw_style", "raw_color", "shape", "color"],
-    "InvalidCharacterStrikeStyles",
+    ['id', 'raw_style', 'raw_color', 'shape', 'color'],
+    'InvalidCharacterStrikeStyles',
   );
   const text = (value) =>
-    value === null || (typeof value === "string" && new TextEncoder().encode(value).length <= 4096);
+    value === null || (typeof value === 'string' && new TextEncoder().encode(value).length <= 4096);
   const color = (value) =>
     value === null || (Number.isInteger(value) && value >= 0 && value <= 0xffffffff);
   for (const row of rows) {
@@ -20,7 +20,7 @@ export function decodeCharacterStrikeStyles(bytes) {
           row.color !== null
         : row.raw_color !== null || !text(row.shape) || !text(row.color)
     )
-      throw new Error("InvalidCharacterStrikeStyles");
+      throw new Error('InvalidCharacterStrikeStyles');
   }
   return rows;
 }

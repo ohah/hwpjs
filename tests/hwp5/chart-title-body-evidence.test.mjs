@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { titleBodyFixture as fixture } from "./chart-title-body-fixture.mjs";
-import { observeChartTitleBody } from "./chart-title-body-evidence.mjs";
-import { observeChartSection } from "./chart-section-evidence.mjs";
-import { incompleteTitleBody } from "./chart-title-body-errors.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { titleBodyFixture as fixture } from './chart-title-body-fixture.mjs';
+import { observeChartTitleBody } from './chart-title-body-evidence.mjs';
+import { observeChartSection } from './chart-section-evidence.mjs';
+import { incompleteTitleBody } from './chart-title-body-errors.mjs';
 const read = (f, b = f.bytes) => observeChartTitleBody(b, f.offset, f.types, f.objects, f.strings);
-test("Title ChartText inline TextBlock Section offsets scope null empty aliases fresh and auxiliary Backdrop", () => {
+test('Title ChartText inline TextBlock Section offsets scope null empty aliases fresh and auxiliary Backdrop', () => {
   for (const offset of [0, 1, 17, 257])
     for (const known of [false, true])
-      for (const text of ["null", "empty", "alias", "fresh", "font"])
+      for (const text of ['null', 'empty', 'alias', 'fresh', 'font'])
         for (const freshName of [false, true])
           for (const background of [false, true]) {
             const f = fixture(offset, known, text, freshName, background),
@@ -20,13 +20,13 @@ test("Title ChartText inline TextBlock Section offsets scope null empty aliases 
             assert.equal(r.objects.size, f.nextId + 2);
             assert.equal(r.types.size, known ? 10 : f.seen.size);
             assert.equal(r.section.section.suffix, 0xa55a);
-            assert.equal(r.body.text.text === null, text === "null");
-            if (text === "empty") assert.equal(r.body.text.text.hex, "");
-            if (text === "font") assert.equal(r.body.text.text.id, f.fontName);
+            assert.equal(r.body.text.text === null, text === 'null');
+            if (text === 'empty') assert.equal(r.body.text.text.hex, '');
+            if (text === 'font') assert.equal(r.body.text.text.id, f.fontName);
             assert.equal(Boolean(r.body.text.background), background);
             const sectionRaw = f.rawFields.filter((x) => x.start >= f.sectionStart);
             assert.deepEqual(r.section.rawFields, sectionRaw);
-            for (const v of sectionRaw) assert.equal(r.section.section["raw" + v.n], v.hex);
+            for (const v of sectionRaw) assert.equal(r.section.section['raw' + v.n], v.hex);
             assert.equal(r.body.objects.size + 3, r.objects.size);
             for (const id of r.section.section.ids) assert(!r.body.objects.has(id));
             if (!known) assert(!r.body.types.has(31 + 37 * 6));
@@ -40,13 +40,13 @@ test("Title ChartText inline TextBlock Section offsets scope null empty aliases 
             f.objects.clear();
             f.strings.clear();
             assert.equal(r.section.section.raw26, saved);
-            assert.notEqual(saved, "00".repeat(26));
+            assert.notEqual(saved, '00'.repeat(26));
           }
 });
-test("Title and standalone Section every cut exact errors late types global duplicates and nonempty Picture", () => {
+test('Title and standalone Section every cut exact errors late types global duplicates and nonempty Picture', () => {
   for (const known of [false, true])
     for (const background of [false, true]) {
-      const f = fixture(17, known, "fresh", true, background),
+      const f = fixture(17, known, 'fresh', true, background),
         r = read(f);
       for (let cut = f.offset; cut < f.end; cut++)
         assert.throws(() => read(f, f.bytes.subarray(0, cut)), incompleteTitleBody);
@@ -59,7 +59,7 @@ test("Title and standalone Section every cut exact errors late types global dupl
               r.body.types,
               r.body.objects,
             ),
-          (e) => e.constructor === Error && e.message === "IncompleteChartSectionObservation",
+          (e) => e.constructor === Error && e.message === 'IncompleteChartSectionObservation',
         );
       // Nullable text/auxiliary positions are references, not required inline IDs.
       // Their null layouts are tested above with the inline payload removed.
@@ -74,10 +74,10 @@ test("Title and standalone Section every cut exact errors late types global dupl
             (e) =>
               e.constructor === Error &&
               [
-                "UnsupportedChartTitleBodyObservationObject",
-                "UnsupportedSeriesLabelObservationObject",
-                "UnsupportedAxisObservationObject",
-                "UnsupportedChartSectionObservationObject",
+                'UnsupportedChartTitleBodyObservationObject',
+                'UnsupportedSeriesLabelObservationObject',
+                'UnsupportedAxisObservationObject',
+                'UnsupportedChartSectionObservationObject',
               ].includes(e.message),
           );
         }
@@ -91,9 +91,9 @@ test("Title and standalone Section every cut exact errors late types global dupl
               (e) =>
                 e.constructor === Error &&
                 [
-                  "UnsupportedChartTitleBodyObservationType",
-                  "UnsupportedAxisObservationType",
-                  "UnsupportedChartSectionObservationType",
+                  'UnsupportedChartTitleBodyObservationType',
+                  'UnsupportedAxisObservationType',
+                  'UnsupportedChartSectionObservationType',
                 ].includes(e.message),
             );
           }
@@ -106,9 +106,9 @@ test("Title and standalone Section every cut exact errors late types global dupl
             (e) =>
               e.constructor === Error &&
               [
-                "UnsupportedChartTitleBodyObservationType",
-                "UnsupportedAxisObservationType",
-                "UnsupportedChartSectionObservationType",
+                'UnsupportedChartTitleBodyObservationType',
+                'UnsupportedAxisObservationType',
+                'UnsupportedChartSectionObservationType',
               ].includes(e.message),
           );
         }
@@ -117,13 +117,13 @@ test("Title and standalone Section every cut exact errors late types global dupl
         b.writeUInt32LE(id, r.section.dataOffset);
         assert.throws(
           () => read(f, b),
-          (e) => e.constructor === Error && e.message === "UnsupportedChartSectionObservationData",
+          (e) => e.constructor === Error && e.message === 'UnsupportedChartSectionObservationData',
         );
       }
       assert.deepEqual(read(f), r);
     }
 });
-test("Title caller errors and incomplete classification do not hide host failures", () => {
+test('Title caller errors and incomplete classification do not hide host failures', () => {
   const f = fixture();
   for (const offset of [-1, 0.5, NaN, f.end + 1])
     assert.throws(
@@ -131,6 +131,6 @@ test("Title caller errors and incomplete classification do not hide host failure
       RangeError,
     );
   for (const C of [WebAssembly.RuntimeError, TypeError, RangeError])
-    assert(!incompleteTitleBody(new C("IncompleteChartSectionObservation")));
-  assert(incompleteTitleBody(Error("IncompleteChartSectionObservation")));
+    assert(!incompleteTitleBody(new C('IncompleteChartSectionObservation')));
+  assert(incompleteTitleBody(Error('IncompleteChartSectionObservation')));
 });

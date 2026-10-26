@@ -4,7 +4,7 @@ export function attachHwp5ShapePoints(editor, content, contract) {
   content[contract.errors] = [];
   if (!editor) return content;
   const components = content.hwp5DrawingComponents ?? [],
-    layout = "observed_i32_points";
+    layout = 'observed_i32_points';
   for (const section of new Set(
     components.filter((r) => r.kind_id === contract.kind).map((r) => r.section),
   )) {

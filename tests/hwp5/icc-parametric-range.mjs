@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { powerRangeInput, verifyRange } from "./icc-power-range.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { reference as linearRange } from "./icc-linear-range.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { powerRangeInput, verifyRange } from './icc-power-range.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { reference as linearRange } from './icc-linear-range.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
+import { cmp } from './icc-power-reference.mjs';
 export function referenceLinearSource(kind, raw) {
   const active = domain(kind, raw);
   if (active && cmp(active.start, [0n, 1n]) === 0) return null;

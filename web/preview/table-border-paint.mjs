@@ -1,8 +1,8 @@
-import { validDrawingFill } from "./drawing-fill-validation.mjs";
+import { validDrawingFill } from './drawing-fill-validation.mjs';
 // 행의 변환/clip은 호출자가 공유 paintRowTransform으로 적용합니다.
-import { paintTableBackground } from "./table-background-paint.mjs";
-import { validTableImageFill } from "./table-image-fill.mjs";
-import { tableBorderStrokeParts } from "./table-border-stroke.mjs";
+import { paintTableBackground } from './table-background-paint.mjs';
+import { validTableImageFill } from './table-image-fill.mjs';
+import { tableBorderStrokeParts } from './table-border-stroke.mjs';
 export function paintTableBorder(ctx, box, plan, scrollTop, { bitmap } = {}) {
   if (
     !box ||
@@ -11,14 +11,14 @@ export function paintTableBorder(ctx, box, plan, scrollTop, { bitmap } = {}) {
     ) ||
     box.width <= 0 ||
     box.height <= 0 ||
-    !["none", "strokes"].includes(plan?.state)
+    !['none', 'strokes'].includes(plan?.state)
   )
     return false;
   if (plan.fill && !validDrawingFill(plan.fill) && !validTableImageFill(plan.fill)) return false;
-  if (plan.state === "none")
+  if (plan.state === 'none')
     return (
       !plan.fill ||
-      (plan.fill.state === "image" && !bitmap) ||
+      (plan.fill.state === 'image' && !bitmap) ||
       paintTableBackground(ctx, box, plan.fill, scrollTop, bitmap)
     );
   if (
@@ -51,12 +51,12 @@ export function paintTableBorder(ctx, box, plan, scrollTop, { bitmap } = {}) {
   try {
     if (
       plan.fill &&
-      !(plan.fill.state === "image" && !bitmap) &&
+      !(plan.fill.state === 'image' && !bitmap) &&
       !paintTableBackground(ctx, box, plan.fill, scrollTop, bitmap)
     )
       return false;
     ctx.setLineDash([]);
-    ctx.lineCap = "butt";
+    ctx.lineCap = 'butt';
     for (const [index, stroke] of plan.strokes.entries()) {
       ctx.strokeStyle = stroke.color;
       const [x1, y1, x2, y2] = ends[stroke.edge];

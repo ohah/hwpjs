@@ -1,9 +1,9 @@
-import { drawingQuadGeometry } from "./drawing-quad-geometry.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { drawingQuadGeometry } from './drawing-quad-geometry.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Map original text coordinates to the already-composed drawing corners.
 export function drawingTextTransform(source, origin) {
-  const fail = (error) => ({ state: "unavailable", error }),
+  const fail = (error) => ({ state: 'unavailable', error }),
     points = source?.rectangle?.points;
   if (
     !Array.isArray(points) ||
@@ -12,7 +12,7 @@ export function drawingTextTransform(source, origin) {
       (p) => Array.isArray(p) && p.length === 2 && Array.from(p).every(Number.isFinite),
     )
   )
-    return fail("MissingDrawingLocalRectangle");
+    return fail('MissingDrawingLocalRectangle');
   const [a, b, c, d] = points;
   if (
     a[0] !== 0 ||
@@ -24,21 +24,21 @@ export function drawingTextTransform(source, origin) {
     b[0] <= 0 ||
     d[1] <= 0
   )
-    return fail("UnsupportedDrawingLocalRectangle");
+    return fail('UnsupportedDrawingLocalRectangle');
   if (
     source.rendering?.reverse !== null ||
     !Array.isArray(source.rendering?.flip) ||
     source.rendering.flip.length !== 2 ||
     !Array.from(source.rendering.flip).every((v) => v === false)
   )
-    return fail("UnsupportedDrawingTextFlip");
+    return fail('UnsupportedDrawingTextFlip');
   const geometry = drawingQuadGeometry(source, origin);
-  if (geometry.state !== "mapped") return fail(geometry.state);
+  if (geometry.state !== 'mapped') return fail(geometry.state);
   const width = hwpUnitPixels(b[0]),
     height = hwpUnitPixels(d[1]);
   const [ma, mb, mc, md, me, mf] = geometry.matrix;
   const transform = [ma / width, mb / width, mc / height, md / height, me, mf];
   if (![width, height, ...transform].every(Number.isFinite) || width <= 0 || height <= 0)
-    return fail("InvalidDrawingTextTransform");
-  return { state: "mapped", width, height, transform };
+    return fail('InvalidDrawingTextTransform');
+  return { state: 'mapped', width, height, transform };
 }

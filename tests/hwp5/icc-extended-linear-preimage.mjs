@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { cmp } from "./icc-power-reference.mjs";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { linearPreimageReference } from "./icc-linear-preimage-reference.mjs";
+import assert from 'node:assert/strict';
+import { cmp } from './icc-power-reference.mjs';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { linearPreimageReference } from './icc-linear-preimage-reference.mjs';
 export function extendedLinearInput(line, y) {
   const out = Buffer.alloc(172);
   [...line.start, ...line.end].forEach((v, i) => out.writeBigUInt64BE(v, i * 8));

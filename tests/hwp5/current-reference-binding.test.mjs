@@ -1,12 +1,12 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { attachHwp5CurrentReferences } from "../../web/preview/hwp5-current-reference-content.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { attachHwp5CurrentReferences } from '../../web/preview/hwp5-current-reference-content.mjs';
 
 // Deliberately unrelated to display ordinals: these are native-issued handles.
-const reference = (section, id, kind = "original") =>
+const reference = (section, id, kind = 'original') =>
   Object.freeze({
-    scope: "native-session-73",
-    epoch: "18446744073709551615",
+    scope: 'native-session-73',
+    epoch: '18446744073709551615',
     kind,
     section,
     id: String(id),
@@ -24,7 +24,7 @@ const contentOf = (pairs) => ({
 function fixture(counts, { source = true } = {}) {
   const refs = counts.map((count, section) =>
     Array.from({ length: count }, (_, i) =>
-      reference(section, 900000 - i, i % 2 ? "generated" : "original"),
+      reference(section, 900000 - i, i % 2 ? 'generated' : 'original'),
     ),
   );
   const calls = [];
@@ -36,27 +36,27 @@ function fixture(counts, { source = true } = {}) {
     supportsCurrentReferences: () => true,
     supportsCurrentSourceReferences: () => source,
     paragraphCount: (section) => counts[section],
-    currentSourceReferences: (section, options) => query("source", section, options),
-    currentReferences: (section, options) => query("full", section, options),
+    currentSourceReferences: (section, options) => query('source', section, options),
+    currentReferences: (section, options) => query('full', section, options),
   };
   return { refs, calls, editor, preview: previewOf(counts) };
 }
 function assertUnbound(content, section) {
   for (const row of content.paragraphs.filter((row) => row.section === section)) {
-    assert.equal(Object.hasOwn(row, "currentReference"), false);
+    assert.equal(Object.hasOwn(row, 'currentReference'), false);
   }
 }
 function assertMismatch(content, section = 0) {
   assert.deepEqual(content.currentReferenceErrors, [
-    { section, error: "CurrentReferenceDisplayMismatch" },
+    { section, error: 'CurrentReferenceDisplayMismatch' },
   ]);
   assertUnbound(content, section);
 }
 
-test("source-only binding ignores the full stream containing created cells and preserves native handles", () => {
+test('source-only binding ignores the full stream containing created cells and preserves native handles', () => {
   const f = fixture([3]);
   f.editor.currentReferences = () => {
-    throw new Error("full stream includes created cells");
+    throw new Error('full stream includes created cells');
   };
   const content = contentOf([
     [0, 2],
@@ -67,14 +67,14 @@ test("source-only binding ignores the full stream containing created cells and p
   assert.deepEqual(content.currentReferenceErrors, []);
   for (const row of content.paragraphs) {
     assert.strictEqual(row.currentReference, f.refs[0][row.paragraph]);
-    assert.equal(row.currentReference.scope, "native-session-73");
-    assert.equal(row.currentReference.epoch, "18446744073709551615");
+    assert.equal(row.currentReference.scope, 'native-session-73');
+    assert.equal(row.currentReference.epoch, '18446744073709551615');
     assert.notEqual(row.currentReference.id, String(row.paragraph));
   }
-  assert.deepEqual(f.calls, [{ kind: "source", section: 0, first: 0, count: 3 }]);
+  assert.deepEqual(f.calls, [{ kind: 'source', section: 0, first: 0, count: 3 }]);
 });
 
-test("display context across 1023/1024 queries only its occupied chunks once", () => {
+test('display context across 1023/1024 queries only its occupied chunks once', () => {
   const f = fixture([4099, 5]);
   const content = contentOf([
     [0, 1023],
@@ -84,8 +84,8 @@ test("display context across 1023/1024 queries only its occupied chunks once", (
   ]);
   attachHwp5CurrentReferences(f.editor, f.preview, content);
   assert.deepEqual(f.calls, [
-    { kind: "source", section: 0, first: 0, count: 1024 },
-    { kind: "source", section: 0, first: 1024, count: 1024 },
+    { kind: 'source', section: 0, first: 0, count: 1024 },
+    { kind: 'source', section: 0, first: 1024, count: 1024 },
   ]);
   assert.deepEqual(content.currentReferenceErrors, []);
   for (const row of content.paragraphs)
@@ -96,7 +96,7 @@ test("display context across 1023/1024 queries only its occupied chunks once", (
   );
 });
 
-test("legacy ABI fallback binds section-local ordinals and clips the last chunk", () => {
+test('legacy ABI fallback binds section-local ordinals and clips the last chunk', () => {
   const f = fixture([1027, 2], { source: false });
   const content = contentOf([
     [0, 1026],
@@ -105,9 +105,9 @@ test("legacy ABI fallback binds section-local ordinals and clips the last chunk"
   ]);
   attachHwp5CurrentReferences(f.editor, f.preview, content);
   assert.deepEqual(f.calls, [
-    { kind: "full", section: 0, first: 1024, count: 3 },
-    { kind: "full", section: 0, first: 0, count: 1024 },
-    { kind: "full", section: 1, first: 0, count: 2 },
+    { kind: 'full', section: 0, first: 1024, count: 3 },
+    { kind: 'full', section: 0, first: 0, count: 1024 },
+    { kind: 'full', section: 1, first: 0, count: 2 },
   ]);
   assert.deepEqual(content.currentReferenceErrors, []);
   for (const row of content.paragraphs)
@@ -118,13 +118,13 @@ test("legacy ABI fallback binds section-local ordinals and clips the last chunk"
   );
 });
 
-test("absent current-reference ABI strips stale handles without any native query", () => {
+test('absent current-reference ABI strips stale handles without any native query', () => {
   for (const available of [undefined, false]) {
     const content = contentOf([
       [0, 0],
       [1, 1],
     ]);
-    const forbidden = () => assert.fail("unavailable ABI must not be queried");
+    const forbidden = () => assert.fail('unavailable ABI must not be queried');
     const editor = {
       paragraphCount: forbidden,
       currentReferences: forbidden,
@@ -138,7 +138,7 @@ test("absent current-reference ABI strips stale handles without any native query
   }
 });
 
-test("native/preview paragraph-count disagreement refuses binding before window queries", () => {
+test('native/preview paragraph-count disagreement refuses binding before window queries', () => {
   const f = fixture([2]);
   const content = contentOf([[0, 0]]);
   attachHwp5CurrentReferences(f.editor, previewOf([3]), content);
@@ -146,7 +146,7 @@ test("native/preview paragraph-count disagreement refuses binding before window 
   assert.deepEqual(f.calls, []);
 });
 
-test("a malformed later window leaves no partial section bindings", () => {
+test('a malformed later window leaves no partial section bindings', () => {
   const corruptions = [
     (window) => ({ ...window, total: window.total + 1 }),
     (window) => ({ ...window, first: 0 }),
@@ -155,7 +155,7 @@ test("a malformed later window leaves no partial section bindings", () => {
     (window) => ({ ...window, references: [reference(1, 17), ...window.references.slice(1)] }),
     (window) => ({
       ...window,
-      references: [reference(0, 17, "cell"), ...window.references.slice(1)],
+      references: [reference(0, 17, 'cell'), ...window.references.slice(1)],
     }),
   ];
   for (const [index, corrupt] of corruptions.entries()) {
@@ -175,7 +175,7 @@ test("a malformed later window leaves no partial section bindings", () => {
   }
 });
 
-test("a missing displayed binding rolls back its section while another section succeeds", () => {
+test('a missing displayed binding rolls back its section while another section succeeds', () => {
   const f = fixture([2, 2]);
   const content = contentOf([
     [0, 0],
@@ -187,21 +187,21 @@ test("a missing displayed binding rolls back its section while another section s
   assert.strictEqual(content.paragraphs[2].currentReference, f.refs[1][0]);
 });
 
-test("source-query failure is reported per section without falling back or leaving stale handles", () => {
+test('source-query failure is reported per section without falling back or leaving stale handles', () => {
   const f = fixture([2, 2]);
   const query = f.editor.currentSourceReferences;
   f.editor.currentSourceReferences = (section, options) => {
-    if (section === 0) throw new Error("InvalidHwp5CurrentReference");
+    if (section === 0) throw new Error('InvalidHwp5CurrentReference');
     return query(section, options);
   };
-  f.editor.currentReferences = () => assert.fail("source failure must not switch ordinal domains");
+  f.editor.currentReferences = () => assert.fail('source failure must not switch ordinal domains');
   const content = contentOf([
     [0, 0],
     [1, 1],
   ]);
   attachHwp5CurrentReferences(f.editor, f.preview, content);
   assert.deepEqual(content.currentReferenceErrors, [
-    { section: 0, error: "InvalidHwp5CurrentReference" },
+    { section: 0, error: 'InvalidHwp5CurrentReference' },
   ]);
   assertUnbound(content, 0);
   assert.strictEqual(content.paragraphs[1].currentReference, f.refs[1][1]);

@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-const wasm = () => readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+const wasm = () => readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
 const options = {
   rows: 2,
   columns: 2,
@@ -10,9 +10,9 @@ const options = {
   rowHeight: 17,
   resources: { paragraph: 1, character: 1, style: 0, border_fill: 1 },
 };
-const source = () => readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx");
+const source = () => readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx');
 
-test("public table creation and cell input save reopen undo redo exact bytes", async () => {
+test('public table creation and cell input save reopen undo redo exact bytes', async () => {
   const editor = await createHwpxEditor(wasm());
   const reopened = await createHwpxEditor(wasm());
   const bytes = source();
@@ -24,21 +24,21 @@ test("public table creation and cell input save reopen undo redo exact bytes", a
       assert(resources[kind].includes(id));
     assert.deepEqual(Buffer.from(editor.save()), bytes);
     const identity = editor.insertTable(0, 2, 0, options);
-    assert.equal(typeof identity, "string");
+    assert.equal(typeof identity, 'string');
     const [table] = editor.createdTables(0);
     assert.equal(table.identity, identity);
     assert.deepEqual(
       table.cells.map((c) => c.width),
       [51, 50, 51, 50],
     );
-    editor.setCreatedCellText(0, identity, 0, 0, "입력😀<&\r");
+    editor.setCreatedCellText(0, identity, 0, 0, '입력😀<&\r');
     assert.deepEqual(Buffer.from(editor.saveForDisplay()), bytes);
-    assert.equal(editor.createdTables(0)[0].cells[0].text, "입력😀<&\r");
+    assert.equal(editor.createdTables(0)[0].cells[0].text, '입력😀<&\r');
     const saved = editor.save();
     reopened.open(saved);
-    assert.equal(reopened.anchorText(0, 3), "입력😀<&\r");
+    assert.equal(reopened.anchorText(0, 3), '입력😀<&\r');
     assert.equal(editor.undo(), true);
-    assert.equal(editor.createdTables(0)[0].cells[0].text, "");
+    assert.equal(editor.createdTables(0)[0].cells[0].text, '');
     assert.equal(editor.undo(), true);
     assert.deepEqual(editor.createdTables(0), []);
     assert.deepEqual(Buffer.from(editor.save()), bytes);
@@ -65,7 +65,7 @@ test("public table creation and cell input save reopen undo redo exact bytes", a
   }
 });
 
-test("public table creation without history rejects malformed requests atomically", async () => {
+test('public table creation without history rejects malformed requests atomically', async () => {
   const editor = await createHwpxEditor(wasm());
   const bytes = source();
   try {
@@ -81,11 +81,11 @@ test("public table creation without history rejects malformed requests atomicall
       { rows: NaN },
       { columns: Infinity },
       { width: 101.5 },
-      { rowHeight: "17" },
+      { rowHeight: '17' },
       { rows: true },
       { rows: 0x100000000 },
       { resources: [] },
-      ...[NaN, Infinity, -1, 1.5, "1", true, 0x100000000].map((character) => ({
+      ...[NaN, Infinity, -1, 1.5, '1', true, 0x100000000].map((character) => ({
         resources: { ...options.resources, character },
       })),
     ]) {
@@ -93,7 +93,7 @@ test("public table creation without history rejects malformed requests atomicall
       assert.deepEqual(Buffer.from(editor.save()), bytes);
       assert.deepEqual(editor.createdTables(0), []);
     }
-    for (const invalid of [NaN, Infinity, -1, 1.5, "0", true, 0x100000000]) {
+    for (const invalid of [NaN, Infinity, -1, 1.5, '0', true, 0x100000000]) {
       for (const coordinates of [
         [invalid, 2, 0],
         [0, invalid, 0],
@@ -101,7 +101,7 @@ test("public table creation without history rejects malformed requests atomicall
       ]) {
         assert.throws(
           () => editor.insertTable(...coordinates, options),
-          (error) => error instanceof RangeError && error.message === "InvalidInteger",
+          (error) => error instanceof RangeError && error.message === 'InvalidInteger',
         );
         assert.deepEqual(Buffer.from(editor.save()), bytes);
         assert.deepEqual(editor.createdTables(0), []);
@@ -110,14 +110,14 @@ test("public table creation without history rejects malformed requests atomicall
     assert.throws(() => editor.insertTable(99, 2, 0, options), /InvalidSectionIndex/);
     assert.throws(() => editor.insertTable(0, 2, 0xffffffff, options));
     const id = editor.insertTable(0, 2, 0, options);
-    editor.setCreatedCellText(0, id, 1, 1, "끝😀");
-    assert.equal(editor.createdTables(0)[0].cells[3].text, "끝😀");
+    editor.setCreatedCellText(0, id, 1, 1, '끝😀');
+    assert.equal(editor.createdTables(0)[0].cells[3].text, '끝😀');
   } finally {
     editor.close();
   }
 });
 
-test("public table creation checkpoint budget refusal leaves no current table or history", async () => {
+test('public table creation checkpoint budget refusal leaves no current table or history', async () => {
   const editor = await createHwpxEditor(wasm());
   const bytes = source();
   try {
@@ -135,14 +135,14 @@ test("public table creation checkpoint budget refusal leaves no current table or
   }
 });
 
-test("table creation resource options include current cloned formats without changing history", async () => {
+test('table creation resource options include current cloned formats without changing history', async () => {
   const editor = await createHwpxEditor(wasm());
   try {
     editor.open(source());
     editor.enableHistory();
     const original = editor.tableCreationResources();
     assert.equal(editor.undo(), false);
-    editor.setParagraphAlignment({ section: 0, paragraph: 2, alignment: "CENTER" });
+    editor.setParagraphAlignment({ section: 0, paragraph: 2, alignment: 'CENTER' });
     const paragraph = editor.paragraphShapeId(0, 2);
     assert(!original.paragraph.includes(paragraph));
     editor.setCharacterProperties({

@@ -1,5 +1,5 @@
-import { paragraphSpacingArgs } from "../../js/paragraph-spacing-args.mjs";
-import { currentParagraphSpacing } from "./paragraph-spacing-source.mjs";
+import { paragraphSpacingArgs } from '../../js/paragraph-spacing-args.mjs';
+import { currentParagraphSpacing } from './paragraph-spacing-source.mjs';
 
 // A percentage step never converts fixed HWPUNIT spacing or guesses absence.
 export function steppedParagraphSpacing(shape, direction) {
@@ -9,6 +9,6 @@ export function steppedParagraphSpacing(shape, direction) {
   const value = current.value;
   const next = Math.max(5, Math.min(500, value + direction * 5));
   if (next === value) return null;
-  paragraphSpacingArgs("PERCENT", next);
+  paragraphSpacingArgs('PERCENT', next);
   return next;
 }

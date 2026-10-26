@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
 
 function input(a, b, slope = 1) {
   const out = Buffer.alloc(540);

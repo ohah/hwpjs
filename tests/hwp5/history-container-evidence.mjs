@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { inflateRawSync } from "node:zlib";
-import { historyExpected } from "./history.mjs";
-import { consumeContainerStreams } from "./container-report-wire.mjs";
-import { lastDocumentEvidence } from "./history-last-document-evidence.mjs";
+import assert from 'node:assert/strict';
+import { inflateRawSync } from 'node:zlib';
+import { historyExpected } from './history.mjs';
+import { consumeContainerStreams } from './container-report-wire.mjs';
+import { lastDocumentEvidence } from './history-last-document-evidence.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -12,16 +12,16 @@ export function historyContainerEvidence(base, model, o = {}) {
   if (o.mode === 0)
     return { wire: Buffer.concat([base, w(0)]), entries: [], decoded: 0, records: 0 };
   const nodes = model.nodes,
-    root = nodes.findIndex((n) => n.parent === 0 && n.name.toLowerCase() === "dochistory");
+    root = nodes.findIndex((n) => n.parent === 0 && n.name.toLowerCase() === 'dochistory');
   const declared = Number(
       (Buffer.from(
-        nodes.find((n) => n.parent === 0 && n.name === "FileHeader").content,
+        nodes.find((n) => n.parent === 0 && n.name === 'FileHeader').content,
       ).readUInt32LE(36) &
         64) !==
         0,
     ),
     last = nodes.find(
-      (n) => root >= 0 && n.parent === root && n.name.toLowerCase() === "historylastdoc",
+      (n) => root >= 0 && n.parent === root && n.name.toLowerCase() === 'historylastdoc',
     );
   const sources = nodes
     .filter((n) => root >= 0 && n.parent === root && /^versionlog(?:0|[1-9][0-9]*)$/i.test(n.name))

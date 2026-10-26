@@ -1,4 +1,4 @@
-import { arrowHeadGeometry } from "./arrow-head-geometry.mjs";
+import { arrowHeadGeometry } from './arrow-head-geometry.mjs';
 export function paintArrowHead(ctx, options) {
   const { color, strokeWidth, fill } = options;
   if (
@@ -7,19 +7,19 @@ export function paintArrowHead(ctx, options) {
     color > 0xffffff ||
     !Number.isFinite(strokeWidth) ||
     strokeWidth <= 0 ||
-    typeof fill !== "boolean"
+    typeof fill !== 'boolean'
   )
     return false;
   const shape = arrowHeadGeometry(options);
   if (!shape) return false;
   ctx.save();
   try {
-    const css = `#${color.toString(16).padStart(6, "0")}`;
+    const css = `#${color.toString(16).padStart(6, '0')}`;
     ctx.strokeStyle = css;
     ctx.fillStyle = css;
     ctx.lineWidth = strokeWidth;
-    ctx.lineCap = "butt";
-    ctx.lineJoin = "miter";
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
     ctx.miterLimit = 10;
     ctx.setLineDash([]);
     ctx.beginPath();

@@ -1,24 +1,24 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createEditor } from "../../src/editor/create-editor.ts";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createEditor } from '../../src/editor/create-editor.ts';
 import {
   SET_CHARACTER_PROPERTIES_COMMAND as CHAR,
   SET_PARAGRAPH_ALIGNMENT_COMMAND as ALIGN,
-} from "../../src/commands/commands.ts";
+} from '../../src/commands/commands.ts';
 async function setup(patch: any = {}, rowPatch: any = {}, failure = false) {
   const calls: any[] = [];
   const content = {
-    format: "hwp5",
+    format: 'hwp5',
     characterPropertiesAvailable: true,
     paragraphAlignmentAvailable: true,
     paragraphs: [
       {
         section: 0,
         paragraph: 0,
-        text: "A😀B",
+        text: 'A😀B',
         editable: true,
-        selectionOwner: "section:0:body",
-        currentReference: { kind: "original", section: 0, id: "99" },
+        selectionOwner: 'section:0:body',
+        currentReference: { kind: 'original', section: 0, id: '99' },
         ...rowPatch,
       },
     ],
@@ -28,45 +28,45 @@ async function setup(patch: any = {}, rowPatch: any = {}, failure = false) {
     runtimeFactory: () => ({
       async request(m: any) {
         calls.push(m);
-        return m.kind === "load" || m.kind === "enable" || m.kind === "refresh"
+        return m.kind === 'load' || m.kind === 'enable' || m.kind === 'refresh'
           ? { kind: m.kind, content }
           : failure
-            ? { kind: m.kind, error: "SnapshotFailure", applied: true }
-            : { kind: m.kind, content, meta: { application: "applied", changed: true } };
+            ? { kind: m.kind, error: 'SnapshotFailure', applied: true }
+            : { kind: m.kind, content, meta: { application: 'applied', changed: true } };
       },
       dispose() {},
     }),
   });
-  await e.load(new Uint8Array([1]), { format: "hwp5" });
+  await e.load(new Uint8Array([1]), { format: 'hwp5' });
   const target = {
     ...e.getEditorState().token,
-    coordinateSpace: "display" as const,
-    format: "hwp5" as const,
+    coordinateSpace: 'display' as const,
+    format: 'hwp5' as const,
     section: 0,
     paragraph: 0,
-    owner: "section:0:body",
+    owner: 'section:0:body',
     startUnit: 0,
     endUnit: 1,
-    affinity: "forward" as const,
+    affinity: 'forward' as const,
   };
   return { e, calls, target };
 }
-test("typed formatting rejects invalid target, unknown capabilities and properties before runtime", async () => {
+test('typed formatting rejects invalid target, unknown capabilities and properties before runtime', async () => {
   const cases: any[] = [
-    [{ characterPropertiesAvailable: undefined }, {}, {}, "FormattingCapabilityUnavailable"],
-    [{ characterPropertiesAvailable: "true" }, {}, {}, "FormattingCapabilityUnavailable"],
+    [{ characterPropertiesAvailable: undefined }, {}, {}, 'FormattingCapabilityUnavailable'],
+    [{ characterPropertiesAvailable: 'true' }, {}, {}, 'FormattingCapabilityUnavailable'],
     [
       {},
-      { currentReference: { kind: "generated", section: 0, id: "1" } },
+      { currentReference: { kind: 'generated', section: 0, id: '1' } },
       {},
-      "UnsupportedFormattingReference",
+      'UnsupportedFormattingReference',
     ],
-    [{}, { currentReference: undefined }, {}, "UnsupportedFormattingReference"],
-    [{}, {}, { owner: "other" }, "InvalidSelectionOwner"],
-    [{}, {}, { startUnit: 2, endUnit: 3 }, "InvalidScalarBoundary"],
-    [{}, {}, { endUnit: 0 }, "EmptyCharacterSelection"],
-    [{}, {}, { viewRevision: 999 }, "StaleTarget"],
-    [{}, {}, { paragraph: -1 }, "InvalidTextPosition"],
+    [{}, { currentReference: undefined }, {}, 'UnsupportedFormattingReference'],
+    [{}, {}, { owner: 'other' }, 'InvalidSelectionOwner'],
+    [{}, {}, { startUnit: 2, endUnit: 3 }, 'InvalidScalarBoundary'],
+    [{}, {}, { endUnit: 0 }, 'EmptyCharacterSelection'],
+    [{}, {}, { viewRevision: 999 }, 'StaleTarget'],
+    [{}, {}, { paragraph: -1 }, 'InvalidTextPosition'],
   ];
   for (const [patch, row, change, error] of cases) {
     const { e, calls, target } = await setup(patch, row);
@@ -77,7 +77,7 @@ test("typed formatting rejects invalid target, unknown capabilities and properti
         properties: { bold: true },
       });
       assert.equal(r.error, error);
-      assert.equal(r.status, "rejected-unapplied");
+      assert.equal(r.status, 'rejected-unapplied');
       assert.equal(calls.length, count);
     } finally {
       await e.dispose();
@@ -88,18 +88,18 @@ test("typed formatting rejects invalid target, unknown capabilities and properti
     const n = calls.length;
     assert.equal(
       (await e.dispatchCommand(CHAR, { target, properties: { unknown: true } as any })).error,
-      "InvalidCharacterProperties",
+      'InvalidCharacterProperties',
     );
     assert.equal(
-      (await e.dispatchCommand(ALIGN, { target, alignment: "UNKNOWN" })).error,
-      "InvalidParagraphAlignment",
+      (await e.dispatchCommand(ALIGN, { target, alignment: 'UNKNOWN' })).error,
+      'InvalidParagraphAlignment',
     );
     assert.equal(calls.length, n);
   } finally {
     await e.dispose();
   }
 });
-test("paragraph collapsed allowed; source ordinal is preserved, applied failure fences both commands", async () => {
+test('paragraph collapsed allowed; source ordinal is preserved, applied failure fences both commands', async () => {
   for (const character of [true, false]) {
     const { e, calls, target } = await setup({}, {}, true);
     try {
@@ -107,17 +107,17 @@ test("paragraph collapsed allowed; source ordinal is preserved, applied failure 
         ? await e.dispatchCommand(CHAR, { target, properties: { bold: true } })
         : await e.dispatchCommand(ALIGN, {
             target: { ...target, endUnit: 0 },
-            alignment: "CENTER",
+            alignment: 'CENTER',
           });
-      assert.equal(r.status, "committed-refresh-required");
+      assert.equal(r.status, 'committed-refresh-required');
       assert.equal(calls.at(-1).paragraph, 0);
       assert.equal(calls.at(-1).reference, undefined);
       assert(r.state.operationRevision > target.operationRevision);
       const again = await e.dispatchCommand(ALIGN, {
         target: { ...target, ...r.state.token },
-        alignment: "LEFT",
+        alignment: 'LEFT',
       });
-      assert.equal(again.error, "RefreshRequired");
+      assert.equal(again.error, 'RefreshRequired');
       const revision = r.state.operationRevision;
       await e.refresh();
       assert.equal(e.getEditorState().operationRevision, revision);
@@ -127,11 +127,11 @@ test("paragraph collapsed allowed; source ordinal is preserved, applied failure 
   }
 });
 
-test("paragraph permits anchor-spanning selection while character rejects protected mapping", async () => {
+test('paragraph permits anchor-spanning selection while character rejects protected mapping', async () => {
   const { e, target } = await setup(
     {},
     {
-      text: "AB",
+      text: 'AB',
       sourceOffsets: [
         { at: 0, source: 0 },
         { at: 1, source: 8 },
@@ -142,11 +142,11 @@ test("paragraph permits anchor-spanning selection while character rejects protec
     const range = { ...target, endUnit: 2 };
     assert.equal(
       (await e.dispatchCommand(CHAR, { target: range, properties: { bold: true } })).error,
-      "ProtectedAnchorRange",
+      'ProtectedAnchorRange',
     );
     assert.equal(
-      (await e.dispatchCommand(ALIGN, { target: range, alignment: "CENTER" })).status,
-      "committed-with-snapshot",
+      (await e.dispatchCommand(ALIGN, { target: range, alignment: 'CENTER' })).status,
+      'committed-with-snapshot',
     );
   } finally {
     await e.dispose();

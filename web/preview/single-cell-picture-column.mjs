@@ -1,10 +1,10 @@
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
 
 // A selected one-column cell list owns its local column content area.
 // This is not the document/page column translated into a different cell.
 export function singleCellPictureColumn(input) {
   if (
-    input.columnContext?.state !== "selected" ||
+    input.columnContext?.state !== 'selected' ||
     input.columnContext.declaration?.count !== 1 ||
     !Number.isFinite(input.width) ||
     input.width <= 0 ||
@@ -33,7 +33,7 @@ export function singleCellPictureColumn(input) {
     1024,
     { allowZeroHeight },
   );
-  return selected.state === "placed" && selected.boxes.length === 1
+  return selected.state === 'placed' && selected.boxes.length === 1
     ? { column: selected.boxes[0] }
     : undefined;
 }

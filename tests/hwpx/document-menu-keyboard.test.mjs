@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { navigateDocumentMenu } from "../../web/preview/document-menu-keyboard.mjs";
-import { createDocumentMenuControls } from "../../web/preview/document-menu-controls.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { navigateDocumentMenu } from '../../web/preview/document-menu-keyboard.mjs';
+import { createDocumentMenuControls } from '../../web/preview/document-menu-controls.mjs';
 
-test("menu bar arrows move between summaries and preserve open or closed intent", () => {
+test('menu bar arrows move between summaries and preserve open or closed intent', () => {
   const focused = [];
   const popups = [0, 1, 2].map((index) => {
     const summary = { focus: () => focused.push(index) };
     return Object.assign(new EventTarget(), {
       open: false,
-      querySelector: (selector) => (selector === "summary" ? summary : null),
+      querySelector: (selector) => (selector === 'summary' ? summary : null),
     });
   });
   const buttons = popups.map((popup) => Object.assign(new EventTarget(), { closest: () => popup }));
@@ -19,28 +19,28 @@ test("menu bar arrows move between summaries and preserve open or closed intent"
       target: {
         disabled: false,
         click() {
-          throw Error("UnexpectedCommand");
+          throw Error('UnexpectedCommand');
         },
       },
     })),
   );
   const key = (index, key, extra = {}) => {
-    const event = Object.assign(new Event("keydown", { cancelable: true }), { key, ...extra });
-    Object.defineProperty(event, "target", { value: popups[index].querySelector("summary") });
+    const event = Object.assign(new Event('keydown', { cancelable: true }), { key, ...extra });
+    Object.defineProperty(event, 'target', { value: popups[index].querySelector('summary') });
     popups[index].dispatchEvent(event);
     return event;
   };
-  assert.equal(key(0, "ArrowRight").defaultPrevented, true);
+  assert.equal(key(0, 'ArrowRight').defaultPrevented, true);
   assert.deepEqual(focused, [1]);
   assert(popups.every((popup) => !popup.open));
   popups[1].open = true;
-  assert.equal(key(1, "ArrowLeft").defaultPrevented, true);
+  assert.equal(key(1, 'ArrowLeft').defaultPrevented, true);
   assert.deepEqual(focused, [1, 0]);
   assert.deepEqual(
     popups.map((popup) => popup.open),
     [true, false, false],
   );
-  assert.equal(key(0, "ArrowLeft").defaultPrevented, true);
+  assert.equal(key(0, 'ArrowLeft').defaultPrevented, true);
   assert.deepEqual(focused, [1, 0, 2]);
   assert.deepEqual(
     popups.map((popup) => popup.open),
@@ -54,13 +54,13 @@ test("menu bar arrows move between summaries and preserve open or closed intent"
     { isComposing: true },
     { keyCode: 229 },
   ])
-    assert.equal(key(2, "ArrowRight", extra).defaultPrevented, false);
+    assert.equal(key(2, 'ArrowRight', extra).defaultPrevented, false);
   controls.close();
-  assert.equal(key(2, "ArrowRight").defaultPrevented, false);
+  assert.equal(key(2, 'ArrowRight').defaultPrevented, false);
   assert.deepEqual(focused, [1, 0, 2]);
 });
 
-test("menu focus navigation opens at edges and wraps without issuing commands", () => {
+test('menu focus navigation opens at edges and wraps without issuing commands', () => {
   const summary = {},
     focused = [],
     buttons = [0, 1, 2].map((index) => ({ focus: () => focused.push(index) }));
@@ -74,15 +74,15 @@ test("menu focus navigation opens at edges and wraps without issuing commands", 
     },
     ...extra,
   });
-  assert.equal(navigateDocumentMenu(event("Home", summary), popup, buttons), false);
-  assert.equal(navigateDocumentMenu(event("ArrowUp", summary), popup, buttons), true);
+  assert.equal(navigateDocumentMenu(event('Home', summary), popup, buttons), false);
+  assert.equal(navigateDocumentMenu(event('ArrowUp', summary), popup, buttons), true);
   assert.equal(popup.open, true);
   assert.deepEqual(focused, [2]);
   for (const [key, index, expected] of [
-    ["ArrowDown", 2, 0],
-    ["ArrowUp", 0, 2],
-    ["Home", 2, 0],
-    ["End", 0, 2],
+    ['ArrowDown', 2, 0],
+    ['ArrowUp', 0, 2],
+    ['Home', 2, 0],
+    ['End', 0, 2],
   ]) {
     assert.equal(navigateDocumentMenu(event(key, buttons[index]), popup, buttons), true);
     assert.equal(focused.at(-1), expected);
@@ -96,30 +96,30 @@ test("menu focus navigation opens at edges and wraps without issuing commands", 
     { ctrlKey: true },
     { metaKey: true },
   ])
-    assert.equal(navigateDocumentMenu(event("ArrowDown", summary, extra), popup, buttons), false);
-  assert.equal(navigateDocumentMenu(event("ArrowDown", {}), popup, buttons), false);
-  assert.equal(navigateDocumentMenu(event("ArrowDown", summary), popup, []), false);
+    assert.equal(navigateDocumentMenu(event('ArrowDown', summary, extra), popup, buttons), false);
+  assert.equal(navigateDocumentMenu(event('ArrowDown', {}), popup, buttons), false);
+  assert.equal(navigateDocumentMenu(event('ArrowDown', summary), popup, []), false);
   assert.equal(focused.length, before);
 });
 
-test("menu controller skips disabled targets and cannot focus after disposal", () => {
+test('menu controller skips disabled targets and cannot focus after disposal', () => {
   const summary = new EventTarget(),
     focused = [],
     popup = Object.assign(new EventTarget(), {
       open: false,
-      querySelector: (selector) => (selector === "summary" ? summary : null),
+      querySelector: (selector) => (selector === 'summary' ? summary : null),
     });
   const targets = [
     {
       disabled: false,
       click() {
-        throw Error("UnexpectedCommand");
+        throw Error('UnexpectedCommand');
       },
     },
     {
       disabled: true,
       click() {
-        throw Error("UnexpectedCommand");
+        throw Error('UnexpectedCommand');
       },
     },
   ];
@@ -130,8 +130,8 @@ test("menu controller skips disabled targets and cannot focus after disposal", (
     buttons.map((button, index) => ({ button, target: targets[index] })),
   );
   const key = () => {
-    const event = Object.assign(new Event("keydown", { cancelable: true }), { key: "ArrowDown" });
-    Object.defineProperty(event, "target", { value: summary });
+    const event = Object.assign(new Event('keydown', { cancelable: true }), { key: 'ArrowDown' });
+    Object.defineProperty(event, 'target', { value: summary });
     popup.dispatchEvent(event);
     return event;
   };
@@ -146,7 +146,7 @@ test("menu controller skips disabled targets and cannot focus after disposal", (
   assert.deepEqual(focused, [0]);
 });
 
-test("menu navigation refreshes popup before focus and recognizes nested button content", () => {
+test('menu navigation refreshes popup before focus and recognizes nested button content', () => {
   const summary = {},
     nested = {},
     calls = [];
@@ -155,25 +155,25 @@ test("menu navigation refreshes popup before focus and recognizes nested button 
     contains: (target) => index === 0 && target === nested,
     focus() {
       assert.equal(popup.open, true);
-      assert.equal(calls.at(-1), "refresh");
+      assert.equal(calls.at(-1), 'refresh');
       calls.push(`focus:${index}`);
     },
   }));
   const event = {
-    key: "ArrowDown",
+    key: 'ArrowDown',
     target: nested,
     preventDefault() {
-      calls.push("prevent");
+      calls.push('prevent');
     },
   };
   const refresh = () => {
     popup.open = true;
-    calls.push("refresh");
+    calls.push('refresh');
   };
   assert.equal(navigateDocumentMenu(event, popup, buttons, refresh), true);
-  assert.deepEqual(calls, ["prevent", "refresh", "focus:1"]);
+  assert.deepEqual(calls, ['prevent', 'refresh', 'focus:1']);
   calls.length = 0;
-  event.key = "Enter";
+  event.key = 'Enter';
   assert.equal(navigateDocumentMenu(event, popup, buttons, refresh), false);
   assert.deepEqual(calls, []);
 });

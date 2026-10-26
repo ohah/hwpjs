@@ -15,7 +15,7 @@ export function hwp5SectionExtensionSupported(source, retainedMemoLists = 0) {
   if (source?.extra_nonzero === true && memoStyleOnly(source, retainedMemoLists)) return true;
   if (source?.extra_nonzero !== false) return false;
   if (
-    Object.hasOwn(source, "extra_raw") &&
+    Object.hasOwn(source, 'extra_raw') &&
     (!Array.isArray(source.extra_raw) ||
       source.extra_raw.length !== source.extra_bytes ||
       !Array.from(source.extra_raw).every((byte) => byte === 0))
@@ -57,16 +57,16 @@ function memoStyleOnly(source, retainedMemoLists) {
     id <= source.memo_shape_count &&
     extension?.memo_shape_id_ref === id &&
     [
-      "leading_count_raw",
-      "flags_raw",
-      "unknown_flags",
-      "text_direction_raw",
-      "line_number_restart_raw",
-      "line_number_count_by",
-      "line_number_distance_raw",
-      "line_number_start",
+      'leading_count_raw',
+      'flags_raw',
+      'unknown_flags',
+      'text_direction_raw',
+      'line_number_restart_raw',
+      'line_number_count_by',
+      'line_number_distance_raw',
+      'line_number_start',
     ].every((key) => extension[key] === 0) &&
-    extension.text_direction === "HORIZONTAL" &&
+    extension.text_direction === 'HORIZONTAL' &&
     extension.text_vertical_width_head === false
   );
 }

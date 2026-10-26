@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { seriesLabelContext } from "./chart-series-label-context.mjs";
-import { observeSeriesPoint } from "./chart-series-point-evidence.mjs";
-import { observeSeriesLabelBody } from "./chart-series-label-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { seriesLabelContext } from './chart-series-label-context.mjs';
+import { observeSeriesPoint } from './chart-series-point-evidence.mjs';
+import { observeSeriesLabelBody } from './chart-series-label-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let pointCuts = 0,
   labelCuts = 0,
   collisions = 0,
@@ -17,9 +17,9 @@ let pointCuts = 0,
 const incomplete = (e) =>
   e.constructor === Error &&
   [
-    "IncompleteSeriesBranchObservation",
-    "IncompleteAxisObservation",
-    "IncompleteSeriesPointObservation",
+    'IncompleteSeriesBranchObservation',
+    'IncompleteAxisObservation',
+    'IncompleteSeriesPointObservation',
   ].includes(e.message);
 const comparable = ({ series: { input: _requestInput, ...series }, ...rest }) => ({
   ...rest,
@@ -28,10 +28,10 @@ const comparable = ({ series: { input: _requestInput, ...series }, ...rest }) =>
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const c = seriesLabelContext(b);
     let state = { types: c.series.r.types, objects: c.series.r.objects, strings: c.series.strings };
     for (const p of c.points) {
@@ -48,13 +48,13 @@ try {
         assert.deepEqual(read(after), p);
         const raw = Buffer.from(b);
         raw.fill(0xff, p.label.end, p.baseOffset);
-        assert.deepEqual(read(raw), { ...p, raw20: "ff".repeat(20) });
+        assert.deepEqual(read(raw), { ...p, raw20: 'ff'.repeat(20) });
         rawVariants++;
         const bad = Buffer.from(b);
         bad.writeUInt32LE(p.prefix.point.typeId, p.baseOffset);
         assert.throws(
           () => read(bad),
-          (e) => e.constructor === Error && e.message === "UnsupportedSeriesPointObservationType",
+          (e) => e.constructor === Error && e.message === 'UnsupportedSeriesPointObservationType',
         );
         typeRejects++;
       }
@@ -80,7 +80,7 @@ try {
         duplicate.writeUInt32LE(prefix.label.id, label.text.fontOffset);
         assert.throws(
           () => read(duplicate),
-          (e) => e.constructor === Error && e.message === "UnsupportedSeriesLabelObservationObject",
+          (e) => e.constructor === Error && e.message === 'UnsupportedSeriesLabelObservationObject',
         );
         collisions++;
         const raw = Buffer.from(b);
@@ -90,7 +90,7 @@ try {
           ...label,
           text: {
             ...label.text,
-            rawFields: label.text.rawFields.map((f) => ({ ...f, hex: "ff".repeat(f.n) })),
+            rawFields: label.text.rawFields.map((f) => ({ ...f, hex: 'ff'.repeat(f.n) })),
           },
         });
         rawVariants++;
@@ -99,7 +99,7 @@ try {
           wrong.set(id, { ...wrong.get(id), version: 99 });
           assert.throws(
             () => observeSeriesLabelBody(b, prefix.end, wrong, prefix.objects, prefix.strings),
-            (e) => e.constructor === Error && e.message === "UnsupportedAxisObservationType",
+            (e) => e.constructor === Error && e.message === 'UnsupportedAxisObservationType',
           );
           typeRejects++;
         }
@@ -120,7 +120,7 @@ try {
       textNull: c.label.text.text === null,
       textIntroduced: c.label.text.text?.introduced ?? false,
       end: c.end,
-      nextBytes: b.subarray(c.end, c.end + 32).toString("hex"),
+      nextBytes: b.subarray(c.end, c.end + 32).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);

@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { attachRectangleSources } from "../../web/preview/rectangle-content.mjs";
-import { decodeRectangleRenderingSources } from "../../js/hwpx-rectangle-rendering-sources.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { attachRectangleSources } from '../../web/preview/rectangle-content.mjs';
+import { decodeRectangleRenderingSources } from '../../js/hwpx-rectangle-rendering-sources.mjs';
 
-test("rectangle batch projection uses fresh rows and retains per-node refusal fallback", () => {
+test('rectangle batch projection uses fresh rows and retains per-node refusal fallback', () => {
   let singles = 0;
   let anchor = 0;
   const row = () => ({
@@ -28,27 +28,27 @@ test("rectangle batch projection uses fresh rows and retains per-node refusal fa
   attachRectangleSources(editor, content);
   assert.equal(content.rectangles[0].anchorUnit, 3);
   editor.rectangleRenderingSources = () => {
-    throw new Error("BatchRefused");
+    throw new Error('BatchRefused');
   };
   editor.rectangleNodes = () => [7, 8];
   editor.rectangleRenderingSource = (_, node) => {
     singles++;
-    if (node === 8) throw new Error("InvalidOwner");
+    if (node === 8) throw new Error('InvalidOwner');
     return row();
   };
   attachRectangleSources(editor, content);
   assert.equal(singles, 2);
   assert.equal(content.rectangles.length, 1);
   assert.deepEqual(content.rectangleSourceErrors, [
-    { section: 0, drawingNode: 8, error: "InvalidOwner" },
+    { section: 0, drawingNode: 8, error: 'InvalidOwner' },
   ]);
 });
 
-test("public rectangle inventory equals single queries across edits and history", async () => {
+test('public rectangle inventory equals single queries across edits and history', async () => {
   const editor = await createHwpxEditor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
-  const original = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx");
+  const original = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/shapecontainer-2.hwpx');
   try {
     editor.open(original);
     const check = () => {
@@ -69,7 +69,7 @@ test("public rectangle inventory equals single queries across edits and history"
     const before = check();
     assert.deepEqual(Buffer.from(editor.save()), original);
     editor.enableHistory();
-    editor.spliceAnchored(0, 1, 0, 0, "앞😀");
+    editor.spliceAnchored(0, 1, 0, 0, '앞😀');
     const after = check();
     assert(after.every((row) => row.owner.anchor_unit === 3));
     assert(editor.undo());

@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartTextBlockObjectsOracle as oracle } from "./chart-text-block-objects-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartTextBlockObjectsOracle as oracle } from './chart-text-block-objects-oracle.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -15,17 +15,17 @@ const extent = (b) => {
   return b;
 };
 export async function chartTextBlockObjects(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     accepted = 0,
     rejected = 0;
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const e = oracle(b);
       const accept = (bytes) => {
@@ -51,15 +51,15 @@ export async function chartTextBlockObjects(call) {
       };
       accept(b);
       for (let cut = e.blockStart; cut < e.blockEnd; cut++)
-        reject(extent(Buffer.from(b.subarray(0, cut))), "UnexpectedEnd");
-      reject(b, "LimitExceeded", e.per - 1);
-      reject(b, "LimitExceeded", e.per, e.total - 1);
-      reject(b, "LimitExceeded", e.per, e.total, e.objects - 1);
-      reject(b, "LimitExceeded", e.per, e.total, e.objects, b.length - 1);
+        reject(extent(Buffer.from(b.subarray(0, cut))), 'UnexpectedEnd');
+      reject(b, 'LimitExceeded', e.per - 1);
+      reject(b, 'LimitExceeded', e.per, e.total - 1);
+      reject(b, 'LimitExceeded', e.per, e.total, e.objects - 1);
+      reject(b, 'LimitExceeded', e.per, e.total, e.objects, b.length - 1);
       for (const at of e.references.filter((p) => p >= e.blockStart && p < e.blockEnd)) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(0, at);
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
       }
       for (const at of e.objectOffsets.filter(
         (p) => p >= e.blockStart && p < e.blockEnd && p !== e.text.start && p !== e.fontName.start,
@@ -70,17 +70,17 @@ export async function chartTextBlockObjects(call) {
           bad.writeUInt32LE(id, at);
           reject(
             bad,
-            id === 0xffffffff ? "UnsupportedChartObjectReference" : "DuplicateChartObjectId",
+            id === 0xffffffff ? 'UnsupportedChartObjectReference' : 'DuplicateChartObjectId',
           );
         }
       for (const at of [e.fontName.start, e.text.start]) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(e.fontId, at);
-        reject(bad, "UnsupportedChartObjectReference");
+        reject(bad, 'UnsupportedChartObjectReference');
       }
       let bad = Buffer.from(b);
       bad.writeUInt32LE(1, e.rawFields.find((r) => r.n === 4).start + 4);
-      reject(bad, "UnsupportedChartPictureData");
+      reject(bad, 'UnsupportedChartPictureData');
       bad = Buffer.from(b);
       for (const r of e.rawFields.filter((r) => r.start >= e.blockStart))
         bad.fill(0xff, r.start, r.start + r.n);
@@ -106,7 +106,7 @@ export async function chartTextBlockObjects(call) {
         Buffer.concat([b.subarray(0, e.text.start), u32(e.fontName.id), b.subarray(e.text.end)]),
       );
       const alias = accept(bad);
-      reject(bad, "LimitExceeded", alias.per, alias.total - 1, alias.objects);
+      reject(bad, 'LimitExceeded', alias.per, alias.total - 1, alias.objects);
       bad = extent(
         Buffer.concat([
           b.subarray(0, e.auxiliaryOffset),

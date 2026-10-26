@@ -1,8 +1,8 @@
-import { projectInlineObjectPages } from "./inline-object-page-projection.mjs";
+import { projectInlineObjectPages } from './inline-object-page-projection.mjs';
 
 // Bind native object units to final source fragments, not pre-projection runs.
 export function projectInlineObjectSourceRows(objects, rows) {
-  const fail = () => ({ state: "unavailable", error: "InvalidInlineObjectSourceRows" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidInlineObjectSourceRows' });
   if (
     !Array.isArray(objects) ||
     !Array.isArray(rows) ||
@@ -16,7 +16,7 @@ export function projectInlineObjectSourceRows(objects, rows) {
       .map((row, index) => ({ row, index }))
       .filter(
         ({ row }) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === object.section &&
           row.paragraph === object.paragraph &&
           row.startUnit <= object.unit &&
@@ -36,5 +36,5 @@ export function projectInlineObjectSourceRows(objects, rows) {
       height: object.height,
     });
   }
-  return projectInlineObjectPages({ state: "measured", rows, anchors }, rows);
+  return projectInlineObjectPages({ state: 'measured', rows, anchors }, rows);
 }

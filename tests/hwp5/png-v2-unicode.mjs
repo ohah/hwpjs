@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { description } from "./png-v2-text.mjs";
-import { profile, payloadInput } from "./png-payload-inspection.mjs";
-const decoder = new TextDecoder("utf-16be", { fatal: true, ignoreBOM: true });
+import assert from 'node:assert/strict';
+import { description } from './png-v2-text.mjs';
+import { profile, payloadInput } from './png-payload-inspection.mjs';
+const decoder = new TextDecoder('utf-16be', { fatal: true, ignoreBOM: true });
 export function unicodeDescription(units, ascii = 1) {
   const d = description(ascii, units.length, 0);
   units.forEach((v, i) => d.writeUInt16BE(v, 20 + ascii + 2 * i));
@@ -10,7 +10,7 @@ export function unicodeDescription(units, ascii = 1) {
 export function pngV2UnicodeEdges(call) {
   let comparisons = 0,
     rejected = 0;
-  const input = (d, opts = {}) => payloadInput(profile([["desc", d]], 2), { edition: 2, ...opts });
+  const input = (d, opts = {}) => payloadInput(profile([['desc', d]], 2), { edition: 2, ...opts });
   function check(units, ascii = 1) {
     const d = unicodeDescription(units, ascii),
       raw = d.subarray(20 + ascii, 20 + ascii + 2 * units.length);
@@ -43,8 +43,8 @@ export function pngV2UnicodeEdges(call) {
       1,
       1,
       characters.length,
-      characters.filter((c) => c === "\0").length,
-      characters.filter((c) => c === "\ufeff").length,
+      characters.filter((c) => c === '\0').length,
+      characters.filter((c) => c === '\ufeff').length,
     ];
     assert.equal(out.length, 112);
     assert.deepEqual(

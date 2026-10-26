@@ -8,7 +8,7 @@ const mm = (value) => (value * 96) / 25.4;
 export function tableBorderStrokeParts(stroke) {
   if (!Number.isFinite(stroke?.width) || stroke.width <= 0) return null;
   if (stroke.compound === undefined) return [{ width: stroke.width, offset: 0, extension: 0 }];
-  if (stroke.compound !== "DOUBLE_SLIM" || stroke.width !== mm(0.5)) return null;
+  if (stroke.compound !== 'DOUBLE_SLIM' || stroke.width !== mm(0.5)) return null;
   return [-1, 1].map((sign) => ({
     width: mm(0.12),
     offset: sign * mm(0.185),

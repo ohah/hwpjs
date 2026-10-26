@@ -22,7 +22,7 @@
   --hwpjs-glow: #e68c5024;
   --hwpjs-title-gradient: linear-gradient(110deg, #c75027, #97524b 60%, #74628c);
   --hwpjs-sheet-shadow: #59422920;
-  --rp-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+  --rp-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
 }
 html.rp-dark {
   --rp-c-brand: #f39768;

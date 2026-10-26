@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { sectionFieldOffset, reportBytes } from "./document-report-wire.mjs";
-import { unselectedForms } from "./form-report-evidence.mjs";
-import { formSchemaEvidence, rewriteFormProperties } from "./form-schema.mjs";
-import { formPropertyEvidence } from "./form-property.mjs";
-import { formSemanticCounters } from "./form-semantics.mjs";
-import { maxLengthCounters } from "./form-max-length-evidence.mjs";
-import { controlLinkEvidence } from "./links.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { sectionFieldOffset, reportBytes } from './document-report-wire.mjs';
+import { unselectedForms } from './form-report-evidence.mjs';
+import { formSchemaEvidence, rewriteFormProperties } from './form-schema.mjs';
+import { formPropertyEvidence } from './form-property.mjs';
+import { formSemanticCounters } from './form-semantics.mjs';
+import { maxLengthCounters } from './form-max-length-evidence.mjs';
+import { controlLinkEvidence } from './links.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -22,7 +22,7 @@ const selection = (o = {}) =>
     w(o.nodes ?? 100000),
     w(o.depth ?? 64),
   ]);
-const kinds = ["????", "tbp+", "tbc+", "boc+", "tbr+", "tde+"];
+const kinds = ['????', 'tbp+', 'tbc+', 'boc+', 'tbr+', 'tde+'];
 function selected(bytes, count) {
   const records = documentRecords(bytes),
     v = unselectedForms(bytes, records);
@@ -54,7 +54,7 @@ function expected(base, sections, count, mode = 1) {
     const values = mode
       ? selected(s.bytes, count)
       : unselectedForms(s.bytes, documentRecords(s.bytes));
-    values.forEach((v, j) => out.writeUInt32LE(v, sectionFieldOffset(i, "forms", j)));
+    values.forEach((v, j) => out.writeUInt32LE(v, sectionFieldOffset(i, 'forms', j)));
   }
   return out;
 }
@@ -74,7 +74,7 @@ function changeProperty(bytes, index, key, value, kind = 2) {
     b = bytes.subarray(r.start, r.end),
     p = b.subarray(14, 14 + b.readUInt16LE(12) * 2),
     { rows } = formPropertyEvidence(p),
-    node = rows.findIndex((n) => n.key.toString("utf16le") === key);
+    node = rows.findIndex((n) => n.key.toString('utf16le') === key);
   assert.ok(node >= 0);
   const text = rewriteFormProperties(
       rows,
@@ -82,12 +82,12 @@ function changeProperty(bytes, index, key, value, kind = 2) {
         [
           node,
           value === null
-            ? ""
-            : `${key}:${["set", "wstring", "int", "bool"][kind]}:${kind < 2 ? value.length + ":" : ""}${value} `,
+            ? ''
+            : `${key}:${['set', 'wstring', 'int', 'bool'][kind]}:${kind < 2 ? value.length + ':' : ''}${value} `,
         ],
       ]),
     ),
-    wide = Buffer.from(text, "utf16le"),
+    wide = Buffer.from(text, 'utf16le'),
     prefix = Buffer.from(b.subarray(0, 14));
   prefix.writeUInt32LE(wide.length / 2, 8);
   prefix.writeUInt16LE(wide.length / 2, 12);
@@ -98,13 +98,13 @@ export function formDocumentActual(call, cfb) {
     results = [];
   let rejected = 0,
     semanticMutations = 0;
-  for (const name of ["form-01.hwp", "form-02.hwp"]) {
-    const file = readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url));
+  for (const name of ['form-01.hwp', 'form-02.hwp']) {
+    const file = readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url));
     cfb.parse(file, { strict: true });
     const model = cfb.document(),
-      h = Buffer.from(cfb.findExact("/FileHeader").content),
-      doc = inflateRawSync(cfb.findExact("/DocInfo").content),
-      body = inflateRawSync(cfb.findExact("/BodyText/Section0").content),
+      h = Buffer.from(cfb.findExact('/FileHeader').content),
+      doc = inflateRawSync(cfb.findExact('/DocInfo').content),
+      body = inflateRawSync(cfb.findExact('/BodyText/Section0').content),
       sections = [{ index: 0, bytes: body }],
       count = documentRecords(doc).filter((r) => r.tag === 21).length;
     const decoded = decodedDocumentInput(h, doc, sections),
@@ -155,20 +155,20 @@ export function formDocumentActual(call, cfb) {
       body.subarray(firstObject.end),
     ]);
     const bodyRoot = model.nodes.findIndex(
-      (n) => n.kind === 1 && n.parent === 0 && n.name === "BodyText",
+      (n) => n.kind === 1 && n.parent === 0 && n.name === 'BodyText',
     );
     assert.ok(bodyRoot >= 0);
     const formRecords = records.filter((r) => r.tag === 91);
     for (const index of formRecords
       .map((r, i) => [r, i])
-      .filter(([r]) => ["tbc+", "tbr+"].includes(body.subarray(r.start, r.start + 4).toString()))
+      .filter(([r]) => ['tbc+', 'tbr+'].includes(body.subarray(r.start, r.start + 4).toString()))
       .map(([, i]) => i)) {
-      for (const follow of ["0", "1", null, "2", "-1"])
-        for (const tri of ["0", "1", null, "2"]) {
-          let changed = changeProperty(body, index, "CharShapeID", String(count));
-          changed = changeProperty(changed, index, "FollowContext", follow, 3);
-          changed = changeProperty(changed, index, "TriState", tri, 3);
-          changed = changeProperty(changed, index, "Value", "2");
+      for (const follow of ['0', '1', null, '2', '-1'])
+        for (const tri of ['0', '1', null, '2']) {
+          let changed = changeProperty(body, index, 'CharShapeID', String(count));
+          changed = changeProperty(changed, index, 'FollowContext', follow, 3);
+          changed = changeProperty(changed, index, 'TriState', tri, 3);
+          changed = changeProperty(changed, index, 'Value', '2');
           const sections = [{ index: 0, bytes: changed }],
             d = decodedDocumentInput(h, doc, sections),
             out = run(d),
@@ -176,17 +176,17 @@ export function formDocumentActual(call, cfb) {
           assert.deepEqual(out, expected(call(24, d), sections, count));
           assert.equal(v[11], 1);
           assert.equal(v[14], 4);
-          assert.equal(v[15], Number(follow === "0"));
-          assert.equal(v[17], Number(follow === "1"));
-          assert.equal(v[18], Number(!["0", "1"].includes(follow)));
-          assert.equal(v[21], Number(tri === "1"));
-          assert.equal(v[22], Number(tri === "0"));
-          assert.equal(v[23], Number(tri === null || tri === "2"));
+          assert.equal(v[15], Number(follow === '0'));
+          assert.equal(v[17], Number(follow === '1'));
+          assert.equal(v[18], Number(!['0', '1'].includes(follow)));
+          assert.equal(v[21], Number(tri === '1'));
+          assert.equal(v[22], Number(tri === '0'));
+          assert.equal(v[23], Number(tri === null || tri === '2'));
           assert.deepEqual(run(d, { mode: 0 }), call(24, d));
           const changedModel = {
             ...model,
             nodes: model.nodes.map((n) =>
-              n.kind === 2 && n.parent === bodyRoot && n.name === "Section0"
+              n.kind === 2 && n.parent === bodyRoot && n.name === 'Section0'
                 ? { ...n, content: deflateRawSync(changed) }
                 : n,
             ),
@@ -203,8 +203,8 @@ export function formDocumentActual(call, cfb) {
         }
     }
     for (const [changed, error] of [
-      [changeProperty(body, 0, "CharShapeID", "0", 1), /FormSchemaTypeMismatch/],
-      [changeProperty(body, 4, "CharShapeID", "4294967296"), /FormCharShapeIdOverflow/],
+      [changeProperty(body, 0, 'CharShapeID', '0', 1), /FormSchemaTypeMismatch/],
+      [changeProperty(body, 4, 'CharShapeID', '4294967296'), /FormCharShapeIdOverflow/],
       [wrongCode, /FormControlCodeMismatch/],
       [wrongOwner, /MissingFormObject/],
       [duplicate, /DuplicateFormObject/],
@@ -218,7 +218,7 @@ export function formDocumentActual(call, cfb) {
       const changedModel = {
         ...model,
         nodes: model.nodes.map((n) =>
-          n.kind === 2 && n.parent === bodyRoot && n.name === "Section0"
+          n.kind === 2 && n.parent === bodyRoot && n.name === 'Section0'
             ? { ...n, content: deflateRawSync(changed) }
             : n,
         ),
@@ -239,10 +239,10 @@ export function formDocumentActual(call, cfb) {
     doc = Buffer.from(a.doc),
     props = documentRecords(doc).find((r) => r.tag === 16);
   doc.writeUInt16LE(2, props.start);
-  let second = changeProperty(b.body, 0, "CharShapeID", "7");
+  let second = changeProperty(b.body, 0, 'CharShapeID', '7');
   const unknown = documentRecords(second).filter((r) => r.tag === 91)[1];
   second = Buffer.from(second);
-  second.write("????", unknown.start, 4, "latin1");
+  second.write('????', unknown.start, 4, 'latin1');
   const sections = [
       { index: 1, bytes: second },
       { index: 0, bytes: a.body },
@@ -256,10 +256,10 @@ export function formDocumentActual(call, cfb) {
   const run = (o = {}) => call(109, Buffer.concat([selection(o), decoded]));
   assert.deepEqual(run(exact), want);
   assert.equal(want.length, reportBytes(2));
-  assert.equal(want.readUInt32LE(sectionFieldOffset(0, "forms", 10)), 5);
-  assert.equal(want.readUInt32LE(sectionFieldOffset(1, "forms", 10)), 3);
-  assert.equal(want.readUInt32LE(sectionFieldOffset(1, "forms", 11)), 1);
-  assert.equal(want.readUInt32LE(sectionFieldOffset(1, "forms", 13)), 1);
+  assert.equal(want.readUInt32LE(sectionFieldOffset(0, 'forms', 10)), 5);
+  assert.equal(want.readUInt32LE(sectionFieldOffset(1, 'forms', 10)), 3);
+  assert.equal(want.readUInt32LE(sectionFieldOffset(1, 'forms', 11)), 1);
+  assert.equal(want.readUInt32LE(sectionFieldOffset(1, 'forms', 13)), 1);
   for (const o of [
     { ...exact, forms: 9 },
     { ...exact, bytes: exact.bytes - 1 },

@@ -1,4 +1,4 @@
-import { sameCreatedCell } from "./created-cell-address.mjs";
+import { sameCreatedCell } from './created-cell-address.mjs';
 export function projectCreatedCellDraft(content, draft) {
   if (!draft?.createdCell) return content;
   return {

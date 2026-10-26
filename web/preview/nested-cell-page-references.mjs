@@ -19,6 +19,6 @@ export function nestedCellPageReferences(item, placement, dx, dy) {
     column.width <= 0 ||
     column.height <= 0
   )
-    throw Error("InvalidNestedCaptionBounds");
+    throw Error('InvalidNestedCaptionBounds');
   return { ...placement.referenceBoxes, column: { ...column, x: column.x + dx, y: column.y + dy } };
 }

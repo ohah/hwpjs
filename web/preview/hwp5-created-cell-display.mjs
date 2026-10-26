@@ -1,5 +1,5 @@
-import { sourceTableCellInsets } from "./table-source-insets.mjs";
-import { hwp5ParagraphGeometry } from "./hwp5-paragraph-geometry.mjs";
+import { sourceTableCellInsets } from './table-source-insets.mjs';
+import { hwp5ParagraphGeometry } from './hwp5-paragraph-geometry.mjs';
 
 // Native authoring options and selected resource define the pending display.
 export function hwp5CreatedCellDisplay(table, options, shapes) {
@@ -11,7 +11,7 @@ export function hwp5CreatedCellDisplay(table, options, shapes) {
   );
   if (!insets) return {};
   return {
-    displayFormat: "hwp5",
+    displayFormat: 'hwp5',
     displayParagraphShape: hwp5ParagraphGeometry(shape),
     displayInsets: insets,
   };

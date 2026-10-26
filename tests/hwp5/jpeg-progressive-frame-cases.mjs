@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 import {
   progressiveFrameInput,
   progressiveFrameActual,
   progressiveFrameOracle,
-} from "./jpeg-progressive-frame.mjs";
-import { jpegScanFixture, jpegScanGeometry } from "./jpeg-scan.mjs";
-import { segment } from "./jpeg-structure.mjs";
-import { progressiveSingle } from "./jpeg-progressive-block.mjs";
-import { encodeCodes } from "./jpeg-codec.mjs";
+} from './jpeg-progressive-frame.mjs';
+import { jpegScanFixture, jpegScanGeometry } from './jpeg-scan.mjs';
+import { segment } from './jpeg-structure.mjs';
+import { progressiveSingle } from './jpeg-progressive-block.mjs';
+import { encodeCodes } from './jpeg-codec.mjs';
 
 const scalar = (n) => {
   const b = Buffer.alloc(2);
@@ -69,10 +69,10 @@ export function progressiveFrameFixture({
           dc
             ? ah
               ? String((m + slot) % 2)
-              : "0" + String((m + slot) % 2)
+              : '0' + String((m + slot) % 2)
             : ah
-              ? "011"
-              : "00" + String(m % 2) + "01",
+              ? '011'
+              : '00' + String(m % 2) + '01',
         );
     }
     parts.push(encodeCodes(bits));
@@ -107,9 +107,9 @@ export function progressiveSharedQuantizationFixture() {
   ])
     parts.push(
       segment(218, Buffer.from([1, id, 0, 0, 0, 0])),
-      encodeCodes(["01"]),
+      encodeCodes(['01']),
       segment(218, Buffer.from([1, id, 0, 1, 63, 0])),
-      encodeCodes(["0"]),
+      encodeCodes(['0']),
       segment(219, q(value)),
     );
   return Buffer.concat([...parts, Buffer.from([255, 217])]);
@@ -129,14 +129,14 @@ export function progressiveWideQuantizationFixture(precision = 12) {
     ),
   ];
   for (const [id, selector, bits] of [
-    [9, 32, "01"],
-    [4, 48, "010"],
+    [9, 32, '01'],
+    [4, 48, '010'],
   ])
     parts.push(
       segment(218, Buffer.from([1, id, selector, 0, 0, 0])),
       encodeCodes([bits]),
       segment(218, Buffer.from([1, id, 1, 1, 63, 0])),
-      encodeCodes(["0"]),
+      encodeCodes(['0']),
     );
   return Buffer.concat([...parts, Buffer.from([255, 217])]);
 }
@@ -214,13 +214,13 @@ export function progressiveFrameEdges(call) {
     segment(196, Buffer.concat([dc, ac])),
     segment(194, Buffer.from([8, 0, 1, 0, 1, 1, 9, 17, 0])),
   ];
-  const first = [...base, segment(218, Buffer.from([1, 9, 0, 0, 0, 1])), encodeCodes(["01"])];
+  const first = [...base, segment(218, Buffer.from([1, 9, 0, 0, 0, 1])), encodeCodes(['01'])];
   reject(
     Buffer.concat([
       ...first,
       segment(219, Buffer.concat([q(2), q(1)])),
       segment(218, Buffer.from([1, 9, 0, 0, 0, 16])),
-      encodeCodes(["0"]),
+      encodeCodes(['0']),
       Buffer.from([255, 217]),
     ]),
     /AlteredJpegProgressiveQuantization/,
@@ -229,7 +229,7 @@ export function progressiveFrameEdges(call) {
     Buffer.concat([
       ...base,
       segment(218, Buffer.from([1, 9, 0, 1, 63, 0])),
-      encodeCodes(["0"]),
+      encodeCodes(['0']),
       Buffer.from([255, 217]),
     ]),
     /MissingJpegInitialDcScan/,

@@ -1,7 +1,7 @@
 // Read-only viewport projection of the current measured layout.
 export function visiblePageStatus(layout, top, height) {
   if (
-    layout?.state !== "paginated" ||
+    layout?.state !== 'paginated' ||
     !Array.isArray(layout.pages) ||
     !Number.isFinite(top) ||
     top < 0 ||

@@ -1,1 +1,1 @@
-export * from "../../svelte/src/index.ts";
+export * from '../../svelte/src/index.ts';

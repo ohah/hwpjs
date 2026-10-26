@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { startPreview } from "../../web/preview/preview-startup.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { startPreview } from '../../web/preview/preview-startup.mjs';
 
-test("startup reports slow loading but allows late readiness without loading twice", async () => {
+test('startup reports slow loading but allows late readiness without loading twice', async () => {
   const states = [];
   let resolve,
     timeout,
@@ -26,22 +26,22 @@ test("startup reports slow loading but allows late readiness without loading twi
       cleared++;
     },
   });
-  assert.deepEqual(states, ["loading"]);
+  assert.deepEqual(states, ['loading']);
   timeout();
-  assert.deepEqual(states, ["loading", "slow"]);
+  assert.deepEqual(states, ['loading', 'slow']);
   resolve();
   assert.equal(await pending, true);
-  assert.deepEqual(states, ["loading", "slow", "ready"]);
+  assert.deepEqual(states, ['loading', 'slow', 'ready']);
   assert.equal(loads, 1);
   assert.equal(cleared, 1);
   timeout();
-  assert.deepEqual(states, ["loading", "slow", "ready"]);
+  assert.deepEqual(states, ['loading', 'slow', 'ready']);
 });
 
-test("startup reports both thrown and rejected module failures and clears the timer", async () => {
+test('startup reports both thrown and rejected module failures and clears the timer', async () => {
   for (const load of [
     () => {
-      throw new Error("LinkFailure");
+      throw new Error('LinkFailure');
     },
     () => Promise.reject(null),
   ]) {
@@ -61,7 +61,7 @@ test("startup reports both thrown and rejected module failures and clears the ti
     );
     assert.deepEqual(
       states.map((state) => state.kind),
-      ["loading", "failed"],
+      ['loading', 'failed'],
     );
     assert.equal(cleared, 1);
   }

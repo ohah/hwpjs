@@ -1,5 +1,5 @@
-import { validateHwp5NoteShapeSources } from "../../js/hwp5-note-shape-sources.mjs";
-import { selectHwp5NotePagePolicy } from "./hwp5-note-page-policy.mjs";
+import { validateHwp5NoteShapeSources } from '../../js/hwp5-note-shape-sources.mjs';
+import { selectHwp5NotePagePolicy } from './hwp5-note-page-policy.mjs';
 
 export function attachHwp5NoteShapes(editor, content) {
   content.hwp5NoteShapes = [];
@@ -8,7 +8,7 @@ export function attachHwp5NoteShapes(editor, content) {
   if (!editor) return content;
   const sections = new Set(
     (content.currentParagraphFlows ?? [])
-      .filter((row) => ["footnote", "endnote"].includes(row.host))
+      .filter((row) => ['footnote', 'endnote'].includes(row.host))
       .map((row) => row.section),
   );
   for (const section of sections) {
@@ -18,7 +18,7 @@ export function attachHwp5NoteShapes(editor, content) {
       const policies = shapes.map((shape) => selectHwp5NotePagePolicy(shapes, section, shape.kind));
       content.hwp5NoteShapes.push({ section, shapes });
       for (const [index, policy] of policies.entries()) {
-        if (policy.state === "selected") content.hwp5NotePolicies.push(policy);
+        if (policy.state === 'selected') content.hwp5NotePolicies.push(policy);
         else
           content.hwp5NoteShapeErrors.push({
             section,

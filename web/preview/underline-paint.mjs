@@ -1,4 +1,4 @@
-import { compoundLineWeights, compoundLineGap } from "./compound-line-weights.mjs";
+import { compoundLineWeights, compoundLineGap } from './compound-line-weights.mjs';
 /** Approximate Canvas decoration on current glyph geometry, not page shaping. */
 export function paintUnderline(ctx, style, x, width, y, metrics, height, origin = x) {
   if (!style || !Number.isFinite(width) || width <= 0) return;
@@ -9,9 +9,9 @@ export function paintUnderline(ctx, style, x, width, y, metrics, height, origin 
     ? metrics.fontBoundingBoxDescent
     : height * 0.8;
   const at =
-    style.kind === "top"
+    style.kind === 'top'
       ? y - ascent - 1
-      : style.kind === "center"
+      : style.kind === 'center'
         ? y + (descent - ascent) / 2
         : y + descent + 1;
   const strokes = compoundLineWeights(style.shape) ?? [1];
@@ -28,12 +28,12 @@ export function paintUnderline(ctx, style, x, width, y, metrics, height, origin 
   ctx.strokeStyle = style.color;
   ctx.setLineDash(dash);
   ctx.lineDashOffset = -(x - origin);
-  ctx.lineCap = style.shape === "CIRCLE" ? "round" : "butt";
+  ctx.lineCap = style.shape === 'CIRCLE' ? 'round' : 'butt';
   let offset = 0;
   for (const thickness of strokes) {
     ctx.lineWidth = thickness;
     ctx.beginPath();
-    const wave = style.shape === "WAVE" || style.shape === "DOUBLEWAVE";
+    const wave = style.shape === 'WAVE' || style.shape === 'DOUBLEWAVE';
     const waveY = (position) =>
       at + offset + (wave ? Math.sin(((position - origin) * Math.PI) / 3) : 0);
     ctx.moveTo(x, waveY(x));

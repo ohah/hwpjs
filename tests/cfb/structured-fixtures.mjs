@@ -5,7 +5,7 @@ export function miniContainer(version, size, fragmented, salt = 0) {
   const rootSize = blocks * 64;
   const dataSectors = Math.ceil(rootSize / sector);
   const bytes = Buffer.alloc((4 + dataSectors) * sector);
-  Buffer.from("d0cf11e0a1b11ae1", "hex").copy(bytes);
+  Buffer.from('d0cf11e0a1b11ae1', 'hex').copy(bytes);
   for (const [o, n] of [
     [24, 62],
     [26, version],
@@ -34,7 +34,7 @@ export function miniContainer(version, size, fragmented, salt = 0) {
     bytes.writeUInt32LE(i + 1 === dataSectors ? 0xfffffffe : i + 4, sector + (i + 3) * 4);
   function entry(index, name, kind, start, length, child) {
     const o = 2 * sector + index * 128;
-    const encoded = Buffer.from(name + "\0", "utf16le");
+    const encoded = Buffer.from(name + '\0', 'utf16le');
     encoded.copy(bytes, o);
     bytes.writeUInt16LE(encoded.length, o + 64);
     bytes[o + 66] = kind;
@@ -48,8 +48,8 @@ export function miniContainer(version, size, fragmented, salt = 0) {
     ])
       bytes.writeUInt32LE(value, o + field);
   }
-  entry(0, "Root Entry", 5, dataSectors ? 3 : 0xfffffffe, rootSize, 1);
-  entry(1, "Data", 2, blocks ? (fragmented ? blocks - 1 : 0) : 0xfffffffe, size, 0xffffffff);
+  entry(0, 'Root Entry', 5, dataSectors ? 3 : 0xfffffffe, rootSize, 1);
+  entry(1, 'Data', 2, blocks ? (fragmented ? blocks - 1 : 0) : 0xfffffffe, size, 0xffffffff);
   bytes.fill(255, 3 * sector, 4 * sector);
   const expected = Buffer.from(Array.from({ length: size }, (_, i) => (i * 17 + salt) % 251));
   for (let i = 0; i < blocks; i++) {

@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
 import {
   paragraphEvidence,
   rootMergeGroups,
   rangeFilteredCandidate,
-} from "./line-cache-evidence.mjs";
+} from './line-cache-evidence.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -28,7 +28,7 @@ export function revisionProjectionEdges(call) {
   let accepted = 0,
     rejected = 0;
   const range = (start, end, kind = 17, data = 0) => ({ start, end, kind, data });
-  const p = { text: Buffer.from("ABCDE\r", "utf16le"), units: 6, ranges: [] };
+  const p = { text: Buffer.from('ABCDE\r', 'utf16le'), units: 6, ranges: [] };
   const check = (p, options = {}) => {
     assert.deepEqual(call(100, input(p, options)), rangeFilteredCandidate([p], 17));
     accepted++;
@@ -113,7 +113,7 @@ export function revisionProjectionEdges(call) {
   check({ text: Buffer.alloc(0), units: 0, ranges: [] }, { input: 0, output: 0, ranges: 0 });
   check({ text: Buffer.from([0, 0xd8, 0, 0xdc, 9, 0, 13, 0]), units: 4, ranges: [range(0, 1)] }); // raw units, no Unicode repair
   const capInput = (count) => {
-    const base = input({ text: Buffer.from("\r", "utf16le"), units: 1, ranges: [] }, { output: 0 }),
+    const base = input({ text: Buffer.from('\r', 'utf16le'), units: 1, ranges: [] }, { output: 0 }),
       raw = Buffer.alloc(count * 12);
     for (let i = 0; i < count; i++) {
       raw.writeUInt32LE(1, i * 12 + 4);
@@ -134,16 +134,16 @@ export function revisionProjectionActual(call, cfb) {
   cfb.parse(
     readFileSync(
       new URL(
-        "../../reference/rhwp/samples/issue5169_viewtext_changetracking.hwp",
+        '../../reference/rhwp/samples/issue5169_viewtext_changetracking.hwp',
         import.meta.url,
       ),
     ),
     { strict: true },
   );
   const read = (kind) =>
-    paragraphEvidence(inflateRawSync(cfb.findExact("/" + kind + "/Section0").content));
-  const groups = rootMergeGroups(read("ViewText")),
-    body = read("BodyText").filter((p) => p.level === 0);
+    paragraphEvidence(inflateRawSync(cfb.findExact('/' + kind + '/Section0').content));
+  const groups = rootMergeGroups(read('ViewText')),
+    body = read('BodyText').filter((p) => p.level === 0);
   assert.equal(groups.length, 99);
   assert.equal(body.length, 99);
   let paragraphs = 0,
@@ -176,7 +176,7 @@ export function revisionProjectionActual(call, cfb) {
     if (body[i].text === null) assert.equal(body[i].units, 1);
     assert.deepEqual(
       Buffer.concat(outputs),
-      body[i].text ?? Buffer.from("\r", "utf16le"),
+      body[i].text ?? Buffer.from('\r', 'utf16le'),
       `BodyText root ${i}`,
     );
   }

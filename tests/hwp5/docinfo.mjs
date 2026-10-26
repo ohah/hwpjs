@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 function u32(n) {
   const b = Buffer.alloc(4);

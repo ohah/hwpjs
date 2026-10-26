@@ -28,7 +28,7 @@ export function createFontLanguageResolver() {
     next = 0,
     start = -1;
   return (text, unit) => {
-    if (typeof text !== "string" || !Number.isInteger(unit) || unit < 0 || unit >= text.length)
+    if (typeof text !== 'string' || !Number.isInteger(unit) || unit < 0 || unit >= text.length)
       return null;
     if (text !== previousText) {
       previousText = text;

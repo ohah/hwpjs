@@ -4,8 +4,8 @@ export function attachHwp5TableBorderSources(editor, content) {
   content.hwp5BorderFillSourceError = null;
   if (!editor || !content.tables?.length) return content;
   try {
-    if (typeof editor.borderFillSources !== "function")
-      throw new Error("Hwp5BorderFillSourcesAbiUnavailable");
+    if (typeof editor.borderFillSources !== 'function')
+      throw new Error('Hwp5BorderFillSourcesAbiUnavailable');
     content.hwp5BorderFillSources = editor.borderFillSources();
   } catch (error) {
     content.hwp5BorderFillSourceError = error.message;

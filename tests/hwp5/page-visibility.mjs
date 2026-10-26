@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -63,11 +63,11 @@ export function visibilityEdges(call) {
   return { accepted, rejected };
 }
 export function visibilityReference(call, cfb) {
-  const path = new URL("../../reference/rhwp/saved/pr360-edward.hwp", import.meta.url);
-  if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
+  const path = new URL('../../reference/rhwp/saved/pr360-edward.hwp', import.meta.url);
+  if (!existsSync(path)) return { skipped: 'reference fixture unavailable' };
   cfb.parse(readFileSync(path), { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
-    raw = Buffer.from(cfb.findExact("/BodyText/Section0").content);
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
+    raw = Buffer.from(cfb.findExact('/BodyText/Section0').content);
   assert.equal(h.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024), 0);
   const b = h.readUInt32LE(36) & 1 ? inflateRawSync(raw) : raw,
     v = h.readUInt32LE(32);

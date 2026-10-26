@@ -1,15 +1,15 @@
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { reserveTableVerticalFlow } from "./table-vertical-flow-reservation.mjs";
-import { pageSequenceReference } from "./page-sequence-reference.mjs";
-import { isHardLineBreak } from "./hard-line-break.mjs";
-import { pageFlowAnchorIdentity } from "./page-flow-anchor-identity.mjs";
-import { positionedRowFragments, positionedRowOwnerMatches } from "./positioned-row-fragments.mjs";
-import { isZeroAdvanceTextAnchor } from "./row-geometry.mjs";
-import { pageRowFitHeight, pageRowRequiredHeight } from "./page-row-extents.mjs";
-import { createPageRowSourceCursor } from "./page-row-source-cursor.mjs";
-import { createExplicitPageBreakTerminalFit } from "./explicit-page-break-terminal-fit.mjs";
-import { canHideOverflowEmptyLine } from "./empty-line-page-policy.mjs";
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { reserveTableVerticalFlow } from './table-vertical-flow-reservation.mjs';
+import { pageSequenceReference } from './page-sequence-reference.mjs';
+import { isHardLineBreak } from './hard-line-break.mjs';
+import { pageFlowAnchorIdentity } from './page-flow-anchor-identity.mjs';
+import { positionedRowFragments, positionedRowOwnerMatches } from './positioned-row-fragments.mjs';
+import { isZeroAdvanceTextAnchor } from './row-geometry.mjs';
+import { pageRowFitHeight, pageRowRequiredHeight } from './page-row-extents.mjs';
+import { createPageRowSourceCursor } from './page-row-source-cursor.mjs';
+import { createExplicitPageBreakTerminalFit } from './explicit-page-break-terminal-fit.mjs';
+import { canHideOverflowEmptyLine } from './empty-line-page-policy.mjs';
 
 /** Paginate measured body rows. Caller owns shaping, columns and section selection. */
 export function paginateBodyRows(
@@ -33,7 +33,7 @@ export function paginateBodyRows(
     rowFitsColumn,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     ![x, y, gap, zoneGap].every(Number.isFinite) ||
     gap < 0 ||
@@ -41,18 +41,18 @@ export function paginateBodyRows(
     !Number.isSafeInteger(maxPages) ||
     maxPages < 1
   )
-    return unavailable("InvalidPageFlowBounds");
+    return unavailable('InvalidPageFlowBounds');
   const initial = pageReferenceBoxes(setting, { x, y });
-  if (initial.state !== "placed") return unavailable(initial.state);
+  if (initial.state !== 'placed') return unavailable(initial.state);
   const validRow = (row) =>
     row &&
     fitHeight(row) !== null &&
-    (row.kind === "anchor"
+    (row.kind === 'anchor'
       ? row.height === 0
       : isZeroAdvanceTextAnchor(row) ||
         (row.height > 0 && fitHeight(row) <= initial.boxes.page.height));
   const invalidRow = (row, stage) => ({
-    ...unavailable("UnsupportedPageRow"),
+    ...unavailable('UnsupportedPageRow'),
     section: row?.section,
     paragraph: row?.paragraph,
     rowHeight: row?.height,
@@ -65,30 +65,30 @@ export function paginateBodyRows(
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
-    (measureRow !== undefined && typeof measureRow !== "function")
+    (measureRow !== undefined && typeof measureRow !== 'function')
   )
-    return unavailable("InvalidPageFlowBounds");
-  if (rowY !== undefined && typeof rowY !== "function") return unavailable("InvalidPageFlowBounds");
-  if (columnBottom !== undefined && typeof columnBottom !== "function")
-    return unavailable("InvalidPageFlowBounds");
-  if (minimumRowPage !== undefined && typeof minimumRowPage !== "function")
-    return unavailable("InvalidPageFlowBounds");
-  if (rowFitsColumn !== undefined && typeof rowFitsColumn !== "function")
-    return unavailable("InvalidPageFlowBounds");
-  if (measurePositionedRow !== undefined && typeof measurePositionedRow !== "function")
-    return unavailable("InvalidPageFlowBounds");
-  if (typeof columnZones !== "boolean" || (columnZones && columnDeclaration !== undefined))
-    return unavailable("InvalidPageFlowBounds");
+    return unavailable('InvalidPageFlowBounds');
+  if (rowY !== undefined && typeof rowY !== 'function') return unavailable('InvalidPageFlowBounds');
+  if (columnBottom !== undefined && typeof columnBottom !== 'function')
+    return unavailable('InvalidPageFlowBounds');
+  if (minimumRowPage !== undefined && typeof minimumRowPage !== 'function')
+    return unavailable('InvalidPageFlowBounds');
+  if (rowFitsColumn !== undefined && typeof rowFitsColumn !== 'function')
+    return unavailable('InvalidPageFlowBounds');
+  if (measurePositionedRow !== undefined && typeof measurePositionedRow !== 'function')
+    return unavailable('InvalidPageFlowBounds');
+  if (typeof columnZones !== 'boolean' || (columnZones && columnDeclaration !== undefined))
+    return unavailable('InvalidPageFlowBounds');
   if (columnZones)
     columnDeclaration =
       paragraphFlows[0]?.column_changes?.filter((change) => change.unit === 0).at(-1)
         ?.declaration ?? paragraphFlows[0]?.column_declaration;
   const columnsFor = (body) =>
     columnDeclaration === undefined
-      ? { state: "placed", boxes: [body] }
+      ? { state: 'placed', boxes: [body] }
       : columnReferenceBoxes(body, columnDeclaration);
   const initialColumns = columnsFor(initial.boxes.page);
-  if (initialColumns.state !== "placed") return unavailable(initialColumns.error);
+  if (initialColumns.state !== 'placed') return unavailable(initialColumns.error);
   const flows = new Map();
   let section;
   for (const flow of paragraphFlows) {
@@ -100,7 +100,7 @@ export function paginateBodyRows(
       !Number.isSafeInteger(flow.paragraph) ||
       flow.paragraph < 0
     )
-      return unavailable("UnsupportedPageFlow");
+      return unavailable('UnsupportedPageFlow');
     const key = `${flow.section}:${flow.paragraph}`;
     if (
       flows.has(key) ||
@@ -108,21 +108,21 @@ export function paginateBodyRows(
       ![true, false, null].includes(flow.column_break) ||
       ![true, false, null].includes(flow.page_break)
     )
-      return unavailable("UnsupportedPageFlow");
+      return unavailable('UnsupportedPageFlow');
     if (flow.column_break === true && columnDeclaration === undefined) {
       // A verified full-width single column advances to the next page. Do not
       // invent a declaration or infer the same for unknown/narrower columns.
       if (flow.single_column !== true || flow.column_declaration?.count !== 1)
-        return unavailable("UnsupportedPageFlow");
+        return unavailable('UnsupportedPageFlow');
       const proof = columnReferenceBoxes(initial.boxes.page, flow.column_declaration);
       if (
-        proof.state !== "placed" ||
+        proof.state !== 'placed' ||
         proof.boxes.length !== 1 ||
-        ["x", "y", "width", "height"].some(
+        ['x', 'y', 'width', 'height'].some(
           (name) => proof.boxes[0][name] !== initial.boxes.page[name],
         )
       )
-        return unavailable("UnsupportedPageFlow");
+        return unavailable('UnsupportedPageFlow');
     }
     if (columnZones) {
       const declarations = flow.column_changes?.length
@@ -130,7 +130,7 @@ export function paginateBodyRows(
         : [flow.column_declaration];
       for (const declaration of declarations) {
         const columns = columnReferenceBoxes(initial.boxes.page, declaration);
-        if (columns.state !== "placed") return unavailable(columns.error);
+        if (columns.state !== 'placed') return unavailable(columns.error);
       }
     }
     flows.set(key, flow);
@@ -157,9 +157,9 @@ export function paginateBodyRows(
   const next = () => {
     if (pages.length >= maxPages) return false;
     const placed = pageSequenceReference(setting, pages.length, { x, y, gap });
-    if (placed.state !== "placed") return false;
+    if (placed.state !== 'placed') return false;
     const columns = columnsFor(placed.boxes.page);
-    if (columns.state !== "placed") return false;
+    if (columns.state !== 'placed') return false;
     current = { ordinal: pages.length, ...placed.boxes, columns: columns.boxes };
     pages.push(current);
     columnOrdinal = 0;
@@ -186,7 +186,7 @@ export function paginateBodyRows(
     currentSource = source;
     if (result.length + flowAnchors.length >= maxRows) {
       limited = true;
-      if (source.kind === "text")
+      if (source.kind === 'text')
         for (const row of result)
           if (row.section === source.section && row.paragraph === source.paragraph) {
             row.editable = false;
@@ -195,7 +195,7 @@ export function paginateBodyRows(
       break;
     }
     let row = source;
-    const logicalAnchor = source.kind === "anchor";
+    const logicalAnchor = source.kind === 'anchor';
     if (logicalAnchor) {
       const identity = pageFlowAnchorIdentity(source);
       if (
@@ -207,17 +207,17 @@ export function paginateBodyRows(
         source.tableVerticalSource !== undefined ||
         (source.keepNextHeight ?? 0) !== 0
       )
-        return unavailable("InvalidPageFlowAnchor");
-      if (anchorIds.has(identity)) return unavailable("AmbiguousPageFlowAnchor");
+        return unavailable('InvalidPageFlowAnchor');
+      if (anchorIds.has(identity)) return unavailable('AmbiguousPageFlowAnchor');
       anchorIds.add(identity);
     }
     const keepNextHeight = source.keepNextHeight ?? 0;
     if (!Number.isFinite(keepNextHeight) || keepNextHeight < 0)
-      return unavailable("InvalidPageKeepTogether");
+      return unavailable('InvalidPageKeepTogether');
     const key = `${row.section}:${row.paragraph}`;
     const flow = flows.get(key);
-    if (!flow || !["text", "gap", "anchor"].includes(row.kind))
-      return invalidRow(row, "flow-owner");
+    if (!flow || !['text', 'gap', 'anchor'].includes(row.kind))
+      return invalidRow(row, 'flow-owner');
     const rowDeclaration = source.columnDeclaration ?? flow.column_declaration;
     const changedZone =
       columnZones && JSON.stringify(rowDeclaration) !== JSON.stringify(columnDeclaration);
@@ -226,7 +226,7 @@ export function paginateBodyRows(
       zoneOrdinal++;
     }
     const firstColumns = columnsFor(initial.boxes.page);
-    if (firstColumns.state !== "placed") return unavailable(firstColumns.error);
+    if (firstColumns.state !== 'placed') return unavailable(firstColumns.error);
     if (measureRow && !logicalAnchor)
       row = measureRow(
         source,
@@ -234,23 +234,23 @@ export function paginateBodyRows(
           ? firstColumns.boxes[0].width
           : current.columns[columnOrdinal].width,
       );
-    if (!validRow(row)) return invalidRow(row, "initial-measure");
+    if (!validRow(row)) return invalidRow(row, 'initial-measure');
     if (!Number.isFinite(row.height + keepNextHeight))
-      return unavailable("InvalidPageKeepTogether");
+      return unavailable('InvalidPageKeepTogether');
     if (
       !current ||
       (key !== previous && flow.page_break === true && result.length + flowAnchors.length > 0)
     ) {
-      if (!next()) return unavailable("PageFlowLimit");
+      if (!next()) return unavailable('PageFlowLimit');
     } else if (changedZone) {
       const bottom = current.page.y + current.page.height;
       const zoneTop = zoneBottom + zoneGap;
-      if (!Number.isFinite(zoneTop + row.height)) return unavailable("InvalidPageFlowBounds");
+      if (!Number.isFinite(zoneTop + row.height)) return unavailable('InvalidPageFlowBounds');
       if (zoneTop + requiredRowHeight(row, keepNextHeight) > bottom) {
-        if (!next()) return unavailable("PageFlowLimit");
+        if (!next()) return unavailable('PageFlowLimit');
       } else {
         const columns = columnsFor({ ...current.page, y: zoneTop, height: bottom - zoneTop });
-        if (columns.state !== "placed") return unavailable(columns.error);
+        if (columns.state !== 'placed') return unavailable(columns.error);
         current.columns = columns.boxes;
         columnOrdinal = 0;
         cursor = zoneTop;
@@ -260,19 +260,19 @@ export function paginateBodyRows(
       flow.column_break === true &&
       result.length + flowAnchors.length > 0
     ) {
-      if (!nextColumn()) return unavailable("PageFlowLimit");
+      if (!nextColumn()) return unavailable('PageFlowLimit');
     }
     if (measureRow && !logicalAnchor)
       row = measureRow(source, current.columns[columnOrdinal].width);
-    if (!validRow(row)) return invalidRow(row, "current-column-measure");
+    if (!validRow(row)) return invalidRow(row, 'current-column-measure');
     if (minimumRowPage) {
       const minimum = minimumRowPage(row);
       if (!Number.isSafeInteger(minimum) || minimum < 0)
-        return unavailable("InvalidPageRowPosition");
-      while (current.ordinal < minimum) if (!next()) return unavailable("PageFlowLimit");
+        return unavailable('InvalidPageRowPosition');
+      while (current.ordinal < minimum) if (!next()) return unavailable('PageFlowLimit');
       if (measureRow && !logicalAnchor)
         row = measureRow(source, current.columns[columnOrdinal].width);
-      if (!validRow(row)) return invalidRow(row, "minimum-page-measure");
+      if (!validRow(row)) return invalidRow(row, 'minimum-page-measure');
     }
     let flowAnchorY;
     while (true) {
@@ -285,7 +285,7 @@ export function paginateBodyRows(
           columnOrdinal,
         });
         if (!Number.isFinite(proposed) || proposed < cursor)
-          return unavailable("InvalidPageRowPosition");
+          return unavailable('InvalidPageRowPosition');
         cursor = proposed;
       }
       if (measurePositionedRow && !logicalAnchor) {
@@ -296,7 +296,7 @@ export function paginateBodyRows(
           columnOrdinal,
         });
         if (!validRow(row) || !positionedRowOwnerMatches(source, row))
-          return invalidRow(row, "positioned-row-owner");
+          return invalidRow(row, 'positioned-row-owner');
       }
       const column = current.columns[columnOrdinal],
         fullBottom = column.y + column.height;
@@ -310,7 +310,7 @@ export function paginateBodyRows(
             })
           : fullBottom;
       if (!Number.isFinite(bottom) || bottom < column.y || bottom > fullBottom)
-        return unavailable("InvalidPageColumnBottom");
+        return unavailable('InvalidPageColumnBottom');
       const fits =
         rowFitsColumn && !logicalAnchor
           ? rowFitsColumn(row, {
@@ -321,9 +321,9 @@ export function paginateBodyRows(
               columnOrdinal,
             })
           : true;
-      if (typeof fits !== "boolean") return unavailable("InvalidPageRowFit");
+      if (typeof fits !== 'boolean') return unavailable('InvalidPageRowFit');
       const requiredHeight = requiredRowHeight(row, keepNextHeight);
-      if (requiredHeight === null) return invalidRow(row, "required-height");
+      if (requiredHeight === null) return invalidRow(row, 'required-height');
       if (fits && cursor + requiredHeight <= bottom) break;
       if (
         flowAnchorY === cursor &&
@@ -351,7 +351,7 @@ export function paginateBodyRows(
         requiredHeight > bottom - column.y
       )
         return {
-          ...unavailable("PageColumnReservationOverflow"),
+          ...unavailable('PageColumnReservationOverflow'),
           section: row.section,
           paragraph: row.paragraph,
           ...(row.noteOwnerNode !== undefined ? { noteNode: row.noteOwnerNode } : {}),
@@ -359,12 +359,12 @@ export function paginateBodyRows(
           keepNextHeight,
           availableHeight: bottom - column.y,
         };
-      if (requiredHeight > initial.boxes.page.height) return invalidRow(row, "next-page-height");
+      if (requiredHeight > initial.boxes.page.height) return invalidRow(row, 'next-page-height');
       if (!(requiredHeight > current.columns[columnOrdinal].height ? next() : nextColumn()))
-        return unavailable("PageFlowLimit");
+        return unavailable('PageFlowLimit');
       if (measureRow && !logicalAnchor)
         row = measureRow(source, current.columns[columnOrdinal].width);
-      if (!validRow(row)) return invalidRow(row, "next-column-measure");
+      if (!validRow(row)) return invalidRow(row, 'next-column-measure');
     }
     if (row.tableVerticalSource) {
       let reservation;
@@ -381,10 +381,10 @@ export function paginateBodyRows(
           paperTop: current.paper.y,
           paperBottom: current.paper.y + current.paper.height,
         });
-        if (reservation.state === "reserved") break;
-        if (reservation.state !== "next-page") return unavailable(reservation.error);
-        if (attempt === 1) return unavailable("TableVerticalFlowPageOverflow");
-        if (!nextColumn()) return unavailable("PageFlowLimit");
+        if (reservation.state === 'reserved') break;
+        if (reservation.state !== 'next-page') return unavailable(reservation.error);
+        if (attempt === 1) return unavailable('TableVerticalFlowPageOverflow');
+        if (!nextColumn()) return unavailable('PageFlowLimit');
       }
       row = {
         ...row,
@@ -401,9 +401,9 @@ export function paginateBodyRows(
         placedRows: result,
       });
       if (!Number.isFinite(bottom) || bottom < column.y || bottom > column.y + column.height)
-        return unavailable("InvalidPageColumnBottom");
+        return unavailable('InvalidPageColumnBottom');
       if (cursor + requiredRowHeight(row, keepNextHeight) > bottom)
-        return unavailable("PageColumnReservationOverflow");
+        return unavailable('PageColumnReservationOverflow');
     }
     const anchorKey = `${current.ordinal}:${columnOrdinal}:${key}`;
     if (!paragraphAnchors.has(anchorKey)) paragraphAnchors.set(anchorKey, cursor);
@@ -417,12 +417,12 @@ export function paginateBodyRows(
         row.endUnit < source.startUnit ||
         (row.endUnit === source.startUnit && source.startUnit < sourceEnd))
     )
-      return invalidRow(row, "source-text-range");
+      return invalidRow(row, 'source-text-range');
     const expanded =
       row.positionedFragments === undefined
-        ? { state: "expanded", rows: [row] }
+        ? { state: 'expanded', rows: [row] }
         : positionedRowFragments(source, row, maxRows - result.length - flowAnchors.length);
-    if (expanded.state !== "expanded") return expanded;
+    if (expanded.state !== 'expanded') return expanded;
     positioned ||= row.positionedFragments !== undefined;
     for (const fragment of expanded.rows)
       (logicalAnchor ? flowAnchors : result).push({
@@ -449,7 +449,7 @@ export function paginateBodyRows(
     }
   }
   return {
-    state: "paginated",
+    state: 'paginated',
     rows: result,
     pages,
     limited,

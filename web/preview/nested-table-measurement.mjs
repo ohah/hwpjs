@@ -1,19 +1,19 @@
-import { nestedPictureTableSeparation } from "./nested-picture-table-separation.mjs";
-import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
-import { tableGeometryFailureEvidence } from "./table-geometry-failure-evidence.mjs";
-import { measureTableCells } from "./table-cell-measurement.mjs";
-import { layoutContent } from "./layout.mjs";
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
-import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
-import { tableSourceHorizontalLayout } from "./table-source-horizontal-layout.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
-import { reserveNestedFloatingFlow } from "./nested-floating-flow-reservation.mjs";
+import { nestedPictureTableSeparation } from './nested-picture-table-separation.mjs';
+import { validateNestedTableOwnership } from './nested-table-ownership.mjs';
+import { tableGeometryFailureEvidence } from './table-geometry-failure-evidence.mjs';
+import { measureTableCells } from './table-cell-measurement.mjs';
+import { layoutContent } from './layout.mjs';
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
+import { layoutInlineTablePageContent } from './inline-table-page-content.mjs';
+import { tableSourceHorizontalLayout } from './table-source-horizontal-layout.mjs';
+import { textMeasurement } from './text-measurement.mjs';
+import { reserveNestedFloatingFlow } from './nested-floating-flow-reservation.mjs';
 import {
   inspectNestedCellPictureSources,
   measureNestedCellPictureParagraph,
-} from "./nested-cell-picture-flow.mjs";
-import { measureNestedInlineTableObject } from "./nested-inline-table-object-measurement.mjs";
-import { flowNestedBlockText } from "./nested-block-text-flow.mjs";
+} from './nested-cell-picture-flow.mjs';
+import { measureNestedInlineTableObject } from './nested-inline-table-object-measurement.mjs';
+import { flowNestedBlockText } from './nested-block-text-flow.mjs';
 
 // 자식 표 크기를 선행 측정하고 현재 UTF-16 앵커에 부모 셀 흐름을 결합합니다.
 export const MAX_NESTED_TABLE_DEPTH = 64;
@@ -24,7 +24,7 @@ export function measureNestedTable(
   {
     maxRows = 20000,
     maxDepth = MAX_NESTED_TABLE_DEPTH,
-    overflow = "reject",
+    overflow = 'reject',
     minimumCellHeight,
     measureCellFlow,
     completeCellFlow,
@@ -32,26 +32,26 @@ export function measureNestedTable(
     deferMultilineAlignment = false,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
     !Number.isSafeInteger(maxDepth) ||
     maxDepth < 1 ||
-    !["reject", "clip", "visible"].includes(overflow)
+    !['reject', 'clip', 'visible'].includes(overflow)
   )
-    return unavailable("InvalidNestedTableMeasurement");
-  if (measureCellFlow !== undefined && typeof measureCellFlow !== "function")
-    return unavailable("InvalidNestedTableMeasurement");
+    return unavailable('InvalidNestedTableMeasurement');
+  if (measureCellFlow !== undefined && typeof measureCellFlow !== 'function')
+    return unavailable('InvalidNestedTableMeasurement');
   let index;
   try {
     index = validateNestedTableOwnership(content);
   } catch {
-    return unavailable("InvalidNestedTableFlow");
+    return unavailable('InvalidNestedTableFlow');
   }
   if (index.tables.get(`${root?.section}:${root?.tableNode}`) !== root)
-    return unavailable("InvalidNestedTableMeasurement");
+    return unavailable('InvalidNestedTableMeasurement');
   const hosts = new Map();
   for (const table of index.tables.values()) {
     if (table.parentTableNode == null) continue;
@@ -61,13 +61,13 @@ export function measureNestedTable(
     hosts.set(key, children);
   }
   const measureTable = (table, budget, depth) => {
-    if (depth > maxDepth) return unavailable("NestedTableMeasurementLimit");
+    if (depth > maxDepth) return unavailable('NestedTableMeasurementLimit');
     const source = tableSourceHorizontalLayout(table);
-    if (source.state !== "resolved")
+    if (source.state !== 'resolved')
       return { ...source, section: table.section, tableNode: table.tableNode };
     const measuredTable = measureTableCells(table, content.paragraphs, measure, {
       origin: { x: 0, y: 0 },
-      padding: "source",
+      padding: 'source',
       maxRows: budget,
       compactLines: true,
       minimumCellHeight,
@@ -89,14 +89,14 @@ export function measureNestedTable(
           return null;
         if (input.columnContext?.declaration?.count > 1)
           return {
-            ...unavailable("UnsupportedNestedCellContent"),
+            ...unavailable('UnsupportedNestedCellContent'),
             section: table.section,
             tableNode: table.tableNode,
             listNode: input.cell.listNode,
-            nestedCellReason: "columns-with-nested-tables",
+            nestedCellReason: 'columns-with-nested-tables',
           };
         const pictureSources = inspectNestedCellPictureSources(input);
-        if (pictureSources.state !== "indexed")
+        if (pictureSources.state !== 'indexed')
           return {
             ...pictureSources,
             section: table.section,
@@ -124,11 +124,11 @@ export function measureNestedTable(
           for (const child of children) {
             if (!child.sourceGeometry?.geometry) {
               return {
-                ...unavailable("MissingTableGeometry"),
+                ...unavailable('MissingTableGeometry'),
                 section: child.section,
                 tableNode: child.tableNode,
                 parentTableNode: table.tableNode,
-                nestedAnchorReason: "missing-geometry",
+                nestedAnchorReason: 'missing-geometry',
                 ...tableGeometryFailureEvidence(child, content.tableGeometryErrors),
               };
             }
@@ -141,17 +141,17 @@ export function measureNestedTable(
                 : child.sourceGeometry?.geometry?.treat_as_character !== true)
             )
               return {
-                ...unavailable("UnsupportedNestedTableAnchor"),
+                ...unavailable('UnsupportedNestedTableAnchor'),
                 section: child.section,
                 tableNode: child.tableNode,
                 parentTableNode: table.tableNode,
                 nestedAnchorReason: child.sourceCaption
-                  ? "caption"
+                  ? 'caption'
                   : floating && ![1, 2, 3].includes(child.sourceGeometry.text_wrap)
-                    ? "wrap"
+                    ? 'wrap'
                     : floating
-                      ? "line-spacing"
-                      : "inline-geometry",
+                      ? 'line-spacing'
+                      : 'inline-geometry',
               };
             const raw = child.sourceGeometry.out_margin;
             if (
@@ -159,24 +159,24 @@ export function measureNestedTable(
               raw.length !== 4 ||
               !raw.every((v) => Number.isSafeInteger(v) && v >= 0 && v <= 0xffffffff)
             )
-              return unavailable("MissingTableOuterInsets");
+              return unavailable('MissingTableOuterInsets');
             const remaining = input.maxRows - rows.length;
-            if (remaining < 1) return unavailable("TableCellMeasurementLimit");
+            if (remaining < 1) return unavailable('TableCellMeasurementLimit');
             const childFlow = measureTable(child, remaining, depth + 1);
-            if (childFlow.state !== "measured") return childFlow;
+            if (childFlow.state !== 'measured') return childFlow;
             if ([...childFlow.flows.values()].some((flow) => flow.cellPageBreaks?.length))
-              return unavailable("UnsupportedNestedCellPageBreak");
+              return unavailable('UnsupportedNestedCellPageBreak');
             columnEvidence.push(...(childFlow.columnEvidence ?? []));
             if ([...childFlow.flows.values()].some((flow) => flow.floatingTables?.length))
-              return unavailable("UnsupportedNestedFloatingDepth");
+              return unavailable('UnsupportedNestedFloatingDepth');
             if (floating) {
               if (
                 !Number.isInteger(child.anchorUnit) ||
                 child.anchorUnit < 0 ||
-                paragraph.text[child.anchorUnit] !== "\ufffc" ||
+                paragraph.text[child.anchorUnit] !== '\ufffc' ||
                 floatingUnits.has(child.anchorUnit)
               )
-                return unavailable("InvalidNestedFloatingTableOwner");
+                return unavailable('InvalidNestedFloatingTableOwner');
               floatingUnits.add(child.anchorUnit);
               const descriptor = { table: child, paragraph, measured: childFlow };
               floatingTables.push(descriptor);
@@ -190,7 +190,7 @@ export function measureNestedTable(
               measure,
               remaining,
             );
-            if (object.state !== "object-measured") return object;
+            if (object.state !== 'object-measured') return object;
             measured.set(child.tableNode, {
               child,
               childFlow,
@@ -204,7 +204,7 @@ export function measureNestedTable(
               height: object.height,
             });
           }
-          if (rows.length >= input.maxRows) return unavailable("TableCellMeasurementLimit");
+          if (rows.length >= input.maxRows) return unavailable('TableCellMeasurementLimit');
           const paragraphPictures = [...pictures.values()].filter(
             (item) =>
               item.picture.section === paragraph.section &&
@@ -221,8 +221,8 @@ export function measureNestedTable(
             })),
           ];
           const currentMeasure = (text, owner, unit, kind) =>
-            floatingUnits.has(unit) && kind === "text"
-              ? { ...textMeasurement(measure("", owner, unit, kind)), width: 0 }
+            floatingUnits.has(unit) && kind === 'text'
+              ? { ...textMeasurement(measure('', owner, unit, kind)), width: 0 }
               : measure(text, owner, unit, kind);
           const pictureFlow =
             floatingPictures.some(
@@ -237,7 +237,7 @@ export function measureNestedTable(
               height,
               input.width,
             );
-            if (separation.state !== "separated")
+            if (separation.state !== 'separated')
               return {
                 ...separation,
                 section: table.section,
@@ -264,7 +264,7 @@ export function measureNestedTable(
             : inlineEntries.length
               ? measureInlineObjectParagraph(paragraph, inlineEntries, input.width, measure, {
                   maxRows: input.maxRows - rows.length,
-                  allowLineOverflow: overflow !== "reject",
+                  allowLineOverflow: overflow !== 'reject',
                   compactLines: true,
                   includeTerminalAfter: paragraph !== input.paragraphs.at(-1),
                   zeroWidthUnits: [...floatingUnits],
@@ -280,7 +280,7 @@ export function measureNestedTable(
                     includeTerminalAfter: paragraph !== input.paragraphs.at(-1),
                   },
                 );
-          if (flow.state === "unavailable")
+          if (flow.state === 'unavailable')
             return {
               ...flow,
               section: table.section,
@@ -295,17 +295,17 @@ export function measureNestedTable(
                 height: entry.height,
               })),
             };
-          if (flow.limited) return unavailable("TableCellMeasurementLimit");
+          if (flow.limited) return unavailable('TableCellMeasurementLimit');
           if (pictureFlow) flowPictures.push(...(flow.flowPictures ?? []));
           if (paragraphFloats.length && !inlineEntries.length) {
             const wrapped = flowNestedBlockText(paragraph, flow, paragraphFloats, input.width);
-            if (wrapped.state === "unavailable") return wrapped;
+            if (wrapped.state === 'unavailable') return wrapped;
             flow = wrapped.flow;
           }
           const reservation = paragraphFloats.length
             ? reserveNestedFloatingFlow(paragraph, flow, paragraphFloats, { x: 0, y: height })
-            : { state: "reserved", bottom: height + flow.height };
-          if (reservation.state !== "reserved") return reservation;
+            : { state: 'reserved', bottom: height + flow.height };
+          if (reservation.state !== 'reserved') return reservation;
           rows.push(
             ...flow.rows.map((row) => ({
               ...row,
@@ -327,7 +327,7 @@ export function measureNestedTable(
           );
           for (const anchor of flow.anchors ?? []) {
             if (pictureNodes.has(anchor.objectNode)) continue;
-            if (rows.length >= input.maxRows) return unavailable("TableCellMeasurementLimit");
+            if (rows.length >= input.maxRows) return unavailable('TableCellMeasurementLimit');
             const { child, childFlow, margins, captionReservation } = measured.get(
               anchor.objectNode,
             );
@@ -356,10 +356,10 @@ export function measureNestedTable(
               maxRows: input.maxRows - rows.length,
               captionReservation,
             });
-            if (projected.state !== "placed") return projected;
+            if (projected.state !== 'placed') return projected;
             if (captionReservation) inlineCaptions.push({ table: child, projection: projected });
             if (projected.tableCaptionBounds?.some((bound) => bound.tableNode !== child.tableNode))
-              return unavailable("UnsupportedNestedCaptionDepth");
+              return unavailable('UnsupportedNestedCaptionDepth');
             rows.push(...projected.rows);
             boxes.push(...projected.boxes);
             nestedPictures.push(...(projected.flowPictures ?? []));
@@ -381,16 +381,16 @@ export function measureNestedTable(
           width: input.width,
           limited: false,
           spatialRows: true,
-          clipOverflow: overflow === "clip",
+          clipOverflow: overflow === 'clip',
           ...(nestedPictures.length ? { nestedPictures } : {}),
           ...(columnEvidence.length ? { columnEvidence } : {}),
           ...(inlineCaptions.length ? { inlineCaptions } : {}),
-          ...(overflow === "visible" ? { visibleHorizontalOverflow: true } : {}),
+          ...(overflow === 'visible' ? { visibleHorizontalOverflow: true } : {}),
           ...(floatingTables.length ? { floatingTables } : {}),
         };
       },
     });
-    if (measuredTable.state !== "measured") return measuredTable;
+    if (measuredTable.state !== 'measured') return measuredTable;
     const columnEvidence = [
       ...(source.evidence
         ? [{ section: table.section, tableNode: table.tableNode, ...source.evidence }]

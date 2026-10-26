@@ -1,99 +1,99 @@
-import { createRenderer } from "./renderer.mjs";
-import { createPreviewWasmModuleLoader } from "./wasm-module-loader.mjs";
+import { createRenderer } from './renderer.mjs';
+import { createPreviewWasmModuleLoader } from './wasm-module-loader.mjs';
 const loadPreviewWasmModule = createPreviewWasmModuleLoader();
-import { createCommandSearch } from "./command-search.mjs";
-import { detectDocumentFormat } from "../../js/document-format.mjs";
-import { createInspectorToggle } from "./inspector-toggle.mjs";
-import { createFindControls } from "./find-controls.mjs";
-import { updateHwp5Consent } from "./hwp5-consent-visibility.mjs";
-import { presentSaveFailure } from "./save-failure-guidance.mjs";
-import { updateDownloadSessionStatus } from "./download-session-status.mjs";
-import { createDutmalControls } from "./dutmal-controls.mjs";
-import { createChartControls } from "./chart-controls.mjs";
-import { createChartOlePolicyControls } from "./chart-ole-policy-controls.mjs";
-import { createDutmalCanvasControls } from "./dutmal-canvas-controls.mjs";
-import { createCharacterFontControls } from "./character-font-controls.mjs";
-import { createCharacterFontNameControls } from "./character-font-name-controls.mjs";
-import { createSystemFontControls } from "./system-font-controls.mjs";
-import { createCharacterEffectControls } from "./character-effect-controls.mjs";
-import { createCharacterOutlineControls } from "./character-outline-controls.mjs";
-import { bindFileInput } from "./file-input-events.mjs";
-import { createFixtureControls } from "./fixture-controls.mjs";
-import { updateGroupedLayoutStatus } from "./grouped-layout-status.mjs";
-import { updatePageLayoutStatus } from "./page-layout-status.mjs";
-import { createPageStatusControls } from "./page-status-controls.mjs";
-import { createDocumentMenuControls } from "./document-menu-controls.mjs";
-import { createDocumentRibbon } from "./document-ribbon-controls.mjs";
-import { createParagraphBreakControls } from "./paragraph-break-controls.mjs";
-import { createTableCreationControls } from "./table-creation-controls.mjs";
-import { createViewScaleControls } from "./view-scale-controls.mjs";
-import { createDocumentWindowControls } from "./document-window-controls.mjs";
-import { createPictureRequests } from "./picture-requests.mjs";
-import { clipText } from "./content.mjs";
-import { canStartDocumentSession, documentFormatLabel } from "./document-editor-access.mjs";
-import { createEditorControls } from "./editor-controls.mjs";
-import { createCanvasEditor } from "./canvas-editor.mjs";
-import { downloadDocument } from "./document-download.mjs";
-import { failureMessage } from "./failure-message.mjs";
-import { loadFailureMessage } from "./load-failure-guidance.mjs";
-import { createAvailableSectionsControls } from "./available-sections-controls.mjs";
+import { createCommandSearch } from './command-search.mjs';
+import { detectDocumentFormat } from '../../js/document-format.mjs';
+import { createInspectorToggle } from './inspector-toggle.mjs';
+import { createFindControls } from './find-controls.mjs';
+import { updateHwp5Consent } from './hwp5-consent-visibility.mjs';
+import { presentSaveFailure } from './save-failure-guidance.mjs';
+import { updateDownloadSessionStatus } from './download-session-status.mjs';
+import { createDutmalControls } from './dutmal-controls.mjs';
+import { createChartControls } from './chart-controls.mjs';
+import { createChartOlePolicyControls } from './chart-ole-policy-controls.mjs';
+import { createDutmalCanvasControls } from './dutmal-canvas-controls.mjs';
+import { createCharacterFontControls } from './character-font-controls.mjs';
+import { createCharacterFontNameControls } from './character-font-name-controls.mjs';
+import { createSystemFontControls } from './system-font-controls.mjs';
+import { createCharacterEffectControls } from './character-effect-controls.mjs';
+import { createCharacterOutlineControls } from './character-outline-controls.mjs';
+import { bindFileInput } from './file-input-events.mjs';
+import { createFixtureControls } from './fixture-controls.mjs';
+import { updateGroupedLayoutStatus } from './grouped-layout-status.mjs';
+import { updatePageLayoutStatus } from './page-layout-status.mjs';
+import { createPageStatusControls } from './page-status-controls.mjs';
+import { createDocumentMenuControls } from './document-menu-controls.mjs';
+import { createDocumentRibbon } from './document-ribbon-controls.mjs';
+import { createParagraphBreakControls } from './paragraph-break-controls.mjs';
+import { createTableCreationControls } from './table-creation-controls.mjs';
+import { createViewScaleControls } from './view-scale-controls.mjs';
+import { createDocumentWindowControls } from './document-window-controls.mjs';
+import { createPictureRequests } from './picture-requests.mjs';
+import { clipText } from './content.mjs';
+import { canStartDocumentSession, documentFormatLabel } from './document-editor-access.mjs';
+import { createEditorControls } from './editor-controls.mjs';
+import { createCanvasEditor } from './canvas-editor.mjs';
+import { downloadDocument } from './document-download.mjs';
+import { failureMessage } from './failure-message.mjs';
+import { loadFailureMessage } from './load-failure-guidance.mjs';
+import { createAvailableSectionsControls } from './available-sections-controls.mjs';
 import {
   createAvailableSectionCopyControls,
   availableSectionCopySummary,
-} from "./available-section-copy-controls.mjs";
-import { guardGeneration } from "./worker-generation.mjs";
-import { createHistoryControls } from "./history-controls.mjs";
-import { createSaveControls } from "./save-controls.mjs";
-import { createPasswordControls } from "./password-controls.mjs";
-import { createCellSizeControls } from "./cell-size-controls.mjs";
-import { createPictureSizeControls } from "./picture-size-controls.mjs";
-import { createPictureResizeControls } from "./picture-resize-controls.mjs";
-import { createFormulaControls } from "./formula-controls.mjs";
-import { createCheckBoxCanvasControls } from "./checkbox-canvas-controls.mjs";
+} from './available-section-copy-controls.mjs';
+import { guardGeneration } from './worker-generation.mjs';
+import { createHistoryControls } from './history-controls.mjs';
+import { createSaveControls } from './save-controls.mjs';
+import { createPasswordControls } from './password-controls.mjs';
+import { createCellSizeControls } from './cell-size-controls.mjs';
+import { createPictureSizeControls } from './picture-size-controls.mjs';
+import { createPictureResizeControls } from './picture-resize-controls.mjs';
+import { createFormulaControls } from './formula-controls.mjs';
+import { createCheckBoxCanvasControls } from './checkbox-canvas-controls.mjs';
 let formulaControls;
-import { createCellResizeControls } from "./cell-resize-controls.mjs";
-import { createParagraphFormatControls } from "./paragraph-format-controls.mjs";
-import { createParagraphMarginControls } from "./paragraph-margin-controls.mjs";
+import { createCellResizeControls } from './cell-resize-controls.mjs';
+import { createParagraphFormatControls } from './paragraph-format-controls.mjs';
+import { createParagraphMarginControls } from './paragraph-margin-controls.mjs';
 let paragraphMarginControls;
-import { createParagraphSpacingControls } from "./paragraph-spacing-controls.mjs";
-import { createCharacterPropertyControls } from "./character-property-controls.mjs";
-import { createUnderlineColorControls } from "./underline-color-controls.mjs";
-import { createCharacterColorControls } from "./character-color-controls.mjs";
-import { createCharacterShadeControls } from "./character-shade-controls.mjs";
+import { createParagraphSpacingControls } from './paragraph-spacing-controls.mjs';
+import { createCharacterPropertyControls } from './character-property-controls.mjs';
+import { createUnderlineColorControls } from './underline-color-controls.mjs';
+import { createCharacterColorControls } from './character-color-controls.mjs';
+import { createCharacterShadeControls } from './character-shade-controls.mjs';
 let underlineColorControls;
 let characterPropertyControls;
 let paragraphSpacingControls;
-const input = document.querySelector("#file"),
-  status = document.querySelector("#status");
+const input = document.querySelector('#file'),
+  status = document.querySelector('#status');
 const availableSectionsControls = createAvailableSectionsControls({
-  button: document.querySelector("#available-sections-open"),
-  note: document.querySelector("#available-sections-status"),
+  button: document.querySelector('#available-sections-open'),
+  note: document.querySelector('#available-sections-status'),
   reopen: (selected) => openSelectedFile(selected, { availableSectionsOnly: true }),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) availableSectionsControls.close();
 });
 const availableSectionCopyControls = createAvailableSectionCopyControls({
-  button: document.querySelector("#available-section-copy-open"),
-  note: document.querySelector("#available-section-copy-status"),
+  button: document.querySelector('#available-section-copy-open'),
+  note: document.querySelector('#available-section-copy-status'),
   confirm: (message) => window.confirm(message),
   reopen: (selected) => openSelectedFile(selected, { availableSectionCopy: true }),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) availableSectionCopyControls.close();
 });
 const chartOlePolicyControls = createChartOlePolicyControls({
-  checkbox: document.querySelector("#chart-ole-compat"),
+  checkbox: document.querySelector('#chart-ole-compat'),
   file: input,
-  note: document.querySelector("#chart-ole-policy-status"),
+  note: document.querySelector('#chart-ole-policy-status'),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) chartOlePolicyControls.close();
 });
-const accessible = document.querySelector("#accessible");
+const accessible = document.querySelector('#accessible');
 const inspector = createInspectorToggle({
-  button: document.querySelector("#inspector-toggle"),
-  panel: document.querySelector("#document-inspector"),
+  button: document.querySelector('#inspector-toggle'),
+  panel: document.querySelector('#document-inspector'),
 });
 let pageStatusControls,
   documentMenuControls,
@@ -101,30 +101,30 @@ let pageStatusControls,
   documentWindowControls,
   tableCreationControls;
 const renderer = createRenderer(
-  document.querySelector("#canvas"),
-  document.querySelector("#viewport"),
-  document.querySelector("#spacer"),
+  document.querySelector('#canvas'),
+  document.querySelector('#viewport'),
+  document.querySelector('#spacer'),
   (layout) => {
-    document.querySelector("#limit").hidden = !layout.limited;
-    const note = document.querySelector("#picture-status"),
+    document.querySelector('#limit').hidden = !layout.limited;
+    const note = document.querySelector('#picture-status'),
       coverage = layout.pictureCoverage;
     note.hidden = !coverage?.total;
     note.textContent = coverage?.total
       ? `그림 배치 대상 ${coverage.eligible}/${coverage.total} · 보류 ${coverage.pending}개 · 이미지 해독 ${coverage.decoded}개 · 자원 실패 ${coverage.failed}개 · 대기 ${coverage.loading}개 (실제 표시 성공·원본 페이지 조판과는 별도입니다.)`
-      : "";
-    updateGroupedLayoutStatus(document.querySelector("#group-status"), layout);
-    updatePageLayoutStatus(document.querySelector("#page-layout-status"), layout);
+      : '';
+    updateGroupedLayoutStatus(document.querySelector('#group-status'), layout);
+    updatePageLayoutStatus(document.querySelector('#page-layout-status'), layout);
     pageStatusControls?.refresh();
   },
 );
 pageStatusControls = createPageStatusControls({
-  node: document.querySelector("#visible-page-status"),
-  viewport: document.querySelector("#viewport"),
+  node: document.querySelector('#visible-page-status'),
+  viewport: document.querySelector('#viewport'),
   layout: () => renderer.layout(),
   resizeTarget: window,
   viewScale: () => renderer.viewScale(),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) pageStatusControls.close();
 });
 let worker,
@@ -139,39 +139,39 @@ let worker,
   cellResizeControls,
   paragraphFormatControls;
 const findControls = createFindControls({
-  form: document.querySelector("#find-form"),
-  input: document.querySelector("#find-input"),
-  note: document.querySelector("#find-status"),
+  form: document.querySelector('#find-form'),
+  input: document.querySelector('#find-input'),
+  note: document.querySelector('#find-status'),
   search: (query) => renderer.findText(query),
   select: (range) => {
     const selected = direct?.selectTextRange(range) === true;
     if (selected) updateSave();
     return selected;
   },
-  replaceButton: document.querySelector("#replace-found"),
-  replacement: document.querySelector("#replace-input"),
+  replaceButton: document.querySelector('#replace-found'),
+  replacement: document.querySelector('#replace-input'),
   replace: (text) => {
     const accepted = direct?.replaceSelectedText(text) === true;
     updateSave();
     return accepted;
   },
   shortcuts: window,
-  scope: document.querySelector("#viewport"),
+  scope: document.querySelector('#viewport'),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) findControls.close();
 });
 const pictureRequests = createPictureRequests((message) => {
-  if (!worker) throw new Error("PictureReadUnavailable");
+  if (!worker) throw new Error('PictureReadUnavailable');
   worker.postMessage(message);
 });
 renderer.pictureReader((section, node) => pictureRequests.read(section, node));
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) pictureRequests.reset();
 });
-const download = document.querySelector("#download"),
-  staleLayout = document.querySelector("#allow-stale-layout"),
-  downloadStatus = document.querySelector("#download-status");
+const download = document.querySelector('#download'),
+  staleLayout = document.querySelector('#allow-stale-layout'),
+  downloadStatus = document.querySelector('#download-status');
 function updateSave() {
   const enabled = Boolean(worker) && controls.ready() && !controls.busy() && direct.settled();
   download.disabled = !enabled || passwordControls?.allowed() === false;
@@ -203,94 +203,94 @@ const controls = createEditorControls(
   },
 );
 direct = createCanvasEditor({
-  canvas: document.querySelector("#canvas"),
-  viewport: document.querySelector("#viewport"),
-  input: document.querySelector("#canvas-input"),
+  canvas: document.querySelector('#canvas'),
+  viewport: document.querySelector('#viewport'),
+  input: document.querySelector('#canvas-input'),
   renderer,
   controls,
-  note: document.querySelector("#canvas-edit-status"),
+  note: document.querySelector('#canvas-edit-status'),
   queryEditRange: (message) => worker?.postMessage(message),
   querySplitRange: (message) => worker?.postMessage(message),
 });
 tableCreationControls = createTableCreationControls({
-  form: document.querySelector("#table-creation-form"),
-  fields: document.querySelector("#table-creation-fields"),
-  focusButton: document.querySelector("#table-creation-focus"),
-  submit: document.querySelector("#table-creation-submit"),
-  note: document.querySelector("#table-creation-status"),
+  form: document.querySelector('#table-creation-form'),
+  fields: document.querySelector('#table-creation-fields'),
+  focusButton: document.querySelector('#table-creation-focus'),
+  submit: document.querySelector('#table-creation-submit'),
+  note: document.querySelector('#table-creation-status'),
   dimensions: {
-    rows: document.querySelector("#table-creation-rows"),
-    columns: document.querySelector("#table-creation-columns"),
-    width: document.querySelector("#table-creation-width"),
-    rowHeight: document.querySelector("#table-creation-height"),
+    rows: document.querySelector('#table-creation-rows'),
+    columns: document.querySelector('#table-creation-columns'),
+    width: document.querySelector('#table-creation-width'),
+    rowHeight: document.querySelector('#table-creation-height'),
   },
   resources: {
-    paragraph: document.querySelector("#table-creation-paragraph"),
-    character: document.querySelector("#table-creation-character"),
-    style: document.querySelector("#table-creation-style"),
-    border_fill: document.querySelector("#table-creation-border"),
+    paragraph: document.querySelector('#table-creation-paragraph'),
+    character: document.querySelector('#table-creation-character'),
+    style: document.querySelector('#table-creation-style'),
+    border_fill: document.querySelector('#table-creation-border'),
   },
   selected: () => direct.tableCreationSelection(),
   inventory: () => direct.tableCreationResources(),
   request: (options) => direct.insertTable(options),
 });
-for (const node of [document.querySelector("#canvas"), document.querySelector("#canvas-input")])
-  for (const type of ["pointerup", "keyup"])
+for (const node of [document.querySelector('#canvas'), document.querySelector('#canvas-input')])
+  for (const type of ['pointerup', 'keyup'])
     node.addEventListener(type, () => {
       tableCreationControls.update();
       documentMenuControls?.refresh();
     });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) tableCreationControls.close();
 });
 formulaControls = createFormulaControls({
-  form: document.querySelector("#formula-form"),
-  fields: document.querySelector("#formula-fields"),
-  choices: document.querySelector("#formula-choice"),
-  input: document.querySelector("#formula-input"),
-  note: document.querySelector("#formula-status"),
-  definitionApply: document.querySelector("#formula-apply"),
+  form: document.querySelector('#formula-form'),
+  fields: document.querySelector('#formula-fields'),
+  choices: document.querySelector('#formula-choice'),
+  input: document.querySelector('#formula-input'),
+  note: document.querySelector('#formula-status'),
+  definitionApply: document.querySelector('#formula-apply'),
   result: {
-    fields: document.querySelector("#formula-result-fields"),
-    input: document.querySelector("#formula-result-input"),
-    apply: document.querySelector("#formula-result-apply"),
+    fields: document.querySelector('#formula-result-fields'),
+    input: document.querySelector('#formula-result-input'),
+    apply: document.querySelector('#formula-result-apply'),
   },
   ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(),
   request: (message) => controls.request(message),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) formulaControls.close();
 });
 const dutmalControls = createDutmalControls({
-  form: document.querySelector("#dutmal-form"),
-  fields: document.querySelector("#dutmal-fields"),
-  targets: document.querySelector("#dutmal-target"),
-  textKind: document.querySelector("#dutmal-kind"),
-  input: document.querySelector("#dutmal-value"),
-  note: document.querySelector("#dutmal-status"),
+  form: document.querySelector('#dutmal-form'),
+  fields: document.querySelector('#dutmal-fields'),
+  targets: document.querySelector('#dutmal-target'),
+  textKind: document.querySelector('#dutmal-kind'),
+  input: document.querySelector('#dutmal-value'),
+  note: document.querySelector('#dutmal-status'),
   ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(),
   request: (message) => controls.request(message),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) dutmalControls.close();
 });
 const chartControls = createChartControls({
-  form: document.querySelector("#chart-form"),
-  fields: document.querySelector("#chart-fields"),
-  targets: document.querySelector("#chart-target"),
-  points: document.querySelector("#chart-point"),
-  kinds: document.querySelector("#chart-value-kind"),
-  input: document.querySelector("#chart-value"),
-  note: document.querySelector("#chart-status"),
+  form: document.querySelector('#chart-form'),
+  fields: document.querySelector('#chart-fields'),
+  targets: document.querySelector('#chart-target'),
+  points: document.querySelector('#chart-point'),
+  kinds: document.querySelector('#chart-value-kind'),
+  input: document.querySelector('#chart-value'),
+  note: document.querySelector('#chart-status'),
   ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(),
   request: (message) => controls.request(message),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) chartControls.close();
 });
 const dutmalCanvasControls = createDutmalCanvasControls({
-  canvas: document.querySelector("#canvas"),
-  viewport: document.querySelector("#viewport"),
+  canvas: document.querySelector('#canvas'),
+  viewport: document.querySelector('#viewport'),
   renderer,
   ready: () => controls.ready() && !controls.busy() && direct.settled(),
   select: (row) => {
@@ -299,98 +299,98 @@ const dutmalCanvasControls = createDutmalCanvasControls({
     return true;
   },
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) dutmalCanvasControls.close();
 });
 const checkBoxControls = createCheckBoxCanvasControls({
-  canvas: document.querySelector("#canvas"),
-  viewport: document.querySelector("#viewport"),
+  canvas: document.querySelector('#canvas'),
+  viewport: document.querySelector('#viewport'),
   renderer,
-  note: document.querySelector("#canvas-edit-status"),
+  note: document.querySelector('#canvas-edit-status'),
   ready: () => Boolean(worker) && controls.ready() && !controls.busy() && direct.settled(),
   request: (message) => controls.request(message),
 });
 const colorControls = [
   createCharacterOutlineControls({
-    kind: document.querySelector("#canvas-outline-kind"),
-    apply: document.querySelector("#canvas-outline-apply"),
-    current: document.querySelector("#canvas-outline-current"),
-    note: document.querySelector("#canvas-outline-status"),
+    kind: document.querySelector('#canvas-outline-kind'),
+    apply: document.querySelector('#canvas-outline-apply'),
+    current: document.querySelector('#canvas-outline-current'),
+    note: document.querySelector('#canvas-outline-status'),
     selected: () => direct.selectedOutlineRanges(),
     selectedState: () => direct.selectedCharacterOutlineKind(),
     canRequestKind: (kind) => direct.characterOutlineKindAvailable(kind),
     request: (kind) => direct.setCharacterOutline(kind),
   }),
   createCharacterEffectControls({
-    buttons: document.querySelectorAll("[data-effect]"),
-    note: document.querySelector("#canvas-effect-status"),
+    buttons: document.querySelectorAll('[data-effect]'),
+    note: document.querySelector('#canvas-effect-status'),
     selectedState: (effect) => direct.selectedCharacterEffect(effect),
     request: (effect, enabled) => direct.setCharacterEffect(effect, enabled, true),
-    availability: "characterEffectExclusiveAvailable",
-    rangesAvailability: "characterEffectRangesExclusiveAvailable",
+    availability: 'characterEffectExclusiveAvailable',
+    rangesAvailability: 'characterEffectRangesExclusiveAvailable',
     canRequest: () =>
       direct.selectedEffectRanges(true)?.some((range) => range.startUnit < range.endUnit) === true,
   }),
   createSystemFontControls({
-    readButton: document.querySelector("#canvas-system-font-read"),
-    select: document.querySelector("#canvas-system-font"),
-    note: document.querySelector("#canvas-system-font-status"),
+    readButton: document.querySelector('#canvas-system-font-read'),
+    select: document.querySelector('#canvas-system-font'),
+    note: document.querySelector('#canvas-system-font-status'),
     read:
-      window.isSecureContext && typeof window.queryLocalFonts === "function"
+      window.isSecureContext && typeof window.queryLocalFonts === 'function'
         ? () => window.queryLocalFonts()
         : undefined,
     choose: (name) => {
-      const input = document.querySelector("#canvas-font-name");
+      const input = document.querySelector('#canvas-font-name');
       input.value = name;
-      input.dispatchEvent(new Event("input"));
+      input.dispatchEvent(new Event('input'));
     },
   }),
   createCharacterShadeControls({
-    input: document.querySelector("#canvas-shade-color"),
-    apply: document.querySelector("#canvas-shade-apply"),
-    remove: document.querySelector("#canvas-shade-remove"),
-    note: document.querySelector("#canvas-shade-status"),
-    current: document.querySelector("#canvas-shade-current"),
+    input: document.querySelector('#canvas-shade-color'),
+    apply: document.querySelector('#canvas-shade-apply'),
+    remove: document.querySelector('#canvas-shade-remove'),
+    note: document.querySelector('#canvas-shade-status'),
+    current: document.querySelector('#canvas-shade-current'),
     selectedState: () => direct.selectedCharacterShade(),
     selected: () => direct.selectedShadeRanges(),
     request: (color) => direct.setCharacterShade(color),
   }),
   createCharacterFontControls({
-    language: document.querySelector("#canvas-font-language"),
-    font: document.querySelector("#canvas-font"),
-    apply: document.querySelector("#canvas-font-apply"),
-    note: document.querySelector("#canvas-font-status"),
-    category: document.querySelector("#canvas-font-category"),
+    language: document.querySelector('#canvas-font-language'),
+    font: document.querySelector('#canvas-font'),
+    apply: document.querySelector('#canvas-font-apply'),
+    note: document.querySelector('#canvas-font-status'),
+    category: document.querySelector('#canvas-font-category'),
     selectedIds: (language) => direct.selectedCharacterFontIds(language),
     selected: () => direct.selectedFontRanges(),
     request: (language, id) => direct.setCharacterFont(language, id),
   }),
   createCharacterFontNameControls({
-    language: document.querySelector("#canvas-font-language"),
-    name: document.querySelector("#canvas-font-name"),
-    apply: document.querySelector("#canvas-font-name-apply"),
-    note: document.querySelector("#canvas-font-name-status"),
+    language: document.querySelector('#canvas-font-language'),
+    name: document.querySelector('#canvas-font-name'),
+    apply: document.querySelector('#canvas-font-name-apply'),
+    note: document.querySelector('#canvas-font-name-status'),
     selected: () => direct.selectedFontNameRanges(),
     request: (language, name) => direct.setCharacterFontName(language, name),
   }),
   createUnderlineColorControls({
-    input: document.querySelector("#canvas-underline-color"),
-    apply: document.querySelector("#canvas-underline-color-apply"),
-    note: document.querySelector("#canvas-underline-color-status"),
+    input: document.querySelector('#canvas-underline-color'),
+    apply: document.querySelector('#canvas-underline-color-apply'),
+    note: document.querySelector('#canvas-underline-color-status'),
     selected: () => direct.selectedRange(),
     request: (color) => direct.setCharacterUnderlineColor(color),
   }),
   createCharacterColorControls({
-    input: document.querySelector("#canvas-text-color"),
-    apply: document.querySelector("#canvas-text-color-apply"),
-    note: document.querySelector("#canvas-text-color-status"),
+    input: document.querySelector('#canvas-text-color'),
+    apply: document.querySelector('#canvas-text-color-apply'),
+    note: document.querySelector('#canvas-text-color-status'),
     selected: () => direct.selectedTextColorRanges(),
     request: (color) => direct.setCharacterTextColor(color),
-    availability: "characterTextColorAvailable",
-    kind: "character-text-color",
-    additionalKinds: ["character-text-color-ranges"],
-    label: "글자색",
-    success: "글자색 적용",
+    availability: 'characterTextColorAvailable',
+    kind: 'character-text-color',
+    additionalKinds: ['character-text-color-ranges'],
+    label: '글자색',
+    success: '글자색 적용',
   }),
 ];
 underlineColorControls = {
@@ -408,96 +408,96 @@ underlineColorControls = {
   },
 };
 paragraphFormatControls = createParagraphFormatControls({
-  form: document.querySelector("#paragraph-format-form"),
-  fields: document.querySelector("#paragraph-format-fields"),
-  id: document.querySelector("#paragraph-shape-id"),
-  choices: document.querySelector("#paragraph-shape-select"),
-  note: document.querySelector("#paragraph-format-status"),
+  form: document.querySelector('#paragraph-format-form'),
+  fields: document.querySelector('#paragraph-format-fields'),
+  id: document.querySelector('#paragraph-shape-id'),
+  choices: document.querySelector('#paragraph-shape-select'),
+  note: document.querySelector('#paragraph-format-status'),
   selected: () => direct.selectedParagraphFormat(),
   request: (id) => direct.setParagraphFormat(id),
-  alignmentButtons: document.querySelectorAll("[data-alignment]"),
+  alignmentButtons: document.querySelectorAll('[data-alignment]'),
   requestAlignment: (alignment) => direct.setParagraphAlignment(alignment),
 });
 paragraphMarginControls = createParagraphMarginControls({
-  form: document.querySelector("#paragraph-margin-form"),
-  fields: document.querySelector("#paragraph-margin-fields"),
+  form: document.querySelector('#paragraph-margin-form'),
+  fields: document.querySelector('#paragraph-margin-fields'),
   inputs: Object.fromEntries(
-    ["left", "right", "indent", "before", "after"].map((name) => [
+    ['left', 'right', 'indent', 'before', 'after'].map((name) => [
       name,
       document.querySelector(`#paragraph-margin-${name}`),
     ]),
   ),
-  note: document.querySelector("#paragraph-margin-status"),
+  note: document.querySelector('#paragraph-margin-status'),
   selected: () => direct.selectedParagraphFormat(),
   request: (margins) => direct.setParagraphMargins(margins),
 });
 paragraphSpacingControls = createParagraphSpacingControls({
-  form: document.querySelector("#paragraph-spacing-form"),
-  fields: document.querySelector("#paragraph-spacing-fields"),
-  type: document.querySelector("#paragraph-spacing-type"),
-  value: document.querySelector("#paragraph-spacing-value"),
-  note: document.querySelector("#paragraph-spacing-status"),
+  form: document.querySelector('#paragraph-spacing-form'),
+  fields: document.querySelector('#paragraph-spacing-fields'),
+  type: document.querySelector('#paragraph-spacing-type'),
+  value: document.querySelector('#paragraph-spacing-value'),
+  note: document.querySelector('#paragraph-spacing-status'),
   selected: () => direct.selectedParagraphFormat(),
   request: (type, value) => direct.setParagraphSpacing(type, value),
 });
 characterPropertyControls = createCharacterPropertyControls({
-  form: document.querySelector("#character-property-form"),
-  fields: document.querySelector("#character-property-fields"),
-  size: document.querySelector("#character-property-size"),
-  bold: document.querySelector("#character-property-bold"),
-  italic: document.querySelector("#character-property-italic"),
-  note: document.querySelector("#character-property-status"),
+  form: document.querySelector('#character-property-form'),
+  fields: document.querySelector('#character-property-fields'),
+  size: document.querySelector('#character-property-size'),
+  bold: document.querySelector('#character-property-bold'),
+  italic: document.querySelector('#character-property-italic'),
+  note: document.querySelector('#character-property-status'),
   selected: () => direct.selectedRange(),
   selectedRanges: () => direct.selectedCharacterPropertyRanges(),
   request: (properties) => direct.setCharacterProperties(properties),
-  boldToggle: document.querySelector("#canvas-bold-toggle"),
-  italicToggle: document.querySelector("#canvas-italic-toggle"),
-  underlineToggle: document.querySelector("#canvas-underline-toggle"),
-  strikeToggle: document.querySelector("#canvas-strike-toggle"),
+  boldToggle: document.querySelector('#canvas-bold-toggle'),
+  italicToggle: document.querySelector('#canvas-italic-toggle'),
+  underlineToggle: document.querySelector('#canvas-underline-toggle'),
+  strikeToggle: document.querySelector('#canvas-strike-toggle'),
   selectedState: (property) => direct.selectedCharacterPropertyState(property),
   selectedSize: () => direct.selectedCharacterSize(),
   toggle: (property) => direct.toggleCharacterProperty(property),
   canType: () => direct.canSetTypingProperties(),
 });
 cellResizeControls = createCellResizeControls({
-  canvas: document.querySelector("#canvas"),
-  viewport: document.querySelector("#viewport"),
+  canvas: document.querySelector('#canvas'),
+  viewport: document.querySelector('#viewport'),
   renderer,
   selected: () => direct.selectedCell(),
   request: (width, height) => direct.setCellSize(width, height),
-  note: document.querySelector("#cell-size-status"),
+  note: document.querySelector('#cell-size-status'),
 });
 cellSizeControls = createCellSizeControls({
-  form: document.querySelector("#cell-size-form"),
-  fields: document.querySelector("#cell-size-fields"),
-  width: document.querySelector("#cell-width"),
-  height: document.querySelector("#cell-height"),
-  note: document.querySelector("#cell-size-status"),
+  form: document.querySelector('#cell-size-form'),
+  fields: document.querySelector('#cell-size-fields'),
+  width: document.querySelector('#cell-width'),
+  height: document.querySelector('#cell-height'),
+  note: document.querySelector('#cell-size-status'),
   selected: () => direct.selectedCell(),
   request: (width, height) => direct.setCellSize(width, height),
 });
 pictureSizeControls = createPictureSizeControls({
-  form: document.querySelector("#picture-size-form"),
-  fields: document.querySelector("#picture-size-fields"),
-  width: document.querySelector("#picture-width"),
-  height: document.querySelector("#picture-height"),
-  note: document.querySelector("#picture-size-status"),
+  form: document.querySelector('#picture-size-form'),
+  fields: document.querySelector('#picture-size-fields'),
+  width: document.querySelector('#picture-width'),
+  height: document.querySelector('#picture-height'),
+  note: document.querySelector('#picture-size-status'),
   active: () => controls.ready(),
   selected: () => direct.selectedPicture(),
   request: (width, height) => direct.resizePicture(width, height),
 });
 pictureResizeControls = createPictureResizeControls({
-  canvas: document.querySelector("#canvas"),
-  viewport: document.querySelector("#viewport"),
+  canvas: document.querySelector('#canvas'),
+  viewport: document.querySelector('#viewport'),
   renderer,
   selected: () => direct.selectedPicture(),
   request: (width, height) => direct.resizePicture(width, height),
-  note: document.querySelector("#picture-size-status"),
+  note: document.querySelector('#picture-size-status'),
 });
-for (const node of [document.querySelector("#canvas"), document.querySelector("#canvas-input")]) {
-  for (const event of ["pointerup", "keyup"])
+for (const node of [document.querySelector('#canvas'), document.querySelector('#canvas-input')]) {
+  for (const event of ['pointerup', 'keyup'])
     node.addEventListener(event, () => pictureSizeControls.update());
-  for (const event of ["pointerup", "keyup"])
+  for (const event of ['pointerup', 'keyup'])
     node.addEventListener(event, () => {
       formulaControls.selectCanvas(direct.selectedFormula());
       cellSizeControls.update();
@@ -509,8 +509,8 @@ for (const node of [document.querySelector("#canvas"), document.querySelector("#
     });
 }
 historyControls = createHistoryControls({
-  undo: document.querySelector("#undo"),
-  redo: document.querySelector("#redo"),
+  undo: document.querySelector('#undo'),
+  redo: document.querySelector('#redo'),
   canRequest: () => Boolean(worker) && direct.canHistory(),
   request: (kind) => direct.history(kind),
 });
@@ -527,33 +527,33 @@ const saveControls = createSaveControls({
   },
   request: () => {
     const sent = controls.request({
-      kind: "save",
-      origin: "download",
+      kind: 'save',
+      origin: 'download',
       allowStaleLayout: staleLayout.checked,
-      allowUnprotectedOutput: document.querySelector("#allow-unprotected-output").checked,
+      allowUnprotectedOutput: document.querySelector('#allow-unprotected-output').checked,
     });
-    if (sent) downloadStatus.textContent = "저장 중…";
+    if (sent) downloadStatus.textContent = '저장 중…';
     return sent;
   },
   reportBlocked: () => {
     downloadStatus.textContent =
       passwordControls?.allowed() === false
-        ? "비밀번호 보호 해제 다운로드에 동의한 뒤 저장하세요."
-        : "편집 세션과 입력 처리가 준비된 뒤 저장하세요.";
+        ? '비밀번호 보호 해제 다운로드에 동의한 뒤 저장하세요.'
+        : '편집 세션과 입력 처리가 준비된 뒤 저장하세요.';
   },
 });
 passwordControls = createPasswordControls({
-  form: document.querySelector("#password-form"),
-  input: document.querySelector("#document-password"),
-  submit: document.querySelector("#password-submit"),
-  cancel: document.querySelector("#password-cancel"),
-  note: document.querySelector("#password-status"),
-  consentPanel: document.querySelector("#password-output-consent"),
-  consent: document.querySelector("#allow-unprotected-output"),
+  form: document.querySelector('#password-form'),
+  input: document.querySelector('#document-password'),
+  submit: document.querySelector('#password-submit'),
+  cancel: document.querySelector('#password-cancel'),
+  note: document.querySelector('#password-status'),
+  consentPanel: document.querySelector('#password-output-consent'),
+  consent: document.querySelector('#allow-unprotected-output'),
   update: updateSave,
   request: (message) => {
     try {
-      if (!worker) throw new Error("PasswordDocumentNotLoaded");
+      if (!worker) throw new Error('PasswordDocumentNotLoaded');
       worker.postMessage(message);
     } finally {
       delete message.password;
@@ -564,7 +564,7 @@ passwordControls = createPasswordControls({
     pictureRequests.reset();
     worker?.terminate();
     worker = null;
-    input.value = "";
+    input.value = '';
     controls.reset();
     direct.reset();
     formulaControls.reset();
@@ -576,13 +576,13 @@ passwordControls = createPasswordControls({
     characterPropertyControls.reset();
     underlineColorControls.reset();
     renderer.clear();
-    accessible.value = "";
-    status.textContent = "비밀번호 입력을 취소했습니다.";
+    accessible.value = '';
+    status.textContent = '비밀번호 입력을 취소했습니다.';
     updateSave();
   },
 });
-for (const event of ["input", "compositionstart", "compositionend"])
-  document.querySelector("#canvas-input").addEventListener(event, updateSave);
+for (const event of ['input', 'compositionstart', 'compositionend'])
+  document.querySelector('#canvas-input').addEventListener(event, updateSave);
 async function openSelectedFile(
   selected,
   { availableSectionsOnly = false, availableSectionCopy = false } = {},
@@ -598,10 +598,10 @@ async function openSelectedFile(
   worker = null;
   openedFormat = null;
   documentWindowControls?.reset();
-  chartControls.message({ kind: "load" });
+  chartControls.message({ kind: 'load' });
   direct.reset();
   renderer.clear();
-  accessible.value = "";
+  accessible.value = '';
   controls.reset();
   cellSizeControls.reset();
   pictureSizeControls.reset();
@@ -616,13 +616,13 @@ async function openSelectedFile(
   passwordControls.reset();
   staleLayout.checked = false;
   updateSave();
-  downloadStatus.textContent = "편집 세션을 연 뒤 다운로드할 수 있습니다.";
+  downloadStatus.textContent = '편집 세션을 연 뒤 다운로드할 수 있습니다.';
   if (!selected) {
-    status.textContent = "파일을 선택하세요.";
+    status.textContent = '파일을 선택하세요.';
     return;
   }
   if (selected.size > 64 * 1024 * 1024) {
-    status.textContent = "오류: 파일은 64 MiB 이하여야 합니다.";
+    status.textContent = '오류: 파일은 64 MiB 이하여야 합니다.';
     return;
   }
   status.textContent = `${selected.name} 읽는 중…`;
@@ -634,7 +634,7 @@ async function openSelectedFile(
     const wasmModule = await loadPreviewWasmModule();
     if (epoch !== generation) return;
     openedFormat = format;
-    const job = new Worker(new URL("./reader-worker.mjs", import.meta.url), { type: "module" });
+    const job = new Worker(new URL('./reader-worker.mjs', import.meta.url), { type: 'module' });
     worker = job;
     const fail = (message) => {
       if (epoch !== generation) return;
@@ -650,7 +650,7 @@ async function openSelectedFile(
       paragraphSpacingControls.reset();
       characterPropertyControls.reset();
       underlineColorControls.reset();
-      accessible.value = "";
+      accessible.value = '';
       status.textContent = `오류: ${message}`;
       job.terminate();
       worker = null;
@@ -661,7 +661,7 @@ async function openSelectedFile(
       () => generation,
       epoch,
       (event) => {
-        fail(event.message || "읽기 worker 오류");
+        fail(event.message || '읽기 worker 오류');
       },
     );
     job.onmessage = guardGeneration(
@@ -670,9 +670,9 @@ async function openSelectedFile(
       (event) => {
         // Window queries are not full editable document responses.
         // Navigation must consume them explicitly before replacing Canvas state.
-        if (["query-window", "query-edit-window"].includes(event.data.kind)) return;
+        if (['query-window', 'query-edit-window'].includes(event.data.kind)) return;
         documentWindowControls?.message(event.data);
-        if (["query-edit-range", "query-split-range"].includes(event.data.kind)) {
+        if (['query-edit-range', 'query-split-range'].includes(event.data.kind)) {
           direct.message(event.data);
           return;
         }
@@ -694,9 +694,9 @@ async function openSelectedFile(
         queueMicrotask(updateSave);
         passwordControls.message(event.data);
         tableCreationControls.message(event.data);
-        if (event.data.kind !== "load" && event.data.kind !== "unlock")
+        if (event.data.kind !== 'load' && event.data.kind !== 'unlock')
           controls.message(event.data);
-        if (event.data.kind === "save") {
+        if (event.data.kind === 'save') {
           if (event.data.error)
             queueMicrotask(() => {
               if (epoch === generation)
@@ -708,7 +708,7 @@ async function openSelectedFile(
           else {
             try {
               downloadDocument(event.data, selected.name);
-              downloadStatus.textContent = `편집본 다운로드 요청 완료${event.data.passwordProtectionRemoved ? " · 비밀번호 보호 없음" : ""} · 원본 조판 정보는 재계산되지 않았습니다.`;
+              downloadStatus.textContent = `편집본 다운로드 요청 완료${event.data.passwordProtectionRemoved ? ' · 비밀번호 보호 없음' : ''} · 원본 조판 정보는 재계산되지 않았습니다.`;
             } catch (error) {
               downloadStatus.textContent = `다운로드 실패: ${failureMessage(error)}`;
             }
@@ -722,16 +722,16 @@ async function openSelectedFile(
           pictureSizeControls.message(event.data);
           pictureResizeControls.message(event.data);
           paragraphFormatControls.update();
-          if (event.data.kind === "load" && event.data.passwordRequired) {
+          if (event.data.kind === 'load' && event.data.passwordRequired) {
             status.textContent = `${selected.name} · 문서 비밀번호가 필요합니다.`;
             passwordControls.required();
-          } else if (event.data.kind === "load") fail(loadFailureMessage(event.data.error));
+          } else if (event.data.kind === 'load') fail(loadFailureMessage(event.data.error));
           else if (event.data.applied) {
             renderer.clear();
-            accessible.value = "";
+            accessible.value = '';
           }
-          if (event.data.kind === "load") availableSectionsControls.offer(selected, event.data);
-          if (event.data.kind === "load") availableSectionCopyControls.offer(selected, event.data);
+          if (event.data.kind === 'load') availableSectionsControls.offer(selected, event.data);
+          if (event.data.kind === 'load') availableSectionCopyControls.offer(selected, event.data);
           return;
         }
         if (!event.data.content) {
@@ -743,23 +743,23 @@ async function openSelectedFile(
           return;
         }
         try {
-          const initial = event.data.kind === "load" || event.data.kind === "unlock";
+          const initial = event.data.kind === 'load' || event.data.kind === 'unlock';
           const content = event.data.content,
             layout = renderer.show(content, {
-              preserveScroll: !initial && event.data.kind !== "set-edit-window",
+              preserveScroll: !initial && event.data.kind !== 'set-edit-window',
             });
           accessible.value = clipText(
-            content.paragraphs.map((p) => `${p.label}\n${p.text}`).join("\n\n"),
+            content.paragraphs.map((p) => `${p.label}\n${p.text}`).join('\n\n'),
             50000,
           );
           const formatLabel = documentFormatLabel(content);
-          status.textContent = `${selected.name} · ${formatLabel}${content.passwordProtectionRemoved ? " · 비밀번호로 열림 (저장은 보호 해제)" : ""} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? " · 표시 한도에 도달해 일부만 표시" : ""}`;
+          status.textContent = `${selected.name} · ${formatLabel}${content.passwordProtectionRemoved ? ' · 비밀번호로 열림 (저장은 보호 해제)' : ''} · ${content.totalParagraphs}문단 · 텍스트 미리보기${layout.limited ? ' · 표시 한도에 도달해 일부만 표시' : ''}`;
           if (initial) passwordControls.loaded(content);
           if (initial) availableSectionsControls.loaded(content);
           availableSectionCopyControls.loaded(content);
           if (content.availableSectionsOnly)
             downloadStatus.textContent =
-              "저장된 구역의 읽기 전용 미리보기입니다. 편집·다운로드를 허용하지 않습니다. 원본 파일은 변경하지 않았습니다.";
+              '저장된 구역의 읽기 전용 미리보기입니다. 편집·다운로드를 허용하지 않습니다. 원본 파일은 변경하지 않았습니다.';
           if (initial && canStartDocumentSession(content))
             controls.loaded({
               distribution: content.distributionEditingAvailable === true,
@@ -767,13 +767,13 @@ async function openSelectedFile(
               observedDocInfo: content.observedDocInfoEditingAvailable === true,
             });
           if (availableSectionCopySummary(content))
-            status.textContent += " · 저장된 구역의 편집 사본";
+            status.textContent += ' · 저장된 구역의 편집 사본';
           else if (content.normalizationInfo?.normalized)
-            status.textContent += " · CFB 보정본 편집 (저장·실행 취소 기준: 보정본)";
-          if (event.data.kind === "load" && content.primarySource === "distribution_viewtext")
+            status.textContent += ' · CFB 보정본 편집 (저장·실행 취소 기준: 보정본)';
+          if (event.data.kind === 'load' && content.primarySource === 'distribution_viewtext')
             downloadStatus.textContent = content.distributionEditingAvailable
-              ? "배포용 문서입니다. 편집 시작 버튼으로 제한적 편집을 선택할 수 있으며 저장 시 배포 플래그와 재조판 경고를 유지합니다."
-              : "배포용 문서는 이 WASM에서 읽기 전용입니다.";
+              ? '배포용 문서입니다. 편집 시작 버튼으로 제한적 편집을 선택할 수 있으며 저장 시 배포 플래그와 재조판 경고를 유지합니다.'
+              : '배포용 문서는 이 WASM에서 읽기 전용입니다.';
           direct.message(event.data);
           updateDownloadSessionStatus(downloadStatus, event.data);
           cellSizeControls.message(event.data);
@@ -788,14 +788,14 @@ async function openSelectedFile(
     status.textContent = `${selected.name} 문서 해석 중…`;
     job.postMessage(
       {
-        kind: "load",
+        kind: 'load',
         format,
         bytes,
         wasmModule,
         ...(availableSectionsOnly ? { availableSectionsOnly: true } : {}),
         ...(availableSectionCopy ? { availableSectionCopy: true } : {}),
         allowObservedChartOleDeviations:
-          format === "hwpx" && document.querySelector("#chart-ole-compat").checked,
+          format === 'hwpx' && document.querySelector('#chart-ole-compat').checked,
       },
       [bytes],
     );
@@ -805,12 +805,12 @@ async function openSelectedFile(
 }
 bindFileInput(input, () => openSelectedFile(input.files[0]));
 const fixtureControls = createFixtureControls({
-  select: document.querySelector("#demo-fixture"),
-  button: document.querySelector("#demo-fixture-open"),
+  select: document.querySelector('#demo-fixture'),
+  button: document.querySelector('#demo-fixture-open'),
   input,
   open: (selected) => openSelectedFile(selected),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) {
     fixtureControls.close();
     generation++;
@@ -830,61 +830,61 @@ window.addEventListener("pagehide", (event) => {
   }
 });
 viewScaleControls = createViewScaleControls({
-  node: document.querySelector("#view-scale"),
+  node: document.querySelector('#view-scale'),
   renderer,
   ready: () => Boolean(worker) && openedFormat !== null && !controls.busy() && direct.settled(),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) viewScaleControls.close();
 });
 documentWindowControls = createDocumentWindowControls({
-  form: document.querySelector("#document-window-form"),
-  start: document.querySelector("#document-window-start"),
-  count: document.querySelector("#document-window-count"),
-  apply: document.querySelector("#document-window-apply"),
-  restore: document.querySelector("#document-window-restore"),
-  note: document.querySelector("#document-window-status"),
+  form: document.querySelector('#document-window-form'),
+  start: document.querySelector('#document-window-start'),
+  count: document.querySelector('#document-window-count'),
+  apply: document.querySelector('#document-window-apply'),
+  restore: document.querySelector('#document-window-restore'),
+  note: document.querySelector('#document-window-status'),
   ready: () =>
     Boolean(worker) &&
-    ["hwpx", "hwp5"].includes(openedFormat) &&
+    ['hwpx', 'hwp5'].includes(openedFormat) &&
     controls.ready() &&
     !controls.busy() &&
     direct.settled(),
   request: (message) => controls.request(message),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) documentWindowControls.close();
 });
 documentMenuControls = createDocumentMenuControls([
   {
-    button: document.querySelector("#menu-insert-table"),
-    target: document.querySelector("#table-creation-focus"),
+    button: document.querySelector('#menu-insert-table'),
+    target: document.querySelector('#table-creation-focus'),
   },
   {
-    button: document.querySelector("#menu-insert-page-break"),
+    button: document.querySelector('#menu-insert-page-break'),
     target: {
       get disabled() {
         return direct?.canInsertParagraphBreak() !== true;
       },
-      click: () => direct.insertParagraphBreak("page"),
+      click: () => direct.insertParagraphBreak('page'),
     },
   },
   {
-    button: document.querySelector("#menu-insert-column-break"),
+    button: document.querySelector('#menu-insert-column-break'),
     target: {
       get disabled() {
         return direct?.canInsertParagraphBreak() !== true;
       },
-      click: () => direct.insertParagraphBreak("column"),
+      click: () => direct.insertParagraphBreak('column'),
     },
   },
-  { button: document.querySelector("#menu-open"), target: input },
-  { button: document.querySelector("#menu-save"), target: download },
-  { button: document.querySelector("#menu-undo"), target: document.querySelector("#undo") },
-  { button: document.querySelector("#menu-redo"), target: document.querySelector("#redo") },
-  { button: document.querySelector("#menu-find"), target: { click: () => findControls.focus() } },
+  { button: document.querySelector('#menu-open'), target: input },
+  { button: document.querySelector('#menu-save'), target: download },
+  { button: document.querySelector('#menu-undo'), target: document.querySelector('#undo') },
+  { button: document.querySelector('#menu-redo'), target: document.querySelector('#redo') },
+  { button: document.querySelector('#menu-find'), target: { click: () => findControls.focus() } },
   {
-    button: document.querySelector("#menu-copy"),
+    button: document.querySelector('#menu-copy'),
     target: {
       get disabled() {
         return direct?.canTransferSelection() !== true;
@@ -893,7 +893,7 @@ documentMenuControls = createDocumentMenuControls([
     },
   },
   {
-    button: document.querySelector("#menu-cut"),
+    button: document.querySelector('#menu-cut'),
     target: {
       get disabled() {
         return direct?.canTransferSelection(true) !== true;
@@ -902,7 +902,7 @@ documentMenuControls = createDocumentMenuControls([
     },
   },
   {
-    button: document.querySelector("#menu-paste"),
+    button: document.querySelector('#menu-paste'),
     target: {
       get disabled() {
         return direct?.canPasteSelection() !== true;
@@ -911,7 +911,7 @@ documentMenuControls = createDocumentMenuControls([
     },
   },
   {
-    button: document.querySelector("#menu-delete"),
+    button: document.querySelector('#menu-delete'),
     target: {
       get disabled() {
         return direct?.canDeleteSelection() !== true;
@@ -920,51 +920,51 @@ documentMenuControls = createDocumentMenuControls([
     },
   },
   {
-    button: document.querySelector("#menu-properties"),
-    target: document.querySelector("#inspector-toggle"),
+    button: document.querySelector('#menu-properties'),
+    target: document.querySelector('#inspector-toggle'),
   },
   {
-    button: document.querySelector("#menu-bold"),
-    target: document.querySelector("#canvas-bold-toggle"),
+    button: document.querySelector('#menu-bold'),
+    target: document.querySelector('#canvas-bold-toggle'),
   },
   {
-    button: document.querySelector("#menu-italic"),
-    target: document.querySelector("#canvas-italic-toggle"),
+    button: document.querySelector('#menu-italic'),
+    target: document.querySelector('#canvas-italic-toggle'),
   },
   {
-    button: document.querySelector("#menu-underline"),
-    target: document.querySelector("#canvas-underline-toggle"),
+    button: document.querySelector('#menu-underline'),
+    target: document.querySelector('#canvas-underline-toggle'),
   },
   {
-    button: document.querySelector("#menu-strike"),
-    target: document.querySelector("#canvas-strike-toggle"),
+    button: document.querySelector('#menu-strike'),
+    target: document.querySelector('#canvas-strike-toggle'),
   },
   {
-    button: document.querySelector("#menu-align-left"),
+    button: document.querySelector('#menu-align-left'),
     target: document.querySelector('#paragraph-format-form [data-alignment="LEFT"]'),
   },
   {
-    button: document.querySelector("#menu-align-center"),
+    button: document.querySelector('#menu-align-center'),
     target: document.querySelector('#paragraph-format-form [data-alignment="CENTER"]'),
   },
   {
-    button: document.querySelector("#menu-align-right"),
+    button: document.querySelector('#menu-align-right'),
     target: document.querySelector('#paragraph-format-form [data-alignment="RIGHT"]'),
   },
   {
-    button: document.querySelector("#menu-align-justify"),
+    button: document.querySelector('#menu-align-justify'),
     target: document.querySelector('#paragraph-format-form [data-alignment="JUSTIFY"]'),
   },
   {
-    button: document.querySelector("#menu-align-distribute"),
+    button: document.querySelector('#menu-align-distribute'),
     target: document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE"]'),
   },
   {
-    button: document.querySelector("#menu-align-space"),
+    button: document.querySelector('#menu-align-space'),
     target: document.querySelector('#paragraph-format-form [data-alignment="DISTRIBUTE_SPACE"]'),
   },
 ]);
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) {
     checkBoxControls.close();
     pictureResizeControls.close();
@@ -972,24 +972,24 @@ window.addEventListener("pagehide", (event) => {
     documentMenuControls.close();
   }
 });
-const documentRibbon = createDocumentRibbon(document.querySelector(".editor-command-bar"));
+const documentRibbon = createDocumentRibbon(document.querySelector('.editor-command-bar'));
 const paragraphBreakControls = createParagraphBreakControls({
   registry: documentMenuControls,
-  page: document.querySelector("#insert-page-break"),
-  column: document.querySelector("#insert-column-break"),
+  page: document.querySelector('#insert-page-break'),
+  column: document.querySelector('#insert-column-break'),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) paragraphBreakControls.close();
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) documentRibbon.close();
 });
 const commandSearch = createCommandSearch({
   registry: documentMenuControls,
   document,
   keyboard: window,
-  host: document.querySelector(".document-menu"),
+  host: document.querySelector('.document-menu'),
 });
-window.addEventListener("pagehide", (event) => {
+window.addEventListener('pagehide', (event) => {
   if (!event.persisted) commandSearch.close();
 });

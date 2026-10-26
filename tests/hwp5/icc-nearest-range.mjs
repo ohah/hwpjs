@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { cmp } from "./icc-power-reference.mjs";
-import { validateInterval } from "./icc-linear-preimage-reference.mjs";
+import assert from 'node:assert/strict';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { cmp } from './icc-power-reference.mjs';
+import { validateInterval } from './icc-linear-preimage-reference.mjs';
 export function nearestRangeInput(target, ranges) {
   const out = Buffer.alloc(36 + ranges.length * 132);
   writeUnsigned(out, 0, target[0], 16);
@@ -15,7 +15,7 @@ export function nearestRangeInput(target, ranges) {
   return out;
 }
 export function reference(target, ranges) {
-  if (target[1] === 0n || target[0] > target[1]) throw Error("InvalidIccCurveCoordinate");
+  if (target[1] === 0n || target[0] > target[1]) throw Error('InvalidIccCurveCoordinate');
   ranges.forEach(validateInterval);
   const candidates = [];
   for (const r of ranges) {

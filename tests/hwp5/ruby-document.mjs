@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { rubyPayload } from "./ruby.mjs";
-import { documentActual, decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { rubyPayload } from './ruby.mjs';
+import { documentActual, decodedDocumentInput, documentRecords } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -13,8 +13,8 @@ export function rubyDocumentEdges(call, cfb, h, doc, sections) {
   const section = sections.find((s) => s.index === 0),
     original = section.bytes;
   const good = rubyPayload(
-    Buffer.from("가", "utf16le"),
-    Buffer.from("kana", "utf16le"),
+    Buffer.from('가', 'utf16le'),
+    Buffer.from('kana', 'utf16le'),
     [2, 50, 0, 0, 5],
   );
   const paragraph = (p) => {
@@ -40,8 +40,8 @@ export function rubyDocumentEdges(call, cfb, h, doc, sections) {
   const base = run(good);
   documentActual(call, h, doc, replaced(good));
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    index = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
+    body = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0),
+    index = nodes.findIndex((n) => n.name === 'Section0' && n.parent === body);
   assert.ok(index >= 0);
   const full = (p) => {
     const copy = nodes.map((n) => ({ ...n })),
@@ -68,7 +68,7 @@ export function rubyDocumentEdges(call, cfb, h, doc, sections) {
     const changed = Buffer.from(good);
     changed.writeUInt32LE(value, offset);
     const want = Buffer.from(base),
-      at = sectionFieldOffset(0, "ruby", field);
+      at = sectionFieldOffset(0, 'ruby', field);
     want.writeUInt32LE(want.readUInt32LE(at) + 1, at);
     assert.deepEqual(run(changed), want);
     assert.deepEqual(full(changed).subarray(0, want.length), want);
@@ -85,7 +85,7 @@ export function rubyDocumentEdges(call, cfb, h, doc, sections) {
   ];
   documentActual(call, h, info, two);
   const paired = call(24, decodedDocumentInput(h, info, two));
-  assert.equal(paired.readUInt32LE(sectionFieldOffset(0, "ruby", 3)), 0);
-  assert.equal(paired.readUInt32LE(sectionFieldOffset(1, "ruby", 3)), 1);
+  assert.equal(paired.readUInt32LE(sectionFieldOffset(0, 'ruby', 3)), 0);
+  assert.equal(paired.readUInt32LE(sectionFieldOffset(1, 'ruby', 3)), 1);
   return { synthetic: true, rejected, diagnostics: 4, distinctSections: 2 };
 }

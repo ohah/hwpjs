@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { nullableTitleOracle } from "./chart-nullable-title-oracle.mjs";
-import { observeLineItem as observe } from "./chart-line-item-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { nullableTitleOracle } from './chart-nullable-title-oracle.mjs';
+import { observeLineItem as observe } from './chart-line-item-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   typeRejects = 0,
   duplicates = 0,
@@ -16,10 +16,10 @@ const err = (name) => (e) => e.constructor === Error && e.message === name;
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const axis = nullableTitleOracle(b),
       word = b.readUInt16LE(axis.end),
       items = [];
@@ -36,7 +36,7 @@ try {
         for (let cut = offset; cut < r.end; cut++) {
           assert.throws(
             () => observe(b.subarray(0, cut), offset, types, objects),
-            err("IncompleteLineItemObservation"),
+            err('IncompleteLineItemObservation'),
           );
           cuts++;
         }
@@ -46,7 +46,7 @@ try {
             bad[at] ^= 1;
             assert.throws(
               () => observe(bad, offset, types, objects),
-              err("UnsupportedLineItemObservationType"),
+              err('UnsupportedLineItemObservationType'),
             );
             typeRejects++;
           }
@@ -56,7 +56,7 @@ try {
             wrong.set(id, { ...types.get(id), version: 99 });
             assert.throws(
               () => observe(b, offset, wrong, objects),
-              err("UnsupportedLineItemObservationType"),
+              err('UnsupportedLineItemObservationType'),
             );
             typeRejects++;
           }
@@ -65,7 +65,7 @@ try {
           bad.writeUInt32LE(id, offset);
           assert.throws(
             () => observe(bad, offset, types, objects),
-            err("UnsupportedLineItemObservationObject"),
+            err('UnsupportedLineItemObservationObject'),
           );
           duplicates++;
         }
@@ -77,7 +77,7 @@ try {
         changed.fill(0xff, r.rawStart, r.baseOffset);
         assert.deepEqual(observe(changed, offset, types, objects), {
           ...r,
-          raw52: "ff".repeat(52),
+          raw52: 'ff'.repeat(52),
         });
         rawChanges++;
         assert.deepEqual(types, beforeTypes);
@@ -96,7 +96,7 @@ try {
       word,
       items,
       end: offset,
-      nextBytes: b.subarray(offset, offset + 64).toString("hex"),
+      nextBytes: b.subarray(offset, offset + 64).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);

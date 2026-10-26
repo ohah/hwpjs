@@ -1,10 +1,10 @@
-import { placeFloatingPicture } from "./picture-placement.mjs";
+import { placeFloatingPicture } from './picture-placement.mjs';
 
 /** Source table rectangle; caller supplies real page/column/paragraph boxes. */
 export function placeFloatingTable(table, boxes, options) {
   const source = table?.sourceGeometry,
     geometry = source?.geometry;
-  if (!geometry) return { state: "missing_geometry" };
+  if (!geometry) return { state: 'missing_geometry' };
   return placeFloatingPicture(
     {
       geometry: {

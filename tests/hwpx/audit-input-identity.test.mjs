@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { captureInputIdentity, verifyInputIdentity } from "../../tools/audit-input-identity.mjs";
-import { readFileSync } from "node:fs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { captureInputIdentity, verifyInputIdentity } from '../../tools/audit-input-identity.mjs';
+import { readFileSync } from 'node:fs';
 
 const path = new URL(import.meta.url);
 
-test("audit identity independently rejects memory and file mismatches", () => {
+test('audit identity independently rejects memory and file mismatches', () => {
   const input = readFileSync(path);
   const expected = captureInputIdentity(input);
   verifyInputIdentity(input, expected, path);
@@ -18,7 +18,7 @@ test("audit identity independently rejects memory and file mismatches", () => {
   );
   assert.throws(
     () =>
-      verifyInputIdentity(input, expected, new URL("./missing-identity-fixture", import.meta.url)),
+      verifyInputIdentity(input, expected, new URL('./missing-identity-fixture', import.meta.url)),
     /ENOENT/,
   );
 });

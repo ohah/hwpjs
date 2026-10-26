@@ -1,31 +1,31 @@
 // Selection-scoped native permission; never grants whole-paragraph editing.
 function same(a, b) {
   return Boolean(
-    a && b && ["section", "paragraph", "startUnit", "endUnit"].every((key) => a[key] === b[key]),
+    a && b && ['section', 'paragraph', 'startUnit', 'endUnit'].every((key) => a[key] === b[key]),
   );
 }
 
 function validate(range) {
   if (
     !range ||
-    !["section", "paragraph", "startUnit", "endUnit"].every(
+    !['section', 'paragraph', 'startUnit', 'endUnit'].every(
       (key) => Number.isInteger(range[key]) && range[key] >= 0 && range[key] <= 0xffffffff,
     ) ||
     range.endUnit < range.startUnit
   )
-    throw new TypeError("InvalidEditPermissionRange");
+    throw new TypeError('InvalidEditPermissionRange');
 }
 
-export function createSelectionEditPermission({ kind = "query-edit-range" } = {}) {
-  if (!["query-edit-range", "query-split-range"].includes(kind))
-    throw new TypeError("InvalidEditPermissionKind");
+export function createSelectionEditPermission({ kind = 'query-edit-range' } = {}) {
+  if (!['query-edit-range', 'query-split-range'].includes(kind))
+    throw new TypeError('InvalidEditPermissionKind');
   let sequence = 0,
     current = null;
   return {
     request(range) {
       validate(range);
       if (same(current, range)) return null;
-      if (sequence === Number.MAX_SAFE_INTEGER) throw new Error("EditPermissionSequenceExhausted");
+      if (sequence === Number.MAX_SAFE_INTEGER) throw new Error('EditPermissionSequenceExhausted');
       current = { ...range, requestId: ++sequence, allowed: null };
       return {
         kind,
@@ -43,7 +43,7 @@ export function createSelectionEditPermission({ kind = "query-edit-range" } = {}
         message?.kind !== kind ||
         message.requestId !== current.requestId ||
         !same(message, current) ||
-        typeof message.allowed !== "boolean" ||
+        typeof message.allowed !== 'boolean' ||
         message.error
       )
         return false;
@@ -63,7 +63,7 @@ export function createSelectionEditPermission({ kind = "query-edit-range" } = {}
         message?.kind !== kind ||
         message.requestId !== current.requestId ||
         !same(message, current) ||
-        typeof message.error !== "string" ||
+        typeof message.error !== 'string' ||
         !message.error
       )
         return false;

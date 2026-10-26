@@ -1,10 +1,10 @@
-import { createReaderRuntime } from "./reader-runtime.mjs";
+import { createReaderRuntime } from './reader-runtime.mjs';
 
 // Legacy URL resolution and transport stay at the Worker boundary.
 const runtime = createReaderRuntime({
   allowReload: true,
   async loadWasmModule() {
-    const response = await fetch("../../zig-out/bin/hwpjs.wasm", { cache: "no-cache" });
+    const response = await fetch('../../zig-out/bin/hwpjs.wasm', { cache: 'no-cache' });
     if (!response.ok) throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);
     return WebAssembly.compile(await response.arrayBuffer());
   },

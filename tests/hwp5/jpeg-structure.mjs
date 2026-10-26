@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { jpegFrameFixture } from "./jpeg-headers.mjs";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
+import assert from 'node:assert/strict';
+import { jpegFrameFixture } from './jpeg-headers.mjs';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
 const words = (ns) => {
   const b = Buffer.alloc(ns.length * 4);
   ns.forEach((n, i) => b.writeUInt32LE(n, i * 4));
@@ -55,7 +55,7 @@ export function jpegStructureOracle(raw) {
       return words(r);
     } else if ([196, 219, 204, 254].includes(m.code) || (m.code >= 224 && m.code <= 239)) r[11]++;
   }
-  throw Error("Missing EOI");
+  throw Error('Missing EOI');
 }
 export function jpegStructureActual(call, raw, options = {}) {
   assert.deepEqual(call(250, jpegStructureInput(raw, options)), jpegStructureOracle(raw));

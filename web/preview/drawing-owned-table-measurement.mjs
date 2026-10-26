@@ -1,5 +1,5 @@
-import { measureNestedTable } from "./nested-table-measurement.mjs";
-import { measureNestedInlineTableObject } from "./nested-inline-table-object-measurement.mjs";
+import { measureNestedTable } from './nested-table-measurement.mjs';
+import { measureNestedInlineTableObject } from './nested-inline-table-object-measurement.mjs';
 
 // A drawing text list is an ownership boundary, not an absent body paragraph.
 export function measureDrawingOwnedTables(content, drawing, measure, maxRows) {
@@ -27,31 +27,31 @@ export function measureDrawingOwnedTables(content, drawing, measure, maxRows) {
       table.sourceGeometry.geometry.height_relative !== 2 ||
       table.pagination?.cell_spacing !== 0 ||
       !Number.isSafeInteger(table.anchorUnit) ||
-      host?.text?.[table.anchorUnit] !== "\ufffc" ||
+      host?.text?.[table.anchorUnit] !== '\ufffc' ||
       content.tables.some(
         (t) => t.section === table.section && t.parentTableNode === table.tableNode,
       ) ||
       content.drawings.some((d) => d.section === table.section && ids.has(d.hostParagraph))
     )
       return {
-        state: "unavailable",
-        error: "UnsupportedDrawingOwnedTable",
+        state: 'unavailable',
+        error: 'UnsupportedDrawingOwnedTable',
         section: table.section,
         tableNode: table.tableNode,
         drawingNode: drawing.drawingNode,
       };
-    if (used >= maxRows) return { state: "unavailable", error: "DrawingTextLayoutLimit" };
+    if (used >= maxRows) return { state: 'unavailable', error: 'DrawingTextLayoutLimit' };
     const measured = measureNestedTable(content, table, measure, {
       maxRows: maxRows - used,
-      overflow: "visible",
+      overflow: 'visible',
     });
-    if (measured.state !== "measured") return measured;
+    if (measured.state !== 'measured') return measured;
     if (
       [...measured.flows.values()].some(
         (f) => f.floatingTables?.length || f.flowPictures?.length || f.inlineDrawings?.length,
       )
     )
-      return { state: "unavailable", error: "UnsupportedDrawingOwnedTableObjects" };
+      return { state: 'unavailable', error: 'UnsupportedDrawingOwnedTableObjects' };
     const object = measureNestedInlineTableObject(
       table,
       measured,
@@ -59,10 +59,10 @@ export function measureDrawingOwnedTables(content, drawing, measure, maxRows) {
       measure,
       maxRows - used,
     );
-    if (object.state !== "object-measured") return object;
+    if (object.state !== 'object-measured') return object;
     used += object.rowCount;
     tables.push({ table, measured, object });
     for (const id of ids) paragraphIds.add(`${table.section}:${id}`);
   }
-  return { state: "prepared", tables, paragraphIds };
+  return { state: 'prepared', tables, paragraphIds };
 }

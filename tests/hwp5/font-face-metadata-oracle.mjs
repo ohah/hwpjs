@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readStreams, records } from "./style-preservation/text-record-oracle.mjs";
-import { inflateRawSync } from "node:zlib";
-import { FONT_LANGUAGES } from "../../js/font-faces.mjs";
+import assert from 'node:assert/strict';
+import { readStreams, records } from './style-preservation/text-record-oracle.mjs';
+import { inflateRawSync } from 'node:zlib';
+import { FONT_LANGUAGES } from '../../js/font-faces.mjs';
 
 /** Independent byte offsets and UTF16 decoding, never product snapshots. */
 export function expectedFontMetadata(input) {
   const streams = readStreams(input),
-    header = streams.get("FileHeader");
-  assert.equal(header.readUInt32LE(36) & 2, 0, "EncryptedFontOracleInput");
-  const bytes = streams.get("DocInfo");
+    header = streams.get('FileHeader');
+  assert.equal(header.readUInt32LE(36) & 2, 0, 'EncryptedFontOracleInput');
+  const bytes = streams.get('DocInfo');
   const rows = records(
     header.readUInt32LE(36) & 1
       ? inflateRawSync(bytes, { maxOutputLength: 32 * 1024 * 1024 })
@@ -34,7 +34,7 @@ export function expectedFontMetadata(input) {
         const raw = bytes.subarray(at, at + length * 2);
         at += length * 2;
         try {
-          return new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(raw);
+          return new TextDecoder('utf-16le', { fatal: true, ignoreBOM: true }).decode(raw);
         } catch {
           return null;
         }

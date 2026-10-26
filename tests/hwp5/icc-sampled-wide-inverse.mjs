@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { inverseInput, inverseReference } from "./icc-inverse.mjs";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { inverseInput, inverseReference } from './icc-inverse.mjs';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
 export function sampledWideInput(values, n, d) {
   const prefix = Buffer.alloc(128);
   writeUnsigned(prefix, 0, n, 64);

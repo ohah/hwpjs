@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);
@@ -70,12 +70,12 @@ function linkRows(bytes) {
         assert.ok(end + 4 <= header.raw.length);
         if (id === 0x25256d65)
           assert.ok(
-            header.raw.subarray(11, end).subarray(0, 10).equals(Buffer.from("MEMO/", "utf16le")),
+            header.raw.subarray(11, end).subarray(0, 10).equals(Buffer.from('MEMO/', 'utf16le')),
           );
         else
           assert.deepEqual(
             header.raw.subarray(11, end),
-            Buffer.from("$RevisionDelete;", "utf16le"),
+            Buffer.from('$RevisionDelete;', 'utf16le'),
           );
         identity = id === 0x25256d65 ? 1 : 2;
       }

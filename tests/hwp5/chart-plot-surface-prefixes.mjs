@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { axesOracle } from "./chart-axes-oracle.mjs";
-import { observeSurfacePrefix } from "./chart-surface-evidence.mjs";
-import { integer } from "./chart-text-body-oracle.mjs";
-import { plotSurfaceWire } from "./chart-plot-surface-wire.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { axesOracle } from './chart-axes-oracle.mjs';
+import { observeSurfacePrefix } from './chart-surface-evidence.mjs';
+import { integer } from './chart-text-body-oracle.mjs';
+import { plotSurfaceWire } from './chart-plot-surface-wire.mjs';
 const ints = (values) => Buffer.concat(values.map((n) => integer(n)));
 function context(b, isSurface) {
   const c = chartAxisContext(b),
@@ -57,7 +57,7 @@ function context(b, isSurface) {
     );
   const scope = Buffer.concat(
     [...types].map(([id, d]) => {
-      const name = Buffer.from(d.name, "latin1");
+      const name = Buffer.from(d.name, 'latin1');
       return Buffer.concat([integer(id), integer(name.length, 2), name, integer(d.version, 2)]);
     }),
   );
@@ -79,7 +79,7 @@ function context(b, isSurface) {
   };
 }
 export async function chartPlotSurfacePrefixes(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
     result = {
       plot: { roots: 0, accepted: 0, rejected: 0 },
       surface: { roots: 0, accepted: 0, rejected: 0 },
@@ -87,10 +87,10 @@ export async function chartPlotSurfacePrefixes(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       for (const isSurface of [false, true]) {
         const mode = isSurface ? 335 : 334,
           stats = isSurface ? result.surface : result.plot,
@@ -117,12 +117,12 @@ export async function chartPlotSurfacePrefixes(call) {
         const raw = Buffer.from(b);
         for (const [at, n] of e.raws) raw.fill(255, at, at + n);
         accept(raw);
-        for (let cut = e.start; cut < e.end; cut++) reject(b.subarray(0, cut), "UnexpectedEnd");
-        reject(b, "LimitExceeded", e.objects.size + 1);
+        for (let cut = e.start; cut < e.end; cut++) reject(b.subarray(0, cut), 'UnexpectedEnd');
+        reject(b, 'LimitExceeded', e.objects.size + 1);
         for (const at of [e.idOffset, e.array.start]) {
           for (const [id, error] of [
-            [0xffffffff, "UnsupportedChartObjectReference"],
-            [[...e.objects][0], "DuplicateChartObjectId"],
+            [0xffffffff, 'UnsupportedChartObjectReference'],
+            [[...e.objects][0], 'DuplicateChartObjectId'],
           ]) {
             const bad = Buffer.from(b);
             bad.writeUInt32LE(id, at);
@@ -131,22 +131,22 @@ export async function chartPlotSurfacePrefixes(call) {
         }
         const duplicate = Buffer.from(b);
         duplicate.writeUInt32LE(e.id, e.array.start);
-        reject(duplicate, "DuplicateChartObjectId");
+        reject(duplicate, 'DuplicateChartObjectId');
         for (const d of e.declarations)
           for (const [at, error] of [
-            [d.nameOffset, "UnsupportedChartClass"],
-            [d.versionOffset, "UnsupportedChartTypeVersion"],
+            [d.nameOffset, 'UnsupportedChartClass'],
+            [d.versionOffset, 'UnsupportedChartTypeVersion'],
           ]) {
             const bad = Buffer.from(b);
             bad[at] ^= 1;
             reject(bad, error);
           }
-        const base = [...e.types].find(([, d]) => d.name === "VtObject\0")[0],
-          collection = [...e.types].find(([, d]) => d.name === "VtCollection\0")[0];
+        const base = [...e.types].find(([, d]) => d.name === 'VtObject\0')[0],
+          collection = [...e.types].find(([, d]) => d.name === 'VtCollection\0')[0];
         for (const at of e.references) {
           const bad = Buffer.from(b);
           bad.writeUInt32LE(b.readUInt32LE(at) === base ? collection : base, at);
-          reject(bad, "UnsupportedChartClass");
+          reject(bad, 'UnsupportedChartClass');
         }
         for (const [first, second] of [
           [1, 0],
@@ -160,10 +160,10 @@ export async function chartPlotSurfacePrefixes(call) {
           reject(
             bad,
             first !== second
-              ? "UnsupportedChartArrayLayout"
+              ? 'UnsupportedChartArrayLayout'
               : isSurface
-                ? "LimitExceeded"
-                : "UnsupportedChartInitialArray",
+                ? 'LimitExceeded'
+                : 'UnsupportedChartInitialArray',
           );
         }
       }

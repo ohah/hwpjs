@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { decodeInlineStringSources } from "../../js/hwpx-inline-string-sources.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { decodeInlineStringSources } from '../../js/hwpx-inline-string-sources.mjs';
 
-test("source inline string packet keeps zero attributes distinct and rejects broken ownership", () => {
+test('source inline string packet keeps zero attributes distinct and rejects broken ownership', () => {
   const original = {
     sourceOnly: true,
     controls: [
@@ -10,22 +10,22 @@ test("source inline string packet keeps zero attributes distinct and rejects bro
         section_ordinal: 0,
         element_index: 3,
         parent_element_index: 2,
-        parent_uri: "paragraph",
-        parent_local_name: "run",
-        kind: "dutmal",
-        raw_xml: "<p:dutmal/>",
-        direct_text: "",
+        parent_uri: 'paragraph',
+        parent_local_name: 'run',
+        kind: 'dutmal',
+        raw_xml: '<p:dutmal/>',
+        direct_text: '',
         first_text: 0,
         text_count: 2,
         direct_children: 2,
         unknown_children: 0,
         other_attributes: 0,
         attributes: {
-          pos_type: "TOP",
-          sz_ratio: "0",
-          option: "0",
-          style_id_ref: "0",
-          alignment: "CENTER",
+          pos_type: 'TOP',
+          sz_ratio: '0',
+          option: '0',
+          style_id_ref: '0',
+          alignment: 'CENTER',
         },
       },
     ],
@@ -33,18 +33,18 @@ test("source inline string packet keeps zero attributes distinct and rejects bro
       {
         control_index: 0,
         element_index: 4,
-        kind: "main_text",
-        raw_xml: "<p:mainText/>",
-        value: "한😀",
+        kind: 'main_text',
+        raw_xml: '<p:mainText/>',
+        value: '한😀',
         direct_children: 0,
         other_attributes: 0,
       },
       {
         control_index: 0,
         element_index: 5,
-        kind: "sub_text",
-        raw_xml: "<p:subText/>",
-        value: "주석",
+        kind: 'sub_text',
+        raw_xml: '<p:subText/>',
+        value: '주석',
         direct_children: 0,
         other_attributes: 0,
       },
@@ -75,7 +75,7 @@ test("source inline string packet keeps zero attributes distinct and rejects bro
       v.controls[0].attributes.sz_ratio = 0;
     },
     (v) => {
-      v.texts[0].kind = "unknown";
+      v.texts[0].kind = 'unknown';
     },
     (v) => {
       v.controls[0].section_ordinal = true;

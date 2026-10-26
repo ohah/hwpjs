@@ -1,18 +1,18 @@
-import { inlinePictureRowPlacement } from "./inline-picture-row-placement.mjs";
-import { layoutInlineDrawingPageContent } from "./inline-drawing-page-content.mjs";
+import { inlinePictureRowPlacement } from './inline-picture-row-placement.mjs';
+import { layoutInlineDrawingPageContent } from './inline-drawing-page-content.mjs';
 
 // Shared completion for body and cell-owned inline drawings, after horizontal
 // placement and CELL selection. Affine child rows are translated exactly once.
 export function projectOwnedInlineDrawings(entries, layout, maxRows) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(entries) ||
-    layout?.state !== "placed" ||
+    layout?.state !== 'placed' ||
     !Array.isArray(layout.rows) ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return fail("InvalidCellInlineDrawingProjection");
+    return fail('InvalidCellInlineDrawingProjection');
   const rows = [...layout.rows],
     placedDrawings = [...(layout.placedDrawings ?? [])],
     nodes = new Set();
@@ -30,24 +30,24 @@ export function projectOwnedInlineDrawings(entries, layout, maxRows) {
       owner.paragraph !== drawing.hostParagraph ||
       nodes.has(identity)
     )
-      return fail("AmbiguousCellInlineDrawingOwner");
+      return fail('AmbiguousCellInlineDrawingOwner');
     nodes.add(identity);
     const matches = layout.rows.filter(
       (row) =>
-        row.kind === "text" &&
+        row.kind === 'text' &&
         row.section === drawing.section &&
         row.paragraph === drawing.hostParagraph &&
         row.startUnit <= drawing.anchorUnit &&
         drawing.anchorUnit < row.endUnit,
     );
-    if (matches.length !== 1) return fail("AmbiguousCellInlineDrawingOwner");
+    if (matches.length !== 1) return fail('AmbiguousCellInlineDrawingOwner');
     const row = matches[0],
       measured = entry.measured;
     if (
       owner.tableCell &&
       (row.tableNode !== owner.tableCell.tableNode || row.listNode !== owner.tableCell.listNode)
     )
-      return fail("AmbiguousCellInlineDrawingOwner");
+      return fail('AmbiguousCellInlineDrawingOwner');
     const local = inlinePictureRowPlacement(
       {
         picture: {
@@ -61,14 +61,14 @@ export function projectOwnedInlineDrawings(entries, layout, maxRows) {
       row,
       0,
     );
-    if (local.state !== "placed") return local;
+    if (local.state !== 'placed') return local;
     const rectangle = local.rectangle,
       paper = row.referenceBoxes?.paper;
     if (
       row.transform !== undefined ||
       (owner.tableCell && rectangle.y + rectangle.height > row.y + row.height + 1e-8)
     )
-      return fail("SplitCellInlineDrawing");
+      return fail('SplitCellInlineDrawing');
     if (
       !paper ||
       ![
@@ -92,9 +92,9 @@ export function projectOwnedInlineDrawings(entries, layout, maxRows) {
       rectangle.x + rectangle.width > paper.x + paper.width + 1e-8 ||
       rectangle.y + rectangle.height > paper.y + paper.height + 1e-8
     )
-      return fail("CellInlineDrawingPaperOverflow");
+      return fail('CellInlineDrawingPaperOverflow');
     const available = maxRows - rows.length - (layout.repeatedTableHeaderRows?.length ?? 0);
-    if (available < 1) return fail("TablePageProjectionLimit");
+    if (available < 1) return fail('TablePageProjectionLimit');
     const placement = {
       objectNode: drawing.drawingNode,
       section: drawing.section,
@@ -113,7 +113,7 @@ export function projectOwnedInlineDrawings(entries, layout, maxRows) {
       () => 0,
       { measurement: measured, maxRows: available },
     );
-    if (projected.state !== "placed") return projected;
+    if (projected.state !== 'placed') return projected;
     rows.push(...projected.rows);
     boxes.push(...(projected.boxes ?? []));
     tableAnchors.push(...(projected.tableAnchors ?? []));

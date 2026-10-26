@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { composePageAreaBody } from "../../web/preview/page-area-body-composition.mjs";
-import { partitionPageAreaOwnership } from "../../web/preview/page-area-ownership.mjs";
-import { layoutPageAreaContent } from "../../web/preview/page-area-content-layout.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { composePageAreaBody } from '../../web/preview/page-area-body-composition.mjs';
+import { partitionPageAreaOwnership } from '../../web/preview/page-area-ownership.mjs';
+import { layoutPageAreaContent } from '../../web/preview/page-area-content-layout.mjs';
 
 function fixture() {
   const area = {
     owner_node: 10,
     list_node: 11,
-    apply: "both",
+    apply: 'both',
     width: 7500,
     height: 1500,
-    vertical_alignment: "top",
+    vertical_alignment: 'top',
   };
   const numbering = {
     supported: true,
@@ -22,15 +22,15 @@ function fixture() {
   const content = {
     limited: false,
     paragraphs: [
-      { section: 0, paragraph: 0, text: "body" },
-      { section: 0, paragraph: 1, text: "header" },
+      { section: 0, paragraph: 0, text: 'body' },
+      { section: 0, paragraph: 1, text: 'header' },
     ],
     paragraphFlows: [
-      { section: 0, paragraph: 0, host: "body", top_level: true },
+      { section: 0, paragraph: 0, host: 'body', top_level: true },
       {
         section: 0,
         paragraph: 1,
-        host: "header",
+        host: 'header',
         top_level: false,
         page_area: area,
         page_number_source: numbering,
@@ -46,12 +46,12 @@ function fixture() {
     page: { x: 20, y: 40 + ordinal * 260, width: 100, height: 160 },
   }));
   const result = {
-    state: "paginated",
+    state: 'paginated',
     limited: false,
     pages,
     height: 500,
     rows: [
-      { kind: "text", section: 0, paragraph: 0, text: "body", x: 20, y: 40, width: 40, height: 10 },
+      { kind: 'text', section: 0, paragraph: 0, text: 'body', x: 20, y: 40, width: 40, height: 10 },
     ],
     boxes: [{ tableNode: 90 }],
     flowPictures: [],
@@ -61,7 +61,7 @@ function fixture() {
 }
 const measure = () => ({ width: 5, height: 10 });
 
-test("compatibility entrypoint delegates identical results and bounds to the composition owner", () => {
+test('compatibility entrypoint delegates identical results and bounds to the composition owner', () => {
   const { content, result } = fixture(),
     before = structuredClone(content);
   const body = () => result;
@@ -71,12 +71,12 @@ test("compatibility entrypoint delegates identical results and bounds to the com
   );
   assert.equal(
     layoutPageAreaContent(content, measure, 0, body).error,
-    "InvalidPageAreaComposition",
+    'InvalidPageAreaComposition',
   );
   assert.deepEqual(content, before);
 });
 
-test("page areas compose after body objects and preserve callback options and source identities", () => {
+test('page areas compose after body objects and preserve callback options and source identities', () => {
   const { content, result } = fixture(),
     before = structuredClone(content);
   const rowY = () => 0,
@@ -96,7 +96,7 @@ test("page areas compose after body objects and preserve callback options and so
       );
       assert.deepEqual(
         body.paragraphFlows.map((p) => p.host),
-        ["body"],
+        ['body'],
       );
       assert.equal(body.tables[0], content.tables[0]);
       assert.equal(options.rowY, rowY);
@@ -106,7 +106,7 @@ test("page areas compose after body objects and preserve callback options and so
     { rowY, minimumRowPage },
   );
   assert.equal(calls, 1);
-  assert.equal(placed.state, "paginated", placed.error);
+  assert.equal(placed.state, 'paginated', placed.error);
   assert.deepEqual(
     placed.pages.map((page) => page.number),
     [3, 4],
@@ -122,14 +122,14 @@ test("page areas compose after body objects and preserve callback options and so
   assert.deepEqual(content, before);
 });
 
-test("page area composition propagates body failure without hiding source objects", () => {
+test('page area composition propagates body failure without hiding source objects', () => {
   const { content, result } = fixture();
   assert.equal(
     composePageAreaBody(content, measure, 100, () => ({
-      state: "unavailable",
-      error: "BodyTableFailure",
+      state: 'unavailable',
+      error: 'BodyTableFailure',
     })).error,
-    "BodyTableFailure",
+    'BodyTableFailure',
   );
   content.pictures = [{ section: 0, pictureNode: 99, paragraph: 1 }];
   assert.equal(
@@ -137,63 +137,63 @@ test("page area composition propagates body failure without hiding source object
       assert.deepEqual(body.pictures, []);
       return result;
     }).error,
-    "UnsupportedPageAreaObjects",
+    'UnsupportedPageAreaObjects',
   );
 });
 
-test("page area composition requires exact page numbering and bounded complete instances", () => {
+test('page area composition requires exact page numbering and bounded complete instances', () => {
   const { content, result } = fixture();
   const run = (options) => composePageAreaBody(content, measure, 100, () => result, options);
-  assert.equal(run({ pageNumbers: [8] }).error, "MissingEffectivePageNumber");
-  assert.equal(run({ pageNumbers: [0, 9] }).error, "MissingEffectivePageNumber");
+  assert.equal(run({ pageNumbers: [8] }).error, 'MissingEffectivePageNumber');
+  assert.equal(run({ pageNumbers: [0, 9] }).error, 'MissingEffectivePageNumber');
   assert.deepEqual(
     run({ pageNumbers: [8, 9] }).pages.map((page) => page.number),
     [8, 9],
   );
   result.pages[1].ordinal = 5;
-  assert.equal(run().error, "AmbiguousPageAreaInstance");
+  assert.equal(run().error, 'AmbiguousPageAreaInstance');
   assert.equal(
     composePageAreaBody(content, measure, 0, () => result).error,
-    "InvalidPageAreaComposition",
+    'InvalidPageAreaComposition',
   );
   assert.equal(
     composePageAreaBody(content, measure, result.rows.length, () => result).error,
-    "PageAreaOverflow",
+    'PageAreaOverflow',
   );
   assert.equal(
     composePageAreaBody(content, measure, 100, () => ({ ...result, limited: true })).error,
-    "PageAreaOverflow",
+    'PageAreaOverflow',
   );
   assert.equal(
     composePageAreaBody(content, measure, 100, () => ({ ...result, pages: [] })).error,
-    "InvalidPageAreaComposition",
+    'InvalidPageAreaComposition',
   );
 });
 
-test("page area ownership follows table cells and rejects malformed and cyclic links", () => {
+test('page area ownership follows table cells and rejects malformed and cyclic links', () => {
   const { content } = fixture();
   content.tables[0].hostParagraph = 1;
   content.tables[0].cells = [{ listNode: 20, paragraphs: [2] }];
   content.paragraphs.push({
     section: 0,
     paragraph: 2,
-    text: "cell",
+    text: 'cell',
     tableCell: { tableNode: 90, listNode: 20 },
   });
-  content.paragraphFlows.push({ section: 0, paragraph: 2, host: "other" });
+  content.paragraphFlows.push({ section: 0, paragraph: 2, host: 'other' });
   const result = partitionPageAreaOwnership(content);
-  assert.equal(result.state, "partitioned", result.error);
+  assert.equal(result.state, 'partitioned', result.error);
   assert.deepEqual(result.body.tables, []);
   assert.deepEqual(
     result.areas[0].paragraphs.map((p) => p.paragraph),
     [1, 2],
   );
-  for (const malformed of [null, { section: "0", paragraph: 2 }, { section: 0, paragraph: -1 }]) {
+  for (const malformed of [null, { section: '0', paragraph: 2 }, { section: 0, paragraph: -1 }]) {
     assert.equal(
       partitionPageAreaOwnership({ ...content, paragraphs: [malformed] }).error,
-      "InvalidPageAreaOwnership",
+      'InvalidPageAreaOwnership',
     );
   }
   content.tables[0].hostParagraph = 2;
-  assert.equal(partitionPageAreaOwnership(content).error, "CyclicPageAreaOwnership");
+  assert.equal(partitionPageAreaOwnership(content).error, 'CyclicPageAreaOwnership');
 });

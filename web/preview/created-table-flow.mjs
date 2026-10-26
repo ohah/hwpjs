@@ -1,6 +1,6 @@
-import { layoutCreatedTable } from "./created-table-layout.mjs";
-import { rowHeight } from "./row-geometry.mjs";
-import { sameCreatedCell } from "./created-cell-address.mjs";
+import { layoutCreatedTable } from './created-table-layout.mjs';
+import { rowHeight } from './row-geometry.mjs';
+import { sameCreatedCell } from './created-cell-address.mjs';
 
 // Experimental block flow, not source-equivalent inline pagination.
 export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) {
@@ -23,7 +23,7 @@ export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) 
     const host = rows.filter(
       (row) =>
         !row.createdCell &&
-        row.kind === "text" &&
+        row.kind === 'text' &&
         row.section === table.section &&
         row.paragraph === table.hostParagraph,
     );
@@ -34,7 +34,7 @@ export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) 
       unavailable.push({
         section: table.section,
         identity: table.identity,
-        error: "UnsupportedCreatedTableHostLayout",
+        error: 'UnsupportedCreatedTableHostLayout',
       });
       continue;
     }
@@ -84,7 +84,7 @@ export function attachCreatedTableFlow(content, base, measure, maxRows = 20000) 
     spatialRows: true,
     createdCellParagraphs: paragraphs,
     createdTableUnavailable: unavailable,
-    pageLayoutMode: "created-table-block-prototype",
+    pageLayoutMode: 'created-table-block-prototype',
   };
 }
 

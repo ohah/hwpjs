@@ -1,28 +1,28 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { bookmarkActual } from "./bookmarks.mjs";
-import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { bookmarkActual } from './bookmarks.mjs';
+import { documentRecords, documentActual, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
   return b;
 };
 export function bookmarkReference(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/HWP5-nopassword-123456.hwp", import.meta.url);
-  if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
+  const path = new URL('../../reference/rhwp/samples/HWP5-nopassword-123456.hwp', import.meta.url);
+  if (!existsSync(path)) return { skipped: 'reference fixture unavailable' };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32);
   assert.equal(h.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024), 0);
   const decode = (p) => {
     const raw = Buffer.from(cfb.findExact(p).content);
     return h.readUInt32LE(36) & 1 ? inflateRawSync(raw) : raw;
   };
-  const b = decode("/BodyText/Section0"),
-    doc = decode("/DocInfo"),
+  const b = decode('/BodyText/Section0'),
+    doc = decode('/DocInfo'),
     sections = [{ index: 0, bytes: b }];
   const stats = bookmarkActual(call, v, b);
   assert.ok(stats[0] > 0);
@@ -30,8 +30,8 @@ export function bookmarkReference(call, cfb) {
   documentActual(call, h, doc, sections);
   containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
+    body = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0),
+    section = nodes.findIndex((n) => n.name === 'Section0' && n.parent === body);
   assert.ok(section >= 0);
   const full = (bytes) => {
     const copy = nodes.map((n) => ({ ...n }));

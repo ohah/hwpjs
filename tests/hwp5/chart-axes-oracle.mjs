@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { chartGridCellsOracle } from "./chart-grid-cells-oracle.mjs";
-import { chartBackdropOracle } from "./chart-backdrops.mjs";
-import { chartFootnoteOracle } from "./chart-footnote-oracle.mjs";
-import { observeAxis } from "./chart-axis-evidence.mjs";
-import { integer, textBodyWire } from "./chart-text-body-oracle.mjs";
-import { valueBlockWire } from "./chart-value-block-oracle.mjs";
+import assert from 'node:assert/strict';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { chartGridCellsOracle } from './chart-grid-cells-oracle.mjs';
+import { chartBackdropOracle } from './chart-backdrops.mjs';
+import { chartFootnoteOracle } from './chart-footnote-oracle.mjs';
+import { observeAxis } from './chart-axis-evidence.mjs';
+import { integer, textBodyWire } from './chart-text-body-oracle.mjs';
+import { valueBlockWire } from './chart-value-block-oracle.mjs';
 const ints = (values) => Buffer.concat(values.map((n) => integer(n)));
 const array = (h) => ints([h.id, h.first, h.second, h.end]);
 export function axisWire(r, objects, stored) {
@@ -13,7 +13,7 @@ export function axisWire(r, objects, stored) {
     v = r.value;
   const out = [
     ints([x.axisId, r.end, Number(v !== null), x.blockId]),
-    Buffer.from(x.rawFields[0].hex, "hex"),
+    Buffer.from(x.rawFields[0].hex, 'hex'),
     textBodyWire({ ...x, end: x.blockEnd }, 0, objects, stored),
     array(x.scaleArray),
   ];
@@ -23,9 +23,9 @@ export function axisWire(r, objects, stored) {
       array(x.scale.array),
       valueBlockWire(v, 0, objects, stored),
     );
-  out.push(ints([Number(r.tail.extra !== null), r.end]), Buffer.from(r.tail.prefix, "hex"));
-  if (r.tail.extra !== null) out.push(Buffer.from(r.tail.extra, "hex"));
-  out.push(Buffer.from(r.tail.suffix, "hex"));
+  out.push(ints([Number(r.tail.extra !== null), r.end]), Buffer.from(r.tail.prefix, 'hex'));
+  if (r.tail.extra !== null) out.push(Buffer.from(r.tail.extra, 'hex'));
+  out.push(Buffer.from(r.tail.suffix, 'hex'));
   return Buffer.concat(out);
 }
 export function axesOracle(b, count = 4) {
@@ -37,7 +37,7 @@ export function axesOracle(b, count = 4) {
     numbers = new Map();
   const add = (id) => {
     assert.notEqual(id, 0xffffffff);
-    assert(!seen.has(id), "duplicate observed object ID");
+    assert(!seen.has(id), 'duplicate observed object ID');
     seen.add(id);
   };
   for (const c of g.cells)
@@ -45,7 +45,7 @@ export function axesOracle(b, count = 4) {
       add(c.id);
       if (c.kind === 2)
         numbers.set(c.id, {
-          bitsHex: c.raw.readBigUInt64LE().toString(16).padStart(16, "0"),
+          bitsHex: c.raw.readBigUInt64LE().toString(16).padStart(16, '0'),
           trailer: c.trailer,
         });
     }
@@ -93,7 +93,7 @@ export function axesOracle(b, count = 4) {
       x.text,
       ...(v
         ? [
-            v.prefix.reference?.kind === "number" ? null : v.prefix.reference,
+            v.prefix.reference?.kind === 'number' ? null : v.prefix.reference,
             v.prefix.format?.code,
             v.prefix.label,
             v.text.fontName,

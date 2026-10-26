@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 /** Source column geometry, independent of shaping and pagination. */
 export function columnReferenceBoxes(
@@ -7,9 +7,9 @@ export function columnReferenceBoxes(
   maxColumns = 1024,
   { allowZeroHeight = false } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
-    typeof allowZeroHeight !== "boolean" ||
+    typeof allowZeroHeight !== 'boolean' ||
     !body ||
     ![body.x, body.y, body.width, body.height, body.x + body.width, body.y + body.height].every(
       Number.isFinite,
@@ -18,7 +18,7 @@ export function columnReferenceBoxes(
     body.height < 0 ||
     (body.height === 0 && !allowZeroHeight)
   )
-    return unavailable("InvalidColumnBody");
+    return unavailable('InvalidColumnBody');
   if (
     !Number.isSafeInteger(maxColumns) ||
     maxColumns < 1 ||
@@ -28,20 +28,20 @@ export function columnReferenceBoxes(
     declaration.count < 1 ||
     declaration.count > maxColumns
   )
-    return unavailable("InvalidColumnDeclaration");
+    return unavailable('InvalidColumnDeclaration');
   if (
     ![true, false].includes(declaration.same_size) ||
-    declaration.kind !== "newspaper" ||
-    !["left", "right"].includes(declaration.direction)
+    declaration.kind !== 'newspaper' ||
+    !['left', 'right'].includes(declaration.direction)
   )
-    return unavailable("UnsupportedColumnLayout");
+    return unavailable('UnsupportedColumnLayout');
   if (declaration.same_size === false) {
     const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
     if (!Array.isArray(declaration.sizes) || declaration.sizes.length !== declaration.count)
-      return unavailable("InvalidColumnSizes");
+      return unavailable('InvalidColumnSizes');
     for (const size of declaration.sizes) {
       if (!size || !uint(size.width) || size.width === 0 || !uint(size.gap))
-        return unavailable("InvalidColumnSizes");
+        return unavailable('InvalidColumnSizes');
     }
     let cursor = body.x;
     const boxes = declaration.sizes.map((size) => {
@@ -49,22 +49,22 @@ export function columnReferenceBoxes(
       cursor += box.width + hwpUnitPixels(size.gap);
       return box;
     });
-    if (!Number.isFinite(cursor)) return unavailable("InvalidColumnWidth");
-    if (declaration.direction === "right") boxes.reverse();
-    return { state: "placed", boxes };
+    if (!Number.isFinite(cursor)) return unavailable('InvalidColumnWidth');
+    if (declaration.direction === 'right') boxes.reverse();
+    return { state: 'placed', boxes };
   }
   if (!Number.isInteger(declaration.gap) || declaration.gap < 0 || declaration.gap > 0xffffffff)
-    return unavailable("MissingColumnGap");
+    return unavailable('MissingColumnGap');
   const gap = hwpUnitPixels(declaration.gap),
     count = declaration.count;
   const width = (body.width - gap * (count - 1)) / count;
-  if (!Number.isFinite(width) || width <= 0) return unavailable("InvalidColumnWidth");
+  if (!Number.isFinite(width) || width <= 0) return unavailable('InvalidColumnWidth');
   const boxes = Array.from({ length: count }, (_, index) => ({
     x: body.x + index * (width + gap),
     y: body.y,
     width,
     height: body.height,
   }));
-  if (declaration.direction === "right") boxes.reverse();
-  return { state: "placed", boxes };
+  if (declaration.direction === 'right') boxes.reverse();
+  return { state: 'placed', boxes };
 }

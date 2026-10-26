@@ -1,20 +1,20 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
-import { inspect, expectedSection, readStreams } from "./style-preservation/text-record-oracle.mjs";
-import { firstTableCellScalar } from "./style-preservation/table-scalar-site.mjs";
-import { sourceDisplayPosition } from "../../web/preview/text-offsets.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { workerCanvasHarness, dispatchCanvasEvent } from '../canvas/worker-harness.mjs';
+import { inspect, expectedSection, readStreams } from './style-preservation/text-record-oracle.mjs';
+import { firstTableCellScalar } from './style-preservation/table-scalar-site.mjs';
+import { sourceDisplayPosition } from '../../web/preview/text-offsets.mjs';
 
-test("unknown TABLE flags preserve Canvas cell editing despite unavailable page layout", async (t) => {
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwp");
+test('unknown TABLE flags preserve Canvas cell editing despite unavailable page layout', async (t) => {
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/table-bug.hwp');
   const original = Buffer.from(input),
     parsed = inspect(input),
     raw = parsed.sections[0].bytes;
   const h = await workerCanvasHarness(t);
   for (const tableNode of [453, 1130, 1796, 1955]) {
-    assert.equal((await h.send({ kind: "load", bytes: input })).error, undefined);
-    const enabled = await h.send({ kind: "enable" });
+    assert.equal((await h.send({ kind: 'load', bytes: input })).error, undefined);
+    const enabled = await h.send({ kind: 'enable' });
     assert.equal(enabled.error, undefined);
     const diagnostic = enabled.content.tableGeometryErrors.find(
       (row) => row.tableNode === tableNode,
@@ -22,7 +22,7 @@ test("unknown TABLE flags preserve Canvas cell editing despite unavailable page 
     assert.equal(diagnostic?.unknownTableFlags, 0x02000000);
     assert(
       h.renderer.layout().pageLayoutError,
-      "must exercise logical fallback, not pretend exact pagination",
+      'must exercise logical fallback, not pretend exact pagination',
     );
     const site = firstTableCellScalar(raw, tableNode);
     assert(site, `independent cell scalar missing for ${tableNode}`);
@@ -33,22 +33,22 @@ test("unknown TABLE flags preserve Canvas cell editing despite unavailable page 
         : value;
     const start = unit(site.startUnit),
       end = unit(site.endUnit),
-      marker = "표입력😀";
+      marker = '표입력😀';
     assert.equal(h.controller.selectTextRange({ ...site, startUnit: start, endUnit: end }), true);
     const count = h.requests.length;
-    dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: marker });
+    dispatchCanvasEvent(h.input, 'beforeinput', { inputType: 'insertText', data: marker });
     h.input.value = paragraph.text.slice(0, start) + marker + paragraph.text.slice(end);
     h.input.setSelectionRange(start + marker.length, start + marker.length);
-    dispatchCanvasEvent(h.input, "input", { isComposing: false });
+    dispatchCanvasEvent(h.input, 'input', { isComposing: false });
     assert.equal(h.requests.length, count + 1);
     assert.deepEqual(h.requests.at(-1), {
-      kind: "splice",
-      origin: "canvas",
+      kind: 'splice',
+      origin: 'canvas',
       ...site,
       text: marker,
     });
     assert.equal((await h.flush()).error, undefined);
-    const saved = await h.send({ kind: "save", allowStaleLayout: true });
+    const saved = await h.send({ kind: 'save', allowStaleLayout: true });
     assert.equal(saved.error, undefined);
     const after = inspect(Buffer.from(saved.bytes));
     assert.deepEqual(
@@ -57,23 +57,23 @@ test("unknown TABLE flags preserve Canvas cell editing despite unavailable page 
     );
     const streams = readStreams(Buffer.from(saved.bytes));
     for (const [path, bytes] of parsed.streams)
-      if (path !== "BodyText/Section0") assert.deepEqual(streams.get(path), bytes, path);
-    assert.equal(h.controller.history("undo"), true);
+      if (path !== 'BodyText/Section0') assert.deepEqual(streams.get(path), bytes, path);
+    assert.equal(h.controller.history('undo'), true);
     assert.equal((await h.flush()).error, undefined);
-    assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), original);
-    assert.equal(h.controller.history("redo"), true);
+    assert.deepEqual(Buffer.from((await h.send({ kind: 'save' })).bytes), original);
+    assert.equal(h.controller.history('redo'), true);
     assert.equal((await h.flush()).error, undefined);
     assert.deepEqual(
-      Buffer.from((await h.send({ kind: "save", allowStaleLayout: true })).bytes),
+      Buffer.from((await h.send({ kind: 'save', allowStaleLayout: true })).bytes),
       Buffer.from(saved.bytes),
     );
-    assert.equal((await h.send({ kind: "load", bytes: saved.bytes })).error, undefined);
-    assert.equal((await h.send({ kind: "enable" })).error, undefined);
+    assert.equal((await h.send({ kind: 'load', bytes: saved.bytes })).error, undefined);
+    assert.equal((await h.send({ kind: 'enable' })).error, undefined);
     assert(h.renderer.paragraph(site).text.includes(marker));
-    assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), Buffer.from(saved.bytes));
+    assert.deepEqual(Buffer.from((await h.send({ kind: 'save' })).bytes), Buffer.from(saved.bytes));
   }
   assert.deepEqual(input, original);
   t.diagnostic(
-    "four representative cells; real Worker/WASM with simulated DOM, not browser/IME or original layout equivalence",
+    'four representative cells; real Worker/WASM with simulated DOM, not browser/IME or original layout equivalence',
   );
 });

@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function timestampEvidence({ chunks }) {
-  const matches = chunks.filter((c) => c.name === "tIME");
+  const matches = chunks.filter((c) => c.name === 'tIME');
   assert.ok(matches.length <= 1);
   if (!matches.length) return null;
   const b = matches[0].payload;

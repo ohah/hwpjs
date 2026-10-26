@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { hiddenActual } from "./hidden-comment.mjs";
-import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { linksActual } from "./links.mjs";
-import { typeActual } from "./control-types.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { hiddenActual } from './hidden-comment.mjs';
+import { documentRecords, documentActual, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { linksActual } from './links.mjs';
+import { typeActual } from './control-types.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -14,13 +14,13 @@ const w = (n) => {
 };
 export function hiddenReference(call, cfb) {
   const path = new URL(
-    "../../reference/rhwp/samples/issue6034/2912735_court_report_form.hwp",
+    '../../reference/rhwp/samples/issue6034/2912735_court_report_form.hwp',
     import.meta.url,
   );
-  if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
+  if (!existsSync(path)) return { skipped: 'reference fixture unavailable' };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32),
     flags = h.readUInt32LE(36);
   assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
@@ -30,8 +30,8 @@ export function hiddenReference(call, cfb) {
     assert.deepEqual(call(3, Buffer.concat([h, raw]), b.length), b);
     return b;
   };
-  const original = decode("/BodyText/Section0"),
-    doc = decode("/DocInfo");
+  const original = decode('/BodyText/Section0'),
+    doc = decode('/DocInfo');
   const stats = hiddenActual(call, v, original);
   assert.deepEqual(stats, [1, 1, 1, 0, 0, 0]);
   linksActual(call, v, original);
@@ -60,8 +60,8 @@ export function hiddenReference(call, cfb) {
     end = rows[i].end;
   }
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
+    body = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0),
+    section = nodes.findIndex((n) => n.name === 'Section0' && n.parent === body);
   assert.ok(section >= 0);
   const full = (plain) => {
     const copy = nodes.map((n) => ({ ...n }));
@@ -82,8 +82,8 @@ export function hiddenReference(call, cfb) {
   code15.writeUInt16LE(15, token);
   code15.writeUInt16LE(15, token + 14);
   const expected = Buffer.from(normal),
-    checked = sectionFieldOffset(0, "control_types", 0),
-    observed = sectionFieldOffset(0, "control_types", 2);
+    checked = sectionFieldOffset(0, 'control_types', 0),
+    observed = sectionFieldOffset(0, 'control_types', 2);
   expected.writeUInt32LE(expected.readUInt32LE(checked) + 1, checked);
   expected.writeUInt32LE(0, observed);
   assert.deepEqual(call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: code15 }])), expected);

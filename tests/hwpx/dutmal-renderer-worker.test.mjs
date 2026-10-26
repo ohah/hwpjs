@@ -1,42 +1,42 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
-import { rowTop, rowLeft, rowTextTop } from "../../web/preview/row-geometry.mjs";
-import { createDutmalCanvasControls } from "../../web/preview/dutmal-canvas-controls.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { workerCanvasHarness, dispatchCanvasEvent } from '../canvas/worker-harness.mjs';
+import { rowTop, rowLeft, rowTextTop } from '../../web/preview/row-geometry.mjs';
+import { createDutmalCanvasControls } from '../../web/preview/dutmal-canvas-controls.mjs';
 
-test("actual dutmal Worker data paints two runs with one logical anchor", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit dutmal display candidate required");
+test('actual dutmal Worker data paints two runs with one logical anchor', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit dutmal display candidate required');
   const h = await workerCanvasHarness(t, { paintFrames: true });
   const calls = [];
-  const ctx = h.canvas.getContext("2d");
+  const ctx = h.canvas.getContext('2d');
   ctx.fillText = (text, x, y) => calls.push({ text, x, y, font: ctx.font });
   const input = readFileSync(
-    "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx",
+    'reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx',
   );
-  const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
+  const loaded = await h.send({ kind: 'load', format: 'hwpx', bytes: input });
   assert.equal(loaded.error, undefined);
   assert.deepEqual(loaded.content.dutmalErrors, []);
   const layout = h.renderer.layout();
   const index = layout.rows.findIndex(
     (row) =>
-      row.kind === "text" &&
+      row.kind === 'text' &&
       row.section === 0 &&
       row.paragraph === 25 &&
       row.startUnit <= 43 &&
       row.endUnit > 43,
   );
-  assert(index >= 0, "dutmal row must exist");
+  assert(index >= 0, 'dutmal row must exist');
   const row = layout.rows[index];
   const boundary = row.boundaries.findIndex((point) => point.unit === 43);
   assert(boundary >= 0);
   assert.equal(row.boundaries[boundary + 1].unit, 44);
   assert(row.boundaries[boundary + 1].x > row.boundaries[boundary].x);
   h.viewport.scrollTop = rowTop(row, index);
-  h.viewport.dispatchEvent(new Event("scroll"));
+  h.viewport.dispatchEvent(new Event('scroll'));
   h.paint();
-  const main = calls.find((call) => call.text === "팀단위 훈련");
-  const sub = calls.find((call) => call.text === "전술훈련 30% + 현지훈련 20%");
+  const main = calls.find((call) => call.text === '팀단위 훈련');
+  const sub = calls.find((call) => call.text === '전술훈련 30% + 현지훈련 20%');
   assert(
     main,
     JSON.stringify({
@@ -70,7 +70,7 @@ test("actual dutmal Worker data paints two runs with one logical anchor", async 
   });
   try {
     assert.equal(
-      dispatchCanvasEvent(h.canvas, "pointerdown", {
+      dispatchCanvasEvent(h.canvas, 'pointerdown', {
         button: 0,
         clientX: x,
         clientY: y - h.viewport.scrollTop,
@@ -78,7 +78,7 @@ test("actual dutmal Worker data paints two runs with one logical anchor", async 
       true,
     );
     assert.deepEqual(selections, [identity]);
-    dispatchCanvasEvent(h.canvas, "pointerdown", {
+    dispatchCanvasEvent(h.canvas, 'pointerdown', {
       button: 0,
       clientX: x,
       clientY: y - h.viewport.scrollTop,
@@ -86,7 +86,7 @@ test("actual dutmal Worker data paints two runs with one logical anchor", async 
     });
     assert.equal(selections.length, 1);
     selection.close();
-    dispatchCanvasEvent(h.canvas, "pointerdown", {
+    dispatchCanvasEvent(h.canvas, 'pointerdown', {
       button: 0,
       clientX: x,
       clientY: y - h.viewport.scrollTop,
@@ -96,6 +96,6 @@ test("actual dutmal Worker data paints two runs with one logical anchor", async 
     selection.close();
   }
   t.diagnostic(
-    "Real Worker/WASM and renderer; Canvas context/metrics simulated, not Hangul shaping or browser pixels",
+    'Real Worker/WASM and renderer; Canvas context/metrics simulated, not Hangul shaping or browser pixels',
   );
 });

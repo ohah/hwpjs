@@ -1,11 +1,11 @@
-import { tableRowBands } from "./table-row-bands.mjs";
-import { tableCellRowExtent, isZeroAdvanceCellAnchor } from "./table-cell-band.mjs";
+import { tableRowBands } from './table-row-bands.mjs';
+import { tableCellRowExtent, isZeroAdvanceCellAnchor } from './table-cell-band.mjs';
 
 // Classify measured source row bands; do not select or move a page boundary.
 export function cellRowSplitPolicy(table, measured, { top = 0 } = {}) {
-  const fail = () => ({ state: "unavailable", error: "InvalidCellRowSplitPolicy" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidCellRowSplitPolicy' });
   if (
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     !(measured.flows instanceof Map) ||
     !Array.isArray(measured.grid?.rows) ||
     !Number.isFinite(top) ||
@@ -28,7 +28,7 @@ export function cellRowSplitPolicy(table, measured, { top = 0 } = {}) {
   const ends = [0];
   for (const height of measured.grid.rows) ends.push(ends.at(-1) + height);
   return {
-    state: "prepared",
+    state: 'prepared',
     bands: sourceBands.map((band) => ({
       startRow: band.startRow,
       endRow: band.endRow,
@@ -46,7 +46,7 @@ export function cellFlowLineCount(flow, section) {
   for (const row of flow.rows) {
     if (
       !row ||
-      !["text", "gap"].includes(row.kind) ||
+      !['text', 'gap'].includes(row.kind) ||
       row.section !== section ||
       !Number.isFinite(row.y) ||
       row.y < 0
@@ -54,7 +54,7 @@ export function cellFlowLineCount(flow, section) {
       return null;
     const extent = tableCellRowExtent(row);
     if (!Number.isFinite(extent) || extent < 0) return null;
-    if (row.kind === "text" && !isZeroAdvanceCellAnchor(row) && extent > 0) lines.add(row.y);
+    if (row.kind === 'text' && !isZeroAdvanceCellAnchor(row) && extent > 0) lines.add(row.y);
   }
   return lines.size;
 }

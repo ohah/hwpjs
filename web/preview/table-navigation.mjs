@@ -1,4 +1,4 @@
-import { caretGeometry, selectableText } from "./text-geometry.mjs";
+import { caretGeometry, selectableText } from './text-geometry.mjs';
 
 // Navigation changes only the interaction target, never the native table.
 export function adjacentCell(content, layout, point, backward = false) {
@@ -17,7 +17,7 @@ export function adjacentCell(content, layout, point, backward = false) {
       section: point.section,
       createdCell: { identity: table.identity, row: cell.row, column: cell.column },
       unit: 0,
-      affinity: "forward",
+      affinity: 'forward',
     };
     return caretGeometry(layout, target) ? target : null;
   }
@@ -40,7 +40,7 @@ export function adjacentCell(content, layout, point, backward = false) {
         (p) => p.section === point.section && p.paragraph === ordinal,
       );
       if (!p || p.clipped || !selectableText(p)) continue;
-      const target = { section: p.section, paragraph: p.paragraph, unit: 0, affinity: "forward" };
+      const target = { section: p.section, paragraph: p.paragraph, unit: 0, affinity: 'forward' };
       if (caretGeometry(layout, target)) return target;
     }
   }

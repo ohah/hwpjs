@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { modelEntries, modelProfile } from "./icc-model.mjs";
-import { forwardReference as sampled } from "./icc-forward.mjs";
+import assert from 'node:assert/strict';
+import { modelEntries, modelProfile } from './icc-model.mjs';
+import { forwardReference as sampled } from './icc-forward.mjs';
 export function pointInput(profile, points) {
   const prefix = Buffer.alloc(48);
   points.forEach(([n, d], i) => {
@@ -16,7 +16,7 @@ export function pointEntries(matrix, kinds) {
     const kind = kinds[c],
       values = kind === 0 ? [] : kind === 1 ? [0, 12345, 65535] : [512],
       b = Buffer.alloc(kind === 3 ? 16 : 12 + 2 * values.length);
-    b.write(kind === 3 ? "para" : "curv");
+    b.write(kind === 3 ? 'para' : 'curv');
     if (kind === 3) b.writeInt32BE(131072, 12);
     else {
       b.writeUInt32BE(values.length, 8);
@@ -40,7 +40,7 @@ export function checkPoint(out, matrix, kinds, points) {
         : (Number(points[i][0]) / Number(points[i][1])) ** 2,
   );
   if (approximate) {
-    const v = linear.map((x) => (typeof x === "number" ? x : Number(x[0]) / Number(x[1])));
+    const v = linear.map((x) => (typeof x === 'number' ? x : Number(x[0]) / Number(x[1])));
     for (let row = 0; row < 3; row++) {
       const expected = matrix
         .slice(row * 3, row * 3 + 3)

@@ -1,5 +1,5 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { reserveInlineGroupCaption } from "./inline-group-caption-reservation.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { reserveInlineGroupCaption } from './inline-group-caption-reservation.mjs';
 
 // One native group reservation contract for body and source-cell measurement.
 export function inlineGroupObject(root, section, captionContext) {
@@ -25,18 +25,18 @@ export function inlineGroupObject(root, section, captionContext) {
       (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff,
     )
   )
-    return { state: "unavailable", error: "UnsupportedInlineGroupSource" };
+    return { state: 'unavailable', error: 'UnsupportedInlineGroupSource' };
   if (source.has_caption === true) {
-    if (!captionContext) return { state: "unavailable", error: "UnsupportedInlineGroupSource" };
+    if (!captionContext) return { state: 'unavailable', error: 'UnsupportedInlineGroupSource' };
     const reserved = reserveInlineGroupCaption(
       root,
       captionContext.paragraphs,
       captionContext.measure,
       { maxRows: captionContext.maxRows },
     );
-    if (reserved.state !== "reserved") return reserved;
+    if (reserved.state !== 'reserved') return reserved;
     return {
-      state: "measured",
+      state: 'measured',
       objectNode: root.containerNode,
       unit: root.anchorUnit,
       width: reserved.width,
@@ -47,10 +47,10 @@ export function inlineGroupObject(root, section, captionContext) {
     };
   }
   if (source.caption != null)
-    return { state: "unavailable", error: "UnsupportedInlineGroupSource" };
+    return { state: 'unavailable', error: 'UnsupportedInlineGroupSource' };
   const [left, right, top, bottom] = source.flow.outside_margins.map(hwpUnitPixels);
   return {
-    state: "measured",
+    state: 'measured',
     objectNode: root.containerNode,
     unit: root.anchorUnit,
     width: hwpUnitPixels(geometry.width) + left + right,

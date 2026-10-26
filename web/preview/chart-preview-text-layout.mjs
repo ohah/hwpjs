@@ -1,7 +1,7 @@
-import { createChartValueScale } from "./chart-value-scale.mjs";
-import { chartPreviewTicks } from "./chart-preview-ticks.mjs";
-import { shortChartLabel, chartPreviewLegendLayout } from "./chart-preview-legend-layout.mjs";
-import { chartPieTextLayout } from "./chart-pie-text-layout.mjs";
+import { createChartValueScale } from './chart-value-scale.mjs';
+import { chartPreviewTicks } from './chart-preview-ticks.mjs';
+import { shortChartLabel, chartPreviewLegendLayout } from './chart-preview-legend-layout.mjs';
+import { chartPieTextLayout } from './chart-pie-text-layout.mjs';
 const fontHeight = 12;
 /** Preview text layout only; source font/number format/legend settings are pending. */
 export function chartPreviewTextLayout(item, measure) {
@@ -13,24 +13,24 @@ export function chartPreviewTextLayout(item, measure) {
     title.lines.length > 3 ||
     title.lines.some(
       (line) =>
-        typeof line !== "string" ||
+        typeof line !== 'string' ||
         line.length > 258 ||
         !line.isWellFormed() ||
         /[\r\n]/.test(line) ||
         [...line].length > 129,
     )
   )
-    return { state: "unavailable", reason: "InvalidChartPreviewTitle" };
+    return { state: 'unavailable', reason: 'InvalidChartPreviewTitle' };
   for (const line of title.lines) {
     const width = measure(line);
-    if (typeof width !== "number" || !Number.isFinite(width) || width < 0)
-      return { state: "unavailable", reason: "ChartPreviewTextSpaceUnavailable" };
+    if (typeof width !== 'number' || !Number.isFinite(width) || width < 0)
+      return { state: 'unavailable', reason: 'ChartPreviewTextSpaceUnavailable' };
   }
   const height = title.lines.length * 16 + 8;
   if (item.width < 40 || item.height - height < 24)
-    return { state: "unavailable", reason: "ChartPreviewTextSpaceUnavailable" };
+    return { state: 'unavailable', reason: 'ChartPreviewTextSpaceUnavailable' };
   const layout = chartPreviewBodyTextLayout({ ...item, height: item.height - height }, measure);
-  if (layout.state !== "ready") return layout;
+  if (layout.state !== 'ready') return layout;
   return {
     ...layout,
     plot: { ...layout.plot, y: layout.plot.y + height },
@@ -52,31 +52,31 @@ function chartPreviewBodyTextLayout(item, measure) {
   const axesHidden = p.axes_hidden ?? { value: false, category: false };
   if (!Array.isArray(p.categories) || !Array.isArray(p.legend))
     return {
-      state: "ready",
+      state: 'ready',
       plot: { x: 0, y: 0, width: item.width, height: item.height },
       ticks: [],
       categories: [],
       legend: [],
     };
   if (![p.minimum, p.maximum].every(Number.isFinite) || p.minimum >= p.maximum)
-    return { state: "unavailable", reason: "InvalidChartPreviewTextRange" };
+    return { state: 'unavailable', reason: 'InvalidChartPreviewTextRange' };
   const width = (text) => {
     const value = measure(text);
-    return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : NaN;
+    return typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : NaN;
   };
   const sourceTicks =
     p.value_ticks === undefined
       ? (createChartValueScale(
           [p.minimum, p.maximum],
-          { orientation: { value: p.value_reversed ? "maxMin" : "minMax" } },
+          { orientation: { value: p.value_reversed ? 'maxMin' : 'minMax' } },
           { includeZero: false },
         ).ticks?.() ?? null)
       : p.value_ticks;
-  const valueTicks = chartPreviewTicks(sourceTicks, p.grouping === "percentStacked");
+  const valueTicks = chartPreviewTicks(sourceTicks, p.grouping === 'percentStacked');
   const numericCategories =
     p.category_ticks === undefined ? undefined : chartPreviewTicks(p.category_ticks);
   if (!valueTicks || numericCategories === null)
-    return { state: "unavailable", reason: "InvalidChartPreviewTicks" };
+    return { state: 'unavailable', reason: 'InvalidChartPreviewTicks' };
   const ticks = axesHidden.value ? [] : valueTicks;
   let shortened = 0;
   const categories = axesHidden.category
@@ -98,11 +98,11 @@ function chartPreviewBodyTextLayout(item, measure) {
   for (const tick of ticks) widestTick = Math.max(widestTick, width(tick.text));
   for (const category of categories)
     if (category.text !== null) widestCategory = Math.max(widestCategory, width(category.text));
-  const left = 8 + Math.min(item.width * 0.35, p.direction === "bar" ? widestCategory : widestTick);
-  const right = p.direction === "bar" ? Math.min(widestTick / 2 + 4, item.width * 0.15) : 8;
+  const left = 8 + Math.min(item.width * 0.35, p.direction === 'bar' ? widestCategory : widestTick);
+  const right = p.direction === 'bar' ? Math.min(widestTick / 2 + 4, item.width * 0.15) : 8;
   const available = item.width - left - right;
   const legendLayout = chartPreviewLegendLayout(p.legend, available, left, width);
-  if (legendLayout.state !== "ready") return legendLayout;
+  if (legendLayout.state !== 'ready') return legendLayout;
   const legend = legendLayout.legend,
     legendHeight = legendLayout.height;
   shortened += legendLayout.shortened;
@@ -112,7 +112,7 @@ function chartPreviewBodyTextLayout(item, measure) {
     plot.width < 24 ||
     plot.height < 24
   )
-    return { state: "unavailable", reason: "ChartPreviewTextSpaceUnavailable" };
+    return { state: 'unavailable', reason: 'ChartPreviewTextSpaceUnavailable' };
   for (const entry of legend) entry.y = plot.y + plot.height + 24 + entry.line * 18;
   const categoryOmitted =
     axesHidden.category || numericCategories
@@ -120,7 +120,7 @@ function chartPreviewBodyTextLayout(item, measure) {
       : Math.max(0, p.categories.length - categories.length);
   const legendOmitted = legendLayout.omitted;
   return {
-    state: "ready",
+    state: 'ready',
     plot,
     ticks,
     categories,

@@ -23,11 +23,11 @@ export function curvePageCompositionConnected(content, overrides = []) {
           (flow) =>
             flow.section === root.section &&
             flow.paragraph === root.hostParagraph &&
-            flow.host === "body" &&
+            flow.host === 'body' &&
             flow.top_level === true,
         ).length === 1,
     ) &&
-    content.paragraphFlows?.every((flow) => ["body", "drawing"].includes(flow.host))
+    content.paragraphFlows?.every((flow) => ['body', 'drawing'].includes(flow.host))
   )
     return true;
   return (
@@ -48,9 +48,9 @@ export function curvePageCompositionConnected(content, overrides = []) {
       const flow = flows[0],
         note = flow.note_context;
       return (
-        flow.host === "endnote" &&
+        flow.host === 'endnote' &&
         flow.top_level === false &&
-        note?.kind === "endnote" &&
+        note?.kind === 'endnote' &&
         [note.note_node, note.list_node].every((value) => Number.isSafeInteger(value) && value >= 0)
       );
     })

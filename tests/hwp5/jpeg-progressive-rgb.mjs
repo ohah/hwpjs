@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { progressiveFrameFixture } from "./jpeg-progressive-frame-cases.mjs";
-import { progressiveSamplesInput, progressiveSamplesOracle } from "./jpeg-progressive-samples.mjs";
-import { jpegRgbRasterOracle, jpegRgbMetadataOracle } from "./jpeg-rgb.mjs";
-import { jpegJfifFixture } from "./jpeg-jfif.mjs";
-import { jpegJfxxFixture } from "./jpeg-jfxx.mjs";
-import { jpegJfifLayoutFixture } from "./jpeg-jfif-layout.mjs";
-import { adobePayload } from "./jpeg-adobe.mjs";
-import { jpegIccChunk } from "./jpeg-icc.mjs";
-import { segment } from "./jpeg-structure.mjs";
+import assert from 'node:assert/strict';
+import { progressiveFrameFixture } from './jpeg-progressive-frame-cases.mjs';
+import { progressiveSamplesInput, progressiveSamplesOracle } from './jpeg-progressive-samples.mjs';
+import { jpegRgbRasterOracle, jpegRgbMetadataOracle } from './jpeg-rgb.mjs';
+import { jpegJfifFixture } from './jpeg-jfif.mjs';
+import { jpegJfxxFixture } from './jpeg-jfxx.mjs';
+import { jpegJfifLayoutFixture } from './jpeg-jfif-layout.mjs';
+import { adobePayload } from './jpeg-adobe.mjs';
+import { jpegIccChunk } from './jpeg-icc.mjs';
+import { segment } from './jpeg-structure.mjs';
 
 export function progressiveRgbFixture(options = {}) {
   const sampling = options.sampling ?? [34, 17, 17];
@@ -120,7 +120,7 @@ export function progressiveRgbEdges(call) {
     );
   reject(late([segment(224, jpegJfxxFixture(255))]), /InvalidJfxxPosition/);
   reject(late([segment(224, jpegJfifFixture())]), /DuplicateJfifHeader/);
-  reject(late([segment(224, Buffer.from("acme"))]), /UnterminatedJfifApplicationId/);
+  reject(late([segment(224, Buffer.from('acme'))]), /UnterminatedJfifApplicationId/);
   const bytes = raw.length,
     expected = progressiveRgbOracle(raw, { full: true });
   assert.ok(bytes < expected.length - 1);

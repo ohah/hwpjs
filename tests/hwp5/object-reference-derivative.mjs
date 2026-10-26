@@ -1,8 +1,8 @@
 // In-memory counter-control; never overwrite the real source fixture.
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { inspect, records, encodeRecord } from "./style-preservation/text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { inspect, records, encodeRecord } from './style-preservation/text-record-oracle.mjs';
 
 export async function changeFirstObjectNumber(wasm, input, change) {
   const before = inspect(input),
@@ -22,14 +22,14 @@ export async function changeFirstObjectNumber(wasm, input, change) {
         )
           return record.raw;
         const units = record.payload.readUInt16LE(9),
-          text = record.payload.subarray(11, 11 + units * 2).toString("utf16le");
+          text = record.payload.subarray(11, 11 + units * 2).toString('utf16le');
         assert(record.payload.length >= 11 + units * 2);
         assert.match(text, /^\?#\d+;[01];1;0;0;$/);
-        const replacement = Buffer.from(change(text), "utf16le");
+        const replacement = Buffer.from(change(text), 'utf16le');
         assert.notEqual(
-          replacement.toString("utf16le"),
+          replacement.toString('utf16le'),
           text,
-          "Counter-control must actually change the command",
+          'Counter-control must actually change the command',
         );
         const payload = Buffer.concat([
           record.payload.subarray(0, 11),
@@ -42,13 +42,13 @@ export async function changeFirstObjectNumber(wasm, input, change) {
       }),
     );
     assert.equal(changed, 1);
-    const [storageName, sectionName] = section.path.split("/");
+    const [storageName, sectionName] = section.path.split('/');
     const storage = doc.nodes.findIndex((row) => row.parent === 0 && row.name === storageName);
     assert(storage >= 0);
     const target = doc.nodes.find((row) => row.parent === storage && row.name === sectionName);
     assert(target);
     target.content =
-      before.streams.get("FileHeader").readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes;
+      before.streams.get('FileHeader').readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes;
     const output = cfb.write(doc);
     cfb.parse(output, { strict: true });
     const after = inspect(output);

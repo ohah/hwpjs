@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { decodeAvailableSectionCopyInfo } from "../../js/hwp5-available-section-copy.mjs";
-import { createMemory } from "../../js/wasm-memory.mjs";
-import { withoutNormalizationExport } from "./normalization-export-fixture.mjs";
-import { sectionCountFixtures } from "./section-count-fixtures.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { decodeAvailableSectionCopyInfo } from '../../js/hwp5-available-section-copy.mjs';
+import { createMemory } from '../../js/wasm-memory.mjs';
+import { withoutNormalizationExport } from './normalization-export-fixture.mjs';
+import { sectionCountFixtures } from './section-count-fixtures.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit copy API candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit copy API candidate required');
 const wasmBytes = readFileSync(process.env.HWPJS_TEST_WASM);
-const strictInput = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp");
-test("available section copy requires independent Boolean consent and complete optional ABI", async () => {
-  for (const value of [null, 1, "true", [], {}])
+const strictInput = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwp');
+test('available section copy requires independent Boolean consent and complete optional ABI', async () => {
+  for (const value of [null, 1, 'true', [], {}])
     await assert.rejects(
       createExperimentalHwp5Editor(wasmBytes, strictInput, { availableSectionCopy: value }),
       /Invalid available section copy option/,
@@ -25,8 +25,8 @@ test("available section copy requires independent Boolean consent and complete o
       /ConflictingAvailableSectionCopyOptions/,
     );
   for (const name of [
-    "hwp5_edit_open_available_section_copy",
-    "hwp5_edit_available_section_copy_info",
+    'hwp5_edit_open_available_section_copy',
+    'hwp5_edit_available_section_copy_info',
   ]) {
     const masked = withoutNormalizationExport(wasmBytes, name);
     await assert.rejects(
@@ -42,18 +42,18 @@ test("available section copy requires independent Boolean consent and complete o
   }
 });
 
-test("copy report cannot claim recovered content or an original history baseline", () => {
-  assert.equal(decodeAvailableSectionCopyInfo(Buffer.from("null")), null);
+test('copy report cannot claim recovered content or an original history baseline', () => {
+  assert.equal(decodeAvailableSectionCopyInfo(Buffer.from('null')), null);
   for (const value of [
     {},
     [],
     { declared: 1, available: 1 },
-    { declared: "2", available: 1 },
+    { declared: '2', available: 1 },
     { declared: 1025, available: 1 },
   ])
     assert.throws(() => decodeAvailableSectionCopyInfo(Buffer.from(JSON.stringify(value))));
   const result = decodeAvailableSectionCopyInfo(Buffer.from('{"declared":2,"available":1}'));
-  assert.equal(result.historyBaseline, "available-sections-copy");
+  assert.equal(result.historyBaseline, 'available-sections-copy');
   assert.equal(result.missingContentRecovered, false);
   assert.equal(result.sectionInventory.mismatch, true);
 });
@@ -62,7 +62,7 @@ for (const [name, , declared, available, , paragraphs] of sectionCountFixtures)
   test(`explicit copy editor opens stored sections without changing its original: ${name}`, async (t) => {
     const path = `reference/rhwp/samples/${name}`;
     if (!existsSync(path)) {
-      t.skip("Reference fixture unavailable");
+      t.skip('Reference fixture unavailable');
       return;
     }
     const input = readFileSync(path);
@@ -76,7 +76,7 @@ for (const [name, , declared, available, , paragraphs] of sectionCountFixtures)
     try {
       assert.deepEqual(editor.normalizationInfo(), {
         normalized: true,
-        historyBaseline: "available-sections-copy",
+        historyBaseline: 'available-sections-copy',
         deviations: null,
         sectionInventory: { declared, available, mismatch: true },
         missingContentRecovered: false,
@@ -100,10 +100,10 @@ for (const [name, , declared, available, , paragraphs] of sectionCountFixtures)
         const before = editor.text(section, 0),
           at = offsets[section];
         assert(before.charCodeAt(at) >= 32);
-        editor.splice({ section, paragraph: 0, startUnit: at, endUnit: at, text: "사본검증😀" });
+        editor.splice({ section, paragraph: 0, startUnit: at, endUnit: at, text: '사본검증😀' });
         assert.equal(
           editor.text(section, 0),
-          before.slice(0, at) + "사본검증😀" + before.slice(at),
+          before.slice(0, at) + '사본검증😀' + before.slice(at),
         );
       }
       const changed = editor.save({ allowStaleLayout: true }).bytes;
@@ -113,7 +113,7 @@ for (const [name, , declared, available, , paragraphs] of sectionCountFixtures)
       assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, changed);
       const reopened = await createExperimentalHwp5Editor(wasmBytes, changed);
       try {
-        assert.equal(reopened.normalizationInfo().historyBaseline, "original");
+        assert.equal(reopened.normalizationInfo().historyBaseline, 'original');
         assert.equal(reopened.sectionCount(), available);
         for (let section = 0; section < available; section++)
           assert.equal(reopened.text(section, 0), editor.text(section, 0));
@@ -127,10 +127,10 @@ for (const [name, , declared, available, , paragraphs] of sectionCountFixtures)
     assert.throws(() => editor.normalizationInfo(), /EditorClosed/);
   });
 
-test("failed native copy reopen preserves edited history and successful open resets report lifetime", async (t) => {
+test('failed native copy reopen preserves edited history and successful open resets report lifetime', async (t) => {
   const path = `reference/rhwp/samples/${sectionCountFixtures[0][0]}`;
   if (!existsSync(path)) {
-    t.skip("Reference fixture unavailable");
+    t.skip('Reference fixture unavailable');
     return;
   }
   const { instance } = await WebAssembly.instantiate(wasmBytes, {}),
@@ -151,7 +151,7 @@ test("failed native copy reopen preserves edited history and successful open res
   try {
     assert.equal(open(wasm.hwp5_edit_open, strictInput), 1);
     assert.equal(wasm.hwp5_edit_history_enable(4, 16000000), 1);
-    memory.withBytes(Buffer.from("원자성😀"), (ptr, len) =>
+    memory.withBytes(Buffer.from('원자성😀'), (ptr, len) =>
       assert.equal(wasm.hwp5_edit_splice(0, 0, 0, 0, ptr, len, 0), 1),
     );
     const changed = save(),

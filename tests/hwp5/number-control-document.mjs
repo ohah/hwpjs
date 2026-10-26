@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { decodedDocumentInput, documentRecords } from "./documents.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { decodedDocumentInput, documentRecords } from './documents.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
 export function numberDocumentEdges(call, h, doc, sections) {
   let checked = 0;
   for (const s of sections)
@@ -22,7 +22,7 @@ export function numberDocumentEdges(call, h, doc, sections) {
           sections.map((x) => (x.index === s.index ? { ...x, bytes: modified } : x)),
         ),
       );
-      const offset = sectionFieldOffset(s.index, "number_controls", 2);
+      const offset = sectionFieldOffset(s.index, 'number_controls', 2);
       assert.equal(result.readUInt32LE(offset), normal.readUInt32LE(offset) + 1);
       checked++;
     }

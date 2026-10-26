@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   moveBrowserInputToStart,
   selectBrowserInputRange,
-} from "../../tools/browser/input-origin.mjs";
+} from '../../tools/browser/input-origin.mjs';
 
-test("browser input origin uses document-start keys and proves a collapsed zero caret", () => {
+test('browser input origin uses document-start keys and proves a collapsed zero caret', () => {
   for (const mac of [false, true]) {
     const calls = [],
       states = [
@@ -17,15 +17,15 @@ test("browser input origin uses document-start keys and proves a collapsed zero 
       evaluate: () => states.shift(),
     });
     assert.deepEqual(calls, [
-      ["focus", "#canvas-input"],
-      ["press", mac ? "Meta+ArrowUp" : "Control+Home"],
+      ['focus', '#canvas-input'],
+      ['press', mac ? 'Meta+ArrowUp' : 'Control+Home'],
     ]);
   }
 });
 
-test("browser interior range uses actual arrows and refuses a forged or split selection", () => {
+test('browser interior range uses actual arrows and refuses a forged or split selection', () => {
   const calls = [],
-    text = "A😀BC";
+    text = 'A😀BC';
   const states = [
     { active: true, writable: true, start: 0, end: 0, mac: false },
     { active: true, writable: true, start: 0, end: 0 },
@@ -38,11 +38,11 @@ test("browser interior range uses actual arrows and refuses a forged or split se
     4,
   );
   assert.deepEqual(calls, [
-    ["focus", "#canvas-input"],
-    ["press", "Control+Home"],
-    ["press", "ArrowRight"],
-    ["press", "ArrowRight"],
-    ["press", "Shift+ArrowRight"],
+    ['focus', '#canvas-input'],
+    ['press', 'Control+Home'],
+    ['press', 'ArrowRight'],
+    ['press', 'ArrowRight'],
+    ['press', 'Shift+ArrowRight'],
   ]);
   for (const [start, end] of [
     [-1, 1],
@@ -62,7 +62,7 @@ test("browser interior range uses actual arrows and refuses a forged or split se
     );
   for (const wrong of [
     { value: text, start: 0, end: 4 },
-    { value: "wrong", start: 3, end: 4 },
+    { value: 'wrong', start: 3, end: 4 },
   ]) {
     let n = 0;
     assert.throws(
@@ -81,7 +81,7 @@ test("browser interior range uses actual arrows and refuses a forged or split se
   }
 });
 
-test("a successful key command cannot substitute for an active writable zero caret", () => {
+test('a successful key command cannot substitute for an active writable zero caret', () => {
   for (const bad of [
     { active: false, writable: true, start: 0, end: 0 },
     { active: true, writable: false, start: 0, end: 0 },

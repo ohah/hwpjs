@@ -1,14 +1,14 @@
-import { validChartCircularGroup, paintChartCircularGroup } from "./chart-pie-paint.mjs";
+import { validChartCircularGroup, paintChartCircularGroup } from './chart-pie-paint.mjs';
 
 export function validChartOfPie(value) {
   return (
     value &&
-    ["pie", "bar"].includes(value.plot_type) &&
+    ['pie', 'bar'].includes(value.plot_type) &&
     Array.isArray(value.groups) &&
-    value.groups.length === (value.plot_type === "pie" ? 2 : 1) &&
+    value.groups.length === (value.plot_type === 'pie' ? 2 : 1) &&
     value.groups.every((group) => validChartCircularGroup(group, group.origin_angle)) &&
     Array.isArray(value.bars) &&
-    (value.plot_type !== "pie" || value.bars.length === 0) &&
+    (value.plot_type !== 'pie' || value.bars.length === 0) &&
     value.bars.every(
       ({ rectangle: r, color_index: color }) =>
         r &&

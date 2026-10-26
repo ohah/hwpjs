@@ -1,23 +1,23 @@
-import { titleBodyOracle, titleBodyWire } from "./chart-title-body-oracle.mjs";
-import { seriesCollectionWire } from "./chart-series-collection-oracle.mjs";
-import { observeChartTail } from "./chart-tail-evidence.mjs";
-import { chartGridCellsOracle, gridCellsWire } from "./chart-grid-cells-oracle.mjs";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { integer } from "./chart-text-body-oracle.mjs";
-import { axesOracle, axisWire } from "./chart-axes-oracle.mjs";
-import { nullableTitleOracle } from "./chart-nullable-title-oracle.mjs";
-import { lightWire } from "./chart-light-wire.mjs";
-import { lineItemsOracle, lineItemsWire } from "./chart-line-items-oracle.mjs";
-import { postLineWire } from "./chart-post-line-oracle.mjs";
-import { plotSurfaceWire } from "./chart-plot-surface-wire.mjs";
-import { observeSurfacePrefix } from "./chart-surface-evidence.mjs";
-import { tailWire } from "./chart-tail-wire.mjs";
-import { gridPreludeWire } from "./chart-grid-prelude-wire.mjs";
-import { chartFootnoteOracle } from "./chart-footnote-oracle.mjs";
-import { chartLegendOracle, legendWire } from "./chart-legend-oracle.mjs";
-import { chartBackdropOracle } from "./chart-backdrops.mjs";
-import { typeTableWire } from "./chart-type-table-wire.mjs";
-import { objectTableWire } from "./chart-object-table-wire.mjs";
+import { titleBodyOracle, titleBodyWire } from './chart-title-body-oracle.mjs';
+import { seriesCollectionWire } from './chart-series-collection-oracle.mjs';
+import { observeChartTail } from './chart-tail-evidence.mjs';
+import { chartGridCellsOracle, gridCellsWire } from './chart-grid-cells-oracle.mjs';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { integer } from './chart-text-body-oracle.mjs';
+import { axesOracle, axisWire } from './chart-axes-oracle.mjs';
+import { nullableTitleOracle } from './chart-nullable-title-oracle.mjs';
+import { lightWire } from './chart-light-wire.mjs';
+import { lineItemsOracle, lineItemsWire } from './chart-line-items-oracle.mjs';
+import { postLineWire } from './chart-post-line-oracle.mjs';
+import { plotSurfaceWire } from './chart-plot-surface-wire.mjs';
+import { observeSurfacePrefix } from './chart-surface-evidence.mjs';
+import { tailWire } from './chart-tail-wire.mjs';
+import { gridPreludeWire } from './chart-grid-prelude-wire.mjs';
+import { chartFootnoteOracle } from './chart-footnote-oracle.mjs';
+import { chartLegendOracle, legendWire } from './chart-legend-oracle.mjs';
+import { chartBackdropOracle } from './chart-backdrops.mjs';
+import { typeTableWire } from './chart-type-table-wire.mjs';
+import { objectTableWire } from './chart-object-table-wire.mjs';
 // Independent observed layout, not automatic format recognition.
 export function observedContentsCase(b, { seriesCount } = {}) {
   const title = titleBodyOracle(b, seriesCount),
@@ -44,7 +44,7 @@ export function observedContentsCase(b, { seriesCount } = {}) {
       light.sources.length,
     ].map((n) => integer(n)),
     b.subarray(grid.end, grid.end + 26),
-    Buffer.from(tail.raw26, "hex"),
+    Buffer.from(tail.raw26, 'hex'),
     seriesCollectionWire(title.prior.r, scope),
     titleBodyWire(title.prior.r.title.id, title.r, scope),
   ]);
@@ -60,7 +60,7 @@ export function observedContentsCase(b, { seriesCount } = {}) {
       end: light.lightStart,
       id: light.id,
       array: { ...light.initialArray, end: light.initialArray.headerEnd },
-      raws: [Buffer.from(light.raw136, "hex")],
+      raws: [Buffer.from(light.raw136, 'hex')],
     },
     tail.types.size,
     tail.objects.size,
@@ -70,7 +70,7 @@ export function observedContentsCase(b, { seriesCount } = {}) {
       end: surface.end,
       id: surface.objectId,
       array: surface.array,
-      raws: [Buffer.from(surface.raw30, "hex"), Buffer.from(surface.raw46, "hex")],
+      raws: [Buffer.from(surface.raw30, 'hex'), Buffer.from(surface.raw46, 'hex')],
     },
     tail.types.size,
     tail.objects.size,
@@ -82,7 +82,7 @@ export function observedContentsCase(b, { seriesCount } = {}) {
     ...title.prior.r.series.flatMap((s) => [s.section.end, s.suffix.end]),
   ];
   const nameBytes = [...tail.types.values()].reduce(
-    (n, d) => n + Buffer.byteLength(d.name, "latin1"),
+    (n, d) => n + Buffer.byteLength(d.name, 'latin1'),
     0,
   );
   const footnote = chartFootnoteOracle(b),

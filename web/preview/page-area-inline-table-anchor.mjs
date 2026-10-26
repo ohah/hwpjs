@@ -1,14 +1,14 @@
-import { isSingleInlineTableHost } from "./single-inline-table-host.mjs";
-import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
-import { measureInlineTableParagraph } from "./inline-table-paragraph-measurement.mjs";
+import { isSingleInlineTableHost } from './single-inline-table-host.mjs';
+import { structuralAnchorUnits } from './structural-anchor-units.mjs';
+import { measureInlineTableParagraph } from './inline-table-paragraph-measurement.mjs';
 
 // The common inline engine owns spacing/alignment; page-area repetition owns
 // only the final origin. Unsupported mixed anchors must not disappear.
 export function pageAreaInlineTableAnchor(host, table, cells, box, margins, measure, maxRows) {
-  const fail = (error) => ({ state: "unavailable", error });
-  if (!isSingleInlineTableHost(host, table)) return fail("UnsupportedPageAreaInlineTableHost");
+  const fail = (error) => ({ state: 'unavailable', error });
+  if (!isSingleInlineTableHost(host, table)) return fail('UnsupportedPageAreaInlineTableHost');
   if (
-    cells?.state !== "measured" ||
+    cells?.state !== 'measured' ||
     !cells.grid ||
     !box ||
     ![cells.grid.width, cells.grid.height, box.width, box.height].every(
@@ -18,11 +18,11 @@ export function pageAreaInlineTableAnchor(host, table, cells, box, margins, meas
     !Array.isArray(margins) ||
     margins.length !== 4 ||
     !margins.every((n) => Number.isFinite(n) && n >= 0) ||
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return fail("InvalidPageAreaInlineTableAnchor");
+    return fail('InvalidPageAreaInlineTableAnchor');
   const [left, right, top, bottom] = margins;
   const result = measureInlineTableParagraph(
     host,
@@ -43,11 +43,11 @@ export function pageAreaInlineTableAnchor(host, table, cells, box, margins, meas
       zeroWidthUnits: [...structuralAnchorUnits(host)],
     },
   );
-  if (result.state !== "measured") return result;
-  if (result.anchors.length !== 1) return fail("AmbiguousPageAreaInlineTableAnchor");
+  if (result.state !== 'measured') return result;
+  if (result.anchors.length !== 1) return fail('AmbiguousPageAreaInlineTableAnchor');
   const anchor = result.anchors[0];
   return {
-    state: "selected",
+    state: 'selected',
     hostLayout: result,
     rectangle: {
       x: box.x + anchor.x + left,

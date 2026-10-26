@@ -1,24 +1,24 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect } from "./style-preservation/text-record-oracle.mjs";
-import { tableBindings } from "./style-preservation/table-binding-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect } from './style-preservation/text-record-oracle.mjs';
+import { tableBindings } from './style-preservation/table-binding-oracle.mjs';
 
 assert(
   process.env.HWPJS_BASELINE_WASM && process.env.HWPJS_TEST_WASM,
-  "Explicit ownership parity artifacts required",
+  'Explicit ownership parity artifacts required',
 );
 const artifacts = [process.env.HWPJS_BASELINE_WASM, process.env.HWPJS_TEST_WASM].map((path) =>
   readFileSync(path),
 );
-const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
+const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 assert.notEqual(
   digest(artifacts[0]),
   digest(artifacts[1]),
-  "Distinct baseline and candidate required",
+  'Distinct baseline and candidate required',
 );
 const modules = Promise.all(artifacts.map((bytes) => WebAssembly.compile(bytes)));
 const observe = (callback) => {
@@ -29,9 +29,9 @@ const observe = (callback) => {
   }
 };
 const expectedRefusals = new Map([
-  ["password-12345.hwp", "UnsupportedEncryption"],
-  ["distribution.hwp", "UnsupportedDistribution"],
-  ["viewtext.hwp", "UnsupportedDistribution"],
+  ['password-12345.hwp', 'UnsupportedEncryption'],
+  ['distribution.hwp', 'UnsupportedDistribution'],
+  ['viewtext.hwp', 'UnsupportedDistribution'],
 ]);
 
 async function verifyPaths(t, paths) {
@@ -64,7 +64,7 @@ async function verifyPaths(t, paths) {
       if (errors[0]) {
         assert.equal(
           errors[0],
-          expectedRefusals.get(path.split("/").at(-1)),
+          expectedRefusals.get(path.split('/').at(-1)),
           `${path}:unexpected baseline refusal`,
         );
         counts.matchedOpenRefusals++;
@@ -75,7 +75,7 @@ async function verifyPaths(t, paths) {
       assert.equal(editors[0].sectionCount(), editors[1].sectionCount(), path);
       for (let section = 0; section < editors[0].sectionCount(); section++) {
         counts.sections++;
-        for (const name of ["tableBindings", "paragraphFlow", "columnSources"]) {
+        for (const name of ['tableBindings', 'paragraphFlow', 'columnSources']) {
           const before = observe(() => editors[0][name](section)),
             after = observe(() => editors[1][name](section));
           assert.deepEqual(after, before, `${path}:${section}:${name}`);
@@ -84,7 +84,7 @@ async function verifyPaths(t, paths) {
             counts.matchedQueryRefusals++;
             continue;
           }
-          if (name === "tableBindings") {
+          if (name === 'tableBindings') {
             const expected = tableBindings(source.sections[section].bytes);
             assert.deepEqual(after.value, expected, `${path}:${section}:independent cells`);
             counts.cells += expected.length;
@@ -115,35 +115,35 @@ async function verifyPaths(t, paths) {
   assert.equal(
     counts.matchedQueryRefusals,
     0,
-    "These fixtures require successful ownership queries, not matching failures",
+    'These fixtures require successful ownership queries, not matching failures',
   );
   assert.equal(
     counts.matchedOpenRefusals,
-    paths.filter((path) => expectedRefusals.has(path.split("/").at(-1))).length,
+    paths.filter((path) => expectedRefusals.has(path.split('/').at(-1))).length,
   );
   t.diagnostic(
     JSON.stringify({
       ...counts,
       artifacts: artifacts.map(digest),
       scope:
-        "full native query arrays, independent raw cell bindings and source preservation; matched refusals are not support",
+        'full native query arrays, independent raw cell bindings and source preservation; matched refusals are not support',
     }),
   );
 }
 
-test("ownership query index preserves all tracked HWP fixture responses and independent source cells", async (t) => {
-  const paths = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
-    .split("\0")
-    .filter((path) => path.includes("/fixtures/") && /\.hwp$/i.test(path))
+test('ownership query index preserves all tracked HWP fixture responses and independent source cells', async (t) => {
+  const paths = execFileSync('git', ['ls-files', '-z'], { encoding: 'utf8' })
+    .split('\0')
+    .filter((path) => path.includes('/fixtures/') && /\.hwp$/i.test(path))
     .sort();
   assert(paths.length >= 45);
   await verifyPaths(t, paths);
 });
 
-test("ownership query index preserves complete huge table and mixed-field reference snapshots", async (t) => {
+test('ownership query index preserves complete huge table and mixed-field reference snapshots', async (t) => {
   await verifyPaths(t, [
-    "reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
-    "reference/rhwp/samples/issue1891/76076_regulatory_analysis.hwpx",
-    "reference/rhwp/samples/추진일정.hwp",
+    'reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
+    'reference/rhwp/samples/issue1891/76076_regulatory_analysis.hwpx',
+    'reference/rhwp/samples/추진일정.hwp',
   ]);
 });

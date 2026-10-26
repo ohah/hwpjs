@@ -1,5 +1,5 @@
-import { numberSectionPages } from "./section-page-numbering.mjs";
-import { planHwp5PageControls } from "./hwp5-page-control-plan.mjs";
+import { numberSectionPages } from './section-page-numbering.mjs';
+import { planHwp5PageControls } from './hwp5-page-control-plan.mjs';
 
 /** Resolve each explicit section scope and carry the post-restart counter. */
 export function planHwp5SectionPageControls(
@@ -20,7 +20,7 @@ export function planHwp5SectionPageControls(
         (c) => !c || !Number.isInteger(c.section) || c.section < 0 || c.section >= starts.length,
       )
     )
-      throw new Error("InvalidSectionPageNumbering");
+      throw new Error('InvalidSectionPageNumbering');
     const planned = [];
     for (const source of starts) {
       const selected = baseline.filter((p) => p.section === source.section);
@@ -39,13 +39,13 @@ export function planHwp5SectionPageControls(
         start,
         source.section,
       );
-      if (result.state !== "planned") return result;
+      if (result.state !== 'planned') return result;
       planned.push(
         ...result.pages.map((page, index) => ({ ...page, ordinal: selected[index].ordinal })),
       );
     }
-    return { state: "planned", pages: planned };
+    return { state: 'planned', pages: planned };
   } catch (error) {
-    return { state: "unavailable", error: error.message };
+    return { state: 'unavailable', error: error.message };
   }
 }

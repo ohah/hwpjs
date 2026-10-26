@@ -1,66 +1,66 @@
-import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
-import { isAbsolute } from "node:path";
-import { createHwpxEditor } from "../js/hwpx-editor.mjs";
-import { execFileSync } from "./oracle-process.mjs";
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { isAbsolute } from 'node:path';
+import { createHwpxEditor } from '../js/hwpx-editor.mjs';
+import { execFileSync } from './oracle-process.mjs';
 
 const args = process.argv.slice(2);
-if (args.length !== 1 || !args[0].startsWith("--wasm=") || !isAbsolute(args[0].slice(7))) {
+if (args.length !== 1 || !args[0].startsWith('--wasm=') || !isAbsolute(args[0].slice(7))) {
   throw new Error(
-    "Usage: node tools/hwpx-formula-refusal-probe.mjs --wasm=/absolute/candidate/hwpjs.wasm",
+    'Usage: node tools/hwpx-formula-refusal-probe.mjs --wasm=/absolute/candidate/hwpjs.wasm',
   );
 }
 const wasm = readFileSync(args[0].slice(7));
-const sha = (value) => createHash("sha256").update(value).digest("hex");
+const sha = (value) => createHash('sha256').update(value).digest('hex');
 const cases = [
-  ["hwpx/aift.hwpx", 2],
-  ["issue1891_external_bindata_link.hwpx", 0],
-  ["issue3637/regulatory_impact_nested_table_escape.hwpx", 0],
-  ["issue6298/copay_cap_tac_table_leading.hwpx", 0],
-  ["tac-img-02.hwpx", 0],
+  ['hwpx/aift.hwpx', 2],
+  ['issue1891_external_bindata_link.hwpx', 0],
+  ['issue3637/regulatory_impact_nested_table_escape.hwpx', 0],
+  ['issue6298/copay_cap_tac_table_leading.hwpx', 0],
+  ['tac-img-02.hwpx', 0],
 ];
 console.log(
   JSON.stringify({
-    kind: "scope",
+    kind: 'scope',
     wasmSha256: sha(wasm),
     files: cases.length,
     scope:
-      "selected sections of five known formula refusal fixtures; queries and unchanged-save only",
+      'selected sections of five known formula refusal fixtures; queries and unchanged-save only',
   }),
 );
 const editor = await createHwpxEditor(wasm);
 let refused = 0;
 try {
   for (const [file, section] of cases) {
-    let stage = "read-fixture",
+    let stage = 'read-fixture',
       input;
     const started = performance.now();
     try {
-      input = readFileSync("reference/rhwp/samples/" + file);
+      input = readFileSync('reference/rhwp/samples/' + file);
       const inputSha256 = sha(input);
-      stage = "open";
+      stage = 'open';
       editor.open(input);
       console.log(
-        JSON.stringify({ kind: "stage", file, section, stage, status: "ok", inputSha256 }),
+        JSON.stringify({ kind: 'stage', file, section, stage, status: 'ok', inputSha256 }),
       );
-      stage = "paragraphTextSnapshot";
+      stage = 'paragraphTextSnapshot';
       const paragraphs = editor.paragraphTextSnapshot(section).length;
       console.log(
-        JSON.stringify({ kind: "stage", file, section, stage, status: "ok", paragraphs }),
+        JSON.stringify({ kind: 'stage', file, section, stage, status: 'ok', paragraphs }),
       );
-      stage = "formulaCurrent";
+      stage = 'formulaCurrent';
       const formulas = editor.formulaCurrent(section);
       console.log(
         JSON.stringify({
-          kind: "stage",
+          kind: 'stage',
           file,
           section,
           stage,
-          status: "ok",
+          status: 'ok',
           results: formulas.map((field) => field.values.last_result),
         }),
       );
-      stage = "save-after-query";
+      stage = 'save-after-query';
       const saved = editor.save();
       if (!Buffer.from(saved).equals(input)) {
         const code = `import base64,io,json,runpy,zipfile,xml.etree.ElementTree as E
@@ -86,26 +86,26 @@ for name in a.namelist():
   out.append({'part':name,'difference':detail,'beforeBytes':len(left),'afterBytes':len(right),'changes':all_changes if detail!='binary payload differs' else []})
 print(json.dumps({'inventoryEqual':a.namelist()==b.namelist(),'payloads':out},ensure_ascii=False))`;
         const difference = JSON.parse(
-          execFileSync("python3", ["-c", code], {
+          execFileSync('python3', ['-c', code], {
             input: JSON.stringify({
-              before: input.toString("base64"),
-              after: Buffer.from(saved).toString("base64"),
+              before: input.toString('base64'),
+              after: Buffer.from(saved).toString('base64'),
             }),
-            encoding: "utf8",
+            encoding: 'utf8',
             timeout: 30000,
           }),
         );
-        console.log(JSON.stringify({ kind: "save-difference", file, section, difference }));
-        throw new Error("UnchangedSaveDiffers");
+        console.log(JSON.stringify({ kind: 'save-difference', file, section, difference }));
+        throw new Error('UnchangedSaveDiffers');
       }
-      if (sha(input) !== inputSha256) throw new Error("InputBufferMutated");
+      if (sha(input) !== inputSha256) throw new Error('InputBufferMutated');
       console.log(
         JSON.stringify({
-          kind: "stage",
+          kind: 'stage',
           file,
           section,
           stage,
-          status: "byte-identical",
+          status: 'byte-identical',
           elapsedMs: performance.now() - started,
         }),
       );
@@ -113,7 +113,7 @@ print(json.dumps({'inventoryEqual':a.namelist()==b.namelist(),'payloads':out},en
       refused += 1;
       console.log(
         JSON.stringify({
-          kind: "refusal",
+          kind: 'refusal',
           file,
           section,
           stage,
@@ -128,7 +128,7 @@ print(json.dumps({'inventoryEqual':a.namelist()==b.namelist(),'payloads':out},en
 }
 console.log(
   JSON.stringify({
-    kind: "summary",
+    kind: 'summary',
     files: cases.length,
     queriedAndUnchanged: cases.length - refused,
     refused,

@@ -7,7 +7,7 @@ export function paintNoteSeparator(ctx, separator, scrollTop = 0) {
     ) ||
     separator.width <= 0 ||
     separator.height <= 0 ||
-    typeof separator.color !== "string" ||
+    typeof separator.color !== 'string' ||
     !/^#[0-9a-fA-F]{6}$/.test(separator.color)
   )
     return false;

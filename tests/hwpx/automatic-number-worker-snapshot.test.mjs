@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { workerCanvasHarness } from '../canvas/worker-harness.mjs';
 
-test("Worker queries automatic number sites once per refresh and never across history", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
+test('Worker queries automatic number sites once per refresh and never across history', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit candidate required');
   const instantiate = WebAssembly.instantiate;
   let calls = 0;
   WebAssembly.instantiate = async (...args) => {
@@ -24,11 +24,11 @@ test("Worker queries automatic number sites once per refresh and never across hi
     WebAssembly.instantiate = instantiate;
   });
   const h = await workerCanvasHarness(t);
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
-  const load = await h.send({ kind: "load", format: "hwpx", bytes: input });
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx');
+  const load = await h.send({ kind: 'load', format: 'hwpx', bytes: input });
   assert.equal(load.error, undefined);
   assert.equal(calls, 1);
-  assert.equal((await h.send({ kind: "enable" })).error, undefined);
+  assert.equal((await h.send({ kind: 'enable' })).error, undefined);
   assert.equal(calls, 2);
   const paragraph = load.content.paragraphs.find(
     (row) => row.plainEditable && row.automaticNumberPrefixes?.length,
@@ -37,22 +37,22 @@ test("Worker queries automatic number sites once per refresh and never across hi
   assert.equal(
     (
       await h.send({
-        kind: "splice",
+        kind: 'splice',
         section: paragraph.section,
         paragraph: paragraph.paragraph,
         startUnit: 0,
         endUnit: 0,
-        text: "새",
+        text: '새',
       })
     ).error,
     undefined,
   );
   assert.equal(calls, 3);
-  const saved = Buffer.from((await h.send({ kind: "save" })).bytes);
-  assert.equal((await h.send({ kind: "undo" })).error, undefined);
+  const saved = Buffer.from((await h.send({ kind: 'save' })).bytes);
+  assert.equal((await h.send({ kind: 'undo' })).error, undefined);
   assert.equal(calls, 4);
-  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), input);
-  assert.equal((await h.send({ kind: "redo" })).error, undefined);
+  assert.deepEqual(Buffer.from((await h.send({ kind: 'save' })).bytes), input);
+  assert.equal((await h.send({ kind: 'redo' })).error, undefined);
   assert.equal(calls, 5);
-  assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), saved);
+  assert.deepEqual(Buffer.from((await h.send({ kind: 'save' })).bytes), saved);
 });

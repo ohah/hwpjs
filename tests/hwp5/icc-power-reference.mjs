@@ -1,4 +1,4 @@
-import { fraction as F } from "./icc-matrix-reference.mjs";
+import { fraction as F } from './icc-matrix-reference.mjs';
 export const sign = (n) => (n < 0n ? -1 : n > 0n ? 1 : 0);
 export const cmp = (a, b) => sign(a[0] * b[1] - b[0] * a[1]);
 export function exponent(g) {
@@ -19,7 +19,7 @@ export function integerPower(x, p) {
 export const base = (source, x) => F(source.a * x[0] + source.b * x[1], 65536n * x[1]);
 export function rationalPowerOrder(z, g, target) {
   const [p, q] = exponent(g);
-  if ((z[0] === 0n && p <= 0n) || (z[0] < 0n && q > 1n)) throw Error("UndefinedIccCurvePower");
+  if ((z[0] === 0n && p <= 0n) || (z[0] < 0n && q > 1n)) throw Error('UndefinedIccCurvePower');
   if (p === 0n) return cmp([1n, 1n], target);
   if (q > 1n && target[0] < 0n) return 1;
   return cmp(integerPower(z, p), integerPower(target, q));

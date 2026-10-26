@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { parseSpecializedAuditOutput } from "../../tools/hwpx-specialized-audit-output.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { parseSpecializedAuditOutput } from '../../tools/hwpx-specialized-audit-output.mjs';
 
-test("specialized output retains refusal witnesses before compact or pretty summary", () => {
-  const start = { kind: "start", wasmSha256: "candidate" };
+test('specialized output retains refusal witnesses before compact or pretty summary', () => {
+  const start = { kind: 'start', wasmSha256: 'candidate' };
   const refusal = {
-    kind: "refusal",
-    path: "chart.hwpx",
+    kind: 'refusal',
+    path: 'chart.hwpx',
     section: 0,
     paragraph: 24,
     localParagraph: 24,
-    error: "ProtectedFieldRange",
+    error: 'ProtectedFieldRange',
   };
   const summary = { attempts: 2, verified: 1, refused: { ProtectedFieldRange: 1 } };
   for (const pretty of [undefined, 2]) {
@@ -18,38 +18,38 @@ test("specialized output retains refusal witnesses before compact or pretty summ
       JSON.stringify(start),
       JSON.stringify(refusal),
       JSON.stringify(summary, null, pretty),
-    ].join("\n");
-    const boundary = output.indexOf("\n");
+    ].join('\n');
+    const boundary = output.indexOf('\n');
     assert.throws(() => JSON.parse(output.slice(boundary + 1)), SyntaxError);
     assert.deepEqual(parseSpecializedAuditOutput(output), { start, refusals: [refusal], summary });
     const empty = { ...summary, refused: {} };
     assert.deepEqual(
       parseSpecializedAuditOutput(
-        [JSON.stringify(start), JSON.stringify(empty, null, pretty)].join("\n"),
+        [JSON.stringify(start), JSON.stringify(empty, null, pretty)].join('\n'),
       ),
       { start, refusals: [], summary: empty },
     );
   }
 });
 
-test("specialized output refuses malformed witnesses and disagreement with totals", () => {
-  const start = { kind: "start" },
+test('specialized output refuses malformed witnesses and disagreement with totals', () => {
+  const start = { kind: 'start' },
     refusal = {
-      kind: "refusal",
-      path: "chart.hwpx",
+      kind: 'refusal',
+      path: 'chart.hwpx',
       section: 0,
       paragraph: 24,
       localParagraph: 24,
-      error: "ProtectedFieldRange",
+      error: 'ProtectedFieldRange',
     };
   const output = (rows, counts) =>
-    [start, ...rows, { refused: counts }].map((row) => JSON.stringify(row)).join("\n");
+    [start, ...rows, { refused: counts }].map((row) => JSON.stringify(row)).join('\n');
   for (const counts of [
     {},
     { ProtectedFieldRange: 2 },
     { Other: 1 },
     { ProtectedFieldRange: -1 },
-    { ProtectedFieldRange: "1" },
+    { ProtectedFieldRange: '1' },
   ]) {
     assert.throws(() => parseSpecializedAuditOutput(output([refusal], counts)));
   }
@@ -59,11 +59,11 @@ test("specialized output refuses malformed witnesses and disagreement with total
     /DuplicateSpecializedAuditRefusal/,
   );
   for (const patch of [
-    { path: "" },
+    { path: '' },
     { section: -1 },
     { paragraph: 0 },
     { localParagraph: 1.5 },
-    { error: "" },
+    { error: '' },
   ]) {
     assert.throws(
       () =>
@@ -73,10 +73,10 @@ test("specialized output refuses malformed witnesses and disagreement with total
   }
 });
 
-test("specialized output rejects missing summaries unknown rows and truncated JSON", () => {
+test('specialized output rejects missing summaries unknown rows and truncated JSON', () => {
   for (const output of [
-    "",
-    "{}\n{}",
+    '',
+    '{}\n{}',
     '{"kind":"start"}',
     '{"kind":"start"}\n{"kind":"refusal"}',
     '{"kind":"start"}\n{"kind":"unexpected"}\n{}',
@@ -87,21 +87,21 @@ test("specialized output rejects missing summaries unknown rows and truncated JS
   }
 });
 
-test("specialized refusal identity includes the file without hiding repeated sites", () => {
-  const start = { kind: "start" };
+test('specialized refusal identity includes the file without hiding repeated sites', () => {
+  const start = { kind: 'start' };
   const first = {
-    kind: "refusal",
-    path: "first.hwpx",
+    kind: 'refusal',
+    path: 'first.hwpx',
     section: 0,
     paragraph: 24,
     localParagraph: 24,
-    error: "ProtectedFieldRange",
+    error: 'ProtectedFieldRange',
   };
-  const second = { ...first, path: "second.hwpx" };
+  const second = { ...first, path: 'second.hwpx' };
   const output = (rows) =>
     [start, ...rows, { refused: { ProtectedFieldRange: rows.length } }]
       .map(JSON.stringify)
-      .join("\n");
+      .join('\n');
   assert.deepEqual(parseSpecializedAuditOutput(output([first, second])).refusals, [first, second]);
   assert.throws(
     () => parseSpecializedAuditOutput(output([first, second, first])),

@@ -1,4 +1,4 @@
-import { cellTextAtBoundaryPoint } from "./table-boundary-text-hit.mjs";
+import { cellTextAtBoundaryPoint } from './table-boundary-text-hit.mjs';
 
 // 실제 표 셀 배치의 외곽과 현재 보호 앵커를 연결합니다.
 export function tableBoundaryFrames(layout) {
@@ -82,13 +82,13 @@ export function hitTableBoundary(layout, x, y, paragraphAt, target = null) {
       continue;
     if (cellTextAtBoundaryPoint(layout, x, y)) return null;
     const paragraph = paragraphAt({ section: frame.section, paragraph: frame.hostParagraph });
-    if (paragraph?.editable !== true || paragraph.text?.[frame.anchorUnit] !== "\ufffc") continue;
+    if (paragraph?.editable !== true || paragraph.text?.[frame.anchorUnit] !== '\ufffc') continue;
     const after = x >= box.x + box.width / 2;
     return {
       section: frame.section,
       paragraph: frame.hostParagraph,
       unit: frame.anchorUnit + Number(after),
-      affinity: after ? "backward" : "forward",
+      affinity: after ? 'backward' : 'forward',
       tableNode: frame.tableNode,
       pageOrdinal: frame.pageOrdinal,
     };
@@ -119,7 +119,7 @@ export function tableBoundaryCaret(layout, point) {
     }
     candidates = [...objects.values()];
   }
-  const frame = point.affinity === "backward" ? candidates[0] : candidates.at(-1);
+  const frame = point.affinity === 'backward' ? candidates[0] : candidates.at(-1);
   if (!frame) return null;
   const box = frame.rectangle;
   return {

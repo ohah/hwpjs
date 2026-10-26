@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { records, paragraphRecords } from "./text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { records, paragraphRecords } from './text-record-oracle.mjs';
 
 /** Original binary offsets only; no native display or editor positions. */
 export function variedScalarSites(parsed) {

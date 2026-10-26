@@ -1,21 +1,21 @@
-import { createCanvasSurface } from "@hwpjs/vanilla";
-import { createElement, createRef, StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { CanvasSurface, type CanvasSurfaceHandle } from "@hwpjs/react";
-import { mount, unmount } from "svelte";
-import { CanvasEditor, type CanvasSurface as SvelteSurface } from "@hwpjs/svelte";
-import { mountDemo, type MountDemoHost } from "./demo-controller.ts";
-import type { DemoFramework } from "./shell-contract.ts";
-import "./shell.css";
-import "./demo-viewport.css";
-import "./editor-layout.css";
+import { createCanvasSurface } from '@hwpjs/vanilla';
+import { createElement, createRef, StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { CanvasSurface, type CanvasSurfaceHandle } from '@hwpjs/react';
+import { mount, unmount } from 'svelte';
+import { CanvasEditor, type CanvasSurface as SvelteSurface } from '@hwpjs/svelte';
+import { mountDemo, type MountDemoHost } from './demo-controller.ts';
+import type { DemoFramework } from './shell-contract.ts';
+import './shell.css';
+import './demo-viewport.css';
+import './editor-layout.css';
 
-const root = document.querySelector<HTMLElement>("#app");
-if (!root) throw Error("DemoRootMissing");
-const segment = location.pathname.split("/").filter(Boolean).at(-1);
+const root = document.querySelector<HTMLElement>('#app');
+if (!root) throw Error('DemoRootMissing');
+const segment = location.pathname.split('/').filter(Boolean).at(-1);
 const framework: DemoFramework =
-  segment === "headless" || segment === "react" || segment === "svelte" ? segment : "vanilla";
-const hosts: Record<Exclude<DemoFramework, "headless">, MountDemoHost> = {
+  segment === 'headless' || segment === 'react' || segment === 'svelte' ? segment : 'vanilla';
+const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
   vanilla: (root, editor, onStatus) => createCanvasSurface({ root, editor, onStatus }),
   react: (root, editor, onStatus) => {
     const tree = createRoot(root),
@@ -28,7 +28,7 @@ const hosts: Record<Exclude<DemoFramework, "headless">, MountDemoHost> = {
           editor,
           onStatus,
           ref,
-          style: { height: "100%" },
+          style: { height: '100%' },
         }),
       ),
     );
@@ -51,7 +51,7 @@ const hosts: Record<Exclude<DemoFramework, "headless">, MountDemoHost> = {
       props: {
         editor,
         onStatus,
-        style: "height:100%",
+        style: 'height:100%',
         onReady: (value: SvelteSurface) => {
           surface = value;
         },
@@ -73,10 +73,10 @@ const hosts: Record<Exclude<DemoFramework, "headless">, MountDemoHost> = {
 const demo = await mountDemo(
   root,
   framework,
-  framework === "headless" ? undefined : hosts[framework],
+  framework === 'headless' ? undefined : hosts[framework],
 );
 window.addEventListener(
-  "pagehide",
+  'pagehide',
   () => {
     void demo.dispose();
   },

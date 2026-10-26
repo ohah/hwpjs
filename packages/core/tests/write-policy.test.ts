@@ -1,14 +1,14 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { EditorWritePolicy } from "../src/editor/write-policy.ts";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { EditorWritePolicy } from '../src/editor/write-policy.ts';
 
 // Pure policy publication fault injection; these are not Native engine cases.
-test("initial/read-only policy rejects writes without restricting observation", () => {
+test('initial/read-only policy rejects writes without restricting observation', () => {
   const policy = new EditorWritePolicy();
   assert.throws(() => policy.assertWritable(), /ReadOnlyDocument/);
   const native = {
     readOnly: false,
-    paragraphs: [{ text: "owned text", editable: true }],
+    paragraphs: [{ text: 'owned text', editable: true }],
     resourceAvailable: true,
   };
   const observed = policy.observe(native) as typeof native;
@@ -23,7 +23,7 @@ test("initial/read-only policy rejects writes without restricting observation", 
     resourceAvailable: true,
   });
 });
-test("candidate projection does not publish its admission policy", () => {
+test('candidate projection does not publish its admission policy', () => {
   const policy = new EditorWritePolicy(),
     content = { readOnly: false };
   assert.equal(policy.observe(content, true), content);
@@ -33,9 +33,9 @@ test("candidate projection does not publish its admission policy", () => {
   assert.equal((policy.observe(content, false) as typeof content).readOnly, true);
   policy.assertWritable();
 });
-test("failed writable candidate publication restores previous read-only policy", () => {
+test('failed writable candidate publication restores previous read-only policy', () => {
   const policy = new EditorWritePolicy(),
-    failure = Error("publication-fault");
+    failure = Error('publication-fault');
   assert.throws(
     () =>
       policy.publish(true, () => {
@@ -46,9 +46,9 @@ test("failed writable candidate publication restores previous read-only policy",
   );
   assert.throws(() => policy.assertWritable(), /ReadOnlyDocument/);
 });
-test("failed read-only candidate publication restores previous writable policy", () => {
+test('failed read-only candidate publication restores previous writable policy', () => {
   const policy = new EditorWritePolicy(),
-    failure = Error("publication-fault");
+    failure = Error('publication-fault');
   policy.publish(true, () => {});
   assert.throws(
     () =>

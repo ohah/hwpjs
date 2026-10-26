@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { hwp5TableWindowDependencies } from "../../web/preview/hwp5-table-window-dependencies.mjs";
-import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
-import { projectHwp5TableWindow } from "../../web/preview/hwp5-table-window-projection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { hwp5TableWindowDependencies } from '../../web/preview/hwp5-table-window-dependencies.mjs';
+import { planParagraphDependencies } from '../../web/preview/paragraph-dependency-plan.mjs';
+import { projectHwp5TableWindow } from '../../web/preview/hwp5-table-window-projection.mjs';
 
 const projection = { sections: [{ index: 0, paragraphs: [{}, {}, {}, {}] }] };
 const placements = [
@@ -19,7 +19,7 @@ const editor = (p = placements, b = bindings) => ({
   tableBindings: () => b,
 });
 
-test("table window adapter closes nested owners and representative cells without changing inputs", () => {
+test('table window adapter closes nested owners and representative cells without changing inputs', () => {
   const before = structuredClone({ projection, placements, bindings });
   const found = hwp5TableWindowDependencies(editor(), projection);
   assert.deepEqual(
@@ -29,13 +29,13 @@ test("table window adapter closes nested owners and representative cells without
   assert.deepEqual({ projection, placements, bindings }, before);
 });
 
-test("table slice distinguishes read-only ownership context and refuses clipped complete text", () => {
+test('table slice distinguishes read-only ownership context and refuses clipped complete text', () => {
   const source = {
     version: [5, 0, 0, 0],
     sections: [
       {
         index: 0,
-        paragraphs: ["owner", "cell", "nested", "selected😀"].map((text) => ({
+        paragraphs: ['owner', 'cell', 'nested', 'selected😀'].map((text) => ({
           text,
           textPresent: true,
           declaredUnits: text.length + 1,
@@ -75,7 +75,7 @@ test("table slice distinguishes read-only ownership context and refuses clipped 
       projectHwp5TableWindow(
         {
           tableBindings() {
-            assert.fail("invalid request queried native source");
+            assert.fail('invalid request queried native source');
           },
         },
         source,
@@ -85,7 +85,7 @@ test("table slice distinguishes read-only ownership context and refuses clipped 
   );
 });
 
-test("table window adapter refuses ambiguous orphan and cyclic ownership", () => {
+test('table window adapter refuses ambiguous orphan and cyclic ownership', () => {
   for (const p of [
     [...placements, placements[0]],
     [placements[1]],

@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -62,20 +62,20 @@ export function paragraphFlowActual(call, cfb) {
     crossParagraphPairs = 0,
     nestedMemoPairs = 0;
   const names = [
-    "aift.hwp",
-    "issue5169_viewtext_changetracking.hwp",
-    "basic/NewYear_s_Day.hwp",
-    "basic/english.hwp",
-    "issue5866/memo_field_hwp5.hwp",
-    "task2287/1342000_edu_curriculum_map.hwp",
+    'aift.hwp',
+    'issue5169_viewtext_changetracking.hwp',
+    'basic/NewYear_s_Day.hwp',
+    'basic/english.hwp',
+    'issue5866/memo_field_hwp5.hwp',
+    'task2287/1342000_edu_curriculum_map.hwp',
   ];
   for (const name of names) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       nodes = cfb.document().nodes,
-      body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+      body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
     for (const section of nodes.filter((n) => n.parent === body && /^Section\d+$/.test(n.name))) {
       const b = call(3, Buffer.concat([h, Buffer.from(section.content)])),
         stack = [],
@@ -101,7 +101,7 @@ export function paragraphFlowActual(call, cfb) {
         }
         if (r.tag === 71 && p.length >= 15) {
           const end = 11 + p.readUInt16LE(9) * 2,
-            match = /^MEMO\/65535\/(\d+)\//.exec(p.subarray(11, end).toString("utf16le"));
+            match = /^MEMO\/65535\/(\d+)\//.exec(p.subarray(11, end).toString('utf16le'));
           if (match) fields.push({ id: Number(match[1]), parent });
         }
         if (r.tag === 67) {
@@ -114,7 +114,7 @@ export function paragraphFlowActual(call, cfb) {
       assert.deepEqual(
         call(93, Buffer.concat([h.subarray(32, 36), b])),
         Buffer.concat(expected.map(w)),
-        name + "/" + section.name,
+        name + '/' + section.name,
       );
       sections++;
       assert.equal(fields.length, ends.length);

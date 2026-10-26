@@ -6,28 +6,28 @@ export function checkBrowserWriter(reader, reference) {
       const bytes = reader.write({
         version,
         nodes: [
-          { name: "Root Entry", kind: 5 },
-          { name: "Data", parent: 0, content },
+          { name: 'Root Entry', kind: 5 },
+          { name: 'Data', parent: 0, content },
         ],
       });
       reader.parse(bytes, { strict: true });
       const node = reader.document().nodes[1],
-        found = reader.findExact("/Data");
+        found = reader.findExact('/Data');
       if (
         node.content.length !== size ||
         node.content.some((b, i) => b !== content[i]) ||
         found.size !== size
       )
-        throw Error("writer roundtrip");
+        throw Error('writer roundtrip');
       const legacy = reference.parse(bytes).FileIndex[1].content ?? [];
       if (legacy.length !== size || Array.from(legacy).some((b, i) => b !== content[i]))
-        throw Error("writer independent parser");
+        throw Error('writer independent parser');
       const edit = reader.document();
-      edit.nodes[1].name = "Edit";
+      edit.nodes[1].name = 'Edit';
       edit.nodes[1].content = Uint8Array.of(42);
       reader.parse(reader.write(edit), { strict: true });
-      if (reader.findExact("/Edit").content[0] !== 42 || reader.findExact("/Data") !== null)
-        throw Error("writer edit");
+      if (reader.findExact('/Edit').content[0] !== 42 || reader.findExact('/Data') !== null)
+        throw Error('writer edit');
       cases++;
     }
   reader.close();

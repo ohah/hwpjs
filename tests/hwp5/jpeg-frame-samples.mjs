@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { jpegFrameDequantOracle } from "./jpeg-frame-dequant.mjs";
-import { jpegSequentialScans } from "./jpeg-scan.mjs";
-import { jpegFrameInput, jpegFrameFixture } from "./jpeg-frame.mjs";
-import { jpegIdctVerify } from "./jpeg-idct.mjs";
+import assert from 'node:assert/strict';
+import { jpegFrameDequantOracle } from './jpeg-frame-dequant.mjs';
+import { jpegSequentialScans } from './jpeg-scan.mjs';
+import { jpegFrameInput, jpegFrameFixture } from './jpeg-frame.mjs';
+import { jpegIdctVerify } from './jpeg-idct.mjs';
 
 export function jpegFrameSamplesActual(call, raw) {
   const parsed = jpegSequentialScans(raw);

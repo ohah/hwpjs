@@ -1,10 +1,10 @@
 // Preview coordinate policy, not persisted OOXML values or exact Hangul ticks.
-const fail = (reason) => ({ state: "unavailable", reason });
+const fail = (reason) => ({ state: 'unavailable', reason });
 function bound(field) {
   if (field === null || field === undefined) return { value: null };
-  if (field.value === null) return { error: "MissingAxisScaleValue" };
-  if (field.value?.kind !== "finite" || !Number.isFinite(field.value.value))
-    return { error: "NonFiniteAxisScaleValue" };
+  if (field.value === null) return { error: 'MissingAxisScaleValue' };
+  if (field.value?.kind !== 'finite' || !Number.isFinite(field.value.value))
+    return { error: 'NonFiniteAxisScaleValue' };
   return { value: field.value.value };
 }
 function logDistance(low, value) {
@@ -12,18 +12,18 @@ function logDistance(low, value) {
   return Math.abs(relative) < 0.5 ? Math.log1p(relative) : Math.log(value) - Math.log(low);
 }
 export function createChartValueScale(values, scaling = null, { includeZero = true } = {}) {
-  if (!Array.isArray(values) || typeof includeZero !== "boolean")
-    return fail("InvalidAxisScaleInput");
+  if (!Array.isArray(values) || typeof includeZero !== 'boolean')
+    return fail('InvalidAxisScaleInput');
   if (
-    values.some((value) => value !== null && (typeof value !== "number" || !Number.isFinite(value)))
+    values.some((value) => value !== null && (typeof value !== 'number' || !Number.isFinite(value)))
   )
-    return fail("NonFiniteChartData");
+    return fail('NonFiniteChartData');
   const fields = [bound(scaling?.minimum), bound(scaling?.maximum), bound(scaling?.log_base)];
   for (const field of fields) if (field.error) return fail(field.error);
-  if (scaling?.orientation && !["minMax", "maxMin"].includes(scaling.orientation.value))
-    return fail("InvalidAxisOrientation");
+  if (scaling?.orientation && !['minMax', 'maxMin'].includes(scaling.orientation.value))
+    return fail('InvalidAxisOrientation');
   const [low, high, logarithm] = fields.map((field) => field.value);
-  if (logarithm !== null && (logarithm < 2 || logarithm > 1000)) return fail("InvalidAxisLogBase");
+  if (logarithm !== null && (logarithm < 2 || logarithm > 1000)) return fail('InvalidAxisLogBase');
   let dataMin = Infinity,
     dataMax = -Infinity;
   for (const value of values)
@@ -31,12 +31,12 @@ export function createChartValueScale(values, scaling = null, { includeZero = tr
       dataMin = Math.min(dataMin, value);
       dataMax = Math.max(dataMax, value);
     }
-  if (dataMin === Infinity && (low === null || high === null)) return fail("EmptyAxisScaleData");
+  if (dataMin === Infinity && (low === null || high === null)) return fail('EmptyAxisScaleData');
   if (
     logarithm !== null &&
     (dataMin <= 0 || (low !== null && low <= 0) || (high !== null && high <= 0))
   )
-    return fail("NonPositiveLogScale");
+    return fail('NonPositiveLogScale');
   let minimum = low ?? (includeZero && logarithm === null ? Math.min(0, dataMin) : dataMin);
   let maximum = high ?? (includeZero && logarithm === null ? Math.max(0, dataMax) : dataMax);
   if (minimum === maximum && low === null && high === null) {
@@ -54,14 +54,14 @@ export function createChartValueScale(values, scaling = null, { includeZero = tr
     }
   }
   if (!Number.isFinite(minimum) || !Number.isFinite(maximum) || minimum >= maximum)
-    return fail("InvalidAxisScaleRange");
-  const reversed = scaling?.orientation?.value === "maxMin";
+    return fail('InvalidAxisScaleRange');
+  const reversed = scaling?.orientation?.value === 'maxMin';
   const magnitude = Math.max(Math.abs(minimum), Math.abs(maximum));
   const span =
     logarithm === null ? maximum / magnitude - minimum / magnitude : logDistance(minimum, maximum);
-  if (!Number.isFinite(span) || span <= 0) return fail("AxisScalePrecisionLoss");
+  if (!Number.isFinite(span) || span <= 0) return fail('AxisScalePrecisionLoss');
   const project = (value) => {
-    if (typeof value !== "number" || !Number.isFinite(value) || (logarithm !== null && value <= 0))
+    if (typeof value !== 'number' || !Number.isFinite(value) || (logarithm !== null && value <= 0))
       return null;
     const position =
       logarithm === null
@@ -71,7 +71,7 @@ export function createChartValueScale(values, scaling = null, { includeZero = tr
     return reversed ? 1 - position : position;
   };
   return {
-    state: "ready",
+    state: 'ready',
     minimum,
     maximum,
     logarithm,

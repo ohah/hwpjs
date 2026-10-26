@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { segment } from "./jpeg-structure.mjs";
-import { jpegJfxxJpegFixture } from "./jpeg-jfxx-jpeg.mjs";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
+import assert from 'node:assert/strict';
+import { segment } from './jpeg-structure.mjs';
+import { jpegJfxxJpegFixture } from './jpeg-jfxx-jpeg.mjs';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
 
 const words = (ns) => {
   const b = Buffer.alloc(ns.length * 4);
@@ -16,7 +16,7 @@ export function adobePayload(
   extra = Buffer.alloc(0),
 ) {
   const b = Buffer.alloc(12);
-  b.write("Adobe");
+  b.write('Adobe');
   b.writeUInt16BE(version, 5);
   b.writeUInt16BE(flags0, 7);
   b.writeUInt16BE(flags1, 9);
@@ -25,7 +25,7 @@ export function adobePayload(
 }
 export function adobeWire(b) {
   assert.ok(b.length >= 12 && b.length <= 65533);
-  assert.deepEqual(b.subarray(0, 5), Buffer.from("Adobe"));
+  assert.deepEqual(b.subarray(0, 5), Buffer.from('Adobe'));
   return Buffer.concat([
     words([
       b.readUInt16BE(5),
@@ -56,7 +56,7 @@ export function adobeParts(raw) {
     const m = jpegMarkerOracle(raw.subarray(at));
     at += m.consumed;
     const p = m.wire.subarray(20);
-    if (m.code === 238 && p.subarray(0, 5).equals(Buffer.from("Adobe"))) parts.push(p);
+    if (m.code === 238 && p.subarray(0, 5).equals(Buffer.from('Adobe'))) parts.push(p);
     entropy = m.code === 218 || (m.code >= 208 && m.code <= 215);
     if (m.code === 217) break;
   }
@@ -85,7 +85,7 @@ export function jpegAdobeEdges(call) {
     check(b);
     for (const count of [3, 4]) {
       const input = Buffer.concat([Buffer.of(count), b]);
-      const encoding = { "3:0": 0, "4:0": 2, "3:1": 1, "4:2": 3 }[`${count}:${transform}`];
+      const encoding = { '3:0': 0, '4:0': 2, '3:1': 1, '4:2': 3 }[`${count}:${transform}`];
       if (encoding === undefined)
         reject(
           276,

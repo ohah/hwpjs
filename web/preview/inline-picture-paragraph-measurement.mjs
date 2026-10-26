@@ -1,5 +1,5 @@
-import { measureInlineObjectParagraph } from "./inline-object-paragraph-measurement.mjs";
-import { inlinePictureCaptionFrame } from "./inline-picture-caption-flow.mjs";
+import { measureInlineObjectParagraph } from './inline-object-paragraph-measurement.mjs';
+import { inlinePictureCaptionFrame } from './inline-picture-caption-flow.mjs';
 
 // Only complete picture-anchor ownership uses this path; other hosts keep
 // their existing object/column-specific measurement owner.
@@ -23,7 +23,7 @@ export function measureInlinePictureParagraph(
       width: item.width,
       height: item.height,
     }));
-  if (!entries.length || paragraph.text.split("\ufffc").length - 1 !== entries.length) return null;
+  if (!entries.length || paragraph.text.split('\ufffc').length - 1 !== entries.length) return null;
   if (captionParagraphs)
     for (const entry of entries) {
       const item = [...index.values()].find(
@@ -32,7 +32,7 @@ export function measureInlinePictureParagraph(
           item.picture.pictureNode === entry.objectNode,
       );
       const frame = inlinePictureCaptionFrame(item, captionParagraphs, measure, maxRows);
-      if (frame.state === "unavailable") return frame;
+      if (frame.state === 'unavailable') return frame;
       entry.height = frame.height;
     }
   return measureInlineObjectParagraph(paragraph, entries, width, measure, {

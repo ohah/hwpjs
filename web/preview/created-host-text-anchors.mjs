@@ -1,5 +1,5 @@
-import { structuralAnchorUnits } from "./structural-anchor-units.mjs";
-import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
+import { structuralAnchorUnits } from './structural-anchor-units.mjs';
+import { storedAutomaticNumberText } from './automatic-number-text.mjs';
 
 // Classify source-owned display controls, not generated table placeholders.
 export function projectCreatedHostTextAnchors(
@@ -10,13 +10,13 @@ export function projectCreatedHostTextAnchors(
   sourceZeroWidthAnchorUnits = [],
 ) {
   const fail = () => {
-    throw new Error("UnsupportedCreatedTableHostControls");
+    throw new Error('UnsupportedCreatedTableHostControls');
   };
   const first = source.textStartUnit ?? 0,
     last = first + source.text.length;
   const visible = (row) =>
     row && Number.isSafeInteger(row.unit) && row.unit >= first && row.unit < last;
-  const shift = (row) => ({ ...row, unit: projection.viewUnitForSource(row.unit, "after") });
+  const shift = (row) => ({ ...row, unit: projection.viewUnitForSource(row.unit, 'after') });
   if (
     ![
       source.automaticNumbers ?? [],
@@ -34,7 +34,7 @@ export function projectCreatedHostTextAnchors(
         !Number.isSafeInteger(unit) ||
         unit < first ||
         unit >= last ||
-        source.text[unit - first] !== "\ufffc",
+        source.text[unit - first] !== '\ufffc',
     )
   )
     return fail();
@@ -47,14 +47,14 @@ export function projectCreatedHostTextAnchors(
         !Number.isSafeInteger(unit) ||
         unit < first ||
         unit >= last ||
-        source.text[unit - first] !== "\ufffc" ||
+        source.text[unit - first] !== '\ufffc' ||
         knownText.has(unit),
     )
   )
     return fail();
   const knownObjects = new Set(sourceObjectUnits);
   for (const row of (source.automaticNumbers ?? []).filter(visible)) {
-    if (numbers.has(row.unit) || source.text[row.unit - first] !== "\ufffc") return fail();
+    if (numbers.has(row.unit) || source.text[row.unit - first] !== '\ufffc') return fail();
     numbers.set(row.unit, row);
   }
   const structural = (source.structuralAnchors ?? []).filter(visible);
@@ -76,7 +76,7 @@ export function projectCreatedHostTextAnchors(
     if (
       row.section !== source.section ||
       row.paragraph !== source.paragraph ||
-      source.text[row.unit - first] !== "\ufffc"
+      source.text[row.unit - first] !== '\ufffc'
     )
       return fail();
     hidden.add(row.unit);
@@ -91,7 +91,7 @@ export function projectCreatedHostTextAnchors(
         !Number.isSafeInteger(unit) ||
         unit < first ||
         unit >= last ||
-        source.text[unit - first] !== "\ufffc" ||
+        source.text[unit - first] !== '\ufffc' ||
         knownObjects.has(unit) ||
         knownText.has(unit) ||
         hidden.has(unit) ||
@@ -101,7 +101,7 @@ export function projectCreatedHostTextAnchors(
     return fail();
   for (const unit of sourceZeroWidthAnchorUnits) hidden.add(unit);
   for (let index = 0; index < source.text.length; index++)
-    if (source.text[index] === "\ufffc") {
+    if (source.text[index] === '\ufffc') {
       const unit = first + index;
       if (knownObjects.has(unit)) {
         if (hidden.has(unit) || numbers.has(unit)) return fail();
@@ -109,7 +109,7 @@ export function projectCreatedHostTextAnchors(
       }
       if (hidden.has(unit)) {
         if (numbers.has(unit) || knownText.has(unit)) return fail();
-        zeroWidthUnits.push(projection.viewUnitForSource(unit, "after"));
+        zeroWidthUnits.push(projection.viewUnitForSource(unit, 'after'));
       } else {
         const number = numbers.get(unit);
         if (
@@ -118,7 +118,7 @@ export function projectCreatedHostTextAnchors(
             : !knownText.has(unit)
         )
           return fail();
-        textAnchorUnits.push(projection.viewUnitForSource(unit, "after"));
+        textAnchorUnits.push(projection.viewUnitForSource(unit, 'after'));
       }
     }
   return {

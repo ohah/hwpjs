@@ -1,7 +1,7 @@
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 export function validateHwp5FormProperties(rows) {
   const fail = () => {
-    throw Error("InvalidHwp5FormProperties");
+    throw Error('InvalidHwp5FormProperties');
   };
   if (!Array.isArray(rows) || rows.length > 100000) fail();
   let totalUnits = 0,
@@ -11,7 +11,7 @@ export function validateHwp5FormProperties(rows) {
   for (const row of rows) {
     if (
       !row ||
-      !["control_node", "object_node", "known_nodes", "deferred_nodes"].every((k) =>
+      !['control_node', 'object_node', 'known_nodes', 'deferred_nodes'].every((k) =>
         uint(row[k]),
       ) ||
       row.control_node >= row.object_node ||
@@ -24,10 +24,10 @@ export function validateHwp5FormProperties(rows) {
     for (const property of row.fields) {
       if (
         !property ||
-        typeof property.field !== "string" ||
+        typeof property.field !== 'string' ||
         !/^[a-z][a-z0-9_]{0,63}$/.test(property.field) ||
         fields.has(property.field) ||
-        !["wstring", "integer", "boolean"].includes(property.kind) ||
+        !['wstring', 'integer', 'boolean'].includes(property.kind) ||
         !Array.isArray(property.units) ||
         property.units.length > 1000000 - totalUnits ||
         property.units.some((unit) => !Number.isInteger(unit) || unit < 0 || unit > 65535)
@@ -46,6 +46,6 @@ export function validateHwp5FormProperties(rows) {
 }
 export function decodeHwp5FormProperties(bytes) {
   return validateHwp5FormProperties(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

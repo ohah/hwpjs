@@ -1,9 +1,9 @@
-import { createdTableIdentity } from "../../js/created-table-identity.mjs";
+import { createdTableIdentity } from '../../js/created-table-identity.mjs';
 
 export function inlineObjectIdentity(entry) {
-  if (!entry || typeof entry !== "object") return null;
-  if (Object.hasOwn(entry, "createdTableIdentity")) {
-    if (Object.hasOwn(entry, "objectNode")) return null;
+  if (!entry || typeof entry !== 'object') return null;
+  if (Object.hasOwn(entry, 'createdTableIdentity')) {
+    if (Object.hasOwn(entry, 'objectNode')) return null;
     try {
       createdTableIdentity(entry.createdTableIdentity);
     } catch {

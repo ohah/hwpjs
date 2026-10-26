@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { forwardReference, inverseReference, checkVector } from "./icc-matrix-reference.mjs";
+import assert from 'node:assert/strict';
+import { forwardReference, inverseReference, checkVector } from './icc-matrix-reference.mjs';
 export function matrixInput(matrix, xyz) {
   const b = Buffer.alloc(48);
   [...matrix, ...xyz].forEach((v, i) => b.writeInt32BE(v, i * 4));

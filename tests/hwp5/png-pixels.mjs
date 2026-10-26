@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { deflateSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 import {
   signature,
   pngChunk as chunk,
   pngHeader as header,
   png,
-} from "./png-structure-evidence.mjs";
-import { passes, predict, pngPixelsEvidence } from "./png-pixels-evidence.mjs";
+} from './png-structure-evidence.mjs';
+import { passes, predict, pngPixelsEvidence } from './png-pixels-evidence.mjs';
 
 const prefix = (raw, max = 268435456) => {
   const p = Buffer.alloc(4);
@@ -47,9 +47,9 @@ function make(width, height, depth, color, interlace, filter = 4) {
   const data = Buffer.concat(filtered),
     expected = Buffer.concat(restored),
     h = header(depth, color, width, height, interlace);
-  const palette = color === 3 ? [chunk("PLTE", Buffer.alloc(3 * (1 << depth)))] : [];
+  const palette = color === 3 ? [chunk('PLTE', Buffer.alloc(3 * (1 << depth)))] : [];
   const wrap = (stream = deflateSync(data), parts = [stream]) =>
-    png(chunk("IHDR", h), ...palette, ...parts.map((p) => chunk("IDAT", p)), chunk("IEND"));
+    png(chunk('IHDR', h), ...palette, ...parts.map((p) => chunk('IDAT', p)), chunk('IEND'));
   return { data, expected, wrap };
 }
 export function pngPixelsEdges(call, cfb) {
@@ -120,7 +120,7 @@ export function pngPixelsEdges(call, cfb) {
     ),
     f.expected,
   );
-  for (const extra of [Buffer.from([0, 255, 0]), deflateSync(Buffer.from("unused"))])
+  for (const extra of [Buffer.from([0, 255, 0]), deflateSync(Buffer.from('unused'))])
     good(f.wrap(Buffer.concat([compressed, extra])), f.expected);
   for (let end = 0; end < compressed.length; end++) bad(f.wrap(compressed.subarray(0, end)));
   for (const data of [
@@ -147,10 +147,10 @@ export function pngPixelsEdges(call, cfb) {
   const zeroData = Buffer.concat(zeroRows);
   const onePalette = (data) =>
     png(
-      chunk("IHDR", header(4, 3, 9, 9, 1)),
-      chunk("PLTE", Buffer.alloc(3)),
-      chunk("IDAT", deflateSync(data)),
-      chunk("IEND"),
+      chunk('IHDR', header(4, 3, 9, 9, 1)),
+      chunk('PLTE', Buffer.alloc(3)),
+      chunk('IDAT', deflateSync(data)),
+      chunk('IEND'),
     );
   good(onePalette(zeroData));
   for (const at of sampleOffsets) {
@@ -162,7 +162,7 @@ export function pngPixelsEdges(call, cfb) {
   good(
     Buffer.concat([
       original.subarray(0, -12),
-      chunk("vpAg", Buffer.from("deferred")),
+      chunk('vpAg', Buffer.from('deferred')),
       original.subarray(-12),
     ]),
     f.expected,
@@ -171,9 +171,9 @@ export function pngPixelsEdges(call, cfb) {
   checksum[checksum.length - 1] ^= 1;
   bad(f.wrap(checksum));
   const huge = png(
-    chunk("IHDR", header(16, 6, 50000000, 1)),
-    chunk("IDAT", deflateSync(Buffer.alloc(0))),
-    chunk("IEND"),
+    chunk('IHDR', header(16, 6, 50000000, 1)),
+    chunk('IDAT', deflateSync(Buffer.alloc(0))),
+    chunk('IEND'),
   );
   assert.throws(() => call(130, prefix(huge)), /LimitExceeded/);
   rejected++;
@@ -182,18 +182,18 @@ export function pngPixelsEdges(call, cfb) {
     for (const interlace of [0, 1]) {
       const build = (value) =>
         png(
-          chunk("IHDR", header(depth, 3, 1, 1, interlace)),
-          chunk("PLTE", Buffer.alloc(3)),
-          chunk("IDAT", deflateSync(Buffer.from([0, value]))),
-          chunk("IEND"),
+          chunk('IHDR', header(depth, 3, 1, 1, interlace)),
+          chunk('PLTE', Buffer.alloc(3)),
+          chunk('IDAT', deflateSync(Buffer.from([0, value]))),
+          chunk('IEND'),
         );
       good(build((1 << (8 - depth)) - 1));
       bad(build(1 << (8 - depth)));
     }
-  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
-  for (const name of readdirSync(dir).filter((n) => n.endsWith(".hwp"))) {
+  const dir = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
+  for (const name of readdirSync(dir).filter((n) => n.endsWith('.hwp'))) {
     cfb.parse(readFileSync(new URL(name, dir)), { strict: true });
-    const entry = cfb.findExact("/PrvImage");
+    const entry = cfb.findExact('/PrvImage');
     if (!entry) continue;
     const bytes = Buffer.from(entry.content);
     if (!bytes.subarray(0, 8).equals(signature)) continue;

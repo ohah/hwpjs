@@ -1,32 +1,32 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { attachCreatedTableFlow } from "../../web/preview/created-table-flow.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { attachCreatedTableFlow } from '../../web/preview/created-table-flow.mjs';
 import {
   sameParagraph,
   paragraphTarget,
   hitText,
   caretGeometry,
   selectionRects,
-} from "../../web/preview/text-geometry.mjs";
+} from '../../web/preview/text-geometry.mjs';
 const point = (identity, row = 0, column = 0) => ({
   section: 0,
   createdCell: { identity, row, column },
 });
-test("generated cell geometry keeps identity row and column out of source paragraph namespace", () => {
-  assert.equal(sameParagraph(point("1"), point("2")), false);
-  assert.equal(sameParagraph(point("1"), point("1", 1)), false);
-  assert.equal(sameParagraph(point("1"), point("1", 0, 1)), false);
-  assert.equal(sameParagraph(point("1"), { section: 0, paragraph: 1 }), false);
-  assert.equal(sameParagraph(point("1"), point("1")), true);
+test('generated cell geometry keeps identity row and column out of source paragraph namespace', () => {
+  assert.equal(sameParagraph(point('1'), point('2')), false);
+  assert.equal(sameParagraph(point('1'), point('1', 1)), false);
+  assert.equal(sameParagraph(point('1'), point('1', 0, 1)), false);
+  assert.equal(sameParagraph(point('1'), { section: 0, paragraph: 1 }), false);
+  assert.equal(sameParagraph(point('1'), point('1')), true);
   assert.deepEqual(
-    paragraphTarget({ ...point("9007199254740993"), unit: 3 }),
-    point("9007199254740993"),
+    paragraphTarget({ ...point('9007199254740993'), unit: 3 }),
+    point('9007199254740993'),
   );
 });
-test("generated cell blank clicks and caret selection resolve only the matching owner", () => {
+test('generated cell blank clicks and caret selection resolve only the matching owner', () => {
   const table = {
     section: 0,
-    identity: "9007199254740993",
+    identity: '9007199254740993',
     hostParagraph: 0,
     anchorUnit: 0,
     rows: 1,
@@ -37,12 +37,12 @@ test("generated cell blank clicks and caret selection resolve only the matching 
       column,
       width: 7200,
       height: 1000,
-      text: column ? "" : "가😀",
+      text: column ? '' : '가😀',
     })),
   };
   const base = {
     height: 28,
-    rows: [{ section: 0, paragraph: 0, kind: "text", y: 0, height: 28, width: 200, text: "host" }],
+    rows: [{ section: 0, paragraph: 0, kind: 'text', y: 0, height: 28, width: 200, text: 'host' }],
     boxes: [],
   };
   const flow = attachCreatedTableFlow({ createdTables: [table] }, base, (text) => ({

@@ -1,11 +1,11 @@
-import { validateHwp5PictureShadowSource } from "../../js/hwp5-picture-shadow-source.mjs";
-import { pictureShadowBounds } from "./picture-shadow-bounds.mjs";
-import { pictureShadowRasterSize } from "./picture-shadow-raster-budget.mjs";
+import { validateHwp5PictureShadowSource } from '../../js/hwp5-picture-shadow-source.mjs';
+import { pictureShadowBounds } from './picture-shadow-bounds.mjs';
+import { pictureShadowRasterSize } from './picture-shadow-raster-budget.mjs';
 
 export function hwp5PictureShadowPlan(picture) {
   const tail = picture?.tailSource;
-  if (!tail || tail.effects_flags === 0) return { state: "none" };
-  const fail = () => ({ state: "unavailable", error: "UnsupportedHwp5PictureShadow" });
+  if (!tail || tail.effects_flags === 0) return { state: 'none' };
+  const fail = () => ({ state: 'unavailable', error: 'UnsupportedHwp5PictureShadow' });
   if (tail.effects_flags !== 1 || !tail.shadow) return fail();
   try {
     validateHwp5PictureShadowSource(tail.shadow, tail.effects_flags);
@@ -88,7 +88,7 @@ export function hwp5PictureShadowPlan(picture) {
     return fail();
   const radians = (direction * Math.PI) / 180;
   const plan = {
-    state: "outer",
+    state: 'outer',
     opacity: 1 - alpha,
     blur: blur / 75,
     offsetX: (Math.cos(radians) * distance) / 75,
@@ -96,7 +96,7 @@ export function hwp5PictureShadowPlan(picture) {
     color: shadow.color_value,
     width: right / 75,
     height: bottom / 75,
-    rasterParity: "unverified",
+    rasterParity: 'unverified',
   };
   if (
     !pictureShadowRasterSize(

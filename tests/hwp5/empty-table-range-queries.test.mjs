@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { verifyRaw } from "./style-preservation/text-record-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { verifyRaw } from './style-preservation/text-record-oracle.mjs';
 
-test("all scalar-bounded ranges in seeded empty table paragraphs preserve typed queries history and independent records", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "Explicit candidate required");
+test('all scalar-bounded ranges in seeded empty table paragraphs preserve typed queries history and independent records', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'Explicit candidate required');
   const wasm = await WebAssembly.compile(readFileSync(process.env.HWPJS_TEST_WASM));
-  const path = "reference/rhwp/samples/253E164F57A1BC6934-empty.hwp",
+  const path = 'reference/rhwp/samples/253E164F57A1BC6934-empty.hwp',
     input = readFileSync(path);
-  const seed = "가😀나",
+  const seed = '가😀나',
     boundaries = [0, 1, 3, 4];
   let attempts = 0;
   const queries = (editor) => ({
@@ -24,18 +24,18 @@ test("all scalar-bounded ranges in seeded empty table paragraphs preserve typed 
       editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: seed });
       const baseline = editor.save({ allowStaleLayout: true }).bytes,
         original = editor.text(0, paragraph);
-      assert.equal(original, seed + "\r");
+      assert.equal(original, seed + '\r');
       const sources = queries(editor);
       editor.enableHistory();
       for (const startUnit of boundaries)
         for (const endUnit of boundaries.filter((unit) => unit >= startUnit)) {
-          for (const text of ["치환😀", ""]) {
+          for (const text of ['치환😀', '']) {
             if (startUnit === endUnit && !text) continue;
             editor.splice({ section: 0, paragraph, startUnit, endUnit, text });
             const saved = editor.save({ allowStaleLayout: true }).bytes;
             verifyRaw(baseline, saved, 0, paragraph, startUnit, endUnit, text);
             assert.throws(
-              () => verifyRaw(baseline, saved, 0, paragraph, startUnit, endUnit, "wrong"),
+              () => verifyRaw(baseline, saved, 0, paragraph, startUnit, endUnit, 'wrong'),
               assert.AssertionError,
             );
             assert.deepEqual(queries(editor), sources);
@@ -55,7 +55,7 @@ test("all scalar-bounded ranges in seeded empty table paragraphs preserve typed 
             assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, saved);
             assert.equal(editor.undo(), true);
             assert.throws(
-              () => editor.splice({ section: 0, paragraph, startUnit: 2, endUnit: 2, text: "X" }),
+              () => editor.splice({ section: 0, paragraph, startUnit: 2, endUnit: 2, text: 'X' }),
               /SplitSurrogatePair/,
             );
             assert.deepEqual(editor.save({ allowStaleLayout: true }).bytes, baseline);
@@ -73,6 +73,6 @@ test("all scalar-bounded ranges in seeded empty table paragraphs preserve typed 
   assert.equal(attempts, 64);
   assert.deepEqual(readFileSync(path), input);
   t.diagnostic(
-    "64 seeded scalar-bounded insert/replace/delete transactions across four cell paragraphs; not all document commands or Hancom layout equality",
+    '64 seeded scalar-bounded insert/replace/delete transactions across four cell paragraphs; not all document commands or Hancom layout equality',
   );
 });

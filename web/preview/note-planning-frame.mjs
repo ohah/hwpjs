@@ -1,31 +1,31 @@
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // A local scene frame is not a replacement for the document's physical paper.
 export function notePlanningFrame(content, note, width, context) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (content?.pageSettings?.length !== 1 || !Number.isFinite(width) || width <= 0)
-    return fail("InvalidNotePlanningFrame");
+    return fail('InvalidNotePlanningFrame');
   const source = content.pageSettings[0],
     reference = pageReferenceBoxes(source, { x: 20, y: 20 });
-  if (reference.state !== "placed") return reference;
+  if (reference.state !== 'placed') return reference;
   if (Math.abs(reference.boxes.page.width - width) <= 1e-8)
-    return { state: "selected", setting: source, localColumn: false };
+    return { state: 'selected', setting: source, localColumn: false };
   if (
-    note?.kind !== "endnote" ||
-    context?.state !== "resolved" ||
+    note?.kind !== 'endnote' ||
+    context?.state !== 'resolved' ||
     context.section !== note.section ||
     context.width !== width
   )
-    return fail("UnsupportedNotePlanningWidth");
+    return fail('UnsupportedNotePlanningWidth');
   const columns = columnReferenceBoxes(reference.boxes.page, context.declaration);
   if (
-    columns.state !== "placed" ||
+    columns.state !== 'placed' ||
     columns.boxes.length < 2 ||
     columns.boxes.some((box) => Math.abs(box.width - width) > 1e-8)
   )
-    return fail("UnprovenNotePlanningColumn");
+    return fail('UnprovenNotePlanningColumn');
   const widthUnits = Math.round(width / hwpUnitPixels(1)),
     heightUnits = Math.round(reference.boxes.page.height / hwpUnitPixels(1));
   if (
@@ -35,16 +35,16 @@ export function notePlanningFrame(content, note, width, context) {
     Math.abs(hwpUnitPixels(widthUnits) - width) > 1e-8 ||
     Math.abs(hwpUnitPixels(heightUnits) - reference.boxes.page.height) > 1e-8
   )
-    return fail("UnsupportedFractionalNotePlanningFrame");
+    return fail('UnsupportedFractionalNotePlanningFrame');
   return {
-    state: "selected",
+    state: 'selected',
     localColumn: true,
     setting: {
       ...source,
       width: widthUnits,
       height: heightUnits,
-      orientation: "widely",
-      gutter_type: "left_only",
+      orientation: 'widely',
+      gutter_type: 'left_only',
       duplicate_margins: 0,
       margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
     },

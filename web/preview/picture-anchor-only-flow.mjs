@@ -1,6 +1,6 @@
-import { pictureParagraphFlow } from "./picture-paragraph-flow.mjs";
-import { paragraphSpacePixels } from "./paragraph-geometry.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
+import { pictureParagraphFlow } from './picture-paragraph-flow.mjs';
+import { paragraphSpacePixels } from './paragraph-geometry.mjs';
+import { textMeasurement } from './text-measurement.mjs';
 
 // A floating picture's nonpainted anchor is not text that must avoid its own
 // picture. Foreign obstacles still participate in the ordinary line solver.
@@ -15,7 +15,7 @@ export function pictureAnchorOnlyFlow(
 ) {
   if (
     !paragraph.text.length ||
-    paragraph.text !== "\ufffc".repeat(paragraph.text.length) ||
+    paragraph.text !== '\ufffc'.repeat(paragraph.text.length) ||
     (paragraph.textStartUnit ?? 0) !== 0 ||
     placements.length !== paragraph.text.length
   )
@@ -37,10 +37,10 @@ export function pictureAnchorOnlyFlow(
     paragraph.text,
     box,
     obstacles,
-    (_text, unit) => ({ ...textMeasurement(measure("", unit)), width: 0 }),
+    (_text, unit) => ({ ...textMeasurement(measure('', unit)), width: 0 }),
     { paragraphShape: paragraph.paragraphShape, maxLines, includeTerminalAfter },
   );
-  if (flow.state !== "complete") return flow;
+  if (flow.state !== 'complete') return flow;
   const rows = flow.rows.map((row) =>
     compactTerminal && row.height > 0
       ? { ...row, height: Math.min(row.height, row.textHeight + (row.textTop ?? 0)) }
@@ -59,6 +59,6 @@ export function pictureAnchorOnlyFlow(
     bottom -
     box.y +
     (includeTerminalAfter ? paragraphSpacePixels(paragraph.paragraphShape?.after) : 0);
-  if (!Number.isFinite(height) || height < 0) throw new RangeError("InvalidParagraphFlowBounds");
+  if (!Number.isFinite(height) || height < 0) throw new RangeError('InvalidParagraphFlowBounds');
   return { ...flow, rows, height };
 }

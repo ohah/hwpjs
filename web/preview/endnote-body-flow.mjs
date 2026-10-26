@@ -1,6 +1,6 @@
-import { projectNoteFlowPictures } from "./note-picture-projection.mjs";
-import { moveLayoutRow, moveLayoutPlacement } from "./layout-world-offset.mjs";
-import { moveCurvePlacement } from "./curve-world-offset.mjs";
+import { projectNoteFlowPictures } from './note-picture-projection.mjs';
+import { moveLayoutRow, moveLayoutPlacement } from './layout-world-offset.mjs';
+import { moveCurvePlacement } from './curve-world-offset.mjs';
 /** Shared endnote planning/projection; source note ownership remains unchanged. */
 export function prepareEndnoteBodyFlow(
   notes,
@@ -11,8 +11,8 @@ export function prepareEndnoteBodyFlow(
 ) {
   if (
     !Array.isArray(notes) ||
-    policy?.state !== "selected" ||
-    policy.kind !== "endnote" ||
+    policy?.state !== 'selected' ||
+    policy.kind !== 'endnote' ||
     !Number.isSafeInteger(policy.section) ||
     policy.section < 0 ||
     !Array.isArray(sourceFlows) ||
@@ -23,7 +23,7 @@ export function prepareEndnoteBodyFlow(
     notes.some(
       (note) =>
         !note ||
-        note.kind !== "endnote" ||
+        note.kind !== 'endnote' ||
         note.section !== policy.section ||
         !Number.isSafeInteger(note.noteNode) ||
         note.noteNode < 0 ||
@@ -36,7 +36,7 @@ export function prepareEndnoteBodyFlow(
         note.height <= 0,
     )
   )
-    return { state: "unavailable", error: "InvalidEndnoteBodyFlow" };
+    return { state: 'unavailable', error: 'InvalidEndnoteBodyFlow' };
   const rows = [],
     flows = [];
   if (
@@ -44,18 +44,18 @@ export function prepareEndnoteBodyFlow(
       (f) => !Number.isSafeInteger(f.paragraph) || f.paragraph < 0 || f.paragraph > 0xffffffff,
     )
   )
-    return { state: "unavailable", error: "InvalidEndnoteBodyFlow" };
+    return { state: 'unavailable', error: 'InvalidEndnoteBodyFlow' };
   let virtualParagraph = sourceFlows.reduce((maximum, f) => Math.max(maximum, f.paragraph), 0);
   for (const [index, note] of notes.entries()) {
     if (note.scenePages !== undefined) {
       if (!Array.isArray(note.scenePages) || !note.scenePages.length)
-        return { state: "unavailable", error: "InvalidEndnoteBodyFlow" };
+        return { state: 'unavailable', error: 'InvalidEndnoteBodyFlow' };
       for (const paragraph of note.paragraphs)
         if (
           sourceFlows.filter((f) => f.section === note.section && f.paragraph === paragraph)
             .length !== 1
         )
-          return { state: "unavailable", error: "MissingEndnoteBodyFlow" };
+          return { state: 'unavailable', error: 'MissingEndnoteBodyFlow' };
       for (const [sceneIndex, scene] of note.scenePages.entries()) {
         if (
           !scene ||
@@ -66,12 +66,12 @@ export function prepareEndnoteBodyFlow(
           !Array.isArray(scene.numberPrefixes) ||
           ++virtualParagraph > 0xffffffff
         )
-          return { state: "unavailable", error: "InvalidEndnoteBodyFlow" };
+          return { state: 'unavailable', error: 'InvalidEndnoteBodyFlow' };
         const paragraph = virtualParagraph;
         flows.push({
           section: note.section,
           paragraph,
-          host: "body",
+          host: 'body',
           top_level: true,
           page_break: !sceneColumns && sceneIndex > 0,
           column_break: sceneColumns && sceneIndex > 0,
@@ -82,8 +82,8 @@ export function prepareEndnoteBodyFlow(
             : policy.betweenNotes;
         if (sceneIndex === 0 && gap > 0)
           rows.push({
-            kind: "gap",
-            text: "",
+            kind: 'gap',
+            text: '',
             section: note.section,
             paragraph,
             height: gap,
@@ -92,7 +92,7 @@ export function prepareEndnoteBodyFlow(
             ...(index === 0 ? { noteSeparator: { ...separator, offset: policy.aboveLine } } : {}),
           });
         rows.push({
-          kind: "gap",
+          kind: 'gap',
           section: note.section,
           paragraph,
           height: scene.height,
@@ -109,12 +109,12 @@ export function prepareEndnoteBodyFlow(
     else
       for (const row of note.rows) {
         firstTextHeight += row.height;
-        if (row.kind === "text") break;
+        if (row.kind === 'text') break;
       }
     if (height > 0)
       rows.push({
-        kind: "gap",
-        text: "",
+        kind: 'gap',
+        text: '',
         section: note.section,
         paragraph: note.paragraphs[0],
         height,
@@ -124,7 +124,7 @@ export function prepareEndnoteBodyFlow(
       });
     if (note.boxes.length || note.atomicScene)
       rows.push({
-        kind: "gap",
+        kind: 'gap',
         section: note.section,
         paragraph: note.paragraphs[0],
         height: note.height,
@@ -135,11 +135,11 @@ export function prepareEndnoteBodyFlow(
       const sources = sourceFlows.filter(
         (flow) => flow.section === note.section && flow.paragraph === paragraph,
       );
-      if (sources.length !== 1) return { state: "unavailable", error: "MissingEndnoteBodyFlow" };
-      flows.push({ ...sources[0], host: "body", top_level: true });
+      if (sources.length !== 1) return { state: 'unavailable', error: 'MissingEndnoteBodyFlow' };
+      flows.push({ ...sources[0], host: 'body', top_level: true });
     }
   }
-  return { state: "prepared", rows, flows };
+  return { state: 'prepared', rows, flows };
 }
 
 export function projectEndnoteBodySlots(page, notes) {
@@ -153,12 +153,12 @@ export function projectEndnoteBodySlots(page, notes) {
       !note?.scenePages?.[slot.createdNoteScene] ||
       sceneSlots.has(key)
     )
-      return { state: "unavailable", error: "InvalidNoteSceneProjection" };
+      return { state: 'unavailable', error: 'InvalidNoteSceneProjection' };
     sceneSlots.add(key);
   }
   for (const note of notes)
     if (note.scenePages?.some((_scene, index) => !sceneSlots.has(`${note.noteNode}:${index}`)))
-      return { state: "unavailable", error: "InvalidNoteSceneProjection" };
+      return { state: 'unavailable', error: 'InvalidNoteSceneProjection' };
   const rows = page.rows.filter((row) => row.createdNoteNode === undefined),
     boxes = [],
     numberPrefixes = [],
@@ -179,7 +179,7 @@ export function projectEndnoteBodySlots(page, notes) {
       physical = page.pages.find((p) => p.ordinal === slot.pageOrdinal);
     const note =
       slot.createdNoteScene === undefined ? owner : owner?.scenePages?.[slot.createdNoteScene];
-    if (!note || !physical) return { state: "unavailable", error: "MissingCreatedNotePageOwner" };
+    if (!note || !physical) return { state: 'unavailable', error: 'MissingCreatedNotePageOwner' };
     const ordinal = slot.columnOrdinal ?? 0;
     const column = slot.columnOrdinal === undefined ? physical.page : physical.columns?.[ordinal];
     if (
@@ -188,12 +188,12 @@ export function projectEndnoteBodySlots(page, notes) {
       !column ||
       ![column.x, column.y, column.width, column.height].every(Number.isFinite)
     )
-      return { state: "unavailable", error: "MissingCreatedNoteColumnOwner" };
+      return { state: 'unavailable', error: 'MissingCreatedNoteColumnOwner' };
     if (
       note.width !== undefined &&
       (!Number.isFinite(note.width) || note.width <= 0 || note.width > column.width + 1e-8)
     )
-      return { state: "unavailable", error: "InvalidNoteColumnPlacement" };
+      return { state: 'unavailable', error: 'InvalidNoteColumnPlacement' };
     if ([note.width, note.height].every((value) => Number.isFinite(value) && value > 0))
       noteAreas.push({
         section: owner.section,
@@ -215,8 +215,8 @@ export function projectEndnoteBodySlots(page, notes) {
         })),
       );
       for (const [key, output] of [
-        ["placedDrawings", placedDrawings],
-        ["placedContainers", placedContainers],
+        ['placedDrawings', placedDrawings],
+        ['placedContainers', placedContainers],
       ])
         for (const item of note[key] ?? [])
           output.push({
@@ -230,7 +230,7 @@ export function projectEndnoteBodySlots(page, notes) {
             referenceBoxes: { paper: physical.paper, page: physical.page, column },
           });
       if (note.placedCurves !== undefined && !Array.isArray(note.placedCurves))
-        return { state: "unavailable", error: "InvalidNoteBodyProjection" };
+        return { state: 'unavailable', error: 'InvalidNoteBodyProjection' };
       for (const item of note.placedCurves ?? [])
         placedCurves.push({
           ...moveCurvePlacement(item, slot.y, physical.ordinal - (item.pageOrdinal ?? 0), slot.x),
@@ -240,12 +240,12 @@ export function projectEndnoteBodySlots(page, notes) {
     } catch (error) {
       if (
         [
-          "InvalidSectionLayoutOffset",
-          "InvalidSectionPageOrdinal",
-          "InvalidSectionLayoutTransform",
+          'InvalidSectionLayoutOffset',
+          'InvalidSectionPageOrdinal',
+          'InvalidSectionLayoutTransform',
         ].includes(error?.message)
       )
-        return { state: "unavailable", error: "InvalidNoteBodyProjection" };
+        return { state: 'unavailable', error: 'InvalidNoteBodyProjection' };
       throw error;
     }
     const pictures = projectNoteFlowPictures(
@@ -259,7 +259,7 @@ export function projectEndnoteBodySlots(page, notes) {
       },
       note,
     );
-    if (pictures.state !== "projected") return pictures;
+    if (pictures.state !== 'projected') return pictures;
     flowPictures.push(...pictures.pictures);
   }
   for (const row of page.rows)
@@ -274,7 +274,7 @@ export function projectEndnoteBodySlots(page, notes) {
         ...(row.noteSeparator.bands ? { bands: row.noteSeparator.bands } : {}),
       });
   return {
-    state: "projected",
+    state: 'projected',
     rows,
     boxes,
     numberPrefixes,

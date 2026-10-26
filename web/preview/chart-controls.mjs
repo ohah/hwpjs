@@ -1,8 +1,8 @@
 //! Drafts are transient; every committed value comes from the native model.
-import { chartPointLabel } from "./chart-point-label.mjs";
-import { createChartPointTable } from "./chart-point-table.mjs";
-import { createChartPointGrid } from "./chart-point-grid.mjs";
-import { createChartPointDrafts } from "./chart-point-drafts.mjs";
+import { chartPointLabel } from './chart-point-label.mjs';
+import { createChartPointTable } from './chart-point-table.mjs';
+import { createChartPointGrid } from './chart-point-grid.mjs';
+import { createChartPointDrafts } from './chart-point-drafts.mjs';
 export function createChartControls({
   form,
   fields,
@@ -23,7 +23,7 @@ export function createChartControls({
     pointOrdinal = null;
   let queryNeeded = false;
   let stringAvailable = false,
-    inputBaseline = "",
+    inputBaseline = '',
     dirty = false;
   let seriesAvailable = false,
     richAvailable = false;
@@ -33,50 +33,50 @@ export function createChartControls({
   let batchLimits = null,
     chartRevision = null;
   const drafts = createChartPointDrafts();
-  const batchTools = form.querySelector?.("[data-chart-batch-tools]"),
-    batchStage = form.querySelector?.("[data-chart-batch-stage]"),
-    batchApply = form.querySelector?.("[data-chart-batch-apply]"),
-    batchClear = form.querySelector?.("[data-chart-batch-clear]"),
-    batchNote = form.querySelector?.("[data-chart-batch-note]");
-  const pointList = form.querySelector?.("[data-chart-point-list]");
+  const batchTools = form.querySelector?.('[data-chart-batch-tools]'),
+    batchStage = form.querySelector?.('[data-chart-batch-stage]'),
+    batchApply = form.querySelector?.('[data-chart-batch-apply]'),
+    batchClear = form.querySelector?.('[data-chart-batch-clear]'),
+    batchNote = form.querySelector?.('[data-chart-batch-note]');
+  const pointList = form.querySelector?.('[data-chart-point-list]');
   const accepts = (kind) =>
-    ["numeric_cache", "numeric_literal"].includes(kind) ||
-    (stringAvailable && ["string_cache", "string_literal", "multilevel_cache"].includes(kind));
+    ['numeric_cache', 'numeric_literal'].includes(kind) ||
+    (stringAvailable && ['string_cache', 'string_literal', 'multilevel_cache'].includes(kind));
   const option = (value, label) => {
-    const node = form.ownerDocument.createElement("option");
+    const node = form.ownerDocument.createElement('option');
     node.value = String(value);
     node.textContent = label;
     return node;
   };
   const selected = () => rows[Number(targets.value)] ?? null;
   const mode = () =>
-    kinds ? (["points", "series", "rich"].includes(kinds.value) ? kinds.value : null) : "points";
-  const textMode = () => mode() === "series" || mode() === "rich";
+    kinds ? (['points', 'series', 'rich'].includes(kinds.value) ? kinds.value : null) : 'points';
+  const textMode = () => mode() === 'series' || mode() === 'rich';
   const available = () =>
-    mode() === "points" ||
-    (mode() === "series" && seriesAvailable) ||
-    (mode() === "rich" && richAvailable);
+    mode() === 'points' ||
+    (mode() === 'series' && seriesAvailable) ||
+    (mode() === 'rich' && richAvailable);
   const queryKind = () =>
-    mode() === "rich"
-      ? "chart-rich-text"
-      : mode() === "series"
-        ? "chart-series-text"
-        : "chart-points";
+    mode() === 'rich'
+      ? 'chart-rich-text'
+      : mode() === 'series'
+        ? 'chart-series-text'
+        : 'chart-points';
   const items = () =>
     textMode()
-      ? chart?.kind === (mode() === "rich" ? "rich_text" : "direct_series") &&
+      ? chart?.kind === (mode() === 'rich' ? 'rich_text' : 'direct_series') &&
         Array.isArray(chart.values)
         ? chart.values
         : []
-      : mode() === "points"
+      : mode() === 'points'
         ? (chart?.values?.points ?? [])
         : [];
   const selectedPoint = () => {
-    if (points.value === "") return null;
+    if (points.value === '') return null;
     const index = Number(points.value),
       point = items()[index];
     const allowed = textMode()
-      ? available() && typeof point?.text === "string"
+      ? available() && typeof point?.text === 'string'
       : accepts(point?.kind);
     return Number.isInteger(index) && index >= 0 && allowed
       ? { index, value: textMode() ? point.text : point.value }
@@ -84,7 +84,7 @@ export function createChartControls({
   };
   const batchAvailable = () =>
     !closed &&
-    mode() === "points" &&
+    mode() === 'points' &&
     batchLimits !== null &&
     Number.isInteger(chartRevision) &&
     chartRevision >= 0 &&
@@ -95,7 +95,7 @@ export function createChartControls({
     fields.disabled = closed || !enabled || !ready() || !selectedPoint();
     if (kinds)
       kinds.disabled = closed || !enabled || !ready() || !(seriesAvailable || richAvailable);
-    if (pointList) pointList.hidden = mode() !== "points";
+    if (pointList) pointList.hidden = mode() !== 'points';
     if (batchTools) batchTools.hidden = !batchAvailable();
     if (batchStage) batchStage.disabled = !batchAvailable() || fields.disabled;
     if (batchApply)
@@ -112,13 +112,13 @@ export function createChartControls({
     grid?.refresh();
   };
   const currentValue = (selection) =>
-    mode() === "points" ? (drafts.value(selection.index) ?? selection.value) : selection.value;
+    mode() === 'points' ? (drafts.value(selection.index) ?? selection.value) : selection.value;
   const pick = () => {
     const selection = selectedPoint();
-    input.value = selection ? currentValue(selection) : "";
+    input.value = selection ? currentValue(selection) : '';
     inputBaseline = input.value;
     dirty = false;
-    if (mode() === "points") {
+    if (mode() === 'points') {
       table?.reveal(selection?.index);
       grid?.reveal();
     }
@@ -133,7 +133,7 @@ export function createChartControls({
       closed ||
       !enabled ||
       !ready() ||
-      event.key !== "Escape" ||
+      event.key !== 'Escape' ||
       event.defaultPrevented ||
       event.isComposing ||
       event.keyCode === 229 ||
@@ -149,7 +149,7 @@ export function createChartControls({
     event.preventDefault();
     event.stopPropagation();
     pick();
-    note.textContent = "미적용 차트 입력을 취소했습니다.";
+    note.textContent = '미적용 차트 입력을 취소했습니다.';
   };
   const sendQuery = () => {
     if (!queryNeeded || closed || !enabled || !ready() || !mode() || !available()) return;
@@ -168,7 +168,7 @@ export function createChartControls({
     targetIdentity = identity;
     chart = null;
     points.replaceChildren();
-    input.value = "";
+    input.value = '';
     update();
     queryNeeded = Boolean(!closed && enabled && row && mode() && available());
     sendQuery();
@@ -182,16 +182,16 @@ export function createChartControls({
     if (!selection) return;
     const point = selection.index;
     const value = dirty || input.value !== inputBaseline ? input.value : currentValue(selection);
-    if (typeof value !== "string") return;
+    if (typeof value !== 'string') return;
     const command = textMode()
       ? {
-          kind: mode() === "rich" ? "chart-rich-text-set" : "chart-series-text-set",
+          kind: mode() === 'rich' ? 'chart-rich-text-set' : 'chart-series-text-set',
           ...row,
           ordinal: point,
           value,
         }
-      : { kind: stringAvailable ? "chart-point" : "chart-numeric-point", ...row, point, value };
-    if (request(command)) note.textContent = "차트 값 반영 중…";
+      : { kind: stringAvailable ? 'chart-point' : 'chart-numeric-point', ...row, point, value };
+    if (request(command)) note.textContent = '차트 값 반영 중…';
     update();
   };
   const stageBatch = () => {
@@ -217,68 +217,68 @@ export function createChartControls({
     const row = selected();
     if (!batchAvailable() || !row || !drafts.size() || !enabled || !ready()) return;
     if (input.value !== inputBaseline) {
-      note.textContent = "현재 입력을 먼저 변경 목록에 담거나 취소하세요.";
+      note.textContent = '현재 입력을 먼저 변경 목록에 담거나 취소하세요.';
       return;
     }
     if (
       request({
-        kind: "chart-points-set",
+        kind: 'chart-points-set',
         ...row,
         expectedRevision: chartRevision,
         expectedPair: structuredClone(chart.pair),
         changes: drafts.changes(),
       })
     )
-      note.textContent = "차트 변경 목록 일괄 적용 중…";
+      note.textContent = '차트 변경 목록 일괄 적용 중…';
     update();
   };
   const clearBatch = () => {
     if (closed || !enabled || !ready()) return;
     drafts.clear();
     pick();
-    note.textContent = "담아 둔 차트 초안을 취소했습니다. 문서는 변경되지 않았습니다.";
+    note.textContent = '담아 둔 차트 초안을 취소했습니다. 문서는 변경되지 않았습니다.';
   };
-  batchStage?.addEventListener("click", stageBatch);
-  batchApply?.addEventListener("click", applyBatch);
-  batchClear?.addEventListener("click", clearBatch);
-  targets.addEventListener("change", query);
-  points.addEventListener("change", pick);
-  form.addEventListener("submit", submit);
-  kinds?.addEventListener("change", query);
-  input.addEventListener("input", edit);
-  input.addEventListener("keydown", discard);
-  const body = form.querySelector?.("[data-chart-point-body]");
+  batchStage?.addEventListener('click', stageBatch);
+  batchApply?.addEventListener('click', applyBatch);
+  batchClear?.addEventListener('click', clearBatch);
+  targets.addEventListener('change', query);
+  points.addEventListener('change', pick);
+  form.addEventListener('submit', submit);
+  kinds?.addEventListener('change', query);
+  input.addEventListener('input', edit);
+  input.addEventListener('keydown', discard);
+  const body = form.querySelector?.('[data-chart-point-body]');
   if (body)
     table = createChartPointTable({
       body,
-      previous: form.querySelector("[data-chart-point-previous]"),
-      next: form.querySelector("[data-chart-point-next]"),
-      note: form.querySelector("[data-chart-point-page]"),
-      getChart: () => (mode() === "points" ? chart : null),
+      previous: form.querySelector('[data-chart-point-previous]'),
+      next: form.querySelector('[data-chart-point-next]'),
+      note: form.querySelector('[data-chart-point-page]'),
+      getChart: () => (mode() === 'points' ? chart : null),
       getSelected: () => selectedPoint()?.index ?? null,
       accepts,
-      ready: () => !closed && enabled && ready() && mode() === "points",
+      ready: () => !closed && enabled && ready() && mode() === 'points',
       select: (ordinal) => {
         points.value = String(ordinal);
         pick();
         input.focus();
       },
     });
-  const gridBody = form.querySelector?.("[data-chart-grid-body]");
+  const gridBody = form.querySelector?.('[data-chart-grid-body]');
   if (gridBody)
     grid = createChartPointGrid({
       body: gridBody,
-      head: form.querySelector("[data-chart-grid-head]"),
-      previousRows: form.querySelector("[data-chart-grid-previous-rows]"),
-      nextRows: form.querySelector("[data-chart-grid-next-rows]"),
-      previousColumns: form.querySelector("[data-chart-grid-previous-columns]"),
-      nextColumns: form.querySelector("[data-chart-grid-next-columns]"),
-      note: form.querySelector("[data-chart-grid-page]"),
-      getChart: () => (mode() === "points" ? chart : null),
+      head: form.querySelector('[data-chart-grid-head]'),
+      previousRows: form.querySelector('[data-chart-grid-previous-rows]'),
+      nextRows: form.querySelector('[data-chart-grid-next-rows]'),
+      previousColumns: form.querySelector('[data-chart-grid-previous-columns]'),
+      nextColumns: form.querySelector('[data-chart-grid-next-columns]'),
+      note: form.querySelector('[data-chart-grid-page]'),
+      getChart: () => (mode() === 'points' ? chart : null),
       getSelected: () => selectedPoint()?.index ?? null,
       accepts,
       getDraft: (ordinal) => drafts.value(ordinal),
-      ready: () => !closed && enabled && ready() && mode() === "points",
+      ready: () => !closed && enabled && ready() && mode() === 'points',
       select: (ordinal) => {
         points.value = String(ordinal);
         pick();
@@ -298,7 +298,7 @@ export function createChartControls({
     },
     message(message) {
       if (closed) return;
-      if (["load", "unlock"].includes(message.kind)) {
+      if (['load', 'unlock'].includes(message.kind)) {
         enabled = false;
         chart = null;
         targetIdentity = null;
@@ -311,17 +311,17 @@ export function createChartControls({
         rows = [];
         targets.replaceChildren();
         points.replaceChildren();
-        input.value = "";
-        inputBaseline = "";
+        input.value = '';
+        inputBaseline = '';
         dirty = false;
         stringAvailable = false;
         observedRepairsAllowed = false;
-        note.textContent = "";
+        note.textContent = '';
         seriesAvailable = false;
         richAvailable = false;
-        if (kinds) kinds.value = "points";
+        if (kinds) kinds.value = 'points';
       }
-      if (message.kind === "enable" && !message.error) enabled = true;
+      if (message.kind === 'enable' && !message.error) enabled = true;
       if (message.content) {
         queryNeeded = false;
         batchLimits =
@@ -331,7 +331,7 @@ export function createChartControls({
         stringAvailable = message.content.chartStringEditAvailable === true;
         seriesAvailable = message.content.chartSeriesTextEditAvailable === true;
         richAvailable = message.content.chartRichTextEditAvailable === true;
-        if (!available() && kinds) kinds.value = "points";
+        if (!available() && kinds) kinds.value = 'points';
         observedRepairsAllowed = message.content.chartOleObservedRepairsAllowed === true;
         const previous = selected();
         rows = message.content.chartEditAvailable ? (message.content.chartTargets ?? []) : [];
@@ -357,7 +357,7 @@ export function createChartControls({
                 ? [
                     option(
                       index,
-                      `${mode() === "rich" ? "제목/레이블 run" : "시리즈 이름"} ${index + 1}`,
+                      `${mode() === 'rich' ? '제목/레이블 run' : '시리즈 이름'} ${index + 1}`,
                     ),
                   ]
                 : accepts(point.kind)
@@ -375,13 +375,13 @@ export function createChartControls({
           note.textContent = message.error
             ? `차트 조회 실패: ${message.error}`
             : !selectedPoint()
-              ? "현재 차트에는 지원되는 편집 값이 없습니다."
-              : `차트 현재값과 저장 결과를 갱신합니다. 차트 그림·원본 조판과의 동일성을 보장하지 않습니다.${observedRepairsAllowed ? " 호환 저장 옵션 활성: 변경 시 CFB 관리 정보가 정규화될 수 있습니다." : " 기본 strict 저장 정책입니다."}`;
+              ? '현재 차트에는 지원되는 편집 값이 없습니다.'
+              : `차트 현재값과 저장 결과를 갱신합니다. 차트 그림·원본 조판과의 동일성을 보장하지 않습니다.${observedRepairsAllowed ? ' 호환 저장 옵션 활성: 변경 시 CFB 관리 정보가 정규화될 수 있습니다.' : ' 기본 strict 저장 정책입니다.'}`;
         }
       }
-      if (message.kind === "chart-points-set" && message.error) {
+      if (message.kind === 'chart-points-set' && message.error) {
         note.textContent = `차트 일괄 변경 실패: ${message.error}`;
-        if (message.applied || message.error === "StaleChartBatch") {
+        if (message.applied || message.error === 'StaleChartBatch') {
           drafts.clear();
           chartRevision = null;
           queueMicrotask(query);
@@ -389,10 +389,10 @@ export function createChartControls({
       }
       if (
         [
-          "chart-numeric-point",
-          "chart-point",
-          "chart-series-text-set",
-          "chart-rich-text-set",
+          'chart-numeric-point',
+          'chart-point',
+          'chart-series-text-set',
+          'chart-rich-text-set',
         ].includes(message.kind) &&
         message.error
       ) {
@@ -409,17 +409,17 @@ export function createChartControls({
       closed = true;
       serial++;
       drafts.clear();
-      batchStage?.removeEventListener("click", stageBatch);
-      batchApply?.removeEventListener("click", applyBatch);
-      batchClear?.removeEventListener("click", clearBatch);
+      batchStage?.removeEventListener('click', stageBatch);
+      batchApply?.removeEventListener('click', applyBatch);
+      batchClear?.removeEventListener('click', clearBatch);
       table?.close();
       grid?.close();
-      kinds?.removeEventListener("change", query);
-      targets.removeEventListener("change", query);
-      points.removeEventListener("change", pick);
-      input.removeEventListener("input", edit);
-      input.removeEventListener("keydown", discard);
-      form.removeEventListener("submit", submit);
+      kinds?.removeEventListener('change', query);
+      targets.removeEventListener('change', query);
+      points.removeEventListener('change', pick);
+      input.removeEventListener('input', edit);
+      input.removeEventListener('keydown', discard);
+      form.removeEventListener('submit', submit);
       update();
     },
   };

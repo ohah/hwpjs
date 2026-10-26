@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { inspect } from "./style-preservation/text-record-oracle.mjs";
-import { tableBindings, tablePlacements } from "./style-preservation/table-binding-oracle.mjs";
-import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
-import { hwp5TableWindowDependencies } from "../../web/preview/hwp5-table-window-dependencies.mjs";
-import { projectHwp5TableWindow } from "../../web/preview/hwp5-table-window-projection.mjs";
-import { attachTables } from "../../web/preview/table-content.mjs";
-import { attachTablePlacements } from "../../web/preview/table-placements-content.mjs";
-import { validateNestedTableOwnership } from "../../web/preview/nested-table-ownership.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { inspect } from './style-preservation/text-record-oracle.mjs';
+import { tableBindings, tablePlacements } from './style-preservation/table-binding-oracle.mjs';
+import { planParagraphDependencies } from '../../web/preview/paragraph-dependency-plan.mjs';
+import { hwp5TableWindowDependencies } from '../../web/preview/hwp5-table-window-dependencies.mjs';
+import { projectHwp5TableWindow } from '../../web/preview/hwp5-table-window-projection.mjs';
+import { attachTables } from '../../web/preview/table-content.mjs';
+import { attachTablePlacements } from '../../web/preview/table-placements-content.mjs';
+import { validateNestedTableOwnership } from '../../web/preview/nested-table-ownership.mjs';
 
-test("actual huge reference retains independently verified table host outside selected window", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+test('actual huge reference retains independently verified table host outside selected window', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   const input = readFileSync(
-    "reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+    'reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
   );
   const before = inspect(input),
     reader = await createHwp5Reader(wasm),

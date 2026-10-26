@@ -1,5 +1,5 @@
 /** 여러 문단 선택을 원본 위치의 서식 구간으로 투영합니다. */
-import { sourceTextChange } from "./text-offsets.mjs";
+import { sourceTextChange } from './text-offsets.mjs';
 
 /** 원본 문단 번호 순서에서 선택의 시작 또는 끝을 반환합니다. */
 export function paragraphSelectionEdge(anchor, focus, end = false) {
@@ -21,7 +21,7 @@ export function paragraphSelectionOwner(paragraph) {
       )
     )
       return null;
-    const kind = paragraph.drawingText ? "text" : "caption";
+    const kind = paragraph.drawingText ? 'text' : 'caption';
     return `section:${paragraph.section}:drawing:${drawing.drawingNode}:${kind}:list:${drawing.listNode}`;
   }
   if (cell) {
@@ -48,7 +48,7 @@ export function paragraphSelectionRanges(
     !anchor ||
     !focus ||
     anchor.section !== focus.section ||
-    typeof ownerOf !== "function" ||
+    typeof ownerOf !== 'function' ||
     !Array.isArray(paragraphs)
   )
     return null;
@@ -60,7 +60,7 @@ export function paragraphSelectionRanges(
       paragraph.section < 0 ||
       !Number.isSafeInteger(paragraph.paragraph) ||
       paragraph.paragraph < 0 ||
-      typeof paragraph.text !== "string"
+      typeof paragraph.text !== 'string'
     )
       return null;
     const identity = `${paragraph.section}:${paragraph.paragraph}`;
@@ -107,7 +107,7 @@ export function paragraphSelectionRanges(
     if (!boundary(from) || !boundary(to)) return null;
     if (from === to && !includeEmpty) continue;
     const mapped = sourcePositions
-      ? sourceTextChange({ startUnit: from, endUnit: to, text: "" }, row.sourceOffsets)
+      ? sourceTextChange({ startUnit: from, endUnit: to, text: '' }, row.sourceOffsets)
       : { startUnit: from, endUnit: to };
     ranges.push({
       section: row.section,
@@ -136,5 +136,5 @@ export function paragraphSelectionText(
     .map((range) =>
       text.get(`${range.section}:${range.paragraph}`).slice(range.startUnit, range.endUnit),
     )
-    .join("\n");
+    .join('\n');
 }

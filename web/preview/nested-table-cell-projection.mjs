@@ -1,11 +1,11 @@
-import { pageVisibleRectangle } from "./page-visible-rectangle.mjs";
-import { projectNestedInlineCaption } from "./nested-inline-caption-projection.mjs";
-import { tableCellRowExtent, isZeroAdvanceCellAnchor } from "./table-cell-band.mjs";
-import { projectNestedCellPictures } from "./nested-cell-picture-projection.mjs";
+import { pageVisibleRectangle } from './page-visible-rectangle.mjs';
+import { projectNestedInlineCaption } from './nested-inline-caption-projection.mjs';
+import { tableCellRowExtent, isZeroAdvanceCellAnchor } from './table-cell-band.mjs';
+import { projectNestedCellPictures } from './nested-cell-picture-projection.mjs';
 
 // 이미 측정한 중첩 셀의 좌표와 소유권을 같은 물리 페이지로 투영합니다.
 export function projectNestedTableCellContent(flow, parent, insets, fragment, maxRows) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Array.isArray(flow?.rows) ||
     !Array.isArray(flow.boxes) ||
@@ -22,22 +22,22 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     !Number.isSafeInteger(maxRows) ||
     maxRows < 0
   )
-    return unavailable("InvalidNestedCellProjection");
-  if (flow.rows.length > maxRows) return unavailable("TablePageProjectionLimit");
+    return unavailable('InvalidNestedCellProjection');
+  if (flow.rows.length > maxRows) return unavailable('TablePageProjectionLimit');
   const width = parent.width - insets.left - insets.right;
   const height = parent.height - insets.top - insets.bottom;
-  if (flow.clipOverflow !== undefined && typeof flow.clipOverflow !== "boolean")
-    return unavailable("InvalidNestedCellProjection");
+  if (flow.clipOverflow !== undefined && typeof flow.clipOverflow !== 'boolean')
+    return unavailable('InvalidNestedCellProjection');
   if (
     (flow.visibleHorizontalOverflow !== undefined &&
-      typeof flow.visibleHorizontalOverflow !== "boolean") ||
+      typeof flow.visibleHorizontalOverflow !== 'boolean') ||
     (flow.visibleHorizontalOverflow && flow.clipOverflow)
   )
-    return unavailable("InvalidNestedCellProjection");
+    return unavailable('InvalidNestedCellProjection');
   if (!Number.isSafeInteger(parent.depth ?? 0) || (parent.depth ?? 0) < 0)
-    return unavailable("InvalidNestedCellProjection");
+    return unavailable('InvalidNestedCellProjection');
   if (![width, height].every((value) => Number.isFinite(value) && value > 0))
-    return unavailable("InvalidNestedCellProjection");
+    return unavailable('InvalidNestedCellProjection');
   const owners = new Map(),
     boxes = [];
   for (const box of flow.boxes) {
@@ -62,7 +62,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       (!flow.clipOverflow && !flow.visibleHorizontalOverflow && box.x + box.width > width + 1e-8) ||
       box.y + box.height > height + 1e-8
     )
-      return unavailable("InvalidNestedCellProjection");
+      return unavailable('InvalidNestedCellProjection');
     owners.set(key, box);
     boxes.push({
       ...box,
@@ -81,19 +81,19 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       { ...source, x: parent.x + insets.left + source.x, y: parent.y + insets.top + source.y },
       clip,
     );
-    if (result.state === "invalid_page_clip") return null;
+    if (result.state === 'invalid_page_clip') return null;
     return result.rectangle ?? { ...clip, width: 0, height: 0 };
   };
   for (const box of boxes)
     if (flow.clipOverflow === true || box.pageClip !== undefined) {
       box.pageClip = projectClip(box.pageClip);
-      if (!box.pageClip) return unavailable("InvalidNestedCellProjection");
+      if (!box.pageClip) return unavailable('InvalidNestedCellProjection');
     }
   const rows = [],
     tableCaptionBounds = [],
     captionOwners = new Set();
   if (flow.inlineCaptions !== undefined && !Array.isArray(flow.inlineCaptions))
-    return unavailable("InvalidNestedCaptionOwner");
+    return unavailable('InvalidNestedCaptionOwner');
   for (const descriptor of flow.inlineCaptions ?? []) {
     const caption = projectNestedInlineCaption(
       descriptor?.table,
@@ -103,9 +103,9 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       fragment,
       maxRows - rows.length,
     );
-    if (caption.state !== "placed") return caption;
+    if (caption.state !== 'placed') return caption;
     const identity = `${descriptor.table.tableNode}:${descriptor.table.sourceCaption.caption_node}:${descriptor.table.sourceCaption.list_node}`;
-    if (captionOwners.has(identity)) return unavailable("InvalidNestedCaptionOwner");
+    if (captionOwners.has(identity)) return unavailable('InvalidNestedCaptionOwner');
     captionOwners.add(identity);
     rows.push(...caption.rows);
     tableCaptionBounds.push(...caption.tableCaptionBounds);
@@ -114,7 +114,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     const extent = tableCellRowExtent(row);
     if (row?.captionNode !== undefined) {
       if (!captionOwners.has(`${row.tableNode}:${row.captionNode}:${row.listNode}`))
-        return unavailable("MissingNestedCaptionPlacement");
+        return unavailable('MissingNestedCaptionPlacement');
       continue;
     }
     if (
@@ -126,7 +126,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       (extent === 0 && !isZeroAdvanceCellAnchor(row)) ||
       row.y + extent > height + 1e-8
     )
-      return unavailable("InvalidNestedCellProjection");
+      return unavailable('InvalidNestedCellProjection');
     const tableNode = row.tableNode ?? parent.tableNode,
       listNode = row.listNode ?? parent.listNode;
     if (
@@ -134,7 +134,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
         ? listNode !== parent.listNode
         : !owners.has(`${tableNode}:${listNode}`)
     )
-      return unavailable("InvalidNestedCellOwner");
+      return unavailable('InvalidNestedCellOwner');
     const owner =
       tableNode === parent.tableNode
         ? { x: 0, y: 0, width, height }
@@ -150,7 +150,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       x + rowWidth > owner.x + owner.width + 1e-8 ||
       row.y + extent > owner.y + owner.height + 1e-8
     )
-      return unavailable("NestedCellRowOverflow");
+      return unavailable('NestedCellRowOverflow');
     const projected = {
       ...row,
       tableNode,
@@ -164,10 +164,10 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     };
     if (flow.clipOverflow === true || row.pageClip !== undefined) {
       projected.pageClip = projectClip(row.pageClip);
-      if (!projected.pageClip) return unavailable("InvalidNestedCellProjection");
+      if (!projected.pageClip) return unavailable('InvalidNestedCellProjection');
     }
     if (![projected.x, projected.y, projected.y + projected.height].every(Number.isFinite))
-      return unavailable("InvalidNestedCellProjection");
+      return unavailable('InvalidNestedCellProjection');
     rows.push(projected);
   }
   if (
@@ -175,7 +175,7 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
       (box) => ![box.x, box.y, box.x + box.width, box.y + box.height].every(Number.isFinite),
     )
   )
-    return unavailable("InvalidNestedCellProjection");
+    return unavailable('InvalidNestedCellProjection');
   const pictures = projectNestedCellPictures(
     flow,
     parent,
@@ -185,9 +185,9 @@ export function projectNestedTableCellContent(flow, parent, insets, fragment, ma
     rows,
     projectClip,
   );
-  if (pictures.state !== "placed") return pictures;
+  if (pictures.state !== 'placed') return pictures;
   return {
-    state: "placed",
+    state: 'placed',
     rows,
     boxes,
     ...(pictures.pictures.length ? { flowPictures: pictures.pictures } : {}),

@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { revisionTextInput, revisionTextEvidence } from "./revision-text.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { revisionTextInput, revisionTextEvidence } from './revision-text.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -36,7 +36,7 @@ function allQueries(e) {
 export function revisionCoordinateEdges(call) {
   let accepted = 0,
     rejected = 0;
-  const text = Buffer.from("ABCDE\r", "utf16le"),
+  const text = Buffer.from('ABCDE\r', 'utf16le'),
     h = Buffer.alloc(24);
   h.writeUInt32LE(6);
   h.writeUInt16LE(3, 14);
@@ -91,22 +91,22 @@ export function revisionCoordinateEdges(call) {
 export function revisionCoordinateActual(call, cfb) {
   const results = [];
   for (const name of [
-    "issue5169_viewtext_changetracking.hwp",
-    "task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+    'issue5169_viewtext_changetracking.hwp',
+    'task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp',
   ]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const version = cfb.findExact("/FileHeader").content.readUInt32LE(32);
-    for (const kind of ["BodyText", "ViewText"]) {
-      const b = inflateRawSync(cfb.findExact("/" + kind + "/Section0").content),
+    const version = cfb.findExact('/FileHeader').content.readUInt32LE(32);
+    for (const kind of ['BodyText', 'ViewText']) {
+      const b = inflateRawSync(cfb.findExact('/' + kind + '/Section0').content),
         e = revisionTextEvidence(b),
         q = allQueries(e);
       assert.equal(q.count, e.inputBytes / 2 + e.paragraphs);
       assert.deepEqual(
         call(103, revisionTextInput(b, version, { cr: 1 }, q.queries)),
         q.expected,
-        name + "/" + kind,
+        name + '/' + kind,
       );
       results.push({
         name,

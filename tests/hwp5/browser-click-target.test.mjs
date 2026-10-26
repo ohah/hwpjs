@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import vm from "node:vm";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
 import {
   targetHitProbe,
   assertTargetHit,
   clickBrowserTarget,
-} from "../../tools/browser/click-target.mjs";
+} from '../../tools/browser/click-target.mjs';
 
-test("browser click guard rejects missing disabled hidden outside and covered targets", () => {
+test('browser click guard rejects missing disabled hidden outside and covered targets', () => {
   const good = {
     exists: true,
     enabled: true,
@@ -17,11 +17,11 @@ test("browser click guard rejects missing disabled hidden outside and covered ta
   };
   assert.doesNotThrow(() => assertTargetHit(good));
   for (const [key, error] of [
-    ["exists", "Missing"],
-    ["enabled", "Disabled"],
-    ["positiveRect", "NotVisible"],
-    ["inViewport", "NotVisible"],
-    ["hitMatches", "Covered"],
+    ['exists', 'Missing'],
+    ['enabled', 'Disabled'],
+    ['positiveRect', 'NotVisible'],
+    ['inViewport', 'NotVisible'],
+    ['hitMatches', 'Covered'],
   ]) {
     assert.throws(() => assertTargetHit({ ...good, [key]: false }), new RegExp(error));
     const absent = { ...good };
@@ -30,7 +30,7 @@ test("browser click guard rejects missing disabled hidden outside and covered ta
   }
 });
 
-test("browser hit probe checks the actual hit element and safely quotes selectors", () => {
+test('browser hit probe checks the actual hit element and safely quotes selectors', () => {
   const child = {},
     main = {},
     selector = 'button[data-value="quoted\\value"]';
@@ -62,11 +62,11 @@ test("browser hit probe checks the actual hit element and safely quotes selector
     });
     assert.equal(result.hitMatches, expected);
   }
-  for (const value of [null, undefined, 0, "", "  "])
+  for (const value of [null, undefined, 0, '', '  '])
     assert.throws(() => targetHitProbe(value), /InvalidBrowserClickSelector/);
 });
 
-test("a command success cannot substitute for trusted delivery to the intended element", () => {
+test('a command success cannot substitute for trusted delivery to the intended element', () => {
   for (const proof of [
     null,
     {},
@@ -82,7 +82,7 @@ test("a command success cannot substitute for trusted delivery to the intended e
       },
       evaluate(expression) {
         expressions.push(expression);
-        if (expression.includes("positiveRect"))
+        if (expression.includes('positiveRect'))
           return {
             exists: true,
             enabled: true,
@@ -90,34 +90,34 @@ test("a command success cannot substitute for trusted delivery to the intended e
             inViewport: true,
             hitMatches: true,
           };
-        if (expression === "window.__hwpClickProof") return proof;
+        if (expression === 'window.__hwpClickProof') return proof;
       },
     };
-    if (proof?.trusted && proof.matches) clickBrowserTarget(driver, "#undo");
-    else assert.throws(() => clickBrowserTarget(driver, "#undo"), /BrowserClickDidNotReachTarget/);
+    if (proof?.trusted && proof.matches) clickBrowserTarget(driver, '#undo');
+    else assert.throws(() => clickBrowserTarget(driver, '#undo'), /BrowserClickDidNotReachTarget/);
     assert.deepEqual(commands, [
-      ["scrollintoview", "#undo"],
-      ["click", "#undo"],
+      ['scrollintoview', '#undo'],
+      ['click', '#undo'],
     ]);
-    assert.equal(expressions.at(-1), "window.__hwpClickCleanup?.()");
+    assert.equal(expressions.at(-1), 'window.__hwpClickCleanup?.()');
   }
 });
 
-test("dialog resolution occurs before delivery proof and failed clicks still detach observers", () => {
-  for (const failing of [null, "click", "dialog"]) {
+test('dialog resolution occurs before delivery proof and failed clicks still detach observers', () => {
+  for (const failing of [null, 'click', 'dialog']) {
     const order = [],
-      failure = new Error("ExpectedBrowserActionFailure");
+      failure = new Error('ExpectedBrowserActionFailure');
     const driver = {
       command(kind) {
         order.push(kind);
         if (kind === failing) throw failure;
       },
       afterClick() {
-        order.push("dialog");
-        if (failing === "dialog") throw failure;
+        order.push('dialog');
+        if (failing === 'dialog') throw failure;
       },
       evaluate(expression) {
-        if (expression.includes("positiveRect"))
+        if (expression.includes('positiveRect'))
           return {
             exists: true,
             enabled: true,
@@ -125,20 +125,20 @@ test("dialog resolution occurs before delivery proof and failed clicks still det
             inViewport: true,
             hitMatches: true,
           };
-        if (expression === "window.__hwpClickProof") {
-          order.push("proof");
+        if (expression === 'window.__hwpClickProof') {
+          order.push('proof');
           return { trusted: true, matches: true };
         }
-        if (expression === "window.__hwpClickCleanup?.()") order.push("detach");
+        if (expression === 'window.__hwpClickCleanup?.()') order.push('detach');
       },
     };
     if (failing)
       assert.throws(
-        () => clickBrowserTarget(driver, "#enable-edit"),
+        () => clickBrowserTarget(driver, '#enable-edit'),
         (error) => error === failure,
       );
-    else clickBrowserTarget(driver, "#enable-edit");
-    assert.equal(order.at(-1), "detach");
-    if (!failing) assert.deepEqual(order, ["scrollintoview", "click", "dialog", "proof", "detach"]);
+    else clickBrowserTarget(driver, '#enable-edit');
+    assert.equal(order.at(-1), 'detach');
+    if (!failing) assert.deepEqual(order, ['scrollintoview', 'click', 'dialog', 'proof', 'detach']);
   }
 });

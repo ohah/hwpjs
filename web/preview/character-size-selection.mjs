@@ -1,5 +1,5 @@
-import { uint, observationRows, observationSpans } from "./observation-structure.mjs";
-import { snapUnit } from "./text-input.mjs";
+import { uint, observationRows, observationSpans } from './observation-structure.mjs';
+import { snapUnit } from './text-input.mjs';
 
 export const isSourceCharacterSize = (value) =>
   Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
@@ -14,7 +14,7 @@ export function characterSizeState(
 ) {
   if (
     content?.characterPropertiesAvailable !== true ||
-    typeof paragraph?.text !== "string" ||
+    typeof paragraph?.text !== 'string' ||
     paragraph.clipped ||
     !Number.isInteger(start) ||
     !Number.isInteger(end) ||
@@ -42,7 +42,7 @@ export function characterSizeState(
     else if (size !== current) mixed = true;
     cursor = high;
   }
-  return cursor === end && size !== undefined ? (mixed ? "mixed" : size) : null;
+  return cursor === end && size !== undefined ? (mixed ? 'mixed' : size) : null;
 }
 
 export function characterSizeRangesState(content, ranges) {
@@ -50,7 +50,7 @@ export function characterSizeRangesState(content, ranges) {
     !Array.isArray(ranges) ||
     !ranges.length ||
     !Array.isArray(content?.paragraphs) ||
-    content.paragraphs.some((row) => !row || typeof row !== "object") ||
+    content.paragraphs.some((row) => !row || typeof row !== 'object') ||
     ranges.some((range) => !range)
   )
     return null;
@@ -62,7 +62,7 @@ export function characterSizeRangesState(content, ranges) {
     const state = characterSizeState(content, row, range.startUnit, range.endUnit);
     if (state === null) return null;
     if (size === undefined) size = state;
-    else if (size !== state) size = "mixed";
+    else if (size !== state) size = 'mixed';
   }
   return size;
 }

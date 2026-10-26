@@ -1,11 +1,11 @@
-import { configureEquationText, equationFont } from "./equation-font-measure.mjs";
+import { configureEquationText, equationFont } from './equation-font-measure.mjs';
 
 /** Paint only a complete native layout. Coordinates are logical CSS pixels. */
 export function paintEquation(ctx, plan, layout, family, x, baseline) {
   const finite = (value) => Number.isFinite(value) && Math.abs(value) <= 1_000_000;
   const dimension = (value) => finite(value) && value >= 0;
   const invalid = () => {
-    throw new Error("InvalidEquationPaintPlan");
+    throw new Error('InvalidEquationPaintPlan');
   };
   if (
     !plan?.ready ||
@@ -44,7 +44,7 @@ export function paintEquation(ctx, plan, layout, family, x, baseline) {
       invalid();
     seen.add(glyph.request);
     const request = plan.requests[glyph.request];
-    if (typeof request?.text !== "string" || !request.text.isWellFormed()) invalid();
+    if (typeof request?.text !== 'string' || !request.text.isWellFormed()) invalid();
     return { ...glyph, text: request.text, font: equationFont(request, family) };
   });
   for (const rule of layout.rules) {
@@ -109,7 +109,7 @@ export function paintEquation(ctx, plan, layout, family, x, baseline) {
   const strokes = paths.map((value) =>
     prepareStroke(value, 5, (path, points) =>
       points.forEach((point, index) =>
-        path[index ? "lineTo" : "moveTo"](x + point.x, baseline + point.y),
+        path[index ? 'lineTo' : 'moveTo'](x + point.x, baseline + point.y),
       ),
     ),
   );
@@ -141,8 +141,8 @@ export function paintEquation(ctx, plan, layout, family, x, baseline) {
       ctx.fillRect(x + rect.x, baseline + rect.y, rect.width, rect.height);
     if (strokes.length) {
       ctx.strokeStyle = ctx.fillStyle;
-      ctx.lineCap = "butt";
-      ctx.lineJoin = "round";
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'round';
       ctx.setLineDash([]);
       ctx.lineDashOffset = 0;
       for (const stroke of strokes) {

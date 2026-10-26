@@ -1,5 +1,5 @@
-import { hwp5CharacterOutlineArg } from "../../js/character-outline-args.mjs";
-import { encodeCharacterRanges } from "../../js/character-range-batch.mjs";
+import { hwp5CharacterOutlineArg } from '../../js/character-outline-args.mjs';
+import { encodeCharacterRanges } from '../../js/character-range-batch.mjs';
 export function createCharacterOutlineControls({
   kind,
   apply,
@@ -46,30 +46,30 @@ export function createCharacterOutlineControls({
     apply.disabled = kind.disabled || !supported(kind.value);
     for (const option of kind.options ?? []) option.disabled = !supported(option.value);
     const labels = {
-      absent: "원본 요소 없음",
-      none: "없음",
-      solid: "실선",
-      dot: "점선",
-      thick: "굵은 실선",
-      dash: "파선",
-      "dash-dot": "일점쇄선",
-      "dash-dot-dot": "이점쇄선",
-      other: "다른 원본 종류",
-      mixed: "혼합",
+      absent: '원본 요소 없음',
+      none: '없음',
+      solid: '실선',
+      dot: '점선',
+      thick: '굵은 실선',
+      dash: '파선',
+      'dash-dot': '일점쇄선',
+      'dash-dot-dot': '이점쇄선',
+      other: '다른 원본 종류',
+      mixed: '혼합',
     };
     const state = enabled && !pending && !closed ? selectedState() : null;
-    current.textContent = `현재 외곽선 ${Object.hasOwn(labels, state) ? labels[state] : "미확인"}`;
+    current.textContent = `현재 외곽선 ${Object.hasOwn(labels, state) ? labels[state] : '미확인'}`;
   };
   const click = () => {
     if (!eligible()) return;
     try {
       hwp5CharacterOutlineArg(kind.value);
     } catch {
-      note.textContent = "외곽선 종류를 확인하세요.";
+      note.textContent = '외곽선 종류를 확인하세요.';
       return;
     }
     if (!supported(kind.value)) {
-      note.textContent = "현재 선택에서는 이 외곽선 종류를 지원하지 않습니다.";
+      note.textContent = '현재 선택에서는 이 외곽선 종류를 지원하지 않습니다.';
       return;
     }
     if (request(kind.value)) {
@@ -77,23 +77,23 @@ export function createCharacterOutlineControls({
       update();
     }
   };
-  apply.addEventListener("click", click);
+  apply.addEventListener('click', click);
   update();
-  kind.addEventListener?.("change", update);
+  kind.addEventListener?.('change', update);
   return {
     update,
     reset() {
       enabled = pending = extended = false;
-      note.textContent = "";
+      note.textContent = '';
       update();
     },
     message(message) {
-      if (message.kind === "load") this.reset();
-      if (["character-outline", "character-outline-ranges"].includes(message.kind)) {
+      if (message.kind === 'load') this.reset();
+      if (['character-outline', 'character-outline-ranges'].includes(message.kind)) {
         pending = false;
         note.textContent = message.error
           ? `외곽선 변경 실패: ${message.error}`
-          : "외곽선 적용 · 미리보기와 원본 조판은 별도입니다.";
+          : '외곽선 적용 · 미리보기와 원본 조판은 별도입니다.';
       }
       if (message.content && !message.error) {
         enabled =
@@ -107,8 +107,8 @@ export function createCharacterOutlineControls({
     },
     close() {
       closed = true;
-      apply.removeEventListener("click", click);
-      kind.removeEventListener?.("change", update);
+      apply.removeEventListener('click', click);
+      kind.removeEventListener?.('change', update);
       update();
     },
   };

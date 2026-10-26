@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { pathToFileURL } from "node:url";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 const { observeValueText: observe } = await import(
   process.env.CHART_VALUE_TEXT_MODULE
     ? pathToFileURL(process.env.CHART_VALUE_TEXT_MODULE).href
-    : "./chart-value-text-evidence.mjs"
+    : './chart-value-text-evidence.mjs'
 );
 function fixture(offset = 1, textNull = true, freshLabel = false) {
   const parts = [Buffer.alloc(offset, 0xa5)];
@@ -25,7 +25,7 @@ function fixture(offset = 1, textNull = true, freshLabel = false) {
     n(id);
     if ((id === 5 || id === 6) && !declared.has(id)) {
       declared.add(id);
-      const name = Buffer.from(id === 5 ? "VtString\0" : "VtValue\0");
+      const name = Buffer.from(id === 5 ? 'VtString\0' : 'VtValue\0');
       n(name.length, 2);
       add(name);
       n(1, 2);
@@ -71,10 +71,10 @@ function fixture(offset = 1, textNull = true, freshLabel = false) {
   raw(26);
   type(4);
   const types = new Map([
-    [1, { name: "VtValueBlock\0", version: 1 }],
-    [2, { name: "VtTextBlock\0", version: 2 }],
-    [3, { name: "VtFont\0", version: 1 }],
-    [4, { name: "VtObject\0", version: 1 }],
+    [1, { name: 'VtValueBlock\0', version: 1 }],
+    [2, { name: 'VtTextBlock\0', version: 2 }],
+    [3, { name: 'VtFont\0', version: 1 }],
+    [4, { name: 'VtObject\0', version: 1 }],
   ]);
   return {
     bytes: Buffer.concat(parts),
@@ -83,11 +83,11 @@ function fixture(offset = 1, textNull = true, freshLabel = false) {
     end: p,
     refs,
     types,
-    strings: new Map([[7, { hex: "ff80", trailer: 173 }]]),
+    strings: new Map([[7, { hex: 'ff80', trailer: 173 }]]),
   };
 }
 const run = (f) => observe(f.bytes, f.offset, f.types, f.strings);
-test("base has no object ID, nullable text, raw suffix and exact end at varied offsets", () => {
+test('base has no object ID, nullable text, raw suffix and exact end at varied offsets', () => {
   for (const offset of [0, 1, 17, 257])
     for (const textNull of [false, true])
       for (const freshLabel of [false, true]) {
@@ -95,23 +95,23 @@ test("base has no object ID, nullable text, raw suffix and exact end at varied o
           r = run(f);
         assert.equal(r.end, f.end);
         assert.equal(r.prefix.end, f.prefixEnd);
-        assert.equal(r.rawSuffix, "ff8055");
+        assert.equal(r.rawSuffix, 'ff8055');
         assert.equal(r.text.blockId, null);
         assert.equal(r.text.blockStart, f.prefixEnd + 3);
-        assert.equal(r.text.fontName.hex, "ff80");
+        assert.equal(r.text.fontName.hex, 'ff80');
         assert.equal(r.text.text === null, textNull);
-        if (!textNull) assert.equal(r.text.text.hex, "ff80");
-        for (const raw of r.text.rawFields) assert.equal(raw.hex, "a5".repeat(raw.n));
+        if (!textNull) assert.equal(r.text.text.hex, 'ff80');
+        for (const raw of r.text.rawFields) assert.equal(raw.hex, 'a5'.repeat(raw.n));
         assert.deepEqual(run({ ...f, bytes: Buffer.concat([f.bytes, Buffer.alloc(50, 0xff)]) }), r);
         const copy = JSON.stringify(r);
         f.bytes.fill(0);
-        f.strings.get(7).hex = "00";
+        f.strings.get(7).hex = '00';
         assert.equal(JSON.stringify(r), copy);
         assert.equal(f.types.size, 4);
         assert.equal(f.strings.size, 1);
       }
 });
-test("every cut is an explicit incomplete error; prior type versions are checked", () => {
+test('every cut is an explicit incomplete error; prior type versions are checked', () => {
   for (const textNull of [false, true])
     for (const freshLabel of [false, true]) {
       const f = fixture(17, textNull, freshLabel);
@@ -120,7 +120,7 @@ test("every cut is an explicit incomplete error; prior type versions are checked
           () => run({ ...f, bytes: f.bytes.subarray(0, cut) }),
           (e) =>
             e.constructor === Error &&
-            ["IncompleteValueObservation", "IncompleteAxisObservation"].includes(e.message),
+            ['IncompleteValueObservation', 'IncompleteAxisObservation'].includes(e.message),
         );
       for (const [id, v] of f.types) {
         const types = new Map(f.types);
@@ -129,7 +129,7 @@ test("every cut is an explicit incomplete error; prior type versions are checked
           () => run({ ...f, types }),
           (e) =>
             e.constructor === Error &&
-            ["UnsupportedValueObservationType", "UnsupportedAxisObservationType"].includes(
+            ['UnsupportedValueObservationType', 'UnsupportedAxisObservationType'].includes(
               e.message,
             ),
         );

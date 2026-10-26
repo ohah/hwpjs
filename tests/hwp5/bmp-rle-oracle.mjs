@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { bmpLayoutOracle, bmpWords } from "./bmp-oracle.mjs";
+import assert from 'node:assert/strict';
+import { bmpLayoutOracle, bmpWords } from './bmp-oracle.mjs';
 // Decode storage rows independently, with null for unspecified cells. Reverse
 // complete row arrays only at serialization; no native cursor/index formula.
 export function bmpRleOracle(raw, { padding = 0, full = false, trailing = false } = {}) {
@@ -13,7 +13,7 @@ export function bmpRleOracle(raw, { padding = 0, full = false, trailing = false 
     at = 0,
     commands = 0;
   const take = () => {
-    assert.ok(at < data.length, "truncated command");
+    assert.ok(at < data.length, 'truncated command');
     return data[at++];
   };
   while (at < data.length) {
@@ -80,5 +80,5 @@ export function bmpRleOracle(raw, { padding = 0, full = false, trailing = false 
       rows[y][x++] = index;
     }
   }
-  throw Error("missing EOB");
+  throw Error('missing EOB');
 }

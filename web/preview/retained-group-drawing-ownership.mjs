@@ -1,6 +1,6 @@
 // Only explicitly selected native inline groups may keep their text in body flow.
 export function retainedGroupDrawingOwnership(content, drawings, containers) {
-  const fail = () => ({ state: "unavailable", error: "InvalidRetainedDrawingOwnership" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidRetainedDrawingOwnership' });
   if (!Array.isArray(drawings) || !Array.isArray(containers)) return fail();
   const owners = new Set(),
     anchors = new Set(),
@@ -33,5 +33,5 @@ export function retainedGroupDrawingOwnership(content, drawings, containers) {
     ids.add(id);
     owners.add(id);
   }
-  return { state: "selected", owners, anchors };
+  return { state: 'selected', owners, anchors };
 }

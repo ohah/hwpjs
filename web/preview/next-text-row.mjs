@@ -1,14 +1,14 @@
-import { DEFAULT_ROW_HEIGHT, DEFAULT_TEXT_HEIGHT, TEXT_TOP } from "./row-geometry.mjs";
-import { paragraphLineGeometry, paragraphLineAdvance } from "./paragraph-geometry.mjs";
-import { measureDisplayRun, textMeasurement } from "./text-measurement.mjs";
-import { measureAutomaticNumberPrefix } from "./automatic-number-prefix.mjs";
-import { isHardLineBreak } from "./hard-line-break.mjs";
-import { alignTextRow } from "./line-alignment.mjs";
-import { tabLineContext } from "./tab-line-context.mjs";
-import { createTabRowState } from "./tab-row-state.mjs";
-import { createTextLineWidth } from "./text-line-width.mjs";
-import { inlineObjectLineAdvance } from "./inline-object-line-advance.mjs";
-import { trailingSpaceStart, hangsTrailingSpace } from "./trailing-space-flow.mjs";
+import { DEFAULT_ROW_HEIGHT, DEFAULT_TEXT_HEIGHT, TEXT_TOP } from './row-geometry.mjs';
+import { paragraphLineGeometry, paragraphLineAdvance } from './paragraph-geometry.mjs';
+import { measureDisplayRun, textMeasurement } from './text-measurement.mjs';
+import { measureAutomaticNumberPrefix } from './automatic-number-prefix.mjs';
+import { isHardLineBreak } from './hard-line-break.mjs';
+import { alignTextRow } from './line-alignment.mjs';
+import { tabLineContext } from './tab-line-context.mjs';
+import { createTabRowState } from './tab-row-state.mjs';
+import { createTextLineWidth } from './text-line-width.mjs';
+import { inlineObjectLineAdvance } from './inline-object-line-advance.mjs';
+import { trailingSpaceStart, hangsTrailingSpace } from './trailing-space-flow.mjs';
 
 /** One measured line from a source UTF-16 boundary, independent of page state. */
 export function nextTextRow(
@@ -25,22 +25,22 @@ export function nextTextRow(
     startUnit < 0 ||
     startUnit > paragraph.text.length
   )
-    throw new RangeError("InvalidLayoutBounds");
-  const segments = new Intl.Segmenter("ko", { granularity: "grapheme" }).segment(paragraph.text);
+    throw new RangeError('InvalidLayoutBounds');
+  const segments = new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(paragraph.text);
   if (!Number.isInteger(endUnit) || endUnit < startUnit || endUnit > paragraph.text.length)
-    throw new RangeError("InvalidLayoutBounds");
+    throw new RangeError('InvalidLayoutBounds');
   if (startUnit < paragraph.text.length && segments.containing(startUnit)?.index !== startUnit)
-    throw new RangeError("InvalidTextBoundary");
+    throw new RangeError('InvalidTextBoundary');
   if (endUnit < paragraph.text.length && segments.containing(endUnit)?.index !== endUnit)
-    throw new RangeError("InvalidTextBoundary");
+    throw new RangeError('InvalidTextBoundary');
   const numberPrefix = measureAutomaticNumberPrefix(paragraph, startUnit, measure);
   if (!Number.isFinite(minimumTextHeight) || minimumTextHeight < 0)
-    throw new RangeError("InvalidLayoutBounds");
+    throw new RangeError('InvalidLayoutBounds');
   const emptyHeight =
     minimumTextHeight === 0
-      ? textMeasurement(measure("", paragraph, startUnit, "text")).height
+      ? textMeasurement(measure('', paragraph, startUnit, 'text')).height
       : minimumTextHeight;
-  let text = "",
+  let text = '',
     textHeight = Math.max(emptyHeight, numberPrefix?.height ?? 0);
   let spacingBasisHeight = textHeight,
     hasInlineSpacing = false;
@@ -53,7 +53,7 @@ export function nextTextRow(
     if (part.index < startUnit) continue;
     if (part.index >= endUnit) break;
     if (isHardLineBreak(part.segment)) {
-      const breakHeight = textMeasurement(measure("", paragraph, part.index, "text")).height;
+      const breakHeight = textMeasurement(measure('', paragraph, part.index, 'text')).height;
       textHeight = Math.max(textHeight, breakHeight);
       spacingBasisHeight = Math.max(spacingBasisHeight, breakHeight);
       text += part.segment;
@@ -64,9 +64,9 @@ export function nextTextRow(
       part.segment,
       paragraph,
       part.index,
-      "text",
+      'text',
       measure,
-      part.segment === "\t"
+      part.segment === '\t'
         ? tabLineContext(paragraph, width, lineWidth.nextX(), startUnit, {
             endUnit,
             naturalX: tabs.naturalX(),
@@ -104,7 +104,7 @@ export function nextTextRow(
   );
   return alignTextRow(
     {
-      kind: "text",
+      kind: 'text',
       section: paragraph.section,
       paragraph: paragraph.paragraph,
       text,

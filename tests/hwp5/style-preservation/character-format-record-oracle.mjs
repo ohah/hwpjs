@@ -1,6 +1,6 @@
 // Unit-wise styles, independent of native run editing and field ownership.
-import assert from "node:assert/strict";
-import { paragraphRecords, encodeRecord } from "./text-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { paragraphRecords, encodeRecord } from './text-record-oracle.mjs';
 export function expectedCharacterFormat(bytes, paragraph, start, end, id) {
   const p = paragraphRecords(bytes, paragraph);
   const own = p.direct.filter((r) => r.level === p.head.level + 1);

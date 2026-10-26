@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const words = (values) => {
   const b = Buffer.alloc(values.length * 4);
   values.forEach((v, i) => b.writeUInt32LE(v, i * 4));
@@ -29,8 +29,8 @@ export function gifLzw(bytes, minimum, pixels, paletteEntries, maxCodes = 268435
   reset();
   const output = [];
   for (;;) {
-    assert.ok(codes < maxCodes, "code limit");
-    assert.ok(bit + width <= bytes.length * 8, "missing EOI");
+    assert.ok(codes < maxCodes, 'code limit');
+    assert.ok(bit + width <= bytes.length * 8, 'missing EOI');
     let code = 0;
     for (let i = 0; i < width; i++, bit++) code += ((bytes[bit >> 3] >> (bit & 7)) & 1) * 2 ** i;
     if (!codes) initial = code === clear;
@@ -42,14 +42,14 @@ export function gifLzw(bytes, minimum, pixels, paletteEntries, maxCodes = 268435
       continue;
     }
     if (code === end) {
-      assert.equal(Math.ceil(bit / 8), bytes.length, "trailing LZW");
+      assert.equal(Math.ceil(bit / 8), bytes.length, 'trailing LZW');
       break;
     }
     let phrase;
     if (code < clear) phrase = [code];
     else if (code < next) phrase = dict[code];
     else if (code === next && previous !== null) phrase = [...previous, previous[0]];
-    assert.ok(phrase, "invalid LZW code");
+    assert.ok(phrase, 'invalid LZW code');
     for (const index of phrase) {
       assert.ok(!paletteEntries || index < paletteEntries);
       assert.ok(output.length < pixels);
@@ -61,7 +61,7 @@ export function gifLzw(bytes, minimum, pixels, paletteEntries, maxCodes = 268435
     }
     previous = phrase;
   }
-  assert.equal(output.length, pixels, "incomplete raster");
+  assert.equal(output.length, pixels, 'incomplete raster');
   return {
     indices: Buffer.from(output),
     codes,
@@ -88,16 +88,16 @@ export function gifOracle(input, options = {}) {
     unresolved = 0;
   assert.ok(b.length <= (options.bytes ?? 67108864));
   const take = (n) => {
-    assert.ok(n <= b.length - p, "truncated block");
+    assert.ok(n <= b.length - p, 'truncated block');
     const x = b.subarray(p, p + n);
     p += n;
     return x;
   };
   const byte = () => take(1)[0],
     u16 = () => take(2).readUInt16LE();
-  const magic = take(6).toString("latin1");
-  assert.ok(magic === "GIF89a" || magic === "GIF87a");
-  const version = magic === "GIF89a" ? 89 : 87,
+  const magic = take(6).toString('latin1');
+  assert.ok(magic === 'GIF89a' || magic === 'GIF87a');
+  const version = magic === 'GIF89a' ? 89 : 87,
     width = u16(),
     height = u16(),
     flags = byte(),
@@ -199,7 +199,7 @@ export function gifOracle(input, options = {}) {
       chunks();
       texts++;
       pending = null;
-    } else assert.fail("unknown extension");
+    } else assert.fail('unknown extension');
   }
   const parts = [
     words([

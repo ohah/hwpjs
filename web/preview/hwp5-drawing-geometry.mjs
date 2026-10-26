@@ -1,6 +1,6 @@
-import { validateHwp5DrawingSources } from "../../js/hwp5-drawing-sources.mjs";
-import { hwp5ObjectFlags } from "./hwp5-object-flags.mjs";
-import { hasObservedDrawingObjectExtension } from "./hwp5-drawing-object-extension.mjs";
+import { validateHwp5DrawingSources } from '../../js/hwp5-drawing-sources.mjs';
+import { hwp5ObjectFlags } from './hwp5-object-flags.mjs';
+import { hasObservedDrawingObjectExtension } from './hwp5-drawing-object-extension.mjs';
 
 export function hwp5DrawingGeometry(source) {
   validateHwp5DrawingSources([source]);
@@ -8,7 +8,7 @@ export function hwp5DrawingGeometry(source) {
     (source.object_extra_bytes !== 0 && !hasObservedDrawingObjectExtension(source)) ||
     !Array.isArray(source.outer_margins)
   )
-    throw new Error("UnsupportedHwp5DrawingObjectExtension");
+    throw new Error('UnsupportedHwp5DrawingObjectExtension');
   const flags = hwp5ObjectFlags(source.flags);
   return {
     size_protected: flags.size_protected,

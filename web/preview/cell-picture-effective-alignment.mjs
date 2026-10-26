@@ -13,7 +13,7 @@ const ownerKey = (p) => `${p.section}:${p.paragraph}`;
 const cellKey = (section, table, list) => `${section}:${table}:${list}`;
 export function effectiveCellPictureAlignments(content) {
   if (
-    content?.format !== "hwpx" ||
+    content?.format !== 'hwpx' ||
     !Array.isArray(content.pictures) ||
     !Array.isArray(content.paragraphs) ||
     !Array.isArray(content.tables)
@@ -69,19 +69,19 @@ export function effectiveCellPictureAlignments(content) {
           (p) =>
             !p ||
             p.clipped ||
-            typeof p.text !== "string" ||
+            typeof p.text !== 'string' ||
             p.tableCell?.tableNode !== table.tableNode ||
             p.tableCell.listNode !== cell.listNode,
         )
       )
         continue;
-      const anchored = members.filter((p) => p.text.includes("\ufffc"));
+      const anchored = members.filter((p) => p.text.includes('\ufffc'));
       if (anchored.length !== 1) continue;
       const owner = anchored[0],
-        anchor = owner.text.indexOf("\ufffc"),
+        anchor = owner.text.indexOf('\ufffc'),
         start = owner.textStartUnit ?? 0;
       if (
-        owner.text.lastIndexOf("\ufffc") !== anchor ||
+        owner.text.lastIndexOf('\ufffc') !== anchor ||
         !Number.isSafeInteger(start) ||
         start < 0 ||
         !Number.isSafeInteger(start + anchor)
@@ -110,7 +110,7 @@ export function effectiveCellPictureAlignments(content) {
     const g = picture.geometry,
       pos = picture.position;
     if (
-      picture.state !== "located" ||
+      picture.state !== 'located' ||
       g?.treatAsCharacter !== false ||
       g.widthRelative !== 4 ||
       g.heightRelative !== 2 ||

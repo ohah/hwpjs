@@ -1,10 +1,10 @@
-import { paragraphSelectionOwner } from "../web/preview/paragraph-selection.mjs";
+import { paragraphSelectionOwner } from '../web/preview/paragraph-selection.mjs';
 
 const u32 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff;
-const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 function scalarString(text) {
-  if (typeof text !== "string") return false;
+  if (typeof text !== 'string') return false;
   for (let at = 0; at < text.length; at++) {
     const unit = text.charCodeAt(at);
     if (unit >= 0xd800 && unit <= 0xdbff) {
@@ -22,7 +22,7 @@ function scalarString(text) {
 export function fixtureEditCandidates(content) {
   if (
     !object(content) ||
-    !["hwp5", "hwpx"].includes(content.format) ||
+    !['hwp5', 'hwpx'].includes(content.format) ||
     !Array.isArray(content.paragraphs)
   )
     return [];
@@ -46,9 +46,9 @@ export function fixtureEditCandidates(content) {
     )
       continue;
     if (
-      content.format === "hwp5" &&
+      content.format === 'hwp5' &&
       (!object(row.currentReference) ||
-        row.currentReference.kind !== "original" ||
+        row.currentReference.kind !== 'original' ||
         row.currentReference.section !== row.section)
     )
       continue;
@@ -65,7 +65,7 @@ export function fixtureEditCandidates(content) {
       continue;
     const owner = paragraphSelectionOwner(row);
     const body = bindings.length === 0 && owner === `section:${row.section}:body`;
-    if ((!body && bindings.length === 0) || typeof owner !== "string" || !owner) continue;
+    if ((!body && bindings.length === 0) || typeof owner !== 'string' || !owner) continue;
     // Display object anchors and control characters are not trial insertion sites.
     let startUnit = 0;
     while (startUnit < row.text.length) {

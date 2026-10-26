@@ -1,6 +1,6 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { checkTablePictureReservations } from "../../web/preview/table-picture-reservation-check.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { checkTablePictureReservations } from '../../web/preview/table-picture-reservation-check.mjs';
 
 const table = {
   section: 0,
@@ -15,18 +15,18 @@ const picture = {
   flow: { textWrap: 0, textFlow: 0, outsideMargins: [0, 0, 0, 0] },
 };
 
-test("final table footprint permits touching edges but refuses actual reserved overlap", () => {
+test('final table footprint permits touching edges but refuses actual reserved overlap', () => {
   const before = structuredClone({ table, picture });
-  assert.equal(checkTablePictureReservations([table], [picture]).state, "clear");
+  assert.equal(checkTablePictureReservations([table], [picture]).state, 'clear');
   const moved = { ...table, rectangle: { ...table.rectangle, x: 21 } };
   assert.equal(
     checkTablePictureReservations([moved], [picture]).error,
-    "TablePictureReservationOverlap",
+    'TablePictureReservationOverlap',
   );
   assert.deepEqual({ table, picture }, before);
 });
 
-test("caption frame and picture margins participate without changing the nominal image", () => {
+test('caption frame and picture margins participate without changing the nominal image', () => {
   const caption = {
     ...picture,
     rectangle: { x: 20, y: 0, width: 40, height: 10 },
@@ -34,16 +34,16 @@ test("caption frame and picture margins participate without changing the nominal
   };
   assert.equal(
     checkTablePictureReservations([table], [caption]).error,
-    "TablePictureReservationOverlap",
+    'TablePictureReservationOverlap',
   );
   const margin = { ...picture, flow: { ...picture.flow, outsideMargins: [75, 0, 0, 0] } };
   assert.equal(
     checkTablePictureReservations([table], [margin]).error,
-    "TablePictureReservationOverlap",
+    'TablePictureReservationOverlap',
   );
 });
 
-test("reservation checks isolate sections and pages and respect non-wrapping layers", () => {
+test('reservation checks isolate sections and pages and respect non-wrapping layers', () => {
   for (const change of [
     { section: 1 },
     { pageOrdinal: 1 },
@@ -55,28 +55,28 @@ test("reservation checks isolate sections and pages and respect non-wrapping lay
         [table],
         [{ ...picture, rectangle: table.rectangle, ...change }],
       ).state,
-      "clear",
+      'clear',
     );
   }
   assert.equal(
     checkTablePictureReservations([table], [{ ...picture, flow: { ...picture.flow, textWrap: 1 } }])
       .error,
-    "TablePictureReservationOverlap",
+    'TablePictureReservationOverlap',
   );
 });
 
-test("invalid final geometry and reservation identity never count as clear", () => {
+test('invalid final geometry and reservation identity never count as clear', () => {
   assert.equal(
     checkTablePictureReservations([{ ...table, rectangle: { ...table.rectangle, x: NaN } }], [])
       .state,
-    "unavailable",
+    'unavailable',
   );
   assert.equal(
     checkTablePictureReservations([table], [{ ...picture, pageOrdinal: -1 }]).state,
-    "unavailable",
+    'unavailable',
   );
   assert.equal(
     checkTablePictureReservations([table], [{ ...picture, rectangle: null }]).state,
-    "unavailable",
+    'unavailable',
   );
 });

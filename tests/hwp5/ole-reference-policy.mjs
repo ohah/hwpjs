@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { oleActual } from "./ole-validation.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { oleActual } from './ole-validation.mjs';
 const word = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -14,18 +14,18 @@ const exactError = (name) => (e) => e?.constructor === Error && e.message === na
 export function oleReferencePolicyActual(call, cfb) {
   const results = [];
   for (const name of [
-    "chart/분산형/곡선이있는분산형.hwp",
-    "한셀OLE.hwp",
-    "task1725/text_footnote_tail_overpagination.hwp",
+    'chart/분산형/곡선이있는분산형.hwp',
+    '한셀OLE.hwp',
+    'task1725/text_footnote_tail_overpagination.hwp',
   ]) {
-    const file = readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url));
+    const file = readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url));
     cfb.parse(file, { strict: true });
     const nodes = cfb.document().nodes,
-      header = Buffer.from(cfb.findExact("/FileHeader").content),
+      header = Buffer.from(cfb.findExact('/FileHeader').content),
       flags = header.readUInt32LE(36);
     const decode = (bytes) => (flags & 1 ? inflateRawSync(bytes) : Buffer.from(bytes));
-    const info = decode(cfb.findExact("/DocInfo").content),
-      body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    const info = decode(cfb.findExact('/DocInfo').content),
+      body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
     const sections = nodes.filter((n) => n.parent === body && /^Section\d+$/.test(n.name));
     assert.equal(sections.length, 1);
     const section = decode(sections[0].content),
@@ -74,7 +74,7 @@ export function oleReferencePolicyActual(call, cfb) {
         if (id > count) {
           assert.throws(
             () => call(mode, Buffer.concat([Buffer.of(1), input])),
-            exactError("InvalidOleBinaryReference"),
+            exactError('InvalidOleBinaryReference'),
           );
           rejected++;
           assert.deepEqual(call(305, original), originalReport);
@@ -90,7 +90,7 @@ export function oleReferencePolicyActual(call, cfb) {
     for (const [mode, input] of inputs(section)) {
       assert.throws(
         () => call(mode, Buffer.concat([Buffer.of(2), input])),
-        exactError("InvalidMode"),
+        exactError('InvalidMode'),
       );
       rejected++;
       const limit = records.length + (mode === 303 ? 0 : documentRecords(info).length);
@@ -98,7 +98,7 @@ export function oleReferencePolicyActual(call, cfb) {
       const report = mode === 303 ? expected(originalId, true) : originalReport;
       assert.deepEqual(call(mode, selected, limit), report);
       accepted++;
-      assert.throws(() => call(mode, selected, limit - 1), exactError("LimitExceeded"));
+      assert.throws(() => call(mode, selected, limit - 1), exactError('LimitExceeded'));
       rejected++;
       assert.deepEqual(call(305, original), originalReport);
     }

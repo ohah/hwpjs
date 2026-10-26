@@ -1,12 +1,12 @@
 // Read-only presentation of native events. Never an edit model or save input.
-import { clipText } from "./content.mjs";
+import { clipText } from './content.mjs';
 const inlineText = {
-  tab: "\t",
-  fw_space: "\u3000",
-  nb_space: "\u00a0",
-  line_break: "↵",
-  hypen: "\u00ad",
-  unknown: "\ufffc",
+  tab: '\t',
+  fw_space: '\u3000',
+  nb_space: '\u00a0',
+  line_break: '↵',
+  hypen: '\u00ad',
+  unknown: '\ufffc',
 };
 export const HWPX_DISPLAY_BOUNDS = Object.freeze({ maxUnits: 200000, maxParagraphs: 20000 });
 
@@ -27,7 +27,7 @@ export function displayHwpxContent(
     paragraphOffset < 0 ||
     paragraphOffset > result.paragraphCount
   )
-    throw new RangeError("InvalidDisplayBounds");
+    throw new RangeError('InvalidDisplayBounds');
   const paragraphs = [],
     stack = [],
     seen = new Set();
@@ -53,16 +53,16 @@ export function displayHwpxContent(
     units += clipped.length;
   };
   for (const event of result.events) {
-    if (event.kind === "paragraph_start") {
+    if (event.kind === 'paragraph_start') {
       const key = `${event.section}:${event.paragraph}`;
-      if (seen.has(key)) throw new Error("InvalidHwpxParagraphEvents");
+      if (seen.has(key)) throw new Error('InvalidHwpxParagraphEvents');
       seen.add(key);
       const value = {
         section: event.section,
         paragraph: event.paragraph - 1,
         editable: false,
-        label: `구역 ${event.section + 1} · 문단 ${event.paragraph}${stack.length ? " · 중첩" : ""} · HWPX 읽기 전용`,
-        text: "",
+        label: `구역 ${event.section + 1} · 문단 ${event.paragraph}${stack.length ? ' · 중첩' : ''} · HWPX 읽기 전용`,
+        text: '',
       };
       const visible = seen.size - 1 >= paragraphOffset && paragraphs.length < maxParagraphs;
       value.selectionOwner = stack.length === 0 ? `section:${event.section}:body` : null;
@@ -73,16 +73,16 @@ export function displayHwpxContent(
     }
     const frame = stack.at(-1);
     if (!frame || frame.section !== event.section || frame.paragraph !== event.paragraph)
-      throw new Error("InvalidHwpxParagraphEvents");
-    if (event.kind === "paragraph_end") stack.pop();
-    else if (event.kind === "content") append(frame, event.value);
-    else if (event.kind === "inline_start" || event.kind === "inline_empty")
-      append(frame, inlineText[event.inlineKind] ?? "");
+      throw new Error('InvalidHwpxParagraphEvents');
+    if (event.kind === 'paragraph_end') stack.pop();
+    else if (event.kind === 'content') append(frame, event.value);
+    else if (event.kind === 'inline_start' || event.kind === 'inline_empty')
+      append(frame, inlineText[event.inlineKind] ?? '');
   }
   if (stack.length || seen.size !== result.paragraphCount)
-    throw new Error("InvalidHwpxParagraphEvents");
+    throw new Error('InvalidHwpxParagraphEvents');
   return {
-    format: "hwpx",
+    format: 'hwpx',
     version: null,
     readOnly: true,
     paragraphs,

@@ -13,7 +13,7 @@ export function attachCharacterStrikes(editor, content) {
   }
   if (
     content.characterStrikeAvailable === true &&
-    typeof editor?.characterStrikeStyles === "function"
+    typeof editor?.characterStrikeStyles === 'function'
   ) {
     try {
       content.characterStrikeStyles = editor.characterStrikeStyles();

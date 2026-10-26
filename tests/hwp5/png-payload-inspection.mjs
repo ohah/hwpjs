@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { profilePng, profilePayload } from "./png-profile.mjs";
+import assert from 'node:assert/strict';
+import { profilePng, profilePayload } from './png-profile.mjs';
 export function profile(entries, major = 4) {
   const end = 132 + 12 * entries.length;
   const b = Buffer.alloc(
@@ -7,10 +7,10 @@ export function profile(entries, major = 4) {
   );
   b.writeUInt32BE(b.length);
   b[8] = major;
-  b.write("mntr", 12);
-  b.write("RGB ", 16);
-  b.write("XYZ ", 20);
-  b.write("acsp", 36);
+  b.write('mntr', 12);
+  b.write('RGB ', 16);
+  b.write('XYZ ', 20);
+  b.write('acsp', 36);
   b.writeUInt32BE(entries.length, 128);
   let offset = end;
   entries.forEach(([sig, data], i) => {
@@ -29,10 +29,10 @@ const typed = (type, n) => {
   return b;
 };
 function strings() {
-  const b = typed("mluc", 30);
+  const b = typed('mluc', 30);
   b.writeUInt32BE(1, 8);
   b.writeUInt32BE(12, 12);
-  b.write("enUS", 16);
+  b.write('enUS', 16);
   b.writeUInt32BE(2, 20);
   b.writeUInt32BE(28, 24);
   b.writeUInt16BE(65, 28);
@@ -64,17 +64,17 @@ export function pngPayloadEdges(call) {
     assert.throws(() => call(241, input, limit), re);
     rejected++;
   };
-  const xyz = typed("XYZ ", 20);
+  const xyz = typed('XYZ ', 20);
   [63190, 65536, 54061].forEach((v, i) => xyz.writeInt32BE(v, 8 + 4 * i));
-  const chad = typed("sf32", 44);
+  const chad = typed('sf32', 44);
   [8, 24, 40].forEach((at) => chad.writeInt32BE(65536, at));
   const entries = [
-    ["wtpt", xyz],
-    ["rTRC", typed("curv", 12)],
-    ["desc", strings()],
-    ["cprt", strings()],
-    ["chad", chad],
-    ["A2B0", typed("data", 8)],
+    ['wtpt', xyz],
+    ['rTRC', typed('curv', 12)],
+    ['desc', strings()],
+    ['cprt', strings()],
+    ['chad', chad],
+    ['A2B0', typed('data', 8)],
   ];
   const expected = [1, 1, 1, 1, 6, 144, 1, 1, 2, 1, 1, 0, 0, 0, 2, 4, 0, 1];
   for (const list of [entries, [...entries].reverse()])
@@ -88,13 +88,13 @@ export function pngPayloadEdges(call) {
   reject(payloadInput(profile(entries), { edition: 2 }), /IccEditionMismatch/);
   const malformed = strings();
   malformed.writeUInt16BE(0xdc00, 28);
-  reject(payloadInput(profile([["desc", malformed]])), /InvalidUnicodeEncoding/);
-  reject(payloadInput(profile([["rTRC", typed("data", 8)]])), /InvalidIccTrcType/);
+  reject(payloadInput(profile([['desc', malformed]])), /InvalidUnicodeEncoding/);
+  reject(payloadInput(profile([['rTRC', typed('data', 8)]])), /InvalidIccTrcType/);
   const negative = Buffer.from(xyz);
   negative.writeInt32BE(-65536, 8);
-  reject(payloadInput(profile([["wtpt", negative]])), /InvalidIccIlluminant/);
+  reject(payloadInput(profile([['wtpt', negative]])), /InvalidIccIlluminant/);
   check(
-    payloadInput(profile([["rXYZ", negative]])),
+    payloadInput(profile([['rXYZ', negative]])),
     [1, 1, 1, 1, 1, 20, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
   );
   for (let n = 0; n < good.length; n++)

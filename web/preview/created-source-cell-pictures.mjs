@@ -1,9 +1,9 @@
-import { inlinePictureIndex } from "./picture-inline.mjs";
-import { hasPictureSourceErrors } from "./picture-source-validation.mjs";
+import { inlinePictureIndex } from './picture-inline.mjs';
+import { hasPictureSourceErrors } from './picture-source-validation.mjs';
 
 // Measured native pictures stay pictures, never generated/source table aliases.
 export function measureCreatedCellPictures(input) {
-  const fail = () => ({ state: "unavailable", error: "UnsupportedCreatedSourceCellPictures" });
+  const fail = () => ({ state: 'unavailable', error: 'UnsupportedCreatedSourceCellPictures' });
   if (!Array.isArray(input.pictures) || input.pictures.some(hasPictureSourceErrors)) return fail();
   const index = inlinePictureIndex({ paragraphs: input.paragraphs, pictures: input.pictures });
   if (
@@ -31,5 +31,5 @@ export function measureCreatedCellPictures(input) {
     });
     hosts.set(key, entries);
   }
-  return { state: "measured", hosts };
+  return { state: 'measured', hosts };
 }

@@ -1,18 +1,18 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { createEditor } from "@hwpjs/core";
-import { createTextToolsBridge } from "../src/text-tools-bridge.ts";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createEditor } from '@hwpjs/core';
+import { createTextToolsBridge } from '../src/text-tools-bridge.ts';
 // Minimal event/ownership fixture, not browser focus, layout or trusted-input evidence.
 class Element extends EventTarget {
   children: Element[] = [];
   parentElement?: Element;
   dataset: any = {};
   attributes = new Map();
-  value = "";
+  value = '';
   disabled = false;
   hidden = false;
   open = false;
-  textContent = "";
+  textContent = '';
   constructor(readonly ownerDocument: any) {
     super();
   }
@@ -58,14 +58,14 @@ function fire(node: EventTarget, kind: string, values: any = {}) {
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 async function fixture() {
   const content = {
-      format: "hwpx",
+      format: 'hwpx',
       paragraphs: [
         {
           section: 0,
           paragraph: 0,
-          text: "AB AB",
+          text: 'AB AB',
           editable: true,
-          selectionOwner: "section:0:body",
+          selectionOwner: 'section:0:body',
         },
       ],
     },
@@ -75,15 +75,15 @@ async function fixture() {
           return {
             kind: m.kind,
             content,
-            ...(["load", "enable"].includes(m.kind)
+            ...(['load', 'enable'].includes(m.kind)
               ? {}
-              : { meta: { application: "applied" as const, changed: true } }),
+              : { meta: { application: 'applied' as const, changed: true } }),
           };
         },
         dispose() {},
       }),
     });
-  await e.load(new Uint8Array([1]), { format: "hwpx" });
+  await e.load(new Uint8Array([1]), { format: 'hwpx' });
   const doc: any = { activeElement: null };
   doc.createElement = () => new Element(doc);
   doc.createTextNode = (text: string) => {
@@ -103,9 +103,9 @@ async function fixture() {
     }),
     all = (n: Element): Element[] => [n, ...n.children.flatMap(all)],
     role = (value: string) => all(root).find((n) => n.dataset.role === value)!;
-  await bridge.action({ command: "replace" });
-  role("search-query").value = "AB";
-  role("search-replacement").value = "Z";
+  await bridge.action({ command: 'replace' });
+  role('search-query').value = 'AB';
+  role('search-replacement').value = 'Z';
   return {
     e,
     root,
@@ -120,32 +120,32 @@ async function fixture() {
     },
   };
 }
-test("modal statistics blocks retained F3 search", async () => {
+test('modal statistics blocks retained F3 search', async () => {
   const f = await fixture();
   try {
-    fire(f.role("close-text-tool"), "click");
-    await f.bridge.action({ command: "word-count" });
+    fire(f.role('close-text-tool'), 'click');
+    await f.bridge.action({ command: 'word-count' });
     const v = f.e.getEditorState().stateVersion;
-    fire(f.root, "keydown", { code: "F3" });
+    fire(f.root, 'keydown', { code: 'F3' });
     await tick();
     await tick();
     assert.equal(f.e.getEditorState().stateVersion, v);
-    assert.equal(f.role("document-statistics").open, true);
+    assert.equal(f.role('document-statistics').open, true);
   } finally {
     await f.done();
   }
 });
-test("F3 sequential search excludes repeat and composition", async () => {
+test('F3 sequential search excludes repeat and composition', async () => {
   const f = await fixture();
   try {
-    fire(f.role("close-text-tool"), "click");
+    fire(f.role('close-text-tool'), 'click');
     const v = f.e.getEditorState().stateVersion;
     for (const patch of [{ repeat: true }, { isComposing: true }, { keyCode: 229 }])
-      fire(f.root, "keydown", { code: "F3", ...patch });
+      fire(f.root, 'keydown', { code: 'F3', ...patch });
     await tick();
     assert.equal(f.e.getEditorState().stateVersion, v);
     for (const start of [0, 3]) {
-      fire(f.root, "keydown", { code: "F3" });
+      fire(f.root, 'keydown', { code: 'F3' });
       await tick();
       await tick();
       assert.equal((f.e.getEditorState().selection as any).startUnit, start);
@@ -154,44 +154,44 @@ test("F3 sequential search excludes repeat and composition", async () => {
     await f.done();
   }
 });
-test("IME Enter does not start a search", async () => {
+test('IME Enter does not start a search', async () => {
   const f = await fixture();
   try {
     const v = f.e.getEditorState().stateVersion;
     for (const patch of [{ isComposing: true }, { keyCode: 229 }])
-      fire(f.role("search-query"), "keydown", { key: "Enter", ...patch });
+      fire(f.role('search-query'), 'keydown', { key: 'Enter', ...patch });
     await tick();
     assert.equal(f.e.getEditorState().stateVersion, v);
   } finally {
     await f.done();
   }
 });
-test("IME Escape does not dismiss; ordinary Escape restores public focus once", async () => {
+test('IME Escape does not dismiss; ordinary Escape restores public focus once', async () => {
   const f = await fixture();
   try {
-    const dialog = f.role("text-search");
+    const dialog = f.role('text-search');
     for (const patch of [{ isComposing: true }, { keyCode: 229 }])
-      fire(dialog, "keydown", { key: "Escape", ...patch });
-    assert.equal(f.role("text-search"), dialog);
+      fire(dialog, 'keydown', { key: 'Escape', ...patch });
+    assert.equal(f.role('text-search'), dialog);
     assert.equal(f.focuses, 0);
-    fire(dialog, "keydown", { key: "Escape" });
+    fire(dialog, 'keydown', { key: 'Escape' });
     assert.equal(f.focuses, 1);
   } finally {
     await f.done();
   }
 });
-test("find/replace reuse the window and preserve both drafts", async () => {
+test('find/replace reuse the window and preserve both drafts', async () => {
   const f = await fixture();
   try {
-    const dialog = f.role("text-search"),
-      q = f.role("search-query"),
-      r = f.role("search-replacement");
-    await f.bridge.action({ command: "find" });
-    assert.equal(f.role("text-search"), dialog);
-    assert.equal(q.value, "AB");
-    assert.equal(r.value, "Z");
+    const dialog = f.role('text-search'),
+      q = f.role('search-query'),
+      r = f.role('search-replacement');
+    await f.bridge.action({ command: 'find' });
+    assert.equal(f.role('text-search'), dialog);
+    assert.equal(q.value, 'AB');
+    assert.equal(r.value, 'Z');
     assert.equal(r.parentElement!.hidden, true);
-    await f.bridge.action({ command: "replace" });
+    await f.bridge.action({ command: 'replace' });
     assert.equal(r.parentElement!.hidden, false);
   } finally {
     await f.done();

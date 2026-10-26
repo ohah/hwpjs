@@ -1,30 +1,30 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { createEditor } from "../../src/editor/create-editor.ts";
-import { getSelectionFormatting } from "../../src/state/formatting-state.ts";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { createEditor } from '../../src/editor/create-editor.ts';
+import { getSelectionFormatting } from '../../src/state/formatting-state.ts';
 import {
   SET_CHARACTER_PROPERTIES_COMMAND as CHAR,
   SET_PARAGRAPH_ALIGNMENT_COMMAND as ALIGN,
   UNDO_COMMAND,
   REDO_COMMAND,
-} from "../../src/commands/commands.ts";
-import type { SelectionTarget } from "../../src/commands/commands.ts";
-import { createReaderRuntimeFactory } from "../../src/runtime.ts";
-import { verifyCharacterProperties } from "../../../../tests/hwp5/style-preservation/character-property-oracle.mjs";
-import { verifyParagraphProperty } from "../../../../tests/hwp5/style-preservation/paragraph-property-oracle.mjs";
-import { paragraphSelectionOwner } from "../../../../web/preview/paragraph-selection.mjs";
-import { sourceTextChange } from "../../../../web/preview/text-offsets.mjs";
-import { execFileSync } from "../../../../tools/oracle-process.mjs";
+} from '../../src/commands/commands.ts';
+import type { SelectionTarget } from '../../src/commands/commands.ts';
+import { createReaderRuntimeFactory } from '../../src/runtime.ts';
+import { verifyCharacterProperties } from '../../../../tests/hwp5/style-preservation/character-property-oracle.mjs';
+import { verifyParagraphProperty } from '../../../../tests/hwp5/style-preservation/paragraph-property-oracle.mjs';
+import { paragraphSelectionOwner } from '../../../../web/preview/paragraph-selection.mjs';
+import { sourceTextChange } from '../../../../web/preview/text-offsets.mjs';
+import { execFileSync } from '../../../../tools/oracle-process.mjs';
 
 const wasm = readFileSync(
-  process.env.HWPJS_TEST_WASM ?? "zig-out/verification/hwp5-object-extra-u16/bin/hwpjs.wasm",
+  process.env.HWPJS_TEST_WASM ?? 'zig-out/verification/hwp5-object-extra-u16/bin/hwpjs.wasm',
 );
 if (!process.env.HWPJS_TEST_WASM)
   assert.equal(
-    createHash("sha256").update(wasm).digest("hex"),
-    "fdbb6a476a16811d0136f484e9e03a327947bc5c9e361bc756a8a06b1dde1c51",
+    createHash('sha256').update(wasm).digest('hex'),
+    'fdbb6a476a16811d0136f484e9e03a327947bc5c9e361bc756a8a06b1dde1c51',
   );
 const properties = { bold: true, italic: true, size: 1800 };
 
@@ -40,8 +40,8 @@ function verifySavedFormatting({
   rawAlignment,
 }: any) {
   const mapped =
-    format === "hwp5"
-      ? sourceTextChange({ startUnit: 0, endUnit: 1, text: "" }, row.sourceOffsets)
+    format === 'hwp5'
+      ? sourceTextChange({ startUnit: 0, endUnit: 1, text: '' }, row.sourceOffsets)
       : { startUnit: 0, endUnit: 1 };
   const position = {
     section: row.section,
@@ -49,7 +49,7 @@ function verifySavedFormatting({
     startUnit: mapped.startUnit,
     endUnit: mapped.endUnit,
   };
-  if (format === "hwp5") {
+  if (format === 'hwp5') {
     if (character) {
       verifyCharacterProperties(before, after, { ...position, properties });
       assert.throws(() =>
@@ -74,24 +74,24 @@ function verifySavedFormatting({
       .findIndex((p: any) => p.paragraph === row.paragraph);
     assert(localParagraph >= 0);
     const request = {
-      before: before.toString("base64"),
-      after: after.toString("base64"),
+      before: before.toString('base64'),
+      after: after.toString('base64'),
       section: row.section,
       localParagraph,
       startUnit: 0,
       endUnit: 1,
       properties,
       // Keep unselected caption field/anchor runs in the whole-ZIP/XML comparison.
-      mode: character ? "anchor-properties" : "alignment",
+      mode: character ? 'anchor-properties' : 'alignment',
       alignment,
       paraShapeId: updated.paraShapeId,
     };
     const oracle = character
-      ? "tools/hwpx-character-property-oracle.py"
-      : "tools/hwpx-paragraph-format-oracle.py";
-    for (const flags of [[], ["-O"]]) {
+      ? 'tools/hwpx-character-property-oracle.py'
+      : 'tools/hwpx-paragraph-format-oracle.py';
+    for (const flags of [[], ['-O']]) {
       const verify = (input: object) =>
-        execFileSync("python3", [...flags, oracle], {
+        execFileSync('python3', [...flags, oracle], {
           input: JSON.stringify(input),
           timeout: 30000,
         });
@@ -101,18 +101,18 @@ function verifySavedFormatting({
           verify(
             character
               ? { ...request, properties: { ...properties, size: 1900 } }
-              : { ...request, alignment: alignment === "CENTER" ? "RIGHT" : "CENTER" },
+              : { ...request, alignment: alignment === 'CENTER' ? 'RIGHT' : 'CENTER' },
           ),
-        "independent oracle must reject a bogus expected edit",
+        'independent oracle must reject a bogus expected edit',
       );
     }
   }
 }
 
-for (const format of ["hwp5", "hwpx"] as const)
-  for (const kind of ["drawingText", "drawingCaption"] as const)
+for (const format of ['hwp5', 'hwpx'] as const)
+  for (const kind of ['drawingText', 'drawingCaption'] as const)
     for (const character of [true, false]) {
-      test(`${format} textbox original ${kind} typed ${character ? "character properties" : "paragraph alignment"} save/history/reopen`, async (t) => {
+      test(`${format} textbox original ${kind} typed ${character ? 'character properties' : 'paragraph alignment'} save/history/reopen`, async (t) => {
         const factory = createReaderRuntimeFactory({ wasmModule: await WebAssembly.compile(wasm) });
         const calls: string[] = [];
         const e = createEditor({
@@ -133,19 +133,19 @@ for (const format of ["hwp5", "hwpx"] as const)
           await reopened.dispose();
         });
         const before = readFileSync(
-          `legacy/rust/crates/hwp-core/tests/fixtures/textbox.${format === "hwp5" ? "hwp" : "hwpx"}`,
+          `legacy/rust/crates/hwp-core/tests/fixtures/textbox.${format === 'hwp5' ? 'hwp' : 'hwpx'}`,
         );
         await e.load(before, { format });
         const rows = (e.getEditorState().content as any).paragraphs;
         // Select raw content, not projected Canvas rows. Stay before the inline anchor.
-        const prefix = kind === "drawingText" ? "글상자" : "그림 ";
+        const prefix = kind === 'drawingText' ? '글상자' : '그림 ';
         const row = rows.find(
           (p: any) =>
             p[kind] &&
             p.editable &&
             !p.clipped &&
             p.text.startsWith(prefix) &&
-            (format !== "hwp5" || p.currentReference?.kind === "original"),
+            (format !== 'hwp5' || p.currentReference?.kind === 'original'),
         );
         assert(
           row,
@@ -153,75 +153,75 @@ for (const format of ["hwp5", "hwpx"] as const)
         );
         assert(
           !/[\uD800-\uDFFF\uFFFC\t]/.test(row.text[0]),
-          "first visible character must be a safe UTF-16 unit",
+          'first visible character must be a safe UTF-16 unit',
         );
         const owner = paragraphSelectionOwner(row);
-        assert.equal(typeof owner, "string");
+        assert.equal(typeof owner, 'string');
         assert.match(
           owner,
           new RegExp(
-            `^section:\\d+:drawing:\\d+:${kind === "drawingText" ? "text" : "caption"}:list:\\d+$`,
+            `^section:\\d+:drawing:\\d+:${kind === 'drawingText' ? 'text' : 'caption'}:list:\\d+$`,
           ),
         );
         const target = (): SelectionTarget => ({
           ...e.getEditorState().token,
           format,
-          coordinateSpace: "display",
+          coordinateSpace: 'display',
           owner,
           section: row.section,
           paragraph: row.paragraph,
           startUnit: 0,
           endUnit: character ? 1 : 0,
-          affinity: "forward",
+          affinity: 'forward',
         });
         const alignment =
-          row.paragraphShape?.alignment === 3 || row.paragraphShape?.alignment === "CENTER"
-            ? "RIGHT"
-            : "CENTER";
-        const rawAlignment = alignment === "RIGHT" ? 2 : 3;
+          row.paragraphShape?.alignment === 3 || row.paragraphShape?.alignment === 'CENTER'
+            ? 'RIGHT'
+            : 'CENTER';
+        const rawAlignment = alignment === 'RIGHT' ? 2 : 3;
         const dispatch = (selection: SelectionTarget) =>
           character
             ? e.dispatchCommand(CHAR, { target: selection, properties })
             : e.dispatchCommand(ALIGN, { target: selection, alignment });
         await e.setSelection(target());
         for (const [bad, error] of [
-          [{ ...target(), owner: `section:${row.section}:body` }, "InvalidSelectionOwner"],
+          [{ ...target(), owner: `section:${row.section}:body` }, 'InvalidSelectionOwner'],
           [
             {
               ...target(),
               owner: owner.replace(
-                kind === "drawingText" ? ":text:" : ":caption:",
-                kind === "drawingText" ? ":caption:" : ":text:",
+                kind === 'drawingText' ? ':text:' : ':caption:',
+                kind === 'drawingText' ? ':caption:' : ':text:',
               ),
             },
-            "InvalidSelectionOwner",
+            'InvalidSelectionOwner',
           ],
-          [{ ...target(), viewRevision: target().viewRevision + 1 }, "StaleTarget"],
+          [{ ...target(), viewRevision: target().viewRevision + 1 }, 'StaleTarget'],
         ] as const) {
           const prior = e.getEditorState(),
             count = calls.length;
           const rejected = await dispatch(bad);
-          assert.equal(rejected.status, "rejected-unapplied");
+          assert.equal(rejected.status, 'rejected-unapplied');
           assert.equal(rejected.error, error);
           assert.equal(e.getEditorState(), prior);
           assert.deepEqual(
             calls.slice(count),
             [],
-            "rejection must neither mutate native state nor save",
+            'rejection must neither mutate native state nor save',
           );
         }
         const selected = target();
         const outcome = await dispatch(selected);
-        assert.equal(outcome.status, "committed-with-snapshot", outcome.error);
+        assert.equal(outcome.status, 'committed-with-snapshot', outcome.error);
         assert.equal(
           outcome.changed,
           true,
-          "requested properties must actually change the original drawing paragraph",
+          'requested properties must actually change the original drawing paragraph',
         );
         assert.deepEqual(
           { ...(outcome.state.selection as object) },
           target(),
-          "formatting preserves the canonical drawing selection",
+          'formatting preserves the canonical drawing selection',
         );
         const saved = await e.save({ allowStaleLayout: true });
         assert.notDeepEqual(Buffer.from(saved.bytes), before);
@@ -244,18 +244,18 @@ for (const format of ["hwp5", "hwpx"] as const)
         const prior = e.getEditorState(),
           count = calls.length;
         const stale = await dispatch(selected);
-        assert.equal(stale.status, "rejected-unapplied");
-        assert.equal(stale.error, "StaleTarget");
+        assert.equal(stale.status, 'rejected-unapplied');
+        assert.equal(stale.error, 'StaleTarget');
         assert.equal(e.getEditorState(), prior);
         assert.deepEqual(calls.slice(count), []);
         assert.equal(
           (await e.dispatchCommand(UNDO_COMMAND, { token: e.getEditorState().token })).status,
-          "committed-with-snapshot",
+          'committed-with-snapshot',
         );
         assert.deepEqual(Buffer.from((await e.save()).bytes), before);
         assert.equal(
           (await e.dispatchCommand(REDO_COMMAND, { token: e.getEditorState().token })).status,
-          "committed-with-snapshot",
+          'committed-with-snapshot',
         );
         assert.deepEqual(
           Buffer.from((await e.save({ allowStaleLayout: true })).bytes),
@@ -271,27 +271,27 @@ for (const format of ["hwp5", "hwpx"] as const)
           Buffer.from(saved.bytes),
         );
         // Native node IDs are session-local: rediscover the owner after reopening.
-        assert(reopenedRow[kind], "reopened paragraph must retain its drawing kind");
-        assert.equal(Boolean(reopenedRow.drawingText), kind === "drawingText");
-        assert.equal(Boolean(reopenedRow.drawingCaption), kind === "drawingCaption");
+        assert(reopenedRow[kind], 'reopened paragraph must retain its drawing kind');
+        assert.equal(Boolean(reopenedRow.drawingText), kind === 'drawingText');
+        assert.equal(Boolean(reopenedRow.drawingCaption), kind === 'drawingCaption');
         const reopenedOwner = paragraphSelectionOwner(reopenedRow);
-        assert.equal(typeof reopenedOwner, "string");
+        assert.equal(typeof reopenedOwner, 'string');
         assert.match(
           reopenedOwner,
           new RegExp(
-            `^section:${reopenedRow.section}:drawing:\\d+:${kind === "drawingText" ? "text" : "caption"}:list:\\d+$`,
+            `^section:${reopenedRow.section}:drawing:\\d+:${kind === 'drawingText' ? 'text' : 'caption'}:list:\\d+$`,
           ),
         );
         const freshTarget: SelectionTarget = {
           ...reopened.getEditorState().token,
           format,
-          coordinateSpace: "display",
+          coordinateSpace: 'display',
           owner: reopenedOwner,
           section: reopenedRow.section,
           paragraph: reopenedRow.paragraph,
           startUnit: 0,
           endUnit: 1,
-          affinity: "forward",
+          affinity: 'forward',
         };
         await reopened.setSelection(freshTarget);
         const formatting = getSelectionFormatting(reopened.getEditorState());
@@ -305,8 +305,8 @@ for (const format of ["hwp5", "hwpx"] as const)
         const rejected = character
           ? await reopened.dispatchCommand(CHAR, { target: oldDocumentTarget, properties })
           : await reopened.dispatchCommand(ALIGN, { target: oldDocumentTarget, alignment });
-        assert.equal(rejected.status, "rejected-unapplied");
-        assert.equal(rejected.error, "StaleTarget");
+        assert.equal(rejected.status, 'rejected-unapplied');
+        assert.equal(rejected.error, 'StaleTarget');
         assert.equal(reopened.getEditorState(), reopenedState);
       });
     }

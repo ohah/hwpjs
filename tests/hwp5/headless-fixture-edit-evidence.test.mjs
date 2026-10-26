@@ -1,21 +1,21 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { verifiedFixtureEvidence } from "../../tools/headless-fixture-edit-evidence.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { verifiedFixtureEvidence } from '../../tools/headless-fixture-edit-evidence.mjs';
 const keys = [
-  "packages/core/dist/index.js",
-  "packages/core/dist/runtime.js",
-  "apps/demo/src/document-loader.ts",
-  "tools/hwpx-plain-splice-oracle.py",
-  "tools/hwpx_text_snapshot_order.py",
-  "tests/hwp5/style-preservation/text-record-oracle.mjs",
+  'packages/core/dist/index.js',
+  'packages/core/dist/runtime.js',
+  'apps/demo/src/document-loader.ts',
+  'tools/hwpx-plain-splice-oracle.py',
+  'tools/hwpx_text_snapshot_order.py',
+  'tests/hwp5/style-preservation/text-record-oracle.mjs',
 ];
 function sample() {
-  const provenance = Object.fromEntries(keys.map((key) => [key, "b".repeat(64)]));
+  const provenance = Object.fromEntries(keys.map((key) => [key, 'b'.repeat(64)]));
   const report = {
     manifest: {
-      wasmSHA: "a".repeat(64),
+      wasmSHA: 'a'.repeat(64),
       provenance,
-      inputs: [{ path: "sample.hwpx", sha256: "c".repeat(64) }],
+      inputs: [{ path: 'sample.hwpx', sha256: 'c'.repeat(64) }],
     },
     summary: {
       completedPaths: 1,
@@ -27,16 +27,16 @@ function sample() {
     },
     results: [
       {
-        path: "sample.hwpx",
-        sourceSHA: "c".repeat(64),
-        format: "hwpx",
+        path: 'sample.hwpx',
+        sourceSHA: 'c'.repeat(64),
+        format: 'hwpx',
         oracle: {
           controls: [
-            { mode: "normal", status: "pass", wrongExpectedRejected: true },
-            { mode: "optimized", status: "pass", wrongExpectedRejected: true },
+            { mode: 'normal', status: 'pass', wrongExpectedRejected: true },
+            { mode: 'optimized', status: 'pass', wrongExpectedRejected: true },
           ],
         },
-        status: "verified",
+        status: 'verified',
         independentVerified: true,
         sourceUnchanged: true,
         cleanup: { ownedGroupInactive: true, remainingDescendants: false },
@@ -56,29 +56,29 @@ function sample() {
       },
     ],
   };
-  return { report, current: { wasmSHA: "a".repeat(64), provenance: structuredClone(provenance) } };
+  return { report, current: { wasmSHA: 'a'.repeat(64), provenance: structuredClone(provenance) } };
 }
-test("a checkpoint preserves completed independent observations, not cancelled cases", () => {
+test('a checkpoint preserves completed independent observations, not cancelled cases', () => {
   const { report, current } = sample();
   const actual = verifiedFixtureEvidence(report, current);
   assert.equal(actual.size, 1);
-  assert.equal(actual.get("c".repeat(64)), report.results[0]);
-  report.results[0].status = "cancelled";
+  assert.equal(actual.get('c'.repeat(64)), report.results[0]);
+  report.results[0].status = 'cancelled';
   assert.equal(verifiedFixtureEvidence(report, current).size, 0);
 });
-test("changed artifacts and incomplete or foreign results cannot become reused verification", () => {
+test('changed artifacts and incomplete or foreign results cannot become reused verification', () => {
   for (const mutate of [
     (x) => {
-      x.current.wasmSHA = "new";
+      x.current.wasmSHA = 'new';
     },
     (x) => {
-      x.current.provenance[keys[0]] = "new";
+      x.current.provenance[keys[0]] = 'new';
     },
     (x) => {
       x.report.summary.implementationUnchanged = false;
     },
     (x) => {
-      x.report.results[0].sourceSHA = "foreign";
+      x.report.results[0].sourceSHA = 'foreign';
     },
     (x) => {
       x.report.results[0].independentVerified = false;
@@ -108,34 +108,34 @@ test("changed artifacts and incomplete or foreign results cannot become reused v
   }
 });
 
-test("prefix-era evidence requires unchanged source routing and complete ZIP oracle fingerprints", () => {
+test('prefix-era evidence requires unchanged source routing and complete ZIP oracle fingerprints', () => {
   for (const key of [
-    "tools/hwpx-insertion-oracle.mjs",
-    "tools/hwpx-insertion-site.py",
-    "tools/hwpx-insertion-source.py",
-    "tools/hwpx-anchor-prefix-oracle.py",
+    'tools/hwpx-insertion-oracle.mjs',
+    'tools/hwpx-insertion-site.py',
+    'tools/hwpx-insertion-source.py',
+    'tools/hwpx-anchor-prefix-oracle.py',
   ]) {
     const { report, current } = sample();
-    report.manifest.provenance[key] = "d".repeat(64);
+    report.manifest.provenance[key] = 'd'.repeat(64);
     assert.throws(() => verifiedFixtureEvidence(report, current), /ReusedEvidenceOracleMismatch/);
-    current.provenance[key] = "d".repeat(64);
+    current.provenance[key] = 'd'.repeat(64);
     assert.equal(verifiedFixtureEvidence(report, current).size, 1);
-    current.provenance[key] = "e".repeat(64);
+    current.provenance[key] = 'e'.repeat(64);
     assert.throws(() => verifiedFixtureEvidence(report, current), /ReusedEvidenceOracleMismatch/);
   }
 });
 
-test("password-policy fingerprints cannot silently change under reused observations", () => {
+test('password-policy fingerprints cannot silently change under reused observations', () => {
   const { report, current } = sample(),
-    key = "tools/fixture-known-password.mjs";
-  report.manifest.provenance[key] = "d".repeat(64);
+    key = 'tools/fixture-known-password.mjs';
+  report.manifest.provenance[key] = 'd'.repeat(64);
   assert.throws(
     () => verifiedFixtureEvidence(report, current),
     /ReusedEvidencePasswordPolicyMismatch/,
   );
-  current.provenance[key] = "d".repeat(64);
+  current.provenance[key] = 'd'.repeat(64);
   assert.equal(verifiedFixtureEvidence(report, current).size, 1);
-  current.provenance[key] = "e".repeat(64);
+  current.provenance[key] = 'e'.repeat(64);
   assert.throws(
     () => verifiedFixtureEvidence(report, current),
     /ReusedEvidencePasswordPolicyMismatch/,

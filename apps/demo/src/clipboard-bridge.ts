@@ -4,20 +4,20 @@ import {
   type HeadlessEditor,
   type CommandResult,
   type SelectionClipboard,
-} from "@hwpjs/core";
+} from '@hwpjs/core';
 import type {
   DemoAction,
   DemoCommand,
   DemoShellState,
   ActionAvailability,
-} from "./shell-contract.ts";
+} from './shell-contract.ts';
 
 export interface PlainTextClipboard {
   readText?: () => Promise<string>;
   writeText?: (text: string) => Promise<void>;
 }
 export interface ClipboardBridgeOptions {
-  readonly editor: Pick<HeadlessEditor, "getEditorState" | "dispatchCommand" | "update">;
+  readonly editor: Pick<HeadlessEditor, 'getEditorState' | 'dispatchCommand' | 'update'>;
   /** Injectable platform port. null explicitly disables clipboard access. */
   readonly clipboard?: PlainTextClipboard | null;
   readonly onStatus: (message: string) => void;
@@ -31,31 +31,31 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
     closed = false;
   const platform = () =>
     options.clipboard === undefined ? globalThis.navigator?.clipboard : options.clipboard;
-  const supported = (command: string): command is "copy" | "cut" | "paste" =>
-    ["copy", "cut", "paste"].includes(command);
+  const supported = (command: string): command is 'copy' | 'cut' | 'paste' =>
+    ['copy', 'cut', 'paste'].includes(command);
   function reason(
-    command: "copy" | "cut" | "paste",
+    command: 'copy' | 'cut' | 'paste',
     selection: SelectionClipboard,
     ownedPending = false,
   ): string | null {
-    if (closed) return "ClipboardDisposed";
-    if (pending && !ownedPending) return "ClipboardPending";
+    if (closed) return 'ClipboardDisposed';
+    if (pending && !ownedPending) return 'ClipboardPending';
     const selectionReason =
-      command === "copy"
+      command === 'copy'
         ? selection.copyReason
-        : command === "cut"
+        : command === 'cut'
           ? (selection.copyReason ?? selection.editReason)
           : selection.editReason;
     if (selectionReason) return selectionReason;
-    if (!selection.target) return "MissingSelection";
-    if (typeof platform()?.[command === "paste" ? "readText" : "writeText"] !== "function")
-      return command === "paste" ? "ClipboardReadUnavailable" : "ClipboardWriteUnavailable";
+    if (!selection.target) return 'MissingSelection';
+    if (typeof platform()?.[command === 'paste' ? 'readText' : 'writeText'] !== 'function')
+      return command === 'paste' ? 'ClipboardReadUnavailable' : 'ClipboardWriteUnavailable';
     return null;
   }
-  function getPresentation(): Pick<DemoShellState, "actions"> {
+  function getPresentation(): Pick<DemoShellState, 'actions'> {
     const selection = getSelectionClipboard(editor.getEditorState());
     const actions: Partial<Record<DemoCommand, ActionAvailability>> = {};
-    for (const command of ["copy", "cut", "paste"] as const) {
+    for (const command of ['copy', 'cut', 'paste'] as const) {
       const why = reason(command, selection);
       actions[command] = Object.freeze({ enabled: why === null, reason: why ?? undefined });
     }
@@ -74,7 +74,7 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       return true;
     }
     pending = true;
-    let phase: "read" | "write" | "editor" = "editor";
+    let phase: 'read' | 'write' | 'editor' = 'editor';
     try {
       // Public admission settles composition and queued input, without a synthetic edit.
       await editor.update(() => {});
@@ -84,21 +84,21 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       const why = reason(command, captured, true);
       if (why) throw Error(why);
       const clipboard = platform()!;
-      let text = "";
-      if (command === "paste") {
-        phase = "read";
+      let text = '';
+      if (command === 'paste') {
+        phase = 'read';
         text = await clipboard.readText!();
-        phase = "editor";
-        if (!fresh(captured)) throw Error("StaleClipboardSelection");
-        if (typeof text !== "string") throw Error("InvalidClipboardText");
-        if (!text.length) throw Error("ClipboardEmpty");
+        phase = 'editor';
+        if (!fresh(captured)) throw Error('StaleClipboardSelection');
+        if (typeof text !== 'string') throw Error('InvalidClipboardText');
+        if (!text.length) throw Error('ClipboardEmpty');
       } else {
-        phase = "write";
+        phase = 'write';
         await clipboard.writeText!(captured.text!);
-        phase = "editor";
-        if (!fresh(captured)) throw Error("ClipboardWrittenSelectionChanged");
-        if (command === "copy") {
-          onStatus("Copied");
+        phase = 'editor';
+        if (!fresh(captured)) throw Error('ClipboardWrittenSelectionChanged');
+        if (command === 'copy') {
+          onStatus('Copied');
           return true;
         }
       }
@@ -113,14 +113,14 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       onResult?.(result);
     } catch (error) {
       if (!closed) {
-        const name = error instanceof Error ? error.name : "";
+        const name = error instanceof Error ? error.name : '';
         const message = error instanceof Error ? error.message : String(error);
         const denied =
-          (name === "NotAllowedError" || name === "SecurityError") && phase !== "editor";
+          (name === 'NotAllowedError' || name === 'SecurityError') && phase !== 'editor';
         onStatus(
-          denied ? `Clipboard${phase === "read" ? "Read" : "Write"}PermissionDenied` : message,
+          denied ? `Clipboard${phase === 'read' ? 'Read' : 'Write'}PermissionDenied` : message,
         );
-        if (denied && phase === "read") options.onReadDenied?.();
+        if (denied && phase === 'read') options.onReadDenied?.();
       }
     } finally {
       pending = false;

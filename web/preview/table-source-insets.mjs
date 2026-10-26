@@ -1,5 +1,5 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { tableInsets } from "./table-insets.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { tableInsets } from './table-insets.mjs';
 
 /** Explicit source selection; absent flags/fields are not inferred. */
 export function sourceTableCellInsets(table, cell) {
@@ -22,7 +22,7 @@ export function sourceTableCellInsets(table, cell) {
 
 /** Resolve the explicit source mode once for measurement and projection. */
 export function resolveTablePadding(table, padding) {
-  if (padding !== "source") return padding;
+  if (padding !== 'source') return padding;
   if (!Array.isArray(table?.cells) || table.cells.some((cell) => !cell)) return null;
   const values = new Map();
   for (const cell of table.cells) {

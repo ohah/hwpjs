@@ -1,7 +1,7 @@
-import { textChange } from "./text-input.mjs";
+import { textChange } from './text-input.mjs';
 
 /** Transient UTF-16 projection shared by anchored display objects. */
-export function projectDraftAnchoredObjects(content, objects, draft, stateField = "state") {
+export function projectDraftAnchoredObjects(content, objects, draft, stateField = 'state') {
   if (!draft) return objects;
   const paragraph = content.paragraphs.find(
     (p) => p.section === draft.section && p.paragraph === draft.paragraph,
@@ -13,7 +13,7 @@ export function projectDraftAnchoredObjects(content, objects, draft, stateField 
     if (
       object.section !== draft.section ||
       object.paragraph !== draft.paragraph ||
-      !["located", "reference_located"].includes(object[stateField])
+      !['located', 'reference_located'].includes(object[stateField])
     )
       return [object];
     const unit = object.anchorUnit;
@@ -22,6 +22,6 @@ export function projectDraftAnchoredObjects(content, objects, draft, stateField 
       unit >= change.endUnit
         ? unit + change.text.length - (change.endUnit - change.startUnit)
         : unit;
-    return draft.text[anchorUnit] === "\ufffc" ? [{ ...object, anchorUnit }] : [];
+    return draft.text[anchorUnit] === '\ufffc' ? [{ ...object, anchorUnit }] : [];
   });
 }

@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { bmpWords } from "./bmp-oracle.mjs";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { bmpRleFixture, rleAbsolute } from "./bmp-rle-fixture.mjs";
-import { bmpRleRgbaOracle } from "./bmp-rle-rgba-oracle.mjs";
-import { expectBmpError, isBmpOracleRejection } from "./bmp-errors.mjs";
+import assert from 'node:assert/strict';
+import { bmpWords } from './bmp-oracle.mjs';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { bmpRleFixture, rleAbsolute } from './bmp-rle-fixture.mjs';
+import { bmpRleRgbaOracle } from './bmp-rle-rgba-oracle.mjs';
+import { expectBmpError, isBmpOracleRejection } from './bmp-errors.mjs';
 export function bmpRleSelection({
   rleEnabled = 1,
   fill = 2,

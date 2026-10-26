@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 // Forward filter of known original bytes; independent from in-place reconstruction.
 function encode(kind, stride, row, previous) {

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { identityActual } from "./links.mjs";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { identityActual } from './links.mjs';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -15,8 +15,8 @@ export function memoReference(call, cfb, file, h, doc, sections) {
   assert.equal(identityActual(call, v, b), 2);
   const containerReport = containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    index = nodes.findIndex((n) => n.name === "Section2" && n.parent === body);
+    body = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0),
+    index = nodes.findIndex((n) => n.name === 'Section2' && n.parent === body);
   assert.ok(index >= 0);
   const full = (plain) => {
     const copy = nodes.map((n) => ({ ...n }));
@@ -31,7 +31,7 @@ export function memoReference(call, cfb, file, h, doc, sections) {
     assert.equal(b.readUInt32LE(r.start), 0x25756e6b);
     const units = b.readUInt16LE(r.start + 9),
       end = r.start + 11 + units * 2;
-    assert.equal(b.subarray(r.start + 11, r.start + 21).toString("utf16le"), "MEMO/");
+    assert.equal(b.subarray(r.start + 11, r.start + 21).toString('utf16le'), 'MEMO/');
     assert.equal(r.end - end - 4, 4);
     const wrong = Buffer.from(b);
     wrong.writeUInt16LE(88, r.start + 11);

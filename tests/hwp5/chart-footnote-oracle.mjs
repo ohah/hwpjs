@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { chartTextBlockOracle } from "./chart-text-block-oracle.mjs";
-import { readChartSectionFields } from "./chart-section-fields-evidence.mjs";
+import assert from 'node:assert/strict';
+import { chartTextBlockOracle } from './chart-text-block-oracle.mjs';
+import { readChartSectionFields } from './chart-section-fields-evidence.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -29,14 +29,14 @@ export function chartFootnoteOracle(b) {
     if (!types.has(id)) {
       const length = word(),
         nameOffset = p,
-        actual = take(length).toString("latin1"),
+        actual = take(length).toString('latin1'),
         versionOffset = p;
       assert.equal(word(), 1);
-      assert.equal(actual, name + "\0");
+      assert.equal(actual, name + '\0');
       types.set(id, actual);
       declarations.push({ idOffset, nameOffset, versionOffset });
     }
-    assert.equal(types.get(id), name + "\0");
+    assert.equal(types.get(id), name + '\0');
   };
   let picture, suffixOffset, data;
   const fields = readChartSectionFields({
@@ -62,7 +62,7 @@ export function chartFootnoteOracle(b) {
     },
     base: () => {
       bases.push(p);
-      type("VtObject");
+      type('VtObject');
     },
     reject: () => assert.equal(data, 0xffffffff),
   });

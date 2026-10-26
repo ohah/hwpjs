@@ -1,7 +1,7 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
 // Descendant image ownership stays on its own cell; only its position owner
 // changes as the containing cell moves to a physical page.
-import { pictureAnchorRows, pictureAnchorRow } from "./picture-anchor-row-index.mjs";
+import { pictureAnchorRows, pictureAnchorRow } from './picture-anchor-row-index.mjs';
 export function projectNestedCellPictures(
   flow,
   parent,
@@ -11,10 +11,10 @@ export function projectNestedCellPictures(
   rows,
   projectClip,
 ) {
-  const fail = () => ({ state: "unavailable", error: "InvalidNestedPictureProjection" });
+  const fail = () => ({ state: 'unavailable', error: 'InvalidNestedPictureProjection' });
   const pictures = flow.nestedPictures ?? [];
   if (!Array.isArray(pictures) || pictures.length > 20000) return fail();
-  if (!pictures.length) return { state: "placed", pictures: [] };
+  if (!pictures.length) return { state: 'placed', pictures: [] };
   const anchorRows = pictureAnchorRows(rows);
   if (!anchorRows) return fail();
   const projected = [],
@@ -50,7 +50,7 @@ export function projectNestedCellPictures(
         referenceBoxes: fragment.referenceBoxes,
       },
     );
-    if (moved.state !== "translated") return fail();
+    if (moved.state !== 'translated') return fail();
     const item = { ...moved.picture, positionOwnerTableNode: parent.tableNode };
     if (flow.clipOverflow === true || picture.pageClip !== undefined) {
       item.pageClip = projectClip(picture.pageClip);
@@ -58,5 +58,5 @@ export function projectNestedCellPictures(
     }
     projected.push(item);
   }
-  return { state: "placed", pictures: projected };
+  return { state: 'placed', pictures: projected };
 }

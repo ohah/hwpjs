@@ -1,11 +1,11 @@
-import { layoutContent } from "./layout.mjs";
-import { tableGrid } from "./table-grid.mjs";
-import { validateNestedTableOwnership } from "./nested-table-ownership.mjs";
-import { TEXT_LEFT, DEFAULT_ROW_HEIGHT } from "./row-geometry.mjs";
-import { pictureReferenceSpace } from "./picture-reference-space.mjs";
-import { sourceTableCellInsets } from "./table-source-insets.mjs";
-import { tableInsets } from "./table-insets.mjs";
-import { layoutSourceTableCaption } from "./table-caption-source-layout.mjs";
+import { layoutContent } from './layout.mjs';
+import { tableGrid } from './table-grid.mjs';
+import { validateNestedTableOwnership } from './nested-table-ownership.mjs';
+import { TEXT_LEFT, DEFAULT_ROW_HEIGHT } from './row-geometry.mjs';
+import { pictureReferenceSpace } from './picture-reference-space.mjs';
+import { sourceTableCellInsets } from './table-source-insets.mjs';
+import { tableInsets } from './table-insets.mjs';
+import { layoutSourceTableCaption } from './table-caption-source-layout.mjs';
 
 // Block placement inside the source host cell. Inline anchor placement and
 // original page-flow rules remain separate from this display projection.
@@ -48,10 +48,10 @@ export function layoutNestedTables(content, width, measure, maxRows) {
         { column: { x: TEXT_LEFT, y: 0, width, height: 0 } },
         { x: documentX - TEXT_LEFT, y: 0 },
       );
-      if (references.state !== "mapped") throw new Error("InvalidNestedPictureReferences");
+      if (references.state !== 'mapped') throw new Error('InvalidNestedPictureReferences');
       const flat = layoutContent(
         {
-          paragraphs: [{ ...p, ...(owner ? { label: "" } : {}) }],
+          paragraphs: [{ ...p, ...(owner ? { label: '' } : {}) }],
           limited: false,
           pictures: content.pictures,
           placedPictures: result.flowPictures.map((item) => ({
@@ -68,10 +68,10 @@ export function layoutNestedTables(content, width, measure, maxRows) {
         measure,
         maxRows - used + 1,
       );
-      const selected = owner ? flat.rows.filter((row) => row.kind !== "label") : flat.rows;
+      const selected = owner ? flat.rows.filter((row) => row.kind !== 'label') : flat.rows;
       const usedBefore = used;
       const labelHeight = owner
-        ? flat.rows.filter((row) => row.kind === "label").reduce((sum, row) => sum + row.height, 0)
+        ? flat.rows.filter((row) => row.kind === 'label').reduce((sum, row) => sum + row.height, 0)
         : 0;
       let localY = 0;
       for (const row of selected) {
@@ -124,7 +124,7 @@ export function layoutNestedTables(content, width, measure, maxRows) {
     return result;
   };
   const tableFlow = (table, depth, documentX) => {
-    if (depth > 64 || active.has(table)) throw new Error("InvalidNestedTableFlow");
+    if (depth > 64 || active.has(table)) throw new Error('InvalidNestedTableFlow');
     if (emitted.has(table)) return empty();
     emitted.add(table);
     active.add(table);
@@ -139,7 +139,7 @@ export function layoutNestedTables(content, width, measure, maxRows) {
           section: table.section,
           tableNode: table.tableNode,
           listNode: cell.listNode,
-          error: "MissingTableSourceInsets",
+          error: 'MissingTableSourceInsets',
         });
       // Preserve the existing experimental fallback, but report source failure.
       const inset = padding ?? tableInsets(6);
@@ -184,8 +184,8 @@ export function layoutNestedTables(content, width, measure, maxRows) {
               measure,
               { maxRows: maxRows - used },
             )
-          : { state: "unavailable", error: "TableCaptionMeasurementLimit" };
-      if (caption.state === "positioned") {
+          : { state: 'unavailable', error: 'TableCaptionMeasurementLimit' };
+      if (caption.state === 'positioned') {
         result.rows.push(...caption.rows);
         const dx = -caption.bounds.x,
           dy = -caption.bounds.y;

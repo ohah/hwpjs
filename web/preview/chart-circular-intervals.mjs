@@ -1,11 +1,11 @@
-import { createChartAbsoluteTotal } from "./chart-absolute-total.mjs";
+import { createChartAbsoluteTotal } from './chart-absolute-total.mjs';
 
 /** Shared normalized fractions and angle endpoints, not source layout policy. */
 export function chartCircularIntervals(values, origin) {
-  if (!Number.isFinite(origin)) return { state: "unavailable", reason: "InvalidCircularOrigin" };
+  if (!Number.isFinite(origin)) return { state: 'unavailable', reason: 'InvalidCircularOrigin' };
   const total = createChartAbsoluteTotal(values);
   if (!total || values.some((value) => value < 0))
-    return { state: "unavailable", reason: "InvalidCircularValues" };
+    return { state: 'unavailable', reason: 'InvalidCircularValues' };
   const add = total.accumulator(),
     intervals = [];
   let previous = 0;
@@ -16,7 +16,7 @@ export function chartCircularIntervals(values, origin) {
     const first = origin + start * 2 * Math.PI,
       last = origin + end * 2 * Math.PI;
     if (value > 0 && (total.share(value) === 0 || end <= start || last <= first))
-      return { state: "unavailable", reason: "UnrepresentableCircularShare" };
+      return { state: 'unavailable', reason: 'UnrepresentableCircularShare' };
     intervals.push({
       start_fraction: start,
       end_fraction: end,
@@ -24,5 +24,5 @@ export function chartCircularIntervals(values, origin) {
       end_angle: last,
     });
   }
-  return { state: "ready", empty: total.isZero, intervals };
+  return { state: 'ready', empty: total.isZero, intervals };
 }

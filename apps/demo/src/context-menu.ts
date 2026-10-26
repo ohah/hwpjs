@@ -1,26 +1,26 @@
-import type { DemoAction, DemoCommand, DemoShellState } from "./shell-contract.ts";
-import { DEMO_COMMAND_REGISTRY } from "./command-support.ts";
-import { actionAvailability } from "./shell-model.ts";
+import type { DemoAction, DemoCommand, DemoShellState } from './shell-contract.ts';
+import { DEMO_COMMAND_REGISTRY } from './command-support.ts';
+import { actionAvailability } from './shell-model.ts';
 // @ts-ignore Shared accessible menu implementation; permissions stay in the public API bridge.
-import { createDocumentContextMenu } from "../../../web/preview/document-context-menu.mjs";
+import { createDocumentContextMenu } from '../../../web/preview/document-context-menu.mjs';
 
-type ContextCommand = Exclude<DemoCommand, "set-font-size" | "set-zoom">;
+type ContextCommand = Exclude<DemoCommand, 'set-font-size' | 'set-zoom'>;
 const commands: readonly ContextCommand[] = [
-  "undo",
-  "redo",
-  "cut",
-  "copy",
-  "paste",
-  "find",
-  "replace",
-  "bold",
-  "italic",
-  "underline",
-  "strike",
-  "character-properties",
-  "paragraph-properties",
-  "object-properties",
-  "word-count",
+  'undo',
+  'redo',
+  'cut',
+  'copy',
+  'paste',
+  'find',
+  'replace',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'character-properties',
+  'paragraph-properties',
+  'object-properties',
+  'word-count',
 ];
 export function mountDemoContextMenu(options: {
   root: HTMLElement;

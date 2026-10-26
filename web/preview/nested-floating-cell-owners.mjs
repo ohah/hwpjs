@@ -1,8 +1,8 @@
 // Shared source ownership gate for whole-cell and CELL-cut projections.
 export function validateNestedFloatingCellOwners(parent, entries) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (!Array.isArray(entries) || entries.length > 10000)
-    return fail("InvalidNestedFloatingCellContent");
+    return fail('InvalidNestedFloatingCellContent');
   const nodes = new Set(),
     anchors = new Set();
   for (const entry of entries) {
@@ -36,11 +36,11 @@ export function validateNestedFloatingCellOwners(parent, entries) {
       table.section !== paragraph.section ||
       !Number.isInteger(table.anchorUnit) ||
       table.anchorUnit < 0 ||
-      paragraph.text?.[table.anchorUnit] !== "\ufffc"
+      paragraph.text?.[table.anchorUnit] !== '\ufffc'
     )
-      return fail("InvalidNestedFloatingTableOwner");
+      return fail('InvalidNestedFloatingTableOwner');
     nodes.add(identity);
     anchors.add(anchor);
   }
-  return { state: "verified" };
+  return { state: 'verified' };
 }

@@ -16,25 +16,25 @@ export function hwp5WindowTableSourceEditor(editor, content) {
     select(
       section,
       (index) => editor.tableLayoutSources(index),
-      "table_record_node",
+      'table_record_node',
       nodes(section),
-      "AmbiguousTableLayoutSource",
+      'AmbiguousTableLayoutSource',
     );
   scoped.tableAnchors = (section) =>
     select(
       section,
       (index) => editor.tableAnchors(index),
-      "table_record_node",
+      'table_record_node',
       nodes(section),
-      "AmbiguousTableDisplayAnchor",
+      'AmbiguousTableDisplayAnchor',
     );
   scoped.cellLayoutSources = (section) =>
     select(
       section,
       (index) => editor.cellLayoutSources(index),
-      "list_node",
+      'list_node',
       new Set(tables(section).flatMap((row) => row.cells.map((cell) => cell.listNode))),
-      "AmbiguousCellLayoutSource",
+      'AmbiguousCellLayoutSource',
     );
   return scoped;
 }

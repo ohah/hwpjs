@@ -1,4 +1,4 @@
-import { chartPointLabel } from "./chart-point-label.mjs";
+import { chartPointLabel } from './chart-point-label.mjs';
 
 const pageSize = 64;
 // Only pagination is owned here. Values are read from the current native query.
@@ -23,20 +23,20 @@ export function createChartPointTable({
     page = Math.max(0, Math.min(page, pages - 1));
     const rows = values.slice(page * pageSize, (page + 1) * pageSize).map((point, offset) => {
       const ordinal = page * pageSize + offset;
-      const row = body.ownerDocument.createElement("tr");
-      const label = body.ownerDocument.createElement("td");
-      const button = body.ownerDocument.createElement("button");
-      button.type = "button";
+      const row = body.ownerDocument.createElement('tr');
+      const label = body.ownerDocument.createElement('td');
+      const button = body.ownerDocument.createElement('button');
+      button.type = 'button';
       button.dataset.chartPoint = String(ordinal);
       button.textContent = chartPointLabel(chart, point, ordinal);
       const current = ordinal === selected;
-      button.setAttribute("aria-current", String(current));
-      button.style.fontWeight = current ? "700" : "";
+      button.setAttribute('aria-current', String(current));
+      button.style.fontWeight = current ? '700' : '';
       button.disabled = closed || !ready() || !accepts(point.kind);
       label.append(button);
-      const value = body.ownerDocument.createElement("td");
+      const value = body.ownerDocument.createElement('td');
       value.textContent = point.value;
-      value.style.whiteSpace = "pre-wrap";
+      value.style.whiteSpace = 'pre-wrap';
       row.append(label, value);
       return row;
     });
@@ -45,12 +45,12 @@ export function createChartPointTable({
     next.disabled = closed || !ready() || page + 1 >= pages;
     note.textContent = values.length
       ? `${page + 1}/${pages}쪽 · 전체 ${values.length}개 값`
-      : "표시할 차트 값이 없습니다.";
+      : '표시할 차트 값이 없습니다.';
   };
   const pick = (event) => {
-    const button = event.target.closest?.("button[data-chart-point]");
+    const button = event.target.closest?.('button[data-chart-point]');
     if (closed || !ready() || !button || !body.contains(button) || button.disabled) return;
-    if (!/^(0|[1-9][0-9]*)$/.test(button.dataset.chartPoint ?? "")) return;
+    if (!/^(0|[1-9][0-9]*)$/.test(button.dataset.chartPoint ?? '')) return;
     const ordinal = Number(button.dataset.chartPoint),
       point = getChart()?.values.points[ordinal];
     if (!Number.isSafeInteger(ordinal) || ordinal < 0 || !point || !accepts(point.kind)) return;
@@ -68,9 +68,9 @@ export function createChartPointTable({
       render();
     }
   };
-  body.addEventListener("click", pick);
-  previous.addEventListener("click", back);
-  next.addEventListener("click", forward);
+  body.addEventListener('click', pick);
+  previous.addEventListener('click', back);
+  next.addEventListener('click', forward);
   return {
     refresh: render,
     reveal(ordinal) {
@@ -79,9 +79,9 @@ export function createChartPointTable({
     },
     close() {
       closed = true;
-      body.removeEventListener("click", pick);
-      previous.removeEventListener("click", back);
-      next.removeEventListener("click", forward);
+      body.removeEventListener('click', pick);
+      previous.removeEventListener('click', back);
+      next.removeEventListener('click', forward);
       render();
     },
   };

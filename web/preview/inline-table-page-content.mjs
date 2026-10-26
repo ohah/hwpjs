@@ -1,7 +1,7 @@
-import { prepareTablePageBands, tablePageBandFragment } from "./table-page-bands.mjs";
-import { projectTablePageFragments } from "./table-page-fragments.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
-import { projectTablePageCaption } from "./table-caption-page-projection.mjs";
+import { prepareTablePageBands, tablePageBandFragment } from './table-page-bands.mjs';
+import { projectTablePageFragments } from './table-page-fragments.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
+import { projectTablePageCaption } from './table-caption-page-projection.mjs';
 
 // 공통 인라인 개체 위치에 이미 측정한 표 셀을 투영합니다.
 export function layoutInlineTablePageContent(
@@ -11,12 +11,12 @@ export function layoutInlineTablePageContent(
   outerInsets,
   options = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     table?.sourceGeometry?.geometry?.treat_as_character !== true ||
-    (table.sourceCaption && options.captionReservation?.state !== "reserved")
+    (table.sourceCaption && options.captionReservation?.state !== 'reserved')
   )
-    return unavailable("UnsupportedInlineTablePageContent");
+    return unavailable('UnsupportedInlineTablePageContent');
   if (table.sourceCaption) {
     const owner = options.captionReservation.owner;
     if (
@@ -26,10 +26,10 @@ export function layoutInlineTablePageContent(
       owner.captionNode !== table.sourceCaption.caption_node ||
       owner.listNode !== table.sourceCaption.list_node
     )
-      return unavailable("InvalidInlineTableCaptionOwner");
+      return unavailable('InvalidInlineTableCaptionOwner');
   }
   if (
-    measured?.state !== "measured" ||
+    measured?.state !== 'measured' ||
     placement?.objectNode !== table.tableNode ||
     placement.section !== table.section ||
     placement.paragraph !== table.hostParagraph ||
@@ -37,9 +37,9 @@ export function layoutInlineTablePageContent(
     !Number.isSafeInteger(placement.pageOrdinal) ||
     placement.pageOrdinal < 0
   )
-    return unavailable("InvalidInlineTablePageContent");
-  const prepared = prepareTablePageBands(table, measured.grid?.rows, "whole", outerInsets);
-  if (prepared.state !== "prepared") return prepared;
+    return unavailable('InvalidInlineTablePageContent');
+  const prepared = prepareTablePageBands(table, measured.grid?.rows, 'whole', outerInsets);
+  if (prepared.state !== 'prepared') return prepared;
   const rectangle = placement.rectangle;
   if (
     !rectangle ||
@@ -62,9 +62,9 @@ export function layoutInlineTablePageContent(
       rectangle.height - measured.grid.height - prepared.margins.top - prepared.margins.bottom,
     ) > 1e-8
   )
-    return unavailable("InvalidInlineTablePageContent");
-  const padding = resolveTablePadding(table, "source");
-  if (!padding) return unavailable("MissingTableSourceInsets");
+    return unavailable('InvalidInlineTablePageContent');
+  const padding = resolveTablePadding(table, 'source');
+  if (!padding) return unavailable('MissingTableSourceInsets');
   const fragment = tablePageBandFragment(prepared, {
     x: rectangle.x,
     y: rectangle.y,
@@ -77,10 +77,10 @@ export function layoutInlineTablePageContent(
     table,
     measured.grid,
     measured.flows,
-    { state: "planned", fragments: [fragment] },
+    { state: 'planned', fragments: [fragment] },
     { origin: { x: 0, y: 0 }, padding, maxRows: options.maxRows },
   );
-  if (projected.state !== "placed" || !table.sourceCaption) return projected;
+  if (projected.state !== 'placed' || !table.sourceCaption) return projected;
   return projectTablePageCaption(table, options.captionReservation, projected, {
     maxRows: options.maxRows,
   });

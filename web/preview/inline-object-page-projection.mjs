@@ -1,8 +1,8 @@
 // 측정 문단 행과 최종 페이지 행의 현재 UTF-16 범위를 연결합니다.
 export function projectInlineObjectPages(flow, pageRows) {
-  const unavailable = () => ({ state: "unavailable", error: "InvalidInlineObjectPageProjection" });
+  const unavailable = () => ({ state: 'unavailable', error: 'InvalidInlineObjectPageProjection' });
   if (
-    flow?.state !== "measured" ||
+    flow?.state !== 'measured' ||
     !Array.isArray(flow.rows) ||
     !Array.isArray(flow.anchors) ||
     !Array.isArray(pageRows)
@@ -29,7 +29,7 @@ export function projectInlineObjectPages(flow, pageRows) {
     const source = flow.rows[anchor.rowIndex];
     if (
       !source ||
-      source.kind !== "text" ||
+      source.kind !== 'text' ||
       !Number.isSafeInteger(source.section) ||
       source.section < 0 ||
       !Number.isSafeInteger(source.paragraph) ||
@@ -37,7 +37,7 @@ export function projectInlineObjectPages(flow, pageRows) {
       !Number.isSafeInteger(source.startUnit) ||
       !Number.isSafeInteger(source.endUnit) ||
       !(source.startUnit <= anchor.unit && anchor.unit < source.endUnit) ||
-      source.text?.[anchor.unit - source.startUnit] !== "\ufffc"
+      source.text?.[anchor.unit - source.startUnit] !== '\ufffc'
     )
       return unavailable();
     const key = `${source.section}:${source.paragraph}:${anchor.unit}`;
@@ -46,7 +46,7 @@ export function projectInlineObjectPages(flow, pageRows) {
     units.add(key);
     const matches = pageRows.filter(
       (row) =>
-        row?.kind === "text" &&
+        row?.kind === 'text' &&
         row.section === source.section &&
         row.paragraph === source.paragraph &&
         row.startUnit === source.startUnit &&
@@ -81,5 +81,5 @@ export function projectInlineObjectPages(flow, pageRows) {
       rectangle,
     });
   }
-  return { state: "placed", objects };
+  return { state: 'placed', objects };
 }

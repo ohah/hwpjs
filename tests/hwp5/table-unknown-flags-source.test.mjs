@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, records } from './style-preservation/text-record-oracle.mjs';
 
-test("noori unknown TABLE flags retain raw values and exact unedited save", async () => {
-  const bytes = readFileSync("legacy/noori.hwp");
+test('noori unknown TABLE flags retain raw values and exact unedited save', async () => {
+  const bytes = readFileSync('legacy/noori.hwp');
   const parsed = inspect(bytes);
-  assert.equal(parsed.streams.get("FileHeader").readUInt32LE(32), 0x05000300);
+  assert.equal(parsed.streams.get('FileHeader').readUInt32LE(32), 0x05000300);
   const editor = await createExperimentalHwp5Editor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
     bytes,
   );
   try {

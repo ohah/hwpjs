@@ -1,9 +1,9 @@
-import { createProjectionCanvasMetrics } from "./projection-measure-memo.mjs";
-import { equationPaintAt } from "./equation-render-content.mjs";
-import { dutmalAt, dutmalPaintPlan } from "./dutmal-paint.mjs";
-import { picturePositionKey } from "./picture-inline.mjs";
-import { checkBoxPositionKey } from "./checkbox-inline-layout.mjs";
-import { canvasGlyphGeometry } from "./canvas-glyph-geometry.mjs";
+import { createProjectionCanvasMetrics } from './projection-measure-memo.mjs';
+import { equationPaintAt } from './equation-render-content.mjs';
+import { dutmalAt, dutmalPaintPlan } from './dutmal-paint.mjs';
+import { picturePositionKey } from './picture-inline.mjs';
+import { checkBoxPositionKey } from './checkbox-inline-layout.mjs';
+import { canvasGlyphGeometry } from './canvas-glyph-geometry.mjs';
 
 // Canvas와 진단이 같은 원자/글꼴 측정을 사용합니다. 빈 문자열은 글꼴 기준 조회입니다.
 export function createPreviewTextMeasure(
@@ -26,7 +26,7 @@ export function createPreviewTextMeasure(
     const font = fontAt(paragraph, unit, kind);
     if (projection) projection.setFont(font);
     else ctx.font = font;
-    const atom = kind === "text" && text !== "";
+    const atom = kind === 'text' && text !== '';
     const equation = atom ? equationPaintAt(paragraph, unit) : null;
     if (equation)
       return {

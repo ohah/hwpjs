@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function fixedArray(values) {
   const b = Buffer.alloc(8 + 4 * values.length);
-  b.write("sf32");
+  b.write('sf32');
   values.forEach((v, i) => b.writeInt32BE(v, 8 + 4 * i));
   return b;
 }
-export function adaptationInput(values, edition = 0, name = "chad") {
+export function adaptationInput(values, edition = 0, name = 'chad') {
   return Buffer.concat([Buffer.from([edition]), Buffer.from(name), fixedArray(values)]);
 }
 // Leibniz permutation sum, independent of the product's cofactor expansion.

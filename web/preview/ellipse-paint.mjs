@@ -1,8 +1,8 @@
-import { curvedShapePaintPlan } from "./curved-shape-paint-plan.mjs";
-import { ellipsePrincipalAxes } from "./ellipse-principal-axes.mjs";
+import { curvedShapePaintPlan } from './curved-shape-paint-plan.mjs';
+import { ellipsePrincipalAxes } from './ellipse-principal-axes.mjs';
 
 export function ellipsePaintPlan(content, item) {
-  return curvedShapePaintPlan(content, item, "Ellipse");
+  return curvedShapePaintPlan(content, item, 'Ellipse');
 }
 
 export function ellipsePaintGeometry(item) {
@@ -25,7 +25,7 @@ export function paintEllipse(ctx, item, scrollTop = 0) {
   const p = item?.paintPlan,
     geometry = ellipsePaintGeometry(item);
   if (
-    p?.state !== "planned" ||
+    p?.state !== 'planned' ||
     !geometry ||
     !Number.isFinite(scrollTop) ||
     (p.strokeEnabled !== false && (!Number.isFinite(p.lineWidth) || p.lineWidth <= 0))
@@ -36,15 +36,15 @@ export function paintEllipse(ctx, item, scrollTop = 0) {
   try {
     ctx.beginPath();
     ctx.ellipse(center[0], center[1] - scrollTop, rx, ry, rotation, 0, Math.PI * 2);
-    if (p.fill.state === "solid") {
+    if (p.fill.state === 'solid') {
       ctx.fillStyle = p.fill.color;
       ctx.fill();
     }
     if (p.strokeEnabled !== false) {
       ctx.strokeStyle = p.strokeColor;
       ctx.lineWidth = p.lineWidth;
-      ctx.lineCap = "butt";
-      ctx.lineJoin = "miter";
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'miter';
       ctx.setLineDash(p.dash);
       ctx.lineDashOffset = 0;
       ctx.stroke();

@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const words = (ns) => {
   const b = Buffer.alloc(4 * ns.length);
   ns.forEach((n, i) => b.writeUInt32LE(n, 4 * i));
@@ -28,7 +28,7 @@ export function huffmanFixture(bits = [1, 1, ...Array(14).fill(0)], selector = 0
   ]);
 }
 export function jpegTablesOracle(mode, raw) {
-  if (!raw.length) throw Error("EmptyJpegTableSegment");
+  if (!raw.length) throw Error('EmptyJpegTableSegment');
   let at = 0,
     count = 0;
   const chunks = [];
@@ -36,27 +36,27 @@ export function jpegTablesOracle(mode, raw) {
     const selector = raw[at++],
       hi = selector >> 4,
       id = selector & 15;
-    if (hi > 1 || id > 3) throw Error("InvalidJpegTableSelector");
+    if (hi > 1 || id > 3) throw Error('InvalidJpegTableSelector');
     if (mode === 0) {
       const width = hi + 1;
-      if (at + 64 * width > raw.length) throw Error("UnexpectedEnd");
+      if (at + 64 * width > raw.length) throw Error('UnexpectedEnd');
       const values = Buffer.alloc(128);
       for (let i = 0; i < 64; i++) {
         const value = hi ? raw[at] * 256 + raw[at + 1] : raw[at];
         at += width;
-        if (value === 0) throw Error("InvalidJpegQuantizationValue");
+        if (value === 0) throw Error('InvalidJpegQuantizationValue');
         values.writeUInt16LE(value, 2 * i);
       }
       chunks.push(words([id, hi, 64]), values);
     } else {
-      if (at + 16 > raw.length) throw Error("UnexpectedEnd");
+      if (at + 16 > raw.length) throw Error('UnexpectedEnd');
       const bits = raw.subarray(at, at + 16);
       at += 16;
       const symbols = bits.reduce((a, b) => a + b, 0);
       // Independent fixed-denominator Kraft sum, not the product's slot recurrence.
       const occupied = bits.reduce((sum, n, i) => sum + n * 2 ** (15 - i), 0);
-      if (occupied >= 65536) throw Error("InvalidJpegHuffmanCodeSpace");
-      if (at + symbols > raw.length) throw Error("UnexpectedEnd");
+      if (occupied >= 65536) throw Error('InvalidJpegHuffmanCodeSpace');
+      if (at + symbols > raw.length) throw Error('UnexpectedEnd');
       chunks.push(
         words([id, hi, symbols, 65536 - occupied, 1]),
         bits,

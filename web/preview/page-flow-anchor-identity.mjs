@@ -1,9 +1,9 @@
-import { createdTableIdentity } from "../../js/created-table-identity.mjs";
+import { createdTableIdentity } from '../../js/created-table-identity.mjs';
 
 // Source nodes and generated u64 identities occupy disjoint namespaces.
 export function pageFlowAnchorIdentity(row) {
-  if (Object.hasOwn(row, "createdTableIdentity")) {
-    if (Object.hasOwn(row, "tableNode")) return null;
+  if (Object.hasOwn(row, 'createdTableIdentity')) {
+    if (Object.hasOwn(row, 'tableNode')) return null;
     try {
       createdTableIdentity(row.createdTableIdentity);
     } catch {

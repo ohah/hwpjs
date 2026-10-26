@@ -1,12 +1,12 @@
-import { inlinePictureRowPlacement } from "./inline-picture-row-placement.mjs";
-import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
-import { affineBox } from "./affine-point-geometry.mjs";
-import { tableCollisionFootprints } from "./table-collision-footprints.mjs";
+import { inlinePictureRowPlacement } from './inline-picture-row-placement.mjs';
+import { layoutInlineTablePageContent } from './inline-table-page-content.mjs';
+import { affineBox } from './affine-point-geometry.mjs';
+import { tableCollisionFootprints } from './table-collision-footprints.mjs';
 
 // Project table cells in drawing-local coordinates, then apply exactly the
 // drawing text transform. Native table parent identities remain unchanged.
 export function projectInlineDrawingTables(measured, text, placement, maxRows) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const rows = [...text.rows],
     boxes = [],
     tableAnchors = [],
@@ -21,7 +21,7 @@ export function projectInlineDrawingTables(measured, text, placement, maxRows) {
         r.startUnit <= table.anchorUnit &&
         table.anchorUnit < r.endUnit,
     );
-    if (matches.length !== 1) return fail("AmbiguousDrawingOwnedTableAnchor");
+    if (matches.length !== 1) return fail('AmbiguousDrawingOwnedTableAnchor');
     const row = { ...matches[0], transform: undefined };
     const local = inlinePictureRowPlacement(
       {
@@ -36,9 +36,9 @@ export function projectInlineDrawingTables(measured, text, placement, maxRows) {
       row,
       0,
     );
-    if (local.state !== "placed") return local;
+    if (local.state !== 'placed') return local;
     const available = maxRows - rows.length;
-    if (available < 1) return fail("DrawingTextLayoutLimit");
+    if (available < 1) return fail('DrawingTextLayoutLimit');
     const projected = layoutInlineTablePageContent(
       table,
       entry.measured,
@@ -53,13 +53,13 @@ export function projectInlineDrawingTables(measured, text, placement, maxRows) {
       object.outerInsets,
       { maxRows: available },
     );
-    if (projected.state !== "placed") return projected;
+    if (projected.state !== 'placed') return projected;
     if (
       projected.rows.some((r) => r.transform !== undefined) ||
       projected.flowPictures?.length ||
       projected.placedDrawings?.length
     )
-      return fail("UnsupportedDrawingOwnedTableObjects");
+      return fail('UnsupportedDrawingOwnedTableObjects');
     const ownBoxes = projected.boxes.map((box) => {
       const physical = affineBox(matrix, box);
       return physical
@@ -71,7 +71,7 @@ export function projectInlineDrawingTables(measured, text, placement, maxRows) {
           }
         : null;
     });
-    if (ownBoxes.some((box) => !box)) return fail("InvalidDrawingOwnedTableTransform");
+    if (ownBoxes.some((box) => !box)) return fail('InvalidDrawingOwnedTableTransform');
     rows.push(
       ...projected.rows.map((r) => ({
         ...r,
@@ -94,7 +94,7 @@ export function projectInlineDrawingTables(measured, text, placement, maxRows) {
       bottom: object.outerInsets.bottom * matrix[3],
     };
     const collision = tableCollisionFootprints(table, { boxes: ownBoxes }, margins);
-    if (collision.state !== "collected") return collision;
+    if (collision.state !== 'collected') return collision;
     footprints.push(...collision.footprints);
   }
   return {

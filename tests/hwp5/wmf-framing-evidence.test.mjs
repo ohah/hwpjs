@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { inspectWmf } from "./wmf-framing-evidence.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { inspectWmf } from './wmf-framing-evidence.mjs';
 
 function standard() {
   const b = Buffer.alloc(24);
@@ -24,20 +24,20 @@ function placeable() {
   return b;
 }
 
-test("independent WMF oracle distinguishes standard, placeable and damaged framing", () => {
+test('independent WMF oracle distinguishes standard, placeable and damaged framing', () => {
   assert.deepEqual(inspectWmf(standard()), { placeable: false, records: 1, maxRecord: 3 });
   assert.deepEqual(inspectWmf(placeable()), { placeable: true, records: 1, maxRecord: 3 });
   const wrongSize = standard();
   wrongSize.writeUInt32LE(11, 6);
-  assert.throws(() => inspectWmf(wrongSize), { message: "InvalidWmfSize" });
+  assert.throws(() => inspectWmf(wrongSize), { message: 'InvalidWmfSize' });
   const extra = Buffer.concat([standard(), Buffer.from([1, 0])]);
-  assert.throws(() => inspectWmf(extra), { message: "InvalidWmfSize" });
+  assert.throws(() => inspectWmf(extra), { message: 'InvalidWmfSize' });
   extra.writeUInt32LE(13, 6);
-  assert.throws(() => inspectWmf(extra), { message: "DataAfterWmfEof" });
+  assert.throws(() => inspectWmf(extra), { message: 'DataAfterWmfEof' });
   const wrongChecksum = placeable();
   wrongChecksum[20] ^= 1;
-  assert.throws(() => inspectWmf(wrongChecksum), { message: "InvalidWmfPlaceableChecksum" });
+  assert.throws(() => inspectWmf(wrongChecksum), { message: 'InvalidWmfPlaceableChecksum' });
   const wrongMax = standard();
   wrongMax.writeUInt32LE(4, 12);
-  assert.throws(() => inspectWmf(wrongMax), { message: "InvalidWmfMaxRecord" });
+  assert.throws(() => inspectWmf(wrongMax), { message: 'InvalidWmfMaxRecord' });
 });

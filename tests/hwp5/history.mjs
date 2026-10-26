@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { historyDateEvidence } from "./history-date-evidence.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { historyDateEvidence } from './history-date-evidence.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -108,13 +108,13 @@ export function historyEdges(call) {
       check(Buffer.concat([start(0x8040), rec(tag, Buffer.from([7])), end]));
   check(Buffer.concat([start(1), rec(32, w(1)), rec(32, w(2)), end]));
   check(Buffer.concat([start(2), rec(33, Buffer.from([7])), end]));
-  check(Buffer.concat([start(0, 2), rec(49, Buffer.from("<x/>", "utf16le")), end]), 2);
+  check(Buffer.concat([start(0, 2), rec(49, Buffer.from('<x/>', 'utf16le')), end]), 2);
   assert.deepEqual(run(call, Buffer.alloc(0), 0, 0), Buffer.alloc(0));
   return { accepted, rejected };
 }
 export function historyActual(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url);
-  if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
+  const path = new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url);
+  if (!existsSync(path)) return { skipped: 'reference fixture unavailable' };
   cfb.parse(readFileSync(path), { strict: true });
   let decoded = 0,
     records = 0;
@@ -124,7 +124,7 @@ export function historyActual(call, cfb) {
     decoded += b.length;
     // These observed streams carry the same CRC32/ISIZE tail as other HWP streams.
     // Exercise the existing decoder, not a new guessed history encryption policy.
-    const header = Buffer.from(cfb.findExact("/FileHeader").content);
+    const header = Buffer.from(cfb.findExact('/FileHeader').content);
     assert.deepEqual(call(3, Buffer.concat([header, compressed]), b.length), b);
     const corrupt = Buffer.from(compressed);
     corrupt[corrupt.length - 8] ^= 1;

@@ -1,11 +1,11 @@
-import { dutmalKind } from "../../js/hwpx-dutmal-kind.mjs";
+import { dutmalKind } from '../../js/hwpx-dutmal-kind.mjs';
 
 // Drafts are transient. Only a matching native query establishes a baseline.
 export function createDutmalEditState({ request, changed = () => {} }) {
   let serial = 0,
     selection = null,
     baseline = null,
-    draft = "",
+    draft = '',
     pending = null,
     error = null,
     closed = false;
@@ -20,13 +20,13 @@ export function createDutmalEditState({ request, changed = () => {} }) {
   const publish = () => changed(snapshot());
   const query = () => {
     baseline = null;
-    draft = "";
+    draft = '';
     error = null;
     const requestId = ++serial;
-    pending = "query";
-    if (!request({ kind: "dutmal-text-query", ...selection, requestId })) {
+    pending = 'query';
+    if (!request({ kind: 'dutmal-text-query', ...selection, requestId })) {
       pending = null;
-      error = "DutmalQueryUnavailable";
+      error = 'DutmalQueryUnavailable';
     }
     publish();
   };
@@ -40,14 +40,14 @@ export function createDutmalEditState({ request, changed = () => {} }) {
           (number) => Number.isInteger(number) && number >= 0 && number <= 0xffffffff,
         )
       )
-        throw new RangeError("InvalidDutmalSelection");
+        throw new RangeError('InvalidDutmalSelection');
       dutmalKind(value.textKind);
       selection = { section: value.section, node: value.node, textKind: value.textKind };
       query();
       return true;
     },
     edit(value) {
-      if (closed || baseline === null || pending !== null || typeof value !== "string")
+      if (closed || baseline === null || pending !== null || typeof value !== 'string')
         return false;
       draft = value;
       publish();
@@ -57,13 +57,13 @@ export function createDutmalEditState({ request, changed = () => {} }) {
       if (!snapshot().canSubmit) return false;
       if (draft === baseline) return true;
       const accepted = request({
-        kind: "dutmal-text",
+        kind: 'dutmal-text',
         ...selection,
         value: draft,
         requestId: ++serial,
       });
       if (accepted) {
-        pending = "write";
+        pending = 'write';
         error = null;
         publish();
       }
@@ -71,22 +71,22 @@ export function createDutmalEditState({ request, changed = () => {} }) {
     },
     message(message) {
       if (closed) return false;
-      if (message.kind === "dutmal-text-query") {
-        if (pending !== "query" || message.requestId !== serial) return false;
+      if (message.kind === 'dutmal-text-query') {
+        if (pending !== 'query' || message.requestId !== serial) return false;
         const identity = message.error ? message : message.dutmal;
         if (
           !identity ||
-          ["section", "node", "textKind"].some((key) => identity[key] !== selection[key])
+          ['section', 'node', 'textKind'].some((key) => identity[key] !== selection[key])
         )
           return false;
-        if (!message.error && typeof message.dutmal.value !== "string") return false;
+        if (!message.error && typeof message.dutmal.value !== 'string') return false;
         pending = null;
         error = message.error ?? null;
         if (!error) baseline = draft = message.dutmal.value;
         publish();
         return true;
       }
-      if (message.kind === "dutmal-text" && pending === "write") {
+      if (message.kind === 'dutmal-text' && pending === 'write') {
         if (message.requestId !== serial) return false;
         if (message.error) {
           pending = null;
@@ -96,8 +96,8 @@ export function createDutmalEditState({ request, changed = () => {} }) {
         }
         if (
           !message.dutmal ||
-          ["section", "node", "textKind"].some((key) => message.dutmal[key] !== selection[key]) ||
-          typeof message.dutmal.value !== "string"
+          ['section', 'node', 'textKind'].some((key) => message.dutmal[key] !== selection[key]) ||
+          typeof message.dutmal.value !== 'string'
         )
           return false;
         pending = null;
@@ -106,7 +106,7 @@ export function createDutmalEditState({ request, changed = () => {} }) {
         publish();
         return true;
       }
-      if (["undo", "redo"].includes(message.kind) && !message.error && selection) {
+      if (['undo', 'redo'].includes(message.kind) && !message.error && selection) {
         query();
         return true;
       }
@@ -117,7 +117,7 @@ export function createDutmalEditState({ request, changed = () => {} }) {
       serial++;
       selection = null;
       baseline = null;
-      draft = "";
+      draft = '';
       pending = error = null;
       publish();
     },
@@ -126,7 +126,7 @@ export function createDutmalEditState({ request, changed = () => {} }) {
       serial++;
       selection = null;
       baseline = null;
-      draft = "";
+      draft = '';
       pending = error = null;
       closed = true;
       publish();

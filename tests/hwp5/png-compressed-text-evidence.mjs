@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { inflateSync } from "node:zlib";
-import { keywordPrefixEvidence, latin1Evidence } from "./png-text-evidence.mjs";
+import assert from 'node:assert/strict';
+import { inflateSync } from 'node:zlib';
+import { keywordPrefixEvidence, latin1Evidence } from './png-text-evidence.mjs';
 export function compressedTextEvidence({ chunks }, maxText = 64 * 1024 * 1024) {
   const entries = [];
   let keywordBytes = 0,
     textBytes = 0,
     payloadBytes = 0;
   for (const { name, payload } of chunks) {
-    if (name !== "zTXt") continue;
+    if (name !== 'zTXt') continue;
     const { key, remaining } = keywordPrefixEvidence(payload);
     assert.ok(remaining.length >= 1);
     assert.equal(remaining[0], 0);
@@ -45,8 +45,8 @@ export function compressedTextWire(structure, t, maxText = 64 * 1024 * 1024) {
     zi = 0;
   const records = [];
   for (const { name } of structure.chunks) {
-    if (name !== "tEXt" && name !== "zTXt") continue;
-    const isZ = name === "zTXt",
+    if (name !== 'tEXt' && name !== 'zTXt') continue;
+    const isZ = name === 'zTXt',
       v = isZ ? z.entries[zi++] : plain.entries[pi++];
     const lengths = Buffer.alloc(12);
     lengths.writeUInt32LE(isZ ? 1 : 0);

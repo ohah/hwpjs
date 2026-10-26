@@ -1,7 +1,7 @@
-import { object, uint } from "./chart-display-fields.mjs";
+import { object, uint } from './chart-display-fields.mjs';
 const optional = (accepts) => (value) => value === null || accepts(value);
 const bounded = (max) => (value) => uint(value) && value <= max;
-const boolean = (value) => typeof value === "boolean";
+const boolean = (value) => typeof value === 'boolean';
 const offset = (value) => Number.isInteger(value) && value >= -0x80000000 && value <= 0xffffffff;
 export function chartDisplayHost(value, wrapper) {
   if (

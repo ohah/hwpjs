@@ -1,20 +1,20 @@
-import { cellFlowLineCount } from "./cell-row-split-policy.mjs";
-import { layoutContent } from "./layout.mjs";
-import { tableGrid } from "./table-grid.mjs";
-import { tableCellInsets } from "./table-insets.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
-import { tableCellColumnContext } from "./table-cell-column-context.mjs";
-import { measureTableCellColumns } from "./table-cell-column-measurement.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { alignTableCellFlow } from "./table-cell-vertical-alignment.mjs";
-import { tableCellPictureReferences } from "./table-cell-picture-references.mjs";
+import { cellFlowLineCount } from './cell-row-split-policy.mjs';
+import { layoutContent } from './layout.mjs';
+import { tableGrid } from './table-grid.mjs';
+import { tableCellInsets } from './table-insets.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
+import { tableCellColumnContext } from './table-cell-column-context.mjs';
+import { measureTableCellColumns } from './table-cell-column-measurement.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { alignTableCellFlow } from './table-cell-vertical-alignment.mjs';
+import { tableCellPictureReferences } from './table-cell-picture-references.mjs';
 import {
   tableCellFlowExtent,
   tableCellRowExtent,
   isZeroAdvanceCellAnchor,
-} from "./table-cell-band.mjs";
-import { measureCellSqueezeFlow } from "./cell-squeeze-flow.mjs";
-import { cellCrossesMandatoryCut } from "./cell-fragment-alignment.mjs";
+} from './table-cell-band.mjs';
+import { measureCellSqueezeFlow } from './cell-squeeze-flow.mjs';
+import { cellCrossesMandatoryCut } from './cell-fragment-alignment.mjs';
 
 /** Measure flat cell paragraphs without inventing source padding or page policy. */
 export function measureTableCells(
@@ -30,7 +30,7 @@ export function measureTableCells(
     paragraphFlows,
     measureCellFlow,
     completeCellFlow,
-    compactLines = padding === "source",
+    compactLines = padding === 'source',
     columnWidths,
     sourceRowHorizontals = false,
     minimumRowHeight,
@@ -38,38 +38,38 @@ export function measureTableCells(
     deferMultilineAlignment = false,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
-  if (typeof compactLines !== "boolean" || typeof deferMultilineAlignment !== "boolean")
-    return unavailable("InvalidTableCellMeasurement");
-  if (minimumRowHeight === undefined) minimumRowHeight = padding === "source" ? 0 : 28;
+  const unavailable = (error) => ({ state: 'unavailable', error });
+  if (typeof compactLines !== 'boolean' || typeof deferMultilineAlignment !== 'boolean')
+    return unavailable('InvalidTableCellMeasurement');
+  if (minimumRowHeight === undefined) minimumRowHeight = padding === 'source' ? 0 : 28;
   if (!Number.isFinite(minimumRowHeight) || minimumRowHeight < 0)
-    return unavailable("InvalidTableCellMeasurement");
-  if (!Array.isArray(pictures)) return unavailable("InvalidTableCellPictures");
-  if (measureCellFlow !== undefined && typeof measureCellFlow !== "function")
-    return unavailable("InvalidTableCellMeasurement");
-  if (completeCellFlow !== undefined && typeof completeCellFlow !== "function")
-    return unavailable("InvalidTableCellMeasurement");
-  if (minimumCellHeight !== undefined && typeof minimumCellHeight !== "function")
-    return unavailable("InvalidTableCellMinimumHeight");
-  if (padding === "source") {
+    return unavailable('InvalidTableCellMeasurement');
+  if (!Array.isArray(pictures)) return unavailable('InvalidTableCellPictures');
+  if (measureCellFlow !== undefined && typeof measureCellFlow !== 'function')
+    return unavailable('InvalidTableCellMeasurement');
+  if (completeCellFlow !== undefined && typeof completeCellFlow !== 'function')
+    return unavailable('InvalidTableCellMeasurement');
+  if (minimumCellHeight !== undefined && typeof minimumCellHeight !== 'function')
+    return unavailable('InvalidTableCellMinimumHeight');
+  if (padding === 'source') {
     padding = resolveTablePadding(table, padding);
-    if (!padding) return unavailable("MissingTableSourceInsets");
+    if (!padding) return unavailable('MissingTableSourceInsets');
   }
   if (
     !Array.isArray(table?.cells) ||
     table.cells.some((cell) => !cell || !tableCellInsets(padding, cell)) ||
     !Array.isArray(paragraphs) ||
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !origin ||
     ![origin.x, origin.y].every(Number.isFinite) ||
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return unavailable("InvalidTableCellMeasurement");
+    return unavailable('InvalidTableCellMeasurement');
   const members = new Map();
   for (const paragraph of paragraphs) {
     const key = `${paragraph.section}:${paragraph.paragraph}`;
-    if (members.has(key)) return unavailable("AmbiguousTableCellParagraph");
+    if (members.has(key)) return unavailable('AmbiguousTableCellParagraph');
     members.set(key, paragraph);
   }
   const minima = new Map();
@@ -81,7 +81,7 @@ export function measureTableCells(
           listNode: cell.listNode,
         })
       : 0;
-    if (!Number.isFinite(height) || height < 0) return unavailable("InvalidTableCellMinimumHeight");
+    if (!Number.isFinite(height) || height < 0) return unavailable('InvalidTableCellMinimumHeight');
     minima.set(cell, height);
   }
   const initial = tableGrid(table, {
@@ -97,24 +97,24 @@ export function measureTableCells(
   for (const [index, cell] of table.cells.entries()) {
     const insets = tableCellInsets(padding, cell);
     if (!Array.isArray(cell.paragraphs) || flows.has(cell.listNode))
-      return unavailable("AmbiguousTableCellParagraph");
+      return unavailable('AmbiguousTableCellParagraph');
     const selected = [];
     for (const id of cell.paragraphs) {
       const key = `${table.section}:${id}`,
         paragraph = members.get(key);
-      if (!paragraph || owned.has(key)) return unavailable("AmbiguousTableCellParagraph");
+      if (!paragraph || owned.has(key)) return unavailable('AmbiguousTableCellParagraph');
       if (
         paragraph.clipped ||
         paragraph.tableCell?.tableNode !== table.tableNode ||
         paragraph.tableCell?.listNode !== cell.listNode
       )
-        return unavailable("UnsupportedTableCellContent");
+        return unavailable('UnsupportedTableCellContent');
       owned.add(key);
       selected.push(paragraph);
     }
     const width = initial.cells[index].width - insets.left - insets.right;
     const invalidMeasurement = (measurementStage, details = {}) => ({
-      ...unavailable("InvalidTableCellMeasurement"),
+      ...unavailable('InvalidTableCellMeasurement'),
       section: table.section,
       tableNode: table.tableNode,
       listNode: cell.listNode,
@@ -122,12 +122,12 @@ export function measureTableCells(
       ...details,
     });
     if (width <= 0)
-      return invalidMeasurement("content-width", {
+      return invalidMeasurement('content-width', {
         availableWidth: width,
         cellWidth: initial.cells[index].width,
         horizontalInsets: insets.left + insets.right,
       });
-    if (measuredRows >= maxRows) return unavailable("TableCellMeasurementLimit");
+    if (measuredRows >= maxRows) return unavailable('TableCellMeasurementLimit');
     const selectedIds = new Set(selected.map((paragraph) => paragraph.paragraph));
     const cellPictures = pictures.filter(
       (picture) => picture.section === table.section && selectedIds.has(picture.paragraph),
@@ -136,7 +136,7 @@ export function measureTableCells(
       paragraphFlows === undefined
         ? null
         : tableCellColumnContext(table, cell, paragraphs, paragraphFlows);
-    if (context && context.state !== "selected") return context;
+    if (context && context.state !== 'selected') return context;
     const resolvedPictures = tableCellPictureReferences(pictureReferences, {
       table,
       cell,
@@ -148,7 +148,7 @@ export function measureTableCells(
       pictures: cellPictures,
       columnContext: context,
     });
-    if (resolvedPictures.state !== "resolved")
+    if (resolvedPictures.state !== 'resolved')
       return {
         ...resolvedPictures,
         section: table.section,
@@ -156,7 +156,7 @@ export function measureTableCells(
         listNode: cell.listNode,
       };
     const multiple = context?.declaration?.count > 1;
-    if (multiple && cellPictures.length) return unavailable("UnsupportedTableCellColumnPictures");
+    if (multiple && cellPictures.length) return unavailable('UnsupportedTableCellColumnPictures');
     const defaultFlow = () =>
       multiple
         ? measureTableCellColumns(
@@ -214,14 +214,14 @@ export function measureTableCells(
         pictures: cellPictures,
         flow,
       });
-    if (!flow || typeof flow !== "object") return invalidMeasurement("flow-result");
-    if (flow.state === "unavailable") return flow;
+    if (!flow || typeof flow !== 'object') return invalidMeasurement('flow-result');
+    if (flow.state === 'unavailable') return flow;
     if (!Array.isArray(flow.rows) || !Number.isFinite(flow.height) || flow.height < 0)
-      return invalidMeasurement("flow-shape");
+      return invalidMeasurement('flow-shape');
     if (flow.limited || flow.rows.length > maxRows - measuredRows)
-      return unavailable("TableCellMeasurementLimit");
+      return unavailable('TableCellMeasurementLimit');
     const extent = tableCellFlowExtent(flow);
-    if (!Number.isFinite(extent)) return invalidMeasurement("flow-visual-extent");
+    if (!Number.isFinite(extent)) return invalidMeasurement('flow-visual-extent');
     if (extent > flow.height) flow = { ...flow, height: extent };
     if (context?.pageBreakParagraphs?.length) {
       const cellPageBreaks = [];
@@ -230,19 +230,19 @@ export function measureTableCells(
           (row) => row.section === table.section && row.paragraph === paragraph,
         );
         if (!rows.length || rows.some((row) => !Number.isFinite(row.y) || row.y < 0))
-          return unavailable("MissingTableCellPageBreakRow");
+          return unavailable('MissingTableCellPageBreakRow');
         cellPageBreaks.push({
           section: table.section,
           paragraph,
           y: Math.min(...rows.map((row) => row.y)),
         });
       }
-      if (flow.cellPageBreaks !== undefined) return unavailable("AmbiguousTableCellPageBreaks");
+      if (flow.cellPageBreaks !== undefined) return unavailable('AmbiguousTableCellPageBreaks');
       flow = { ...flow, cellPageBreaks };
     }
     if (supplied != null || completeCellFlow !== undefined) {
       if (flow.coverageRows !== undefined && !Array.isArray(flow.coverageRows))
-        return unavailable("InvalidTableCellMeasurement");
+        return unavailable('InvalidTableCellMeasurement');
       const invalidIndex = flow.rows.findIndex(
         (row) =>
           !row ||
@@ -253,7 +253,7 @@ export function measureTableCells(
       );
       if (invalidIndex >= 0)
         return {
-          ...unavailable("InvalidTableCellMeasurement"),
+          ...unavailable('InvalidTableCellMeasurement'),
           tableNode: table.tableNode,
           listNode: cell.listNode,
           rowY: flow.rows[invalidIndex]?.y,
@@ -263,8 +263,8 @@ export function measureTableCells(
       const ownRows = (flow.coverageRows ?? flow.rows).filter(
         (row) => row.section === table.section && selectedIds.has(row.paragraph),
       );
-      if (pageParagraphCoverage(selected, ownRows).state !== "complete")
-        return unavailable("IncompleteTableCellMeasurement");
+      if (pageParagraphCoverage(selected, ownRows).state !== 'complete')
+        return unavailable('IncompleteTableCellMeasurement');
     }
     measuredRows += flow.rows.length;
     flows.set(cell.listNode, flow);
@@ -286,19 +286,19 @@ export function measureTableCells(
     },
   });
   const mandatoryCuts = [];
-  if (table.pagination?.page_break === "cell")
+  if (table.pagination?.page_break === 'cell')
     for (const [index, cell] of table.cells.entries()) {
       const insets = tableCellInsets(padding, cell);
       const flow = flows.get(cell.listNode),
         cuts = flow.cellPageBreaks;
       if (cuts === undefined) continue;
       if (!Array.isArray(cuts) || cuts.length > flow.rows.length)
-        return unavailable("InvalidTableCellPageBreak");
+        return unavailable('InvalidTableCellPageBreak');
       for (const cut of cuts) {
         if (!cut || !Number.isFinite(cut.y) || cut.y < 0 || cut.y > flow.height)
-          return unavailable("InvalidTableCellPageBreak");
+          return unavailable('InvalidTableCellPageBreak');
         const position = grid.cells[index].y + insets.top + cut.y;
-        if (!Number.isFinite(position)) return unavailable("InvalidTableCellPageBreak");
+        if (!Number.isFinite(position)) return unavailable('InvalidTableCellPageBreak');
         mandatoryCuts.push(position);
       }
     }
@@ -335,5 +335,5 @@ export function measureTableCells(
   } catch (error) {
     return unavailable(error.message);
   }
-  return { state: "measured", grid, flows, rowCount: measuredRows };
+  return { state: 'measured', grid, flows, rowCount: measuredRows };
 }

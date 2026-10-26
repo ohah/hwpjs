@@ -1,5 +1,5 @@
-import { clipChartLineSegment } from "./chart-line-clip.mjs";
-import { paintChartMarker } from "./chart-marker-paint.mjs";
+import { clipChartLineSegment } from './chart-line-clip.mjs';
+import { paintChartMarker } from './chart-marker-paint.mjs';
 /** Plot-clipped straight preview strokes; never persists derived coordinates. */
 export function paintChartLines(ctx, lines, plot, x, y, color) {
   ctx.save();

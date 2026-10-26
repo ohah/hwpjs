@@ -1,4 +1,4 @@
-import { removeBase, usePage } from "@rspress/core/runtime";
+import { removeBase, usePage } from '@rspress/core/runtime';
 import {
   Layout as DefaultLayout,
   HomeHero,
@@ -6,8 +6,8 @@ import {
   HomeFooter,
   DocContent,
   type HomeLayoutProps,
-} from "@rspress/core/theme-original";
-import { DocumentGraphic } from "./DocumentGraphic";
+} from '@rspress/core/theme-original';
+import { DocumentGraphic } from './DocumentGraphic';
 
 function HomeLayout(props: HomeLayoutProps) {
   return (
@@ -33,9 +33,9 @@ function HomeLayout(props: HomeLayoutProps) {
 export function Layout() {
   const { page } = usePage();
   const route = removeBase(page.routePath)
-    .replace(/\.html$/, "")
-    .replace(/\/$/, "");
-  const mode = route === "/playground" ? "playground" : page.pageType === "home" ? "home" : "doc";
+    .replace(/\.html$/, '')
+    .replace(/\/$/, '');
+  const mode = route === '/playground' ? 'playground' : page.pageType === 'home' ? 'home' : 'doc';
   return (
     <div className="hwpjs-theme" data-page={mode}>
       <DefaultLayout
@@ -50,4 +50,4 @@ export function Layout() {
   );
 }
 
-export * from "@rspress/core/theme-original";
+export * from '@rspress/core/theme-original';

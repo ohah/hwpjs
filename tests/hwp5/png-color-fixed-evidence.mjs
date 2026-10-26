@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function colorFixedEvidence({ chunks }) {
   const fields = Array(11).fill(0);
   let count = 0,
     bytes = 0;
   for (const [name, size, presence, start] of [
-    ["gAMA", 4, 0, 1],
-    ["cHRM", 32, 2, 3],
+    ['gAMA', 4, 0, 1],
+    ['cHRM', 32, 2, 3],
   ]) {
     const indexes = chunks.map((c, i) => (c.name === name ? i : -1)).filter((i) => i >= 0);
     assert.ok(indexes.length <= 1);
@@ -13,7 +13,7 @@ export function colorFixedEvidence({ chunks }) {
     const index = indexes[0],
       payload = chunks[index].payload;
     assert.equal(payload.length, size);
-    const stop = chunks.findIndex((c) => c.name === "PLTE" || c.name === "IDAT");
+    const stop = chunks.findIndex((c) => c.name === 'PLTE' || c.name === 'IDAT');
     assert.ok(index < stop);
     fields[presence] = 1;
     for (let i = 0; i < size / 4; i++) {

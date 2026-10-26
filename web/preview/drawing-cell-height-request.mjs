@@ -1,10 +1,10 @@
 /** Derive a view-only cell height floor from a proven cell-local collision failure. */
 export function drawingCellHeightRequest(scope, failure) {
-  const refused = () => ({ state: "unavailable", error: "InvalidDrawingCellHeightRequest" });
+  const refused = () => ({ state: 'unavailable', error: 'InvalidDrawingCellHeightRequest' });
   if (
-    scope?.state !== "scoped" ||
-    failure?.state !== "unavailable" ||
-    failure.error !== "DrawingNeedsNextPage"
+    scope?.state !== 'scoped' ||
+    failure?.state !== 'unavailable' ||
+    failure.error !== 'DrawingNeedsNextPage'
   )
     return refused();
   const owner = scope.cellOwner,
@@ -31,7 +31,7 @@ export function drawingCellHeightRequest(scope, failure) {
       return refused();
   }
   if (
-    !["x", "y", "width", "height"].every((key) => body[key] === failure.body[key]) ||
+    !['x', 'y', 'width', 'height'].every((key) => body[key] === failure.body[key]) ||
     rectangle.x < body.x ||
     rectangle.x + rectangle.width > body.x + body.width ||
     rectangle.y < body.y
@@ -42,7 +42,7 @@ export function drawingCellHeightRequest(scope, failure) {
   if (!(overflow > 0) || !Number.isFinite(minimumHeight) || minimumHeight <= owner.height)
     return refused();
   return {
-    state: "requested",
+    state: 'requested',
     section: owner.section,
     tableNode: owner.tableNode,
     listNode: owner.listNode,

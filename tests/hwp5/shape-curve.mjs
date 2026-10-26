@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { polygonBytes } from "./shape-polygon.mjs";
+import assert from 'node:assert/strict';
+import { polygonBytes } from './shape-polygon.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -37,7 +37,7 @@ export function curveActual(call, b, mode = 1, prefixes = true) {
     segments: count,
     types,
     extra: tail.length,
-    tail: tail.toString("hex"),
+    tail: tail.toString('hex'),
     rejected: prefixes ? end : 0,
   };
 }

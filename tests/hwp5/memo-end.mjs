@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { documentRecords } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { documentRecords } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
-const token = () => Buffer.from("0400656d250001ffff00010000000400", "hex");
+const token = () => Buffer.from('0400656d250001ffff00010000000400', 'hex');
 export function memoEndEdges(call) {
   let accepted = 0,
     rejected = 0;
@@ -55,7 +55,7 @@ export function memoEndEdges(call) {
   assert.throws(() => call(91, bad), /InvalidControlTerminator/);
   rejected++;
   check(b);
-  const prefix = Buffer.from("😀", "utf16le");
+  const prefix = Buffer.from('😀', 'utf16le');
   assert.deepEqual(
     call(91, Buffer.concat([prefix, b, b])),
     Buffer.concat([2, b.readUInt32LE(6), 1, 10, b.readUInt32LE(6), 1].map(w)),
@@ -72,19 +72,19 @@ export function memoEndActual(call, cfb) {
     texts = 0;
   const middleCounts = {};
   for (const name of [
-    "aift.hwp",
-    "issue5169_viewtext_changetracking.hwp",
-    "basic/NewYear_s_Day.hwp",
-    "basic/english.hwp",
-    "issue5866/memo_field_hwp5.hwp",
-    "task2287/1342000_edu_curriculum_map.hwp",
+    'aift.hwp',
+    'issue5169_viewtext_changetracking.hwp',
+    'basic/NewYear_s_Day.hwp',
+    'basic/english.hwp',
+    'issue5866/memo_field_hwp5.hwp',
+    'task2287/1342000_edu_curriculum_map.hwp',
   ]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       nodes = cfb.document().nodes,
-      parent = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText"),
+      parent = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText'),
       fields = [],
       closing = [];
     for (const section of nodes.filter((n) => n.parent === parent && /^Section\d+$/.test(n.name))) {
@@ -97,7 +97,7 @@ export function memoEndActual(call, cfb) {
           p = b.subarray(r.start, r.end);
         if (r.tag === 71 && p.length >= 15) {
           const e = 11 + p.readUInt16LE(9) * 2,
-            command = p.subarray(11, e).toString("utf16le"),
+            command = p.subarray(11, e).toString('utf16le'),
             match = /^MEMO\/65535\/(\d+)\//.exec(command);
           if (match) {
             assert.ok(e + 8 <= p.length);

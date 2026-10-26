@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -57,16 +57,16 @@ export function memoResourceEdges(call) {
 }
 export function memoResourceDocument(call, cfb) {
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/hwpx_sample2.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/hwpx_sample2.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const nodes = cfb.document().nodes;
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     flags = h.readUInt32LE(36),
     v = h.subarray(32, 36);
   const decode = (b) => call(3, Buffer.concat([h, Buffer.from(b)]));
-  const info = decode(cfb.findExact("/DocInfo").content),
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+  const info = decode(cfb.findExact('/DocInfo').content),
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const sections = nodes
     .filter((n) => n.parent === body && /^Section\d+$/.test(n.name))
     .map((n) => ({ index: Number(n.name.slice(7)), bytes: decode(n.content) }));
@@ -82,7 +82,7 @@ export function memoResourceDocument(call, cfb) {
     assert.throws(() => call(7, Buffer.concat([v, changed])), error);
     assert.throws(() => call(24, decodedDocumentInput(h, changed, sections)), error);
     const altered = nodes.map((n) =>
-      n.parent === 0 && n.name === "DocInfo"
+      n.parent === 0 && n.name === 'DocInfo'
         ? { ...n, content: flags & 1 ? deflateRawSync(changed) : changed }
         : n,
     );

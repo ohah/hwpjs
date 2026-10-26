@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { formulaAtParagraph } from "../../web/preview/formula-selection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { formulaAtParagraph } from '../../web/preview/formula-selection.mjs';
 
-test("HWP5 Worker formula panel handles current definitions history refusals and saved reopen without unlocking result text", async (t) => {
+test('HWP5 Worker formula panel handles current definitions history refusals and saved reopen without unlocking result text', async (t) => {
   const previousSelf = globalThis.self,
     previousFetch = globalThis.fetch,
     replies = [];
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
   globalThis.self = {
     postMessage(value) {
       replies.push(value);
@@ -25,92 +25,92 @@ test("HWP5 Worker formula panel handles current definitions history refusals and
     assert.equal(replies.length, 1);
     return replies.shift();
   };
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
-  const loaded = await send({ kind: "load", format: "hwp5", bytes: input });
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp');
+  const loaded = await send({ kind: 'load', format: 'hwp5', bytes: input });
   assert.equal(loaded.error, undefined);
   assert.equal(loaded.content.formulaDefinitionAvailable, true);
   assert.deepEqual(loaded.content.formulaErrors, []);
   assert.equal(loaded.content.formulas.length, 13);
   const first = loaded.content.formulas[0],
     command = {
-      kind: "formula-definition",
+      kind: 'formula-definition',
       section: first.section,
       beginElement: first.beginElement,
-      formula: "=AVG(B?:E?)",
+      formula: '=AVG(B?:E?)',
     };
   assert.equal(formulaAtParagraph(loaded.content, { section: 0, paragraph: 23 }), first);
-  assert.equal((await send(command)).error, "EditorNotOpen");
-  assert.equal((await send({ kind: "enable" })).error, undefined);
+  assert.equal((await send(command)).error, 'EditorNotOpen');
+  assert.equal((await send({ kind: 'enable' })).error, undefined);
   const protectedResult = await send({
-    kind: "splice",
+    kind: 'splice',
     section: 0,
     paragraph: 23,
     startUnit: 8,
     endUnit: 8,
-    text: "X",
+    text: 'X',
   });
-  assert.equal(protectedResult.error, "ReadOnlyFormulaResult");
+  assert.equal(protectedResult.error, 'ReadOnlyFormulaResult');
   assert.equal(protectedResult.applied, false);
-  assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), input);
+  assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), input);
   const changed = await send(command);
   assert.equal(changed.error, undefined);
-  assert.equal(changed.content.formulas[0].formula, "=AVG(B?:E?)");
-  assert.equal(changed.content.formulas[0].last_result, "16.875");
-  const saved = await send({ kind: "save", allowStaleLayout: true });
+  assert.equal(changed.content.formulas[0].formula, '=AVG(B?:E?)');
+  assert.equal(changed.content.formulas[0].last_result, '16.875');
+  const saved = await send({ kind: 'save', allowStaleLayout: true });
   assert.equal(saved.error, undefined);
-  assert.equal((await send({ kind: "undo" })).content.formulas[0].formula, first.formula);
-  const refused = await send({ ...command, formula: "=SUM(Z999:Z1000)" });
-  assert.equal(refused.error, "FormulaReferenceOutOfBounds");
+  assert.equal((await send({ kind: 'undo' })).content.formulas[0].formula, first.formula);
+  const refused = await send({ ...command, formula: '=SUM(Z999:Z1000)' });
+  assert.equal(refused.error, 'FormulaReferenceOutOfBounds');
   assert.equal(refused.applied, false);
-  assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), input);
-  assert.equal((await send({ kind: "redo" })).content.formulas[0].last_result, "16.875");
+  assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), input);
+  assert.equal((await send({ kind: 'redo' })).content.formulas[0].last_result, '16.875');
   for (const [formula, display] of [
-    ["=MIN(B?:E?)", "11.2"],
-    ["=MAX(B?,C?,B?)", "24.7"],
-    ["=AVERAGE(B?:E?)", "16.875"],
+    ['=MIN(B?:E?)', '11.2'],
+    ['=MAX(B?,C?,B?)', '24.7'],
+    ['=AVERAGE(B?:E?)', '16.875'],
   ]) {
     const extrema = await send({ ...command, formula });
     assert.equal(extrema.error, undefined);
     assert.equal(extrema.content.formulas[0].last_result, display);
     assert.equal(extrema.content.formulas[0].formula, formula);
-    assert.equal((await send({ kind: "undo" })).content.formulas[0].last_result, "16.875");
-    assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
+    assert.equal((await send({ kind: 'undo' })).content.formulas[0].last_result, '16.875');
+    assert.deepEqual((await send({ kind: 'save', allowStaleLayout: true })).bytes, saved.bytes);
   }
-  const split = await send({ kind: "split", section: 0, paragraph: 1, atUnit: 1 });
+  const split = await send({ kind: 'split', section: 0, paragraph: 1, atUnit: 1 });
   assert.equal(split.error, undefined);
   assert.equal(split.content.formulaDefinitionAvailable, true);
   assert.deepEqual(split.content.formulaErrors, []);
   const shifted = formulaAtParagraph(split.content, { section: 0, paragraph: 24 });
   assert.equal(shifted.beginElement, first.beginElement);
-  assert.equal(shifted.formula, "=AVG(B?:E?)");
+  assert.equal(shifted.formula, '=AVG(B?:E?)');
   assert.equal(formulaAtParagraph(split.content, { section: 0, paragraph: 23 }), null);
-  const splitBytes = (await send({ kind: "save", allowStaleLayout: true })).bytes;
+  const splitBytes = (await send({ kind: 'save', allowStaleLayout: true })).bytes;
   const resultRefused = await send({
-    kind: "splice",
+    kind: 'splice',
     section: 0,
     paragraph: 24,
     startUnit: 8,
     endUnit: 8,
-    text: "X",
+    text: 'X',
   });
-  assert.equal(resultRefused.error, "ReadOnlyFormulaResult");
+  assert.equal(resultRefused.error, 'ReadOnlyFormulaResult');
   assert.equal(resultRefused.applied, false);
-  assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, splitBytes);
-  const sum = await send({ ...command, formula: "=SUM(B?:E?)" });
+  assert.deepEqual((await send({ kind: 'save', allowStaleLayout: true })).bytes, splitBytes);
+  const sum = await send({ ...command, formula: '=SUM(B?:E?)' });
   assert.equal(sum.error, undefined);
-  assert.equal(sum.content.formulas[0].last_result, "67.5");
-  const revertedDefinition = await send({ kind: "undo" });
-  assert.equal(revertedDefinition.content.formulas[0].formula, "=AVG(B?:E?)");
-  assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, splitBytes);
-  const revertedSplit = await send({ kind: "undo" });
+  assert.equal(sum.content.formulas[0].last_result, '67.5');
+  const revertedDefinition = await send({ kind: 'undo' });
+  assert.equal(revertedDefinition.content.formulas[0].formula, '=AVG(B?:E?)');
+  assert.deepEqual((await send({ kind: 'save', allowStaleLayout: true })).bytes, splitBytes);
+  const revertedSplit = await send({ kind: 'undo' });
   assert.equal(
     formulaAtParagraph(revertedSplit.content, { section: 0, paragraph: 23 }).beginElement,
     first.beginElement,
   );
-  assert.deepEqual((await send({ kind: "save", allowStaleLayout: true })).bytes, saved.bytes);
-  const reopened = await send({ kind: "load", format: "hwp5", bytes: saved.bytes });
+  assert.deepEqual((await send({ kind: 'save', allowStaleLayout: true })).bytes, saved.bytes);
+  const reopened = await send({ kind: 'load', format: 'hwp5', bytes: saved.bytes });
   assert.equal(reopened.error, undefined);
-  assert.equal(reopened.content.formulas[0].formula, "=AVG(B?:E?)");
+  assert.equal(reopened.content.formulas[0].formula, '=AVG(B?:E?)');
   assert.equal(reopened.content.formulas[0].derived, false);
   const ambiguous = structuredClone(reopened.content);
   ambiguous.formulas.push(structuredClone(ambiguous.formulas[0]));

@@ -1,29 +1,29 @@
-import assert from "node:assert/strict";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { cmp } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { cmp } from './icc-power-reference.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n];
 export function validateInterval(interval) {
   for (const x of [interval.start, interval.end])
-    if (x[1] === 0n || x[0] < 0n || x[0] > x[1]) throw Error("InvalidIccCurveCoordinate");
+    if (x[1] === 0n || x[0] < 0n || x[0] > x[1]) throw Error('InvalidIccCurveCoordinate');
   const order = cmp(interval.start, interval.end);
-  if (order > 0) throw Error("InvalidIccIntervalOrder");
-  if (order === 0 && interval.flags !== 3) throw Error("EmptyIccInterval");
+  if (order > 0) throw Error('InvalidIccIntervalOrder');
+  if (order === 0 && interval.flags !== 3) throw Error('EmptyIccInterval');
 }
 export function choiceReference(interval) {
   validateInterval(interval);
   if (cmp(interval.end, O) === 0 && interval.flags & 2) {
-    if (!(interval.flags & 1)) throw Error("UnattainedIccPreimageMinimum");
+    if (!(interval.flags & 1)) throw Error('UnattainedIccPreimageMinimum');
     return interval.start;
   }
-  if (!(interval.flags & 2)) throw Error("UnattainedIccPreimageMaximum");
+  if (!(interval.flags & 2)) throw Error('UnattainedIccPreimageMaximum');
   return interval.end;
 }
 // Enumerate critical points and open cells, evaluate each, then unite matching cells.
 // This is independent of the product's half-interval intersection algorithm.
 export function linearPreimageReference(line, y) {
   validateInterval(line);
-  if (y[1] === 0n || y[0] > y[1]) throw Error("InvalidIccCurveCoordinate");
+  if (y[1] === 0n || y[0] > y[1]) throw Error('InvalidIccCurveCoordinate');
   const a = BigInt(line.a),
     b = BigInt(line.b),
     points = [line.start, line.end];
@@ -59,7 +59,7 @@ export function linearPreimageReference(line, y) {
     const relation = cmp(result.end, next.start);
     assert.ok(
       relation > 0 || (relation === 0 && (result.flags & 2 || next.flags & 1)),
-      "disconnected affine preimage",
+      'disconnected affine preimage',
     );
     if (cmp(result.start, next.start) === 0) result.flags |= next.flags & 1;
     const end = cmp(next.end, result.end);

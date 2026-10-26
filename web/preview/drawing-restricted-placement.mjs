@@ -15,7 +15,7 @@ export function restrictDrawingPlacement(
   occupied,
   { section, pageOrdinal, restrictToBody, allowOverlap },
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !validBox(rectangle) ||
     !validBox(body) ||
@@ -24,10 +24,10 @@ export function restrictDrawingPlacement(
     section < 0 ||
     !Number.isSafeInteger(pageOrdinal) ||
     pageOrdinal < 0 ||
-    typeof restrictToBody !== "boolean" ||
-    typeof allowOverlap !== "boolean"
+    typeof restrictToBody !== 'boolean' ||
+    typeof allowOverlap !== 'boolean'
   )
-    return fail("InvalidRestrictedDrawingPlacement");
+    return fail('InvalidRestrictedDrawingPlacement');
   if (
     occupied.some(
       (item) =>
@@ -39,8 +39,8 @@ export function restrictDrawingPlacement(
         item.pageOrdinal < 0,
     )
   )
-    return fail("InvalidDrawingCollisionInventory");
-  if (restrictToBody && rectangle.height > body.height) return fail("DrawingExceedsBodyHeight");
+    return fail('InvalidDrawingCollisionInventory');
+  if (restrictToBody && rectangle.height > body.height) return fail('DrawingExceedsBodyHeight');
   const placed = { ...rectangle };
   if (restrictToBody)
     placed.y = Math.max(body.y, Math.min(placed.y, body.y + body.height - placed.height));
@@ -57,17 +57,17 @@ export function restrictDrawingPlacement(
       let next = placed.y;
       for (const item of hits) next = Math.max(next, item.rectangle.y + item.rectangle.height);
       if (!Number.isFinite(next) || next <= placed.y)
-        return fail("InvalidDrawingCollisionInventory");
+        return fail('InvalidDrawingCollisionInventory');
       placed.y = next;
       if (!Number.isFinite(placed.y + placed.height))
-        return fail("InvalidRestrictedDrawingPlacement");
+        return fail('InvalidRestrictedDrawingPlacement');
     }
     if (candidates.some((item) => overlaps(placed, item.rectangle)))
-      return fail("UnresolvedDrawingCollision");
+      return fail('UnresolvedDrawingCollision');
   }
   if (restrictToBody && placed.y + placed.height > body.y + body.height)
     return {
-      ...fail("DrawingNeedsNextPage"),
+      ...fail('DrawingNeedsNextPage'),
       rectangle: placed,
       body: { ...body },
       blockers: [...blockers].map((item) => ({
@@ -78,5 +78,5 @@ export function restrictDrawingPlacement(
         rectangle: { ...item.rectangle },
       })),
     };
-  return { state: "placed", rectangle: placed, effectiveAllowOverlap: effectiveOverlap };
+  return { state: 'placed', rectangle: placed, effectiveAllowOverlap: effectiveOverlap };
 }

@@ -2,7 +2,7 @@ export function validShapeLayoutValues(value) {
   const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
   const optional = (n, check) => n === null || check(n);
   const signed = (n) => Number.isSafeInteger(n) && n >= -2147483648 && n <= 4294967295;
-  const bool = (n) => n === null || typeof n === "boolean";
+  const bool = (n) => n === null || typeof n === 'boolean';
   const array = (a, length, check) => Array.isArray(a) && a.length === length && a.every(check);
   const g = value?.geometry,
     p = value?.position,

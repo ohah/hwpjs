@@ -1,39 +1,39 @@
 // Product WASM coverage, not an independent XML/ZIP oracle.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { trackedHwpxFiles } from "./hwpx-corpus-files.mjs";
-import { createHwpxEditor } from "../js/hwpx-editor.mjs";
-import { createHwpxReader } from "../js/hwpx.mjs";
-import { parseEditAuditOptions } from "./hwpx-edit-audit-options.mjs";
-import { execFileSync } from "./oracle-process.mjs";
-import { hwpxParagraphCoordinates } from "./hwpx-paragraph-coordinates.mjs";
-import { hwpxParagraphTextIndex } from "./hwpx-paragraph-text-index.mjs";
-import { captureInputIdentity, verifyInputIdentity } from "./audit-input-identity.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { trackedHwpxFiles } from './hwpx-corpus-files.mjs';
+import { createHwpxEditor } from '../js/hwpx-editor.mjs';
+import { createHwpxReader } from '../js/hwpx.mjs';
+import { parseEditAuditOptions } from './hwpx-edit-audit-options.mjs';
+import { execFileSync } from './oracle-process.mjs';
+import { hwpxParagraphCoordinates } from './hwpx-paragraph-coordinates.mjs';
+import { hwpxParagraphTextIndex } from './hwpx-paragraph-text-index.mjs';
+import { captureInputIdentity, verifyInputIdentity } from './audit-input-identity.mjs';
 
 const options = parseEditAuditOptions(process.argv.slice(2), {
   allowHistory: true,
   allowParagraphRange: true,
   allowProgress: true,
 });
-const wasm = readFileSync(options.wasm ?? "zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(options.wasm ?? 'zig-out/bin/hwpjs.wasm');
 const history = options.history ?? false;
 const editor = await createHwpxEditor(wasm),
   reader = await createHwpxReader(wasm);
 const paths = options.fixture !== undefined ? [options.fixture] : trackedHwpxFiles();
-assert(paths.length > 0, "EmptyFixtureInventory");
+assert(paths.length > 0, 'EmptyFixtureInventory');
 console.log(
   JSON.stringify({
-    kind: "start",
+    kind: 'start',
     scope: options.paragraphRange
-      ? "one explicit HWPX fixture; selected paragraph prefix range only"
+      ? 'one explicit HWPX fixture; selected paragraph prefix range only'
       : options.fixture !== undefined
-        ? "one explicit HWPX fixture; every paragraph prefix"
-        : "all tracked HWPX files; every paragraph prefix",
+        ? 'one explicit HWPX fixture; every paragraph prefix'
+        : 'all tracked HWPX files; every paragraph prefix',
     ...(options.paragraphRange ? { paragraphRange: options.paragraphRange } : {}),
     files: paths.length,
-    wasmSha256: createHash("sha256").update(wasm).digest("hex"),
-    evidence: "product projection and saved history; not independent XML or browser proof",
+    wasmSha256: createHash('sha256').update(wasm).digest('hex'),
+    evidence: 'product projection and saved history; not independent XML or browser proof',
   }),
 );
 const counts = {
@@ -53,7 +53,7 @@ try {
     try {
       editor.open(input);
     } catch (error) {
-      if (error.message !== "EncryptedDocument") throw error;
+      if (error.message !== 'EncryptedDocument') throw error;
       verifyInputIdentity(input, inputIdentity, path);
       counts.encrypted++;
       continue;
@@ -64,7 +64,7 @@ try {
     const allParagraphs = hwpxParagraphCoordinates(original.events);
     const range = options.paragraphRange;
     if (range && range.end > allParagraphs.length + 1)
-      throw new Error("AuditParagraphRangeOutOfBounds");
+      throw new Error('AuditParagraphRangeOutOfBounds');
     const paragraphs = range
       ? allParagraphs.filter((row) => row.paragraph >= range.start && row.paragraph < range.end)
       : allParagraphs;
@@ -77,8 +77,8 @@ try {
       if (options.progressEvery && completed % options.progressEvery === 0)
         console.log(
           JSON.stringify({
-            kind: "progress",
-            status: "in_progress",
+            kind: 'progress',
+            status: 'in_progress',
             path,
             completed,
             selectedParagraphs: paragraphs.length,
@@ -98,7 +98,7 @@ try {
         !eligible && editor.canEditOutsideField(paragraph.section, paragraph.paragraph, 0, 0);
       const priorRevision = history ? editor.historyRevision() : null;
       try {
-        editor.splice(paragraph.section, paragraph.paragraph, 0, 0, "검증😀<&\r");
+        editor.splice(paragraph.section, paragraph.paragraph, 0, 0, '검증😀<&\r');
       } catch (error) {
         if (history)
           assert.equal(
@@ -106,24 +106,24 @@ try {
             priorRevision,
             `${path}: refused command changed revision`,
           );
-        if (error.message === "InvalidFormulaNumber") {
+        if (error.message === 'InvalidFormulaNumber') {
           // Editable numeric cells still reject this deliberately nonnumeric
           // prefix. Structural eligibility is not permission for every value.
           assert.equal(eligible, true, path);
-        } else if (error.message === "ProtectedFieldRange") {
+        } else if (error.message === 'ProtectedFieldRange') {
           assert.equal(eligible, false, path);
           assert.equal(outsideEligible, false, path);
           let labels = null;
           try {
             labels = editor.fieldLabels(paragraph.section, paragraph.paragraph);
           } catch (error) {
-            if (error.message !== "InvalidFieldLinks") throw error;
+            if (error.message !== 'InvalidFieldLinks') throw error;
           }
           const namedField = labels?.some((label) => label.start === 0) ?? false;
           if (!namedField) {
             formulaPrefixes ??= JSON.parse(
-              execFileSync("python3", ["tools/hwpx-formula-prefix-inventory.py", path], {
-                encoding: "utf8",
+              execFileSync('python3', ['tools/hwpx-formula-prefix-inventory.py', path], {
+                encoding: 'utf8',
                 timeout: 30000,
               }),
             );
@@ -138,8 +138,8 @@ try {
               );
             if (!formulaPrefix)
               unmatchedPrefixes ??= JSON.parse(
-                execFileSync("python3", ["tools/hwpx-unmatched-prefix-witness.py", path], {
-                  encoding: "utf8",
+                execFileSync('python3', ['tools/hwpx-unmatched-prefix-witness.py', path], {
+                  encoding: 'utf8',
                   timeout: 30000,
                 }),
               );
@@ -156,7 +156,7 @@ try {
         } else {
           assert.equal(eligible, false, path);
           assert(
-            ["MissingTextSite", "UnsupportedParagraphControl", "UnsupportedInlineControl"].includes(
+            ['MissingTextSite', 'UnsupportedParagraphControl', 'UnsupportedInlineControl'].includes(
               error.message,
             ),
             `${path}: ${error.message}`,
@@ -186,12 +186,12 @@ try {
       const text = reopened.events
         .filter(
           (event) =>
-            event.kind === "content" &&
+            event.kind === 'content' &&
             event.section === paragraph.section &&
             event.paragraph === paragraph.paragraph,
         )
         .map((event) => event.value)
-        .join("");
+        .join('');
       const before = originalText(paragraph.section, paragraph.paragraph);
       assert.equal(text, `검증😀<&\r${before}`, `${path}: ${paragraph.paragraph}`);
       if (history) {
@@ -220,7 +220,7 @@ try {
         );
         previousEdited = saved;
         counts.restored++;
-      } else editor.splice(paragraph.section, paragraph.paragraph, 0, 7, "");
+      } else editor.splice(paragraph.section, paragraph.paragraph, 0, 7, '');
       assert.deepEqual(Buffer.from(editor.save()), input, path);
       counts.accepted++;
       accepted++;
@@ -246,12 +246,12 @@ try {
   if (options.fixture === undefined)
     assert.equal(
       counts.encrypted,
-      paths.filter((path) => path.endsWith("/password-12345.hwpx")).length,
+      paths.filter((path) => path.endsWith('/password-12345.hwpx')).length,
     );
   assert.equal(
     counts.paragraphs,
     counts.accepted + Object.values(counts.refused).reduce((sum, value) => sum + value, 0),
-    "Paragraph classification mismatch",
+    'Paragraph classification mismatch',
   );
   console.log(JSON.stringify({ totals: counts }));
 } finally {

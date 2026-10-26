@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { crc32 } from "node:zlib";
+import assert from 'node:assert/strict';
+import { crc32 } from 'node:zlib';
 export const signature = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 export function pngChunk(name, payload = Buffer.alloc(0)) {
   const length = Buffer.alloc(4);
@@ -28,17 +28,17 @@ export function pngStructureEvidence(raw) {
     assert.ok(raw.length - at >= 12);
     const length = raw.readUInt32BE(at);
     assert.ok(length <= 0x7fffffff && length <= raw.length - at - 12);
-    const name = raw.subarray(at + 4, at + 8).toString("latin1");
+    const name = raw.subarray(at + 4, at + 8).toString('latin1');
     assert.match(name, /^[A-Za-z]{4}$/);
     const end = at + 8 + length;
     assert.equal(crc32(raw.subarray(at + 4, end)), raw.readUInt32BE(end));
     chunks.push({ name, payload: raw.subarray(at + 8, end) });
     at = end + 4;
   }
-  assert.equal(chunks[0]?.name, "IHDR");
-  assert.equal(chunks.at(-1)?.name, "IEND");
-  assert.equal(chunks.filter((c) => c.name === "IHDR").length, 1);
-  assert.equal(chunks.filter((c) => c.name === "IEND").length, 1);
+  assert.equal(chunks[0]?.name, 'IHDR');
+  assert.equal(chunks.at(-1)?.name, 'IEND');
+  assert.equal(chunks.filter((c) => c.name === 'IHDR').length, 1);
+  assert.equal(chunks.filter((c) => c.name === 'IEND').length, 1);
   assert.equal(chunks.at(-1).payload.length, 0);
   const h = chunks[0].payload;
   assert.equal(h.length, 13);
@@ -55,10 +55,10 @@ export function pngStructureEvidence(raw) {
   assert.equal(h[10], 0);
   assert.equal(h[11], 0);
   assert.ok(h[12] <= 1);
-  const ids = chunks.map((c, i) => (c.name === "IDAT" ? i : -1)).filter((i) => i >= 0);
+  const ids = chunks.map((c, i) => (c.name === 'IDAT' ? i : -1)).filter((i) => i >= 0);
   assert.ok(ids.length);
   assert.equal(ids.at(-1) - ids[0] + 1, ids.length);
-  const palettes = chunks.map((c, i) => (c.name === "PLTE" ? i : -1)).filter((i) => i >= 0);
+  const palettes = chunks.map((c, i) => (c.name === 'PLTE' ? i : -1)).filter((i) => i >= 0);
   assert.ok(palettes.length <= 1);
   if (color === 3) assert.equal(palettes.length, 1);
   let entries = 0;
@@ -69,7 +69,7 @@ export function pngStructureEvidence(raw) {
     entries = size / 3;
     if (color === 3) assert.ok(entries <= 2 ** depth);
   }
-  const ancillary = chunks.filter((c) => !["IHDR", "PLTE", "IDAT", "IEND"].includes(c.name));
+  const ancillary = chunks.filter((c) => !['IHDR', 'PLTE', 'IDAT', 'IEND'].includes(c.name));
   for (const c of ancillary) assert.ok(c.name.charCodeAt(0) & 32);
   const fields = [
     width,

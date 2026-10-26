@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, verifyRaw } from './style-preservation/text-record-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit revision-sign retention candidate required");
-test("actual empty revision sign retains source across late-body and marker-paragraph text edits", async () => {
+assert(process.env.HWPJS_TEST_WASM, 'Explicit revision-sign retention candidate required');
+test('actual empty revision sign retains source across late-body and marker-paragraph text edits', async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
   const path =
-    "reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp";
+    'reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp';
   const input = readFileSync(path),
     editor = await createExperimentalHwp5Editor(wasm, input);
   try {
@@ -21,7 +21,7 @@ test("actual empty revision sign retains source across late-body and marker-para
     assert.deepEqual(signature.begin, signature.end);
     for (const paragraph of [50000, signature.begin.paragraph]) {
       const old = editor.text(0, paragraph),
-        marker = "원문보존😀";
+        marker = '원문보존😀';
       editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: marker });
       const saved = editor.save({ allowStaleLayout: true }).bytes;
       verifyRaw(input, saved, 0, paragraph, 0, 0, marker, { skipLocalFieldAttributes: true });
@@ -48,7 +48,7 @@ test("actual empty revision sign retains source across late-body and marker-para
             paragraph: signature.begin.paragraph,
             startUnit: signature.begin.unit,
             endUnit: signature.begin.unit,
-            text: "거부",
+            text: '거부',
           }),
         /ReadOnlyRetainedFieldResult/,
       );

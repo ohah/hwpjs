@@ -1,5 +1,5 @@
-import { paragraphLineGeometry } from "./paragraph-geometry.mjs";
-import { alignTextRow } from "./line-alignment.mjs";
+import { paragraphLineGeometry } from './paragraph-geometry.mjs';
+import { alignTextRow } from './line-alignment.mjs';
 
 // Fragment geometry/diagnostics are recomputed, never inherited from a carrier.
 export function alignPictureFragment(fragment, paragraphShape, lastLine) {
@@ -13,7 +13,7 @@ export function alignPictureFragment(fragment, paragraphShape, lastLine) {
   const aligned = alignTextRow(
     {
       ...current,
-      kind: "text",
+      kind: 'text',
       paragraphShape,
       x: current.x + offset,
       width: current.width - offset,

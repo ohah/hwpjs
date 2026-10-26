@@ -1,8 +1,8 @@
 export function decodeFormulaFieldSources(bytes) {
-  const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  const rows = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-  const optionalBoolean = (value) => value === null || typeof value === "boolean";
-  if (!Array.isArray(rows) || rows.length > 100000) throw new Error("InvalidFormulaFieldSources");
+  const optionalBoolean = (value) => value === null || typeof value === 'boolean';
+  if (!Array.isArray(rows) || rows.length > 100000) throw new Error('InvalidFormulaFieldSources');
   const begins = new Set(),
     ends = new Set();
   for (const row of rows) {
@@ -18,10 +18,10 @@ export function decodeFormulaFieldSources(bytes) {
       !Array.isArray(row.raw) ||
       row.raw.length !== 5 ||
       row.raw.some(
-        (value) => value !== null && (typeof value !== "string" || !value.isWellFormed()),
+        (value) => value !== null && (typeof value !== 'string' || !value.isWellFormed()),
       )
     )
-      throw new Error("InvalidFormulaFieldSources");
+      throw new Error('InvalidFormulaFieldSources');
     begins.add(row.begin_node);
     ends.add(row.end_node);
   }

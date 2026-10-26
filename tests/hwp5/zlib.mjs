@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { deflateSync, inflateSync, constants } from "node:zlib";
-import { readFileSync, readdirSync } from "node:fs";
-import { signature, pngStructureEvidence } from "./png-structure-evidence.mjs";
+import assert from 'node:assert/strict';
+import { deflateSync, inflateSync, constants } from 'node:zlib';
+import { readFileSync, readdirSync } from 'node:fs';
+import { signature, pngStructureEvidence } from './png-structure-evidence.mjs';
 
 function header(bytes, info, level = 0, dictionary = false) {
   const b = Buffer.from(bytes);
@@ -70,7 +70,7 @@ export function zlibEdges(call, cfb) {
     seed[i] = state >>> 24;
   }
   const repeated = Buffer.concat(Array.from({ length: 100 }, () => seed));
-  for (const plain of [Buffer.alloc(0), Buffer.from("abc"), Buffer.alloc(70000, 65), repeated])
+  for (const plain of [Buffer.alloc(0), Buffer.from('abc'), Buffer.alloc(70000, 65), repeated])
     for (const options of [{ level: 0 }, { strategy: constants.Z_FIXED }, { level: 9 }]) {
       const b = deflateSync(plain, options);
       good(b, plain);
@@ -107,15 +107,15 @@ export function zlibEdges(call, cfb) {
   bad(header(dynamic, 0), /InvalidDeflate/);
   for (let info = 0; info < 8; info++)
     for (let level = 0; level < 4; level++)
-      good(header(deflateSync(Buffer.from("abc")), info, level));
+      good(header(deflateSync(Buffer.from('abc')), info, level));
   bad(
-    deflateSync(Buffer.from("abc"), { dictionary: Buffer.from("abc") }),
+    deflateSync(Buffer.from('abc'), { dictionary: Buffer.from('abc') }),
     /UnsupportedZlibDictionary/,
   );
-  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
-  for (const name of readdirSync(dir).filter((n) => n.endsWith(".hwp"))) {
+  const dir = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
+  for (const name of readdirSync(dir).filter((n) => n.endsWith('.hwp'))) {
     cfb.parse(readFileSync(new URL(name, dir)), { strict: true });
-    const entry = cfb.findExact("/PrvImage");
+    const entry = cfb.findExact('/PrvImage');
     if (!entry) continue;
     const bytes = Buffer.from(entry.content);
     if (!bytes.subarray(0, 8).equals(signature)) continue;
@@ -123,7 +123,7 @@ export function zlibEdges(call, cfb) {
     const parts = [];
     for (let p = 8; p < bytes.length;) {
       const n = bytes.readUInt32BE(p);
-      if (bytes.toString("ascii", p + 4, p + 8) === "IDAT")
+      if (bytes.toString('ascii', p + 4, p + 8) === 'IDAT')
         parts.push(bytes.subarray(p + 8, p + 8 + n));
       p += 12 + n;
     }

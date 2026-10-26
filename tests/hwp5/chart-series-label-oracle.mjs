@@ -1,5 +1,5 @@
-import { seriesLabelContext } from "./chart-series-label-context.mjs";
-import { integer, textBodyWire } from "./chart-text-body-oracle.mjs";
+import { seriesLabelContext } from './chart-series-label-context.mjs';
+import { integer, textBodyWire } from './chart-text-body-oracle.mjs';
 const stored = (s) => [...s.values()].reduce((n, v) => n + v.hex.length / 2, 0);
 export function seriesLabelOracle(b) {
   const c = seriesLabelContext(b),
@@ -11,7 +11,7 @@ export function seriesLabelOracle(b) {
       textBodyWire(r.text, 0, r.objects.size, stored(r.strings)),
     );
   for (const p of c.points) {
-    parts.push(integer(p.prefix.point.id), integer(p.end), Buffer.from(p.raw20, "hex"));
+    parts.push(integer(p.prefix.point.id), integer(p.end), Buffer.from(p.raw20, 'hex'));
     label(p.prefix, p.label);
   }
   label(c.tail, c.label);

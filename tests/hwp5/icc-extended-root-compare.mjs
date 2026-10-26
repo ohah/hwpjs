@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { expected } from "./icc-normalized-root-compare.mjs";
+import assert from 'node:assert/strict';
+import { writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { expected } from './icc-normalized-root-compare.mjs';
 export function extendedRootInput(s, a, b, p, q, n, d, precision = 1024) {
   const out = Buffer.alloc(528);
   out.writeUInt32BE(precision);

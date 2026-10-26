@@ -21,7 +21,7 @@ export function bmpFixture({
     uncompressed = compression === 0 || compression === 3 || compression === 11,
     size = uncompressed ? stride * height : 4;
   const out = Buffer.alloc(offset + size + after);
-  out.write("BM");
+  out.write('BM');
   out.writeUInt32LE(out.length, 2);
   out.writeUInt32LE(offset, 10);
   out.writeUInt32LE(kind, 14);

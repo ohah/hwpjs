@@ -1,11 +1,11 @@
-import { paginateBodyRows } from "./page-row-flow.mjs";
-import { paginateRepeatedTableBands } from "./repeated-table-band-pagination.mjs";
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { columnReferenceBoxes } from "./column-reference-boxes.mjs";
+import { paginateBodyRows } from './page-row-flow.mjs';
+import { paginateRepeatedTableBands } from './repeated-table-band-pagination.mjs';
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { columnReferenceBoxes } from './column-reference-boxes.mjs';
 
 // Header replay stays in the existing band paginator; it owns no source text.
 export function paginateSplitInlineTables(rows, setting, flows, tables, options = {}) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (
     !(tables instanceof Map) ||
     !Array.isArray(rows) ||
@@ -15,14 +15,14 @@ export function paginateSplitInlineTables(rows, setting, flows, tables, options 
       (flow) => !flow || (flow.column_changes != null && !Array.isArray(flow.column_changes)),
     ) ||
     [...tables.values()].some(
-      (value) => value?.split?.state !== "prepared" || value.split.prepared?.state !== "prepared",
+      (value) => value?.split?.state !== 'prepared' || value.split.prepared?.state !== 'prepared',
     )
   )
-    return fail("InvalidSplitInlineTablePagination");
+    return fail('InvalidSplitInlineTablePagination');
   if (![...tables.values()].some(({ split }) => split.prepared.repeatedHeader))
     return paginateBodyRows(rows, setting, flows, options);
   const reference = pageReferenceBoxes(setting, { x: options.x ?? 20, y: options.y ?? 20 });
-  if (reference.state !== "placed") return reference;
+  if (reference.state !== 'placed') return reference;
   const body = reference.boxes.page;
   for (const flow of flows) {
     for (const declaration of [
@@ -37,11 +37,11 @@ export function paginateSplitInlineTables(rows, setting, flows, tables, options 
         continue;
       const columns = columnReferenceBoxes(body, declaration);
       if (
-        columns.state !== "placed" ||
+        columns.state !== 'placed' ||
         columns.boxes.length !== 1 ||
-        ["x", "y", "width", "height"].some((k) => columns.boxes[0][k] !== body[k])
+        ['x', 'y', 'width', 'height'].some((k) => columns.boxes[0][k] !== body[k])
       )
-        return fail("UnsupportedRepeatedHeaderColumns");
+        return fail('UnsupportedRepeatedHeaderColumns');
     }
   }
   const nodes = [...tables.keys()],
@@ -59,7 +59,7 @@ export function paginateSplitInlineTables(rows, setting, flows, tables, options 
     { ...options, columnZones: false },
     prepared,
   );
-  if (page.state !== "paginated") return page;
+  if (page.state !== 'paginated') return page;
   return {
     ...page,
     rows: page.rows.map((row) =>

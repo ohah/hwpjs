@@ -15,7 +15,7 @@ export function attachHwp5CellLayoutSources(editor, content) {
       const sources = editor.cellLayoutSources(section),
         byList = new Map();
       for (const row of sources) {
-        if (byList.has(row.list_node)) throw new Error("AmbiguousCellLayoutSource");
+        if (byList.has(row.list_node)) throw new Error('AmbiguousCellLayoutSource');
         byList.set(row.list_node, row);
       }
       const selected = content.tables.filter((table) => table.section === section),
@@ -25,11 +25,11 @@ export function attachHwp5CellLayoutSources(editor, content) {
         for (const cell of table.cells) {
           const row = byList.get(cell.listNode);
           if (!row || row.table_record_node !== table.tableNode || seen.has(cell.listNode))
-            throw new Error("CellLayoutSourceBindingMismatch");
+            throw new Error('CellLayoutSourceBindingMismatch');
           seen.add(cell.listNode);
           attachments.push({ cell, row });
         }
-      if (seen.size !== sources.length) throw new Error("IncompleteCellLayoutInventory");
+      if (seen.size !== sources.length) throw new Error('IncompleteCellLayoutInventory');
       for (const { cell, row } of attachments) {
         cell.layoutSource = row;
         cell.sourceMargin = {

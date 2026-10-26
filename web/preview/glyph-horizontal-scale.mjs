@@ -9,7 +9,7 @@ export function horizontalGlyphWidth(width, scale) {
     scale > 2 ||
     !Number.isFinite(result)
   )
-    throw new RangeError("InvalidHorizontalGlyphMeasurement");
+    throw new RangeError('InvalidHorizontalGlyphMeasurement');
   return result;
 }
 export function paintHorizontalGlyph(ctx, scale, x, y, paint) {

@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const sizes = [73, 74, 78];
 const w = (n) => {
   const b = Buffer.alloc(4);

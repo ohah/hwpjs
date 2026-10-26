@@ -1,11 +1,11 @@
-import { assembleHwp5GroupContent } from "./hwp5-group-content-projection.mjs";
-import { hwp5PolygonPathSource } from "./hwp5-polygon-path-source.mjs";
-import { hwp5DrawingGeometry } from "./hwp5-drawing-geometry.mjs";
-import { hwp5DrawingPaintPlan } from "./hwp5-drawing-paint-plan.mjs";
+import { assembleHwp5GroupContent } from './hwp5-group-content-projection.mjs';
+import { hwp5PolygonPathSource } from './hwp5-polygon-path-source.mjs';
+import { hwp5DrawingGeometry } from './hwp5-drawing-geometry.mjs';
+import { hwp5DrawingPaintPlan } from './hwp5-drawing-paint-plan.mjs';
 
 // Preserve the complete group/text/picture inventory; never repartition owned paragraphs.
 export function projectHwp5GroupedMixedContent(content) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   try {
     const roots = content.hwp5Drawings ?? [];
     if (
@@ -14,11 +14,11 @@ export function projectHwp5GroupedMixedContent(content) {
         (row) => ![0x24636f6e, 0x24726563, 0x24706963, 0x24706f6c].includes(row.source?.kind_id),
       )
     )
-      return fail("UnsupportedHwp5GroupedMixedRoots");
-    if (["hwp5PolygonPointErrors", "hwp5DrawingStyleErrors"].some((key) => content[key]?.length))
-      return fail("IncompleteHwp5GroupedPolygonSources");
+      return fail('UnsupportedHwp5GroupedMixedRoots');
+    if (['hwp5PolygonPointErrors', 'hwp5DrawingStyleErrors'].some((key) => content[key]?.length))
+      return fail('IncompleteHwp5GroupedPolygonSources');
     const groups = assembleHwp5GroupContent(content);
-    if (groups.state !== "projected") return groups;
+    if (groups.state !== 'projected') return groups;
     const polygons = [...(groups.content.polygons ?? [])];
     for (const root of roots.filter((row) => row.source.kind_id === 0x24706f6c)) {
       const rows = (content.hwp5PolygonPoints ?? []).filter(
@@ -39,9 +39,9 @@ export function projectHwp5GroupedMixedContent(content) {
         locals[0].owner_node !== root.controlNode ||
         styles.length !== 1
       )
-        return fail("MissingHwp5GroupedPolygonSource");
+        return fail('MissingHwp5GroupedPolygonSource');
       const path = hwp5PolygonPathSource(rows[0]);
-      if (path.state !== "planned") return path;
+      if (path.state !== 'planned') return path;
       if (
         root.source.rotation_angle !== 0 ||
         root.source.component_attributes !== 0 ||
@@ -49,7 +49,7 @@ export function projectHwp5GroupedMixedContent(content) {
         locals[0].matrix.length !== 6 ||
         !Array.from(locals[0].matrix).every((value, i) => value === [1, 0, 0, 0, 1, 0][i])
       )
-        return fail("UnsupportedHwp5GroupedPolygonTransform");
+        return fail('UnsupportedHwp5GroupedPolygonTransform');
       const source = hwp5DrawingGeometry(root.source),
         { width, height } = source.geometry;
       if (
@@ -57,11 +57,11 @@ export function projectHwp5GroupedMixedContent(content) {
         ![2, 3].includes(source.text_wrap) ||
         rows[0].points.some(([x, y]) => x < 0 || y < 0 || x > width || y > height)
       )
-        return fail("UnsupportedHwp5GroupedPolygonFlow");
+        return fail('UnsupportedHwp5GroupedPolygonFlow');
       const paint = hwp5DrawingPaintPlan(styles[0]);
-      if (paint.state !== "planned") return paint;
-      if (path.source.rendering_polygon.length === 2 && paint.fill.state !== "none")
-        return fail("UnsupportedHwp5PolylineFill");
+      if (paint.state !== 'planned') return paint;
+      if (path.source.rendering_polygon.length === 2 && paint.fill.state !== 'none')
+        return fail('UnsupportedHwp5PolylineFill');
       Object.assign(source, path.source, {
         group_context: null,
         text: null,
@@ -92,7 +92,7 @@ export function projectHwp5GroupedMixedContent(content) {
         hwp5Style: structuredClone(styles[0]),
       });
     }
-    return { state: "projected", content: { ...groups.content, polygons } };
+    return { state: 'projected', content: { ...groups.content, polygons } };
   } catch (error) {
     return fail(error.message);
   }

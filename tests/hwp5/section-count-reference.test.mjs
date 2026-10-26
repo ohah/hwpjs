@@ -1,29 +1,29 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { createHash } from "node:crypto";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
 
-import { sectionCountFixtures as fixtures } from "./section-count-fixtures.mjs";
-const hash = (bytes) => createHash("sha256").update(Buffer.from(bytes)).digest("hex");
+import { sectionCountFixtures as fixtures } from './section-count-fixtures.mjs';
+const hash = (bytes) => createHash('sha256').update(Buffer.from(bytes)).digest('hex');
 
 for (const [name, version, declared, available, digest] of fixtures)
   test(`section count refusal is source metadata rather than different version offsets: ${name}`, async (t) => {
     const path = `reference/rhwp/samples/${name}`;
     if (!existsSync(path)) {
-      t.skip("RHWP section-count fixture is unavailable");
+      t.skip('RHWP section-count fixture is unavailable');
       return;
     }
     const input = readFileSync(path);
-    assert.equal(hash(input), digest, "fixture identity changed");
+    assert.equal(hash(input), digest, 'fixture identity changed');
     const normal = JSON.parse(
-      execFileSync("python3", ["tools/hwp5-section-count-oracle.py"], { input, timeout: 30000 }),
+      execFileSync('python3', ['tools/hwp5-section-count-oracle.py'], { input, timeout: 30000 }),
     );
     const optimized = JSON.parse(
-      execFileSync("python3", ["-O", "tools/hwp5-section-count-oracle.py"], {
+      execFileSync('python3', ['-O', 'tools/hwp5-section-count-oracle.py'], {
         input,
         timeout: 30000,
       }),
@@ -38,12 +38,12 @@ for (const [name, version, declared, available, digest] of fixtures)
       normal.bodySections,
       Array.from({ length: available }, (_, index) => `BodyText/Section${index}`),
     );
-    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+    const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
     const cfb = await createCfbReader(wasm),
       reader = await createHwp5Reader(wasm);
     try {
-      assert.throws(() => reader.readText(input), { message: "SectionCountMismatch" });
-      assert.throws(() => cfb.parse(input, { strict: true }), { message: "InvalidFat" });
+      assert.throws(() => reader.readText(input), { message: 'SectionCountMismatch' });
+      assert.throws(() => cfb.parse(input, { strict: true }), { message: 'InvalidFat' });
       // This permissive container query is cross-checked, not called strict-valid.
       const parsed = cfb.parse(input),
         root = parsed.FullPaths[0];
@@ -65,8 +65,8 @@ for (const [name, version, declared, available, digest] of fixtures)
       document.nodes[0].created = 0n;
       const canonical = cfb.write(document);
       cfb.parse(canonical, { strict: true });
-      assert.throws(() => reader.readText(canonical), { message: "SectionCountMismatch" });
-      const info = document.nodes.find((node) => node.parent === 0 && node.name === "DocInfo");
+      assert.throws(() => reader.readText(canonical), { message: 'SectionCountMismatch' });
+      const info = document.nodes.find((node) => node.parent === 0 && node.name === 'DocInfo');
       assert(info);
       const decoded = inflateRawSync(info.content);
       assert.equal(hash(decoded), normal.docInfoSha256);
@@ -88,7 +88,7 @@ for (const [name, version, declared, available, digest] of fixtures)
       for (const [index, entry] of after.FileIndex.entries()) {
         if (entry.type !== 2) continue;
         const path = after.FullPaths[index].slice(after.FullPaths[0].length);
-        if (path === "DocInfo") {
+        if (path === 'DocInfo') {
           assert.deepEqual(inflateRawSync(Buffer.from(entry.content)), patched);
           continue;
         }
@@ -99,8 +99,8 @@ for (const [name, version, declared, available, digest] of fixtures)
         );
       }
       for (const [count, error] of [
-        [available + 1, "SectionCountMismatch"],
-        [0, "InvalidSectionCount"],
+        [available + 1, 'SectionCountMismatch'],
+        [0, 'InvalidSectionCount'],
       ]) {
         const negative = Buffer.from(patched);
         negative.writeUInt16LE(count, normal.properties.offset);
@@ -113,12 +113,12 @@ for (const [name, version, declared, available, digest] of fixtures)
       info.content = deflateRawSync(shortProperties);
       const malformed = cfb.write(document);
       assert.throws(() => reader.readText(malformed), {
-        message: "InvalidDocumentPropertiesLength",
+        message: 'InvalidDocumentPropertiesLength',
       });
-      for (const flags of [[], ["-O"]])
+      for (const flags of [[], ['-O']])
         assert.throws(
           () =>
-            execFileSync("python3", [...flags, "tools/hwp5-section-count-oracle.py"], {
+            execFileSync('python3', [...flags, 'tools/hwp5-section-count-oracle.py'], {
               input: malformed,
               timeout: 30000,
             }),
@@ -131,7 +131,7 @@ for (const [name, version, declared, available, digest] of fixtures)
           declared,
           available,
           paragraphs: result.sections.reduce((sum, section) => sum + section.paragraphs.length, 0),
-          scope: "memory-only counter-control, not production repair or complete recovery",
+          scope: 'memory-only counter-control, not production repair or complete recovery',
         }),
       );
     } finally {

@@ -1,29 +1,29 @@
-import { graphemeUnits } from "./text-input.mjs";
-import { lineVisibleEndUnit } from "./line-visible-end.mjs";
+import { graphemeUnits } from './text-input.mjs';
+import { lineVisibleEndUnit } from './line-visible-end.mjs';
 
 const tableFields = [
-  "bandOrdinal",
-  "tableIndex",
-  "tableNode",
-  "tableVerticalSource",
-  "inlineTableFit",
-  "inlineTableAnchor",
-  "inlineTableAnchors",
-  "inlineTables",
+  'bandOrdinal',
+  'tableIndex',
+  'tableNode',
+  'tableVerticalSource',
+  'inlineTableFit',
+  'inlineTableAnchor',
+  'inlineTableAnchors',
+  'inlineTables',
 ];
 const placedFields = [
-  "x",
-  "y",
-  "pageOrdinal",
-  "columnOrdinal",
-  "referenceBoxes",
-  "transform",
-  "pageClip",
+  'x',
+  'y',
+  'pageOrdinal',
+  'columnOrdinal',
+  'referenceBoxes',
+  'transform',
+  'pageClip',
 ];
 
 export function isPositionedBodySource(row) {
   return Boolean(
-    row && row.kind === "text" && tableFields.every((field) => row[field] === undefined),
+    row && row.kind === 'text' && tableFields.every((field) => row[field] === undefined),
   );
 }
 
@@ -40,15 +40,15 @@ export function positionedRowOwnerMatches(source, row) {
 
 // 물리 줄의 조각은 원본 한 구간을 정확히 소비하며 표 식별자를 복제하지 않습니다.
 export function positionedRowFragments(source, row, remaining) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const fragments = row?.positionedFragments,
     paragraph = source?.paragraphSource;
   if (
     !Array.isArray(fragments) ||
     !fragments.length ||
-    source?.kind !== "text" ||
-    row.kind !== "text" ||
-    typeof paragraph?.text !== "string" ||
+    source?.kind !== 'text' ||
+    row.kind !== 'text' ||
+    typeof paragraph?.text !== 'string' ||
     source.section !== row.section ||
     source.paragraph !== row.paragraph ||
     paragraph.section !== source.section ||
@@ -59,11 +59,11 @@ export function positionedRowFragments(source, row, remaining) {
     row.startUnit !== source.startUnit ||
     !Number.isSafeInteger(row.endUnit)
   )
-    return fail("InvalidPositionedRowFragments");
+    return fail('InvalidPositionedRowFragments');
   if (!Number.isSafeInteger(remaining) || remaining < fragments.length)
-    return fail("PositionedRowFragmentLimit");
+    return fail('PositionedRowFragmentLimit');
   if ([source, row].some((item) => tableFields.some((field) => item[field] !== undefined)))
-    return fail("UnsupportedPositionedTableFragments");
+    return fail('UnsupportedPositionedTableFragments');
   const boundaryUnits = graphemeUnits(paragraph.text),
     boundaries = new Set(boundaryUnits);
   const boundaryIndex = new Map(boundaryUnits.map((unit, index) => [unit, index]));
@@ -76,13 +76,13 @@ export function positionedRowFragments(source, row, remaining) {
     !boundaries.has(source.startUnit) ||
     !boundaries.has(row.endUnit)
   )
-    return fail("InvalidPositionedRowFragments");
+    return fail('InvalidPositionedRowFragments');
   const result = [];
   let unit = source.startUnit;
   for (const fragment of fragments) {
     if (
       !fragment ||
-      fragment.kind !== "text" ||
+      fragment.kind !== 'text' ||
       fragment.section !== source.section ||
       fragment.paragraph !== source.paragraph ||
       fragment.startUnit !== unit ||
@@ -105,7 +105,7 @@ export function positionedRowFragments(source, row, remaining) {
       fragment.boundaries.length !==
         boundaryIndex.get(fragment.endUnit) - boundaryIndex.get(unit) + 1
     )
-      return fail("InvalidPositionedRowFragments");
+      return fail('InvalidPositionedRowFragments');
     let previousUnit = unit - 1,
       previousX = -Infinity;
     const visibleEnd = lineVisibleEndUnit(fragment.text, fragment.startUnit);
@@ -121,7 +121,7 @@ export function positionedRowFragments(source, row, remaining) {
         boundary.x < previousX ||
         (boundary.unit <= visibleEnd && boundary.x > fragment.width + 1e-8)
       )
-        return fail("InvalidPositionedRowFragments");
+        return fail('InvalidPositionedRowFragments');
       previousUnit = boundary.unit;
       previousX = boundary.x;
     }
@@ -133,7 +133,7 @@ export function positionedRowFragments(source, row, remaining) {
           row.endUnit !== source.startUnit ||
           unit !== paragraph.text.length))
     )
-      return fail("InvalidPositionedRowFragments");
+      return fail('InvalidPositionedRowFragments');
     const {
       positionedFragments: _,
       alignmentUnavailable: _staleAlignment,
@@ -145,6 +145,6 @@ export function positionedRowFragments(source, row, remaining) {
     unit = fragment.endUnit;
   }
   return unit === row.endUnit
-    ? { state: "expanded", rows: result }
-    : fail("InvalidPositionedRowFragments");
+    ? { state: 'expanded', rows: result }
+    : fail('InvalidPositionedRowFragments');
 }

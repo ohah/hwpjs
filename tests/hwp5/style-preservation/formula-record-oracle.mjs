@@ -1,7 +1,7 @@
 // Fixture-scoped independent table/cell arithmetic, not product model code.
-import assert from "node:assert/strict";
-import { records } from "./text-record-oracle.mjs";
-import { generalNumber } from "./general-number-oracle.mjs";
+import assert from 'node:assert/strict';
+import { records } from './text-record-oracle.mjs';
+import { generalNumber } from './general-number-oracle.mjs';
 
 function chartTables(bytes) {
   let table,
@@ -46,7 +46,7 @@ function chartTables(bytes) {
     if (record.tag === 71 && record.payload.readUInt32LE(0) === 0x25666d75) {
       assert(cell && cell.paragraphs.includes(paragraph));
       const length = record.payload.readUInt16LE(9);
-      const command = record.payload.subarray(11, 11 + length * 2).toString("utf16le");
+      const command = record.payload.subarray(11, 11 + length * 2).toString('utf16le');
       const match =
         /^=(SUM|AVG|MIN|MAX)\(([A-Z?]+)([0-9?]+):([A-Z?]+)([0-9?]+)\)\?\?(%g|%\.2f),;;(.+)$/.exec(
           command,
@@ -63,10 +63,10 @@ function chartTables(bytes) {
 const column = (value) => [...value].reduce((sum, c) => sum * 26 + c.charCodeAt(0) - 64, 0) - 1;
 function bounds(cell, match) {
   return {
-    left: match[2] === "?" ? cell.column : column(match[2]),
-    top: match[3] === "?" ? cell.row : Number(match[3]) - 1,
-    right: match[4] === "?" ? cell.column : column(match[4]),
-    bottom: match[5] === "?" ? cell.row : Number(match[5]) - 1,
+    left: match[2] === '?' ? cell.column : column(match[2]),
+    top: match[3] === '?' ? cell.row : Number(match[3]) - 1,
+    right: match[4] === '?' ? cell.column : column(match[4]),
+    bottom: match[5] === '?' ? cell.row : Number(match[5]) - 1,
   };
 }
 
@@ -82,7 +82,7 @@ export function chartNumericTargets(bytes) {
           const dependency = table.cells.get(`${col},${row}`);
           assert(
             dependency && !results.has(dependency),
-            "fixture numeric dependency must not be a derived result",
+            'fixture numeric dependency must not be a derived result',
           );
           assert.equal(dependency.paragraphs.length, 1);
           targets.add(dependency.paragraphs[0].index);
@@ -124,28 +124,28 @@ export function verifyChartFormulas(bytes, expectedCount = 13) {
       for (let row = top; row <= bottom; row++)
         for (let col = left; col <= right; col++) {
           const referenced = table.cells.get(`${col},${row}`);
-          assert.equal(referenced?.paragraphs.length, 1, "referenced cell became multi-paragraph");
+          assert.equal(referenced?.paragraphs.length, 1, 'referenced cell became multi-paragraph');
           const raw = referenced.paragraphs[0].text;
-          assert(raw, "missing referenced cell");
-          const text = raw.toString("utf16le").replace(/\r$/, "").replaceAll(",", "");
+          assert(raw, 'missing referenced cell');
+          const text = raw.toString('utf16le').replace(/\r$/, '').replaceAll(',', '');
           assert.match(text, /^-?\d+(?:\.\d+)?$/);
           values.push(Number(text));
         }
       assert(values.length > 0);
       const value =
-        match[1] === "MIN"
+        match[1] === 'MIN'
           ? Math.min(...values)
-          : match[1] === "MAX"
+          : match[1] === 'MAX'
             ? Math.max(...values)
-            : values.reduce((sum, v) => sum + v, 0) / (match[1] === "AVG" ? values.length : 1);
-      const rendered = match[6] === "%.2f" ? value.toFixed(2) : generalNumber(value);
-      const cached = match[7].replaceAll(",", "");
-      assert.equal(cached, rendered, "independent arithmetic differs from command");
-      assert.equal(cell.paragraphs.length, 1, "formula result cell became multi-paragraph");
+            : values.reduce((sum, v) => sum + v, 0) / (match[1] === 'AVG' ? values.length : 1);
+      const rendered = match[6] === '%.2f' ? value.toFixed(2) : generalNumber(value);
+      const cached = match[7].replaceAll(',', '');
+      assert.equal(cached, rendered, 'independent arithmetic differs from command');
+      assert.equal(cell.paragraphs.length, 1, 'formula result cell became multi-paragraph');
       assert.equal(
-        cell.paragraphs[0].text.subarray(16, -18).toString("utf16le").replaceAll(",", ""),
+        cell.paragraphs[0].text.subarray(16, -18).toString('utf16le').replaceAll(',', ''),
         rendered,
-        "independent arithmetic differs from label",
+        'independent arithmetic differs from label',
       );
       count++;
     }

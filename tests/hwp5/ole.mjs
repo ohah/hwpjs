@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync } from "node:zlib";
-import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { oleActual, oleRun } from "./ole-validation.mjs";
-import { storageDocumentEdges } from "./storage-extension.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync } from 'node:zlib';
+import { documentRecords, documentActual, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { oleActual, oleRun } from './ole-validation.mjs';
+import { storageDocumentEdges } from './storage-extension.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -46,34 +46,34 @@ export function oleReference(call, cfb) {
   const files = [],
     skipped = [];
   let rejected = 0;
-  for (const name of ["한셀OLE.hwp", "issue5724/2689441_wmf_contents_ole.hwp"]) {
+  for (const name of ['한셀OLE.hwp', 'issue5724/2689441_wmf_contents_ole.hwp']) {
     const path = new URL(`../../reference/rhwp/samples/${name}`, import.meta.url);
     if (!existsSync(path)) {
       skipped.push(name);
       continue;
     }
     cfb.parse(readFileSync(path), { strict: true });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       flags = h.readUInt32LE(36);
     assert.equal(h.readUInt32LE(32), 0x05010001);
     assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
-    const raw = Buffer.from(cfb.findExact("/BodyText/Section0").content),
+    const raw = Buffer.from(cfb.findExact('/BodyText/Section0').content),
       b = flags & 1 ? inflateRawSync(raw) : raw;
     assert.deepEqual(call(3, Buffer.concat([h, raw]), b.length), b);
     const rows = documentRecords(b).filter((r) => r.tag === 84);
     assert.equal(rows.length, 1);
     const ownership = oleActual(call, h.readUInt32LE(32), b);
-    const rawDoc = Buffer.from(cfb.findExact("/DocInfo").content),
+    const rawDoc = Buffer.from(cfb.findExact('/DocInfo').content),
       doc = flags & 1 ? inflateRawSync(rawDoc) : rawDoc;
     const sections = [{ index: 0, bytes: b }];
     const document = documentActual(call, h, doc, sections);
     const bin = documentRecords(doc).find((r) => r.tag === 18);
     assert.deepEqual(
       doc.subarray(bin.start, bin.end),
-      Buffer.from("0200010003004f004c004500", "hex"),
+      Buffer.from('0200010003004f004c004500', 'hex'),
     );
-    assert.equal(cfb.findExact("/BinData/BIN0001"), null);
-    assert.ok(cfb.findExact("/BinData/BIN0001.OLE"));
+    assert.equal(cfb.findExact('/BinData/BIN0001'), null);
+    assert.ok(cfb.findExact('/BinData/BIN0001.OLE'));
     const container = containerActual(call, readFileSync(path), cfb, h, doc, sections);
     const storage = storageDocumentEdges(call, cfb, h, doc, readFileSync(path));
     const record = rows[0],

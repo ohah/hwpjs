@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
 export function gammaWideInput(raw, n, d) {
   const b = Buffer.alloc(130);
   b.writeUInt16BE(raw);

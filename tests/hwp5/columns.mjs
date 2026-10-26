@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { checkBody } from "./body.mjs";
-import { sectionXml } from "./fixture-xml.mjs";
+import assert from 'node:assert/strict';
+import { checkBody } from './body.mjs';
+import { sectionXml } from './fixture-xml.mjs';
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);
@@ -73,16 +73,16 @@ export function columnPair(call, section, hwpx) {
   const attr = (text, name) => Number(text.match(new RegExp(`\\b${name}="(-?\\d+)"`))[1]);
   for (let i = 0; i < defs.length; i++) {
     const [, head, body] = blocks[i],
-      count = attr(head, "colCount"),
-      same = attr(head, "sameSz");
+      count = attr(head, 'colCount'),
+      same = attr(head, 'sameSz');
     const cols = [...body.matchAll(/<hp:colSz\b([^>]*)\/>/g)].flatMap((m) => [
-      attr(m[1], "width"),
-      attr(m[1], "gap"),
+      attr(m[1], 'width'),
+      attr(m[1], 'gap'),
     ]);
     const expected = [
       count,
       same,
-      same || count < 2 ? attr(head, "sameGap") : -2147483648,
+      same || count < 2 ? attr(head, 'sameGap') : -2147483648,
       ...cols,
     ];
     const out = call(14, defs[i]);

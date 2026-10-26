@@ -1,12 +1,12 @@
-import { lstat, mkdir, writeFile, rename, rm } from "node:fs/promises";
-import { resolve, dirname } from "node:path";
-import { assertOutputPath, rejectSymlinkAncestors, validateBundle } from "./bundle-validation.mjs";
+import { lstat, mkdir, writeFile, rename, rm } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+import { assertOutputPath, rejectSymlinkAncestors, validateBundle } from './bundle-validation.mjs';
 
 async function requireAbsent(path, errorName) {
   try {
     await lstat(path);
   } catch (error) {
-    if (error.code === "ENOENT") return;
+    if (error.code === 'ENOENT') return;
     throw error;
   }
   throw Error(errorName);
@@ -16,22 +16,22 @@ export async function publishBundle(bundle, { root, output }) {
   assertOutputPath(root, output);
   if (
     output === bundle.directory ||
-    output.startsWith(bundle.directory + "/") ||
-    bundle.directory.startsWith(output + "/")
+    output.startsWith(bundle.directory + '/') ||
+    bundle.directory.startsWith(output + '/')
   ) {
-    throw Error("OverlappingBundleOutput");
+    throw Error('OverlappingBundleOutput');
   }
   await rejectSymlinkAncestors(output);
-  const stage = output + ".packaging",
-    backup = output + ".previous";
-  await requireAbsent(stage, "PackagingStageAlreadyExists");
-  await requireAbsent(backup, "BundleBackupAlreadyExists");
+  const stage = output + '.packaging',
+    backup = output + '.previous';
+  await requireAbsent(stage, 'PackagingStageAlreadyExists');
+  await requireAbsent(backup, 'BundleBackupAlreadyExists');
   let existing = false;
   try {
     await lstat(output);
     existing = true;
   } catch (error) {
-    if (error.code !== "ENOENT") throw error;
+    if (error.code !== 'ENOENT') throw error;
   }
   if (existing) await validateBundle(output);
   await mkdir(stage, { recursive: true });

@@ -1,6 +1,6 @@
 // Read-only hypotheses, not permission to accept layout-cache coordinates.
-import assert from "node:assert/strict";
-import { rangeFilteredCandidate } from "./line-cache-evidence.mjs";
+import assert from 'node:assert/strict';
+import { rangeFilteredCandidate } from './line-cache-evidence.mjs';
 
 export function lineAvailability(paragraphs) {
   return {
@@ -22,11 +22,11 @@ export function declaredLineCandidates(members) {
     wanted = new Set(starts),
     mapped = new Map();
   for (const s of starts)
-    assert.ok(Number.isSafeInteger(s) && s >= 0 && s <= sourceUnits, "candidate line bounds");
+    assert.ok(Number.isSafeInteger(s) && s >= 0 && s <= sourceUnits, 'candidate line bounds');
   let source = 0,
     kept = 0;
   for (const p of members) {
-    const b = p.text ?? Buffer.from("\r", "utf16le"),
+    const b = p.text ?? Buffer.from('\r', 'utf16le'),
       ranges = (p.ranges ?? []).filter((r) => r.kind === 17);
     for (let unit = 0; unit < p.units; unit++, source++) {
       const removed = ranges.some((r) => r.start <= unit && unit < r.end);

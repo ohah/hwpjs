@@ -1,4 +1,4 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 // Source coordinates already include renderingInfo. Only translate and convert units.
 export function drawingPathPoints(source, origin, scrollTop = 0) {

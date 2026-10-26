@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { planParagraphDependencies } from '../../web/preview/paragraph-dependency-plan.mjs';
 
-test("late sparse window retains transitive owner identities without filling a huge gap", () => {
+test('late sparse window retains transitive owner identities without filling a huge gap', () => {
   const dependencies = new Map([
     [50000, [19999]],
     [19999, [0]],
@@ -44,10 +44,10 @@ test("late sparse window retains transitive owner identities without filling a h
   );
 });
 
-test("sparse dependency planning rejects invalid and duplicate identities even outside selection", () => {
+test('sparse dependency planning rejects invalid and duplicate identities even outside selection', () => {
   const request = { total: 10, offset: 5, count: 2, dependencies: new Map(), maxParagraphs: 4 };
-  for (const key of ["total", "offset", "count", "maxParagraphs"])
-    for (const value of [-1, 1.5, NaN, Infinity, null, "2", Number.MAX_SAFE_INTEGER + 1])
+  for (const key of ['total', 'offset', 'count', 'maxParagraphs'])
+    for (const value of [-1, 1.5, NaN, Infinity, null, '2', Number.MAX_SAFE_INTEGER + 1])
       assert.throws(
         () => planParagraphDependencies({ ...request, [key]: value }),
         /InvalidParagraphWindow/,

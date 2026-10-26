@@ -7,18 +7,18 @@ export function createTextLineWidth(boundaries, initialWidth = 0) {
     !Number.isFinite(initialWidth) ||
     initialWidth < 0
   )
-    throw new RangeError("InvalidTextMeasurement");
+    throw new RangeError('InvalidTextMeasurement');
   let nextX = initialWidth,
     width = initialWidth;
   const values = (measured) => {
-    const glyphWidth = typeof measured === "number" ? measured : measured?.width;
+    const glyphWidth = typeof measured === 'number' ? measured : measured?.width;
     const advance = measured?.advance === undefined ? glyphWidth : measured.advance;
     if (
       ![glyphWidth, advance].every((value) => Number.isFinite(value) && value >= 0) ||
       !Number.isFinite(nextX + glyphWidth) ||
       !Number.isFinite(nextX + advance)
     )
-      throw new RangeError("InvalidTextMeasurement");
+      throw new RangeError('InvalidTextMeasurement');
     return { glyphWidth, advance };
   };
   return {
@@ -47,7 +47,7 @@ export function createTextLineWidth(boundaries, initialWidth = 0) {
 export function boundaryGlyphWidth(start, end) {
   if (!start || !end || !Number.isFinite(start.x) || !Number.isFinite(end.x) || end.x < start.x)
     return null;
-  const width = Object.hasOwn(end, "glyphWidth") ? end.glyphWidth : end.x - start.x;
+  const width = Object.hasOwn(end, 'glyphWidth') ? end.glyphWidth : end.x - start.x;
   return Number.isFinite(width) && width >= 0 && Number.isFinite(start.x + width) ? width : null;
 }
 

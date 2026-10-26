@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { paraInput } from "./icc-analytic.mjs";
+import assert from 'node:assert/strict';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { paraInput } from './icc-analytic.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n];
 const cmp = (a, b) => {

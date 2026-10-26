@@ -13,7 +13,7 @@
   const workers = new WeakSet(),
     post = Worker.prototype.postMessage;
   const encode = (bytes) => {
-    let text = "";
+    let text = '';
     for (let i = 0; i < bytes.length; i += 8192)
       text += String.fromCharCode(...bytes.subarray(i, i + 8192));
     return btoa(text);
@@ -21,7 +21,7 @@
   Worker.prototype.postMessage = function (envelope, ...rest) {
     if (!workers.has(this)) {
       workers.add(this);
-      this.addEventListener("message", (event) => {
+      this.addEventListener('message', (event) => {
         const reply = event.data?.reply;
         if (!reply) return;
         if (reply.content) audit.content = reply.content;
@@ -30,7 +30,7 @@
           error: reply.error ?? null,
           revision: reply.historyRevision,
         });
-        if (reply.kind === "save" && !reply.error && reply.bytes)
+        if (reply.kind === 'save' && !reply.error && reply.bytes)
           audit.saves.push({ base64: encode(reply.bytes), format: reply.format });
       });
     }
@@ -38,7 +38,7 @@
     return post.call(this, envelope, ...rest);
   };
   document.addEventListener(
-    "keydown",
+    'keydown',
     (event) =>
       audit.keys.push({
         trusted: event.isTrusted,
@@ -53,7 +53,7 @@
     true,
   );
   document.addEventListener(
-    "paste",
+    'paste',
     (event) =>
       audit.pastes.push({
         trusted: event.isTrusted,
@@ -62,16 +62,16 @@
       }),
     true,
   );
-  for (const kind of ["beforeinput", "input"])
+  for (const kind of ['beforeinput', 'input'])
     document.addEventListener(
       kind,
       (event) => {
-        if (!event.target?.matches?.("[data-hwpjs-document-input]")) return;
+        if (!event.target?.matches?.('[data-hwpjs-document-input]')) return;
         const entry = {
           kind,
           trusted: event.isTrusted,
           inputType: event.inputType,
-          dataLength: typeof event.data === "string" ? event.data.length : null,
+          dataLength: typeof event.data === 'string' ? event.data.length : null,
           prevented: event.defaultPrevented,
           start: event.target.selectionStart,
           end: event.target.selectionEnd,

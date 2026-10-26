@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 // Independent symbolic check in Q[z]/(z^16+1), z=exp(i*pi/16).
 // Each cosine is (z^k+z^-k)/2; C(0)=cos(pi/4). Multiply the

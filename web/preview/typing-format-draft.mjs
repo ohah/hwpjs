@@ -1,4 +1,4 @@
-import { textChange } from "./text-input.mjs";
+import { textChange } from './text-input.mjs';
 
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 const splitsScalar = (text, unit) =>
@@ -15,8 +15,8 @@ export function projectTypingDraftRanges(paragraph, text, selection = null) {
   const before = paragraph?.text,
     ranges = paragraph?.characterRanges;
   if (
-    typeof before !== "string" ||
-    typeof text !== "string" ||
+    typeof before !== 'string' ||
+    typeof text !== 'string' ||
     !before.isWellFormed() ||
     !text.isWellFormed() ||
     !Array.isArray(ranges) ||

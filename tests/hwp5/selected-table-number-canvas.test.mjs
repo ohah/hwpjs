@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harness.mjs";
-import { inspect, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-import { independentFieldSpans } from "./field-span-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { workerCanvasHarness, dispatchCanvasEvent } from '../canvas/worker-harness.mjs';
+import { inspect, verifyRaw } from './style-preservation/text-record-oracle.mjs';
+import { independentFieldSpans } from './field-span-oracle.mjs';
 
-assert(process.env.HWPJS_TEST_WASM, "Explicit selected-field candidate required");
+assert(process.env.HWPJS_TEST_WASM, 'Explicit selected-field candidate required');
 for (const [section, paragraph] of [
   [2, 0],
   [2, 1],
@@ -13,16 +13,16 @@ for (const [section, paragraph] of [
   [3, 1],
 ])
   test(`Canvas selected reference section ${section} paragraph ${paragraph} input preserves labels, history and full source`, async (t) => {
-    const input = readFileSync("reference/rhwp/samples/hwpspec.hwp"),
+    const input = readFileSync('reference/rhwp/samples/hwpspec.hwp'),
       h = await workerCanvasHarness(t);
-    assert.equal((await h.send({ kind: "load", format: "hwp5", bytes: input })).error, undefined);
+    assert.equal((await h.send({ kind: 'load', format: 'hwp5', bytes: input })).error, undefined);
     const enabled = await h.send({
-      kind: "enable",
+      kind: 'enable',
       distribution: true,
       normalizeObservedCfb: true,
     });
     assert.equal(enabled.error, undefined);
-    const baseline = (await h.send({ kind: "save" })).bytes,
+    const baseline = (await h.send({ kind: 'save' })).bytes,
       before = inspect(baseline);
     const row = enabled.content.paragraphs.find(
       (row) => row.section === section && row.paragraph === paragraph,
@@ -31,37 +31,37 @@ for (const [section, paragraph] of [
     const position = { section, paragraph, startUnit: 0, endUnit: 0 };
     assert.equal(h.controller.selectTextRange(position), true);
     assert.equal(h.input.readOnly, false);
-    const text = "참조밖😀",
+    const text = '참조밖😀',
       old = h.input.value;
     assert.equal(
-      dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: text })
+      dispatchCanvasEvent(h.input, 'beforeinput', { inputType: 'insertText', data: text })
         .defaultPrevented,
       false,
     );
     h.input.value = text + old;
     h.input.setSelectionRange(text.length, text.length);
-    dispatchCanvasEvent(h.input, "input");
+    dispatchCanvasEvent(h.input, 'input');
     assert.equal((await h.flush()).error, undefined);
-    const saved = (await h.send({ kind: "save", allowStaleLayout: true })).bytes;
+    const saved = (await h.send({ kind: 'save', allowStaleLayout: true })).bytes;
     verifyRaw(baseline, saved, section, paragraph, 0, 0, text, { fieldIds: [0x25787266] });
-    assert.equal(h.controller.history("undo"), true);
+    assert.equal(h.controller.history('undo'), true);
     assert.equal((await h.flush()).error, undefined);
-    assert.deepEqual((await h.send({ kind: "save" })).bytes, baseline);
+    assert.deepEqual((await h.send({ kind: 'save' })).bytes, baseline);
     const field = independentFieldSpans(before.sections[section].bytes).find(
       (row) => row.field_id === 0x25787266,
     );
     assert(field);
     const blocked = await h.send({
-      kind: "splice",
+      kind: 'splice',
       section,
       paragraph: field.begin.paragraph,
       startUnit: field.begin.unit,
       endUnit: field.begin.unit,
-      text: "거부",
+      text: '거부',
     });
-    assert.equal(blocked.error, "ReadOnlyCrossReferenceResult");
-    assert.deepEqual((await h.send({ kind: "save" })).bytes, baseline);
-    assert.equal(h.controller.history("redo"), true);
+    assert.equal(blocked.error, 'ReadOnlyCrossReferenceResult');
+    assert.deepEqual((await h.send({ kind: 'save' })).bytes, baseline);
+    assert.equal(h.controller.history('redo'), true);
     assert.equal((await h.flush()).error, undefined);
-    assert.deepEqual((await h.send({ kind: "save", allowStaleLayout: true })).bytes, saved);
+    assert.deepEqual((await h.send({ kind: 'save', allowStaleLayout: true })).bytes, saved);
   });

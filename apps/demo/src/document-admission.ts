@@ -15,7 +15,7 @@ export function createDocumentAdmission(options: AdmissionOptions) {
   let disposal: Promise<void> | undefined;
   return {
     open(name: string, read: (signal: AbortSignal) => Promise<Uint8Array>): Promise<void> {
-      if (closed) return Promise.reject(Error("DocumentAdmissionDisposed"));
+      if (closed) return Promise.reject(Error('DocumentAdmissionDisposed'));
       const current = ++generation;
       abort?.abort();
       const controller = (abort = new AbortController());

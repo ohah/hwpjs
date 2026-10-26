@@ -1,6 +1,6 @@
-import { tableBorderPlanForBox } from "./table-border-plan.mjs";
-import { affineBox, inverseAffine } from "./affine-point-geometry.mjs";
-import { pageVisibleRectangle } from "./page-visible-rectangle.mjs";
+import { tableBorderPlanForBox } from './table-border-plan.mjs';
+import { affineBox, inverseAffine } from './affine-point-geometry.mjs';
+import { pageVisibleRectangle } from './page-visible-rectangle.mjs';
 
 function sourceBounds(box) {
   if (
@@ -26,7 +26,7 @@ export function tableBoxPaintBounds(box) {
   if (!bounds) return null;
   if (box.pageClip !== undefined) {
     const clipped = pageVisibleRectangle(bounds, box.pageClip);
-    if (clipped.state !== "visible") return null;
+    if (clipped.state !== 'visible') return null;
     bounds = clipped.rectangle;
   }
   return bounds;
@@ -39,7 +39,7 @@ export function tableBackgroundTargets(boxes, index, viewport) {
     valid = new Set();
   for (const box of boxes ?? []) {
     const fill = tableBorderPlanForBox(index, box).fill;
-    if (fill?.state !== "image") continue;
+    if (fill?.state !== 'image') continue;
     if (![box.section, box.listNode].every((n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff))
       continue;
     const id = `${box.section}:${box.listNode}`,
@@ -48,14 +48,14 @@ export function tableBackgroundTargets(boxes, index, viewport) {
     if (
       !sourceBounds(box) ||
       (box.pageClip !== undefined &&
-        pageVisibleRectangle(box.pageClip, box.pageClip).state !== "visible")
+        pageVisibleRectangle(box.pageClip, box.pageClip).state !== 'visible')
     ) {
       invalid.add(id);
       continue;
     }
     valid.add(id);
     const bounds = tableBoxPaintBounds(box);
-    if (bounds && pageVisibleRectangle(bounds, viewport).state === "visible")
+    if (bounds && pageVisibleRectangle(bounds, viewport).state === 'visible')
       visible.set(id, target);
   }
   return {

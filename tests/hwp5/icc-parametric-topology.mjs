@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { paraInput } from "./icc-analytic.mjs";
+import assert from 'node:assert/strict';
+import { paraInput } from './icc-analytic.mjs';
 // Evidence fixtures, not a classifier or an inverse implementation.
 export function parametricTopologyEdges(call) {
   let comparisons = 0,

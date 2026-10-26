@@ -1,19 +1,19 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { execFileSync } from "node:child_process";
-import { layoutPageContent } from "../../web/preview/page-content-layout.mjs";
-import { createTextStyle } from "../../web/preview/text-style.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { layoutPageContent } from '../../web/preview/page-content-layout.mjs';
+import { createTextStyle } from '../../web/preview/text-style.mjs';
 
-const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
 const names = WebAssembly.Module.exports(new WebAssembly.Module(wasm));
-const available = ["hwpx_edit_picture_caption", "hwpx_edit_picture_caption_bindings"].every(
+const available = ['hwpx_edit_picture_caption', 'hwpx_edit_picture_caption_bindings'].every(
   (name) => names.some((e) => e.name === name),
 );
-const reference = "reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx";
+const reference = 'reference/rhwp/samples/issue5543_carried_anchor_ladder.hwpx';
 
 test(
-  "real captioned picture document preserves full XML and drawing ownership through body edit history and reopen",
+  'real captioned picture document preserves full XML and drawing ownership through body edit history and reopen',
   { skip: !available || !existsSync(reference) },
   async (t) => {
     const priorSelf = globalThis.self,
@@ -23,8 +23,8 @@ test(
     globalThis.fetch = async () => new Response(wasm);
     t.after(async () => {
       try {
-        if (typeof globalThis.self?.onmessage === "function")
-          await self.onmessage({ data: { kind: "load", format: "close-audit", bytes: [] } });
+        if (typeof globalThis.self?.onmessage === 'function')
+          await self.onmessage({ data: { kind: 'load', format: 'close-audit', bytes: [] } });
       } finally {
         globalThis.self = priorSelf;
         globalThis.fetch = priorFetch;
@@ -39,16 +39,16 @@ test(
       return reply;
     };
     const bytes = readFileSync(reference),
-      original = await send({ kind: "load", format: "hwpx", bytes });
+      original = await send({ kind: 'load', format: 'hwpx', bytes });
     const target = original.content.paragraphs.find((p) => p.section === 0 && p.paragraph === 30);
     const originalCaption = original.content.paragraphs.find(
       (p) => p.section === 0 && p.paragraph === 31,
     ).text;
     assert.equal(target.editable, true);
-    const marker = "왕복검증😀";
-    await send({ kind: "enable" });
+    const marker = '왕복검증😀';
+    await send({ kind: 'enable' });
     const edited = await send({
-      kind: "splice",
+      kind: 'splice',
       section: 0,
       paragraph: 30,
       startUnit: target.text.length,
@@ -56,22 +56,22 @@ test(
       text: marker,
     });
     const measureLayout = (content) => {
-      const style = createTextStyle(content, "16px sans-serif");
+      const style = createTextStyle(content, '16px sans-serif');
       const result = layoutPageContent(content, (text, p, unit, kind) => ({
         width: text.length * 8,
         height: style.textHeight(p, unit, kind),
       }));
-      assert.equal(result.state, "paginated", JSON.stringify(result));
+      assert.equal(result.state, 'paginated', JSON.stringify(result));
       assert.equal(result.limited, false);
       const body = result.rows.filter((row) => row.section === 0 && row.paragraph === 30);
-      assert.equal(body.map((row) => row.text).join(""), target.text + marker);
+      assert.equal(body.map((row) => row.text).join(''), target.text + marker);
       const caption = content.paragraphs.find((p) => p.section === 0 && p.paragraph === 31);
       assert.equal(caption.text, originalCaption);
       assert.equal(
         result.rows
           .filter((row) => row.section === 0 && row.paragraph === 31)
           .map((row) => row.text)
-          .join(""),
+          .join(''),
         caption.text,
       );
       assert.equal(
@@ -83,7 +83,7 @@ test(
       assert.equal(result.tableCollisionFootprintErrors.length, 0);
       assert.equal(content.tables.length, original.content.tables.length);
       for (const row of result.rows.filter(
-        (row) => row.kind === "text" && row.listNode !== undefined,
+        (row) => row.kind === 'text' && row.listNode !== undefined,
       )) {
         const owner = content.paragraphs.find(
           (p) => p.section === row.section && p.paragraph === row.paragraph,
@@ -96,11 +96,11 @@ test(
       return result;
     };
     const editedLayout = measureLayout(edited.content);
-    const saved = (await send({ kind: "save", allowStaleLayout: true })).bytes;
+    const saved = (await send({ kind: 'save', allowStaleLayout: true })).bytes;
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         `
 import io,sys,zipfile,xml.etree.ElementTree as E
 old=zipfile.ZipFile(sys.argv[1]); new=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read()))
@@ -128,15 +128,15 @@ assert signature(a)==signature(b),'non-target XML or object ownership changed'
       ],
       { input: saved, timeout: 30000 },
     );
-    await send({ kind: "undo" });
-    assert.deepEqual(Buffer.from((await send({ kind: "save" })).bytes), bytes);
-    const redone = await send({ kind: "redo" });
+    await send({ kind: 'undo' });
+    assert.deepEqual(Buffer.from((await send({ kind: 'save' })).bytes), bytes);
+    const redone = await send({ kind: 'redo' });
     measureLayout(redone.content);
     assert.deepEqual(
-      Buffer.from((await send({ kind: "save", allowStaleLayout: true })).bytes),
+      Buffer.from((await send({ kind: 'save', allowStaleLayout: true })).bytes),
       Buffer.from(saved),
     );
-    const reopened = await send({ kind: "load", format: "hwpx", bytes: saved });
+    const reopened = await send({ kind: 'load', format: 'hwpx', bytes: saved });
     const reopenedLayout = measureLayout(reopened.content);
     assert.equal(reopenedLayout.pages.length, editedLayout.pages.length);
     t.diagnostic(

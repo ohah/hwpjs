@@ -1,13 +1,13 @@
-import { tableLineRegions } from "./table-line-regions.mjs";
-import { pictureFlowLine } from "./picture-flow-line.mjs";
-import { pictureParagraphFlow } from "./picture-paragraph-flow.mjs";
-import { measureDisplayRun } from "./text-measurement.mjs";
-import { intersectPictureLineRegions } from "./picture-line-intersections.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
+import { tableLineRegions } from './table-line-regions.mjs';
+import { pictureFlowLine } from './picture-flow-line.mjs';
+import { pictureParagraphFlow } from './picture-paragraph-flow.mjs';
+import { measureDisplayRun } from './text-measurement.mjs';
+import { intersectPictureLineRegions } from './picture-line-intersections.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
 
 function intersectTables(line, tables) {
   const initial = intersectPictureLineRegions(line, []);
-  if (initial.state !== "available") return initial;
+  if (initial.state !== 'available') return initial;
   let regions = initial.regions,
     nextY = Infinity;
   for (const { table, rectangle, footprint, fragmentOrdinal, fragmentCount } of tables) {
@@ -16,7 +16,7 @@ function intersectTables(line, tables) {
       fragmentOrdinal,
       fragmentCount,
     });
-    if (result.state !== "available") return result;
+    if (result.state !== 'available') return result;
     const bottom =
       footprint === undefined
         ? rectangle.y +
@@ -37,7 +37,7 @@ function intersectTables(line, tables) {
       }
     regions = next;
   }
-  return { state: "available", regions, ...(Number.isFinite(nextY) ? { nextY } : {}) };
+  return { state: 'available', regions, ...(Number.isFinite(nextY) ? { nextY } : {}) };
 }
 
 export function tableFlowLine(paragraph, unit, line, tables, measure) {
@@ -46,7 +46,7 @@ export function tableFlowLine(paragraph, unit, line, tables, measure) {
     unit,
     line,
     tables,
-    (text, position) => measureDisplayRun(text, paragraph, position, "text", measure),
+    (text, position) => measureDisplayRun(text, paragraph, position, 'text', measure),
     paragraph.paragraphShape,
     intersectTables,
   );
@@ -58,7 +58,7 @@ export function tableParagraphFlow(paragraph, box, tables, measure, options = {}
     paragraph.text,
     box,
     tables,
-    (text, unit) => measureDisplayRun(text, paragraph, unit, "text", measure),
+    (text, unit) => measureDisplayRun(text, paragraph, unit, 'text', measure),
     {
       ...options,
       paragraphShape: paragraph.paragraphShape,

@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { jpegSequentialScans } from "./jpeg-scan.mjs";
-import { jpegFrameFixture } from "./jpeg-frame.mjs";
-import { jpegFrameDequantOracle } from "./jpeg-frame-dequant.mjs";
-import { jpegIdctReference, jpegRestoredSample } from "./jpeg-idct.mjs";
+import assert from 'node:assert/strict';
+import { jpegSequentialScans } from './jpeg-scan.mjs';
+import { jpegFrameFixture } from './jpeg-frame.mjs';
+import { jpegFrameDequantOracle } from './jpeg-frame-dequant.mjs';
+import { jpegIdctReference, jpegRestoredSample } from './jpeg-idct.mjs';
 
 export function jpegPlanesInput(raw, maximum = 64000000) {
   const prefix = Buffer.alloc(4);

@@ -3,7 +3,7 @@
 const MAX_NATIVE_REACHABLE_REVISIONS = 65536;
 export function createHistorySelectionStore(limit = 100) {
   if (!Number.isSafeInteger(limit) || limit < 1)
-    throw new RangeError("InvalidHistorySelectionLimit");
+    throw new RangeError('InvalidHistorySelectionLimit');
   const selections = new Map();
   let reachable;
   const copy = (selection) => (selection ? structuredClone(selection) : null);
@@ -14,7 +14,7 @@ export function createHistorySelectionStore(limit = 100) {
   };
   return {
     remember(revision, selection) {
-      if (!validRevision(revision)) throw new RangeError("InvalidHistoryRevision");
+      if (!validRevision(revision)) throw new RangeError('InvalidHistoryRevision');
       if (reachable && !reachable.has(revision)) return;
       const value = copy(selection);
       selections.delete(revision);
@@ -26,7 +26,7 @@ export function createHistorySelectionStore(limit = 100) {
     },
     retain(revisions, currentRevision) {
       if (currentRevision !== undefined && !validRevision(currentRevision))
-        throw new RangeError("InvalidHistoryRevisions");
+        throw new RangeError('InvalidHistoryRevisions');
       // Missing metadata is the legacy bounded fallback, never an invented Native history.
       if (revisions === undefined) {
         reachable = undefined;
@@ -34,15 +34,15 @@ export function createHistorySelectionStore(limit = 100) {
         return;
       }
       if (!Array.isArray(revisions) || revisions.length > MAX_NATIVE_REACHABLE_REVISIONS)
-        throw new RangeError("InvalidHistoryRevisions");
+        throw new RangeError('InvalidHistoryRevisions');
       const next = new Set();
       for (const revision of revisions) {
         if (!validRevision(revision) || next.has(revision))
-          throw new RangeError("InvalidHistoryRevisions");
+          throw new RangeError('InvalidHistoryRevisions');
         next.add(revision);
       }
       if (currentRevision !== undefined && !next.has(currentRevision))
-        throw new RangeError("InvalidHistoryRevisions");
+        throw new RangeError('InvalidHistoryRevisions');
       reachable = next;
       for (const revision of selections.keys())
         if (!reachable.has(revision)) selections.delete(revision);

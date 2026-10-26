@@ -1,18 +1,18 @@
 // @ts-ignore Public selection uses the canonical UTF-16 scalar boundary.
-import { isUtf16Boundary } from "../../../../web/preview/utf16-boundary.mjs";
-import { characterTextColorObservation } from "./text-color-state.ts";
-import type { EditorState } from "./editor-state.ts";
-import type { SelectionTarget } from "../commands/commands.ts";
-import { validateSelection } from "../commands/selection.ts";
-import { validateFormattingTarget, type FormattingCapability } from "../commands/formatting.ts";
+import { isUtf16Boundary } from '../../../../web/preview/utf16-boundary.mjs';
+import { characterTextColorObservation } from './text-color-state.ts';
+import type { EditorState } from './editor-state.ts';
+import type { SelectionTarget } from '../commands/commands.ts';
+import { validateSelection } from '../commands/selection.ts';
+import { validateFormattingTarget, type FormattingCapability } from '../commands/formatting.ts';
 // @ts-ignore Canonical readonly display projection, not native writer rules.
-import { characterSelectionState } from "../../../../web/preview/character-property-selection.mjs";
+import { characterSelectionState } from '../../../../web/preview/character-property-selection.mjs';
 // @ts-ignore Canonical readonly source size projection.
-import { characterSizeState } from "../../../../web/preview/character-size-selection.mjs";
+import { characterSizeState } from '../../../../web/preview/character-size-selection.mjs';
 // @ts-ignore Canonical display enum; no duplicated ordinal table.
-import { paragraphAlignmentKey } from "../../../../web/preview/paragraph-alignments.mjs";
+import { paragraphAlignmentKey } from '../../../../web/preview/paragraph-alignments.mjs';
 
-export type FormattingValue<T> = T | "mixed" | null;
+export type FormattingValue<T> = T | 'mixed' | null;
 export interface SelectionFormatting {
   readonly target: SelectionTarget | null;
   /** null means the command target is available; unknown observations remain null below. */
@@ -50,10 +50,10 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
       size: null,
       align: null,
     });
-  if (state.status !== "ready")
-    return unavailable(state.status === "refresh-required" ? "RefreshRequired" : "EditorNotReady");
+  if (state.status !== 'ready')
+    return unavailable(state.status === 'refresh-required' ? 'RefreshRequired' : 'EditorNotReady');
   const selection = state.selection;
-  if (selection == null) return unavailable("MissingSelection");
+  if (selection == null) return unavailable('MissingSelection');
   let target: SelectionTarget, row: ReturnType<typeof validateSelection>;
   try {
     const selected = selection as SelectionTarget;
@@ -86,36 +86,36 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
   };
   const characterAvailableReason = reason(true),
     paragraphAvailableReason = reason(false);
-  const underlineAvailableReason = reason(true, "characterUnderlineAvailable");
-  const strikeTargetReason = reason(true, "characterStrikeAvailable");
+  const underlineAvailableReason = reason(true, 'characterUnderlineAvailable');
+  const strikeTargetReason = reason(true, 'characterStrikeAvailable');
   const content = state.content;
   // Helpers deliberately consume display offsets, not the mapped native offsets.
   const bold =
     characterAvailableReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, "bold")
+      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'bold')
       : null;
   const italic =
     characterAvailableReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, "italic")
+      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'italic')
       : null;
   const underline =
     underlineAvailableReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, "underline")
+      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'underline')
       : null;
   const strike =
     strikeTargetReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, "strike")
+      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'strike')
       : null;
   const strikeAvailableReason =
-    strikeTargetReason ?? (strike === null ? "UnknownCharacterStrike" : null);
-  const textColorTargetReason = reason(true, "characterTextColorAvailable");
+    strikeTargetReason ?? (strike === null ? 'UnknownCharacterStrike' : null);
+  const textColorTargetReason = reason(true, 'characterTextColorAvailable');
   const colorObservation =
     textColorTargetReason === null
       ? characterTextColorObservation(content, row, target.startUnit, target.endUnit)
       : null;
   const textColor = colorObservation?.value ?? null;
   const textColorAvailableReason =
-    textColorTargetReason ?? (colorObservation?.bindingValid ? null : "UnknownCharacterTextColor");
+    textColorTargetReason ?? (colorObservation?.bindingValid ? null : 'UnknownCharacterTextColor');
   const size =
     characterAvailableReason === null
       ? characterSizeState(content, row, target.startUnit, target.endUnit, {

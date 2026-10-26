@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function fraction(n, d = 1n) {
   assert.notEqual(d, 0n);
   if (d < 0n) {

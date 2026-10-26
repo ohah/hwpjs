@@ -1,9 +1,9 @@
-import { projectFloatingPicturePage } from "./picture-page-projection.mjs";
-import { intersectPictureLineRegions } from "./picture-line-intersections.mjs";
-import { measurePictureCaptionFrame } from "./picture-caption-frame.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { selectPicturePageReservations } from "./picture-page-selection.mjs";
+import { projectFloatingPicturePage } from './picture-page-projection.mjs';
+import { intersectPictureLineRegions } from './picture-line-intersections.mjs';
+import { measurePictureCaptionFrame } from './picture-caption-frame.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { selectPicturePageReservations } from './picture-page-selection.mjs';
 
 // 배치와 줄 공간 계산은 기존 모듈이 소유합니다. 여기서는 페이지 소속만 연결합니다.
 export function picturePageReservations(
@@ -19,20 +19,20 @@ export function picturePageReservations(
   } = {},
 ) {
   if (!Array.isArray(pictures))
-    return { state: "unavailable", error: "InvalidPicturePageReservations" };
+    return { state: 'unavailable', error: 'InvalidPicturePageReservations' };
   if (!Number.isSafeInteger(maxCaptionRows) || maxCaptionRows < 1)
-    return { state: "unavailable", error: "InvalidPictureCaptionBudget" };
+    return { state: 'unavailable', error: 'InvalidPictureCaptionBudget' };
   const reservations = [],
     captionRows = [],
     ids = new Set();
   for (const picture of pictures) {
     const key = `${picture.section}:${picture.pictureNode}`;
-    if (ids.has(key)) return { state: "unavailable", error: "AmbiguousPicturePageReservations" };
+    if (ids.has(key)) return { state: 'unavailable', error: 'AmbiguousPicturePageReservations' };
     ids.add(key);
     if (![0, 1].includes(picture.flow?.textWrap))
-      return { state: "unavailable", error: "UnsupportedPicturePageReservationWrap" };
+      return { state: 'unavailable', error: 'UnsupportedPicturePageReservationWrap' };
     const result = projectFloatingPicturePage(picture, paragraphs, rows, options);
-    if (result.state !== "placed")
+    if (result.state !== 'placed')
       return {
         ...result,
         section: picture.section,
@@ -62,8 +62,8 @@ export function picturePageReservations(
         column.width <= 0
       )
         return {
-          state: "unavailable",
-          error: "UnsupportedColumnPictureExtent",
+          state: 'unavailable',
+          error: 'UnsupportedColumnPictureExtent',
           section: picture.section,
           paragraph: picture.paragraph,
           pictureNode: picture.pictureNode,
@@ -95,15 +95,15 @@ export function picturePageReservations(
           paper.width <= 0 ||
           paper.height <= 0
         )
-          return { state: "unavailable", error: "MissingColumnPicturePaper" };
+          return { state: 'unavailable', error: 'MissingColumnPicturePaper' };
         reservation.pageClip = { ...paper };
       }
     }
     if (picture.caption != null) {
-      if (typeof captionMeasure !== "function")
-        return { state: "unavailable", error: "MissingPictureCaptionMeasurement" };
+      if (typeof captionMeasure !== 'function')
+        return { state: 'unavailable', error: 'MissingPictureCaptionMeasurement' };
       if (captionRows.length >= maxCaptionRows)
-        return { state: "unavailable", error: "PictureCaptionRowLimit" };
+        return { state: 'unavailable', error: 'PictureCaptionRowLimit' };
       const caption = measurePictureCaptionFrame(
         picture,
         captionParagraphs,
@@ -111,7 +111,7 @@ export function picturePageReservations(
         captionMeasure,
         { maxRows: maxCaptionRows - captionRows.length },
       );
-      if (caption.state !== "measured") return caption;
+      if (caption.state !== 'measured') return caption;
       reservation.flowRectangle = caption.flowRectangle;
       reservation.captionRectangle = caption.captionRectangle;
       captionRows.push(
@@ -124,12 +124,12 @@ export function picturePageReservations(
     }
     reservations.push(reservation);
   }
-  return { state: "reserved", reservations, ...(captionRows.length ? { captionRows } : {}) };
+  return { state: 'reserved', reservations, ...(captionRows.length ? { captionRows } : {}) };
 }
 
 export function picturePageLineRegions(line, pageOrdinal, reservations) {
   const selected = selectPicturePageReservations(line, pageOrdinal, reservations);
   return selected === null
-    ? { state: "invalid_page_reservations" }
+    ? { state: 'invalid_page_reservations' }
     : intersectPictureLineRegions(line, selected, { includeNextEvent: true });
 }

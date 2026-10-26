@@ -1,11 +1,11 @@
 // 버전별 선택 배치와 그 배치의 alpha 부재 계약만 소유합니다.
 export function hwp5PictureTailLayout(version) {
   return version === 0x05010001 || version === 0x05010100
-    ? "with_alpha9"
+    ? 'with_alpha9'
     : version === 0x05000500 || version === 0x05000304
-      ? "dimensions8"
+      ? 'dimensions8'
       : version === 0x05000300
-        ? "effects_only"
+        ? 'effects_only'
         : null;
 }
 export function hwp5PictureTailAlphaSupported(tail) {
@@ -13,5 +13,5 @@ export function hwp5PictureTailAlphaSupported(tail) {
   if (tail?.image_alpha === 0) return true;
   const layout = hwp5PictureTailLayout(tail?.fileVersion);
   if (layout === null || tail.layout !== layout) return false;
-  return ["dimensions8", "effects_only"].includes(layout) && tail.image_alpha === null;
+  return ['dimensions8', 'effects_only'].includes(layout) && tail.image_alpha === null;
 }

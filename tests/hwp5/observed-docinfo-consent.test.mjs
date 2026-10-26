@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   prepareObservedDocInfoEnable,
   OBSERVED_DOCINFO_WARNING,
   observedDocInfoSummary,
-} from "../../web/preview/observed-docinfo-consent.mjs";
-import { createEditorControls } from "../../web/preview/editor-controls.mjs";
-import { NORMALIZATION_WARNING } from "../../web/preview/normalization-consent.mjs";
+} from '../../web/preview/observed-docinfo-consent.mjs';
+import { createEditorControls } from '../../web/preview/editor-controls.mjs';
+import { NORMALIZATION_WARNING } from '../../web/preview/normalization-consent.mjs';
 
-test("observed DocInfo consent applies only to the explicit policy and requires exact acceptance", () => {
-  const message = { kind: "enable", retainObservedDocInfo: true };
-  for (const answer of [false, undefined, 1, "yes"]) {
+test('observed DocInfo consent applies only to the explicit policy and requires exact acceptance', () => {
+  const message = { kind: 'enable', retainObservedDocInfo: true };
+  for (const answer of [false, undefined, 1, 'yes']) {
     assert.equal(
       prepareObservedDocInfoEnable(message, true, (warning) => {
         assert.equal(warning, OBSERVED_DOCINFO_WARNING);
@@ -25,20 +25,20 @@ test("observed DocInfo consent applies only to the explicit policy and requires 
   );
   assert.equal(
     prepareObservedDocInfoEnable(message, false, () => {
-      throw Error("UnexpectedPrompt");
+      throw Error('UnexpectedPrompt');
     }),
     null,
   );
-  for (const other of [{ kind: "enable" }, { kind: "splice" }])
+  for (const other of [{ kind: 'enable' }, { kind: 'splice' }])
     assert.equal(
       prepareObservedDocInfoEnable(other, true, () => {
-        throw Error("UnexpectedPrompt");
+        throw Error('UnexpectedPrompt');
       }),
       other,
     );
 });
 
-test("observed DocInfo warning keeps unresolved data and count mismatch explicit", () => {
+test('observed DocInfo warning keeps unresolved data and count mismatch explicit', () => {
   assert.equal(observedDocInfoSummary(null), null);
   const summary = observedDocInfoSummary({
     absent_carets: 1,
@@ -52,20 +52,20 @@ test("observed DocInfo warning keeps unresolved data and count mismatch explicit
   assert.match(summary, /리소스 개수 불일치 유지/);
 });
 
-test("separate observed-policy button keeps two consents explicit and resets with the file", (t) => {
+test('separate observed-policy button keeps two consents explicit and resets with the file', (t) => {
   const ids = [
-    "#editor-panel",
-    "#enable-edit",
-    "#enable-observed-docinfo-edit",
-    "#edit-fields",
-    "#edit-status",
-    "#edit-form",
-    "#format-button",
+    '#editor-panel',
+    '#enable-edit',
+    '#enable-observed-docinfo-edit',
+    '#edit-fields',
+    '#edit-status',
+    '#edit-form',
+    '#format-button',
   ];
   const nodes = new Map(
-    ids.map((id) => [id, Object.assign(new EventTarget(), { textContent: "" })]),
+    ids.map((id) => [id, Object.assign(new EventTarget(), { textContent: '' })]),
   );
-  nodes.get("#edit-form").elements = { charShapeId: { value: "0", reportValidity: () => true } };
+  nodes.get('#edit-form').elements = { charShapeId: { value: '0', reportValidity: () => true } };
   const previous = globalThis.document;
   globalThis.document = { querySelector: (id) => nodes.get(id) };
   t.after(() => {
@@ -80,32 +80,32 @@ test("separate observed-policy button keeps two consents explicit and resets wit
       return accept;
     },
   });
-  const button = nodes.get("#enable-observed-docinfo-edit");
+  const button = nodes.get('#enable-observed-docinfo-edit');
   controls.reset();
   controls.loaded({ normalization: true, observedDocInfo: true });
   assert.equal(button.hidden, false);
   assert.equal(button.disabled, false);
-  button.dispatchEvent(new Event("click"));
+  button.dispatchEvent(new Event('click'));
   assert.equal(sent.length, 0);
   assert.equal(controls.busy(), false);
   assert.deepEqual(warnings, [OBSERVED_DOCINFO_WARNING]);
   warnings.length = 0;
   accept = true;
-  button.dispatchEvent(new Event("click"));
+  button.dispatchEvent(new Event('click'));
   assert.deepEqual(warnings, [OBSERVED_DOCINFO_WARNING, NORMALIZATION_WARNING]);
   assert.deepEqual(sent, [
-    { kind: "enable", retainObservedDocInfo: true, normalizeObservedCfb: true },
+    { kind: 'enable', retainObservedDocInfo: true, normalizeObservedCfb: true },
   ]);
   assert.equal(button.disabled, true);
   controls.reset();
   controls.loaded();
   assert.equal(button.hidden, true);
-  button.dispatchEvent(new Event("click"));
+  button.dispatchEvent(new Event('click'));
   assert.equal(
     sent.length,
     1,
-    "unavailable policy must remain blocked even if an event is dispatched",
+    'unavailable policy must remain blocked even if an event is dispatched',
   );
-  controls.request({ kind: "enable" });
-  assert.deepEqual(sent.at(-1), { kind: "enable" });
+  controls.request({ kind: 'enable' });
+  assert.deepEqual(sent.at(-1), { kind: 'enable' });
 });

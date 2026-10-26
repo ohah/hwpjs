@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { shapeActual, shapeRun } from "./shape-validation.mjs";
+import assert from 'node:assert/strict';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { documentRecords, documentActual, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { shapeActual, shapeRun } from './shape-validation.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -11,15 +11,15 @@ const w = (n) => {
 export function shapeDocument(call, cfb, file, h, b) {
   const flags = h.readUInt32LE(36),
     v = h.readUInt32LE(32),
-    raw = Buffer.from(cfb.findExact("/DocInfo").content),
+    raw = Buffer.from(cfb.findExact('/DocInfo').content),
     doc = flags & 1 ? inflateRawSync(raw) : raw;
   const sections = [{ index: 0, bytes: b }],
     stats = shapeActual(call, v, b);
   const document = documentActual(call, h, doc, sections),
     container = containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
+    body = nodes.findIndex((n) => n.name === 'BodyText' && n.parent === 0),
+    section = nodes.findIndex((n) => n.name === 'Section0' && n.parent === body);
   assert.ok(section >= 0);
   const full = (plain) => {
     const copy = nodes.map((n) => ({ ...n }));

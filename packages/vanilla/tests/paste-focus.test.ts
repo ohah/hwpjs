@@ -1,12 +1,12 @@
-import { test, expect } from "bun:test";
+import { test, expect } from 'bun:test';
 // @ts-ignore Canonical controller/layout, not alternate input implementations.
-import { createCanvasEditor } from "../../../web/preview/canvas-editor.mjs";
+import { createCanvasEditor } from '../../../web/preview/canvas-editor.mjs';
 // @ts-ignore Canonical renderer geometry for a source fixture string.
-import { layoutContent } from "../../../web/preview/layout.mjs";
+import { layoutContent } from '../../../web/preview/layout.mjs';
 function fixture() {
   const doc: any = {
     activeElement: null,
-    defaultView: { AbortController, navigator: { platform: "MacIntel" } },
+    defaultView: { AbortController, navigator: { platform: 'MacIntel' } },
   };
   const fire = (node: EventTarget, type: string, props: object = {}) => {
     const event = new Event(type, { cancelable: true });
@@ -18,10 +18,10 @@ function fixture() {
     ownerDocument = doc;
     style: any = {};
     dataset: any = {};
-    value = "";
+    value = '';
     selectionStart = 0;
     selectionEnd = 0;
-    selectionDirection = "forward";
+    selectionDirection = 'forward';
     disabled = false;
     scrollTop = 0;
     scrollLeft = 0;
@@ -32,7 +32,7 @@ function fixture() {
     getRootNode() {
       return doc;
     }
-    setSelectionRange(a: number, b: number, direction = "forward") {
+    setSelectionRange(a: number, b: number, direction = 'forward') {
       this.selectionStart = a;
       this.selectionEnd = b;
       this.selectionDirection = direction;
@@ -40,11 +40,11 @@ function fixture() {
     focus() {
       doc.activeElement = this;
       if (this.restoreBrowserRange) this.setSelectionRange(0, 0);
-      fire(this, "focus");
+      fire(this, 'focus');
     }
     blur() {
       doc.activeElement = null;
-      fire(this, "blur");
+      fire(this, 'blur');
     }
     scrollIntoView() {}
     getBoundingClientRect() {
@@ -57,11 +57,11 @@ function fixture() {
   const row = {
     section: 0,
     paragraph: 0,
-    text: "기울임진하게",
+    text: '기울임진하게',
     editable: true,
-    selectionOwner: "section:0:body",
+    selectionOwner: 'section:0:body',
   };
-  const content = { format: "hwpx", paragraphs: [row] },
+  const content = { format: 'hwpx', paragraphs: [row] },
     canvas = new Node(),
     input = new Node(),
     viewport = new Node();
@@ -97,7 +97,7 @@ function fixture() {
     viewport,
     renderer,
     controls,
-    note: { textContent: "" },
+    note: { textContent: '' },
     environment: { ownerDocument: doc },
     onCommittedSelection: (selection: any) => selections.push(selection),
   });
@@ -119,22 +119,22 @@ function fixture() {
     setBusy(value: boolean) {
       busy = value;
     },
-    ack(text = "기울임기울임") {
+    ack(text = '기울임기울임') {
       row.text = text;
       layout = layoutContent(content, 400, () => 10);
       busy = false;
-      direct.message({ kind: "splice", origin: "canvas" });
+      direct.message({ kind: 'splice', origin: 'canvas' });
     },
   };
 }
-test("dialog-like focus restoration cannot publish the browser zero range over a canonical find selection", () => {
+test('dialog-like focus restoration cannot publish the browser zero range over a canonical find selection', () => {
   const f = fixture();
   try {
     f.input.blur();
     f.input.restoreBrowserRange = true;
     f.input.focus();
     // Browsers may enqueue select after restoring their old control selection.
-    f.fire(f.input, "select");
+    f.fire(f.input, 'select');
     expect([f.input.selectionStart, f.input.selectionEnd]).toEqual([3, 6]);
     expect(f.selections.at(-1)?.anchor.unit).toBe(3);
     expect(f.selections.at(-1)?.focus.unit).toBe(6);
@@ -144,7 +144,7 @@ test("dialog-like focus restoration cannot publish the browser zero range over a
     f.direct.close();
   }
 });
-test("availability getters preserve DOM range and canonical selection without publication", () => {
+test('availability getters preserve DOM range and canonical selection without publication', () => {
   const f = fixture();
   try {
     const before = f.selections.length;
@@ -157,22 +157,22 @@ test("availability getters preserve DOM range and canonical selection without pu
   }
 });
 
-test("public focus helper preserves backward selection and is terminal after close", () => {
+test('public focus helper preserves backward selection and is terminal after close', () => {
   const f = fixture();
   try {
     expect(
       f.direct.selectTextRange(
-        { section: 0, paragraph: 0, startUnit: 3, endUnit: 6, affinity: "backward" },
+        { section: 0, paragraph: 0, startUnit: 3, endUnit: 6, affinity: 'backward' },
         { focusInput: false },
       ),
     ).toBe(true);
     f.input.restoreBrowserRange = true;
     expect(f.direct.focusInput()).toBe(true);
-    f.fire(f.input, "select");
+    f.fire(f.input, 'select');
     expect([f.input.selectionStart, f.input.selectionEnd, f.input.selectionDirection]).toEqual([
       3,
       6,
-      "backward",
+      'backward',
     ]);
     expect(f.selections.at(-1)?.anchor.unit).toBe(6);
     expect(f.selections.at(-1)?.focus.unit).toBe(3);
@@ -184,67 +184,67 @@ test("public focus helper preserves backward selection and is terminal after clo
     f.direct.close();
   }
 });
-test("recovered selection uses the existing beforeinput/input/ACK path once and retains next-typing caret", () => {
+test('recovered selection uses the existing beforeinput/input/ACK path once and retains next-typing caret', () => {
   const f = fixture();
   try {
     f.input.restoreBrowserRange = true;
     expect(f.direct.focusInput()).toBe(true);
-    f.fire(f.input, "select");
+    f.fire(f.input, 'select');
     expect(
-      f.fire(f.input, "beforeinput", { inputType: "insertFromPaste", data: "기울임" })
+      f.fire(f.input, 'beforeinput', { inputType: 'insertFromPaste', data: '기울임' })
         .defaultPrevented,
     ).toBe(false);
     // Unit simulation of the browser default insertion, never a real clipboard E2E.
-    f.input.value = "기울임기울임";
+    f.input.value = '기울임기울임';
     f.input.setSelectionRange(6, 6);
-    f.fire(f.input, "input", { inputType: "insertFromPaste", data: "기울임" });
+    f.fire(f.input, 'input', { inputType: 'insertFromPaste', data: '기울임' });
     expect(f.requests.length).toBe(1);
     expect(f.requests[0]).toMatchObject({
-      kind: "splice",
+      kind: 'splice',
       startUnit: 3,
       endUnit: 6,
-      text: "기울임",
+      text: '기울임',
     });
     expect(f.direct.canPasteInput()).toBe(false);
     f.ack();
-    expect(f.input.value).toBe("기울임기울임");
+    expect(f.input.value).toBe('기울임기울임');
     expect([f.input.selectionStart, f.input.selectionEnd]).toEqual([6, 6]);
-    f.fire(f.input, "beforeinput", { inputType: "insertText", data: "x" });
-    f.input.value += "x";
+    f.fire(f.input, 'beforeinput', { inputType: 'insertText', data: 'x' });
+    f.input.value += 'x';
     f.input.setSelectionRange(7, 7);
-    f.fire(f.input, "input", { inputType: "insertText", data: "x" });
+    f.fire(f.input, 'input', { inputType: 'insertText', data: 'x' });
     expect(f.requests.length).toBe(2);
-    expect(f.requests[1]).toMatchObject({ kind: "splice", startUnit: 6, endUnit: 6, text: "x" });
-    f.ack("기울임기울임x");
+    expect(f.requests[1]).toMatchObject({ kind: 'splice', startUnit: 6, endUnit: 6, text: 'x' });
+    f.ack('기울임기울임x');
     expect([f.input.selectionStart, f.input.selectionEnd]).toEqual([7, 7]);
   } finally {
     f.direct.close();
   }
 });
-test("focus does not rewrite composition, pending draft, or permission availability", () => {
-  for (const mode of ["composition", "pending", "busy", "readonly"]) {
+test('focus does not rewrite composition, pending draft, or permission availability', () => {
+  for (const mode of ['composition', 'pending', 'busy', 'readonly']) {
     const f = fixture();
     try {
-      if (mode === "composition") {
-        f.fire(f.input, "compositionstart");
-        f.input.value = "조합중";
+      if (mode === 'composition') {
+        f.fire(f.input, 'compositionstart');
+        f.input.value = '조합중';
         f.input.setSelectionRange(2, 2);
       }
-      if (mode === "pending") {
-        f.input.value = "기울임기울임";
+      if (mode === 'pending') {
+        f.input.value = '기울임기울임';
         f.input.setSelectionRange(6, 6);
-        f.fire(f.input, "input");
+        f.fire(f.input, 'input');
         expect(f.requests.length).toBe(1);
       }
-      if (mode === "busy") f.setBusy(true);
-      if (mode === "readonly") f.row.editable = false;
+      if (mode === 'busy') f.setBusy(true);
+      if (mode === 'readonly') f.row.editable = false;
       const text = f.input.value,
         range = [f.input.selectionStart, f.input.selectionEnd];
       expect(f.direct.canPasteInput()).toBe(false);
       expect(f.direct.focusInput()).toBe(true);
       expect(f.input.value).toBe(text);
       expect([f.input.selectionStart, f.input.selectionEnd]).toEqual(range);
-      expect(f.requests.length).toBe(mode === "pending" ? 1 : 0);
+      expect(f.requests.length).toBe(mode === 'pending' ? 1 : 0);
     } finally {
       f.direct.close();
     }

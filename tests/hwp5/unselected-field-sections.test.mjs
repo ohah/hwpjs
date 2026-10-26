@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { inspect, paragraphRecords, verifyRaw } from "./style-preservation/text-record-oracle.mjs";
-import { expectedCharacterFormat } from "./style-preservation/character-format-record-oracle.mjs";
-import { verifyCharacterProperties } from "./style-preservation/character-property-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { inspect, paragraphRecords, verifyRaw } from './style-preservation/text-record-oracle.mjs';
+import { expectedCharacterFormat } from './style-preservation/character-format-record-oracle.mjs';
+import { verifyCharacterProperties } from './style-preservation/character-property-oracle.mjs';
 
-test("fourteen-section original retains unselected click fields through text format properties and history", async () => {
-  assert(process.env.HWPJS_TEST_WASM, "Explicit candidate required");
+test('fourteen-section original retains unselected click fields through text format properties and history', async () => {
+  assert(process.env.HWPJS_TEST_WASM, 'Explicit candidate required');
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
-  const path = "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwp";
+  const path = 'reference/rhwp/samples/2025 행정업무운영 편람(최종).hwp';
   const input = readFileSync(path),
     original = inspect(input);
   const editor = await createExperimentalHwp5Editor(wasm, input);
@@ -17,9 +17,9 @@ test("fourteen-section original retains unselected click fields through text for
     editor.enableHistory();
     assert.equal(editor.sectionCount(), 14);
     for (let section = 0; section < 14; section++) {
-      editor.splice({ section, paragraph: 0, startUnit: 0, endUnit: 0, text: "검증😀" });
+      editor.splice({ section, paragraph: 0, startUnit: 0, endUnit: 0, text: '검증😀' });
       const prefix = editor.save({ allowStaleLayout: true });
-      verifyRaw(input, prefix.bytes, section, 0, 0, 0, "검증😀");
+      verifyRaw(input, prefix.bytes, section, 0, 0, 0, '검증😀');
       const prefixed = inspect(prefix.bytes);
       const owner = paragraphRecords(prefixed.sections[section].bytes, 0);
       const run = owner.direct.find((r) => r.tag === 68 && r.level === owner.head.level + 1);

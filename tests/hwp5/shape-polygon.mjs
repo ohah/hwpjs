@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export const polygonRun = (call, b, mode = 1) => call(66, Buffer.concat([Buffer.from([mode]), b]));
 export function polygonBytes(points, mode, tail = Buffer.alloc(0)) {
   const start = mode ? 4 : 2,
@@ -36,7 +36,7 @@ export function polygonActual(call, b, mode = 1, prefixes = true) {
     assert.deepEqual(partial.subarray(8 + n * 8), b.subarray(end, end + tail));
   }
   assert.deepEqual(polygonRun(call, b, mode), expected);
-  return { count: n, extra, tail: b.subarray(end).toString("hex"), rejected: prefixes ? end : 0 };
+  return { count: n, extra, tail: b.subarray(end).toString('hex'), rejected: prefixes ? end : 0 };
 }
 export function polygonEdges(call) {
   let accepted = 0,

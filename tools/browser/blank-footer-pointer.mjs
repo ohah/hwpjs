@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 
 /** Probe physical footer coordinates with real pointer events, never set selection. */
 export function clickBlankFooter(driver, target) {
   const { command, evaluate } = driver;
-  command("scrollintoview", "#viewport");
+  command('scrollintoview', '#viewport');
   const band =
     evaluate(`(async()=>{const {pageSequenceReference}=await import('/web/preview/page-sequence-reference.mjs');
     const {hwpUnitPixels}=await import('/web/preview/hwp-units.mjs');
@@ -23,18 +23,18 @@ export function clickBlankFooter(driver, target) {
     evaluate(
       "window.__blankFooterPointer=false;document.querySelector('#canvas').addEventListener('pointerdown',e=>window.__blankFooterPointer=e.isTrusted&&e.target===document.querySelector('#canvas'),{once:true})",
     );
-    command("mouse", "move", String(point.x), String(point.y));
-    command("mouse", "down");
-    command("mouse", "up");
+    command('mouse', 'move', String(point.x), String(point.y));
+    command('mouse', 'down');
+    command('mouse', 'up');
     if (evaluate('document.querySelector("#canvas").dataset.caret').startsWith(expected)) {
-      assert.equal(evaluate("window.__blankFooterPointer"), true);
+      assert.equal(evaluate('window.__blankFooterPointer'), true);
       const top = evaluate('parseFloat(document.querySelector("#canvas-input").style.top)');
       assert.ok(
         Number.isFinite(top) && top >= band.y - 1 && top <= band.y + band.height + 40,
-        "FooterCaretMustRemainOnClickedPage",
+        'FooterCaretMustRemainOnClickedPage',
       );
       return;
     }
   }
-  throw Error("BlankFooterPointerTargetNotReached");
+  throw Error('BlankFooterPointerTargetNotReached');
 }

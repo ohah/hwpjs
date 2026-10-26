@@ -2,7 +2,7 @@
 // the native flow snapshot or assigning physical pages in the reader.
 export function paragraphStylePageBreaks(content) {
   if (
-    content?.format !== "hwpx" ||
+    content?.format !== 'hwpx' ||
     !Array.isArray(content.paragraphs) ||
     !Array.isArray(content.paragraphFlows)
   )

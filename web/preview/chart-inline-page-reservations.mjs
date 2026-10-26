@@ -1,16 +1,16 @@
-import { inlinePictureRowPlacement } from "./inline-picture-row-placement.mjs";
-import { rowTextHeight } from "./row-geometry.mjs";
+import { inlinePictureRowPlacement } from './inline-picture-row-placement.mjs';
+import { rowTextHeight } from './row-geometry.mjs';
 const tolerance = 1e-7;
 
 // Final measured UTF-16 anchor geometry, shared with inline Canvas placement.
 export function reserveInlineChartPages(charts, content, body) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   if (!Array.isArray(charts) || !Array.isArray(body?.rows))
-    return fail("IncompleteInlineChartMeasurement");
+    return fail('IncompleteInlineChartMeasurement');
   const reservations = [];
   for (const chart of charts) {
     const item = chart?.inlineItem;
-    if (!item) return fail("UnsupportedInlineChartPage");
+    if (!item) return fail('UnsupportedInlineChartPage');
     const competing = [
       ...(content.pictures ?? []),
       ...(content.tables ?? []),
@@ -24,27 +24,27 @@ export function reserveInlineChartPages(charts, content, body) {
           other.anchorUnit === chart.anchorUnit,
       )
     )
-      return fail("AmbiguousInlineChartAnchor");
+      return fail('AmbiguousInlineChartAnchor');
     const hosts = body.rows
       .map((row, index) => ({ row, index }))
       .filter(
         ({ row }) =>
-          row.kind === "text" &&
+          row.kind === 'text' &&
           row.section === chart.section &&
           row.paragraph === chart.paragraph &&
           row.startUnit <= chart.anchorUnit &&
           row.endUnit > chart.anchorUnit,
       );
-    if (hosts.length !== 1) return fail("AmbiguousInlineChartAnchor");
+    if (hosts.length !== 1) return fail('AmbiguousInlineChartAnchor');
     const { row, index } = hosts[0];
     if (
       row.transform !== undefined ||
       !Number.isSafeInteger(row.pageOrdinal) ||
       row.pageOrdinal < 0
     )
-      return fail("UnsupportedInlineChartTransform");
+      return fail('UnsupportedInlineChartTransform');
     const placement = inlinePictureRowPlacement(item, row, index);
-    if (placement.state !== "placed") return placement;
+    if (placement.state !== 'placed') return placement;
     const boundaries = row.boundaries,
       at = boundaries.findIndex((boundary) => boundary.unit === chart.anchorUnit);
     const advance = boundaries[at + 1]?.x - boundaries[at]?.x;
@@ -55,7 +55,7 @@ export function reserveInlineChartPages(charts, content, body) {
       !Number.isFinite(textHeight) ||
       textHeight < item.height
     )
-      return fail("IncompleteInlineChartMeasurement");
+      return fail('IncompleteInlineChartMeasurement');
     const box = row.referenceBoxes?.column ?? row.referenceBoxes?.page,
       r = placement.rectangle;
     if (
@@ -68,7 +68,7 @@ export function reserveInlineChartPages(charts, content, body) {
       r.x + r.width > box.x + box.width + tolerance ||
       r.y + r.height > box.y + box.height + tolerance
     )
-      return fail("InlineChartPageOverflow");
+      return fail('InlineChartPageOverflow');
     reservations.push({
       section: chart.section,
       oleNode: chart.node,
@@ -82,5 +82,5 @@ export function reserveInlineChartPages(charts, content, body) {
       paintable: true,
     });
   }
-  return { state: "reserved", reservations };
+  return { state: 'reserved', reservations };
 }

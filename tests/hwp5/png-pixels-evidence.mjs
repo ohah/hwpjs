@@ -1,18 +1,18 @@
-import assert from "node:assert/strict";
-import { inflateSync, crc32 } from "node:zlib";
-import { pngStructureEvidence } from "./png-structure-evidence.mjs";
-import { transparencyEvidence } from "./png-transparency-evidence.mjs";
+import assert from 'node:assert/strict';
+import { inflateSync, crc32 } from 'node:zlib';
+import { pngStructureEvidence } from './png-structure-evidence.mjs';
+import { transparencyEvidence } from './png-transparency-evidence.mjs';
 
 // Independent Adam7 oracle uses the specification's repeated tile, not strides.
 const tile = [
-  "16462646",
-  "77777777",
-  "56565656",
-  "77777777",
-  "36463646",
-  "77777777",
-  "56565656",
-  "77777777",
+  '16462646',
+  '77777777',
+  '56565656',
+  '77777777',
+  '36463646',
+  '77777777',
+  '56565656',
+  '77777777',
 ];
 export function passes(width, height, interlace) {
   if (!interlace) return [{ width, height }];
@@ -47,7 +47,7 @@ export function pngPixelsEvidence(raw) {
   const structure = pngStructureEvidence(raw);
   const [width, height, depth, color, interlace] = structure.fields;
   const transparency = transparencyEvidence(structure);
-  const chunks = structure.chunks.filter((c) => c.name === "IDAT").map((c) => c.payload);
+  const chunks = structure.chunks.filter((c) => c.name === 'IDAT').map((c) => c.payload);
   const compressed = Buffer.concat(chunks);
   const { buffer, engine } = inflateSync(compressed, { info: true, maxOutputLength: 268435456 });
   const decoded = Buffer.from(buffer);

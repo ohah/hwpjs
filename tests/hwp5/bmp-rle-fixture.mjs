@@ -1,6 +1,6 @@
-import { bmpFixture } from "./bmp-fixture.mjs";
-export const rleExample4 = Buffer.from("0304050600064556670004780002050104780000091e0001", "hex");
-export const rleExample8 = Buffer.from("0304050600034556670002780002050102780000091e0001", "hex");
+import { bmpFixture } from './bmp-fixture.mjs';
+export const rleExample4 = Buffer.from('0304050600064556670004780002050104780000091e0001', 'hex');
+export const rleExample8 = Buffer.from('0304050600034556670002780002050102780000091e0001', 'hex');
 export function bmpRleFixture({
   bits = 8,
   width = 32,

@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { jpegMarkerOracle, jpegEntropyOracle } from "./jpeg-framing.mjs";
-import { jpegStructureOracle } from "./jpeg-structure.mjs";
-import { jpegProgressiveOracle } from "./jpeg-progressive.mjs";
-import { jpegTablesOracle } from "./jpeg-tables.mjs";
+import assert from 'node:assert/strict';
+import { jpegMarkerOracle, jpegEntropyOracle } from './jpeg-framing.mjs';
+import { jpegStructureOracle } from './jpeg-structure.mjs';
+import { jpegProgressiveOracle } from './jpeg-progressive.mjs';
+import { jpegTablesOracle } from './jpeg-tables.mjs';
 import {
   jpegScanGeometry,
   headerBytes as scanHeaderBytes,
   blockBytes as scanBlockBytes,
-} from "./jpeg-scan.mjs";
-import { progressiveScanOracle } from "./jpeg-progressive-scan.mjs";
-import { progressiveZero } from "./jpeg-progressive-block.mjs";
+} from './jpeg-scan.mjs';
+import { progressiveScanOracle } from './jpeg-progressive-scan.mjs';
+import { progressiveZero } from './jpeg-progressive-block.mjs';
 
 export const frameHeaderBytes = 48,
   planeHeaderBytes = 232;

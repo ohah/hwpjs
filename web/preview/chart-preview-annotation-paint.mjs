@@ -3,11 +3,11 @@ export function paintChartPreviewGrid(ctx, layout, item, scrollTop) {
   const plot = layout.plot,
     x = item.x + plot.x,
     y = item.y + plot.y - scrollTop;
-  ctx.strokeStyle = "#dbe4eb";
+  ctx.strokeStyle = '#dbe4eb';
   ctx.lineWidth = 1;
   for (const tick of layout.ticks) {
     ctx.beginPath();
-    if (layout.direction === "bar") {
+    if (layout.direction === 'bar') {
       const px = x + tick.fraction * plot.width;
       ctx.moveTo(px, y);
       ctx.lineTo(px, y + plot.height);
@@ -23,13 +23,13 @@ export function paintChartPreviewAnnotations(ctx, layout, item, scrollTop, color
   const plot = layout.plot,
     x = item.x + plot.x,
     y = item.y + plot.y - scrollTop;
-  const horizontal = layout.direction === "bar";
-  ctx.font = "12px sans-serif";
+  const horizontal = layout.direction === 'bar';
+  ctx.font = '12px sans-serif';
   ctx.lineWidth = 1;
-  ctx.fillStyle = "#334155";
+  ctx.fillStyle = '#334155';
   if (layout.title) {
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
     for (const [index, text] of layout.title.lines.entries())
       ctx.fillText(
         text,
@@ -41,8 +41,8 @@ export function paintChartPreviewAnnotations(ctx, layout, item, scrollTop, color
   for (const tick of layout.ticks) {
     const px = x + tick.fraction * plot.width,
       py = y + (1 - tick.fraction) * plot.height;
-    ctx.textAlign = horizontal ? "center" : "right";
-    ctx.textBaseline = horizontal ? "top" : "middle";
+    ctx.textAlign = horizontal ? 'center' : 'right';
+    ctx.textBaseline = horizontal ? 'top' : 'middle';
     ctx.fillText(
       tick.text,
       horizontal ? px : x - 6,
@@ -52,8 +52,8 @@ export function paintChartPreviewAnnotations(ctx, layout, item, scrollTop, color
   }
   for (const row of layout.categories)
     if (row.text !== null) {
-      ctx.textAlign = horizontal ? "right" : "center";
-      ctx.textBaseline = horizontal ? "middle" : "top";
+      ctx.textAlign = horizontal ? 'right' : 'center';
+      ctx.textBaseline = horizontal ? 'middle' : 'top';
       ctx.fillText(
         row.text,
         horizontal ? x - 6 : x + row.fraction * plot.width,
@@ -64,7 +64,7 @@ export function paintChartPreviewAnnotations(ctx, layout, item, scrollTop, color
       );
     }
   const hidden = layout.axes_hidden ?? { value: false, category: false };
-  ctx.strokeStyle = "#64748b";
+  ctx.strokeStyle = '#64748b';
   if (!(horizontal ? hidden.category : hidden.value)) {
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -82,9 +82,9 @@ export function paintChartPreviewAnnotations(ctx, layout, item, scrollTop, color
     ctx.beginPath();
     ctx.rect(item.x + entry.x, item.y - scrollTop + entry.y + 2, 8, 8);
     ctx.fill();
-    ctx.fillStyle = "#334155";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
+    ctx.fillStyle = '#334155';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
     ctx.fillText(entry.text, item.x + entry.x + 12, item.y - scrollTop + entry.y, entry.maxWidth);
   }
 }

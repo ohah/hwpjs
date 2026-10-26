@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { axesOracle } from "./chart-axes-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { axesOracle } from './chart-axes-oracle.mjs';
 const extent = (b) => {
   b.writeUInt32LE(b.length - 36, 32);
   return b;
 };
 export async function chartAxes(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     axes = 0,
     scales = 0,
@@ -19,10 +19,10 @@ export async function chartAxes(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const e = axesOracle(b);
       axes += e.rows.length;
@@ -67,19 +67,19 @@ export async function chartAxes(call) {
       }
       accept(changed);
       for (let cut = e.start; cut < e.end; cut++)
-        reject(extent(Buffer.from(b.subarray(0, cut))), "UnexpectedEnd");
-      if (e.per) reject(b, "LimitExceeded", { per: e.per - 1 });
-      if (e.total) reject(b, "LimitExceeded", { total: e.total - 1 });
-      reject(b, "LimitExceeded", { objects: e.objects - 1 });
-      reject(b, "LimitExceeded", { stored: e.stored - 1 });
-      reject(b, "LimitExceeded", {}, b.length - 1);
+        reject(extent(Buffer.from(b.subarray(0, cut))), 'UnexpectedEnd');
+      if (e.per) reject(b, 'LimitExceeded', { per: e.per - 1 });
+      if (e.total) reject(b, 'LimitExceeded', { total: e.total - 1 });
+      reject(b, 'LimitExceeded', { objects: e.objects - 1 });
+      reject(b, 'LimitExceeded', { stored: e.stored - 1 });
+      reject(b, 'LimitExceeded', {}, b.length - 1);
       for (const { result: r } of e.rows) {
         const bad = Buffer.from(b);
         bad.writeUInt16LE(2, r.axis.rawFields[0].start + 6);
-        reject(bad, "UnsupportedChartAxisTailLayout");
+        reject(bad, 'UnsupportedChartAxisTailLayout');
         const duplicate = Buffer.from(b);
         duplicate.writeUInt32LE(b.readUInt32LE(e.start), r.axis.blockStart);
-        reject(duplicate, "DuplicateChartObjectId");
+        reject(duplicate, 'DuplicateChartObjectId');
       }
     });
   } finally {

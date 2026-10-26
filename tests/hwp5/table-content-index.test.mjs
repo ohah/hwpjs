@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { attachTables } from "../../web/preview/table-content.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { attachTables } from '../../web/preview/table-content.mjs';
 
-test("table grouping keeps cell lookups linear without changing first-binding geometry or paragraph order", () => {
+test('table grouping keeps cell lookups linear without changing first-binding geometry or paragraph order', () => {
   const count = 1000;
   let reads = 0;
   const bindings = Array.from({ length: count }, (_, paragraph) => ({
@@ -36,7 +36,7 @@ test("table grouping keeps cell lookups linear without changing first-binding ge
   });
 });
 
-test("table grouping scopes reused list IDs by table and section and retains original first geometry", () => {
+test('table grouping scopes reused list IDs by table and section and retains original first geometry', () => {
   const binding = (paragraph, tableNode, width) => ({
     paragraph,
     tableNode,

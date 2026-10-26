@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { lastDocumentEvidence } from "./history-last-document-evidence.mjs";
-import { historyContainerEvidence } from "./history-container-evidence.mjs";
-import { historyContainerPrefix } from "./history-container.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { lastDocumentEvidence } from './history-last-document-evidence.mjs';
+import { historyContainerEvidence } from './history-container-evidence.mjs';
+import { historyContainerPrefix } from './history-container.mjs';
+import { containerTotals } from './container-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -24,14 +24,14 @@ export function historyLastDocumentEdges(call, cfb) {
   };
   for (const units of [0, 1, 2, 127, 256]) check(frame(Buffer.alloc(units * 2, 0xd8)));
   check(
-    frame(Buffer.from('<!DOCTYPE x SYSTEM "https://invalid.invalid/a"><x>&bad;</y>\0', "utf16le")),
+    frame(Buffer.from('<!DOCTYPE x SYSTEM "https://invalid.invalid/a"><x>&bad;</y>\0', 'utf16le')),
   );
   for (let tag = 0; tag < 256; tag++)
     if (tag !== 49) {
       assert.throws(() => direct(frame(Buffer.alloc(0), tag)), /InvalidHistoryLastDocumentTag/);
       rejected++;
     }
-  const small = frame(Buffer.from("x\0", "utf16le"));
+  const small = frame(Buffer.from('x\0', 'utf16le'));
   for (let n = 0; n < small.length; n++) {
     assert.throws(
       () => direct(small.subarray(0, n)),
@@ -64,12 +64,12 @@ export function historyLastDocumentEdges(call, cfb) {
     rejected += 2;
   }
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const model = cfb.document(),
-    root = model.nodes.findIndex((n) => n.parent === 0 && n.name === "DocHistory"),
-    index = model.nodes.findIndex((n) => n.parent === root && n.name === "HistoryLastDoc");
+    root = model.nodes.findIndex((n) => n.parent === 0 && n.name === 'DocHistory'),
+    index = model.nodes.findIndex((n) => n.parent === root && n.name === 'HistoryLastDoc');
   assert.ok(index >= 0);
   const raw = Buffer.from(model.nodes[index].content),
     plain = inflateRawSync(raw);
@@ -104,7 +104,7 @@ export function historyLastDocumentEdges(call, cfb) {
   accepted++;
   assert.throws(() => run(file, {}, total - 1), /LimitExceeded/);
   rejected++;
-  const changed = (content, name = "HistoryLastDoc") => ({
+  const changed = (content, name = 'HistoryLastDoc') => ({
     ...model,
     nodes: model.nodes.map((n, i) => (i === index ? { ...n, name, content } : n)),
   });
@@ -125,7 +125,7 @@ export function historyLastDocumentEdges(call, cfb) {
   verify(tiny);
   verify(tiny, { last_document: 0 });
   verify(tiny, { mode: 0 });
-  verify(changed(Buffer.from([255]), "UnselectedLastDoc"));
+  verify(changed(Buffer.from([255]), 'UnselectedLastDoc'));
   for (const o of [{ bytes: tinyExpected.decoded - 1 }, { records: 28 }]) {
     assert.throws(() => run(tinyFile, o), /LimitExceeded/);
     rejected++;
@@ -153,7 +153,7 @@ export function historyLastDocumentEdges(call, cfb) {
     {
       ...tiny,
       nodes: tiny.nodes.map((n) =>
-        n.parent === root && (/VersionLog/.test(n.name) || n.name === "HistoryLastDoc")
+        n.parent === root && (/VersionLog/.test(n.name) || n.name === 'HistoryLastDoc')
           ? { ...n, content: inflateRawSync(n.content) }
           : n,
       ),

@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { spawnSync } from "node:child_process";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { spawnSync } from 'node:child_process';
 
-test("public generated table host prefix keeps complete XML ZIP and native redo on refusal", async () => {
+test('public generated table host prefix keeps complete XML ZIP and native redo on refusal', async () => {
   const editor = await createHwpxEditor(
-    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm'),
   );
   try {
-    editor.open(readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx"));
+    editor.open(readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/charshape.hwpx'));
     editor.enableHistory();
     const identity = editor.insertTable(0, 2, 2, {
       rows: 1,
@@ -31,34 +31,34 @@ test("public generated table host prefix keeps complete XML ZIP and native redo 
       /UnsupportedCreatedTableHostEdit/,
     );
     assert.deepEqual(Buffer.from(editor.save()), Buffer.from(before));
-    editor.splice(0, 2, 0, 0, "앞😀<&");
+    editor.splice(0, 2, 0, 0, '앞😀<&');
     assert.equal(editor.createdTables(0)[0].anchor_unit, 7);
     assert.equal(editor.createdTables(0)[0].identity, identity);
     const after = editor.save();
     const data = {
-      before: Buffer.from(before).toString("base64"),
-      after: Buffer.from(after).toString("base64"),
-      part: "Contents/section0.xml",
+      before: Buffer.from(before).toString('base64'),
+      after: Buffer.from(after).toString('base64'),
+      part: 'Contents/section0.xml',
       index: 1,
       start: 0,
       end: 0,
-      text: "앞😀<&",
+      text: '앞😀<&',
       zero_width_table_id: String(table.instance_id),
     };
-    for (const flags of [[], ["-O"]])
-      execFileSync("python3", [...flags, "tools/hwpx-plain-splice-oracle.py"], {
+    for (const flags of [[], ['-O']])
+      execFileSync('python3', [...flags, 'tools/hwpx-plain-splice-oracle.py'], {
         input: JSON.stringify(data),
         timeout: 30000,
       });
     for (const fields of [
       { zero_width_table_id: null },
       { zero_width_table_id: true },
-      { zero_width_table_id: "9" },
+      { zero_width_table_id: '9' },
       { start: 0, end: 3 },
     ]) {
-      const result = spawnSync("python3", ["-O", "tools/hwpx-plain-splice-oracle.py"], {
+      const result = spawnSync('python3', ['-O', 'tools/hwpx-plain-splice-oracle.py'], {
         input: JSON.stringify({ ...data, ...fields }),
-        encoding: "utf8",
+        encoding: 'utf8',
         timeout: 30000,
       });
       assert.equal(result.error, undefined);
@@ -70,7 +70,7 @@ test("public generated table host prefix keeps complete XML ZIP and native redo 
       );
     }
     assert.equal(editor.undo(), true);
-    assert.throws(() => editor.splice(0, 2, 0, 3, ""), /ProtectedCreatedTableAnchor/);
+    assert.throws(() => editor.splice(0, 2, 0, 3, ''), /ProtectedCreatedTableAnchor/);
     assert.deepEqual(Buffer.from(editor.save()), Buffer.from(before));
     assert.equal(editor.redo(), true);
     assert.deepEqual(Buffer.from(editor.save()), Buffer.from(after));

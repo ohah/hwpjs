@@ -1,7 +1,7 @@
 /** HCS1 read-only resources; signed native height, not CSS pixels. */
 export function decodeCharacterShapes(bytes) {
   const fail = () => {
-    throw new Error("InvalidCharacterShapes");
+    throw new Error('InvalidCharacterShapes');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length < 8) return fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -27,7 +27,7 @@ export function decodeCharacterShapes(bytes) {
 
 export function decodeCharacterRanges(bytes) {
   const fail = () => {
-    throw new Error("InvalidCharacterRanges");
+    throw new Error('InvalidCharacterRanges');
   };
   if (!(bytes instanceof Uint8Array) || bytes.length < 8) return fail();
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

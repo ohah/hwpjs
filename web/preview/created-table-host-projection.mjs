@@ -1,13 +1,13 @@
-import { createdTableIdentity } from "../../js/created-table-identity.mjs";
+import { createdTableIdentity } from '../../js/created-table-identity.mjs';
 
 // Read-only layout projection, never an editor document or native source index.
 export function projectCreatedTableHost(source, tables) {
   const fail = () => {
-    throw new RangeError("InvalidCreatedTableHostProjection");
+    throw new RangeError('InvalidCreatedTableHostProjection');
   };
   if (
     !source ||
-    typeof source.text !== "string" ||
+    typeof source.text !== 'string' ||
     !source.text.isWellFormed() ||
     !Array.isArray(tables) ||
     !Number.isSafeInteger(source.section) ||
@@ -49,7 +49,7 @@ export function projectCreatedTableHost(source, tables) {
   const ordered = [...tables].sort((a, b) => a.anchorUnit - b.anchorUnit);
   const anchors = [],
     runs = [];
-  let text = "",
+  let text = '',
     cursor = first;
   for (const table of ordered) {
     if (cursor < table.anchorUnit) {
@@ -68,7 +68,7 @@ export function projectCreatedTableHost(source, tables) {
       sourceUnit: table.anchorUnit,
       unit: text.length,
     });
-    text += "\ufffc";
+    text += '\ufffc';
     cursor = table.anchorUnit;
   }
   if (cursor < last) {
@@ -95,12 +95,12 @@ export function projectCreatedTableHost(source, tables) {
   };
   const sourceUnitForView = (unit) => {
     if (!boundary(text, unit)) return fail();
-    return first + unit - countAnchors("unit", unit);
+    return first + unit - countAnchors('unit', unit);
   };
-  const viewUnitForSource = (unit, affinity = "before") => {
-    if (!boundary(sourceText, unit - first) || !["before", "after"].includes(affinity))
+  const viewUnitForSource = (unit, affinity = 'before') => {
+    if (!boundary(sourceText, unit - first) || !['before', 'after'].includes(affinity))
       return fail();
-    return unit - first + countAnchors("sourceUnit", unit, affinity === "after");
+    return unit - first + countAnchors('sourceUnit', unit, affinity === 'after');
   };
   const sourceRunsForViewRange = (start, end) => {
     if (!boundary(text, start) || !boundary(text, end) || end < start) return fail();

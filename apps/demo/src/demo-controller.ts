@@ -1,44 +1,44 @@
-import type { CanvasDisplayOptions } from "@hwpjs/vanilla";
-import { createViewOptionsBridge } from "./view-options-bridge.ts";
-import { isMenuZoomPercent, stepViewZoom } from "./view-zoom.ts";
-import { mountShortcutSettings } from "./shortcut-settings.ts";
-import { getHistoryAvailability, getSelectionFormatting } from "@hwpjs/core";
-import { createEditor, type HeadlessEditor } from "@hwpjs/core";
-import { createWorkerRuntimeFactory } from "@hwpjs/core/runtime";
-import { createFormattingDialogController } from "./formatting-dialog-controller.ts";
-import { createFormattingBridge } from "./formatting-bridge.ts";
-import { createTextToolsBridge } from "./text-tools-bridge.ts";
-import { createClipboardBridge } from "./clipboard-bridge.ts";
-import { commandSupportActions } from "./command-support.ts";
-import { mountDemoContextMenu } from "./context-menu.ts";
-import { createDemoShell } from "./shell.ts";
+import type { CanvasDisplayOptions } from '@hwpjs/vanilla';
+import { createViewOptionsBridge } from './view-options-bridge.ts';
+import { isMenuZoomPercent, stepViewZoom } from './view-zoom.ts';
+import { mountShortcutSettings } from './shortcut-settings.ts';
+import { getHistoryAvailability, getSelectionFormatting } from '@hwpjs/core';
+import { createEditor, type HeadlessEditor } from '@hwpjs/core';
+import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
+import { createFormattingDialogController } from './formatting-dialog-controller.ts';
+import { createFormattingBridge } from './formatting-bridge.ts';
+import { createTextToolsBridge } from './text-tools-bridge.ts';
+import { createClipboardBridge } from './clipboard-bridge.ts';
+import { commandSupportActions } from './command-support.ts';
+import { mountDemoContextMenu } from './context-menu.ts';
+import { createDemoShell } from './shell.ts';
 import type {
   DemoAction,
   DemoCommand,
   DemoFramework,
   DemoShellState,
   DemoTraceEntry,
-} from "./shell-contract.ts";
-import { mountHeadlessPanel } from "./headless-panel.ts";
-import { requireOpenConsent } from "./document-open-consent.ts";
-import { createDocumentAdmission } from "./document-admission.ts";
-import { mountSavePolicy } from "./save-policy.ts";
-import { askDocumentPassword } from "./password-dialog.ts";
-import { documentDownloadName } from "./download-name.ts";
-import { askObservedDocInfoConsent } from "./observed-docinfo-dialog.ts";
-import { mountObservedDocInfoNotice } from "./observed-docinfo-notice.ts";
-import { createDocumentLoader } from "./document-loader.ts";
-import { askDistributionConsent, askAvailableSectionsConsent } from "./source-policy-dialog.ts";
-import { askNormalizationConsent } from "./normalization-dialog.ts";
-import { mountSourcePolicyNotice } from "./source-policy-notice.ts";
-import { mountNormalizationNotice } from "./normalization-notice.ts";
-import { getInitialAvailableFixtures, fetchAvailableFixtures } from "./available-fixtures.ts";
+} from './shell-contract.ts';
+import { mountHeadlessPanel } from './headless-panel.ts';
+import { requireOpenConsent } from './document-open-consent.ts';
+import { createDocumentAdmission } from './document-admission.ts';
+import { mountSavePolicy } from './save-policy.ts';
+import { askDocumentPassword } from './password-dialog.ts';
+import { documentDownloadName } from './download-name.ts';
+import { askObservedDocInfoConsent } from './observed-docinfo-dialog.ts';
+import { mountObservedDocInfoNotice } from './observed-docinfo-notice.ts';
+import { createDocumentLoader } from './document-loader.ts';
+import { askDistributionConsent, askAvailableSectionsConsent } from './source-policy-dialog.ts';
+import { askNormalizationConsent } from './normalization-dialog.ts';
+import { mountSourcePolicyNotice } from './source-policy-notice.ts';
+import { mountNormalizationNotice } from './normalization-notice.ts';
+import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available-fixtures.ts';
 // @ts-ignore Canonical fixture catalog is shared with the server.
-import { fixtureUrl } from "../../../web/preview/fixture-catalog.mjs";
+import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
 export interface DemoHost {
-  canRequestHistory?(kind: "undo" | "redo"): boolean;
-  requestHistory?(kind: "undo" | "redo"): boolean;
+  canRequestHistory?(kind: 'undo' | 'redo'): boolean;
+  requestHistory?(kind: 'undo' | 'redo'): boolean;
   focus?(): boolean;
   canPasteInput?(): boolean;
   focusForPaste?(): boolean;
@@ -54,13 +54,13 @@ export type MountDemoHost = (
 ) => DemoHost | Promise<DemoHost>;
 
 /** 공개 상태의 검증된 선택만 표시하며 별도 선택 캐시를 만들지 않습니다. */
-export function selectionStatusLabel(state: ReturnType<HeadlessEditor["getEditorState"]>): string {
+export function selectionStatusLabel(state: ReturnType<HeadlessEditor['getEditorState']>): string {
   const selected = getSelectionFormatting(state).target;
   return selected
     ? selected.startUnit === selected.endUnit
-      ? "커서 위치"
-      : "텍스트 선택"
-    : "선택 없음";
+      ? '커서 위치'
+      : '텍스트 선택'
+    : '선택 없음';
 }
 
 /** The app owns transport, file admission and downloads; framework hosts own the surface. */
@@ -72,8 +72,8 @@ export async function mountDemo(
 ) {
   let closed = false,
     busy = false,
-    filename = "",
-    status = "문서를 열어주세요.",
+    filename = '',
+    status = '문서를 열어주세요.',
     zoom = 100;
   const fetcher = options.fetch ?? globalThis.fetch.bind(globalThis);
   let fixtures = getInitialAvailableFixtures();
@@ -87,13 +87,13 @@ export async function mountDemo(
   let host: DemoHost | undefined;
   const traces: DemoTraceEntry[] = [];
   const runtimeFactory = createWorkerRuntimeFactory({
-    workerURL: "/hwpjs/worker.js",
-    wasmURL: "/hwpjs/hwpjs.wasm",
+    workerURL: '/hwpjs/worker.js',
+    wasmURL: '/hwpjs/hwpjs.wasm',
   });
   const editor = createEditor({
     runtimeFactory,
     onError: () => {
-      if (!closed) note("문서 작업에 실패했습니다.");
+      if (!closed) note('문서 작업에 실패했습니다.');
     },
   });
   const formatting = createFormattingBridge({ editor, onStatus: note });
@@ -129,7 +129,7 @@ export async function mountDemo(
   const viewOptions = createViewOptionsBridge({ getHost: () => host, onStatus: note });
   const presentation = (): DemoShellState => {
     const state = editor.getEditorState(),
-      ready = state.status === "ready";
+      ready = state.status === 'ready';
     const formatState = formatting.getPresentation(),
       history = getHistoryAvailability(state);
     const availability = {
@@ -138,52 +138,52 @@ export async function mountDemo(
       ...formatDialogs.presentation(),
       ...viewOptions.presentation(ready),
       ...clipboard.getPresentation().actions,
-      save: { enabled: ready, reason: ready ? undefined : "문서를 먼저 열어주세요." },
+      save: { enabled: ready, reason: ready ? undefined : '문서를 먼저 열어주세요.' },
       undo: {
-        enabled: host?.canRequestHistory?.("undo") ?? history.canUndo,
+        enabled: host?.canRequestHistory?.('undo') ?? history.canUndo,
         reason: !ready
-          ? "문서를 먼저 열어주세요."
+          ? '문서를 먼저 열어주세요.'
           : history.available
-            ? "현재 상태에서는 실행 취소 명령을 접수할 수 없습니다."
-            : "편집 이력 상태를 확인할 수 없습니다.",
+            ? '현재 상태에서는 실행 취소 명령을 접수할 수 없습니다.'
+            : '편집 이력 상태를 확인할 수 없습니다.',
       },
       redo: {
-        enabled: host?.canRequestHistory?.("redo") ?? history.canRedo,
+        enabled: host?.canRequestHistory?.('redo') ?? history.canRedo,
         reason: !ready
-          ? "문서를 먼저 열어주세요."
+          ? '문서를 먼저 열어주세요.'
           : history.available
-            ? "현재 상태에서는 다시 실행 명령을 접수할 수 없습니다."
-            : "편집 이력 상태를 확인할 수 없습니다.",
+            ? '현재 상태에서는 다시 실행 명령을 접수할 수 없습니다.'
+            : '편집 이력 상태를 확인할 수 없습니다.',
       },
-      "set-zoom": { enabled: !!host },
-      "zoom-in": {
-        enabled: !!host && stepViewZoom(zoom, "in") !== null,
-        reason: !host ? "Canvas 표시 기능이 연결되지 않았습니다." : "최대 배율입니다.",
+      'set-zoom': { enabled: !!host },
+      'zoom-in': {
+        enabled: !!host && stepViewZoom(zoom, 'in') !== null,
+        reason: !host ? 'Canvas 표시 기능이 연결되지 않았습니다.' : '최대 배율입니다.',
       },
-      "zoom-out": {
-        enabled: !!host && stepViewZoom(zoom, "out") !== null,
-        reason: !host ? "Canvas 표시 기능이 연결되지 않았습니다." : "최소 배율입니다.",
+      'zoom-out': {
+        enabled: !!host && stepViewZoom(zoom, 'out') !== null,
+        reason: !host ? 'Canvas 표시 기능이 연결되지 않았습니다.' : '최소 배율입니다.',
       },
     };
     const actions = commandSupportActions({
       connectedCommands: new Set(Object.keys(availability) as DemoCommand[]),
       availability,
       document:
-        state.status === "ready" ? "ready" : state.status === "loading" ? "loading" : "none",
+        state.status === 'ready' ? 'ready' : state.status === 'loading' ? 'loading' : 'none',
       hasSelection: state.selection != null,
       busy,
       disposed: closed,
     });
     return {
       ...formatState,
-      title: filename || "새 문서",
+      title: filename || '새 문서',
       documentLabel: filename || undefined,
       status,
       busy,
       openFile: { enabled: !busy },
       openFixture: { enabled: !busy },
       zoomPercent: zoom,
-      pageLabel: ready ? "문서 열림" : "",
+      pageLabel: ready ? '문서 열림' : '',
       selectionLabel: selectionStatusLabel(state),
       actions,
     };
@@ -212,7 +212,7 @@ export async function mountDemo(
     },
     loaded: (name) => {
       filename = name;
-      note("문서를 열었습니다.");
+      note('문서를 열었습니다.');
     },
     settled: () => {
       busy = false;
@@ -220,11 +220,11 @@ export async function mountDemo(
     },
   });
   async function openFixture(id: string) {
-    if (closed) throw Error("DemoDisposed");
+    if (closed) throw Error('DemoDisposed');
     const entry = fixtures.find((item) => item.id === id);
-    if (!entry) throw Error("UnknownDemoFixture");
-    if (!entry.available) throw Error("FixtureUnavailable");
-    if (busy) throw Error("DemoBusy");
+    if (!entry) throw Error('UnknownDemoFixture');
+    if (!entry.available) throw Error('FixtureUnavailable');
+    if (busy) throw Error('DemoBusy');
     await admission.open(entry.name, async (signal) => {
       const response = await fetcher(fixtureUrl(id), { signal });
       if (!response.ok) throw Error(`FixtureFetchFailed:${response.status}`);
@@ -235,7 +235,7 @@ export async function mountDemo(
     if (closed) return;
     const available = presentation().actions?.[action.command];
     if (!available?.enabled) {
-      note(available?.reason ?? "현재 사용할 수 없습니다.");
+      note(available?.reason ?? '현재 사용할 수 없습니다.');
       return;
     }
     if (formatDialogs.action(action)) return;
@@ -244,29 +244,29 @@ export async function mountDemo(
       return;
     }
     if (
-      action.command === "set-zoom" ||
-      action.command === "zoom-in" ||
-      action.command === "zoom-out"
+      action.command === 'set-zoom' ||
+      action.command === 'zoom-in' ||
+      action.command === 'zoom-out'
     ) {
       const percent =
-        action.command === "set-zoom"
+        action.command === 'set-zoom'
           ? action.percent
-          : stepViewZoom(zoom, action.command === "zoom-in" ? "in" : "out");
+          : stepViewZoom(zoom, action.command === 'zoom-in' ? 'in' : 'out');
       if (!isMenuZoomPercent(percent)) {
-        note("지원되는 표시 배율을 선택해주세요.");
+        note('지원되는 표시 배율을 선택해주세요.');
         return;
       }
       if (host?.setScale(percent / 100)) {
         zoom = percent;
         shell.update();
         host.focus?.();
-      } else note("표시 배율을 적용하지 못했습니다.");
+      } else note('표시 배율을 적용하지 못했습니다.');
       return;
     }
-    if (action.command === "undo" || action.command === "redo") {
+    if (action.command === 'undo' || action.command === 'redo') {
       if (host?.requestHistory) {
         if (!host.requestHistory(action.command))
-          note("실행 취소/다시 실행 명령을 접수하지 못했습니다. 문서 상태를 확인하세요.");
+          note('실행 취소/다시 실행 명령을 접수하지 못했습니다. 문서 상태를 확인하세요.');
         return;
       }
       const result = await editor[action.command]();
@@ -285,27 +285,27 @@ export async function mountDemo(
       shell.update();
       return;
     }
-    if (action.command !== "save") throw Error("UnsupportedDemoAction");
+    if (action.command !== 'save') throw Error('UnsupportedDemoAction');
     const result = await editor.save(savePolicy.options());
     const bytes = new Uint8Array(result.bytes.length);
     bytes.set(result.bytes);
-    const url = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
-    const link = root.ownerDocument.createElement("a");
+    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/octet-stream' }));
+    const link = root.ownerDocument.createElement('a');
     link.href = url;
     link.download = documentDownloadName(filename, result.format);
     root.append(link);
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    note("파일을 저장했습니다.");
+    note('파일을 저장했습니다.');
   }
   const shell = createDemoShell(root, {
     framework,
     routes: {
-      headless: "/demo/headless",
-      vanilla: "/demo/vanilla",
-      react: "/demo/react",
-      svelte: "/demo/svelte",
+      headless: '/demo/headless',
+      vanilla: '/demo/vanilla',
+      react: '/demo/react',
+      svelte: '/demo/svelte',
     },
     fixtures,
     getState: presentation,
@@ -313,7 +313,7 @@ export async function mountDemo(
       admission.open(file.name, async () => new Uint8Array(await file.arrayBuffer())),
     onOpenFixture: openFixture,
     onAction: runAction,
-    onError: (error) => note(error instanceof Error ? error.message : "작업에 실패했습니다."),
+    onError: (error) => note(error instanceof Error ? error.message : '작업에 실패했습니다.'),
   });
   async function refreshFixtures() {
     if (closed) return;
@@ -340,7 +340,7 @@ export async function mountDemo(
         execute: runAction,
         subscribe: (listener) => editor.registerStateListener(() => listener()),
         onError: (error) =>
-          note(error instanceof Error ? error.message : "명령을 실행하지 못했습니다."),
+          note(error instanceof Error ? error.message : '명령을 실행하지 못했습니다.'),
       })
     : undefined;
   const normalizationNotice = mountNormalizationNotice(shell.saveOptionsMount, editor);
@@ -349,7 +349,7 @@ export async function mountDemo(
   const unsubscribe = editor.registerStateListener((state) => {
     if (closed) return;
     traces.push({
-      event: "state",
+      event: 'state',
       detail: `${state.status} · operation ${state.operationRevision} · view ${state.viewRevision}`,
     });
     if (traces.length > 100) traces.shift();
@@ -368,8 +368,8 @@ export async function mountDemo(
         available: (command) =>
           !closed &&
           !busy &&
-          editor.getEditorState().status === "ready" &&
-          ((command === "paste" && host?.canPasteInput?.() === true) ||
+          editor.getEditorState().status === 'ready' &&
+          ((command === 'paste' && host?.canPasteInput?.() === true) ||
             presentation().actions?.[command]?.enabled === true),
         execute: runAction,
         nativePaste: () => host?.focusForPaste?.() ?? false,

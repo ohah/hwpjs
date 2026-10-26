@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -51,21 +51,21 @@ export function memoListReference(call, cfb) {
   let parsed = 0,
     matchedFields = 0;
   for (const [name, section, count] of [
-    ["aift.hwp", 2, 2],
-    ["issue5169_viewtext_changetracking.hwp", 0, 2],
-    ["basic/NewYear_s_Day.hwp", 0, 9],
-    ["basic/english.hwp", 0, 15],
-    ["issue5866/memo_field_hwp5.hwp", 0, 1],
-    ["task2287/1342000_edu_curriculum_map.hwp", 33, 1],
+    ['aift.hwp', 2, 2],
+    ['issue5169_viewtext_changetracking.hwp', 0, 2],
+    ['basic/NewYear_s_Day.hwp', 0, 9],
+    ['basic/english.hwp', 0, 15],
+    ['issue5866/memo_field_hwp5.hwp', 0, 1],
+    ['task2287/1342000_edu_curriculum_map.hwp', 33, 1],
   ]) {
-    cfb.parse(readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url)), {
+    cfb.parse(readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url)), {
       strict: true,
     });
-    const h = Buffer.from(cfb.findExact("/FileHeader").content),
+    const h = Buffer.from(cfb.findExact('/FileHeader').content),
       version = h.readUInt32LE(32),
       b = call(
         3,
-        Buffer.concat([h, Buffer.from(cfb.findExact("/BodyText/Section" + section).content)]),
+        Buffer.concat([h, Buffer.from(cfb.findExact('/BodyText/Section' + section).content)]),
       );
     const rs = documentRecords(b),
       memos = rs.filter((r) => r.tag === 93);
@@ -87,7 +87,7 @@ export function memoListReference(call, cfb) {
       if (p.readUInt32LE() >>> 24 !== 37) continue;
       const end = 11 + p.readUInt16LE(9) * 2;
       if (end + 8 > p.length) continue;
-      const command = p.subarray(11, end).toString("utf16le"),
+      const command = p.subarray(11, end).toString('utf16le'),
         match = command.match(/^MEMO\/65535\/(\d+)\//);
       if (!match) continue;
       const index = p.readUInt32LE(end + 4);
@@ -104,15 +104,15 @@ export function memoListReference(call, cfb) {
 }
 export function memoListDocument(call, cfb) {
   const file = readFileSync(
-    new URL("../../reference/rhwp/samples/issue5866/memo_field_hwp5.hwp", import.meta.url),
+    new URL('../../reference/rhwp/samples/issue5866/memo_field_hwp5.hwp', import.meta.url),
   );
   cfb.parse(file, { strict: true });
   const nodes = cfb.document().nodes,
-    h = Buffer.from(cfb.findExact("/FileHeader").content),
+    h = Buffer.from(cfb.findExact('/FileHeader').content),
     flags = h.readUInt32LE(36);
   const decode = (raw) => call(3, Buffer.concat([h, Buffer.from(raw)]));
-  const doc = decode(cfb.findExact("/DocInfo").content),
-    b = decode(cfb.findExact("/BodyText/Section0").content),
+  const doc = decode(cfb.findExact('/DocInfo').content),
+    b = decode(cfb.findExact('/BodyText/Section0').content),
     r = documentRecords(b).find((r) => r.tag === 93);
   assert.ok(r);
   const run = (body) => call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: body }])),
@@ -120,13 +120,13 @@ export function memoListDocument(call, cfb) {
     cap = w(64 * 1024 * 1024),
     whole = call(25, Buffer.concat([cap, file]));
   assert.deepEqual(whole.subarray(0, original.length), original);
-  const body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+  const body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   let rejected = 0;
   const reject = (changed, error) => {
     assert.throws(() => call(88, Buffer.concat([h.subarray(32, 36), changed])), error);
     assert.throws(() => run(changed), error);
     const altered = nodes.map((n) =>
-      n.parent === body && n.name === "Section0"
+      n.parent === body && n.name === 'Section0'
         ? { ...n, content: flags & 1 ? deflateRawSync(changed) : changed }
         : n,
     );

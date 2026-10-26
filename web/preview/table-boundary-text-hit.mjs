@@ -5,8 +5,8 @@ import {
   rowTop,
   rowTextTop,
   rowTextHeight,
-} from "./row-geometry.mjs";
-import { boundaryGlyphWidth } from "./text-line-width.mjs";
+} from './row-geometry.mjs';
+import { boundaryGlyphWidth } from './text-line-width.mjs';
 
 /** A real cell glyph, including source whitespace, wins over border tolerance. */
 export function cellTextAtBoundaryPoint(layout, x, y) {
@@ -14,11 +14,11 @@ export function cellTextAtBoundaryPoint(layout, x, y) {
   const index = rowAtPoint(layout, x, y),
     row = layout.rows[index];
   if (
-    row?.kind !== "text" ||
+    row?.kind !== 'text' ||
     !(row.editable || row.selectable) ||
     !Number.isSafeInteger(row.tableNode) ||
     !Number.isSafeInteger(row.listNode) ||
-    typeof row.text !== "string" ||
+    typeof row.text !== 'string' ||
     !Number.isSafeInteger(row.startUnit) ||
     !Array.isArray(row.boundaries)
   )
@@ -35,7 +35,7 @@ export function cellTextAtBoundaryPoint(layout, x, y) {
       width !== null &&
       width > 0 &&
       text.length > 0 &&
-      !text.includes("\ufffc") &&
+      !text.includes('\ufffc') &&
       localX >= start.x &&
       localX < start.x + width
     );

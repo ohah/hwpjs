@@ -25,8 +25,8 @@ export function createSizeControls({
     fields.disabled = !cell;
     if (!cell) {
       previous = null;
-      width.value = "";
-      height.value = "";
+      width.value = '';
+      height.value = '';
       return;
     }
     const key = keyOf(cell);
@@ -60,24 +60,24 @@ export function createSizeControls({
     else note.textContent = `${label} 크기 반영 중…`;
     update();
   };
-  form.addEventListener("submit", submit);
+  form.addEventListener('submit', submit);
   return {
     update,
     close() {
       if (closed) return;
       closed = true;
       available = false;
-      form.removeEventListener("submit", submit);
+      form.removeEventListener('submit', submit);
       update();
     },
     reset() {
       available = false;
       previous = null;
-      note.textContent = "";
+      note.textContent = '';
       update();
     },
     message(message) {
-      if (message.kind === "enable" && !message.error) available = message[capability] === true;
+      if (message.kind === 'enable' && !message.error) available = message[capability] === true;
       if (message.kind === kind)
         note.textContent = message.error ? `${label} 크기 변경 실패: ${message.error}` : success;
       update();

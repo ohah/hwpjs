@@ -1,5 +1,5 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { picturePositionKey } from "./picture-inline.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { picturePositionKey } from './picture-inline.mjs';
 
 /** Source size for inline chart reservation; no virtual picture or image cache. */
 export function chartInlineItem(target, value) {
@@ -27,7 +27,7 @@ export function inlineChartIndex(content, read) {
       owners.length !== 1 ||
       owners[0].clipped ||
       owners[0].tableCell ||
-      owners[0].text?.[target.anchorUnit] !== "\ufffc"
+      owners[0].text?.[target.anchorUnit] !== '\ufffc'
     )
       continue;
     const item = chartInlineItem(target, resource.value);
@@ -35,7 +35,7 @@ export function inlineChartIndex(content, read) {
     const key = picturePositionKey(target.section, target.paragraph, target.anchorUnit);
     const pictureConflict = (content.pictures ?? []).some(
       (picture) =>
-        picture.state === "located" &&
+        picture.state === 'located' &&
         picture.section === target.section &&
         picture.paragraph === target.paragraph &&
         picture.anchorUnit === target.anchorUnit,

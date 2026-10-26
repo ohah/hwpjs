@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartTextBlockOracle } from "./chart-text-block-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartTextBlockOracle } from './chart-text-block-oracle.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -11,17 +11,17 @@ const u32 = (n) => {
 };
 const input = (b, s, t) => Buffer.concat([u32(s), u32(t), b]);
 export async function chartTextBlocks(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     accepted = 0,
     rejected = 0;
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const e = chartTextBlockOracle(b),
         max = Math.max(...e.strings.map((s) => s.bytes.length)),
@@ -55,36 +55,36 @@ export async function chartTextBlocks(call) {
       for (let cut = e.start; cut < e.end; cut++) {
         const bad = Buffer.from(b.subarray(0, cut));
         bad.writeUInt32LE(cut - 36, 32);
-        reject(bad, "UnexpectedEnd");
+        reject(bad, 'UnexpectedEnd');
       }
-      reject(b, "LimitExceeded", max - 1);
-      reject(b, "LimitExceeded", max, total - 1);
-      reject(b, "LimitExceeded", max, total, b.length - 1);
+      reject(b, 'LimitExceeded', max - 1);
+      reject(b, 'LimitExceeded', max, total - 1);
+      reject(b, 'LimitExceeded', max, total, b.length - 1);
       for (const d of e.declarations) {
         let bad = Buffer.from(b);
         bad[d.nameOffset] = 88;
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
         bad = Buffer.from(b);
         bad[d.versionOffset]++;
-        reject(bad, "UnsupportedChartTypeVersion");
+        reject(bad, 'UnsupportedChartTypeVersion');
       }
       for (const offset of e.objectOffsets) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(0xffffffff, offset);
-        reject(bad, "UnsupportedChartObjectReference");
+        reject(bad, 'UnsupportedChartObjectReference');
       }
       for (const offset of e.objectOffsets.slice(1)) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(b.readUInt32LE(e.objectOffsets[0]), offset);
-        reject(bad, "UnsupportedChartObjectReference");
+        reject(bad, 'UnsupportedChartObjectReference');
       }
       let bad = Buffer.from(b);
       bad.writeUInt32LE(0, e.auxiliary);
-      reject(bad, "UnsupportedChartTextReference");
+      reject(bad, 'UnsupportedChartTextReference');
       for (const offset of e.bases) {
         bad = Buffer.from(b);
         bad.writeUInt32LE(0, offset);
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
       }
       bad = Buffer.from(b);
       for (const [offset, len] of e.rawOffsets) bad.fill(0xa5, offset, offset + len);

@@ -1,17 +1,17 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { projectHwp5OwnedWindow } from "../../web/preview/hwp5-window-projection.mjs";
-import { attachHwp5Tables } from "../../web/preview/hwp5-table-content.mjs";
-import { attachHwp5WindowCaptions } from "../../web/preview/hwp5-window-caption-content.mjs";
-import { hwp5WindowTableSourceEditor } from "../../web/preview/hwp5-window-table-sources.mjs";
-import { attachHwp5TableLayoutSources } from "../../web/preview/hwp5-table-layout-content.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { projectHwp5OwnedWindow } from '../../web/preview/hwp5-window-projection.mjs';
+import { attachHwp5Tables } from '../../web/preview/hwp5-table-content.mjs';
+import { attachHwp5WindowCaptions } from '../../web/preview/hwp5-window-caption-content.mjs';
+import { hwp5WindowTableSourceEditor } from '../../web/preview/hwp5-window-table-sources.mjs';
+import { attachHwp5TableLayoutSources } from '../../web/preview/hwp5-table-layout-content.mjs';
 
-test("actual eight-table caption document attaches only selected table sources", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwp");
+test('actual eight-table caption document attaches only selected table sources', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/table-caption.hwp');
   const editor = await createExperimentalHwp5Editor(wasm, input),
     reader = await createHwp5Reader(wasm);
   try {
@@ -25,12 +25,12 @@ test("actual eight-table caption document attaches only selected table sources",
     attachHwp5Tables(editor, preview, content);
     assert(content.tables.length > 0 && content.tables.length < 8);
     for (const key of [
-      "tableBindingsErrors",
-      "tablePlacementsErrors",
-      "tableLayoutSourceErrors",
-      "cellLayoutSourceErrors",
-      "tableAnchorErrors",
-      "tableGeometryErrors",
+      'tableBindingsErrors',
+      'tablePlacementsErrors',
+      'tableLayoutSourceErrors',
+      'cellLayoutSourceErrors',
+      'tableAnchorErrors',
+      'tableGeometryErrors',
     ])
       assert.deepEqual(content[key], [], key);
     assert(
@@ -64,7 +64,7 @@ test("actual eight-table caption document attaches only selected table sources",
   }
 });
 
-test("window table source scope keeps exact selected inventory without relaxing full attachment", () => {
+test('window table source scope keeps exact selected inventory without relaxing full attachment', () => {
   const sources = [
     { table_record_node: 10, rows: 1, columns: 1 },
     { table_record_node: 20, rows: 1, columns: 1 },
@@ -89,7 +89,7 @@ test("window table source scope keeps exact selected inventory without relaxing 
   });
   const full = content();
   attachHwp5TableLayoutSources(editor, full);
-  assert.equal(full.tableLayoutSourceErrors[0].error, "IncompleteTableLayoutInventory");
+  assert.equal(full.tableLayoutSourceErrors[0].error, 'IncompleteTableLayoutInventory');
   const window = content(),
     scoped = hwp5WindowTableSourceEditor(editor, window);
   attachHwp5TableLayoutSources(scoped, window);

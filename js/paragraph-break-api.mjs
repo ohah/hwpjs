@@ -12,23 +12,23 @@ export function createParagraphBreakApi({
   return {
     supportsParagraphBreaks() {
       check();
-      return typeof wasm[name] === "function";
+      return typeof wasm[name] === 'function';
     },
     splitParagraphWithBreak({ section, paragraph, atUnit, endUnit = atUnit, kind }) {
       check();
       const values = [section, paragraph, atUnit, endUnit];
-      for (const [index, label] of ["section", "paragraph", "atUnit", "endUnit"].entries())
+      for (const [index, label] of ['section', 'paragraph', 'atUnit', 'endUnit'].entries())
         uint(values[index], label);
-      if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
-      if (kind !== "page" && kind !== "column") throw new Error("InvalidParagraphBreakKind");
-      if (typeof wasm[name] !== "function") throw new Error(unavailable);
+      if (endUnit < atUnit) throw new RangeError('InvalidTextPosition');
+      if (kind !== 'page' && kind !== 'column') throw new Error('InvalidParagraphBreakKind');
+      if (typeof wasm[name] !== 'function') throw new Error(unavailable);
       if (
         wasm[name](
           section,
           paragraph,
           atUnit,
           endAsCount ? endUnit - atUnit : endUnit,
-          kind === "page" ? 1 : 2,
+          kind === 'page' ? 1 : 2,
         ) !== 1
       )
         throw memory.error();

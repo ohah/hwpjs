@@ -2,7 +2,7 @@
 export function attachCharacterShades(editor, content) {
   content.characterShades = null;
   content.characterShadesError = null;
-  if (typeof editor?.characterShades === "function") {
+  if (typeof editor?.characterShades === 'function') {
     try {
       content.characterShades = editor.characterShades();
     } catch (error) {

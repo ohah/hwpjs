@@ -41,10 +41,10 @@
   padding: 6px;
   text-align: left;
 }
-.chart-point-grid button[aria-current="true"] {
+.chart-point-grid button[aria-current='true'] {
   outline: 2px solid #235a85;
   outline-offset: -2px;
 }
-.chart-point-grid button[data-chart-draft="true"] {
+.chart-point-grid button[data-chart-draft='true'] {
   background: #fff0c2;
 }

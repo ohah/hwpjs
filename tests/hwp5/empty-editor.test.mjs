@@ -1,17 +1,17 @@
-import assert from "node:assert/strict";
-import test from "node:test";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createCfbReader } from "../../js/cfb.mjs";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createCfbReader } from '../../js/cfb.mjs';
 import {
   inspect,
   records,
   paragraphRecords,
   encodeRecord,
   verifyRaw,
-} from "./style-preservation/text-record-oracle.mjs";
-const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
+} from './style-preservation/text-record-oracle.mjs';
+const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
 const fixture = (name) => readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
 
 async function exercise(source, paragraph) {
@@ -20,35 +20,35 @@ async function exercise(source, paragraph) {
     assert.equal(
       editor.copyText(0, paragraph).length,
       0,
-      "raw absence remains observable before materialization",
+      'raw absence remains observable before materialization',
     );
-    editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "" });
+    editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: '' });
     editor.setCharacterFormat({ section: 0, paragraph, startUnit: 0, endUnit: 0, charShapeId: 0 });
     assert.deepEqual(
       editor.save().bytes,
       new Uint8Array(source),
-      "no-op cannot manufacture a record",
+      'no-op cannot manufacture a record',
     );
     assert.throws(
-      () => editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "\n" }),
-      { message: "UnsupportedTextControl" },
+      () => editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: '\n' }),
+      { message: 'UnsupportedTextControl' },
     );
     assert.deepEqual(editor.save().bytes, new Uint8Array(source));
-    editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: "한😀" });
-    assert.equal(editor.text(0, paragraph), "한😀\r");
-    assert.throws(() => editor.save(), { message: "LayoutReflowRequired" });
+    editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 0, text: '한😀' });
+    assert.equal(editor.text(0, paragraph), '한😀\r');
+    assert.throws(() => editor.save(), { message: 'LayoutReflowRequired' });
     const first = editor.save({ allowStaleLayout: true }).bytes;
-    verifyRaw(source, first, 0, paragraph, 0, 0, "한😀");
-    editor.splice({ section: 0, paragraph, startUnit: 3, endUnit: 3, text: "끝" });
+    verifyRaw(source, first, 0, paragraph, 0, 0, '한😀');
+    editor.splice({ section: 0, paragraph, startUnit: 3, endUnit: 3, text: '끝' });
     const second = editor.save({ allowStaleLayout: true }).bytes;
-    verifyRaw(first, second, 0, paragraph, 3, 3, "끝");
-    editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 4, text: "" });
+    verifyRaw(first, second, 0, paragraph, 3, 3, '끝');
+    editor.splice({ section: 0, paragraph, startUnit: 0, endUnit: 4, text: '' });
     const empty = editor.save({ allowStaleLayout: true }).bytes;
-    verifyRaw(second, empty, 0, paragraph, 0, 4, "");
-    assert.equal(editor.text(0, paragraph), "\r");
+    verifyRaw(second, empty, 0, paragraph, 0, 4, '');
+    assert.equal(editor.text(0, paragraph), '\r');
     const reopened = await createExperimentalHwp5Editor(wasm, empty);
     try {
-      assert.equal(reopened.text(0, paragraph), "\r");
+      assert.equal(reopened.text(0, paragraph), '\r');
     } finally {
       reopened.close();
     }
@@ -56,15 +56,15 @@ async function exercise(source, paragraph) {
     assert.equal(
       p.direct.filter((r) => r.tag === 67).length,
       1,
-      "repeated edits cannot duplicate PARA_TEXT",
+      'repeated edits cannot duplicate PARA_TEXT',
     );
   } finally {
     editor.close();
   }
 }
 
-test("real omitted-text paragraphs preserve their style and support insert, repeat, delete and reopen", async (t) => {
-  for (const name of ["table", "table2", "software", "example", "facename"])
+test('real omitted-text paragraphs preserve their style and support insert, repeat, delete and reopen', async (t) => {
+  for (const name of ['table', 'table2', 'software', 'example', 'facename'])
     await t.test(name, async () => {
       const source = fixture(name),
         raw = inspect(source).sections[0].bytes;
@@ -87,7 +87,7 @@ test("real omitted-text paragraphs preserve their style and support insert, repe
 });
 
 async function changedParagraph(change) {
-  const source = fixture("table"),
+  const source = fixture('table'),
     raw = inspect(source).sections[0].bytes,
     p = paragraphRecords(raw, 1);
   const writer = await createCfbReader(wasm);
@@ -95,7 +95,7 @@ async function changedParagraph(change) {
     writer.parse(source, { strict: true });
     const doc = writer.document();
     const section = doc.nodes.find(
-      (n) => n.name === "Section0" && doc.nodes[n.parent]?.name === "BodyText",
+      (n) => n.name === 'Section0' && doc.nodes[n.parent]?.name === 'BodyText',
     );
     section.content = deflateRawSync(
       Buffer.concat([
@@ -110,7 +110,7 @@ async function changedParagraph(change) {
   }
 }
 
-test("zero-count empty paragraphs work with omitted or explicit zero-length text records", async () => {
+test('zero-count empty paragraphs work with omitted or explicit zero-length text records', async () => {
   for (const present of [false, true]) {
     const bytes = await changedParagraph((p) => {
       const header = Buffer.from(p.head.payload);
@@ -125,10 +125,10 @@ test("zero-count empty paragraphs work with omitted or explicit zero-length text
   }
 });
 
-test("missing nonempty text and missing style metadata cannot be silently fabricated", async () => {
+test('missing nonempty text and missing style metadata cannot be silently fabricated', async () => {
   for (const [error, change] of [
     [
-      "UnsupportedMissingText",
+      'UnsupportedMissingText',
       (p) => {
         const h = Buffer.from(p.head.payload);
         h.writeUInt32LE(9, 0);
@@ -136,7 +136,7 @@ test("missing nonempty text and missing style metadata cannot be silently fabric
       },
     ],
     [
-      "UnsupportedMissingCharacterRuns",
+      'UnsupportedMissingCharacterRuns',
       (p) => {
         const h = Buffer.from(p.head.payload);
         h.writeUInt16LE(0, 12);
@@ -151,7 +151,7 @@ test("missing nonempty text and missing style metadata cannot be silently fabric
       editor = await createExperimentalHwp5Editor(wasm, bytes);
     try {
       assert.throws(
-        () => editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "X" }),
+        () => editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: 'X' }),
         { message: error },
       );
       assert.equal(editor.copyText(0, 1).length, 0);

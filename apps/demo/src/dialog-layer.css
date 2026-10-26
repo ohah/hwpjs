@@ -16,7 +16,7 @@
   font:
     13px/1.45 -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
 }
 .hwp-dialog-layer::backdrop {

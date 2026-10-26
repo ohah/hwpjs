@@ -1,14 +1,14 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { titleBodyOracle } from "./chart-title-body-oracle.mjs";
-import { observeChartTail } from "./chart-tail-evidence.mjs";
-import { incompleteChartTail } from "./chart-tail-errors.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { titleBodyOracle } from './chart-title-body-oracle.mjs';
+import { observeChartTail } from './chart-tail-evidence.mjs';
+import { incompleteChartTail } from './chart-tail-errors.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   ids = 0,
   declarations = 0,
@@ -17,10 +17,10 @@ let cuts = 0,
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const c = titleBodyOracle(b).r,
       read = (bytes) => observeChartTail(bytes, c.end, c.types, c.objects),
       r = read(b);
@@ -36,7 +36,7 @@ try {
         bad.writeUInt32LE(id, r.start);
         assert.throws(
           () => read(bad),
-          (e) => e.constructor === Error && e.message === "UnsupportedListPrefixObservationObject",
+          (e) => e.constructor === Error && e.message === 'UnsupportedListPrefixObservationObject',
         );
         ids++;
       }
@@ -48,7 +48,7 @@ try {
             () => read(bad),
             (e) =>
               e.constructor === Error &&
-              ["UnsupportedListPrefixObservationType", "UnsupportedWindowObservationType"].includes(
+              ['UnsupportedListPrefixObservationType', 'UnsupportedWindowObservationType'].includes(
                 e.message,
               ),
           );
@@ -63,7 +63,7 @@ try {
           () => read(bad),
           (e) =>
             e.constructor === Error &&
-            ["UnsupportedListPrefixObservationType", "UnsupportedWindowObservationType"].includes(
+            ['UnsupportedListPrefixObservationType', 'UnsupportedWindowObservationType'].includes(
               e.message,
             ),
         );
@@ -75,7 +75,7 @@ try {
       raw.writeUInt16LE(0xa55a, r.window.wordOffset);
       assert.deepEqual(read(raw), {
         ...r,
-        raw26: "ff".repeat(26),
+        raw26: 'ff'.repeat(26),
         list: { ...r.list, collection: { ...r.list.collection, word: 65535 } },
         window: { ...r.window, rawWord: 0xa55a },
       });

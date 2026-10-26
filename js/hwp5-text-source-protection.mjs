@@ -1,7 +1,7 @@
 // Extra native source protection only; false bits do not grant input permission.
 export function validateHwp5TextSourceProtection(value, count) {
   const fail = () => {
-    throw new Error("InvalidHwp5TextSourceProtection");
+    throw new Error('InvalidHwp5TextSourceProtection');
   };
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
   if (
@@ -13,12 +13,12 @@ export function validateHwp5TextSourceProtection(value, count) {
     fail();
   let any = false;
   for (const bit of value.protected_paragraphs) {
-    if (typeof bit !== "boolean") fail();
+    if (typeof bit !== 'boolean') fail();
     any ||= bit;
   }
-  if (value.mode === "strict") {
+  if (value.mode === 'strict') {
     if (value.retained_headers !== null || any) fail();
-  } else if (value.mode === "retained_click" || value.mode === "retained_memo") {
+  } else if (value.mode === 'retained_click' || value.mode === 'retained_memo') {
     if (!uint(value.retained_headers) || value.retained_headers === 0 || !any) fail();
   } else fail();
   return {
@@ -29,7 +29,7 @@ export function validateHwp5TextSourceProtection(value, count) {
 }
 export function decodeHwp5TextSourceProtection(bytes, count) {
   return validateHwp5TextSourceProtection(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
     count,
   );
 }

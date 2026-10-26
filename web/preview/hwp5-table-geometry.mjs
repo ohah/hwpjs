@@ -1,7 +1,7 @@
-import { validateHwp5TableLayoutSources } from "../../js/hwp5-table-layout-sources.mjs";
-import { hwp5ObjectFlags, hwp5UnsupportedObjectFlags } from "./hwp5-object-flags.mjs";
-import { hwp5TableFlags } from "./hwp5-table-flags.mjs";
-import { hasObservedZeroTableObjectTail } from "./hwp5-table-object-tail.mjs";
+import { validateHwp5TableLayoutSources } from '../../js/hwp5-table-layout-sources.mjs';
+import { hwp5ObjectFlags, hwp5UnsupportedObjectFlags } from './hwp5-object-flags.mjs';
+import { hwp5TableFlags } from './hwp5-table-flags.mjs';
+import { hasObservedZeroTableObjectTail } from './hwp5-table-object-tail.mjs';
 export function hwp5TableUnsupportedObjectFlags(flags) {
   return hwp5UnsupportedObjectFlags(flags, { allowObservedLock: true });
 }
@@ -11,10 +11,10 @@ export function hwp5TableGeometry(
   { allowOpaqueTableFlags = false, allowObservedZeroObjectTail = false } = {},
 ) {
   if (
-    typeof allowOpaqueTableFlags !== "boolean" ||
-    typeof allowObservedZeroObjectTail !== "boolean"
+    typeof allowOpaqueTableFlags !== 'boolean' ||
+    typeof allowObservedZeroObjectTail !== 'boolean'
   )
-    throw new Error("InvalidOpaqueTablePolicy");
+    throw new Error('InvalidOpaqueTablePolicy');
   validateHwp5TableLayoutSources([source]);
   const flags = source.object_flags,
     table = hwp5TableFlags(source.table_flags);
@@ -25,14 +25,14 @@ export function hwp5TableGeometry(
       !(allowObservedZeroObjectTail && hasObservedZeroTableObjectTail(source))) ||
     source.table_extra_bytes !== 0
   )
-    throw new Error("UnsupportedHwp5TableExtension");
+    throw new Error('UnsupportedHwp5TableExtension');
   let decoded;
   try {
     decoded = hwp5ObjectFlags(flags, { allowObservedLock: true });
   } catch {
-    throw new Error("UnsupportedHwp5TableEnum");
+    throw new Error('UnsupportedHwp5TableEnum');
   }
-  if (table.page_break === null) throw new Error("UnsupportedHwp5TableEnum");
+  if (table.page_break === null) throw new Error('UnsupportedHwp5TableEnum');
   return {
     geometry: {
       width: source.width,
@@ -62,11 +62,11 @@ export function hwp5TableGeometry(
   };
 }
 export function hwp5TablePagination(source, { allowOpaqueTableFlags = false } = {}) {
-  if (typeof allowOpaqueTableFlags !== "boolean") throw new Error("InvalidOpaqueTablePolicy");
+  if (typeof allowOpaqueTableFlags !== 'boolean') throw new Error('InvalidOpaqueTablePolicy');
   validateHwp5TableLayoutSources([source]);
   const table = hwp5TableFlags(source.table_flags);
   if ((!allowOpaqueTableFlags && table.unknown_flags !== 0) || table.page_break === null)
-    throw new Error("UnsupportedHwp5TablePagination");
+    throw new Error('UnsupportedHwp5TablePagination');
   return {
     page_break: table.page_break,
     repeat_header: table.repeat_header,

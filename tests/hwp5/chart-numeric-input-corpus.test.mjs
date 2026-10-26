@@ -1,14 +1,14 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { runInNewContext } from "node:vm";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { sectionTexts, verifySaved } from "../../tools/hwp5-edit-corpus-lib.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { runInNewContext } from 'node:vm';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { sectionTexts, verifySaved } from '../../tools/hwp5-edit-corpus-lib.mjs';
 
-test("all actual HWP5 chart nonnumeric refusals accept numeric replacement and retain history", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "explicit candidate required");
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp");
+test('all actual HWP5 chart nonnumeric refusals accept numeric replacement and retain history', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'explicit candidate required');
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/chart.hwp');
   const module = await WebAssembly.compile(readFileSync(process.env.HWPJS_TEST_WASM));
   const context = {
     module: { exports: {} },
@@ -16,7 +16,7 @@ test("all actual HWP5 chart nonnumeric refusals accept numeric replacement and r
     Buffer,
     process,
   };
-  runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);
+  runInNewContext(readFileSync('legacy/cfb.js', 'utf8'), context);
   const streams = (bytes) => {
     const cfb = context.module.exports.parse(Buffer.from(bytes)),
       output = new Map();
@@ -41,9 +41,9 @@ test("all actual HWP5 chart nonnumeric refusals accept numeric replacement and r
         examined++;
         let refused = false;
         try {
-          editor.splice({ section, paragraph, startUnit: 0, endUnit: 0, text: "검증😀" });
+          editor.splice({ section, paragraph, startUnit: 0, endUnit: 0, text: '검증😀' });
         } catch (error) {
-          assert.equal(error.message, "InvalidFormulaNumber");
+          assert.equal(error.message, 'InvalidFormulaNumber');
           refused = true;
         }
         if (!refused) {
@@ -53,25 +53,25 @@ test("all actual HWP5 chart nonnumeric refusals accept numeric replacement and r
         assert.deepEqual(
           Buffer.from(editor.save().bytes),
           input,
-          "invalid numeric command must not dirty the original",
+          'invalid numeric command must not dirty the original',
         );
-        const text = Buffer.from(editor.copyText(section, paragraph)).toString("utf16le");
-        assert(text.endsWith("\r"));
-        editor.splice({ section, paragraph, startUnit: 0, endUnit: text.length - 1, text: "7" });
+        const text = Buffer.from(editor.copyText(section, paragraph)).toString('utf16le');
+        assert(text.endsWith('\r'));
+        editor.splice({ section, paragraph, startUnit: 0, endUnit: text.length - 1, text: '7' });
         assert.deepEqual(
           Buffer.from(editor.copyText(section, paragraph)),
-          Buffer.from("7\r", "utf16le"),
+          Buffer.from('7\r', 'utf16le'),
         );
         const saved = editor.save({ allowStaleLayout: true });
         const after = streams(saved.bytes),
           independentlyRead = sectionTexts(after);
-        assert.deepEqual(independentlyRead.get(section)[paragraph], Buffer.from("7\r", "utf16le"));
+        assert.deepEqual(independentlyRead.get(section)[paragraph], Buffer.from('7\r', 'utf16le'));
         verifySaved(before, after, independentlyRead); // Inventory and every non-body stream.
         const reopened = await createExperimentalHwp5Editor(module, saved.bytes);
         try {
           assert.deepEqual(
             Buffer.from(reopened.copyText(section, paragraph)),
-            Buffer.from("7\r", "utf16le"),
+            Buffer.from('7\r', 'utf16le'),
           );
         } finally {
           reopened.close();
@@ -88,7 +88,7 @@ test("all actual HWP5 chart nonnumeric refusals accept numeric replacement and r
     assert.equal(examined, 175);
     assert.equal(numeric, 48);
     t.diagnostic(
-      "175 source paragraphs classified, 48 numeric replacements; not independent formula arithmetic, layout, or browser proof",
+      '175 source paragraphs classified, 48 numeric replacements; not independent formula arithmetic, layout, or browser proof',
     );
   } finally {
     editor.close();

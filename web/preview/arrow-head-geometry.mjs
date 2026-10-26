@@ -14,13 +14,13 @@ export function arrowHeadGeometry({ tip, direction, length, width, style }) {
   )
     return null;
   const norm = Math.hypot(...direction);
-  if (!Number.isFinite(norm) || norm === 0 || !["ARROW", "SPEAR"].includes(style)) return null;
+  if (!Number.isFinite(norm) || norm === 0 || !['ARROW', 'SPEAR'].includes(style)) return null;
   const [dx, dy] = direction.map((value) => value / norm);
   const base = [tip[0] - length * dx, tip[1] - length * dy];
   const a = [base[0] - (dy * width) / 2, base[1] + (dx * width) / 2];
   const b = [base[0] + (dy * width) / 2, base[1] - (dx * width) / 2];
   if (![...a, ...b].every(Number.isFinite)) return null;
-  return style === "ARROW"
+  return style === 'ARROW'
     ? { points: [tip.slice(), a, b], closed: true }
     : { points: [a, tip.slice(), b], closed: false };
 }

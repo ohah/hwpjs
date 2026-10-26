@@ -1,20 +1,20 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
 export function loadMemoDocument(call, cfb, name) {
-  const file = readFileSync(new URL("../../reference/rhwp/samples/" + name, import.meta.url));
+  const file = readFileSync(new URL('../../reference/rhwp/samples/' + name, import.meta.url));
   cfb.parse(file, { strict: true });
   const nodes = cfb.document().nodes,
-    h = Buffer.from(cfb.findExact("/FileHeader").content),
+    h = Buffer.from(cfb.findExact('/FileHeader').content),
     decode = (raw) => call(3, Buffer.concat([h, Buffer.from(raw)])),
-    doc = decode(cfb.findExact("/DocInfo").content),
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    doc = decode(cfb.findExact('/DocInfo').content),
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const sections = nodes
     .filter((n) => n.parent === body && /^Section\d+$/.test(n.name))
     .map((n) => ({ index: Number(n.name.slice(7)), bytes: decode(n.content) }));
@@ -23,12 +23,12 @@ export function loadMemoDocument(call, cfb, name) {
 export function memoReferencesActual(call, cfb) {
   const results = [];
   for (const [name, fields, lists, cross] of [
-    ["aift.hwp", 2, 2, 0],
-    ["issue5169_viewtext_changetracking.hwp", 0, 2, 0],
-    ["basic/NewYear_s_Day.hwp", 9, 9, 0],
-    ["basic/english.hwp", 15, 15, 0],
-    ["issue5866/memo_field_hwp5.hwp", 1, 1, 0],
-    ["task2287/1342000_edu_curriculum_map.hwp", 1, 1, 1],
+    ['aift.hwp', 2, 2, 0],
+    ['issue5169_viewtext_changetracking.hwp', 0, 2, 0],
+    ['basic/NewYear_s_Day.hwp', 9, 9, 0],
+    ['basic/english.hwp', 15, 15, 0],
+    ['issue5866/memo_field_hwp5.hwp', 1, 1, 0],
+    ['task2287/1342000_edu_curriculum_map.hwp', 1, 1, 1],
   ]) {
     const { h, doc, sections } = loadMemoDocument(call, cfb, name),
       expected = [fields, lists, 0, fields, cross, 0, 0, lists - fields, 0, 0],
@@ -37,7 +37,7 @@ export function memoReferencesActual(call, cfb) {
     try {
       actual = call(90, input);
     } catch (error) {
-      error.message = name + ": " + error.message;
+      error.message = name + ': ' + error.message;
       throw error;
     }
     assert.deepEqual(actual, Buffer.concat(expected.map(w)));
@@ -56,7 +56,7 @@ export function memoReferencesActual(call, cfb) {
   return results;
 }
 export function memoReferenceDocument(call, cfb) {
-  const x = loadMemoDocument(call, cfb, "issue5866/memo_field_hwp5.hwp"),
+  const x = loadMemoDocument(call, cfb, 'issue5866/memo_field_hwp5.hwp'),
     { h, doc, nodes, body } = x;
   assert.equal(x.sections.length, 1);
   const b = x.sections[0].bytes,
@@ -83,7 +83,7 @@ export function memoReferenceDocument(call, cfb) {
       Buffer.from(
         cfb.write({
           nodes: nodes.map((n) =>
-            n.parent === body && n.name === "Section0"
+            n.parent === body && n.name === 'Section0'
               ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes }
               : n,
           ),

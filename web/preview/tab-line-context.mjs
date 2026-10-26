@@ -1,4 +1,4 @@
-import { paragraphLineGeometry, paragraphMarginPixels } from "./paragraph-geometry.mjs";
+import { paragraphLineGeometry, paragraphMarginPixels } from './paragraph-geometry.mjs';
 /** Same unaligned column frame as ordinary paragraph wrapping. */
 export function tabLineContext(
   paragraph,

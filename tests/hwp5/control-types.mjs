@@ -1,57 +1,57 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const cases = [
-  [2, ["secd", "cold"]],
+  [2, ['secd', 'cold']],
   [
     3,
     [
-      "%unk",
-      "%dte",
-      "%ddt",
-      "%pat",
-      "%bmk",
-      "%mmg",
-      "%xrf",
-      "%fmu",
-      "%clk",
-      "%smr",
-      "%usr",
-      "%hlk",
-      "%sig",
-      "%%*d",
-      "%%*a",
-      "%%*C",
-      "%%*S",
-      "%%*T",
-      "%%*P",
-      "%%*L",
-      "%%*c",
-      "%%*h",
-      "%%*A",
-      "%%*i",
-      "%%*t",
-      "%%*r",
-      "%%*l",
-      "%%*n",
-      "%%*e",
-      "%spl",
-      "%%mr",
-      "%%me",
-      "%cpr",
-      "%toc",
+      '%unk',
+      '%dte',
+      '%ddt',
+      '%pat',
+      '%bmk',
+      '%mmg',
+      '%xrf',
+      '%fmu',
+      '%clk',
+      '%smr',
+      '%usr',
+      '%hlk',
+      '%sig',
+      '%%*d',
+      '%%*a',
+      '%%*C',
+      '%%*S',
+      '%%*T',
+      '%%*P',
+      '%%*L',
+      '%%*c',
+      '%%*h',
+      '%%*A',
+      '%%*i',
+      '%%*t',
+      '%%*r',
+      '%%*l',
+      '%%*n',
+      '%%*e',
+      '%spl',
+      '%%mr',
+      '%%me',
+      '%cpr',
+      '%toc',
     ],
   ],
-  [11, ["tbl ", "gso ", "eqed"]],
-  [15, ["tcmt"]],
-  [16, ["head", "foot"]],
-  [17, ["fn  ", "en  "]],
-  [18, ["atno"]],
-  [21, ["nwno", "pghd", "pgct", "pgnp"]],
-  [22, ["idxm", "bokm"]],
-  [23, ["tcps", "tdut"]],
+  [11, ['tbl ', 'gso ', 'eqed']],
+  [15, ['tcmt']],
+  [16, ['head', 'foot']],
+  [17, ['fn  ', 'en  ']],
+  [18, ['atno']],
+  [21, ['nwno', 'pghd', 'pgct', 'pgnp']],
+  [22, ['idxm', 'bokm']],
+  [23, ['tcps', 'tdut']],
 ];
 const extended = [1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23];
 export const fieldIds = new Set(
-  cases.find(([code]) => code === 3)[1].map((name) => Buffer.from(name, "latin1").readUInt32BE()),
+  cases.find(([code]) => code === 3)[1].map((name) => Buffer.from(name, 'latin1').readUInt32BE()),
 );
 const word = (v) => {
   const b = Buffer.alloc(4);
@@ -66,7 +66,7 @@ export function typeActual(call, v, bytes) {
 }
 export function typeEdges(call) {
   const make = (name, code) => {
-    const id = Buffer.from(name, "latin1").readUInt32BE();
+    const id = Buffer.from(name, 'latin1').readUInt32BE();
     const token = Buffer.alloc(16, 255);
     token.writeUInt16LE(code);
     token.writeUInt32LE(id, 2);
@@ -86,7 +86,7 @@ export function typeEdges(call) {
       known++;
       for (const code of extended)
         if (code !== expected) {
-          if (name === "tcmt" && code === 23) {
+          if (name === 'tcmt' && code === 23) {
             assert.deepEqual(typeActual(call, 0x05000307, make(name, code)), [0, 0, 1]);
             continue;
           }
@@ -98,7 +98,7 @@ export function typeEdges(call) {
           mismatches++;
         }
     }
-  for (const name of ["%zzz", "autn", "newn", "bkmk", "%crf", "%fml", "FN  ", "abcd"]) {
+  for (const name of ['%zzz', 'autn', 'newn', 'bkmk', '%crf', '%fml', 'FN  ', 'abcd']) {
     assert.deepEqual(typeActual(call, 0x05000307, make(name, 11)), [0, 1, 0]);
   }
   assert.equal(known, 53);

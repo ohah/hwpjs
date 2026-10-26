@@ -1,10 +1,10 @@
-import { layoutContent } from "./layout.mjs";
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { selectMasterPages } from "./master-page-selection.mjs";
+import { layoutContent } from './layout.mjs';
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { selectMasterPages } from './master-page-selection.mjs';
 
 /** Repeat an explicitly selected master group without changing body pagination. */
 export function layoutMasterPageRows(paragraphs, profile, pages, measure, maxRows = 20000) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
@@ -13,14 +13,14 @@ export function layoutMasterPageRows(paragraphs, profile, pages, measure, maxRow
     !Array.isArray(pages) ||
     !pages.length
   )
-    return unavailable("InvalidMasterPageBounds");
+    return unavailable('InvalidMasterPageBounds');
   if (
     !profile ||
     ![profile.width, profile.height].every(
       (value) => Number.isInteger(value) && value > 0 && value <= 0xffffffff,
     )
   )
-    return unavailable("UnsupportedMasterPageProfile");
+    return unavailable('UnsupportedMasterPageProfile');
   let selected;
   try {
     selected = new Set(selectMasterPages(profile, pages));
@@ -36,15 +36,15 @@ export function layoutMasterPageRows(paragraphs, profile, pages, measure, maxRow
       row.section < 0 ||
       !Number.isSafeInteger(row.paragraph) ||
       row.paragraph < 0 ||
-      typeof row.text !== "string" ||
-      typeof row.label !== "string" ||
+      typeof row.text !== 'string' ||
+      typeof row.label !== 'string' ||
       row.clipped ||
       row.tableCell ||
       ids.has(row.paragraph)
     )
-      return unavailable("UnsupportedMasterPageParagraph");
+      return unavailable('UnsupportedMasterPageParagraph');
     section ??= row.section;
-    if (section !== row.section) return unavailable("UnsupportedMasterPageParagraph");
+    if (section !== row.section) return unavailable('UnsupportedMasterPageParagraph');
     ids.add(row.paragraph);
   }
   const width = hwpUnitPixels(profile.width),
@@ -57,7 +57,7 @@ export function layoutMasterPageRows(paragraphs, profile, pages, measure, maxRow
     measured.height > height ||
     measured.rows.length * selected.size > maxRows
   )
-    return unavailable("MasterPageOverflow");
+    return unavailable('MasterPageOverflow');
   const rows = [];
   const seenPages = new Set();
   for (const page of pages) {
@@ -73,7 +73,7 @@ export function layoutMasterPageRows(paragraphs, profile, pages, measure, maxRow
       width > box.width + 1e-9 ||
       height > box.height + 1e-9
     )
-      return unavailable("UnsupportedMasterPageBox");
+      return unavailable('UnsupportedMasterPageBox');
     seenPages.add(page.ordinal);
     if (!selected.has(page)) continue;
     for (const row of measured.rows)
@@ -82,10 +82,10 @@ export function layoutMasterPageRows(paragraphs, profile, pages, measure, maxRow
         x: box.x,
         y: box.y + row.y,
         pageOrdinal: page.ordinal,
-        pageArea: "master_page",
+        pageArea: 'master_page',
         masterListNode: profile.list_node,
         referenceBoxes: { paper: page.paper, page: box, column: { ...box, width, height } },
       });
   }
-  return { state: "placed", rows };
+  return { state: 'placed', rows };
 }

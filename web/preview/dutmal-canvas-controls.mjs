@@ -1,4 +1,4 @@
-import { canvasDocumentPoint } from "./canvas-pointer-coordinates.mjs";
+import { canvasDocumentPoint } from './canvas-pointer-coordinates.mjs';
 
 export function createDutmalCanvasControls({ canvas, viewport, renderer, ready, select }) {
   let closed = false;
@@ -25,12 +25,12 @@ export function createDutmalCanvasControls({ canvas, viewport, renderer, ready, 
     event.preventDefault();
     event.stopImmediatePropagation();
   };
-  canvas.addEventListener("pointerdown", pointer, { capture: true });
+  canvas.addEventListener('pointerdown', pointer, { capture: true });
   return {
     close() {
       if (closed) return;
       closed = true;
-      canvas.removeEventListener("pointerdown", pointer, { capture: true });
+      canvas.removeEventListener('pointerdown', pointer, { capture: true });
     },
   };
 }

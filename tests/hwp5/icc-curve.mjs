@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function iccCurveEdges(call) {
   let comparisons = 0,
     rejected = 0;
   function input(values) {
     const b = Buffer.alloc(12 + values.length * 2);
-    b.write("curv");
+    b.write('curv');
     b.writeUInt32BE(values.length, 8);
     values.forEach((v, i) => b.writeUInt16BE(v, 12 + i * 2));
     return b;
@@ -29,7 +29,7 @@ export function iccCurveEdges(call) {
   for (const n of [0, 1, 2, 3, 10, 0x7fffffff, 0x80000000, 0xffffffff])
     for (let size = 0; size <= 33; size++) {
       const b = Buffer.alloc(34);
-      b.write("curv");
+      b.write('curv');
       b.writeUInt32BE(n, 8);
       if (size >= 12 && size === 12 + 2 * n) continue;
       reject(b.subarray(0, size), /InvalidIccTagDataSize|InvalidIccCurveSize/);

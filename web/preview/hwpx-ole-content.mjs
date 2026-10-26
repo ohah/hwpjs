@@ -20,7 +20,7 @@ export function attachHwpxOleSources(editor, content, available) {
     try {
       sites = editor.oleSites(section);
     } catch (error) {
-      if (["OutOfMemory", "LimitExceeded"].includes(error.message)) throw error;
+      if (['OutOfMemory', 'LimitExceeded'].includes(error.message)) throw error;
       content.oleSourceErrors.push({ section, error: error.message });
       continue;
     }
@@ -33,24 +33,24 @@ export function attachHwpxOleSources(editor, content, available) {
         oleNode: site.ole_node,
         paragraph,
         anchorUnit: site.anchor_unit,
-        state: "unavailable",
+        state: 'unavailable',
         error: site.error_name,
         source: null,
         sourceError: null,
         paintable: false,
         chartWrapper: site.chart_wrapper ?? null,
-        representation: site.chart_wrapper == null ? "standalone" : "unresolved-chart-alternative",
+        representation: site.chart_wrapper == null ? 'standalone' : 'unresolved-chart-alternative',
       };
       if (
         !row.error &&
         (matches.length !== 1 ||
           matches[0].clipped ||
-          typeof matches[0].text !== "string" ||
-          matches[0].text[site.anchor_unit] !== "\ufffc")
+          typeof matches[0].text !== 'string' ||
+          matches[0].text[site.anchor_unit] !== '\ufffc')
       )
-        row.error = "OleDisplayBindingMismatch";
+        row.error = 'OleDisplayBindingMismatch';
       if (!row.error) {
-        row.state = "located";
+        row.state = 'located';
         if (row.chartWrapper !== null) {
           const targets = (content.chartTargets ?? []).filter(
             (target) =>
@@ -60,12 +60,12 @@ export function attachHwpxOleSources(editor, content, available) {
               target.anchorUnit === row.anchorUnit &&
               target.error_name === null,
           );
-          if (targets.length === 1) row.representation = "chart-alternative";
+          if (targets.length === 1) row.representation = 'chart-alternative';
         }
         try {
           row.source = editor.oleSource(section, site.ole_node);
         } catch (error) {
-          if (["OutOfMemory", "LimitExceeded"].includes(error.message)) throw error;
+          if (['OutOfMemory', 'LimitExceeded'].includes(error.message)) throw error;
           row.sourceError = error.message;
         }
       }

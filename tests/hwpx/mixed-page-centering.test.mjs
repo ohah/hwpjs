@@ -1,30 +1,30 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { layoutPageSections } from "../../web/preview/page-section-layout.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { layoutPageSections } from '../../web/preview/page-section-layout.mjs';
 import {
   moveSectionBox,
   moveSectionRow,
   moveSectionPlacement,
-} from "../../web/preview/section-layout-offset.mjs";
+} from '../../web/preview/section-layout-offset.mjs';
 
 const families = [
-  "placedDrawings",
-  "placedContainers",
-  "flowPictures",
-  "groupReservations",
-  "pageNumberGlyphs",
-  "tableAnchors",
-  "flowAnchors",
-  "tableCollisionFootprints",
-  "tableCollisionFootprintErrors",
-  "tableColumnEvidence",
-  "tableCaptionBounds",
-  "pageAreaDeclarationPages",
-  "hostNumberPrefixes",
-  "noteSeparators",
-  "pageAreaOverflow",
+  'placedDrawings',
+  'placedContainers',
+  'flowPictures',
+  'groupReservations',
+  'pageNumberGlyphs',
+  'tableAnchors',
+  'flowAnchors',
+  'tableCollisionFootprints',
+  'tableCollisionFootprintErrors',
+  'tableColumnEvidence',
+  'tableCaptionBounds',
+  'pageAreaDeclarationPages',
+  'hostNumberPrefixes',
+  'noteSeparators',
+  'pageAreaOverflow',
 ];
-const rowFamilies = ["boxes", "repeatedTableHeaderRows", "repeatedTableHeaderBoxes"];
+const rowFamilies = ['boxes', 'repeatedTableHeaderRows', 'repeatedTableHeaderBoxes'];
 const content = () => ({
   pageSettings: [0, 1, 2].map((section_ordinal) => ({ section_ordinal })),
   paragraphs: [0, 1, 2].map((section) => ({ section })),
@@ -41,7 +41,7 @@ function part(section, width, x = 20) {
   };
   const placement = {
     ...row,
-    kind: "anchor",
+    kind: 'anchor',
     height: 0,
     rectangle: box,
     outerRectangle: box,
@@ -51,7 +51,7 @@ function part(section, width, x = 20) {
     footprint: box,
   };
   return {
-    state: "paginated",
+    state: 'paginated',
     height: 140,
     limited: false,
     pages: [
@@ -60,7 +60,7 @@ function part(section, width, x = 20) {
     rows: [row, { ...row, transform: [0, 1, -1, 0, 30, 40], inlineGroupPlacements: [placement] }],
     ...Object.fromEntries(families.map((key) => [key, [placement]])),
     ...Object.fromEntries(rowFamilies.map((key) => [key, [row]])),
-    pageAreaSelectionPolicy: "declared",
+    pageAreaSelectionPolicy: 'declared',
     createdTablesPaginated: true,
     createdCellParagraphs: [{ section, createdCell: true, x: 3, y: 4 }],
   };
@@ -76,7 +76,7 @@ function captionedPicture() {
     captionRectangle: { x: 40, y: 55, width: 60, height: 15 },
     captionRows: [
       {
-        kind: "text",
+        kind: 'text',
         section: 2,
         pictureNode: 99,
         captionNode: 100,
@@ -85,7 +85,7 @@ function captionedPicture() {
         y: 55,
         width: 60,
         height: 15,
-        text: "caption",
+        text: 'caption',
       },
     ],
     paintOrigin: { x: 42, y: 32 },
@@ -103,19 +103,19 @@ function run(parts, maxRows = 30, source = content()) {
     (scoped, measure, budget) => {
       const section = scoped.pageSettings[0].section_ordinal;
       calls.push([section, budget]);
-      measure("once");
+      measure('once');
       return parts[section];
     },
   );
   return { result, calls };
 }
-test("mixed paper families share scene center and every world family moves once without source mutation", () => {
+test('mixed paper families share scene center and every world family moves once without source mutation', () => {
   const source = content(),
     parts = [part(0, 794), part(1, 1122), part(2, 794)];
   parts[2].flowPictures = [captionedPicture()];
   const snapshot = structuredClone({ source, parts });
   const { result, calls } = run(parts, 30, source);
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.deepEqual(calls, [
     [0, 30],
     [1, 27],
@@ -134,7 +134,7 @@ test("mixed paper families share scene center and every world family moves once 
       dy = section * 140;
     const original = parts[section],
       page = result.pages[section];
-    for (const key of ["paper", "page", "header", "footer"])
+    for (const key of ['paper', 'page', 'header', 'footer'])
       assert.deepEqual(page[key], moveSectionBox(original.pages[0][key], dy, dx));
     assert.deepEqual(
       page.columns,
@@ -144,7 +144,7 @@ test("mixed paper families share scene center and every world family moves once 
       result.rows.slice(section * 2, section * 2 + 2),
       original.rows.map((r) => moveSectionRow(r, dy, section, dx)),
     );
-    assert.equal(result.rows[section * 2 + 1].x, 7, "affine local coordinates stay local");
+    assert.equal(result.rows[section * 2 + 1].x, 7, 'affine local coordinates stay local');
     assert.deepEqual(result.rows[section * 2 + 1].transform, [0, 1, -1, 0, 30 + dx, 40 + dy]);
     for (const key of families)
       assert.deepEqual(
@@ -169,7 +169,7 @@ test("mixed paper families share scene center and every world family moves once 
   assert.deepEqual(picture.pageClip, { x: 184, y: 300, width: 794, height: 100 });
   assert.deepEqual(picture.captionRows, [
     {
-      kind: "text",
+      kind: 'text',
       section: 2,
       pictureNode: 99,
       captionNode: 100,
@@ -178,7 +178,7 @@ test("mixed paper families share scene center and every world family moves once 
       y: 335,
       width: 60,
       height: 15,
-      text: "caption",
+      text: 'caption',
       pageOrdinal: 2,
       columnOrdinal: 1,
       referenceBoxes: { column: { x: 189, y: 305, width: 700, height: 90 } },
@@ -187,7 +187,7 @@ test("mixed paper families share scene center and every world family moves once 
   assert.equal(picture.pageOrdinal, 2);
   assert.equal(picture.columnOrdinal, 1);
   assert.equal(result.height, 420);
-  assert.equal(result.pageAreaSelectionPolicy, "declared");
+  assert.equal(result.pageAreaSelectionPolicy, 'declared');
   assert.equal(result.createdTablesPaginated, true);
   assert.deepEqual(
     result.createdCellParagraphs,
@@ -195,7 +195,7 @@ test("mixed paper families share scene center and every world family moves once 
   );
   assert.deepEqual({ source, parts }, snapshot);
 });
-test("uniform width leaves horizontal geometry unchanged; actual extents include nondefault origins", () => {
+test('uniform width leaves horizontal geometry unchanged; actual extents include nondefault origins', () => {
   const parts = [part(0, 794), part(1, 794), part(2, 794)];
   parts[2].flowPictures = [captionedPicture()];
   const uniform = run(parts).result;
@@ -213,7 +213,7 @@ test("uniform width leaves horizontal geometry unchanged; actual extents include
     [410, 410, 410],
   );
 });
-test("budget counts repeated headers, callbacks once, and limited stops collection", () => {
+test('budget counts repeated headers, callbacks once, and limited stops collection', () => {
   const parts = [part(0, 794), part(1, 1122), part(2, 794)];
   const bounded = run(parts, 3);
   assert.deepEqual(bounded.calls, [[0, 3]]);
@@ -223,10 +223,10 @@ test("budget counts repeated headers, callbacks once, and limited stops collecti
   assert.deepEqual(run(parts).calls, [[0, 30]]);
   assert.equal(run(parts).result.limited, true);
   assert.deepEqual(run(parts, 0).calls, []);
-  assert.equal(run(parts, 0).result.error, "InvalidPageFlowBounds");
-  assert.equal(run(parts, 2).result.error, "InvalidSectionLayout");
+  assert.equal(run(parts, 0).result.error, 'InvalidPageFlowBounds');
+  assert.equal(run(parts, 2).result.error, 'InvalidSectionLayout');
 });
-test("invalid geometry and incompatible centers are explicit failures", () => {
+test('invalid geometry and incompatible centers are explicit failures', () => {
   for (const mutate of [
     (p) => (p.flowRectangle.width = 0),
     (p) => (p.captionRectangle.y = 100),
@@ -241,13 +241,13 @@ test("invalid geometry and incompatible centers are explicit failures", () => {
     mutate(picture);
     parts[2].flowPictures = [picture];
     const before = structuredClone(parts);
-    assert.equal(run(parts).result.error, "InvalidPicturePlacementTranslation");
+    assert.equal(run(parts).result.error, 'InvalidPicturePlacementTranslation');
     assert.deepEqual(parts, before);
   }
   for (const change of [{ x: NaN }, { width: -1 }, { width: Infinity }, { height: 0 }]) {
     const parts = [part(0, 794)];
     Object.assign(parts[0].pages[0].paper, change);
-    assert.equal(run(parts).result.error, "InvalidSectionLayout");
+    assert.equal(run(parts).result.error, 'InvalidSectionLayout');
     assert.deepEqual(run(parts).calls, [[0, 30]]);
   }
   const parts = [part(0, 794)];
@@ -256,25 +256,25 @@ test("invalid geometry and incompatible centers are explicit failures", () => {
     ordinal: 1,
     paper: { ...parts[0].pages[0].paper, x: 21 },
   });
-  assert.equal(run(parts).result.error, "UnsupportedSectionPaperCenters");
+  assert.equal(run(parts).result.error, 'UnsupportedSectionPaperCenters');
 });
-test("policy and created-cell contracts survive collection and reject conflicts", () => {
+test('policy and created-cell contracts survive collection and reject conflicts', () => {
   const parts = [part(0, 794), part(1, 1122), part(2, 794)];
-  parts[1].pageAreaSelectionPolicy = "other";
-  assert.equal(run(parts).result.error, "ConflictingSectionPageAreaPolicy");
+  parts[1].pageAreaSelectionPolicy = 'other';
+  assert.equal(run(parts).result.error, 'ConflictingSectionPageAreaPolicy');
   assert.deepEqual(run(parts).calls, [
     [0, 30],
     [1, 27],
   ]);
-  parts[1].pageAreaSelectionPolicy = "declared";
+  parts[1].pageAreaSelectionPolicy = 'declared';
   parts[0].createdCellParagraphs[0].section = 2;
-  assert.equal(run(parts).result.error, "InvalidSectionLayout");
+  assert.equal(run(parts).result.error, 'InvalidSectionLayout');
   parts[0].createdCellParagraphs[0].section = 0;
   const source = content();
   source.limited = true;
   assert.equal(run(parts, 30, source).result.limited, true);
 });
-test("multiple pages with the same center retain all areas and page ordinals", () => {
+test('multiple pages with the same center retain all areas and page ordinals', () => {
   const parts = [part(0, 794), part(1, 1122), part(2, 794)];
   parts[0].pages.push({
     ...parts[0].pages[0],
@@ -283,7 +283,7 @@ test("multiple pages with the same center retain all areas and page ordinals", (
   });
   parts[0].height = 260;
   const { result } = run(parts);
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.deepEqual(
     result.pages.map((p) => p.ordinal),
     [0, 1, 2, 3],

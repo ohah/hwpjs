@@ -11,12 +11,12 @@ export function textFormatCase(bytes, result, priorTypes) {
     if (d.nameOffset < f.start) types.set(d.id, { name: d.name, version: d.version });
   const declarations = [];
   for (const [id, v] of types) {
-    const raw = Buffer.from(v.name, "latin1");
+    const raw = Buffer.from(v.name, 'latin1');
     declarations.push(integer(id), integer(raw.length, 2), raw, integer(v.version, 2));
   }
   const seed = Buffer.concat(declarations),
     body = Buffer.from(bytes.subarray(f.start, f.end)),
-    raw = Buffer.from(f.code.hex, "hex");
+    raw = Buffer.from(f.code.hex, 'hex');
   const input = (data = body, options = {}) => {
     const alias = options.alias ?? false;
     return Buffer.concat([

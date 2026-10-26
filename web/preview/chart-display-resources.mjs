@@ -7,12 +7,12 @@ export function createChartDisplayResources({
   maxTotalUnits = 4000000,
 }) {
   if (
-    typeof read !== "function" ||
+    typeof read !== 'function' ||
     ![maxEntries, maxSnapshotUnits, maxTotalUnits].every(
       (value) => Number.isSafeInteger(value) && value >= 1,
     )
   )
-    throw new Error("InvalidChartDisplayResources");
+    throw new Error('InvalidChartDisplayResources');
   let epoch = 0,
     closed = false,
     totalUnits = 0;
@@ -30,24 +30,24 @@ export function createChartDisplayResources({
     status(section, wrapper) {
       const entry = entries.get(key(section, wrapper));
       if (entry) return entry;
-      if (closed) return { value: null, error: "ChartDisplayResourcesClosed" };
+      if (closed) return { value: null, error: 'ChartDisplayResourcesClosed' };
       if (entries.size >= maxEntries)
-        return { value: null, error: "ChartDisplayCountLimitExceeded" };
+        return { value: null, error: 'ChartDisplayCountLimitExceeded' };
       return null;
     },
     load(section, wrapper) {
-      if (closed) return Promise.reject(new Error("ChartDisplayResourcesClosed"));
+      if (closed) return Promise.reject(new Error('ChartDisplayResourcesClosed'));
       if (
         ![section, wrapper].every(
           (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff,
         )
       )
-        return Promise.reject(new Error("InvalidChartDisplayKey"));
+        return Promise.reject(new Error('InvalidChartDisplayKey'));
       const id = key(section, wrapper),
         existing = entries.get(id);
       if (existing) return existing.pending;
       if (entries.size >= maxEntries)
-        return Promise.reject(new Error("ChartDisplayCountLimitExceeded"));
+        return Promise.reject(new Error('ChartDisplayCountLimitExceeded'));
       const generation = epoch,
         entry = { value: null, error: null, pending: null };
       entries.set(id, entry);
@@ -56,15 +56,15 @@ export function createChartDisplayResources({
           const value = await read(section, wrapper);
           if (generation !== epoch || closed) return;
           if (
-            value?.kind !== "chart_display" ||
+            value?.kind !== 'chart_display' ||
             value.pair?.section_ordinal !== section ||
             value.pair?.wrapper_node !== wrapper
           )
-            throw new Error("InvalidChartDisplayReply");
+            throw new Error('InvalidChartDisplayReply');
           // Serialized UTF-16 units bound retained data, not exact JS heap usage.
           const units = JSON.stringify(value).length;
           if (units > maxSnapshotUnits || units > maxTotalUnits - totalUnits)
-            throw new Error("ChartDisplayUnitsLimitExceeded");
+            throw new Error('ChartDisplayUnitsLimitExceeded');
           totalUnits += units;
           entry.value = value;
         } catch (error) {

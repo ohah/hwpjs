@@ -1,16 +1,16 @@
 // Original fixtures are read-only; each successful attempt is undone before the next.
-import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
-import { fixturePaths } from "./hwp5-edit-corpus-lib.mjs";
-import { createExperimentalHwp5Editor } from "../js/hwp5-editor.mjs";
-import { verifySplit } from "../tests/hwp5/style-preservation/structure-record-oracle.mjs";
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { fixturePaths } from './hwp5-edit-corpus-lib.mjs';
+import { createExperimentalHwp5Editor } from '../js/hwp5-editor.mjs';
+import { verifySplit } from '../tests/hwp5/style-preservation/structure-record-oracle.mjs';
 
-const module = await WebAssembly.compile(readFileSync("zig-out/bin/hwpjs.wasm"));
-const paths = fixturePaths(execFileSync("git", ["ls-files", "-z"]).toString().split("\0")).filter(
+const module = await WebAssembly.compile(readFileSync('zig-out/bin/hwpjs.wasm'));
+const paths = fixturePaths(execFileSync('git', ['ls-files', '-z']).toString().split('\0')).filter(
   (p) => /\.hwp$/i.test(p),
 );
-assert(paths.length, "EmptyFixtureInventory");
+assert(paths.length, 'EmptyFixtureInventory');
 const totals = {
   attempted: 0,
   verified: 0,
@@ -85,7 +85,7 @@ console.log(
   JSON.stringify(
     {
       scope:
-        "tracked HWP paragraphs at beginning/middle/end; independent whole records and streams; native history; not full controls or layout",
+        'tracked HWP paragraphs at beginning/middle/end; independent whole records and streams; native history; not full controls or layout',
       files: paths.length,
       ...totals,
     },

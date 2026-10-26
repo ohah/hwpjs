@@ -1,6 +1,6 @@
-import type { SynchronousCallback } from "./synchronous-callback.ts";
-import { ownObservation, discardPromise, isPromiseLike } from "./owned.ts";
-export type EditorStatus = "empty" | "loading" | "ready" | "refresh-required" | "disposed";
+import type { SynchronousCallback } from './synchronous-callback.ts';
+import { ownObservation, discardPromise, isPromiseLike } from './owned.ts';
+export type EditorStatus = 'empty' | 'loading' | 'ready' | 'refresh-required' | 'disposed';
 export interface StateToken {
   readonly editorId: string;
   readonly documentId: string | null;
@@ -83,7 +83,7 @@ function localRead<T>(callback: (state: EditorState) => T, state: EditorState): 
   const result = callback(state);
   if (isPromiseLike(result)) {
     discardPromise(result);
-    throw Error("AsyncRead");
+    throw Error('AsyncRead');
   }
   return result;
 }

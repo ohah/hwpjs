@@ -1,10 +1,10 @@
-import test from "node:test";
-import { fileURLToPath } from "node:url";
-import { readFile } from "node:fs/promises";
-import { strict as assert } from "node:assert";
-import { createHash } from "node:crypto";
-import { createEditor } from "../src/editor/create-editor.ts";
-import { getHistoryAvailability } from "../src/state/history-state.ts";
+import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
+import { strict as assert } from 'node:assert';
+import { createHash } from 'node:crypto';
+import { createEditor } from '../src/editor/create-editor.ts';
+import { getHistoryAvailability } from '../src/state/history-state.ts';
 import {
   SPLICE_TEXT_COMMAND,
   SET_CHARACTER_UNDERLINE_COMMAND,
@@ -12,26 +12,26 @@ import {
   findTextMatch,
   PasswordAttemptError,
   getSelectionFormatting,
-} from "../src/index.ts";
-import { createReaderRuntimeFactory } from "../src/runtime.ts";
-import { surfaceOperation } from "../src/commands/surface-protocol.ts";
-import { fixtureKnownPassword } from "../../../tools/fixture-known-password.mjs";
+} from '../src/index.ts';
+import { createReaderRuntimeFactory } from '../src/runtime.ts';
+import { surfaceOperation } from '../src/commands/surface-protocol.ts';
+import { fixtureKnownPassword } from '../../../tools/fixture-known-password.mjs';
 // An explicit real WASM is required; this suite never fabricates runtime replies.
-const root = fileURLToPath(new URL("../../../", import.meta.url));
+const root = fileURLToPath(new URL('../../../', import.meta.url));
 const wasmPath = process.env.HWPJS_TEST_WASM;
-assert(wasmPath, "readonly-runtime requires explicit HWPJS_TEST_WASM");
+assert(wasmPath, 'readonly-runtime requires explicit HWPJS_TEST_WASM');
 const raw = await readFile(wasmPath),
   wasmModule = await WebAssembly.compile(raw);
-const sha = (b: Uint8Array) => createHash("sha256").update(b).digest("hex");
+const sha = (b: Uint8Array) => createHash('sha256').update(b).digest('hex');
 const inv = [
-  { path: "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwp" },
-  { path: "legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx" },
+  { path: 'legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwp' },
+  { path: 'legacy/rust/crates/hwp-core/tests/fixtures/password-12345.hwpx' },
 ];
 async function input(format: string, encrypted = false) {
   const path = encrypted
-    ? inv.find((x: any) => x.path.endsWith(format === "hwp5" ? ".hwp" : ".hwpx")).path
-    : "apps/docs/docs/public/demo/noori." + (format === "hwp5" ? "hwp" : "hwpx");
-  const bytes = await readFile(root + "/" + path);
+    ? inv.find((x: any) => x.path.endsWith(format === 'hwp5' ? '.hwp' : '.hwpx')).path
+    : 'apps/docs/docs/public/demo/noori.' + (format === 'hwp5' ? 'hwp' : 'hwpx');
+  const bytes = await readFile(root + '/' + path);
   return { bytes, secret: encrypted ? fixtureKnownPassword(sha(bytes)) : undefined };
 }
 function make() {
@@ -71,10 +71,10 @@ function snapshot(e: any) {
   };
 }
 const writes = (trace: any[]) =>
-  trace.filter((x) => surfaceOperation(x.kind) === "mutation").length;
+  trace.filter((x) => surfaceOperation(x.kind) === 'mutation').length;
 async function load(
   e: any,
-  format = "hwpx",
+  format = 'hwpx',
   editable = true,
   encrypted = false,
   unlockEditable?: boolean,
@@ -86,7 +86,7 @@ async function load(
     if (!encrypted) throw err;
     assert.equal(
       (err as Error).message,
-      format === "hwp5" ? "UnsupportedEncryption" : "EncryptedDocument",
+      format === 'hwp5' ? 'UnsupportedEncryption' : 'EncryptedDocument',
     );
   }
   if (encrypted)
@@ -94,8 +94,8 @@ async function load(
   return p;
 }
 function target(e: any, encrypted = false) {
-  const t = findTextMatch(e.getEditorState(), encrypted ? "암호로" : "과학기술정보통신부", {
-    origin: "document",
+  const t = findTextMatch(e.getEditorState(), encrypted ? '암호로' : '과학기술정보통신부', {
+    origin: 'document',
     wrap: false,
   });
   assert(t);
@@ -106,10 +106,10 @@ async function deny(e: any, trace: any[], encrypted = false) {
     count = writes(trace);
   const result = await e.dispatchCommand(SPLICE_TEXT_COMMAND, {
     target: target(e, encrypted),
-    text: "DENIED-MARKER",
+    text: 'DENIED-MARKER',
   });
-  assert.equal(result.status, "rejected-unapplied");
-  assert.equal(result.error, "ReadOnlyDocument");
+  assert.equal(result.status, 'rejected-unapplied');
+  assert.equal(result.error, 'ReadOnlyDocument');
   assert.equal(writes(trace), count);
   const after = snapshot(e);
   assert.deepEqual(after, before);
@@ -120,11 +120,11 @@ async function allow(e: any, trace: any[], encrypted = false) {
     count = writes(trace);
   const result = await e.dispatchCommand(SPLICE_TEXT_COMMAND, {
     target: target(e, encrypted),
-    text: "ALLOWED-MARKER",
+    text: 'ALLOWED-MARKER',
   });
-  assert.equal(result.status, "committed-with-snapshot");
+  assert.equal(result.status, 'committed-with-snapshot');
   assert.equal(writes(trace), count + 1);
-  assert(findTextMatch(e.getEditorState(), "ALLOWED-MARKER", { origin: "document", wrap: false }));
+  assert(findTextMatch(e.getEditorState(), 'ALLOWED-MARKER', { origin: 'document', wrap: false }));
   const after = snapshot(e);
   assert(after.operationRevision > before.operationRevision);
   return { before, result: { status: result.status }, after, nativeWrites: 1 };
@@ -139,18 +139,18 @@ function run(name: string, fn: (e: any, trace: any[]) => Promise<unknown>) {
     }
   });
 }
-run("1-plain-readonly-both-formats-save-contract", async (e, t) => {
+run('1-plain-readonly-both-formats-save-contract', async (e, t) => {
   const rows = [];
-  for (const format of ["hwp5", "hwpx"]) {
+  for (const format of ['hwp5', 'hwpx']) {
     await load(e, format, false);
     const selection = target(e);
     await e.setSelection(selection);
     assert.equal(
       e.read((s: any) => s.status),
-      "ready",
+      'ready',
     );
     const f = getSelectionFormatting(e.getEditorState());
-    assert.equal(f.characterAvailableReason, "SelectionNotEditable");
+    assert.equal(f.characterAvailableReason, 'SelectionNotEditable');
     const outcome = await deny(e, t);
     let save: any;
     try {
@@ -163,9 +163,9 @@ run("1-plain-readonly-both-formats-save-contract", async (e, t) => {
   }
   return rows;
 });
-run("2-encrypted-readonly-unlock-cannot-upgrade", async (e, t) => {
+run('2-encrypted-readonly-unlock-cannot-upgrade', async (e, t) => {
   const rows = [];
-  for (const format of ["hwp5", "hwpx"]) {
+  for (const format of ['hwp5', 'hwpx']) {
     await load(e, format, false, true, true);
     const outcome = await deny(e, t, true);
     assert.equal(outcome.after.readOnly, true);
@@ -175,32 +175,32 @@ run("2-encrypted-readonly-unlock-cannot-upgrade", async (e, t) => {
   }
   return rows;
 });
-run("3-plain-editable-positive-both-formats", async (e, t) => {
+run('3-plain-editable-positive-both-formats', async (e, t) => {
   const rows = [];
-  for (const format of ["hwp5", "hwpx"]) {
+  for (const format of ['hwp5', 'hwpx']) {
     await load(e, format, true);
     rows.push({ format, ...(await allow(e, t)) });
   }
   return rows;
 });
-run("4-encrypted-editable-initial-policy-wins", async (e, t) => {
+run('4-encrypted-editable-initial-policy-wins', async (e, t) => {
   const rows = [];
-  for (const format of ["hwp5", "hwpx"]) {
+  for (const format of ['hwp5', 'hwpx']) {
     await load(e, format, true, true, false);
     rows.push({ format, ...(await allow(e, t, true)) });
   }
   return rows;
 });
-run("5-wrong-password-retains-A-until-correct-adoption", async (e, t) => {
-  await load(e, "hwpx", false);
+run('5-wrong-password-retains-A-until-correct-adoption', async (e, t) => {
+  await load(e, 'hwpx', false);
   const a = snapshot(e);
-  const b = await input("hwpx", true);
+  const b = await input('hwpx', true);
   try {
-    await e.load(b.bytes, { format: "hwpx", editable: true });
+    await e.load(b.bytes, { format: 'hwpx', editable: true });
   } catch {}
   try {
-    await e.unlock("incorrect-public-fixture-password");
-    assert.fail("wrong accepted");
+    await e.unlock('incorrect-public-fixture-password');
+    assert.fail('wrong accepted');
   } catch (err) {
     assert(err instanceof PasswordAttemptError);
   }
@@ -210,46 +210,46 @@ run("5-wrong-password-retains-A-until-correct-adoption", async (e, t) => {
   const adopted = await allow(e, t, true);
   return { a, rejectedA, adopted };
 });
-run("6-cancel-readonly-candidate-keeps-writable-A", async (e, t) => {
+run('6-cancel-readonly-candidate-keeps-writable-A', async (e, t) => {
   await load(e);
   const a = e.getEditorState().documentId;
-  const b = await input("hwpx", true);
+  const b = await input('hwpx', true);
   try {
-    await e.load(b.bytes, { format: "hwpx", editable: false });
+    await e.load(b.bytes, { format: 'hwpx', editable: false });
   } catch {}
   await e.cancelLoad();
   assert.equal(e.getEditorState().documentId, a);
   return allow(e, t);
 });
-run("7-terminal-load-failure-keeps-writable-A", async (e, t) => {
+run('7-terminal-load-failure-keeps-writable-A', async (e, t) => {
   await load(e);
   const a = e.getEditorState().documentId;
   await assert.rejects(
-    e.load(new Uint8Array([1, 2, 3]), { format: "hwpx", editable: false }),
+    e.load(new Uint8Array([1, 2, 3]), { format: 'hwpx', editable: false }),
     /MissingEndRecord/,
   );
   assert.equal(e.getEditorState().documentId, a);
   return allow(e, t);
 });
-run("8-successful-replacement-publishes-new-policy", async (e, t) => {
+run('8-successful-replacement-publishes-new-policy', async (e, t) => {
   await load(e);
   const a = snapshot(e);
-  await load(e, "hwpx", false);
+  await load(e, 'hwpx', false);
   const blocked = await deny(e, t);
   assert.notEqual(blocked.before.documentId, a.documentId);
-  await load(e, "hwpx", true);
+  await load(e, 'hwpx', true);
   return { a, blocked, enabled: await allow(e, t) };
 });
-run("9-all-write-boundaries-view-read-and-custom-handler", async (e, t) => {
-  await load(e, "hwpx", false, true);
+run('9-all-write-boundaries-view-read-and-custom-handler', async (e, t) => {
+  await load(e, 'hwpx', false, true);
   const before = snapshot(e);
   const lease = e.acquireInputSurface({
-    commitComposition: () => "unchanged",
+    commitComposition: () => 'unchanged',
     cancelComposition: () => {},
   });
   await lease.request(
-    { kind: "enable" },
-    { token: e.getEditorState().token, coordinates: "legacy-native" },
+    { kind: 'enable' },
+    { token: e.getEditorState().token, coordinates: 'legacy-native' },
   );
   const view = snapshot(e);
   assert.equal(view.readOnly, true);
@@ -261,58 +261,58 @@ run("9-all-write-boundaries-view-read-and-custom-handler", async (e, t) => {
     canRedo: false,
   });
   await e.setSelection(target(e, true));
-  const resource = await e.readResource({ kind: "query-window", offset: 0, count: 1 });
-  assert.equal(resource.kind, "query-window");
+  const resource = await e.readResource({ kind: 'query-window', offset: 0, count: 1 });
+  assert.equal(resource.kind, 'query-window');
   const count = writes(t),
     answers = [];
   answers.push(await e.undo(), await e.redo());
   answers.push(
     await e.dispatchCommand(SET_CHARACTER_UNDERLINE_COMMAND, {
       target: target(e, true),
-      kind: "top",
+      kind: 'top',
     }),
   );
   answers.push(
     await e.requestExperimental(
       {
-        kind: "character-underline",
+        kind: 'character-underline',
         section: 0,
         paragraph: 0,
         startUnit: 0,
         endUnit: 1,
-        underlineKind: "top",
+        underlineKind: 'top',
       },
       { mutation: true, token: e.getEditorState().token },
     ),
   );
   answers.push(
     await lease.request(
-      { kind: "splice", section: 0, paragraph: 0, startUnit: 0, endUnit: 1, text: "blocked" },
-      { token: e.getEditorState().token, coordinates: "legacy-native" },
+      { kind: 'splice', section: 0, paragraph: 0, startUnit: 0, endUnit: 1, text: 'blocked' },
+      { token: e.getEditorState().token, coordinates: 'legacy-native' },
     ),
   );
   const updated = await e.update((collect: any) => {
-    collect.dispatchCommand(SPLICE_TEXT_COMMAND, { target: target(e, true), text: "blocked" });
+    collect.dispatchCommand(SPLICE_TEXT_COMMAND, { target: target(e, true), text: 'blocked' });
   });
   answers.push(...updated.results);
   for (const r of answers) {
-    assert.equal(r.status, "rejected-unapplied");
-    assert.equal(r.error, "ReadOnlyDocument");
+    assert.equal(r.status, 'rejected-unapplied');
+    assert.equal(r.error, 'ReadOnlyDocument');
   }
   assert.equal(writes(t), count);
-  const ui = createCommand("ui-only");
-  let nested = "";
+  const ui = createCommand('ui-only');
+  let nested = '';
   e.registerCommand(ui, () => {
     try {
-      e.dispatchCommand(SPLICE_TEXT_COMMAND, { target: target(e, true), text: "nested" });
+      e.dispatchCommand(SPLICE_TEXT_COMMAND, { target: target(e, true), text: 'nested' });
     } catch (err) {
       nested = (err as Error).message;
     }
     return true;
   });
   const handled = await e.dispatchCommand(ui, {});
-  assert.equal(handled.status, "handled-without-runtime");
-  assert.equal(nested, "CommandHandlerMutation");
+  assert.equal(handled.status, 'handled-without-runtime');
+  assert.equal(nested, 'CommandHandlerMutation');
   assert.equal(writes(t), count);
   lease.release();
   const after = snapshot(e);
@@ -329,17 +329,17 @@ run("9-all-write-boundaries-view-read-and-custom-handler", async (e, t) => {
     nativeWrites: 0,
   };
 });
-run("10-readonly-A-survives-cancel-and-terminal-candidate", async (e, t) => {
-  await load(e, "hwpx", false);
+run('10-readonly-A-survives-cancel-and-terminal-candidate', async (e, t) => {
+  await load(e, 'hwpx', false);
   const before = snapshot(e);
-  const b = await input("hwpx", true);
+  const b = await input('hwpx', true);
   try {
-    await e.load(b.bytes, { format: "hwpx", editable: true });
+    await e.load(b.bytes, { format: 'hwpx', editable: true });
   } catch {}
   await e.cancelLoad();
   const cancelled = await deny(e, t);
   await assert.rejects(
-    e.load(new Uint8Array([1, 2, 3]), { format: "hwpx", editable: true }),
+    e.load(new Uint8Array([1, 2, 3]), { format: 'hwpx', editable: true }),
     /MissingEndRecord/,
   );
   const failed = await deny(e, t);

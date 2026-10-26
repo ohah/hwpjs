@@ -1,7 +1,7 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { attachCreatedTables } from "../../web/preview/created-table-content.mjs";
-test("pending table outside window gates all source modes without granting paragraph eligibility", () => {
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { attachCreatedTables } from '../../web/preview/created-table-content.mjs';
+test('pending table outside window gates all source modes without granting paragraph eligibility', () => {
   const paragraphs = [
     {
       section: 0,
@@ -47,16 +47,16 @@ test("pending table outside window gates all source modes without granting parag
   );
   assert.equal(content.readOnly, false);
 });
-test("created table projection filters window hosts and preserves generated identity", () => {
+test('created table projection filters window hosts and preserves generated identity', () => {
   const table = {
-    identity: "9007199254740993",
+    identity: '9007199254740993',
     host_paragraph: 3,
     anchor_unit: 4,
-    cells: [{ text: "😀" }],
+    cells: [{ text: '😀' }],
   };
   const content = { paragraphs: [{ section: 0, paragraph: 2, editable: true }] };
   attachCreatedTables(
-    { createdTables: () => [table, { ...table, identity: "2", host_paragraph: 4 }] },
+    { createdTables: () => [table, { ...table, identity: '2', host_paragraph: 4 }] },
     content,
     true,
     2,
@@ -67,12 +67,12 @@ test("created table projection filters window hosts and preserves generated iden
   assert.equal(content.createdTables[0].anchorUnit, 4);
   assert.equal(content.paragraphs[0].editable, false);
 });
-test("created table projection refuses text truncation and does not query unavailable ABI", () => {
+test('created table projection refuses text truncation and does not query unavailable ABI', () => {
   const content = { paragraphs: [{ section: 0, paragraph: 2, editable: true }] };
   assert.throws(
     () =>
       attachCreatedTables(
-        { createdTables: () => [{ host_paragraph: 3, cells: [{ text: "😀" }] }] },
+        { createdTables: () => [{ host_paragraph: 3, cells: [{ text: '😀' }] }] },
         content,
         true,
         1,
@@ -84,7 +84,7 @@ test("created table projection refuses text truncation and does not query unavai
   attachCreatedTables(
     {
       createdTables: () => {
-        throw new Error("unexpected query");
+        throw new Error('unexpected query');
       },
     },
     content,
@@ -95,9 +95,9 @@ test("created table projection refuses text truncation and does not query unavai
   assert.equal(content.tableCreationAvailable, false);
 });
 
-test("created cell soft line capability is explicit and does not mutate native snapshots", () => {
+test('created cell soft line capability is explicit and does not mutate native snapshots', () => {
   for (const capability of [undefined, false, true, 1]) {
-    const cell = Object.freeze({ text: "a" });
+    const cell = Object.freeze({ text: 'a' });
     const table = Object.freeze({
       host_paragraph: 1,
       anchor_unit: 0,

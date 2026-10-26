@@ -1,22 +1,22 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { layoutDrawingWrapBody } from "../../web/preview/drawing-wrap-body-flow.mjs";
-import { paginateBodyRows } from "../../web/preview/page-row-flow.mjs";
-import { drawingPageReference } from "../../web/preview/drawing-page-reference.mjs";
-import { projectFloatingDrawing } from "../../web/preview/drawing-page-projection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { layoutDrawingWrapBody } from '../../web/preview/drawing-wrap-body-flow.mjs';
+import { paginateBodyRows } from '../../web/preview/page-row-flow.mjs';
+import { drawingPageReference } from '../../web/preview/drawing-page-reference.mjs';
+import { projectFloatingDrawing } from '../../web/preview/drawing-page-projection.mjs';
 
 function fixture() {
   const setting = {
     width: 15000,
     height: 22500,
-    orientation: "widely",
-    gutter_type: "left_only",
+    orientation: 'widely',
+    gutter_type: 'left_only',
     duplicate_margins: 0,
     margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
   };
   const paragraphs = [
-    { section: 0, paragraph: 0, text: "\ufffc" },
-    { section: 0, paragraph: 1, text: "본문😀" },
+    { section: 0, paragraph: 0, text: '\ufffc' },
+    { section: 0, paragraph: 1, text: '본문😀' },
   ];
   const flows = paragraphs.map((p) => ({
     section: 0,
@@ -28,7 +28,7 @@ function fixture() {
   }));
   const rows = paragraphs.map((p) => ({
     ...p,
-    kind: "text",
+    kind: 'text',
     startUnit: 0,
     endUnit: p.text.length,
     width: 200,
@@ -62,13 +62,13 @@ function fixture() {
   return { setting, paragraphs, flows, rows, drawings };
 }
 
-test("drawing top-bottom flow excludes the full line without moving the source anchor", () => {
+test('drawing top-bottom flow excludes the full line without moving the source anchor', () => {
   const f = fixture(),
     before = structuredClone(f);
   const result = layoutDrawingWrapBody(f.drawings, f.paragraphs, (options) =>
     paginateBodyRows(f.rows, f.setting, f.flows, options),
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.equal(result.drawingWrapIterations, 1);
   assert.deepEqual(
     result.rows.map((row) => row.y),
@@ -81,7 +81,7 @@ test("drawing top-bottom flow excludes the full line without moving the source a
     20,
   );
   const projected = projectFloatingDrawing(f.drawings[0], f.paragraphs, {}, result.rows, () => 8);
-  assert.equal(projected.state, "placed", projected.error);
+  assert.equal(projected.state, 'placed', projected.error);
   assert.deepEqual(projected.rectangle, result.drawingWrapReservations[0].rectangle);
   assert.deepEqual(
     result.rows.map((row) => row.text),
@@ -90,7 +90,7 @@ test("drawing top-bottom flow excludes the full line without moving the source a
   assert.deepEqual(f, before);
 });
 
-test("drawing wrapping bounds a changing anchor and rejects nonfinite pre-flow coordinates", () => {
+test('drawing wrapping bounds a changing anchor and rejects nonfinite pre-flow coordinates', () => {
   const f = fixture();
   let call = 0;
   const changing = layoutDrawingWrapBody(
@@ -102,14 +102,14 @@ test("drawing wrapping bounds a changing anchor and rejects nonfinite pre-flow c
     },
     { maxIterations: 1 },
   );
-  assert.equal(changing.error, "DrawingWrapConvergenceLimit");
+  assert.equal(changing.error, 'DrawingWrapConvergenceLimit');
   assert.equal(changing.drawingWrapIterations, 1);
   const body = paginateBodyRows(f.rows, f.setting, f.flows);
   body.rows[0].flowAnchorY = NaN;
-  assert.equal(drawingPageReference(f.drawings[0], f.paragraphs, body.rows).state, "unavailable");
+  assert.equal(drawingPageReference(f.drawings[0], f.paragraphs, body.rows).state, 'unavailable');
 });
 
-test("drawing wrap keeps bounded failure, margins, and layout refusal instead of overlap fallback", () => {
+test('drawing wrap keeps bounded failure, margins, and layout refusal instead of overlap fallback', () => {
   const f = fixture();
   const run = (options) =>
     layoutDrawingWrapBody(
@@ -118,57 +118,57 @@ test("drawing wrap keeps bounded failure, margins, and layout refusal instead of
       (options) => paginateBodyRows(f.rows, f.setting, f.flows, options),
       options,
     );
-  assert.equal(run({ maxIterations: 0 }).error, "InvalidDrawingWrapBudget");
+  assert.equal(run({ maxIterations: 0 }).error, 'InvalidDrawingWrapBudget');
   f.drawings[0].source.flow.outside_margins = [0, 0, 0, 750];
   assert.equal(run().rows[0].y, 50);
   f.drawings[0].source.flow.outside_margins = null;
-  assert.equal(run().error, "missing_margins");
+  assert.equal(run().error, 'missing_margins');
   assert.equal(
     layoutDrawingWrapBody(f.drawings, f.paragraphs, () => ({
-      state: "unavailable",
-      error: "ExistingBodyFailure",
+      state: 'unavailable',
+      error: 'ExistingBodyFailure',
     })).error,
-    "ExistingBodyFailure",
+    'ExistingBodyFailure',
   );
 });
 
-test("drawing wrap refuses ignored row reservations and later table intersections", () => {
+test('drawing wrap refuses ignored row reservations and later table intersections', () => {
   const f = fixture();
   const ignored = layoutDrawingWrapBody(f.drawings, f.paragraphs, () =>
     paginateBodyRows(f.rows, f.setting, f.flows),
   );
-  assert.equal(ignored.error, "IncompleteDrawingWrapFlow");
+  assert.equal(ignored.error, 'IncompleteDrawingWrapFlow');
   const table = layoutDrawingWrapBody(f.drawings, f.paragraphs, (options) => ({
     ...paginateBodyRows(f.rows, f.setting, f.flows, options),
     tableCollisionFootprints: [
       { section: 0, pageOrdinal: 0, rectangle: { x: 20, y: 20, width: 200, height: 20 } },
     ],
   }));
-  assert.equal(table.error, "IncompleteDrawingWrapFlow");
+  assert.equal(table.error, 'IncompleteDrawingWrapFlow');
 });
 
-test("drawing wrap validates widthless paragraph gaps against the full placed column", () => {
+test('drawing wrap validates widthless paragraph gaps against the full placed column', () => {
   const f = fixture();
-  f.rows.push({ section: 0, paragraph: 1, kind: "gap", text: "", height: 12 });
+  f.rows.push({ section: 0, paragraph: 1, kind: 'gap', text: '', height: 12 });
   const run = (mutate) =>
     layoutDrawingWrapBody(f.drawings, f.paragraphs, (options) => {
       const body = paginateBodyRows(f.rows, f.setting, f.flows, options);
       return mutate ? mutate(body) : body;
     });
   const placed = run();
-  assert.equal(placed.state, "paginated", placed.error);
+  assert.equal(placed.state, 'paginated', placed.error);
   assert.equal(placed.rows.at(-1).width, undefined);
   assert.equal(placed.rows.at(-1).referenceBoxes.column.width, 200);
   const overlap = run((body) => ({
     ...body,
-    rows: body.rows.map((row) => (row.kind === "gap" ? { ...row, y: 20 } : row)),
+    rows: body.rows.map((row) => (row.kind === 'gap' ? { ...row, y: 20 } : row)),
   }));
-  assert.equal(overlap.error, "IncompleteDrawingWrapFlow");
+  assert.equal(overlap.error, 'IncompleteDrawingWrapFlow');
   const missing = run((body) => ({
     ...body,
     rows: body.rows.map((row) =>
-      row.kind === "gap" ? { ...row, referenceBoxes: undefined } : row,
+      row.kind === 'gap' ? { ...row, referenceBoxes: undefined } : row,
     ),
   }));
-  assert.equal(missing.error, "IncompleteDrawingWrapFlow");
+  assert.equal(missing.error, 'IncompleteDrawingWrapFlow');
 });

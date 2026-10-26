@@ -1,6 +1,6 @@
-import { validateHwp5NoteSources } from "../../js/hwp5-note-sources.mjs";
-import { attachHwp5Notes } from "./hwp5-note-content.mjs";
-import { hwp5WindowFlows } from "./hwp5-window-flows.mjs";
+import { validateHwp5NoteSources } from '../../js/hwp5-note-sources.mjs';
+import { attachHwp5Notes } from './hwp5-note-content.mjs';
+import { hwp5WindowFlows } from './hwp5-window-flows.mjs';
 
 // Explicit window adapter; full-document attachment keeps its strict inventory.
 export function attachHwp5WindowNotes(editor, content) {
@@ -21,7 +21,7 @@ export function attachHwp5WindowNotes(editor, content) {
             row.list_node === source.list_node,
         );
       if (members.some((row) => !displayed.has(`${section}:${row.paragraph}`)))
-        throw new Error("MissingHwp5NoteBody");
+        throw new Error('MissingHwp5NoteBody');
     }
     return rows;
   };

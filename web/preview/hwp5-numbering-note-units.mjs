@@ -1,10 +1,10 @@
-import { validateHwp5NoteSources } from "../../js/hwp5-note-sources.mjs";
-import { sourceDisplayPosition } from "./text-offsets.mjs";
+import { validateHwp5NoteSources } from '../../js/hwp5-note-sources.mjs';
+import { sourceDisplayPosition } from './text-offsets.mjs';
 
 // Classify validated references only; this does not grant note layout support.
 export function hwp5NumberingNoteUnits(content, paragraph) {
   const fail = () => {
-    throw new Error("AmbiguousHwp5NumberingNoteAnchor");
+    throw new Error('AmbiguousHwp5NumberingNoteAnchor');
   };
   if ((content.hwp5NoteErrors ?? []).some((row) => row.section === paragraph.section)) fail();
   const notes = (content.hwp5Notes ?? []).filter((row) => row.section === paragraph.section);
@@ -43,7 +43,7 @@ export function hwp5NumberingNoteUnits(content, paragraph) {
       paragraph.clipped ||
       note.anchorUnit !== unit ||
       end !== unit + 1 ||
-      paragraph.text[unit] !== "\ufffc"
+      paragraph.text[unit] !== '\ufffc'
     )
       fail();
     const members = (content.currentParagraphFlows ?? []).filter(

@@ -1,23 +1,23 @@
 /** Validate source geometry only; source enum indices are not layout defaults. */
 export function decodeTableGeometry(bytes) {
-  const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  if (!value || typeof value !== "object") throw new Error("InvalidTableGeometry");
+  const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+  if (!value || typeof value !== 'object') throw new Error('InvalidTableGeometry');
   const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
   const signed = (v) => Number.isSafeInteger(v) && v >= -0x80000000 && v <= 0xffffffff;
   const optional = (v, check) => v === null || check(v);
   const bool = (v) => [null, false, true].includes(v);
   const bounded = (max) => (v) => uint(v) && v <= max;
-  if (Object.hasOwn(value, "z_order") && !optional(value.z_order, signed))
-    throw new Error("InvalidTableGeometry");
+  if (Object.hasOwn(value, 'z_order') && !optional(value.z_order, signed))
+    throw new Error('InvalidTableGeometry');
   const g = value?.geometry;
   const margin = (v) =>
     v === null || (Array.isArray(v) && v.length === 4 && v.every((n) => optional(n, signed)));
   for (const [name, maximum] of [
-    ["text_wrap", 5],
-    ["text_flow", 3],
+    ['text_wrap', 5],
+    ['text_flow', 3],
   ]) {
     if (name in value && !optional(value[name], bounded(maximum)))
-      throw new Error("InvalidTableGeometry");
+      throw new Error('InvalidTableGeometry');
   }
   if (
     !g ||
@@ -41,6 +41,6 @@ export function decodeTableGeometry(bytes) {
     !margin(value.out_margin) ||
     !margin(value.in_margin)
   )
-    throw new Error("InvalidTableGeometry");
+    throw new Error('InvalidTableGeometry');
   return value;
 }

@@ -17,28 +17,28 @@ export function createPasswordControls({
   const reset = () => {
     protectionRemoved = false;
     pending = false;
-    input.value = "";
+    input.value = '';
     form.hidden = true;
     submit.disabled = false;
     input.disabled = false;
     consentPanel.hidden = true;
     consent.checked = false;
-    note.textContent = "";
+    note.textContent = '';
     update();
   };
   form.addEventListener(
-    "submit",
+    'submit',
     (event) => {
       event.preventDefault();
       if (form.hidden || pending) return;
       const password = input.value;
-      input.value = "";
+      input.value = '';
       pending = true;
       submit.disabled = true;
       input.disabled = true;
-      note.textContent = "비밀번호 확인 중…";
+      note.textContent = '비밀번호 확인 중…';
       try {
-        request({ kind: "unlock", origin: "password", password });
+        request({ kind: 'unlock', origin: 'password', password });
       } catch (error) {
         pending = false;
         submit.disabled = false;
@@ -50,28 +50,28 @@ export function createPasswordControls({
     { signal: events.signal },
   );
   cancel.addEventListener(
-    "click",
+    'click',
     () => {
       reset();
       onCancel();
     },
     { signal: events.signal },
   );
-  consent.addEventListener("change", update, { signal: events.signal });
+  consent.addEventListener('change', update, { signal: events.signal });
   return {
     reset,
     required() {
       reset();
       form.hidden = false;
-      note.textContent = "암호화된 문서입니다. 비밀번호를 입력하세요.";
+      note.textContent = '암호화된 문서입니다. 비밀번호를 입력하세요.';
       input.focus();
     },
     message(value) {
-      if (value.kind !== "unlock") return;
+      if (value.kind !== 'unlock') return;
       pending = false;
       submit.disabled = false;
       input.disabled = false;
-      input.value = "";
+      input.value = '';
       if (value.error) {
         note.textContent = `열기 실패: ${value.error}`;
         input.focus();
@@ -87,7 +87,7 @@ export function createPasswordControls({
     allowed: () => !protectionRemoved || consent.checked === true,
     removed: () => protectionRemoved,
     close() {
-      input.value = "";
+      input.value = '';
       events.abort();
     },
   };

@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { bcp47Evidence } from "./bcp47-evidence.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { bcp47Evidence } from './bcp47-evidence.mjs';
 export const catalog = JSON.parse(
-  readFileSync(new URL("../../src/text/bcp47/data/source.json", import.meta.url), "utf8"),
+  readFileSync(new URL('../../src/text/bcp47/data/source.json', import.meta.url), 'utf8'),
 );
 const groups = Object.fromEntries(
-  ["language", "script", "region", "variant"].map((k) => [
+  ['language', 'script', 'region', 'variant'].map((k) => [
     k,
-    catalog[k].split(" ").map((s) => s.split("..")),
+    catalog[k].split(' ').map((s) => s.split('..')),
   ]),
 );
 export function member(kind, value) {
@@ -17,7 +17,7 @@ export function member(kind, value) {
 }
 export function registryEvidence(bytes, maxBytes = 4096, maxSubtags = 512) {
   const syntax = bcp47Evidence(bytes, maxBytes, maxSubtags),
-    raw = bytes.toString("latin1").toLowerCase();
+    raw = bytes.toString('latin1').toLowerCase();
   const span = (i) =>
     raw.slice(
       syntax.readUInt32LE(28 + i * 8),
@@ -27,7 +27,7 @@ export function registryEvidence(bytes, maxBytes = 4096, maxSubtags = 512) {
     prefix = 0,
     deferred = 0;
   if (syntax.readUInt32LE(0) === 0) {
-    assert.ok(member("language", span(0)));
+    assert.ok(member('language', span(0)));
     lookups++;
     assert.ok(syntax.readUInt32LE(8) <= 1);
     if (span(1)) {
@@ -36,19 +36,19 @@ export function registryEvidence(bytes, maxBytes = 4096, maxSubtags = 512) {
       prefix = 1;
     }
     for (const [i, kind] of [
-      [2, "script"],
-      [3, "region"],
-      [4, "variant"],
+      [2, 'script'],
+      [3, 'region'],
+      [4, 'variant'],
     ])
       if (span(i))
-        for (const v of span(i).split("-")) {
+        for (const v of span(i).split('-')) {
           assert.ok(member(kind, v));
           lookups++;
         }
     if (span(5))
-      for (const v of span(5).split("-"))
+      for (const v of span(5).split('-'))
         if (v.length === 1) {
-          assert.ok(catalog.extensions.split(" ").includes(v));
+          assert.ok(catalog.extensions.split(' ').includes(v));
           lookups++;
           deferred++;
         }
@@ -59,8 +59,8 @@ export function registryEvidence(bytes, maxBytes = 4096, maxSubtags = 512) {
     lookups,
     prefix,
     deferred,
-    Number(catalog.date.replaceAll("-", "")),
-    Number(catalog.extension_date.replaceAll("-", "")),
+    Number(catalog.date.replaceAll('-', '')),
+    Number(catalog.extension_date.replaceAll('-', '')),
   ].forEach((v, i) => tail.writeUInt32LE(v, i * 4));
   return Buffer.concat([syntax, tail]);
 }

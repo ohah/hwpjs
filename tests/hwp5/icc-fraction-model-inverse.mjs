@@ -1,12 +1,12 @@
-import assert from "node:assert/strict";
-import { modelProfile } from "./icc-model.mjs";
-import { pointEntries } from "./icc-model-forward.mjs";
-import { inverseReference, fraction } from "./icc-matrix-reference.mjs";
-import { readFractionMatrix } from "./icc-fraction-matrix-inverse.mjs";
-import { inverseReference as sampled } from "./icc-inverse.mjs";
-import { endpoint } from "./icc-preimage-bounds.mjs";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
-import { trcInverseInput } from "./icc-trc-inverse.mjs";
+import assert from 'node:assert/strict';
+import { modelProfile } from './icc-model.mjs';
+import { pointEntries } from './icc-model-forward.mjs';
+import { inverseReference, fraction } from './icc-matrix-reference.mjs';
+import { readFractionMatrix } from './icc-fraction-matrix-inverse.mjs';
+import { inverseReference as sampled } from './icc-inverse.mjs';
+import { endpoint } from './icc-preimage-bounds.mjs';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
+import { trcInverseInput } from './icc-trc-inverse.mjs';
 
 export function fractionModelInput(profile, n, d, precision = 512) {
   const b = Buffer.alloc(132);
@@ -127,7 +127,7 @@ export function fractionModelInverseEdges(call) {
     [65535, 65535, 0, 0],
   ]) {
     const plateaus = pointEntries(identity, [0, 0, 0]);
-    for (const [i, name] of ["rTRC", "gTRC", "bTRC"].entries())
+    for (const [i, name] of ['rTRC', 'gTRC', 'bTRC'].entries())
       plateaus[i + 3][1] = trcInverseInput(name, [0n, 1n], values).subarray(40);
     for (const n of [
       [-1n, 1n, hi],
@@ -148,17 +148,17 @@ export function fractionModelInverseEdges(call) {
     }
   }
   entries[3][1] = trcInverseInput(
-    "rTRC",
+    'rTRC',
     [0n, 1n],
     [65536, 0, 0, 0, 32768, 65536, 0],
-    "para",
+    'para',
     4,
   ).subarray(40);
   entries[4][1] = trcInverseInput(
-    "gTRC",
+    'gTRC',
     [0n, 1n],
     [65536, 0, 0, 65536, 32768, 65536, 0],
-    "para",
+    'para',
     4,
   ).subarray(40);
   const parts = fractionModelParts(
@@ -182,7 +182,7 @@ export function fractionModelInverseEdges(call) {
   assert.equal(parts[2].readUInt32LE(), 5);
   endpoint(parts[2].subarray(4), [1n, 4n], true, 128);
   comparisons++;
-  entries[5][1] = trcInverseInput("bTRC", [0n, 1n], [0]).subarray(40);
+  entries[5][1] = trcInverseInput('bTRC', [0n, 1n], [0]).subarray(40);
   assert.throws(
     () => call(238, fractionModelInput(modelProfile(entries), [4n, 5n, 2n], 8n)),
     /NonInvertibleIccGamma/,

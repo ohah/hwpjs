@@ -1,4 +1,4 @@
-import { hwp5WindowIdentities } from "./hwp5-window-identities.mjs";
+import { hwp5WindowIdentities } from './hwp5-window-identities.mjs';
 
 export function boundHwp5ColumnSources(editor, section, flows) {
   const declarations = new Map();
@@ -10,7 +10,7 @@ export function boundHwp5ColumnSources(editor, section, flows) {
       owner.source_node !== source.paragraph_node ||
       declarations.has(source.current_paragraph)
     )
-      throw new Error("WindowDependencyBindingMismatch");
+      throw new Error('WindowDependencyBindingMismatch');
     declarations.set(source.current_paragraph, source);
   }
   return declarations;
@@ -27,7 +27,7 @@ export function hwp5ColumnWindowDependencies(editor, projection) {
       flows.length !== section.paragraphs.length ||
       flows.some((row, index) => row.paragraph !== index)
     )
-      throw new Error("WindowDependencyBindingMismatch");
+      throw new Error('WindowDependencyBindingMismatch');
     const declarations = boundHwp5ColumnSources(editor, section.index, flows);
     for (const flow of flows) {
       const scope = `${flow.host}:${flow.parent_node}:${flow.list_node}`;

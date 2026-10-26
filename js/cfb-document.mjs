@@ -1,32 +1,32 @@
-import { DOCUMENT as D } from "./abi-schema.mjs";
-import { inputBytes } from "./input.mjs";
+import { DOCUMENT as D } from './abi-schema.mjs';
+import { inputBytes } from './input.mjs';
 const encoder = new TextEncoder();
-const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 function u32(value) {
   if (!Number.isInteger(value) || value < 0 || value > 0xffffffff)
-    throw new TypeError("Expected u32");
+    throw new TypeError('Expected u32');
   return value;
 }
 function u64(value) {
-  if (typeof value !== "bigint" || value < 0n || value > 0xffffffffffffffffn)
-    throw new TypeError("Expected u64 bigint");
+  if (typeof value !== 'bigint' || value < 0n || value > 0xffffffffffffffffn)
+    throw new TypeError('Expected u64 bigint');
   return value;
 }
 export function encodeDocument(document) {
   const version = document.version ?? 3;
-  if (version !== 3 && version !== 4) throw new TypeError("UnsupportedVersion");
+  if (version !== 3 && version !== 4) throw new TypeError('UnsupportedVersion');
   if (!Array.isArray(document.nodes) || !document.nodes.length || document.nodes.length > 1000000)
-    throw new TypeError("InvalidDocument");
+    throw new TypeError('InvalidDocument');
   let size = D.header_bytes;
   const nodes = document.nodes.map((node) => {
-    if (typeof node.name !== "string" || !node.name.isWellFormed())
-      throw new TypeError("InvalidName");
+    if (typeof node.name !== 'string' || !node.name.isWellFormed())
+      throw new TypeError('InvalidName');
     const name = encoder.encode(node.name),
       content = inputBytes(node.content ?? new Uint8Array());
     const clsid = inputBytes(node.clsid ?? new Uint8Array(16));
-    if (clsid.length !== 16) throw new TypeError("InvalidCLSID");
+    if (clsid.length !== 16) throw new TypeError('InvalidCLSID');
     size += D.node_bytes + name.length + content.length;
-    if (size > 256 * 1024 * 1024) throw new RangeError("LimitExceeded");
+    if (size > 256 * 1024 * 1024) throw new RangeError('LimitExceeded');
     return {
       name,
       content,
@@ -87,19 +87,19 @@ export function decodeDocument(bytes) {
     offset += content;
     nodes.push(node);
   }
-  if (offset !== bytes.length) throw new Error("InvalidDocument");
+  if (offset !== bytes.length) throw new Error('InvalidDocument');
   return { version, nodes };
 }
 
 /** Remove a node/subtree and remap parents. Returns a new model, does not mutate input. */
 export function removeNode(document, index) {
   if (!Number.isInteger(index) || index <= 0 || index >= document.nodes.length)
-    throw new RangeError("InvalidNode");
+    throw new RangeError('InvalidNode');
   const children = document.nodes.map(() => []);
   document.nodes.forEach((n, i) => {
     if (!i) return;
     if (!Number.isInteger(n.parent) || n.parent < 0 || n.parent >= children.length)
-      throw new Error("InvalidDirectoryReference");
+      throw new Error('InvalidDirectoryReference');
     children[n.parent].push(i);
   });
   const removed = new Set(),
@@ -120,7 +120,7 @@ export function removeNode(document, index) {
   });
   for (let i = 1; i < nodes.length; i++) {
     const parent = map.get(nodes[i].parent);
-    if (parent === undefined) throw new Error("InvalidDirectoryReference");
+    if (parent === undefined) throw new Error('InvalidDirectoryReference');
     nodes[i].parent = parent;
   }
   return { ...document, nodes };

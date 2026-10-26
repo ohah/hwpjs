@@ -1,11 +1,11 @@
-import { layoutGroupPictureBody } from "./group-picture-body-layout.mjs";
-import { notePageScenes } from "./note-page-scenes.mjs";
-import { notePlanningFrame, columnNotePictureReference } from "./note-planning-frame.mjs";
-import { previewPictureLayers } from "./picture-layers.mjs";
-import { previewRectangleLayers } from "./rectangle-layers.mjs";
-import { groupedLayoutCoverage } from "./grouped-layout-coverage.mjs";
-import { equationTextAnchors, equationTextMeasure } from "./equation-text-anchors.mjs";
-import { groupShapeChildren } from "./group-shape-children.mjs";
+import { layoutGroupPictureBody } from './group-picture-body-layout.mjs';
+import { notePageScenes } from './note-page-scenes.mjs';
+import { notePlanningFrame, columnNotePictureReference } from './note-planning-frame.mjs';
+import { previewPictureLayers } from './picture-layers.mjs';
+import { previewRectangleLayers } from './rectangle-layers.mjs';
+import { groupedLayoutCoverage } from './grouped-layout-coverage.mjs';
+import { equationTextAnchors, equationTextMeasure } from './equation-text-anchors.mjs';
+import { groupShapeChildren } from './group-shape-children.mjs';
 
 /** Null means no group owner. Never turn absent child geometry into a root. */
 export function measureGroupedNoteBody(
@@ -19,7 +19,7 @@ export function measureGroupedNoteBody(
   maxRows,
   endnoteContext,
 ) {
-  const fail = (error) => ({ state: "unavailable", error });
+  const fail = (error) => ({ state: 'unavailable', error });
   const direct = new Set(note.paragraphs);
   const roots = (content.containers ?? []).filter(
     (root) =>
@@ -28,10 +28,10 @@ export function measureGroupedNoteBody(
       direct.has(root.hostParagraph),
   );
   if (!roots.length) return null;
-  if (note.kind !== "endnote" || createdTables.length || content.pageSettings?.length !== 1)
-    return fail("UnsupportedGroupedNoteBody");
+  if (note.kind !== 'endnote' || createdTables.length || content.pageSettings?.length !== 1)
+    return fail('UnsupportedGroupedNoteBody');
   const rootIds = new Set(roots.map((root) => root.containerNode));
-  if (rootIds.size !== roots.length) return fail("AmbiguousGroupedNoteOwner");
+  if (rootIds.size !== roots.length) return fail('AmbiguousGroupedNoteOwner');
   const containers = content.containers.filter(
     (c) =>
       c.section === note.section &&
@@ -57,9 +57,9 @@ export function measureGroupedNoteBody(
   try {
     for (const container of containers)
       for (const child of groupShapeChildren(container.source))
-        if (child.kind !== "metadata") childIds.add(child.node);
+        if (child.kind !== 'metadata') childIds.add(child.node);
   } catch {
-    return fail("InvalidGroupedNoteSource");
+    return fail('InvalidGroupedNoteSource');
   }
   if (
     content.paragraphs.some(
@@ -69,7 +69,7 @@ export function measureGroupedNoteBody(
         !drawingIds.has(p.drawingText.drawingNode),
     )
   )
-    return fail("MissingGroupedNoteTextOwner");
+    return fail('MissingGroupedNoteTextOwner');
   const extraParagraphs = content.paragraphs.filter(
     (p) =>
       p.section === note.section &&
@@ -87,7 +87,7 @@ export function measureGroupedNoteBody(
     const sources = content.paragraphFlows.filter(
       (f) => f.section === note.section && f.paragraph === paragraph.paragraph,
     );
-    if (sources.length !== 1) return fail("AmbiguousGroupedNoteFlow");
+    if (sources.length !== 1) return fail('AmbiguousGroupedNoteFlow');
     const flow = sources[0];
     if (!direct.has(paragraph.paragraph)) {
       flows.push(flow);
@@ -100,20 +100,20 @@ export function measureGroupedNoteBody(
       flow.note_context.list_node !== note.listNode ||
       flow.note_context.kind !== note.kind
     )
-      return fail("InvalidGroupedNoteOwner");
+      return fail('InvalidGroupedNoteOwner');
     if (flow.column_declaration !== null && flow.column_declaration?.count !== 1)
-      return fail("UnsupportedGroupedNoteColumns");
+      return fail('UnsupportedGroupedNoteColumns');
     const declaration = flow.column_declaration ?? {
       count: 1,
       same_size: true,
       gap: 0,
-      direction: "left",
-      kind: "newspaper",
+      direction: 'left',
+      kind: 'newspaper',
       ambiguous: false,
     };
     flows.push({
       ...flow,
-      host: "body",
+      host: 'body',
       top_level: true,
       single_column: true,
       column_declaration: declaration,
@@ -122,9 +122,9 @@ export function measureGroupedNoteBody(
   }
   for (const paragraph of paragraphs) {
     const equations = equationTextAnchors(paragraph);
-    if (equations.state !== "resolved")
+    if (equations.state !== 'resolved')
       return {
-        ...fail("UnsupportedGroupedNoteEquation"),
+        ...fail('UnsupportedGroupedNoteEquation'),
         section: paragraph.section,
         paragraph: paragraph.paragraph,
         equationNode: equations.equationNode,
@@ -134,8 +134,8 @@ export function measureGroupedNoteBody(
       };
   }
   const frame = notePlanningFrame(content, note, width, endnoteContext);
-  if (frame.state !== "selected")
-    return { ...fail("UnsupportedGroupedNoteWidth"), sourceError: frame.error };
+  if (frame.state !== 'selected')
+    return { ...fail('UnsupportedGroupedNoteWidth'), sourceError: frame.error };
   const pictures = (content.pictures ?? []).filter(
     (p) => p.section === note.section && (ids.has(p.paragraph) || rootIds.has(p.owner?.anchorNode)),
   );
@@ -149,7 +149,7 @@ export function measureGroupedNoteBody(
           r.source.geometry.height_relative !== 2,
       ))
   )
-    return fail("UnsupportedNoteColumnGroupReference");
+    return fail('UnsupportedNoteColumnGroupReference');
   const view = {
     ...content,
     pageSettings: [frame.setting],
@@ -174,15 +174,15 @@ export function measureGroupedNoteBody(
   const layout = layoutGroupPictureBody(view, equationTextMeasure(measure), maxRows, {
     firstPageTopInset: frame.localColumn ? (endnoteContext.firstPageTopInset ?? 0) : 0,
   });
-  if (layout.state !== "paginated") return layout;
-  if (layout.limited) return fail("UnsupportedGroupedNoteContinuation");
+  if (layout.state !== 'paginated') return layout;
+  if (layout.limited) return fail('UnsupportedGroupedNoteContinuation');
   const rectangleLayers = previewRectangleLayers(view, layout),
     pictureLayers = previewPictureLayers(view, layout, width);
   const coverage = groupedLayoutCoverage(view, layout, rectangleLayers, pictureLayers);
   if (coverage.length !== roots.length || coverage.some((c) => !c.complete))
-    return { ...fail("IncompleteGroupedNoteScene"), groups: coverage };
+    return { ...fail('IncompleteGroupedNoteScene'), groups: coverage };
   const scenes = notePageScenes(layout, rectangleLayers, pictureLayers, width);
-  if (scenes.state !== "measured") return scenes;
+  if (scenes.state !== 'measured') return scenes;
   return {
     ...scenes,
     rowCount: scenes.rows.length,

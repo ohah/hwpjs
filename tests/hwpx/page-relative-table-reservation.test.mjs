@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { reserveTableVerticalFlow } from "../../web/preview/table-vertical-flow-reservation.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { reserveTableVerticalFlow } from '../../web/preview/table-vertical-flow-reservation.mjs';
 
-test("page-relative alignment is fixed and cannot clamp to occupied flow", () => {
+test('page-relative alignment is fixed and cannot clamp to occupied flow', () => {
   const source = {
     geometry: { treat_as_character: false, vertical_offset: 1500 },
     vertical_relative: 1,
@@ -13,7 +13,7 @@ test("page-relative alignment is fixed and cannot clamp to occupied flow", () =>
   const bounds = { anchorY: 400, occupiedBottom: 500, height: 80, pageTop: 100, pageBottom: 1000 };
   const original = structuredClone(source);
   assert.deepEqual(reserveTableVerticalFlow(source, bounds), {
-    state: "reserved",
+    state: 'reserved',
     requestedY: 900,
     y: 900,
     bottom: 980,
@@ -21,7 +21,7 @@ test("page-relative alignment is fixed and cannot clamp to occupied flow", () =>
   });
   assert.equal(
     reserveTableVerticalFlow(source, { ...bounds, occupiedBottom: 901 }).state,
-    "next-page",
+    'next-page',
   );
   const fresh = reserveTableVerticalFlow(source, {
     ...bounds,
@@ -34,7 +34,7 @@ test("page-relative alignment is fixed and cannot clamp to occupied flow", () =>
   assert.equal(fresh.bottom, 1980);
   assert.equal(
     reserveTableVerticalFlow({ ...source, vertical_alignment: 0 }, bounds).state,
-    "next-page",
+    'next-page',
   );
   assert.equal(
     reserveTableVerticalFlow(
@@ -48,11 +48,11 @@ test("page-relative alignment is fixed and cannot clamp to occupied flow", () =>
       { ...source, geometry: { ...source.geometry, vertical_offset: 0xffffffff } },
       bounds,
     ).error,
-    "TablePageAnchorOverflow",
+    'TablePageAnchorOverflow',
   );
   assert.equal(
     reserveTableVerticalFlow({ ...source, vertical_alignment: 3 }, bounds).error,
-    "UnsupportedTableVerticalFlow",
+    'UnsupportedTableVerticalFlow',
   );
   assert.deepEqual(source, original);
 });

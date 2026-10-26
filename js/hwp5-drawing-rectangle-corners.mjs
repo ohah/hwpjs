@@ -1,6 +1,6 @@
 export function validateHwp5DrawingRectangleCorners(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-  if (!Array.isArray(rows)) throw new Error("InvalidHwp5DrawingRectangleCorners");
+  if (!Array.isArray(rows)) throw new Error('InvalidHwp5DrawingRectangleCorners');
   const components = new Set(),
     rectangles = new Set();
   for (const row of rows) {
@@ -20,11 +20,11 @@ export function validateHwp5DrawingRectangleCorners(rows) {
       components.has(row.component_node) ||
       rectangles.has(row.rectangle_node)
     )
-      throw new Error("InvalidHwp5DrawingRectangleCorners");
+      throw new Error('InvalidHwp5DrawingRectangleCorners');
     components.add(row.component_node);
     rectangles.add(row.rectangle_node);
     if (
-      Object.hasOwn(row, "raw_points") &&
+      Object.hasOwn(row, 'raw_points') &&
       (!Array.isArray(row.raw_points) ||
         row.raw_points.length !== 4 ||
         !Array.from(row.raw_points).every(
@@ -36,12 +36,12 @@ export function validateHwp5DrawingRectangleCorners(rows) {
             ),
         ))
     )
-      throw new Error("InvalidHwp5DrawingRectangleCorners");
+      throw new Error('InvalidHwp5DrawingRectangleCorners');
   }
   return rows;
 }
 export function decodeHwp5DrawingRectangleCorners(bytes) {
   return validateHwp5DrawingRectangleCorners(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

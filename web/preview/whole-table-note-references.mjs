@@ -1,15 +1,15 @@
 import {
   hasCellFootnoteReferences,
   isFootnoteColumnReservation,
-} from "./footnote-column-reservation.mjs";
-import { sourceTableLineReferences } from "./source-table-line-references.mjs";
+} from './footnote-column-reservation.mjs';
+import { sourceTableLineReferences } from './source-table-line-references.mjs';
 
 // Only the exact whole-table anchor row owns its cell references.
 export function wholeTableNoteReferences(entries, rows, columnBottom) {
-  if (!isFootnoteColumnReservation(columnBottom)) return { state: "bound", rows };
+  if (!isFootnoteColumnReservation(columnBottom)) return { state: 'bound', rows };
   try {
     return {
-      state: "bound",
+      state: 'bound',
       rows: rows.map((row) => {
         if (row.mandatoryCellFragment !== undefined && Array.isArray(row.cellReferenceRows))
           return row;
@@ -29,7 +29,7 @@ export function wholeTableNoteReferences(entries, rows, columnBottom) {
             )
           )
             continue;
-          if (entry.splitMode !== "whole") throw new Error("MissingCellFootnoteBandReservation");
+          if (entry.splitMode !== 'whole') throw new Error('MissingCellFootnoteBandReservation');
           sources.set(entry.table.tableNode, { table: entry.table, measured: entry.measured });
           anchors.push({ tableNode: entry.table.tableNode });
         }
@@ -39,6 +39,6 @@ export function wholeTableNoteReferences(entries, rows, columnBottom) {
       }),
     };
   } catch (error) {
-    return { state: "unavailable", error: error.message };
+    return { state: 'unavailable', error: error.message };
   }
 }

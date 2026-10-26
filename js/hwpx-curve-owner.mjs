@@ -1,7 +1,7 @@
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
-const object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const object = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 export function decodeCurveOwner(bytes) {
-  const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+  const value = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
   const owner = value?.owner;
   if (
     !object(value) ||
@@ -13,6 +13,6 @@ export function decodeCurveOwner(bytes) {
         owner.paragraph === 0 ||
         owner.anchor_node >= value.node))
   )
-    throw new Error("InvalidCurveOwner");
+    throw new Error('InvalidCurveOwner');
   return value;
 }

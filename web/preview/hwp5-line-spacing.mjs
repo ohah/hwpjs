@@ -1,6 +1,6 @@
 // Integer HWP5 spacing arithmetic. No font measurement, hit testing or source writes.
-import { roundedMulDiv, isInt32 as int32 } from "./integer-mul-div.mjs";
-export { roundedMulDiv } from "./integer-mul-div.mjs";
+import { roundedMulDiv, isInt32 as int32 } from './integer-mul-div.mjs';
+export { roundedMulDiv } from './integer-mul-div.mjs';
 export function hwp5LineSpacing(kind, value, height, { basisHeight = height, relativeBase } = {}) {
   if (
     ![kind, value, height, basisHeight].every(int32) ||

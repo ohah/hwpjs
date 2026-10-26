@@ -1,18 +1,18 @@
-import { pageReferenceBoxes } from "./page-reference-boxes.mjs";
-import { paginateBodyRows } from "./page-row-flow.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
+import { pageReferenceBoxes } from './page-reference-boxes.mjs';
+import { paginateBodyRows } from './page-row-flow.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
 import {
   measureCreatedBodyFlow,
   projectCreatedBodyFlow,
-} from "./created-body-flow-measurement.mjs";
-import { layoutCreatedTableSourceScene } from "./created-table-source-scene-layout.mjs";
-import { layoutCreatedGroupBody } from "./created-table-group-body-layout.mjs";
+} from './created-body-flow-measurement.mjs';
+import { layoutCreatedTableSourceScene } from './created-table-source-scene-layout.mjs';
+import { layoutCreatedGroupBody } from './created-table-group-body-layout.mjs';
 
 // Inline whole-object path. Oversized objects retain explicit fallback, not loss.
 export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
-    !["hwp5", "hwpx"].includes(content.format) ||
+    !['hwp5', 'hwpx'].includes(content.format) ||
     content.window ||
     content.limited ||
     content.pageSettings?.length !== 1 ||
@@ -20,12 +20,12 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1
   )
-    return unavailable("UnsupportedCreatedTablePageScope");
+    return unavailable('UnsupportedCreatedTablePageScope');
   if (
     content.hwp5PageNumberSource?.page_controls?.length ||
     content.hwp5PageNumberSource?.section_starts?.length
   )
-    return unavailable("UnsupportedCreatedTablePageControls");
+    return unavailable('UnsupportedCreatedTablePageControls');
   if (
     content.containers?.some(
       (root) =>
@@ -58,7 +58,7 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
     bodyIds.has(`${flow.section}:${flow.paragraph}`),
   );
   if (
-    ["pictures", "drawings", "rectangles", "lines", "checkBoxes", "charts", "noteBodies"].some(
+    ['pictures', 'drawings', 'rectangles', 'lines', 'checkBoxes', 'charts', 'noteBodies'].some(
       (key) => content[key]?.length,
     ) ||
     content.paragraphs.some(
@@ -69,24 +69,24 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
       (flow) =>
         flow.top_level !== true ||
         flow.single_column !== true ||
-        flow.host !== "body" ||
+        flow.host !== 'body' ||
         (flow.column_declaration && flow.column_declaration.count !== 1) ||
         flow.column_changes?.some((change) => change.declaration?.count !== 1),
     )
   )
-    return unavailable("UnsupportedCreatedTablePageObjects");
+    return unavailable('UnsupportedCreatedTablePageObjects');
   const setting = content.pageSettings[0],
     reference = pageReferenceBoxes(setting, { x: 20, y: 20 });
-  if (reference.state !== "placed") return unavailable(reference.state);
+  if (reference.state !== 'placed') return unavailable(reference.state);
   if (content.paragraphs.some((paragraph) => paragraph.section !== setting.section_ordinal))
-    return unavailable("UnsupportedCreatedTablePageScope");
+    return unavailable('UnsupportedCreatedTablePageScope');
   const measured = measureCreatedBodyFlow(content, reference.boxes.page.width, measure, maxRows);
-  if (measured.state !== "measured") return measured;
+  if (measured.state !== 'measured') return measured;
   const paginated = paginateBodyRows(measured.rows, setting, bodyFlows, { maxRows });
-  if (paginated.state !== "paginated") return paginated;
-  if (paginated.limited) return unavailable("CreatedTablePageProjectionLimit");
+  if (paginated.state !== 'paginated') return paginated;
+  if (paginated.limited) return unavailable('CreatedTablePageProjectionLimit');
   const projected = projectCreatedBodyFlow(measured, paginated.rows, maxRows);
-  if (projected.state !== "projected") return projected;
+  if (projected.state !== 'projected') return projected;
   const { rows, boxes, hostNumberPrefixes, createdCellParagraphs } = projected;
   if (
     rows.some(
@@ -96,7 +96,7 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
         ),
     )
   )
-    return unavailable("InvalidCreatedTablePageProjection");
+    return unavailable('InvalidCreatedTablePageProjection');
   const sourceTexts = new Map(
     content.paragraphs.map((paragraph) => [
       `${paragraph.section}:${paragraph.paragraph}`,
@@ -106,12 +106,12 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
   const sourceRows = rows.filter(
     (row) =>
       !row.createdCell &&
-      (row.kind !== "text" ||
+      (row.kind !== 'text' ||
         row.startUnit < row.endUnit ||
-        sourceTexts.get(`${row.section}:${row.paragraph}`) === ""),
+        sourceTexts.get(`${row.section}:${row.paragraph}`) === ''),
   );
   const coverage = pageParagraphCoverage(content.paragraphs, sourceRows);
-  if (coverage.state !== "complete") return coverage;
+  if (coverage.state !== 'complete') return coverage;
   return {
     ...paginated,
     rows: rows.sort((a, b) => a.y - b.y || a.x - b.x),
@@ -121,6 +121,6 @@ export function layoutCreatedTableInlinePages(content, measure, maxRows = 20000)
     createdTablesPaginated: true,
     hostNumberPrefixes,
     createdCellParagraphs,
-    pageLayoutMode: "measured-created-inline",
+    pageLayoutMode: 'measured-created-inline',
   };
 }

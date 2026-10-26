@@ -1,13 +1,13 @@
-import { test, expect } from "bun:test";
-import { EditorState, getHistoryAvailability, createEditor } from "../../src/index.ts";
+import { test, expect } from 'bun:test';
+import { EditorState, getHistoryAvailability, createEditor } from '../../src/index.ts';
 function state(
   current?: number,
   revisions?: readonly number[],
-  status: "ready" | "refresh-required" | "empty" = "ready",
+  status: 'ready' | 'refresh-required' | 'empty' = 'ready',
 ) {
   return new EditorState({
-    editorId: "e",
-    documentId: "d",
+    editorId: 'e',
+    documentId: 'd',
     generation: 1,
     operationRevision: 1,
     viewRevision: 1,
@@ -17,7 +17,7 @@ function state(
     nativeHistoryRevisions: revisions,
   });
 }
-test("Native reachability, not positive revision or list index, determines undo/redo", () => {
+test('Native reachability, not positive revision or list index, determines undo/redo', () => {
   for (const [current, revisions, undo, redo] of [
     [0, [0], false, false],
     [149, [149, 0, 1], true, false],
@@ -33,7 +33,7 @@ test("Native reachability, not positive revision or list index, determines undo/
     });
   }
 });
-test("missing, stale, malformed, and incomplete history cannot enable actions", () => {
+test('missing, stale, malformed, and incomplete history cannot enable actions', () => {
   for (const [current, revisions] of [
     [undefined, undefined],
     [2, undefined],
@@ -49,17 +49,17 @@ test("missing, stale, malformed, and incomplete history cannot enable actions", 
       canRedo: false,
     });
   }
-  expect(() => state(1, [1, NaN])).toThrow("InvalidNumber");
-  expect(getHistoryAvailability(state(1, [1, 0], "refresh-required")).available).toBe(false);
+  expect(() => state(1, [1, NaN])).toThrow('InvalidNumber');
+  expect(getHistoryAvailability(state(1, [1, 0], 'refresh-required')).available).toBe(false);
 });
-test("owned immutable history survives selection updates and does not alias runtime buffers", async () => {
+test('owned immutable history survives selection updates and does not alias runtime buffers', async () => {
   const revisions = [1, 0];
   const editor = createEditor({
     runtimeFactory: () => ({
       async request(message) {
         return {
           kind: message.kind,
-          content: { format: "hwpx", paragraphs: [] },
+          content: { format: 'hwpx', paragraphs: [] },
           historyRevision: 1,
           historyRevisions: revisions,
         };
@@ -68,7 +68,7 @@ test("owned immutable history survives selection updates and does not alias runt
     }),
   });
   try {
-    await editor.load(new Uint8Array([1]), { format: "hwpx" });
+    await editor.load(new Uint8Array([1]), { format: 'hwpx' });
     const first = editor.getEditorState();
     revisions[1] = 100;
     expect(first.nativeHistoryRevisions).toEqual([1, 0]);

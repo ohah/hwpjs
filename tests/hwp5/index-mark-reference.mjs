@@ -1,22 +1,22 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { inflateRawSync, deflateRawSync } from "node:zlib";
-import { indexMarkActual } from "./index-mark.mjs";
-import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { checkBody } from "./body.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { inflateRawSync, deflateRawSync } from 'node:zlib';
+import { indexMarkActual } from './index-mark.mjs';
+import { documentRecords, documentActual, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { checkBody } from './body.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
   return b;
 };
 export function indexMarkReference(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/HWP5-nopassword-123456.hwp", import.meta.url);
-  if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
+  const path = new URL('../../reference/rhwp/samples/HWP5-nopassword-123456.hwp', import.meta.url);
+  if (!existsSync(path)) return { skipped: 'reference fixture unavailable' };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
-    raw = Buffer.from(cfb.findExact("/BodyText/Section0").content);
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
+    raw = Buffer.from(cfb.findExact('/BodyText/Section0').content);
   assert.equal(h.readUInt32LE(36) & (2 | 4 | 16 | 256 | 1024), 0);
   const b = h.readUInt32LE(36) & 1 ? inflateRawSync(raw) : raw;
   assert.deepEqual(call(3, Buffer.concat([h, raw]), b.length), b);
@@ -24,14 +24,14 @@ export function indexMarkReference(call, cfb) {
     stats = indexMarkActual(call, version, b);
   assert.deepEqual(stats, [3, 11, 0, 6]);
   checkBody(call, version, b);
-  const docRaw = Buffer.from(cfb.findExact("/DocInfo").content);
+  const docRaw = Buffer.from(cfb.findExact('/DocInfo').content);
   const doc = h.readUInt32LE(36) & 1 ? inflateRawSync(docRaw) : docRaw;
   const sections = [{ index: 0, bytes: b }];
   const documentReport = documentActual(call, h, doc, sections);
   const containerReport = containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes;
-  const body = nodes.findIndex((n) => n.name === "BodyText" && n.kind === 1);
-  const section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
+  const body = nodes.findIndex((n) => n.name === 'BodyText' && n.kind === 1);
+  const section = nodes.findIndex((n) => n.name === 'Section0' && n.parent === body);
   assert.ok(section >= 0);
   const full = (plain) => {
     const modified = nodes.map((n) => ({ ...n }));

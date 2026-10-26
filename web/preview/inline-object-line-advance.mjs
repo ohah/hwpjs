@@ -1,4 +1,4 @@
-import { paragraphLineAdvance } from "./paragraph-geometry.mjs";
+import { paragraphLineAdvance } from './paragraph-geometry.mjs';
 
 // Inline ink and the font's spacing basis have independent ownership.
 export function inlineObjectLineAdvance(
@@ -8,7 +8,7 @@ export function inlineObjectLineAdvance(
   minimum,
   { terminal = false } = {},
 ) {
-  return shape?.spacingFormat === "hwpx"
+  return shape?.spacingFormat === 'hwpx'
     ? Math.max(
         inkHeight,
         terminal ? glyphHeight : paragraphLineAdvance(shape, glyphHeight, minimum),

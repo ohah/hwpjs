@@ -1,5 +1,5 @@
-import { tableCollisionFootprints } from "./table-collision-footprints.mjs";
-import { rectanglesOverlap } from "./rectangles-overlap.mjs";
+import { tableCollisionFootprints } from './table-collision-footprints.mjs';
+import { rectanglesOverlap } from './rectangles-overlap.mjs';
 
 // Validate every fragment before the caller publishes any placement or rows.
 export function inspectFloatingTablePlacement(
@@ -11,9 +11,9 @@ export function inspectFloatingTablePlacement(
   groups,
 ) {
   const collected = tableCollisionFootprints(table, placement, insets, content);
-  if (collected.state !== "collected") return collected;
+  if (collected.state !== 'collected') return collected;
   if (collected.footprints.length !== (placement.fragmentCount ?? 1))
-    return { state: "unavailable", error: "InvalidFloatingTableFootprint" };
+    return { state: 'unavailable', error: 'InvalidFloatingTableFootprint' };
   for (const entry of collected.footprints) {
     const conflict = placements.find(
       (previous) =>
@@ -22,8 +22,8 @@ export function inspectFloatingTablePlacement(
     );
     if (conflict)
       return {
-        state: "unavailable",
-        error: "UnsupportedFloatingTableCollision",
+        state: 'unavailable',
+        error: 'UnsupportedFloatingTableCollision',
         section: table.section,
         tableNode: table.tableNode,
         pageOrdinal: entry.pageOrdinal,
@@ -39,8 +39,8 @@ export function inspectFloatingTablePlacement(
       )
     )
       return {
-        state: "unavailable",
-        error: "FloatingGroupTableCollision",
+        state: 'unavailable',
+        error: 'FloatingGroupTableCollision',
         section: table.section,
         tableNode: table.tableNode,
         pageOrdinal: entry.pageOrdinal,

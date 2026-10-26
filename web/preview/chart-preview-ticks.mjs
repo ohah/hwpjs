@@ -16,8 +16,8 @@ export function chartPreviewTicks(source, percent = false) {
   return source.map((tick) => {
     const number = percent ? tick.value * 100 : tick.value;
     const text = Number.isFinite(number)
-      ? Number(number.toPrecision(4)).toString() + (percent ? "%" : "")
-      : tick.value.toExponential(3) + "×100%";
+      ? Number(number.toPrecision(4)).toString() + (percent ? '%' : '')
+      : tick.value.toExponential(3) + '×100%';
     return { fraction: tick.fraction, text };
   });
 }

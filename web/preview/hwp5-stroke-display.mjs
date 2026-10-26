@@ -1,4 +1,4 @@
-import { colorrefCss } from "./colorref-css.mjs";
+import { colorrefCss } from './colorref-css.mjs';
 
 // HWP5 LineType is not the common display enum: raw2=Dash, raw3=Dot.
 // Raw source values stay in the native style snapshot, never patched here.

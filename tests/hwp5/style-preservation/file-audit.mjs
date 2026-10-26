@@ -1,41 +1,41 @@
-import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { runInNewContext } from "node:vm";
-import { deflateRawSync, inflateRawSync } from "node:zlib";
-import { createCfbReader } from "../../../js/cfb.mjs";
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { runInNewContext } from 'node:vm';
+import { deflateRawSync, inflateRawSync } from 'node:zlib';
+import { createCfbReader } from '../../../js/cfb.mjs';
 
 const probe = resolve(process.argv[2]);
-const artifacts = mkdtempSync(join(tmpdir(), "hwpjs-style-preservation-"));
+const artifacts = mkdtempSync(join(tmpdir(), 'hwpjs-style-preservation-'));
 const context = {
   module: { exports: {} },
   require: createRequire(import.meta.url),
   Buffer,
   process,
 };
-runInNewContext(readFileSync("legacy/cfb.js", "utf8"), context);
+runInNewContext(readFileSync('legacy/cfb.js', 'utf8'), context);
 const legacy = context.module.exports;
-const rust = createRequire(import.meta.url)("../../../legacy/rust/packages/hwpjs/dist/index.js");
-const writer = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+const rust = createRequire(import.meta.url)('../../../legacy/rust/packages/hwpjs/dist/index.js');
+const writer = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
 
 // Independent framing walk. No Zig-produced expected offsets or payloads.
 function records(bytes) {
   const result = [];
   for (let offset = 0; offset < bytes.length;) {
-    assert(offset + 4 <= bytes.length, "truncated record header");
+    assert(offset + 4 <= bytes.length, 'truncated record header');
     const start = offset,
       bits = bytes.readUInt32LE(offset);
     offset += 4;
     let length = bits >>> 20;
     if (length === 4095) {
-      assert(offset + 4 <= bytes.length, "truncated extended size");
+      assert(offset + 4 <= bytes.length, 'truncated extended size');
       length = bytes.readUInt32LE(offset);
       offset += 4;
     }
-    assert(length <= bytes.length - offset, "truncated record payload");
+    assert(length <= bytes.length - offset, 'truncated record payload');
     result.push({
       tag: bits & 1023,
       level: (bits >>> 10) & 1023,
@@ -58,12 +58,12 @@ function inspect(input) {
         Buffer.from(entry.content ?? []),
       );
   });
-  const header = streams.get("FileHeader");
+  const header = streams.get('FileHeader');
   assert(header && header.length >= 256);
   const compressed = Boolean(header.readUInt32LE(36) & 1);
   const decode = (value) =>
     compressed ? inflateRawSync(value, { maxOutputLength: 32 * 1024 * 1024 }) : value;
-  const info = decode(streams.get("DocInfo"));
+  const info = decode(streams.get('DocInfo'));
   const styleCount = records(info).filter((r) => r.tag === 26).length;
   const sections = [...streams]
     .filter(([path]) => /^BodyText\/Section\d+$/.test(path))
@@ -77,8 +77,8 @@ function inspect(input) {
 }
 
 function headers(value, out = []) {
-  if (!value || typeof value !== "object") return out;
-  if (Object.hasOwn(value, "para_header")) out.push(value.para_header);
+  if (!value || typeof value !== 'object') return out;
+  if (Object.hasOwn(value, 'para_header')) out.push(value.para_header);
   for (const child of Object.values(value)) headers(child, out);
   return out;
 }
@@ -92,7 +92,7 @@ function verify(beforeBytes, afterBytes, section, paragraph, style) {
   assert(heading);
   const expected = Buffer.from(target.bytes);
   expected[heading.payload + 10] = style;
-  assert.deepEqual(after.sections[section].bytes, expected, "only selected style byte may change");
+  assert.deepEqual(after.sections[section].bytes, expected, 'only selected style byte may change');
   for (const [path, bytes] of before.streams) {
     if (path !== target.path)
       assert.deepEqual(after.streams.get(path), bytes, `unselected stream ${path}`);
@@ -113,8 +113,8 @@ function verify(beforeBytes, afterBytes, section, paragraph, style) {
   // Rust can expose the same source paragraph in cell and control projections.
   // The independent byte oracle above fixes the exact source owner; every JSON
   // projection must then change only that reference, with all other data equal.
-  assert(changes > 0, "Rust must observe the edited source paragraph");
-  assert.deepEqual(newJson, oldJson, "Rust JSON must change only the selected paragraph style");
+  assert(changes > 0, 'Rust must observe the edited source paragraph');
+  assert.deepEqual(newJson, oldJson, 'Rust JSON must change only the selected paragraph style');
 }
 
 let edited = 0,
@@ -129,7 +129,7 @@ function run(inputPath, section, paragraph, style, permission, succeeds, label) 
   const result = spawnSync(
     probe,
     [inputPath, output, String(section), String(paragraph), String(style), permission],
-    { encoding: "utf8", maxBuffer: 1024 * 1024 },
+    { encoding: 'utf8', maxBuffer: 1024 * 1024 },
   );
   if (result.error) throw result.error;
   assert.equal(result.signal, null, result.stderr);
@@ -150,15 +150,15 @@ function inject(input, change, name, addWitness = true) {
   writer.parse(input, { strict: true });
   const doc = writer.document();
   const index = doc.nodes.findIndex(
-    (n) => n.name === "Section0" && doc.nodes[n.parent]?.name === "BodyText",
+    (n) => n.name === 'Section0' && doc.nodes[n.parent]?.name === 'BodyText',
   );
   const parsed = inspect(input),
     decoded = parsed.sections[0].bytes;
   const changed = change(decoded);
   doc.nodes[index].content = parsed.compressed ? deflateRawSync(changed) : changed;
-  if (addWitness && !doc.nodes.some((n) => n.name === "UnmodelledWitness" && n.parent === 0))
+  if (addWitness && !doc.nodes.some((n) => n.name === 'UnmodelledWitness' && n.parent === 0))
     doc.nodes.push({
-      name: "UnmodelledWitness",
+      name: 'UnmodelledWitness',
       parent: 0,
       content: Buffer.from([0x90, 0x81, 0x72, 0x63]),
     });
@@ -169,7 +169,7 @@ function inject(input, change, name, addWitness = true) {
 }
 
 try {
-  for (const name of ["example", "noori", "table", "footnote-endnote"]) {
+  for (const name of ['example', 'noori', 'table', 'footnote-endnote']) {
     const path = `legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`,
       input = readFileSync(path),
       original = inspect(input);
@@ -178,26 +178,26 @@ try {
       const old = original.sections[0].bytes[paraRecords[index].payload + 10];
       assert(original.styleCount > 1);
       const style = (old + 1) % original.styleCount;
-      const after = run(path, 0, index, style, "allow-stale-layout", true, `${name}-${index}`);
+      const after = run(path, 0, index, style, 'allow-stale-layout', true, `${name}-${index}`);
       verify(input, after, 0, index, style);
       if (paraRecords[index].level > 0) nested++;
       edited++;
     }
     const firstStyle = original.sections[0].bytes[paraRecords[0].payload + 10];
-    const noop = run(path, 0, 0, firstStyle, "require-layout", true, `${name}-noop`);
-    assert.deepEqual(noop, input, "no edit must preserve the whole original file");
+    const noop = run(path, 0, 0, firstStyle, 'require-layout', true, `${name}-noop`);
+    assert.deepEqual(noop, input, 'no edit must preserve the whole original file');
     run(
       path,
       0,
       0,
       (firstStyle + 1) % original.styleCount,
-      "require-layout",
+      'require-layout',
       false,
       `${name}-layout`,
     );
   }
 
-  const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/example.hwp");
+  const input = readFileSync('legacy/rust/crates/hwp-core/tests/fixtures/example.hwp');
   const base = inspect(input),
     first = records(base.sections[0].bytes).find((r) => r.tag === 66);
   const old = base.sections[0].bytes[first.payload + 10],
@@ -209,17 +209,17 @@ try {
   writer.parse(input, { strict: true });
   const uncompressedDoc = writer.document();
   for (const node of uncompressedDoc.nodes) {
-    if (node.name === "FileHeader" && node.parent === 0) {
+    if (node.name === 'FileHeader' && node.parent === 0) {
       node.content = Buffer.from(node.content);
       node.content.writeUInt32LE(node.content.readUInt32LE(36) & ~1, 36);
     } else if (
-      (node.name === "DocInfo" && node.parent === 0) ||
-      (/^Section\d+$/.test(node.name) && uncompressedDoc.nodes[node.parent]?.name === "BodyText") ||
-      (["DefaultJScript", "JScriptVersion"].includes(node.name) &&
-        uncompressedDoc.nodes[node.parent]?.name === "Scripts")
+      (node.name === 'DocInfo' && node.parent === 0) ||
+      (/^Section\d+$/.test(node.name) && uncompressedDoc.nodes[node.parent]?.name === 'BodyText') ||
+      (['DefaultJScript', 'JScriptVersion'].includes(node.name) &&
+        uncompressedDoc.nodes[node.parent]?.name === 'Scripts')
     ) {
       node.content = inflateRawSync(node.content);
-      if (node.name === "DocInfo")
+      if (node.name === 'DocInfo')
         for (const record of records(node.content)) {
           if (record.tag !== 18) continue;
           const flags = node.content.readUInt16LE(record.payload);
@@ -228,7 +228,7 @@ try {
     }
   }
   const uncompressedInput = Buffer.from(writer.write(uncompressedDoc));
-  const uncompressedPath = join(artifacts, "uncompressed-input.hwp");
+  const uncompressedPath = join(artifacts, 'uncompressed-input.hwp');
   writeFileSync(uncompressedPath, uncompressedInput);
   assert.equal(inspect(uncompressedInput).compressed, false);
   const uncompressedAfter = run(
@@ -236,9 +236,9 @@ try {
     0,
     0,
     style,
-    "allow-stale-layout",
+    'allow-stale-layout',
     true,
-    "uncompressed-edited",
+    'uncompressed-edited',
   );
   verify(uncompressedInput, uncompressedAfter, 0, 0, style);
   uncompressedCases++;
@@ -247,20 +247,20 @@ try {
   writer.parse(input, { strict: true });
   const multiDoc = writer.document();
   const bodyIndex = multiDoc.nodes.findIndex(
-    (n) => n.kind === 1 && n.name === "BodyText" && n.parent === 0,
+    (n) => n.kind === 1 && n.name === 'BodyText' && n.parent === 0,
   );
-  const firstSection = multiDoc.nodes.find((n) => n.name === "Section0" && n.parent === bodyIndex);
-  multiDoc.nodes.push({ name: "Section1", parent: bodyIndex, content: firstSection.content });
-  const infoNode = multiDoc.nodes.find((n) => n.name === "DocInfo" && n.parent === 0);
+  const firstSection = multiDoc.nodes.find((n) => n.name === 'Section0' && n.parent === bodyIndex);
+  multiDoc.nodes.push({ name: 'Section1', parent: bodyIndex, content: firstSection.content });
+  const infoNode = multiDoc.nodes.find((n) => n.name === 'DocInfo' && n.parent === 0);
   const info = inflateRawSync(infoNode.content),
     properties = records(info).find((r) => r.tag === 16);
   info.writeUInt16LE(2, properties.payload);
   infoNode.content = deflateRawSync(info);
   const multiInput = Buffer.from(writer.write(multiDoc));
-  const multiPath = join(artifacts, "two-sections-input.hwp");
+  const multiPath = join(artifacts, 'two-sections-input.hwp');
   writeFileSync(multiPath, multiInput);
   assert.equal(inspect(multiInput).sections.length, 2);
-  const multiAfter = run(multiPath, 1, 0, style, "allow-stale-layout", true, "two-sections-edited");
+  const multiAfter = run(multiPath, 1, 0, style, 'allow-stale-layout', true, 'two-sections-edited');
   verify(multiInput, multiAfter, 1, 0, style);
   multiSectionCases++;
   // Preserve an unknown extended-size root record and the first header's tail.
@@ -282,9 +282,9 @@ try {
         opaque,
       ]);
     },
-    "unknown-header-and-record",
+    'unknown-header-and-record',
   );
-  const after = run(injected.path, 0, 0, style, "allow-stale-layout", true, "unknown-edited");
+  const after = run(injected.path, 0, 0, style, 'allow-stale-layout', true, 'unknown-edited');
   verify(injected.bytes, after, 0, 0, style);
   unknownCases++;
 
@@ -298,7 +298,7 @@ try {
       header.writeUInt32LE(first.end - first.payload, 4);
       return Buffer.concat([bytes.subarray(0, first.start), header, bytes.subarray(first.payload)]);
     },
-    "extended-short-header",
+    'extended-short-header',
     false,
   );
   const extendedAfter = run(
@@ -306,9 +306,9 @@ try {
     0,
     0,
     style,
-    "allow-stale-layout",
+    'allow-stale-layout',
     true,
-    "extended-short-edited",
+    'extended-short-edited',
   );
   verify(extendedShort.bytes, extendedAfter, 0, 0, style);
   unknownCases++;
@@ -322,7 +322,7 @@ try {
       opaque[4] = 0xbb;
       return Buffer.concat([bytes.subarray(0, first.end), opaque, bytes.subarray(first.end)]);
     },
-    "shifted-binding",
+    'shifted-binding',
   );
   const shiftedRaw = inspect(shifted.bytes).sections[0].bytes;
   const heading = records(shiftedRaw)
@@ -335,9 +335,9 @@ try {
     0,
     lastIndex,
     lastStyle,
-    "allow-stale-layout",
+    'allow-stale-layout',
     true,
-    "shifted-edited",
+    'shifted-edited',
   );
   verify(shifted.bytes, shiftedAfter, 0, lastIndex, lastStyle);
   unknownCases++;
@@ -359,9 +359,9 @@ try {
         bytes.subarray(text.end),
       ]);
     },
-    "stale-text-length",
+    'stale-text-length',
   );
-  run(badText.path, 0, 0, style, "allow-stale-layout", false, "stale-text-length-output");
+  run(badText.path, 0, 0, style, 'allow-stale-layout', false, 'stale-text-length-output');
 
   // Oracle adversarial controls: ignored edit, wrong owner and lost opaque
   // bytes must all fail even when the candidate is a readable canonical CFB.
@@ -378,7 +378,7 @@ try {
       value[other.payload + 10] = style;
       return value;
     },
-    "wrong-owner",
+    'wrong-owner',
     false,
   );
   assert.throws(
@@ -394,7 +394,7 @@ try {
       value[value.length - 1] ^= 1;
       return value;
     },
-    "lost-opaque",
+    'lost-opaque',
   );
   assert.throws(
     () => verify(injected.bytes, lostOpaque.bytes, 0, 0, style),
@@ -402,10 +402,10 @@ try {
   );
   oracleCounterexamples++;
 
-  const originalPath = "legacy/rust/crates/hwp-core/tests/fixtures/example.hwp";
-  run(originalPath, 0, 0, 255, "allow-stale-layout", false, "invalid-style");
-  run(originalPath, 100, 0, 0, "allow-stale-layout", false, "invalid-section");
-  run(originalPath, 0, 100000, 0, "allow-stale-layout", false, "invalid-paragraph");
+  const originalPath = 'legacy/rust/crates/hwp-core/tests/fixtures/example.hwp';
+  run(originalPath, 0, 0, 255, 'allow-stale-layout', false, 'invalid-style');
+  run(originalPath, 100, 0, 0, 'allow-stale-layout', false, 'invalid-section');
+  run(originalPath, 0, 100000, 0, 'allow-stale-layout', false, 'invalid-paragraph');
   console.log(
     JSON.stringify({
       real_files: 4,
@@ -416,7 +416,7 @@ try {
       unknown_cases: unknownCases,
       refused,
       oracle_counterexamples: oracleCounterexamples,
-      independent_oracles: ["legacy CFB.js", "Node zlib", "Rust toJson"],
+      independent_oracles: ['legacy CFB.js', 'Node zlib', 'Rust toJson'],
       artifacts,
     }),
   );

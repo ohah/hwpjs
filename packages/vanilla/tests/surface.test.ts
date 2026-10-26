@@ -1,7 +1,7 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { createCanvasSurface } from "../src/surface.ts";
-import { EditorState } from "../../core/src/state/editor-state.ts";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createCanvasSurface } from '../src/surface.ts';
+import { EditorState } from '../../core/src/state/editor-state.ts';
 
 function fixture(ready = false) {
   const observers = new Set<any>(),
@@ -17,7 +17,7 @@ function fixture(ready = false) {
     activeElement: null,
     defaultView: {
       AbortController,
-      navigator: { platform: "test" },
+      navigator: { platform: 'test' },
       setInterval,
       clearInterval,
       setTimeout,
@@ -44,10 +44,10 @@ function fixture(ready = false) {
     parent: any = null;
     style: any = {};
     dataset: any = {};
-    value = "";
+    value = '';
     selectionStart = 0;
     selectionEnd = 0;
-    selectionDirection = "forward";
+    selectionDirection = 'forward';
     scrollTop = 0;
     scrollLeft = 0;
     clientWidth = 800;
@@ -70,7 +70,7 @@ function fixture(ready = false) {
     }
     focus() {
       doc.activeElement = this;
-      this.dispatchEvent(new Event("focus"));
+      this.dispatchEvent(new Event('focus'));
     }
     blur() {
       doc.activeElement = null;
@@ -90,14 +90,14 @@ function fixture(ready = false) {
   let listener: any,
     active = false;
   const state = new EditorState({
-    editorId: "test",
+    editorId: 'test',
     documentId: null,
     generation: 0,
     operationRevision: 0,
     viewRevision: 0,
     stateVersion: 0,
-    status: ready ? "ready" : "empty",
-    content: ready ? { format: "hwpx", paragraphs: [], limited: false } : undefined,
+    status: ready ? 'ready' : 'empty',
+    content: ready ? { format: 'hwpx', paragraphs: [], limited: false } : undefined,
   });
   const editor: any = {
     getEditorState: () => state,
@@ -108,14 +108,14 @@ function fixture(ready = false) {
       };
     },
     acquireInputSurface() {
-      if (active) throw Error("SurfaceAlreadyAttached");
+      if (active) throw Error('SurfaceAlreadyAttached');
       active = true;
       return {
-        id: "l",
+        id: 'l',
         generation: 1,
         isActive: () => active,
         request: async () => {
-          throw Error("UnexpectedRequest");
+          throw Error('UnexpectedRequest');
         },
         publishSelection: async () => state,
         release() {
@@ -125,7 +125,7 @@ function fixture(ready = false) {
       };
     },
     readResource: async () => {
-      throw Error("UnexpectedResource");
+      throw Error('UnexpectedResource');
     },
     dispose() {
       editorDisposals++;
@@ -148,7 +148,7 @@ function fixture(ready = false) {
     },
   };
 }
-test("multiple scoped mounts focus in their own realm and cleanup preserves editor and sibling nodes", async () => {
+test('multiple scoped mounts focus in their own realm and cleanup preserves editor and sibling nodes', async () => {
   const a = fixture(),
     b = fixture();
   const x = createCanvasSurface({ root: a.root as any, editor: a.editor }),
@@ -173,7 +173,7 @@ test("multiple scoped mounts focus in their own realm and cleanup preserves edit
   await remount.dispose();
   assert.equal(a.releases, 2);
 });
-test("failed second lease acquisition cleans up only its own subtree and observer", async () => {
+test('failed second lease acquisition cleans up only its own subtree and observer', async () => {
   const a = fixture();
   const first = createCanvasSurface({ root: a.root as any, editor: a.editor });
   assert.throws(
@@ -186,18 +186,18 @@ test("failed second lease acquisition cleans up only its own subtree and observe
   assert.equal(a.observers.size, 0);
 });
 
-test("ready snapshot mounts using canonical renderer and capability initialization", async () => {
+test('ready snapshot mounts using canonical renderer and capability initialization', async () => {
   const a = fixture(true);
   const surface = createCanvasSurface({ root: a.root as any, editor: a.editor });
-  assert.equal(surface.canRequestHistory("undo"), false);
-  assert.equal(surface.canRequestHistory("redo"), false);
-  assert.equal(surface.requestHistory("undo"), false);
-  assert.equal(surface.requestHistory("redo"), false);
+  assert.equal(surface.canRequestHistory('undo'), false);
+  assert.equal(surface.canRequestHistory('redo'), false);
+  assert.equal(surface.requestHistory('undo'), false);
+  assert.equal(surface.requestHistory('redo'), false);
   assert.equal(surface.getSelection(), null);
   assert.equal(surface.setScale(1), true);
-  assert.equal(await surface.flushComposition(), "unchanged");
+  assert.equal(await surface.flushComposition(), 'unchanged');
   await surface.dispose();
   assert.equal(a.frames.size, 0);
-  assert.equal(surface.canRequestHistory("undo"), false);
-  assert.equal(surface.requestHistory("undo"), false);
+  assert.equal(surface.canRequestHistory('undo'), false);
+  assert.equal(surface.requestHistory('undo'), false);
 });

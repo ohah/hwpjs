@@ -2,8 +2,8 @@ import {
   hwp5TableGeometry,
   hwp5TablePagination,
   hwp5TableUnsupportedObjectFlags,
-} from "./hwp5-table-geometry.mjs";
-import { hwp5TableFlags } from "./hwp5-table-flags.mjs";
+} from './hwp5-table-geometry.mjs';
+import { hwp5TableFlags } from './hwp5-table-flags.mjs';
 /** Source adapters only; placement policy still decides whether it is usable. */
 export function attachHwp5TableGeometry(content) {
   content.tableGeometryErrors = [];
@@ -11,7 +11,7 @@ export function attachHwp5TableGeometry(content) {
     delete table.sourceGeometry;
     delete table.pagination;
     try {
-      if (!table.layoutSource) throw new Error("MissingTableLayoutSource");
+      if (!table.layoutSource) throw new Error('MissingTableLayoutSource');
       const geometry = hwp5TableGeometry(table.layoutSource),
         pagination = hwp5TablePagination(table.layoutSource);
       table.sourceGeometry = geometry;

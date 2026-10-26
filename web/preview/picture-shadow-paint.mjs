@@ -1,9 +1,9 @@
-import { pictureShadowBounds } from "./picture-shadow-bounds.mjs";
-import { paintPictureBorder } from "./picture-border-paint.mjs";
-import { pictureShadowRasterSize } from "./picture-shadow-raster-budget.mjs";
+import { pictureShadowBounds } from './picture-shadow-bounds.mjs';
+import { paintPictureBorder } from './picture-border-paint.mjs';
+import { pictureShadowRasterSize } from './picture-shadow-raster-budget.mjs';
 
 export function paintPictureShadow(ctx, bitmap, item, x, y, crop, border, plan) {
-  const bounds = pictureShadowBounds(plan, border.state === "solid" ? border.width / 75 : 0);
+  const bounds = pictureShadowBounds(plan, border.state === 'solid' ? border.width / 75 : 0);
   if (
     !bounds ||
     ![x, y, item.width, item.height].every(Number.isFinite) ||
@@ -22,8 +22,8 @@ export function paintPictureShadow(ctx, bitmap, item, x, y, crop, border, plan) 
   const { width, height } = size;
   const make = () => {
     const canvas =
-      ctx.canvas?.ownerDocument?.createElement("canvas") ??
-      (typeof OffscreenCanvas === "function" ? new OffscreenCanvas(width, height) : null);
+      ctx.canvas?.ownerDocument?.createElement('canvas') ??
+      (typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(width, height) : null);
     if (canvas) {
       canvas.width = width;
       canvas.height = height;
@@ -34,8 +34,8 @@ export function paintPictureShadow(ctx, bitmap, item, x, y, crop, border, plan) 
   try {
     content = make();
     result = make();
-    const source = content?.getContext("2d"),
-      effect = result?.getContext("2d");
+    const source = content?.getContext('2d'),
+      effect = result?.getContext('2d');
     if (!source || !effect) return false;
     source.scale(rasterScale, rasterScale);
     source.drawImage(
@@ -52,7 +52,7 @@ export function paintPictureShadow(ctx, bitmap, item, x, y, crop, border, plan) 
     // This surface is already in native pixel units. Keep the stroke in those
     // same units instead of composing a second raw-unit affine transform.
     const rasterBorder =
-      border.state === "solid"
+      border.state === 'solid'
         ? {
             ...border,
             width: border.width / 75,
@@ -76,11 +76,11 @@ export function paintPictureShadow(ctx, bitmap, item, x, y, crop, border, plan) 
     effect.drawImage(content, 0, 0);
     ctx.save();
     try {
-      ctx.shadowColor = "rgba(0,0,0,0)";
+      ctx.shadowColor = 'rgba(0,0,0,0)';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
-      ctx.filter = "none";
+      ctx.filter = 'none';
       ctx.drawImage(
         result,
         0,

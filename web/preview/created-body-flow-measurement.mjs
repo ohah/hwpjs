@@ -1,11 +1,11 @@
-import { layoutCreatedTable } from "./created-table-layout.mjs";
-import { measureCreatedTableHost } from "./created-table-host-measurement.mjs";
-import { layoutContent } from "./layout.mjs";
-import { createdTableInlinePolicy } from "./created-table-inline-policy.mjs";
-import { measureSourceInlineTables } from "./source-table-inline-measurement.mjs";
-import { layoutInlineTablePageContent } from "./inline-table-page-content.mjs";
-import { bindCreatedSourcePlacements } from "./created-source-placement-context.mjs";
-import { sourceTableLineReferences } from "./source-table-line-references.mjs";
+import { layoutCreatedTable } from './created-table-layout.mjs';
+import { measureCreatedTableHost } from './created-table-host-measurement.mjs';
+import { layoutContent } from './layout.mjs';
+import { createdTableInlinePolicy } from './created-table-inline-policy.mjs';
+import { measureSourceInlineTables } from './source-table-inline-measurement.mjs';
+import { layoutInlineTablePageContent } from './inline-table-page-content.mjs';
+import { bindCreatedSourcePlacements } from './created-source-placement-context.mjs';
+import { sourceTableLineReferences } from './source-table-line-references.mjs';
 
 // Whole-line reservations shared by ordinary body and body-plus-note pagination.
 export function measureCreatedBodyFlow(
@@ -16,29 +16,29 @@ export function measureCreatedBodyFlow(
   preparedSource = null,
   createdCellOptions = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   const cells = new Map(),
     hosts = new Map(),
     sequence = [],
     measuredHosts = new Map();
   const source = preparedSource ?? measureSourceInlineTables(content, measure, maxRows);
-  if (source.state !== "measured") return source;
+  if (source.state !== 'measured') return source;
   let remaining = maxRows - source.rowCount;
   for (const key of source.hosts.keys()) hosts.set(key, []);
   for (const key of source.pictures?.keys() ?? []) hosts.set(key, []);
   for (const key of source.objects?.keys() ?? []) hosts.set(key, []);
   for (const table of content.createdTables ?? []) {
     if (!createdTableInlinePolicy(table, content.format))
-      return unavailable("UnsupportedCreatedTableInlinePolicy");
+      return unavailable('UnsupportedCreatedTableInlinePolicy');
     if (cells.has(table.identity) || !content.paragraphs.some((p) => p.section === table.section))
-      return unavailable("InvalidCreatedTablePageOwner");
+      return unavailable('InvalidCreatedTablePageOwner');
     if (
       !content.paragraphs.some(
         (p) => p.section === table.section && p.paragraph === table.hostParagraph,
       )
     )
-      return unavailable("MissingCreatedTablePageHost");
-    if (remaining < 1) return unavailable("CreatedTablePageProjectionLimit");
+      return unavailable('MissingCreatedTablePageHost');
+    if (remaining < 1) return unavailable('CreatedTablePageProjectionLimit');
     let flow;
     try {
       flow = layoutCreatedTable(table, measure, {
@@ -51,9 +51,9 @@ export function measureCreatedBodyFlow(
     } catch (error) {
       if (
         [
-          "InvalidTableGrid",
-          "InvalidCreatedTableLayout",
-          "CreatedTableLayoutRowBudgetExceeded",
+          'InvalidTableGrid',
+          'InvalidCreatedTableLayout',
+          'CreatedTableLayoutRowBudgetExceeded',
         ].includes(error.message)
       )
         return unavailable(error.message);
@@ -73,7 +73,7 @@ export function measureCreatedBodyFlow(
       createdCellOptions.includeTerminalAfter !== false || paragraph !== content.paragraphs.at(-1);
     const key = `${paragraph.section}:${paragraph.paragraph}`,
       entries = hosts.get(key);
-    if (remaining < 1) return unavailable("CreatedTablePageProjectionLimit");
+    if (remaining < 1) return unavailable('CreatedTablePageProjectionLimit');
     if (!entries) {
       const measured = layoutContent(
         { paragraphs: [paragraph], limited: false },
@@ -82,7 +82,7 @@ export function measureCreatedBodyFlow(
         remaining,
         { documentBody: true, includeTerminalAfter },
       );
-      if (measured.limited) return unavailable("CreatedTablePageProjectionLimit");
+      if (measured.limited) return unavailable('CreatedTablePageProjectionLimit');
       remaining -= measured.rows.length;
       sequence.push(...measured.rows);
       continue;
@@ -104,7 +104,7 @@ export function measureCreatedBodyFlow(
       allowSourceTableOverflow: createdCellOptions.allowSourceTableOverflow ?? false,
       includeTerminalAfter,
     });
-    if (measured.state !== "measured") return measured;
+    if (measured.state !== 'measured') return measured;
     const rowsByLine = measured.lines.map(() => []),
       anchorsByLine = measured.lines.map(() => []),
       prefixesByLine = measured.lines.map(() => []);
@@ -116,7 +116,7 @@ export function measureCreatedBodyFlow(
     try {
       sequence.push(
         ...measured.lines.map((line) => ({
-          kind: "gap",
+          kind: 'gap',
           section: paragraph.section,
           paragraph: paragraph.paragraph,
           height: line.height,
@@ -133,9 +133,9 @@ export function measureCreatedBodyFlow(
     }
   }
   if (remaining < 0 || measuredHosts.size !== hosts.size)
-    return unavailable("CreatedTablePageProjectionLimit");
+    return unavailable('CreatedTablePageProjectionLimit');
   return {
-    state: "measured",
+    state: 'measured',
     rows: sequence,
     cells,
     sourceTables: source.tables,
@@ -157,24 +157,24 @@ export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
     maxRows +
     [...measured.measuredHosts.values()].reduce((sum, host) => sum + host.lines.length, 0);
   if (!Number.isSafeInteger(queueLimit) || queueLimit < 0)
-    return { state: "unavailable", error: "CreatedTablePageProjectionLimit" };
+    return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
   for (let cursor = 0; cursor < queue.length; cursor++) {
     const placed = queue[cursor];
     if (queue.length > queueLimit || rows.length + hostNumberPrefixes.length > maxRows)
-      return { state: "unavailable", error: "CreatedTablePageProjectionLimit" };
+      return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
     if (placed.createdHost === undefined) {
       rows.push(placed);
       continue;
     }
     const lineKey = `${placed.createdHost}:${placed.hostLineOrdinal}`;
     if (seenLines.has(lineKey))
-      return { state: "unavailable", error: "DuplicateCreatedTableHostLine" };
+      return { state: 'unavailable', error: 'DuplicateCreatedTableHostLine' };
     seenLines.add(lineKey);
     const host = measured.measuredHosts.get(placed.createdHost),
       line = host?.lines[placed.hostLineOrdinal];
-    if (!line) return { state: "unavailable", error: "MissingCreatedTablePageHost" };
+    if (!line) return { state: 'unavailable', error: 'MissingCreatedTablePageHost' };
     if (!Number.isFinite(placed.height) || Math.abs(placed.height - line.height) > 1e-8)
-      return { state: "unavailable", error: "SplitCreatedTableHostLine" };
+      return { state: 'unavailable', error: 'SplitCreatedTableHostLine' };
     const placement = {
       pageOrdinal: placed.pageOrdinal,
       columnOrdinal: placed.columnOrdinal,
@@ -203,11 +203,11 @@ export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
           ? `source:${anchor.tableNode}`
           : `created:${anchor.createdTableIdentity}`;
       if (emitted.has(identity))
-        return { state: "unavailable", error: "DuplicateCreatedTablePageCell" };
+        return { state: 'unavailable', error: 'DuplicateCreatedTablePageCell' };
       emitted.add(identity);
       if (anchor.createdTableIdentity === undefined) {
         const source = measured.sourceTables.get(anchor.tableNode);
-        if (!source) return { state: "unavailable", error: "MissingCreatedTablePageHost" };
+        if (!source) return { state: 'unavailable', error: 'MissingCreatedTablePageHost' };
         const projected = layoutInlineTablePageContent(
           source.table,
           source.measured,
@@ -230,13 +230,13 @@ export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
             captionReservation: source.captionReservation,
           },
         );
-        if (projected.state !== "placed") return projected;
+        if (projected.state !== 'placed') return projected;
         const owner = placed.positionOwnerTableNode ?? placed.tableNode;
         const nested = bindCreatedSourcePlacements(projected.rows, projected.boxes, {
           baseDepth: (placed.depth ?? 0) + 1,
           positionOwnerTableNode: owner,
         });
-        if (nested.state !== "bound") return nested;
+        if (nested.state !== 'bound') return nested;
         queue.push(...nested.rows);
         boxes.push(
           ...projected.boxes.map((box) => ({
@@ -290,9 +290,9 @@ export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
     emitted.size !== measured.cells.size + measured.sourceTables.size ||
     rows.length + hostNumberPrefixes.length > maxRows
   )
-    return { state: "unavailable", error: "CreatedTablePageProjectionLimit" };
+    return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
   return {
-    state: "projected",
+    state: 'projected',
     rows,
     boxes,
     hostNumberPrefixes,

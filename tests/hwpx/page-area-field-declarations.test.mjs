@@ -1,16 +1,16 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
-import { execFileSync } from "../../tools/oracle-process.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createHwpxEditor } from '../../js/hwpx-editor.mjs';
+import { execFileSync } from '../../tools/oracle-process.mjs';
 
-test("actual hyperlink host page declaration survives field edit independent XML history and Worker reload", async (t) => {
-  assert(process.env.HWPJS_TEST_WASM, "Explicit candidate required");
+test('actual hyperlink host page declaration survives field edit independent XML history and Worker reload', async (t) => {
+  assert(process.env.HWPJS_TEST_WASM, 'Explicit candidate required');
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM),
-    path = "reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx";
+    path = 'reference/rhwp/samples/hwpx/143E433F503322BD33.hwpx';
   const input = readFileSync(path),
     editor = await createHwpxEditor(wasm),
-    marker = "검증😀<&";
+    marker = '검증😀<&';
   let saved;
   try {
     editor.open(input);
@@ -26,21 +26,21 @@ test("actual hyperlink host page declaration survives field edit independent XML
     assert.deepEqual(editor.pageAreaDeclarations(0), declarations);
     saved = editor.save();
     const request = {
-      before: input.toString("base64"),
-      after: Buffer.from(saved).toString("base64"),
+      before: input.toString('base64'),
+      after: Buffer.from(saved).toString('base64'),
       paragraph: 49,
-      beginId: "1687662581",
+      beginId: '1687662581',
       text: marker,
     };
-    for (const flags of [[], ["-O"]]) {
-      execFileSync("python3", [...flags, "tools/hwpx-field-edit-oracle.py"], {
+    for (const flags of [[], ['-O']]) {
+      execFileSync('python3', [...flags, 'tools/hwpx-field-edit-oracle.py'], {
         input: JSON.stringify(request),
         timeout: 30000,
       });
       assert.throws(
         () =>
-          execFileSync("python3", [...flags, "tools/hwpx-field-edit-oracle.py"], {
-            input: JSON.stringify({ ...request, text: "wrong" }),
+          execFileSync('python3', [...flags, 'tools/hwpx-field-edit-oracle.py'], {
+            input: JSON.stringify({ ...request, text: 'wrong' }),
             timeout: 30000,
           }),
         (error) => error.status === 1 && /ValueError/.test(String(error.stderr)),
@@ -70,7 +70,7 @@ test("actual hyperlink host page declaration survives field edit independent XML
   });
   await import(`../../web/preview/reader-worker.mjs?field-page-declaration=${Date.now()}`);
   try {
-    await self.onmessage({ data: { kind: "load", format: "hwpx", bytes: saved } });
+    await self.onmessage({ data: { kind: 'load', format: 'hwpx', bytes: saved } });
     assert.equal(replies.length, 1);
     const reply = replies.shift();
     assert.equal(reply.error, undefined);
@@ -80,7 +80,7 @@ test("actual hyperlink host page declaration survives field edit independent XML
       [[0, 48, 0]],
     );
   } finally {
-    await self.onmessage({ data: { kind: "load", format: "close-audit", bytes: [] } });
+    await self.onmessage({ data: { kind: 'load', format: 'close-audit', bytes: [] } });
   }
   assert.deepEqual(readFileSync(path), input);
 });

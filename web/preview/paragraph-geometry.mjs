@@ -1,8 +1,8 @@
 // Display margins and offsets; line-alignment owns spacing distribution.
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { paragraphAlignmentKey } from "./paragraph-alignments.mjs";
-import { hwp5LineSpacing } from "./hwp5-line-spacing.mjs";
-import { currentParagraphSpacing } from "./paragraph-spacing-source.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { paragraphAlignmentKey } from './paragraph-alignments.mjs';
+import { hwp5LineSpacing } from './hwp5-line-spacing.mjs';
+import { currentParagraphSpacing } from './paragraph-spacing-source.mjs';
 export const paragraphSpacing = (shape) =>
   currentParagraphSpacing(shape) ?? { kind: undefined, value: undefined };
 // Raw paragraph margins use twice the coordinate scale.
@@ -19,7 +19,7 @@ export function paragraphLineAdvance(
   const { kind, value } = paragraphSpacing(shape);
   if (!Number.isInteger(value) || value < 0) return baselineHeight;
   if (!Number.isFinite(textHeight) || textHeight < 0) return baselineHeight;
-  if (shape.spacingFormat === "hwpx") {
+  if (shape.spacingFormat === 'hwpx') {
     return kind === 0
       ? (textHeight * value) / 100
       : kind === 1
@@ -48,7 +48,7 @@ export function paragraphLineGeometry(shape, width, measuredWidth, firstLine) {
   const available = Math.max(1, width - start - Math.max(0, right));
   const slack = Math.max(0, available - Math.max(1, measuredWidth));
   const alignment = paragraphAlignmentKey(shape?.alignment);
-  const offset = alignment === "RIGHT" ? slack : alignment === "CENTER" ? slack / 2 : 0;
+  const offset = alignment === 'RIGHT' ? slack : alignment === 'CENTER' ? slack / 2 : 0;
   return { x: start + offset, width: available };
 }
 

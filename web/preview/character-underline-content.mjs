@@ -13,7 +13,7 @@ export function attachCharacterUnderlines(editor, content) {
   }
   if (
     content.characterUnderlineAvailable === true &&
-    typeof editor?.characterUnderlineStyles === "function"
+    typeof editor?.characterUnderlineStyles === 'function'
   ) {
     try {
       content.characterUnderlineStyles = editor.characterUnderlineStyles();

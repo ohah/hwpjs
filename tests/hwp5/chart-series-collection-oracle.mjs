@@ -1,6 +1,6 @@
-import { postLineOracle } from "./chart-post-line-oracle.mjs";
-import { observeSeriesCollection } from "./chart-series-collection-evidence.mjs";
-import { integer, textBodyWire } from "./chart-text-body-oracle.mjs";
+import { postLineOracle } from './chart-post-line-oracle.mjs';
+import { observeSeriesCollection } from './chart-series-collection-evidence.mjs';
+import { integer, textBodyWire } from './chart-text-body-oracle.mjs';
 export function seriesCollectionOracle(b, selectedSeriesCount) {
   const prior = postLineOracle(b),
     r = observeSeriesCollection(
@@ -26,7 +26,7 @@ export function seriesCollectionWire(r, scope = r) {
   const stored = [...scope.strings.values()].reduce((n, s) => n + s.hex.length / 2, 0),
     parts = [];
   const ints = (...ns) => parts.push(...ns.map((n) => integer(n))),
-    raw = (s) => parts.push(Buffer.from(s, "hex"));
+    raw = (s) => parts.push(Buffer.from(s, 'hex'));
   const body = (s) => parts.push(textBodyWire(s.text, 0, scope.objects.size, stored));
   const label = (prefix, s) => {
     ints(prefix.label.id, s.end);
@@ -76,7 +76,7 @@ export function seriesCollectionWire(r, scope = r) {
         f.codeEnd,
         f.end,
       );
-      raw(c?.hex ?? "");
+      raw(c?.hex ?? '');
     }
     const pic = s.picture;
     ints(pic.picture.id, pic.pictureEnd, pic.pictureEnd, pic.end);

@@ -1,4 +1,4 @@
-import { object, uint, field } from "./chart-display-fields.mjs";
+import { object, uint, field } from './chart-display-fields.mjs';
 // Optional additive wire member; omission by older cores is not a default view.
 export function validChartView3D(value, occupied = null) {
   if (value === undefined || value === null) return true;
@@ -7,7 +7,7 @@ export function validChartView3D(value, occupied = null) {
     !uint(value.node) ||
     value.node === 0 ||
     occupied?.has(value.node) ||
-    typeof value.unparsed_children !== "boolean"
+    typeof value.unparsed_children !== 'boolean'
   )
     return false;
   const ranges = {
@@ -18,10 +18,10 @@ export function validChartView3D(value, occupied = null) {
     perspective: [0, 240],
   };
   const nodes = new Set([value.node]);
-  for (const key of [...Object.keys(ranges), "right_angle_axes"]) {
+  for (const key of [...Object.keys(ranges), 'right_angle_axes']) {
     const accepts =
-      key === "right_angle_axes"
-        ? (v) => typeof v === "boolean"
+      key === 'right_angle_axes'
+        ? (v) => typeof v === 'boolean'
         : (v) => Number.isInteger(v) && v >= ranges[key][0] && v <= ranges[key][1];
     const leaf = value[key];
     if (!field(leaf, accepts, value.node)) return false;

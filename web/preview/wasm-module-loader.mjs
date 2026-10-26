@@ -5,10 +5,10 @@ export function createPreviewWasmModuleLoader({
   timeoutMs = 30000,
   setTimer = setTimeout,
   clearTimer = clearTimeout,
-  url = new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url),
+  url = new URL('../../zig-out/bin/hwpjs.wasm', import.meta.url),
 } = {}) {
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1)
-    throw new Error("InvalidWasmDownloadTimeout");
+    throw new Error('InvalidWasmDownloadTimeout');
   let pending = null;
   return () => {
     if (!pending)
@@ -18,7 +18,7 @@ export function createPreviewWasmModuleLoader({
         const deadline = new Promise((_, reject) => {
           timer = setTimer(() => {
             const error = new Error(
-              "실행 엔진 다운로드 시간이 초과되었습니다. 연결을 확인하고 문서를 다시 열어주세요.",
+              '실행 엔진 다운로드 시간이 초과되었습니다. 연결을 확인하고 문서를 다시 열어주세요.',
             );
             request.abort(error);
             reject(error);
@@ -29,7 +29,7 @@ export function createPreviewWasmModuleLoader({
           bytes = await Promise.race([
             deadline,
             (async () => {
-              const response = await fetchImpl(url, { cache: "no-cache", signal: request.signal });
+              const response = await fetchImpl(url, { cache: 'no-cache', signal: request.signal });
               request.signal.throwIfAborted();
               if (!response.ok)
                 throw new Error(`WASM HTTP ${response.status}: 먼저 Zig 빌드를 실행하세요.`);

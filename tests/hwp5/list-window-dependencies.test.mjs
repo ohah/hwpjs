@@ -1,15 +1,15 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createExperimentalHwp5Editor } from "../../js/hwp5-editor.mjs";
-import { createHwp5Reader } from "../../js/hwp5.mjs";
-import { hwp5ListWindowDependencies } from "../../web/preview/hwp5-list-window-dependencies.mjs";
-import { planParagraphDependencies } from "../../web/preview/paragraph-dependency-plan.mjs";
-import { projectHwp5OwnedWindow } from "../../web/preview/hwp5-window-projection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createExperimentalHwp5Editor } from '../../js/hwp5-editor.mjs';
+import { createHwp5Reader } from '../../js/hwp5.mjs';
+import { hwp5ListWindowDependencies } from '../../web/preview/hwp5-list-window-dependencies.mjs';
+import { planParagraphDependencies } from '../../web/preview/paragraph-dependency-plan.mjs';
+import { projectHwp5OwnedWindow } from '../../web/preview/hwp5-window-projection.mjs';
 
-test("actual note and caption windows retain source hosts and all owned list paragraphs", async () => {
-  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  for (const name of ["footnote-endnote", "table-caption"]) {
+test('actual note and caption windows retain source hosts and all owned list paragraphs', async () => {
+  const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? 'zig-out/bin/hwpjs.wasm');
+  for (const name of ['footnote-endnote', 'table-caption']) {
     const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
     const reader = await createHwp5Reader(wasm),
       editor = await createExperimentalHwp5Editor(wasm, input);
@@ -17,7 +17,7 @@ test("actual note and caption windows retain source hosts and all owned list par
       const source = reader.readText(input),
         found = hwp5ListWindowDependencies(editor, source);
       assert(found.dependencies.size > 0, name);
-      if (name === "footnote-endnote") {
+      if (name === 'footnote-endnote') {
         assert.deepEqual(
           planParagraphDependencies({ ...found, offset: 1, count: 1, maxParagraphs: 10 }).ordinals,
           [0, 1, 2],
@@ -31,7 +31,7 @@ test("actual note and caption windows retain source hosts and all owned list par
         for (const parent of parents) assert(found.dependencies.get(parent)?.includes(child));
       const member = editor
         .paragraphFlow(0)
-        .find((row) => ["footnote", "table_caption"].includes(row.host));
+        .find((row) => ['footnote', 'table_caption'].includes(row.host));
       assert(member);
       const offset = found.ordinals.get(`0:${member.paragraph}`);
       const content = projectHwp5OwnedWindow(editor, source, { offset, count: 1 });
@@ -50,7 +50,7 @@ test("actual note and caption windows retain source hosts and all owned list par
   }
 });
 
-test("caption dependencies require the exact native table control owner", () => {
+test('caption dependencies require the exact native table control owner', () => {
   const projection = { sections: [{ index: 0, paragraphs: [{}, {}] }] };
   const source = { control_node: 7, list_node: 8, table_record_node: 9, paragraph_count: 1 };
   const editor = (table_node = 7) => ({
@@ -59,8 +59,8 @@ test("caption dependencies require the exact native table control owner", () => 
     tablePlacements: () => [{ tableNode: 9, paragraph: 0 }],
     tableLayoutSources: () => [{ table_record_node: 9, table_node }],
     paragraphFlow: () => [
-      { paragraph: 0, host: "body" },
-      { paragraph: 1, host: "table_caption", parent_node: 7, list_node: 8 },
+      { paragraph: 0, host: 'body' },
+      { paragraph: 1, host: 'table_caption', parent_node: 7, list_node: 8 },
     ],
   });
   assert.deepEqual(hwp5ListWindowDependencies(editor(), projection).dependencies.get(1), [0]);
@@ -74,18 +74,18 @@ test("caption dependencies require the exact native table control owner", () => 
   );
 });
 
-test("list dependency adapter refuses missing wrong duplicate and unclaimed ownership", () => {
+test('list dependency adapter refuses missing wrong duplicate and unclaimed ownership', () => {
   const projection = { sections: [{ index: 0, paragraphs: [{}, {}] }] };
   const note = {
-    kind: "footnote",
+    kind: 'footnote',
     control_node: 7,
     list_node: 8,
     paragraph: 0,
     paragraph_count: 1,
   };
   const rows = [
-    { paragraph: 0, host: "body" },
-    { paragraph: 1, host: "footnote", parent_node: 7, list_node: 8 },
+    { paragraph: 0, host: 'body' },
+    { paragraph: 1, host: 'footnote', parent_node: 7, list_node: 8 },
   ];
   const editor = (notes = [note], flows = rows) => ({
     noteSources: () => notes,
@@ -99,7 +99,7 @@ test("list dependency adapter refuses missing wrong duplicate and unclaimed owne
     [],
     [note, note],
     [{ ...note, paragraph: 99 }],
-    [{ ...note, kind: "other" }],
+    [{ ...note, kind: 'other' }],
   ])
     assert.throws(
       () => hwp5ListWindowDependencies(editor(notes), projection),

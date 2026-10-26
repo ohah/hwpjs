@@ -2,7 +2,7 @@
 export function attachCharacterTextColors(editor, content) {
   content.characterTextColors = null;
   content.characterTextColorsError = null;
-  if (typeof editor?.characterTextColors === "function") {
+  if (typeof editor?.characterTextColors === 'function') {
     try {
       content.characterTextColors = editor.characterTextColors();
     } catch (error) {

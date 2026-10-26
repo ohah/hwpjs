@@ -1,9 +1,9 @@
 // @ts-ignore Existing static catalog is shared with the server; never accept paths from HTTP.
-import { demoFixtures } from "../../../web/preview/fixture-catalog.mjs";
+import { demoFixtures } from '../../../web/preview/fixture-catalog.mjs';
 // @ts-ignore Existing tracked inventory owns the immediate built-in selection list.
-import { trackedDemoFixtures } from "../../../web/preview/fixture-inventory.mjs";
+import { trackedDemoFixtures } from '../../../web/preview/fixture-inventory.mjs';
 
-export const availableFixturesEndpoint = "/demo-fixture-catalog.json";
+export const availableFixturesEndpoint = '/demo-fixture-catalog.json';
 export interface AvailableFixture {
   readonly id: string;
   readonly name: string;
@@ -26,12 +26,12 @@ export function getInitialAvailableFixtures(): readonly AvailableFixture[] {
 }
 
 function invalid(): never {
-  throw Error("InvalidAvailableFixtureCatalog");
+  throw Error('InvalidAvailableFixtureCatalog');
 }
 /** Read only data descriptors: injected fetch results must not execute Node getters. */
 function data(object: object, key: string): unknown {
   const descriptor = Object.getOwnPropertyDescriptor(object, key);
-  if (!descriptor || !("value" in descriptor)) return invalid();
+  if (!descriptor || !('value' in descriptor)) return invalid();
   return descriptor.value;
 }
 export function parseAvailableFixtures(value: unknown): readonly AvailableFixture[] {
@@ -40,18 +40,18 @@ export function parseAvailableFixtures(value: unknown): readonly AvailableFixtur
   const found = new Map<string, boolean>();
   for (let index = 0; index < value.length; index++) {
     const entry: unknown = data(value, String(index));
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return invalid();
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return invalid();
     const keys = Reflect.ownKeys(entry);
     if (
       keys.length !== 4 ||
-      keys.some((key) => !["id", "name", "label", "available"].includes(String(key)))
+      keys.some((key) => !['id', 'name', 'label', 'available'].includes(String(key)))
     )
       return invalid();
-    const id = data(entry, "id"),
-      name = data(entry, "name"),
-      label = data(entry, "label"),
-      available = data(entry, "available");
-    if (typeof id !== "string" || typeof available !== "boolean") return invalid();
+    const id = data(entry, 'id'),
+      name = data(entry, 'name'),
+      label = data(entry, 'label'),
+      available = data(entry, 'available');
+    if (typeof id !== 'string' || typeof available !== 'boolean') return invalid();
     const item = expected.get(id);
     if (!item || found.has(id) || name !== item.name || label !== (item.label ?? item.name))
       return invalid();
@@ -64,8 +64,8 @@ export type AvailableFixturesFetch = (
   input: string,
   init: {
     readonly signal?: AbortSignal;
-    readonly cache: "no-store";
-    readonly credentials: "same-origin";
+    readonly cache: 'no-store';
+    readonly credentials: 'same-origin';
   },
 ) => Promise<{ readonly ok: boolean; json(): Promise<unknown> }>;
 /** Explicit fetch injection; no global fetch, DOM or Native effects at import time.
@@ -81,11 +81,11 @@ export async function fetchAvailableFixtures(
     signal?.throwIfAborted();
     const response = await fetcher(availableFixturesEndpoint, {
       signal,
-      cache: "no-store",
-      credentials: "same-origin",
+      cache: 'no-store',
+      credentials: 'same-origin',
     });
     signal?.throwIfAborted();
-    if (!response.ok) throw Error("AvailableFixtureCatalogRequestFailed");
+    if (!response.ok) throw Error('AvailableFixtureCatalogRequestFailed');
     const value: unknown = await response.json();
     signal?.throwIfAborted();
     return parseAvailableFixtures(value);
@@ -97,8 +97,8 @@ export async function fetchAvailableFixtures(
       cleanup();
       reject(signal.reason);
     };
-    const cleanup = () => signal.removeEventListener("abort", aborted);
-    signal.addEventListener("abort", aborted, { once: true });
+    const cleanup = () => signal.removeEventListener('abort', aborted);
+    signal.addEventListener('abort', aborted, { once: true });
     if (signal.aborted) {
       aborted();
       return;

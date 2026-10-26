@@ -1,6 +1,6 @@
-import { nullableTitleOracle } from "./chart-nullable-title-oracle.mjs";
-import { observeLineItem } from "./chart-line-item-evidence.mjs";
-import { integer } from "./chart-text-body-oracle.mjs";
+import { nullableTitleOracle } from './chart-nullable-title-oracle.mjs';
+import { observeLineItem } from './chart-line-item-evidence.mjs';
+import { integer } from './chart-text-body-oracle.mjs';
 const ints = (ns) => Buffer.concat(ns.map((n) => integer(n)));
 export function lineItemsOracle(b, count = 2) {
   const axis = nullableTitleOracle(b),
@@ -24,6 +24,6 @@ export function lineItemsOracle(b, count = 2) {
 export function lineItemsWire(rows, word, end, typeCount, objectCount) {
   return Buffer.concat([
     ints([word, rows.length, end, typeCount, objectCount]),
-    ...rows.map((r) => Buffer.concat([ints([r.objectId, r.end]), Buffer.from(r.raw52, "hex")])),
+    ...rows.map((r) => Buffer.concat([ints([r.objectId, r.end]), Buffer.from(r.raw52, 'hex')])),
   ]);
 }

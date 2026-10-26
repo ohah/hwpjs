@@ -1,42 +1,42 @@
-import test from "node:test";
-import assert from "node:assert/strict";
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {
   paragraphSelectionRanges,
   paragraphSelectionOwner,
   paragraphSelectionText,
-} from "../../web/preview/paragraph-selection.mjs";
-import { selectionRects } from "../../web/preview/text-geometry.mjs";
+} from '../../web/preview/paragraph-selection.mjs';
+import { selectionRects } from '../../web/preview/text-geometry.mjs';
 
 const paragraphs = [
-  { section: 0, paragraph: 3, text: "A😀B", owner: "body" },
-  { section: 0, paragraph: 4, text: "", owner: "body" },
-  { section: 0, paragraph: 5, text: "XY", owner: "body", sourceOffsets: [{ at: 0, source: 8 }] },
+  { section: 0, paragraph: 3, text: 'A😀B', owner: 'body' },
+  { section: 0, paragraph: 4, text: '', owner: 'body' },
+  { section: 0, paragraph: 5, text: 'XY', owner: 'body', sourceOffsets: [{ at: 0, source: 8 }] },
 ];
 const ownerOf = (row) => row.owner;
 const anchor = { section: 0, paragraph: 3, unit: 1 };
 const focus = { section: 0, paragraph: 5, unit: 1 };
 
-test("multi paragraph clipboard preserves empty paragraphs scalar text and boundary-only selection", () => {
-  assert.equal(paragraphSelectionText(paragraphs, anchor, focus, ownerOf), "😀B\n\nX");
-  assert.equal(paragraphSelectionText(paragraphs, focus, anchor, ownerOf), "😀B\n\nX");
+test('multi paragraph clipboard preserves empty paragraphs scalar text and boundary-only selection', () => {
+  assert.equal(paragraphSelectionText(paragraphs, anchor, focus, ownerOf), '😀B\n\nX');
+  assert.equal(paragraphSelectionText(paragraphs, focus, anchor, ownerOf), '😀B\n\nX');
   assert.equal(
     paragraphSelectionText(paragraphs, { ...anchor, unit: 4 }, { ...focus, unit: 0 }, ownerOf),
-    "\n\n",
+    '\n\n',
   );
-  assert.equal(paragraphSelectionText(paragraphs, anchor, anchor, ownerOf), "");
+  assert.equal(paragraphSelectionText(paragraphs, anchor, anchor, ownerOf), '');
   assert.equal(
     paragraphSelectionText(paragraphs, anchor, focus, () => null),
     null,
   );
 });
 
-test("selection ownership separates native cell lists sections and unknown nested paragraphs", () => {
+test('selection ownership separates native cell lists sections and unknown nested paragraphs', () => {
   const row = {
     section: 0,
-    selectionOwner: "section:0:body",
+    selectionOwner: 'section:0:body',
     tableCell: { tableNode: 7, listNode: 9 },
   };
-  assert.equal(paragraphSelectionOwner(row), "section:0:table:7:list:9");
+  assert.equal(paragraphSelectionOwner(row), 'section:0:table:7:list:9');
   assert.notEqual(
     paragraphSelectionOwner(row),
     paragraphSelectionOwner({ ...row, tableCell: { tableNode: 7, listNode: 10 } }),
@@ -46,7 +46,7 @@ test("selection ownership separates native cell lists sections and unknown neste
   assert.equal(paragraphSelectionOwner({ ...row, tableCell: {} }), null);
 });
 
-test("multi paragraph selection maps reverse ranges empty paragraphs and retained source offsets", () => {
+test('multi paragraph selection maps reverse ranges empty paragraphs and retained source offsets', () => {
   const expected = [
     { section: 0, paragraph: 3, startUnit: 1, endUnit: 4 },
     { section: 0, paragraph: 5, startUnit: 8, endUnit: 9 },
@@ -56,7 +56,7 @@ test("multi paragraph selection maps reverse ranges empty paragraphs and retaine
   assert.deepEqual(paragraphSelectionRanges(paragraphs, anchor, anchor, ownerOf), []);
 });
 
-test("multi paragraph selection paint uses display positions rather than retained source units", () => {
+test('multi paragraph selection paint uses display positions rather than retained source units', () => {
   const ranges = paragraphSelectionRanges(paragraphs, anchor, focus, ownerOf, {
     sourcePositions: false,
   });
@@ -86,9 +86,9 @@ test("multi paragraph selection paint uses display positions rather than retaine
   assert.deepEqual(selectionRects({ rows }, anchor, focus, []), []);
 });
 
-test("multi paragraph selection rejects owner crossings missing endpoints clipping and surrogate halves", () => {
+test('multi paragraph selection rejects owner crossings missing endpoints clipping and surrogate halves', () => {
   for (const rows of [
-    paragraphs.map((row, i) => (i === 1 ? { ...row, owner: "cell" } : row)),
+    paragraphs.map((row, i) => (i === 1 ? { ...row, owner: 'cell' } : row)),
     paragraphs.map((row, i) => (i === 1 ? { ...row, clipped: true } : row)),
   ])
     assert.equal(paragraphSelectionRanges(rows, anchor, focus, ownerOf), null);
@@ -113,16 +113,16 @@ test("multi paragraph selection rejects owner crossings missing endpoints clippi
   }
 });
 
-test("drawing text and captions keep distinct validated list owners without inheriting body ownership", () => {
-  const base = { section: 0, paragraph: 1, text: "AB", selectionOwner: "section:0:body" };
+test('drawing text and captions keep distinct validated list owners without inheriting body ownership', () => {
+  const base = { section: 0, paragraph: 1, text: 'AB', selectionOwner: 'section:0:body' };
   const text = { ...base, drawingText: { drawingNode: 7, listNode: 9 } };
   const caption = { ...base, drawingCaption: { drawingNode: 7, captionNode: 8, listNode: 9 } };
-  assert.equal(paragraphSelectionOwner(text), "section:0:drawing:7:text:list:9");
-  assert.equal(paragraphSelectionOwner(caption), "section:0:drawing:7:caption:list:9");
-  for (const field of ["section", "drawingNode", "listNode"])
-    for (const value of [-1, 0.5, 0x100000000, NaN, "7", null]) {
+  assert.equal(paragraphSelectionOwner(text), 'section:0:drawing:7:text:list:9');
+  assert.equal(paragraphSelectionOwner(caption), 'section:0:drawing:7:caption:list:9');
+  for (const field of ['section', 'drawingNode', 'listNode'])
+    for (const value of [-1, 0.5, 0x100000000, NaN, '7', null]) {
       const row =
-        field === "section"
+        field === 'section'
           ? { ...text, section: value }
           : { ...text, drawingText: { ...text.drawingText, [field]: value } };
       assert.equal(paragraphSelectionOwner(row), null);

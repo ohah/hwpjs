@@ -9,7 +9,7 @@ export function createTableCreationControls({
   selected,
   inventory,
   request,
-  createOption = () => document.createElement("option"),
+  createOption = () => document.createElement('option'),
 }) {
   let closed = false,
     signature = null;
@@ -18,7 +18,7 @@ export function createTableCreationControls({
   };
   const showFields = (open) => {
     fields.hidden = !open;
-    focusButton.setAttribute?.("aria-expanded", String(open));
+    focusButton.setAttribute?.('aria-expanded', String(open));
     updateVisibility();
   };
   showFields(false);
@@ -47,7 +47,7 @@ export function createTableCreationControls({
         );
         select.value = ids?.[key]?.some((id) => String(id) === previous)
           ? previous
-          : String(ids?.[key]?.[0] ?? "");
+          : String(ids?.[key]?.[0] ?? '');
       }
       signature = next;
     }
@@ -57,12 +57,12 @@ export function createTableCreationControls({
     update();
     if (!closed && !focusButton.disabled) {
       showFields(true);
-      form.scrollIntoView?.({ block: "nearest" });
+      form.scrollIntoView?.({ block: 'nearest' });
       dimensions.rows.focus();
     }
   };
   const keydown = (event) => {
-    if (closed || event.key !== "Escape" || fields.hidden) return;
+    if (closed || event.key !== 'Escape' || fields.hidden) return;
     event.preventDefault();
     event.stopPropagation();
     showFields(false);
@@ -97,34 +97,34 @@ export function createTableCreationControls({
       Object.entries(resources).map(([key, node]) => [key, Number(node.value)]),
     );
     note.textContent = request(options)
-      ? "표 생성 중…"
-      : "현재 선택에서는 표를 생성할 수 없습니다.";
+      ? '표 생성 중…'
+      : '현재 선택에서는 표를 생성할 수 없습니다.';
     update();
   };
-  focusButton.addEventListener("click", focus);
-  form.addEventListener("submit", insert);
-  form.addEventListener("keydown", keydown);
+  focusButton.addEventListener('click', focus);
+  form.addEventListener('submit', insert);
+  form.addEventListener('keydown', keydown);
   update();
   return {
     update,
     message(reply) {
       if (closed) return;
-      if (reply.kind === "load" || reply.kind === "unlock") {
-        note.textContent = "";
+      if (reply.kind === 'load' || reply.kind === 'unlock') {
+        note.textContent = '';
         showFields(false);
-      } else if (reply.kind === "insert-table")
+      } else if (reply.kind === 'insert-table')
         note.textContent = reply.error
-          ? `${reply.applied ? "표 생성 후 표시 실패" : "표 생성 실패"}: ${reply.error}`
-          : "표 생성 완료 · 첫 셀 입력 가능 여부는 Canvas 상태를 확인하세요.";
-      if (reply.kind === "insert-table" && !reply.error) showFields(false);
+          ? `${reply.applied ? '표 생성 후 표시 실패' : '표 생성 실패'}: ${reply.error}`
+          : '표 생성 완료 · 첫 셀 입력 가능 여부는 Canvas 상태를 확인하세요.';
+      if (reply.kind === 'insert-table' && !reply.error) showFields(false);
       update();
     },
     close() {
       if (closed) return;
       closed = true;
-      focusButton.removeEventListener("click", focus);
-      form.removeEventListener("submit", insert);
-      form.removeEventListener("keydown", keydown);
+      focusButton.removeEventListener('click', focus);
+      form.removeEventListener('submit', insert);
+      form.removeEventListener('keydown', keydown);
       showFields(false);
       fields.disabled = true;
       focusButton.disabled = true;

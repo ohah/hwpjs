@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { exponent, rationalPowerOrder } from "./icc-power-reference.mjs";
+import assert from 'node:assert/strict';
+import { exponent, rationalPowerOrder } from './icc-power-reference.mjs';
 function input(precision, g, a, b, n, d) {
   const out = Buffer.alloc(72);
   out.writeUInt32BE(precision);

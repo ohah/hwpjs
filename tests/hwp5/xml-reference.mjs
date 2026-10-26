@@ -1,15 +1,15 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 const start =
-  ":A-Z_a-z\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u02ff\\u0370-\\u037d\\u037f-\\u1fff\\u200c-\\u200d\\u2070-\\u218f\\u2c00-\\u2fef\\u3001-\\ud7ff\\uf900-\\ufdcf\\ufdf0-\\ufffd\\u{10000}-\\u{effff}";
-const more = "\\-.0-9\\u00b7\\u0300-\\u036f\\u203f-\\u2040";
-const first = new RegExp(`^[${start}]$`, "u"),
-  continuing = new RegExp(`^[${start}${more}]$`, "u"),
-  name = new RegExp(`^[${start}][${start}${more}]*`, "u");
+  ':A-Z_a-z\\u00c0-\\u00d6\\u00d8-\\u00f6\\u00f8-\\u02ff\\u0370-\\u037d\\u037f-\\u1fff\\u200c-\\u200d\\u2070-\\u218f\\u2c00-\\u2fef\\u3001-\\ud7ff\\uf900-\\ufdcf\\ufdf0-\\ufffd\\u{10000}-\\u{effff}';
+const more = '\\-.0-9\\u00b7\\u0300-\\u036f\\u203f-\\u2040';
+const first = new RegExp(`^[${start}]$`, 'u'),
+  continuing = new RegExp(`^[${start}${more}]$`, 'u'),
+  name = new RegExp(`^[${start}][${start}${more}]*`, 'u');
 export { name as xmlNamePattern };
 export function xmlReferenceExpected(source) {
   if (/^&#(?:[0-9]+|x[0-9a-fA-F]+);/.test(source)) {
-    const token = source.slice(0, source.indexOf(";") + 1),
-      n = BigInt(token[2] === "x" ? "0x" + token.slice(3, -1) : token.slice(2, -1));
+    const token = source.slice(0, source.indexOf(';') + 1),
+      n = BigInt(token[2] === 'x' ? '0x' + token.slice(3, -1) : token.slice(2, -1));
     assert.ok(n <= 0x10ffffn);
     const value = Number(n);
     assert.ok(
@@ -20,19 +20,19 @@ export function xmlReferenceExpected(source) {
     );
     return { token, kind: 1, value };
   }
-  assert.equal(source[0], "&");
+  assert.equal(source[0], '&');
   const n = name.exec(source.slice(1))?.[0];
-  assert.ok(n && source[1 + n.length] === ";");
+  assert.ok(n && source[1 + n.length] === ';');
   const predefined = { lt: 60, gt: 62, amp: 38, apos: 39, quot: 34 },
     known = Object.hasOwn(predefined, n);
-  return { token: "&" + n + ";", kind: known ? 2 : 3, value: known ? predefined[n] : 0, name: n };
+  return { token: '&' + n + ';', kind: known ? 2 : 3, value: known ? predefined[n] : 0, name: n };
 }
 const encode = (text, e) =>
   e === 0
     ? Buffer.from(text)
     : e === 1
-      ? Buffer.from(text, "utf16le")
-      : Buffer.from(text, "utf16le").swap16();
+      ? Buffer.from(text, 'utf16le')
+      : Buffer.from(text, 'utf16le').swap16();
 function wire(raw, e, ref, cap = 4096, nameCap = 4096) {
   const out = Buffer.alloc(10);
   out[0] = ref ? 1 : 0;
@@ -50,7 +50,7 @@ export function xmlReferenceEdges(call) {
   const point = Buffer.alloc(4);
   for (let c = 0; c <= 0x110000; c++) {
     point.writeUInt32LE(c);
-    const text = c <= 0x10ffff ? String.fromCodePoint(c) : "";
+    const text = c <= 0x10ffff ? String.fromCodePoint(c) : '';
     assert.equal(
       call(120, point).readUInt32LE(0),
       (first.test(text) ? 1 : 0) | (continuing.test(text) ? 2 : 0),
@@ -96,48 +96,48 @@ export function xmlReferenceEdges(call) {
     rejected++;
   };
   for (let e = 0; e < 3; e++) {
-    for (const s of ["한글:😀-1\u0300;tail", ":a:b", "a.b_0", "\u{effff}", "A\u00b7"])
+    for (const s of ['한글:😀-1\u0300;tail', ':a:b', 'a.b_0', '\u{effff}', 'A\u00b7'])
       good(s, e, false);
     for (const s of [
-      "&#13;",
-      "&#xD;",
-      "&#00065;",
-      "&#x10FFFF;",
-      "&#xFDD0;",
-      "&lt;",
-      "&gt;",
-      "&amp;",
-      "&apos;",
-      "&quot;",
-      "&AMP;",
-      "&한글;",
-      "&a:b;",
+      '&#13;',
+      '&#xD;',
+      '&#00065;',
+      '&#x10FFFF;',
+      '&#xFDD0;',
+      '&lt;',
+      '&gt;',
+      '&amp;',
+      '&apos;',
+      '&quot;',
+      '&AMP;',
+      '&한글;',
+      '&a:b;',
     ])
       good(s, e, true);
-    good("&#" + "0".repeat(128) + "65;", e, true);
+    good('&#' + '0'.repeat(128) + '65;', e, true);
     for (const s of [
-      "",
-      "&",
-      "&#",
-      "&#;",
-      "&#x;",
-      "&#X41;",
-      "&#-1;",
-      "&#1A;",
-      "&amp",
-      "&;",
-      "&1n;",
-      "&amp x;",
-      "&#0;",
-      "&#xD800;",
-      "&#xFFFE;",
-      "&#1114112;",
-      "&#999999999999999999999;",
+      '',
+      '&',
+      '&#',
+      '&#;',
+      '&#x;',
+      '&#X41;',
+      '&#-1;',
+      '&#1A;',
+      '&amp',
+      '&;',
+      '&1n;',
+      '&amp x;',
+      '&#0;',
+      '&#xD800;',
+      '&#xFFFE;',
+      '&#1114112;',
+      '&#999999999999999999999;',
     ]) {
       assert.throws(() => call(121, wire(encode(s, e), e, true)));
       rejected++;
     }
-    const raw = encode("&amp;", e);
+    const raw = encode('&amp;', e);
     for (let end = 0; end < raw.length; end++) {
       assert.throws(() => call(121, wire(raw.subarray(0, end), e, true)));
       rejected++;
@@ -145,14 +145,14 @@ export function xmlReferenceEdges(call) {
     assert.throws(() => call(121, wire(raw, e, true), 4), /LimitExceeded/);
     rejected++;
     assert.throws(
-      () => call(121, wire(raw, e, true, 4096, encode("am", e).length)),
+      () => call(121, wire(raw, e, true, 4096, encode('am', e).length)),
       /LimitExceeded/,
     );
     rejected++;
     for (const [s, ref] of [
-      ["&#" + "0".repeat(4096) + "9;", true],
-      ["&" + "a".repeat(4096) + ";", true],
-      ["a".repeat(4097), false],
+      ['&#' + '0'.repeat(4096) + '9;', true],
+      ['&' + 'a'.repeat(4096) + ';', true],
+      ['a'.repeat(4097), false],
     ]) {
       assert.throws(() => call(121, wire(encode(s, e), e, ref)), /LimitExceeded/);
       rejected++;
@@ -165,7 +165,7 @@ export function xmlReferenceEdges(call) {
     assert.throws(() => call(121, Buffer.alloc(end)), /UnexpectedEnd/);
     rejected++;
   }
-  good("&amp;", 0, true);
+  good('&amp;', 0, true);
   return {
     classes,
     accepted,

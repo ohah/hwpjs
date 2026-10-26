@@ -14,7 +14,7 @@ export function createHistoryInputIntentQueue({
     !Number.isSafeInteger(maxUnits) ||
     maxUnits < 0
   )
-    throw new RangeError("InvalidOrderedInputLimit");
+    throw new RangeError('InvalidOrderedInputLimit');
   let generation = 0,
     sequence = 0,
     scheduled = false,
@@ -38,9 +38,9 @@ export function createHistoryInputIntentQueue({
     const epoch = generation;
     processing = true;
     try {
-      const accepted = entry.kind === "history" ? history(entry.operation) : input(entry);
+      const accepted = entry.kind === 'history' ? history(entry.operation) : input(entry);
       if (epoch !== generation) return;
-      if (!accepted) throw Error("OrderedInputRejected");
+      if (!accepted) throw Error('OrderedInputRejected');
       active = !ready();
       if (!active) wake();
     } catch (cause) {
@@ -76,21 +76,21 @@ export function createHistoryInputIntentQueue({
       return entries.length < maxOperations;
     },
     history(operation) {
-      return ["undo", "redo"].includes(operation) && append({ kind: "history", operation });
+      return ['undo', 'redo'].includes(operation) && append({ kind: 'history', operation });
     },
-    input(inputType, data = "") {
+    input(inputType, data = '') {
       return (
-        typeof data === "string" &&
+        typeof data === 'string' &&
         data.isWellFormed() &&
-        append({ kind: "input", inputType, data })
+        append({ kind: 'input', inputType, data })
       );
     },
     composition() {
       const token = { generation, id: ++sequence };
       return append({
-        kind: "input",
-        inputType: "insertText",
-        data: "",
+        kind: 'input',
+        inputType: 'insertText',
+        data: '',
         compositionPending: true,
         token,
       })
@@ -102,7 +102,7 @@ export function createHistoryInputIntentQueue({
       if (
         !entry ||
         token.generation !== generation ||
-        typeof data !== "string" ||
+        typeof data !== 'string' ||
         !data.isWellFormed() ||
         data.length > maxUnits - units
       )

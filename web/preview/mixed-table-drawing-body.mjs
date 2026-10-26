@@ -1,38 +1,38 @@
-import { layoutTableBodyContent } from "./table-body-content-layout.mjs";
-import { layoutDrawingBodyContent } from "./drawing-body-content-layout.mjs";
-import { drawingPictureScope } from "./drawing-picture-scope.mjs";
-import { pictureTextMeasure } from "./picture-text-measurement.mjs";
-import { drawingColumnContext } from "./drawing-column-context.mjs";
-import { measureInlineDrawingContent } from "./inline-drawing-measurement.mjs";
-import { inlineDrawingGeometry } from "./inline-drawing-geometry.mjs";
-import { drawingFillPlan } from "./drawing-fill-plan.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { drawingHasNoShadow } from "./drawing-shadow-policy.mjs";
-import { tableAnchorCoverage } from "./table-anchor-coverage.mjs";
-import { pageParagraphCoverage } from "./page-paragraph-coverage.mjs";
-import { measureInlineDrawingCellFlow } from "./inline-drawing-cell-flow.mjs";
-import { projectOwnedInlineDrawings } from "./inline-drawing-owned-projection.mjs";
-import { measureDrawingOwnedTables } from "./drawing-owned-table-measurement.mjs";
-import { textMeasurement } from "./text-measurement.mjs";
+import { layoutTableBodyContent } from './table-body-content-layout.mjs';
+import { layoutDrawingBodyContent } from './drawing-body-content-layout.mjs';
+import { drawingPictureScope } from './drawing-picture-scope.mjs';
+import { pictureTextMeasure } from './picture-text-measurement.mjs';
+import { drawingColumnContext } from './drawing-column-context.mjs';
+import { measureInlineDrawingContent } from './inline-drawing-measurement.mjs';
+import { inlineDrawingGeometry } from './inline-drawing-geometry.mjs';
+import { drawingFillPlan } from './drawing-fill-plan.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { drawingHasNoShadow } from './drawing-shadow-policy.mjs';
+import { tableAnchorCoverage } from './table-anchor-coverage.mjs';
+import { pageParagraphCoverage } from './page-paragraph-coverage.mjs';
+import { measureInlineDrawingCellFlow } from './inline-drawing-cell-flow.mjs';
+import { projectOwnedInlineDrawings } from './inline-drawing-owned-projection.mjs';
+import { measureDrawingOwnedTables } from './drawing-owned-table-measurement.mjs';
+import { textMeasurement } from './text-measurement.mjs';
 
 // Keep block table/caption and floating drawing policies in their existing
 // owners; only inline drawings are measured into the delegated body text.
 export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
-  const fail = (error, details = {}) => ({ state: "unavailable", error, ...details });
+  const fail = (error, details = {}) => ({ state: 'unavailable', error, ...details });
   if (
     !Number.isSafeInteger(maxRows) ||
     maxRows < 1 ||
-    typeof measure !== "function" ||
+    typeof measure !== 'function' ||
     !Array.isArray(content?.drawings) ||
     !Array.isArray(content.paragraphs) ||
     (content.pictures != null && !Array.isArray(content.pictures))
   )
-    return fail("InvalidMixedTableDrawingBody");
+    return fail('InvalidMixedTableDrawingBody');
   const scope = drawingPictureScope(
     content,
     content.paragraphs.filter((p) => !p.drawingText && !p.drawingCaption),
   );
-  if (scope.state !== "scoped") return scope;
+  if (scope.state !== 'scoped') return scope;
   const localMeasure = pictureTextMeasure(scope.inlineIndex, [], measure);
   const inline = [],
     floats = [],
@@ -43,20 +43,20 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
   let measuredRows = 0;
   for (const drawing of content.drawings) {
     const key = `${drawing.section}:${drawing.drawingNode}`;
-    if (nodes.has(key)) return fail("AmbiguousMixedInlineObjects");
+    if (nodes.has(key)) return fail('AmbiguousMixedInlineObjects');
     nodes.add(key);
     if (drawing.source?.geometry?.treat_as_character === false) {
       floats.push(drawing);
       continue;
     }
     if (
-      inlineDrawingGeometry(drawing.source).state !== "selected" ||
+      inlineDrawingGeometry(drawing.source).state !== 'selected' ||
       drawing.source.group_context !== null ||
       !drawingHasNoShadow(drawing.source.paint) ||
       signedInt32(drawing.source.flow?.z_order) === null ||
-      drawingFillPlan(content, drawing).state === "unavailable"
+      drawingFillPlan(content, drawing).state === 'unavailable'
     )
-      return fail("UnsupportedMixedInlineDrawing", {
+      return fail('UnsupportedMixedInlineDrawing', {
         section: drawing.section,
         drawingNode: drawing.drawingNode,
       });
@@ -66,16 +66,16 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
     const owner = owners[0],
       anchorKey = `${drawing.section}:${drawing.hostParagraph}:${drawing.anchorUnit}`;
     if (owners.length !== 1)
-      return fail("AmbiguousMixedInlineOwnership", {
+      return fail('AmbiguousMixedInlineOwnership', {
         section: drawing.section,
         drawingNode: drawing.drawingNode,
       });
     if (owner.drawingText)
-      return fail("UnsupportedMixedInlineDrawingHost", {
+      return fail('UnsupportedMixedInlineDrawingHost', {
         section: drawing.section,
         drawingNode: drawing.drawingNode,
         paragraph: drawing.hostParagraph,
-        policyReason: owner.tableCell ? "table-cell" : "drawing-text",
+        policyReason: owner.tableCell ? 'table-cell' : 'drawing-text',
         ...(owner.tableCell
           ? { tableNode: owner.tableCell.tableNode, listNode: owner.tableCell.listNode }
           : {}),
@@ -83,18 +83,18 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
     if (
       !Number.isSafeInteger(drawing.anchorUnit) ||
       drawing.anchorUnit < 0 ||
-      owner.text?.[drawing.anchorUnit] !== "\ufffc" ||
+      owner.text?.[drawing.anchorUnit] !== '\ufffc' ||
       anchors.has(anchorKey)
     )
-      return fail("AmbiguousMixedInlineOwnership", {
+      return fail('AmbiguousMixedInlineOwnership', {
         section: drawing.section,
         drawingNode: drawing.drawingNode,
       });
     const context = drawingColumnContext(drawing, content.paragraphs, content.paragraphFlows);
-    if (context.state !== "selected") return context;
-    if (measuredRows >= maxRows) return fail("MixedInlineLayoutLimit");
+    if (context.state !== 'selected') return context;
+    if (measuredRows >= maxRows) return fail('MixedInlineLayoutLimit');
     const local = measureDrawingOwnedTables(content, drawing, localMeasure, maxRows - measuredRows);
-    if (local.state !== "prepared") return local;
+    if (local.state !== 'prepared') return local;
     for (const entry of local.tables)
       localTables.add(`${entry.table.section}:${entry.table.tableNode}`);
     for (const id of local.paragraphIds) localParagraphs.add(id);
@@ -105,7 +105,7 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
       localMeasure,
       { maxRows: maxRows - measuredRows, inlineTables: local.tables },
     );
-    if (measured.state !== "measured") return measured;
+    if (measured.state !== 'measured') return measured;
     measuredRows += measured.rowCount;
     const paragraphs = content.paragraphs.filter(
       (p) =>
@@ -143,12 +143,12 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
     const owners = content.paragraphs.filter(
       (p) => p.section === picture.section && p.paragraph === picture.paragraph,
     );
-    if (owners.length !== 1) return fail("AmbiguousDrawingPictureOwner");
+    if (owners.length !== 1) return fail('AmbiguousDrawingPictureOwner');
     if (
       !paragraphIds.has(`${picture.section}:${picture.paragraph}`) &&
       !scope.localIds.has(`${picture.section}:${picture.pictureNode}`)
     )
-      return fail("UnsupportedMixedInlinePictures", {
+      return fail('UnsupportedMixedInlinePictures', {
         section: picture.section,
         paragraph: picture.paragraph,
         pictureNode: picture.pictureNode,
@@ -176,16 +176,16 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
   };
   const bodyMeasure = (text, paragraph, unit, kind) => {
     const entry =
-      kind === "text" && anchors.get(`${paragraph.section}:${paragraph.paragraph}:${unit}`);
+      kind === 'text' && anchors.get(`${paragraph.section}:${paragraph.paragraph}:${unit}`);
     return entry
       ? {
           width: entry.measured.width,
           height: entry.measured.height,
-          spacingBasisHeight: textMeasurement(localMeasure("", paragraph, unit, kind)).height,
+          spacingBasisHeight: textMeasurement(localMeasure('', paragraph, unit, kind)).height,
         }
       : localMeasure(text, paragraph, unit, kind);
   };
-  if (measuredRows >= maxRows) return fail("MixedInlineLayoutLimit");
+  if (measuredRows >= maxRows) return fail('MixedInlineLayoutLimit');
   const budget = maxRows;
   const layoutTables = (value, measured, limit, options = {}) =>
     layoutTableBodyContent(value, measured, limit, {
@@ -196,8 +196,8 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
   const body = floats.length
     ? layoutDrawingBodyContent(delegated, bodyMeasure, budget, layoutTables)
     : layoutTables(delegated, bodyMeasure, budget);
-  if (body.state !== "paginated")
-    return body.error === "NoFittingTableTextRegion"
+  if (body.state !== 'paginated')
+    return body.error === 'NoFittingTableTextRegion'
       ? {
           ...body,
           inlineObjectMetrics: inline
@@ -218,11 +218,11 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
       : body;
   const { rows, boxes, placedDrawings, tableAnchors } = body;
   if (rows.length + (body.repeatedTableHeaderRows?.length ?? 0) > maxRows)
-    return fail("MixedInlineLayoutLimit");
+    return fail('MixedInlineLayoutLimit');
   const controls = tableAnchorCoverage(content, { ...body, rows, boxes, tableAnchors });
-  if (controls.state !== "covered") return controls;
+  if (controls.state !== 'covered') return controls;
   const coverage = pageParagraphCoverage(content.paragraphs, [...rows, ...controls.rows]);
-  if (coverage.state !== "complete") {
+  if (coverage.state !== 'complete') {
     const groups = new Map();
     for (const row of [...rows, ...controls.rows]) {
       const key = `${row.section}:${row.paragraph}`,
@@ -233,11 +233,11 @@ export function layoutMixedTableDrawingBody(content, measure, maxRows = 20000) {
     const owner = content.paragraphs.find(
       (p) =>
         pageParagraphCoverage([p], groups.get(`${p.section}:${p.paragraph}`) ?? []).state !==
-        "complete",
+        'complete',
     );
     return {
       ...coverage,
-      layoutStage: "mixed-table-drawing-coverage",
+      layoutStage: 'mixed-table-drawing-coverage',
       section: owner?.section,
       paragraph: owner?.paragraph,
     };

@@ -1,25 +1,25 @@
 /** Manual bounded microbenchmark; not a product fixture/layout/E2E performance claim. */
-import { performance } from "node:perf_hooks";
-import { EditorState } from "../../src/state/editor-state.ts";
-import { copyOwned, freezeDTO } from "../../src/state/owned.ts";
+import { performance } from 'node:perf_hooks';
+import { EditorState } from '../../src/state/editor-state.ts';
+import { copyOwned, freezeDTO } from '../../src/state/owned.ts';
 const content = {
-  format: "hwp5",
+  format: 'hwp5',
   paragraphs: Array.from({ length: 6000 }, (_, paragraph) => ({
     section: 0,
     paragraph,
-    text: "x".repeat(440),
-    selectionOwner: "section:0:body",
+    text: 'x'.repeat(440),
+    selectionOwner: 'section:0:body',
     editable: true,
   })),
 };
 const data = {
-  editorId: "benchmark",
-  documentId: "document",
+  editorId: 'benchmark',
+  documentId: 'document',
   generation: 1,
   operationRevision: 1,
   viewRevision: 1,
   stateVersion: 1,
-  status: "ready" as const,
+  status: 'ready' as const,
   content,
 };
 let sink = 0;

@@ -6,7 +6,7 @@ const before = (lhs, rhs) =>
 
 export function validateHwp5FieldTopology(value) {
   const fail = () => {
-    throw new Error("InvalidHwp5FieldTopology");
+    throw new Error('InvalidHwp5FieldTopology');
   };
   if (!value || !Array.isArray(value.spans) || !Array.isArray(value.unresolved)) fail();
   const starts = new Set();
@@ -20,7 +20,7 @@ export function validateHwp5FieldTopology(value) {
       before(row.end, row.begin)
     )
       fail();
-    const key = row.begin.paragraph + ":" + row.ordinal;
+    const key = row.begin.paragraph + ':' + row.ordinal;
     if (starts.has(key)) fail();
     starts.add(key);
   }
@@ -35,12 +35,12 @@ export function validateHwp5FieldTopology(value) {
       fail();
     if (previous && !before(previous, row.position)) fail();
     previous = row.position;
-    if (row.kind === "unclosed_start") {
+    if (row.kind === 'unclosed_start') {
       if (!uint(row.ordinal)) fail();
-      const key = row.position.paragraph + ":" + row.ordinal;
+      const key = row.position.paragraph + ':' + row.ordinal;
       if (starts.has(key)) fail();
       starts.add(key);
-    } else if (row.kind === "orphan_end") {
+    } else if (row.kind === 'orphan_end') {
       if (row.ordinal !== null) fail();
     } else fail();
   }
@@ -49,6 +49,6 @@ export function validateHwp5FieldTopology(value) {
 
 export function decodeHwp5FieldTopology(bytes) {
   return validateHwp5FieldTopology(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

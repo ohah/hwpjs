@@ -1,4 +1,4 @@
-import { storedAutomaticNumberText } from "./automatic-number-text.mjs";
+import { storedAutomaticNumberText } from './automatic-number-text.mjs';
 
 // Reuse an agreed direct-body atno display; never interpret opaque note bytes.
 export function attachHwp5NoteReferenceDisplay(content) {
@@ -7,7 +7,7 @@ export function attachHwp5NoteReferenceDisplay(content) {
     const host = paragraphs.get(`${note.section}:${note.hostParagraph}`);
     if (
       !host ||
-      host.text[note.anchorUnit] !== "\ufffc" ||
+      host.text[note.anchorUnit] !== '\ufffc' ||
       host.automaticNumbers?.some((row) => row.unit === note.anchorUnit)
     )
       continue;
@@ -16,7 +16,7 @@ export function attachHwp5NoteReferenceDisplay(content) {
     );
     if (!candidates.length) continue;
     const number = candidates[0],
-      expectedKind = note.kind === "footnote" ? 1 : note.kind === "endnote" ? 2 : null;
+      expectedKind = note.kind === 'footnote' ? 1 : note.kind === 'endnote' ? 2 : null;
     if (
       expectedKind === null ||
       candidates.some(
@@ -32,7 +32,7 @@ export function attachHwp5NoteReferenceDisplay(content) {
     host.automaticNumbers ??= [];
     host.automaticNumbers.push({
       unit: note.anchorUnit,
-      kind: "hwp5-note-reference",
+      kind: 'hwp5-note-reference',
       noteNode: note.controlNode,
       numberNode: number.numberNode,
       numberNodes: candidates.map((candidate) => candidate.numberNode),

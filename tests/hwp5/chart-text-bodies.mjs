@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { observeAxis } from "./chart-axis-evidence.mjs";
-import { textBodyCase, integer } from "./chart-text-body-oracle.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { observeAxis } from './chart-axis-evidence.mjs';
+import { textBodyCase, integer } from './chart-text-body-oracle.mjs';
 export async function chartTextBodies(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     bodies = 0,
     accepted = 0,
@@ -16,10 +16,10 @@ export async function chartTextBodies(call) {
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const c = chartAxisContext(b);
       let state = { types: c.types, strings: c.strings, numbers: new Map() },
@@ -46,15 +46,15 @@ export async function chartTextBodies(call) {
           accept(original);
           accept(e.input(Buffer.concat([e.body, Buffer.alloc(32, 0xff)])));
           for (let cut = 0; cut < e.body.length; cut++)
-            reject(e.input(e.body.subarray(0, cut)), "UnexpectedEnd");
-          reject(e.input(e.body, { per: e.per - 1 }), "LimitExceeded");
-          reject(e.input(e.body, { total: e.total - 1 }), "LimitExceeded");
-          reject(e.input(e.body, { objects: e.objects - 1 }), "LimitExceeded");
-          reject(e.input(e.body, { stored: e.stored - 1 }), "LimitExceeded");
-          reject(original, "LimitExceeded", original.length - 1);
+            reject(e.input(e.body.subarray(0, cut)), 'UnexpectedEnd');
+          reject(e.input(e.body, { per: e.per - 1 }), 'LimitExceeded');
+          reject(e.input(e.body, { total: e.total - 1 }), 'LimitExceeded');
+          reject(e.input(e.body, { objects: e.objects - 1 }), 'LimitExceeded');
+          reject(e.input(e.body, { stored: e.stored - 1 }), 'LimitExceeded');
+          reject(original, 'LimitExceeded', original.length - 1);
           const bad = Buffer.from(e.body);
           bad.writeUInt32LE(0, e.body.length - 4);
-          reject(e.input(bad), "UnsupportedChartClass");
+          reject(e.input(bad), 'UnsupportedChartClass');
           const changed = (bytes) => {
             const observed = observeAxis(bytes, offset, state.types, state.strings, state.numbers),
               x = textBodyCase(bytes, observed, state),
@@ -79,7 +79,7 @@ export async function chartTextBodies(call) {
               b.subarray(textEnd),
             ]),
           );
-          reject(alias.input(alias.body, { total: alias.total - 1 }), "LimitExceeded");
+          reject(alias.input(alias.body, { total: alias.total - 1 }), 'LimitExceeded');
         }
         state = r;
         offset = r.end;

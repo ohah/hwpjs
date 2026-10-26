@@ -1,6 +1,6 @@
 export function picturePrefixArg(prefix) {
-  const value = ["base73", "with_opacity74", "with_instance78"].indexOf(prefix);
-  if (value < 0) throw new Error("InvalidPicturePrefix");
+  const value = ['base73', 'with_opacity74', 'with_instance78'].indexOf(prefix);
+  if (value < 0) throw new Error('InvalidPicturePrefix');
   return value;
 }
 export function validateHwp5PictureSources(rows) {
@@ -10,19 +10,19 @@ export function validateHwp5PictureSources(rows) {
   const array = (value, length, valid) =>
     Array.isArray(value) && value.length === length && Array.from(value).every(valid);
   const optional = (value, valid) => value === null || valid(value);
-  if (!Array.isArray(rows)) throw new Error("InvalidHwp5PictureSources");
+  if (!Array.isArray(rows)) throw new Error('InvalidHwp5PictureSources');
   const components = new Set(),
     pictures = new Set();
   for (const row of rows) {
     if (
       !row ||
       ![
-        "component_node",
-        "owner_node",
-        "picture_node",
-        "border_color",
-        "border_attributes",
-        "extra_bytes",
+        'component_node',
+        'owner_node',
+        'picture_node',
+        'border_color',
+        'border_attributes',
+        'extra_bytes',
       ].every((key) => uint(row[key])) ||
       row.owner_node >= row.component_node ||
       row.component_node >= row.picture_node ||
@@ -40,7 +40,7 @@ export function validateHwp5PictureSources(rows) {
       !optional(row.instance_id, uint) ||
       (row.instance_id !== null && row.border_opacity === null)
     )
-      throw new Error("InvalidHwp5PictureSources");
+      throw new Error('InvalidHwp5PictureSources');
     components.add(row.component_node);
     pictures.add(row.picture_node);
   }
@@ -48,6 +48,6 @@ export function validateHwp5PictureSources(rows) {
 }
 export function decodeHwp5PictureSources(bytes) {
   return validateHwp5PictureSources(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

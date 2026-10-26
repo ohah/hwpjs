@@ -1,12 +1,12 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync } from 'node:child_process';
 
 // Independent expanded-name XML traversal; never calls a product parser.
 export function sourceRowTableOracle(path, tableId) {
   return JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         `
 import zipfile,xml.etree.ElementTree as E,json,sys
 r=E.fromstring(zipfile.ZipFile(sys.argv[1]).read('Contents/section0.xml'))
@@ -23,7 +23,7 @@ print(json.dumps(dict(tableNode=indices[id(t)],rows=int(t.get('rowCnt')),columns
         path,
         String(tableId),
       ],
-      { encoding: "utf8", timeout: 30000 },
+      { encoding: 'utf8', timeout: 30000 },
     ),
   );
 }

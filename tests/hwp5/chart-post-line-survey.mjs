@@ -1,13 +1,13 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { lineItemsOracle } from "./chart-line-items-oracle.mjs";
-import { observePostLine as observe } from "./chart-post-line-evidence.mjs";
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm")),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { lineItemsOracle } from './chart-line-items-oracle.mjs';
+import { observePostLine as observe } from './chart-post-line-evidence.mjs';
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm')),
   rows = [],
-  verify = process.argv.includes("--verify");
+  verify = process.argv.includes('--verify');
 let cuts = 0,
   typeRejects = 0,
   ids = 0,
@@ -16,10 +16,10 @@ const err = (name) => (e) => e.constructor === Error && e.message === name;
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const e = lineItemsOracle(b),
       prior = e.rows.at(-1),
       r = observe(b, e.end, prior.types, prior.objects);
@@ -27,14 +27,14 @@ try {
       for (let cut = e.end; cut < r.end; cut++) {
         assert.throws(
           () => observe(b.subarray(0, cut), e.end, prior.types, prior.objects),
-          err("IncompletePostLineObservation"),
+          err('IncompletePostLineObservation'),
         );
         cuts++;
       }
       for (const id of new Set(r.references.map((at) => b.readUInt32LE(at))))
         for (const replacement of [
           null,
-          { ...prior.types.get(id), name: "VtOther\0" },
+          { ...prior.types.get(id), name: 'VtOther\0' },
           { ...prior.types.get(id), version: 99 },
         ]) {
           const wrong = new Map(prior.types);
@@ -42,7 +42,7 @@ try {
           else wrong.delete(id);
           assert.throws(
             () => observe(b, e.end, wrong, prior.objects),
-            err("UnsupportedPostLineObservationType"),
+            err('UnsupportedPostLineObservationType'),
           );
           typeRejects++;
         }
@@ -51,7 +51,7 @@ try {
         bad.writeUInt32LE(id, r.array.start);
         assert.throws(
           () => observe(bad, e.end, prior.types, prior.objects),
-          err("UnsupportedPostLineObservationObject"),
+          err('UnsupportedPostLineObservationObject'),
         );
         ids++;
       }
@@ -63,7 +63,7 @@ try {
       raw.fill(0xff, e.end, r.baseOffset);
       assert.deepEqual(observe(raw, e.end, prior.types, prior.objects), {
         ...r,
-        raw194: "ff".repeat(194),
+        raw194: 'ff'.repeat(194),
       });
       variants++;
       const words = Buffer.from(b);
@@ -80,7 +80,7 @@ try {
     rows.push({
       sha256: digest(b),
       ...view,
-      nextBytes: b.subarray(r.end, r.end + 32).toString("hex"),
+      nextBytes: b.subarray(r.end, r.end + 32).toString('hex'),
     });
   });
   assert.equal(rows.length, 43);
@@ -90,7 +90,7 @@ try {
         corpus,
         charts: rows.length,
         lengths: [...new Set(rows.map((r) => r.end - r.start))],
-        words: [...new Set(rows.map((r) => r.array.first + "/" + r.array.second))],
+        words: [...new Set(rows.map((r) => r.array.first + '/' + r.array.second))],
         rawVariants: new Set(rows.map((r) => r.raw194)).size,
         verification: verify ? { cuts, typeRejects, ids, variants } : null,
         rows,

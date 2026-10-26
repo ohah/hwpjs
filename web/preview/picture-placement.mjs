@@ -1,6 +1,6 @@
-import { hwpUnitPixels } from "./hwp-units.mjs";
-import { signedInt32 } from "./signed-int32.mjs";
-import { resolvePictureSize } from "./picture-size.mjs";
+import { hwpUnitPixels } from './hwp-units.mjs';
+import { signedInt32 } from './signed-int32.mjs';
+import { resolvePictureSize } from './picture-size.mjs';
 
 const validBox = (box) =>
   box &&
@@ -20,43 +20,43 @@ export function alignedReferenceCoordinate(origin, extent, size, offset, alignme
 export function placeFloatingPicture(picture, boxes, { edgePolicy } = {}) {
   const geometry = picture.geometry,
     position = picture.position;
-  if (geometry?.treatAsCharacter !== false) return { state: "not_floating" };
+  if (geometry?.treatAsCharacter !== false) return { state: 'not_floating' };
   if (
     ![geometry.width, geometry.height].every(
       (value) => Number.isInteger(value) && value > 0 && value <= 4294967295,
     )
   )
-    return { state: "invalid_size" };
+    return { state: 'invalid_size' };
   const size = resolvePictureSize(geometry, boxes);
   if (!size || (geometry.widthRelative === 3 && position?.relations?.[0] !== 2))
-    return { state: "unsupported_size" };
+    return { state: 'unsupported_size' };
   const relations = position?.relations;
   if (!Array.isArray(relations) || relations.length !== 4 || !relations.every(Number.isInteger))
-    return { state: "missing_position" };
+    return { state: 'missing_position' };
   const [vertical, horizontal, verticalAlignment, horizontalAlignment] = relations;
   if (vertical < 0 || vertical > 2 || horizontal < 0 || horizontal > 3)
-    return { state: "unsupported_reference" };
-  const vbox = boxes?.[["paper", "page", "paragraph"][vertical]];
-  const hbox = boxes?.[["paper", "page", "column", "paragraph"][horizontal]];
-  if (!validBox(vbox) || !validBox(hbox)) return { state: "missing_reference" };
+    return { state: 'unsupported_reference' };
+  const vbox = boxes?.[['paper', 'page', 'paragraph'][vertical]];
+  const hbox = boxes?.[['paper', 'page', 'column', 'paragraph'][horizontal]];
+  if (!validBox(vbox) || !validBox(hbox)) return { state: 'missing_reference' };
   const resolveAlignment = (alignment) =>
     alignment <= 2 && alignment >= 0
       ? alignment
-      : edgePolicy === "inside-start-outside-end" && [3, 4].includes(alignment)
+      : edgePolicy === 'inside-start-outside-end' && [3, 4].includes(alignment)
         ? alignment === 3
           ? 0
           : 2
         : null;
   const va = resolveAlignment(verticalAlignment),
     ha = resolveAlignment(horizontalAlignment);
-  if (va === null || ha === null) return { state: "unsupported_alignment" };
+  if (va === null || ha === null) return { state: 'unsupported_alignment' };
   const dx = signedInt32(geometry.horizontalOffset),
     dy = signedInt32(geometry.verticalOffset);
-  if (dx === null || dy === null) return { state: "missing_offset" };
+  if (dx === null || dy === null) return { state: 'missing_offset' };
   const { width, height } = size;
   const x = alignedReferenceCoordinate(hbox.x, hbox.width, width, hwpUnitPixels(dx), ha);
   const y = alignedReferenceCoordinate(vbox.y, vbox.height, height, hwpUnitPixels(dy), va);
   if (![x, y, width, height, x + width, y + height].every(Number.isFinite))
-    return { state: "invalid_bounds" };
-  return { state: "placed", rectangle: { x, y, width, height } };
+    return { state: 'invalid_bounds' };
+  return { state: 'placed', rectangle: { x, y, width, height } };
 }

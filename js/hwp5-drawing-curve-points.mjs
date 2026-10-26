@@ -1,10 +1,10 @@
-import { countedPointLayoutArg } from "./hwp5-counted-point-layout.mjs";
-export const curveLayoutArg = (layout) => countedPointLayoutArg(layout, "InvalidCurvePointLayout");
+import { countedPointLayoutArg } from './hwp5-counted-point-layout.mjs';
+export const curveLayoutArg = (layout) => countedPointLayoutArg(layout, 'InvalidCurvePointLayout');
 export function validateHwp5DrawingCurvePoints(rows) {
   const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 0xffffffff;
   const signed = (v) => Number.isInteger(v) && v >= -2147483648 && v <= 2147483647;
   const fail = () => {
-    throw new Error("InvalidHwp5DrawingCurvePoints");
+    throw new Error('InvalidHwp5DrawingCurvePoints');
   };
   if (!Array.isArray(rows) || rows.length > 1_000_000) fail();
   const owners = new Set();
@@ -33,8 +33,8 @@ export function validateHwp5DrawingCurvePoints(rows) {
 }
 export function decodeHwp5DrawingCurvePoints(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length > 64 * 1024 * 1024)
-    throw new Error("InvalidHwp5DrawingCurvePoints");
+    throw new Error('InvalidHwp5DrawingCurvePoints');
   return validateHwp5DrawingCurvePoints(
-    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)),
+    JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes)),
   );
 }

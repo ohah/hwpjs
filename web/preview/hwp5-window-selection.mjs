@@ -17,7 +17,7 @@ export function validateHwp5WindowSelection(content) {
     window.paragraphCount !== window.requestedCount ||
     content.paragraphs.length !== window.requestedCount + window.contextCount
   )
-    throw new Error("InvalidHwp5WindowSelection");
+    throw new Error('InvalidHwp5WindowSelection');
   const identities = new Set();
   let previous = -1,
     selected = 0;
@@ -28,12 +28,12 @@ export function validateHwp5WindowSelection(content) {
       row.windowOrdinal >= content.totalParagraphs ||
       row.windowOrdinal <= previous ||
       row.clipped ||
-      typeof row.text !== "string"
+      typeof row.text !== 'string'
     )
-      throw new Error("InvalidHwp5WindowSelection");
+      throw new Error('InvalidHwp5WindowSelection');
     previous = row.windowOrdinal;
     const key = `${row.section}:${row.paragraph}`;
-    if (identities.has(key)) throw new Error("InvalidHwp5WindowSelection");
+    if (identities.has(key)) throw new Error('InvalidHwp5WindowSelection');
     identities.add(key);
     const context =
       row.windowOrdinal < window.requestedOffset ||
@@ -43,14 +43,14 @@ export function validateHwp5WindowSelection(content) {
       (context && (row.editable !== false || row.selectable !== false)) ||
       (content.readOnly && row.editable !== false)
     )
-      throw new Error("InvalidHwp5WindowSelection");
+      throw new Error('InvalidHwp5WindowSelection');
     if (!context) {
       if (row.windowOrdinal !== window.requestedOffset + selected)
-        throw new Error("InvalidHwp5WindowSelection");
+        throw new Error('InvalidHwp5WindowSelection');
       selected++;
     }
   }
-  if (selected !== window.requestedCount) throw new Error("InvalidHwp5WindowSelection");
+  if (selected !== window.requestedCount) throw new Error('InvalidHwp5WindowSelection');
   return {
     offset: window.requestedOffset,
     count: selected,

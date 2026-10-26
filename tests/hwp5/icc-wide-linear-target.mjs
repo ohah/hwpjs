@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { readWide, writeUnsigned } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { readWide, writeUnsigned } from './icc-wide-fraction-wire.mjs';
 export function wideLinearInput(values) {
   const out = Buffer.alloc(values.length * 64);
   values.forEach((v, i) => writeUnsigned(out, i * 64, BigInt.asUintN(512, v), 64));

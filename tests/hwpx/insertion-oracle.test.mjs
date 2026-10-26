@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { execFileSync } from "../../tools/oracle-process.mjs";
-import { verifyHwpxInsertion } from "../../tools/hwpx-insertion-oracle.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from '../../tools/oracle-process.mjs';
+import { verifyHwpxInsertion } from '../../tools/hwpx-insertion-oracle.mjs';
 function packages() {
   return JSON.parse(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         String.raw`
 import base64,io,json,zipfile
 xml='<s xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"><p:p><p:run charPrIDRef="2"><p:t>A<p:tab width="1"/>B</p:t></p:run></p:p></s>'
@@ -18,43 +18,43 @@ def pack(s):
 print(json.dumps(dict(before=pack(xml),after=pack(xml.replace('<p:t>A','<p:t>검증😀A')),bad=pack(xml.replace('width="1"','width="2"').replace('<p:t>A','<p:t>검증😀A')))))
 `,
       ],
-      { encoding: "utf8" },
+      { encoding: 'utf8' },
     ),
   );
 }
-test("unsupported inline tree receives an independent prefix check in both Python modes", () => {
+test('unsupported inline tree receives an independent prefix check in both Python modes', () => {
   const p = packages(),
     request = {
-      before: Buffer.from(p.before, "base64"),
-      after: Buffer.from(p.after, "base64"),
+      before: Buffer.from(p.before, 'base64'),
+      after: Buffer.from(p.after, 'base64'),
       section: 0,
       sectionIndex: 0,
       startUnit: 0,
-      text: "검증😀",
+      text: '검증😀',
     };
   const result = verifyHwpxInsertion(request);
-  assert.equal(result.state, "verified");
-  assert.equal(result.kind, "direct-prefix");
+  assert.equal(result.state, 'verified');
+  assert.equal(result.kind, 'direct-prefix');
   assert(result.controls.every((r) => r.wrongExpectedRejected));
-  assert(result.plainControls.every((r) => r.status === "unsupported"));
+  assert(result.plainControls.every((r) => r.status === 'unsupported'));
   assert.equal(
-    verifyHwpxInsertion({ ...request, after: Buffer.from(p.bad, "base64") }).state,
-    "mismatch",
+    verifyHwpxInsertion({ ...request, after: Buffer.from(p.bad, 'base64') }).state,
+    'mismatch',
   );
-  assert.equal(verifyHwpxInsertion({ ...request, text: "WRONG" }).state, "mismatch");
+  assert.equal(verifyHwpxInsertion({ ...request, text: 'WRONG' }).state, 'mismatch');
   const offset = verifyHwpxInsertion({ ...request, startUnit: 1 });
-  assert.equal(offset.state, "unsupported");
-  assert.equal(offset.kind, "plain-splice");
+  assert.equal(offset.state, 'unsupported');
+  assert.equal(offset.kind, 'plain-splice');
 });
-test("plain XML mismatches do not try an alternative oracle", () => {
+test('plain XML mismatches do not try an alternative oracle', () => {
   const p = packages(),
     plain = (bytes) =>
       Buffer.from(
         JSON.parse(
           execFileSync(
-            "python3",
+            'python3',
             [
-              "-c",
+              '-c',
               String.raw`
 import sys,json,base64,io,zipfile
 b=base64.b64decode(json.load(sys.stdin));o=io.BytesIO()
@@ -63,10 +63,10 @@ with zipfile.ZipFile(io.BytesIO(b)) as z,zipfile.ZipFile(o,'w') as w:
 print(json.dumps(base64.b64encode(o.getvalue()).decode()))
 `,
             ],
-            { input: JSON.stringify(bytes), encoding: "utf8" },
+            { input: JSON.stringify(bytes), encoding: 'utf8' },
           ),
         ),
-        "base64",
+        'base64',
       );
   const result = verifyHwpxInsertion({
     before: plain(p.before),
@@ -74,19 +74,19 @@ print(json.dumps(base64.b64encode(o.getvalue()).decode()))
     section: 0,
     sectionIndex: 0,
     startUnit: 0,
-    text: "WRONG",
+    text: 'WRONG',
   });
-  assert.equal(result.state, "mismatch");
-  assert.equal(result.kind, "plain-splice");
+  assert.equal(result.state, 'mismatch');
+  assert.equal(result.kind, 'plain-splice');
   assert.equal(result.plainControls, undefined);
 });
 
-test("source empty-run affinity is selected before inspecting the edited output", () => {
+test('source empty-run affinity is selected before inspecting the edited output', () => {
   const before = Buffer.from(
     execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         String.raw`
 import io,sys,zipfile
 b=io.BytesIO()
@@ -99,9 +99,9 @@ sys.stdout.buffer.write(b.getvalue())
   );
   function edit(incorrect) {
     return execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         String.raw`
 import io,sys,zipfile,json,base64
 r=json.load(sys.stdin);o=io.BytesIO()
@@ -113,7 +113,7 @@ sys.stdout.buffer.write(o.getvalue())
 `,
       ],
       {
-        input: JSON.stringify({ before: before.toString("base64"), incorrect }),
+        input: JSON.stringify({ before: before.toString('base64'), incorrect }),
         maxBuffer: 1024 * 1024,
       },
     );
@@ -124,23 +124,23 @@ sys.stdout.buffer.write(o.getvalue())
     section: 0,
     sectionIndex: 0,
     startUnit: 0,
-    text: "검증😀",
+    text: '검증😀',
   };
   const valid = verifyHwpxInsertion(request);
-  assert.equal(valid.kind, "empty-run-prefix");
-  assert.equal(valid.state, "verified");
+  assert.equal(valid.kind, 'empty-run-prefix');
+  assert.equal(valid.state, 'verified');
   const invalid = verifyHwpxInsertion({ ...request, after: edit(true) });
-  assert.equal(invalid.kind, "empty-run-prefix");
-  assert.equal(invalid.state, "mismatch");
+  assert.equal(invalid.kind, 'empty-run-prefix');
+  assert.equal(invalid.state, 'mismatch');
 });
 
-test("unknown controls before text cannot be guessed to have zero display width", () => {
+test('unknown controls before text cannot be guessed to have zero display width', () => {
   const p = packages();
   function control(bytes) {
     return execFileSync(
-      "python3",
+      'python3',
       [
-        "-c",
+        '-c',
         String.raw`
 import base64,io,json,sys,zipfile
 b=base64.b64decode(json.load(sys.stdin));o=io.BytesIO()
@@ -158,8 +158,8 @@ sys.stdout.buffer.write(o.getvalue())
     section: 0,
     sectionIndex: 0,
     startUnit: 0,
-    text: "검증😀",
+    text: '검증😀',
   });
-  assert.equal(result.state, "unsupported");
-  assert.equal(result.kind, "plain-splice");
+  assert.equal(result.state, 'unsupported');
+  assert.equal(result.kind, 'plain-splice');
 });

@@ -1,12 +1,12 @@
 /** Display-only native snapshots. Failure cannot change editing eligibility. */
-import { attachCharacterUnderlines } from "./character-underline-content.mjs";
-import { attachCharacterTextColors } from "./character-text-color-content.mjs";
-import { attachCharacterShades } from "./character-shade-content.mjs";
-import { attachCharacterEffects } from "./character-effect-content.mjs";
-import { attachCharacterOutlines } from "./character-outline-content.mjs";
-import { attachCharacterFonts } from "./character-font-content.mjs";
-import { attachCharacterStrikes } from "./character-strike-content.mjs";
-import { attachTabSources } from "./tab-source-content.mjs";
+import { attachCharacterUnderlines } from './character-underline-content.mjs';
+import { attachCharacterTextColors } from './character-text-color-content.mjs';
+import { attachCharacterShades } from './character-shade-content.mjs';
+import { attachCharacterEffects } from './character-effect-content.mjs';
+import { attachCharacterOutlines } from './character-outline-content.mjs';
+import { attachCharacterFonts } from './character-font-content.mjs';
+import { attachCharacterStrikes } from './character-strike-content.mjs';
+import { attachTabSources } from './tab-source-content.mjs';
 export function attachHwpxStyles(editor, content, available) {
   content.characterShapes = null;
   content.characterShapesError = null;
@@ -25,7 +25,7 @@ export function attachHwpxStyles(editor, content, available) {
     try {
       const ranges = editor.characterRanges(paragraph.section, paragraph.paragraph + 1);
       if ((ranges.at(-1)?.end ?? 0) !== paragraph.text.length)
-        throw new Error("CharacterDisplayLengthMismatch");
+        throw new Error('CharacterDisplayLengthMismatch');
       paragraph.characterRanges = ranges;
       paragraph.selectable = paragraph.text.length > 0 || paragraph.editable === true;
     } catch (error) {

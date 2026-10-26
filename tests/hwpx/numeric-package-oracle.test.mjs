@@ -1,13 +1,13 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { execFileSync } from "../../tools/oracle-process.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from '../../tools/oracle-process.mjs';
 
-for (const flags of [[], ["-O"]])
-  test(`numeric package oracle rejects exact ZIP/XML mutations (${flags.join(" ") || "normal"})`, () => {
-    const options = { encoding: "utf8", timeout: 30000, stdio: ["pipe", "pipe", "pipe"] };
+for (const flags of [[], ['-O']])
+  test(`numeric package oracle rejects exact ZIP/XML mutations (${flags.join(' ') || 'normal'})`, () => {
+    const options = { encoding: 'utf8', timeout: 30000, stdio: ['pipe', 'pipe', 'pipe'] };
     const result = execFileSync(
-      "python3",
-      [...flags, "tools/hwpx-numeric-package-self-test.py"],
+      'python3',
+      [...flags, 'tools/hwpx-numeric-package-self-test.py'],
       options,
     );
     assert.deepEqual(JSON.parse(result), {
@@ -18,8 +18,8 @@ for (const flags of [[], ["-O"]])
     assert.throws(
       () =>
         execFileSync(
-          "python3",
-          [...flags, "tools/hwpx-numeric-package-self-test.py", "--skip-crc"],
+          'python3',
+          [...flags, 'tools/hwpx-numeric-package-self-test.py', '--skip-crc'],
           options,
         ),
       (error) =>

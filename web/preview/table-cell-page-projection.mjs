@@ -1,16 +1,16 @@
-import { translatePicturePlacement } from "./picture-placement-translation.mjs";
-import { createCellRowBandIndex } from "./cell-row-band-index.mjs";
-import { nestedCellPageReferences } from "./nested-cell-page-references.mjs";
-import { planMeasuredCellCuts } from "./table-measured-cell-cuts.mjs";
-import { resolveTablePadding } from "./table-source-insets.mjs";
-import { tableCellInsets } from "./table-insets.mjs";
-import { prepareNestedCellCutIndex } from "./nested-cell-cut-index.mjs";
-import { nestedFloatingCellCutScenes } from "./nested-floating-cell-cut-scenes.mjs";
-import { projectNestedFloatingCellContent } from "./nested-floating-cell-content.mjs";
-import { tableCellBand, isZeroAdvanceCellAnchor } from "./table-cell-band.mjs";
-import { cellFloatingDrawingBands } from "./cell-floating-drawing-bands.mjs";
-import { alignCellFragmentFlow } from "./cell-fragment-alignment.mjs";
-import { pictureAnchorRow } from "./picture-anchor-row-index.mjs";
+import { translatePicturePlacement } from './picture-placement-translation.mjs';
+import { createCellRowBandIndex } from './cell-row-band-index.mjs';
+import { nestedCellPageReferences } from './nested-cell-page-references.mjs';
+import { planMeasuredCellCuts } from './table-measured-cell-cuts.mjs';
+import { resolveTablePadding } from './table-source-insets.mjs';
+import { tableCellInsets } from './table-insets.mjs';
+import { prepareNestedCellCutIndex } from './nested-cell-cut-index.mjs';
+import { nestedFloatingCellCutScenes } from './nested-floating-cell-cut-scenes.mjs';
+import { projectNestedFloatingCellContent } from './nested-floating-cell-content.mjs';
+import { tableCellBand, isZeroAdvanceCellAnchor } from './table-cell-band.mjs';
+import { cellFloatingDrawingBands } from './cell-floating-drawing-bands.mjs';
+import { alignCellFragmentFlow } from './cell-fragment-alignment.mjs';
+import { pictureAnchorRow } from './picture-anchor-row-index.mjs';
 
 // Project explicit cuts and page placements; source pagination stays upstream.
 export function projectCellPageCuts(
@@ -27,9 +27,9 @@ export function projectCellPageCuts(
     maxFragments = 2000,
   } = {},
 ) {
-  const unavailable = (error) => ({ state: "unavailable", error });
+  const unavailable = (error) => ({ state: 'unavailable', error });
   if (
-    plan?.state !== "planned" ||
+    plan?.state !== 'planned' ||
     !Array.isArray(plan.fragments) ||
     !plan.fragments.length ||
     !Array.isArray(placements) ||
@@ -39,11 +39,11 @@ export function projectCellPageCuts(
     !Number.isSafeInteger(maxFragments) ||
     maxFragments < 1
   )
-    return unavailable("InvalidCellPageProjection");
+    return unavailable('InvalidCellPageProjection');
   if (plan.fragments.length > maxFragments)
     return {
-      ...unavailable("CellPageProjectionLimit"),
-      layoutStage: "cell-fragments",
+      ...unavailable('CellPageProjectionLimit'),
+      layoutStage: 'cell-fragments',
       tableNode: table.tableNode,
       fragments: plan.fragments.length,
       maxFragments,
@@ -55,7 +55,7 @@ export function projectCellPageCuts(
     frameInsets,
     maxRows,
   });
-  if (validation.state !== "planned") return validation;
+  if (validation.state !== 'planned') return validation;
   let end = 0;
   for (const fragment of plan.fragments) {
     if (
@@ -65,13 +65,13 @@ export function projectCellPageCuts(
       fragment.end <= fragment.start ||
       fragment.height !== fragment.end - fragment.start
     )
-      return unavailable("InvalidCellPageProjection");
+      return unavailable('InvalidCellPageProjection');
     end = fragment.end;
   }
-  if (end !== measured.grid.height) return unavailable("InvalidCellPageProjection");
+  if (end !== measured.grid.height) return unavailable('InvalidCellPageProjection');
   for (const cut of validation.mandatoryCuts ?? [])
     if (cut > 0 && !plan.fragments.some((fragment) => fragment.start === cut))
-      return unavailable("MissingTableCellPageBreak");
+      return unavailable('MissingTableCellPageBreak');
   const rows = [],
     boxes = [],
     flowPictures = [];
@@ -80,7 +80,7 @@ export function projectCellPageCuts(
   const rowIndexes = new WeakMap();
   const nestedIndexes = new WeakMap();
   const limit = (layoutStage) => ({
-    ...unavailable("CellPageProjectionLimit"),
+    ...unavailable('CellPageProjectionLimit'),
     layoutStage,
     tableNode: table.tableNode,
     inspections,
@@ -96,10 +96,10 @@ export function projectCellPageCuts(
       !Number.isSafeInteger(placement.pageOrdinal) ||
       placement.pageOrdinal <= previousPage
     )
-      return unavailable("InvalidCellPageProjection");
+      return unavailable('InvalidCellPageProjection');
     previousPage = placement.pageOrdinal;
     for (const [index, cell] of table.cells.entries()) {
-      if (++inspections > maxInspections) return limit("cell-owners");
+      if (++inspections > maxInspections) return limit('cell-owners');
       const source = measured.grid.cells[index],
         insets = tableCellInsets(padding, cell);
       let flow = measured.flows.get(cell.listNode);
@@ -114,7 +114,7 @@ export function projectCellPageCuts(
         return unavailable(error.message);
       }
       const drawings = cellFloatingDrawingBands(table, cell, flow);
-      if (drawings.state !== "prepared") return drawings;
+      if (drawings.state !== 'prepared') return drawings;
       for (const band of drawings.bands) {
         const start = top + insets.top + band.start,
           end = top + insets.top + band.end;
@@ -123,7 +123,7 @@ export function projectCellPageCuts(
           start < fragment.end &&
           (start < fragment.start || end > fragment.end)
         )
-          return unavailable("SplitCellFloatingDrawing");
+          return unavailable('SplitCellFloatingDrawing');
       }
       const x = placement.x + source.x - origin.x,
         y = placement.y + start - fragment.start;
@@ -131,7 +131,7 @@ export function projectCellPageCuts(
         ![x, y, source.width, x + source.width, y + finish - start].every(Number.isFinite) ||
         source.width <= 0
       )
-        return unavailable("InvalidCellPageProjection");
+        return unavailable('InvalidCellPageProjection');
       boxes.push({
         ...source,
         x,
@@ -152,19 +152,19 @@ export function projectCellPageCuts(
           listNode: cell.listNode,
         };
         const floating = nestedFloatingCellCutScenes(parent, flow, insets);
-        if (floating.state !== "prepared") return floating;
+        if (floating.state !== 'prepared') return floating;
         const selected = [];
         for (const scene of floating.scenes) {
-          if (++inspections > maxInspections) return limit("cell-floating-tables");
+          if (++inspections > maxInspections) return limit('cell-floating-tables');
           const sceneStart = top + insets.top + scene.start,
             sceneEnd = top + insets.top + scene.end;
           if (sceneEnd <= fragment.start || sceneStart >= fragment.end) continue;
           if (sceneStart < fragment.start || sceneEnd > fragment.end)
-            return unavailable("SplitCellFloatingContent");
+            return unavailable('SplitCellFloatingContent');
           selected.push(scene.entry);
         }
         if (selected.length) {
-          if (rows.length >= maxRows) return limit("cell-floating-table-rows");
+          if (rows.length >= maxRows) return limit('cell-floating-table-rows');
           const projected = projectNestedFloatingCellContent(
             { ...parent, x, y: placement.y + top - fragment.start },
             flow,
@@ -176,7 +176,7 @@ export function projectCellPageCuts(
             },
             { insets, maxRows: maxRows - rows.length },
           );
-          if (projected.state !== "placed") return projected;
+          if (projected.state !== 'placed') return projected;
           rows.push(...projected.rows);
           boxes.push(...projected.boxes);
           flowPictures.push(...(projected.flowPictures ?? []));
@@ -187,15 +187,15 @@ export function projectCellPageCuts(
         ? pictureAnchorRows(flow.rows, { tableNode: table.tableNode, listNode: cell.listNode })
         : null;
       if (hasOverlayPictures && !cellPictureAnchors)
-        return unavailable("InvalidCellPageProjection");
+        return unavailable('InvalidCellPageProjection');
       for (const picture of flow.flowPictures ?? []) {
-        if (++inspections > maxInspections) return limit("cell-pictures");
+        if (++inspections > maxInspections) return limit('cell-pictures');
         const extent = picture.flowRectangle ?? picture.rectangle;
         const pictureTop = top + insets.top + extent.y,
           pictureBottom = pictureTop + extent.height;
         if ([2, 3].includes(picture.flow?.textWrap)) {
           const anchor = pictureAnchorRow(cellPictureAnchors, picture);
-          if (!anchor) return unavailable("InvalidCellPageProjection");
+          if (!anchor) return unavailable('InvalidCellPageProjection');
           const anchorTop = top + insets.top + anchor.y;
           if (
             anchorTop < fragment.start ||
@@ -206,7 +206,7 @@ export function projectCellPageCuts(
         } else {
           if (pictureBottom <= fragment.start || pictureTop >= fragment.end) continue;
           if (pictureTop < fragment.start || pictureBottom > fragment.end)
-            return unavailable("SplitTableCellPicture");
+            return unavailable('SplitTableCellPicture');
         }
         const moved = translatePicturePlacement(
           picture,
@@ -218,7 +218,7 @@ export function projectCellPageCuts(
             referenceBoxes: placement.referenceBoxes,
           },
         );
-        if (moved.state !== "translated") return unavailable("InvalidCellPageProjection");
+        if (moved.state !== 'translated') return unavailable('InvalidCellPageProjection');
         flowPictures.push(moved.picture);
       }
       if (flow.boxes?.length) {
@@ -243,9 +243,9 @@ export function projectCellPageCuts(
             origin,
             maxRows,
           );
-          if (prepared.state !== "prepared") return prepared;
+          if (prepared.state !== 'prepared') return prepared;
           inspections += prepared.inspections;
-          if (inspections > maxInspections) return limit("cell-nested-index-build");
+          if (inspections > maxInspections) return limit('cell-nested-index-build');
           cells.set(cell.listNode, prepared);
         }
         const { nested, pictureAnchors } = prepared;
@@ -272,18 +272,18 @@ export function projectCellPageCuts(
           return shifted;
         };
         const selected = prepared.index.select(fragment.start, fragment.end);
-        if (selected.state !== "selected") return selected;
+        if (selected.state !== 'selected') return selected;
         inspections += selected.inspections;
-        if (inspections > maxInspections) return limit("cell-nested-index-query");
+        if (inspections > maxInspections) return limit('cell-nested-index-query');
         for (const { item } of selected.rows) {
-          if (++inspections > maxInspections) return limit("cell-nested-items");
+          if (++inspections > maxInspections) return limit('cell-nested-items');
           const itemTop = item.y - origin.y,
             itemBottom = itemTop + item.height;
           if (itemBottom <= fragment.start || itemTop >= fragment.end) continue;
-          if (item.kind !== "gap" && (itemTop < fragment.start || itemBottom > fragment.end))
-            return unavailable("SplitNestedCellContent");
+          if (item.kind !== 'gap' && (itemTop < fragment.start || itemBottom > fragment.end))
+            return unavailable('SplitNestedCellContent');
           const shifted = move(item);
-          if (item.kind === "gap") {
+          if (item.kind === 'gap') {
             shifted.y = placement.y + Math.max(itemTop, fragment.start) - fragment.start;
             shifted.height = Math.min(itemBottom, fragment.end) - Math.max(itemTop, fragment.start);
           }
@@ -295,16 +295,16 @@ export function projectCellPageCuts(
               shifted.y + shifted.height,
             ].every(Number.isFinite)
           )
-            return unavailable("InvalidCellPageProjection");
-          if (Object.hasOwn(item, "kind")) {
-            if (rows.length >= maxRows) return limit("cell-nested-rows");
+            return unavailable('InvalidCellPageProjection');
+          if (Object.hasOwn(item, 'kind')) {
+            if (rows.length >= maxRows) return limit('cell-nested-rows');
             rows.push(shifted);
           } else boxes.push(shifted);
         }
         for (const picture of nested.flowPictures ?? []) {
-          if (++inspections > maxInspections) return limit("cell-nested-pictures");
+          if (++inspections > maxInspections) return limit('cell-nested-pictures');
           const anchor = pictureAnchorRow(pictureAnchors, picture);
-          if (!anchor) return unavailable("InvalidNestedPictureProjection");
+          if (!anchor) return unavailable('InvalidNestedPictureProjection');
           const anchorTop = anchor.y - origin.y;
           if (
             anchorTop < fragment.start ||
@@ -322,7 +322,7 @@ export function projectCellPageCuts(
               referenceBoxes: placement.referenceBoxes,
             },
           );
-          if (moved.state !== "translated") return unavailable("InvalidNestedPictureProjection");
+          if (moved.state !== 'translated') return unavailable('InvalidNestedPictureProjection');
           const projected = moved.picture;
           if (picture.pageClip) projected.pageClip = move(picture.pageClip);
           flowPictures.push(projected);
@@ -335,17 +335,17 @@ export function projectCellPageCuts(
       let rowIndex = offsets.get(offset);
       if (!rowIndex) {
         rowIndex = createCellRowBandIndex(flow.rows, offset);
-        if (rowIndex.state !== "prepared") return unavailable(rowIndex.error);
+        if (rowIndex.state !== 'prepared') return unavailable(rowIndex.error);
         inspections += rowIndex.inspections;
-        if (inspections > maxInspections) return limit("cell-row-index-build");
+        if (inspections > maxInspections) return limit('cell-row-index-build');
         offsets.set(offset, rowIndex);
       }
       const selected = rowIndex.select(fragment.start, fragment.end);
-      if (selected.state !== "selected") return unavailable(selected.error);
+      if (selected.state !== 'selected') return unavailable(selected.error);
       inspections += selected.inspections;
-      if (inspections > maxInspections) return limit("cell-row-index-query");
+      if (inspections > maxInspections) return limit('cell-row-index-query');
       for (const row of selected.rows) {
-        if (++inspections > maxInspections) return limit("cell-row-projection");
+        if (++inspections > maxInspections) return limit('cell-row-projection');
         const { start: rowTop, end: rowBottom } = tableCellBand(top + insets.top, row);
         const point = isZeroAdvanceCellAnchor(row);
         if (
@@ -355,27 +355,27 @@ export function projectCellPageCuts(
             : rowBottom <= fragment.start || rowTop >= fragment.end
         )
           continue;
-        if (row.kind === "text" && (rowTop < fragment.start || rowBottom > fragment.end))
-          return unavailable("SplitTableTextRow");
-        if (rows.length >= maxRows) return limit("cell-output-rows");
+        if (row.kind === 'text' && (rowTop < fragment.start || rowBottom > fragment.end))
+          return unavailable('SplitTableTextRow');
+        if (rows.length >= maxRows) return limit('cell-output-rows');
         const localX = row.x ?? 0;
-        if (!Number.isFinite(localX)) return unavailable("InvalidCellPageProjection");
+        if (!Number.isFinite(localX)) return unavailable('InvalidCellPageProjection');
         if (row.width !== undefined && (!Number.isFinite(row.width) || row.width < 0))
-          return unavailable("InvalidCellPageProjection");
+          return unavailable('InvalidCellPageProjection');
         const rowX = x + insets.left + localX,
           rowY = placement.y + Math.max(rowTop, fragment.start) - fragment.start;
         const rowHeight = Math.min(rowBottom, fragment.end) - Math.max(rowTop, fragment.start);
         if (
           ![rowX, rowY, rowHeight, rowY + rowHeight, rowX + (row.width ?? 0)].every(Number.isFinite)
         )
-          return unavailable("InvalidCellPageProjection");
+          return unavailable('InvalidCellPageProjection');
         rows.push({
           ...row,
           ...(flow.columns ? { cellColumnOrdinal: row.columnOrdinal } : {}),
           columnOrdinal: placement.columnOrdinal,
           x: rowX,
           y: rowY,
-          height: row.kind === "text" ? row.height : rowHeight,
+          height: row.kind === 'text' ? row.height : rowHeight,
           tableNode: table.tableNode,
           listNode: cell.listNode,
           pageOrdinal: placement.pageOrdinal,
@@ -385,7 +385,7 @@ export function projectCellPageCuts(
     }
   }
   return {
-    state: "placed",
+    state: 'placed',
     rows: rows.toSorted((a, b) => a.pageOrdinal - b.pageOrdinal || a.y - b.y || a.x - b.x),
     boxes,
     ...(flowPictures.length ? { flowPictures } : {}),

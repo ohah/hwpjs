@@ -1,8 +1,8 @@
 // Command entry only. The native editor in the Worker owns editable values.
-import { formatOptions } from "./format-options.mjs";
-import { createRangePolicyControls } from "./range-policy-controls.mjs";
-import { prepareNormalizationEnable } from "./normalization-consent.mjs";
-import { prepareObservedDocInfoEnable } from "./observed-docinfo-consent.mjs";
+import { formatOptions } from './format-options.mjs';
+import { createRangePolicyControls } from './range-policy-controls.mjs';
+import { prepareNormalizationEnable } from './normalization-consent.mjs';
+import { prepareObservedDocInfoEnable } from './observed-docinfo-consent.mjs';
 export function createEditorControls(
   send,
   {
@@ -11,15 +11,15 @@ export function createEditorControls(
     confirmNormalization = () => false,
   } = {},
 ) {
-  const panel = document.querySelector("#editor-panel"),
-    enable = document.querySelector("#enable-edit");
-  const fields = document.querySelector("#edit-fields"),
-    note = document.querySelector("#edit-status");
-  const form = document.querySelector("#edit-form");
-  const format = document.querySelector("#format-button");
-  const canvasFormat = document.querySelector("#canvas-format-button");
-  const presets = document.querySelector("#format-presets");
-  const observedEnable = document.querySelector("#enable-observed-docinfo-edit");
+  const panel = document.querySelector('#editor-panel'),
+    enable = document.querySelector('#enable-edit');
+  const fields = document.querySelector('#edit-fields'),
+    note = document.querySelector('#edit-status');
+  const form = document.querySelector('#edit-form');
+  const format = document.querySelector('#format-button');
+  const canvasFormat = document.querySelector('#canvas-format-button');
+  const presets = document.querySelector('#format-presets');
+  const observedEnable = document.querySelector('#enable-observed-docinfo-edit');
   let observedAvailable = false;
   let loaded = false,
     ready = false,
@@ -30,13 +30,13 @@ export function createEditorControls(
   let distribution = false;
   let normalizationAvailable = false;
   const rangePolicy = createRangePolicyControls({
-    node: document.querySelector("#range-policy-consent"),
+    node: document.querySelector('#range-policy-consent'),
     format: documentFormat,
     ready: () => loaded && ready && !busy && !broken,
   });
   const validFormat = (id) => {
     if (formatIds === null || formatIds.has(id)) return true;
-    note.textContent = "문서에 존재하는 글자 모양 ID를 선택하세요.";
+    note.textContent = '문서에 존재하는 글자 모양 ID를 선택하세요.';
     return false;
   };
   const state = () => {
@@ -54,14 +54,14 @@ export function createEditorControls(
     }
     form.elements.charShapeId.disabled = format.disabled;
     format.title = formatAvailable
-      ? "기존 글자 모양 ID 적용"
-      : "이 세션은 글자 모양 ID 적용을 지원하지 않습니다";
+      ? '기존 글자 모양 ID 적용'
+      : '이 세션은 글자 모양 ID 적용을 지원하지 않습니다';
   };
-  presets?.addEventListener("change", () => {
+  presets?.addEventListener('change', () => {
     if (busy || !ready || !formatAvailable || !validFormat(Number(presets.value))) return;
     form.elements.charShapeId.value = presets.value;
   });
-  form.elements.charShapeId.addEventListener?.("input", () => {
+  form.elements.charShapeId.addEventListener?.('input', () => {
     if (presets) presets.value = form.elements.charShapeId.value;
   });
   const run = (message) => {
@@ -69,54 +69,54 @@ export function createEditorControls(
       !loaded ||
       busy ||
       broken ||
-      (message.kind === "enable" ? ready : !ready) ||
-      (message.kind === "format" && (!formatAvailable || !validFormat(message.charShapeId)))
+      (message.kind === 'enable' ? ready : !ready) ||
+      (message.kind === 'format' && (!formatAvailable || !validFormat(message.charShapeId)))
     )
       return false;
-    if (message.kind === "enable" && distribution) message = { ...message, distribution: true };
+    if (message.kind === 'enable' && distribution) message = { ...message, distribution: true };
     message = prepareObservedDocInfoEnable(message, observedAvailable, confirmNormalization);
     if (message === null) {
-      note.textContent = "원본 서식 보존 편집을 취소했습니다. 원본은 변경하지 않았습니다.";
+      note.textContent = '원본 서식 보존 편집을 취소했습니다. 원본은 변경하지 않았습니다.';
       return false;
     }
     message = prepareNormalizationEnable(message, normalizationAvailable, confirmNormalization);
     if (message === null) {
-      note.textContent = "보정본 편집을 취소했습니다. 원본은 변경하지 않았습니다.";
+      note.textContent = '보정본 편집을 취소했습니다. 원본은 변경하지 않았습니다.';
       return false;
     }
     message = rangePolicy.prepare(message);
     busy = true;
     state();
     rangePolicy.refresh();
-    note.textContent = "처리 중…";
+    note.textContent = '처리 중…';
     send(message);
     return true;
   };
-  enable.addEventListener("click", () => run({ kind: "enable" }));
-  observedEnable?.addEventListener("click", () =>
-    run({ kind: "enable", retainObservedDocInfo: true }),
+  enable.addEventListener('click', () => run({ kind: 'enable' }));
+  observedEnable?.addEventListener('click', () =>
+    run({ kind: 'enable', retainObservedDocInfo: true }),
   );
   const values = () =>
     Object.fromEntries(
-      ["section", "paragraph", "startUnit", "endUnit"].map((key) => [
+      ['section', 'paragraph', 'startUnit', 'endUnit'].map((key) => [
         key,
         Number(form.elements[key].value),
       ]),
     );
-  form.addEventListener("submit", (event) => {
+  form.addEventListener('submit', (event) => {
     event.preventDefault();
     if (busy || !ready || !form.reportValidity()) return;
-    run({ kind: "splice", ...values(), text: form.elements.text.value });
+    run({ kind: 'splice', ...values(), text: form.elements.text.value });
   });
-  format.addEventListener("click", () => {
+  format.addEventListener('click', () => {
     if (busy || !ready || !formatAvailable || !form.reportValidity()) return;
-    run({ kind: "format", ...values(), charShapeId: Number(form.elements.charShapeId.value) });
+    run({ kind: 'format', ...values(), charShapeId: Number(form.elements.charShapeId.value) });
   });
-  canvasFormat?.addEventListener("click", () => {
+  canvasFormat?.addEventListener('click', () => {
     if (busy || !ready || !formatAvailable || !form.elements.charShapeId.reportValidity()) return;
     if (!validFormat(Number(form.elements.charShapeId.value))) return;
     if (!formatSelection(Number(form.elements.charShapeId.value)))
-      note.textContent = "Canvas에서 텍스트를 선택하고 입력 처리가 끝난 뒤 적용하세요.";
+      note.textContent = 'Canvas에서 텍스트를 선택하고 입력 처리가 끝난 뒤 적용하세요.';
   });
   return {
     request: run,
@@ -133,7 +133,7 @@ export function createEditorControls(
       distribution = false;
       normalizationAvailable = false;
       observedAvailable = false;
-      note.textContent = "";
+      note.textContent = '';
       if (presets) presets.replaceChildren();
       state();
       rangePolicy.reset();
@@ -159,8 +159,8 @@ export function createEditorControls(
           ready = false;
           broken = true;
         }
-        note.textContent = `${message.applied ? "모델 변경 후 표시 갱신 실패. 파일을 다시 선택하세요" : "변경은 적용되지 않았습니다"}: ${message.error}`;
-      } else if (message.kind === "enable") {
+        note.textContent = `${message.applied ? '모델 변경 후 표시 갱신 실패. 파일을 다시 선택하세요' : '변경은 적용되지 않았습니다'}: ${message.error}`;
+      } else if (message.kind === 'enable') {
         ready = true;
         if (message.charShapeIds !== undefined) {
           const ids = message.charShapeIds;
@@ -179,26 +179,26 @@ export function createEditorControls(
           form.elements.charShapeId.max = valid && ids.length ? ids.at(-1) : 0;
           if (formatAvailable && !formatIds.has(Number(form.elements.charShapeId.value)))
             form.elements.charShapeId.value = String(ids[0]);
-          note.textContent = `편집 실험을 시작했습니다 · CharShape ID: ${formatAvailable ? ids.slice(0, 32).join(", ") + (ids.length > 32 ? " …" : "") : "없음"}`;
+          note.textContent = `편집 실험을 시작했습니다 · CharShape ID: ${formatAvailable ? ids.slice(0, 32).join(', ') + (ids.length > 32 ? ' …' : '') : '없음'}`;
         } else {
           formatIds = null;
           formatAvailable = Number.isInteger(message.charShapeCount) && message.charShapeCount > 0;
           form.elements.charShapeId.max = Math.max(0, message.charShapeCount - 1);
-          note.textContent = `편집 실험을 시작했습니다 · CharShape ID: ${message.charShapeCount ? `0~${message.charShapeCount - 1}` : "없음"}`;
+          note.textContent = `편집 실험을 시작했습니다 · CharShape ID: ${message.charShapeCount ? `0~${message.charShapeCount - 1}` : '없음'}`;
         }
       } else
         note.textContent =
-          "명령을 적용했습니다. 변경이 있으면 재조판 필요 · 지원하는 글자 크기·굵게·기울임을 시스템 글꼴로 표시하며 원본 글꼴·페이지 조판은 재현하지 않습니다.";
+          '명령을 적용했습니다. 변경이 있으면 재조판 필요 · 지원하는 글자 크기·굵게·기울임을 시스템 글꼴로 표시하며 원본 글꼴·페이지 조판은 재현하지 않습니다.';
       state();
       rangePolicy.refresh();
-      if (presets && message.kind === "enable" && !message.error) {
+      if (presets && message.kind === 'enable' && !message.error) {
         const ids =
           formatIds === null
             ? Array.from({ length: formatAvailable ? message.charShapeCount : 0 }, (_, id) => id)
             : [...formatIds];
         presets.replaceChildren(
           ...formatOptions(ids, message.characterShapes).map((row) => {
-            const option = document.createElement("option");
+            const option = document.createElement('option');
             option.value = row.value;
             option.textContent = row.label;
             return option;

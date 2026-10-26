@@ -1,22 +1,22 @@
-import { createHash } from "node:crypto";
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-export const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+export const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export function projectMarkdownInventory() {
   const list = (args) =>
     execFileSync(
-      "git",
-      ["ls-files", ...args, "-z", "--", "*.md", ":!:legacy/**", ":!:reference/**"],
+      'git',
+      ['ls-files', ...args, '-z', '--', '*.md', ':!:legacy/**', ':!:reference/**'],
       { cwd: projectRoot },
     )
-      .toString("utf8")
-      .split("\0")
+      .toString('utf8')
+      .split('\0')
       .filter(Boolean);
-  return { tracked: list([]), untracked: list(["--others", "--exclude-standard"]) };
+  return { tracked: list([]), untracked: list(['--others', '--exclude-standard']) };
 }
 
 export function auditDocs(paths, verified, read, untracked = []) {
@@ -40,13 +40,13 @@ export function auditDocs(paths, verified, read, untracked = []) {
     } else if (!(path in verified)) {
       result.pending.push(path);
     } else if (
-      !/^[0-9a-f]{64}$/.test(verified[path]?.sha256 ?? "") ||
-      typeof verified[path]?.evidence !== "string" ||
+      !/^[0-9a-f]{64}$/.test(verified[path]?.sha256 ?? '') ||
+      typeof verified[path]?.evidence !== 'string' ||
       !verified[path].evidence.trim()
     ) {
       result.invalid_verified.push(path);
     } else {
-      const actual = createHash("sha256").update(bytes).digest("hex");
+      const actual = createHash('sha256').update(bytes).digest('hex');
       (actual === verified[path].sha256 ? result.verified_current : result.stale).push(path);
     }
   }
@@ -55,17 +55,17 @@ export function auditDocs(paths, verified, read, untracked = []) {
 
 function main() {
   const { tracked, untracked } = projectMarkdownInventory();
-  if (!tracked.length) throw new Error("EmptyDocsInventory");
+  if (!tracked.length) throw new Error('EmptyDocsInventory');
   const manifest = JSON.parse(
-    readFileSync(resolve(projectRoot, "tools/docs-audit-reviewed.json"), "utf8"),
+    readFileSync(resolve(projectRoot, 'tools/docs-audit-reviewed.json'), 'utf8'),
   );
   if (
     manifest.schema !== 1 ||
     !manifest.verified ||
-    typeof manifest.verified !== "object" ||
+    typeof manifest.verified !== 'object' ||
     Array.isArray(manifest.verified)
   )
-    throw new Error("InvalidDocsAuditManifest");
+    throw new Error('InvalidDocsAuditManifest');
   const result = auditDocs(
     tracked,
     manifest.verified,
@@ -85,11 +85,11 @@ function main() {
     ((100 * result.verified_current.length) / Math.max(1, result.tracked)).toFixed(2),
   );
   process.stdout.write(`${JSON.stringify(summary)}\n`);
-  if (process.argv.includes("--list-pending")) process.stdout.write(`${JSON.stringify(result)}\n`);
+  if (process.argv.includes('--list-pending')) process.stdout.write(`${JSON.stringify(result)}\n`);
   if (
     result.unknown_verified.length ||
     result.invalid_verified.length ||
-    (process.argv.includes("--require-complete") &&
+    (process.argv.includes('--require-complete') &&
       (result.verified_current.length !== result.tracked || result.untracked.length))
   )
     process.exitCode = 1;

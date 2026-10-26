@@ -1,11 +1,11 @@
-import { DRAWING_PATTERN_KINDS } from "./drawing-pattern-fill.mjs";
-const color = (value) => typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
+import { DRAWING_PATTERN_KINDS } from './drawing-pattern-fill.mjs';
+const color = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 export function validDrawingFill(fill) {
-  if (fill?.state === "solid") return color(fill.color);
-  if (fill?.state === "pattern")
+  if (fill?.state === 'solid') return color(fill.color);
+  if (fill?.state === 'pattern')
     return DRAWING_PATTERN_KINDS.includes(fill.kind) && color(fill.background) && color(fill.color);
   if (
-    fill?.state !== "linear_gradient" ||
+    fill?.state !== 'linear_gradient' ||
     !Number.isFinite(fill.angle) ||
     !Array.isArray(fill.stops) ||
     fill.stops.length < 2

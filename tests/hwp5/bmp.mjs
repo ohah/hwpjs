@@ -1,6 +1,6 @@
-import assert from "node:assert/strict";
-import { bmpFixture } from "./bmp-fixture.mjs";
-import { bmpHeaderOracle, bmpLayoutOracle, bmpPixelsOracle, bmpWords } from "./bmp-oracle.mjs";
+import assert from 'node:assert/strict';
+import { bmpFixture } from './bmp-fixture.mjs';
+import { bmpHeaderOracle, bmpLayoutOracle, bmpPixelsOracle, bmpWords } from './bmp-oracle.mjs';
 export function bmpInput(
   raw,
   {
@@ -109,25 +109,25 @@ export function bmpEdges(call) {
     b[type](value, at);
     return b;
   };
-  reject(change(0, "writeUInt16LE", 0), /InvalidBmpSignature/);
-  for (const at of [6, 8]) reject(change(at, "writeUInt16LE", 1), /InvalidBmpReserved/);
-  reject(change(2, "writeUInt32LE", 13), /InvalidBmpFileSize/);
-  reject(change(2, "writeUInt32LE", raw.length + 1), /UnexpectedEnd/);
+  reject(change(0, 'writeUInt16LE', 0), /InvalidBmpSignature/);
+  for (const at of [6, 8]) reject(change(at, 'writeUInt16LE', 1), /InvalidBmpReserved/);
+  reject(change(2, 'writeUInt32LE', 13), /InvalidBmpFileSize/);
+  reject(change(2, 'writeUInt32LE', raw.length + 1), /UnexpectedEnd/);
   for (const offset of [0, 13, 53, raw.length + 1, 0xffffffff])
-    reject(change(10, "writeUInt32LE", offset), /InvalidBmpPixelOffset/);
+    reject(change(10, 'writeUInt32LE', offset), /InvalidBmpPixelOffset/);
   for (const size of [0, 1, 16, 52, 56, 64, 0xffffffff])
-    reject(change(14, "writeUInt32LE", size), /UnsupportedBmpHeader/);
-  for (const at of [18, 22]) reject(change(at, "writeInt32LE", 0), /InvalidBmpDimensions/);
-  reject(change(18, "writeInt32LE", -1), /InvalidBmpDimensions/);
-  reject(change(22, "writeInt32LE", -2147483648), /LimitExceeded/);
+    reject(change(14, 'writeUInt32LE', size), /UnsupportedBmpHeader/);
+  for (const at of [18, 22]) reject(change(at, 'writeInt32LE', 0), /InvalidBmpDimensions/);
+  reject(change(18, 'writeInt32LE', -1), /InvalidBmpDimensions/);
+  reject(change(22, 'writeInt32LE', -2147483648), /LimitExceeded/);
   for (const planes of [0, 2, 65535])
-    reject(change(26, "writeUInt16LE", planes), /InvalidBmpPlanes/);
+    reject(change(26, 'writeUInt16LE', planes), /InvalidBmpPlanes/);
   for (const bits of [0, 2, 3, 15, 48, 64, 65535])
-    reject(change(28, "writeUInt16LE", bits), /InvalidBmpBitCount/);
+    reject(change(28, 'writeUInt16LE', bits), /InvalidBmpBitCount/);
   for (const compression of [6, 7, 10, 14, 0xffffffff])
-    reject(change(30, "writeUInt32LE", compression), /UnsupportedBmpCompression/);
+    reject(change(30, 'writeUInt32LE', compression), /UnsupportedBmpCompression/);
   for (const size of [1, 23, 25, 0xffffffff])
-    reject(change(34, "writeUInt32LE", size), /InvalidBmpImageSize/);
+    reject(change(34, 'writeUInt32LE', size), /InvalidBmpImageSize/);
   reject(raw, /LimitExceeded/, { pixels: 5 });
   reject(raw, /LimitExceeded/, { bytes: raw.length - 1 });
   reject(raw, /LimitExceeded/, { storage: 23 });

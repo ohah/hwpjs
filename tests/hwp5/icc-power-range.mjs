@@ -1,9 +1,9 @@
-import assert from "node:assert/strict";
-import { preimageInput } from "./icc-power-preimage.mjs";
-import { reference as domain } from "./icc-parametric-domain.mjs";
-import { fraction as F } from "./icc-matrix-reference.mjs";
-import { cmp } from "./icc-power-reference.mjs";
-import { readWide } from "./icc-wide-fraction-wire.mjs";
+import assert from 'node:assert/strict';
+import { preimageInput } from './icc-power-preimage.mjs';
+import { reference as domain } from './icc-parametric-domain.mjs';
+import { fraction as F } from './icc-matrix-reference.mjs';
+import { cmp } from './icc-power-reference.mjs';
+import { readWide } from './icc-wide-fraction-wire.mjs';
 const Z = [0n, 1n],
   O = [1n, 1n],
   abs = (n) => (n < 0n ? -n : n);
@@ -25,7 +25,7 @@ function sqrt(n) {
     a = b;
     b = (a + n / a) / 2n;
   }
-  assert.equal(a * a, n, "oracle requires rational square root");
+  assert.equal(a * a, n, 'oracle requires rational square root');
   return a;
 }
 function evaluate(active, offset, x) {

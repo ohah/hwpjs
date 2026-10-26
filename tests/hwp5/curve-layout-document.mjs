@@ -1,34 +1,34 @@
-import assert from "node:assert/strict";
-import { existsSync, readFileSync } from "node:fs";
-import { deflateRawSync } from "node:zlib";
-import { documentRecords, decodedDocumentInput } from "./documents.mjs";
-import { containerActual } from "./containers.mjs";
-import { sectionFieldOffset } from "./document-report-wire.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
-import { polygonBytes } from "./shape-polygon.mjs";
-import { curveOwnerActual, curveOwnerRun } from "./curve-validation.mjs";
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import { deflateRawSync } from 'node:zlib';
+import { documentRecords, decodedDocumentInput } from './documents.mjs';
+import { containerActual } from './containers.mjs';
+import { sectionFieldOffset } from './document-report-wire.mjs';
+import { containerTotals } from './container-report-wire.mjs';
+import { polygonBytes } from './shape-polygon.mjs';
+import { curveOwnerActual, curveOwnerRun } from './curve-validation.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
 export function curveLayoutDocument(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/3-09월_교육_통합_2022.hwp", import.meta.url);
+  const path = new URL('../../reference/rhwp/samples/3-09월_교육_통합_2022.hwp', import.meta.url);
   if (!existsSync(path)) return { skipped: true };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
-  const h = Buffer.from(cfb.findExact("/FileHeader").content),
+  const h = Buffer.from(cfb.findExact('/FileHeader').content),
     v = h.readUInt32LE(32);
   const decode = (path) => call(3, Buffer.concat([h, Buffer.from(cfb.findExact(path).content)]));
-  const doc = decode("/DocInfo"),
-    original = decode("/BodyText/Section0");
+  const doc = decode('/DocInfo'),
+    original = decode('/BodyText/Section0');
   // Independent Node inflate/stream accounting verifies the exact total and total-1 boundary.
   containerActual(call, file, cfb, h, doc, [{ index: 0, bytes: original }]);
   assert.throws(() => call(25, Buffer.concat([w(64 * 1024 * 1024), file])), /LimitExceeded/);
   const fullOriginal = call(25, Buffer.concat([w(128 * 1024 * 1024), file]));
   assert.equal(containerTotals(fullOriginal).decoded_bytes, 87772864);
   const nodes = cfb.document().nodes,
-    body = nodes.findIndex((n) => n.parent === 0 && n.name === "BodyText");
+    body = nodes.findIndex((n) => n.parent === 0 && n.name === 'BodyText');
   const frame = (b, r, p) =>
     Buffer.concat([w((b.readUInt32LE(r.offset) & 0xfffff) | (p.length << 20)), p]);
   const variant = (mode) =>
@@ -63,7 +63,7 @@ export function curveLayoutDocument(call, cfb) {
           Buffer.from(
             cfb.write({
               nodes: nodes.map((n) =>
-                n.parent === body && n.name === "Section0"
+                n.parent === body && n.name === 'Section0'
                   ? { ...n, content: h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes }
                   : n,
               ),
@@ -77,7 +77,7 @@ export function curveLayoutDocument(call, cfb) {
     assert.deepEqual(expected, [1, 418, 417, 0, 0, 4]);
     assert.deepEqual(container.subarray(0, report.length), report);
     expected.forEach((n, i) =>
-      assert.equal(report.readUInt32LE(sectionFieldOffset(0, "curves", i)), n),
+      assert.equal(report.readUInt32LE(sectionFieldOffset(0, 'curves', i)), n),
     );
     if (mode === 1) {
       assert.deepEqual(call(24, input(b)), report);
@@ -117,7 +117,7 @@ export function curveLayoutDocument(call, cfb) {
     changed[records[0].start + width + 418 * 8] = 255;
     const changedReport = run(changed);
     assert.deepEqual(full(changed).subarray(0, changedReport.length), changedReport);
-    assert.equal(changedReport.readUInt32LE(sectionFieldOffset(0, "curves", 4)), 1);
+    assert.equal(changedReport.readUInt32LE(sectionFieldOffset(0, 'curves', 4)), 1);
     const info = Buffer.from(doc),
       properties = documentRecords(info).find((r) => r.tag === 16);
     info.writeUInt16LE(2, properties.start);
@@ -129,8 +129,8 @@ export function curveLayoutDocument(call, cfb) {
       call(72, Buffer.concat([Buffer.from([mode]), decodedDocumentInput(h, info, parts)]));
     const canonical = ordered(pair);
     assert.deepEqual(ordered([...pair].reverse()), canonical);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, "curves", 4)), 0);
-    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, "curves", 4)), 1);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(0, 'curves', 4)), 0);
+    assert.equal(canonical.readUInt32LE(sectionFieldOffset(1, 'curves', 4)), 1);
     ordering++;
   }
   for (const mode of [2, 255])

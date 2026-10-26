@@ -1,5 +1,5 @@
 /** Integer advance-based spacing delta only; no run-end or wrapping policy. */
-import { roundedMulDiv } from "./integer-mul-div.mjs";
+import { roundedMulDiv } from './integer-mul-div.mjs';
 export function characterSpacingDelta(advance, percent) {
   if (
     !Number.isInteger(advance) ||

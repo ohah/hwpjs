@@ -1,5 +1,5 @@
-import assert from "node:assert/strict";
-import { checkDocinfo } from "./docinfo.mjs";
+import assert from 'node:assert/strict';
+import { checkDocinfo } from './docinfo.mjs';
 
 function word(n) {
   const b = Buffer.alloc(4);
@@ -11,9 +11,9 @@ function frame(tag, b, level = 1) {
 }
 export function formattingEdges(call) {
   const version = 0x05010001;
-  const tab = Buffer.from("0300008001000000fffffffffefd3412aa", "hex");
-  const bullet = Buffer.from("0800000000003200ffffffff222001000000f6140334121327aa", "hex");
-  const style = Buffer.from("010000d80000fffeffff34127856abcd", "hex");
+  const tab = Buffer.from('0300008001000000fffffffffefd3412aa', 'hex');
+  const bullet = Buffer.from('0800000000003200ffffffff222001000000f6140334121327aa', 'hex');
+  const style = Buffer.from('010000d80000fffeffff34127856abcd', 'hex');
   const numbering = Buffer.alloc(184);
   numbering[98] = 7;
   numbering[100] = 9;
@@ -42,7 +42,7 @@ export function formattingEdges(call) {
     checkDocinfo(call, v, frame(23, numbering));
   assert.throws(
     () =>
-      call(4, Buffer.concat([word(version), frame(22, Buffer.from("00000000ffffffff", "hex"))])),
+      call(4, Buffer.concat([word(version), frame(22, Buffer.from('00000000ffffffff', 'hex'))])),
     /UnexpectedEnd/,
   );
   // Nonempty formats in all ten levels, distinct headers, embedded NUL/surrogate.
@@ -82,7 +82,7 @@ export function formattingMutations(call) {
     } catch (e) {
       error = e;
     }
-    if (error) assert.equal(error.message, "UnexpectedEnd");
+    if (error) assert.equal(error.message, 'UnexpectedEnd');
     else checkDocinfo(call, 0x05010001, frame(tag, b));
     checkDocinfo(call, 0x05010001, frame(tag, original));
     return !error;
@@ -152,13 +152,13 @@ export function formattingCounts(bytes) {
     paraShape: 0,
   };
   const names = {
-    20: "borderFill",
-    21: "charShape",
-    22: "tabDef",
-    23: "numbering",
-    24: "bullet",
-    25: "paraShape",
-    26: "style",
+    20: 'borderFill',
+    21: 'charShape',
+    22: 'tabDef',
+    23: 'numbering',
+    24: 'bullet',
+    25: 'paraShape',
+    26: 'style',
   };
   let offset = 0;
   while (offset < bytes.length) {

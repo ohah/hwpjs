@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
-import { deflateRawSync } from "node:zlib";
-import { loadMemoDocument } from "./memo-references.mjs";
-import { documentRecords } from "./documents.mjs";
-import { containerTotals } from "./container-report-wire.mjs";
+import assert from 'node:assert/strict';
+import { deflateRawSync } from 'node:zlib';
+import { loadMemoDocument } from './memo-references.mjs';
+import { documentRecords } from './documents.mjs';
+import { containerTotals } from './container-report-wire.mjs';
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
@@ -10,9 +10,9 @@ const w = (n) => {
 };
 const words = (xs) => Buffer.concat(xs.map(w));
 export function viewTextDocument(call, cfb) {
-  const x = loadMemoDocument(call, cfb, "issue5169_viewtext_changetracking.hwp"),
-    parent = x.nodes.findIndex((n) => n.parent === 0 && n.name === "ViewText"),
-    target = x.nodes.findIndex((n) => n.parent === parent && n.name === "Section0");
+  const x = loadMemoDocument(call, cfb, 'issue5169_viewtext_changetracking.hwp'),
+    parent = x.nodes.findIndex((n) => n.parent === 0 && n.name === 'ViewText'),
+    target = x.nodes.findIndex((n) => n.parent === parent && n.name === 'Section0');
   assert.ok(parent >= 0 && target >= 0);
   const view = call(3, Buffer.concat([x.h, Buffer.from(x.nodes[target].content)])),
     records = documentRecords(view).length;
@@ -50,24 +50,24 @@ export function viewTextDocument(call, cfb) {
   }
   // Renaming avoids rewriting unrelated CFB parent indices.
   reject(
-    rebuild(x.nodes.map((n, i) => (i === parent ? { ...n, name: "OtherView" } : n))),
+    rebuild(x.nodes.map((n, i) => (i === parent ? { ...n, name: 'OtherView' } : n))),
     /MissingViewText/,
   );
-  for (const name of ["Other", "Section01", "Section1"]) {
+  for (const name of ['Other', 'Section01', 'Section1']) {
     reject(
       rebuild(x.nodes.map((n, i) => (i === target ? { ...n, name } : n))),
-      name === "Other"
+      name === 'Other'
         ? /SectionCountMismatch/
-        : name === "Section01"
+        : name === 'Section01'
           ? /InvalidSectionName/
           : /InvalidSectionIndex/,
     );
   }
-  reject(rebuild([...x.nodes, { ...x.nodes[target], name: "Section1" }]), /SectionCountMismatch/);
+  reject(rebuild([...x.nodes, { ...x.nodes[target], name: 'Section1' }]), /SectionCountMismatch/);
   const h = Buffer.from(x.h);
   h.writeUInt32LE(h.readUInt32LE(36) & ~16384, 36);
   const unflagged = rebuild(
-    x.nodes.map((n) => (n.parent === 0 && n.name === "FileHeader" ? { ...n, content: h } : n)),
+    x.nodes.map((n) => (n.parent === 0 && n.name === 'FileHeader' ? { ...n, content: h } : n)),
   );
   assert.deepEqual(call(98, input(unflagged)), words([0, 1, 1, records, view.length, records]));
   accepted++;

@@ -1,9 +1,9 @@
 // Optional third implementation: macOS ImageIO, never a product dependency.
-import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 export function compareGifImageIo(executable, raw, reference) {
   // Do not confuse frame rasters with animation canvases or inferred palettes.
-  assert.equal(reference.frames.length, 1, "oracle comparison is single-frame only");
+  assert.equal(reference.frames.length, 1, 'oracle comparison is single-frame only');
   const frame = reference.frames[0];
   assert.equal(frame.left, 0);
   assert.equal(frame.top, 0);
@@ -28,6 +28,6 @@ export function compareGifImageIo(executable, raw, reference) {
       frame.colors.copy(expected, i * 4, index * 3, index * 3 + 3);
       expected[i * 4 + 3] = 255;
     }
-  assert.deepEqual(Buffer.from(native[0].rgba, "base64"), expected);
+  assert.deepEqual(Buffer.from(native[0].rgba, 'base64'), expected);
   return { pixels: frame.indices.length };
 }

@@ -1,17 +1,17 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { historyXmlPayloads } from "./history-xml-source.mjs";
-const decoders = ["utf-8", "utf-16le", "utf-16be"].map(
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { historyXmlPayloads } from './history-xml-source.mjs';
+const decoders = ['utf-8', 'utf-16le', 'utf-16be'].map(
   (name) => new TextDecoder(name, { fatal: true, ignoreBOM: true }),
 );
 function expected(raw, encoding) {
   const text = decoders[encoding].decode(raw);
   // oxlint-disable-next-line no-control-regex -- XML에서 금지된 C0 및 비문자 코드포인트를 정확히 거부하는 oracle이다.
   if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/u.test(text))
-    throw Error("forbidden XML character");
+    throw Error('forbidden XML character');
   let count = 0,
     hash = 2166136261;
-  for (const c of text.replace(/\r\n?/g, "\n")) {
+  for (const c of text.replace(/\r\n?/g, '\n')) {
     count++;
     hash = Math.imul(hash ^ c.codePointAt(0), 16777619) >>> 0;
   }
@@ -49,18 +49,18 @@ export function xmlInputEdges(call, cfb) {
   }
   for (let n = 0; n < 256; n++) compare(Buffer.from([n]), 0);
   for (const text of [
-    "",
-    "\r",
-    "\r\n",
-    "\r\r\n",
-    "\n\r",
-    "\r\u0085\u2028",
-    "한글😀\ufeff",
-    "\ufeff<x/>&#13;",
-    "\ufdd0\u{10ffff}",
+    '',
+    '\r',
+    '\r\n',
+    '\r\r\n',
+    '\n\r',
+    '\r\u0085\u2028',
+    '한글😀\ufeff',
+    '\ufeff<x/>&#13;',
+    '\ufdd0\u{10ffff}',
   ]) {
     const utf8 = Buffer.from(text),
-      le = Buffer.from(text, "utf16le"),
+      le = Buffer.from(text, 'utf16le'),
       be = Buffer.from(le).swap16();
     [utf8, le, be].forEach((raw, encoding) => {
       compare(raw, encoding);
@@ -92,13 +92,13 @@ export function xmlInputEdges(call, cfb) {
   assert.throws(() => call(118, prefix(Buffer.alloc(0), 255)), /InvalidXmlEncoding/);
   rejected++;
   assert.deepEqual(
-    call(118, prefix(Buffer.from("x"), 0, 0xffffffff), 0xffffffff),
-    expected(Buffer.from("x"), 0),
+    call(118, prefix(Buffer.from('x'), 0, 0xffffffff), 0xffffffff),
+    expected(Buffer.from('x'), 0),
   );
   const actual = [];
   cfb.parse(
     readFileSync(
-      new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url),
+      new URL('../../reference/rhwp/samples/basic/treatise sample.hwp', import.meta.url),
     ),
     { strict: true },
   );
@@ -117,6 +117,6 @@ export function xmlInputEdges(call, cfb) {
       hash: want.readUInt32LE(4),
     });
   }
-  compare(Buffer.from("<recovered/>"), 0);
+  compare(Buffer.from('<recovered/>'), 0);
   return { accepted, rejected, actual, xmlGrammarValidated: false };
 }

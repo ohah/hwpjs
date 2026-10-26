@@ -1,22 +1,22 @@
-import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
-import { deflateSync } from "node:zlib";
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+import { deflateSync } from 'node:zlib';
 import {
   signature,
   png,
   pngChunk as chunk,
   pngHeader as header,
   pngStructureEvidence,
-} from "./png-structure-evidence.mjs";
-import { transparencyEvidence } from "./png-transparency-evidence.mjs";
-import { pngPixelsEvidence } from "./png-pixels-evidence.mjs";
+} from './png-structure-evidence.mjs';
+import { transparencyEvidence } from './png-transparency-evidence.mjs';
+import { pngPixelsEvidence } from './png-pixels-evidence.mjs';
 function parts(color, depth, entries = 0) {
   const size = Math.ceil(({ 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 }[color] * depth) / 8);
   return {
-    h: chunk("IHDR", header(depth, color)),
-    palette: entries ? [chunk("PLTE", Buffer.alloc(entries * 3))] : [],
-    idat: chunk("IDAT", deflateSync(Buffer.alloc(1 + size))),
-    end: chunk("IEND"),
+    h: chunk('IHDR', header(depth, color)),
+    palette: entries ? [chunk('PLTE', Buffer.alloc(entries * 3))] : [],
+    idat: chunk('IDAT', deflateSync(Buffer.alloc(1 + size))),
+    end: chunk('IEND'),
   };
 }
 export function pngTransparencyEdges(call, cfb) {
@@ -63,8 +63,8 @@ export function pngTransparencyEdges(call, cfb) {
         good(
           png(
             p.h,
-            chunk("tRNS", payload),
-            chunk("vpAg", Buffer.from("opaque metadata")),
+            chunk('tRNS', payload),
+            chunk('vpAg', Buffer.from('opaque metadata')),
             p.idat,
             p.end,
           ),
@@ -72,8 +72,8 @@ export function pngTransparencyEdges(call, cfb) {
       }
       for (let size = 0; size <= 8; size++)
         if (size !== (color === 0 ? 2 : 6))
-          bad(png(p.h, chunk("tRNS", Buffer.alloc(size)), p.idat, p.end));
-      const valid = chunk("tRNS", Buffer.alloc(color === 0 ? 2 : 6));
+          bad(png(p.h, chunk('tRNS', Buffer.alloc(size)), p.idat, p.end));
+      const valid = chunk('tRNS', Buffer.alloc(color === 0 ? 2 : 6));
       bad(png(p.h, valid, valid, p.idat, p.end));
       bad(png(p.h, p.idat, valid, p.end));
     }
@@ -87,33 +87,33 @@ export function pngTransparencyEdges(call, cfb) {
             p.h,
             ...p.palette,
             chunk(
-              "tRNS",
+              'tRNS',
               Buffer.from(Array.from({ length: size }, (_, i) => (i * 127 + size) % 256)),
             ),
             p.idat,
             p.end,
           ),
         );
-      const trns = chunk("tRNS", Buffer.from([0]));
+      const trns = chunk('tRNS', Buffer.from([0]));
       bad(png(p.h, trns, ...p.palette, p.idat, p.end));
-      bad(png(p.h, ...p.palette, chunk("tRNS", Buffer.alloc(entries + 1)), p.idat, p.end));
-      bad(png(p.h, ...p.palette, chunk("tRNS"), chunk("tRNS"), p.idat, p.end));
+      bad(png(p.h, ...p.palette, chunk('tRNS', Buffer.alloc(entries + 1)), p.idat, p.end));
+      bad(png(p.h, ...p.palette, chunk('tRNS'), chunk('tRNS'), p.idat, p.end));
     }
   for (const depth of [8, 16]) {
     const p = parts(2, depth, 3),
-      trns = chunk("tRNS", Buffer.from([255, 1, 128, 2, 64, 3]));
+      trns = chunk('tRNS', Buffer.from([255, 1, 128, 2, 64, 3]));
     good(png(p.h, ...p.palette, trns, p.idat, p.end));
     bad(png(p.h, trns, ...p.palette, p.idat, p.end));
     for (const color of [4, 6]) {
       const alpha = parts(color, depth);
       for (const size of [0, 2, 6])
-        bad(png(alpha.h, chunk("tRNS", Buffer.alloc(size)), alpha.idat, alpha.end));
+        bad(png(alpha.h, chunk('tRNS', Buffer.alloc(size)), alpha.idat, alpha.end));
     }
   }
-  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
-  for (const name of readdirSync(dir).filter((n) => n.endsWith(".hwp"))) {
+  const dir = new URL('../../legacy/rust/crates/hwp-core/tests/fixtures/', import.meta.url);
+  for (const name of readdirSync(dir).filter((n) => n.endsWith('.hwp'))) {
     cfb.parse(readFileSync(new URL(name, dir)), { strict: true });
-    const entry = cfb.findExact("/PrvImage");
+    const entry = cfb.findExact('/PrvImage');
     if (!entry) continue;
     const bytes = Buffer.from(entry.content);
     if (!bytes.subarray(0, 8).equals(signature)) continue;
@@ -122,6 +122,6 @@ export function pngTransparencyEdges(call, cfb) {
     actualTransparency += e.present;
   }
   const p = parts(0, 16);
-  good(png(p.h, chunk("tRNS", Buffer.from([0, 1])), p.idat, p.end));
+  good(png(p.h, chunk('tRNS', Buffer.from([0, 1])), p.idat, p.end));
   return { accepted, rejected, actualPng, actualTransparency };
 }

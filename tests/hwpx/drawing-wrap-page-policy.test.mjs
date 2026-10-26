@@ -1,8 +1,8 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { drawingWrapPagePolicyError } from "../../web/preview/drawing-wrap-page-policy.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { drawingWrapPagePolicyError } from '../../web/preview/drawing-wrap-page-policy.mjs';
 
-test("body drawing wrap requires explicit source geometry and ownership flags", () => {
+test('body drawing wrap requires explicit source geometry and ownership flags', () => {
   const source = {
     caption: null,
     geometry: { width: 100, height: 50 },
@@ -23,20 +23,20 @@ test("body drawing wrap requires explicit source geometry and ownership flags", 
   for (const grouped of [true, {}])
     assert.equal(
       drawingWrapPagePolicyError(source, placement, grouped),
-      "UnsupportedDrawingPageWrap",
+      'UnsupportedDrawingPageWrap',
     );
   for (const caption of [undefined, {}, false])
     assert.equal(
       drawingWrapPagePolicyError({ ...source, caption }, placement, false),
-      "UnsupportedDrawingPageWrap",
+      'UnsupportedDrawingPageWrap',
     );
   for (const text_wrap of [undefined, 0, 3])
     assert.equal(
       drawingWrapPagePolicyError(source, { ...placement, flow: { text_wrap } }, false),
-      "UnsupportedDrawingPageWrap",
+      'UnsupportedDrawingPageWrap',
     );
-  assert.equal(drawingWrapPagePolicyError(source, null, false), "UnsupportedDrawingPageWrap");
-  assert.equal(drawingWrapPagePolicyError(null, placement, false), "UnsupportedDrawingPageWrap");
+  assert.equal(drawingWrapPagePolicyError(source, null, false), 'UnsupportedDrawingPageWrap');
+  assert.equal(drawingWrapPagePolicyError(null, placement, false), 'UnsupportedDrawingPageWrap');
   const changed = (index, value) => {
     const next = structuredClone(placement);
     next.position.flags[index] = value;
@@ -45,18 +45,18 @@ test("body drawing wrap requires explicit source geometry and ownership flags", 
   for (const value of [undefined, true, 0])
     assert.equal(
       drawingWrapPagePolicyError(source, changed(1, value), false),
-      "UnsupportedDrawingFlowWithText",
+      'UnsupportedDrawingFlowWithText',
     );
   for (const value of [undefined, false, 1])
     assert.equal(
       drawingWrapPagePolicyError(source, changed(2, value), false),
-      "UnsupportedDrawingOverlapPolicy",
+      'UnsupportedDrawingOverlapPolicy',
     );
   const transformed = structuredClone(source);
   transformed.rendering.matrix[1] = 1;
   assert.equal(
     drawingWrapPagePolicyError(transformed, placement, false),
-    "UnsupportedDrawingPageWrap",
+    'UnsupportedDrawingPageWrap',
   );
   assert.deepEqual({ source, placement }, before);
 });

@@ -1,19 +1,19 @@
-import assert from "node:assert/strict";
-import { paletteMetadataEvidence } from "./png-palette-metadata-evidence.mjs";
-import { sampleMetadataEvidence } from "./png-sample-metadata-evidence.mjs";
-import { timestampEvidence } from "./png-timestamp-evidence.mjs";
-import { textEvidence } from "./png-text-evidence.mjs";
-import { compressedTextEvidence } from "./png-compressed-text-evidence.mjs";
-import { internationalEvidence } from "./png-international-evidence.mjs";
-import { suggestedEvidence } from "./png-suggested-evidence.mjs";
-import { colorFixedEvidence } from "./png-color-fixed-evidence.mjs";
-import { srgbEvidence } from "./png-srgb-evidence.mjs";
+import assert from 'node:assert/strict';
+import { paletteMetadataEvidence } from './png-palette-metadata-evidence.mjs';
+import { sampleMetadataEvidence } from './png-sample-metadata-evidence.mjs';
+import { timestampEvidence } from './png-timestamp-evidence.mjs';
+import { textEvidence } from './png-text-evidence.mjs';
+import { compressedTextEvidence } from './png-compressed-text-evidence.mjs';
+import { internationalEvidence } from './png-international-evidence.mjs';
+import { suggestedEvidence } from './png-suggested-evidence.mjs';
+import { colorFixedEvidence } from './png-color-fixed-evidence.mjs';
+import { srgbEvidence } from './png-srgb-evidence.mjs';
 export function transparencyEvidence(structure) {
   const { chunks, fields } = structure;
   const color = fields[3],
     depth = fields[2],
     palette = fields[8];
-  const indexes = chunks.map((c, i) => (c.name === "tRNS" ? i : -1)).filter((i) => i >= 0);
+  const indexes = chunks.map((c, i) => (c.name === 'tRNS' ? i : -1)).filter((i) => i >= 0);
   assert.ok(indexes.length <= 1);
   const raw = [0, 0, 0],
     values = [0, 0, 0],
@@ -26,8 +26,8 @@ export function transparencyEvidence(structure) {
     const index = indexes[0],
       payload = chunks[index].payload;
     payloadBytes = payload.length;
-    assert.ok(index < chunks.findIndex((c) => c.name === "IDAT"));
-    const plte = chunks.findIndex((c) => c.name === "PLTE");
+    assert.ok(index < chunks.findIndex((c) => c.name === 'IDAT'));
+    const plte = chunks.findIndex((c) => c.name === 'PLTE');
     assert.ok(plte < 0 || plte < index);
     assert.ok([0, 2, 3].includes(color));
     kind = { 0: 1, 2: 2, 3: 3 }[color];

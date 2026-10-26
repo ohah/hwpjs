@@ -9,16 +9,16 @@ export function attachHwp5TableLayoutSources(editor, content) {
       const sources = editor.tableLayoutSources(section),
         byNode = new Map();
       for (const source of sources) {
-        if (byNode.has(source.table_record_node)) throw new Error("AmbiguousTableLayoutSource");
+        if (byNode.has(source.table_record_node)) throw new Error('AmbiguousTableLayoutSource');
         byNode.set(source.table_record_node, source);
       }
       const tables = content.tables.filter((table) => table.section === section),
         attachments = [];
-      if (sources.length !== tables.length) throw new Error("IncompleteTableLayoutInventory");
+      if (sources.length !== tables.length) throw new Error('IncompleteTableLayoutInventory');
       for (const table of tables) {
         const source = byNode.get(table.tableNode);
         if (!source || source.rows !== table.rows || source.columns !== table.columns)
-          throw new Error("TableLayoutSourceBindingMismatch");
+          throw new Error('TableLayoutSourceBindingMismatch');
         if (
           !Number.isInteger(table.hostParagraph) ||
           table.hostParagraph < 0 ||
@@ -26,7 +26,7 @@ export function attachHwp5TableLayoutSources(editor, content) {
             (row) => row.section === section && row.paragraph === table.hostParagraph,
           )
         )
-          throw new Error("MissingTableLayoutHost");
+          throw new Error('MissingTableLayoutHost');
         attachments.push({ table, source });
       }
       for (const { table, source } of attachments) table.layoutSource = source;

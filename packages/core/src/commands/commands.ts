@@ -1,22 +1,22 @@
-import type { StateToken } from "../state/editor-state.ts";
+import type { StateToken } from '../state/editor-state.ts';
 export interface EditorCommand<T> {
   readonly name: string;
   readonly id: symbol;
   readonly __payload?: T;
 }
 export function createCommand<T>(name: string): EditorCommand<T> {
-  if (!name) throw Error("InvalidCommand");
+  if (!name) throw Error('InvalidCommand');
   return Object.freeze({ name, id: Symbol(name) });
 }
 export interface SelectionTarget extends StateToken {
-  readonly coordinateSpace: "display";
-  readonly format: "hwp5" | "hwpx";
+  readonly coordinateSpace: 'display';
+  readonly format: 'hwp5' | 'hwpx';
   readonly owner: string;
   readonly section: number;
   readonly paragraph: number;
   readonly startUnit: number;
   readonly endUnit: number;
-  readonly affinity: "forward" | "backward";
+  readonly affinity: 'forward' | 'backward';
 }
 export interface SpliceTextPayload {
   readonly target: SelectionTarget;
@@ -26,9 +26,9 @@ export interface SpliceTextPayload {
 export interface HistoryPayload {
   readonly token: StateToken;
 }
-export const SPLICE_TEXT_COMMAND = createCommand<SpliceTextPayload>("splice-text");
-export const UNDO_COMMAND = createCommand<HistoryPayload>("undo");
-export const REDO_COMMAND = createCommand<HistoryPayload>("redo");
+export const SPLICE_TEXT_COMMAND = createCommand<SpliceTextPayload>('splice-text');
+export const UNDO_COMMAND = createCommand<HistoryPayload>('undo');
+export const REDO_COMMAND = createCommand<HistoryPayload>('redo');
 
 export interface CharacterProperties {
   readonly size?: number | null;
@@ -44,29 +44,29 @@ export interface SetParagraphAlignmentPayload {
   readonly alignment: string;
 }
 export const SET_CHARACTER_PROPERTIES_COMMAND = createCommand<SetCharacterPropertiesPayload>(
-  "set-character-properties",
+  'set-character-properties',
 );
 export const SET_PARAGRAPH_ALIGNMENT_COMMAND =
-  createCommand<SetParagraphAlignmentPayload>("set-paragraph-alignment");
-export type CharacterUnderlineKind = "none" | "bottom" | "center" | "top";
+  createCommand<SetParagraphAlignmentPayload>('set-paragraph-alignment');
+export type CharacterUnderlineKind = 'none' | 'bottom' | 'center' | 'top';
 export interface SetCharacterUnderlinePayload {
   readonly target: SelectionTarget;
   readonly kind: CharacterUnderlineKind;
 }
 export const SET_CHARACTER_UNDERLINE_COMMAND =
-  createCommand<SetCharacterUnderlinePayload>("set-character-underline");
+  createCommand<SetCharacterUnderlinePayload>('set-character-underline');
 
 export interface SetCharacterStrikePayload {
   readonly target: SelectionTarget;
   readonly enabled: boolean;
 }
 export const SET_CHARACTER_STRIKE_COMMAND =
-  createCommand<SetCharacterStrikePayload>("set-character-strike");
+  createCommand<SetCharacterStrikePayload>('set-character-strike');
 
 export interface SetCharacterTextColorPayload {
   readonly target: SelectionTarget;
   readonly color: string;
 }
 export const SET_CHARACTER_TEXT_COLOR_COMMAND = createCommand<SetCharacterTextColorPayload>(
-  "set-character-text-color",
+  'set-character-text-color',
 );

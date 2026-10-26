@@ -2,8 +2,8 @@ export function paintMemoPane(ctx, boxes, scrollTop, height) {
   if (!boxes?.length) return;
   ctx.save();
   try {
-    ctx.fillStyle = "#fff8d8";
-    ctx.strokeStyle = "#d8be69";
+    ctx.fillStyle = '#fff8d8';
+    ctx.strokeStyle = '#d8be69';
     ctx.lineWidth = 1;
     ctx.setLineDash([]);
     for (const box of boxes) {

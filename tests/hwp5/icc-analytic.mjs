@@ -1,8 +1,8 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function gammaInput(g, x) {
   const b = Buffer.alloc(22);
   b.writeDoubleBE(x);
-  b.write("curv", 8);
+  b.write('curv', 8);
   b.writeUInt32BE(1, 16);
   b.writeUInt16BE(g, 20);
   return b;
@@ -10,7 +10,7 @@ export function gammaInput(g, x) {
 export function paraInput(kind, values, x) {
   const b = Buffer.alloc(20 + values.length * 4);
   b.writeDoubleBE(x);
-  b.write("para", 8);
+  b.write('para', 8);
   b.writeUInt16BE(kind, 16);
   values.forEach((v, i) => b.writeInt32BE(v, 20 + i * 4));
   return b;
@@ -36,7 +36,7 @@ function reference(kind, raw, x) {
       y = x < d ? c * x + f : (a * x + b) ** g + e;
       break;
     default:
-      throw Error("kind");
+      throw Error('kind');
   }
   return Math.max(0, Math.min(1, y));
 }

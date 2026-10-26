@@ -1,10 +1,10 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { chartGridCellsOracle } from "./chart-grid-cells-oracle.mjs";
-import { backdropRawVariant } from "./chart-backdrop-variant.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { chartGridCellsOracle } from './chart-grid-cells-oracle.mjs';
+import { backdropRawVariant } from './chart-backdrop-variant.mjs';
 const u32 = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -27,16 +27,16 @@ export function chartBackdropOracle(b, start) {
     objects = [],
     raw = [];
   for (const [name, length] of [
-    ["VtBackdrop", 50],
-    ["VtFill", 34],
-    ["VtPicture", 4],
+    ['VtBackdrop', 50],
+    ['VtFill', 34],
+    ['VtPicture', 4],
   ]) {
     objects.push(long());
     const idOffset = p,
       id = long(),
       len = word(),
       nameOffset = p;
-    assert.equal(take(len).toString("latin1"), name + "\0");
+    assert.equal(take(len).toString('latin1'), name + '\0');
     const versionOffset = p;
     assert.equal(word(), 1);
     declarations.push({ id, idOffset, nameOffset, versionOffset });
@@ -67,17 +67,17 @@ export function chartBackdropOracle(b, start) {
   };
 }
 export async function chartBackdrops(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     accepted = 0,
     rejected = 0;
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const start = chartGridCellsOracle(b).end,
         e = chartBackdropOracle(b, start);
@@ -97,28 +97,28 @@ export async function chartBackdrops(call) {
       for (let cut = start; cut < e.end; cut++) {
         const bad = Buffer.from(b.subarray(0, cut));
         bad.writeUInt32LE(cut - 36, 32);
-        reject(bad, "UnexpectedEnd");
+        reject(bad, 'UnexpectedEnd');
       }
-      reject(b, "LimitExceeded", b.length - 1);
+      reject(b, 'LimitExceeded', b.length - 1);
       for (const d of e.declarations) {
         let bad = Buffer.from(b);
         bad[d.nameOffset] = 88;
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
         bad = Buffer.from(b);
         bad.writeUInt16LE(2, d.versionOffset);
-        reject(bad, "UnsupportedChartTypeVersion");
+        reject(bad, 'UnsupportedChartTypeVersion');
       }
       let bad = Buffer.from(b);
       bad.writeUInt32LE(0, e.pictureData);
-      reject(bad, "UnsupportedChartPictureData");
+      reject(bad, 'UnsupportedChartPictureData');
       for (const base of e.bases) {
         bad = Buffer.from(b);
         bad.writeUInt32LE(e.declarations[0].id, base);
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
       }
       bad = Buffer.from(b);
       bad.writeUInt32LE(0xffffffff, start + 26);
-      reject(bad, "UnsupportedChartObjectReference");
+      reject(bad, 'UnsupportedChartObjectReference');
       accept(backdropRawVariant(b, start, e));
       bad = Buffer.from(b);
       for (const [i, d] of e.declarations.entries()) bad.writeUInt32LE(900 + i, d.idOffset);

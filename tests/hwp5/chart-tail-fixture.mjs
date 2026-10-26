@@ -1,16 +1,16 @@
 export function chartTailFixture(
   offset = 0,
-  mode = "corpus",
+  mode = 'corpus',
   listWord = 0xa55a,
   windowWord = 65535,
   typeIds = [17, 43, 69, 95],
 ) {
-  const definitions = ["VtList", "VtCollection", "VtObject", "VtWindow"].map((name, i) => [
+  const definitions = ['VtList', 'VtCollection', 'VtObject', 'VtWindow'].map((name, i) => [
     typeIds[i],
-    { name: name + "\0", version: i === 3 ? 2 : 1 },
+    { name: name + '\0', version: i === 3 ? 2 : 1 },
   ]);
   const types = new Map(
-      mode === "known" ? definitions : mode === "corpus" ? definitions.slice(1, 3) : [],
+      mode === 'known' ? definitions : mode === 'corpus' ? definitions.slice(1, 3) : [],
     ),
     objects = new Set([999]),
     seen = new Set(types.keys()),
@@ -69,7 +69,7 @@ export function chartTailFixture(
     windowStart,
     listWordOffset,
     windowWordOffset,
-    raw26: raw26.toString("hex"),
+    raw26: raw26.toString('hex'),
     listWord,
     windowWord,
     typeIds,

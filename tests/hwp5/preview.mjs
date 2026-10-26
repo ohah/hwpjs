@@ -1,7 +1,7 @@
-import assert from "node:assert/strict";
+import assert from 'node:assert/strict';
 export function previewStats(bytes) {
   assert.equal(bytes.length % 2, 0);
-  const value = bytes.toString("utf16le"),
+  const value = bytes.toString('utf16le'),
     result = [value.length, 0, 0, 0, 0];
   // JS string iteration combines surrogate pairs but preserves isolated units.
   for (const char of value) {
@@ -39,7 +39,7 @@ export function previewEdges(call) {
       }
   // Includes body control codes as ordinary units, BOM in the middle, NUL,
   // a supplementary scalar and unpaired surrogates; no terminator requirement.
-  const sample = Buffer.from("\ufeff\u0002\u000bA\0😀\ud800B\udc00\ufeffZ", "utf16le");
+  const sample = Buffer.from('\ufeff\u0002\u000bA\0😀\ud800B\udc00\ufeffZ', 'utf16le');
   for (let n = 0; n <= sample.length; n++) {
     if (n % 2) assert.throws(() => call(26, sample.subarray(0, n)), /InvalidPreviewTextSize/);
     else previewActual(call, sample.subarray(0, n));

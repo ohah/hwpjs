@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { sectionObjectContent } from "../../web/preview/section-object-content.mjs";
-import { layoutPageSections } from "../../web/preview/page-section-layout.mjs";
-import { moveSectionPlacement } from "../../web/preview/section-layout-offset.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { sectionObjectContent } from '../../web/preview/section-object-content.mjs';
+import { layoutPageSections } from '../../web/preview/page-section-layout.mjs';
+import { moveSectionPlacement } from '../../web/preview/section-layout-offset.mjs';
 
-test("section scoping isolates declaration coordinates and errors with overlapping local IDs", () => {
+test('section scoping isolates declaration coordinates and errors with overlapping local IDs', () => {
   const content = {
     pictures: [0, 1].map((section) => ({ section, pictureNode: 9 })),
     pageAreaDeclarations: [0, 1].map((section) => ({
@@ -13,7 +13,7 @@ test("section scoping isolates declaration coordinates and errors with overlappi
       paragraph: 0,
       unit: 0,
     })),
-    pageAreaDeclarationErrors: [{ section: 1, error: "UnsupportedParagraphControl" }],
+    pageAreaDeclarationErrors: [{ section: 1, error: 'UnsupportedParagraphControl' }],
   };
   const before = structuredClone(content),
     known = new Map([
@@ -31,13 +31,13 @@ test("section scoping isolates declaration coordinates and errors with overlappi
     [0],
   );
   assert.deepEqual(content, before);
-  for (const key of ["pictures", "pageAreaDeclarations", "pageAreaDeclarationErrors"])
+  for (const key of ['pictures', 'pageAreaDeclarations', 'pageAreaDeclarationErrors'])
     assert.throws(() => sectionObjectContent({ ...content, [key]: [{ section: 8 }] }, 0, known), {
-      message: "UnsupportedPageSections",
+      message: 'UnsupportedPageSections',
     });
 });
 
-test("section join retains affine rows, object reference boxes, declarations, and overflow coordinates", () => {
+test('section join retains affine rows, object reference boxes, declarations, and overflow coordinates', () => {
   const input = {
     paragraphs: [0, 1].map((section) => ({ section, paragraph: 0 })),
     pageSettings: [0, 1].map((section_ordinal) => ({ section_ordinal })),
@@ -55,7 +55,7 @@ test("section join retains affine rows, object reference boxes, declarations, an
         page: { x: 10, y: 10, width: 80, height: 80 },
       };
       const part = {
-        state: "paginated",
+        state: 'paginated',
         limited: false,
         height: 100,
         pages: [
@@ -69,7 +69,7 @@ test("section join retains affine rows, object reference boxes, declarations, an
         ],
         rows: [
           {
-            kind: "text",
+            kind: 'text',
             section,
             paragraph: 0,
             x: 2,
@@ -92,7 +92,7 @@ test("section join retains affine rows, object reference boxes, declarations, an
         pageAreaDeclarationPages: [
           { section, sourceElement: 12, paragraph: 0, unit: 0, pageOrdinal: 0 },
         ],
-        pageAreaSelectionPolicy: "rhwp-declaration-start",
+        pageAreaSelectionPolicy: 'rhwp-declaration-start',
         pageAreaOverflow: [
           { section, pageOrdinal: 0, rectangle: { x: 1, y: 16, width: 5, height: 5 } },
         ],
@@ -101,7 +101,7 @@ test("section join retains affine rows, object reference boxes, declarations, an
       return part;
     },
   );
-  assert.equal(result.state, "paginated", result.error);
+  assert.equal(result.state, 'paginated', result.error);
   assert.equal(result.rows[1].transform[5], 130);
   assert.equal(result.rows[1].y, 3);
   assert.equal(result.placedDrawings[1].rectangle.y, 115);
@@ -113,26 +113,26 @@ test("section join retains affine rows, object reference boxes, declarations, an
       [1, 1],
     ],
   );
-  assert.equal(result.pageAreaSelectionPolicy, "rhwp-declaration-start");
+  assert.equal(result.pageAreaSelectionPolicy, 'rhwp-declaration-start');
   assert.equal(result.pageAreaOverflow[1].rectangle.y, 116);
   assert.equal(result.pageAreaOverflow[1].pageOrdinal, 1);
   assert.equal(parts[1].placedDrawings[0].rectangle.y, 15);
   assert.deepEqual(input, before);
 });
 
-test("section placement offsets reject nonfinite coordinates rather than publishing invalid geometry", () => {
+test('section placement offsets reject nonfinite coordinates rather than publishing invalid geometry', () => {
   const placement = { section: 0, pageOrdinal: 0, rectangle: { x: 0, y: 10, width: 5, height: 5 } };
   for (const offset of [NaN, Infinity, -Infinity])
     assert.throws(() => moveSectionPlacement(placement, offset, 0));
 });
 
-test("late malformed section output cannot publish partial rows or conceal a foreign owner", () => {
+test('late malformed section output cannot publish partial rows or conceal a foreign owner', () => {
   const input = {
     paragraphs: [0, 1].map((section) => ({ section, paragraph: 0 })),
     pageSettings: [0, 1].map((section_ordinal) => ({ section_ordinal })),
   };
   const part = (section) => ({
-    state: "paginated",
+    state: 'paginated',
     height: 100,
     limited: false,
     pages: [{ ordinal: 0, section, paper: { y: 0 }, page: { y: 0 }, columns: [] }],
@@ -175,7 +175,7 @@ test("late malformed section output cannot publish partial rows or conceal a for
         return value;
       },
     );
-    assert.equal(result.state, "unavailable");
+    assert.equal(result.state, 'unavailable');
     assert.equal(result.rows, undefined);
   }
   for (const content of [null, {}, { pageSettings: [null], paragraphs: [] }])
@@ -186,6 +186,6 @@ test("late malformed section output cannot publish partial rows or conceal a for
         100,
         () => part(0),
       ).state,
-      "unavailable",
+      'unavailable',
     );
 });

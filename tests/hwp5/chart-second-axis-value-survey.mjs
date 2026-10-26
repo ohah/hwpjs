@@ -1,31 +1,31 @@
 // Diagnostic candidate offsets only: not a structural Axis-tail parser.
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { chartAxisContext } from "./chart-axis-context.mjs";
-import { observeAxisPrefix } from "./chart-axis-prefix-evidence.mjs";
-import { observeValueText } from "./chart-value-text-evidence.mjs";
-const verify = process.argv.includes("--verify"),
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { chartAxisContext } from './chart-axis-context.mjs';
+import { observeAxisPrefix } from './chart-axis-prefix-evidence.mjs';
+import { observeValueText } from './chart-value-text-evidence.mjs';
+const verify = process.argv.includes('--verify'),
   rows = [];
 let cuts = 0,
   withoutScale = 0;
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
 const addTypes = (c, ds) => {
   for (const d of ds) c.types.set(d.id, { name: d.name, version: d.version });
 };
 const addStrings = (c, ss) => {
   for (const s of ss)
-    if (s && s.kind !== "number") c.strings.set(s.id, { hex: s.hex, trailer: s.trailer });
+    if (s && s.kind !== 'number') c.strings.set(s.id, { hex: s.hex, trailer: s.trailer });
 };
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const c = chartAxisContext(b),
       firstAxis = observeAxisPrefix(b, c.plot.end, c.types, c.strings);
     if (!firstAxis.scale) {
@@ -54,11 +54,11 @@ try {
         if (
           e.constructor !== Error ||
           ![
-            "IncompleteAxisObservation",
-            "UnsupportedAxisObservationObject",
-            "UnsupportedAxisObservationType",
-            "UnsupportedAxisObservationPicture",
-            "UnsupportedAxisObservationScaleArray",
+            'IncompleteAxisObservation',
+            'UnsupportedAxisObservationObject',
+            'UnsupportedAxisObservationType',
+            'UnsupportedAxisObservationPicture',
+            'UnsupportedAxisObservationScaleArray',
           ].includes(e.message)
         )
           throw e;
@@ -75,7 +75,7 @@ try {
           () => observeValueText(b.subarray(0, cut), axis.end, c.types, c.strings),
           (e) =>
             e.constructor === Error &&
-            ["IncompleteValueObservation", "IncompleteAxisObservation"].includes(e.message),
+            ['IncompleteValueObservation', 'IncompleteAxisObservation'].includes(e.message),
         );
         cuts++;
       }
@@ -91,7 +91,7 @@ try {
   });
   assert.equal(rows.length, 34);
   assert.equal(withoutScale, 9);
-  assert.equal(rows.filter((r) => r.prefix.reference?.kind === "number").length, 1);
+  assert.equal(rows.filter((r) => r.prefix.reference?.kind === 'number').length, 1);
   console.log(
     JSON.stringify(
       { corpus, observations: rows.length, withoutScale, cuts: verify ? cuts : null, rows },

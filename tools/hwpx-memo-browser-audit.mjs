@@ -1,2 +1,2 @@
-import { runFieldLabelBrowserAudit } from "./browser/field-label-roundtrip.mjs";
-await runFieldLabelBrowserAudit("memo");
+import { runFieldLabelBrowserAudit } from './browser/field-label-roundtrip.mjs';
+await runFieldLabelBrowserAudit('memo');

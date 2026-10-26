@@ -1,11 +1,11 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createEditor } from "../../src/editor/create-editor.ts";
-import { PasswordAttemptError } from "../../src/editor/unlock-policy.ts";
-import { createReaderRuntimeFactory } from "../../src/runtime.ts";
-const module = await WebAssembly.compile(readFileSync("packages/core/dist/hwpjs.wasm"));
-for (const format of ["hwp5", "hwpx"] as const)
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createEditor } from '../../src/editor/create-editor.ts';
+import { PasswordAttemptError } from '../../src/editor/unlock-policy.ts';
+import { createReaderRuntimeFactory } from '../../src/runtime.ts';
+const module = await WebAssembly.compile(readFileSync('packages/core/dist/hwpjs.wasm'));
+for (const format of ['hwp5', 'hwpx'] as const)
   test(`${format} actual encrypted fixture unlock retry keeps candidate and old active`, async () => {
     const factory = createReaderRuntimeFactory({ wasmModule: module });
     let created = 0,
@@ -24,7 +24,7 @@ for (const format of ["hwp5", "hwpx"] as const)
       },
     });
     try {
-      const ext = format === "hwp5" ? "hwp" : "hwpx";
+      const ext = format === 'hwp5' ? 'hwp' : 'hwpx';
       await e.load(readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/charshape.${ext}`), {
         format,
       });
@@ -37,17 +37,17 @@ for (const format of ["hwp5", "hwpx"] as const)
       );
       for (let i = 0; i < 2; i++) {
         await assert.rejects(
-          e.unlock("wrong"),
+          e.unlock('wrong'),
           (error) =>
             error instanceof PasswordAttemptError &&
-            error.message === "WrongPasswordOrCorruptPayload",
+            error.message === 'WrongPasswordOrCorruptPayload',
         );
         assert.equal(e.getEditorState().documentId, old.documentId);
         assert.deepEqual(e.getEditorState().content, old.content);
         assert.equal(created, 2);
         assert.equal(closed, 0);
       }
-      await e.unlock("12345");
+      await e.unlock('12345');
       assert.equal(created, 2);
       assert.equal(closed, 1);
       assert.notEqual(e.getEditorState().documentId, old.documentId);

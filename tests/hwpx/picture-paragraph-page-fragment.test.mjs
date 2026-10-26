@@ -1,10 +1,10 @@
-import test from "node:test";
-import assert from "node:assert/strict";
-import { projectFloatingPicturePage } from "../../web/preview/picture-page-projection.mjs";
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { projectFloatingPicturePage } from '../../web/preview/picture-page-projection.mjs';
 
 function fixture() {
   const picture = {
-    state: "located",
+    state: 'located',
     section: 0,
     paragraph: 1,
     pictureNode: 7,
@@ -20,10 +20,10 @@ function fixture() {
     },
     position: { relations: [2, 3, 0, 0] },
   };
-  const paragraphs = [{ section: 0, paragraph: 1, text: "\ufffcab" }];
+  const paragraphs = [{ section: 0, paragraph: 1, text: '\ufffcab' }];
   const column = { x: 20, y: 20, width: 100, height: 100 };
   const rows = [0, 1].map((i) => ({
-    kind: "text",
+    kind: 'text',
     section: 0,
     paragraph: 1,
     startUnit: i ? 2 : 0,
@@ -39,11 +39,11 @@ function fixture() {
   return { picture, paragraphs, rows };
 }
 
-test("split paragraph start TOP LEFT anchor uses its actual page fragment and declared horizontal area", () => {
+test('split paragraph start TOP LEFT anchor uses its actual page fragment and declared horizontal area', () => {
   const f = fixture(),
     before = structuredClone(f);
   const result = projectFloatingPicturePage(f.picture, f.paragraphs, f.rows);
-  assert.equal(result.state, "placed", result.error);
+  assert.equal(result.state, 'placed', result.error);
   assert.equal(result.pageOrdinal, 0);
   assert.deepEqual(result.rectangle, { x: 20, y: 30, width: 10, height: 10 });
   const wrapped = f.rows.map((row, i) => ({
@@ -59,7 +59,7 @@ test("split paragraph start TOP LEFT anchor uses its actual page fragment and de
   assert.deepEqual(f, before);
 });
 
-test("split paragraph projection retains refusal for unproven alignments holes and inconsistent columns", () => {
+test('split paragraph projection retains refusal for unproven alignments holes and inconsistent columns', () => {
   for (const mutate of [
     (f) => (f.picture.position.relations[2] = 1),
     (f) => (f.picture.position.relations[3] = 2),
@@ -68,12 +68,12 @@ test("split paragraph projection retains refusal for unproven alignments holes a
     (f) => (f.rows[1].startUnit = 1),
     (f) => (f.rows[1].pageOrdinal = -1),
     (f) => {
-      f.paragraphs[0].text = "a\ufffcb";
+      f.paragraphs[0].text = 'a\ufffcb';
       f.picture.anchorUnit = 1;
     },
   ]) {
     const f = fixture();
     mutate(f);
-    assert.equal(projectFloatingPicturePage(f.picture, f.paragraphs, f.rows).state, "unavailable");
+    assert.equal(projectFloatingPicturePage(f.picture, f.paragraphs, f.rows).state, 'unavailable');
   }
 });

@@ -1,5 +1,5 @@
-import { FONT_LANGUAGES } from "../../js/font-faces.mjs";
-import { snapUnit } from "./text-input.mjs";
+import { FONT_LANGUAGES } from '../../js/font-faces.mjs';
+import { snapUnit } from './text-input.mjs';
 
 /** Current native display references, not installed-font detection. */
 export function selectedFontIds(content, ranges, language) {
@@ -22,7 +22,7 @@ export function selectedFontIds(content, ranges, language) {
     const start = range.startUnit,
       end = range.endUnit;
     if (
-      typeof row?.text !== "string" ||
+      typeof row?.text !== 'string' ||
       row.clipped ||
       !Number.isInteger(start) ||
       !Number.isInteger(end) ||

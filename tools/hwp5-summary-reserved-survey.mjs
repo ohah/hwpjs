@@ -1,13 +1,13 @@
 // Read-only wire census. CFB lookup uses the product reader; the property-set
 // directory and TypedPropertyValue header are interpreted independently here.
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
-import { createCfbReader } from "../js/cfb.mjs";
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { createCfbReader } from '../js/cfb.mjs';
 
 const args = process.argv.slice(2);
-const probeEnabled = args[0] === "--probe";
+const probeEnabled = args[0] === '--probe';
 const roots = probeEnabled ? args.slice(1) : args;
-const hwpFmtid = Buffer.from("60b6a29f6110d411b4c6006097c09d8c", "hex");
+const hwpFmtid = Buffer.from('60b6a29f6110d411b4c6006097c09d8c', 'hex');
 const emptyResult = () => ({
   files: 0,
   cfb_rejected: 0,
@@ -45,7 +45,7 @@ const emptyResult = () => ({
 
 function probeSummary(wasm, bytes, result) {
   const ptr = wasm.alloc(bytes.length);
-  if (!ptr) throw new Error("OutOfMemory");
+  if (!ptr) throw new Error('OutOfMemory');
   try {
     new Uint8Array(wasm.memory.buffer, ptr, bytes.length).set(bytes);
     if (wasm.probe(27, ptr, bytes.length, 1024)) result.summary_probe_parsed++;
@@ -91,7 +91,7 @@ function* hwpPaths(root) {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
       if (entry.isDirectory()) pending.push(path);
-      else if (entry.isFile() && entry.name.toLowerCase().endsWith(".hwp")) yield path;
+      else if (entry.isFile() && entry.name.toLowerCase().endsWith('.hwp')) yield path;
     }
   }
 }
@@ -195,18 +195,18 @@ function surveySummary(bytes, result) {
   }
 }
 
-if (roots.length === 1 && roots[0] === "--self-test") {
+if (roots.length === 1 && roots[0] === '--self-test') {
   const placeholder = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
   if (dictionaryShape(placeholder, 1) || dictionaryShape(placeholder, 2))
-    throw new Error("HWP marker accepted as OLEPS dictionary");
+    throw new Error('HWP marker accepted as OLEPS dictionary');
   const byteDictionary = Buffer.from([1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 65, 66, 0, 0]);
   if (!dictionaryShape(byteDictionary, 1) || dictionaryShape(byteDictionary, 2))
-    throw new Error("byte dictionary shape failed");
+    throw new Error('byte dictionary shape failed');
   const wideDictionary = Buffer.from([
     1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 65, 0, 66, 0, 0, 0, 0, 0,
   ]);
   if (!dictionaryShape(wideDictionary, 2) || dictionaryShape(wideDictionary, 1))
-    throw new Error("wide dictionary shape failed");
+    throw new Error('wide dictionary shape failed');
   const raw = Buffer.alloc(72);
   hwpFmtid.copy(raw, 28);
   raw.writeUInt32LE(1, 24);
@@ -220,28 +220,28 @@ if (roots.length === 1 && roots[0] === "--self-test") {
   const found = emptyResult();
   surveySummary(raw, found);
   if (found.one_set !== 1 || found.typed_properties !== 1 || found.nonzero_reserved !== 1)
-    throw new Error("typed reserved census failed");
+    throw new Error('typed reserved census failed');
   raw.writeUInt32LE(0, 56);
   const dictionary = emptyResult();
   surveySummary(raw, dictionary);
   if (dictionary.typed_properties !== 0 || dictionary.nonzero_reserved !== 0)
-    throw new Error("dictionary was typed");
+    throw new Error('dictionary was typed');
   raw.writeUInt32LE(2, 24);
   const two = emptyResult();
   surveySummary(raw, two);
-  if (two.two_sets !== 1 || two.typed_properties !== 0) throw new Error("two-set selection failed");
-  process.stdout.write("summary reserved survey self-test passed\n");
+  if (two.two_sets !== 1 || two.typed_properties !== 0) throw new Error('two-set selection failed');
+  process.stdout.write('summary reserved survey self-test passed\n');
 } else {
   if (roots.length === 0)
-    throw new Error("usage: hwp5-summary-reserved-survey.mjs [--self-test|--probe] DIR [DIR ...]");
+    throw new Error('usage: hwp5-summary-reserved-survey.mjs [--self-test|--probe] DIR [DIR ...]');
   const cfb = await createCfbReader(
-    readFileSync(new URL("../zig-out/bin/hwpjs.wasm", import.meta.url)),
+    readFileSync(new URL('../zig-out/bin/hwpjs.wasm', import.meta.url)),
   );
   const probe = probeEnabled
     ? (
         await WebAssembly.instantiate(
           await WebAssembly.compile(
-            readFileSync(new URL("../zig-out/bin/hwp5-probe.wasm", import.meta.url)),
+            readFileSync(new URL('../zig-out/bin/hwp5-probe.wasm', import.meta.url)),
           ),
           {},
         )
@@ -256,15 +256,15 @@ if (roots.length === 1 && roots[0] === "--self-test") {
       } catch (error) {
         const expected =
           error instanceof Error &&
-          (["InvalidFat", "InvalidUnusedEntry", "InvalidRoot"].includes(error.message) ||
-            error.message.startsWith("Header Signature: Expected d0cf11e0a1b11ae1 saw "));
+          (['InvalidFat', 'InvalidUnusedEntry', 'InvalidRoot'].includes(error.message) ||
+            error.message.startsWith('Header Signature: Expected d0cf11e0a1b11ae1 saw '));
         if (!expected) throw error;
         result.cfb_rejected++;
         result.cfb_rejection_reasons[error.message] =
           (result.cfb_rejection_reasons[error.message] ?? 0) + 1;
         continue;
       }
-      const node = cfb.findExact("/\x05HwpSummaryInformation");
+      const node = cfb.findExact('/\x05HwpSummaryInformation');
       if (node) {
         const bytes = Buffer.from(node.content);
         surveySummary(bytes, result);

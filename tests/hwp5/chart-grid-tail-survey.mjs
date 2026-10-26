@@ -1,23 +1,23 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes, digest } from "./hwp-corpus-evidence.mjs";
-import { chartGridCellsOracle } from "./chart-grid-cells-oracle.mjs";
-import { observeGridTail } from "./chart-grid-tail-evidence.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes, digest } from './hwp-corpus-evidence.mjs';
+import { chartGridCellsOracle } from './chart-grid-cells-oracle.mjs';
+import { observeGridTail } from './chart-grid-tail-evidence.mjs';
 
-const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
 const rows = [];
 try {
   const corpus = await oleContainerSurvey((envelope, payload) => {
     cfb.parse(Buffer.from(payload), { strict: true });
-    const entry = cfb.findExact("/Contents");
+    const entry = cfb.findExact('/Contents');
     if (!entry) return;
     const b = Buffer.from(streamBytes(entry));
-    if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+    if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
     const grid = chartGridCellsOracle(b),
       tail = observeGridTail(b, grid.end);
-    assert.ok(tail.declaration, "selected observation must be complete");
+    assert.ok(tail.declaration, 'selected observation must be complete');
     rows.push({
       sha256: digest(b),
       cellEnd: grid.end,

@@ -1,11 +1,11 @@
-import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { createCfbReader } from "../../js/cfb.mjs";
-import { oleContainerSurvey } from "./ole-container-survey.mjs";
-import { streamBytes } from "./hwp-corpus-evidence.mjs";
-import { titleBodyOracle } from "./chart-title-body-oracle.mjs";
-import { observeChartTail } from "./chart-tail-evidence.mjs";
-import { tailWire } from "./chart-tail-wire.mjs";
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { createCfbReader } from '../../js/cfb.mjs';
+import { oleContainerSurvey } from './ole-container-survey.mjs';
+import { streamBytes } from './hwp-corpus-evidence.mjs';
+import { titleBodyOracle } from './chart-title-body-oracle.mjs';
+import { observeChartTail } from './chart-tail-evidence.mjs';
+import { tailWire } from './chart-tail-wire.mjs';
 const extent = (b) => {
   b.writeUInt32LE(b.length - 36, 32);
   return b;
@@ -16,17 +16,17 @@ function oracle(b) {
   return { prior, r, wire: tailWire(r) };
 }
 export async function chartTails(call) {
-  const cfb = await createCfbReader(readFileSync("zig-out/bin/hwpjs.wasm"));
+  const cfb = await createCfbReader(readFileSync('zig-out/bin/hwpjs.wasm'));
   let roots = 0,
     accepted = 0,
     rejected = 0;
   try {
     await oleContainerSurvey((envelope, payload) => {
       cfb.parse(Buffer.from(payload), { strict: true });
-      const entry = cfb.findExact("/Contents");
+      const entry = cfb.findExact('/Contents');
       if (!entry) return;
       const b = Buffer.from(streamBytes(entry));
-      if (b.indexOf(Buffer.from("VtChart\0")) < 0) return;
+      if (b.indexOf(Buffer.from('VtChart\0')) < 0) return;
       roots++;
       const e = oracle(b);
       assert.equal(e.r.end, b.length);
@@ -46,11 +46,11 @@ export async function chartTails(call) {
       accept(b);
       accept(extent(Buffer.concat([b, Buffer.alloc(91, 255)])));
       for (let cut = e.prior.end; cut < e.r.end; cut++)
-        reject(extent(Buffer.from(b.subarray(0, cut))), "UnexpectedEnd");
-      reject(b, "LimitExceeded", e.r.objects.size - 1);
+        reject(extent(Buffer.from(b.subarray(0, cut))), 'UnexpectedEnd');
+      reject(b, 'LimitExceeded', e.r.objects.size - 1);
       for (const [id, error] of [
-        [0xffffffff, "UnsupportedChartObjectReference"],
-        [e.prior.r.blockId, "DuplicateChartObjectId"],
+        [0xffffffff, 'UnsupportedChartObjectReference'],
+        [e.prior.r.blockId, 'DuplicateChartObjectId'],
       ]) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(id, e.r.start);
@@ -58,8 +58,8 @@ export async function chartTails(call) {
       }
       for (const d of [...e.r.list.declarations, ...e.r.window.declarations])
         for (const [at, error] of [
-          [d.nameOffset, "UnsupportedChartClass"],
-          [d.versionOffset, "UnsupportedChartTypeVersion"],
+          [d.nameOffset, 'UnsupportedChartClass'],
+          [d.versionOffset, 'UnsupportedChartTypeVersion'],
         ]) {
           const bad = Buffer.from(b);
           bad[at] ^= 1;
@@ -70,7 +70,7 @@ export async function chartTails(call) {
       for (const at of [...e.r.list.references, ...e.r.window.references]) {
         const bad = Buffer.from(b);
         bad.writeUInt32LE(b.readUInt32LE(at) === base ? collection : base, at);
-        reject(bad, "UnsupportedChartClass");
+        reject(bad, 'UnsupportedChartClass');
       }
       const raw = Buffer.from(b);
       raw.fill(255, e.r.list.end, e.r.window.start);
