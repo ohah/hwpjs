@@ -3,8 +3,14 @@ import { attachTablePlacements } from "./table-placements-content.mjs";
 import { attachTableCaptions } from "./table-caption-content.mjs";
 
 export function attachHwpxTables(editor, content) {
-  const sections = [...new Set(content.paragraphs.map(p => p.section))].map(index => ({ index }));
-  const displayed = { tableBindings(section) { return editor.tableBindings(section).map(row => ({ ...row, paragraph: row.paragraph - 1 })); } };
+  const sections = [...new Set(content.paragraphs.map((p) => p.section))].map((index) => ({
+    index,
+  }));
+  const displayed = {
+    tableBindings(section) {
+      return editor.tableBindings(section).map((row) => ({ ...row, paragraph: row.paragraph - 1 }));
+    },
+  };
   attachTables(displayed, { sections }, content);
   attachTablePlacements(editor, sections, content, -1);
   attachTableCaptions(editor, sections, content);
@@ -19,23 +25,48 @@ export function attachHwpxTables(editor, content) {
         cell.sourceVerticalAlignment = cell.sourceMargin.vertical_alignment;
         cell.sourceLineWrap = cell.sourceMargin.line_wrap;
         cell.sourceTextDirection = cell.sourceMargin.text_direction;
+      } catch (error) {
+        content.tableCellMarginErrors.push({
+          section: table.section,
+          listNode: cell.listNode,
+          error: error.message,
+        });
       }
-      catch (error) { content.tableCellMarginErrors.push({ section: table.section, listNode: cell.listNode, error: error.message }); }
     }
-    try { table.sourceGeometry = editor.tableGeometry(table.section, table.tableNode); }
-    catch (error) { content.tableGeometryErrors.push({ section: table.section, tableNode: table.tableNode, error: error.message }); }
-    try { table.sourceCaption = editor.tableCaption(table.section, table.tableNode); }
-    catch (error) { content.tableCaptionErrors.push({ section: table.section, tableNode: table.tableNode, error: error.message }); }
+    try {
+      table.sourceGeometry = editor.tableGeometry(table.section, table.tableNode);
+    } catch (error) {
+      content.tableGeometryErrors.push({
+        section: table.section,
+        tableNode: table.tableNode,
+        error: error.message,
+      });
+    }
+    try {
+      table.sourceCaption = editor.tableCaption(table.section, table.tableNode);
+    } catch (error) {
+      content.tableCaptionErrors.push({
+        section: table.section,
+        tableNode: table.tableNode,
+        error: error.message,
+      });
+    }
   }
   for (const section of sections) {
     try {
       const rows = editor.tablePagination(section.index);
-      const tables = new Map(content.tables.filter(table => table.section === section.index).map(table => [table.tableNode, table]));
+      const tables = new Map(
+        content.tables
+          .filter((table) => table.section === section.index)
+          .map((table) => [table.tableNode, table]),
+      );
       for (const row of rows) {
         const table = tables.get(row.table_node);
         if (table) table.pagination = row.values;
       }
-    } catch (error) { content.tablePaginationErrors.push({ section: section.index, error: error.message }); }
+    } catch (error) {
+      content.tablePaginationErrors.push({ section: section.index, error: error.message });
+    }
   }
   return content;
 }

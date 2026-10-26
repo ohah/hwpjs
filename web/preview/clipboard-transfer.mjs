@@ -5,8 +5,9 @@ export async function transferSelectedText({ clipboard, text, isCurrent, cut, re
     report("이 환경에서는 시스템 클립보드를 사용할 수 없습니다.");
     return false;
   }
-  try { await clipboard.writeText(text); }
-  catch {
+  try {
+    await clipboard.writeText(text);
+  } catch {
     if (isCurrent()) report("클립보드 쓰기가 거부되었습니다.");
     return false;
   }
@@ -16,15 +17,22 @@ export async function transferSelectedText({ clipboard, text, isCurrent, cut, re
   return true;
 }
 
-export async function pasteClipboardText({ clipboard, isCurrent, replace, report, onDenied = null }) {
+export async function pasteClipboardText({
+  clipboard,
+  isCurrent,
+  replace,
+  report,
+  onDenied = null,
+}) {
   if (!isCurrent()) return false;
   if (typeof clipboard?.readText !== "function") {
     report("이 환경에서는 시스템 클립보드를 읽을 수 없습니다.");
     return false;
   }
   let text;
-  try { text = await clipboard.readText(); }
-  catch {
+  try {
+    text = await clipboard.readText();
+  } catch {
     if (isCurrent()) {
       report("클립보드 읽기가 거부되었습니다. Ctrl/Cmd+V를 사용하세요.");
       if (isCurrent()) onDenied?.();

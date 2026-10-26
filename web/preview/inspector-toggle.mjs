@@ -1,7 +1,7 @@
 // Presentation only. Native controls retain their own availability and values.
 export function createInspectorToggle({ button, panel }) {
   if (!button || !panel) throw new TypeError("MissingInspectorElements");
-  const show = visible => {
+  const show = (visible) => {
     if (typeof visible !== "boolean") throw new TypeError("InvalidInspectorVisibility");
     const restoreFocus = !visible && panel.contains(panel.ownerDocument.activeElement);
     panel.hidden = !visible;
@@ -15,5 +15,10 @@ export function createInspectorToggle({ button, panel }) {
   const toggle = () => show(panel.hidden);
   button.addEventListener("click", toggle);
   show(!panel.hidden);
-  return { show, close() { button.removeEventListener("click", toggle); } };
+  return {
+    show,
+    close() {
+      button.removeEventListener("click", toggle);
+    },
+  };
 }

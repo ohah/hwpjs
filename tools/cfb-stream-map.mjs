@@ -3,7 +3,12 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { runInNewContext } from "node:vm";
 
-const context = { module: { exports: {} }, require: createRequire(import.meta.url), Buffer, process };
+const context = {
+  module: { exports: {} },
+  require: createRequire(import.meta.url),
+  Buffer,
+  process,
+};
 runInNewContext(readFileSync(new URL("../legacy/cfb.js", import.meta.url), "utf8"), context);
 
 export function readLegacyCfbStreams(bytes) {

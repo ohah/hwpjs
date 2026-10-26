@@ -5,8 +5,7 @@ const word = (v) => {
   b.writeUInt32LE(v >>> 0);
   return b;
 };
-const frame = (tag, level, b) =>
-  Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
+const frame = (tag, level, b) => Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
 const version = 0x05000307;
 export function sectionActual(call, v, counts, bytes) {
   const out = call(11, Buffer.concat([word(v), ...counts.map(word), bytes]));
@@ -21,17 +20,12 @@ export function sectionEdges(call) {
     [74, Buffer.alloc(0), 28],
     [75, Buffer.alloc(0), 14],
   ]) {
-    const raw = Buffer.from(
-      Array.from({ length: min + 3 }, (_, i) => (i * 71 + 128) & 255),
-    );
+    const raw = Buffer.from(Array.from({ length: min + 3 }, (_, i) => (i * 71 + 128) & 255));
     for (const v of [0x05000104, 0x05000105, version])
       for (let n = 0; n <= raw.length; n++) {
         const b = frame(tag, 0, Buffer.concat([prefix, raw.subarray(0, n)]));
         if (n < (tag === 71 && v < 0x05000105 ? 24 : min))
-          assert.throws(
-            () => call(8, Buffer.concat([word(v), b])),
-            /UnexpectedEnd/,
-          );
+          assert.throws(() => call(8, Buffer.concat([word(v), b])), /UnexpectedEnd/);
         else checkBody(call, v, b);
       }
     for (let i = 0; i < raw.length; i++)
@@ -50,10 +44,7 @@ export function sectionEdges(call) {
   const page = frame(73, 2, Buffer.alloc(40)),
     border = Buffer.alloc(14);
   const good = () => Buffer.concat([h, ctrl(), page, frame(75, 2, border)]);
-  assert.deepEqual(
-    sectionActual(call, version, [1, 1], good()),
-    [1, 1, 1, 0, 0, 0],
-  );
+  assert.deepEqual(sectionActual(call, version, [1, 1], good()), [1, 1, 1, 0, 0, 0]);
   for (const [bytes, error] of [
     [h, /MissingSectionDefinition/],
     [Buffer.concat([h, ctrl()]), /MissingPageDefinition/],
@@ -65,20 +56,11 @@ export function sectionEdges(call) {
     sectionActual(call, version, [1, 1], good());
   }
   d.writeUInt16LE(2, 14);
-  assert.throws(
-    () => sectionActual(call, version, [1, 1], good()),
-    /InvalidResourceReference/,
-  );
+  assert.throws(() => sectionActual(call, version, [1, 1], good()), /InvalidResourceReference/);
   d.writeUInt16LE(0, 14);
-  assert.deepEqual(
-    sectionActual(call, version, [1, 1], good()),
-    [1, 1, 1, 1, 0, 0],
-  );
+  assert.deepEqual(sectionActual(call, version, [1, 1], good()), [1, 1, 1, 1, 0, 0]);
   border.writeUInt16LE(2, 12);
-  assert.throws(
-    () => sectionActual(call, version, [1, 1], good()),
-    /InvalidResourceReference/,
-  );
+  assert.throws(() => sectionActual(call, version, [1, 1], good()), /InvalidResourceReference/);
   border.writeUInt16LE(1, 12);
   sectionActual(call, version, [1, 1], good());
   const note = frame(74, 2, Buffer.alloc(28));
@@ -87,43 +69,29 @@ export function sectionEdges(call) {
     [1, 1, 1, 1, 2, 0],
   );
   assert.throws(
-    () =>
-      sectionActual(
-        call,
-        version,
-        [1, 1],
-        Buffer.concat([good(), note, note, note]),
-      ),
+    () => sectionActual(call, version, [1, 1], Buffer.concat([good(), note, note, note])),
     /ExcessNoteShapes/,
   );
   assert.throws(
     () =>
-      sectionActual(
-        call,
-        version,
-        [1, 1],
-        Buffer.concat([good(), frame(74, 1, Buffer.alloc(28))]),
-      ),
+      sectionActual(call, version, [1, 1], Buffer.concat([good(), frame(74, 1, Buffer.alloc(28))])),
     /OrphanSectionRecord/,
   );
   assert.equal(mutations, 960);
   const cold = Buffer.alloc(12);
   cold.writeUInt16LE(0x1004);
-  const column = (level) =>
-    frame(71, level, Buffer.concat([word(0x636f6c64), cold]));
+  const column = (level) => frame(71, level, Buffer.concat([word(0x636f6c64), cold]));
   assert.deepEqual(
     sectionActual(call, version, [1, 1], Buffer.concat([good(), column(1)])),
     [1, 1, 1, 1, 0, 1],
   );
   assert.throws(
-    () =>
-      sectionActual(call, version, [1, 1], Buffer.concat([good(), column(0)])),
+    () => sectionActual(call, version, [1, 1], Buffer.concat([good(), column(0)])),
     /OrphanColumnDefinition/,
   );
   cold.writeUInt16LE(0);
   assert.throws(
-    () =>
-      sectionActual(call, version, [1, 1], Buffer.concat([good(), column(1)])),
+    () => sectionActual(call, version, [1, 1], Buffer.concat([good(), column(1)])),
     /InvalidColumnCount/,
   );
   return { mutations, recoveries: mutations };

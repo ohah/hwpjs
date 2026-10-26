@@ -9,18 +9,28 @@ export const DEFAULT_TEXT_HEIGHT = 20;
 export const TEXT_TOP = 8;
 export const TEXT_LEFT = 20;
 export const rowTop = (row, index) => row.y ?? index * DEFAULT_ROW_HEIGHT;
-export const rowHeight = row => row.height ?? DEFAULT_ROW_HEIGHT;
-export const rowTextHeight = row => row.textHeight ?? DEFAULT_TEXT_HEIGHT;
-export const rowTextTop = row => row.textTop ?? TEXT_TOP;
+export const rowHeight = (row) => row.height ?? DEFAULT_ROW_HEIGHT;
+export const rowTextHeight = (row) => row.textHeight ?? DEFAULT_TEXT_HEIGHT;
+export const rowTextTop = (row) => row.textTop ?? TEXT_TOP;
 // Ink/input extent is independent of the distance to the following line.
-export const rowVisualHeight = row => row.kind === "text" ? Math.max(rowHeight(row), rowTextTop(row) + rowTextHeight(row)) : rowHeight(row);
-export const rowLeft = row => (row.x ?? TEXT_LEFT) + (row.paragraphX ?? 0);
+export const rowVisualHeight = (row) =>
+  row.kind === "text"
+    ? Math.max(rowHeight(row), rowTextTop(row) + rowTextHeight(row))
+    : rowHeight(row);
+export const rowLeft = (row) => (row.x ?? TEXT_LEFT) + (row.paragraphX ?? 0);
 
 export function isZeroAdvanceTextAnchor(row) {
-  return row?.kind === "text" && row.text === "" && !row.numberPrefix && row.height === 0
-    && Number.isSafeInteger(row.startUnit) && row.startUnit >= 0 && row.endUnit === row.startUnit
-    && (row.textHeight === undefined || Number.isFinite(row.textHeight) && row.textHeight >= 0)
-    && (row.textTop === undefined || Number.isFinite(row.textTop) && row.textTop >= 0);
+  return (
+    row?.kind === "text" &&
+    row.text === "" &&
+    !row.numberPrefix &&
+    row.height === 0 &&
+    Number.isSafeInteger(row.startUnit) &&
+    row.startUnit >= 0 &&
+    row.endUnit === row.startUnit &&
+    (row.textHeight === undefined || (Number.isFinite(row.textHeight) && row.textHeight >= 0)) &&
+    (row.textTop === undefined || (Number.isFinite(row.textTop) && row.textTop >= 0))
+  );
 }
 
 // 변환 행은 조판 좌표를 유지하고 화면 입력만 같은 행렬의 역으로 돌립니다.
@@ -43,46 +53,81 @@ export function rowAtPoint(layout, x, y) {
     if (row.sourceObjectAnchor === true) return false;
     if (!rowPageClipContains(row, x, y)) return false;
     const point = rowLocalPoint(row, x, y);
-    return point && row.kind === "text" && point[0] >= rowLeft(row) && point[0] < rowLeft(row) + row.width &&
-      point[1] >= rowTop(row, index) && point[1] < rowTop(row, index) + rowVisualHeight(row);
+    return (
+      point &&
+      row.kind === "text" &&
+      point[0] >= rowLeft(row) &&
+      point[0] < rowLeft(row) + row.width &&
+      point[1] >= rowTop(row, index) &&
+      point[1] < rowTop(row, index) + rowVisualHeight(row)
+    );
   };
   // 글자가 있는 영역을 먼저 찾고 빈 줄 끝 영역은 마지막에 선택합니다.
   const ink = topTablePaintRowIndex(layout.rows, (row, index) => {
     if (!contains(row, index)) return false;
-    const point = rowLocalPoint(row, x, y), boundaries = row.boundaries;
+    const point = rowLocalPoint(row, x, y),
+      boundaries = row.boundaries;
     if (!Array.isArray(boundaries) || !boundaries.length) return false;
-    const start = boundaries[0]?.x, end = boundaries.at(-1)?.x;
-    return Number.isFinite(start) && Number.isFinite(end) && end > start
-      && point[0] >= rowLeft(row) + start && point[0] < rowLeft(row) + end
-      && point[1] >= rowTop(row, index) + rowTextTop(row)
-      && point[1] < rowTop(row, index) + rowTextTop(row) + rowTextHeight(row);
+    const start = boundaries[0]?.x,
+      end = boundaries.at(-1)?.x;
+    return (
+      Number.isFinite(start) &&
+      Number.isFinite(end) &&
+      end > start &&
+      point[0] >= rowLeft(row) + start &&
+      point[0] < rowLeft(row) + end &&
+      point[1] >= rowTop(row, index) + rowTextTop(row) &&
+      point[1] < rowTop(row, index) + rowTextTop(row) + rowTextHeight(row)
+    );
   });
   if (ink >= 0) return ink;
   // Equal layers retain array order; floating layers match the paint order.
   const direct = topTablePaintRowIndex(layout.rows, contains);
   if (direct >= 0) return direct;
-  const cell = layout.boxes?.filter(box => rowPageClipContains(box, x, y) && x >= box.x && x < box.x + box.width && y >= box.y && y < box.y + box.height)
-    .reduce((best, box) => !best || (box.depth ?? 0) > (best.depth ?? 0) ? box : best, null);
+  const cell = layout.boxes
+    ?.filter(
+      (box) =>
+        rowPageClipContains(box, x, y) &&
+        x >= box.x &&
+        x < box.x + box.width &&
+        y >= box.y &&
+        y < box.y + box.height,
+    )
+    .reduce((best, box) => (!best || (box.depth ?? 0) > (best.depth ?? 0) ? box : best), null);
   if (!cell) return -1;
-  let closest = -1, distance = Infinity;
+  let closest = -1,
+    distance = Infinity;
   for (const [index, row] of layout.rows.entries()) {
     if (!rowPageClipContains(row, x, y)) continue;
     if ((cell.createdCell || row.createdCell) && !sameCreatedCell(row, cell)) continue;
-    if (row.kind !== "text" || !(row.editable || row.selectable) || row.section !== cell.section || row.tableNode !== cell.tableNode || row.listNode !== cell.listNode) continue;
+    if (
+      row.kind !== "text" ||
+      !(row.editable || row.selectable) ||
+      row.section !== cell.section ||
+      row.tableNode !== cell.tableNode ||
+      row.listNode !== cell.listNode
+    )
+      continue;
     const delta = Math.max(rowTop(row, index) - y, y - (rowTop(row, index) + rowHeight(row)), 0);
-    if (delta < distance) { distance = delta; closest = index; }
+    if (delta < distance) {
+      distance = delta;
+      closest = index;
+    }
   }
   return closest;
 }
 
 export function rowAtY(layout, y) {
   if (!Number.isFinite(y)) return -1;
-  let low = 0, high = layout.rows.length;
+  let low = 0,
+    high = layout.rows.length;
   while (low < high) {
     const middle = low + Math.floor((high - low) / 2);
     if (rowTop(layout.rows[middle], middle) <= y) low = middle + 1;
     else high = middle;
   }
   const index = low - 1;
-  return index >= 0 && y < rowTop(layout.rows[index], index) + rowVisualHeight(layout.rows[index]) ? index : -1;
+  return index >= 0 && y < rowTop(layout.rows[index], index) + rowVisualHeight(layout.rows[index])
+    ? index
+    : -1;
 }

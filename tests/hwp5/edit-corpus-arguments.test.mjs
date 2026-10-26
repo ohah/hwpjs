@@ -11,7 +11,10 @@ test("HWP5 corpus arguments reject duplicate and empty fixture before reading WA
     [["--wasm="], "Unknown argument"],
     [["--unknown"], "Unknown argument"],
   ]) {
-    const result = spawnSync(process.execPath, ["tools/hwp5-edit-corpus-audit.mjs", ...args], { encoding: "utf8", timeout: 10000 });
+    const result = spawnSync(process.execPath, ["tools/hwp5-edit-corpus-audit.mjs", ...args], {
+      encoding: "utf8",
+      timeout: 10000,
+    });
     assert.equal(result.error, undefined);
     assert.notEqual(result.status, 0);
     assert(result.stderr.includes(message), result.stderr);

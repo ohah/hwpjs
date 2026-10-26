@@ -21,8 +21,10 @@ test("split pending state follows exact current selection and clears on denial o
   assert.equal(state.accept({ ...next, allowed: true }), false);
 });
 test("split and input permission reject cross-kind and stale responses independently", () => {
-  const edit = createSelectionEditPermission(), split = createSelectionEditPermission({ kind: "query-split-range" });
-  const editRequest = edit.request(range), splitRequest = split.request(range);
+  const edit = createSelectionEditPermission(),
+    split = createSelectionEditPermission({ kind: "query-split-range" });
+  const editRequest = edit.request(range),
+    splitRequest = split.request(range);
   assert.equal(splitRequest.kind, "query-split-range");
   assert.equal(split.accept({ ...editRequest, allowed: true }), false);
   assert.equal(edit.accept({ ...splitRequest, allowed: true }), false);
@@ -35,11 +37,18 @@ test("split and input permission reject cross-kind and stale responses independe
   assert.ok(next.requestId > splitRequest.requestId);
   assert.equal(split.reject({ ...next, error: "OutOfMemory" }), true);
   assert.equal(split.allowed(range), false);
-  assert.throws(() => createSelectionEditPermission({ kind: "splice" }), /InvalidEditPermissionKind/);
+  assert.throws(
+    () => createSelectionEditPermission({ kind: "splice" }),
+    /InvalidEditPermissionKind/,
+  );
 });
 test("selection permission consumes only current identified failures without granting permission", () => {
-  const state = createSelectionEditPermission(), request = state.request(range);
-  assert.equal(state.reject({ ...request, requestId: request.requestId + 1, error: "OutOfMemory" }), false);
+  const state = createSelectionEditPermission(),
+    request = state.request(range);
+  assert.equal(
+    state.reject({ ...request, requestId: request.requestId + 1, error: "OutOfMemory" }),
+    false,
+  );
   assert.equal(state.reject({ ...request, error: "" }), false);
   assert.equal(state.reject({ ...request, error: "OutOfMemory" }), true);
   assert.equal(state.allowed(range), false);
@@ -47,9 +56,17 @@ test("selection permission consumes only current identified failures without gra
   assert.equal(state.reject({ ...request, error: "OutOfMemory" }), false);
 });
 test("selection permission requires exact native boolean reply and does not authorize other ranges", () => {
-  const state = createSelectionEditPermission(), request = state.request(range);
+  const state = createSelectionEditPermission(),
+    request = state.request(range);
   assert.equal(state.allowed(range), false);
-  for (const mutation of [{ allowed: 1 }, { allowed: "true" }, { paragraph: 11, allowed: true }, { kind: "splice", allowed: true }, { allowed: true, error: "ProtectedFieldRange" }]) assert.equal(state.accept({ ...request, ...mutation }), false);
+  for (const mutation of [
+    { allowed: 1 },
+    { allowed: "true" },
+    { paragraph: 11, allowed: true },
+    { kind: "splice", allowed: true },
+    { allowed: true, error: "ProtectedFieldRange" },
+  ])
+    assert.equal(state.accept({ ...request, ...mutation }), false);
   assert.equal(state.accept({ ...request, allowed: true }), true);
   assert.equal(state.allowed(range), true);
   assert.equal(state.accept({ ...request, allowed: false }), false);
@@ -58,8 +75,10 @@ test("selection permission requires exact native boolean reply and does not auth
   assert.equal(state.request(range), null);
 });
 test("selection permission rejects reordered replies and reuse after model reset", () => {
-  const state = createSelectionEditPermission(), old = state.request(range);
-  const nextRange = { ...range, startUnit: 13, endUnit: 14 }, next = state.request(nextRange);
+  const state = createSelectionEditPermission(),
+    old = state.request(range);
+  const nextRange = { ...range, startUnit: 13, endUnit: 14 },
+    next = state.request(nextRange);
   assert.equal(state.accept({ ...old, allowed: true }), false);
   assert.equal(state.accept({ ...next, allowed: false }), true);
   assert.equal(state.allowed(nextRange), false);
@@ -71,7 +90,15 @@ test("selection permission rejects reordered replies and reuse after model reset
   assert.equal(state.accept({ ...reopened, allowed: true }), true);
 });
 test("selection permission refuses malformed ranges before changing current request", () => {
-  const state = createSelectionEditPermission(), request = state.request(range);
-  for (const mutation of [{ section: -1 }, { paragraph: 1.5 }, { startUnit: NaN }, { endUnit: 0x100000000 }, { startUnit: 2, endUnit: 1 }]) assert.throws(() => state.request({ ...range, ...mutation }), /InvalidEditPermissionRange/);
+  const state = createSelectionEditPermission(),
+    request = state.request(range);
+  for (const mutation of [
+    { section: -1 },
+    { paragraph: 1.5 },
+    { startUnit: NaN },
+    { endUnit: 0x100000000 },
+    { startUnit: 2, endUnit: 1 },
+  ])
+    assert.throws(() => state.request({ ...range, ...mutation }), /InvalidEditPermissionRange/);
   assert.equal(state.accept({ ...request, allowed: true }), true);
 });

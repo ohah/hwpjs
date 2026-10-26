@@ -7,13 +7,8 @@ const w = (n) => {
 };
 export const scriptFixture = (
   fields = [Buffer.alloc(0), Buffer.alloc(0), Buffer.alloc(0), Buffer.alloc(0)],
-) =>
-  Buffer.concat([
-    ...fields.flatMap((b) => [w(b.length / 2), b]),
-    w(0xffffffff),
-  ]);
-const run = (call, kind, b) =>
-  call(28, Buffer.concat([Buffer.from([kind]), b]));
+) => Buffer.concat([...fields.flatMap((b) => [w(b.length / 2), b]), w(0xffffffff)]);
+const run = (call, kind, b) => call(28, Buffer.concat([Buffer.from([kind]), b]));
 export function scriptsActual(call, cfb, h, used) {
   const result = Array(10).fill(0);
   for (const [kind, name] of ["JScriptVersion", "DefaultJScript"].entries()) {
@@ -63,8 +58,7 @@ export function scriptEdges(call) {
     [1, good],
   ]) {
     assert.deepEqual(run(call, kind, b), b);
-    for (let i = 0; i < b.length; i++)
-      reject(kind, b.subarray(0, i), /UnexpectedEnd/);
+    for (let i = 0; i < b.length; i++) reject(kind, b.subarray(0, i), /UnexpectedEnd/);
     const tail = Buffer.concat([b, Buffer.from([0, 255, 7])]);
     assert.deepEqual(run(call, kind, tail), tail);
   }

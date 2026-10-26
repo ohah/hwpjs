@@ -51,17 +51,14 @@ const cases = [
 ];
 const extended = [1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23];
 export const fieldIds = new Set(
-  cases
-    .find(([code]) => code === 3)[1]
-    .map((name) => Buffer.from(name, "latin1").readUInt32BE()),
+  cases.find(([code]) => code === 3)[1].map((name) => Buffer.from(name, "latin1").readUInt32BE()),
 );
 const word = (v) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(v >>> 0);
   return b;
 };
-const frame = (tag, level, b) =>
-  Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
+const frame = (tag, level, b) => Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
 export function typeActual(call, v, bytes) {
   const out = call(16, Buffer.concat([word(v), bytes]));
   assert.equal(out.length, 12);
@@ -90,10 +87,7 @@ export function typeEdges(call) {
       for (const code of extended)
         if (code !== expected) {
           if (name === "tcmt" && code === 23) {
-            assert.deepEqual(
-              typeActual(call, 0x05000307, make(name, code)),
-              [0, 0, 1],
-            );
+            assert.deepEqual(typeActual(call, 0x05000307, make(name, code)), [0, 0, 1]);
             continue;
           }
           assert.throws(
@@ -104,16 +98,7 @@ export function typeEdges(call) {
           mismatches++;
         }
     }
-  for (const name of [
-    "%zzz",
-    "autn",
-    "newn",
-    "bkmk",
-    "%crf",
-    "%fml",
-    "FN  ",
-    "abcd",
-  ]) {
+  for (const name of ["%zzz", "autn", "newn", "bkmk", "%crf", "%fml", "FN  ", "abcd"]) {
     assert.deepEqual(typeActual(call, 0x05000307, make(name, 11)), [0, 1, 0]);
   }
   assert.equal(known, 53);

@@ -4,9 +4,69 @@ import { execFileSync } from "node:child_process";
 import { compareWasmExports } from "../../tools/wasm-export-parity.mjs";
 
 const header = [0, 97, 115, 109, 1, 0, 0, 0];
-const memory = name => Uint8Array.from([...header, 5, 3, 1, 0, 1, 7, 5, 1, 1, name.charCodeAt(0), 2, 0]);
-const func = Uint8Array.from([...header, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 7, 5, 1, 1, 109, 0, 0, 10, 4, 1, 2, 0, 11]);
-const extended = Uint8Array.from([...header, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 5, 3, 1, 0, 1, 7, 9, 2, 1, 109, 0, 0, 1, 110, 2, 0, 10, 4, 1, 2, 0, 11]);
+const memory = (name) =>
+  Uint8Array.from([...header, 5, 3, 1, 0, 1, 7, 5, 1, 1, name.charCodeAt(0), 2, 0]);
+const func = Uint8Array.from([
+  ...header,
+  1,
+  4,
+  1,
+  96,
+  0,
+  0,
+  3,
+  2,
+  1,
+  0,
+  7,
+  5,
+  1,
+  1,
+  109,
+  0,
+  0,
+  10,
+  4,
+  1,
+  2,
+  0,
+  11,
+]);
+const extended = Uint8Array.from([
+  ...header,
+  1,
+  4,
+  1,
+  96,
+  0,
+  0,
+  3,
+  2,
+  1,
+  0,
+  5,
+  3,
+  1,
+  0,
+  1,
+  7,
+  9,
+  2,
+  1,
+  109,
+  0,
+  0,
+  1,
+  110,
+  2,
+  0,
+  10,
+  4,
+  1,
+  2,
+  0,
+  11,
+]);
 
 test("WASM export gate rejects missing names and changed kinds rather than trusting counts", () => {
   const missing = compareWasmExports(memory("m"), memory("n"));
@@ -31,6 +91,13 @@ test("WASM export gate allows additions and accepts compiled modules without gra
 
 test("WASM export gate CLI refuses missing extra and empty arguments", () => {
   for (const args of [[], ["one"], ["one", "two", "three"], ["", ""]]) {
-    assert.throws(() => execFileSync(process.execPath, ["tools/wasm-export-parity.mjs", ...args], { encoding: "utf8", stdio: "pipe" }), error => error.status === 2 && error.stderr.includes("Usage:"));
+    assert.throws(
+      () =>
+        execFileSync(process.execPath, ["tools/wasm-export-parity.mjs", ...args], {
+          encoding: "utf8",
+          stdio: "pipe",
+        }),
+      (error) => error.status === 2 && error.stderr.includes("Usage:"),
+    );
   }
 });

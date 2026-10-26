@@ -1,5 +1,26 @@
 # 개발·검증 명령
 
+<a id="javascript-quality-commands"></a>
+
+## JavaScript 품질 검사
+
+기본 범위는 Git 추적·새 staged 파일의 현재 작업 트리 내용이며, 추적 파일의 unstaged 편집도 포함합니다. 미추적 파일은 명시 파일 경로나 `--include-untracked`로만 추가합니다. 정확한 정책·언어 한계·CI 및 검증 상태는 [JavaScript 품질 검사](javascript-quality.md)를 따릅니다.
+
+```sh
+mise exec -- bun run quality:files
+mise exec -- bun run quality:config
+mise exec -- bun run lint
+mise exec -- bun run format:check
+mise exec -- bun run check
+# 아래 두 명령은 선택된 파일을 수정합니다.
+mise exec -- bun run lint:fix
+mise exec -- bun run format
+```
+
+예: `mise exec -- bun run lint tools/quality.mjs`, `mise exec -- bun run format:check --include-untracked`.
+
+<!-- javascript-quality-commands:end -->
+
 ## JS 모노레포 CLI
 
 Bun 1.4.4와 명시 WASM을 사용하는 경로입니다. 내부 core·vanilla·react·svelte·react-native 5개는 private/dist 계약이고 외부 package 진입점은 `@ohah/hwpjs`입니다.

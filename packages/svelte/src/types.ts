@@ -1,9 +1,9 @@
-import type { CanvasSurfaceOptions, createCanvasSurface } from '@hwpjs/vanilla';
+import type { CanvasSurfaceOptions, createCanvasSurface } from "@hwpjs/vanilla";
 
 export type CanvasSurface = ReturnType<typeof createCanvasSurface>;
 export interface CanvasSurfaceProps {
-  editor: CanvasSurfaceOptions['editor'];
-  environment?: CanvasSurfaceOptions['environment'];
+  editor: CanvasSurfaceOptions["editor"];
+  environment?: CanvasSurfaceOptions["environment"];
   scale?: number;
   onStatus?: (message: string) => void;
   onError?: (error: unknown) => void;
@@ -12,6 +12,8 @@ export interface CanvasSurfaceProps {
 export interface CanvasEditorProps extends CanvasSurfaceProps {
   class?: string;
   style?: string;
-  'aria-label'?: string;
+  "aria-label"?: string;
 }
-export type SurfaceFactory = (options: CanvasSurfaceOptions) => CanvasSurface | Promise<CanvasSurface>;
+export type SurfaceFactory = (
+  options: CanvasSurfaceOptions,
+) => CanvasSurface | Promise<CanvasSurface>;

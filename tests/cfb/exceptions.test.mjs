@@ -14,9 +14,9 @@ const context = createContext({
   Buffer,
   process,
 });
-new Script(
-  readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"),
-).runInContext(context);
+new Script(readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8")).runInContext(
+  context,
+);
 const script = new Script("module.exports.parse(bytes)");
 function legacy(bytes) {
   context.bytes = bytes;
@@ -38,8 +38,7 @@ test("directory fixtures have zero storage starts and no unused allocated sector
     for (let offset = 8192; offset < bytes.length; offset += 128) {
       if (bytes[offset + 66] === 0) {
         const expected = Buffer.alloc(128);
-        for (const field of [68, 72, 76])
-          expected.writeUInt32LE(0xffffffff, field);
+        for (const field of [68, 72, 76]) expected.writeUInt32LE(0xffffffff, field);
         assert.deepEqual(bytes.subarray(offset, offset + 128), expected);
       }
       if (bytes[offset + 66] !== 1) continue;

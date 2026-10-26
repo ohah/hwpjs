@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync, deflateRawSync } from "node:zlib";
 import { hiddenActual } from "./hidden-comment.mjs";
-import {
-  documentRecords,
-  documentActual,
-  decodedDocumentInput,
-} from "./documents.mjs";
+import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
 import { containerActual } from "./containers.mjs";
 import { linksActual } from "./links.mjs";
 import { typeActual } from "./control-types.mjs";
@@ -52,9 +48,7 @@ export function hiddenReference(call, cfb) {
   const documentReport = documentActual(call, h, doc, sections),
     containerReport = containerActual(call, file, cfb, h, doc, sections);
   const rows = documentRecords(b),
-    control = rows.find(
-      (r) => r.tag === 71 && b.readUInt32LE(r.start) === 0x74636d74,
-    ),
+    control = rows.find((r) => r.tag === 71 && b.readUInt32LE(r.start) === 0x74636d74),
     level = (b.readUInt32LE(control.offset) >>> 10) & 1023,
     index = rows.indexOf(control);
   const list = rows[index + 1];
@@ -67,26 +61,16 @@ export function hiddenReference(call, cfb) {
   }
   const nodes = cfb.document().nodes,
     body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    section = nodes.findIndex(
-      (n) => n.name === "Section0" && n.parent === body,
-    );
+    section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
   assert.ok(section >= 0);
   const full = (plain) => {
     const copy = nodes.map((n) => ({ ...n }));
     copy[section].content = flags & 1 ? deflateRawSync(plain) : plain;
-    return call(
-      25,
-      Buffer.concat([w(67108864), Buffer.from(cfb.write({ nodes: copy }))]),
-    );
+    return call(25, Buffer.concat([w(67108864), Buffer.from(cfb.write({ nodes: copy }))]));
   };
-  const short = Buffer.concat([
-    b.subarray(0, list.end - 1),
-    b.subarray(list.end),
-  ]);
+  const short = Buffer.concat([b.subarray(0, list.end - 1), b.subarray(list.end)]);
   short.writeUInt32LE(
-    ((b.readUInt32LE(list.offset) & 0xfffff) |
-      ((list.end - list.start - 1) << 20)) >>>
-      0,
+    ((b.readUInt32LE(list.offset) & 0xfffff) | ((list.end - list.start - 1) << 20)) >>> 0,
     list.offset,
   );
   const count = Buffer.from(b);
@@ -102,10 +86,7 @@ export function hiddenReference(call, cfb) {
     observed = sectionFieldOffset(0, "control_types", 2);
   expected.writeUInt32LE(expected.readUInt32LE(checked) + 1, checked);
   expected.writeUInt32LE(0, observed);
-  assert.deepEqual(
-    call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: code15 }])),
-    expected,
-  );
+  assert.deepEqual(call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: code15 }])), expected);
   assert.deepEqual(full(code15).subarray(0, expected.length), expected);
   linksActual(call, v, code15);
   for (const code of [2, 3, 11, 21]) {

@@ -16,7 +16,14 @@
     "dev": "bun tools/serve-demo.mjs",
     "docs:build": "bun run --cwd apps/docs build",
     "docs:typecheck": "bun run --cwd apps/docs typecheck",
-    "docs:check": "bun run --cwd apps/docs check"
+    "docs:check": "bun run --cwd apps/docs check",
+    "lint": "bun tools/quality.mjs lint",
+    "lint:fix": "bun tools/quality.mjs lint:fix",
+    "format": "bun tools/quality.mjs format",
+    "format:check": "bun tools/quality.mjs format:check",
+    "check": "bun tools/quality.mjs check",
+    "quality:files": "bun tools/quality.mjs files",
+    "quality:config": "bun tools/sync-quality-config.mjs --check"
   },
   "engines": {
     "bun": ">=1.4.4"
@@ -31,6 +38,8 @@
     "react-dom": "19.3.1",
     "svelte": "5.57.2",
     "typescript": "7.0.2",
-    "vite": "8.3.5"
+    "vite": "8.3.5",
+    "oxlint": "1.89.0",
+    "oxfmt": "0.74.0"
   }
 }

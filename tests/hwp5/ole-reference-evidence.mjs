@@ -6,12 +6,15 @@ import { createCfbReader } from "../../js/cfb.mjs";
 import { documentRecords, documentActual } from "./documents.mjs";
 import { containerActual } from "./containers.mjs";
 import { oleActual } from "./ole-validation.mjs";
-import {olePairedEvidence} from './ole-paired-evidence.mjs';
+import { olePairedEvidence } from "./ole-paired-evidence.mjs";
 
 // A counterexample to equating the OLE ID, DocInfo ordinal and physical storage ID.
 // Inspect data only; do not activate OLE or execute chart content.
 export async function oleReferenceEvidence(call, cfb) {
-  const path = new URL("../../reference/rhwp/samples/chart/분산형/곡선이있는분산형.hwp", import.meta.url);
+  const path = new URL(
+    "../../reference/rhwp/samples/chart/분산형/곡선이있는분산형.hwp",
+    import.meta.url,
+  );
   if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
@@ -19,18 +22,19 @@ export async function oleReferenceEvidence(call, cfb) {
   assert.equal(h.readUInt32LE(32), 0x05010100);
   const flags = h.readUInt32LE(36);
   assert.equal(flags & (2 | 4 | 16 | 256 | 1024), 0);
-  const decode = path => {
+  const decode = (path) => {
     const raw = Buffer.from(cfb.findExact(path).content);
     const plain = flags & 1 ? inflateRawSync(raw) : raw;
     assert.deepEqual(call(3, Buffer.concat([h, raw]), plain.length), plain);
     return plain;
   };
-  const doc = decode("/DocInfo"), body = decode("/BodyText/Section0");
-  const bins = documentRecords(doc).filter(r => r.tag === 18);
+  const doc = decode("/DocInfo"),
+    body = decode("/BodyText/Section0");
+  const bins = documentRecords(doc).filter((r) => r.tag === 18);
   assert.equal(bins.length, 1);
   const bin = doc.subarray(bins[0].start, bins[0].end);
   assert.deepEqual(bin, Buffer.from("0200030003004f004c004500", "hex"));
-  const oleRecords = documentRecords(body).filter(r => r.tag === 84);
+  const oleRecords = documentRecords(body).filter((r) => r.tag === 84);
   assert.equal(oleRecords.length, 1);
   const p = body.subarray(oleRecords[0].start, oleRecords[0].end);
   const id = p.readUInt16LE(12);
@@ -41,10 +45,16 @@ export async function oleReferenceEvidence(call, cfb) {
   const sections = [{ index: 0, bytes: body }];
   const document = documentActual(call, h, doc, sections);
   const container = containerActual(call, file, cfb, h, doc, sections);
-  const inner = await createCfbReader(readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)));
+  const inner = await createCfbReader(
+    readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
+  );
   const streams = [];
   try {
-    for (const [name, style] of [["BIN0001.OLE", "smooth"], ["BIN0002.OLE", "lineMarker"], ["BIN0003.OLE", "smoothMarker"]]) {
+    for (const [name, style] of [
+      ["BIN0001.OLE", "smooth"],
+      ["BIN0002.OLE", "lineMarker"],
+      ["BIN0003.OLE", "smoothMarker"],
+    ]) {
       const raw = Buffer.from(cfb.findExact(`/BinData/${name}`).content);
       const bytes = flags & 1 ? inflateRawSync(raw) : raw;
       // This fixture uses a four-byte size envelope followed by an independent CFB.
@@ -57,7 +67,18 @@ export async function oleReferenceEvidence(call, cfb) {
   } finally {
     inner.close();
   }
-  assert.equal(new Set(streams.map(s => s.sha256)).size, 3);
-  const paired=await olePairedEvidence(cfb);
-  return { oleId: id, docInfoOrdinal: 1, docInfoStorageId: 3, ownership, document, container, streams, paired, interpretation: "pending: paired XML supports ordinal for this fixture; no universal rule or Hancom execution" };
+  assert.equal(new Set(streams.map((s) => s.sha256)).size, 3);
+  const paired = await olePairedEvidence(cfb);
+  return {
+    oleId: id,
+    docInfoOrdinal: 1,
+    docInfoStorageId: 3,
+    ownership,
+    document,
+    container,
+    streams,
+    paired,
+    interpretation:
+      "pending: paired XML supports ordinal for this fixture; no universal rule or Hancom execution",
+  };
 }

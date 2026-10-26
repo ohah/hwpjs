@@ -1,7 +1,7 @@
-import test from 'node:test';
-import assert from 'node:assert/strict';
-import {spawnSync} from '../../tools/oracle-process.mjs';
-const code=String.raw`
+import test from "node:test";
+import assert from "node:assert/strict";
+import { spawnSync } from "../../tools/oracle-process.mjs";
+const code = String.raw`
 import base64, io, runpy, warnings, zipfile
 verify=runpy.run_path('tools/hwpx-anchor-prefix-oracle.py')['verify']
 xml='<s xmlns:p="http://www.hancom.co.kr/hwpml/2011/paragraph"><p:p id="1"><p:run charPrIDRef="2"><p:secPr><p:pagePr width="10"/></p:secPr><p:t>A<p:tab width="10"/>B</p:t><p:ctrl><p:header/></p:ctrl></p:run></p:p></s>'
@@ -36,7 +36,12 @@ reject(dict(before=package(xml,duplicate=True),after=package(edited,duplicate=Tr
 reject(dict(before=request['before']+'!'))
 print('prefix and ZIP controls passed')
 `;
-for(const flags of [[],['-O']])test(`prefix whole-tree and ZIP metadata controls ${flags.join(' ')||'normal'}`,()=>{
- const result=spawnSync('nice',['-n','19','python3',...flags,'-c',code],{encoding:'utf8',timeout:30000});
- assert.equal(result.status,0,result.stderr);assert.match(result.stdout,/prefix and ZIP controls passed/);
-});
+for (const flags of [[], ["-O"]])
+  test(`prefix whole-tree and ZIP metadata controls ${flags.join(" ") || "normal"}`, () => {
+    const result = spawnSync("nice", ["-n", "19", "python3", ...flags, "-c", code], {
+      encoding: "utf8",
+      timeout: 30000,
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /prefix and ZIP controls passed/);
+  });

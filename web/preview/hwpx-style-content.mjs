@@ -11,8 +11,11 @@ export function attachHwpxStyles(editor, content, available) {
   content.characterShapes = null;
   content.characterShapesError = null;
   if (available) {
-    try { content.characterShapes = editor.characterShapes(); }
-    catch (error) { content.characterShapesError = error.message; }
+    try {
+      content.characterShapes = editor.characterShapes();
+    } catch (error) {
+      content.characterShapesError = error.message;
+    }
   }
   for (const paragraph of content.paragraphs) {
     paragraph.characterRanges = null;
@@ -21,10 +24,31 @@ export function attachHwpxStyles(editor, content, available) {
     if (!available || paragraph.clipped) continue;
     try {
       const ranges = editor.characterRanges(paragraph.section, paragraph.paragraph + 1);
-      if ((ranges.at(-1)?.end ?? 0) !== paragraph.text.length) throw new Error("CharacterDisplayLengthMismatch");
+      if ((ranges.at(-1)?.end ?? 0) !== paragraph.text.length)
+        throw new Error("CharacterDisplayLengthMismatch");
       paragraph.characterRanges = ranges;
       paragraph.selectable = paragraph.text.length > 0 || paragraph.editable === true;
-    } catch (error) { paragraph.characterRangesError = error.message; }
+    } catch (error) {
+      paragraph.characterRangesError = error.message;
+    }
   }
-  return attachTabSources(editor, attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content))))))));
+  return attachTabSources(
+    editor,
+    attachCharacterOutlines(
+      editor,
+      attachCharacterEffects(
+        editor,
+        attachCharacterShades(
+          editor,
+          attachCharacterStrikes(
+            editor,
+            attachCharacterFonts(
+              editor,
+              attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content)),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }

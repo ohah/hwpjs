@@ -4,7 +4,7 @@ import { objectActual } from "./objects.mjs";
 import { headerFooterActual } from "./header-footer.mjs";
 import { numberControlActual } from "./number-controls.mjs";
 import { reportBytes } from "./document-report-wire.mjs";
-import {unselectedForms} from './form-report-evidence.mjs';
+import { unselectedForms } from "./form-report-evidence.mjs";
 import { pageNumberActual } from "./page-number.mjs";
 import { indexMarkActual } from "./index-mark.mjs";
 import { visibilityActual } from "./page-visibility.mjs";
@@ -21,7 +21,7 @@ import { oleActual } from "./ole-validation.mjs";
 import { shapeActual } from "./shape-validation.mjs";
 import { unselectedStyles } from "./drawing-style-document.mjs";
 import { lineOwnerActual } from "./line-validation.mjs";
-import {groupActual} from "./group-validation.mjs";
+import { groupActual } from "./group-validation.mjs";
 import { rectangleOwnerActual } from "./rectangle-validation.mjs";
 import { ellipseOwnerActual } from "./ellipse-validation.mjs";
 import { arcOwnerActual } from "./arc-validation.mjs";
@@ -39,15 +39,8 @@ const u = (n) => {
   b.writeUInt16LE(n);
   return b;
 };
-const words = (b) =>
-  Array.from({ length: b.length / 4 }, (_, i) => b.readUInt32LE(i * 4));
-function input(
-  h,
-  doc,
-  sections,
-  maxBytes = 64 * 1024 * 1024,
-  maxSections = 4096,
-) {
+const words = (b) => Array.from({ length: b.length / 4 }, (_, i) => b.readUInt32LE(i * 4));
+function input(h, doc, sections, maxBytes = 64 * 1024 * 1024, maxSections = 4096) {
   return Buffer.concat([
     w(maxBytes),
     u(maxSections),
@@ -60,7 +53,7 @@ function input(
 }
 function records(bytes) {
   const result = [];
-  for (let p = 0; p < bytes.length; ) {
+  for (let p = 0; p < bytes.length;) {
     const offset = p,
       bits = bytes.readUInt32LE(p);
     p += 4;
@@ -84,13 +77,10 @@ export function documentActual(call, h, doc, sections) {
     call(mode, Buffer.concat([w(v), ...counts.map(w), bytes]));
   const resource = run(5, doc),
     bins = resource.readUInt32LE(0);
-  const params = (source, b) =>
-    call(23, Buffer.concat([Buffer.from([source]), w(v), w(bins), b]));
-  const totalBytes =
-    h.length + doc.length + sections.reduce((n, s) => n + s.bytes.length, 0);
+  const params = (source, b) => call(23, Buffer.concat([Buffer.from([source]), w(v), w(bins), b]));
+  const totalBytes = h.length + doc.length + sections.reduce((n, s) => n + s.bytes.length, 0);
   const totalRecords =
-    records(doc).length +
-    sections.reduce((n, s) => n + records(s.bytes).length, 0);
+    records(doc).length + sections.reduce((n, s) => n + records(s.bytes).length, 0);
   const props = records(doc).find((r) => r.tag === 16);
   assert.ok(props);
   const expected = [
@@ -104,15 +94,7 @@ export function documentActual(call, h, doc, sections) {
       doc.readUInt16LE(props.start),
     ].map(w),
     resource.subarray(0, 8),
-    ...[
-      c.borderFill,
-      c.charShape,
-      c.tabDef,
-      c.numbering,
-      c.bullet,
-      c.paraShape,
-      c.style,
-    ].map(w),
+    ...[c.borderFill, c.charShape, c.tabDef, c.numbering, c.bullet, c.paraShape, c.style].map(w),
     run(7, doc).subarray(0, 16),
     params(0, doc),
   ];
@@ -143,12 +125,7 @@ export function documentActual(call, h, doc, sections) {
       ...indexMarkActual(call, v, b).map(w),
       ...visibilityActual(call, v, b).map(w),
       ...bookmarkActual(call, v, b).map(w),
-      ...overlapActual(
-        call,
-        v,
-        b,
-        records(doc).filter((r) => r.tag === 21).length,
-      ).map(w),
+      ...overlapActual(call, v, b, records(doc).filter((r) => r.tag === 21).length).map(w),
       w(identityActual(call, v, b)),
       ...fieldsActual(call, v, b).map(w),
       ...rubyActual(call, v, b).map(w),
@@ -159,35 +136,23 @@ export function documentActual(call, h, doc, sections) {
       ...oleActual(call, v, b).map(w),
       ...shapeActual(call, v, b).map(w),
       ...unselectedStyles(b).map(w),
-      ...lineOwnerActual(call,v,b).map(w),
-      ...rectangleOwnerActual(call,v,b).map(w),
-      ...ellipseOwnerActual(call,v,b).map(w),
-      ...arcOwnerActual(call,v,b).map(w),
-      ...polygonOwnerActual(call,v,b).map(w),
-      ...curveOwnerActual(call,v,b).map(w),
-      ...pictureOwnerActual(call,v,b,0,bins).map(w),
-      ...groupActual(call,v,b).map(w),
-      ...unselectedForms(b,records(b)).map(w),
+      ...lineOwnerActual(call, v, b).map(w),
+      ...rectangleOwnerActual(call, v, b).map(w),
+      ...ellipseOwnerActual(call, v, b).map(w),
+      ...arcOwnerActual(call, v, b).map(w),
+      ...polygonOwnerActual(call, v, b).map(w),
+      ...curveOwnerActual(call, v, b).map(w),
+      ...pictureOwnerActual(call, v, b, 0, bins).map(w),
+      ...groupActual(call, v, b).map(w),
+      ...unselectedForms(b, records(b)).map(w),
     );
   }
   const want = Buffer.concat(expected);
   assert.equal(want.length, reportBytes(sections.length));
-  assert.deepEqual(
-    call(24, input(h, doc, sections, totalBytes), totalRecords),
-    want,
-  );
-  assert.deepEqual(
-    call(24, input(h, doc, [...sections].reverse()), totalRecords),
-    want,
-  );
-  assert.throws(
-    () => call(24, input(h, doc, sections, totalBytes - 1)),
-    /LimitExceeded/,
-  );
-  assert.throws(
-    () => call(24, input(h, doc, sections), totalRecords - 1),
-    /LimitExceeded/,
-  );
+  assert.deepEqual(call(24, input(h, doc, sections, totalBytes), totalRecords), want);
+  assert.deepEqual(call(24, input(h, doc, [...sections].reverse()), totalRecords), want);
+  assert.throws(() => call(24, input(h, doc, sections, totalBytes - 1)), /LimitExceeded/);
+  assert.throws(() => call(24, input(h, doc, sections), totalRecords - 1), /LimitExceeded/);
   return [1, sections.length, totalBytes, totalRecords];
 }
 export function documentEdges(call, h, doc, sections) {
@@ -217,24 +182,14 @@ export function documentEdges(call, h, doc, sections) {
   const modified = Buffer.from(doc);
   modified.writeUInt16LE(sections.length + 1, properties.start);
   reject(input(h, modified, sections), /SectionCountMismatch/);
-  const without = Buffer.concat([
-    doc.subarray(0, properties.offset),
-    doc.subarray(properties.end),
-  ]);
+  const without = Buffer.concat([doc.subarray(0, properties.offset), doc.subarray(properties.end)]);
   reject(input(h, without, sections), /MissingDocumentProperties/);
   reject(
-    input(
-      h,
-      Buffer.concat([doc, doc.subarray(properties.offset, properties.end)]),
-      sections,
-    ),
+    input(h, Buffer.concat([doc, doc.subarray(properties.offset, properties.end)]), sections),
     /DuplicateDocumentProperties/,
   );
   const level = Buffer.from(doc);
-  level.writeUInt32LE(
-    (level.readUInt32LE(properties.offset) | 1024) >>> 0,
-    properties.offset,
-  );
+  level.writeUInt32LE((level.readUInt32LE(properties.offset) | 1024) >>> 0, properties.offset);
   reject(input(h, level, sections), /InvalidDocInfoLevel/);
   reject(
     input(
@@ -262,40 +217,24 @@ export function documentEdges(call, h, doc, sections) {
   const badSection = Buffer.from(sections[0].bytes),
     para = records(badSection).find((r) => r.tag === 66);
   badSection.writeUInt16LE(65535, para.start + 8);
-  reject(
-    input(h, twoDoc, [two[0], { ...two[1], bytes: badSection }]),
-    /InvalidResourceReference/,
-  );
+  reject(input(h, twoDoc, [two[0], { ...two[1], bytes: badSection }]), /InvalidResourceReference/);
   // Verify the integrated path invokes source validation, retaining unsupported
   // data rather than silently upgrading it to fully validated content.
   const emptyParagraph = Buffer.concat([w(66 | (24 << 20)), Buffer.alloc(24)]);
   const shifted = Buffer.concat([emptyParagraph, sections[0].bytes]);
-  reject(
-    input(h, twoDoc, [two[0], { ...two[1], bytes: shifted }]),
-    /MisplacedSectionDefinition/,
-  );
+  reject(input(h, twoDoc, [two[0], { ...two[1], bytes: shifted }]), /MisplacedSectionDefinition/);
   // Unknown records before the first paragraph must not be confused with it.
   const prefixed = Buffer.concat([w(999), sections[0].bytes]);
   call(24, input(h, twoDoc, [two[0], { ...two[1], bytes: prefixed }]));
   const frame = (b) => Buffer.concat([w(27 | (b.length << 20)), b]);
   const unknown = frame(Buffer.concat([u(1), u(1), u(0), u(7), u(0x7777)]));
-  const pending = words(
-    call(24, input(h, Buffer.concat([doc, unknown]), sections)),
-  );
+  const pending = words(call(24, input(h, Buffer.concat([doc, unknown]), sections)));
   assert.equal(pending[24], words(good)[24] + 1); // unsupported payloads
   assert.equal(pending[25], words(good)[25] + 10); // unsupported bytes
   const bins = words(good)[7];
-  const invalidRef = frame(
-    Buffer.concat([u(1), u(1), u(0), u(7), u(0x8002), u(bins + 1)]),
-  );
-  reject(
-    input(h, Buffer.concat([doc, invalidRef]), sections),
-    /InvalidResourceReference/,
-  );
+  const invalidRef = frame(Buffer.concat([u(1), u(1), u(0), u(7), u(0x8002), u(bins + 1)]));
+  reject(input(h, Buffer.concat([doc, invalidRef]), sections), /InvalidResourceReference/);
   const truncated = frame(Buffer.concat([u(1), u(1), u(0), u(7), u(3)]));
-  reject(
-    input(h, Buffer.concat([doc, unknown, truncated]), sections),
-    /UnexpectedEnd/,
-  );
+  reject(input(h, Buffer.concat([doc, unknown, truncated]), sections), /UnexpectedEnd/);
   return { rejected, recoveries: rejected };
 }

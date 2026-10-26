@@ -57,23 +57,14 @@ export function overlapEdges(call) {
   let accepted = 0,
     rejected = 0;
   const payload = (text, ids = [], flags = Buffer.from([255, 128, 255])) =>
-    Buffer.concat([
-      u(text.length / 2),
-      text,
-      flags,
-      Buffer.from([ids.length]),
-      ...ids.map(w),
-    ]);
+    Buffer.concat([u(text.length / 2), text, flags, Buffer.from([ids.length]), ...ids.map(w)]);
   const good = payload(Buffer.from([0, 0, 0, 216, 255, 254]), [0, 0xffffffff]);
   const check = (p, mode = 1, shapes = 1) => {
     accepted++;
     return overlapActual(call, v, frame(p), shapes, mode);
   };
   const reject = (p, mode = 1, shapes = 1, error = /UnexpectedEnd/) => {
-    assert.throws(
-      () => call(37, overlapInput(v, frame(p), shapes, mode)),
-      error,
-    );
+    assert.throws(() => call(37, overlapInput(v, frame(p), shapes, mode)), error);
     rejected++;
     check(good);
   };
@@ -97,12 +88,8 @@ export function overlapEdges(call) {
   reject(old);
   reject(old.subarray(0, 3), 0);
   check(Buffer.concat([old, Buffer.from([1, 2, 3])]), 0, 0);
-  for (let len = 0; len < 4; len++)
-    check(Buffer.concat([good, Buffer.alloc(len, 9)]));
-  const mixed = Buffer.concat([
-    frame(good),
-    frame(payload(Buffer.alloc(0), [])),
-  ]);
+  for (let len = 0; len < 4; len++) check(Buffer.concat([good, Buffer.alloc(len, 9)]));
+  const mixed = Buffer.concat([frame(good), frame(payload(Buffer.alloc(0), []))]);
   overlapActual(call, v, mixed, 1);
   accepted++;
   return { accepted, rejected };

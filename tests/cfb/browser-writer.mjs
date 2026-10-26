@@ -20,19 +20,13 @@ export function checkBrowserWriter(reader, reference) {
       )
         throw Error("writer roundtrip");
       const legacy = reference.parse(bytes).FileIndex[1].content ?? [];
-      if (
-        legacy.length !== size ||
-        Array.from(legacy).some((b, i) => b !== content[i])
-      )
+      if (legacy.length !== size || Array.from(legacy).some((b, i) => b !== content[i]))
         throw Error("writer independent parser");
       const edit = reader.document();
       edit.nodes[1].name = "Edit";
       edit.nodes[1].content = Uint8Array.of(42);
       reader.parse(reader.write(edit), { strict: true });
-      if (
-        reader.findExact("/Edit").content[0] !== 42 ||
-        reader.findExact("/Data") !== null
-      )
+      if (reader.findExact("/Edit").content[0] !== 42 || reader.findExact("/Data") !== null)
         throw Error("writer edit");
       cases++;
     }

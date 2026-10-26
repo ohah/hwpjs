@@ -15,11 +15,7 @@ function u64(value) {
 export function encodeDocument(document) {
   const version = document.version ?? 3;
   if (version !== 3 && version !== 4) throw new TypeError("UnsupportedVersion");
-  if (
-    !Array.isArray(document.nodes) ||
-    !document.nodes.length ||
-    document.nodes.length > 1000000
-  )
+  if (!Array.isArray(document.nodes) || !document.nodes.length || document.nodes.length > 1000000)
     throw new TypeError("InvalidDocument");
   let size = D.header_bytes;
   const nodes = document.nodes.map((node) => {
@@ -102,11 +98,7 @@ export function removeNode(document, index) {
   const children = document.nodes.map(() => []);
   document.nodes.forEach((n, i) => {
     if (!i) return;
-    if (
-      !Number.isInteger(n.parent) ||
-      n.parent < 0 ||
-      n.parent >= children.length
-    )
+    if (!Number.isInteger(n.parent) || n.parent < 0 || n.parent >= children.length)
       throw new Error("InvalidDirectoryReference");
     children[n.parent].push(i);
   });

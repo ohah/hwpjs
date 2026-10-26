@@ -2,7 +2,8 @@
 // Verified against lib/std/zig/Server.zig and lib/compiler/test_runner.zig.
 // Version selection lives here; unknown versions must fail closed.
 export function protocolForVersion(version) {
-  if (version !== "0.16.0" && version !== "0.17.0") throw new Error(`UnsupportedTestProtocolVersion: ${version}`);
+  if (version !== "0.16.0" && version !== "0.17.0")
+    throw new Error(`UnsupportedTestProtocolVersion: ${version}`);
   return { request, metadata, result, frameParser };
 }
 
@@ -16,7 +17,8 @@ export function request(tag, index) {
 
 export function metadata(bytes) {
   if (bytes.length < 8) throw new Error("InvalidTestMetadata");
-  const length = bytes.readUInt32LE(0), count = bytes.readUInt32LE(4);
+  const length = bytes.readUInt32LE(0),
+    count = bytes.readUInt32LE(4);
   if (!count || bytes.length !== 8 + count * 8 + length) throw new Error("InvalidTestMetadata");
   const strings = bytes.subarray(8 + count * 8);
   const names = [];
@@ -33,9 +35,16 @@ export function metadata(bytes) {
 
 export function result(bytes) {
   if (bytes.length !== 12) throw new Error("InvalidTestResult");
-  const flags = bytes.readBigUInt64LE(4), status = Number(flags & 3n);
+  const flags = bytes.readBigUInt64LE(4),
+    status = Number(flags & 3n);
   if (status > 2) throw new Error("InvalidTestStatus");
-  return { index: bytes.readUInt32LE(0), status, fuzz: Boolean(flags & 4n), logs: Number(flags >> 3n & ((1n << 30n) - 1n)), leaks: Number(flags >> 33n) };
+  return {
+    index: bytes.readUInt32LE(0),
+    status,
+    fuzz: Boolean(flags & 4n),
+    logs: Number((flags >> 3n) & ((1n << 30n) - 1n)),
+    leaks: Number(flags >> 33n),
+  };
 }
 
 export function frameParser(receive) {
@@ -44,7 +53,8 @@ export function frameParser(receive) {
     push(chunk) {
       pending = Buffer.concat([pending, chunk]);
       while (pending.length >= 8) {
-        const tag = pending.readUInt32LE(0), length = pending.readUInt32LE(4);
+        const tag = pending.readUInt32LE(0),
+          length = pending.readUInt32LE(4);
         if (length > 16 * 1024 * 1024) throw new Error("TestFrameLimit");
         if (pending.length < 8 + length) return;
         const body = pending.subarray(8, 8 + length);
@@ -52,6 +62,8 @@ export function frameParser(receive) {
         receive({ tag, body });
       }
     },
-    end() { if (pending.length) throw new Error("TruncatedTestFrame"); },
+    end() {
+      if (pending.length) throw new Error("TruncatedTestFrame");
+    },
   };
 }

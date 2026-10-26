@@ -15,10 +15,7 @@ const context = {
   process,
   console,
 };
-runInNewContext(
-  readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"),
-  context,
-);
+runInNewContext(readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"), context);
 const CFB = context.module.exports;
 
 const module = await WebAssembly.compile(
@@ -59,35 +56,23 @@ for (const [name, offset, value, error] of [
   });
 
 test("reject a WASM module with no ABI", async () => {
-  await assert.rejects(
-    createCfbReader(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0])),
-    /ABI/,
-  );
+  await assert.rejects(createCfbReader(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0])), /ABI/);
 });
 
 test("reject an unsupported ABI before exposing a reader", async () => {
   for (const version of [2, 3, 4, 5, 63])
-    await assert.rejects(
-      createCfbReader(versionModule(version)),
-      /Unsupported.*ABI/,
-    );
+    await assert.rejects(createCfbReader(versionModule(version)), /Unsupported.*ABI/);
 });
 
 test("reject a supported version with missing required exports", async () => {
-  await assert.rejects(
-    createCfbReader(versionModule(6)),
-    /Missing.*ABI export/,
-  );
+  await assert.rejects(createCfbReader(versionModule(6)), /Missing.*ABI export/);
 });
 
 test("reject missing ABI memory and verify the independently pinned ABI version", async () => {
   const { exports } = await WebAssembly.instantiate(module, {});
   assert.equal(exports.hwpjs_abi_version(), 6);
   assert.doesNotThrow(() => validateAbi(exports));
-  assert.throws(
-    () => validateAbi({ ...exports, memory: undefined }),
-    /Missing.*ABI memory/,
-  );
+  assert.throws(() => validateAbi({ ...exports, memory: undefined }), /Missing.*ABI memory/);
 });
 
 test("Unicode, path and control aliases match the reference across four lifetimes", async (t) => {

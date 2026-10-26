@@ -2,7 +2,15 @@
 import { roundedMulDiv, isInt32 as int32 } from "./integer-mul-div.mjs";
 export { roundedMulDiv } from "./integer-mul-div.mjs";
 export function hwp5LineSpacing(kind, value, height, { basisHeight = height, relativeBase } = {}) {
-  if (![kind, value, height, basisHeight].every(int32) || kind < 0 || kind > 3 || value < 0 || height < 0 || basisHeight < 0) return null;
+  if (
+    ![kind, value, height, basisHeight].every(int32) ||
+    kind < 0 ||
+    kind > 3 ||
+    value < 0 ||
+    height < 0 ||
+    basisHeight < 0
+  )
+    return null;
   let extra;
   if (kind === 0) {
     const rounded = roundedMulDiv(Math.trunc(basisHeight / 4), value - 100, 100);

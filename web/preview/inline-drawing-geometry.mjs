@@ -9,7 +9,7 @@ export function inlineDrawingGeometry(source) {
   if (!axis && !drawingScaledGeometry(source)) return fail();
   const width = hwpUnitPixels(axis ? source.geometry.width : source.rendering_corners[1][0]);
   const height = hwpUnitPixels(axis ? source.geometry.height : source.rendering_corners[3][1]);
-  if (![width, height].every(v => Number.isFinite(v) && v > 0)) return fail();
+  if (![width, height].every((v) => Number.isFinite(v) && v > 0)) return fail();
   // Positive axis resize changes the text area, not document font/table sizes.
   // Rounding differences between declared size and corners must not switch
   // the text coordinate system or multiply owned tables a second time.

@@ -14,18 +14,12 @@ const context = {
 };
 runInNewContext(readFileSync(new URL("legacy/cfb.js", root), "utf8"), context);
 const CFB = context.module.exports;
-const module = await WebAssembly.compile(
-  readFileSync(new URL("zig-out/bin/hwpjs.wasm", root)),
-);
+const module = await WebAssembly.compile(readFileSync(new URL("zig-out/bin/hwpjs.wasm", root)));
 assert.equal(WebAssembly.Module.imports(module).length, 0);
 const { exports: wasm } = await WebAssembly.instantiate(module, {});
 const field = (i, key) =>
   Buffer.from(
-    new Uint8Array(
-      wasm.memory.buffer,
-      wasm.cfb_field_ptr(i, key),
-      wasm.cfb_field_len(i, key),
-    ),
+    new Uint8Array(wasm.memory.buffer, wasm.cfb_field_ptr(i, key), wasm.cfb_field_len(i, key)),
   );
 const text = (i, key) => field(i, key).toString("utf8");
 const value = (i, key) => Number(wasm.cfb_value(i, key));
@@ -44,36 +38,14 @@ function check(name, bytes) {
   if (!ok)
     throw new Error(
       new TextDecoder().decode(
-        new Uint8Array(
-          wasm.memory.buffer,
-          wasm.cfb_error_code_ptr(),
-          wasm.cfb_error_code_len(),
-        ),
+        new Uint8Array(wasm.memory.buffer, wasm.cfb_error_code_ptr(), wasm.cfb_error_code_len()),
       ),
     );
-  assert.equal(
-    wasm.cfb_count(),
-    original.FileIndex.length,
-    name + ": entry count",
-  );
+  assert.equal(wasm.cfb_count(), original.FileIndex.length, name + ": entry count");
   const raw = (id) =>
-    Buffer.from(
-      new Uint8Array(
-        wasm.memory.buffer,
-        wasm.cfb_raw_ptr(id),
-        wasm.cfb_raw_len(id),
-      ),
-    );
-  assert.deepEqual(
-    raw(-1),
-    Buffer.from(original.raw.header),
-    name + ": raw header",
-  );
-  assert.equal(
-    wasm.cfb_sector_count(),
-    original.raw.sectors.length,
-    name + ": sector count",
-  );
+    Buffer.from(new Uint8Array(wasm.memory.buffer, wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id)));
+  assert.deepEqual(raw(-1), Buffer.from(original.raw.header), name + ": raw header");
+  assert.equal(wasm.cfb_sector_count(), original.raw.sectors.length, name + ": sector count");
   original.raw.sectors.forEach((sector, i) =>
     assert.deepEqual(raw(i), Buffer.from(sector), name + ": raw sector " + i),
   );
@@ -99,23 +71,14 @@ function check(name, bytes) {
       const ticks = wasm.cfb_value(i, key);
       if (date)
         assert.ok(
-          Math.abs(Number(ticks / 10000n - 11644473600000n) - date.getTime()) <=
-            1,
+          Math.abs(Number(ticks / 10000n - 11644473600000n) - date.getTime()) <= 1,
           name + ": time",
         );
       else assert.equal(ticks, 0n);
     }
     if (e.type === 2) {
-      assert.equal(
-        value(i, 11),
-        Number(Object.hasOwn(e, "content")),
-        name + ": content presence",
-      );
-      assert.deepEqual(
-        field(i, 2),
-        Buffer.from(e.content ?? []),
-        name + ": stream " + e.name,
-      );
+      assert.equal(value(i, 11), Number(Object.hasOwn(e, "content")), name + ": content presence");
+      assert.deepEqual(field(i, 2), Buffer.from(e.content ?? []), name + ": stream " + e.name);
       streams++;
     }
     for (const query of [
@@ -123,6 +86,7 @@ function check(name, bytes) {
       e.name.toLowerCase(),
       original.FullPaths[i],
       "/" + original.FullPaths[i].split("/").slice(1).join("/"),
+      // oxlint-disable-next-line no-control-regex -- CFB 스트림 이름의 U+0001~U+0006 정규화 비교를 보존한다.
       e.name.replace(/[\u0001-\u0006]/g, "!"),
       e.name + "\0",
     ]) {
@@ -220,8 +184,7 @@ fragmented.writeUInt32LE(2, 4096 + 3 * 4);
 fragmented.writeUInt32LE(0xfffffffe, 4096 + 2 * 4);
 fragmented.writeUInt32LE(3, 8320 + 116);
 fragmented.writeUInt32LE(6000, 8320 + 120);
-for (let i = 0; i < 6000; i++)
-  fragmented[(i < 4096 ? 16384 : 12288) + (i % 4096)] = i % 239;
+for (let i = 0; i < 6000; i++) fragmented[(i < 4096 ? 16384 : 12288) + (i % 4096)] = i % 239;
 try {
   check("v4-fragmented", fragmented);
 } catch (error) {
@@ -239,11 +202,7 @@ function reject(name, bytes, expectedError) {
     assert.equal(wasm.cfb_count(), 0, name);
     assert.equal(
       new TextDecoder().decode(
-        new Uint8Array(
-          wasm.memory.buffer,
-          wasm.cfb_error_code_ptr(),
-          wasm.cfb_error_code_len(),
-        ),
+        new Uint8Array(wasm.memory.buffer, wasm.cfb_error_code_ptr(), wasm.cfb_error_code_len()),
       ),
       expectedError,
       name,
@@ -291,10 +250,7 @@ for (const [data, type] of [
   [Array.from(v4), "array"],
 ]) {
   const parsed = api.read(data, { type });
-  assert.deepEqual(
-    Buffer.from(api.find(parsed, "/Data").content),
-    v4.subarray(12288),
-  );
+  assert.deepEqual(Buffer.from(api.find(parsed, "/Data").content), v4.subarray(12288));
   assert.equal(api.find(saved, "/Data"), saved.FileIndex[1]);
 }
 api.close();
@@ -306,7 +262,5 @@ const nodeParsed = nodeReader.read(new URL("example.hwp", fixtures), {
 });
 assert.equal(nodeReader.find(nodeParsed, "FileHeader").content.length, 256);
 nodeReader.close();
-console.log(
-  JSON.stringify({ files, streams, searches, rejected, failures }, null, 2),
-);
+console.log(JSON.stringify({ files, streams, searches, rejected, failures }, null, 2));
 if (failures.length) process.exitCode = 1;

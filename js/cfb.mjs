@@ -9,10 +9,7 @@ export { removeNode } from "./cfb-document.mjs";
 
 /** Browser/Node CFB memory API. Returned arrays own their data. */
 export async function createCfbReader(source) {
-  const module =
-    source instanceof WebAssembly.Module
-      ? source
-      : await WebAssembly.compile(source);
+  const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
   validateAbi(wasm);
   const memory = createMemory(wasm);
@@ -38,13 +35,10 @@ export async function createCfbReader(source) {
         result.FullPaths.push(decoded.path);
       }
       if (rawRequested) {
-        const raw = (id) =>
-          output.raw(memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id)));
+        const raw = (id) => output.raw(memory.copy(wasm.cfb_raw_ptr(id), wasm.cfb_raw_len(id)));
         result.raw = {
           header: raw(-1),
-          sectors: Array.from({ length: wasm.cfb_sector_count() }, (_, i) =>
-            raw(i),
-          ),
+          sectors: Array.from({ length: wasm.cfb_sector_count() }, (_, i) => raw(i)),
         };
       }
       loaded = result;
@@ -60,8 +54,7 @@ export async function createCfbReader(source) {
   }
   function read(data, options = {}) {
     const type = options?.type || "base64";
-    if (type === "file")
-      throw new Error("Use cfb-node.mjs for filesystem input");
+    if (type === "file") throw new Error("Use cfb-node.mjs for filesystem input");
     return parse(decodeInput(data, type), options);
   }
   return {
@@ -78,16 +71,13 @@ export async function createCfbReader(source) {
     document() {
       try {
         if (!wasm.cfb_document()) throw memory.error();
-        return decodeDocument(
-          memory.copy(wasm.cfb_output_ptr(), wasm.cfb_output_len()),
-        );
+        return decodeDocument(memory.copy(wasm.cfb_output_ptr(), wasm.cfb_output_len()));
       } finally {
         wasm.cfb_output_free();
       }
     },
     findExact(path) {
-      if (typeof path !== "string" || !path.isWellFormed())
-        throw new TypeError("InvalidName");
+      if (typeof path !== "string" || !path.isWellFormed()) throw new TypeError("InvalidName");
       return memory.withBytes(new TextEncoder().encode(path), (ptr, size) => {
         const index = wasm.cfb_find_exact(ptr, size);
         if (index === -2) throw memory.error();

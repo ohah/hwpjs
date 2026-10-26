@@ -8,7 +8,8 @@ import { createHwpxReader } from "../../js/hwpx.mjs";
 test("public HWPX four note bodies edit with independent complete XML and ZIP comparison", async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
-  const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
+  const editor = await createHwpxEditor(wasm),
+    reader = await createHwpxReader(wasm);
   const inserted = "검증😀<&";
   const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
 d=json.load(sys.stdin)
@@ -36,9 +37,17 @@ print('four bodies and all remaining XML unchanged')`;
     }
     const saved = editor.save();
     for (const flags of [[], ["-O"]]) {
-      assert.match(execFileSync("python3", [...flags, "-c", oracle], {
-        input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64"), inserted }), timeout: 30000,
-      }).toString(), /four bodies/);
+      assert.match(
+        execFileSync("python3", [...flags, "-c", oracle], {
+          input: JSON.stringify({
+            before: input.toString("base64"),
+            after: Buffer.from(saved).toString("base64"),
+            inserted,
+          }),
+          timeout: 30000,
+        }).toString(),
+        /four bodies/,
+      );
     }
     const mutations = `import io,json,sys,base64,zipfile,copy,xml.etree.ElementTree as E
 z=zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'; variants=[]
@@ -55,14 +64,31 @@ for kind in ('number','body','payload'):
    out.writestr(copy.copy(info),payload)
  variants.append(base64.b64encode(stream.getvalue()).decode())
 print(json.dumps(variants))`;
-    const variants = JSON.parse(execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString());
-    for (const [index, after] of variants.entries()) for (const flags of [[], ["-O"]]) {
-      assert.throws(() => execFileSync("python3", [...flags, "-c", oracle], {
-        input: JSON.stringify({ before: input.toString("base64"), after, inserted }), timeout: 30000,
-      }), error => error.status === 1 && error.signal === null && String(error.stderr).includes(`ValueError: ${index === 2 ? "mimetype" : "complete XML mismatch"}`));
-    }
+    const variants = JSON.parse(
+      execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString(),
+    );
+    for (const [index, after] of variants.entries())
+      for (const flags of [[], ["-O"]]) {
+        assert.throws(
+          () =>
+            execFileSync("python3", [...flags, "-c", oracle], {
+              input: JSON.stringify({ before: input.toString("base64"), after, inserted }),
+              timeout: 30000,
+            }),
+          (error) =>
+            error.status === 1 &&
+            error.signal === null &&
+            String(error.stderr).includes(
+              `ValueError: ${index === 2 ? "mimetype" : "complete XML mismatch"}`,
+            ),
+        );
+      }
     for (const paragraph of paragraphs) {
-      const text = reader.readTextEvents(saved).events.filter(e => e.kind === "content" && e.paragraph === paragraph).map(e => e.value).join("");
+      const text = reader
+        .readTextEvents(saved)
+        .events.filter((e) => e.kind === "content" && e.paragraph === paragraph)
+        .map((e) => e.value)
+        .join("");
       assert(text.startsWith(inserted));
     }
     assert(!editor.canEdit(0, 1));
@@ -73,17 +99,26 @@ print(json.dumps(variants))`;
     assert.deepEqual(Buffer.from(editor.save()), input);
     editor.open(saved);
     assert.deepEqual(editor.save(), saved);
-  } finally { editor.close(); reader.close(); }
+  } finally {
+    editor.close();
+    reader.close();
+  }
 });
 
 test("public HWPX note body delete all reopen and reinput keeps numbering", async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwpx");
-  const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
+  const editor = await createHwpxEditor(wasm),
+    reader = await createHwpxReader(wasm);
   try {
     for (const paragraph of [2, 3, 5, 6]) {
       editor.open(input);
-      const contents = bytes => reader.readTextEvents(bytes).events.filter(e => e.kind === "content" && e.paragraph === paragraph).map(e => e.value).join("");
+      const contents = (bytes) =>
+        reader
+          .readTextEvents(bytes)
+          .events.filter((e) => e.kind === "content" && e.paragraph === paragraph)
+          .map((e) => e.value)
+          .join("");
       const original = contents(input);
       editor.splice(0, paragraph, 0, original.length, "");
       const empty = editor.save();
@@ -99,7 +134,15 @@ def numbers(key):
  root=E.fromstring(zipfile.ZipFile(io.BytesIO(base64.b64decode(d[key]))).read('Contents/section0.xml'))
  return [E.tostring(e) for e in root.iter(p+'autoNum')]
 if numbers('before')!=numbers('after'): raise ValueError('number changed')`;
-      execFileSync("python3", ["-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64") }) });
+      execFileSync("python3", ["-c", oracle], {
+        input: JSON.stringify({
+          before: input.toString("base64"),
+          after: Buffer.from(saved).toString("base64"),
+        }),
+      });
     }
-  } finally { editor.close(); reader.close(); }
+  } finally {
+    editor.close();
+    reader.close();
+  }
 });

@@ -48,26 +48,21 @@ function oracle(v, bytes) {
     [14, 26],
   ])
     assert.equal(m.readInt32LE(i * 4), count(tag));
-  const out = [
-    0, 0, 0, 0, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
-  ];
+  const out = [0, 0, 0, 0, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff];
   function check(r, field, slot, id, n, base = 0, absent = -1) {
     if (id === absent) return;
     out[0]++;
     if (id < base || id - base >= n) {
       out[1]++;
-      if (out[4] === 0xffffffff)
-        out.splice(4, 5, r.offset, r.tag, field, slot, id);
+      if (out[4] === 0xffffffff) out.splice(4, 5, r.offset, r.tag, field, slot, id);
     }
   }
   for (const r of rows) {
     const b = r.b;
     switch (r.tag) {
       case 21:
-        for (let i = 0; i < 7; i++)
-          check(r, 0, i, b.readUInt16LE(i * 2), fonts[i]);
-        if (v >= 0x05000201 && b.length > 68)
-          check(r, 1, 0, b.readUInt16LE(68), count(20), 1, 0);
+        for (let i = 0; i < 7; i++) check(r, 0, i, b.readUInt16LE(i * 2), fonts[i]);
+        if (v >= 0x05000201 && b.length > 68) check(r, 1, 0, b.readUInt16LE(68), count(20), 1, 0);
         break;
       case 23: {
         let p = 0;
@@ -78,8 +73,7 @@ function oracle(v, bytes) {
         for (let i = 0; i < 7; i++) level(i);
         p += 2;
         if (v >= 0x05000205 && p < b.length) p += 28;
-        if (v >= 0x05010000 && p < b.length)
-          for (let i = 7; i < 10; i++) level(i);
+        if (v >= 0x05010000 && p < b.length) for (let i = 7; i < 10; i++) level(i);
         break;
       }
       case 24:
@@ -123,14 +117,12 @@ function oracle(v, bytes) {
           check(r, 10, 0, b[p + 1], count(26));
           check(r, 11, 0, b.readUInt16LE(p + 4), count(25));
         }
-        if (kind === 0 || kind === 1)
-          check(r, 12, 0, b.readUInt16LE(p + 6), count(21));
+        if (kind === 0 || kind === 1) check(r, 12, 0, b.readUInt16LE(p + 6), count(21));
         else out[2]++;
         break;
       }
       default:
-        if ((r.tag < 16 || r.tag > 26) && r.tag !== 30 && r.tag !== 31 && r.tag !== 92)
-          out[3]++;
+        if ((r.tag < 16 || r.tag > 26) && r.tag !== 30 && r.tag !== 31 && r.tag !== 92) out[3]++;
     }
   }
   return out;
@@ -172,9 +164,7 @@ function fixture() {
   return data;
 }
 const encode = (data) =>
-  Buffer.concat(
-    [...data].flatMap(([tag, rows]) => rows.map((b) => frame(tag, b))),
-  );
+  Buffer.concat([...data].flatMap(([tag, rows]) => rows.map((b) => frame(tag, b))));
 export function referenceEdges(call) {
   const data = fixture(),
     good = encode(data);
@@ -203,12 +193,7 @@ export function referenceEdges(call) {
   for (const [tag, offset, size] of fields) {
     const b = data.get(tag)[0],
       old = Buffer.from(b);
-    for (const value of [
-      0,
-      1,
-      2,
-      size === 4 ? 0xffffffff : size === 2 ? 65535 : 255,
-    ]) {
+    for (const value of [0, 1, 2, size === 4 ? 0xffffffff : size === 2 ? 65535 : 255]) {
       b.writeUIntLE(value, offset, size);
       referenceActual(call, version, encode(data));
       cases++;
@@ -227,14 +212,10 @@ export function referenceEdges(call) {
     }
   assert.throws(() => call(7, word(version)), /MissingIdMappings/);
   assert.throws(
-    () =>
-      call(7, Buffer.concat([word(version), good, frame(17, data.get(17)[0])])),
+    () => call(7, Buffer.concat([word(version), good, frame(17, data.get(17)[0])])),
     /DuplicateIdMappings/,
   );
-  assert.throws(
-    () => call(7, Buffer.concat([word(version), good]), 1),
-    /LimitExceeded/,
-  );
+  assert.throws(() => call(7, Buffer.concat([word(version), good]), 1), /LimitExceeded/);
   const para = data.get(25)[0];
   para.writeUInt32LE(1 << 23);
   para.writeUInt16LE(0, 30);
@@ -257,19 +238,11 @@ export function referenceEdges(call) {
   style[4] = 7;
   assert.equal(referenceActual(call, version, encode(data))[2], 1);
   assert.equal(
-    referenceActual(
-      call,
-      version,
-      Buffer.concat([good, frame(1023, Buffer.from([255]))]),
-    )[3],
+    referenceActual(call, version, Buffer.concat([good, frame(1023, Buffer.from([255]))]))[3],
     1,
   );
   assert.deepEqual(
-    referenceActual(
-      call,
-      version,
-      Buffer.concat([good.subarray(64), good.subarray(0, 64)]),
-    ),
+    referenceActual(call, version, Buffer.concat([good.subarray(64), good.subarray(0, 64)])),
     referenceActual(call, version, good),
   );
   return { idBoundaryCases: cases };

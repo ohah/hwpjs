@@ -1,8 +1,6 @@
 // Host representation only; CFB allocation and content-presence rules stay in Zig.
 export const nodeBuffer =
-  typeof Buffer !== "undefined" &&
-  typeof process !== "undefined" &&
-  process.versions?.node
+  typeof Buffer !== "undefined" && typeof process !== "undefined" && process.versions?.node
     ? Buffer
     : null;
 

@@ -4,7 +4,9 @@ import { paintChartMarker } from "./chart-marker-paint.mjs";
 export function paintChartLines(ctx, lines, plot, x, y, color) {
   ctx.save();
   try {
-    ctx.beginPath(); ctx.rect(x, y, plot.width, plot.height); ctx.clip();
+    ctx.beginPath();
+    ctx.rect(x, y, plot.width, plot.height);
+    ctx.clip();
     ctx.lineWidth = 2;
     for (const line of lines) {
       ctx.strokeStyle = color(line.series_node);
@@ -21,10 +23,14 @@ export function paintChartLines(ctx, lines, plot, x, y, color) {
         }
         ctx.stroke();
       }
-      if (line.marker) for (const path of line.paths) for (const point of path) {
-        if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) continue;
-        paintChartMarker(ctx, line.marker, x + point.x * plot.width, y + point.y * plot.height);
-      }
+      if (line.marker)
+        for (const path of line.paths)
+          for (const point of path) {
+            if (point.x < 0 || point.x > 1 || point.y < 0 || point.y > 1) continue;
+            paintChartMarker(ctx, line.marker, x + point.x * plot.width, y + point.y * plot.height);
+          }
     }
-  } finally { ctx.restore(); }
+  } finally {
+    ctx.restore();
+  }
 }

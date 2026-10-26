@@ -6,7 +6,7 @@ const w = (n) => {
 };
 export function numberControlActual(call, bytes) {
   const stats = [0, 0, 0, 0];
-  for (let p = 0; p < bytes.length; ) {
+  for (let p = 0; p < bytes.length;) {
     const bits = bytes.readUInt32LE(p);
     p += 4;
     let size = bits >>> 20;
@@ -41,10 +41,7 @@ export function numberControlEdges(call) {
     };
     const good = Buffer.alloc(size, 255);
     for (let len = 0; len < size; len++) {
-      assert.throws(
-        () => call(32, Buffer.concat([w(id), good.subarray(0, len)])),
-        /UnexpectedEnd/,
-      );
+      assert.throws(() => call(32, Buffer.concat([w(id), good.subarray(0, len)])), /UnexpectedEnd/);
       rejected++;
       check(good);
     }
@@ -53,8 +50,7 @@ export function numberControlEdges(call) {
       b[bit >>> 3] = 1 << (bit & 7);
       check(b);
     }
-    for (let len = 0; len < 4; len++)
-      check(Buffer.concat([good, Buffer.alloc(len, 0x81)]));
+    for (let len = 0; len < 4; len++) check(Buffer.concat([good, Buffer.alloc(len, 0x81)]));
   }
   for (const id of [0x6175746e, 0x6e65776e]) {
     assert.throws(() => call(32, w(id)), /UnknownNumberControl/);

@@ -6,36 +6,58 @@ import { execFileSync } from "../../tools/oracle-process.mjs";
 
 test("manual result empty whitespace Unicode and exact byte limit retain text styles and history", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
-  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(
+    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+  );
   try {
     for (const display of ["", " ", "가\u0301", "😀", "x".repeat(4096)]) {
-      editor.open(input); editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 4 * 1024 * 1024 });
+      editor.open(input);
+      editor.enableHistory({ maxEntries: 8, maxCheckpointBytes: 4 * 1024 * 1024 });
       const source = editor.formulaSources(0)[0];
       editor.setManualFormulaResult(0, source.begin_element, display);
       const saved = Buffer.from(editor.save());
       assert.equal(editor.formulaCurrent(0)[0].values.last_result, display);
       assert.equal(editor.paragraphTextSnapshot(0)[23].text, display);
       const styles = editor.characterRanges(0, 24);
-      assert(styles.every(range => range.start >= 0 && range.start <= range.end && range.end <= display.length));
+      assert(
+        styles.every(
+          (range) => range.start >= 0 && range.start <= range.end && range.end <= display.length,
+        ),
+      );
       if (display.length) assert.equal(styles.at(-1).end, display.length);
       assert.deepEqual(editor.formulaSources(0)[0], source);
-      for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-manual-result-save-oracle.py"], {
-        input: JSON.stringify({ before: input.toString("base64"), after: saved.toString("base64"), ordinal: 0, display, selfTest: true }), timeout: 30000,
-      });
-      assert.equal(editor.undo(), true); assert(Buffer.from(editor.save()).equals(input));
-      assert.equal(editor.redo(), true); assert(Buffer.from(editor.save()).equals(saved));
+      for (const flags of [[], ["-O"]])
+        execFileSync("python3", [...flags, "tools/hwpx-manual-result-save-oracle.py"], {
+          input: JSON.stringify({
+            before: input.toString("base64"),
+            after: saved.toString("base64"),
+            ordinal: 0,
+            display,
+            selfTest: true,
+          }),
+          timeout: 30000,
+        });
+      assert.equal(editor.undo(), true);
+      assert(Buffer.from(editor.save()).equals(input));
+      assert.equal(editor.redo(), true);
+      assert(Buffer.from(editor.save()).equals(saved));
       editor.open(saved);
       assert.equal(editor.formulaCurrent(0)[0].values.last_result, display);
       assert(Buffer.from(editor.save()).equals(saved));
     }
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });
 
 test("manual result invalid coordinates preserve source bytes revision and pending redo", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
-  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(
+    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+  );
   try {
-    editor.open(input); editor.enableHistory();
+    editor.open(input);
+    editor.enableHistory();
     const source = editor.formulaSources(0)[0];
     editor.setManualFormulaResult(0, source.begin_element, "좌표😀");
     const edited = Buffer.from(editor.save());
@@ -59,5 +81,7 @@ test("manual result invalid coordinates preserve source bytes revision and pendi
     assert.equal(editor.redo(), true);
     assert(Buffer.from(editor.save()).equals(edited));
     assert.equal(editor.formulaCurrent(0)[0].values.last_result, "좌표😀");
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });

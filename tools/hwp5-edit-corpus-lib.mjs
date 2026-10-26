@@ -7,7 +7,13 @@ export const marker = "검증😀";
 
 // Inventory comes from Git, not a hand-picked list of successful examples.
 export function fixturePaths(paths, { allTracked = false } = {}) {
-  return [...new Set(paths.filter(path => (allTracked || /(?:^|\/)fixtures\//.test(path)) && /\.(hwp|hwpx)$/i.test(path)))].sort();
+  return [
+    ...new Set(
+      paths.filter(
+        (path) => (allTracked || /(?:^|\/)fixtures\//.test(path)) && /\.(hwp|hwpx)$/i.test(path),
+      ),
+    ),
+  ].sort();
 }
 
 export function sectionTexts(streams) {
@@ -23,8 +29,9 @@ export function sectionTexts(streams) {
       assert(header[36] & 1, "uncompressed distribution oracle unsupported");
       raw = decodeDistribution(encoded);
     } else if (header[36] & 1) {
-      try { raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 }); }
-      catch (error) {
+      try {
+        raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
+      } catch (error) {
         if (error.code !== "Z_DATA_ERROR") throw error;
         raw = inflateSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
       }
@@ -37,53 +44,104 @@ export function sectionTexts(streams) {
 // Verifies text bytes of EVERY paragraph, plus EVERY non-body stream.
 // This is not an oracle for formatting, pagination, or cell geometry.
 export function verifySaved(beforeStreams, afterStreams, expected) {
-  assert.deepEqual([...afterStreams.keys()].sort(), [...beforeStreams.keys()].sort(), "stream inventory changed");
+  assert.deepEqual(
+    [...afterStreams.keys()].sort(),
+    [...beforeStreams.keys()].sort(),
+    "stream inventory changed",
+  );
   const actual = sectionTexts(afterStreams);
-  assert.deepEqual([...actual.keys()].sort(), [...expected.keys()].sort(), "section inventory changed");
-  for (const [section, texts] of expected) assert.deepEqual(actual.get(section), texts, `section ${section} paragraph text bytes`);
+  assert.deepEqual(
+    [...actual.keys()].sort(),
+    [...expected.keys()].sort(),
+    "section inventory changed",
+  );
+  for (const [section, texts] of expected)
+    assert.deepEqual(actual.get(section), texts, `section ${section} paragraph text bytes`);
   for (const [path, bytes] of beforeStreams) {
     const distribution = Boolean(beforeStreams.get("FileHeader").readUInt32LE(36) & 4);
-    if (!(distribution ? /^ViewText\/Section\d+$/ : /^BodyText\/Section\d+$/).test(path)) assert.deepEqual(afterStreams.get(path), bytes, `unselected stream ${path}`);
+    if (!(distribution ? /^ViewText\/Section\d+$/ : /^BodyText\/Section\d+$/).test(path))
+      assert.deepEqual(afterStreams.get(path), bytes, `unselected stream ${path}`);
   }
 }
 
 export function exerciseEditor(editor, expected, { history = false } = {}) {
-  const failures = {}, failureSites = [], edits = [];
+  const failures = {},
+    failureSites = [],
+    edits = [];
   let historyVerified = 0;
   if (history) editor.enableHistory();
   let attempted = 0;
   assert.equal(editor.sectionCount(), expected.size, "editor section count differs from oracle");
   for (const [section, texts] of expected) {
-    assert.equal(editor.paragraphCount(section), texts.length, "editor paragraph count differs from oracle");
+    assert.equal(
+      editor.paragraphCount(section),
+      texts.length,
+      "editor paragraph count differs from oracle",
+    );
     for (let paragraph = 0; paragraph < texts.length; paragraph++) {
       attempted++;
       let before;
-      try { before = Buffer.from(editor.copyText(section, paragraph)); }
-      catch (error) {
+      try {
+        before = Buffer.from(editor.copyText(section, paragraph));
+      } catch (error) {
         const message = `copyText:${error.message}`;
         failures[message] = (failures[message] ?? 0) + 1;
         failureSites.push({ section, paragraph, error: message });
         continue;
       }
-      assert.deepEqual(before, texts[paragraph] ?? Buffer.alloc(0), "source text differs from independent oracle");
+      assert.deepEqual(
+        before,
+        texts[paragraph] ?? Buffer.alloc(0),
+        "source text differs from independent oracle",
+      );
       const prior = history ? editor.save({ allowStaleLayout: true }) : null;
-      try { editor.splice({ section, paragraph, startUnit: 0, endUnit: 0, text: marker }); }
-      catch (error) {
-        assert.deepEqual(Buffer.from(editor.copyText(section, paragraph)), before, "refused edit mutated paragraph");
-        if (history) assert.deepEqual(editor.save({ allowStaleLayout: true }), prior, "refused edit changed document or layout state");
+      try {
+        editor.splice({ section, paragraph, startUnit: 0, endUnit: 0, text: marker });
+      } catch (error) {
+        assert.deepEqual(
+          Buffer.from(editor.copyText(section, paragraph)),
+          before,
+          "refused edit mutated paragraph",
+        );
+        if (history)
+          assert.deepEqual(
+            editor.save({ allowStaleLayout: true }),
+            prior,
+            "refused edit changed document or layout state",
+          );
         failures[error.message] = (failures[error.message] ?? 0) + 1;
         failureSites.push({ section, paragraph, error: error.message });
         continue;
       }
-      const after = Buffer.concat([Buffer.from(marker, "utf16le"), before.length ? before : Buffer.from("\r", "utf16le")]);
-      assert.deepEqual(Buffer.from(editor.copyText(section, paragraph)), after, "accepted edit did not insert marker");
+      const after = Buffer.concat([
+        Buffer.from(marker, "utf16le"),
+        before.length ? before : Buffer.from("\r", "utf16le"),
+      ]);
+      assert.deepEqual(
+        Buffer.from(editor.copyText(section, paragraph)),
+        after,
+        "accepted edit did not insert marker",
+      );
       if (history) {
         const changed = editor.save({ allowStaleLayout: true });
         assert.equal(editor.undo(), true, "accepted command missing undo");
-        assert.deepEqual(editor.save({ allowStaleLayout: true }), prior, "undo differs from previous complete document");
-        if (edits.length === 0) assert.deepEqual(editor.save(), prior, "first undo failed to restore strict layout state");
+        assert.deepEqual(
+          editor.save({ allowStaleLayout: true }),
+          prior,
+          "undo differs from previous complete document",
+        );
+        if (edits.length === 0)
+          assert.deepEqual(
+            editor.save(),
+            prior,
+            "first undo failed to restore strict layout state",
+          );
         assert.equal(editor.redo(), true, "accepted command missing redo");
-        assert.deepEqual(editor.save({ allowStaleLayout: true }), changed, "redo differs from edited complete document");
+        assert.deepEqual(
+          editor.save({ allowStaleLayout: true }),
+          changed,
+          "redo differs from edited complete document",
+        );
         historyVerified++;
       }
       texts[paragraph] = after;
@@ -92,6 +150,17 @@ export function exerciseEditor(editor, expected, { history = false } = {}) {
   }
   if (edits.length) assert.throws(() => editor.save(), { message: "LayoutReflowRequired" });
   const saved = editor.save({ allowStaleLayout: true });
-  assert.equal(saved.layoutRequiresReflow, edits.length > 0, "save reflow status differs from applied edits");
-  return { attempted, edited: edits.length, failures, failureSites, saved, ...(history ? { historyVerified } : {}) };
+  assert.equal(
+    saved.layoutRequiresReflow,
+    edits.length > 0,
+    "save reflow status differs from applied edits",
+  );
+  return {
+    attempted,
+    edited: edits.length,
+    failures,
+    failureSites,
+    saved,
+    ...(history ? { historyVerified } : {}),
+  };
 }

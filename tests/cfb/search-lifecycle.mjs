@@ -1,25 +1,12 @@
 // Browser/Node shared regression: the expected answers come from the legacy engine.
 export function checkSearchLifecycle(reference, reader) {
   const source = reference.utils.cfb_new();
-  for (const name of [
-    "/Straße/ﬃ",
-    "/한글/표😀",
-    "/\u0001Control",
-    "/\ufffd",
-    "/\u1c8a",
-  ])
+  for (const name of ["/Straße/ﬃ", "/한글/표😀", "/\u0001Control", "/\ufffd", "/\u1c8a"])
     reference.utils.cfb_add(source, name, new Uint8Array([1]));
   const bytes = reference.write(source, { type: "buffer" });
   const expected = reference.read(bytes, { type: "buffer" });
   const saved = reader.parse(bytes);
-  const queries = [
-    "missing",
-    "/STRASSE/FFI",
-    "!control",
-    "\ud800",
-    "\udc00",
-    "\u1c89",
-  ];
+  const queries = ["missing", "/STRASSE/FFI", "!control", "\ud800", "\udc00", "\u1c89"];
   expected.FileIndex.forEach((entry, i) =>
     queries.push(
       entry.name,
@@ -43,13 +30,9 @@ export function checkSearchLifecycle(reference, reader) {
     if (phase === "closed") reader.close();
     for (const query of queries) {
       const actualIndex = saved.FileIndex.indexOf(reader.find(saved, query));
-      const expectedIndex = expected.FileIndex.indexOf(
-        reference.find(expected, query),
-      );
+      const expectedIndex = expected.FileIndex.indexOf(reference.find(expected, query));
       if (actualIndex !== expectedIndex)
-        throw new Error(
-          `${phase}: ${JSON.stringify(query)}: ${actualIndex} != ${expectedIndex}`,
-        );
+        throw new Error(`${phase}: ${JSON.stringify(query)}: ${actualIndex} != ${expectedIndex}`);
       searches++;
     }
   }

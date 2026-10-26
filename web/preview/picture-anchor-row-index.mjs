@@ -5,7 +5,11 @@ export function pictureAnchorRows(rows, cell) {
   for (const row of rows) {
     if (!row) return null;
     if (row.kind !== "text" || row.startUnit === row.endUnit) continue;
-    if (![row.startUnit, row.endUnit].every(v => Number.isSafeInteger(v) && v >= 0) || row.endUnit <= row.startUnit) return null;
+    if (
+      ![row.startUnit, row.endUnit].every((v) => Number.isSafeInteger(v) && v >= 0) ||
+      row.endUnit <= row.startUnit
+    )
+      return null;
     const key = `${row.section}:${row.paragraph}:${row.tableNode ?? cell?.tableNode}:${row.listNode ?? cell?.listNode}`;
     if (!index.has(key)) index.set(key, []);
     index.get(key).push(row);
@@ -17,8 +21,16 @@ export function pictureAnchorRows(rows, cell) {
   return index;
 }
 export function pictureAnchorRow(index, picture) {
-  const group = index.get(`${picture.section}:${picture.paragraph}:${picture.cell?.tableNode}:${picture.cell?.listNode}`) ?? [];
-  let lo = 0, hi = group.length;
-  while (lo < hi) { const mid = (lo + hi) >>> 1; if (group[mid].startUnit <= picture.anchorUnit) lo = mid + 1; else hi = mid; }
+  const group =
+    index.get(
+      `${picture.section}:${picture.paragraph}:${picture.cell?.tableNode}:${picture.cell?.listNode}`,
+    ) ?? [];
+  let lo = 0,
+    hi = group.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >>> 1;
+    if (group[mid].startUnit <= picture.anchorUnit) lo = mid + 1;
+    else hi = mid;
+  }
   return lo === 0 || picture.anchorUnit >= group[lo - 1].endUnit ? null : group[lo - 1];
 }

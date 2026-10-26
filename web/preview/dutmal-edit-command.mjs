@@ -2,7 +2,12 @@
 export function dutmalQueryIdentity(message) {
   if (message.kind === "inline-string-sources") return { requestId: message.requestId };
   if (!["dutmal-text-query", "dutmal-text"].includes(message.kind)) return {};
-  return { requestId: message.requestId, section: message.section, node: message.node, textKind: message.textKind };
+  return {
+    requestId: message.requestId,
+    section: message.section,
+    node: message.node,
+    textKind: message.textKind,
+  };
 }
 
 export function readDutmalText(editor, message) {

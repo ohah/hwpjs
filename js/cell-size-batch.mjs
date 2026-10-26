@@ -2,14 +2,23 @@
 export function encodeCellSizes(cells) {
   if (!Array.isArray(cells)) throw new TypeError("InvalidCellSizeBatch");
   if (cells.length > 4096) throw new RangeError("LimitExceeded");
-  const names = ["section", "listNode", "width", "height"], seen = new Set();
-  const bytes = new Uint8Array(cells.length * 16), view = new DataView(bytes.buffer);
+  const names = ["section", "listNode", "width", "height"],
+    seen = new Set();
+  const bytes = new Uint8Array(cells.length * 16),
+    view = new DataView(bytes.buffer);
   for (let i = 0; i < cells.length; i++) {
     const cell = cells[i];
-    if (!cell || typeof cell !== "object" || Array.isArray(cell) || Object.keys(cell).some(key => !names.includes(key))) throw new TypeError("InvalidCellSizeBatch");
-    const values = names.map(name => {
+    if (
+      !cell ||
+      typeof cell !== "object" ||
+      Array.isArray(cell) ||
+      Object.keys(cell).some((key) => !names.includes(key))
+    )
+      throw new TypeError("InvalidCellSizeBatch");
+    const values = names.map((name) => {
       const value = cell[name];
-      if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) throw new RangeError("InvalidCellSizeBatch");
+      if (!Number.isInteger(value) || value < 0 || value > 0xffffffff)
+        throw new RangeError("InvalidCellSizeBatch");
       return value;
     });
     const key = `${values[0]}:${values[1]}`;

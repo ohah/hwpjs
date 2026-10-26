@@ -14,14 +14,7 @@ function counts(rows, cells) {
 function expected(rows, columns, sizes, cells) {
   const starts = Array(rows).fill(0);
   for (const [y, x, h, w] of cells) {
-    if (
-      !h ||
-      !w ||
-      y >= rows ||
-      x >= columns ||
-      y + h > rows ||
-      x + w > columns
-    )
+    if (!h || !w || y >= rows || x >= columns || y + h > rows || x + w > columns)
       return "InvalidCellSpan";
     if (starts[y] >= sizes[y]) return "TableRowCellCountMismatch";
     starts[y]++;
@@ -102,29 +95,18 @@ export function gridEdges(call) {
       wrong = [...sizes];
     wrong[source]--;
     wrong[target]++;
-    assert.equal(
-      checkGrid(call, rows, columns, wrong, cells),
-      "TableRowCellCountMismatch",
-    );
+    assert.equal(checkGrid(call, rows, columns, wrong, cells), "TableRowCellCountMismatch");
   }
   const sizes = Array(65535).fill(0);
   sizes[0] = 1;
-  assert.equal(
-    call(19, input(65535, 65535, sizes, [[0, 0, 65535, 65535]])).length,
-    0,
-  );
+  assert.equal(call(19, input(65535, 65535, sizes, [[0, 0, 65535, 65535]])).length, 0);
   // Maximum u16 cells in one row and many shared row-boundary remove/add events.
   for (const vertical of [false, true]) {
-    const cells = Array.from({ length: 65535 }, (_, i) =>
-      vertical ? [i, 0, 1, 1] : [0, i, 1, 1],
-    );
+    const cells = Array.from({ length: 65535 }, (_, i) => (vertical ? [i, 0, 1, 1] : [0, i, 1, 1]));
     const rows = vertical ? 65535 : 1,
       columns = vertical ? 1 : 65535;
     const rowSizes = vertical ? Array(65535).fill(1) : [65535];
-    assert.equal(
-      call(19, input(rows, columns, rowSizes, cells.reverse())).length,
-      0,
-    );
+    assert.equal(call(19, input(rows, columns, rowSizes, cells.reverse())).length, 0);
   }
   const good = input(1, 1, [1], [[0, 0, 1, 1]]);
   for (let n = 0; n < good.length; n++)

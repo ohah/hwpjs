@@ -5,17 +5,10 @@ const word = (v) => {
   b.writeUInt32LE(v >>> 0);
   return b;
 };
-const frame = (tag, b) =>
-  Buffer.concat([word(tag | 1024 | (b.length << 20)), b]);
+const frame = (tag, b) => Buffer.concat([word(tag | 1024 | (b.length << 20)), b]);
 const version = 0x05010001;
 const input = (v, shapes, header, records) =>
-  Buffer.concat([
-    word(v),
-    word(shapes),
-    word(header.length),
-    header,
-    ...records,
-  ]);
+  Buffer.concat([word(v), word(shapes), word(header.length), header, ...records]);
 
 // Independent test-only paragraph association. Product hierarchy assembly is separate.
 export function metadataActual(call, v, bytes, shapes) {
@@ -46,15 +39,11 @@ export function metadataActual(call, v, bytes, shapes) {
     } else if (tag >= 68 && tag <= 70) {
       assert.ok(parents[level - 1], `orphan metadata at ${start}`);
       parents[level - 1].records.push(bytes.subarray(start, p));
-      totals[["runs", "lines", "ranges"][tag - 68]] +=
-        n / [8, 36, 12][tag - 68];
+      totals[["runs", "lines", "ranges"][tag - 68]] += n / [8, 36, 12][tag - 68];
     }
   }
   for (const h of paragraphs) {
-    assert.deepEqual(
-      call(9, input(v, shapes, h.header, h.records)),
-      Buffer.alloc(0),
-    );
+    assert.deepEqual(call(9, input(v, shapes, h.header, h.records)), Buffer.alloc(0));
     totals.paragraphs++;
   }
   return totals;
@@ -67,9 +56,7 @@ export function metadataEdges(call) {
     [69, 36],
     [70, 12],
   ]) {
-    const original = Buffer.from(
-      Array.from({ length: width * 2 }, (_, i) => (i * 73 + 129) & 255),
-    );
+    const original = Buffer.from(Array.from({ length: width * 2 }, (_, i) => (i * 73 + 129) & 255));
     for (let n = 0; n <= original.length; n++) {
       const record = frame(tag, original.subarray(0, n));
       if (n % width)
@@ -105,8 +92,7 @@ export function metadataEdges(call) {
     word(0x80123456),
   ]);
   const records = () => [frame(68, runs), frame(69, lines), frame(70, ranges)];
-  const good = () =>
-    assert.deepEqual(call(9, input(version, 2, h, records())), Buffer.alloc(0));
+  const good = () => assert.deepEqual(call(9, input(version, 2, h, records())), Buffer.alloc(0));
   good();
   let boundaries = 0;
   for (const [buffer, offset, value, error] of [
@@ -152,10 +138,7 @@ export function metadataEdges(call) {
   good();
   const empty = input(version, 0, Buffer.alloc(24), []);
   assert.deepEqual(call(9, empty), Buffer.alloc(0));
-  assert.throws(
-    () => call(9, input(version, 2, h, records()), 2),
-    /LimitExceeded/,
-  );
+  assert.throws(() => call(9, input(version, 2, h, records()), 2), /LimitExceeded/);
   good();
   assert.equal(mutations, 896);
   return { mutations, recoveries: mutations, boundaries };

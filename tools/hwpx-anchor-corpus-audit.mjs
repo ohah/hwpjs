@@ -6,17 +6,35 @@ import { createHwpxEditor } from "../js/hwpx-editor.mjs";
 import { createHwpxReader } from "../js/hwpx.mjs";
 
 const wasm = readFileSync("zig-out/bin/hwpjs.wasm");
-const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
-const files = execFileSync("git", ["ls-files", "-z"]).toString().split("\0").filter(path => path.includes("/fixtures/") && path.endsWith(".hwpx"));
+const editor = await createHwpxEditor(wasm),
+  reader = await createHwpxReader(wasm);
+const files = execFileSync("git", ["ls-files", "-z"])
+  .toString()
+  .split("\0")
+  .filter((path) => path.includes("/fixtures/") && path.endsWith(".hwpx"));
 const prefix = "검증😀";
 const leadingBoundary = process.argv.includes("--leading-boundary");
-const totals = { boundary: leadingBoundary ? "leading" : "after-leading-anchors", files: files.length, encrypted: 0, candidates: 0, accepted: 0, refused: {} };
+const totals = {
+  boundary: leadingBoundary ? "leading" : "after-leading-anchors",
+  files: files.length,
+  encrypted: 0,
+  candidates: 0,
+  accepted: 0,
+  refused: {},
+};
 try {
   for (const path of files) {
     const input = readFileSync(path);
-    try { editor.open(input); }
-    catch (error) { assert.equal(error.message, "EncryptedDocument"); totals.encrypted++; continue; }
-    const paragraphs = reader.readTextEvents(input).events.filter(e => e.kind === "paragraph_start");
+    try {
+      editor.open(input);
+    } catch (error) {
+      assert.equal(error.message, "EncryptedDocument");
+      totals.encrypted++;
+      continue;
+    }
+    const paragraphs = reader
+      .readTextEvents(input)
+      .events.filter((e) => e.kind === "paragraph_start");
     let accepted = 0;
     for (const paragraph of paragraphs) {
       editor.open(input);
@@ -31,7 +49,17 @@ try {
         if (!leadingBoundary) while (before[start] === "\ufffc") start++;
         editor.spliceAnchored(paragraph.section, paragraph.paragraph, start, 0, prefix);
       } catch (error) {
-        assert(["UnsupportedParagraphControl", "UnsupportedInlineControl", "MissingTextSite", "SourceBindingMismatch", "InvalidTextPosition", "InvalidFormulaNumber"].includes(error.message), `${path}: ${error.message}`);
+        assert(
+          [
+            "UnsupportedParagraphControl",
+            "UnsupportedInlineControl",
+            "MissingTextSite",
+            "SourceBindingMismatch",
+            "InvalidTextPosition",
+            "InvalidFormulaNumber",
+          ].includes(error.message),
+          `${path}: ${error.message}`,
+        );
         assert.deepEqual(Buffer.from(editor.save()), input);
         totals.refused[error.message] = (totals.refused[error.message] ?? 0) + 1;
         continue;
@@ -44,12 +72,18 @@ try {
         reopened.open(saved);
         assert.equal(reopened.anchorText(paragraph.section, paragraph.paragraph), expected);
         assert.deepEqual(reopened.save(), saved);
-      } finally { reopened.close(); }
+      } finally {
+        reopened.close();
+      }
       editor.spliceAnchored(paragraph.section, paragraph.paragraph, start, prefix.length, "");
       assert.deepEqual(Buffer.from(editor.save()), input);
-      totals.accepted++; accepted++;
+      totals.accepted++;
+      accepted++;
     }
     console.log(JSON.stringify({ path, accepted }));
   }
   console.log(JSON.stringify({ totals }));
-} finally { editor.close(); reader.close(); }
+} finally {
+  editor.close();
+  reader.close();
+}

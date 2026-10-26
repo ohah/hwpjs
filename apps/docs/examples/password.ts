@@ -1,4 +1,4 @@
-import { PasswordAttemptError, type HeadlessEditor, type LoadOptions } from '@ohah/hwpjs';
+import { PasswordAttemptError, type HeadlessEditor, type LoadOptions } from "@ohah/hwpjs";
 
 export type RequestPassword = (notice: {
   attempt: number;
@@ -9,16 +9,19 @@ export type RequestPassword = (notice: {
 export async function openWithPassword(
   editor: HeadlessEditor,
   bytes: Uint8Array,
-  options: Pick<LoadOptions, 'format' | 'editable'>,
+  options: Pick<LoadOptions, "format" | "editable">,
   requestPassword: RequestPassword,
-): Promise<{ status: 'opened' | 'cancelled' }> {
+): Promise<{ status: "opened" | "cancelled" }> {
   try {
     await editor.load(bytes, options);
-    return { status: 'opened' };
+    return { status: "opened" };
   } catch (error) {
     // 관찰한 지원 fixture/runtime의 신호만 다룹니다. 문자열만으로 후보 존재를 증명하지 않습니다.
-    if (!(error instanceof Error) ||
-      !['EncryptedDocument', 'UnsupportedEncryption'].includes(error.message)) throw error;
+    if (
+      !(error instanceof Error) ||
+      !["EncryptedDocument", "UnsupportedEncryption"].includes(error.message)
+    )
+      throw error;
   }
   let opened = false;
   let primaryError: unknown;
@@ -27,11 +30,11 @@ export async function openWithPassword(
     for (let attempt = 1; ; attempt++) {
       // 암호를 저장하거나 로그에 출력하지 않습니다. UI/재시도 횟수는 호스트 책임입니다.
       const password = await requestPassword({ attempt, retry: attempt > 1 });
-      if (password === null) return { status: 'cancelled' };
+      if (password === null) return { status: "cancelled" };
       try {
         await editor.unlock(password);
         opened = true;
-        return { status: 'opened' };
+        return { status: "opened" };
       } catch (error) {
         // 이 오류만 같은 후보에 재시도할 수 있습니다. 메시지 문자열만 보고 재시도하지 않습니다.
         if (!(error instanceof PasswordAttemptError)) throw error;
@@ -44,11 +47,15 @@ export async function openWithPassword(
   } finally {
     // 후보 정리가 원래 실패를 가리지 않도록 두 오류를 보존합니다.
     if (!opened) {
-      try { await editor.cancelLoad(); }
-      catch (cleanupError) {
-        if (failed) throw new AggregateError(
-          [primaryError, cleanupError], 'PasswordCandidateCleanupFailed', { cause: primaryError },
-        );
+      try {
+        await editor.cancelLoad();
+      } catch (cleanupError) {
+        if (failed)
+          // oxlint-disable-next-line no-unsafe-finally -- 암호 후보 정리 실패 때 원래 오류와 cleanup 오류의 AggregateError 우선순위를 보존한다.
+          throw new AggregateError([primaryError, cleanupError], "PasswordCandidateCleanupFailed", {
+            cause: primaryError,
+          });
+        // oxlint-disable-next-line no-unsafe-finally -- 암호 후보 정리 실패 때 원래 오류와 cleanup 오류의 AggregateError 우선순위를 보존한다.
         throw cleanupError;
       }
     }

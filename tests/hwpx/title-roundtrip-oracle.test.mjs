@@ -20,12 +20,35 @@ print(json.dumps([{ "name":name,"paragraph":1,"before":before,"after":archive(xm
   const cases = JSON.parse(execFileSync("python3", ["-c", generate], { timeout: 30000 }));
   for (const flags of [[], ["-O"]]) {
     for (const item of cases) {
-      const run = () => execFileSync("python3", [...flags, "tools/hwpx-title-roundtrip-oracle.py"], { input: JSON.stringify(item), timeout: 30000 });
+      const run = () =>
+        execFileSync("python3", [...flags, "tools/hwpx-title-roundtrip-oracle.py"], {
+          input: JSON.stringify(item),
+          timeout: 30000,
+        });
       if (item.name === "positive") run();
-      else assert.throws(run, error => error.status === 1 && error.signal === null && /ValueError: (Merged metadata position\/source mismatch|Merged text\/style\/anchor mismatch|Non-target payload|Paragraph surrounding text)/.test(String(error.stderr)), item.name);
+      else
+        assert.throws(
+          run,
+          (error) =>
+            error.status === 1 &&
+            error.signal === null &&
+            /ValueError: (Merged metadata position\/source mismatch|Merged text\/style\/anchor mismatch|Non-target payload|Paragraph surrounding text)/.test(
+              String(error.stderr),
+            ),
+          item.name,
+        );
     }
     for (const paragraph of [true, 0, 2]) {
-      assert.throws(() => execFileSync("python3", [...flags, "tools/hwpx-title-roundtrip-oracle.py"], { input: JSON.stringify({ ...cases[0], paragraph }), timeout: 30000 }), error => error.status === 1 && /ValueError: (Invalid paragraph|Paragraph out of range)/.test(String(error.stderr)));
+      assert.throws(
+        () =>
+          execFileSync("python3", [...flags, "tools/hwpx-title-roundtrip-oracle.py"], {
+            input: JSON.stringify({ ...cases[0], paragraph }),
+            timeout: 30000,
+          }),
+        (error) =>
+          error.status === 1 &&
+          /ValueError: (Invalid paragraph|Paragraph out of range)/.test(String(error.stderr)),
+      );
     }
   }
 });

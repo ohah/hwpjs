@@ -6,21 +6,42 @@ import { hwpUnitPixels } from "./hwp-units.mjs";
 import { tableHostProfile } from "./table-host-profile.mjs";
 
 // Replan from measured source content, never move already projected fragments.
-export function planFloatingTablePlacement(table, measured, setting, host, insets, content, placements, groups,
-  { pageOrdinal, anchorY, maxRows, maxAttempts = 2000 } = {}) {
-  const fail = error => ({ state: "unavailable", error });
-  if (!Number.isSafeInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 2000) return fail("InvalidFloatingTablePlacementBudget");
+export function planFloatingTablePlacement(
+  table,
+  measured,
+  setting,
+  host,
+  insets,
+  content,
+  placements,
+  groups,
+  { pageOrdinal, anchorY, maxRows, maxAttempts = 2000 } = {},
+) {
+  const fail = (error) => ({ state: "unavailable", error });
+  if (!Number.isSafeInteger(maxAttempts) || maxAttempts < 1 || maxAttempts > 2000)
+    return fail("InvalidFloatingTablePlacementBudget");
   const source = table?.sourceGeometry;
-  if (!source || !Array.isArray(placements) || !Array.isArray(groups)) return fail("InvalidFloatingTablePlacementPlan");
-  const movable = table.pagination?.page_break === "cell" && source.flow_with_text === true
-    && source.vertical_relative === 2 && source.vertical_alignment === 0 && source.allow_overlap === false;
+  if (!source || !Array.isArray(placements) || !Array.isArray(groups))
+    return fail("InvalidFloatingTablePlacementPlan");
+  const movable =
+    table.pagination?.page_break === "cell" &&
+    source.flow_with_text === true &&
+    source.vertical_relative === 2 &&
+    source.vertical_alignment === 0 &&
+    source.allow_overlap === false;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    if (!Number.isSafeInteger(pageOrdinal) || pageOrdinal < 0 || pageOrdinal >= 2000) return fail("PageFlowLimit");
+    if (!Number.isSafeInteger(pageOrdinal) || pageOrdinal < 0 || pageOrdinal >= 2000)
+      return fail("PageFlowLimit");
     const reference = pageSequenceReference(setting, pageOrdinal);
     if (reference.state !== "placed") return reference;
     const page = reference.boxes.page;
-    let placement = placeWholeFloatingTablePage(table, measured, { ...reference.boxes, column: page }, host,
-      { anchorY, occupiedBottom: anchorY, pageOrdinal, maxRows });
+    let placement = placeWholeFloatingTablePage(
+      table,
+      measured,
+      { ...reference.boxes, column: page },
+      host,
+      { anchorY, occupiedBottom: anchorY, pageOrdinal, maxRows },
+    );
     if (placement.state === "next-page") {
       pageOrdinal++;
       const next = pageSequenceReference(setting, pageOrdinal);
@@ -29,21 +50,53 @@ export function planFloatingTablePlacement(table, measured, setting, host, inset
       continue;
     }
     const leadingTable = tableHostProfile(host, table)?.leading === true;
-    if ((placement.error === "TableVerticalFlowHeightOverflow" || placement.error === "UnsupportedUnconfinedTableBodyOverflow"
-      && source.flow_with_text === false && source.geometry.vertical_offset >= 0
-      && hwpUnitPixels(source.geometry.vertical_offset) < page.height) && leadingTable && table.pagination.page_break === "cell") {
-      placement = layoutFloatingCellPages(table, measured, setting, host, { pageOrdinal, anchorY, maxRows });
+    if (
+      (placement.error === "TableVerticalFlowHeightOverflow" ||
+        (placement.error === "UnsupportedUnconfinedTableBodyOverflow" &&
+          source.flow_with_text === false &&
+          source.geometry.vertical_offset >= 0 &&
+          hwpUnitPixels(source.geometry.vertical_offset) < page.height)) &&
+      leadingTable &&
+      table.pagination.page_break === "cell"
+    ) {
+      placement = layoutFloatingCellPages(table, measured, setting, host, {
+        pageOrdinal,
+        anchorY,
+        maxRows,
+      });
     }
-    if (placement.state !== "placed") return { ...placement, section: placement.section ?? table.section, tableNode: placement.tableNode ?? table.tableNode };
-    const inspected = inspectFloatingTablePlacement(table, placement, insets, content, placements, groups);
-    if (inspected.state === "collected") return { state: "planned", placement, pageOrdinal: placement.firstPageOrdinal ?? pageOrdinal,
-      anchorY: placement.anchorY ?? anchorY };
+    if (placement.state !== "placed")
+      return {
+        ...placement,
+        section: placement.section ?? table.section,
+        tableNode: placement.tableNode ?? table.tableNode,
+      };
+    const inspected = inspectFloatingTablePlacement(
+      table,
+      placement,
+      insets,
+      content,
+      placements,
+      groups,
+    );
+    if (inspected.state === "collected")
+      return {
+        state: "planned",
+        placement,
+        pageOrdinal: placement.firstPageOrdinal ?? pageOrdinal,
+        anchorY: placement.anchorY ?? anchorY,
+      };
     if (inspected.error !== "UnsupportedFloatingTableCollision" || !movable) return inspected;
     const nextOrdinal = inspected.pageOrdinal;
     const next = pageSequenceReference(setting, nextOrdinal);
     if (next.state !== "placed") return next;
     const bottom = inspected.conflictingRectangle.y + inspected.conflictingRectangle.height;
-    if (!Number.isFinite(bottom) || nextOrdinal < pageOrdinal || nextOrdinal === pageOrdinal && bottom <= anchorY) return fail("InvalidFloatingTablePlacementAdvance");
+    if (
+      !Number.isFinite(bottom) ||
+      nextOrdinal < pageOrdinal ||
+      (nextOrdinal === pageOrdinal && bottom <= anchorY)
+    )
+      return fail("InvalidFloatingTablePlacementAdvance");
     pageOrdinal = nextOrdinal;
     anchorY = bottom;
     if (anchorY >= next.boxes.page.y + next.boxes.page.height) {

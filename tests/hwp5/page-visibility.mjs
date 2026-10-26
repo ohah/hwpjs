@@ -7,10 +7,8 @@ const w = (n) => {
   b.writeUInt32LE(n);
   return b;
 };
-const frame = (id, b) =>
-  Buffer.concat([w((71 | ((b.length + 4) << 20)) >>> 0), w(id), b]);
-const run = (call, v, b, mode = 1) =>
-  call(35, Buffer.concat([w(v), Buffer.from([mode]), b]));
+const frame = (id, b) => Buffer.concat([w((71 | ((b.length + 4) << 20)) >>> 0), w(id), b]);
+const run = (call, v, b, mode = 1) => call(35, Buffer.concat([w(v), Buffer.from([mode]), b]));
 export function visibilityActual(call, v, b, mode = 1) {
   const stats = [0, 0, 0, 0, 0],
     raw = [];
@@ -32,10 +30,7 @@ export function visibilityActual(call, v, b, mode = 1) {
         raw.push(p);
       }
     }
-  assert.deepEqual(
-    run(call, v, b, mode),
-    Buffer.concat([...stats.map(w), ...raw]),
-  );
+  assert.deepEqual(run(call, v, b, mode), Buffer.concat([...stats.map(w), ...raw]));
   return stats;
 }
 export function visibilityEdges(call) {
@@ -51,10 +46,7 @@ export function visibilityEdges(call) {
       };
       const good = Buffer.alloc(size, 255);
       for (let n = 0; n < size; n++) {
-        assert.throws(
-          () => run(call, v, frame(id, good.subarray(0, n)), mode),
-          /UnexpectedEnd/,
-        );
+        assert.throws(() => run(call, v, frame(id, good.subarray(0, n)), mode), /UnexpectedEnd/);
         rejected++;
         check(good);
       }
@@ -63,25 +55,15 @@ export function visibilityEdges(call) {
         b[bit >>> 3] = 1 << (bit & 7);
         check(b);
       }
-      for (let len = 0; len < 4; len++)
-        check(Buffer.concat([good, Buffer.alloc(len, 7)]));
+      for (let len = 0; len < 4; len++) check(Buffer.concat([good, Buffer.alloc(len, 7)]));
     }
-  assert.throws(
-    () => run(call, v, frame(0x70676864, Buffer.alloc(2)), 1),
-    /UnexpectedEnd/,
-  );
+  assert.throws(() => run(call, v, frame(0x70676864, Buffer.alloc(2)), 1), /UnexpectedEnd/);
   rejected++;
-  assert.deepEqual(
-    run(call, v, frame(0x70676164, Buffer.alloc(0))),
-    Buffer.alloc(20),
-  );
+  assert.deepEqual(run(call, v, frame(0x70676164, Buffer.alloc(0))), Buffer.alloc(20));
   return { accepted, rejected };
 }
 export function visibilityReference(call, cfb) {
-  const path = new URL(
-    "../../reference/rhwp/saved/pr360-edward.hwp",
-    import.meta.url,
-  );
+  const path = new URL("../../reference/rhwp/saved/pr360-edward.hwp", import.meta.url);
   if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
   cfb.parse(readFileSync(path), { strict: true });
   const h = Buffer.from(cfb.findExact("/FileHeader").content),
@@ -95,14 +77,9 @@ export function visibilityReference(call, cfb) {
   let rejected = 0;
   for (const r of documentRecords(b))
     if (r.tag === 71 && b.readUInt32LE(r.start) === 0x70676864) {
-      const short = Buffer.concat([
-        b.subarray(0, r.end - 1),
-        b.subarray(r.end),
-      ]);
+      const short = Buffer.concat([b.subarray(0, r.end - 1), b.subarray(r.end)]);
       short.writeUInt32LE(
-        ((b.readUInt32LE(r.offset) & 0xfffff) |
-          ((r.end - r.start - 1) << 20)) >>>
-          0,
+        ((b.readUInt32LE(r.offset) & 0xfffff) | ((r.end - r.start - 1) << 20)) >>> 0,
         r.offset,
       );
       assert.throws(() => run(call, v, short), /UnexpectedEnd/);

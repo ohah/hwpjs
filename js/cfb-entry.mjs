@@ -16,9 +16,7 @@ export function decodeEntry(wasm, memory, index, output) {
     L: number(VALUE.left) | 0,
     R: number(VALUE.right) | 0,
     C: number(VALUE.child) | 0,
-    clsid: Array.from(field(FIELD.clsid), (b) =>
-      b.toString(16).padStart(2, "0"),
-    ).join(""),
+    clsid: Array.from(field(FIELD.clsid), (b) => b.toString(16).padStart(2, "0")).join(""),
     state: number(VALUE.state) | 0,
     start: number(VALUE.start) | 0,
     size: number(VALUE.size),
@@ -31,14 +29,11 @@ export function decodeEntry(wasm, memory, index, output) {
     const ticks = unsigned(key);
     if (ticks)
       e[name] = new Date(
-        ((Number(ticks >> 32n) / 1e7) * 2 ** 32 +
-          Number(ticks & 0xffffffffn) / 1e7 -
-          11644473600) *
+        ((Number(ticks >> 32n) / 1e7) * 2 ** 32 + Number(ticks & 0xffffffffn) / 1e7 - 11644473600) *
           1000,
       );
   }
   if (e.type !== 5) e.storage = number(VALUE.uses_fat) ? "fat" : "minifat";
-  if (number(VALUE.has_content))
-    e.content = attachCursor(output.content(field(FIELD.content)));
+  if (number(VALUE.has_content)) e.content = attachCursor(output.content(field(FIELD.content)));
   return { entry: e, path: decoder.decode(field(FIELD.path)) };
 }

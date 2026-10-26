@@ -6,11 +6,18 @@ import { inspect, records } from "./style-preservation/text-record-oracle.mjs";
 import { changeFirstObjectNumber } from "./object-reference-derivative.mjs";
 
 test("object-number retention does not waive cross-section page reference protection", async () => {
-  const original = readFileSync("reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp");
+  const original = readFileSync(
+    "reference/rhwp/samples/issue5941/1490000-201600081_roadmap_research.hwp",
+  );
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const input = await changeFirstObjectNumber(wasm, original, text => text.replace(/;1;0;0;$/, ";0;0;0;"));
+  const input = await changeFirstObjectNumber(wasm, original, (text) =>
+    text.replace(/;1;0;0;$/, ";0;0;0;"),
+  );
   const before = inspect(input);
-  const referenceCount = section => records(section.bytes).filter(record => record.tag === 71 && record.payload.subarray(0, 4).equals(Buffer.from("frx%"))).length;
+  const referenceCount = (section) =>
+    records(section.bytes).filter(
+      (record) => record.tag === 71 && record.payload.subarray(0, 4).equals(Buffer.from("frx%")),
+    ).length;
   assert.equal(before.sections.length, 7);
   assert.equal(referenceCount(before.sections[0]), 2);
   for (const section of [1, 5, 6]) assert.equal(referenceCount(before.sections[section]), 0);
@@ -26,8 +33,11 @@ test("object-number retention does not waive cross-section page reference protec
       ]) {
         assert.throws(command, /UnsupportedSectionControl/);
         assert.deepEqual(Buffer.from(editor.save().bytes), input);
-        assert.equal(editor.undo(), false); assert.equal(editor.redo(), false);
+        assert.equal(editor.undo(), false);
+        assert.equal(editor.redo(), false);
       }
     }
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });

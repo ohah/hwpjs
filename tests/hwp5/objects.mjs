@@ -29,11 +29,7 @@ export function objectEdges(call) {
     for (let n = 0; n < 48; n++) {
       const bytes = frame(id, original.subarray(0, n));
       if (n === 40) checkBody(call, version, bytes);
-      else
-        assert.throws(
-          () => call(8, Buffer.concat([word(version), bytes])),
-          /UnexpectedEnd/,
-        );
+      else assert.throws(() => call(8, Buffer.concat([word(version), bytes])), /UnexpectedEnd/);
     }
     for (const v of [0x05000107, 0x05000300, 0x05010001, 0x05010100]) {
       checkBody(call, v, frame(id, original));
@@ -47,10 +43,7 @@ export function objectEdges(call) {
         b[p] ^= 1 << bit;
         const bytes = frame(id, b);
         if (42 + b.readUInt16LE(40) * 2 > b.length) {
-          assert.throws(
-            () => call(8, Buffer.concat([word(version), bytes])),
-            /UnexpectedEnd/,
-          );
+          assert.throws(() => call(8, Buffer.concat([word(version), bytes])), /UnexpectedEnd/);
           rejected++;
         } else checkBody(call, version, bytes);
         checkBody(call, version, frame(id, original));
@@ -59,8 +52,7 @@ export function objectEdges(call) {
     const max = Buffer.alloc(42 + 65535 * 2, 0xff);
     checkBody(call, version, frame(id, max));
     assert.throws(
-      () =>
-        call(8, Buffer.concat([word(version), frame(id, max.subarray(0, -1))])),
+      () => call(8, Buffer.concat([word(version), frame(id, max.subarray(0, -1))])),
       /UnexpectedEnd/,
     );
   }
@@ -70,7 +62,7 @@ export function objectEdges(call) {
 // Independent fixture coverage; mode 8 reconstructs every parsed field separately.
 export function objectActual(section) {
   const counts = [0, 0, 0, 0, 0, 0, 0]; // table, drawing, equation, absent, empty, text, negative position
-  for (let p = 0; p < section.length; ) {
+  for (let p = 0; p < section.length;) {
     const bits = section.readUInt32LE(p);
     p += 4;
     let n = bits >>> 20;

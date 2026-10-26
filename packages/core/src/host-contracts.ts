@@ -17,7 +17,10 @@ export interface InputSurfaceLease {
   readonly id: string;
   readonly generation: number;
   isActive(): boolean;
-  request(message: RuntimeMessage, options: SurfaceRequestOptions): Promise<CommandResult | RuntimeReply>;
+  request(
+    message: RuntimeMessage,
+    options: SurfaceRequestOptions,
+  ): Promise<CommandResult | RuntimeReply>;
   publishSelection(target: SelectionTarget | null): Promise<EditorState>;
   release(): void;
 }

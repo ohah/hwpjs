@@ -6,12 +6,16 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 test("public HWPX object-only paragraph inserts at every boundary without changing objects", async () => {
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/shapeline.hwpx");
-  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+  const editor = await createHwpxEditor(
+    readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+  );
   try {
     for (const position of [0, 1, 2]) {
       editor.open(input);
       assert.equal(editor.anchorText(0, 1), "\ufffc\ufffc");
-      assert.throws(() => editor.spliceAnchored(0, 1, 0, 1, ""), { message: "ProtectedInlineControl" });
+      assert.throws(() => editor.spliceAnchored(0, 1, 0, 1, ""), {
+        message: "ProtectedInlineControl",
+      });
       assert.deepEqual(Buffer.from(editor.save()), input);
       editor.spliceAnchored(0, 1, position, 0, "앞😀<&");
       const expected = "\ufffc".repeat(position) + "앞😀<&" + "\ufffc".repeat(2 - position);
@@ -37,8 +41,21 @@ for name in a.namelist():
   t=E.Element(p+'t'); t.text='앞😀<&'; run.insert(index,t)
  def signature(e): return (e.tag,sorted(e.attrib.items()),e.text,e.tail,[signature(c) for c in e])
  if signature(x)!=signature(y): raise ValueError('complete XML mismatch')`;
-      for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(output).toString("base64"), position }) + "\n", timeout: 30000 });
-      const corrupted = execFileSync("python3", ["-c", `import io,sys,base64,zipfile,xml.etree.ElementTree as E
+      for (const flags of [[], ["-O"]])
+        execFileSync("python3", [...flags, "-c", oracle], {
+          input:
+            JSON.stringify({
+              before: input.toString("base64"),
+              after: Buffer.from(output).toString("base64"),
+              position,
+            }) + "\n",
+          timeout: 30000,
+        });
+      const corrupted = execFileSync(
+        "python3",
+        [
+          "-c",
+          `import io,sys,base64,zipfile,xml.etree.ElementTree as E
 source=zipfile.ZipFile(io.BytesIO(base64.b64decode(sys.stdin.readline()))); target=io.BytesIO(); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 with zipfile.ZipFile(target,'w') as out:
  out.comment=source.comment
@@ -47,9 +64,20 @@ with zipfile.ZipFile(target,'w') as out:
   if item.filename=='Contents/section0.xml':
    root=E.fromstring(data); next(root.iter(p+'line')).set('id','corrupted-object'); data=E.tostring(root,encoding='utf-8')
   out.writestr(item,data)
-sys.stdout.buffer.write(target.getvalue())`], { input: Buffer.from(output).toString("base64") + "\n", timeout: 30000 });
+sys.stdout.buffer.write(target.getvalue())`,
+        ],
+        { input: Buffer.from(output).toString("base64") + "\n", timeout: 30000 },
+      );
       for (const flags of [[], ["-O"]]) {
-        const result = spawnSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: corrupted.toString("base64"), position }) + "\n", timeout: 30000 });
+        const result = spawnSync("python3", [...flags, "-c", oracle], {
+          input:
+            JSON.stringify({
+              before: input.toString("base64"),
+              after: corrupted.toString("base64"),
+              position,
+            }) + "\n",
+          timeout: 30000,
+        });
         assert.equal(result.error, undefined);
         assert.equal(result.status, 1);
         assert.match(result.stderr.toString(), /ValueError: complete XML mismatch/);
@@ -60,5 +88,7 @@ sys.stdout.buffer.write(target.getvalue())`], { input: Buffer.from(output).toStr
       assert.equal(editor.anchorText(0, 1), expected);
       assert.deepEqual(editor.save(), output);
     }
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });

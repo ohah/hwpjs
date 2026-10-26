@@ -29,9 +29,7 @@ export function previewEdges(call) {
     bytes.writeUInt16LE(unit);
     previewActual(call, bytes);
   }
-  const boundary = [
-    0, 0xd7ff, 0xd800, 0xdbff, 0xdc00, 0xdfff, 0xe000, 0xfeff, 0xffff,
-  ];
+  const boundary = [0, 0xd7ff, 0xd800, 0xdbff, 0xdc00, 0xdfff, 0xe000, 0xfeff, 0xffff];
   for (const a of boundary)
     for (const b of boundary)
       for (const c of boundary) {
@@ -41,16 +39,9 @@ export function previewEdges(call) {
       }
   // Includes body control codes as ordinary units, BOM in the middle, NUL,
   // a supplementary scalar and unpaired surrogates; no terminator requirement.
-  const sample = Buffer.from(
-    "\ufeff\u0002\u000bA\0😀\ud800B\udc00\ufeffZ",
-    "utf16le",
-  );
+  const sample = Buffer.from("\ufeff\u0002\u000bA\0😀\ud800B\udc00\ufeffZ", "utf16le");
   for (let n = 0; n <= sample.length; n++) {
-    if (n % 2)
-      assert.throws(
-        () => call(26, sample.subarray(0, n)),
-        /InvalidPreviewTextSize/,
-      );
+    if (n % 2) assert.throws(() => call(26, sample.subarray(0, n)), /InvalidPreviewTextSize/);
     else previewActual(call, sample.subarray(0, n));
     previewActual(call, sample);
   }

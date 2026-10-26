@@ -25,35 +25,24 @@ export function headerFooterDocumentEdges(call, cfb, h, doc, sections) {
   const container = (ss) => {
     const modified = nodes.map((n) => ({ ...n }));
     for (const s of ss) {
-      const body = modified.findIndex(
-        (n) => n.name === "BodyText" && n.kind === 1,
-      );
-      const node = modified.find(
-        (n) => n.parent === body && n.name === `Section${s.index}`,
-      );
+      const body = modified.findIndex((n) => n.name === "BodyText" && n.kind === 1);
+      const node = modified.find((n) => n.parent === body && n.name === `Section${s.index}`);
       assert.ok(node);
       node.content = h.readUInt32LE(36) & 1 ? deflateRawSync(s.bytes) : s.bytes;
     }
     return call(
       25,
-      Buffer.concat([
-        w(64 * 1024 * 1024),
-        Buffer.from(cfb.write({ nodes: modified })),
-      ]),
+      Buffer.concat([w(64 * 1024 * 1024), Buffer.from(cfb.write({ nodes: modified }))]),
     );
   };
   for (const s of sections) {
     const rows = documentRecords(s.bytes);
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      if (
-        r.tag !== 71 ||
-        ![0x68656164, 0x666f6f74].includes(s.bytes.readUInt32LE(r.start))
-      )
+      if (r.tag !== 71 || ![0x68656164, 0x666f6f74].includes(s.bytes.readUInt32LE(r.start)))
         continue;
       controls++;
-      const mutate = (bytes) =>
-        sections.map((x) => (x.index === s.index ? { ...x, bytes } : x));
+      const mutate = (bytes) => sections.map((x) => (x.index === s.index ? { ...x, bytes } : x));
       const good = decoded(sections);
       const check = (bytes, error) => {
         const ss = mutate(bytes);
@@ -62,51 +51,32 @@ export function headerFooterDocumentEdges(call, cfb, h, doc, sections) {
         rejected += 2;
         assert.deepEqual(decoded(sections), good);
       };
-      check(
-        replace(s.bytes, r, s.bytes.subarray(r.start, r.start + 7)),
-        /UnexpectedEnd/,
-      );
+      check(replace(s.bytes, r, s.bytes.subarray(r.start, r.start + 7)), /UnexpectedEnd/);
       const level = (s.bytes.readUInt32LE(r.offset) >>> 10) & 1023;
       let end = i + 1;
-      while (
-        end < rows.length &&
-        ((s.bytes.readUInt32LE(rows[end].offset) >>> 10) & 1023) > level
-      )
+      while (end < rows.length && ((s.bytes.readUInt32LE(rows[end].offset) >>> 10) & 1023) > level)
         end++;
       const list = rows
         .slice(i + 1, end)
         .find(
-          (x) =>
-            x.tag === 72 &&
-            ((s.bytes.readUInt32LE(x.offset) >>> 10) & 1023) === level + 1,
+          (x) => x.tag === 72 && ((s.bytes.readUInt32LE(x.offset) >>> 10) & 1023) === level + 1,
         );
       assert.ok(list);
-      check(
-        replace(s.bytes, list, s.bytes.subarray(list.start, list.start + 8)),
-        /UnexpectedEnd/,
-      );
+      check(replace(s.bytes, list, s.bytes.subarray(list.start, list.start + 8)), /UnexpectedEnd/);
       check(
         Buffer.concat([
           s.bytes.subarray(0, r.end),
-          s.bytes.subarray(
-            end < rows.length ? rows[end].offset : s.bytes.length,
-          ),
+          s.bytes.subarray(end < rows.length ? rows[end].offset : s.bytes.length),
         ]),
         /MissingHeaderFooterList/,
       );
       const reserved = Buffer.from(s.bytes);
-      reserved.writeUInt32LE(
-        (reserved.readUInt32LE(r.start + 4) | 3) >>> 0,
-        r.start + 4,
-      );
+      reserved.writeUInt32LE((reserved.readUInt32LE(r.start + 4) | 3) >>> 0, r.start + 4);
       const changed = decoded(mutate(reserved));
       const stat = sectionFieldOffset(s.index, "header_footer", 3);
       assert.equal(changed.readUInt32LE(stat), good.readUInt32LE(stat) + 1);
       // Container serializes the same document prefix, including the previously unobserved report.
-      assert.deepEqual(
-        container(mutate(reserved)).subarray(0, changed.length),
-        changed,
-      );
+      assert.deepEqual(container(mutate(reserved)).subarray(0, changed.length), changed);
     }
   }
   return { controls, rejected };

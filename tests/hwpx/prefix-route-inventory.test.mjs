@@ -14,16 +14,30 @@ test("prefix route inventory rejects incomplete and ambiguous CLI scope before r
     [["--wasm=missing", "--fixture=a", "--history"], "Unknown argument"],
     [["--wasm=", "--fixture=a"], "Unknown argument"],
   ]) {
-    assert.throws(() => execFileSync(process.execPath, [tool, ...args], { timeout: 10000, stdio: ["ignore", "pipe", "pipe"] }),
-      error => error.status === 1 && error.signal === null && String(error.stderr).includes(expected));
+    assert.throws(
+      () =>
+        execFileSync(process.execPath, [tool, ...args], {
+          timeout: 10000,
+          stdio: ["ignore", "pipe", "pipe"],
+        }),
+      (error) =>
+        error.status === 1 && error.signal === null && String(error.stderr).includes(expected),
+    );
   }
 });
 
 test("prefix route inventory reports all plain paragraphs and exact input/artifact identities", () => {
   const fixture = resolve("legacy/rust/crates/hwp-core/tests/fixtures/linespacing.hwpx");
   const wasm = resolve(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
-  const before = readFileSync(fixture), artifact = readFileSync(wasm);
-  const result = JSON.parse(execFileSync(process.execPath, [tool, `--wasm=${wasm}`, `--fixture=${fixture}`], { encoding: "utf8", timeout: 30000, stdio: ["ignore", "pipe", "pipe"] }));
+  const before = readFileSync(fixture),
+    artifact = readFileSync(wasm);
+  const result = JSON.parse(
+    execFileSync(process.execPath, [tool, `--wasm=${wasm}`, `--fixture=${fixture}`], {
+      encoding: "utf8",
+      timeout: 30000,
+      stdio: ["ignore", "pipe", "pipe"],
+    }),
+  );
   assert.deepEqual(result.counts, { plain: 26 });
   assert.deepEqual(result.refused, []);
   assert.equal(result.inputSha256, captureInputIdentity(before));

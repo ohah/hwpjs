@@ -10,7 +10,8 @@ test("fourteen-section original retains unselected click fields through text for
   assert(process.env.HWPJS_TEST_WASM, "Explicit candidate required");
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
   const path = "reference/rhwp/samples/2025 행정업무운영 편람(최종).hwp";
-  const input = readFileSync(path), original = inspect(input);
+  const input = readFileSync(path),
+    original = inspect(input);
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
     editor.enableHistory();
@@ -21,21 +22,36 @@ test("fourteen-section original retains unselected click fields through text for
       verifyRaw(input, prefix.bytes, section, 0, 0, 0, "검증😀");
       const prefixed = inspect(prefix.bytes);
       const owner = paragraphRecords(prefixed.sections[section].bytes, 0);
-      const run = owner.direct.find(r => r.tag === 68 && r.level === owner.head.level + 1);
+      const run = owner.direct.find((r) => r.tag === 68 && r.level === owner.head.level + 1);
       const charShapeId = (run.payload.readUInt32LE(4) + 1) % editor.characterShapeCount();
       assert.notEqual(charShapeId, run.payload.readUInt32LE(4));
       editor.setCharacterFormat({ section, paragraph: 0, startUnit: 0, endUnit: 2, charShapeId });
-      const formatted = editor.save({ allowStaleLayout: true }), formatView = inspect(formatted.bytes);
-      assert.deepEqual(formatView.sections[section].bytes, expectedCharacterFormat(prefixed.sections[section].bytes, 0, 0, 2, charShapeId));
-      for (const [name, bytes] of prefixed.streams) if (name !== prefixed.sections[section].path) assert.deepEqual(formatView.streams.get(name), bytes);
-      const request = { section, paragraph: 0, startUnit: 0, endUnit: 2, properties: { size: 1371, bold: true, italic: true } };
+      const formatted = editor.save({ allowStaleLayout: true }),
+        formatView = inspect(formatted.bytes);
+      assert.deepEqual(
+        formatView.sections[section].bytes,
+        expectedCharacterFormat(prefixed.sections[section].bytes, 0, 0, 2, charShapeId),
+      );
+      for (const [name, bytes] of prefixed.streams)
+        if (name !== prefixed.sections[section].path)
+          assert.deepEqual(formatView.streams.get(name), bytes);
+      const request = {
+        section,
+        paragraph: 0,
+        startUnit: 0,
+        endUnit: 2,
+        properties: { size: 1371, bold: true, italic: true },
+      };
       editor.setCharacterProperties(request);
       const properties = editor.save({ allowStaleLayout: true });
       verifyCharacterProperties(formatted.bytes, properties.bytes, request);
       assert.deepEqual(inspect(properties.bytes).metadata, original.metadata);
       const reopened = await createExperimentalHwp5Editor(wasm, properties.bytes);
-      try { assert.equal(reopened.text(section, 0), editor.text(section, 0)); }
-      finally { reopened.close(); }
+      try {
+        assert.equal(reopened.text(section, 0), editor.text(section, 0));
+      } finally {
+        reopened.close();
+      }
       for (const expected of [formatted, prefix]) {
         assert.equal(editor.undo(), true);
         assert.deepEqual(editor.save({ allowStaleLayout: true }), expected);
@@ -49,6 +65,8 @@ test("fourteen-section original retains unselected click fields through text for
       for (let index = 0; index < 3; index++) assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save().bytes), input);
     }
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
   assert.deepEqual(readFileSync(path), input);
 });

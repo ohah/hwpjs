@@ -1,19 +1,14 @@
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import { rubyPayload } from "./ruby.mjs";
-import {
-  documentActual,
-  decodedDocumentInput,
-  documentRecords,
-} from "./documents.mjs";
+import { documentActual, decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { sectionFieldOffset } from "./document-report-wire.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n >>> 0);
   return b;
 };
-const frame = (tag, level, p) =>
-  Buffer.concat([w(tag | (level << 10) | (p.length << 20)), p]);
+const frame = (tag, level, p) => Buffer.concat([w(tag | (level << 10) | (p.length << 20)), p]);
 export function rubyDocumentEdges(call, cfb, h, doc, sections) {
   const section = sections.find((s) => s.index === 0),
     original = section.bytes;
@@ -39,9 +34,7 @@ export function rubyDocumentEdges(call, cfb, h, doc, sections) {
   };
   const replaced = (p) =>
     sections.map((s) =>
-      s.index === 0
-        ? { index: 0, bytes: Buffer.concat([original, paragraph(p)]) }
-        : s,
+      s.index === 0 ? { index: 0, bytes: Buffer.concat([original, paragraph(p)]) } : s,
     );
   const run = (p) => call(24, decodedDocumentInput(h, doc, replaced(p)));
   const base = run(good);
@@ -53,12 +46,8 @@ export function rubyDocumentEdges(call, cfb, h, doc, sections) {
   const full = (p) => {
     const copy = nodes.map((n) => ({ ...n })),
       plain = replaced(p).find((s) => s.index === 0).bytes;
-    copy[index].content =
-      h.readUInt32LE(36) & 1 ? deflateRawSync(plain) : plain;
-    return call(
-      25,
-      Buffer.concat([w(67108864), Buffer.from(cfb.write({ nodes: copy }))]),
-    );
+    copy[index].content = h.readUInt32LE(36) & 1 ? deflateRawSync(plain) : plain;
+    return call(25, Buffer.concat([w(67108864), Buffer.from(cfb.write({ nodes: copy }))]));
   };
   const originalCfb = full(good);
   assert.deepEqual(originalCfb.subarray(0, base.length), base);

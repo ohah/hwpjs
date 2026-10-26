@@ -11,10 +11,15 @@ export function workerReopenProjection(content) {
     assert.equal(typeof text, "string");
     return { section, paragraph, text };
   });
-  assert.equal(new Set(paragraphs.map(row => `${row.section}:${row.paragraph}`)).size, paragraphs.length);
-  const objects = Object.fromEntries(["tables", "drawings", "pictures", "containers"].map(key => {
-    assert(Array.isArray(content[key]), `MissingObjectProjection:${key}`);
-    return [key, content[key].length];
-  }));
+  assert.equal(
+    new Set(paragraphs.map((row) => `${row.section}:${row.paragraph}`)).size,
+    paragraphs.length,
+  );
+  const objects = Object.fromEntries(
+    ["tables", "drawings", "pictures", "containers"].map((key) => {
+      assert(Array.isArray(content[key]), `MissingObjectProjection:${key}`);
+      return [key, content[key].length];
+    }),
+  );
   return { paragraphs, objects };
 }

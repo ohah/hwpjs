@@ -4,8 +4,8 @@ React 어댑터는 외부에서 소유한 `HeadlessEditor`를 받아 Canvas 호�
 
 <!-- example:react.tsx -->
 ```tsx
-import { CanvasSurface, useEditorState } from '@ohah/hwpjs/react';
-import type { HeadlessEditor } from '@ohah/hwpjs';
+import { CanvasSurface, useEditorState } from "@ohah/hwpjs/react";
+import type { HeadlessEditor } from "@ohah/hwpjs";
 
 // editor의 생성·load·save·dispose는 부모 앱이 소유합니다.
 export function DocumentPane({ editor }: { editor: HeadlessEditor }) {
@@ -13,7 +13,7 @@ export function DocumentPane({ editor }: { editor: HeadlessEditor }) {
   return (
     <section aria-label="문서 편집">
       <p role="status">{state.status}</p>
-      <div style={{ height: '70vh' }}>
+      <div style={{ height: "70vh" }}>
         <CanvasSurface editor={editor} onError={console.error} />
       </div>
     </section>

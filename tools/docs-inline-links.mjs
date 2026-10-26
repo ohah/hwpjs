@@ -10,7 +10,11 @@ export function inlineLocalTargets(markdown) {
   for (const match of markdown.matchAll(/\]\(([^)]+)\)/g)) {
     let target = match[1].trim().split("#")[0].replace(/^</, "").replace(/>$/, "");
     if (!target || /^[a-z][a-z0-9+.-]*:/i.test(target) || target.startsWith("//")) continue;
-    try { target = decodeURIComponent(target); } catch { /* A malformed escape stays literal. */ }
+    try {
+      target = decodeURIComponent(target);
+    } catch {
+      /* A malformed escape stays literal. */
+    }
     targets.push(target);
   }
   return targets;
@@ -19,7 +23,8 @@ export function inlineLocalTargets(markdown) {
 function main() {
   const inventory = projectMarkdownInventory();
   const paths = [...inventory.tracked, ...inventory.untracked];
-  let files = 0, links = 0;
+  let files = 0,
+    links = 0;
   const missing = [];
   for (const path of paths) {
     const absolute = resolve(projectRoot, path);

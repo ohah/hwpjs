@@ -18,10 +18,18 @@ export function decodeDistributionSection(encoded, compressed) {
   const start = extended ? 8 : 4;
   assert.equal(extended ? bytes.readUInt32LE(4) : bits >>> 20, 256);
   const data = Buffer.from(bytes.subarray(start, start + 256));
-  let state = data.readUInt32LE(0), remaining = 0, mask = 0;
-  const random = () => { state = (Math.imul(state, 214013) + 2531011) >>> 0; return (state >>> 16) & 32767; };
+  let state = data.readUInt32LE(0),
+    remaining = 0,
+    mask = 0;
+  const random = () => {
+    state = (Math.imul(state, 214013) + 2531011) >>> 0;
+    return (state >>> 16) & 32767;
+  };
   for (let i = 0; i < data.length; i++) {
-    if (!remaining) { mask = random() & 255; remaining = (random() & 15) + 1; }
+    if (!remaining) {
+      mask = random() & 255;
+      remaining = (random() & 15) + 1;
+    }
     if (i >= 4) data[i] ^= mask;
     remaining--;
   }

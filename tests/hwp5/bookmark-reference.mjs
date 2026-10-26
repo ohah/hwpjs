@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync, deflateRawSync } from "node:zlib";
 import { bookmarkActual } from "./bookmarks.mjs";
-import {
-  documentRecords,
-  documentActual,
-  decodedDocumentInput,
-} from "./documents.mjs";
+import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
 import { containerActual } from "./containers.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
@@ -14,10 +10,7 @@ const w = (n) => {
   return b;
 };
 export function bookmarkReference(call, cfb) {
-  const path = new URL(
-    "../../reference/rhwp/samples/HWP5-nopassword-123456.hwp",
-    import.meta.url,
-  );
+  const path = new URL("../../reference/rhwp/samples/HWP5-nopassword-123456.hwp", import.meta.url);
   if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
@@ -38,18 +31,12 @@ export function bookmarkReference(call, cfb) {
   containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes,
     body = nodes.findIndex((n) => n.name === "BodyText" && n.parent === 0),
-    section = nodes.findIndex(
-      (n) => n.name === "Section0" && n.parent === body,
-    );
+    section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
   assert.ok(section >= 0);
   const full = (bytes) => {
     const copy = nodes.map((n) => ({ ...n }));
-    copy[section].content =
-      h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes;
-    return call(
-      25,
-      Buffer.concat([w(67108864), Buffer.from(cfb.write({ nodes: copy }))]),
-    );
+    copy[section].content = h.readUInt32LE(36) & 1 ? deflateRawSync(bytes) : bytes;
+    return call(25, Buffer.concat([w(67108864), Buffer.from(cfb.write({ nodes: copy }))]));
   };
   let rejected = 0,
     owned = false;

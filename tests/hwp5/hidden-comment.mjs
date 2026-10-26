@@ -7,8 +7,7 @@ const w = (n) => {
 };
 const frame = (tag, level, p = Buffer.alloc(0)) =>
   Buffer.concat([w(tag | (level << 10) | (p.length << 20)), p]);
-const run = (call, v, b, mode = 1) =>
-  call(41, Buffer.concat([w(v), Buffer.from([mode]), b]));
+const run = (call, v, b, mode = 1) => call(41, Buffer.concat([w(v), Buffer.from([mode]), b]));
 export function hiddenActual(call, v, b, mode = 1) {
   const stats = Array(6).fill(0),
     stack = [],
@@ -89,36 +88,15 @@ export function hiddenEdges(call) {
       mode,
     );
     for (let n = 0; n < (mode ? 8 : 6); n++)
-      reject(
-        Buffer.concat([ctrl(), frame(72, 1, Buffer.alloc(n))]),
-        /UnexpectedEnd/,
-        mode,
-      );
+      reject(Buffer.concat([ctrl(), frame(72, 1, Buffer.alloc(n))]), /UnexpectedEnd/, mode);
   }
   reject(ctrl(), /MissingHiddenCommentList/);
-  reject(
-    Buffer.concat([ctrl(), list(2), para(1)]),
-    /ListParagraphCountMismatch/,
-  );
+  reject(Buffer.concat([ctrl(), list(2), para(1)]), /ListParagraphCountMismatch/);
   reject(Buffer.concat([ctrl(), para(1)]), /OrphanListParagraph/);
-  reject(
-    Buffer.concat([ctrl(), ctrl(0x12345678, 1), list(0, 1, 2)]),
-    /MissingHiddenCommentList/,
-  );
-  reject(
-    Buffer.concat([ctrl(0x12345678), list(0), ctrl()]),
-    /MissingHiddenCommentList/,
-  );
+  reject(Buffer.concat([ctrl(), ctrl(0x12345678, 1), list(0, 1, 2)]), /MissingHiddenCommentList/);
+  reject(Buffer.concat([ctrl(0x12345678), list(0), ctrl()]), /MissingHiddenCommentList/);
   check(Buffer.concat([ctrl(0x12345678), list(0), good, ctrl(), list(0)]));
-  check(
-    Buffer.concat([
-      ctrl(),
-      list(1),
-      para(1),
-      ctrl(0x74636d74, 2),
-      list(0, 1, 3),
-    ]),
-  );
+  check(Buffer.concat([ctrl(), list(1), para(1), ctrl(0x74636d74, 2), list(0, 1, 3)]));
   check(ctrl(0x68696465));
   return { accepted, rejected };
 }

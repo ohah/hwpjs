@@ -4,10 +4,16 @@ import { insertPrefix } from "./hwpx-prefix-edit-probe.mjs";
 export function queryPrefixRoute(editor, section, paragraph) {
   const view = {
     canEdit: (...args) => editor.canEdit(...args),
-    canEditOutsideField: typeof editor.canEditOutsideField === "function" ? (...args) => editor.canEditOutsideField(...args) : undefined,
+    canEditOutsideField:
+      typeof editor.canEditOutsideField === "function"
+        ? (...args) => editor.canEditOutsideField(...args)
+        : undefined,
     anchorText: (...args) => editor.anchorText(...args),
     fieldLabels: (...args) => editor.fieldLabels(...args),
-    fieldRangeTarget: typeof editor.fieldRangeTarget === "function" ? (...args) => editor.fieldRangeTarget(...args) : undefined,
+    fieldRangeTarget:
+      typeof editor.fieldRangeTarget === "function"
+        ? (...args) => editor.fieldRangeTarget(...args)
+        : undefined,
     splice: () => "plain",
     spliceAnchored: () => "anchored",
     spliceFieldLabel: () => "field",

@@ -21,9 +21,14 @@ export async function createHwpxReader(source) {
         try {
           if (!wasm.hwpx_text_read(ptr, size)) throw memory.error();
           return decodeHwpxText(memory.copy(wasm.hwpx_text_ptr(), wasm.hwpx_text_len()));
-        } finally { wasm.hwpx_text_free(); }
+        } finally {
+          wasm.hwpx_text_free();
+        }
       });
     },
-    close() { if (!closed) wasm.hwpx_text_free(); closed = true; },
+    close() {
+      if (!closed) wasm.hwpx_text_free();
+      closed = true;
+    },
   };
 }

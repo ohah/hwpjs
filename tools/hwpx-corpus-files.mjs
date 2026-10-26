@@ -2,7 +2,7 @@
 import { execFileSync } from "node:child_process";
 
 export function selectHwpxFiles(listing) {
-  const paths = listing.split("\0").filter(path => path.endsWith(".hwpx"));
+  const paths = listing.split("\0").filter((path) => path.endsWith(".hwpx"));
   if (!paths.length) throw new Error("EmptyFixtureInventory");
   if (new Set(paths).size !== paths.length) throw new Error("DuplicateFixturePath");
   return paths;

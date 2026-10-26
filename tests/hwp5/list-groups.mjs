@@ -9,7 +9,7 @@ const frame = (tag, level, b = Buffer.alloc(0)) =>
   Buffer.concat([word(tag | (level << 10) | (b.length << 20)), b]);
 export function listsActual(call, v, bytes) {
   const nodes = [];
-  for (let p = 0; p < bytes.length; ) {
+  for (let p = 0; p < bytes.length;) {
     const bits = bytes.readUInt32LE(p);
     p += 4;
     let n = bits >>> 20;
@@ -40,11 +40,7 @@ export function listsActual(call, v, bytes) {
       intervening = 0;
     for (; end < nodes.length; end++) {
       const next = nodes[end];
-      if (
-        next.level < node.level ||
-        (next.parent === node.parent && next.tag === 72)
-      )
-        break;
+      if (next.level < node.level || (next.parent === node.parent && next.tag === 72)) break;
       if (next.parent === node.parent) {
         if (next.tag === 66) count++;
         else intervening++;
@@ -58,11 +54,7 @@ export function listsActual(call, v, bytes) {
     call(15, Buffer.concat([word(v), bytes])),
     Buffer.concat(rows.flatMap((r) => r.map(word))),
   );
-  return [
-    rows.length,
-    rows.reduce((n, r) => n + r[4], 0),
-    rows.reduce((n, r) => n + r[5], 0),
-  ];
+  return [rows.length, rows.reduce((n, r) => n + r[4], 0), rows.reduce((n, r) => n + r[5], 0)];
 }
 export function listEdges(call) {
   const h = frame(66, 0, Buffer.alloc(24)),
@@ -85,10 +77,7 @@ export function listEdges(call) {
       Buffer.concat([h, ctrl, list(1), frame(66, 3, Buffer.alloc(24))]),
       /ListParagraphCountMismatch|OrphanListParagraph/,
     ],
-    [
-      Buffer.concat([h, ctrl, list(1), list(1), para]),
-      /ListParagraphCountMismatch/,
-    ],
+    [Buffer.concat([h, ctrl, list(1), list(1), para]), /ListParagraphCountMismatch/],
   ]) {
     assert.throws(() => run(bytes), error);
     listsActual(call, version, good);

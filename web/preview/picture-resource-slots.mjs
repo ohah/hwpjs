@@ -2,12 +2,27 @@
 export function createPictureResourceSlots(limit) {
   let active = 0;
   const waiters = new Set();
-  const wake = () => { for (const resolve of waiters) resolve(); waiters.clear(); };
+  const wake = () => {
+    for (const resolve of waiters) resolve();
+    waiters.clear();
+  };
   return {
-    take() { if (active >= limit) return false; active++; return true; },
-    changed() { return new Promise(resolve => waiters.add(resolve)); },
-    release() { if (active < 1) throw new Error("UnbalancedPictureResourceSlot"); active--; wake(); },
+    take() {
+      if (active >= limit) return false;
+      active++;
+      return true;
+    },
+    changed() {
+      return new Promise((resolve) => waiters.add(resolve));
+    },
+    release() {
+      if (active < 1) throw new Error("UnbalancedPictureResourceSlot");
+      active--;
+      wake();
+    },
     wake,
-    stats() { return { active, waiting: waiters.size, limit }; },
+    stats() {
+      return { active, waiting: waiters.size, limit };
+    },
   };
 }

@@ -12,10 +12,7 @@ function frame(tag, b, level = 1) {
 export function formattingEdges(call) {
   const version = 0x05010001;
   const tab = Buffer.from("0300008001000000fffffffffefd3412aa", "hex");
-  const bullet = Buffer.from(
-    "0800000000003200ffffffff222001000000f6140334121327aa",
-    "hex",
-  );
+  const bullet = Buffer.from("0800000000003200ffffffff222001000000f6140334121327aa", "hex");
   const style = Buffer.from("010000d80000fffeffff34127856abcd", "hex");
   const numbering = Buffer.alloc(184);
   numbering[98] = 7;
@@ -32,11 +29,7 @@ export function formattingEdges(call) {
     for (let n = 0; n < required; n++) {
       const input = frame(tag, b.subarray(0, n));
       if (optional.includes(n)) checkDocinfo(call, version, input);
-      else
-        assert.throws(
-          () => call(4, Buffer.concat([word(version), input])),
-          /UnexpectedEnd/,
-        );
+      else assert.throws(() => call(4, Buffer.concat([word(version), input])), /UnexpectedEnd/);
     }
     checkDocinfo(call, version, frame(tag, b));
     assert.throws(
@@ -49,13 +42,7 @@ export function formattingEdges(call) {
     checkDocinfo(call, v, frame(23, numbering));
   assert.throws(
     () =>
-      call(
-        4,
-        Buffer.concat([
-          word(version),
-          frame(22, Buffer.from("00000000ffffffff", "hex")),
-        ]),
-      ),
+      call(4, Buffer.concat([word(version), frame(22, Buffer.from("00000000ffffffff", "hex"))])),
     /UnexpectedEnd/,
   );
   // Nonempty formats in all ten levels, distinct headers, embedded NUL/surrogate.

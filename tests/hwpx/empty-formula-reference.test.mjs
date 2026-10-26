@@ -18,10 +18,18 @@ with zipfile.ZipFile(sys.argv[1]) as z:
  r=E.fromstring(z.read('Contents/section0.xml'))
  starts=list(r.iter(p+'fieldBegin')); ends={e.get('beginIDRef') for e in r.iter(p+'fieldEnd')}
  print(json.dumps({'formulas':sum(e.get('type')=='FORMULA' for e in starts),'unmatched':sum(e.get('id') not in ends for e in starts)}))`;
-    assert.deepEqual(JSON.parse(execFileSync("python3", ["-c", inspect, path], { encoding: "utf8", timeout: 30000 })), { formulas: 0, unmatched });
-    const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"));
+    assert.deepEqual(
+      JSON.parse(
+        execFileSync("python3", ["-c", inspect, path], { encoding: "utf8", timeout: 30000 }),
+      ),
+      { formulas: 0, unmatched },
+    );
+    const editor = await createHwpxEditor(
+      readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm"),
+    );
     try {
-      editor.open(input); editor.enableHistory();
+      editor.open(input);
+      editor.enableHistory();
       const snapshot = editor.paragraphTextSnapshot(0);
       assert(snapshot.length > 0);
       assert.deepEqual(editor.formulaCurrent(0), []);
@@ -34,6 +42,8 @@ with zipfile.ZipFile(sys.argv[1]) as z:
       assert.deepEqual(editor.formulaCurrent(0), []);
       assert(Buffer.from(editor.save()).equals(input));
       assert(readFileSync(path).equals(input));
-    } finally { editor.close(); }
+    } finally {
+      editor.close();
+    }
   });
 }

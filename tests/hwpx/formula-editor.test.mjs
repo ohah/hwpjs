@@ -8,16 +8,23 @@ import { createHwpxReader } from "../../js/hwpx.mjs";
 test("public HWPX formula numeric edit saves synchronized result and rejects invalid input atomically", async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
-  const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
+  const editor = await createHwpxEditor(wasm),
+    reader = await createHwpxReader(wasm);
   try {
     editor.open(input);
     assert.deepEqual(Buffer.from(editor.save()), input);
-    const numeric = reader.readTextEvents(input).events.find(e => e.kind === "content" && e.value === "11.2");
+    const numeric = reader
+      .readTextEvents(input)
+      .events.find((e) => e.kind === "content" && e.value === "11.2");
     assert(numeric);
     editor.splice(numeric.section, numeric.paragraph, 0, 4, "100");
     const saved = editor.save();
-    assert(reader.readTextEvents(saved).events.some(e => e.kind === "content" && e.value === "156.3"));
-    assert.throws(() => editor.splice(numeric.section, numeric.paragraph, 0, 3, "bad"), { message: "InvalidFormulaNumber" });
+    assert(
+      reader.readTextEvents(saved).events.some((e) => e.kind === "content" && e.value === "156.3"),
+    );
+    assert.throws(() => editor.splice(numeric.section, numeric.paragraph, 0, 3, "bad"), {
+      message: "InvalidFormulaNumber",
+    });
     assert.deepEqual(editor.save(), saved);
     const oracle = `import io,json,sys,base64,zipfile,xml.etree.ElementTree as E
 d=json.load(sys.stdin)
@@ -38,7 +45,13 @@ owner=f
 while owner.tag!=p+'p': owner=parents[owner]
 if ''.join(t.text or '' for t in owner.iter(p+'t'))!='156.3': raise ValueError('display result')
 print('synchronized result and unchanged ZIP payloads')`;
-    const output = execFileSync("python3", ["-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after: Buffer.from(saved).toString("base64") }), timeout: 30000 }).toString();
+    const output = execFileSync("python3", ["-c", oracle], {
+      input: JSON.stringify({
+        before: input.toString("base64"),
+        after: Buffer.from(saved).toString("base64"),
+      }),
+      timeout: 30000,
+    }).toString();
     assert.match(output, /synchronized result/);
     const mutations = `import io,json,sys,base64,zipfile,copy,xml.etree.ElementTree as E
 data=sys.stdin.buffer.read(); z=zipfile.ZipFile(io.BytesIO(data)); p='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
@@ -60,26 +73,44 @@ for kind in ('result','dirty','label','payload'):
    out.writestr(copy.copy(info),payload)
  variants.append(base64.b64encode(stream.getvalue()).decode())
 print(json.dumps(variants))`;
-    const variants = JSON.parse(execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString());
+    const variants = JSON.parse(
+      execFileSync("python3", ["-c", mutations], { input: saved, timeout: 30000 }).toString(),
+    );
     for (const [index, after] of variants.entries()) {
       for (const flags of [[], ["-O"]]) {
-        assert.throws(() => execFileSync("python3", [...flags, "-c", oracle], { input: JSON.stringify({ before: input.toString("base64"), after }), timeout: 30000 }), error => {
-          assert.equal(error.status, 1);
-          assert.equal(error.signal, null);
-          assert.match(String(error.stderr), new RegExp(`ValueError: ${["stored result", "stored result", "display result", "mimetype"][index]}`));
-          return true;
-        });
+        assert.throws(
+          () =>
+            execFileSync("python3", [...flags, "-c", oracle], {
+              input: JSON.stringify({ before: input.toString("base64"), after }),
+              timeout: 30000,
+            }),
+          (error) => {
+            assert.equal(error.status, 1);
+            assert.equal(error.signal, null);
+            assert.match(
+              String(error.stderr),
+              new RegExp(
+                `ValueError: ${["stored result", "stored result", "display result", "mimetype"][index]}`,
+              ),
+            );
+            return true;
+          },
+        );
       }
     }
     editor.open(saved);
     assert.deepEqual(editor.save(), saved);
-  } finally { editor.close(); reader.close(); }
+  } finally {
+    editor.close();
+    reader.close();
+  }
 });
 
 test("all forty-eight actual formula input paragraphs support numeric edit with independent recalculation", async () => {
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   const input = readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx");
-  const editor = await createHwpxEditor(wasm), reader = await createHwpxReader(wasm);
+  const editor = await createHwpxEditor(wasm),
+    reader = await createHwpxReader(wasm);
   // Import the hyphenated standalone oracle explicitly; its XML/Decimal
   // evaluation does not consume LastResult or native reader output.
   const comparison = `import io,sys,zipfile,decimal,xml.etree.ElementTree as E,importlib.util
@@ -104,25 +135,57 @@ if count!=13: raise ValueError('count')
 print(count)`;
   let numericInputs = 0;
   try {
-    const paragraphs = reader.readTextEvents(input).events.filter(e => e.kind === "paragraph_start");
+    const paragraphs = reader
+      .readTextEvents(input)
+      .events.filter((e) => e.kind === "paragraph_start");
     for (const paragraph of paragraphs) {
       editor.open(input);
       if (!editor.canEdit(paragraph.section, paragraph.paragraph)) continue;
       let numeric = false;
-      try { editor.splice(paragraph.section, paragraph.paragraph, 0, 0, "X"); }
-      catch (error) { assert.equal(error.message, "InvalidFormulaNumber"); numeric = true; }
+      try {
+        editor.splice(paragraph.section, paragraph.paragraph, 0, 0, "X");
+      } catch (error) {
+        assert.equal(error.message, "InvalidFormulaNumber");
+        numeric = true;
+      }
       if (!numeric) continue;
       assert.deepEqual(Buffer.from(editor.save()), input);
-      const original = reader.readTextEvents(input).events.filter(e => e.kind === "content" && e.section === paragraph.section && e.paragraph === paragraph.paragraph).map(e => e.value).join("");
+      const original = reader
+        .readTextEvents(input)
+        .events.filter(
+          (e) =>
+            e.kind === "content" &&
+            e.section === paragraph.section &&
+            e.paragraph === paragraph.paragraph,
+        )
+        .map((e) => e.value)
+        .join("");
       editor.splice(paragraph.section, paragraph.paragraph, 0, original.length, "100");
       const saved = editor.save();
-      const updatedText = reader.readTextEvents(saved).events.filter(e => e.kind === "content" && e.section === paragraph.section && e.paragraph === paragraph.paragraph).map(e => e.value).join("");
+      const updatedText = reader
+        .readTextEvents(saved)
+        .events.filter(
+          (e) =>
+            e.kind === "content" &&
+            e.section === paragraph.section &&
+            e.paragraph === paragraph.paragraph,
+        )
+        .map((e) => e.value)
+        .join("");
       assert.equal(updatedText, "100");
-      assert.equal(execFileSync("python3", ["-c", comparison], { input: saved, timeout: 30000 }).toString().trim(), "13");
+      assert.equal(
+        execFileSync("python3", ["-c", comparison], { input: saved, timeout: 30000 })
+          .toString()
+          .trim(),
+        "13",
+      );
       editor.open(saved);
       assert.deepEqual(editor.save(), saved);
       numericInputs++;
     }
     assert.equal(numericInputs, 48);
-  } finally { editor.close(); reader.close(); }
+  } finally {
+    editor.close();
+    reader.close();
+  }
 });

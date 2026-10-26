@@ -37,16 +37,14 @@ export function pageNumberEdges(call) {
     b.writeUInt16LE(dash, 10);
     check(b);
   }
-  for (let tail = 0; tail < 4; tail++)
-    check(Buffer.concat([good, Buffer.alloc(tail, 7)]));
+  for (let tail = 0; tail < 4; tail++) check(Buffer.concat([good, Buffer.alloc(tail, 7)]));
   return { accepted, rejected };
 }
 export function pageNumberDocumentEdges(call, h, doc, sections) {
   let count = 0;
   for (const s of sections)
     for (const r of documentRecords(s.bytes)) {
-      if (r.tag !== 71 || s.bytes.readUInt32LE(r.start) !== 0x70676e70)
-        continue;
+      if (r.tag !== 71 || s.bytes.readUInt32LE(r.start) !== 0x70676e70) continue;
       const invoke = (b) =>
         call(
           24,
@@ -57,22 +55,14 @@ export function pageNumberDocumentEdges(call, h, doc, sections) {
           ),
         );
       const good = invoke(s.bytes);
-      const short = Buffer.concat([
-        s.bytes.subarray(0, r.end - 1),
-        s.bytes.subarray(r.end),
-      ]);
+      const short = Buffer.concat([s.bytes.subarray(0, r.end - 1), s.bytes.subarray(r.end)]);
       short.writeUInt32LE(
-        ((s.bytes.readUInt32LE(r.offset) & 0xfffff) |
-          ((r.end - r.start - 1) << 20)) >>>
-          0,
+        ((s.bytes.readUInt32LE(r.offset) & 0xfffff) | ((r.end - r.start - 1) << 20)) >>> 0,
         r.offset,
       );
       assert.throws(() => invoke(short), /UnexpectedEnd/);
       const reserved = Buffer.from(s.bytes);
-      reserved.writeUInt32LE(
-        (reserved.readUInt32LE(r.start + 4) | 0xf00) >>> 0,
-        r.start + 4,
-      );
+      reserved.writeUInt32LE((reserved.readUInt32LE(r.start + 4) | 0xf00) >>> 0, r.start + 4);
       const out = invoke(reserved),
         offset = sectionFieldOffset(s.index, "page_number", 1);
       assert.equal(out.readUInt32LE(offset), good.readUInt32LE(offset) + 1);

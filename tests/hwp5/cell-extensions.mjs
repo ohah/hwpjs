@@ -18,10 +18,7 @@ export function cellActual(call, raw) {
     Math.max(0, extra.length - 5),
   ];
   const out = call(20, raw);
-  assert.deepEqual(
-    out,
-    Buffer.concat([...values.map(word), extra.subarray(5)]),
-  );
+  assert.deepEqual(out, Buffer.concat([...values.map(word), extra.subarray(5)]));
   return values;
 }
 export function cellPair(call, rawCells, hwpx) {
@@ -30,13 +27,11 @@ export function cellPair(call, rawCells, hwpx) {
   assert.equal(blocks.length, rawCells.length);
   const positive = [0, 0, 0, 0];
   rawCells.forEach((raw, i) => {
-    const expected = ["hasMargin", "protect", "header", "editable"].map(
-      (key) => {
-        const m = blocks[i][1].match(new RegExp(`\\b${key}="([01])"`));
-        assert.ok(m);
-        return Number(m[1]);
-      },
-    );
+    const expected = ["hasMargin", "protect", "header", "editable"].map((key) => {
+      const m = blocks[i][1].match(new RegExp(`\\b${key}="([01])"`));
+      assert.ok(m);
+      return Number(m[1]);
+    });
     assert.deepEqual(cellActual(call, raw).slice(1, 5), expected);
     expected.forEach((v, j) => {
       positive[j] += v;

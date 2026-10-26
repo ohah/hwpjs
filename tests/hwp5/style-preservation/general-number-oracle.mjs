@@ -11,5 +11,8 @@ export function generalNumber(value) {
     const mantissa = digits.replace(/0+$/, "").replace(/\.$/, "");
     return `${mantissa}e${exponent < 0 ? "-" : "+"}${String(Math.abs(exponent)).padStart(2, "0")}`;
   }
-  return Number(value.toPrecision(6)).toFixed(Math.max(0, 5 - exponent)).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "");
+  return Number(value.toPrecision(6))
+    .toFixed(Math.max(0, 5 - exponent))
+    .replace(/(\.\d*?)0+$/, "$1")
+    .replace(/\.$/, "");
 }

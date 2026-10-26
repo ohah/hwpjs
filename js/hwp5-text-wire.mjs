@@ -16,8 +16,7 @@ export function decodeHwp5Text(bytes, { allowGenerated = false } = {}) {
     offset += length;
     return result;
   }
-  if (new TextDecoder().decode(raw(4)) !== "H5T1")
-    throw new Error("InvalidHwp5TextWire");
+  if (new TextDecoder().decode(raw(4)) !== "H5T1") throw new Error("InvalidHwp5TextWire");
   const versionRaw = word();
   const sectionCount = word();
   if (sectionCount > 1024) throw new Error("InvalidHwp5TextWire");
@@ -25,8 +24,7 @@ export function decodeHwp5Text(bytes, { allowGenerated = false } = {}) {
   for (let s = 0; s < sectionCount; s++) {
     const index = word();
     const paragraphCount = word();
-    if (index !== s || paragraphCount > bytes.length / 20)
-      throw new Error("InvalidHwp5TextWire");
+    if (index !== s || paragraphCount > bytes.length / 20) throw new Error("InvalidHwp5TextWire");
     const paragraphs = [];
     for (let p = 0; p < paragraphCount; p++) {
       const nodeRaw = word();
@@ -54,13 +52,25 @@ export function decodeHwp5Text(bytes, { allowGenerated = false } = {}) {
         } else throw new Error("InvalidHwp5TextWire");
       }
       if (!present && tokenCount) throw new Error("InvalidHwp5TextWire");
-      paragraphs.push({ nodeIndex, parentNodeIndex: parentRaw === 0xffffffff ? null : parentRaw, declaredUnits, textPresent: Boolean(present), text: textParts.join(""), tokens });
+      paragraphs.push({
+        nodeIndex,
+        parentNodeIndex: parentRaw === 0xffffffff ? null : parentRaw,
+        declaredUnits,
+        textPresent: Boolean(present),
+        text: textParts.join(""),
+        tokens,
+      });
     }
     sections.push({ index, paragraphs });
   }
   if (offset !== bytes.length) throw new Error("InvalidHwp5TextWire");
   return {
-    version: [versionRaw >>> 24, (versionRaw >>> 16) & 255, (versionRaw >>> 8) & 255, versionRaw & 255],
+    version: [
+      versionRaw >>> 24,
+      (versionRaw >>> 16) & 255,
+      (versionRaw >>> 8) & 255,
+      versionRaw & 255,
+    ],
     sections,
   };
 }

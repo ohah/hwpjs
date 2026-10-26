@@ -13,15 +13,24 @@ test("actual opaque drawing tails match independent offsets and remain read-only
     const bytes = record.payload;
     const end = 46 + bytes.readUInt16LE(44) * 2;
     assert(end <= bytes.length);
-    return [{ control_node, extra_bytes: bytes.length - end, extra_hex: bytes.subarray(end).toString("hex") }];
+    return [
+      {
+        control_node,
+        extra_bytes: bytes.length - end,
+        extra_hex: bytes.subarray(end).toString("hex"),
+      },
+    ];
   });
   const editor = await createExperimentalHwp5Editor(wasm, input);
   try {
     editor.enableHistory();
     const rows = editor.drawingObjectExtras(0);
     assert.equal(rows.length, 30);
-    assert.deepEqual(rows.map(({ paragraph_node, ...row }) => row), expected);
-    assert(rows.every(row => row.extra_bytes === 2 && row.extra_hex === "0000"));
+    assert.deepEqual(
+      rows.map(({ paragraph_node: _serializationParagraphNode, ...row }) => row),
+      expected,
+    );
+    assert(rows.every((row) => row.extra_bytes === 2 && row.extra_hex === "0000"));
     assert.deepEqual(Buffer.from(editor.save().bytes), input);
     editor.splice({ section: 0, paragraph: 5, startUnit: 0, endUnit: 0, text: "조회😀" });
     const saved = editor.save({ allowStaleLayout: true }).bytes;
@@ -33,5 +42,7 @@ test("actual opaque drawing tails match independent offsets and remain read-only
     assert.throws(() => editor.drawingObjectExtras(999), /InvalidSection/);
     assert.deepEqual(editor.drawingObjectExtras(0), rows);
     assert.deepEqual(input, before);
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });

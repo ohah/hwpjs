@@ -4,7 +4,7 @@ import { sectionXml } from "./fixture-xml.mjs";
 export function notePair(call, section, hwpx) {
   const xml = sectionXml(hwpx);
   const notes = [];
-  for (let p = 0; p < section.length; ) {
+  for (let p = 0; p < section.length;) {
     const bits = section.readUInt32LE(p);
     p += 4;
     let n = bits >>> 20;
@@ -16,9 +16,7 @@ export function notePair(call, section, hwpx) {
     p += n;
   }
   const blocks = [
-    ...xml.matchAll(
-      /<hp:(?:footNotePr|endNotePr)>([\s\S]*?)<\/hp:(?:footNotePr|endNotePr)>/g,
-    ),
+    ...xml.matchAll(/<hp:(?:footNotePr|endNotePr)>([\s\S]*?)<\/hp:(?:footNotePr|endNotePr)>/g),
   ].map((m) => m[1]);
   assert.equal(notes.length, 2);
   assert.equal(blocks.length, 2);
@@ -26,8 +24,7 @@ export function notePair(call, section, hwpx) {
   for (let i = 0; i < 2; i++) {
     const line = blocks[i].match(/<hp:noteLine\b[^>]*>/)[0];
     const spacing = blocks[i].match(/<hp:noteSpacing\b[^>]*>/)[0];
-    const attr = (text, key) =>
-      Number(text.match(new RegExp(`\\b${key}="(-?\\d+)"`))[1]);
+    const attr = (text, key) => Number(text.match(new RegExp(`\\b${key}="(-?\\d+)"`))[1]);
     const expected = [
       attr(line, "length"),
       attr(spacing, "aboveLine"),

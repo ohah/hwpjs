@@ -8,32 +8,64 @@ import { createHash } from "node:crypto";
 import { closeOwnedBrowser } from "./browser/session-close.mjs";
 import { verifyHwpxSourceTextRoundtrip } from "./browser/hwpx-source-text-roundtrip.mjs";
 
-assert.ok(process.argv.length === 2 || process.argv.length === 3 && process.argv[2] === "--case=sections");
+assert.ok(
+  process.argv.length === 2 || (process.argv.length === 3 && process.argv[2] === "--case=sections"),
+);
 const sectionCase = process.argv[2] === "--case=sections";
 assert.ok(process.env.HWPJS_TEST_WASM, "ExplicitCandidateRequired");
 const wasm = resolve(process.env.HWPJS_TEST_WASM);
-assert.ok(WebAssembly.Module.exports(new WebAssembly.Module(readFileSync(wasm))).some(e => e.name === "hwpx_edit_page_area_declarations"));
-const fixture = resolve(sectionCase ? "legacy/rust/crates/hwp-core/tests/fixtures/lists.hwpx" : "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx");
-const input = readFileSync(fixture), hash = bytes => createHash("sha256").update(bytes).digest("hex");
+assert.ok(
+  WebAssembly.Module.exports(new WebAssembly.Module(readFileSync(wasm))).some(
+    (e) => e.name === "hwpx_edit_page_area_declarations",
+  ),
+);
+const fixture = resolve(
+  sectionCase
+    ? "legacy/rust/crates/hwp-core/tests/fixtures/lists.hwpx"
+    : "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",
+);
+const input = readFileSync(fixture),
+  hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const output = mkdtempSync(join(tmpdir(), "hwpjs-page-area-objects-"));
-const session = execFileSync("agent-browser", ["session", "id", "--scope", "worktree", "--prefix", "hwpjs-page-area-objects"], { encoding: "utf8" }).trim();
+const session = execFileSync(
+  "agent-browser",
+  ["session", "id", "--scope", "worktree", "--prefix", "hwpjs-page-area-objects"],
+  { encoding: "utf8" },
+).trim();
 const command = (...args) => {
-  const reply = JSON.parse(execFileSync("agent-browser", ["--json", "--session", session, ...args], {
-    encoding: "utf8", timeout: 65000, maxBuffer: 4 * 1024 * 1024,
-    env: { ...process.env, AGENT_BROWSER_DEFAULT_TIMEOUT: "60000" },
-  }));
-  assert.equal(reply.success, true, JSON.stringify(reply.error)); return reply.data;
+  const reply = JSON.parse(
+    execFileSync("agent-browser", ["--json", "--session", session, ...args], {
+      encoding: "utf8",
+      timeout: 65000,
+      maxBuffer: 4 * 1024 * 1024,
+      env: { ...process.env, AGENT_BROWSER_DEFAULT_TIMEOUT: "60000" },
+    }),
+  );
+  assert.equal(reply.success, true, JSON.stringify(reply.error));
+  return reply.data;
 };
-const evaluate = source => command("eval", source).result;
-let server, owned = false;
+const evaluate = (source) => command("eval", source).result;
+let server,
+  owned = false;
 try {
   assert.equal(command("session", "info").active, false);
-  server = spawn(process.execPath, [resolve("tools/serve-preview.mjs"), "58886", wasm], { stdio: ["ignore", "pipe", "pipe"] });
+  server = spawn(process.execPath, [resolve("tools/serve-preview.mjs"), "58886", wasm], {
+    stdio: ["ignore", "pipe", "pipe"],
+  });
   await new Promise((accept, reject) => {
     const timer = setTimeout(() => reject(Error("ServerStartTimeout")), 10000);
-    server.once("error", error => { clearTimeout(timer); reject(error); });
-    server.once("exit", code => { clearTimeout(timer); reject(Error("ServerExited:" + code)); });
-    server.stdout.once("data", () => { clearTimeout(timer); accept(); });
+    server.once("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    server.once("exit", (code) => {
+      clearTimeout(timer);
+      reject(Error("ServerExited:" + code));
+    });
+    server.stdout.once("data", () => {
+      clearTimeout(timer);
+      accept();
+    });
   });
   owned = true;
   command("open", "http://127.0.0.1:58886/web/preview/index.html");
@@ -54,44 +86,101 @@ try {
   command("upload", "#file", fixture);
   command("wait", "--fn", 'window.__areaReplies.some(r=>r.kind==="load")');
   const reply = evaluate('window.__areaReplies.find(r=>r.kind==="load")');
-  assert.equal(reply.error, undefined); assert.equal(reply.declarations.length, sectionCase ? 0 : 3);
+  assert.equal(reply.error, undefined);
+  assert.equal(reply.declarations.length, sectionCase ? 0 : 3);
   command("wait", "--fn", 'Number(document.querySelector("#canvas").dataset.rows)>0');
-  const state = () => evaluate('({page:document.querySelector("#page-layout-status").textContent,data:{...document.querySelector("#canvas").dataset},draws:window.__areaDraws.length})');
+  const state = () =>
+    evaluate(
+      '({page:document.querySelector("#page-layout-status").textContent,data:{...document.querySelector("#canvas").dataset},draws:window.__areaDraws.length})',
+    );
   console.log(JSON.stringify({ phase: "loaded", session, output, ...state() }));
-  console.log(JSON.stringify(evaluate(`(() => {const failure=JSON.parse(document.querySelector('#canvas').dataset.pageLayoutFailure||'null');if(!failure)return null;const p=window.__areaContent.paragraphs.find(p=>p.section===failure.section&&p.paragraph===failure.paragraph);return {length:p?.text.length,shape:p?.paragraphShape,tables:window.__areaContent.tables.filter(t=>t.section===failure.section&&t.hostParagraph===failure.paragraph).map(t=>({node:t.tableNode,pagination:t.pagination,geometry:t.sourceGeometry}))}})()`)));
+  console.log(
+    JSON.stringify(
+      evaluate(
+        `(() => {const failure=JSON.parse(document.querySelector('#canvas').dataset.pageLayoutFailure||'null');if(!failure)return null;const p=window.__areaContent.paragraphs.find(p=>p.section===failure.section&&p.paragraph===failure.paragraph);return {length:p?.text.length,shape:p?.paragraphShape,tables:window.__areaContent.tables.filter(t=>t.section===failure.section&&t.hostParagraph===failure.paragraph).map(t=>({node:t.tableNode,pagination:t.pagination,geometry:t.sourceGeometry}))}})()`,
+      ),
+    ),
+  );
   command("screenshot", join(output, "loaded.png"));
   assert.match(state().page, /측정 배치 \d+페이지/);
   if (sectionCase) {
-    assert.equal(evaluate('window.__areaContent.pageSettings.length'), 2);
-    const bodyEdited = verifyHwpxSourceTextRoundtrip({ command, evaluate }, input, output, { host: "body", section: 1 });
+    assert.equal(evaluate("window.__areaContent.pageSettings.length"), 2);
+    const bodyEdited = verifyHwpxSourceTextRoundtrip({ command, evaluate }, input, output, {
+      host: "body",
+      section: 1,
+    });
     assert.equal(bodyEdited.section, 1);
     command("screenshot", join(output, "section-reopened.png"));
     assert.deepEqual(readFileSync(fixture), input);
-    console.log(JSON.stringify({ session, output, bodyEdited, wasmSha256: hash(readFileSync(wasm)), ...state() }));
+    console.log(
+      JSON.stringify({
+        session,
+        output,
+        bodyEdited,
+        wasmSha256: hash(readFileSync(wasm)),
+        ...state(),
+      }),
+    );
   } else {
-  command("wait", "--fn", 'document.querySelector("#picture-status").textContent.includes("대기 0개")');
-  command("scrollintoview", "#viewport");
-  command("screenshot", join(output, "first.png"));
-  evaluate('window.__areaDraws=[]');
-  const extent = evaluate('({height:document.querySelector("#viewport").scrollHeight,client:document.querySelector("#viewport").clientHeight})');
-  assert.ok(extent.client > 0 && extent.height > extent.client);
-  let captured = false;
-  for (let top = Math.floor(extent.height * 0.65); top < extent.height; top += Math.max(1, Math.floor(extent.client / 2))) {
-    evaluate(`new Promise(resolve=>{document.querySelector('#viewport').scrollTop=${top};requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true)));})`);
-    if (!captured && evaluate('window.__areaDraws.length') > 0) { command("screenshot", join(output, "tail-picture.png")); captured = true; }
-  }
-  assert.ok(evaluate('window.__areaDraws.length') > 0, "TailPagesMustPaintImages");
-  command("screenshot", join(output, "last.png"));
-  const cellEdited = verifyHwpxSourceTextRoundtrip({ command, evaluate }, input, output, { host: "cell" });
-  command("screenshot", join(output, "cell-reopened.png"));
-  evaluate("window.__areaReplies=[]"); command("upload", "#file", fixture);
-  command("wait", "--fn", 'window.__areaReplies.some(r=>r.kind==="load"&&!r.error)');
-  const footerEdited = verifyHwpxSourceTextRoundtrip({ command, evaluate }, input, output, { host: "footer" });
-  command("screenshot", join(output, "footer-reopened.png"));
-  assert.deepEqual(readFileSync(fixture), input);
-  console.log(JSON.stringify({ session, output, cellEdited, footerEdited, wasmSha256: hash(readFileSync(wasm)), ...state() }));
+    command(
+      "wait",
+      "--fn",
+      'document.querySelector("#picture-status").textContent.includes("대기 0개")',
+    );
+    command("scrollintoview", "#viewport");
+    command("screenshot", join(output, "first.png"));
+    evaluate("window.__areaDraws=[]");
+    const extent = evaluate(
+      '({height:document.querySelector("#viewport").scrollHeight,client:document.querySelector("#viewport").clientHeight})',
+    );
+    assert.ok(extent.client > 0 && extent.height > extent.client);
+    let captured = false;
+    for (
+      let top = Math.floor(extent.height * 0.65);
+      top < extent.height;
+      top += Math.max(1, Math.floor(extent.client / 2))
+    ) {
+      evaluate(
+        `new Promise(resolve=>{document.querySelector('#viewport').scrollTop=${top};requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true)));})`,
+      );
+      if (!captured && evaluate("window.__areaDraws.length") > 0) {
+        command("screenshot", join(output, "tail-picture.png"));
+        captured = true;
+      }
+    }
+    assert.ok(evaluate("window.__areaDraws.length") > 0, "TailPagesMustPaintImages");
+    command("screenshot", join(output, "last.png"));
+    const cellEdited = verifyHwpxSourceTextRoundtrip({ command, evaluate }, input, output, {
+      host: "cell",
+    });
+    command("screenshot", join(output, "cell-reopened.png"));
+    evaluate("window.__areaReplies=[]");
+    command("upload", "#file", fixture);
+    command("wait", "--fn", 'window.__areaReplies.some(r=>r.kind==="load"&&!r.error)');
+    const footerEdited = verifyHwpxSourceTextRoundtrip({ command, evaluate }, input, output, {
+      host: "footer",
+    });
+    command("screenshot", join(output, "footer-reopened.png"));
+    assert.deepEqual(readFileSync(fixture), input);
+    console.log(
+      JSON.stringify({
+        session,
+        output,
+        cellEdited,
+        footerEdited,
+        wasmSha256: hash(readFileSync(wasm)),
+        ...state(),
+      }),
+    );
   }
 } finally {
-  try { if (owned) await closeOwnedBrowser(command); }
-  finally { if (server && server.exitCode === null && server.signalCode === null) { const ended = once(server, "exit"); server.kill("SIGTERM"); await ended; } }
+  try {
+    if (owned) await closeOwnedBrowser(command);
+  } finally {
+    if (server && server.exitCode === null && server.signalCode === null) {
+      const ended = once(server, "exit");
+      server.kill("SIGTERM");
+      await ended;
+    }
+  }
 }

@@ -2,11 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync, deflateRawSync } from "node:zlib";
 import { indexMarkActual } from "./index-mark.mjs";
-import {
-  documentRecords,
-  documentActual,
-  decodedDocumentInput,
-} from "./documents.mjs";
+import { documentRecords, documentActual, decodedDocumentInput } from "./documents.mjs";
 import { containerActual } from "./containers.mjs";
 import { checkBody } from "./body.mjs";
 const w = (n) => {
@@ -15,10 +11,7 @@ const w = (n) => {
   return b;
 };
 export function indexMarkReference(call, cfb) {
-  const path = new URL(
-    "../../reference/rhwp/samples/HWP5-nopassword-123456.hwp",
-    import.meta.url,
-  );
+  const path = new URL("../../reference/rhwp/samples/HWP5-nopassword-123456.hwp", import.meta.url);
   if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
   const file = readFileSync(path);
   cfb.parse(file, { strict: true });
@@ -38,20 +31,14 @@ export function indexMarkReference(call, cfb) {
   const containerReport = containerActual(call, file, cfb, h, doc, sections);
   const nodes = cfb.document().nodes;
   const body = nodes.findIndex((n) => n.name === "BodyText" && n.kind === 1);
-  const section = nodes.findIndex(
-    (n) => n.name === "Section0" && n.parent === body,
-  );
+  const section = nodes.findIndex((n) => n.name === "Section0" && n.parent === body);
   assert.ok(section >= 0);
   const full = (plain) => {
     const modified = nodes.map((n) => ({ ...n }));
-    modified[section].content =
-      h.readUInt32LE(36) & 1 ? deflateRawSync(plain) : plain;
+    modified[section].content = h.readUInt32LE(36) & 1 ? deflateRawSync(plain) : plain;
     return call(
       25,
-      Buffer.concat([
-        w(64 * 1024 * 1024),
-        Buffer.from(cfb.write({ nodes: modified })),
-      ]),
+      Buffer.concat([w(64 * 1024 * 1024), Buffer.from(cfb.write({ nodes: modified }))]),
     );
   };
   let rejected = 0;
@@ -66,8 +53,7 @@ export function indexMarkReference(call, cfb) {
     assert.throws(() => call(34, input(short)), /UnexpectedEnd/);
     rejected++;
     assert.throws(
-      () =>
-        call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: short }])),
+      () => call(24, decodedDocumentInput(h, doc, [{ index: 0, bytes: short }])),
       /UnexpectedEnd/,
     );
     rejected++;
@@ -75,14 +61,8 @@ export function indexMarkReference(call, cfb) {
     rejected++;
     assert.deepEqual(call(34, input(b)), good);
     // Opaque bytes are not required padding: trim just these bytes and still parse.
-    const trimmed = Buffer.concat([
-      b.subarray(0, r.end - 2),
-      b.subarray(r.end),
-    ]);
-    trimmed.writeUInt32LE(
-      (bits | ((r.end - r.start - 2) << 20)) >>> 0,
-      r.offset,
-    );
+    const trimmed = Buffer.concat([b.subarray(0, r.end - 2), b.subarray(r.end)]);
+    trimmed.writeUInt32LE((bits | ((r.end - r.start - 2) << 20)) >>> 0, r.offset);
     assert.deepEqual(indexMarkActual(call, version, trimmed), [3, 11, 0, 4]);
     assert.doesNotThrow(() => full(trimmed));
   }

@@ -19,11 +19,32 @@ process.argv=[process.execPath,'tools/hwpx-specialized-input-audit.mjs','--wasm=
 await import('./tools/hwpx-specialized-input-audit.mjs');
 console.log(JSON.stringify({kind:'module-reuse-observation',compiles,instances,distinctMemories:memories.size}));
 `;
-  const result = spawnSync(process.execPath, ["--input-type=module", "-e", program], { encoding: "utf8", timeout: 30000, maxBuffer: 8 * 1024 * 1024 });
-  assert.equal(result.error, undefined); assert.equal(result.signal, null); assert.equal(result.status, 0, result.stderr);
+  const result = spawnSync(process.execPath, ["--input-type=module", "-e", program], {
+    encoding: "utf8",
+    timeout: 30000,
+    maxBuffer: 8 * 1024 * 1024,
+  });
+  assert.equal(result.error, undefined);
+  assert.equal(result.signal, null);
+  assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, "");
-  const lines = result.stdout.trimEnd().split("\n"), observation = JSON.parse(lines.pop());
+  const lines = result.stdout.trimEnd().split("\n"),
+    observation = JSON.parse(lines.pop());
   const { summary } = parseSpecializedAuditOutput(lines.join("\n"));
-  assert.deepEqual(summary, { files: 1, encrypted: 0, attempts: 1, verified: 1, xmlVerified: 1, xmlFieldVerified: 0, refused: {}, examples: [] });
-  assert.deepEqual(observation, { kind: "module-reuse-observation", compiles: 1, instances: 3, distinctMemories: 3 });
+  assert.deepEqual(summary, {
+    files: 1,
+    encrypted: 0,
+    attempts: 1,
+    verified: 1,
+    xmlVerified: 1,
+    xmlFieldVerified: 0,
+    refused: {},
+    examples: [],
+  });
+  assert.deepEqual(observation, {
+    kind: "module-reuse-observation",
+    compiles: 1,
+    instances: 3,
+    distinctMemories: 3,
+  });
 });

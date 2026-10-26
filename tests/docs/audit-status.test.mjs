@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { test } from "node:test";
 import { auditDocs } from "../../tools/docs-audit-status.mjs";
 
-const hash = value => createHash("sha256").update(value).digest("hex");
+const hash = (value) => createHash("sha256").update(value).digest("hex");
 
 test("document audit distinguishes current, stale, pending, missing and unknown entries", () => {
   const content = new Map([
@@ -21,7 +21,7 @@ test("document audit distinguishes current, stale, pending, missing and unknown 
       "e.md": { sha256: hash("invalid"), evidence: "" },
       "ghost.md": { sha256: hash("ghost"), evidence: "checked" },
     },
-    path => content.get(path) ?? null,
+    (path) => content.get(path) ?? null,
     ["new.md"],
   );
   assert.deepEqual(result, {

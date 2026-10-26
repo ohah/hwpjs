@@ -5,26 +5,16 @@ const w = (n) => {
   return b;
 };
 const wire = (fields) =>
-  Buffer.concat(
-    fields.flatMap((b) => (b === null ? [w(0xffffffff)] : [w(b.length), b])),
-  );
-const string = (b, tail = Buffer.alloc(0)) =>
-  Buffer.concat([w(b.length / 2), b, tail]);
+  Buffer.concat(fields.flatMap((b) => (b === null ? [w(0xffffffff)] : [w(b.length), b])));
+const string = (b, tail = Buffer.alloc(0)) => Buffer.concat([w(b.length / 2), b, tail]);
 export function xmlTemplateEdges(call) {
   let rejected = 0,
     accepted = 0;
   const run = (fields, limit) => call(29, wire(fields), limit);
-  const good = [
-    string(Buffer.from("<x/>", "utf16le")),
-    null,
-    string(Buffer.alloc(0)),
-  ];
+  const good = [string(Buffer.from("<x/>", "utf16le")), null, string(Buffer.alloc(0))];
   const check = (fields) => {
     const total = fields.reduce((n, b) => n + (b?.length ?? 0), 0);
-    const extra = fields.reduce(
-      (n, b) => n + (b ? b.length - 4 - 2 * b.readUInt32LE(0) : 0),
-      0,
-    );
+    const extra = fields.reduce((n, b) => n + (b ? b.length - 4 - 2 * b.readUInt32LE(0) : 0), 0);
     const expected = Buffer.concat([w(total), w(extra), wire(fields)]);
     assert.deepEqual(run(fields, total), expected);
     accepted++;
@@ -40,11 +30,7 @@ export function xmlTemplateEdges(call) {
   };
   // All eight combinations independently test absence, including all absent at limit zero.
   for (let mask = 0; mask < 8; mask++)
-    check(
-      Array.from({ length: 3 }, (_, i) =>
-        mask & (1 << i) ? string(Buffer.alloc(0)) : null,
-      ),
-    );
+    check(Array.from({ length: 3 }, (_, i) => (mask & (1 << i) ? string(Buffer.alloc(0)) : null)));
   for (let field = 0; field < 3; field++) {
     const raw = string(Buffer.from([0, 0xd8, 0, 0, 0xff, 0xfe, 60, 0]));
     for (let n = 0; n < raw.length; n++) {

@@ -8,5 +8,11 @@ export function createChartOlePolicyControls({ checkbox, file, note }) {
     note.textContent = "설정은 다음 문서 열기에 적용됩니다. 현재 편집 세션은 바뀌지 않았습니다.";
   };
   checkbox.addEventListener("change", change);
-  return { close() { if (closed) return; closed = true; checkbox.removeEventListener("change", change); } };
+  return {
+    close() {
+      if (closed) return;
+      closed = true;
+      checkbox.removeEventListener("change", change);
+    },
+  };
 }

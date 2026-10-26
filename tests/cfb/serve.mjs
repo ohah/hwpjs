@@ -18,21 +18,13 @@ const routes = {
   "/cfb-search-snapshot.mjs": ["js/cfb-search-snapshot.mjs", "text/javascript"],
   "/abi.mjs": ["js/abi.mjs", "text/javascript"],
   "/abi-schema.mjs": ["js/abi-schema.mjs", "text/javascript"],
-  "/search-lifecycle.mjs": [
-    "tests/cfb/search-lifecycle.mjs",
-    "text/javascript",
-  ],
+  "/search-lifecycle.mjs": ["tests/cfb/search-lifecycle.mjs", "text/javascript"],
   "/legacy.js": ["legacy/cfb.js", "text/javascript"],
-  "/browser-boundaries.mjs": [
-    "tests/cfb/browser-boundaries.mjs",
-    "text/javascript",
-  ],
+  "/browser-boundaries.mjs": ["tests/cfb/browser-boundaries.mjs", "text/javascript"],
   "/hwpjs.wasm": ["zig-out/bin/hwpjs.wasm", "application/wasm"],
 };
 createServer((req, res) => {
-  const path = decodeURIComponent(
-    new URL(req.url, "http://localhost").pathname,
-  );
+  const path = decodeURIComponent(new URL(req.url, "http://localhost").pathname);
   let body,
     type = "application/octet-stream";
   if (routes[path]) {

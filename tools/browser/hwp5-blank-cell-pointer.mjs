@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
 
-export function clickHwp5BlankCell({command,evaluate},{section,paragraph}) {
-  assert(Number.isSafeInteger(section)&&section>=0&&Number.isSafeInteger(paragraph)&&paragraph>=0);
-  command("scrollintoview","#viewport");
-  const point=evaluate(`(async()=>{
+export function clickHwp5BlankCell({ command, evaluate }, { section, paragraph }) {
+  assert(
+    Number.isSafeInteger(section) &&
+      section >= 0 &&
+      Number.isSafeInteger(paragraph) &&
+      paragraph >= 0,
+  );
+  command("scrollintoview", "#viewport");
+  const point = evaluate(`(async()=>{
     await document.fonts.ready;
     const {layoutHwp5PageContent}=await import('/web/preview/hwp5-page-layout.mjs');
     const {createTextStyle}=await import('/web/preview/text-style.mjs');
@@ -23,13 +28,22 @@ export function clickHwp5BlankCell({command,evaluate},{section,paragraph}) {
     const x=Math.round(rect.left+localX-viewport.scrollLeft),y=Math.round(rect.top+localY-viewport.scrollTop);
     return {x,y,canvas:document.elementFromPoint(x,y)===document.querySelector('#canvas'),pages:layout.pages.length};
   })()`);
-  assert(point&&!point.error,JSON.stringify(point));assert.equal(point.canvas,true,"BlankCellPointMustHitCanvas");
-  evaluate("window.__blankCellPointer=null;document.querySelector('#canvas').addEventListener('pointerdown',e=>window.__blankCellPointer={trusted:e.isTrusted,canvas:e.target===document.querySelector('#canvas')},{once:true})");
-  command("mouse","move",String(point.x),String(point.y));
-  assert.equal(evaluate("getComputedStyle(document.querySelector('#canvas')).cursor"),"text");
-  command("mouse","down");command("mouse","up");
-  assert.deepEqual(evaluate("window.__blankCellPointer"),{trusted:true,canvas:true});
-  assert(evaluate("document.querySelector('#canvas').dataset.caret").startsWith(`${section}:${paragraph}:`),"BlankCellPointerSelectedWrongSource");
-  assert.equal(evaluate("document.querySelector('#canvas-input').value"),"");
+  assert(point && !point.error, JSON.stringify(point));
+  assert.equal(point.canvas, true, "BlankCellPointMustHitCanvas");
+  evaluate(
+    "window.__blankCellPointer=null;document.querySelector('#canvas').addEventListener('pointerdown',e=>window.__blankCellPointer={trusted:e.isTrusted,canvas:e.target===document.querySelector('#canvas')},{once:true})",
+  );
+  command("mouse", "move", String(point.x), String(point.y));
+  assert.equal(evaluate("getComputedStyle(document.querySelector('#canvas')).cursor"), "text");
+  command("mouse", "down");
+  command("mouse", "up");
+  assert.deepEqual(evaluate("window.__blankCellPointer"), { trusted: true, canvas: true });
+  assert(
+    evaluate("document.querySelector('#canvas').dataset.caret").startsWith(
+      `${section}:${paragraph}:`,
+    ),
+    "BlankCellPointerSelectedWrongSource",
+  );
+  assert.equal(evaluate("document.querySelector('#canvas-input').value"), "");
   return point;
 }

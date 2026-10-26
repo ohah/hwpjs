@@ -12,19 +12,12 @@ const module = await WebAssembly.compile(
 test("FILETIME uses unsigned i64 bits at the JS boundary", async () => {
   const api = await createCfbReader(module);
   try {
-    for (const ticks of [
-      0x7fffffffffffffffn,
-      0x8000000000000000n,
-      0xffffffffffffffffn,
-    ]) {
+    for (const ticks of [0x7fffffffffffffffn, 0x8000000000000000n, 0xffffffffffffffffn]) {
       const bytes = v4File();
       bytes.writeBigUInt64LE(ticks, 8192 + 100);
       const time = api.parse(bytes).FileIndex[0].ct.getTime();
       const expected = Number(ticks / 10000n - 11644473600000n);
-      assert.ok(
-        Math.abs(time - expected) <= 1,
-        `${ticks}: ${time} != ${expected}`,
-      );
+      assert.ok(Math.abs(time - expected) <= 1, `${ticks}: ${time} != ${expected}`);
     }
   } finally {
     api.close();
@@ -60,10 +53,7 @@ test("cross-realm ArrayBuffer and byte views preserve their bytes", async () => 
     const source = v4File();
     for (let i = 12288; i < source.length; i++) source[i] = i % 251;
     const bytes = Array.from(source);
-    for (const expression of [
-      "Uint8Array.from(bytes).buffer",
-      "Uint8Array.from(bytes)",
-    ]) {
+    for (const expression of ["Uint8Array.from(bytes).buffer", "Uint8Array.from(bytes)"]) {
       const foreign = runInNewContext(expression, { bytes });
       assert.deepEqual(
         Buffer.from(api.parse(foreign).FileIndex[1].content),
@@ -105,11 +95,7 @@ test("a leading U+FEFF in root and stream names is data, not a text transport BO
 });
 
 for (const [name, mutate, message] of [
-  [
-    "used stream marked free",
-    (b) => b.writeUInt32LE(0xffffffff, 4104),
-    "UnallocatedSector",
-  ],
+  ["used stream marked free", (b) => b.writeUInt32LE(0xffffffff, 4104), "UnallocatedSector"],
   [
     "stream child references root",
     (b) => b.writeUInt32LE(0, 8320 + 76),
@@ -127,21 +113,9 @@ for (const [name, mutate, message] of [
     },
     "InvalidDirectory",
   ],
-  [
-    "missing name terminator",
-    (b) => b.writeUInt16LE(2, 8320 + 64),
-    "InvalidName",
-  ],
-  [
-    "live entry without a name field",
-    (b) => b.writeUInt16LE(0, 8320 + 64),
-    "InvalidName",
-  ],
-  [
-    "slash in a single entry name",
-    (b) => b.writeUInt16LE(47, 8320),
-    "InvalidName",
-  ],
+  ["missing name terminator", (b) => b.writeUInt16LE(2, 8320 + 64), "InvalidName"],
+  ["live entry without a name field", (b) => b.writeUInt16LE(0, 8320 + 64), "InvalidName"],
+  ["slash in a single entry name", (b) => b.writeUInt16LE(47, 8320), "InvalidName"],
   [
     "NUL separating an invalid surrogate pair",
     (b) => {

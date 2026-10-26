@@ -10,21 +10,43 @@ test("actual header footer and master lists stay bound to source hosts in body w
   const wasm = readFileSync(process.env.HWPJS_TEST_WASM ?? "zig-out/bin/hwpjs.wasm");
   for (const name of ["headerfooter", "table-bug"]) {
     const input = readFileSync(`legacy/rust/crates/hwp-core/tests/fixtures/${name}.hwp`);
-    const editor = await createExperimentalHwp5Editor(wasm, input), reader = await createHwp5Reader(wasm);
+    const editor = await createExperimentalHwp5Editor(wasm, input),
+      reader = await createHwp5Reader(wasm);
     try {
-      const projection = reader.readText(input), flows = editor.paragraphFlow(0);
-      const selected = flows.findLast(row => row.host === "body"), repeated = flows.filter(row => ["header", "footer", "master_page"].includes(row.host));
+      const projection = reader.readText(input),
+        flows = editor.paragraphFlow(0);
+      const selected = flows.findLast((row) => row.host === "body"),
+        repeated = flows.filter((row) => ["header", "footer", "master_page"].includes(row.host));
       assert(selected && repeated.length > 0);
       const found = hwp5RepeatedWindowDependencies(editor, projection);
-      const plan = planParagraphDependencies({ ...found, offset: selected.paragraph, count: 1, maxParagraphs: 100 });
-      for (const row of repeated) assert(plan.ordinals.includes(row.paragraph), `${name}:${row.paragraph}`);
+      const plan = planParagraphDependencies({
+        ...found,
+        offset: selected.paragraph,
+        count: 1,
+        maxParagraphs: 100,
+      });
+      for (const row of repeated)
+        assert(plan.ordinals.includes(row.paragraph), `${name}:${row.paragraph}`);
       assert.deepEqual(Buffer.from(editor.save().bytes), input);
       const missingAnchor = Object.create(editor);
-      missingAnchor.structuralAnchors = section => editor.structuralAnchors(section).filter(row => row.kind === "column");
-      assert.throws(() => hwp5RepeatedWindowDependencies(missingAnchor, projection), /WindowDependencyBindingMismatch/);
+      missingAnchor.structuralAnchors = (section) =>
+        editor.structuralAnchors(section).filter((row) => row.kind === "column");
+      assert.throws(
+        () => hwp5RepeatedWindowDependencies(missingAnchor, projection),
+        /WindowDependencyBindingMismatch/,
+      );
       const missingBody = Object.create(editor);
-      missingBody.paragraphFlow = section => editor.paragraphFlow(section).map(row => row.paragraph === repeated[0].paragraph ? { ...row, host: "body" } : row);
-      assert.throws(() => hwp5RepeatedWindowDependencies(missingBody, projection), /MissingWindowRepeatedBody/);
-    } finally { editor.close(); reader.close(); }
+      missingBody.paragraphFlow = (section) =>
+        editor
+          .paragraphFlow(section)
+          .map((row) => (row.paragraph === repeated[0].paragraph ? { ...row, host: "body" } : row));
+      assert.throws(
+        () => hwp5RepeatedWindowDependencies(missingBody, projection),
+        /MissingWindowRepeatedBody/,
+      );
+    } finally {
+      editor.close();
+      reader.close();
+    }
   }
 });

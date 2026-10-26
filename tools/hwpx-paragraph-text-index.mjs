@@ -5,9 +5,9 @@ export function hwpxParagraphTextIndex(events) {
   for (const event of events) {
     if (event.kind !== "content") continue;
     let paragraphs = sections.get(event.section);
-    if (!paragraphs) sections.set(event.section, paragraphs = new Map());
+    if (!paragraphs) sections.set(event.section, (paragraphs = new Map()));
     let chunks = paragraphs.get(event.paragraph);
-    if (!chunks) paragraphs.set(event.paragraph, chunks = []);
+    if (!chunks) paragraphs.set(event.paragraph, (chunks = []));
     chunks.push(event.value);
   }
   for (const paragraphs of sections.values())

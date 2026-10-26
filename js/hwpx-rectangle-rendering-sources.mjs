@@ -3,11 +3,13 @@ import { decodeRectangleRenderingSource } from "./hwpx-rectangle-rendering-sourc
 export function decodeRectangleRenderingSources(bytes) {
   if (!(bytes instanceof Uint8Array)) throw new Error("InvalidRectangleRenderingSources");
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  if (!Array.isArray(rows) || rows.length > 100000) throw new Error("InvalidRectangleRenderingSources");
+  if (!Array.isArray(rows) || rows.length > 100000)
+    throw new Error("InvalidRectangleRenderingSources");
   const encoder = new TextEncoder();
   return rows.map((row, index) => {
     const value = decodeRectangleRenderingSource(encoder.encode(JSON.stringify(row)));
-    if (index && value.rectangle_node <= rows[index - 1].rectangle_node) throw new Error("InvalidRectangleRenderingSources");
+    if (index && value.rectangle_node <= rows[index - 1].rectangle_node)
+      throw new Error("InvalidRectangleRenderingSources");
     return value;
   });
 }

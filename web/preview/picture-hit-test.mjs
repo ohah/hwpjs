@@ -24,20 +24,33 @@ function contains(item, x, y) {
     const v = (-b * (x - e) + a * (y - f)) / determinant;
     return Number.isFinite(u) && Number.isFinite(v) && u >= 0 && u <= 1 && v >= 0 && v <= 1;
   }
-  if (item.paintPlan?.state !== "plain" || ![item.x, item.y, item.width, item.height].every(Number.isFinite) || item.width <= 0 || item.height <= 0) return false;
+  if (
+    item.paintPlan?.state !== "plain" ||
+    ![item.x, item.y, item.width, item.height].every(Number.isFinite) ||
+    item.width <= 0 ||
+    item.height <= 0
+  )
+    return false;
   return x >= item.x && x <= item.x + item.width && y >= item.y && y <= item.y + item.height;
 }
 
 // Coordinates are logical Canvas pixels, including document scroll offset.
 // Behind-text objects require an explicit object-selection gesture.
-export function hitPictureLayers(layers, x, y, isPainted, { includeBehind = false, paintOrder = null } = {}) {
-    if (![x, y].every(Number.isFinite) || typeof isPainted !== "function") return null;
+export function hitPictureLayers(
+  layers,
+  x,
+  y,
+  isPainted,
+  { includeBehind = false, paintOrder = null } = {},
+) {
+  if (![x, y].every(Number.isFinite) || typeof isPainted !== "function") return null;
   if (paintOrder !== null) {
     for (let index = paintOrder.length - 1; index >= 0; index--) {
       const record = paintOrder[index];
       if (!contains(record.item, x, y)) continue;
       if (record.kind === "occluder") return null;
-      if (record.kind === "picture" && (!record.behind || includeBehind) && isPainted(record.item)) return record.item;
+      if (record.kind === "picture" && (!record.behind || includeBehind) && isPainted(record.item))
+        return record.item;
     }
     return null;
   }

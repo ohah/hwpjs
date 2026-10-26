@@ -23,17 +23,14 @@ export function compatibilityEdges(call) {
   for (const tag of [30, 31]) {
     const size = tag === 30 ? 4 : 20;
     const good = Buffer.concat(
-      Array.from({ length: size / 4 }, (_, i) =>
-        w([0xffffffff, 0x80000000, 0x12345678, 0, 1][i]),
-      ),
+      Array.from({ length: size / 4 }, (_, i) => w([0xffffffff, 0x80000000, 0x12345678, 0, 1][i])),
     );
     for (const extended of [false, true]) {
       check(tag, good, extended);
       check(tag, Buffer.concat([good, Buffer.from([7, 0, 9])]), extended);
       for (let n = 0; n < size; n++) {
         assert.throws(
-          () =>
-            run(frame(tag, tag === 30 ? 0 : 1, good.subarray(0, n), extended)),
+          () => run(frame(tag, tag === 30 ? 0 : 1, good.subarray(0, n), extended)),
           /UnexpectedEnd/,
         );
         rejected++;
@@ -42,10 +39,7 @@ export function compatibilityEdges(call) {
     }
     for (const level of [0, 1, 2, 1023])
       if (level !== (tag === 30 ? 0 : 1)) {
-        assert.throws(
-          () => run(frame(tag, level, good)),
-          /InvalidDocInfoLevel/,
-        );
+        assert.throws(() => run(frame(tag, level, good)), /InvalidDocInfoLevel/);
         rejected++;
       }
     for (let field = 0; field < size / 4; field++)

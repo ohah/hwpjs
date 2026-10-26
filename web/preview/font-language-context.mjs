@@ -8,24 +8,51 @@ export function displayFontLanguage(character) {
   return 4;
 }
 
-const neutral=character=>{const code=character.codePointAt(0);return /\p{Mark}/u.test(character)||code<=0x20||code>=0x21&&code<=0x2f
-  ||code>=0x3a&&code<=0x40||code>=0x5b&&code<=0x60||code>=0x7b&&code<=0x7f||code>=0xa0&&code<=0xbf;};
+const neutral = (character) => {
+  const code = character.codePointAt(0);
+  return (
+    /\p{Mark}/u.test(character) ||
+    code <= 0x20 ||
+    (code >= 0x21 && code <= 0x2f) ||
+    (code >= 0x3a && code <= 0x40) ||
+    (code >= 0x5b && code <= 0x60) ||
+    (code >= 0x7b && code <= 0x7f) ||
+    (code >= 0xa0 && code <= 0xbf)
+  );
+};
 
 export function createFontLanguageResolver() {
-  let previousText,initial=0,current=0,next=0,start=-1;
-  return (text,unit)=>{
-    if(typeof text!=="string"||!Number.isInteger(unit)||unit<0||unit>=text.length)return null;
-    if(text!==previousText){
-      previousText=text;initial=0;
-      for(const character of text)if(!neutral(character)){initial=displayFontLanguage(character);break;}
-      next=0;start=-1;current=initial;
+  let previousText,
+    initial = 0,
+    current = 0,
+    next = 0,
+    start = -1;
+  return (text, unit) => {
+    if (typeof text !== "string" || !Number.isInteger(unit) || unit < 0 || unit >= text.length)
+      return null;
+    if (text !== previousText) {
+      previousText = text;
+      initial = 0;
+      for (const character of text)
+        if (!neutral(character)) {
+          initial = displayFontLanguage(character);
+          break;
+        }
+      next = 0;
+      start = -1;
+      current = initial;
     }
-    if(unit<start){next=0;start=-1;current=initial;}
+    if (unit < start) {
+      next = 0;
+      start = -1;
+      current = initial;
+    }
     // Keep one paragraph cursor, not an array or every historical draft.
-    while(next<=unit){
-      const character=String.fromCodePoint(text.codePointAt(next));
-      if(!neutral(character))current=displayFontLanguage(character);
-      start=next;next+=character.length;
+    while (next <= unit) {
+      const character = String.fromCodePoint(text.codePointAt(next));
+      if (!neutral(character)) current = displayFontLanguage(character);
+      start = next;
+      next += character.length;
     }
     return current;
   };

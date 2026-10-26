@@ -14,10 +14,7 @@ const context = {
   Buffer,
   process,
 };
-runInNewContext(
-  readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"),
-  context,
-);
+runInNewContext(readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"), context);
 const CFB = context.module.exports;
 const module = await WebAssembly.compile(
   readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url)),
@@ -25,10 +22,7 @@ const module = await WebAssembly.compile(
 
 test("exact return shape: all real HWP fixtures including unused entries and blob methods", async () => {
   const api = await createCfbReader(module);
-  const dir = new URL(
-    "../../legacy/rust/crates/hwp-core/tests/fixtures/",
-    import.meta.url,
-  );
+  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
   try {
     for (const name of readdirSync(dir).filter((n) => n.endsWith(".hwp"))) {
       const bytes = readFileSync(new URL(name, dir));
@@ -49,10 +43,7 @@ test("exact return shape: empty, MiniFAT and regular streams across input repres
       ),
     ]) {
       for (const input of [bytes, new Uint8Array(bytes), Array.from(bytes)]) {
-        assertExactResult(
-          api.parse(input, { raw: true }),
-          CFB.parse(input, { raw: true }),
-        );
+        assertExactResult(api.parse(input, { raw: true }), CFB.parse(input, { raw: true }));
       }
       for (const type of ["binary", "base64"]) {
         const input = bytes.toString(type);
@@ -171,11 +162,7 @@ test("exact header failure messages from the same validation branches", async ()
       } catch (e) {
         message = e.message;
       }
-      assert.equal(
-        typeof message,
-        "string",
-        "reference must reject the targeted header",
-      );
+      assert.equal(typeof message, "string", "reference must reject the targeted header");
       assert.throws(() => api.parse(bytes), { name: "Error", message });
       assertExactResult(api.parse(v4File()), CFB.parse(v4File()));
     }
@@ -196,10 +183,7 @@ test("empty content presence is not inferred from size or entry kind", async () 
         const actual = api.parse(bytes),
           expected = CFB.parse(bytes);
         assertExactResult(actual, expected);
-        assert.equal(
-          Object.hasOwn(actual.FileIndex[1], "content"),
-          start === 0,
-        );
+        assert.equal(Object.hasOwn(actual.FileIndex[1], "content"), start === 0);
         assert.equal(
           Object.hasOwn(actual.FileIndex[2], "content"),
           true,

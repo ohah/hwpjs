@@ -1,6 +1,6 @@
-import { detectDocumentFormat } from '@ohah/hwpjs';
-import { createCanvasSurface } from '@ohah/hwpjs/vanilla';
-import { createBrowserEditor, type BrowserAssets } from './runtime';
+import { detectDocumentFormat } from "@ohah/hwpjs";
+import { createCanvasSurface } from "@ohah/hwpjs/vanilla";
+import { createBrowserEditor, type BrowserAssets } from "./runtime";
 
 export async function mountDocument(root: HTMLElement, file: File, assets: BrowserAssets) {
   const editor = createBrowserEditor(assets);
@@ -13,13 +13,19 @@ export async function mountDocument(root: HTMLElement, file: File, assets: Brows
     return {
       editor,
       async dispose() {
-        try { await surface?.dispose(); }
-        finally { await editor.dispose(); }
+        try {
+          await surface?.dispose();
+        } finally {
+          await editor.dispose();
+        }
       },
     };
   } catch (error) {
-    try { await surface?.dispose(); }
-    finally { await editor.dispose(); }
+    try {
+      await surface?.dispose();
+    } finally {
+      await editor.dispose();
+    }
     throw error;
   }
 }

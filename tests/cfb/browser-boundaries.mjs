@@ -9,18 +9,10 @@ export async function checkBrowserBoundaries(reference, reader) {
   const saved = reader.parse(bytes);
   const entry = reader.find(saved, "\ufeffData");
   if (entry?.name !== "\ufeffData") throw new Error("Leading BOM was lost");
-  if (
-    Math.abs(
-      saved.FileIndex[0].ct.getTime() -
-        Number(ticks / 10000n - 11644473600000n),
-    ) > 1
-  )
+  if (Math.abs(saved.FileIndex[0].ct.getTime() - Number(ticks / 10000n - 11644473600000n)) > 1)
     throw new Error("FILETIME signedness");
   reader.close();
-  if (
-    reader.find(saved, "\ufeffData") !== entry ||
-    reader.find(saved, "Data") !== null
-  )
+  if (reader.find(saved, "\ufeffData") !== entry || reader.find(saved, "Data") !== null)
     throw new Error("BOM lookup changed after close");
   const frame = document.createElement("iframe");
   frame.hidden = true;

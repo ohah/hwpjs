@@ -10,8 +10,16 @@ import { attachHwp5TableBorderSources } from "./hwp5-table-border-content.mjs";
 export function attachHwp5Tables(editor, preview, content) {
   attachTables(editor, preview, content);
   attachHwp5TableBorderSources(editor, content);
-  if (!editor) { content.tablePlacementsErrors = []; return content; }
+  if (!editor) {
+    content.tablePlacementsErrors = [];
+    return content;
+  }
   attachTablePlacements(editor, preview.sections, content);
   const sources = content.window ? hwp5WindowTableSourceEditor(editor, content) : editor;
-  return attachHwp5TableGeometry(attachHwp5TableAnchors(sources, attachHwp5CellLayoutSources(sources, attachHwp5TableLayoutSources(sources, content))));
+  return attachHwp5TableGeometry(
+    attachHwp5TableAnchors(
+      sources,
+      attachHwp5CellLayoutSources(sources, attachHwp5TableLayoutSources(sources, content)),
+    ),
+  );
 }

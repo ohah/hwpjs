@@ -11,17 +11,49 @@ export function attachHwp5FlowSources(editor, content) {
   content.columnSources = [];
   content.flowSourceErrors = [];
   attachHwp5Memos(content);
-  if (!editor) return attachHwp5Drawings(editor, attachHwp5Captions(editor, attachHwp5Notes(editor, attachHwp5MasterPages(editor, attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, content))))));
+  if (!editor)
+    return attachHwp5Drawings(
+      editor,
+      attachHwp5Captions(
+        editor,
+        attachHwp5Notes(
+          editor,
+          attachHwp5MasterPages(
+            editor,
+            attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, content)),
+          ),
+        ),
+      ),
+    );
   for (let section = 0; section < editor.sectionCount(); section++) {
     try {
-      const flows = editor.paragraphFlow(section), columns = editor.columnSources(section);
+      const flows = editor.paragraphFlow(section),
+        columns = editor.columnSources(section);
       for (const declaration of columns) {
         const owner = flows[declaration.current_paragraph];
-        if (!owner || owner.generated || owner.source_node !== declaration.paragraph_node) throw new Error("ColumnSourceBindingMismatch");
+        if (!owner || owner.generated || owner.source_node !== declaration.paragraph_node)
+          throw new Error("ColumnSourceBindingMismatch");
       }
-      content.currentParagraphFlows.push(...flows.map(row => ({ ...row, section })));
-      content.columnSources.push(...columns.map(row => ({ ...row, section })));
-    } catch (error) { content.flowSourceErrors.push({ section, error: error.message }); }
+      content.currentParagraphFlows.push(...flows.map((row) => ({ ...row, section })));
+      content.columnSources.push(...columns.map((row) => ({ ...row, section })));
+    } catch (error) {
+      content.flowSourceErrors.push({ section, error: error.message });
+    }
   }
-  return attachHwp5Drawings(editor, attachHwp5Captions(editor, attachHwp5Notes(editor, attachHwp5MasterPages(editor, attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, attachHwp5Memos(content)))))));
+  return attachHwp5Drawings(
+    editor,
+    attachHwp5Captions(
+      editor,
+      attachHwp5Notes(
+        editor,
+        attachHwp5MasterPages(
+          editor,
+          attachHwp5PageAreas(
+            editor,
+            attachHwp5StructuralAnchors(editor, attachHwp5Memos(content)),
+          ),
+        ),
+      ),
+    ),
+  );
 }

@@ -4,7 +4,8 @@ import { createMemory } from "../../js/wasm-memory.mjs";
 
 test("WASM zero length sentinel buffers need no dereference while nonempty bounds stay strict", () => {
   const memory = createMemory({ memory: { buffer: new ArrayBuffer(16) } });
-  for (const pointer of [0, 16, 0xffffffff, -1]) assert.deepEqual(memory.copy(pointer, 0), new Uint8Array(0));
+  for (const pointer of [0, 16, 0xffffffff, -1])
+    assert.deepEqual(memory.copy(pointer, 0), new Uint8Array(0));
   assert.throws(() => memory.copy(0xffffffff, 1), RangeError);
   assert.throws(() => memory.copy(16, 1), RangeError);
   assert.throws(() => memory.copy(0, -1), RangeError);

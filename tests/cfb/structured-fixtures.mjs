@@ -31,10 +31,7 @@ export function miniContainer(version, size, fragmented, salt = 0) {
   bytes.writeUInt32LE(0xfffffffe, sector + 4);
   bytes.writeUInt32LE(0xfffffffe, sector + 8);
   for (let i = 0; i < dataSectors; i++)
-    bytes.writeUInt32LE(
-      i + 1 === dataSectors ? 0xfffffffe : i + 4,
-      sector + (i + 3) * 4,
-    );
+    bytes.writeUInt32LE(i + 1 === dataSectors ? 0xfffffffe : i + 4, sector + (i + 3) * 4);
   function entry(index, name, kind, start, length, child) {
     const o = 2 * sector + index * 128;
     const encoded = Buffer.from(name + "\0", "utf16le");
@@ -52,29 +49,14 @@ export function miniContainer(version, size, fragmented, salt = 0) {
       bytes.writeUInt32LE(value, o + field);
   }
   entry(0, "Root Entry", 5, dataSectors ? 3 : 0xfffffffe, rootSize, 1);
-  entry(
-    1,
-    "Data",
-    2,
-    blocks ? (fragmented ? blocks - 1 : 0) : 0xfffffffe,
-    size,
-    0xffffffff,
-  );
+  entry(1, "Data", 2, blocks ? (fragmented ? blocks - 1 : 0) : 0xfffffffe, size, 0xffffffff);
   bytes.fill(255, 3 * sector, 4 * sector);
-  const expected = Buffer.from(
-    Array.from({ length: size }, (_, i) => (i * 17 + salt) % 251),
-  );
+  const expected = Buffer.from(Array.from({ length: size }, (_, i) => (i * 17 + salt) % 251));
   for (let i = 0; i < blocks; i++) {
     const physical = fragmented ? blocks - 1 - i : i;
-    const next =
-      i + 1 === blocks ? 0xfffffffe : fragmented ? physical - 1 : physical + 1;
+    const next = i + 1 === blocks ? 0xfffffffe : fragmented ? physical - 1 : physical + 1;
     bytes.writeUInt32LE(next, 3 * sector + physical * 4);
-    expected.copy(
-      bytes,
-      4 * sector + physical * 64,
-      i * 64,
-      Math.min(size, (i + 1) * 64),
-    );
+    expected.copy(bytes, 4 * sector + physical * 64, i * 64, Math.min(size, (i + 1) * 64));
   }
   return { bytes, expected };
 }

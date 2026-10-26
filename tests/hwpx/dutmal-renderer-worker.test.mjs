@@ -5,47 +5,97 @@ import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harne
 import { rowTop, rowLeft, rowTextTop } from "../../web/preview/row-geometry.mjs";
 import { createDutmalCanvasControls } from "../../web/preview/dutmal-canvas-controls.mjs";
 
-test("actual dutmal Worker data paints two runs with one logical anchor", async t => {
+test("actual dutmal Worker data paints two runs with one logical anchor", async (t) => {
   assert(process.env.HWPJS_TEST_WASM, "explicit dutmal display candidate required");
   const h = await workerCanvasHarness(t, { paintFrames: true });
   const calls = [];
   const ctx = h.canvas.getContext("2d");
   ctx.fillText = (text, x, y) => calls.push({ text, x, y, font: ctx.font });
-  const input = readFileSync("reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx");
+  const input = readFileSync(
+    "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx",
+  );
   const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
   assert.equal(loaded.error, undefined);
   assert.deepEqual(loaded.content.dutmalErrors, []);
   const layout = h.renderer.layout();
-  const index = layout.rows.findIndex(row => row.kind === "text" && row.section === 0 && row.paragraph === 25 && row.startUnit <= 43 && row.endUnit > 43);
+  const index = layout.rows.findIndex(
+    (row) =>
+      row.kind === "text" &&
+      row.section === 0 &&
+      row.paragraph === 25 &&
+      row.startUnit <= 43 &&
+      row.endUnit > 43,
+  );
   assert(index >= 0, "dutmal row must exist");
   const row = layout.rows[index];
-  const boundary = row.boundaries.findIndex(point => point.unit === 43);
+  const boundary = row.boundaries.findIndex((point) => point.unit === 43);
   assert(boundary >= 0);
   assert.equal(row.boundaries[boundary + 1].unit, 44);
   assert(row.boundaries[boundary + 1].x > row.boundaries[boundary].x);
   h.viewport.scrollTop = rowTop(row, index);
-  h.viewport.dispatchEvent(new Event("scroll")); h.paint();
-  const main = calls.find(call => call.text === "팀단위 훈련");
-  const sub = calls.find(call => call.text === "전술훈련 30% + 현지훈련 20%");
-  assert(main, JSON.stringify({ calls: calls.slice(-12), row, paragraph: loaded.content.paragraphs.find(p => p.paragraph === 25) })); assert(sub);
+  h.viewport.dispatchEvent(new Event("scroll"));
+  h.paint();
+  const main = calls.find((call) => call.text === "팀단위 훈련");
+  const sub = calls.find((call) => call.text === "전술훈련 30% + 현지훈련 20%");
+  assert(
+    main,
+    JSON.stringify({
+      calls: calls.slice(-12),
+      row,
+      paragraph: loaded.content.paragraphs.find((p) => p.paragraph === 25),
+    }),
+  );
+  assert(sub);
   assert(sub.y < main.y);
-  const pixels = font => Number(/([\d.]+)(?:px|pt)/.exec(font)[1]);
+  const pixels = (font) => Number(/([\d.]+)(?:px|pt)/.exec(font)[1]);
   assert(pixels(sub.font) < pixels(main.font));
   const x = rowLeft(row) + (row.boundaries[boundary].x + row.boundaries[boundary + 1].x) / 2;
   const y = rowTop(row, index) + rowTextTop(row) + 1;
-  const identity = { section: 0, node: loaded.content.paragraphs.find(p => p.paragraph === 25).dutmal[0].node };
+  const identity = {
+    section: 0,
+    node: loaded.content.paragraphs.find((p) => p.paragraph === 25).dutmal[0].node,
+  };
   assert.deepEqual(h.renderer.dutmalAtLogicalPoint(x, y), identity);
   assert.equal(h.renderer.dutmalAtLogicalPoint(x - 10000, y), null);
   const selections = [];
-  const selection = createDutmalCanvasControls({ canvas: h.canvas, viewport: h.viewport, renderer: h.renderer, ready: () => true, select: value => { selections.push(value); return true; } });
+  const selection = createDutmalCanvasControls({
+    canvas: h.canvas,
+    viewport: h.viewport,
+    renderer: h.renderer,
+    ready: () => true,
+    select: (value) => {
+      selections.push(value);
+      return true;
+    },
+  });
   try {
-    assert.equal(dispatchCanvasEvent(h.canvas, "pointerdown", { button: 0, clientX: x, clientY: y - h.viewport.scrollTop }).defaultPrevented, true);
+    assert.equal(
+      dispatchCanvasEvent(h.canvas, "pointerdown", {
+        button: 0,
+        clientX: x,
+        clientY: y - h.viewport.scrollTop,
+      }).defaultPrevented,
+      true,
+    );
     assert.deepEqual(selections, [identity]);
-    dispatchCanvasEvent(h.canvas, "pointerdown", { button: 0, clientX: x, clientY: y - h.viewport.scrollTop, shiftKey: true });
+    dispatchCanvasEvent(h.canvas, "pointerdown", {
+      button: 0,
+      clientX: x,
+      clientY: y - h.viewport.scrollTop,
+      shiftKey: true,
+    });
     assert.equal(selections.length, 1);
     selection.close();
-    dispatchCanvasEvent(h.canvas, "pointerdown", { button: 0, clientX: x, clientY: y - h.viewport.scrollTop });
+    dispatchCanvasEvent(h.canvas, "pointerdown", {
+      button: 0,
+      clientX: x,
+      clientY: y - h.viewport.scrollTop,
+    });
     assert.equal(selections.length, 1);
-  } finally { selection.close(); }
-  t.diagnostic("Real Worker/WASM and renderer; Canvas context/metrics simulated, not Hangul shaping or browser pixels");
+  } finally {
+    selection.close();
+  }
+  t.diagnostic(
+    "Real Worker/WASM and renderer; Canvas context/metrics simulated, not Hangul shaping or browser pixels",
+  );
 });

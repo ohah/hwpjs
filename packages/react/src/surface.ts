@@ -1,6 +1,13 @@
 import {
-  createElement, forwardRef, useCallback, useEffect, useImperativeHandle,
-  useMemo, useRef, useState, useSyncExternalStore,
+  createElement,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
 } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 import type { HeadlessEditor } from "@hwpjs/core";
@@ -41,20 +48,37 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
   const callbacks = useRef(options);
   // Update only on commit, so an aborted concurrent render cannot replace the
   // active surface's callbacks. This effect precedes the surface setup effect.
-  useEffect(() => { callbacks.current = options; });
+  useEffect(() => {
+    callbacks.current = options;
+  });
   const mountRef = useCallback((node: HTMLElement | null) => {
     if (rootRef.current !== node) surfaceRef.current = null;
     rootRef.current = node;
     setRoot(node);
   }, []);
-  const handle = useMemo<CanvasSurfaceHandle>(() => ({
-    get element() { return rootRef.current; },
-    get surface() { return surfaceRef.current; },
-    focus() { return surfaceRef.current?.focus() ?? false; },
-    setScale(value) { return surfaceRef.current?.setScale(value) ?? false; },
-    getSelection() { return surfaceRef.current?.getSelection() ?? null; },
-    flushComposition() { return surfaceRef.current?.flushComposition() ?? Promise.resolve("blocked" as const); },
-  }), []);
+  const handle = useMemo<CanvasSurfaceHandle>(
+    () => ({
+      get element() {
+        return rootRef.current;
+      },
+      get surface() {
+        return surfaceRef.current;
+      },
+      focus() {
+        return surfaceRef.current?.focus() ?? false;
+      },
+      setScale(value) {
+        return surfaceRef.current?.setScale(value) ?? false;
+      },
+      getSelection() {
+        return surfaceRef.current?.getSelection() ?? null;
+      },
+      flushComposition() {
+        return surfaceRef.current?.flushComposition() ?? Promise.resolve("blocked" as const);
+      },
+    }),
+    [],
+  );
   useEffect(() => {
     if (!root) return;
     let live = true;
@@ -63,9 +87,12 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
     const report = (error: unknown) => {
       if (!current()) return;
       try {
-        if (callbacks.current.onError) void Promise.resolve(callbacks.current.onError(error)).catch(() => {});
+        if (callbacks.current.onError)
+          void Promise.resolve(callbacks.current.onError(error)).catch(() => {});
         else console.error(error);
-      } catch { /* Error reporters cannot break lease cleanup or recurse. */ }
+      } catch {
+        /* Error reporters cannot break lease cleanup or recurse. */
+      }
     };
     const dispose = () => {
       // Surface.dispose releases its lease synchronously before returning its
@@ -75,71 +102,116 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
       if (surfaceRef.current === owned) surfaceRef.current = null;
       if (!owned) return;
       let pending: Promise<void>;
-      try { pending = Promise.resolve(owned.dispose()); }
-      catch (error) { pending = Promise.reject(error); }
+      try {
+        pending = Promise.resolve(owned.dispose());
+      } catch (error) {
+        pending = Promise.reject(error);
+      }
       disposal.current = pending;
       // Observe rejection even when no replacement follows. Detached native
       // request errors remain observable through the editor's error channel.
-      const clear = () => { if (disposal.current === pending) disposal.current = null; };
-      void pending.then(clear, () => { failedDisposal.current = true; clear(); });
+      const clear = () => {
+        if (disposal.current === pending) disposal.current = null;
+      };
+      void pending.then(clear, () => {
+        failedDisposal.current = true;
+        clear();
+      });
     };
     const start = () => {
       if (!current()) return;
-      if (failedDisposal.current) { report(Error("CanvasSurfaceDisposalFailed")); return; }
+      if (failedDisposal.current) {
+        report(Error("CanvasSurfaceDisposalFailed"));
+        return;
+      }
       try {
-        surface = createCanvasSurface({ root, editor, environment,
+        surface = createCanvasSurface({
+          root,
+          editor,
+          environment,
           onStatus(message) {
             if (!current()) return;
-            try { void Promise.resolve(callbacks.current.onStatus?.(message)).catch(report); }
-            catch (error) { report(error); }
+            try {
+              void Promise.resolve(callbacks.current.onStatus?.(message)).catch(report);
+            } catch (error) {
+              report(error);
+            }
           },
         });
         if (current()) {
           surfaceRef.current = surface;
           const ready = callbacks.current.onReady?.(surface);
-          if (ready) void Promise.resolve(ready).catch(error => {
-            if (current()) { dispose(); report(error); live = false; }
-          });
+          if (ready)
+            void Promise.resolve(ready).catch((error) => {
+              if (current()) {
+                dispose();
+                report(error);
+                live = false;
+              }
+            });
         } else dispose();
-      } catch (error) { dispose(); report(error); live = false; }
+      } catch (error) {
+        dispose();
+        report(error);
+        live = false;
+      }
     };
     // A prior lease's synchronous teardown is not its full in-flight drain.
     // Do not attach the replacement until the public dispose Promise settles.
     const previous = disposal.current;
     if (previous) void previous.then(start, report);
     else start();
-    return () => { live = false; dispose(); };
+    return () => {
+      live = false;
+      dispose();
+    };
   }, [root, editor, environment]);
   return { mountRef, handle };
 }
 
-export interface CanvasSurfaceProps extends UseCanvasSurfaceOptions,
-  Omit<ComponentPropsWithoutRef<"div">, "children" | "dangerouslySetInnerHTML" | "onError"> {}
+export interface CanvasSurfaceProps
+  extends
+    UseCanvasSurfaceOptions,
+    Omit<ComponentPropsWithoutRef<"div">, "children" | "dangerouslySetInnerHTML" | "onError"> {}
 
 /** React owns this one empty host div; vanilla exclusively owns its descendants.
  * ref is an imperative surface handle, not the externally owned editor.
  */
-export const CanvasSurface = forwardRef<CanvasSurfaceHandle, CanvasSurfaceProps>(function CanvasSurface(
-  { editor, environment, onStatus, onReady, onError, style, ...attributes }, ref,
-) {
-  const { mountRef, handle } = useCanvasSurface({ editor, environment, onStatus, onReady, onError });
-  useImperativeHandle(ref, () => handle, [handle]);
-  // TypeScript excludes these, but JS consumers must not insert React-owned
-  // children or HTML into vanilla's exclusively owned host subtree either.
-  Reflect.deleteProperty(attributes, "children");
-  Reflect.deleteProperty(attributes, "dangerouslySetInnerHTML");
-  return createElement("div", { ...attributes, ref: mountRef,
-    "data-hwpjs-react-surface": "",
-    style: { ...style, height: "100%", minHeight: 0 },
-  });
-});
+export const CanvasSurface = forwardRef<CanvasSurfaceHandle, CanvasSurfaceProps>(
+  function CanvasSurface(
+    { editor, environment, onStatus, onReady, onError, style, ...attributes },
+    ref,
+  ) {
+    const { mountRef, handle } = useCanvasSurface({
+      editor,
+      environment,
+      onStatus,
+      onReady,
+      onError,
+    });
+    useImperativeHandle(ref, () => handle, [handle]);
+    // TypeScript excludes these, but JS consumers must not insert React-owned
+    // children or HTML into vanilla's exclusively owned host subtree either.
+    Reflect.deleteProperty(attributes, "children");
+    Reflect.deleteProperty(attributes, "dangerouslySetInnerHTML");
+    return createElement("div", {
+      ...attributes,
+      ref: mountRef,
+      "data-hwpjs-react-surface": "",
+      style: { ...style, height: "100%", minHeight: 0 },
+    });
+  },
+);
 CanvasSurface.displayName = "CanvasSurface";
 
 /** Observations only: getEditorState has stable identity at an unchanged version.
  * The same snapshot getter supplies SSR and hydration's server snapshot.
  */
 export function useEditorState(editor: HeadlessEditor) {
-  const subscribe = useCallback((notify: () => void) => editor.registerStateListener(() => notify()), [editor]);
+  const subscribe = useCallback(
+    (notify: () => void) => editor.registerStateListener(() => notify()),
+    [editor],
+  );
   const getSnapshot = useCallback(() => editor.getEditorState(), [editor]);
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }

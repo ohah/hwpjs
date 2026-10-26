@@ -2,9 +2,11 @@
 export function paragraphBreakIntent(message) {
   if (!Object.hasOwn(message, "breakBefore")) return null;
   if (message.kind !== "split") throw new Error("InvalidStructureCommand");
-  if (message.anchored !== undefined && typeof message.anchored !== "boolean") throw new Error("InvalidAnchorMode");
+  if (message.anchored !== undefined && typeof message.anchored !== "boolean")
+    throw new Error("InvalidAnchorMode");
   if (message.anchored === true) throw new Error("InvalidStructureCommand");
-  if (message.breakBefore !== "page" && message.breakBefore !== "column") throw new Error("InvalidParagraphBreakKind");
+  if (message.breakBefore !== "page" && message.breakBefore !== "column")
+    throw new Error("InvalidParagraphBreakKind");
   return message.breakBefore;
 }
 

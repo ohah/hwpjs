@@ -4,13 +4,25 @@ import { projectDraftAnchoredObjects } from "./anchored-object-draft.mjs";
 export function projectDraftPictures(content, draft) {
   if (!draft) return content.pictures;
   const grouped = new Map();
-  const adapted = (content.pictures ?? []).map(picture => {
+  const adapted = (content.pictures ?? []).map((picture) => {
     if (!picture.owner || picture.owner.anchorNode === picture.pictureNode) return picture;
     grouped.set(`${picture.section}:${picture.pictureNode}`, picture);
-    return { ...picture, paragraph: picture.owner.paragraph, anchorUnit: picture.owner.anchorUnit, state: "located" };
+    return {
+      ...picture,
+      paragraph: picture.owner.paragraph,
+      anchorUnit: picture.owner.anchorUnit,
+      state: "located",
+    };
   });
-  return projectDraftAnchoredObjects(content, adapted, draft).map(picture => {
+  return projectDraftAnchoredObjects(content, adapted, draft).map((picture) => {
     const original = grouped.get(`${picture.section}:${picture.pictureNode}`);
-    return original ? { ...picture, state: original.state, anchorUnit: original.anchorUnit, owner: { ...original.owner, anchorUnit: picture.anchorUnit } } : picture;
+    return original
+      ? {
+          ...picture,
+          state: original.state,
+          anchorUnit: original.anchorUnit,
+          owner: { ...original.owner, anchorUnit: picture.anchorUnit },
+        }
+      : picture;
   });
 }

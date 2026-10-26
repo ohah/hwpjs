@@ -1,28 +1,28 @@
 import assert from "node:assert/strict";
-import {containerJpegActual} from './container-jpeg.mjs';
-import {containerBmpActual} from './container-bmp.mjs';
-import {containerBmpRleActual} from './container-bmp-rle.mjs';
-import {bmpActual} from './bmp.mjs';
-import {bmpProfileActual} from './bmp-profile.mjs';
-import {containerBmpProfileActual} from './container-bmp-profile.mjs';
-import {selectedBmpEntries} from './container-bmp.mjs';
-import {jpegFramingActual} from './jpeg-framing.mjs';
-import {jpegStructureActual} from './jpeg-structure.mjs';
-import {jpegSequentialFileActual} from './jpeg-scan.mjs';
-import {jpegFrameFileActual} from './jpeg-frame.mjs';
-import {jpegFrameDequantFileActual} from './jpeg-frame-dequant.mjs';
-import {jpegFrameSamplesActual} from './jpeg-frame-samples.mjs';
-import {jpegPlanesActual} from './jpeg-planes.mjs';
-import {progressiveSamplesActual} from './jpeg-progressive-samples.mjs';
-import {progressiveRgbActual} from './jpeg-progressive-rgb.mjs';
-import {jpegRgbFileActual} from './jpeg-rgb.mjs';
-import {jpegJfifFileActual} from './jpeg-jfif.mjs';
+import { containerJpegActual } from "./container-jpeg.mjs";
+import { containerBmpActual } from "./container-bmp.mjs";
+import { containerBmpRleActual } from "./container-bmp-rle.mjs";
+import { bmpActual } from "./bmp.mjs";
+import { bmpProfileActual } from "./bmp-profile.mjs";
+import { containerBmpProfileActual } from "./container-bmp-profile.mjs";
+import { selectedBmpEntries } from "./container-bmp.mjs";
+import { jpegFramingActual } from "./jpeg-framing.mjs";
+import { jpegStructureActual } from "./jpeg-structure.mjs";
+import { jpegSequentialFileActual } from "./jpeg-scan.mjs";
+import { jpegFrameFileActual } from "./jpeg-frame.mjs";
+import { jpegFrameDequantFileActual } from "./jpeg-frame-dequant.mjs";
+import { jpegFrameSamplesActual } from "./jpeg-frame-samples.mjs";
+import { jpegPlanesActual } from "./jpeg-planes.mjs";
+import { progressiveSamplesActual } from "./jpeg-progressive-samples.mjs";
+import { progressiveRgbActual } from "./jpeg-progressive-rgb.mjs";
+import { jpegRgbFileActual } from "./jpeg-rgb.mjs";
+import { jpegJfifFileActual } from "./jpeg-jfif.mjs";
 import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { decodedDocumentInput, documentRecords } from "./documents.mjs";
 import { previewActual } from "./preview.mjs";
 import { summaryActual, summaryFixture, summaryStatsWords } from "./summary.mjs";
 import { scriptsActual, scriptFixture } from "./scripts.mjs";
-import {distributionOracle} from './distribution-oracle.mjs';
+import { distributionOracle } from "./distribution-oracle.mjs";
 const summaryStartFromEnd = 13 + 1 + summaryStatsWords;
 const scriptsStartFromEnd = summaryStartFromEnd + 10;
 const w = (n) => {
@@ -37,8 +37,7 @@ const u = (n) => {
 };
 const run = (call, bytes, limit = 64 * 1024 * 1024, records) =>
   call(25, Buffer.concat([w(limit), Buffer.from(bytes)]), records);
-const words = (b) =>
-  Array.from({ length: b.length / 4 }, (_, i) => b.readUInt32LE(i * 4));
+const words = (b) => Array.from({ length: b.length / 4 }, (_, i) => b.readUInt32LE(i * 4));
 export function containerActual(call, bytes, cfb, h, doc, sections) {
   const expected = call(24, decodedDocumentInput(h, doc, sections));
   const used = new Set([
@@ -64,19 +63,16 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     }
     const id = b.readUInt16LE(2),
       ext =
-        (type === 1 || b.length > 4)
+        type === 1 || b.length > 4
           ? b.subarray(6, 6 + 2 * b.readUInt16LE(4)).toString("utf16le")
           : "";
     const path = `/BinData/BIN${id.toString(16).padStart(4, "0")}${ext ? "." + ext : ""}`;
     const raw = Buffer.from(cfb.findExact(path).content),
       mode = (flags >>> 4) & 3;
-    const plain =
-      mode === 1 || (mode === 0 && h.readUInt32LE(36) & 1)
-        ? inflateRawSync(raw)
-        : raw;
+    const plain = mode === 1 || (mode === 0 && h.readUInt32LE(36) & 1) ? inflateRawSync(raw) : raw;
     stats[1]++;
-    imageEntries.push({raw: plain, extension: ext});
-    if (plain.subarray(0,2).equals(Buffer.from('BM'))) bmpActual(call, plain);
+    imageEntries.push({ raw: plain, extension: ext });
+    if (plain.subarray(0, 2).equals(Buffer.from("BM"))) bmpActual(call, plain);
     if (plain[0] === 255 && plain[1] === 216) {
       jpegFramingActual(call, plain, true, true);
       jpegStructureActual(call, plain);
@@ -88,41 +84,41 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
       if (progressive) progressiveSamplesActual(call, plain);
       if (jpegJfifFileActual(call, plain).headers === 1) {
         jpegRgbFileActual(call, plain);
-        if (progressive) for (const method of [0, 1]) progressiveRgbActual(call, plain, {method});
+        if (progressive) for (const method of [0, 1]) progressiveRgbActual(call, plain, { method });
       }
     }
     stats[2] += plain.length;
     used.add(path.toLowerCase());
   }
   const nodes = cfb.document().nodes;
-  let viewBytes = 0, viewRecords = 0;
-  const viewRoot = nodes.findIndex(n => n.parent === 0 && n.name.toLowerCase() === 'viewtext');
-  if (viewRoot >= 0) for (const n of nodes.filter(n => n.parent === viewRoot && /^section\d+$/i.test(n.name))) {
-    const raw = Buffer.from(n.content);
-    const plain = raw.length >= 4 && raw.readUInt32LE(0) === 0x1000001c ? distributionOracle(raw) : h.readUInt32LE(36) & 1 ? inflateRawSync(raw) : raw;
-    viewBytes += plain.length;
-    viewRecords += documentRecords(plain).length;
-    used.add(`/viewtext/${n.name.toLowerCase()}`);
-  }
+  let viewBytes = 0,
+    viewRecords = 0;
+  const viewRoot = nodes.findIndex((n) => n.parent === 0 && n.name.toLowerCase() === "viewtext");
+  if (viewRoot >= 0)
+    for (const n of nodes.filter((n) => n.parent === viewRoot && /^section\d+$/i.test(n.name))) {
+      const raw = Buffer.from(n.content);
+      const plain =
+        raw.length >= 4 && raw.readUInt32LE(0) === 0x1000001c
+          ? distributionOracle(raw)
+          : h.readUInt32LE(36) & 1
+            ? inflateRawSync(raw)
+            : raw;
+      viewBytes += plain.length;
+      viewRecords += documentRecords(plain).length;
+      used.add(`/viewtext/${n.name.toLowerCase()}`);
+    }
   const scripts = scriptsActual(call, cfb, h, used);
   const summaryEntry = cfb.findExact("/\x05HwpSummaryInformation");
-  const summaryBytes = summaryEntry
-    ? Buffer.from(summaryEntry.content)
-    : Buffer.alloc(0);
+  const summaryBytes = summaryEntry ? Buffer.from(summaryEntry.content) : Buffer.alloc(0);
   const summary = summaryEntry
     ? [1, ...summaryActual(call, summaryBytes)]
     : Array(1 + summaryStatsWords).fill(0);
   if (summaryEntry) used.add("/\x05hwpsummaryinformation");
   const previewEntry = cfb.findExact("/PrvText");
-  const previewBytes = previewEntry
-    ? Buffer.from(previewEntry.content)
-    : Buffer.alloc(0);
-  const preview = previewEntry
-    ? [1, ...previewActual(call, previewBytes)]
-    : [0, 0, 0, 0, 0, 0];
+  const previewBytes = previewEntry ? Buffer.from(previewEntry.content) : Buffer.alloc(0);
+  const preview = previewEntry ? [1, ...previewActual(call, previewBytes)] : [0, 0, 0, 0, 0, 0];
   if (previewEntry) used.add("/prvtext");
-  const path = (i) =>
-    nodes[i].kind === 5 ? "" : `${path(nodes[i].parent)}/${nodes[i].name}`;
+  const path = (i) => (nodes[i].kind === 5 ? "" : `${path(nodes[i].parent)}/${nodes[i].name}`);
   const uninspected = nodes.filter(
     (n, i) => n.kind === 2 && !used.has(path(i).toLowerCase()),
   ).length;
@@ -131,7 +127,8 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     stats[2] +
     previewBytes.length +
     summaryBytes.length +
-    scripts[8] + viewBytes;
+    scripts[8] +
+    viewBytes;
   const want = Buffer.concat([
     expected,
     ...scripts.map(w),
@@ -139,11 +136,11 @@ export function containerActual(call, bytes, cfb, h, doc, sections) {
     ...preview.map(w),
     ...[...stats, total, uninspected].map(w),
   ]);
-  containerJpegActual(call, bytes, imageEntries, {documentBytes: total});
-  containerBmpActual(call, bytes, imageEntries, {documentBytes: total});
-  containerBmpRleActual(call, bytes, imageEntries, {documentBytes: total});
-  containerBmpProfileActual(call,bytes,imageEntries,{documentBytes:total});
-  for(const {raw} of selectedBmpEntries(imageEntries))bmpProfileActual(call,raw);
+  containerJpegActual(call, bytes, imageEntries, { documentBytes: total });
+  containerBmpActual(call, bytes, imageEntries, { documentBytes: total });
+  containerBmpRleActual(call, bytes, imageEntries, { documentBytes: total });
+  containerBmpProfileActual(call, bytes, imageEntries, { documentBytes: total });
+  for (const { raw } of selectedBmpEntries(imageEntries)) bmpProfileActual(call, raw);
   assert.deepEqual(run(call, bytes, total, expected.readUInt32LE(16) + viewRecords), want);
   assert.throws(() => run(call, bytes, total - 1), /LimitExceeded/);
   return [
@@ -169,12 +166,7 @@ export function containerEdges(call, cfb) {
     Buffer.concat([u(flags), u(9), u(ext.length / 2), ext]);
   const map = Buffer.alloc(60);
   map.writeUInt32LE(1);
-  const doc = (b) =>
-    Buffer.concat([
-      frame(16, Buffer.alloc(26)),
-      frame(17, map),
-      frame(18, b, 1),
-    ]);
+  const doc = (b) => Buffer.concat([frame(16, Buffer.alloc(26)), frame(17, map), frame(18, b, 1)]);
   const nodes = (header = h, item = binary(), payload = Buffer.from("abc")) => [
     { name: "Root Entry", kind: 5 },
     { name: "FileHeader", parent: 0, content: header },
@@ -223,20 +215,11 @@ export function containerEdges(call, cfb) {
   ]) {
     reject([...nodes(), { name, parent: 3 }], /InvalidSectionName/);
   }
-  reject(
-    [...nodes(), { name: "Section0", parent: 3, kind: 1 }],
-    /InvalidHwpEntryKind/,
-  );
+  reject([...nodes(), { name: "Section0", parent: 3, kind: 1 }], /InvalidHwpEntryKind/);
   reject([...nodes(), { name: "Section0", parent: 3 }], /SectionCountMismatch/);
   for (const ext of ["/x", "\\x", "x:y", "\0", "a".repeat(24)])
-    reject(
-      nodes(h, binary(0x21, Buffer.from(ext, "utf16le"))),
-      /InvalidBinDataExtension/,
-    );
-  reject(
-    nodes(h, binary(0x21, Buffer.from([0, 0xd8]))),
-    /InvalidBinDataExtension/,
-  );
+    reject(nodes(h, binary(0x21, Buffer.from(ext, "utf16le"))), /InvalidBinDataExtension/);
+  reject(nodes(h, binary(0x21, Buffer.from([0, 0xd8]))), /InvalidBinDataExtension/);
   const mixed = nodes();
   for (const i of [1, 2, 3, 4, 5]) mixed[i].name = mixed[i].name.toLowerCase();
   assert.deepEqual(run(call, write(mixed)), output);
@@ -264,10 +247,7 @@ export function containerEdges(call, cfb) {
     [31, 20, 1],
   ]) {
     const short = nodes();
-    short[2].content = Buffer.concat([
-      short[2].content,
-      frame(tag, Buffer.alloc(size - 1), level),
-    ]);
+    short[2].content = Buffer.concat([short[2].content, frame(tag, Buffer.alloc(size - 1), level)]);
     reject(short, /UnexpectedEnd/);
     const wrongLevel = nodes();
     wrongLevel[2].content = Buffer.concat([
@@ -280,11 +260,7 @@ export function containerEdges(call, cfb) {
     const sh = Buffer.from(h);
     sh[36] = compressed;
     const encode = (b) => (compressed ? deflateRawSync(b) : b);
-    const version = Buffer.concat([
-      w(0xffffffff),
-      w(0x80000000),
-      Buffer.from([7]),
-    ]);
+    const version = Buffer.concat([w(0xffffffff), w(0x80000000), Buffer.from([7])]);
     const source = Buffer.concat([scriptFixture(), Buffer.from([8, 9])]);
     const sn = () => [
       ...nodes(sh),
@@ -335,9 +311,10 @@ export function containerEdges(call, cfb) {
   }
   reject([...nodes(), { name: "Scripts", parent: 0 }], /InvalidHwpEntryKind/);
   assert.deepEqual(
-    words(
-      run(call, write([...nodes(), { name: "Scripts", parent: 0, kind: 1 }])),
-    ).slice(-scriptsStartFromEnd, -summaryStartFromEnd),
+    words(run(call, write([...nodes(), { name: "Scripts", parent: 0, kind: 1 }]))).slice(
+      -scriptsStartFromEnd,
+      -summaryStartFromEnd,
+    ),
     Array(10).fill(0),
   );
   assert.deepEqual(run(call, good, total), output);
@@ -345,21 +322,15 @@ export function containerEdges(call, cfb) {
   for (const flag of [2, 4, 16, 256, 1024]) {
     const b = Buffer.from(h);
     b.writeUInt32LE(flag, 36);
-    reject(
-      nodes(b),
-      /UnsupportedEncryption|UnsupportedDistribution|UnsupportedDrm/,
-    );
+    reject(nodes(b), /UnsupportedEncryption|UnsupportedDistribution|UnsupportedDrm/);
   }
   for (const compressed of [0, 1])
     for (const mode of [0, 1, 2]) {
       const b = Buffer.from(h);
       b[36] = compressed;
       const raw = Buffer.from("abc"),
-        payload =
-          mode === 1 || (mode === 0 && compressed) ? deflateRawSync(raw) : raw;
-      const out = words(
-        run(call, write(nodes(b, binary(1 | (mode << 4)), payload)), total),
-      );
+        payload = mode === 1 || (mode === 0 && compressed) ? deflateRawSync(raw) : raw;
+      const out = words(run(call, write(nodes(b, binary(1 | (mode << 4)), payload)), total));
       assert.deepEqual(out.slice(-7), [1, 1, 3, 0, 0, total, 0]);
     }
   reject(nodes(h, binary(0x31)), /UnsupportedCompression/);
@@ -375,10 +346,7 @@ export function containerEdges(call, cfb) {
   }
   const storage = nodes(h, Buffer.concat([u(0x22), u(9)]));
   storage[5].name = "BIN0009";
-  assert.deepEqual(
-    words(run(call, write(storage))).slice(-7, -2),
-    [1, 1, 3, 0, 0],
-  );
+  assert.deepEqual(words(run(call, write(storage))).slice(-7, -2), [1, 1, 3, 0, 0]);
   const repeated = nodes();
   repeated[2].content = Buffer.concat([doc(binary()), frame(18, binary(), 1)]);
   repeated[2].content.writeUInt32LE(2, 34);
@@ -393,22 +361,13 @@ export function containerEdges(call, cfb) {
     repeatedTotal,
     0,
   ]);
-  assert.throws(
-    () => run(call, repeatedBytes, repeatedTotal - 1),
-    /LimitExceeded/,
-  );
+  assert.throws(() => run(call, repeatedBytes, repeatedTotal - 1), /LimitExceeded/);
   const corruptedDoc = nodes(Buffer.from(h));
   corruptedDoc[1].content[36] = 1;
   corruptedDoc[2].content = Buffer.from([255]);
   reject(corruptedDoc, /Invalid|Unexpected|Deflate/);
-  reject(
-    nodes(h, binary(0x11), Buffer.from([255])),
-    /Invalid|Unexpected|Deflate/,
-  );
-  const extra = [
-    ...nodes(),
-    { name: "Other", parent: 3, content: Buffer.from([1]) },
-  ];
+  reject(nodes(h, binary(0x11), Buffer.from([255])), /Invalid|Unexpected|Deflate/);
+  const extra = [...nodes(), { name: "Other", parent: 3, content: Buffer.from([1]) }];
   assert.equal(words(run(call, write(extra))).at(-1), 1);
   const external = words(run(call, write(nodes(h, Buffer.alloc(6)))));
   assert.deepEqual(external.slice(-7, -2), [1, 0, 0, 1, 0]);
@@ -426,40 +385,29 @@ export function containerEdges(call, cfb) {
     words(run(call, summaryFile, total + summary.length)).slice(-summaryStartFromEnd, -13),
     [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0],
   );
-  assert.throws(
-    () => run(call, summaryFile, total + summary.length - 1),
-    /LimitExceeded/,
-  );
+  assert.throws(() => run(call, summaryFile, total + summary.length - 1), /LimitExceeded/);
   const marker = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
   const markerSummary = summaryFixture([[0, marker]]);
   const summaryWords = (raw) =>
-    words(run(call, write([...nodes(), { ...summaryNode, content: raw }]), total + raw.length))
-      .slice(-summaryStartFromEnd, -13);
+    words(
+      run(call, write([...nodes(), { ...summaryNode, content: raw }]), total + raw.length),
+    ).slice(-summaryStartFromEnd, -13);
   assert.deepEqual(summaryWords(markerSummary), [1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
   marker[12] = 1;
   assert.deepEqual(summaryWords(summaryFixture([[0, marker]])), [1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]);
   const withCodePage = summaryFixture([[1, Buffer.concat([w(2), w(1200)])]]);
   assert.deepEqual(summaryWords(withCodePage), [1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0]);
-  reject(
-    [...nodes(), { ...summaryNode, content: summary.subarray(0, -1) }],
-    /InvalidSummarySize/,
-  );
+  reject([...nodes(), { ...summaryNode, content: summary.subarray(0, -1) }], /InvalidSummarySize/);
   reject(
     [...nodes(), { ...summaryNode, kind: 1, content: Buffer.alloc(0) }],
     /InvalidHwpEntryKind/,
   );
   const alias = words(
-    run(
-      call,
-      write([...nodes(), { ...summaryNode, name: "HwpSummaryInformation" }]),
-    ),
+    run(call, write([...nodes(), { ...summaryNode, name: "HwpSummaryInformation" }])),
   );
   assert.equal(alias.at(-summaryStartFromEnd), 0);
   assert.equal(alias.at(-1), 1);
-  for (const raw of [
-    Buffer.alloc(0),
-    Buffer.from("\ufeffA\0😀\ud800", "utf16le"),
-  ]) {
+  for (const raw of [Buffer.alloc(0), Buffer.from("\ufeffA\0😀\ud800", "utf16le")]) {
     const n = [...nodes(), { name: "PrvText", parent: 0, content: raw }];
     const out = words(run(call, write(n), total + raw.length));
     assert.deepEqual(out.slice(-13, -7), [1, ...previewActual(call, raw)]);
@@ -469,18 +417,9 @@ export function containerEdges(call, cfb) {
     [...nodes(), { name: "PrvText", parent: 0, content: Buffer.from([1]) }],
     /InvalidPreviewTextSize/,
   );
-  reject(
-    [...nodes(), { name: "PrvText", parent: 0, kind: 1 }],
-    /InvalidHwpEntryKind/,
-  );
-  const nestedPreview = [
-    ...nodes(),
-    { name: "PrvText", parent: 4, content: Buffer.from([1]) },
-  ];
-  assert.deepEqual(
-    words(run(call, write(nestedPreview))).slice(-13, -7),
-    [0, 0, 0, 0, 0, 0],
-  );
+  reject([...nodes(), { name: "PrvText", parent: 0, kind: 1 }], /InvalidHwpEntryKind/);
+  const nestedPreview = [...nodes(), { name: "PrvText", parent: 4, content: Buffer.from([1]) }];
+  assert.deepEqual(words(run(call, write(nestedPreview))).slice(-13, -7), [0, 0, 0, 0, 0, 0]);
   assert.equal(words(run(call, write(nestedPreview))).at(-1), 1);
   return {
     rejected,

@@ -13,23 +13,40 @@ function record(tag, level, payload) {
 
 test("preview oracle preserves missing text and ignores unrelated records", () => {
   const bytes = Buffer.concat([
-    record(66, 0, [0]), record(77, 1, [1]),
-    record(66, 0, [0]), record(67, 1, [65, 0]),
+    record(66, 0, [0]),
+    record(77, 1, [1]),
+    record(66, 0, [0]),
+    record(67, 1, [65, 0]),
   ]);
   assert.deepEqual(rawParagraphTexts(bytes), [null, Buffer.from([65, 0])]);
 });
 
 test("preview oracle rejects truncated framing and invalid text ownership", () => {
   assert.throws(() => rawParagraphTexts(Buffer.of(1)), /truncated header/);
-  assert.throws(() => rawParagraphTexts(Buffer.concat([record(66, 0, [0]), Buffer.of(67, 4, 32, 0, 0)])), /truncated payload/);
+  assert.throws(
+    () => rawParagraphTexts(Buffer.concat([record(66, 0, [0]), Buffer.of(67, 4, 32, 0, 0)])),
+    /truncated payload/,
+  );
   assert.throws(() => rawParagraphTexts(record(67, 1, [65, 0])), /invalid text owner/);
-  assert.throws(() => rawParagraphTexts(Buffer.concat([record(66, 0, [0]), record(67, 1, [65, 0]), record(67, 1, [66, 0])])), /invalid text owner/);
+  assert.throws(
+    () =>
+      rawParagraphTexts(
+        Buffer.concat([record(66, 0, [0]), record(67, 1, [65, 0]), record(67, 1, [66, 0])]),
+      ),
+    /invalid text owner/,
+  );
 });
 
 test("preview corpus audit classifies tracked fixtures and checks every accepted paragraph", () => {
-  const fixtureRoot = fileURLToPath(new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url));
-  const script = fileURLToPath(new URL("../../tools/hwp5-preview-corpus-audit.mjs", import.meta.url));
-  const result = JSON.parse(execFileSync(process.execPath, [script, fixtureRoot], { encoding: "utf8" }));
+  const fixtureRoot = fileURLToPath(
+    new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url),
+  );
+  const script = fileURLToPath(
+    new URL("../../tools/hwp5-preview-corpus-audit.mjs", import.meta.url),
+  );
+  const result = JSON.parse(
+    execFileSync(process.execPath, [script, fixtureRoot], { encoding: "utf8" }),
+  );
   assert.equal(result.paths, 48);
   assert.deepEqual(result.categories, {
     UnsupportedEncryption: 1,

@@ -34,18 +34,10 @@ export function resourceEdges(call) {
     if (mask & 2) fields.push(Buffer.from([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]));
     if (mask & 1) fields.push(string(name));
     const bytes = Buffer.concat(fields);
-    checkDocinfo(
-      call,
-      version,
-      frame(19, Buffer.concat([bytes, Buffer.from([123])])),
-    );
+    checkDocinfo(call, version, frame(19, Buffer.concat([bytes, Buffer.from([123])])));
     for (let n = 0; n < bytes.length; n++)
       assert.throws(
-        () =>
-          call(
-            4,
-            Buffer.concat([word(version), frame(19, bytes.subarray(0, n))]),
-          ),
+        () => call(4, Buffer.concat([word(version), frame(19, bytes.subarray(0, n))])),
         /UnexpectedEnd/,
       );
   }
@@ -55,15 +47,10 @@ export function resourceEdges(call) {
     Buffer.concat([word(2, 2), word(1, 2)]),
   ];
   for (const b of variants) {
-    checkDocinfo(
-      call,
-      version,
-      frame(18, Buffer.concat([b, Buffer.from([123])])),
-    );
+    checkDocinfo(call, version, frame(18, Buffer.concat([b, Buffer.from([123])])));
     for (let n = 0; n < b.length; n++)
       assert.throws(
-        () =>
-          call(4, Buffer.concat([word(version), frame(18, b.subarray(0, n))])),
+        () => call(4, Buffer.concat([word(version), frame(18, b.subarray(0, n))])),
         /UnexpectedEnd/,
       );
   }
@@ -79,10 +66,7 @@ export function resourceEdges(call) {
     );
   const mappings = Buffer.alloc(60);
   mappings.writeUInt32LE(1, 4);
-  const table = Buffer.concat([
-    frame(17, mappings, 0),
-    frame(19, Buffer.alloc(3)),
-  ]);
+  const table = Buffer.concat([frame(17, mappings, 0), frame(19, Buffer.alloc(3))]);
   assert.deepEqual(
     call(5, Buffer.concat([word(version), table])),
     Buffer.concat([word(0), word(1), word(1), Buffer.alloc(24)]),
@@ -97,8 +81,7 @@ export function resourceEdges(call) {
   }
   assert.throws(() => call(5, word(version)), /MissingIdMappings/);
   assert.throws(
-    () =>
-      call(5, Buffer.concat([word(version), table, frame(17, mappings, 0)])),
+    () => call(5, Buffer.concat([word(version), table, frame(17, mappings, 0)])),
     /DuplicateIdMappings/,
   );
   const plain = Buffer.from("binary payload"),
@@ -110,14 +93,9 @@ export function resourceEdges(call) {
       hdr.writeUInt32LE(version, 32);
       hdr[36] = defaultCompressed;
       const item = Buffer.from([2 | (mode << 4), 0, 1, 0]);
-      const b =
-        mode === 1 || (mode === 0 && defaultCompressed) ? packed : plain;
+      const b = mode === 1 || (mode === 0 && defaultCompressed) ? packed : plain;
       const wire = Buffer.concat([hdr, word(item.length), item, b]);
-      if (mode === 3)
-        assert.throws(
-          () => call(6, wire, plain.length),
-          /UnsupportedCompression/,
-        );
+      if (mode === 3) assert.throws(() => call(6, wire, plain.length), /UnsupportedCompression/);
       else {
         assert.deepEqual(call(6, wire, plain.length), plain);
         assert.throws(() => call(6, wire, plain.length - 1), /LimitExceeded/);
@@ -129,19 +107,14 @@ export function resourceActual(call, hdr, docinfo, cfb) {
     m = parsed.find((r) => r.tag === 17).payload;
   const bins = parsed.filter((r) => r.tag === 18),
     fonts = parsed.filter((r) => r.tag === 19);
-  const expected = Buffer.concat([
-    word(bins.length),
-    word(fonts.length),
-    m.subarray(4, 32),
-  ]);
+  const expected = Buffer.concat([word(bins.length), word(fonts.length), m.subarray(4, 32)]);
   const reportWire = Buffer.concat([hdr.subarray(32, 36), docinfo]);
-  const totalFonts = Array.from({ length: 7 }, (_, i) =>
-    m.readInt32LE(4 + i * 4),
-  ).reduce((a, b) => a + b, 0);
-  const mismatch =
-    m.readInt32LE(0) !== bins.length || totalFonts !== fonts.length;
-  if (mismatch)
-    assert.throws(() => call(5, reportWire), /ResourceCountMismatch/);
+  const totalFonts = Array.from({ length: 7 }, (_, i) => m.readInt32LE(4 + i * 4)).reduce(
+    (a, b) => a + b,
+    0,
+  );
+  const mismatch = m.readInt32LE(0) !== bins.length || totalFonts !== fonts.length;
+  if (mismatch) assert.throws(() => call(5, reportWire), /ResourceCountMismatch/);
   else assert.deepEqual(call(5, reportWire), expected);
   let decoded = 0;
   const missing = [];
@@ -150,10 +123,7 @@ export function resourceActual(call, hdr, docinfo, cfb) {
       type = flags & 15;
     if (type !== 1 && type !== 2) continue;
     const id = p.readUInt16LE(2);
-    const ext =
-      type === 1
-        ? p.subarray(6, 6 + p.readUInt16LE(4) * 2).toString("utf16le")
-        : "";
+    const ext = type === 1 ? p.subarray(6, 6 + p.readUInt16LE(4) * 2).toString("utf16le") : "";
     const path = `/BinData/BIN${id.toString(16).padStart(4, "0")}${ext ? "." + ext : ""}`;
     const entry = cfb.findExact(path);
     if (!entry) {

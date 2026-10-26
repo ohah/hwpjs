@@ -6,8 +6,7 @@ const w = (n) => {
 };
 const frame = (tag, level, b) =>
   Buffer.concat([w((tag | (level << 10) | (b.length << 20)) >>> 0), b]);
-const run = (call, b, mode = 1) =>
-  call(31, Buffer.concat([w(0x05000107), Buffer.from([mode]), b]));
+const run = (call, b, mode = 1) => call(31, Buffer.concat([w(0x05000107), Buffer.from([mode]), b]));
 export function headerFooterActual(call, version, b) {
   let offset = 0;
   const stack = [],
@@ -50,20 +49,13 @@ export function headerFooterActual(call, version, b) {
   }
   const stats = [controls.length, areas.length, paragraphs, reserved, extra];
   const out = call(31, Buffer.concat([w(version), Buffer.from([1]), b]));
-  assert.deepEqual(
-    out,
-    Buffer.concat([...stats.map(w), ...controls, ...areas]),
-  );
+  assert.deepEqual(out, Buffer.concat([...stats.map(w), ...controls, ...areas]));
   return stats;
 }
 export function headerFooterEdges(call) {
   let rejected = 0;
   const attrs = Buffer.concat([w(0x80000003), Buffer.from([9])]);
-  const area = Buffer.concat([
-    w(0xffffffff),
-    w(0x80000000),
-    Buffer.from([0x81, 0xfe, 7]),
-  ]);
+  const area = Buffer.concat([w(0xffffffff), w(0x80000000), Buffer.from([0x81, 0xfe, 7])]);
   const build = (p = attrs, a = area, mode = 1, id = 0x68656164) =>
     Buffer.concat([
       frame(71, 0, Buffer.concat([w(id), p])),
@@ -101,10 +93,7 @@ export function headerFooterEdges(call) {
       rejected++;
       assert.deepEqual(run(call, good, mode), out);
     }
-    assert.equal(
-      run(call, build(attrs, area, mode, 0x666f6f74), mode).readUInt32LE(0),
-      1,
-    );
+    assert.equal(run(call, build(attrs, area, mode, 0x666f6f74), mode).readUInt32LE(0), 1);
   }
   assert.throws(
     () => run(call, frame(71, 0, Buffer.concat([w(0x68656164), attrs]))),

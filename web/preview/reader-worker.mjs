@@ -10,9 +10,17 @@ const runtime = createReaderRuntime({
   },
 });
 const transport = self;
-transport.onmessage = async event => {
-  try { transport.postMessage(await runtime.request(event.data)); }
-  catch (error) {
-    transport.postMessage({ origin: event.data?.origin, kind: event.data?.kind, applied: false, error: error.message || String(error) });
-  } finally { delete event.data?.password; }
+transport.onmessage = async (event) => {
+  try {
+    transport.postMessage(await runtime.request(event.data));
+  } catch (error) {
+    transport.postMessage({
+      origin: event.data?.origin,
+      kind: event.data?.kind,
+      applied: false,
+      error: error.message || String(error),
+    });
+  } finally {
+    delete event.data?.password;
+  }
 };

@@ -2,10 +2,22 @@ import { chartPointLabel } from "./chart-point-label.mjs";
 
 const pageSize = 64;
 // Only pagination is owned here. Values are read from the current native query.
-export function createChartPointTable({ body, previous, next, note, getChart, getSelected = () => null, accepts, ready, select }) {
-  let page = 0, closed = false;
+export function createChartPointTable({
+  body,
+  previous,
+  next,
+  note,
+  getChart,
+  getSelected = () => null,
+  accepts,
+  ready,
+  select,
+}) {
+  let page = 0,
+    closed = false;
   const render = () => {
-    const chart = closed ? null : getChart(), values = chart?.values.points ?? [];
+    const chart = closed ? null : getChart(),
+      values = chart?.values.points ?? [];
     const selected = closed ? null : getSelected();
     const pages = Math.ceil(values.length / pageSize);
     page = Math.max(0, Math.min(page, pages - 1));
@@ -31,24 +43,40 @@ export function createChartPointTable({ body, previous, next, note, getChart, ge
     body.replaceChildren(...rows);
     previous.disabled = closed || !ready() || page === 0;
     next.disabled = closed || !ready() || page + 1 >= pages;
-    note.textContent = values.length ? `${page + 1}/${pages}쪽 · 전체 ${values.length}개 값` : "표시할 차트 값이 없습니다.";
+    note.textContent = values.length
+      ? `${page + 1}/${pages}쪽 · 전체 ${values.length}개 값`
+      : "표시할 차트 값이 없습니다.";
   };
-  const pick = event => {
+  const pick = (event) => {
     const button = event.target.closest?.("button[data-chart-point]");
     if (closed || !ready() || !button || !body.contains(button) || button.disabled) return;
     if (!/^(0|[1-9][0-9]*)$/.test(button.dataset.chartPoint ?? "")) return;
-    const ordinal = Number(button.dataset.chartPoint), point = getChart()?.values.points[ordinal];
+    const ordinal = Number(button.dataset.chartPoint),
+      point = getChart()?.values.points[ordinal];
     if (!Number.isSafeInteger(ordinal) || ordinal < 0 || !point || !accepts(point.kind)) return;
     select(ordinal);
   };
-  const back = () => { if (!closed && !previous.disabled && ready()) { page--; render(); } };
-  const forward = () => { if (!closed && !next.disabled && ready()) { page++; render(); } };
+  const back = () => {
+    if (!closed && !previous.disabled && ready()) {
+      page--;
+      render();
+    }
+  };
+  const forward = () => {
+    if (!closed && !next.disabled && ready()) {
+      page++;
+      render();
+    }
+  };
   body.addEventListener("click", pick);
   previous.addEventListener("click", back);
   next.addEventListener("click", forward);
   return {
     refresh: render,
-    reveal(ordinal) { if (Number.isSafeInteger(ordinal) && ordinal >= 0) page = Math.floor(ordinal / pageSize); render(); },
+    reveal(ordinal) {
+      if (Number.isSafeInteger(ordinal) && ordinal >= 0) page = Math.floor(ordinal / pageSize);
+      render();
+    },
     close() {
       closed = true;
       body.removeEventListener("click", pick);

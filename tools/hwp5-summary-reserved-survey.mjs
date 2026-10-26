@@ -9,19 +9,38 @@ const probeEnabled = args[0] === "--probe";
 const roots = probeEnabled ? args.slice(1) : args;
 const hwpFmtid = Buffer.from("60b6a29f6110d411b4c6006097c09d8c", "hex");
 const emptyResult = () => ({
-  files: 0, cfb_rejected: 0, cfb_rejection_reasons: {}, summary_present: 0, malformed_summary: 0,
-  one_set: 0, two_sets: 0, other_set_count: 0, other_fmtid: 0,
-  version_0: 0, version_1: 0, other_version: 0,
-  typed_properties: 0, nonzero_reserved: 0,
-  code_page_present: 0, code_page_missing: 0, dictionary_present: 0,
-  dictionary_empty: 0, dictionary_nonempty: 0,
-  dictionary_wide_only: 0, dictionary_byte_only: 0,
-  dictionary_both: 0, dictionary_neither: 0,
+  files: 0,
+  cfb_rejected: 0,
+  cfb_rejection_reasons: {},
+  summary_present: 0,
+  malformed_summary: 0,
+  one_set: 0,
+  two_sets: 0,
+  other_set_count: 0,
+  other_fmtid: 0,
+  version_0: 0,
+  version_1: 0,
+  other_version: 0,
+  typed_properties: 0,
+  nonzero_reserved: 0,
+  code_page_present: 0,
+  code_page_missing: 0,
+  dictionary_present: 0,
+  dictionary_empty: 0,
+  dictionary_nonempty: 0,
+  dictionary_wide_only: 0,
+  dictionary_byte_only: 0,
+  dictionary_both: 0,
+  dictionary_neither: 0,
   dictionary_hwp_placeholder: 0,
-  code_page_values: {}, typed_type_values: {},
+  code_page_values: {},
+  typed_type_values: {},
   dictionary_entry_counts: {},
-  dictionary_ids: {}, dictionary_name_lengths: {}, dictionary_raw_lengths: {},
-  summary_probe_parsed: 0, summary_probe_errors: {},
+  dictionary_ids: {},
+  dictionary_name_lengths: {},
+  dictionary_raw_lengths: {},
+  summary_probe_parsed: 0,
+  summary_probe_errors: {},
 });
 
 function probeSummary(wasm, bytes, result) {
@@ -55,12 +74,13 @@ function dictionaryShape(raw, width) {
     if (raw.subarray(nameEnd - width, nameEnd).some((byte) => byte !== 0)) return false;
     pos = nameEnd;
     if (width === 2) {
-      const pad = (4 - (len * 2) % 4) % 4;
-      if (pad > raw.length - pos || raw.subarray(pos, pos + pad).some((byte) => byte !== 0)) return false;
+      const pad = (4 - ((len * 2) % 4)) % 4;
+      if (pad > raw.length - pos || raw.subarray(pos, pos + pad).some((byte) => byte !== 0))
+        return false;
       pos += pad;
     }
   }
-  const pad = (4 - pos % 4) % 4;
+  const pad = (4 - (pos % 4)) % 4;
   return raw.length - pos === pad && raw.subarray(pos).every((byte) => byte === 0);
 }
 
@@ -78,8 +98,14 @@ function* hwpPaths(root) {
 
 function surveySummary(bytes, result) {
   result.summary_present++;
-  if (bytes.length < 48) { result.malformed_summary++; return; }
-  if (!bytes.subarray(28, 44).equals(hwpFmtid)) { result.other_fmtid++; return; }
+  if (bytes.length < 48) {
+    result.malformed_summary++;
+    return;
+  }
+  if (!bytes.subarray(28, 44).equals(hwpFmtid)) {
+    result.other_fmtid++;
+    return;
+  }
   const version = bytes.readUInt16LE(2);
   if (version === 0) result.version_0++;
   else if (version === 1) result.version_1++;
@@ -90,7 +116,10 @@ function surveySummary(bytes, result) {
   else result.other_set_count++;
   if (sets !== 1) return;
   const offset = bytes.readUInt32LE(44);
-  if (offset > bytes.length - 8) { result.malformed_summary++; return; }
+  if (offset > bytes.length - 8) {
+    result.malformed_summary++;
+    return;
+  }
   const size = bytes.readUInt32LE(offset);
   const count = bytes.readUInt32LE(offset + 4);
   if (size < 8 || size > bytes.length - offset || count > (size - 8) / 8) {
@@ -123,14 +152,22 @@ function surveySummary(bytes, result) {
         if (propertyOffset > dictionaryOffset && propertyOffset < end) end = propertyOffset;
       }
       const raw = bytes.subarray(offset + dictionaryOffset, offset + end);
-      if (raw.length === 13 && raw.readUInt32LE(0) === 1 && raw.readUInt32LE(4) === 0 && raw.readUInt32LE(8) === 1 && raw[12] === 0) result.dictionary_hwp_placeholder++;
+      if (
+        raw.length === 13 &&
+        raw.readUInt32LE(0) === 1 &&
+        raw.readUInt32LE(4) === 0 &&
+        raw.readUInt32LE(8) === 1 &&
+        raw[12] === 0
+      )
+        result.dictionary_hwp_placeholder++;
       if (raw.length >= 12) {
         const id = raw.readUInt32LE(4);
         const len = raw.readUInt32LE(8);
         result.dictionary_ids[id] = (result.dictionary_ids[id] ?? 0) + 1;
         result.dictionary_name_lengths[len] = (result.dictionary_name_lengths[len] ?? 0) + 1;
       }
-      result.dictionary_raw_lengths[raw.length] = (result.dictionary_raw_lengths[raw.length] ?? 0) + 1;
+      result.dictionary_raw_lengths[raw.length] =
+        (result.dictionary_raw_lengths[raw.length] ?? 0) + 1;
       const wide = dictionaryShape(raw, 2);
       const byte = dictionaryShape(raw, 1);
       if (wide && byte) result.dictionary_both++;
@@ -160,11 +197,16 @@ function surveySummary(bytes, result) {
 
 if (roots.length === 1 && roots[0] === "--self-test") {
   const placeholder = Buffer.from([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]);
-  if (dictionaryShape(placeholder, 1) || dictionaryShape(placeholder, 2)) throw new Error("HWP marker accepted as OLEPS dictionary");
+  if (dictionaryShape(placeholder, 1) || dictionaryShape(placeholder, 2))
+    throw new Error("HWP marker accepted as OLEPS dictionary");
   const byteDictionary = Buffer.from([1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 65, 66, 0, 0]);
-  if (!dictionaryShape(byteDictionary, 1) || dictionaryShape(byteDictionary, 2)) throw new Error("byte dictionary shape failed");
-  const wideDictionary = Buffer.from([1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 65, 0, 66, 0, 0, 0, 0, 0]);
-  if (!dictionaryShape(wideDictionary, 2) || dictionaryShape(wideDictionary, 1)) throw new Error("wide dictionary shape failed");
+  if (!dictionaryShape(byteDictionary, 1) || dictionaryShape(byteDictionary, 2))
+    throw new Error("byte dictionary shape failed");
+  const wideDictionary = Buffer.from([
+    1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 65, 0, 66, 0, 0, 0, 0, 0,
+  ]);
+  if (!dictionaryShape(wideDictionary, 2) || dictionaryShape(wideDictionary, 1))
+    throw new Error("wide dictionary shape failed");
   const raw = Buffer.alloc(72);
   hwpFmtid.copy(raw, 28);
   raw.writeUInt32LE(1, 24);
@@ -177,21 +219,33 @@ if (roots.length === 1 && roots[0] === "--self-test") {
   raw.writeUInt16LE(1, 66);
   const found = emptyResult();
   surveySummary(raw, found);
-  if (found.one_set !== 1 || found.typed_properties !== 1 || found.nonzero_reserved !== 1) throw new Error("typed reserved census failed");
+  if (found.one_set !== 1 || found.typed_properties !== 1 || found.nonzero_reserved !== 1)
+    throw new Error("typed reserved census failed");
   raw.writeUInt32LE(0, 56);
   const dictionary = emptyResult();
   surveySummary(raw, dictionary);
-  if (dictionary.typed_properties !== 0 || dictionary.nonzero_reserved !== 0) throw new Error("dictionary was typed");
+  if (dictionary.typed_properties !== 0 || dictionary.nonzero_reserved !== 0)
+    throw new Error("dictionary was typed");
   raw.writeUInt32LE(2, 24);
   const two = emptyResult();
   surveySummary(raw, two);
   if (two.two_sets !== 1 || two.typed_properties !== 0) throw new Error("two-set selection failed");
   process.stdout.write("summary reserved survey self-test passed\n");
 } else {
-  if (roots.length === 0) throw new Error("usage: hwp5-summary-reserved-survey.mjs [--self-test|--probe] DIR [DIR ...]");
-  const cfb = await createCfbReader(readFileSync(new URL("../zig-out/bin/hwpjs.wasm", import.meta.url)));
+  if (roots.length === 0)
+    throw new Error("usage: hwp5-summary-reserved-survey.mjs [--self-test|--probe] DIR [DIR ...]");
+  const cfb = await createCfbReader(
+    readFileSync(new URL("../zig-out/bin/hwpjs.wasm", import.meta.url)),
+  );
   const probe = probeEnabled
-    ? (await WebAssembly.instantiate(await WebAssembly.compile(readFileSync(new URL("../zig-out/bin/hwp5-probe.wasm", import.meta.url))), {})).exports
+    ? (
+        await WebAssembly.instantiate(
+          await WebAssembly.compile(
+            readFileSync(new URL("../zig-out/bin/hwp5-probe.wasm", import.meta.url)),
+          ),
+          {},
+        )
+      ).exports
     : null;
   const result = emptyResult();
   for (const root of roots) {
@@ -200,13 +254,14 @@ if (roots.length === 1 && roots[0] === "--self-test") {
       try {
         cfb.parse(readFileSync(path), { strict: true });
       } catch (error) {
-        const expected = error instanceof Error && (
-          ["InvalidFat", "InvalidUnusedEntry", "InvalidRoot"].includes(error.message) ||
-          error.message.startsWith("Header Signature: Expected d0cf11e0a1b11ae1 saw ")
-        );
+        const expected =
+          error instanceof Error &&
+          (["InvalidFat", "InvalidUnusedEntry", "InvalidRoot"].includes(error.message) ||
+            error.message.startsWith("Header Signature: Expected d0cf11e0a1b11ae1 saw "));
         if (!expected) throw error;
         result.cfb_rejected++;
-        result.cfb_rejection_reasons[error.message] = (result.cfb_rejection_reasons[error.message] ?? 0) + 1;
+        result.cfb_rejection_reasons[error.message] =
+          (result.cfb_rejection_reasons[error.message] ?? 0) + 1;
         continue;
       }
       const node = cfb.findExact("/\x05HwpSummaryInformation");

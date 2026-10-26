@@ -3,11 +3,25 @@ import assert from "node:assert/strict";
 import { createFormulaControls } from "../../web/preview/formula-controls.mjs";
 
 test("formula drafts follow exact identity and yield to authoritative changes", () => {
-  const form = new EventTarget(), choices = new EventTarget(), fields = {}, input = {}, note = {};
+  const form = new EventTarget(),
+    choices = new EventTarget(),
+    fields = {},
+    input = {},
+    note = {};
   form.reportValidity = () => true;
   choices.ownerDocument = { createElement: () => ({}) };
-  choices.replaceChildren = (...nodes) => { choices.value = nodes[0]?.value ?? ""; };
-  const controls = createFormulaControls({ form, choices, fields, input, note, ready: () => true, request: () => true });
+  choices.replaceChildren = (...nodes) => {
+    choices.value = nodes[0]?.value ?? "";
+  };
+  const controls = createFormulaControls({
+    form,
+    choices,
+    fields,
+    input,
+    note,
+    ready: () => true,
+    request: () => true,
+  });
   const first = { section: 0, beginElement: 7, formula: "=SUM(A1:A2)", last_result: "4" };
   const second = { section: 1, beginElement: 7, formula: "=AVG(B1:B2)", last_result: "2" };
   const content = { formulaDefinitionAvailable: true, formulas: [first, second] };
@@ -42,26 +56,67 @@ test("formula drafts follow exact identity and yield to authoritative changes", 
 });
 
 test("formula form gates editing preserves draft and refreshes authoritative replies", () => {
-  const form = new EventTarget(), choices = new EventTarget(), fields = {}, input = {}, note = {}, requests = [];
+  const form = new EventTarget(),
+    choices = new EventTarget(),
+    fields = {},
+    input = {},
+    note = {},
+    requests = [];
   form.reportValidity = () => true;
   choices.ownerDocument = { createElement: () => ({}) };
-  choices.replaceChildren = (...nodes) => { choices.value = nodes[0]?.value ?? ""; };
+  choices.replaceChildren = (...nodes) => {
+    choices.value = nodes[0]?.value ?? "";
+  };
   let ready = true;
-  const controls = createFormulaControls({ form, choices, fields, input, note, ready: () => ready, request: value => { requests.push(value); return true; } });
-  const content = { formulaDefinitionAvailable: true, formulas: [{ section: 0, beginElement: 7, formula: "=SUM(A1:A2)", last_result: "4" }] };
+  const controls = createFormulaControls({
+    form,
+    choices,
+    fields,
+    input,
+    note,
+    ready: () => ready,
+    request: (value) => {
+      requests.push(value);
+      return true;
+    },
+  });
+  const content = {
+    formulaDefinitionAvailable: true,
+    formulas: [{ section: 0, beginElement: 7, formula: "=SUM(A1:A2)", last_result: "4" }],
+  };
   controls.message({ kind: "load", content });
   assert.equal(fields.disabled, true);
   controls.message({ kind: "enable", content });
-  input.value = "=AVG(A1:A2)"; controls.update();
+  input.value = "=AVG(A1:A2)";
+  controls.update();
   assert.equal(input.value, "=AVG(A1:A2)");
   controls.message({ kind: "splice", content });
-  assert.equal(input.value, "=AVG(A1:A2)", "unrelated text refresh must not discard a formula draft");
-  controls.message({ kind: "splice", content: { ...content, formulas: [{ ...content.formulas[0], last_result: "8" }] } });
-  assert.equal(input.value, "=AVG(A1:A2)", "derived result changes must not replace an unsubmitted definition");
-  ready = false; form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.equal(
+    input.value,
+    "=AVG(A1:A2)",
+    "unrelated text refresh must not discard a formula draft",
+  );
+  controls.message({
+    kind: "splice",
+    content: { ...content, formulas: [{ ...content.formulas[0], last_result: "8" }] },
+  });
+  assert.equal(
+    input.value,
+    "=AVG(A1:A2)",
+    "derived result changes must not replace an unsubmitted definition",
+  );
+  ready = false;
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(requests.length, 0);
-  ready = true; form.dispatchEvent(new Event("submit", { cancelable: true }));
-  assert.deepEqual(requests[0], { kind: "formula-definition", origin: "formula", section: 0, beginElement: 7, formula: "=AVG(A1:A2)" });
+  ready = true;
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
+  assert.deepEqual(requests[0], {
+    kind: "formula-definition",
+    origin: "formula",
+    section: 0,
+    beginElement: 7,
+    formula: "=AVG(A1:A2)",
+  });
   controls.message({ kind: "formula-definition", error: "InvalidFormula" });
   assert.match(note.textContent, /InvalidFormula/);
   assert.equal(input.value, "=AVG(A1:A2)");
@@ -69,9 +124,11 @@ test("formula form gates editing preserves draft and refreshes authoritative rep
   assert.equal(input.value, "=AVG(A1:A2)");
   controls.message({ kind: "undo", content });
   assert.equal(input.value, "=SUM(A1:A2)");
-  input.value = "가".repeat(1366); form.dispatchEvent(new Event("submit", { cancelable: true }));
+  input.value = "가".repeat(1366);
+  form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(requests.length, 1);
-  controls.reset(); assert.equal(form.hidden, true);
+  controls.reset();
+  assert.equal(form.hidden, true);
   assert.equal(fields.disabled, true);
   controls.message({ kind: "load", content: { ...content, formulaDefinitionAvailable: false } });
   controls.message({ kind: "enable", content: { ...content, formulaDefinitionAvailable: false } });
@@ -92,32 +149,71 @@ test("formula form gates editing preserves draft and refreshes authoritative rep
 });
 
 test("formula submit revalidates target and readiness after validity callbacks", () => {
-  const form = new EventTarget(), choices = new EventTarget(), fields = {}, input = {}, note = {}, requests = [];
+  const form = new EventTarget(),
+    choices = new EventTarget(),
+    fields = {},
+    input = {},
+    note = {},
+    requests = [];
   choices.ownerDocument = { createElement: () => ({}) };
-  choices.replaceChildren = (...nodes) => { choices.value = nodes[0]?.value ?? ""; };
+  choices.replaceChildren = (...nodes) => {
+    choices.value = nodes[0]?.value ?? "";
+  };
   let ready = true;
-  const controls = createFormulaControls({ form, choices, fields, input, note, ready: () => ready, request: value => { requests.push(value); return true; } });
-  const rows = [{ section: 0, beginElement: 7, formula: "=SUM(A1:A2)" }, { section: 0, beginElement: 8, formula: "=AVG(B1:B2)" }];
+  const controls = createFormulaControls({
+    form,
+    choices,
+    fields,
+    input,
+    note,
+    ready: () => ready,
+    request: (value) => {
+      requests.push(value);
+      return true;
+    },
+  });
+  const rows = [
+    { section: 0, beginElement: 7, formula: "=SUM(A1:A2)" },
+    { section: 0, beginElement: 8, formula: "=AVG(B1:B2)" },
+  ];
   const content = { formulaDefinitionAvailable: true, formulas: rows };
-  controls.message({ kind: "load", content }); controls.message({ kind: "enable", content });
-  form.reportValidity = () => { controls.selectCanvas(rows[1]); return true; };
+  controls.message({ kind: "load", content });
+  controls.message({ kind: "enable", content });
+  form.reportValidity = () => {
+    controls.selectCanvas(rows[1]);
+    return true;
+  };
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(requests, [], "new draft must not be sent to the old target");
-  form.reportValidity = () => { ready = false; return true; };
+  form.reportValidity = () => {
+    ready = false;
+    return true;
+  };
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.deepEqual(requests, [], "pending input must still gate a validated form");
-  ready = true; form.reportValidity = () => true;
+  ready = true;
+  form.reportValidity = () => true;
   form.dispatchEvent(new Event("submit", { cancelable: true }));
-  assert.equal(requests.length, 1); assert.equal(requests[0].beginElement, 8); assert.equal(requests[0].formula, rows[1].formula);
-  form.reportValidity = () => { controls.message({ kind: "load", content }); return true; };
+  assert.equal(requests.length, 1);
+  assert.equal(requests[0].beginElement, 8);
+  assert.equal(requests[0].formula, rows[1].formula);
+  form.reportValidity = () => {
+    controls.message({ kind: "load", content });
+    return true;
+  };
   form.dispatchEvent(new Event("submit", { cancelable: true }));
   assert.equal(requests.length, 1, "a new document must enable its own session before submission");
   controls.message({ kind: "enable", content });
-  controls.close(); controls.close();
-  controls.message({ kind: "enable", content }); controls.selectCanvas(rows[1]);
-  assert.equal(form.hidden, true); assert.equal(fields.disabled, true); assert.equal(input.value, "");
+  controls.close();
+  controls.close();
+  controls.message({ kind: "enable", content });
+  controls.selectCanvas(rows[1]);
+  assert.equal(form.hidden, true);
+  assert.equal(fields.disabled, true);
+  assert.equal(input.value, "");
   form.dispatchEvent(new Event("submit", { cancelable: true }));
-  input.value = "closed draft"; choices.dispatchEvent(new Event("change"));
+  input.value = "closed draft";
+  choices.dispatchEvent(new Event("change"));
   assert.equal(input.value, "closed draft", "closed controls must release choice listeners");
   assert.equal(requests.length, 1);
 });

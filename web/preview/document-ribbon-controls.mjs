@@ -6,14 +6,27 @@ export function createDocumentRibbon(root) {
   const document = root.ownerDocument;
   const menus = root.querySelectorAll(".document-menu");
   if (menus.length !== 1) throw new Error("MissingDocumentRibbonMenu");
-  const groups = documentRibbonPages.map(page => ({ ...page, nodes: page.selectors.map(selector => {
-    const matches = root.querySelectorAll(selector);
-    if (matches.length !== 1) throw new Error("InvalidDocumentRibbonGroup");
-    return matches[0];
-  }) }));
-  const nodes = groups.flatMap(group => group.nodes);
-  if (new Set(nodes).size !== nodes.length || nodes.some(node => nodes.some(other => other !== node && node.contains(other)))) throw new Error("NestedDocumentRibbonGroup");
-  for (const id of ["document-ribbon-tabs", ...groups.flatMap(page => [`document-ribbon-tab-${page.id}`, `document-ribbon-panel-${page.id}`])]) {
+  const groups = documentRibbonPages.map((page) => ({
+    ...page,
+    nodes: page.selectors.map((selector) => {
+      const matches = root.querySelectorAll(selector);
+      if (matches.length !== 1) throw new Error("InvalidDocumentRibbonGroup");
+      return matches[0];
+    }),
+  }));
+  const nodes = groups.flatMap((group) => group.nodes);
+  if (
+    new Set(nodes).size !== nodes.length ||
+    nodes.some((node) => nodes.some((other) => other !== node && node.contains(other)))
+  )
+    throw new Error("NestedDocumentRibbonGroup");
+  for (const id of [
+    "document-ribbon-tabs",
+    ...groups.flatMap((page) => [
+      `document-ribbon-tab-${page.id}`,
+      `document-ribbon-panel-${page.id}`,
+    ]),
+  ]) {
     if (document.getElementById(id)) throw new Error("DuplicateDocumentRibbonId");
   }
   const list = document.createElement("div");
@@ -22,8 +35,9 @@ export function createDocumentRibbon(root) {
   list.setAttribute("role", "tablist");
   list.setAttribute("aria-label", "문서 도구 탭");
   const restored = [];
-  const pages = groups.map(group => {
-    const tab = document.createElement("button"), panel = document.createElement("div");
+  const pages = groups.map((group) => {
+    const tab = document.createElement("button"),
+      panel = document.createElement("div");
     tab.type = "button";
     tab.id = `document-ribbon-tab-${group.id}`;
     tab.textContent = group.label;
@@ -49,7 +63,7 @@ export function createDocumentRibbon(root) {
     list.append(tab);
     return { tab, panel };
   });
-  root.append(list, ...pages.map(page => page.panel));
+  root.append(list, ...pages.map((page) => page.panel));
   let closed = false;
   const select = (selected, focus = false, reveal = false) => {
     for (const page of pages) {
@@ -61,17 +75,31 @@ export function createDocumentRibbon(root) {
     if (focus) selected.tab.focus();
     if (reveal) selected.panel.scrollIntoView({ block: "nearest", inline: "nearest" });
   };
-  const tabFrom = target => pages.find(page => page.tab === target || page.tab.contains(target));
-  const onClick = event => {
+  const tabFrom = (target) =>
+    pages.find((page) => page.tab === target || page.tab.contains(target));
+  const onClick = (event) => {
     if (closed) return;
     const tab = event.target?.nodeType === 1 ? tabFrom(event.target) : null;
-    if (tab) { select(tab, false, true); return; }
+    if (tab) {
+      select(tab, false, true);
+      return;
+    }
     // Menu delegation can click an existing control in an inactive panel.
-    const owner = event.target?.nodeType === 1 && pages.find(page => page.panel.contains(event.target));
+    const owner =
+      event.target?.nodeType === 1 && pages.find((page) => page.panel.contains(event.target));
     if (owner) select(owner, false, owner.panel.hidden);
   };
-  const onKey = event => {
-    if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229 || event.altKey || event.ctrlKey || event.metaKey) return;
+  const onKey = (event) => {
+    if (
+      closed ||
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.keyCode === 229 ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey
+    )
+      return;
     const tab = event.target?.nodeType === 1 ? tabFrom(event.target) : null;
     if (!tab) return;
     const index = pages.indexOf(tab);
@@ -87,13 +115,15 @@ export function createDocumentRibbon(root) {
   select(pages[0]);
   root.addEventListener("click", onClick, true);
   list.addEventListener("keydown", onKey);
-  return { close() {
-    if (closed) return;
-    closed = true;
-    root.removeEventListener("click", onClick, true);
-    list.removeEventListener("keydown", onKey);
-    for (const { node, marker } of restored) marker.replaceWith(node);
-    list.remove();
-    for (const page of pages) page.panel.remove();
-  } };
+  return {
+    close() {
+      if (closed) return;
+      closed = true;
+      root.removeEventListener("click", onClick, true);
+      list.removeEventListener("keydown", onKey);
+      for (const { node, marker } of restored) marker.replaceWith(node);
+      list.remove();
+      for (const page of pages) page.panel.remove();
+    },
+  };
 }

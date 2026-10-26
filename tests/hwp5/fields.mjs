@@ -35,10 +35,7 @@ export function fieldsActual(call, v, b) {
       stats[5] += p.length - 15 - units * 2;
       raw.push(p);
     }
-  assert.deepEqual(
-    call(39, Buffer.concat([w(v), b])),
-    Buffer.concat([...stats.map(w), ...raw]),
-  );
+  assert.deepEqual(call(39, Buffer.concat([w(v), b])), Buffer.concat([...stats.map(w), ...raw]));
   return stats;
 }
 export function fieldEdges(call) {
@@ -67,7 +64,10 @@ export function fieldEdges(call) {
     }
     const extra = Buffer.from([9, 8, 7]);
     if (id === 0x25256d65) {
-      assert.throws(() => call(39, Buffer.concat([w(v), frame(id, Buffer.concat([good, extra]))])), /UnexpectedEnd/);
+      assert.throws(
+        () => call(39, Buffer.concat([w(v), frame(id, Buffer.concat([good, extra]))])),
+        /UnexpectedEnd/,
+      );
       rejected++;
       check(id, Buffer.concat([good, w(0), extra]));
     } else check(id, Buffer.concat([good, extra]));
@@ -81,13 +81,7 @@ export function fieldEdges(call) {
   for (const units of [0, 1, 32768, 65535])
     check(
       id,
-      Buffer.concat([
-        w(0),
-        Buffer.from([0]),
-        u(units),
-        Buffer.alloc(units * 2, 255),
-        w(0),
-      ]),
+      Buffer.concat([w(0), Buffer.from([0]), u(units), Buffer.alloc(units * 2, 255), w(0)]),
     );
   for (const unknown of [0x25252525, 0x257a7a7a, 0x74637073])
     assert.deepEqual(check(unknown, Buffer.alloc(0)), Array(6).fill(0));

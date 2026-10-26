@@ -50,15 +50,10 @@ export function indexMarkEdges(call) {
     indexMarkActual(call, 0x05000107, frame(b));
     accepted++;
   };
-  const good = props(
-    Buffer.from([0, 0xd8]),
-    Buffer.from([0, 0, 0xff, 0xfe]),
-    65535,
-  );
+  const good = props(Buffer.from([0, 0xd8]), Buffer.from([0, 0, 0xff, 0xfe]), 65535);
   for (let n = 0; n < good.length; n++) {
     assert.throws(
-      () =>
-        call(34, Buffer.concat([w(0x05000107), frame(good.subarray(0, n))])),
+      () => call(34, Buffer.concat([w(0x05000107), frame(good.subarray(0, n))])),
       /UnexpectedEnd/,
     );
     rejected++;
@@ -71,34 +66,20 @@ export function indexMarkEdges(call) {
       check(props(...fields));
     }
   check(props(Buffer.alloc(65535 * 2, 7), Buffer.alloc(65535 * 2, 8)));
-  for (const b of [
-    Buffer.from([255, 255, 0, 0, 0, 0]),
-    Buffer.from([0, 0, 255, 255, 0, 0]),
-  ]) {
-    assert.throws(
-      () => call(34, Buffer.concat([w(0x05000107), frame(b)])),
-      /UnexpectedEnd/,
-    );
+  for (const b of [Buffer.from([255, 255, 0, 0, 0, 0]), Buffer.from([0, 0, 255, 255, 0, 0])]) {
+    assert.throws(() => call(34, Buffer.concat([w(0x05000107), frame(b)])), /UnexpectedEnd/);
     rejected++;
   }
-  for (const d of [0, 1, 0x8000, 65535])
-    check(props(Buffer.alloc(0), Buffer.alloc(0), d));
-  for (let len = 1; len <= 3; len++)
-    check(Buffer.concat([good, Buffer.alloc(len, 7)]));
+  for (const d of [0, 1, 0x8000, 65535]) check(props(Buffer.alloc(0), Buffer.alloc(0), d));
+  for (let len = 1; len <= 3; len++) check(Buffer.concat([good, Buffer.alloc(len, 7)]));
   indexMarkActual(
     call,
     0x05000107,
-    Buffer.concat([
-      frame(good),
-      frame(props(Buffer.alloc(0), Buffer.alloc(0))),
-    ]),
+    Buffer.concat([frame(good), frame(props(Buffer.alloc(0), Buffer.alloc(0)))]),
   );
   accepted++;
   assert.deepEqual(
-    call(
-      34,
-      Buffer.concat([w(0x05000107), frame(Buffer.alloc(0), 0x626b6d6b)]),
-    ),
+    call(34, Buffer.concat([w(0x05000107), frame(Buffer.alloc(0), 0x626b6d6b)])),
     Buffer.alloc(16),
   );
   return { accepted, rejected };

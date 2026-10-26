@@ -5,12 +5,21 @@ export function attachCharacterStrikes(editor, content) {
   content.characterStrikeStyles = null;
   content.characterStrikeStylesError = null;
   if (content.characterStrikeAvailable === true && editor) {
-    try { content.characterStrikes = editor.characterStrikes(); }
-    catch (error) { content.characterStrikesError = error.message; }
+    try {
+      content.characterStrikes = editor.characterStrikes();
+    } catch (error) {
+      content.characterStrikesError = error.message;
+    }
   }
-  if (content.characterStrikeAvailable === true && typeof editor?.characterStrikeStyles === "function") {
-    try { content.characterStrikeStyles = editor.characterStrikeStyles(); }
-    catch (error) { content.characterStrikeStylesError = error.message; }
+  if (
+    content.characterStrikeAvailable === true &&
+    typeof editor?.characterStrikeStyles === "function"
+  ) {
+    try {
+      content.characterStrikeStyles = editor.characterStrikeStyles();
+    } catch (error) {
+      content.characterStrikeStylesError = error.message;
+    }
   }
   return content;
 }

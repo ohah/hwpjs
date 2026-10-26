@@ -17,8 +17,7 @@ const frame = (tag, level, b) =>
     b,
   ]);
 const item = (id, type, b) => Buffer.concat([u(id), u(type), b]);
-const set = (items, id = 0x021b) =>
-  Buffer.concat([u(id), u(items.length), u(0), ...items]);
+const set = (items, id = 0x021b) => Buffer.concat([u(id), u(items.length), u(0), ...items]);
 const name = (b) => item(0x4000, 1, Buffer.concat([u(b.length / 2), b]));
 const ctrl = (id = 0x626f6b6d, level = 0) => frame(71, level, w(id));
 const run = (call, v, b) => {
@@ -105,10 +104,7 @@ export function bookmarkEdges(call) {
     return bookmarkActual(call, v, b);
   };
   for (let n = 0; n < good.length; n++) {
-    assert.throws(
-      () => run(call, v, wrap(good.subarray(0, n))),
-      /UnexpectedEnd/,
-    );
+    assert.throws(() => run(call, v, wrap(good.subarray(0, n))), /UnexpectedEnd/);
     rejected++;
     check(wrap(good));
   }
@@ -123,32 +119,18 @@ export function bookmarkEdges(call) {
     rejected++;
     check(wrap(good));
   }
-  assert.deepEqual(
-    check(wrap(set([name(Buffer.alloc(0))]))),
-    [1, 1, 1, 0, 0, 0, 0, 0],
-  );
+  assert.deepEqual(check(wrap(set([name(Buffer.alloc(0))]))), [1, 1, 1, 0, 0, 0, 0, 0]);
   assert.deepEqual(check(wrap(set([]))), [1, 1, 0, 0, 1, 0, 0, 0]);
   assert.deepEqual(check(wrap(set([], 99))), [1, 1, 0, 0, 0, 1, 0, 0]);
   check(wrap(Buffer.concat([good, Buffer.from([7, 8, 9])])));
   // A nested same-ID string is not the root name; order and other items vary.
-  check(
-    wrap(
-      set([
-        item(8, 0x8000, good),
-        item(9, 2, w(123)),
-        name(Buffer.from("ab", "utf16le")),
-      ]),
-    ),
-  );
+  check(wrap(set([item(8, 0x8000, good), item(9, 2, w(123)), name(Buffer.from("ab", "utf16le"))])));
   assert.equal(check(wrap(set([item(8, 0x8000, good)])))[4], 1);
   for (const b of [
     set([name(Buffer.alloc(0)), name(Buffer.alloc(0))]),
     set([item(0x4000, 2, w(0))]),
   ]) {
-    assert.throws(
-      () => run(call, v, wrap(b)),
-      /DuplicateNamedFieldName|InvalidNamedFieldType/,
-    );
+    assert.throws(() => run(call, v, wrap(b)), /DuplicateNamedFieldName|InvalidNamedFieldType/);
     rejected++;
     check(wrap(good));
   }

@@ -1,4 +1,4 @@
-import {writeSync} from "node:fs";
+import { writeSync } from "node:fs";
 
 // Audit evidence must be completely written before a command can succeed.
 export function writeAuditRow(value, write = writeSync) {
@@ -9,7 +9,8 @@ export function writeAuditRow(value, write = writeSync) {
   while (offset < bytes.length) {
     const remaining = bytes.length - offset;
     const written = write(1, bytes, offset, remaining);
-    if (!Number.isSafeInteger(written) || written <= 0 || written > remaining) throw new Error("AuditOutputWriteFailed");
+    if (!Number.isSafeInteger(written) || written <= 0 || written > remaining)
+      throw new Error("AuditOutputWriteFailed");
     offset += written;
   }
 }

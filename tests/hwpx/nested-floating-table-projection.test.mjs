@@ -7,11 +7,55 @@ import { projectNestedFloatingCellContent } from "../../web/preview/nested-float
 import { projectTablePageFragments } from "../../web/preview/table-page-fragments.mjs";
 
 test("floating nested cells retain text and source size at the explicit page position", () => {
-  const table = { section: 0, tableNode: 2, parentTableNode: 1, parentListNode: 11, hostParagraph: 3, anchorUnit: 0, rows: 1, columns: 1,
-    sourceGeometry: { geometry: { treat_as_character: false, width: 1500, height: 7500, width_relative: 4, height_relative: 2, horizontal_offset: 0, vertical_offset: 0 }, in_margin: [0, 0, 0, 0], text_wrap: 2, vertical_relative: 2, horizontal_relative: 3, vertical_alignment: 2, horizontal_alignment: 0 },
-    cells: [{ listNode: 12, row: 0, column: 0, rowSpan: 1, columnSpan: 1, width: 1500, height: 6000, paragraphs: [4], sourceMargin: { has_margin: false } }] };
-  const paragraphs = [{ section: 0, paragraph: 4, text: "X😀", tableCell: { tableNode: 2, listNode: 12 } }];
-  const measured = measureTableCells(table, paragraphs, text => ({ width: text.length * 4, height: 12 }), { origin: { x: 0, y: 0 }, padding: "source", columnWidths: [20] });
+  const table = {
+    section: 0,
+    tableNode: 2,
+    parentTableNode: 1,
+    parentListNode: 11,
+    hostParagraph: 3,
+    anchorUnit: 0,
+    rows: 1,
+    columns: 1,
+    sourceGeometry: {
+      geometry: {
+        treat_as_character: false,
+        width: 1500,
+        height: 7500,
+        width_relative: 4,
+        height_relative: 2,
+        horizontal_offset: 0,
+        vertical_offset: 0,
+      },
+      in_margin: [0, 0, 0, 0],
+      text_wrap: 2,
+      vertical_relative: 2,
+      horizontal_relative: 3,
+      vertical_alignment: 2,
+      horizontal_alignment: 0,
+    },
+    cells: [
+      {
+        listNode: 12,
+        row: 0,
+        column: 0,
+        rowSpan: 1,
+        columnSpan: 1,
+        width: 1500,
+        height: 6000,
+        paragraphs: [4],
+        sourceMargin: { has_margin: false },
+      },
+    ],
+  };
+  const paragraphs = [
+    { section: 0, paragraph: 4, text: "X😀", tableCell: { tableNode: 2, listNode: 12 } },
+  ];
+  const measured = measureTableCells(
+    table,
+    paragraphs,
+    (text) => ({ width: text.length * 4, height: 12 }),
+    { origin: { x: 0, y: 0 }, padding: "source", columnWidths: [20] },
+  );
   assert.equal(measured.state, "measured");
   const paper = { x: 0, y: 0, width: 600, height: 800 };
   const parent = { section: 0, tableNode: 1, listNode: 11, x: 50, y: 100, width: 200, height: 300 };
@@ -21,38 +65,176 @@ test("floating nested cells retain text and source size at the explicit page pos
   const page = { pageOrdinal: 0, referenceBoxes: { paper } };
   const output = projectNestedFloatingTable(table, measured, position, page);
   assert.equal(output.state, "placed", output.error);
-  assert.equal(output.boxes.length, 1); assert.equal(output.boxes[0].x, 50); assert.equal(output.boxes[0].y, 116);
-  assert.equal(output.rows.filter(row => row.kind === "text").map(row => row.text).join(""), "X😀");
+  assert.equal(output.boxes.length, 1);
+  assert.equal(output.boxes[0].x, 50);
+  assert.equal(output.boxes[0].y, 116);
+  assert.equal(
+    output.rows
+      .filter((row) => row.kind === "text")
+      .map((row) => row.text)
+      .join(""),
+    "X😀",
+  );
   assert.equal(output.paintLayer, "behind");
   assert.deepEqual(output.rectangle, position.rectangle);
-  assert.equal(projectNestedFloatingTable(table, measured, { ...position, rectangle: { ...position.rectangle, height: 1 } }, page).error, "NestedFloatingTableMeasuredOverflow");
-  assert.equal(projectNestedFloatingTable(table, measured, { ...position, owner: { ...position.owner, parentListNode: 99 } }, page).error, "InvalidNestedFloatingTableOwner");
-  assert.equal(projectNestedFloatingTable(table, measured, position, { ...page, columnOrdinal: -1 }).error, "InvalidNestedFloatingTableProjection");
-  assert.equal(projectNestedFloatingTable(table, measured, position, { ...page, referenceBoxes: { paper: { ...paper, x: Number.MAX_VALUE, width: Number.MAX_VALUE } } }).error, "NestedFloatingTablePaperOverflow");
+  assert.equal(
+    projectNestedFloatingTable(
+      table,
+      measured,
+      { ...position, rectangle: { ...position.rectangle, height: 1 } },
+      page,
+    ).error,
+    "NestedFloatingTableMeasuredOverflow",
+  );
+  assert.equal(
+    projectNestedFloatingTable(
+      table,
+      measured,
+      { ...position, owner: { ...position.owner, parentListNode: 99 } },
+      page,
+    ).error,
+    "InvalidNestedFloatingTableOwner",
+  );
+  assert.equal(
+    projectNestedFloatingTable(table, measured, position, { ...page, columnOrdinal: -1 }).error,
+    "InvalidNestedFloatingTableProjection",
+  );
+  assert.equal(
+    projectNestedFloatingTable(table, measured, position, {
+      ...page,
+      referenceBoxes: { paper: { ...paper, x: Number.MAX_VALUE, width: Number.MAX_VALUE } },
+    }).error,
+    "NestedFloatingTablePaperOverflow",
+  );
   assert.deepEqual(table, original);
-  const currentParagraph = { ...paragraph, text: "\ufffc", tableCell: { tableNode: 1, listNode: 11 } };
-  const parentFlow = { rows: [{ kind: "text", section: 0, paragraph: 3, startUnit: 0, endUnit: 1, text: "\ufffc", x: 0, y: 100, textTop: 0, width: 200, textHeight: 16 }] };
+  const currentParagraph = {
+    ...paragraph,
+    text: "\ufffc",
+    tableCell: { tableNode: 1, listNode: 11 },
+  };
+  const parentFlow = {
+    rows: [
+      {
+        kind: "text",
+        section: 0,
+        paragraph: 3,
+        startUnit: 0,
+        endUnit: 1,
+        text: "\ufffc",
+        x: 0,
+        y: 100,
+        textTop: 0,
+        width: 200,
+        textHeight: 16,
+      },
+    ],
+  };
   const entry = { table, paragraph: currentParagraph, measured };
   const options = { insets: { left: 0, right: 0, top: 0, bottom: 0 }, maxRows: 20000 };
   const composed = projectNestedFloatingCellContent(parent, parentFlow, [entry], page, options);
   assert.equal(composed.state, "placed", composed.error);
   assert.equal(composed.boxes[0].y, 116);
   assert.equal(composed.rows[0].tablePaintLayer, "behind");
-  assert.equal(projectNestedFloatingCellContent(parent, parentFlow, [entry, entry], page, options).error, "InvalidNestedFloatingTableOwner");
-  assert.equal(projectNestedFloatingCellContent(parent, parentFlow, [entry, { ...entry, table: { ...table, tableNode: 99 } }], page, options).error, "InvalidNestedFloatingTableOwner");
-  assert.equal(projectNestedFloatingCellContent(parent, parentFlow, [{ ...entry, paragraph: { ...currentParagraph, text: "X" } }], page, options).error, "InvalidNestedFloatingTableOwner");
+  assert.equal(
+    projectNestedFloatingCellContent(parent, parentFlow, [entry, entry], page, options).error,
+    "InvalidNestedFloatingTableOwner",
+  );
+  assert.equal(
+    projectNestedFloatingCellContent(
+      parent,
+      parentFlow,
+      [entry, { ...entry, table: { ...table, tableNode: 99 } }],
+      page,
+      options,
+    ).error,
+    "InvalidNestedFloatingTableOwner",
+  );
+  assert.equal(
+    projectNestedFloatingCellContent(
+      parent,
+      parentFlow,
+      [{ ...entry, paragraph: { ...currentParagraph, text: "X" } }],
+      page,
+      options,
+    ).error,
+    "InvalidNestedFloatingTableOwner",
+  );
   const outerTable = { section: 0, tableNode: 1, cells: [{ listNode: 11, row: 0, rowSpan: 1 }] };
   const outerGrid = { cells: [{ listNode: 11, x: 0, y: 0, width: 200, height: 300 }] };
-  const outerFlow = { ...parentFlow, rows: parentFlow.rows.map(row => ({ ...row, height: 16 })), floatingTables: [entry] };
-  const plan = { state: "planned", fragments: [{ cells: [0], startRow: 0, endRow: 1, offset: 0, x: 50, y: 100, pageOrdinal: 0, referenceBoxes: { paper } }] };
-  const projectedParent = projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, { origin: { x: 0, y: 0 }, padding: 0 });
+  const outerFlow = {
+    ...parentFlow,
+    rows: parentFlow.rows.map((row) => ({ ...row, height: 16 })),
+    floatingTables: [entry],
+  };
+  const plan = {
+    state: "planned",
+    fragments: [
+      {
+        cells: [0],
+        startRow: 0,
+        endRow: 1,
+        offset: 0,
+        x: 50,
+        y: 100,
+        pageOrdinal: 0,
+        referenceBoxes: { paper },
+      },
+    ],
+  };
+  const projectedParent = projectTablePageFragments(
+    outerTable,
+    outerGrid,
+    new Map([[11, outerFlow]]),
+    plan,
+    { origin: { x: 0, y: 0 }, padding: 0 },
+  );
   assert.equal(projectedParent.state, "placed", projectedParent.error);
-  assert.deepEqual(projectedParent.boxes.map(box => box.tableNode), [1, 2]);
-  assert.equal(projectedParent.rows.filter(row => row.tableNode === 2).map(row => row.text).join(""), "X😀");
-  assert.equal(projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, { origin: { x: 0, y: 0 }, padding: 0, maxRows: 1 }).error, "TablePageProjectionLimit");
+  assert.deepEqual(
+    projectedParent.boxes.map((box) => box.tableNode),
+    [1, 2],
+  );
+  assert.equal(
+    projectedParent.rows
+      .filter((row) => row.tableNode === 2)
+      .map((row) => row.text)
+      .join(""),
+    "X😀",
+  );
+  assert.equal(
+    projectTablePageFragments(outerTable, outerGrid, new Map([[11, outerFlow]]), plan, {
+      origin: { x: 0, y: 0 },
+      padding: 0,
+      maxRows: 1,
+    }).error,
+    "TablePageProjectionLimit",
+  );
   assert.deepEqual(table, original);
-  const pictured = { ...measured, flows: new Map([...measured.flows].map(([key, value]) => [key, { ...value, flowPictures: [{ section: 0, pictureNode: 7, cell: { tableNode: 2, listNode: 12 }, rectangle: { x: 0, y: 0, width: 2, height: 2 } }] }])) };
-  const pictureContent = projectNestedFloatingCellContent(parent, parentFlow, [{ ...entry, measured: pictured }], page, options);
+  const pictured = {
+    ...measured,
+    flows: new Map(
+      [...measured.flows].map(([key, value]) => [
+        key,
+        {
+          ...value,
+          flowPictures: [
+            {
+              section: 0,
+              pictureNode: 7,
+              cell: { tableNode: 2, listNode: 12 },
+              rectangle: { x: 0, y: 0, width: 2, height: 2 },
+            },
+          ],
+        },
+      ]),
+    ),
+  };
+  const pictureContent = projectNestedFloatingCellContent(
+    parent,
+    parentFlow,
+    [{ ...entry, measured: pictured }],
+    page,
+    options,
+  );
   assert.equal(pictureContent.state, "placed");
   assert.equal(pictureContent.flowPictures.length, 1);
   assert.equal(pictureContent.flowPictures[0].positionOwnerTableNode, 1);

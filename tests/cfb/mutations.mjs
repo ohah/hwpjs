@@ -17,9 +17,7 @@ runInNewContext(readFileSync(new URL("legacy/cfb.js", root), "utf8"), context);
 const seeds = [
   v4File(),
   miniFragmented(context.module.exports),
-  readFileSync(
-    new URL("legacy/rust/crates/hwp-core/tests/fixtures/example.hwp", root),
-  ),
+  readFileSync(new URL("legacy/rust/crates/hwp-core/tests/fixtures/example.hwp", root)),
 ];
 const { instance } = await WebAssembly.instantiate(
   readFileSync(new URL("zig-out/bin/hwpjs.wasm", root)),
@@ -72,9 +70,7 @@ function check(bytes, required = false) {
     wasm.cfb_close();
   }
 }
-const values = [
-  0, 1, 0xfffffffc, 0xfffffffd, 0xfffffffe, 0xffffffff, 0x7fffffff, 0x80000000,
-];
+const values = [0, 1, 0xfffffffc, 0xfffffffd, 0xfffffffe, 0xffffffff, 0x7fffffff, 0x80000000];
 for (let i = 0; i < 12000; i++) {
   const bytes = Buffer.from(seeds[i % seeds.length]);
   let length = bytes.length;
@@ -83,17 +79,13 @@ for (let i = 0; i < 12000; i++) {
       bytes[random() % bytes.length] ^= 1 << (random() % 8);
       break;
     case 1:
-      bytes.writeUInt32LE(
-        values[random() % values.length],
-        random() % (bytes.length - 3),
-      );
+      bytes.writeUInt32LE(values[random() % values.length], random() % (bytes.length - 3));
       break;
     case 2:
       length = random() % bytes.length;
       break;
     case 3:
-      for (let j = 0; j < 4; j++)
-        bytes[random() % bytes.length] = random() & 255;
+      for (let j = 0; j < 4; j++) bytes[random() % bytes.length] = random() & 255;
       break;
   }
   try {

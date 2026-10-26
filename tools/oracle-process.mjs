@@ -14,7 +14,7 @@ function withInput(run, command, args, options = {}) {
     const path = join(directory, "input.json");
     writeFileSync(path, options.input, { mode: 0o600 });
     descriptor = openSync(path, "r");
-    const { input, ...rest } = options;
+    const { input: _stdinInput, ...rest } = options;
     return run(command, args, { ...rest, stdio: [descriptor, "pipe", "pipe"] });
   } finally {
     if (descriptor !== undefined) closeSync(descriptor);

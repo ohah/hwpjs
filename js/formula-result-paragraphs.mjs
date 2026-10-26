@@ -4,7 +4,8 @@ export function decodeFormulaResultParagraphs(bytes) {
   if (!Array.isArray(values)) throw new Error("InvalidFormulaResultParagraphs");
   let previous = 0;
   for (const value of values) {
-    if (!Number.isInteger(value) || value <= previous || value > 0xffffffff) throw new Error("InvalidFormulaResultParagraphs");
+    if (!Number.isInteger(value) || value <= previous || value > 0xffffffff)
+      throw new Error("InvalidFormulaResultParagraphs");
     previous = value;
   }
   return values;

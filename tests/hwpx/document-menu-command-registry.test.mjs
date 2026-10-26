@@ -4,61 +4,113 @@ import { createDocumentMenuControls } from "../../web/preview/document-menu-cont
 
 function entry(id, label) {
   const handlers = new Map();
-  const target = { disabled: false, inherited: false, calls: 0, matches() { return this.inherited; }, click() { this.calls++; } };
-  const button = { id, textContent: label, disabled: false, addEventListener(type, callback) { handlers.set(type, callback); },
-    removeEventListener(type) { handlers.delete(type); }, closest() { return null; } };
+  const target = {
+    disabled: false,
+    inherited: false,
+    calls: 0,
+    matches() {
+      return this.inherited;
+    },
+    click() {
+      this.calls++;
+    },
+  };
+  const button = {
+    id,
+    textContent: label,
+    disabled: false,
+    addEventListener(type, callback) {
+      handlers.set(type, callback);
+    },
+    removeEventListener(type) {
+      handlers.delete(type);
+    },
+    closest() {
+      return null;
+    },
+  };
   return { button, target, handlers };
 }
 
 test("command metadata and execution share existing menu controls and live eligibility", () => {
-  const save = entry("menu-save", " 저장 "), undo = entry("menu-undo", "실행 취소");
+  const save = entry("menu-save", " 저장 "),
+    undo = entry("menu-undo", "실행 취소");
   undo.target.disabled = true;
   const menu = createDocumentMenuControls([save, undo]);
-  assert.deepEqual(menu.commands(), [{ id: "menu-save", label: "저장", enabled: true }, { id: "menu-undo", label: "실행 취소", enabled: false }]);
-  assert.equal(menu.execute("menu-save"), true); assert.equal(save.target.calls, 1);
-  save.handlers.get("click")(); assert.equal(save.target.calls, 2, "ordinary menu and registry use the same delegate");
-  assert.equal(menu.execute("menu-undo"), false); assert.equal(undo.target.calls, 0);
+  assert.deepEqual(menu.commands(), [
+    { id: "menu-save", label: "저장", enabled: true },
+    { id: "menu-undo", label: "실행 취소", enabled: false },
+  ]);
+  assert.equal(menu.execute("menu-save"), true);
+  assert.equal(save.target.calls, 1);
+  save.handlers.get("click")();
+  assert.equal(save.target.calls, 2, "ordinary menu and registry use the same delegate");
+  assert.equal(menu.execute("menu-undo"), false);
+  assert.equal(undo.target.calls, 0);
   const stale = menu.commands();
   save.target.inherited = true;
   assert.equal(stale[0].enabled, true);
-  assert.equal(menu.execute("menu-save"), false); assert.equal(save.target.calls, 2);
+  assert.equal(menu.execute("menu-save"), false);
+  assert.equal(save.target.calls, 2);
   undo.target.disabled = false;
-  assert.equal(menu.execute("menu-undo"), true); assert.equal(undo.target.calls, 1);
+  assert.equal(menu.execute("menu-undo"), true);
+  assert.equal(undo.target.calls, 1);
   assert.equal(menu.execute("unknown"), false);
-  menu.close(); menu.close();
-  assert(menu.commands().every(command => !command.enabled));
+  menu.close();
+  menu.close();
+  assert(menu.commands().every((command) => !command.enabled));
   assert.equal(menu.execute("menu-undo"), false);
   assert.equal(undo.handlers.size, 0);
 });
 
 test("duplicate command ids are rejected before listeners or actions are installed", () => {
-  const a = entry("same", "a"), b = entry("same", "b");
+  const a = entry("same", "a"),
+    b = entry("same", "b");
   assert.throws(() => createDocumentMenuControls([a, b]), /AmbiguousDocumentMenuCommand/);
-  assert.equal(a.handlers.size, 0); assert.equal(b.handlers.size, 0);
+  assert.equal(a.handlers.size, 0);
+  assert.equal(b.handlers.size, 0);
   assert.equal(a.target.calls + b.target.calls, 0);
 });
 
 test("registry publishes changed metadata once and permits reentrant reads without a command", () => {
-  const save = entry("menu-save", "저장"), menu = createDocumentMenuControls([save]);
+  const save = entry("menu-save", "저장"),
+    menu = createDocumentMenuControls([save]);
   const states = [];
   const unsubscribe = menu.subscribe(() => states.push(menu.commands()));
-  menu.refresh(); assert.equal(states.length, 0);
-  save.target.disabled = true; menu.refresh();
-  assert.equal(states.length, 1); assert.equal(states[0][0].enabled, false);
-  menu.refresh(); assert.equal(states.length, 1);
-  save.target.disabled = false; menu.refresh(); assert.equal(states.length, 2);
-  save.button.textContent = "다른 이름으로 저장"; menu.refresh(); assert.equal(states.length, 3);
+  menu.refresh();
+  assert.equal(states.length, 0);
+  save.target.disabled = true;
+  menu.refresh();
+  assert.equal(states.length, 1);
+  assert.equal(states[0][0].enabled, false);
+  menu.refresh();
+  assert.equal(states.length, 1);
+  save.target.disabled = false;
+  menu.refresh();
+  assert.equal(states.length, 2);
+  save.button.textContent = "다른 이름으로 저장";
+  menu.refresh();
+  assert.equal(states.length, 3);
   assert.equal(save.target.calls, 0);
-  unsubscribe(); unsubscribe(); save.target.disabled = true; menu.refresh(); assert.equal(states.length, 3);
+  unsubscribe();
+  unsubscribe();
+  save.target.disabled = true;
+  menu.refresh();
+  assert.equal(states.length, 3);
   assert.throws(() => menu.subscribe(null), /InvalidDocumentMenuSubscription/);
-  menu.close(); const late = menu.subscribe(() => assert.fail("closed registry notification")); late(); menu.refresh();
+  menu.close();
+  const late = menu.subscribe(() => assert.fail("closed registry notification"));
+  late();
+  menu.refresh();
 });
 
 test("closing the registry during notification prevents later disposed listeners", () => {
-  const save = entry("menu-save", "저장"), menu = createDocumentMenuControls([save]);
+  const save = entry("menu-save", "저장"),
+    menu = createDocumentMenuControls([save]);
   menu.subscribe(() => menu.close());
   menu.subscribe(() => assert.fail("listener invoked after registry close"));
-  save.target.disabled = true; menu.refresh();
+  save.target.disabled = true;
+  menu.refresh();
   assert.equal(save.target.calls, 0);
   assert.equal(menu.execute("menu-save"), false);
 });

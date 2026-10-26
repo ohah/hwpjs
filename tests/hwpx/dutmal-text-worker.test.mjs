@@ -4,26 +4,38 @@ import { readFileSync } from "node:fs";
 import { workerCanvasHarness } from "../canvas/worker-harness.mjs";
 import { execFileSync } from "../../tools/oracle-process.mjs";
 
-test("dutmal Worker edits preserve independent leaf history and actual ZIP", async t => {
+test("dutmal Worker edits preserve independent leaf history and actual ZIP", async (t) => {
   assert(process.env.HWPJS_TEST_WASM, "explicit dutmal candidate required");
-  const input = readFileSync("reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx");
+  const input = readFileSync(
+    "reference/rhwp/samples/hwpx/opengov/36389301_결재문서본문_직장훈련계획_덧말.hwpx",
+  );
   const h = await workerCanvasHarness(t);
   const loaded = await h.send({ kind: "load", format: "hwpx", bytes: input });
   assert.equal(loaded.error, undefined);
   assert.equal(loaded.content.dutmalAvailable, true);
   assert.deepEqual(loaded.content.dutmalErrors, []);
-  const displayed = loaded.content.paragraphs.find(row => row.section === 0 && row.paragraph === 25);
+  const displayed = loaded.content.paragraphs.find(
+    (row) => row.section === 0 && row.paragraph === 25,
+  );
   assert.equal(displayed.dutmal[0].unit, 43);
   assert.equal(displayed.dutmal[0].mainText, "팀단위 훈련");
   const source = await h.send({ kind: "inline-string-sources", requestId: 12 });
   assert.equal(source.error, undefined);
   assert.equal(source.requestId, 12);
   assert.equal(source.sources.sourceOnly, true);
-  const node = source.sources.controls.find(row => row.kind === "dutmal").element_index;
-  const command = { kind: "dutmal-text", requestId: 20, section: 0, node, textKind: "mainText", value: "본문😀<&" };
+  const node = source.sources.controls.find((row) => row.kind === "dutmal").element_index;
+  const command = {
+    kind: "dutmal-text",
+    requestId: 20,
+    section: 0,
+    node,
+    textKind: "mainText",
+    value: "본문😀<&",
+  };
   assert.equal((await h.send(command)).error, "EditorNotOpen");
   assert.equal((await h.send({ kind: "enable" })).error, undefined);
-  const query = textKind => h.send({ kind: "dutmal-text-query", requestId: 17, section: 0, node, textKind });
+  const query = (textKind) =>
+    h.send({ kind: "dutmal-text-query", requestId: 17, section: 0, node, textKind });
   const original = await query("mainText");
   assert.equal(original.error, undefined);
   assert.equal(original.requestId, 17);
@@ -32,15 +44,26 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert.equal(changed.error, undefined);
   assert.equal(changed.requestId, 20);
   assert.equal(changed.dutmal.value, command.value);
-  assert.equal(changed.content.paragraphs.find(row => row.section === 0 && row.paragraph === 25).dutmal[0].mainText, command.value);
+  assert.equal(
+    changed.content.paragraphs.find((row) => row.section === 0 && row.paragraph === 25).dutmal[0]
+      .mainText,
+    command.value,
+  );
   assert.equal((await query("subText")).dutmal.value, "전술훈련 30% + 현지훈련 20%");
   const mainSaved = Buffer.from((await h.send({ kind: "save" })).bytes);
   const sub = { ...command, textKind: "subText", value: "주석😀<&" };
   assert.equal((await h.send(sub)).error, undefined);
   const saved = Buffer.from((await h.send({ kind: "save" })).bytes);
-  for (const flags of [[], ["-O"]]) execFileSync("python3", [...flags, "tools/hwpx-dutmal-text-oracle.py"], {
-    input: JSON.stringify({ before: input.toString("base64"), after: saved.toString("base64"), mainText: command.value, subText: sub.value }), timeout: 30000,
-  });
+  for (const flags of [[], ["-O"]])
+    execFileSync("python3", [...flags, "tools/hwpx-dutmal-text-oracle.py"], {
+      input: JSON.stringify({
+        before: input.toString("base64"),
+        after: saved.toString("base64"),
+        mainText: command.value,
+        subText: sub.value,
+      }),
+      timeout: 30000,
+    });
   assert.equal((await h.send({ kind: "undo" })).error, undefined);
   assert.deepEqual(Buffer.from((await h.send({ kind: "save" })).bytes), mainSaved);
   const refused = await query("main_text");
@@ -49,7 +72,13 @@ test("dutmal Worker edits preserve independent leaf history and actual ZIP", asy
   assert.equal(refused.section, 0);
   assert.equal(refused.node, node);
   assert.equal(refused.textKind, "main_text");
-  const badNode = await h.send({ kind: "dutmal-text-query", requestId: 18, section: 0, node: 0xffffffff, textKind: "mainText" });
+  const badNode = await h.send({
+    kind: "dutmal-text-query",
+    requestId: 18,
+    section: 0,
+    node: 0xffffffff,
+    textKind: "mainText",
+  });
   assert.equal(typeof badNode.error, "string");
   assert.equal(badNode.requestId, 18);
   assert.equal(badNode.node, 0xffffffff);

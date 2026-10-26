@@ -24,7 +24,8 @@ export function rawParagraphTexts(section) {
       paragraphs.push(null);
     } else if (tag === 67) {
       const owner = atLevel[level - 1];
-      if (owner === undefined || paragraphs[owner] !== null) throw new Error("oracle invalid text owner");
+      if (owner === undefined || paragraphs[owner] !== null)
+        throw new Error("oracle invalid text owner");
       paragraphs[owner] = Buffer.from(data);
     }
   }

@@ -2,7 +2,9 @@
 export function createMemory(wasm) {
   const decoder = new TextDecoder();
   const copy = (ptr, length) =>
-    length === 0 ? new Uint8Array(0) : new Uint8Array(wasm.memory.buffer, ptr >>> 0, length).slice();
+    length === 0
+      ? new Uint8Array(0)
+      : new Uint8Array(wasm.memory.buffer, ptr >>> 0, length).slice();
   const withBytes = (bytes, fn, secret = false) => {
     const ptr = wasm.cfb_alloc(bytes.length) >>> 0;
     if (!ptr) throw new Error("OutOfMemory");
@@ -16,10 +18,7 @@ export function createMemory(wasm) {
   };
   return {
     copy,
-    error: () =>
-      new Error(
-        decoder.decode(copy(wasm.cfb_error_ptr(), wasm.cfb_error_len())),
-      ),
+    error: () => new Error(decoder.decode(copy(wasm.cfb_error_ptr(), wasm.cfb_error_len()))),
     withBytes,
     withSecretBytes: (bytes, fn) => withBytes(bytes, fn, true),
   };

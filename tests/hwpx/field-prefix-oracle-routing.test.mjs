@@ -8,24 +8,60 @@ import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 test("field prefix oracle selection preserves section paragraph and native element identity", () => {
   const request = { before: "source", section: 2, paragraph: 2694, beginElement: 25779 };
-  const target = { part: "Contents/section2.xml", paragraph: 2694, beginElement: 25779, beginId: "memo" };
+  const target = {
+    part: "Contents/section2.xml",
+    paragraph: 2694,
+    beginElement: 25779,
+    beginId: "memo",
+  };
   const calls = [];
   const run = (_command, [path], options) => {
-    calls.push(path); assert.deepEqual(JSON.parse(options.input), { mode: "inventory", before: "source" });
-    return JSON.stringify(path.endsWith("memo-label-oracle.py") ? [target] : [{ ...target, part: "Contents/section0.xml" }, { ...target, paragraph: 1 }, { ...target, beginElement: 7 }]);
+    calls.push(path);
+    assert.deepEqual(JSON.parse(options.input), { mode: "inventory", before: "source" });
+    return JSON.stringify(
+      path.endsWith("memo-label-oracle.py")
+        ? [target]
+        : [
+            { ...target, part: "Contents/section0.xml" },
+            { ...target, paragraph: 1 },
+            { ...target, beginElement: 7 },
+          ],
+    );
   };
-  assert.deepEqual(selectFieldPrefixOracle(request, run), { oracle: "tools/memo-label-oracle.py", beginId: "memo" });
+  assert.deepEqual(selectFieldPrefixOracle(request, run), {
+    oracle: "tools/memo-label-oracle.py",
+    beginId: "memo",
+  });
   assert.equal(calls.length, 3);
-  assert.throws(() => selectFieldPrefixOracle(request, () => "[]"), /MissingIndependentFieldFragment/);
-  assert.throws(() => selectFieldPrefixOracle(request, () => JSON.stringify([target, target])), /must be unique/);
+  assert.throws(
+    () => selectFieldPrefixOracle(request, () => "[]"),
+    /MissingIndependentFieldFragment/,
+  );
+  assert.throws(
+    () => selectFieldPrefixOracle(request, () => JSON.stringify([target, target])),
+    /must be unique/,
+  );
   assert.throws(() => selectFieldPrefixOracle(request, () => "{}"), /InvalidFieldOracleInventory/);
-  assert.deepEqual(selectFieldPrefixOracle(request, () => JSON.stringify([target])), { oracle: "tools/hwpx-field-edit-oracle.py", beginId: "memo" });
+  assert.deepEqual(
+    selectFieldPrefixOracle(request, () => JSON.stringify([target])),
+    { oracle: "tools/hwpx-field-edit-oracle.py", beginId: "memo" },
+  );
 });
 
 test("actual aift MEMO target selects the independent annotation-preserving oracle", () => {
   const before = readFileSync("reference/rhwp/samples/hwpx/aift.hwpx").toString("base64");
-  assert.deepEqual(selectFieldPrefixOracle({ before, section: 2, paragraph: 2694, beginElement: 25779 }), { oracle: "tools/memo-label-oracle.py", beginId: "2135782115" });
-  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "tools/memo-label-oracle.py", "--self-test"], { encoding: "utf8", timeout: 10000 }), /self-test verified/);
+  assert.deepEqual(
+    selectFieldPrefixOracle({ before, section: 2, paragraph: 2694, beginElement: 25779 }),
+    { oracle: "tools/memo-label-oracle.py", beginId: "2135782115" },
+  );
+  for (const flags of [[], ["-O"]])
+    assert.match(
+      execFileSync("python3", [...flags, "tools/memo-label-oracle.py", "--self-test"], {
+        encoding: "utf8",
+        timeout: 10000,
+      }),
+      /self-test verified/,
+    );
 });
 
 test("independent prefix site crosses only zero-width metadata and preserves object order", () => {
@@ -65,7 +101,11 @@ except ValueError as error:
 else:raise ValueError('Accepted object outside the chosen field')
 print('27 prefix site cases verified')
 `;
-  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /27 prefix site cases verified/);
+  for (const flags of [[], ["-O"]])
+    assert.match(
+      execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }),
+      /27 prefix site cases verified/,
+    );
 });
 
 test("object-only field inventory preserves the outer paragraph and independent saved XML", () => {
@@ -116,66 +156,171 @@ for replacement in ['future','ctrl']:
  if any(p==1 for _,p,_ in base['fragments'](bad)):raise ValueError('Invented unsupported outer object')
 print('object-only inventory and three corruptions verified')
 `;
-  for (const flags of [[], ["-O"]]) assert.match(execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }), /object-only inventory and three corruptions verified/);
+  for (const flags of [[], ["-O"]])
+    assert.match(
+      execFileSync("python3", [...flags, "-c", program], { encoding: "utf8", timeout: 10000 }),
+      /object-only inventory and three corruptions verified/,
+    );
 });
 
-test("actual graphic and automatic-number field prefixes preserve complete XML ZIP and history", async t => {
-  if (!process.env.HWPJS_TEST_WASM) { t.skip("explicit candidate WASM required"); return; }
+test("actual graphic and automatic-number field prefixes preserve complete XML ZIP and history", async (t) => {
+  if (!process.env.HWPJS_TEST_WASM) {
+    t.skip("explicit candidate WASM required");
+    return;
+  }
   const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
   try {
     for (const [path, section, paragraph, local] of [
-      ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 114, 1],
-      ["reference/rhwp/samples/hwpx/opengov/36385226_결재문서본문_제2처리장 슬러지인발용 에어리프트 브로워 2호기 소모품 교체 보고.hwpx", 0, 74, 74],
-      ["reference/rhwp/samples/hwpx/opengov/36392900_결재문서본문_일일굴착복구공사현황보고.hwpx", 0, 90, 90],
-      ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 121, 8],
-      ["reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx", 2, 129, 16],
+      [
+        "reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx",
+        2,
+        114,
+        1,
+      ],
+      [
+        "reference/rhwp/samples/hwpx/opengov/36385226_결재문서본문_제2처리장 슬러지인발용 에어리프트 브로워 2호기 소모품 교체 보고.hwpx",
+        0,
+        74,
+        74,
+      ],
+      [
+        "reference/rhwp/samples/hwpx/opengov/36392900_결재문서본문_일일굴착복구공사현황보고.hwpx",
+        0,
+        90,
+        90,
+      ],
+      [
+        "reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx",
+        2,
+        121,
+        8,
+      ],
+      [
+        "reference/rhwp/samples/hwpx/opengov/36382669_결재문서본문_’26년 제3차 강사선정 심의회 운영결과.hwpx",
+        2,
+        129,
+        16,
+      ],
       ["reference/rhwp/samples/issue2083_hide_fill_page.hwpx", 2, 121, 1],
       ["reference/rhwp/samples/issue2813/dangjik_dutylog.hwpx", 0, 141, 141],
       ["reference/rhwp/samples/issue2470/36341511_masked.hwpx", 0, 72, 72],
       ["reference/rhwp/samples/task1749/saved_bounds_cumulative_page_break.hwpx", 0, 44, 44],
     ]) {
-      const input = readFileSync(path); editor.open(input); editor.enableHistory();
-      const target = editor.fieldRangeTarget(section, paragraph, 0, 0); assert(target);
-      const selected = selectFieldPrefixOracle({ before: input.toString("base64"), section, paragraph: local, beginElement: target.beginElement });
+      const input = readFileSync(path);
+      editor.open(input);
+      editor.enableHistory();
+      const target = editor.fieldRangeTarget(section, paragraph, 0, 0);
+      assert(target);
+      const selected = selectFieldPrefixOracle({
+        before: input.toString("base64"),
+        section,
+        paragraph: local,
+        beginElement: target.beginElement,
+      });
       assert.equal(selected.oracle, "tools/hwpx-field-edit-oracle.py");
-      const text = "경로😀<&"; editor.spliceFieldLabel(section, paragraph, target.beginElement, 0, 0, text);
+      const text = "경로😀<&";
+      editor.spliceFieldLabel(section, paragraph, target.beginElement, 0, 0, text);
       const saved = Buffer.from(editor.save());
-      const request = { mode: "prefix", before: input.toString("base64"), after: saved.toString("base64"), section, paragraph: local, beginId: selected.beginId, text };
+      const request = {
+        mode: "prefix",
+        before: input.toString("base64"),
+        after: saved.toString("base64"),
+        section,
+        paragraph: local,
+        beginId: selected.beginId,
+        text,
+      };
       for (const flags of [[], ["-O"]]) {
-        execFileSync("python3", [...flags, selected.oracle], { input: JSON.stringify(request), timeout: 30000 });
-        assert.throws(() => execFileSync("python3", [...flags, selected.oracle], { input: JSON.stringify({ ...request, text: "wrong" }), timeout: 30000 }), error => error.status === 1 && /Unexpected XML change/.test(String(error.stderr)));
+        execFileSync("python3", [...flags, selected.oracle], {
+          input: JSON.stringify(request),
+          timeout: 30000,
+        });
+        assert.throws(
+          () =>
+            execFileSync("python3", [...flags, selected.oracle], {
+              input: JSON.stringify({ ...request, text: "wrong" }),
+              timeout: 30000,
+            }),
+          (error) => error.status === 1 && /Unexpected XML change/.test(String(error.stderr)),
+        );
       }
-      assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save()), input);
-      assert.equal(editor.redo(), true); assert.deepEqual(Buffer.from(editor.save()), saved);
-      editor.open(saved); assert.deepEqual(Buffer.from(editor.save()), saved);
+      assert.equal(editor.undo(), true);
+      assert.deepEqual(Buffer.from(editor.save()), input);
+      assert.equal(editor.redo(), true);
+      assert.deepEqual(Buffer.from(editor.save()), saved);
+      editor.open(saved);
+      assert.deepEqual(Buffer.from(editor.save()), saved);
       assert.deepEqual(readFileSync(path), input);
     }
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });
 
-test("actual task1749 field supports interior insertion replacement deletion and end insertion", async t => {
-  if (!process.env.HWPJS_TEST_WASM) { t.skip("explicit candidate WASM required"); return; }
+test("actual task1749 field supports interior insertion replacement deletion and end insertion", async (t) => {
+  if (!process.env.HWPJS_TEST_WASM) {
+    t.skip("explicit candidate WASM required");
+    return;
+  }
   const path = "reference/rhwp/samples/task1749/saved_bounds_cumulative_page_break.hwpx";
-  const input = readFileSync(path), wasm = readFileSync(process.env.HWPJS_TEST_WASM);
-  const digest = bytes => createHash("sha256").update(bytes).digest("hex");
+  const input = readFileSync(path),
+    wasm = readFileSync(process.env.HWPJS_TEST_WASM);
+  const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
   assert.equal(digest(input), "2fd531b3e235a714c3fef1a59ddcd9d23225f68f5c492adb17500d23f5cbfe2f");
-  const originalWasm = digest(wasm), editor = await createHwpxEditor(wasm);
+  const originalWasm = digest(wasm),
+    editor = await createHwpxEditor(wasm);
   try {
-    for (const [atUnit, deletedUnits, text] of [[2, 0, "😀<&"], [2, 2, "치환"], [2, 2, ""], [16, 0, "끝"]]) {
-      editor.open(input); editor.enableHistory();
-      const target = editor.fieldRangeTarget(0, 45, atUnit, atUnit + deletedUnits); assert(target);
-      const selected = selectFieldPrefixOracle({ before: input.toString("base64"), section: 0, paragraph: 45, beginElement: target.beginElement });
+    for (const [atUnit, deletedUnits, text] of [
+      [2, 0, "😀<&"],
+      [2, 2, "치환"],
+      [2, 2, ""],
+      [16, 0, "끝"],
+    ]) {
+      editor.open(input);
+      editor.enableHistory();
+      const target = editor.fieldRangeTarget(0, 45, atUnit, atUnit + deletedUnits);
+      assert(target);
+      const selected = selectFieldPrefixOracle({
+        before: input.toString("base64"),
+        section: 0,
+        paragraph: 45,
+        beginElement: target.beginElement,
+      });
       assert.equal(selected.oracle, "tools/hwpx-field-edit-oracle.py");
       editor.spliceFieldLabel(0, 45, target.beginElement, atUnit, deletedUnits, text);
       const saved = Buffer.from(editor.save());
-      const request = { before: input.toString("base64"), after: saved.toString("base64"), paragraph: 45, beginId: selected.beginId, atUnit, deletedUnits, text };
+      const request = {
+        before: input.toString("base64"),
+        after: saved.toString("base64"),
+        paragraph: 45,
+        beginId: selected.beginId,
+        atUnit,
+        deletedUnits,
+        text,
+      };
       for (const flags of [[], ["-O"]]) {
-        execFileSync("python3", [...flags, selected.oracle], { input: JSON.stringify(request), timeout: 30000 });
-        assert.throws(() => execFileSync("python3", [...flags, selected.oracle], { input: JSON.stringify({ ...request, text: "wrong" }), timeout: 30000 }), error => error.status === 1 && error.signal === null && /Unexpected XML change/.test(String(error.stderr)));
+        execFileSync("python3", [...flags, selected.oracle], {
+          input: JSON.stringify(request),
+          timeout: 30000,
+        });
+        assert.throws(
+          () =>
+            execFileSync("python3", [...flags, selected.oracle], {
+              input: JSON.stringify({ ...request, text: "wrong" }),
+              timeout: 30000,
+            }),
+          (error) =>
+            error.status === 1 &&
+            error.signal === null &&
+            /Unexpected XML change/.test(String(error.stderr)),
+        );
       }
-      assert.equal(editor.undo(), true); assert.deepEqual(Buffer.from(editor.save()), input);
-      assert.equal(editor.redo(), true); assert.deepEqual(Buffer.from(editor.save()), saved);
-      editor.open(saved); assert.deepEqual(Buffer.from(editor.save()), saved);
+      assert.equal(editor.undo(), true);
+      assert.deepEqual(Buffer.from(editor.save()), input);
+      assert.equal(editor.redo(), true);
+      assert.deepEqual(Buffer.from(editor.save()), saved);
+      editor.open(saved);
+      assert.deepEqual(Buffer.from(editor.save()), saved);
     }
     assert.deepEqual(readFileSync(path), input);
   } finally {

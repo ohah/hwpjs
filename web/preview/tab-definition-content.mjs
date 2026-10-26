@@ -12,10 +12,11 @@ export function attachTabDefinitions(editor, content) {
   }
   if (!selected.length) return content;
   try {
-    if (typeof editor.tabDefinitions !== "function") throw new Error("HwpxTabDefinitionsAbiUnavailable");
+    if (typeof editor.tabDefinitions !== "function")
+      throw new Error("HwpxTabDefinitionsAbiUnavailable");
     const rows = validateTabDefinitions(editor.tabDefinitions());
     content.tabDefinitions = rows;
-    const byId = new Map(rows.map(row => [row.id, row]));
+    const byId = new Map(rows.map((row) => [row.id, row]));
     for (const paragraph of selected) {
       const id = paragraph.tabDefinitionId;
       if (!Number.isInteger(id) || id < 0 || id > 0xffffffff || !byId.has(id)) {

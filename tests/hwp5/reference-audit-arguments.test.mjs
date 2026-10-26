@@ -10,7 +10,10 @@ test("reference read audit rejects duplicate empty and unknown options before IO
     [["--wasm="], "UnknownAuditArgument"],
     [["--history"], "UnknownAuditArgument"],
   ]) {
-    const result = spawnSync(process.execPath, ["tools/reference-parser-audit.mjs", ...args], { encoding: "utf8", timeout: 10000 });
+    const result = spawnSync(process.execPath, ["tools/reference-parser-audit.mjs", ...args], {
+      encoding: "utf8",
+      timeout: 10000,
+    });
     assert.equal(result.error, undefined);
     assert.notEqual(result.status, 0);
     assert(result.stderr.includes(error), result.stderr);

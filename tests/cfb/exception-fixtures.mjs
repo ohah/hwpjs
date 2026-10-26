@@ -6,8 +6,7 @@ export function directoryOrder(cycle = false) {
   bytes.writeUInt32LE(0xffffffff, 4096 + 2 * 4);
   // MS-CFB 2.6.3: unused entries are zero except for their NOSTREAM links.
   for (let offset = 8192; offset < bytes.length; offset += 128)
-    for (const field of [68, 72, 76])
-      bytes.writeUInt32LE(0xffffffff, offset + field);
+    for (const field of [68, 72, 76]) bytes.writeUInt32LE(0xffffffff, offset + field);
   function entry(index, name, type, left, right, child) {
     const o = 8192 + index * 128;
     bytes.fill(0, o, o + 128);

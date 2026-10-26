@@ -10,7 +10,12 @@ export function tableCellBand(offset, row) {
 export function tableCellRowExtent(row) {
   if (!row || !Number.isFinite(row.height) || row.height < 0) return NaN;
   if (row.kind !== "text" || row.textHeight === undefined) return row.height;
-  if (!Number.isFinite(row.textHeight) || row.textHeight < 0 || row.textTop !== undefined && (!Number.isFinite(row.textTop) || row.textTop < 0)) return NaN;
+  if (
+    !Number.isFinite(row.textHeight) ||
+    row.textHeight < 0 ||
+    (row.textTop !== undefined && (!Number.isFinite(row.textTop) || row.textTop < 0))
+  )
+    return NaN;
   if (row.text === "" && !row.numberPrefix) return row.height;
   return rowVisualHeight(row);
 }

@@ -17,11 +17,25 @@ test("actual field exterior input preserves end markers and a field-owned table"
       const text = "종료뒤😀<&";
       editor.splice(0, paragraph, 0, 0, text);
       const saved = Buffer.from(editor.save());
-      const payload = { before: input.toString("base64"), after: saved.toString("base64"), section: 0, paragraph, text };
+      const payload = {
+        before: input.toString("base64"),
+        after: saved.toString("base64"),
+        section: 0,
+        paragraph,
+        text,
+      };
       for (const flags of [[], ["-O"]]) {
-        const check = data => execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], { input: JSON.stringify(data), timeout: 30000 });
+        const check = (data) =>
+          execFileSync("python3", [...flags, "tools/hwpx-anchor-prefix-oracle.py"], {
+            input: JSON.stringify(data),
+            timeout: 30000,
+          });
         check(payload);
-        assert.throws(() => check({ ...payload, text: "wrong" }), error => error.status === 1 && /ValueError: complete XML mismatch/.test(String(error.stderr)));
+        assert.throws(
+          () => check({ ...payload, text: "wrong" }),
+          (error) =>
+            error.status === 1 && /ValueError: complete XML mismatch/.test(String(error.stderr)),
+        );
       }
       assert.equal(editor.undo(), true);
       assert.deepEqual(Buffer.from(editor.save()), input);
@@ -31,5 +45,7 @@ test("actual field exterior input preserves end markers and a field-owned table"
       assert.deepEqual(Buffer.from(editor.save()), saved);
     }
     assert.deepEqual(readFileSync(path), input);
-  } finally { editor.close(); }
+  } finally {
+    editor.close();
+  }
 });

@@ -7,11 +7,21 @@ export function attachHwp5WindowNotes(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
   content.currentParagraphFlows = selectedFlows;
   const scoped = Object.create(editor);
-  scoped.noteSources = section => {
-    const rows = validateHwp5NoteSources(editor.noteSources(section)).filter(row => displayed.has(`${section}:${row.paragraph}`));
+  scoped.noteSources = (section) => {
+    const rows = validateHwp5NoteSources(editor.noteSources(section)).filter((row) =>
+      displayed.has(`${section}:${row.paragraph}`),
+    );
     for (const source of rows) {
-      const members = completeFlows.get(section).filter(row => row.host === source.kind && row.parent_node === source.control_node && row.list_node === source.list_node);
-      if (members.some(row => !displayed.has(`${section}:${row.paragraph}`))) throw new Error("MissingHwp5NoteBody");
+      const members = completeFlows
+        .get(section)
+        .filter(
+          (row) =>
+            row.host === source.kind &&
+            row.parent_node === source.control_node &&
+            row.list_node === source.list_node,
+        );
+      if (members.some((row) => !displayed.has(`${section}:${row.paragraph}`)))
+        throw new Error("MissingHwp5NoteBody");
     }
     return rows;
   };

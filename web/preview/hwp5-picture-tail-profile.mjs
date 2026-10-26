@@ -1,6 +1,12 @@
 // 버전별 선택 배치와 그 배치의 alpha 부재 계약만 소유합니다.
 export function hwp5PictureTailLayout(version) {
-  return version === 0x05010001 || version === 0x05010100 ? "with_alpha9" : version === 0x05000500 || version === 0x05000304 ? "dimensions8" : version === 0x05000300 ? "effects_only" : null;
+  return version === 0x05010001 || version === 0x05010100
+    ? "with_alpha9"
+    : version === 0x05000500 || version === 0x05000304
+      ? "dimensions8"
+      : version === 0x05000300
+        ? "effects_only"
+        : null;
 }
 export function hwp5PictureTailAlphaSupported(tail) {
   // 명시적0 alpha의 기존 판정은 유지하고 부재 허용만 버전 프로필로 제한합니다.

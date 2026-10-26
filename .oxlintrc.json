@@ -1,0 +1,43 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "globals": {
+    "Bun": "readonly"
+  },
+  "ignorePatterns": [
+    "**/title-column-roundtrip.test.mjs",
+    "**/hwpers_test4_complex_table.hwp",
+    "packages/hwpjs/tests/fixtures/__tests__/nodefixture.d.ts",
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/.cache/**",
+    "**/.zig-cache/**",
+    "**/zig-cache/**",
+    "**/zig-out/**",
+    "**/legacy/**",
+    "**/vendor/**",
+    "**/third_party/**",
+    "**/generated/**",
+    "**/dist/**",
+    "**/doc_build/**",
+    "**/coverage/**",
+    "**/.rspress/**",
+    "**/.vite/**",
+    "**/Pods/**",
+    "**/DerivedData/**",
+    "apps/docs/docs/public/editor/**",
+    "apps/demo/public/**",
+    "public/**",
+    "packages/react-native/examples/**/ios/build/**",
+    "packages/react-native/examples/**/android/app/build/**",
+    "**/*.min.*",
+    "**/*.generated.*",
+    "**/*.gen.*"
+  ]
+}

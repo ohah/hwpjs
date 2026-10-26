@@ -5,7 +5,14 @@ import { execFileSync } from "../../tools/oracle-process.mjs";
 import { createHwpxEditor } from "../../js/hwpx-editor.mjs";
 
 // Independent ZIP/expanded-name traversal, without product selection helpers.
-const oracle = path => JSON.parse(execFileSync("python3", ["-B", "-c", `
+const oracle = (path) =>
+  JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-B",
+        "-c",
+        `
 import json,sys,zipfile,xml.etree.ElementTree as E
 h="{http://www.hancom.co.kr/hwpml/2011/head}"
 p="{http://www.hancom.co.kr/hwpml/2011/paragraph}"
@@ -38,23 +45,33 @@ for node in root.iter(h+"paraPr"):
   spacing_type=None if spacing is None else spacing.get("type"),spacing=measure(spacing),
   margins=[None if margin is None else measure(one(margin,c+name)) for name in ("intent","left","right","prev","next")]))
 print(json.dumps(sorted(rows,key=lambda row:row["id"])))
-`, path], { encoding: "utf8", timeout: 30000 }));
+`,
+        path,
+      ],
+      { encoding: "utf8", timeout: 30000 },
+    ),
+  );
 
 for (const path of [
   "reference/rhwp/samples/issue6298/copay_cap_tac_table_leading.hwpx",
   "reference/rhwp/samples/hwpx/exam_social.hwpx",
-]) test("selected paragraph display matches independent header XML: " + path, async t => {
-  const input = readFileSync(path), before = Buffer.from(input);
-  const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
-  try {
-    editor.open(input);
-    const expected = oracle(path);
-    assert.ok(expected.some(row => row.margins.some(margin => margin?.value < 0)));
-    const actual = editor.paragraphShapes();
-    assert.equal(actual.length, expected.length);
-    for (const [index, row] of expected.entries()) assert.deepEqual(actual[index], row, "paragraph shape " + row.id);
-    t.diagnostic(JSON.stringify({ path, resources: expected.length }));
-    assert.deepEqual(Buffer.from(editor.save()), before);
-    assert.deepEqual(input, before);
-  } finally { editor.close(); }
-});
+])
+  test("selected paragraph display matches independent header XML: " + path, async (t) => {
+    const input = readFileSync(path),
+      before = Buffer.from(input);
+    const editor = await createHwpxEditor(readFileSync(process.env.HWPJS_TEST_WASM));
+    try {
+      editor.open(input);
+      const expected = oracle(path);
+      assert.ok(expected.some((row) => row.margins.some((margin) => margin?.value < 0)));
+      const actual = editor.paragraphShapes();
+      assert.equal(actual.length, expected.length);
+      for (const [index, row] of expected.entries())
+        assert.deepEqual(actual[index], row, "paragraph shape " + row.id);
+      t.diagnostic(JSON.stringify({ path, resources: expected.length }));
+      assert.deepEqual(Buffer.from(editor.save()), before);
+      assert.deepEqual(input, before);
+    } finally {
+      editor.close();
+    }
+  });

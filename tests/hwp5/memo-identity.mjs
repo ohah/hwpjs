@@ -16,8 +16,7 @@ const frame = (tag, level, b) =>
     ...(b.length >= 4095 ? [w(b.length)] : []),
     b,
   ]);
-const field = (cmd) =>
-  Buffer.concat([w(0x8001), Buffer.from([0]), u(cmd.length / 2), cmd, w(123)]);
+const field = (cmd) => Buffer.concat([w(0x8001), Buffer.from([0]), u(cmd.length / 2), cmd, w(123)]);
 export function memoEdges(call) {
   const v = 0x05010001;
   const make = (p, tokenId = 0x25256d65, headId = 0x25756e6b, code = 3) => {
@@ -43,17 +42,8 @@ export function memoEdges(call) {
     rejected++;
     check(make(good));
   };
-  for (let n = 0; n < good.length; n++)
-    reject(make(good.subarray(0, n)), /UnexpectedEnd/);
-  for (const s of [
-    "",
-    "M",
-    "MEMO",
-    "memo/",
-    "XMEMO/",
-    "MEMO\u0000/",
-    "ＭＥＭＯ/",
-  ])
+  for (let n = 0; n < good.length; n++) reject(make(good.subarray(0, n)), /UnexpectedEnd/);
+  for (const s of ["", "M", "MEMO", "memo/", "XMEMO/", "MEMO\u0000/", "ＭＥＭＯ/"])
     reject(make(field(Buffer.from(s, "utf16le"))));
   for (const [token, head, code] of [
     [0x25756e6b, 0x25256d65, 3],
@@ -67,10 +57,7 @@ export function memoEdges(call) {
     Buffer.from([0, 0, 0, 216, 255, 254]),
     Buffer.alloc((65535 - 5) * 2, 255),
   ])
-    check(
-      make(field(Buffer.concat([Buffer.from("MEMO/", "utf16le"), suffix]))),
-    );
-  for (let n = 0; n < 4; n++)
-    check(make(Buffer.concat([good, Buffer.alloc(n, 7)])));
+    check(make(field(Buffer.concat([Buffer.from("MEMO/", "utf16le"), suffix]))));
+  for (let n = 0; n < 4; n++) check(make(Buffer.concat([good, Buffer.alloc(n, 7)])));
   return { accepted, rejected };
 }

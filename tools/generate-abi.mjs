@@ -18,12 +18,7 @@ const generated =
     .join("") +
   "};\n";
 if (process.argv.includes("--check")) {
-  if (
-    readFileSync(
-      new URL("../src/wasm/abi_schema.zig", import.meta.url),
-      "utf8",
-    ) !== generated
-  )
+  if (readFileSync(new URL("../src/wasm/abi_schema.zig", import.meta.url), "utf8") !== generated)
     throw new Error(
       "ABI schema drift: regenerate src/wasm/abi_schema.zig with tools/generate-abi.mjs",
     );

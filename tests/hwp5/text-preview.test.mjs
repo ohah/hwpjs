@@ -9,13 +9,19 @@ import { rawParagraphTexts } from "../../tools/hwp5-preview-record-oracle.mjs";
 import { decodeDistributionSection } from "../../tools/hwp5-distribution-oracle.mjs";
 
 const wasm = readFileSync(new URL("../../zig-out/bin/hwpjs.wasm", import.meta.url));
-const fixture = name => readFileSync(new URL(`../../legacy/rust/crates/hwp-core/tests/fixtures/${name}`, import.meta.url));
+const fixture = (name) =>
+  readFileSync(
+    new URL(`../../legacy/rust/crates/hwp-core/tests/fixtures/${name}`, import.meta.url),
+  );
 
 test("HWP5 public preview preserves exact text-token bytes from two real files", async () => {
   const hwp = await createHwp5Reader(wasm);
   const cfb = await createCfbReader(wasm);
   try {
-    for (const [name, expectedCount] of [["example.hwp", 15], ["footnote-endnote.hwp", 6]]) {
+    for (const [name, expectedCount] of [
+      ["example.hwp", 15],
+      ["footnote-endnote.hwp", 6],
+    ]) {
       const bytes = fixture(name);
       const result = hwp.readText(bytes);
       cfb.parse(bytes, { strict: true });
@@ -23,7 +29,7 @@ test("HWP5 public preview preserves exact text-token bytes from two real files",
       assert.equal(result.sections.length, 1);
       const paragraphs = result.sections[0].paragraphs;
       assert.equal(paragraphs.length, expectedCount);
-      if (name === "example.hwp") assert.equal(paragraphs.filter(p => !p.textPresent).length, 3);
+      if (name === "example.hwp") assert.equal(paragraphs.filter((p) => !p.textPresent).length, 3);
       const header = cfb.findExact("/FileHeader").content;
       const encoded = cfb.findExact("/BodyText/Section0").content;
       const section = header[36] & 1 ? inflateRawSync(encoded) : encoded;
@@ -31,11 +37,17 @@ test("HWP5 public preview preserves exact text-token bytes from two real files",
       assert.equal(oracle.length, paragraphs.length);
       for (const [index, paragraph] of paragraphs.entries()) {
         assert.equal(paragraph.textPresent, oracle[index] !== null);
-        assert.deepEqual(Buffer.concat(paragraph.tokens.map(t => Buffer.from(t.raw))), oracle[index] ?? Buffer.alloc(0));
+        assert.deepEqual(
+          Buffer.concat(paragraph.tokens.map((t) => Buffer.from(t.raw))),
+          oracle[index] ?? Buffer.alloc(0),
+        );
       }
     }
     assert.equal(hwp.readText(fixture("example.hwp")).sections[0].paragraphs[0].text, "삼강오륜");
-    assert.equal(hwp.readText(fixture("footnote-endnote.hwp")).sections[0].paragraphs[0].text, "각주참조");
+    assert.equal(
+      hwp.readText(fixture("footnote-endnote.hwp")).sections[0].paragraphs[0].text,
+      "각주참조",
+    );
   } finally {
     cfb.close();
     hwp.close();
@@ -50,8 +62,8 @@ test("HWP5 preview accepts zlib-wrapped DocInfo and Section with strict envelope
     const expected = hwp.readText(original);
     cfb.parse(original, { strict: true });
     const document = cfb.document();
-    const info = document.nodes.find(node => node.name === "DocInfo");
-    const section = document.nodes.find(node => node.name === "Section0");
+    const info = document.nodes.find((node) => node.name === "DocInfo");
+    const section = document.nodes.find((node) => node.name === "Section0");
     assert.ok(info && section);
     const rawInfo = inflateRawSync(info.content);
     const rawSection = inflateRawSync(section.content);
@@ -86,14 +98,20 @@ test("HWP5 preview agrees across zlib levels, strategies and window sizes", asyn
     const expected = hwp.readText(original);
     cfb.parse(original, { strict: true });
     const document = cfb.document();
-    const info = document.nodes.find(node => node.name === "DocInfo");
-    const section = document.nodes.find(node => node.name === "Section0");
+    const info = document.nodes.find((node) => node.name === "DocInfo");
+    const section = document.nodes.find((node) => node.name === "Section0");
     assert.ok(info && section);
     const rawInfo = inflateRawSync(info.content);
     const rawSection = inflateRawSync(section.content);
     let checked = 0;
     for (const level of [0, 1, 3, 6, 9]) {
-      for (const strategy of [constants.Z_DEFAULT_STRATEGY, constants.Z_FILTERED, constants.Z_HUFFMAN_ONLY, constants.Z_RLE, constants.Z_FIXED]) {
+      for (const strategy of [
+        constants.Z_DEFAULT_STRATEGY,
+        constants.Z_FILTERED,
+        constants.Z_HUFFMAN_ONLY,
+        constants.Z_RLE,
+        constants.Z_FIXED,
+      ]) {
         for (const windowBits of [9, 10, 11, 12, 13, 14, 15]) {
           const options = { level, strategy, windowBits };
           info.content = deflateSync(rawInfo, options);
@@ -111,26 +129,30 @@ test("HWP5 preview agrees across zlib levels, strategies and window sizes", asyn
 });
 
 const wrappedCorpusFile = new URL("../../reference/hwpers/converted_output.hwp", import.meta.url);
-test("observed wrapped HWP reaches its separately short DocumentProperties", { skip: !existsSync(wrappedCorpusFile) }, async () => {
-  const hwp = await createHwp5Reader(wasm);
-  const cfb = await createCfbReader(wasm);
-  try {
-    const bytes = readFileSync(wrappedCorpusFile);
-    cfb.parse(bytes, { strict: true });
-    const info = cfb.findExact("/DocInfo").content;
-    const section = cfb.findExact("/BodyText/Section0").content;
-    assert.throws(() => inflateRawSync(info));
-    assert.throws(() => inflateRawSync(section));
-    const decodedInfo = inflateSync(info);
-    assert.equal(decodedInfo.readUInt32LE(0) & 1023, 16);
-    assert.equal(decodedInfo.readUInt32LE(0) >>> 20, 4);
-    assert.equal(inflateSync(section).length, 8782);
-    assert.throws(() => hwp.readText(bytes), { message: "InvalidDocumentPropertiesLength" });
-  } finally {
-    cfb.close();
-    hwp.close();
-  }
-});
+test(
+  "observed wrapped HWP reaches its separately short DocumentProperties",
+  { skip: !existsSync(wrappedCorpusFile) },
+  async () => {
+    const hwp = await createHwp5Reader(wasm);
+    const cfb = await createCfbReader(wasm);
+    try {
+      const bytes = readFileSync(wrappedCorpusFile);
+      cfb.parse(bytes, { strict: true });
+      const info = cfb.findExact("/DocInfo").content;
+      const section = cfb.findExact("/BodyText/Section0").content;
+      assert.throws(() => inflateRawSync(info));
+      assert.throws(() => inflateRawSync(section));
+      const decodedInfo = inflateSync(info);
+      assert.equal(decodedInfo.readUInt32LE(0) & 1023, 16);
+      assert.equal(decodedInfo.readUInt32LE(0) >>> 20, 4);
+      assert.equal(inflateSync(section).length, 8782);
+      assert.throws(() => hwp.readText(bytes), { message: "InvalidDocumentPropertiesLength" });
+    } finally {
+      cfb.close();
+      hwp.close();
+    }
+  },
+);
 
 test("HWP5 preview repairs only observed CFB metadata without changing text", async () => {
   const bytes = fixture("example.hwp");
@@ -171,15 +193,21 @@ test("HWP5 preview skips unrelated malformed semantic records but keeps framing 
     const original = hwp.readText(bytes);
     cfb.parse(bytes, { strict: true });
     const document = cfb.document();
-    const info = document.nodes.find(node => node.name === "DocInfo");
-    const section = document.nodes.find(node => node.name === "Section0");
+    const info = document.nodes.find((node) => node.name === "DocInfo");
+    const section = document.nodes.find((node) => node.name === "Section0");
     assert.ok(info && section);
-    info.content = deflateRawSync(Buffer.concat([inflateRawSync(info.content), framed(21, 1, [0])]));
-    section.content = deflateRawSync(Buffer.concat([inflateRawSync(section.content), framed(77, 0, [0])]));
+    info.content = deflateRawSync(
+      Buffer.concat([inflateRawSync(info.content), framed(21, 1, [0])]),
+    );
+    section.content = deflateRawSync(
+      Buffer.concat([inflateRawSync(section.content), framed(77, 0, [0])]),
+    );
     const malformedUnrelated = cfb.write(document);
     assert.deepEqual(hwp.readText(malformedUnrelated), original);
 
-    section.content = deflateRawSync(Buffer.concat([inflateRawSync(section.content), Buffer.of(1)]));
+    section.content = deflateRawSync(
+      Buffer.concat([inflateRawSync(section.content), Buffer.of(1)]),
+    );
     assert.throws(() => hwp.readText(cfb.write(document)), { message: "UnexpectedEnd" });
   } finally {
     cfb.close();
@@ -195,7 +223,7 @@ test("HWP5 preview accepts complete base DocumentProperties without caret and re
     const expected = hwp.readText(bytes);
     cfb.parse(bytes, { strict: true });
     const document = cfb.document();
-    const info = document.nodes.find(node => node.name === "DocInfo");
+    const info = document.nodes.find((node) => node.name === "DocInfo");
     assert.ok(info);
     const raw = inflateRawSync(info.content);
     const bits = raw.readUInt32LE(0);
@@ -205,10 +233,13 @@ test("HWP5 preview accepts complete base DocumentProperties without caret and re
     for (const length of [4, 14, 13, 15, 25]) {
       const first = Buffer.from(raw.subarray(0, 4));
       first.writeUInt32LE((length << 20) | (bits & 0xfffff));
-      info.content = deflateRawSync(Buffer.concat([first, raw.subarray(4, 4 + length), raw.subarray(4 + oldLength)]));
+      info.content = deflateRawSync(
+        Buffer.concat([first, raw.subarray(4, 4 + length), raw.subarray(4 + oldLength)]),
+      );
       const changed = cfb.write(document);
       if (length === 14) assert.deepEqual(hwp.readText(changed), expected);
-      else assert.throws(() => hwp.readText(changed), { message: "InvalidDocumentPropertiesLength" });
+      else
+        assert.throws(() => hwp.readText(changed), { message: "InvalidDocumentPropertiesLength" });
     }
   } finally {
     cfb.close();
@@ -220,10 +251,10 @@ test("HWP5 preview matches raw section text across all tracked HWP fixtures", as
   const hwp = await createHwp5Reader(wasm);
   const cfb = await createCfbReader(wasm);
   const folder = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
-  const names = readdirSync(folder).filter(name => name.endsWith(".hwp")).sort();
-  const expectedRejections = new Map([
-    ["password-12345.hwp", "UnsupportedEncryption"],
-  ]);
+  const names = readdirSync(folder)
+    .filter((name) => name.endsWith(".hwp"))
+    .sort();
+  const expectedRejections = new Map([["password-12345.hwp", "UnsupportedEncryption"]]);
   let accepted = 0;
   const versions = new Map();
   try {
@@ -244,20 +275,33 @@ test("HWP5 preview matches raw section text across all tracked HWP fixtures", as
         assert.equal(result.primarySource, "distribution_viewtext", name);
       }
       for (const section of result.sections) {
-        const encoded = cfb.findExact(`/${distribution ? "ViewText" : "BodyText"}/Section${section.index}`).content;
-        const raw = distribution ? decodeDistributionSection(encoded, Boolean(header[36] & 1)) : header[36] & 1 ? inflateRawSync(encoded) : encoded;
+        const encoded = cfb.findExact(
+          `/${distribution ? "ViewText" : "BodyText"}/Section${section.index}`,
+        ).content;
+        const raw = distribution
+          ? decodeDistributionSection(encoded, Boolean(header[36] & 1))
+          : header[36] & 1
+            ? inflateRawSync(encoded)
+            : encoded;
         const oracle = rawParagraphTexts(raw);
         assert.equal(section.paragraphs.length, oracle.length, name);
         for (const [i, paragraph] of section.paragraphs.entries()) {
           assert.equal(paragraph.textPresent, oracle[i] !== null, name);
-          assert.deepEqual(Buffer.concat(paragraph.tokens.map(token => Buffer.from(token.raw))), oracle[i] ?? Buffer.alloc(0), `${name} section ${section.index} paragraph ${i}`);
+          assert.deepEqual(
+            Buffer.concat(paragraph.tokens.map((token) => Buffer.from(token.raw))),
+            oracle[i] ?? Buffer.alloc(0),
+            `${name} section ${section.index} paragraph ${i}`,
+          );
         }
       }
       accepted++;
     }
     assert.equal(names.length, 48);
     assert.equal(accepted, 47);
-    assert.deepEqual([...versions].sort(), [["5.0", 14], ["5.1", 33]]);
+    assert.deepEqual([...versions].sort(), [
+      ["5.0", 14],
+      ["5.1", 33],
+    ]);
   } finally {
     cfb.close();
     hwp.close();
@@ -272,7 +316,7 @@ test("HWP5 preview rejects damaged and encrypted inputs without leaking result s
     assert.throws(() => hwp.readText(Uint8Array.of(1, 2, 3)));
     cfb.parse(fixture("example.hwp"), { strict: true });
     const document = cfb.document();
-    const fileHeader = document.nodes.find(n => n.name === "FileHeader");
+    const fileHeader = document.nodes.find((n) => n.name === "FileHeader");
     assert.ok(fileHeader);
     fileHeader.content = Uint8Array.from(fileHeader.content);
     fileHeader.content[36] |= 2;
@@ -293,9 +337,9 @@ test("HWP5 preview checks declared Section count and keeps all sections", async 
   try {
     cfb.parse(fixture("example.hwp"), { strict: true });
     const original = cfb.document();
-    const infoNode = original.nodes.find(n => n.name === "DocInfo");
-    const bodyIndex = original.nodes.findIndex(n => n.name === "BodyText");
-    const section = original.nodes.find(n => n.name === "Section0" && n.parent === bodyIndex);
+    const infoNode = original.nodes.find((n) => n.name === "DocInfo");
+    const bodyIndex = original.nodes.findIndex((n) => n.name === "BodyText");
+    const section = original.nodes.find((n) => n.name === "Section0" && n.parent === bodyIndex);
     assert.ok(infoNode && section && bodyIndex > 0);
     const info = inflateRawSync(infoNode.content);
     const view = new DataView(info.buffer, info.byteOffset, info.byteLength);
@@ -304,7 +348,10 @@ test("HWP5 preview checks declared Section count and keeps all sections", async 
       const bits = view.getUint32(offset, true);
       offset += 4;
       let length = bits >>> 20;
-      if (length === 4095) { length = view.getUint32(offset, true); offset += 4; }
+      if (length === 4095) {
+        length = view.getUint32(offset, true);
+        offset += 4;
+      }
       if ((bits & 1023) === 16) {
         view.setUint16(offset, 2, true);
         changed = true;
@@ -317,7 +364,10 @@ test("HWP5 preview checks declared Section count and keeps all sections", async 
     assert.throws(() => hwp.readText(cfb.write(original)), { message: "SectionCountMismatch" });
     original.nodes.push({ name: "Section1", parent: bodyIndex, content: section.content });
     const two = hwp.readText(cfb.write(original));
-    assert.deepEqual(two.sections.map(s => s.index), [0, 1]);
+    assert.deepEqual(
+      two.sections.map((s) => s.index),
+      [0, 1],
+    );
     assert.equal(two.sections[1].paragraphs.length, two.sections[0].paragraphs.length);
     original.nodes.at(-1).name = "Section2";
     assert.throws(() => hwp.readText(cfb.write(original)), { message: "SectionCountMismatch" });
@@ -335,12 +385,26 @@ test("HWP5 preview wire rejects truncation and trailing bytes", () => {
 });
 
 test("HWP5 text wire preserves a literal leading BOM code unit", () => {
-  const u32 = n => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, n >>> 24];
+  const u32 = (n) => [n & 255, (n >>> 8) & 255, (n >>> 16) & 255, n >>> 24];
   const bytes = Uint8Array.from([
-    72, 53, 84, 49, ...u32(0x05010001), ...u32(1),
-    ...u32(0), ...u32(1),
-    ...u32(0), ...u32(0xffffffff), ...u32(1), ...u32(1), ...u32(1),
-    ...u32(0), ...u32(0), ...u32(2), 0xff, 0xfe,
+    72,
+    53,
+    84,
+    49,
+    ...u32(0x05010001),
+    ...u32(1),
+    ...u32(0),
+    ...u32(1),
+    ...u32(0),
+    ...u32(0xffffffff),
+    ...u32(1),
+    ...u32(1),
+    ...u32(1),
+    ...u32(0),
+    ...u32(0),
+    ...u32(2),
+    0xff,
+    0xfe,
   ]);
   const paragraph = decodeHwp5Text(bytes).sections[0].paragraphs[0];
   assert.equal(paragraph.text, "\ufeff");

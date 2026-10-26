@@ -6,7 +6,10 @@ export function paintRowTransform(ctx, row, scrollTop, paint) {
   if (!Number.isFinite(scrollTop) || typeof paint !== "function") return false;
   const clip = row.pageClip;
   if (clip !== undefined && pageVisibleRectangle(clip, clip).state !== "visible") return false;
-  if (row.transform === undefined && clip === undefined) { paint(); return true; }
+  if (row.transform === undefined && clip === undefined) {
+    paint();
+    return true;
+  }
   if (row.transform !== undefined && !inverseAffine(row.transform)) return false;
   ctx.save();
   try {
@@ -21,6 +24,8 @@ export function paintRowTransform(ctx, row, scrollTop, paint) {
       ctx.translate(0, scrollTop);
     }
     paint();
-  } finally { ctx.restore(); }
+  } finally {
+    ctx.restore();
+  }
   return true;
 }

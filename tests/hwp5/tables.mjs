@@ -17,7 +17,7 @@ const frame = (tag, level, b = Buffer.alloc(0)) =>
 const version = 0x05010001;
 function nodes(bytes) {
   const out = [];
-  for (let p = 0; p < bytes.length; ) {
+  for (let p = 0; p < bytes.length;) {
     const bits = bytes.readUInt32LE(p);
     p += 4;
     let n = bits >>> 20;
@@ -44,11 +44,8 @@ export function tableCellLists(bytes) {
     .filter((r, i) => {
       if (r.tag !== 72 || r.parent < 0) return false;
       const parent = records[r.parent];
-      if (parent.tag !== 71 || parent.raw.readUInt32LE() !== 0x74626c20)
-        return false;
-      const marker = records.findIndex(
-        (n) => n.tag === 77 && n.parent === r.parent,
-      );
+      if (parent.tag !== 71 || parent.raw.readUInt32LE() !== 0x74626c20) return false;
+      const marker = records.findIndex((n) => n.tag === 77 && n.parent === r.parent);
       return marker >= 0 && i > marker;
     })
     .map((r) => r.raw);
@@ -83,9 +80,7 @@ export function tablesActual(call, v, borders, bytes) {
     });
     const rows = table.readUInt16LE(4),
       columns = table.readUInt16LE(6);
-    const sizes = Array.from({ length: rows }, (_, j) =>
-      table.readUInt16LE(18 + j * 2),
-    );
+    const sizes = Array.from({ length: rows }, (_, j) => table.readUInt16LE(18 + j * 2));
     assert.equal(checkGrid(call, rows, columns, sizes, cells), null);
   }
   const out = call(17, Buffer.concat([word(v), word(borders), bytes]));
@@ -102,11 +97,7 @@ export function tableEdges(call) {
     large.writeUInt16LE(zones, 20 + rows * 2);
     checkBody(call, version, frame(77, 0, large));
     assert.throws(
-      () =>
-        call(
-          8,
-          Buffer.concat([word(version), frame(77, 0, large.subarray(0, -1))]),
-        ),
+      () => call(8, Buffer.concat([word(version), frame(77, 0, large.subarray(0, -1))])),
       /UnexpectedEnd/,
     );
   }
@@ -128,11 +119,7 @@ export function tableEdges(call) {
         /UnexpectedEnd/,
       );
     checkBody(call, v, frame(77, 0, b));
-    checkBody(
-      call,
-      v,
-      frame(77, 0, Buffer.concat([b, Buffer.from([255, 0, 128])])),
-    );
+    checkBody(call, v, frame(77, 0, Buffer.concat([b, Buffer.from([255, 0, 128])])));
   }
   let rejected = 0;
   for (let p = 0; p < t.length; p++)
@@ -140,8 +127,7 @@ export function tableEdges(call) {
       const b = Buffer.from(t);
       b[p] ^= 1 << bit;
       const base = 22 + b.readUInt16LE(4) * 2;
-      const valid =
-        base <= b.length && base + b.readUInt16LE(base - 2) * 10 <= b.length;
+      const valid = base <= b.length && base + b.readUInt16LE(base - 2) * 10 <= b.length;
       if (valid) checkBody(call, version, frame(77, 0, b));
       else {
         assert.throws(
@@ -162,25 +148,15 @@ export function tableEdges(call) {
   cell.writeUInt16LE(1, 12);
   cell.writeUInt16LE(1, 14);
   const caption = Buffer.alloc(22);
-  const run = (parts) =>
-    call(17, Buffer.concat([word(version), word(1), ...parts]));
-  const good = [
-    head,
-    ctrl,
-    frame(72, 2, caption),
-    frame(77, 2, small),
-    frame(72, 2, cell),
-  ];
+  const run = (parts) => call(17, Buffer.concat([word(version), word(1), ...parts]));
+  const good = [head, ctrl, frame(72, 2, caption), frame(77, 2, small), frame(72, 2, cell)];
   assert.deepEqual(
     Array.from({ length: 4 }, (_, i) => run(good).readUInt32LE(i * 4)),
     [1, 1, 1, 0],
   );
   assert.throws(() => run([head, ctrl]), /MissingTableRecord/);
   assert.throws(() => run([frame(77, 0, small)]), /OrphanTableRecord/);
-  assert.throws(
-    () => run([...good, frame(77, 2, small)]),
-    /DuplicateTableRecord/,
-  );
+  assert.throws(() => run([...good, frame(77, 2, small)]), /DuplicateTableRecord/);
   assert.throws(() => run(good.slice(0, -1)), /TableCellCountMismatch/);
   for (const [offset, value] of [
     [8, 1],
@@ -192,10 +168,7 @@ export function tableEdges(call) {
   ]) {
     const b = Buffer.from(cell);
     b.writeUInt16LE(value, offset);
-    assert.throws(
-      () => run([...good.slice(0, -1), frame(72, 2, b)]),
-      /InvalidCellSpan/,
-    );
+    assert.throws(() => run([...good.slice(0, -1), frame(72, 2, b)]), /InvalidCellSpan/);
     run(good);
   }
   for (let n = 8; n < 34; n++)
@@ -205,13 +178,7 @@ export function tableEdges(call) {
     );
   for (let n = 8; n < 22; n++)
     assert.throws(
-      () =>
-        run([
-          head,
-          ctrl,
-          frame(72, 2, caption.subarray(0, n)),
-          ...good.slice(3),
-        ]),
+      () => run([head, ctrl, frame(72, 2, caption.subarray(0, n)), ...good.slice(3)]),
       /UnexpectedEnd/,
     );
   for (const offset of [4, 6]) {
@@ -240,10 +207,7 @@ export function tableEdges(call) {
   for (const offset of [24, 26, 28, 30]) {
     const b = Buffer.from(zoned);
     b.writeUInt16LE(1, offset);
-    assert.throws(
-      () => run([head, ctrl, frame(77, 2, b), frame(72, 2, cell)]),
-      /InvalidTableZone/,
-    );
+    assert.throws(() => run([head, ctrl, frame(77, 2, b), frame(72, 2, cell)]), /InvalidTableZone/);
   }
   zoned.writeUInt16LE(2, 32);
   assert.throws(

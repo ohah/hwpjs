@@ -7,5 +7,9 @@ export function characterScriptStyle(flags, font) {
   const size = canvasFontSize(font);
   if (!size) return null;
   const state = flags.superscript ? "superscript" : "subscript";
-  return { state, font: font.replace(size.token, `${Number((size.value * 0.7).toPrecision(12))}${size.unit}`), offset: size.pixels * (flags.superscript ? -0.3 : 0.15) };
+  return {
+    state,
+    font: font.replace(size.token, `${Number((size.value * 0.7).toPrecision(12))}${size.unit}`),
+    offset: size.pixels * (flags.superscript ? -0.3 : 0.15),
+  };
 }

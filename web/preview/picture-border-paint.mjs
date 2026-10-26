@@ -10,5 +10,7 @@ export function paintPictureBorder(ctx, plan, item, x, y) {
     ctx.miterLimit = 10;
     ctx.setLineDash([]);
     ctx.strokeRect(0, 0, plan.rectangleWidth, plan.rectangleHeight);
-  } finally { ctx.restore(); }
+  } finally {
+    ctx.restore();
+  }
 }

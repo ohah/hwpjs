@@ -16,10 +16,7 @@ const ctx = {
   Buffer,
   process,
 };
-runInNewContext(
-  readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"),
-  ctx,
-);
+runInNewContext(readFileSync(new URL("../../legacy/cfb.js", import.meta.url), "utf8"), ctx);
 const legacy = ctx.module.exports;
 const root = () => ({ name: "Root Entry", kind: 5 });
 
@@ -97,10 +94,7 @@ test("parse failures preserve or close both JS and WASM state at the open bounda
 test("WASM writer bridge rejects truncated/invalid models and preserves the active reader", async () => {
   const { exports: w } = await WebAssembly.instantiate(module, {});
   const wire = encodeDocument({
-    nodes: [
-      root(),
-      { name: "Data", parent: 0, content: Uint8Array.of(1, 2, 3) },
-    ],
+    nodes: [root(), { name: "Data", parent: 0, content: Uint8Array.of(1, 2, 3) }],
   });
   const call = (bytes, fn) => {
     const ptr = w.cfb_alloc(bytes.length);
@@ -114,11 +108,7 @@ test("WASM writer bridge rejects truncated/invalid models and preserves the acti
   };
   try {
     assert.equal(call(wire, w.cfb_write), 1);
-    const cfb = new Uint8Array(
-      w.memory.buffer,
-      w.cfb_output_ptr(),
-      w.cfb_output_len(),
-    ).slice();
+    const cfb = new Uint8Array(w.memory.buffer, w.cfb_output_ptr(), w.cfb_output_len()).slice();
     assert.equal(call(cfb, w.cfb_open_strict), 1);
     for (let len = 0; len < wire.length; len++) {
       assert.equal(call(wire.subarray(0, len), w.cfb_write), 0);
@@ -143,11 +133,7 @@ test("WASM writer bridge rejects truncated/invalid models and preserves the acti
     assert.equal(call(extra, w.cfb_write), 0);
     assert.equal(call(wire, w.cfb_write), 1);
     assert.deepEqual(
-      new Uint8Array(
-        w.memory.buffer,
-        w.cfb_output_ptr(),
-        w.cfb_output_len(),
-      ).slice(),
+      new Uint8Array(w.memory.buffer, w.cfb_output_ptr(), w.cfb_output_len()).slice(),
       cfb,
     );
   } finally {
@@ -160,9 +146,7 @@ test("v3/v4 writer: independent parser, byte oracles, editable model and determi
   const api = await createCfbReader(module);
   try {
     for (const version of [3, 4])
-      for (const size of [
-        0, 1, 63, 64, 65, 511, 512, 513, 4095, 4096, 4097, 16385,
-      ]) {
+      for (const size of [0, 1, 63, 64, 65, 511, 512, 513, 4095, 4096, 4097, 16385]) {
         const content = Uint8Array.from({ length: size }, (_, i) => i % 251);
         const doc = {
           version,
@@ -180,15 +164,9 @@ test("v3/v4 writer: independent parser, byte oracles, editable model and determi
         };
         const bytes = api.write(doc),
           parsed = api.parse(bytes, { strict: true });
-        assert.deepEqual(
-          Buffer.from(parsed.FileIndex[1].content ?? []),
-          Buffer.from(content),
-        );
+        assert.deepEqual(Buffer.from(parsed.FileIndex[1].content ?? []), Buffer.from(content));
         const ref = legacy.parse(Buffer.from(bytes));
-        assert.deepEqual(
-          Buffer.from(ref.FileIndex[1].content ?? []),
-          Buffer.from(content),
-        );
+        assert.deepEqual(Buffer.from(ref.FileIndex[1].content ?? []), Buffer.from(content));
         assert.equal(parsed.FullPaths[1], "Root Entry/Folder/Data");
         const edit = api.document();
         assert.equal(edit.nodes[2].modified, 0xfedcba9876543210n);
@@ -219,19 +197,13 @@ test("v3/v4 writer: independent parser, byte oracles, editable model and determi
 test("writer produces multiple DIFAT sectors and full independent payload", async () => {
   const api = await createCfbReader(module);
   try {
-    const content = Uint8Array.from(
-      { length: 16 * 1024 * 1024 },
-      (_, i) => i % 251,
-    );
+    const content = Uint8Array.from({ length: 16 * 1024 * 1024 }, (_, i) => i % 251);
     const bytes = api.write({
       nodes: [root(), { name: "Large", parent: 0, content }],
     });
     assert.ok(new DataView(bytes.buffer).getUint32(72, true) >= 2);
     const parsed = api.parse(bytes, { strict: true });
-    assert.deepEqual(
-      Buffer.from(parsed.FileIndex[1].content),
-      Buffer.from(content),
-    );
+    assert.deepEqual(Buffer.from(parsed.FileIndex[1].content), Buffer.from(content));
     assert.deepEqual(
       Buffer.from(legacy.parse(Buffer.from(bytes)).FileIndex[1].content),
       Buffer.from(content),
@@ -243,10 +215,7 @@ test("writer produces multiple DIFAT sectors and full independent payload", asyn
 
 test("all 48 real HWP files: v3/v4 rebuild preserves every live field and stream byte", async () => {
   const api = await createCfbReader(module);
-  const dir = new URL(
-    "../../legacy/rust/crates/hwp-core/tests/fixtures/",
-    import.meta.url,
-  );
+  const dir = new URL("../../legacy/rust/crates/hwp-core/tests/fixtures/", import.meta.url);
   const files = readdirSync(dir).filter((n) => n.endsWith(".hwp"));
   assert.equal(files.length, 48);
   let streams = 0;
@@ -313,10 +282,7 @@ test("strict allocation ownership, name lengths, unused metadata and global tree
     // B < D locally, but B is in C's right subtree and violates the ancestor bound.
     b = Buffer.from(
       api.write({
-        nodes: [
-          root(),
-          ...["A", "B", "C", "D"].map((name) => ({ name, parent: 0 })),
-        ],
+        nodes: [root(), ...["A", "B", "C", "D"].map((name) => ({ name, parent: 0 }))],
       }),
     );
     const entryOffset = (i) => (1 + Math.floor(i / 4)) * 512 + (i % 4) * 128;
@@ -332,22 +298,18 @@ test("strict allocation ownership, name lengths, unused metadata and global tree
     const miniFat = mini.readUInt32LE(60);
     mini.writeUInt32LE(0xfffffffe, (miniFat + 1) * 512 + 4);
     check(mini, "UnclaimedMiniSector");
-    assert.throws(
-      () => api.write({ nodes: [root(), { name: "x", parent: 0xffffffff }] }),
-      { message: "InvalidDirectoryReference" },
-    );
-    assert.throws(
-      () => api.write({ nodes: [root(), { name: "x", parent: 1, kind: 1 }] }),
-      { message: "InvalidDirectoryReference" },
-    );
-    assert.throws(
-      () => api.write({ nodes: [root(), { name: "x".repeat(32), parent: 0 }] }),
-      { message: "InvalidName" },
-    );
-    api.parse(
-      api.write({ nodes: [root(), { name: "x".repeat(31), parent: 0 }] }),
-      { strict: true },
-    );
+    assert.throws(() => api.write({ nodes: [root(), { name: "x", parent: 0xffffffff }] }), {
+      message: "InvalidDirectoryReference",
+    });
+    assert.throws(() => api.write({ nodes: [root(), { name: "x", parent: 1, kind: 1 }] }), {
+      message: "InvalidDirectoryReference",
+    });
+    assert.throws(() => api.write({ nodes: [root(), { name: "x".repeat(32), parent: 0 }] }), {
+      message: "InvalidName",
+    });
+    api.parse(api.write({ nodes: [root(), { name: "x".repeat(31), parent: 0 }] }), {
+      strict: true,
+    });
   } finally {
     api.close();
   }
@@ -461,14 +423,10 @@ test("exact lookup uses CFB simple uppercase and UTF16 ordering", async () => {
   const api = await createCfbReader(module);
   try {
     const doc = {
-      nodes: [
-        root(),
-        ...["ß", "SS", "ᾀ", "𐐨", "𐐀"].map((name) => ({ name, parent: 0 })),
-      ],
+      nodes: [root(), ...["ß", "SS", "ᾀ", "𐐨", "𐐀"].map((name) => ({ name, parent: 0 }))],
     };
     api.parse(api.write(doc), { strict: true });
-    for (const name of ["ß", "SS", "𐐨", "𐐀"])
-      assert.equal(api.findExact("/" + name).name, name);
+    for (const name of ["ß", "SS", "𐐨", "𐐀"]) assert.equal(api.findExact("/" + name).name, name);
     assert.equal(api.findExact("/ᾈ").name, "ᾀ");
     assert.throws(
       () =>
@@ -477,15 +435,12 @@ test("exact lookup uses CFB simple uppercase and UTF16 ordering", async () => {
         }),
       { message: "DuplicateName" },
     );
-    assert.throws(
-      () => api.write({ nodes: [root(), { name: "a/b", parent: 0 }] }),
-      { message: "InvalidName" },
-    );
-    assert.throws(
-      () =>
-        api.write({ nodes: [root(), { name: "x", parent: 0, created: 1n }] }),
-      { message: "InvalidStreamMetadata" },
-    );
+    assert.throws(() => api.write({ nodes: [root(), { name: "a/b", parent: 0 }] }), {
+      message: "InvalidName",
+    });
+    assert.throws(() => api.write({ nodes: [root(), { name: "x", parent: 0, created: 1n }] }), {
+      message: "InvalidStreamMetadata",
+    });
     api.close();
     assert.throws(() => api.document(), { message: "NoDocument" });
   } finally {

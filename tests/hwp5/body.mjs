@@ -18,8 +18,7 @@ const frame = (tag, b, level = 1, extended = b.length >= 4095) =>
   ]);
 // Independent table 6: 0=text, 1=character, 2=inline, 3=extended.
 const kinds = [
-  1, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1, 3, 3, 1, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 1, 1,
-  1, 1, 1, 1, 1, 1,
+  1, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1, 3, 3, 1, 3, 3, 3, 3, 3, 2, 2, 3, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1,
 ];
 function tokenize(b) {
   assert.equal(b.length % 2, 0);
@@ -72,12 +71,7 @@ export function checkBody(call, v, bytes, pairCounts = false) {
       level = (bits >>> 10) & 1023,
       b = bytes.subarray(p, p + n);
     p += n;
-    expected.push(
-      word(tag),
-      word(level),
-      word(p - start),
-      bytes.subarray(start, p),
-    );
+    expected.push(word(tag), word(level), word(p - start), bytes.subarray(start, p));
     if (tag === 71) stats.controlHeaders++;
     if (tag === 72) {
       stats.listHeaders++;
@@ -92,21 +86,11 @@ export function checkBody(call, v, bytes, pairCounts = false) {
       headers.push(h);
     } else if (tag === 67) {
       const tokens = tokenize(b);
-      expected.push(
-        word(tokens.length),
-        ...tokens.flatMap((row) => row.map(word)),
-      );
+      expected.push(word(tokens.length), ...tokens.flatMap((row) => row.map(word)));
       stats.texts++;
       stats.units += n / 2;
       for (const row of tokens)
-        stats[
-          [
-            "textRuns",
-            "characterControls",
-            "inlineControls",
-            "extendedControls",
-          ][row[2]]
-        ]++;
+        stats[["textRuns", "characterControls", "inlineControls", "extendedControls"][row[2]]]++;
       if (pairCounts) {
         assert.ok(parents[level - 1]);
         assert.equal(parents[level - 1].paired, false);
@@ -116,46 +100,28 @@ export function checkBody(call, v, bytes, pairCounts = false) {
     }
   }
   assert.equal(p, bytes.length);
-  if (pairCounts)
-    stats.headersWithoutText = headers.filter((h) => !h.paired).length;
-  assert.deepEqual(
-    call(8, Buffer.concat([word(v), bytes])),
-    Buffer.concat(expected),
-  );
+  if (pairCounts) stats.headersWithoutText = headers.filter((h) => !h.paired).length;
+  assert.deepEqual(call(8, Buffer.concat([word(v), bytes])), Buffer.concat(expected));
   return stats;
 }
 function control(code) {
-  return units(
-    kinds[code] === 1
-      ? [code]
-      : [code, 0xffff, 0, 13, 0xd800, 0xfeff, 0x1234, code],
-  );
+  return units(kinds[code] === 1 ? [code] : [code, 0xffff, 0, 13, 0xd800, 0xfeff, 0x1234, code]);
 }
 export function bodyEdges(call) {
   for (const v of [0x05000107, 0x05000301, 0x05000302, version])
     for (let n = 0; n <= 28; n++) {
-      const b = Buffer.from(
-        Array.from({ length: n }, (_, i) => (i * 17 + 128) & 255),
-      );
+      const b = Buffer.from(Array.from({ length: n }, (_, i) => (i * 17 + 128) & 255));
       if (n < 22 || (v >= 0x05000302 && n === 23))
-        assert.throws(
-          () => call(8, Buffer.concat([word(v), frame(66, b)])),
-          /UnexpectedEnd/,
-        );
+        assert.throws(() => call(8, Buffer.concat([word(v), frame(66, b)])), /UnexpectedEnd/);
       else checkBody(call, v, frame(66, b));
     }
   for (let code = 0; code < 32; code++) {
     const c = control(code),
-      b = Buffer.concat([
-        units([0x41, 0xd83d, 0xde00, 0xd800]),
-        c,
-        units([0xfeff, 0x42, 13]),
-      ]);
+      b = Buffer.concat([units([0x41, 0xd83d, 0xde00, 0xd800]), c, units([0xfeff, 0x42, 13])]);
     checkBody(call, version, frame(67, b));
     for (let n = 1; n < c.length; n++)
       assert.throws(
-        () =>
-          call(8, Buffer.concat([word(version), frame(67, c.subarray(0, n))])),
+        () => call(8, Buffer.concat([word(version), frame(67, c.subarray(0, n))])),
         n % 2 ? /InvalidTextSize/ : /UnexpectedEnd/,
       );
     if (c.length === 16) {
@@ -176,17 +142,11 @@ export function bodyEdges(call) {
     checkBody(
       call,
       version,
-      Buffer.concat([
-        frame(66, header, level, true),
-        frame(67, text, level + 1, true),
-      ]),
+      Buffer.concat([frame(66, header, level, true), frame(67, text, level + 1, true)]),
       true,
     );
   const good = Buffer.concat([frame(66, header, 0), frame(67, text)]);
-  assert.throws(
-    () => call(8, Buffer.concat([word(version), good]), 1),
-    /LimitExceeded/,
-  );
+  assert.throws(() => call(8, Buffer.concat([word(version), good]), 1), /LimitExceeded/);
   checkBody(call, version, good, true);
   checkBody(call, version, frame(1023, Buffer.from([255]), 1023));
 }
@@ -216,10 +176,7 @@ export function bodyMutations(call) {
           error = e;
         }
         if (error) {
-          assert.match(
-            error.message,
-            /^(UnexpectedEnd|InvalidControlTerminator)$/,
-          );
+          assert.match(error.message, /^(UnexpectedEnd|InvalidControlTerminator)$/);
           rejected++;
         } else {
           checkBody(call, version, frame(tag, b));

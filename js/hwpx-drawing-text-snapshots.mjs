@@ -7,7 +7,8 @@ export function decodeDrawingTextSnapshots(bytes) {
   const encoder = new TextEncoder();
   return rows.map((row, index) => {
     const value = decodeDrawingTextSnapshot(encoder.encode(JSON.stringify(row)));
-    if (index && value.drawing_node <= rows[index - 1].drawing_node) throw new Error("InvalidDrawingTextSnapshots");
+    if (index && value.drawing_node <= rows[index - 1].drawing_node)
+      throw new Error("InvalidDrawingTextSnapshots");
     return value;
   });
 }

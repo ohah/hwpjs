@@ -5,6 +5,10 @@ import { isSourceCharacterSize } from "./character-size-selection.mjs";
 export function steppedCharacterSize(current, direction) {
   if (!isSourceCharacterSize(current) || ![-1, 1].includes(direction)) return null;
   const size = current + direction * 100;
-  try { characterPropertyArgs({ size }); } catch { return null; }
+  try {
+    characterPropertyArgs({ size });
+  } catch {
+    return null;
+  }
   return size;
 }

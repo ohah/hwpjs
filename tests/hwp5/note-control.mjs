@@ -17,7 +17,8 @@ function check(call, raw, mode) {
   );
 }
 export function noteControlEdges(call) {
-  let accepted = 0, rejected = 0;
+  let accepted = 0,
+    rejected = 0;
   for (const mode of [0, 1, 2]) {
     const width = [8, 16, 12][mode];
     // Independent byte-position mutations catch swapped fields and narrowed integers.
@@ -40,11 +41,20 @@ export function noteControlEdges(call) {
   return { accepted, rejected: rejected + 1 };
 }
 export function noteControlReference(call, cfb) {
-  let controls = 0, rejected = 0;
-  const files = [], skipped = [];
-  for (const [name, expected] of [["footnote-01.hwp", 9], ["endnote-01.hwp", 6], ["footnote-tbox-01.hwp", 2]]) {
+  let controls = 0,
+    rejected = 0;
+  const files = [],
+    skipped = [];
+  for (const [name, expected] of [
+    ["footnote-01.hwp", 9],
+    ["endnote-01.hwp", 6],
+    ["footnote-tbox-01.hwp", 2],
+  ]) {
     const path = new URL(`../../reference/rhwp/samples/${name}`, import.meta.url);
-    if (!existsSync(path)) { skipped.push(name); continue; }
+    if (!existsSync(path)) {
+      skipped.push(name);
+      continue;
+    }
     cfb.parse(readFileSync(path), { strict: true });
     const h = Buffer.from(cfb.findExact("/FileHeader").content);
     assert.equal(h.readUInt32LE(32), 0x05000300);
@@ -61,7 +71,10 @@ export function noteControlReference(call, cfb) {
       check(call, payload, 2);
       check(call, payload, 0);
       for (let n = 0; n < 16; n++) {
-        assert.throws(() => call(42, Buffer.concat([Buffer.from([1]), payload.subarray(0, n)])), /UnexpectedEnd/);
+        assert.throws(
+          () => call(42, Buffer.concat([Buffer.from([1]), payload.subarray(0, n)])),
+          /UnexpectedEnd/,
+        );
         check(call, payload, 1);
         rejected++;
       }
@@ -71,7 +84,12 @@ export function noteControlReference(call, cfb) {
     controls += count;
     const sites = noteSourceSitesActual(call, h.readUInt32LE(32), body, noteSiteFixtures[name]);
     assert.equal(sites, count);
-    files.push({ name, count, sites, document: noteDocument(call, cfb, readFileSync(path), h, body) });
+    files.push({
+      name,
+      count,
+      sites,
+      document: noteDocument(call, cfb, readFileSync(path), h, body),
+    });
   }
   return { controls, rejected, files, skipped };
 }

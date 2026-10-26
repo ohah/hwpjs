@@ -13,7 +13,7 @@ function linkRows(bytes) {
   const nodes = [],
     stack = [],
     paragraphs = [];
-  for (let p = 0; p < bytes.length; ) {
+  for (let p = 0; p < bytes.length;) {
     const bits = bytes.readUInt32LE(p);
     p += 4;
     let n = bits >>> 20;
@@ -41,10 +41,9 @@ function linkRows(bytes) {
     if (tag === 67) {
       const parent = nodes[node.parent];
       assert.equal(parent.tag, 66);
-      for (let o = 0; o < raw.length; ) {
+      for (let o = 0; o < raw.length;) {
         const code = raw.readUInt16LE(o);
-        if (extended.has(code))
-          parent.tokens.push([i, o / 2, code, raw.readUInt32LE(o + 2)]);
+        if (extended.has(code)) parent.tokens.push([i, o / 2, code, raw.readUInt32LE(o + 2)]);
         o += wide.has(code) ? 16 : 2;
       }
     }
@@ -69,30 +68,23 @@ function linkRows(bytes) {
         const units = header.raw.readUInt16LE(9),
           end = 11 + units * 2;
         assert.ok(end + 4 <= header.raw.length);
-        if (id === 0x25256d65) assert.ok(
-          header.raw
-            .subarray(11, end)
-            .subarray(0, 10)
-            .equals(Buffer.from("MEMO/", "utf16le")),
-        );
-        else assert.deepEqual(header.raw.subarray(11,end),Buffer.from('$RevisionDelete;','utf16le'));
+        if (id === 0x25256d65)
+          assert.ok(
+            header.raw.subarray(11, end).subarray(0, 10).equals(Buffer.from("MEMO/", "utf16le")),
+          );
+        else
+          assert.deepEqual(
+            header.raw.subarray(11, end),
+            Buffer.from("$RevisionDelete;", "utf16le"),
+          );
         identity = id === 0x25256d65 ? 1 : 2;
       }
-      rows.push([
-        p.index,
-        text,
-        header.index,
-        offset,
-        code,
-        id,
-        headerId,
-        identity,
-      ]);
+      rows.push([p.index, text, header.index, offset, code, id, headerId, identity]);
     }
   }
   return rows;
 }
-export {linkRows as controlLinkEvidence};
+export { linkRows as controlLinkEvidence };
 export function linksActual(call, v, bytes) {
   const rows = linkRows(bytes);
   assert.deepEqual(
@@ -128,22 +120,11 @@ export function linkEdges(call) {
     [Buffer.concat([header, text(1)]), /MissingControlHeader/],
     [Buffer.concat([header, ctrl(1)]), /MissingControlToken/],
     [ctrl(1, 0), /OrphanControlHeader/],
-    [
-      Buffer.concat([header, frame(1023, 1), ctrl(1, 2)]),
-      /OrphanControlHeader/,
-    ],
-    [
-      Buffer.concat([header, text(1), text(1), ctrl(1)]),
-      /DuplicateParagraphRecord/,
-    ],
+    [Buffer.concat([header, frame(1023, 1), ctrl(1, 2)]), /OrphanControlHeader/],
+    [Buffer.concat([header, text(1), text(1), ctrl(1)]), /DuplicateParagraphRecord/],
     [Buffer.concat([header, text(1), ctrl(2)]), /ControlIdMismatch/],
     [
-      Buffer.concat([
-        header,
-        frame(67, 1, Buffer.concat([token(1), token(2)])),
-        ctrl(2),
-        ctrl(1),
-      ]),
+      Buffer.concat([header, frame(67, 1, Buffer.concat([token(1), token(2)])), ctrl(2), ctrl(1)]),
       /ControlIdMismatch/,
     ],
   ]) {
@@ -151,18 +132,9 @@ export function linkEdges(call) {
     linksActual(call, version, good);
   }
   // Repeated IDs are occurrence-based, not a global ID map. Skip inline controls.
-  const body = Buffer.concat([
-    Buffer.from([65, 0]),
-    token(0, 9),
-    token(7),
-    token(7),
-  ]);
+  const body = Buffer.concat([Buffer.from([65, 0]), token(0, 9), token(7), token(7)]);
   assert.equal(
-    linksActual(
-      call,
-      version,
-      Buffer.concat([header, frame(67, 1, body), ctrl(7), ctrl(7)]),
-    ),
+    linksActual(call, version, Buffer.concat([header, frame(67, 1, body), ctrl(7), ctrl(7)])),
     2,
   );
   // Nested paragraph belongs to outer control, not the outer paragraph's token list.
@@ -170,12 +142,7 @@ export function linkEdges(call) {
     linksActual(
       call,
       version,
-      Buffer.concat([
-        good,
-        frame(66, 2, Buffer.alloc(24)),
-        text(3, 3),
-        ctrl(3, 3),
-      ]),
+      Buffer.concat([good, frame(66, 2, Buffer.alloc(24)), text(3, 3), ctrl(3, 3)]),
     ),
     2,
   );
@@ -186,10 +153,7 @@ export function linkEdges(call) {
       () => run(Buffer.concat([header, text(id), ctrl(0x74626c20)])),
       /ControlIdMismatch/,
     );
-    assert.equal(
-      linksActual(call, version, Buffer.concat([header, text(id), ctrl(id)])),
-      1,
-    );
+    assert.equal(linksActual(call, version, Buffer.concat([header, text(id), ctrl(id)])), 1);
     linksActual(call, version, good);
   }
   return { idMutations: 32, recoveries: 32 };

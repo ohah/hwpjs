@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { inflateRawSync } from "node:zlib";
-import {historyDateEvidence} from './history-date-evidence.mjs';
+import { historyDateEvidence } from "./history-date-evidence.mjs";
 const w = (n) => {
   const b = Buffer.alloc(4);
   b.writeUInt32LE(n);
@@ -12,23 +12,12 @@ const u = (n) => {
   b.writeUInt16LE(n);
   return b;
 };
-const rec = (tag, b = Buffer.alloc(0)) =>
-  Buffer.concat([Buffer.from([tag]), w(b.length), b]);
+const rec = (tag, b = Buffer.alloc(0)) => Buffer.concat([Buffer.from([tag]), w(b.length), b]);
 const start = (flags, layout = 1) =>
-  rec(
-    16,
-    layout === 1
-      ? Buffer.concat([u(flags), w(1)])
-      : Buffer.concat([w(1), u(flags)]),
-  );
+  rec(16, layout === 1 ? Buffer.concat([u(flags), w(1)]) : Buffer.concat([w(1), u(flags)]));
 const end = rec(17);
-const run = (
-  call,
-  b,
-  mode = 1,
-  records = 1000000,
-  payload = 64 * 1024 * 1024,
-) => call(30, Buffer.concat([Buffer.from([mode]), w(payload), b]), records);
+const run = (call, b, mode = 1, records = 1000000, payload = 64 * 1024 * 1024) =>
+  call(30, Buffer.concat([Buffer.from([mode]), w(payload), b]), records);
 function expected(b, mode) {
   let pos = 0;
   const rows = [];
@@ -42,7 +31,7 @@ function expected(b, mode) {
   const first = rows[0].b,
     flags = first.readUInt16LE(mode === 1 || mode === 3 ? 0 : 4),
     option = first.readUInt32LE(mode === 1 || mode === 3 ? 2 : 0);
-  const report = [rows.length, 0, 0, 0, 0, first.length - 6, 0, 0,0,0,0,0];
+  const report = [rows.length, 0, 0, 0, 0, first.length - 6, 0, 0, 0, 0, 0, 0];
   let seen = 0;
   for (const { tag, b } of rows.slice(1)) {
     const bit = { 32: 1, 33: 2, 34: 4, 35: 8, 48: 16 }[tag] ?? 0;
@@ -50,10 +39,16 @@ function expected(b, mode) {
     seen |= bit;
     if (tag === 32) report[5] += b.length - 4;
     else if (tag === 33) {
-      if(mode<3)report[2]++;
-      else {const d=historyDateEvidence(b);report[8]++;report[9]+=Number(d.mask!==0);report[10]+=Number(d.calendar===2);report[11]+=Number(d.weekday===2);report[5]+=d.extra;}
-    }
-    else if ([34, 35, 48, 49].includes(tag)) {
+      if (mode < 3) report[2]++;
+      else {
+        const d = historyDateEvidence(b);
+        report[8]++;
+        report[9] += Number(d.mask !== 0);
+        report[10] += Number(d.calendar === 2);
+        report[11] += Number(d.weekday === 2);
+        report[5] += d.extra;
+      }
+    } else if ([34, 35, 48, 49].includes(tag)) {
       report[3]++;
       report[4] += b.length / 2;
       if (tag === 49) report[7]++;
@@ -83,8 +78,7 @@ export function historyEdges(call) {
     check(good);
   };
   check(good);
-  for (let i = 0; i < good.length; i++)
-    reject(good.subarray(0, i), /UnexpectedEnd|MissingHistory/);
+  for (let i = 0; i < good.length; i++) reject(good.subarray(0, i), /UnexpectedEnd|MissingHistory/);
   for (const b of [
     Buffer.concat([end, start(0)]),
     Buffer.concat([start(0), start(0), end]),
@@ -93,23 +87,13 @@ export function historyEdges(call) {
     reject(b, /MissingHistoryStart|NestedHistoryStart|RecordAfterHistoryEnd/);
   for (const bit of [1, 2, 4, 8, 16])
     reject(Buffer.concat([start(bit), end]), /HistoryPresenceMismatch/);
-  reject(
-    Buffer.concat([start(0), rec(32, w(1)), end]),
-    /HistoryPresenceMismatch/,
-  );
+  reject(Buffer.concat([start(0), rec(32, w(1)), end]), /HistoryPresenceMismatch/);
   for (const tag of [34, 35, 48, 49])
     reject(
-      Buffer.concat([
-        start({ 34: 4, 35: 8, 48: 16 }[tag] ?? 0),
-        rec(tag, Buffer.from([0])),
-        end,
-      ]),
+      Buffer.concat([start({ 34: 4, 35: 8, 48: 16 }[tag] ?? 0), rec(tag, Buffer.from([0])), end]),
       /InvalidHistoryTextSize/,
     );
-  reject(
-    Buffer.concat([start(0), rec(17, Buffer.from([0]))]),
-    /InvalidHistoryEndPayload/,
-  );
+  reject(Buffer.concat([start(0), rec(17, Buffer.from([0]))]), /InvalidHistoryEndPayload/);
   reject(good, /LimitExceeded/, 1, 6);
   assert.deepEqual(run(call, good, 1, 7), expected(good, 1));
   reject(good, /LimitExceeded/, 1, 7, 15);
@@ -124,26 +108,18 @@ export function historyEdges(call) {
       check(Buffer.concat([start(0x8040), rec(tag, Buffer.from([7])), end]));
   check(Buffer.concat([start(1), rec(32, w(1)), rec(32, w(2)), end]));
   check(Buffer.concat([start(2), rec(33, Buffer.from([7])), end]));
-  check(
-    Buffer.concat([start(0, 2), rec(49, Buffer.from("<x/>", "utf16le")), end]),
-    2,
-  );
+  check(Buffer.concat([start(0, 2), rec(49, Buffer.from("<x/>", "utf16le")), end]), 2);
   assert.deepEqual(run(call, Buffer.alloc(0), 0, 0), Buffer.alloc(0));
   return { accepted, rejected };
 }
 export function historyActual(call, cfb) {
-  const path = new URL(
-    "../../reference/rhwp/samples/basic/treatise sample.hwp",
-    import.meta.url,
-  );
+  const path = new URL("../../reference/rhwp/samples/basic/treatise sample.hwp", import.meta.url);
   if (!existsSync(path)) return { skipped: "reference fixture unavailable" };
   cfb.parse(readFileSync(path), { strict: true });
   let decoded = 0,
     records = 0;
   for (let i = 0; i < 4; i++) {
-    const compressed = Buffer.from(
-      cfb.findExact(`/DocHistory/VersionLog${i}`).content,
-    );
+    const compressed = Buffer.from(cfb.findExact(`/DocHistory/VersionLog${i}`).content);
     const b = inflateRawSync(compressed);
     decoded += b.length;
     // These observed streams carry the same CRC32/ISIZE tail as other HWP streams.
@@ -152,10 +128,7 @@ export function historyActual(call, cfb) {
     assert.deepEqual(call(3, Buffer.concat([header, compressed]), b.length), b);
     const corrupt = Buffer.from(compressed);
     corrupt[corrupt.length - 8] ^= 1;
-    assert.throws(
-      () => call(3, Buffer.concat([header, corrupt]), b.length),
-      /InvalidChecksum/,
-    );
+    assert.throws(() => call(3, Buffer.concat([header, corrupt]), b.length), /InvalidChecksum/);
     const out = run(call, b, 2);
     assert.deepEqual(out, expected(b, 2));
     records += out.readUInt32LE(8);
@@ -166,4 +139,4 @@ export function historyActual(call, cfb) {
   assert.equal(records, 28);
   return { items: 4, decoded, records, dateDeferred: 4 };
 }
-export {expected as historyExpected,run as historyRun};
+export { expected as historyExpected, run as historyRun };

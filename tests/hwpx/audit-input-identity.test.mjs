@@ -12,6 +12,13 @@ test("audit identity independently rejects memory and file mismatches", () => {
   const changed = Buffer.from(input);
   changed[0] ^= 1;
   assert.throws(() => verifyInputIdentity(changed, expected, path), /AuditMemoryInputChanged/);
-  assert.throws(() => verifyInputIdentity(changed, captureInputIdentity(changed), path), /AuditFileInputChanged/);
-  assert.throws(() => verifyInputIdentity(input, expected, new URL("./missing-identity-fixture", import.meta.url)), /ENOENT/);
+  assert.throws(
+    () => verifyInputIdentity(changed, captureInputIdentity(changed), path),
+    /AuditFileInputChanged/,
+  );
+  assert.throws(
+    () =>
+      verifyInputIdentity(input, expected, new URL("./missing-identity-fixture", import.meta.url)),
+    /ENOENT/,
+  );
 });

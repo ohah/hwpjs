@@ -24,7 +24,10 @@ test("current source references edit actual CFB and reject stale, foreign and cl
     const reference = window.references[1];
     assert.throws(() => other.currentText(reference), /InvalidCurrentReferenceScope/);
     const before = editor.currentText(reference);
-    assert.throws(() => editor.spliceCurrent({ reference, startUnit: 0, endUnit: 0, text: "\ud800" }), /InvalidUnicodeEncoding/);
+    assert.throws(
+      () => editor.spliceCurrent({ reference, startUnit: 0, endUnit: 0, text: "\ud800" }),
+      /InvalidUnicodeEncoding/,
+    );
     assert.equal(editor.currentText(reference), before);
     editor.spliceCurrent({ reference, startUnit: 0, endUnit: 0, text: "입력😀" });
     verifyRaw(input, editor.save({ allowStaleLayout: true }).bytes, 0, 1, 0, 0, "입력😀");
@@ -42,16 +45,37 @@ test("current source references edit actual CFB and reject stale, foreign and cl
     const fresh = editor.currentReferences(0).references[1];
     editor.splice({ section: 0, paragraph: 1, startUnit: 0, endUnit: 0, text: "A" });
     assert.throws(() => editor.currentText(fresh), /StaleCurrentReference/);
-  } finally { editor.close(); other.close(); }
+  } finally {
+    editor.close();
+    other.close();
+  }
   assert.throws(() => editor.currentReferences(0), /EditorClosed/);
   assert.throws(() => editor.currentText({}), /EditorClosed/);
 });
 
 test("current reference decoder preserves u64 strings and rejects malformed windows", () => {
-  const ref = { epoch: "18446744073709551615", kind: "cell", section: 0, id: "18446744073709551615", row: 0, column: 0 };
-  const wire = references => new TextEncoder().encode(JSON.stringify({ version: 1, total: references.length, first: 0, references }));
+  const ref = {
+    epoch: "18446744073709551615",
+    kind: "cell",
+    section: 0,
+    id: "18446744073709551615",
+    row: 0,
+    column: 0,
+  };
+  const wire = (references) =>
+    new TextEncoder().encode(
+      JSON.stringify({ version: 1, total: references.length, first: 0, references }),
+    );
   assert.deepEqual(decodeHwp5CurrentReferences(wire([ref])).references, [ref]);
-  for (const change of [{ epoch: "0" }, { id: "01" }, { id: "18446744073709551616" }, { kind: "generated" }, { section: -1 }, { row: 0.5 }, { extra: true }])
+  for (const change of [
+    { epoch: "0" },
+    { id: "01" },
+    { id: "18446744073709551616" },
+    { kind: "generated" },
+    { section: -1 },
+    { row: 0.5 },
+    { extra: true },
+  ])
     assert.throws(() => decodeHwp5CurrentReferences(wire([{ ...ref, ...change }])));
   assert.throws(() => decodeHwp5CurrentReferences(wire([ref, { ...ref, epoch: "1" }])));
   assert.throws(() => decodeHwp5CurrentReferences(new Uint8Array([255])));

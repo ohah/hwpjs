@@ -6,13 +6,7 @@ const w = (n) => {
   return b;
 };
 const cp = (n) => Buffer.concat([w(2), w(n)]);
-const text = (b) =>
-  Buffer.concat([
-    w(30),
-    w(b.length),
-    b,
-    Buffer.alloc((4 - (b.length % 4)) % 4),
-  ]);
+const text = (b) => Buffer.concat([w(30), w(b.length), b, Buffer.alloc((4 - (b.length % 4)) % 4)]);
 function dict(entries, unicode) {
   const parts = [w(entries.length)];
   for (const [id, name] of entries)
@@ -117,18 +111,9 @@ export function codepageEdges(call) {
           : /UnexpectedEnd|InvalidSummaryTerminator|InvalidSummaryPadding/,
       );
   }
-  reject(
-    summaryFixture([[1, Buffer.concat([w(3), w(1200)])]]),
-    /InvalidSummaryPropertyType/,
-  );
-  reject(
-    summaryFixture([[1, Buffer.concat([w(0x7777), w(1200)])]]),
-    /InvalidSummaryPropertyType/,
-  );
-  reject(
-    summaryFixture([[1, Buffer.concat([w(2), w(0xffff04b0)])]]),
-    /InvalidSummaryPadding/,
-  );
+  reject(summaryFixture([[1, Buffer.concat([w(3), w(1200)])]]), /InvalidSummaryPropertyType/);
+  reject(summaryFixture([[1, Buffer.concat([w(0x7777), w(1200)])]]), /InvalidSummaryPropertyType/);
+  reject(summaryFixture([[1, Buffer.concat([w(2), w(0xffff04b0)])]]), /InvalidSummaryPadding/);
   reject(
     summaryFixture([
       [2, text(Buffer.from([0]))],
@@ -151,14 +136,8 @@ export function codepageEdges(call) {
     /InvalidSummaryTerminator/,
   );
   // Missing codepage leaves codepage-sensitive content opaque instead of guessed.
-  reject(
-    summaryFixture([[2, Buffer.concat([w(30), w(0xffffffff)])]]),
-    /UnexpectedEnd/,
-  );
-  reject(
-    summaryFixture([[2, text(Buffer.from([255]))]]),
-    /InvalidSummaryTerminator/,
-  );
+  reject(summaryFixture([[2, Buffer.concat([w(30), w(0xffffffff)])]]), /UnexpectedEnd/);
+  reject(summaryFixture([[2, text(Buffer.from([255]))]]), /InvalidSummaryTerminator/);
   summaryActual(
     call,
     summaryFixture([

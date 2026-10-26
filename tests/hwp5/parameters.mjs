@@ -9,15 +9,9 @@ const u32 = (n) => {
   b.writeUInt32LE(n >>> 0);
   return b;
 };
-const item = (id, type, body = Buffer.alloc(0)) =>
-  Buffer.concat([u16(id), u16(type), body]);
+const item = (id, type, body = Buffer.alloc(0)) => Buffer.concat([u16(id), u16(type), body]);
 const set = (items, mode = 0, id = 12) =>
-  Buffer.concat([
-    u16(id),
-    u16(items.length),
-    ...(mode === 0 ? [u16(0xabcd)] : []),
-    ...items,
-  ]);
+  Buffer.concat([u16(id), u16(items.length), ...(mode === 0 ? [u16(0xabcd)] : []), ...items]);
 const str = (b) => Buffer.concat([u16(b.length / 2), b]);
 function oracle(b, mode) {
   let p = 0;
@@ -73,10 +67,7 @@ function check(call, b, mode = 0) {
   try {
     info = oracle(b, mode);
   } catch (e) {
-    assert.throws(
-      () => call(21, Buffer.concat([Buffer.from([mode]), b])),
-      new RegExp(e.message),
-    );
+    assert.throws(() => call(21, Buffer.concat([Buffer.from([mode]), b])), new RegExp(e.message));
     return false;
   }
   assert.deepEqual(call(21, Buffer.concat([Buffer.from([mode]), b])), b);
@@ -84,7 +75,7 @@ function check(call, b, mode = 0) {
 }
 export function parameterActual(call, section, tag) {
   const report = [0, 0, 0, 0, 0, 0, 0, 0];
-  for (let p = 0; p < section.length; ) {
+  for (let p = 0; p < section.length;) {
     const bits = section.readUInt32LE(p);
     p += 4;
     let n = bits >>> 20;
@@ -143,8 +134,7 @@ export function parameterEdges(call) {
     );
     items.push(item(22, 0x8002, u16(65535)));
     const b = set(items, mode);
-    for (let n = 0; n < b.length; n++)
-      assert.equal(check(call, b.subarray(0, n), mode), false);
+    for (let n = 0; n < b.length; n++) assert.equal(check(call, b.subarray(0, n), mode), false);
     check(call, b, mode);
     check(call, Buffer.concat([b, Buffer.from([255, 0, 7])]), mode);
     check(call, set([item(8, 0x8001, u16(0))], mode), mode);
@@ -158,11 +148,7 @@ export function parameterEdges(call) {
       }
   }
   const many = set([
-    item(
-      1,
-      0x8001,
-      Buffer.concat([u16(32767), u16(19), Buffer.alloc(32767 * 2)]),
-    ),
+    item(1, 0x8001, Buffer.concat([u16(32767), u16(19), Buffer.alloc(32767 * 2)])),
   ]);
   check(call, many);
   const nestedArray = Buffer.concat([
@@ -186,34 +172,19 @@ export function parameterEdges(call) {
     /ParameterNodeLimit/,
   );
   const fieldName = str(Buffer.from([0, 216, 0, 0, 65, 0]));
-  const wrap = (ps) =>
-    Buffer.concat([u32(123), Buffer.from([255]), ps, Buffer.alloc(8)]);
+  const wrap = (ps) => Buffer.concat([u32(123), Buffer.from([255]), ps, Buffer.alloc(8)]);
   const ps = set([item(17, 8, u32(42)), item(0x4000, 1, fieldName)], 0, 0x21b);
   const out = call(22, wrap(ps));
   assert.deepEqual(
     out,
-    Buffer.concat([
-      ...[1, 6, 1, 3, 8].map(u32),
-      fieldName.subarray(2),
-      Buffer.alloc(8),
-    ]),
+    Buffer.concat([...[1, 6, 1, 3, 8].map(u32), fieldName.subarray(2), Buffer.alloc(8)]),
   );
   assert.throws(
     () => call(22, wrap(set([item(0x4000, 4, u32(1))], 0, 0x21b))),
     /InvalidCellFieldType/,
   );
   assert.throws(
-    () =>
-      call(
-        22,
-        wrap(
-          set(
-            [item(0x4000, 1, fieldName), item(0x4000, 1, fieldName)],
-            0,
-            0x21b,
-          ),
-        ),
-      ),
+    () => call(22, wrap(set([item(0x4000, 1, fieldName), item(0x4000, 1, fieldName)], 0, 0x21b))),
     /DuplicateCellFieldName/,
   );
   const empty = call(22, wrap(set([item(0x4000, 1, u16(0))], 0, 0x21b)));
@@ -224,20 +195,11 @@ export function parameterEdges(call) {
   assert.equal(unknown.readUInt32LE(8), 0);
   const child = call(
     22,
-    wrap(
-      set(
-        [item(1, 0x8000, set([item(0x4000, 1, fieldName)], 0, 0x21b))],
-        0,
-        0x21b,
-      ),
-    ),
+    wrap(set([item(1, 0x8000, set([item(0x4000, 1, fieldName)], 0, 0x21b))], 0, 0x21b)),
   );
   assert.equal(child.readUInt32LE(), 0);
   assert.equal(call(22, Buffer.alloc(5)).length, 0);
-  assert.throws(
-    () => call(22, Buffer.from([0, 0, 0, 0, 255])),
-    /UnexpectedEnd/,
-  );
+  assert.throws(() => call(22, Buffer.from([0, 0, 0, 0, 255])), /UnexpectedEnd/);
   call(22, wrap(ps));
   return {
     mutations,

@@ -10,10 +10,7 @@ export function overlapReference(call, cfb) {
     ["aift.hwp", 1],
     ["basic/issue2007_nested_cell_pagination_42065.hwp", 0],
   ]) {
-    const url = new URL(
-      "../../reference/rhwp/samples/" + path,
-      import.meta.url,
-    );
+    const url = new URL("../../reference/rhwp/samples/" + path, import.meta.url);
     if (!existsSync(url)) {
       results.push({ path, skipped: "reference fixture unavailable" });
       continue;
@@ -38,21 +35,13 @@ export function overlapReference(call, cfb) {
     let rejected = 0;
     for (const r of documentRecords(b))
       if (r.tag === 71 && b.readUInt32LE(r.start) === 0x74637073) {
-        const short = Buffer.concat([
-          b.subarray(0, r.end - 1),
-          b.subarray(r.end),
-        ]);
+        const short = Buffer.concat([b.subarray(0, r.end - 1), b.subarray(r.end)]);
         assert.notEqual(b.readUInt32LE(r.offset) >>> 20, 4095);
         short.writeUInt32LE(
-          ((b.readUInt32LE(r.offset) & 0xfffff) |
-            ((r.end - r.start - 1) << 20)) >>>
-            0,
+          ((b.readUInt32LE(r.offset) & 0xfffff) | ((r.end - r.start - 1) << 20)) >>> 0,
           r.offset,
         );
-        assert.throws(
-          () => call(37, overlapInput(v, short, count, mode)),
-          /UnexpectedEnd/,
-        );
+        assert.throws(() => call(37, overlapInput(v, short, count, mode)), /UnexpectedEnd/);
         rejected++;
         if (mode) {
           const bad = Buffer.from(b),
@@ -70,11 +59,7 @@ export function overlapReference(call, cfb) {
     const nodes = cfb.document().nodes;
     const sections = mode
       ? nodes
-          .filter(
-            (n) =>
-              /^Section\d+$/.test(n.name) &&
-              nodes[n.parent]?.name === "BodyText",
-          )
+          .filter((n) => /^Section\d+$/.test(n.name) && nodes[n.parent]?.name === "BodyText")
           .map((n) => ({
             index: Number(n.name.slice(7)),
             bytes: decode("/BodyText/" + n.name),
@@ -84,9 +69,7 @@ export function overlapReference(call, cfb) {
     if (mode) {
       documentReport = documentActual(call, h, doc, sections);
     }
-    const memoReport = mode
-      ? memoReference(call, cfb, file, h, doc, sections)
-      : null;
+    const memoReport = mode ? memoReference(call, cfb, file, h, doc, sections) : null;
     results.push({
       path,
       version: v,

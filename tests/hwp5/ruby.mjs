@@ -11,13 +11,7 @@ const u = (n) => {
   return b;
 };
 export const rubyPayload = (main, sub, values = [0, 0, 0, 0, 0]) =>
-  Buffer.concat([
-    u(main.length / 2),
-    main,
-    u(sub.length / 2),
-    sub,
-    ...values.map(w),
-  ]);
+  Buffer.concat([u(main.length / 2), main, u(sub.length / 2), sub, ...values.map(w)]);
 const frame = (p) =>
   Buffer.concat([
     w(71 | (Math.min(p.length + 4, 4095) << 20)),
@@ -43,10 +37,7 @@ export function rubyActual(call, v, b) {
       stats[5] += p.length - offset - 20;
       raw.push(p);
     }
-  assert.deepEqual(
-    call(40, Buffer.concat([w(v), b])),
-    Buffer.concat([...stats.map(w), ...raw]),
-  );
+  assert.deepEqual(call(40, Buffer.concat([w(v), b])), Buffer.concat([...stats.map(w), ...raw]));
   return stats;
 }
 export function rubyEdges(call) {
@@ -63,10 +54,7 @@ export function rubyEdges(call) {
     return rubyActual(call, v, frame(p));
   };
   const reject = (p) => {
-    assert.throws(
-      () => call(40, Buffer.concat([w(v), frame(p)])),
-      /UnexpectedEnd/,
-    );
+    assert.throws(() => call(40, Buffer.concat([w(v), frame(p)])), /UnexpectedEnd/);
     rejected++;
     check(good);
   };
@@ -85,11 +73,7 @@ export function rubyEdges(call) {
       check(rubyPayload(Buffer.alloc(0), Buffer.alloc(0), values));
     }
   for (let n = 0; n < 4; n++) check(Buffer.concat([good, Buffer.alloc(n, 9)]));
-  for (const b of [
-    Buffer.from([255, 255, 0, 0]),
-    Buffer.from([0, 0, 255, 255]),
-    Buffer.alloc(18),
-  ])
+  for (const b of [Buffer.from([255, 255, 0, 0]), Buffer.from([0, 0, 255, 255]), Buffer.alloc(18)])
     reject(b);
   rubyActual(call, v, Buffer.concat([frame(good), frame(Buffer.alloc(24))]));
   accepted++;

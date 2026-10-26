@@ -6,12 +6,24 @@ export function attachHwp5WindowCaptions(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
   content.currentParagraphFlows = selectedFlows;
   const scoped = Object.create(editor);
-  scoped.captionSources = section => {
-    const selected = new Set((content.tables ?? []).filter(row => row.section === section).map(row => row.tableNode));
-    const rows = validateHwp5CaptionSources(editor.captionSources(section)).filter(row => selected.has(row.table_record_node));
+  scoped.captionSources = (section) => {
+    const selected = new Set(
+      (content.tables ?? []).filter((row) => row.section === section).map((row) => row.tableNode),
+    );
+    const rows = validateHwp5CaptionSources(editor.captionSources(section)).filter((row) =>
+      selected.has(row.table_record_node),
+    );
     for (const source of rows) {
-      const members = completeFlows.get(section).filter(row => row.host === "table_caption" && row.parent_node === source.control_node && row.list_node === source.list_node);
-      if (members.some(row => !displayed.has(`${section}:${row.paragraph}`))) throw new Error("MissingHwp5CaptionBody");
+      const members = completeFlows
+        .get(section)
+        .filter(
+          (row) =>
+            row.host === "table_caption" &&
+            row.parent_node === source.control_node &&
+            row.list_node === source.list_node,
+        );
+      if (members.some((row) => !displayed.has(`${section}:${row.paragraph}`)))
+        throw new Error("MissingHwp5CaptionBody");
     }
     return rows;
   };

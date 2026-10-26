@@ -6,11 +6,15 @@ export function hwpxGateTestPaths(source) {
   const block = source.slice(start, end);
   const initial = /^const hwpx_text_tests = b\.addSystemCommand\(&\.\{([^\n]*)\}\);/m.exec(block);
   if (!initial) throw new Error("MissingHwpxGateInitialArguments");
-  return [...initial[1].matchAll(/"(tests\/[^"\n]*\.test\.mjs)"/g),
-    ...block.matchAll(/^\s*hwpx_text_tests\.addArg\("(tests\/[^"\n]*\.test\.mjs)"\);\s*$/gm)].map(match => match[1]);
+  return [
+    ...initial[1].matchAll(/"(tests\/[^"\n]*\.test\.mjs)"/g),
+    ...block.matchAll(/^\s*hwpx_text_tests\.addArg\("(tests\/[^"\n]*\.test\.mjs)"\);\s*$/gm),
+  ].map((match) => match[1]);
 }
 
 export function verifyHwpxGateRegistration(source, paths) {
   const registrations = hwpxGateTestPaths(source);
-  for (const path of paths) if (registrations.filter(value => value === path).length !== 1) throw new Error(`HwpxGateRegistration: ${path}`);
+  for (const path of paths)
+    if (registrations.filter((value) => value === path).length !== 1)
+      throw new Error(`HwpxGateRegistration: ${path}`);
 }

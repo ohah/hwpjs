@@ -1,5 +1,11 @@
-import type { EditorRuntime, RuntimeFactory, RuntimeMessage, RuntimeRequestContext, RuntimeReply } from '../contracts.ts';
-import { createReaderRuntime } from '../../../../web/preview/reader-runtime.mjs';
+import type {
+  EditorRuntime,
+  RuntimeFactory,
+  RuntimeMessage,
+  RuntimeRequestContext,
+  RuntimeReply,
+} from "../contracts.ts";
+import { createReaderRuntime } from "../../../../web/preview/reader-runtime.mjs";
 
 export interface ReaderRuntimeOptions {
   wasmModule?: WebAssembly.Module;
@@ -16,7 +22,10 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
       const ownedContext = context === undefined ? undefined : { ...context };
       return backend.request(message).then((reply: RuntimeReply) => ({
         ...reply,
-        meta: { ...backend.outcome(reply), ...(ownedContext === undefined ? {} : { context: ownedContext }) },
+        meta: {
+          ...backend.outcome(reply),
+          ...(ownedContext === undefined ? {} : { context: ownedContext }),
+        },
       }));
     },
     dispose: () => backend.dispose(),

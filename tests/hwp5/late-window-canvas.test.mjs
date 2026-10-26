@@ -5,29 +5,48 @@ import { workerCanvasHarness, dispatchCanvasEvent } from "../canvas/worker-harne
 import { verifyRaw } from "./style-preservation/text-record-oracle.mjs";
 
 assert(process.env.HWPJS_TEST_WASM, "Explicit late-window retention candidate required");
-test("Canvas input reaches the actual 50000th paragraph and retains complete source history", async t => {
-  const input = readFileSync("reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp");
+test("Canvas input reaches the actual 50000th paragraph and retains complete source history", async (t) => {
+  const input = readFileSync(
+    "reference/rhwp/samples/task2070/1130000-201900011_D0150004-1-002_2017년기준 시장구조조사.hwp",
+  );
   const h = await workerCanvasHarness(t, { paintFrames: true });
   assert.equal((await h.send({ kind: "load", format: "hwp5", bytes: input })).error, undefined);
   assert.equal((await h.send({ kind: "enable" })).error, undefined);
   const selected = await h.send({ kind: "set-edit-window", offset: 50000, count: 1 });
   assert.equal(selected.error, undefined);
-  const row = selected.content.paragraphs.find(row => !row.windowContext);
+  const row = selected.content.paragraphs.find((row) => !row.windowContext);
   assert(row?.editable && !row.clipped);
   assert.equal(row.windowOrdinal, 50000);
   h.paint();
   assert.equal(h.canvas.dataset.pageLayoutScope, "paragraph-window-fragment");
   assert.equal(h.canvas.dataset.documentPageNumbersExact, "false");
-  assert.equal(h.controller.selectTextRange({ section: row.section, paragraph: row.paragraph, startUnit: 0, endUnit: 0 }), true);
+  assert.equal(
+    h.controller.selectTextRange({
+      section: row.section,
+      paragraph: row.paragraph,
+      startUnit: 0,
+      endUnit: 0,
+    }),
+    true,
+  );
   assert.equal(h.input.readOnly, false);
-  const before = (await h.send({ kind: "save" })).bytes, original = h.input.value, marker = "Canvas후반😀";
+  const before = (await h.send({ kind: "save" })).bytes,
+    original = h.input.value,
+    marker = "Canvas후반😀";
   assert.deepEqual(Buffer.from(before), input);
-  assert.equal(dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: marker }).defaultPrevented, false);
-  h.input.value = marker + original; h.input.setSelectionRange(marker.length, marker.length);
+  assert.equal(
+    dispatchCanvasEvent(h.input, "beforeinput", { inputType: "insertText", data: marker })
+      .defaultPrevented,
+    false,
+  );
+  h.input.value = marker + original;
+  h.input.setSelectionRange(marker.length, marker.length);
   dispatchCanvasEvent(h.input, "input");
   assert.equal((await h.flush()).error, undefined);
   const saved = (await h.send({ kind: "save", allowStaleLayout: true })).bytes;
-  verifyRaw(before, saved, row.section, row.paragraph, 0, 0, marker, { skipLocalFieldAttributes: true });
+  verifyRaw(before, saved, row.section, row.paragraph, 0, 0, marker, {
+    skipLocalFieldAttributes: true,
+  });
   assert.equal(h.controller.history("undo"), true);
   assert.equal((await h.flush()).error, undefined);
   assert.deepEqual((await h.send({ kind: "save" })).bytes, before);

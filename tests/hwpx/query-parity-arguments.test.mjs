@@ -13,7 +13,8 @@ test("query parity rejects missing empty unknown and duplicate arguments before 
     [["--before-wasm=a", "--after-wasm=b", "--max-duration-ms=bad"], "InvalidQueryParityLimit"],
   ]) {
     const result = spawnSync(process.execPath, ["tools/hwpx-query-parity-audit.mjs", ...args], {
-      encoding: "utf8", timeout: 10000,
+      encoding: "utf8",
+      timeout: 10000,
     });
     assert.equal(result.error, undefined);
     assert.equal(result.signal, null);

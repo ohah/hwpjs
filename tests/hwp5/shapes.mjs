@@ -22,14 +22,7 @@ function border(flags, count = 3) {
   const parts = [head, word(flags)];
   if (flags & 1) parts.push(word(0x12345678), word(0xaabbccdd), word(-1));
   if (flags & 4) {
-    parts.push(
-      Buffer.from([4]),
-      word(90),
-      word(20),
-      word(30),
-      word(40),
-      word(count),
-    );
+    parts.push(Buffer.from([4]), word(90), word(20), word(30), word(40), word(count));
     if (count > 2) for (let i = 0; i < count; i++) parts.push(word(i * 50));
     for (let i = 0; i < count; i++) parts.push(word(0xabcdef00 + i));
   }
@@ -43,16 +36,9 @@ export function shapeEdges(call) {
     for (const count of [0, 1, 2, 3]) {
       const b = border(flags, count);
       checkDocinfo(call, version, frame(20, b));
-      checkDocinfo(
-        call,
-        version,
-        frame(20, Buffer.concat([b, Buffer.from([0xee, 0xff])])),
-      );
+      checkDocinfo(call, version, frame(20, Buffer.concat([b, Buffer.from([0xee, 0xff])])));
       for (let n = 0; n < b.length; n++)
-        assert.throws(
-          () => call(4, input(20, b.subarray(0, n))),
-          /^Error: UnexpectedEnd$/,
-        );
+        assert.throws(() => call(4, input(20, b.subarray(0, n))), /^Error: UnexpectedEnd$/);
     }
   for (const v of [
     0x05000106,
@@ -67,9 +53,7 @@ export function shapeEdges(call) {
     for (let n = 0; n <= 80; n++) {
       const valid =
         n >= 68 &&
-        (v < 0x05000201 ||
-          n === 68 ||
-          (n >= 70 && (v < 0x05000300 || n === 70 || n >= 74)));
+        (v < 0x05000201 || n === 68 || (n >= 70 && (v < 0x05000300 || n === 70 || n >= 74)));
       const b = Buffer.alloc(n);
       if (valid) checkDocinfo(call, v, frame(21, b));
       else assert.throws(() => call(4, input(21, b, v)), /UnexpectedEnd/);
@@ -80,19 +64,13 @@ export function shapeEdges(call) {
         (v < 0x05000107 ||
           n === 42 ||
           (n >= 46 &&
-            (v < 0x05000205 ||
-              n === 46 ||
-              (n >= 54 && (v < 0x05010000 || n === 54 || n >= 58)))));
+            (v < 0x05000205 || n === 46 || (n >= 54 && (v < 0x05010000 || n === 54 || n >= 58)))));
       const b = Buffer.alloc(n);
       if (valid) checkDocinfo(call, v, frame(25, b));
       else assert.throws(() => call(4, input(25, b, v)), /UnexpectedEnd/);
     }
   }
-  const unknown = Buffer.concat([
-    Buffer.alloc(32),
-    word(0x80000007),
-    Buffer.from([255]),
-  ]);
+  const unknown = Buffer.concat([Buffer.alloc(32), word(0x80000007), Buffer.from([255])]);
   checkDocinfo(call, version, frame(20, unknown));
   const huge = border(4);
   huge.writeUInt32LE(0xffffffff, 53);
@@ -101,21 +79,14 @@ export function shapeEdges(call) {
   oversized.writeUInt32LE(0xffffffff, 36);
   assert.throws(() => call(4, input(20, oversized)), /UnexpectedEnd/);
   // Nonzero signed/language fields ensure roundtrip isn't tested only on zeroes.
-  const char = Buffer.from(
-    Array.from({ length: 74 }, (_, i) => (i * 13 + 128) & 255),
-  );
-  const para = Buffer.from(
-    Array.from({ length: 58 }, (_, i) => (i * 17 + 128) & 255),
-  );
+  const char = Buffer.from(Array.from({ length: 74 }, (_, i) => (i * 13 + 128) & 255));
+  const para = Buffer.from(Array.from({ length: 58 }, (_, i) => (i * 17 + 128) & 255));
   for (const [tag, b] of [
     [20, border(7)],
     [21, char],
     [25, para],
   ]) {
-    assert.throws(
-      () => call(4, input(tag, b, version, 0)),
-      /InvalidDocInfoLevel/,
-    );
+    assert.throws(() => call(4, input(tag, b, version, 0)), /InvalidDocInfoLevel/);
     checkDocinfo(call, version, frame(tag, b));
   }
 }

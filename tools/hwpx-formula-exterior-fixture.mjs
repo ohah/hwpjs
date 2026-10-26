@@ -3,9 +3,15 @@ import { readFileSync } from "node:fs";
 import { execFileSync } from "./oracle-process.mjs";
 
 export function formulaExteriorFixture(placement, { mixed = false } = {}) {
-  if (!["same-run", "separate-run"].includes(placement)) throw new TypeError("Invalid exterior placement");
+  if (!["same-run", "separate-run"].includes(placement))
+    throw new TypeError("Invalid exterior placement");
   if (typeof mixed !== "boolean") throw new TypeError("Invalid mixed fixture policy");
-  const derived = JSON.parse(execFileSync("python3", ["-c", `
+  const derived = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `
 import sys, io, json, base64, zipfile, xml.etree.ElementTree as ET
 P = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 with zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())) as source:
@@ -35,6 +41,13 @@ with zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())) as source:
         for info in source.infolist():
             target.writestr(info, ET.tostring(root, encoding='utf-8') if info.filename == 'Contents/section0.xml' else source.read(info.filename))
     print(json.dumps({'input': base64.b64encode(output.getvalue()).decode(), 'paragraph': ordinal}))
-`], { input: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx"), encoding: "utf8" }));
+`,
+      ],
+      {
+        input: readFileSync("legacy/rust/crates/hwp-core/tests/fixtures/chart.hwpx"),
+        encoding: "utf8",
+      },
+    ),
+  );
   return { input: Buffer.from(derived.input, "base64"), paragraph: derived.paragraph };
 }

@@ -18,30 +18,13 @@ export function summaryFixture(rows) {
     table.push(w(id), w(offset));
     offset += b.length;
   }
-  return Buffer.concat([
-    header,
-    w(offset),
-    w(rows.length),
-    ...table,
-    ...rows.map((r) => r[1]),
-  ]);
+  return Buffer.concat([header, w(offset), w(rows.length), ...table, ...rows.map((r) => r[1])]);
 }
 export function summaryActual(call, b) {
   const start = b.readUInt32LE(44),
     size = b.readUInt32LE(start),
     count = b.readUInt32LE(start + 4);
-  const stats = [
-      count,
-      0,
-      0,
-      0,
-      0,
-      0,
-      b.length - start - size + (start - 48),
-      0,
-      0,
-      0,
-    ],
+  const stats = [count, 0, 0, 0, 0, 0, b.length - start - size + (start - 48), 0, 0, 0],
     parts = [];
   let codePage = null;
   for (let i = 0; i < count; i++)
@@ -57,8 +40,7 @@ export function summaryActual(call, b) {
     const end = i + 1 < count ? b.readUInt32LE(start + 20 + i * 8) : size;
     const raw = b.subarray(start + offset, start + end);
     if (i === 0) stats[6] += offset - 8 - count * 8;
-    if (![0, 1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 20, 21].includes(id))
-      stats[7]++;
+    if (![0, 1, 2, 3, 4, 5, 6, 8, 9, 11, 12, 13, 14, 20, 21].includes(id)) stats[7]++;
     if (id === 0) {
       stats[4]++;
       if (codePage === null && raw.equals(hwpPlaceholder)) stats[9]++;
@@ -82,10 +64,7 @@ export function summaryActual(call, b) {
     }
     parts.push(w(id), w(offset), w(raw.length), raw);
   }
-  assert.deepEqual(
-    call(27, b, count),
-    Buffer.concat([...stats.map(w), ...parts]),
-  );
+  assert.deepEqual(call(27, b, count), Buffer.concat([...stats.map(w), ...parts]));
   assert.equal(stats.length, summaryStatsWords);
   return stats;
 }
@@ -105,10 +84,7 @@ export function summaryEdges(call) {
   };
   summaryActual(call, good);
   for (let n = 0; n < good.length; n++)
-    reject(
-      good.subarray(0, n),
-      /UnexpectedEnd|InvalidSummaryOffset|InvalidSummarySize/,
-    );
+    reject(good.subarray(0, n), /UnexpectedEnd|InvalidSummaryOffset|InvalidSummarySize/);
   for (const [at, value, error] of [
     [0, 0, /InvalidSummaryByteOrder/],
     [2, 2, /UnsupportedSummaryVersion/],
@@ -135,28 +111,14 @@ export function summaryEdges(call) {
   const term = Buffer.from(good);
   term[98] = 1;
   reject(term, /InvalidSummaryTerminator/);
+  reject(summaryFixture([[2, Buffer.concat([w(3), w(1)])]]), /InvalidSummaryPropertyType/);
+  reject(summaryFixture([[14, Buffer.concat([w(0x00010003), w(1)])]]), /InvalidSummaryPadding/);
+  reject(summaryFixture([[999, Buffer.concat([w(0x0001ffff), w(1)])]]), /InvalidSummaryPadding/);
   reject(
-    summaryFixture([[2, Buffer.concat([w(3), w(1)])]]),
-    /InvalidSummaryPropertyType/,
-  );
-  reject(
-    summaryFixture([[14, Buffer.concat([w(0x00010003), w(1)])]]),
+    summaryFixture([[2, Buffer.concat([w(31), w(1), Buffer.from([0, 0, 1, 0])])]]),
     /InvalidSummaryPadding/,
   );
-  reject(
-    summaryFixture([[999, Buffer.concat([w(0x0001ffff), w(1)])]]),
-    /InvalidSummaryPadding/,
-  );
-  reject(
-    summaryFixture([
-      [2, Buffer.concat([w(31), w(1), Buffer.from([0, 0, 1, 0])])],
-    ]),
-    /InvalidSummaryPadding/,
-  );
-  for (const raw of [
-    Buffer.concat([w(31), w(0)]),
-    Buffer.concat([w(31), w(1), Buffer.alloc(4)]),
-  ])
+  for (const raw of [Buffer.concat([w(31), w(0)]), Buffer.concat([w(31), w(1), Buffer.alloc(4)])])
     summaryActual(call, summaryFixture([[2, raw]]));
   summaryActual(
     call,

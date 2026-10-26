@@ -21,7 +21,11 @@ export function queryHwp5WindowContent(editor, preview, options, paragraphFormat
   content.documentWindowAvailable = true;
   attachHwp5Styles(editor, preview, content);
   attachHwp5ParagraphFormats(editor, content, paragraphFormatsAvailable);
-  attachHwp5PageDeclarations(editor, content, new Set(content.paragraphs.map(row => row.section)));
+  attachHwp5PageDeclarations(
+    editor,
+    content,
+    new Set(content.paragraphs.map((row) => row.section)),
+  );
   attachHwp5WindowObjects(editor, preview, content);
   attachHwp5WindowRepeatedAreas(editor, content);
   attachHwp5WindowStructuralAnchors(editor, content);

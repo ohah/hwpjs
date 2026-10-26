@@ -10,7 +10,7 @@ import { decodeDistributionSection } from "./hwp5-distribution-oracle.mjs";
 const ignored = new Set([".git", ".zig-cache", "node_modules"]);
 function filesUnder(root) {
   const files = [];
-  const visit = dir => {
+  const visit = (dir) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const path = join(dir, entry.name);
       if (entry.isDirectory() && !ignored.has(entry.name)) visit(path);
@@ -32,10 +32,12 @@ function category(error, bytes, cfb) {
         const decoded = inflateSync(info, { maxOutputLength: 32 * 1024 * 1024 });
         if (decoded.length >= 4) {
           const first = decoded.readUInt32LE(0);
-          if ((first & 1023) === 16 && (first >>> 20) < 14) return "short_document_properties";
+          if ((first & 1023) === 16 && first >>> 20 < 14) return "short_document_properties";
         }
       }
-    } catch { /* Keep the original parser error if the independent check fails. */ }
+    } catch {
+      /* Keep the original parser error if the independent check fails. */
+    }
   }
   if (error === "InvalidSignature") {
     if (bytes.subarray(0, 8).toString() === "HWP Docu") return "legacy_signature_not_cfb";
@@ -52,24 +54,32 @@ function compareText(cfb, bytes, preview) {
   let compared = 0;
   for (const section of preview.sections) {
     const distribution = Boolean(header[36] & 4);
-    const encoded = cfb.findExact(`/${distribution ? "ViewText" : "BodyText"}/Section${section.index}`)?.content;
+    const encoded = cfb.findExact(
+      `/${distribution ? "ViewText" : "BodyText"}/Section${section.index}`,
+    )?.content;
     if (!encoded) throw new Error("oracle missing Section");
     let raw = encoded;
     if (distribution) raw = decodeDistributionSection(encoded, Boolean(header[36] & 1));
     else if (header[36] & 1) {
-      try { raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 }); }
-      catch (err) {
+      try {
+        raw = inflateRawSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
+      } catch (err) {
         if (err.code !== "Z_DATA_ERROR") throw err;
         raw = inflateSync(encoded, { maxOutputLength: 32 * 1024 * 1024 });
       }
     }
     const expected = rawParagraphTexts(raw);
-    if (expected.length !== section.paragraphs.length) throw new Error("oracle paragraph count mismatch");
+    if (expected.length !== section.paragraphs.length)
+      throw new Error("oracle paragraph count mismatch");
     for (let i = 0; i < expected.length; i++) {
       const actual = section.paragraphs[i];
       const text = expected[i];
-      if (actual.textPresent !== (text !== null) ||
-          !Buffer.concat(actual.tokens.map(token => Buffer.from(token.raw))).equals(text ?? Buffer.alloc(0))) {
+      if (
+        actual.textPresent !== (text !== null) ||
+        !Buffer.concat(actual.tokens.map((token) => Buffer.from(token.raw))).equals(
+          text ?? Buffer.alloc(0),
+        )
+      ) {
         throw new Error(`oracle text mismatch section=${section.index} paragraph=${i}`);
       }
       compared++;
@@ -79,7 +89,7 @@ function compareText(cfb, bytes, preview) {
 }
 
 const showFiles = process.argv.includes("--files");
-const roots = process.argv.slice(2).filter(arg => arg !== "--files");
+const roots = process.argv.slice(2).filter((arg) => arg !== "--files");
 const paths = (roots.length ? roots : ["reference", "legacy"]).flatMap(filesUnder).sort();
 const wasm = readFileSync(new URL("../zig-out/bin/hwpjs.wasm", import.meta.url));
 const preview = await createHwp5Reader(wasm);
@@ -91,7 +101,11 @@ try {
     const bytes = readFileSync(path);
     let result;
     let error = null;
-    try { result = preview.readText(bytes); } catch (err) { error = err.message; }
+    try {
+      result = preview.readText(bytes);
+    } catch (err) {
+      error = err.message;
+    }
     const key = category(error, bytes, cfb);
     const group = groups.get(key) ?? [];
     group.push(path);
@@ -113,14 +127,25 @@ try {
 }
 const report = {
   paths: paths.length,
-  categories: Object.fromEntries([...groups].sort().map(([name, paths]) => [name, showFiles && name !== "preview_ok" ? paths : paths.length])),
+  categories: Object.fromEntries(
+    [...groups]
+      .sort()
+      .map(([name, paths]) => [name, showFiles && name !== "preview_ok" ? paths : paths.length]),
+  ),
   oracle,
 };
 console.log(JSON.stringify(report, null, 2));
 const known = new Set([
-  "preview_ok", "legacy_signature_not_cfb", "zip_not_hwp5", "non_document_bytes",
-  "UnsupportedDistribution", "UnsupportedEncryption", "UnsupportedVersion",
-  "InvalidDeflate", "SectionCountMismatch",
+  "preview_ok",
+  "legacy_signature_not_cfb",
+  "zip_not_hwp5",
+  "non_document_bytes",
+  "UnsupportedDistribution",
+  "UnsupportedEncryption",
+  "UnsupportedVersion",
+  "InvalidDeflate",
+  "SectionCountMismatch",
   "short_document_properties",
 ]);
-if (oracle.failures.length || [...groups.keys()].some(key => !known.has(key))) process.exitCode = 1;
+if (oracle.failures.length || [...groups.keys()].some((key) => !known.has(key)))
+  process.exitCode = 1;

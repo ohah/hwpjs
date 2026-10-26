@@ -4,6 +4,11 @@ import { pageVisibleRectangle } from "./page-visible-rectangle.mjs";
 export function rowPageClipContains(row, x, y) {
   if (row.pageClip === undefined) return true;
   const clip = row.pageClip;
-  return pageVisibleRectangle(clip, clip).state === "visible" &&
-    x >= clip.x && x < clip.x + clip.width && y >= clip.y && y < clip.y + clip.height;
+  return (
+    pageVisibleRectangle(clip, clip).state === "visible" &&
+    x >= clip.x &&
+    x < clip.x + clip.width &&
+    y >= clip.y &&
+    y < clip.y + clip.height
+  );
 }

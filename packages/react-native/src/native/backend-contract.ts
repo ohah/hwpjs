@@ -7,10 +7,16 @@ export interface NativeToken {
 }
 export interface NativeCapabilityTable {
   readonly abiVersion: 1;
-  readonly formats: readonly ('hwp5' | 'hwpx')[];
-  readonly operations: readonly ('open' | 'readNativeText' | 'spliceNativeText' | 'save' | 'history')[];
-  readonly inputCoordinates: 'format-native';
-  readonly snapshotProjection: 'shared-provider-required';
+  readonly formats: readonly ("hwp5" | "hwpx")[];
+  readonly operations: readonly (
+    | "open"
+    | "readNativeText"
+    | "spliceNativeText"
+    | "save"
+    | "history"
+  )[];
+  readonly inputCoordinates: "format-native";
+  readonly snapshotProjection: "shared-provider-required";
   // Keep unavailable until actual OS/JSI/Skia implementation and validation.
   readonly jsiInstalled: false;
   readonly canvas: false;
@@ -25,19 +31,19 @@ export interface NativeCapabilityTable {
 export interface NativeProviderProposal {
   readonly capabilities: NativeCapabilityTable;
   readonly lifecycle: {
-    readonly ordering: 'core-fifo';
-    readonly nativeGuard: 'reject-concurrent-calls';
-    readonly output: 'copy-then-release';
-    readonly invalidate: 'fence-cancel-drain-release';
+    readonly ordering: "core-fifo";
+    readonly nativeGuard: "reject-concurrent-calls";
+    readonly output: "copy-then-release";
+    readonly invalidate: "fence-cancel-drain-release";
   };
 }
 export const nativeCapabilityProposal: NativeProviderProposal = {
   capabilities: {
     abiVersion: 1,
-    formats: ['hwp5', 'hwpx'],
-    operations: ['open', 'readNativeText', 'spliceNativeText', 'save', 'history'],
-    inputCoordinates: 'format-native',
-    snapshotProjection: 'shared-provider-required',
+    formats: ["hwp5", "hwpx"],
+    operations: ["open", "readNativeText", "spliceNativeText", "save", "history"],
+    inputCoordinates: "format-native",
+    snapshotProjection: "shared-provider-required",
     jsiInstalled: false,
     canvas: false,
     shapeRun: false,
@@ -45,9 +51,9 @@ export const nativeCapabilityProposal: NativeProviderProposal = {
     androidComposingSpans: false,
   },
   lifecycle: {
-    ordering: 'core-fifo',
-    nativeGuard: 'reject-concurrent-calls',
-    output: 'copy-then-release',
-    invalidate: 'fence-cancel-drain-release',
+    ordering: "core-fifo",
+    nativeGuard: "reject-concurrent-calls",
+    output: "copy-then-release",
+    invalidate: "fence-cancel-drain-release",
   },
 };

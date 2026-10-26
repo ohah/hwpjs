@@ -6,8 +6,11 @@ export function systemFontFamilies(fonts) {
   const names = new Set();
   for (const font of fonts) {
     const name = font?.family;
-    try { characterFontNameArgs("hangul", name); }
-    catch { throw new Error("InvalidSystemFontName"); }
+    try {
+      characterFontNameArgs("hangul", name);
+    } catch {
+      throw new Error("InvalidSystemFontName");
+    }
     names.add(name);
     if (names.size > 10000) throw new Error("SystemFontLimitExceeded");
   }

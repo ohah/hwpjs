@@ -13,15 +13,19 @@ export function attachSectionTabSources(editor, content) {
   }
   if (!selected.length) return content;
   try {
-    if (typeof editor.sectionTabSources !== "function") throw new Error("HwpxSectionTabsAbiUnavailable");
+    if (typeof editor.sectionTabSources !== "function")
+      throw new Error("HwpxSectionTabsAbiUnavailable");
     const rows = validateSectionTabs(editor.sectionTabSources());
     content.sectionTabSources = rows;
     const intervals = new Map();
     for (const paragraph of selected) {
-      paragraph.sectionTabSources = rows.filter(row => row.section === paragraph.section);
-      if (!intervals.has(paragraph.section)) intervals.set(paragraph.section, resolveSectionTabInterval(rows, paragraph.section));
+      paragraph.sectionTabSources = rows.filter((row) => row.section === paragraph.section);
+      if (!intervals.has(paragraph.section))
+        intervals.set(paragraph.section, resolveSectionTabInterval(rows, paragraph.section));
       paragraph.sectionTabInterval = intervals.get(paragraph.section);
     }
-  } catch (error) { content.sectionTabSourcesError = error.message; }
+  } catch (error) {
+    content.sectionTabSourcesError = error.message;
+  }
   return content;
 }

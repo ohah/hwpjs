@@ -1,19 +1,31 @@
 import { setTimeout as pause } from "node:timers/promises";
 
 // Call only for a session acquired while inactive by this audit's caller.
-export async function closeOwnedBrowser(command, { attempts = 10, wait = () => pause(100), onClosedSocket = () => {} } = {}) {
-  if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts > 100) throw Error("InvalidBrowserCloseAttempts");
+export async function closeOwnedBrowser(
+  command,
+  { attempts = 10, wait = () => pause(100), onClosedSocket = () => {} } = {},
+) {
+  if (!Number.isSafeInteger(attempts) || attempts < 1 || attempts > 100)
+    throw Error("InvalidBrowserCloseAttempts");
   const initial = await command("session", "info");
   if (initial?.active === false) return;
   if (initial?.active !== true) throw Error("InvalidBrowserSessionState");
   const requestClose = async () => {
-    try { await command("close"); return false; }
-    catch (error) {
+    try {
+      await command("close");
+      return false;
+    } catch (error) {
       let disconnected = false;
       try {
         const result = JSON.parse(error.stdout);
-        disconnected = (error.status ?? error.code) === 1 && error.signal == null && result.success === false && result.error === "Failed to connect: No such file or directory (os error 2)";
-      } catch { /* Other command errors are never success. */ }
+        disconnected =
+          (error.status ?? error.code) === 1 &&
+          error.signal == null &&
+          result.success === false &&
+          result.error === "Failed to connect: No such file or directory (os error 2)";
+      } catch {
+        /* Other command errors are never success. */
+      }
       if (!disconnected) throw error;
       if ((await command("session", "info"))?.active !== false) throw error;
       onClosedSocket();

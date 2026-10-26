@@ -3,7 +3,11 @@ import test from "node:test";
 import { selectHwpxFiles, trackedHwpxFiles } from "../../tools/hwpx-corpus-files.mjs";
 
 test("HWPX corpus includes demos and preserves NUL-separated paths", () => {
-  assert.deepEqual(selectHwpxFiles("fixtures/a.hwpx\0demo/a b.hwpx\0demo/한글.hwpx\0other.hwp\0"), ["fixtures/a.hwpx", "demo/a b.hwpx", "demo/한글.hwpx"]);
+  assert.deepEqual(selectHwpxFiles("fixtures/a.hwpx\0demo/a b.hwpx\0demo/한글.hwpx\0other.hwp\0"), [
+    "fixtures/a.hwpx",
+    "demo/a b.hwpx",
+    "demo/한글.hwpx",
+  ]);
   assert.throws(() => selectHwpxFiles("other.hwp\0"), /EmptyFixtureInventory/);
   assert.throws(() => selectHwpxFiles("a.hwpx\0a.hwpx\0"), /DuplicateFixturePath/);
 });

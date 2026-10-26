@@ -37,10 +37,7 @@ const groups = Object.freeze({
   forms: 28,
 });
 export const documentPrefixBytes = 33 * 4;
-export const sectionReportBytes = Object.values(groups).reduce(
-  (n, count) => n + count * 4,
-  0,
-);
+export const sectionReportBytes = Object.values(groups).reduce((n, count) => n + count * 4, 0);
 const offsets = new Map();
 let offset = 0;
 for (const [name, count] of Object.entries(groups)) {
@@ -57,17 +54,7 @@ export function reportBytes(sectionCount) {
 }
 export function sectionFieldOffset(sectionIndex, group, field = 0) {
   index(sectionIndex);
-  if (
-    !offsets.has(group) ||
-    !Number.isInteger(field) ||
-    field < 0 ||
-    field >= groups[group]
-  )
+  if (!offsets.has(group) || !Number.isInteger(field) || field < 0 || field >= groups[group])
     throw new RangeError("Invalid report field");
-  return (
-    documentPrefixBytes +
-    sectionIndex * sectionReportBytes +
-    offsets.get(group) +
-    field * 4
-  );
+  return documentPrefixBytes + sectionIndex * sectionReportBytes + offsets.get(group) + field * 4;
 }

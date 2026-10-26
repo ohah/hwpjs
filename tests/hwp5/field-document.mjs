@@ -16,33 +16,24 @@ export function fieldDocumentEdges(call, h, doc, sections, cfb) {
   for (const section of sections) {
     const b = section.bytes;
     let checkedContainer = false;
-    fieldsActual(call, h.readUInt32LE(32), b).forEach(
-      (n, i) => (total[i] += n),
-    );
+    fieldsActual(call, h.readUInt32LE(32), b).forEach((n, i) => (total[i] += n));
     const run = (bytes) =>
       call(
         24,
         decodedDocumentInput(
           h,
           doc,
-          sections.map((s) =>
-            s.index === section.index ? { index: s.index, bytes } : s,
-          ),
+          sections.map((s) => (s.index === section.index ? { index: s.index, bytes } : s)),
         ),
       );
     for (const r of documentRecords(b))
       if (r.tag === 71 && fieldIds.has(b.readUInt32LE(r.start))) {
         const requiredEnd = r.start + 15 + b.readUInt16LE(r.start + 9) * 2;
         // Remove all opaque tail and the last required instance ID byte.
-        const short = Buffer.concat([
-          b.subarray(0, requiredEnd - 1),
-          b.subarray(r.end),
-        ]);
+        const short = Buffer.concat([b.subarray(0, requiredEnd - 1), b.subarray(r.end)]);
         assert.notEqual(b.readUInt32LE(r.offset) >>> 20, 4095);
         short.writeUInt32LE(
-          ((b.readUInt32LE(r.offset) & 0xfffff) |
-            ((requiredEnd - 1 - r.start) << 20)) >>>
-            0,
+          ((b.readUInt32LE(r.offset) & 0xfffff) | ((requiredEnd - 1 - r.start) << 20)) >>> 0,
           r.offset,
         );
         assert.throws(() => run(short), /UnexpectedEnd/);
@@ -55,14 +46,10 @@ export function fieldDocumentEdges(call, h, doc, sections, cfb) {
           assert.ok(index >= 0);
           const full = (plain) => {
             const copy = nodes.map((n) => ({ ...n }));
-            copy[index].content =
-              h.readUInt32LE(36) & 1 ? deflateRawSync(plain) : plain;
+            copy[index].content = h.readUInt32LE(36) & 1 ? deflateRawSync(plain) : plain;
             const cap = Buffer.alloc(4);
             cap.writeUInt32LE(67108864);
-            return call(
-              25,
-              Buffer.concat([cap, Buffer.from(cfb.write({ nodes: copy }))]),
-            );
+            return call(25, Buffer.concat([cap, Buffer.from(cfb.write({ nodes: copy }))]));
           };
           const original = full(b);
           assert.throws(() => full(short), /UnexpectedEnd/);
@@ -84,10 +71,7 @@ export function fieldDocumentEdges(call, h, doc, sections, cfb) {
           changed.writeUInt32LE(attrs, r.start + 4);
           const want = Buffer.from(base),
             offset = sectionFieldOffset(section.index, "fields", field);
-          want.writeUInt32LE(
-            want.readUInt32LE(offset) + (before ? -1 : 1),
-            offset,
-          );
+          want.writeUInt32LE(want.readUInt32LE(offset) + (before ? -1 : 1), offset);
           assert.deepEqual(run(changed), want);
           diagnostics++;
         }

@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-const fullEm = Object.freeze({em:1024,width:1024});
+const fullEm = Object.freeze({ em: 1024, width: 1024 });
 export const HFT_HANGUL_METRICS = Object.freeze({
-  "한양신명조":fullEm,
-  "휴먼명조":fullEm,
+  한양신명조: fullEm,
+  휴먼명조: fullEm,
 });
