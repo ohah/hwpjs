@@ -1,6 +1,6 @@
 # 헤드리스 텍스트 도구
 
-공개 `@hwpjs/core`는 `findTextMatch`, `selectionMatchesText`, `getDocumentTextStatistics`, `getSelectionClipboard`를 제공합니다. DOM이나 OS clipboard를 요구하지 않습니다. 원본 문서·저장·이력은 Native 세션이 계속 소유하고, 이 함수들은 현재 `EditorState` 관측값을 읽습니다.
+공개 `@hwpjs/core`는 `createParagraphSelection`, `findTextMatch`, `selectionMatchesText`, `getDocumentTextStatistics`, `getSelectionClipboard`를 제공합니다. DOM이나 OS clipboard를 요구하지 않습니다. 원본 문서·저장·이력은 Native 세션이 계속 소유하고, 이 함수들은 현재 `EditorState` 관측값을 읽습니다.
 
 찾기는 현재 불러온 표시 텍스트의 리터럴 검색입니다. 기본 API는 선택 끝부터 앞으로 순환하며, 세 번째 `FindTextOptions` 인자로 `direction:'forward'|'backward'`, `wrap:boolean`, `origin:'selection'|'document'`를 지정할 수 있습니다. 뒤로 찾기는 선택 시작 이전에서 끝나는 일치를 찾고, document origin은 방향에 따라 관측 범위의 첫/마지막 문단부터 시작합니다. 반환되는 타깃은 UTF-16 좌표와 문서 토큰을 가지므로 `editor.setSelection(target)`에 전달할 수 있습니다. 잘못된 scalar 쿼리·중복 문단 식별자·알 수 없는 옵션은 거부하고, 잘리거나 소유자를 정할 수 없는 문단은 검색 대상에서 제외합니다. 미로딩 문단까지 검색했다고 해석하지 않습니다. 정규식·문단을 가로지르는 검색·전체 바꾸기는 아직 제공하지 않습니다.
 
@@ -15,6 +15,31 @@ clipboard 관측은 검증된 단일 문단 선택의 텍스트·타깃·읽기/
 비동기 찾기의 선택 반영은 `editor.setSelection(target, {stateVersion: observed.stateVersion})`을 사용합니다. `SelectionOptions`를 생략한 기존 호출은 유지합니다. 버전이 있으면 composition 정리와 앞선 admission 작업이 끝난 실제 반영 시점에 비교하고, 다르면 `StaleSelectionObservation`으로 거부합니다. 같은 문서 revision에서 새 Canvas 선택을 늦은 검색이 덮어쓰거나 오래된 null 선택이 새 선택을 해제하지 못하게 합니다. options는 즉시 복사하고 유효하지 않은 버전/필드는 거부합니다.
 
 코어 검사는 `packages/core/tests/state/text-tools.test.ts`와 `clipboard-state.test.ts`가 소유합니다. 공개 API만 사용하는 데모의 clipboard 권한 거부·지연 선택 변경은 `apps/demo/tests/clipboard-bridge.test.ts`, 찾기/바꾸기의 중복·닫기·dispose 경합은 `text-tools-bridge.test.ts`가 검사합니다. fake DOM 검사는 실제 Canvas·OS clipboard E2E를 대체하지 않습니다. 브라우저 증거와 배포 상태는 [통합 검증 기록](headless-editor-verification.md)을 따릅니다.
+
+## 좌표 기반 문단 선택
+
+`createParagraphSelection(state, { section, paragraph, startUnit, endUnit?, affinity? })`는 현재 표시 문단의 좌표로 frozen `SelectionTarget` 하나를 만듭니다. `endUnit` 기본은 `startUnit`, affinity 기본은 `forward`이고 단위는 UTF-16입니다. 빈 문단/빈 원본 표셀의 `0..0` caret과 같은 문구를 가진 서로 다른 셀을 텍스트 검색 없이 선택할 수 있습니다. 문단 번호는 현재 snapshot의 `section`/`paragraph` 좌표이며 Native ID를 추정하거나 텍스트로 역검색하지 않습니다.
+
+문서를 이미 연 ready editor를 전제로 합니다. 아래 코드는 그 editor를 host에서 주입받는 조각이며 editor 생성·파일 로드 bootstrap을 포함하지 않습니다.
+
+```ts
+import { createParagraphSelection } from '@ohah/hwpjs';
+
+const observed = editor.getEditorState();
+const target = createParagraphSelection(observed, {
+  section: chosenParagraph.section,
+  paragraph: chosenParagraph.paragraph,
+  startUnit: 0,
+  endUnit: 0,
+});
+await editor.setSelection(target);
+```
+
+owner/reference/token은 옵션으로 받지 않습니다. 기존 canonical owner와 선택 validator를 재사용하며, Native reference는 기존 명령 경로가 현재 row에서 가져옵니다. 잘못된 좌표·중복 문단 identity·clipped·scalar 경계는 기존 검증으로 거부합니다. 오래된 state로 만든 target은 실제 반영 시 문서/generation/operation/view token 검사로 거부합니다. 읽기 전용 선택이 편집 권한을 새로 부여하지 않으며 생성 셀의 surface 전용 정책도 유지합니다. dispose 뒤 `setSelection`은 `EditorDisposed` Promise rejection이므로 호출자는 await/catch해야 합니다. 비동기 선택 관측 fence가 필요하면 기존 `{ stateVersion: observed.stateVersion }` 옵션을 함께 사용합니다.
+
+현재 P를 snapshot의 문단 행 수로 두면 facade의 좌표 조회는 최대 P회이고 기존 validator의 유일성 검사는 별도 P회입니다. target은 한 개이고 문서 텍스트를 출력/복제하지 않습니다. 반복 조회 Map/WeakMap 인덱스는 아직 없으며 이 단위 결과를 인덱스 효과나 전체 편집 복잡도 개선의 증명으로 읽지 않습니다. `findTextMatch`의 기존 검색 결과 선택 기능은 유지합니다.
+
+정규 회귀는 `packages/core/tests/state/paragraph-selection-facade.test.ts`의 pure9와 `packages/core/tests/integration/paragraph-selection-facade.test.ts`의 실 Runtime8입니다. 전체17의 [명시 실행 명령과 WASM/Python 준비 조건](development-commands.md#문단-좌표-선택-집중-검증)을 따릅니다. Native 검사는 절대경로 `HWPJS_TEST_WASM`을 요구하고 verification artifact로 자동 대체하지 않습니다. 허용 원본은 Git에 있는 `legacy/rust/crates/hwp-core/tests/fixtures/table.hwpx`와 `noori.hwp` 두 개뿐입니다. 중복 문구 fixture는 원 table ZIP에서 테스트 안의 Python 표준 라이브러리로 메모리 생성하며 새 바이너리를 게시하지 않습니다. 저장 후 다른 ZIP member/XML 구조가 바뀌지 않았는지도 메모리 oracle로 검사하며 기본 증거파일 출력은 없습니다. same-process ReaderRuntime 검증은 Worker transport·브라우저·실제 Canvas 완료 증거와 구분합니다.
 
 <!-- text-tools-pending-presentation-20261026-933905ad -->
 ## 검색 작업 종료와 메뉴 표시 수명

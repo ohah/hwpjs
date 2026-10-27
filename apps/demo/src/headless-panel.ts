@@ -1,13 +1,13 @@
 import {
   SPLICE_TEXT_COMMAND,
   getHistoryAvailability,
-  findTextMatch,
+  createParagraphSelection,
   type HeadlessEditor,
 } from '@hwpjs/core';
 // @ts-ignore Browser samples are also packaged directly as static JavaScript.
 import { mountApiPlayground } from './api-playground.mjs';
 
-/** The demo shell owns file loading; these samples use its actual editor instance. */
+/** 문서 열기는 데모 셸이 소유하며, 이 예제에는 문서를 연 ready editor를 주입합니다. */
 export function mountHeadlessPanel(
   root: HTMLElement,
   editor: HeadlessEditor,
@@ -17,7 +17,7 @@ export function mountHeadlessPanel(
     editor,
     spliceCommand: SPLICE_TEXT_COMMAND,
     getHistoryAvailability,
-    findTextMatch,
+    createParagraphSelection,
     operations: ['read', 'select', 'splice', 'undo', 'redo', 'save', 'reopen'],
   });
   onStatus(

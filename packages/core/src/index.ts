@@ -89,3 +89,6 @@ export type {
   NativeHistoryStats,
   HistoryPolicyObservation,
 } from './history-options.ts';
+
+export { createParagraphSelection } from './state/paragraph-selection.ts';
+export type { ParagraphSelectionOptions } from './state/paragraph-selection.ts';

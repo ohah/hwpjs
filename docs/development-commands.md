@@ -23,6 +23,21 @@ mise exec -- bun run format
 
 Native 서식 증거의 정규 CLI·pure tests와 명시48 입력 준비 조건은 [서식 증거 독립 검증](formatting-evidence-oracle.md#기존-native48-소비와-순수-테스트)을 따릅니다.
 
+## 문단 좌표 선택 집중 검증
+
+[좌표 선택·owner·수명 계약](headless-text-tools.md#좌표-기반-문단-선택)을 따릅니다. 공식 core 테스트 실행기인 Bun에서 명시 두 파일만 실행합니다. 아래 WASM은 호출자가 준비한 호환 엔진의 절대경로여야 하며, 없으면 `ExplicitWasmRequired`로 실패합니다. ignored artifact나 source-only pass/skip로 대체하지 않습니다. Python3는 표준 `zipfile`/`ElementTree`만 사용하고 `-I -B`로 실행합니다. 기존 허용 table/Noori fixture만 읽으며 생성 중복 ZIP은 메모리에만 존재합니다.
+
+```sh
+HWPJS_TEST_WASM="/absolute/path/hwpjs.wasm" \
+HWPJS_TEST_PYTHON="/usr/bin/python3" \
+mise exec -- bun test \
+  ./packages/core/tests/state/paragraph-selection-facade.test.ts \
+  ./packages/core/tests/integration/paragraph-selection-facade.test.ts \
+  --timeout 60000
+```
+
+기대는 pure9+실 Runtime8=17개입니다. 이 명시 검사는 Node24 직접 source index 실행에서 기존 JSON import attribute 오류로 case 진입 전 실패한 기록과 구분합니다. 해당 제품 JSON import를 이 작업에서 바꾸지 않았으며, Node 직접 실행 성공을 주장하지 않습니다. 새 WASM/Native 빌드를 수행하는 명령이 아닙니다.
+
 ## 입력 표면 응답 검증
 
 [응답·콜백 계약과 검증 범위](input-surface-acknowledgement.md)를 따릅니다. Native 저장·이력 검사는 명시 WASM과 Bun을 사용합니다.
