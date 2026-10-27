@@ -200,7 +200,7 @@ const declarationSources = [
   join(root, 'packages/core/src/index.ts'),
   join(root, 'packages/core/src/runtime.ts'),
   ...packages.filter((n) => n !== 'core').map((n) => join(root, 'packages', n, 'src/index.ts')),
-  join(root, 'packages/core/src/runtime/legacy-reader-runtime.d.ts'),
+  join(root, 'web/preview/reader-runtime.d.mts'),
 ];
 await writeFile(
   config,
@@ -233,6 +233,8 @@ await writeFile(
     2,
   ),
 );
+// 명시 선언 입력도 인접 .d.mts를 포함해 같은 source 지문으로 관측합니다.
+for (const path of declarationSources) await observe(path, 'public-types-entry');
 const graph = spawnSync(join(root, 'node_modules/.bin/tsc'), ['-p', config, '--listFilesOnly'], {
   cwd: root,
   encoding: 'utf8',
