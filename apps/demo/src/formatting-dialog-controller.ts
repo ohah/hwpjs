@@ -20,6 +20,7 @@ export interface FormattingDialogControllerOptions {
   readonly onPresentationChange?: () => void;
   /** Dedicated unit boundary. Production always uses the common DOM view. */
   readonly createView?: typeof createFormattingDialogView;
+  readonly decorateParagraphView?: (view: ReturnType<typeof createFormattingDialogView>) => void;
 }
 /** Frozen-target dialog lifecycle. It never writes selection or calls Native directly. */
 export function createFormattingDialogController({
@@ -31,6 +32,7 @@ export function createFormattingDialogController({
   onClose,
   onPresentationChange,
   createView = createFormattingDialogView,
+  decorateParagraphView,
 }: FormattingDialogControllerOptions) {
   let closed = false,
     pending = false,
@@ -211,6 +213,13 @@ export function createFormattingDialogController({
         },
         onDismiss: dismiss,
       });
+      try {
+        if (observation.kind === 'paragraph') decorateParagraphView?.(view);
+      } catch {
+        close(false);
+        onStatus('문단 모양 창을 표시하지 못했습니다.');
+        return true;
+      }
       view.show();
       notify();
       return true;

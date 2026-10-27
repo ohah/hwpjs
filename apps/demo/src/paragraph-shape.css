@@ -1,0 +1,32 @@
+.hwp-paragraph-shape-dialog {
+  width: min(602px, calc(100vw - 24px));
+}
+.hwp-paragraph-shape-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+}
+.hwp-paragraph-shape-fields label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.hwp-paragraph-shape-fields input,
+.hwp-paragraph-shape-fields select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #9ba4ad;
+  border-radius: 2px;
+  padding: 5px 7px;
+}
+.hwp-paragraph-shape-fields :is(input, select):focus-visible {
+  border-color: #2069cf;
+  outline: 2px solid #2069cf;
+  outline-offset: 0;
+}
+@media (max-width: 520px) {
+  .hwp-paragraph-shape-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

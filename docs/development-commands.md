@@ -751,3 +751,17 @@ node --test ./packages/core/tests/worker-resource-transfer.test.mjs
 bun test ./apps/demo/tests/context-menu-target.test.ts ./apps/demo/tests/command-support.test.ts
 node --test tests/hwpx/document-context-menu.test.mjs
 ```
+
+## 문단 원자 서식 창 단위 검증
+
+저장소 루트에서 정확히 다음 네 entry를 확인한 뒤 실행합니다. 공개 API 포트의 모의 상태·숫자 입력·공용 모달 도구 검사이며 Native·브라우저 검증은 별도입니다. 보호 파일 읽기·stat 거부 profile은 실행 환경에서 그대로 적용합니다.
+
+```sh
+test -f ./apps/demo/tests/paragraph-shape-ui.test.ts || exit 1
+test -f ./apps/demo/tests/paragraph-shape-number.test.ts || exit 1
+test -f ./apps/demo/tests/paragraph-shape-tool.test.ts || exit 1
+test -f ./apps/demo/tests/paragraph-shape-fallback.test.ts || exit 1
+mise exec -- bun test ./apps/demo/tests/paragraph-shape-ui.test.ts ./apps/demo/tests/paragraph-shape-number.test.ts ./apps/demo/tests/paragraph-shape-tool.test.ts ./apps/demo/tests/paragraph-shape-fallback.test.ts
+```
+
+계약과 미연결 필드는 [글자·문단 모양 창](formatting-dialogs.md#문단-원자-서식-창-후보)을 따릅니다.

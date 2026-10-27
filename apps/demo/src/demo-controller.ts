@@ -1,3 +1,6 @@
+import { decorateParagraphAlignmentFallback } from './paragraph-shape-fallback-view.ts';
+import * as paragraphShapeCore from '@hwpjs/core';
+import { createParagraphShapeTool } from './paragraph-shape-tool.ts';
 import type { CanvasDisplayOptions } from '@hwpjs/vanilla';
 import { createViewOptionsBridge } from './view-options-bridge.ts';
 import { isMenuZoomPercent, stepViewZoom } from './view-zoom.ts';
@@ -129,6 +132,7 @@ export async function mountDemo(
     onUIError: () => note('글꼴 창 표시를 갱신하지 못했습니다.'),
   });
   const formatDialogs = createFormattingDialogController({
+    decorateParagraphView: decorateParagraphAlignmentFallback,
     root,
     port: formatting,
     getState: () => editor.getEditorState(),
@@ -138,6 +142,19 @@ export async function mountDemo(
       host?.focus?.();
     },
     onPresentationChange: () => shell.update(),
+  });
+  const paragraphShape = createParagraphShapeTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    fallback: () => {
+      formatDialogs.action({ command: 'paragraph-properties' });
+    },
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+    onUIError: () => note('문단 모양 창을 갱신하지 못했습니다.'),
   });
   const textTools = createTextToolsBridge({
     editor,
@@ -193,6 +210,14 @@ export async function mountDemo(
             : undefined,
       },
       ...formatDialogs.presentation(),
+      ...(paragraphShape.available
+        ? {
+            'paragraph-properties': {
+              enabled: ready && paragraphShape.presentation().enabled,
+              reason: paragraphShape.presentation().reason ?? undefined,
+            },
+          }
+        : {}),
       ...viewOptions.presentation(ready),
       ...clipboard.getPresentation().actions,
       save: { enabled: ready, reason: ready ? undefined : '문서를 먼저 열어주세요.' },
@@ -300,6 +325,7 @@ export async function mountDemo(
       return;
     }
     if (textColor.action(action.command)) return;
+    if (paragraphShape.action(action.command)) return;
     if (formatDialogs.action(action)) return;
     if (viewOptions.action(action)) {
       shell.update();
@@ -453,6 +479,7 @@ export async function mountDemo(
     contextMenu?.close();
     textTools.dispose();
     symbols.dispose();
+    paragraphShape.dispose();
     formatDialogs.dispose();
     textColor.dispose();
     fontName.dispose();
@@ -485,6 +512,7 @@ export async function mountDemo(
       contextMenu?.close();
       textTools.dispose();
       symbols.dispose();
+      paragraphShape.dispose();
       formatDialogs.dispose();
       textColor.dispose();
       fontName.dispose();

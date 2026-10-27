@@ -1,0 +1,37 @@
+.hwp-dialog-layer.hwp-paragraph-alignment-fallback {
+  width: min(42rem, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+}
+.hwp-dialog-layer.hwp-paragraph-alignment-fallback[open] {
+  display: flex;
+  flex-direction: column;
+}
+.hwp-paragraph-alignment-fallback .hwp-dialog-body {
+  min-height: 0;
+  overflow: auto;
+}
+.hwp-paragraph-alignment-fallback .hwp-dialog-footer {
+  flex: 0 0 auto;
+}
+.hwp-paragraph-alignment-fallback .hwp-format-field select {
+  min-width: 0;
+  max-width: 100%;
+}
+.hwp-paragraph-alignment-fallback .hwp-format-unavailable ul {
+  columns: 2 12rem;
+  padding-inline-start: 1.25rem;
+}
+.hwp-paragraph-alignment-fallback .hwp-format-unavailable li {
+  break-inside: avoid;
+}
+.hwp-paragraph-fallback-scope {
+  padding: 0.75rem;
+  border-inline-start: 3px solid currentColor;
+  line-height: 1.5;
+}
+@media (max-width: 560px) {
+  .hwp-paragraph-alignment-fallback .hwp-format-unavailable ul {
+    columns: 1;
+  }
+}
