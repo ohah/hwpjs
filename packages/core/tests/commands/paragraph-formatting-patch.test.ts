@@ -11,12 +11,7 @@ import {
   RuntimeAdmissionRejected,
 } from '../../src/internal/runtime-admission.ts';
 import { validateParagraphFormattingPatch } from '../../src/commands/atomic-formatting.ts';
-import type {
-  EditorRuntime,
-  RuntimeMessage,
-  RuntimeReply,
-  RuntimeRequestContext,
-} from '../../src/contracts.ts';
+import type { EditorRuntime, RuntimeMessage, RuntimeReply } from '../../src/contracts.ts';
 const known = (value: unknown, unit?: string) => ({
   state: 'known',
   value,
@@ -114,10 +109,17 @@ function backend(
       if (message.kind === 'formatting-patch') {
         const request = message.request as { binding: { revision: number } };
         if (request.binding.revision !== bindingRevision)
-          return { ...base, formattingNativeCode: 0, error: 'StaleFormattingBinding' } as RuntimeReply;
+          return {
+            ...base,
+            formattingNativeCode: 0,
+            error: 'StaleFormattingBinding',
+          } as RuntimeReply;
 
         const code = options.nativeCode ?? 1;
-        if (code === 1) { revision++; bindingRevision++; }
+        if (code === 1) {
+          revision++;
+          bindingRevision++;
+        }
         return {
           ...base,
           formattingNativeCode: code,
@@ -137,7 +139,8 @@ function backend(
         } as RuntimeReply;
       }
       if (message.kind === 'splice') {
-        revision++; bindingRevision++;
+        revision++;
+        bindingRevision++;
         return {
           ...base,
           historyRevision: revision,
@@ -155,14 +158,23 @@ function backend(
     bindRuntimeAdmission(
       runtime,
       async (m, c, a) => {
-        if (options.delayKind === undefined || m.kind === options.delayKind) await options.delay?.();
+        if (options.delayKind === undefined || m.kind === options.delayKind)
+          await options.delay?.();
         a();
         return runtime.request(m, c);
       },
       () => !closed,
     );
   const editor = createEditor({ runtimeFactory: () => runtime });
-  return { runtime, editor, calls, issuedBindings, advanceNativeBinding: () => { bindingRevision++; } };
+  return {
+    runtime,
+    editor,
+    calls,
+    issuedBindings,
+    advanceNativeBinding: () => {
+      bindingRevision++;
+    },
+  };
 }
 async function loaded(options: Parameters<typeof backend>[0] = {}, editable = true) {
   const h = backend(options);
@@ -506,51 +518,120 @@ test('dispatch 입력은 async 준비 전에 깊게 소유한다', async () => {
   }
 });
 
-
 test('fields 누락과 빈 배열을 구분하며 on-demand 관측 identity를 유지한다', async () => {
-  const h = await loaded({trusted:true});
-  try { const state=h.editor.getEditorState(), t=target(h), beforeToken=state.token;
-    const all=await h.editor.queryFormatting(t), empty=await h.editor.queryFormatting(t,{fields:[]});
-    assert.equal(Object.keys(all.observations.aggregate).length,3);
-    assert.deepEqual(Object.keys(empty.observations.aggregate),[]);
-    assert.deepEqual(Object.keys(empty.observations.perTarget[0].fields),[]);
-    assert.equal(empty.targets.length,1);
-    const calls=h.calls.filter(x=>x.kind==='query-formatting');
-    assert.equal(calls[0].fields,undefined);assert.deepEqual(calls[1].fields,[]);
-    assert.equal(h.editor.getEditorState(),state);assert.deepEqual(state.token,beforeToken);
-  } finally { await h.editor.dispose(); }
+  const h = await loaded({ trusted: true });
+  try {
+    const state = h.editor.getEditorState(),
+      t = target(h),
+      beforeToken = state.token;
+    const all = await h.editor.queryFormatting(t),
+      empty = await h.editor.queryFormatting(t, { fields: [] });
+    assert.equal(Object.keys(all.observations.aggregate).length, 3);
+    assert.deepEqual(Object.keys(empty.observations.aggregate), []);
+    assert.deepEqual(Object.keys(empty.observations.perTarget[0].fields), []);
+    assert.equal(empty.targets.length, 1);
+    const calls = h.calls.filter((x) => x.kind === 'query-formatting');
+    assert.equal(calls[0].fields, undefined);
+    assert.deepEqual(calls[1].fields, []);
+    assert.equal(h.editor.getEditorState(), state);
+    assert.deepEqual(state.token, beforeToken);
+  } finally {
+    await h.editor.dispose();
+  }
 });
 
 test('query 뒤 admission 대기 중 dispose는 Native patch 전 거부한다', async () => {
-  let release!:()=>void, entered!:()=>void;
-  const gate=new Promise<void>(r=>release=r), waiting=new Promise<void>(r=>entered=r);
-  const h=await loaded({trusted:true,delayKind:'formatting-patch',delay:async()=>{entered();await gate}});
-  try { const pending=h.editor.dispatchCommand(APPLY_FORMATTING_PATCH_COMMAND,{target:target(h),patch});
-    await waiting;assert.deepEqual(h.issuedBindings,[{session:'native-unit-session',revision:0}]);assert.equal(h.calls.some(x=>x.kind==='formatting-patch'),false);const disposed=h.editor.dispose();release();const answer=await pending;
-    assert.equal(answer.status,'rejected-unapplied');assert.equal(answer.error,'EditorDisposed');
-    assert.equal(h.calls.filter(x=>x.kind==='formatting-patch').length,0);await disposed;
-  }finally{release();await h.editor.dispose()}
+  let release!: () => void, entered!: () => void;
+  const gate = new Promise<void>((r) => (release = r)),
+    waiting = new Promise<void>((r) => (entered = r));
+  const h = await loaded({
+    trusted: true,
+    delayKind: 'formatting-patch',
+    delay: async () => {
+      entered();
+      await gate;
+    },
+  });
+  try {
+    const pending = h.editor.dispatchCommand(APPLY_FORMATTING_PATCH_COMMAND, {
+      target: target(h),
+      patch,
+    });
+    await waiting;
+    assert.deepEqual(h.issuedBindings, [{ session: 'native-unit-session', revision: 0 }]);
+    assert.equal(
+      h.calls.some((x) => x.kind === 'formatting-patch'),
+      false,
+    );
+    const disposed = h.editor.dispose();
+    release();
+    const answer = await pending;
+    assert.equal(answer.status, 'rejected-unapplied');
+    assert.equal(answer.error, 'EditorDisposed');
+    assert.equal(h.calls.filter((x) => x.kind === 'formatting-patch').length, 0);
+    await disposed;
+  } finally {
+    release();
+    await h.editor.dispose();
+  }
 });
 
 test('합성 Native binding 변경은 재발급 없이 code0 원오류로 거부한다', async () => {
-  let release!:()=>void, entered!:()=>void;
-  const gate=new Promise<void>(r=>release=r),waiting=new Promise<void>(r=>entered=r);
-  const h=await loaded({trusted:true,delayKind:'formatting-patch',delay:async()=>{entered();await gate}});
-  try { const pending=h.editor.dispatchCommand(APPLY_FORMATTING_PATCH_COMMAND,{target:target(h),patch});
-    await waiting;assert.deepEqual(h.issuedBindings,[{session:'native-unit-session',revision:0}]);assert.equal(h.calls.some(x=>x.kind==='formatting-patch'),false);h.advanceNativeBinding();release();const answer=await pending;
-    assert.equal(answer.status,'rejected-unapplied');assert.equal(answer.error,'StaleFormattingBinding');
-    assert.equal(answer.reply?.formattingNativeCode,0);assert.equal(h.calls.filter(x=>x.kind==='formatting-patch').length,1);
-    assert.equal(h.editor.getEditorState().nativeHistoryRevision,0);
-  }finally{release();await h.editor.dispose()}
+  let release!: () => void, entered!: () => void;
+  const gate = new Promise<void>((r) => (release = r)),
+    waiting = new Promise<void>((r) => (entered = r));
+  const h = await loaded({
+    trusted: true,
+    delayKind: 'formatting-patch',
+    delay: async () => {
+      entered();
+      await gate;
+    },
+  });
+  try {
+    const pending = h.editor.dispatchCommand(APPLY_FORMATTING_PATCH_COMMAND, {
+      target: target(h),
+      patch,
+    });
+    await waiting;
+    assert.deepEqual(h.issuedBindings, [{ session: 'native-unit-session', revision: 0 }]);
+    assert.equal(
+      h.calls.some((x) => x.kind === 'formatting-patch'),
+      false,
+    );
+    h.advanceNativeBinding();
+    release();
+    const answer = await pending;
+    assert.equal(answer.status, 'rejected-unapplied');
+    assert.equal(answer.error, 'StaleFormattingBinding');
+    assert.equal(answer.reply?.formattingNativeCode, 0);
+    assert.equal(h.calls.filter((x) => x.kind === 'formatting-patch').length, 1);
+    assert.equal(h.editor.getEditorState().nativeHistoryRevision, 0);
+  } finally {
+    release();
+    await h.editor.dispose();
+  }
 });
 
 test('Native1 뒤 projection 실패는 재시도 없이 refresh-required 완료사실을 유지한다', async () => {
-  const h=await loaded({trusted:true,nativeCode:1,postError:'InjectedProjectionFailure'});
-  try { const answer=await h.editor.dispatchCommand(APPLY_FORMATTING_PATCH_COMMAND,{target:target(h),patch});
-    assert.equal(answer.status,'committed-refresh-required');assert.equal(answer.reply?.formattingNativeCode,1);
-    assert.equal(answer.state.status,'refresh-required');assert.equal(h.calls.filter(x=>x.kind==='formatting-patch').length,1);
-    assert.equal(h.calls.some(x=>x.kind==='splice'),false);
-    await h.editor.refresh();assert.equal(h.editor.getEditorState().nativeHistoryRevision,1);
-    assert.equal(h.calls.filter(x=>x.kind==='formatting-patch').length,1);
-  }finally{await h.editor.dispose()}
+  const h = await loaded({ trusted: true, nativeCode: 1, postError: 'InjectedProjectionFailure' });
+  try {
+    const answer = await h.editor.dispatchCommand(APPLY_FORMATTING_PATCH_COMMAND, {
+      target: target(h),
+      patch,
+    });
+    assert.equal(answer.status, 'committed-refresh-required');
+    assert.equal(answer.reply?.formattingNativeCode, 1);
+    assert.equal(answer.state.status, 'refresh-required');
+    assert.equal(h.calls.filter((x) => x.kind === 'formatting-patch').length, 1);
+    assert.equal(
+      h.calls.some((x) => x.kind === 'splice'),
+      false,
+    );
+    await h.editor.refresh();
+    assert.equal(h.editor.getEditorState().nativeHistoryRevision, 1);
+    assert.equal(h.calls.filter((x) => x.kind === 'formatting-patch').length, 1);
+  } finally {
+    await h.editor.dispose();
+  }
 });
