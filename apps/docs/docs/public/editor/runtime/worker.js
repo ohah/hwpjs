@@ -8785,6 +8785,7 @@ function hwp5TableGeometry(source, { allowOpaqueTableFlags = false, allowObserve
   if (table.page_break === null)
     throw new Error("UnsupportedHwp5TableEnum");
   return {
+    size_protected: decoded.size_protected,
     geometry: {
       width: source.width,
       height: source.height,
