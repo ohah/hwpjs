@@ -27,7 +27,7 @@ pub const Header = struct {
         if (version >> 8 != 1) return error.UnsupportedJfifVersion;
         const unit = try reader.readInt(u8);
         if (unit > 2) return error.InvalidJfifUnits;
-        const units: Units = @enumFromInt(unit);
+        const units: Units = @fromBackingInt(@intCast(unit));
         const horizontal = try big16(&reader);
         const vertical = try big16(&reader);
         if (horizontal == 0 or vertical == 0) return error.InvalidJfifDensity;

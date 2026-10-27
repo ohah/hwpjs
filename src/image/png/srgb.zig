@@ -11,7 +11,7 @@ pub const canonical_chromaticities: chromaticities.Value = .{
 pub fn parse(bytes: []const u8) !Intent {
     if (bytes.len != 1) return error.InvalidPngSrgbSize;
     if (bytes[0] > 3) return error.InvalidPngSrgbIntent;
-    return @enumFromInt(bytes[0]);
+    return @fromBackingInt(@intCast(bytes[0]));
 }
 /// Encoder field consistency only. Does not select a profile or transform pixels.
 /// Missing accompanying chunks remain absent; recommendations are not requirements.

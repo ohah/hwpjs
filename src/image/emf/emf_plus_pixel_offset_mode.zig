@@ -6,15 +6,15 @@ pub const PixelOffsetMode = enum(u8) {
     half = 4,
 
     pub fn parse(raw: u8) !PixelOffsetMode {
-        if (raw > @intFromEnum(PixelOffsetMode.half)) return error.InvalidEmfPlusPixelOffsetMode;
-        return @enumFromInt(raw);
+        if (raw > @backingInt(PixelOffsetMode.half)) return error.InvalidEmfPlusPixelOffsetMode;
+        return @fromBackingInt(@intCast(raw));
     }
 };
 
 test "EMF+ PixelOffsetMode accepts exactly the official domain" {
     const std = @import("std");
     for (0..5) |raw|
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(try PixelOffsetMode.parse(@intCast(raw))));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(try PixelOffsetMode.parse(@intCast(raw))));
     try std.testing.expectError(error.InvalidEmfPlusPixelOffsetMode, PixelOffsetMode.parse(5));
     try std.testing.expectError(error.InvalidEmfPlusPixelOffsetMode, PixelOffsetMode.parse(0xff));
 }

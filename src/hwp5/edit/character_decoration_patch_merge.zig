@@ -17,8 +17,17 @@ pub fn merge(source: Shape, current: Shape, previous: Patch, requested: Patch) !
         const changes_color = if (requested.underline_color) |color| @import("../../model/rgb_color.zig").hwp5(color) != current.underline_color_raw else false;
         if (changes_color or (requested.underline_kind != null and requested.underline_kind.? != .none)) return error.UnsupportedLegacyCharacterDecorations;
     }
+    const lines = @import("../../model/character_line_style.zig");
+    if (current_legacy and requested.strike_enabled != false and requested.underline_style != null and lines.hwp5(requested.underline_style.?) != current.underline_style_raw) return error.UnsupportedLegacyCharacterDecorations;
+    if (source_legacy and requested.strike_style != null and requested.underline_style != null and requested.strike_style.? != requested.underline_style.?) return error.ConflictingCharacterDecorationStyles;
     var result = @import("../../model/character_properties.zig").merge(previous, requested);
     if (source_legacy) {
+        if (current_legacy and result.strike_enabled != false and requested.underline_style != null) result.underline_style = previous.underline_style;
+        if (result.strike_enabled == false and requested.underline_style != null and requested.strike_style == null) result.strike_style = null;
+        if (requested.strike_enabled == true and current.underline_kind_raw == 0 and current.strike_kind_raw == 0) {
+            if (requested.strike_style == null and result.underline_style != null) result.strike_style = result.underline_style;
+            result.underline_style = null;
+        }
         if (current_legacy and result.strike_enabled != false and requested.underline_color != null)
             result.underline_color = previous.underline_color;
         if (requested.strike_enabled == true and result.underline_kind != null and result.underline_kind.? != .none)

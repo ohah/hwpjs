@@ -29,7 +29,7 @@ pub fn parse(raw: u32) !Style {
 
 test "brush style accepts exactly the defined domain" {
     const testing = @import("std").testing;
-    for (0..10) |raw| try testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum(try parse(@intCast(raw))));
+    for (0..10) |raw| try testing.expectEqual(@as(u32, @intCast(raw)), @backingInt(try parse(@intCast(raw))));
     try testing.expectError(error.UnsupportedEmfBrushStyle, parse(10));
     try testing.expectError(error.UnsupportedEmfBrushStyle, parse(0xffffffff));
 }

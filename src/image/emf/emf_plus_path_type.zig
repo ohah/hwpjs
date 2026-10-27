@@ -13,7 +13,7 @@ pub const PointType = struct {
 pub fn parse(raw: u8) !PointType {
     const raw_kind: u4 = @truncate(raw);
     const kind: Kind = switch (raw_kind) {
-        0, 1, 3 => @enumFromInt(raw_kind),
+        0, 1, 3 => @fromBackingInt(@intCast(raw_kind)),
         else => return error.InvalidEmfPlusPathPointType,
     };
     const raw_flags = raw >> 4;

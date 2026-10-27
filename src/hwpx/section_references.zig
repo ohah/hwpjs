@@ -23,7 +23,7 @@ pub const Report = struct {
     references: paragraph_style_links.Links = @splat(.{}),
 
     pub fn counts(self: *const Report, kind: Kind) *const Counts {
-        return &self.references[@intFromEnum(kind)];
+        return &self.references[@backingInt(kind)];
     }
 };
 

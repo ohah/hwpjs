@@ -14,6 +14,16 @@ pub fn writeWithMargins(a: std.mem.Allocator, input: []const u8, version: Versio
     return writeWithProperties(a, input, version, source_id, alignment, margins, null, limit);
 }
 pub fn writeWithProperties(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, alignment: u32, margins: @import("paragraph_margin_payload.zig").Patch, spacing: ?@import("paragraph_spacing_payload.zig").Spacing, limit: usize) !Result {
+    return writeWithFlags(a, input, version, source_id, alignment, margins, spacing, .{}, limit);
+}
+pub fn writeWithFlags(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, alignment: u32, margins: @import("paragraph_margin_payload.zig").Patch, spacing: ?@import("paragraph_spacing_payload.zig").Spacing, flags: @import("../../model/paragraph_flags.zig").Patch, limit: usize) !Result {
+    return writeWithResource(a, input, version, source_id, alignment, margins, spacing, flags, .{}, limit);
+}
+pub fn writeWithResource(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, alignment: u32, margins: @import("paragraph_margin_payload.zig").Patch, spacing: ?@import("paragraph_spacing_payload.zig").Spacing, flags: @import("../../model/paragraph_flags.zig").Patch, border_fill: @import("../../model/border_fill_patch.zig").Patch, limit: usize) !Result {
+    if (@import("../../model/border_fill_patch.zig").has(border_fill)) return @import("border_fill_paragraph_docinfo.zig").write(a, input, version, source_id, alignment, margins, spacing, flags, border_fill, limit);
+    return writePreparedWithFlags(a, input, version, source_id, alignment, margins, spacing, flags, limit);
+}
+pub fn writePreparedWithFlags(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, alignment: u32, margins: @import("paragraph_margin_payload.zig").Patch, spacing: ?@import("paragraph_spacing_payload.zig").Spacing, flags: @import("../../model/paragraph_flags.zig").Patch, limit: usize) !Result {
     if (input.len > limit) return error.LimitExceeded;
     var iterator = framing.Iterator.init(input, .{});
     var map_offset: ?usize = null;
@@ -23,14 +33,14 @@ pub fn writeWithProperties(a: std.mem.Allocator, input: []const u8, version: Ver
     var insertion: ?usize = null;
     var within_shape = false;
     while (try iterator.next()) |record| {
-        if (record.tag == @intFromEnum(Tag.id_mappings)) {
+        if (record.tag == @backingInt(Tag.id_mappings)) {
             if (map_offset != null) return error.DuplicateIdMappings;
             if (record.level != 0) return error.InvalidDocInfoLevel;
             const map = try mappings.IdMappings.parse(record.payload, version);
             declared = map.get(.para_shape).?;
-            map_offset = record.offset + record.raw.len - record.payload.len + @intFromEnum(mappings.Field.para_shape) * 4;
+            map_offset = record.offset + record.raw.len - record.payload.len + @backingInt(mappings.Field.para_shape) * 4;
         }
-        if (record.tag == @intFromEnum(Tag.para_shape)) {
+        if (record.tag == @backingInt(Tag.para_shape)) {
             if (record.level != 1) return error.InvalidDocInfoLevel;
             _ = try @import("../docinfo/para_shape.zig").ParaShape.parse(record.payload, version);
             if (count == source_id) template = record.payload;
@@ -57,7 +67,12 @@ pub fn writeWithProperties(a: std.mem.Allocator, input: []const u8, version: Ver
         a.free(payload);
         payload = patched;
     }
-    return .{ .bytes = try @import("docinfo_resource_append.zig").write(a, input, insertion.?, offset, declared, @intFromEnum(Tag.para_shape), payload, limit), .id = @intCast(count) };
+    if (@import("../../model/paragraph_flags.zig").has(flags)) {
+        const patched = try @import("paragraph_flags_payload.zig").write(a, payload, version, flags, limit);
+        a.free(payload);
+        payload = patched;
+    }
+    return .{ .bytes = try @import("docinfo_resource_append.zig").write(a, input, insertion.?, offset, declared, @backingInt(Tag.para_shape), payload, limit), .id = @intCast(count) };
 }
 
 test "HWP5 paragraph alignment DocInfo preserves opaque children and allocation failures" {
@@ -101,7 +116,7 @@ test "HWP5 paragraph alignment DocInfo inserts actual resource and reparses coun
     var para_index: usize = 0;
     var inserted = false;
     while (try changed.next()) |record| {
-        if (record.tag == @intFromEnum(Tag.para_shape)) {
+        if (record.tag == @backingInt(Tag.para_shape)) {
             if (para_index == result.id) {
                 const shape = try @import("../docinfo/para_shape.zig").ParaShape.parse(record.payload, source.header.version());
                 try std.testing.expectEqual(@as(u32, 3), (shape.attributes >> 2) & 7);
@@ -111,7 +126,7 @@ test "HWP5 paragraph alignment DocInfo inserts actual resource and reparses coun
             para_index += 1;
         }
         const previous = (try old.next()).?;
-        if (record.tag == @intFromEnum(Tag.id_mappings)) {
+        if (record.tag == @backingInt(Tag.id_mappings)) {
             const before = try mappings.IdMappings.parse(previous.payload, source.header.version());
             const after = try mappings.IdMappings.parse(record.payload, source.header.version());
             try std.testing.expectEqual(before.get(.para_shape).? + 1, after.get(.para_shape).?);

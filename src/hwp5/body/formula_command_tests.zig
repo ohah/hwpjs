@@ -36,11 +36,11 @@ test "formula command actual chart fields preserve expression format cache and c
     var seen_paragraph = false;
     var node: usize = 0;
     while (try iterator.next()) |record| : (node += 1) {
-        if (record.tag == @intFromEnum(body.Tag.paragraph_header)) {
+        if (record.tag == @backingInt(body.Tag.paragraph_header)) {
             if (seen_paragraph) paragraph += 1;
             seen_paragraph = true;
         }
-        if (record.tag != @intFromEnum(body.Tag.control_header)) continue;
+        if (record.tag != @backingInt(body.Tag.control_header)) continue;
         const header = try body.ControlHeader.parse(record.payload);
         if (header.id != @import("control_rules.zig").id("%fmu")) continue;
         try std.testing.expect(count < cached.len);
@@ -232,7 +232,7 @@ test "formula command actual chart fields preserve expression format cache and c
                     var records_out = records.Iterator.init(serialized, .{});
                     var checked = false;
                     while (try records_out.next()) |entry| {
-                        if (entry.tag != @intFromEnum(body.Tag.control_header)) continue;
+                        if (entry.tag != @backingInt(body.Tag.control_header)) continue;
                         const h = try body.ControlHeader.parse(entry.payload);
                         if (h.id != @import("control_rules.zig").id("%fmu")) continue;
                         try expectAscii((try (try fields.Properties.parse(h.properties)).formulaView()).cached_display, "68.5");
@@ -295,7 +295,7 @@ test "formula command actual chart fields preserve expression format cache and c
     var output_records = records.Iterator.init(output, .{});
     var formula_count: usize = 0;
     while (try output_records.next()) |entry| {
-        if (entry.tag != @intFromEnum(body.Tag.control_header)) continue;
+        if (entry.tag != @backingInt(body.Tag.control_header)) continue;
         const h = try body.ControlHeader.parse(entry.payload);
         if (h.id != @import("control_rules.zig").id("%fmu")) continue;
         try std.testing.expect(formula_count < cached.len);

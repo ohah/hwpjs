@@ -20,7 +20,7 @@ pub const Header = struct {
         const version = try big16(&r);
         const flags0 = try big16(&r);
         const flags1 = try big16(&r);
-        const transform: Transform = @enumFromInt(try r.readInt(u8));
+        const transform: Transform = @fromBackingInt(@intCast(try r.readInt(u8)));
         return .{ .version = version, .flags0 = flags0, .flags1 = flags1, .transform = transform, .extra = payload[r.offset..] };
     }
 

@@ -94,7 +94,7 @@ test "JPEG RGB raster rejects hostile dimensions precision counts lengths and sa
 
 test "JPEG RGB JFIF Adobe conflicts never select the last header or unknown fallback" {
     for (0..256) |transform| {
-        const h: adobe.Header = .{ .version = 356, .flags0 = 65535, .flags1 = 65535, .transform = @enumFromInt(transform), .extra = &.{} };
+        const h: adobe.Header = .{ .version = 356, .flags0 = 65535, .flags1 = 65535, .transform = @fromBackingInt(@intCast(transform)), .extra = &.{} };
         for ([_]usize{ 1, 3 }) |count| {
             if ((count == 1 and transform == 0) or (count == 3 and transform == 1)) try compatibility.validate(h, count) else try t.expectError(if (transform > 2) error.UnsupportedAdobeTransform else error.ConflictingJfifAdobeColour, compatibility.validate(h, count));
         }

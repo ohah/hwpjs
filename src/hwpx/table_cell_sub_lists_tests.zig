@@ -29,8 +29,8 @@ test "HWPX cell subLists select direct children and reuse ParaListType field rul
     try std.testing.expectEqual(@as(usize, 1), lists.other_direct_elements);
     try std.testing.expectEqual(@as(usize, 1), lists.unknown_enums);
     try std.testing.expectEqual(@as(usize, 2), lists.other_attributes);
-    try std.testing.expectEqual(@as(usize, 1), lists.field_present[@intFromEnum(para_list.Field.id)]);
-    try std.testing.expectEqual(@as(usize, 1), lists.field_empty[@intFromEnum(para_list.Field.id)]);
+    try std.testing.expectEqual(@as(usize, 1), lists.field_present[@backingInt(para_list.Field.id)]);
+    try std.testing.expectEqual(@as(usize, 1), lists.field_empty[@backingInt(para_list.Field.id)]);
     try std.testing.expectEqual(@as(u64, 12), lists.text_width_sum);
     try std.testing.expectEqual(@as(usize, 1), lists.has_text_ref_true);
 }

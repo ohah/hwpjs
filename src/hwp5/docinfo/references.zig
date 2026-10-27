@@ -38,7 +38,7 @@ pub fn inspect(bytes: []const u8, version: Version, options: Options) !Report {
     var report: Report = .{};
     while (try it.next()) |r| switch (r.value) {
         .char_shape => |v| {
-            for (v.font_ids, 0..) |id, i| report.check(r, .font, @intCast(i), id, @intCast(counts.fontCount(@enumFromInt(i))), .zero_based);
+            for (v.font_ids, 0..) |id, i| report.check(r, .font, @intCast(i), id, @intCast(counts.fontCount(@fromBackingInt(@intCast(i)))), .zero_based);
             if (v.border_fill_id) |id| report.check(r, .char_border, 0, id, counts.count(.border_fill), .optional_one_based);
         },
         .numbering => |v| {

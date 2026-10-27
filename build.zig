@@ -10,12 +10,31 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-    const tests = @import("tools/native-test-build.zig").add(b, core);
+    // Committed reference data only; no Git or verification artifacts at test runtime.
+    const history_reference = b.createModule(.{
+        .root_source_file = b.path("src/testing/hwp5_history_reference.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const tests = @import("tools/native-test-build.zig").add(b, core, history_reference);
     tests.step.dependOn(&icc_registry_check.step);
     const run_tests = b.addRunArtifact(tests);
     run_tests.step.dependOn(&abi_check.step);
     const core_test_step = b.step("test", "Run core and controlled text unit tests");
     core_test_step.dependOn(&run_tests.step);
+
+    // Explicit shipping reference regressions; never infer their collection from imports.
+    const reference_tests_module = b.createModule(.{
+        .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    reference_tests_module.addImport("baseline", history_reference);
+    const reference_tests = b.addTest(.{ .root_module = reference_tests_module });
+    const run_reference_tests = b.addRunArtifact(reference_tests);
+    // Keep reference execution after the core run and record its results separately.
+    run_reference_tests.step.dependOn(&run_tests.step);
+    core_test_step.dependOn(&run_reference_tests.step);
 
     const preservation_module = b.createModule(.{
         .root_source_file = b.path("tests/hwp5/style-preservation/session.test.zig"),

@@ -7,8 +7,8 @@ pub const BrushType = enum(u32) {
 };
 
 pub fn brushType(raw: u32) !BrushType {
-    if (raw > @intFromEnum(BrushType.linear_gradient)) return error.InvalidEmfPlusBrushType;
-    return @enumFromInt(raw);
+    if (raw > @backingInt(BrushType.linear_gradient)) return error.InvalidEmfPlusBrushType;
+    return @fromBackingInt(@intCast(raw));
 }
 
 pub const HatchStyle = enum(u6) {
@@ -68,8 +68,8 @@ pub const HatchStyle = enum(u6) {
 };
 
 pub fn hatchStyle(raw: u32) !HatchStyle {
-    if (raw > @intFromEnum(HatchStyle.solid_diamond)) return error.InvalidEmfPlusHatchStyle;
-    return @enumFromInt(@as(u6, @intCast(raw)));
+    if (raw > @backingInt(HatchStyle.solid_diamond)) return error.InvalidEmfPlusHatchStyle;
+    return @fromBackingInt(@intCast(@as(u6, @intCast(raw))));
 }
 
 pub const BrushDataFlags = packed struct(u32) {
@@ -102,12 +102,12 @@ pub fn validateBrushDataFlags(raw: u32) !void {
 test "EMF+ brush and hatch enums reject gaps beyond their official domains" {
     const std = @import("std");
     for (0..5) |raw| {
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum(try brushType(@intCast(raw))));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt(try brushType(@intCast(raw))));
     }
     try std.testing.expectError(error.InvalidEmfPlusBrushType, brushType(5));
     try std.testing.expectError(error.InvalidEmfPlusBrushType, brushType(0xffffffff));
     for (0..0x35) |raw|
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum(try hatchStyle(@intCast(raw))));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt(try hatchStyle(@intCast(raw))));
     try std.testing.expectError(error.InvalidEmfPlusHatchStyle, hatchStyle(0x35));
     try std.testing.expectError(error.InvalidEmfPlusHatchStyle, hatchStyle(0xffffffff));
 }

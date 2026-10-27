@@ -58,6 +58,11 @@ pub fn readFull(session: *const @import("editor_session.zig").Session) ![]FullRo
         }
         if (low == expected.len or output[low].id != entry.source_id) return error.InvalidCharacterShapeReference;
         output[count] = try derive(a, output[low], entry.id, entry.properties.underline_kind, entry.properties.underline_color);
+        if (entry.properties.underline_style) |style| {
+            const replacement = try a.dupe(u8, @tagName(style));
+            if (output[count].shape) |value| a.free(value);
+            output[count].shape = replacement;
+        }
         count += 1;
     }
     std.mem.sort(FullRow, output, {}, less);

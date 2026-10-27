@@ -22,7 +22,7 @@ pub const Value = union(enum) {
 };
 pub fn parse(tag: u8, bytes: []const u8, layout: StartLayout) !Value {
     var r: Reader = .{ .bytes = bytes };
-    return switch (@as(Tag, @enumFromInt(tag))) {
+    return switch (@as(Tag, @fromBackingInt(@intCast(tag)))) {
         .start => blk: {
             var flags: u16 = undefined;
             var option: u32 = undefined;
@@ -48,7 +48,7 @@ pub fn parse(tag: u8, bytes: []const u8, layout: StartLayout) !Value {
 }
 /// Only the five presence bits with numeric values explicitly specified by the PDF.
 pub fn presenceBit(tag: u8) u16 {
-    return switch (@as(Tag, @enumFromInt(tag))) {
+    return switch (@as(Tag, @fromBackingInt(@intCast(tag)))) {
         .version => 1,
         .date => 2,
         .writer => 4,

@@ -36,7 +36,7 @@ pub const Report = struct {
     first_unclassified_item_index: ?usize = null,
 
     pub fn counts(self: *const Report, kind: Kind) *const Counts {
-        return &self.counts_by_kind[@intFromEnum(kind)];
+        return &self.counts_by_kind[@backingInt(kind)];
     }
 
     pub fn deinit(self: *Report, a: std.mem.Allocator) void {
@@ -84,7 +84,7 @@ pub fn resolve(index: *const Index, manifest: content_manifest.Manifest, raw_id:
 /// against OPF item IDs; a ZIP filename or a list position is never an ID.
 pub fn note(a: std.mem.Allocator, report: *Report, index: *const Index, manifest: content_manifest.Manifest, kind: Kind, source_item_index: usize, raw_id: ?[]u8) !void {
     defer if (raw_id) |id| a.free(id);
-    const counts = &report.counts_by_kind[@intFromEnum(kind)];
+    const counts = &report.counts_by_kind[@backingInt(kind)];
     counts.sites += 1;
     switch (resolve(index, manifest, raw_id).state) {
         .absent => counts.absent += 1,

@@ -7,6 +7,7 @@ const histories = @import("../hwpx/editor_history.zig");
 var active: ?editor.Session = null;
 var history: ?histories.History = null;
 var output: ?[]u8 = null;
+var formatting_lifetime: @import("../model/formatting_binding.zig").State = .{};
 
 // Optional capability: generated LF is serialized as hp:lineBreak.
 export fn hwpx_edit_created_cell_soft_line_breaks() u32 {
@@ -42,6 +43,7 @@ export fn hwpx_edit_table_creation_resources() u32 {
     return 1;
 }
 export fn hwpx_edit_close() void {
+    formatting_lifetime.close();
     hwpx_edit_output_free();
     if (history) |*value| value.deinit();
     history = null;
@@ -58,11 +60,27 @@ export fn hwpx_edit_open_with_chart_ole_policy(ptr: [*]const u8, size: usize, al
 fn openWithChartPolicy(ptr: [*]const u8, size: usize, allow_observed_deviations: bool) u32 {
     if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
     const next = editor.open(a, ptr[0..size], .{ .allow_observed_chart_ole_deviations = allow_observed_deviations }) catch |err| return fail(err);
+    const next_formatting = formatting_lifetime.next() catch |err| {
+        var rejected = next;
+        rejected.deinit();
+        return fail(err);
+    };
     hwpx_edit_close();
+    formatting_lifetime = next_formatting;
     active = next;
+    @import("../hwpx/display_resource_generation.zig").openOwned(&active.?);
     return 1;
 }
 // Optional independent document capability; existing exports/signatures remain unchanged.
+// 새 선택 기능이다. 기존 provenance 및 이력 출력은 변경하지 않는다.
+export fn hwpx_edit_display_resource_receipt_v1() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const bytes = a.alloc(u8, 24) catch |err| return fail(err);
+    @import("../hwpx/display_resource_generation.zig").write(session, bytes[0..24]);
+    output = bytes;
+    return 1;
+}
 export fn hwpx_edit_document_provenance() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -850,9 +868,11 @@ fn travel(redo: bool) u32 {
         return 2;
     };
     const changed = (if (redo) value.redo(session) else value.undo(session)) catch |err| {
+        @import("../hwpx/display_resource_generation.zig").pauseReceipt(session);
         _ = fail(err);
         return 2;
     };
+    @import("../hwpx/display_resource_generation.zig").afterTravel(session, changed);
     return @intFromBool(changed);
 }
 export fn hwpx_edit_undo() u32 {
@@ -863,8 +883,10 @@ export fn hwpx_edit_redo() u32 {
 }
 fn apply(command: histories.Command) !void {
     const session = if (active) |*value| value else return error.EditorNotOpen;
+    errdefer @import("../hwpx/display_resource_generation.zig").pauseReceipt(session);
+    if (history == null) @import("../hwpx/display_resource_generation.zig").block(session);
     if (history) |*value| {
-        _ = try value.apply(session, command);
+        _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         .created_cell_text => {
             _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
@@ -906,6 +928,14 @@ fn apply(command: histories.Command) !void {
             if (command.inserted.len != 0) return error.InvalidFormatCommand;
             const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
             _ = try session.setCharacterProperties(command.section, command.paragraph, command.start, end, command.character_properties);
+        },
+        .paragraph_flags => {
+            if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+            _ = try @import("../hwpx/paragraph_flags_session.zig").apply(session, command.section, command.paragraph, command.paragraph_flags);
+        },
+        .paragraph_border_fill => {
+            if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+            _ = try @import("../hwpx/paragraph_border_fill_session.zig").apply(session, command.section, command.paragraph, command.paragraph_border_fill, command.paragraph_flags);
         },
         .paragraph_spacing => {
             _ = try session.setParagraphSpacing(command.section, command.paragraph, command.paragraph_spacing);
@@ -1014,8 +1044,10 @@ export fn hwpx_edit_set_character_properties_ranges(ptr: [*]const u8, length: us
     return 1;
 }
 fn applyBatch(s: *editor.Session, commands: []const histories.Command) !void {
+    errdefer @import("../hwpx/display_resource_generation.zig").pauseReceipt(s);
+    if (history == null) @import("../hwpx/display_resource_generation.zig").block(s);
     if (history) |*value| {
-        _ = try value.applyBatch(s, commands);
+        _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, s, commands);
     } else {
         var temporary = try histories.History.init(s, 1, 128 * 1024 * 1024);
         defer temporary.deinit();
@@ -1545,6 +1577,13 @@ export fn hwpx_edit_tab_definitions() u32 {
     output = @import("../hwpx/tab_definition_snapshot.zig").encode(a, session) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_section_grids() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/section_grid_snapshot.zig").encode(a, session) catch |err| return fail(err);
+    return 1;
+}
+
 export fn hwpx_edit_section_tabs() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -1829,4 +1868,42 @@ export fn hwpx_edit_manual_formula_result_display_text(section: u32, paragraph: 
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     output = @import("../hwpx/formula_result_projection.zig").readText(session, section, paragraph) catch |err| return fail(err);
     return 1;
+}
+
+const Formatting = @import("formatting_service.zig").Service(.hwpx);
+fn formattingService() !Formatting {
+    const current = if (active) |*value| value else return error.EditorNotOpen;
+    return .{ .backend = .{ .session = current, .allocator = a }, .lifetime = &formatting_lifetime, .history = if (history) |*h| h else null };
+}
+export fn hwpx_edit_formatting_capabilities() u32 {
+    hwpx_edit_output_free();
+    const service = formattingService() catch |err| return fail(err);
+    output = service.capabilities(a) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_query_formatting(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    if (size > @import("../model/formatting_patch.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = formattingService() catch |err| return fail(err);
+    var request = @import("formatting_query_request.zig").decode(a, ptr[0..size], &@import("../model/formatting_projection.zig").fields) catch |err| return fail(err);
+    defer request.deinit();
+    output = service.query(a, request.value) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    if (size > @import("../model/formatting_patch.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = formattingService() catch |err| return fail(err);
+    var request = @import("formatting_patch_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    const changed = service.apply(a, request.value) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+
+    return if (changed) 1 else 2;
 }

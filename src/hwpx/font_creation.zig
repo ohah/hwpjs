@@ -50,7 +50,7 @@ pub fn apply(session: *editor.Session, section: usize, paragraph: usize, start: 
     const count = session.font_resources.entries.items.len;
     const id = try ensure(session, language, name);
     var ids: @import("../model/character_fonts.zig").Values = @splat(null);
-    ids[@intFromEnum(language)] = id;
+    ids[@backingInt(language)] = id;
     const changed = try session.setCharacterProperties(section, paragraph, start, end, .{ .font_ids = ids });
     return changed or session.font_resources.entries.items.len != count;
 }

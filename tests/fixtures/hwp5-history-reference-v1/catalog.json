@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "oldCommit": "ac196c0720a438871af26228051bcd3e738e15c6",
+  "oldClosureSHA256": "5c5f50fda6ac137ef04e28c7f65f3b33882ba91b9b091bb61fa1ff2ee487505b",
+  "inputSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+  "targets": [
+    {
+      "arch": "aarch64",
+      "os": "macos",
+      "abi": "none",
+      "pointerBits": 64,
+      "payloadCost": 16654,
+      "initBelowCostError": "LimitExceeded"
+    },
+    {
+      "arch": "x86_64",
+      "os": "linux",
+      "abi": "gnu",
+      "pointerBits": 64,
+      "payloadCost": 16654,
+      "initBelowCostError": "LimitExceeded"
+    },
+    {
+      "arch": "wasm32",
+      "os": "freestanding",
+      "abi": "none",
+      "pointerBits": 32,
+      "payloadCost": 12666,
+      "initBelowCostError": "LimitExceeded"
+    }
+  ],
+  "cases": [
+    {
+      "method": "run",
+      "kind": "format",
+      "section": 0,
+      "paragraph": 15,
+      "node": 0,
+      "width": 0,
+      "height": 0,
+      "states": [
+        {
+          "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+          "bytes": 245248
+        },
+        {
+          "sha256": "017ce7198f260438d54fadb9b0f21cd94ca8b0bbbe2f80739cb3b89396ae5a38",
+          "bytes": 256512
+        },
+        {
+          "sha256": "cc83e593fb1e89908ee25edde5d75086073f61466992f1d2b6e0ed6df9301789",
+          "bytes": 256512
+        }
+      ]
+    },
+    {
+      "method": "run",
+      "kind": "table",
+      "section": 0,
+      "paragraph": 15,
+      "node": 21,
+      "width": 5721,
+      "height": 2149,
+      "states": [
+        {
+          "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+          "bytes": 245248
+        },
+        {
+          "sha256": "dbfbb8ddb590a302593e5637746105b31d8b70dc76bb59c6c9c6a46965f5c05d",
+          "bytes": 245248
+        },
+        {
+          "sha256": "cd984beef4ebc3ae0fea00bc8ce1893ef41b1ae28c5debabe9d27743993785f6",
+          "bytes": 245248
+        }
+      ]
+    },
+    {
+      "method": "run",
+      "kind": "picture",
+      "section": 0,
+      "paragraph": 15,
+      "node": 14,
+      "width": 48105,
+      "height": 6134,
+      "states": [
+        {
+          "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+          "bytes": 245248
+        },
+        {
+          "sha256": "be3f775718b6f32e1affdcddebae23cf9e068d84ae12ec27f857196558cff7e6",
+          "bytes": 245248
+        },
+        {
+          "sha256": "37f20f6cfad131f3898865ff665f3edaaf96f76968e9af4759e8047dfde218e1",
+          "bytes": 245248
+        }
+      ]
+    },
+    {
+      "method": "current20",
+      "states": [
+        {
+          "sha256": "0cdf539ed6fa81dc02fef7ed291fbf481bd2f06f12311c9d5a3c6531254f83bf",
+          "bytes": 245248
+        }
+      ]
+    },
+    {
+      "method": "payloadCost"
+    },
+    {
+      "method": "refusal",
+      "kind": "noop_external",
+      "states": [
+        {
+          "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+          "bytes": 245248
+        }
+      ]
+    },
+    {
+      "method": "refusal",
+      "kind": "changed_external",
+      "states": [
+        {
+          "sha256": "e6ee18d9301f9dab4767ea351cdbb0761b03d1540134dbee796e78849e8c1474",
+          "bytes": 245248
+        }
+      ]
+    },
+    {
+      "method": "refusal",
+      "kind": "failed_batch",
+      "states": [
+        {
+          "sha256": "b7e83ba649f6daa3d8b56b8d931030248e8a1877177dcd3bdf0febeb44c2c159",
+          "bytes": 245248
+        }
+      ]
+    },
+    {
+      "method": "refusal",
+      "kind": "payload",
+      "errorName": "LimitExceeded"
+    }
+  ]
+}

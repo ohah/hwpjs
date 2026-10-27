@@ -23,8 +23,8 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, intent: @import("../model/
         const text = try raw.toUtf8(a, 4096);
         defer a.free(text);
         const language = faces.languageFromSource(text) orelse return error.InvalidFontLanguage;
-        if (seen[@intFromEnum(language)]) return error.DuplicateFontLanguage;
-        seen[@intFromEnum(language)] = true;
+        if (seen[@backingInt(language)]) return error.DuplicateFontLanguage;
+        seen[@backingInt(language)] = true;
         if (language == intent.language) target = index;
     }
     const name = intent.name orelse return error.InvalidFontName;

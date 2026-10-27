@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "oldCommit": "ac196c0720a438871af26228051bcd3e738e15c6",
+  "oldClosureManifestSHA256": "5c5f50fda6ac137ef04e28c7f65f3b33882ba91b9b091bb61fa1ff2ee487505b",
+  "sourceManifest": "tools/fixtures/hwp5-history-reference-source.json",
+  "explicitPatch": "tools/fixtures/hwp5-history-reference-old-helper.patch",
+  "producer": "tools/fixtures/generate-hwp5-history-reference.zig",
+  "producerSHA256": "fccc74ff744ac6b07e3e1b95856c2e34cd4ebf8eaf5a16a0ec1c8c6d5985e312",
+  "catalogSHA256": "185695c2443c36d459ef04476c35e2315a47ea58880f8b0f30c9388cf8471bdf",
+  "toolVersion": "0.17.0",
+  "target": {
+    "arch": "aarch64",
+    "os": "macos",
+    "abi": "none",
+    "pointerBits": 64,
+    "payloadCost": 16654
+  },
+  "inputPinSHA256": "ab73145bed8c3854571a9b7f47529648131cbad3abbace52ddd9e6241bce873b",
+  "stdoutStderrSHA256": "fd86152d33a33e45ffcc7f9cb8d6d08a8af3b8c12c4a9b83256715de25a37fb7",
+  "generationNamedTests": 1,
+  "oldUndoRedoAssertionsPassed": true,
+  "oldPayloadFailure": {
+    "error": "LimitExceeded",
+    "cap": 16654,
+    "revision": 0,
+    "originalBytesUnchanged": true
+  },
+  "independentCFBOracleSHA256": "cc6ff4f47a5f28532d2f740eb1b66919e34775bea35e747efa6d32ec5a058774",
+  "inputSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+  "currentEngineUsed": false,
+  "otherTargets": "이 세 target 이외는 명시 ReferenceTargetUnavailable. Linux runtime 미실행. 32bit실측은 wasm32에 한정.",
+  "generationExit": 0,
+  "guard": null,
+  "sourceDrift": [],
+  "ownedRemaining": [],
+  "targets": [
+    {
+      "arch": "aarch64",
+      "os": "macos",
+      "abi": "none",
+      "pointerBits": 64,
+      "payloadCost": 16654
+    },
+    {
+      "arch": "x86_64",
+      "os": "linux",
+      "abi": "gnu",
+      "pointerBits": 64,
+      "payloadCost": 16654
+    },
+    {
+      "arch": "wasm32",
+      "os": "freestanding",
+      "abi": "none",
+      "pointerBits": 32,
+      "payloadCost": 12666
+    }
+  ],
+  "originalSingleTargetCatalogSHA256": "cca9bec3759fa126b8bb00e0e4c00ad7609d00bdeaab233d62cb99b20e4ba972",
+  "native64LinuxEvidence": {
+    "runtimeExecuted": false,
+    "oldSizeFormulaSame": true,
+    "layout16TypesIdentical": true,
+    "layoutComparisonSHA256": "0cf745f97de77dd465235469e323ef2cd5eb313ccba26433acf18a0b198c64cc"
+  },
+  "wasm32Evidence": {
+    "target": "wasm32-freestanding-none",
+    "pointerBits": 32,
+    "oldCommit": "ac196c0720a438871af26228051bcd3e738e15c6",
+    "inputSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+    "diagnosticWasmSHA256": "848db0925c366b0217c397101a7319cefef73c840a48e38b7b0145579a69ff65",
+    "diagnosticBytes": 868672,
+    "payloadCost": 12666,
+    "imports": [],
+    "nodeVersion": "v24.19.0",
+    "currentEngineUsed": false,
+    "productWasm": false
+  },
+  "payloadError32": "old 진단 WASM 실제 확인: cap12665 init LimitExceeded/revision미생성/splice미시도, cap12666 apply LimitExceeded/revision0. 양쪽 저장 원문 exact.",
+  "wasm32RefusalActualSHA256": "ac1dbbc4f1304c202a9fa7f799435ed4bc350b2e5591e2124f20740549109ea5",
+  "native64BelowCost": "cost16654 실측과 old 초기 capture→payloadCost(limit) 분기 근거. cap16653 자체의 신규 Native64 runtime 검증은 없음.",
+  "initBelowCostKey": "정확 cost-1 한 키만 추가. old init 오류 전파와 apply 오류 문자열 반환을 구분.",
+  "generationToolGuard": "명시 require/raise. normal/-O 실제 재구성·CFB후처리 정상/틀린SourceSHA/잘못된blob·record·출력 경계 통제 유지."
+}

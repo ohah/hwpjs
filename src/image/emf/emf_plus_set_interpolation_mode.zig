@@ -34,7 +34,7 @@ test "EMF+ SetInterpolationMode parses every mode and preserves ignored reserved
         const flags: u16 = 0xff00 | @as(u16, @intCast(raw));
         const parsed = try parse(makeRecord(flags));
         try std.testing.expectEqual(flags, parsed.flags);
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(parsed.mode));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(parsed.mode));
     }
     try std.testing.expectEqual(interpolation_mode.InterpolationMode.high_quality_bicubic, (try parse(makeRecord(0x0007))).mode);
 }

@@ -30,7 +30,7 @@ test "HWPX equation shape owns all 25 geometry values and exact XML subspans" {
     try std.testing.expectEqual(@as(usize, 4), report.equations[0].shape_child_count);
     var value_bytes: usize = 0;
     for (report.shape_children, expected, 0..) |child, wanted, index| {
-        try std.testing.expectEqual(index, @intFromEnum(child.kind));
+        try std.testing.expectEqual(index, @backingInt(child.kind));
         try std.testing.expectEqual(@as(usize, 0), child.equation_index);
         try std.testing.expectEqual(wanted.len, child.values.len);
         for (report.shape.by_kind[index].fields[0..wanted.len]) |counts| {

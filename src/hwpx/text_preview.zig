@@ -57,17 +57,17 @@ pub fn encode(a: std.mem.Allocator, input: []const u8) ![]u8 {
             },
             .inline_start => |b| blk: {
                 kind = 7;
-                inline_kind = @intFromEnum(b.kind);
+                inline_kind = @backingInt(b.kind);
                 break :blk b.raw_tag;
             },
             .inline_end => |b| blk: {
                 kind = 8;
-                inline_kind = @intFromEnum(b.kind);
+                inline_kind = @backingInt(b.kind);
                 break :blk b.raw_tag;
             },
             .inline_empty => |b| blk: {
                 kind = 9;
-                inline_kind = @intFromEnum(b.kind);
+                inline_kind = @backingInt(b.kind);
                 break :blk b.raw_tag;
             },
         };

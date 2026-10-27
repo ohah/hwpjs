@@ -8,6 +8,11 @@ pub const Values = struct {
         self.entries.deinit(a);
         self.* = .{};
     }
+    // 이력 스냅샷은 실제 항목만 소유한다. 복원 후 append는 일반 성장 규칙을 따른다.
+    pub fn cloneExact(self: *const Values, a: std.mem.Allocator) !Values {
+        const items = try a.dupe(Entry, self.entries.items);
+        return .{ .entries = std.ArrayList(Entry).fromOwnedSlice(items) };
+    }
     pub fn clone(self: *const Values, a: std.mem.Allocator) !Values {
         var output: Values = .{};
         errdefer output.deinit(a);

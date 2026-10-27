@@ -8,7 +8,7 @@ pub fn locate(bytes: []const u8, version: @import("../version.zig").Version) !Si
     var records = @import("../record.zig").Iterator.init(bytes, .{});
     var result: ?Site = null;
     while (try records.next()) |record| {
-        if (record.tag != @intFromEnum(docinfo.Tag.document_properties)) continue;
+        if (record.tag != @backingInt(docinfo.Tag.document_properties)) continue;
         if (result != null) return error.DuplicateDocumentProperties;
         if (record.level != 0) return error.InvalidDocInfoLevel;
         const len = record.payload.len;

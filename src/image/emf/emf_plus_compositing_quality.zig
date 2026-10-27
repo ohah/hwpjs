@@ -6,9 +6,9 @@ pub const CompositingQuality = enum(u8) {
     assume_linear = 5,
 
     pub fn parse(raw: u8) !CompositingQuality {
-        if (raw < @intFromEnum(CompositingQuality.default) or raw > @intFromEnum(CompositingQuality.assume_linear))
+        if (raw < @backingInt(CompositingQuality.default) or raw > @backingInt(CompositingQuality.assume_linear))
             return error.InvalidEmfPlusCompositingQuality;
-        return @enumFromInt(raw);
+        return @fromBackingInt(@intCast(raw));
     }
 };
 
@@ -35,7 +35,7 @@ test "EMF+ CompositingQuality separates the official domain from Windows fallbac
         const wire = WireValue.parse(raw);
         if (raw >= 1 and raw <= 5) {
             const defined = try CompositingQuality.parse(raw);
-            try std.testing.expectEqual(raw, @intFromEnum(defined));
+            try std.testing.expectEqual(raw, @backingInt(defined));
             try std.testing.expectEqual(defined, wire.defined);
             try std.testing.expectEqual(defined, wire.effective());
         } else {

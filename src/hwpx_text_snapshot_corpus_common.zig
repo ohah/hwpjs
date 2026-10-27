@@ -59,11 +59,11 @@ pub fn eventDigests(events: []const snapshot.Event, report: text.Report, master_
                 text_ends += 1;
                 ordered.update(&.{6});
             },
-            .inline_start => |item| ordered.update(&.{ 7, @intFromEnum(item.kind) }),
-            .inline_end => |item| ordered.update(&.{ 8, @intFromEnum(item.kind) }),
+            .inline_start => |item| ordered.update(&.{ 7, @backingInt(item.kind) }),
+            .inline_end => |item| ordered.update(&.{ 8, @backingInt(item.kind) }),
             .inline_empty => |item| {
-                ordered.update(&.{ 7, @intFromEnum(item.kind) });
-                ordered.update(&.{ 8, @intFromEnum(item.kind) });
+                ordered.update(&.{ 7, @backingInt(item.kind) });
+                ordered.update(&.{ 8, @backingInt(item.kind) });
             },
             .content => |bytes| {
                 content.update(bytes);

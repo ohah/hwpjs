@@ -27,11 +27,8 @@ fn wire(o: policy.Options) Policy {
 }
 pub fn v2(h: anytype) Stats {
     const s = h.stack;
-    var undo: usize = 0;
-    var redo: usize = 0;
-    for (s.undo_slots[0..s.undo_len]) |e| undo += e.ownedBytes();
-    for (s.redo_slots[0..s.redo_len]) |e| redo += e.ownedBytes();
-    return .{ .protocolVersion = 2, .requested = wire(h.requested), .resolved = wire(.{ .max_entries = s.policy.max_entries, .max_checkpoint_bytes = s.policy.max_checkpoint_bytes, .max_checkpoint_owned_bytes = s.policy.max_checkpoint_owned_bytes, .max_retained_bytes = s.policy.max_retained_bytes }), .revision = s.current.revision, .oldestAvailableRevision = s.oldestAvailableRevision(), .undoCount = s.undo_len, .redoCount = s.redo_len, .retainedBytes = s.retained_bytes, .metadataOwnedBytes = s.metadata_bytes, .currentOwnedBytes = s.current.ownedBytes(), .undoOwnedBytes = undo, .redoOwnedBytes = redo, .evictedCount = s.evicted, .poisoned = h.poisoned };
+    const totals = s.runningOwnedTotals();
+    return .{ .protocolVersion = 2, .requested = wire(h.requested), .resolved = wire(.{ .max_entries = s.policy.max_entries, .max_checkpoint_bytes = s.policy.max_checkpoint_bytes, .max_checkpoint_owned_bytes = s.policy.max_checkpoint_owned_bytes, .max_retained_bytes = s.policy.max_retained_bytes }), .revision = s.current.revision, .oldestAvailableRevision = s.oldestAvailableRevision(), .undoCount = s.undo_len, .redoCount = s.redo_len, .retainedBytes = s.retained_bytes, .metadataOwnedBytes = s.metadata_bytes, .currentOwnedBytes = s.current.ownedBytes(), .undoOwnedBytes = totals.undo, .redoOwnedBytes = totals.redo, .evictedCount = s.evicted, .poisoned = h.poisoned };
 }
 pub fn v1(h: anytype) Stats {
     const s = &h.stack;

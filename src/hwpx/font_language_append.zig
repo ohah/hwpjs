@@ -23,15 +23,15 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, language: fac
         const text = try raw.toUtf8(a, 4096);
         defer a.free(text);
         const existing = faces.languageFromSource(text) orelse return error.InvalidFontLanguage;
-        const ordinal = @intFromEnum(existing);
+        const ordinal = @backingInt(existing);
         if (seen[ordinal]) return error.DuplicateFontLanguage;
         seen[ordinal] = true;
         count += 1;
     }
-    if (seen[@intFromEnum(language)]) return error.DuplicateFontLanguage;
+    if (seen[@backingInt(language)]) return error.DuplicateFontLanguage;
     const font = try @import("font_face_payload.zig").write(a, id, name, kind, 4096, limit);
     defer a.free(font);
-    const group = try std.fmt.allocPrint(a, "<fontface xmlns=\"{s}\" lang=\"{s}\" fontCnt=\"1\">{s}</fontface>", .{ uri, faces.source_names[@intFromEnum(language)], font });
+    const group = try std.fmt.allocPrint(a, "<fontface xmlns=\"{s}\" lang=\"{s}\" fontCnt=\"1\">{s}</fontface>", .{ uri, faces.source_names[@backingInt(language)], font });
     defer a.free(group);
     return @import("xml_group_append.zig").write(a, tree, node, .item, count, group, limit);
 }

@@ -10,7 +10,7 @@ pub fn parse(signature: [4]u8, data: []const u8) !?Value {
         if (!std.mem.eql(u8, &signature, &name)) continue;
         const array = try xyz.parse(data);
         if (array.count() != 1) return error.InvalidIccXyzTagCount;
-        return .{ .kind = @enumFromInt(i), .xyz = try array.at(0) };
+        return .{ .kind = @fromBackingInt(@intCast(i)), .xyz = try array.at(0) };
     }
     return null;
 }

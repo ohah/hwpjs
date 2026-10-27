@@ -15,8 +15,8 @@ test "HWPX unknown object anchor requires exact direct run ownership and stable 
         checked += 1;
     }
     try std.testing.expectEqual(@as(usize, 4), checked);
-    try std.testing.expectEqual(@as(u8, 20), @intFromEnum(anchors.Kind.dutmal));
-    try std.testing.expectEqual(@as(u8, 21), @intFromEnum(anchors.Kind.unknown_object));
+    try std.testing.expectEqual(@as(u8, 20), @backingInt(anchors.Kind.dutmal));
+    try std.testing.expectEqual(@as(u8, 21), @backingInt(anchors.Kind.unknown_object));
     try std.testing.expectEqualStrings(xml, tree.source);
 }
 

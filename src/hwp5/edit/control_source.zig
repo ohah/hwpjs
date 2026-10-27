@@ -14,7 +14,7 @@ pub fn validateWithSource(a: std.mem.Allocator, tree: Tree, source: []const u8, 
 
 fn validateInternal(a: std.mem.Allocator, tree: Tree, original: ?Original) !void {
     for (tree.nodes) |*node| {
-        if (node.record.framing.tag == @intFromEnum(body.Tag.control_header))
+        if (node.record.framing.tag == @backingInt(body.Tag.control_header))
             node.record.value = .{ .control_header = try body.ControlHeader.parse(node.record.framing.payload) };
     }
     var links = try @import("../body/control_links.zig").Links.build(a, tree);

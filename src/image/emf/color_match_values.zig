@@ -21,9 +21,9 @@ pub fn target(value: u32) !Target {
 
 test "color match action and target values are exact" {
     for ([_]u32{ 1, 2, 3 }) |value|
-        try std.testing.expectEqual(value, @intFromEnum(try action(value)));
+        try std.testing.expectEqual(value, @backingInt(try action(value)));
     for ([_]u32{ 0, 1 }) |value|
-        try std.testing.expectEqual(value, @intFromEnum(try target(value)));
+        try std.testing.expectEqual(value, @backingInt(try target(value)));
     for ([_]u32{ 0, 4, std.math.maxInt(u32) }) |value|
         try std.testing.expectError(error.InvalidEmfColorSpaceAction, action(value));
     for ([_]u32{ 2, 3, std.math.maxInt(u32) }) |value|

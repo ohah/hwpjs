@@ -38,25 +38,12 @@ test "FORMAT-V2 HWPX actual ZIP 100 individual edits undo redo exact initial sav
 
 /// Evidence export is opt-in. All inline model/save comparisons run either way.
 fn output(comptime name: []const u8, bytes: []const u8) !void {
-    const a = std.testing.allocator;
-    const directory = std.process.Environ.getAlloc(std.testing.environ, a, "HWPJS_HISTORY_EVIDENCE_DIR") catch |err| switch (err) {
-        error.EnvironmentVariableMissing => return,
+    var sink = (@import("evidence_output.zig").Sink.fromEnviron(std.testing.allocator, std.testing.io, std.testing.environ, "HWPJS_HISTORY_EVIDENCE_DIR") catch |err| switch (err) {
+        error.InvalidEvidenceDirectory => return error.InvalidHistoryEvidenceDirectory,
         else => return err,
-    };
-    defer a.free(directory);
-    if (directory.len == 0 or !std.fs.path.isAbsolute(directory)) {
-        std.debug.print("HWPJS_HISTORY_EVIDENCE_DIR must name an existing absolute directory: {s}\n", .{directory});
-        return error.InvalidHistoryEvidenceDirectory;
-    }
-    const target = std.Io.Dir.openDirAbsolute(std.testing.io, directory, .{}) catch |err| {
-        std.debug.print("HWPJS_HISTORY_EVIDENCE_DIR open failed ({s}): {s}\n", .{ directory, @errorName(err) });
-        return err;
-    };
-    defer target.close(std.testing.io);
-    target.writeFile(std.testing.io, .{ .sub_path = name, .data = bytes, .flags = .{ .exclusive = true } }) catch |err| {
-        std.debug.print("HWPJS_HISTORY_EVIDENCE_DIR write failed ({s}/{s}): {s}\n", .{ directory, name, @errorName(err) });
-        return err;
-    };
+    }) orelse return;
+    defer sink.deinit();
+    try sink.writeFile(name, bytes);
 }
 
 test "FORMAT-V2 HWPX late second-command failure rolls back once and preserves redo" {

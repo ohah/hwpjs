@@ -24,7 +24,7 @@ pub fn parse(signature: [4]u8, data: []const u8, edition: Edition) !?Parsed {
             .{ .parametric = try @import("parametric_curve.zig").parse(data) }
         else
             return error.InvalidIccTrcType;
-        return .{ .channel = @enumFromInt(i), .curve = curve };
+        return .{ .channel = @fromBackingInt(@intCast(i)), .curve = curve };
     }
     return null;
 }

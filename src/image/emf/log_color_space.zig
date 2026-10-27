@@ -78,8 +78,8 @@ fn initValid(bytes: []u8) void {
     std.mem.writeInt(u32, bytes[0..4], signature, .little);
     std.mem.writeInt(u32, bytes[4..8], version, .little);
     std.mem.writeInt(u32, bytes[8..12], @intCast(bytes.len), .little);
-    std.mem.writeInt(u32, bytes[12..16], @intFromEnum(values.LogicalColorSpace.srgb), .little);
-    std.mem.writeInt(u32, bytes[16..20], @intFromEnum(values.GamutMappingIntent.images), .little);
+    std.mem.writeInt(u32, bytes[12..16], @backingInt(values.LogicalColorSpace.srgb), .little);
+    std.mem.writeInt(u32, bytes[16..20], @backingInt(values.GamutMappingIntent.images), .little);
 }
 
 test "ANSI log color space preserves raw fixed-point fields and filename storage" {

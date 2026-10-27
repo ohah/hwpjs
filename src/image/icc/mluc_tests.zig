@@ -52,7 +52,7 @@ test "localized tags dispatch without discharging Unicode or locale semantics" {
     const b = fixture();
     for ([_][4]u8{ "desc".*, "cprt".* }, 0..) |name, i| {
         const value = (try tag.parse(name, &b, .v4_2022, .{})).?;
-        try t.expectEqual(i, @intFromEnum(value.kind));
+        try t.expectEqual(i, @backingInt(value.kind));
         try t.expect(value.unicode_deferred and value.locale_deferred and value.extensions_deferred);
         try t.expectError(error.UnsupportedIccLocalizedEdition, tag.parse(name, &b, .v2_2001, .{}));
     }

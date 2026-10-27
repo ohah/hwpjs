@@ -26,7 +26,7 @@ pub const BinData = struct {
         return .{ .attributes = attributes, .data = data, .extra = bytes[r.offset..] };
     }
     pub fn compression(self: BinData) Compression {
-        return @enumFromInt((self.attributes >> 4) & 3);
+        return @fromBackingInt(@intCast((self.attributes >> 4) & 3));
     }
     /// Explicit interpretation of storage tail; parse() keeps the original spec envelope.
     /// In the observed layout an absent tail is absent extension; a present prefix must be complete.

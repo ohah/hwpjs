@@ -4,7 +4,7 @@ const rules = @import("control_rules.zig");
 const owned = @import("owned_record.zig");
 pub const Report = struct { components: usize = 0, top_level: usize = 0, grouped: usize = 0, matrix_pairs: usize = 0, mismatched_ids: usize = 0, unknown_attributes: usize = 0, nonfinite_values: usize = 0, extra_bytes: usize = 0 };
 fn gso(node: @import("tree.zig").Node) bool {
-    if (node.record.framing.tag != @intFromEnum(@import("reader.zig").Tag.control_header)) return false;
+    if (node.record.framing.tag != @backingInt(@import("reader.zig").Tag.control_header)) return false;
     const header = @import("control_header.zig").Header.parse(node.record.framing.payload) catch return false;
     return header.id == rules.drawing_id;
 }

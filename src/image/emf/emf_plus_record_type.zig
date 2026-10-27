@@ -60,16 +60,16 @@ pub const RecordType = enum(u16) {
 };
 
 pub fn parse(raw: u16) !RecordType {
-    if (raw < @intFromEnum(RecordType.header) or raw > @intFromEnum(RecordType.set_ts_clip))
+    if (raw < @backingInt(RecordType.header) or raw > @backingInt(RecordType.set_ts_clip))
         return error.InvalidEmfPlusRecordType;
-    return @enumFromInt(raw);
+    return @fromBackingInt(@intCast(raw));
 }
 
 test "EMF+ record type accepts the complete contiguous official range" {
     const testing = @import("std").testing;
-    var raw: u32 = @intFromEnum(RecordType.header);
-    while (raw <= @intFromEnum(RecordType.set_ts_clip)) : (raw += 1)
-        try testing.expectEqual(@as(u16, @intCast(raw)), @intFromEnum(try parse(@intCast(raw))));
+    var raw: u32 = @backingInt(RecordType.header);
+    while (raw <= @backingInt(RecordType.set_ts_clip)) : (raw += 1)
+        try testing.expectEqual(@as(u16, @intCast(raw)), @backingInt(try parse(@intCast(raw))));
     try testing.expectError(error.InvalidEmfPlusRecordType, parse(0x4000));
     try testing.expectError(error.InvalidEmfPlusRecordType, parse(0x403b));
     try testing.expectError(error.InvalidEmfPlusRecordType, parse(0xffff));

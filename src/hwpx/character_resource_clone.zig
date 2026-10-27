@@ -6,6 +6,11 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, prop
     return writeWithProfile(a, tree, node, id, properties, limit, .{});
 }
 pub fn writeWithProfile(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+    if (properties.border_fill) |border| return @import("border_fill_character_xml.zig").clone(a, tree, node, id, properties, border, limit, profile);
+    return writePreparedWithProfile(a, tree, node, id, properties, limit, profile);
+}
+pub fn writePreparedWithProfile(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+    if (properties.border_fill != null) return error.UnpreparedBorderFillIntent;
     return compose(a, tree, node, id, properties, properties.underline_kind, limit, profile);
 }
 pub fn writeUnderline(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, kind: UnderlineKind, limit: usize) ![]u8 {
@@ -17,7 +22,12 @@ fn compose(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, proper
     if (tree.source.len > limit) return error.LimitExceeded;
     var current = try a.dupe(u8, tree.source);
     defer a.free(current);
-    for (0..22) |step| {
+    if (properties.strike_enabled == false and properties.strike_style != null) return error.ConflictingCharacterDecorationStyles;
+    for (0..26) |step| {
+        if (step == 25 and properties.shadow == null) continue;
+        if (step == 22 and !@import("../model/character_metric_patch.zig").has(properties)) continue;
+        if (step == 23 and properties.underline_style == null) continue;
+        if (step == 24 and properties.strike_style == null) continue;
         if (step == 21 and properties.strike_color == null) continue;
         if (step == 20 and properties.outline_kind == null) continue;
         if (step >= 16 and step < 20) {
@@ -51,6 +61,10 @@ fn compose(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, proper
             18 => try @import("character_emphasis_patch.zig").write(a, &parsed, node, .supscript, properties.superscript.?, limit),
             19 => try @import("character_emphasis_patch.zig").write(a, &parsed, node, .subscript, properties.subscript.?, limit),
             20 => try @import("character_outline_patch.zig").write(a, &parsed, node, properties.outline_kind.?, limit),
+            25 => try @import("character_shadow_patch.zig").write(a, &parsed, node, properties.shadow.?, limit),
+            22 => try @import("character_metric_patch.zig").write(a, &parsed, node, properties, limit),
+            23 => try @import("character_decoration_style_patch.zig").write(a, &parsed, node, false, properties.underline_style.?, limit),
+            24 => try @import("character_decoration_style_patch.zig").write(a, &parsed, node, true, properties.strike_style.?, limit),
             21 => try @import("character_strike_color_patch.zig").write(a, &parsed, node, properties.strike_color.?, limit),
             else => try @import("character_font_patch.zig").write(a, &parsed, node, @fromBackingInt(@intCast(step - 7)), properties.font_ids.?[step - 7].?, limit),
         };

@@ -10,6 +10,9 @@ pub fn hasEffects(patch: Patch) bool {
     return patch.emboss != null or patch.engrave != null or patch.superscript != null or patch.subscript != null;
 }
 pub fn validate(patch: Patch) !void {
+    if (patch.border_fill) |resource| try @import("border_fill_patch.zig").validate(resource);
+    if (patch.shadow) |value| try @import("character_shadow.zig").validate(value);
+    try @import("character_metric_patch.zig").validate(patch);
     if (patch.size) |size| if (size < 0 or size > 409600) return error.InvalidCharacterSize;
     if (patch.underline_color) |color| try @import("rgb_color.zig").validate(color);
     if (patch.strike_color) |color| try @import("rgb_color.zig").validate(color);
@@ -23,6 +26,12 @@ pub fn merge(previous: Patch, requested: Patch) Patch {
         if (@field(requested, field.name)) |value| {
             if (comptime std.mem.eql(u8, field.name, "font_ids")) {
                 result.font_ids = @import("character_fonts.zig").merge(previous.font_ids orelse @as(@import("character_fonts.zig").Values, @splat(null)), value);
+            } else if (comptime std.mem.eql(u8, field.name, "border_fill")) {
+                result.border_fill = @import("border_fill_patch.zig").merge(previous.border_fill orelse .{}, value);
+            } else if (comptime std.mem.eql(u8, field.name, "shadow")) {
+                result.shadow = @import("character_shadow.zig").merge(previous.shadow orelse .{}, value);
+            } else if (comptime std.mem.eql(u8, field.name, "ratio") or std.mem.eql(u8, field.name, "char_spacing") or std.mem.eql(u8, field.name, "relative_size") or std.mem.eql(u8, field.name, "offset")) {
+                @field(result, field.name) = @import("character_metric_patch.zig").merge(@field(previous, field.name) orelse @as(@import("character_metric_patch.zig").Values, @splat(null)), value);
             } else @field(result, field.name) = value;
         }
     }

@@ -5,6 +5,6 @@ pub const CompatibleDocument = struct {
     extra: []const u8,
     pub fn parse(bytes: []const u8) !CompatibleDocument {
         var r: Reader = .{ .bytes = bytes };
-        return .{ .target = @enumFromInt(try r.readInt(u32)), .extra = bytes[r.offset..] };
+        return .{ .target = @fromBackingInt(@intCast(try r.readInt(u32))), .extra = bytes[r.offset..] };
     }
 };

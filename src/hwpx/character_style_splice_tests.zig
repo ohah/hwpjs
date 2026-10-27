@@ -22,7 +22,7 @@ test "HWPX character style splice preserves left affinity across boundaries and 
     const splice = @import("character_style_splice.zig").splice;
     try std.testing.expectError(error.SplitSurrogatePair, splice(a, &tree, paragraph, 2, 0, "x", 10000));
     try std.testing.expect(!try splice(a, &tree, paragraph, 1, 2, "😀", 10000));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, t: *const @import("xml_part_tree.zig").Tree, p: *const @import("paragraph_structure_values.zig").Paragraph) !void {
             var copy = try p.clone(allocator);
             defer copy.deinit(allocator);

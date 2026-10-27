@@ -65,11 +65,11 @@ pub fn pitchAndFamily(value: u8) !PitchAndFamily {
 test "font value domains preserve exact sparse and packed values" {
     const t = std.testing;
     for ([_]u8{ 0, 1, 2, 0x4d, 0x80, 0x81, 0x82, 0x86, 0x88, 0xa1, 0xa2, 0xa3, 0xb1, 0xb2, 0xba, 0xcc, 0xde, 0xee, 0xff }) |value|
-        try t.expectEqual(value, @intFromEnum(try characterSet(value)));
+        try t.expectEqual(value, @backingInt(try characterSet(value)));
     for ([_]u8{ 3, 0x4c, 0x83, 0xfe }) |value| try t.expectError(error.InvalidEmfFontCharacterSet, characterSet(value));
-    for ([_]u8{ 0, 1, 3, 4, 5, 6, 7, 8, 9, 10 }) |value| try t.expectEqual(value, @intFromEnum(try outPrecision(value)));
+    for ([_]u8{ 0, 1, 3, 4, 5, 6, 7, 8, 9, 10 }) |value| try t.expectEqual(value, @backingInt(try outPrecision(value)));
     for ([_]u8{ 2, 11, 255 }) |value| try t.expectError(error.InvalidEmfFontOutPrecision, outPrecision(value));
-    for (0..6) |value| try t.expectEqual(value, @intFromEnum(try quality(@intCast(value))));
+    for (0..6) |value| try t.expectEqual(value, @backingInt(try quality(@intCast(value))));
     try t.expectError(error.InvalidEmfFontQuality, quality(6));
     _ = try clipPrecision(0xf3);
     try t.expectError(error.InvalidEmfFontClipPrecision, clipPrecision(0x04));

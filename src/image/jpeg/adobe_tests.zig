@@ -20,7 +20,7 @@ test "JPEG Adobe preserves every word and transform byte without fallback" {
     for (0..256) |n| {
         bytes[11] = @intCast(n);
         const h = try adobe.Header.parse(&bytes);
-        try t.expectEqual(n, @intFromEnum(h.transform));
+        try t.expectEqual(n, @backingInt(h.transform));
         for ([_]u8{ 3, 4 }) |count| {
             if (n > 2) try t.expectError(error.UnsupportedAdobeTransform, h.printEncoding(count)) else if ((n == 1 and count == 4) or (n == 2 and count == 3)) try t.expectError(error.InvalidAdobeTransformComponents, h.printEncoding(count)) else try t.expectEqual(if (n == 0) (if (count == 3) adobe.Encoding.rgb else .complemented_cmyk) else (if (n == 1) adobe.Encoding.ycbcr else .ycck), try h.printEncoding(count));
         }
@@ -91,7 +91,7 @@ test "JPEG Adobe distinct headers keep physical order across entropy" {
     try t.expectEqual(@as(u16, 100), result.headers[0].version);
     try t.expectEqual(@as(u16, 356), result.headers[1].version);
     try t.expectEqual(adobe.Transform.ycbcr, result.headers[0].transform);
-    try t.expectEqual(@as(u8, 255), @intFromEnum(result.headers[1].transform));
+    try t.expectEqual(@as(u8, 255), @backingInt(result.headers[1].transform));
     try t.expectEqualSlices(u8, &.{0x91}, result.headers[0].extra);
     try t.expectEqualSlices(u8, &.{0x27}, result.headers[1].extra);
 }

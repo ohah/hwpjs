@@ -1,0 +1,86 @@
+--- /dev/null
++++ b/src/original_hwp5_v2_compare.zig
+@@ -0,0 +1,83 @@
++//! 원래 V2 별도 closure 비교. 후보 Session을 baseline으로 사용하지 않는다.
++const std=@import("std");
++const edit=@import("hwp5/edit/style_preservation.zig");
++const history=@import("hwp5/edit/editor_history.zig");
++pub const Request=struct {kind:enum{format,table,picture},section:usize=0,paragraph:usize=15,node:u32=0,width:u32=0,height:u32=0};
++pub const Result=struct {
++    allocator:std.mem.Allocator,states:[3][]u8,
++    pub fn deinit(self:*Result)void{for(self.states)|bytes|self.allocator.free(bytes);}
++};
++fn saved(a:std.mem.Allocator,s:*edit.Session)![]u8 {return (try s.save(a,.{.allow_stale_layout=true})).bytes;}
++fn same(a:std.mem.Allocator,s:*edit.Session,expected:[]const u8)!void {
++    const b=try saved(a,s);defer a.free(b);try std.testing.expectEqualSlices(u8,expected,b);
++}
++pub fn run(a:std.mem.Allocator,input:[]const u8,request:Request)!Result {
++    const s=try edit.Session.open(a,input);defer s.close();
++    var h=try history.History.initV2(a,s,.{});defer h.deinit();
++    var out:Result=.{.allocator=a,.states=undefined};var count:usize=0;
++    errdefer for(out.states[0..count])|bytes|a.free(bytes);
++    try std.testing.expect(try h.apply(s,.{.splice_text=.{.section=request.section,.paragraph=request.paragraph,.start_unit=0,.end_unit=0,.utf8="x"}}));
++    out.states[0]=try saved(a,s);count+=1;
++    const command:edit.Command=switch(request.kind){
++        .format=>.{.set_character_properties=.{.section=request.section,.paragraph=request.paragraph,.start_unit=0,.end_unit=1,.properties=.{.bold=true,.italic=true,.size=1800}}},
++        .table=>.{.set_cell_size=.{.section=request.section,.list_node=request.node,.width=request.width,.height=request.height}},
++        .picture=>.{.set_picture_current_size=.{.section=request.section,.picture_node=request.node,.width=request.width,.height=request.height}},
++    };
++    try std.testing.expect(try h.apply(s,command));out.states[1]=try saved(a,s);count+=1;
++    try std.testing.expect(try h.apply(s,.{.splice_text=.{.section=request.section,.paragraph=request.paragraph,.start_unit=1,.end_unit=1,.utf8="y"}}));
++    out.states[2]=try saved(a,s);count+=1;
++    for(0..3)|i|{try std.testing.expect(try h.undo(s));try same(a,s,if(i==2)input else out.states[1-i]);}
++    for(out.states)|b|{try std.testing.expect(try h.redo(s));try same(a,s,b);}
++    return out;
++}
++
++pub fn current20(a:std.mem.Allocator,input:[]const u8)![]u8 {
++    const s=try edit.Session.open(a,input);defer s.close();
++    const ref=try s.currentSourceParagraphReference(0,15);
++    var h=try history.History.initV2(a,s,.{});defer h.deinit();
++    for(0..20)|i|try std.testing.expect(try h.apply(s,.{.splice_current_paragraph=.{.section=0,.reference=ref,.start_unit=@intCast(i),.end_unit=@intCast(i),.utf8="x"}}));
++    const changed=try saved(a,s);errdefer a.free(changed);
++    for(0..20)|_|try std.testing.expect(try h.undo(s));try same(a,s,input);
++    for(0..20)|_|try std.testing.expect(try h.redo(s));try same(a,s,changed);
++    try std.testing.expectEqual(@as(u32,20),h.revision());
++    return changed;
++}
++pub const Refusal=enum{noop_external,changed_external,payload,failed_batch};
++/// payload는 정적 오류명, 다른 경우는 호출자 소유 저장 bytes를 반환한다.
++pub fn refusal(a:std.mem.Allocator,input:[]const u8,kind:Refusal,cap:?u32)!?[]const u8 {
++    const s=try edit.Session.open(a,input);defer s.close();
++    var options:@import("model/history_policy.zig").Options=.{};
++    if(kind==.payload)options.max_checkpoint_bytes=cap orelse return error.MissingExplicitBudget;
++    var h=try history.History.initV2(a,s,options);defer h.deinit();
++    if(kind==.payload){
++        const result:?anyerror=blk:{
++            _=h.apply(s,.{.splice_text=.{.section=0,.paragraph=15,.start_unit=0,.end_unit=0,.utf8="x"}}) catch |err|break :blk err;
++            break :blk null;
++        };
++        const failure=result orelse return error.OriginalV2UnexpectedBudgetSuccess;
++        try std.testing.expectEqual(@as(u32,0),h.revision());try same(a,s,input);
++        return @errorName(failure);
++    }
++    try std.testing.expect(try h.apply(s,.{.splice_text=.{.section=0,.paragraph=15,.start_unit=0,.end_unit=0,.utf8=if(kind==.failed_batch)"😀"else"x"}}));
++    const changed=try saved(a,s);defer a.free(changed);
++    if(kind==.changed_external){
++        try s.apply(.{.splice_text=.{.section=0,.paragraph=15,.start_unit=1,.end_unit=1,.utf8="z"}});
++        try std.testing.expectError(error.HistoryCurrentMismatch,h.undo(s));
++        const external=try saved(a,s);defer a.free(external);
++        try std.testing.expect(!std.mem.eql(u8,external,changed));
++        return try a.dupe(u8,external);
++    }
++    try std.testing.expect(try h.undo(s));const before=h.stats();
++    if(kind==.noop_external){
++        try s.apply(.{.splice_text=.{.section=0,.paragraph=15,.start_unit=0,.end_unit=0,.utf8=""}});
++        try std.testing.expectError(error.InvalidParagraph,s.apply(.{.set_style=.{.section=0,.paragraph=std.math.maxInt(usize),.style_id=0}}));
++    }else{
++        try std.testing.expectError(error.UnsupportedStructuralEdit,h.applyBatch(s,&.{.{.splice_text=.{.section=0,.paragraph=15,.start_unit=0,.end_unit=0,.utf8="Q"}},.{.delete_paragraph=.{.section=0,.paragraph=15}}}));
++    }
++    try same(a,s,input);try std.testing.expectEqual(before.revision,h.revision());try std.testing.expectEqual(before.redoCount,h.stats().redoCount);
++    try std.testing.expect(try h.redo(s));try same(a,s,changed);
++    return try a.dupe(u8,changed);
++}
++pub fn payloadCost(a:std.mem.Allocator,input:[]const u8)!usize {
++    const s=try edit.Session.open(a,input);defer s.close();return s.checkpointSize(std.math.maxInt(usize));
++}

@@ -8,19 +8,31 @@ pub fn applyWithMargins(session: *editor.Session, section: usize, paragraph: usi
     return applyWithProperties(session, section, paragraph, requested_alignment, patch, null);
 }
 pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: usize, requested_alignment: ?@import("paragraph_resource_clone.zig").Alignment, patch: @import("paragraph_margin_patch.zig").Patch, requested_spacing: ?@import("paragraph_spacing_patch.zig").Spacing) !bool {
+    return applyWithFlags(session, section, paragraph, requested_alignment, patch, requested_spacing, .{});
+}
+pub fn applyWithFlags(session: *editor.Session, section: usize, paragraph: usize, requested_alignment: ?@import("paragraph_resource_clone.zig").Alignment, patch: @import("paragraph_margin_patch.zig").Patch, requested_spacing: ?@import("paragraph_spacing_patch.zig").Spacing, requested_flags: @import("../model/paragraph_flags.zig").Patch) !bool {
+    return applyWithResources(session, section, paragraph, requested_alignment, patch, requested_spacing, requested_flags, .{});
+}
+pub fn applyWithResources(session: *editor.Session, section: usize, paragraph: usize, requested_alignment: ?@import("paragraph_resource_clone.zig").Alignment, patch: @import("paragraph_margin_patch.zig").Patch, requested_spacing: ?@import("paragraph_spacing_patch.zig").Spacing, requested_flags: @import("../model/paragraph_flags.zig").Patch, requested_border: @import("../model/border_fill_patch.zig").Patch) !bool {
     if (requested_spacing) |value| try @import("paragraph_spacing_patch.zig").validate(value);
     const a = session.allocator;
     const current = try session.paragraphShapeId(section, paragraph);
     const shapes = try session.paragraphShapes();
     defer @import("paragraph_display_resources.zig").deinit(a, shapes);
     var alignment = requested_alignment;
+    var flags_only = (@import("../model/paragraph_flags.zig").has(requested_flags) or @import("../model/border_fill_patch.zig").has(requested_border)) and requested_alignment == null and requested_spacing == null;
+    inline for (@import("../reflection.zig").fields(@import("paragraph_margin_patch.zig").Patch)) |field| if (@field(patch, field.name) != null) {
+        flags_only = false;
+    };
     var unchanged = true;
     var found = false;
     for (shapes) |shape| if (shape.id == current) {
         found = true;
-        const horizontal = shape.horizontal orelse return error.MissingParagraphAlignment;
-        if (alignment == null) alignment = std.meta.stringToEnum(@import("paragraph_resource_clone.zig").Alignment, horizontal) orelse return error.InvalidParagraphAlignment;
-        unchanged = std.mem.eql(u8, horizontal, @tagName(alignment.?));
+        if (!flags_only) {
+            const horizontal = shape.horizontal orelse return error.MissingParagraphAlignment;
+            if (alignment == null) alignment = std.meta.stringToEnum(@import("paragraph_resource_clone.zig").Alignment, horizontal) orelse return error.InvalidParagraphAlignment;
+            unchanged = std.mem.eql(u8, horizontal, @tagName(alignment.?));
+        }
         if (requested_spacing) |value| {
             const current_spacing = shape.spacing orelse return error.MissingParagraphSpacing;
             if (value.kind != 0) {
@@ -38,9 +50,13 @@ pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: 
         };
     };
     if (!found) return error.InvalidParagraphShapeReference;
+    if (@import("../model/paragraph_flags.zig").has(requested_flags)) unchanged = unchanged and try @import("paragraph_flags_session.zig").matchesCurrent(session, current, requested_flags);
+    if (@import("../model/border_fill_patch.zig").has(requested_border)) unchanged = unchanged and try @import("paragraph_border_fill_session.zig").matchesCurrent(session, current, requested_border);
     if (unchanged) return false;
     var source_id = current;
+    var border_fill: @import("../model/border_fill_patch.zig").Patch = .{};
     var keep_lines: ?bool = null;
+    var flags: @import("../model/paragraph_flags.zig").Patch = .{};
     var margins: @import("paragraph_margin_patch.zig").Patch = .{};
     var spacing: ?@import("paragraph_spacing_patch.zig").Spacing = null;
     for (session.paragraph_resources.entries.items) |entry| if (entry.id == current) {
@@ -48,6 +64,9 @@ pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: 
         margins = entry.margins;
         spacing = entry.spacing;
         keep_lines = entry.keep_lines;
+        flags = entry.flags;
+        border_fill = entry.border_fill;
+        if (flags_only) alignment = entry.alignment;
         break;
     };
     var original = session.*;
@@ -60,7 +79,9 @@ pub fn applyWithProperties(session: *editor.Session, section: usize, paragraph: 
         if (@field(patch, field.name)) |value| @field(margins, field.name) = value;
     }
     if (requested_spacing) |value| spacing = value;
-    const id = try pending.addWithBreakProperties(a, ids, source_id, alignment.?, margins, spacing, keep_lines);
+    flags = @import("../model/paragraph_flags.zig").merge(flags, requested_flags);
+    border_fill = @import("../model/border_fill_patch.zig").merge(border_fill, requested_border);
+    const id = try pending.addWithResources(a, ids, source_id, alignment, margins, spacing, keep_lines, flags, border_fill);
     std.mem.swap(@import("paragraph_resource_values.zig").Values, &pending, &session.paragraph_resources);
     const changed = session.setParagraphFormat(section, paragraph, id) catch |err| {
         std.mem.swap(@import("paragraph_resource_values.zig").Values, &pending, &session.paragraph_resources);

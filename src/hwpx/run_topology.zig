@@ -47,7 +47,7 @@ pub const Report = struct {
     first_unmodeled_child: ?Location = null,
 
     pub fn childCount(self: *const Report, kind: ChildClass) usize {
-        return self.child_classes[@intFromEnum(kind)];
+        return self.child_classes[@backingInt(kind)];
     }
 };
 
@@ -122,7 +122,7 @@ const Scanner = struct {
             const parent_node = &self.nodes.items[depth - 2];
             const child_class = try classify(tag, scope);
             self.report.direct_children += 1;
-            self.report.child_classes[@intFromEnum(child_class)] += 1;
+            self.report.child_classes[@backingInt(child_class)] += 1;
             if (child_class != .model and self.report.first_unmodeled_child == null) self.report.first_unmodeled_child = self.location(parent.run_ordinal);
             if (try attrs.element(tag, scope, document_xml.paragraph_uri, "secPr")) {
                 self.report.sec_pr_children += 1;

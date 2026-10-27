@@ -10,7 +10,7 @@ pub const Kind = children.Kind;
 pub const common_count = children.common_count;
 const max_fields = blk: {
     var count: usize = 0;
-    for (0..common_count) |slot| count = @max(count, children.specs(@enumFromInt(slot)).len);
+    for (0..common_count) |slot| count = @max(count, children.specs(@fromBackingInt(@intCast(slot))).len);
     break :blk count;
 };
 
@@ -36,7 +36,7 @@ pub const Child = struct {
     }
 
     pub fn localName(self: Child) []const u8 {
-        return children.names[@intFromEnum(self.kind)];
+        return children.names[@backingInt(self.kind)];
     }
 };
 
@@ -97,7 +97,7 @@ pub fn read(temp_a: std.mem.Allocator, owned_a: std.mem.Allocator, tree: *const 
         }
         result.other_attributes += @intFromBool(!matched);
     }
-    const counts = &report.by_kind[@intFromEnum(kind)];
+    const counts = &report.by_kind[@backingInt(kind)];
     counts.elements += 1;
     for (specs, values, 0..) |spec, value, slot| try fields.observe(spec, value, &counts.fields[slot]);
     var child = element.first_child;

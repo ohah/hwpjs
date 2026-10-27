@@ -48,7 +48,7 @@ test "formula definition fixture AVG model survives clone recalculation save and
     defer reopened.deinit(a);
     var matches: usize = 0;
     for (reopened.nodes) |node| {
-        if (node.record.framing.tag != @intFromEnum(body.Tag.control_header)) continue;
+        if (node.record.framing.tag != @backingInt(body.Tag.control_header)) continue;
         const header = try body.ControlHeader.parse(node.record.framing.payload);
         if (header.id != original.id) continue;
         const actual = try field.Properties.parse(header.properties);

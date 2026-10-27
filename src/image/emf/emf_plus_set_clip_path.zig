@@ -37,7 +37,7 @@ test "EMF+ SetClipPath preserves flags and parses every CombineMode with boundar
         const flags: u16 = 0xf03f | (@as(u16, @intCast(raw_mode)) << 8);
         const parsed = try parse(makeRecord(flags));
         try std.testing.expectEqual(flags, parsed.flags);
-        try std.testing.expectEqual(@as(u4, @intCast(raw_mode)), @intFromEnum(parsed.mode));
+        try std.testing.expectEqual(@as(u4, @intCast(raw_mode)), @backingInt(parsed.mode));
         try std.testing.expectEqual(@as(u6, 63), parsed.path_id);
     }
     try std.testing.expectEqual(@as(u6, 0), (try parse(makeRecord(0))).path_id);

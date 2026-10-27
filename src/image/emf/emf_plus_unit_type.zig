@@ -9,7 +9,7 @@ pub const UnitType = enum(u32) {
 
     pub fn parse(raw: u32) !UnitType {
         return switch (raw) {
-            0...6 => @enumFromInt(raw),
+            0...6 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusUnitType,
         };
     }

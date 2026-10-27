@@ -9,7 +9,7 @@ pub const FilterType = enum(u8) {
 
     pub fn parse(raw: u8) !FilterType {
         return switch (raw) {
-            0...4, 6, 7 => @enumFromInt(raw),
+            0...4, 6, 7 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusFilterType,
         };
     }
@@ -18,7 +18,7 @@ pub const FilterType = enum(u8) {
 test "EMF+ FilterType accepts exactly the official sparse domain" {
     const std = @import("std");
     for ([_]u8{ 0, 1, 2, 3, 4, 6, 7 }) |raw|
-        try std.testing.expectEqual(raw, @intFromEnum(try FilterType.parse(raw)));
+        try std.testing.expectEqual(raw, @backingInt(try FilterType.parse(raw)));
     try std.testing.expectError(error.InvalidEmfPlusFilterType, FilterType.parse(5));
     try std.testing.expectError(error.InvalidEmfPlusFilterType, FilterType.parse(8));
     try std.testing.expectError(error.InvalidEmfPlusFilterType, FilterType.parse(0xff));

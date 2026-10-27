@@ -39,8 +39,8 @@ pub const Effect = struct {
         return e;
     }
     pub fn kind(self: Effect) ?Kind {
-        if (self.kind_raw < 0 or self.kind_raw > @intFromEnum(Kind.inv)) return null;
-        return @enumFromInt(self.kind_raw);
+        if (self.kind_raw < 0 or self.kind_raw > @backingInt(Kind.inv)) return null;
+        return @fromBackingInt(@intCast(self.kind_raw));
     }
     pub fn value(self: Effect) f32 {
         return @bitCast(self.value_bits);

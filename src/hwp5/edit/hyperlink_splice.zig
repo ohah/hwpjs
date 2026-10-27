@@ -52,7 +52,7 @@ const Context = struct {
                 while (child < tree.nodes[source_node].subtree_end) {
                     const node = tree.nodes[child];
                     if (node.parent != source_node) return error.SourceBindingMismatch;
-                    if (node.record.framing.tag == @intFromEnum(body.Tag.control_header)) {
+                    if (node.record.framing.tag == @backingInt(body.Tag.control_header)) {
                         const header = try body.ControlHeader.parse(node.record.framing.payload);
                         if (header.id == @import("../body/control_rules.zig").id("%hlk")) {
                             const props = try @import("../body/field_start.zig").Properties.parse(header.properties);

@@ -71,6 +71,7 @@ test "HWP5 shade payload preserves all other bytes versions and allocation failu
 
 pub fn validate(patch: Patch) !void {
     try @import("../../model/character_properties.zig").validate(patch);
+    if (patch.underline_style == .REV3D or patch.strike_style == .REV3D) return error.UnsupportedCharacterLineStyle;
     if (patch.underline_kind == .center) return error.UnsupportedCharacterUnderlineKind;
     if (patch.font_ids) |ids| try @import("../../model/character_fonts.zig").validateHwp5(ids);
 }
@@ -87,12 +88,21 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, patch: P
     if (legacy_strike and patch.strike_enabled != false and (changes_underline_color or (patch.underline_kind != null and patch.underline_kind.? != .none)))
         return error.UnsupportedLegacyCharacterDecorations;
     if (patch.strike_enabled) |enabled| _ = try @import("character_strike_payload.zig").attributes(shape.attributes, enabled);
-    const output = try a.dupe(u8, input);
+    const lines = @import("../../model/character_line_style.zig");
+    if (patch.strike_style != null and shape.strikeKindRaw() > 1) return error.UnsupportedCharacterStrikeKind;
+    if (legacy_strike and patch.underline_style != null and patch.strike_enabled != false and lines.hwp5(patch.underline_style.?) != shape.underlineStyleRaw()) return error.UnsupportedLegacyCharacterDecorations;
+    if (legacy_strike and patch.underline_style != null and patch.strike_style != null and patch.underline_style.? != patch.strike_style.?) return error.ConflictingCharacterDecorationStyles;
+    const output = if (patch.shadow) |value| try @import("character_shadow_payload.zig").write(a, input, version, value, limit) else try a.dupe(u8, input);
     if (patch.font_ids) |ids| for (ids, 0..) |id, language| {
         if (id) |value| std.mem.writeInt(u16, output[language * 2 ..][0..2], @intCast(value), .little);
     };
     if (patch.size) |size| std.mem.writeInt(i32, output[42..46], size, .little);
-    var attributes = shape.attributes;
+    inline for (.{ .{ "ratio", 14 }, .{ "char_spacing", 21 }, .{ "relative_size", 28 }, .{ "offset", 35 } }) |entry| {
+        if (@field(patch, entry[0])) |values| for (values, 0..) |value, language| if (value) |v| {
+            output[entry[1] + language] = if (comptime entry[1] == 21 or entry[1] == 35) @bitCast(@as(i8, @intCast(v))) else @intCast(v);
+        };
+    }
+    var attributes = std.mem.readInt(u32, output[46..50], .little);
     if (patch.outline_kind) |kind| attributes = (attributes & ~@as(u32, 7 << 8)) | (@as(u32, @import("character_outline_kind.zig").raw(kind)) << 8);
     inline for (.{ "emboss", "engrave", "superscript", "subscript" }, 13..) |name, bit| {
         if (@field(patch, name)) |enabled| attributes = (attributes & ~(@as(u32, 1) << bit)) | (@as(u32, @intFromBool(enabled)) << bit);
@@ -110,6 +120,11 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, patch: P
         };
         attributes = underline.attributes(attributes, mapped);
     };
+    if (patch.underline_style) |style| attributes = (attributes & ~@as(u32, 15 << 4)) | (@as(u32, lines.hwp5(style)) << 4);
+    if (patch.strike_style) |style| {
+        const shift: u5 = if (legacy_strike) 4 else 26;
+        attributes = (attributes & ~(@as(u32, 15) << shift)) | (@as(u32, lines.hwp5(style)) << shift);
+    }
     std.mem.writeInt(u32, output[46..50], attributes, .little);
     if (patch.underline_color) |color| std.mem.writeInt(u32, output[56..60], @import("../../model/rgb_color.zig").hwp5(color), .little);
     if (patch.strike_color) |color| std.mem.writeInt(u32, output[strike_color_offset.?..][0..4], @import("../../model/rgb_color.zig").hwp5(color), .little);

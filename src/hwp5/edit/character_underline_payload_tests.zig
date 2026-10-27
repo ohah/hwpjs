@@ -23,7 +23,7 @@ test "HWP5 underline payload actual fixture resources change only position bits"
                 defer a.free(output);
                 const expected = try a.dupe(u8, record.payload);
                 defer a.free(expected);
-                if (kind) |value| expected[46] = (expected[46] & ~@as(u8, 12)) | (@as(u8, @intFromEnum(value)) << 2);
+                if (kind) |value| expected[46] = (expected[46] & ~@as(u8, 12)) | (@as(u8, @backingInt(value)) << 2);
                 try std.testing.expectEqualSlices(u8, expected, output);
                 const parsed = try @import("../docinfo/char_shape.zig").CharShape.parse(output, source.header.version());
                 try std.testing.expectEqual(@as(u2, @truncate((expected[46] >> 2) & 3)), parsed.underlineKindRaw());

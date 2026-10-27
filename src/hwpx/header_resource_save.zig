@@ -33,6 +33,34 @@ pub fn replacementWithFonts(a: std.mem.Allocator, source: []const u8, values: *c
         const next = try @import("header_tree.zig").parse(a, bytes, tree.item_index, .{ .max_xml_bytes = max_bytes });
         tree.deinit(a);
         tree = next;
+        if (@import("../model/border_fill_patch.zig").has(intent.border_fill)) {
+            const owner = try @import("border_fill_resource_patch.zig").target(a, &tree, "paraPr", intent.id);
+            const fill = try @import("border_fill_resource_patch.zig").write(a, &tree, try @import("border_fill_resource_patch.zig").reference(a, &tree, owner), intent.border_fill, max_bytes, if (@import("border_fill_profile.zig").needsBorder(intent.border_fill)) try @import("border_fill_profile.zig").read(a, source) else .{});
+            defer a.free(fill.bytes);
+            var prepared = try @import("header_tree.zig").parse(a, fill.bytes, tree.item_index, .{ .max_xml_bytes = max_bytes });
+            defer prepared.deinit(a);
+            const updated = try @import("border_fill_resource_patch.zig").patchReference(a, &prepared, try @import("border_fill_resource_patch.zig").target(a, &prepared, "paraPr", intent.id), fill.id, max_bytes);
+            defer a.free(updated);
+            const next_tree = try @import("header_tree.zig").parse(a, updated, tree.item_index, .{ .max_xml_bytes = max_bytes });
+            tree.deinit(a);
+            tree = next_tree;
+        }
+        if (@import("../model/paragraph_flags.zig").has(intent.flags)) {
+            var target: ?usize = null;
+            for (tree.elements, 0..) |element, index| {
+                if (!element.is(head, "paraPr")) continue;
+                const raw = (try tree.attributeValue(a, index, "", "id")) orelse continue;
+                if (try @import("table_xml_fields.zig").unsigned(a, raw, 4096) == intent.id) target = index;
+            }
+            const node = target orelse return error.InvalidParagraphShapeReference;
+            const fragment = try @import("paragraph_flags_patch.zig").write(a, &tree, node, intent.flags, max_bytes);
+            defer a.free(fragment);
+            const patched = try @import("xml_source_writer.zig").write(a, tree.source, &.{.{ .start = tree.elements[node].start_tag.start, .end = tree.elements[node].end, .text = "", .serialized_xml = fragment }}, max_bytes);
+            defer a.free(patched);
+            const updated = try @import("header_tree.zig").parse(a, patched, tree.item_index, .{ .max_xml_bytes = max_bytes });
+            tree.deinit(a);
+            tree = updated;
+        }
         if (intent.keep_lines) |value| {
             var target: ?usize = null;
             for (tree.elements, 0..) |element, index| {
@@ -60,7 +88,7 @@ pub fn replacementWithFonts(a: std.mem.Allocator, source: []const u8, values: *c
         }
         const selected_template = template orelse return error.InvalidCharacterShapeReference;
         // Metadata is not a dependency for unrelated property writes.
-        if (intent.properties.text_color != null and source_profile == null) {
+        if (@import("border_fill_profile.zig").needs(intent.properties) and source_profile == null) {
             var producer = try @import("source_version_metadata.zig").readDocument(a, &document, .{});
             defer producer.deinit(a);
             source_profile = @import("source_color_profile.zig").classify(if (producer.sourceVersion) |*v| v else null);

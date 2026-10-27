@@ -16,7 +16,7 @@ pub fn count(tree: Tree, owner: usize) !usize {
     while (child < tree.nodes[owner].subtree_end) : (child = tree.nodes[child].subtree_end) {
         const node = tree.nodes[child];
         if (node.parent != owner) return error.SourceBindingMismatch;
-        if (node.record.framing.tag != @intFromEnum(body.Tag.control_header)) continue;
+        if (node.record.framing.tag != @backingInt(body.Tag.control_header)) continue;
         if (start.supports((try body.ControlHeader.parse(node.record.framing.payload)).id)) actual += 1;
     }
     return actual;
@@ -30,7 +30,7 @@ pub fn read(tree: Tree, owner: usize, wanted: usize, id: u32, readable: bool) !H
     while (child < tree.nodes[owner].subtree_end) : (child = tree.nodes[child].subtree_end) {
         const node = tree.nodes[child];
         if (node.parent != owner) return error.SourceBindingMismatch;
-        if (node.record.framing.tag != @intFromEnum(body.Tag.control_header)) continue;
+        if (node.record.framing.tag != @backingInt(body.Tag.control_header)) continue;
         const header = try body.ControlHeader.parse(node.record.framing.payload);
         if (!start.supports(header.id)) continue;
         if (ordinal == wanted) {

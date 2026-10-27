@@ -23,7 +23,7 @@ test "HWPX section definition references distinguish absent zero missing table a
     defer definitions.deinit(a);
     var inventory: resources.Report = .{ .xml_bytes = 0, .tables = @splat(.{}) };
     defer inventory.deinit(a);
-    const numbering = &inventory.tables[@intFromEnum(resources.Kind.numbering)];
+    const numbering = &inventory.tables[@backingInt(resources.Kind.numbering)];
     numbering.present = true;
     try numbering.ids.append(a, 7);
     var report = try definition_refs.inspect(&definitions, &inventory);
@@ -34,7 +34,7 @@ test "HWPX section definition references distinguish absent zero missing table a
     try std.testing.expectEqual(@as(?u32, 8), report.outline.first_unresolved_id);
     try std.testing.expectEqual(@as(usize, 2), report.memo.absent_table);
     try std.testing.expectEqual(@as(?u32, 3), report.memo.first_unresolved_id);
-    const memo = &inventory.tables[@intFromEnum(resources.Kind.memo_shape)];
+    const memo = &inventory.tables[@backingInt(resources.Kind.memo_shape)];
     memo.present = true;
     try memo.ids.append(a, 3);
     report = try definition_refs.inspect(&definitions, &inventory);

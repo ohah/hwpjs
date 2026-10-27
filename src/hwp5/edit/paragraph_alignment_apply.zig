@@ -9,6 +9,12 @@ pub fn applyWithMargins(a: std.mem.Allocator, document: *model.Document, decoded
     return applyWithProperties(a, document, decoded, version, original_count, section, index, alignment, patch, null, limit);
 }
 pub fn applyWithProperties(a: std.mem.Allocator, document: *model.Document, decoded: []const u8, version: @import("../version.zig").Version, original_count: usize, section: usize, index: usize, alignment: ?u32, patch: model.ParagraphMarginPatch, requested_spacing: ?model.ParagraphSpacing, limit: usize) !void {
+    return applyWithFlags(a, document, decoded, version, original_count, section, index, alignment, patch, requested_spacing, .{}, limit);
+}
+pub fn applyWithFlags(a: std.mem.Allocator, document: *model.Document, decoded: []const u8, version: @import("../version.zig").Version, original_count: usize, section: usize, index: usize, alignment: ?u32, patch: model.ParagraphMarginPatch, requested_spacing: ?model.ParagraphSpacing, requested_flags: @import("../../model/paragraph_flags.zig").Patch, limit: usize) !void {
+    return applyWithResources(a, document, decoded, version, original_count, section, index, alignment, patch, requested_spacing, requested_flags, .{}, limit);
+}
+pub fn applyWithResources(a: std.mem.Allocator, document: *model.Document, decoded: []const u8, version: @import("../version.zig").Version, original_count: usize, section: usize, index: usize, alignment: ?u32, patch: model.ParagraphMarginPatch, requested_spacing: ?model.ParagraphSpacing, requested_flags: @import("../../model/paragraph_flags.zig").Patch, requested_border: @import("../../model/border_fill_patch.zig").Patch, limit: usize) !void {
     if (alignment) |value| if (value > 5) return error.InvalidParagraphAlignment;
     if (requested_spacing) |value| if (value.kind > 3) return error.InvalidParagraphSpacing;
     if (section >= document.sections.len) return error.InvalidSection;
@@ -32,23 +38,31 @@ pub fn applyWithProperties(a: std.mem.Allocator, document: *model.Document, deco
         if (current_shape.modern_spacing == null and value.kind == 3) return error.UnsupportedParagraphSpacing;
         unchanged = unchanged and std.meta.eql(current_spacing, value);
     }
+    unchanged = unchanged and @import("../../model/paragraph_flags.zig").matches(current_shape.flags, requested_flags);
+    if (@import("../../model/border_fill_patch.zig").has(requested_border)) unchanged = unchanged and @import("../../model/border_fill_patch.zig").matches(try @import("border_fill_paragraph_current.zig").observe(current, version, selected.para_shape_id), requested_border);
     if (unchanged) return;
     var source_id: u32 = selected.para_shape_id;
+    var border_fill: @import("../../model/border_fill_patch.zig").Patch = .{};
     var margins: model.ParagraphMarginPatch = .{};
     var spacing: ?model.ParagraphSpacing = null;
+    var flags: @import("../../model/paragraph_flags.zig").Patch = .{};
     if (source_id >= original_count) {
         const intent = document.paragraph_resources[source_id - original_count];
         source_id = intent.source_id;
         margins = intent.margins;
         spacing = intent.spacing;
+        flags = intent.flags;
+        border_fill = intent.border_fill;
     }
     inline for (@import("../../reflection.zig").fields(model.ParagraphMarginPatch)) |field| if (@field(patch, field.name)) |value| {
         @field(margins, field.name) = value;
     };
     if (requested_spacing) |value| spacing = value;
+    flags = @import("../../model/paragraph_flags.zig").merge(flags, requested_flags);
     var pending = try borrowed.clone(a);
     defer pending.deinit(a);
-    const id = try pending.addWithProperties(a, original_count, source_id, effective_alignment, margins, spacing);
+    border_fill = @import("../../model/border_fill_patch.zig").merge(border_fill, requested_border);
+    const id = try pending.addWithResources(a, original_count, source_id, effective_alignment, margins, spacing, flags, border_fill);
     const verified = try pending.write(a, decoded, version, original_count, limit);
     defer a.free(verified);
     const entries = try pending.entries.toOwnedSlice(a);

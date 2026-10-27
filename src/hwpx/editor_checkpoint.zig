@@ -195,6 +195,7 @@ pub const Checkpoint = struct {
     allocator: std.mem.Allocator,
     source_pointer: [*]const u8,
     source_len: usize,
+    display_resource_generation: u64 = 0,
     states: []State,
     max_bytes: usize,
     paragraph_resources: Resources.Values,
@@ -232,6 +233,7 @@ pub const Checkpoint = struct {
     }
 
     fn swap(self: *Checkpoint, session: *editor.Session) void {
+        std.mem.swap(u64, &self.display_resource_generation, &session.display_resource_generation);
         std.mem.swap(Resources.Values, &self.paragraph_resources, &session.paragraph_resources);
         std.mem.swap(Characters.Values, &self.character_resources, &session.character_resources);
         std.mem.swap(@import("chart_resource_values.zig").Values, &self.chart_resources, &session.chart_resources);
@@ -292,6 +294,7 @@ pub fn cloneForRestore(self: *const Checkpoint, session: *const editor.Session, 
     }
     var view = session.*;
     view.sections = sections;
+    view.display_resource_generation = self.display_resource_generation;
     view.paragraph_resources = self.paragraph_resources;
     view.character_resources = self.character_resources;
     view.chart_resources = self.chart_resources;
@@ -302,9 +305,9 @@ pub fn cloneForRestore(self: *const Checkpoint, session: *const editor.Session, 
 pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
     _ = try size(session, max_bytes);
     const a = session.allocator;
-    var paragraph_resources = try session.paragraph_resources.clone(a);
+    var paragraph_resources = try session.paragraph_resources.cloneExact(a);
     errdefer paragraph_resources.deinit(a);
-    var character_resources = try session.character_resources.clone(a);
+    var character_resources = try session.character_resources.cloneExact(a);
     errdefer character_resources.deinit(a);
     var font_resources = try session.font_resources.clone(a);
     errdefer font_resources.deinit(a);
@@ -353,7 +356,7 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
         state.picture_frames = .{ .items = picture_frames, .capacity = picture_frames.len, .pointer_stability = .{} };
         initialized += 1;
     }
-    return .{ .allocator = a, .source_pointer = session.source.ptr, .source_len = session.source.len, .states = states, .max_bytes = max_bytes, .paragraph_resources = paragraph_resources, .character_resources = character_resources, .font_resources = font_resources, .chart_resources = chart_resources };
+    return .{ .allocator = a, .source_pointer = session.source.ptr, .source_len = session.source.len, .states = states, .max_bytes = max_bytes, .display_resource_generation = session.display_resource_generation, .paragraph_resources = paragraph_resources, .character_resources = character_resources, .font_resources = font_resources, .chart_resources = chart_resources };
 }
 
 pub fn size(session: *const editor.Session, limit: usize) !usize {
@@ -694,5 +697,5 @@ pub fn matches(snapshot: *const Checkpoint, session: *const editor.Session, limi
     var live = try capture(session, limit);
     defer live.deinit();
     const eql = @import("../model/history_value_equal.zig").equal;
-    return snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and eql(@TypeOf(live.states), snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources);
+    return snapshot.display_resource_generation == live.display_resource_generation and snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and eql(@TypeOf(live.states), snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources);
 }

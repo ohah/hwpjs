@@ -21,7 +21,7 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
     if (spans.len == 0) return error.InvalidTextPosition;
     const validation_id = spans[0].char_shape_id orelse return error.InvalidCharacterShapeReference;
     try @import("character_style_session.zig").validate(session, section, paragraph, start, end, validation_id);
-    if (start == end or (patch.strike_color == null and patch.outline_kind == null and !@import("../model/character_properties.zig").hasEffects(patch) and patch.shade == null and patch.strike_enabled == null and patch.size == null and patch.bold == null and patch.italic == null and patch.underline_kind == null and patch.underline_color == null and patch.text_color == null and patch.font_ids == null)) return false;
+    if (start == end or (!@import("../model/border_fill_patch.zig").has(patch.border_fill orelse .{}) and patch.shadow == null and patch.ratio == null and patch.char_spacing == null and patch.relative_size == null and patch.offset == null and patch.underline_style == null and patch.strike_style == null and patch.strike_color == null and patch.outline_kind == null and !@import("../model/character_properties.zig").hasEffects(patch) and patch.shade == null and patch.strike_enabled == null and patch.size == null and patch.bold == null and patch.italic == null and patch.underline_kind == null and patch.underline_color == null and patch.text_color == null and patch.font_ids == null)) return false;
     const shapes = try @import("character_style_resources.zig").displayShapes(session);
     defer a.free(shapes);
     var document = try @import("package.zig").inspectDocument(a, session.source, .{});
@@ -61,7 +61,7 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
             for (shapes) |value| if (value.id == current_id) break :block value;
             return error.InvalidCharacterShapeReference;
         };
-        if ((patch.strike_color == null or patch.strike_color.? == try @import("character_strike_color_current.zig").read(session, &underline_tree.?, current_id)) and @import("character_outline_display.zig").matches(shape.outline, patch.outline_kind) and @import("../model/character_properties.zig").effectsMatch(patch, shape.effects) and (patch.strike_enabled == null or patch.strike_enabled.? == try @import("character_strike_current.zig").read(session, &underline_tree.?, current_id)) and
+        if ((patch.border_fill == null or try @import("paragraph_border_fill_session.zig").matchesCharacterCurrent(session, current_id, patch.border_fill.?)) and (try @import("character_shadow_patch.zig").matchesCurrent(session, current_id, patch.shadow)) and (try @import("character_metric_patch.zig").matchesCurrent(session, current_id, patch)) and (patch.strike_color == null or patch.strike_color.? == try @import("character_strike_color_current.zig").read(session, &underline_tree.?, current_id)) and @import("character_outline_display.zig").matches(shape.outline, patch.outline_kind) and @import("../model/character_properties.zig").effectsMatch(patch, shape.effects) and (patch.strike_enabled == null or patch.strike_enabled.? == try @import("character_strike_current.zig").read(session, &underline_tree.?, current_id)) and
             (patch.size == null or patch.size.? == (shape.height orelse 1000)) and
             (patch.bold == null or patch.bold.? == shape.bold) and
             (patch.italic == null or patch.italic.? == shape.italic) and

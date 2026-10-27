@@ -3,8 +3,8 @@ pub const CompositingMode = enum(u8) {
     source_copy = 1,
 
     pub fn parse(raw: u8) !CompositingMode {
-        if (raw > @intFromEnum(CompositingMode.source_copy)) return error.InvalidEmfPlusCompositingMode;
-        return @enumFromInt(raw);
+        if (raw > @backingInt(CompositingMode.source_copy)) return error.InvalidEmfPlusCompositingMode;
+        return @fromBackingInt(@intCast(raw));
     }
 };
 

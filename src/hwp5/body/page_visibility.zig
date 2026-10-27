@@ -14,7 +14,7 @@ pub const Hide = struct {
         return .{ .attributes = attributes, .extra = bytes[r.offset..] };
     }
     pub fn hides(self: Hide, target: Target) bool {
-        return self.attributes & @intFromEnum(target) != 0;
+        return self.attributes & @backingInt(target) != 0;
     }
     pub fn unknownBits(self: Hide) u32 {
         return self.attributes & ~@as(u32, 63);

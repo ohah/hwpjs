@@ -15,7 +15,7 @@ pub const Report = struct {
     values: [fields.len]?[]u8 = @splat(null),
 
     pub fn value(self: *const Report, field: Field) ?[]const u8 {
-        return self.values[@intFromEnum(field)];
+        return self.values[@backingInt(field)];
     }
 
     pub fn missingAttributes(self: *const Report) usize {

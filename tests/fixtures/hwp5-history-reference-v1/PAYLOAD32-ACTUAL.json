@@ -1,0 +1,13 @@
+{
+  "target": "wasm32-freestanding-none",
+  "pointerBits": 32,
+  "oldCommit": "ac196c0720a438871af26228051bcd3e738e15c6",
+  "inputSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+  "diagnosticWasmSHA256": "848db0925c366b0217c397101a7319cefef73c840a48e38b7b0145579a69ff65",
+  "diagnosticBytes": 868672,
+  "payloadCost": 12666,
+  "imports": [],
+  "nodeVersion": "v24.19.0",
+  "currentEngineUsed": false,
+  "productWasm": false
+}

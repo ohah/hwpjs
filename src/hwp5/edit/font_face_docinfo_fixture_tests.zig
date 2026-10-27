@@ -18,12 +18,12 @@ test "new font CFB saves reopens every ordinary fixture in seven languages" {
         for (0..7) |language| {
             const checkpoint = try session.createCheckpoint(64_000_000);
             defer checkpoint.deinit();
-            const id = try session.ensureFont(@enumFromInt(language), "Hwpjs Corpus Font");
+            const id = try session.ensureFont(@fromBackingInt(@intCast(language)), "Hwpjs Corpus Font");
             const saved = try session.save(a, .{ .allow_stale_layout = true });
             defer a.free(saved.bytes);
             const reopened = try @import("style_preservation.zig").Session.open(a, saved.bytes);
             defer reopened.close();
-            try std.testing.expectEqual(id, try reopened.ensureFont(@enumFromInt(language), "Hwpjs Corpus Font"));
+            try std.testing.expectEqual(id, try reopened.ensureFont(@fromBackingInt(@intCast(language)), "Hwpjs Corpus Font"));
             const unchanged = try reopened.save(a, .{ .allow_stale_layout = true });
             defer a.free(unchanged.bytes);
             try std.testing.expectEqualSlices(u8, saved.bytes, unchanged.bytes);
@@ -57,11 +57,11 @@ test "new font DocInfo preserves every ordinary fixture original record in seven
         const input = try @import("../stream.zig").decode(a, &source.header, try source.file.readStream(a, "/DocInfo"), 16_000_000);
         defer a.free(input);
         for (0..7) |language| {
-            const output = try @import("font_face_docinfo.zig").write(a, input, source.header.version(), @enumFromInt(language), "New", 3, 16_000_000);
+            const output = try @import("font_face_docinfo.zig").write(a, input, source.header.version(), @fromBackingInt(@intCast(language)), "New", 3, 16_000_000);
             defer a.free(output.bytes);
             const report = try @import("../docinfo/resources.zig").inspect(output.bytes, source.header.version(), .{});
             try report.validate();
-            try std.testing.expectEqual(@as(i32, @intCast(output.id + 1)), report.fontCount(@enumFromInt(language)));
+            try std.testing.expectEqual(@as(i32, @intCast(output.id + 1)), report.fontCount(@fromBackingInt(@intCast(language))));
             var originals = @import("../record.zig").Iterator.init(input, .{});
             var result = @import("../record.zig").Iterator.init(output.bytes, .{});
             var boundary: usize = 0;

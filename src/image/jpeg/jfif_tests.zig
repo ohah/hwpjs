@@ -19,7 +19,7 @@ test "JPEG JFIF densities are nonzero big endian and units are not normalized" {
     var bytes = header;
     for (0..256) |unit| {
         bytes[7] = @intCast(unit);
-        if (unit <= 2) try t.expectEqual(unit, @intFromEnum((try jfif.Header.parse(&bytes)).units)) else try t.expectError(error.InvalidJfifUnits, jfif.Header.parse(&bytes));
+        if (unit <= 2) try t.expectEqual(unit, @backingInt((try jfif.Header.parse(&bytes)).units)) else try t.expectError(error.InvalidJfifUnits, jfif.Header.parse(&bytes));
     }
     bytes[7] = 0;
     for (0..65536) |density| {

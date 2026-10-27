@@ -7,15 +7,15 @@ pub const TextRenderingHint = enum(u8) {
     clear_type_grid_fit = 5,
 
     pub fn parse(raw: u8) !TextRenderingHint {
-        if (raw > @intFromEnum(TextRenderingHint.clear_type_grid_fit)) return error.InvalidEmfPlusTextRenderingHint;
-        return @enumFromInt(raw);
+        if (raw > @backingInt(TextRenderingHint.clear_type_grid_fit)) return error.InvalidEmfPlusTextRenderingHint;
+        return @fromBackingInt(@intCast(raw));
     }
 };
 
 test "EMF+ TextRenderingHint accepts exactly the official domain" {
     const std = @import("std");
     for (0..6) |raw|
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(try TextRenderingHint.parse(@intCast(raw))));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(try TextRenderingHint.parse(@intCast(raw))));
     try std.testing.expectError(error.InvalidEmfPlusTextRenderingHint, TextRenderingHint.parse(6));
     try std.testing.expectError(error.InvalidEmfPlusTextRenderingHint, TextRenderingHint.parse(0xff));
 }

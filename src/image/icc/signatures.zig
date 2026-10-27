@@ -2,7 +2,7 @@ const std = @import("std");
 pub const ProfileClass = enum { input, display, output, device_link, color_space, abstract, named_color };
 pub fn profileClass(value: [4]u8) !ProfileClass {
     const names = [_][4]u8{ "scnr".*, "mntr".*, "prtr".*, "link".*, "spac".*, "abst".*, "nmcl".* };
-    for (names, 0..) |name, i| if (std.mem.eql(u8, &value, &name)) return @enumFromInt(i);
+    for (names, 0..) |name, i| if (std.mem.eql(u8, &value, &name)) return @fromBackingInt(@intCast(i));
     return error.InvalidIccProfileClass;
 }
 /// ICC.1 v2 Table 13 / v4 Table 19. Exact case and trailing spaces matter.

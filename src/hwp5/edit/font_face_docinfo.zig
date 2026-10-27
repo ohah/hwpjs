@@ -9,10 +9,10 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, language
     if (input.len > limit) return error.LimitExceeded;
     const report = try @import("../docinfo/resources.zig").inspect(input, version, .{});
     try report.validate();
-    const count = report.fontCount(@enumFromInt(@intFromEnum(language)));
+    const count = report.fontCount(@fromBackingInt(@intCast(@backingInt(language))));
     if (count > std.math.maxInt(u16)) return error.InvalidFontId;
     var boundary: usize = 0;
-    for (0..@as(usize, @intFromEnum(language)) + 1) |index| boundary += @intCast(report.fontCount(@enumFromInt(index)));
+    for (0..@as(usize, @backingInt(language)) + 1) |index| boundary += @intCast(report.fontCount(@fromBackingInt(@intCast(index))));
     var iterator = @import("../record.zig").Iterator.init(input, .{});
     var mapping_offset: ?usize = null;
     var fallback: ?usize = null;
@@ -21,19 +21,19 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, language
     var selected_owner = false;
     var bin_owner = false;
     while (try iterator.next()) |record| {
-        if (record.tag == @intFromEnum(Tag.id_mappings)) {
+        if (record.tag == @backingInt(Tag.id_mappings)) {
             if (record.level != 0) return error.InvalidDocInfoLevel;
-            mapping_offset = record.offset + record.raw.len - record.payload.len + (1 + @as(usize, @intFromEnum(language))) * 4;
+            mapping_offset = record.offset + record.raw.len - record.payload.len + (1 + @as(usize, @backingInt(language))) * 4;
             if (fallback == null) fallback = record.offset + record.raw.len;
         }
-        if (record.tag == @intFromEnum(Tag.bin_data)) {
+        if (record.tag == @backingInt(Tag.bin_data)) {
             if (record.level != 1) return error.InvalidDocInfoLevel;
             fallback = record.offset + record.raw.len;
             bin_owner = true;
         } else if (bin_owner) {
             if (record.level > 1) fallback = record.offset + record.raw.len else bin_owner = false;
         }
-        if (record.tag == @intFromEnum(Tag.face_name)) {
+        if (record.tag == @backingInt(Tag.face_name)) {
             if (record.level != 1) return error.InvalidDocInfoLevel;
             if (boundary == 0 and insertion == null) insertion = record.offset;
             fonts += 1;
@@ -46,7 +46,7 @@ pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, language
     const at = insertion orelse if (report.face_name_count == 0) fallback orelse return error.MissingIdMappings else return error.ResourceCountMismatch;
     const payload = try @import("font_face_payload.zig").write(a, name, name_limit, limit);
     defer a.free(payload);
-    return .{ .id = @intCast(count), .bytes = try @import("docinfo_resource_append.zig").write(a, input, at, mapping_offset orelse return error.MissingIdMappings, count, @intFromEnum(Tag.face_name), payload, limit) };
+    return .{ .id = @intCast(count), .bytes = try @import("docinfo_resource_append.zig").write(a, input, at, mapping_offset orelse return error.MissingIdMappings, count, @backingInt(Tag.face_name), payload, limit) };
 }
 
 test "font DocInfo creates first font after binary resource opaque children" {
@@ -86,13 +86,13 @@ test "font DocInfo inserts into seven independent language boundaries preserving
     try append(a, &input, 19, 1, &.{ 0, 1, 0, 'B', 0 }, 4096);
     try append(a, &input, 998, 1, "opaque next", 4096);
     for (0..7) |language| {
-        const output = try write(a, input.items, .{ .raw = 0x05000000 }, @enumFromInt(language), "New", 3, 4096);
+        const output = try write(a, input.items, .{ .raw = 0x05000000 }, @fromBackingInt(@intCast(language)), "New", 3, 4096);
         defer a.free(output.bytes);
         const expected_id: u32 = if (language == 1 or language == 3) 1 else 0;
         try std.testing.expectEqual(expected_id, output.id);
         const report = try @import("../docinfo/resources.zig").inspect(output.bytes, .{ .raw = 0x05000000 }, .{});
         try report.validate();
-        const ordinal = (try report.fontOrdinal(@enumFromInt(language), output.id)).?;
+        const ordinal = (try report.fontOrdinal(@fromBackingInt(@intCast(language)), output.id)).?;
         var result = @import("../record.zig").Iterator.init(output.bytes, .{});
         var original = @import("../record.zig").Iterator.init(input.items, .{});
         var font_index: usize = 0;

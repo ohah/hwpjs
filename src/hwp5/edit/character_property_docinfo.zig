@@ -8,6 +8,35 @@ pub const Result = struct { bytes: []u8, id: u32 };
 const underline_writer = @import("character_underline_payload.zig");
 const Mutation = union(enum) { properties: payload_writer.Patch, underline: underline_writer.Kind };
 pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, patch: payload_writer.Patch, limit: usize) !Result {
+    if (patch.border_fill) |border| {
+        var it = @import("../record.zig").Iterator.init(input, .{});
+        var n: u32 = 0;
+        var source: ?[]const u8 = null;
+        while (try it.next()) |record| if (record.tag == @backingInt(Tag.char_shape)) {
+            if (n == source_id) source = record.payload;
+            n += 1;
+        };
+        const shape = try @import("../docinfo/char_shape.zig").CharShape.parse(source orelse return error.InvalidCharacterShapeReference, version);
+        const ref = shape.border_fill_id orelse return error.MissingBorderFillReference;
+        const fill = try @import("border_fill_docinfo_patch.zig").write(a, input, version, ref, border, limit);
+        defer a.free(fill.bytes);
+        var without = patch;
+        without.border_fill = null;
+        const character = try cloneResource(a, fill.bytes, version, source_id, .{ .properties = without }, limit);
+        errdefer a.free(character.bytes);
+        var result_it = @import("../record.zig").Iterator.init(character.bytes, .{});
+        n = 0;
+        while (try result_it.next()) |record| if (record.tag == @backingInt(Tag.char_shape)) {
+            if (n == character.id) {
+                const offset = record.offset + record.raw.len - record.payload.len + @import("../docinfo/char_shape.zig").CharShape.border_fill_offset;
+                if (record.payload.len < 70) return error.MissingBorderFillReference;
+                std.mem.writeInt(u16, character.bytes[offset..][0..2], fill.id, .little);
+                return character;
+            }
+            n += 1;
+        };
+        return error.InvalidCharacterShapeReference;
+    }
     return cloneResource(a, input, version, source_id, .{ .properties = patch }, limit);
 }
 pub fn writeUnderline(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, kind: underline_writer.Kind, limit: usize) !Result {
@@ -23,14 +52,14 @@ fn cloneResource(a: std.mem.Allocator, input: []const u8, version: Version, sour
     var insertion: ?usize = null;
     var within_shape = false;
     while (try iterator.next()) |record| {
-        if (record.tag == @intFromEnum(Tag.id_mappings)) {
+        if (record.tag == @backingInt(Tag.id_mappings)) {
             if (mapping_offset != null) return error.DuplicateIdMappings;
             if (record.level != 0) return error.InvalidDocInfoLevel;
             const map = try mappings.IdMappings.parse(record.payload, version);
             declared = map.get(.char_shape).?;
-            mapping_offset = record.offset + record.raw.len - record.payload.len + @intFromEnum(mappings.Field.char_shape) * 4;
+            mapping_offset = record.offset + record.raw.len - record.payload.len + @backingInt(mappings.Field.char_shape) * 4;
         }
-        if (record.tag == @intFromEnum(Tag.char_shape)) {
+        if (record.tag == @backingInt(Tag.char_shape)) {
             if (record.level != 1) return error.InvalidDocInfoLevel;
             _ = try @import("../docinfo/char_shape.zig").CharShape.parse(record.payload, version);
             if (count == source_id) template = record.payload;
@@ -50,7 +79,7 @@ fn cloneResource(a: std.mem.Allocator, input: []const u8, version: Version, sour
         .underline => |kind| try underline_writer.write(a, source, version, kind, limit),
     };
     defer a.free(payload);
-    return .{ .bytes = try @import("docinfo_resource_append.zig").write(a, input, insertion.?, offset, declared, @intFromEnum(Tag.char_shape), payload, limit), .id = @intCast(count) };
+    return .{ .bytes = try @import("docinfo_resource_append.zig").write(a, input, insertion.?, offset, declared, @backingInt(Tag.char_shape), payload, limit), .id = @intCast(count) };
 }
 
 test "HWP5 character property DocInfo clones actual resource without changing existing records" {
@@ -68,7 +97,7 @@ test "HWP5 character property DocInfo clones actual resource without changing ex
     var index: u32 = 0;
     var inserted = false;
     while (try saved.next()) |record| {
-        if (record.tag == @intFromEnum(Tag.char_shape)) {
+        if (record.tag == @backingInt(Tag.char_shape)) {
             if (index == result.id) {
                 const shape = try @import("../docinfo/char_shape.zig").CharShape.parse(record.payload, source.header.version());
                 try std.testing.expectEqual(@as(i32, 2400), shape.size);
@@ -79,7 +108,7 @@ test "HWP5 character property DocInfo clones actual resource without changing ex
             index += 1;
         }
         const before = (try original.next()).?;
-        if (record.tag == @intFromEnum(Tag.id_mappings)) {
+        if (record.tag == @backingInt(Tag.id_mappings)) {
             try std.testing.expectEqualSlices(u8, before.payload[0..36], record.payload[0..36]);
             try std.testing.expectEqualSlices(u8, before.payload[40..], record.payload[40..]);
             try std.testing.expectEqual(std.mem.readInt(i32, before.payload[36..40], .little) + 1, std.mem.readInt(i32, record.payload[36..40], .little));

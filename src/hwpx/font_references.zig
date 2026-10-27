@@ -15,7 +15,7 @@ pub const Report = struct {
     references: [font_faces.languages.len]id_references.Counts = @splat(.{}),
 
     pub fn counts(self: *const Report, language: font_faces.Language) *const id_references.Counts {
-        return &self.references[@intFromEnum(language)];
+        return &self.references[@backingInt(language)];
     }
 };
 
@@ -76,7 +76,7 @@ const Context = struct {
         self.report.font_ref_elements += 1;
         for (font_faces.languages, font_faces.reference_names) |language, attribute| {
             const value = try attrs.attribute(self.allocator, tag, scope, attribute, self.options.max_attribute_bytes);
-            _ = try id_references.note(self.allocator, &self.report.references[@intFromEnum(language)], value, self.faces.table(language), self.item_index);
+            _ = try id_references.note(self.allocator, &self.report.references[@backingInt(language)], value, self.faces.table(language), self.item_index);
         }
     }
 };

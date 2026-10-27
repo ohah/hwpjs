@@ -12,7 +12,7 @@ pub const reference_names = [_][]const u8{ "hangul", "latin", "hanja", "japanese
 
 pub fn languageFromSource(value: []const u8) ?Language {
     for (source_names, 0..) |name, index| {
-        if (std.mem.eql(u8, value, name)) return @enumFromInt(index);
+        if (std.mem.eql(u8, value, name)) return @fromBackingInt(@intCast(index));
     }
     return null;
 }
@@ -24,7 +24,7 @@ pub const Report = struct {
     tables: [languages.len]header_resources.Table,
 
     pub fn table(self: *const Report, language: Language) *const header_resources.Table {
-        return &self.tables[@intFromEnum(language)];
+        return &self.tables[@backingInt(language)];
     }
 
     pub fn languageCountMatches(self: *const Report) ?bool {
@@ -101,7 +101,7 @@ const Context = struct {
             const raw_language = (try attrs.attribute(self.allocator, tag, scope, "lang", self.options.max_attribute_bytes)) orelse return error.MissingFontLanguage;
             defer self.allocator.free(raw_language);
             const language = languageFromSource(raw_language) orelse return error.InvalidFontLanguage;
-            const table = &self.tables[@intFromEnum(language)];
+            const table = &self.tables[@backingInt(language)];
             if (table.present) return error.DuplicateFontLanguage;
             table.present = true;
             const count = try attrs.attribute(self.allocator, tag, scope, "fontCnt", self.options.max_attribute_bytes);
@@ -117,7 +117,7 @@ const Context = struct {
         defer self.allocator.free(raw_id);
         const id = std.fmt.parseInt(u32, raw_id, 10) catch return error.InvalidFontId;
         if (self.total_ids == self.options.max_font_ids) return error.LimitExceeded;
-        try self.tables[@intFromEnum(language)].ids.append(self.allocator, id);
+        try self.tables[@backingInt(language)].ids.append(self.allocator, id);
         self.total_ids += 1;
     }
 };

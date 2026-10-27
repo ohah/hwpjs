@@ -13,7 +13,7 @@ fn header(compressed: bool) !Header {
 }
 
 fn item(compression: Compression) BinData {
-    return .{ .attributes = @as(u16, @intFromEnum(compression)) << 4, .data = .{ .storage = 1 }, .extra = &.{} };
+    return .{ .attributes = @as(u16, @backingInt(compression)) << 4, .data = .{ .storage = 1 }, .extra = &.{} };
 }
 
 fn exercise(a: std.mem.Allocator, default_compressed: bool, compression: Compression) !void {

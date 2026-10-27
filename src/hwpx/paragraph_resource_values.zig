@@ -1,12 +1,14 @@
 //! New resource intents only; serialized header XML is never mutable state.
 const std = @import("std");
 pub const Entry = struct {
+    border_fill: @import("../model/border_fill_patch.zig").Patch = .{},
     source_id: u32,
     id: u32,
     alignment: ?@import("paragraph_resource_clone.zig").Alignment,
     margins: @import("paragraph_margin_patch.zig").Patch = .{},
     spacing: ?@import("paragraph_spacing_patch.zig").Spacing = null,
     keep_lines: ?bool = null,
+    flags: @import("../model/paragraph_flags.zig").Patch = .{},
 };
 pub const Values = struct {
     entries: std.ArrayList(Entry) = .empty,
@@ -14,6 +16,11 @@ pub const Values = struct {
     pub fn deinit(self: *Values, a: std.mem.Allocator) void {
         self.entries.deinit(a);
         self.* = .{};
+    }
+    // 이력 스냅샷은 실제 항목만 소유한다. 복원 후 append는 일반 성장 규칙을 따른다.
+    pub fn cloneExact(self: *const Values, a: std.mem.Allocator) !Values {
+        const items = try a.dupe(Entry, self.entries.items);
+        return .{ .entries = std.ArrayList(Entry).fromOwnedSlice(items) };
     }
     pub fn clone(self: *const Values, a: std.mem.Allocator) !Values {
         var output: Values = .{};
@@ -32,6 +39,12 @@ pub const Values = struct {
         return self.addWithBreakProperties(a, original, source_id, alignment, margins, spacing, null);
     }
     pub fn addWithBreakProperties(self: *Values, a: std.mem.Allocator, original: []const u32, source_id: u32, alignment: ?@import("paragraph_resource_clone.zig").Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing, keep_lines: ?bool) !u32 {
+        return self.addWithFlags(a, original, source_id, alignment, margins, spacing, keep_lines, .{});
+    }
+    pub fn addWithFlags(self: *Values, a: std.mem.Allocator, original: []const u32, source_id: u32, alignment: ?@import("paragraph_resource_clone.zig").Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing, keep_lines: ?bool, flags: @import("../model/paragraph_flags.zig").Patch) !u32 {
+        return self.addWithResources(a, original, source_id, alignment, margins, spacing, keep_lines, flags, .{});
+    }
+    pub fn addWithResources(self: *Values, a: std.mem.Allocator, original: []const u32, source_id: u32, alignment: ?@import("paragraph_resource_clone.zig").Alignment, margins: @import("paragraph_margin_patch.zig").Patch, spacing: ?@import("paragraph_spacing_patch.zig").Spacing, keep_lines: ?bool, flags: @import("../model/paragraph_flags.zig").Patch, border_fill: @import("../model/border_fill_patch.zig").Patch) !u32 {
         if (spacing) |value| try @import("paragraph_spacing_patch.zig").validate(value);
         try @import("paragraph_style_resources.zig").requireExisting(original, source_id);
         var occupied: std.ArrayList(u32) = .empty;
@@ -39,12 +52,12 @@ pub const Values = struct {
         try occupied.appendSlice(a, original);
         for (self.entries.items) |entry| {
             // Reuse an identical intent; repeated application must not grow resources.
-            if (entry.source_id == source_id and entry.alignment == alignment and std.meta.eql(entry.margins, margins) and std.meta.eql(entry.spacing, spacing) and entry.keep_lines == keep_lines) return entry.id;
+            if (entry.source_id == source_id and entry.alignment == alignment and std.meta.eql(entry.margins, margins) and std.meta.eql(entry.spacing, spacing) and entry.keep_lines == keep_lines and std.meta.eql(entry.flags, flags) and std.meta.eql(entry.border_fill, border_fill)) return entry.id;
             try occupied.append(a, entry.id);
         }
         std.mem.sort(u32, occupied.items, {}, std.sort.asc(u32));
         const id = try @import("resource_id_allocate.zig").next(occupied.items);
-        try self.entries.append(a, .{ .source_id = source_id, .id = id, .alignment = alignment, .margins = margins, .spacing = spacing, .keep_lines = keep_lines });
+        try self.entries.append(a, .{ .source_id = source_id, .id = id, .alignment = alignment, .margins = margins, .spacing = spacing, .keep_lines = keep_lines, .flags = flags, .border_fill = border_fill });
         return id;
     }
 };

@@ -23,9 +23,9 @@ pub fn intent(value: u32) !GamutMappingIntent {
 
 test "logical color-space and gamut intent values are exact" {
     for ([_]u32{ 0, 0x73524742, 0x57696e20 }) |value|
-        try std.testing.expectEqual(value, @intFromEnum(try logical(value)));
+        try std.testing.expectEqual(value, @backingInt(try logical(value)));
     for ([_]u32{ 1, 2, 4, 8 }) |value|
-        try std.testing.expectEqual(value, @intFromEnum(try intent(value)));
+        try std.testing.expectEqual(value, @backingInt(try intent(value)));
     for ([_]u32{ 3, 0x4c494e4b, 0x4d424544, std.math.maxInt(u32) }) |value|
         try std.testing.expectError(error.InvalidEmfLogicalColorSpace, logical(value));
     for ([_]u32{ 0, 3, 7, 16, std.math.maxInt(u32) }) |value|

@@ -9,7 +9,7 @@ fn entry(index: usize) ?*const cfb.Entry {
 }
 fn field(index: usize, key: u32) []const u8 {
     const e = entry(index) orelse return "";
-    return switch (@as(abi.Field, @enumFromInt(key))) {
+    return switch (@as(abi.Field, @fromBackingInt(@intCast(key)))) {
         .name => e.name,
         .path => e.path,
         .content => e.content,
@@ -25,7 +25,7 @@ export fn cfb_field_len(index: usize, key: u32) usize {
 }
 export fn cfb_value(index: usize, key: u32) u64 {
     const e = entry(index) orelse return 0;
-    return switch (@as(abi.Value, @enumFromInt(key))) {
+    return switch (@as(abi.Value, @fromBackingInt(@intCast(key)))) {
         .kind => e.kind,
         .color => e.color,
         .left => e.left,

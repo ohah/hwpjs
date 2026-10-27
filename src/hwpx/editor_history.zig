@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -20,6 +20,8 @@ pub const Command = struct {
     font_name: []const u8 = "",
     paragraph_shape_id: u32 = 0,
     paragraph_alignment: @import("paragraph_resource_clone.zig").Alignment = .LEFT,
+    paragraph_flags: @import("../model/paragraph_flags.zig").Patch = .{},
+    paragraph_border_fill: @import("../model/border_fill_patch.zig").Patch = .{},
     paragraph_margins: @import("paragraph_margin_patch.zig").Patch = .{},
     paragraph_spacing: @import("paragraph_spacing_patch.zig").Spacing = .{ .kind = 0, .value = 160 },
     list_node: usize = 0,
@@ -75,6 +77,10 @@ pub const History = struct {
         self.stack.deinit();
         self.* = undefined;
     }
+    pub fn ownsSession(self: *const History, session: *const editor.Session) bool {
+        if (self.owned) |h| return h.ownsSession(session);
+        return self.source_pointer == session.source.ptr and self.allocator.ptr == session.allocator.ptr and self.allocator.vtable == session.allocator.vtable;
+    }
     fn bind(self: *const History, session: *const editor.Session) !void {
         if (self.source_pointer != session.source.ptr or self.allocator.ptr != session.allocator.ptr or self.allocator.vtable != session.allocator.vtable) return error.SourceBindingMismatch;
     }
@@ -100,7 +106,10 @@ pub const History = struct {
             };
             changed = applied or changed;
         }
-        if (!changed) return false;
+        if (!changed) {
+            session.display_resource_trusted = false;
+            return false;
+        }
         if (property_batch) {
             const saved = session.save() catch |err| {
                 try before.rollback(session);
@@ -112,6 +121,7 @@ pub const History = struct {
             try before.rollback(session);
             return err;
         };
+        @import("display_resource_generation.zig").afterCommands(session, commands, true);
         self.stack.commit(before);
         transferred = true;
         return true;
@@ -129,6 +139,7 @@ pub const History = struct {
             session.allocator.free(saved);
         }
         if (changed) _ = try checkpoints.size(session, limit);
+        @import("display_resource_generation.zig").afterCommands(session, commands, changed);
         return changed;
     }
     fn applyDeferredProperty(session: *editor.Session, command: Command) !bool {
@@ -168,6 +179,14 @@ pub const History = struct {
             .paragraph_spacing => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
                 break :block try session.setParagraphSpacing(command.section, command.paragraph, command.paragraph_spacing);
+            },
+            .paragraph_border_fill => blk: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+                break :blk try @import("paragraph_border_fill_session.zig").apply(session, command.section, command.paragraph, command.paragraph_border_fill, command.paragraph_flags);
+            },
+            .paragraph_flags => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
+                break :block try @import("paragraph_flags_session.zig").apply(session, command.section, command.paragraph, command.paragraph_flags);
             },
             .paragraph_margins => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;

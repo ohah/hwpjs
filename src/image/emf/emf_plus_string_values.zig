@@ -5,7 +5,7 @@ pub const Alignment = enum(u32) {
 
     pub fn parse(raw: u32) !Alignment {
         return switch (raw) {
-            0...2 => @enumFromInt(raw),
+            0...2 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusStringAlignment,
         };
     }
@@ -19,7 +19,7 @@ pub const DigitSubstitution = enum(u32) {
 
     pub fn parse(raw: u32) !DigitSubstitution {
         return switch (raw) {
-            0...3 => @enumFromInt(raw),
+            0...3 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusStringDigitSubstitution,
         };
     }
@@ -35,7 +35,7 @@ pub const Trimming = enum(u32) {
 
     pub fn parse(raw: u32) !Trimming {
         return switch (raw) {
-            0...5 => @enumFromInt(raw),
+            0...5 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusStringTrimming,
         };
     }
@@ -48,7 +48,7 @@ pub const HotkeyPrefix = enum(i32) {
 
     pub fn parse(raw: i32) !HotkeyPrefix {
         return switch (raw) {
-            0...2 => @enumFromInt(raw),
+            0...2 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusHotkeyPrefix,
         };
     }

@@ -1,0 +1,270 @@
+{
+  "targets": [
+    {
+      "target": "aarch64-macos",
+      "objectSHA256": "c13f16a90c37216e1419ce1c33f5692bce9c6ecb062eb00426dad1ee730e77b4",
+      "magicOffset": 1032,
+      "sizeAlign": [
+        {
+          "type": "DocumentState",
+          "size": 120,
+          "align": 8
+        },
+        {
+          "type": "TableState",
+          "size": 64,
+          "align": 8
+        },
+        {
+          "type": "Values",
+          "size": 16,
+          "align": 8
+        },
+        {
+          "type": "Section",
+          "size": 72,
+          "align": 8
+        },
+        {
+          "type": "ParagraphResourceIntent",
+          "size": 56,
+          "align": 4
+        },
+        {
+          "type": "CharacterResourceIntent",
+          "size": 128,
+          "align": 4
+        },
+        {
+          "type": "FontValue",
+          "size": 24,
+          "align": 8
+        },
+        {
+          "type": "FormValue",
+          "size": 24,
+          "align": 8
+        },
+        {
+          "type": "PictureCurrentSize",
+          "size": 136,
+          "align": 8
+        },
+        {
+          "type": "TableCellSize",
+          "size": 12,
+          "align": 4
+        },
+        {
+          "type": "Paragraph",
+          "size": 136,
+          "align": 8
+        },
+        {
+          "type": "Token",
+          "size": 24,
+          "align": 8
+        },
+        {
+          "type": "CharacterRun",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "TextRange",
+          "size": 12,
+          "align": 4
+        },
+        {
+          "type": "FieldAttributes",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "FormulaResult",
+          "size": 32,
+          "align": 8
+        }
+      ]
+    },
+    {
+      "target": "x86_64-linux-gnu",
+      "objectSHA256": "b76d951ce17d754b854cf66d95eea00b8cea21eb20520736ba6c08149c60e35f",
+      "magicOffset": 64,
+      "sizeAlign": [
+        {
+          "type": "DocumentState",
+          "size": 120,
+          "align": 8
+        },
+        {
+          "type": "TableState",
+          "size": 64,
+          "align": 8
+        },
+        {
+          "type": "Values",
+          "size": 16,
+          "align": 8
+        },
+        {
+          "type": "Section",
+          "size": 72,
+          "align": 8
+        },
+        {
+          "type": "ParagraphResourceIntent",
+          "size": 56,
+          "align": 4
+        },
+        {
+          "type": "CharacterResourceIntent",
+          "size": 128,
+          "align": 4
+        },
+        {
+          "type": "FontValue",
+          "size": 24,
+          "align": 8
+        },
+        {
+          "type": "FormValue",
+          "size": 24,
+          "align": 8
+        },
+        {
+          "type": "PictureCurrentSize",
+          "size": 136,
+          "align": 8
+        },
+        {
+          "type": "TableCellSize",
+          "size": 12,
+          "align": 4
+        },
+        {
+          "type": "Paragraph",
+          "size": 136,
+          "align": 8
+        },
+        {
+          "type": "Token",
+          "size": 24,
+          "align": 8
+        },
+        {
+          "type": "CharacterRun",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "TextRange",
+          "size": 12,
+          "align": 4
+        },
+        {
+          "type": "FieldAttributes",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "FormulaResult",
+          "size": 32,
+          "align": 8
+        }
+      ]
+    },
+    {
+      "target": "wasm32-freestanding",
+      "objectSHA256": "bebd255fafbd1363c085a71405310e8eafcaffc1e13adad331bbc90a363e6052",
+      "magicOffset": 58,
+      "sizeAlign": [
+        {
+          "type": "DocumentState",
+          "size": 60,
+          "align": 4
+        },
+        {
+          "type": "TableState",
+          "size": 32,
+          "align": 4
+        },
+        {
+          "type": "Values",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "Section",
+          "size": 36,
+          "align": 4
+        },
+        {
+          "type": "ParagraphResourceIntent",
+          "size": 56,
+          "align": 4
+        },
+        {
+          "type": "CharacterResourceIntent",
+          "size": 128,
+          "align": 4
+        },
+        {
+          "type": "FontValue",
+          "size": 16,
+          "align": 4
+        },
+        {
+          "type": "FormValue",
+          "size": 16,
+          "align": 4
+        },
+        {
+          "type": "PictureCurrentSize",
+          "size": 136,
+          "align": 8
+        },
+        {
+          "type": "TableCellSize",
+          "size": 12,
+          "align": 4
+        },
+        {
+          "type": "Paragraph",
+          "size": 92,
+          "align": 4
+        },
+        {
+          "type": "Token",
+          "size": 16,
+          "align": 4
+        },
+        {
+          "type": "CharacterRun",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "TextRange",
+          "size": 12,
+          "align": 4
+        },
+        {
+          "type": "FieldAttributes",
+          "size": 8,
+          "align": 4
+        },
+        {
+          "type": "FormulaResult",
+          "size": 24,
+          "align": 8
+        }
+      ]
+    }
+  ],
+  "native64LayoutsIdentical": true,
+  "native32LayoutDifferent": true,
+  "LinuxRuntimeExecuted": false,
+  "native64CostBasis": "old16654 실측 + 구성16타입 크기·정렬 일치 + old size식 동일/정수합산 + 동일 입력",
+  "aliasOnlyProofPath": "ALIAS-ONLY-PROOF.json"
+}

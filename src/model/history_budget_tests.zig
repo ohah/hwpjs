@@ -176,10 +176,10 @@ test "owned-v2 rejects retained current undo redo and foreign entries without ow
     try append(s, &c, 'a');
     try append(s, &c, 'b');
     try std.testing.expectError(error.CheckpointAlreadyRetained, s.plan(s.current));
-    try std.testing.expectError(error.CheckpointAlreadyRetained, s.plan(s.undo_slots[0]));
+    try std.testing.expectError(error.CheckpointAlreadyRetained, s.plan(s.undoAt(0).?));
     _ = try s.move(false, &c, restore);
     const retained = s.retained_bytes;
-    try std.testing.expectError(error.CheckpointAlreadyRetained, s.plan(s.redo_slots[0]));
+    try std.testing.expectError(error.CheckpointAlreadyRetained, s.plan(s.redoAt(0).?));
     try std.testing.expectError(error.CheckpointAlreadyRetained, S.create(a, p, s.current));
     const other_first = try capture(a, p, "other");
     const other = S.create(a, p, other_first) catch |err| {

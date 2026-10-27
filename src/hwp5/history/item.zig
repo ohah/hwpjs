@@ -27,7 +27,7 @@ pub const Item = struct {
     pub fn parse(bytes: []const u8, options: Options) !Item {
         var it = record.Iterator.init(bytes, options.framing);
         const first = try it.next() orelse return error.MissingHistoryStart;
-        const start_tag = @intFromEnum(value.Tag.start);
+        const start_tag = @backingInt(value.Tag.start);
         if (first.tag != start_tag) return error.MissingHistoryStart;
         const start = (try value.parse(first.tag, first.payload, options.start_layout)).start;
         var report: Report = .{ .records = 1, .extra_bytes = start.extra.len };
@@ -41,7 +41,7 @@ pub const Item = struct {
             const bit = value.presenceBit(r.tag);
             if (bit != 0 and presence & bit != 0) report.duplicate_presence_records += 1;
             presence |= bit;
-            if (r.tag == @intFromEnum(value.Tag.last_doc_data)) report.last_doc_records += 1;
+            if (r.tag == @backingInt(value.Tag.last_doc_data)) report.last_doc_records += 1;
             switch (parsed) {
                 .start => unreachable,
                 .end => ended = true,

@@ -1517,3 +1517,17 @@ test {
     _ = @import("company_fixture_dependency_probe.zig");
     _ = @import("native/context_history_v2_test.zig");
 }
+
+// 격리 최종 union: 각 명시 회귀 suite를 정규 Native test root에 연결한다.
+test {
+    _ = @import("testing/history_stack_shared_tests.zig");
+    _ = @import("testing/formatting_candidate_gate.zig");
+    _ = @import("testing/hwp5_history_delta_service_tests.zig");
+    _ = @import("testing/hwp5_live_text_backing_tests.zig");
+    _ = @import("testing/hwp5_live_text_window_tests.zig");
+    _ = @import("hwpx/section_grid_snapshot_tests.zig");
+    _ = @import("testing/whole_formatting_w3_tests.zig");
+    _ = @import("testing/hx_full_query_limit_tests.zig");
+    _ = @import("hwpx/character_border_fill_noop_tests.zig");
+    _ = @import("hwpx/resource_snapshot_exact_capacity_tests.zig");
+}

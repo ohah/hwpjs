@@ -4,6 +4,7 @@ const info = @import("../docinfo/reader.zig");
 pub const Shape = struct {
     id: u32,
     alignment: u3,
+    flags: @import("../../model/paragraph_flags.zig").Value = .{},
     left: i32,
     right: i32,
     indent: i32,
@@ -30,6 +31,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
         if (count >= output.len) return error.ResourceCountMismatch;
         const shape = record.value.para_shape;
         output[count] = .{ .id = @intCast(count), .alignment = @truncate(shape.attributes >> 2), .left = shape.left, .right = shape.right, .indent = shape.indent, .before = shape.before, .after = shape.after, .legacy_spacing_kind = @truncate(shape.attributes), .legacy_spacing = shape.legacy_spacing, .modern_spacing = shape.modern_spacing };
+        output[count].flags = @import("paragraph_flags_payload.zig").read(shape.attributes);
         output[count].heading_kind = @truncate(shape.attributes >> 23);
         output[count].heading_id = shape.head_id;
         output[count].packed_heading_level = @truncate(shape.attributes >> 25);

@@ -181,7 +181,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
                         if (kind == .shape_comment) try comments.register(child_index, children.items.len);
                         try children.append(owned_a, item);
                         equation.shape_child_count += 1;
-                        per_equation[@intFromEnum(kind)] += 1;
+                        per_equation[@backingInt(kind)] += 1;
                     } else shape_report.unknown_children += 1;
                 }
             }

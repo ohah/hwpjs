@@ -34,7 +34,7 @@ test "EMF+ SetTextRenderingHint parses every hint and preserves ignored reserved
         const flags: u16 = 0xff00 | @as(u16, @intCast(raw));
         const parsed = try parse(makeRecord(flags));
         try std.testing.expectEqual(flags, parsed.flags);
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(parsed.hint));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(parsed.hint));
     }
     try std.testing.expectEqual(text_rendering_hint.TextRenderingHint.clear_type_grid_fit, (try parse(makeRecord(0x0005))).hint);
 }

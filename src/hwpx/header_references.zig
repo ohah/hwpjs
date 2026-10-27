@@ -28,7 +28,7 @@ pub const Report = struct {
     references: [6]id_references.Counts = @splat(.{}),
 
     pub fn counts(self: *const Report, kind: Kind) *const id_references.Counts {
-        return &self.references[@intFromEnum(kind)];
+        return &self.references[@backingInt(kind)];
     }
 };
 
@@ -51,7 +51,7 @@ const Context = struct {
 
     fn note(self: *Context, kind: Kind, tag: xml.tags.Tag, scope: *const xml.namespaces.State, attribute: []const u8, table_kind: header_resources.Kind) !id_references.Outcome {
         const value = try attrs.attribute(self.allocator, tag, scope, attribute, self.options.max_attribute_bytes);
-        return id_references.note(self.allocator, &self.report.references[@intFromEnum(kind)], value, self.resources.table(table_kind), self.item_index);
+        return id_references.note(self.allocator, &self.report.references[@backingInt(kind)], value, self.resources.table(table_kind), self.item_index);
     }
 
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {

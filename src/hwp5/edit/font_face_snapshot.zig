@@ -56,15 +56,15 @@ fn readRows(comptime Row: type, a: std.mem.Allocator, bytes: []const u8, version
     var iterator = try info.Iterator.init(bytes, version, .{});
     while (try iterator.next()) |record| {
         if (record.value != .face_name) continue;
-        while (language < 7 and local == report.fontCount(@enumFromInt(language))) {
+        while (language < 7 and local == report.fontCount(@fromBackingInt(@intCast(language)))) {
             language += 1;
             local = 0;
         }
         if (language >= 7 or count >= rows.len) return error.ResourceCountMismatch;
         rows[count] = if (Row == Metadata)
-            try metadata(a, record.value.face_name, @enumFromInt(language), local, max_name_bytes)
+            try metadata(a, record.value.face_name, @fromBackingInt(@intCast(language)), local, max_name_bytes)
         else
-            .{ .language = @enumFromInt(language), .id = local, .name = try decodeName(a, record.value.face_name.name_utf16, max_name_bytes) };
+            .{ .language = @fromBackingInt(@intCast(language)), .id = local, .name = try decodeName(a, record.value.face_name.name_utf16, max_name_bytes) };
         count += 1;
         local += 1;
     }

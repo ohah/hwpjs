@@ -46,13 +46,13 @@ pub const Header = struct {
         return self.word(36);
     }
     pub fn has(self: *const Header, flag: Flag) bool {
-        return self.flags() & (@as(u32, 1) << @intFromEnum(flag)) != 0;
+        return self.flags() & (@as(u32, 1) << @backingInt(flag)) != 0;
     }
     pub fn licenseFlags(self: *const Header) u32 {
         return self.word(40);
     }
     pub fn hasLicense(self: *const Header, flag: LicenseFlag) bool {
-        return self.licenseFlags() & (@as(u32, 1) << @intFromEnum(flag)) != 0;
+        return self.licenseFlags() & (@as(u32, 1) << @backingInt(flag)) != 0;
     }
     pub fn encryptVersion(self: *const Header) u32 {
         return self.word(44);

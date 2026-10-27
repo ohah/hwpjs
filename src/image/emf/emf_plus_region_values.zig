@@ -11,7 +11,7 @@ pub const NodeType = enum(u32) {
 
     pub fn parse(raw: u32) !NodeType {
         return switch (raw) {
-            1...5, 0x1000_0000...0x1000_0003 => @enumFromInt(raw),
+            1...5, 0x1000_0000...0x1000_0003 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusRegionNodeType,
         };
     }

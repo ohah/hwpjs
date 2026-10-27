@@ -2,7 +2,7 @@ pub const CustomLineCapDataType = enum(i32) { default = 0, adjustable_arrow = 1 
 
 pub fn customLineCapDataType(raw: i32) !CustomLineCapDataType {
     return switch (raw) {
-        0, 1 => @enumFromInt(raw),
+        0, 1 => @fromBackingInt(@intCast(raw)),
         else => error.InvalidEmfPlusCustomLineCapDataType,
     };
 }
@@ -23,7 +23,7 @@ pub const LineCapType = enum(u32) {
 
 pub fn lineCapType(raw: u32) !LineCapType {
     return switch (raw) {
-        0x00...0x03, 0x10...0x14, 0xf0, 0xff => @enumFromInt(raw),
+        0x00...0x03, 0x10...0x14, 0xf0, 0xff => @fromBackingInt(@intCast(raw)),
         else => error.InvalidEmfPlusLineCapType,
     };
 }
@@ -31,8 +31,8 @@ pub fn lineCapType(raw: u32) !LineCapType {
 pub const LineJoinType = enum(u32) { miter = 0, bevel = 1, round = 2, miter_clipped = 3 };
 
 pub fn lineJoinType(raw: u32) !LineJoinType {
-    if (raw > @intFromEnum(LineJoinType.miter_clipped)) return error.InvalidEmfPlusLineJoinType;
-    return @enumFromInt(raw);
+    if (raw > @backingInt(LineJoinType.miter_clipped)) return error.InvalidEmfPlusLineJoinType;
+    return @fromBackingInt(@intCast(raw));
 }
 
 pub const CustomLineCapDataFlags = packed struct(u32) {
@@ -60,11 +60,11 @@ test "EMF+ custom line cap enums and flags accept only official values" {
     try std.testing.expectError(error.InvalidEmfPlusCustomLineCapDataType, customLineCapDataType(-1));
     try std.testing.expectError(error.InvalidEmfPlusCustomLineCapDataType, customLineCapDataType(2));
     for ([_]u32{ 0, 1, 2, 3, 0x10, 0x11, 0x12, 0x13, 0x14, 0xf0, 0xff }) |raw|
-        try std.testing.expectEqual(raw, @intFromEnum(try lineCapType(raw)));
+        try std.testing.expectEqual(raw, @backingInt(try lineCapType(raw)));
     for ([_]u32{ 4, 0x0f, 0x15, 0xef, 0xf1, 0xfe, 0x100, 0xffffffff }) |raw|
         try std.testing.expectError(error.InvalidEmfPlusLineCapType, lineCapType(raw));
     for (0..4) |raw|
-        try std.testing.expectEqual(@as(u32, @intCast(raw)), @intFromEnum(try lineJoinType(@intCast(raw))));
+        try std.testing.expectEqual(@as(u32, @intCast(raw)), @backingInt(try lineJoinType(@intCast(raw))));
     try std.testing.expectError(error.InvalidEmfPlusLineJoinType, lineJoinType(4));
     try std.testing.expectError(error.InvalidEmfPlusLineJoinType, lineJoinType(0xffffffff));
     try validateCustomLineCapDataFlags(3);

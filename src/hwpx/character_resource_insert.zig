@@ -7,6 +7,11 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, template: usize, id: u32, 
     return writeWithProfile(a, tree, template, id, properties, limit, .{});
 }
 pub fn writeWithProfile(a: std.mem.Allocator, tree: *const Tree, template: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+    if (properties.border_fill) |border| return @import("border_fill_character_xml.zig").insert(a, tree, template, id, properties, border, limit, profile);
+    return writePreparedWithProfile(a, tree, template, id, properties, limit, profile);
+}
+pub fn writePreparedWithProfile(a: std.mem.Allocator, tree: *const Tree, template: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+    if (properties.border_fill != null) return error.UnpreparedBorderFillIntent;
     if (template >= tree.elements.len) return error.InvalidElementIndex;
     const parent = tree.elements[template].parent orelse return error.InvalidCharacterResourceParent;
     if (!tree.elements[parent].is(uri, "charProperties")) return error.InvalidCharacterResourceParent;

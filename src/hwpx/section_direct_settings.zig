@@ -60,7 +60,11 @@ comptime {
     if (descriptors.len != @typeInfo(Field).@"enum".field_names.len) @compileError("section direct setting field/descriptor mismatch");
 }
 
+pub const ObservationKey = struct { section: usize, node: usize, field: Field };
+pub const ValueErrors = std.AutoHashMap(ObservationKey, []const u8);
 pub const Options = struct {
+    kind_filter: ?Kind = null,
+    observation_errors: ?*ValueErrors = null,
     max_items: usize = 400_000,
     max_direct_children: usize = 1_000_000,
     max_attribute_bytes: usize = 4096,
@@ -154,7 +158,12 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
         if (selected) |slot| {
             const normalized = try attribute.value.toUtf8(a, options.max_attribute_bytes);
             item.raw[slot] = normalized;
-            try validate(item, descriptors[slot], normalized);
+            validate(item, descriptors[slot], normalized) catch |err| {
+                const errors = options.observation_errors orelse return err;
+                switch (err) {
+                    error.InvalidNonNegativeInteger, error.InvalidUnsigned32, error.InvalidXmlBoolean => try errors.put(.{ .section = item.section_ordinal, .node = index, .field = @fromBackingInt(@intCast(slot)) }, @errorName(err)),
+                }
+            };
             item.extension_attributes += @intFromBool(descriptors[slot].extension);
         } else {
             item.other_attributes += 1;
@@ -179,6 +188,7 @@ pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: 
         if (tree.part_kind != .section or tree.elements.len == 0 or tree.section_ordinal != section_ordinal) return error.InvalidPartKind;
         for (tree.elements, 0..) |element, index| {
             const kind = elementKind(element) orelse continue;
+            if (options.kind_filter) |selected| if (kind != selected) continue;
             const parent_index = element.parent orelse continue;
             if (!tree.elements[parent_index].is(document_xml.paragraph_uri, "secPr")) continue;
             if (items.items.len == options.max_items) return error.LimitExceeded;

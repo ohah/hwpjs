@@ -5,9 +5,12 @@ const errors = @import("cfb.zig");
 const edit = @import("../hwp5/edit/style_preservation.zig");
 const Session = edit.Session;
 const History = @import("../hwp5/edit/editor_history.zig").History;
+const ReceiptMarker = struct { before_epoch: u64, epoch: u64, before_revision: u32, revision: u32 };
+var last_delta: ?ReceiptMarker = null;
 var active: ?*Session = null;
 var history: ?History = null;
 var output: ?[]u8 = null;
+var formatting_lifetime: @import("../model/formatting_binding.zig").State = .{};
 var reflow: bool = false;
 var normalization: ?@import("../cfb/observed_repairs.zig").Deviations = null;
 var available_section_copy: ?@import("../hwp5/edit/available_section_copy.zig").Report = null;
@@ -48,6 +51,8 @@ export fn hwp5_edit_reflow() u32 {
     return @intFromBool(reflow);
 }
 export fn hwp5_edit_close() void {
+    formatting_lifetime.close();
+    last_delta = null;
     view_epoch.invalidate();
     hwp5_edit_output_free();
     if (history) |*value| value.deinit();
@@ -61,8 +66,14 @@ export fn hwp5_edit_open_available_section_copy(ptr: [*]const u8, size: usize) u
     if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
     const next = @import("../hwp5/edit/available_section_copy.zig").open(a, ptr[0..size]) catch |err| return fail(err);
     // Commit only after the entire candidate session has opened successfully.
+    const next_formatting = formatting_lifetime.next() catch |err| {
+        next.session.close();
+        return fail(err);
+    };
     hwp5_edit_close();
+    formatting_lifetime = next_formatting;
     active = next.session;
+    active.?.enableHistoryDelta();
     available_section_copy = next.report;
     return 1;
 }
@@ -80,13 +91,25 @@ export fn hwp5_edit_open_observed_docinfo(ptr: [*]const u8, size: usize, normali
     if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
     if (normalize_cfb == 1) {
         const next = @import("../hwp5/edit/normalized_open.zig").openRetainingObservedDocInfo(a, ptr[0..size]) catch |err| return fail(err);
+        const next_formatting = formatting_lifetime.next() catch |err| {
+            next.session.close();
+            return fail(err);
+        };
         hwp5_edit_close();
+        formatting_lifetime = next_formatting;
         active = next.session;
+        active.?.enableHistoryDelta();
         normalization = next.deviations;
     } else {
         const next = Session.openRetainingObservedDocInfo(a, ptr[0..size]) catch |err| return fail(err);
+        const next_formatting = formatting_lifetime.next() catch |err| {
+            next.close();
+            return fail(err);
+        };
         hwp5_edit_close();
+        formatting_lifetime = next_formatting;
         active = next;
+        active.?.enableHistoryDelta();
     }
     return 1;
 }
@@ -103,8 +126,14 @@ fn openNormalizedMode(ptr: [*]const u8, size: usize, distribution: bool) u32 {
     if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
     const normalized = @import("../hwp5/edit/normalized_open.zig");
     const next = (if (distribution) normalized.openDistribution(a, ptr[0..size]) else normalized.open(a, ptr[0..size])) catch |err| return fail(err);
+    const next_formatting = formatting_lifetime.next() catch |err| {
+        next.session.close();
+        return fail(err);
+    };
     hwp5_edit_close();
+    formatting_lifetime = next_formatting;
     active = next.session;
+    active.?.enableHistoryDelta();
     normalization = next.deviations;
     return 1;
 }
@@ -125,8 +154,14 @@ export fn hwp5_edit_open_distribution(ptr: [*]const u8, size: usize) u32 {
 fn openMode(ptr: [*]const u8, size: usize, distribution: bool) u32 {
     if (size > 64 * 1024 * 1024) return fail(error.LimitExceeded);
     const next = (if (distribution) Session.openDistribution(a, ptr[0..size]) else Session.open(a, ptr[0..size])) catch |err| return fail(err);
+    const next_formatting = formatting_lifetime.next() catch |err| {
+        next.close();
+        return fail(err);
+    };
     hwp5_edit_close();
+    formatting_lifetime = next_formatting;
     active = next;
+    active.?.enableHistoryDelta();
     return 1;
 }
 export fn hwp5_edit_history_enable_options(ptr: [*]const u8, size: usize) u32 {
@@ -168,6 +203,7 @@ export fn hwp5_edit_history_revision_at(index: u32) u32 {
     return std.math.maxInt(u32);
 }
 fn travel(redo: bool) u32 {
+    last_delta = null;
     const s = session() catch |err| {
         _ = fail(err);
         return 2;
@@ -194,14 +230,48 @@ export fn hwp5_edit_redo() u32 {
     return travel(true);
 }
 fn apply(command: edit.Command) !void {
+    last_delta = null;
     const s = try session();
+    const before_epoch = try view_epoch.current();
     const next_epoch = try view_epoch.next();
     if (history) |*value| {
-        if (try value.apply(s, command)) view_epoch.value = next_epoch;
+        const before_revision = value.revision();
+        const deltas = if (value.owned) |h| h.counters.delta else 0;
+        if (try value.apply(s, command)) {
+            view_epoch.value = next_epoch;
+            if (value.owned) |h| {
+                if (h.counters.delta == deltas + 1) last_delta = .{ .before_epoch = before_epoch, .epoch = next_epoch, .before_revision = before_revision, .revision = value.revision() };
+            }
+        }
     } else {
         try s.apply(command);
         view_epoch.value = next_epoch;
     }
+}
+// Allocates only on explicit post-commit read. Failure never re-applies mutation.
+export fn hwp5_edit_last_text_delta_receipt() u32 {
+    hwp5_edit_output_free();
+    const marker = last_delta orelse return fail(error.NoExclusiveTextDelta);
+    if (marker.epoch != (view_epoch.current() catch |err| return fail(err))) return fail(error.StaleCurrentReference);
+    const wrapper = if (history) |*h| h else return fail(error.HistoryNotEnabled);
+    if (wrapper.revision() != marker.revision) return fail(error.StaleCurrentReference);
+    const h = wrapper.owned orelse return fail(error.NoExclusiveTextDelta);
+    const d = switch (h.stack.current.value) {
+        .delta => |*d| d,
+        else => return fail(error.NoExclusiveTextDelta),
+    };
+    var before_buf: [20]u8 = undefined;
+    var after_buf: [20]u8 = undefined;
+    const before_epoch = std.fmt.bufPrint(&before_buf, "{d}", .{marker.before_epoch}) catch unreachable;
+    const epoch = std.fmt.bufPrint(&after_buf, "{d}", .{marker.epoch}) catch unreachable;
+    output = std.json.Stringify.valueAlloc(a, .{ .version = @as(u32, 1), .exclusive = true, .beforeEpoch = before_epoch, .epoch = epoch, .beforeRevision = marker.before_revision, .revision = marker.revision, .section = d.section, .paragraph = d.paragraph, .sourceNode = d.after.source_node, .parentNode = d.after.parent_node, .startUnit = d.record.range.start, .removed = d.record.removed, .inserted = d.record.inserted, .totalUnits = d.after.declared_units, .runs = d.after.runs }, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_live_text_counters() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    output = std.json.Stringify.valueAlloc(a, s.liveTextCounters(), .{}) catch |err| return fail(err);
+    return 1;
 }
 
 export fn hwp5_edit_current_references(section: u32, first: u32, count: u32) u32 {
@@ -229,6 +299,22 @@ export fn hwp5_edit_copy_current_text(ptr: [*]const u8, size: usize) u32 {
         .created_cell => |r| r.section,
     };
     output = s.copyCurrentParagraphTextUtf16(a, section, reference) catch |err| return fail(err);
+    return 1;
+}
+
+// optional bounded read API. 기존 full snapshot ABI/권한/저장 동작은 그대로다.
+export fn hwp5_edit_copy_current_text_window(ptr: [*]const u8, size: usize, start: u32, end: u32) u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const epoch = view_epoch.current() catch |err| return fail(err);
+    const ref = @import("hwp5_current_reference.zig").decode(a, ptr[0..size], epoch) catch |err| return fail(err);
+    const source = switch (ref) {
+        .source => |v| v,
+        else => return fail(error.UnsupportedTextWindowReference),
+    };
+    var window = s.copySourceTextWindowUtf16(a, source.section, source.host, start, end) catch |err| return fail(err);
+    defer window.deinit(a);
+    output = @import("hwp5_text_window_wire.zig").encode(a, epoch, @intCast(source.section), window) catch |err| return fail(err);
     return 1;
 }
 
@@ -975,6 +1061,7 @@ export fn hwp5_edit_set_character_properties_ranges(ptr: [*]const u8, length: us
     return 1;
 }
 fn applyBatch(s: *Session, commands: []const edit.Command) !void {
+    last_delta = null;
     const next_epoch = try view_epoch.next();
     if (history) |*value| {
         if (try value.applyBatch(s, commands)) view_epoch.value = next_epoch;
@@ -1212,4 +1299,47 @@ export fn hwp5_edit_save(allow_stale_layout: u32) u32 {
     output = saved.bytes;
     reflow = saved.layout_requires_reflow;
     return 1;
+}
+
+const Formatting = @import("formatting_service.zig").Service(.hwp5);
+fn formattingService() !Formatting {
+    const current = try session();
+    return .{ .backend = .{ .session = current, .allocator = a }, .lifetime = &formatting_lifetime, .history = if (history) |*h| h else null };
+}
+export fn hwp5_edit_formatting_capabilities() u32 {
+    hwp5_edit_output_free();
+    const service = formattingService() catch |err| return fail(err);
+    output = service.capabilities(a) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_query_formatting(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/formatting_patch.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = formattingService() catch |err| return fail(err);
+    var request = @import("formatting_query_request.zig").decode(a, ptr[0..size], &@import("../model/formatting_projection.zig").fields) catch |err| return fail(err);
+    defer request.deinit();
+    output = service.query(a, request.value) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/formatting_patch.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = formattingService() catch |err| return fail(err);
+    var request = @import("formatting_patch_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    // Reserve before mutation; update transport epoch only on commit.
+    const next_view_epoch = view_epoch.next() catch |err| return fail(err);
+    const changed = service.apply(a, request.value) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    if (changed) {
+        view_epoch.value = next_view_epoch;
+        reflow = true;
+    }
+    return if (changed) 1 else 2;
 }

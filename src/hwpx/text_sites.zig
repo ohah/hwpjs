@@ -11,8 +11,34 @@ pub const Site = struct {
     missing_text: bool = false,
     anchor_boundary: bool = false,
 };
+pub const MutationWatch = struct { serial: *u64, active: *bool };
 pub const Sites = struct {
     items: []Site,
+    /// 활성 delta 저장소의 실제 할당. text는 해당 buffer의 연속 prefix view다.
+    delta_buffers: @import("text_backing_map.zig").Map = .empty,
+    /// snapshot clone에는 전달하지 않는다. live Session의 거래 serial만 관찰한다.
+    delta_watch: ?MutationWatch = null,
+    pub fn validateTextOwnership(self: *const Sites, index: usize) !void {
+        if (index >= self.items.len) return error.InvalidTextSite;
+        if (self.delta_buffers.get(index)) |buffer| {
+            const current = self.items[index].text;
+            if (current.ptr != buffer.ptr or current.len > buffer.len) return error.HistorySourceOwnershipUncertain;
+        }
+    }
+    pub fn prepareTextCommit(self: *const Sites, index: usize) !void {
+        try self.validateTextOwnership(index);
+        if (self.delta_watch) |watch| if (!watch.active.* and watch.serial.* == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+    }
+    pub fn finishTextCommit(self: *const Sites) void {
+        if (self.delta_watch) |watch| if (!watch.active.*) {
+            watch.serial.* += 1;
+        };
+    }
+    /// prefix slice가 아니라 등록된 실제 할당을 정확히 한 번 해제한다.
+    pub fn releaseText(self: *Sites, a: std.mem.Allocator, index: usize) void {
+        if (self.delta_buffers.fetchRemove(index)) |entry| a.free(entry.value) else a.free(self.items[index].text);
+        self.items[index].text = &.{};
+    }
     pub fn clone(self: *const Sites, a: std.mem.Allocator) !Sites {
         const items = try a.alloc(Site, self.items.len);
         var initialized: usize = 0;
@@ -28,7 +54,8 @@ pub const Sites = struct {
         return .{ .items = items };
     }
     pub fn deinit(self: *Sites, a: std.mem.Allocator) void {
-        for (self.items) |item| a.free(item.text);
+        for (self.items, 0..) |item, index| a.free(self.delta_buffers.get(index) orelse item.text);
+        self.delta_buffers.deinit(a);
         a.free(self.items);
         self.* = undefined;
     }

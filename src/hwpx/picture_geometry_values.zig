@@ -181,7 +181,7 @@ test "HWPX table shared geometry preserves source size and placement" {
         if (!fields.childIs(tree, node, "tbl")) continue;
         const expected = Values{ .width = 11337, .height = 14172, .width_relative = 4, .height_relative = 2, .treat_as_character = false, .horizontal_offset = 0, .vertical_offset = 0 };
         try std.testing.expectEqualDeep(expected, try readTable(a, tree, node));
-        try std.testing.checkAllAllocationFailures(a, struct {
+        try @import("../testing/allocation_failures.zig").check(struct {
             fn run(allocator: std.mem.Allocator, source: *const Tree, index: usize, value: Values) !void {
                 try std.testing.expectEqualDeep(value, try readTable(allocator, source, index));
             }

@@ -34,7 +34,7 @@ test "EMF+ SetPixelOffsetMode parses every mode and preserves ignored reserved b
         const flags: u16 = 0xff00 | @as(u16, @intCast(raw));
         const parsed = try parse(makeRecord(flags));
         try std.testing.expectEqual(flags, parsed.flags);
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(parsed.mode));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(parsed.mode));
     }
     try std.testing.expectEqual(pixel_offset_mode.PixelOffsetMode.none, (try parse(makeRecord(0x0003))).mode);
 }

@@ -30,7 +30,7 @@ test "BMP owns top-down RGBA and never interprets unused BI_RGB high bytes as al
 
 test "BMP preserves specified CMYK structure without decoding it as RGB" {
     var raw = f.plain;
-    f.put(&raw, 30, u32, @intFromEnum(header.Compression.cmyk));
+    f.put(&raw, 30, u32, @backingInt(header.Compression.cmyk));
     const view = try structure.inspect(&raw, .{});
     try t.expectEqual(header.Compression.cmyk, view.header.compression);
     try t.expectError(error.UnsupportedBmpPixelCompression, bmp.decode(t.allocator, &raw, options));

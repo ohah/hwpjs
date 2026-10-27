@@ -25,7 +25,7 @@ pub const Item = struct {
     fill_brushes: usize = 0,
 
     pub fn get(self: *const Item, field: Field) ?[]const u8 {
-        return self.raw[@intFromEnum(field)];
+        return self.raw[@backingInt(field)];
     }
 
     pub fn deinit(self: *Item, a: std.mem.Allocator) void {
@@ -85,7 +85,7 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
         if (selected) |slot| {
             const raw = try attribute.value.toUtf8(a, options.max_attribute_bytes);
             item.raw[slot] = raw;
-            item.unknown_enums += @intFromBool(try fields.validate(@enumFromInt(slot), raw));
+            item.unknown_enums += @intFromBool(try fields.validate(@fromBackingInt(@intCast(slot)), raw));
         } else item.other_attributes += 1;
     }
 }

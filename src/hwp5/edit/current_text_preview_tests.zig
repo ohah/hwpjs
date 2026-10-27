@@ -15,7 +15,7 @@ test "current native preview shares source framing preserves tokens and handles 
         defer session.close();
         const expected = try @import("../text_preview.zig").encode(a, bytes);
         defer a.free(expected);
-        try std.testing.checkAllAllocationFailures(a, readOwned, .{ session, expected });
+        try @import("../../testing/allocation_failures.zig").check(readOwned, .{ session, expected });
         const saved = try session.save(a, .{});
         defer a.free(saved.bytes);
         try std.testing.expectEqualSlices(u8, bytes, saved.bytes);

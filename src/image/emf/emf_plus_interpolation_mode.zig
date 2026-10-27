@@ -9,15 +9,15 @@ pub const InterpolationMode = enum(u8) {
     high_quality_bicubic = 7,
 
     pub fn parse(raw: u8) !InterpolationMode {
-        if (raw > @intFromEnum(InterpolationMode.high_quality_bicubic)) return error.InvalidEmfPlusInterpolationMode;
-        return @enumFromInt(raw);
+        if (raw > @backingInt(InterpolationMode.high_quality_bicubic)) return error.InvalidEmfPlusInterpolationMode;
+        return @fromBackingInt(@intCast(raw));
     }
 };
 
 test "EMF+ InterpolationMode accepts exactly the official domain" {
     const std = @import("std");
     for (0..8) |raw|
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(try InterpolationMode.parse(@intCast(raw))));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(try InterpolationMode.parse(@intCast(raw))));
     try std.testing.expectError(error.InvalidEmfPlusInterpolationMode, InterpolationMode.parse(8));
     try std.testing.expectError(error.InvalidEmfPlusInterpolationMode, InterpolationMode.parse(0xff));
 }

@@ -12,7 +12,7 @@ pub fn payloadFor(cipher: []const u8, block_size: BlockSize) ![]const u8 {
     if (cipher.len < 8) return error.UnexpectedEnd;
     const end = cipher.len - 8;
     if (!std.mem.eql(u8, cipher[end..][0..4], &.{ 0x38, 0xa4, 0xce, 0x59 })) return error.InvalidPasswordFooter;
-    if (end == 0 or end % @intFromEnum(block_size) != 0) return error.InvalidPasswordPayloadLength;
+    if (end == 0 or end % @backingInt(block_size) != 0) return error.InvalidPasswordPayloadLength;
     return cipher[0..end];
 }
 

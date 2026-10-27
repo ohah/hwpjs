@@ -6,6 +6,7 @@ const characters = @import("../xml/characters.zig");
 
 pub fn splice(a: std.mem.Allocator, sites: *sites_module.Sites, index: usize, start_units: u32, delete_units: u32, inserted: []const u8, max_bytes: usize) !bool {
     if (index >= sites.items.len) return error.InvalidTextSite;
+    try sites.validateTextOwnership(index);
     const text = sites.items[index].text;
     const end_units = std.math.add(u32, start_units, delete_units) catch return error.InvalidTextPosition;
     const start = try bytePosition(text, start_units);
@@ -18,12 +19,14 @@ pub fn splice(a: std.mem.Allocator, sites: *sites_module.Sites, index: usize, st
     if (std.mem.eql(u8, text[start..end], inserted)) return false;
     const kept = text.len - (end - start);
     if (kept > max_bytes or inserted.len > max_bytes - kept) return error.LimitExceeded;
+    try sites.prepareTextCommit(index);
     const replacement = try a.alloc(u8, kept + inserted.len);
     @memcpy(replacement[0..start], text[0..start]);
     @memcpy(replacement[start..][0..inserted.len], inserted);
     @memcpy(replacement[start + inserted.len ..], text[end..]);
+    sites.releaseText(a, index);
     sites.items[index].text = replacement;
-    a.free(text);
+    sites.finishTextCommit();
     return true;
 }
 

@@ -1,7 +1,7 @@
 //! Read-only display projection; original DocInfo remains authoritative.
 const std = @import("std");
 const info = @import("../docinfo/reader.zig");
-pub const Shape = struct { id: u32, height: i32, bold: bool, italic: bool, effects: @import("../../model/character_effect_flags.zig").Flags = .{}, outline_kind_raw: u3 = 0, strike_kind_raw: u3 = 0, strike_style_raw: u4 = 0, strike_color_raw: ?u32 = null, underline_kind_raw: u2 = 0, underline_style_raw: u4 = 0, underline_color_raw: u32 = 0, text_color_raw: u32 = 0, shade_color_raw: u32 = 0xffffffff, font_ids: [7]u16 = @splat(0), font_metrics: @import("character_font_metrics.zig").Values = .{} };
+pub const Shape = struct { id: u32, height: i32, bold: bool, italic: bool, effects: @import("../../model/character_effect_flags.zig").Flags = .{}, outline_kind_raw: u3 = 0, strike_kind_raw: u3 = 0, strike_style_raw: u4 = 0, strike_color_raw: ?u32 = null, underline_kind_raw: u2 = 0, underline_style_raw: u4 = 0, underline_color_raw: u32 = 0, text_color_raw: u32 = 0, shade_color_raw: u32 = 0xffffffff, font_ids: [7]u16 = @splat(0), shadow: ?@import("../../model/character_shadow.zig").Value = null, font_metrics: @import("character_font_metrics.zig").Values = .{} };
 
 pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, expected_count: usize) ![]Shape {
     if (expected_count > 100_000) return error.LimitExceeded;
@@ -22,6 +22,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
         output[count].strike_kind_raw = shape.strikeKindRaw();
         output[count].strike_style_raw = shape.strikeStyleRaw();
         output[count].strike_color_raw = shape.strike_color;
+        output[count].shadow = .{ .kind_raw = shape.shadowKindRaw(), .offset_x = shape.shadow_x, .offset_y = shape.shadow_y, .color_raw = shape.shadow_color };
         count += 1;
     }
     if (count != output.len) return error.ResourceCountMismatch;

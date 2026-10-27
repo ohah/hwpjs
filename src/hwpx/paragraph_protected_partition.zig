@@ -58,7 +58,7 @@ test "HWPX protected partition rejects duplicate missing and inherited object ow
     try std.testing.expectError(error.SourceBindingMismatch, validate(a, &tree, &paragraphs));
     paragraphs[1].protected_positions = &owned;
     try std.testing.expectError(error.SourceBindingMismatch, validate(a, &tree, &.{ paragraphs[1], paragraphs[1] }));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree, rows: []const model.Paragraph) !void {
             try validate(allocator, source, rows);
             const values: model.Values = .{ .paragraphs = @constCast(rows) };

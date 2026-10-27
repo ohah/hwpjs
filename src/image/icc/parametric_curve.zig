@@ -22,7 +22,7 @@ pub const Curve = struct {
     function: Function,
     values: [7]i32,
     pub fn get(self: Curve, parameter: Parameter) ?i32 {
-        const index = @intFromEnum(parameter);
+        const index = @backingInt(parameter);
         return if (index < self.function.count()) self.values[index] else null;
     }
 };
@@ -34,7 +34,7 @@ pub fn parse(data: []const u8) !Curve {
     if (!std.mem.allEqual(u8, data[10..12], 0)) return error.InvalidIccParametricReserved;
     const raw = std.mem.readInt(u16, data[8..10], .big);
     if (raw > 4) return error.UnsupportedIccParametricFunction;
-    const function: Function = @enumFromInt(raw);
+    const function: Function = @fromBackingInt(@intCast(raw));
     const count = function.count();
     if (data.len != 12 + count * 4) return error.InvalidIccParametricSize;
     var result: Curve = .{ .function = function, .values = @splat(0) };

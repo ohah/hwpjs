@@ -5,7 +5,7 @@ const record = @import("../record.zig");
 const body = @import("../body/reader.zig");
 
 pub fn prepare(a: std.mem.Allocator, original: record.Record, source_node: usize, result: model.FormulaResult, limit: usize) ![]u8 {
-    if (result.source_node != source_node or original.tag != @intFromEnum(body.Tag.control_header)) return error.SourceBindingMismatch;
+    if (result.source_node != source_node or original.tag != @backingInt(body.Tag.control_header)) return error.SourceBindingMismatch;
     const header = try body.ControlHeader.parse(original.payload);
     if (header.id != @import("../body/control_rules.zig").id("%fmu")) return error.SourceBindingMismatch;
     var properties = try @import("../body/field_start.zig").Properties.parse(header.properties);

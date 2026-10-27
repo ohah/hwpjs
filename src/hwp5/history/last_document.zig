@@ -11,7 +11,7 @@ pub const View = struct {
     pub fn parseObserved(bytes: []const u8, options: record.Options) !View {
         var it = record.Iterator.init(bytes, options);
         const first = try it.next() orelse return error.MissingHistoryLastDocument;
-        if (first.tag != @intFromEnum(value.Tag.last_doc_data)) return error.InvalidHistoryLastDocumentTag;
+        if (first.tag != @backingInt(value.Tag.last_doc_data)) return error.InvalidHistoryLastDocumentTag;
         // The start layout argument is unused for LASTDOCDATA.
         const text = (try value.parse(first.tag, first.payload, .spec_flag_first)).text;
         if (try it.next() != null) return error.ExtraHistoryLastDocumentRecord;

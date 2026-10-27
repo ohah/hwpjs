@@ -38,7 +38,7 @@ test "EMF+ SetAntiAliasMode parses every smoothing mode A bit and ignored reserv
             const flags: u16 = 0xff00 | @as(u16, @intCast(raw << 1)) | @intFromBool(anti_alias);
             const parsed = try parse(makeRecord(flags));
             try std.testing.expectEqual(flags, parsed.flags);
-            try std.testing.expectEqual(@as(u7, @intCast(raw)), @intFromEnum(parsed.smoothing));
+            try std.testing.expectEqual(@as(u7, @intCast(raw)), @backingInt(parsed.smoothing));
             try std.testing.expectEqual(anti_alias, parsed.anti_alias);
         }
     }

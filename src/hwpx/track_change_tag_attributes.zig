@@ -76,7 +76,7 @@ pub fn noteTag(a: std.mem.Allocator, tag: xml.tags.Tag, scope: *const xml.namesp
     const paraend = try attrs.attribute(a, tag, scope, "paraend", max_attribute_bytes);
     defer if (paraend) |value| a.free(value);
 
-    report.kinds[@intFromEnum(kind)] += 1;
+    report.kinds[@backingInt(kind)] += 1;
     try noteNumeric(id, &report.id);
     try noteNumeric(tc_id, &report.tc_id);
     if (paraend) |value| {

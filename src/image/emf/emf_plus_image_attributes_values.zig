@@ -4,7 +4,7 @@ pub const ObjectClamp = enum(i32) {
 
     pub fn parse(raw: i32) !ObjectClamp {
         return switch (raw) {
-            0, 1 => @enumFromInt(raw),
+            0, 1 => @fromBackingInt(@intCast(raw)),
             else => error.InvalidEmfPlusObjectClamp,
         };
     }

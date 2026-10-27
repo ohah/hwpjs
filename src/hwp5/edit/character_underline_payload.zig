@@ -3,7 +3,7 @@ const std = @import("std");
 const Version = @import("../version.zig").Version;
 pub const Kind = enum(u2) { none = 0, bottom = 1, top = 3 };
 pub fn attributes(input: u32, kind: Kind) u32 {
-    return (input & ~@as(u32, 0x0c)) | (@as(u32, @intFromEnum(kind)) << 2);
+    return (input & ~@as(u32, 0x0c)) | (@as(u32, @backingInt(kind)) << 2);
 }
 
 pub fn write(a: std.mem.Allocator, input: []const u8, version: Version, kind: ?Kind, limit: usize) ![]u8 {
@@ -24,7 +24,7 @@ test "HWP5 underline payload preserves every unrelated byte and version tail" {
             const output = try write(a, &input, .{ .raw = raw }, kind, 100);
             defer a.free(output);
             var expected = input;
-            if (kind) |value| expected[46] = (expected[46] & ~@as(u8, 0x0c)) | (@as(u8, @intFromEnum(value)) << 2);
+            if (kind) |value| expected[46] = (expected[46] & ~@as(u8, 0x0c)) | (@as(u8, @backingInt(value)) << 2);
             try std.testing.expectEqualSlices(u8, &expected, output);
             const repeated = try write(a, output, .{ .raw = raw }, kind, 100);
             defer a.free(repeated);

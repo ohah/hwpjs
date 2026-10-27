@@ -75,8 +75,18 @@ pub const Section = struct {
     }
 };
 pub const Session = struct {
+    /// WASM open만 설정한다. 기존 direct Zig Session은 snapshot guard를 유지한다.
+    history_delta_managed: bool = false,
+    mutation_serial: u64 = 0,
+    history_transaction_active: bool = false,
     allocator: std.mem.Allocator,
     source: []u8,
+    // 표시 자원 증명 전용이며 원시 Session 사용자는 기본적으로 허용하지 않는다.
+    display_resource_document: u64 = 0,
+    display_resource_generation: u64 = 0,
+    display_resource_trusted: bool = false,
+    // 원시 변경/소유권 불확실은 재인증하지 않고 정상 owned 이력만 재검사한다.
+    display_resource_recoverable: bool = false,
     sections: []Section,
     options: Options,
     source_fields: ?@import("source_field_analysis.zig").Source = null,
@@ -98,25 +108,85 @@ pub const Session = struct {
     }
 
     pub fn setParagraphMargins(self: *Session, section: usize, paragraph: usize, margins: @import("paragraph_margin_patch.zig").Patch) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setParagraphMarginsHistoryBody(section, paragraph, margins);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setParagraphMarginsHistoryBody(section, paragraph, margins);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setParagraphMarginsHistoryBody(self: *Session, section: usize, paragraph: usize, margins: @import("paragraph_margin_patch.zig").Patch) !bool {
         return @import("paragraph_alignment_session.zig").applyWithMargins(self, section, paragraph, null, margins);
     }
     pub fn setParagraphSpacing(self: *Session, section: usize, paragraph: usize, spacing: @import("paragraph_spacing_patch.zig").Spacing) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setParagraphSpacingHistoryBody(section, paragraph, spacing);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setParagraphSpacingHistoryBody(section, paragraph, spacing);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setParagraphSpacingHistoryBody(self: *Session, section: usize, paragraph: usize, spacing: @import("paragraph_spacing_patch.zig").Spacing) !bool {
         return @import("paragraph_alignment_session.zig").applyWithProperties(self, section, paragraph, null, .{}, spacing);
     }
     pub fn setParagraphAlignment(self: *Session, section: usize, paragraph: usize, alignment: @import("paragraph_resource_clone.zig").Alignment) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setParagraphAlignmentHistoryBody(section, paragraph, alignment);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setParagraphAlignmentHistoryBody(section, paragraph, alignment);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setParagraphAlignmentHistoryBody(self: *Session, section: usize, paragraph: usize, alignment: @import("paragraph_resource_clone.zig").Alignment) !bool {
         return @import("paragraph_alignment_session.zig").apply(self, section, paragraph, alignment);
     }
 
     pub fn splice(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.spliceHistoryBody(section_index, paragraph, start, deleted, inserted);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.spliceHistoryBody(section_index, paragraph, start, deleted, inserted);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn spliceHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
         return self.spliceMode(section_index, paragraph, start, deleted, inserted, false);
     }
 
     pub fn splitParagraph(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.splitParagraphHistoryBody(section_index, paragraph, start, deleted);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.splitParagraphHistoryBody(section_index, paragraph, start, deleted);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn splitParagraphHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
         try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").split(self, section_index, paragraph, start, deleted);
     }
 
     pub fn splitParagraphWithBreak(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, intent: @import("../model/paragraph_break.zig").Kind) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.splitParagraphWithBreakHistoryBody(section_index, paragraph, start, deleted, intent);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.splitParagraphWithBreakHistoryBody(section_index, paragraph, start, deleted, intent);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn splitParagraphWithBreakHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, intent: @import("../model/paragraph_break.zig").Kind) !bool {
         try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").splitWithBreak(self, section_index, paragraph, start, deleted, intent);
     }
@@ -132,28 +202,88 @@ pub const Session = struct {
     }
 
     pub fn splitParagraphAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.splitParagraphAnchoredHistoryBody(section_index, paragraph, start, deleted);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.splitParagraphAnchoredHistoryBody(section_index, paragraph, start, deleted);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn splitParagraphAnchoredHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32) !bool {
         try self.requireMutableHostPositions();
         return @import("paragraph_split_session.zig").splitAnchored(self, section_index, paragraph, start, deleted);
     }
 
     pub fn mergeParagraph(self: *Session, section_index: usize, paragraph: usize) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.mergeParagraphHistoryBody(section_index, paragraph);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.mergeParagraphHistoryBody(section_index, paragraph);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn mergeParagraphHistoryBody(self: *Session, section_index: usize, paragraph: usize) !bool {
         try self.requireMutableHostPositions();
         return @import("paragraph_merge_session.zig").merge(self, section_index, paragraph);
     }
 
     pub fn mergeParagraphPair(self: *Session, section_index: usize, paragraph: usize, right: usize) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.mergeParagraphPairHistoryBody(section_index, paragraph, right);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.mergeParagraphPairHistoryBody(section_index, paragraph, right);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn mergeParagraphPairHistoryBody(self: *Session, section_index: usize, paragraph: usize, right: usize) !bool {
         try self.requireMutableHostPositions();
         return @import("paragraph_merge_session.zig").mergePair(self, section_index, paragraph, right);
     }
 
     pub fn setCharacterFormat(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, id: u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCharacterFormatHistoryBody(section_index, paragraph, start, end, id);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setCharacterFormatHistoryBody(section_index, paragraph, start, end, id);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setCharacterFormatHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, id: u32) !bool {
         return @import("character_style_session.zig").apply(self, section_index, paragraph, start, end, id);
     }
 
     pub fn setCharacterProperties(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, properties: @import("../model/document.zig").CharacterPropertyPatch) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCharacterPropertiesHistoryBody(section_index, paragraph, start, end, properties);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setCharacterPropertiesHistoryBody(section_index, paragraph, start, end, properties);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setCharacterPropertiesHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, properties: @import("../model/document.zig").CharacterPropertyPatch) !bool {
         return @import("character_property_session.zig").apply(self, section_index, paragraph, start, end, properties);
     }
     pub fn setCharacterFontName(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, language: @import("font_faces.zig").Language, name: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCharacterFontNameHistoryBody(section_index, paragraph, start, end, language, name);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setCharacterFontNameHistoryBody(section_index, paragraph, start, end, language, name);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setCharacterFontNameHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, language: @import("font_faces.zig").Language, name: []const u8) !bool {
         return @import("font_creation.zig").apply(self, section_index, paragraph, start, end, language, name);
     }
 
@@ -167,10 +297,30 @@ pub const Session = struct {
         return @import("paragraph_format_session.zig").currentId(self, section, paragraph);
     }
     pub fn setParagraphFormat(self: *Session, section: usize, paragraph: usize, id: u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setParagraphFormatHistoryBody(section, paragraph, id);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setParagraphFormatHistoryBody(section, paragraph, id);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setParagraphFormatHistoryBody(self: *Session, section: usize, paragraph: usize, id: u32) !bool {
         return @import("paragraph_format_session.zig").apply(self, section, paragraph, id);
     }
 
     pub fn spliceAnchored(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.spliceAnchoredHistoryBody(section_index, paragraph, start, deleted, inserted);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.spliceAnchoredHistoryBody(section_index, paragraph, start, deleted, inserted);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn spliceAnchoredHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
         return self.spliceMode(section_index, paragraph, start, deleted, inserted, true);
     }
 
@@ -343,6 +493,16 @@ pub const Session = struct {
     }
 
     pub fn spliceFieldLabel(self: *Session, section_index: usize, paragraph: usize, begin_element: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.spliceFieldLabelHistoryBody(section_index, paragraph, begin_element, start, deleted, inserted);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.spliceFieldLabelHistoryBody(section_index, paragraph, begin_element, start, deleted, inserted);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn spliceFieldLabelHistoryBody(self: *Session, section_index: usize, paragraph: usize, begin_element: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
         const host = @import("created_table_host_splice.zig");
         if (host.hasPending(self)) {
             if (!try host.supportsFieldLabelMode(self, section_index)) return error.UnsupportedCreatedTableHostEdit;
@@ -358,11 +518,31 @@ pub const Session = struct {
         return @import("field_label_targets.zig").list(self, section_index, paragraph, 4096);
     }
     pub fn setCellSize(self: *Session, section_index: usize, cell_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCellSizeHistoryBody(section_index, cell_node, size);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setCellSizeHistoryBody(section_index, cell_node, size);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setCellSizeHistoryBody(self: *Session, section_index: usize, cell_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const section = &self.sections[section_index];
         return @import("table_cell_size_values.zig").set(self.allocator, &section.tree, &section.cell_sizes, cell_node, size, self.options.max_xml_bytes);
     }
     pub fn setPictureDimensions(self: *Session, section_index: usize, picture_node: usize, update: @import("picture_dimension_write.zig").Update) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setPictureDimensionsHistoryBody(section_index, picture_node, update);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setPictureDimensionsHistoryBody(section_index, picture_node, update);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setPictureDimensionsHistoryBody(self: *Session, section_index: usize, picture_node: usize, update: @import("picture_dimension_write.zig").Update) !bool {
         if (section_index >= self.sections.len) return error.InvalidSectionIndex;
         const section = &self.sections[section_index];
         return @import("picture_dimension_edit_values.zig").set(self.allocator, &section.tree, &section.picture_dimensions, picture_node, update, self.options.max_xml_bytes);
@@ -371,54 +551,194 @@ pub const Session = struct {
         return @import("form_checkbox_state_session.zig").read(self, section, node);
     }
     pub fn setCheckBoxState(self: *Session, section: usize, node: usize, state: @import("form_checkbox_state_session.zig").State) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCheckBoxStateHistoryBody(section, node, state);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setCheckBoxStateHistoryBody(section, node, state);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setCheckBoxStateHistoryBody(self: *Session, section: usize, node: usize, state: @import("form_checkbox_state_session.zig").State) !bool {
         return @import("form_checkbox_state_session.zig").set(self, section, node, state);
     }
     pub fn dutmalText(self: *const Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind) ![]u8 {
         return @import("dutmal_text_session.zig").read(self, section, node, kind);
     }
     pub fn setDutmalText(self: *Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind, text: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setDutmalTextHistoryBody(section, node, kind, text);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setDutmalTextHistoryBody(section, node, kind, text);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setDutmalTextHistoryBody(self: *Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind, text: []const u8) !bool {
         return @import("dutmal_text_session.zig").set(self, section, node, kind, text);
     }
     pub fn equationScript(self: *const Session, section: usize, node: usize) ![]u8 {
         return @import("equation_script_session.zig").read(self, section, node);
     }
     pub fn setEquationScript(self: *Session, section: usize, node: usize, text: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setEquationScriptHistoryBody(section, node, text);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setEquationScriptHistoryBody(section, node, text);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setEquationScriptHistoryBody(self: *Session, section: usize, node: usize, text: []const u8) !bool {
         return @import("equation_script_session.zig").set(self, section, node, text);
     }
     pub fn setFormulaDefinition(self: *Session, section_index: usize, begin: usize, formula: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setFormulaDefinitionHistoryBody(section_index, begin, formula);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setFormulaDefinitionHistoryBody(section_index, begin, formula);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setFormulaDefinitionHistoryBody(self: *Session, section_index: usize, begin: usize, formula: []const u8) !bool {
         try self.requireMutableHostPositions();
         return @import("formula_definition_edit.zig").set(self, section_index, begin, formula);
     }
     pub fn setManualFormulaResult(self: *Session, section_index: usize, begin: usize, display: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setManualFormulaResultHistoryBody(section_index, begin, display);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setManualFormulaResultHistoryBody(section_index, begin, display);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setManualFormulaResultHistoryBody(self: *Session, section_index: usize, begin: usize, display: []const u8) !bool {
         return @import("formula_result_override_edit.zig").set(self, section_index, begin, display);
     }
     pub fn spliceManualFormulaResult(self: *Session, section_index: usize, begin: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.spliceManualFormulaResultHistoryBody(section_index, begin, start, deleted, inserted);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.spliceManualFormulaResultHistoryBody(section_index, begin, start, deleted, inserted);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn spliceManualFormulaResultHistoryBody(self: *Session, section_index: usize, begin: usize, start: u32, deleted: u32, inserted: []const u8) !bool {
         return @import("formula_result_override_splice.zig").splice(self, section_index, begin, start, deleted, inserted);
     }
     pub fn setChartNumericPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setChartNumericPointHistoryBody(section_index, wrapper, point, value);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setChartNumericPointHistoryBody(section_index, wrapper, point, value);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setChartNumericPointHistoryBody(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
         return @import("chart_numeric_point_session.zig").set(self, section_index, wrapper, point, value);
     }
     pub fn setChartSeriesText(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setChartSeriesTextHistoryBody(section, wrapper, ordinal, value);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setChartSeriesTextHistoryBody(section, wrapper, ordinal, value);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setChartSeriesTextHistoryBody(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
         return @import("chart_series_text_session.zig").set(self, section, wrapper, ordinal, value);
     }
 
     pub fn setChartRichText(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setChartRichTextHistoryBody(section, wrapper, ordinal, value);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setChartRichTextHistoryBody(section, wrapper, ordinal, value);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setChartRichTextHistoryBody(self: *Session, section: usize, wrapper: usize, ordinal: usize, value: []const u8) !bool {
         return @import("chart_rich_text_session.zig").set(self, section, wrapper, ordinal, value);
     }
     pub fn setChartPoint(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setChartPointHistoryBody(section_index, wrapper, point, value);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setChartPointHistoryBody(section_index, wrapper, point, value);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setChartPointHistoryBody(self: *Session, section_index: usize, wrapper: usize, point: usize, value: []const u8) !bool {
         return @import("chart_point_session.zig").set(self, section_index, wrapper, point, value);
     }
     pub fn setChartPoints(self: *Session, section_index: usize, wrapper: usize, edits: []const @import("chart_point_write.zig").Edit) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setChartPointsHistoryBody(section_index, wrapper, edits);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setChartPointsHistoryBody(section_index, wrapper, edits);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setChartPointsHistoryBody(self: *Session, section_index: usize, wrapper: usize, edits: []const @import("chart_point_write.zig").Edit) !bool {
         return @import("chart_point_session.zig").setMany(self, section_index, wrapper, edits);
     }
     pub fn setPictureMatrix(self: *Session, section_index: usize, matrix_node: usize, values: [6]f64) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setPictureMatrixHistoryBody(section_index, matrix_node, values);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setPictureMatrixHistoryBody(section_index, matrix_node, values);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setPictureMatrixHistoryBody(self: *Session, section_index: usize, matrix_node: usize, values: [6]f64) !bool {
         return @import("picture_matrix_session.zig").set(self, section_index, matrix_node, values);
     }
     pub fn resizePicture(self: *Session, section_index: usize, picture_node: usize, size: [2]u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.resizePictureHistoryBody(section_index, picture_node, size);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.resizePictureHistoryBody(section_index, picture_node, size);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn resizePictureHistoryBody(self: *Session, section_index: usize, picture_node: usize, size: [2]u32) !bool {
         const plan = try @import("picture_resize_plan.zig").build(self, section_index, picture_node, size);
         return @import("picture_geometry_transaction.zig").applyWithFrame(self, section_index, picture_node, plan.dimensions, &plan.matrices, plan.frame, self.options.max_output_bytes);
     }
     pub fn setCellSizeForList(self: *Session, section_index: usize, list_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCellSizeForListHistoryBody(section_index, list_node, size);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try self.setCellSizeForListHistoryBody(section_index, list_node, size);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    fn setCellSizeForListHistoryBody(self: *Session, section_index: usize, list_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
         const bindings = try @import("table_display_bindings.zig").read(self.allocator, self, section_index);
         defer self.allocator.free(bindings);
         for (bindings) |binding| if (binding.owner.list_node == list_node) {

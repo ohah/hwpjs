@@ -1,0 +1,32 @@
+{
+  "oldCommit": "ac196c0720a438871af26228051bcd3e738e15c6",
+  "target": "wasm32-freestanding-none",
+  "diagnosticWasmSHA256": "e67a7108c4e040f8de741a8af4aaf5ca9ef436671f9a340b3e6c289154614981",
+  "diagnosticBytes": 5370193,
+  "inputSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+  "rows": [
+    {
+      "cap": 12665,
+      "stage": "init",
+      "error": "LimitExceeded",
+      "spliceAttempted": false,
+      "revision": null,
+      "savedBytes": 257536,
+      "savedSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+      "originalExact": true
+    },
+    {
+      "cap": 12666,
+      "stage": "apply",
+      "error": "LimitExceeded",
+      "spliceAttempted": true,
+      "revision": 0,
+      "savedBytes": 257536,
+      "savedSHA256": "b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f",
+      "originalExact": true
+    }
+  ],
+  "nodeVersion": "v24.19.0",
+  "currentEngineUsed": false,
+  "productWasm": false
+}

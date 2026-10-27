@@ -46,7 +46,7 @@ test "ColorAdjustment flag combinations and illuminants are exact" {
         try std.testing.expectError(error.InvalidEmfColorAdjustmentValues, values(raw));
 
     for (0..9) |raw|
-        try std.testing.expectEqual(@as(u16, @intCast(raw)), @intFromEnum(try illuminant(@intCast(raw))));
+        try std.testing.expectEqual(@as(u16, @intCast(raw)), @backingInt(try illuminant(@intCast(raw))));
     for ([_]u16{ 9, std.math.maxInt(u16) }) |raw|
         try std.testing.expectError(error.InvalidEmfColorAdjustmentIlluminant, illuminant(raw));
 }

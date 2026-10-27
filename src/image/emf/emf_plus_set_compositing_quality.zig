@@ -38,7 +38,7 @@ test "EMF+ SetCompositingQuality preserves every defined mode and ignored reserv
         const parsed = try parse(makeRecord(flags));
         try std.testing.expectEqual(flags, parsed.flags);
         try std.testing.expectEqual(@as(u8, @intCast(raw)), parsed.raw_quality);
-        try std.testing.expectEqual(@as(u8, @intCast(raw)), @intFromEnum(parsed.quality.defined));
+        try std.testing.expectEqual(@as(u8, @intCast(raw)), @backingInt(parsed.quality.defined));
         try std.testing.expectEqual(parsed.quality.defined, parsed.quality.effective());
     }
     try std.testing.expectEqual(compositing_quality.CompositingQuality.high_speed, (try parse(makeRecord(0x0002))).quality.defined);

@@ -33,7 +33,7 @@ fn collectRows(comptime Row: type, a: std.mem.Allocator, tree: *const @import("x
     }
     std.mem.sort(Row, rows.items, {}, struct {
         fn less(_: void, left: Row, right: Row) bool {
-            if (left.language != right.language) return @intFromEnum(left.language) < @intFromEnum(right.language);
+            if (left.language != right.language) return @backingInt(left.language) < @backingInt(right.language);
             return left.id < right.id;
         }
     }.less);

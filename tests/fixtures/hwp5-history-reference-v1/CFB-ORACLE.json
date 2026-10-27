@@ -1,0 +1,451 @@
+{
+  "library": "olefile",
+  "version": "0.47",
+  "logicalStates": 13,
+  "uniqueBlobs": 10,
+  "reports": [
+    {
+      "logicalState": "run.format.0",
+      "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14688,
+          "recordCount": 326,
+          "decodedSHA256": "7c5f7f8b5a333b70fe9e5c866d4a477ec3bb2d8e0016cb0ffcb8d746d5bea79e"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "run.format.1",
+      "sha256": "017ce7198f260438d54fadb9b0f21cd94ca8b0bbbe2f80739cb3b89396ae5a38",
+      "bytes": 256512,
+      "changedStreams": [
+        "BodyText/Section0",
+        "DocInfo"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14696,
+          "recordCount": 326,
+          "decodedSHA256": "dbf4d89d955cb69cb7949b738c6f7ef594a51ab9fa5ad46fc6e83e7948bdedde"
+        },
+        "DocInfo": {
+          "decodedBytes": 13061,
+          "recordCount": 243,
+          "decodedSHA256": "22e62d9dfe08db632896e5f4b898603aec4a55f267a878820dc37c1ee834b966"
+        }
+      }
+    },
+    {
+      "logicalState": "run.format.2",
+      "sha256": "cc83e593fb1e89908ee25edde5d75086073f61466992f1d2b6e0ed6df9301789",
+      "bytes": 256512,
+      "changedStreams": [
+        "BodyText/Section0",
+        "DocInfo"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14698,
+          "recordCount": 326,
+          "decodedSHA256": "9b12c62c1d152f6f32d7a53a6152f91a5c78fbf8b48313190126c8d146436a7e"
+        },
+        "DocInfo": {
+          "decodedBytes": 13061,
+          "recordCount": 243,
+          "decodedSHA256": "22e62d9dfe08db632896e5f4b898603aec4a55f267a878820dc37c1ee834b966"
+        }
+      }
+    },
+    {
+      "logicalState": "run.table.0",
+      "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14688,
+          "recordCount": 326,
+          "decodedSHA256": "7c5f7f8b5a333b70fe9e5c866d4a477ec3bb2d8e0016cb0ffcb8d746d5bea79e"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "run.table.1",
+      "sha256": "dbfbb8ddb590a302593e5637746105b31d8b70dc76bb59c6c9c6a46965f5c05d",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14688,
+          "recordCount": 326,
+          "decodedSHA256": "f042781869f20dae10a3a7ca2feeabe1eaa00b749c2245dbb94d11f700a7a662"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "run.table.2",
+      "sha256": "cd984beef4ebc3ae0fea00bc8ce1893ef41b1ae28c5debabe9d27743993785f6",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14690,
+          "recordCount": 326,
+          "decodedSHA256": "a51a2cd5fe687c4baddf9e50ead8071a2d3bc2395b4efb8e5c0af423b5eb431d"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "run.picture.0",
+      "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14688,
+          "recordCount": 326,
+          "decodedSHA256": "7c5f7f8b5a333b70fe9e5c866d4a477ec3bb2d8e0016cb0ffcb8d746d5bea79e"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "run.picture.1",
+      "sha256": "be3f775718b6f32e1affdcddebae23cf9e068d84ae12ec27f857196558cff7e6",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14688,
+          "recordCount": 326,
+          "decodedSHA256": "dfcdb4f20e88bff775ff6e5e8a77c37dfe6258ef1c12f0481e17248b371f9031"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "run.picture.2",
+      "sha256": "37f20f6cfad131f3898865ff665f3edaaf96f76968e9af4759e8047dfde218e1",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14690,
+          "recordCount": 326,
+          "decodedSHA256": "578b86dcbec2df103b55dd31103951344d0ebe56481075e2fe7cb8a5df2b3f5f"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "current20",
+      "sha256": "0cdf539ed6fa81dc02fef7ed291fbf481bd2f06f12311c9d5a3c6531254f83bf",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14726,
+          "recordCount": 326,
+          "decodedSHA256": "28b354bbefcfd51cf7fa9ec99fb80c24f8d1615a2650022560cfaff62c98bfe2"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "refusal.noop_external",
+      "sha256": "3544803d6faec763ae280ff05faaa4a4cdeecd5bfc091aa4aab460c37029eade",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14688,
+          "recordCount": 326,
+          "decodedSHA256": "7c5f7f8b5a333b70fe9e5c866d4a477ec3bb2d8e0016cb0ffcb8d746d5bea79e"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "refusal.changed_external",
+      "sha256": "e6ee18d9301f9dab4767ea351cdbb0761b03d1540134dbee796e78849e8c1474",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14690,
+          "recordCount": 326,
+          "decodedSHA256": "736d8d73fb0de05ef3498b6da16f3474a9740d56c54f596a5b5e4c1d61fc0786"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    },
+    {
+      "logicalState": "refusal.failed_batch",
+      "sha256": "b7e83ba649f6daa3d8b56b8d931030248e8a1877177dcd3bdf0febeb44c2c159",
+      "bytes": 245248,
+      "changedStreams": [
+        "BodyText/Section0"
+      ],
+      "unaffectedExactStreams": [
+        "\u0005HwpSummaryInformation",
+        "BinData/BIN0001.jpg",
+        "BinData/BIN0002.bmp",
+        "BinData/BIN0003.bmp",
+        "BinData/BIN0004.jpg",
+        "DocInfo",
+        "DocOptions/_LinkDoc",
+        "FileHeader",
+        "PrvImage",
+        "PrvText",
+        "Scripts/DefaultJScript",
+        "Scripts/JScriptVersion"
+      ],
+      "validatedRecordStreams": {
+        "BodyText/Section0": {
+          "decodedBytes": 14690,
+          "recordCount": 326,
+          "decodedSHA256": "581fb48f69505e57d9cdc78ca0bdde6f0ae2ca5b7ed31052cb981cdcd51416b7"
+        },
+        "DocInfo": {
+          "decodedBytes": 12983,
+          "recordCount": 242,
+          "decodedSHA256": "75216c150bb73a6968a520f0cb67def9d7c7df013de8ea1bb95ab6b50a11764d"
+        }
+      }
+    }
+  ],
+  "scope": "독립 CFB stream목록·비대상 stream exact·변경stream레코드 framing/DEFLATE 검증. 모든 서식 의미의 독립구현 검증은 아님."
+}

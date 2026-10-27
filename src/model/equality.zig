@@ -5,7 +5,7 @@ pub fn paragraph(left: model.Paragraph, right: model.Paragraph) bool {
     return equal(model.Paragraph, left, right);
 }
 
-/// Shared deep semantic comparison for adapter-owned values without unions.
+/// Shared deep semantic comparison; tagged unions require an explicit reviewed branch.
 pub fn semantic(comptime T: type, left: T, right: T) bool {
     return equal(T, left, right);
 }
@@ -21,6 +21,7 @@ pub fn document(left: model.Document, right: model.Document) bool {
 
 fn equal(comptime T: type, left: T, right: T) bool {
     if (T == @import("shade_color.zig").Intent) return std.meta.eql(left, right);
+    if (T == @import("border_fill_patch.zig").Background) return std.meta.eql(left, right);
     return switch (@typeInfo(T)) {
         .@"struct" => result: {
             inline for (@import("../reflection.zig").fields(T)) |field| {

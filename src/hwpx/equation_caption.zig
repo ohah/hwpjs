@@ -16,7 +16,7 @@ pub const SubList = struct {
     other_attributes: usize,
 
     pub fn get(self: SubList, field: para_list.Field) ?[]const u8 {
-        return self.attributes[@intFromEnum(field)];
+        return self.attributes[@backingInt(field)];
     }
 };
 

@@ -7,7 +7,7 @@ test "HWPX joined split session allocation failures preserve authority" {
     var baseline = try @import("editor_session.zig").open(a, input, .{});
     defer baseline.deinit();
     try std.testing.expect(try baseline.mergeParagraph(0, 1));
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, borrowed: *const @import("editor_session.zig").Session) !void {
             const parts = try allocator.dupe(@import("editor_session.zig").Section, borrowed.sections);
             defer allocator.free(parts);
