@@ -69,3 +69,15 @@ f5045308 기준 Git archive에 Canvas controller·이 Worker 회귀 파일만 �
 초기 분리 명령은7경로를 직접 Node에 전달했지만 archive에 없는3파일이 실제 실행 목록에서 빠졌으므로7파일 통과로 해석하지 않습니다. 그 뒤 존재를 검사하는 공통 선택 wrapper로5파일을 명시해 검증했습니다. 게시 변경은 Canvas 의도 큐 연결·조합/거부 처리와 회귀 검사이며 native form 지원·다른 로컬 renderer 변경·기본 WASM 승격을 포함하지 않습니다.
 
 이 검증은 실제 OS/브라우저 이벤트 타이밍, pending 도중 조합 입력·서식 명령·구조 변경 전체의 지원 완료가 아닙니다. native 거부를 JS 허용으로 덮어쓰거나 원본 캐시를 편집 모델로 만들지 않습니다. 큐·pure diff를 게시한 f5045308과 이 문서에 동반한 Canvas 통합/Worker 검사 게시 단위를 구분하며, 기본 WASM 승격은 여전히 별도입니다.
+
+## 입력·이력 FIFO의 비용과 token 수명
+
+입력 의도와 이력 의도는 공통 head-index FIFO를 사용합니다. 소모한 슬롯은 즉시 `undefined`로 바꾸며, 소비한 prefix가 남은 항목 이상일 때만 남은 구간을 압축합니다. K회의 삽입·소모에서 압축 복사량은 이미 소모한 항목에 상각하므로 큐 구조의 누적 비용은 O(K)입니다. 매 소모마다 전체 배열을 앞당기거나 복사하지 않습니다. pending을 Q라 하면 비어 있지 않은 큐의 retained 슬롯 수는 2Q 미만이고, 최대 대기 M항목에서 2M 미만입니다. 이는 슬롯 상한이며 실제 엔진의 할당 바이트·메모리 hard cap 보장이 아닙니다.
+
+composition은 token 객체 identity를 key로 하는 Map으로 찾습니다. 조회는 평균적 비용의 개선이며 최악 O(1)을 보장하지 않습니다. token은 대기 항목이 소모되거나 clear될 때 Map에서도 제거합니다. 같은 id를 복사한 객체에 권한을 부여하지 않습니다. 미완료 composition이 head에 있으면 뒤 history는 기다립니다. 이력의 active 항목은 size에 포함하지만 기존 maxOperations·hasCapacity는 대기 항목만 셉니다. maxUnits·세대·FIFO·ready 재진입·stale microtask 폐기 정책은 유지합니다.
+
+`completeComposition(undefined, data)`는 기존 일반 항목의 undefined token을 잘못 찾으면 예외가 발생할 수 있었지만, 이제 false로 거부합니다. null token도 false로 거부합니다. 이 fail-closed 정규화를 모든 invalid 입력의 기존 동작 동일성으로 표현하지 않습니다. 같은 token을 소모 전에 반복 완료하면 기존처럼 각 data 길이가 누적 예산에 더해집니다. 이 기존 의미는 이번 구조 개선에서 고치지 않았습니다.
+
+문자열 `textChange` 탐색·slice와 선택 structuredClone, Native 명령·ACK·개별 이력·화면 조판 비용은 별도입니다. 이 변경은 현재 1초 지연의 원인 확정이나 전체 입력 파이프라인 O(n), 브라우저 응답성 개선 완료를 뜻하지 않습니다. 검증 명령은 [개발·검증 명령](development-commands.md#입력-의도-fifo-집중-검증)을 따릅니다.
+
+후보 r2의 명시 순수 unit 10개와 포맷 후 r3의 기존 반복 단축키 명시 unit 10개는 서로 다른 범위의 기록입니다. 이를 20개의 신규 회귀나 브라우저 통합 검증으로 합산하지 않습니다. r2→r3는 Oxfmt만 실행한 이력이 있으나 별도 parser/token 동치 검사는 하지 않았으므로 그 자체를 독립 semantic 동일성 증명으로 취급하지 않습니다. strict checkJs는 통과하지 않았고 baseline의 같은 실패도 실행 대조하지 않았습니다. 실제 프로젝트 정규 타입 gate와 공식 producer 검증은 별도로 남아 있습니다.

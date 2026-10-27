@@ -1,3 +1,4 @@
+import { createTransientIntentDeque } from './transient-intent-deque.mjs';
 // Unacknowledged DOM operations only; native responses own document revisions.
 import { textChange } from './text-input.mjs';
 
@@ -12,16 +13,16 @@ export function createInputIntentQueue({ maxOperations = 1024, maxUnits = 16 * 1
   let base = null,
     projected = null,
     units = 0;
-  const entries = [];
+  const entries = createTransientIntentDeque();
   const clear = () => {
-    entries.length = 0;
+    entries.clear();
     base = projected = null;
     units = 0;
   };
   const peek = (committed) => {
     if (!entries.length) return null;
     if (committed !== base) throw new Error('InputIntentBaseMismatch');
-    const entry = entries[0];
+    const entry = entries.front();
     return {
       ...entry,
       beforeSelection: structuredClone(entry.beforeSelection),

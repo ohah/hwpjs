@@ -1,3 +1,4 @@
+import { createTransientIntentDeque } from './transient-intent-deque.mjs';
 // 앞선 DOM text intent가 끝난 뒤, history와 후속 의미 입력을 한 순서로 처리합니다.
 // 좌표나 문서 스냅샷을 저장하지 않으며 적용 시점의 현재 선택을 사용합니다.
 export function createHistoryInputIntentQueue({
@@ -21,10 +22,12 @@ export function createHistoryInputIntentQueue({
     active = false,
     processing = false,
     units = 0;
-  const entries = [];
+  const entries = createTransientIntentDeque();
+  const compositions = new Map();
   const clear = () => {
     generation++;
-    entries.length = 0;
+    entries.clear();
+    compositions.clear();
     active = false;
     units = 0;
     scheduled = false;
@@ -32,8 +35,9 @@ export function createHistoryInputIntentQueue({
   const drain = () => {
     if (processing || !ready()) return;
     active = false;
-    if (!entries.length || entries[0].compositionPending) return;
+    if (!entries.length || entries.front().compositionPending) return;
     const entry = entries.shift();
+    if (entry.token) compositions.delete(entry.token);
     units -= entry.data?.length ?? 0;
     const epoch = generation;
     processing = true;
@@ -64,6 +68,7 @@ export function createHistoryInputIntentQueue({
     const size = entry.data?.length ?? 0;
     if (entries.length >= maxOperations || size > maxUnits - units) return false;
     entries.push(entry);
+    if (entry.token) compositions.set(entry.token, entry);
     units += size;
     drain();
     return true;
@@ -98,7 +103,7 @@ export function createHistoryInputIntentQueue({
         : null;
     },
     completeComposition(token, data) {
-      const entry = entries.find((entry) => entry.token === token);
+      const entry = compositions.get(token);
       if (
         !entry ||
         token.generation !== generation ||

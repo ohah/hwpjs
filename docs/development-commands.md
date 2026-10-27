@@ -711,3 +711,15 @@ mise exec -- node --test ./tests/hwpx/display-resource-cache.test.mjs
 ```
 
 소유 복사·순수 텍스트 편집 중 재사용·서식/구조/문서/실패 경계 무효화의 단위 회귀입니다. 실제 Native 저장·브라우저 성능 검증은 [표시 투영](renderer-ack-projection.md)의 별도 근거입니다.
+
+## 입력 의도 FIFO 집중 검증
+
+[큐 단계별 비용·token 수명·검증 한계](canvas-pending-input-intents.md#입력이력-fifo의-비용과-token-수명)를 따릅니다. 존재하는 정규 entry만 실행하며, 이 명령은 Native·브라우저·공식 producer 검증을 대신하지 않습니다. 반복 단축키 검사는 현재 source를 반영한 내부 core/dist 또는 명시적으로 고정한 source alias가 필요합니다. 후보 source-alias 결과를 root/dist 통과로 읽지 않습니다.
+
+```sh
+test -f ./tests/hwp5/input-intent-queue.test.mjs || exit 1
+test -f ./tests/hwp5/history-input-intent-queue.test.mjs || exit 1
+mise exec -- node --test --test-concurrency=1 ./tests/hwp5/input-intent-queue.test.mjs ./tests/hwp5/history-input-intent-queue.test.mjs
+test -f ./packages/vanilla/tests/history-key-repeat.test.mjs || exit 1
+mise exec -- bun test ./packages/vanilla/tests/history-key-repeat.test.mjs
+```

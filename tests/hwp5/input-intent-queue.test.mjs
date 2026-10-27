@@ -40,3 +40,22 @@ test('input intent failures are atomic and limits clear without retaining text',
   assert.equal(queue.size, 0);
   assert.equal(queue.peek('anything'), null);
 });
+
+test('입력 FIFO는 반복 소모와 보충 뒤에도 순서와 한도를 유지한다', () => {
+  const queue = createInputIntentQueue({ maxOperations: 32, maxUnits: 64 });
+  let base = '',
+    projected = '';
+  for (let i = 0; i < 32; i++) {
+    queue.append(projected, projected + 'x', null, null);
+    projected += 'x';
+  }
+  for (let i = 0; i < 256; i++) {
+    base = queue.consume(base).afterText;
+    queue.append(projected, projected + 'x', null, null);
+    projected += 'x';
+    assert.equal(queue.size, 32);
+  }
+  while (queue.size) base = queue.consume(base).afterText;
+  assert.equal(base, projected);
+  assert.equal(queue.projected, null);
+});
