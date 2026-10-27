@@ -1,3 +1,8 @@
+import {
+  createHistoryPaintBarrier,
+  historySelectionStamp,
+  sameHistoryPaintStamp,
+} from './history-paint-authority.mjs';
 import { LINE_HEIGHT } from './layout.mjs';
 import {
   canvasDocumentPoint,
@@ -70,10 +75,12 @@ export function createCanvasEditor({
     (() => input.getRootNode?.().activeElement ?? ownerDocument?.activeElement);
   const events = new AbortController(),
     listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
+  let historyPaintBarrier;
   const hostControls = controls;
   controls = {
     ready: () => !events.signal.aborted && hostControls.ready(),
-    busy: () => events.signal.aborted || hostControls.busy(),
+    busy: () =>
+      events.signal.aborted || hostControls.busy() || historyPaintBarrier?.pending === true,
     request: (message) => !events.signal.aborted && hostControls.request(message),
   };
   let target = null,
@@ -136,6 +143,26 @@ export function createCanvasEditor({
     history: (kind) => performHistory(kind),
     input: (intent) => applyOrderedInput(intent),
     error: (error) => report(`대기 명령을 적용할 수 없습니다: ${error.message}`),
+  });
+  historyPaintBarrier = createHistoryPaintBarrier({
+    isPainted(selection) {
+      return (
+        !events.signal.aborted &&
+        ownerDocument?.visibilityState !== 'hidden' &&
+        sameHistoryPaintStamp(
+          historySelectionStamp(selection),
+          historySelectionStamp({ anchor, focus }),
+        ) &&
+        renderer.isSelectionPainted?.(selection) === true
+      );
+    },
+    release() {
+      canvas.dataset.selectionAuthority = 'current';
+      input.setAttribute('aria-busy', 'false');
+      updateReadOnly();
+      paint();
+      historyIntents.wake();
+    },
   });
   let splitQueryAvailable = false;
   let paragraphBreakAvailable = false;
@@ -237,8 +264,10 @@ export function createCanvasEditor({
         splitPermission.invalidate();
     }
   };
+  let reportedNote = '';
   const report = (text) => {
     note.textContent = text;
+    reportedNote = text;
   };
   const compositionProjection = () => {
     if (!multiComposition) return null;
@@ -314,7 +343,14 @@ export function createCanvasEditor({
     input.style.height = `${bounds.height}px`;
     input.style.top = `${Math.max(viewport.scrollTop, Math.min(bounds.y, viewport.scrollTop + viewport.clientHeight - bounds.height))}px`;
   };
-  renderer.onGeometry(place);
+  renderer.onGeometry(() => {
+    place();
+    historyPaintBarrier.notify();
+  });
+  if (ownerDocument?.addEventListener)
+    listen(ownerDocument, 'visibilitychange', () => {
+      if (ownerDocument.visibilityState !== 'hidden') historyPaintBarrier.notify();
+    });
   const paint = () => {
     let composition;
     if (multiComposition) composition = compositionProjection()?.composition;
@@ -329,16 +365,23 @@ export function createCanvasEditor({
       focus,
       active: activeElement() === input || drag !== null,
       composition,
+      historyPending,
     });
     canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : '';
     canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : '';
     canvas.dataset.composing = String(composing);
     place();
-    onComposition({ composing, pending: Boolean(pending || historyPending || inputIntents.size) });
+    onComposition({
+      composing,
+      pending: Boolean(
+        pending || historyPending || historyPaintBarrier.pending || inputIntents.size,
+      ),
+    });
     if (
       !composing &&
       !pending &&
       !historyPending &&
+      !historyPaintBarrier.pending &&
       !inputIntents.size &&
       input.value === committed
     )
@@ -677,14 +720,26 @@ export function createCanvasEditor({
       return false;
     }
     historyPending = true;
+    historyPaintBarrier.begin();
     if (historyRevision !== null && anchor && focus)
       historySelections.remember(historyRevision, { anchor, focus });
+    const previousNote = reportedNote;
+    const pendingNote =
+      '실행 취소/다시 실행 반영 중 · 현재 커서는 새 입력 위치가 아닙니다. 입력은 복원 위치 확인 뒤 적용됩니다.';
+    canvas.dataset.selectionAuthority = 'history-pending';
+    input.setAttribute('aria-busy', 'true');
+    report(pendingNote);
+    paint();
     if (!controls.request({ kind, origin: 'canvas' })) {
       historyPending = false;
+      historyPaintBarrier.reset();
+      canvas.dataset.selectionAuthority = 'current';
+      input.setAttribute('aria-busy', 'false');
+      if (reportedNote === pendingNote) report(previousNote);
       updateReadOnly();
+      paint();
       return false;
     }
-    input.setAttribute('aria-busy', 'true');
     return true;
   };
   const canRequestHistory = (kind) => {
@@ -2922,6 +2977,8 @@ export function createCanvasEditor({
     reset({ preserveHistory = false, selectionOrigin: origin = 'canvas' } = {}) {
       selectionOrigin = origin;
       if (events.signal.aborted) return;
+      historyPaintBarrier.reset();
+      canvas.dataset.selectionAuthority = 'current';
       historyIntents.clear();
       deferredComposition = null;
       deferredReplies = [];
@@ -2971,6 +3028,11 @@ export function createCanvasEditor({
     },
     message(message) {
       if (events.signal.aborted) return;
+      const pendingHistoryReply =
+        historyPaintBarrier.pending &&
+        historyPending &&
+        message.origin === 'canvas' &&
+        ['undo', 'redo'].includes(message.kind);
       if (
         deferredComposition &&
         composing &&
@@ -2983,7 +3045,8 @@ export function createCanvasEditor({
       }
       if (
         message.error &&
-        !['save', 'query-edit-range', 'query-split-range'].includes(message.kind)
+        !['save', 'query-edit-range', 'query-split-range'].includes(message.kind) &&
+        !pendingHistoryReply
       )
         historyIntents.clear();
       historyIntents.wake();
@@ -3187,7 +3250,6 @@ export function createCanvasEditor({
         ) {
           historyPending = false;
           updateReadOnly();
-          input.setAttribute('aria-busy', 'false');
           if (message.error) {
             report(`실행 취소/다시 실행 실패: ${message.error}`);
             return;
@@ -3224,21 +3286,13 @@ export function createCanvasEditor({
             report('실행 취소/다시 실행 적용 · 재조판 필요');
             return;
           }
-          if (versioned && message.changed) {
-            const available = historyAvailable,
-              structure = structureAvailable,
-              merge = mergeAvailable,
-              splitQuery = splitQueryAvailable,
-              breaks = paragraphBreakAvailable;
-            this.reset({ preserveHistory: true });
-            historyAvailable = available;
-            structureAvailable = structure;
-            mergeAvailable = merge;
-            splitQueryAvailable = splitQuery;
-            paragraphBreakAvailable = breaks;
-            report(
-              '이력은 적용됐지만 원래 선택 위치를 확인할 수 없습니다. 문단을 클릭해 입력을 이어가세요.',
-            );
+          if (message.changed) {
+            // 복원 권한이 없으면 대기 입력을 보존하며 임의 위치로 보내지 않습니다.
+            target = anchor = focus = null;
+            input.disabled = true;
+            renderer.preview(null);
+            paint();
+            report('이력은 적용됐지만 복원 위치를 확인할 수 없어 대기 입력을 보존했습니다.');
             return;
           }
           if (!target) {
@@ -3427,6 +3481,15 @@ export function createCanvasEditor({
           historyRevision = revision;
           if (revisionChanged && !travelMessage)
             historySelections.remember(revision, anchor && focus ? { anchor, focus } : null);
+        }
+        if (pendingHistoryReply && historyPaintBarrier.pending && !historyPending) {
+          const restoredSelection = target && anchor && focus ? { anchor, focus } : null;
+          historyPaintBarrier.acknowledge(restoredSelection);
+          canvas.dataset.selectionAuthority = restoredSelection
+            ? 'awaiting-history-paint'
+            : 'history-unresolved';
+          input.setAttribute('aria-busy', 'true');
+          paint();
         }
       }
     },

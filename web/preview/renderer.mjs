@@ -1,3 +1,4 @@
+import { historySelectionStamp, sameHistoryPaintStamp } from './history-paint-authority.mjs';
 import {
   createOwnedBodyDraftProjection,
   createStatePaintParagraphLookup,
@@ -199,6 +200,14 @@ export function createRenderer(
     }
     return canvasMeasurementPolicy.current(explicitEpoch);
   };
+  let interactionRevision = 0,
+    paintedInteractionStamp = null;
+  const interactionStamp = () => [
+    ...historySelectionStamp(interaction),
+    interaction.historyPending === true,
+    interaction.active === true,
+    ...historySelectionStamp(interaction.composition),
+  ];
   let geometryEvidence,
     measurementEpoch = 0;
   let draft = null,
@@ -433,6 +442,9 @@ export function createRenderer(
   const paint = () => {
     if (closed) return;
     flushProjection(false);
+    const paintInteractionRevision = interactionRevision;
+    const paintInteractionStamp = interactionStamp();
+    const paintSelection = interaction.historyPending ? {} : interaction;
     const metrics = canvasViewportMetrics(
       viewportElement,
       viewScale,
@@ -468,6 +480,7 @@ export function createRenderer(
     if (!resourcesPending) pictureWaitExpired = false;
     canvas.dataset.paintPending = 'false';
     paintedStamp = null;
+    paintedInteractionStamp = null;
     paintedCharts = [];
     let paintedParagraphMarks = 0;
     const paintedForms = new Set();
@@ -672,8 +685,8 @@ export function createRenderer(
     }
     const displayRanges = paragraphSelectionRanges(
       content.paragraphs,
-      interaction.anchor,
-      interaction.focus,
+      paintSelection.anchor,
+      paintSelection.focus,
       undefined,
       { sourcePositions: false },
     );
@@ -768,8 +781,8 @@ export function createRenderer(
         for (const r of rowSelectionRects(
           row,
           i,
-          interaction.anchor,
-          interaction.focus,
+          paintSelection.anchor,
+          paintSelection.focus,
           displayRanges,
         ))
           ctx.fillRect(r.x, r.y - viewport.scrollTop, r.width, r.height);
@@ -984,8 +997,8 @@ export function createRenderer(
                 row,
                 start.unit,
                 end.unit,
-                interaction.anchor,
-                interaction.focus,
+                paintSelection.anchor,
+                paintSelection.focus,
                 displayRanges,
               );
               if (shade && !selected && text !== '\ufffc') {
@@ -1140,19 +1153,23 @@ export function createRenderer(
         paintedCheckBoxes.push(box);
     }
     let paintedCaret = '';
-    if (interaction.active && (caretVisible || interaction.composition)) {
-      const caret = caretGeometry(layout, interaction.composition?.focus ?? interaction.focus);
+    if (
+      !interaction.historyPending &&
+      interaction.active &&
+      (caretVisible || interaction.composition)
+    ) {
+      const caret = caretGeometry(layout, interaction.composition?.focus ?? paintSelection.focus);
       if (caret) {
         ctx.fillStyle = '#145b96';
         const r = caret.paintGeometry ?? caret;
         paintRowTransform(ctx, r, viewport.scrollTop, () =>
           ctx.fillRect(r.x, r.y - viewport.scrollTop, 2, r.height),
         );
-        const point = interaction.composition?.focus ?? interaction.focus;
+        const point = interaction.composition?.focus ?? paintSelection.focus;
         paintedCaret = `${point.section}:${point.paragraph}:${point.unit}`;
       }
     }
-    if (interaction.composition) {
+    if (!interaction.historyPending && interaction.composition) {
       ctx.fillStyle = '#145b96';
       for (const r of selectionRects(
         layout,
@@ -1210,8 +1227,8 @@ export function createRenderer(
       paragraphMarkCount: paintedParagraphMarks,
       caret: paintedCaret,
       selection:
-        interaction.anchor && interaction.focus
-          ? { anchor: { ...interaction.anchor }, focus: { ...interaction.focus } }
+        paintSelection.anchor && paintSelection.focus
+          ? { anchor: { ...paintSelection.anchor }, focus: { ...paintSelection.focus } }
           : null,
     };
     publishLayoutDataset();
@@ -1255,6 +1272,9 @@ export function createRenderer(
       pictureStatus,
     );
     onLayout(layout, content);
+    // 알림·후처리까지 성공한 프레임만 다음 입력의 근거로 게시합니다.
+    paintedInteractionStamp =
+      interactionRevision === paintInteractionRevision ? paintInteractionStamp : null;
   };
   let frame = 0;
   const schedule = () => {
@@ -1755,6 +1775,15 @@ export function createRenderer(
     layout: () => flushProjection(),
     paintedFrame: () => paintedFrame,
     isPaintedFrameCurrent,
+    isSelectionPainted(selection) {
+      return (
+        isPaintedFrameCurrent() &&
+        !interaction.historyPending &&
+        !interaction.composition &&
+        sameHistoryPaintStamp(paintedInteractionStamp, interactionStamp()) &&
+        sameHistoryPaintStamp(historySelectionStamp(selection), historySelectionStamp(interaction))
+      );
+    },
     chartPreviews: () => paintedCharts.slice(),
     chartAtLogicalPoint: (x, y) => {
       flushProjection();
@@ -1877,11 +1906,12 @@ export function createRenderer(
     select(value) {
       if (closed) return;
       interaction = value;
+      interactionRevision++;
       caretVisible = true;
       // A new input/selection starts a full visible phase. Reusing the previous
       // interval can hide the caret immediately before this frame is painted.
       stopBlink();
-      if (interaction.active && !interaction.composition)
+      if (interaction.active && !interaction.composition && !interaction.historyPending)
         blink = setInterval(() => {
           caretVisible = !caretVisible;
           schedule();
