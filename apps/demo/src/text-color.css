@@ -1,0 +1,42 @@
+.hwp-text-color-dialog {
+  width: min(350px, calc(100vw - 24px));
+}
+.hwp-text-color-dialog .hwp-dialog-body {
+  display: grid;
+  gap: 12px;
+}
+.hwp-text-color-dialog label {
+  display: grid;
+  gap: 6px;
+}
+.hwp-text-color-dialog input {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid #b8c4db;
+  border-radius: 2px;
+  font: inherit;
+  background: #fff;
+  color: inherit;
+}
+.hwp-text-color-dialog input:focus {
+  outline: none;
+  border-color: #2463c4;
+}
+.hwp-dialog-layer.hwp-text-color-dialog input:focus-visible {
+  outline: 2px solid #2463c4;
+  outline-offset: 0;
+}
+.hwp-text-color-palette {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 6px;
+}
+.hwp-text-color-palette button {
+  min-width: 24px;
+  height: 26px;
+  border: 1px solid #666;
+}
+.hwp-text-color-palette button:focus-visible {
+  outline: 2px solid Highlight;
+  outline-offset: 2px;
+}

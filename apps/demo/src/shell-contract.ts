@@ -34,6 +34,7 @@ export type DemoCommand =
   | 'italic'
   | 'underline'
   | 'strike'
+  | 'text-color'
   | 'align-left'
   | 'align-center'
   | 'align-right'

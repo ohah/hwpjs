@@ -6,6 +6,7 @@ import { getHistoryAvailability, getSelectionFormatting } from '@hwpjs/core';
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
 import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
 import { createFormattingDialogController } from './formatting-dialog-controller.ts';
+import { createTextColorTool } from './text-color-tool.ts';
 import { createFormattingBridge } from './formatting-bridge.ts';
 import { createTextToolsBridge } from './text-tools-bridge.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
@@ -97,6 +98,16 @@ export async function mountDemo(
     },
   });
   const formatting = createFormattingBridge({ editor, onStatus: note });
+  const textColor = createTextColorTool({
+    root,
+    editor,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+    onUIError: () => note('글자색 표시를 갱신하지 못했습니다.'),
+  });
   const formatDialogs = createFormattingDialogController({
     root,
     port: formatting,
@@ -134,6 +145,7 @@ export async function mountDemo(
       history = getHistoryAvailability(state);
     const availability = {
       ...formatState.actions,
+      ...textColor.presentation(),
       ...textTools.presentation(),
       ...formatDialogs.presentation(),
       ...viewOptions.presentation(ready),
@@ -238,6 +250,7 @@ export async function mountDemo(
       note(available?.reason ?? '현재 사용할 수 없습니다.');
       return;
     }
+    if (textColor.action(action.command)) return;
     if (formatDialogs.action(action)) return;
     if (viewOptions.action(action)) {
       shell.update();
@@ -385,6 +398,7 @@ export async function mountDemo(
     contextMenu?.close();
     textTools.dispose();
     formatDialogs.dispose();
+    textColor.dispose();
     viewOptions.dispose();
     clipboard.dispose();
     sourcePolicyNotice.dispose();
@@ -414,6 +428,7 @@ export async function mountDemo(
       contextMenu?.close();
       textTools.dispose();
       formatDialogs.dispose();
+      textColor.dispose();
       viewOptions.dispose();
       clipboard.dispose();
       sourcePolicyNotice.dispose();
