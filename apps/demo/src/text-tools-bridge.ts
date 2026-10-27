@@ -2,7 +2,6 @@ import {
   SPLICE_TEXT_COMMAND,
   findTextMatch,
   selectionMatchesText,
-  getDocumentTextStatistics,
   type HeadlessEditor,
   type SelectionTarget,
 } from '@hwpjs/core';
@@ -12,7 +11,8 @@ import {
   type SearchDraft,
   type SearchDirection,
 } from './text-tools-dialog.ts';
-import { createDialogLayer } from './dialog-layer.ts';
+import { createDocumentStatisticsController } from './document-statistics-controller.ts';
+import { createDocumentStatisticsView } from './document-statistics-view.ts';
 import { replacementCaret } from './replacement-selection.ts';
 
 export function createTextToolsBridge({
@@ -31,7 +31,6 @@ export function createTextToolsBridge({
   resolveShortcut?: (event: KeyboardEvent) => string | undefined;
 }) {
   let view: ReturnType<typeof createTextToolsDialog> | undefined,
-    statistics: ReturnType<typeof createDialogLayer> | undefined,
     closed = false,
     pending = false,
     epoch = 0,
@@ -41,6 +40,12 @@ export function createTextToolsBridge({
     continuation: { version: number; query: string; mode: string } | undefined;
   let documentId = editor.getEditorState().documentId,
     generation = editor.getEditorState().generation;
+  const statistics = createDocumentStatisticsController({
+    editor,
+    createView: (dismiss) => createDocumentStatisticsView(root, dismiss),
+    onClose,
+    onStatus,
+  });
   const current = () => view?.getDraft() ?? draft;
   const clearContinuation = () => {
     continuation = undefined;
@@ -62,8 +67,7 @@ export function createTextToolsBridge({
       view.destroy();
       view = undefined;
     }
-    statistics?.destroy();
-    statistics = undefined;
+    statistics.close();
     clearContinuation();
     if (clearDraft) draft = { query: '', replacement: '', direction: 'down' };
     notify();
@@ -76,7 +80,6 @@ export function createTextToolsBridge({
       state.status !== 'ready'
     )
       close(false, true);
-    else if (statistics) close();
     documentId = state.documentId;
     generation = state.generation;
   });
@@ -249,7 +252,7 @@ export function createTextToolsBridge({
   };
   const keyboard = (event: KeyboardEvent) => {
     if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
-    if (statistics?.element.open || root.ownerDocument.querySelector?.('dialog:modal')) return;
+    if (statistics.isOpen || root.ownerDocument.querySelector?.('dialog:modal')) return;
     const target = event.target as Element | null,
       inside = view?.element.contains(target);
     if (inside) {
@@ -296,24 +299,7 @@ export function createTextToolsBridge({
         return true;
       }
       close();
-      const stats = getDocumentTextStatistics(editor.getEditorState()),
-        doc = root.ownerDocument;
-      statistics = createDialogLayer(root, {
-        role: 'document-statistics',
-        title: '문서 통계',
-        mode: 'modal',
-        onDismiss: () => close(true),
-      });
-      const text = doc.createElement('p'),
-        button = doc.createElement('button');
-      text.textContent = `${stats.complete ? '문서' : '불러온 부분'} 통계: 문단 ${stats.paragraphs}개 · 글자 ${stats.characters}개(공백 포함), ${stats.charactersWithoutWhitespace}개(공백 제외) · 어절 ${stats.words}개(공백 기준)`;
-      button.type = 'button';
-      button.textContent = '닫기';
-      button.dataset.role = 'close-text-tool';
-      button.addEventListener('click', () => close(true));
-      statistics.body.append(text);
-      statistics.footer.append(button);
-      statistics.show(button);
+      statistics.open();
       return true;
     },
     dispose() {
@@ -322,6 +308,7 @@ export function createTextToolsBridge({
       root.removeEventListener('keydown', keyboard, true);
       try {
         unsubscribe();
+        statistics.dispose();
       } finally {
         close(false, true);
       }

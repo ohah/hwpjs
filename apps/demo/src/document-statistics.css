@@ -1,0 +1,25 @@
+.hwp-document-statistics {
+  width: min(420px, calc(100vw - 24px));
+}
+.hwp-document-statistics table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+.hwp-document-statistics th,
+.hwp-document-statistics td {
+  border: 1px solid #cbd4e6;
+  padding: 9px 12px;
+}
+.hwp-document-statistics th {
+  text-align: left;
+  font-weight: 500;
+}
+.hwp-document-statistics td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.hwp-document-statistics .hwp-statistics-note {
+  margin-bottom: 0;
+  color: #526174;
+}
