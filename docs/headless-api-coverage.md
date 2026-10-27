@@ -8,6 +8,8 @@ HWPX load 직후 enable의 표시 재사용·폐기·소유권과 실측은 [최
 
 글자·문단 모양 창의 현재 제공 기능, 구현 중인 UI와 남은 원자 적용·조회·선택 검사·쓰기 계약은 [서식 대화상자](formatting-dialogs.md)를 따릅니다.
 
+문자표의 선택·단일 삽입·커서 복원과 검증 한계는 [기호 삽입](symbol-insertion.md)을 따릅니다.
+
 ## 기준과 책임
 
 사용자 목표는 DOM 없이 문서를 읽고 편집·저장할 수 있는 API와 이를 사용하는 데모다. 공식 HwpCtrl 문서는 필요한 사용자 작업을 찾는 기준이며, ActiveX/기존 WebHwpCtrl의 이름·좌표·ParameterSet·UI를 동일 구현한다는 계약은 아니다. 레거시 호환 facade는 이후 선택 사항이다. HWP5/HWPX가 대상이며 HWP3는 범위 밖이다.
