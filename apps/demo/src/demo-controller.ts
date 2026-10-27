@@ -9,6 +9,8 @@ import { createFormattingDialogController } from './formatting-dialog-controller
 import { createTextColorTool } from './text-color-tool.ts';
 import { createFormattingBridge } from './formatting-bridge.ts';
 import { createTextToolsBridge } from './text-tools-bridge.ts';
+import { createSymbolDialogController } from './symbol-dialog-controller.ts';
+import { createSymbolInsertionPort } from './symbol-insertion-port.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions } from './command-support.ts';
 import { mountDemoContextMenu } from './context-menu.ts';
@@ -129,6 +131,15 @@ export async function mountDemo(
     onPresentationChange: () => shell.update(),
     resolveShortcut: (event) => shortcuts?.resolveCommand(event),
   });
+  const symbolPort = createSymbolInsertionPort(editor);
+  const symbols = createSymbolDialogController({
+    root,
+    port: symbolPort,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
   const clipboard = createClipboardBridge({
     editor,
     onStatus: note,
@@ -147,6 +158,14 @@ export async function mountDemo(
       ...formatState.actions,
       ...textColor.presentation(),
       ...textTools.presentation(),
+      'insert-symbol': {
+        enabled: ready && !!state.selection,
+        reason: !ready
+          ? '문서를 먼저 열어주세요.'
+          : !state.selection
+            ? '문서에서 넣을 위치를 선택하세요.'
+            : undefined,
+      },
       ...formatDialogs.presentation(),
       ...viewOptions.presentation(ready),
       ...clipboard.getPresentation().actions,
@@ -290,6 +309,10 @@ export async function mountDemo(
       shell.update();
       return;
     }
+    if (action.command === 'insert-symbol') {
+      symbols.open();
+      return;
+    }
     if (await textTools.action(action)) {
       shell.update();
       return;
@@ -397,6 +420,7 @@ export async function mountDemo(
     shortcuts?.dispose();
     contextMenu?.close();
     textTools.dispose();
+    symbols.dispose();
     formatDialogs.dispose();
     textColor.dispose();
     viewOptions.dispose();
@@ -427,6 +451,7 @@ export async function mountDemo(
       shortcuts?.dispose();
       contextMenu?.close();
       textTools.dispose();
+      symbols.dispose();
       formatDialogs.dispose();
       textColor.dispose();
       viewOptions.dispose();
