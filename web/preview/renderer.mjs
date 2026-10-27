@@ -1,3 +1,7 @@
+import {
+  createOwnedBodyDraftProjection,
+  createStatePaintParagraphLookup,
+} from './owned-body-draft-paragraph-index.mjs';
 import { createDecodedResourceGeometryEpoch } from './decoded-resource-geometry-epoch.mjs';
 import { createCanvasMeasurementPolicy } from './canvas-measurement-policy.mjs';
 import { createNativeGeometryDeps } from './native-geometry-deps.mjs';
@@ -299,6 +303,8 @@ export function createRenderer(
     const entry = pictureResources.status(section, node, kind);
     return entry?.refreshing ? { ...entry, bitmap: null } : entry;
   };
+  let sourceObservationState = null;
+  let ownedBodyDraftProjection = null;
   let display = content,
     pictureDisplay = content,
     fontAt = createTextStyle(content, FONT);
@@ -742,6 +748,9 @@ export function createRenderer(
     const first = layout.spatialRows
       ? 0
       : Math.max(0, rowAtY(layout, viewport.scrollTop - shadowInsets.bottom));
+    const paintParagraphLookup =
+      ownedBodyDraftProjection?.beginFrame() ??
+      createStatePaintParagraphLookup(display.paragraphs, sourceObservationState, display);
     const paintTextRow = (row, i) => {
       if (row.kind === 'gap') return;
       if (
@@ -768,10 +777,7 @@ export function createRenderer(
         ctx.fillStyle = row.kind === 'label' ? '#526d80' : '#172b3b';
         if (row.kind === 'text') {
           const paragraph =
-            createdCellParagraph(layout, row) ??
-            display.paragraphs.find(
-              (p) => p.section === row.section && p.paragraph === row.paragraph,
-            );
+            createdCellParagraph(layout, row) ?? paintParagraphLookup.find(display.paragraphs, row);
           paintNumberPrefix(ctx, row, i, paragraph, fontAt, viewport.scrollTop);
           // Draw with the same grapheme advances used for hit-testing.
           for (let b = 0; b < row.boundaries.length - 1; b++) {
@@ -1266,21 +1272,26 @@ export function createRenderer(
     paintedPictures = { behind: [], front: [] };
     picturePaintOrder = [];
     ctx.font = FONT;
+    ownedBodyDraftProjection = null;
     display = draft?.createdCell
       ? projectCreatedCellDraft(content, draft)
       : draft
         ? {
             ...content,
-            paragraphs: content.paragraphs.map((p) =>
-              p.section === draft.section && p.paragraph === draft.paragraph
-                ? {
-                    ...withDraftText(p, draft.text),
-                    ...(Array.isArray(draft.characterRanges)
-                      ? { characterRanges: draft.characterRanges }
-                      : {}),
-                  }
-                : p,
-            ),
+            paragraphs: (ownedBodyDraftProjection = createOwnedBodyDraftProjection(
+              content.paragraphs,
+              (p) =>
+                p.section === draft.section && p.paragraph === draft.paragraph
+                  ? {
+                      ...withDraftText(p, draft.text),
+                      ...(Array.isArray(draft.characterRanges)
+                        ? { characterRanges: draft.characterRanges }
+                        : {}),
+                    }
+                  : p,
+              sourceObservationState,
+              content,
+            )).paragraphs,
           }
         : content;
     fontAt = createTextStyle(display, FONT, { projectionMemo: true });
@@ -1632,16 +1643,22 @@ export function createRenderer(
       resizeGuide = value;
       schedule();
     },
-    show(
-      value,
-      {
+    show(value, options = {}) {
+      const {
         preserveScroll = false,
         resourceEpoch: nextResourceEpoch = resourceEpoch,
         resourceDocument: nextResourceDocument,
         deferLayout = false,
         geometryEvidence: nextGeometryEvidence,
-      } = {},
-    ) {
+      } = options;
+      sourceObservationState = null;
+      try {
+        const sourceStateDescriptor = Object.getOwnPropertyDescriptor(options, 'sourceState');
+        if (sourceStateDescriptor && Object.hasOwn(sourceStateDescriptor, 'value'))
+          sourceObservationState = sourceStateDescriptor.value;
+      } catch {
+        /* 읽기 전용 witness 확인 실패는 일반 경로로 남긴다. */
+      }
       // Callers without a separate document identity retain the conservative
       // epoch boundary. A node number alone never identifies a source document.
       const changedResourceDocument =
@@ -1666,6 +1683,7 @@ export function createRenderer(
       resourceEpoch = nextResourceEpoch;
       resourceDocument = nextResourceDocument;
       chartResources.clear();
+      ownedBodyDraftProjection = null;
       content = value;
       geometryEvidence = nextGeometryEvidence;
       paragraphLookup.clear();
@@ -1714,6 +1732,8 @@ export function createRenderer(
       decodedResourceGeometry.clear();
       const resetWidth = canvas.width;
       canvas.width = resetWidth;
+      ownedBodyDraftProjection = null;
+      sourceObservationState = null;
       content = { paragraphs: [], limited: false };
       paragraphLookup.clear();
       draft = null;
@@ -1876,6 +1896,8 @@ export function createRenderer(
       paragraphFlowReuse.clear();
       geometryEvidence = undefined;
       if (closed) return;
+      ownedBodyDraftProjection = null;
+      sourceObservationState = null;
       closed = true;
       projectionDeferred = false;
       paragraphLookup.clear();

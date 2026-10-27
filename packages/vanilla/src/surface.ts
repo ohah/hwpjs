@@ -164,6 +164,7 @@ export function createCanvasSurface({
       direct?.external({ kind: 'external-update', origin: 'core' });
     displayed = key;
     renderer.show(geometry?.content ?? state.content, {
+      sourceState: state,
       geometryEvidence: geometry?.evidence,
       preserveScroll: !changedDocument,
       resourceEpoch: `${state.documentId}:${state.generation}:${state.operationRevision}`,
