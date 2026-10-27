@@ -30,14 +30,14 @@
       "sha256": "9381d11e81a9aba65a498fa457bc81895a480dcfd520e13aa7a6fe82c2e196e3"
     },
     {
-      "path": "assets/app-BunI6r6b.css",
-      "bytes": 14110,
-      "sha256": "e6bbfb3b50c8a9c7935b1ebe325517ec1479bd3c8d42586e84e8d5349090cadb"
+      "path": "assets/app-BpQhG73e.css",
+      "bytes": 14838,
+      "sha256": "148c5314cb02a8822155c277db20271fec11e789e4bdea4eeaa86a77aed2c791"
     },
     {
       "path": "assets/app.js",
-      "bytes": 329359,
-      "sha256": "b70588361aaf3f9014c17a1c55049ef59b95d2296c96e5ace23327078748a473"
+      "bytes": 334860,
+      "sha256": "2941efa218eda7b9008b9a2159a09171a34c4ce4a61396c7ba8369c92432a337"
     },
     {
       "path": "assets/core-wrapper-Cs9QzzTt.js",
@@ -77,22 +77,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 843,
-      "sha256": "0232bc51bb99bc51ea56660cddd7bc56d8fb5b89cc09a83234def3c6ad0f61d0"
+      "sha256": "488711b7792ee1e0b3e079f3e0b8b964591ee443c56c4a3cb8fe1a7af515893d"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 843,
-      "sha256": "0232bc51bb99bc51ea56660cddd7bc56d8fb5b89cc09a83234def3c6ad0f61d0"
+      "sha256": "488711b7792ee1e0b3e079f3e0b8b964591ee443c56c4a3cb8fe1a7af515893d"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 843,
-      "sha256": "0232bc51bb99bc51ea56660cddd7bc56d8fb5b89cc09a83234def3c6ad0f61d0"
+      "sha256": "488711b7792ee1e0b3e079f3e0b8b964591ee443c56c4a3cb8fe1a7af515893d"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 843,
-      "sha256": "0232bc51bb99bc51ea56660cddd7bc56d8fb5b89cc09a83234def3c6ad0f61d0"
+      "sha256": "488711b7792ee1e0b3e079f3e0b8b964591ee443c56c4a3cb8fe1a7af515893d"
     },
     {
       "path": "fixture-catalog.json",
@@ -117,7 +117,7 @@
     {
       "path": "index.html",
       "bytes": 819,
-      "sha256": "5781e2bbd9204a1ac31e9b98ecc36e23768267959e362895d9b6888c83f4d4f3"
+      "sha256": "7c9a27432d6cf70e84319cd1451db022a800649c8c21ea55f318437fb94b9951"
     },
     {
       "path": "LICENSE.txt",
