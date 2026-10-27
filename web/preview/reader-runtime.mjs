@@ -2687,7 +2687,7 @@ export function createReaderRuntime({
             : applied
               ? null
               : false;
-      displayResources.finishRequest(Boolean(response.error));
+      displayResources.finishRequest(Boolean(response.error), response);
       outcomes.set(
         response,
         atomicOutcome

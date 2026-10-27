@@ -28,30 +28,65 @@ const READ_ONLY_REQUESTS = new Set([
 export function createDisplayResourceCache() {
   let owner = null,
     facade = null,
-    failed = false;
+    failed = false,
+    textOnlyHistory = false,
+    pendingHistoryRoot = null;
   const values = new Map();
   const invalidate = () => values.clear();
   return {
-    invalidate,
+    invalidate() {
+      invalidate();
+      textOnlyHistory = false;
+      pendingHistoryRoot = null;
+    },
     beginRequest(message, { format, editor, historyEnabled }) {
       failed = false;
-      if (
-        !(format === 'hwpx' && editor && historyEnabled && message.kind === 'splice') &&
-        !READ_ONLY_REQUESTS.has(message.kind)
-      )
-        invalidate();
+      pendingHistoryRoot = null;
+      if (format !== 'hwpx' || owner !== editor) textOnlyHistory = false;
+      const textSplice = format === 'hwpx' && editor && historyEnabled && message.kind === 'splice';
+      const textHistoryTravel =
+        format === 'hwpx' &&
+        owner === editor &&
+        editor &&
+        historyEnabled &&
+        textOnlyHistory &&
+        (message.kind === 'undo' || message.kind === 'redo');
+      if (format === 'hwpx' && editor && !historyEnabled && message.kind === 'enable')
+        pendingHistoryRoot = editor;
+      else if (!textSplice && !textHistoryTravel && !READ_ONLY_REQUESTS.has(message.kind))
+        textOnlyHistory = false;
+      if (!textSplice && !textHistoryTravel && !READ_ONLY_REQUESTS.has(message.kind)) invalidate();
     },
-    finishRequest(error = false) {
-      if (error || failed) invalidate();
+    finishRequest(error = false, metadata) {
+      if (error || failed) {
+        invalidate();
+        textOnlyHistory = false;
+      } else if (
+        pendingHistoryRoot &&
+        owner === pendingHistoryRoot &&
+        Number.isInteger(metadata?.historyRevision) &&
+        metadata.historyRevision >= 0 &&
+        metadata.historyRevision < 0xffffffff &&
+        Array.isArray(metadata.historyRevisions) &&
+        metadata.historyRevisions.length === 1 &&
+        metadata.historyRevisions[0] === metadata.historyRevision
+      ) {
+        // 새 이력의 시작 이후 알려진 본문 작업만 있는 구간에 한정합니다.
+        textOnlyHistory = true;
+      }
+      pendingHistoryRoot = null;
     },
     reset() {
       invalidate();
       owner = facade = null;
-      failed = false;
+      pendingHistoryRoot = null;
+      failed = textOnlyHistory = false;
     },
     view(editor) {
       if (owner !== editor) {
         invalidate();
+        textOnlyHistory = false;
+        if (pendingHistoryRoot !== editor) pendingHistoryRoot = null;
         owner = editor;
         facade = null;
       }
