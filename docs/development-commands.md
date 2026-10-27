@@ -679,3 +679,14 @@ CDP의 trusted `autoRepeat` 검사는 실제 OS 키 반복이나 OS IME 검증�
 test -f ./apps/demo/tests/document-statistics.test.ts || exit 1
 HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm mise exec -- bun test ./apps/demo/tests/document-statistics.test.ts
 ```
+
+<a id="font-name-ui-tests"></a>
+
+## 언어별 글꼴 이름 UI
+
+```sh
+test -f ./apps/demo/tests/font-name-tool.test.ts || exit 1
+mise exec -- bun test ./apps/demo/tests/font-name-tool.test.ts
+```
+
+정규 대상은 fake port·공통 DOM 하네스의 25개/160 assertion입니다. 명시 파일의 존재를 확인한 뒤 실행하며 Native·브라우저 검증을 대신하지 않습니다. 이 검사는 core 타입만 참조하여 private dist를 runtime import하지 않습니다. 실제 앱 연결에는 `SET_CHARACTER_FONT_NAME_COMMAND`와 해당 조회 필드를 내보내는 검증된 SDK가 필요합니다. 기존 글꼴 export 없는 dist를 새 API 지원으로 간주하지 않습니다.

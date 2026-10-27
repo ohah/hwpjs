@@ -2,10 +2,15 @@ import type { CanvasDisplayOptions } from '@hwpjs/vanilla';
 import { createViewOptionsBridge } from './view-options-bridge.ts';
 import { isMenuZoomPercent, stepViewZoom } from './view-zoom.ts';
 import { mountShortcutSettings } from './shortcut-settings.ts';
-import { getHistoryAvailability, getSelectionFormatting } from '@hwpjs/core';
+import {
+  getHistoryAvailability,
+  getSelectionFormatting,
+  SET_CHARACTER_FONT_NAME_COMMAND,
+} from '@hwpjs/core';
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
 import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
 import { createFormattingDialogController } from './formatting-dialog-controller.ts';
+import { createFontNameTool } from './font-name-tool.ts';
 import { createTextColorTool } from './text-color-tool.ts';
 import { createFormattingBridge } from './formatting-bridge.ts';
 import { createTextToolsBridge } from './text-tools-bridge.ts';
@@ -110,6 +115,17 @@ export async function mountDemo(
     onPresentationChange: () => shell.update(),
     onUIError: () => note('글자색 표시를 갱신하지 못했습니다.'),
   });
+  const fontName = createFontNameTool({
+    root,
+    editor,
+    api: { command: SET_CHARACTER_FONT_NAME_COMMAND, observe: getSelectionFormatting },
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+    onUIError: () => note('글꼴 창 표시를 갱신하지 못했습니다.'),
+  });
   const formatDialogs = createFormattingDialogController({
     root,
     port: formatting,
@@ -157,6 +173,14 @@ export async function mountDemo(
     const availability = {
       ...formatState.actions,
       ...textColor.presentation(),
+      'font-name': {
+        enabled: fontName.presentation().enabled,
+        reason: !ready
+          ? '문서를 먼저 열어주세요.'
+          : !fontName.presentation().enabled
+            ? '글꼴 이름을 반영하고 있습니다.'
+            : undefined,
+      },
       ...textTools.presentation(),
       'insert-symbol': {
         enabled: ready && !!state.selection,
@@ -267,6 +291,10 @@ export async function mountDemo(
     const available = presentation().actions?.[action.command];
     if (!available?.enabled) {
       note(available?.reason ?? '현재 사용할 수 없습니다.');
+      return;
+    }
+    if (action.command === 'font-name') {
+      fontName.open();
       return;
     }
     if (textColor.action(action.command)) return;
@@ -423,6 +451,7 @@ export async function mountDemo(
     symbols.dispose();
     formatDialogs.dispose();
     textColor.dispose();
+    fontName.dispose();
     viewOptions.dispose();
     clipboard.dispose();
     sourcePolicyNotice.dispose();
@@ -454,6 +483,7 @@ export async function mountDemo(
       symbols.dispose();
       formatDialogs.dispose();
       textColor.dispose();
+      fontName.dispose();
       viewOptions.dispose();
       clipboard.dispose();
       sourcePolicyNotice.dispose();

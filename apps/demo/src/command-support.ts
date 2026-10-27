@@ -37,6 +37,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   underline: entry('밑줄', '서식', true),
   strike: entry('취소선', '서식', true),
   'text-color': entry('글자 색', '서식', true),
+  'font-name': entry('언어별 글꼴', '서식', true),
   'align-left': entry('왼쪽 정렬', '서식', true),
   'align-center': entry('가운데 정렬', '서식', true),
   'align-right': entry('오른쪽 정렬', '서식', true),
