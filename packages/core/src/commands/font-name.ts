@@ -18,7 +18,8 @@ export function fontNameMessage(payload: SetCharacterFontNamePayload, state: Edi
     throw Error('InvalidCharacterFontNamePayload');
   }
   const range = validateFormattingTarget(payload.target, state, true, 'characterFontNameAvailable');
-  if (typeof globalThis.TextEncoder !== 'function') throw Error('FontNameEncodingUnavailable');
+  if (typeof (globalThis as { TextEncoder?: unknown }).TextEncoder !== 'function')
+    throw Error('FontNameEncodingUnavailable');
   characterFontNameArgs(payload.language, payload.name);
   const row = validateSelection(payload.target, state);
   const observed = characterFontNameObservations(
