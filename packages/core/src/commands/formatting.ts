@@ -15,7 +15,8 @@ export type FormattingCapability =
   | 'paragraphAlignmentAvailable'
   | 'characterUnderlineAvailable'
   | 'characterStrikeAvailable'
-  | 'characterTextColorAvailable';
+  | 'characterTextColorAvailable'
+  | 'characterFontNameAvailable';
 export function validateFormattingTarget(
   target: SelectionTarget,
   state: EditorState,

@@ -38,6 +38,7 @@ import {
   SET_CHARACTER_UNDERLINE_COMMAND,
   SET_CHARACTER_STRIKE_COMMAND,
   SET_CHARACTER_TEXT_COLOR_COMMAND,
+  SET_CHARACTER_FONT_NAME_COMMAND,
 } from '../commands/commands.ts';
 import type {
   EditorCommand,
@@ -49,11 +50,13 @@ import type {
   SetCharacterUnderlinePayload,
   SetCharacterStrikePayload,
   SetCharacterTextColorPayload,
+  SetCharacterFontNamePayload,
 } from '../commands/commands.ts';
 import { retryablePasswordReply, PasswordAttemptError } from './unlock-policy.ts';
 import { formattingSelection } from '../state/formatting-selection.ts';
 import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
+import { fontNameMessage } from '../commands/font-name.ts';
 import { textColorMessage } from '../commands/text-color.ts';
 import { strikeMessage } from '../commands/strike.ts';
 import { selectionMessage, validateSelection, validateToken } from '../commands/selection.ts';
@@ -837,6 +840,10 @@ export function createEditor(options: CreateEditorOptions) {
           throw Error('InvalidText');
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
+      }
+      if (pending.command.id === SET_CHARACTER_FONT_NAME_COMMAND.id) {
+        const payload = pending.payload as SetCharacterFontNamePayload;
+        return await mutate(fontNameMessage(payload, state), payload.target, true);
       }
       if (pending.command.id === SET_CHARACTER_TEXT_COLOR_COMMAND.id) {
         const payload = pending.payload as SetCharacterTextColorPayload;

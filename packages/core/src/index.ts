@@ -24,6 +24,7 @@ export {
   SET_CHARACTER_UNDERLINE_COMMAND,
   SET_CHARACTER_STRIKE_COMMAND,
   SET_CHARACTER_TEXT_COLOR_COMMAND,
+  SET_CHARACTER_FONT_NAME_COMMAND,
 } from './commands/commands.ts';
 export type {
   EditorCommand,
@@ -37,6 +38,8 @@ export type {
   SetCharacterUnderlinePayload,
   SetCharacterStrikePayload,
   SetCharacterTextColorPayload,
+  SetCharacterFontNamePayload,
+  CharacterFontLanguage,
 } from './commands/commands.ts';
 export type {
   EditorRuntime,
@@ -92,3 +95,5 @@ export type {
 
 export { createParagraphSelection } from './state/paragraph-selection.ts';
 export type { ParagraphSelectionOptions } from './state/paragraph-selection.ts';
+
+export type { CharacterFontNameValue } from './state/font-name-state.ts';

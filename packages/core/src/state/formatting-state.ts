@@ -1,3 +1,7 @@
+import { characterFontNameObservations, type CharacterFontNameValue } from './font-name-state.ts';
+import type { CharacterFontLanguage } from '../commands/commands.ts';
+// @ts-ignore Canonical language partition order.
+import { FONT_LANGUAGES } from '../../../../js/font-face-identity.mjs';
 // @ts-ignore Public selection uses the canonical UTF-16 scalar boundary.
 import { isUtf16Boundary } from '../../../../web/preview/utf16-boundary.mjs';
 import { characterTextColorObservation } from './text-color-state.ts';
@@ -21,6 +25,8 @@ export interface SelectionFormatting {
   readonly underlineAvailableReason: string | null;
   readonly strikeAvailableReason: string | null;
   readonly textColorAvailableReason: string | null;
+  readonly fontNames: Readonly<Record<CharacterFontLanguage, CharacterFontNameValue>>;
+  readonly fontNameAvailableReasons: Readonly<Record<CharacterFontLanguage, string | null>>;
   /** Canonical #rrggbb, mixed, or unknown null; not a CSS named color. */
   readonly textColor: FormattingValue<string>;
   readonly bold: FormattingValue<boolean>;
@@ -42,6 +48,17 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
       underlineAvailableReason: reason,
       strikeAvailableReason: reason,
       textColorAvailableReason: reason,
+      fontNames: Object.freeze(
+        Object.fromEntries(
+          FONT_LANGUAGES.map((language: string) => [
+            language,
+            Object.freeze({ kind: 'unknown' as const }),
+          ]),
+        ),
+      ) as Readonly<Record<CharacterFontLanguage, CharacterFontNameValue>>,
+      fontNameAvailableReasons: Object.freeze(
+        Object.fromEntries(FONT_LANGUAGES.map((language: string) => [language, reason])),
+      ) as Readonly<Record<CharacterFontLanguage, string>>,
       textColor: null,
       bold: null,
       italic: null,
@@ -129,6 +146,30 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
             ?.alignment,
         )
       : null;
+  const fontTargetReason = reason(true, 'characterFontNameAvailable');
+  const fontObserved = characterFontNameObservations(
+    content,
+    row,
+    target.startUnit,
+    target.endUnit,
+  );
+  const fontNames = Object.freeze(
+    Object.fromEntries(
+      FONT_LANGUAGES.map((language: CharacterFontLanguage) => [
+        language,
+        fontObserved[language].value,
+      ]),
+    ),
+  ) as Readonly<Record<CharacterFontLanguage, CharacterFontNameValue>>;
+  const fontNameAvailableReasons = Object.freeze(
+    Object.fromEntries(
+      FONT_LANGUAGES.map((language: CharacterFontLanguage) => [
+        language,
+        fontTargetReason ??
+          (fontObserved[language].bindingValid ? null : 'UnknownCharacterFontName'),
+      ]),
+    ),
+  ) as Readonly<Record<CharacterFontLanguage, string | null>>;
   return Object.freeze({
     target,
     characterAvailableReason,
@@ -136,6 +177,8 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
     underlineAvailableReason,
     strikeAvailableReason,
     textColorAvailableReason,
+    fontNames,
+    fontNameAvailableReasons,
     textColor,
     bold,
     italic,

@@ -70,3 +70,19 @@ export interface SetCharacterTextColorPayload {
 export const SET_CHARACTER_TEXT_COLOR_COMMAND = createCommand<SetCharacterTextColorPayload>(
   'set-character-text-color',
 );
+
+export type CharacterFontLanguage =
+  | 'hangul'
+  | 'latin'
+  | 'hanja'
+  | 'japanese'
+  | 'other'
+  | 'symbol'
+  | 'user';
+export interface SetCharacterFontNamePayload {
+  readonly target: SelectionTarget;
+  readonly language: CharacterFontLanguage;
+  readonly name: string;
+}
+export const SET_CHARACTER_FONT_NAME_COMMAND =
+  createCommand<SetCharacterFontNamePayload>('set-character-font-name');
