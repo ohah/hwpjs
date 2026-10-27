@@ -21,6 +21,8 @@ mise exec -- bun run format
 
 <!-- javascript-quality-commands:end -->
 
+Native 서식 증거의 정규 CLI·pure tests와 명시48 입력 준비 조건은 [서식 증거 독립 검증](formatting-evidence-oracle.md#기존-native48-소비와-순수-테스트)을 따릅니다.
+
 ## 입력 표면 응답 검증
 
 [응답·콜백 계약과 검증 범위](input-surface-acknowledgement.md)를 따릅니다. Native 저장·이력 검사는 명시 WASM과 Bun을 사용합니다.
