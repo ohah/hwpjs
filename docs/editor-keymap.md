@@ -39,7 +39,7 @@ const shortcuts = createKeyboardShortcuts({
 // 호스트 해제: shortcuts.dispose()
 ```
 
-adapter는 editor root 안에서만 동작하며 일반 입력창/선택 상자/contenteditable의 텍스트 편집은 가로채지 않습니다. Canvas의 명시적 문서 입력면은 대상입니다. IME 조합·229·AltGraph는 매칭하지 않고 반복 입력은 명령을 중복 실행하지 않습니다. 처리한 키는 기존 Canvas handler로 전달하지 않습니다. fallback은 해제·재지정된 기본 키가 기존 Canvas 명령을 실행하지 않도록 하는 용도이며, 해제된 키의 브라우저 기본 동작까지 강제로 차단하지는 않습니다.
+adapter는 editor root 안에서만 동작하며 일반 입력창/선택 상자/contenteditable의 텍스트 편집은 가로채지 않습니다. Canvas의 명시적 문서 입력면은 대상입니다. IME 조합·229·AltGraph는 매칭하지 않습니다. 반복 keydown은 undo·redo에만 허용하고 다른 명령은 반복 실행하지 않습니다. 추가 반복 타이머 없이 이미 접수한 이력 명령의 순서를 보존하며, keyup은 새 명령을 만들지 않습니다. 자세한 계약과 대표 운영 검증은 [이력 단축키 반복](history-key-repeat.md)을 따릅니다. 처리한 키는 기존 Canvas handler로 전달하지 않습니다. fallback은 해제·재지정된 기본 키가 기존 Canvas 명령을 실행하지 않도록 합니다. 이력·clipboard 기본키와 차단된 반복 이벤트는 브라우저 기본 이력/편집으로도 새지 않게 막으며, 모든 일반 브라우저 기본키를 일괄 차단하는 계약은 아닙니다.
 
 데모의 ‘단축키 설정’에서 JSON 가져오기/내보내기, 기본값 복원, 한국어/English 안내를 제공합니다. 설정은 해당 호스트 수명 동안 유지하며 자동 디스크 저장·브라우저 간 동기화는 하지 않습니다. 파일 입력은 256KiB로 제한하고 최신 가져오기만 적용합니다. 문서/선택에서 실행할 수 없는 명령은 단축키를 등록해도 실행 가능해지지 않습니다.
 
