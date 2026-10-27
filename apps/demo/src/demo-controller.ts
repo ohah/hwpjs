@@ -18,7 +18,7 @@ import { createSymbolDialogController } from './symbol-dialog-controller.ts';
 import { createSymbolInsertionPort } from './symbol-insertion-port.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions } from './command-support.ts';
-import { mountDemoContextMenu } from './context-menu.ts';
+import { mountDemoContextMenu, contextTarget, type ContextPicture } from './context-menu.ts';
 import { createDemoShell } from './shell.ts';
 import type {
   DemoAction,
@@ -45,6 +45,8 @@ import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available
 import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
 export interface DemoHost {
+  /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
+  getContextPicture?(): ContextPicture | null | undefined;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
   requestHistory?(kind: 'undo' | 'redo'): boolean;
   focus?(): boolean;
@@ -401,6 +403,8 @@ export async function mountDemo(
     ? mountDemoContextMenu({
         root: shell.surfaceMount,
         getState: presentation,
+        getTarget: () =>
+          contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null),
         execute: runAction,
         subscribe: (listener) => editor.registerStateListener(() => listener()),
         onError: (error) =>

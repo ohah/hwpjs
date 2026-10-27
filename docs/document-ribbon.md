@@ -77,3 +77,11 @@ tablist/tab/tabpanel 연결과 roving tabindex를 사용합니다. 방향키·Ho
 네 실행 모두 터미널 exit0·stderr0이며 cleanup 성공과 서버 종료를 확인했습니다. 새 picker 캡처는 `/var/folders/51/mr5cjhg13v324f1vgg9m237c0000gn/T/hwpjs-menu-browser-67diYX/reopened.png`, HWP5는 `hwpjs-reference-browser-IOCUE7`, 보호 개체는 `hwpjs-unknown-browser-KBY0U0` 디렉터리에 있습니다. 직접 확인한 초기 일반 캡처는 `hwpjs-menu-browser-NBmrXx/reopened.png`입니다. 소유 세션 세 개의 후속 조회도 active=false·pid=null입니다.
 
 브라우저 인자·정확한 picker 원본 매핑·클릭/종료 guard 세 파일13/13·fail/cancel/skip0·exit0·stderr0, JS 구문·변경 diff 공백 검사도 통과했습니다. 스킬에 따라 격리 세션과 실제 입력을 사용하고 브라우저를 종료했습니다. 이 집중 검사는 전체104개 UI 픽스쳐·모든 리본 명령·RHWP 기능/조판 동치 완료가 아닙니다.
+
+## 대상별 보조 메뉴의 선택 재검증
+
+본문과 표 셀은 공개 선택 validator가 확인한 owner와 범위로 구분하며, 표 셀의 글자·문단 속성은 기존 도구를 연결합니다. 그림 선택은 현재 문서·revision·settled 상태를 확인한 surface 관측만 사용합니다. 그림에는 문서·보기·이력 명령만 제공하며 개체 속성 편집 지원을 새로 주장하지 않습니다.
+
+메뉴를 연 뒤 문서, owner, 범위, undo 또는 view가 바뀌면 이전 메뉴 실행을 거부하고 재열기를 요구합니다. 실행 직전 포커스 복원과 현재 capability도 다시 확인합니다. 격리 후보에서 HWP5/HWPX 본문, HWPX 표 셀·그림, 취소 후 포커스·캐럿 보존, undo·문서교체 진행 중 열린 메뉴의 비활성화를 실제 UI로 확인했습니다. 이는 객체 편집이나 전체 저장 roundtrip·성능 검증을 뜻하지 않습니다.
+
+문맥 조회에는 공개 선택 검증과 문단 탐색 비용이 있습니다. 전체 입력 파이프라인 O(n) 완료를 뜻하지 않으며, 집중 회귀 명령은 개발·검증 명령 문서를 따릅니다.

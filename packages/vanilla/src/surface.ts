@@ -381,6 +381,34 @@ export function createCanvasSurface({
     getDisplayOptions(): Readonly<CanvasDisplayOptions> | undefined {
       return closed ? undefined : renderer.getDisplayOptions();
     },
+    /** 표시용 선택 identity만 반환하며 크기 편집 권한을 만들지 않습니다. */
+    getContextPicture() {
+      const state = editor.getEditorState();
+      const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+      if (
+        closed ||
+        !lease?.isActive() ||
+        state.status !== 'ready' ||
+        observedStateVersion !== state.stateVersion ||
+        key !== displayed ||
+        bridge?.busy() ||
+        !direct?.settled?.()
+      )
+        return undefined;
+      const picture = renderer.selectedPicture?.();
+      if (!picture) return null;
+      if (
+        ![picture.section, picture.pictureNode].every(
+          (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff,
+        )
+      )
+        return undefined;
+      return Object.freeze({
+        ...state.token,
+        section: picture.section,
+        pictureNode: picture.pictureNode,
+      });
+    },
     getSelection() {
       return editor.getEditorState().selection ?? null;
     },

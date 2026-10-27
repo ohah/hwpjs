@@ -132,3 +132,48 @@ export function unsupportedCommandCategories(connectedCommands: ReadonlySet<Demo
   }
   return Array.from(groups, ([category, commands]) => ({ category, commands }));
 }
+
+/** 선택 종류는 검증된 공개 관측값이며 명령 실행 권한을 새로 만들지 않습니다. */
+export type ContextTargetKind = 'body' | 'table-cell' | 'picture' | 'none';
+export type ContextCommand = Exclude<DemoCommand, 'set-font-size' | 'set-zoom'>;
+const documentContextCommands: readonly ContextCommand[] = Object.freeze([
+  'undo',
+  'redo',
+  'find',
+  'replace',
+  'word-count',
+  'zoom-in',
+  'zoom-out',
+]);
+const textContextCommands: readonly ContextCommand[] = Object.freeze([
+  'cut',
+  'copy',
+  'paste',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'character-properties',
+  'paragraph-properties',
+  'text-color',
+  'font-name',
+  'align-left',
+  'align-center',
+  'align-right',
+  'align-justify',
+]);
+export const CONTEXT_COMMAND_IDS: readonly ContextCommand[] = Object.freeze([
+  ...documentContextCommands,
+  ...textContextCommands,
+]);
+/** 그림 개체 속성은 실행 도구가 없어 목록에 넣지 않습니다. */
+export function contextCommandIds(kind: ContextTargetKind): readonly ContextCommand[] {
+  return kind === 'body' || kind === 'table-cell' ? CONTEXT_COMMAND_IDS : documentContextCommands;
+}
+export function contextCommandLabel(command: ContextCommand, kind: ContextTargetKind): string {
+  if (kind === 'table-cell') {
+    if (command === 'character-properties') return '셀 글자 속성';
+    if (command === 'paragraph-properties') return '셀 문단 속성';
+  }
+  return DEMO_COMMAND_REGISTRY[command].label;
+}

@@ -742,3 +742,12 @@ Node 24의 내장 TypeScript 타입 제거와 실제 Node Worker 전송을 사�
 ```sh
 node --test ./packages/core/tests/worker-resource-transfer.test.mjs
 ```
+
+## 대상별 문맥 메뉴 집중 회귀
+
+선택 후보를 반영한 뒤 공개 owner·문서·undo/view 토큰 재검증과 공통 메뉴의 포커스 복원 계약을 검사합니다. 실제 브라우저 기능 범위와 단위 대역 검증은 별도로 기록합니다.
+
+```sh
+bun test ./apps/demo/tests/context-menu-target.test.ts ./apps/demo/tests/command-support.test.ts
+node --test tests/hwpx/document-context-menu.test.mjs
+```
