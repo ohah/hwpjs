@@ -1,3 +1,4 @@
+import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { validateAbi } from './abi.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
 import { decodeCharacterFontMetrics } from './character-font-metrics.mjs';
@@ -193,6 +194,7 @@ export async function createExperimentalHwp5Editor(
     ).bytes;
   };
   return {
+    ...createAtomicFormattingApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     observedDocInfoDiagnostics() {
       check();
       if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== 'function')

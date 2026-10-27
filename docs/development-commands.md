@@ -723,3 +723,12 @@ mise exec -- node --test --test-concurrency=1 ./tests/hwp5/input-intent-queue.te
 test -f ./packages/vanilla/tests/history-key-repeat.test.mjs || exit 1
 mise exec -- bun test ./packages/vanilla/tests/history-key-repeat.test.mjs
 ```
+
+## 문단 원자 서식 API 회귀
+
+계약과 검증 범위는 [문단 원자 서식 API](headless-paragraph-formatting.md)를 참조합니다. 저장소 루트에서 정규 합성 회귀 한 파일만 실행합니다. Native 실행물은 필요하지 않습니다.
+
+```sh
+test -f ./packages/core/tests/commands/paragraph-formatting-patch.test.ts || exit 1
+bun test --no-install ./packages/core/tests/commands/paragraph-formatting-patch.test.ts
+```

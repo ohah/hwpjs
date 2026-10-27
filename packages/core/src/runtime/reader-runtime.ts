@@ -1,3 +1,4 @@
+import { bindRuntimeAdmission } from '../internal/runtime-admission.ts';
 import type {
   EditorRuntime,
   RuntimeFactory,
@@ -64,10 +65,14 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
   async function request(message: RuntimeMessage, context?: RuntimeRequestContext) {
     return requestInternal(message, context);
   }
-  async function requestInternal(message: RuntimeMessage, context?: RuntimeRequestContext) {
+  async function requestInternal(
+    message: RuntimeMessage,
+    context?: RuntimeRequestContext,
+    admission?: () => void,
+  ) {
     const captured = context ? { ...context } : undefined,
       kind = message.kind;
-    const raw = await backend.request(message);
+    const raw = await backend.request(message, admission);
     const reply = ownObservation({
       ...raw,
       meta: { ...backend.outcome(raw), ...(captured ? { context: captured } : {}) },
@@ -90,6 +95,11 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     return backend.dispose();
   }
   runtime = { request, dispose };
+  bindRuntimeAdmission(
+    runtime,
+    (message, context, admission) => requestInternal(message, context, admission),
+    () => !closed && !poisoned,
+  );
   origins.set(runtime, {
     valid,
     read: (reply, ctx) => {

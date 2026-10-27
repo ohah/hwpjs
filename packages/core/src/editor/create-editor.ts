@@ -1,3 +1,18 @@
+import {
+  hasRuntimeAdmission,
+  requestAtRuntimeAdmission,
+  RuntimeAdmissionRejected,
+} from '../internal/runtime-admission.ts';
+import { atomicSelector, validateParagraphFormattingPatch } from '../commands/atomic-formatting.ts';
+import { assertFormattingAdmission } from '../commands/formatting-patch.ts';
+import type {
+  ApplyFormattingPatchPayload,
+  FormattingCapabilities,
+  FormattingCapabilityOptions,
+  FormattingQueryResult,
+  QueryFormattingOptions,
+  SelectionAdmissionFence,
+} from '../commands/formatting-patch.ts';
 import { consumeNativeRuntimeOrigin } from '../internal/native-runtime-origin.ts';
 import {
   createGeometryEvidenceController,
@@ -45,6 +60,7 @@ import {
   SET_CHARACTER_STRIKE_COMMAND,
   SET_CHARACTER_TEXT_COLOR_COMMAND,
   SET_CHARACTER_FONT_NAME_COMMAND,
+  APPLY_FORMATTING_PATCH_COMMAND,
 } from '../commands/commands.ts';
 import type {
   EditorCommand,
@@ -741,18 +757,23 @@ export function createEditor(options: CreateEditorOptions) {
     message: RuntimeMessage,
     token: StateToken,
     preserveFormattingSelection = false,
+    admissionGuard?: () => void,
   ): Promise<CommandResult> {
     const ctx = context(token);
     let reserved: number | undefined, reply: RuntimeReply | undefined;
     try {
       requireReady(token);
       writePolicy.assertWritable();
+      admissionGuard?.();
       reserved = ++revisionClock;
       // Once request() begins, an exception cannot prove that Native did not apply.
       try {
-        reply = await active!.request(message, ctx);
+        reply = admissionGuard
+          ? await requestAtRuntimeAdmission(active!, message, ctx, admissionGuard)
+          : await active!.request(message, ctx);
         verifyReply(reply, ctx);
       } catch (error) {
+        if (error instanceof RuntimeAdmissionRejected) return reject(ctx, error);
         install({ operationRevision: reserved, status: 'refresh-required' });
         notifyError(error, ctx, 'unknown');
         return result('committed-refresh-required', ctx, error);
@@ -784,6 +805,16 @@ export function createEditor(options: CreateEditorOptions) {
         );
       }
       if (application === 'unapplied') {
+        if (message.kind === 'formatting-patch' && reply.formattingRefreshRequired === true)
+          install({ status: 'refresh-required' });
+        if (message.kind === 'formatting-patch' && reply.formattingNativeCode === 2) {
+          if (reply.error) notifyError(reply.error, ctx, false);
+          return result('known-no-op', ctx, reply.error, reply);
+        }
+        if (message.kind === 'formatting-patch' && reply.error) {
+          notifyError(reply.error, ctx, false);
+          return result('rejected-unapplied', ctx, reply.error, reply);
+        }
         if (reply.error) return reject(ctx, reply.error);
         return result('known-no-op', ctx, undefined, reply);
       }
@@ -871,6 +902,50 @@ export function createEditor(options: CreateEditorOptions) {
       assertLive();
       if (handled) return result('handled-without-runtime', ctx);
       writePolicy.assertWritable();
+      if (pending.command.id === APPLY_FORMATTING_PATCH_COMMAND.id) {
+        const payload = pending.payload as ApplyFormattingPatchPayload;
+        if (
+          !payload ||
+          Object.keys(payload).some((key) => !['target', 'patch', 'selectionVersion'].includes(key))
+        )
+          throw Error('InvalidFormattingPatch');
+        validateParagraphFormattingPatch(payload.patch);
+        const selector = atomicSelector(payload.target, state, true, false);
+        const capability = await readFormattingCapabilities(payload.target);
+        if (!capability.atomic) throw Error(capability.reason);
+        const guard = () => {
+          requireReady(payload.target, true);
+          assertFormattingAdmission(
+            payload,
+            state.stateVersion,
+            capability.selectionAdmissionFence,
+          );
+        };
+        guard();
+        const prepared = await readRequest(
+          { kind: 'query-formatting', selector, fields: [] },
+          payload.target,
+          guard,
+          true,
+        );
+        guard();
+        const value = checkedFormattingQuery(prepared.formatting);
+        if (value.binding.revision === null) throw Error('InvalidFormattingBinding');
+        return await mutate(
+          {
+            kind: 'formatting-patch',
+            request: {
+              schemaVersion: 1,
+              binding: value.binding,
+              targets: value.targets,
+              patch: payload.patch,
+            },
+          },
+          payload.target,
+          true,
+          guard,
+        );
+      }
       if (pending.command.id === SPLICE_TEXT_COMMAND.id) {
         const payload = pending.payload as SpliceTextPayload;
         if (
@@ -1138,12 +1213,15 @@ export function createEditor(options: CreateEditorOptions) {
     message: RuntimeMessage,
     token: StateToken,
     guard: () => void = () => {},
+    admitted = false,
   ): Promise<RuntimeReply> {
     guard();
     requireReady(token, true);
     const ctx = context(token);
     try {
-      const reply = await active!.request(message, ctx);
+      const reply = admitted
+        ? await requestAtRuntimeAdmission(active!, message, ctx, guard)
+        : await active!.request(message, ctx);
       verifyReply(reply, ctx);
       if (reply.error) throw Error(reply.error);
       assertLive();
@@ -1153,6 +1231,204 @@ export function createEditor(options: CreateEditorOptions) {
       notifyError(error, ctx, false);
       throw error;
     }
+  }
+  function hostFormattingWritable(): boolean {
+    try {
+      writePolicy.assertWritable();
+      return true;
+    } catch (error) {
+      if (error instanceof Error && error.message === 'ReadOnlyDocument') return false;
+      throw error;
+    }
+  }
+  function checkedFormattingQuery(input: unknown): FormattingQueryResult {
+    const v = input as FormattingQueryResult;
+    if (
+      v?.schemaVersion !== 1 ||
+      typeof v.binding?.session !== 'string' ||
+      !v.binding.session ||
+      !Array.isArray(v.targets) ||
+      v.targets.length !== 1 ||
+      typeof v.targets[0]?.ref !== 'string' ||
+      !v.targets[0].ref ||
+      !Array.isArray(v.observations?.perTarget) ||
+      v.observations.perTarget.length !== 1 ||
+      v.observations.perTarget[0].ref !== v.targets[0].ref ||
+      !v.observations.aggregate
+    )
+      throw Error('MalformedFormattingQuery');
+    if (
+      v.binding.revision !== null &&
+      (!Number.isSafeInteger(v.binding.revision) ||
+        v.binding.revision < 0 ||
+        v.binding.revision >= 0xffffffff)
+    )
+      throw Error('InvalidFormattingBinding');
+    for (const fields of [v.observations.aggregate, v.observations.perTarget[0].fields]) {
+      if (!fields || typeof fields !== 'object' || Array.isArray(fields))
+        throw Error('MalformedFormattingQuery');
+      for (const observation of Object.values(fields)) {
+        const o = observation as Record<string, unknown> | null;
+        if (
+          !o ||
+          typeof o.state !== 'string' ||
+          !['known', 'mixed', 'unknown', 'unavailable'].includes(o.state) ||
+          typeof o.writable !== 'boolean' ||
+          (!o.writable && typeof o.writeUnavailableReason !== 'string') ||
+          ((o.state === 'unknown' || o.state === 'unavailable') && typeof o.reason !== 'string') ||
+          (o.state === 'known' && !Object.hasOwn(o, 'value')) ||
+          (o.unit !== undefined && typeof o.unit !== 'string')
+        )
+          throw Error('MalformedFormattingQuery');
+      }
+    }
+    if (!hostFormattingWritable()) {
+      const observe = (fields: typeof v.observations.aggregate) =>
+        Object.fromEntries(
+          Object.entries(fields).map(([key, o]) => [
+            key,
+            o.writable
+              ? { ...o, writable: false as const, writeUnavailableReason: 'ReadOnlyDocument' }
+              : o,
+          ]),
+        );
+      return freezeDTO(
+        copyOwned(
+          {
+            ...v,
+            observations: {
+              perTarget: v.observations.perTarget.map((row) => ({
+                ...row,
+                fields: observe(row.fields),
+              })),
+              aggregate: observe(v.observations.aggregate),
+            },
+          },
+          true,
+        ),
+      );
+    }
+    return freezeDTO(copyOwned(v, true));
+  }
+  async function readFormattingCapabilities(
+    token: StateToken,
+    guard: () => void = () => {},
+  ): Promise<FormattingCapabilities> {
+    requireReady(token, true);
+    if (!hasRuntimeAdmission(active))
+      return Object.freeze({ atomic: false, reason: 'UnsupportedAtomicRuntime' });
+    const ready = () => {
+      requireReady(token, true);
+      guard();
+    };
+    const reply = await readRequest({ kind: 'formatting-capabilities' }, token, ready, true);
+    const cap = reply.formattingCapabilities as FormattingCapabilities | undefined;
+    if (cap?.atomic === false && typeof cap.reason === 'string')
+      return freezeDTO(copyOwned(cap, true));
+    if (
+      cap?.atomic !== true ||
+      cap.schemaVersion !== 1 ||
+      cap.coordinateSpace !== 'native-source-utf16' ||
+      cap.requiresHistoryProtocol !== 2 ||
+      cap.format !== (state.content as { format?: string }).format ||
+      typeof cap.binding?.session !== 'string' ||
+      !cap.binding.session ||
+      !cap.fields ||
+      !cap.limits
+    )
+      throw Error('MalformedFormattingCapabilities');
+    if (
+      cap.binding.revision !== null &&
+      (!Number.isSafeInteger(cap.binding.revision) ||
+        cap.binding.revision < 0 ||
+        cap.binding.revision >= 0xffffffff)
+    )
+      throw Error('InvalidFormattingBinding');
+    for (const n of [
+      'requestBytes',
+      'replyBytes',
+      'targets',
+      'ranges',
+      'commands',
+      'fontNameBytes',
+      'projectionBytes',
+    ] as const)
+      if (!Number.isSafeInteger(cap.limits[n]) || cap.limits[n] <= 0)
+        throw Error('MalformedFormattingCapabilities');
+    const fence: SelectionAdmissionFence = Object.freeze({
+      version: 1,
+      commands: Object.freeze(['APPLY_FORMATTING_PATCH'] as const),
+      epoch: 'stateVersion',
+    });
+    const fields = hostFormattingWritable()
+      ? cap.fields
+      : Object.fromEntries(
+          Object.entries(cap.fields).map(([key, field]) => [
+            key,
+            field.writable
+              ? { ...field, writable: false, writeUnavailableReason: 'ReadOnlyDocument' }
+              : field,
+          ]),
+        );
+    return freezeDTO(
+      copyOwned(
+        {
+          ...cap,
+          fields,
+          ...(hasRuntimeAdmission(active) ? { selectionAdmissionFence: fence } : {}),
+        },
+        true,
+      ),
+    );
+  }
+  function getFormattingCapabilities(
+    options: FormattingCapabilityOptions = {},
+  ): Promise<FormattingCapabilities> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((k) => k !== 'token')
+    )
+      throw Error('InvalidFormattingCapabilityOptions');
+    if (settings.token === null) throw Error('InvalidFormattingCapabilityOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(() => readFormattingCapabilities(token));
+  }
+  function queryFormatting(
+    target: SelectionTarget,
+    options: QueryFormattingOptions = {},
+  ): Promise<FormattingQueryResult> {
+    assertPublicMutation();
+    const owned = copyOwned(target),
+      settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((k) => k !== 'fields') ||
+      (settings.fields !== undefined &&
+        (!Array.isArray(settings.fields) || settings.fields.some((f) => typeof f !== 'string')))
+    )
+      throw Error('InvalidFormattingQueryOptions');
+    return enqueue(async () => {
+      requireReady(owned, true);
+      if (!hasRuntimeAdmission(active)) throw Error('UnsupportedAtomicRuntime');
+      const selector = atomicSelector(owned, state, false, owned.startUnit !== owned.endUnit);
+      const reply = await readRequest(
+        {
+          kind: 'query-formatting',
+          selector,
+          ...(settings.fields === undefined ? {} : { fields: settings.fields }),
+        },
+        owned,
+        () => requireReady(owned, true),
+        true,
+      );
+      return checkedFormattingQuery(reply.formatting);
+    });
   }
   function readResource(
     message: RuntimeMessage,
@@ -1369,6 +1645,8 @@ export function createEditor(options: CreateEditorOptions) {
     refresh: geometryGuard(refresh),
     requestExperimental: geometryGuard(requestExperimental),
     readResource: geometryGuard(readResource),
+    getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
+    queryFormatting: geometryGuard(queryFormatting),
     setSelection: geometryGuard(setSelection),
     acquireInputSurface: geometryGuard(acquireInputSurface),
     dispose: geometryGuard(dispose),

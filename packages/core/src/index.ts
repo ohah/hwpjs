@@ -97,3 +97,24 @@ export { createParagraphSelection } from './state/paragraph-selection.ts';
 export type { ParagraphSelectionOptions } from './state/paragraph-selection.ts';
 
 export type { CharacterFontNameValue } from './state/font-name-state.ts';
+
+export { APPLY_FORMATTING_PATCH_COMMAND } from './commands/commands.ts';
+export type {
+  ParagraphFormattingPatch,
+  FormattingPatch,
+  ApplyFormattingPatchPayload,
+  SelectionAdmissionFence,
+  FormattingObservation,
+  FormattingBinding,
+  FormattingNativeTarget,
+  FormattingQueryResult,
+  QueryFormattingOptions,
+  FormattingCapabilities,
+  FormattingCapabilityOptions,
+} from './commands/formatting-patch.ts';
+export type {
+  BorderLineStyle,
+  BorderEdgePatch,
+  BorderPatch,
+  BackgroundPatch,
+} from './commands/formatting-resource-intent.ts';

@@ -1,3 +1,4 @@
+import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-text-requested.mjs';
 import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
 import { encodeTableBorderSections, decodeTableBorderBatch } from './hwpx-table-border-batch.mjs';
@@ -193,6 +194,7 @@ export async function createHwpxEditor(source) {
     }
   }
   return {
+    ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createParagraphBreakApi({
       wasm,
       memory,

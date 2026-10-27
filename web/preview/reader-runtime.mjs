@@ -1,3 +1,4 @@
+import { formattingCapabilities, queryAtomicFormatting } from './atomic-formatting-command.mjs';
 import { createDisplayResourceCache } from './display-resource-cache.mjs';
 import { createHwp5Reader } from '../../js/hwp5.mjs';
 import {
@@ -1036,8 +1037,34 @@ export function createReaderRuntime({
     };
     let applied = false;
     let mutationUncertain = false;
+    let atomicOutcome;
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
+      if (message.kind === 'formatting-capabilities') {
+        if (!editor) throw Error('EditorNotOpen');
+        reply({ kind: message.kind, formattingCapabilities: formattingCapabilities(editor) });
+        return;
+      }
+      if (message.kind === 'query-formatting') {
+        if (!editor) throw Error('EditorNotOpen');
+        reply({ kind: message.kind, formatting: queryAtomicFormatting(editor, format, message) });
+        return;
+      }
+      if (message.kind === 'formatting-patch') {
+        if (!editor || !historyEnabled) throw Error('HistoryNotEnabled');
+        atomicOutcome = editor.applyFormattingPatch(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
+        return;
+      }
       if (format === 'hwp5' && preview?.sectionInventory && message.kind !== 'load')
         throw new Error('AvailableSectionsReadOnly');
       if (
@@ -2545,9 +2572,9 @@ export function createReaderRuntime({
         reply({ kind: message.kind, content: hwp5Display() });
       } else throw new Error('UnknownPreviewCommand');
     } catch (error) {
-      mutationUncertain = ['MutationUncertain', 'HistoryMutationUncertain'].includes(
-        error?.message,
-      );
+      mutationUncertain =
+        mutationUncertain ||
+        ['MutationUncertain', 'HistoryMutationUncertain'].includes(error?.message);
       if (mutationUncertain) historyPoisoned = true;
       delete message.password;
       const availableSectionsPreviewAvailable =
@@ -2644,6 +2671,13 @@ export function createReaderRuntime({
           loadProjection = null;
         } // Uncertain ownership falls back to normal projection.
       }
+      if (atomicOutcome)
+        response = {
+          ...response,
+          formattingNativeCode: atomicOutcome.nativeCode,
+          formattingRefreshRequired: atomicOutcome.refreshRequired === true,
+          changed: atomicOutcome.changed,
+        };
       const revision = response.historyRevision;
       const changed =
         typeof response.changed === 'boolean'
@@ -2654,17 +2688,22 @@ export function createReaderRuntime({
               ? null
               : false;
       displayResources.finishRequest(Boolean(response.error));
-      outcomes.set(response, {
-        application:
-          historyPoisoned ||
-          mutationUncertain ||
-          ['MutationUncertain', 'HistoryMutationUncertain'].includes(response.error)
-            ? 'unknown'
-            : applied && changed !== false
-              ? 'applied'
-              : 'unapplied',
-        changed,
-      });
+      outcomes.set(
+        response,
+        atomicOutcome
+          ? { application: atomicOutcome.application, changed: atomicOutcome.changed }
+          : {
+              application:
+                historyPoisoned ||
+                mutationUncertain ||
+                ['MutationUncertain', 'HistoryMutationUncertain'].includes(response.error)
+                  ? 'unknown'
+                  : applied && changed !== false
+                    ? 'applied'
+                    : 'unapplied',
+              changed,
+            },
+      );
       if (typeof revision === 'number') lastHistoryRevision = revision;
       // oxlint-disable-next-line no-unsafe-finally -- 직접 Runtime도 성공·실패를 응답 객체로 반환하는 기존 finally 정리 계약을 보존한다.
       return response;
@@ -2697,7 +2736,9 @@ export function createReaderRuntime({
     outcome(reply) {
       return { ...outcomes.get(reply) };
     },
-    request(input) {
+    request(input, admission) {
+      if (admission !== undefined && typeof admission !== 'function')
+        return Promise.reject(Error('InvalidRuntimeAdmission'));
       const requestTicket = ++requestSequence;
       const reusableLoad = loadProjection;
       loadProjection = null; // Also invalidate on rejected/malformed/error requests.
@@ -2717,6 +2758,7 @@ export function createReaderRuntime({
           loaded = true;
           lastHistoryRevision = undefined;
         }
+        admission?.();
         return execute(message, requestTicket, reusableLoad);
       });
       const settled = task.finally(() => {

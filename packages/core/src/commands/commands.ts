@@ -86,3 +86,7 @@ export interface SetCharacterFontNamePayload {
 }
 export const SET_CHARACTER_FONT_NAME_COMMAND =
   createCommand<SetCharacterFontNamePayload>('set-character-font-name');
+
+import type { ApplyFormattingPatchPayload } from './formatting-patch.ts';
+export const APPLY_FORMATTING_PATCH_COMMAND =
+  createCommand<ApplyFormattingPatchPayload>('apply-formatting-patch');

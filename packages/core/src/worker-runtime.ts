@@ -1,3 +1,4 @@
+import { bindRuntimeAdmission } from './internal/runtime-admission.ts';
 import { createNativeWorkerWitness } from './internal/native-worker-origin.ts';
 import type {
   EditorRuntime,
@@ -154,7 +155,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     if (closed) throw Error('RuntimeDisposed');
     attach(new Worker(blobURL ?? defaultURL, { type: 'module' }));
   }
-  const send = (message: unknown): Promise<RuntimeReply> =>
+  const send = (message: unknown, admission?: () => void): Promise<RuntimeReply> =>
     new Promise((resolve, reject) => {
       if (closed) {
         reject(failure ?? Error('RuntimeDisposed'));
@@ -163,6 +164,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       const id = ++sequence;
       pending.set(id, { resolve, reject });
       try {
+        admission?.();
         worker!.postMessage({ id, message });
       } catch (error) {
         pending.delete(id);
@@ -185,12 +187,16 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
   async function request(message: RuntimeMessage, context?: RuntimeRequestContext) {
     return requestInternal(message, context);
   }
-  async function requestInternal(message: RuntimeMessage, context?: RuntimeRequestContext) {
+  async function requestInternal(
+    message: RuntimeMessage,
+    context?: RuntimeRequestContext,
+    admission?: () => void,
+  ) {
     const owned = copyOwned(message),
       captured = context ? { ...context } : undefined,
       kind = owned.kind;
     await ready;
-    const raw = await send(owned);
+    const raw = await send(owned, admission);
     const reply = ownObservation({
       ...raw,
       meta: { ...raw.meta, ...(captured ? { context: captured } : {}) },
@@ -216,6 +222,11 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     shutdown(Error('RuntimeDisposed'));
   }
   runtime = { request, dispose };
+  bindRuntimeAdmission(
+    runtime,
+    (message, context, admission) => requestInternal(message, context, admission),
+    () => !closed && !poisoned && !custom && canonicalCode && transportWitness.current(worker),
+  );
   origins.set(runtime, {
     valid,
     read: (reply, ctx) => {

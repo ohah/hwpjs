@@ -1,5 +1,7 @@
 /** Internal compatibility inventory from reader-runtime and canvas-editor, not a general JSON API. */
 export const SURFACE_READ_KINDS = Object.freeze([
+  'formatting-capabilities',
+  'query-formatting',
   'query-window',
   'query-edit-window',
   'query-edit-range',

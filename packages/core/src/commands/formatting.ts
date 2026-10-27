@@ -5,6 +5,7 @@ import type {
 } from './commands.ts';
 import type { EditorState } from '../state/editor-state.ts';
 import { selectionMessage, validateSelection } from './selection.ts';
+import { validateOriginalParagraphReference } from './original-paragraph-reference.ts';
 // @ts-ignore Canonical native facade argument encoder; no independent bit definitions.
 import { characterPropertyArgs } from '../../../../js/character-property-args.mjs';
 // @ts-ignore Shared canonical display alignment validator; native ordinals stay in the facade.
@@ -47,23 +48,7 @@ export function validateFormattingTarget(
     target.owner !== `section:${target.section}:body`
   )
     throw Error('UnsupportedFormattingOwner');
-  if (target.format === 'hwp5') {
-    // attachHwp5CurrentReferences binds source ordinals to native current references.
-    // These runtime commands ignore reference, so only a proven original source binding is accepted.
-    const ref = row.currentReference as
-      | { kind?: string; section?: number; id?: string }
-      | undefined;
-    if (
-      ref?.kind !== 'original' ||
-      ref.section !== target.section ||
-      typeof ref.id !== 'string' ||
-      !/^(0|[1-9][0-9]*)$/.test(ref.id) ||
-      BigInt(ref.id) > 0xffffffffn
-    )
-      throw Error('UnsupportedFormattingReference');
-    // currentSourceParagraphReference indexes the same source paragraph array as
-    // the native formatting ordinal ABI. ref.id is a node ID, never an ordinal.
-  }
+  validateOriginalParagraphReference(target, row, 'UnsupportedFormattingReference');
   // reference is deliberately not sent: the canonical commands do not consume it.
   const { reference: _, ...range } = position;
   if (character && target.startUnit === target.endUnit) throw Error('EmptyCharacterSelection');
