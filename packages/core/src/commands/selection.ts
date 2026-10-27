@@ -1,3 +1,4 @@
+import { uniqueParagraphRow } from '../internal/paragraph-index.ts';
 import type { SelectionTarget } from './commands.ts';
 import type { EditorState, StateToken } from '../state/editor-state.ts';
 // The original pure display->source converter remains the single mapping implementation.
@@ -51,10 +52,7 @@ export function validateSelection(target: SelectionTarget, state: EditorState, e
     target.endUnit < target.startUnit
   )
     throw Error('InvalidTextPosition');
-  const matches = content.paragraphs?.filter(
-    (row) => row.section === target.section && row.paragraph === target.paragraph,
-  );
-  const row = matches?.length === 1 ? matches[0] : undefined;
+  const row = uniqueParagraphRow(content.paragraphs, target.section, target.paragraph);
   if (
     !row ||
     row.clipped ||

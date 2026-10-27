@@ -82,6 +82,11 @@ export function discardPromise(value: unknown): void {
 }
 
 const immutableObservations = new WeakSet<object>();
+/** Internal membership query only. Does not brand, copy, or freeze caller input. */
+export function isOwnedImmutableObservation(value: unknown): value is object {
+  return value !== null && typeof value === 'object' && immutableObservations.has(value);
+}
+
 /** Stable plain DTOs with copy-on-access leaves for mutable built-in containers. */
 export function ownObservation<T>(value: T): () => T {
   if (value && typeof value === 'object' && immutableObservations.has(value)) return () => value;
