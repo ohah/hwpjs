@@ -8,6 +8,10 @@
 
 통계는 Unicode scalar 수와 공백 기준 어절 수입니다. 개체 자리표시자는 제외하고, window/limited/clipped 관측에는 `complete=false`를 반환합니다. 한글 프로그램의 언어별 단어 수 계산과 동일하다는 계약은 아닙니다.
 
+문서 통계 모달은 이 공개 함수의 반환값만 표시하며 별도 카운터를 구현하지 않습니다. `complete`는 현재 관측 범위의 표시이지 완전한 원본문서나 한컴 통계 방식과의 동등성 증명이 아닙니다. 읽기 전용도 조회할 수 있고, 같은 문서의 선택 변경은 창을 유지하며 문서 교체·로딩은 폐기합니다.
+
+검증은 mock 12개와 명시 cb48의 실제 readonly 조회 2개를 합쳐 14개·74 assertions로 구분합니다. window/limited/clipped 부분 범위는 mock 근거이며 실제 Noori HWP5/HWPX 두 문서에서는 모달 포커스·Escape·Tab·합성 IME·캐럿 복귀, 조회 중 Worker 요청 0과 일반 편집 모드의 저장 원본 바이트 불변을 확인했습니다. 별도 동결 SDK/cb48 대조에서 발생한 HWP5 readonly 저장의 `EditorNotOpen`은 조회 기능과 분리하며, 통계 UI가 저장 권한을 바꾸지 않습니다. 실제 OS IME·전 코퍼스·공개 배포 완료를 뜻하지 않습니다. 재현 명령은 [개발·검증 명령](development-commands.md#문서-통계-모달-집중-검증)을 따릅니다.
+
 clipboard 관측은 검증된 단일 문단 선택의 텍스트·타깃·읽기/변경 불가 사유·`stateVersion`을 제공합니다. 읽기 전용 텍스트의 복사와 Native 변경 권한은 별도입니다. 개체 선택을 텍스트로 바꾸지 않고, HWP 원본 좌표의 보호 구간과 생성 셀도 기존 선택 검증을 재사용합니다. OS clipboard 읽기/쓰기는 host가 수행합니다.
 
 비동기 권한 요청 후 잘라내기/붙이기/바꾸기는 `SPLICE_TEXT_COMMAND`의 `selectionVersion`을 전달할 수 있습니다. 코어는 실행 시점의 정확한 `stateVersion`과 비교합니다. 같은 문서 revision에서 선택을 다른 곳으로 옮겼다가 되돌려도 이전 관측은 거부됩니다. 일반 타깃의 문서·소유자·scalar·원본 좌표 검증도 계속 적용합니다. 이 fence는 원본 텍스트나 편집값의 별도 캐시를 만들지 않습니다.
