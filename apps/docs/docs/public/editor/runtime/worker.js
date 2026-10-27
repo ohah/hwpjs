@@ -121,28 +121,50 @@ var READ_ONLY_REQUESTS = new Set([
   "query-split-range"
 ]);
 function createDisplayResourceCache() {
-  let owner = null, facade = null, failed = false;
+  let owner = null, facade = null, failed = false, textOnlyHistory = false, pendingHistoryRoot = null;
   const values = new Map;
   const invalidate = () => values.clear();
   return {
-    invalidate,
+    invalidate() {
+      invalidate();
+      textOnlyHistory = false;
+      pendingHistoryRoot = null;
+    },
     beginRequest(message, { format, editor, historyEnabled }) {
       failed = false;
-      if (!(format === "hwpx" && editor && historyEnabled && message.kind === "splice") && !READ_ONLY_REQUESTS.has(message.kind))
+      pendingHistoryRoot = null;
+      if (format !== "hwpx" || owner !== editor)
+        textOnlyHistory = false;
+      const textSplice = format === "hwpx" && editor && historyEnabled && message.kind === "splice";
+      const textHistoryTravel = format === "hwpx" && owner === editor && editor && historyEnabled && textOnlyHistory && (message.kind === "undo" || message.kind === "redo");
+      if (format === "hwpx" && editor && !historyEnabled && message.kind === "enable")
+        pendingHistoryRoot = editor;
+      else if (!textSplice && !textHistoryTravel && !READ_ONLY_REQUESTS.has(message.kind))
+        textOnlyHistory = false;
+      if (!textSplice && !textHistoryTravel && !READ_ONLY_REQUESTS.has(message.kind))
         invalidate();
     },
-    finishRequest(error = false) {
-      if (error || failed)
+    finishRequest(error = false, metadata) {
+      if (error || failed) {
         invalidate();
+        textOnlyHistory = false;
+      } else if (pendingHistoryRoot && owner === pendingHistoryRoot && Number.isInteger(metadata?.historyRevision) && metadata.historyRevision >= 0 && metadata.historyRevision < 4294967295 && Array.isArray(metadata.historyRevisions) && metadata.historyRevisions.length === 1 && metadata.historyRevisions[0] === metadata.historyRevision) {
+        textOnlyHistory = true;
+      }
+      pendingHistoryRoot = null;
     },
     reset() {
       invalidate();
       owner = facade = null;
-      failed = false;
+      pendingHistoryRoot = null;
+      failed = textOnlyHistory = false;
     },
     view(editor) {
       if (owner !== editor) {
         invalidate();
+        textOnlyHistory = false;
+        if (pendingHistoryRoot !== editor)
+          pendingHistoryRoot = null;
         owner = editor;
         facade = null;
       }
@@ -19098,7 +19120,7 @@ function createReaderRuntime({
         };
       const revision = response.historyRevision;
       const changed = typeof response.changed === "boolean" ? response.changed : typeof revision === "number" && typeof lastHistoryRevision === "number" ? revision !== lastHistoryRevision : applied ? null : false;
-      displayResources.finishRequest(Boolean(response.error));
+      displayResources.finishRequest(Boolean(response.error), response);
       outcomes.set(response, atomicOutcome ? { application: atomicOutcome.application, changed: atomicOutcome.changed } : {
         application: historyPoisoned || mutationUncertain || ["MutationUncertain", "HistoryMutationUncertain"].includes(response.error) ? "unknown" : applied && changed !== false ? "applied" : "unapplied",
         changed
