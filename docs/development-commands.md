@@ -732,3 +732,13 @@ mise exec -- bun test ./packages/vanilla/tests/history-key-repeat.test.mjs
 test -f ./packages/core/tests/commands/paragraph-formatting-patch.test.ts || exit 1
 bun test --no-install ./packages/core/tests/commands/paragraph-formatting-patch.test.ts
 ```
+
+<a id="worker-resource-transfer-tests"></a>
+
+## Worker 그림 바이트 전송 집중 검증
+
+Node 24의 내장 TypeScript 타입 제거와 실제 Node Worker 전송을 사용합니다. 설치·빌드·WASM 파일은 필요하지 않습니다. [소유권과 미검증 경계](worker-runtime-transport.md#그림-리소스-응답의-버퍼-소유권)를 따릅니다. 아래 명시 파일은 13건을 실행하며, 그림 교체·undo는 controlled 리소스 변경 대조이고 실제 Native 이력 검증이 아닙니다.
+
+```sh
+node --test ./packages/core/tests/worker-resource-transfer.test.mjs
+```

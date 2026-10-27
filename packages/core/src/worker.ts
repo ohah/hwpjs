@@ -1,9 +1,10 @@
 import { createReaderEditorRuntime } from './runtime/reader-runtime.ts';
+import { workerResourceReply } from './internal/worker-resource-reply.ts';
 import type { EditorRuntime, RuntimeMessage } from './contracts.ts';
 
 const scope = globalThis as unknown as {
   onmessage: ((event: MessageEvent) => void) | null;
-  postMessage(value: unknown): void;
+  postMessage(value: unknown, transfer?: Transferable[]): void;
 };
 let runtime: EditorRuntime | undefined;
 let queue = Promise.resolve();
@@ -23,7 +24,13 @@ scope.onmessage = (event) => {
         scope.postMessage({ id, reply: { kind: message.kind } });
       } else {
         if (!runtime) throw Error('RuntimeNotInitialized');
-        scope.postMessage({ id, reply: await runtime.request(message as RuntimeMessage) });
+        const outgoing = workerResourceReply(
+          id,
+          message.kind,
+          await runtime.request(message as RuntimeMessage),
+        );
+        if (outgoing.transfer) scope.postMessage(outgoing.envelope, outgoing.transfer);
+        else scope.postMessage(outgoing.envelope);
       }
     } catch (error) {
       scope.postMessage({

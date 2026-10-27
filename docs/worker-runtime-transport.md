@@ -11,3 +11,11 @@ factory의 `preload()`는 컴파일만 준비하며 문서 Worker를 만들지 �
 HWP5 현재 참조는 transport별 prefix를 initialize-runtime에서 Worker에 전달해 realm별 로컬 scope 충돌을 막습니다. [현재 참조의 scope·native epoch 계약과 브라우저 양성/취약 대조군](hwp5-sdk-current-references.md)을 따릅니다. 이 구분자는 보안 인증 수단이 아닙니다.
 
 게시 전 별도 HEAD 사본에서 `node --test packages/core/tests/transport/worker-runtime.test.ts`8건, strict 선언 생성과 browser ESM 번들4모듈을 통과했습니다. 독립 Worker·preload 무Worker·준비 실패 재시도·재사용 거부·payload/context 소유·dispose/오류를 대역 Worker로 검증한 결과입니다. 실제 브라우저·문서 파싱·물리 IME·RN 검증으로 확대하지 않습니다.
+
+## 그림 리소스 응답의 버퍼 소유권
+
+`picture-bytes`와 `table-background-bytes`의 요청·응답 종류가 일치하고 오류가 없을 때, Worker는 내부 `ownObservation` 브랜드와 copy-on-access `bytes` getter를 확인합니다. getter가 만든 독립 사본을 wire 객체에 한 번 고정한 뒤 그 전체 `ArrayBuffer`만 transfer합니다. 숨겨진 응답 backing, 재사용 `Uint8Array`, WASM 메모리를 detach하지 않습니다. 브랜드가 없거나 오류·종류 불일치이면 기존 구조화 복제 경로를 유지하며 SharedArrayBuffer의 기존 거부 정책을 바꾸지 않습니다.
+
+이 변경은 postMessage 경계의 바이트 복제 한 단계를 피하는 후보이며, Native 조회·refresh·그림 바이트 요청 수·이력 단위·core 소유 복사는 유지합니다. 관측된 요청 165건을 줄이는 변경이나 물리 zero-copy·입력 지연 해결로 해석하지 않습니다.
+
+[정규 집중 명령](development-commands.md#worker-resource-transfer-tests)은 실제 Worker entry와 소유 DTO·그림 리소스 모듈을 controlled Node Worker에 연결합니다. ReaderRuntime은 대역이며 실제 Native·브라우저·성능 증거가 아닙니다. 공식 Worker 해시 재생성·런타임 권위·실 E2E는 별도 후속 gate이고, 현재 운영 union에는 이 후속 변경이 포함되지 않았습니다.
