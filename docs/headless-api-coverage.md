@@ -63,7 +63,7 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 | --- | --- | --- |
 | 텍스트 삽입·삭제·교체 | `SPLICE_TEXT_COMMAND`, `SpliceTextPayload.target/text/selectionVersion` | public 구현. 보호 필드/개체·clipped/unknown owner·stale selection은 실제 타깃 검증 결과를 따름 |
 | 실행 취소·다시 실행 | `UNDO_COMMAND`, `REDO_COMMAND`, `editor.undo/redo`, `getHistoryAvailability` | public 구현. Native 이력이 SSOT; 새 command handler가 외부에서 처리했다는 사실만으로 Native 편집 완료가 되지는 않음 |
-| 문자 서식 | `SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic, `SET_CHARACTER_UNDERLINE_COMMAND`, `SET_CHARACTER_STRIKE_COMMAND`, `SET_CHARACTER_TEXT_COLOR_COMMAND`; `getSelectionFormatting` | 부분. 취소선과 `#RRGGBB` 글자색의 typed 명령·선택 조회가 소스에 있다. 글자색은 유효한 원본 바인딩·비어 있지 않은 편집 가능 선택·capability를 검증하며 RGB 변환은 Native 정책을 따른다. 글자색 데모 도구 연결이나 글꼴·음영·모든 효과의 공개 완료를 뜻하지 않음 |
+| 문자 서식 | `SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic, `SET_CHARACTER_UNDERLINE_COMMAND`, `SET_CHARACTER_STRIKE_COMMAND`, `SET_CHARACTER_TEXT_COLOR_COMMAND`; `getSelectionFormatting` | 부분. 취소선과 `#RRGGBB` 글자색의 typed 명령·선택 조회가 소스에 있다. 글자색은 유효한 원본 바인딩·비어 있지 않은 편집 가능 선택·capability를 검증하며 RGB 변환은 Native 정책을 따른다. 독립 글자색 창은 소스에 연결되어 있으며 검증·게시 범위는 [대화상자 범위](formatting-dialogs.md)를 따름. 글꼴·음영·모든 효과의 공개 완료를 뜻하지 않음 |
 | 문단 서식·구조 | `SET_PARAGRAPH_ALIGNMENT_COMMAND`; split/merge/spacing/margins는 내부 transport에 존재 | 부분. 일반 문단 구조 및 전체 문단 속성 typed public 명령 필요 |
 | 찾기·바꾸기·통계 | 위 pure text helper + `setSelection`/splice 조합 | 부분. literal 순방향/역방향 match, 선택적 wraparound, 현재 snapshot 범위. 정규식·전체 replace transaction·한글의 통계 정의 동등성은 없음 |
 | clipboard | `getSelectionClipboard`가 plain text/target/copyReason/editReason/stateVersion 반환 | 부분. OS 권한·read/write·paste form은 host, rich clipboard/object 복사는 미제공. 비동기 결과는 selectionVersion/token을 다시 검증 |
@@ -105,7 +105,7 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 | --- | --- | --- |
 | 필드·양식 | typed field inventory/identity/선택·값 변경, 중복명/수식/보호/폼별 capability; 읽기와 변경 분리 | HWP5/HWPX 실제 필드·빈 필드·복수 필드·current/source 혼합. 원본 보호·dirty/continuation·필드 외부 문자 보존 |
 | 표·셀 구조 | typed table/cell target, 생성·행열/크기 변경의 명시적 지원 범위 | noori 등 실제 표 + 중첩/병합/새 생성 셀. 셀 외부·이력·저장/재열기 보존 |
-| 문자/문단 확장·구조 | 글꼴, 문단 split/join 등 기존 경로의 typed 승격과 기존 글자색의 UI 연결 | 실제 혼합 서식·title/field/zero site·보호 구간. source+command 독립 XML/CFB 기대값 |
+| 문자/문단 확장·구조 | 글꼴, 문단 split/join 등 기존 경로의 typed 승격과 문자·문단 속성의 원자 통합 적용 확장 | 실제 혼합 서식·title/field/zero site·보호 구간. source+command 독립 XML/CFB 기대값 |
 | 개체·media | typed object identity/resource bytes/개별 편집; 그림·차트·수식부터 기능별 공개 | 원본 관계/BinData·개체 외 XML/ZIP·배치 보존. OLE presentation 표시와 active OLE 실행은 분리하며 자동 실행하지 않음 |
 | 문서 텍스트·layout/export | complete/partial 명시 텍스트 순회, typed 페이지 관측, 형식별 export capability | 긴/windowed 문서의 누락 검출. 페이지 수·이미지·인쇄는 동일 원본의 실제 조판 증거와 연결 |
 | 문서 관리·메타·facade | 재사용 clear/new 문서, 명시적 메타 schema; 필요할 때만 HwpCtrl facade | 취소/실패 시 기존 문서 유지, 리소스 해제·형식 보존. facade 부재를 core 편집 불가능과 혼동하지 않음 |
