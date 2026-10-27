@@ -22,7 +22,7 @@
     {
       "path": "assets/api-main.js",
       "bytes": 572,
-      "sha256": "8de7639d961a6894f994d4f35787c15281422071213d8b10bc39ebf8c8f543db"
+      "sha256": "9627dbb20387c94d25df940beb5b30a4c421e0007d966f755e06735a7f22f215"
     },
     {
       "path": "assets/api-playground-C2Xz6S74.js",
@@ -36,63 +36,68 @@
     },
     {
       "path": "assets/app.js",
-      "bytes": 353908,
-      "sha256": "6d23040fc997735ae90a5201d9526a87894b8d44c8ed515c37e9a05537ec7548"
+      "bytes": 353957,
+      "sha256": "516e674fca439587e8e173d26131411f1645139eb7e79b663c34b3b1c334717c"
     },
     {
-      "path": "assets/dist-9GB0U9Tx.js",
-      "bytes": 57,
-      "sha256": "444f7611e2641c62321024eb535b43c04a912e81a62f74adf7536efef49465b1"
+      "path": "assets/chunk-7m4vavvm-UC0haJWk.js",
+      "bytes": 11525,
+      "sha256": "21357fab3c59aa4cc074c5fd260fa27aa169eef2a94129bde63eac435c74e9e9"
     },
     {
-      "path": "assets/dist-B1YNmS9g.js",
-      "bytes": 63446,
-      "sha256": "bf5961dc2cc5f3c13ce3a147dadea3fdf2dae544c7fed3bcb4e6a50927454dfe"
+      "path": "assets/chunk-e65368qj-QYMcpVAB.js",
+      "bytes": 108589,
+      "sha256": "3a0f666eb68faa94f3a5abc5addfe9e3ea0a6d93607a0ca2d6b783731484e597"
     },
     {
-      "path": "assets/dist-DEo7Papa.js",
-      "bytes": 1063431,
-      "sha256": "f849fbccf5a49409c16f37dbae9f3fcc882586b14a13011c2f86baf315a10209"
-    },
-    {
-      "path": "assets/index-6htz2rdz-D2gS2sxn.js",
-      "bytes": 11508,
-      "sha256": "9d8538b93b47dbe3e90bd9434faa08bcb87ed7a8fcb48e0f4a4593a39b14d2ed"
+      "path": "assets/dist-CyRdOx21.js",
+      "bytes": 66946,
+      "sha256": "312ad565b2b21e98d1a3fd14d0b10a2e0aca152b596936624a106b6a47535e35"
     },
     {
       "path": "assets/public-index.js",
       "bytes": 779,
-      "sha256": "2045980fea28b77de440b511cffcf1b597fb415fa237df5dd405a9d00688caaf"
+      "sha256": "9735e79a63fec7859a7e1901e085c4851d21095fdd815e2e1a3d2fa8d5704111"
     },
     {
       "path": "assets/public-runtime.js",
       "bytes": 189,
-      "sha256": "2d3aedcb12e29c2a41a2c9e744d15532994e1c374883ba93e3a57d61b9185049"
+      "sha256": "de297f227cf430e14000d451b9bd26f35b2977fc7049165f873f6c227bf42179"
     },
     {
-      "path": "assets/runtime-OM1IQyOL.js",
-      "bytes": 497991,
-      "sha256": "06303267d7a98a512c20b5ed9971d85c98030d30d377da04d9fc4818f762b231"
+      "path": "assets/runtime-BepkSDBf.js",
+      "bytes": 401511,
+      "sha256": "97010373e23de7ed7f05863be8413cf4e66eb2412a3998fc2e69a22cceed38bf"
+    },
+    {
+      "path": "assets/vanilla-AsL-IfsQ.js",
+      "bytes": 964174,
+      "sha256": "1a44d8e7d850272df05a17be9569186102a3b7b9c5751ce607a4b2761b8e851e"
+    },
+    {
+      "path": "assets/vanilla-ZxgMu3Xm.js",
+      "bytes": 60,
+      "sha256": "e6d47e4870a8ebf8c51f858d28bdd97a440e7ca36346e257a2e105bc4c7dd783"
     },
     {
       "path": "demo/headless/index.html",
-      "bytes": 915,
-      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
+      "bytes": 1008,
+      "sha256": "f4580161c7074051994985f3e4f4eb169a599ef646172809cec3115769e21bf7"
     },
     {
       "path": "demo/react/index.html",
-      "bytes": 915,
-      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
+      "bytes": 1008,
+      "sha256": "f4580161c7074051994985f3e4f4eb169a599ef646172809cec3115769e21bf7"
     },
     {
       "path": "demo/svelte/index.html",
-      "bytes": 915,
-      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
+      "bytes": 1008,
+      "sha256": "f4580161c7074051994985f3e4f4eb169a599ef646172809cec3115769e21bf7"
     },
     {
       "path": "demo/vanilla/index.html",
-      "bytes": 915,
-      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
+      "bytes": 1008,
+      "sha256": "f4580161c7074051994985f3e4f4eb169a599ef646172809cec3115769e21bf7"
     },
     {
       "path": "fixture-catalog.json",
@@ -116,8 +121,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 887,
-      "sha256": "fd2867bfdf957dd075283cbc33e9b51f1b75b57d51eb549f9b91051db8e8e697"
+      "bytes": 976,
+      "sha256": "2282aed929a6d8007a81f0e8737c6b2d60c505d4b6a0c3ab0519c8b83f77195a"
     },
     {
       "path": "LICENSE.txt",
