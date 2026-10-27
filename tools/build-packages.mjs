@@ -72,7 +72,7 @@ for (const name of selected) {
     source = join(directory, 'src');
   const entries =
     name === 'core'
-      ? ['index.ts', 'runtime.ts', 'worker.ts']
+      ? ['index.ts', 'runtime.ts', '_internal/native-geometry.ts']
       : name === 'react-native'
         ? ['index.ts', 'canvas.ts']
         : ['index.ts'];
@@ -117,7 +117,21 @@ for (const name of selected) {
   ].sort();
   const before = await fingerprints(inputs),
     staging = await mkdtemp(join(outputRoot, `${name}-`));
+  let workerCodeSHA = 'unverified';
+  if (name === 'core') {
+    const workerBuild = await Bun.build({
+      entrypoints: [join(source, 'worker.ts')],
+      outdir: staging,
+      target: 'browser',
+      format: 'esm',
+      splitting: false,
+      naming: 'worker.js',
+    });
+    assert(workerBuild.success, workerBuild.logs.map(String).join('\n'));
+    workerCodeSHA = sha(await readFile(join(staging, 'worker.js')));
+  }
   const result = await Bun.build({
+    define: { __HWPJS_WORKER_CODE_SHA256__: JSON.stringify(workerCodeSHA) },
     entrypoints: entries.map((entry) => join(source, entry)),
     outdir: staging,
     root: source,
@@ -125,7 +139,11 @@ for (const name of selected) {
     format: 'esm',
     splitting: true,
     sourcemap: 'external',
-    naming: { entry: '[name].js', chunk: '[name]-[hash].js', asset: 'assets/[name]-[hash].[ext]' },
+    naming: {
+      entry: '[dir]/[name].js',
+      chunk: '[name]-[hash].js',
+      asset: 'assets/[name]-[hash].[ext]',
+    },
     plugins: name === 'svelte' ? [sveltePlugin('client')] : [],
     external: [
       '@hwpjs/*',
@@ -159,6 +177,12 @@ for (const name of selected) {
     JSON.stringify({
       extends: resolve(root, 'tsconfig.json'),
       compilerOptions: {
+        paths: {
+          ...JSON.parse(await readFile(join(root, 'tsconfig.json'), 'utf8')).compilerOptions.paths,
+          '@hwpjs/core/_internal/native-geometry': [
+            join(root, 'packages/core/src/_internal/native-geometry.ts'),
+          ],
+        },
         noEmit: false,
         declaration: true,
         emitDeclarationOnly: true,

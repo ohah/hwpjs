@@ -1,3 +1,7 @@
+import {
+  readGeometryProjection,
+  readNativeGeometryEvidence,
+} from '@hwpjs/core/_internal/native-geometry';
 // Existing renderer/input remain the single implementation; the package build bundles these sources.
 // @ts-ignore existing canonical JavaScript source
 import { createRenderer } from '../../../web/preview/renderer.mjs';
@@ -23,10 +27,14 @@ type HostEditor = HeadlessEditor & {
 export interface CanvasDisplayOptions {
   readonly paragraphMarks: boolean;
 }
+export interface CanvasSurfaceEnvironment extends Record<string, any> {
+  /** 측정 함수 내부 의미가 바뀌기 전에 새 frozen 빈 객체를 반환해야 합니다. */
+  geometryMeasurementEpoch?: () => Readonly<Record<string, never>>;
+}
 export interface CanvasSurfaceOptions {
   root: HTMLElement;
   editor: HostEditor;
-  environment?: Record<string, any>;
+  environment?: CanvasSurfaceEnvironment;
   onStatus?: (message: string) => void;
 }
 export function createCanvasSurface({
@@ -113,11 +121,17 @@ export function createCanvasSurface({
     observedStateVersion = state.stateVersion;
     const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
     if (state.status === 'refresh-required') {
+      renderer.suspendGeometryEvidence();
       input.readOnly = true;
       return;
     }
-    if (state.status !== 'ready') return;
+    if (state.status !== 'ready') {
+      renderer.suspendGeometryEvidence();
+      return;
+    }
+    const geometry = lease ? readGeometryProjection(lease, state) : undefined;
     if (key === displayed) {
+      renderer.setGeometryEvidence(geometry?.content, geometry?.evidence);
       // Public selection commands do not change document/view revisions.
       // Observe them without rebuilding the page layout or republishing the
       // selection which originated in this input surface.
@@ -149,7 +163,8 @@ export function createCanvasSurface({
     if (!retained && !changedDocument && displayed && !bridge?.busy())
       direct?.external({ kind: 'external-update', origin: 'core' });
     displayed = key;
-    renderer.show(state.content, {
+    renderer.show(geometry?.content ?? state.content, {
+      geometryEvidence: geometry?.evidence,
       preserveScroll: !changedDocument,
       resourceEpoch: `${state.documentId}:${state.generation}:${state.operationRevision}`,
       resourceDocument: `${state.documentId}:${state.generation}`,
@@ -190,7 +205,33 @@ export function createCanvasSurface({
     }
   };
   try {
-    renderer = createRenderer(canvas, viewport, spacer, alignFrame, environment);
+    const rendererEnvironment = Object.create(environment);
+    const measurementEpoch = Object.getOwnPropertyDescriptor(
+      environment,
+      'geometryMeasurementEpoch',
+    );
+    if (measurementEpoch && Object.hasOwn(measurementEpoch, 'value')) {
+      Object.defineProperty(rendererEnvironment, 'geometryMeasurementEpoch', {
+        // 원 호스트의 descriptor 변경은 renderer가 알 수 없으므로 매 호출마다 확인합니다.
+        value: () => {
+          const current = Object.getOwnPropertyDescriptor(environment, 'geometryMeasurementEpoch');
+          if (
+            !current ||
+            current.value !== measurementEpoch.value ||
+            current.writable !== measurementEpoch.writable ||
+            current.configurable !== measurementEpoch.configurable ||
+            current.enumerable !== measurementEpoch.enumerable ||
+            typeof current.value !== 'function'
+          )
+            return null;
+          return current.value();
+        },
+      });
+    }
+    Object.defineProperty(rendererEnvironment, 'nativeGeometryEvidenceReader', {
+      value: readNativeGeometryEvidence,
+    });
+    renderer = createRenderer(canvas, viewport, spacer, alignFrame, rendererEnvironment);
     if (environment.decodeImage) renderer.pictureDecoder(environment.decodeImage);
     lease = editor.acquireInputSurface({
       commitComposition: async () => {

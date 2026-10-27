@@ -147,6 +147,7 @@ const entrypoints = [
   'svelte',
   'react-native',
   'react-native-canvas',
+  '_internal/native-geometry',
 ].map((n) => join(pkg, 'src', n + '.ts'));
 // Worker is emitted separately below so bundlers may safely copy its URL as a single asset.
 const settings = {
@@ -156,7 +157,7 @@ const settings = {
   format: 'esm',
   splitting: true,
   sourcemap: 'none',
-  naming: { entry: '[name].js', chunk: 'chunk-[hash].js' },
+  naming: { entry: '[dir]/[name].js', chunk: 'chunk-[hash].js' },
   external: [
     '@ohah/hwpjs',
     '@ohah/hwpjs/*',
@@ -171,12 +172,6 @@ const settings = {
     '@shopify/react-native-skia',
   ],
 };
-const built = await Bun.build({
-  ...settings,
-  entrypoints,
-  plugins: [namespace, runtimeInputs, svelte('client')],
-});
-assert(built.success, built.logs.map(String).join('\n'));
 // Use the actual source rather than an import-only wrapper (sideEffects can drop the wrapper).
 const worker = await Bun.build({
   ...settings,
@@ -186,6 +181,16 @@ const worker = await Bun.build({
   plugins: [namespace, runtimeInputs],
 });
 assert(worker.success, worker.logs.map(String).join('\n'));
+const built = await Bun.build({
+  ...settings,
+  define: {
+    ...settings.define,
+    __HWPJS_WORKER_CODE_SHA256__: JSON.stringify(sha(await readFile(join(dist, 'worker.js')))),
+  },
+  entrypoints,
+  plugins: [namespace, runtimeInputs, svelte('client')],
+});
+assert(built.success, built.logs.map(String).join('\n'));
 const ssr = await Bun.build({
   ...settings,
   entrypoints: [join(pkg, 'src/svelte.ts')],
@@ -221,9 +226,13 @@ await writeFile(
         rewriteRelativeImportExtensions: true,
         rootDir: join(root, 'packages'),
         outDir: join(dist, 'types'),
-        paths: Object.fromEntries(
-          packages.map((n) => ['@hwpjs/' + n, [join(root, 'packages', n, 'src/index.ts')]]),
-        ),
+        paths: Object.fromEntries([
+          ...packages.map((n) => ['@hwpjs/' + n, [join(root, 'packages', n, 'src/index.ts')]]),
+          [
+            '@hwpjs/core/_internal/native-geometry',
+            [join(root, 'packages/core/src/_internal/native-geometry.ts')],
+          ],
+        ]),
         types: ['react'],
         typeRoots: [join(root, 'node_modules/@types')],
       },
@@ -290,9 +299,13 @@ await writeFile(
         allowImportingTsExtensions: true,
         rootDir: join(root, 'packages'),
         outDir: nativeTypes,
-        paths: Object.fromEntries(
-          packages.map((n) => ['@hwpjs/' + n, [join(root, 'packages', n, 'src/index.ts')]]),
-        ),
+        paths: Object.fromEntries([
+          ...packages.map((n) => ['@hwpjs/' + n, [join(root, 'packages', n, 'src/index.ts')]]),
+          [
+            '@hwpjs/core/_internal/native-geometry',
+            [join(root, 'packages/core/src/_internal/native-geometry.ts')],
+          ],
+        ]),
         types: ['react'],
         typeRoots: [join(root, 'node_modules/@types')],
       },

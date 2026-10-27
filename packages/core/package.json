@@ -18,7 +18,11 @@
       "import": "./dist/runtime.js"
     },
     "./worker": "./dist/worker.js",
-    "./wasm": "./dist/hwpjs.wasm"
+    "./wasm": "./dist/hwpjs.wasm",
+    "./_internal/native-geometry": {
+      "types": "./dist/_internal/native-geometry.d.ts",
+      "import": "./dist/_internal/native-geometry.js"
+    }
   },
   "types": "./dist/index.d.ts",
   "sideEffects": [

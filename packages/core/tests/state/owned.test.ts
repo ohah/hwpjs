@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
-import { copyOwned } from '../../src/state/owned.ts';
+import { copyOwned, ownObservation } from '../../src/state/owned.ts';
 import { EditorState } from '../../src/state/editor-state.ts';
 
 test('byte boundaries copy Buffer slices and ArrayBuffer; reject shared/accessor/cycle/class payloads', () => {
@@ -78,4 +78,36 @@ test('plain observation identity is stable while each typed-buffer access is a f
   first.binary[0] = 99;
   assert.equal(first.binary[0], 1);
   assert.ok(Object.isFrozen(first.paragraphs[0]));
+});
+
+test('내부 관측 재사용은 byte getter의 복제 격리와 외부 입력 거부를 보존', () => {
+  const source = new Uint8Array([7, 8]);
+  const observed = ownObservation({ bytes: source })();
+  source[0] = 99;
+  assert.equal(typeof Object.getOwnPropertyDescriptor(observed, 'bytes')?.get, 'function');
+  assert.equal(copyOwned(observed, true), observed);
+  const first = observed.bytes;
+  const second = observed.bytes;
+  assert.notEqual(first, second);
+  first[0] = 42;
+  assert.equal(second[0], 7);
+  assert.equal(observed.bytes[0], 7);
+  assert.throws(() => copyOwned(observed, false), /AccessorPayloadUnsupported/);
+  let calls = 0;
+  const foreign = Object.freeze({
+    get bytes() {
+      calls++;
+      return source;
+    },
+  });
+  assert.throws(() => copyOwned(foreign, true), /AccessorPayloadUnsupported/);
+  assert.throws(() => copyOwned(foreign, false), /AccessorPayloadUnsupported/);
+  assert.equal(calls, 0);
+});
+test('중첩 내부 관측은 build에서 원본 identity와 byte 소유권을 함께 보존', () => {
+  const child = ownObservation({ bytes: new Uint8Array([5]) })();
+  const parent = ownObservation({ child })();
+  assert.equal(parent.child, child);
+  parent.child.bytes[0] = 66;
+  assert.equal(parent.child.bytes[0], 5);
 });

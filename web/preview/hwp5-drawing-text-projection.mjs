@@ -1,3 +1,4 @@
+import { createProjectionPairIndex, isProjectionDataOnly } from './projection-pair-index.mjs';
 import { hwp5DrawingTextSource } from './hwp5-drawing-text-source.mjs';
 import { validateHwp5DrawingListSources } from '../../js/hwp5-drawing-list-sources.mjs';
 import { hwp5CaptionGeometry } from './hwp5-caption-geometry.mjs';
@@ -20,8 +21,27 @@ export function projectHwp5DrawingText(content) {
       if (paragraphs.has(key)) throw new Error('AmbiguousHwp5DrawingTextParagraph');
       paragraphs.set(key, paragraph);
     }
+    const bodies = content.hwp5DrawingBodies ?? [];
+    const rootsData = Object.getOwnPropertyDescriptor(content, 'hwp5Drawings');
+    const flowsData = Object.getOwnPropertyDescriptor(content, 'currentParagraphFlows');
+    const stableBodies =
+      Array.isArray(bodies) &&
+      bodies.length > 0 &&
+      rootsData &&
+      Object.hasOwn(rootsData, 'value') &&
+      flowsData &&
+      Object.hasOwn(flowsData, 'value') &&
+      Array.isArray(rootsData.value ?? []) &&
+      Array.isArray(flowsData.value ?? []) &&
+      isProjectionDataOnly([bodies, content.paragraphs, rootsData.value, flowsData.value]);
+    const rootsByOwner = stableBodies
+      ? createProjectionPairIndex(rootsData.value ?? [], 'section', 'controlNode')
+      : null;
+    const flowsByParagraph = stableBodies
+      ? createProjectionPairIndex(flowsData.value ?? [], 'section', 'paragraph')
+      : null;
     const lists = new Set();
-    for (const body of content.hwp5DrawingBodies ?? []) {
+    for (const body of bodies) {
       validateHwp5DrawingListSources([body.source]);
       const source = body.source,
         listKey = `${body.section}:${body.listNode}`;
@@ -34,11 +54,16 @@ export function projectHwp5DrawingText(content) {
       )
         throw new Error('Hwp5DrawingTextSourceMismatch');
       lists.add(listKey);
-      const roots = (content.hwp5Drawings ?? []).filter(
-        (row) => row.section === body.section && row.controlNode === body.controlNode,
-      );
-      if (roots.length !== 1) throw new Error('MissingHwp5DrawingTextRoot');
-      const drawingNode = body.kind === 'body' ? body.ownerNode : roots[0].componentNode;
+      const rootMatches = stableBodies
+        ? null
+        : (content.hwp5Drawings ?? []).filter(
+            (row) => row.section === body.section && row.controlNode === body.controlNode,
+          );
+      const roots = !stableBodies
+        ? { count: rootMatches.length, first: rootMatches[0] }
+        : rootsByOwner.find(body.section, body.controlNode);
+      if (roots.count !== 1) throw new Error('MissingHwp5DrawingTextRoot');
+      const drawingNode = body.kind === 'body' ? body.ownerNode : roots.first.componentNode;
       const text = body.kind === 'body' ? hwp5DrawingTextSource(source) : null;
       const caption =
         body.kind === 'caption'
@@ -52,9 +77,14 @@ export function projectHwp5DrawingText(content) {
       for (const id of body.paragraphs) {
         const key = `${body.section}:${id}`,
           paragraph = paragraphs.get(key);
-        const flows = (content.currentParagraphFlows ?? []).filter(
-          (row) => row.section === body.section && row.paragraph === id,
-        );
+        const flowMatches = stableBodies
+          ? null
+          : (content.currentParagraphFlows ?? []).filter(
+              (row) => row.section === body.section && row.paragraph === id,
+            );
+        const flows = !stableBodies
+          ? { count: flowMatches.length, first: flowMatches[0] }
+          : flowsByParagraph.find(body.section, id);
         if (
           !Number.isInteger(id) ||
           id < 0 ||
@@ -64,11 +94,11 @@ export function projectHwp5DrawingText(content) {
           paragraph.clipped ||
           paragraph.tableCell ||
           paragraph.tableCaption ||
-          flows.length !== 1 ||
-          flows[0].host !== 'drawing' ||
-          flows[0].parent_node !== body.ownerNode ||
-          flows[0].list_node !== body.listNode ||
-          flows[0].top_level !== false
+          flows.count !== 1 ||
+          flows.first.host !== 'drawing' ||
+          flows.first.parent_node !== body.ownerNode ||
+          flows.first.list_node !== body.listNode ||
+          flows.first.top_level !== false
         )
           throw new Error('Hwp5DrawingTextMemberMismatch');
         owners.set(key, {
@@ -92,6 +122,22 @@ export function projectHwp5DrawingText(content) {
       if (flow.host === 'drawing' && !owners.has(`${flow.section}:${flow.paragraph}`))
         throw new Error('MissingHwp5DrawingTextMember');
     const projected = content.paragraphs.map((paragraph) => {
+      // 표시 소유권을 바꾸지 않는 immutable 행은 원본 identity를 유지합니다.
+      // 외부 복제 행에 권위를 부여하지 않습니다. 실제 Native membership은 별도로 검증합니다.
+      if (
+        Object.isFrozen(paragraph) &&
+        [Object.prototype, null].includes(Object.getPrototypeOf(paragraph)) &&
+        !('drawingText' in paragraph) &&
+        !('drawingCaption' in paragraph) &&
+        Reflect.ownKeys(paragraph).every(
+          (key) =>
+            typeof key === 'string' &&
+            Object.hasOwn(Object.getOwnPropertyDescriptor(paragraph, key), 'value'),
+        ) &&
+        !owners.has(`${paragraph.section}:${paragraph.paragraph}`)
+      )
+        return paragraph;
+
       const {
         drawingText: _previousDrawingText,
         drawingCaption: _previousDrawingCaption,

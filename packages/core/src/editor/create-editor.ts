@@ -1,3 +1,9 @@
+import { consumeNativeRuntimeOrigin } from '../internal/native-runtime-origin.ts';
+import {
+  createGeometryEvidenceController,
+  bindGeometryProjectionPort,
+} from '../internal/native-geometry-evidence.ts';
+import type { NativeRuntimeOrigin } from '../internal/native-runtime-origin.ts';
 import type { HistoryOptions } from '../history-options.ts';
 import { EditorWritePolicy } from './write-policy.ts';
 import type { SynchronousCallback, UpdateCallback } from '../state/synchronous-callback.ts';
@@ -148,6 +154,12 @@ export function createEditor(options: CreateEditorOptions) {
   const queue = new FifoScheduler(),
     admission = new FifoScheduler(),
     registry = new CommandRegistry();
+  const geometry = createGeometryEvidenceController();
+  const takeGeometryOrigin = (
+    runtime: EditorRuntime,
+    reply: RuntimeReply,
+    ctx: RuntimeRequestContext,
+  ): NativeRuntimeOrigin | undefined => consumeNativeRuntimeOrigin(runtime, reply, ctx);
   const selectionHistory = new SelectionHistory();
   const writePolicy = new EditorWritePolicy();
   let active: EditorRuntime | undefined,
@@ -213,9 +225,18 @@ export function createEditor(options: CreateEditorOptions) {
     runRead,
   );
   function assertPublicMutation() {
-    if (readDepth) throw Error('ReadMutation');
-    if (collecting) throw Error('CollectorOnly');
-    if (handling) throw Error('CommandHandlerMutation');
+    if (readDepth) {
+      geometry.invalidate();
+      throw Error('ReadMutation');
+    }
+    if (collecting) {
+      geometry.invalidate();
+      throw Error('CollectorOnly');
+    }
+    if (handling) {
+      geometry.invalidate();
+      throw Error('CommandHandlerMutation');
+    }
   }
   function assertLive() {
     if (terminal) throw Error('EditorDisposed');
@@ -225,6 +246,7 @@ export function createEditor(options: CreateEditorOptions) {
     context?: RuntimeRequestContext,
     applied: boolean | 'unknown' = false,
   ) {
+    geometry.invalidate();
     if (terminal) return;
     const event = Object.freeze({
       error,
@@ -271,7 +293,12 @@ export function createEditor(options: CreateEditorOptions) {
       }
     }
   }
-  function install(patch: Partial<StateData>, mutation = false, ctx?: RuntimeRequestContext) {
+  function install(
+    patch: Partial<StateData>,
+    mutation = false,
+    ctx?: RuntimeRequestContext,
+    origin?: NativeRuntimeOrigin,
+  ) {
     if (terminal) return;
     // Capture both sets before any callback changes registrations.
     const states = [...stateListeners],
@@ -294,7 +321,12 @@ export function createEditor(options: CreateEditorOptions) {
       selection: state.selection,
       ...patch,
     };
+    const previousState = state;
     state = new EditorState(next, runRead);
+    if (origin) geometry.publish(previousState, state, origin);
+    else if (!mutation && Object.keys(patch).length === 1 && Object.hasOwn(patch, 'selection'))
+      geometry.inherit(previousState, state);
+    else geometry.invalidate();
     selectionHistory.observe(state);
     const snapshot = state;
     notify(states, snapshot, ctx, mutation);
@@ -453,11 +485,13 @@ export function createEditor(options: CreateEditorOptions) {
     first?: RuntimeReply,
     guard: () => void = () => {},
   ): Promise<EditorState> {
+    let publicationContext = ctx;
     let reply = first ?? (await runtime.request(message, ctx));
     verifyReply(reply, ctx);
     if (reply.error) throw Error(reply.error);
     if (editable) {
       const enableContext = { ...ctx, requestId: ++requestId };
+      publicationContext = enableContext;
       reply = await runtime.request({ ...enableOptions, kind: 'enable' }, enableContext);
       verifyReply(reply, enableContext);
       if (reply.error) throw Error(reply.error);
@@ -490,7 +524,7 @@ export function createEditor(options: CreateEditorOptions) {
     writePolicy.publish(editable, () => {
       active = runtime;
       try {
-        install(nextData, true, ctx);
+        install(nextData, true, ctx, takeGeometryOrigin(runtime, reply, publicationContext));
       } catch (error) {
         active = previous;
         throw error;
@@ -754,7 +788,10 @@ export function createEditor(options: CreateEditorOptions) {
         return result('known-no-op', ctx, undefined, reply);
       }
       const noOp = !reply.error && (reply.meta?.changed === false || reply.changed === false);
-      if (noOp) return result('known-no-op', ctx, undefined, reply);
+      if (noOp) {
+        geometry.invalidate();
+        return result('known-no-op', ctx, undefined, reply);
+      }
       if (reply.error || reply.content === undefined) {
         install({
           operationRevision: reserved,
@@ -787,7 +824,12 @@ export function createEditor(options: CreateEditorOptions) {
           );
           selection = selectionHistory.restore(provisional);
         }
-        install({ ...patch, selection, operationRevision: reserved, status: 'ready' }, true, ctx);
+        install(
+          { ...patch, selection, operationRevision: reserved, status: 'ready' },
+          true,
+          ctx,
+          takeGeometryOrigin(active!, reply, ctx),
+        );
       } catch (error) {
         install({ operationRevision: reserved, status: 'refresh-required' });
         notifyError(error, ctx, true);
@@ -892,9 +934,15 @@ export function createEditor(options: CreateEditorOptions) {
   function update<T>(
     callback: UpdateCallback<[UpdateCollector, EditorState], T>,
   ): Promise<UpdateResult> {
-    if (readDepth) throw Error('ReadMutation');
+    if (readDepth) {
+      geometry.invalidate();
+      throw Error('ReadMutation');
+    }
     if (collecting) throw Error('NestedUpdate');
-    if (handling) throw Error('CommandHandlerMutation');
+    if (handling) {
+      geometry.invalidate();
+      throw Error('CommandHandlerMutation');
+    }
     assertLive();
     if (typeof callback !== 'function') throw TypeError('InvalidUpdateCallback');
     if (isAsyncFunction(callback)) throw Error('AsyncUpdate');
@@ -1146,7 +1194,7 @@ export function createEditor(options: CreateEditorOptions) {
       fence,
     };
     surface = record;
-    return Object.freeze({
+    const lease = Object.freeze({
       id: record.id,
       generation,
       isActive: () => !terminal && record.active && surface === record,
@@ -1178,7 +1226,7 @@ export function createEditor(options: CreateEditorOptions) {
             const reply = await active!.request(owned, ctx);
             verifyReply(reply, ctx);
             if (reply.error) throw Error(reply.error);
-            install(contentPatch(reply), false, ctx);
+            install(contentPatch(reply), false, ctx, takeGeometryOrigin(active!, reply, ctx));
             assertSurface(record);
             return freezeDTO(copyOwned(reply, true));
           }
@@ -1210,6 +1258,7 @@ export function createEditor(options: CreateEditorOptions) {
       release() {
         if (!record.active) return;
         assertPublicMutation();
+        geometry.invalidate();
         record.active = false;
         record.fence.cancel();
         if (surface === record) {
@@ -1219,6 +1268,12 @@ export function createEditor(options: CreateEditorOptions) {
         cancelComposition(record, 'detach');
       },
     });
+    bindGeometryProjectionPort(lease, (snapshot) =>
+      !terminal && record.active && surface === record && snapshot === state
+        ? geometry.read(snapshot)
+        : undefined,
+    );
+    return lease;
   }
   function register<T>(set: Set<T>, listener: T): () => void {
     assertLive();
@@ -1232,6 +1287,7 @@ export function createEditor(options: CreateEditorOptions) {
     };
   }
   function dispose(): Promise<void> {
+    geometry.invalidate();
     assertPublicMutation();
     if (disposePromise) return disposePromise;
     terminal = true;
@@ -1287,21 +1343,35 @@ export function createEditor(options: CreateEditorOptions) {
     disposePromise = Promise.all([nativeDisposal, admission.drain()]).then(() => {});
     return disposePromise;
   }
+  function geometryGuard<F extends (...args: any[]) => any>(fn: F): F {
+    return ((...args: any[]) => {
+      try {
+        const value = fn(...args);
+        // dispose의 반복 호출은 동일한 Promise를 반환해야 합니다.
+        // 거부 관측은 별도로 연결하고 호출자가 받는 Promise는 교체하지 않습니다.
+        if (value instanceof Promise) void value.catch(() => geometry.invalidate());
+        return value;
+      } catch (error) {
+        geometry.invalidate();
+        throw error;
+      }
+    }) as F;
+  }
   return Object.freeze({
     getEditorState: () => state,
     read: <T>(callback: SynchronousCallback<[EditorState], T>): T => runRead(callback, state),
-    load,
-    unlock,
-    cancelLoad,
-    dispatchCommand,
-    update,
-    save,
-    refresh,
-    requestExperimental,
-    readResource,
-    setSelection,
-    acquireInputSurface,
-    dispose,
+    load: geometryGuard(load),
+    unlock: geometryGuard(unlock),
+    cancelLoad: geometryGuard(cancelLoad),
+    dispatchCommand: geometryGuard(dispatchCommand),
+    update: geometryGuard(update),
+    save: geometryGuard(save),
+    refresh: geometryGuard(refresh),
+    requestExperimental: geometryGuard(requestExperimental),
+    readResource: geometryGuard(readResource),
+    setSelection: geometryGuard(setSelection),
+    acquireInputSurface: geometryGuard(acquireInputSurface),
+    dispose: geometryGuard(dispose),
     undo: (token?: StateToken) => historyCommand(UNDO_COMMAND, token),
     redo: (token?: StateToken) => historyCommand(REDO_COMMAND, token),
     registerStateListener: (listener: (state: EditorState) => unknown) =>

@@ -1,3 +1,4 @@
+import { withParagraphFlowReuse } from './paragraph-flow-reuse.mjs';
 import { pageReferenceBoxes } from './page-reference-boxes.mjs';
 import { pageRowFitHeight } from './page-row-extents.mjs';
 import { columnReferenceBoxes } from './column-reference-boxes.mjs';
@@ -241,10 +242,14 @@ export function layoutInlineGroupBody(
         : layoutContent(
             { paragraphs: [paragraph], limited: false },
             columns.boxes[0].width,
-            (text, p, unit, kind) =>
-              kind === 'text' && zeroWidthUnits.includes(unit)
-                ? { width: 0, height: textMeasurement(measure('', p, unit, kind)).height }
-                : measure(text, p, unit, kind),
+            withParagraphFlowReuse(
+              measure,
+              (text, p, unit, kind) =>
+                kind === 'text' && zeroWidthUnits.includes(unit)
+                  ? { width: 0, height: textMeasurement(measure('', p, unit, kind)).height }
+                  : measure(text, p, unit, kind),
+              { kind: 'inline-group-zero-width', zeroWidthUnits },
+            ),
             maxRows - rows.length,
             { documentBody: true },
           ));

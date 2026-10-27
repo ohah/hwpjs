@@ -1,4 +1,5 @@
 import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
+import { withParagraphFlowReuse } from './paragraph-flow-reuse.mjs';
 import { layoutContent } from './layout.mjs';
 import { textMeasurement } from './text-measurement.mjs';
 import { inlineObjectLineAdvance } from './inline-object-line-advance.mjs';
@@ -112,16 +113,20 @@ export function measureInlineObjectParagraph(
       limited: false,
     },
     width,
-    (text, current, unit, kind) =>
-      kind === 'text' && text !== '' && byUnit.has(unit)
-        ? {
-            width: byUnit.get(unit).width,
-            height: byUnit.get(unit).height,
-            ...(pictureFlow
-              ? { spacingBasisHeight: textMeasurement(measure('', current, unit, kind)).height }
-              : {}),
-          }
-        : currentMeasure(text, current, unit, kind),
+    withParagraphFlowReuse(
+      measure,
+      (text, current, unit, kind) =>
+        kind === 'text' && text !== '' && byUnit.has(unit)
+          ? {
+              width: byUnit.get(unit).width,
+              height: byUnit.get(unit).height,
+              ...(pictureFlow
+                ? { spacingBasisHeight: textMeasurement(measure('', current, unit, kind)).height }
+                : {}),
+            }
+          : currentMeasure(text, current, unit, kind),
+      { kind: 'inline-object-geometry', entries, overlays: [...overlays] },
+    ),
     maxRows,
     { documentBody: true, compactLines: pictureFlow ? false : compactLines, includeTerminalAfter },
   );

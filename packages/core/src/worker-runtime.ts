@@ -1,3 +1,4 @@
+import { createNativeWorkerWitness } from './internal/native-worker-origin.ts';
 import type {
   EditorRuntime,
   RuntimeFactory,
@@ -5,11 +6,19 @@ import type {
   RuntimeReply,
   RuntimeRequestContext,
 } from './contracts.ts';
-import { createWasmModuleLoader } from './wasm-module-loader.ts';
-import { copyOwned } from './state/owned.ts';
-const ownedWorkers = new WeakSet<object>();
-let workerScopeSequence = 0;
-
+import { createWasmModuleLoader, readKnownNativeModule } from './wasm-module-loader.ts';
+import { copyOwned, ownObservation } from './state/owned.ts';
+import {
+  bindNativeRuntimeOrigin,
+  canonicalRuntimeDescriptors,
+  nativeOrigin,
+  sameRequestContext,
+} from './internal/native-runtime-origin.ts';
+import type {
+  NativeRuntimeOrigin,
+  NativeModuleContract,
+} from './internal/native-runtime-origin.ts';
+import { KNOWN_WORKER_CODE_SHA256 } from './internal/known-worker-code.ts';
 interface RuntimeWorker {
   postMessage(message: unknown): void;
   terminate(): void;
@@ -24,25 +33,63 @@ export interface WorkerRuntimeOptions {
   workerFactory?: (url: string | URL) => RuntimeWorker;
 }
 export type WorkerRuntimeFactory = RuntimeFactory & { preload(): Promise<WebAssembly.Module> };
-
-/** Browser transport only. Its worker owns exactly one candidate/active runtime. */
+const ownedWorkers = new WeakSet<object>();
+let scopeSequence = 0;
+const origins = new WeakMap<
+  object,
+  {
+    valid: () => boolean;
+    read: (reply: RuntimeReply, ctx: RuntimeRequestContext) => NativeRuntimeOrigin | undefined;
+  }
+>();
+export function consumeWorkerNativeGeometryOrigin(
+  runtime: object,
+  reply: RuntimeReply,
+  ctx: RuntimeRequestContext,
+) {
+  return origins.get(runtime)?.read(reply, ctx);
+}
+export function workerNativeGeometryAuthority(runtime: object) {
+  return origins.get(runtime)?.valid() === true;
+}
 export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): EditorRuntime {
-  if (workerScopeSequence >= Number.MAX_SAFE_INTEGER) throw Error('WorkerIdentityExhausted');
-  const referenceScope = `worker:${++workerScopeSequence}`;
-  const worker = options.workerFactory
-    ? options.workerFactory(options.workerURL ?? new URL('./worker.js', import.meta.url))
-    : new Worker(options.workerURL ?? new URL('./worker.js', import.meta.url), { type: 'module' });
-  if (ownedWorkers.has(worker)) throw Error('WorkerAlreadyOwned');
-  ownedWorkers.add(worker);
-  let closed = false,
+  if (scopeSequence >= Number.MAX_SAFE_INTEGER) throw Error('WorkerIdentityExhausted');
+  const referenceScope = `worker:${++scopeSequence}`;
+  const defaultURL = new URL('./worker.js', import.meta.url),
+    custom = options.workerFactory !== undefined || options.workerURL !== undefined;
+  let worker: RuntimeWorker | undefined,
+    closed = false,
+    failure: Error | undefined,
     sequence = 0,
-    failure: Error | undefined;
+    publication = 0,
+    canonicalCode = false,
+    tainted = false,
+    poisoned = false,
+    blobURL: string | undefined,
+    contract: NativeModuleContract | undefined;
+  const trustedReplies = new WeakSet<object>();
+  const transportWitness = createNativeWorkerWitness();
   const pending = new Map<
-    number,
-    { resolve: (value: RuntimeReply) => void; reject: (error: Error) => void }
-  >();
-  const rejectAll = (error: Error) => {
-    for (const item of pending.values()) item.reject(error);
+      number,
+      { resolve: (reply: RuntimeReply) => void; reject: (error: Error) => void }
+    >(),
+    proofs = new WeakMap<object, NativeRuntimeOrigin>();
+  let runtime: EditorRuntime;
+  const valid = () => {
+    if (canonicalCode && !custom && !transportWitness.current(worker)) tainted = true;
+    if (!canonicalRuntimeDescriptors(runtime, request, dispose, Object.prototype)) tainted = true;
+    return (
+      !closed &&
+      !tainted &&
+      !poisoned &&
+      !custom &&
+      canonicalCode &&
+      !!contract &&
+      transportWitness.current(worker)
+    );
+  };
+  const rejectAll = (e: Error) => {
+    for (const item of pending.values()) item.reject(e);
     pending.clear();
   };
   const receive = (event: MessageEvent) => {
@@ -54,22 +101,59 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     if (typeof value.transportError === 'string') item.reject(Error(value.transportError));
     else if (!value.reply || typeof value.reply.kind !== 'string')
       item.reject(Error('MalformedWorkerReply'));
-    else item.resolve(value.reply);
+    else {
+      if (transportWitness.accepts(event, value)) trustedReplies.add(value.reply);
+      item.resolve(value.reply);
+    }
   };
-  const shutdown = (reason: Error) => {
+  function shutdown(reason: Error) {
     if (closed) return;
     closed = true;
     failure = reason;
     rejectAll(reason);
-    worker.removeEventListener('message', receive);
-    worker.removeEventListener('error', failed);
-    worker.removeEventListener('messageerror', failed);
-    worker.terminate();
-  };
-  const failed = () => shutdown(Error('WorkerRuntimeFailed'));
-  worker.addEventListener('message', receive);
-  worker.addEventListener('error', failed);
-  worker.addEventListener('messageerror', failed);
+    if (worker) {
+      worker.removeEventListener('message', receive);
+      worker.removeEventListener('error', failed);
+      worker.removeEventListener('messageerror', failed);
+      worker.terminate();
+    }
+    if (blobURL) URL.revokeObjectURL(blobURL);
+  }
+  function failed() {
+    shutdown(Error('WorkerRuntimeFailed'));
+  }
+  function attach(w: RuntimeWorker) {
+    if (ownedWorkers.has(w)) throw Error('WorkerAlreadyOwned');
+    ownedWorkers.add(w);
+    worker = w;
+    w.addEventListener('message', receive);
+    w.addEventListener('error', failed);
+    w.addEventListener('messageerror', failed);
+  }
+  if (options.workerFactory) attach(options.workerFactory(options.workerURL ?? defaultURL));
+  else if (options.workerURL !== undefined)
+    attach(new Worker(options.workerURL, { type: 'module' }));
+  async function canonicalWorker() {
+    if (worker) return;
+    if (globalThis.crypto?.subtle) {
+      try {
+        const response = await fetch(defaultURL, { cache: 'no-cache' });
+        if (response.ok) {
+          const bytes = await response.arrayBuffer(),
+            digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+          const hash = Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('');
+          if (hash === KNOWN_WORKER_CODE_SHA256) {
+            canonicalCode = true;
+            blobURL = URL.createObjectURL(new Blob([bytes], { type: 'text/javascript' }));
+          }
+        }
+      } catch {
+        /* Unknown packaged code keeps the ordinary Worker path without authority. */
+      }
+    }
+    if (closed) throw Error('RuntimeDisposed');
+    attach(new Worker(blobURL ?? defaultURL, { type: 'module' }));
+  }
   const send = (message: unknown): Promise<RuntimeReply> =>
     new Promise((resolve, reject) => {
       if (closed) {
@@ -79,10 +163,10 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       const id = ++sequence;
       pending.set(id, { resolve, reject });
       try {
-        worker.postMessage({ id, message });
+        worker!.postMessage({ id, message });
       } catch (error) {
         pending.delete(id);
-        reject(error);
+        reject(error instanceof Error ? error : Error(String(error)));
       }
     });
   const load =
@@ -92,41 +176,78 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       : createWasmModuleLoader({ url: options.wasmURL }));
   const ready = Promise.resolve()
     .then(load)
-    .then((module) => send({ kind: 'initialize-runtime', wasmModule: module, referenceScope }));
-  void ready.catch((error) => shutdown(error instanceof Error ? error : Error(String(error))));
-  return {
-    async request(message: RuntimeMessage, context?: RuntimeRequestContext) {
-      // Copy before the module loader can yield; postMessage will copy once more.
-      const owned = copyOwned(message),
-        captured = context ? { ...context } : undefined;
-      await ready;
-      const reply = await send(owned);
-      return { ...reply, meta: { ...reply.meta, ...(captured ? { context: captured } : {}) } };
+    .then(async (module) => {
+      contract = readKnownNativeModule(module);
+      await canonicalWorker();
+      return send({ kind: 'initialize-runtime', wasmModule: module, referenceScope });
+    });
+  void ready.catch((e) => shutdown(e instanceof Error ? e : Error(String(e))));
+  async function request(message: RuntimeMessage, context?: RuntimeRequestContext) {
+    return requestInternal(message, context);
+  }
+  async function requestInternal(message: RuntimeMessage, context?: RuntimeRequestContext) {
+    const owned = copyOwned(message),
+      captured = context ? { ...context } : undefined,
+      kind = owned.kind;
+    await ready;
+    const raw = await send(owned);
+    const reply = ownObservation({
+      ...raw,
+      meta: { ...raw.meta, ...(captured ? { context: captured } : {}) },
+    })() as RuntimeReply;
+    if (/MutationUncertain|HistoryMutationUncertain/.test(String(reply.error ?? '')))
+      poisoned = true;
+    if (
+      reply.content !== undefined ||
+      reply.error ||
+      reply.meta?.changed === true ||
+      ['splice', 'splice-current', 'undo', 'redo', 'format'].includes(kind)
+    )
+      publication++;
+    const trusted = trustedReplies.has(raw);
+    trustedReplies.delete(raw);
+    const proof = trusted
+      ? nativeOrigin(kind, reply, captured, publication, contract, valid)
+      : undefined;
+    if (proof) proofs.set(reply, proof);
+    return reply;
+  }
+  function dispose() {
+    shutdown(Error('RuntimeDisposed'));
+  }
+  runtime = { request, dispose };
+  origins.set(runtime, {
+    valid,
+    read: (reply, ctx) => {
+      if (!valid()) return;
+      const proof = proofs.get(reply);
+      proofs.delete(reply);
+      return proof && sameRequestContext(proof.context, ctx) ? proof : undefined;
     },
-    dispose() {
-      shutdown(Error('RuntimeDisposed'));
-    },
-  };
+  });
+  bindNativeRuntimeOrigin(runtime, (reply, ctx) =>
+    consumeWorkerNativeGeometryOrigin(runtime, reply, ctx),
+  );
+  return runtime;
 }
-
 export function createWorkerRuntimeFactory(
   options: WorkerRuntimeOptions = {},
 ): WorkerRuntimeFactory {
-  const captured = { ...options };
-  const loader =
-    captured.loadWasmModule ??
-    (captured.wasmModule
-      ? async () => captured.wasmModule!
-      : createWasmModuleLoader({ url: captured.wasmURL }));
+  const captured = { ...options },
+    load =
+      captured.loadWasmModule ??
+      (captured.wasmModule
+        ? async () => captured.wasmModule!
+        : createWasmModuleLoader({ url: captured.wasmURL }));
   let compiled: Promise<WebAssembly.Module> | undefined;
   const loadWasmModule = () => {
     if (compiled) return compiled;
-    const pending = Promise.resolve().then(loader);
-    compiled = pending;
-    void pending.catch(() => {
-      if (compiled === pending) compiled = undefined;
+    const p = Promise.resolve().then(load);
+    compiled = p;
+    void p.catch(() => {
+      if (compiled === p) compiled = undefined;
     });
-    return pending;
+    return p;
   };
   return Object.assign(() => createWorkerEditorRuntime({ ...captured, loadWasmModule }), {
     preload: loadWasmModule,

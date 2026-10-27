@@ -1,3 +1,16 @@
+export const PROJECTION_CANVAS_CONTEXT_FIELDS = Object.freeze([
+  'direction',
+  'fontKerning',
+  'fontStretch',
+  'fontVariantCaps',
+  'letterSpacing',
+  'wordSpacing',
+  'textRendering',
+  'textAlign',
+  'textBaseline',
+  'lang',
+]);
+
 // 한 동기 layout projection에서만 쓰며 다음 projection과 공유하지 않습니다.
 const LIMIT = 4096;
 const BYTE_LIMIT = 1024 * 1024;
@@ -31,19 +44,7 @@ export function createProjectionCanvasMetrics(ctx, limit = LIMIT, { stableContex
     currentFont = ctx.font,
     size = 0,
     bytes = 0;
-  const contextKey = () =>
-    JSON.stringify([
-      ctx.direction,
-      ctx.fontKerning,
-      ctx.fontStretch,
-      ctx.fontVariantCaps,
-      ctx.letterSpacing,
-      ctx.wordSpacing,
-      ctx.textRendering,
-      ctx.textAlign,
-      ctx.textBaseline,
-      ctx.lang,
-    ]);
+  const contextKey = () => JSON.stringify(PROJECTION_CANVAS_CONTEXT_FIELDS.map((key) => ctx[key]));
   // renderer의 동기 projection 안에서는 이 속성들을 변경하지 않습니다.
   const projectionKey = stableContext ? contextKey() : null;
   return {

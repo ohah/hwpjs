@@ -1,5 +1,14 @@
 /** Copies at public boundaries. No WASM view or caller-owned backing store escapes. */
 export function copyOwned<T>(value: T, observation = false, seen = new Set<object>()): T {
+  // 내부 생성·동결 관측만 재사용합니다. 외부 accessor 입력은 이 권위를 얻지 못합니다.
+  if (
+    observation &&
+    value !== null &&
+    typeof value === 'object' &&
+    immutableObservations.has(value)
+  )
+    return value;
+
   if (
     value === null ||
     typeof value === 'string' ||
@@ -84,6 +93,7 @@ export function ownObservation<T>(value: T): () => T {
     item instanceof Set;
   const build = (item: unknown): unknown => {
     if (item === null || typeof item !== 'object') return item;
+    if (immutableObservations.has(item)) return item;
     const node: Record<string, unknown> | unknown[] = Array.isArray(item)
       ? // oxlint-disable-next-line unicorn/no-new-array -- 소유 DTO 복제 시 원래 배열 길이와 희소 슬롯을 그대로 보존한다.
         new Array(item.length)

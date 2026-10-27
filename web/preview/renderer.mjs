@@ -1,3 +1,8 @@
+import { createDecodedResourceGeometryEpoch } from './decoded-resource-geometry-epoch.mjs';
+import { createCanvasMeasurementPolicy } from './canvas-measurement-policy.mjs';
+import { createNativeGeometryDeps } from './native-geometry-deps.mjs';
+import { currentTextBoundaryIdentity } from './text-boundary-platform.mjs';
+import { createParagraphFlowReuse } from './paragraph-flow-reuse.mjs';
 import { createParagraphLookup } from './projection-paragraph-index.mjs';
 import { watchProjectionFonts } from './projection-measure-memo.mjs';
 import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from './canvas-display-options.mjs';
@@ -140,6 +145,58 @@ export function createRenderer(
     layout = { rows: [], limited: false };
   let projectionDeferred = false;
   const paragraphLookup = createParagraphLookup();
+  const evidenceDescriptor = Object.getOwnPropertyDescriptor(
+    environment,
+    'nativeGeometryEvidenceReader',
+  );
+  const evidenceReader = evidenceDescriptor?.value;
+  const readGeometryEvidence = (evidence, value) => {
+    const current = Object.getOwnPropertyDescriptor(environment, 'nativeGeometryEvidenceReader');
+    if (
+      typeof evidenceReader !== 'function' ||
+      !current ||
+      current.value !== evidenceReader ||
+      current.writable !== evidenceDescriptor.writable ||
+      current.configurable !== evidenceDescriptor.configurable ||
+      current.enumerable !== evidenceDescriptor.enumerable
+    )
+      return undefined;
+    return evidenceReader(evidence, value);
+  };
+  const nativeGeometry = createNativeGeometryDeps({
+    readEvidence: readGeometryEvidence,
+  });
+  const canvasMeasurementPolicy = createCanvasMeasurementPolicy(ctx, realm);
+  const measurementEpochDescriptor = Object.getOwnPropertyDescriptor(
+    environment,
+    'geometryMeasurementEpoch',
+  );
+  const measurementEpochReader = measurementEpochDescriptor?.value;
+  const readMeasurementPolicy = () => {
+    let explicitEpoch;
+    if (measurementEpochReader !== undefined) {
+      const current = Object.getOwnPropertyDescriptor(environment, 'geometryMeasurementEpoch');
+      if (
+        typeof measurementEpochReader !== 'function' ||
+        !current ||
+        current.value !== measurementEpochReader ||
+        current.get ||
+        current.set ||
+        current.writable !== measurementEpochDescriptor.writable ||
+        current.configurable !== measurementEpochDescriptor.configurable ||
+        current.enumerable !== measurementEpochDescriptor.enumerable
+      )
+        return null;
+      try {
+        explicitEpoch = measurementEpochReader();
+      } catch {
+        return null;
+      }
+    }
+    return canvasMeasurementPolicy.current(explicitEpoch);
+  };
+  let geometryEvidence,
+    measurementEpoch = 0;
   let draft = null,
     interaction = {},
     onGeometry = () => {},
@@ -182,12 +239,17 @@ export function createRenderer(
       mode: 'preview-overlay',
     },
     paintedCharts = [];
+  const paragraphFlowReuse = createParagraphFlowReuse();
   const chartResources = createChartDisplayResources({
     read: (section, wrapper) =>
       chartReader
         ? chartReader(section, wrapper)
         : Promise.reject(new Error('ChartDisplayReaderUnavailable')),
-    onChange: () => reflow(),
+    onChange: () => {
+      measurementEpoch++;
+      paragraphFlowReuse.clear();
+      reflow();
+    },
   });
   let pictureLayers = { behind: [], front: [] };
   let paintedPictures = { behind: [], front: [] };
@@ -202,6 +264,7 @@ export function createRenderer(
   let inlineForms = new Map();
   let paintedFormTargets = [];
   let pictureDecoder = (bytes) => createImageBitmap(new Blob([bytes]));
+  const decodedResourceGeometry = createDecodedResourceGeometryEpoch(realm);
   const pictureResources = createPictureResources({
     read: (section, node) =>
       pictureReader
@@ -226,7 +289,8 @@ export function createRenderer(
       }
       return pictureDecoder(bytes);
     },
-    onChange: () => {
+    onChange: (section, node, kind) => {
+      decodedResourceGeometry.observe(pictureResources.status(section, node, kind));
       resourceGeneration++;
       schedule();
     },
@@ -1243,6 +1307,20 @@ export function createRenderer(
       projectionMemo: true,
       stableContext: true,
     });
+    const nativeScope = nativeGeometry.prepare(content, geometryEvidence, {
+      width: viewport.clientWidth,
+      scale: viewScale,
+      dpr: environment.devicePixelRatio?.() ?? realm.devicePixelRatio ?? 1,
+      fontEpoch: measurementEpoch,
+      decodedResourceEpoch: decodedResourceGeometry.value,
+      fontKey: FONT,
+      textBoundaryIdentity: currentTextBoundaryIdentity(),
+      measurementPolicy: readMeasurementPolicy(),
+    });
+    if (nativeScope) {
+      paragraphFlowReuse.beginNative(nativeScope);
+      measure.paragraphFlowReuse = paragraphFlowReuse;
+    } else paragraphFlowReuse.clear();
     const windowFragment = pictureDisplay.format === 'hwp5' && Boolean(pictureDisplay.window);
     const pageLayout =
       pictureDisplay.format === 'hwp5'
@@ -1321,11 +1399,26 @@ export function createRenderer(
   };
   viewport.addEventListener('scroll', schedule);
   const stopFontWatch = watchProjectionFonts(canvas, () => {
+    measurementEpoch++;
+    paragraphFlowReuse.clear();
     if (!closed) reflow();
   });
   const resize = new ResizeObserver(reflow);
   resize.observe(viewport);
   return {
+    setGeometryEvidence(value, evidence) {
+      geometryEvidence =
+        value === content && readGeometryEvidence(evidence, value) ? evidence : undefined;
+      if (geometryEvidence === undefined) {
+        nativeGeometry.clear();
+        paragraphFlowReuse.clear();
+      }
+    },
+    suspendGeometryEvidence() {
+      geometryEvidence = undefined;
+      nativeGeometry.clear();
+      paragraphFlowReuse.clear();
+    },
     getDisplayOptions: () => displayOptions,
     setDisplayOptions(options) {
       if (closed) return false;
@@ -1478,6 +1571,7 @@ export function createRenderer(
       pictureDecoder = decode;
       resourceGeneration++;
       pictureResources.clear();
+      decodedResourceGeometry.clear();
     },
     chartReader(read) {
       chartReader = read;
@@ -1545,6 +1639,7 @@ export function createRenderer(
         resourceEpoch: nextResourceEpoch = resourceEpoch,
         resourceDocument: nextResourceDocument,
         deferLayout = false,
+        geometryEvidence: nextGeometryEvidence,
       } = {},
     ) {
       // Callers without a separate document identity retain the conservative
@@ -1554,6 +1649,8 @@ export function createRenderer(
           ? nextResourceEpoch !== resourceEpoch
           : nextResourceDocument !== resourceDocument;
       if (changedResourceDocument) {
+        nativeGeometry.clear();
+        paragraphFlowReuse.clear();
         stopPictureWait();
         pictureWaitExpired = false;
         paintedFrame = null;
@@ -1562,6 +1659,7 @@ export function createRenderer(
         interaction = {};
         caretVisible = true;
         pictureResources.clear();
+        decodedResourceGeometry.clear();
         const resetWidth = canvas.width;
         canvas.width = resetWidth;
       } else if (nextResourceEpoch !== resourceEpoch) pictureResources.refresh();
@@ -1569,6 +1667,7 @@ export function createRenderer(
       resourceDocument = nextResourceDocument;
       chartResources.clear();
       content = value;
+      geometryEvidence = nextGeometryEvidence;
       paragraphLookup.clear();
       draft = null;
       resizeGuide = null;
@@ -1600,6 +1699,9 @@ export function createRenderer(
     },
     flushProjection,
     clear() {
+      nativeGeometry.clear();
+      paragraphFlowReuse.clear();
+      geometryEvidence = undefined;
       stopPictureWait();
       pictureWaitExpired = false;
       paintedFrame = null;
@@ -1609,6 +1711,7 @@ export function createRenderer(
       selectedPicture = null;
       canvas.dataset.selectedPicture = '';
       pictureResources.clear();
+      decodedResourceGeometry.clear();
       const resetWidth = canvas.width;
       canvas.width = resetWidth;
       content = { paragraphs: [], limited: false };
@@ -1769,6 +1872,9 @@ export function createRenderer(
       onGeometry = callback;
     },
     close() {
+      nativeGeometry.clear();
+      paragraphFlowReuse.clear();
+      geometryEvidence = undefined;
       if (closed) return;
       closed = true;
       projectionDeferred = false;
@@ -1776,6 +1882,7 @@ export function createRenderer(
       stopPictureWait();
       chartResources.close();
       pictureResources.close();
+      decodedResourceGeometry.clear();
       stopBlink();
       resize.disconnect();
       stopFontWatch();

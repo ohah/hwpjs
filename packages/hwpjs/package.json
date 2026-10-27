@@ -25,6 +25,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
+    "./_internal/native-geometry": {
+      "types": "./dist/types/core/src/_internal/native-geometry.d.ts",
+      "import": "./dist/_internal/native-geometry.js"
+    },
     "./runtime": {
       "types": "./dist/types/core/src/runtime.d.ts",
       "browser": "./dist/runtime.js",

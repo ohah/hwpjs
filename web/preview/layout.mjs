@@ -75,7 +75,26 @@ export function layoutContent(
     rows.push(row);
     return true;
   };
+  const reuse = measure.paragraphFlowReuse?.scope(content, width, {
+    documentBody,
+    noWrap,
+    compactLines,
+    includeTerminalAfter,
+  });
   outer: for (const p of content.paragraphs) {
+    const startRow = rows.length,
+      startHeight = height;
+    const cached = reuse?.lookup(
+      p,
+      maxRows - rows.length,
+      flowPictures,
+      p === content.paragraphs.at(-1),
+    );
+    if (cached?.value) {
+      for (const row of cached.value.rows) rows.push({ ...row, y: row.y + height });
+      height += cached.value.height;
+      continue;
+    }
     const sourceStart = p.textStartUnit ?? 0;
     const trailingStart = trailingSpaceStart(p.text, sourceStart);
     if (
@@ -276,6 +295,8 @@ export function layoutContent(
     )
       break;
     if (!documentBody && !push({ text: '', kind: 'gap' })) break;
+    if (cached?.store && !paragraphFlowed && !limited)
+      cached.store(rows, height - startHeight, startRow, startHeight);
   }
   const flow = {
     rows,
