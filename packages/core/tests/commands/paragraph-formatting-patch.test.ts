@@ -347,7 +347,7 @@ test('strict selection fence는 composition settle 이후 기존 stateVersion으
           clear = false;
           await lease.publishSelection(null);
         }
-        return 'unchanged';
+        return 'unchanged' as const;
       },
       cancelComposition() {},
     });
