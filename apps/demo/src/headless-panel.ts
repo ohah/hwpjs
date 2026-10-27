@@ -1,4 +1,9 @@
-import { SPLICE_TEXT_COMMAND, getHistoryAvailability, type HeadlessEditor } from '@hwpjs/core';
+import {
+  SPLICE_TEXT_COMMAND,
+  getHistoryAvailability,
+  findTextMatch,
+  type HeadlessEditor,
+} from '@hwpjs/core';
 // @ts-ignore Browser samples are also packaged directly as static JavaScript.
 import { mountApiPlayground } from './api-playground.mjs';
 
@@ -12,6 +17,7 @@ export function mountHeadlessPanel(
     editor,
     spliceCommand: SPLICE_TEXT_COMMAND,
     getHistoryAvailability,
+    findTextMatch,
     operations: ['read', 'select', 'splice', 'undo', 'redo', 'save', 'reopen'],
   });
   onStatus(
