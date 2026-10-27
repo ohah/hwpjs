@@ -1,4 +1,4 @@
-/** Fixed API samples. The editor/command/fetch dependencies are real injected implementations. */
+/** 이미 문서를 연 ready editor를 주입받는 API 예제 조각입니다. 독립 bootstrap은 포함하지 않습니다. */
 export const readApiProjection = (state) => ({
   status: state.status,
   selection: state.selection,
@@ -13,44 +13,15 @@ export function apiLoadOptions(args = {}) {
     throw Error('InvalidArgument:editable');
   return { format: args.format, editable: args.editable ?? true };
 }
-export function apiSelectionTarget(editor, args, findTextMatch) {
-  const integer = (value, name) => {
-    if (!Number.isSafeInteger(value) || value < 0) throw Error('InvalidArgument:' + name);
-    return value;
-  };
-  const state = editor.getEditorState(),
-    row = state.content?.paragraphs?.find(
-      (r) =>
-        r.section === integer(args.section ?? 0, 'section') &&
-        r.paragraph === integer(args.paragraph ?? 0, 'paragraph'),
-    );
-  if (!row) throw Error(state.status === 'ready' ? 'ParagraphNotFound' : 'DocumentNotReady');
-  const startUnit = integer(args.start ?? 0, 'start');
-  const endUnit = integer(args.end ?? args.start ?? 0, 'end');
-  if (typeof row.selectionOwner !== 'string' || !row.selectionOwner) {
-    if (typeof findTextMatch !== 'function') throw Error('SelectionIssuerUnavailable');
-    if (!row.text) throw Error('SelectionMatchNotFound');
-    const match = findTextMatch(state, row.text, {
-      origin: 'document',
-      direction: 'forward',
-      wrap: false,
-    });
-    if (!match) throw Error('SelectionMatchNotFound');
-    if (match.section !== row.section || match.paragraph !== row.paragraph)
-      throw Error('SelectionMatchParagraphMismatch');
-    return { ...match, startUnit, endUnit, affinity: 'forward' };
-  }
-  return {
-    ...state.token,
-    format: state.content.format,
-    coordinateSpace: 'display',
-    owner: row.selectionOwner,
-    section: row.section,
-    paragraph: row.paragraph,
-    startUnit,
-    endUnit,
-    affinity: 'forward',
-  };
+export function apiSelectionTarget(editor, args, createParagraphSelection) {
+  if (typeof createParagraphSelection !== 'function') throw Error('SelectionIssuerUnavailable');
+  return createParagraphSelection(editor.getEditorState(), {
+    section: args.section ?? 0,
+    paragraph: args.paragraph ?? 0,
+    startUnit: args.start ?? 0,
+    endUnit: args.end ?? args.start ?? 0,
+    affinity: args.affinity ?? 'forward',
+  });
 }
 
 export function createApiPlayground({
@@ -58,7 +29,7 @@ export function createApiPlayground({
   spliceCommand,
   loadFixture,
   getHistoryAvailability,
-  findTextMatch,
+  createParagraphSelection,
   operations,
 }) {
   let saved = null,
@@ -86,7 +57,7 @@ export function createApiPlayground({
         owner: r.selectionOwner,
       })),
     }));
-  const target = (args) => apiSelectionTarget(editor, args, findTextMatch);
+  const target = (args) => apiSelectionTarget(editor, args, createParagraphSelection);
   const registry = Object.freeze({
     async load(args) {
       const options = apiLoadOptions(args);
@@ -226,11 +197,12 @@ export function apiSampleCode(operation, args = {}) {
       'const args = ' +
       JSON.stringify(args, null, 2) +
       ';\n' +
-      'const target = createTarget(editor, args, findTextMatch);\n' +
+      'const target = createTarget(editor, args, createParagraphSelection);\n' +
       (operation === 'splice' ? 'const text = args.text;\n' : '')
     : '';
   return (
-    'import { createEditor, SPLICE_TEXT_COMMAND, findTextMatch } from "@ohah/hwpjs";\nimport { createWorkerRuntimeFactory } from "@ohah/hwpjs/runtime";\n\n' +
+    '// 전제: 문서를 이미 연 ready editor를 주입합니다.\n' +
+    'import { createEditor, SPLICE_TEXT_COMMAND, createParagraphSelection } from "@ohah/hwpjs";\nimport { createWorkerRuntimeFactory } from "@ohah/hwpjs/runtime";\n\n' +
     prepare +
     call
   );

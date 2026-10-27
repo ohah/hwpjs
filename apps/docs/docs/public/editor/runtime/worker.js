@@ -1,4 +1,4 @@
-// web/preview/hwpx-display-resource-receipt.mjs
+// web/preview/display-resource-cache.mjs
 var HEADER_READS = new Set([
   "characterShapes",
   "characterUnderlines",
@@ -17,113 +17,31 @@ var HEADER_READS = new Set([
   "paragraphShapes",
   "tabDefinitions"
 ]);
-var FORBIDDEN = new Set([
-  "currentReference",
-  "currentReferences",
-  "authority",
-  "ownerEpoch",
-  "sessionEpoch",
-  "selection",
-  "historyRevision",
-  "documentIncarnation",
-  "epoch",
-  "revision",
-  "owner",
-  "handle",
-  "target",
-  "readOnly",
-  "readonly",
-  "editable"
+var READ_ONLY_REQUESTS = new Set([
+  "picture-bytes",
+  "table-background-bytes",
+  "query-edit-range",
+  "query-split-range"
 ]);
-function plainData(value, seen = new Set) {
-  if (value === null || ["string", "boolean"].includes(typeof value))
-    return;
-  if (typeof value === "number" && Number.isFinite(value))
-    return;
-  if (typeof value !== "object" || ArrayBuffer.isView(value) || value instanceof ArrayBuffer)
-    throw new Error("UnsafeDisplayResourcePayload");
-  if (seen.has(value))
-    throw new Error("CyclicDisplayResourcePayload");
-  if (!Array.isArray(value) && ![null, Object.prototype].includes(Object.getPrototypeOf(value)))
-    throw new Error("UnsafeDisplayResourcePrototype");
-  seen.add(value);
-  for (const key of Reflect.ownKeys(value)) {
-    if (typeof key !== "string" || FORBIDDEN.has(key))
-      throw new Error("AuthorityInDisplayResource");
-    const descriptor = Object.getOwnPropertyDescriptor(value, key);
-    if (!descriptor || !("value" in descriptor))
-      throw new Error("AccessorInDisplayResource");
-    plainData(descriptor.value, seen);
-  }
-  seen.delete(value);
-}
-function readReceipt(editor) {
-  let availability = "unknown";
-  try {
-    if (typeof editor?.supportsDisplayResourceReceipt !== "function") {
-      return {
-        availability: typeof editor?.displayResourceReceipt === "function" ? "unknown" : "absent",
-        key: null
-      };
-    }
-    const available = editor.supportsDisplayResourceReceipt();
-    if (available === false)
-      return { availability: "absent", key: null };
-    if (available !== true)
-      return { availability, key: null };
-    availability = "present";
-    if (typeof editor.displayResourceReceipt !== "function")
-      return { availability, key: null };
-    const r = editor.displayResourceReceipt();
-    if (r?.version !== 1 || typeof r.document !== "string" || typeof r.generation !== "string" || !/^[1-9a-f][0-9a-f]{0,15}$/.test(r.document) || !/^[1-9a-f][0-9a-f]{0,15}$/.test(r.generation))
-      return { availability, key: null };
-    return { availability, key: `${r.document}:${r.generation}` };
-  } catch {
-    return { availability, key: null };
-  }
-}
-function createReceiptDisplayResourceCache({ maxEncodedBytes = 1024 * 1024 } = {}) {
-  if (!Number.isSafeInteger(maxEncodedBytes) || maxEncodedBytes < 0)
-    throw new Error("InvalidDisplayCacheBudget");
-  let owner = null, facade = null, generation = null, bytes = 0, enabled = false, failed = false, requestToken = null, receiptAvailability = "unknown";
+function createDisplayResourceCache() {
+  let owner = null, facade = null, failed = false;
   const values = new Map;
-  const invalidate = () => {
-    values.clear();
-    generation = null;
-    bytes = 0;
-  };
-  const synchronize = () => {
-    const receipt = enabled && !failed ? readReceipt(owner) : { availability: "not-applicable", key: null };
-    receiptAvailability = receipt.availability;
-    const next = failed ? null : receipt.key === null ? requestToken : `native:${receipt.key}`;
-    if (next === null || next !== generation)
-      invalidate();
-    generation = next;
-    return next;
-  };
+  const invalidate = () => values.clear();
   return {
     invalidate,
+    beginRequest(message, { format, editor, historyEnabled }) {
+      failed = false;
+      if (!(format === "hwpx" && editor && historyEnabled && message.kind === "splice") && !READ_ONLY_REQUESTS.has(message.kind))
+        invalidate();
+    },
+    finishRequest(error = false) {
+      if (error || failed)
+        invalidate();
+    },
     reset() {
       invalidate();
       owner = facade = null;
-      enabled = failed = false;
-      requestToken = null;
-    },
-    beginRequest(_message, context) {
       failed = false;
-      requestToken = Symbol("display-resource-request");
-      enabled = context.format === "hwpx" && Boolean(context.historyEnabled);
-      if (owner !== context.editor) {
-        invalidate();
-        owner = context.editor;
-        facade = null;
-      }
-      synchronize();
-    },
-    finishRequest(error = false) {
-      if (error || failed || typeof generation === "symbol")
-        invalidate();
-      requestToken = null;
     },
     view(editor) {
       if (owner !== editor) {
@@ -133,53 +51,23 @@ function createReceiptDisplayResourceCache({ maxEncodedBytes = 1024 * 1024 } = {
       }
       if (!editor)
         return editor;
-      synchronize();
-      if (!facade) {
-        const capturedOwner = editor;
+      if (!facade)
         facade = new Proxy(Object.create(null), {
           get(_, key) {
-            const method = Reflect.get(capturedOwner, key, capturedOwner);
+            const method = Reflect.get(editor, key, editor);
             if (typeof method !== "function")
               return method;
             if (!HEADER_READS.has(key))
-              return method.bind(capturedOwner);
+              return method.bind(editor);
             return (...args) => {
-              if (owner !== capturedOwner)
+              if (owner !== editor)
                 throw new Error("StaleDisplayResourceOwner");
               if (args.length)
-                return method.apply(capturedOwner, args);
-              const proof = synchronize();
-              if (proof === null)
-                return method.call(capturedOwner);
-              if (values.has(key)) {
-                try {
-                  return structuredClone(values.get(key).value);
-                } catch (error) {
-                  failed = true;
-                  invalidate();
-                  throw error;
-                }
-              }
+                return method.apply(editor, args);
               try {
-                const value = method.call(capturedOwner);
-                let size;
-                try {
-                  plainData(value);
-                  size = new TextEncoder().encode(JSON.stringify(value)).byteLength;
-                } catch {
-                  failed = true;
-                  invalidate();
-                  return value;
-                }
-                if (synchronize() !== proof)
-                  return value;
-                if (size <= maxEncodedBytes - bytes) {
-                  const copy = structuredClone(value);
-                  values.set(key, { value: copy, size });
-                  bytes += size;
-                  return structuredClone(copy);
-                }
-                return value;
+                if (!values.has(key))
+                  values.set(key, structuredClone(method.call(editor)));
+                return structuredClone(values.get(key));
               } catch (error) {
                 failed = true;
                 invalidate();
@@ -188,478 +76,9 @@ function createReceiptDisplayResourceCache({ maxEncodedBytes = 1024 * 1024 } = {
             };
           }
         });
-      }
       return facade;
-    },
-    inspect() {
-      return {
-        entries: values.size,
-        encodedBytes: bytes,
-        generation: typeof generation === "symbol" ? null : generation,
-        scope: typeof generation === "symbol" ? "request" : generation === null ? "none" : "native",
-        receiptAvailability
-      };
     }
   };
-}
-
-// web/preview/display-resource-cache.mjs
-var derivedReaders = new WeakMap;
-function readDisplayResource(editor, key, read, bindingKey) {
-  if (typeof bindingKey !== "string" || !bindingKey)
-    throw Error("MissingDisplayResourceBinding");
-  const reader = derivedReaders.get(editor);
-  return reader ? reader(key, read, bindingKey) : read();
-}
-function createDisplayResourceCache(options = {}) {
-  const base = createReceiptDisplayResourceCache(options);
-  const maxBytes = options.maxEncodedBytes ?? 1024 * 1024;
-  let owner = null, facade = null, binding = null, bytes = 0;
-  const derived = new Map;
-  const clearDerived = () => {
-    derived.clear();
-    binding = null;
-    bytes = 0;
-  };
-  const invalidate = () => {
-    clearDerived();
-    base.invalidate();
-  };
-  return {
-    invalidate,
-    reset() {
-      clearDerived();
-      owner = facade = null;
-      base.reset();
-    },
-    beginRequest(message, context) {
-      clearDerived();
-      base.beginRequest(message, context);
-    },
-    finishRequest(error = false) {
-      clearDerived();
-      base.finishRequest(error);
-    },
-    view(editor) {
-      if (owner !== editor) {
-        clearDerived();
-        owner = editor;
-        facade = null;
-      }
-      const value = base.view(editor);
-      if (!value)
-        return value;
-      facade = value;
-      const capturedOwner = editor, capturedFacade = value;
-      derivedReaders.set(value, (key, read, bindingKey) => {
-        if (owner !== capturedOwner || facade !== capturedFacade)
-          throw Error("StaleDisplayResourceOwner");
-        if (binding !== bindingKey) {
-          clearDerived();
-          binding = bindingKey;
-        }
-        if (derived.has(key))
-          return structuredClone(derived.get(key));
-        try {
-          const result = read();
-          const encoded = new TextEncoder().encode(JSON.stringify(result)).byteLength;
-          if (encoded <= maxBytes - bytes) {
-            const copy = structuredClone(result);
-            derived.set(key, copy);
-            bytes += encoded;
-            return structuredClone(copy);
-          }
-          return result;
-        } catch (error) {
-          invalidate();
-          throw error;
-        }
-      });
-      return value;
-    },
-    inspect() {
-      return { ...base.inspect(), derivedEntries: derived.size, derivedBytes: bytes, derivedScope: "request" };
-    }
-  };
-}
-
-// web/preview/text-offsets.mjs
-function retainedTextView(paragraph) {
-  const retained = (code) => [2, 3, 4, 8, 9, 11, 16, 17, 18, 21, 22, 23].includes(code);
-  if (!paragraph.tokens.some((t) => t.type === "control" && (retained(t.code) || t.code === 10 || t.code === 24 || t.code === 30 || t.code === 31)))
-    return null;
-  const chunks = [], offsets = [{ at: 0, source: 0 }];
-  let source = 0, display = 0, ended = false;
-  for (const t of paragraph.tokens) {
-    if (ended || t.startUnit !== source)
-      return null;
-    if (t.type === "text") {
-      if (t.raw.length !== t.text.length * 2)
-        return null;
-      chunks.push(t.text);
-      display += t.text.length;
-    } else if (t.code === 10 && t.raw.length === 2) {
-      chunks.push(`
-`);
-      display++;
-    } else if (t.code === 24 && t.raw.length === 2) {
-      chunks.push("­");
-      display++;
-    } else if ((t.code === 30 || t.code === 31) && t.raw.length === 2) {
-      chunks.push(" ");
-      display++;
-    } else if (retained(t.code) && t.raw.length === 16) {
-      chunks.push(t.code === 9 ? "\t" : t.code === 3 ? "«" : t.code === 4 ? "»" : "￼");
-      display++;
-      offsets.push({ at: display, source: source + t.raw.length / 2 });
-    } else if (t.code === 13 && t.raw.length === 2)
-      ended = true;
-    else
-      return null;
-    source += t.raw.length / 2;
-  }
-  if (!ended || source !== paragraph.declaredUnits)
-    return null;
-  return { text: chunks.join(""), offsets };
-}
-function sourceTextChange(change, offsets) {
-  if (!offsets)
-    return change;
-  const map = (unit) => {
-    const row = offsets.findLast((r) => r.at <= unit);
-    if (!row)
-      throw new RangeError("InvalidDisplayPosition");
-    return row.source + unit - row.at;
-  };
-  return { ...change, startUnit: map(change.startUnit), endUnit: map(change.endUnit) };
-}
-function sourceDisplayPosition(unit, offsets, displayLength) {
-  if (!Number.isInteger(unit) || unit < 0 || !Number.isInteger(displayLength) || displayLength < 0 || !Array.isArray(offsets) || offsets.length === 0)
-    throw new RangeError("InvalidSourceDisplayPosition");
-  let previous;
-  for (const row of offsets) {
-    if (!row || !Number.isInteger(row.at) || !Number.isInteger(row.source) || row.at < 0 || row.source < 0 || previous && (row.at <= previous.at || row.source <= previous.source))
-      throw new RangeError("InvalidSourceDisplayPosition");
-    previous = row;
-  }
-  if (offsets[0].at !== 0 || offsets[0].source !== 0)
-    throw new RangeError("InvalidSourceDisplayPosition");
-  const index = offsets.findLastIndex((row) => row.source <= unit);
-  if (index < 0)
-    throw new RangeError("InvalidSourceDisplayPosition");
-  const row = offsets[index], result = row.at + unit - row.source, next = offsets[index + 1];
-  if (result > displayLength || next && result >= next.at && unit < next.source)
-    throw new RangeError("InvalidSourceDisplayPosition");
-  return result;
-}
-
-// web/preview/atomic-formatting-display-content.mjs
-function atomicFormattingBindingKey(binding) {
-  if (!binding || typeof binding !== "object" || Array.isArray(binding))
-    throw Error("InvalidFormattingBinding");
-  if (typeof binding.session !== "string" || !binding.session || !(binding.revision === null || Number.isSafeInteger(binding.revision) && binding.revision >= 0 && binding.revision < 4294967295))
-    throw Error("InvalidFormattingBinding");
-  const keys = Object.keys(binding).sort();
-  for (const key of keys) {
-    const value = binding[key];
-    if (!(value === null || typeof value === "string" || typeof value === "boolean" || typeof value === "number" && Number.isSafeInteger(value) && value >= 0))
-      throw Error("InvalidFormattingBinding");
-  }
-  return JSON.stringify(keys.map((key) => [key, binding[key]]));
-}
-var uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-var known = (fields) => Object.fromEntries(Object.entries(fields).filter(([, row]) => row?.state === "known").map(([key, row]) => [key, row.value]));
-function attachAtomicFormattingDisplay(editor, content, format) {
-  content.characterFormattingDisplay = [];
-  content.atomicFormattingDisplayErrors = [];
-  content.atomicFormattingDisplayBinding = null;
-  for (const p of content.paragraphs ?? []) {
-    p.atomicFormattingDisplay = null;
-    delete p.atomicFormattingDisplaySource;
-  }
-  if (!editor?.supportsAtomicFormatting?.())
-    return content;
-  let cap, key;
-  const fail = (error) => {
-    content.characterFormattingDisplay = [];
-    content.atomicFormattingDisplayBinding = null;
-    for (const p of content.paragraphs ?? []) {
-      p.atomicFormattingDisplay = null;
-      delete p.atomicFormattingDisplaySource;
-    }
-    content.atomicFormattingDisplayErrors.push(String(error?.message ?? error));
-    return content;
-  };
-  try {
-    if (!["hwp5", "hwpx"].includes(format))
-      throw Error("UnsupportedFormattingDisplayFormat");
-    cap = editor.atomicFormattingCapabilities();
-    key = atomicFormattingBindingKey(cap.binding);
-    const query = (selector, fields) => {
-      const response = editor.queryFormatting({
-        schemaVersion: 1,
-        binding: cap.binding,
-        selectors: [selector],
-        fields
-      });
-      if (atomicFormattingBindingKey(response.binding) !== key)
-        throw Error("StaleFormattingBinding");
-      if (response.targets?.length !== 1 || typeof response.targets[0]?.ref !== "string" || !response.targets[0].ref || !response.observations?.aggregate || typeof response.observations.aggregate !== "object")
-        throw Error("MalformedFormattingQuery");
-      const expected = selector.ranges ?? [], actual = response.targets[0].ranges ?? [];
-      if (actual.length !== expected.length || expected.some((range, i) => range.startUnit !== actual[i]?.startUnit || range.endUnit !== actual[i]?.endUnit))
-        throw Error("MalformedFormattingQueryOwner");
-      return { fields: response.observations.aggregate, ref: response.targets[0].ref };
-    };
-    const ids = new Set;
-    for (const paragraph of content.paragraphs ?? []) {
-      if (paragraph.clipped || paragraph.currentReference && paragraph.currentReference.kind !== "original")
-        continue;
-      const sourceParagraph = paragraph.paragraph + (format === "hwpx" ? 1 : 0);
-      if (!uint(paragraph.section) || !uint(sourceParagraph) || !uint(paragraph.paragraph)) {
-        content.atomicFormattingDisplayErrors.push({
-          section: paragraph.section,
-          paragraph: paragraph.paragraph,
-          error: "InvalidFormattingDisplayOwner"
-        });
-        continue;
-      }
-      const selector = {
-        kind: "original-paragraph",
-        section: paragraph.section,
-        paragraph: sourceParagraph
-      };
-      try {
-        const admitted = query(selector, []);
-        const shape = editor.paragraphShapeId(paragraph.section, sourceParagraph);
-        if (!uint(shape))
-          throw Error("InvalidFormattingDisplayShape");
-        paragraph.atomicFormattingDisplay = readDisplayResource(editor, "atomic-paragraph:" + shape, () => known(query(selector, [
-          "paragraph.grid",
-          "paragraph.borderConnect",
-          "paragraph.border",
-          "paragraph.background"
-        ]).fields), key);
-        paragraph.atomicFormattingDisplaySource = {
-          binding: { ...cap.binding },
-          ref: admitted.ref,
-          section: paragraph.section,
-          paragraph: sourceParagraph,
-          format
-        };
-        for (const range of paragraph.characterRanges ?? []) {
-          const end = Math.min(range.end, paragraph.text.length);
-          if (end <= range.start || !uint(range.charShapeId) || ids.has(range.charShapeId))
-            continue;
-          const mapped = format === "hwp5" ? sourceTextChange({ startUnit: range.start, endUnit: end }, paragraph.sourceOffsets) : { startUnit: range.start, endUnit: end };
-          if (mapped.endUnit - mapped.startUnit !== end - range.start || paragraph.text.slice(range.start, end).includes("￼"))
-            continue;
-          const characterSelector = { ...selector, ranges: [mapped] };
-          query(characterSelector, []);
-          const values = readDisplayResource(editor, "atomic-character:" + range.charShapeId, () => known(query(characterSelector, [
-            "character.shadow",
-            "character.border",
-            "character.background"
-          ]).fields), key);
-          content.characterFormattingDisplay.push({ id: range.charShapeId, ...values });
-          ids.add(range.charShapeId);
-        }
-      } catch (error) {
-        if (String(error?.message ?? error) === "StaleFormattingBinding")
-          throw error;
-        content.atomicFormattingDisplayErrors.push({
-          section: paragraph.section,
-          paragraph: paragraph.paragraph,
-          error: String(error?.message ?? error)
-        });
-      }
-    }
-    if (atomicFormattingBindingKey(editor.atomicFormattingCapabilities().binding) !== key)
-      throw Error("StaleFormattingBinding");
-    content.atomicFormattingDisplayBinding = { ...cap.binding };
-    return content;
-  } catch (error) {
-    return fail(error);
-  }
-}
-
-// web/preview/atomic-formatting-command.mjs
-var protocolSupport = new WeakMap;
-function atomicFormattingAvailable(editor) {
-  if (!editor?.supportsAtomicFormatting?.())
-    return false;
-  if (protocolSupport.has(editor))
-    return protocolSupport.get(editor);
-  try {
-    const cap = editor.atomicFormattingCapabilities();
-    const available = cap?.schemaVersion === 1 && cap.atomic === true;
-    protocolSupport.set(editor, available);
-    return available;
-  } catch (error) {
-    if (error?.message === "AtomicFormattingUnavailable") {
-      protocolSupport.set(editor, false);
-      return false;
-    }
-    throw error;
-  }
-}
-function queryAtomicFormatting(editor, format, message) {
-  if (!editor || !atomicFormattingAvailable(editor))
-    throw Error("AtomicFormattingUnavailable");
-  const selector = message.selector;
-  if (!selector || selector.kind !== "original-paragraph" || !Number.isInteger(selector.section) || selector.section < 0 || selector.section > 4294967295 || !Number.isInteger(selector.paragraph) || selector.paragraph < 0 || selector.paragraph > 4294967295 - (format === "hwpx" ? 1 : 0))
-    throw Error("InvalidFormattingSelector");
-  const cap = editor.atomicFormattingCapabilities();
-  return editor.queryFormatting({
-    schemaVersion: 1,
-    binding: cap.binding,
-    selectors: [{ ...selector, paragraph: selector.paragraph + (format === "hwpx" ? 1 : 0) }],
-    ...message.fields === undefined ? {} : { fields: message.fields }
-  });
-}
-
-// web/preview/hwp5-owner-rope.mjs
-var len = (n) => n?.length ?? 0;
-var height = (n) => n?.height ?? 0;
-function createRopeMetrics() {
-  return { nodes: 0, sourceUnitsRead: 0, insertedUnits: 0, fullMaterializeUnits: 0 };
-}
-function leaf(source, from, length, m) {
-  if (!length)
-    return null;
-  m.nodes++;
-  return Object.freeze({ source, from, length, height: 1 });
-}
-function branch(left, right, m) {
-  if (!left)
-    return right;
-  if (!right)
-    return left;
-  m.nodes++;
-  return Object.freeze({ left, right, length: len(left) + len(right), height: 1 + Math.max(height(left), height(right)) });
-}
-function balance(left, right, m) {
-  if (height(left) > height(right) + 1) {
-    const a = left;
-    if (height(a.left) >= height(a.right))
-      return branch(a.left, branch(a.right, right, m), m);
-    const b = a.right;
-    return branch(branch(a.left, b.left, m), branch(b.right, right, m), m);
-  }
-  if (height(right) > height(left) + 1) {
-    const a = right;
-    if (height(a.right) >= height(a.left))
-      return branch(branch(left, a.left, m), a.right, m);
-    const b = a.left;
-    return branch(branch(left, b.left, m), branch(b.right, a.right, m), m);
-  }
-  return branch(left, right, m);
-}
-function concat(left, right, m) {
-  if (!left)
-    return right;
-  if (!right)
-    return left;
-  if (height(left) > height(right) + 1)
-    return balance(left.left, concat(left.right, right, m), m);
-  if (height(right) > height(left) + 1)
-    return balance(concat(left, right.left, m), right.right, m);
-  return branch(left, right, m);
-}
-function split(node, at, m) {
-  if (at === 0)
-    return [null, node];
-  if (at === len(node))
-    return [node, null];
-  if (node.source !== undefined)
-    return [leaf(node.source, node.from, at, m), leaf(node.source, node.from + at, node.length - at, m)];
-  if (at < len(node.left)) {
-    const [a, b] = split(node.left, at, m);
-    return [a, concat(b, node.right, m)];
-  }
-  const [a, b] = split(node.right, at - len(node.left), m);
-  return [concat(node.left, a, m), b];
-}
-function range(node, start, end) {
-  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > len(node))
-    throw Error("InvalidRopeRange");
-}
-function readRope(node, start, end, m) {
-  range(node, start, end);
-  const parts = [];
-  function read(n, a, b) {
-    if (a === b)
-      return;
-    if (n.source !== undefined) {
-      parts.push(n.source.slice(n.from + a, n.from + b));
-      m.sourceUnitsRead += b - a;
-      return;
-    }
-    const k = len(n.left);
-    if (a < k)
-      read(n.left, a, Math.min(b, k));
-    if (b > k)
-      read(n.right, Math.max(0, a - k), b - k);
-  }
-  read(node, start, end);
-  return parts.join("");
-}
-function boundary(node, at, m) {
-  if (at === 0 || at === len(node))
-    return;
-  const s = readRope(node, at - 1, at + 1, m);
-  const a = s.charCodeAt(0), b = s.charCodeAt(1);
-  if (a >= 55296 && a <= 56319 && b >= 56320 && b <= 57343)
-    throw Error("SplitSurrogatePair");
-}
-function ropeFromText(text, m) {
-  if (typeof text !== "string" || !text.isWellFormed())
-    throw Error("InvalidRopeText");
-  return leaf(text, 0, text.length, m);
-}
-function spliceRope(node, start, end, text, m) {
-  range(node, start, end);
-  if (typeof text !== "string" || !text.isWellFormed())
-    throw Error("InvalidRopeText");
-  boundary(node, start, m);
-  boundary(node, end, m);
-  const [a, tail] = split(node, start, m), [, b] = split(tail, end - start, m);
-  m.insertedUnits += text.length;
-  return concat(concat(a, leaf(text, 0, text.length, m), m), b, m);
-}
-var fromUnits = (units) => {
-  if (!Array.isArray(units) || units.some((n) => !Number.isInteger(n) || n < 0 || n > 65535))
-    throw Error("InvalidDeltaUnits");
-  let s = "";
-  for (let i = 0;i < units.length; i += 1024)
-    s += String.fromCharCode(...units.slice(i, i + 1024));
-  if (!s.isWellFormed())
-    throw Error("InvalidDeltaUnits");
-  return s;
-};
-function createOwnerRope(row, m) {
-  if (row.clipped || !row.editable || row.currentReference?.kind !== "original" || row.sourceOffsets?.some((o) => o.at !== o.source))
-    throw Error("UnsupportedRopeOwner");
-  return Object.freeze({ row, root: ropeFromText(row.text, m), epoch: row.currentReference.epoch, revision: null });
-}
-function patchOwnerRope(state, patch, m) {
-  const { receipt: r, reference: ref, window: w } = patch;
-  if (r?.version !== 1 || r.exclusive !== true || r.beforeEpoch !== state.epoch || BigInt(r.epoch) <= BigInt(r.beforeEpoch) || state.revision !== null && r.beforeRevision !== state.revision || r.section !== state.row.section || r.paragraph !== state.row.paragraph || String(r.sourceNode) !== state.row.currentReference.id)
-    throw Error("StaleRopeReceipt");
-  if (ref.scope !== state.row.currentReference.scope || ref.epoch !== r.epoch || ref.id !== String(r.sourceNode) || ref.kind !== "original" || ref.section !== r.section || w.epoch !== r.epoch || w.sourceNode !== r.sourceNode || w.section !== r.section || w.parentNode !== r.parentNode || w.totalUnits !== r.totalUnits || !w.textPresent)
-    throw Error("RopeOwnerMismatch");
-  const removed = fromUnits(r.removed), inserted = fromUnits(r.inserted);
-  if (readRope(state.root, r.startUnit, r.startUnit + removed.length, m) !== removed)
-    throw Error("RopeRemovedMismatch");
-  const root = spliceRope(state.root, r.startUnit, r.startUnit + removed.length, inserted, m);
-  if (len(root) + 1 !== r.totalUnits)
-    throw Error("RopeLengthMismatch");
-  if (!Number.isSafeInteger(w.startUnit) || !Number.isSafeInteger(w.endUnit) || w.startUnit < 0 || w.startUnit > w.endUnit || w.endUnit > r.totalUnits)
-    throw Error("InvalidRopeWindow");
-  const expected = readRope(root, Math.min(w.startUnit, len(root)), Math.min(w.endUnit, len(root)), m) + (w.startUnit < w.endUnit && w.endUnit === r.totalUnits ? "\r" : "");
-  if (expected !== w.text)
-    throw Error("RopeWindowMismatch");
-  return Object.freeze({ ...state, root, epoch: r.epoch, revision: r.revision });
 }
 
 // js/wasm-memory.mjs
@@ -705,9 +124,6 @@ var EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
   "hwp5_edit_reflow"
 ]);
 var HWPX_DOCUMENT_PROVENANCE_FUNCTIONS = Object.freeze(["hwpx_edit_document_provenance"]);
-var HWPX_DISPLAY_RESOURCE_RECEIPT_FUNCTIONS = Object.freeze([
-  "hwpx_edit_display_resource_receipt_v1"
-]);
 var DOCUMENT = Object.freeze({
   header_bytes: 8,
   node_bytes: 56,
@@ -968,6 +384,65 @@ async function createHwp5Reader(source) {
   };
 }
 
+// web/preview/text-offsets.mjs
+function retainedTextView(paragraph) {
+  const retained = (code) => [2, 3, 4, 8, 9, 11, 16, 17, 18, 21, 22, 23].includes(code);
+  if (!paragraph.tokens.some((t) => t.type === "control" && (retained(t.code) || t.code === 10 || t.code === 24 || t.code === 30 || t.code === 31)))
+    return null;
+  const chunks = [], offsets = [{ at: 0, source: 0 }];
+  let source = 0, display = 0, ended = false;
+  for (const t of paragraph.tokens) {
+    if (ended || t.startUnit !== source)
+      return null;
+    if (t.type === "text") {
+      if (t.raw.length !== t.text.length * 2)
+        return null;
+      chunks.push(t.text);
+      display += t.text.length;
+    } else if (t.code === 10 && t.raw.length === 2) {
+      chunks.push(`
+`);
+      display++;
+    } else if (t.code === 24 && t.raw.length === 2) {
+      chunks.push("­");
+      display++;
+    } else if ((t.code === 30 || t.code === 31) && t.raw.length === 2) {
+      chunks.push(" ");
+      display++;
+    } else if (retained(t.code) && t.raw.length === 16) {
+      chunks.push(t.code === 9 ? "\t" : t.code === 3 ? "«" : t.code === 4 ? "»" : "￼");
+      display++;
+      offsets.push({ at: display, source: source + t.raw.length / 2 });
+    } else if (t.code === 13 && t.raw.length === 2)
+      ended = true;
+    else
+      return null;
+    source += t.raw.length / 2;
+  }
+  if (!ended || source !== paragraph.declaredUnits)
+    return null;
+  return { text: chunks.join(""), offsets };
+}
+function sourceDisplayPosition(unit, offsets, displayLength) {
+  if (!Number.isInteger(unit) || unit < 0 || !Number.isInteger(displayLength) || displayLength < 0 || !Array.isArray(offsets) || offsets.length === 0)
+    throw new RangeError("InvalidSourceDisplayPosition");
+  let previous;
+  for (const row of offsets) {
+    if (!row || !Number.isInteger(row.at) || !Number.isInteger(row.source) || row.at < 0 || row.source < 0 || previous && (row.at <= previous.at || row.source <= previous.source))
+      throw new RangeError("InvalidSourceDisplayPosition");
+    previous = row;
+  }
+  if (offsets[0].at !== 0 || offsets[0].source !== 0)
+    throw new RangeError("InvalidSourceDisplayPosition");
+  const index = offsets.findLastIndex((row) => row.source <= unit);
+  if (index < 0)
+    throw new RangeError("InvalidSourceDisplayPosition");
+  const row = offsets[index], result = row.at + unit - row.source, next = offsets[index + 1];
+  if (result > displayLength || next && result >= next.at && unit < next.source)
+    throw new RangeError("InvalidSourceDisplayPosition");
+  return result;
+}
+
 // web/preview/content.mjs
 function clipText(text, maxUnits) {
   let end = Math.min(text.length, maxUnits);
@@ -1215,197 +690,6 @@ async function createHwpxReader(source) {
   };
 }
 
-// js/xml-integer-text.mjs
-function integer(raw, minimum, maximum) {
-  if (typeof raw !== "string" || raw.length > 4096 || !/^[ \t\r\n]*[+-]?\d+[ \t\r\n]*$/.test(raw))
-    return null;
-  const value = Number(raw);
-  return Number.isInteger(value) && value >= minimum && value <= maximum ? value === 0 ? 0 : value : null;
-}
-var xmlSigned32 = (raw) => integer(raw, -2147483648, 2147483647);
-var xmlUnsigned32 = (raw) => integer(raw, 0, 4294967295);
-
-// js/hwpx-section-grids.mjs
-var uint2 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-var raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
-var numberIssues = new Set(["InvalidNonNegativeInteger", "InvalidUnsigned32"]);
-function numberField(source, name) {
-  const text = source[name + "_raw"], value = source[name + "_value"], error = source[name + "_error"];
-  if (!raw(text) || !(value === null || uint2(value)) || !(error === null || numberIssues.has(error)))
-    return false;
-  if (error !== null)
-    return text !== null && value === null;
-  return text === null ? value === null : xmlUnsigned32(text) !== null && xmlUnsigned32(text) === value;
-}
-function validateSectionGrids(value) {
-  if (!value || value.schemaVersion !== 1 || value.normalization !== "none" || value.schemaDefaultApplied !== false || !uint2(value.sections) || !Array.isArray(value.rows))
-    throw Error("InvalidSectionGridSources");
-  let previous = null;
-  for (const row of value.rows) {
-    if (!row || !uint2(row.section) || row.section >= value.sections || !uint2(row.node) || !raw(row.text_direction_raw) || !Array.isArray(row.grid_sources) || !(row.body_owner === null || uint2(row.body_owner) && row.body_owner < row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node))
-      throw Error("InvalidSectionGridSources");
-    let last = -1;
-    for (const source of row.grid_sources) {
-      if (!source || !uint2(source.node) || source.node <= row.node || source.node <= last || source.parent_node !== row.node || !numberField(source, "line_grid") || !numberField(source, "char_grid") || !raw(source.wonggoji_format_raw) || ![null, true, false].includes(source.wonggoji_format_value) || !(source.wonggoji_format_error === null || source.wonggoji_format_error === "InvalidXmlBoolean") || !["other_attributes", "extension_attributes", "direct_children"].every((k) => uint2(source[k])))
-        throw Error("InvalidSectionGridSources");
-      const { wonggoji_format_raw: text, wonggoji_format_value: flag, wonggoji_format_error: error } = source;
-      if (error !== null) {
-        if (text === null || flag !== null)
-          throw Error("InvalidSectionGridSources");
-      } else if (text === null) {
-        if (flag !== null)
-          throw Error("InvalidSectionGridSources");
-      } else {
-        const token = text.trim();
-        if (!["0", "1", "true", "false"].includes(token) || flag !== ["1", "true"].includes(token))
-          throw Error("InvalidSectionGridSources");
-      }
-      last = source.node;
-    }
-    previous = row;
-  }
-  return value;
-}
-function decodeSectionGrids(bytes) {
-  return validateSectionGrids(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
-}
-
-// js/atomic-formatting-api.mjs
-function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
-  const suffixes = [
-    "formatting_capabilities",
-    "query_formatting",
-    "apply_formatting_patch",
-    "output_ptr",
-    "output_len",
-    "output_free",
-    "history_revision",
-    "history_stats"
-  ];
-  const available = () => suffixes.every((s) => typeof wasm[`${prefix}_${s}`] === "function");
-  const required = () => {
-    check();
-    if (!available())
-      throw Error("AtomicFormattingUnavailable");
-  };
-  const read = (action) => {
-    try {
-      if (action() !== 1)
-        throw memory.error();
-      return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), wasm[`${prefix}_output_len`]())));
-    } finally {
-      wasm[`${prefix}_output_free`]();
-    }
-  };
-  const caps = () => {
-    required();
-    const value = read(() => wasm[`${prefix}_formatting_capabilities`]());
-    if (value?.schemaVersion !== 1 || value.atomic !== true || value.format !== prefix.replace(/_edit$/, "") || value.coordinateSpace !== "native-source-utf16" || value.requiresHistoryProtocol !== 2 || typeof value.binding?.session !== "string" || !value.binding.session || !value.fields || typeof value.fields !== "object" || Array.isArray(value.fields) || !Object.values(value.fields).some((field) => field && field.readable === true) || !value.limits || !["requestBytes", "replyBytes", "targets", "ranges", "commands", "fontNameBytes"].every((k) => Number.isSafeInteger(value.limits[k]) && value.limits[k] > 0))
-      throw Error("AtomicFormattingUnavailable");
-    if (value.binding.revision !== null && (!Number.isSafeInteger(value.binding.revision) || value.binding.revision < 0 || value.binding.revision >= 4294967295))
-      throw Error("InvalidFormattingBinding");
-    return value;
-  };
-  const encode = (value, limit) => {
-    const bytes = new TextEncoder().encode(JSON.stringify(ownedJSON(value)));
-    if (bytes.byteLength > limit)
-      throw Error("LimitExceeded");
-    return bytes;
-  };
-  return {
-    supportsAtomicFormatting() {
-      check();
-      return available();
-    },
-    atomicFormattingCapabilities: caps,
-    queryFormatting(request) {
-      const policy = caps();
-      const bytes = encode(request, policy.limits.requestBytes);
-      const value = memory.withBytes(bytes, (ptr, size) => read(() => wasm[`${prefix}_query_formatting`](ptr, size)));
-      if (value?.schemaVersion !== 1 || !Array.isArray(value.targets) || !value.observations || value.binding?.session !== request.binding?.session || value.binding?.revision !== request.binding?.revision)
-        throw Error("MalformedFormattingQuery");
-      return value;
-    },
-    applyFormattingPatch(request) {
-      const policy = caps();
-      const bytes = encode(request, policy.limits.requestBytes);
-      let started = false, completed;
-      try {
-        return memory.withBytes(bytes, (ptr, size) => {
-          started = true;
-          const nativeCode = wasm[`${prefix}_apply_formatting_patch`](ptr, size);
-          if (![0, 1, 2, 3].includes(nativeCode))
-            return {
-              application: "unknown",
-              changed: null,
-              error: "InvalidAtomicFormattingResult"
-            };
-          const error = nativeCode === 0 || nativeCode === 3 ? memory.error().message : undefined;
-          return completed = {
-            nativeCode,
-            application: nativeCode === 1 ? "applied" : nativeCode === 3 ? "unknown" : "unapplied",
-            changed: nativeCode === 3 ? null : nativeCode === 1,
-            ...error ? { error } : {}
-          };
-        });
-      } catch (error) {
-        if (!started)
-          throw error;
-        if (completed)
-          return {
-            ...completed,
-            cleanupError: error?.message || String(error),
-            refreshRequired: true
-          };
-        return { application: "unknown", changed: null, error: error?.message || String(error) };
-      }
-    }
-  };
-}
-function ownedJSON(value, seen = new Set) {
-  if (value === null || typeof value === "string" || typeof value === "boolean")
-    return value;
-  if (typeof value === "number") {
-    if (!Number.isFinite(value))
-      throw Error("InvalidNumber");
-    return value;
-  }
-  if (typeof value !== "object" || seen.has(value))
-    throw Error("InvalidFormattingDTO");
-  const array = Array.isArray(value), proto = Object.getPrototypeOf(value);
-  if (!array && proto !== Object.prototype && proto !== null)
-    throw Error("InvalidFormattingDTO");
-  seen.add(value);
-  try {
-    const result = array ? [] : Object.create(null);
-    for (const key of Reflect.ownKeys(value)) {
-      if (array && key === "length")
-        continue;
-      if (typeof key !== "string")
-        throw Error("InvalidFormattingDTO");
-      if (array && !/^(0|[1-9][0-9]*)$/.test(key))
-        throw Error("InvalidFormattingDTO");
-      const descriptor = Object.getOwnPropertyDescriptor(value, key);
-      if (!descriptor || !("value" in descriptor))
-        throw Error("AccessorPayloadUnsupported");
-      if (descriptor.value === undefined) {
-        if (array)
-          throw Error("InvalidFormattingDTO");
-        continue;
-      }
-      result[key] = ownedJSON(descriptor.value, seen);
-    }
-    if (array && result.length !== value.length)
-      throw Error("InvalidFormattingDTO");
-    for (let i = 0;array && i < value.length; i++)
-      if (!Object.hasOwn(result, i))
-        throw Error("InvalidFormattingDTO");
-    return result;
-  } finally {
-    seen.delete(value);
-  }
-}
-
 // js/hwpx-table-caption.mjs
 function decodeTableCaption(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -1549,21 +833,21 @@ function decodeDrawingTextSnapshot(bytes) {
 }
 
 // js/hwpx-drawing-text-requested.mjs
-var uint3 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function drawingTextRequest(nodes, limit) {
-  if (!uint3(limit) || limit < 1 || limit > 1024)
+  if (!uint(limit) || limit < 1 || limit > 1024)
     throw Error("InvalidDrawingTextRequestLimit");
   if (!Array.isArray(nodes))
     throw Error("InvalidDrawingTextRequest");
   const count = nodes.length;
-  if (!uint3(count) || count > limit)
+  if (!uint(count) || count > limit)
     throw Error("InvalidDrawingTextRequest");
   const requested = [];
   for (let index = 0;index < count; index++) {
     if (!Object.hasOwn(nodes, index))
       throw Error("InvalidDrawingTextRequest");
     const node = nodes[index];
-    if (!uint3(node))
+    if (!uint(node))
       throw Error("InvalidDrawingTextRequest");
     requested.push(node);
   }
@@ -1892,7 +1176,7 @@ function decodeTableBorderSources(bytes) {
 }
 
 // js/hwpx-table-border-batch.mjs
-var uint4 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint2 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function encodeTableBorderSections(sections, limit) {
   return encodeU32IndexRequest(sections, limit, "InvalidTableBorderBatchLimit", "InvalidTableBorderSections");
 }
@@ -1904,7 +1188,7 @@ function decodeTableBorderBatch(bytes, sections) {
   if (!Array.isArray(value) || value.length !== sections.length)
     fail();
   for (const [index, entry] of value.entries()) {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint4(entry.section))
+    if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint2(entry.section))
       fail();
     if (Object.hasOwn(entry, "error")) {
       if (Object.hasOwn(entry, "value") || Object.keys(entry).length !== 2 || typeof entry.error !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(entry.error) || entry.error === "OutOfMemory")
@@ -1948,7 +1232,7 @@ function validShapePaintValues(source) {
 
 // js/hwpx-shape-common-source.mjs
 var object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-var uint5 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint3 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var coordinate = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 var optionalBoolean = (value) => value === null || typeof value === "boolean";
 function validShapeCommonSource(value) {
@@ -1956,17 +1240,17 @@ function validShapeCommonSource(value) {
     return false;
   if (Object.hasOwn(value, "component_sizes")) {
     const sizes = value.component_sizes;
-    if (!object(sizes) || !["original", "current"].every((key) => sizes[key] === null || object(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint5(n))))
+    if (!object(sizes) || !["original", "current"].every((key) => sizes[key] === null || object(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint3(n))))
       return false;
   }
-  if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint5(value.stroke_style) && value.stroke_style <= 17))
+  if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint3(value.stroke_style) && value.stroke_style <= 17))
     return false;
   if (value.stroke && value.stroke_style !== undefined && value.stroke_style !== value.stroke.style)
     return false;
   if (["stroke", "stroke_error", "paint"].some((key) => Object.hasOwn(value, key)) && !validShapePaintValues(value))
     return false;
   const r = value.rendering;
-  if (!object(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint5(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate))
+  if (!object(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint3(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate))
     return false;
   return r.matrix === null ? [
     "UnsupportedPictureMatrixSequence",
@@ -1987,40 +1271,40 @@ function validGroupContext(value, node) {
 
 // js/hwpx-curve-geometry.mjs
 var object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-var uint6 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint4 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var coordinate2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 function decodeCurveGeometry(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  if (!object2(value) || value.sourceOnly !== true || !uint6(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object2(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && ["x1", "y1", "x2", "y2"].every((key) => coordinate2(segment[key]))))
+  if (!object2(value) || value.sourceOnly !== true || !uint4(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object2(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && ["x1", "y1", "x2", "y2"].every((key) => coordinate2(segment[key]))))
     throw new Error("InvalidCurveGeometry");
   return value;
 }
 
 // js/hwpx-curve-owner.mjs
-var uint7 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint5 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 function decodeCurveOwner(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const owner = value?.owner;
-  if (!object3(value) || value.sourceOnly !== true || !uint7(value.node) || owner !== null && (!object3(owner) || ![owner.paragraph, owner.anchor_node, owner.anchor_unit].every(uint7) || owner.paragraph === 0 || owner.anchor_node >= value.node))
+  if (!object3(value) || value.sourceOnly !== true || !uint5(value.node) || owner !== null && (!object3(owner) || ![owner.paragraph, owner.anchor_node, owner.anchor_unit].every(uint5) || owner.paragraph === 0 || owner.anchor_node >= value.node))
     throw new Error("InvalidCurveOwner");
   return value;
 }
 
 // js/hwpx-tab-sources.mjs
-var uint8 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint6 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 function decodeTabSources(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   return validateTabSources(value);
 }
 function validateTabSources(value) {
-  if (!object4(value) || !uint8(value.section) || !uint8(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows))
+  if (!object4(value) || !uint6(value.section) || !uint6(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows))
     throw new Error("InvalidTabSources");
   let previous = -1;
   const nodes = new Set;
   for (const row of value.rows) {
-    if (!object4(row) || !uint8(row.unit) || !uint8(row.node) || row.unit <= previous || nodes.has(row.node) || ![row.width, row.tab_type, row.leader].every((raw) => raw === null || typeof raw === "string" && new TextEncoder().encode(raw).length <= 4096))
+    if (!object4(row) || !uint6(row.unit) || !uint6(row.node) || row.unit <= previous || nodes.has(row.node) || ![row.width, row.tab_type, row.leader].every((raw) => raw === null || typeof raw === "string" && new TextEncoder().encode(raw).length <= 4096))
       throw new Error("InvalidTabSources");
     previous = row.unit;
     nodes.add(row.node);
@@ -2029,22 +1313,22 @@ function validateTabSources(value) {
 }
 
 // js/hwpx-tab-definitions.mjs
-var uint9 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint7 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-var raw2 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
+var raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 function validateTabDefinitions(rows) {
   if (!Array.isArray(rows))
     throw new Error("InvalidTabDefinitions");
   let previous = -1, count = 0;
   for (const row of rows) {
-    if (!object5(row) || !uint9(row.id) || row.id <= previous || !raw2(row.auto_left) || !raw2(row.auto_right) || !Array.isArray(row.items))
+    if (!object5(row) || !uint7(row.id) || row.id <= previous || !raw(row.auto_left) || !raw(row.auto_right) || !Array.isArray(row.items))
       throw new Error("InvalidTabDefinitions");
     previous = row.id;
     count += row.items.length;
     if (count > 1e6)
       throw new Error("InvalidTabDefinitions");
     for (const item of row.items)
-      if (!object5(item) || !raw2(item.pos) || !raw2(item.kind) || !raw2(item.leader) || Object.hasOwn(item, "unit") && !raw2(item.unit))
+      if (!object5(item) || !raw(item.pos) || !raw(item.kind) || !raw(item.leader) || Object.hasOwn(item, "unit") && !raw(item.unit))
         throw new Error("InvalidTabDefinitions");
   }
   return rows;
@@ -2054,14 +1338,14 @@ function decodeTabDefinitions(bytes) {
 }
 
 // js/hwpx-section-tabs.mjs
-var uint10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-var raw3 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
+var uint8 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var raw2 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 function validateSectionTabs(rows) {
   if (!Array.isArray(rows))
     throw new Error("InvalidSectionTabSources");
   let previous = null;
   for (const row of rows) {
-    if (!row || typeof row !== "object" || Array.isArray(row) || !uint10(row.section) || !uint10(row.node) || ![row.tab_stop, row.tab_stop_val, row.tab_stop_unit].every(raw3) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint10(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node))
+    if (!row || typeof row !== "object" || Array.isArray(row) || !uint8(row.section) || !uint8(row.node) || ![row.tab_stop, row.tab_stop_val, row.tab_stop_unit].every(raw2) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint8(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node))
       throw new Error("InvalidSectionTabSources");
     previous = row;
   }
@@ -2380,30 +1664,30 @@ function validateChartRichText(value) {
 
 // js/chart-display-fields.mjs
 var object6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-var uint11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint9 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var text = (value) => typeof value === "string" && value.isWellFormed();
-var nullableUint = (value) => value === null || uint11(value);
+var nullableUint = (value) => value === null || uint9(value);
 var oneOf = (values) => (value) => values.includes(value);
 function field(value, accepts, owner) {
-  return value === null || object6(value) && uint11(value.node) && value.node > owner && (value.value === null || accepts(value.value));
+  return value === null || object6(value) && uint9(value.node) && value.node > owner && (value.value === null || accepts(value.value));
 }
 function number(value) {
   return object6(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : ["positive_infinity", "negative_infinity", "not_a_number"].includes(value.kind) && value.value === null);
 }
 function scaling(value, owner) {
-  return value === null || object6(value) && uint11(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [value.minimum, value.maximum, value.log_base].every((item) => field(item, number, value.node));
+  return value === null || object6(value) && uint9(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [value.minimum, value.maximum, value.log_base].every((item) => field(item, number, value.node));
 }
 
 // js/chart-display-host.mjs
 var optional = (accepts) => (value) => value === null || accepts(value);
-var bounded = (max) => (value) => uint11(value) && value <= max;
+var bounded = (max) => (value) => uint9(value) && value <= max;
 var boolean = (value) => typeof value === "boolean";
 var offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 function chartDisplayHost(value, wrapper) {
-  if (!object6(value) || value.wrapper_node !== wrapper || !uint11(value.chart_node) || value.chart_node <= wrapper)
+  if (!object6(value) || value.wrapper_node !== wrapper || !uint9(value.chart_node) || value.chart_node <= wrapper)
     return false;
   const { geometry: g, position: p } = value;
-  return object6(g) && object6(p) && [g.width, g.height].every(optional(uint11)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([2, 3, 4, 4][i]))(v));
+  return object6(g) && object6(p) && [g.width, g.height].every(optional(uint9)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([2, 3, 4, 4][i]))(v));
 }
 
 // js/chart-series-settings.mjs
@@ -2429,17 +1713,17 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
     const row = values[index++], kind = plots.get(plotNode)?.kind;
     if (!object6(row) || row.series_node !== node || row.plot_node !== plotNode || !field(row.smooth, (v) => typeof v === "boolean", node))
       return false;
-    if (!field(row.index, uint11, node) || !field(row.order, uint11, node))
+    if (!field(row.index, uint9, node) || !field(row.order, uint9, node))
       return false;
     const line = ["lineChart", "line3DChart", "stockChart", "scatterChart"].includes(kind);
     if (row.smooth !== null && !line)
       return false;
-    if (!field(row.explosion, uint11, node))
+    if (!field(row.explosion, uint9, node))
       return false;
     if (row.explosion !== null && !["pieChart", "pie3DChart", "ofPieChart", "doughnutChart"].includes(kind))
       return false;
     const marker = row.marker;
-    if (marker !== null && (!line && kind !== "radarChart" || !object6(marker) || !uint11(marker.node) || marker.node <= node || !field(marker.symbol, oneOf(symbols), marker.node) || !field(marker.size, (v) => uint11(v) && v >= 2 && v <= 72, marker.node)))
+    if (marker !== null && (!line && kind !== "radarChart" || !object6(marker) || !uint9(marker.node) || marker.node <= node || !field(marker.symbol, oneOf(symbols), marker.node) || !field(marker.size, (v) => uint9(v) && v >= 2 && v <= 72, marker.node)))
       return false;
     const leaves = [
       row.index,
@@ -2450,7 +1734,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
     ].filter((value) => value !== null);
     const stroke = row.stroke, strokeNodes = [];
     if (stroke !== undefined && stroke !== null) {
-      if (!object6(stroke) || !uint11(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint11(stroke.no_fill_node) && stroke.no_fill_node > stroke.node))
+      if (!object6(stroke) || !uint9(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint9(stroke.no_fill_node) && stroke.no_fill_node > stroke.node))
         return false;
       strokeNodes.push(stroke.node);
       if (stroke.no_fill_node !== null)
@@ -2471,7 +1755,7 @@ function validChartPointSettings(values, series, occupied = null) {
     return false;
   let previous = -1;
   for (const row of values) {
-    if (!object6(row) || !uint11(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field(row.index, uint11, row.node) || !field(row.explosion, uint11, row.node))
+    if (!object6(row) || !uint9(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field(row.index, uint9, row.node) || !field(row.explosion, uint9, row.node))
       return false;
     if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node)
       return false;
@@ -2497,7 +1781,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
   if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null))
     return false;
   const parent = stock.up_down_node ?? plotNode;
-  if (!field(stock.gap_width, (value) => uint11(value) && value <= 500, parent))
+  if (!field(stock.gap_width, (value) => uint9(value) && value <= 500, parent))
     return false;
   for (const key of ["up_node", "down_node"])
     if (stock[key] !== null && stock[key] <= parent)
@@ -2522,7 +1806,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
 function validChartView3D(value, occupied = null) {
   if (value === undefined || value === null)
     return true;
-  if (!object6(value) || !uint11(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean")
+  if (!object6(value) || !uint9(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean")
     return false;
   const ranges = {
     rotation_x: [-90, 90],
@@ -2553,7 +1837,7 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
   const spatial = ["bar3DChart", "line3DChart", "area3DChart"].includes(kind);
   if (!spatial)
     return value === null;
-  if (!object6(value) || !field(value.gap_depth, (v) => uint11(v) && v <= 500, owner) || !field(value.shape, oneOf(["box", "cone", "coneToMax", "cylinder", "pyramid", "pyramidToMax"]), owner))
+  if (!object6(value) || !field(value.gap_depth, (v) => uint9(v) && v <= 500, owner) || !field(value.shape, oneOf(["box", "cone", "coneToMax", "cylinder", "pyramid", "pyramidToMax"]), owner))
     return false;
   if (kind !== "bar3DChart" && value.shape !== null)
     return false;
@@ -2615,7 +1899,7 @@ function decodeChartDisplay(bytes) {
   ])
     require2(Array.isArray(value[name]));
   const pair = value.pair;
-  require2(object6(pair) && text(pair.chart_path) && pair.chart_path.length > 0 && text(pair.ole_path) && pair.ole_path.length > 0 && uint11(pair.wrapper_node) && uint11(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint11(n) && n <= 255));
+  require2(object6(pair) && text(pair.chart_path) && pair.chart_path.length > 0 && text(pair.ole_path) && pair.ole_path.length > 0 && uint9(pair.wrapper_node) && uint9(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint9(n) && n <= 255));
   require2(chartDisplayHost(value.host, pair.wrapper_node));
   require2(value.plots.length === value.plot_settings.length);
   const plots = new Map, series = new Map, references = new Map;
@@ -2623,28 +1907,28 @@ function decodeChartDisplay(bytes) {
   const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes ? null : new Set;
   let previousPlot = -1;
   for (const [index, plot] of value.plots.entries()) {
-    require2(object6(plot) && uint11(plot.node) && plot.node > previousPlot && uint11(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
+    require2(object6(plot) && uint9(plot.node) && plot.node > previousPlot && uint9(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
     plots.set(plot.node, plot);
     previousPlot = plot.node;
     occupied?.add(plot.node);
     occupied?.add(plot.area_node);
     let previousSeries = plot.node;
     for (const node of plot.series_nodes) {
-      require2(uint11(node) && node > previousSeries && !series.has(node));
+      require2(uint9(node) && node > previousSeries && !series.has(node));
       series.set(node, plot.node);
       previousSeries = node;
       occupied?.add(node);
     }
     const settings = value.plot_settings[index];
     require2(object6(settings) && field(settings.direction, oneOf(["bar", "col"]), plot.node) && field(settings.grouping, oneOf(["standard", "clustered", "stacked", "percentStacked"]), plot.node) && field(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-    require2(field(settings.gap_width, (v) => uint11(v) && v <= 500, plot.node) && field(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+    require2(field(settings.gap_width, (v) => uint9(v) && v <= 500, plot.node) && field(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
     require2(field(settings.scatter_style, oneOf(["line", "lineMarker", "marker", "smooth", "smoothMarker"]), plot.node));
     if (settings.scatter_style !== null)
       require2(plot.kind === "scatterChart");
-    require2(field(settings.first_slice_angle, (v) => uint11(v) && v <= 360, plot.node));
+    require2(field(settings.first_slice_angle, (v) => uint9(v) && v <= 360, plot.node));
     if (settings.first_slice_angle !== null)
       require2(["pieChart", "doughnutChart"].includes(plot.kind));
-    require2(field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field(settings.second_pie_size, (v) => uint11(v) && v >= 5 && v <= 200, plot.node) && field(settings.split_type, oneOf(["auto", "cust", "percent", "pos", "val"]), plot.node) && field(settings.split_position, number, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
+    require2(field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field(settings.second_pie_size, (v) => uint9(v) && v >= 5 && v <= 200, plot.node) && field(settings.split_type, oneOf(["auto", "cust", "percent", "pos", "val"]), plot.node) && field(settings.split_position, number, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
     if ([
       settings.of_pie_type,
       settings.second_pie_size,
@@ -2681,7 +1965,7 @@ function decodeChartDisplay(bytes) {
       ...settings.axis_references
     ])
       if (leaf !== null) {
-        require2(object6(leaf) && uint11(leaf.node) && !leaves.has(leaf.node));
+        require2(object6(leaf) && uint9(leaf.node) && !leaves.has(leaf.node));
         leaves.add(leaf.node);
       }
     require2(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
@@ -2689,7 +1973,7 @@ function decodeChartDisplay(bytes) {
     for (const node of leaves)
       occupied?.add(node);
     for (const reference of settings.axis_references) {
-      require2(reference !== null && field(reference, uint11, plot.node));
+      require2(reference !== null && field(reference, uint9, plot.node));
       const key = plot.node + ":" + reference.node;
       require2(!references.has(key));
       references.set(key, reference.value);
@@ -2699,7 +1983,7 @@ function decodeChartDisplay(bytes) {
   require2(validChartSeriesSettings(value.series_settings, plots, series, occupied));
   require2(validChartPointSettings(value.point_settings, series, occupied));
   for (const axis of value.axes) {
-    require2(object6(axis) && uint11(axis.node) && !axes.has(axis.node) && uint11(axis.area_node) && axis.area_node < axis.node && ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) && field(axis.id, uint11, axis.node) && field(axis.cross_axis, uint11, axis.node) && field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) && field(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node));
+    require2(object6(axis) && uint9(axis.node) && !axes.has(axis.node) && uint9(axis.area_node) && axis.area_node < axis.node && ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) && field(axis.id, uint9, axis.node) && field(axis.cross_axis, uint9, axis.node) && field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) && field(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node));
     axes.set(axis.node, axis);
     occupied?.add(axis.node);
     occupied?.add(axis.area_node);
@@ -2728,7 +2012,7 @@ function decodeChartDisplay(bytes) {
   require2(value.axis_links.length === references.size);
   const seenLinks = new Set;
   for (const link of value.axis_links) {
-    require2(object6(link) && uint11(link.plot_node) && plots.has(link.plot_node) && uint11(link.reference_node) && nullableUint(link.id) && object6(link.target));
+    require2(object6(link) && uint9(link.plot_node) && plots.has(link.plot_node) && uint9(link.reference_node) && nullableUint(link.id) && object6(link.target));
     const key = link.plot_node + ":" + link.reference_node;
     require2(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
     seenLinks.add(key);
@@ -2740,7 +2024,7 @@ function decodeChartDisplay(bytes) {
   let previousLeaf = -1;
   const pointNodes = new Set;
   for (const [index, point] of value.points.entries()) {
-    require2(object6(point) && [point.cache_node, point.point_node, point.value_node, point.index].every(uint11) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+    require2(object6(point) && [point.cache_node, point.point_node, point.value_node, point.index].every(uint9) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
     previousLeaf = point.value_node;
     pointNodes.add(point.point_node);
     for (const node of [point.cache_node, point.point_node, point.value_node, point.level_node])
@@ -3422,7 +2706,7 @@ function decodeTableCreationResources(bytes) {
 
 // js/hwpx-form-source.mjs
 var kinds2 = new Set(["button", "check_button", "combo_box", "radio_button", "edit_box"]);
-var uint12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 function decode(bytes, maximum) {
   if (!(bytes instanceof Uint8Array) || bytes.length > maximum)
@@ -3435,26 +2719,26 @@ function decode(bytes, maximum) {
 }
 function decodeFormSourceNodes(bytes) {
   const value = decode(bytes, 8 * 1024 * 1024);
-  if (!object7(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object7(row) && uint12(row.formNode) && kinds2.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode)))
+  if (!object7(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object7(row) && uint10(row.formNode) && kinds2.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode)))
     throw new Error("InvalidFormSource");
   return value;
 }
 function decodeFormSourceAttributes(bytes) {
   const value = decode(bytes, 1024 * 1024);
   const group = (data, check) => object7(data) && Object.keys(data).length <= 128 && Object.entries(data).every(([key, item]) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && key.length <= 128 && (item === null || check(item)));
-  if (!object7(value) || value.sourceOnly !== true || !kinds2.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint12))
+  if (!object7(value) || value.sourceOnly !== true || !kinds2.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint10))
     throw new Error("InvalidFormSource");
   return value;
 }
 function decodeFormSites(bytes) {
   const sites = decode(bytes, 16 * 1024 * 1024);
   if (!Array.isArray(sites) || sites.length > 1e5 || !sites.every((site, i) => {
-    if (!object7(site) || !uint12(site.formNode) || !kinds2.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode)
+    if (!object7(site) || !uint10(site.formNode) || !kinds2.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode)
       return false;
     if (site.state === "located")
-      return uint12(site.paragraph) && site.paragraph > 0 && uint12(site.anchorUnit);
+      return uint10(site.paragraph) && site.paragraph > 0 && uint10(site.anchorUnit);
     if (site.state === "unsupported_anchor")
-      return uint12(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
+      return uint10(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
     return ["conditional", "missing_host", "ambiguous_host"].includes(site.state) && site.paragraph === null && site.anchorUnit === null;
   }))
     throw new Error("InvalidFormSource");
@@ -3463,7 +2747,7 @@ function decodeFormSites(bytes) {
 function decodeFormSourceLayout(bytes) {
   const value = decode(bytes, 65536);
   const bool = (value) => value === null || typeof value === "boolean";
-  if (!object7(value) || value.sourceOnly !== true || !uint12(value.formNode) || !kinds2.has(value.kind) || !validShapeLayoutValues(value) || !object7(value.character) || !(value.character.id === null || uint12(value.character.id)) || ![
+  if (!object7(value) || value.sourceOnly !== true || !uint10(value.formNode) || !kinds2.has(value.kind) || !validShapeLayoutValues(value) || !object7(value.character) || !(value.character.id === null || uint10(value.character.id)) || ![
     value.character.follow_context,
     value.character.auto_size,
     value.character.word_wrap,
@@ -3801,7 +3085,7 @@ function decodeCharacterStrikeStyles(bytes) {
 // js/hwpx-document-provenance.mjs
 var object8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var exact = (value, keys) => object8(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
-var uint13 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var text2 = (value) => typeof value === "string" && value.length <= 4096;
 function isSourceColorProfile(value) {
   return exact(value, ["id", "encoding", "verified"]) && typeof value.id === "string" && value.id.length > 0 && value.id.length <= 256 && ["rgb24", "colorref24"].includes(value.encoding) && typeof value.verified === "boolean";
@@ -3835,7 +3119,7 @@ function decodeDocumentProvenance(bytes) {
       "application",
       "app_version",
       "xml_bytes"
-    ]) || ![version.major, version.minor, version.xml_bytes].every(uint13) || !["micro", "build_number", "patch", "revision", "os"].every((key) => version[key] === null || uint13(version[key])) || !["xml_version", "target_application", "application", "app_version"].every((key) => version[key] === null || text2(version[key])))
+    ]) || ![version.major, version.minor, version.xml_bytes].every(uint11) || !["micro", "build_number", "patch", "revision", "os"].every((key) => version[key] === null || uint11(version[key])) || !["xml_version", "target_application", "application", "app_version"].every((key) => version[key] === null || text2(version[key])))
       return fail();
   }
   if (value.sourceVersionError !== null && (version !== null || typeof value.sourceVersionError !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value.sourceVersionError)))
@@ -4186,14 +3470,14 @@ function decodeRectangleRenderingSources(bytes) {
 
 // js/hwpx-ellipse-sources.mjs
 var object9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-var uint14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var coordinate3 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 function decodeEllipseSources(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const text = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
   if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((row, index) => {
     const owner = row?.owner, geometry = row?.geometry;
-    return !object9(row) || row.sourceOnly !== true || !uint14(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object9(owner) || !["paragraph", "anchor_node", "anchor_unit"].every((key) => uint14(owner[key])) || owner.paragraph < 1 || !object9(geometry) || !["interval_dirty", "has_arc_properties", "arc_type"].every((key) => text(geometry[key])) || !Array.isArray(geometry.points) || geometry.points.length !== 7 || !Array.from(geometry.points).every((point) => point === null || object9(point) && coordinate3(point.x) && coordinate3(point.y));
+    return !object9(row) || row.sourceOnly !== true || !uint12(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object9(owner) || !["paragraph", "anchor_node", "anchor_unit"].every((key) => uint12(owner[key])) || owner.paragraph < 1 || !object9(geometry) || !["interval_dirty", "has_arc_properties", "arc_type"].every((key) => text(geometry[key])) || !Array.isArray(geometry.points) || geometry.points.length !== 7 || !Array.from(geometry.points).every((point) => point === null || object9(point) && coordinate3(point.x) && coordinate3(point.y));
   }))
     throw new Error("InvalidEllipseSources");
   return rows;
@@ -4241,7 +3525,7 @@ function decodePictureSites(bytes) {
 }
 
 // js/hwpx-ole-source.mjs
-var uint15 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
+var uint13 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
 var errors = new Set([
   "UnsupportedOleDisplayHost",
   "MissingCurrentParagraphDisplayHost",
@@ -4269,9 +3553,9 @@ function decodeOleSites(bytes) {
   if (!Array.isArray(value) || value.length > 1e5)
     fail();
   for (const row of value) {
-    if (!row || !uint15(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint15(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint15(row.anchor_unit)))
+    if (!row || !uint13(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint13(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint13(row.anchor_unit)))
       fail();
-    if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint15(row.chart_wrapper))
+    if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint13(row.chart_wrapper))
       fail();
     if (row.error_name === null ? row.paragraph === null || row.anchor_unit === null : !errors.has(row.error_name) || row.anchor_unit !== null)
       fail();
@@ -4339,32 +3623,32 @@ function decodePictureRenderingCorners(bytes) {
 }
 
 // js/hwpx-connector-source.mjs
-var uint16 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var parse2 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 function decodeConnectorNodes(bytes) {
   const nodes = parse2(bytes);
-  if (!Array.isArray(nodes) || !nodes.every((value, index) => uint16(value) && (index === 0 || value > nodes[index - 1])))
+  if (!Array.isArray(nodes) || !nodes.every((value, index) => uint14(value) && (index === 0 || value > nodes[index - 1])))
     throw new Error("InvalidConnectorNodes");
   return nodes;
 }
 function decodeConnectorSource(bytes) {
   const value = parse2(bytes), geometry = value?.geometry;
   const point = (item) => item === null || object10(item) && ["x", "y", "subject_id_ref", "subject_index", "control_type"].every((name) => item[name] === null || typeof item[name] === "string");
-  if (!object10(value) || value.sourceOnly !== true || !uint16(value.node) || !object10(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint16(geometry.unexpected_children))
+  if (!object10(value) || value.sourceOnly !== true || !uint14(value.node) || !object10(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint14(geometry.unexpected_children))
     throw new Error("InvalidConnectorSource");
   return value;
 }
 function decodeConnectorOwner(bytes, expectedNode) {
   const value = parse2(bytes);
-  if (!object10(value) || value.current !== true || value.sourceOnly === true || !["node", "paragraph", "anchor_node", "anchor_unit"].every((name) => uint16(value[name])) || value.paragraph < 1 || expectedNode !== undefined && value.node !== expectedNode)
+  if (!object10(value) || value.current !== true || value.sourceOnly === true || !["node", "paragraph", "anchor_node", "anchor_unit"].every((name) => uint14(value[name])) || value.paragraph < 1 || expectedNode !== undefined && value.node !== expectedNode)
     throw new Error("InvalidConnectorOwner");
   return value;
 }
 function decodeConnectorRenderingSource(bytes, expectedNode) {
   const value = parse2(bytes);
   const point = (row) => Array.isArray(row) && row.length === 2 && row.every(Number.isFinite);
-  if (!object10(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint16(value.node) || expectedNode !== undefined && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point))
+  if (!object10(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint14(value.node) || expectedNode !== undefined && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point))
     throw new Error("InvalidConnectorRenderingSource");
   return value;
 }
@@ -4384,11 +3668,11 @@ var fields2 = [
   "outlineStyle",
   "alpha"
 ];
-var uint17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint15 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function decodeDrawingStrokeSource(bytes, expectedNode) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const attr = value?.attributes;
-  if (!value || value.sourceOnly !== true || !uint17(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint17(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint17(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields2.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096))
+  if (!value || value.sourceOnly !== true || !uint15(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint15(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint15(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields2.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096))
     throw new Error("InvalidDrawingStrokeSource");
   return value;
 }
@@ -4897,14 +4181,10 @@ function createHistoryApi({ wasm, memory, check, uint, prefix, unavailable }) {
         throw memory.error();
       return value;
     },
-    enableHistory({ maxEntries = 16, maxCheckpointBytes = 8 * 1024 * 1024, liveTextWindow = false } = {}) {
+    enableHistory({ maxEntries = 16, maxCheckpointBytes = 8 * 1024 * 1024 } = {}) {
       check();
       uint(maxEntries, "maxEntries");
       uint(maxCheckpointBytes, "maxCheckpointBytes");
-      if (liveTextWindow && prefix === "hwp5_edit") {
-        api.enableHistoryV2({ maxEntries, maxCheckpointBytes });
-        return;
-      }
       const action = wasm[`${prefix}_history_enable`];
       if (typeof action !== "function")
         throw new Error(unavailable);
@@ -5187,7 +4467,6 @@ async function createHwpxEditor(source) {
       if (!wasm.hwpx_edit_set_paragraph_spacing(section, paragraph, ...args))
         throw memory.error();
     },
-    ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: "hwpx_edit" }),
     ...createHistoryApi({
       wasm,
       memory,
@@ -5742,35 +5021,6 @@ async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
-    supportsDisplayResourceReceipt() {
-      ready();
-      return typeof wasm.hwpx_edit_display_resource_receipt_v1 === "function";
-    },
-    displayResourceReceipt() {
-      ready();
-      if (typeof wasm.hwpx_edit_display_resource_receipt_v1 !== "function")
-        return null;
-      try {
-        if (!wasm.hwpx_edit_display_resource_receipt_v1())
-          return null;
-        const bytes = memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len());
-        if (bytes.byteLength !== 24)
-          return null;
-        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-        if (view.getUint32(0, true) !== 1 || view.getUint32(4, true) !== 1)
-          return null;
-        const document = view.getBigUint64(8, true), generation = view.getBigUint64(16, true);
-        if (document === 0n || generation === 0n)
-          return null;
-        return Object.freeze({
-          version: 1,
-          document: document.toString(16),
-          generation: generation.toString(16)
-        });
-      } finally {
-        wasm.hwpx_edit_output_free();
-      }
-    },
     fontFaces() {
       ready();
       if (typeof wasm.hwpx_edit_font_faces !== "function")
@@ -6129,22 +5379,6 @@ async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_tab_definitions())
           throw memory.error();
         return decodeTabDefinitions(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
-      } finally {
-        wasm.hwpx_edit_output_free();
-      }
-    },
-    supportsSectionGrids() {
-      ready();
-      return typeof wasm.hwpx_edit_section_grids === "function";
-    },
-    sectionGridSources() {
-      ready();
-      if (typeof wasm.hwpx_edit_section_grids !== "function")
-        throw Error("HwpxSectionGridsAbiUnavailable");
-      try {
-        if (!wasm.hwpx_edit_section_grids())
-          throw memory.error();
-        return decodeSectionGrids(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
       } finally {
         wasm.hwpx_edit_output_free();
       }
@@ -8096,7 +7330,7 @@ function projectFormulaResultText(editor, paragraph, available, maxUnits, snapsh
   if (!targets.length)
     return 0;
   const text = snapshot === undefined ? editor.manualFormulaResultDisplayText(paragraph.section, paragraph.paragraph + 1) : snapshot.text;
-  if (typeof text !== "string" || targets.some((target) => !uint18(target.beginElement) || !uint18(target.start) || !uint18(target.end) || target.end < target.start || target.end > text.length))
+  if (typeof text !== "string" || targets.some((target) => !uint16(target.beginElement) || !uint16(target.start) || !uint16(target.end) || target.end < target.start || target.end > text.length))
     throw new Error("InvalidFormulaResultTarget");
   const before = paragraph.text.length;
   paragraph.text = clipText(text, maxUnits);
@@ -8115,7 +7349,7 @@ function spliceFormulaResultText(editor, module, message) {
   const target = editor.manualFormulaResultRangeTarget(message.section, message.paragraph + 1, message.startUnit, message.endUnit);
   if (target === null)
     return false;
-  if (!uint18(target.beginElement) || !uint18(target.start) || !uint18(target.end) || target.start > message.startUnit || target.end < message.endUnit || target.end < target.start)
+  if (!uint16(target.beginElement) || !uint16(target.start) || !uint16(target.end) || target.start > message.startUnit || target.end < message.endUnit || target.end < target.start)
     throw new Error("InvalidFormulaResultTarget");
   editor.spliceManualFormulaResult(message.section, target.beginElement, message.startUnit - target.start, message.endUnit - message.startUnit, message.text);
   return true;
@@ -8123,7 +7357,7 @@ function spliceFormulaResultText(editor, module, message) {
 function formulaResultTextRangeAllowed(editor, module, section, nativeParagraph, start, end) {
   return formulaResultTextAvailable(editor, module) && editor.manualFormulaResultRangeTarget(section, nativeParagraph, start, end) !== null;
 }
-function uint18(value) {
+function uint16(value) {
   return Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }
 
@@ -8691,8 +7925,7 @@ function attachHwpxStyles(editor, content, available) {
       paragraph.characterRangesError = error.message;
     }
   }
-  const styled = attachTabSources(editor, attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content))))))));
-  return attachAtomicFormattingDisplay(editor, styled, "hwpx");
+  return attachTabSources(editor, attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content))))))));
 }
 
 // web/preview/tab-definition-content.mjs
@@ -8729,6 +7962,15 @@ function attachTabDefinitions(editor, content) {
   }
   return content;
 }
+
+// js/xml-integer-text.mjs
+function integer(raw, minimum, maximum) {
+  if (typeof raw !== "string" || raw.length > 4096 || !/^[ \t\r\n]*[+-]?\d+[ \t\r\n]*$/.test(raw))
+    return null;
+  const value = Number(raw);
+  return Number.isInteger(value) && value >= minimum && value <= maximum ? value === 0 ? 0 : value : null;
+}
+var xmlSigned32 = (raw) => integer(raw, -2147483648, 2147483647);
 
 // web/preview/section-tab-interval.mjs
 function resolveSectionTabInterval(rows, section) {
@@ -8877,8 +8119,7 @@ function attachHwp5Styles(editor, preview, content, openError = null) {
       paragraph.characterRangesError = error.message;
     }
   }
-  const styled = attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content)))))));
-  return attachAtomicFormattingDisplay(editor, styled, "hwp5");
+  return attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content)))))));
 }
 
 // js/hwp5-text-source-protection.mjs
@@ -8898,7 +8139,7 @@ function validateHwp5TextSourceProtection(value, count) {
   if (value.mode === "strict") {
     if (value.retained_headers !== null || any)
       fail();
-  } else if (value.mode === "retained_click" || value.mode === "retained_memo" || value.mode === "retained_company") {
+  } else if (value.mode === "retained_click" || value.mode === "retained_memo") {
     if (!uint(value.retained_headers) || value.retained_headers === 0 || !any)
       fail();
   } else
@@ -8919,7 +8160,7 @@ function retainedClickProtection(editor, section, failure) {
     return null;
   const value = validateHwp5TextSourceProtection(editor.textSourceProtection(section), editor.paragraphCount(section));
   const expected = failure === "UnsupportedSectionControl" ? "retained_memo" : "retained_click";
-  if (value.mode !== expected && !(failure === "UnsupportedSectionControl" && value.mode === "retained_company"))
+  if (value.mode !== expected)
     throw new Error("InvalidHwp5TextSourceProtection");
   return value;
 }
@@ -8952,8 +8193,6 @@ function attachHwp5TextSourcePolicy(editor, content) {
             error = null;
             if (protection.mode === "retained_memo")
               content.retainedMemoProtection = true;
-            else if (protection.mode === "retained_company")
-              content.retainedCompanyProtection = true;
             else
               content.retainedClickFieldProtection = true;
           }
@@ -8967,25 +8206,17 @@ function attachHwp5TextSourcePolicy(editor, content) {
     if (state.protection && (!Number.isInteger(paragraph.paragraph) || paragraph.paragraph < 0 || paragraph.paragraph >= state.protection.protected_paragraphs.length)) {
       paragraph.textSourcePolicyError = "InvalidHwp5TextSourceProtection";
       paragraph.editable = false;
-      paragraph.characterPropertiesAvailable = false;
       continue;
     }
     const protectedRow = state.protection?.protected_paragraphs[paragraph.paragraph];
-    const error = state.error ?? (protectedRow === true ? state.protection?.mode === "retained_memo" ? "OutsideEditableMemo" : state.protection?.mode === "retained_company" ? "ProtectedRetainedCompanyParagraph" : "UnsupportedCrossParagraphField" : null);
+    const error = state.error ?? (protectedRow === true ? state.protection?.mode === "retained_memo" ? "OutsideEditableMemo" : "UnsupportedCrossParagraphField" : null);
     if (state.protection && protectedRow === false)
       restoreRetainedWindowCandidate(paragraph);
     paragraph.textSourcePolicyError = error;
-    if (state.protection?.mode === "retained_company" || state.error !== null) {
-      paragraph.characterPropertiesAvailable = content.characterPropertiesAvailable === true && error === null && paragraph.editable === true;
-    }
     if (error !== null) {
       paragraph.selectable = paragraph.clipped !== true && (paragraph.selectable === true || paragraph.editable === true);
       paragraph.editable = false;
     }
-  }
-  if (content.retainedCompanyProtection === true || [...sections.values()].every((state) => state.error !== null)) {
-    content.characterPropertiesAvailable = content.characterPropertiesAvailable === true && content.paragraphs.some((paragraph) => paragraph.characterPropertiesAvailable === true || paragraph.characterPropertiesAvailable === undefined && paragraph.editable === true);
-    content.characterPropertiesRangesAvailable = content.characterPropertiesRangesAvailable === true && content.characterPropertiesAvailable;
   }
   content.readOnly = !content.paragraphs.some((paragraph) => paragraph.editable === true);
   return content;
@@ -9646,14 +8877,14 @@ function attachHwp5Formulas(editor, content, available) {
 }
 
 // js/hwp5-form-sources.mjs
-var uint19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 var uniqueRows = (rows, inspect) => {
   const controls = new Set, objects = new Set;
   if (!Array.isArray(rows))
     throw Error("InvalidHwp5FormSources");
   for (const row of rows) {
-    if (!row || !uint19(row.control_node) || !uint19(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row))
+    if (!row || !uint17(row.control_node) || !uint17(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row))
       throw Error("InvalidHwp5FormSources");
     controls.add(row.control_node);
     objects.add(row.object_node);
@@ -9674,10 +8905,10 @@ function validateHwp5FormSources(rows) {
     "property_bytes",
     "property_nodes",
     "other_direct_children"
-  ].every((k) => uint19(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && ["unknown", "push_button", "check_box", "combo_box", "radio_button", "edit"].includes(row.kind) && uint19(row.type_id) && uint19(row.secondary_type_id) && ["offset_x", "offset_y", "z_order", "prevent_page_break"].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint19(row.description_bytes)));
+  ].every((k) => uint17(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && ["unknown", "push_button", "check_box", "combo_box", "radio_button", "edit"].includes(row.kind) && uint17(row.type_id) && uint17(row.secondary_type_id) && ["offset_x", "offset_y", "z_order", "prevent_page_break"].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint17(row.description_bytes)));
 }
 function validateHwp5FormAnchors(rows) {
-  return uniqueRows(rows, (row) => uint19(row.paragraph) && uint19(row.source_unit) && row.source_unit <= 4294967287 && uint19(row.current_unit) && row.current_unit <= 4294967287);
+  return uniqueRows(rows, (row) => uint17(row.paragraph) && uint17(row.source_unit) && row.source_unit <= 4294967287 && uint17(row.current_unit) && row.current_unit <= 4294967287);
 }
 var decode2 = (bytes, validate) => validate(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 var decodeHwp5FormSources = (bytes) => decode2(bytes, validateHwp5FormSources);
@@ -9732,7 +8963,7 @@ function attachHwp5Forms(editor, content) {
 }
 
 // js/hwp5-form-properties.mjs
-var uint20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint18 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function validateHwp5FormProperties(rows) {
   const fail = () => {
     throw Error("InvalidHwp5FormProperties");
@@ -9742,7 +8973,7 @@ function validateHwp5FormProperties(rows) {
   let totalUnits = 0, totalFields = 0;
   const controls = new Set, objects = new Set;
   for (const row of rows) {
-    if (!row || !["control_node", "object_node", "known_nodes", "deferred_nodes"].every((k) => uint20(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields))
+    if (!row || !["control_node", "object_node", "known_nodes", "deferred_nodes"].every((k) => uint18(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields))
       fail();
     const fields = new Set;
     for (const property of row.fields) {
@@ -11081,15 +10312,15 @@ function decodeHwp5DrawingSources(bytes) {
 
 // web/preview/hwp5-drawing-object-extension.mjs
 var version = 83951872;
-var uint21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function hasObservedDrawingObjectExtension(source) {
   const proof = source?.observedObjectExtension;
-  return source?.object_extra_bytes === 2 && proof?.fileVersion === version && proof.extraBytes === 2 && proof.extraHex === "0000" && uint21(source.control_node) && uint21(source.paragraph_node) && proof.controlNode === source.control_node && proof.paragraphNode === source.paragraph_node;
+  return source?.object_extra_bytes === 2 && proof?.fileVersion === version && proof.extraBytes === 2 && proof.extraHex === "0000" && uint19(source.control_node) && uint19(source.paragraph_node) && proof.controlNode === source.control_node && proof.paragraphNode === source.paragraph_node;
 }
 function withObservedDrawingObjectExtensions(editor, sources, section) {
   if (!sources.some((source) => source.object_extra_bytes === 2) || editor.fileVersion() !== version)
     return sources;
-  if (!uint21(section))
+  if (!uint19(section))
     throw new Error("InvalidDrawingObjectExtensionSection");
   const extras = editor.drawingObjectExtras(section);
   if (!Array.isArray(extras) || extras.length !== sources.length)
@@ -11301,33 +10532,6 @@ function attachHwp5Lines(editor, content) {
     } catch (error) {
       content.lineErrors.push({ section, error: error.message });
     }
-  }
-  return content;
-}
-
-// web/preview/section-grid-content.mjs
-function attachSectionGridObservations(editor, content, format) {
-  if (format === "hwp5") {
-    content.sectionGridObservations = {
-      state: "observed",
-      format,
-      normalization: "none",
-      schemaDefaultApplied: false,
-      rows: content.sectionSources ?? [],
-      errors: content.sectionSourceErrors ?? []
-    };
-    return content;
-  }
-  try {
-    if (typeof editor?.sectionGridSources !== "function" || editor.supportsSectionGrids?.() === false)
-      throw Error("HwpxSectionGridsAbiUnavailable");
-    content.sectionGridObservations = { state: "observed", format, ...editor.sectionGridSources() };
-  } catch (error) {
-    content.sectionGridObservations = {
-      state: "unavailable",
-      format,
-      reason: String(error?.message ?? error)
-    };
   }
   return content;
 }
@@ -12007,7 +11211,7 @@ function attachHwpxPageSettings(editor, content) {
   const notes = bindSourceNoteBodies(content, sourceTables?.state === "selected" ? sourceTables : null);
   content.noteBodies = notes.state === "bound" ? notes.notes : [];
   content.noteBodyBindingError = notes.state === "bound" ? null : notes.error;
-  return attachSectionGridObservations(editor, content, "hwpx");
+  return content;
 }
 
 // js/hwp5-structural-anchors.mjs
@@ -13614,8 +12818,7 @@ function attachHwp5PageSources(editor, content) {
   attachHwp5PageDeclarations(editor, content);
   if (!editor)
     return attachHwp5PageControls(editor, attachHwp5ColumnDisplay(attachHwp5FlowSources(editor, content)));
-  const observed = attachHwp5DocumentProperties(editor, attachHwp5PageControls(editor, attachHwp5AutomaticNumbers(editor, attachHwp5ColumnDisplay(attachHwp5FlowSources(editor, content)))));
-  return attachSectionGridObservations(editor, observed, "hwp5");
+  return attachHwp5DocumentProperties(editor, attachHwp5PageControls(editor, attachHwp5AutomaticNumbers(editor, attachHwp5ColumnDisplay(attachHwp5FlowSources(editor, content)))));
 }
 
 // web/preview/hwp5-rectangle-geometry-projection.mjs
@@ -14461,9 +13664,9 @@ var profiles = Object.freeze([
     instance: true
   })
 ]);
-var uint22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function selectedSourceMatches(profile, source) {
-  return source?.extra_bytes === 0 && (profile.opacity ? uint22(source.border_opacity) && source.border_opacity <= 255 : source.border_opacity === null) && (profile.instance ? uint22(source.instance_id) : source.instance_id === null);
+  return source?.extra_bytes === 0 && (profile.opacity ? uint20(source.border_opacity) && source.border_opacity <= 255 : source.border_opacity === null) && (profile.instance ? uint20(source.instance_id) : source.instance_id === null);
 }
 function hwp5PictureAbsentVersion(version) {
   return profiles.some((profile) => profile.version === version);
@@ -15263,7 +14466,7 @@ function decodeHwp5TableAnchors(bytes) {
 }
 
 // js/hwp5-flow-sources.mjs
-var uint23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var parse3 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 function decodeHwp5ParagraphFlow(bytes) {
   const rows = parse3(bytes);
@@ -15273,7 +14476,7 @@ function decodeHwp5ParagraphFlow(bytes) {
     if (row?.empty_line_eligible !== undefined && (typeof row.empty_line_eligible !== "boolean" || row.empty_line_eligible && row.top_level !== true))
       throw new Error("InvalidHwp5ParagraphFlow");
     if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
-      if (!(row.memo_index === null && row.memo_node === null) && !(uint23(row.memo_index) && uint23(row.memo_node) && row.host === "other" && row.top_level === false && uint23(row.list_node) && row.memo_node + 1 === row.list_node))
+      if (!(row.memo_index === null && row.memo_node === null) && !(uint21(row.memo_index) && uint21(row.memo_node) && row.host === "other" && row.top_level === false && uint21(row.list_node) && row.memo_node + 1 === row.list_node))
         throw new Error("InvalidHwp5ParagraphFlow");
     }
     if (row?.host !== undefined) {
@@ -15288,10 +14491,10 @@ function decodeHwp5ParagraphFlow(bytes) {
         "master_page",
         "drawing",
         "other"
-      ].includes(row.host) || !(row.list_node === null || uint23(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null))
+      ].includes(row.host) || !(row.list_node === null || uint21(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null))
         throw new Error("InvalidHwp5ParagraphFlow");
     }
-    if (!row || row.paragraph !== index || !uint23(row.template_node) || !(row.source_node === null || uint23(row.source_node)) || !(row.parent_node === null || uint23(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![0, 4, 8].includes(row.break_flags) || row.break_flags !== 0 && !row.top_level) || !row.generated && row.source_node !== row.template_node)
+    if (!row || row.paragraph !== index || !uint21(row.template_node) || !(row.source_node === null || uint21(row.source_node)) || !(row.parent_node === null || uint21(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![0, 4, 8].includes(row.break_flags) || row.break_flags !== 0 && !row.top_level) || !row.generated && row.source_node !== row.template_node)
       throw new Error("InvalidHwp5ParagraphFlow");
     for (const [name, mask] of [
       ["section_break", 1],
@@ -15309,9 +14512,9 @@ function decodeHwp5ColumnSources(bytes) {
   if (!Array.isArray(rows))
     throw new Error("InvalidHwp5ColumnSources");
   for (const row of rows) {
-    if (!row || !uint23(row.current_paragraph) || !uint23(row.current_unit))
+    if (!row || !uint21(row.current_paragraph) || !uint21(row.current_unit))
       throw new Error("InvalidHwp5ColumnSources");
-    if (!row || !["source_node", "paragraph_node", "flags", "color", "extra_bytes"].every((name) => uint23(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![0, 1, 2, 3].includes(row.kind) || ![0, 1, 2, 3].includes(row.direction) || typeof row.same_width !== "boolean" || !(row.spacing === null || Number.isInteger(row.spacing) && row.spacing >= -32768 && row.spacing <= 32767) || ![row.line_type, row.line_width].every((value) => Number.isInteger(value) && value >= 0 && value <= 255) || !Array.isArray(row.columns))
+    if (!row || !["source_node", "paragraph_node", "flags", "color", "extra_bytes"].every((name) => uint21(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![0, 1, 2, 3].includes(row.kind) || ![0, 1, 2, 3].includes(row.direction) || typeof row.same_width !== "boolean" || !(row.spacing === null || Number.isInteger(row.spacing) && row.spacing >= -32768 && row.spacing <= 32767) || ![row.line_type, row.line_width].every((value) => Number.isInteger(value) && value >= 0 && value <= 255) || !Array.isArray(row.columns))
       throw new Error("InvalidHwp5ColumnSources");
     if ((row.flags >>> 2 & 255) !== row.count || (row.flags & 3) !== row.kind || (row.flags >>> 10 & 3) !== row.direction || Boolean(row.flags & 4096) !== row.same_width || row.columns.length !== (row.count < 2 || row.same_width ? 0 : row.count) || row.columns.length > 0 !== (row.spacing === null))
       throw new Error("InvalidHwp5ColumnSources");
@@ -15324,14 +14527,14 @@ function decodeHwp5ColumnSources(bytes) {
 
 // js/hwp5-formula-sources.mjs
 var decoder4 = new TextDecoder("utf-8", { fatal: true });
-var uint24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function decodeHwp5FormulaSources(bytes) {
   const rows = JSON.parse(decoder4.decode(bytes));
   if (!Array.isArray(rows) || rows.length > 1e6)
     throw new Error("InvalidHwp5FormulaSources");
   const seen = new Set;
   for (const row of rows) {
-    if (!row || !uint24(row.source_node) || row.source_node === 0 || !uint24(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed())
+    if (!row || !uint22(row.source_node) || row.source_node === 0 || !uint22(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed())
       throw new Error("InvalidHwp5FormulaSources");
     seen.add(row.source_node);
   }
@@ -15356,8 +14559,8 @@ function decodeHwp5FieldSpans(bytes) {
 }
 
 // js/hwp5-field-topology.mjs
-var uint25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-var position = (value) => value && uint25(value.paragraph) && uint25(value.unit);
+var uint23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var position = (value) => value && uint23(value.paragraph) && uint23(value.unit);
 var before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
 function validateHwp5FieldTopology(value) {
   const fail = () => {
@@ -15367,7 +14570,7 @@ function validateHwp5FieldTopology(value) {
     fail();
   const starts = new Set;
   for (const row of value.spans) {
-    if (!row || !uint25(row.field_id) || !uint25(row.ordinal) || !position(row.begin) || !position(row.end) || before(row.end, row.begin))
+    if (!row || !uint23(row.field_id) || !uint23(row.ordinal) || !position(row.begin) || !position(row.end) || before(row.end, row.begin))
       fail();
     const key = row.begin.paragraph + ":" + row.ordinal;
     if (starts.has(key))
@@ -15376,13 +14579,13 @@ function validateHwp5FieldTopology(value) {
   }
   let previous = null;
   for (const row of value.unresolved) {
-    if (!row || !position(row.position) || !uint25(row.marker_id) || !(row.list_node === null || uint25(row.list_node)))
+    if (!row || !position(row.position) || !uint23(row.marker_id) || !(row.list_node === null || uint23(row.list_node)))
       fail();
     if (previous && !before(previous, row.position))
       fail();
     previous = row.position;
     if (row.kind === "unclosed_start") {
-      if (!uint25(row.ordinal))
+      if (!uint23(row.ordinal))
         fail();
       const key = row.position.paragraph + ":" + row.ordinal;
       if (starts.has(key))
@@ -15459,89 +14662,43 @@ function decodeObservedDocInfoDiagnostics(bytes) {
   return value;
 }
 
-// js/hwp5-text-window.mjs
-var utf16 = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
-var invalid = () => {
-  throw new Error("InvalidHwp5TextWindow");
-};
-function decodeHwp5TextWindow(bytes, reference, startUnit, endUnit) {
-  if (!(bytes instanceof Uint8Array) || bytes.length < 48 || bytes.length > 8240)
-    invalid();
-  if (bytes[0] !== 72 || bytes[1] !== 53 || bytes[2] !== 87 || bytes[3] !== 49)
-    invalid();
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const word = (at) => view.getUint32(at, true);
-  const epoch = BigInt(word(12)) << 32n | BigInt(word(8));
-  const totalUnits = word(28), first = word(32), end = word(36), present = word(40);
-  if (word(4) !== 1 || epoch === 0n || first > end || end > totalUnits || end - first > 4096 || present > 1 || !present && totalUnits !== 0 || word(44) !== (end - first) * 2 || bytes.length !== 48 + word(44))
-    invalid();
-  if (!reference || reference.kind !== "original" || typeof reference.epoch !== "string" || !/^[1-9][0-9]{0,19}$/.test(reference.epoch) || BigInt(reference.epoch) !== epoch || typeof reference.id !== "string" || !/^(0|[1-9][0-9]{0,9})$/.test(reference.id) || BigInt(reference.id) !== BigInt(word(20)) || reference.section !== word(16) || first !== startUnit || end !== endUnit)
-    invalid();
-  const raw = bytes.slice(48);
-  if (raw.length && end === totalUnits && present && (raw.at(-2) !== 13 || raw.at(-1) !== 0))
-    invalid();
-  for (let i = 0;i < raw.length; i += 2) {
-    const unit = raw[i] | raw[i + 1] << 8;
-    if (unit < 32 && !(unit === 13 && i + 2 === raw.length && end === totalUnits))
-      invalid();
-  }
-  let text;
-  try {
-    text = utf16.decode(raw);
-  } catch {
-    invalid();
-  }
-  return Object.freeze({
-    epoch: String(epoch),
-    section: word(16),
-    sourceNode: word(20),
-    parentNode: word(24) === 4294967295 ? null : word(24),
-    totalUnits,
-    startUnit: first,
-    endUnit: end,
-    textPresent: Boolean(present),
-    bytes: raw,
-    text
-  });
-}
-
 // js/hwp5-current-references.mjs
 var utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
-var utf162 = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
+var utf16 = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 var encoder = new TextEncoder;
 var fields3 = ["epoch", "kind", "section", "id", "row", "column"];
 var scopeSequence = 0n;
-var invalid2 = () => {
+var invalid = () => {
   throw new Error("InvalidHwp5CurrentReference");
 };
-var uint26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 0xffffffffffffffffn;
 function validate(reference) {
   if (!reference || typeof reference !== "object" || Array.isArray(reference))
-    invalid2();
+    invalid();
   if (Object.keys(reference).length !== fields3.length || fields3.some((key) => !Object.hasOwn(reference, key)))
-    invalid2();
+    invalid();
   const { epoch, kind, section, id, row, column } = reference;
-  if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint26(section) || !uint26(row) || !uint26(column))
-    invalid2();
+  if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint24(section) || !uint24(row) || !uint24(column))
+    invalid();
   if (!["original", "generated", "cell"].includes(kind))
-    invalid2();
+    invalid();
   if (kind !== "cell" && (row !== 0 || column !== 0 || BigInt(id) > 0xffffffffn))
-    invalid2();
+    invalid();
   if (kind !== "original" && id === "0")
-    invalid2();
+    invalid();
   return reference;
 }
 function decodeHwp5CurrentReferences(bytes) {
   const value = JSON.parse(utf8.decode(bytes));
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version")
-    invalid2();
-  if (value.version !== 1 || !uint26(value.total) || !uint26(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total)
-    invalid2();
+    invalid();
+  if (value.version !== 1 || !uint24(value.total) || !uint24(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total)
+    invalid();
   for (const reference of value.references)
     validate(reference);
   if (value.references.some((reference) => reference.epoch !== value.references[0].epoch))
-    invalid2();
+    invalid();
   return value;
 }
 function createHwp5CurrentReferenceApi({
@@ -15587,33 +14744,13 @@ function createHwp5CurrentReferenceApi({
       throw new RangeError("LimitExceeded");
     const window = decodeHwp5CurrentReferences(output(() => wasm[name](...args)).bytes);
     if (window.first !== args[1] || window.references.length !== Math.min(args[2], window.total - args[1]) || window.references.some((ref) => ref.section !== args[0]))
-      invalid2();
+      invalid();
     return {
       ...window,
       references: window.references.map((reference) => Object.freeze({ ...reference, scope }))
     };
   };
   return {
-    supportsTextDeltaReceipt() {
-      check();
-      return typeof wasm.hwp5_edit_last_text_delta_receipt === "function";
-    },
-    textDeltaReceipt() {
-      ready();
-      if (typeof wasm.hwp5_edit_last_text_delta_receipt !== "function")
-        return null;
-      try {
-        return JSON.parse(utf8.decode(output(() => wasm.hwp5_edit_last_text_delta_receipt()).bytes));
-      } catch (error) {
-        if (/NoExclusiveTextDelta/.test(error.message))
-          return null;
-        throw error;
-      }
-    },
-    liveTextCounters() {
-      ready();
-      return JSON.parse(utf8.decode(output(() => wasm.hwp5_edit_live_text_counters()).bytes));
-    },
     supportsCurrentReferences() {
       check();
       return available();
@@ -15625,36 +14762,15 @@ function createHwp5CurrentReferenceApi({
     currentSourceReferences(section, options) {
       const window = windowQuery("hwp5_edit_current_source_references", section, options);
       if (window.references.some((ref) => ref.kind === "cell"))
-        invalid2();
+        invalid();
       return window;
     },
     currentReferences(section, options = {}) {
       return windowQuery("hwp5_edit_current_references", section, options);
     },
-    supportsCurrentTextWindow() {
-      check();
-      return available() && typeof wasm.hwp5_edit_copy_current_text_window === "function";
-    },
-    copyCurrentTextWindow(reference, options) {
-      ready();
-      if (typeof wasm.hwp5_edit_copy_current_text_window !== "function")
-        throw new Error("Hwp5TextWindowAbiUnavailable");
-      const encoded = encode(reference);
-      if (reference.kind !== "original")
-        throw new Error("UnsupportedTextWindowReference");
-      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).sort().join() !== "endUnit,startUnit")
-        throw new TypeError("InvalidTextWindowOptions");
-      const start = u32(options.startUnit, "startUnit");
-      const end = u32(options.endUnit, "endUnit");
-      if (start > end)
-        throw new RangeError("InvalidTextPosition");
-      if (end - start > 4096)
-        throw new RangeError("LimitExceeded");
-      return memory.withBytes(encoded, (ptr, size) => decodeHwp5TextWindow(output(() => wasm.hwp5_edit_copy_current_text_window(ptr, size, start, end)).bytes, reference, start, end));
-    },
     copyCurrentText,
     currentText(reference) {
-      return utf162.decode(copyCurrentText(reference));
+      return utf16.decode(copyCurrentText(reference));
     },
     spliceCurrent(options) {
       ready();
@@ -15885,7 +15001,6 @@ async function createExperimentalHwp5Editor(source, input, {
         throw new Error("Hwp5TextSourcePolicyAbiUnavailable");
       success(wasm.hwp5_edit_validate_text_source_policy(section));
     },
-    ...createAtomicFormattingApi({ wasm, memory, check, prefix: "hwp5_edit" }),
     ...createHistoryApi({
       wasm,
       memory,
@@ -17935,54 +17050,12 @@ function createReaderRuntime({
   wasmModule,
   loadWasmModule,
   allowReload = false,
-  referenceScope,
-  liveTextWindow = false
+  referenceScope
 } = {}) {
   if (referenceScope !== undefined && (typeof referenceScope !== "string" || !referenceScope.length))
     throw new TypeError("InvalidCurrentReferenceScope");
   const createExperimentalHwp5Editor2 = (module, input, options = {}) => createExperimentalHwp5Editor(module, input, { ...options, referenceScope });
   let module, bytes, preview, editor, format;
-  let windowCache = null;
-  let activeOwnerRope = null;
-  const ropeMetrics = createRopeMetrics();
-  const windowCosts = { fullSnapshots: 0, partialAcks: 0, fallback: 0 };
-  function ownerWindowReply(message) {
-    if (!liveTextWindow || !windowCache || !editor.supportsTextDeltaReceipt?.() || !editor.supportsCurrentTextWindow?.())
-      return null;
-    const receipt = editor.textDeltaReceipt();
-    if (!receipt) {
-      windowCosts.fallback++;
-      return null;
-    }
-    const old = activeOwnerRope?.row.section === receipt.section && activeOwnerRope?.row.paragraph === receipt.paragraph ? activeOwnerRope.row : windowCache.paragraphs.find((p) => p.section === receipt.section && p.paragraph === receipt.paragraph);
-    if (!old?.currentReference || old.clipped || !old.editable || activeOwnerRope && activeOwnerRope.row !== old) {
-      windowCosts.fallback++;
-      return null;
-    }
-    const reference = { ...old.currentReference, epoch: receipt.epoch };
-    const caret = receipt.startUnit + receipt.inserted.length;
-    let start = Math.max(0, caret - 16), end = Math.min(receipt.totalUnits, caret + 16);
-    let window;
-    for (let attempt = 0;attempt < 3; attempt++) {
-      try {
-        window = editor.copyCurrentTextWindow(reference, { startUnit: start, endUnit: end });
-        break;
-      } catch (error) {
-        if (!/SplitSurrogatePair/.test(error.message) || attempt === 2)
-          throw error;
-        start = Math.max(0, start - 1);
-        end = Math.min(receipt.totalUnits, end + 1);
-      }
-    }
-    const patch = { viewKind: "owner-window-patch", version: 1, receipt, reference, window };
-    const before = activeOwnerRope?.row === old ? activeOwnerRope : createOwnerRope(old, ropeMetrics);
-    const next = patchOwnerRope(before, patch, ropeMetrics);
-    activeOwnerRope = next;
-    windowCosts.rope = { ...ropeMetrics };
-    windowCosts.windowUnits = (windowCosts.windowUnits ?? 0) + window.text.length;
-    windowCosts.partialAcks++;
-    return patch;
-  }
   const displayResources = createDisplayResourceCache();
   let historyEnabled = false;
   let historyPoisoned = false;
@@ -18031,31 +17104,7 @@ function createReaderRuntime({
       "hwp5_edit_splice_current"
     ].every((name) => WebAssembly.Module.exports(module).some((entry) => entry.name === name && entry.kind === "function"));
   }
-  function withAtomicDisplayFence(project) {
-    const binding = () => {
-      if (!editor?.supportsAtomicFormatting?.())
-        return null;
-      const value = editor.atomicFormattingCapabilities().binding;
-      atomicFormattingBindingKey(value);
-      return { ...value };
-    };
-    const before = binding();
-    const result = project();
-    const after = binding();
-    if (before === null !== (after === null) || before && atomicFormattingBindingKey(before) !== atomicFormattingBindingKey(after))
-      throw Error("StaleFormattingBinding");
-    if (result.atomicFormattingDisplayBinding != null) {
-      if (!before || atomicFormattingBindingKey(result.atomicFormattingDisplayBinding) !== atomicFormattingBindingKey(before))
-        throw Error("StaleFormattingBinding");
-      result.atomicFormattingSourceBinding = Object.freeze({ ...before });
-    }
-    return result;
-  }
   function hwp5Display(projected = null) {
-    return withAtomicDisplayFence(() => hwp5DisplayBody(projected));
-  }
-  function hwp5DisplayBody(projected = null) {
-    windowCosts.fullSnapshots++;
     if (historyEnabled && editor?.supportsCurrentTextPreview?.()) {
       preview = { ...preview, ...editor.currentTextPreview() };
     }
@@ -18066,7 +17115,6 @@ function createReaderRuntime({
     }
     const content = projected ?? displayContent(hwp5DisplayProjection());
     content.editorSessionAvailable = Boolean(editor);
-    content.atomicFormattingAvailable = atomicFormattingAvailable(editor);
     const observedDocInfoAvailable = [
       "hwp5_edit_open_observed_docinfo",
       "hwp5_edit_observed_docinfo_diagnostics"
@@ -18075,7 +17123,7 @@ function createReaderRuntime({
       content.observedDocInfoEditingAvailable = !editor && preview.primarySource !== "distribution_viewtext" && ["UnexpectedEnd", "RepairedSourceUnsupported", "ResourceCountMismatch"].includes(hwp5StyleOpenError);
       content.observedDocInfoDiagnostics = editor?.observedDocInfoDiagnostics() ?? null;
     }
-    if (historyEnabled || content.atomicFormattingAvailable)
+    if (historyEnabled)
       attachHwp5CurrentReferences(editor, preview, content);
     attachHwp5CreatedTables(editor, content, hwp5TableCreationAvailable(), preview.sections.length);
     const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
@@ -18178,9 +17226,6 @@ function createReaderRuntime({
     }
   }
   function hwpxDisplay(projected) {
-    return withAtomicDisplayFence(() => hwpxDisplayBody(projected));
-  }
-  function hwpxDisplayBody(projected) {
     const resources = displayResources.view(editor);
     if (!projected && documentWindow) {
       const offset = Math.min(documentWindow.offset, Math.max(0, preview.paragraphCount - 1));
@@ -18188,7 +17233,6 @@ function createReaderRuntime({
       projected = projectHwpxWindow(editor, preview, { offset, count });
     }
     const content = projected ?? displayHwpxContent(preview);
-    content.atomicFormattingAvailable = atomicFormattingAvailable(editor);
     if (!content.window)
       attachHwpxFormulas(editor, content);
     content.formulaDefinitionAvailable = WebAssembly.Module.exports(module).some((entry) => entry.name === "hwpx_edit_set_formula_definition" && entry.kind === "function");
@@ -18409,10 +17453,6 @@ function createReaderRuntime({
           historyRevision = editor.historyRevision();
         if (historyEnabled && editor && ["count", "at"].every((suffix) => WebAssembly.Module.exports(module).some((entry) => entry.name === `${format}_edit_history_revision_${suffix}`)))
           historyRevisions = editor.historyRevisions();
-        if (value.content?.format === "hwp5" && value.content.viewKind !== "owner-window-patch") {
-          windowCache = value.content;
-          activeOwnerRope = null;
-        }
         if (historyEnabled && editor)
           historyStats = editor.historyStats();
         response = {
@@ -18428,39 +17468,11 @@ function createReaderRuntime({
       }
     };
     let applied = false;
-    let atomicOutcome;
     let mutationUncertain = false;
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
-      if (message.kind === "query-live-text-counters") {
-        reply({ kind: message.kind, counters: editor.liveTextCounters(), windowCosts: { ...windowCosts } });
-        return;
-      }
       if (format === "hwp5" && preview?.sectionInventory && message.kind !== "load")
         throw new Error("AvailableSectionsReadOnly");
-      if (message.kind === "query-formatting") {
-        const formatting = queryAtomicFormatting(editor, format, message);
-        reply({ kind: message.kind, formatting });
-        return;
-      }
-      if (message.kind === "formatting-patch") {
-        if (!editor || !historyEnabled)
-          throw Error("HistoryNotEnabled");
-        atomicOutcome = editor.applyFormattingPatch(message.request);
-        applied = atomicOutcome.application === "applied";
-        mutationUncertain = atomicOutcome.application === "unknown";
-        if (mutationUncertain)
-          historyPoisoned = true;
-        const completion = {
-          kind: message.kind,
-          formattingNativeCode: atomicOutcome.nativeCode,
-          changed: atomicOutcome.changed
-        };
-        if (atomicOutcome.error || atomicOutcome.cleanupError)
-          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
-        reply({ ...completion, content: format === "hwpx" ? hwpxDisplay() : hwp5Display() });
-        return;
-      }
       if ([
         "query-current-references",
         "query-current-source-references",
@@ -18473,11 +17485,6 @@ function createReaderRuntime({
           reply({ kind: message.kind, requestId: message.requestId, ...result });
         } else {
           applied = true;
-          const partial = ownerWindowReply(message);
-          if (partial) {
-            reply({ kind: message.kind, requestId: message.requestId, content: partial, windowCosts: { ...windowCosts } });
-            return;
-          }
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, requestId: message.requestId, content: hwp5Display() });
         }
@@ -19708,11 +18715,6 @@ function createReaderRuntime({
         if (message.kind === "splice" && message.reference !== undefined) {
           editor.spliceCurrent(message);
           applied = true;
-          const partial = ownerWindowReply(message);
-          if (partial) {
-            reply({ kind: message.kind, content: partial, windowCosts: { ...windowCosts } });
-            return;
-          }
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, content: hwp5Display() });
           return;
@@ -19722,13 +18724,6 @@ function createReaderRuntime({
         else
           editor.setCharacterFormat(message);
         applied = true;
-        if (message.kind === "splice") {
-          const partial = ownerWindowReply(message);
-          if (partial) {
-            reply({ kind: message.kind, content: partial, windowCosts: { ...windowCosts } });
-            return;
-          }
-        }
         if (historyEnabled && editor.supportsCurrentTextPreview?.()) {
           reply({ kind: message.kind, content: hwp5Display() });
           return;
@@ -19828,16 +18823,10 @@ function createReaderRuntime({
           loadProjection = null;
         }
       }
-      if (atomicOutcome)
-        response = {
-          ...response,
-          formattingNativeCode: atomicOutcome.nativeCode,
-          changed: atomicOutcome.changed
-        };
       const revision = response.historyRevision;
       const changed = typeof response.changed === "boolean" ? response.changed : typeof revision === "number" && typeof lastHistoryRevision === "number" ? revision !== lastHistoryRevision : applied ? null : false;
       displayResources.finishRequest(Boolean(response.error));
-      outcomes.set(response, atomicOutcome ? { application: atomicOutcome.application, changed: atomicOutcome.changed } : {
+      outcomes.set(response, {
         application: historyPoisoned || mutationUncertain || ["MutationUncertain", "HistoryMutationUncertain"].includes(response.error) ? "unknown" : applied && changed !== false ? "applied" : "unapplied",
         changed
       });
@@ -19867,7 +18856,7 @@ function createReaderRuntime({
     outcome(reply) {
       return { ...outcomes.get(reply) };
     },
-    request(input, admission) {
+    request(input) {
       const requestTicket = ++requestSequence;
       const reusableLoad = loadProjection;
       loadProjection = null;
@@ -19890,7 +18879,6 @@ function createReaderRuntime({
           loaded = true;
           lastHistoryRevision = undefined;
         }
-        admission?.();
         return execute(message, requestTicket, reusableLoad);
       });
       const settled = task.finally(() => {
@@ -19920,17 +18908,9 @@ function createReaderRuntime({
 }
 
 // packages/core/src/state/owned.ts
-var observationCopies = { visitedNodes: 0, sharedNodes: 0, bufferBytes: 0, buildNodes: 0, buildSharedNodes: 0 };
 function copyOwned(value, observation = false, seen = new Set) {
-  if (observation && value !== null && typeof value === "object") {
-    observationCopies.visitedNodes++;
-    if (immutableObservations.has(value)) {
-      observationCopies.sharedNodes++;
-      return value;
-    }
-    if (value instanceof ArrayBuffer || ArrayBuffer.isView(value))
-      observationCopies.bufferBytes += value.byteLength;
-  }
+  if (observation && value !== null && typeof value === "object" && immutableObservations.has(value))
+    return value;
   if (value === null || typeof value === "string" || typeof value === "boolean" || typeof value === "undefined")
     return value;
   if (typeof value === "number") {
@@ -19992,11 +18972,8 @@ function ownObservation(value) {
   const build = (item) => {
     if (item === null || typeof item !== "object")
       return item;
-    if (immutableObservations.has(item)) {
-      observationCopies.buildSharedNodes++;
+    if (immutableObservations.has(item))
       return item;
-    }
-    observationCopies.buildNodes++;
     const node = Array.isArray(item) ? new Array(item.length) : Object.create(null);
     for (const [key, child] of Object.entries(item)) {
       if (mutable(child)) {
@@ -20025,23 +19002,39 @@ function readKnownNativeModule(module) {
 var modules = new Map;
 
 // packages/core/src/internal/native-runtime-origin.ts
-var uint27 = (n) => Number.isSafeInteger(n) && Number(n) >= 0 && Number(n) < 4294967295;
+var uint25 = (n) => Number.isSafeInteger(n) && Number(n) >= 0 && Number(n) < 4294967295;
 var epoch = (s) => typeof s === "string" && /^[1-9][0-9]{0,19}$/.test(s) && BigInt(s) <= 0xffffffffffffffffn;
 function canonicalRuntimeDescriptors(runtime, request, dispose, prototype) {
   const a = Object.getOwnPropertyDescriptor(runtime, "request"), b = Object.getOwnPropertyDescriptor(runtime, "dispose");
   return Object.getPrototypeOf(runtime) === prototype && !!a && !!b && "value" in a && "value" in b && a.value === request && b.value === dispose;
 }
 function nativeOrigin(kind, reply, context, sequence, contract, authority) {
-  if (!contract || !context || !authority() || reply.error || !uint27(reply.historyRevision))
+  if (!contract || !context || !authority() || reply.error || !uint25(reply.historyRevision))
     return;
   const ctx = Object.freeze({ ...context });
   const content = reply.content;
   if (content?.viewKind === "owner-window-patch") {
     const { receipt: r, window: w, reference: ref } = content;
-    if (!["splice", "splice-current"].includes(kind) || reply.meta?.application !== "applied" || reply.meta?.changed !== true || r?.exclusive !== true || r.version !== 1 || !epoch(r.beforeEpoch) || !epoch(r.epoch) || BigInt(r.epoch) <= BigInt(r.beforeEpoch) || !uint27(r.beforeRevision) || r.revision !== reply.historyRevision || !ref || ref.kind !== "original" || typeof ref.scope !== "string" || ref.epoch !== r.epoch || ref.id !== String(r.sourceNode) || ref.section !== r.section || w?.epoch !== r.epoch || w.sourceNode !== r.sourceNode || w.parentNode !== r.parentNode || w.section !== r.section)
+    if (!["splice", "splice-current"].includes(kind) || reply.meta?.application !== "applied" || reply.meta?.changed !== true || r?.exclusive !== true || r.version !== 1 || !epoch(r.beforeEpoch) || !epoch(r.epoch) || BigInt(r.epoch) <= BigInt(r.beforeEpoch) || !uint25(r.beforeRevision) || r.revision !== reply.historyRevision || !ref || ref.kind !== "original" || typeof ref.scope !== "string" || ref.epoch !== r.epoch || ref.id !== String(r.sourceNode) || ref.section !== r.section || w?.epoch !== r.epoch || w.sourceNode !== r.sourceNode || w.parentNode !== r.parentNode || w.section !== r.section)
       return;
-    const owner = Object.freeze({ section: r.section, paragraph: r.paragraph, sourceNode: r.sourceNode, parentNode: r.parentNode });
-    return Object.freeze({ kind: "exclusive-text", context: ctx, sequence, referenceScope: ref.scope, nativeEpoch: r.epoch, nativeRevision: r.revision, beforeEpoch: r.beforeEpoch, beforeRevision: r.beforeRevision, owner, authority });
+    const owner = Object.freeze({
+      section: r.section,
+      paragraph: r.paragraph,
+      sourceNode: r.sourceNode,
+      parentNode: r.parentNode
+    });
+    return Object.freeze({
+      kind: "exclusive-text",
+      context: ctx,
+      sequence,
+      referenceScope: ref.scope,
+      nativeEpoch: r.epoch,
+      nativeRevision: r.revision,
+      beforeEpoch: r.beforeEpoch,
+      beforeRevision: r.beforeRevision,
+      owner,
+      authority
+    });
   }
   if (content?.format !== "hwp5" || content.window || content.viewKind || !Array.isArray(content.paragraphs))
     return;
@@ -20051,39 +19044,59 @@ function nativeOrigin(kind, reply, context, sequence, contract, authority) {
   const ref = refs[0];
   if (!ref || !epoch(ref.epoch) || typeof ref.scope !== "string" || !ref.scope || refs.some((r) => r.scope !== ref.scope || r.epoch !== ref.epoch))
     return;
-  return Object.freeze({ kind: "full-baseline", context: ctx, sequence, referenceScope: ref.scope, nativeEpoch: ref.epoch, nativeRevision: reply.historyRevision, owner: null, authority });
+  return Object.freeze({
+    kind: "full-baseline",
+    context: ctx,
+    sequence,
+    referenceScope: ref.scope,
+    nativeEpoch: ref.epoch,
+    nativeRevision: reply.historyRevision,
+    owner: null,
+    authority
+  });
 }
 function sameRequestContext(a, b) {
   return !!b && ["editorId", "documentId", "generation", "requestId", "operationRevision"].every((k) => a[k] === b[k]);
 }
+var runtimeOrigins = new WeakMap;
+function bindNativeRuntimeOrigin(runtime, read) {
+  runtimeOrigins.set(runtime, read);
+}
 
 // packages/core/src/runtime/reader-runtime.ts
 var origins = new WeakMap;
+function consumeReaderNativeGeometryOrigin(runtime, reply, ctx) {
+  return origins.get(runtime)?.read(reply, ctx);
+}
 function createReaderEditorRuntime(options = {}) {
   let contract = options.wasmModule ? readKnownNativeModule(options.wasmModule) : undefined, closed = false, sequence = 0, tainted = false, poisoned = false;
-  const backend = createReaderRuntime({ ...options, ...options.loadWasmModule ? { loadWasmModule: async () => {
-    const module = await options.loadWasmModule();
-    contract = readKnownNativeModule(module);
-    return module;
-  } } : {} });
+  const backend = createReaderRuntime({
+    ...options,
+    ...options.loadWasmModule ? {
+      loadWasmModule: async () => {
+        const module = await options.loadWasmModule();
+        contract = readKnownNativeModule(module);
+        return module;
+      }
+    } : {}
+  });
   const replies = new WeakMap;
   let runtime;
   const valid = () => {
-    const admissionDescriptor = Object.getOwnPropertyDescriptor(runtime, "requestAtAdmission");
-    if (!canonicalRuntimeDescriptors(runtime, request, dispose, Object.prototype) || !admissionDescriptor || !("value" in admissionDescriptor) || admissionDescriptor.value !== requestAtAdmission)
+    if (!canonicalRuntimeDescriptors(runtime, request, dispose, Object.prototype))
       tainted = true;
     return !closed && !tainted && !poisoned && !!contract;
   };
   async function request(message, context) {
     return requestInternal(message, context);
   }
-  async function requestAtAdmission(message, context, admission) {
-    return requestInternal(message, context, admission);
-  }
-  async function requestInternal(message, context, admission) {
+  async function requestInternal(message, context) {
     const captured = context ? { ...context } : undefined, kind = message.kind;
-    const raw = await backend.request(message, admission);
-    const reply = ownObservation({ ...raw, meta: { ...backend.outcome(raw), ...captured ? { context: captured } : {} } })();
+    const raw = await backend.request(message);
+    const reply = ownObservation({
+      ...raw,
+      meta: { ...backend.outcome(raw), ...captured ? { context: captured } : {} }
+    })();
     if (/MutationUncertain|HistoryMutationUncertain/.test(String(reply.error ?? "")))
       poisoned = true;
     if (reply.content !== undefined || reply.error || reply.meta?.changed === true || ["splice", "splice-current", "undo", "redo", "format"].includes(kind))
@@ -20097,14 +19110,18 @@ function createReaderEditorRuntime(options = {}) {
     closed = true;
     return backend.dispose();
   }
-  runtime = { request, requestAtAdmission, dispose };
-  origins.set(runtime, { valid, read: (reply, ctx) => {
-    if (!valid())
-      return;
-    const o = replies.get(reply);
-    replies.delete(reply);
-    return o && sameRequestContext(o.context, ctx) ? o : undefined;
-  } });
+  runtime = { request, dispose };
+  origins.set(runtime, {
+    valid,
+    read: (reply, ctx) => {
+      if (!valid())
+        return;
+      const o = replies.get(reply);
+      replies.delete(reply);
+      return o && sameRequestContext(o.context, ctx) ? o : undefined;
+    }
+  });
+  bindNativeRuntimeOrigin(runtime, (reply, ctx) => consumeReaderNativeGeometryOrigin(runtime, reply, ctx));
   return runtime;
 }
 
@@ -20125,7 +19142,6 @@ scope.onmessage = (event) => {
           throw Error("InvalidWasmModule");
         runtime = createReaderEditorRuntime({
           wasmModule: message.wasmModule,
-          liveTextWindow: message.liveTextWindow === true,
           referenceScope: message.referenceScope
         });
         scope.postMessage({ id, reply: { kind: message.kind } });
@@ -20142,5 +19158,3 @@ scope.onmessage = (event) => {
     }
   });
 };
-
-//# debugId=DF6891AE9CF34D8E64756E2164756E21
