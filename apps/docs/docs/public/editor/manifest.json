@@ -22,7 +22,7 @@
     {
       "path": "assets/api-main.js",
       "bytes": 572,
-      "sha256": "eec49557fb54ff2a1c7da66bdae1c4fd73d3a0d84c1fc548e00eb951a5f1fb44"
+      "sha256": "8de7639d961a6894f994d4f35787c15281422071213d8b10bc39ebf8c8f543db"
     },
     {
       "path": "assets/api-playground-C2Xz6S74.js",
@@ -36,63 +36,63 @@
     },
     {
       "path": "assets/app.js",
-      "bytes": 353913,
-      "sha256": "2082376f61fc7350a74af8dd4b49f1edb846212b0899dcd6f8121985cc3d3826"
+      "bytes": 353908,
+      "sha256": "6d23040fc997735ae90a5201d9526a87894b8d44c8ed515c37e9a05537ec7548"
     },
     {
-      "path": "assets/dist-0bcqrk1p.js",
-      "bytes": 1063431,
-      "sha256": "46db89a3d06598c10e19c6f25f28fcdceb3c1c52e6083af21c78ac79de18118a"
-    },
-    {
-      "path": "assets/dist-CtnShoLX.js",
+      "path": "assets/dist-9GB0U9Tx.js",
       "bytes": 57,
-      "sha256": "2d59d9aa7982224f90489c2e7acf32cb19a6c4f04115f3b96b2294fc0431ecb9"
+      "sha256": "444f7611e2641c62321024eb535b43c04a912e81a62f74adf7536efef49465b1"
     },
     {
-      "path": "assets/dist-DN1x5Vn5.js",
-      "bytes": 54784,
-      "sha256": "056eac13e92b84d1b0020d5633abe618d5b01b17d397ee1cf7c20ee28703643b"
+      "path": "assets/dist-B1YNmS9g.js",
+      "bytes": 63446,
+      "sha256": "bf5961dc2cc5f3c13ce3a147dadea3fdf2dae544c7fed3bcb4e6a50927454dfe"
     },
     {
-      "path": "assets/index-djcdcpyg-kHK4BEg6.js",
-      "bytes": 10363,
-      "sha256": "d89921b7e913a67b663cd86f49ea13dc0f81b4ce605cbb2225858508f58b4f78"
+      "path": "assets/dist-DEo7Papa.js",
+      "bytes": 1063431,
+      "sha256": "f849fbccf5a49409c16f37dbae9f3fcc882586b14a13011c2f86baf315a10209"
+    },
+    {
+      "path": "assets/index-6htz2rdz-D2gS2sxn.js",
+      "bytes": 11508,
+      "sha256": "9d8538b93b47dbe3e90bd9434faa08bcb87ed7a8fcb48e0f4a4593a39b14d2ed"
     },
     {
       "path": "assets/public-index.js",
-      "bytes": 743,
-      "sha256": "de0452cf3baeaf18365877497d171aaeeac0dd57ff9f6ea6de1ad7f1b1289d61"
+      "bytes": 779,
+      "sha256": "2045980fea28b77de440b511cffcf1b597fb415fa237df5dd405a9d00688caaf"
     },
     {
       "path": "assets/public-runtime.js",
       "bytes": 189,
-      "sha256": "124804b65834d7d687fb316191dd99869b7bc56c12cbc545b3bbb435954938d7"
+      "sha256": "2d3aedcb12e29c2a41a2c9e744d15532994e1c374883ba93e3a57d61b9185049"
     },
     {
-      "path": "assets/runtime-DZrQVqgE.js",
-      "bytes": 493586,
-      "sha256": "678af54919def8337b6e58df763534815dd89f43e0f538a3f6b037ceaa0b4d96"
+      "path": "assets/runtime-OM1IQyOL.js",
+      "bytes": 497991,
+      "sha256": "06303267d7a98a512c20b5ed9971d85c98030d30d377da04d9fc4818f762b231"
     },
     {
       "path": "demo/headless/index.html",
       "bytes": 915,
-      "sha256": "40079913ba37efa7045a77db881b595be05c72b4977d74762c8a43edac1e7794"
+      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 915,
-      "sha256": "40079913ba37efa7045a77db881b595be05c72b4977d74762c8a43edac1e7794"
+      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 915,
-      "sha256": "40079913ba37efa7045a77db881b595be05c72b4977d74762c8a43edac1e7794"
+      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 915,
-      "sha256": "40079913ba37efa7045a77db881b595be05c72b4977d74762c8a43edac1e7794"
+      "sha256": "b6f111c8723a4fd754bce2edb5e016b15a1935a85d285a0ed24142a4fad16f54"
     },
     {
       "path": "fixture-catalog.json",
@@ -117,7 +117,7 @@
     {
       "path": "index.html",
       "bytes": 887,
-      "sha256": "5e1970d6c47c9d24bf51b6bafd395a3049f39096031a4cf841746d07e0ce3f82"
+      "sha256": "fd2867bfdf957dd075283cbc33e9b51f1b75b57d51eb549f9b91051db8e8e697"
     },
     {
       "path": "LICENSE.txt",
@@ -136,8 +136,8 @@
     },
     {
       "path": "runtime/worker.js",
-      "bytes": 872727,
-      "sha256": "0ad3aab89a2a2ff562f988a6c4e62269b84af97fde29a73d2298b99d6fd53315"
+      "bytes": 878038,
+      "sha256": "4b73840ef2eac03e005319c98a8e338626c7a57b9108d648efdc88fa64f8354e"
     },
     {
       "path": "THIRD_PARTY_NOTICES.txt",
