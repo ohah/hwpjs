@@ -969,7 +969,7 @@ export function createReaderRuntime({
       WebAssembly.Module.exports(module).some(
         (entry) => entry.name === 'hwpx_edit_table_creation_resources' && entry.kind === 'function',
       )
-        ? editor.tableCreationResources()
+        ? resources.tableCreationResources()
         : null;
     const result = attachCreatedTables(
       editor,

@@ -16,6 +16,7 @@ const HEADER_READS = new Set([
   'paragraphShapeIds',
   'paragraphShapes',
   'tabDefinitions',
+  'tableCreationResources',
 ]);
 const READ_ONLY_REQUESTS = new Set([
   'picture-bytes',

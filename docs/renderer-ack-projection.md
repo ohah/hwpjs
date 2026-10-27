@@ -11,3 +11,11 @@
 실행 명령은 [개발·검증 명령](development-commands.md)의 입력 응답 표시 투영 회귀를 따릅니다.
 
 합성 회귀는 실제 Native 저장 검사가 아닙니다. 실제 3fc A/B 결과와 Native 저장·이력 회귀는 별도의 검증 범위입니다.
+
+## HWPX 표시용 header 조회의 국소 재사용
+
+기존 display resource cache는 검증된 일반 텍스트 splice에서 `tableCreationResources`의 ID 목록도 소유 복사로 재사용합니다. 해당 조회는 원본 header와 소유 paragraph/character 리소스 ID에 의존합니다. 서식·구조·문서 전환·실패·undo/redo는 기존 전체 무효화 정책을 유지합니다. 위치·dirty·표 owner/site 및 `characterRanges`는 이 항목에 포함하지 않습니다. 정규 회귀 명령은 [개발·검증 명령](development-commands.md#hwpx-표시-자원-캐시-회귀)을 따릅니다.
+
+동일 aebc/cb48 Noori HWPX의 격리 계측 8키 비교에서 해당 Native 조회는 8회에서 1회로 줄고, warm Worker 평균은 84.3ms에서 79.1ms로 줄었습니다. 단일 순차 표본이며 조용한 성능 A/B가 아닙니다. 8명령·8응답·Native 이력 통계·undo8 후 저장 원본 바이트를 대조했고, 별도 Native getter 검사에서 redo8 저장도 비교했습니다. 실제 제품 배포 결과로 확대하지 않습니다.
+
+실제 입력 문자열의 Canvas `fillText` 호출은 첫 beforeinput 후 약75.9ms로 첫 ACK 약321.1ms보다 먼저였습니다. 이는 픽셀 합성 완료 시각이 아니며 처리 backlog 전체를 최초 글자 표시 지연으로 동일시하지 않습니다. 전체 표시 재조회·원문 복사와 O(K·D) 경계는 남고, 이번 국소 개선이 사용자 전체 O(n) 요구나 입력 지연 해결을 완료한 것은 아닙니다.

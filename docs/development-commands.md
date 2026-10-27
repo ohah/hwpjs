@@ -690,3 +690,12 @@ mise exec -- bun test ./apps/demo/tests/font-name-tool.test.ts
 ```
 
 정규 대상은 fake port·공통 DOM 하네스의 25개/160 assertion입니다. 명시 파일의 존재를 확인한 뒤 실행하며 Native·브라우저 검증을 대신하지 않습니다. 이 검사는 core 타입만 참조하여 private dist를 runtime import하지 않습니다. 실제 앱 연결에는 `SET_CHARACTER_FONT_NAME_COMMAND`와 해당 조회 필드를 내보내는 검증된 SDK가 필요합니다. 기존 글꼴 export 없는 dist를 새 API 지원으로 간주하지 않습니다.
+
+## HWPX 표시 자원 캐시 회귀
+
+```sh
+test -f ./tests/hwpx/display-resource-cache.test.mjs || exit 1
+mise exec -- node --test ./tests/hwpx/display-resource-cache.test.mjs
+```
+
+소유 복사·순수 텍스트 편집 중 재사용·서식/구조/문서/실패 경계 무효화의 단위 회귀입니다. 실제 Native 저장·브라우저 성능 검증은 [표시 투영](renderer-ack-projection.md)의 별도 근거입니다.

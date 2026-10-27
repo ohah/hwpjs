@@ -125,3 +125,94 @@ test('read-only resource requests preserve values; unenabled/non-HWPX splice doe
     assert.deepEqual(v.fontFaces(), [2]);
   }
 });
+
+test('표 생성 리소스만 순수 텍스트 이력 편집 사이에 소유 복사로 보존한다', () => {
+  const cache = createDisplayResourceCache();
+  let calls = 0,
+    dynamic = 0;
+  const source = { paragraph: [7], character: [5], style: [2], border_fill: [3] };
+  const editor = {
+    tableCreationResources() {
+      calls++;
+      return source;
+    },
+    tableBindings() {
+      return ++dynamic;
+    },
+    tableBorderSourcesBatch() {
+      return ++dynamic;
+    },
+  };
+  const view = cache.view(editor);
+  plain(cache, editor);
+  const first = view.tableCreationResources();
+  first.character.push(99);
+  cache.finishRequest();
+  plain(cache, editor);
+  assert.deepEqual(view.tableCreationResources(), source);
+  assert.equal(calls, 1);
+  assert.equal(view.tableBindings(), 1);
+  assert.equal(view.tableBindings(), 2);
+  assert.equal(view.tableBorderSourcesBatch([0]), 3);
+  assert.equal(view.tableBorderSourcesBatch([0]), 4);
+  view.tableCreationResources(0);
+  assert.equal(calls, 2);
+  cache.invalidate();
+  view.tableCreationResources();
+  assert.equal(calls, 3);
+  cache.finishRequest(true);
+  view.tableCreationResources();
+  assert.equal(calls, 4);
+});
+test('표 생성 리소스의 형식 구조 이력 오류 문서 경계는 재조회한다', () => {
+  for (const kind of [
+    'format',
+    'font',
+    'character-properties',
+    'split',
+    'merge',
+    'insert-table',
+    'undo',
+    'redo',
+    'load',
+    'enable',
+    'unlock',
+    'save',
+    'unknown',
+  ]) {
+    let calls = 0;
+    const cache = createDisplayResourceCache(),
+      editor = {
+        tableCreationResources() {
+          return { character: [++calls] };
+        },
+      };
+    const view = cache.view(editor);
+    view.tableCreationResources();
+    cache.beginRequest({ kind }, { format: 'hwpx', editor, historyEnabled: true });
+    assert.deepEqual(view.tableCreationResources(), { character: [2] }, kind);
+  }
+  let fail = false;
+  const cache = createDisplayResourceCache(),
+    a = {
+      tableCreationResources() {
+        if (fail) throw Error('원 조회 거부');
+        return [1];
+      },
+    },
+    b = {
+      tableCreationResources() {
+        return [2];
+      },
+    };
+  const av = cache.view(a);
+  av.tableCreationResources();
+  cache.invalidate();
+  fail = true;
+  assert.throws(() => av.tableCreationResources(), /원 조회 거부/);
+  cache.finishRequest();
+  fail = false;
+  assert.deepEqual(av.tableCreationResources(), [1]);
+  assert.deepEqual(cache.view(b).tableCreationResources(), [2]);
+  assert.throws(() => av.tableCreationResources(), /StaleDisplayResourceOwner/);
+});
