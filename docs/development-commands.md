@@ -60,6 +60,23 @@ HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm mise exec -- bun test ./packages/vanil
 
 WASM을 생략하면 실제 Native 2건은 skip되며 프로토콜 검증만 실행합니다.
 
+## plain 각주 연속 페이지 집중 검증
+
+[소유권·예약·지원 범위](plain-footnote-continuation.md)를 따릅니다. 순수 21개는 WASM·fixture를 읽지 않습니다.
+
+```sh
+test -f ./tests/hwp5/plain-footnote-continuation.test.mjs || exit 1
+mise exec -- node --test ./tests/hwp5/plain-footnote-continuation.test.mjs
+```
+
+실제 저장·undo/redo·재열기 통합 1개는 명시 엔진을 요구하며 저장소의 기존 `legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp`만 읽습니다. 엔진을 생략한 일반 실행은 이 1개가 skip되며 Native 통과가 아닙니다. 아래 명시 명령은 엔진이 비었으면 시작 전에 실패합니다. 순수 21개와 실제 1개의 합계는 22개이며 Canvas 검증은 별도입니다.
+
+```sh
+test -n "$HWPJS_TEST_WASM" || exit 1
+test -f ./tests/hwp5/plain-footnote-continuation-native.test.mjs || exit 1
+mise exec -- node --test ./tests/hwp5/plain-footnote-continuation-native.test.mjs
+```
+
 ## JS 모노레포 CLI
 
 Bun 1.4.4와 명시 WASM을 사용하는 경로입니다. 내부 core·vanilla·react·svelte·react-native 5개는 private/dist 계약이고 외부 package 진입점은 `@ohah/hwpjs`입니다.

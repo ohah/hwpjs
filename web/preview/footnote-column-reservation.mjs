@@ -1,3 +1,4 @@
+import { footnoteTextReference as referencesText } from './footnote-reference-rows.mjs';
 import { placeFootnoteArea } from './footnote-area-placement.mjs';
 const ownedReservations = new WeakMap();
 export const isFootnoteColumnReservation = (callback) =>
@@ -38,14 +39,6 @@ export function createFootnoteColumnReservation(notes, policy, separatorHeight) 
         ) ||
         (candidate && references(candidate, note)),
     );
-  const referencesText = (row, note) =>
-    row?.kind === 'text' &&
-    row.section === note.section &&
-    row.paragraph === note.hostParagraph &&
-    Number.isSafeInteger(row.startUnit) &&
-    Number.isSafeInteger(row.endUnit) &&
-    row.startUnit <= note.anchorUnit &&
-    note.anchorUnit < row.endUnit;
   const references = (row, note) =>
     referencesText(row, note) ||
     (row?.createdHost !== undefined &&

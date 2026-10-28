@@ -1,3 +1,4 @@
+import { paginatePlainFootnoteContinuations } from './plain-footnote-continuation.mjs';
 import { measureNoteBodies } from './note-body-measurement.mjs';
 import { contentNotePagePolicy } from './content-note-page-policy.mjs';
 import { noteSeparatorGeometry } from './note-separator-geometry.mjs';
@@ -153,13 +154,35 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   }
   if (rows.length + footnotes.reduce((sum, note) => sum + note.rows.length, 0) > maxRows)
     return unavailable('NotePageLayoutLimit');
-  const reservation = footnotes.length
-    ? createFootnoteColumnReservation(
-        footnotes,
-        policies.get('footnote'),
-        separators.get('footnote').height,
-      )
-    : null;
+  const footPolicy = policies.get('footnote');
+  const footSeparator = separators.get('footnote');
+  const needsContinuation = footnotes.some(
+    (note) =>
+      note.height + footPolicy.aboveLine + footSeparator.height + footPolicy.belowLine >
+      reference.boxes.page.height,
+  );
+  const continuation =
+    needsContinuation && content.format === 'hwp5' && !hasBodyTables
+      ? paginatePlainFootnoteContinuations(
+          rows,
+          setting,
+          pageFlows,
+          footnotes,
+          footPolicy,
+          footSeparator.height,
+          { maxRows },
+        )
+      : null;
+  if (continuation && continuation.state !== 'ready') return continuation;
+  const reservation =
+    continuation ??
+    (footnotes.length
+      ? createFootnoteColumnReservation(
+          footnotes,
+          policies.get('footnote'),
+          separators.get('footnote').height,
+        )
+      : null);
   if (reservation && reservation.state !== 'ready') return reservation;
   if (reservation && content.createdTables?.length)
     for (const row of rows.filter((row) => row.kind === 'text' || row.createdHost !== undefined)) {
@@ -173,10 +196,12 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
       if (row.height > bottom - reference.boxes.page.y)
         return unavailable('CreatedNotePageHeightOverflow');
     }
-  const page = paginateBodyRows(rows, setting, pageFlows, {
-    maxRows,
-    columnBottom: reservation?.columnBottom,
-  });
+  const page =
+    continuation?.page ??
+    paginateBodyRows(rows, setting, pageFlows, {
+      maxRows,
+      columnBottom: reservation?.columnBottom,
+    });
   if (page.state !== 'paginated' || page.limited) return page;
   const projectedBody = hasBodyTables ? projectCreatedBodyFlow(bodyFlow, page.rows, maxRows) : null;
   if (projectedBody && projectedBody.state !== 'projected') return projectedBody;
