@@ -3,7 +3,11 @@ import {
   requestAtRuntimeAdmission,
   RuntimeAdmissionRejected,
 } from '../internal/runtime-admission.ts';
-import { atomicSelector, validateParagraphFormattingPatch } from '../commands/atomic-formatting.ts';
+import {
+  atomicSelector,
+  validateFormattingPatch,
+  formattingPatchNeedsCharacter,
+} from '../commands/atomic-formatting.ts';
 import { assertFormattingAdmission } from '../commands/formatting-patch.ts';
 import type {
   ApplyFormattingPatchPayload,
@@ -909,8 +913,13 @@ export function createEditor(options: CreateEditorOptions) {
           Object.keys(payload).some((key) => !['target', 'patch', 'selectionVersion'].includes(key))
         )
           throw Error('InvalidFormattingPatch');
-        validateParagraphFormattingPatch(payload.patch);
-        const selector = atomicSelector(payload.target, state, true, false);
+        validateFormattingPatch(payload.patch);
+        const selector = atomicSelector(
+          payload.target,
+          state,
+          true,
+          formattingPatchNeedsCharacter(payload.patch),
+        );
         const capability = await readFormattingCapabilities(payload.target);
         if (!capability.atomic) throw Error(capability.reason);
         const guard = () => {

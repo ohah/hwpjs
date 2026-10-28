@@ -141,3 +141,8 @@ export function validateBackgroundPatch(value: unknown): void {
       throw Error('UnsupportedBackgroundKind');
   }
 }
+
+// Derived UI catalogs; the validators above remain the single value source.
+export const BORDER_LINE_STYLES = Object.freeze([...styles]);
+export const BORDER_WIDTHS_HUNDREDTH_MM = Object.freeze([...widths]);
+export const BACKGROUND_HATCH_STYLES = Object.freeze([...hatch]);

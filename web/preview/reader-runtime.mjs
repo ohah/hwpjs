@@ -253,7 +253,8 @@ export function createReaderRuntime({
         );
       content.observedDocInfoDiagnostics = editor?.observedDocInfoDiagnostics() ?? null;
     }
-    if (historyEnabled) attachHwp5CurrentReferences(editor, preview, content);
+    if (historyEnabled || editor?.supportsAtomicFormatting?.())
+      attachHwp5CurrentReferences(editor, preview, content);
     attachHwp5CreatedTables(editor, content, hwp5TableCreationAvailable(), preview.sections.length);
     const normalizationExport =
       preview.primarySource === 'distribution_viewtext'

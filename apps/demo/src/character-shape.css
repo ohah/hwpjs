@@ -1,0 +1,75 @@
+.hwp-character-shape {
+  width: min(680px, calc(100vw - 24px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px;
+}
+.hwp-character-shape:not([open]) {
+  display: none;
+}
+.hwp-character-shape > .hwp-dialog-header {
+  grid-column: 1 / -1;
+}
+.hwp-character-shape > .hwp-dialog-footer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding-inline-start: 0;
+}
+.hwp-character-shape [role='tablist'] {
+  display: flex;
+  gap: 4px;
+  margin-block-end: 12px;
+}
+.hwp-character-shape [role='tab'][aria-selected='true'] {
+  background: #e8effb;
+  font-weight: 600;
+}
+.hwp-character-row {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 6px 10px;
+  align-items: center;
+  margin-block: 10px;
+}
+.hwp-character-row small {
+  grid-column: 1 / -1;
+  color: #596679;
+  overflow-wrap: anywhere;
+}
+.hwp-character-row input,
+.hwp-character-row select {
+  min-width: 0;
+  max-width: 100%;
+  font: inherit;
+  padding: 5px;
+}
+.hwp-character-shape fieldset {
+  margin-block-start: 16px;
+  border: 1px solid #d6deed;
+}
+.hwp-character-shape fieldset input {
+  display: block;
+  max-width: 100%;
+  margin-block: 5px;
+}
+.hwp-character-shape [data-role='character-temporary-limit'] {
+  font-size: 12px;
+  color: #596679;
+}
+.hwp-character-shape [data-role='character-status'] {
+  min-height: 1.5em;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 520px) {
+  .hwp-character-shape {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hwp-character-shape > .hwp-dialog-footer {
+    flex-direction: row;
+    justify-content: end;
+  }
+  .hwp-character-row {
+    grid-template-columns: 105px minmax(0, 1fr);
+  }
+}

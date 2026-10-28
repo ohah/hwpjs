@@ -118,3 +118,18 @@ export type {
   BorderPatch,
   BackgroundPatch,
 } from './commands/formatting-resource-intent.ts';
+
+export type {
+  CharacterFormattingPatch,
+  CharacterLineStyle,
+  CharacterOutlineKind,
+  CharacterFontIntent,
+  CharacterLanguageMetrics,
+  FormattingReset,
+} from './commands/character-formatting-patch.ts';
+
+export {
+  BORDER_LINE_STYLES,
+  BORDER_WIDTHS_HUNDREDTH_MM,
+  BACKGROUND_HATCH_STYLES,
+} from './commands/formatting-resource-intent.ts';

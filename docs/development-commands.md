@@ -765,3 +765,17 @@ mise exec -- bun test ./apps/demo/tests/paragraph-shape-ui.test.ts ./apps/demo/t
 ```
 
 계약과 미연결 필드는 [글자·문단 모양 창](formatting-dialogs.md#문단-원자-서식-창-후보)을 따릅니다.
+
+
+## 읽기 전용 서식 참조 집중 회귀
+
+두 파일은 정규 `test:core`와 `test:packages`의 core 테스트 경로에 등록되어 있습니다. 참조 발급 모델 6건과 실제 HWP5/HWPX 읽기 전용 2건을 구분합니다. 실제 검사는 명시한 WASM을 사용하며 누락 입력을 성공이나 skip으로 바꾸지 않습니다.
+
+```sh
+test -f packages/core/tests/commands/hwp5-readonly-references.test.mjs || exit 1
+test -f packages/core/tests/integration/readonly-formatting-references.test.ts || exit 1
+node --test packages/core/tests/commands/hwp5-readonly-references.test.mjs
+HWPJS_TEST_WASM=/absolute/path/to/hwpjs.wasm HWPJS_REQUIRE_ATOMIC_FORMATTING=1 bun test ./packages/core/tests/integration/readonly-formatting-references.test.ts
+```
+
+`HWPJS_REQUIRE_ATOMIC_FORMATTING=1`은 원자 서식 지원 엔진을 요구합니다. 구형 엔진 호환 거부 검사는 이 변수를 생략해 별도로 실행하며 원자 서식 성공으로 계수하지 않습니다. 픽스쳐 기본값은 추적된 공개 Noori 두 파일입니다. 별도 고정 입력은 `HWPJS_TEST_HWP5_FIXTURE`와 `HWPJS_TEST_HWPX_FIXTURE`의 절대 경로로 지정합니다. 보호·제외 픽스쳐는 사용하지 않습니다. 읽기 전용 query는 새 문서 참조·지원 거부·쓰기 거부·상태 불변을 확인하며 편집 지원 확대를 주장하지 않습니다.

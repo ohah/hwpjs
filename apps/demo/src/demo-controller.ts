@@ -1,3 +1,4 @@
+import { createCharacterShapePort } from './character-shape-port.ts';
 import { decorateParagraphAlignmentFallback } from './paragraph-shape-fallback-view.ts';
 import * as paragraphShapeCore from '@hwpjs/core';
 import { createParagraphShapeTool } from './paragraph-shape-tool.ts';
@@ -134,6 +135,7 @@ export async function mountDemo(
   const formatDialogs = createFormattingDialogController({
     decorateParagraphView: decorateParagraphAlignmentFallback,
     root,
+    characterPort: createCharacterShapePort(editor),
     port: formatting,
     getState: () => editor.getEditorState(),
     subscribe: (listener) => editor.registerStateListener(listener),

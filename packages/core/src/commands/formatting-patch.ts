@@ -1,3 +1,4 @@
+import type { CharacterFormattingPatch, FormattingReset } from './character-formatting-patch.ts';
 import type { SelectionTarget } from './commands.ts';
 import type { BorderPatch, BackgroundPatch } from './formatting-resource-intent.ts';
 export interface ParagraphFormattingPatch {
@@ -18,9 +19,11 @@ export interface ParagraphFormattingPatch {
   readonly border?: BorderPatch;
   readonly background?: BackgroundPatch;
 }
-/** This slice writes paragraph fields only. Native character/reset intents are not exposed here. */
+/** Sparse Native atomic intents. Omitted fields retain source values. */
 export interface FormattingPatch {
-  readonly paragraph: ParagraphFormattingPatch;
+  readonly paragraph?: ParagraphFormattingPatch;
+  readonly character?: CharacterFormattingPatch;
+  readonly reset?: FormattingReset;
 }
 export interface ApplyFormattingPatchPayload {
   readonly target: SelectionTarget;

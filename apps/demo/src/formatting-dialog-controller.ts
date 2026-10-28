@@ -1,3 +1,5 @@
+import { createCharacterShapeTool } from './character-shape-tool.ts';
+import type { CharacterShapePort } from './character-shape-port.ts';
 import { getSelectionFormatting, type HeadlessEditor } from '@hwpjs/core';
 import type {
   createFormattingBridge,
@@ -12,6 +14,7 @@ import type { DemoAction, DemoCommand, ActionAvailability } from './shell-contra
 type State = ReturnType<HeadlessEditor['getEditorState']>;
 export interface FormattingDialogControllerOptions {
   readonly root: HTMLElement;
+  readonly characterPort?: CharacterShapePort;
   readonly port: Pick<ReturnType<typeof createFormattingBridge>, 'captureDialog' | 'applyDialog'>;
   readonly getState: () => State;
   readonly subscribe: (listener: (state: State) => void) => () => void;
@@ -25,6 +28,7 @@ export interface FormattingDialogControllerOptions {
 /** Frozen-target dialog lifecycle. It never writes selection or calls Native directly. */
 export function createFormattingDialogController({
   root,
+  characterPort,
   port,
   getState,
   subscribe,
@@ -42,6 +46,17 @@ export function createFormattingDialogController({
     view: ReturnType<typeof createFormattingDialogView> | undefined;
   let properties: { size?: number; bold?: boolean; italic?: boolean } = {},
     alignment: string | undefined;
+  const characterTool = characterPort
+    ? createCharacterShapeTool({
+        root,
+        port: characterPort,
+        getState,
+        subscribe,
+        onStatus,
+        onClose,
+        onPresentationChange,
+      })
+    : undefined;
   const sameRange = (
     a: ReturnType<typeof getSelectionFormatting>['target'],
     b: ReturnType<typeof getSelectionFormatting>['target'],
@@ -176,13 +191,21 @@ export function createFormattingDialogController({
             : undefined;
     // A readonly/caret target may open an honest disabled observation dialog.
     return {
-      'character-properties': { enabled: !reason, reason },
-      'paragraph-properties': { enabled: !reason, reason },
+      'character-properties': characterTool?.presentation()['character-properties'] ?? {
+        enabled: !reason,
+        reason,
+      },
+      'paragraph-properties': characterTool?.isOpen()
+        ? { enabled: false, reason: 'AnotherModalOpen' }
+        : { enabled: !reason, reason },
     };
   };
   return {
     presentation,
     action(action: DemoAction): boolean {
+      if (action.command === 'character-properties' && characterTool)
+        return characterTool.action(action.command);
+      if (characterTool?.isOpen()) return action.command === 'paragraph-properties';
       if (action.command !== 'character-properties' && action.command !== 'paragraph-properties')
         return false;
       if (closed) return true;
@@ -227,6 +250,7 @@ export function createFormattingDialogController({
     dispose() {
       if (closed) return;
       closed = true;
+      characterTool?.dispose();
       unsubscribe();
       close(false);
     },
