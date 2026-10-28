@@ -188,9 +188,20 @@ export function createParagraphShapeController(o: Options) {
             )
               return;
             const observed = c.captured?.result.observations.aggregate[name];
+            if (name === 'paragraph.spacing.kind') {
+              const oldKind = c.captured?.result.observations.aggregate[name];
+              const previous =
+                c.draft.get(name) ?? (oldKind?.state === 'known' ? oldKind.value : undefined);
+              const next = value ?? (oldKind?.state === 'known' ? oldKind.value : undefined);
+              if (previous !== next) c.draft.delete('paragraph.spacing.value');
+            }
+            const explicitSpacingPair =
+              name === 'paragraph.spacing.value' && c.draft.has('paragraph.spacing.kind');
             if (
               value === undefined ||
-              (observed?.state === 'known' && Object.is(observed.value, value))
+              (!explicitSpacingPair &&
+                observed?.state === 'known' &&
+                Object.is(observed.value, value))
             )
               c.draft.delete(name);
             else c.draft.set(name, value);

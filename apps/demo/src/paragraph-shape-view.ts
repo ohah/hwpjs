@@ -1,3 +1,4 @@
+import { paragraphSpacingInput, paragraphSpacingLabels } from './paragraph-spacing-input.ts';
 import { exactParagraphNumber } from './paragraph-shape-number.ts';
 import { createDialogLayer } from './dialog-layer.ts';
 import type {
@@ -25,12 +26,6 @@ const groups = [
   ['grid', '줄 격자'],
   ['borderConnect', '문단 테두리 연결'],
 ] as const;
-const spacingLabels: Record<string, string> = {
-  percent: '글자에 따라',
-  fixed: '고정 값',
-  between: '여백만 지정',
-  at_least: '최소',
-};
 const reasonText = (reason: string | null) =>
   reason === 'ReadOnly' || reason === 'ReadOnlyDocument'
     ? '읽기 전용 문서입니다.'
@@ -90,7 +85,7 @@ export function createParagraphShapeView(
         suffix === 'alignment'
           ? paragraphAlignments.map((v: { key: string; label: string }) => [v.key, v.label])
           : suffix === 'spacing.kind'
-            ? Object.entries(spacingLabels)
+            ? Object.entries(paragraphSpacingLabels)
             : [
                 ['true', '사용'],
                 ['false', '사용 안 함'],
@@ -124,7 +119,13 @@ export function createParagraphShapeView(
       else {
         const observation = model.captured?.result.observations.aggregate[name];
         const scale =
-          observation?.unit === 'HWPUNIT' ? 100 : observation?.unit === 'percent' ? 1 : null;
+          suffix === 'spacing.value'
+            ? paragraphSpacingInput(model).scale
+            : observation?.unit === 'HWPUNIT'
+              ? 100
+              : observation?.unit === 'percent'
+                ? 1
+                : null;
         callbacks.field(name, scale === null ? Number.NaN : exactParagraphNumber(raw, scale));
       }
     });
@@ -186,16 +187,26 @@ export function createParagraphShapeView(
         captured = next.captured;
       }
       pending = next.pending;
+      const spacing = paragraphSpacingInput(next);
       for (const [name, { input, note }] of fields) {
         const observed = next.captured?.result.observations.aggregate[name];
         const declared = next.captured?.capabilities?.atomic
           ? next.captured.capabilities.fields[name]
           : undefined;
+        if (name === 'paragraph.spacing.kind') {
+          for (const option of Array.from(input.children) as HTMLOptionElement[])
+            option.disabled =
+              !!option.value &&
+              (!spacing.kindChangeSupported ||
+                (!!declared?.enumValues && !declared.enumValues.includes(option.value)));
+        }
         const isNumber = input.tagName === 'INPUT';
         const unitSupported =
-          !isNumber || observed?.unit === 'HWPUNIT' || observed?.unit === 'percent';
+          name === 'paragraph.spacing.value'
+            ? spacing.scale !== null
+            : !isNumber || observed?.unit === 'HWPUNIT' || observed?.unit === 'percent';
         input.disabled =
-          name === 'paragraph.spacing.kind' ||
+          (name === 'paragraph.spacing.kind' && !spacing.available) ||
           pending ||
           next.loading ||
           next.stale ||
@@ -211,32 +222,49 @@ export function createParagraphShapeView(
               : undefined;
         if (isNumber && edited.has(name) && doc.activeElement === input) {
           /* 입력 중인 소수점과 부호를 관측값으로 덮지 않는다. */
-        } else if (value === undefined) input.value = '';
+        } else if (
+          (name === 'paragraph.spacing.value' && spacing.needsValue) ||
+          value === undefined
+        )
+          input.value = '';
         else if (isNumber && typeof value === 'number')
           input.value = Number.isNaN(value)
             ? input.value
-            : String(value / (observed?.unit === 'HWPUNIT' ? 100 : 1));
+            : String(
+                value /
+                  (name === 'paragraph.spacing.value'
+                    ? (spacing.scale ?? 1)
+                    : observed?.unit === 'HWPUNIT'
+                      ? 100
+                      : 1),
+              );
         else input.value = String(value);
         note.textContent =
           name === 'paragraph.spacing.kind'
-            ? '줄 간격 종류 변경은 준비 중입니다.'
-            : !observed
-              ? declared?.readable === false
-                ? '조회할 수 없음'
-                : '지원되지 않는 항목'
-              : observed.state === 'mixed'
-                ? '여러 값'
-                : observed.state === 'unknown'
-                  ? '알 수 없음'
-                  : observed.state === 'unavailable'
-                    ? '사용할 수 없음'
-                    : isNumber && !unitSupported
-                      ? '이 단위는 조회만 지원합니다.'
-                      : observed.unit === 'HWPUNIT'
-                        ? 'pt'
-                        : observed.unit === 'percent'
-                          ? '%'
-                          : '';
+            ? spacing.available
+              ? ''
+              : spacing.reason
+            : name === 'paragraph.spacing.value' && spacing.needsValue
+              ? '새 종류에 사용할 값을 직접 입력하세요. (' + spacing.unit + ')'
+              : name === 'paragraph.spacing.value' && spacing.scale !== null
+                ? spacing.unit
+                : !observed
+                  ? declared?.readable === false
+                    ? '조회할 수 없음'
+                    : '지원되지 않는 항목'
+                  : observed.state === 'mixed'
+                    ? '여러 값'
+                    : observed.state === 'unknown'
+                      ? '알 수 없음'
+                      : observed.state === 'unavailable'
+                        ? '사용할 수 없음'
+                        : isNumber && !unitSupported
+                          ? '이 단위는 조회만 지원합니다.'
+                          : observed.unit === 'HWPUNIT'
+                            ? 'pt'
+                            : observed.unit === 'percent'
+                              ? '%'
+                              : '';
         if (observed && (!observed.writable || declared?.writable === false)) {
           const reason = reasonText(
             observed.writeUnavailableReason ??
@@ -268,6 +296,7 @@ export function createParagraphShapeView(
         next.refreshRequired ||
         !next.captured ||
         !next.draft.size ||
+        paragraphSpacingInput(next).needsValue ||
         [...next.draft.values()].some((v) => typeof v === 'number' && !Number.isFinite(v));
       cancel.disabled = pending;
       status.textContent = next.refreshRequired
