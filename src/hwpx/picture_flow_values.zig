@@ -50,16 +50,25 @@ fn readComponent(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     value.text_wrap = try enums.readExtended(a, tree, node, specs[3]);
     value.text_flow = try enums.read(a, tree, node, specs[4]);
     value.z_order = try readZOrder(a, tree, node);
+    value.outside_margins = try readOutsideMargins(a, tree, node);
+    return value;
+}
+
+/// 기존 shape flow와 독립 읽기 진단이 공유하는 직접 여백 원값입니다.
+/// 형식별 owner 검사는 호출자가 기존 source binding으로 먼저 수행합니다.
+pub fn readOutsideMargins(a: std.mem.Allocator, tree: *const Tree, node: usize) ![4]?i64 {
+    if (node >= tree.elements.len) return error.InvalidPictureDisplayNode;
+    var values: [4]?i64 = @splat(null);
     var missing: usize = 0;
     var duplicate: usize = 0;
     const margins = fields.uniqueChild(tree, node, "outMargin", &missing, &duplicate);
     if (duplicate != 0) return error.DuplicatePictureOutsideMargin;
     if (margins) |parent| {
         for (fields.margin_names, 0..) |name, index| {
-            if (try tree.attributeValue(a, parent, "", name)) |raw| value.outside_margins[index] = try fields.margin(a, raw, 4096);
+            if (try tree.attributeValue(a, parent, "", name)) |raw| values[index] = try fields.margin(a, raw, 4096);
         }
     }
-    return value;
+    return values;
 }
 
 /// Shared raw order for shape/table adapters; absent is not an implicit zero.

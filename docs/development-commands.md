@@ -779,3 +779,15 @@ HWPJS_TEST_WASM=/absolute/path/to/hwpjs.wasm HWPJS_REQUIRE_ATOMIC_FORMATTING=1 b
 ```
 
 `HWPJS_REQUIRE_ATOMIC_FORMATTING=1`은 원자 서식 지원 엔진을 요구합니다. 구형 엔진 호환 거부 검사는 이 변수를 생략해 별도로 실행하며 원자 서식 성공으로 계수하지 않습니다. 픽스쳐 기본값은 추적된 공개 Noori 두 파일입니다. 별도 고정 입력은 `HWPJS_TEST_HWP5_FIXTURE`와 `HWPJS_TEST_HWPX_FIXTURE`의 절대 경로로 지정합니다. 보호·제외 픽스쳐는 사용하지 않습니다. 읽기 전용 query는 새 문서 참조·지원 거부·쓰기 거부·상태 불변을 확인하며 편집 지원 확대를 주장하지 않습니다.
+
+<a id="ole-outside-margin-diagnostic"></a>
+
+## OLE 바깥 여백 읽기 진단
+
+[원값·수치 도메인·오류 순서 계약](hwpx-ole-outside-margin-domain.md)을 따릅니다. 정규 root에 연결된 진단 6개를 명시 필터로 검사합니다. 합성 XML/정수와 할당 실패 검사이며 실제 파일 저장·WASM·레이아웃 검증은 아닙니다.
+
+```sh
+mise exec -- zig test src/root.zig -O ReleaseSafe --test-filter 'OLE margin '
+```
+
+후보의 별도 전용 실행 11개는 위 진단 6개에 기존 flow 2개·Reader 2개·wrapper 1개를 더한 결과입니다. 이 root 필터의 실제 수집 수로 11개를 약속하지 않습니다.

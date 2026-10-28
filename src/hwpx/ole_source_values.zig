@@ -45,3 +45,9 @@ pub fn read(a: std.mem.Allocator, tree: *const Tree, node: usize) !Values {
     if (try tree.attributeValue(a, node, "", "hasMoniker")) |raw| result.has_moniker = try fields.boolean(a, raw, 4096);
     return result;
 }
+
+/// 별도 읽기 진단입니다. 기존 read의 오류·wire와 setter 권한을 바꾸지 않습니다.
+/// 정확한 직접 run OLE 소유권과 nullable 원값은 진단 모듈이 검사합니다.
+pub fn readOutsideMarginDomain(a: std.mem.Allocator, tree: *const Tree, node: usize) !@import("ole_outside_margin_domain.zig").Report {
+    return @import("ole_outside_margin_domain.zig").read(a, tree, node);
+}

@@ -19,3 +19,7 @@ OLE source query는 원본 geometry/position/flow·binary item ID·object type·
 분리 main에서 새로 실행한 ReleaseSafe 제품 빌드도5/5다. 산출물 `e67a727d83fe99df77022c2d6a9feebec2b06ee54e8ab10e2850c11ed162bab3`는 기존3f9236a6와 모든 실행/데이터 섹션 및 나머지 custom section이 바이트 동일하며 경로를 포함한 DWARF만 다르다. 새 산출물로 위12개도 다시 통과했다. 전체 native 결과를 다른 실행 코드에 적용한 것이 아니다.
 
 이는 HWP5/HWPX 전체 픽스쳐의 모든 필드·편집 위치·물리 페이지 완료가 아니다. 후속 차트 표시/rich/선 원값 후보와 기본 데모 바이너리는 별도이며, 이 소스 게시만으로 후속 후보나 데모 승격을 완료 처리하지 않는다.
+
+## OLE 바깥 여백의 Native 읽기 진단
+
+[OLE 바깥 여백 읽기 진단](hwpx-ole-outside-margin-domain.md)은 원값·부재·보호 플래그를 편집 권한 없이 분류합니다. 기존 full-flow 조회와 오류 계약을 분리하며 WASM/JS/Worker API는 추가하지 않습니다.

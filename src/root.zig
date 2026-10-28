@@ -14,6 +14,7 @@ pub const model = @import("model/document.zig");
 
 test {
     _ = @import("hwp5/body/note_shape_attributes_tests.zig");
+    _ = @import("hwpx/ole_outside_margin_domain_tests.zig");
     _ = @import("model/history_budget_tests.zig");
     _ = @import("testing/history_owned_format_tests.zig");
     _ = @import("testing/history_owned_memory_tests.zig");
