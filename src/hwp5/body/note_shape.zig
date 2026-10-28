@@ -1,4 +1,5 @@
 const Reader = @import("../../binary/reader.zig").Reader;
+pub const attributes = @import("note_shape_attributes.zig");
 pub const Layout = enum { observed28, spec26 };
 pub const Shape = struct {
     flags: u32,
@@ -16,13 +17,17 @@ pub const Shape = struct {
     layout: Layout,
     extra: []const u8,
     pub fn numberKind(self: Shape) u8 {
-        return @truncate(self.flags);
+        return attributes.numberKind(self.flags);
     }
     pub fn placement(self: Shape) u2 {
-        return @truncate(self.flags >> 8);
+        return attributes.placementRaw(self.flags);
     }
     pub fn numbering(self: Shape) u2 {
-        return @truncate(self.flags >> 10);
+        return attributes.numberingRaw(self.flags);
+    }
+    /// Explicit semantic view; raw parsing/getters still retain unsupported values.
+    pub fn attributeSemantics(self: Shape, kind: attributes.Kind) !attributes.Attributes {
+        return attributes.decode(self.flags, kind);
     }
     /// Observed HWP wire layout. Do not treat a truncated 28-byte record as spec26.
     pub fn parse(bytes: []const u8) !Shape {

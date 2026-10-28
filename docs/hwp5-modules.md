@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [HWP5 각주·미주 속성의 명시적 의미 조회](hwp5-note-attributes.md)
+
 - [HWP5/HWPX Native 서식 증거의 독립 저장 검증](formatting-evidence-oracle.md)
 
 - [5.0.3.0 그림 effects-only 꼬리](hwp5-effects-only-picture-tail.md)
