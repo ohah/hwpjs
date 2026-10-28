@@ -810,6 +810,7 @@ test {
     _ = @import("hwpx/chart_scatter_style_tests.zig");
     _ = @import("hwpx/chart_series_settings_tests.zig");
     _ = @import("hwpx/chart_series_stroke_tests.zig");
+    _ = @import("hwpx/chart_major_tick_tests.zig");
     _ = @import("hwpx/chart_axis_tests.zig");
     _ = @import("hwpx/chart_axis_scaling_tests.zig");
     _ = @import("json/bounded_stringify.zig");

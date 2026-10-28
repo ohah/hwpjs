@@ -77,6 +77,12 @@ export function paintChartPreviewAnnotations(ctx, layout, item, scrollTop, color
     ctx.lineTo(x + plot.width, y + plot.height);
     ctx.stroke();
   }
+  for (const segment of layout.major_tick_segments ?? []) {
+    ctx.beginPath();
+    ctx.moveTo(x + segment.x1, y + segment.y1);
+    ctx.lineTo(x + segment.x2, y + segment.y2);
+    ctx.stroke();
+  }
   for (const entry of layout.legend) {
     ctx.fillStyle = color(entry.color_key ?? entry.series_node);
     ctx.beginPath();

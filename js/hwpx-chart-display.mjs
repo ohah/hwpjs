@@ -86,8 +86,11 @@ export function decodeChartDisplay(bytes) {
   const hasStrokes =
     Array.isArray(value.series_settings) &&
     value.series_settings.some((row) => row?.stroke != null);
+  const hasMajorTicks = value.axes.some((axis) => axis?.major_tick_mark != null);
   const occupied =
-    value.view_3d == null && value.blank_policy == null && !hasStrokes ? null : new Set();
+    value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks
+      ? null
+      : new Set();
   let previousPlot = -1;
   for (const [index, plot] of value.plots.entries()) {
     require(
@@ -209,7 +212,9 @@ export function decodeChartDisplay(bytes) {
         field(axis.cross_axis, uint, axis.node) &&
         field(axis.position, oneOf(['b', 'l', 'r', 't']), axis.node) &&
         field(axis.deleted, (v) => typeof v === 'boolean', axis.node) &&
-        scaling(axis.scaling, axis.node),
+        scaling(axis.scaling, axis.node) &&
+        (axis.major_tick_mark === undefined ||
+          field(axis.major_tick_mark, oneOf(['cross', 'in', 'none', 'out']), axis.node)),
     );
     axes.set(axis.node, axis);
     occupied?.add(axis.node);
@@ -338,6 +343,12 @@ export function decodeChartDisplay(bytes) {
         occupied.add(node);
       }
     }
+  for (const axis of value.axes) {
+    if (axis.major_tick_mark != null) {
+      require(!occupied.has(axis.major_tick_mark.node));
+      occupied.add(axis.major_tick_mark.node);
+    }
+  }
   if (value.blank_policy !== undefined && value.blank_policy !== null) {
     require(
       field(value.blank_policy, oneOf(['gap', 'zero', 'span']), 0) &&

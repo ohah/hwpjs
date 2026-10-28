@@ -808,3 +808,15 @@ mise exec -- zig test src/root.zig -O ReleaseSafe --test-filter 'OLE margin '
 ```
 
 후보의 별도 전용 실행 11개는 위 진단 6개에 기존 flow 2개·Reader 2개·wrapper 1개를 더한 결과입니다. 이 root 필터의 실제 수집 수로 11개를 약속하지 않습니다.
+
+<a id="chart-major-ticks"></a>
+
+## HWPX 차트 주 눈금선
+
+[원값·진단·preview 한계](hwpx-chart-major-ticks.md)를 따릅니다. 정규 root의 새 모델4개와 순수 기하5개를 명시 필터/파일로 실행합니다. 별도 격리 Native6은 실fixture1+wrapper1을 더한 수이며 이 명령의 수집 수로 승계하지 않습니다. 새 전체 WASM·실브라우저 검증이 아닙니다.
+
+```sh
+mise exec -- zig test src/root.zig -O ReleaseSafe --test-filter 'chart major ticks'
+test -f ./tests/hwpx/chart-major-ticks.test.mjs || exit 1
+mise exec -- bun test ./tests/hwpx/chart-major-ticks.test.mjs
+```

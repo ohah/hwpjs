@@ -5,6 +5,7 @@ const uri = @import("chart_namespace.zig").uri;
 const scalar = @import("chart_scalar_field.zig");
 pub const Kind = enum { catAx, valAx, dateAx, serAx };
 pub const Position = enum { b, l, r, t };
+pub const TickMark = enum { cross, in, none, out };
 pub const Axis = struct {
     node: usize,
     area_node: usize,
@@ -13,6 +14,7 @@ pub const Axis = struct {
     cross_axis: ?scalar.Field(u32) = null,
     position: ?scalar.Field(Position) = null,
     deleted: ?scalar.Field(bool) = null,
+    major_tick_mark: ?scalar.Field(TickMark) = null,
     scaling: ?@import("chart_axis_scaling.zig").Scaling = null,
 };
 pub const Link = struct { status: enum { missing_value, missing_definition, ambiguous, resolved }, node: ?usize = null };
@@ -65,6 +67,9 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, options: Options) !Value
             } else if (field.is(uri, "delete")) {
                 if (axis.deleted != null) return error.DuplicateChartAxisField;
                 axis.deleted = try scalar.read(bool, a, tree, index, options.max_attribute_bytes, error.InvalidChartAxisField);
+            } else if (field.is(uri, "majorTickMark")) {
+                if (axis.major_tick_mark != null) return error.DuplicateChartAxisField;
+                axis.major_tick_mark = try scalar.read(TickMark, a, tree, index, options.max_attribute_bytes, error.InvalidChartAxisField);
             } else if (field.is(uri, "scaling")) {
                 if (axis.scaling != null) return error.DuplicateChartAxisField;
                 axis.scaling = try @import("chart_axis_scaling.zig").read(a, tree, index, options.max_attribute_bytes);

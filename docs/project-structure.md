@@ -444,3 +444,5 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 `picture-fragment-alignment.mjs`와 `nested-paragraph-reference.mjs`는 [그림 흐름의 문단 기준 영역](picture-paragraph-reference.md)을 통해 표시용 글자 정렬과 PARA 개체 기준점을 구분합니다.
 
 `page-area-flow.mjs`와 `hwp5-page-area-content.mjs`는 [높이0인 텍스트 쪽 영역](zero-height-page-areas.md)의 원값 보존·표시 앵커·넘침 계약을 공유합니다.
+
+[HWPX 차트 주 눈금선](hwpx-chart-major-ticks.md)은 공통 축 원값·선택 wire·2D 막대 preview 기하/paint의 책임을 분리합니다. [차트 레이아웃 지원 경계](hwpx-chart-layout-coverage.md)는 타입/축/범례/데이터 레이블/좌표/페이지 및 unknown 보존의 남은 범위를 소유합니다.

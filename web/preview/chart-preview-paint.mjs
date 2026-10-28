@@ -1,3 +1,4 @@
+import { chartMajorTickSegments } from './chart-major-ticks.mjs';
 import { chartPreviewTextLayout } from './chart-preview-text-layout.mjs';
 import {
   paintChartPreviewAnnotations,
@@ -101,6 +102,9 @@ export function paintChartPreview(ctx, item, scrollTop, report = () => {}) {
     ctx.font = '12px sans-serif';
     const presentation = chartPreviewTextLayout(item, (text) => ctx.measureText(text).width);
     if (presentation.state !== 'ready') return false;
+    const tickPlan = chartMajorTickSegments(presentation, item.primitives);
+    if (tickPlan.state !== 'ready') return false;
+    presentation.major_tick_segments = tickPlan.segments;
     const plot = presentation.plot;
     ctx.beginPath();
     ctx.rect(item.x, item.y - scrollTop, item.width, item.height);

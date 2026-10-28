@@ -68,6 +68,18 @@ export function chartBarLayout(display, plotNode) {
     category_reversed: categoryReversed,
     categories,
     axes_hidden: axesHidden,
+    ...(plot.kind === 'barChart'
+      ? {
+          major_tick_marks: {
+            value: data.valueAxis.major_tick_mark,
+            category: data.categoryAxis.major_tick_mark,
+          },
+          major_tick_positions: {
+            value: data.valueAxis.position?.value,
+            category: data.categoryAxis.position?.value,
+          },
+        }
+      : {}),
     value_ticks: scale.ticks(),
     legend: data.legend,
     spacing: {
