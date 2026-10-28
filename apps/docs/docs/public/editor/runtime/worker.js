@@ -17381,7 +17381,7 @@ function createReaderRuntime({
       content.observedDocInfoEditingAvailable = !editor && preview.primarySource !== "distribution_viewtext" && ["UnexpectedEnd", "RepairedSourceUnsupported", "ResourceCountMismatch"].includes(hwp5StyleOpenError);
       content.observedDocInfoDiagnostics = editor?.observedDocInfoDiagnostics() ?? null;
     }
-    if (historyEnabled)
+    if (historyEnabled || editor?.supportsAtomicFormatting?.())
       attachHwp5CurrentReferences(editor, preview, content);
     attachHwp5CreatedTables(editor, content, hwp5TableCreationAvailable(), preview.sections.length);
     const normalizationExport = preview.primarySource === "distribution_viewtext" ? "hwp5_edit_open_normalized_distribution" : "hwp5_edit_open_normalized";
