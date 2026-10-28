@@ -1,3 +1,4 @@
+import { caretGeometry } from '../../web/preview/text-geometry.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createCanvasEditor } from '../../web/preview/canvas-editor.mjs';
@@ -50,6 +51,11 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
       this.attributes[k] = v;
     }
     scrollIntoView() {}
+    getBoundingClientRect() {
+      return { left: 0, top: 0, right: 500, bottom: 600 };
+    }
+    setPointerCapture() {}
+    releasePointerCapture() {}
     hasPointerCapture() {
       return false;
     }
@@ -114,6 +120,9 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
       frameCurrent = false;
       geometry();
     },
+    isPaintedFrameCurrent() {
+      return frameCurrent;
+    },
     isSelectionPainted(value) {
       return (
         frameCurrent &&
@@ -124,6 +133,7 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
       );
     },
   };
+  let committedCallback = () => {};
   const direct = createCanvasEditor({
     canvas,
     input,
@@ -141,6 +151,9 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
         busy = true;
         return true;
       },
+    },
+    onCommittedSelection(value) {
+      committedCallback(value);
     },
     onComposition(value) {
       statusFrames.push({
@@ -223,6 +236,30 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
   };
   return {
     direct,
+    setCommittedCallback(fn) {
+      committedCallback = fn;
+    },
+    currentLayout() {
+      return layout;
+    },
+    pointerMove(unit) {
+      const g = caretGeometry(layout, point(unit));
+      assert(g);
+      const e = new Event('pointermove', { cancelable: true });
+      Object.assign(e, { pointerId: 1, clientX: g.x, clientY: g.y + 2 });
+      canvas.dispatchEvent(e);
+    },
+    modelFrameOnly() {
+      frameCurrent = true;
+    },
+    pointer(unit) {
+      const g = caretGeometry(layout, point(unit));
+      assert(g);
+      const e = new Event('pointerdown', { cancelable: true });
+      Object.assign(e, { pointerId: 1, button: 0, clientX: g.x, clientY: g.y + 2 });
+      canvas.dispatchEvent(e);
+      return e;
+    },
     useSetterOnly() {
       assert.equal(Object.getOwnPropertyDescriptor(note, 'textContent').get, undefined);
     },
@@ -501,4 +538,170 @@ test('실 setter-only port의 거부 뒤 새 입력은 원 249 선택을 유지�
   assert.equal(f.requests.at(-1).kind, 'splice');
   assert.equal(f.requests.at(-1).startUnit, 249);
   assert.equal(f.requests.at(-1).text, 'R');
+});
+
+test('실 frame gate는 ACK 뒤 아직 새 frame이 없을 때 pointer를 차단한다', async (t) => {
+  const f = await prepared(t);
+  f.direct.requestHistory('undo');
+  f.ack();
+  f.pointer(20);
+  f.type('R');
+  f.frame();
+  await tick();
+  assert.equal(f.requests.length, 3);
+  assert.equal(f.requests[2].startUnit, 528);
+});
+test('모델 frame만 current인 선택 미확정 구간의 pointer가 이력 ticket을 영구 이탈시키지 않는다', async (t) => {
+  const f = await prepared(t);
+  f.direct.requestHistory('undo');
+  f.ack();
+  f.modelFrameOnly();
+  f.pointer(20);
+  f.type('R');
+  f.frame();
+  await tick();
+  assert.equal(
+    f.requests.length,
+    3,
+    '현재 source는 pointer로 복원 선택을 덮고 barrier가 해제되지 않습니다.',
+  );
+  assert.equal(f.requests[2].startUnit, 528);
+});
+test('ACK와 새 frame 사이 Ctrl+A는 복원 paint 뒤 원순서로 적용되어야 한다', async (t) => {
+  const f = await prepared(t);
+  f.direct.requestHistory('undo');
+  f.ack();
+  f.fire('keydown', { key: 'a', metaKey: true, ctrlKey: false });
+  f.type('R');
+  f.frame();
+  await tick();
+  assert.equal(
+    f.requests.length,
+    3,
+    '현재 source는 Ctrl+A가 복원 선택을 덮어 대기 R도 영구 보류합니다.',
+  );
+  assert.equal(f.requests[2].startUnit, 0);
+});
+
+for (const event of ['select', 'keyup'])
+  test(`복원 paint 전 늦은 DOM ${event}는 ticket 선택을 바꾸지 않는다`, async (t) => {
+    const f = await prepared(t);
+    f.direct.requestHistory('undo');
+    f.ack();
+    f.input.setSelectionRange(20, 20);
+    f.fire(event, { key: 'z' });
+    f.type('R');
+    f.frame();
+    await tick();
+    assert.equal(f.requests.length, 3);
+    assert.equal(
+      f.requests[2].startUnit,
+      528,
+      'DOM 범위가 아닌 확인된 이력 선택에서 입력해야 합니다.',
+    );
+  });
+for (const mode of ['noop', 'error'])
+  test(`Ctrl+A 보존은 ${mode} 응답에서도 실제 전체 선택 뒤 R로 대체한다`, async (t) => {
+    const f = await prepared(t);
+    f.direct.requestHistory('undo');
+    f.ack(mode === 'noop' ? { noop: true } : { error: '기존 오류' });
+    f.fire('keydown', { key: 'a', ctrlKey: true });
+    f.type('R');
+    f.frame();
+    await tick();
+    assert.equal(f.requests.length, 3);
+    assert.equal(f.requests[2].startUnit, 0);
+    assert.equal(f.requests[2].endUnit, f.text.length);
+    assert.equal(f.requests[2].text, 'R');
+  });
+test('paint 완료 뒤 공개 재선택은 즉시 허용되고 새 입력은 명시 선택을 사용한다', async (t) => {
+  const f = await prepared(t);
+  f.direct.requestHistory('undo');
+  f.ack();
+  assert.equal(
+    f.direct.selectTextRange({ section: 0, paragraph: 0, startUnit: 20, endUnit: 20 }),
+    false,
+  );
+  f.frame();
+  await tick();
+  assert.equal(
+    f.direct.selectTextRange({ section: 0, paragraph: 0, startUnit: 20, endUnit: 20 }),
+    true,
+  );
+  f.type('R');
+  assert.equal(f.requests[2].startUnit, 20);
+});
+
+test('이전 drag의 pointermove도 복원 paint 전 ticket 선택을 바꾸지 않는다', async (t) => {
+  const f = await prepared(t);
+  f.pointer(249);
+  f.direct.requestHistory('undo');
+  f.ack();
+  f.modelFrameOnly();
+  f.pointerMove(20);
+  f.type('R');
+  f.frame();
+  await tick();
+  assert.equal(f.requests.length, 3);
+  assert.equal(f.requests[2].startUnit, 528);
+});
+for (const key of ['ArrowLeft', 'Home', 'End'])
+  test(`대기 ${key}는 원래 navigation 큐에서 복원 paint 다음에 적용된다`, async (t) => {
+    const f = await prepared(t);
+    f.direct.requestHistory('undo');
+    f.ack();
+    const row = f.currentLayout().rows.find((row) => row.startUnit <= 528 && row.endUnit >= 528);
+    const expected = key === 'ArrowLeft' ? 527 : key === 'Home' ? row.startUnit : row.endUnit;
+    f.fire('keydown', { key });
+    assert.equal(f.interaction.focus.unit, 528);
+    f.type('R');
+    f.frame();
+    await tick();
+    assert.equal(f.requests.length, 3);
+    assert.equal(f.requests[2].startUnit, expected);
+  });
+for (const action of ['reset', 'close'])
+  test(`해제 중 selection callback이 ${action}하면 이전 R은 drain하지 않는다`, async (t) => {
+    const f = await prepared(t);
+    f.direct.requestHistory('undo');
+    f.type('R');
+    f.ack();
+    let calls = 0;
+    f.setCommittedCallback((value) => {
+      if (!value || calls) return;
+      calls++;
+      f.direct[action]();
+    });
+    f.frame();
+    await tick();
+    f.frame();
+    await tick();
+    assert.equal(calls, 1);
+    assert.equal(f.requests.length, 2);
+  });
+
+for (const mode of ['changed', 'noop', 'error'])
+  for (const key of ['SelectAll', 'ArrowLeft'])
+    test(`기존 history 포트의 ${mode} 응답 뒤 ${key} 의도도 같은 barrier에 보존된다`, async (t) => {
+      const f = await prepared(t);
+      assert.equal(f.direct.history('undo'), true);
+      f.ack(mode === 'noop' ? { noop: true } : mode === 'error' ? { error: '기존 오류' } : {});
+      f.fire('keydown', key === 'SelectAll' ? { key: 'a', metaKey: true } : { key });
+      f.type('R');
+      f.frame();
+      await tick();
+      assert.equal(f.requests.length, 3);
+      const restored = mode === 'changed' ? 528 : 249;
+      assert.equal(f.requests[2].startUnit, key === 'SelectAll' ? 0 : restored - 1);
+      if (key === 'SelectAll') assert.equal(f.requests[2].endUnit, f.text.length);
+    });
+test('기존 history 포트의 Native ACK 전 R도 조용히 버리지 않는다', async (t) => {
+  const f = await prepared(t);
+  assert.equal(f.direct.history('undo'), true);
+  f.type('R');
+  f.ack();
+  f.frame();
+  await tick();
+  assert.equal(f.requests.length, 3);
+  assert.equal(f.requests[2].startUnit, 528);
 });

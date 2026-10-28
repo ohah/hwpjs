@@ -144,6 +144,8 @@ export function createCanvasEditor({
     input: (intent) => applyOrderedInput(intent),
     error: (error) => report(`대기 명령을 적용할 수 없습니다: ${error.message}`),
   });
+  const historyInputPending = () =>
+    historyIntents.size > 0 || historyPaintBarrier?.pending === true;
   historyPaintBarrier = createHistoryPaintBarrier({
     isPainted(selection) {
       return (
@@ -159,8 +161,8 @@ export function createCanvasEditor({
     release() {
       canvas.dataset.selectionAuthority = 'current';
       input.setAttribute('aria-busy', 'false');
-      updateReadOnly();
-      paint();
+      // 확인한 Canvas 선택을 DOM에도 재확정한 뒤 대기 의도를 실행합니다.
+      setSelection(anchor, focus, preferredX, selectionOrigin);
       historyIntents.wake();
     },
   });
@@ -391,6 +393,8 @@ export function createCanvasEditor({
       );
   };
   const sync = () => {
+    // 늦은 DOM select/keyup은 이력이 복원 중인 선택의 권위가 아닙니다.
+    if (historyPaintBarrier.pending) return;
     if (!target || multipleParagraphs()) return;
     const backward = input.selectionDirection === 'backward';
     const start = snapUnit(input.value, input.selectionStart),
@@ -592,6 +596,7 @@ export function createCanvasEditor({
     );
   };
   listen(canvas, 'pointermove', (event) => {
+    if (historyPaintBarrier.pending) return;
     canvas.style.cursor = point(event) ? 'text' : 'default';
     if (drag !== event.pointerId || !target) return;
     if (dragScale !== viewScale()) {
@@ -615,6 +620,11 @@ export function createCanvasEditor({
   });
   listen(canvas, 'pointerdown', (event) => {
     if (event.button !== 0) return;
+    if (historyPaintBarrier.pending) {
+      event.preventDefault();
+      report('이력의 입력 위치를 확인 중입니다. 화면 반영 뒤 다시 선택하세요.');
+      return;
+    }
     const location = coordinates(event);
     const picture =
       !event.shiftKey && !event.metaKey && !event.ctrlKey
@@ -772,8 +782,13 @@ export function createCanvasEditor({
   const applyOrderedInput = ({ inputType, data }) => {
     if (!target || !anchor || !focus) return false;
     if (inputType === 'navigation') {
-      const action = JSON.parse(data),
-        next = extendedNavigation(action.key, action.paragraphEdge, action.extend, action.word);
+      const action = JSON.parse(data);
+      if (action.key === 'SelectAll') {
+        setSelection({ ...target, unit: 0 }, { ...target, unit: committed.length });
+        reveal();
+        return true;
+      }
+      const next = extendedNavigation(action.key, action.paragraphEdge, action.extend, action.word);
       if (!next) return true;
       if (!action.extend && !sameParagraph(target, next.focus)) {
         target = paragraphTarget(next.focus);
@@ -1580,7 +1595,7 @@ export function createCanvasEditor({
       return;
     }
     if (deferredComposition) return;
-    if (historyIntents.size && !composing && !event.isComposing) {
+    if (historyInputPending() && !composing && !event.isComposing) {
       event.preventDefault();
       if (!queueOrderedInput(event.inputType, event.data))
         report('현재 대기 명령 뒤에 이 입력을 적용할 수 없습니다.');
@@ -1750,7 +1765,7 @@ export function createCanvasEditor({
   listen(input, 'compositionstart', () => {
     if (!target || !controls.ready()) return;
     compositionInvalidated = false;
-    if (historyIntents.size) {
+    if (historyInputPending()) {
       const token = historyIntents.composition();
       if (!token) {
         report('조합 입력을 위한 대기 공간이 없습니다.');
@@ -1886,7 +1901,7 @@ export function createCanvasEditor({
     const navigation = navigationIntent(event, platform);
     const key = navigation?.key ?? event.key;
     if (
-      historyIntents.size &&
+      historyInputPending() &&
       navigation &&
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)
     ) {
@@ -1903,7 +1918,7 @@ export function createCanvasEditor({
       return;
     }
     if (
-      historyIntents.size &&
+      historyInputPending() &&
       !event.altKey &&
       !event.metaKey &&
       !event.ctrlKey &&
@@ -1915,7 +1930,7 @@ export function createCanvasEditor({
       return;
     }
     if (
-      historyIntents.size &&
+      historyInputPending() &&
       !event.altKey &&
       !event.metaKey &&
       !event.ctrlKey &&
@@ -1926,7 +1941,7 @@ export function createCanvasEditor({
       return;
     }
     if (
-      historyIntents.size &&
+      historyInputPending() &&
       !event.metaKey &&
       !event.ctrlKey &&
       !event.altKey &&
@@ -2072,6 +2087,10 @@ export function createCanvasEditor({
       key.toLowerCase() === 'a'
     ) {
       event.preventDefault();
+      if (historyInputPending()) {
+        queueOrderedInput('navigation', JSON.stringify({ key: 'SelectAll' }));
+        return;
+      }
       setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length });
       reveal();
       return;
@@ -2151,7 +2170,7 @@ export function createCanvasEditor({
     });
   listen(input, 'paste', (event) => {
     const text = event.clipboardData?.getData('text/plain');
-    if (historyIntents.size && typeof text === 'string' && !composing) {
+    if (historyInputPending() && typeof text === 'string' && !composing) {
       event.preventDefault();
       queueOrderedInput('insertFromPaste', text);
       return;
@@ -2930,7 +2949,7 @@ export function createCanvasEditor({
       this.message({ ...value, kind: 'enable', origin: 'surface-init' });
     },
     flushComposition() {
-      if (composing || pending || historyPending || inputIntents.size || historyIntents.size)
+      if (composing || pending || historyPending || inputIntents.size || historyInputPending())
         return 'blocked';
       if (target && input.value !== committed) {
         pump();
@@ -2958,7 +2977,7 @@ export function createCanvasEditor({
       !pending &&
       !inputIntents.size &&
       !historyPending &&
-      !historyIntents.size &&
+      !historyInputPending() &&
       (!target || input.value === committed),
     canHistory: () =>
       historyAvailable &&
@@ -2966,7 +2985,7 @@ export function createCanvasEditor({
       !pending &&
       !inputIntents.size &&
       !historyPending &&
-      !historyIntents.size &&
+      !historyInputPending() &&
       (!target || input.value === committed) &&
       controls.ready() &&
       !controls.busy(),
