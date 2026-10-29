@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { Buffer } from 'node:buffer';
+import { spawnSync } from 'node:child_process';
 import { copyOwned, ownObservation } from '../../src/state/owned.ts';
 import { EditorState } from '../../src/state/editor-state.ts';
 
@@ -110,4 +111,57 @@ test('중첩 내부 관측은 build에서 원본 identity와 byte 소유권을 �
   assert.equal(parent.child, child);
   parent.child.bytes[0] = 66;
   assert.equal(parent.child.bytes[0], 5);
+});
+
+test('모듈 import 전 외부 allocator가 포획한 첫 복제본은 동결하거나 게시하지 않는다', () => {
+  const moduleURL = new URL('../../src/state/owned.ts', import.meta.url).href;
+  const script = `
+    (async () => {
+      const descriptor = Object.getOwnPropertyDescriptor(Object, 'create');
+      let active = false;
+      const captured = [];
+      Object.defineProperty(Object, 'create', {
+        ...descriptor,
+        value: function (...args) {
+          const value = Reflect.apply(descriptor.value, this, args);
+          if (active) captured.push(value);
+          return value;
+        },
+      });
+      try {
+        const { ownObservation } = await import(${JSON.stringify(moduleURL)});
+        active = true;
+        const source = { value: 1 };
+        const get = ownObservation(source);
+        const observed = get();
+        active = false;
+        if (captured.length === 0) throw Error('AllocatorWitnessMissing');
+        if (Object.isFrozen(captured[0])) throw Error('ExternallyCapturedCopyWasFrozen');
+        if (captured[0] === observed) throw Error('ExternallyCapturedCopyWasPublished');
+        captured[0].value = 99;
+        source.value = 77;
+        if (observed.value !== 1 || get() !== observed || !Object.isFrozen(observed))
+          throw Error('OwnedObservationIsolationLost');
+        console.log(JSON.stringify({ passed: true, capturedCount: captured.length }));
+      } finally {
+        active = false;
+        Object.defineProperty(Object, 'create', descriptor);
+      }
+    })().catch((error) => { console.error(error); process.exitCode = 1; });
+  `;
+  const environment = { ...process.env };
+  delete environment.NODE_COMPILE_CACHE;
+  delete environment.NODE_OPTIONS;
+  const child = spawnSync(process.execPath, ['--eval', script], {
+    encoding: 'utf8',
+    env: environment,
+    maxBuffer: 64 * 1024,
+    timeout: 10_000,
+  });
+  assert.ifError(child.error);
+  assert.equal(child.signal, null, child.stderr);
+  assert.equal(child.status, 0, child.stderr);
+  const result = JSON.parse(child.stdout.trim());
+  assert.equal(result.passed, true);
+  assert.ok(result.capturedCount > 0);
 });
