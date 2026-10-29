@@ -2159,7 +2159,8 @@ function decodeChartDisplay(bytes) {
   require2(value.plots.length === value.plot_settings.length);
   const plots = new Map, series = new Map, references = new Map;
   const hasStrokes = Array.isArray(value.series_settings) && value.series_settings.some((row) => row?.stroke != null);
-  const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes ? null : new Set;
+  const hasMajorTicks = value.axes.some((axis) => axis?.major_tick_mark != null);
+  const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks ? null : new Set;
   let previousPlot = -1;
   for (const [index, plot] of value.plots.entries()) {
     require2(object6(plot) && uint10(plot.node) && plot.node > previousPlot && uint10(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
@@ -2238,7 +2239,7 @@ function decodeChartDisplay(bytes) {
   require2(validChartSeriesSettings(value.series_settings, plots, series, occupied));
   require2(validChartPointSettings(value.point_settings, series, occupied));
   for (const axis of value.axes) {
-    require2(object6(axis) && uint10(axis.node) && !axes.has(axis.node) && uint10(axis.area_node) && axis.area_node < axis.node && ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) && field(axis.id, uint10, axis.node) && field(axis.cross_axis, uint10, axis.node) && field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) && field(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node));
+    require2(object6(axis) && uint10(axis.node) && !axes.has(axis.node) && uint10(axis.area_node) && axis.area_node < axis.node && ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) && field(axis.id, uint10, axis.node) && field(axis.cross_axis, uint10, axis.node) && field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) && field(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node) && (axis.major_tick_mark === undefined || field(axis.major_tick_mark, oneOf(["cross", "in", "none", "out"]), axis.node)));
     axes.set(axis.node, axis);
     occupied?.add(axis.node);
     occupied?.add(axis.area_node);
@@ -2328,6 +2329,12 @@ function decodeChartDisplay(bytes) {
         occupied.add(node);
       }
     }
+  for (const axis of value.axes) {
+    if (axis.major_tick_mark != null) {
+      require2(!occupied.has(axis.major_tick_mark.node));
+      occupied.add(axis.major_tick_mark.node);
+    }
+  }
   if (value.blank_policy !== undefined && value.blank_policy !== null) {
     require2(field(value.blank_policy, oneOf(["gap", "zero", "span"]), 0) && !occupied.has(value.blank_policy.node));
     occupied.add(value.blank_policy.node);
