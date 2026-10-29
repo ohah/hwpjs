@@ -1,0 +1,38 @@
+.hwp-paragraph-resource-fields {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.hwp-paragraph-resource-fields fieldset {
+  min-width: 0;
+  margin: 0.5rem 0;
+}
+.hwp-paragraph-resource-edge {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.hwp-paragraph-resource-fields label {
+  display: grid;
+  min-width: 0;
+}
+.hwp-paragraph-resource-fields input,
+.hwp-paragraph-resource-fields select {
+  min-width: 0;
+  width: 100%;
+}
+@media (max-width: 480px) {
+  .hwp-paragraph-resource-edge {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.hwp-paragraph-resource-linear {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (max-width: 480px) {
+  .hwp-paragraph-resource-linear {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

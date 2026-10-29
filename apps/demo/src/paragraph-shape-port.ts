@@ -1,3 +1,4 @@
+import { invalidResourceDraft, type ParagraphResourceValue } from './paragraph-resource-input.ts';
 import type {
   HeadlessEditor,
   CommandResult,
@@ -8,6 +9,8 @@ import type {
   ParagraphFormattingPatch,
   FormattingCapabilityOptions,
   FormattingCapabilities,
+  BorderPatch,
+  BackgroundPatch,
 } from '@hwpjs/core';
 // @ts-ignore 정렬 enum과 여백 값 검증은 기존 단일 출처를 사용한다.
 import { paragraphAlignmentValue } from '../../../web/preview/paragraph-alignments.mjs';
@@ -28,7 +31,7 @@ export const paragraphShapeFields = Object.freeze([
   'paragraph.background',
 ]);
 export type ParagraphShapeState = ReturnType<HeadlessEditor['getEditorState']>;
-export type ParagraphShapeValue = string | number | boolean;
+export type ParagraphShapeValue = string | number | boolean | ParagraphResourceValue;
 export interface ParagraphShapeApi {
   readonly command: EditorCommand<ApplyFormattingPatchPayload>;
   target(state: ParagraphShapeState): SelectionTarget | null;
@@ -118,6 +121,18 @@ export function createParagraphShapePort(api: ParagraphShapeApi) {
         } else if (field === 'paragraph.grid' || field === 'paragraph.borderConnect') {
           if (typeof value !== 'boolean') throw Error('InvalidParagraphFlag');
           paragraph[field.slice('paragraph.'.length)] = value;
+        } else if (field === 'paragraph.border' || field === 'paragraph.background') {
+          if (
+            !value ||
+            typeof value !== 'object' ||
+            Array.isArray(value) ||
+            invalidResourceDraft(value)
+          )
+            throw Error(
+              invalidResourceDraft(value) ? value.reason : 'InvalidParagraphResourceDraft',
+            );
+          if (field === 'paragraph.border') paragraph.border = value as BorderPatch;
+          else paragraph.background = value as BackgroundPatch;
         } else if (!field.startsWith('paragraph.spacing.')) {
           // 상세 테두리·배경은 다음 편집 surface에서 공식 intent로 연결한다.
           throw Error('ParagraphFieldUiNotConnected');

@@ -1,3 +1,6 @@
+import { createParagraphResourceFields } from './paragraph-resource-fields.ts';
+import { invalidResourceDraft } from './paragraph-resource-input.ts';
+import './paragraph-resource-fields.css';
 import { paragraphSpacingInput, paragraphSpacingLabels } from './paragraph-spacing-input.ts';
 import { exactParagraphNumber } from './paragraph-shape-number.ts';
 import { createDialogLayer } from './dialog-layer.ts';
@@ -133,16 +136,8 @@ export function createParagraphShapeView(
     body.append(label);
     fields.set(name, { input, note });
   }
-  const summaries = new Map<string, HTMLElement>();
-  for (const title of ['테두리', '배경']) {
-    const p = doc.createElement('p');
-    p.textContent = title + '의 상세 편집은 준비 중입니다.';
-    const name = title === '테두리' ? 'paragraph.border' : 'paragraph.background';
-    p.dataset.role =
-      title === '테두리' ? 'paragraph-border-summary' : 'paragraph-background-summary';
-    summaries.set(name, p);
-    body.append(p);
-  }
+  const resources = createParagraphResourceFields(doc, callbacks.field, () => composing);
+  body.append(resources.element);
   const status = doc.createElement('p');
   status.setAttribute('role', 'status');
   const apply = doc.createElement('button'),
@@ -275,20 +270,7 @@ export function createParagraphShapeView(
           if (reason) note.textContent += (note.textContent ? ' · ' : '') + reason;
         }
       }
-      for (const [name, summary] of summaries) {
-        const observed = next.captured?.result.observations.aggregate[name];
-        const title = name === 'paragraph.border' ? '테두리' : '배경';
-        const value = !observed
-          ? '조회 전'
-          : observed.state === 'mixed'
-            ? '여러 값'
-            : observed.state === 'unknown'
-              ? '알 수 없음'
-              : observed.state === 'unavailable'
-                ? '사용할 수 없음'
-                : '현재 값 있음';
-        summary.textContent = title + ': ' + value + ' · 상세 편집은 준비 중입니다.';
-      }
+      resources.update(next);
       apply.disabled =
         pending ||
         next.loading ||
@@ -297,7 +279,9 @@ export function createParagraphShapeView(
         !next.captured ||
         !next.draft.size ||
         paragraphSpacingInput(next).needsValue ||
-        [...next.draft.values()].some((v) => typeof v === 'number' && !Number.isFinite(v));
+        [...next.draft.values()].some(
+          (v) => (typeof v === 'number' && !Number.isFinite(v)) || invalidResourceDraft(v),
+        );
       cancel.disabled = pending;
       status.textContent = next.refreshRequired
         ? '적용 결과를 다시 확인해주세요. 닫고 문서를 확인할 수 있습니다.'
@@ -312,6 +296,7 @@ export function createParagraphShapeView(
       if (disposed) return;
       disposed = true;
       for (const remove of removals) remove();
+      resources.dispose();
       layer.destroy();
     },
   };

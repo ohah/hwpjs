@@ -15,6 +15,35 @@ HWPJS_TEST_WASM=/absolute/path/to/current-build/hwpjs.wasm \
 
 2026-10-30 실제 작업 트리에서 d849 엔진을 명시한 위 두 진입점은 12pass·0fail·0skip이었습니다. 새로운 Native 컴파일이나 미배포 각주 배치 후보의 검증 결과로 합산하지 않습니다.
 
+<a id="paragraph-resource-ui-regression"></a>
+
+## 문단 테두리·배경 UI 집중 검사
+
+core 소스의 공개 목록·타입을 바꾼 뒤 설치된 `packages/core/dist`가 오래됐다면, 선택한 기존 WASM을 명시해 core만 갱신합니다. 아래 명령은 새 Native 컴파일·React Native 빌드·운영 번들 배포가 아닙니다. 공간·작업 소유권을 확인한 뒤 필요한 경우에만 실행합니다.
+
+```sh
+test -f ./tools/build-packages.mjs || exit 1
+test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
+mise exec -- bun ./tools/build-packages.mjs --package=core --web --wasm="$(pwd)/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+```
+
+검사는 전용 UI 두 파일과 기존 문단 다섯 파일이 모두 있는지 먼저 확인한 뒤 저장소 루트에서 명시 실행합니다. `--tsconfig-override`나 후보 폴더의 자동 paths로 오래된 dist 오류를 숨기지 않습니다.
+
+```sh
+set -- \
+  ./apps/demo/tests/paragraph-resource-input.test.ts \
+  ./apps/demo/tests/paragraph-resource-view.test.ts \
+  ./apps/demo/tests/paragraph-shape-fallback.test.ts \
+  ./apps/demo/tests/paragraph-shape-number.test.ts \
+  ./apps/demo/tests/paragraph-shape-tool.test.ts \
+  ./apps/demo/tests/paragraph-shape-ui.test.ts \
+  ./apps/demo/tests/paragraph-spacing-kind.test.ts
+for path in "$@"; do test -f "$path" || exit 1; done
+mise exec -- bun test --no-install "$@"
+```
+
+2026-10-30 실제 root 검사는 공식 core 갱신과 구 SDK·합성 namespace catalog 호환성 수정 뒤 신규 UI35개와 기존 문단58개의 고유 합계93pass·0fail·0skip(314expect)이었습니다. 실제 root의 설치 core dist 소비와 paths 추가 없는 제품5 엄격 타입 검사, 선택 lint6·format7도 종료0이었습니다. 후보 source-alias 검증은 별도 원자료로 보존하며 현재 실제 root 결과를 대신하지 않습니다. 이는 메인의 실제 적용 후 결과이며, 후보의 자동 source alias 32pass와 후속 source 기준34pass는 별도 원자료입니다. 정규 신규35개에는 catalog가 없는 모듈 경계 두 사례와 브라우저 번들의 합성 namespace 회귀 한 사례가 포함됩니다. 실제 이전 dist로 실행한 별도 view·도구 두 사례는 이 93개에 더하지 않습니다. 이 93개는 모형 DOM/port·단위 및 실제 view 모듈의 검사이지 Native·실제 브라우저·Canvas 검사가 아닙니다. [지원·unknown·교체 요청 경계](formatting-dialogs.md#paragraph-resource-ui-source-integration)를 따릅니다.
+
 <a id="javascript-quality-commands"></a>
 
 ## JavaScript 품질 검사

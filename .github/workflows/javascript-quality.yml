@@ -28,6 +28,23 @@ jobs:
           test -f ./apps/demo/tests/runtime-assets.test.ts || exit 1
           test -f ./tests/hwpx/pages-runtime-asset-paths.test.mjs || exit 1
           bun test ./apps/demo/tests/runtime-assets.test.ts ./tests/hwpx/pages-runtime-asset-paths.test.mjs
+      - name: Build core for demo formatting regressions
+        run: |
+          test -f ./tools/build-packages.mjs || exit 1
+          test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
+          bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test paragraph formatting dialogs
+        run: |
+          set -- \
+            ./apps/demo/tests/paragraph-resource-input.test.ts \
+            ./apps/demo/tests/paragraph-resource-view.test.ts \
+            ./apps/demo/tests/paragraph-shape-fallback.test.ts \
+            ./apps/demo/tests/paragraph-shape-number.test.ts \
+            ./apps/demo/tests/paragraph-shape-tool.test.ts \
+            ./apps/demo/tests/paragraph-shape-ui.test.ts \
+            ./apps/demo/tests/paragraph-spacing-kind.test.ts
+          for path in "$@"; do test -f "$path" || exit 1; done
+          bun test --no-install "$@"
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

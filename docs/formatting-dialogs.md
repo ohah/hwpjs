@@ -1,6 +1,20 @@
 # 글자 모양·문단 모양 대화상자
 
-현재 공용 글자 모양 창은 크기·굵게·기울임, 문단 모양 창은 여섯 정렬 값을 지원합니다. 단위 검사와 Noori HWP5/HWPX 대표 운영 경로의 적용·undo·저장·재열기 검증 범위를 구분합니다. 기존 API 지원, 이 부분 대화상자 구현, 전체 글자·문단 모양 완성은 서로 다른 상태입니다.
+<a id="paragraph-resource-ui-source-integration"></a>
+
+## 문단 테두리·배경 상세 UI의 소스 통합 범위
+
+상세 자원 UI는 방향별 희소 선 종류·굵기·RGB와 없음·단색·무늬·선형 배경의 명시 입력을 기존 `APPLY_FORMATTING_PATCH` 한 요청으로 연결합니다. 빈 입력은 원본을 유지하며 RGB0을 기본값이나 부재로 바꾸지 않습니다. 입력 가능한 값과 선택의 실제 쓰기 권한은 기존 core·Native가 소유합니다. 새 `paragraph.resourceLayout` 관측이나 renderer geometry 권한은 이 UI 통합의 의존성이 아닙니다.
+
+API 부재·atomic capability 거부는 기존 fallback으로 남습니다. 구 SDK에 새 catalog export가 없더라도 모듈 연결 실패로 창 전체를 막지 않습니다. 공식 목록은 namespace의 own export 존재를 확인한 뒤 Reflect.get으로 읽어 번들러의 합성 getter도 처리합니다. descriptor.value만 읽던 방식의 실제 번들 실패를 보존하고, 수정본의 공식 core 번들과 정규 browser ESM 회귀를 확인했습니다. export 부재 시에는 값을 복제하지 않은 빈 목록을 사용해 상세 자원 입력만 비활성화합니다. 안내는 “현재 버전에서는 상세 테두리·배경을 편집할 수 없습니다.”이며 기존 정렬과 도구 fallback을 유지합니다. 이 호환성은 실제 이전 dist로 원본 연결 실패와 수정본 로드를 대조했고, 모형 view·도구 두 사례로 확인했습니다. 실제 구 SDK의 모든 기능·브라우저 동치를 뜻하지 않습니다. 필드 편집은 capability와 관측의 writable를 모두 요구하고, unknown 배경은 writable로 덮어쓰지 않고 비활성을 유지합니다. readonly·stale·pending·IME 조합 중 입력과 불완전 intent도 차단합니다. 기존 readonly 또는 불명확한 target을 UI가 우회하지 않습니다.
+
+현재 공개 d849의 Noori 양 형식에서 본문 p0·p1의 테두리/배경은 unknown·writable:false였고, 관측한 앞쪽 표 셀 문단의 테두리만 known·writable:true였습니다. 이 대표 문단의 명시 테두리 적용·한 undo/redo·저장·fresh reopen은 직접 Node/Native로 확인했습니다. HWP 저장은 기본 `LayoutReflowRequired`를 받은 뒤 controlled fixture 검증에서만 명시 stale 허용을 사용했습니다. 부분 CFB/XML 비교를 모든 필드·조판의 독립 저장 보장으로 확대하지 않습니다.
+
+같은 원본의 unknown 배경에 완전 명시 단색 RGB0·선형 intent를 직접 요청한 별도 네 사례는 Native에서 성공했습니다. 따라서 unknown 조회를 Native 기능 전체 미지원으로 해석하지 않습니다. 그러나 이 성공은 비활성 UI에서 실제로 교체한 증거가 아니며 모든 unknown resource의 교체 권한도 아닙니다. 부분 편집과 별도 전체 교체 요청 UX는 후속 계약입니다. 특히 solid의 hatchColor 생략은 기존 값을 보존할 수 있어 색 하나를 전체 교체라고 부르지 않습니다.
+
+[정규 집중 검사](development-commands.md#paragraph-resource-ui-regression)는 실제 root에서 core dist를 사용한 신규35·기존58의 고유93개와 타입·품질 검사로 확인했습니다. 이는 구 SDK의 전체 기능이나 실제 모달·Canvas 성공을 뜻하지 않습니다. 모달의 실제 선택·적용·취소·재열기·Tab/포커스와 Canvas 표시, 공식 SDK 소비·운영 배포 완료는 이 소스 통합만으로 주장하지 않습니다. 아래 초기 부분창·과거 엔진 기록은 각 당시 범위이며 이번 상세 UI의 전체 사용자 E2E 성공으로 승계하지 않습니다.
+
+초기 공용 글자 모양 창은 크기·굵게·기울임, 문단 모양 창은 여섯 정렬 값을 지원합니다. 단위 검사와 Noori HWP5/HWPX 대표 운영 경로의 적용·undo·저장·재열기 검증 범위를 구분합니다. 기존 API 지원, 이 부분 대화상자 구현, 전체 글자·문단 모양 완성은 서로 다른 상태입니다.
 
 이 문서는 대화상자의 표시·초안·적용 경계를 설명합니다. 공개 API 목록은 [Headless API 범위](headless-api-coverage.md), 형식별 원본 보호와 전체 완료 기준은 [편집기 완료 조건](fixture-editor-completion.md)을 따릅니다.
 
