@@ -1736,6 +1736,26 @@ export function createRenderer(
       return layout;
     },
     flushProjection,
+    // surface의 실제 현재 snapshot과 show가 소비한 모델이 같은 경우에만 유예합니다.
+    observeSourceState(state) {
+      if (
+        closed ||
+        !sourceObservationState ||
+        state?.status !== 'ready' ||
+        state.content !== content ||
+        !Number.isSafeInteger(state.stateVersion) ||
+        state.stateVersion <= sourceObservationState.stateVersion ||
+        ['editorId', 'documentId', 'generation', 'operationRevision', 'viewRevision'].some(
+          (key) => state[key] !== sourceObservationState[key],
+        )
+      )
+        return false;
+      sourceObservationState = state;
+      return true;
+    },
+    historyModelMatches(state) {
+      return !closed && sourceObservationState === state && state?.content === content;
+    },
     clear() {
       nativeGeometry.clear();
       paragraphFlowReuse.clear();

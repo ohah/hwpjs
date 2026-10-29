@@ -750,6 +750,23 @@ mise exec -- bun test ./packages/vanilla/tests/shortcuts.test.ts ./packages/vani
 
 CDP의 trusted `autoRepeat` 검사는 실제 OS 키 반복이나 OS IME 검증과 구분합니다. 명시 테스트의 모의 비동기 ACK와 실제 Native·브라우저 검증도 별도 범위입니다.
 
+### 이력 모델과 최종 paint 준비
+
+[모델 준비와 최종 화면 준비](canvas-edit-history.md#연속-이력의-모델-준비와-최종-화면-준비)를 따릅니다. 저장소 루트에서 존재하는 아래 다섯 entry만 실행합니다.
+
+```sh
+set -- \
+  ./tests/hwpx/history-model-presentation.test.mjs \
+  ./tests/hwpx/history-paint-authority.test.mjs \
+  ./tests/hwp5/history-selection-canvas.test.mjs \
+  ./tests/hwp5/history-input-intent-queue.test.mjs \
+  ./tests/hwp5/history-input-intent-readiness.test.mjs
+for path in "$@"; do test -f "$path" || exit 1; done
+mise exec -- node --test --test-concurrency=1 "$@"
+```
+
+97개 회귀는 실제 controller와 모형 DOM·ACK·선택 게시 포트를 검사합니다. 같은 다섯 entry의 Bun 검사도 같은 고유 97개이며, 둘을 합산하지 않습니다. 실제 Native·저장 oracle·브라우저 Canvas·OS IME 검증과는 별도 범위입니다. 이 명령은 WASM이나 새 SDK 빌드를 요구하지 않습니다.
+
 ## 문서 통계 모달 집중 검증
 
 [통계 관측·모달 검증 범위](headless-text-tools.md)를 따릅니다. 기존 호환 WASM을 명시해 정규 테스트 한 파일만 실행합니다. 실제 cb48에서 mock 12개와 readonly 조회 2개가 14통과·74 assertions·0skip이었습니다. WASM이 없으면 Native 2개는 skip이므로 같은 검증으로 보지 않습니다.

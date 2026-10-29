@@ -52,6 +52,16 @@ jobs:
           test -f ./tests/hwp5/plain-footnote-stable-order.test.mjs || exit 1
           test -f ./tests/hwp5/plain-footnote-lock-audit.test.mjs || exit 1
           bun test --no-install ./tests/hwp5/plain-footnote-continuation.test.mjs ./tests/hwp5/plain-footnote-stable-order.test.mjs ./tests/hwp5/plain-footnote-lock-audit.test.mjs
+      - name: 이력 모델과 paint 준비 검사
+        run: |
+          set -- \
+            ./tests/hwpx/history-model-presentation.test.mjs \
+            ./tests/hwpx/history-paint-authority.test.mjs \
+            ./tests/hwp5/history-selection-canvas.test.mjs \
+            ./tests/hwp5/history-input-intent-queue.test.mjs \
+            ./tests/hwp5/history-input-intent-readiness.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          bun test --no-install "$@"
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

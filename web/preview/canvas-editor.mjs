@@ -1,4 +1,8 @@
 import {
+  matchHistoryModelSelection,
+  sameHistoryModelObservation,
+} from './history-model-readiness.mjs';
+import {
   createHistoryPaintBarrier,
   historySelectionStamp,
   sameHistoryPaintStamp,
@@ -62,6 +66,8 @@ export function createCanvasEditor({
   platform = null,
   environment = {},
   historyAvailability = null,
+  historyModelState = null,
+  prepareHistoryModelSelection = null,
   onCommittedSelection = () => {},
   onComposition = () => {},
 }) {
@@ -130,7 +136,45 @@ export function createCanvasEditor({
     structureTarget = null;
   let deferredComposition = null,
     deferredReplies = [];
+  let historyModelWitness = null;
+  let historyModelPreparation = null;
+  const historyModelReady = () => {
+    if (
+      !historyModelWitness ||
+      events.signal.aborted ||
+      ownerDocument?.visibilityState === 'hidden' ||
+      typeof historyModelState !== 'function'
+    )
+      return false;
+    const state = historyModelState();
+    return (
+      sameHistoryModelObservation(historyModelWitness, state) &&
+      matchHistoryModelSelection(
+        state,
+        historyRevision,
+        { anchor, focus },
+        renderer.paragraph(focus),
+      )
+    );
+  };
+  const nativeHistoryReady = () =>
+    !events.signal.aborted &&
+    !deferredComposition &&
+    !composing &&
+    !pending &&
+    !historyPending &&
+    !inputIntents.size &&
+    (!target || input.value === committed) &&
+    hostControls.ready() &&
+    !hostControls.busy() &&
+    (!historyPaintBarrier?.pending || historyModelReady());
   const historyIntents = createHistoryInputIntentQueue({
+    ...(typeof historyModelState === 'function'
+      ? {
+          nativeReady: nativeHistoryReady,
+          readyForKind: (kind) => (kind === 'history' && historyModelReady() ? true : undefined),
+        }
+      : {}),
     ready: () =>
       !deferredComposition &&
       !composing &&
@@ -148,9 +192,44 @@ export function createCanvasEditor({
     historyIntents.size > 0 || historyPaintBarrier?.pending === true;
   historyPaintBarrier = createHistoryPaintBarrier({
     isPainted(selection) {
+      if (historyModelPreparation) return false;
+      if (
+        events.signal.aborted ||
+        ownerDocument?.visibilityState === 'hidden' ||
+        !sameHistoryPaintStamp(
+          historySelectionStamp(selection),
+          historySelectionStamp({ anchor, focus }),
+        ) ||
+        renderer.isSelectionPainted?.(selection) !== true
+      )
+        return false;
+      // 기존 경로는 ACK에서 geometry를 확인했습니다. 빠른 모델 경로만 최종 frame에서 확인합니다.
+      if (!historyModelWitness) return true;
+      if (!historyModelReady()) return false;
+      const paragraph = renderer.paragraph(selection.focus);
+      if (
+        !paragraphSelectionRanges([paragraph], selection.anchor, selection.focus, () => 'single', {
+          sourcePositions: false,
+          includeEmpty: true,
+        })
+      )
+        return false;
+      const currentLayout = renderer.layout();
+      if (
+        !caretGeometry(currentLayout, selection.anchor) ||
+        !caretGeometry(currentLayout, selection.focus)
+      )
+        return false;
+      const top = viewport.scrollTop,
+        left = viewport.scrollLeft;
+      reveal();
+      if (top !== viewport.scrollTop || left !== viewport.scrollLeft) {
+        paint();
+        return false;
+      }
+      // layout/reveal 중 재진입이나 stamp 변경이 있으면 이전 paint로 다음 입력을 해제하지 않습니다.
       return (
-        !events.signal.aborted &&
-        ownerDocument?.visibilityState !== 'hidden' &&
+        historyModelReady() &&
         sameHistoryPaintStamp(
           historySelectionStamp(selection),
           historySelectionStamp({ anchor, focus }),
@@ -353,7 +432,7 @@ export function createCanvasEditor({
     listen(ownerDocument, 'visibilitychange', () => {
       if (ownerDocument.visibilityState !== 'hidden') historyPaintBarrier.notify();
     });
-  const paint = () => {
+  const paint = ({ deferGeometry = false } = {}) => {
     let composition;
     if (multiComposition) composition = compositionProjection()?.composition;
     const change = composing && !multiComposition && draftTextChange();
@@ -372,7 +451,7 @@ export function createCanvasEditor({
     canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : '';
     canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : '';
     canvas.dataset.composing = String(composing);
-    place();
+    if (!deferGeometry) place();
     onComposition({
       composing,
       pending: Boolean(
@@ -717,6 +796,7 @@ export function createCanvasEditor({
       report('이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다.');
       return false;
     }
+    const modelReady = historyModelReady();
     if (
       composing ||
       pending ||
@@ -724,11 +804,13 @@ export function createCanvasEditor({
       historyPending ||
       (target && input.value !== committed) ||
       !controls.ready() ||
-      controls.busy()
+      (controls.busy() && !modelReady)
     ) {
       report('입력 반영이 끝난 뒤 실행 취소/다시 실행하세요.');
       return false;
     }
+    historyModelWitness = null;
+    historyModelPreparation = null;
     historyPending = true;
     historyPaintBarrier.begin();
     if (historyRevision !== null && anchor && focus)
@@ -739,9 +821,11 @@ export function createCanvasEditor({
     canvas.dataset.selectionAuthority = 'history-pending';
     input.setAttribute('aria-busy', 'true');
     report(pendingNote);
-    paint();
+    paint({ deferGeometry: modelReady });
     if (!controls.request({ kind, origin: 'canvas' })) {
       historyPending = false;
+      historyModelWitness = null;
+      historyModelPreparation = null;
       historyPaintBarrier.reset();
       canvas.dataset.selectionAuthority = 'current';
       input.setAttribute('aria-busy', 'false');
@@ -2992,10 +3076,13 @@ export function createCanvasEditor({
     // 기존 동기식 도구 계약은 유지하며, 키보드와 새 surface 포트는 접수 큐를 사용합니다.
     history: (kind) => !historyIntents.size && performHistory(kind),
     canRequestHistory,
+    historyModelReady,
     requestHistory: travel,
     reset({ preserveHistory = false, selectionOrigin: origin = 'canvas' } = {}) {
       selectionOrigin = origin;
       if (events.signal.aborted) return;
+      historyModelWitness = null;
+      historyModelPreparation = null;
       historyPaintBarrier.reset();
       canvas.dataset.selectionAuthority = 'current';
       historyIntents.clear();
@@ -3276,6 +3363,107 @@ export function createCanvasEditor({
           const restored =
             versioned && message.changed ? historySelections.selection(revision) : null;
           const restoredParagraph = restored && renderer.paragraph(restored.focus);
+          const modelState =
+            message.changed === true && typeof historyModelState === 'function'
+              ? historyModelState()
+              : null;
+          let modelSelectionAccepted = false;
+          const applyModelSelection = (state) => {
+            if (
+              !restored ||
+              !state ||
+              !matchHistoryModelSelection(state, revision, restored, restoredParagraph)
+            )
+              return false;
+            modelSelectionAccepted = true;
+            target = paragraphTarget(restored.focus);
+            committed = restoredParagraph.text;
+            input.value = committed;
+            // DOM 선택·화면 권위는 실제 최신 paint 뒤 기존 barrier가 복원합니다.
+            anchor = restored.anchor;
+            focus = restored.focus;
+            preferredX = null;
+            selectionOrigin = 'canvas';
+            historyModelWitness = state;
+            // 중간 paint를 생략해도 기존 선택 게시와 core의 공개 알림을 생략하지 않습니다.
+            try {
+              onCommittedSelection(
+                { anchor: { ...anchor }, focus: { ...focus } },
+                { origin: 'canvas' },
+              );
+            } catch (error) {
+              historyModelWitness = null;
+              throw error;
+            }
+            if (events.signal.aborted || historyModelWitness !== state) return false;
+            report('실행 취소/다시 실행 적용 · 화면 반영 대기');
+            return true;
+          };
+          if (applyModelSelection(modelState) || modelSelectionAccepted) return;
+          if (
+            restored &&
+            modelState &&
+            modelState.selection === undefined &&
+            typeof prepareHistoryModelSelection === 'function'
+          ) {
+            const preparation = {};
+            historyModelPreparation = preparation;
+            let preparing;
+            try {
+              preparing = prepareHistoryModelSelection({
+                revision,
+                selection: restored,
+                sourceState: modelState,
+              });
+            } catch (error) {
+              historyModelPreparation = null;
+              throw error;
+            }
+            if (preparing && typeof preparing.then === 'function') {
+              if (events.signal.aborted || historyModelPreparation !== preparation) return;
+              // 검증·게시 대기 동안 논리 위치만 보존합니다. DOM/paint 권위는 기존 barrier가 소유합니다.
+              target = paragraphTarget(restored.focus);
+              committed = restoredParagraph?.text ?? committed;
+              input.value = committed;
+              anchor = restored.anchor;
+              focus = restored.focus;
+              return Promise.resolve(preparing)
+                .then((freshState) => {
+                  if (events.signal.aborted || historyModelPreparation !== preparation) return;
+                  const accepted =
+                    sameHistoryModelObservation(modelState, freshState) &&
+                    freshState === historyModelState() &&
+                    applyModelSelection(freshState);
+                  if (events.signal.aborted || historyModelPreparation !== preparation) return;
+                  if (!accepted) {
+                    historyModelWitness = null;
+                    historyPaintBarrier.begin();
+                    historyPaintBarrier.acknowledge(null);
+                    canvas.dataset.selectionAuthority = 'history-unresolved';
+                    report(
+                      '복원 선택을 확인하지 못했습니다. 대기 입력은 아직 적용되지 않았습니다.',
+                    );
+                    return;
+                  }
+                  historyModelPreparation = null;
+                  historyIntents.wake();
+                  historyPaintBarrier.notify();
+                  return true;
+                })
+                .catch((error) => {
+                  if (events.signal.aborted || historyModelPreparation !== preparation) return;
+                  historyModelWitness = null;
+                  historyPaintBarrier.begin();
+                  historyPaintBarrier.acknowledge(null);
+                  canvas.dataset.selectionAuthority = 'history-unresolved';
+                  report(`복원 선택 게시를 확인하지 못했습니다: ${error.message}`);
+                })
+                .finally(() => {
+                  if (historyModelPreparation === preparation) historyModelPreparation = null;
+                });
+            }
+            if (historyModelPreparation === preparation) historyModelPreparation = null;
+          }
           const restoredRanges =
             restored &&
             (sameParagraph(restored.anchor, restored.focus)
@@ -3511,7 +3699,7 @@ export function createCanvasEditor({
             ? 'awaiting-history-paint'
             : 'history-unresolved';
           input.setAttribute('aria-busy', 'true');
-          paint();
+          paint({ deferGeometry: Boolean(historyModelPreparation) || historyModelReady() });
         }
       }
     },

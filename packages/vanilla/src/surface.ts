@@ -11,7 +11,7 @@ import type { HeadlessEditor } from '@hwpjs/core';
 import type { InputSurfaceHooks, InputSurfaceLease } from '@hwpjs/core';
 import type { SelectionTarget } from '@hwpjs/core';
 import type { RuntimeMessage, RuntimeReply } from '@hwpjs/core';
-import { getHistoryAvailability } from '@hwpjs/core';
+import { getHistoryAvailability, createParagraphSelection } from '@hwpjs/core';
 import { createControlBridge } from './core-bridge.ts';
 import { canvasSurfacePageFrame } from './page-frame.ts';
 // @ts-ignore Canonical owner projection shared with headless selection validation.
@@ -84,6 +84,10 @@ export function createCanvasSurface({
   let displayed = '',
     selectionKey = '',
     observedStateVersion = -1;
+  let activeHistoryAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
+  let historySelectionPublication:
+    | { state: ReturnType<HeadlessEditor['getEditorState']>; target: SelectionTarget }
+    | undefined;
   let explicitClearPending: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   const status = (message: string) => {
     if (!closed) onStatus(message);
@@ -131,12 +135,22 @@ export function createCanvasSurface({
     }
     const geometry = lease ? readGeometryProjection(lease, state) : undefined;
     if (key === displayed) {
+      renderer.observeSourceState(state);
       renderer.setGeometryEvidence(geometry?.content, geometry?.evidence);
       // Public selection commands do not change document/view revisions.
       // Observe them without rebuilding the page layout or republishing the
       // selection which originated in this input surface.
       const selected = state.selection as SelectionTarget | null;
       const nextSelectionKey = JSON.stringify(selected ?? null);
+      if (
+        historySelectionPublication &&
+        state.content === historySelectionPublication.state.content &&
+        state.nativeHistoryRevision === historySelectionPublication.state.nativeHistoryRevision &&
+        nextSelectionKey === JSON.stringify(historySelectionPublication.target)
+      ) {
+        selectionKey = nextSelectionKey;
+        return;
+      }
       if (!bridge?.busy() && nextSelectionKey !== selectionKey) {
         selectionKey = nextSelectionKey;
         if (selected) {
@@ -170,7 +184,8 @@ export function createCanvasSurface({
       resourceEpoch: `${state.documentId}:${state.generation}:${state.operationRevision}`,
       resourceDocument: `${state.documentId}:${state.generation}`,
       // 같은 문서의 splice 대기 중 투영 계산을 유예합니다. snapshot의 ACK 귀속 판정은 아닙니다.
-      deferLayout: !changedDocument && bridge?.pendingKind() === 'splice',
+      deferLayout:
+        !changedDocument && ['splice', 'undo', 'redo'].includes(bridge?.pendingKind() ?? ''),
     });
     if (retained && !bridge?.busy()) {
       direct?.initializeCapabilities({
@@ -191,6 +206,7 @@ export function createCanvasSurface({
   const cleanup = () => {
     closed = true;
     explicitClearPending = undefined;
+    historySelectionPublication = undefined;
     frameObserver?.disconnect();
     bridge?.close();
     unsubscribe?.();
@@ -247,12 +263,28 @@ export function createCanvasSurface({
       state: () => editor.getEditorState(),
       lease,
       acknowledge(reply, state) {
+        const priorAcknowledgement = activeHistoryAcknowledgement;
+        activeHistoryAcknowledgement = state;
+        const finish = (modelPrepared = false) => {
+          if (!closed && !modelPrepared && !direct.historyModelReady()) renderer.flushProjection();
+        };
         try {
           if (state) render(state);
-          direct.message(reply);
+          const prepared = direct.message(reply);
+          if (prepared && typeof prepared.then === 'function') {
+            void Promise.resolve(prepared).then(
+              (value) => finish(value === true),
+              (error) => {
+                status(String(error));
+                finish();
+              },
+            );
+          } else finish();
+        } catch (error) {
+          finish();
+          throw error;
         } finally {
-          // 사용자 입력의 다음 Native 요청 microtask보다 먼저 최종 투영을 확정합니다.
-          renderer.flushProjection();
+          activeHistoryAcknowledgement = priorAcknowledgement;
         }
       },
       error: (error) => status(String(error)),
@@ -263,6 +295,69 @@ export function createCanvasSurface({
       input,
       renderer,
       controls: bridge,
+      historyModelState: () => {
+        if (closed || !lease?.isActive() || !bridge?.ready() || bridge.busy()) return null;
+        const state = editor.getEditorState();
+        return state.status === 'ready' && renderer.historyModelMatches(state) ? state : null;
+      },
+      prepareHistoryModelSelection({ revision, selection, sourceState }: any) {
+        const current = editor.getEditorState();
+        if (
+          closed ||
+          !lease?.isActive() ||
+          bridge?.busy() ||
+          current !== sourceState ||
+          sourceState !== activeHistoryAcknowledgement ||
+          current.status !== 'ready' ||
+          current.nativeHistoryRevision !== revision ||
+          selection?.anchor?.section !== selection?.focus?.section ||
+          selection?.anchor?.paragraph !== selection?.focus?.paragraph
+        )
+          return null;
+        let target: SelectionTarget;
+        try {
+          target = createParagraphSelection(current, {
+            section: selection.anchor.section,
+            paragraph: selection.anchor.paragraph,
+            startUnit: Math.min(selection.anchor.unit, selection.focus.unit),
+            endUnit: Math.max(selection.anchor.unit, selection.focus.unit),
+            affinity: selection.anchor.unit > selection.focus.unit ? 'backward' : 'forward',
+          });
+        } catch (error) {
+          status(String(error));
+          return null;
+        }
+        const publication = { state: current, target };
+        historySelectionPublication = publication;
+        return lease
+          .publishSelection(target)
+          .then((published) => {
+            const fresh = editor.getEditorState();
+            if (
+              closed ||
+              !lease?.isActive() ||
+              historySelectionPublication !== publication ||
+              fresh !== published ||
+              fresh.content !== current.content ||
+              fresh.documentId !== current.documentId ||
+              fresh.generation !== current.generation ||
+              fresh.operationRevision !== current.operationRevision ||
+              fresh.viewRevision !== current.viewRevision ||
+              fresh.nativeHistoryRevision !== revision ||
+              !renderer.historyModelMatches(fresh)
+            )
+              return null;
+            return fresh;
+          })
+          .catch((error) => {
+            status(String(error));
+            return null;
+          })
+          .finally(() => {
+            if (historySelectionPublication === publication)
+              historySelectionPublication = undefined;
+          });
+      },
       note,
       environment: { ...environment, ownerDocument: doc },
       platform: realm.navigator.platform,
