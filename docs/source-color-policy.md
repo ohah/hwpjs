@@ -43,3 +43,13 @@
 확장 집중18/18과 별도 JS 원본4종·5회 흐름에서 legacy→RGB→legacy, single/batch, raw 값·alpha, 무편집 저장 바이트 불변을 대조했습니다. 고립 Canvas의7문서 흐름에서는 noori 단색 `#E7E7A5`, 실제 RGB 문서 유지, HWP 대조, pattern의 면 `#99CCFF`·hatch `#0099FF`, gradient 시작색 `#3F7FFF`와80 stops를 관측했습니다. 기대색은 원본 HWP/독립 XML·owner 자료에서 얻었으며 제품 codec로 기대를 생성하지 않았습니다.
 
 이는 모든 색 필드·문서·플랫폼이나 한컴 raster 동치의 완료가 아닙니다. gradient owner의 비어 있는 셀은 구조/좌표 대응 근거이며 비어 있지 않은 소유 텍스트 대조로 세지 않습니다. 새 RN archive/기기 검증과 공개 번들 승격은 별도입니다. [전체 완료 조건](fixture-editor-completion.md)은 계속 미완료입니다.
+
+<!-- paragraph-background-asymmetric-raw-d849:begin -->
+## d849 문단 배경의 비대칭 원시 저장 검사
+
+고정 d849와 공식 core dist에서 Noori HWP/HWPX의 명시 배경 교체 저장 4개를 수집했습니다. 생성 실행은 저장 뒤 null-prototype 관측과 일반 객체의 비교에서 종료 1이므로 전체 typed 적용·undo/redo·재열기 통과로 세지 않습니다. 후속 독립 검사는 같은 저장 SHA를 읽으며 생성 실패를 소급해 성공으로 바꾸지 않습니다. 원본 대상은 세 번째 source 문단으로, HWP는 ParaShape8→BorderFill1, HWPX는 paraPr8→borderFill2였습니다. 두 원본의 면 색 원값은 `0xFFFFFFFF`/`#FFFFFFFF`, 보조색 원값은 `0xFF000000`/`#FF000000`이고, 이는 Noori의 별도 유채색 표 머리글 대응 검증이 아닙니다. 저장 대상은 각각 ParaShape45→BorderFill19, paraPr45→borderFill0으로 연결됐으며 형식 간 ID 동치를 가정하지 않았습니다.
+
+비대칭 단색 요청 RGB `#123456`·보조색 `#ABCDEF`에 대해 HWP 원시 COLORREF 바이트 `12 34 56 00`·`AB CD EF 00`, HWPX의 고정 Noori legacy tuple에서 XML `#563412`·`#efcdab`를 확인했습니다. HWPX 선형의 두 색은 `#563412` 다음 `#cdab98`이며 원본 version.xml은 두 저장물 모두 바이트 일치했습니다. 기대값은 제품 decoder가 아닌 고정 literal이고 여섯 자리 hex의 대소문자만 정규화합니다. 현대 form-002의 정확 version tuple은 표준 RGB로 별도 고정했으며 첫 문단 paraPr21→borderFill2의 면 색은 none입니다. 이 원문 추출을 현대 문서 Native 쓰기 성공이나 전체 버전 규칙으로 확대하지 않습니다.
+
+HWP 선형은 payload offset57/61에서 `12 34 56 00`·`98 AB CD 00`의 순서를 관측했지만 물리 필드 배치의 독립 근거는 아직 미완료입니다. 전체 비대상 CFB/XML 보존·undo 저장 원본 바이트 일치·실제 UI/Canvas·운영 배포도 이 검사로 완료하지 않습니다. 상세 원문·실패·핀은 `zig-out/verification/paragraph-background-raw-color-oracle-r1/REPORT.ko.md`와 `FINAL-PARTIAL-RECEIPT.json`에 보존합니다.
+<!-- paragraph-background-asymmetric-raw-d849:end -->
