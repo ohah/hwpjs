@@ -1,5 +1,17 @@
 # 글자 모양·문단 모양 대화상자
 
+<a id="paragraph-background-explicit-replacement-request"></a>
+
+## 원값 편집과 명시 배경 교체 요청
+
+원값 편집은 capability와 관측 writable를 모두 요구하며 unknown 배경의 일반 편집을 계속 차단합니다. 별도 “원값을 사용하지 않고 새 배경으로 교체 요청” 체크는 쓰기 권한을 발급하는 표시가 아니라, 완전한 입력으로 기존 원자 명령을 요청하겠다는 명시 동의입니다. ready·capability의 readable/writable·단일 원본 target·같은 session/revision을 요구하고, unknown은 기존 Native의 `UnknownBorderFillValue`/`UnknownSourceValue` 쌍만 요청 후보로 분류합니다. 다른 미지원·누락·불명확 관측을 임의 쓰기 가능 상태로 바꾸지 않습니다. 최종 선택·binding·원본 writer 허용 여부는 기존 core·Native가 실행 시 다시 검사합니다.
+
+교체 요청은 종류별 의미값을 모두 명시합니다. 단색은 면 색뿐 아니라 보조색도 명시합니다. `hatchColor` 생략은 기존 값 상속일 수 있으므로 색 하나를 전체 교체라고 부르지 않습니다. 무늬는 면/선 색과 종류, 선형은 두 색·각도·중심·단계 값을 모두 요구합니다. 빈 입력을 원본 기본값으로 만들지 않으며 RGB0을 보존합니다. 취소·새 capture·stale·pending·IME·dispose와 거부 시 오류/초안 유지의 기존 수명 경계를 따릅니다. private draft marker는 Native wire에 넣지 않고 기존 한 paragraph patch만 보냅니다.
+
+명시 d849와 현재 공식 core/dist만 사용하는 후보 API/port 실행에서 HWP/HWPX 각각 단색(보조색 명시)·선형 네 사례의 실제 수용, 첫 이력 단계1, undo 원관측 복원·redo·저장 후 fresh reopen의 값 일치를 확인했습니다. source alias 없이 같은 core의 메서드·command·catalog와 EditorState를 사용했습니다. 양 형식 readonly는 `ReadOnlyDocument`, 큐 앞 선택 변경은 `StaleFormattingSelection`으로 변경 없이 거부됐습니다. HWP의 기본 저장은 `LayoutReflowRequired`를 받은 뒤 이 controlled fixture 검증에서만 `allowStaleLayout:true`를 명시했습니다. 이 옵션이 일반 사용자 기본 동의라는 뜻은 아닙니다.
+
+후속 소스6 적용 후 정규 root111개(기존93+후속18), 제품5 엄격 타입과 lint5/format6이 통과했습니다. 공식 core dist의 실행 파일은 이 추가 소스 통합 전후 동일해서 e05b234d의 실제 Native 네 양성과 네 음성 결과를 재실행 없이 그 범위로 연결합니다. 이 네 저장물의 전체 독립 CFB/XML 의미 oracle, 실제 checkbox·DOM·Canvas E2E와 운영 배포는 미완료입니다. undo는 원관측 복원이며 원본 바이트 복원 증거와 구분합니다. 이전 테두리의 부분 저장 비교나 다른 엔진 세대의 결과를 새 교체 요청의 독립 저장 완료로 승계하지 않습니다. 이 원자 요청 경로에 새 Native 기능이나 geometry 권한을 추가하지 않습니다.
+
 <a id="paragraph-resource-ui-source-integration"></a>
 
 ## 문단 테두리·배경 상세 UI의 소스 통합 범위
@@ -10,7 +22,7 @@ API 부재·atomic capability 거부는 기존 fallback으로 남습니다. 구 
 
 현재 공개 d849의 Noori 양 형식에서 본문 p0·p1의 테두리/배경은 unknown·writable:false였고, 관측한 앞쪽 표 셀 문단의 테두리만 known·writable:true였습니다. 이 대표 문단의 명시 테두리 적용·한 undo/redo·저장·fresh reopen은 직접 Node/Native로 확인했습니다. HWP 저장은 기본 `LayoutReflowRequired`를 받은 뒤 controlled fixture 검증에서만 명시 stale 허용을 사용했습니다. 부분 CFB/XML 비교를 모든 필드·조판의 독립 저장 보장으로 확대하지 않습니다.
 
-같은 원본의 unknown 배경에 완전 명시 단색 RGB0·선형 intent를 직접 요청한 별도 네 사례는 Native에서 성공했습니다. 따라서 unknown 조회를 Native 기능 전체 미지원으로 해석하지 않습니다. 그러나 이 성공은 비활성 UI에서 실제로 교체한 증거가 아니며 모든 unknown resource의 교체 권한도 아닙니다. 부분 편집과 별도 전체 교체 요청 UX는 후속 계약입니다. 특히 solid의 hatchColor 생략은 기존 값을 보존할 수 있어 색 하나를 전체 교체라고 부르지 않습니다.
+같은 원본의 unknown 배경에 단색 RGB0·선형 intent를 직접 요청한 별도 네 사례는 Native에서 성공했습니다. 따라서 unknown 조회를 Native 기능 전체 미지원으로 해석하지 않습니다. 그러나 이 성공은 비활성 UI에서 실제로 교체한 증거가 아니며 모든 unknown resource의 교체 권한도 아닙니다. 부분 편집과 별도 전체 교체 요청은 위의 명시 교체 계약으로 구분합니다. 특히 solid의 hatchColor 생략은 기존 값을 보존할 수 있어 색 하나를 전체 교체라고 부르지 않습니다.
 
 [정규 집중 검사](development-commands.md#paragraph-resource-ui-regression)는 실제 root에서 core dist를 사용한 신규35·기존58의 고유93개와 타입·품질 검사로 확인했습니다. 이는 구 SDK의 전체 기능이나 실제 모달·Canvas 성공을 뜻하지 않습니다. 모달의 실제 선택·적용·취소·재열기·Tab/포커스와 Canvas 표시, 공식 SDK 소비·운영 배포 완료는 이 소스 통합만으로 주장하지 않습니다. 아래 초기 부분창·과거 엔진 기록은 각 당시 범위이며 이번 상세 UI의 전체 사용자 E2E 성공으로 승계하지 않습니다.
 

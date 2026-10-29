@@ -386,7 +386,15 @@ async function cataloglessModules() {
     readFileSync(new URL('../src/paragraph-resource-fields.ts', import.meta.url), 'utf8'),
   );
   expect(fields.includes('./paragraph-resource-input.ts')).toBe(true);
-  const fieldsURL = esmURL(fields.replace('./paragraph-resource-input.ts', inputURL));
+  const replacement = transpiler.transformSync(
+    readFileSync(new URL('../src/paragraph-background-replacement.ts', import.meta.url), 'utf8'),
+  );
+  const replacementURL = esmURL(replacement.replace('./paragraph-resource-input.ts', inputURL));
+  const fieldsURL = esmURL(
+    fields
+      .replace('./paragraph-resource-input.ts', inputURL)
+      .replace('./paragraph-background-replacement.ts', replacementURL),
+  );
   return { input: await import(inputURL), fields: await import(fieldsURL) };
 }
 test('catalog 없는 실제 ESM export 경계에서도 helper가 로드되고 목록은 비어 있음', async () => {

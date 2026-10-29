@@ -36,3 +36,8 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.hwp-paragraph-resource-fields input[type='checkbox'] {
+  width: auto;
+  justify-self: start;
+}

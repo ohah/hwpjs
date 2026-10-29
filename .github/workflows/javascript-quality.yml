@@ -38,6 +38,7 @@ jobs:
           set -- \
             ./apps/demo/tests/paragraph-resource-input.test.ts \
             ./apps/demo/tests/paragraph-resource-view.test.ts \
+            ./apps/demo/tests/paragraph-background-replacement.test.ts \
             ./apps/demo/tests/paragraph-shape-fallback.test.ts \
             ./apps/demo/tests/paragraph-shape-number.test.ts \
             ./apps/demo/tests/paragraph-shape-tool.test.ts \

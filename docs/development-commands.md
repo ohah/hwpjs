@@ -27,12 +27,13 @@ test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
 mise exec -- bun ./tools/build-packages.mjs --package=core --web --wasm="$(pwd)/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
 ```
 
-검사는 전용 UI 두 파일과 기존 문단 다섯 파일이 모두 있는지 먼저 확인한 뒤 저장소 루트에서 명시 실행합니다. `--tsconfig-override`나 후보 폴더의 자동 paths로 오래된 dist 오류를 숨기지 않습니다.
+검사는 전용 UI 세 파일과 기존 문단 다섯 파일이 모두 있는지 먼저 확인한 뒤 저장소 루트에서 명시 실행합니다. `--tsconfig-override`나 후보 폴더의 자동 paths로 오래된 dist 오류를 숨기지 않습니다.
 
 ```sh
 set -- \
   ./apps/demo/tests/paragraph-resource-input.test.ts \
   ./apps/demo/tests/paragraph-resource-view.test.ts \
+  ./apps/demo/tests/paragraph-background-replacement.test.ts \
   ./apps/demo/tests/paragraph-shape-fallback.test.ts \
   ./apps/demo/tests/paragraph-shape-number.test.ts \
   ./apps/demo/tests/paragraph-shape-tool.test.ts \
@@ -42,7 +43,7 @@ for path in "$@"; do test -f "$path" || exit 1; done
 mise exec -- bun test --no-install "$@"
 ```
 
-2026-10-30 실제 root 검사는 공식 core 갱신과 구 SDK·합성 namespace catalog 호환성 수정 뒤 신규 UI35개와 기존 문단58개의 고유 합계93pass·0fail·0skip(314expect)이었습니다. 실제 root의 설치 core dist 소비와 paths 추가 없는 제품5 엄격 타입 검사, 선택 lint6·format7도 종료0이었습니다. 후보 source-alias 검증은 별도 원자료로 보존하며 현재 실제 root 결과를 대신하지 않습니다. 이는 메인의 실제 적용 후 결과이며, 후보의 자동 source alias 32pass와 후속 source 기준34pass는 별도 원자료입니다. 정규 신규35개에는 catalog가 없는 모듈 경계 두 사례와 브라우저 번들의 합성 namespace 회귀 한 사례가 포함됩니다. 실제 이전 dist로 실행한 별도 view·도구 두 사례는 이 93개에 더하지 않습니다. 이 93개는 모형 DOM/port·단위 및 실제 view 모듈의 검사이지 Native·실제 브라우저·Canvas 검사가 아닙니다. [지원·unknown·교체 요청 경계](formatting-dialogs.md#paragraph-resource-ui-source-integration)를 따릅니다.
+2026-10-30 명시한 8개 파일의 실제 root 검사는 111pass·0fail·0skip이었습니다. 상세 UI35개·명시 교체 요청18개·기존 문단58개의 고유 집합이며, 초기 root93개에 같은 검사를 중복 합산하지 않습니다. 공식 core dist를 소비하고 paths를 추가하지 않은 엄격 타입 검사와 선택 lint5·format6도 종료0이었습니다. 후보 source-alias 결과와 실제 이전 SDK의 별도 사례는 이 합계에 더하지 않습니다. 실제 브라우저·Canvas 검사는 별도이며, [엔진 저장 조건과 남은 검증](formatting-dialogs.md#paragraph-background-explicit-replacement-request)을 따릅니다.
 
 <a id="javascript-quality-commands"></a>
 

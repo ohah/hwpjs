@@ -1,3 +1,9 @@
+import {
+  backgroundReplacementAvailability,
+  backgroundReplacementWireValue,
+  isBackgroundReplacementIntent,
+  type BackgroundReplacementIntent,
+} from './paragraph-background-replacement.ts';
 import { invalidResourceDraft, type ParagraphResourceValue } from './paragraph-resource-input.ts';
 import type {
   HeadlessEditor,
@@ -31,7 +37,12 @@ export const paragraphShapeFields = Object.freeze([
   'paragraph.background',
 ]);
 export type ParagraphShapeState = ReturnType<HeadlessEditor['getEditorState']>;
-export type ParagraphShapeValue = string | number | boolean | ParagraphResourceValue;
+export type ParagraphShapeValue =
+  | string
+  | number
+  | boolean
+  | ParagraphResourceValue
+  | BackgroundReplacementIntent;
 export interface ParagraphShapeApi {
   readonly command: EditorCommand<ApplyFormattingPatchPayload>;
   target(state: ParagraphShapeState): SelectionTarget | null;
@@ -92,10 +103,16 @@ export function createParagraphShapePort(api: ParagraphShapeApi) {
         const declared = captured.capabilities.atomic
           ? captured.capabilities.fields[field]
           : undefined;
+        const replacement = isBackgroundReplacementIntent(value);
+        if (replacement) {
+          if (field !== 'paragraph.background') throw Error('InvalidBackgroundReplacementField');
+          const request = backgroundReplacementAvailability(captured);
+          if (!request.enabled) throw Error(request.reason ?? 'BackgroundReplacementUnavailable');
+        }
         if (
           !paragraphShapeFields.includes(field) ||
           !observed ||
-          !observed.writable ||
+          (!observed.writable && !replacement) ||
           !declared?.writable
         )
           throw Error(
@@ -132,7 +149,10 @@ export function createParagraphShapePort(api: ParagraphShapeApi) {
               invalidResourceDraft(value) ? value.reason : 'InvalidParagraphResourceDraft',
             );
           if (field === 'paragraph.border') paragraph.border = value as BorderPatch;
-          else paragraph.background = value as BackgroundPatch;
+          else
+            paragraph.background = replacement
+              ? backgroundReplacementWireValue(value as BackgroundReplacementIntent)
+              : (value as BackgroundPatch);
         } else if (!field.startsWith('paragraph.spacing.')) {
           // 상세 테두리·배경은 다음 편집 surface에서 공식 intent로 연결한다.
           throw Error('ParagraphFieldUiNotConnected');

@@ -1,3 +1,7 @@
+import {
+  backgroundReplacementAvailability,
+  completeBackgroundReplacementDraft,
+} from './paragraph-background-replacement.ts';
 import type { ParagraphShapePresentation } from './paragraph-shape-controller.ts';
 import type { ParagraphShapeValue } from './paragraph-shape-port.ts';
 import {
@@ -120,7 +124,13 @@ export function createParagraphResourceFields(
     select(resourceHatches.map((v) => [v, v] as const)),
     'paragraph.background',
   );
-  add(background, 'background-hatch-color', '무늬 선 색', input(), 'paragraph.background');
+  add(
+    background,
+    'background-hatch-color',
+    '무늬 선·단색 교체 보조색',
+    input(),
+    'paragraph.background',
+  );
   const linear = doc.createElement('div');
   linear.className = 'hwp-paragraph-resource-linear';
   add(linear, 'background-linear-end', '끝 색', input(), 'paragraph.background');
@@ -148,6 +158,16 @@ export function createParagraphResourceFields(
     notes.set(name, note);
     parent.append(note);
   }
+  const replacementToggle = doc.createElement('input');
+  replacementToggle.type = 'checkbox';
+  replacementToggle.checked = false;
+  add(
+    background,
+    'background-replacement-request',
+    '원값을 사용하지 않고 새 배경으로 교체 요청',
+    replacementToggle,
+    'paragraph.background',
+  );
   element.append(border, background);
   function emit(field: string) {
     if (field === 'paragraph.border') {
@@ -159,6 +179,24 @@ export function createParagraphResourceFields(
           color: controls.get('border-' + edge + '-color')!.value,
         };
       change(field, paragraphBorderDraft(raw));
+    } else if (replacementToggle.checked) {
+      change(
+        field,
+        completeBackgroundReplacementDraft({
+          kind: controls.get('background-kind')!.value,
+          faceColor: controls.get('background-color')!.value,
+          hatchColor: controls.get('background-hatch-color')!.value,
+          hatchStyle: controls.get('background-hatch-style')!.value,
+          linear: {
+            endColor: controls.get('background-linear-end')!.value,
+            angle: controls.get('background-linear-angle')!.value,
+            centerX: controls.get('background-linear-centerX')!.value,
+            centerY: controls.get('background-linear-centerY')!.value,
+            step: controls.get('background-linear-step')!.value,
+            stepCenter: controls.get('background-linear-stepCenter')!.value,
+          },
+        }),
+      );
     } else
       change(
         field,
@@ -185,11 +223,14 @@ export function createParagraphResourceFields(
     update(model: ParagraphShapePresentation) {
       if (disposed) return;
       if (captured !== model.captured) {
+        replacementToggle.checked = false;
         for (const node of controls.values()) node.value = '';
         captured = model.captured;
       }
       disabled =
         model.pending || model.loading || model.stale || model.refreshRequired || !captured;
+      const request = backgroundReplacementAvailability(captured);
+      const requestEnabled = !disabled && resourceCatalogAvailable.background && request.enabled;
       for (const field of ['paragraph.border', 'paragraph.background']) {
         const observation = captured?.result.observations.aggregate[field];
         const declared = captured?.capabilities.atomic
@@ -207,9 +248,14 @@ export function createParagraphResourceFields(
           unknownBackground ||
           observation?.writable !== true ||
           declared?.writable !== true;
-        for (const [key, node] of controls)
-          if (key.startsWith(field.endsWith('border') ? 'border-' : 'background-'))
-            node.disabled = blocked;
+        for (const [key, node] of controls) {
+          if (!key.startsWith(field.endsWith('border') ? 'border-' : 'background-')) continue;
+          node.disabled =
+            key === 'background-replacement-request'
+              ? !requestEnabled
+              : blocked &&
+                !(field === 'paragraph.background' && replacementToggle.checked && requestEnabled);
+        }
         const reason = blocked
           ? catalogMissing
             ? '현재 버전에서는 상세 테두리·배경을 편집할 수 없습니다.'
@@ -228,7 +274,9 @@ export function createParagraphResourceFields(
               : '알 수 없음') +
           (reason ? ' · ' + reason : '') +
           (field === 'paragraph.background'
-            ? ' · 빈 입력에 기본값을 채우지 않습니다. 표시 지원과 저장 지원은 별도입니다.'
+            ? replacementToggle.checked
+              ? ' · 새 배경으로 교체 요청합니다. 거부되면 입력은 유지됩니다.'
+              : ' · 빈 입력에 기본값을 채우지 않습니다. 표시 지원과 저장 지원은 별도입니다.'
             : '');
       }
     },
