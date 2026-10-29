@@ -24,7 +24,10 @@ jobs:
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs
       - name: Test published demo runtime asset paths
-        run: bun test ./apps/demo/tests/runtime-assets.test.ts ./tests/hwpx/pages-runtime-asset-paths.test.mjs
+        run: |
+          test -f ./apps/demo/tests/runtime-assets.test.ts || exit 1
+          test -f ./tests/hwpx/pages-runtime-asset-paths.test.mjs || exit 1
+          bun test ./apps/demo/tests/runtime-assets.test.ts ./tests/hwpx/pages-runtime-asset-paths.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts
