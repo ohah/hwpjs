@@ -85,3 +85,11 @@
 새 main artifact에서 사본 API/Worker/Canvas·보정·읽기 전용·숫자 계산·암호 fixture·기존 ABI·fixture 제공 집중 묶음 58/58·실패·skip 0을 확인했다. fixture 제공 검사는 경로 이탈을 거부하므로 격리 환경의 legacy/reference 심볼릭 링크에서는 404가 발생했다. 이 설정 오류를 제품 파서 오류로 집계하지 않고 원본을 변경하지 않는 실제 fixture 복사본에서 정상 제공·경로 이탈 거부를 재검사했다.
 
 같은 main native 기준선 `c8c6e8ab17e1e2426e01c1ec70293912c04a86dfcba1aa572df5a420479ff9c5`와 새 artifact의 975경로 읽기 비교는 전체 JSON 944개 동일·같은 거부 5개·HWP3 제외 26개로 종료 0이다. 이 비교와 export 호환성은 기본 artifact 교체나 전체 native/HWPX 회귀 완료의 증거가 아니며, 기본 WASM·외부 데모는 아직 교체하지 않았다.
+
+## 2026-10-30 기존 바이너리의 명시적 단일 회귀
+
+`83e60400` 기반의 기존 전체 시험 바이너리를 다시 컴파일하지 않고, 표준 시험 메타데이터에서 `available section copy actual fixtures retain counts input and normalized undo redo baseline` 이름을 유일하게 선택했다. 바이너리 SHA256은 `d851b3f89d0745f16def85e6cab87d56919eb67de04be6c994b4ee73add02396`이며, 이 바이너리의 5,043개 목록 중 index 1069 하나만 실행해 1 통과·실패/skip/log 오류/누수 0으로 종료했다. index는 해당 바이너리에 한정되며 다른 빌드에 재사용하는 식별자가 아니다.
+
+`section-count-fixtures.json`에 고정된 세 입력만 새 읽기 전용 작업 폴더에 준비했다(합계 80,896바이트). 선언/저장 구역 수 2/1·11/2·4/1, 문단 수 118·23·2,614와 구역별 편집·정규화 기준의 undo/redo·원본 readback assertions가 실제로 통과했다. 세 원본과 사본의 지문을 전후 대조했고, 자식 파일 쓰기를 차단했다. 이력 복원 기준은 위 계약대로 정규화된 사본이며, 원래 구역 수 불일치 원문으로 undo했다고 해석하지 않는다.
+
+별도 과거 전체 실행의 결과는 5,057/5,059 통과·2 skip 기록으로 그대로 보존한다. 이번 한 시험의 후속 통과를 더해 전체 통과 수나 skip 수를 수정하지 않았다. 현재 HEAD의 전체 Native/제품 ReleaseSafe, 독립 CFB writer 비교, 실제 브라우저, 새 차트 `tickLblPos` 후보의 검증 결과로도 승계하지 않는다.
