@@ -3299,7 +3299,8 @@ export function createCanvasEditor({
             target = paragraphTarget(restored.focus);
             committed = renderer.paragraph(target).text;
             input.value = committed;
-            renderer.preview(null);
+            if (renderer.clearDraft) renderer.clearDraft();
+            else renderer.preview(null);
             setSelection(restored.anchor, restored.focus);
             reveal();
             report('실행 취소/다시 실행 적용 · 재조판 필요');
@@ -3309,7 +3310,8 @@ export function createCanvasEditor({
             // 복원 권한이 없으면 대기 입력을 보존하며 임의 위치로 보내지 않습니다.
             target = anchor = focus = null;
             input.disabled = true;
-            renderer.preview(null);
+            if (renderer.clearDraft) renderer.clearDraft();
+            else renderer.preview(null);
             paint();
             report('이력은 적용됐지만 복원 위치를 확인할 수 없어 대기 입력을 보존했습니다.');
             return;
@@ -3334,7 +3336,8 @@ export function createCanvasEditor({
             : null;
           committed = paragraph.text;
           input.value = committed;
-          renderer.preview(null);
+          if (renderer.clearDraft) renderer.clearDraft();
+          else renderer.preview(null);
           if (multi && renderer.selectionRanges?.(multi.anchor, multi.focus))
             setSelection(multi.anchor, multi.focus);
           else

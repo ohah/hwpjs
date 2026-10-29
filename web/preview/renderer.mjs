@@ -1903,6 +1903,14 @@ export function createRenderer(
       draft = value;
       reflow();
     },
+    clearDraft() {
+      if (closed) return;
+      // 새 모델의 투영이 이미 확정됐으면 초안 제거만으로 다시 계산하지 않습니다.
+      // 외부 mutable 입력을 다시 읽는 preview(null)의 기존 계약은 유지합니다.
+      if (draft === null && !projectionDeferred) return;
+      draft = null;
+      reflow();
+    },
     select(value) {
       if (closed) return;
       interaction = value;

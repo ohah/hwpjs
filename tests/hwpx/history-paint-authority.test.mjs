@@ -102,7 +102,12 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
     frameCurrent = false;
   const requests = [],
     waiting = [];
+  let clearDraftCalls = 0;
   const renderer = {
+    clearDraft() {
+      clearDraftCalls++;
+      this.preview(null);
+    },
     layout: () => layout,
     paragraph: (p) => (p?.section === 0 && p?.paragraph === 0 ? row : null),
     onGeometry(fn) {
@@ -236,6 +241,7 @@ function fixture(t, initial = '국민' + 'a '.repeat(263) + '본문', unit = 528
   };
   return {
     direct,
+    clearDraftCount: () => clearDraftCalls,
     setCommittedCallback(fn) {
       committedCallback = fn;
     },
@@ -704,4 +710,90 @@ test('기존 history 포트의 Native ACK 전 R도 조용히 버리지 않는다
   await tick();
   assert.equal(f.requests.length, 3);
   assert.equal(f.requests[2].startUnit, 528);
+});
+
+// 실제 controller·queue·pump를 사용하지만 DOM과 Native ACK는 모형입니다.
+test('64개 대기 입력 뒤 누른 undo8과 두 칸 이동 뒤 R의 접수 순서를 보존한다', async (t) => {
+  const f = fixture(t, 'AB', 1);
+  const text = '0123456789'.repeat(7).slice(0, 64);
+  for (const c of text) f.type(c);
+  assert.equal(f.requests.length, 1);
+  for (let i = 0; i < 8; i++) {
+    const event = f.fire('keydown', { key: 'z', code: 'KeyZ', metaKey: true, repeat: i > 0 });
+    assert.equal(event.defaultPrevented, true);
+  }
+  f.fire('keyup', { key: 'z', code: 'KeyZ', metaKey: false });
+  for (let i = 0; i < 2; i++) f.fire('keydown', { key: 'ArrowLeft', code: 'ArrowLeft' });
+  assert.equal(f.type('R').defaultPrevented, true);
+  for (let i = 0; i < 64; i++) {
+    assert.equal(f.waiting[0]?.kind, 'splice');
+    f.ack();
+    f.frame();
+    await tick();
+  }
+  for (let i = 0; i < 8; i++) {
+    assert.equal(f.waiting[0]?.kind, 'undo');
+    const count = f.requests.length;
+    f.ack();
+    await tick();
+    assert.equal(f.requests.length, count);
+    f.frame();
+    await tick();
+  }
+  const base = 'A' + text.slice(0, 56) + 'B';
+  assert.equal(f.waiting[0]?.kind, 'splice');
+  assert.equal(f.waiting[0]?.startUnit, 55);
+  assert.equal(f.waiting[0]?.text, 'R');
+  f.ack();
+  f.frame();
+  await tick();
+  assert.equal(f.text, base.slice(0, 55) + 'R' + base.slice(55));
+  assert.equal(f.direct.requestHistory('redo'), false);
+  assert.equal(f.waiting.length, 0);
+});
+
+test('대기 중 undo 접수의 표시 상태와 Native barrier 상태를 구분해 관측한다', async (t) => {
+  const f = fixture(t, 'AB', 1);
+  for (const c of '0123456789'.repeat(4)) f.type(c);
+  assert(f.direct.requestHistory('undo'));
+  console.log(
+    JSON.stringify({
+      scope: '실 controller·모형 DOM/ACK',
+      phase: 'history-queued-before-native',
+      requests: f.requests.length,
+      currentKind: f.waiting[0]?.kind,
+      authority: f.canvas.dataset.selectionAuthority ?? null,
+      historyPaintPending: f.interaction.historyPending,
+      ariaBusy: f.input.attributes['aria-busy'],
+    }),
+  );
+  assert.equal(f.requests.length, 1);
+  assert.equal(f.waiting[0].kind, 'splice');
+  assert.equal(f.interaction.historyPending, false);
+});
+
+test('실 controller는 64개 undo ACK에서 초안 제거 전용 경로를 사용한다', async (t) => {
+  const h = fixture(t, 'AB', 1);
+  for (let n = 0; n < 64; n++) h.type('x');
+  for (let n = 0; n < 64; n++) {
+    h.ack();
+    h.frame();
+    await tick();
+  }
+  const before = h.clearDraftCount();
+  for (let n = 0; n < 64; n++) {
+    h.fire('keydown', { key: 'z', metaKey: true, repeat: n > 0 });
+    await tick();
+    h.ack();
+    h.frame();
+    await tick();
+  }
+  assert.equal(h.clearDraftCount() - before, 64);
+  assert.equal(h.text, 'AB');
+  console.log(
+    JSON.stringify({
+      scope: '실 controller·모형 Native/DOM',
+      clearDraftCalls: h.clearDraftCount() - before,
+    }),
+  );
 });
