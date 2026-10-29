@@ -1,5 +1,20 @@
 # 개발·검증 명령
 
+## 관측 소유권·각주 저장 집중 검사
+
+저장소 루트에서 두 진입점을 명시합니다. `HWPJS_TEST_WASM`에는 검증할 생성 WASM의 절대 경로를 지정합니다.
+
+```sh
+test -f ./packages/core/tests/state/owned.test.ts || exit 1
+test -f ./tests/hwp5/plain-footnote-saved-oracle.test.mjs || exit 1
+HWPJS_TEST_WASM=/absolute/path/to/current-build/hwpjs.wasm \
+  mise exec -- node --test ./packages/core/tests/state/owned.test.ts ./tests/hwp5/plain-footnote-saved-oracle.test.mjs
+```
+
+각주 검사는 기존 `footnote-endnote.hwp` 한 개를 사용합니다. fixture가 없으면 관련 검사는 skip이며, fixture가 있지만 WASM 환경변수가 없으면 Native 검사 한 개만 skip입니다. 명시한 WASM 경로가 잘못되면 실패합니다. 각주별 긴 문자열을 한 번씩 삽입하는 총 두 편집의 전체 section·비대상 stream·컨테이너 metadata와 undo/redo 바이트를 독립 oracle로 비교하며, 저장 정책은 `allowStaleLayout:true`입니다. 실제 Canvas 배치·입력 속도 검사는 별도입니다.
+
+2026-10-30 실제 작업 트리에서 d849 엔진을 명시한 위 두 진입점은 12pass·0fail·0skip이었습니다. 새로운 Native 컴파일이나 미배포 각주 배치 후보의 검증 결과로 합산하지 않습니다.
+
 <a id="javascript-quality-commands"></a>
 
 ## JavaScript 품질 검사
