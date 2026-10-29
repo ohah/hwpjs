@@ -1,4 +1,4 @@
-import { paginatePlainFootnoteContinuations } from './plain-footnote-continuation.mjs';
+import { paginateMeasuredPlainFootnoteContinuations } from './plain-footnote-continuation.mjs';
 import { measureNoteBodies } from './note-body-measurement.mjs';
 import { contentNotePagePolicy } from './content-note-page-policy.mjs';
 import { noteSeparatorGeometry } from './note-separator-geometry.mjs';
@@ -163,7 +163,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   );
   const continuation =
     needsContinuation && content.format === 'hwp5' && !hasBodyTables
-      ? paginatePlainFootnoteContinuations(
+      ? paginateMeasuredPlainFootnoteContinuations(
           rows,
           setting,
           pageFlows,

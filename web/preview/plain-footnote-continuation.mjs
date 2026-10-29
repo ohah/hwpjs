@@ -1,3 +1,4 @@
+import { createFootnoteLockAudit } from './footnote-lock-audit.mjs';
 import { stableSafeIntegerOrder } from './stable-safe-integer-order.mjs';
 import { placeFootnoteArea } from './footnote-area-placement.mjs';
 import { columnReferenceBoxes } from './column-reference-boxes.mjs';
@@ -15,7 +16,42 @@ export function paginatePlainFootnoteContinuations(
   notes,
   policy,
   separatorHeight,
-  { maxRows = 20000, maxPages = 2000, maxPasses = 4000 } = {},
+  options = {},
+) {
+  return paginateContinuations(
+    rows,
+    setting,
+    flows,
+    notes,
+    policy,
+    separatorHeight,
+    options,
+    false,
+  );
+}
+
+// 측정기가 새로 만든 note의 잠금 좌표만 값으로 소유합니다. raw 진입점은 기존 재검사를 유지합니다.
+export function paginateMeasuredPlainFootnoteContinuations(
+  rows,
+  setting,
+  flows,
+  notes,
+  policy,
+  separatorHeight,
+  options = {},
+) {
+  return paginateContinuations(rows, setting, flows, notes, policy, separatorHeight, options, true);
+}
+
+function paginateContinuations(
+  rows,
+  setting,
+  flows,
+  notes,
+  policy,
+  separatorHeight,
+  { maxRows = 20000, maxPages = 2000, maxPasses = 4000 },
+  measured,
 ) {
   const fail = (error) => ({ state: 'unavailable', error });
   if (![maxRows, maxPages, maxPasses].every((n) => Number.isSafeInteger(n) && n > 0))
@@ -147,20 +183,26 @@ export function paginatePlainFootnoteContinuations(
     (_note, index) => sourceIndicesByGroup[index],
   );
   const anchorKeys = new Set(ordered.map((note) => rowKey(rows[anchorIndex.get(note)])));
+  const audit = measured ? createFootnoteLockAudit((counters.lockAudit = {})) : null;
   let physicalIndex = new Map();
   const indexPhysical = (page) => {
     physicalIndex = new Map();
+    audit?.beginScan();
     counters.physicalBuilds++;
     for (const row of page.rows) {
       counters.physicalRowVisits++;
       if (row.kind !== 'text') continue;
       const key = rowKey(row);
-      if (anchorKeys.has(key)) physicalIndex.set(key, physicalIndex.has(key) ? null : row);
+      if (anchorKeys.has(key)) {
+        physicalIndex.set(key, physicalIndex.has(key) ? null : row);
+        audit?.observeTextRow(key, row);
+      }
     }
+    audit?.endScan();
   };
   const allocations = new Map(),
     minimum = new Map(),
-    locked = new Map();
+    locked = measured ? null : new Map();
   let passes = 0,
     last;
   const reserved = (ordinal) => {
@@ -202,16 +244,18 @@ export function paginatePlainFootnoteContinuations(
   };
   let page = paginate();
   if (page.state !== 'paginated' || page.limited) return page;
-  const physicalAnchor = (note) => {
-    const row = physicalIndex.get(rowKey(rows[anchorIndex.get(note)]));
+  const physicalAnchor = (note, key = rowKey(rows[anchorIndex.get(note)])) => {
+    const row = physicalIndex.get(key);
     return footnoteTextReference(row, note) ? row : null;
   };
   for (const note of ordered) {
-    const anchor = physicalAnchor(note);
+    const sourceKey = rowKey(rows[anchorIndex.get(note)]);
+    const anchor = physicalAnchor(note, sourceKey);
     if (!anchor) return fail('MissingFootnoteContinuationReference');
     const required = pageRowRequiredHeight(anchor, anchor.keepNextHeight ?? 0);
     if (required === null) return fail('UnsupportedFootnoteContinuationAnchor');
-    locked.set(note, { ordinal: anchor.pageOrdinal, y: anchor.y });
+    if (audit) audit.register(sourceKey, note, anchor);
+    else locked.set(note, { ordinal: anchor.pageOrdinal, y: anchor.y });
     let ordinal = anchor.pageOrdinal,
       start = 0;
     while (start < note.rows.length) {
@@ -298,10 +342,14 @@ export function paginatePlainFootnoteContinuations(
     }
     page = paginate();
     if (page.state !== 'paginated' || page.limited) return page;
-    for (const [prior, position] of locked) {
-      const current = physicalAnchor(prior);
-      if (!current || current.pageOrdinal !== position.ordinal || current.y !== position.y)
-        return fail('FootnoteContinuationAnchorMoved');
+    if (audit) {
+      if (!audit.valid()) return fail('FootnoteContinuationAnchorMoved');
+    } else {
+      for (const [prior, position] of locked) {
+        const current = physicalAnchor(prior);
+        if (!current || current.pageOrdinal !== position.ordinal || current.y !== position.y)
+          return fail('FootnoteContinuationAnchorMoved');
+      }
     }
   }
   const lastPage = Math.max(...allocations.keys());

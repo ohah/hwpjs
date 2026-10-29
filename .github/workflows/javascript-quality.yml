@@ -50,7 +50,8 @@ jobs:
         run: |
           test -f ./tests/hwp5/plain-footnote-continuation.test.mjs || exit 1
           test -f ./tests/hwp5/plain-footnote-stable-order.test.mjs || exit 1
-          bun test --no-install ./tests/hwp5/plain-footnote-continuation.test.mjs ./tests/hwp5/plain-footnote-stable-order.test.mjs
+          test -f ./tests/hwp5/plain-footnote-lock-audit.test.mjs || exit 1
+          bun test --no-install ./tests/hwp5/plain-footnote-continuation.test.mjs ./tests/hwp5/plain-footnote-stable-order.test.mjs ./tests/hwp5/plain-footnote-lock-audit.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts
