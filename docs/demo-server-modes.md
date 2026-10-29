@@ -1,6 +1,6 @@
 # 데모 서버의 dist·검증 bundle 모드
 
-기준 소스는 `47849ae2`입니다. 실행 명령은 [개발·검증 명령](development-commands.md#데모-서버-실행-모드)이 소유하고, 이 문서는 선택·검증·라우팅·자산 수명만 설명합니다. 서버를 실행하거나 정적 자산을 게시했다는 사실을 문서별 전체 편집·조판 지원으로 확대하지 않습니다.
+최초 기준 소스는 `47849ae2`입니다. 실행 명령은 [개발·검증 명령](development-commands.md#데모-서버-실행-모드)이 소유하고, 이 문서는 선택·검증·라우팅·자산 수명만 설명합니다. 서버를 실행하거나 정적 자산을 게시했다는 사실을 문서별 전체 편집·조판 지원으로 확대하지 않습니다.
 
 ## 모드 선택
 
@@ -36,6 +36,8 @@ GitHub Pages에는 위 서버 별칭이 없습니다. 배포된 `assets/` 모듈
 
 2026-10-30 공개 사이트에서는 앱이 `/hwpjs/hwpjs.wasm`을 요청해 404로 문서 열기가 실패했습니다. 파일은 `/hwpjs/editor/hwpjs/hwpjs.wasm`에 존재했지만 로컬 서버의 별칭 때문에 배포 검사에서 누락됐습니다. 공개 JS 검증은 이제 해당 Worker·WASM의 루트 리터럴을 거부합니다. 파일의 manifest·SHA 일치만으로 실제 요청 경로가 옳다고 판단하지 않으며, 별칭 없는 정적 경로에서 두 런타임 파일을 불러와 HWP5·HWPX 예제를 실제로 여는 검사를 별도로 수행합니다.
 
+수정 소스 `295db8e2`의 공개 배포 후 실제 Chromium에서 `noori.hwp`와 `noori.hwpx`를 순서대로 열었습니다. 두 문서의 제목·Canvas 행·글꼴 준비와 그리기 대기 해제를 확인했고, 잘못된 루트의 런타임 요청은 없었습니다. WASM의 실제 요청은 200이었으며 Worker는 요청 URL 관측과 별도 HTTP 200·바이트 해시 대조를 구분해 확인했습니다. 공개 manifest는 `5db3fa393f512adbbbb48ff9dc01177346dce2e40fb68d4d8c5c233a10fee890`입니다. 이 검증은 문서 열기와 경로 복구 범위이며 입력·취소·저장·전체 조판·속도 검증을 포함하지 않습니다. 기존 guardian의 명령 순서 실패와 별도 Updater 잔류 기록은 보존했고, 최종 검사 브라우저 종료 및 잔류 PID의 후속 자연 종료를 각각 확인했습니다.
+
 빌드된 문서 사이트의 `/docs/` 응답은 `tools/demo-documentation-response.mjs`가 소유하며 `apps/docs/doc_build`를 사용합니다. fixture catalog/원본 응답은 기존 `demo-fixture-catalog-response.mjs`·`demo-fixture-response.mjs`가 허용 목록과 정확한 경로 검증을 계속 소유합니다. private bundle에서 catalog 가용성을 관측하거나 bundle에 없는 허용 fixture를 제공할 때도 이 handler들을 재사용합니다.
 
 공개 bundle에 fixture2개가 있다는 사실과 개발 서버의 기존 runtime fixture route는 서로 다른 경계입니다. `--private-fixtures`는 기존 route 전체의 인증 스위치가 아닙니다. 서버는 임의 요청 경로를 로컬 파일 경로로 읽어 주지 않습니다. GET/HEAD만 처리하고 WASM 압축·MIME·HEAD body 정책은 기존 공통 경로를 사용합니다.
@@ -48,7 +50,7 @@ GitHub Pages에는 위 서버 별칭이 없습니다. 배포된 `assets/` 모듈
 
 기존 fixture handler의 요청 시 파일 가용성/바이트 처리는 위 정적 자산 snapshot과 구분합니다. 전체 runtime 파일이 불변 snapshot이라고 쓰거나 이 동작을 원본·UI 자산의 자동 동기화 완료로 설명하지 않습니다.
 
-## 현재 검증 경계
+## 2026-10-26 검증 기록
 
 2026-10-26 후속 배포 소스는 `5f0ff9a4`이며 공개 bundle manifest SHA256은 `735d3c3d01b90ecb8cbd1342eda279da020d3ce80be8854336ef6f9fee3ce429`입니다. 공개 HTTPS의 자산 28개를 SHA와 대조했고, 별도 운영 경로의 Noori HWP 입력·undo/redo·다운로드·재열기 표본이 통과했습니다. HTTP 바이트 검증과 브라우저 편집 표본은 별도 근거이며, 아래 최초 운영 검증 이력이나 전체 fixture 성공으로 합산하지 않습니다. Native V1의 16회 undo 한도는 그대로이며, 집중 테스트 27건을 통과한 이력 후보는 아직 배포되지 않았습니다. 입력 측정 캐시의 국소 개선은 반영됐지만 전체 입력 파이프라인 O(n)은 미충족입니다.
 
