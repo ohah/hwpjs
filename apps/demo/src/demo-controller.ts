@@ -13,6 +13,7 @@ import {
 } from '@hwpjs/core';
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
 import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
+import { demoRuntimeAssets } from './runtime-assets.ts';
 import { createFormattingDialogController } from './formatting-dialog-controller.ts';
 import { createFontNameTool } from './font-name-tool.ts';
 import { createTextColorTool } from './text-color-tool.ts';
@@ -100,10 +101,11 @@ export async function mountDemo(
   };
   let host: DemoHost | undefined;
   const traces: DemoTraceEntry[] = [];
-  const runtimeFactory = createWorkerRuntimeFactory({
-    workerURL: '/hwpjs/worker.js',
-    wasmURL: '/hwpjs/hwpjs.wasm',
-  });
+  const runtimeFactory = createWorkerRuntimeFactory(
+    import.meta.env?.DEV
+      ? { workerURL: '/hwpjs/worker.js', wasmURL: '/hwpjs/hwpjs.wasm' }
+      : demoRuntimeAssets(import.meta.url),
+  );
   const editor = createEditor({
     runtimeFactory,
     onError: () => {

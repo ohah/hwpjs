@@ -30,6 +30,12 @@ bundle 모드의 canonical 편집기 경로는 `/hwpjs/editor/demo/vanilla/`입�
 
 `/hwpjs/hwpjs.wasm`·`/hwpjs/worker.js`는 선택된 bundle의 canonical WASM/worker와 같은 바이트를 제공하는 호환 별칭입니다. bundle 모드의 `/docs/editor/`도 같은 편집기 자산으로 연결되어 과거 docs build 안의 다른 engine 사본과 섞지 않습니다.
 
+### 정적 배포의 Worker·WASM 경로
+
+GitHub Pages에는 위 서버 별칭이 없습니다. 배포된 `assets/` 모듈은 자신의 `import.meta.url`에서 `../runtime/worker.js`와 `../hwpjs/hwpjs.wasm`을 해석합니다. `apps/demo/src/runtime-assets.ts`가 이 규칙을 소유하며, Vite 개발 모드에서만 기존 개발 서버의 루트 경로를 사용합니다.
+
+2026-10-30 공개 사이트에서는 앱이 `/hwpjs/hwpjs.wasm`을 요청해 404로 문서 열기가 실패했습니다. 파일은 `/hwpjs/editor/hwpjs/hwpjs.wasm`에 존재했지만 로컬 서버의 별칭 때문에 배포 검사에서 누락됐습니다. 공개 JS 검증은 이제 해당 Worker·WASM의 루트 리터럴을 거부합니다. 파일의 manifest·SHA 일치만으로 실제 요청 경로가 옳다고 판단하지 않으며, 별칭 없는 정적 경로에서 두 런타임 파일을 불러와 HWP5·HWPX 예제를 실제로 여는 검사를 별도로 수행합니다.
+
 빌드된 문서 사이트의 `/docs/` 응답은 `tools/demo-documentation-response.mjs`가 소유하며 `apps/docs/doc_build`를 사용합니다. fixture catalog/원본 응답은 기존 `demo-fixture-catalog-response.mjs`·`demo-fixture-response.mjs`가 허용 목록과 정확한 경로 검증을 계속 소유합니다. private bundle에서 catalog 가용성을 관측하거나 bundle에 없는 허용 fixture를 제공할 때도 이 handler들을 재사용합니다.
 
 공개 bundle에 fixture2개가 있다는 사실과 개발 서버의 기존 runtime fixture route는 서로 다른 경계입니다. `--private-fixtures`는 기존 route 전체의 인증 스위치가 아닙니다. 서버는 임의 요청 경로를 로컬 파일 경로로 읽어 주지 않습니다. GET/HEAD만 처리하고 WASM 압축·MIME·HEAD body 정책은 기존 공통 경로를 사용합니다.

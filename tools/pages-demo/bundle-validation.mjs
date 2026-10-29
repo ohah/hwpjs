@@ -36,6 +36,12 @@ export async function rejectSymlinkAncestors(path) {
 }
 export function assertPublicText(path, bytes) {
   if (
+    path.endsWith('.js') &&
+    /(["'`])\/hwpjs\/(?:worker\.js|hwpjs\.wasm)\1/.test(bytes.toString())
+  ) {
+    throw Error('OriginRootRuntimeAssetInPublishedText:' + path);
+  }
+  if (
     /\.(js|css|html|json|txt)$/.test(path) &&
     /(?:\.ts\.net|tailscale|\/Users\/|reference\/rhwp|legacy\/rust\/|sourceMappingURL)/i.test(
       bytes.toString(),

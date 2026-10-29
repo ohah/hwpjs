@@ -31,13 +31,8 @@
     },
     {
       "path": "assets/api-main.js",
-      "bytes": 572,
-      "sha256": "a33e98712afd1d13a07448a2b861724d6d0001f38d93d7fe2ca4f30675122209"
-    },
-    {
-      "path": "assets/api-playground-C2Xz6S74.js",
-      "bytes": 8564,
-      "sha256": "481e13dc9761908b3c8c446ca1a98eb5b12b2ee6e1ae5f807c26a64f6e113de0"
+      "bytes": 9072,
+      "sha256": "36c9539e30e39f83003f54af6408022ef8a59b62e81b4b1fedd30dbdc11feff7"
     },
     {
       "path": "assets/app-B_XIwBTc.css",
@@ -46,8 +41,8 @@
     },
     {
       "path": "assets/app.js",
-      "bytes": 394943,
-      "sha256": "a1c7c1cbaaf4d70e18e2795259159be804b5d5b2355f2415f899a2709588360e"
+      "bytes": 403503,
+      "sha256": "fbbd6e1a83c2094f2c27d5fc877de1c68e50a3983f3d35969a0c39a0dd8aaf10"
     },
     {
       "path": "assets/chunk-bx6r37e7-aC25CTdd.js",
