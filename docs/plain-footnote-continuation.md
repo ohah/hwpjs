@@ -31,3 +31,13 @@
 정규 순수 검사는 기존 53개와 신규 helper13·실제 진입점4로 총 70개입니다. 격리 출력 동치53·phase 모형10·sandbox 통제1은 별도 증거이고 이 70개에 더하지 않습니다. Node 및 Bun 검사에서 통과했으며 Native·Canvas·운영 SDK 승격 증거는 아닙니다.
 
 각주 N=32/64/128, 물리 본문 행 R=1 통제에서 원 locked 루프 방문은 528/2080/8256회였고 새 scan 참조 판정은 60/121/243회였습니다(등록 판정 32/64/128회 별도). Map 조회는 평균적 비용 특성이며 최악 상수 보장이 아닙니다. 잠금 목록 누적 순회만 제거했고 P·R 순회와 fragment 복사·배치 비용은 남아 전체 O(n) 또는 실제 입력 시간 개선을 주장하지 않습니다.
+
+## 복수 plain 각주의 합계 예약 fallback
+
+개별 각주는 페이지보다 짧더라도 합계 예약이 본문을 수용하지 못할 수 있습니다. 기존 continuation이 없고 각주가 둘 이상인 HWP5 plain 경로에서, 본문 표가 없고 일반 pagination이 정확히 `PageColumnReservationOverflow`로 실패한 경우만 같은 measured planner로 재계획합니다. 긴 각주와 합계 초과 경로 모두 측정 전용 잠금 검사를 사용하며, 임의 raw caller의 live 재검사는 유지합니다. 다른 오류·표·개체·다단 거부나 limited 결과를 성공으로 바꾸지 않습니다.
+
+이번 합성의 실제 저장소 root 검증은 순수70개, 기존 d849 엔진의 통합2개, 정규 독립 저장 oracle6개가 각각 fail0·skip0으로 통과했습니다. 통합2개는 긴 각주1개와 두 짧은 각주 합계 초과1개이며, 같은 허용 `footnote-endnote.hwp`를 저수준 Native splice와 ReaderRuntime으로 검사합니다. 본문·미주와의 비겹침, UTF-16 구간과 번호1)/2)의 단회 보존, 비대상 텍스트·저장·undo/redo·재열기를 확인했습니다.
+
+독립 저장 oracle6개는 순수 변조 통제5개와 실제 Native 저장1개입니다. 실제 사례는 각주별 문자열150회 반복을 각각 한 번 splice한 총2편집이며 300회 키 입력 검증이 아닙니다. 원본 기반 raw-record 기대와 전체 Section·비대상 스트림·컨테이너 metadata, 두 단계 undo와 redo 바이트가 일치했습니다. `allowStaleLayout:true`와 변경 문단의 linecache 제거 정책을 명시적으로 유지합니다. 이6개를 Native6사례로 세지 않습니다.
+
+위 결과는 고정 측정의 Node·기존 WASM 검증입니다. 앞선 단일 긴 각주 Canvas 근거와 별도로, 이번 복수 각주 합성의 실제 글꼴 측정·Canvas·공식 새 bundle·Worker·공개 선택 입력은 아직 검증하지 않았습니다. 새 Native 빌드나 운영 반영도 수행하지 않았으며, 전체 O(n)이나 실제 입력 지연 개선을 주장하지 않습니다.

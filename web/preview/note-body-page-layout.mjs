@@ -174,7 +174,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
         )
       : null;
   if (continuation && continuation.state !== 'ready') return continuation;
-  const reservation =
+  let reservation =
     continuation ??
     (footnotes.length
       ? createFootnoteColumnReservation(
@@ -196,12 +196,35 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
       if (row.height > bottom - reference.boxes.page.y)
         return unavailable('CreatedNotePageHeightOverflow');
     }
-  const page =
+  let page =
     continuation?.page ??
     paginateBodyRows(rows, setting, pageFlows, {
       maxRows,
       columnBottom: reservation?.columnBottom,
     });
+  // 개별 각주는 페이지보다 짧아도 같은 참조 행의 합계가 본문 예약을 막을 수 있습니다.
+  // 정상/다른 실패 경로는 유지하고 정확한 예약 overflow만 기존 plain planner에 연결합니다.
+  if (
+    !continuation &&
+    footnotes.length > 1 &&
+    content.format === 'hwp5' &&
+    !hasBodyTables &&
+    page.state === 'unavailable' &&
+    page.error === 'PageColumnReservationOverflow'
+  ) {
+    const aggregate = paginateMeasuredPlainFootnoteContinuations(
+      rows,
+      setting,
+      pageFlows,
+      footnotes,
+      footPolicy,
+      footSeparator.height,
+      { maxRows },
+    );
+    if (aggregate.state !== 'ready') return aggregate;
+    reservation = aggregate;
+    page = aggregate.page;
+  }
   if (page.state !== 'paginated' || page.limited) return page;
   const projectedBody = hasBodyTables ? projectCreatedBodyFlow(bodyFlow, page.rows, maxRows) : null;
   if (projectedBody && projectedBody.state !== 'projected') return projectedBody;

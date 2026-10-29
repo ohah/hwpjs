@@ -119,7 +119,7 @@ mise exec -- node --test --test-concurrency=1 \
   ./tests/hwp5/plain-footnote-lock-audit.test.mjs
 ```
 
-실제 저장·undo/redo·재열기 통합 1개는 명시 엔진을 요구하며 저장소의 기존 `legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp`만 읽습니다. 엔진을 생략한 일반 실행은 이 1개가 skip되며 Native 통과가 아닙니다. 아래 명시 명령은 엔진이 비었으면 시작 전에 실패합니다. 순수 70개와 명시 통합 1개는 별도 단계이며, 정렬 변경의 Native·Canvas 검증을 순수 결과에서 승계하지 않습니다.
+실제 저장·undo/redo·재열기 통합 2개는 명시 엔진을 요구하며 저장소의 기존 `legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp`만 읽습니다. 엔진을 생략한 일반 실행은 이 2개가 skip되며 Native 통과가 아닙니다. 아래 명시 명령은 엔진이 비었으면 시작 전에 실패합니다. 순수 70개와 명시 통합 2개는 별도 단계이며, 정렬 변경의 Native·Canvas 검증을 순수 결과에서 승계하지 않습니다.
 
 ```sh
 test -n "$HWPJS_TEST_WASM" || exit 1
