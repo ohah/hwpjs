@@ -323,3 +323,178 @@ for (const h of [19.2, 13.333333333333334, 17.6])
       }),
     );
   });
+
+test('aggregate area exact capacity and adjacent HWP unit preserve both complete notes', () => {
+  const policy = {
+    state: 'selected',
+    kind: 'footnote',
+    section: 0,
+    aboveLine: 1,
+    belowLine: 2,
+    betweenNotes: 3,
+    beneathText: false,
+  };
+  const rows = [
+    {
+      kind: 'text',
+      section: 0,
+      paragraph: 0,
+      startUnit: 0,
+      endUnit: 2,
+      height: 20,
+      width: 20,
+      x: 0,
+      y: 0,
+      text: 'AB',
+    },
+  ];
+  const flows = [
+    { section: 0, paragraph: 0, top_level: true, page_break: null, column_break: null },
+  ];
+  const boundaryNote = (id, anchor, height) => ({
+    kind: 'footnote',
+    section: 0,
+    noteNode: id,
+    hostParagraph: 0,
+    anchorUnit: anchor,
+    width: 100,
+    height,
+    boxes: [],
+    rows: [
+      {
+        kind: 'text',
+        section: 0,
+        paragraph: id,
+        startUnit: 0,
+        endUnit: 1,
+        height,
+        width: 20,
+        x: 0,
+        y: 0,
+        text: 'X',
+        numberPrefix: { text: anchor + 1 + ')', width: 5, height: 10 },
+      },
+    ],
+  });
+  const notes = [boundaryNote(40, 0, 20), boundaryNote(41, 1, 30)];
+  for (const delta of [-1, 0, 1]) {
+    const setting = {
+      section_ordinal: 0,
+      width: 7500,
+      height: 5775 + delta,
+      orientation: 'widely',
+      gutter_type: 'left_only',
+      duplicate_margins: 0,
+      margin: { left: 0, right: 0, top: 0, bottom: 0, gutter: 0, header: 0, footer: 0 },
+    };
+    const result = plan(rows, setting, flows, notes, policy, 1);
+    assert.equal(result.state, 'ready', result.error);
+    const fragments = [];
+    for (const page of result.page.pages) {
+      const selected = result.notesFor([], page.ordinal, 0);
+      if (!selected.length) continue;
+      fragments.push(...selected);
+      const bottom = result.page.rows
+        .filter((r) => r.pageOrdinal === page.ordinal)
+        .reduce((n, r) => Math.max(n, r.y + r.height), page.page.y);
+      const area = placeFootnoteArea(selected, policy, page.page, bottom, 1);
+      assert.equal(area.state, 'placed', area.error);
+      assert(
+        area.rows.every((r) => r.y >= bottom && r.y + r.height <= page.page.y + page.page.height),
+      );
+    }
+    assert.deepEqual(
+      fragments.map((n) => n.noteNode),
+      [40, 41],
+    );
+    assert.deepEqual(
+      fragments.flatMap((n) => n.rows.map((r) => r.numberPrefix.text)),
+      ['1)', '2)'],
+    );
+    assert.equal(result.page.pages.length, delta < 0 ? 2 : 1);
+  }
+});
+
+// Pure layout/source-coordinate contracts; no live DOM, selection issuer or Canvas proof.
+const aggregateBody = () => [{ ...body(1)[0], startUnit: 0, endUnit: 2, text: 'AB' }];
+const aggregateNotes = () => [note(40, 0, 3), { ...note(41, 0, 3), anchorUnit: 1 }];
+test('aggregate short notes retain source coordinates and a single original number prefix', () => {
+  const bs = aggregateBody(),
+    ns = aggregateNotes();
+  for (let i = 0; i < ns.length; i++)
+    ns[i].rows[0].numberPrefix = { text: i + 1 + ')', width: 5, height: 10 };
+  const original = structuredClone({ bs, ns });
+  const result = run([...ns].reverse(), bs),
+    parts = verify(result, ns, bs);
+  assert(ns.every((n) => n.height + 4 < 100));
+  assert(ns.reduce((sum, n) => sum + n.height, 0) > 100);
+  assert.deepEqual(
+    parts.map((p) => p.noteNode).filter((n, i, a) => i === 0 || n !== a[i - 1]),
+    [40, 41],
+  );
+  for (const n of ns) {
+    const selected = parts.filter((p) => p.noteNode === n.noteNode);
+    const sourceKeys = (r) => ({
+      section: r.section,
+      paragraph: r.paragraph,
+      startUnit: r.startUnit,
+      endUnit: r.endUnit,
+      text: r.text,
+      numberPrefix: r.numberPrefix,
+    });
+    assert.deepEqual(
+      selected.flatMap((p) => p.rows.map(sourceKeys)),
+      n.rows.map(sourceKeys),
+    );
+    assert.equal(selected.flatMap((p) => p.rows).filter((r) => r.numberPrefix).length, 1);
+  }
+  for (const page of result.page.pages) {
+    const first = result.notesFor([], page.ordinal, 0),
+      second = result.notesFor([], page.ordinal, 0);
+    assert.deepEqual(second, first);
+    assert.deepEqual(result.notesFor([], page.ordinal, 1), []);
+  }
+  assert.deepEqual({ bs, ns }, original);
+});
+test('wrapped body reference at a half-open end binds only the next source row', () => {
+  const bs = [
+    { ...body(1)[0], startUnit: 0, endUnit: 1, text: 'A', height: 70 },
+    { ...body(1)[0], startUnit: 1, endUnit: 2, text: 'B', y: 70, height: 40 },
+  ];
+  const ns = [{ ...note(40, 0, 1), anchorUnit: 1 }],
+    r = plan(bs, setting, flows(bs).slice(0, 1), ns, policy, 1);
+  verify(r, ns, bs);
+  const previous = r.page.rows.find((row) => row.startUnit === 0);
+  const anchor = r.page.rows.find((row) => row.startUnit === 1);
+  assert.equal(previous.pageOrdinal, 0);
+  assert.equal(anchor.pageOrdinal, 1);
+  assert.deepEqual(r.notesFor([], 0, 0), []);
+  assert.deepEqual(
+    r.notesFor([], 1, 0).map((n) => n.noteNode),
+    [40],
+  );
+  assert.equal(r.page.pages.length, 2);
+});
+
+test('terminal boundary is not an authority for a missing note reference', () => {
+  const bs = aggregateBody(),
+    ns = aggregateNotes();
+  ns[1].anchorUnit = 2;
+  assert.equal(run(ns, bs).error, 'MissingFootnoteContinuationReference');
+});
+test('duplicate canonical note owner fails instead of coalescing source ranges', () => {
+  const bs = aggregateBody(),
+    ns = aggregateNotes();
+  ns[1].noteNode = ns[0].noteNode;
+  assert.equal(run(ns, bs).error, 'AmbiguousFootnoteContinuationOwner');
+});
+test('same ordinal from another section does not gain note reservation authority', () => {
+  const ns = aggregateNotes();
+  ns[1].section = 1;
+  assert.equal(run(ns, aggregateBody()).error, 'InvalidFootnoteReservation');
+});
+test('a gap row cannot supply an otherwise matching note source reference', () => {
+  const bs = aggregateBody();
+  bs[0].kind = 'gap';
+  assert.equal(run(aggregateNotes(), bs).error, 'MissingFootnoteContinuationReference');
+});

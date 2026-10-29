@@ -77,14 +77,14 @@ WASM을 생략하면 실제 Native 2건은 skip되며 프로토콜 검증만 실
 
 ## plain 각주 연속 페이지 집중 검증
 
-[소유권·예약·지원 범위](plain-footnote-continuation.md)를 따릅니다. 순수 21개는 WASM·fixture를 읽지 않습니다.
+[소유권·예약·지원 범위](plain-footnote-continuation.md)를 따릅니다. 순수 28개는 WASM·fixture를 읽지 않습니다.
 
 ```sh
 test -f ./tests/hwp5/plain-footnote-continuation.test.mjs || exit 1
 mise exec -- node --test ./tests/hwp5/plain-footnote-continuation.test.mjs
 ```
 
-실제 저장·undo/redo·재열기 통합 1개는 명시 엔진을 요구하며 저장소의 기존 `legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp`만 읽습니다. 엔진을 생략한 일반 실행은 이 1개가 skip되며 Native 통과가 아닙니다. 아래 명시 명령은 엔진이 비었으면 시작 전에 실패합니다. 순수 21개와 실제 1개의 합계는 22개이며 Canvas 검증은 별도입니다.
+실제 저장·undo/redo·재열기 통합 1개는 명시 엔진을 요구하며 저장소의 기존 `legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp`만 읽습니다. 엔진을 생략한 일반 실행은 이 1개가 skip되며 Native 통과가 아닙니다. 아래 명시 명령은 엔진이 비었으면 시작 전에 실패합니다. 순수 28개와 실제 1개의 합계는 29개이며 Canvas 검증은 별도입니다.
 
 ```sh
 test -n "$HWPJS_TEST_WASM" || exit 1
