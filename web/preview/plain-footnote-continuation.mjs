@@ -1,3 +1,4 @@
+import { stableSafeIntegerOrder } from './stable-safe-integer-order.mjs';
 import { placeFootnoteArea } from './footnote-area-placement.mjs';
 import { columnReferenceBoxes } from './column-reference-boxes.mjs';
 import { footnoteTextReference } from './footnote-reference-rows.mjs';
@@ -96,6 +97,8 @@ export function paginatePlainFootnoteContinuations(
   }
   // 같은 text-row 판정 SSOT를 기존 일반 예약기와 공유합니다.
   // 문서 스냅샷 내 소유 source 좌표를 색인하며 공개 reference를 발급하지 않습니다.
+  const orderedByGroup = [],
+    sourceIndicesByGroup = [];
   const anchorIndex = new Map(),
     groups = new Map(),
     rowKey = (row) => `${row.section}:${row.paragraph}:${row.startUnit}:${row.endUnit}`;
@@ -113,7 +116,7 @@ export function paginatePlainFootnoteContinuations(
         ?.rows.push({ row: rows[i], index: i });
   }
   for (const group of groups.values()) {
-    group.notes.sort((a, b) => a.anchorUnit - b.anchorUnit);
+    group.notes = stableSafeIntegerOrder(group.notes, (note) => note.anchorUnit);
     let cursor = 0,
       end = -1;
     for (const item of group.rows) {
@@ -131,12 +134,17 @@ export function paginatePlainFootnoteContinuations(
         counters.sourceAnchorVisits++;
         if (!footnoteTextReference(row, note)) return fail('MissingFootnoteContinuationReference');
         anchorIndex.set(note, item.index);
+        orderedByGroup.push(note);
+        sourceIndicesByGroup.push(item.index);
       }
     }
   }
   if (anchorIndex.size !== notes.length) return fail('MissingFootnoteContinuationReference');
-  const ordered = notes.toSorted(
-    (a, b) => anchorIndex.get(a) - anchorIndex.get(b) || a.anchorUnit - b.anchorUnit,
+  // 같은 행의 각주는 단일 host 그룹에서 이미 anchorUnit 순서로 소비됩니다.
+  // 안정 행 순서화가 동률 내부의 anchorUnit 및 원 입력 순서를 그대로 보존합니다.
+  const ordered = stableSafeIntegerOrder(
+    orderedByGroup,
+    (_note, index) => sourceIndicesByGroup[index],
   );
   const anchorKeys = new Set(ordered.map((note) => rowKey(rows[anchorIndex.get(note)])));
   let physicalIndex = new Map();

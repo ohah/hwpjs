@@ -45,6 +45,11 @@ jobs:
             ./apps/demo/tests/paragraph-spacing-kind.test.ts
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
+      - name: Test footnote continuation and ordering
+        run: |
+          test -f ./tests/hwp5/plain-footnote-continuation.test.mjs || exit 1
+          test -f ./tests/hwp5/plain-footnote-stable-order.test.mjs || exit 1
+          bun test --no-install ./tests/hwp5/plain-footnote-continuation.test.mjs ./tests/hwp5/plain-footnote-stable-order.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts
