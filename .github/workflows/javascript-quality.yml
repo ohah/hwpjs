@@ -23,6 +23,8 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs
+      - name: Test published demo runtime asset paths
+        run: bun test ./apps/demo/tests/runtime-assets.test.ts ./tests/hwpx/pages-runtime-asset-paths.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts
