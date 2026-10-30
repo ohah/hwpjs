@@ -4,6 +4,10 @@
 
 `packages/core/src/state/owned.ts`는 외부 입력의 복제와 게시할 관측값의 소유권을 구분합니다. 소유한 일반 관측값의 identity는 유지하되 Map·Set·바이트 버퍼를 통한 변경은 다음 관측값에 전파되지 않아야 합니다. 모듈을 가져오기 전에 설치되어 기존 할당자에 위임하는 관측 wrapper가 포획한 중간 복제본도 임의로 동결하거나 게시하지 않습니다. 이 경계는 `packages/core/tests/state/owned.test.ts`의 별도 프로세스 회귀로 검사합니다.
 
+내부 `build`가 생성·동결을 완료해 기존 `immutableObservations` WeakSet에 등록한 관측값은 `freezeDTO`에서 다시 열거하지 않습니다. 이 판정은 외부 `Object.isFrozen`이나 가변 객체를 캐시하는 권위가 아닙니다. 외부 동결 객체와 getter의 기존 순회, 원본 backing 복사, 각 바이트 getter의 독립 사본은 유지합니다. 최초 복제본을 동결·게시하는 변경과 달리 `copyOwned`와 `build`의 분리는 그대로입니다.
+
+이 변경은 위 early return만 추가합니다. 전용 `packages/core/tests/state/owned-freeze-observation.test.ts`는 별도 child process에서 `Object.values` 한 개만 관측하고 finally 복구해, 내부 관측 재열거 0회·외부 동결 getter 순회·바이트 격리를 함께 검사합니다. 기준본의 재열거 반례 실패 후 수정본 통과와 기존 35개 보존 검사를 확인했습니다. 앞선 WeakMap 후보의 합성·실제 소스 operation A/B 수치는 이 변경의 실측이 아니며, 입력 화면 지연 해결을 증명하지 않습니다.
+
 2026-10-30 내부 복제본을 그대로 동결하는 후보는 미채택했습니다. d849 엔진의 HWP5·HWPX 열기와 HWP5의 41개 splice·40개 undo 응답에서 빠른 경로가 0회였고, 방문·생성 계수는 줄지 않았습니다. 별도 import 전 allocator 반례에서는 기존 구현이 외부 포획 복제본을 동결하지 않는 반면 후보는 이를 동결·게시했습니다. JSON 값 동치는 이 회귀를 상쇄하지 않습니다. 원 제품 코드는 유지하며, 후속 최적화는 실제 문서에서의 효과와 외부 별칭 격리를 함께 검증합니다. 집중 실행 방법은 [개발·검증 명령](development-commands.md)을 따릅니다.
 
 설정 가능한 키 조합과 번역은 [JSON 단축키 계약](editor-keymap.md)을 따릅니다.

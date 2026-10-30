@@ -64,6 +64,9 @@ export function freezeDTO<T>(value: T): T {
     !(value instanceof Map) &&
     !(value instanceof Set)
   ) {
+    if (immutableObservations.has(value)) {
+      return value;
+    }
     for (const child of Object.values(value)) freezeDTO(child);
     Object.freeze(value);
   }
