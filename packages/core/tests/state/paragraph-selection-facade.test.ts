@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EditorState, createParagraphSelection, findTextMatch } from '../../src/index.ts';
 import { validateSelection } from '../../src/commands/selection.ts';
+import { createParagraphRowLookup } from '../../src/internal/paragraph-index.ts';
 const base = {
   editorId: 'pure',
   documentId: 'doc',
@@ -191,7 +192,7 @@ test('선택 facade는 편집권한을 발급하지 않는다', () => {
       new RegExp('EditorNotReady'),
     );
 });
-test('n조회행과 출력target 비용을 분리하며 전체문구 검색을 하지 않는다', () => {
+test('선택 출력·중복 거부와 소유 관측의 최초 색인 및 반복 조회 비용을 분리한다', () => {
   for (const n of [32, 64, 128]) {
     const rs = Array.from({ length: n }, (_, paragraph) => ({
       section: 0,
@@ -201,42 +202,78 @@ test('n조회행과 출력target 비용을 분리하며 전체문구 검색을 �
       editable: true,
     }));
     const s = state(rs),
-      owned = (s.content as any).paragraphs;
-    let lookupVisits = 0,
-      validatorVisits = 0;
-    const find = Array.prototype.find,
-      filter = Array.prototype.filter;
-    Array.prototype.find = function (cb: any, ctx: any) {
-      const tracked = this === owned;
-      return find.call(this, function (v: any, i: number, a: any) {
-        if (tracked) lookupVisits++;
-        return cb.call(ctx, v, i, a);
-      });
-    };
-    Array.prototype.filter = function (cb: any, ctx: any) {
-      const tracked = this === owned;
-      return filter.call(this, function (v: any, i: number, a: any) {
-        if (tracked) validatorVisits++;
-        return cb.call(ctx, v, i, a);
-      });
-    };
-    let t;
-    try {
-      t = createParagraphSelection(s, at(n - 1));
-    } finally {
-      Array.prototype.find = find;
-      Array.prototype.filter = filter;
+      owned = (s.content as { paragraphs: typeof rs }).paragraphs;
+    let indexVisits = 0,
+      fallbackVisits = 0;
+    // 기존 내부 tap으로 행 방문만 관측합니다. 공개 선택 권한은 facade/validator로 검사합니다.
+    const lookup = createParagraphRowLookup((phase) => {
+      if (phase === 'index') indexVisits++;
+      else fallbackVisits++;
+    });
+    const selected = owned[n - 1];
+    assert.equal(lookup(owned, 0, n - 1), selected);
+    assert.equal(indexVisits, n);
+    assert.equal(fallbackVisits, 0);
+    for (const queries of [1, 4, 16]) {
+      for (let i = 0; i < queries; i++) {
+        const t = createParagraphSelection(s, at(n - 1));
+        assert.equal(t.owner, 'section:0:body');
+        assert.equal(t.paragraph, n - 1);
+        assert.equal(Object.isFrozen(t), true);
+        assert.equal(Object.hasOwn(t, 'text'), false);
+        assert.equal(Object.hasOwn(t, 'reference'), false);
+        assert.equal(validateSelection(t, s), selected);
+        assert.equal(lookup(owned, 0, n - 1), selected);
+        assert.equal(lookup(owned, 0, n), undefined);
+      }
+      assert.equal(indexVisits, n);
+      assert.equal(fallbackVisits, 0);
     }
-    assert.equal(lookupVisits, n);
-    assert.equal(validatorVisits, n);
-    assert.equal(Object.hasOwn(t!, 'text'), false);
+    // 같은 좌표의 새 관측은 새 행을 조회하고, 이전 토큰은 정상 validator가 거부합니다.
+    const next = state(
+      rs.map((r) => ({ ...r, text: '새 문구' })),
+      { operationRevision: 3 },
+    );
+    const nextRows = (next.content as { paragraphs: typeof rs }).paragraphs;
+    assert.equal(lookup(nextRows, 0, n - 1), nextRows[n - 1]);
+    assert.notEqual(nextRows[n - 1], selected);
+    assert.equal(indexVisits, n * 2);
+    assert.equal(
+      validateSelection(createParagraphSelection(next, at(n - 1)), next).text,
+      '새 문구',
+    );
+    assert.throws(
+      () => validateSelection(createParagraphSelection(s, at(n - 1)), next),
+      /StaleTarget/,
+    );
+    // 첫 행을 조용히 택하지 않고 중복 좌표를 거부하며 반복 실패도 재순회하지 않습니다.
+    const duplicateState = state([...rs, { ...rs[n - 1] }]);
+    const duplicateRows = (duplicateState.content as { paragraphs: typeof rs }).paragraphs;
+    const beforeDuplicate = indexVisits;
+    for (let i = 0; i < 4; i++) {
+      assert.equal(lookup(duplicateRows, 0, n - 1), undefined);
+      assert.throws(
+        () => createParagraphSelection(duplicateState, at(n - 1)),
+        /InvalidSelectionOwner/,
+      );
+    }
+    assert.equal(indexVisits - beforeDuplicate, n + 1);
+    assert.equal(fallbackVisits, 0);
+    // 외부 mutable 배열은 캐시 권한이 없으며 mutation을 다음 조회에서 다시 관측합니다.
+    const external = rs.map((r) => ({ ...r }));
+    const beforeFallback = fallbackVisits;
+    for (let i = 0; i < 4; i++) assert.equal(lookup(external, 0, n - 1), external[n - 1]);
+    assert.equal(fallbackVisits - beforeFallback, n * 4);
+    external.push({ ...external[n - 1] });
+    assert.equal(lookup(external, 0, n - 1), undefined);
+    assert.equal(fallbackVisits - beforeFallback, n * 4 + n + 1);
     console.log(
       JSON.stringify({
-        scope: 'pure 실제함수 논리계수',
+        scope: '순수 선택 계약 및 기존 독립 lookup tap, 공개 facade find 비용과 별도',
         n,
-        lookupVisits,
-        validatorVisits,
-        outputTargets: 1,
+        indexVisits,
+        fallbackVisits,
+        queries: [1, 4, 16],
         outputTextUnits: 0,
       }),
     );

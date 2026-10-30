@@ -43,7 +43,7 @@ owner/reference/token은 옵션으로 받지 않습니다. 기존 canonical owne
 
 기존 HWP5 원본 각주·미주의 Native note/list·source node·현재 참조를 확인한 공개 owner 승격 범위와 거부 조건은 [기존 각주 헤드리스 선택](headless-existing-note-selection.md)이 소유합니다. 생성 note·표 안 note·불명 중첩 owner로 일반화하지 않습니다.
 
-현재 P를 snapshot의 문단 행 수로 두면 facade의 좌표 조회는 최대 P회이고 기존 validator의 유일성 검사는 별도 P회입니다. target은 한 개이고 문서 텍스트를 출력/복제하지 않습니다. 반복 조회 Map/WeakMap 인덱스는 아직 없으며 이 단위 결과를 인덱스 효과나 전체 편집 복잡도 개선의 증명으로 읽지 않습니다. `findTextMatch`의 기존 검색 결과 선택 기능은 유지합니다.
+현재 P를 snapshot의 문단 행 수로 두면 facade의 좌표 조회는 최대 P회입니다. validator는 내부 소유 불변 관측의 적격 문단 배열을 WeakMap으로 식별하고, 좌표 Map을 최초 O(P)에 만든 뒤 반복 조회를 평균 O(1)에 수행합니다. 외부 가변 배열이나 적격하지 않은 배열은 기존 순회와 중복 거부를 유지합니다. target은 한 개이고 문서 텍스트를 출력/복제하지 않습니다. facade 자체의 선형 조회가 남아 있으므로 전체 선택이나 편집이 O(1)이라는 뜻은 아닙니다. `findTextMatch`의 기존 검색 결과 선택 기능은 유지합니다.
 
 정규 회귀는 `packages/core/tests/state/paragraph-selection-facade.test.ts`의 pure9와 `packages/core/tests/integration/paragraph-selection-facade.test.ts`의 실 Runtime8입니다. 전체17의 [명시 실행 명령과 WASM/Python 준비 조건](development-commands.md#문단-좌표-선택-집중-검증)을 따릅니다. Native 검사는 절대경로 `HWPJS_TEST_WASM`을 요구하고 verification artifact로 자동 대체하지 않습니다. 허용 원본은 Git에 있는 `legacy/rust/crates/hwp-core/tests/fixtures/table.hwpx`와 `noori.hwp` 두 개뿐입니다. 중복 문구 fixture는 원 table ZIP에서 테스트 안의 Python 표준 라이브러리로 메모리 생성하며 새 바이너리를 게시하지 않습니다. 저장 후 다른 ZIP member/XML 구조가 바뀌지 않았는지도 메모리 oracle로 검사하며 기본 증거파일 출력은 없습니다. same-process ReaderRuntime 검증은 Worker transport·브라우저·실제 Canvas 완료 증거와 구분합니다.
 

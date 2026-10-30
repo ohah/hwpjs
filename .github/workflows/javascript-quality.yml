@@ -45,7 +45,8 @@ jobs:
       - name: 표 삽입 공개 명령 모델 검사
         run: |
           test -f ./packages/core/tests/commands/table-insert.test.ts || exit 1
-          bun test --no-install ./packages/core/tests/commands/table-insert.test.ts
+          test -f ./packages/core/tests/state/paragraph-selection-facade.test.ts || exit 1
+          bun test --no-install ./packages/core/tests/commands/table-insert.test.ts ./packages/core/tests/state/paragraph-selection-facade.test.ts
       - name: 표 삽입 명시 Native 통합 검사
         run: |
           test -f ./packages/core/integration/commands/table-insert.test.ts || exit 1
