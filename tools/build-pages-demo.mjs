@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 /** Explicit static bundle publication. Verification needs only Node built-ins. */
 import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { validateExplicitFixturePolicy } from './pages-demo/fixture-policy.mjs';
 import { fileURLToPath } from 'node:url';
 import { assertOutputPath, digest, validateBundle } from './pages-demo/bundle-validation.mjs';
 
@@ -10,11 +12,15 @@ function optionsFor(flags) {
   const options = new Map();
   if (flags.length % 2) throw Error('BundleModeUsage');
   for (let i = 0; i < flags.length; i += 2) {
-    if (!['--bundle-dir', '--out'].includes(flags[i]) || options.has(flags[i]))
+    if (!['--bundle-dir', '--out', '--fixture-policy'].includes(flags[i]) || options.has(flags[i]))
       throw Error('BundleModeUsage');
     options.set(flags[i], flags[i + 1]);
   }
   return options;
+}
+async function fixturePolicyFor(options) {
+  const path = options.get('--fixture-policy');
+  return path === undefined ? undefined : JSON.parse(await readFile(resolve(path), 'utf8'));
 }
 function outputFor(options) {
   const output = resolve(root, options.get('--out') ?? 'apps/docs/docs/public/editor');
@@ -25,6 +31,8 @@ if (args.includes('--verify')) {
   const options = optionsFor(args.filter((arg) => arg !== '--verify'));
   if (options.has('--bundle-dir')) throw Error('BundleModeUsage');
   const bundle = await validateBundle(outputFor(options));
+  const fixturePolicy = await fixturePolicyFor(options);
+  if (fixturePolicy !== undefined) validateExplicitFixturePolicy(bundle.files, fixturePolicy);
   console.log(
     JSON.stringify({
       verified: true,
@@ -37,7 +45,11 @@ if (args.includes('--verify')) {
   const options = optionsFor(args);
   const { validateProductionBundle } = await import('./pages-demo/bundle-production.mjs');
   const { publishBundle } = await import('./pages-demo/bundle-publish.mjs');
-  const bundle = await validateProductionBundle(resolve(options.get('--bundle-dir')), { root });
+  const fixturePolicy = await fixturePolicyFor(options);
+  const bundle = await validateProductionBundle(resolve(options.get('--bundle-dir')), {
+    root,
+    fixturePolicy,
+  });
   const output = outputFor(options);
   await publishBundle(bundle, { root, output });
   console.log(

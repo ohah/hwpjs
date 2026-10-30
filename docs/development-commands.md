@@ -887,3 +887,20 @@ mise exec -- zig test src/root.zig -O ReleaseSafe --test-filter 'chart major tic
 test -f ./tests/hwpx/chart-major-ticks.test.mjs || exit 1
 mise exec -- bun test ./tests/hwpx/chart-major-ticks.test.mjs
 ```
+
+## 공개 예제 정책 집중 회귀
+
+명시 정책·payload의 정상/음성 통제, 기본 Noori2 계약과 명시101 생산 계약을 같은 15개 회귀로 검사합니다. 테스트는 명시된 저장소 예제와 기존 공개 번들을 읽고 호출자가 소유한 임시 폴더만 생성·정리합니다. Native 실행이나 새 WASM 빌드는 없습니다.
+
+```sh
+test -f ./tests/tools/pages-demo-fixture-policy.test.mjs || exit 1
+node --test --test-concurrency=1 ./tests/tools/pages-demo-fixture-policy.test.mjs
+```
+
+이미 검증한 bundle을 명시 정책으로 게시할 때는 다음을 사용합니다. 공개 예제 정책을 사설 목록으로 간주하지 않습니다.
+
+```sh
+test -n "${HWPJS_REVIEWED_BUNDLE_DIR:-}" || exit 1
+node tools/build-pages-demo.mjs --bundle-dir "$HWPJS_REVIEWED_BUNDLE_DIR" --fixture-policy tools/pages-demo/public-gallery-fixtures.json --out zig-out/verification/gallery/public
+node tools/build-pages-demo.mjs --verify --fixture-policy tools/pages-demo/public-gallery-fixtures.json --out zig-out/verification/gallery/public
+```

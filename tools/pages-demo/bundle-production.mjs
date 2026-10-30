@@ -1,3 +1,4 @@
+import { validateExplicitFixturePolicy } from './fixture-policy.mjs';
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -95,7 +96,7 @@ function validateReferences(files) {
     if (path.endsWith('.js')) checkJavaScriptModule(source);
   }
 }
-export async function validateProductionBundle(directory, { root }) {
+export async function validateProductionBundle(directory, { root, fixturePolicy }) {
   const bundle = await validateBundle(directory);
   if (required.some((path) => !bundle.files.has(path))) throw Error('IncompleteEditorBundle');
   if (
@@ -105,7 +106,8 @@ export async function validateProductionBundle(directory, { root }) {
   ) {
     throw Error('UnapprovedBundleType');
   }
-  validateFixtures(bundle.files);
+  if (fixturePolicy === undefined) validateFixtures(bundle.files);
+  else validateExplicitFixturePolicy(bundle.files, fixturePolicy);
   await validateLicenses(root, bundle.files);
   validateReferences(bundle.files);
   return bundle;

@@ -62,6 +62,10 @@ jobs:
             ./tests/hwp5/history-input-intent-readiness.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
+      - name: 공개 예제 정책 정규 회귀
+        run: |
+          test -f ./tests/tools/pages-demo-fixture-policy.test.mjs || exit 1
+          node --test --test-concurrency=1 ./tests/tools/pages-demo-fixture-policy.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

@@ -57,3 +57,11 @@ GitHub Pages에는 위 서버 별칭이 없습니다. 배포된 `assets/` 모듈
 최초 작성 시점에는 부모 HTTP12개 검사 통과와 브라우저 검증 진행 상태를 구분했습니다. 후속 실제 운영 경로에서는 기존 진입의 canonical redirect, catalog117개에서 noori HWPX 선택·실제 입력·undo/redo·다운로드·다시 열기, React/Svelte의 catalog·문단 부호, API ready를 확인했고 소유 브라우저 2개를 종료했습니다. 117은 이 실행의 catalog 관측값이지 정책 기본값이나 전 fixture 검증 수가 아닙니다.
 
 이 후속은 UI/Native ACK·다운로드·reopen 근거이며 이번 실행에서 독립 CFB/XML oracle를 새로 수행한 것은 아닙니다. 엔진은 3fc/V1이며 V2 이력 미포함입니다. 이전 다른 공개 실행의 Svelte 최초 timeout은 원인이 확정되지 않은 별도 이력으로 유지하며 이번 성공으로 지우지 않습니다. 주소·PID·개인 경로는 이 공개 문서에 싣지 않습니다. 이 문서 갱신 과정에서는 새 서버·브라우저·Native 빌드를 실행하지 않았습니다. 영구 회귀 진입점은 [서버 bundle 검사](../tests/hwpx/demo-server-bundle.test.mjs)이며, 대표 경로 검증을 전체 문서·모든 fixture E2E로 확대하지 않습니다.
+
+## 명시 공개 예제 정책 후보
+
+기본 정규 생산은 기존 Noori 두 예제만 허용합니다. `--fixture-policy`를 명시하면 catalog의 정확한 바이트 해시와 ID·파일 경로·크기·SHA를 검증하며, 중복·추가·누락·보호 이름·내부 주소는 거부합니다. 공개 목록은 `tools/pages-demo/public-gallery-fixtures.json`, 원본 공급 기록은 같은 폴더의 `public-gallery-sources.json`이 소유합니다. 정규 회귀와 생산 명령은 [개발·검증 명령](development-commands.md)의 공개 예제 정책 절을 따릅니다.
+
+현재 복구 후보는 프로젝트 예제99개와 기존 Noori 호환 ID2개를 합친 101항목입니다. 암호 예제2개와 별도 참조16개는 이 공개 범위에서 제외합니다. 파일 가용성은 Native 기능 지원이나 모든 문서 편집 성공을 의미하지 않습니다. 기존 사설117 목록은 별도이며, catalog 길이·ID를 엄격 검증하는 앱에 공개101 목록을 통째로 덮어써서는 안 됩니다. 이번 기록은 후보 생산·HTTP 검증 범위이며 실제 서비스 전환 완료를 뜻하지 않습니다.
+
+정규 회귀의 기본 Noori2 양성은 현재 공개 앱 자산에서 두 fixture와 catalog만 분리한 호출자 소유 사본으로 검증합니다. 공개 갤러리 개수나 예전 산출물 경로에 의존하지 않습니다.
