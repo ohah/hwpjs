@@ -104,6 +104,8 @@ pure147은 기존 helper108 + hint/branch/512/보존9 + controller/COW30으로 �
 
 메인05 통합은 Native/Worker·공개 음성25개와 순수57개, 총82개 및 companion strict가 통과했습니다. 원03의 항상 같은 capabilities identity 기대는 원08의 실제 전체 값 기준으로 교정했고, 첫 metadata 변경과 이후 동일 metadata 재사용을 나눠 검사합니다. 정규 테스트는 ignored SDK를 자동 import하지 않으며 SDK08 실제 oracle3은 격리된 별도 근거입니다. 공식 SDK05 strict와 새 앱 쌍은 완료됐지만, 최종 반복 브라우저 검사·운영 승격·외부 HTTPS 확인은 별도 단계입니다.
 
+05 최종 Chrome ABBA16도 재시도 없이 통과했습니다. 같은 Noori·font·DPR·low-timeline 조건에서 각2회 평균 재입력→최종 marker는 p4 burst1357.15→832.30ms, p15 burst1377.50→888.70ms, p4 30Hz202.75→83.95ms, p15 30Hz193.65→53.80ms였습니다. A는 배포 COW08, B는 capabilities를 수정한05이며 원03·small4와 합산하지 않습니다. 최종 text/caret·busy=false·trusted40/undo40/repeat39·소유 브라우저 종료16건과 독립 CFB 저장4건을 확인했습니다. source `290be23b5`의 CI도 성공했습니다. burst에 약0.83~0.89초가 남고 표본·계측·호스트 부하의 한계가 있어 전체 문서·픽셀·Native ACK 또는 무지연을 보장하지 않습니다. 실제 운영 반영과 외부 주소 검사는 이 결과와 별도입니다.
+
 ## 불변 증거와 재현 경계
 
 | 입력 | SHA256 |
