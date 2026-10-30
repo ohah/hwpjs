@@ -31,6 +31,8 @@ jobs:
           test -f ./packages/core/tests/state/owned.test.ts || exit 1
           test -f ./packages/core/tests/state/owned-freeze-observation.test.ts || exit 1
           bun test --no-install ./packages/core/tests/state/owned.test.ts ./packages/core/tests/state/owned-freeze-observation.test.ts
+      - name: Test WASM loader buffer ownership
+        run: node --test ./packages/core/tests/runtime/wasm-module-loader-owned-input.test.ts
       - name: Test versioned demo Worker assets
         run: |
           test -f ./tools/tests/worker-assets.test.mjs || exit 1

@@ -13,7 +13,7 @@ export function createWasmModuleLoader(options: { url?: string | URL; fetch?: ty
   return async (): Promise<WebAssembly.Module> => {
     const response = await (options.fetch ?? globalThis.fetch)(url, { cache: 'no-cache' });
     if (!response.ok) throw Error(`WasmFetchFailed:${response.status}`);
-    const bytes = new Uint8Array(await response.arrayBuffer());
+    const bytes = new Uint8Array(await response.arrayBuffer()).slice();
     if (
       bytes.length < 8 ||
       ![0, 97, 115, 109, 1, 0, 0, 0].every((value, index) => bytes[index] === value)

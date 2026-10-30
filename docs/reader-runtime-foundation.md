@@ -19,6 +19,12 @@ try {
 
 Node24 이상의 TypeScript source 실행 환경이 필요합니다. 위 readFile은 host 예시이며 core의 I/O가 아닙니다. 편집의 typed 명령과 토큰은 [헤드리스 코어 기반](headless-core-foundation.md), transport는 [Worker 계약](worker-runtime-transport.md)을 따릅니다.
 
+## WASM 로더의 바이트 소유권
+
+`createWasmModuleLoader`는 fetch 응답의 ArrayBuffer를 즉시 복사한 뒤 헤더 확인·해시 계산·실제 compile에 같은 소유 바이트를 사용합니다. 사용자 fetch가 보관한 버퍼를 나중에 바꿔도 등록한 해시와 컴파일 입력이 어긋나지 않습니다. 복사 비용은 WASM 크기에 비례하는 O(W) 시간·메모리이며, 입력 지연 개선을 뜻하지 않습니다.
+
+`packages/core/tests/runtime/wasm-module-loader-owned-input.test.ts`는 별도 프로세스에서 외부 버퍼를 hash 이후 변경하고 실제 WebAssembly.compile에 위임해 이 경계를 검사합니다. crypto·등록 결과를 대체하지 않으며, 알 수 없는 정상 모듈은 권위를 받지 않습니다. 자체 생성한 작은 WASM으로 2개 검사가 통과하므로 외부 엔진 아티팩트 없이 CI에서 실행됩니다.
+
 ## 세션과 실패
 
 요청은 호출 시 복사하고 backend 큐로 직렬화합니다. default runtime은 한 후보 load만 받으며, legacy wrapper만 allowReload를 사용합니다. reload는 이전 문서의 window·생성 표 대기 상태를 초기화합니다. dispose는 신규/대기 요청을 차단하고 실제 진행 중 요청의 결과를 먼저 확정한 뒤 native editor를 해제합니다. caller의 버퍼와 반환 projection은 이후 요청이 변경하지 않습니다. 임시 decoder와 password bytes는 해제 전에 지웁니다.
