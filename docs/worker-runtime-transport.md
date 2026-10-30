@@ -19,3 +19,11 @@ HWP5 현재 참조는 transport별 prefix를 initialize-runtime에서 Worker에 
 이 변경은 postMessage 경계의 바이트 복제 한 단계를 피하는 후보이며, Native 조회·refresh·그림 바이트 요청 수·이력 단위·core 소유 복사는 유지합니다. 관측된 요청 165건을 줄이는 변경이나 물리 zero-copy·입력 지연 해결로 해석하지 않습니다.
 
 [정규 집중 명령](development-commands.md#worker-resource-transfer-tests)은 실제 Worker entry와 소유 DTO·그림 리소스 모듈을 controlled Node Worker에 연결합니다. ReaderRuntime은 대역이며 실제 Native·브라우저·성능 증거가 아닙니다. 공식 Worker 해시 재생성·런타임 권위·실 E2E는 별도 후속 gate이고, 현재 운영 union에는 이 후속 변경이 포함되지 않았습니다.
+
+## 게시 데모의 기본 Worker 연결
+
+게시 데모는 `createWorkerRuntimeFactory`에 번들 기준 WASM URL만 전달하고 Worker 선택은 기본 factory에 맡깁니다. 기본 경로는 패키지가 선언한 Worker 코드 해시를 확인하고 검증된 바이트로 Worker를 만듭니다. 같은 주소여도 `workerURL`을 명시하면 사용자 정의 전송으로 분류하므로 원자적 서식 admission을 얻지 못합니다. 사용자 정의 Worker 옵션의 지원이나 core의 검증 조건을 완화하지 않습니다. 개발 서버의 명시 경로는 별도이며, 게시 URL의 하위 경로·쿼리·fragment에서도 WASM 상대 경로를 보존합니다.
+
+실제 Chrome의 새 갤러리 후보에서 Noori HWPX를 열고 ‘보도일시’를 찾은 뒤 문단 모양을 조회했습니다. 정렬·여백 조회와 배경 교체 요청 체크박스는 활성입니다. 원값이 unknown인 배경 입력은 명시 교체 요청 전까지 잠기며, 변경값이 없을 때 적용 버튼이 비활성인 것은 오류가 아닙니다. `option`의 접근성 표시만으로 상위 입력 전체가 비활성이라고 판단하지 않고 실제 `disabled`와 `:disabled`를 확인합니다.
+
+정상 UI로 교체 요청을 체크하고 면 색 `#123456`과 보조색 `#ABCDEF`를 입력해 적용·실행 취소/다시 실행·다운로드·같은 저장본 재열기를 수행했습니다. 독립 ZIP/XML 읽기에서 대상 ‘보도일시’ 문단의 `paraPrIDRef=45` → `borderFillIDRef=0` → 면 색 `#563412`·보조색 `#efcdab` 연결을 확인했습니다. 이는 [원본 색상 정책](source-color-policy.md)의 해당 Noori 원값 처리이며 일반 문서 전체에 적용하는 채널 순서 규칙이 아닙니다. 재열기의 배경 입력란은 새 변경값을 위한 빈칸이고, 조회한 원값을 자동 채우지 않습니다. 이 한 파일의 경로 검증은 모든 문서·최종 화면 픽셀·비대상 ZIP 항목 보존·성능이나 운영 배포 완료를 증명하지 않습니다.
