@@ -1,0 +1,2265 @@
+{
+  "format": "hwp5",
+  "version": "5.1.0.1",
+  "paragraphs": [
+    {
+      "section": 0,
+      "paragraph": 0,
+      "editable": true,
+      "label": "구역 1 · 문단 1 · 제어 표식 5개 (표시 의미 미적용)",
+      "text": "￼￼각주참조￼￼",
+      "selectionOwner": "section:0:body",
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 1,
+          "source": 8
+        },
+        {
+          "at": 2,
+          "source": 16
+        },
+        {
+          "at": 7,
+          "source": 28
+        },
+        {
+          "at": 8,
+          "source": 36
+        }
+      ],
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 8,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 11,
+      "paragraphShape": {
+        "id": 11,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "structuralAnchors": [
+        {
+          "kind": "section",
+          "control_node": 4,
+          "paragraph": 0,
+          "source_unit": 0,
+          "current_unit": 0,
+          "unit": 0
+        },
+        {
+          "kind": "column",
+          "control_node": 11,
+          "paragraph": 0,
+          "source_unit": 8,
+          "current_unit": 8,
+          "unit": 1
+        }
+      ],
+      "automaticNumbers": [
+        {
+          "unit": 6,
+          "kind": "hwp5-note-reference",
+          "noteNode": 12,
+          "numberNode": 18,
+          "numberNodes": [
+            18
+          ],
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 1
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        },
+        {
+          "unit": 7,
+          "kind": "hwp5-note-reference",
+          "noteNode": 19,
+          "numberNode": 25,
+          "numberNodes": [
+            25
+          ],
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 2
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    },
+    {
+      "section": 0,
+      "paragraph": 1,
+      "editable": true,
+      "label": "구역 1 · 문단 2 · 중첩 · 제어 표식 2개 (표시 의미 미적용)",
+      "text": "￼ 각주입니다. before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 before-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789 after-table-0123456789",
+      "selectionOwner": null,
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 1,
+          "source": 8
+        }
+      ],
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 5648,
+          "charShapeId": 4
+        }
+      ],
+      "paraShapeId": 10,
+      "paragraphShape": {
+        "id": 10,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": -2620,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 130,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 130
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [
+        {
+          "unit": 0,
+          "numberNode": 18,
+          "hwp5Source": {
+            "control_node": 18,
+            "paragraph": 1,
+            "source_unit": 0,
+            "current_unit": 0,
+            "attributes": 1,
+            "kind": 1,
+            "shape": 0,
+            "superscript": false,
+            "number": 1,
+            "symbol": 0,
+            "prefix": 0,
+            "suffix": 41,
+            "extra_bytes": 0,
+            "extra_nonzero": false
+          },
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 1
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    },
+    {
+      "section": 0,
+      "paragraph": 2,
+      "editable": true,
+      "label": "구역 1 · 문단 3 · 중첩 · 제어 표식 2개 (표시 의미 미적용)",
+      "text": "￼ 각주 두 번째입니다.",
+      "selectionOwner": null,
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 1,
+          "source": 8
+        }
+      ],
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 13,
+          "charShapeId": 4
+        }
+      ],
+      "paraShapeId": 10,
+      "paragraphShape": {
+        "id": 10,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": -2620,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 130,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 130
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [
+        {
+          "unit": 0,
+          "numberNode": 25,
+          "hwp5Source": {
+            "control_node": 25,
+            "paragraph": 2,
+            "source_unit": 0,
+            "current_unit": 0,
+            "attributes": 1,
+            "kind": 1,
+            "shape": 0,
+            "superscript": false,
+            "number": 2,
+            "symbol": 0,
+            "prefix": 0,
+            "suffix": 41,
+            "extra_bytes": 0,
+            "extra_nonzero": false
+          },
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 2
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    },
+    {
+      "section": 0,
+      "paragraph": 3,
+      "editable": true,
+      "label": "구역 1 · 문단 4 · 제어 표식 3개 (표시 의미 미적용)",
+      "text": "미주참조￼￼",
+      "selectionOwner": "section:0:body",
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 5,
+          "source": 12
+        },
+        {
+          "at": 6,
+          "source": 20
+        }
+      ],
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 6,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 11,
+      "paragraphShape": {
+        "id": 11,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [
+        {
+          "unit": 4,
+          "kind": "hwp5-note-reference",
+          "noteNode": 30,
+          "numberNode": 36,
+          "numberNodes": [
+            36
+          ],
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 1
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        },
+        {
+          "unit": 5,
+          "kind": "hwp5-note-reference",
+          "noteNode": 37,
+          "numberNode": 43,
+          "numberNodes": [
+            43
+          ],
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 2
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    },
+    {
+      "section": 0,
+      "paragraph": 4,
+      "editable": true,
+      "label": "구역 1 · 문단 5 · 중첩 · 제어 표식 2개 (표시 의미 미적용)",
+      "text": "￼ 미주입니다.",
+      "selectionOwner": null,
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 1,
+          "source": 8
+        }
+      ],
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 8,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 0,
+      "paragraphShape": {
+        "id": 0,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [
+        {
+          "unit": 0,
+          "numberNode": 36,
+          "hwp5Source": {
+            "control_node": 36,
+            "paragraph": 4,
+            "source_unit": 0,
+            "current_unit": 0,
+            "attributes": 2,
+            "kind": 2,
+            "shape": 0,
+            "superscript": false,
+            "number": 1,
+            "symbol": 0,
+            "prefix": 0,
+            "suffix": 41,
+            "extra_bytes": 0,
+            "extra_nonzero": false
+          },
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 1
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    },
+    {
+      "section": 0,
+      "paragraph": 5,
+      "editable": true,
+      "label": "구역 1 · 문단 6 · 중첩 · 제어 표식 2개 (표시 의미 미적용)",
+      "text": "￼ 미주 두 번째입니다.",
+      "selectionOwner": null,
+      "sourceOffsets": [
+        {
+          "at": 0,
+          "source": 0
+        },
+        {
+          "at": 1,
+          "source": 8
+        }
+      ],
+      "textSourcePolicyError": null,
+      "characterRanges": [
+        {
+          "start": 0,
+          "end": 13,
+          "charShapeId": 1
+        }
+      ],
+      "paraShapeId": 0,
+      "paragraphShape": {
+        "id": 0,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "automaticNumbers": [
+        {
+          "unit": 0,
+          "numberNode": 43,
+          "hwp5Source": {
+            "control_node": 43,
+            "paragraph": 5,
+            "source_unit": 0,
+            "current_unit": 0,
+            "attributes": 2,
+            "kind": 2,
+            "shape": 0,
+            "superscript": false,
+            "number": 2,
+            "symbol": 0,
+            "prefix": 0,
+            "suffix": 41,
+            "extra_bytes": 0,
+            "extra_nonzero": false
+          },
+          "source": {
+            "values": {
+              "type_known": true,
+              "num": 2
+            },
+            "format": {
+              "type_known": true,
+              "raw": [
+                "DIGIT",
+                "",
+                "",
+                ")"
+              ],
+              "supscript": false
+            },
+            "hwp5PageNumber": false
+          }
+        }
+      ],
+      "automaticNumberPrefixes": [],
+      "pageControls": []
+    }
+  ],
+  "totalParagraphs": 6,
+  "limited": false,
+  "editorSessionAvailable": true,
+  "observedDocInfoEditingAvailable": false,
+  "observedDocInfoDiagnostics": null,
+  "currentReferenceErrors": [],
+  "tableCreationAvailable": true,
+  "tableCreationResources": {
+    "paragraph": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "character": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "style": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "border_fill": [
+      0,
+      1,
+      2
+    ]
+  },
+  "createdTables": [
+    {
+      "identity": "1",
+      "instance_id": 2,
+      "host_paragraph": 1,
+      "anchor_unit": 2895,
+      "rows": 1,
+      "columns": 1,
+      "width": 15000,
+      "height": 5400,
+      "resources": {
+        "paragraph": 0,
+        "character": 0,
+        "style": 0,
+        "border_fill": 0
+      },
+      "cells": [
+        {
+          "paragraph_id": 1,
+          "row": 0,
+          "column": 0,
+          "x": 0,
+          "y": 0,
+          "width": 15000,
+          "height": 5400,
+          "text": "CELL_TEXT",
+          "softLineBreakAvailable": true
+        }
+      ],
+      "displayFormat": "hwp5",
+      "displayParagraphShape": {
+        "id": 0,
+        "alignment": 0,
+        "left": 0,
+        "right": 0,
+        "indent": 0,
+        "before": 0,
+        "after": 0,
+        "legacySpacingKind": 0,
+        "legacySpacing": 160,
+        "modernSpacing": {
+          "attributes": 0,
+          "value": 160
+        },
+        "headingKind": 0,
+        "headingId": 0,
+        "packedHeadingLevel": 0,
+        "extendedHeadingLevel": 0,
+        "headingLevel": 0,
+        "spacingFormat": "hwp5"
+      },
+      "displayInsets": {
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "bottom": 0
+      },
+      "hwp5Policy": {
+        "common": {
+          "flags": 6955537,
+          "offset_y": 0,
+          "offset_x": 0,
+          "z_order": 0,
+          "margins": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "prevent_page_break": false,
+          "description": "표"
+        },
+        "table": {
+          "page_break": 1,
+          "repeat_header": false,
+          "cell_spacing": 0,
+          "margins": [
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "cell": {
+          "layout": "observed8",
+          "unknown": 0,
+          "attributes": 0,
+          "margins": [
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "section": 0,
+      "hostParagraph": 1,
+      "anchorUnit": 2888
+    }
+  ],
+  "normalizationEditingAvailable": false,
+  "normalizationInfo": {
+    "normalized": false,
+    "historyBaseline": "original",
+    "deviations": null
+  },
+  "documentWindowAvailable": true,
+  "distributionEditingAvailable": false,
+  "paragraphAlignmentAvailable": true,
+  "paragraphMarginsAvailable": true,
+  "paragraphSpacingAvailable": true,
+  "characterPropertiesAvailable": true,
+  "characterPropertiesRangesAvailable": true,
+  "paragraphReplacementAvailable": true,
+  "characterUnderlineAvailable": true,
+  "characterStrikeAvailable": true,
+  "characterStrikeRangesAvailable": true,
+  "characterUnderlineRangesAvailable": true,
+  "characterUnderlineColorAvailable": true,
+  "characterStrikeColorAvailable": true,
+  "characterTextColorAvailable": true,
+  "characterShadeAvailable": true,
+  "characterEffectAvailable": true,
+  "characterEffectExclusiveAvailable": true,
+  "characterEffectRangesExclusiveAvailable": true,
+  "characterOutlineAvailable": true,
+  "characterOutlineRangesAvailable": true,
+  "characterOutlineExtendedAvailable": true,
+  "characterOutlineRangesExtendedAvailable": true,
+  "characterEffectRangesAvailable": true,
+  "characterFontAvailable": true,
+  "characterFontNameAvailable": true,
+  "namedFontTextAvailable": true,
+  "characterPropertyTextAvailable": true,
+  "namedFontPropertyTextAvailable": true,
+  "namedFontReplacementAvailable": true,
+  "characterPropertyReplacementAvailable": true,
+  "namedFontPropertyReplacementAvailable": true,
+  "characterFontNameRangesAvailable": true,
+  "characterFontRangesAvailable": true,
+  "characterTextColorRangesAvailable": true,
+  "characterShadeRangesAvailable": true,
+  "textSourcePolicyAvailable": true,
+  "readOnly": false,
+  "characterShapes": [
+    {
+      "id": 0,
+      "height": 1000,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 1,
+      "height": 1000,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 2,
+      "height": 900,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 3,
+      "height": 900,
+      "bold": false,
+      "italic": false
+    },
+    {
+      "id": 4,
+      "height": 900,
+      "bold": false,
+      "italic": false
+    }
+  ],
+  "characterShapesError": null,
+  "characterUnderlines": [
+    {
+      "id": 0,
+      "kind": "none"
+    },
+    {
+      "id": 1,
+      "kind": "none"
+    },
+    {
+      "id": 2,
+      "kind": "none"
+    },
+    {
+      "id": 3,
+      "kind": "none"
+    },
+    {
+      "id": 4,
+      "kind": "none"
+    }
+  ],
+  "characterUnderlinesError": null,
+  "characterUnderlineStyles": [
+    {
+      "id": 0,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 1,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 2,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 3,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 4,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    }
+  ],
+  "characterUnderlineStylesError": null,
+  "characterTextColors": [
+    {
+      "id": 0,
+      "color": 0
+    },
+    {
+      "id": 1,
+      "color": 0
+    },
+    {
+      "id": 2,
+      "color": 0
+    },
+    {
+      "id": 3,
+      "color": 0
+    },
+    {
+      "id": 4,
+      "color": 0
+    }
+  ],
+  "characterTextColorsError": null,
+  "fontFaces": [
+    {
+      "language": "hangul",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "hangul",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "latin",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "latin",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "hanja",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "hanja",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "japanese",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "japanese",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "other",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "other",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "symbol",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "symbol",
+      "id": 1,
+      "name": "바탕"
+    },
+    {
+      "language": "user",
+      "id": 0,
+      "name": "굴림"
+    },
+    {
+      "language": "user",
+      "id": 1,
+      "name": "바탕"
+    }
+  ],
+  "fontFacesError": null,
+  "fontFaceMetadata": [
+    {
+      "language": "hangul",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "hangul",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        3,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "latin",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "latin",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        3,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "hanja",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "hanja",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        3,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "japanese",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "japanese",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        3,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "other",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "other",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        4,
+        2,
+        2,
+        2,
+        2,
+        2,
+        4
+      ],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "symbol",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "symbol",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        3,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Batang"
+    },
+    {
+      "language": "user",
+      "id": 0,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        11,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Gulim"
+    },
+    {
+      "language": "user",
+      "id": 1,
+      "attributes": 97,
+      "substitute": null,
+      "typeInfo": [
+        2,
+        3,
+        6,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "defaultName": "Batang"
+    }
+  ],
+  "fontFaceMetadataError": null,
+  "characterFontReferences": [
+    {
+      "id": 0,
+      "fontIds": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 1,
+      "fontIds": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": 2,
+      "fontIds": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 3,
+      "fontIds": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 4,
+      "fontIds": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "characterFontReferencesError": null,
+  "characterFontMetrics": [
+    {
+      "id": 0,
+      "values": {
+        "ratio": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "spacing": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "relativeSize": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "offset": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "values": {
+        "ratio": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "spacing": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "relativeSize": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "offset": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "values": {
+        "ratio": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "spacing": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "relativeSize": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "offset": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "values": {
+        "ratio": [
+          95,
+          95,
+          95,
+          95,
+          95,
+          95,
+          95
+        ],
+        "spacing": [
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5
+        ],
+        "relativeSize": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "offset": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "values": {
+        "ratio": [
+          95,
+          95,
+          95,
+          95,
+          95,
+          95,
+          95
+        ],
+        "spacing": [
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5
+        ],
+        "relativeSize": [
+          100,
+          100,
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "offset": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ],
+  "characterFontMetricsError": null,
+  "characterStrikes": [
+    {
+      "id": 0,
+      "enabled": false
+    },
+    {
+      "id": 1,
+      "enabled": false
+    },
+    {
+      "id": 2,
+      "enabled": false
+    },
+    {
+      "id": 3,
+      "enabled": false
+    },
+    {
+      "id": 4,
+      "enabled": false
+    }
+  ],
+  "characterStrikesError": null,
+  "characterStrikeStyles": [
+    {
+      "id": 0,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 1,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 2,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 3,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    },
+    {
+      "id": 4,
+      "raw_style": 0,
+      "raw_color": 0,
+      "shape": null,
+      "color": null
+    }
+  ],
+  "characterStrikeStylesError": null,
+  "characterShades": [
+    {
+      "id": 0,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 1,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 2,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 3,
+      "state": "none",
+      "color": null
+    },
+    {
+      "id": 4,
+      "state": "none",
+      "color": null
+    }
+  ],
+  "characterShadesError": null,
+  "characterEffects": [
+    {
+      "id": 0,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 1,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 2,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 3,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    },
+    {
+      "id": 4,
+      "emboss": false,
+      "engrave": false,
+      "superscript": false,
+      "subscript": false
+    }
+  ],
+  "characterEffectsError": null,
+  "characterOutlines": [
+    {
+      "id": 0,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 1,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 2,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 3,
+      "state": "none",
+      "rawKind": 0
+    },
+    {
+      "id": 4,
+      "state": "none",
+      "rawKind": 0
+    }
+  ],
+  "characterOutlinesError": null,
+  "tables": [],
+  "tableBindingsErrors": [],
+  "hwp5BorderFillSources": null,
+  "hwp5BorderFillSourceError": null,
+  "tablePlacementsErrors": [],
+  "tableLayoutSourceErrors": [],
+  "cellLayoutSourceErrors": [],
+  "tableAnchorErrors": [],
+  "tableGeometryErrors": [],
+  "paragraphFormatAvailable": true,
+  "paragraphShapeCount": 12,
+  "paragraphShapeOptions": [
+    {
+      "value": "0",
+      "label": "ID 0 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "1",
+      "label": "ID 1 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "2",
+      "label": "ID 2 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "3",
+      "label": "ID 3 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "4",
+      "label": "ID 4 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "5",
+      "label": "ID 5 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "6",
+      "label": "ID 6 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "7",
+      "label": "ID 7 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "8",
+      "label": "ID 8 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 150%"
+    },
+    {
+      "value": "9",
+      "label": "ID 9 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    },
+    {
+      "value": "10",
+      "label": "ID 10 · 양쪽 정렬 · 들여쓰기 -2620 HWPUNIT · 줄 간격 130%"
+    },
+    {
+      "value": "11",
+      "label": "ID 11 · 양쪽 정렬 · 들여쓰기 0 HWPUNIT · 줄 간격 160%"
+    }
+  ],
+  "pageSources": [
+    {
+      "section": 0,
+      "source_node": 5,
+      "width": 59528,
+      "height": 84188,
+      "left": 8504,
+      "right": 8504,
+      "top": 5668,
+      "bottom": 4252,
+      "header": 4252,
+      "footer": 4252,
+      "gutter": 0,
+      "flags": 0,
+      "orientation": "narrowly",
+      "binding": "one_side",
+      "extra_bytes": 0
+    }
+  ],
+  "pageSourceErrors": [],
+  "sectionSources": [
+    {
+      "section": 0,
+      "source_node": 4,
+      "flags": 0,
+      "column_gap": 1134,
+      "vertical_grid": 0,
+      "horizontal_grid": 0,
+      "tab_spacing": 8000,
+      "numbering_id": 1,
+      "page_start": 0,
+      "picture_start": 0,
+      "table_start": 0,
+      "equation_start": 0,
+      "language": 0,
+      "extra_bytes": 17,
+      "extra_nonzero": false,
+      "extra_raw": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "observed_extension": {
+        "leading_count_raw": 0,
+        "memo_shape_id_ref": 0,
+        "flags_raw": 0,
+        "text_direction_raw": 0,
+        "text_direction": "HORIZONTAL",
+        "text_vertical_width_head": false,
+        "unknown_flags": 0,
+        "line_number_restart_raw": 0,
+        "line_number_count_by": 0,
+        "line_number_distance_raw": 0,
+        "line_number_start": 0,
+        "trailing_raw": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "memo_shape_count": 0,
+      "memo_list_count": 0,
+      "fileVersion": 83951617
+    }
+  ],
+  "sectionSourceErrors": [],
+  "currentParagraphFlows": [
+    {
+      "paragraph": 0,
+      "source_node": 0,
+      "template_node": 0,
+      "parent_node": null,
+      "generated": false,
+      "top_level": true,
+      "break_flags": 3,
+      "section_break": true,
+      "multicolumn_break": true,
+      "page_break": false,
+      "column_break": false,
+      "host": "body",
+      "list_node": null,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 1,
+      "source_node": 14,
+      "template_node": 14,
+      "parent_node": 12,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "footnote",
+      "list_node": 13,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 2,
+      "source_node": 21,
+      "template_node": 21,
+      "parent_node": 19,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "footnote",
+      "list_node": 20,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 3,
+      "source_node": 26,
+      "template_node": 26,
+      "parent_node": null,
+      "generated": false,
+      "top_level": true,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "body",
+      "list_node": null,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 4,
+      "source_node": 32,
+      "template_node": 32,
+      "parent_node": 30,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "endnote",
+      "list_node": 31,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    },
+    {
+      "paragraph": 5,
+      "source_node": 39,
+      "template_node": 39,
+      "parent_node": 37,
+      "generated": false,
+      "top_level": false,
+      "break_flags": 0,
+      "section_break": false,
+      "multicolumn_break": false,
+      "page_break": false,
+      "column_break": false,
+      "host": "endnote",
+      "list_node": 38,
+      "memo_index": null,
+      "memo_node": null,
+      "empty_line_eligible": false,
+      "section": 0
+    }
+  ],
+  "columnSources": [
+    {
+      "current_paragraph": 0,
+      "current_unit": 8,
+      "source_node": 11,
+      "paragraph_node": 0,
+      "flags": 4100,
+      "count": 1,
+      "kind": 0,
+      "direction": 0,
+      "same_width": true,
+      "spacing": 0,
+      "columns": [],
+      "line_type": 0,
+      "line_width": 0,
+      "color": 0,
+      "extra_bytes": 0,
+      "section": 0
+    }
+  ],
+  "flowSourceErrors": [],
+  "hwp5Memos": [],
+  "hwp5MemoErrors": [],
+  "structuralAnchorErrors": [],
+  "pageAreaSources": [],
+  "pageAreaSourceErrors": [],
+  "masterPageSources": [],
+  "masterPageSourceErrors": [],
+  "hwp5Notes": [
+    {
+      "section": 0,
+      "kind": "footnote",
+      "controlNode": 12,
+      "listNode": 13,
+      "hostParagraph": 0,
+      "anchorUnit": 6,
+      "paragraphs": [
+        1
+      ],
+      "source": {
+        "kind": "footnote",
+        "control_node": 12,
+        "list_node": 13,
+        "paragraph_count": 1,
+        "paragraph": 0,
+        "source_unit": 20,
+        "current_unit": 20,
+        "number": 1,
+        "prefix": 0,
+        "suffix": 41,
+        "number_shape": 0,
+        "instance_id": null,
+        "control_extra_bytes": 4,
+        "control_extra_nonzero": true,
+        "list_attributes": 0,
+        "list_unknown": 0,
+        "list_extra_bytes": 8,
+        "list_extra_nonzero": false
+      }
+    },
+    {
+      "section": 0,
+      "kind": "footnote",
+      "controlNode": 19,
+      "listNode": 20,
+      "hostParagraph": 0,
+      "anchorUnit": 7,
+      "paragraphs": [
+        2
+      ],
+      "source": {
+        "kind": "footnote",
+        "control_node": 19,
+        "list_node": 20,
+        "paragraph_count": 1,
+        "paragraph": 0,
+        "source_unit": 28,
+        "current_unit": 28,
+        "number": 2,
+        "prefix": 0,
+        "suffix": 41,
+        "number_shape": 0,
+        "instance_id": null,
+        "control_extra_bytes": 4,
+        "control_extra_nonzero": true,
+        "list_attributes": 0,
+        "list_unknown": 0,
+        "list_extra_bytes": 8,
+        "list_extra_nonzero": false
+      }
+    },
+    {
+      "section": 0,
+      "kind": "endnote",
+      "controlNode": 30,
+      "listNode": 31,
+      "hostParagraph": 3,
+      "anchorUnit": 4,
+      "paragraphs": [
+        4
+      ],
+      "source": {
+        "kind": "endnote",
+        "control_node": 30,
+        "list_node": 31,
+        "paragraph_count": 1,
+        "paragraph": 3,
+        "source_unit": 4,
+        "current_unit": 4,
+        "number": 1,
+        "prefix": 0,
+        "suffix": 41,
+        "number_shape": 0,
+        "instance_id": null,
+        "control_extra_bytes": 4,
+        "control_extra_nonzero": true,
+        "list_attributes": 0,
+        "list_unknown": 0,
+        "list_extra_bytes": 8,
+        "list_extra_nonzero": false
+      }
+    },
+    {
+      "section": 0,
+      "kind": "endnote",
+      "controlNode": 37,
+      "listNode": 38,
+      "hostParagraph": 3,
+      "anchorUnit": 5,
+      "paragraphs": [
+        5
+      ],
+      "source": {
+        "kind": "endnote",
+        "control_node": 37,
+        "list_node": 38,
+        "paragraph_count": 1,
+        "paragraph": 3,
+        "source_unit": 12,
+        "current_unit": 12,
+        "number": 2,
+        "prefix": 0,
+        "suffix": 41,
+        "number_shape": 0,
+        "instance_id": null,
+        "control_extra_bytes": 4,
+        "control_extra_nonzero": true,
+        "list_attributes": 0,
+        "list_unknown": 0,
+        "list_extra_bytes": 8,
+        "list_extra_nonzero": false
+      }
+    }
+  ],
+  "hwp5NoteErrors": [],
+  "hwp5NoteShapes": [
+    {
+      "section": 0,
+      "shapes": [
+        {
+          "kind": "footnote",
+          "source_node": 6,
+          "owner_node": 4,
+          "flags": 0,
+          "user_char": 0,
+          "prefix": 0,
+          "suffix": 41,
+          "start_number": 1,
+          "separator_length": -1,
+          "above": 850,
+          "below": 567,
+          "between": 283,
+          "line_type": 1,
+          "line_width": 1,
+          "color": 0,
+          "extra_bytes": 0,
+          "extra_nonzero": false
+        },
+        {
+          "kind": "endnote",
+          "source_node": 7,
+          "owner_node": 4,
+          "flags": 0,
+          "user_char": 0,
+          "prefix": 0,
+          "suffix": 41,
+          "start_number": 1,
+          "separator_length": 14692344,
+          "above": 850,
+          "below": 567,
+          "between": 0,
+          "line_type": 1,
+          "line_width": 1,
+          "color": 0,
+          "extra_bytes": 0,
+          "extra_nonzero": false
+        }
+      ]
+    }
+  ],
+  "hwp5NotePolicies": [
+    {
+      "state": "selected",
+      "section": 0,
+      "kind": "footnote",
+      "sourceNode": 6,
+      "placement": "EACH_COLUMN",
+      "beneathText": false,
+      "betweenNotes": 3.7733333333333334,
+      "belowLine": 7.56,
+      "aboveLine": 11.333333333333334,
+      "separator": {
+        "length": "full",
+        "type": "SOLID",
+        "width": "0.12 mm",
+        "color": "#000000"
+      }
+    },
+    {
+      "state": "selected",
+      "section": 0,
+      "kind": "endnote",
+      "sourceNode": 7,
+      "placement": "END_OF_DOCUMENT",
+      "beneathText": false,
+      "betweenNotes": 0,
+      "belowLine": 7.56,
+      "aboveLine": 11.333333333333334,
+      "separator": {
+        "length": 195897.92,
+        "type": "SOLID",
+        "width": "0.12 mm",
+        "color": "#000000"
+      }
+    }
+  ],
+  "hwp5NoteShapeErrors": [],
+  "hwp5Captions": [],
+  "hwp5CaptionErrors": [],
+  "hwp5CaptionGeometryErrors": [],
+  "hwp5Drawings": [],
+  "hwp5DrawingErrors": [],
+  "hwp5DrawingObjectExtraErrors": [],
+  "hwp5PolygonPoints": [],
+  "hwp5PolygonPointErrors": [],
+  "hwp5CurvePoints": [],
+  "hwp5CurvePointErrors": [],
+  "hwp5DrawingComponents": [],
+  "hwp5DrawingComponentErrors": [],
+  "hwp5DrawingBodies": [],
+  "hwp5DrawingBodyErrors": [],
+  "hwp5DrawingMatrices": [],
+  "hwp5DrawingMatrixErrors": [],
+  "hwp5DrawingLocalTransforms": [],
+  "hwp5DrawingLocalErrors": [],
+  "hwp5DrawingCorners": [],
+  "hwp5DrawingCornerErrors": [],
+  "hwp5DrawingGeometry": [],
+  "hwp5DrawingGeometryErrors": [],
+  "hwp5DrawingStyles": [],
+  "hwp5DrawingStyleErrors": [],
+  "columnDisplaySources": [
+    {
+      "current_paragraph": 0,
+      "current_unit": 8,
+      "source_node": 11,
+      "paragraph_node": 0,
+      "flags": 4100,
+      "count": 1,
+      "kind": 0,
+      "direction": 0,
+      "same_width": true,
+      "spacing": 0,
+      "columns": [],
+      "line_type": 0,
+      "line_width": 0,
+      "color": 0,
+      "extra_bytes": 0,
+      "section": 0,
+      "display_unit": 1,
+      "display_end": 2
+    }
+  ],
+  "columnDisplayErrors": [],
+  "automaticNumberErrors": [],
+  "pageControlSources": [],
+  "pageControlSourceErrors": [],
+  "documentPropertySource": null,
+  "documentPropertySourceError": null,
+  "hwp5Pictures": [],
+  "hwp5PictureErrors": [],
+  "hwp5PictureTails": [],
+  "hwp5PictureTailErrors": [],
+  "hwp5PictureAbsentTails": [],
+  "hwp5GroupGeometry": {
+    "state": "projected",
+    "containers": [],
+    "rectangles": [],
+    "polygons": [],
+    "pictureBindings": [],
+    "lineBindings": []
+  },
+  "hwp5FormSourcesAvailable": true,
+  "hwp5Forms": [],
+  "hwp5FormErrors": [],
+  "hwp5FormPropertiesAvailable": true,
+  "hwp5FormPropertyErrors": [],
+  "hwp5FormTextEditAvailable": true,
+  "hwp5FormTextLayoutRetentionAvailable": true,
+  "hwp5CheckBoxStateEditAvailable": true,
+  "hwp5RadioSelectAvailable": true,
+  "hwp5UnnamedRadioSelectAvailable": true,
+  "lines": [],
+  "lineErrors": [],
+  "formulas": [],
+  "formulaErrors": [],
+  "formulaDefinitionAvailable": true
+}

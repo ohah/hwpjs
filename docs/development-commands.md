@@ -127,6 +127,24 @@ test -f ./tests/hwp5/plain-footnote-continuation-native.test.mjs || exit 1
 mise exec -- node --test ./tests/hwp5/plain-footnote-continuation-native.test.mjs
 ```
 
+## 표가 있는 각주의 순수 회귀
+
+[혼합 각주 계약](mixed-footnote-continuation.md)을 따릅니다. 아래 6개 진입점은 기존 plain70과 혼합32를 함께 검사합니다. 기록 JSON3은 테스트 전용이며 WASM·로컬 검증 폴더·추가 환경변수를 요구하지 않습니다.
+
+```sh
+set -- \
+  ./tests/hwp5/mixed-note-table-continuation.test.mjs \
+  ./tests/hwp5/recorded-mixed-note-continuation.test.mjs \
+  ./tests/hwp5/source-note-projection-optin.test.mjs \
+  ./tests/hwp5/plain-footnote-continuation.test.mjs \
+  ./tests/hwp5/plain-footnote-stable-order.test.mjs \
+  ./tests/hwp5/plain-footnote-lock-audit.test.mjs
+for path in "$@"; do test -f "$path" || exit 1; done
+mise exec -- node --test --test-concurrency=1 "$@"
+```
+
+2026-10-30 실제 작업 트리에서 102pass·0fail·0skip이었습니다. 독립 저장 oracle와 실제 Canvas의 별도 증거는 계약 문서에 기록하며 이 순수 검사 수에 합산하지 않습니다.
+
 ## JS 모노레포 CLI
 
 Bun 1.4.4와 명시 WASM을 사용하는 경로입니다. 내부 core·vanilla·react·svelte·react-native 5개는 private/dist 계약이고 외부 package 진입점은 `@ohah/hwpjs`입니다.

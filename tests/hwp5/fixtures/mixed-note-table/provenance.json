@@ -1,0 +1,68 @@
+{
+  "testDataOnly": true,
+  "authorizationUse": false,
+  "originalPlanSHA256": "32281210adbdcf89786bf8cff3a23003cf0697b824193952b7eaed94c613c0da",
+  "records": [
+    {
+      "file": "live-content.json",
+      "originalPath": "/Users/yoonhb/Documents/workspace/hwpjs/zig-out/verification/multiple-plain-footnote-resume-83-r1/mixed-note-table-continuation-r1/public-reproduction/execution-existing-surface-once/artifacts/live-content.json",
+      "originalSHA256": "7e5e3364fa6617c30635ca8c27616e68ead75a967b7252c15f2d26f1349a1d1b",
+      "normalizedSHA256": "53d03d91f72a20dd553f84c19cb1af953a123c0ba77263924f2645ddca5e1e19",
+      "removedExactPaths": [
+        "/paragraphs/0/currentReference",
+        "/paragraphs/1/currentReference",
+        "/paragraphs/2/currentReference",
+        "/paragraphs/3/currentReference",
+        "/paragraphs/4/currentReference",
+        "/paragraphs/5/currentReference",
+        "/createdTables/0/cells/0/currentReference"
+      ]
+    },
+    {
+      "file": "reopened-content.json",
+      "originalPath": "/Users/yoonhb/Documents/workspace/hwpjs/zig-out/verification/multiple-plain-footnote-resume-83-r1/mixed-note-table-continuation-r1/public-reproduction/execution-existing-surface-once/artifacts/reopened-content.json",
+      "originalSHA256": "96e3077265e24c6af9cc46fd5201e93c0bb6686ae5a1ddae175bd6fbf90d6d80",
+      "normalizedSHA256": "c745c389a05dba52f14a70a98c0008db1cb7b00838568335c8af13bd4a69a5b9",
+      "removedExactPaths": [
+        "/paragraphs/0/currentReference",
+        "/paragraphs/1/currentReference",
+        "/paragraphs/2/currentReference",
+        "/paragraphs/3/currentReference",
+        "/paragraphs/4/currentReference",
+        "/paragraphs/5/currentReference",
+        "/paragraphs/6/currentReference"
+      ]
+    }
+  ],
+  "originalFixtureSHA256": "360c6dc2c679e03e48396b11d7f31823a577d64e96a9ec75e074390385b865a9",
+  "savedSHA256": "24e91f888d4cb9dd0d2432f931c2fb125a4d4377cacb8e915db2b477884d48ae",
+  "existingWasmSnapshotSHA256": "d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb",
+  "receiptSHA256": "fb156d52379c65d977f20d385aca473f3e466f42fb0cbeeca770a778684fec0c",
+  "edits": [
+    {
+      "kind": "splice",
+      "textLeft": " before-table-0123456789",
+      "textRight": " after-table-0123456789",
+      "repeatEach": 120,
+      "position": "각주 원문 끝; sourceOffsets를 통한 sourceTextChange 변환"
+    },
+    {
+      "kind": "insert-table",
+      "rows": 1,
+      "columns": 1,
+      "width": 15000,
+      "rowHeight": 5400,
+      "position": "각주 원문 UTF16 길이 + left 반복문자열 길이를 sourceOffsets로 변환",
+      "resources": "각 Native tableCreationResources 배열의 첫 항목"
+    },
+    {
+      "kind": "created-cell-text",
+      "text": "CELL_TEXT"
+    }
+  ],
+  "sourceMarkerDifference": {
+    "liveParagraph1UTF16": 5648,
+    "reopenedParagraph1UTF16": 5649
+  },
+  "removalPolicy": "currentReference 정확 키만 제거; characterFontReferences 및 selectionOwner 등 보존"
+}

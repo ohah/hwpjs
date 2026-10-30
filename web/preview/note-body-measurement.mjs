@@ -225,6 +225,7 @@ export function measureNoteBodies(
       flowPictures: flow.flowPictures ?? [],
       ownedParagraphs: coverageOwned.map((p) => p.paragraph),
       atomicScene: flow.atomicScene === true,
+      ...(flow.continuationUnits ? { continuationUnits: flow.continuationUnits } : {}),
       placedDrawings: flow.placedDrawings ?? [],
       placedContainers: flow.placedContainers ?? [],
       placedCurves: flow.placedCurves ?? [],

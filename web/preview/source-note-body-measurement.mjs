@@ -73,7 +73,22 @@ export function measureSourceNoteBody(
   }
   const bounds = { x: 0, y: 0, width, height };
   for (const row of placed) row.referenceBoxes = { paper: bounds, page: bounds, column: bounds };
-  let projected = projectCreatedBodyFlow(measured, placed, maxRows);
+  // 일반 표 측정 성공 뒤 단일 인라인 비병합 표만 연속 단위를 요청합니다.
+  const table = content.tables?.[0];
+  const collect =
+    content.format === 'hwp5' &&
+    note?.kind === 'footnote' &&
+    content.tables.length === 1 &&
+    !content.createdTables?.length &&
+    !overflowTables.size &&
+    table.parentTableNode === null &&
+    !table.partial &&
+    table.sourceGeometry?.geometry?.treat_as_character === true &&
+    table.sourceGeometry.has_caption === false &&
+    !table.captionParagraphs?.length &&
+    table.cells.every((cell) => cell.rowSpan === 1 && cell.columnSpan === 1) &&
+    !['pictures', 'drawings', 'rectangles', 'lines', 'charts'].some((key) => content[key]?.length);
+  let projected = projectCreatedBodyFlow(measured, placed, maxRows, collect);
   if (projected.state !== 'projected') return projected;
   if (note?.kind === 'endnote') {
     const reference = pageReferenceBoxes(content.pageSettings?.[0], { x: 20, y: 20 });

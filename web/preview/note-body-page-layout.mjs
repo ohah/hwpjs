@@ -1,3 +1,4 @@
+import { prepareMixedFootnoteContinuation } from './mixed-footnote-continuation.mjs';
 import { paginateMeasuredPlainFootnoteContinuations } from './plain-footnote-continuation.mjs';
 import { measureNoteBodies } from './note-body-measurement.mjs';
 import { contentNotePagePolicy } from './content-note-page-policy.mjs';
@@ -104,12 +105,23 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
     policies.set(kind, policy);
     separators.set(kind, separator);
   }
+  const mixed =
+    content.format === 'hwp5' && !hasBodyTables
+      ? prepareMixedFootnoteContinuation(
+          measured.notes.filter((note) => note.kind === 'footnote'),
+          reference.boxes.page,
+          policies.get('footnote'),
+          separators.get('footnote')?.height,
+          { maxRows },
+        )
+      : null;
+  if (mixed && mixed.state !== 'prepared') return mixed;
   for (const note of measured.notes.filter((note) => note.boxes.length || note.atomicScene)) {
     const policy = policies.get(note.kind),
       separator = separators.get(note.kind);
     const overhead =
       note.kind === 'footnote' ? policy.aboveLine + separator.height + policy.belowLine : 0;
-    if (note.height + overhead > reference.boxes.page.height)
+    if (note.height + overhead > reference.boxes.page.height && !mixed?.canSplit(note))
       return unavailable('CreatedNotePageHeightOverflow');
   }
   const body = content.paragraphs.filter(
@@ -163,7 +175,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   );
   const continuation =
     needsContinuation && content.format === 'hwp5' && !hasBodyTables
-      ? paginateMeasuredPlainFootnoteContinuations(
+      ? (mixed ? mixed.paginate : paginateMeasuredPlainFootnoteContinuations)(
           rows,
           setting,
           pageFlows,
@@ -184,7 +196,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
         )
       : null);
   if (reservation && reservation.state !== 'ready') return reservation;
-  if (reservation && content.createdTables?.length)
+  if (!continuation && reservation && content.createdTables?.length)
     for (const row of rows.filter((row) => row.kind === 'text' || row.createdHost !== undefined)) {
       const bottom = reservation.columnBottom(row, {
         column: reference.boxes.page,

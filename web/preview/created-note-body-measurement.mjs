@@ -51,6 +51,8 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
     boxes = [],
     numberPrefixes = [],
     usedHosts = new Set();
+  const continuationUnits = format === 'hwp5' && tables.length === 1 ? [] : null;
+  let unitsValid = true;
   let height = 0;
   for (const paragraph of paragraphs) {
     if (remaining < 1) return unavailable('NoteBodyMeasurementLimit');
@@ -65,7 +67,17 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
         { documentBody: true },
       );
       if (flow.limited) return unavailable('NoteBodyMeasurementLimit');
+      const firstRow = rows.length;
       rows.push(...flow.rows.map((row) => ({ ...row, x: row.x ?? 0, y: row.y + height })));
+      if (continuationUnits)
+        for (let i = firstRow; i < rows.length; i++)
+          continuationUnits.push({
+            y: rows[i].y,
+            height: rows[i].height,
+            rowIndices: [i],
+            boxIndices: [],
+            prefixIndices: [],
+          });
       remaining -= flow.rows.length;
       height += flow.height;
       continue;
@@ -75,7 +87,28 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
       maxRows: remaining,
     });
     if (host.state !== 'measured') return host;
+    const hostUnits = new Map();
+    if (continuationUnits)
+      for (const line of host.lines) {
+        const unit = {
+          y: height + line.y,
+          height: line.height,
+          rowIndices: [],
+          boxIndices: [],
+          prefixIndices: [],
+        };
+        hostUnits.set(line.lineOrdinal, unit);
+        continuationUnits.push(unit);
+      }
+    const firstHostRow = rows.length;
     rows.push(...host.rows.map((row) => ({ ...row, x: (row.x ?? 20) - 20, y: row.y + height })));
+    if (continuationUnits)
+      host.rows.forEach((row, i) => {
+        const unit = hostUnits.get(row.lineOrdinal);
+        if (unit) unit.rowIndices.push(firstHostRow + i);
+        else unitsValid = false;
+      });
+    const firstPrefix = numberPrefixes.length;
     numberPrefixes.push(
       ...host.numberPrefixes.map((prefix) => ({
         ...prefix,
@@ -83,6 +116,12 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
         y: prefix.y + height,
       })),
     );
+    if (continuationUnits)
+      host.numberPrefixes.forEach((prefix, i) => {
+        const unit = hostUnits.get(prefix.lineOrdinal);
+        if (unit) unit.prefixIndices.push(firstPrefix + i);
+        else unitsValid = false;
+      });
     remaining -= host.rows.length + host.numberPrefixes.length;
     for (const anchor of host.anchors) {
       const flow = cellFlows.get(anchor.createdTableIdentity),
@@ -90,6 +129,8 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
         y = height + anchor.y;
       if (x < 0 || x + flow.width > width + 1e-8)
         return unavailable('CreatedTablePageWidthOverflow');
+      const firstBox = boxes.length,
+        firstCellRow = rows.length;
       boxes.push(...flow.boxes.map((box) => ({ ...box, x: box.x + x, y: box.y + y })));
       rows.push(
         ...flow.rows.map((row) => ({
@@ -99,6 +140,16 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
           pageClip: { ...row.pageClip, x: row.pageClip.x + x, y: row.pageClip.y + y },
         })),
       );
+      if (continuationUnits) {
+        const unit = hostUnits.get(anchor.lineOrdinal);
+        if (!unit || unit.tableIdentity !== undefined) unitsValid = false;
+        else {
+          unit.tableIdentity = anchor.createdTableIdentity;
+          unit.tableBounds = { x, y, width: flow.width, height: flow.height };
+          for (let i = firstBox; i < boxes.length; i++) unit.boxIndices.push(i);
+          for (let i = firstCellRow; i < rows.length; i++) unit.rowIndices.push(i);
+        }
+      }
     }
     height += host.height;
   }
@@ -124,5 +175,6 @@ export function measureCreatedNoteBody(paragraphs, tables, format, width, measur
     height,
     createdCellParagraphs: [...cellFlows.values()].flatMap((flow) => flow.paragraphs),
     rowCount: rows.length + numberPrefixes.length,
+    ...(continuationUnits && unitsValid ? { continuationUnits } : {}),
   };
 }

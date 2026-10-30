@@ -144,7 +144,15 @@ export function measureCreatedBodyFlow(
   };
 }
 
-export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
+export function projectCreatedBodyFlow(
+  measured,
+  placedRows,
+  maxRows,
+  collectContinuationUnits = false,
+) {
+  // 임시 표시 단위만 수집하며 원본 소유자와 참조를 재발급하지 않습니다.
+  const continuationUnits = [],
+    unitOwners = new WeakMap();
   const rows = [],
     boxes = [],
     hostNumberPrefixes = [],
@@ -160,130 +168,169 @@ export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
     return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
   for (let cursor = 0; cursor < queue.length; cursor++) {
     const placed = queue[cursor];
-    if (queue.length > queueLimit || rows.length + hostNumberPrefixes.length > maxRows)
-      return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
-    if (placed.createdHost === undefined) {
-      rows.push(placed);
-      continue;
+    let unit = unitOwners.get(placed);
+    if (collectContinuationUnits && !unit) {
+      unit = {
+        y: placed.y,
+        height: placed.height,
+        rowIndices: [],
+        boxIndices: [],
+        prefixIndices: [],
+      };
+      continuationUnits.push(unit);
     }
-    const lineKey = `${placed.createdHost}:${placed.hostLineOrdinal}`;
-    if (seenLines.has(lineKey))
-      return { state: 'unavailable', error: 'DuplicateCreatedTableHostLine' };
-    seenLines.add(lineKey);
-    const host = measured.measuredHosts.get(placed.createdHost),
-      line = host?.lines[placed.hostLineOrdinal];
-    if (!line) return { state: 'unavailable', error: 'MissingCreatedTablePageHost' };
-    if (!Number.isFinite(placed.height) || Math.abs(placed.height - line.height) > 1e-8)
-      return { state: 'unavailable', error: 'SplitCreatedTableHostLine' };
-    const placement = {
-      pageOrdinal: placed.pageOrdinal,
-      columnOrdinal: placed.columnOrdinal,
-      referenceBoxes: placed.referenceBoxes,
-    };
-    const dy = placed.y - line.y;
-    for (const prefix of host.prefixesByLine[line.lineOrdinal])
-      hostNumberPrefixes.push({
-        ...prefix,
-        x: prefix.x + placed.x - 20,
-        y: prefix.y + dy,
-        ...placement,
-        pageClip: placed.referenceBoxes.column,
-      });
-    for (const row of host.rowsByLine[line.lineOrdinal])
-      rows.push({
-        ...row,
-        x: (row.x ?? 20) + placed.x - 20,
-        y: row.y + dy,
-        ...placement,
-        pageClip: placed.referenceBoxes.column,
-      });
-    for (const anchor of host.anchorsByLine[line.lineOrdinal]) {
-      const identity =
-        anchor.createdTableIdentity === undefined
-          ? `source:${anchor.tableNode}`
-          : `created:${anchor.createdTableIdentity}`;
-      if (emitted.has(identity))
-        return { state: 'unavailable', error: 'DuplicateCreatedTablePageCell' };
-      emitted.add(identity);
-      if (anchor.createdTableIdentity === undefined) {
-        const source = measured.sourceTables.get(anchor.tableNode);
-        if (!source) return { state: 'unavailable', error: 'MissingCreatedTablePageHost' };
-        const projected = layoutInlineTablePageContent(
-          source.table,
-          source.measured,
-          {
-            ...placement,
-            objectNode: anchor.tableNode,
-            section: source.table.section,
-            paragraph: source.table.hostParagraph,
-            unit: anchor.unit,
-            rectangle: {
+    const rowStart = rows.length,
+      boxStart = boxes.length,
+      prefixStart = hostNumberPrefixes.length;
+    try {
+      if (queue.length > queueLimit || rows.length + hostNumberPrefixes.length > maxRows)
+        return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
+      if (placed.createdHost === undefined) {
+        rows.push(placed);
+        continue;
+      }
+      const lineKey = `${placed.createdHost}:${placed.hostLineOrdinal}`;
+      if (seenLines.has(lineKey))
+        return { state: 'unavailable', error: 'DuplicateCreatedTableHostLine' };
+      seenLines.add(lineKey);
+      const host = measured.measuredHosts.get(placed.createdHost),
+        line = host?.lines[placed.hostLineOrdinal];
+      if (!line) return { state: 'unavailable', error: 'MissingCreatedTablePageHost' };
+      if (!Number.isFinite(placed.height) || Math.abs(placed.height - line.height) > 1e-8)
+        return { state: 'unavailable', error: 'SplitCreatedTableHostLine' };
+      const placement = {
+        pageOrdinal: placed.pageOrdinal,
+        columnOrdinal: placed.columnOrdinal,
+        referenceBoxes: placed.referenceBoxes,
+      };
+      const dy = placed.y - line.y;
+      for (const prefix of host.prefixesByLine[line.lineOrdinal])
+        hostNumberPrefixes.push({
+          ...prefix,
+          x: prefix.x + placed.x - 20,
+          y: prefix.y + dy,
+          ...placement,
+          pageClip: placed.referenceBoxes.column,
+        });
+      for (const row of host.rowsByLine[line.lineOrdinal])
+        rows.push({
+          ...row,
+          x: (row.x ?? 20) + placed.x - 20,
+          y: row.y + dy,
+          ...placement,
+          pageClip: placed.referenceBoxes.column,
+        });
+      for (const anchor of host.anchorsByLine[line.lineOrdinal]) {
+        const identity =
+          anchor.createdTableIdentity === undefined
+            ? `source:${anchor.tableNode}`
+            : `created:${anchor.createdTableIdentity}`;
+        if (emitted.has(identity))
+          return { state: 'unavailable', error: 'DuplicateCreatedTablePageCell' };
+        emitted.add(identity);
+        if (anchor.createdTableIdentity === undefined) {
+          const source = measured.sourceTables.get(anchor.tableNode);
+          if (!source) return { state: 'unavailable', error: 'MissingCreatedTablePageHost' };
+          const projected = layoutInlineTablePageContent(
+            source.table,
+            source.measured,
+            {
+              ...placement,
+              objectNode: anchor.tableNode,
+              section: source.table.section,
+              paragraph: source.table.hostParagraph,
+              unit: anchor.unit,
+              rectangle: {
+                x: placed.x + anchor.x,
+                y: placed.y + anchor.y - line.y,
+                width: anchor.width,
+                height: anchor.height,
+              },
+            },
+            source.margins,
+            {
+              maxRows: maxRows - rows.length - hostNumberPrefixes.length,
+              captionReservation: source.captionReservation,
+            },
+          );
+          if (projected.state !== 'placed') return projected;
+          const owner = placed.positionOwnerTableNode ?? placed.tableNode;
+          const nested = bindCreatedSourcePlacements(projected.rows, projected.boxes, {
+            baseDepth: (placed.depth ?? 0) + 1,
+            positionOwnerTableNode: owner,
+          });
+          if (nested.state !== 'bound') return nested;
+          if (unit) {
+            if (unit.sourceTableNode !== undefined)
+              return { state: 'unavailable', error: 'AmbiguousMixedFootnoteTableBlock' };
+            unit.sourceTableNode = source.table.tableNode;
+            unit.sourceCells = source.table.cells.map((cell) => ({
+              listNode: cell.listNode,
+              rowSpan: cell.rowSpan,
+              columnSpan: cell.columnSpan,
+            }));
+            unit.tableBounds = {
               x: placed.x + anchor.x,
               y: placed.y + anchor.y - line.y,
               width: anchor.width,
               height: anchor.height,
-            },
-          },
-          source.margins,
-          {
-            maxRows: maxRows - rows.length - hostNumberPrefixes.length,
-            captionReservation: source.captionReservation,
-          },
-        );
-        if (projected.state !== 'placed') return projected;
-        const owner = placed.positionOwnerTableNode ?? placed.tableNode;
-        const nested = bindCreatedSourcePlacements(projected.rows, projected.boxes, {
-          baseDepth: (placed.depth ?? 0) + 1,
-          positionOwnerTableNode: owner,
-        });
-        if (nested.state !== 'bound') return nested;
-        queue.push(...nested.rows);
+            };
+            for (const row of nested.rows) unitOwners.set(row, unit);
+          }
+          queue.push(...nested.rows);
+          boxes.push(
+            ...projected.boxes.map((box) => ({
+              ...box,
+              ...(placed.tableNode === undefined
+                ? {}
+                : {
+                    depth: (box.depth ?? 0) + (placed.depth ?? 0) + 1,
+                    positionOwnerTableNode: owner,
+                  }),
+            })),
+          );
+          tableCaptionBounds.push(
+            ...(projected.tableCaptionBounds ?? []).map((bound) => ({
+              ...bound,
+              ...(placed.tableNode === undefined ? {} : { positionOwnerTableNode: owner }),
+            })),
+          );
+          flowPictures.push(...(projected.flowPictures ?? []));
+          continue;
+        }
+        const flow = measured.cells.get(anchor.createdTableIdentity),
+          dx = placed.x + anchor.x,
+          ay = placed.y + anchor.y - line.y;
         boxes.push(
-          ...projected.boxes.map((box) => ({
+          ...flow.boxes.map((box) => ({
             ...box,
+            x: box.x + dx,
+            y: box.y + ay,
+            ...placement,
             ...(placed.tableNode === undefined
               ? {}
               : {
-                  depth: (box.depth ?? 0) + (placed.depth ?? 0) + 1,
-                  positionOwnerTableNode: owner,
+                  depth: (placed.depth ?? 0) + 1,
+                  positionOwnerTableNode: placed.positionOwnerTableNode ?? placed.tableNode,
                 }),
           })),
         );
-        tableCaptionBounds.push(
-          ...(projected.tableCaptionBounds ?? []).map((bound) => ({
-            ...bound,
-            ...(placed.tableNode === undefined ? {} : { positionOwnerTableNode: owner }),
+        rows.push(
+          ...flow.rows.map((row) => ({
+            ...row,
+            x: row.x + dx,
+            y: row.y + ay,
+            ...placement,
+            pageClip: { ...row.pageClip, x: row.pageClip.x + dx, y: row.pageClip.y + ay },
           })),
         );
-        flowPictures.push(...(projected.flowPictures ?? []));
-        continue;
       }
-      const flow = measured.cells.get(anchor.createdTableIdentity),
-        dx = placed.x + anchor.x,
-        ay = placed.y + anchor.y - line.y;
-      boxes.push(
-        ...flow.boxes.map((box) => ({
-          ...box,
-          x: box.x + dx,
-          y: box.y + ay,
-          ...placement,
-          ...(placed.tableNode === undefined
-            ? {}
-            : {
-                depth: (placed.depth ?? 0) + 1,
-                positionOwnerTableNode: placed.positionOwnerTableNode ?? placed.tableNode,
-              }),
-        })),
-      );
-      rows.push(
-        ...flow.rows.map((row) => ({
-          ...row,
-          x: row.x + dx,
-          y: row.y + ay,
-          ...placement,
-          pageClip: { ...row.pageClip, x: row.pageClip.x + dx, y: row.pageClip.y + ay },
-        })),
-      );
+    } finally {
+      if (unit) {
+        for (let i = rowStart; i < rows.length; i++) unit.rowIndices.push(i);
+        for (let i = boxStart; i < boxes.length; i++) unit.boxIndices.push(i);
+        for (let i = prefixStart; i < hostNumberPrefixes.length; i++) unit.prefixIndices.push(i);
+      }
     }
   }
   if (
@@ -293,6 +340,7 @@ export function projectCreatedBodyFlow(measured, placedRows, maxRows) {
     return { state: 'unavailable', error: 'CreatedTablePageProjectionLimit' };
   return {
     state: 'projected',
+    ...(collectContinuationUnits ? { continuationUnits } : {}),
     rows,
     boxes,
     hostNumberPrefixes,

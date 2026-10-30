@@ -48,10 +48,15 @@ jobs:
           bun test --no-install "$@"
       - name: Test footnote continuation and ordering
         run: |
-          test -f ./tests/hwp5/plain-footnote-continuation.test.mjs || exit 1
-          test -f ./tests/hwp5/plain-footnote-stable-order.test.mjs || exit 1
-          test -f ./tests/hwp5/plain-footnote-lock-audit.test.mjs || exit 1
-          bun test --no-install ./tests/hwp5/plain-footnote-continuation.test.mjs ./tests/hwp5/plain-footnote-stable-order.test.mjs ./tests/hwp5/plain-footnote-lock-audit.test.mjs
+          set -- \
+            ./tests/hwp5/plain-footnote-continuation.test.mjs \
+            ./tests/hwp5/plain-footnote-stable-order.test.mjs \
+            ./tests/hwp5/plain-footnote-lock-audit.test.mjs \
+            ./tests/hwp5/mixed-note-table-continuation.test.mjs \
+            ./tests/hwp5/recorded-mixed-note-continuation.test.mjs \
+            ./tests/hwp5/source-note-projection-optin.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          bun test --no-install "$@"
       - name: 이력 모델과 paint 준비 검사
         run: |
           set -- \
