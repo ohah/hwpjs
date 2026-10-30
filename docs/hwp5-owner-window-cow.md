@@ -46,6 +46,10 @@ source07의41검사는 Reader24·실 Node Worker data4·public 음성4·source f
 
 Node 실제 Worker 데이터 전달과 실제 browser main Worker admission은 같은 증거가 아닙니다. Native build 재현성은 기존 문서의 한계를 유지하며, 이 문서 갱신 자체가 새 Native/SDK build나 브라우저 실행은 아닙니다.
 
+후속 Chrome ABBA는 paragraph4/15 × burst/30Hz × A/B 각2회, 총16개가 최종 통과했습니다. 재입력→최종 DOM/Canvas caret marker 관측은 burst에서 A1904.9..1999.8ms/B1285.9..1331.3ms, 30Hz에서 A705.0..739.0ms/B110.3..132.6ms였습니다. 이는 Noori 한 파일과 같은 브라우저·측정 조건의 결과이며 pixel 표시 시점이나 일반 HWPX 성능 보장이 아닙니다. Native ACK/private COW receipt는 직접 관측하지 않았습니다. 최종 text/caret·busy=false·trusted40/undo40/repeat39와 소유 브라우저 종료를 확인했습니다.
+
+원 r1의14번째는 키 전송 전 CDP session/channel 오류로 중단돼 실패 기록을 보존했습니다. OS crash 직접 귀속은 미확정입니다. r1 성공13개를 재실행하지 않고 별도 r2에서 실패한14번과 미실행15/16번만 실행해 최종16개를 구성했습니다. 원 실패를 성공으로 덮어쓰거나 small4와 중복 합산하지 않습니다. B 저장4개는 원본에서 사전 계산한 전체 section326 record·비대상12 stream·metadata와 독립 CFB oracle로 대조해 통과했습니다. source commit `dde44e71a`의 JavaScript Quality CI도 성공했습니다. 운영 반영과 외부 HTTPS 확인은 이 로컬 결과와 별도입니다.
+
 ## 증거 식별과 문서 수명
 
 source07 제품 명세는 로컬 `zig-out/verification/native-owner-window-worker-r1/candidate/PRODUCT-IMMUTABLE-07.json`이며 선택13=변경10+미변경 Worker 의존3입니다. 그 인계서의 sdkBuilds0/browserRuns0은 원 source 검증 시점의 기록으로 보존하고 후속 main build 성공으로 덮어쓰지 않습니다. ignored packet은 source-only clone에 포함되지 않으므로 이 문서만으로 같은 실행 준비가 완료됐다고 보지 않습니다. 정확 지문·원 계수·한계는 해당 세대의 불변 명세와 인계서가 소유합니다.
