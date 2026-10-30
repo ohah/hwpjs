@@ -1,6 +1,6 @@
 # 지원 현황과 로드맵
 
-기준일: 2026-10-26. 공개 배포와 준비 소스의 상태를 구분합니다. 현재 HWPJS는 **Zig 기반 HWP5/HWPX 코어와 freestanding WASM**, DOM 없는 헤드리스 API, 이를 사용하는 Canvas 호스트로 구성됩니다. 전체 형식·모든 위치의 편집·한/글과 동일한 조판은 아직 완료되지 않았습니다. HWP3는 사용자 요청으로 대상에서 제외합니다.
+배포 정보 기준일: 2026-10-30. 아래 과거 검증 기록은 각 실행 당시 범위를 유지합니다. 공개 배포와 준비 소스의 상태를 구분합니다. 현재 HWPJS는 **Zig 기반 HWP5/HWPX 코어와 freestanding WASM**, DOM 없는 헤드리스 API, 이를 사용하는 Canvas 호스트로 구성됩니다. 전체 형식·모든 위치의 편집·한/글과 동일한 조판은 아직 완료되지 않았습니다. HWP3는 사용자 요청으로 대상에서 제외합니다.
 
 이 페이지는 현재 작업 트리의 공개 소스와 기존 검증 기록을 대조한 상태표입니다. 이번 문서 조사에서 Native 빌드나 전수감사를 새로 실행하지 않았습니다. 소스의 public export, 패키지 빌드, npm registry 공개 설치, 실제 브라우저, RN 기기 지원은 서로 다른 증거입니다. 완료 기준이 다른 항목을 합쳐 진행률을 계산하지 않습니다.
 
@@ -8,12 +8,12 @@
 
 | 사용자 진입점 | 현재 확인한 범위 | 완료로 해석하면 안 되는 범위 |
 | --- | --- | --- |
-| [웹 Canvas 데모](./playground.mdx) · [API 직접 실행](./api/playground.mdx) | 현재 공개 정적 배포는 3fc WASM을 사용합니다. 과거 b7 API 검사에서 두 형식의 열기·선택·삽입·이력·저장·재열기를 확인한 기록과 현재 배포 확인은 별도입니다 | Company/Enter 후속 소스의 이 배포 포함 여부는 이 확인만으로 판정하지 않으며, 모든 위치·명령·완전 조판의 증거도 아닙니다 |
+| [웹 Canvas 데모](./playground.mdx) · [API 직접 실행](./api/playground.mdx) | 현재 공개 정적 배포는 d849 WASM과 공개 예제 101개를 제공합니다. HWP5 한 사례에서 입력 80회·실행 취소 80회·저장을 확인했습니다. 예제 101개 전체의 편집·저장 검증은 아닙니다. 과거 b7 API 검사에서 두 형식의 열기·선택·삽입·이력·저장·재열기를 확인한 기록과 현재 배포 확인은 별도입니다 | Company/Enter 후속 소스의 이 배포 포함 여부는 이 확인만으로 판정하지 않으며, 모든 위치·명령·완전 조판의 증거도 아닙니다 |
 | [새 canonical 패키지 예제](./guide/package-names.md) | 단일 `@ohah/hwpjs`와 `/runtime`, `/react`, `/svelte`, `/vanilla`, `/react-native` subpath 후보를 tarball로 검사했습니다 | 새 Zig/WASM API는 npm 미게시입니다. 현재 npm의 `0.1.0-rc.10`은 구 Rust 패키지이며, 패키지 소비 검증이 새 엔진 배포 완료를 뜻하지 않습니다 |
-| Company/Enter 후속 | 준비 소스·격리 후보의 개별 검증은 현재 공개 3fc 배포 및 과거 b7 감사와 별도입니다 | 소스 존재·commit·후보 빌드만으로 현재 웹 배포 반영이나 전체 corpus/형식 지원을 선언하지 않습니다 |
+| Company/Enter 후속 | 준비 소스·격리 후보의 개별 검증은 현재 공개 d849 배포 및 과거 b7 감사와 별도입니다 | 소스 존재·commit·후보 빌드만으로 현재 웹 배포 반영이나 전체 corpus/형식 지원을 선언하지 않습니다 |
 | [RN](./frameworks/react-native.md) | provider/JSI 기반 및 제한된 iOS 시뮬레이터 저수준 진단 harness의 근거가 있습니다 | 정식 HeadlessEditor provider 연결·Native Canvas 전체 조판·Android/iOS 제품 release·실기기·OS IME는 미완료입니다 |
 
-현재 배포 지문은 공개 asset commit `9e208626`의 [실제 HTTP manifest](https://ohah.github.io/hwpjs/editor/manifest.json)로 확인했습니다. manifest SHA256은 `f9a4dd5c271c614a4f02153df7903c13df41434a6db6335199a0b7128de15ad0`, WASM SHA256은 `3fc519b22c4c3f69d7e64c5337247163fcf0b7f8175e80c124325b922effccf0`입니다. 이는 배포 식별이며 b7 전수감사의 재실행이나 아래 기능별 검증 결과의 현재 배포 계승을 뜻하지 않습니다.
+현재 배포 지문은 공개 asset commit `77a08`의 [실제 HTTP manifest](https://ohah.github.io/hwpjs/editor/manifest.json)를 기준으로 합니다. Pages 실행 `41000992379`의 배포 성공과 공개 HTTP 135개 항목의 SHA 일치, 일반 URL 4개의 일치를 확인한 기록이 있습니다. manifest SHA256은 `9fae46c66d7a514eb1026f8f83c490762a72e2dd8504b2fcc55f9de57407f50d`, WASM SHA256은 `d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb`, core Worker SHA256은 `e30f0f4cd0cf45b4055bb2ae3d840518c153b6d397f1faaad49366c74ade83df`입니다. 이는 배포 식별과 위 한 사례의 확인 범위이며 b7 전수감사의 재실행이나 아래 기능별 검증 결과의 현재 배포 계승을 뜻하지 않습니다.
 
 설치·pack·예제 검사는 [설치 안내](./guide/installation.md)의 선행 소스와 메타데이터 조건을 따릅니다. 현재 소스, 독립 tarball, 실제 웹 배포, npm registry, Native 기기 지원의 검증을 서로 계승하지 않습니다.
 
