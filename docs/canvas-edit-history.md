@@ -92,4 +92,6 @@ Noori HWPX의 동일 WASM을 사용한 Node 진단에서 64undo의 전체 conten
 
 정규 모형 회귀 97건은 기존 이력·입력 순서, 선택 없는 ACK의 게시, 게시 실패와 늦은 완료, 최종 geometry와 paint 경계를 검사했습니다. 별도 Node 검사에서는 실제 Native·core·surface를 연결해 Noori HWP5의 표 셀 문단 0:15, 문자 위치 2에서 `a` 80개 입력·undo 80회·`r` 재입력을 확인했습니다. 다른 실제 셀의 공개 선택·입력·undo, 독립 CFB의 전체 대상 Section·비대상 stream·metadata 비교와 잘못된 기대 3건의 거부, 전체 undo 뒤 원본 바이트 복원과 저장본 재열기도 확인했습니다.
 
+후속 Node 검사에서는 입력 80개의 ACK를 기다리지 않고 undo 80회와 `r`을 접수했습니다. 접수 당시 operation revision 1·Native history revision 0, 원문 모델과 모형 textarea의 80자 초안 차이, `aria-busy=true`를 확인했습니다. 개별 Native 이력 `1..80`→`79..0`→새 분기 `81` 순서와 같은 저장 oracle·원본 바이트 복원·재열기를 통과했습니다.
+
 이 Node 검사의 DOM·rAF·2D 측정과 그리기는 모형입니다. 실제 Canvas 픽셀이나 마우스 클릭, HWPX, OS IME·키 반복, 브라우저 입력 지연 개선의 증거가 아닙니다. 기존 브라우저 비교의 `a1b2c3d4` 반복과 Node의 `a` 80개도 구분합니다. 검증 시간은 속도 우위로 비교하지 않으며, 문단 membership 순회와 전체 입력 성능의 남은 비용은 별도 과제입니다. 이 소스 변경만으로 운영·Pages·npm이 갱신되지는 않습니다.
