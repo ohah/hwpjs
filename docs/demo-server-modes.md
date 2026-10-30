@@ -27,6 +27,14 @@ private 모드는 이 제한을 전역으로 풀거나 원본 파일의 공개 �
 
 개인 원본을 추가하거나 private fixture를 공개 Git/Pages에 복사하는 절차는 이 모드의 제공 범위가 아닙니다. private bundle 준비와 네트워크 공개 범위는 운영자가 별도로 소유합니다.
 
+## 원본 파일 provider와 bundle root
+
+불변 host에 원본 문서를 복사하지 않을 때는 사설 bundle 모드에서 `--fixture-root`를 명시합니다. `--private-fixtures`와 `--bundle-dir`가 함께 있어야 하며 canonical directory만 허용합니다. 명시 경로 자체나 조상이 심볼릭 링크인 별칭은 거부합니다. 옵션 생략 시 기존 root와 옵션 객체 모양, 검증 순서를 유지합니다.
+
+이 root는 원본 fixture와 가용성 catalog handler에만 전달합니다. bundle·publicBase·라이선스·문서의 root는 host 그대로입니다. 사설 앱이 사용하는 두 canonical prefix의 fixture/catalog 별칭도 같은 기존 strict handler로 보냅니다. 허용 목록에 없는 파일이나 provider 밖으로 벗어나는 링크를 읽는 기능을 추가하지 않습니다. 가용성은 요청 시 관측하며 모든 문서의 Native 지원을 뜻하지 않습니다.
+
+2026-10-30 실제 작업 트리의 신규 provider15·기존 원본23, 총38개 검사가 실패·skip 없이 통과했습니다. 신규 테스트는 임시 provider 한 파일·경로 검사와 entry 의존성 주입을 사용하며, 기존 HTTP 테스트는 임시 loopback 포트를 종료합니다. 이 검사만으로 운영 서비스 전환이나 모든 원본 파일 서빙을 완료했다고 판단하지 않습니다.
+
 ## canonical 경로와 기존 handler의 책임
 
 bundle 모드의 canonical 편집기 경로는 `/hwpjs/editor/demo/vanilla/`입니다. React/Svelte/headless와 API도 같은 `/hwpjs/editor/` 아래 자산을 사용합니다. `/`, `/index.html`, `/web/preview/index.html`, 기존 `/demo/...`·`/api...` 진입은 대응 canonical 경로로 redirect합니다. 기본 dev/dist 모드의 기존 페이지 응답 동작은 바꾸지 않습니다.

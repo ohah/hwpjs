@@ -4,6 +4,7 @@ export function parseDemoServerArguments(args, root) {
     seenPort = false,
     bundleDirectory,
     fixturePolicyPath,
+    fixtureRoot,
     privateFixtures = false;
   for (let i = 0; i < args.length; i++) {
     const value = args[i];
@@ -15,6 +16,11 @@ export function parseDemoServerArguments(args, root) {
       const directory = value === '--bundle-dir' ? args[++i] : value.slice('--bundle-dir='.length);
       if (!directory || directory.startsWith('--')) throw Error('MissingBundleDirectory');
       bundleDirectory = resolve(root, directory);
+    } else if (value === '--fixture-root' || value.startsWith('--fixture-root=')) {
+      if (fixtureRoot !== undefined) throw Error('DuplicateFixtureRoot');
+      const path = value === '--fixture-root' ? args[++i] : value.slice('--fixture-root='.length);
+      if (!path || path.startsWith('--')) throw Error('MissingFixtureRoot');
+      fixtureRoot = resolve(root, path);
     } else if (value === '--fixture-policy' || value.startsWith('--fixture-policy=')) {
       if (fixturePolicyPath !== undefined) throw Error('DuplicateFixturePolicy');
       const path =
@@ -28,6 +34,8 @@ export function parseDemoServerArguments(args, root) {
     }
   }
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('InvalidPort');
+  if (fixtureRoot !== undefined && (!privateFixtures || !bundleDirectory))
+    throw Error('FixtureRootRequiresPrivateBundle');
   if (privateFixtures && !bundleDirectory) throw Error('PrivateBundleRequired');
   if (fixturePolicyPath !== undefined && !bundleDirectory)
     throw Error('FixturePolicyBundleRequired');
@@ -35,6 +43,7 @@ export function parseDemoServerArguments(args, root) {
     port,
     bundleDirectory,
     privateFixtures,
+    ...(fixtureRoot === undefined ? {} : { fixtureRoot }),
     ...(fixturePolicyPath === undefined ? {} : { fixturePolicyPath }),
   };
 }

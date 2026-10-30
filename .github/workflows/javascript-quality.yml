@@ -34,8 +34,9 @@ jobs:
         run: |
           test -f ./tests/hwpx/demo-server-fixture-policy.test.mjs || exit 1
           test -f ./tests/hwpx/demo-server-bundle.test.mjs || exit 1
+          test -f ./tests/hwpx/demo-fixture-provider-root.test.mjs || exit 1
           test -f ./tools/pages-demo/public-gallery-fixtures.json || exit 1
-          node --test --test-concurrency=1 ./tests/hwpx/demo-server-fixture-policy.test.mjs ./tests/hwpx/demo-server-bundle.test.mjs
+          node --test --test-concurrency=1 ./tests/hwpx/demo-fixture-provider-root.test.mjs ./tests/hwpx/demo-server-fixture-policy.test.mjs ./tests/hwpx/demo-server-bundle.test.mjs
       - name: Build core for demo formatting regressions
         run: |
           test -f ./tools/build-packages.mjs || exit 1

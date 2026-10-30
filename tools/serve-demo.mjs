@@ -1,3 +1,4 @@
+import { resolveDemoFixtureProviderRoot } from './demo-fixture-provider-root.mjs';
 import { parseDemoServerArguments } from './demo-server-options.mjs';
 import { loadDemoServerBundle } from './demo-server-bundle.mjs';
 import { createServer } from 'node:http';
@@ -10,10 +11,9 @@ import { createPreviewWasmCompression } from './preview-wasm-compression.mjs';
 import { loadDemoDocumentation } from './demo-documentation-response.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { port, bundleDirectory, privateFixtures, fixturePolicyPath } = parseDemoServerArguments(
-  process.argv.slice(2),
-  root,
-);
+const { port, bundleDirectory, privateFixtures, fixturePolicyPath, fixtureRoot } =
+  parseDemoServerArguments(process.argv.slice(2), root);
+const providerRoot = await resolveDemoFixtureProviderRoot(root, fixtureRoot);
 const dist = resolve(root, 'apps/demo/dist'),
   core = resolve(root, 'packages/core/dist');
 const bundle = bundleDirectory
@@ -69,14 +69,39 @@ const server = createServer(async (request, response) => {
       return;
     }
     const path = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
+    // 명시 provider를 쓸 때만 사설 bundle의 fixture 별칭을 같은 strict handler로 보냅니다.
+    if (fixtureRoot !== undefined) {
+      for (const prefix of ['/hwpjs/editor/', '/docs/editor/']) {
+        if (!path.startsWith(prefix)) continue;
+        const key = path.slice(prefix.length);
+        if (key === 'fixture-catalog.json') {
+          await respondDemoFixtureCatalog(
+            providerRoot,
+            '/demo-fixture-catalog.json',
+            request.method,
+            response,
+          );
+          return;
+        }
+        if (key.startsWith('fixtures/')) {
+          await respondDemoFixture(
+            providerRoot,
+            '/demo-fixtures/' + key.slice('fixtures/'.length),
+            request.method,
+            response,
+          );
+          return;
+        }
+      }
+    }
     if (bundle && path.startsWith('/docs/editor/')) {
       await bundle.respond(path, request.method, response, request.headers['accept-encoding']);
       return;
     }
     if (documentation.respond(path, request.method, response, request.headers['accept-encoding']))
       return;
-    if (await respondDemoFixtureCatalog(root, path, request.method, response)) return;
-    if (await respondDemoFixture(root, path, request.method, response)) return;
+    if (await respondDemoFixtureCatalog(providerRoot, path, request.method, response)) return;
+    if (await respondDemoFixture(providerRoot, path, request.method, response)) return;
     if (bundle) {
       await bundle.respond(path, request.method, response, request.headers['accept-encoding']);
       return;
