@@ -1018,3 +1018,12 @@ mise exec node@24.20.0 -- node --test --test-concurrency=1 \
   tests/hwpx/picture-resources-settled.test.mjs \
   apps/demo/tests/surface-environment.test.ts
 ```
+
+실제 d849 엔진과 Noori 원본을 명시하는 정규 회귀는 다음과 같습니다. 입력 누락·다른 SHA는 실패하며 skip하지 않습니다. 저장 후 재열기의 핵심 필드 검사는 독립 CFB 저장 oracle와 구분합니다.
+
+```sh
+HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" \
+HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp" \
+  mise exec node@24.20.0 -- node --max-old-space-size=512 --test \
+    --test-concurrency=1 --test-timeout=50000 tools/tests/hwp5-native-text-reuse.test.mjs
+```

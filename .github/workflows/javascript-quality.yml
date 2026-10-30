@@ -41,6 +41,12 @@ jobs:
             ./tests/hwpx/native-picture-refresh-gate.test.mjs \
             ./tests/hwpx/picture-resources-settled.test.mjs \
             ./apps/demo/tests/surface-environment.test.ts
+      - name: Test real HWP5 text reuse and history
+        timeout-minutes: 1
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_NOORI: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwp
+        run: node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=50000 ./tools/tests/hwp5-native-text-reuse.test.mjs
       - name: Test WASM loader buffer ownership
         run: node --test ./packages/core/tests/runtime/wasm-module-loader-owned-input.test.ts
       - name: Test versioned demo Worker assets

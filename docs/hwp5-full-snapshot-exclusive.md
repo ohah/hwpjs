@@ -98,7 +98,7 @@ root-descriptor-native에 중복된 Native4는 재합산하지 않았습니다. 
 
 메인 실제 root의157 pure·27 품질·focused strict noEmit, 독립 SDK67 전체 DTO의 세 owner별 두 splice와 undo 값 일치는 별도 전달 근거입니다. 현재 root의 history-text 기대검사 통과도 이 범위에 속하며 final03의48에 더하지 않습니다. prototype 차이의 원 실패와 structuredClone 후 값 동치 경계는 앞 절과 같습니다.
 
-**실브라우저 입력/undo 지연과 UI 성능 개선은 미증명입니다.** 별도 late ACK/dispose race도 아직 후속입니다. 문서교체 권위철회 음성 통과를 late ACK 전체 검증으로 확대하지 않습니다. frozen SDK67 Reader의 명시 import 기준선은 고정했지만 전체 의존 closure SHA 재귀검증은 미완료입니다. 공식 SDK·운영 배포 완료로도 승계하지 않습니다.
+**실브라우저 입력/undo 지연과 UI 성능 개선은 미증명입니다.** late ACK 후속05는 실제 d849 undo 반환 직후 delivery 이전 microtask에서 lifecycle을 바꾸는 계측 실행으로3사례가 통과했고 제품7은 불변입니다. dispose와 surface release→재획득 ABA에서는 pending 요청의 rejected 및 이전 권위 철회를 확인했습니다. 문서교체는 FIFO상 undo ACK가 committed-with-snapshot으로 먼저 완료된 뒤 새 문서가 설치됐으므로, 교체 후 도착한 지연 ACK 거부의 증거가 아닙니다. 이 사례는 교체 완료 후 이전 권위 철회와 새 scope 분리만 입증합니다. 임의 Promise 장기지연·Native epoch 값 ABA·전체 비동기 상태공간을 검증한 것은 아닙니다. 실제 export의 인자·반환값을 유지한 wrapping 관측이며 pristine 실행이나 성능 증거로 확대하지 않습니다. 후속05는 dispose/ABA의 rejected 명시 assert를 보완했고 Oracle이 연결3핀과 원로그3통과를 확인했습니다. 원04는 보존하며 04/05를 독립6사례로 중복 합산하지 않습니다. frozen SDK67 Reader의 명시 import 기준선은 고정했지만 전체 의존 closure SHA 재귀검증은 미완료입니다. 별도 canonical Native/SDK build는 strict declaration을 포함해 exit0으로 전달됐으며 closure/build packet은 봉인 중입니다. 이 빌드 전달을 위 SDK67 전체 의존 closure 재귀검증 완료나 브라우저·운영 배포 완료로 승계하지 않습니다.
 
 ## 등록 정책과 재현성 한계
 
