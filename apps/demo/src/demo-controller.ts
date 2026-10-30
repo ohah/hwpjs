@@ -21,6 +21,7 @@ import { createFormattingBridge } from './formatting-bridge.ts';
 import { createTextToolsBridge } from './text-tools-bridge.ts';
 import { createSymbolDialogController } from './symbol-dialog-controller.ts';
 import { createSymbolInsertionPort } from './symbol-insertion-port.ts';
+import { createTableInsertTool } from './table-insert-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions } from './command-support.ts';
 import { mountDemoContextMenu, contextTarget, type ContextPicture } from './context-menu.ts';
@@ -170,6 +171,16 @@ export async function mountDemo(
     onPresentationChange: () => shell.update(),
     resolveShortcut: (event) => shortcuts?.resolveCommand(event),
   });
+  const tableInsert = createTableInsertTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+    onClose: () => {
+      host?.focus?.();
+    },
+  });
   const symbolPort = createSymbolInsertionPort(editor);
   const symbols = createSymbolDialogController({
     root,
@@ -205,6 +216,7 @@ export async function mountDemo(
             : undefined,
       },
       ...textTools.presentation(),
+      'insert-table': tableInsert.presentation(),
       'insert-symbol': {
         enabled: ready && !!state.selection,
         reason: !ready
@@ -322,6 +334,10 @@ export async function mountDemo(
     const available = presentation().actions?.[action.command];
     if (!available?.enabled) {
       note(available?.reason ?? '현재 사용할 수 없습니다.');
+      return;
+    }
+    if (action.command === 'insert-table') {
+      tableInsert.open();
       return;
     }
     if (action.command === 'font-name') {
@@ -483,6 +499,7 @@ export async function mountDemo(
     contextMenu?.close();
     textTools.dispose();
     symbols.dispose();
+    tableInsert.dispose();
     paragraphShape.dispose();
     formatDialogs.dispose();
     textColor.dispose();
@@ -516,6 +533,7 @@ export async function mountDemo(
       contextMenu?.close();
       textTools.dispose();
       symbols.dispose();
+      tableInsert.dispose();
       paragraphShape.dispose();
       formatDialogs.dispose();
       textColor.dispose();

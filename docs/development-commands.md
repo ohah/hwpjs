@@ -966,3 +966,17 @@ node tools/build-pages-demo.mjs --verify --fixture-policy tools/pages-demo/publi
 기본 core suite에는 `packages/core/tests/commands/table-insert.test.ts`의 모델16만 들어갑니다. 명시 순수 검사는 파일존재 확인 후 `bun test --no-install ./packages/core/tests/commands/table-insert.test.ts`입니다.
 
 실제 Native 검사는 core/tests 밖의 integration entry입니다. 검토한 엔진 경로와 SHA를 `HWPJS_TEST_WASM`·`HWPJS_TEST_WASM_EXPECTED_SHA256`, 허용 원본 디렉터리를 `TABLE_FIXTURE_ROOT`, 비어 있는 소유 출력 디렉터리를 `TABLE_INSERT_OUTPUT`으로 명시하고 파일존재 확인 후 `bun test --no-install ./packages/core/integration/commands/table-insert.test.ts`를 실행합니다. 필수 입력 부재·핀 불일치·ABI 부재는 실패이며 자동 skip/fallback은 없습니다. d849 고정 증거와 현재 CI 산출물의 새 실행 결과를 구분합니다. CI는 기존 core 빌드 뒤 그 build-manifest의 WASM 핀을 사용하며 새 Native 빌드는 추가하지 않습니다.
+
+## 데모 본문 표 만들기 모델 검증
+
+공개 `@hwpjs/core` 빌드가 준비된 workspace에서 아래 두 정규 시험을 명시 실행합니다. 별도 `TABLE_DEMO_SDK_INDEX` 설정이나 artifact 경로 import가 필요하지 않습니다. CI는 기존 `Build core for demo formatting regressions` 뒤에 이 단계를 실행합니다. 작업 트리의 새 SDK69와 세 웹 어댑터를 채택한 뒤 정규 27개와 기존 문단 서식을 포함한 138개가 통과했습니다. controller를 포함한 명시 타입 검사도 통과했습니다. 과거 SDK04491 명시 검사27과 새 root27 결과를 중복 합산하지 않습니다.
+
+```sh
+set -- \
+  ./apps/demo/tests/table-insert.test.ts \
+  ./apps/demo/tests/table-insert-uncertain.test.ts
+for path in "$@"; do test -f "$path" || exit 1; done
+bun test --no-install "$@"
+```
+
+이 모델27은 공개 JS API와 대역 runtime/이벤트 DOM 경계의 검사입니다. Native ABI·실Worker·브라우저·CFB/XML 저장·실Native undo 성공을 의미하지 않습니다. 기본 core 모델16과 별도 Native integration 진입점은 [본문 caret 표 삽입 명령 검증](#본문-caret-표-삽입-명령-검증)을 따릅니다. 모달의 지원 범위는 [공개 본문 표 삽입](headless-table-insert.md#데모-표-만들기-연결)을 따릅니다.

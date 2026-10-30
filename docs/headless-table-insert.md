@@ -15,3 +15,9 @@ payload는 `{target, options}`이고 options는 `rows`, `columns`, `width`, `row
 strict TypeScript7.0.2에서 제품·공개 소비자·시험2의 양성0오류와 rows 문자열/raw reference/forged identity 음성 TS2322·TS2353·TS2353을 확인했습니다. 선택 source6+시험2 lint/fmt8은 통과했습니다. 공식 root lib 정책과 provider를 재사용했으며 새 DOM/polyfill을 추가하지 않았습니다. RN 실제 실행·실Worker·공식packed 소비자·브라우저 UI·새 SDK 배포는 미검증입니다. 현재 demo insert-table UI의 연결 완료로 주장하지 않습니다.
 
 작업 트리의 명시 source 검사에서 모델 16개·표 삽입 Native 2개·기존 각주 선택 20개를 함께 실행해 38개가 실패 없이 통과했습니다. 별도 교차 검사에서는 HWP5 각주·미주 target 4개가 표 삽입을 거부하고 관측·이력·저장 바이트를 유지했습니다. 기본 core suite에는 모델 검사만 포함하며 Native 진입점은 `packages/core/integration/commands/table-insert.test.ts`입니다. 명시 환경과 실행 명령은 [개발·검증 명령](development-commands.md#본문-caret-표-삽입-명령-검증)을 따릅니다. 필수 입력 부재는 skip하지 않고 실패합니다.
+
+## 데모 표 만들기 연결
+
+데모는 공개 `INSERT_TABLE_COMMAND`와 현재 본문 caret·resource 관측만 사용하며, 줄·칸·너비/한 줄 높이(pt)를 기존 정수 변환으로 전달합니다. 내부 resource ID 입력, 새 table/cell 자동 선택과 셀 편집권한 발급은 제공하지 않습니다. note·readonly·선택 부재·stale lease·미지원 capability는 거부하고 취소 시 명령을 보내지 않습니다. 실행 중 중복을 막으며, 같은 문서의 `committed-refresh-required`는 다시 만들지 말라는 경고를 유지하고 타문서/dispose의 늦은 결과는 폐기합니다.
+
+정규 모델 시험은 artifact 환경변수 대신 공개 `@hwpjs/core`를 직접 import합니다. 기존 SDK04491 명시 검사27과 원 P2 재현2pass/1fail 및 수정27pass는 이력이며, 새 SDK69와 웹 어댑터 채택 뒤 작업 트리의 정규 27개와 기존 서식을 포함한 138개가 통과했고 controller를 포함한 타입 검사도 통과했습니다. 모델 runtime은 대역이고 DOM은 이벤트 fixture이므로 실제 Native·Worker·Canvas·저장 성공을 주장하지 않습니다. 메뉴·모달의 실제 브라우저 E2E와 배포는 별도 검증 대상입니다. 명시 실행과 선행 core 빌드 순서는 [개발 명령](development-commands.md#데모-본문-표-만들기-모델-검증)이 소유합니다.

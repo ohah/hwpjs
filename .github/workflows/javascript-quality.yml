@@ -42,6 +42,13 @@ jobs:
           test -f ./tools/build-packages.mjs || exit 1
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: 데모 표 만들기 공개 API 모델 검사
+        run: |
+          set -- \
+            ./apps/demo/tests/table-insert.test.ts \
+            ./apps/demo/tests/table-insert-uncertain.test.ts
+          for path in "$@"; do test -f "$path" || exit 1; done
+          bun test --no-install "$@"
       - name: 표 삽입 공개 명령 모델 검사
         run: |
           test -f ./packages/core/tests/commands/table-insert.test.ts || exit 1
