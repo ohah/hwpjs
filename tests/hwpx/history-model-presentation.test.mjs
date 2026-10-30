@@ -163,7 +163,8 @@ function fixture(t, initial = 'AB', unit = 1, modelPort = true) {
       if (publicationOverride)
         return publicationOverride({ selection, revision, sourceState: modelState });
       assert.equal(modelState.nativeHistoryRevision, revision);
-      const unit = selection.focus.unit;
+      const startUnit = Math.min(selection.anchor.unit, selection.focus.unit);
+      const endUnit = Math.max(selection.anchor.unit, selection.focus.unit);
       modelState = {
         ...modelState,
         stateVersion: modelState.stateVersion + 1,
@@ -177,8 +178,8 @@ function fixture(t, initial = 'AB', unit = 1, modelPort = true) {
           owner: 'section:0:body',
           section: 0,
           paragraph: 0,
-          startUnit: unit,
-          endUnit: unit,
+          startUnit,
+          endUnit,
           affinity: 'forward',
         },
       };
@@ -308,6 +309,20 @@ function fixture(t, initial = 'AB', unit = 1, modelPort = true) {
   };
   return {
     direct,
+    formatRange(startUnit = 0, endUnit = 2) {
+      // surface가 공개 서식 snapshot과 retained selection을 받는 순서만 모델링합니다.
+      assert(direct.selectTextRange({ section: 0, paragraph: 0, startUnit, endUnit }));
+      stack = stack.slice(0, cursor + 1);
+      stack.push({ text: row.text, revision: ++clock, caret: endUnit });
+      cursor++;
+      direct.initializeCapabilities({
+        historyAvailable: true,
+        historyRevision: clock,
+        historyRevisions: stack.map((entry) => entry.revision),
+      });
+      assert(direct.selectTextRange({ section: 0, paragraph: 0, startUnit, endUnit }));
+      frameCurrent = false;
+    },
     acknowledgement: () => lastAcknowledgement,
     clearCoreHistorySelection() {
       clearHistorySelection = true;
@@ -936,4 +951,175 @@ test('dispose 뒤 늦은 게시 완료는 이전 문서의 입력을 제출하�
   finish(old);
   await tick();
   assert.equal(f.requests.length, 3);
+});
+
+test('서식 undo의 최종 선택 paint 뒤 대기 문구를 완료로 바꾼다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  assert(f.direct.requestHistory('undo'));
+  f.ack();
+  await tick();
+  assert.match(f.currentNote(), /화면 반영 대기/);
+  assert.equal(f.direct.settled(), false);
+  f.frame();
+  await tick();
+  assert(f.direct.settled());
+  assert.equal(f.canvas.dataset.selectionAuthority, 'current');
+  assert.equal(f.input.attributes['aria-busy'], 'false');
+  assert.equal(f.input.selectionStart, 0);
+  assert.equal(f.input.selectionEnd, 2);
+  assert.match(f.currentNote(), /화면 반영 완료/);
+});
+test('서식 undo와 redo 뒤 다른 위치 클릭과 입력은 실제 paint 뒤 허용된다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  for (const kind of ['undo', 'redo']) {
+    assert(f.direct.requestHistory(kind));
+    f.ack();
+    await tick();
+    assert.equal(f.direct.settled(), false);
+    assert(f.pointer(3).defaultPrevented);
+    f.frame();
+    await tick();
+    assert(f.direct.settled());
+  }
+  f.pointer(3);
+  f.type('R');
+  assert.equal(f.requests.at(-1).kind, 'splice');
+  assert.equal(f.requests.at(-1).startUnit, 3);
+  f.ack();
+  f.frame();
+  await tick();
+  assert.equal(f.text, 'ABCRD');
+});
+test('blur로 caret가 없어도 실제 선택 paint가 확인되면 완료하고 focus를 빼앗지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  f.input.blur();
+  f.direct.requestHistory('undo');
+  f.ack();
+  await tick();
+  f.frame();
+  await tick();
+  assert(f.direct.settled());
+  assert.equal(f.doc.activeElement, null);
+  assert.match(f.currentNote(), /화면 반영 완료/);
+});
+test('복원 geometry가 없으면 대기를 완료로 바꾸지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  f.direct.requestHistory('undo');
+  f.ack();
+  await tick();
+  const restore = f.hideCaretRows();
+  f.frame();
+  await tick();
+  assert.equal(f.direct.settled(), false);
+  assert.match(f.currentNote(), /화면 반영 대기/);
+  restore();
+  f.frame();
+  await tick();
+  assert(f.direct.settled());
+  assert.match(f.currentNote(), /화면 반영 완료/);
+});
+test('이력 실패 문구는 다음 paint가 덮어쓰지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.direct.requestHistory('undo');
+  f.ack({ error: 'FormatHistoryRejected' });
+  f.frame();
+  await tick();
+  assert.match(f.currentNote(), /FormatHistoryRejected/);
+});
+test('reset 뒤 늦은 geometry 알림은 완료 상태를 게시하지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  f.direct.requestHistory('undo');
+  f.ack();
+  await tick();
+  f.direct.reset({ selectionOrigin: 'core' });
+  f.frame();
+  await tick();
+  assert.equal(f.currentNote(), '');
+  assert.equal(f.input.disabled, true);
+});
+
+test('대기 중 다른 안내가 게시되면 release가 그 안내를 덮어쓰지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  f.direct.requestHistory('undo');
+  f.ack();
+  await tick();
+  assert(f.pointer(3).defaultPrevented);
+  const current = f.currentNote();
+  assert.equal(current, '화면 갱신 중입니다. 갱신된 화면에서 다시 선택하세요.');
+  f.frame();
+  await tick();
+  assert(f.direct.settled());
+  assert.equal(f.currentNote(), current);
+});
+test('release의 선택 알림에서 발생한 오류 안내를 완료 문구가 덮어쓰지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  f.direct.requestHistory('undo');
+  f.ack();
+  await tick();
+  f.setCommittedCallback(() => {
+    f.setCommittedCallback(() => {});
+    f.direct.initializeCapabilities({ historyAvailable: false });
+    f.direct.history('undo');
+  });
+  f.frame();
+  await tick();
+  assert(f.direct.settled());
+  assert.equal(f.currentNote(), '이 문서 형식은 실행 취소/다시 실행을 아직 지원하지 않습니다.');
+});
+test('changed false 이력은 기존 안내를 보존하고 완료 문구를 만들지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.direct.requestHistory('undo');
+  f.ack({ noop: true });
+  f.frame();
+  await tick();
+  assert(f.direct.settled());
+  assert.equal(f.currentNote(), '이동할 편집 이력이 없습니다.');
+});
+test('close 뒤 늦은 frame은 완료 안내를 게시하지 않는다', async (t) => {
+  const f = fixture(t, 'ABCD', 2);
+  f.formatRange();
+  f.frame();
+  await tick();
+  f.clearCoreHistorySelection();
+  f.direct.requestHistory('undo');
+  f.ack();
+  await tick();
+  f.direct.close();
+  f.frame();
+  await tick();
+  assert.equal(f.currentNote(), '');
 });

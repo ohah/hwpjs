@@ -138,6 +138,7 @@ export function createCanvasEditor({
     deferredReplies = [];
   let historyModelWitness = null;
   let historyModelPreparation = null;
+  let historyPresentationReport = null;
   const historyModelReady = () => {
     if (
       !historyModelWitness ||
@@ -238,10 +239,15 @@ export function createCanvasEditor({
       );
     },
     release() {
+      const completedReport = historyPresentationReport;
+      historyPresentationReport = null;
       canvas.dataset.selectionAuthority = 'current';
       input.setAttribute('aria-busy', 'false');
       // 확인한 Canvas 선택을 DOM에도 재확정한 뒤 대기 의도를 실행합니다.
       setSelection(anchor, focus, preferredX, selectionOrigin);
+      // 실제 선택 paint를 확인한 이력의 문구만 끝냅니다. 재진입한 다른 알림은 보존합니다.
+      if (completedReport !== null && reportedNoteRevision === completedReport)
+        report('실행 취소/다시 실행 적용 · 화면 반영 완료');
       historyIntents.wake();
     },
   });
@@ -346,9 +352,11 @@ export function createCanvasEditor({
     }
   };
   let reportedNote = '';
+  let reportedNoteRevision = 0;
   const report = (text) => {
     note.textContent = text;
     reportedNote = text;
+    reportedNoteRevision++;
   };
   const compositionProjection = () => {
     if (!multiComposition) return null;
@@ -3079,6 +3087,7 @@ export function createCanvasEditor({
     historyModelReady,
     requestHistory: travel,
     reset({ preserveHistory = false, selectionOrigin: origin = 'canvas' } = {}) {
+      historyPresentationReport = null;
       selectionOrigin = origin;
       if (events.signal.aborted) return;
       historyModelWitness = null;
@@ -3397,6 +3406,7 @@ export function createCanvasEditor({
             }
             if (events.signal.aborted || historyModelWitness !== state) return false;
             report('실행 취소/다시 실행 적용 · 화면 반영 대기');
+            historyPresentationReport = reportedNoteRevision;
             return true;
           };
           if (applyModelSelection(modelState) || modelSelectionAccepted) return;
