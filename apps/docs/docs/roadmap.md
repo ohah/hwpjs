@@ -15,7 +15,7 @@
 
 현재 웹 아티팩트의 단일 출처는 [실제 HTTP manifest](https://ohah.github.io/hwpjs/editor/manifest.json)입니다. 아래 지문은 2026-10-30 검증 시점의 기록이며 새 배포의 현재 값은 manifest에서 확인합니다.
 
-공개 asset commit `dcadaba7`은 표시 소스 `762dbbd57`을 사용합니다. Pages 실행 `41006825501`의 성공, 공개 payload138개와 manifest를 합친 139개 파일의 HTTP·SHA 일치, 실제 공개 사이트의 Noori HWP 열기와 저장된 혼합 각주의 다음 쪽 계속 표시를 확인했습니다. manifest SHA256은 `f4d7b84cbb9f2c3a6171b1605a3171a1d8426dee0628797e91e1f34436e76ec8`, WASM SHA256은 `d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb`, core Worker SHA256은 `e30f0f4cd0cf45b4055bb2ae3d840518c153b6d397f1faaad49366c74ade83df`입니다. 이는 해당 입력과 배포의 확인 범위이며 b7 전수감사의 재실행, 모든 원본 조판이나 사설 서버 전환 완료를 뜻하지 않습니다.
+공개 asset commit `cfd732a13`은 표시 소스 `5bc30289e`를 사용합니다. Pages 실행 `41013927787`의 성공, 공개 payload 141개와 manifest를 합친 142개 파일의 실제 HTTP·SHA 일치, 공개 사이트에서 Noori 열기와 저장된 혼합 각주의 마지막 쪽 계속 표시를 확인했습니다. manifest SHA256은 `275b0f8b804adc8766d2e941687706b11c0eb89d1d5dafcbc80758a6769a35b5`, WASM SHA256은 `d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb`, core Worker SHA256은 `e30f0f4cd0cf45b4055bb2ae3d840518c153b6d397f1faaad49366c74ade83df`입니다. 이전 공개 스크립트 3개를 추가 보존해 페이지 캐시의 참조를 유지했습니다. 이후 소스에서 검증한 원본 각주 선택·typed 표 삽입·조합 중 우클릭 수정은 이 번들에 포함되지 않습니다. b7 전수감사나 원본 한/글 전체 조판 동치를 다시 검증한 결과도 아닙니다.
 
 설치·pack·예제 검사는 [설치 안내](./guide/installation.md)의 선행 소스와 메타데이터 조건을 따릅니다. 현재 소스, 독립 tarball, 실제 웹 배포, npm registry, Native 기기 지원의 검증을 서로 계승하지 않습니다.
 
@@ -66,7 +66,8 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | 문단 정렬 | core `SET_PARAGRAPH_ALIGNMENT_COMMAND`; 형식별 문단 속성; formatting bridge | public 소스 확인과 한정된 과거 서식 검사 | 부분 | 여백·간격·split/join 등 전체 문단 명령군 공개 |
 | 찾기·바꾸기·통계 | core text-tools/query와 setSelection/splice; `apps/demo/src/text-tools-bridge.ts` | snapshot 기반 literal 검색 계약, 과거 UI 표본 | 부분 | 긴/windowed 문서의 완전성, regex·전체 replace transaction은 별도 |
 | 필드·양식 | `js/hwp5-editor.mjs`, `js/hwpx-editor.mjs`에 저수준 기반; 전용 typed public 필드 계약은 미제공 | `docs/headless-api-coverage.md`, 과거 private field E2E는 해당 후보만 | 부분 | 필드 ID/중복명/보호/양식별 조회·명령·이력과 실제 UI 승격 |
-| 표·셀 구조 | 형식별 표 생성/크기 저수준 경로; generic public splice/서식과 구분 | 개별 표 계약·과거 검사, public API 정적 대조 | 부분 | typed table/cell target·행열·병합·중첩·새 셀·Canvas 연결 검증 |
+| 표·셀 구조 | core `INSERT_TABLE_COMMAND`의 본문 caret 삽입과 기존 형식별 저수준 경로 | 소스 모델 16개·실제 두 형식의 Native 삽입 2개, 각주 선택과 합친 명시 38개 통과 및 CI 확인 | 부분 | 현재 배포 SDK·Worker·표 삽입 UI 연결, typed cell target·행열·병합·중첩·새 셀 편집 검증 |
+| 기존 HWP5 각주·미주 선택 | 전체 source snapshot의 검증된 note/list·현재 참조에서 공개 selection owner 파생 | 실제 WASM 선택·편집·독립 저장·이력·재열기 4개와 순수 16개, CI 확인 | 부분 | 배포 SDK·Worker·Canvas, 생성 note·표 안 note·window와 모든 원본 지원 검증 |
 | 그림·도형·차트 | 형식별 source/query/edit, 제한된 Canvas 표시; `apps/demo/src/command-support.ts`의 메뉴 목록은 실행 증거가 아님 | 개별 주제 보고서와 public inventory | 부분 | 객체별 public identity/resource/명령과 독립 저장·E2E |
 | 수식 | `src/equation`, WASM 배치 API와 HWPX Canvas 경로 | `docs/hwpx-equation-rendering.md`의 별도 과거 후보 사례 | 부분 | HWP5 연결, 남은 명령 의미·원본 폰트·전체 조판 동치 검증 |
 | 웹 Canvas와 framework | `packages/vanilla`, `packages/react`, `packages/svelte`; 기존 `web/preview/renderer.mjs` 공유 | 위 6조합 paste/undo 사례. 과거 SSR·빌드 성공은 별도 | 부분 | 모든 메뉴·브라우저·접근성·전체 페이지/픽스쳐 E2E |
