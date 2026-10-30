@@ -60,6 +60,7 @@ jobs:
             ./tests/hwp5/plain-footnote-continuation.test.mjs \
             ./tests/hwp5/plain-footnote-stable-order.test.mjs \
             ./tests/hwp5/plain-footnote-lock-audit.test.mjs \
+            ./tests/hwp5/footnote-allocation-index.test.mjs \
             ./tests/hwp5/mixed-note-table-continuation.test.mjs \
             ./tests/hwp5/recorded-mixed-note-continuation.test.mjs \
             ./tests/hwp5/source-note-projection-optin.test.mjs

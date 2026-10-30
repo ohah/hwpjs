@@ -1,3 +1,4 @@
+import { createFootnoteAllocationIndex } from './footnote-allocation-index.mjs';
 import { createFootnoteLockAudit } from './footnote-lock-audit.mjs';
 import { stableSafeIntegerOrder } from './stable-safe-integer-order.mjs';
 import { placeFootnoteArea } from './footnote-area-placement.mjs';
@@ -20,6 +21,8 @@ export function paginateFootnoteContinuationUnits(
   { maxRows = 20000, maxPages = 2000, maxPasses = 4000 },
   measured,
   unitsAdapter = plainFootnoteUnitsAdapter,
+  // 내부 mixed 호출만 true를 전달합니다. 기존 외부 adapter는 높이를 매번 읽습니다.
+  ownedFragmentHeights = unitsAdapter === plainFootnoteUnitsAdapter,
 ) {
   const fail = (error) => ({ state: 'unavailable', error });
   if (![maxRows, maxPages, maxPasses].every((n) => Number.isSafeInteger(n) && n > 0))
@@ -160,19 +163,12 @@ export function paginateFootnoteContinuationUnits(
     }
     audit?.endScan();
   };
-  const allocations = new Map(),
+  const allocations = createFootnoteAllocationIndex(overhead, policy, ownedFragmentHeights),
     minimum = new Map(),
     locked = measured ? null : new Map();
   let passes = 0,
     last;
-  const reserved = (ordinal) => {
-    const fragments = allocations.get(ordinal) ?? [];
-    return fragments.length
-      ? overhead +
-          fragments.reduce((n, f) => n + f.height, 0) +
-          policy.betweenNotes * (fragments.length - 1)
-      : 0;
-  };
+  const reserved = (ordinal) => allocations.reserved(ordinal);
   const paginate = () => {
     while (++passes <= maxPasses) {
       last = null;
@@ -222,7 +218,7 @@ export function paginateFootnoteContinuationUnits(
       if (ordinal >= maxPages) return fail('FootnoteContinuationPageLimit');
       const frame = pageSequenceReference(setting, ordinal);
       if (frame.state !== 'placed') return fail('InvalidFootnoteContinuationPage');
-      const existing = allocations.get(ordinal) ?? [];
+      const existing = allocations.fragments(ordinal);
       const bodyHeight =
         ordinal === anchor.pageOrdinal ? anchor.y + required - frame.boxes.page.y : 0;
       const capacity =
@@ -301,7 +297,7 @@ export function paginateFootnoteContinuationUnits(
         ordinal++;
         continue;
       }
-      allocations.set(ordinal, [...existing, fragment]);
+      allocations.append(ordinal, fragment);
       start = end;
       ordinal++;
     }
@@ -330,6 +326,6 @@ export function paginateFootnoteContinuationUnits(
     page: { ...page, pages },
     passes,
     counters,
-    notesFor: (_rows, ordinal, column) => (column === 0 ? (allocations.get(ordinal) ?? []) : []),
+    notesFor: (_rows, ordinal, column) => (column === 0 ? allocations.fragments(ordinal) : []),
   };
 }
