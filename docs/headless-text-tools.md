@@ -41,11 +41,14 @@ await editor.setSelection(target);
 
 owner/reference/token은 옵션으로 받지 않습니다. 기존 canonical owner와 선택 validator를 재사용하며, Native reference는 기존 명령 경로가 현재 row에서 가져옵니다. 잘못된 좌표·중복 문단 identity·clipped·scalar 경계는 기존 검증으로 거부합니다. 오래된 state로 만든 target은 실제 반영 시 문서/generation/operation/view token 검사로 거부합니다. 읽기 전용 선택이 편집 권한을 새로 부여하지 않으며 생성 셀의 surface 전용 정책도 유지합니다. dispose 뒤 `setSelection`은 `EditorDisposed` Promise rejection이므로 호출자는 await/catch해야 합니다. 비동기 선택 관측 fence가 필요하면 기존 `{ stateVersion: observed.stateVersion }` 옵션을 함께 사용합니다.
 
+기존 HWP5 원본 각주·미주의 Native note/list·source node·현재 참조를 확인한 공개 owner 승격 범위와 거부 조건은 [기존 각주 헤드리스 선택](headless-existing-note-selection.md)이 소유합니다. 생성 note·표 안 note·불명 중첩 owner로 일반화하지 않습니다.
+
 현재 P를 snapshot의 문단 행 수로 두면 facade의 좌표 조회는 최대 P회이고 기존 validator의 유일성 검사는 별도 P회입니다. target은 한 개이고 문서 텍스트를 출력/복제하지 않습니다. 반복 조회 Map/WeakMap 인덱스는 아직 없으며 이 단위 결과를 인덱스 효과나 전체 편집 복잡도 개선의 증명으로 읽지 않습니다. `findTextMatch`의 기존 검색 결과 선택 기능은 유지합니다.
 
 정규 회귀는 `packages/core/tests/state/paragraph-selection-facade.test.ts`의 pure9와 `packages/core/tests/integration/paragraph-selection-facade.test.ts`의 실 Runtime8입니다. 전체17의 [명시 실행 명령과 WASM/Python 준비 조건](development-commands.md#문단-좌표-선택-집중-검증)을 따릅니다. Native 검사는 절대경로 `HWPJS_TEST_WASM`을 요구하고 verification artifact로 자동 대체하지 않습니다. 허용 원본은 Git에 있는 `legacy/rust/crates/hwp-core/tests/fixtures/table.hwpx`와 `noori.hwp` 두 개뿐입니다. 중복 문구 fixture는 원 table ZIP에서 테스트 안의 Python 표준 라이브러리로 메모리 생성하며 새 바이너리를 게시하지 않습니다. 저장 후 다른 ZIP member/XML 구조가 바뀌지 않았는지도 메모리 oracle로 검사하며 기본 증거파일 출력은 없습니다. same-process ReaderRuntime 검증은 Worker transport·브라우저·실제 Canvas 완료 증거와 구분합니다.
 
 <!-- text-tools-pending-presentation-20261026-933905ad -->
+
 ## 검색 작업 종료와 메뉴 표시 수명
 
 2026-10-26 수정 `933905ad`는 검색 선택의 상태 이벤트가 `pending=true`일 때 shell을 갱신한 뒤, 작업 종료에서 메뉴를 다시 그리지 않아 찾기 버튼의 disabled·진행 중 title이 남던 문제를 고칩니다. CSS 겹침 수정과 별도 원인입니다. bridge는 `onPresentationChange`로 시작·settle·close의 표시 변경을 알리고, demo-controller가 `shell.update()`를 연결합니다. close는 epoch를 바꾸되 pending을 즉시 해제하지 않습니다. epoch가 달라진 작업도 settle에서는 살아 있는 bridge의 메뉴를 갱신하되, 후속 선택 접수·성공 안내는 기존 active 검사를 따릅니다. 이미 접수된 작업을 취소한다는 뜻은 아닙니다. dispose 뒤에는 알리지 않고, 동기 constructor 구독 중에는 shell 준비 전 콜백을 막습니다.

@@ -87,6 +87,7 @@ import { createFieldLinkDisplayGuard } from './field-link-display-guard.mjs';
 import { queryHwp5WindowContent } from './hwp5-window-query-content.mjs';
 import { currentReferenceCommand } from './hwp5-current-reference-command.mjs';
 import { attachHwp5CurrentReferences } from './hwp5-current-reference-content.mjs';
+import { attachHwp5NoteSelectionOwners } from './hwp5-note-selection-owner.mjs';
 import { attachHwp5CreatedTables } from './hwp5-created-table-content.mjs';
 import {
   hwp5TableCreationRequest,
@@ -469,14 +470,14 @@ export function createReaderRuntime({
       ),
     );
     const roots = projectHwp5RootContent(prepared);
-    if (roots.state === 'projected') return roots.content;
+    if (roots.state === 'projected') return attachHwp5NoteSelectionOwners(roots.content);
     if (
       prepared.hwp5Drawings?.length &&
       prepared.hwp5Drawings.every((row) => row.source.kind_id === 0x24636f6e)
     )
       prepared.hwp5GroupPageModelError = roots.error;
     else prepared.hwp5DrawingPageModelError = roots.error;
-    return prepared;
+    return attachHwp5NoteSelectionOwners(prepared);
   }
   function anchorView(section, paragraph) {
     try {

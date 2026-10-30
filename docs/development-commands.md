@@ -1,5 +1,23 @@
 # 개발·검증 명령
 
+<a id="existing-note-headless-selection"></a>
+
+## 기존 각주 문단 헤드리스 선택
+
+명시 d849 WASM과 기존360c `footnote-endnote.hwp`를 사용하는 source Bun 검사입니다. 독립 CFB와 이력·재열기는 canonical4, 순수 게시 투영은 양성1+음성15이며 서로 대체하거나 중복 합산하지 않습니다. [소유권 계약과 범위](headless-existing-note-selection.md)를 따릅니다. 새 SDK/Native 빌드나 브라우저를 시작하지 않습니다.
+
+```sh
+test -n "$HWPJS_TEST_WASM" || exit 1
+test -f ./legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp || exit 1
+test -f ./tools/tests/existing-note-selection.test.ts || exit 1
+test -f ./tests/hwp5/note-selection-owner.test.mjs || exit 1
+bun test --no-install \
+  ./tools/tests/existing-note-selection.test.ts \
+  ./tests/hwp5/note-selection-owner.test.mjs
+```
+
+`HWPJS_TEST_WASM`에는 검증할 기존 WASM의 절대경로를 지정합니다. fixture/WASM의 고정 SHA 불일치나 부재는 실패이며 skip가 아닙니다. 기본 증거파일 쓰기는 없습니다.
+
 ## 관측 소유권·각주 저장 집중 검사
 
 저장소 루트에서 두 진입점을 명시합니다. `HWPJS_TEST_WASM`에는 검증할 생성 WASM의 절대 경로를 지정합니다.

@@ -55,6 +55,17 @@ jobs:
             ./apps/demo/tests/paragraph-spacing-kind.test.ts
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
+      - name: Test existing note paragraph selection from source
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+        run: |
+          test -f "$HWPJS_TEST_WASM" || exit 1
+          test -f ./legacy/rust/crates/hwp-core/tests/fixtures/footnote-endnote.hwp || exit 1
+          set -- \
+            ./tools/tests/existing-note-selection.test.ts \
+            ./tests/hwp5/note-selection-owner.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          bun test --no-install "$@"
       - name: Test footnote continuation and ordering
         run: |
           set -- \
