@@ -18,6 +18,7 @@ export function prepareMixedFootnoteContinuation(
   policy,
   separatorHeight,
   { maxRows = 20000 } = {},
+  ownedTrialOutput = false,
 ) {
   const candidates = notes.filter((note) => note.continuationUnits !== undefined);
   if (!candidates.length) return null;
@@ -321,6 +322,7 @@ export function prepareMixedFootnoteContinuation(
         adapter,
         // 이 함수의 fragment는 동기 배치가 끝나기 전 외부로 노출되지 않습니다.
         true,
+        ownedTrialOutput,
       );
       return result.state === 'ready' ? { ...result, mixedCounters: counters } : result;
     },

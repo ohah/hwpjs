@@ -64,7 +64,8 @@ jobs:
             ./tests/hwp5/footnote-allocation-index.test.mjs \
             ./tests/hwp5/mixed-note-table-continuation.test.mjs \
             ./tests/hwp5/recorded-mixed-note-continuation.test.mjs \
-            ./tests/hwp5/source-note-projection-optin.test.mjs
+            ./tests/hwp5/source-note-projection-optin.test.mjs \
+            ./tests/hwp5/footnote-trial-projection.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
       - name: 이력 모델과 paint 준비 검사

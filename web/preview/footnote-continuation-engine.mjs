@@ -1,7 +1,7 @@
 import { createFootnoteAllocationIndex } from './footnote-allocation-index.mjs';
 import { createFootnoteLockAudit } from './footnote-lock-audit.mjs';
 import { stableSafeIntegerOrder } from './stable-safe-integer-order.mjs';
-import { placeFootnoteArea } from './footnote-area-placement.mjs';
+import { placeFootnoteArea, checkFootnoteAreaTrial } from './footnote-area-placement.mjs';
 import { columnReferenceBoxes } from './column-reference-boxes.mjs';
 import { footnoteTextReference } from './footnote-reference-rows.mjs';
 import { createFootnoteColumnReservation } from './footnote-column-reservation.mjs';
@@ -23,6 +23,8 @@ export function paginateFootnoteContinuationUnits(
   unitsAdapter = plainFootnoteUnitsAdapter,
   // 내부 mixed 호출만 true를 전달합니다. 기존 외부 adapter는 높이를 매번 읽습니다.
   ownedFragmentHeights = unitsAdapter === plainFootnoteUnitsAdapter,
+  // 기존 raw/custom 호출은 기본적으로 새 출력 억제 경로를 사용하지 않습니다.
+  ownedTrialOutput = false,
 ) {
   const fail = (error) => ({ state: 'unavailable', error });
   if (![maxRows, maxPages, maxPasses].every((n) => Number.isSafeInteger(n) && n > 0))
@@ -266,19 +268,36 @@ export function paginateFootnoteContinuationUnits(
             height: measuredHeight,
             normalizedUnits: fragmentRows,
           });
-          const trial = placeFootnoteArea(
-            [...existing, candidate],
-            { ...policy, beneathText: false },
-            frame.boxes.page,
-            frame.boxes.page.y + bodyHeight,
-            separatorHeight,
-          );
+          const trialNotes = [...existing, candidate];
+          const trialPolicy = { ...policy, beneathText: false };
+          const trial =
+            ownedTrialOutput === true
+              ? checkFootnoteAreaTrial(
+                  trialNotes,
+                  trialPolicy,
+                  frame.boxes.page,
+                  frame.boxes.page.y + bodyHeight,
+                  separatorHeight,
+                  physicalBottom,
+                  20000,
+                  true,
+                )
+              : placeFootnoteArea(
+                  trialNotes,
+                  trialPolicy,
+                  frame.boxes.page,
+                  frame.boxes.page.y + bodyHeight,
+                  separatorHeight,
+                );
           if (
             trial.state === 'placed' &&
-            trial.rows.every(
-              (row) =>
-                row.y >= frame.boxes.page.y + bodyHeight && row.y + row.height <= physicalBottom,
-            )
+            (ownedTrialOutput === true
+              ? trial.rowsFit
+              : trial.rows.every(
+                  (row) =>
+                    row.y >= frame.boxes.page.y + bodyHeight &&
+                    row.y + row.height <= physicalBottom,
+                ))
           ) {
             fragment = candidate;
             break;

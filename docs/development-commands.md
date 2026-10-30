@@ -139,10 +139,13 @@ set -- \
   ./tests/hwp5/source-note-projection-optin.test.mjs \
   ./tests/hwp5/plain-footnote-continuation.test.mjs \
   ./tests/hwp5/plain-footnote-stable-order.test.mjs \
-  ./tests/hwp5/plain-footnote-lock-audit.test.mjs
+  ./tests/hwp5/plain-footnote-lock-audit.test.mjs \
+  ./tests/hwp5/footnote-trial-projection.test.mjs
 for path in "$@"; do test -f "$path" || exit 1; done
 mise exec -- node --test --test-concurrency=1 "$@"
 ```
+
+직접 수치 trial 회귀는 내부 측정 경로와 raw/custom fallback, 부동소수 계산 및 오류 순서를 검사합니다. 테스트 전용 대조 함수와 합성 입력을 사용하며 로컬 검증 폴더나 Native 엔진은 요구하지 않습니다. 방문 계수와 순수 A/B는 별도 증거이며 전체 reflow 선형화나 브라우저 성능을 뜻하지 않습니다.
 
 2026-10-30 예약 인덱스 개선 뒤 실제 작업 트리에서 114pass·0fail·0skip이었습니다. 독립 저장 oracle와 실제 Canvas의 별도 증거는 계약 문서에 기록하며 이 순수 검사 수에 합산하지 않습니다.
 

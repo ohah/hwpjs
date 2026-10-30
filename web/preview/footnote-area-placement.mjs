@@ -1,4 +1,5 @@
 import { projectNoteFlowPictures } from './note-picture-projection.mjs';
+const defineDataProperty = Object.defineProperty;
 // 측정된 각주 영역을 한 단에 배치합니다. 참조의 페이지 이동은 페이지 엔진 책임입니다.
 export function placeFootnoteArea(
   notes,
@@ -7,6 +8,54 @@ export function placeFootnoteArea(
   occupiedBottom,
   separatorHeight,
   maxRows = 20000,
+) {
+  return projectFootnoteArea(notes, policy, column, occupiedBottom, separatorHeight, maxRows, null);
+}
+
+// 내부 측정 fragment만 사용합니다. custom adapter는 기존 materialization 경로를 유지합니다.
+export function checkFootnoteAreaTrial(
+  notes,
+  policy,
+  column,
+  occupiedBottom,
+  separatorHeight,
+  physicalBottom,
+  maxRows = 20000,
+  ownedData = false,
+) {
+  if (ownedData !== true) {
+    const placed = projectFootnoteArea(
+      notes,
+      policy,
+      column,
+      occupiedBottom,
+      separatorHeight,
+      maxRows,
+      null,
+    );
+    return placed.state === 'placed'
+      ? {
+          state: 'placed',
+          rowsFit: placed.rows.every(
+            (row) => row.y >= occupiedBottom && row.y + row.height <= physicalBottom,
+          ),
+        }
+      : placed;
+  }
+  // 오직 같은 동기 측정 호출이 새로 만든 own-data 결과만 내부 caller가 선택합니다.
+  return projectFootnoteArea(notes, policy, column, occupiedBottom, separatorHeight, maxRows, {
+    physicalBottom,
+  });
+}
+
+function projectFootnoteArea(
+  notes,
+  policy,
+  column,
+  occupiedBottom,
+  separatorHeight,
+  maxRows,
+  trial,
 ) {
   const unavailable = (error) => ({ state: 'unavailable', error });
   if (
@@ -64,12 +113,20 @@ export function placeFootnoteArea(
     numberPrefixes = [],
     flowPictures = [],
     owners = new Set();
+  // 수치 계산은 양 경로가 공유하고, trial만 재사용 scratch와 개수로 출력 생성을 생략합니다.
+  const rowScratch = trial ? { x: 0, y: 0 } : null,
+    clipScratch = trial ? { x: 0, y: 0 } : null;
+  let rowCount = 0,
+    boxCount = 0,
+    prefixCount = 0,
+    rowsFit = true;
   let cursor = top + policy.aboveLine + separatorHeight + policy.belowLine;
   for (const note of notes) {
     if (owners.has(note.noteNode)) return unavailable('AmbiguousFootnoteArea');
     owners.add(note.noteNode);
     for (const row of note.rows) {
-      if (rows.length + numberPrefixes.length >= maxRows) return unavailable('FootnoteAreaLimit');
+      if ((trial ? rowCount + prefixCount : rows.length + numberPrefixes.length) >= maxRows)
+        return unavailable('FootnoteAreaLimit');
       if (
         !row ||
         ![row.y, row.height, row.x ?? 0].every(Number.isFinite) ||
@@ -78,23 +135,31 @@ export function placeFootnoteArea(
         row.y + row.height > note.height
       )
         return unavailable('InvalidFootnoteArea');
-      const projected = {
-        ...row,
-        x: column.x + (row.x ?? 0),
-        y: cursor + row.y,
-        ...(row.pageClip
-          ? {
-              pageClip: {
-                ...row.pageClip,
-                x: column.x + row.pageClip.x,
-                y: cursor + row.pageClip.y,
-              },
-            }
-          : {}),
-      };
+      // generic spread의 getter 관측은 기존 순서를 유지합니다. x/y는 항상 own data입니다.
+      const projected = trial ? rowScratch : { ...row, x: 0, y: 0 };
+      projected.x = column.x + (row.x ?? 0);
+      projected.y = cursor + row.y;
+      if (row.pageClip) {
+        const pageClip = trial ? clipScratch : { ...row.pageClip, x: 0, y: 0 };
+        pageClip.x = column.x + row.pageClip.x;
+        pageClip.y = cursor + row.pageClip.y;
+        if (!trial)
+          defineDataProperty(projected, 'pageClip', {
+            value: pageClip,
+            enumerable: true,
+            configurable: true,
+            writable: true,
+          });
+      }
       if (![projected.x, projected.y, projected.y + row.height].every(Number.isFinite))
         return unavailable('InvalidFootnoteArea');
-      rows.push(projected);
+      if (trial) {
+        rowCount++;
+        // bounds 실패로 조기 반환하면 뒤의 원 구조 오류를 가리므로 결과만 누적합니다.
+        if (rowsFit)
+          rowsFit =
+            projected.y >= occupiedBottom && projected.y + row.height <= trial.physicalBottom;
+      } else rows.push(projected);
     }
     for (const [key, output] of [
       ['boxes', boxes],
@@ -103,8 +168,12 @@ export function placeFootnoteArea(
       if (note[key] !== undefined && !Array.isArray(note[key]))
         return unavailable('InvalidFootnoteArea');
       for (const item of note[key] ?? []) {
-        if (key === 'boxes' && boxes.length >= maxRows) return unavailable('FootnoteAreaLimit');
-        if (rows.length + numberPrefixes.length >= maxRows && key === 'numberPrefixes')
+        if (key === 'boxes' && (trial ? boxCount : boxes.length) >= maxRows)
+          return unavailable('FootnoteAreaLimit');
+        if (
+          (trial ? rowCount + prefixCount : rows.length + numberPrefixes.length) >= maxRows &&
+          key === 'numberPrefixes'
+        )
           return unavailable('FootnoteAreaLimit');
         if (
           !item ||
@@ -121,7 +190,13 @@ export function placeFootnoteArea(
               item.x + item.width > column.width + 1e-8))
         )
           return unavailable('InvalidFootnoteArea');
-        output.push({ ...item, x: column.x + item.x, y: cursor + item.y });
+        const projected = trial ? rowScratch : { ...item, x: 0, y: 0 };
+        projected.x = column.x + item.x;
+        projected.y = cursor + item.y;
+        if (trial) {
+          if (key === 'boxes') boxCount++;
+          else prefixCount++;
+        } else output.push(projected);
       }
     }
     const pictures = projectNoteFlowPictures(note.flowPictures ?? [], column.x, cursor, {}, note);
@@ -129,6 +204,7 @@ export function placeFootnoteArea(
     flowPictures.push(...pictures.pictures);
     cursor += note.height + policy.betweenNotes;
   }
+  if (trial) return { state: 'placed', rowsFit };
   return {
     state: 'placed',
     rows,

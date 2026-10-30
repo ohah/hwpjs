@@ -31,6 +31,7 @@ export function paginateMeasuredPlainFootnoteContinuations(
   policy,
   separatorHeight,
   options = {},
+  ownedTrialOutput = false,
 ) {
   return paginateFootnoteContinuationUnits(
     rows,
@@ -41,5 +42,8 @@ export function paginateMeasuredPlainFootnoteContinuations(
     separatorHeight,
     options,
     true,
+    undefined,
+    undefined,
+    ownedTrialOutput,
   );
 }

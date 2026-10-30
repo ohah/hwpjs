@@ -80,6 +80,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
   )
     return unavailable('UnsupportedCreatedTablePageControls');
   const bodyIdentities = new Set(bodyTables.map((table) => table.identity));
+  // 이 호출에서 생성한 측정 note는 외부로 게시되기 전 동기 continuation이 소비합니다.
   const measured = measureNoteBodies(
     {
       ...content,
@@ -113,6 +114,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
           policies.get('footnote'),
           separators.get('footnote')?.height,
           { maxRows },
+          true,
         )
       : null;
   if (mixed && mixed.state !== 'prepared') return mixed;
@@ -183,6 +185,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
           footPolicy,
           footSeparator.height,
           { maxRows },
+          true,
         )
       : null;
   if (continuation && continuation.state !== 'ready') return continuation;
@@ -232,6 +235,7 @@ export function layoutNoteBodyPages(content, measure, maxRows = 20000) {
       footPolicy,
       footSeparator.height,
       { maxRows },
+      true,
     );
     if (aggregate.state !== 'ready') return aggregate;
     reservation = aggregate;
