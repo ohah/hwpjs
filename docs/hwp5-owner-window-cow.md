@@ -50,6 +50,8 @@ Node 실제 Worker 데이터 전달과 실제 browser main Worker admission은 �
 
 원 r1의14번째는 키 전송 전 CDP session/channel 오류로 중단돼 실패 기록을 보존했습니다. OS crash 직접 귀속은 미확정입니다. r1 성공13개를 재실행하지 않고 별도 r2에서 실패한14번과 미실행15/16번만 실행해 최종16개를 구성했습니다. 원 실패를 성공으로 덮어쓰거나 small4와 중복 합산하지 않습니다. B 저장4개는 원본에서 사전 계산한 전체 section326 record·비대상12 stream·metadata와 독립 CFB oracle로 대조해 통과했습니다. source commit `dde44e71a`의 JavaScript Quality CI도 성공했습니다. 운영 반영과 외부 HTTPS 확인은 이 로컬 결과와 별도입니다.
 
+공개 자산 `9ec9f493c`의 첫 CI는 서버 alias 검사 중 runner shutdown으로 중단됐습니다. 해당 검사의 기존 가정인 `/hwpjs/worker.js`와 `runtime/worker.js` 바이트 동일은 새 세대에서 성립하지 않습니다. 전자는 manifest의 새 active Worker, 후자는 이전 페이지 캐시용 Worker입니다. 실제 HTTP에서 각각 c382/E30을 확인하고, alias를 active 경로와 대조하면서 두 세대의 SHA를 각각 검사하도록 회귀를 고쳤습니다. 대형 Buffer 실패 출력 대신 bounded boolean 바이트 비교를 사용하며 소유 서버의 연결도 finally 종료합니다. runner 종료가 OOM인지 여부는 미확정입니다. 명시 서버·정책38개는 수정 후 통과했으며 엔진·번들 바이트는 바꾸지 않았습니다.
+
 ## 증거 식별과 문서 수명
 
 source07 제품 명세는 로컬 `zig-out/verification/native-owner-window-worker-r1/candidate/PRODUCT-IMMUTABLE-07.json`이며 선택13=변경10+미변경 Worker 의존3입니다. 그 인계서의 sdkBuilds0/browserRuns0은 원 source 검증 시점의 기록으로 보존하고 후속 main build 성공으로 덮어쓰지 않습니다. ignored packet은 source-only clone에 포함되지 않으므로 이 문서만으로 같은 실행 준비가 완료됐다고 보지 않습니다. 정확 지문·원 계수·한계는 해당 세대의 불변 명세와 인계서가 소유합니다.

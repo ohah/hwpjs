@@ -10,6 +10,7 @@ import { parseDemoServerArguments } from '../../tools/demo-server-options.mjs';
 import { respondDemoFixtureCatalog } from '../../tools/demo-fixture-catalog-response.mjs';
 import { respondDemoFixture } from '../../tools/demo-fixture-response.mjs';
 import { demoFixtures } from '../../web/preview/fixture-catalog.mjs';
+import { readWorkerAssets } from '../../tools/pages-demo/worker-assets.mjs';
 const root = process.cwd(),
   privatePath = process.env.HWPJS_TEST_PRIVATE_BUNDLE,
   fixturePolicyPath = process.env.HWPJS_TEST_PUBLIC_FIXTURE_POLICY,
@@ -43,7 +44,10 @@ async function serve(fn) {
   try {
     await fn('http://127.0.0.1:' + server.address().port);
   } finally {
-    await new Promise((r) => server.close(r));
+    await new Promise((r) => {
+      server.close(r);
+      server.closeAllConnections();
+    });
   }
 }
 test('explicit mode parsing preserves default dev and rejects invalid/duplicate arguments', () => {
@@ -78,17 +82,34 @@ test('legacy redirects keep canonical relative assets valid for every framework 
   }));
 test('canonical and legacy engine/worker aliases are byte exact, HEAD bodyless', () =>
   serve(async (base) => {
+    const workers = readWorkerAssets(bundle.manifest);
     for (const [a, b] of [
       ['/hwpjs/hwpjs.wasm', '/hwpjs/editor/hwpjs/hwpjs.wasm'],
-      ['/hwpjs/worker.js', '/hwpjs/editor/runtime/worker.js'],
+      ['/hwpjs/worker.js', '/hwpjs/editor/' + workers.activeWorkerPath],
     ]) {
       const x = await fetch(base + a),
         y = await fetch(base + b);
       assert.equal(x.status, 200);
-      assert.deepEqual(Buffer.from(await x.arrayBuffer()), Buffer.from(await y.arrayBuffer()));
+      assert.equal(y.status, 200);
+      const xb = Buffer.from(await x.arrayBuffer()),
+        yb = Buffer.from(await y.arrayBuffer());
+      assert(xb.equals(yb), `alias bytes must match ${b}`);
       const h = await fetch(base + b, { method: 'HEAD' });
       assert.equal(h.status, 200);
       assert.equal((await h.arrayBuffer()).byteLength, 0);
+    }
+    for (const [path, sha256] of [
+      [workers.activeWorkerPath, workers.activeWorkerSha256],
+      [workers.legacyWorkerPath, workers.legacyWorkerSha256],
+    ]) {
+      const response = await fetch(base + '/hwpjs/editor/' + path);
+      assert.equal(response.status, 200);
+      assert.equal(
+        createHash('sha256')
+          .update(Buffer.from(await response.arrayBuffer()))
+          .digest('hex'),
+        sha256,
+      );
     }
     const wasm = await fetch(base + '/hwpjs/hwpjs.wasm');
     assert.equal(
