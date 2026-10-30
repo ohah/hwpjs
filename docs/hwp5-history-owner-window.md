@@ -106,6 +106,12 @@ pure147은 기존 helper108 + hint/branch/512/보존9 + controller/COW30으로 �
 
 05 최종 Chrome ABBA16도 재시도 없이 통과했습니다. 같은 Noori·font·DPR·low-timeline 조건에서 각2회 평균 재입력→최종 marker는 p4 burst1357.15→832.30ms, p15 burst1377.50→888.70ms, p4 30Hz202.75→83.95ms, p15 30Hz193.65→53.80ms였습니다. A는 배포 COW08, B는 capabilities를 수정한05이며 원03·small4와 합산하지 않습니다. 최종 text/caret·busy=false·trusted40/undo40/repeat39·소유 브라우저 종료16건과 독립 CFB 저장4건을 확인했습니다. source `290be23b5`의 CI도 성공했습니다. burst에 약0.83~0.89초가 남고 표본·계측·호스트 부하의 한계가 있어 전체 문서·픽셀·Native ACK 또는 무지연을 보장하지 않습니다. 실제 운영 반영과 외부 주소 검사는 이 결과와 별도입니다.
 
+## 최종 배포 확인
+
+05 공개 자산 commit `a52f1cc49`의 JavaScript Quality와 GitHub Pages 배포가 모두 성공했습니다. 공개 manifest는6cf4ca05, private manifest는3fd9d3ff이며, 두 실제 HTTPS 주소에서 Worker1f2e1089 및 기존 WASMd849의 HTTP200과 전체 SHA를 확인했습니다. private 서비스는 검증한 immutable05 release를 사용합니다. 원03은 공개 배포하지 않았고 rollback 이력도 별도 보존합니다.
+
+실제 private HTTPS에서 MetaLeft/modifier4의 Cmd+Z40회, 공개 HTTPS에서 ControlLeft/modifier2의 Ctrl+Z40회를 각각 trusted 이벤트로 확인했습니다. 각 사례는 40문자 입력→취소40회(repeat39)→재입력 뒤 예상 원문+r, 선택3:3·caret0:15:3·current·busy=false·paintPending=false·console/error0으로 종료했습니다. 각 소유 브라우저는 active=false/pid=null/잔류0으로 종료했습니다. 비교 full16도 실제 Meta/modifier4였으므로 Ctrl 성능 측정으로 표기하지 않습니다. Ctrl 사례는 배포 후 기능 검증이며 기존 성능16회에 합산하지 않습니다. 임시 QA 서버 두 개도 소유 PID를 확인해 종료했고 운영 서버는 유지했습니다.
+
 ## 불변 증거와 재현 경계
 
 | 입력 | SHA256 |
