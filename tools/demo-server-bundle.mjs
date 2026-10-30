@@ -1,5 +1,6 @@
 import { loadPrivateDemoBundle } from './demo-private-bundle.mjs';
-import { digest } from './pages-demo/bundle-validation.mjs';
+import { digest, rejectSymlinkAncestors } from './pages-demo/bundle-validation.mjs';
+import { readFile, lstat } from 'node:fs/promises';
 import { demoFixtures } from '../web/preview/fixture-catalog.mjs';
 import { respondDemoFixtureCatalog } from './demo-fixture-catalog-response.mjs';
 import { respondDemoFixture } from './demo-fixture-response.mjs';
@@ -36,15 +37,27 @@ const redirects = new Map([
   ]),
 ]);
 /** Validated immutable snapshot only. Fixture/docs handlers remain owned by the server. */
-export async function loadDemoServerBundle(directory, { root, privateFixtures = false }) {
+export async function loadDemoServerBundle(
+  directory,
+  { root, privateFixtures = false, fixturePolicyPath },
+) {
+  let fixturePolicy;
+  if (fixturePolicyPath !== undefined) {
+    if (typeof fixturePolicyPath !== 'string' || fixturePolicyPath.length === 0)
+      throw Error('InvalidFixturePolicyPath');
+    const path = resolve(root, fixturePolicyPath);
+    await rejectSymlinkAncestors(path);
+    if (!(await lstat(path)).isFile()) throw Error('InvalidFixturePolicyFile');
+    fixturePolicy = JSON.parse(await readFile(path, 'utf8'));
+  }
   const bundle = privateFixtures
     ? await loadPrivateDemoBundle(directory)
-    : await validateProductionBundle(directory, { root });
+    : await validateProductionBundle(directory, { root, fixturePolicy });
   if (privateFixtures) {
     const policy = bundle.manifest.privateDemo;
     const publicBase = await validateProductionBundle(
       resolve(root, 'apps/docs/docs/public/editor'),
-      { root },
+      { root, fixturePolicy },
     );
     if (
       !policy ||

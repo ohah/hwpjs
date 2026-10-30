@@ -12,9 +12,10 @@ import { respondDemoFixture } from '../../tools/demo-fixture-response.mjs';
 import { demoFixtures } from '../../web/preview/fixture-catalog.mjs';
 const root = process.cwd(),
   privatePath = process.env.HWPJS_TEST_PRIVATE_BUNDLE,
+  fixturePolicyPath = process.env.HWPJS_TEST_PUBLIC_FIXTURE_POLICY,
   bundle = await loadDemoServerBundle(
     privatePath ? resolve(privatePath) : resolve(root, 'apps/docs/docs/public/editor'),
-    { root, privateFixtures: !!privatePath },
+    { root, privateFixtures: !!privatePath, fixturePolicyPath },
   );
 async function serve(fn) {
   const server = createServer(async (req, res) => {
@@ -38,6 +39,7 @@ async function serve(fn) {
   });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
+  console.log(JSON.stringify({ ownedTestPort: server.address().port, host: '127.0.0.1' }));
   try {
     await fn('http://127.0.0.1:' + server.address().port);
   } finally {
@@ -110,7 +112,14 @@ test('full private catalog and allowlisted original fixture handlers remain avai
       await readFile(resolve(root, source.path)),
     );
     const published = await (await fetch(base + '/hwpjs/editor/fixture-catalog.json')).json();
-    assert.equal(published.length, privatePath ? demoFixtures.length : 2);
+    assert.equal(
+      published.length,
+      privatePath
+        ? demoFixtures.length
+        : fixturePolicyPath === undefined
+          ? 2
+          : JSON.parse(await readFile(resolve(root, fixturePolicyPath), 'utf8')).files.length,
+    );
   }));
 test('unknown paths, non-GET and docs alias never read arbitrary files', () =>
   serve(async (base) => {

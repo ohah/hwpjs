@@ -28,6 +28,14 @@ jobs:
           test -f ./apps/demo/tests/runtime-assets.test.ts || exit 1
           test -f ./tests/hwpx/pages-runtime-asset-paths.test.mjs || exit 1
           bun test ./apps/demo/tests/runtime-assets.test.ts ./tests/hwpx/pages-runtime-asset-paths.test.mjs
+      - name: Test explicit demo bundle policies and routes
+        env:
+          HWPJS_TEST_PUBLIC_FIXTURE_POLICY: tools/pages-demo/public-gallery-fixtures.json
+        run: |
+          test -f ./tests/hwpx/demo-server-fixture-policy.test.mjs || exit 1
+          test -f ./tests/hwpx/demo-server-bundle.test.mjs || exit 1
+          test -f ./tools/pages-demo/public-gallery-fixtures.json || exit 1
+          node --test --test-concurrency=1 ./tests/hwpx/demo-server-fixture-policy.test.mjs ./tests/hwpx/demo-server-bundle.test.mjs
       - name: Build core for demo formatting regressions
         run: |
           test -f ./tools/build-packages.mjs || exit 1

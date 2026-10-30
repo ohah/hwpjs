@@ -3,6 +3,7 @@ export function parseDemoServerArguments(args, root) {
   let port = 8082,
     seenPort = false,
     bundleDirectory,
+    fixturePolicyPath,
     privateFixtures = false;
   for (let i = 0; i < args.length; i++) {
     const value = args[i];
@@ -14,6 +15,12 @@ export function parseDemoServerArguments(args, root) {
       const directory = value === '--bundle-dir' ? args[++i] : value.slice('--bundle-dir='.length);
       if (!directory || directory.startsWith('--')) throw Error('MissingBundleDirectory');
       bundleDirectory = resolve(root, directory);
+    } else if (value === '--fixture-policy' || value.startsWith('--fixture-policy=')) {
+      if (fixturePolicyPath !== undefined) throw Error('DuplicateFixturePolicy');
+      const path =
+        value === '--fixture-policy' ? args[++i] : value.slice('--fixture-policy='.length);
+      if (!path || path.startsWith('--')) throw Error('MissingFixturePolicy');
+      fixturePolicyPath = resolve(root, path);
     } else {
       if (seenPort || !/^\d+$/.test(value)) throw Error('InvalidServerArgument');
       port = Number(value);
@@ -22,5 +29,12 @@ export function parseDemoServerArguments(args, root) {
   }
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw Error('InvalidPort');
   if (privateFixtures && !bundleDirectory) throw Error('PrivateBundleRequired');
-  return { port, bundleDirectory, privateFixtures };
+  if (fixturePolicyPath !== undefined && !bundleDirectory)
+    throw Error('FixturePolicyBundleRequired');
+  return {
+    port,
+    bundleDirectory,
+    privateFixtures,
+    ...(fixturePolicyPath === undefined ? {} : { fixturePolicyPath }),
+  };
 }

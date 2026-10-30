@@ -181,7 +181,21 @@ mise exec -- bun run dev 8082
 ```sh
 mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/public-bundle
 mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/private-bundle --private-fixtures
+# 공개 갤러리 정책을 쓰는 bundle은 공개·사설 모두 명시합니다.
+mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/public-bundle --fixture-policy tools/pages-demo/public-gallery-fixtures.json
+mise exec -- bun tools/serve-demo.mjs 8082 --bundle-dir /path/to/private-bundle --private-fixtures --fixture-policy tools/pages-demo/public-gallery-fixtures.json
 ```
+
+
+공개 갤러리를 사용하는 서버 회귀는 정책을 명시합니다. 기본 Noori2 양성·정책 누락/위조·링크 거부·사설 catalog 및 engine 일치와 기존 라우팅을 함께 검사합니다.
+
+```sh
+HWPJS_TEST_PUBLIC_FIXTURE_POLICY=tools/pages-demo/public-gallery-fixtures.json \
+  mise exec -- node --test --test-concurrency=1 \
+  ./tests/hwpx/demo-server-fixture-policy.test.mjs ./tests/hwpx/demo-server-bundle.test.mjs
+```
+
+2026-10-30 실제 작업 트리에서 23pass·0fail·0skip이었고 임시 loopback 포트 4개는 모두 종료됐습니다. 사설 운영 bundle이나 앱을 새로 생성한 검사가 아닙니다.
 
 모드별 검증·public 기준 manifest/동일 worker/WASM·라우팅·시작 시 snapshot과 **업데이트 후 재시작** 절차는 [데모 서버 모드](demo-server-modes.md)를 따릅니다. private catalog의 관측 개수는 정책 기본값이 아닙니다. bundle/문서 파일을 바꿔도 실행 중 서비스에 자동 반영되지 않습니다.
 

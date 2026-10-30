@@ -4,21 +4,24 @@
 
 ## 모드 선택
 
-| 입력 | 제공할 자산과 검증 |
-| --- | --- |
-| bundle 옵션 생략 | 기존 dev/dist 동작 보존. `apps/demo/dist`와 `packages/core/dist`를 읽음 |
-| 명시 `--bundle-dir` | 해당 공개 bundle의 manifest·파일별 SHA/크기·허용 경로/종류·참조·라이선스·JS 문법 등을 검증한 뒤 제공 |
-| `--bundle-dir`와 `--private-fixtures` | private bundle opt-in. manifest·스키마·실제 서버 catalog·공개 기준 세대·engine 일치 검증을 추가 |
+| 입력                                  | 제공할 자산과 검증                                                                                   |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| bundle 옵션 생략                      | 기존 dev/dist 동작 보존. `apps/demo/dist`와 `packages/core/dist`를 읽음                              |
+| 명시 `--bundle-dir`                   | 해당 공개 bundle의 manifest·파일별 SHA/크기·허용 경로/종류·참조·라이선스·JS 문법 등을 검증한 뒤 제공 |
+| `--bundle-dir`와 `--fixture-policy`   | 명시한 공개 예제 정책을 같은 생산 검증기에 전달. 정책 생략 시 기본 Noori2 보호 유지                  |
+| `--bundle-dir`와 `--private-fixtures` | private bundle opt-in. manifest·스키마·실제 서버 catalog·공개 기준 세대·engine 일치 검증을 추가      |
 
 private 옵션만 단독으로 주면 `PrivateBundleRequired`이며, 옵션 중복·잘못된 인자/포트·빈 bundle 경로도 시작 전에 거부합니다. 포트 기본값은 8082이고 인자 파싱의 단일 출처는 `tools/demo-server-options.mjs`입니다. Bun으로 검증 경로를 실행해도 생성 JS 문법 검사는 실제 Node를 사용하며, 해당 실행 환경에는 Node가 필요합니다.
 
-공개 bundle 검증은 noori HWP/HWPX 2개만을 배포 fixture로 허용합니다. private 모드는 이 제한을 전역으로 풀거나 원본 파일의 공개 재배포 권한을 부여하지 않습니다. 운영 전환 당시 private catalog의 **117개는 관측된 항목 수**이며 정책 기본값이나 모든 입력의 지원 수가 아닙니다. 실제 항목과 순서는 서버의 `demoFixtures`와 비교하고 `available`은 파일 접근 가능 관측일 뿐 Native 편집 capability가 아닙니다.
+공개 bundle 검증의 기본값은 noori HWP/HWPX 2개만을 배포 fixture로 허용합니다. `--fixture-policy`는 bundle 모드에서만 받으며, 명시한 일반 JSON 파일을 읽기 전에 심볼릭 링크 경로와 파일 종류를 검사합니다. 정책 스키마와 catalog·파일의 일치는 기존 생산 검증기가 소유합니다. 옵션 생략 시 목록을 보고 정책을 추측하거나 자동 허용하지 않습니다.
+
+private 모드는 이 제한을 전역으로 풀거나 원본 파일의 공개 재배포 권한을 부여하지 않습니다. 운영 전환 당시 private catalog의 **117개는 관측된 항목 수**이며 정책 기본값이나 모든 입력의 지원 수가 아닙니다. 실제 항목과 순서는 서버의 `demoFixtures`와 비교하고 `available`은 파일 접근 가능 관측일 뿐 Native 편집 capability가 아닙니다.
 
 ## private bundle과 공개 기준의 결합
 
 `tools/demo-private-bundle.mjs`는 private manifest·파일 집합/크기/SHA·JS 문법·단일 canonical WASM을 검사합니다. 절대 개인 경로나 내부 URL을 자산에 넣는 것을 허용하지 않습니다. 서버 loader는 다음을 추가로 확인합니다.
 
-- private manifest의 `publicBaseManifestSHA256`가 프로젝트의 `apps/docs/docs/public/editor`를 검증해 얻은 manifest SHA와 같아야 합니다. 다른 공개 세대와 조용히 섞지 않습니다.
+- private manifest의 `publicBaseManifestSHA256`가 프로젝트의 `apps/docs/docs/public/editor`를 검증해 얻은 manifest SHA와 같아야 합니다. 명시한 공개 예제 정책은 이 공개 기준 검증에도 전달하며 private catalog 검증을 대신하지 않습니다. 다른 공개 세대와 조용히 섞지 않습니다.
 - `runtime/worker.js`와 `hwpjs/hwpjs.wasm`은 그 공개 기준 파일과 **전체 바이트가 같아야** 합니다. 불일치는 `PrivateEngineDrift`로 거부합니다.
 - catalog의 항목 수·id/name/label 및 허용 스키마를 현재 서버 catalog와 비교합니다. 단순히 숫자117만 일치시키는 검사가 아닙니다.
 
@@ -58,10 +61,10 @@ GitHub Pages에는 위 서버 별칭이 없습니다. 배포된 `assets/` 모듈
 
 이 후속은 UI/Native ACK·다운로드·reopen 근거이며 이번 실행에서 독립 CFB/XML oracle를 새로 수행한 것은 아닙니다. 엔진은 3fc/V1이며 V2 이력 미포함입니다. 이전 다른 공개 실행의 Svelte 최초 timeout은 원인이 확정되지 않은 별도 이력으로 유지하며 이번 성공으로 지우지 않습니다. 주소·PID·개인 경로는 이 공개 문서에 싣지 않습니다. 이 문서 갱신 과정에서는 새 서버·브라우저·Native 빌드를 실행하지 않았습니다. 영구 회귀 진입점은 [서버 bundle 검사](../tests/hwpx/demo-server-bundle.test.mjs)이며, 대표 경로 검증을 전체 문서·모든 fixture E2E로 확대하지 않습니다.
 
-## 명시 공개 예제 정책 후보
+## 명시 공개 예제 정책
 
 기본 정규 생산은 기존 Noori 두 예제만 허용합니다. `--fixture-policy`를 명시하면 catalog의 정확한 바이트 해시와 ID·파일 경로·크기·SHA를 검증하며, 중복·추가·누락·보호 이름·내부 주소는 거부합니다. 공개 목록은 `tools/pages-demo/public-gallery-fixtures.json`, 원본 공급 기록은 같은 폴더의 `public-gallery-sources.json`이 소유합니다. 정규 회귀와 생산 명령은 [개발·검증 명령](development-commands.md)의 공개 예제 정책 절을 따릅니다.
 
-현재 복구 후보는 프로젝트 예제99개와 기존 Noori 호환 ID2개를 합친 101항목입니다. 암호 예제2개와 별도 참조16개는 이 공개 범위에서 제외합니다. 파일 가용성은 Native 기능 지원이나 모든 문서 편집 성공을 의미하지 않습니다. 기존 사설117 목록은 별도이며, catalog 길이·ID를 엄격 검증하는 앱에 공개101 목록을 통째로 덮어써서는 안 됩니다. 이번 기록은 후보 생산·HTTP 검증 범위이며 실제 서비스 전환 완료를 뜻하지 않습니다.
+2026-10-30 공개 배포는 프로젝트 예제99개와 기존 Noori 호환 ID2개를 합친 101항목입니다. 암호 예제2개와 별도 참조16개는 이 공개 범위에서 제외합니다. 파일 가용성은 Native 기능 지원이나 모든 문서 편집 성공을 의미하지 않습니다. 기존 사설117 목록은 별도이며, catalog 길이·ID를 엄격 검증하는 앱에 공개101 목록을 통째로 덮어써서는 안 됩니다. 공개 asset commit `77a08d489`의 Pages 배포와 payload135개·manifest의 실제 HTTP 바이트 일치, 공개 Vanilla에서 Noori 두 형식의 열기·Canvas 표시를 확인했습니다. 이 공개 배포 결과를 사설117 서비스의 업데이트 완료로 해석하지 않습니다.
 
 정규 회귀의 기본 Noori2 양성은 현재 공개 앱 자산에서 두 fixture와 catalog만 분리한 호출자 소유 사본으로 검증합니다. 공개 갤러리 개수나 예전 산출물 경로에 의존하지 않습니다.

@@ -10,14 +10,14 @@ import { createPreviewWasmCompression } from './preview-wasm-compression.mjs';
 import { loadDemoDocumentation } from './demo-documentation-response.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const { port, bundleDirectory, privateFixtures } = parseDemoServerArguments(
+const { port, bundleDirectory, privateFixtures, fixturePolicyPath } = parseDemoServerArguments(
   process.argv.slice(2),
   root,
 );
 const dist = resolve(root, 'apps/demo/dist'),
   core = resolve(root, 'packages/core/dist');
 const bundle = bundleDirectory
-  ? await loadDemoServerBundle(bundleDirectory, { root, privateFixtures })
+  ? await loadDemoServerBundle(bundleDirectory, { root, privateFixtures, fixturePolicyPath })
   : undefined;
 const index = bundle ? undefined : await readFile(resolve(dist, 'index.html'));
 const assets = new Map();
