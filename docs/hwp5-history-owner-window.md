@@ -92,6 +92,18 @@ pure147은 기존 helper108 + hint/branch/512/보존9 + controller/COW30으로 �
 
 메인 통합의 정규 회귀는 Native/Worker·공개 음성25개와 소스/응답 shape 음성7개, 총32개가 통과했습니다. focused strict 및 공개2인자/내부 preference companion strict도 통과했습니다. 이32개를 source13/pure147에 합산해 독립 기능 수로 표시하지 않습니다.
 
+03 공개 SDK의 createEditor/default Worker factory와 public input-surface를 사용한 별도 Chrome A/B 관측에서는 구조 공유를 확인했습니다. 그러나 후속 전체 값 대조에서 기존 full 응답이 capabilities에 추가하던 changed:true가03에는 빠지는 차이를 발견했습니다. 공통12키는 같았지만 전체 map은 달랐습니다. 이 관측은 identity가 같다고 값 호환성까지 증명하지 못함을 보여줍니다. 03 공개 배포는 보류했고 잠시 바꾼 private 서버도 COW08로 되돌렸습니다. source commit `7f6b410cc`의 CI 성공과 이 수동 검증 실패는 구분합니다.
+
+## candidate05: capabilities 호환성과 관측 순서
+
+기존 contentPatch의 capabilities 조립을 assembleCapabilities와 observeCapabilities 두 private closure로 분리해 full/COW 경로가 단일 조립 규칙을 사용합니다. 기존 catch-all 필드·명시 capabilities 우선·상속·write policy·undefined 존재 여부를 유지합니다. changed만 하드코딩해 보충하지 않습니다. 값이 바뀌면 새 관측을 만들고, COW에서 이전 owned 관측과 새 plain record의 own-data key/value가 모두 같을 때만 이전 root를 재사용합니다. Map/Set 등의 빈 own-key 목록으로 내용 동치를 추정하지 않습니다. 큰 owned 하위 자원은 계속 공유합니다.
+
+최초04 추출은 full 경로의 raw capabilities 조립을 content 관측 뒤로 옮겼습니다. custom runtime의 plain Proxy.content가 반사 중 reply.extra를 바꾸는 실제 공개 API 반례에서 원08은 before,04는 after를 반환했습니다. 05는 raw 조립을 원래처럼 content 관측 앞에, 소유 관측 생성을 뒤에 유지해 순서를 복원했습니다. 원04와 반례 로그는 보존합니다. 새 공개 export나 Native ABI 변경은 없습니다.
+
+05의 별도 source 검사는 custom full 경로13개(Native 실행0), 실제 Noori capabilities4개와 자원 공유3개를 각각 확인했습니다. 이 검사를03의 Native13/pure147에 더하지 않습니다. 공개 Chrome A08/B05 두 세션에서도 original/splice/undo/redo 4단계 capabilities 전체 값이 같았고, key 수12→12→13→13 및 undo/redo의 changed:true가 일치했습니다. 첫 undo는 양쪽 새 capabilities root이며, 다음 redo는 B05만 같은 값을 재사용했습니다. characterShapes는 history에서도 B05가 공유하고 A08은 새로 생성했습니다. Native ACK/private 권위는 직접 조회하지 않았습니다.
+
+메인05 통합은 Native/Worker·공개 음성25개와 순수57개, 총82개 및 companion strict가 통과했습니다. 원03의 항상 같은 capabilities identity 기대는 원08의 실제 전체 값 기준으로 교정했고, 첫 metadata 변경과 이후 동일 metadata 재사용을 나눠 검사합니다. 정규 테스트는 ignored SDK를 자동 import하지 않으며 SDK08 실제 oracle3은 격리된 별도 근거입니다. 공식 SDK05 strict와 새 앱 쌍은 완료됐지만, 최종 반복 브라우저 검사·운영 승격·외부 HTTPS 확인은 별도 단계입니다.
+
 ## 불변 증거와 재현 경계
 
 | 입력 | SHA256 |

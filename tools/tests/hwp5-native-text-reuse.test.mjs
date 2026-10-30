@@ -88,12 +88,15 @@ async function session(paragraph = 15, mode = 'registered') {
     let state = e.getEditorState(),
       projection = readGeometryProjection(lease, state);
     const original = cloneData(state.content);
+    const originalCaps = state.capabilities;
+    let historyCapsChanged = false;
     assert.equal(original.paragraphs.length, 65);
     if (mode === 'registered') assert(projection);
     else assert.equal(projection, undefined);
     return {
       e,
       original,
+      originalCaps,
       get content() {
         return state.content;
       },
@@ -121,11 +124,29 @@ async function session(paragraph = 15, mode = 'registered') {
             before.content.characterShapes,
             'COW keeps stable header identity',
           );
-          assert.equal(
-            state.capabilities,
-            before.capabilities,
-            'COW preserves stable capabilities',
+          if (['undo', 'redo'].includes(message.kind)) historyCapsChanged = true;
+          const expectedCaps = historyCapsChanged
+            ? { ...originalCaps, changed: true }
+            : originalCaps;
+          assert.deepEqual(
+            cloneData(state.capabilities),
+            cloneData(expectedCaps),
+            'whole caps from load baseline plus confirmed legacy changed key',
           );
+          if (
+            ['undo', 'redo'].includes(message.kind) &&
+            !Object.hasOwn(before.capabilities, 'changed')
+          ) {
+            assert.notEqual(
+              state.capabilities,
+              before.capabilities,
+              'first history metadata delta creates cap root',
+            );
+            assert.equal(Object.hasOwn(state.capabilities, 'changed'), true);
+            assert.equal(state.capabilities.changed, true);
+            assert.equal(Reflect.ownKeys(state.capabilities).length, 13);
+          } else
+            assert.equal(state.capabilities, before.capabilities, 'same cap metadata reuses root');
         }
         if (mode !== 'registered') {
           assert.equal(projection, undefined);

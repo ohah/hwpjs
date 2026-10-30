@@ -44,6 +44,7 @@ import {
   discardPromise,
   freezeDTO,
   isPromiseLike,
+  isOwnedImmutableObservation,
   ownObservation,
 } from '../state/owned.ts';
 import type {
@@ -457,6 +458,64 @@ export function createEditor(options: CreateEditorOptions) {
   function history(reply: RuntimeReply) {
     return Number.isSafeInteger(reply.historyRevision) ? reply.historyRevision : undefined;
   }
+  function assembleCapabilities(reply: RuntimeReply, inherit = true): unknown {
+    return (
+      reply.capabilities ?? {
+        ...(inherit && state.documentId !== null ? (state.capabilities as object) : {}),
+        ...Object.fromEntries(
+          Object.entries(reply).filter(
+            ([key]) =>
+              ![
+                'content',
+                'kind',
+                'error',
+                'applied',
+                'bytes',
+                'meta',
+                'origin',
+                'requestId',
+                'historyRevision',
+                'historyRevisions',
+                'historyStats',
+                'nativeTextDelta',
+                'historyPoisoned',
+              ].includes(key),
+          ),
+        ),
+      }
+    );
+  }
+  function observeCapabilities(value: unknown, editable?: boolean, reuseCurrent = false): unknown {
+    const projected = writePolicy.capabilities(value, editable);
+    const previousValue = reuseCurrent ? state.capabilities : undefined;
+    const plainRecord = (value: unknown): value is Record<string, unknown> => {
+      if (value === null || typeof value !== 'object') return false;
+      const proto = Object.getPrototypeOf(value);
+      return proto === Object.prototype || proto === null;
+    };
+    if (
+      reuseCurrent &&
+      isOwnedImmutableObservation(previousValue) &&
+      plainRecord(previousValue) &&
+      plainRecord(projected)
+    ) {
+      const previous = Object.getOwnPropertyDescriptors(previousValue);
+      const next = Object.getOwnPropertyDescriptors(projected);
+      const keys = Reflect.ownKeys(next);
+      if (
+        keys.length === Reflect.ownKeys(previous).length &&
+        keys.every(
+          (key) =>
+            Object.hasOwn(previous, key) &&
+            'value' in previous[key as string] &&
+            'value' in next[key as string] &&
+            Object.is(previous[key as string].value, next[key as string].value),
+        )
+      )
+        return previousValue;
+    }
+    return ownObservation(projected)();
+  }
   function contentPatch(
     reply: RuntimeReply,
     inherit = true,
@@ -468,32 +527,10 @@ export function createEditor(options: CreateEditorOptions) {
       reply.historyPoisoned === true ||
       reply.historyStats?.poisoned === true;
     const observedEditable = historyRecoveryRequired ? false : editable;
-    const capabilities = reply.capabilities ?? {
-      ...(inherit && state.documentId !== null ? (state.capabilities as object) : {}),
-      ...Object.fromEntries(
-        Object.entries(reply).filter(
-          ([key]) =>
-            ![
-              'content',
-              'kind',
-              'error',
-              'applied',
-              'bytes',
-              'meta',
-              'origin',
-              'requestId',
-              'historyRevision',
-              'historyRevisions',
-              'historyStats',
-              'nativeTextDelta',
-              'historyPoisoned',
-            ].includes(key),
-        ),
-      ),
-    };
+    const capabilities = assembleCapabilities(reply, inherit);
     return {
       content: ownObservation(writePolicy.observe(reply.content, observedEditable))(),
-      capabilities: ownObservation(writePolicy.capabilities(capabilities, observedEditable))(),
+      capabilities: observeCapabilities(capabilities, observedEditable),
       historyRecoveryRequired,
       nativeHistoryStats: reply.historyStats,
       nativeHistoryRevision: history(reply),
@@ -914,7 +951,7 @@ export function createEditor(options: CreateEditorOptions) {
         const patch = merged
           ? {
               content: merged,
-              capabilities: state.capabilities,
+              capabilities: observeCapabilities(assembleCapabilities(reply), undefined, true),
               historyRecoveryRequired: false,
               nativeHistoryStats: reply.historyStats,
               nativeHistoryRevision: history(reply),
