@@ -1,4 +1,5 @@
 import { loadPrivateDemoBundle } from './demo-private-bundle.mjs';
+import { readWorkerAssets, validateWorkerPair } from './pages-demo/worker-assets.mjs';
 import { digest, rejectSymlinkAncestors } from './pages-demo/bundle-validation.mjs';
 import { readFile, lstat } from 'node:fs/promises';
 import { demoFixtures } from '../web/preview/fixture-catalog.mjs';
@@ -70,6 +71,7 @@ export async function loadDemoServerBundle(
       !bundle.files.get('hwpjs/hwpjs.wasm')?.equals(publicBase.files.get('hwpjs/hwpjs.wasm'))
     )
       throw Error('PrivateEngineDrift');
+    validateWorkerPair(bundle, publicBase);
     const rows = JSON.parse(bundle.files.get('fixture-catalog.json'));
     if (
       !Array.isArray(rows) ||
@@ -100,6 +102,7 @@ export async function loadDemoServerBundle(
     ])
       if (!bundle.files.has(path)) throw Error('IncompletePrivateBundle');
   }
+  const workerAssets = readWorkerAssets(bundle.manifest);
   const compress = createPreviewWasmCompression();
   const primaryWasm = bundle.files.get('hwpjs/hwpjs.wasm');
   compress(primaryWasm, 'br');
@@ -116,7 +119,7 @@ export async function loadDemoServerBundle(
       }
       let key;
       if (path === '/hwpjs/hwpjs.wasm') key = 'hwpjs/hwpjs.wasm';
-      else if (path === '/hwpjs/worker.js') key = 'runtime/worker.js';
+      else if (path === '/hwpjs/worker.js') key = workerAssets.activeWorkerPath;
       else if (path.startsWith(prefix)) key = path.slice(prefix.length);
       else if (path.startsWith('/docs/editor/')) key = path.slice('/docs/editor/'.length);
       if (key?.endsWith('/')) key += 'index.html';

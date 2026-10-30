@@ -1,5 +1,16 @@
 # 개발·검증 명령
 
+## 불변 관측과 Worker 세대 집중 검사
+
+[관측 소유권](headless-core-foundation.md)과 [Worker 캐시 수명](demo-server-modes.md#worker-세대와-브라우저-캐시)의 source·정적 bundle 회귀입니다. 실제 브라우저 입력 지연과 새 SDK 배포는 별도 확인합니다. WASM·Native 빌드를 시작하지 않습니다.
+
+```sh
+test -f ./packages/core/tests/state/owned-freeze-observation.test.ts || exit 1
+test -f ./tools/tests/worker-assets.test.mjs || exit 1
+bun test --no-install ./packages/core/tests/state/owned.test.ts ./packages/core/tests/state/owned-freeze-observation.test.ts
+node --test ./tools/tests/worker-assets.test.mjs
+```
+
 <a id="existing-note-headless-selection"></a>
 
 ## 기존 각주 문단 헤드리스 선택

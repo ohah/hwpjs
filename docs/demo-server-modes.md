@@ -55,6 +55,14 @@ GitHub Pages에는 위 서버 별칭이 없습니다. 배포된 `assets/` 모듈
 
 ## 시작 시 snapshot과 업데이트 운영
 
+### Worker 세대와 브라우저 캐시
+
+새 SDK가 요구하는 Worker의 SHA가 바뀌면, 이전에 열린 페이지가 참조하는 `runtime/worker.js`를 새 바이트로 덮지 않습니다. 새 기본 Worker URL은 `runtime/worker-<SHA256>.js`이고 이전 stable URL과 기존 hash 이름의 JS 자산은 그대로 보존합니다. `manifest.workerAssets`의 active/legacy 경로·SHA·활성 runtime 목록을 `tools/pages-demo/worker-assets.mjs`가 함께 검증합니다. 기존 stable-only manifest도 계속 읽습니다.
+
+`canonical-worker-url.mjs`는 명시한 SDK runtime의 원본 SHA와 정확히 한 개의 기본 Worker URL을 확인한 뒤 그 URL만 Vite 자산 참조로 바꿉니다. SDK의 expected Worker hash, Blob 생성·초기화·권위 검사는 바꾸지 않으며 사용자 지정 `workerURL` 옵션으로 대체하지 않습니다. 새 producer 세대에는 실제로 생성된 Worker와 runtime의 핀을 사용해야 합니다.
+
+공통 responder의 `/hwpjs/worker.js` 별칭은 active Worker입니다. `/hwpjs/editor/runtime/worker.js`와 `/docs/editor/runtime/worker.js`는 이전 stable Worker이고, 두 prefix의 hash 이름 경로는 해당 SHA의 Worker를 제공합니다. public/private bundle은 active와 legacy를 각각 같은 바이트로 제공해야 합니다. 이 계약은 새 Worker의 HTTP·캐시 기능 검증을 대신하지 않으며, WASM 404의 원인이었다는 주장도 아닙니다.
+
 서버는 시작 시 선택된 dist 또는 검증 bundle의 자산 바이트를 읽어 보관합니다. 빌드된 docs도 시작 시 snapshot을 만듭니다. 디스크의 bundle·public 기준 manifest·dist·docs를 나중에 바꿔도 실행 중 프로세스가 자동 갱신하거나 새 세대를 재검증하는 구조가 아닙니다. `Cache-Control: no-store`도 서버 메모리의 snapshot을 새 파일로 바꾸지 않습니다.
 
 운영자는 **같은 검증 세대**의 bundle/public 기준 manifest/worker/WASM을 준비한 뒤 서비스를 명시적으로 재시작해야 합니다. 재시작 후 canonical redirect·manifest·실제 JS/worker/WASM의 SHA/크기/MIME 및 문서·fixture route를 대조합니다. 기존 PID가 살아 있다는 사실이나 파일 복사 성공만으로 새 세대가 제공됐다고 판단하지 않습니다.

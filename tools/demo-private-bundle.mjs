@@ -1,4 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
+import { validateWorkerAssets } from './pages-demo/worker-assets.mjs';
 import { resolve } from 'node:path';
 import { checkJavaScriptModule } from './pages-demo/javascript-syntax.mjs';
 import {
@@ -59,5 +60,6 @@ export async function loadPrivateDemoBundle(directory) {
     wasm[0].sha256 !== manifest.wasmSha256
   )
     throw Error('NonCanonicalWasm');
+  validateWorkerAssets(manifest, files);
   return { manifest, manifestBytes, files };
 }

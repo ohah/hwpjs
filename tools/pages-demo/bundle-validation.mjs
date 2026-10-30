@@ -1,6 +1,7 @@
 import { readFile, readdir, lstat } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
+import { validateWorkerAssets } from './worker-assets.mjs';
 
 export const digest = (bytes) => createHash('sha256').update(bytes).digest('hex');
 export function assertBundlePath(path) {
@@ -101,5 +102,6 @@ export async function validateBundle(directory) {
   ) {
     throw Error('NonCanonicalWasm');
   }
+  validateWorkerAssets(manifest, files);
   return { directory, manifest, manifestBytes, files };
 }

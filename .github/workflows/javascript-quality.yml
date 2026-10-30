@@ -23,6 +23,15 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs
+      - name: Test owned observation freeze boundaries
+        run: |
+          test -f ./packages/core/tests/state/owned.test.ts || exit 1
+          test -f ./packages/core/tests/state/owned-freeze-observation.test.ts || exit 1
+          bun test --no-install ./packages/core/tests/state/owned.test.ts ./packages/core/tests/state/owned-freeze-observation.test.ts
+      - name: Test versioned demo Worker assets
+        run: |
+          test -f ./tools/tests/worker-assets.test.mjs || exit 1
+          node --test ./tools/tests/worker-assets.test.mjs
       - name: Test published demo runtime asset paths
         run: |
           test -f ./apps/demo/tests/runtime-assets.test.ts || exit 1
