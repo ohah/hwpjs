@@ -35,7 +35,7 @@ jobs:
       - name: Check generated JavaScript syntax under Bun
         run: bun test ./tests/pages-demo-javascript-syntax.test.mjs
       - name: Verify bundled editor artifacts
-        run: bun tools/build-pages-demo.mjs --verify
+        run: bun tools/build-pages-demo.mjs --verify --fixture-policy tools/pages-demo/public-gallery-fixtures.json
       - name: Prepare independent documentation workspace
         run: |
           mkdir -p "$RUNNER_TEMP/hwpjs-docs"

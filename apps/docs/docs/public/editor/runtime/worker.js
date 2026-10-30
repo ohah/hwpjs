@@ -8402,7 +8402,7 @@ function validateHwp5TextSourceProtection(value, count) {
   if (value.mode === "strict") {
     if (value.retained_headers !== null || any)
       fail();
-  } else if (value.mode === "retained_click" || value.mode === "retained_memo") {
+  } else if (value.mode === "retained_click" || value.mode === "retained_memo" || value.mode === "retained_company") {
     if (!uint(value.retained_headers) || value.retained_headers === 0 || !any)
       fail();
   } else
@@ -8423,7 +8423,7 @@ function retainedClickProtection(editor, section, failure) {
     return null;
   const value = validateHwp5TextSourceProtection(editor.textSourceProtection(section), editor.paragraphCount(section));
   const expected = failure === "UnsupportedSectionControl" ? "retained_memo" : "retained_click";
-  if (value.mode !== expected)
+  if (value.mode !== expected && !(failure === "UnsupportedSectionControl" && value.mode === "retained_company"))
     throw new Error("InvalidHwp5TextSourceProtection");
   return value;
 }
@@ -8456,6 +8456,8 @@ function attachHwp5TextSourcePolicy(editor, content) {
             error = null;
             if (protection.mode === "retained_memo")
               content.retainedMemoProtection = true;
+            else if (protection.mode === "retained_company")
+              content.retainedCompanyProtection = true;
             else
               content.retainedClickFieldProtection = true;
           }
@@ -8469,17 +8471,25 @@ function attachHwp5TextSourcePolicy(editor, content) {
     if (state.protection && (!Number.isInteger(paragraph.paragraph) || paragraph.paragraph < 0 || paragraph.paragraph >= state.protection.protected_paragraphs.length)) {
       paragraph.textSourcePolicyError = "InvalidHwp5TextSourceProtection";
       paragraph.editable = false;
+      paragraph.characterPropertiesAvailable = false;
       continue;
     }
     const protectedRow = state.protection?.protected_paragraphs[paragraph.paragraph];
-    const error = state.error ?? (protectedRow === true ? state.protection?.mode === "retained_memo" ? "OutsideEditableMemo" : "UnsupportedCrossParagraphField" : null);
+    const error = state.error ?? (protectedRow === true ? state.protection?.mode === "retained_memo" ? "OutsideEditableMemo" : state.protection?.mode === "retained_company" ? "ProtectedRetainedCompanyParagraph" : "UnsupportedCrossParagraphField" : null);
     if (state.protection && protectedRow === false)
       restoreRetainedWindowCandidate(paragraph);
     paragraph.textSourcePolicyError = error;
+    if (state.protection?.mode === "retained_company" || state.error !== null) {
+      paragraph.characterPropertiesAvailable = content.characterPropertiesAvailable === true && error === null && paragraph.editable === true;
+    }
     if (error !== null) {
       paragraph.selectable = paragraph.clipped !== true && (paragraph.selectable === true || paragraph.editable === true);
       paragraph.editable = false;
     }
+  }
+  if (content.retainedCompanyProtection === true || [...sections.values()].every((state) => state.error !== null)) {
+    content.characterPropertiesAvailable = content.characterPropertiesAvailable === true && content.paragraphs.some((paragraph) => paragraph.characterPropertiesAvailable === true || paragraph.characterPropertiesAvailable === undefined && paragraph.editable === true);
+    content.characterPropertiesRangesAvailable = content.characterPropertiesRangesAvailable === true && content.characterPropertiesAvailable;
   }
   content.readOnly = !content.paragraphs.some((paragraph) => paragraph.editable === true);
   return content;
