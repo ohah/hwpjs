@@ -13,6 +13,7 @@ import {
   bindNativeRuntimeOrigin,
   canonicalRuntimeDescriptors,
   nativeOrigin,
+  allowsOwnerWindowProjection,
   sameRequestContext,
 } from './internal/native-runtime-origin.ts';
 import type {
@@ -140,7 +141,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       try {
         const response = await fetch(defaultURL, { cache: 'no-cache' });
         if (response.ok) {
-          const bytes = await response.arrayBuffer(),
+          const bytes = new Uint8Array(await response.arrayBuffer()).slice(),
             digest = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
           const hash = Array.from(digest, (b) => b.toString(16).padStart(2, '0')).join('');
           if (hash === KNOWN_WORKER_CODE_SHA256) {
@@ -155,7 +156,11 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     if (closed) throw Error('RuntimeDisposed');
     attach(new Worker(blobURL ?? defaultURL, { type: 'module' }));
   }
-  const send = (message: unknown, admission?: () => void): Promise<RuntimeReply> =>
+  const send = (
+    message: unknown,
+    admission?: () => void,
+    projection = false,
+  ): Promise<RuntimeReply> =>
     new Promise((resolve, reject) => {
       if (closed) {
         reject(failure ?? Error('RuntimeDisposed'));
@@ -165,7 +170,11 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       pending.set(id, { resolve, reject });
       try {
         admission?.();
-        worker!.postMessage({ id, message });
+        worker!.postMessage({
+          id,
+          message,
+          ...(projection ? { viewProjection: 'owner-window-v1' } : {}),
+        });
       } catch (error) {
         pending.delete(id);
         reject(error instanceof Error ? error : Error(String(error)));
@@ -191,12 +200,17 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     message: RuntimeMessage,
     context?: RuntimeRequestContext,
     admission?: () => void,
+    projection = false,
   ) {
     const owned = copyOwned(message),
       captured = context ? { ...context } : undefined,
       kind = owned.kind;
     await ready;
-    const raw = await send(owned, admission);
+    const raw = await send(
+      owned,
+      admission,
+      projection && allowsOwnerWindowProjection(contract) && valid(),
+    );
     const reply = ownObservation({
       ...raw,
       meta: { ...raw.meta, ...(captured ? { context: captured } : {}) },
@@ -224,7 +238,8 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
   runtime = { request, dispose };
   bindRuntimeAdmission(
     runtime,
-    (message, context, admission) => requestInternal(message, context, admission),
+    (message, context, admission, projection) =>
+      requestInternal(message, context, admission, projection),
     () => !closed && !poisoned && !custom && canonicalCode && transportWitness.current(worker),
   );
   origins.set(runtime, {

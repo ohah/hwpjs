@@ -1,15 +1,15 @@
-import { createReaderEditorRuntime } from './runtime/reader-runtime.ts';
+import { createWorkerReaderDataRuntime } from './internal/worker-reader-data-runtime.ts';
 import { workerResourceReply } from './internal/worker-resource-reply.ts';
-import type { EditorRuntime, RuntimeMessage } from './contracts.ts';
+import type { RuntimeMessage } from './contracts.ts';
 
 const scope = globalThis as unknown as {
   onmessage: ((event: MessageEvent) => void) | null;
   postMessage(value: unknown, transfer?: Transferable[]): void;
 };
-let runtime: EditorRuntime | undefined;
+let runtime: ReturnType<typeof createWorkerReaderDataRuntime> | undefined;
 let queue = Promise.resolve();
 scope.onmessage = (event) => {
-  const { id, message } = event.data ?? {};
+  const { id, message, viewProjection } = event.data ?? {};
   queue = queue.then(async () => {
     try {
       if (!Number.isSafeInteger(id) || !message || typeof message.kind !== 'string')
@@ -17,7 +17,7 @@ scope.onmessage = (event) => {
       if (message.kind === 'initialize-runtime') {
         if (runtime) throw Error('RuntimeAlreadyInitialized');
         if (!(message.wasmModule instanceof WebAssembly.Module)) throw Error('InvalidWasmModule');
-        runtime = createReaderEditorRuntime({
+        runtime = createWorkerReaderDataRuntime({
           wasmModule: message.wasmModule,
           referenceScope: message.referenceScope,
         });
@@ -27,7 +27,7 @@ scope.onmessage = (event) => {
         const outgoing = workerResourceReply(
           id,
           message.kind,
-          await runtime.request(message as RuntimeMessage),
+          await runtime.request(message as RuntimeMessage, viewProjection === 'owner-window-v1'),
         );
         if (outgoing.transfer) scope.postMessage(outgoing.envelope, outgoing.transfer);
         else scope.postMessage(outgoing.envelope);

@@ -9,6 +9,7 @@ type Request = (
   message: RuntimeMessage,
   context: RuntimeRequestContext,
   admission: () => void,
+  projection?: boolean,
 ) => Promise<RuntimeReply>;
 type Port = { valid: () => boolean; request: Request };
 const ports = new WeakMap<object, Port>();
@@ -47,6 +48,7 @@ export function requestAtRuntimeAdmission(
   message: RuntimeMessage,
   context: RuntimeRequestContext,
   guard: () => void,
+  projection = false,
 ): Promise<RuntimeReply> {
   const port = ports.get(runtime);
   const admission = () => {
@@ -58,5 +60,5 @@ export function requestAtRuntimeAdmission(
     }
   };
   admission();
-  return port!.request(message, context, admission);
+  return port!.request(message, context, admission, projection);
 }

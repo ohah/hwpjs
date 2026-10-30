@@ -7,7 +7,11 @@ export interface ReaderRuntimeOptions {
   readonly allowReload?: boolean;
 }
 export function createReaderRuntime(options?: ReaderRuntimeOptions): {
-  request(message: RuntimeMessage, admission?: () => void): Promise<RuntimeReply>;
+  request(
+    message: RuntimeMessage,
+    admission?: () => void,
+    ownerWindowProjection?: boolean,
+  ): Promise<RuntimeReply>;
   outcome(reply: RuntimeReply): NonNullable<RuntimeReply['meta']>;
   dispose(): Promise<void>;
 };

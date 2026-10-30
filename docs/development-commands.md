@@ -1,5 +1,22 @@
 # 개발·검증 명령
 
+## HWP5 owner-window Worker 회귀
+
+[COW 계약과 지원 경계](hwp5-owner-window-cow.md)를 따릅니다. 기존 d849 WASM과 b18 Noori HWP5의 절대경로를 명시합니다. 누락·해시 불일치는 실패이며 새 Native 빌드를 수행하지 않습니다.
+
+```sh
+HWPJS_TEST_WASM=/absolute/path/d849/hwpjs.wasm \
+HWPJS_TEST_NOORI=/absolute/path/noori.hwp \
+node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=50000 \
+  ./tools/tests/hwp5-native-text-reuse.test.mjs \
+  ./tools/tests/hwp5-worker-cow-regression.test.mjs \
+  ./tools/tests/hwp5-worker-public-full.test.mjs \
+  ./tools/tests/worker-cow-source-contract.test.mjs
+```
+
+Native 편집·이력8개와 Worker 데이터·fallback·수명 및 소스계약14개입니다. Node Worker 검사를 Chrome의 실제 권위 경로·UI 지연·배포 성공으로 대체하지 않습니다.
+
+
 ## 불변 관측과 Worker 세대 집중 검사
 
 [관측 소유권](headless-core-foundation.md)과 [Worker 캐시 수명](demo-server-modes.md#worker-세대와-브라우저-캐시)의 source·정적 bundle 회귀입니다. 실제 브라우저 입력 지연과 새 SDK 배포는 별도 확인합니다. WASM·Native 빌드를 시작하지 않습니다.

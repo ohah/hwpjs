@@ -1,3 +1,4 @@
+import { mergeExclusiveOwnerWindow, isPlainOwnerBaseline } from '../internal/owner-window-cow.ts';
 import {
   hasRuntimeAdmission,
   requestAtRuntimeAdmission,
@@ -776,11 +777,26 @@ export function createEditor(options: CreateEditorOptions) {
       admissionGuard?.();
       reserved = ++revisionClock;
       const historyCapture = geometry.captureHistory(state, message.kind);
+      const exclusiveCapture = geometry.captureExclusive(state);
+      const priorProjection = exclusiveCapture?.projection;
+      const projectionRequested =
+        ['splice', 'splice-current'].includes(message.kind) &&
+        !!priorProjection &&
+        !(state.content as any)?.readOnly &&
+        !(state.content as any)?.window &&
+        isPlainOwnerBaseline(state.content, (message as any).section, (message as any).paragraph);
       // Once request() begins, an exception cannot prove that Native did not apply.
       try {
-        reply = admissionGuard
-          ? await requestAtRuntimeAdmission(active!, message, ctx, admissionGuard)
-          : await active!.request(message, ctx);
+        reply =
+          admissionGuard || (projectionRequested && hasRuntimeAdmission(active!))
+            ? await requestAtRuntimeAdmission(
+                active!,
+                message,
+                ctx,
+                admissionGuard ?? (() => {}),
+                projectionRequested,
+              )
+            : await active!.request(message, ctx);
         verifyReply(reply, ctx);
       } catch (error) {
         if (error instanceof RuntimeAdmissionRejected) return reject(ctx, error);
@@ -848,7 +864,40 @@ export function createEditor(options: CreateEditorOptions) {
         return result('committed-refresh-required', ctx, reply.error ?? 'SnapshotMissing', reply);
       }
       try {
-        const patch = contentPatch(reply);
+        const mutationReply = reply;
+        let origin = takeGeometryOrigin(active!, reply, ctx);
+        let merged: any;
+        if ((reply.content as any)?.viewKind === 'owner-window-patch') {
+          requireReady(token);
+          if (priorProjection && origin)
+            merged = mergeExclusiveOwnerWindow(state, reply.content as any, origin, {
+              context: ctx,
+              sequence: exclusiveCapture!.sequence + 1,
+              revision: state.nativeHistoryRevision,
+              epoch: priorProjection.evidence.nativeEpoch,
+              referenceScope: priorProjection.evidence.scope.referenceScope,
+            });
+          if (!merged) {
+            reply = await active!.request({ kind: 'refresh' }, ctx);
+            verifyReply(reply, ctx);
+            requireReady(token);
+            if (reply.error || !reply.content || (reply.content as any).viewKind)
+              throw Error('OwnerProjectionFallbackFailed');
+            origin = takeGeometryOrigin(active!, reply, ctx);
+          }
+        }
+        const patch = merged
+          ? {
+              content: merged,
+              capabilities: state.capabilities,
+              historyRecoveryRequired: false,
+              nativeHistoryStats: reply.historyStats,
+              nativeHistoryRevision: history(reply),
+              nativeHistoryRevisions: reply.historyRevisions,
+              selection: undefined,
+              viewRevision: state.viewRevision + 1,
+            }
+          : contentPatch(reply);
         let selection: SelectionTarget | null | undefined = preserveFormattingSelection
           ? formattingSelection(state, patch, reserved)
           : undefined;
@@ -869,9 +918,26 @@ export function createEditor(options: CreateEditorOptions) {
           { ...patch, selection, operationRevision: reserved, status: 'ready' },
           true,
           ctx,
-          takeGeometryOrigin(active!, reply, ctx),
+          origin,
           { kind: message.kind, capture: historyCapture },
         );
+        // Canonical origin was consumed from raw reply once. Compatibility receives full DTO.
+        if ((mutationReply.content as any)?.viewKind === 'owner-window-patch') {
+          reply = {
+            ...mutationReply,
+            content: state.content,
+            ...(reply.historyStats === undefined ? {} : { historyStats: reply.historyStats }),
+            ...(reply.historyRevision === undefined
+              ? {}
+              : { historyRevision: reply.historyRevision }),
+            ...(reply.historyRevisions === undefined
+              ? {}
+              : { historyRevisions: reply.historyRevisions }),
+            ...(reply.historyPoisoned === undefined
+              ? {}
+              : { historyPoisoned: reply.historyPoisoned }),
+          };
+        }
       } catch (error) {
         install({ operationRevision: reserved, status: 'refresh-required' });
         notifyError(error, ctx, true);

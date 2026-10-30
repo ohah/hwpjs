@@ -272,7 +272,8 @@ export function createGeometryEvidenceController() {
         } else invalidate();
         return;
       }
-      const fullSnapshot = origin.fullSnapshotDelta !== undefined;
+      const packet = origin.fullSnapshotDelta ?? origin.ownerWindowDelta;
+      const fullSnapshot = packet !== undefined;
       const update = (
         next.content as {
           windowUpdate?: { section: number; paragraph: number; sourceNode: number; epoch: string };
@@ -280,7 +281,7 @@ export function createGeometryEvidenceController() {
       )?.windowUpdate;
       if (
         fullSnapshot
-          ? !validateFullSnapshotTextDelta(before.content, next.content, origin.fullSnapshotDelta)
+          ? !validateFullSnapshotTextDelta(before.content, next.content, packet)
           : !update ||
             update.section !== origin.owner?.section ||
             update.paragraph !== origin.owner.paragraph ||
@@ -345,7 +346,7 @@ export function createGeometryEvidenceController() {
           }),
         );
     } else if (evidenceKind === 'exclusive-text') {
-      if (ids && owner && origin.fullSnapshotDelta)
+      if (ids && owner && (origin.fullSnapshotDelta || origin.ownerWindowDelta))
         edges.recordVerifiedTextEdge(
           proof('record', {
             kind: 'text-delta',
@@ -383,5 +384,17 @@ export function createGeometryEvidenceController() {
     }
     states.set(next, r);
   }
-  return Object.freeze({ publish, inherit, invalidate, read, captureHistory });
+  return Object.freeze({
+    publish,
+    inherit,
+    invalidate,
+    read,
+    captureHistory,
+    captureExclusive(state: EditorState) {
+      const r = states.get(state);
+      return r && read(state)
+        ? { projection: r.projection, sequence: r.sequence, serial: r.serial }
+        : undefined;
+    },
+  });
 }

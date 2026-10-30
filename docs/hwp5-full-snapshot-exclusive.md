@@ -23,7 +23,9 @@ parent가 있는 plain owner도 정확한 source/parent 대조를 통해 검증�
 
 이 한정 증거를 HWPX, 임의 owner, 모든 Native export 또는 다른 SHA의 엔진에 자동 적용하지 않습니다. 다른 엔진의 등록에는 해당 바이트와 계약의 별도 검증이 필요합니다.
 
-## full snapshot을 유지하는 exclusive 흐름
+## r1/r2·history r3의 full snapshot을 유지하는 exclusive 흐름
+
+아래는 COW07 도입 전 확정한 full-snapshot 경로의 실증 범위입니다. 후속 내부 splice projection은 [bounded owner-window COW 계약](hwp5-owner-window-cow.md)을 따릅니다. 공개 Runtime.request와 호환 CommandResult.reply 및 undo/redo의 full 응답 계약은 유지하며, 후속 선별 경로의 Native getter 생략을 아래 기존 경로에 소급하지 않습니다.
 
 1. canonical Reader가 기존 current-reference facade로 편집 전 Native reference와 H5W1 metadata를 읽습니다. 실제 성공 splice 뒤 기존 `last_text_delta_receipt`와 fresh reference의 완전한 bounded owner window를 읽습니다. 버전·정확 u64 epoch·범위·UTF-16/CR·runs·source/parent를 대조한 소유 복사본만 packet으로 연결합니다. optional 조회가 실패하면 이미 적용한 편집을 재시도하지 않고 기존 전체 display 경로를 유지합니다.
 2. backend는 여전히 전체 `hwp5Display`를 만들고 `structuredClone`하며, core도 전체 snapshot을 설치합니다. owner-window patch/merge나 source heap 구조 공유로 바꾼 후보가 아닙니다.

@@ -4,6 +4,13 @@ export type NativeModuleContract = Readonly<{
   contract: 'hwp5-exclusive-text-delta-v1';
   sha256: string;
 }>;
+/** 부분 view 선호의 실증 범위만 제한한다. Native 권위를 등록하거나 발급하지 않는다. */
+export function allowsOwnerWindowProjection(contract: NativeModuleContract | undefined): boolean {
+  return (
+    contract?.contract === 'hwp5-exclusive-text-delta-v1' &&
+    contract.sha256 === 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb'
+  );
+}
 export type NativeRuntimeOrigin = Readonly<{
   kind: 'full-baseline' | 'exclusive-text';
   context: RuntimeRequestContext;
@@ -15,6 +22,7 @@ export type NativeRuntimeOrigin = Readonly<{
   beforeRevision?: number;
   owner: GeometryOwner | null;
   fullSnapshotDelta?: unknown;
+  ownerWindowDelta?: unknown;
   authority: () => boolean;
 }>;
 const uint = (n: unknown) => Number.isSafeInteger(n) && Number(n) >= 0 && Number(n) < 0xffffffff;
@@ -93,6 +101,7 @@ export function nativeOrigin(
       beforeEpoch: r.beforeEpoch,
       beforeRevision: r.beforeRevision,
       owner,
+      ownerWindowDelta: content,
       authority,
     });
   }

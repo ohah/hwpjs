@@ -13,6 +13,7 @@ import {
   bindNativeRuntimeOrigin,
   canonicalRuntimeDescriptors,
   nativeOrigin,
+  allowsOwnerWindowProjection,
   sameRequestContext,
 } from '../internal/native-runtime-origin.ts';
 import type { NativeRuntimeOrigin } from '../internal/native-runtime-origin.ts';
@@ -69,10 +70,15 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     message: RuntimeMessage,
     context?: RuntimeRequestContext,
     admission?: () => void,
+    projection = false,
   ) {
     const captured = context ? { ...context } : undefined,
       kind = message.kind;
-    const raw = await backend.request(message, admission);
+    const raw = await backend.request(
+      message,
+      admission,
+      projection && allowsOwnerWindowProjection(contract) && valid(),
+    );
     const reply = ownObservation({
       ...raw,
       meta: { ...backend.outcome(raw), ...(captured ? { context: captured } : {}) },
@@ -97,7 +103,8 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
   runtime = { request, dispose };
   bindRuntimeAdmission(
     runtime,
-    (message, context, admission) => requestInternal(message, context, admission),
+    (message, context, admission, projection) =>
+      requestInternal(message, context, admission, projection),
     () => !closed && !poisoned,
   );
   origins.set(runtime, {

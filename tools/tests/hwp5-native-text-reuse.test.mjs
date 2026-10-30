@@ -110,6 +110,23 @@ async function session(paragraph = 15, mode = 'registered') {
         state = e.getEditorState();
         projection = readGeometryProjection(lease, state);
         assertFullSnapshot(state.content, expected, before.content);
+        assert.equal(
+          result.reply.content,
+          state.content,
+          'command reply keeps the complete owned view',
+        );
+        if (mode === 'registered' && message.kind === 'splice' && kind === 'exclusive-text') {
+          assert.equal(
+            state.content.characterShapes,
+            before.content.characterShapes,
+            'COW keeps stable header identity',
+          );
+          assert.equal(
+            state.capabilities,
+            before.capabilities,
+            'COW preserves stable capabilities',
+          );
+        }
         if (mode !== 'registered') {
           assert.equal(projection, undefined);
           return;

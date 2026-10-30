@@ -162,6 +162,7 @@ export function createReaderRuntime({
   let protectionRemoved = false;
   let hwp5StyleOpenError = null;
   let documentWindow = null;
+  let hwp5PreviewDirty = false;
   let hwpxCreatedTablesPending = false;
   function normalizationMetadataAvailable() {
     return WebAssembly.Module.exports(module).some(
@@ -177,6 +178,7 @@ export function createReaderRuntime({
     );
   }
   function hwp5DisplayProjection() {
+    if (hwp5PreviewDirty) refreshCurrentHwp5Preview();
     // Only an explicitly opened native editor can lift the display-only gate.
     return editor && historyEnabled && preview.primarySource === 'distribution_viewtext'
       ? { ...preview, readOnly: false }
@@ -221,10 +223,15 @@ export function createReaderRuntime({
       )
     );
   }
-  function hwp5Display(projected = null) {
+  function refreshCurrentHwp5Preview() {
     if (historyEnabled && editor?.supportsCurrentTextPreview?.()) {
       preview = { ...preview, ...editor.currentTextPreview() };
+      hwp5PreviewDirty = false;
     }
+  }
+  function hwp5Display(projected = null) {
+    refreshCurrentHwp5Preview();
+    if (typeof projected === 'function') projected = projected();
     if (!projected && documentWindow) {
       const total = preview.sections.reduce((sum, section) => sum + section.paragraphs.length, 0);
       const offset = Math.min(documentWindow.offset, Math.max(0, total - 1));
@@ -990,7 +997,7 @@ export function createReaderRuntime({
   // Never keep text/history authority or a cache beyond that one request.
   let loadProjection = null;
   let requestSequence = 0;
-  async function execute(message, requestTicket, reusableLoad) {
+  async function execute(message, requestTicket, reusableLoad, ownerWindowProjection = false) {
     let reader;
     let response;
     const minimalError = (error) => ({
@@ -1049,6 +1056,22 @@ export function createReaderRuntime({
         /* Optional read failure keeps full display. */
       }
     }
+    const projectedOwner = () => {
+      if (
+        ownerWindowProjection === true &&
+        nativeTextDelta &&
+        !documentWindow &&
+        preview.sections.every((s) =>
+          s.paragraphs.every((p) =>
+            p.tokens.every((t) => t.type !== 'control' || [2, 11, 13, 21].includes(t.code)),
+          ),
+        )
+      ) {
+        hwp5PreviewDirty = true;
+        return { viewKind: 'owner-window-patch', ...nativeTextDelta };
+      }
+      return null;
+    };
     const captureTextDelta = () => {
       try {
         nativeTextDelta = editor.readExclusiveTextDelta(beforeTextOwner);
@@ -1144,14 +1167,15 @@ export function createReaderRuntime({
         if (!editor || !preview || !historyEnabled) throw new Error('EditorNotOpen');
         const full = message.offset === null && message.count === null;
         if (format === 'hwp5') {
-          const projected = full
-            ? displayContent(hwp5DisplayProjection())
-            : queryHwp5WindowContent(
-                editor,
-                hwp5DisplayProjection(),
-                { offset: message.offset, count: message.count },
-                hwp5ParagraphFormatsAvailable(),
-              );
+          const projected = () =>
+            full
+              ? displayContent(hwp5DisplayProjection())
+              : queryHwp5WindowContent(
+                  editor,
+                  hwp5DisplayProjection(),
+                  { offset: message.offset, count: message.count },
+                  hwp5ParagraphFormatsAvailable(),
+                );
           const content = hwp5Display(projected);
           documentWindow = full ? null : { offset: message.offset, count: message.count };
           reply({ kind: 'set-edit-window', content });
@@ -1171,7 +1195,7 @@ export function createReaderRuntime({
         if (message.kind === 'query-edit-window' && !historyEnabled)
           throw new Error('EditorNotOpen');
         if (format === 'hwp5') {
-          const content = hwp5Display(
+          const content = hwp5Display(() =>
             queryHwp5WindowContent(
               editor,
               hwp5DisplayProjection(),
@@ -2543,6 +2567,10 @@ export function createReaderRuntime({
           editor.spliceCurrent(message);
           applied = true;
           captureTextDelta();
+          if (projectedOwner()) {
+            reply({ kind: message.kind, content: projectedOwner() });
+            return;
+          }
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, content: hwp5Display() });
           return;
@@ -2553,7 +2581,7 @@ export function createReaderRuntime({
         } else editor.setCharacterFormat(message);
         applied = true;
         if (historyEnabled && editor.supportsCurrentTextPreview?.()) {
-          reply({ kind: message.kind, content: hwp5Display() });
+          reply({ kind: message.kind, content: projectedOwner() ?? hwp5Display() });
           return;
         }
         // Refresh only a derived display snapshot from authoritative native text.
@@ -2737,6 +2765,7 @@ export function createReaderRuntime({
   let loaded = false;
   let disposal;
   function clear() {
+    hwp5PreviewDirty = false;
     displayResources.reset();
     try {
       editor?.close();
@@ -2758,7 +2787,7 @@ export function createReaderRuntime({
     outcome(reply) {
       return { ...outcomes.get(reply) };
     },
-    request(input, admission) {
+    request(input, admission, ownerWindowProjection = false) {
       if (admission !== undefined && typeof admission !== 'function')
         return Promise.reject(Error('InvalidRuntimeAdmission'));
       const requestTicket = ++requestSequence;
@@ -2777,11 +2806,12 @@ export function createReaderRuntime({
         if (terminal) throw new Error('RuntimeDisposed');
         if (message.kind === 'load') {
           if (loaded && !allowReload) throw new Error('RuntimeDocumentAlreadyLoaded');
+          hwp5PreviewDirty = false;
           loaded = true;
           lastHistoryRevision = undefined;
         }
         admission?.();
-        return execute(message, requestTicket, reusableLoad);
+        return execute(message, requestTicket, reusableLoad, ownerWindowProjection);
       });
       const settled = task.finally(() => {
         if (ArrayBuffer.isView(secret))
