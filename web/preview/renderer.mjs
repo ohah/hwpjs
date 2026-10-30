@@ -21,6 +21,7 @@ import {
 import { paintTableBackground } from './table-background-paint.mjs';
 import { FONT, displayRunText } from './layout.mjs';
 import { createPreviewTextMeasure } from './preview-text-measure.mjs';
+import { createRendererGlyphMetrics } from './renderer-glyph-metrics.mjs';
 import { inlineHwp5FormIndex, formPositionKey } from './hwp5-form-inline.mjs';
 import { paintHwp5Form } from './hwp5-form-paint.mjs';
 import { visiblePictureTargets } from './visible-picture-targets.mjs';
@@ -146,6 +147,7 @@ export function createRenderer(
   const viewport = viewportElement;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas2DUnavailable');
+  const rendererGlyphMetrics = createRendererGlyphMetrics(ctx);
   let content = { paragraphs: [], limited: false },
     layout = { rows: [], limited: false };
   let projectionDeferred = false;
@@ -347,6 +349,9 @@ export function createRenderer(
       metrics.pixelHeight,
       canvas.width,
       canvas.height,
+      viewport.clientWidth,
+      viewport.clientHeight,
+      viewScale,
       canvas.style.width,
       canvas.style.height,
       bounds?.width,
@@ -492,6 +497,7 @@ export function createRenderer(
     picturePaintOrder = [];
     canvas.style.width = `${metrics.width}px`;
     canvas.style.height = `${metrics.height}px`;
+    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) rendererGlyphMetrics.clear();
     canvas.width = pixelWidth;
     canvas.height = pixelHeight;
     ctx.setTransform(ratio * metrics.scale, 0, 0, ratio * metrics.scale, 0, 0);
@@ -1285,6 +1291,7 @@ export function createRenderer(
       });
   };
   const reflow = ({ scrollOrigin = null, scheduleFrame = true } = {}) => {
+    refreshFontWatch();
     layoutGeneration++;
     paintedCharts = [];
     paintedCheckBoxes = [];
@@ -1330,6 +1337,29 @@ export function createRenderer(
     );
     inlineCheckBoxes = inlineCheckBoxIndex(pictureDisplay);
     inlineForms = inlineHwp5FormIndex(pictureDisplay, { draft });
+    const measurementPolicy = readMeasurementPolicy();
+    const measuredEnvironment = [
+      canvas.ownerDocument,
+      canvas.ownerDocument?.defaultView,
+      canvas.ownerDocument?.fonts,
+      canvas.width,
+      canvas.height,
+      viewport.clientWidth,
+      viewport.clientHeight,
+      viewScale,
+      environment.devicePixelRatio?.() ?? realm.devicePixelRatio ?? 1,
+      canvas.lang,
+      canvas.dir,
+      canvas.ownerDocument?.documentElement?.lang,
+      canvas.ownerDocument?.documentElement?.dir,
+      realm.getComputedStyle?.(canvas)?.direction,
+      measurementPolicy,
+    ];
+    // 외부 측정 세대가 주어진 경우 기존 정책 검증 실패를 재사용 허가로 바꾸지 않습니다.
+    const rawCanvasMetrics =
+      !measurementPolicy || (resourceDocument === undefined && resourceEpoch === undefined)
+        ? (rendererGlyphMetrics.clear(), undefined)
+        : rendererGlyphMetrics.begin(measurementEpoch, measuredEnvironment);
     const measure = createPreviewTextMeasure(ctx, fontAt, {
       pictures,
       charts: inlineCharts,
@@ -1337,6 +1367,7 @@ export function createRenderer(
       forms: inlineForms,
       projectionMemo: true,
       stableContext: true,
+      rawCanvasMetrics,
     });
     const nativeScope = nativeGeometry.prepare(content, geometryEvidence, {
       width: viewport.clientWidth,
@@ -1346,7 +1377,7 @@ export function createRenderer(
       decodedResourceEpoch: decodedResourceGeometry.value,
       fontKey: FONT,
       textBoundaryIdentity: currentTextBoundaryIdentity(),
-      measurementPolicy: readMeasurementPolicy(),
+      measurementPolicy,
     });
     if (nativeScope) {
       paragraphFlowReuse.beginNative(nativeScope);
@@ -1429,11 +1460,36 @@ export function createRenderer(
     return layout;
   };
   viewport.addEventListener('scroll', schedule);
-  const stopFontWatch = watchProjectionFonts(canvas, () => {
+  let watchedFonts,
+    fontWatchReady = false,
+    stopFontWatch = () => {};
+  const invalidateFontMetrics = () => {
+    rendererGlyphMetrics.clear();
     measurementEpoch++;
     paragraphFlowReuse.clear();
     if (!closed) reflow();
-  });
+  };
+  const refreshFontWatch = () => {
+    const next = canvas.ownerDocument?.fonts;
+    if (next === watchedFonts) return;
+    stopFontWatch();
+    watchedFonts = next;
+    rendererGlyphMetrics.clear();
+    if (fontWatchReady) {
+      measurementEpoch++;
+      paragraphFlowReuse.clear();
+    }
+    fontWatchReady = true;
+    stopFontWatch = watchProjectionFonts(canvas, invalidateFontMetrics);
+  };
+  refreshFontWatch();
+  const invalidateCanvasMetrics = () => {
+    rendererGlyphMetrics.clear();
+    measurementEpoch++;
+    paragraphFlowReuse.clear();
+  };
+  canvas.addEventListener?.('contextlost', invalidateCanvasMetrics);
+  canvas.addEventListener?.('contextrestored', invalidateCanvasMetrics);
   const resize = new ResizeObserver(reflow);
   resize.observe(viewport);
   return {
@@ -1685,6 +1741,11 @@ export function createRenderer(
         nextResourceDocument === undefined
           ? nextResourceEpoch !== resourceEpoch
           : nextResourceDocument !== resourceDocument;
+      if (
+        changedResourceDocument ||
+        (nextResourceDocument === undefined && !Object.hasOwn(options, 'resourceEpoch'))
+      )
+        rendererGlyphMetrics.clear();
       if (changedResourceDocument) {
         nativeGeometry.clear();
         paragraphFlowReuse.clear();
@@ -1757,6 +1818,7 @@ export function createRenderer(
       return !closed && sourceObservationState === state && state?.content === content;
     },
     clear() {
+      rendererGlyphMetrics.clear();
       nativeGeometry.clear();
       paragraphFlowReuse.clear();
       geometryEvidence = undefined;
@@ -1950,6 +2012,7 @@ export function createRenderer(
       onGeometry = callback;
     },
     close() {
+      rendererGlyphMetrics.close();
       nativeGeometry.clear();
       paragraphFlowReuse.clear();
       geometryEvidence = undefined;
@@ -1966,6 +2029,8 @@ export function createRenderer(
       stopBlink();
       resize.disconnect();
       stopFontWatch();
+      canvas.removeEventListener?.('contextlost', invalidateCanvasMetrics);
+      canvas.removeEventListener?.('contextrestored', invalidateCanvasMetrics);
       viewport.removeEventListener('scroll', schedule);
       cancelAnimationFrame(frame);
     },

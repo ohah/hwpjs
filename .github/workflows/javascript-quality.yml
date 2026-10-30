@@ -19,6 +19,9 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version-file: package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.20.0'
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
       - name: Test public package JSX runtime compatibility
@@ -51,6 +54,17 @@ jobs:
           test -f ./tools/build-packages.mjs || exit 1
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test renderer glyph measurement reuse
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
+        run: |
+          set -- \
+            ./tests/hwpx/renderer-glyph-metrics.test.mjs \
+            ./tests/hwpx/renderer-projection-measure.test.mjs \
+            ./packages/vanilla/tests/native-geometry-renderer.test.mjs \
+            ./packages/vanilla/tests/native-geometry-deps.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --import ./tools/renderer-test-core-provider.mjs --test "$@"
       - name: 데모 표 만들기 공개 API 모델 검사
         run: |
           set -- \

@@ -37,7 +37,11 @@ export function createProjectionFontCache(limit = LIMIT) {
     },
   };
 }
-export function createProjectionCanvasMetrics(ctx, limit = LIMIT, { stableContext = false } = {}) {
+export function createProjectionCanvasMetrics(
+  ctx,
+  limit = LIMIT,
+  { stableContext = false, rawCanvasMetrics } = {},
+) {
   const contexts = new Map();
   let requested = null,
     applied = null,
@@ -70,7 +74,10 @@ export function createProjectionCanvasMetrics(ctx, limit = LIMIT, { stableContex
       let fonts = contexts.get(key),
         metrics = fonts?.get(font);
       if (metrics?.has(text)) return metrics.get(text);
-      const value = ctx.measureText(text);
+      const value =
+        stableContext && rawCanvasMetrics?.context === ctx
+          ? rawCanvasMetrics.measureText(text)
+          : ctx.measureText(text);
       const entryBytes = 128 + (key.length + font.length + text.length) * 2;
       if (
         Number.isFinite(value.width) &&

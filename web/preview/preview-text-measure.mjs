@@ -16,10 +16,11 @@ export function createPreviewTextMeasure(
     forms = new Map(),
     projectionMemo = false,
     stableContext = false,
+    rawCanvasMetrics,
   } = {},
 ) {
   const projection = projectionMemo
-    ? createProjectionCanvasMetrics(ctx, undefined, { stableContext })
+    ? createProjectionCanvasMetrics(ctx, undefined, { stableContext, rawCanvasMetrics })
     : null;
   const measureText = projection ? (text) => projection.measureText(text) : undefined;
   return (text, paragraph, unit, kind) => {

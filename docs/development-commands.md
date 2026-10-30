@@ -991,3 +991,15 @@ bun test --no-install "$@"
 ```
 
 이 모델27은 공개 JS API와 대역 runtime/이벤트 DOM 경계의 검사입니다. Native ABI·실Worker·브라우저·CFB/XML 저장·실Native undo 성공을 의미하지 않습니다. 기본 core 모델16과 별도 Native integration 진입점은 [본문 caret 표 삽입 명령 검증](#본문-caret-표-삽입-명령-검증)을 따릅니다. 모달의 지원 범위는 [공개 본문 표 삽입](headless-table-insert.md#데모-표-만들기-연결)을 따릅니다.
+
+## 렌더러 글자 측정 회귀
+
+[재사용·무효화 계약](font-layout-metrics.md#렌더러-사이의-원시-글자-측정-재사용)을 검사합니다. 공식 core dist를 먼저 준비하고 그 경로를 명시합니다. resolver는 해당 dist의 index manifest 지문을 확인하며, 제품 함수나 Canvas를 대체하지 않습니다. Native/WASM 실행이나 브라우저 입력 A/B는 포함하지 않습니다.
+
+```sh
+HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist" node --import ./tools/renderer-test-core-provider.mjs --test \
+  ./tests/hwpx/renderer-glyph-metrics.test.mjs \
+  ./tests/hwpx/renderer-projection-measure.test.mjs \
+  ./packages/vanilla/tests/native-geometry-renderer.test.mjs \
+  ./packages/vanilla/tests/native-geometry-deps.test.mjs
+```
