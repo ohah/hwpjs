@@ -27,7 +27,8 @@ export function createWasmModuleLoader(options: { url?: string | URL; fetch?: ty
     const compiled = WebAssembly.compile(bytes).then((module) => {
       if (
         key === '8e0ff0d0e80f185f255024cb9d946b0469648fd5eb175ef6c7aa3562124c91ff' ||
-        key === 'a38f4df7993c8f645fd28fd13df0108f9be4ba5ca55736e76e334d7d8968343f'
+        key === 'a38f4df7993c8f645fd28fd13df0108f9be4ba5ca55736e76e334d7d8968343f' ||
+        key === 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb'
       )
         knownModules.set(
           module,

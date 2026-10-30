@@ -1,3 +1,4 @@
+import { createHwp5ExclusiveTextApi } from './hwp5-exclusive-text-delta.mjs';
 const utf8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 const utf16 = new TextDecoder('utf-16le', { fatal: true, ignoreBOM: true });
 const encoder = new TextEncoder();
@@ -120,7 +121,19 @@ export function createHwp5CurrentReferenceApi({
       references: window.references.map((reference) => Object.freeze({ ...reference, scope })),
     };
   };
+  const exclusive = createHwp5ExclusiveTextApi({
+    wasm,
+    check,
+    encode,
+    currentSourceReferences: (section, options) =>
+      windowQuery('hwp5_edit_current_source_references', section, options),
+    output: (action, bytes) =>
+      bytes === undefined
+        ? output(action).bytes
+        : memory.withBytes(bytes, (ptr, size) => output(() => action(ptr, size)).bytes),
+  });
   return {
+    ...exclusive,
     supportsCurrentReferences() {
       check();
       return available();

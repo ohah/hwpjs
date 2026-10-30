@@ -134,14 +134,14 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
         typeof nextEpoch !== 'string' ||
         !/^\d+$/.test(nextEpoch) ||
         !integer(nextRevision) ||
-        !['full-baseline', 'exclusive-text'].includes(kind)
+        !['full-baseline', 'exclusive-text', 'history-text'].includes(kind)
       )
         return reject('InvalidRegisteredEvidence');
       const sameResource = scope === nextScope && resourceLease === nextLease;
       const sameEpoch = sameResource && epoch === nextEpoch && revision === nextRevision;
       const continuous =
         sameResource &&
-        kind === 'exclusive-text' &&
+        ['exclusive-text', 'history-text'].includes(kind) &&
         own(verified, 'beforeEpoch') === epoch &&
         own(verified, 'beforeRevision') === revision;
       let rebase = !sameResource || (!sameEpoch && !continuous);
@@ -150,7 +150,7 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
       const section = own(owner, 'section'),
         paragraph = own(owner, 'paragraph');
       if (
-        kind === 'exclusive-text' &&
+        ['exclusive-text', 'history-text'].includes(kind) &&
         (!integer(section) || !integer(paragraph) || !integer(generation))
       )
         return reject('InvalidOwnerGeneration');
@@ -173,7 +173,8 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
       epoch = nextEpoch;
       revision = nextRevision;
       host = nextHost;
-      if (kind === 'exclusive-text') versions.set(`${section}:${paragraph}`, String(generation));
+      if (['exclusive-text', 'history-text'].includes(kind))
+        versions.set(`${section}:${paragraph}`, String(generation));
       if (
         membershipContent !== content ||
         membershipEpoch !== nextEpoch ||

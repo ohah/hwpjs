@@ -87,6 +87,7 @@
 - [현재 필드 범위 조회](hwp5-field-span-query.md)
 - [빈 RevisionSign 표식 보존 텍스트 편집](hwp5-revision-sign-text-retention.md)
 - [HWP5 native 체크포인트·편집 이력 기반](hwp5-edit-history.md)
+- [HWP5 full snapshot의 Native exclusive 증거와 warm 그림 재사용](hwp5-full-snapshot-exclusive.md)
 - [HWPX 원본 색상 호환 정책](source-color-policy.md)
 - [문단 분할·병합 구조 편집 기반](paragraph-structure-edit.md)
 - [명시적 쪽·단 나누기 편집](paragraph-flow-break-edit.md)

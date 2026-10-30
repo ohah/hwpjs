@@ -1,3 +1,8 @@
+// @ts-ignore Canonical host descriptor boundary shared with the renderer.
+import {
+  HOST_EPOCH_KEYS,
+  createHostEpochReaders,
+} from '../../../web/preview/host-epoch-readers.mjs';
 import {
   readGeometryProjection,
   readNativeGeometryEvidence,
@@ -30,6 +35,11 @@ export interface CanvasDisplayOptions {
 export interface CanvasSurfaceEnvironment extends Record<string, any> {
   /** 측정 함수 내부 의미가 바뀌기 전에 새 frozen 빈 객체를 반환해야 합니다. */
   geometryMeasurementEpoch?: () => Readonly<Record<string, never>>;
+  /** Optional host promise: rotate this frozen empty opaque token before resource bytes,
+   * reader/decoder policy, or hidden same-function provider state changes.
+   * Missing/invalid tokens retain ordinary refresh. This never grants Native authority.
+   */
+  resourceProviderEpoch?: () => Readonly<Record<string, never>>;
 }
 export interface CanvasSurfaceOptions {
   root: HTMLElement;
@@ -223,27 +233,9 @@ export function createCanvasSurface({
   };
   try {
     const rendererEnvironment = Object.create(environment);
-    const measurementEpoch = Object.getOwnPropertyDescriptor(
-      environment,
-      'geometryMeasurementEpoch',
-    );
-    if (measurementEpoch && Object.hasOwn(measurementEpoch, 'value')) {
-      Object.defineProperty(rendererEnvironment, 'geometryMeasurementEpoch', {
-        // 원 호스트의 descriptor 변경은 renderer가 알 수 없으므로 매 호출마다 확인합니다.
-        value: () => {
-          const current = Object.getOwnPropertyDescriptor(environment, 'geometryMeasurementEpoch');
-          if (
-            !current ||
-            current.value !== measurementEpoch.value ||
-            current.writable !== measurementEpoch.writable ||
-            current.configurable !== measurementEpoch.configurable ||
-            current.enumerable !== measurementEpoch.enumerable ||
-            typeof current.value !== 'function'
-          )
-            return null;
-          return current.value();
-        },
-      });
+    const hostEpochs = createHostEpochReaders(environment);
+    for (const key of HOST_EPOCH_KEYS) {
+      Object.defineProperty(rendererEnvironment, key, { value: hostEpochs[key] });
     }
     Object.defineProperty(rendererEnvironment, 'nativeGeometryEvidenceReader', {
       value: readNativeGeometryEvidence,

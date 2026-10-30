@@ -1,3 +1,4 @@
+import { createDemoSurfaceEnvironment } from './surface-environment.ts';
 import { createCanvasSurface } from '@hwpjs/vanilla';
 import { createElement, createRef, StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -15,15 +16,9 @@ if (!root) throw Error('DemoRootMissing');
 const segment = location.pathname.split('/').filter(Boolean).at(-1);
 const framework: DemoFramework =
   segment === 'headless' || segment === 'react' || segment === 'svelte' ? segment : 'vanilla';
-// 이 호스트는 mount 뒤 Canvas 측정 함수를 교체하지 않습니다.
-// 향후 내부 측정 의미를 변경하는 기능은 새 epoch를 공급한 뒤 재투영해야 합니다.
-const measurementEnvironment = () => {
-  const epoch = Object.freeze({});
-  return Object.freeze({ geometryMeasurementEpoch: () => epoch });
-};
 const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
   vanilla: (root, editor, onStatus) =>
-    createCanvasSurface({ root, editor, onStatus, environment: measurementEnvironment() }),
+    createCanvasSurface({ root, editor, onStatus, environment: createDemoSurfaceEnvironment() }),
   react: (root, editor, onStatus) => {
     const tree = createRoot(root),
       ref = createRef<CanvasSurfaceHandle>();
@@ -33,7 +28,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         null,
         createElement(CanvasSurface, {
           editor,
-          environment: measurementEnvironment(),
+          environment: createDemoSurfaceEnvironment(),
           onStatus,
           ref,
           style: { height: '100%' },
@@ -59,7 +54,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       target: root,
       props: {
         editor,
-        environment: measurementEnvironment(),
+        environment: createDemoSurfaceEnvironment(),
         onStatus,
         style: 'height:100%',
         onReady: (value: SvelteSurface) => {

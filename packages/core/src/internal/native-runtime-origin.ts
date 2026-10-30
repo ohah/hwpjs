@@ -14,6 +14,7 @@ export type NativeRuntimeOrigin = Readonly<{
   beforeEpoch?: string;
   beforeRevision?: number;
   owner: GeometryOwner | null;
+  fullSnapshotDelta?: unknown;
   authority: () => boolean;
 }>;
 const uint = (n: unknown) => Number.isSafeInteger(n) && Number(n) >= 0 && Number(n) < 0xffffffff;
@@ -113,6 +114,51 @@ export function nativeOrigin(
     refs.some((r: any) => r.scope !== ref.scope || r.epoch !== ref.epoch)
   )
     return;
+  const packet = (reply as any).nativeTextDelta,
+    r = packet?.receipt,
+    w = packet?.window,
+    b = packet?.before;
+  if (
+    packet &&
+    ['splice', 'splice-current'].includes(kind) &&
+    reply.meta?.application === 'applied' &&
+    reply.meta?.changed === true &&
+    r?.version === 1 &&
+    r.exclusive === true &&
+    epoch(r.beforeEpoch) &&
+    epoch(r.epoch) &&
+    BigInt(r.epoch) > BigInt(r.beforeEpoch) &&
+    uint(r.beforeRevision) &&
+    r.revision === reply.historyRevision &&
+    w?.epoch === r.epoch &&
+    b?.epoch === r.beforeEpoch &&
+    w.sourceNode === r.sourceNode &&
+    b.sourceNode === r.sourceNode &&
+    w.parentNode === r.parentNode &&
+    b.parentNode === r.parentNode &&
+    packet.reference?.scope === ref.scope &&
+    packet.reference?.epoch === r.epoch &&
+    packet.reference?.id === String(r.sourceNode)
+  ) {
+    return Object.freeze({
+      kind: 'exclusive-text',
+      context: ctx,
+      sequence,
+      referenceScope: ref.scope,
+      nativeEpoch: r.epoch,
+      nativeRevision: r.revision,
+      beforeEpoch: r.beforeEpoch,
+      beforeRevision: r.beforeRevision,
+      owner: Object.freeze({
+        section: r.section,
+        paragraph: r.paragraph,
+        sourceNode: r.sourceNode,
+        parentNode: r.parentNode,
+      }),
+      fullSnapshotDelta: packet,
+      authority,
+    });
+  }
   return Object.freeze({
     kind: 'full-baseline',
     context: ctx,

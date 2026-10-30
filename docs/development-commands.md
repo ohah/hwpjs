@@ -1003,3 +1003,18 @@ HWPJS_TEST_CORE_DIST="$PWD/packages/core/dist" node --import ./tools/renderer-te
   ./packages/vanilla/tests/native-geometry-renderer.test.mjs \
   ./packages/vanilla/tests/native-geometry-deps.test.mjs
 ```
+
+## HWP5 텍스트 재사용 경계
+
+문서·WASM 아티팩트 없이 실행하는 소유권·이력·provider 회귀입니다. 실제 Native 문서·브라우저 성능 검증과 구분합니다. 계약과 실증 범위는 [full snapshot 텍스트 재사용](hwp5-full-snapshot-exclusive.md)을 따릅니다.
+
+```sh
+mise exec node@24.20.0 -- node --test --test-concurrency=1 \
+  packages/core/tests/runtime/full-snapshot-text-delta.test.mjs \
+  packages/core/tests/internal/private-history-edges.test.ts \
+  packages/core/tests/internal/private-history-edges-reentrancy.test.ts \
+  tests/hwpx/host-epoch-readers.test.mjs \
+  tests/hwpx/native-picture-refresh-gate.test.mjs \
+  tests/hwpx/picture-resources-settled.test.mjs \
+  apps/demo/tests/surface-environment.test.ts
+```

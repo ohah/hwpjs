@@ -1,3 +1,5 @@
+import { createNativePictureRefreshGate } from './native-picture-refresh-gate.mjs';
+import { createHostEpochReaders } from './host-epoch-readers.mjs';
 import { historySelectionStamp, sameHistoryPaintStamp } from './history-paint-authority.mjs';
 import {
   createOwnedBodyDraftProjection,
@@ -170,38 +172,15 @@ export function createRenderer(
       return undefined;
     return evidenceReader(evidence, value);
   };
+  const hostEpochs = createHostEpochReaders(environment);
+  const pictureRefreshGate = createNativePictureRefreshGate(readGeometryEvidence);
   const nativeGeometry = createNativeGeometryDeps({
     readEvidence: readGeometryEvidence,
   });
   const canvasMeasurementPolicy = createCanvasMeasurementPolicy(ctx, realm);
-  const measurementEpochDescriptor = Object.getOwnPropertyDescriptor(
-    environment,
-    'geometryMeasurementEpoch',
-  );
-  const measurementEpochReader = measurementEpochDescriptor?.value;
-  const readMeasurementPolicy = () => {
-    let explicitEpoch;
-    if (measurementEpochReader !== undefined) {
-      const current = Object.getOwnPropertyDescriptor(environment, 'geometryMeasurementEpoch');
-      if (
-        typeof measurementEpochReader !== 'function' ||
-        !current ||
-        current.value !== measurementEpochReader ||
-        current.get ||
-        current.set ||
-        current.writable !== measurementEpochDescriptor.writable ||
-        current.configurable !== measurementEpochDescriptor.configurable ||
-        current.enumerable !== measurementEpochDescriptor.enumerable
-      )
-        return null;
-      try {
-        explicitEpoch = measurementEpochReader();
-      } catch {
-        return null;
-      }
-    }
-    return canvasMeasurementPolicy.current(explicitEpoch);
-  };
+  const readMeasurementPolicy = () =>
+    canvasMeasurementPolicy.current(hostEpochs.geometryMeasurementEpoch());
+
   let interactionRevision = 0,
     paintedInteractionStamp = null;
   const interactionStamp = () => [
@@ -227,6 +206,7 @@ export function createRenderer(
   let tableBackgroundReader = null;
   let resourceEpoch;
   let resourceDocument;
+  let resourceProviderEpoch;
   let layoutGeneration = 0,
     resourceGeneration = 0,
     paintedStamp = null,
@@ -1497,12 +1477,14 @@ export function createRenderer(
       geometryEvidence =
         value === content && readGeometryEvidence(evidence, value) ? evidence : undefined;
       if (geometryEvidence === undefined) {
+        pictureRefreshGate.clear();
         nativeGeometry.clear();
         paragraphFlowReuse.clear();
       }
     },
     suspendGeometryEvidence() {
       geometryEvidence = undefined;
+      pictureRefreshGate.clear();
       nativeGeometry.clear();
       paragraphFlowReuse.clear();
     },
@@ -1648,12 +1630,15 @@ export function createRenderer(
       ]),
     characterShadeRangesAvailable: () => content.characterShadeRangesAvailable === true,
     pictureReader(read) {
+      pictureRefreshGate.clear();
       pictureReader = read;
     },
     tableBackgroundReader(read) {
+      pictureRefreshGate.clear();
       tableBackgroundReader = read;
     },
     pictureDecoder(decode) {
+      pictureRefreshGate.clear();
       if (typeof decode !== 'function') throw new Error('InvalidPictureDecoder');
       pictureDecoder = decode;
       resourceGeneration++;
@@ -1746,6 +1731,12 @@ export function createRenderer(
         (nextResourceDocument === undefined && !Object.hasOwn(options, 'resourceEpoch'))
       )
         rendererGlyphMetrics.clear();
+      if (changedResourceDocument) pictureRefreshGate.clear();
+      const nextProviderEpoch = hostEpochs.resourceProviderEpoch();
+      const providerEpochChanged = nextProviderEpoch !== resourceProviderEpoch;
+      const retainNativePictures =
+        pictureRefreshGate.observe(value, nextGeometryEvidence, nextProviderEpoch) &&
+        pictureResources.canRetainSettled();
       if (changedResourceDocument) {
         nativeGeometry.clear();
         paragraphFlowReuse.clear();
@@ -1760,7 +1751,20 @@ export function createRenderer(
         decodedResourceGeometry.clear();
         const resetWidth = canvas.width;
         canvas.width = resetWidth;
-      } else if (nextResourceEpoch !== resourceEpoch) pictureResources.refresh();
+      } else if (
+        (nextResourceEpoch !== resourceEpoch || providerEpochChanged) &&
+        !retainNativePictures
+      ) {
+        // An unverified/in-flight provider cannot preserve geometry from its prior bytes.
+        if (providerEpochChanged) {
+          // A changed provider contract also invalidates same-byte decoder results.
+          pictureResources.clear();
+          decodedResourceGeometry.clear();
+        } else pictureResources.refresh();
+        nativeGeometry.clear();
+        paragraphFlowReuse.clear();
+      }
+      resourceProviderEpoch = nextProviderEpoch;
       resourceEpoch = nextResourceEpoch;
       resourceDocument = nextResourceDocument;
       chartResources.clear();
@@ -1822,6 +1826,7 @@ export function createRenderer(
       nativeGeometry.clear();
       paragraphFlowReuse.clear();
       geometryEvidence = undefined;
+      pictureRefreshGate.clear();
       stopPictureWait();
       pictureWaitExpired = false;
       paintedFrame = null;
@@ -2016,6 +2021,7 @@ export function createRenderer(
       nativeGeometry.clear();
       paragraphFlowReuse.clear();
       geometryEvidence = undefined;
+      pictureRefreshGate.clear();
       if (closed) return;
       ownedBodyDraftProjection = null;
       sourceObservationState = null;

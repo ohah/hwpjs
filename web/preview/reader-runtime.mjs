@@ -1040,6 +1040,22 @@ export function createReaderRuntime({
     let applied = false;
     let mutationUncertain = false;
     let atomicOutcome;
+    let nativeTextDelta;
+    let beforeTextOwner = null;
+    if (format === 'hwp5' && historyEnabled && message.kind === 'splice') {
+      try {
+        beforeTextOwner = editor?.captureExclusiveTextOwner(message.section, message.paragraph);
+      } catch {
+        /* Optional read failure keeps full display. */
+      }
+    }
+    const captureTextDelta = () => {
+      try {
+        nativeTextDelta = editor.readExclusiveTextDelta(beforeTextOwner);
+      } catch {
+        nativeTextDelta = undefined;
+      }
+    };
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
       if (message.kind === 'formatting-capabilities') {
@@ -2526,12 +2542,15 @@ export function createReaderRuntime({
         if (message.kind === 'splice' && message.reference !== undefined) {
           editor.spliceCurrent(message);
           applied = true;
+          captureTextDelta();
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, content: hwp5Display() });
           return;
         }
-        if (message.kind === 'splice') editor.splice(message);
-        else editor.setCharacterFormat(message);
+        if (message.kind === 'splice') {
+          editor.splice(message);
+          captureTextDelta();
+        } else editor.setCharacterFormat(message);
         applied = true;
         if (historyEnabled && editor.supportsCurrentTextPreview?.()) {
           reply({ kind: message.kind, content: hwp5Display() });
@@ -2640,6 +2659,7 @@ export function createReaderRuntime({
         response = minimalError(error);
       }
       response ??= minimalError(new Error('MissingRuntimeReply'));
+      if (nativeTextDelta && !response.error) response = { ...response, nativeTextDelta };
       // Match Worker structured-clone ownership for direct DOM-free callers too.
       try {
         response = structuredClone(response);

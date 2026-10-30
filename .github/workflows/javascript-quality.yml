@@ -31,6 +31,16 @@ jobs:
           test -f ./packages/core/tests/state/owned.test.ts || exit 1
           test -f ./packages/core/tests/state/owned-freeze-observation.test.ts || exit 1
           bun test --no-install ./packages/core/tests/state/owned.test.ts ./packages/core/tests/state/owned-freeze-observation.test.ts
+      - name: Test exclusive text snapshot reuse boundaries
+        run: |
+          node --test --test-concurrency=1 \
+            ./packages/core/tests/runtime/full-snapshot-text-delta.test.mjs \
+            ./packages/core/tests/internal/private-history-edges.test.ts \
+            ./packages/core/tests/internal/private-history-edges-reentrancy.test.ts \
+            ./tests/hwpx/host-epoch-readers.test.mjs \
+            ./tests/hwpx/native-picture-refresh-gate.test.mjs \
+            ./tests/hwpx/picture-resources-settled.test.mjs \
+            ./apps/demo/tests/surface-environment.test.ts
       - name: Test WASM loader buffer ownership
         run: node --test ./packages/core/tests/runtime/wasm-module-loader-owned-input.test.ts
       - name: Test versioned demo Worker assets

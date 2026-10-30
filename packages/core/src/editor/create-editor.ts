@@ -321,6 +321,7 @@ export function createEditor(options: CreateEditorOptions) {
     mutation = false,
     ctx?: RuntimeRequestContext,
     origin?: NativeRuntimeOrigin,
+    transition?: { kind: string; capture?: object },
   ) {
     if (terminal) return;
     // Capture both sets before any callback changes registrations.
@@ -346,7 +347,7 @@ export function createEditor(options: CreateEditorOptions) {
     };
     const previousState = state;
     state = new EditorState(next, runRead);
-    if (origin) geometry.publish(previousState, state, origin);
+    if (origin) geometry.publish(previousState, state, origin, transition);
     else if (!mutation && Object.keys(patch).length === 1 && Object.hasOwn(patch, 'selection'))
       geometry.inherit(previousState, state);
     else geometry.invalidate();
@@ -483,6 +484,7 @@ export function createEditor(options: CreateEditorOptions) {
               'historyRevision',
               'historyRevisions',
               'historyStats',
+              'nativeTextDelta',
               'historyPoisoned',
             ].includes(key),
         ),
@@ -773,6 +775,7 @@ export function createEditor(options: CreateEditorOptions) {
       writePolicy.assertWritable();
       admissionGuard?.();
       reserved = ++revisionClock;
+      const historyCapture = geometry.captureHistory(state, message.kind);
       // Once request() begins, an exception cannot prove that Native did not apply.
       try {
         reply = admissionGuard
@@ -867,6 +870,7 @@ export function createEditor(options: CreateEditorOptions) {
           true,
           ctx,
           takeGeometryOrigin(active!, reply, ctx),
+          { kind: message.kind, capture: historyCapture },
         );
       } catch (error) {
         install({ operationRevision: reserved, status: 'refresh-required' });

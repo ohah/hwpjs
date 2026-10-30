@@ -216,6 +216,14 @@ export function createPictureResources({
         }
       slots.wake();
     },
+    // Settled promises remain in entry.pending. Only the validated bitmap/error state is readiness.
+    canRetainSettled() {
+      if (closed) return false;
+      for (const entry of entries.values())
+        if (!entry.bitmap || !costs.has(entry) || entry.refreshing !== false || entry.error != null)
+          return false;
+      return true;
+    },
     // Operation revision only. Document replacement must still call clear().
     refresh() {
       if (closed) throw new Error('PictureResourcesClosed');
