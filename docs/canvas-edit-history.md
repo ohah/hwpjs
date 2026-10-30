@@ -93,6 +93,12 @@ Noori HWPX의 동일 WASM을 사용한 Node 진단에서 64undo의 전체 conten
 
 별도 Chromium의 Vanilla·Noori HWP5 검사에서는 혼합 ASCII `a1b2c3d4` 10회 입력 뒤 Meta+Z 80회(최초 1회·repeat 79회)와 즉시 `r`을 접수했습니다. 첫 undo 이벤트 때 수신 splice ACK는 0개이고 textarea에는 80자가 있었으며, 이후 고유 mutation ACK 161개와 Native revision `1..80`→`79..0`→`81`, 최종 문구 `국민r이 정한 그 이름은 ｢누리｣`·caret 3·포커스를 확인했습니다. keyup 뒤 새 undo keydown은 0개였고 이미 접수된 undo ACK 80개가 뒤늦게 도착했습니다. r7 입력·저장은 통과했지만 재열기 선택자가 다른 파일 input까지 포함해 전체 종료는 1이었고, 같은 저장본만 fresh 브라우저에 올린 별도 r8 재열기는 새 loading→ready·텍스트·caret·포커스를 확인하고 종료 0이었습니다. 독립 CFB 검사는 전체 대상 Section의 정확한 `r` 삽입과 비대상 stream 바이트를 확인했으며 metadata는 비교하지 않았습니다. 전체 PNG를 보존했고 live·재열기 대상 글자의 검정 픽셀 차이는 0, RGB 차이 15개는 caret에서 관측됐지만 전체 화면 동등이나 renderer의 row/glyph 직접 관측은 아닙니다. 소유 브라우저는 모두 inactive·pid null·잔류 0으로 정리했습니다. 이는 한 HWP5·Meta 사례이며 별도 엄격 pending 사례, Ctrl·HWPX·물리 OS hold·IME·성능 개선·전체 조판·운영 배포 완료로 확대하지 않습니다.
 
+## 기본 Worker 경로의 입력·저장 회귀
+
+2026-10-30 배포 후보의 기본 Worker 경로에서도 Noori HWP5에 trusted 혼합 ASCII 80개를 입력하고 Meta+Z 80회(반복 79회), keyup 직후 `r`을 입력했습니다. 최종 문구는 `국민r이 정한 그 이름은 ｢누리｣`, caret와 paintedCaret은 0:15:3, 선택은 current, paintPending과 aria-busy는 false였습니다. 이 검사에서는 Native ACK를 관측하지 않았으므로 이전 별도 계측의 ACK 개수를 가져오지 않습니다.
+
+첫 저장은 줄 배치 저장 동의를 선택하지 않아 `LayoutReflowRequired`였습니다. 이전 custom Worker 검사는 동의를 선택했으므로 같은 정책 조건의 비교가 아니었습니다. 후속 기본 Worker 검사에서 정상 UI 체크박스의 disabled=false와 checked=false→true를 확인한 뒤 저장한 245,248바이트 HWP의 SHA256은 `963f5a4edfb957a19a2fd2b53c34609766bfbde82e8a8b92c3ed973eb7ffa8d5`였습니다. 독립 MIT CFB oracle은 전체 대상 Section의 문단 15·위치 2에 정확히 `r`만 삽입되고 비대상 stream은 보존됐음을 확인했습니다. 컨테이너 metadata·재열기·HWPX·성능 우위는 이 검사 범위가 아닙니다. 증거는 `zig-out/verification/paragraph-default-worker-typing-save-consent-r1/`에 보존하며 소유 브라우저는 종료했습니다. 저장 정책을 우회하거나 기본 동의를 변경하지 않았습니다.
+
 ## 서식 이력의 완료 안내
 
 서식 undo/redo 뒤 대기 문구가 남은 사례에서 실제 선택은 current이고 입력의 aria-busy는 false였습니다. 정상 Canvas 클릭 후 다른 문단에 입력한 `x`가 저장 XML에도 반영됐으므로 이 문구만으로 기능 차단을 판정하지 않습니다. 실제 선택 paint가 확인된 release에서 본인이 게시한 대기 문구의 보고 세대만 완료로 바꿉니다. 재진입한 다른 안내나 실패·noop·reset·close는 보존하며 Native·선택·geometry·paint의 완료 조건을 완화하지 않습니다.
