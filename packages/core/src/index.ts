@@ -17,6 +17,7 @@ export type { StateToken, StateData, EditorStatus } from './state/editor-state.t
 export {
   createCommand,
   SPLICE_TEXT_COMMAND,
+  INSERT_TABLE_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -133,3 +134,9 @@ export {
   BORDER_WIDTHS_HUNDREDTH_MM,
   BACKGROUND_HATCH_STYLES,
 } from './commands/formatting-resource-intent.ts';
+
+export type {
+  InsertTablePayload,
+  InsertTableOptions,
+  TableInsertResources,
+} from './commands/table-insert.ts';

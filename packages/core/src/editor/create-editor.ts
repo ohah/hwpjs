@@ -56,6 +56,7 @@ import { FifoScheduler } from '../scheduler/fifo.ts';
 import { CommandRegistry } from '../commands/registry.ts';
 import {
   SPLICE_TEXT_COMMAND,
+  INSERT_TABLE_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -83,6 +84,8 @@ import { formattingSelection } from '../state/formatting-selection.ts';
 import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
 import { fontNameMessage } from '../commands/font-name.ts';
+import { tableInsertMessage } from '../commands/table-insert.ts';
+import type { InsertTablePayload } from '../commands/table-insert.ts';
 import { textColorMessage } from '../commands/text-color.ts';
 import { strikeMessage } from '../commands/strike.ts';
 import { selectionMessage, validateSelection, validateToken } from '../commands/selection.ts';
@@ -966,6 +969,10 @@ export function createEditor(options: CreateEditorOptions) {
           throw Error('InvalidText');
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
+      }
+      if (pending.command.id === INSERT_TABLE_COMMAND.id) {
+        const payload = pending.payload as InsertTablePayload;
+        return await mutate(tableInsertMessage(payload, state), payload.target);
       }
       if (pending.command.id === SET_CHARACTER_FONT_NAME_COMMAND.id) {
         const payload = pending.payload as SetCharacterFontNamePayload;

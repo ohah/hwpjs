@@ -5,7 +5,10 @@ import type { validateSelection } from './selection.ts';
 export function validateOriginalParagraphReference(
   target: SelectionTarget,
   row: ReturnType<typeof validateSelection>,
-  errorName: 'UnsupportedFormattingReference' | 'UnsupportedHyperlinkReference',
+  errorName:
+    | 'UnsupportedFormattingReference'
+    | 'UnsupportedHyperlinkReference'
+    | 'UnsupportedTableInsertReference',
 ): void {
   if (target.format !== 'hwp5') return;
   const ref = row.currentReference as { kind?: string; section?: number; id?: string } | undefined;

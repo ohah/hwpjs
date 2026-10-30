@@ -64,3 +64,5 @@ owner/reference/token은 옵션으로 받지 않습니다. 기존 canonical owne
 실제 Canvas 검사는 `node tools/editor-search-direction-browser-audit.mjs https://macstudio.tailed42f2.ts.net:10000`입니다. Vanilla/React/Svelte × charshape.hwp/charshape.hwpx의 아래로·위로, 경계에서 명시적 계속 찾기, 문서 전체 순환, Escape 닫기, 저장 Native 요청1회와 실제 다운로드를 확인했습니다. private/public 각6/6 통과했고 검색 후 저장된6개 파일은 원본 전체 bytes와 같습니다. 검색은 문서를 수정하지 않았습니다. 공개 최종 산출물은 `zig-out/verification/search-direction-public/`의 results/cleanup JSON·스크린샷이며 소유 브라우저 inactive=true입니다. 현재 명시 엔진은 `fc7fb2ab7eeff2bb07ae1463f7e5b12dcc7ebbd49f4c6de9487a85da6900dda4`입니다. 모든 문서·모든 검색 옵션의 구현 완료를 뜻하지 않습니다.
 
 후속 경합 검사에서 검색 setSelection이 지연된 동안 새 Canvas 선택을 먼저 반영하면 동일 문서 revision에서도 검색이 이를 덮어쓰는 실패를 재현했습니다(`queued-selection-before-fix.log`: 기대 stateVersion3, 실제4). 관측 버전 옵션을 추가한 뒤 회귀가 통과했고, 실제 코어 FIFO·composition publication·설정 즉시 복사·기존 API 호환을 포함한 상태/제어기/키 설정/찾기 bridge123개가 모두 통과했습니다. 원본 실패 기록은 `zig-out/verification/search-direction-private/`에 보존했습니다.
+
+본문 caret의 현재 선택과 자원 관측을 사용하는 `INSERT_TABLE_COMMAND`의 payload·거부·이력·검증 범위는 [헤드리스 표 삽입](headless-table-insert.md)을 따릅니다.

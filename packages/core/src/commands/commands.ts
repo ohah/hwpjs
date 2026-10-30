@@ -30,6 +30,9 @@ export const SPLICE_TEXT_COMMAND = createCommand<SpliceTextPayload>('splice-text
 export const UNDO_COMMAND = createCommand<HistoryPayload>('undo');
 export const REDO_COMMAND = createCommand<HistoryPayload>('redo');
 
+import type { InsertTablePayload } from './table-insert.ts';
+export const INSERT_TABLE_COMMAND = createCommand<InsertTablePayload>('insert-table');
+
 export interface CharacterProperties {
   readonly size?: number | null;
   readonly bold?: boolean | null;

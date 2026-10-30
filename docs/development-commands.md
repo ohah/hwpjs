@@ -960,3 +960,9 @@ test -n "${HWPJS_REVIEWED_BUNDLE_DIR:-}" || exit 1
 node tools/build-pages-demo.mjs --bundle-dir "$HWPJS_REVIEWED_BUNDLE_DIR" --fixture-policy tools/pages-demo/public-gallery-fixtures.json --out zig-out/verification/gallery/public
 node tools/build-pages-demo.mjs --verify --fixture-policy tools/pages-demo/public-gallery-fixtures.json --out zig-out/verification/gallery/public
 ```
+
+## 본문 caret 표 삽입 명령 검증
+
+기본 core suite에는 `packages/core/tests/commands/table-insert.test.ts`의 모델16만 들어갑니다. 명시 순수 검사는 파일존재 확인 후 `bun test --no-install ./packages/core/tests/commands/table-insert.test.ts`입니다.
+
+실제 Native 검사는 core/tests 밖의 integration entry입니다. 검토한 엔진 경로와 SHA를 `HWPJS_TEST_WASM`·`HWPJS_TEST_WASM_EXPECTED_SHA256`, 허용 원본 디렉터리를 `TABLE_FIXTURE_ROOT`, 비어 있는 소유 출력 디렉터리를 `TABLE_INSERT_OUTPUT`으로 명시하고 파일존재 확인 후 `bun test --no-install ./packages/core/integration/commands/table-insert.test.ts`를 실행합니다. 필수 입력 부재·핀 불일치·ABI 부재는 실패이며 자동 skip/fallback은 없습니다. d849 고정 증거와 현재 CI 산출물의 새 실행 결과를 구분합니다. CI는 기존 core 빌드 뒤 그 build-manifest의 WASM 핀을 사용하며 새 Native 빌드는 추가하지 않습니다.

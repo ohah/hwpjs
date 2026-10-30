@@ -42,6 +42,22 @@ jobs:
           test -f ./tools/build-packages.mjs || exit 1
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: 표 삽입 공개 명령 모델 검사
+        run: |
+          test -f ./packages/core/tests/commands/table-insert.test.ts || exit 1
+          bun test --no-install ./packages/core/tests/commands/table-insert.test.ts
+      - name: 표 삽입 명시 Native 통합 검사
+        run: |
+          test -f ./packages/core/integration/commands/table-insert.test.ts || exit 1
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+          test -f "$HWPJS_TEST_WASM" || exit 1
+          export HWPJS_TEST_WASM_EXPECTED_SHA256="$(bun -e 'const m=JSON.parse(await Bun.file("packages/core/dist/build-manifest.json").text());const s=m.files?.["hwpjs.wasm"];if(typeof s!=="string"||!/^[a-f0-9]{64}$/.test(s))throw Error("WasmManifestPinMissing");console.log(s)')"
+          export TABLE_FIXTURE_ROOT="$PWD/legacy/rust/crates/hwp-core/tests/fixtures"
+          export TABLE_INSERT_OUTPUT="$RUNNER_TEMP/table-insert-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$TABLE_INSERT_OUTPUT" || exit 1
+          mkdir "$TABLE_INSERT_OUTPUT"
+          bun test --no-install ./packages/core/integration/commands/table-insert.test.ts
       - name: Test paragraph formatting dialogs
         run: |
           set -- \
