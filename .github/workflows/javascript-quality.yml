@@ -83,6 +83,10 @@ jobs:
             ./tests/hwp5/note-selection-owner.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
+      - name: Test delegated context menu composition lifetime
+        run: |
+          test -f ./tests/hwpx/document-context-menu-composition.test.mjs || exit 1
+          node --test ./tests/hwpx/document-context-menu-composition.test.mjs
       - name: Test footnote continuation and ordering
         run: |
           set -- \

@@ -54,6 +54,13 @@ export function createDocumentContextMenu({
   let closed = false,
     previous = null,
     rendering = false;
+  const composingTargets = new Set();
+  const hasComposition = () => {
+    // Detached inputs may never emit compositionend/blur. Unknown connectivity stays guarded.
+    for (const owner of composingTargets)
+      if (owner?.isConnected === false) composingTargets.delete(owner);
+    return composingTargets.size > 0;
+  };
   const rows = () => registry.commands().filter((command) => commandIds.includes(command.id));
   const enabled = () => [...menu.children].filter((node) => !node.disabled);
   const finish = (restore = false) => {
@@ -126,6 +133,29 @@ export function createDocumentContextMenu({
     registry.execute(id);
   };
   for (const target of targets) {
+    target.addEventListener(
+      'compositionstart',
+      (event) => {
+        composingTargets.add(event.target);
+        finish(false);
+      },
+      { signal: events.signal },
+    );
+    target.addEventListener(
+      'compositionend',
+      (event) => {
+        composingTargets.delete(event.target);
+      },
+      { signal: events.signal },
+    );
+    // blur does not bubble: delegated textarea ownership must be cleared in capture.
+    target.addEventListener(
+      'blur',
+      (event) => {
+        composingTargets.delete(event.target);
+      },
+      { capture: true, signal: events.signal },
+    );
     // Native right-button focus runs before contextmenu. Keep the existing
     // editor selection/focus rather than remembering a newly focused Canvas.
     target.addEventListener(
@@ -134,6 +164,7 @@ export function createDocumentContextMenu({
         if (
           !closed &&
           !event.defaultPrevented &&
+          !hasComposition() &&
           event.button === 2 &&
           event.pointerType !== 'touch' &&
           target.disabled !== true &&
@@ -146,7 +177,13 @@ export function createDocumentContextMenu({
     target.addEventListener(
       'contextmenu',
       (event) => {
-        if (event.defaultPrevented || event.isComposing || target.disabled === true) return;
+        if (
+          hasComposition() ||
+          event.defaultPrevented ||
+          event.isComposing ||
+          target.disabled === true
+        )
+          return;
         const box = target.getBoundingClientRect();
         const keyboard = event.button === 0 && event.clientX === 0 && event.clientY === 0;
         if (open(keyboard ? box.left + 8 : event.clientX, keyboard ? box.top + 8 : event.clientY))
@@ -159,6 +196,7 @@ export function createDocumentContextMenu({
       (event) => {
         if (
           event.defaultPrevented ||
+          hasComposition() ||
           event.isComposing ||
           event.keyCode === 229 ||
           event.repeat ||
@@ -192,6 +230,7 @@ export function createDocumentContextMenu({
     (event) => {
       if (
         menu.hidden ||
+        hasComposition() ||
         event.defaultPrevented ||
         event.isComposing ||
         event.keyCode === 229 ||
@@ -258,6 +297,7 @@ export function createDocumentContextMenu({
       finish(true);
       closed = true;
       events.abort();
+      composingTargets.clear();
       unsubscribe();
       menu.remove();
       style.remove();
