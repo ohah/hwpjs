@@ -1,3 +1,4 @@
+import type { RuntimeProjectionPreference } from './internal/runtime-admission.ts';
 import { bindRuntimeAdmission } from './internal/runtime-admission.ts';
 import { createNativeWorkerWitness } from './internal/native-worker-origin.ts';
 import type {
@@ -159,7 +160,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
   const send = (
     message: unknown,
     admission?: () => void,
-    projection = false,
+    projection: RuntimeProjectionPreference = false,
   ): Promise<RuntimeReply> =>
     new Promise((resolve, reject) => {
       if (closed) {
@@ -173,7 +174,11 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
         worker!.postMessage({
           id,
           message,
-          ...(projection ? { viewProjection: 'owner-window-v1' } : {}),
+          ...(projection === true
+            ? { viewProjection: 'owner-window-v1' }
+            : projection && typeof projection === 'object'
+              ? { viewProjection: projection }
+              : {}),
         });
       } catch (error) {
         pending.delete(id);
@@ -200,8 +205,14 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     message: RuntimeMessage,
     context?: RuntimeRequestContext,
     admission?: () => void,
-    projection = false,
+    projection: RuntimeProjectionPreference = false,
   ) {
+    let ownedProjection: RuntimeProjectionPreference = false;
+    try {
+      ownedProjection = copyOwned(projection);
+    } catch {
+      /* malformed hint keeps full reply */
+    }
     const owned = copyOwned(message),
       captured = context ? { ...context } : undefined,
       kind = owned.kind;
@@ -209,7 +220,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     const raw = await send(
       owned,
       admission,
-      projection && allowsOwnerWindowProjection(contract) && valid(),
+      allowsOwnerWindowProjection(contract) && valid() ? ownedProjection : false,
     );
     const reply = ownObservation({
       ...raw,

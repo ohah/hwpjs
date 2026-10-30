@@ -1,3 +1,4 @@
+import { decodeCharacterRanges } from './character-shapes-wire.mjs';
 const uint = (x) => Number.isSafeInteger(x) && x >= 0 && x < 0xffffffff;
 const epoch = (x) =>
   typeof x === 'string' && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 0xffffffffffffffffn;
@@ -127,6 +128,69 @@ export function createHwp5ExclusiveTextApi({
       if (reference?.kind !== 'original') return null;
       const w = decodeHwp5TextWindow(window(reference, 0, 0));
       return { section, paragraph, reference, window: w };
+    },
+    readCurrentOwnerWindow(section, paragraph) {
+      check();
+      if (
+        typeof wasm.hwp5_edit_copy_current_text_window !== 'function' ||
+        typeof wasm.hwp5_edit_character_ranges !== 'function'
+      )
+        return null;
+      const captured = this.captureExclusiveTextOwner(section, paragraph);
+      if (!captured || captured.window.totalUnits < 2 || captured.window.totalUnits > 4096)
+        return null;
+      const reference = captured.reference;
+      const w = decodeHwp5TextWindow(window(reference, 0, captured.window.totalUnits));
+      if (
+        w.epoch !== captured.window.epoch ||
+        w.sourceNode !== captured.window.sourceNode ||
+        w.parentNode !== captured.window.parentNode ||
+        w.section !== section ||
+        w.totalUnits !== captured.window.totalUnits ||
+        w.startUnit !== 0 ||
+        w.endUnit !== w.totalUnits ||
+        w.text.length !== w.totalUnits ||
+        w.text.at(-1) !== '\r' ||
+        !w.text.isWellFormed() ||
+        Array.from(w.text.slice(0, -1)).some((c) => c.charCodeAt(0) < 32 || c === '\ufffc')
+      )
+        bad();
+      const raw = decodeCharacterRanges(
+        output(() => wasm.hwp5_edit_character_ranges(section, paragraph)),
+      );
+      if (!raw.length || raw.length > 4096) bad();
+      const characterRanges = [];
+      const length = w.text.length - 1;
+      let cursor = 0;
+      for (const range of raw) {
+        if (
+          range.start !== cursor ||
+          range.end < range.start ||
+          range.end > w.totalUnits ||
+          !uint(range.charShapeId)
+        )
+          bad();
+        cursor = range.end;
+        const start = Math.min(length, range.start),
+          end = Math.min(length, range.end),
+          charShapeId = range.charShapeId;
+        if (start === end) {
+          if (start === length) characterRanges.push({ start, end, charShapeId });
+          continue;
+        }
+        const last = characterRanges.at(-1);
+        if (last?.charShapeId === charShapeId) last.end = end;
+        else characterRanges.push({ start, end, charShapeId });
+      }
+      if (cursor !== w.totalUnits) bad();
+      const final = currentSourceReferences(section, { first: paragraph, count: 1 }).references[0];
+      if (
+        !final ||
+        Object.keys(reference).some((k) => final[k] !== reference[k]) ||
+        Object.keys(final).length !== Object.keys(reference).length
+      )
+        bad();
+      return { reference, window: w, characterRanges };
     },
     readExclusiveTextDelta(before) {
       check();

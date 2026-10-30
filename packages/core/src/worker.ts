@@ -1,3 +1,4 @@
+import type { RuntimeProjectionPreference } from './internal/runtime-admission.ts';
 import { createWorkerReaderDataRuntime } from './internal/worker-reader-data-runtime.ts';
 import { workerResourceReply } from './internal/worker-resource-reply.ts';
 import type { RuntimeMessage } from './contracts.ts';
@@ -27,7 +28,14 @@ scope.onmessage = (event) => {
         const outgoing = workerResourceReply(
           id,
           message.kind,
-          await runtime.request(message as RuntimeMessage, viewProjection === 'owner-window-v1'),
+          await runtime.request(
+            message as RuntimeMessage,
+            viewProjection === 'owner-window-v1'
+              ? true
+              : typeof viewProjection === 'object' && viewProjection?.kind === 'history-window-v1'
+                ? (viewProjection as RuntimeProjectionPreference)
+                : false,
+          ),
         );
         if (outgoing.transfer) scope.postMessage(outgoing.envelope, outgoing.transfer);
         else scope.postMessage(outgoing.envelope);

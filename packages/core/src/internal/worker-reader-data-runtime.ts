@@ -1,3 +1,4 @@
+import type { RuntimeProjectionPreference } from './runtime-admission.ts';
 import { createReaderRuntime } from '../../../../web/preview/reader-runtime.mjs';
 import { ownObservation } from '../state/owned.ts';
 import type { RuntimeMessage, RuntimeReply } from '../contracts.ts';
@@ -9,7 +10,10 @@ export function createWorkerReaderDataRuntime(options: {
 }) {
   const backend = createReaderRuntime(options);
   return {
-    async request(message: RuntimeMessage, ownerWindowProjection = false): Promise<RuntimeReply> {
+    async request(
+      message: RuntimeMessage,
+      ownerWindowProjection: RuntimeProjectionPreference = false,
+    ): Promise<RuntimeReply> {
       const raw = await backend.request(message, undefined, ownerWindowProjection);
       return ownObservation({ ...raw, meta: backend.outcome(raw) })() as RuntimeReply;
     },

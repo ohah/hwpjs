@@ -455,6 +455,27 @@ export function createPrivateHistoryEdges(options: {
     recordVerifiedTextEdge(proof: unknown) {
       return ingress(false, () => recordVerifiedTextEdge(proof));
     },
+    // Read plan only: never consumes an ACK, advances a cursor or grants authority.
+    hint(kind: 'undo' | 'redo', ticket: HistoryCapture | undefined) {
+      if (ingressActive || !enabled() || !ticket || ticket !== capture) return null;
+      let selected: Edge | undefined;
+      if (kind === 'undo') selected = edges.get(currentRevision!);
+      else if (kind === 'redo') {
+        for (const edge of edges.values())
+          if (edge.parentRevision === currentRevision) {
+            if (selected) return null;
+            selected = edge;
+          }
+      }
+      if (!selected) return null;
+      return Object.freeze({
+        from: currentRevision!,
+        to: kind === 'undo' ? selected.parentRevision : selected.childRevision,
+        owner: selected.owner,
+        edgeToken: selected.edgeToken,
+        generation,
+      });
+    },
     lookup(query: HistoryQuery, proof: unknown): HistoryLookup | null {
       return ingress<HistoryLookup | null>(null, () => lookup(query, proof));
     },

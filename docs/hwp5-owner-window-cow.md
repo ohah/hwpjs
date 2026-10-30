@@ -10,9 +10,11 @@
 | 내부 canonical runtime admission | 적격 요청에 한해 owner-window-v1 전달 선호를 envelope로 전송 |
 | core EditorState.content | 검증된 COW 결과로 전체 문단·자원 관측을 유지. 부분 packet을 전체 문서로 위장하지 않음 |
 | 호환 CommandResult.reply | 부분 mutation reply를 설치된 전체 content로 교체한 full DTO. 공개 반환의 소유 복사 비용도 남음 |
-| undo/redo 및 미지원 작업 | full Native display 유지. controller의 history-text 파생을 Native thin history 응답으로 오해하지 않음 |
+| COW07/08의 undo/redo 및 미지원 작업 | full Native display 유지. controller의 history-text 파생을 Native thin history 응답으로 오해하지 않음 |
 
 내부 선호는 권위가 아닙니다. canonical runtime의 descriptor·admission, 실제 main module contract와 검증된 Worker code/witness를 통과해야 하며 core는 전후 context·sequence·revision·epoch·reference scope·receipt/window를 다시 대조합니다. custom workerFactory/workerURL, 변조된 request/dispose descriptor, unknown module/code/platform 및 임의 JSON receipt는 projection 권위를 얻지 못하고 full 경로를 사용합니다. Worker에 전송한 Module의 local WeakMap 미등록을 별도 brand 발급으로 우회하지 않습니다. Worker helper는 데이터 전달과 소유 관측만 담당하며 main의 실제 응답/기존 origin 검증을 대신하지 않습니다.
+
+후속 [HWP5 history owner-window 계약](hwp5-history-owner-window.md)은 실제 undo/redo 뒤 fresh Native 관측을 읽는 candidate03 계약입니다. source03 실제13·pure147과 품질/strict를 연결하되 COW07/08의 undo full·기존 브라우저 결과는 해당 세대의 근거로 보존합니다. 새 history03의 SDK·small4 예비값·진행 중 full16은 source 검증과 별도입니다.
 
 ## exact d849와 bounded eligible subset
 

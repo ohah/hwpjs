@@ -11,11 +11,13 @@ node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=50000 \
   ./tools/tests/hwp5-native-text-reuse.test.mjs \
   ./tools/tests/hwp5-worker-cow-regression.test.mjs \
   ./tools/tests/hwp5-worker-public-full.test.mjs \
+  ./tools/tests/hwp5-worker-history-window.test.mjs \
+  ./tools/tests/hwp5-runtime-reply-shape.test.mjs \
   ./tools/tests/worker-cow-source-contract.test.mjs
+bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.history-owner-window.json
 ```
 
-Native 편집·이력8개와 Worker 데이터·fallback·수명 및 소스계약14개입니다. Node Worker 검사를 Chrome의 실제 권위 경로·UI 지연·배포 성공으로 대체하지 않습니다.
-
+Native 편집·이력8개, Worker 데이터·fallback·수명 및 공개 음성17개, 소스계약·응답 shape 음성7개로 총32개입니다. [history owner-window](hwp5-history-owner-window.md)의 metadata edge·실제 Native 조회·공개 full 응답 경계와 companion 타입도 확인합니다. Node Worker 검사를 Chrome의 실제 권위 경로·UI 지연·배포 성공으로 대체하지 않습니다.
 
 ## 불변 관측과 Worker 세대 집중 검사
 

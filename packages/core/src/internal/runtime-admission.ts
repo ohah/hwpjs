@@ -5,11 +5,26 @@ import type {
   RuntimeRequestContext,
 } from '../contracts.ts';
 import { canonicalRuntimeDescriptors } from './native-runtime-origin.ts';
+export type RuntimeProjectionPreference =
+  | boolean
+  | Readonly<{
+      kind: 'history-window-v1';
+      operation: 'undo' | 'redo';
+      beforeRevision: number;
+      expectedRevision: number;
+      beforeEpoch: string;
+      owner: Readonly<{
+        section: number;
+        paragraph: number;
+        sourceNode: number;
+        parentNode: number | null;
+      }>;
+    }>;
 type Request = (
   message: RuntimeMessage,
   context: RuntimeRequestContext,
   admission: () => void,
-  projection?: boolean,
+  projection?: RuntimeProjectionPreference,
 ) => Promise<RuntimeReply>;
 type Port = { valid: () => boolean; request: Request };
 const ports = new WeakMap<object, Port>();
@@ -48,7 +63,7 @@ export function requestAtRuntimeAdmission(
   message: RuntimeMessage,
   context: RuntimeRequestContext,
   guard: () => void,
-  projection = false,
+  projection: RuntimeProjectionPreference = false,
 ): Promise<RuntimeReply> {
   const port = ports.get(runtime);
   const admission = () => {

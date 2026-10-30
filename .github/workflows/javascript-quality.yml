@@ -42,7 +42,7 @@ jobs:
             ./tests/hwpx/picture-resources-settled.test.mjs \
             ./apps/demo/tests/surface-environment.test.ts
       - name: Test real HWP5 text reuse and history
-        timeout-minutes: 1
+        timeout-minutes: 2
         env:
           HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
           HWPJS_TEST_NOORI: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwp
@@ -51,7 +51,11 @@ jobs:
             ./tools/tests/hwp5-native-text-reuse.test.mjs \
             ./tools/tests/hwp5-worker-cow-regression.test.mjs \
             ./tools/tests/hwp5-worker-public-full.test.mjs \
+            ./tools/tests/hwp5-worker-history-window.test.mjs \
+            ./tools/tests/hwp5-runtime-reply-shape.test.mjs \
             ./tools/tests/worker-cow-source-contract.test.mjs
+      - name: Check private projection companion types
+        run: bunx --no-install tsc --noEmit -p ./tools/tests/tsconfig.history-owner-window.json
       - name: Test WASM loader buffer ownership
         run: node --test ./packages/core/tests/runtime/wasm-module-loader-owned-input.test.ts
       - name: Test versioned demo Worker assets

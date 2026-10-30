@@ -1,3 +1,8 @@
+import {
+  assertReplyShape,
+  assertHistoryPacket,
+  assertSplicePacket,
+} from './hwp5-runtime-reply-shape.mjs';
 import assert from 'node:assert/strict';
 import { readFileSync, lstatSync, realpathSync } from 'node:fs';
 import { isAbsolute, join, parse } from 'node:path';
@@ -60,7 +65,22 @@ export function channel() {
       clearTimeout(p.timer);
       if (!p.raw) p.reject(Error('MissingWorkerReply'));
       else if (p.raw.transportError) p.reject(Error(p.raw.transportError));
-      else p.resolve(p.raw.reply);
+      else {
+        try {
+          const r = p.raw.reply;
+          if (!['initialize-runtime', 'load'].includes(p.kind)) {
+            if (r?.content?.viewKind === 'history-owner-window') assertHistoryPacket(r, p.kind);
+            else if (r?.content?.viewKind === 'owner-window-patch') assertSplicePacket(r);
+            else
+              assertReplyShape(r, p.kind, {
+                full: ['enable', 'refresh', 'splice', 'undo', 'redo'].includes(p.kind),
+              });
+          }
+          p.resolve(r);
+        } catch (error) {
+          p.reject(error);
+        }
+      }
     } else p.raw = v;
   });
   w.on('error', rejectAll);
@@ -80,7 +100,7 @@ export function channel() {
             pending.delete(id);
             reject(Error('WorkerRequestTimeout'));
           }, 10000);
-        pending.set(id, { resolve, reject, timer });
+        pending.set(id, { resolve, reject, timer, kind: message.kind });
         w.postMessage({ id, message, ...(viewProjection ? { viewProjection } : {}) });
       });
     },

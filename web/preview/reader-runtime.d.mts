@@ -1,3 +1,4 @@
+import type { RuntimeProjectionPreference } from '../../packages/core/src/internal/runtime-admission.ts';
 import type { RuntimeMessage, RuntimeReply } from '../../packages/core/src/contracts.ts';
 /** 기존 JavaScript 전송 경계의 타입이며 Native 검증 증거가 아닙니다. */
 export interface ReaderRuntimeOptions {
@@ -10,7 +11,7 @@ export function createReaderRuntime(options?: ReaderRuntimeOptions): {
   request(
     message: RuntimeMessage,
     admission?: () => void,
-    ownerWindowProjection?: boolean,
+    ownerWindowProjection?: RuntimeProjectionPreference,
   ): Promise<RuntimeReply>;
   outcome(reply: RuntimeReply): NonNullable<RuntimeReply['meta']>;
   dispose(): Promise<void>;

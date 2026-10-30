@@ -779,6 +779,16 @@ export function createEditor(options: CreateEditorOptions) {
       const historyCapture = geometry.captureHistory(state, message.kind);
       const exclusiveCapture = geometry.captureExclusive(state);
       const priorProjection = exclusiveCapture?.projection;
+      const historyProjection = geometry.historyWindowHint(state, historyCapture);
+      const projectionPreference =
+        historyProjection &&
+        isPlainOwnerBaseline(
+          state.content,
+          historyProjection.owner.section,
+          historyProjection.owner.paragraph,
+        )
+          ? historyProjection
+          : undefined;
       const projectionRequested =
         ['splice', 'splice-current'].includes(message.kind) &&
         !!priorProjection &&
@@ -788,13 +798,14 @@ export function createEditor(options: CreateEditorOptions) {
       // Once request() begins, an exception cannot prove that Native did not apply.
       try {
         reply =
-          admissionGuard || (projectionRequested && hasRuntimeAdmission(active!))
+          admissionGuard ||
+          ((projectionRequested || projectionPreference) && hasRuntimeAdmission(active!))
             ? await requestAtRuntimeAdmission(
                 active!,
                 message,
                 ctx,
                 admissionGuard ?? (() => {}),
-                projectionRequested,
+                projectionPreference ?? projectionRequested,
               )
             : await active!.request(message, ctx);
         verifyReply(reply, ctx);
@@ -867,6 +878,20 @@ export function createEditor(options: CreateEditorOptions) {
         const mutationReply = reply;
         let origin = takeGeometryOrigin(active!, reply, ctx);
         let merged: any;
+        if ((reply.content as any)?.viewKind === 'history-owner-window') {
+          requireReady(token);
+          merged = geometry.mergeHistoryWindow(state, reply.content, origin, historyCapture, reply);
+          if (!merged) {
+            geometry.invalidate();
+            // The history mutation already ran once. Only read the actual full Native view.
+            reply = await active!.request({ kind: 'refresh' }, ctx);
+            verifyReply(reply, ctx);
+            requireReady(token);
+            if (reply.error || !reply.content || (reply.content as any).viewKind)
+              throw Error('HistoryWindowFallbackFailed');
+            origin = takeGeometryOrigin(active!, reply, ctx);
+          }
+        }
         if ((reply.content as any)?.viewKind === 'owner-window-patch') {
           requireReady(token);
           if (priorProjection && origin)
@@ -922,7 +947,11 @@ export function createEditor(options: CreateEditorOptions) {
           { kind: message.kind, capture: historyCapture },
         );
         // Canonical origin was consumed from raw reply once. Compatibility receives full DTO.
-        if ((mutationReply.content as any)?.viewKind === 'owner-window-patch') {
+        if (
+          ['owner-window-patch', 'history-owner-window'].includes(
+            (mutationReply.content as any)?.viewKind,
+          )
+        ) {
           reply = {
             ...mutationReply,
             content: state.content,

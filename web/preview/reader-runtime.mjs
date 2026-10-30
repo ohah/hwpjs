@@ -2390,8 +2390,85 @@ export function createReaderRuntime({
         });
       } else if (message.kind === 'undo' || message.kind === 'redo') {
         if (!editor) throw new Error('EditorNotOpen');
+        let historyHint = null,
+          beforeOwner = null,
+          beforeRevision;
+        if (
+          format === 'hwp5' &&
+          historyEnabled &&
+          ownerWindowProjection &&
+          typeof ownerWindowProjection === 'object'
+        ) {
+          try {
+            const h = ownerWindowProjection,
+              o = h.owner;
+            const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n < 0xffffffff;
+            if (
+              h.kind === 'history-window-v1' &&
+              h.operation === message.kind &&
+              uint(h.beforeRevision) &&
+              uint(h.expectedRevision) &&
+              typeof h.beforeEpoch === 'string' &&
+              /^[1-9][0-9]{0,19}$/.test(h.beforeEpoch) &&
+              o &&
+              [o.section, o.paragraph, o.sourceNode].every(uint) &&
+              (o.parentNode === null || uint(o.parentNode))
+            ) {
+              const actual = editor.historyRevision();
+              const captured = editor.captureExclusiveTextOwner(o.section, o.paragraph);
+              if (
+                actual === h.beforeRevision &&
+                captured?.window.epoch === h.beforeEpoch &&
+                captured.window.sourceNode === o.sourceNode &&
+                captured.window.parentNode === o.parentNode
+              ) {
+                historyHint = h;
+                beforeOwner = captured;
+                beforeRevision = actual;
+              }
+            }
+          } catch {
+            /* Optional metadata read failure keeps existing full Native view. */
+          }
+        }
         const changed = message.kind === 'undo' ? editor.undo() : editor.redo();
         applied = changed;
+        if (changed && historyHint) {
+          try {
+            const o = historyHint.owner,
+              revision = editor.historyRevision();
+            const fresh =
+              revision === historyHint.expectedRevision
+                ? editor.readCurrentOwnerWindow(o.section, o.paragraph)
+                : null;
+            if (
+              fresh &&
+              fresh.window.sourceNode === o.sourceNode &&
+              fresh.window.parentNode === o.parentNode &&
+              BigInt(fresh.window.epoch) > BigInt(beforeOwner.window.epoch)
+            ) {
+              hwp5PreviewDirty = true;
+              reply({
+                kind: message.kind,
+                changed,
+                content: {
+                  viewKind: 'history-owner-window',
+                  version: 1,
+                  operation: message.kind,
+                  beforeRevision,
+                  revision,
+                  beforeEpoch: beforeOwner.window.epoch,
+                  epoch: fresh.window.epoch,
+                  owner: { ...o },
+                  ...fresh,
+                },
+              });
+              return;
+            }
+          } catch {
+            /* Read-only full fallback below never repeats undo/redo. */
+          }
+        }
         if (format === 'hwpx') {
           reader = await createHwpxReader(module);
           preview = reader.readTextEvents(editor.saveForDisplay());

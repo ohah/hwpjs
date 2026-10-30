@@ -1,3 +1,4 @@
+import type { RuntimeProjectionPreference } from '../internal/runtime-admission.ts';
 import { bindRuntimeAdmission } from '../internal/runtime-admission.ts';
 import type {
   EditorRuntime,
@@ -7,7 +8,7 @@ import type {
   RuntimeReply,
 } from '../contracts.ts';
 import { createReaderRuntime } from '../../../../web/preview/reader-runtime.mjs';
-import { ownObservation } from '../state/owned.ts';
+import { copyOwned, ownObservation } from '../state/owned.ts';
 import { readKnownNativeModule } from '../wasm-module-loader.ts';
 import {
   bindNativeRuntimeOrigin,
@@ -70,14 +71,20 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
     message: RuntimeMessage,
     context?: RuntimeRequestContext,
     admission?: () => void,
-    projection = false,
+    projection: RuntimeProjectionPreference = false,
   ) {
+    let ownedProjection: RuntimeProjectionPreference = false;
+    try {
+      ownedProjection = copyOwned(projection);
+    } catch {
+      /* malformed hint keeps full reply */
+    }
     const captured = context ? { ...context } : undefined,
       kind = message.kind;
     const raw = await backend.request(
       message,
       admission,
-      projection && allowsOwnerWindowProjection(contract) && valid(),
+      allowsOwnerWindowProjection(contract) && valid() ? ownedProjection : false,
     );
     const reply = ownObservation({
       ...raw,

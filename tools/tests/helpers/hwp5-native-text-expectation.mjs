@@ -1,3 +1,4 @@
+import { assertContentShape } from './hwp5-runtime-reply-shape.mjs';
 import assert from 'node:assert/strict';
 // Test-owned data only: never assign these clones to a runtime/cache or issue evidence.
 export function cloneData(value) {
@@ -57,6 +58,7 @@ export function insertExpected(before, paragraph, at, text) {
   return expected;
 }
 export function assertFullSnapshot(actual, expected, before) {
+  for (const v of [actual, expected, before]) assertContentShape(v, true);
   assert.equal(actual.format, 'hwp5');
   assert.equal(actual.limited, false);
   assert.equal(actual.paragraphs.length, 65);

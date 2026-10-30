@@ -12,7 +12,7 @@ export function allowsOwnerWindowProjection(contract: NativeModuleContract | und
   );
 }
 export type NativeRuntimeOrigin = Readonly<{
-  kind: 'full-baseline' | 'exclusive-text';
+  kind: 'full-baseline' | 'exclusive-text' | 'history-window';
   context: RuntimeRequestContext;
   sequence: number;
   referenceScope: string;
@@ -23,6 +23,7 @@ export type NativeRuntimeOrigin = Readonly<{
   owner: GeometryOwner | null;
   fullSnapshotDelta?: unknown;
   ownerWindowDelta?: unknown;
+  historyWindowDelta?: unknown;
   authority: () => boolean;
 }>;
 const uint = (n: unknown) => Number.isSafeInteger(n) && Number(n) >= 0 && Number(n) < 0xffffffff;
@@ -58,6 +59,57 @@ export function nativeOrigin(
   if (!contract || !context || !authority() || reply.error || !uint(reply.historyRevision)) return;
   const ctx = Object.freeze({ ...context });
   const content = reply.content as any;
+  if (content?.viewKind === 'history-owner-window') {
+    const p = content,
+      w = p.window,
+      r = p.reference,
+      o = p.owner;
+    if (
+      !allowsOwnerWindowProjection(contract) ||
+      !['undo', 'redo'].includes(kind) ||
+      p.version !== 1 ||
+      p.operation !== kind ||
+      reply.changed !== true ||
+      reply.meta?.application !== 'applied' ||
+      reply.meta?.changed !== true ||
+      !uint(p.beforeRevision) ||
+      p.beforeRevision === p.revision ||
+      p.revision !== reply.historyRevision ||
+      !epoch(p.beforeEpoch) ||
+      !epoch(p.epoch) ||
+      BigInt(p.epoch) <= BigInt(p.beforeEpoch) ||
+      !o ||
+      !uint(o.section) ||
+      !uint(o.paragraph) ||
+      !uint(o.sourceNode) ||
+      (o.parentNode !== null && !uint(o.parentNode)) ||
+      !r ||
+      r.kind !== 'original' ||
+      typeof r.scope !== 'string' ||
+      !r.scope ||
+      r.epoch !== p.epoch ||
+      r.section !== o.section ||
+      r.id !== String(o.sourceNode) ||
+      w?.epoch !== p.epoch ||
+      w.section !== o.section ||
+      w.sourceNode !== o.sourceNode ||
+      w.parentNode !== o.parentNode
+    )
+      return;
+    return Object.freeze({
+      kind: 'history-window',
+      context: ctx,
+      sequence,
+      referenceScope: r.scope,
+      nativeEpoch: p.epoch,
+      nativeRevision: p.revision,
+      beforeEpoch: p.beforeEpoch,
+      beforeRevision: p.beforeRevision,
+      owner: Object.freeze({ ...o }),
+      historyWindowDelta: content,
+      authority,
+    });
+  }
   if (content?.viewKind === 'owner-window-patch') {
     const r = content.receipt,
       w = content.window,

@@ -115,7 +115,7 @@ async function session(paragraph = 15, mode = 'registered') {
           state.content,
           'command reply keeps the complete owned view',
         );
-        if (mode === 'registered' && message.kind === 'splice' && kind === 'exclusive-text') {
+        if (mode === 'registered' && (kind === 'exclusive-text' || kind === 'history-text')) {
           assert.equal(
             state.content.characterShapes,
             before.content.characterShapes,
@@ -139,6 +139,12 @@ async function session(paragraph = 15, mode = 'registered') {
           'old capsule revoked',
         );
         assert.equal(projection.evidence.kind, kind);
+        if (kind !== 'full-baseline')
+          assert.equal(
+            projection.evidence.scope,
+            prior.evidence.scope,
+            'continuous evidence scope',
+          );
         const scope = deps.prepare(projection.content, projection.evidence, host);
         assert(scope);
         if (kind === 'full-baseline') {
@@ -203,7 +209,7 @@ for (const p of [4, 15, 18])
     }
   });
 for (const overflow of [false, true])
-  test(`Noori15: 40 type / 40 undo / ${overflow ? 'overflow' : 'branch'} no-op / rs recovery`, async () => {
+  test(`Noori15: 40 type / 40 undo / 40 redo / ${overflow ? 'overflow' : 'branch'} no-op / rs recovery`, async () => {
     const s = await session();
     try {
       const expected = [s.original];
@@ -211,6 +217,12 @@ for (const overflow of [false, true])
         expected.push(insertExpected(expected.at(-1), 15, i, 'x'));
         await s.step(splice(15, i, 'x'), expected.at(-1), 'exclusive-text');
       }
+      for (let i = 39; i >= 0; i--) await s.step({ kind: 'undo' }, expected[i], 'history-text');
+      assert.equal(row(s.content, 15).text, row(s.original, 15).text);
+      // All 120 steps use the original-derived expectation stack, never reply text.
+      for (let i = 1; i <= 40; i++) await s.step({ kind: 'redo' }, expected[i], 'history-text');
+      assert.equal(row(s.content, 15).text, row(expected[40], 15).text);
+      // Restore the exact branch/overflow precondition; retain original negative expectations.
       for (let i = 39; i >= 0; i--) await s.step({ kind: 'undo' }, expected[i], 'history-text');
       assert.equal(row(s.content, 15).text, row(s.original, 15).text);
       let before = s.original,
@@ -248,6 +260,8 @@ test('save / new Reader reopen: before-derived expected text and core fields', a
     let expected = s.original;
     expected = insertExpected(expected, 15, 0, '가');
     await s.step(splice(15, 0, '가'), expected, 'exclusive-text');
+    await s.step({ kind: 'undo' }, s.original, 'history-text');
+    await s.step({ kind: 'redo' }, expected, 'history-text');
     const saved = await s.e.save({ allowStaleLayout: true });
     assert(saved.bytes instanceof Uint8Array);
     reopened = createEditor({

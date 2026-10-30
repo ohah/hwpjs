@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": [],
+    "skipLibCheck": false
+  },
+  "files": [
+    "../../packages/core/src/editor/create-editor.ts",
+    "../../packages/core/src/runtime/reader-runtime.ts",
+    "../../packages/core/src/worker-runtime.ts",
+    "../../packages/core/src/worker.ts",
+    "../../packages/core/src/internal/history-owner-window.ts",
+    "./history-owner-window-companion.ts"
+  ],
+  "include": []
+}

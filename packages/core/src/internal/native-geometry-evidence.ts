@@ -1,3 +1,4 @@
+import { mergeHistoryOwnerWindow } from './history-owner-window.ts';
 import { createPrivateHistoryEdges } from './private-history-edges.ts';
 import { validateHistoryTextSnapshots } from './history-text-snapshot.ts';
 import { validateFullSnapshotTextDelta } from './full-snapshot-text-delta.ts';
@@ -82,6 +83,7 @@ export function createGeometryEvidenceController() {
   const states = new WeakMap<EditorState, StateRecord>();
   const proofs = new WeakMap<object, { op: string; metadata: any }>();
   const captures = new WeakMap<object, any>();
+  const historyMerges = new WeakMap<object, any>();
   const edges = createPrivateHistoryEdges({
     readValidated: (proof, op) => {
       if (!proof || typeof proof !== 'object') return;
@@ -106,6 +108,7 @@ export function createGeometryEvidenceController() {
     const p = Object.freeze({});
     captures.set(p, {
       capture: c,
+      hint: edges.hint(kind as 'undo' | 'redo', c),
       scope: e.scope,
       lease: e.resourceLease,
       revision: e.nativeRevision,
@@ -157,13 +160,42 @@ export function createGeometryEvidenceController() {
     });
     let lease: object | undefined = undefined,
       generation = 0;
-    let evidenceKind: NativeGeometryEvidence['kind'] = origin.kind,
+    let evidenceKind: NativeGeometryEvidence['kind'] =
+        origin.kind === 'history-window' ? 'full-baseline' : origin.kind,
       owner = origin.owner,
       beforeEpoch = origin.beforeEpoch,
       beforeRevision = origin.beforeRevision;
     let historyReuse = false;
     const priorRecord = states.get(before),
       priorEvidence = priorRecord?.projection.evidence;
+    if (origin.kind === 'history-window') {
+      const merged = historyMerges.get(origin);
+      historyMerges.delete(origin);
+      if (
+        !merged ||
+        merged.before !== before ||
+        merged.content !== next.content ||
+        merged.capture !== transition?.capture ||
+        !priorEvidence ||
+        !read(before) ||
+        origin.context.operationRevision !== before.operationRevision ||
+        next.operationRevision <= before.operationRevision ||
+        next.viewRevision !== before.viewRevision + 1 ||
+        origin.nativeRevision !== next.nativeHistoryRevision ||
+        merged.serial !== current.serial
+      ) {
+        invalidate();
+        return;
+      }
+      historyReuse = true;
+      scope = priorEvidence.scope;
+      lease = priorEvidence.resourceLease;
+      generation = priorEvidence.ownerTextRunGeneration + 1;
+      owner = merged.owner;
+      evidenceKind = 'history-text';
+      beforeEpoch = priorEvidence.nativeEpoch;
+      beforeRevision = priorEvidence.nativeRevision;
+    }
     if (
       origin.kind === 'full-baseline' &&
       transition &&
@@ -390,6 +422,123 @@ export function createGeometryEvidenceController() {
     invalidate,
     read,
     captureHistory,
+    historyWindowHint(state: EditorState, capture: object | undefined) {
+      const c = capture && captures.get(capture);
+      const r = states.get(state),
+        e = r?.projection.evidence,
+        h = c?.hint;
+      if (
+        !c ||
+        !h ||
+        !r ||
+        !e ||
+        !read(state) ||
+        c.serial !== current.serial ||
+        c.sequence !== r.sequence ||
+        c.revision !== e.nativeRevision ||
+        c.epoch !== e.nativeEpoch ||
+        c.scope !== e.scope ||
+        c.lease !== e.resourceLease ||
+        c.operationRevision !== state.operationRevision
+      )
+        return;
+      return Object.freeze({
+        kind: 'history-window-v1' as const,
+        operation: c.kind as 'undo' | 'redo',
+        beforeRevision: h.from,
+        expectedRevision: h.to,
+        beforeEpoch: c.epoch,
+        owner: h.owner,
+      });
+    },
+    mergeHistoryWindow(
+      state: EditorState,
+      packet: any,
+      origin: NativeRuntimeOrigin | undefined,
+      capture: object | undefined,
+      ack: { historyRevisions?: readonly number[]; historyStats?: any },
+    ) {
+      const c = capture && captures.get(capture),
+        r = states.get(state),
+        e = r?.projection.evidence;
+      if (capture) captures.delete(capture);
+      if (
+        !c ||
+        !c.hint ||
+        !r ||
+        !e ||
+        !origin ||
+        origin.kind !== 'history-window' ||
+        origin.historyWindowDelta !== packet ||
+        !origin.authority() ||
+        !read(state) ||
+        origin.sequence !== r.sequence + 1 ||
+        c.sequence !== r.sequence ||
+        c.serial !== current.serial ||
+        c.scope !== e.scope ||
+        c.lease !== e.resourceLease ||
+        c.revision !== state.nativeHistoryRevision ||
+        c.revision !== e.nativeRevision ||
+        c.epoch !== e.nativeEpoch ||
+        c.operationRevision !== state.operationRevision ||
+        origin.context.editorId !== state.editorId ||
+        origin.context.documentId !== state.documentId ||
+        origin.context.generation !== state.generation ||
+        origin.context.operationRevision !== state.operationRevision ||
+        origin.beforeRevision !== c.revision ||
+        origin.beforeEpoch !== c.epoch ||
+        origin.referenceScope !== e.scope.referenceScope ||
+        packet.operation !== c.kind ||
+        origin.nativeRevision !== c.hint.to ||
+        packet.revision !== c.hint.to
+      )
+        return null;
+      const ids = ack.historyStats?.protocolVersion === 2 ? ack.historyRevisions : undefined;
+      if (!ids) return null;
+      const hit = edges.lookup(
+        {
+          from: c.revision,
+          to: origin.nativeRevision,
+          kind: c.kind,
+          scope: e.scope,
+          resourceLease: e.resourceLease,
+          expectedGeneration: c.capture.generation,
+          capture: c.capture,
+        },
+        proof('lookup', {
+          kind: c.kind,
+          scope: e.scope,
+          resourceLease: e.resourceLease,
+          serial: origin.sequence,
+          from: c.revision,
+          to: origin.nativeRevision,
+          reachableRevisions: ids,
+        }),
+      );
+      if (!hit || hit.edgeToken !== c.hint.edgeToken) {
+        invalidate();
+        return null;
+      }
+      const merged = mergeHistoryOwnerWindow(state, packet, origin, {
+        owner: hit.owner,
+        epoch: e.nativeEpoch,
+        revision: e.nativeRevision,
+        nextRevision: origin.nativeRevision,
+        referenceScope: e.scope.referenceScope,
+      });
+      if (!merged || !read(state) || !origin.authority() || current.serial !== c.serial) {
+        invalidate();
+        return null;
+      }
+      historyMerges.set(origin, {
+        before: state,
+        content: merged,
+        owner: hit.owner,
+        capture,
+        serial: current.serial,
+      });
+      return merged;
+    },
     captureExclusive(state: EditorState) {
       const r = states.get(state);
       return r && read(state)
