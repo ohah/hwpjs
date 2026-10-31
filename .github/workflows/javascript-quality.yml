@@ -31,6 +31,9 @@ jobs:
           test -f ./packages/core/tests/state/owned.test.ts || exit 1
           test -f ./packages/core/tests/state/owned-freeze-observation.test.ts || exit 1
           bun test --no-install ./packages/core/tests/state/owned.test.ts ./packages/core/tests/state/owned-freeze-observation.test.ts
+      - name: Test demo toolbar and find dialog
+        run: |
+          bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts
       - name: Test exclusive text snapshot reuse boundaries
         run: |
           node --test --test-concurrency=1 \

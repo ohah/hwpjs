@@ -148,41 +148,90 @@
   text-align: left;
   padding: 6px 12px;
 }
+/* 기본 도구는 가로로 탐색하고 추가 도구의 팝업은 스크롤 영역 밖에 둔다. */
 .hwp-demo-tools {
   display: flex;
   align-items: stretch;
-  gap: 3px;
-  overflow-x: auto;
-  padding: 7px 15px;
+  gap: 8px;
+  padding: 6px 12px;
   min-height: 82px;
   border-bottom: 1px solid var(--hwp-line);
   background: #fbfcfd;
+}
+.hwp-demo-tool-groups {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  gap: 6px;
+}
+.hwp-demo-tool-group {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  padding-right: 6px;
+  border-right: 1px solid var(--hwp-line);
+}
+.hwp-demo-tool-group:last-child {
+  border-right: 0;
+  padding-right: 0;
 }
 .hwp-demo-tool {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: start;
-  gap: 5px;
-  flex: 0 0 58px;
-  padding: 4px 3px;
-  font-size: 12px !important;
+  gap: 4px;
+  flex: 0 0 42px;
+  width: 42px;
+  padding: 4px 2px;
+  font-size: 11px !important;
 }
 .hwp-demo-tool > span:last-child {
-  max-width: 60px;
+  max-width: 40px;
   text-align: center;
   word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .hwp-demo-symbol {
   display: block;
+  flex: 0 0 28px;
+  width: 28px;
   height: 28px;
-  font-size: 25px;
-  line-height: 28px;
-  font-weight: 400;
   color: #5c759b;
 }
 .hwp-demo-tool:disabled .hwp-demo-symbol {
+  --hwp-icon-accent: #a4adb9;
+  --hwp-icon-warm: #e3e5e8;
+  --hwp-icon-soft: #f0f1f3;
   color: #8591a0;
+}
+.hwp-demo-extra-tools {
+  flex: 0 0 64px;
+}
+.hwp-demo-extra-tools > summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.hwp-demo-extra-tools > .hwp-demo-popup {
+  left: auto;
+  right: 0;
+}
+.hwp-demo-extra-tools .hwp-demo-tool {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.hwp-demo-extra-tools .hwp-demo-tool > span:last-child {
+  max-width: none;
+  text-align: left;
 }
 .hwp-demo-formatbar {
   display: flex;

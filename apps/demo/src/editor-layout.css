@@ -6,6 +6,7 @@
   --hwp-format-height: 25px;
   --hwp-status-height: 23px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: var(--hwp-title-height) var(--hwp-menu-height) var(--hwp-tools-height) var(
       --hwp-format-height
     ) auto minmax(0, 1fr) var(--hwp-status-height);

@@ -1,97 +1,141 @@
-.hwp-search-tabs {
+/* 찾기 창에만 크기·밀도를 적용하고 공통 창과 다른 도구의 스타일은 유지한다. */
+.hwp-dialog-layer[data-role='text-search'] {
+  width: min(422px, calc(100vw - 24px));
+  border-radius: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-dialog-header {
+  height: 28px;
+  gap: 8px;
+  padding: 3px 11px;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-dialog-header h2 {
+  font-size: 12px;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-dialog-body {
+  padding: 10px 12px 12px;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-dialog-footer:empty {
+  display: none;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-tabs {
   display: flex;
   gap: 2px;
   border-bottom: 1px solid #d6deed;
-  margin: -4px 0 14px;
+  margin: 0 0 8px;
 }
-.hwp-search-tabs button {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-tabs button {
   border: 0;
+  border-bottom: 2px solid transparent;
   border-radius: 0;
   background: transparent;
-  padding: 7px 18px;
+  padding: 4px 12px;
   color: #667183;
 }
-.hwp-search-tabs button[aria-selected='true'] {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-tabs button[aria-selected='true'] {
   color: #1f55a5;
-  border-bottom: 2px solid #2463c4;
+  border-bottom-color: #2463c4;
   font-weight: 600;
 }
-.hwp-search-grid {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: 12px;
 }
-.hwp-search-field {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-fields {
+  min-width: 0;
+  padding: 12px 16px 14px;
+  border: 1px solid #d4d6da;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-field {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
+  grid-template-columns: 54px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  margin-bottom: 10px;
+  margin: 0;
 }
-.hwp-search-field input {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-field + .hwp-search-field {
+  margin-top: 8px;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-field input {
   width: 100%;
   min-width: 0;
+  height: 24px;
   border: 1px solid #b8c4db;
   border-radius: 2px;
-  padding: 5px 7px;
+  padding: 3px 6px;
   font: inherit;
   background: #fff;
   color: inherit;
 }
-.hwp-search-fields fieldset {
-  margin: 12px 0 0;
-  padding: 8px 10px;
-  border: 1px solid #d6deed;
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-fields fieldset {
+  min-width: 0;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
   display: flex;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
 }
-.hwp-search-fields legend {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-fields legend {
+  padding: 0;
+  margin-bottom: 6px;
   font-size: 12px;
   font-weight: 600;
   color: #2f5596;
 }
-.hwp-search-fields fieldset label {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-fields fieldset label {
   display: flex;
   align-items: center;
   gap: 3px;
   white-space: nowrap;
 }
-.hwp-search-actions {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
-.hwp-search-actions [data-role='close-text-tool'] {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-actions button {
+  width: 80px;
+  max-width: 100%;
+  min-height: 30px;
+  padding: 3px 5px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-actions [data-role='close-text-tool'] {
   margin-top: auto;
 }
-.hwp-search-message {
-  margin: 12px 0 0;
-  min-height: 20px;
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-message {
+  margin: 8px 0 0;
+  min-height: 17px;
   color: #354c71;
 }
-.hwp-search-limit {
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-limit {
   font-size: 11px;
-  color: #6e7787;
-  margin: 4px 0 0;
+  line-height: 1.4;
+  color: #5b6676;
+  margin: 3px 0 0;
 }
-@media (max-width: 480px) {
-  .hwp-search-grid {
+.hwp-dialog-layer[data-role='text-search'] :focus-visible {
+  outline: 2px solid #0969da;
+  outline-offset: 0;
+}
+/* 테두리와 포커스선을 겹쳐 단일 2px 표시를 만들고 입력 폭은 유지한다. */
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-field input:focus,
+.hwp-dialog-layer[data-role='text-search'] .hwp-search-field input:focus-visible {
+  border-color: #0969da;
+  outline: 2px solid #0969da;
+  outline-offset: -2px;
+  box-shadow: none;
+}
+@media (max-width: 360px) {
+  .hwp-dialog-layer[data-role='text-search'] .hwp-search-grid {
     grid-template-columns: 1fr;
   }
-  .hwp-search-actions {
+  .hwp-dialog-layer[data-role='text-search'] .hwp-search-actions {
     flex-direction: row;
     flex-wrap: wrap;
   }
-  .hwp-search-field {
-    grid-template-columns: 64px minmax(0, 1fr);
-  }
-}
-.hwp-search-field input:focus {
-  outline: none;
-  border-color: #2463c4;
-}
-.hwp-dialog-layer .hwp-search-field input:focus-visible {
-  outline: 2px solid #2463c4;
-  outline-offset: 0;
 }

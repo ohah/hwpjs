@@ -1,3 +1,4 @@
+import { createShellIcon, type ShellIcon } from './shell-icons.ts';
 import { createDocumentOpenUI, exampleAvailability } from './document-open-ui.ts';
 import { VIEW_ZOOM_LEVELS, isMenuZoomPercent } from './view-zoom.ts';
 import { DocumentOpenCancelledError } from './document-open-consent.ts';
@@ -17,30 +18,70 @@ const frameworks: readonly [DemoFramework, string][] = [
   ['react', 'React'],
   ['svelte', 'Svelte'],
 ];
-const commands: readonly [DemoCommand, string, string][] = [
-  ['save', '저장하기', '↓'],
-  ['cut', '오려두기', '✂'],
-  ['copy', '복사하기', '▤'],
-  ['paste', '붙이기', '▣'],
-  ['format-copy', '모양 복사', '◇'],
-  ['find', '찾기', '⌕'],
-  ['insert-shape', '도형', '△'],
-  ['insert-image', '그림', '▧'],
-  ['insert-table', '표', '▦'],
-  ['insert-chart', '차트', '▥'],
-  ['insert-footnote', '각주', '¹'],
-  ['insert-endnote', '미주', 'ⅰ'],
-  ['insert-link', '하이퍼링크', '↗'],
-  ['insert-symbol', '문자표', 'Ω'],
-  ['character-properties', '글자 모양', '가'],
-  ['paragraph-properties', '문단 모양', '≡'],
-  ['object-properties', '개체 속성', '□'],
-  ['insert-header', '머리말', '⊤'],
-  ['insert-footer', '꼬리말', '⊥'],
-  ['toggle-marks', '조판 부호', '¶'],
-  ['toggle-paragraph-marks', '문단 부호', '↵'],
-  ['toggle-grid', '격자 보기', '▦'],
+type Tool = readonly [DemoCommand, string, ShellIcon];
+// 표시 순서만 소유한다. 지원 여부와 실행은 기존 명령 가용성 경로가 결정한다.
+const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
+  [
+    '클립보드',
+    [
+      ['cut', '오려두기', 'cut'],
+      ['copy', '복사하기', 'copy'],
+      ['paste', '붙이기', 'paste'],
+      ['format-copy', '모양 복사', 'format-copy'],
+    ],
+  ],
+  [
+    '표시 부호와 격자',
+    [
+      ['toggle-marks', '조판 부호', 'toggle-marks'],
+      ['toggle-paragraph-marks', '문단 부호', 'toggle-paragraph-marks'],
+      ['toggle-grid', '격자 보기', 'toggle-grid'],
+    ],
+  ],
+  [
+    '글자와 문단 모양',
+    [
+      ['character-properties', '글자 모양', 'character-properties'],
+      ['paragraph-properties', '문단 모양', 'paragraph-properties'],
+    ],
+  ],
+  [
+    '표와 개체',
+    [
+      ['insert-table', '표', 'insert-table'],
+      ['insert-shape', '도형', 'insert-shape'],
+      ['insert-image', '그림', 'insert-image'],
+      ['object-properties', '개체 속성', 'object-properties'],
+    ],
+  ],
+  [
+    '문자표와 링크',
+    [
+      ['insert-symbol', '문자표', 'insert-symbol'],
+      ['insert-link', '하이퍼링크', 'insert-link'],
+    ],
+  ],
+  [
+    '각주와 미주',
+    [
+      ['insert-footnote', '각주', 'insert-footnote'],
+      ['insert-endnote', '미주', 'insert-endnote'],
+    ],
+  ],
+  [
+    '머리말과 꼬리말',
+    [
+      ['insert-header', '머리말', 'insert-header'],
+      ['insert-footer', '꼬리말', 'insert-footer'],
+    ],
+  ],
+  ['찾기', [['find', '찾기', 'find']]],
 ];
+const extraTools: readonly Tool[] = [
+  ['save', '저장하기', 'save'],
+  ['insert-chart', '차트', 'insert-chart'],
+];
+const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
 const menus: readonly [string, readonly DemoCommand[]][] = [
   ['파일', ['save']],
   ['편집', ['undo', 'redo', 'cut', 'copy', 'paste', 'format-copy', 'find', 'replace']],
@@ -200,16 +241,12 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   const commandButton = (
     command: DemoCommand,
     label = labels.get(command) || command,
-    icon?: string,
+    icon?: ShellIcon,
   ) => {
     const node = el('button', icon ? 'hwp-demo-tool' : 'hwp-demo-button');
     node.type = 'button';
     node.setAttribute('aria-label', label);
-    if (icon) {
-      const symbol = el('span', 'hwp-demo-symbol', icon);
-      symbol.setAttribute('aria-hidden', 'true');
-      node.append(symbol);
-    }
+    if (icon) node.append(createShellIcon(doc, icon));
     node.append(el('span', '', label));
     const description = bindCommand(node, command);
     // Pointer toolbar interaction retains the host's selection/focus. Keyboard
@@ -225,6 +262,26 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   const zoomChoices: { node: HTMLButtonElement; percent: number }[] = [];
   const disclosures: { details: HTMLDetailsElement; summary: HTMLElement; popup: HTMLElement }[] =
     [];
+  const trackDisclosure = (
+    details: HTMLDetailsElement,
+    summary: HTMLElement,
+    popup: HTMLElement,
+  ) => {
+    disclosures.push({ details, summary, popup });
+    listen(details, 'toggle', () => {
+      summary.setAttribute('aria-expanded', String(details.open));
+      if (details.open)
+        for (const row of disclosures) if (row.details !== details) row.details.open = false;
+    });
+    summary.setAttribute('aria-expanded', 'false');
+    listen(details, 'keydown', (event) => {
+      if ((event as KeyboardEvent).key === 'Escape') {
+        event.preventDefault();
+        details.open = false;
+        summary.focus();
+      }
+    });
+  };
   for (const [label, items] of menus) {
     const details = el('details', 'hwp-demo-menu'),
       summary = el('summary', '', label),
@@ -258,25 +315,12 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       popup.append(scales);
     }
     details.append(summary, popup);
-    disclosures.push({ details, summary, popup });
     menuNav.append(details);
-    listen(details, 'toggle', () => {
-      summary.setAttribute('aria-expanded', String(details.open));
-      if (details.open)
-        for (const row of disclosures) if (row.details !== details) row.details.open = false;
-    });
-    summary.setAttribute('aria-expanded', 'false');
-    listen(details, 'keydown', (event) => {
-      if ((event as KeyboardEvent).key === 'Escape') {
-        event.preventDefault();
-        details.open = false;
-        summary.focus();
-      }
-    });
+    trackDisclosure(details, summary, popup);
   }
   listen(doc, 'pointerdown', (event) => {
     if (
-      !menuNav.contains(event.target as Node) &&
+      !disclosures.some((row) => row.details.contains(event.target as Node)) &&
       !openUI.containsExampleTarget(event.target as Node)
     )
       for (const row of disclosures) row.details.open = false;
@@ -284,10 +328,34 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   const toolbar = el('div', 'hwp-demo-tools');
   toolbar.setAttribute('role', 'group');
   toolbar.setAttribute('aria-label', '문서 도구');
-  for (const [id, label, icon] of commands) {
-    const item = commandButton(id, label, icon);
-    toolbar.append(item.node, item.description);
+  const primaryTools = el('div', 'hwp-demo-tool-groups');
+  for (const [groupLabel, tools] of toolGroups) {
+    const group = el('div', 'hwp-demo-tool-group');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', groupLabel);
+    for (const [id, label, icon] of tools) {
+      const item = commandButton(id, label, icon);
+      group.append(item.node, item.description);
+    }
+    primaryTools.append(group);
   }
+  const extra = el('details', 'hwp-demo-menu hwp-demo-extra-tools');
+  const extraSummary = el('summary');
+  extraSummary.append(createShellIcon(doc, 'more'), el('span', '', '추가 도구'));
+  extraSummary.setAttribute('aria-label', '추가 도구');
+  const extraPopup = el('div', 'hwp-demo-popup');
+  extraPopup.id = `${prefix}-extra-tools`;
+  extraSummary.setAttribute('aria-controls', extraPopup.id);
+  for (const [id, label, icon] of extraTools) {
+    const item = commandButton(id, label, icon);
+    extraPopup.append(item.node, item.description);
+    listen(item.node, 'click', () => {
+      extra.open = false;
+    });
+  }
+  extra.append(extraSummary, extraPopup);
+  trackDisclosure(extra, extraSummary, extraPopup);
+  toolbar.append(primaryTools, extra);
   const formatbar = el('div', 'hwp-demo-formatbar');
   formatbar.setAttribute('role', 'group');
   formatbar.setAttribute('aria-label', '글자와 문단 서식');
@@ -363,8 +431,8 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     supportTitle = el('summary', '', '도구 지원 안내'),
     supportList = el('ul');
   support.append(supportTitle, supportList);
-  disclosures.at(-1)!.popup.className += ' hwp-demo-tools-popup';
-  disclosures.at(-1)!.popup.append(support);
+  disclosures[menus.length - 1].popup.className += ' hwp-demo-tools-popup';
+  disclosures[menus.length - 1].popup.append(support);
   const workspace = el('main', 'hwp-demo-workspace');
   workspace.id = `${prefix}-workspace`;
   const surfaceMount = options.framework === 'headless' ? null : el('div', 'hwp-demo-surface');

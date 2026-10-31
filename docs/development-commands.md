@@ -1049,3 +1049,13 @@ HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp" \
   mise exec node@24.20.0 -- node --max-old-space-size=512 --test \
     --test-concurrency=1 --test-timeout=50000 tools/tests/hwp5-native-text-reuse.test.mjs
 ```
+
+## 도구상자·찾기 창 순수 UI 회귀
+
+제품 UI5와 정규 테스트/helper5개를 함께 선택 통합한 뒤 저장소 루트에서 다음 네 진입점을 명시합니다. `formatting-dialog-test-dom.ts`는 기존 HEAD의 공통 fixture를 재사용합니다. 신규 파일은 `fake-dom.mjs`, `shell.test.mjs`, `shell-fixture-availability.test.mjs`, `toolbox.test.mjs`, `text-tools-dialog-density.test.ts`이며 CI checkout에 포함되도록 모두 선택 추가합니다.
+
+```sh
+bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts
+```
+
+Bun의 기존 CSS import 지원을 사용하며 Node 전용 CSS loader를 추가하지 않습니다. 모든 진입점의 `./` 접두사를 유지해 임시 사본의 중복 수집을 막습니다. 27개는 fake DOM·모달/toolbar/CSS 계약 검사이며 실제 브라우저 픽셀·Native 검색·UI QA의 대체가 아닙니다. WASM·fixture·SDK/app/Native 빌드는 이 명령의 선행 조건이 아닙니다.
