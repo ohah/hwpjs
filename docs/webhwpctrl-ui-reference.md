@@ -124,3 +124,21 @@ Vanilla/React/Svelte × 두 문서 형식의6개 입구 스모크 및 배포 후
 근거 식별자는 `zig-out/verification/` 아래 `hist05-ui5r3-input-coverage-r3/HANDOFF.json`, `hist05-ui5-save-independent-oracle-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/ui5-r3-framework6-smoke-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/ui5-r3-private-https-smoke-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/ui5-r3-public-https-smoke-r1/FINAL-HANDOFF.json`입니다. 이 ignored 기록을 공개 사이트의 자료 링크로 취급하지 않습니다.
 
 전체 기안기 UI·문서 조판 동치는 여전히 미완료입니다. 파일 열기 진입 배치, 서식 입력줄, 쪽/구역 상태와 쪽·보기 옵션, 다른 모달·컨텍스트 메뉴·단축키 설정의 전체 대조가 남습니다. 위7항목 표의 UI5 배포 대기만 이번 마감으로 갱신하며, 미확정 기능을 부재나 구현 완료로 바꾸지 않습니다. 다음 UI 슬라이스는 기존 파일 열기·예제 선택 흐름을 공유하는 상단 직접 진입 배치입니다.
+
+## 상단 파일열기 직접 진입
+
+UI5 마감에서 다음 항목으로 남겼던 상단 파일열기 진입을 공개·사설 운영에 반영했습니다. `shell.ts`는 버튼 배치, `shell.css`는 상단 배치와 설명 containing block, `document-open-ui.ts`는 두 버튼·한 file input·가용성·선택 콜백을 소유합니다. 상단 `파일열기`와 기존 메뉴 `열기…`는 같은 동기 함수를 사용하며 중간 await나 타이머 없이 같은 input을 엽니다. 클릭과 change에서 최신 가용성을 각각 검사하고, 선택 입력값 초기화·예제 선택·기존 교체 정책을 공유합니다. 추가 버튼 갱신은 고정2개로 상수 시간이며 예제 목록의 기존 O(n) 순회를 늘리지 않았습니다. 공통 설명을 닫힌 메뉴 밖 상단에 두어 두 진입이 같은 이유를 참조합니다.
+
+공식 공개 화면에서는 상단 별도 진입의 클릭·Enter/Space와 Escape 뒤 포커스를 확인했습니다. 실제 OS 선택창과 Cancel 이벤트는 직접 관측하지 못했습니다. 파일 메뉴는 사진에서 열렸지만 AX 스냅샷에 나타나지 않았던 원 관측도 정정해 보존했습니다. 이 결과는 상단 진입 배치의 근거이며 공식의 모든 파일 형식·시스템 선택창·메뉴 전체 동치가 아닙니다.
+
+검사는 각각 별도 범위입니다. HEAD와 선택 runtime3·신규 test1만 합성한 격리 소스에서 기존27+신규4, 총31개가 통과했습니다. 독립 음성5개는 동기 동일 input, 갱신 전 가용성 변경, 선택 중 busy/권한 변경, 종료 후 이벤트, 인스턴스별 설명을 검사했습니다. 명시 포맷10파일·lint3파일과 후보 strict 검사도 통과했습니다. compiled Noori의1440/640/375/360/361px에서는 상단 버튼·제목·framework nav의 겹침과 문서 overflow0, 기존 Grid/SR·22도구·More·찾기 포커스를 확인했습니다. 서로 겹치는 소스 검사를 하나의 새로운 총계로 합산하지 않습니다.
+
+실제 stock 업로드는 Vanilla/React/Svelte 각각 공개 픽스처 복사본 `charshape.hwp`와 `charshape.hwpx`로6사례를 실행했습니다. direct와 기존 메뉴 진입 후 같은 파일을 다시 지정해 총12업로드의 live File SHA·문서 ready·제품의 빈 input 값과 파일 수0을 확인했습니다. 자동화가 입력값을 미리 비워 재선택 결함을 가리지 않았습니다. 별도의 합성 empty-change6개에서는 제목·상태·Canvas 픽셀 해시가 유지됐습니다. 이 합성 이벤트와 CDP 파일 지정은 실제 OS 선택창·Cancel/Escape의 증거가 아닙니다. 처음 실행기는 비TTY stdin EOF로 업로드 전 종료돼6개 모두 미실행이었으며 제품 실패0으로 보존했습니다. 이를 최종6사례 성공에 합산하지 않습니다.
+
+배포는 소스 `43ea6c32a`와 공개 산출물 `f44fdeef6`을 main에 푸시했습니다. 해당 JavaScript Quality와 Deploy Docs가 성공했습니다. 공개 manifest는 `dccb31f3c9a01742200c97118cec9caaf65bd5b3e9565464e128efe6685b33f3`이며162파일을 전수 대조했고, 기존 공개159경로를 보존했습니다. 사설은 `65bef4861fd40b107ae433746bcc1ce22c1042f49064d706471bf129e81a0d4c`와 기존 public base6cf4를 정규 loader로 결합해 별도 운영합니다. 이전 사설 UI5의 해시 자산2개를 포함한 기존 경로도 새 manifest 생성 입력으로 보존했습니다. 처음 패키징에서 이 추가 입력의 lstat 권한 누락으로 실패한 원자료를 남기고, 허용 경로를 정확히 보완해 성공한 Vite 결과를 재사용했습니다. 배포 엔진은 기존 SDK67/history05·Worker1f2·WASMd849입니다.
+
+배포 후 사설 정상 HWP·이전 주소 HWPX 합계2사례와 공개 Vanilla의 HWP/HWPX2사례를 별도로 통과했습니다. live File SHA·ready·제품 input 초기화·콘솔 오류0을 확인했고 각 소유 브라우저 종료·잔류0 및 종료 후 HTTPS11응답의 해시 일치도 확인했습니다. 메인도 공개 새 자산·이전 자산2·Worker/WASM 등11응답과 사설5응답을 별도로 대조했습니다. 테스트 서버는 최종 HTTP 뒤 종료하고 운영 서버만 유지했습니다. 공개 React/Svelte의 실제 업로드와 실기기 OS 선택창·IME·전체 조판은 이 배포 후 검사 범위가 아닙니다.
+
+근거는 `zig-out/verification/` 아래 `ui-file-open-direct-candidate-r1/FINAL-HANDOFF.json`, `fileopen-head-d6d6-unit31-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/file-open-compiled-layout-qa-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/file-open-upload6-e2e-r1/FINAL-HANDOFF.json`(최종 SHA `10ec3681…0b378a9`), 같은 prefix의 `file-open-private-https2-r1/FINAL-HANDOFF.json`과 `file-open-public-https2-r1/FINAL-HANDOFF.json`에 연결됩니다. ignored 기록은 공개 자료 링크가 아닙니다.
+
+파일열기 직접 진입은 이 범위에서 완료했습니다. 전체 기안기 UI 동치는 계속 미완료이며 서식 입력줄·쪽/구역 상태·쪽/보기·다른 모달·컨텍스트 메뉴의 대조가 남습니다. 다음 쪽 상태 관측은 미리보기 페이지 수·가시 페이지와 캐럿 현재쪽·원본 쪽번호의 의미를 구분하는 계약부터 연결하며, 미확정 값을 추정해 표시하지 않습니다.
