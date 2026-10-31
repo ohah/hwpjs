@@ -90,6 +90,7 @@
 - [HWP5 full snapshot의 Native exclusive 증거와 warm 그림 재사용](hwp5-full-snapshot-exclusive.md)
 - [HWP5 bounded owner-window COW 계약](hwp5-owner-window-cow.md)
 - [HWP5 history owner-window 계약](hwp5-history-owner-window.md)
+- [Renderer 성능 진단과 후보 판정](renderer-performance-status.md)
 - [HWPX 원본 색상 호환 정책](source-color-policy.md)
 - [문단 분할·병합 구조 편집 기반](paragraph-structure-edit.md)
 - [명시적 쪽·단 나누기 편집](paragraph-flow-break-edit.md)
