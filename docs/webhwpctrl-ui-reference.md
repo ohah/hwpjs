@@ -112,3 +112,15 @@ Vanilla/React/Svelte × 두 문서 형식의6개 입구 스모크 및 배포 후
 | `run/01-main1440.png` | `60afb2f348536628db7ad06d93fd01c73d8f6c83db2f48c559cdddb7951ea72a` |
 | `run/02-find1440.png` | `83109aa543a99f01fb92c377d1968f610264f7a66a4ce14fbb18dd01a3b30e48` |
 | `run/03-find375.png` | `fc0a67f751315fd853465348ee91ec6002dcb9a6b8ed40ae61a26a3068ae9c4e` |
+
+## UI5 배포와 후속 검증 마감
+
+위 절의 배포 대기 표기는 각 관측 시점의 기록입니다. 후속으로 UI5 도구 모음·자체 SVG·찾기 창·좁은 화면 수정은 공개 GitHub Pages와 사설 운영 서버에 배포했습니다. [공개 데모](https://ohah.github.io/hwpjs/editor/demo/vanilla/)에서 확인할 수 있습니다. 제품 소스는 `9acc26685`, 테스트 포맷 보정은 `76a528b1d`, 공개 산출물은 `b8eddd655`입니다. 마지막 두 소스/산출물 커밋의 JavaScript Quality와 산출물의 Deploy Docs가 성공했습니다. 새 SDK/Native/WASM 빌드는 없으며 SDK67/history05·Worker1f2·WASMd849를 유지했습니다.
+
+검증 범위는 각각 구분합니다. 순수 UI27과 명시 변경10파일 포맷 검사, Vanilla/Noori의 5개 화면 폭 검증, Vanilla/React/Svelte에서 Noori.hwp·aligns.hwpx를 여는 1440×900 기본 입구6개가 통과했습니다. 입력 회귀는 r2 p4 ABBA4와 r3 p15 ABBA4가 별도로 통과한 것으로 단일 세대8 성공이 아닙니다. 최초 CDP 세션 종료의 정확한 원인은 미확정이며 원 실패·미실행·p15 준비 실패는 보존합니다. 해당 두 문단에서 저장한2건은 원본에서 기대를 생성한 독립 CFB 검사도 통과했습니다. 이 결과를 성능 개선·물리 CFB 전체 바이트 동일·전체 Native/IME/패키지 동치로 일반화하지 않습니다.
+
+배포 후 사설 정상/이전 주소 합계2경로와 공개 Vanilla/Noori1경로에서 실제 문서 열기·22개 도구·찾기 포커스·More 동작·콘솔 오류0을 확인했습니다. 각 소유 브라우저 종료·잔류0과 종료 후 HTTPS 자산의 SHA 일치도 확인했습니다. 메인은 공개 HTML·새 JS/CSS·Worker·WASM 등9개 응답을 별도로 대조했습니다. 공개 manifest는 `23e1ad1f3fb17e08f5b59cd06c90be36701c27f78d173244769c8de13cb95ae1`, 사설 manifest는 `d276668d26dbecc78f0b7592991d219f24805d281ab0967b250293714dc747b8`입니다. 사설은 정규 loader가 요구하는 기존 공개 base6cf4와 결합하고 새 GitHub 공개 root와 분리했습니다. 최종 HTTP 기록 뒤 테스트 서버2개를 종료했고 운영 서버는 유지했습니다.
+
+근거 식별자는 `zig-out/verification/` 아래 `hist05-ui5r3-input-coverage-r3/HANDOFF.json`, `hist05-ui5-save-independent-oracle-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/ui5-r3-framework6-smoke-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/ui5-r3-private-https-smoke-r1/FINAL-HANDOFF.json`, `headless-table-insert-r1/ui5-r3-public-https-smoke-r1/FINAL-HANDOFF.json`입니다. 이 ignored 기록을 공개 사이트의 자료 링크로 취급하지 않습니다.
+
+전체 기안기 UI·문서 조판 동치는 여전히 미완료입니다. 파일 열기 진입 배치, 서식 입력줄, 쪽/구역 상태와 쪽·보기 옵션, 다른 모달·컨텍스트 메뉴·단축키 설정의 전체 대조가 남습니다. 위7항목 표의 UI5 배포 대기만 이번 마감으로 갱신하며, 미확정 기능을 부재나 구현 완료로 바꾸지 않습니다. 다음 UI 슬라이스는 기존 파일 열기·예제 선택 흐름을 공유하는 상단 직접 진입 배치입니다.

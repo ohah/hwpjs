@@ -178,3 +178,19 @@ Tracing은 trusted 키 입력과 초기 읽기관측 전에 시작해 trusted40�
 | Trace scope audit | `44849aa9a8b2662631619b35ba1c7cda403c10b4f6695fd7dad93696ea8ec8b2` |
 
 exact 로컬 경로와 읽은 연결 지문은 후보 manifest에 기록합니다. ignored 검증 자료는 source-only checkout에 자동 포함되지 않습니다.
+
+## Presentation 서식 관측 공유 P: 미채택
+
+P는 실제05 동결 SDK67/앱을 기준으로, 같은 동기 표시 호출에서만 서식 관측을 공유한 격리 후보입니다. 순수22개(정규20·별도 baseline 비교2)와 기존 d849/Noori p4·p15의 공개 editor 발급 상태2개에서 출력 동치·관측 결과 identity4→1을 확인했습니다. reader 요청은 양쪽4회이며 전역 함수 hook 계수나 전체 파이프라인 복잡도·속도 개선 증명이 아닙니다. 최초 capabilities getter 누락 의심은 **실제05에서 비재현으로 종결**했습니다. 해당 서식 경로의 getter 호출은0회이고, 공유 밖 history 조회는 매 presentation마다1회로 같은 state의 readOnly 변경을 즉시 반영했습니다. helper import 이전 prototype 교체를 원 접근자로 인증하지 않는 한계는 남습니다.
+
+후속 trace-off ABBA16은 p4/p15×burst/30Hz, 각 조건 A2/B2입니다. 기능16은 통과했지만 burst의 작은 차이·순서 추세와 30Hz의 악화를 넘는 실질 이득이 확정되지 않아 **P 제품 소스5는 미채택·실제 제품 소스 적용0**으로 보존합니다. 같은 실행군의 저장4는 원본b18에서 p4/p15의 UTF-16 offset2에 r을 삽입한 기대를 독립 생성해 전체 decoded section·비대상12스트림·metadata 및 오문자/offset 음성 대조를 통과했습니다. 이전 저장 성공과 합산하지 않으며 물리 CFB 전체 byte동일·완전무손실 전체범위 인증은 아닙니다.
+
+마감 B postHTTP의 `fetch failed`는 메인이 후보 서버를 전환한 순서가 원인임을 확인한 별도 인프라 관측입니다. 원 실패는 보존하고 P 기능 회귀로 분류하지 않습니다. 실행 전 HTTP·실소비 핀 및 마감 로컬30파일의 drift0과 구분하며, 누락된 B postHTTP를 성공으로 바꾸거나 전후 HTTP exact라고 주장하지 않습니다.
+
+| P의 별도 근거 | SHA256 |
+|---|---|
+| 동결 source-r2 | `663dfca90cede4018e1940a398919c29ec87fd0dbcb5ca47b9600841a95b1599` |
+| 순수22·Noori2 후보 HANDOFF | `aed40eb931cd38163d012f4840a2f3d5d4f97c10982803ec3d2d2b43e638b16b` |
+| capabilities getter 가설 종결 | `08aaf3525e7fbda1256de2c331291adbccb2d51ee0bdd51f7632dfce883ac412` |
+| 실제 trace-off16 HANDOFF | `f569d0d752043e5f72eabdc9858cd807149afd1f5f5e67ca0a9e32c09d00831a` |
+| 해당 저장4 독립 CFB HANDOFF | `4b57dd3fc278063e2aabaf3cee2fb12d9026349a6c4535a7c8ad93cb0abe7e80` |
