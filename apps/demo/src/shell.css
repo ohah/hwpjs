@@ -62,12 +62,19 @@
   color: #174b99;
 }
 .hwp-demo-titlebar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
   min-height: 38px;
   padding: 5px 16px;
   border-bottom: 1px solid #eef0f3;
+}
+.hwp-demo button.hwp-demo-open-file {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  border-color: var(--hwp-line);
+  padding: 2px 8px;
 }
 .hwp-demo-brand {
   display: inline-grid;

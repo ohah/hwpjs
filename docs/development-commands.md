@@ -1050,12 +1050,30 @@ HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp" \
     --test-concurrency=1 --test-timeout=50000 tools/tests/hwp5-native-text-reuse.test.mjs
 ```
 
-## 도구상자·찾기 창 순수 UI 회귀
+## 파일열기 직접 진입과 도구상자·찾기 창 순수 회귀
 
-제품 UI5와 정규 테스트/helper5개를 함께 선택 통합한 뒤 저장소 루트에서 다음 네 진입점을 명시합니다. `formatting-dialog-test-dom.ts`는 기존 HEAD의 공통 fixture를 재사용합니다. 신규 파일은 `fake-dom.mjs`, `shell.test.mjs`, `shell-fixture-availability.test.mjs`, `toolbox.test.mjs`, `text-tools-dialog-density.test.ts`이며 CI checkout에 포함되도록 모두 선택 추가합니다.
+기존 UI27 명시 진입점에 신규4개 case를 추가한 순수31입니다. Bun의 기존 CSS import 지원을 사용하며, 모든 경로에 `./`를 붙여 ignored 임시 사본을 중복 수집하지 않습니다.
 
 ```sh
-bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts
+bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts ./apps/demo/tests/file-open-direct.test.mjs
 ```
 
-Bun의 기존 CSS import 지원을 사용하며 Node 전용 CSS loader를 추가하지 않습니다. 모든 진입점의 `./` 접두사를 유지해 임시 사본의 중복 수집을 막습니다. 27개는 fake DOM·모달/toolbar/CSS 계약 검사이며 실제 브라우저 픽셀·Native 검색·UI QA의 대체가 아닙니다. WASM·fixture·SDK/app/Native 빌드는 이 명령의 선행 조건이 아닙니다.
+선택 publication은 runtime3(`shell.ts`, `shell.css`, `document-open-ui.ts`)과 신규 `apps/demo/tests/file-open-direct.test.mjs`입니다. HEAD의 나머지 의존 파일을 재사용하며 unrelated WIP나 root SDK69/dist를 추가하지 않습니다. 실제SDK05는 이 순수 회귀에서 새로 빌드하거나 대체하지 않습니다.
+
+포맷 검사는 availability 테스트 누락을 반복하지 않도록 runtime3과 아래 테스트/helper7개를 모두 명시합니다.
+
+```sh
+bun run format:check \
+  ./apps/demo/src/shell.ts \
+  ./apps/demo/src/shell.css \
+  ./apps/demo/src/document-open-ui.ts \
+  ./apps/demo/tests/fake-dom.mjs \
+  ./apps/demo/tests/file-open-direct.test.mjs \
+  ./apps/demo/tests/formatting-dialog-test-dom.ts \
+  ./apps/demo/tests/shell-fixture-availability.test.mjs \
+  ./apps/demo/tests/shell.test.mjs \
+  ./apps/demo/tests/text-tools-dialog-density.test.ts \
+  ./apps/demo/tests/toolbox.test.mjs
+```
+
+정적 click fixture는 동기 input 연결·가용성·선택 콜백 경계만 검사합니다. OS picker·trusted keyboard·실제 취소 포커스·반응형 픽셀·Native 파일열기의 증거가 아닙니다. SDK/Native/app 빌드·브라우저는 이 명령의 선행 조건이 아닙니다.

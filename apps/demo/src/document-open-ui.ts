@@ -45,6 +45,9 @@ export function createDocumentOpenUI(root: HTMLElement, options: DocumentOpenUIO
   };
   const fileAction = button('열기…', 'open-document'),
     examplesAction = button('예제 문서…', 'open-examples');
+  const directFileAction = button('파일열기', 'open-document-direct');
+  directFileAction.className += ' hwp-demo-open-file';
+  const fileActions = [fileAction, directFileAction];
   const file = doc.createElement('input');
   file.type = 'file';
   file.accept = '.hwp,.hwpx';
@@ -55,7 +58,7 @@ export function createDocumentOpenUI(root: HTMLElement, options: DocumentOpenUIO
   const fileReason = doc.createElement('span');
   fileReason.className = 'hwp-demo-sr';
   fileReason.id = options.id + '-file-reason';
-  fileAction.setAttribute('aria-describedby', fileReason.id);
+  for (const action of fileActions) action.setAttribute('aria-describedby', fileReason.id);
   const state = () => options.getState();
   const hideExamples = () => {
     if (layer.element.open) layer.element.close();
@@ -109,9 +112,12 @@ export function createDocumentOpenUI(root: HTMLElement, options: DocumentOpenUIO
       canFile = openAvailability(current.openFile, current.busy, options.fileConnected),
       canFixture = openAvailability(current.openFixture, current.busy, options.fixtureConnected),
       any = [...availability.values()].some(Boolean);
-    fileAction.disabled = file.disabled = !canFile.enabled;
+    file.disabled = !canFile.enabled;
     fileReason.textContent = canFile.enabled ? '' : canFile.reason || '파일 열기 불가';
-    fileAction.title = fileReason.textContent;
+    for (const action of fileActions) {
+      action.disabled = !canFile.enabled;
+      action.title = fileReason.textContent;
+    }
     examplesAction.disabled = fixture.disabled = !canFixture.enabled || !any;
     fixtureOpen.disabled = !canFixture.enabled || availability.get(fixture.value) !== true;
     fixtureReason.textContent = !any
@@ -123,12 +129,14 @@ export function createDocumentOpenUI(root: HTMLElement, options: DocumentOpenUIO
           : '';
     examplesAction.title = fixture.title = fixtureOpen.title = fixtureReason.textContent;
   };
-  listen(fileAction, 'click', () => {
+  // 두 진입은 같은 동기 사용자 활성화 경로를 사용한다.
+  const chooseFile = () => {
     if (closed) return;
     const current = state();
     if (!openAvailability(current.openFile, current.busy, options.fileConnected).enabled) return;
     file.click();
-  });
+  };
+  for (const action of fileActions) listen(action, 'click', chooseFile);
   listen(file, 'change', () => {
     if (closed) return;
     const current = state(),
@@ -159,6 +167,7 @@ export function createDocumentOpenUI(root: HTMLElement, options: DocumentOpenUIO
   });
   listen(cancel, 'click', hideExamples);
   return {
+    directFileAction,
     fileAction,
     examplesAction,
     file,

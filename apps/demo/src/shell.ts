@@ -423,7 +423,8 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     onFixture: (id) => invoke(() => options.onOpenFixture?.(id)),
   });
   const fileActions = el('div', 'hwp-demo-file-actions');
-  fileActions.append(openUI.fileAction, openUI.examplesAction, openUI.fileReason);
+  fileActions.append(openUI.fileAction, openUI.examplesAction);
+  titlebar.replaceChildren(openUI.directFileAction, openUI.fileReason, brand, title, frameworkNav);
   disclosures[0].popup.className += ' hwp-demo-file-popup';
   disclosures[0].popup.append(fileActions, picker);
   shell.append(openUI.file);
