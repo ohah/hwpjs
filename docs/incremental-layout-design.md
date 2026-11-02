@@ -110,3 +110,5 @@ selection·scroll/zoom만 바뀌면 presentation ticket을 무효화하고 준�
 ## 글꼴 인덱스 후보 실측
 
 [글꼴 인덱스 후보 검증 기록](font-resource-index-cache.md)은 정합성과 작업량 감소를 확인했지만 입력·취소 응답의 개선 근거를 확보하지 못해 채택하지 않은 실험을 소유한다. 이 기록으로 제품 코드·정규 시험·CI·운영·Pages 번들은 변경하지 않았다. 운영 버전 자체의 CPU 진단과 후속 복사·키 구축 조사도 같은 문서에서 구분한다.
+
+[문단 측정과 배치 분리](measurement-placement.md)는 readonly 문단 로컬 geometry와 매 배치 새 row의 제한된 구현·검증 범위를 소유한다. 증분 scheduler와 전체 조판의 미구현 상태는 유지하며 운영 반영은 별도 확인한다.

@@ -1,3 +1,7 @@
+import {
+  createMeasurementPlacementPort,
+  isMeasurementPlacementPort,
+} from './measurement-placement-private.mjs';
 import { createNativePictureRefreshGate } from './native-picture-refresh-gate.mjs';
 import { createHostEpochReaders } from './host-epoch-readers.mjs';
 import { historySelectionStamp, sameHistoryPaintStamp } from './history-paint-authority.mjs';
@@ -133,6 +137,7 @@ export function createRenderer(
   spacer,
   onLayout = () => {},
   environment = {},
+  privatePlacementPort = null,
 ) {
   const realm = canvas.ownerDocument?.defaultView ?? globalThis;
   const requestAnimationFrame =
@@ -234,7 +239,10 @@ export function createRenderer(
       mode: 'preview-overlay',
     },
     paintedCharts = [];
-  const paragraphFlowReuse = createParagraphFlowReuse();
+  const paragraphFlowReuse = createParagraphFlowReuse(
+    undefined,
+    isMeasurementPlacementPort(privatePlacementPort) ? privatePlacementPort : null,
+  );
   const chartResources = createChartDisplayResources({
     read: (section, wrapper) =>
       chartReader
@@ -2045,3 +2053,15 @@ export function createRenderer(
 import { formulaAtParagraph } from './formula-selection.mjs';
 import { isViewScale } from './view-scale.mjs';
 import { findText } from './text-search.mjs';
+
+// mutable layout을 외부에 반환하지 않는 surface 내부 소비자 전용이다.
+export function createSurfaceRenderer(canvas, viewport, spacer, onLayout, environment) {
+  return createRenderer(
+    canvas,
+    viewport,
+    spacer,
+    onLayout,
+    environment,
+    createMeasurementPlacementPort(),
+  );
+}

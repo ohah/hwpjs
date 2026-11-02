@@ -177,6 +177,12 @@ jobs:
         run: |
           test -f ./tests/tools/pages-demo-fixture-policy.test.mjs || exit 1
           node --test --test-concurrency=1 ./tests/tools/pages-demo-fixture-policy.test.mjs
+      - name: 문단 측정과 배치 분리 source 회귀
+        run: |
+          node --test --test-concurrency=1 \
+            ./tests/hwp5/measurement-placement.test.mjs \
+            ./tests/hwpx/renderer-projection-measure.test.mjs \
+            ./tests/hwp5/line-spacing-compat.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

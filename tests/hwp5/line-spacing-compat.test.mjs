@@ -258,8 +258,8 @@ test('round 5 drawing: zero advance cannot hide ink overflow or bypass row limit
 test('round 5 negative controls reject naive multiplication, doubled units and minimum clamps', async () => {
   const sourceUrl = new URL('../../web/preview/hwp5-line-spacing.mjs', import.meta.url);
   const source = readFileSync(sourceUrl, 'utf8');
-  const dependency = '"./integer-mul-div.mjs"';
-  assert.ok(source.includes(dependency));
+  const dependency = /(['"])\.\/integer-mul-div\.mjs\1/g;
+  assert.ok(dependency.test(source));
   // A data URL has no hierarchical base; keep the real shared dependency.
   const linked = source.replaceAll(
     dependency,

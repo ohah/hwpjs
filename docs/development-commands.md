@@ -1077,3 +1077,16 @@ bun run format:check \
 ```
 
 정적 click fixture는 동기 input 연결·가용성·선택 콜백 경계만 검사합니다. OS picker·trusted keyboard·실제 취소 포커스·반응형 픽셀·Native 파일열기의 증거가 아닙니다. SDK/Native/app 빌드·브라우저는 이 명령의 선행 조건이 아닙니다.
+
+## 문단 측정과 배치 분리 정규 회귀
+
+[측정값 소유와 배치 경계](measurement-placement.md)를 따른다. 제품4·신규 시험·line-spacing quote 정규식 교정이 반영된 checkout에서 다음 세 entry를 명시한다. ignored artifact 자동 수집과 Native/SDK 빌드는 하지 않는다.
+
+```sh
+node --test --test-concurrency=1 \
+  ./tests/hwp5/measurement-placement.test.mjs \
+  ./tests/hwpx/renderer-projection-measure.test.mjs \
+  ./tests/hwp5/line-spacing-compat.test.mjs
+```
+
+신규5+projection16+교정 line-spacing8=source29다. 합성 복원은 Native undo가 아니며 실제 브라우저4·pixel crop·두 timing cohort는 별도다. 이 명령 추가만으로 CI 성공·실제 운영 반영을 선언하지 않는다.

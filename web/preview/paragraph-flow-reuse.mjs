@@ -1,13 +1,17 @@
+import {
+  isMeasurementPlacementPort,
+  clonePrivateMeasurement,
+} from './measurement-placement-private.mjs';
 import { createProjectionDataKey } from './paragraph-flow-data-key.mjs';
 
 // currentReference는 최신 표시 모델에서 읽는 선택 권한이며 행 기하에 저장하지 않습니다.
 const selectionKeys = new Set(['currentReference']);
 
-export function createParagraphFlowReuse({
-  maxEntries = 1024,
-  maxRows = 8192,
-  maxUnits = 2097152,
-} = {}) {
+export function createParagraphFlowReuse(
+  { maxEntries = 1024, maxRows = 8192, maxUnits = 2097152 } = {},
+  placementPort = null,
+) {
+  const shareMeasurements = isMeasurementPlacementPort(placementPort);
   if (![maxEntries, maxRows, maxUnits].every((v) => Number.isSafeInteger(v) && v > 0))
     throw new RangeError('InvalidParagraphFlowBudget');
   let nativeScope = null;
@@ -141,6 +145,10 @@ export function createParagraphFlowReuse({
           if (old?.signature === signature && old.rows.length <= remaining) {
             counts.hits++;
             counts.copiedRows += old.rows.length;
+            if (shareMeasurements && old.immutable) {
+              counts.copiedRows -= old.rows.length;
+              return { value: { rows: old.rows, height: old.height } };
+            }
             return { value: structuredClone({ rows: old.rows, height: old.height }) };
           }
           counts.misses++;
@@ -163,9 +171,12 @@ export function createParagraphFlowReuse({
               if (encoded === null) return;
               const size = encoded.length + signature.length + key.length;
               if (size > maxUnits) return;
-              let copy;
+              let copy,
+                immutable = false;
               try {
-                copy = structuredClone(rows);
+                const shared = shareMeasurements ? clonePrivateMeasurement(rows) : null;
+                copy = shared ? shared.value : structuredClone(rows);
+                immutable = !!shared;
                 counts.storeRowsCopied += rows.length;
               } catch {
                 counts.fallbacks++;
@@ -187,7 +198,13 @@ export function createParagraphFlowReuse({
                 units = 0;
                 rowCount = 0;
               }
-              entries.set(key, { signature, rows: copy, height, size });
+              entries.set(key, {
+                signature,
+                rows: copy,
+                height,
+                size,
+                ...(immutable ? { immutable: true } : {}),
+              });
               units += size;
               rowCount += copy.length;
             },

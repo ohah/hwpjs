@@ -9,7 +9,7 @@ import {
 } from '@hwpjs/core/_internal/native-geometry';
 // Existing renderer/input remain the single implementation; the package build bundles these sources.
 // @ts-ignore existing canonical JavaScript source
-import { createRenderer } from '../../../web/preview/renderer.mjs';
+import { createSurfaceRenderer } from '../../../web/preview/renderer.mjs';
 // @ts-ignore existing canonical JavaScript source
 import { createCanvasEditor } from '../../../web/preview/canvas-editor.mjs';
 import type { HeadlessEditor } from '@hwpjs/core';
@@ -240,7 +240,7 @@ export function createCanvasSurface({
     Object.defineProperty(rendererEnvironment, 'nativeGeometryEvidenceReader', {
       value: readNativeGeometryEvidence,
     });
-    renderer = createRenderer(canvas, viewport, spacer, alignFrame, rendererEnvironment);
+    renderer = createSurfaceRenderer(canvas, viewport, spacer, alignFrame, rendererEnvironment);
     if (environment.decodeImage) renderer.pictureDecoder(environment.decodeImage);
     lease = editor.acquireInputSurface({
       commitComposition: async () => {
