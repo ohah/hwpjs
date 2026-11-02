@@ -1090,3 +1090,25 @@ node --test --test-concurrency=1 \
 ```
 
 신규5+projection16+교정 line-spacing8=source29다. 합성 복원은 Native undo가 아니며 실제 브라우저4·pixel crop·두 timing cohort는 별도다. 이 명령 추가만으로 CI 성공·실제 운영 반영을 선언하지 않는다.
+
+## 첫 undo onset 화면 투영 선택 회귀
+
+[지원 계약과 검증 범위](undo-onset-projection.md)를 따른다. Node24.20에서 TypeScript source/fixture를 직접 처리한다. 선택 제품·시험·provider가 반영된 checkout과 공식 Core dist를 명시한다. provider는 부모 package.json exports와 dist/build-manifest.json의 실제 target SHA를 검증한다. package symlink·NODE_PATH·오래된 root dist fallback이나 ignored 자동수집을 사용하지 않는다.
+
+```sh
+HWPJS_TEST_CORE_DIST=/absolute/official-core/dist \
+node --import ./tools/renderer-test-core-provider.mjs \
+  --test --test-concurrency=1 --test-reporter=tap \
+  ./tests/hwpx/undo-onset-candidate.test.mjs \
+  ./tests/hwpx/history-model-presentation.test.mjs \
+  ./tests/hwp5/history-input-intent-queue.test.mjs \
+  ./tests/hwp5/history-input-intent-readiness.test.mjs \
+  ./packages/vanilla/tests/undo-onset-surface-integration.test.mjs \
+  ./packages/vanilla/tests/undo-onset-held-renderer.test.mjs \
+  ./packages/vanilla/tests/renderer-ack-projection.test.mjs \
+  ./packages/vanilla/tests/native-geometry-renderer.test.mjs
+```
+
+source70+controlled Surface/frame6+기존 renderer18=94개 고유 시험이다. 신규 test3+fixture3 중 fixture는 import로 소비하며 독립 entry로 세지 않는다. 기존 provider1파일은 정규 선택 파일과 함께 필요하다. 실제 canonical 검사는 frozen SDK05 provider로94개 통과했고 실제 root의 같은 선택도94개 통과했다. 현재 Core 신빌드 CI 완료로 승계하지 않는다.
+
+실제 Surface/controller/renderer source 함수와 Core public EditorState를 사용하지만 editor lease·DOM·Canvas·RAF는 통제 모형이다. Native 실행·실제 pixel·브라우저 지연은 별도 영수증 범위다.

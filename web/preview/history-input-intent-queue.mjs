@@ -138,6 +138,9 @@ export function createHistoryInputIntentQueue({
     return true;
   };
   return {
+    get nextKind() {
+      return entries.front()?.kind ?? null;
+    },
     get size() {
       return entries.length + Number(active);
     },

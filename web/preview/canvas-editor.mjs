@@ -68,6 +68,7 @@ export function createCanvasEditor({
   historyAvailability = null,
   historyModelState = null,
   prepareHistoryModelSelection = null,
+  deferQueuedTypingProjection = null,
   onCommittedSelection = () => {},
   onComposition = () => {},
 }) {
@@ -136,6 +137,8 @@ export function createCanvasEditor({
     structureTarget = null;
   let deferredComposition = null,
     deferredReplies = [];
+  let ackProjectionSequence = 0,
+    deferredTypingCheck = null;
   let historyModelWitness = null;
   let historyModelPreparation = null;
   let historyPresentationReport = null;
@@ -440,7 +443,7 @@ export function createCanvasEditor({
     listen(ownerDocument, 'visibilitychange', () => {
       if (ownerDocument.visibilityState !== 'hidden') historyPaintBarrier.notify();
     });
-  const paint = ({ deferGeometry = false } = {}) => {
+  const paint = ({ deferGeometry = false, preserveQueuedTyping = false } = {}) => {
     let composition;
     if (multiComposition) composition = compositionProjection()?.composition;
     const change = composing && !multiComposition && draftTextChange();
@@ -449,13 +452,15 @@ export function createCanvasEditor({
         anchor: { ...target, unit: change.startUnit },
         focus: { ...target, unit: change.startUnit + change.text.length },
       };
-    renderer.select({
+    const interaction = {
       anchor,
       focus,
       active: activeElement() === input || drag !== null,
       composition,
       historyPending,
-    });
+    };
+    if (preserveQueuedTyping) renderer.select(interaction, true);
+    else renderer.select(interaction);
     canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : '';
     canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : '';
     canvas.dataset.composing = String(composing);
@@ -479,7 +484,7 @@ export function createCanvasEditor({
         { origin: selectionOrigin },
       );
   };
-  const sync = () => {
+  const sync = ({ deferGeometry = false } = {}) => {
     // 늦은 DOM select/keyup은 이력이 복원 중인 선택의 권위가 아닙니다.
     if (historyPaintBarrier.pending) return;
     if (!target || multipleParagraphs()) return;
@@ -516,7 +521,7 @@ export function createCanvasEditor({
         affinity: focus?.unit === focusUnit ? focus.affinity : 'forward',
       };
     updateReadOnly();
-    paint();
+    paint({ deferGeometry, preserveQueuedTyping: deferGeometry });
   };
   const setSelection = (a, f, nextX = null, origin = 'canvas') => {
     selectionOrigin = origin;
@@ -3064,6 +3069,11 @@ export function createCanvasEditor({
       renderer.preview(null);
       sync();
     },
+    consumeDeferredTypingProjection() {
+      const check = deferredTypingCheck;
+      deferredTypingCheck = null;
+      return check?.() === true;
+    },
     settled: () =>
       !composing &&
       !pending &&
@@ -3087,6 +3097,8 @@ export function createCanvasEditor({
     historyModelReady,
     requestHistory: travel,
     reset({ preserveHistory = false, selectionOrigin: origin = 'canvas' } = {}) {
+      ackProjectionSequence++;
+      deferredTypingCheck = null;
       historyPresentationReport = null;
       selectionOrigin = origin;
       if (events.signal.aborted) return;
@@ -3143,6 +3155,8 @@ export function createCanvasEditor({
     },
     message(message) {
       if (events.signal.aborted) return;
+      const ackSequence = ++ackProjectionSequence;
+      deferredTypingCheck = null;
       const pendingHistoryReply =
         historyPaintBarrier.pending &&
         historyPending &&
@@ -3694,6 +3708,59 @@ export function createCanvasEditor({
           }
         }
         report('변경 적용 · 재조판 필요');
+        // 앞선 Native 입력은 모두 적용한다. 이력 대기 중인 중간 plain ACK의 기하만 유예한다.
+        const canStage =
+          typeof deferQueuedTypingProjection === 'function' &&
+          previous.kind === 'splice' &&
+          !message.error &&
+          message.applied !== false &&
+          inputIntents.size > 0 &&
+          historyIntents.nextKind === 'history' &&
+          !composing &&
+          !deferredComposition &&
+          !multiComposition &&
+          !historyPending &&
+          !historyPaintBarrier.pending &&
+          !typingFont &&
+          !typingProperties &&
+          !target.createdCell &&
+          !multipleParagraphs() &&
+          wholeTextEditable();
+        if (canStage) {
+          const capturedTarget = target,
+            capturedValue = input.value;
+          const unchanged = () =>
+            !events.signal.aborted &&
+            ackProjectionSequence === ackSequence &&
+            target === capturedTarget &&
+            input.value === capturedValue &&
+            !composing &&
+            !deferredComposition &&
+            !multiComposition &&
+            !historyPending &&
+            !historyPaintBarrier.pending &&
+            !typingFont &&
+            !typingProperties &&
+            historyIntents.nextKind === 'history';
+          const current = () => {
+            if (!unchanged()) return false;
+            const observed = renderer.paragraph(capturedTarget);
+            return unchanged() && observed === paragraph;
+          };
+          if (
+            current() &&
+            deferQueuedTypingProjection(draftPreview(), current) === true &&
+            current()
+          ) {
+            sync({ deferGeometry: true });
+            if (!current()) return;
+            pump();
+            if (current() && pending?.kind === 'splice') deferredTypingCheck = current;
+            return;
+          }
+          // callback의 문서/선택 교체 뒤에는 이전 ACK의 preview/pump를 실행하지 않는다.
+          if (!current()) return;
+        }
         preview();
         pump();
       } finally {

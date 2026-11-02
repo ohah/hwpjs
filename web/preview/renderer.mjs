@@ -434,6 +434,18 @@ export function createRenderer(
   };
   const paint = () => {
     if (closed) return;
+    const held = queuedTypingHold;
+    if (held && projectionDeferred) {
+      let current = false;
+      try {
+        current = held.current() === true;
+      } catch {
+        /* 유예 검증 실패는 기존 fresh 경로다. */
+      }
+      if (!closed && queuedTypingHold === held && current) return;
+      queuedTypingHold = null;
+      if (closed) return;
+    }
     flushProjection(false);
     const paintInteractionRevision = interactionRevision;
     const paintInteractionStamp = interactionStamp();
@@ -1271,7 +1283,10 @@ export function createRenderer(
       interactionRevision === paintInteractionRevision ? paintInteractionStamp : null;
   };
   let frame = 0;
-  const schedule = () => {
+  let queuedTypingHold = null;
+  const preserveQueuedTyping = {};
+  const schedule = (reason = null) => {
+    if (reason !== preserveQueuedTyping) queuedTypingHold = null;
     if (!closed && !frame)
       frame = requestAnimationFrame(() => {
         frame = 0;
@@ -1279,6 +1294,7 @@ export function createRenderer(
       });
   };
   const reflow = ({ scrollOrigin = null, scheduleFrame = true } = {}) => {
+    queuedTypingHold = null;
     refreshFontWatch();
     layoutGeneration++;
     paintedCharts = [];
@@ -1444,6 +1460,7 @@ export function createRenderer(
     if (scheduleFrame) schedule();
   };
   const flushProjection = (scheduleFrame = true) => {
+    queuedTypingHold = null;
     if (!closed && projectionDeferred) reflow({ scheduleFrame });
     return layout;
   };
@@ -1472,6 +1489,7 @@ export function createRenderer(
   };
   refreshFontWatch();
   const invalidateCanvasMetrics = () => {
+    queuedTypingHold = null;
     rendererGlyphMetrics.clear();
     measurementEpoch++;
     paragraphFlowReuse.clear();
@@ -1482,6 +1500,7 @@ export function createRenderer(
   resize.observe(viewport);
   return {
     setGeometryEvidence(value, evidence) {
+      queuedTypingHold = null;
       geometryEvidence =
         value === content && readGeometryEvidence(evidence, value) ? evidence : undefined;
       if (geometryEvidence === undefined) {
@@ -1491,6 +1510,7 @@ export function createRenderer(
       }
     },
     suspendGeometryEvidence() {
+      queuedTypingHold = null;
       geometryEvidence = undefined;
       pictureRefreshGate.clear();
       nativeGeometry.clear();
@@ -1638,14 +1658,17 @@ export function createRenderer(
       ]),
     characterShadeRangesAvailable: () => content.characterShadeRangesAvailable === true,
     pictureReader(read) {
+      queuedTypingHold = null;
       pictureRefreshGate.clear();
       pictureReader = read;
     },
     tableBackgroundReader(read) {
+      queuedTypingHold = null;
       pictureRefreshGate.clear();
       tableBackgroundReader = read;
     },
     pictureDecoder(decode) {
+      queuedTypingHold = null;
       pictureRefreshGate.clear();
       if (typeof decode !== 'function') throw new Error('InvalidPictureDecoder');
       pictureDecoder = decode;
@@ -1654,6 +1677,7 @@ export function createRenderer(
       decodedResourceGeometry.clear();
     },
     chartReader(read) {
+      queuedTypingHold = null;
       chartReader = read;
     },
     chartDisplay(section, wrapper) {
@@ -1713,6 +1737,7 @@ export function createRenderer(
       schedule();
     },
     show(value, options = {}) {
+      queuedTypingHold = null;
       const {
         preserveScroll = false,
         resourceEpoch: nextResourceEpoch = resourceEpoch,
@@ -1830,6 +1855,7 @@ export function createRenderer(
       return !closed && sourceObservationState === state && state?.content === content;
     },
     clear() {
+      queuedTypingHold = null;
       rendererGlyphMetrics.clear();
       nativeGeometry.clear();
       paragraphFlowReuse.clear();
@@ -1998,6 +2024,16 @@ export function createRenderer(
       draft = value;
       reflow();
     },
+    stageQueuedTypingPreview(value, current = null) {
+      if (closed) return false;
+      draft = value;
+      projectionDeferred = true;
+      layoutGeneration++;
+      canvas.dataset.paintPending = 'true';
+      queuedTypingHold = typeof current === 'function' ? { current } : null;
+      schedule(preserveQueuedTyping);
+      return !closed && draft === value && projectionDeferred;
+    },
     clearDraft() {
       if (closed) return;
       // 새 모델의 투영이 이미 확정됐으면 초안 제거만으로 다시 계산하지 않습니다.
@@ -2006,7 +2042,7 @@ export function createRenderer(
       draft = null;
       reflow();
     },
-    select(value) {
+    select(value, preserve = false) {
       if (closed) return;
       interaction = value;
       interactionRevision++;
@@ -2019,12 +2055,13 @@ export function createRenderer(
           caretVisible = !caretVisible;
           schedule();
         }, 500);
-      schedule();
+      schedule(preserve === true ? preserveQueuedTyping : null);
     },
     onGeometry(callback) {
       onGeometry = callback;
     },
     close() {
+      queuedTypingHold = null;
       rendererGlyphMetrics.close();
       nativeGeometry.clear();
       paragraphFlowReuse.clear();

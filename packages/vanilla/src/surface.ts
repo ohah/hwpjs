@@ -95,6 +95,7 @@ export function createCanvasSurface({
     selectionKey = '',
     observedStateVersion = -1;
   let activeHistoryAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
+  let deferredTypingAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   let historySelectionPublication:
     | { state: ReturnType<HeadlessEditor['getEditorState']>; target: SelectionTarget }
     | undefined;
@@ -256,9 +257,20 @@ export function createCanvasSurface({
       lease,
       acknowledge(reply, state) {
         const priorAcknowledgement = activeHistoryAcknowledgement;
+        deferredTypingAcknowledgement = undefined;
         activeHistoryAcknowledgement = state;
         const finish = (modelPrepared = false) => {
-          if (!closed && !modelPrepared && !direct.historyModelReady()) renderer.flushProjection();
+          const deferred = deferredTypingAcknowledgement;
+          deferredTypingAcknowledgement = undefined;
+          const currentTyping =
+            deferred &&
+            deferred === state &&
+            !closed &&
+            editor.getEditorState() === deferred &&
+            lease?.isActive() &&
+            direct.consumeDeferredTypingProjection?.() === true;
+          if (!closed && !modelPrepared && !currentTyping && !direct.historyModelReady())
+            renderer.flushProjection();
         };
         try {
           if (state) render(state);
@@ -287,6 +299,45 @@ export function createCanvasSurface({
       input,
       renderer,
       controls: bridge,
+      deferQueuedTypingProjection(draft: any, controllerCurrent: () => boolean) {
+        const current = activeHistoryAcknowledgement;
+        if (
+          closed ||
+          !current ||
+          current !== editor.getEditorState() ||
+          current.status !== 'ready' ||
+          !lease?.isActive() ||
+          bridge?.busy()
+        )
+          return false;
+        const held = () => {
+          if (
+            closed ||
+            current !== editor.getEditorState() ||
+            !lease?.isActive() ||
+            bridge?.pendingKind() !== 'splice' ||
+            controllerCurrent() !== true
+          )
+            return false;
+          // controller 검증 중 재진입한 state/lease/pending 변경은 유예를 해제한다.
+          return (
+            !closed &&
+            current === editor.getEditorState() &&
+            lease?.isActive() === true &&
+            bridge?.pendingKind() === 'splice'
+          );
+        };
+        if (
+          renderer.stageQueuedTypingPreview(draft, held) !== true ||
+          closed ||
+          current !== editor.getEditorState() ||
+          !lease?.isActive() ||
+          bridge?.busy()
+        )
+          return false;
+        deferredTypingAcknowledgement = current;
+        return true;
+      },
       historyModelState: () => {
         if (closed || !lease?.isActive() || !bridge?.ready() || bridge.busy()) return null;
         const state = editor.getEditorState();
