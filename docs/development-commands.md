@@ -1,5 +1,18 @@
 # 개발·검증 명령
 
+## 그림 대기 중 문단 측정 캐시 보존
+
+[수명과 검증 범위](resource-geometry-lifetime.md)를 따릅니다. 다음 4개 진입점은 그림 저장소·연속성 gate·디코딩 epoch·다음 측정 준비의 회귀 47개를 실행합니다. 실제 브라우저와 속도 검증은 별도입니다.
+
+```sh
+nice -n 19 mise exec -- node --max-old-space-size=512 \
+  --test --test-concurrency=1 --test-timeout=30000 \
+  tests/hwp5/picture-resource-geometry-lifetime.test.mjs \
+  tests/hwpx/picture-resources-settled.test.mjs \
+  tests/hwpx/picture-resources.test.mjs \
+  tests/hwpx/native-picture-refresh-gate.test.mjs
+```
+
 ## HWP5 owner-window Worker 회귀
 
 [COW 계약과 지원 경계](hwp5-owner-window-cow.md)를 따릅니다. 기존 d849 WASM과 b18 Noori HWP5의 절대경로를 명시합니다. 누락·해시 불일치는 실패이며 새 Native 빌드를 수행하지 않습니다.

@@ -1768,9 +1768,14 @@ export function createRenderer(
       if (changedResourceDocument) pictureRefreshGate.clear();
       const nextProviderEpoch = hostEpochs.resourceProviderEpoch();
       const providerEpochChanged = nextProviderEpoch !== resourceProviderEpoch;
-      const retainNativePictures =
-        pictureRefreshGate.observe(value, nextGeometryEvidence, nextProviderEpoch) &&
-        pictureResources.canRetainSettled();
+      const nativeContinuity = pictureRefreshGate.observe(
+        value,
+        nextGeometryEvidence,
+        nextProviderEpoch,
+      );
+      const retainNativePictures = nativeContinuity && pictureResources.canRetainSettled();
+      const retainNativeGeometry =
+        nativeContinuity && (retainNativePictures || pictureResources.hasOnlyNullBitmaps());
       if (changedResourceDocument) {
         nativeGeometry.clear();
         paragraphFlowReuse.clear();
@@ -1795,8 +1800,10 @@ export function createRenderer(
           pictureResources.clear();
           decodedResourceGeometry.clear();
         } else pictureResources.refresh();
-        nativeGeometry.clear();
-        paragraphFlowReuse.clear();
+        if (!retainNativeGeometry) {
+          nativeGeometry.clear();
+          paragraphFlowReuse.clear();
+        }
       }
       resourceProviderEpoch = nextProviderEpoch;
       resourceEpoch = nextResourceEpoch;

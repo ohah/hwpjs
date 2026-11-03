@@ -224,6 +224,12 @@ export function createPictureResources({
           return false;
       return true;
     },
+    // 표시용 상태가 아닌 모든 비공개 원본 entry를 확인합니다.
+    hasOnlyNullBitmaps() {
+      if (closed) return false;
+      for (const entry of entries.values()) if (entry.bitmap !== null) return false;
+      return true;
+    },
     // Operation revision only. Document replacement must still call clear().
     refresh() {
       if (closed) throw new Error('PictureResourcesClosed');

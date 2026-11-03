@@ -14,6 +14,8 @@
 
 ## 현재 계층과 연결
 
+[그림 대기 중 문단 측정 캐시 보존](resource-geometry-lifetime.md)은 그림 자원과 측정 캐시의 수명·무효화 계약 및 검증 범위를 소유합니다.
+
 [실험용 HWP5 편집 API](hwp5-editor-api.md)는 native 소유 세션을 별도 optional WASM/JS 경계에 연결합니다. Canvas 직접 입력과 고급 폼이 같은 명령 경로를 사용합니다. 변경 값의 SSOT는 native 모델이며 Worker의 표시 projection과 textarea의 임시 조합/대기 입력은 저장 모델이 아닙니다.
 
 [기존 글자 모양 적용](hwp5-character-format-edit.md)은 텍스트 splice와 같은 소유 모델·서식 경계 교체·내용 검증·Section writer를 재사용합니다. 서식 명령과 범위 보존 정책만 별도 모듈에 두며 리소스 생성·조판은 추가하지 않습니다. JS 경계는 위 별도 API가 소유합니다.
