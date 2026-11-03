@@ -43,7 +43,8 @@ function hostSnapshot(value) {
   return result;
 }
 
-// 권위 발급은 하지 않습니다. 정규 registry 조회를 주입한 renderer만 소비합니다.
+// Source continuity is observed on every registered model. Host-dependent
+// measurement scopes are issued only by prepare, never by observe.
 export function createNativeGeometryDeps({ readEvidence } = {}) {
   if (typeof readEvidence !== 'function') throw new TypeError('NativeGeometryResolverRequired');
   let scope = null,
@@ -51,7 +52,8 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
     revision = null,
     resourceLease = null,
     host = null;
-  let environmentKey = null;
+  let environmentKey = null,
+    observedContent = null;
   const versions = new Map();
   let membership = new WeakMap(),
     membershipContent = null,
@@ -77,6 +79,7 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
     resourceLease = null;
     host = null;
     environmentKey = null;
+    observedContent = null;
     versions.clear();
     membership = new WeakMap();
     membershipContent = null;
@@ -90,76 +93,135 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
     clear();
     return null;
   };
+  const readSource = (content, evidence) => {
+    let verified;
+    try {
+      verified = readEvidence(evidence, content);
+    } catch {
+      return reject('EvidenceResolverFailed');
+    }
+    if (
+      !verified ||
+      content?.format !== 'hwp5' ||
+      !Array.isArray(content.paragraphs) ||
+      !Object.isFrozen(content) ||
+      !Object.isFrozen(content.paragraphs)
+    )
+      return reject('UnregisteredProjection');
+    if (
+      content.limited !== false ||
+      content.window ||
+      content.viewKind ||
+      (content.totalParagraphs !== undefined &&
+        content.totalParagraphs !== content.paragraphs.length)
+    )
+      return reject('IncompleteNativeProjection');
+    return verified;
+  };
+  const describeSource = (verified) => {
+    const nextScope = own(verified, 'scope'),
+      nextLease = own(verified, 'resourceLease'),
+      nextEpoch = own(verified, 'nativeEpoch'),
+      nextRevision = own(verified, 'nativeRevision'),
+      kind = own(verified, 'kind');
+    if (
+      !nextScope ||
+      !nextLease ||
+      typeof nextEpoch !== 'string' ||
+      !/^\d+$/.test(nextEpoch) ||
+      !integer(nextRevision) ||
+      !['full-baseline', 'exclusive-text', 'history-text'].includes(kind)
+    )
+      return reject('InvalidRegisteredEvidence');
+    const owner = own(verified, 'owner'),
+      generation = own(verified, 'ownerTextRunGeneration'),
+      section = own(owner, 'section'),
+      paragraph = own(owner, 'paragraph');
+    if (
+      ['exclusive-text', 'history-text'].includes(kind) &&
+      (!integer(section) || !integer(paragraph) || !integer(generation))
+    )
+      return reject('InvalidOwnerGeneration');
+    return {
+      verified,
+      nextScope,
+      nextLease,
+      nextEpoch,
+      nextRevision,
+      kind,
+      section,
+      paragraph,
+      generation,
+    };
+  };
+  const advance = (content, source) => {
+    const {
+      verified,
+      nextScope,
+      nextLease,
+      nextEpoch,
+      nextRevision,
+      kind,
+      section,
+      paragraph,
+      generation,
+    } = source;
+    const sameResource = scope === nextScope && resourceLease === nextLease;
+    const sameEpoch = sameResource && epoch === nextEpoch && revision === nextRevision;
+    const continuous =
+      sameResource &&
+      ['exclusive-text', 'history-text'].includes(kind) &&
+      own(verified, 'beforeEpoch') === epoch &&
+      own(verified, 'beforeRevision') === revision;
+    let rebase = !sameResource || (!sameEpoch && !continuous);
+    if (versions.size >= 4096 && !versions.has(`${section}:${paragraph}`)) rebase = true;
+    if (rebase) {
+      versions.clear();
+      environmentKey = Object.freeze({});
+      counts.rebases++;
+      // A later prepare of the same source must still rebuild its membership.
+      membershipContent = null;
+      membershipEpoch = null;
+      membershipLease = null;
+      counts.membershipEntries = 0;
+    }
+    scope = nextScope;
+    resourceLease = nextLease;
+    epoch = nextEpoch;
+    revision = nextRevision;
+    observedContent = content;
+    if (['exclusive-text', 'history-text'].includes(kind))
+      versions.set(`${section}:${paragraph}`, String(generation));
+  };
   return {
     clear,
     stats: () => ({
       ...counts,
       owners: versions.size,
-      enabled: environmentKey !== null,
+      enabled:
+        environmentKey !== null &&
+        membershipContent === observedContent &&
+        membershipEpoch === epoch,
       lastFallback,
     }),
+    observe(content, evidence) {
+      const verified = readSource(content, evidence);
+      if (!verified) return false;
+      const source = describeSource(verified);
+      if (!source) return false;
+      advance(content, source);
+      return true;
+    },
     prepare(content, evidence, hostDeps) {
-      let verified;
-      try {
-        verified = readEvidence(evidence, content);
-      } catch {
-        return reject('EvidenceResolverFailed');
-      }
-      if (
-        !verified ||
-        content?.format !== 'hwp5' ||
-        !Array.isArray(content.paragraphs) ||
-        !Object.isFrozen(content) ||
-        !Object.isFrozen(content.paragraphs)
-      )
-        return reject('UnregisteredProjection');
-      if (
-        content.limited !== false ||
-        content.window ||
-        content.viewKind ||
-        (content.totalParagraphs !== undefined &&
-          content.totalParagraphs !== content.paragraphs.length)
-      )
-        return reject('IncompleteNativeProjection');
+      const verified = readSource(content, evidence);
+      if (!verified) return null;
+      // Preserve the original prepare validation/error precedence.
       const nextHost = hostSnapshot(hostDeps);
       if (!nextHost) return reject('UnknownHostDependencies');
-      const nextScope = own(verified, 'scope');
-      const nextLease = own(verified, 'resourceLease');
-      const nextEpoch = own(verified, 'nativeEpoch');
-      const nextRevision = own(verified, 'nativeRevision');
-      const kind = own(verified, 'kind');
-      if (
-        !nextScope ||
-        !nextLease ||
-        typeof nextEpoch !== 'string' ||
-        !/^\d+$/.test(nextEpoch) ||
-        !integer(nextRevision) ||
-        !['full-baseline', 'exclusive-text', 'history-text'].includes(kind)
-      )
-        return reject('InvalidRegisteredEvidence');
-      const sameResource = scope === nextScope && resourceLease === nextLease;
-      const sameEpoch = sameResource && epoch === nextEpoch && revision === nextRevision;
-      const continuous =
-        sameResource &&
-        ['exclusive-text', 'history-text'].includes(kind) &&
-        own(verified, 'beforeEpoch') === epoch &&
-        own(verified, 'beforeRevision') === revision;
-      let rebase = !sameResource || (!sameEpoch && !continuous);
-      const owner = own(verified, 'owner');
-      const generation = own(verified, 'ownerTextRunGeneration');
-      const section = own(owner, 'section'),
-        paragraph = own(owner, 'paragraph');
-      if (
-        ['exclusive-text', 'history-text'].includes(kind) &&
-        (!integer(section) || !integer(paragraph) || !integer(generation))
-      )
-        return reject('InvalidOwnerGeneration');
-      if (versions.size >= 4096 && !versions.has(`${section}:${paragraph}`)) rebase = true;
-      if (rebase) {
-        versions.clear();
-        environmentKey = Object.freeze({});
-        counts.rebases++;
-      }
+      const source = describeSource(verified);
+      if (!source) return null;
+      advance(content, source);
+      const { nextEpoch, nextLease } = source;
       if (
         !host ||
         host.length !== nextHost.length ||
@@ -168,18 +230,11 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
         environmentKey = Object.freeze({});
         counts.hostMisses++;
       }
-      scope = nextScope;
-      resourceLease = nextLease;
-      epoch = nextEpoch;
-      revision = nextRevision;
       host = nextHost;
-      if (['exclusive-text', 'history-text'].includes(kind))
-        versions.set(`${section}:${paragraph}`, String(generation));
       if (
         membershipContent !== content ||
         membershipEpoch !== nextEpoch ||
-        membershipLease !== nextLease ||
-        rebase
+        membershipLease !== nextLease
       ) {
         const nextMembership = new WeakMap();
         for (const row of content.paragraphs) {
@@ -200,11 +255,10 @@ export function createNativeGeometryDeps({ readEvidence } = {}) {
       counts.accepted++;
       lastFallback = null;
       const key = environmentKey;
-      // 최신 등록 content의 실제 문단 객체에만 stamp를 돌려줍니다.
       return {
         key,
         stamp(p) {
-          if (environmentKey !== key || epoch !== nextEpoch) {
+          if (environmentKey !== key || epoch !== nextEpoch || observedContent !== content) {
             counts.stampMisses++;
             return null;
           }

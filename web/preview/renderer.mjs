@@ -1503,6 +1503,7 @@ export function createRenderer(
       queuedTypingHold = null;
       geometryEvidence =
         value === content && readGeometryEvidence(evidence, value) ? evidence : undefined;
+      if (geometryEvidence !== undefined) nativeGeometry.observe(content, geometryEvidence);
       if (geometryEvidence === undefined) {
         pictureRefreshGate.clear();
         nativeGeometry.clear();
@@ -1804,6 +1805,9 @@ export function createRenderer(
       ownedBodyDraftProjection = null;
       content = value;
       geometryEvidence = nextGeometryEvidence;
+      // Source version continuity must survive skipped intermediate layouts.
+      // observe issues no measurement scope or geometry/selection authority.
+      nativeGeometry.observe(content, geometryEvidence);
       paragraphLookup.clear();
       draft = null;
       resizeGuide = null;

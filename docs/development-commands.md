@@ -1106,9 +1106,10 @@ node --import ./tools/renderer-test-core-provider.mjs \
   ./packages/vanilla/tests/undo-onset-surface-integration.test.mjs \
   ./packages/vanilla/tests/undo-onset-held-renderer.test.mjs \
   ./packages/vanilla/tests/renderer-ack-projection.test.mjs \
-  ./packages/vanilla/tests/native-geometry-renderer.test.mjs
+  ./packages/vanilla/tests/native-geometry-renderer.test.mjs \
+  ./tests/hwp5/native-geometry-source-observation.test.mjs
 ```
 
-source70+controlled Surface/frame6+기존 renderer18=94개 고유 시험이다. 신규 test3+fixture3 중 fixture는 import로 소비하며 독립 entry로 세지 않는다. 기존 provider1파일은 정규 선택 파일과 함께 필요하다. 실제 canonical 검사는 frozen SDK05 provider로94개 통과했고 실제 root의 같은 선택도94개 통과했다. 현재 Core 신빌드 CI 완료로 승계하지 않는다.
+source70+controlled Surface/frame6+기존 renderer18+source 관측6=100개 고유 시험이다. 신규 test3+fixture3 중 fixture는 import로 소비하며 독립 entry로 세지 않는다. 기존 provider1파일은 정규 선택 파일과 함께 필요하다. 실제 canonical 검사는 frozen SDK05 provider로100개 통과했고 실제 root의 같은 선택도100개 통과했다. 현재 Core 신빌드 CI 완료로 승계하지 않는다.
 
 실제 Surface/controller/renderer source 함수와 Core public EditorState를 사용하지만 editor lease·DOM·Canvas·RAF는 통제 모형이다. Native 실행·실제 pixel·브라우저 지연은 별도 영수증 범위다.
