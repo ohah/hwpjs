@@ -1089,7 +1089,7 @@ node --test --test-concurrency=1 \
   ./tests/hwp5/line-spacing-compat.test.mjs
 ```
 
-신규5+projection16+교정 line-spacing8=source29다. 합성 복원은 Native undo가 아니며 실제 브라우저4·pixel crop·두 timing cohort는 별도다. 이 명령 추가만으로 CI 성공·실제 운영 반영을 선언하지 않는다.
+측정·배치8+projection16+교정 line-spacing8=source32다. 소유 null-prototype 보존과 불확정 clone fallback을 포함한다. 합성 복원은 Native undo가 아니며 실제 브라우저4·pixel crop·두 timing cohort는 별도다. 이 명령 추가만으로 CI 성공·실제 운영 반영을 선언하지 않는다.
 
 ## 첫 undo onset 화면 투영 선택 회귀
 

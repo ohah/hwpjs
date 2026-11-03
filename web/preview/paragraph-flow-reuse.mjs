@@ -174,7 +174,14 @@ export function createParagraphFlowReuse(
               let copy,
                 immutable = false;
               try {
-                const shared = shareMeasurements ? clonePrivateMeasurement(rows) : null;
+                const shared = shareMeasurements
+                  ? clonePrivateMeasurement(rows, { preserveNullPrototype: true })
+                  : null;
+                // 소유 clone이 확인되지 않으면 private cache는 발행하지 않는다.
+                if (shareMeasurements && !shared) {
+                  counts.fallbacks++;
+                  return;
+                }
                 copy = shared ? shared.value : structuredClone(rows);
                 immutable = !!shared;
                 counts.storeRowsCopied += rows.length;

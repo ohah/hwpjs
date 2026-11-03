@@ -1,7 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createParagraphFlowReuse } from '../../web/preview/paragraph-flow-reuse.mjs';
-import { createMeasurementPlacementPort } from '../../web/preview/measurement-placement-private.mjs';
+import {
+  createMeasurementPlacementPort,
+  clonePrivateMeasurement,
+} from '../../web/preview/measurement-placement-private.mjs';
 import { layoutContent } from '../../web/preview/layout.mjs';
 const content = () => ({
   format: 'hwp5',
@@ -84,7 +87,7 @@ test('합성 텍스트 변경/원상복귀·폭·clear·가짜 port의 raw 경�
   layoutContent(c, 200, m);
   assert.equal(Object.isFrozen(layoutContent(c, 200, m).rows[0].boundaries), false);
 });
-test('후천 clone identity wrapper는 raw fallback이며 원본 freeze0', () => {
+test('후천 clone identity wrapper는 private cache decline이며 원본 freeze0', () => {
   const c = content(),
     b = setup(true),
     desc = Object.getOwnPropertyDescriptor(globalThis, 'structuredClone');
@@ -102,10 +105,11 @@ test('후천 clone identity wrapper는 raw fallback이며 원본 freeze0', () =>
   } finally {
     Object.defineProperty(globalThis, 'structuredClone', desc);
   }
-  assert.ok(calls > 0);
+  assert.equal(calls, 0);
+  assert.equal(b.cache.stats().entries, 0);
   assert.equal(Object.isFrozen(c.paragraphs[0].paragraphShape), false);
   assert.equal(Object.isFrozen(flow.rows[0].boundaries), false);
-  // 이후 정상 host로 돌아와도 이전 mutable entry는 공유하지 않는다.
+  // 정상 host로 복귀해도 거부한 계산은 이전 cache entry로 게시되지 않는다.
   assert.equal(Object.isFrozen(layoutContent(c, 200, b.measure).rows[0].boundaries), false);
 });
 test('freeze/ownKeys 후천 훅은 원본을 관측하되 private clone은 노출하지 않음', () => {
@@ -155,4 +159,76 @@ test('freeze/ownKeys 후천 훅은 원본을 관측하되 private clone은 노�
   const hit = scope.lookup(p, 10, [], true);
   assert.equal(hit.value.rows[0].boundaries[0].x, 8);
   assert.equal(Object.isFrozen(hit.value.rows[0].boundaries[0]), true);
+});
+
+// 표 캐시와 무관한 private clone의 관측 가능한 graph 계약입니다.
+test('null-prototype opt-in은 primitive와 기본 clone 동작을 바꾸지 않는다', () => {
+  for (const value of [null, undefined, true, false, 0, -0, 123, '본문', 12n]) {
+    assert.deepStrictEqual(clonePrivateMeasurement(value).value, value);
+    assert.deepStrictEqual(
+      clonePrivateMeasurement(value, { preserveNullPrototype: true }).value,
+      value,
+    );
+  }
+  const child = Object.assign(Object.create(null), { value: 3 });
+  const source = Object.assign(Object.create(null), { child });
+  const normal = clonePrivateMeasurement(source).value;
+  assert.equal(Object.getPrototypeOf(normal), Object.prototype);
+  assert.equal(Object.getPrototypeOf(normal.child), Object.prototype);
+  const preserved = clonePrivateMeasurement(source, { preserveNullPrototype: true }).value;
+  assert.deepStrictEqual(preserved, source);
+  assert.equal(Object.getPrototypeOf(preserved), null);
+  assert.equal(Object.getPrototypeOf(preserved.child), null);
+  assert.notEqual(preserved.child, child);
+  assert.ok(Object.isFrozen(preserved.child));
+  assert.equal(Object.isFrozen(source), false);
+  assert.equal(Object.isFrozen(child), false);
+});
+test('null-prototype opt-in은 배열 alias와 cycle을 보존하고 원본과 분리한다', () => {
+  const node = Object.assign(Object.create(null), { value: -0, optional: undefined });
+  const source = { items: [node, node], child: node };
+  source.self = source;
+  node.parent = source;
+  const value = clonePrivateMeasurement(source, { preserveNullPrototype: true }).value;
+  assert.deepStrictEqual(value, source);
+  assert.equal(value.self, value);
+  assert.equal(value.items[0], value.items[1]);
+  assert.equal(value.items[0], value.child);
+  assert.equal(value.child.parent, value);
+  assert.equal(Object.getPrototypeOf(value.child), null);
+  assert.equal(Object.getPrototypeOf(value.items), Array.prototype);
+  assert.ok(Object.isFrozen(value.items));
+  assert.notEqual(value.child, node);
+  node.value = 7;
+  assert.ok(Object.is(value.child.value, -0));
+});
+test('null-prototype 문단의 private cold/warm은 fresh uncached 전체 결과와 strict 동치다', () => {
+  for (const width of [36, 200]) {
+    const c = content();
+    for (const p of c.paragraphs)
+      p.paragraphShape = Object.assign(Object.create(null), {
+        alignment: 0,
+        modernSpacing: Object.assign(Object.create(null), { before: 0, after: 0 }),
+      });
+    const s = setup(true);
+    for (const text of ['abcdef ghijkl', '다른 문단 text', 'abcdef ghijkl']) {
+      c.paragraphs[0].text = text;
+      const fresh = layoutContent(c, width, (value) => value.length * 7, 200, {
+        documentBody: true,
+      });
+      const cold = layoutContent(c, width, s.measure, 200, { documentBody: true });
+      const calls = s.calls();
+      const warm = layoutContent(c, width, s.measure, 200, { documentBody: true });
+      assert.deepStrictEqual(cold, fresh);
+      assert.deepStrictEqual(warm, fresh);
+      assert.equal(s.calls(), calls);
+      assert.notEqual(cold.rows[0], warm.rows[0]);
+      for (const row of warm.rows) {
+        assert.equal(Object.getPrototypeOf(row.paragraphShape), null);
+        assert.equal(Object.getPrototypeOf(row.paragraphShape.modernSpacing), null);
+      }
+      assert.equal(Object.isFrozen(c.paragraphs[0].paragraphShape), false);
+    }
+    assert.ok(s.cache.stats().hits > 0);
+  }
 });
