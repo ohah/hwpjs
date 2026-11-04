@@ -105,10 +105,12 @@ jobs:
             ./apps/demo/tests/object-properties-controller.test.mjs \
             ./apps/demo/tests/object-properties-view.test.mjs \
             ./apps/demo/tests/object-properties-reentry.test.mjs \
+            ./apps/demo/tests/object-properties-size-integration.test.mjs \
             ./apps/demo/tests/context-menu-target.test.ts \
             ./apps/demo/tests/command-support.test.ts \
             ./tests/hwpx/canvas-display-options.test.mjs \
-            ./tests/hwpx/formatting-marks.test.mjs
+            ./tests/hwpx/formatting-marks.test.mjs \
+            ./tests/hwpx/formatting-marks-original-cells.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           node --experimental-transform-types --max-old-space-size=256 \
             --import ./tools/object-properties-test-css.mjs \
@@ -122,6 +124,8 @@ jobs:
           test -f ./tools/renderer-test-core-provider.mjs || exit 1
           test -f ./packages/core/dist/build-manifest.json || exit 1
           test -f ./packages/vanilla/tests/non-text-history-surface.test.mjs || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-rejected-picture.test.mjs || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-rejected-picture-negative.test.mjs || exit 1
           test -f ./packages/vanilla/tests/non-text-history-fixture.mjs || exit 1
           test -f ./packages/vanilla/tests/non-text-history-renderer-hook.mjs || exit 1
           node --max-old-space-size=256 --experimental-transform-types \
