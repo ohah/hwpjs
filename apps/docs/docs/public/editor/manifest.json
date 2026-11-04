@@ -326,9 +326,19 @@
       "sha256": "9ae87d5d720d6e0acbfca2c8e9fff3d50121d3d4105c06314a929f7447bdab66"
     },
     {
+      "path": "assets/index-C-kVoeEm.js",
+      "bytes": 460456,
+      "sha256": "93f1f435e0e9f843c697cb1a21c39434077f2aa96ff497258f3c25ef72a11249"
+    },
+    {
       "path": "assets/index-pse72t3d-D27BAp8q.js",
       "bytes": 11503,
       "sha256": "b2f4cc334fb27fb8471fa2f5e550e99d486561da98239037bdd967f618f85f3f"
+    },
+    {
+      "path": "assets/index-tdX0uD1N.css",
+      "bytes": 24045,
+      "sha256": "865be416528fb403a6079173f30fd58d3ecc5eba0d3dfb611764740e76003f3a"
     },
     {
       "path": "assets/public-index.js",
@@ -416,6 +426,11 @@
       "sha256": "32ed627bc1e75ebf623538786b25dd994d20c7c6224647aee5f40cface47f8ad"
     },
     {
+      "path": "assets/src-CVixFSwd.js",
+      "bytes": 56,
+      "sha256": "bc55d13523b47ff86065a3b164c4226420bb84264eb8a9a90694d54e331e73e6"
+    },
+    {
       "path": "assets/src-CfWs_kQK.js",
       "bytes": 83,
       "sha256": "0699e55cb16df75edde492f202e524fb5d316a4e60656fabb5a1591ad39735fb"
@@ -434,6 +449,11 @@
       "path": "assets/src-D6h7dSs8.js",
       "bytes": 1086695,
       "sha256": "5012b8c1a2c38113e2e449ba13c577362b92392d56330665657015a7c0aab41b"
+    },
+    {
+      "path": "assets/src-DQKnqVjg.js",
+      "bytes": 1112803,
+      "sha256": "6dc09c158c2d74eb0cecd7921ef33a8f7790e0ca3a54c5d3069ef1f8c86c034c"
     },
     {
       "path": "assets/src-DdtME6Kr.js",
@@ -483,22 +503,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 491,
-      "sha256": "ec3f282b454457733270c78b248b37a32d0cbf7768605818b7100b816922548a"
+      "sha256": "840ca5d58e4fd12732cd562747e3ac5596282398850922197096218e189db992"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 491,
-      "sha256": "ec3f282b454457733270c78b248b37a32d0cbf7768605818b7100b816922548a"
+      "sha256": "840ca5d58e4fd12732cd562747e3ac5596282398850922197096218e189db992"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 491,
-      "sha256": "ec3f282b454457733270c78b248b37a32d0cbf7768605818b7100b816922548a"
+      "sha256": "840ca5d58e4fd12732cd562747e3ac5596282398850922197096218e189db992"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 491,
-      "sha256": "ec3f282b454457733270c78b248b37a32d0cbf7768605818b7100b816922548a"
+      "sha256": "840ca5d58e4fd12732cd562747e3ac5596282398850922197096218e189db992"
     },
     {
       "path": "fixture-catalog.json",
@@ -1018,7 +1038,7 @@
     {
       "path": "index.html",
       "bytes": 479,
-      "sha256": "76bd148578a44bfe7bac1138bd5820cce22b703a440f1fd0ddbb167a5fa53930"
+      "sha256": "f359a92a530fb53d7e71f5dd66c7b03e1a6021328521c592c3783d7747c6f67a"
     },
     {
       "path": "runtime/index.js",
