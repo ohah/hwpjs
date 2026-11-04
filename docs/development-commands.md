@@ -1198,7 +1198,7 @@ mise exec -- tsc --project ./tools/tsconfig.demo-shell.json
 
 ## 표·그림·조판 부호의 명시 CI 선택
 
-기존 공식 Core 산출물과 선택 소스·시험을 준비한 뒤 아래11개 entry만 실행한다. 두 CSS preload는 원 소유 범위만 처리한다. command-support 시험의 HEAD 선택 출판본과 기존 root WIP는 별도이며, missing entry를 skip하지 않는다. 이는 CI에 선택된 명령이고 원격 CI 실행 통과 증거는 아직 아니다. 기존 묶음의 수를 새 총계로 재산정하지 않는다.
+기존 공식 Core 산출물과 선택 소스·시험을 준비한 뒤 아래12개 entry만 실행한다. 두 CSS preload는 원 소유 범위만 처리한다. command-support 시험의 HEAD 선택 출판본과 기존 root WIP는 별도이며, missing entry를 skip하지 않는다. 이는 CI에 선택된 명령이고 원격 CI 실행 통과 증거는 아직 아니다. 기존 묶음의 수를 새 총계로 재산정하지 않는다.
 
 ```sh
 test -f ./packages/core/dist/build-manifest.json || exit 1
@@ -1212,6 +1212,7 @@ set -- \
   ./apps/demo/tests/object-properties-controller.test.mjs \
   ./apps/demo/tests/object-properties-view.test.mjs \
   ./apps/demo/tests/object-properties-reentry.test.mjs \
+  ./apps/demo/tests/object-properties-size-integration.test.mjs \
   ./apps/demo/tests/context-menu-target.test.ts \
   ./apps/demo/tests/command-support.test.ts \
   ./tests/hwpx/canvas-display-options.test.mjs \
@@ -1244,3 +1245,16 @@ node --max-old-space-size=256 --experimental-transform-types \
 ```
 
 통제47pass·0fail·0skip는 소유자의 thin7362 sidecar 환경 결과다. 같은 기대의 초점4개 이전 실패는 보존하고47개에 포함된 수정 검증과 중복 합산하지 않는다. 설치 Core 단독 CLI/새 CI 두 step은 아직 별도 실행 완료로 주장하지 않는다. 명시 shell config의 `tsc -p` 통과도 shell/assets 경계만 검증하며 전체 SDK/앱 strict·이 명령의 성공을 대신하지 않는다.
+
+## 원본 표 셀 조판 부호 선택 검사
+
+제품3파일과 신규시험1파일을 선택 반영한 source에서 Node 타입 제거 지원을 사용한다. Core/SDK/Native를 import하지 않으며 renderer 전체 의존성을 실행하거나 컴파일하지 않는다.
+
+```sh
+for entry in ./tests/hwpx/canvas-display-options.test.mjs ./tests/hwpx/formatting-marks.test.mjs ./tests/hwpx/formatting-marks-original-cells.test.mjs; do
+  test -f "$entry" || exit 1
+done
+nice -n 19 mise exec -- node --max-old-space-size=256 --test --test-concurrency=1 --test-timeout=30000 ./tests/hwpx/canvas-display-options.test.mjs ./tests/hwpx/formatting-marks.test.mjs ./tests/hwpx/formatting-marks-original-cells.test.mjs
+```
+
+기존27=옵션6+기존표시21, 신규10으로 총37이다. 옵션6을 다시 합산하지 않는다. before 셀 양성 실패는 별도 반례이며37에 더하지 않는다. 개별 test timeout과 별도 총wall/RSS/출력 감독은 구분한다.

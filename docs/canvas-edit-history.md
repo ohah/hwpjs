@@ -116,3 +116,11 @@ Noori HWPX의 동일 WASM을 사용한 Node 진단에서 64undo의 전체 conten
 [정규 시험 명령과 소유 helper](development-commands.md#non-text-history-surface-tests)는47개 통제 사례다. 같은 기대의 draft/splice/IME/ShadowRoot 초점4개가 이전 후보에서 실패했고, 수정 후보의47개에 포함돼 통과했다. 47+4로 합산하지 않는다. 소유 실행은 thin7362 경로 sidecar를 사용한 통제 환경이며 설치 Core 단독 CLI·Native undo값·실제 키보드·지연 성공을 이 수에서 추론하지 않는다. 독립 소스 검토의 P1/P2 발견0도 별도 실행 증거가 아니다.
 
 별도 실제 R6 HWP5/HWPX 그림 UI에서는 첫 단일 재선택, 메뉴 및 Canvas 초점의 키보드 undo/redo, 저장과 새 Reader 재열기를 확인했다. Native issue/ACK·내부 이력 단계·지연은 계측하지 않았다. 저장 원값 검증은 [그림 선택 주제](canvas-picture-selection.md#그림-크기-저장본의-독립-검증)가 소유하며 이 문서에서 중복 판정을 만들지 않는다. 이전 R3 셀 저장·R4 모달 시각 기록과 반복 합산하지 않는다.
+
+### 명시적 미적용 거부 뒤의 현재 그림 선택
+
+비텍스트 `none` 경로의 명시적 `rejected-unapplied` 결과에서만, 결과의 state와 접수 시 캡처한 불변 관측 및 현재 ready 관측이 같은 객체이고 현재 lease·표시 key·noneViewState의 마지막 fence가 유효하면 현재 그림 선택을 그대로 보존한다. 옛 그림 ref·target·caret을 저장하거나 다시 발행하는 복원이 아니다. 문서/관측 교체나 일반 텍스트 경로에 이 예외를 확장하지 않는다.
+
+미적용 판정은 `result.changed`, `reply.changed`, `reply.meta.changed` 각각이 부재/undefined·null·false인 경우만 허용한다. true나 다른 자료형은 허용하지 않는다. optional boolean인 `reply.applied`는 부재/undefined 또는 false만 허용하고 null·true·비boolean은 허용하지 않는다. `reply.meta.application`은 부재/undefined 또는 `unapplied`만 허용한다. `unknown`·`applied`·null 등은 이 보존 예외를 사용하지 않고 기존 정상 결과 처리 경로에 남긴다. nullable changed와 optional applied를 같은 규칙으로 합치지 않는다.
+
+실제 Surface/pointer 선택 경로와 통제 Core 결과를 사용하는 원 반례1개는 실패했고, 수정 뒤 집중11개 및 기존47개는 별도 실행에서 각각 통과했다(겹침0·skip0). Oracle 최종 독립 검토117d9f38c3829359454915252634e7dbdfa1958ee092a3e5319413cab4105f41은 source gate7f5ed1c/Surface2c5f6dd7과 해당 품질·실행 근거를 정적으로 대조한 비차단 판정이며 추가 실행이 아니다. Core 변경·Native 거부 응답의 실제 UI E2E·Canvas 픽셀 증거나 Native 호출0은 이 결과로 주장하지 않는다. 별도 최종 브라우저 영수증93266548에서는 HWP5 그림 적용·undo/redo 및 trusted8입력·undo8·r의 표준 양성 회귀를 통과했다. 실제 Native 거부 응답의 UI E2E를 관측한 것은 아니다.

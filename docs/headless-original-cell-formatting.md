@@ -41,3 +41,11 @@ Noori HWP5/HWPX 두 문서의 실제 UI 경로에서 높이 원값12578→12678 
 실제 R6 HWP5 첫 원본 표에서 너비57.2→58.2pt의 공유 열 적용·undo/redo·저장·새 Reader 재열기를 확인했다. 다운로드의 별도 독립 비교는 원본 table20/list21·31·51을 바인딩해 너비5720→5820 HWPUNIT와 높이2149/2294/2426의 정확 보존을 확인했다. 비대상37셀·전체40셀 높이·문단 소유권 바인딩은 유지됐다. 각 행 총폭48230→48330은 의도한 증가이며 고정 총폭 재분배가 아니다.
 
 `compareCellSizeBatchSave`는 전체13스트림과 대상 section 전체 기대 레코드를 비교하고 잘못된 기대 너비를 거부했다. 입력 SHA는 전후 같았다. 이는 UI 동작·Native 실행·성능 증거와 별도인 저장본 검사이며 물리 CFB 배치·픽셀·전체 조판 동등성은 주장하지 않는다. HWPX 공유 열의 실제 UI/다운로드 검증으로 확대하지 않는다.
+
+## 셀 테두리·배경 쓰기의 미지원 경계
+
+고정 SDK05/Worker1f2/d849 감사에서는 원본 셀 테두리·배경색 쓰기를 연결하는 Native·wire·공개 target 경로가 없었다. `FormattingPatch`의 문자/문단 배경은 셀 전체 배경이 아니며, 기존 `cell-size`·`table-column-width`나 임의 experimental 요청을 색 쓰기로 확대하지 않는다. 읽기/표시 자원의 존재도 쓰기 지원을 뜻하지 않는다. 이 판정은 source·고정 asset·export 부분집합 감사이며 새 Native 실행이나 UI 성공 증거가 아니다.
+
+최소 후속 단계는 현재 원본 단일 셀의 단색 배경과 명시 cell owner/membership 검증부터다. 공유 BorderFill은 clone-on-write로 새 자원을 만들고 대상 셀 참조만 교체하며, HWP5 DocInfo/LIST_HEADER와 HWPX header/cell 참조는 각 형식의 기존 자원·저장 SSOT가 소유해야 한다. 비대상 공유 자원·미지원 필드 보존, 단일 history batch, undo/redo·실패 원자성 및 독립 CFB/XML 저장·재열기를 먼저 검증해야 한다. 테두리 sparse patch는 그 뒤의 별도 범위다. 이 단계들은 아직 구현하지 않았다.
+
+[공식 테두리 도움말](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/cellborder/cellborder%28border%29.htm)은 선 종류·목록형 굵기·색·방향과 선택 셀/모든 셀 범위를 설명한다. [공식 배경 도움말](https://help.hancom.com/hoffice110/ko-KR/Hwp/table/cellborder/cellborder%28background%29.htm)은 색·무늬·그러데이션·그림 및 채우기 없음을 구분한다. [표 배경](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/tableborder/tableborder.htm)은 여러 셀에 각각 같은 배경을 주는 것과 다르다. 채우기 없음은 흰색·alpha=0·필드 생략과 동의어로 확정하지 않았다. 데스크톱 도움말의 UI 의미를 WebHwpCtrl API나 HWP5/HWPX 저장 계약으로 승계하지 않으며, API 상세 필드·수치 단위·공통 기본값·투명색 인코딩은 미확정이다.
