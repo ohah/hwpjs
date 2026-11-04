@@ -104,3 +104,15 @@ Noori HWPX의 동일 WASM을 사용한 Node 진단에서 64undo의 전체 conten
 서식 undo/redo 뒤 대기 문구가 남은 사례에서 실제 선택은 current이고 입력의 aria-busy는 false였습니다. 정상 Canvas 클릭 후 다른 문단에 입력한 `x`가 저장 XML에도 반영됐으므로 이 문구만으로 기능 차단을 판정하지 않습니다. 실제 선택 paint가 확인된 release에서 본인이 게시한 대기 문구의 보고 세대만 완료로 바꿉니다. 재진입한 다른 안내나 실패·noop·reset·close는 보존하며 Native·선택·geometry·paint의 완료 조건을 완화하지 않습니다.
 
 정규 기존 97건과 새 서식·문구 10건, 총 107건을 확인했습니다. 같은 새 검사에서 수정 전 소스는 104건 통과·문구 종결 3건 실패였습니다. 별도 실제 Chrome의 Noori HWPX 서식 편집에서는 undo·redo 각각 완료 안내, selectionAuthority=current, aria-busy=false, paintPending=false와 caret/paintedCaret 일치를 확인했습니다. 이전 서식 검사의 25초 timeout은 원기록으로 남기고 완료된 실행으로 소급하지 않습니다. 적용·undo·redo 저장본은 별도 독립 ZIP/XML 읽기에서 변경·원본·변경 상태와 연결됐으며, 수정 후 문구 확인에서는 저장과 추가 입력을 반복하지 않았습니다. 이 사례와 107건은 모든 포맷·OS IME·입력 성능·원본 조판 동치의 완료를 뜻하지 않습니다.
+
+## 텍스트 선택 없는 크기 편집 뒤의 이력
+
+그림·셀 크기 편집 뒤 텍스트 복원 위치가 없는 상태를 가짜 textarea 선택이나 caret으로 채우지 않는다. `canvas-editor.mjs`의 `historyRoute`는 텍스트 대상·초안·입력/이력 의도·조합 캡처가 남은 `text`, 안정된 비텍스트 `none`, 처리 중이거나 일관된 소유 상태를 확인할 수 없는 `blocked`를 구분한다. Core selection이 null이라는 이유만으로 텍스트 큐를 우회하지 않는다.
+
+`surface.ts`는 `text`를 기존 Canvas 입력·이력 경로로 전달하고 `blocked`를 거부한다. `none`에서는 활성 lease·ready·현재 문서/generation·표시 key/stateVersion·현재 Core 이력 capability를 확인한 뒤 기존 `editor.undo/redo(state.token)` FIFO에 단일 요청을 보낸다. 별도 이력 스택·Native token·권위·텍스트 ACK를 만들지 않는다. 대기 중 중복 접수와 충돌 제어를 막고, 응답 후에는 보관한 reply를 새 권위로 쓰지 않고 최신 Core 상태를 다시 관측한다. 현재 텍스트 선택이 실제로 있으면 그 선택만 투영하고, 없으면 없음을 유지한다. 문서 교체·닫힘 뒤의 늦은 결과는 새 화면/선택/안내를 덮지 않는다.
+
+포커스도 두 경로를 구분한다. 텍스트는 기존 `focusInput`의 pending 입력·splice·IME 초점 계약을 유지한다. 비텍스트 fallback에서만 현재성·lease·ready·modal 부재·settled를 검사하고 Canvas에 `preventScroll`로 초점을 돌린 뒤 같은 Document/ShadowRoot의 실제 활성 요소와 상태를 재확인한다. disabled textarea를 켜거나 가짜 caret을 만들지 않는다. 비텍스트에 textarea 초점을 요구했던 초기 브라우저 검사 실패는 보존하며 Canvas 초점 계약으로 고친 사례와 구분한다.
+
+[정규 시험 명령과 소유 helper](development-commands.md#non-text-history-surface-tests)는47개 통제 사례다. 같은 기대의 draft/splice/IME/ShadowRoot 초점4개가 이전 후보에서 실패했고, 수정 후보의47개에 포함돼 통과했다. 47+4로 합산하지 않는다. 소유 실행은 thin7362 경로 sidecar를 사용한 통제 환경이며 설치 Core 단독 CLI·Native undo값·실제 키보드·지연 성공을 이 수에서 추론하지 않는다. 독립 소스 검토의 P1/P2 발견0도 별도 실행 증거가 아니다.
+
+별도 실제 R6 HWP5/HWPX 그림 UI에서는 첫 단일 재선택, 메뉴 및 Canvas 초점의 키보드 undo/redo, 저장과 새 Reader 재열기를 확인했다. Native issue/ACK·내부 이력 단계·지연은 계측하지 않았다. 저장 원값 검증은 [그림 선택 주제](canvas-picture-selection.md#그림-크기-저장본의-독립-검증)가 소유하며 이 문서에서 중복 판정을 만들지 않는다. 이전 R3 셀 저장·R4 모달 시각 기록과 반복 합산하지 않는다.

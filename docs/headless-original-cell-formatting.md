@@ -15,3 +15,29 @@ Canvas surface는 본문용 `row.selectionOwner`만 읽지 않고 같은 `paragr
 ## 후속 실측
 
 현재 작업 트리 패키지 173건과 타입 검사가 통과했습니다. 실제 제품 Canvas `demo-cell-formatting/2026-10-24T16-37-00-062Z`는 Vanilla/React/Svelte × 두 형식의 원본 셀에서 물리 선택·네 서식 동작·실제 다운로드·별도 WASM 재열기·undo/redo·재업로드 6건을 통과했습니다. 별도 WASM 재열기는 독립 CFB/XML 저장 oracle과 구분합니다. 초기 자동화의 glyph만으로 source row를 추측한 매칭 실패는 실제 caret의 section/paragraph와 원본 row·textarea 값을 대조하도록 수정했으며 실패 산출물은 보존했습니다. 모든 테스트 브라우저는 종료했습니다.
+
+## 원본 표 셀 크기 UI
+
+표 셀 문단의 문자/문단 서식과 셀 자체의 크기 변경은 별도입니다. UI는 현재 공개 선택을 검증한 뒤 원본 table/list/membership와 원 HWPUNIT 크기를 현재 state에서 읽고, 기존 공개 `requestExperimental`의 한 `cell-size` 또는 `table-column-width` 요청으로 연결합니다. 안정된 typed table API가 추가됐다는 뜻이 아닙니다. capability와 실제 canonical 공유 열 계획이 거부하면 명시 이유를 표시하며, 병합 셀의 영향 범위는 기존 계획기가 소유합니다. 선택/문서/undo/headless 변경 뒤 이전 모달을 새 셀로 재타깃하지 않습니다.
+
+pt 표시는 기존 정확 정수 변환을 사용합니다. untouched 필드는 표시 문자열을 재해석하지 않고 원 정수를 그대로 보존하며, 명시0과 부재/null은 구분합니다. 단일 셀 wire가 두 크기를 모두 요구해도 변경하지 않은 값은 원값이고, 공유 열의 optional 높이는 실제 변경일 때만 포함합니다. 취소/no-op은 SDK 편집 요청을 보내지 않으며 접수 후 commit-refresh 또는 불확실 결과는 재접수하지 않습니다. 성공 뒤 선택 복원은 현재 state의 공식 `createParagraphSelection`과 stateVersion fence를 사용하는 selection-only 명령입니다.
+
+명시 순수52개는 모달/포트의 HWP5/HWPX 계약과 stale/readonly/IME/pending/cleanup을 검사합니다. 모의 성공을 Native나 브라우저 검증으로 확대하지 않습니다. [정규 명령](development-commands.md#table-cell-properties-ui-tests)은 기존 호환 wire를 사용하는 포트·뷰·도구 시험이며 새 Native/SDK 빌드를 실행하지 않습니다.
+
+별도 실제 SDK05·기존 d849·Noori HWP5/HWPX의 공개 선택→포트→기존 명령 검사에서는 원본 셀 높이를 12578→12678 HWPUNIT로 한 번 변경하고 undo1/redo1로 원값/변경값을 복원했습니다. 너비47907과 비대상39셀의 크기·membership·순서는 유지했습니다. 이 관측은 셀 전체의 모든 서식·CFB/XML 보존이나 전체 조판 동등성 증거가 아닙니다.
+
+공유 열의 별도 실제 두 형식 검사에서는 기존 canonical 계획에 따라 3셀의 너비를5720→5820으로 바꾸고 undo1/redo1을 확인했습니다. 비대상37셀과 높이는 유지했지만 각 행의 총폭은48230→48330 HWPUNIT로 증가했습니다. 고정 총폭 재분배 기능을 입증한 것이 아닙니다. 공유 열 Native 기록은 순수52와 별도이며 HWPX 공유 열 UI·인쇄·정규 전체 strict 타입 검증은 이 UI의 완료 범위가 아닙니다. 셀 배경/테두리·병합/분할·행열 삽입삭제도 이 범위에 포함하지 않습니다.
+
+### 셀 크기 UI와 다운로드의 확인 범위
+
+Noori HWP5/HWPX 두 문서의 실제 UI 경로에서 높이 원값12578→12678 HWPUNIT의 적용·실행 취소·다시 실행·저장·새 Reader 재열기를 확인했습니다. 이것은 해당 단일 셀의 경로이며 공유 열 UI·병합 전체·모든 표의 지원 완료를 뜻하지 않습니다. 브라우저에서 Native 요청 횟수나 내부 이력 단계는 별도 계측하지 않았습니다.
+
+실제 다운로드의 별도 독립 oracle은 HWP5의13개 CFB 스트림 이름 집합을 확인하고 대상 section의 지정 셀 크기만 원본에서 바꾼 기대 바이트와 전체 비교했습니다. 비대상 스트림 바이트는 모두 같았습니다. HWPX는 ZIP entry 목록·순서를 확인하고 대상 section 전체 XML 기대 트리와 나머지14개 entry 내용 바이트를 비교했으며 일반 실행과 Python `-O`에서 통과했습니다. 잘못된 높이12679는 양 형식에서 거부됐고 HWPX는 두 모드 모두 거부했습니다. 원본2개와 다운로드2개의 입력 SHA도 유지했습니다. CFB 물리 배치·ZIP 압축 바이트·전체 directory metadata·글리프/픽셀 동등성을 주장하지 않습니다.
+
+표 대화상자는 HWP5에서 viewport 폭1280·320의 라벨·입력 실제 rect 겹침0과 화면 내 배치를 확인하고 PNG를 시각 검토했습니다. 이 두 폭의 현재 대화상자에 한정하며 모든 viewport·resize 과정·HWPX 시각 배치 전체 완료로 확대하지 않습니다. r3의 앞선 실패는 보존하며 r4 시각 확인과 구분합니다. 인쇄·OS IME·정규 전체 strict 및 세 기능 전체 완료는 이 검증의 범위가 아닙니다.
+
+### 공유 열 UI와 저장본의 별도 검증
+
+실제 R6 HWP5 첫 원본 표에서 너비57.2→58.2pt의 공유 열 적용·undo/redo·저장·새 Reader 재열기를 확인했다. 다운로드의 별도 독립 비교는 원본 table20/list21·31·51을 바인딩해 너비5720→5820 HWPUNIT와 높이2149/2294/2426의 정확 보존을 확인했다. 비대상37셀·전체40셀 높이·문단 소유권 바인딩은 유지됐다. 각 행 총폭48230→48330은 의도한 증가이며 고정 총폭 재분배가 아니다.
+
+`compareCellSizeBatchSave`는 전체13스트림과 대상 section 전체 기대 레코드를 비교하고 잘못된 기대 너비를 거부했다. 입력 SHA는 전후 같았다. 이는 UI 동작·Native 실행·성능 증거와 별도인 저장본 검사이며 물리 CFB 배치·픽셀·전체 조판 동등성은 주장하지 않는다. HWPX 공유 열의 실제 UI/다운로드 검증으로 확대하지 않는다.

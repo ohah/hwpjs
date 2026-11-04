@@ -14,6 +14,12 @@
 
 ## 현재 계층과 연결
 
+[원본 표 셀 크기 UI](headless-original-cell-formatting.md#원본-표-셀-크기-ui)는 현재 원본 셀 선택·크기 원값·공유 열 계획 및 검증 경계를 소유합니다.
+
+[조판 부호 일부 표시](canvas-formatting-marks.md)는 화면 전용 표시 옵션과 원문 경계 검증·부분 지원 범위를 소유합니다.
+
+[그림 개체 속성 대화상자](canvas-picture-selection.md#데모-개체-속성-대화상자-계약)는 명시 양수·비회전 그림의 원값·대상/token 검사와 단일 resize 요청의 경계를 소유합니다.
+
 [그림 대기 중 문단 측정 캐시 보존](resource-geometry-lifetime.md)은 그림 자원과 측정 캐시의 수명·무효화 계약 및 검증 범위를 소유합니다.
 
 [실험용 HWP5 편집 API](hwp5-editor-api.md)는 native 소유 세션을 별도 optional WASM/JS 경계에 연결합니다. Canvas 직접 입력과 고급 폼이 같은 명령 경로를 사용합니다. 변경 값의 SSOT는 native 모델이며 Worker의 표시 projection과 textarea의 임시 조합/대기 입력은 저장 모델이 아닙니다.
@@ -498,3 +504,5 @@ CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명
 2026-09-28 재검증에서는 현재 `src/` 디렉터리와 제품/테스트 경계를 대조해 위 역할 요약의 누락을 고쳤습니다. 이 문서가 연결한 주제 문서 237개는 모두 파일이 존재하고, 236개는 현재 내용 해시로 검증 목록에 있으며 `hwp5-foundation.md`만 별도 이력 검증을 남겼습니다. 본문에 적힌 `.zig` 파일명 75개도 현재 소스에서 확인했습니다. Debug 전체 테스트 5/5 단계·2,664/2,664개, ReleaseSafe 제품 빌드 5/5 단계가 통과했습니다. 이 구조·빌드 검사는 모든 EMF+/HWP5/HWPX 의미 필드의 구현 완료나 화면·저장 동치를 뜻하지 않습니다.
 
 [첫 실행 취소와 화면 투영](undo-onset-projection.md)은 대기 입력 FIFO·private frame hold·최종 fresh 투영의 지원 계약과 검증 범위를 소유합니다.
+
+[텍스트 선택 없는 크기 편집 뒤의 이력](canvas-edit-history.md#텍스트-선택-없는-크기-편집-뒤의-이력)은 Core FIFO와 Canvas none/text/blocked 분기·포커스 및 현재성 검증을 소유합니다.

@@ -1126,3 +1126,121 @@ node --import ./tools/renderer-test-core-provider.mjs \
 source70+controlled Surface/frame6+기존 renderer18+source 관측6=100개 고유 시험이다. 신규 test3+fixture3 중 fixture는 import로 소비하며 독립 entry로 세지 않는다. 기존 provider1파일은 정규 선택 파일과 함께 필요하다. 실제 canonical 검사는 frozen SDK05 provider로100개 통과했고 실제 root의 같은 선택도100개 통과했다. 현재 Core 신빌드 CI 완료로 승계하지 않는다.
 
 실제 Surface/controller/renderer source 함수와 Core public EditorState를 사용하지만 editor lease·DOM·Canvas·RAF는 통제 모형이다. Native 실행·실제 pixel·브라우저 지연은 별도 영수증 범위다.
+
+<a id="table-cell-properties-ui-tests"></a>
+
+## 원본 표 셀 속성 UI 순수 검사
+
+[셀 크기 UI 계약과 실제 Native의 별도 범위](headless-original-cell-formatting.md#원본-표-셀-크기-ui)를 따릅니다. 선택 제품·시험·공용 DOM fixture를 반영한 소스에서 Node24.20의 TypeScript 변환을 사용합니다. CSS preload는 공용 CSS 하나의 JS 평가만 생략하며 화면 검증이 아닙니다. SDK/Native/실제 fixture를 로드하지 않습니다.
+
+```sh
+test -f ./apps/demo/tests/table-cell-properties-style-preload.mjs || exit 1
+set -- \
+  ./apps/demo/tests/table-cell-properties-port.test.mjs \
+  ./apps/demo/tests/table-cell-properties-view.test.mjs \
+  ./apps/demo/tests/table-cell-properties-tool.test.mjs
+for path in "$@"; do test -f "$path" || exit 1; done
+nice -n 19 mise exec -- node --experimental-transform-types --max-old-space-size=256 \
+  --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
+  --test --test-isolation=none --test-concurrency=1 "$@"
+```
+
+52pass는 대역 계약 검사입니다. 실제 셀 높이·공유 열의 SDK05/Native 증거와 저장·브라우저 검증을 대신하지 않습니다.
+
+<a id="canvas-formatting-marks-tests"></a>
+
+## 조판 부호 일부 표시 순수 검사
+
+[표시 옵션·부분 지원 범위](canvas-formatting-marks.md)를 따릅니다. 선택 소스·시험을 반영한 환경에서 Node의 TypeScript 타입 제거 지원이 필요합니다. ignored 후보 자동 수집·SDK 배포물·Native 입력 없이 두 entry를 명시합니다.
+
+```sh
+for entry in ./tests/hwpx/canvas-display-options.test.mjs ./tests/hwpx/formatting-marks.test.mjs; do
+  test -f "$entry" || exit 1
+done
+nice -n 19 mise exec -- node --max-old-space-size=256 --test --test-concurrency=1 --test-timeout=30000 tests/hwpx/canvas-display-options.test.mjs tests/hwpx/formatting-marks.test.mjs
+```
+
+명시27개(기존 표시 옵션6+조판 부호21)이며 탭 색인의256/512/1024접근 계수와 기존 표시·단축키 계약을 포함합니다. 행 계획의 Map 평균 조회 O(B+T+원문 길이)는 전체 renderer 선형화나 실제 지연 개선 주장이 아닙니다. 개별 test timeout과 별도 총wall/RSS/출력 감독 예산을 구분하며 실제 Canvas/Native·저장·인쇄 검증은 포함하지 않습니다.
+
+<a id="object-properties-ui-tests"></a>
+
+## 그림 개체 속성 UI 정규 검사
+
+[개체 속성 대화상자 계약](canvas-picture-selection.md#데모-개체-속성-대화상자-계약)을 따릅니다. 선택 소스·시험·명시 CSS preload와 설치된 공개 workspace `@hwpjs/core` entry가 필요합니다. 로컬 SDK05 환경변수나 ignored 경로를 자동 import하지 않습니다. preload는 object-properties.css/dialog-layer.css의 두 정확 URL만 처리하며 다른 CSS는 기본 loader로 전달합니다.
+
+```sh
+for entry in ./tools/object-properties-test-css.mjs ./apps/demo/tests/object-properties-port.test.mjs ./apps/demo/tests/object-properties-controller.test.mjs ./apps/demo/tests/object-properties-view.test.mjs ./apps/demo/tests/object-properties-reentry.test.mjs; do
+  test -f "$entry" || exit 1
+done
+nice -n 19 mise exec -- node --max-old-space-size=256 --experimental-transform-types --import ./tools/object-properties-test-css.mjs --test --test-concurrency=1 ./apps/demo/tests/object-properties-port.test.mjs ./apps/demo/tests/object-properties-controller.test.mjs ./apps/demo/tests/object-properties-view.test.mjs ./apps/demo/tests/object-properties-reentry.test.mjs
+```
+
+정규45 통과는 기존 SDK05 thin을 읽기 전용 연결한 공개 package resolver 환경의 증거입니다. 현재 HEAD의 Core 신빌드·strict 타입 완료를 승계하지 않습니다. SDK05 정확 hash sidecar1과 registry/context29는 별도 증거이며 이 명령의45개에 중복 합산하지 않습니다. Native·브라우저·저장·인쇄는 별도입니다.
+
+<a id="demo-shell-type-gate"></a>
+
+## 데모 shell 아이콘·도구의 명시 타입 경계
+
+`ShellIcon`·도구 등록과 기존 CSS 선언의 정적 경계입니다. 기존 `assets.d.ts`와 `shell.ts` 및 그 import graph를 명시한 격리 CLI에서는 아이콘 인자 한 줄 수정 전 TS2322가 있었고 수정 후 진단0/exit0이었습니다. CSS 선언 누락의 초기 실패도 보존했습니다. 이 결과는 전체 SDK/앱 strict·브라우저 기능·원래 합성 시험의 재실행 성과가 아닙니다.
+
+다음은 별도 선택 대상인 `tools/tsconfig.demo-shell.json` 후보를 반영한 뒤 실행할 정규 명령안입니다. 같은 config의 명시 `tsc -p`도 통과했으며 shell/assets의 좁은 범위에 한정한다. config/workflow는 별도 선택 대상이며 이 문서 패치에 포함하지 않는다. 원격 CI 통과를 뜻하지 않는다. `types: []`로 자동 ambient package 수집을 끄고 기존 `assets.d.ts`를 사용하며 SDK 선언을 대역으로 대체하지 않습니다.
+
+```sh
+test -f ./apps/demo/src/assets.d.ts || exit 1
+test -f ./apps/demo/src/shell.ts || exit 1
+test -f ./tools/tsconfig.demo-shell.json || exit 1
+mise exec -- tsc --project ./tools/tsconfig.demo-shell.json
+```
+
+실제 실행 영수증의 격리 CLI와 이 portable config 명령은 구분합니다. 파일이 없는 현재 HEAD 단독 실행을 통과로 처리하거나 ignored 경로·고정 SDK 배포물을 자동 import/fetch/build하지 않습니다.
+
+<a id="selected-feature-node-entries"></a>
+
+## 표·그림·조판 부호의 명시 CI 선택
+
+기존 공식 Core 산출물과 선택 소스·시험을 준비한 뒤 아래11개 entry만 실행한다. 두 CSS preload는 원 소유 범위만 처리한다. command-support 시험의 HEAD 선택 출판본과 기존 root WIP는 별도이며, missing entry를 skip하지 않는다. 이는 CI에 선택된 명령이고 원격 CI 실행 통과 증거는 아직 아니다. 기존 묶음의 수를 새 총계로 재산정하지 않는다.
+
+```sh
+test -f ./packages/core/dist/build-manifest.json || exit 1
+test -f ./tools/object-properties-test-css.mjs || exit 1
+test -f ./apps/demo/tests/table-cell-properties-style-preload.mjs || exit 1
+set -- \
+  ./apps/demo/tests/table-cell-properties-port.test.mjs \
+  ./apps/demo/tests/table-cell-properties-view.test.mjs \
+  ./apps/demo/tests/table-cell-properties-tool.test.mjs \
+  ./apps/demo/tests/object-properties-port.test.mjs \
+  ./apps/demo/tests/object-properties-controller.test.mjs \
+  ./apps/demo/tests/object-properties-view.test.mjs \
+  ./apps/demo/tests/object-properties-reentry.test.mjs \
+  ./apps/demo/tests/context-menu-target.test.ts \
+  ./apps/demo/tests/command-support.test.ts \
+  ./tests/hwpx/canvas-display-options.test.mjs \
+  ./tests/hwpx/formatting-marks.test.mjs
+for path in "$@"; do test -f "$path" || exit 1; done
+node --experimental-transform-types --max-old-space-size=256 \
+  --import ./tools/object-properties-test-css.mjs \
+  --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
+  --test --test-isolation=none --test-concurrency=1 "$@"
+```
+
+<a id="non-text-history-surface-tests"></a>
+
+## 비텍스트 Surface 이력 정규 선택
+
+[비텍스트 이력 계약](canvas-edit-history.md#텍스트-선택-없는-크기-편집-뒤의-이력)을 따른다. 시험·fixture·renderer hook은 `packages/vanilla/tests/`가 소유한다. hook은 Surface가 가져오는 renderer 한 specifier만 통제하며 Core·Canvas·Native 권한 구현은 교체하지 않는다. CI형 명령은 명시 Core provider로 현재 공식 산출물을 공급하고, source47의 thin7362 전용 routing sidecar를 자동 import하지 않는다.
+
+```sh
+test -f ./tools/renderer-test-core-provider.mjs || exit 1
+test -f ./packages/core/dist/build-manifest.json || exit 1
+test -f ./packages/vanilla/tests/non-text-history-surface.test.mjs || exit 1
+test -f ./packages/vanilla/tests/non-text-history-fixture.mjs || exit 1
+test -f ./packages/vanilla/tests/non-text-history-renderer-hook.mjs || exit 1
+HWPJS_TEST_CORE_DIST=packages/core/dist \
+node --max-old-space-size=256 --experimental-transform-types \
+  --import ./tools/renderer-test-core-provider.mjs \
+  --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+  --test --test-concurrency=1 \
+  ./packages/vanilla/tests/non-text-history-surface.test.mjs
+```
+
+통제47pass·0fail·0skip는 소유자의 thin7362 sidecar 환경 결과다. 같은 기대의 초점4개 이전 실패는 보존하고47개에 포함된 수정 검증과 중복 합산하지 않는다. 설치 Core 단독 CLI/새 CI 두 step은 아직 별도 실행 완료로 주장하지 않는다. 명시 shell config의 `tsc -p` 통과도 shell/assets 경계만 검증하며 전체 SDK/앱 strict·이 명령의 성공을 대신하지 않는다.
