@@ -84,3 +84,11 @@ Noori HWP5/HWPX 본문 문단18·19에서 도구4개 활성, cut 본문 변경·
 공식 WebHwpCtrl 참조는 빈 문서·편집 메뉴와 Cmd+C/Cmd+X 표시만 관측했다. 두 번의 환경 중단으로 다문단 clipboard·밑줄·취소선 기능은 실행하지 않았고 제품 실패로 판정하지 않았다. [참조 r1](../zig-out/verification/webhwp-live-clipboard-textstyle-audit-r1/FINAL-HANDOFF.json)과 [r2](../zig-out/verification/webhwp-live-clipboard-textstyle-audit-r2/FINAL-HANDOFF.json)를 우리 제품 실제 동작이나 API 동등성 증거로 승계하지 않는다.
 
 source69e8c379와 공개 d54의 Quality/Docs 성공·HTTP manifest 일치는 메인이 확인했다. [최종 공개 HWP5 spot](../zig-out/verification/multi-paragraph-public-live-r1/FINAL-HANDOFF.json)은 gallery101의 Noori p18u2→p19u26에서 도구4개 활성→밑줄1회·current/busy false/paint false/pressed true를 확인했다. Worker1f2·WASMd849·fixtureb18 요청은200이고 관측 DOM/리소스 URL의 private 참조는 없었다. favicon404 한 건은 보존하며 전 번들 개인정보 검사는 별도 builder validator 범위다. private73bfa5d6 운영과 공개 c44d0f84 반영은 이 유한 범위의 배포 증거이며 clipboard readback·전체 기능 완료가 아니다. 공개 spot은 clipboard/저장을 반복하지 않았고 소유 Chrome은 모두 종료했다.
+
+## 다문단 서식 이력 뒤 현재 가용성 알림
+
+다문단 밑줄 undo 뒤 선택이 유지돼도 큐가 대기 중일 때 그려진 비활성 도구의 최종 갱신이 누락될 수 있었다. 현재 geometry 복원 성공 경로는 report token을 기록하고, 실제 paint 해제와 의도 큐 wake 뒤 microtask에서 같은 report revision·미폐기·큐/paint/history/명령 대기 없음 조건을 확인해 현재 가용성을 알린다. 선택 캐시·Core 단일 target·Native 권위를 추가하지 않으며 원본 owner/문자 경계와 선택 복원·paint 확인 조건은 유지한다. reset·dispose는 옛 알림을 무효화한다.
+
+[통제 gate](../zig-out/verification/multiblock-format-history-selection-r1/SOURCE-GATE.json)의 before는 직접 캡처의 유효한 false와 마지막 표시 null 차이를 실패로 남겼다. 수정 뒤 집중6·기존47은 별도로 통과했다. [실제 QA216f](../zig-out/verification/multi-paragraph-undo-toolbar-after-r1/FINAL-HANDOFF.json)는 Noori H5/HX 밑줄 적용→CmdZ→redo에서 재선택0·현재 범위/caret·도구 활성과 true→false→true를 확인했다. [private 운영079](../zig-out/verification/multi-paragraph-undo-toolbar-private-live-r2/FINAL-HANDOFF.json)은 H5 한정이며 앞선 실패와 최초 cleanup 실패도 보존하고 최종 잔류0을 확인했다. 이 결과는 font/size 표시·저장·clipboard·속도·전체 픽셀 동등성의 검증이 아니다.
+
+sourceadfd·CI41841397408 성공 및 private127 manifest6a7ed589 운영·HTTPS4 exact는 메인 확인 범위다. 공개 sourcef156과 manifest a45dc538의 urgent undo 번들은 별도 공개 세대이며 font/size 후속을 포함한 성공으로 확대하지 않는다. 공개 산출물 근거는 [후보 인계](../zig-out/verification/feature-followup-build-coordination-r1/undo-presentation-public-final-execution-r1/FINAL-PUBLIC-CANDIDATE-HANDOFF.json)를 따른다.

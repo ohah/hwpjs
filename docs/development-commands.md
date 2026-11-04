@@ -1279,3 +1279,30 @@ node --experimental-transform-types --max-old-space-size=256 \
 ```
 
 앱14와 Surface12는 별도 통제 실행이다. 기존47도 최종8626 제품 바이트에서 별도로 재실행해 통과했다. 새12·앱14와 범위가 다르므로 반복 합산하지 않는다. capture-before1실패와 fixed1통과는 반례 이력이며 총계에 더하지 않는다. Core update 장벽과 최초 범위 포착·clipboard 쓰기 후 current guard를 검사한다.
+
+## 원본 글꼴·크기 표시 선택 회귀
+
+공개 Core 패키지가 설치된 정규 stage에서 다음3개 entry만 실행한다. 기존 CI와 같은 Node 타입 제거 경로이며 원본 이름·크기 상태·readonly 읽기와 writer 거부·shell 표시의 통제17개다. Native·브라우저 검증과 구분한다.
+
+```sh
+node --experimental-transform-types --max-old-space-size=256 \
+  --test --test-concurrency=1 \
+  ./apps/demo/tests/formatting-observation-display.test.mjs \
+  ./apps/demo/tests/formatting-observation-shell.test.mjs \
+  ./apps/demo/tests/formatting-observation-bridge.test.mjs
+```
+
+새 SDK·Worker·Native 빌드를 실행하지 않는다. 실제 H5/HX50%와 Native readonly 근거는 [원본 선택 표시](headless-font-name.md#현재-선택의-글꼴크기-표시)를 따른다.
+
+## 다문단 서식 실행 취소 뒤 툴바 갱신 회귀
+
+코어 패키지가 준비된 workspace에서 검증할 dist 경로를 명시한다. 실제 Canvas·Surface와 제어된 Runtime의 이력 완료 알림 6건이며, 실제 브라우저 검증은 별도다.
+
+```sh
+HWPJS_TEST_CORE_DIST=/absolute/path/to/core/dist \
+node --experimental-transform-types --max-old-space-size=256 \
+  --import ./tools/renderer-test-core-provider.mjs \
+  --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+  --test --test-concurrency=1 \
+  ./packages/vanilla/tests/multiblock-format-history-selection.test.mjs
+```
