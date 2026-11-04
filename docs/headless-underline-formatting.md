@@ -24,3 +24,9 @@ Vanilla 실제 noori 셀에서도 `demo-cell-formatting-underline/2026-10-24T17-
 게시 대상 source SDK만 분리한 후보에서는 기존 회귀와 새 명령/관측·원본 네 owner 범위를 합친161건이 모두 통과했습니다. 원래 작업 트리의 후속 renderer/Native 구현을 이 소스 검사에 끼워 넣지 않았습니다.
 
 데모를 같은 포트8082에 반영한 뒤 `monorepo-demo-deployment-check/2026-10-24T17-22-36-391Z`에서 HTTPS11개 아티팩트의 로컬 바이트 일치와 누락 URL404를 확인했습니다. 공개 주소의 실제 HWPX 밑줄 툴바·다운로드·이력·재업로드 재검증은 `demo-formatting-underline/2026-10-24T17-22-56-601Z`에서1건 통과했습니다. source SDK는1727cf64로 게시됐고, 전체 UI 패키지 게시와 구분합니다. 소유 브라우저/임시49002 서버는 종료하고8082 데모만 유지했습니다.
+
+## Surface 밑줄의 실제 검증 범위
+
+위 `{target,kind}` 단일 Core 명령과 owner·token·capability 계약은 유지한다. 현재 Surface UI의 다문단 밑줄/취소선 연결은 Core MissingSelection일 때만 현재 범위 포트를 사용하며, null/unknown을 false로 바꾸거나 새 Native 권위를 만들지 않는다. 현재 범위 캡처·Core update·guard와 clipboard/운영 한계는 [텍스트 도구의 단일 계약](headless-text-tools.md#surface-다문단-ui-범위와-clipboard)을 따른다.
+
+[실제 r5 저장·재열기](../zig-out/verification/multi-paragraph-underline-r5/FINAL-HANDOFF.json)는 Noori HWP5 p18u2→p19u26, HWPX p18u2→p19u28의 밑줄 단독 저장 뒤 새 문서 load fence와 정상 재선택에서 underline=true·strike=false를 확인했다. [HWP5 독립 비교](../zig-out/verification/multi-paragraph-underline-independent-r1/FINAL-H5-UNDERLINE-HANDOFF.json)는 기대한 전체 decoded DocInfo·전체 section 레코드·비대상 stream 원바이트를 확인하고 잘못된 범위/스타일을 거부했다. 입력 SHA는 유지됐으며 modern strike enum과 HWPX 다문단 XML oracle은 이 성공에 포함하지 않는다. UI 재열기와 독립 구조 비교를 구분하며 밑줄 픽셀의 한글 조판 동등성·인쇄·IME 전체 완료로 확대하지 않는다.

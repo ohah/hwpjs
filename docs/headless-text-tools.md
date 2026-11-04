@@ -66,3 +66,21 @@ owner/reference/token은 옵션으로 받지 않습니다. 기존 canonical owne
 후속 경합 검사에서 검색 setSelection이 지연된 동안 새 Canvas 선택을 먼저 반영하면 동일 문서 revision에서도 검색이 이를 덮어쓰는 실패를 재현했습니다(`queued-selection-before-fix.log`: 기대 stateVersion3, 실제4). 관측 버전 옵션을 추가한 뒤 회귀가 통과했고, 실제 코어 FIFO·composition publication·설정 즉시 복사·기존 API 호환을 포함한 상태/제어기/키 설정/찾기 bridge123개가 모두 통과했습니다. 원본 실패 기록은 `zig-out/verification/search-direction-private/`에 보존했습니다.
 
 본문 caret의 현재 선택과 자원 관측을 사용하는 `INSERT_TABLE_COMMAND`의 payload·거부·이력·검증 범위는 [헤드리스 표 삽입](headless-table-insert.md)을 따릅니다.
+
+## Surface 다문단 UI 범위와 clipboard
+
+공개 `getSelectionClipboard`와 `SPLICE_TEXT_COMMAND`의 단일 문단 Core SelectionTarget 계약은 유지한다. 현재 Surface UI는 같은 원본 owner 안의 Canvas 다문단 anchor/focus를 별도 호스트 포트로 연결한다. Core null 선택을 단일 target으로 위조하거나 공개 Core 다중 선택 API를 추가하지 않는다. plain text 범위이며 불연속 블록·서식/개체 clipboard·여러 셀 전체 지원으로 확대하지 않는다.
+
+메뉴 실행은 외부 표시 콜백과 await 전에 최초 범위의 일회용 closure를 캡처하고 기존 Core update 장벽을 유지한다. 장벽 뒤 동일 host와 원 범위·lease/state·표시 key·focus·settled 상태를 확인한다. clipboard 쓰기 뒤와 삭제 pending 직전에도 current guard를 검사하며, stale·거부·close 뒤에는 삭제하지 않는다. cut과 밑줄/취소선은 기존 canonical 범위 capability·원본 owner 검증과 단일 거래를 사용한다. readonly copy는 허용하되 cut/format은 거부한다. null/unknown 서식을 false로 바꾸지 않으며 request true는 접수이지 Native 완료가 아니다.
+
+### 검증 범위와 남은 한계
+
+초기 A→Core update 대기→B 선택 반례는 B 쓰기로 실패했고, 최초 범위 캡처 수정 뒤 쓰기0·삭제0으로 거부됐다. 최종 집중12와 기존47은 모두 최종8626 제품 바이트에서 별도로 통과했으며 앱14는 별도 통제 검사다. 모의 Runtime과 실제 SDK05 Core의 이 결과를 Native/E2E로 바꾸어 부르지 않는다. [최종 source와 반례](../zig-out/verification/multiblock-clipboard-candidate-r1/CAPTURE-FINAL-SOURCE-GATE.json), [최종 바이트 기존47 재실행](../zig-out/verification/multiblock-clipboard-candidate-r1/CAPTURE-FINAL-REGRESSION-RECEIPT.json), [명시 검사 명령](development-commands.md#surface-다문단-clipboard서식-선택-회귀)을 따른다.
+
+Noori HWP5/HWPX 본문 문단18·19에서 도구4개 활성, cut 본문 변경·undo/redo를 관측했다. 취소선 저장본은 [r4](../zig-out/verification/multi-paragraph-saved-reopen-r4/FINAL-HANDOFF.json), 밑줄은 [r5](../zig-out/verification/multi-paragraph-underline-r5/FINAL-HANDOFF.json)에서 새 로딩 전환·파일명·ready를 확인한 뒤 같은 범위를 재선택해 저장된 서식을 확인했다. r2/r3의 이전 재열기 완료 주장은 철회 상태로 보존하고 r4/r5로만 닫는다. HWP5 reflow 뒤 첫 오선택도 보존하고 정상 재선택 결과만 성공 범위다. 밑줄의 독립 구조 검증은 [밑줄 주제](headless-underline-formatting.md#surface-밑줄의-실제-검증-범위)가 소유한다.
+
+실제 clipboard 내용 readback은 미검증이다. copy 완료 문구와 cut 본문 변경은 clipboard 문자열 증거가 아니다. 추가 fallback1작업의 events=[]·paste0·기대124/실제0은 정상 paste 입력 자체가 없었으므로 제품 실패로 단정하지 않으며 재시도하지 않았다. modern HWP5 strike profile/enum의 독립 전체 oracle과 HWPX 다문단 XML 독립 검증도 미완료다. 인쇄·OS IME·모든 범위·전체 조판 동등성은 이 검증 범위가 아니다.
+
+공식 WebHwpCtrl 참조는 빈 문서·편집 메뉴와 Cmd+C/Cmd+X 표시만 관측했다. 두 번의 환경 중단으로 다문단 clipboard·밑줄·취소선 기능은 실행하지 않았고 제품 실패로 판정하지 않았다. [참조 r1](../zig-out/verification/webhwp-live-clipboard-textstyle-audit-r1/FINAL-HANDOFF.json)과 [r2](../zig-out/verification/webhwp-live-clipboard-textstyle-audit-r2/FINAL-HANDOFF.json)를 우리 제품 실제 동작이나 API 동등성 증거로 승계하지 않는다.
+
+source69e8c379와 공개 d54의 Quality/Docs 성공·HTTP manifest 일치는 메인이 확인했다. [최종 공개 HWP5 spot](../zig-out/verification/multi-paragraph-public-live-r1/FINAL-HANDOFF.json)은 gallery101의 Noori p18u2→p19u26에서 도구4개 활성→밑줄1회·current/busy false/paint false/pressed true를 확인했다. Worker1f2·WASMd849·fixtureb18 요청은200이고 관측 DOM/리소스 URL의 private 참조는 없었다. favicon404 한 건은 보존하며 전 번들 개인정보 검사는 별도 builder validator 범위다. private73bfa5d6 운영과 공개 c44d0f84 반영은 이 유한 범위의 배포 증거이며 clipboard readback·전체 기능 완료가 아니다. 공개 spot은 clipboard/저장을 반복하지 않았고 소유 Chrome은 모두 종료했다.

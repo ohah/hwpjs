@@ -1258,3 +1258,24 @@ nice -n 19 mise exec -- node --max-old-space-size=256 --test --test-concurrency=
 ```
 
 기존27=옵션6+기존표시21, 신규10으로 총37이다. 옵션6을 다시 합산하지 않는다. before 셀 양성 실패는 별도 반례이며37에 더하지 않는다. 개별 test timeout과 별도 총wall/RSS/출력 감독은 구분한다.
+
+## Surface 다문단 clipboard·서식 선택 회귀
+
+공개 core 패키지와 테스트 의존성이 준비된 workspace에서 실행한다. Surface 검사에는 검증할 core dist의 절대 경로를 지정한다. 아래 목록은 CI와 같은 테스트 진입점을 사용한다. 제어된 Runtime 검사이므로 실제 브라우저 clipboard·Native·저장 oracle은 별도다.
+
+```sh
+node --experimental-transform-types --max-old-space-size=256 --test --test-concurrency=1 \
+  ./apps/demo/tests/selection-decoration-bridge.test.mjs \
+  ./apps/demo/tests/surface-selection-command-support.test.mjs \
+  ./apps/demo/tests/mac-surface-selection-shortcuts.test.mjs
+
+HWPJS_TEST_CORE_DIST=/absolute/path/to/core/dist \
+node --experimental-transform-types --max-old-space-size=256 \
+  --import ./tools/renderer-test-core-provider.mjs \
+  --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+  --test --test-concurrency=1 \
+  ./packages/vanilla/tests/multiblock-clipboard-capture.test.mjs \
+  ./packages/vanilla/tests/multiblock-clipboard-safety.test.mjs
+```
+
+앱14와 Surface12는 별도 통제 실행이다. 기존47도 최종8626 제품 바이트에서 별도로 재실행해 통과했다. 새12·앱14와 범위가 다르므로 반복 합산하지 않는다. capture-before1실패와 fixed1통과는 반례 이력이며 총계에 더하지 않는다. Core update 장벽과 최초 범위 포착·clipboard 쓰기 후 current guard를 검사한다.
