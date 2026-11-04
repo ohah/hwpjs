@@ -255,7 +255,7 @@ test('UI 두 토글은 현재 호스트 옵션을 각각 보존하고 focus만 �
   assert.equal(focus, 5);
   assert.deepEqual(
     statuses,
-    Array(2).fill('조판 부호 일부 표시: 본문 공백·배치된 탭·줄바꿈만 지원합니다.'),
+    Array(2).fill('조판 부호 일부 표시: 본문과 원본 표 셀의 공백·탭·줄바꿈을 표시합니다.'),
   );
   bridge.dispose();
   bridge.action({ command: 'toggle-marks' });

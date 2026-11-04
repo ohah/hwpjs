@@ -81,7 +81,7 @@ export function createViewOptionsBridge({
         if (current.host.setDisplayOptions!(next)) {
           current.host.focus?.();
           if (action.command === 'toggle-marks' && next.formattingMarks)
-            onStatus('조판 부호 일부 표시: 본문 공백·배치된 탭·줄바꿈만 지원합니다.');
+            onStatus('조판 부호 일부 표시: 본문과 원본 표 셀의 공백·탭·줄바꿈을 표시합니다.');
         } else onStatus('표시 설정을 적용하지 못했습니다.');
       } catch (error) {
         onStatus(error instanceof Error ? error.message : String(error));

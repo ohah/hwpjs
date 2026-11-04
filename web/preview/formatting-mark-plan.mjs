@@ -1,8 +1,8 @@
 import { rowLeft, rowTop, rowTextTop, rowTextHeight } from './row-geometry.mjs';
 import { paragraphSelectionOwner } from './paragraph-selection.mjs';
 const EMPTY = Object.freeze([]);
-/** 현재 본문 텍스트와 실제 행 경계가 일치할 때만 화면용 부호를 만듭니다. */
-export function formattingMarkPlans(row, index, paragraph) {
+/** 현재 원문과 행 경계를 검사하며 원본 셀은 현재 그리기 범위도 확인합니다. */
+export function formattingMarkPlans(row, index, paragraph, cellRowIsCurrent = null) {
   if (
     !row ||
     row.kind !== 'text' ||
@@ -12,8 +12,9 @@ export function formattingMarkPlans(row, index, paragraph) {
     (paragraph.textStartUnit ?? 0) !== 0 ||
     typeof paragraph.text !== 'string' ||
     typeof row.text !== 'string' ||
-    paragraphSelectionOwner(paragraph) !== `section:${paragraph.section}:body` ||
-    paragraph.tableCell ||
+    (paragraph.tableCell
+      ? typeof cellRowIsCurrent !== 'function'
+      : paragraphSelectionOwner(paragraph) !== `section:${paragraph.section}:body`) ||
     paragraph.drawingText ||
     paragraph.drawingCaption ||
     paragraph.createdCell ||
@@ -47,7 +48,18 @@ export function formattingMarkPlans(row, index, paragraph) {
       (previous && (point.unit <= previous.unit || point.x < previous.x))
     )
       return EMPTY;
+    if (
+      paragraph.tableCell &&
+      point.unit > 0 &&
+      point.unit < paragraph.text.length &&
+      paragraph.text.charCodeAt(point.unit - 1) >= 0xd800 &&
+      paragraph.text.charCodeAt(point.unit - 1) <= 0xdbff &&
+      paragraph.text.charCodeAt(point.unit) >= 0xdc00 &&
+      paragraph.text.charCodeAt(point.unit) <= 0xdfff
+    )
+      return EMPTY;
   }
+  if (paragraph.tableCell && !cellRowIsCurrent(row, paragraph)) return EMPTY;
   const plans = [];
   // 탭이 실제로 필요한 행에서만 한 번 색인합니다. 중복은 상태와 무관하게 거부합니다.
   const duplicate = Symbol('duplicate-tab-unit');

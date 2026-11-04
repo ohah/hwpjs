@@ -19,6 +19,7 @@ import { watchProjectionFonts } from './projection-measure-memo.mjs';
 import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from './canvas-display-options.mjs';
 import { paragraphMarkPlan, paintParagraphMark } from './paragraph-mark-paint.mjs';
 import { formattingMarkPlans } from './formatting-mark-plan.mjs';
+import { createFormattingMarkCellScope } from './formatting-mark-cell-scope.mjs';
 import { paintFormattingMarks } from './formatting-mark-paint.mjs';
 import { decodeTableImageTone } from './table-image-tone.mjs';
 import {
@@ -773,6 +774,9 @@ export function createRenderer(
     const paintParagraphLookup =
       ownedBodyDraftProjection?.beginFrame() ??
       createStatePaintParagraphLookup(display.paragraphs, sourceObservationState, display);
+    const formattingMarkCellScope = displayOptions.formattingMarks
+      ? createFormattingMarkCellScope(display, layout.rows, layout.repeatedTableHeaderRows ?? [])
+      : null;
     const paintTextRow = (row, i) => {
       if (row.kind === 'gap') return;
       if (
@@ -1088,7 +1092,7 @@ export function createRenderer(
           if (displayOptions.formattingMarks)
             paintedFormattingMarks += paintFormattingMarks(
               ctx,
-              formattingMarkPlans(row, i, paragraph),
+              formattingMarkPlans(row, i, paragraph, formattingMarkCellScope),
               viewport.scrollTop,
             );
         } else
