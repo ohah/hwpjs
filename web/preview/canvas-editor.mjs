@@ -250,10 +250,20 @@ export function createCanvasEditor({
       input.setAttribute('aria-busy', 'false');
       // 확인한 Canvas 선택을 DOM에도 재확정한 뒤 대기 의도를 실행합니다.
       setSelection(anchor, focus, preferredX, selectionOrigin);
-      // 실제 선택 paint를 확인한 이력의 문구만 끝냅니다. 재진입한 다른 알림은 보존합니다.
-      if (completedReport !== null && reportedNoteRevision === completedReport)
-        report('실행 취소/다시 실행 적용 · 화면 반영 완료');
+      // 기존 의도 큐의 Native 대기 표시도 해제한 뒤 현재 가용성을 알린다.
       historyIntents.wake();
+      queueMicrotask(() => {
+        if (
+          !events.signal.aborted &&
+          completedReport !== null &&
+          reportedNoteRevision === completedReport &&
+          !historyIntents.size &&
+          !historyPaintBarrier.pending &&
+          !historyPending &&
+          !pending
+        )
+          report('실행 취소/다시 실행 적용 · 화면 반영 완료');
+      });
     },
   });
   let splitQueryAvailable = false;
@@ -3644,6 +3654,8 @@ export function createCanvasEditor({
             setSelection(restored.anchor, restored.focus);
             reveal();
             report('실행 취소/다시 실행 적용 · 재조판 필요');
+            // 모델 빠른 경로와 같이 실제 paint 해제 뒤 현재 가용성을 다시 알린다.
+            historyPresentationReport = reportedNoteRevision;
             return;
           }
           if (message.changed) {

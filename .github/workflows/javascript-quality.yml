@@ -145,6 +145,22 @@ jobs:
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 "$@"
+      - name: Test multi-paragraph formatting history selection lifecycle
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
+        run: |
+          test -f ./tools/renderer-test-core-provider.mjs || exit 1
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-renderer-hook.mjs || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-fixture.mjs || exit 1
+          test -f ./packages/vanilla/tests/multiblock-clipboard-fixture.mjs || exit 1
+          test -f ./packages/vanilla/tests/multiblock-format-history-selection.test.mjs || exit 1
+          node --experimental-transform-types --max-old-space-size=256 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 \
+            ./packages/vanilla/tests/multiblock-format-history-selection.test.mjs
       - name: Test non-text selection history surface lifecycle
         timeout-minutes: 2
         env:
