@@ -418,6 +418,13 @@ export function createCanvasSurface({
       environment: { ...environment, ownerDocument: doc },
       platform: realm.navigator.platform,
       historyAvailability: () => getHistoryAvailability(editor.getEditorState()),
+      transferMultiParagraphSelection(options: {
+        cut?: boolean;
+        clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+      }) {
+        if (!nonTextHistoryAdmissionReady || !direct) return Promise.resolve(false);
+        return transferSurfaceSelection(options);
+      },
       requestStableNonTextHistory(kind: 'undo' | 'redo') {
         if (!nonTextHistoryAdmissionReady || !direct) return false;
         const state = nonTextHistoryState(kind);
@@ -681,6 +688,63 @@ export function createCanvasSurface({
       return false;
     }
   };
+  const rangeViewState = () => {
+    if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy() || modalOpen())
+      return undefined;
+    const state = editor.getEditorState();
+    const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+    if (
+      state.status !== 'ready' ||
+      state.selection != null ||
+      state.stateVersion !== observedStateVersion ||
+      key !== displayed ||
+      direct.hasMultiParagraphSelection() !== true ||
+      !direct.settled()
+    )
+      return undefined;
+    return !closed && lease?.isActive() && !bridge?.busy() && editor.getEditorState() === state
+      ? state
+      : undefined;
+  };
+  const rangeWritable = (state: ReturnType<HeadlessEditor['getEditorState']>) =>
+    (state.capabilities as { readOnly?: boolean } | undefined)?.readOnly !== true &&
+    (state.content as { readOnly?: boolean } | undefined)?.readOnly !== true;
+  const surfaceClipboard = () =>
+    environment.clipboard === undefined ? realm.navigator?.clipboard : environment.clipboard;
+  const captureSurfaceSelection = (
+    options: {
+      cut?: boolean;
+      clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+    } = {},
+  ) => {
+    const state = rangeViewState();
+    const clipboard = options.clipboard === undefined ? surfaceClipboard() : options.clipboard;
+    if (
+      !state ||
+      (options.cut === true && !rangeWritable(state)) ||
+      !direct.canTransferSelection(options.cut === true, true, clipboard)
+    )
+      return null;
+    const active = () =>
+      (input.getRootNode() as Document | ShadowRoot).activeElement ?? doc.activeElement;
+    const focus = active();
+    return direct.captureTransferSelection({
+      cut: options.cut === true,
+      clipboard,
+      multiOnly: true,
+      isCurrent: () =>
+        rangeViewState() === state &&
+        (options.cut !== true || rangeWritable(state)) &&
+        active() === focus &&
+        rangeViewState() === state,
+    }) as (() => Promise<boolean>) | null;
+  };
+  const transferSurfaceSelection = (
+    options: {
+      cut?: boolean;
+      clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+    } = {},
+  ) => captureSurfaceSelection(options)?.() ?? Promise.resolve(false);
   nonTextHistoryAdmissionReady = true;
   let disposal: Promise<void> | undefined;
   return {
@@ -738,6 +802,64 @@ export function createCanvasSurface({
         !modalOpen() &&
         noneViewState() === current
       );
+    },
+    canTransferSelection(
+      cut = false,
+      clipboard:
+        | { writeText?: (text: string) => Promise<void> }
+        | null
+        | undefined = surfaceClipboard(),
+    ): boolean {
+      const state = rangeViewState();
+      return Boolean(
+        state &&
+        (!cut || rangeWritable(state)) &&
+        direct.canTransferSelection(cut, true, clipboard) &&
+        rangeViewState() === state,
+      );
+    },
+    captureTransferSelection(
+      options: {
+        cut?: boolean;
+        clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+      } = {},
+    ): (() => Promise<boolean>) | null {
+      return captureSurfaceSelection(options);
+    },
+    transferSelection(
+      options: {
+        cut?: boolean;
+        clipboard?: { writeText?: (text: string) => Promise<void> } | null;
+      } = {},
+    ): Promise<boolean> {
+      return transferSurfaceSelection(options);
+    },
+    captureRangeFormatting(property: 'underline' | 'strike') {
+      const state = rangeViewState();
+      if (!state) return null;
+      if (!rangeWritable(state))
+        return Object.freeze({
+          state,
+          value: null,
+          reason: 'ReadOnlyDocument',
+          request: () => false,
+        });
+      const captured = direct.captureRangeFormatting(
+        property,
+        () => rangeViewState() === state && rangeWritable(state),
+      );
+      if (!captured || rangeViewState() !== state) return null;
+      let used = false;
+      return Object.freeze({
+        state,
+        value: captured.value as boolean | 'mixed' | null,
+        reason: captured.reason as string | null,
+        request(): boolean {
+          if (used) return false;
+          used = true;
+          return rangeViewState() === state && rangeWritable(state) && captured.request() === true;
+        },
+      });
     },
     canPasteInput(): boolean {
       return !closed && direct.canPasteInput();

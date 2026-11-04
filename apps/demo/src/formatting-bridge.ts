@@ -1,3 +1,4 @@
+import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
 // Public core entry only; no runtime protocol, native facade or private selection helpers.
 import {
   getSelectionFormatting,
@@ -63,9 +64,15 @@ export interface FormattingBridgeOptions {
     Partial<Pick<HeadlessEditor, 'update'>>;
   readonly onStatus: (message: string) => void;
   readonly onResult?: (result: CommandResult) => void;
+  readonly getSurfaceFormattingHost?: () => SurfaceFormattingHost | undefined;
 }
 /** A partial shell API: caller composes this with file/history/zoom actions. */
-export function createFormattingBridge({ editor, onStatus, onResult }: FormattingBridgeOptions) {
+export function createFormattingBridge({
+  editor,
+  onStatus,
+  onResult,
+  getSurfaceFormattingHost,
+}: FormattingBridgeOptions) {
   const alignments = {
     'align-left': 'LEFT',
     'align-center': 'CENTER',
@@ -80,6 +87,37 @@ export function createFormattingBridge({ editor, onStatus, onResult }: Formattin
     command === 'set-font-size' ||
     Object.hasOwn(alignments, command);
   let pending = false;
+  function surfaceCapture(
+    property: 'underline' | 'strike',
+    state: ReturnType<HeadlessEditor['getEditorState']>,
+  ) {
+    try {
+      if (pending || state.status !== 'ready' || state.selection != null) return null;
+      const host = getSurfaceFormattingHost?.();
+      const captured = host?.captureRangeFormatting?.(property);
+      if (!captured) return null;
+      const value = captured.value,
+        reason = captured.reason,
+        ownerState = captured.state;
+      const request = captured.request.bind(captured);
+      if (
+        getSurfaceFormattingHost?.() !== host ||
+        editor.getEditorState() !== state ||
+        ownerState !== state
+      )
+        return { value: null, reason: 'StaleSurfaceFormatting', request: () => false };
+      if (reason !== null || (value !== true && value !== false && value !== 'mixed'))
+        return {
+          value: null,
+          reason: reason ?? 'UnknownCharacterFormatting',
+          request: () => false,
+        };
+      return { value, reason: null, request };
+    } catch {
+      return { value: null, reason: 'SurfaceFormattingUnavailable', request: () => false };
+    }
+  }
+
   function presentation(
     state: SelectionFormatting,
   ): Pick<DemoShellState, 'actions' | 'fontSizePoints'> {
@@ -122,7 +160,39 @@ export function createFormattingBridge({ editor, onStatus, onResult }: Formattin
   async function action(action: DemoAction): Promise<boolean> {
     if (!supported(action.command)) return false;
     // Fresh selection/target at invocation; never retain the presentation's token.
-    const formatting = getSelectionFormatting(editor.getEditorState());
+    const state = editor.getEditorState();
+    const formatting = getSelectionFormatting(state);
+    if (
+      (action.command === 'underline' || action.command === 'strike') &&
+      formatting.target === null &&
+      formatting.characterAvailableReason === 'MissingSelection' &&
+      state.selection == null &&
+      getSurfaceFormattingHost
+    ) {
+      const capture = surfaceCapture(action.command, state);
+      if (!capture || capture.reason !== null) {
+        onStatus(pending ? 'FormattingPending' : (capture?.reason ?? 'MissingSelection'));
+        return true;
+      }
+      pending = true;
+      try {
+        if (editor.getEditorState() !== state) {
+          onStatus('StaleSurfaceFormatting');
+          return true;
+        }
+        const accepted = capture.request();
+        onStatus(
+          accepted
+            ? '서식 변경을 접수했습니다.'
+            : '선택 범위가 바뀌었거나 현재 서식을 변경할 수 없습니다.',
+        );
+      } catch (error) {
+        onStatus(error instanceof Error ? error.message : String(error));
+      } finally {
+        pending = false;
+      }
+      return true;
+    }
     const availability = presentation(formatting).actions?.[action.command];
     if (!availability?.enabled || !formatting.target) {
       onStatus(availability?.reason ?? 'MissingSelection');
@@ -263,6 +333,29 @@ export function createFormattingBridge({ editor, onStatus, onResult }: Formattin
     }
   }
 
-  const getPresentation = () => presentation(getSelectionFormatting(editor.getEditorState()));
+  const getPresentation = () => {
+    const state = editor.getEditorState(),
+      formatting = getSelectionFormatting(state);
+    const base = presentation(formatting);
+    if (
+      formatting.target !== null ||
+      formatting.characterAvailableReason !== 'MissingSelection' ||
+      state.selection != null ||
+      !getSurfaceFormattingHost
+    )
+      return base;
+    const actions = { ...base.actions };
+    for (const property of ['underline', 'strike'] as const) {
+      const capture = surfaceCapture(property, state);
+      if (capture)
+        actions[property] = Object.freeze({
+          enabled: !pending && capture.reason === null,
+          reason: pending ? 'FormattingPending' : (capture.reason ?? undefined),
+          pressed: capture.value ?? undefined,
+          surfaceSelection: !pending && capture.reason === null,
+        });
+    }
+    return Object.freeze({ ...base, actions: Object.freeze(actions) });
+  };
   return Object.freeze({ action, getPresentation, captureDialog, applyDialog });
 }

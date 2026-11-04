@@ -95,7 +95,11 @@ export function resolveCommandSupport(
   const proof = input.confirmedUnimplemented;
   if (proof?.reason.trim() && proof.evidence.trim()) return deny('unimplemented', proof.reason);
   if (!input.connected) return deny('unconnected', UNCONNECTED_COMMAND_REASON);
-  if (definition.selection && input.hasSelection === false)
+  const surfaceSelection =
+    ['copy', 'cut', 'underline', 'strike'].includes(command) &&
+    input.availability?.enabled === true &&
+    input.availability.surfaceSelection === true;
+  if (definition.selection && input.hasSelection === false && !surfaceSelection)
     return deny('missing-selection', '편집 위치나 대상을 먼저 선택해주세요.');
   if (input.availability?.enabled === true) return { ...input.availability, kind: 'available' };
   return deny(

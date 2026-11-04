@@ -66,6 +66,7 @@ export function createCanvasEditor({
   platform = null,
   environment = {},
   historyAvailability = null,
+  transferMultiParagraphSelection = null,
   requestStableNonTextHistory = null,
   historyModelState = null,
   prepareHistoryModelSelection = null,
@@ -1140,7 +1141,7 @@ export function createCanvasEditor({
     input.setAttribute('aria-busy', 'true');
     return true;
   };
-  const replaceSelection = (text) => {
+  const replaceSelection = (text, guard = null) => {
     if (
       !target ||
       !anchor ||
@@ -1200,6 +1201,7 @@ export function createCanvasEditor({
       report('현재 WASM은 입력 속성을 포함한 문단 교체를 지원하지 않습니다.');
       return false;
     }
+    if (guard && guard() !== true) return false;
     pending = {
       kind: 'replace-paragraph-ranges',
       font,
@@ -1283,7 +1285,7 @@ export function createCanvasEditor({
       ) ?? null
     );
   };
-  const setCharacterUnderline = (underlineKind) => {
+  const setCharacterUnderline = (underlineKind, guard = null) => {
     if (multipleParagraphs()) {
       if (
         renderer.characterUnderlineRangesAvailable?.() !== true ||
@@ -1297,6 +1299,7 @@ export function createCanvasEditor({
         return false;
       const ranges = renderer.selectionRanges?.(anchor, focus);
       if (!ranges?.length) return false;
+      if (guard && guard() !== true) return false;
       pending = { kind: 'character-underline-ranges', anchor: { ...anchor }, focus: { ...focus } };
       if (!controls.request({ kind: pending.kind, origin: 'canvas', ranges, underlineKind })) {
         pending = null;
@@ -1317,7 +1320,7 @@ export function createCanvasEditor({
     input.setAttribute('aria-busy', 'true');
     return true;
   };
-  const toggleCharacterProperty = (property) => {
+  const toggleCharacterProperty = (property, guard = null) => {
     if (property === 'strike') {
       if (
         composing ||
@@ -1333,6 +1336,7 @@ export function createCanvasEditor({
         const state = selectedCharacterPropertyState(property);
         const ranges = renderer.selectionRanges?.(anchor, focus);
         if (state === null || !ranges?.length) return false;
+        if (guard && guard() !== true) return false;
         pending = { kind: 'character-strike-ranges', anchor: { ...anchor }, focus: { ...focus } };
         if (
           !controls.request({
@@ -1372,7 +1376,7 @@ export function createCanvasEditor({
       return state === null
         ? false
         : property === 'underline'
-          ? setCharacterUnderline(state === true ? 'none' : 'bottom')
+          ? setCharacterUnderline(state === true ? 'none' : 'bottom', guard)
           : setCharacterProperties({ [property]: state !== true });
     }
     if (!selectedRange()) return false;
@@ -2134,7 +2138,10 @@ export function createCanvasEditor({
       ['c', 'x'].includes(key.toLowerCase())
     ) {
       event.preventDefault();
-      transferSelection({ cut: key.toLowerCase() === 'x' });
+      const options = { cut: key.toLowerCase() === 'x' };
+      if (typeof transferMultiParagraphSelection === 'function')
+        void transferMultiParagraphSelection(options);
+      else void transferSelection(options);
       return;
     }
     if (
@@ -2293,6 +2300,19 @@ export function createCanvasEditor({
     listen(input, kind, (event) => {
       if (!multipleParagraphs()) return;
       event.preventDefault();
+      if (typeof transferMultiParagraphSelection === 'function') {
+        if (!event.clipboardData) return;
+        void transferMultiParagraphSelection({
+          cut: kind === 'cut',
+          clipboard: {
+            writeText(text) {
+              event.clipboardData.setData('text/plain', text);
+              return Promise.resolve();
+            },
+          },
+        });
+        return;
+      }
       const text = renderer.selectionText?.(anchor, focus);
       if (
         typeof text !== 'string' ||
@@ -2472,9 +2492,9 @@ export function createCanvasEditor({
       ranges?.length && ranges.every((range) => renderer.paragraph(range)?.editable === true),
     );
   };
-  const replaceSelectedText = (text) => {
+  const replaceSelectedText = (text, guard = null) => {
     if (typeof text !== 'string' || !text.isWellFormed()) return false;
-    if (/[\r\n]/.test(text) || multipleParagraphs()) return replaceSelection(text);
+    if (/[\r\n]/.test(text) || multipleParagraphs()) return replaceSelection(text, guard);
     if (
       !target ||
       composing ||
@@ -2504,19 +2524,84 @@ export function createCanvasEditor({
     preview();
     return true;
   };
-  const transferSelection = ({
+  const transferableSelection = (cut, multiOnly) => {
+    const saved = settledSelection();
+    if (!saved || (cut && !selectionTextEditAvailable())) return null;
+    if (
+      multiOnly &&
+      (!multipleParagraphs() ||
+        saved.text.includes('\ufffc') ||
+        (cut && renderer.paragraphReplacementAvailable?.() !== true))
+    )
+      return null;
+    return saved;
+  };
+  const captureTransferSelection = ({
     cut = false,
     clipboard = environment.clipboard ?? realm.navigator?.clipboard,
+    multiOnly = false,
+    isCurrent = null,
   } = {}) => {
+    const saved = transferableSelection(cut, multiOnly);
+    if (!saved) return null;
+    const current = () =>
+      isCurrent
+        ? selectionCurrent(saved) && isCurrent() === true && selectionCurrent(saved)
+        : selectionCurrent(saved);
+    let used = false;
+    return () => {
+      if (used) return Promise.resolve(false);
+      used = true;
+      return transferSelectedText({
+        clipboard,
+        text: saved.text,
+        isCurrent: current,
+        cut,
+        remove: () => replaceSelectedText('', isCurrent ? current : null),
+        report,
+      });
+    };
+  };
+  const transferSelection = (options = {}) =>
+    captureTransferSelection(options)?.() ?? Promise.resolve(false);
+  const captureRangeFormatting = (property, isCurrent = () => true) => {
+    if (!['underline', 'strike'].includes(property) || !multipleParagraphs()) return null;
     const saved = settledSelection();
-    if (!saved || (cut && !selectionTextEditAvailable())) return Promise.resolve(false);
-    return transferSelectedText({
-      clipboard,
-      text: saved.text,
-      isCurrent: () => selectionCurrent(saved),
-      cut,
-      remove: () => replaceSelectedText(''),
-      report,
+    if (!saved) return null;
+    const available = () =>
+      property === 'underline'
+        ? renderer.characterUnderlineRangesAvailable?.() === true
+        : renderer.characterStrikeRangesAvailable?.() === true;
+    const supported = available();
+    const observed = selectedCharacterPropertyState(property);
+    const value = typeof observed === 'boolean' || observed === 'mixed' ? observed : null;
+    if (!selectionCurrent(saved)) return null;
+    let used = false;
+    return Object.freeze({
+      value,
+      reason: !supported
+        ? 'RangeFormattingUnsupported'
+        : value === null
+          ? 'RangeFormattingUnknown'
+          : null,
+      request() {
+        if (used) return false;
+        used = true;
+        if (
+          !selectionCurrent(saved) ||
+          !available() ||
+          value === null ||
+          selectedCharacterPropertyState(property) !== value ||
+          !selectionCurrent(saved)
+        )
+          return false;
+        return (
+          toggleCharacterProperty(
+            property,
+            () => selectionCurrent(saved) && isCurrent() === true && selectionCurrent(saved),
+          ) === true
+        );
+      },
     });
   };
   const canDeleteSelection = () => settledSelection() !== null && selectionTextEditAvailable();
@@ -2558,11 +2643,12 @@ export function createCanvasEditor({
         onDenied: () => input.focus({ preventScroll: true }),
       });
     },
-    canTransferSelection(cut = false) {
+    hasMultiParagraphSelection: () => multipleParagraphs(),
+    captureRangeFormatting,
+    captureTransferSelection,
+    canTransferSelection(cut = false, multiOnly = false, port = clipboard) {
       return (
-        typeof clipboard?.writeText === 'function' &&
-        settledSelection() !== null &&
-        (!cut || selectionTextEditAvailable())
+        typeof port?.writeText === 'function' && transferableSelection(cut, multiOnly) !== null
       );
     },
     transferSelection,

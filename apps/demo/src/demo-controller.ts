@@ -1,3 +1,5 @@
+import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
+import type { SurfaceClipboardPort } from './clipboard-bridge.ts';
 import { createCharacterShapePort } from './character-shape-port.ts';
 import { decorateParagraphAlignmentFallback } from './paragraph-shape-fallback-view.ts';
 import * as paragraphShapeCore from '@hwpjs/core';
@@ -52,7 +54,7 @@ import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available
 // @ts-ignore Canonical fixture catalog is shared with the server.
 import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
-export interface DemoHost {
+export interface DemoHost extends SurfaceFormattingHost, SurfaceClipboardPort {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
@@ -115,7 +117,11 @@ export async function mountDemo(
       if (!closed) note('문서 작업에 실패했습니다.');
     },
   });
-  const formatting = createFormattingBridge({ editor, onStatus: note });
+  const formatting = createFormattingBridge({
+    editor,
+    onStatus: note,
+    getSurfaceFormattingHost: () => host,
+  });
   const textColor = createTextColorTool({
     root,
     editor,
@@ -214,6 +220,8 @@ export async function mountDemo(
   });
   const clipboard = createClipboardBridge({
     editor,
+    getSurface: () => host,
+    onPresentationChange: () => shell.update(),
     onStatus: note,
     onReadDenied: () => {
       host?.focus?.();

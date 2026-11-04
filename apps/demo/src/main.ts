@@ -43,6 +43,14 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setDisplayOptions: (value) => ref.current?.surface?.setDisplayOptions(value) ?? false,
       getDisplayOptions: () => ref.current?.surface?.getDisplayOptions(),
       getContextPicture: () => ref.current?.surface?.getContextPicture(),
+      captureRangeFormatting: (property) =>
+        ref.current?.surface?.captureRangeFormatting?.(property) ?? null,
+      canTransferSelection: (cut, clipboard) =>
+        ref.current?.surface?.canTransferSelection?.(cut, clipboard) ?? false,
+      transferSelection: (options) =>
+        ref.current?.surface?.transferSelection?.(options) ?? Promise.resolve(false),
+      captureTransferSelection: (options) =>
+        ref.current?.surface?.captureTransferSelection?.(options) ?? null,
       focusForPaste: () => ref.current?.surface?.focusForPaste() ?? false,
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => tree.unmount(),
@@ -70,6 +78,12 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setDisplayOptions: (value) => surface?.setDisplayOptions(value) ?? false,
       getDisplayOptions: () => surface?.getDisplayOptions(),
       getContextPicture: () => surface?.getContextPicture(),
+      captureRangeFormatting: (property) => surface?.captureRangeFormatting?.(property) ?? null,
+      canTransferSelection: (cut, clipboard) =>
+        surface?.canTransferSelection?.(cut, clipboard) ?? false,
+      transferSelection: (options) =>
+        surface?.transferSelection?.(options) ?? Promise.resolve(false),
+      captureTransferSelection: (options) => surface?.captureTransferSelection?.(options) ?? null,
       focusForPaste: () => surface?.focusForPaste() ?? false,
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => unmount(component),

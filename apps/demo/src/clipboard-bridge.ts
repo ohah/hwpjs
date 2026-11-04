@@ -16,10 +16,23 @@ export interface PlainTextClipboard {
   readText?: () => Promise<string>;
   writeText?: (text: string) => Promise<void>;
 }
+export interface SurfaceClipboardPort {
+  canTransferSelection?(cut?: boolean, clipboard?: PlainTextClipboard | null): boolean;
+  captureTransferSelection?(options: {
+    cut?: boolean;
+    clipboard?: PlainTextClipboard | null;
+  }): (() => Promise<boolean>) | null;
+  transferSelection?(options: {
+    cut?: boolean;
+    clipboard?: PlainTextClipboard | null;
+  }): Promise<boolean>;
+}
 export interface ClipboardBridgeOptions {
   readonly editor: Pick<HeadlessEditor, 'getEditorState' | 'dispatchCommand' | 'update'>;
   /** Injectable platform port. null explicitly disables clipboard access. */
   readonly clipboard?: PlainTextClipboard | null;
+  readonly onPresentationChange?: () => void;
+  readonly getSurface?: () => SurfaceClipboardPort | undefined;
   readonly onStatus: (message: string) => void;
   readonly onResult?: (result: CommandResult) => void;
   readonly onReadDenied?: () => void;
@@ -52,12 +65,30 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       return command === 'paste' ? 'ClipboardReadUnavailable' : 'ClipboardWriteUnavailable';
     return null;
   }
+  function surfaceLane(command: 'copy' | 'cut' | 'paste', selection: SelectionClipboard) {
+    if (command === 'paste' || closed || selection.copyReason !== 'MissingSelection')
+      return undefined;
+    const surface = options.getSurface?.();
+    if (
+      !surface?.captureTransferSelection ||
+      surface.canTransferSelection?.(command === 'cut', platform()) !== true ||
+      typeof platform()?.writeText !== 'function' ||
+      options.getSurface?.() !== surface
+    )
+      return undefined;
+    return surface;
+  }
   function getPresentation(): Pick<DemoShellState, 'actions'> {
     const selection = getSelectionClipboard(editor.getEditorState());
     const actions: Partial<Record<DemoCommand, ActionAvailability>> = {};
     for (const command of ['copy', 'cut', 'paste'] as const) {
-      const why = reason(command, selection);
-      actions[command] = Object.freeze({ enabled: why === null, reason: why ?? undefined });
+      const surface = !pending && surfaceLane(command, selection);
+      const why = surface ? null : reason(command, selection);
+      actions[command] = Object.freeze({
+        enabled: why === null,
+        reason: why ?? undefined,
+        ...(surface ? { surfaceSelection: true as const } : {}),
+      });
     }
     return Object.freeze({ actions: Object.freeze(actions) });
   }
@@ -68,17 +99,33 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
   async function action(action: DemoAction): Promise<boolean> {
     if (!supported(action.command)) return false;
     const command = action.command;
-    const initial = reason(command, getSelectionClipboard(editor.getEditorState()));
+    const selection = getSelectionClipboard(editor.getEditorState());
+    const surface = !pending && surfaceLane(command, selection);
+    const initial = surface ? null : reason(command, selection);
     if (initial) {
       if (!closed) onStatus(initial);
       return true;
     }
+    // 외부 콜백이나 Core 갱신 전에 최초 Canvas 범위의 일회용 클로저를 확보한다.
+    const transfer = surface?.captureTransferSelection?.({
+      cut: command === 'cut',
+      clipboard: platform(),
+    });
+    if (surface && !transfer) return true;
     pending = true;
     let phase: 'read' | 'write' | 'editor' = 'editor';
     try {
-      // Public admission settles composition and queued input, without a synthetic edit.
+      options.onPresentationChange?.();
+      if (closed) return true;
       await editor.update(() => {});
       if (closed) return true;
+      if (surface) {
+        if (options.getSurface?.() !== surface) return true;
+        phase = 'write';
+        const transferred = await transfer!();
+        if (!closed && !transferred) onStatus('SurfaceClipboardNotApplied');
+        return true;
+      }
       const captured = getSelectionClipboard(editor.getEditorState());
       // Revalidate after composition while keeping duplicate actions fenced.
       const why = reason(command, captured, true);
@@ -124,6 +171,7 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       }
     } finally {
       pending = false;
+      if (!closed) options.onPresentationChange?.();
     }
     return true;
   }

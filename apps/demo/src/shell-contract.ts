@@ -52,6 +52,8 @@ export type DemoAction =
   | { readonly command: 'set-zoom'; readonly percent: number };
 export interface ActionAvailability {
   readonly enabled: boolean;
+  /** 표시용 선택 근거만. 실행 시 소유 Surface가 현재 범위를 다시 검증한다. */
+  readonly surfaceSelection?: boolean;
   /** Required explanation when unavailable; the shell supplies a fallback. */
   readonly reason?: string;
   readonly pressed?: boolean | 'mixed';

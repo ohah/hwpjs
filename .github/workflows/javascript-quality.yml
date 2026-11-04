@@ -116,6 +116,35 @@ jobs:
             --import ./tools/object-properties-test-css.mjs \
             --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
             --test --test-isolation=none --test-concurrency=1 "$@"
+      - name: Test multi-paragraph formatting app port regressions
+        timeout-minutes: 2
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          set -- \
+            ./apps/demo/tests/selection-decoration-bridge.test.mjs \
+            ./apps/demo/tests/surface-selection-command-support.test.mjs \
+            ./apps/demo/tests/mac-surface-selection-shortcuts.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --experimental-transform-types --max-old-space-size=256 \
+            --test --test-concurrency=1 "$@"
+      - name: Test multi-paragraph clipboard capture surface regressions
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          test -f ./tools/renderer-test-core-provider.mjs || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-renderer-hook.mjs || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-fixture.mjs || exit 1
+          test -f ./packages/vanilla/tests/multiblock-clipboard-fixture.mjs || exit 1
+          set -- \
+            ./packages/vanilla/tests/multiblock-clipboard-capture.test.mjs \
+            ./packages/vanilla/tests/multiblock-clipboard-safety.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --experimental-transform-types --max-old-space-size=256 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 "$@"
       - name: Test non-text selection history surface lifecycle
         timeout-minutes: 2
         env:
