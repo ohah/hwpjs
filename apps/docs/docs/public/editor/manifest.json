@@ -326,6 +326,11 @@
       "sha256": "9ae87d5d720d6e0acbfca2c8e9fff3d50121d3d4105c06314a929f7447bdab66"
     },
     {
+      "path": "assets/index-B4N-x2Kw.js",
+      "bytes": 463349,
+      "sha256": "f6cd66839f85d464ede2d0d0f67b8d6b11483dedc1a72074b1e8100347bfeee0"
+    },
+    {
       "path": "assets/index-C-kVoeEm.js",
       "bytes": 460456,
       "sha256": "93f1f435e0e9f843c697cb1a21c39434077f2aa96ff497258f3c25ef72a11249"
@@ -501,9 +506,19 @@
       "sha256": "408a9d8d2fc0535680fff1693e399ccfb37b44dea8a50eda70235115067fe997"
     },
     {
+      "path": "assets/src-eoY3o5cH.js",
+      "bytes": 1118166,
+      "sha256": "8f361024aa7670d69068496474cc0c8a9f42d21c45349c9d10181ca80b686b17"
+    },
+    {
       "path": "assets/src-fDI49rQ9.js",
       "bytes": 56,
       "sha256": "ae812069ed410496e8f1f6f84fc93a1d37c9dc8fec62366f1853d0d777ee519c"
+    },
+    {
+      "path": "assets/src-icAvCVlT.js",
+      "bytes": 56,
+      "sha256": "568c23d67ed062eb86bf0e6447dd99fa7984dcbdf6917e5bddb6250a8a5fcc93"
     },
     {
       "path": "assets/src-k96pZaXA.js",
@@ -533,22 +548,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 491,
-      "sha256": "0c66ac62df8ce622c2f4409365f75ddb05f86765599eff665b9728267dbc031c"
+      "sha256": "c11b3941f67a4c2a0642202c5cc04b1a569814f73ed90b7cc0b29c2c87cb460c"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 491,
-      "sha256": "0c66ac62df8ce622c2f4409365f75ddb05f86765599eff665b9728267dbc031c"
+      "sha256": "c11b3941f67a4c2a0642202c5cc04b1a569814f73ed90b7cc0b29c2c87cb460c"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 491,
-      "sha256": "0c66ac62df8ce622c2f4409365f75ddb05f86765599eff665b9728267dbc031c"
+      "sha256": "c11b3941f67a4c2a0642202c5cc04b1a569814f73ed90b7cc0b29c2c87cb460c"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 491,
-      "sha256": "0c66ac62df8ce622c2f4409365f75ddb05f86765599eff665b9728267dbc031c"
+      "sha256": "c11b3941f67a4c2a0642202c5cc04b1a569814f73ed90b7cc0b29c2c87cb460c"
     },
     {
       "path": "fixture-catalog.json",
@@ -1068,7 +1083,7 @@
     {
       "path": "index.html",
       "bytes": 479,
-      "sha256": "567f02013121cfcfa241525e170c74bb1fea24ebc5ea4ee4d0d2a2abfb71604f"
+      "sha256": "4e8082ab84e189c94990f617cd4b4956a0e40d5e7f10532add2524ca1c05f6c2"
     },
     {
       "path": "runtime/index.js",
