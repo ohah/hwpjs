@@ -1,7 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { contextTarget, mountDemoContextMenu, type ContextTarget } from '../src/context-menu.ts';
-import { contextCommandIds, contextCommandLabel } from '../src/command-support.ts';
+import {
+  CONTEXT_COMMAND_IDS,
+  contextCommandIds,
+  contextCommandLabel,
+} from '../src/command-support.ts';
 const token = {
   editorId: 'e',
   documentId: 'd',
@@ -52,14 +56,17 @@ test('공개 선택 validator를 통과한 본문과 셀만 표시 종류를 구
     assert.equal(contextTarget(s, null).kind, 'none', change);
   }
 });
-test('그림 관측은 기존 텍스트보다 우선하지만 속성 명령을 만들지 않는다', () => {
+test('그림 관측은 기존 텍스트보다 우선하고 개체 속성만 추가한다', () => {
   const picture = { ...token, section: 0, pictureNode: 13 };
   assert.equal(contextTarget(state(), picture).kind, 'picture');
   assert.equal(contextTarget(state(), undefined).kind, 'none');
   assert.equal(contextTarget(state(), { ...picture, generation: 0 }).kind, 'none');
   assert.equal(contextTarget(state(), { ...picture, pictureNode: -1 }).kind, 'none');
   assert.ok(!contextCommandIds('picture').includes('character-properties'));
-  assert.ok(!contextCommandIds('picture').includes('object-properties'));
+  assert.ok(contextCommandIds('picture').includes('object-properties'));
+  assert.equal(CONTEXT_COMMAND_IDS.filter((id) => id === 'object-properties').length, 1);
+  for (const kind of ['body', 'table-cell', 'none'] as const)
+    assert.ok(!contextCommandIds(kind).includes('object-properties'));
 });
 test('셀 도구는 기존 명령 ID를 재사용하고 capability를 만들지 않는다', () => {
   assert.equal(contextCommandLabel('paragraph-properties', 'table-cell'), '셀 문단 속성');
@@ -139,7 +146,12 @@ function harness() {
     getState: () => ({
       title: '',
       status: '',
-      actions: { copy: { enabled }, bold: { enabled }, 'paragraph-properties': { enabled } },
+      actions: {
+        copy: { enabled },
+        bold: { enabled },
+        'paragraph-properties': { enabled },
+        'object-properties': { enabled },
+      },
     }),
     execute: (a) => {
       calls.push(a.command);
@@ -255,6 +267,35 @@ for (const axis of [
       h.open();
       h.setTarget(contextTarget(after, null));
       h.click('copy');
+      assert.deepEqual(h.calls, []);
+    } finally {
+      h.control.close();
+    }
+  });
+
+test('그림 메뉴 개체 속성은 기존 실행 경로로 한 번 전달된다', () => {
+  const h = harness();
+  try {
+    h.setTarget({ kind: 'picture', key: 'picture:13' });
+    h.open();
+    assert.ok(h.menu.children.some((n: any) => n.dataset.commandId === 'object-properties'));
+    h.click('object-properties');
+    assert.deepEqual(h.calls, ['object-properties']);
+  } finally {
+    h.control.close();
+  }
+});
+for (const change of ['disabled', 'picture', 'document', 'body', 'focus'] as const)
+  test(`그림 속성 메뉴 ${change} 변경 후 실행은 거부한다`, () => {
+    const h = harness();
+    try {
+      h.setTarget({ kind: 'picture', key: 'picture:13' });
+      h.open();
+      if (change === 'disabled') h.setEnabled(false);
+      else if (change === 'focus')
+        h.setFocus(() => h.setTarget({ kind: 'picture', key: 'picture:14' }));
+      else h.setTarget({ kind: change === 'body' ? 'body' : 'picture', key: change });
+      h.click('object-properties');
       assert.deepEqual(h.calls, []);
     } finally {
       h.control.close();

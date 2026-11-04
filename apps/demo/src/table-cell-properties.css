@@ -1,0 +1,32 @@
+.hwp-table-cell-properties-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.hwp-table-cell-properties-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.hwp-table-cell-properties-field input,
+.hwp-table-cell-properties-field select {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+}
+.hwp-table-cell-properties-hint,
+.hwp-table-cell-properties-status {
+  min-width: 0;
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 420px) {
+  .hwp-table-cell-properties-field {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

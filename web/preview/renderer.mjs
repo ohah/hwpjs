@@ -18,6 +18,8 @@ import { createParagraphLookup } from './projection-paragraph-index.mjs';
 import { watchProjectionFonts } from './projection-measure-memo.mjs';
 import { DEFAULT_CANVAS_DISPLAY_OPTIONS, canvasDisplayOptions } from './canvas-display-options.mjs';
 import { paragraphMarkPlan, paintParagraphMark } from './paragraph-mark-paint.mjs';
+import { formattingMarkPlans } from './formatting-mark-plan.mjs';
+import { paintFormattingMarks } from './formatting-mark-paint.mjs';
 import { decodeTableImageTone } from './table-image-tone.mjs';
 import {
   tableBackgroundTargets,
@@ -488,6 +490,7 @@ export function createRenderer(
     paintedInteractionStamp = null;
     paintedCharts = [];
     let paintedParagraphMarks = 0;
+    let paintedFormattingMarks = 0;
     const paintedForms = new Set();
     paintedFormTargets = [];
     paintedCheckBoxes = [];
@@ -1078,10 +1081,16 @@ export function createRenderer(
               );
           }
           if (
-            displayOptions.paragraphMarks &&
+            (displayOptions.paragraphMarks || displayOptions.formattingMarks) &&
             paintParagraphMark(ctx, paragraphMarkPlan(row, i, paragraph), viewport.scrollTop)
           )
             paintedParagraphMarks++;
+          if (displayOptions.formattingMarks)
+            paintedFormattingMarks += paintFormattingMarks(
+              ctx,
+              formattingMarkPlans(row, i, paragraph),
+              viewport.scrollTop,
+            );
         } else
           ctx.fillText(
             row.text,
@@ -1221,6 +1230,11 @@ export function createRenderer(
       });
     }
     canvas.dataset.paintedCaret = paintedCaret;
+    canvas.dataset.formattingMarks = String(displayOptions.formattingMarks === true);
+    canvas.dataset.formattingMarkCount = String(paintedFormattingMarks);
+    canvas.dataset.effectiveParagraphMarks = String(
+      displayOptions.paragraphMarks || displayOptions.formattingMarks === true,
+    );
     canvas.dataset.paragraphMarks = String(displayOptions.paragraphMarks);
     canvas.dataset.paragraphMarkCount = String(paintedParagraphMarks);
     paintedFrame = {
@@ -1231,6 +1245,7 @@ export function createRenderer(
       scrollTop: viewport.scrollTop,
       displayOptions,
       paragraphMarkCount: paintedParagraphMarks,
+      formattingMarkCount: paintedFormattingMarks,
       caret: paintedCaret,
       selection:
         paintSelection.anchor && paintSelection.focus
@@ -1521,7 +1536,11 @@ export function createRenderer(
     setDisplayOptions(options) {
       if (closed) return false;
       const next = canvasDisplayOptions(options);
-      if (next.paragraphMarks === displayOptions.paragraphMarks) return true;
+      if (
+        next.paragraphMarks === displayOptions.paragraphMarks &&
+        (next.formattingMarks === true) === (displayOptions.formattingMarks === true)
+      )
+        return true;
       displayOptions = next;
       schedule();
       return true;

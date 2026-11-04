@@ -1,0 +1,51 @@
+.hwp-object-properties {
+  width: min(420px, calc(100vw - 24px));
+}
+.hwp-object-properties fieldset {
+  border: 1px solid #cbd4e6;
+  border-radius: 3px;
+  padding: 12px;
+  margin: 0;
+}
+.hwp-object-properties legend {
+  padding: 0 5px;
+  font-weight: 600;
+}
+.hwp-object-properties label {
+  display: grid;
+  grid-template-columns: 44px minmax(80px, 1fr) 22px;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+.hwp-object-properties label:has(input[type='checkbox']) {
+  display: flex;
+  gap: 7px;
+}
+.hwp-object-properties input[type='text'] {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  padding: 5px 7px;
+  font: inherit;
+  border: 1px solid #9ba9cd;
+  border-radius: 2px;
+}
+.hwp-object-properties input:focus-visible {
+  outline: 2px solid #526bb3;
+  outline-offset: 1px;
+}
+.hwp-object-properties [data-role='object-status'] {
+  min-height: 2.8em;
+  color: #97401f;
+  margin-bottom: 0;
+}
+.hwp-object-hint {
+  color: #586579;
+  font-size: 12px;
+}
+@media (max-width: 420px) {
+  .hwp-object-properties .hwp-dialog-body {
+    padding: 10px;
+  }
+}

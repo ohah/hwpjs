@@ -17,6 +17,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'insert-shape': entry('도형', '삽입', true),
   'insert-image': entry('그림', '삽입', true),
   'insert-table': entry('표', '삽입', true),
+  'table-cell-properties': entry('표/셀 속성', '표', true),
   'insert-chart': entry('차트', '삽입', true),
   'insert-footnote': entry('각주', '삽입', true),
   'insert-endnote': entry('미주', '삽입', true),
@@ -24,7 +25,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'insert-symbol': entry('기호', '삽입', true),
   'character-properties': entry('글자 속성', '서식', true),
   'paragraph-properties': entry('문단 속성', '서식', true),
-  'object-properties': entry('개체 속성', '서식', true),
+  'object-properties': entry('개체 속성', '서식'),
   'insert-header': entry('머리말', '삽입'),
   'insert-footer': entry('꼬리말', '삽입'),
   'toggle-paragraph-marks': entry('문단 부호', '보기'),
@@ -162,13 +163,27 @@ const textContextCommands: readonly ContextCommand[] = Object.freeze([
   'align-right',
   'align-justify',
 ]);
-export const CONTEXT_COMMAND_IDS: readonly ContextCommand[] = Object.freeze([
+const editableContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,
   ...textContextCommands,
 ]);
-/** 그림 개체 속성은 실행 도구가 없어 목록에 넣지 않습니다. */
+const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
+  ...editableContextCommands,
+  'table-cell-properties',
+]);
+const pictureContextCommands: readonly ContextCommand[] = Object.freeze([
+  ...documentContextCommands,
+  'object-properties',
+]);
+export const CONTEXT_COMMAND_IDS: readonly ContextCommand[] = Object.freeze([
+  ...tableCellContextCommands,
+  'object-properties',
+]);
+/** 목록은 표시 범위만 정하며 실행 시 기존 가용성·대상 검증을 유지합니다. */
 export function contextCommandIds(kind: ContextTargetKind): readonly ContextCommand[] {
-  return kind === 'body' || kind === 'table-cell' ? CONTEXT_COMMAND_IDS : documentContextCommands;
+  if (kind === 'table-cell') return tableCellContextCommands;
+  if (kind === 'picture') return pictureContextCommands;
+  return kind === 'body' ? editableContextCommands : documentContextCommands;
 }
 export function contextCommandLabel(command: ContextCommand, kind: ContextTargetKind): string {
   if (kind === 'table-cell') {

@@ -31,6 +31,8 @@ type HostEditor = HeadlessEditor & {
 };
 export interface CanvasDisplayOptions {
   readonly paragraphMarks: boolean;
+  /** 공백·검증된 탭·강제 줄바꿈의 화면 전용 표시입니다. */
+  readonly formattingMarks?: boolean;
 }
 export interface CanvasSurfaceEnvironment extends Record<string, any> {
   /** 측정 함수 내부 의미가 바뀌기 전에 새 frozen 빈 객체를 반환해야 합니다. */
@@ -94,6 +96,10 @@ export function createCanvasSurface({
   let displayed = '',
     selectionKey = '',
     observedStateVersion = -1;
+  let nonTextHistoryAdmissionReady = false;
+  let nonTextHistoryPending: object | undefined;
+  let nonTextSelectionProjection: ReturnType<HeadlessEditor['getEditorState']> | undefined;
+  let nonTextHistoryTask: Promise<void> = Promise.resolve();
   let activeHistoryAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   let deferredTypingAcknowledgement: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   let historySelectionPublication:
@@ -162,7 +168,7 @@ export function createCanvasSurface({
         selectionKey = nextSelectionKey;
         return;
       }
-      if (!bridge?.busy() && nextSelectionKey !== selectionKey) {
+      if (!nonTextHistoryPending && !bridge?.busy() && nextSelectionKey !== selectionKey) {
         selectionKey = nextSelectionKey;
         if (selected) {
           direct?.initializeCapabilities({
@@ -185,7 +191,7 @@ export function createCanvasSurface({
     }
     const retained =
       !changedDocument && state.selection ? (state.selection as SelectionTarget) : undefined;
-    if (!retained && !changedDocument && displayed && !bridge?.busy())
+    if (!nonTextHistoryPending && !retained && !changedDocument && displayed && !bridge?.busy())
       direct?.external({ kind: 'external-update', origin: 'core' });
     displayed = key;
     renderer.show(geometry?.content ?? state.content, {
@@ -198,7 +204,7 @@ export function createCanvasSurface({
       deferLayout:
         !changedDocument && ['splice', 'undo', 'redo'].includes(bridge?.pendingKind() ?? ''),
     });
-    if (retained && !bridge?.busy()) {
+    if (!nonTextHistoryPending && retained && !bridge?.busy()) {
       direct?.initializeCapabilities({
         ...(state.capabilities as object),
         historyRevision: state.nativeHistoryRevision,
@@ -216,6 +222,8 @@ export function createCanvasSurface({
   };
   const cleanup = () => {
     closed = true;
+    nonTextHistoryAdmissionReady = false;
+    nonTextHistoryPending = undefined;
     explicitClearPending = undefined;
     historySelectionPublication = undefined;
     frameObserver?.disconnect();
@@ -298,7 +306,12 @@ export function createCanvasSurface({
       viewport,
       input,
       renderer,
-      controls: bridge,
+      controls: {
+        ready: () => nonTextHistoryPending === undefined && bridge!.ready(),
+        busy: () => nonTextHistoryPending !== undefined || bridge!.busy(),
+        request: (message: RuntimeMessage) =>
+          nonTextHistoryPending === undefined && bridge!.request(message),
+      },
       deferQueuedTypingProjection(draft: any, controllerCurrent: () => boolean) {
         const current = activeHistoryAcknowledgement;
         if (
@@ -405,6 +418,11 @@ export function createCanvasSurface({
       environment: { ...environment, ownerDocument: doc },
       platform: realm.navigator.platform,
       historyAvailability: () => getHistoryAvailability(editor.getEditorState()),
+      requestStableNonTextHistory(kind: 'undo' | 'redo') {
+        if (!nonTextHistoryAdmissionReady || !direct) return false;
+        const state = nonTextHistoryState(kind);
+        return state ? requestNonTextHistory(kind, state) : false;
+      },
       queryEditRange: (m: RuntimeMessage) => bridge!.request(m),
       querySplitRange: (m: RuntimeMessage) => bridge!.request(m),
       onCommittedSelection(value: any, observation?: { origin?: string }) {
@@ -433,6 +451,10 @@ export function createCanvasSurface({
               }
             : null;
         const key = JSON.stringify(target);
+        if (observation?.origin === 'core' && nonTextSelectionProjection === state) {
+          selectionKey = key;
+          return;
+        }
         const projectedClear =
           observation?.origin === 'core' && target === null && state.selection == null;
         const explicitClear =
@@ -492,16 +514,211 @@ export function createCanvasSurface({
     cleanup();
     throw error;
   }
+  const historyKind = (kind: unknown): kind is 'undo' | 'redo' =>
+    kind === 'undo' || kind === 'redo';
+  // 텍스트 상태의 판정은 Canvas 내부에 남긴다. Core의 null 선택만으로 우회하지 않는다.
+  const noneViewState = () => {
+    if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy()) return undefined;
+    const state = editor.getEditorState();
+    const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+    if (
+      state.status !== 'ready' ||
+      state.selection != null ||
+      state.stateVersion !== observedStateVersion ||
+      key !== displayed ||
+      direct?.historyRoute?.() !== 'none'
+    )
+      return undefined;
+    // 표시·권한 조회 중 동기 재진입으로 입력이나 문서가 바뀌면 접수하지 않는다.
+    if (
+      closed ||
+      nonTextHistoryPending ||
+      !lease?.isActive() ||
+      bridge?.busy() ||
+      editor.getEditorState() !== state ||
+      direct?.historyRoute?.() !== 'none' ||
+      editor.getEditorState() !== state
+    )
+      return undefined;
+    return state;
+  };
+  const nonTextHistoryState = (kind: 'undo' | 'redo') => {
+    if (!historyKind(kind)) return undefined;
+    const state = noneViewState();
+    if (!state || (state.capabilities as { historyAvailable?: boolean })?.historyAvailable !== true)
+      return undefined;
+    const availability = getHistoryAvailability(state);
+    if (!availability.available || !availability[kind === 'undo' ? 'canUndo' : 'canRedo'])
+      return undefined;
+    return noneViewState() === state ? state : undefined;
+  };
+  const modalOpen = () => {
+    try {
+      return typeof doc.querySelector === 'function' && doc.querySelector('dialog:modal') !== null;
+    } catch {
+      return true;
+    }
+  };
+  const requestNonTextHistory = (
+    kind: 'undo' | 'redo',
+    state: ReturnType<HeadlessEditor['getEditorState']>,
+  ) => {
+    const request = {};
+    nonTextHistoryPending = request;
+    let resolveTask!: () => void;
+    nonTextHistoryTask = new Promise<void>((resolve) => {
+      resolveTask = resolve;
+    });
+    const sameOwner = () => {
+      if (closed || nonTextHistoryPending !== request || !lease?.isActive()) return false;
+      const current = editor.getEditorState();
+      return current.documentId === state.documentId && current.generation === state.generation;
+    };
+    const settle = (result?: Awaited<ReturnType<HeadlessEditor['undo']>>, error?: unknown) => {
+      let current: ReturnType<HeadlessEditor['getEditorState']> | undefined;
+      const stillCurrent = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() &&
+        current !== undefined &&
+        editor.getEditorState() === current &&
+        current.documentId === state.documentId &&
+        current.generation === state.generation;
+      try {
+        if (!sameOwner()) return;
+        const observed = editor.getEditorState();
+        if (observed.status === 'ready') render(observed);
+        if (!sameOwner()) return;
+        if (nonTextHistoryPending === request) nonTextHistoryPending = undefined;
+        // 대기 중 선택 투영을 생략했을 수 있다. 옛 reply가 아닌 최신 Core 관측만 사용한다.
+        current = editor.getEditorState();
+        if (!stillCurrent()) return;
+        if (current.status !== 'ready') {
+          status('실행 취소/다시 실행 대기가 끝났습니다. 현재 문서 상태를 확인하세요.');
+          return;
+        }
+        const key = `${current.documentId}:${current.generation}:${current.operationRevision}:${current.viewRevision}`;
+        if (current.stateVersion !== observedStateVersion || key !== displayed) {
+          status('실행 취소/다시 실행 대기가 끝났습니다. 현재 문서 표시를 확인하세요.');
+          return;
+        }
+        direct.initializeCapabilities({
+          ...(current.capabilities as object),
+          historyRevision: current.nativeHistoryRevision,
+          historyRevisions: current.nativeHistoryRevisions,
+        });
+        if (!stillCurrent()) return;
+        selectionKey = JSON.stringify(current.selection ?? null);
+        if (current.selection) {
+          let selected: boolean;
+          nonTextSelectionProjection = current;
+          try {
+            selected = direct.selectTextRange(current.selection, {
+              focusInput: false,
+              selectionOrigin: 'core',
+            });
+          } finally {
+            nonTextSelectionProjection = undefined;
+          }
+          if (!stillCurrent()) return;
+          if (!selected) {
+            status('이력은 적용됐지만 복원된 텍스트 선택의 화면 위치를 확인할 수 없습니다.');
+            return;
+          }
+        } else {
+          direct.external({ kind: 'external-update', origin: 'core' });
+          if (!stillCurrent()) return;
+        }
+        const failure = error ?? result?.error;
+        status(
+          failure
+            ? `실행 취소/다시 실행 실패: ${String(failure)}`
+            : result?.state !== current
+              ? '이력 응답 뒤 변경된 현재 문서 상태를 표시했습니다.'
+              : current.selection
+                ? '실행 취소/다시 실행 적용 · 복원 선택 표시 완료'
+                : '실행 취소/다시 실행 적용 · 텍스트 복원 위치 없음',
+        );
+      } catch (failure) {
+        // 표시 오류를 Native 미적용 응답으로 바꾸지 않는다. 새 문서의 알림도 덮지 않는다.
+        try {
+          if (stillCurrent()) status(`이력 응답 후 화면 반영 실패: ${String(failure)}`);
+        } catch {}
+      } finally {
+        if (nonTextHistoryPending === request) nonTextHistoryPending = undefined;
+        resolveTask();
+      }
+    };
+    try {
+      // 기존 Core FIFO/토큰 검사를 사용한다. 별도 이력 모델·텍스트 ACK를 만들지 않는다.
+      const task = editor[kind](state.token);
+      void Promise.resolve(task).then(
+        (result) => settle(result),
+        (error) => settle(undefined, error),
+      );
+      return true;
+    } catch (error) {
+      settle(undefined, error);
+      return false;
+    }
+  };
+  nonTextHistoryAdmissionReady = true;
   let disposal: Promise<void> | undefined;
   return {
     canRequestHistory(kind: 'undo' | 'redo'): boolean {
-      return !closed && direct.canRequestHistory(kind);
+      if (!historyKind(kind) || closed || nonTextHistoryPending) return false;
+      const route = direct.historyRoute();
+      if (route === 'none') return Boolean(nonTextHistoryState(kind));
+      return route === 'text' && !closed && direct.canRequestHistory(kind);
     },
     requestHistory(kind: 'undo' | 'redo'): boolean {
-      return !closed && direct.requestHistory(kind);
+      if (!historyKind(kind) || closed || nonTextHistoryPending) return false;
+      const route = direct.historyRoute();
+      if (route === 'none') {
+        const state = nonTextHistoryState(kind);
+        return state ? requestNonTextHistory(kind, state) : false;
+      }
+      return route === 'text' && !closed && direct.requestHistory(kind);
     },
     focus(): boolean {
-      return !closed && direct.focusInput();
+      if (closed || nonTextHistoryPending || !lease?.isActive() || modalOpen()) return false;
+      const state = editor.getEditorState();
+      const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+      if (
+        state.status !== 'ready' ||
+        state.stateVersion !== observedStateVersion ||
+        key !== displayed
+      )
+        return false;
+      const route = direct.historyRoute();
+      if (route === 'blocked') return false;
+      if (route === 'text')
+        return (
+          direct.focusInput() &&
+          !closed &&
+          !nonTextHistoryPending &&
+          lease?.isActive() === true &&
+          !modalOpen() &&
+          editor.getEditorState() === state
+        );
+      if (!direct.settled()) return false;
+      const current = noneViewState();
+      if (
+        typeof doc.querySelector !== 'function' ||
+        !current ||
+        current !== state ||
+        modalOpen() ||
+        noneViewState() !== current
+      )
+        return false;
+      // disabled 입력을 활성화하거나 가짜 caret을 만들지 않고 명시적 host.focus만 복귀한다.
+      canvas.focus({ preventScroll: true });
+      return (
+        ((canvas.getRootNode() as Document | ShadowRoot).activeElement ?? doc.activeElement) ===
+          canvas &&
+        !modalOpen() &&
+        noneViewState() === current
+      );
     },
     canPasteInput(): boolean {
       return !closed && direct.canPasteInput();
@@ -525,6 +742,7 @@ export function createCanvasSurface({
       const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
       if (
         closed ||
+        nonTextHistoryPending !== undefined ||
         !lease?.isActive() ||
         state.status !== 'ready' ||
         observedStateVersion !== state.stateVersion ||
@@ -559,7 +777,7 @@ export function createCanvasSurface({
     dispose(): Promise<void> {
       if (!disposal) {
         cleanup();
-        disposal = bridge!.flush();
+        disposal = Promise.all([bridge!.flush(), nonTextHistoryTask]).then(() => {});
       }
       return disposal;
     },

@@ -66,6 +66,7 @@ export function createCanvasEditor({
   platform = null,
   environment = {},
   historyAvailability = null,
+  requestStableNonTextHistory = null,
   historyModelState = null,
   prepareHistoryModelSelection = null,
   deferQueuedTypingProjection = null,
@@ -849,6 +850,41 @@ export function createCanvasEditor({
     }
     return true;
   };
+  // 기존 텍스트 소유 상태와 안정 비텍스트, 소유권 없는 대기를 구분한다.
+  const historyRoute = () => {
+    if (events.signal.aborted) return 'blocked';
+    if (
+      target !== null ||
+      anchor !== null ||
+      focus !== null ||
+      inputIntents.size > 0 ||
+      historyIntents.size > 0 ||
+      historyPending ||
+      historyPaintBarrier.pending ||
+      queuedInputCapture !== null ||
+      compositionInputCapture !== null ||
+      deferredComposition !== null ||
+      historyModelPreparation !== null ||
+      historyModelWitness !== null ||
+      draftSelection !== null ||
+      textPending()
+    )
+      return 'text';
+    if (
+      compositionInvalidated ||
+      structureTarget !== null ||
+      drag !== null ||
+      composing ||
+      multiComposition !== null ||
+      pending !== null ||
+      deferredReplies.length > 0 ||
+      deferredTypingCheck !== null ||
+      historyPresentationReport !== null ||
+      input.value !== committed
+    )
+      return 'blocked';
+    return 'none';
+  };
   const canRequestHistory = (kind) => {
     if (
       !['undo', 'redo'].includes(kind) ||
@@ -874,6 +910,11 @@ export function createCanvasEditor({
   };
   const travel = (kind) => {
     if (!canRequestHistory(kind)) return false;
+    if (typeof requestStableNonTextHistory === 'function') {
+      const route = historyRoute();
+      if (route === 'blocked') return false;
+      if (route === 'none') return requestStableNonTextHistory(kind) === true;
+    }
     return historyIntents.history(kind);
   };
   const applyOrderedInput = ({ inputType, data }) => {
@@ -3074,6 +3115,7 @@ export function createCanvasEditor({
       deferredTypingCheck = null;
       return check?.() === true;
     },
+    historyRoute,
     settled: () =>
       !composing &&
       !pending &&

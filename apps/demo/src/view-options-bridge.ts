@@ -1,6 +1,6 @@
 import type { DemoHost } from './demo-controller.ts';
 import type { DemoAction, DemoCommand, ActionAvailability } from './shell-contract.ts';
-/** Paint preferences only. No editor, selection, runtime or save port is held here. */
+/** 표시 설정만 소유하며 편집·선택·런타임·저장 포트는 소유하지 않습니다. */
 export function createViewOptionsBridge({
   getHost,
   onStatus,
@@ -30,26 +30,59 @@ export function createViewOptionsBridge({
           : !current
             ? 'Canvas 표시 정책이 연결되지 않았습니다.'
             : undefined;
+      const marksReason =
+        reason ??
+        (typeof current?.value.formattingMarks === 'boolean'
+          ? undefined
+          : '조판 부호 표시 정책이 연결되지 않았습니다.');
+      const paragraphReason =
+        reason ??
+        (current?.value.formattingMarks === true
+          ? '조판 부호를 끄면 문단 부호를 따로 설정할 수 있습니다.'
+          : undefined);
       return {
+        'toggle-marks': {
+          enabled: !marksReason,
+          reason: marksReason,
+          pressed: marksReason ? undefined : current!.value.formattingMarks,
+        },
         'toggle-paragraph-marks': {
-          enabled: !reason,
-          reason,
-          pressed: reason ? undefined : current!.value.paragraphMarks,
+          enabled: !paragraphReason,
+          reason: paragraphReason,
+          pressed: reason
+            ? undefined
+            : current!.value.paragraphMarks || current!.value.formattingMarks === true,
         },
       };
     },
     action(action: DemoAction): boolean {
-      if (action.command !== 'toggle-paragraph-marks') return false;
+      if (action.command !== 'toggle-paragraph-marks' && action.command !== 'toggle-marks')
+        return false;
       if (closed) return true;
       const current = observe();
-      if (!current) {
+      if (
+        !current ||
+        (action.command === 'toggle-marks' && typeof current.value.formattingMarks !== 'boolean')
+      ) {
         onStatus('Canvas 표시 상태를 확인할 수 없습니다.');
         return true;
       }
+      if (action.command === 'toggle-paragraph-marks' && current.value.formattingMarks === true) {
+        onStatus('조판 부호를 끄면 문단 부호를 따로 설정할 수 있습니다.');
+        return true;
+      }
       try {
-        if (current.host.setDisplayOptions!({ paragraphMarks: !current.value.paragraphMarks }))
+        const next = {
+          ...current.value,
+          ...(action.command === 'toggle-marks'
+            ? { formattingMarks: !current.value.formattingMarks }
+            : { paragraphMarks: !current.value.paragraphMarks }),
+        };
+        if (current.host.setDisplayOptions!(next)) {
           current.host.focus?.();
-        else onStatus('문단 부호 표시 설정을 적용하지 못했습니다.');
+          if (action.command === 'toggle-marks' && next.formattingMarks)
+            onStatus('조판 부호 일부 표시: 본문 공백·배치된 탭·줄바꿈만 지원합니다.');
+        } else onStatus('표시 설정을 적용하지 못했습니다.');
       } catch (error) {
         onStatus(error instanceof Error ? error.message : String(error));
       }

@@ -1,3 +1,4 @@
+import { mountFormattingMarksShortcut } from './formatting-marks-shortcut.ts';
 import {
   DEFAULT_KEYMAP,
   mergeKeymap,
@@ -44,6 +45,26 @@ export function mountShortcutSettings(options: {
     ),
     closed = false,
     generation = 0;
+  const marksKeyboard = mountFormattingMarksShortcut({
+    root: options.surface,
+    available: options.available,
+    execute: (command) => options.execute({ command }),
+    claimed: (event) =>
+      Boolean(
+        resolveKeyboardShortcut(compileKeymap(config, platform), {
+          code: event.code,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          altKey: event.altKey,
+          shiftKey: event.shiftKey,
+          isComposing: event.isComposing,
+          keyCode: event.keyCode,
+          repeat: event.repeat,
+          altGraph: event.getModifierState?.('AltGraph') === true,
+        }),
+      ),
+    onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
+  });
   const keyboard = createKeyboardShortcuts({
     root: options.surface,
     config,
@@ -63,6 +84,8 @@ export function mountShortcutSettings(options: {
   details.dataset.role = 'shortcut-settings';
   const summary = doc.createElement('summary');
   summary.textContent = '단축키 설정';
+  const marksHint = doc.createElement('p');
+  marksHint.textContent = '조판 부호: Ctrl+G 다음 C · 문단 부호: Ctrl+G 다음 T (문서 입력 영역)';
   const locale = doc.createElement('select');
   locale.dataset.role = 'shortcut-locale';
   locale.setAttribute('aria-label', '단축키 표시 언어');
@@ -157,7 +180,7 @@ export function mountShortcutSettings(options: {
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-  details.append(summary, locale, label, reset, download, list);
+  details.append(summary, marksHint, locale, label, reset, download, list);
   options.root.append(details);
   render();
   const resolveCommand = (event: KeyboardEvent) =>
@@ -180,6 +203,7 @@ export function mountShortcutSettings(options: {
       if (closed) return;
       closed = true;
       generation++;
+      marksKeyboard.dispose();
       keyboard.dispose();
       reset.onclick = null;
       download.onclick = null;

@@ -22,6 +22,8 @@ import { createTextToolsBridge } from './text-tools-bridge.ts';
 import { createSymbolDialogController } from './symbol-dialog-controller.ts';
 import { createSymbolInsertionPort } from './symbol-insertion-port.ts';
 import { createTableInsertTool } from './table-insert-tool.ts';
+import { createObjectPropertiesTool } from './object-properties-tool.ts';
+import { createTableCellPropertiesTool } from './table-cell-properties-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions } from './command-support.ts';
 import { mountDemoContextMenu, contextTarget, type ContextPicture } from './context-menu.ts';
@@ -171,6 +173,16 @@ export async function mountDemo(
     onPresentationChange: () => shell.update(),
     resolveShortcut: (event) => shortcuts?.resolveCommand(event),
   });
+  const tableCellProperties = createTableCellPropertiesTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+  });
   const tableInsert = createTableInsertTool({
     root,
     editor,
@@ -180,6 +192,16 @@ export async function mountDemo(
     onClose: () => {
       host?.focus?.();
     },
+  });
+  const objectProperties = createObjectPropertiesTool({
+    root,
+    editor,
+    host: () => host,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
   });
   const symbolPort = createSymbolInsertionPort(editor);
   const symbols = createSymbolDialogController({
@@ -217,6 +239,8 @@ export async function mountDemo(
       },
       ...textTools.presentation(),
       'insert-table': tableInsert.presentation(),
+      'object-properties': objectProperties.presentation(),
+      'table-cell-properties': tableCellProperties.presentation(),
       'insert-symbol': {
         enabled: ready && !!state.selection,
         reason: !ready
@@ -336,8 +360,16 @@ export async function mountDemo(
       note(available?.reason ?? '현재 사용할 수 없습니다.');
       return;
     }
+    if (action.command === 'table-cell-properties') {
+      tableCellProperties.open();
+      return;
+    }
     if (action.command === 'insert-table') {
       tableInsert.open();
+      return;
+    }
+    if (action.command === 'object-properties') {
+      objectProperties.open();
       return;
     }
     if (action.command === 'font-name') {
@@ -460,21 +492,23 @@ export async function mountDemo(
   const normalizationNotice = mountNormalizationNotice(shell.saveOptionsMount, editor);
   const observedNotice = mountObservedDocInfoNotice(shell.saveOptionsMount, editor);
   const sourcePolicyNotice = mountSourcePolicyNotice(shell.saveOptionsMount, editor);
-  const unsubscribe = editor.registerStateListener((state) => {
-    if (closed) return;
-    traces.push({
-      event: 'state',
-      detail: `${state.status} · operation ${state.operationRevision} · view ${state.viewRevision}`,
-    });
-    if (traces.length > 100) traces.shift();
-    shell.setTrace(traces);
-    shell.update();
-  });
+  let unsubscribe = () => {};
   let headless: ReturnType<typeof mountHeadlessPanel> | undefined;
   let shortcuts: ReturnType<typeof mountShortcutSettings> | undefined;
   void refreshFixtures();
   try {
     if (shell.surfaceMount && mountHost) host = await mountHost(shell.surfaceMount, editor, note);
+    // Surface 먼저 관측한 뒤 현재 대상 기반 presentation을 읽습니다.
+    unsubscribe = editor.registerStateListener((state) => {
+      if (closed) return;
+      traces.push({
+        event: 'state',
+        detail: `${state.status} · operation ${state.operationRevision} · view ${state.viewRevision}`,
+      });
+      if (traces.length > 100) traces.shift();
+      shell.setTrace(traces);
+      shell.update();
+    });
     if (shell.surfaceMount)
       shortcuts = mountShortcutSettings({
         root: shell.saveOptionsMount,
@@ -499,7 +533,9 @@ export async function mountDemo(
     contextMenu?.close();
     textTools.dispose();
     symbols.dispose();
+    tableCellProperties.dispose();
     tableInsert.dispose();
+    objectProperties.dispose();
     paragraphShape.dispose();
     formatDialogs.dispose();
     textColor.dispose();
@@ -533,7 +569,9 @@ export async function mountDemo(
       contextMenu?.close();
       textTools.dispose();
       symbols.dispose();
+      tableCellProperties.dispose();
       tableInsert.dispose();
+      objectProperties.dispose();
       paragraphShape.dispose();
       formatDialogs.dispose();
       textColor.dispose();

@@ -49,6 +49,7 @@ const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
     '표와 개체',
     [
       ['insert-table', '표', 'insert-table'],
+      ['table-cell-properties', '표/셀 속성', 'insert-table'],
       ['insert-shape', '도형', 'insert-shape'],
       ['insert-image', '그림', 'insert-image'],
       ['object-properties', '개체 속성', 'object-properties'],
@@ -101,7 +102,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
     ],
   ],
   ['쪽', ['insert-header', 'insert-footer']],
-  ['표', ['insert-table', 'object-properties']],
+  ['표', ['insert-table', 'table-cell-properties', 'object-properties']],
   ['검토', ['insert-comment']],
   ['도구', ['word-count']],
 ];

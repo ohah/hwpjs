@@ -16,6 +16,7 @@ export type DemoCommand =
   | 'insert-shape'
   | 'insert-image'
   | 'insert-table'
+  | 'table-cell-properties'
   | 'insert-chart'
   | 'insert-footnote'
   | 'insert-endnote'
