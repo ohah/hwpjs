@@ -602,6 +602,25 @@ export function createCanvasSurface({
           status('실행 취소/다시 실행 대기가 끝났습니다. 현재 문서 표시를 확인하세요.');
           return;
         }
+        // changed의 null은 미관측값이다. applied는 선택적 boolean이므로 부재/false만 허용한다.
+        const noAffirmativeChange = (value: unknown) =>
+          value === undefined || value === null || value === false;
+        const reply = result?.reply;
+        if (
+          result?.status === 'rejected-unapplied' &&
+          result.state === state &&
+          current === state &&
+          noAffirmativeChange(result.changed) &&
+          (reply?.applied === undefined || reply.applied === false) &&
+          noAffirmativeChange(reply?.changed) &&
+          noAffirmativeChange(reply?.meta?.changed) &&
+          (reply?.meta?.application === undefined || reply.meta.application === 'unapplied') &&
+          noneViewState() === state
+        ) {
+          // 옛 그림/선택을 다시 발행하지 않고 현재 보기를 건드리지 않은 채 실패만 알린다.
+          status(`실행 취소/다시 실행 실패: ${result.error ?? '요청이 적용되지 않았습니다.'}`);
+          return;
+        }
         direct.initializeCapabilities({
           ...(current.capabilities as object),
           historyRevision: current.nativeHistoryRevision,

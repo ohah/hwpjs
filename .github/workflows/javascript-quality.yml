@@ -128,7 +128,9 @@ jobs:
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 \
-            ./packages/vanilla/tests/non-text-history-surface.test.mjs
+            ./packages/vanilla/tests/non-text-history-surface.test.mjs \
+            ./packages/vanilla/tests/non-text-history-rejected-picture.test.mjs \
+            ./packages/vanilla/tests/non-text-history-rejected-picture-negative.test.mjs
       - name: Test renderer measurements and queued input frames
         env:
           HWPJS_TEST_CORE_DIST: packages/core/dist
