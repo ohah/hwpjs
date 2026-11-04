@@ -67,7 +67,11 @@ export interface DemoShellState {
   readonly pageLabel?: string;
   readonly selectionLabel?: string;
   readonly fontName?: string;
+  readonly fontNameTitle?: string;
+  readonly fontNameLanguage?: 'hangul';
   readonly fontSizePoints?: number;
+  readonly fontSizeStatus?: 'single' | 'mixed' | 'unknown' | 'unavailable';
+  readonly fontSizeHint?: string;
   readonly styleLabel?: string;
   readonly zoomPercent?: number;
   readonly actions?: Readonly<Partial<Record<DemoCommand, ActionAvailability>>>;

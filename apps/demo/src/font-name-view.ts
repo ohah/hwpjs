@@ -1,3 +1,5 @@
+import { fontLanguageLabels as labels, fontNameLabel } from './formatting-observation-label.ts';
+export { fontNameLabel } from './formatting-observation-label.ts';
 import type { CharacterFontLanguage, CharacterFontNameValue } from '@hwpjs/core';
 import { createDialogLayer } from './dialog-layer.ts';
 import './font-name.css';
@@ -19,22 +21,6 @@ export interface FontNameView {
   show(): void;
   dispose(): void;
   isComposing(): boolean;
-}
-const labels: Record<CharacterFontLanguage, string> = {
-  hangul: '한글',
-  latin: '영문',
-  hanja: '한자',
-  japanese: '일본어',
-  other: '기타',
-  symbol: '기호',
-  user: '사용자',
-};
-export function fontNameLabel(value: CharacterFontNameValue) {
-  if (value.kind === 'mixed') return '서로 다른 글꼴';
-  if (value.kind === 'unknown') return '알 수 없음';
-  if (value.name === null) return '원본 이름을 확인할 수 없음';
-  if (value.name === '') return '빈 원본 이름';
-  return JSON.stringify(value.name);
 }
 function reasonText(reason: string | null) {
   if (!reason) return '';

@@ -503,6 +503,13 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     selection.textContent = state.selectionLabel || '선택 없음';
     style.textContent = state.styleLabel || '스타일 정보 없음';
     font.textContent = state.fontName || '글꼴 정보 없음';
+    font.title = state.fontNameTitle || '';
+    font.setAttribute(
+      'aria-label',
+      state.fontNameLanguage === 'hangul' ? '현재 한글 글꼴' : '현재 글꼴',
+    );
+    size.placeholder = state.fontSizeHint || '';
+    size.dataset.observation = state.fontSizeStatus || 'unknown';
     // Only an ordinary toolbar draft; never write into the host's input/selection.
     if (resetFormatDraft || doc.activeElement !== size)
       size.value = state.fontSizePoints == null ? '' : String(state.fontSizePoints);

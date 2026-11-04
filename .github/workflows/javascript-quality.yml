@@ -116,6 +116,17 @@ jobs:
             --import ./tools/object-properties-test-css.mjs \
             --import ./apps/demo/tests/table-cell-properties-style-preload.mjs \
             --test --test-isolation=none --test-concurrency=1 "$@"
+      - name: Test original font and size observation display
+        timeout-minutes: 2
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          set -- \
+            ./apps/demo/tests/formatting-observation-display.test.mjs \
+            ./apps/demo/tests/formatting-observation-shell.test.mjs \
+            ./apps/demo/tests/formatting-observation-bridge.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --experimental-transform-types --max-old-space-size=256 \
+            --test --test-concurrency=1 "$@"
       - name: Test multi-paragraph formatting app port regressions
         timeout-minutes: 2
         run: |

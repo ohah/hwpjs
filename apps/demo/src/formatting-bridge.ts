@@ -1,3 +1,4 @@
+import { formattingObservationLabels, readSelectionSize } from './formatting-observation-label.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
 // Public core entry only; no runtime protocol, native facade or private selection helpers.
 import {
@@ -120,7 +121,18 @@ export function createFormattingBridge({
 
   function presentation(
     state: SelectionFormatting,
-  ): Pick<DemoShellState, 'actions' | 'fontSizePoints'> {
+    size: SelectionFormatting['size'] = state.size,
+  ): Pick<
+    DemoShellState,
+    | 'actions'
+    | 'fontSizePoints'
+    | 'fontName'
+    | 'fontNameTitle'
+    | 'fontNameLanguage'
+    | 'styleLabel'
+    | 'fontSizeStatus'
+    | 'fontSizeHint'
+  > {
     const availability = (reason: string | null, pressed?: boolean | 'mixed'): ActionAvailability =>
       Object.freeze({
         enabled: !pending && reason === null,
@@ -153,7 +165,8 @@ export function createFormattingBridge({
       );
     return Object.freeze({
       actions: Object.freeze(actions),
-      fontSizePoints: typeof state.size === 'number' ? state.size / 100 : undefined,
+      ...formattingObservationLabels(state, size),
+      fontSizePoints: typeof size === 'number' ? size / 100 : undefined,
     });
   }
   /** Returns false only for commands belonging to another bridge. */
@@ -336,7 +349,7 @@ export function createFormattingBridge({
   const getPresentation = () => {
     const state = editor.getEditorState(),
       formatting = getSelectionFormatting(state);
-    const base = presentation(formatting);
+    const base = presentation(formatting, readSelectionSize(state, formatting));
     if (
       formatting.target !== null ||
       formatting.characterAvailableReason !== 'MissingSelection' ||
