@@ -3,6 +3,13 @@ const std = @import("std");
 const resources = @import("paragraph_resource_values.zig");
 const head = @import("document_xml.zig").head_uri;
 
+/// Atomic-formatting opt-in only. Unsupported resource profiles retain raw behavior.
+pub fn replacementBatch(a: std.mem.Allocator, source: []const u8, values: *const resources.Values, characters: ?*const @import("character_resource_values.zig").Values, fonts: ?*const @import("../model/font_resource_values.zig").Values, max_bytes: usize, stats: *@import("header_batch_resource_save.zig").Stats) !@import("../zip/replace_writer.zig").Replacement {
+    const empty_characters: @import("character_resource_values.zig").Values = .{};
+    const empty_fonts: @import("../model/font_resource_values.zig").Values = .{};
+    if (try @import("header_batch_resource_save.zig").replacement(a, source, values, characters orelse &empty_characters, fonts orelse &empty_fonts, max_bytes, stats)) |result| return result;
+    return replacementWithFonts(a, source, values, characters, fonts, max_bytes);
+}
 pub fn replacement(a: std.mem.Allocator, source: []const u8, values: *const resources.Values, max_bytes: usize) !@import("../zip/replace_writer.zig").Replacement {
     return replacementWithCharacters(a, source, values, null, max_bytes);
 }

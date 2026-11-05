@@ -4,6 +4,9 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const faces = @import("font_faces.zig");
 
 pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, language: faces.Language, id: u32, name: []const u8, kind: @import("font_face_payload.zig").Kind, limit: usize) ![]u8 {
+    return writeMany(a, tree, node, language, &.{.{ .id = id, .name = name }}, kind, limit);
+}
+pub fn writeMany(a: std.mem.Allocator, tree: *const Tree, node: usize, language: faces.Language, requests: []const @import("font_face_append.zig").Request, kind: @import("font_face_payload.zig").Kind, limit: usize) ![]u8 {
     if (tree.part_kind != .header) return error.InvalidPartKind;
     if (node >= tree.elements.len) return error.InvalidElementIndex;
     const uri = @import("document_xml.zig").head_uri;
@@ -29,9 +32,27 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, language: fac
         count += 1;
     }
     if (seen[@backingInt(language)]) return error.DuplicateFontLanguage;
-    const font = try @import("font_face_payload.zig").write(a, id, name, kind, 4096, limit);
-    defer a.free(font);
-    const group = try std.fmt.allocPrint(a, "<fontface xmlns=\"{s}\" lang=\"{s}\" fontCnt=\"1\">{s}</fontface>", .{ uri, faces.source_names[@backingInt(language)], font });
+    if (requests.len == 1) {
+        const request = requests[0];
+        const font = try @import("font_face_payload.zig").write(a, request.id, request.name, kind, 4096, limit);
+        defer a.free(font);
+        const group = try std.fmt.allocPrint(a, "<fontface xmlns=\"{s}\" lang=\"{s}\" fontCnt=\"1\">{s}</fontface>", .{ uri, faces.source_names[@backingInt(language)], font });
+        defer a.free(group);
+        return @import("xml_group_append.zig").write(a, tree, node, .item, count, group, limit);
+    }
+    var fonts: std.ArrayList(u8) = .empty;
+    defer fonts.deinit(a);
+    var ids: std.AutoHashMapUnmanaged(u32, void) = .empty;
+    defer ids.deinit(a);
+    for (requests) |request| {
+        const slot = try ids.getOrPut(a, request.id);
+        if (slot.found_existing) return error.DuplicateFontId;
+        const font = try @import("font_face_payload.zig").write(a, request.id, request.name, kind, 4096, limit);
+        defer a.free(font);
+        if (font.len > limit -| fonts.items.len) return error.LimitExceeded;
+        try fonts.appendSlice(a, font);
+    }
+    const group = try std.fmt.allocPrint(a, "<fontface xmlns=\"{s}\" lang=\"{s}\" fontCnt=\"{d}\">{s}</fontface>", .{ uri, faces.source_names[@backingInt(language)], requests.len, fonts.items });
     defer a.free(group);
     return @import("xml_group_append.zig").write(a, tree, node, .item, count, group, limit);
 }

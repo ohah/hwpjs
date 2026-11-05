@@ -1,3 +1,4 @@
+import type { CharacterFontLanguage, SelectionFormatting } from '@hwpjs/core';
 /** UI boundary only: the app bridges these intents to PUBLIC editor/host APIs.
  * No snapshot is a command target. The bridge must capture/revalidate the core
  * selection token at dispatch, including pending composition and revision gates.
@@ -47,7 +48,8 @@ export type DemoCommand =
   | 'zoom-in'
   | 'zoom-out';
 export type DemoAction =
-  | { readonly command: Exclude<DemoCommand, 'set-font-size' | 'set-zoom'> }
+  | { readonly command: Exclude<DemoCommand, 'set-font-size' | 'set-zoom' | 'font-name'> }
+  | { readonly command: 'font-name'; readonly language?: CharacterFontLanguage | 'representative' }
   | { readonly command: 'set-font-size'; readonly points: number }
   | { readonly command: 'set-zoom'; readonly percent: number };
 export interface ActionAvailability {
@@ -66,6 +68,7 @@ export interface DemoShellState {
   readonly documentLabel?: string;
   readonly pageLabel?: string;
   readonly selectionLabel?: string;
+  readonly fontNames?: SelectionFormatting['fontNames'];
   readonly fontName?: string;
   readonly fontNameTitle?: string;
   readonly fontNameLanguage?: 'hangul';

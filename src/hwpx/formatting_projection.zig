@@ -10,6 +10,11 @@ pub const Backend = struct {
     snapshot: ?*Snapshot = null,
     pub const Snapshot = struct {
         allocator: std.mem.Allocator,
+        face_index: ?common.FontFaceIndex = null,
+        range_validation: ?@import("character_style_session.zig").QueryValidation = null,
+        character_ids: ?std.AutoHashMapUnmanaged(u32, usize) = null,
+        paragraph_ids: ?std.AutoHashMapUnmanaged(u32, usize) = null,
+        owner_views: std.AutoHashMapUnmanaged(usize, @import("display_current_paragraphs.zig").View) = .empty,
         characters: ?[]@import("character_shape_display.zig").Shape = null,
         paragraphs: ?[]@import("paragraph_display_owned.zig").Shape = null,
         faces: ?[]@import("../model/font_face_value.zig").Value = null,
@@ -18,6 +23,13 @@ pub const Backend = struct {
         strikes: ?[]@import("character_strike_styles.zig").Row = null,
         preflight_context: ?@import("formatting_preflight.zig").Context = null,
         pub fn deinit(self: *Snapshot) void {
+            if (self.face_index) |*index| index.deinit();
+            if (self.range_validation) |*query| query.deinit();
+            if (self.character_ids) |*ids| ids.deinit(self.allocator);
+            if (self.paragraph_ids) |*ids| ids.deinit(self.allocator);
+            var views = self.owner_views.valueIterator();
+            while (views.next()) |view| view.deinit(self.allocator);
+            self.owner_views.deinit(self.allocator);
             if (self.underlines) |rows| @import("character_underline_snapshot.zig").deinit(self.allocator, rows);
             if (self.metrics) |rows| self.allocator.free(rows);
             if (self.strikes) |rows| @import("character_strike_styles.zig").deinit(self.allocator, rows);
@@ -96,10 +108,22 @@ pub const Backend = struct {
         if (value.section >= self.session.sections.len) return error.InvalidSectionIndex;
         const section = &self.session.sections[value.section];
         if (value.paragraph < section.first_paragraph or value.paragraph > section.last_paragraph) return error.InvalidParagraphIndex;
-        var view = try @import("display_current_paragraphs.zig").read(self.allocator, section, self.session.options);
-        defer view.deinit(self.allocator);
         const index = value.paragraph - section.first_paragraph;
-        if (index >= view.paragraphs.len or view.paragraphs[index].source_ordinal == null) return error.UnsupportedFormattingOwner;
+        if (self.snapshot) |snapshot| {
+            const entry = try snapshot.owner_views.getOrPut(snapshot.allocator, value.section);
+            if (!entry.found_existing) {
+                entry.value_ptr.* = @import("display_current_paragraphs.zig").read(snapshot.allocator, section, self.session.options) catch |err| {
+                    _ = snapshot.owner_views.remove(value.section);
+                    return err;
+                };
+            }
+            const paragraphs = entry.value_ptr.paragraphs;
+            if (index >= paragraphs.len or paragraphs[index].source_ordinal == null) return error.UnsupportedFormattingOwner;
+        } else {
+            var view = try @import("display_current_paragraphs.zig").read(self.allocator, section, self.session.options);
+            defer view.deinit(self.allocator);
+            if (index >= view.paragraphs.len or view.paragraphs[index].source_ordinal == null) return error.UnsupportedFormattingOwner;
+        }
         return value;
     }
     pub fn authorize(self: Backend, selected: m.Owner, ranges: []const m.Range, field: []const u8) !void {
@@ -118,6 +142,15 @@ pub const Backend = struct {
     }
     pub fn validateRange(self: Backend, selected: m.Owner, range: m.Range) !void {
         _ = try self.owner(selected);
+        if (self.snapshot) |snapshot| {
+            if (snapshot.range_validation == null) snapshot.range_validation = .{ .allocator = snapshot.allocator };
+            const query = &snapshot.range_validation.?;
+            const range_rows = try query.readSpans(self.session, selected.section, selected.paragraph);
+            if (range_rows.len == 0) return error.MissingCharacterResource;
+            const id = range_rows[0].char_shape_id orelse return error.InvalidCharacterShapeReference;
+            const view = snapshot.owner_views.get(selected.section).?;
+            return query.validate(self.session, selected.section, selected.paragraph, range.startUnit, range.endUnit, id, view.paragraphs);
+        }
         const range_spans = try @import("character_style_snapshot.zig").read(self.session, selected.section, selected.paragraph);
         defer self.session.allocator.free(range_spans);
         if (range_spans.len == 0) return error.MissingCharacterResource;
@@ -155,9 +188,15 @@ pub const Backend = struct {
         try common.validateFonts(patch, rows);
     }
     pub fn spans(self: Backend, a: std.mem.Allocator, selected: m.Owner) ![]p.Span {
-        const rows = try @import("character_style_snapshot.zig").read(self.session, selected.section, selected.paragraph);
-        // These are transient Session-owned input rows, not the cached p.Span copy.
-        defer self.session.allocator.free(rows);
+        var owned_rows: ?[]@import("character_style_display_ranges.zig").Range = null;
+        defer if (owned_rows) |rows| self.session.allocator.free(rows);
+        const rows = if (self.snapshot) |snapshot| blk: {
+            if (snapshot.range_validation == null) snapshot.range_validation = .{ .allocator = snapshot.allocator };
+            break :blk try snapshot.range_validation.?.readSpans(self.session, selected.section, selected.paragraph);
+        } else blk: {
+            owned_rows = try @import("character_style_snapshot.zig").read(self.session, selected.section, selected.paragraph);
+            break :blk owned_rows.?;
+        };
         const output = try a.alloc(p.Span, rows.len);
         errdefer a.free(output);
         for (rows, output) |v, *row| row.* = .{ .start = std.math.cast(u32, v.start_unit) orelse return error.LimitExceeded, .end = std.math.cast(u32, v.end_unit) orelse return error.LimitExceeded, .resource = v.char_shape_id };
@@ -170,6 +209,31 @@ pub const Backend = struct {
         }
         local.* = try @import("formatting_preflight.zig").Context.init(a, self.session);
         return &local.*.?;
+    }
+    fn indexedShapes(self: Backend, shapes: anytype, id: u32, comptime character: bool) !@TypeOf(shapes) {
+        if (self.snapshot) |snapshot| {
+            const slot = if (character) &snapshot.character_ids else &snapshot.paragraph_ids;
+            if (slot.* == null) {
+                var ids: std.AutoHashMapUnmanaged(u32, usize) = .empty;
+                errdefer ids.deinit(snapshot.allocator);
+                for (shapes, 0..) |shape, index| {
+                    const shape_id = if (@TypeOf(shape.id) == ?u32) shape.id orelse continue else shape.id;
+                    const entry = try ids.getOrPut(snapshot.allocator, shape_id);
+                    if (!entry.found_existing) entry.value_ptr.* = index;
+                }
+                slot.* = ids;
+            }
+            if (slot.*.?.get(id)) |index| return shapes[index..][0..1];
+            return shapes[0..0];
+        }
+        return shapes;
+    }
+    fn fontIndex(self: Backend, faces: []const @import("../model/font_face_value.zig").Value) !?*const common.FontFaceIndex {
+        if (self.snapshot) |snapshot| {
+            if (snapshot.face_index == null) snapshot.face_index = try common.FontFaceIndex.init(snapshot.allocator, faces);
+            return &snapshot.face_index.?;
+        }
+        return null;
     }
     pub fn characterField(self: Backend, a: std.mem.Allocator, id: u32, field: []const u8) !p.Observation {
         if (eq(field, "character.border") or eq(field, "character.background")) {
@@ -190,7 +254,7 @@ pub const Backend = struct {
         }
         const shapes = try self.readCharacters(a);
         defer if (self.snapshot == null) self.session.allocator.free(shapes);
-        for (shapes) |shape| if (shape.id == id) {
+        for (try self.indexedShapes(shapes, id, true)) |shape| if (shape.id == id) {
             if (eq(field, "character.size")) return if (shape.height) |v| p.known(p.integer(v), true, null, "hundredth-point") else p.unknown("MissingCharacterSize", "MissingSourceField");
             if (eq(field, "character.bold")) return p.known(p.boolean(shape.bold), true, null, null);
             if (eq(field, "character.italic")) return p.known(p.boolean(shape.italic), true, null, null);
@@ -208,13 +272,13 @@ pub const Backend = struct {
                 if (std.mem.endsWith(u8, field, ".id")) return common.fontField(a, ids, null, field);
                 const faces = try self.readFaces(self.session.allocator);
                 defer if (self.snapshot == null) @import("font_face_snapshot.zig").deinit(self.session.allocator, faces);
-                return common.fontField(a, ids, faces, field);
+                return common.fontFieldIndexed(a, ids, faces, field, try self.fontIndex(faces));
             }
             if (eq(field, "character.fonts")) return common.fontIds(a, shape.font_ids orelse return p.unknown("MissingFontReferences", "MissingSourceField"));
             if (eq(field, "character.fontNames")) {
                 const faces = try self.readFaces(self.session.allocator);
                 defer if (self.snapshot == null) @import("font_face_snapshot.zig").deinit(self.session.allocator, faces);
-                return common.fontNames(a, shape.font_ids orelse return p.unknown("MissingFontReferences", "MissingSourceField"), faces);
+                return common.fontNamesIndexed(a, shape.font_ids orelse return p.unknown("MissingFontReferences", "MissingSourceField"), faces, try self.fontIndex(faces));
             }
             if (eq(field, "character.underline.kind") or eq(field, "character.underline.color") or eq(field, "character.underline.style")) {
                 const rows = try self.readUnderlines();
@@ -311,7 +375,7 @@ pub const Backend = struct {
 
         const shapes = try self.readParagraphs(a);
         defer if (self.snapshot == null) @import("paragraph_display_resources.zig").deinit(self.session.allocator, shapes);
-        for (shapes) |shape| if (shape.id == id) return paragraphFromShape(a, shape, field);
+        for (try self.indexedShapes(shapes, id, false)) |shape| if (shape.id == id) return paragraphFromShape(a, shape, field);
         return error.InvalidParagraphShapeReference;
     }
     pub fn paragraphFromShape(a: std.mem.Allocator, shape: @import("paragraph_display_owned.zig").Shape, field: []const u8) !p.Observation {

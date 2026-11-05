@@ -2,7 +2,11 @@
 const std = @import("std");
 const Tree = @import("xml_part_tree.zig").Tree;
 
+pub const Request = struct { id: u32, name: []const u8 };
 pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, name: []const u8, kind: @import("font_face_payload.zig").Kind, limit: usize) ![]u8 {
+    return writeMany(a, tree, node, &.{.{ .id = id, .name = name }}, kind, limit);
+}
+pub fn writeMany(a: std.mem.Allocator, tree: *const Tree, node: usize, requests: []const Request, kind: @import("font_face_payload.zig").Kind, limit: usize) ![]u8 {
     if (tree.part_kind != .header) return error.InvalidPartKind;
     if (node >= tree.elements.len) return error.InvalidElementIndex;
     const uri = @import("document_xml.zig").head_uri;
@@ -27,10 +31,25 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, name
         const slot = try seen.getOrPut(a, face.id);
         if (slot.found_existing) return error.DuplicateFontId;
     }
-    if (seen.contains(id)) return error.DuplicateFontId;
-    const payload = try @import("font_face_payload.zig").write(a, id, name, kind, 4096, limit);
-    defer a.free(payload);
-    return @import("xml_group_append.zig").write(a, tree, node, .font, seen.count(), payload, limit);
+    if (requests.len == 1) {
+        const request = requests[0];
+        if (seen.contains(request.id)) return error.DuplicateFontId;
+        const payload = try @import("font_face_payload.zig").write(a, request.id, request.name, kind, 4096, limit);
+        defer a.free(payload);
+        return @import("xml_group_append.zig").write(a, tree, node, .font, seen.count(), payload, limit);
+    }
+    const original_count = seen.count();
+    var payloads: std.ArrayList(u8) = .empty;
+    defer payloads.deinit(a);
+    for (requests) |request| {
+        if (seen.contains(request.id)) return error.DuplicateFontId;
+        const payload = try @import("font_face_payload.zig").write(a, request.id, request.name, kind, 4096, limit);
+        defer a.free(payload);
+        if (payload.len > limit -| payloads.items.len) return error.LimitExceeded;
+        try payloads.appendSlice(a, payload);
+        try seen.put(a, request.id, {});
+    }
+    return @import("xml_group_append.zig").writeMany(a, tree, node, .font, original_count, std.math.cast(u32, requests.len) orelse return error.LimitExceeded, payloads.items, limit);
 }
 
 test "HWPX font append preserves sparse IDs opaque XML and allocation failures" {

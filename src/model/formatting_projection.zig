@@ -122,10 +122,26 @@ pub fn character(a: std.mem.Allocator, backend: anytype, owner: m.Owner, ranges:
     defer a.free(spans);
     var values: std.ArrayList(Observation) = .empty;
     defer values.deinit(a);
+    // Sorted disjoint Native ranges/spans admit a shared forward cursor.
+    // Malformed/custom backend order retains the original exhaustive traversal.
+    var ordered = true;
+    for (ranges, 0..) |range, i| {
+        if (range.startUnit >= range.endUnit or (i != 0 and ranges[i - 1].endUnit > range.startUnit)) ordered = false;
+    }
+    for (spans, 0..) |span, i| {
+        if (span.start >= span.end or (i != 0 and spans[i - 1].end > span.start)) ordered = false;
+    }
+    var span_index: usize = 0;
     for (ranges) |range| {
         try backend.validateRange(owner, range);
         var cursor = range.startUnit;
-        for (spans) |span| {
+        if (ordered) while (span_index < spans.len and spans[span_index].end <= range.startUnit) {
+            span_index += 1;
+        };
+        var at: usize = if (ordered) span_index else 0;
+        while (at < spans.len) : (at += 1) {
+            const span = spans[at];
+            if (ordered and span.start >= range.endUnit) break;
             const low = @max(span.start, range.startUnit);
             const high = @min(span.end, range.endUnit);
             if (low >= high) continue;

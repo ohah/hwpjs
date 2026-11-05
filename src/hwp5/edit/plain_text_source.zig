@@ -10,6 +10,44 @@ pub const validateSection = @import("source_policy.zig").validate;
 pub const Validation = struct { ranges: ?body.Ranges, preserved_direct_records: usize };
 const Purpose = enum { splice, formula_transaction, hyperlink_transaction, field_transaction, character_format, structure_transaction, retained_company };
 
+/// Request-only immutable section preparation for original root-body formatting.
+/// Nested/memo/company/generated/restart routes deliberately keep raw validation.
+pub const CharacterContext = struct {
+    source: []const u8,
+    version: Version,
+    tree: ?Tree = null,
+    company: ?bool = null,
+    memo_lists: ?bool = null,
+    policy_checked: bool = false,
+    controls_checked: bool = false,
+    tree_builds: usize = 0,
+    owner_reads: usize = 0,
+    fallbacks: usize = 0,
+    pub fn deinit(self: *CharacterContext, a: std.mem.Allocator) void {
+        if (self.tree) |*tree| tree.deinit(a);
+    }
+};
+pub fn validateCharacterFormatScoped(a: std.mem.Allocator, context: *CharacterContext, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
+    if (source.ptr != context.source.ptr or source.len != context.source.len or version.raw != context.version.raw) return error.SourceBindingMismatch;
+    if (context.company == null) context.company = try @import("company_source.zig").has(source);
+    if (context.company.?) {
+        context.fallbacks += 1;
+        return validateWith(a, source, version, p, char_count, .retained_company);
+    }
+    if (context.memo_lists == null) context.memo_lists = try @import("memo_source_retention.zig").hasLists(source);
+    if (context.memo_lists.? or p.source_node == null or p.parent_node != null or p.restart_control_source != null or p.field_attributes != null or p.formula_results != null) {
+        context.fallbacks += 1;
+        return validateWith(a, source, version, p, char_count, .character_format);
+    }
+    context.owner_reads += 1;
+    return validatePrepared(a, source, version, p, char_count, .character_format, context);
+}
+fn validateControls(a: std.mem.Allocator, tree: Tree, source: []const u8, version: Version, context: ?*CharacterContext) !void {
+    if (context) |scope| if (scope.controls_checked) return;
+    try @import("control_source.zig").validateWithSource(a, tree, source, version);
+    if (context) |scope| scope.controls_checked = true;
+}
+
 pub fn validateStructureTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize) !Validation {
     return validateWith(a, source, version, p, char_count, .structure_transaction);
 }
@@ -47,11 +85,24 @@ pub fn validateRetainedCompanyTransaction(a: std.mem.Allocator, source: []const 
 }
 
 fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, comptime purpose: Purpose) !Validation {
+    return validatePrepared(a, source, version, p, char_count, purpose, null);
+}
+fn validatePrepared(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, char_count: usize, comptime purpose: Purpose, context: ?*CharacterContext) !Validation {
     const generated = p.source_node == null;
     const source_node = if (generated) p.header_template orelse return error.MissingParagraphSource else try p.originalNode();
     if (generated and (p.instance_id == 0 or p.field_attributes != null or p.formula_results != null)) return error.UnsupportedStructuralControl;
-    var tree = try Tree.parseTextPreview(a, source, version, .{});
-    defer tree.deinit(a);
+    var owned_tree: ?Tree = null;
+    const tree = if (context) |scope| block: {
+        if (scope.tree == null) {
+            scope.tree = try Tree.parseTextPreview(a, source, version, .{});
+            scope.tree_builds += 1;
+        }
+        break :block scope.tree.?;
+    } else block: {
+        owned_tree = try Tree.parseTextPreview(a, source, version, .{});
+        break :block owned_tree.?;
+    };
+    defer if (owned_tree) |*value| value.deinit(a);
     if (source_node >= tree.nodes.len or tree.nodes[source_node].record.value != .header) return error.SourceBindingMismatch;
     const node = tree.nodes[source_node];
     const parent: ?usize = if (p.parent_node) |value| @as(usize, value) else null;
@@ -62,15 +113,18 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
     if (purpose == .structure_transaction) {
         try @import("structure_source_policy.zig").validateParagraph(a, source, version, p, tree);
     } else if (try @import("memo_source_retention.zig").target(a, tree, source_node, version) or
-        ((purpose == .splice or purpose == .character_format) and try @import("memo_body_retention.zig").target(a, source, version, source_node)))
+        ((purpose == .splice or purpose == .character_format) and context == null and try @import("memo_body_retention.zig").target(a, source, version, source_node)))
     {
         try @import("source_policy.zig").validateMemoTransaction(a, source, version);
     } else switch (purpose) {
         .formula_transaction => _ = try @import("source_policy.zig").hasFormulas(a, source, version),
         .character_format => {
-            if (try @import("source_policy.zig").hasNamedFields(source)) {
-                try @import("source_policy.zig").validateCharacterFormat(a, source, version);
-            } else _ = try @import("source_policy.zig").hasFormulas(a, source, version);
+            if (context == null or !context.?.policy_checked) {
+                if (try @import("source_policy.zig").hasNamedFields(source)) {
+                    try @import("source_policy.zig").validateCharacterFormat(a, source, version);
+                } else _ = try @import("source_policy.zig").hasFormulas(a, source, version);
+                if (context) |scope| scope.policy_checked = true;
+            }
         },
         .retained_company => try @import("company_source.zig").validateParagraph(a, source, version, p),
         .splice, .hyperlink_transaction => try validateSection(a, source, version),
@@ -106,7 +160,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
         }
         if (entry.record.framing.tag == @backingInt(body.Tag.control_header)) {
             preserved_direct_records += 1;
-            if (!links_checked) try @import("control_source.zig").validateWithSource(a, tree, source, version);
+            if (!links_checked) try validateControls(a, tree, source, version, context);
             links_checked = true;
             child = entry.subtree_end;
             continue;
@@ -165,7 +219,7 @@ fn validateWith(a: std.mem.Allocator, source: []const u8, version: Version, p: m
             var tokens = text.tokens();
             while (try tokens.next()) |token| {
                 if (token.value == .control and token.value.control.kind == .extended) {
-                    try @import("control_source.zig").validateWithSource(a, tree, source, version);
+                    try validateControls(a, tree, source, version, context);
                     break;
                 }
             }

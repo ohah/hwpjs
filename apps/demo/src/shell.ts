@@ -1,3 +1,5 @@
+import { fontLanguageLabels, selectionFontNameTooltip } from './formatting-observation-label.ts';
+import type { CharacterFontLanguage } from '@hwpjs/core';
 import { createShellIcon, type ShellIcon } from './shell-icons.ts';
 import { createDocumentOpenUI, exampleAvailability } from './document-open-ui.ts';
 import { VIEW_ZOOM_LEVELS, isMenuZoomPercent } from './view-zoom.ts';
@@ -239,6 +241,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       }
       return options.onAction?.(action);
     });
+  let selectedFontLanguage: CharacterFontLanguage | null = null;
   const commandButton = (
     command: DemoCommand,
     label = labels.get(command) || command,
@@ -255,7 +258,13 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     listen(node, 'pointerdown', (event) => {
       if ((event as PointerEvent).button === 0 && !node.disabled) event.preventDefault();
     });
-    listen(node, 'click', () => dispatch({ command } as DemoAction));
+    listen(node, 'click', () =>
+      dispatch(
+        command === 'font-name'
+          ? { command, language: selectedFontLanguage ?? 'representative' }
+          : ({ command } as DemoAction),
+      ),
+    );
     return { node, description };
   };
   const menuNav = el('nav', 'hwp-demo-menus');
@@ -364,9 +373,27 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     const item = commandButton(id);
     formatbar.append(item.node, item.description);
   }
-  const style = el('output', 'hwp-demo-format-label'),
-    font = el('output', 'hwp-demo-format-label');
-  style.setAttribute('aria-label', '현재 스타일');
+  const language = el('select');
+  const fontCommand = commandButton('font-name', '글꼴 선택');
+  const font = fontCommand.node;
+  font.dataset.role = 'format-font-picker';
+  font.setAttribute('aria-haspopup', 'dialog');
+  language.setAttribute('aria-label', '글꼴 적용 언어');
+  language.title = '대표는 모든 언어, 각 언어는 해당 언어의 글꼴 적용 대상입니다.';
+  const representative = el('option', '', '대표');
+  representative.value = '';
+  language.append(representative);
+  for (const [key, label] of Object.entries(fontLanguageLabels)) {
+    const option = el('option', '', label);
+    option.value = key;
+    language.append(option);
+  }
+  listen(language, 'change', () => {
+    selectedFontLanguage = Object.hasOwn(fontLanguageLabels, language.value)
+      ? (language.value as CharacterFontLanguage)
+      : null;
+    update();
+  });
   font.setAttribute('aria-label', '현재 글꼴');
   const sizeForm = el('form', 'hwp-demo-size'),
     sizeLabel = el('label', '', '크기 (pt)'),
@@ -392,7 +419,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     }
     dispatch({ command: 'set-font-size', points });
   });
-  formatbar.append(style, font, sizeForm);
+  formatbar.append(language, font, fontCommand.description, sizeForm);
   for (const [id, label] of [
     ['bold', '굵게'],
     ['italic', '기울임'],
@@ -501,12 +528,46 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     status.textContent = state.status;
     page.textContent = state.pageLabel || '쪽 정보 없음';
     selection.textContent = state.selectionLabel || '선택 없음';
-    style.textContent = state.styleLabel || '스타일 정보 없음';
-    font.textContent = state.fontName || '글꼴 정보 없음';
-    font.title = state.fontNameTitle || '';
+    language.value = selectedFontLanguage ?? '';
+    language.disabled = state.busy === true;
+    font.dataset.language = selectedFontLanguage ?? 'representative';
+    const languageValue = selectedFontLanguage
+      ? state.fontNames?.[selectedFontLanguage]
+      : undefined;
+    const names = state.fontNames ? Object.values(state.fontNames) : [];
+    const common =
+      names.length === 7 &&
+      names.every(
+        (value) => value.kind === 'single' && value.name === (names[0] as { name?: string }).name,
+      )
+        ? names[0]
+        : undefined;
+    const shown = languageValue ?? common;
+    font.textContent = shown
+      ? shown.kind === 'mixed'
+        ? '혼합 글꼴'
+        : shown.kind === 'unknown'
+          ? '글꼴 정보 미관측'
+          : shown.name === null
+            ? '원본 이름 미관측'
+            : shown.name === ''
+              ? '빈 원본 이름'
+              : shown.name
+      : state.fontNames
+        ? names.every((value) => value.kind === 'unknown')
+          ? '글꼴 정보 미관측'
+          : names.some((value) => value.kind === 'mixed')
+            ? '혼합 글꼴'
+            : '언어별 글꼴'
+        : state.fontName || '글꼴 정보 미관측';
+    font.title = state.fontNames
+      ? selectionFontNameTooltip(state.fontNames)
+      : state.fontNameTitle || '';
     font.setAttribute(
       'aria-label',
-      state.fontNameLanguage === 'hangul' ? '현재 한글 글꼴' : '현재 글꼴',
+      selectedFontLanguage
+        ? `현재 ${fontLanguageLabels[selectedFontLanguage]} 글꼴`
+        : '언어별 글꼴 요약',
     );
     size.placeholder = state.fontSizeHint || '';
     size.dataset.observation = state.fontSizeStatus || 'unknown';
@@ -524,6 +585,13 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       if (value.pressed !== undefined) node.setAttribute('aria-pressed', String(value.pressed));
       else node.removeAttribute('aria-pressed');
     }
+    const fontAvailability = actionAvailability(state, 'font-name', Boolean(options.onAction));
+    font.title = [
+      state.fontNames ? selectionFontNameTooltip(state.fontNames) : state.fontNameTitle || '',
+      fontAvailability.enabled ? '' : fontAvailability.reason || '현재 사용할 수 없습니다.',
+    ]
+      .filter(Boolean)
+      .join(' · ');
     for (const { node, percent } of zoomChoices)
       node.setAttribute('aria-pressed', String(percent === (state.zoomPercent ?? 100)));
     supportList.replaceChildren();

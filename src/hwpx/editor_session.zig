@@ -75,6 +75,7 @@ pub const Section = struct {
     }
 };
 pub const Session = struct {
+    formatting_batch: ?*@import("formatting_batch_context.zig").Context = null,
     /// WASM open만 설정한다. 기존 direct Zig Session은 snapshot guard를 유지한다.
     history_delta_managed: bool = false,
     mutation_serial: u64 = 0,
@@ -257,6 +258,7 @@ pub const Session = struct {
         return changed;
     }
     fn setCharacterFormatHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, id: u32) !bool {
+        if (self.formatting_batch != null) return @import("character_style_session.zig").applyDeferred(self, section_index, paragraph, start, end, id);
         return @import("character_style_session.zig").apply(self, section_index, paragraph, start, end, id);
     }
 
@@ -271,20 +273,24 @@ pub const Session = struct {
         return changed;
     }
     fn setCharacterPropertiesHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, properties: @import("../model/document.zig").CharacterPropertyPatch) !bool {
+        if (self.formatting_batch != null) return @import("character_property_session.zig").applyDeferredSave(self, section_index, paragraph, start, end, properties);
         return @import("character_property_session.zig").apply(self, section_index, paragraph, start, end, properties);
     }
     pub fn setCharacterFontName(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, language: @import("font_faces.zig").Language, name: []const u8) !bool {
-        if (!self.history_delta_managed or self.history_transaction_active) return self.setCharacterFontNameHistoryBody(section_index, paragraph, start, end, language, name);
+        return self.setCharacterFontNameScoped(section_index, paragraph, start, end, language, name, null);
+    }
+    pub fn setCharacterFontNameScoped(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, language: @import("font_faces.zig").Language, name: []const u8, cache: ?*@import("../model/batch_font_lookup.zig").Cache) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return self.setCharacterFontNameHistoryBody(section_index, paragraph, start, end, language, name, cache);
         if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
         try @import("suffix_text_delta.zig").normalize(self);
         self.history_transaction_active = true;
         defer self.history_transaction_active = false;
-        const changed = try self.setCharacterFontNameHistoryBody(section_index, paragraph, start, end, language, name);
+        const changed = try self.setCharacterFontNameHistoryBody(section_index, paragraph, start, end, language, name, cache);
         if (changed) self.mutation_serial += 1;
         return changed;
     }
-    fn setCharacterFontNameHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, language: @import("font_faces.zig").Language, name: []const u8) !bool {
-        return @import("font_creation.zig").apply(self, section_index, paragraph, start, end, language, name);
+    fn setCharacterFontNameHistoryBody(self: *Session, section_index: usize, paragraph: usize, start: u32, end: u32, language: @import("font_faces.zig").Language, name: []const u8, cache: ?*@import("../model/batch_font_lookup.zig").Cache) !bool {
+        return @import("font_creation.zig").applyScoped(self, section_index, paragraph, start, end, language, name, cache);
     }
 
     pub fn paragraphShapeIds(self: *const Session) ![]u32 {
@@ -748,7 +754,16 @@ pub const Session = struct {
     }
 
     /// Caller owns the result with Session.allocator. Save is side-effect free.
+    pub fn beginFormattingBatch(self: *Session, context: *@import("formatting_batch_context.zig").Context) !void {
+        if (self.formatting_batch != null) return error.FormattingBatchAlreadyActive;
+        self.formatting_batch = context;
+    }
+    pub fn endFormattingBatch(self: *Session, context: *@import("formatting_batch_context.zig").Context) void {
+        if (self.formatting_batch == context) self.formatting_batch = null;
+        context.deinit(self.allocator);
+    }
     pub fn save(self: *const Session) ![]u8 {
+        if (self.formatting_batch) |context| context.save_calls += 1;
         try @import("inline_leaf_text_budget.zig").validate(self);
         for (self.sections) |section| if (section.dutmal_texts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedDutmalStructuralSave;
         for (self.sections) |section| if (section.equation_scripts.entries.items.len != 0 and section.structure_values != null) return error.UnsupportedEquationStructuralSave;
@@ -763,7 +778,7 @@ pub const Session = struct {
         }
         var xml_bytes: usize = 0;
         if (self.paragraph_resources.entries.items.len != 0 or self.character_resources.entries.items.len != 0 or self.font_resources.entries.items.len != 0) {
-            const header = try @import("header_resource_save.zig").replacementWithFonts(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes);
+            const header = if (self.formatting_batch) |context| try @import("header_resource_save.zig").replacementBatch(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes, &context.header_stats) else try @import("header_resource_save.zig").replacementWithFonts(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes);
             errdefer a.free(header.bytes);
             try replacements.append(a, header);
             xml_bytes += header.bytes.len;

@@ -8,8 +8,11 @@ const runs = @import("character_runs.zig");
 pub const Edit = struct { section: usize, paragraph: usize, start_unit: u32, end_unit: u32, char_shape_id: u32 };
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Edit, count: usize) !void {
+    return applyScoped(a, source, version, p, edit, count, null);
+}
+pub fn applyScoped(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Edit, count: usize, context: ?*@import("plain_text_source.zig").CharacterContext) !void {
     if (edit.char_shape_id >= count) return error.InvalidResourceReference;
-    const validated = try @import("plain_text_source.zig").validateCharacterFormat(a, source, version, p.*, count);
+    const validated = if (context) |scope| try @import("plain_text_source.zig").validateCharacterFormatScoped(a, scope, source, version, p.*, count) else try @import("plain_text_source.zig").validateCharacterFormat(a, source, version, p.*, count);
     const original_ranges = validated.ranges;
     const text = try plain.editableTextBytes(a, p.*);
     defer a.free(text);

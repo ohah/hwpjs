@@ -1,3 +1,4 @@
+import { captureFormattingPresentation } from './surface-formatting-capture.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
 import type { SurfaceClipboardPort } from './clipboard-bridge.ts';
 import { createCharacterShapePort } from './character-shape-port.ts';
@@ -119,10 +120,15 @@ export async function mountDemo(
   });
   const formatting = createFormattingBridge({
     editor,
+    onFocus: () => {
+      if (!closed) host?.focus?.();
+    },
     onStatus: note,
     getSurfaceFormattingHost: () => host,
   });
+  const characterShapePort = createCharacterShapePort(editor);
   const textColor = createTextColorTool({
+    getSurfaceFormattingHost: () => host,
     root,
     editor,
     onStatus: note,
@@ -133,6 +139,8 @@ export async function mountDemo(
     onUIError: () => note('글자색 표시를 갱신하지 못했습니다.'),
   });
   const fontName = createFontNameTool({
+    atomicCharacterPort: characterShapePort,
+    getSurfaceFormattingHost: () => host,
     root,
     editor,
     api: { command: SET_CHARACTER_FONT_NAME_COMMAND, observe: getSelectionFormatting },
@@ -146,7 +154,7 @@ export async function mountDemo(
   const formatDialogs = createFormattingDialogController({
     decorateParagraphView: decorateParagraphAlignmentFallback,
     root,
-    characterPort: createCharacterShapePort(editor),
+    characterPort: characterShapePort,
     port: formatting,
     getState: () => editor.getEditorState(),
     subscribe: (listener) => editor.registerStateListener(listener),
@@ -230,19 +238,22 @@ export async function mountDemo(
   });
   const viewOptions = createViewOptionsBridge({ getHost: () => host, onStatus: note });
   const presentation = (): DemoShellState => {
-    const state = editor.getEditorState(),
+    const sharedFormatting = captureFormattingPresentation(editor, () => host);
+    const state = sharedFormatting.state,
       ready = state.status === 'ready';
-    const formatState = formatting.getPresentation(),
-      history = getHistoryAvailability(state);
+    const formatState = formatting.getPresentation(sharedFormatting),
+      history = getHistoryAvailability(state),
+      fontAvailability = fontName.presentation(sharedFormatting);
     const availability = {
       ...formatState.actions,
-      ...textColor.presentation(),
+      ...textColor.presentation(sharedFormatting),
       'font-name': {
-        enabled: fontName.presentation().enabled,
+        enabled: fontAvailability.enabled,
+        surfaceSelection: fontAvailability.surfaceSelection,
         reason: !ready
           ? '문서를 먼저 열어주세요.'
-          : !fontName.presentation().enabled
-            ? '글꼴 이름을 반영하고 있습니다.'
+          : !fontAvailability.enabled
+            ? (fontAvailability.reason ?? '글꼴 이름을 반영하고 있습니다.')
             : undefined,
       },
       ...textTools.presentation(),
@@ -381,7 +392,7 @@ export async function mountDemo(
       return;
     }
     if (action.command === 'font-name') {
-      fontName.open();
+      fontName.open(action.language);
       return;
     }
     if (textColor.action(action.command)) return;
@@ -569,6 +580,7 @@ export async function mountDemo(
     async dispose() {
       if (closed) return;
       closed = true;
+      formatting.dispose();
       cancelFixtureRefresh();
       const drained = admission.dispose();
       unsubscribe();

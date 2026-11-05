@@ -26,12 +26,14 @@ pub fn decode(a: std.mem.Allocator, bytes: []const u8, catalog: []const []const 
     if (items.len == 0 or items.len > m.limits.targets) return error.LimitExceeded;
     const selectors = try aa.alloc(Selector, items.len);
     var total: usize = 0;
+    var seen: std.AutoHashMapUnmanaged(m.Owner, void) = .empty;
     for (items, 0..) |item, index| {
         try d.keys(item, &.{ "kind", "section", "paragraph", "ranges" });
         if (!std.mem.eql(u8, try d.string(try d.required(item, "kind")), "original-paragraph")) return error.UnsupportedFormattingOwner;
         const section: u32 = @intCast(try d.uint(try d.required(item, "section"), 0xffffffff));
         const paragraph: u32 = @intCast(try d.uint(try d.required(item, "paragraph"), 0xffffffff));
-        for (selectors[0..index]) |previous| if (previous.section == section and previous.paragraph == paragraph) return error.DuplicateFormattingTarget;
+        const duplicate = try seen.getOrPut(aa, .{ .section = section, .paragraph = paragraph });
+        if (duplicate.found_existing) return error.DuplicateFormattingTarget;
         const ranges = if (d.get(item, "ranges")) |value| try d.decodeRanges(aa, value) else &.{};
         total = try std.math.add(usize, total, ranges.len);
         if (total > m.limits.ranges) return error.LimitExceeded;

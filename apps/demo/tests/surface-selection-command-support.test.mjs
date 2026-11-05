@@ -7,10 +7,30 @@ const ready = {
   connected: true,
   availability: { enabled: true, surfaceSelection: true },
 };
-test('Surface 실제 선택 표시 근거는 copy/cut/underline/strike에만 적용', () => {
-  for (const command of ['copy', 'cut', 'underline', 'strike'])
+test('Surface 실제 선택 표시 근거는 연결된 개별 범위 명령에만 적용', () => {
+  for (const command of [
+    'copy',
+    'cut',
+    'underline',
+    'strike',
+    'bold',
+    'italic',
+    'set-font-size',
+    'text-color',
+    'font-name',
+    'align-left',
+    'align-center',
+    'align-right',
+    'align-justify',
+  ])
     assert.equal(resolveCommandSupport(command, ready).enabled, true);
-  for (const command of ['bold', 'italic', 'character-properties', 'text-color'])
+  for (const command of [
+    'character-properties',
+    'paragraph-properties',
+    'insert-table',
+    'format-copy',
+    'insert-symbol',
+  ])
     assert.equal(resolveCommandSupport(command, ready).kind, 'missing-selection');
 });
 test('표시 태그 없는 enabled만으로 public 선택 부재를 우회하지 않음', () => {

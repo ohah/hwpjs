@@ -19,6 +19,61 @@ pub fn ids(session: *const @import("editor_session.zig").Session) ![]u32 {
     return output.toOwnedSlice(a);
 }
 
+/// Formatting-patch-only request index. Original inventory and current COW IDs
+/// remain separate; no serialized header or model/source references are retained.
+pub fn batchContains(session: *const @import("editor_session.zig").Session, id: u32) !bool {
+    const context = session.formatting_batch.?;
+    const a = session.allocator;
+    errdefer context.invalidateSections();
+    if (!context.ids_initialized) {
+        const document = try context.originalDocument(a, session.source);
+        const resources = try context.originalResources(a, document);
+        for (resources.table(.char_shape).ids.items) |original| {
+            try context.original_ids.put(a, original, {});
+            try context.current_ids.put(a, original, {});
+        }
+        context.ids_initialized = true;
+    }
+    while (context.indexed_entries < session.character_resources.entries.items.len) {
+        const index = context.indexed_entries;
+        const entry = session.character_resources.entries.items[index];
+        if (!context.original_ids.contains(entry.source_id)) return error.InvalidCharacterShapeReference;
+        const slot = try context.current_ids.getOrPut(a, entry.id);
+        if (slot.found_existing) return error.DuplicateCharacterResourceId;
+        try context.intent_indices.put(a, entry.id, index);
+        context.indexed_entries += 1;
+    }
+    return context.current_ids.contains(id);
+}
+pub fn batchShape(session: *const @import("editor_session.zig").Session, id: u32) !@import("character_shape_display.zig").Shape {
+    const context = session.formatting_batch.?;
+    const a = session.allocator;
+    errdefer context.invalidateSections();
+    if (!try batchContains(session, id)) return error.InvalidCharacterShapeReference;
+    if (!context.shapes_initialized) {
+        const document = try context.originalDocument(a, session.source);
+        const resources = try context.originalResources(a, document);
+        var tree = try document.readHeaderTree(a, .{});
+        defer tree.deinit(a);
+        const originals = try normalizeColors(session, try collect(a, &tree, resources.table(.char_shape).ids.items));
+        defer a.free(originals);
+        for (originals) |shape| {
+            try context.original_shapes.put(a, shape.id.?, shape);
+            try context.current_shapes.put(a, shape.id.?, shape);
+        }
+        context.shape_inventory_builds += 1;
+        context.shapes_initialized = true;
+    }
+    while (context.projected_entries < session.character_resources.entries.items.len) {
+        const entry = session.character_resources.entries.items[context.projected_entries];
+        const source = context.original_shapes.get(entry.source_id) orelse return error.InvalidCharacterShapeReference;
+        const shape = try @import("character_shape_intent.zig").project(source, entry.id, entry.properties);
+        try context.current_shapes.put(a, entry.id, shape);
+        context.projected_entries += 1;
+    }
+    return context.current_shapes.get(id) orelse error.InvalidCharacterShapeReference;
+}
+
 /// Temporary read-only resource projection, never an editable style cache.
 pub fn displayShapes(session: *const @import("editor_session.zig").Session) ![]@import("character_shape_display.zig").Shape {
     if (session.paragraph_resources.entries.items.len != 0 or session.font_resources.entries.items.len != 0) return displayShapesSerialized(session);

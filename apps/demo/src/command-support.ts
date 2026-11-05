@@ -96,7 +96,21 @@ export function resolveCommandSupport(
   if (proof?.reason.trim() && proof.evidence.trim()) return deny('unimplemented', proof.reason);
   if (!input.connected) return deny('unconnected', UNCONNECTED_COMMAND_REASON);
   const surfaceSelection =
-    ['copy', 'cut', 'underline', 'strike'].includes(command) &&
+    [
+      'copy',
+      'cut',
+      'underline',
+      'strike',
+      'bold',
+      'italic',
+      'set-font-size',
+      'text-color',
+      'font-name',
+      'align-left',
+      'align-center',
+      'align-right',
+      'align-justify',
+    ].includes(command) &&
     input.availability?.enabled === true &&
     input.availability.surfaceSelection === true;
   if (definition.selection && input.hasSelection === false && !surfaceSelection)

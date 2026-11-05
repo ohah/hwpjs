@@ -5,6 +5,13 @@ const Range = @import("character_style_display_ranges.zig").Range;
 const sites_mod = @import("text_sites.zig");
 
 pub fn read(session: *const editor.Session, section_index: usize, ordinal: usize) !?[]Range {
+    return readBound(session, section_index, ordinal, null);
+}
+/// The caller has resolved this template through the canonical paragraph owner resolver.
+pub fn readForTemplate(session: *const editor.Session, section_index: usize, ordinal: usize, template: usize) !?[]Range {
+    return readBound(session, section_index, ordinal, template);
+}
+fn readBound(session: *const editor.Session, section_index: usize, ordinal: usize, bound_template: ?usize) !?[]Range {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     if (ordinal < section.first_paragraph or ordinal > section.last_paragraph) return error.InvalidParagraphIndex;
@@ -13,7 +20,7 @@ pub fn read(session: *const editor.Session, section_index: usize, ordinal: usize
     }
     const a = session.allocator;
     const paragraph = if (section.structure_values) |*values| &values.paragraphs[ordinal - section.first_paragraph] else null;
-    const template = if (paragraph) |value| value.template_element else try @import("paragraph_site_owner.zig").resolve(&section.tree, &section.sites, section.locations, ordinal);
+    const template = if (paragraph) |value| value.template_element else bound_template orelse try @import("paragraph_site_owner.zig").resolve(&section.tree, &section.sites, section.locations, ordinal);
     var found = false;
     var owned = try @import("paragraph_owned_elements.zig").Iterator.init(&section.tree, template);
     while (try owned.next()) |index| {

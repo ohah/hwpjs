@@ -14,8 +14,8 @@ export const fontLanguageLabels: Record<CharacterFontLanguage, string> = {
   hangul: '한글',
   latin: '영문',
   hanja: '한자',
-  japanese: '일본어',
-  other: '기타',
+  japanese: '일어',
+  other: '외국어',
   symbol: '기호',
   user: '사용자',
 };
@@ -71,6 +71,7 @@ export function formattingObservationLabels(
               ? '커서 크기 미관측'
               : '현재 크기 관측 불가';
   return Object.freeze({
+    fontNames: state.fontNames,
     fontName: selectionFontNameLabel(state.fontNames),
     fontNameTitle: selectionFontNameTooltip(state.fontNames),
     fontNameLanguage: 'hangul' as const,

@@ -22,11 +22,15 @@ export function characterOutlineRangesState(content, ranges) {
 }
 export function characterOutlineRangesKind(content, ranges) {
   return outlineValues(content, ranges, (row) => {
-    if (!row) return null;
-    if (row.rawKind === null)
-      return ['absent', 'none', 'solid'].includes(row.state) ? row.state : null;
-    if (!Number.isInteger(row.rawKind) || row.rawKind < 0 || row.rawKind > 6) return null;
-    const expected = row.rawKind === 0 ? 'none' : row.rawKind === 1 ? 'solid' : 'other';
-    return row.state === expected ? HWP5_CHARACTER_OUTLINE_KINDS[row.rawKind] : null;
+    return characterOutlineResourceKind(row);
   });
+}
+
+export function characterOutlineResourceKind(row) {
+  if (!row) return null;
+  if (row.rawKind === null)
+    return ['absent', 'none', 'solid'].includes(row.state) ? row.state : null;
+  if (!Number.isInteger(row.rawKind) || row.rawKind < 0 || row.rawKind > 6) return null;
+  const expected = row.rawKind === 0 ? 'none' : row.rawKind === 1 ? 'solid' : 'other';
+  return row.state === expected ? HWP5_CHARACTER_OUTLINE_KINDS[row.rawKind] : null;
 }

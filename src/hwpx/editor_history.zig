@@ -88,6 +88,7 @@ pub const History = struct {
         return self.applyBatch(session, &.{command});
     }
     pub fn applyBatch(self: *History, session: *editor.Session, commands: []const Command) !bool {
+        errdefer if (session.formatting_batch) |context| context.invalidateSections();
         if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
@@ -96,11 +97,12 @@ pub const History = struct {
         defer if (!transferred) before.deinit();
         try self.stack.prepare();
         var changed = false;
+        var font_cache: @import("../model/batch_font_lookup.zig").Cache = .{};
         const property_batch = commands.len > 1 and for (commands) |command| {
             if (command.kind != .character_properties) break false;
         } else true;
         for (commands) |command| {
-            const applied = (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command)) catch |err| {
+            const applied = (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command, &font_cache)) catch |err| {
                 try before.rollback(session);
                 return err;
             };
@@ -110,7 +112,7 @@ pub const History = struct {
             session.display_resource_trusted = false;
             return false;
         }
-        if (property_batch) {
+        if (property_batch or session.formatting_batch != null) {
             const saved = session.save() catch |err| {
                 try before.rollback(session);
                 return err;
@@ -128,13 +130,15 @@ pub const History = struct {
     }
     /// V2 leaves all rollback to the common transaction owner. Never roll back twice.
     pub fn applyCommandsUnchecked(session: *editor.Session, commands: []const Command, limit: usize) !bool {
+        errdefer if (session.formatting_batch) |context| context.invalidateSections();
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
         var changed = false;
+        var font_cache: @import("../model/batch_font_lookup.zig").Cache = .{};
         const property_batch = commands.len > 1 and for (commands) |command| {
             if (command.kind != .character_properties) break false;
         } else true;
-        for (commands) |command| changed = (try (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command))) or changed;
-        if (changed and property_batch) {
+        for (commands) |command| changed = (try (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command, &font_cache))) or changed;
+        if (changed and (property_batch or session.formatting_batch != null)) {
             const saved = try session.save();
             session.allocator.free(saved);
         }
@@ -147,7 +151,11 @@ pub const History = struct {
         const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
         return @import("character_property_session.zig").applyDeferredSave(session, command.section, command.paragraph, command.start, end, command.character_properties);
     }
-    fn applyCommand(session: *editor.Session, command: Command) !bool {
+    fn applyCommand(session: *editor.Session, command: Command, font_cache: *@import("../model/batch_font_lookup.zig").Cache) !bool {
+        switch (command.kind) {
+            .character_font_name, .character_properties, .format, .paragraph_format, .paragraph_alignment, .paragraph_flags, .paragraph_border_fill, .paragraph_margins, .paragraph_spacing => {},
+            else => font_cache.clear(),
+        }
         return switch (command.kind) {
             .created_cell_text => block: {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidCreatedTableCommand;
@@ -160,7 +168,7 @@ pub const History = struct {
             .character_font_name => block: {
                 if (command.inserted.len != 0) return error.InvalidFormatCommand;
                 const end = std.math.add(u32, command.start, command.deleted) catch return error.InvalidTextPosition;
-                break :block try session.setCharacterFontName(command.section, command.paragraph, command.start, end, command.font_language, command.font_name);
+                break :block try session.setCharacterFontNameScoped(command.section, command.paragraph, command.start, end, command.font_language, command.font_name, font_cache);
             },
             .formula_definition => block: {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidFormulaDefinitionCommand;

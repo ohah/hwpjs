@@ -1,4 +1,13 @@
 import { uint, observationRows, observationSpans } from './observation-structure.mjs';
+// 정규화된 원본 리소스 값의 공통 판정. 범위·권한은 호출자가 기존 검사로 확인한다.
+export function characterPropertyResourceValue(property, shape, underline, strike) {
+  if (property === 'strike') return strike?.enabled;
+  if (property === 'underline') {
+    const kind = underline?.kind;
+    return ['none', 'bottom', 'center', 'top'].includes(kind) ? kind !== 'none' : null;
+  }
+  return shape?.[property];
+}
 /** Derive a toggle from the current native display projection, never cached UI state. */
 export function characterSelectionState(content, paragraph, start, end, property) {
   const underline = property === 'underline';
@@ -33,14 +42,12 @@ export function characterSelectionState(content, paragraph, start, end, property
     if (low >= high) continue;
     if (!uint(span.charShapeId)) return null;
     const shape = shapes?.get(span.charShapeId);
-    const kind = underlines?.get(span.charShapeId)?.kind;
-    const enabled = strike
-      ? strikes.get(span.charShapeId)?.enabled
-      : underline
-        ? ['none', 'bottom', 'center', 'top'].includes(kind)
-          ? kind !== 'none'
-          : null
-        : shape?.[property];
+    const enabled = characterPropertyResourceValue(
+      property,
+      shape,
+      underlines?.get(span.charShapeId),
+      strikes?.get(span.charShapeId),
+    );
     if (low !== cursor || typeof enabled !== 'boolean') return null;
     allEnabled &&= enabled;
     anyEnabled ||= enabled;

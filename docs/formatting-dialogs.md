@@ -140,3 +140,69 @@ HWP5는 비례 간격 이외 Native 질의가 `hwp5-source-unit`을 반환한다
 격리 공유 후보의 문단 42개와 글자·공유 93개는 별도 명시 entry 검사입니다. 실제 Chrome에서는 동일 공식 g5 SDK/Worker를 유지하고 실행 모듈만 cb48로 명시하여 Noori H5/HX 각각 정렬 fallback, 375×320 본문 스크롤과 하단 버튼 접근, 모달 상호배타·Tab 내부 포커스·Escape 본문 복원, 정렬 적용·undo 원본 바이트 복원·redo·저장 재열기를 확인했습니다. 기본 load/save에는 formatting 요청0, 창을 열 때 capability 조회만 있으며 미지원 query/atomic patch는0입니다. 정렬값 입력은 표준 select setter와 change 이벤트, 열기·확인은 실제 CDP 포인터로 검증했습니다. 물리 키보드의 native select 선택·OS IME·전체 Canvas 동치·성능 개선 증명은 아닙니다.
 
 SDK에 포함된 진단6860과 실제 사용 cb48은 다른 입력입니다. 새 Native 배포·전체 문단 필드 쓰기 지원·실제 제품 반영을 이 결과로 주장하지 않습니다. 두 세션은 editor.dispose 뒤 Worker 잔류0이며 브라우저 close 명령의 exit1은 별도로 보존했습니다. 시작 identity가 같은 소유 프로세스 정리 후 inactive/pid null·잔류0을 확인했고 운영 서버에는 신호를 보내지 않았습니다.
+
+
+## 여러 문단 서식과 언어 대표 선택 후보
+
+이 절은 앞선 단일 선택·개별 속성 창의 범위를 확장하는 소스 후보를 다룹니다. 기존 검증을 새 경로의 검증으로 승계하지 않습니다.
+
+### 언어 선택과 적용 계약
+
+첫 번째 `대표` 메뉴는 문단 스타일이 아닌 글꼴 언어 선택입니다. 후보는 한글·영문·한자·일어·외국어·기호·사용자의 일곱 슬롯을 구분합니다. 대표 글꼴 적용은 일곱 슬롯의 이름을 하나의 원자 요청에 담고, 개별 언어는 해당 슬롯만 대상으로 합니다. 이름과 언어별 적용 불가 사유는 [글꼴 이름 명령](headless-font-name.md)을 따릅니다. 관측하지 않은 스타일 이름을 언어 라벨로 대신하지 않습니다.
+
+여러 문단의 굵게·기울임·글자 색·글자 크기·문단 정렬 연결은 Surface 범위 캡처를 사용합니다. bridge와 글꼴·색 도구는 같은 캡처를 공유하며, 실행이나 창 열기에는 새 캡처를 사용합니다. 준비는 의도와 가용성을 확인하고 대상을 바꾸거나 쓰기를 수행하지 않습니다. 정착 확인은 실제 Core 결과와 현재 배치의 확인이며 화면 합성 완료나 입력 큐 소진을 뜻하지 않습니다. 오래된 선택과 적용 불가 사유를 우회하거나 별도 저장 모델을 만들지 않습니다.
+
+### 검증 구분
+
+| 근거 | 확인 범위 | 남은 경계 |
+| --- | --- | --- |
+| 공개 기안기 reference | 두 문단 굵게·기울임·20pt·가운데/왼쪽 전환. r4의 대표 메뉴는 언어 선택이며, r5 대표 글꼴 적용 뒤 한글·영문·기호 필드를 확인 | 나머지 네 언어와 저장 내부 값은 미확인. r4 색 팔레트 열기는 색 적용 증거가 아님 |
+| Surface g8 소스 게이트 | 집중 72건과 기존 65건은 별도 검사. 명시 시험 8개와 공유 fixture 1개를 구분 | 고정 SDK05·runtime 대역 검증을 전체 실제 Native 통과로 확대하지 않음 |
+| 앱 r6 소스 게이트 | 최종 Core 선언 기반 strict 141파일, 순수 91건, 실제 Core와 runtime/renderer 대역 8건, 품질 21파일은 각각 별도 근거 | 최종 Worker·Native·브라우저의 전체 경로 및 배포와 구분. 독립 최종 읽기 검토는 별도 |
+| SDK05 Native 원자 적용 기준선 | HWP5/HWPX 각각 두 문단 정렬을 한 patch로 적용, undo 한 번으로 양쪽 복원·redo 한 번으로 재적용. 대상별 일곱 글꼴 슬롯을 한 patch로 적용하고 undo 한 번으로 원래 이름·ID 복원 | 저장 파일 전체 oracle·Canvas·브라우저 및 최종 선형 질의 후보의 검증이 아님 |
+
+앱 r4는 focus 조건의 public selection 존재 여부가 fresh state 검사를 우회해 최종 채택이 보류됐습니다. 같은 focus 음성 4건이 r4에서 실패하고 r5에서 통과했으며, 이 4건은 순수 80건 안에 포함됩니다. 이전 실패 영수증은 보존합니다. 최종 Native 후보의 집중 검증과 전체 Native 시험·Worker·브라우저 검증은 아래처럼 구분합니다. 완료나 배포를 선언하지 않습니다.
+
+### 완료 후 현재성 재검증
+
+읽기 전용 `settledCurrent()`는 같은 Core state에서 Canvas 선택만 바뀌어도 현재성을 다시 검사합니다. 완료 전·원결과 없음·예외·dispose는 false입니다. 성공 결과와 `settle.current` 확인 뒤 fresh UI state를 캡처하고 외부 callback·view.dispose·onPresentation 뒤 focus 직전에 정확한 fresh state와 `settledCurrent()`를 모두 확인하며 이후 state 일치도 확인합니다. 다른 public selection의 존재 여부로 우회하지 않습니다. 이 관측 포트는 Native 쓰기 권한이 아닙니다.
+
+### Native 원자 배치와 저장 경계
+
+검증된 formatting plan의 기존 논리 명령 수·순서와 capability·range·reference·binding 검증을 유지합니다. 논리 명령 14개의 처리를 내부 요청 context로 묶더라도 History 호출 수를 늘리지 않습니다. 원자 patch는 기존 History checkpoint를 얻은 뒤 실행하고, 실패·OOM·최종 저장 또는 checkpoint 예산 초과는 같은 History에서 전체 rollback합니다. 최종 바이트·checkpoint 예산과 최종 형식 검증을 완화하지 않습니다.
+
+HWPX 원자 context는 기존 `character_properties`의 지연 저장 모드를 재사용해 중간 raw setter마다 저장하지 않고 최종 정상 변경 시 한 번 저장합니다. 따라서 앞 명령의 중간 출력 한도 초과와 뒤 명령의 잘못된 range가 함께 있으면 원자 context는 뒤 입력 오류를 먼저 반환할 수 있습니다. 중간 raw setter와 context 없는 경로의 기존 저장 검증·오류 순서는 그대로입니다. 비대상 원본과 생성 리소스의 순서·ID 및 중간 생성 항목도 보존합니다.
+
+소유 section buffer 재사용은 준비 영수증과 현재 소유 버퍼의 동기 사용에 한정합니다. 예외 시 폐기하고 context 종료 시 강참조·사전을 해제합니다. formula 문단 준비는 기존 clone 경로를 유지합니다. 포인터 동일성만으로 rollback 세대 안전성을 주장하지 않습니다.
+
+### 후속 검증 범위
+
+Native 최종 소스 37파일의 gate와 별도 producer 결과를 구분합니다. 정규 합성 시험 13건은 4+4+4+1로 통과했으며 전체 Native 시험과 별도입니다. 실제 Noori HWP5/HWPX의 query·정렬·일곱 글꼴 단일 history 적용, undo 원본 전체 바이트 복원, redo 저장, late-error rollback이 보고됐습니다. 요청 16/32/64의 indexed 경로·HWPX 저장 한 번·소스별 shape 증가 계수 검증은 해당 경로의 근거입니다. 일반 run의 제곱 비용과 raw fallback이 남으므로 전체 API O(n) 완료를 뜻하지 않습니다.
+
+실제 Core canonical의 저장 없는 두 splice·두 undo·두 redo와 등록 geometry 검사는 별도 긍정 근거입니다. 저장 뒤 redo 전제 실패는 기존 엔진에서도 재현되어 원로그와 정정 근거를 보존합니다. 이를 저장 왕복 통과로 바꾸지 않습니다. 첫 HWP5 브라우저 시도의 잘못된 도구 참조와 이후 r2의 원본 mixed를 false로 기대한 하네스 오류는 원실패로 보존합니다. r3는 별도 기대값 정정 근거를 사용한 새 실행입니다. cf72 후보의 실제 Worker target·네트워크와 bd095 WASM job 핀 아래 50% 배율 Noori HWP5의 18문단 UTF-16 2에서 19문단 26까지 선택해 굵게 mixed→true→Cmd+Z mixed→redo true→undo mixed, 기울임 false→true→undo false를 확인했습니다. 적용 뒤 재드래그 없이 현재 선택·포커스와 PNG 변화를 관측했습니다. 직접 Native 서식 getter·저장·typing·크기·색·글꼴·정렬·모달 취소·HWPX는 이 실행 범위가 아닙니다. 소유 Chrome은 최종 inactive·pid null·잔류 없음으로 확인했으며 최초 cleanup 추적 잔류 기록도 보존합니다.
+
+독립 HTTP QA 41건은 source context cf72의 테스트 서버 준비 검사이며 제품 Chrome 증거가 아닙니다. 전체 Native 최신 8GiB 조건 실행은 컴파일을 마치고 132초 시점에 실제 core 시험 binary가 존재했으나 180초 wall guard로 종료됐습니다. 이는 전체 pass 증거가 아닙니다. Chrome 종료 뒤 warm cache 전체 검증이 예정되어 있으며 전체 pass 수는 아직 확정되지 않았습니다. 전체 시험·나머지 브라우저 cohort·배포는 아직 후속 확인 대상입니다. 명령은 개발·검증 명령 문서의 선택 Native manifest 항목에서 관리하고 여기서 실행 정책을 복제하지 않습니다.
+
+### 크기 적용과 색 모달의 후속 브라우저 확인
+
+앱 r6의 HWP5 50% 한 문서에서는 다중 선택의 혼합 크기→20pt 적용 뒤 textarea 포커스, undo 혼합 복원·redo 20pt를 확인했습니다. 재선택 없이 R을 입력한 뒤 한 번의 텍스트 undo로 두 문단을 복원하고, 별도 서식 undo로 원래 혼합 크기를 복원했습니다. 가운데 정렬과 undo 양쪽 정렬 복원도 확인했습니다. 마지막 원문 확인은 문단별 커서 이동으로 수행했으며, 직접 Native getter나 저장 바이트 oracle은 이 실행에 추가하지 않았습니다.
+
+별도 HWPX 색 모달 cohort에서는 취소 후 다시 열기 활성, 빨강 초안 적용, 실제 본문 빨강 PNG, 닫힌 뒤 문서 포커스, 재선택 없는 Cmd+Z와 모달의 원래 검정 UI 값을 확인했습니다. Canvas 범위는 유지됐으나 textarea 값 길이가 달라 프록시 본문 전체 동일을 주장하지 않습니다. 직접 Native 필드·저장·글꼴은 관측하지 않았습니다. 이 결과는 b570 QA와 Surface/Canvas 수정 입력에 한정하며 앞선 HWP5 cohort와 동일 입력으로 합산하지 않습니다. 각 소유 Chrome은 종료·잔류 없음으로 확인했습니다.
+
+대표 적용과 영문 단독 적용·다른 여섯 슬롯 보존은 아래 별도 cohort에서 각각 확인했습니다. 전체 Native 5075건 완료는 확인되지 않았습니다. 기존 case106과 case279·281은 모두 HEAD와 후보 양쪽에서 같은 `NondeterministicMemoryUsage` 실패가 재현됐습니다. 279·281 비교의 기준선은 익명 17건 통과·명시 시험 2건 실패, 후보는 익명 18건 통과·같은 명시 시험 2건 실패이며 익명 수집 차이를 따로 기록합니다. 양쪽 skip 0·guard null·누수 marker 관측 0·최종 소유 PS 빈 목록입니다. 누수 marker 미관측을 전체 경로 누수 부재 증명으로 확대하지 않습니다. 원래 `FileNotFound`는 fixture 준비 오류로 별도 보존합니다. 같은 실패 재현은 원인 해결·전체 5059건 통과·case285 완료를 뜻하지 않습니다. reference 7건과 text 9건 집중 통과는 전체 Native 통과로 합산하거나 실패를 제외하는 근거가 아닙니다.
+
+### HWPX 대표 글꼴의 기능 관측
+
+실제 b570 후보의 AE5 Worker·bd WASM 경로에서 대표 글꼴을 굴림으로 적용한 뒤 일곱 언어의 GUI 값을 모두 확인했습니다. 완료 조건에서 textarea 포커스를 확인했고, 이후 GUI 조회를 위한 모달 열기·취소를 거쳐 재선택 없이 Cmd+Z 한 번으로 원래 일곱 값을 모두 복원했습니다. 선택은 2:28, caret은 0:19:28로 유지됐습니다. 직접 Native 필드·내부 ACK 시각·저장·추가 typing·redo는 이 관측 범위가 아닙니다.
+
+클릭부터 일곱 완료 조건의 첫 참까지 12194.6ms였으므로 원래 12초 판정 실패는 유지합니다. 별도 20초 기능 관측 통과를 속도 개선이나 앞선 실패 실행의 성공으로 재분류하지 않습니다. 다른 SDK·Reader를 사용한 계측 시간도 이 후보에 승계하지 않습니다. 최초 cleanup 실패와 updater 두 개 잔류 기록을 보존하고, 이후 신호 없이 자연 종료를 추적해 최종 Chrome inactive·pid null·소유 PS 빈 목록을 확인했습니다.
+
+### HWPX 영문 단독 글꼴의 기능 관측
+
+같은 b570 후보의 별도 20초 기능 cohort에서 latin만 HCI Poppy에서 굴림으로 바뀌고 다른 여섯 언어의 GUI 값이 그대로임을 확인했습니다. 재선택 없이 Cmd+Z 한 번으로 원래 일곱 값을 모두 복원했으며 selection 2:28·caret 0:19:28을 유지했습니다. 직접 Native 필드·저장·redo·typing은 미검증입니다. 이 개별 언어 작업을 대표 일곱 언어 적용과 같은 workload로 취급하거나 대표의 기존 12초 실패 판정을 바꾸지 않습니다. 최초 cleanup 실패 기록을 보존했고 추적 updater 자연 종료 뒤 최종 Chrome inactive·pid null·소유 PS 빈 목록을 확인했습니다.
+
+### HWP5 대표 글꼴과 글자 색의 기능 관측
+
+별도 HWP5 Noori(b18)·b570 후보·AE5 Worker·bd WASM·50% 배율의 기능 cohort에서 대표 일곱 언어의 GUI 값이 모두 굴림으로 적용되고, 재선택 없이 Cmd+Z 한 번으로 원래 일곱 값이 복원됐습니다. 색은 원래 #000000에서 #ff0000 초안·실제 본문 PNG·모달 값을 확인한 뒤, 재선택 없이 Cmd+Z 한 번으로 #000000 GUI 값이 복원됐습니다. caret 0:19:26·selection 2:26을 유지했습니다.
+
+이 결과는 GUI 적용·복원 근거이며 직접 Native 필드·저장·독립 저장 oracle·redo·추가 typing의 증거가 아닙니다. 20초 기능 cohort를 기존 12초 성능 실패의 대체나 속도 개선으로 해석하지 않습니다. 최초 cleanup 실패와 updater 두 개 잔류 기록은 보존하며, 신호 없이 자연 종료를 추적해 최종 Chrome inactive·pid null·소유 PS 빈 목록을 확인했습니다.

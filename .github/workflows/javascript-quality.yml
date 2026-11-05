@@ -129,15 +129,22 @@ jobs:
             --test --test-concurrency=1 "$@"
       - name: Test multi-paragraph formatting app port regressions
         timeout-minutes: 2
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
         run: |
           test -f ./packages/core/dist/build-manifest.json || exit 1
+          test -f ./tools/renderer-test-core-provider.mjs || exit 1
+          test -f ./apps/demo/tests/formatting-style-preload.mjs || exit 1
           set -- \
             ./apps/demo/tests/selection-decoration-bridge.test.mjs \
             ./apps/demo/tests/surface-selection-command-support.test.mjs \
-            ./apps/demo/tests/mac-surface-selection-shortcuts.test.mjs
+            ./apps/demo/tests/mac-surface-selection-shortcuts.test.mjs \
+            ./apps/demo/tests/multiblock-formatting-app.test.mjs \
+            ./apps/demo/tests/formatting-language-controls.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
-          node --experimental-transform-types --max-old-space-size=256 \
-            --test --test-concurrency=1 "$@"
+          node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --test --test-concurrency=1 --test-timeout=50000 "$@"
       - name: Test multi-paragraph clipboard capture surface regressions
         timeout-minutes: 2
         env:
@@ -172,6 +179,29 @@ jobs:
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 \
             ./packages/vanilla/tests/multiblock-format-history-selection.test.mjs
+      - name: Test multi-paragraph formatting surface regressions
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_CORE_DIST: packages/core/dist
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          test -f ./tools/renderer-test-core-provider.mjs || exit 1
+          test -f ./packages/vanilla/tests/non-text-history-renderer-hook.mjs || exit 1
+          test -f ./packages/vanilla/tests/multirange-formatting-fixture.mjs || exit 1
+          set -- \
+            ./packages/vanilla/tests/multirange-formatting-surface.test.mjs \
+            ./packages/vanilla/tests/multirange-formatting-observation.test.mjs \
+            ./packages/vanilla/tests/formatting-patch-lease.test.mjs \
+            ./packages/vanilla/tests/formatting-patch-batch.test.mjs \
+            ./packages/vanilla/tests/formatting-patch-surface.test.mjs \
+            ./packages/vanilla/tests/formatting-patch-core.test.mjs \
+            ./packages/vanilla/tests/formatting-capability-reason.test.mjs \
+            ./packages/vanilla/tests/formatting-settled-current.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 --test-timeout=50000 "$@"
       - name: Test non-text selection history surface lifecycle
         timeout-minutes: 2
         env:

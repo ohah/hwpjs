@@ -5,9 +5,12 @@ const writer = @import("xml_source_writer.zig");
 pub const Count = enum { font, item };
 
 pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, count_kind: Count, actual_count: u32, payload: []const u8, limit: usize) ![]u8 {
+    return writeMany(a, tree, node, count_kind, actual_count, 1, payload, limit);
+}
+pub fn writeMany(a: std.mem.Allocator, tree: *const Tree, node: usize, count_kind: Count, actual_count: u32, added_count: u32, payload: []const u8, limit: usize) ![]u8 {
     if (node >= tree.elements.len) return error.InvalidElementIndex;
     const count_name = if (count_kind == .font) "fontCnt" else "itemCnt";
-    const next = std.math.add(u32, actual_count, 1) catch return error.LimitExceeded;
+    const next = std.math.add(u32, actual_count, added_count) catch return error.LimitExceeded;
     const count_raw = try tree.attributeValue(a, node, "", count_name);
     if (count_raw) |raw| {
         const text = try raw.toUtf8(a, 64);

@@ -1,3 +1,4 @@
+import { demoCommandAction } from './demo-command-action.ts';
 import { getSelectionFormatting, type HeadlessEditor } from '@hwpjs/core';
 import type { DemoAction, DemoShellState } from './shell-contract.ts';
 import {
@@ -149,9 +150,9 @@ export function mountDemoContextMenu(options: {
         )
           return;
         try {
-          void Promise.resolve(options.execute({ command: id as ContextCommand })).catch(
-            options.onError,
-          );
+          const action = demoCommandAction(id);
+          if (!action) return;
+          void Promise.resolve(options.execute(action)).catch(options.onError);
         } catch (error) {
           options.onError(error);
         }

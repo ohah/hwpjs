@@ -28,26 +28,32 @@ pub fn apply(session: *editor.Session, section_index: usize, paragraph: usize, i
     if (try currentId(session, section_index, paragraph) == id) return false;
     var view = try @import("display_current_paragraphs.zig").read(a, section, session.options);
     defer view.deinit(a);
-    var values = if (section.structure_values) |*current| try current.clone(a) else try view.owned.?.clone(a);
+    const borrowed = session.formatting_batch != null and section.structure_values != null;
+    var values = if (borrowed) section.structure_values.? else if (section.structure_values) |*current| try current.clone(a) else try view.owned.?.clone(a);
     var transferred = false;
-    defer if (!transferred) values.deinit(a);
+    defer if (!transferred and !borrowed) values.deinit(a);
+    if (session.formatting_batch) |context| try context.dirty_sections.put(a, section_index, {});
     const selected = &values.paragraphs[paragraph - section.first_paragraph];
     selected.paragraph_shape_id = if (try sourceId(a, &section.tree, selected.template_element) == id) null else id;
     const empty = try a.alloc(@import("text_sites.zig").Site, 0);
     defer if (!transferred) a.free(empty);
-    const sections = try a.dupe(editor.Section, session.sections);
-    defer a.free(sections);
-    sections[section_index].structure_values = values;
-    sections[section_index].sites = .{ .items = empty };
-    var candidate = session.*;
-    candidate.sections = sections;
-    const output = try candidate.save();
-    defer a.free(output);
-    if (section.structure_values) |*old| old.deinit(a);
-    section.sites.deinit(a);
-    section.sites = .{ .items = empty };
-    section.structure_values = values;
-    transferred = true;
+    if (session.formatting_batch == null) {
+        const sections = try a.dupe(editor.Section, session.sections);
+        defer a.free(sections);
+        sections[section_index].structure_values = values;
+        sections[section_index].sites = .{ .items = empty };
+        var candidate = session.*;
+        candidate.sections = sections;
+        const output = try candidate.save();
+        defer a.free(output);
+    }
+    if (!borrowed) {
+        if (section.structure_values) |*old| old.deinit(a);
+        section.sites.deinit(a);
+        section.sites = .{ .items = empty };
+        section.structure_values = values;
+        transferred = true;
+    }
     return true;
 }
 

@@ -11,11 +11,17 @@ pub const Backend = struct {
     snapshot: ?*Snapshot = null,
     pub const Snapshot = struct {
         allocator: std.mem.Allocator,
+        face_index: ?common.FontFaceIndex = null,
+        character_ids: ?std.AutoHashMapUnmanaged(u32, usize) = null,
+        paragraph_ids: ?std.AutoHashMapUnmanaged(u32, usize) = null,
         characters: ?[]@import("character_display_shapes.zig").Shape = null,
         paragraphs: ?[]@import("paragraph_display_shapes.zig").Shape = null,
         faces: ?[]@import("../../model/font_face_value.zig").Value = null,
         preflight_source: ?Session.FormattingSource = null,
         pub fn deinit(self: *Snapshot) void {
+            if (self.face_index) |*index| index.deinit();
+            if (self.character_ids) |*ids| ids.deinit(self.allocator);
+            if (self.paragraph_ids) |*ids| ids.deinit(self.allocator);
             if (self.preflight_source) |*source| source.deinit();
             if (self.characters) |rows| self.allocator.free(rows);
             if (self.paragraphs) |rows| self.allocator.free(rows);
@@ -104,6 +110,30 @@ pub const Backend = struct {
         for (original, output) |v, *row| row.* = .{ .start = v.start_unit, .end = v.end_unit, .resource = v.char_shape_id };
         return output;
     }
+    fn indexedShapes(self: Backend, shapes: anytype, id: u32, comptime character: bool) !@TypeOf(shapes) {
+        if (self.snapshot) |snapshot| {
+            const slot = if (character) &snapshot.character_ids else &snapshot.paragraph_ids;
+            if (slot.* == null) {
+                var ids: std.AutoHashMapUnmanaged(u32, usize) = .empty;
+                errdefer ids.deinit(snapshot.allocator);
+                for (shapes, 0..) |shape, index| {
+                    const entry = try ids.getOrPut(snapshot.allocator, shape.id);
+                    if (!entry.found_existing) entry.value_ptr.* = index;
+                }
+                slot.* = ids;
+            }
+            if (slot.*.?.get(id)) |index| return shapes[index..][0..1];
+            return shapes[0..0];
+        }
+        return shapes;
+    }
+    fn fontIndex(self: Backend, faces: []const @import("../../model/font_face_value.zig").Value) !?*const common.FontFaceIndex {
+        if (self.snapshot) |snapshot| {
+            if (snapshot.face_index == null) snapshot.face_index = try common.FontFaceIndex.init(snapshot.allocator, faces);
+            return &snapshot.face_index.?;
+        }
+        return null;
+    }
     pub fn characterField(self: Backend, a: std.mem.Allocator, id: u32, field: []const u8) !p.Observation {
         if (eq(field, "character.border") or eq(field, "character.background")) {
             var source = try self.session.formattingSource(a);
@@ -114,7 +144,7 @@ pub const Backend = struct {
 
         const shapes = try self.readCharacters(a);
         defer if (self.snapshot == null) a.free(shapes);
-        for (shapes) |shape| if (shape.id == id) {
+        for (try self.indexedShapes(shapes, id, true)) |shape| if (shape.id == id) {
             if (eq(field, "character.shadow") or std.mem.startsWith(u8, field, "character.shadow.")) {
                 const raw = shape.shadow orelse return p.unknown("MissingShadow", "MissingSourceField");
                 const value: @import("../../model/shadow_observation.zig").Value = .{ .kind = if (raw.kind_raw == 3) null else @as(@import("../../model/character_shadow.zig").Kind, @fromBackingInt(raw.kind_raw)), .x = raw.offset_x, .y = raw.offset_y, .color = if (raw.color_raw <= 0xffffff) @import("../../model/rgb_color.zig").hwp5(raw.color_raw) else null, .@"opaque" = raw.kind_raw == 3 };
@@ -149,13 +179,13 @@ pub const Backend = struct {
                 if (std.mem.endsWith(u8, field, ".id")) return common.fontField(a, ids, null, field);
                 const faces = try self.readFaces(a);
                 defer if (self.snapshot == null) @import("../../model/font_face_value.zig").deinit(a, faces);
-                return common.fontField(a, ids, faces, field);
+                return common.fontFieldIndexed(a, ids, faces, field, try self.fontIndex(faces));
             }
             if (eq(field, "character.fonts")) return common.fontIds(a, ids);
             if (eq(field, "character.fontNames")) {
                 const faces = try self.readFaces(a);
                 defer if (self.snapshot == null) @import("../../model/font_face_value.zig").deinit(a, faces);
-                return common.fontNames(a, ids, faces);
+                return common.fontNamesIndexed(a, ids, faces, try self.fontIndex(faces));
             }
             inline for (.{ .{ "ratio", "ratio" }, .{ "charSpacing", "spacing" }, .{ "relativeSize", "relativeSize" }, .{ "offset", "offset" } }) |entry| {
                 if (eq(field, "character." ++ entry[0])) return common.metrics(a, @field(shape.font_metrics, entry[1]), if (comptime std.mem.eql(u8, entry[0], "charSpacing")) "char_spacing" else if (comptime std.mem.eql(u8, entry[0], "relativeSize")) "relative_size" else entry[0]);
@@ -189,7 +219,7 @@ pub const Backend = struct {
         const id = try self.session.paragraphShapeId(selected.section, selected.paragraph);
         const shapes = try self.readParagraphs(a);
         defer if (self.snapshot == null) a.free(shapes);
-        for (shapes) |shape| if (shape.id == id) {
+        for (try self.indexedShapes(shapes, id, false)) |shape| if (shape.id == id) {
             if (eq(field, "paragraph.grid")) return if (shape.flags.grid) |v| p.known(p.boolean(v), shape.alignment <= 5, if (shape.alignment <= 5) null else "UnsupportedSourceAlignment", null) else p.unknown("MissingParagraphGrid", "MissingSourceField");
             if (eq(field, "paragraph.borderConnect")) return if (shape.flags.border_connect) |v| p.known(p.boolean(v), shape.alignment <= 5, if (shape.alignment <= 5) null else "UnsupportedSourceAlignment", null) else p.unknown("MissingParagraphBorderConnect", "MissingSourceField");
             if (eq(field, "paragraph.alignment")) {

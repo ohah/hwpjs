@@ -23,7 +23,9 @@ pub const Adapter = struct {
         return s.matchesCheckpoint(parent);
     }
     pub fn apply(s: *Session, before: *Snapshot, commands: []const Command, limit: usize) !bool {
-        for (commands) |command| try s.apply(command);
+        var font_cache: @import("../../model/batch_font_lookup.zig").Cache = .{};
+        for (commands) |command| try s.applyWithFontCache(command, &font_cache);
+        try s.finishFormattingBatch();
         if (try s.matchesCheckpoint(before.*)) return false;
         _ = try s.checkpointSize(limit);
         return true;
@@ -209,7 +211,9 @@ pub const History = struct {
         var before_transferred = false;
         defer if (!before_transferred) before.deinit();
         self.counters.capture += 2;
-        for (commands) |command| s.apply(command) catch |err| return self.rollback(parent, err);
+        var font_cache: @import("../../model/batch_font_lookup.zig").Cache = .{};
+        for (commands) |command| s.applyWithFontCache(command, &font_cache) catch |err| return self.rollback(parent, err);
+        s.finishFormattingBatch() catch |err| return self.rollback(parent, err);
         const same = s.matchesCheckpoint(parent) catch |err| return self.rollback(parent, err);
         if (same) {
             self.end(false);
@@ -233,7 +237,9 @@ pub const History = struct {
         if (!try Adapter.matches(&self.stack.current.value.full, s, p.max_checkpoint_bytes)) return error.HistoryCurrentMismatch;
         const parent = try s.cloneHistoryCheckpointForRestore(self.stack.current.value.full, p.max_checkpoint_bytes);
         defer parent.deinit();
-        for (commands) |command| s.apply(command) catch |err| return self.rollback(parent, err);
+        var font_cache: @import("../../model/batch_font_lookup.zig").Cache = .{};
+        for (commands) |command| s.applyWithFontCache(command, &font_cache) catch |err| return self.rollback(parent, err);
+        s.finishFormattingBatch() catch |err| return self.rollback(parent, err);
         if (s.matchesCheckpoint(parent) catch |err| return self.rollback(parent, err)) return false;
         const payload = s.checkpointSize(p.max_checkpoint_bytes) catch |err| return self.rollback(parent, err);
         const next = E.create(self.allocator, p.max_retained_bytes, p.max_checkpoint_owned_bytes) catch |err| return self.rollback(parent, err);

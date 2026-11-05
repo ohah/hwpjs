@@ -40,6 +40,15 @@ pub fn apply(comptime format: Format, a: std.mem.Allocator, history: anytype, se
     defer a.free(commands);
     // No loop over exported setters. The existing owned history controls rollback,
     // final save validation, checkpoint budget and poison on uncertain recovery.
+    if (format == .hwp5) {
+        var context: @import("../hwp5/edit/style_preservation.zig").FormattingBatch = .{};
+        try session.beginFormattingBatch(&context);
+        defer session.endFormattingBatch(&context);
+        return history.applyBatch(session, commands);
+    }
+    var context: @import("../hwpx/formatting_batch_context.zig").Context = .{};
+    try session.beginFormattingBatch(&context);
+    defer session.endFormattingBatch(&context);
     return history.applyBatch(session, commands);
 }
 fn hwp5Alignment(value: m.Alignment) u32 {

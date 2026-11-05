@@ -8,7 +8,8 @@ export type NativeModuleContract = Readonly<{
 export function allowsOwnerWindowProjection(contract: NativeModuleContract | undefined): boolean {
   return (
     contract?.contract === 'hwp5-exclusive-text-delta-v1' &&
-    contract.sha256 === 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb'
+    (contract.sha256 === 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb' ||
+      contract.sha256 === 'bd095cdf56892d5b5708a567ca91ae271846a3949bfc41c3a717bdee6513684f')
   );
 }
 export type NativeRuntimeOrigin = Readonly<{

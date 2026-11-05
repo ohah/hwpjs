@@ -107,10 +107,12 @@ export function createClipboardBridge(options: ClipboardBridgeOptions) {
       return true;
     }
     // 외부 콜백이나 Core 갱신 전에 최초 Canvas 범위의 일회용 클로저를 확보한다.
-    const transfer = surface?.captureTransferSelection?.({
-      cut: command === 'cut',
-      clipboard: platform(),
-    });
+    const transfer = surface
+      ? surface.captureTransferSelection?.({
+          cut: command === 'cut',
+          clipboard: platform(),
+        })
+      : undefined;
     if (surface && !transfer) return true;
     pending = true;
     let phase: 'read' | 'write' | 'editor' = 'editor';

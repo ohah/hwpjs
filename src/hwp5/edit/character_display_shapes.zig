@@ -3,8 +3,28 @@ const std = @import("std");
 const info = @import("../docinfo/reader.zig");
 pub const Shape = struct { id: u32, height: i32, bold: bool, italic: bool, effects: @import("../../model/character_effect_flags.zig").Flags = .{}, outline_kind_raw: u3 = 0, strike_kind_raw: u3 = 0, strike_style_raw: u4 = 0, strike_color_raw: ?u32 = null, underline_kind_raw: u2 = 0, underline_style_raw: u4 = 0, underline_color_raw: u32 = 0, text_color_raw: u32 = 0, shade_color_raw: u32 = 0xffffffff, font_ids: [7]u16 = @splat(0), shadow: ?@import("../../model/character_shadow.zig").Value = null, font_metrics: @import("character_font_metrics.zig").Values = .{} };
 
+/// 원시 모양의 기존 표시 투영만 공유한다. payload를 변경하지 않는다.
+pub fn fromRaw(id: u32, shape: info.CharShape) Shape {
+    var output: Shape = .{ .id = id, .height = shape.size, .bold = shape.attributes & 2 != 0, .italic = shape.attributes & 1 != 0, .underline_kind_raw = shape.underlineKindRaw(), .underline_style_raw = shape.underlineStyleRaw(), .underline_color_raw = shape.underline_color, .text_color_raw = shape.text_color };
+    output.font_ids = shape.font_ids;
+    output.font_metrics = @import("character_font_metrics.zig").Values.fromRaw(shape);
+    output.outline_kind_raw = shape.outlineKindRaw();
+    output.effects = .{ .emboss = shape.embossed(), .engrave = shape.engraved(), .superscript = shape.superscript(), .subscript = shape.subscript() };
+    output.shade_color_raw = shape.shade_color;
+    output.strike_kind_raw = shape.strikeKindRaw();
+    output.strike_style_raw = shape.strikeStyleRaw();
+    output.strike_color_raw = shape.strike_color;
+    output.shadow = .{ .kind_raw = shape.shadowKindRaw(), .offset_x = shape.shadow_x, .offset_y = shape.shadow_y, .color_raw = shape.shadow_color };
+    return output;
+}
+
+pub const read_count_limit: usize = 100_000;
+pub fn validateReadCount(count: usize) !void {
+    if (count > read_count_limit) return error.LimitExceeded;
+}
+
 pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, expected_count: usize) ![]Shape {
-    if (expected_count > 100_000) return error.LimitExceeded;
+    try validateReadCount(expected_count);
     const output = try a.alloc(Shape, expected_count);
     errdefer a.free(output);
     var iterator = try info.Iterator.init(bytes, version, .{});
@@ -12,17 +32,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
     while (try iterator.next()) |record| {
         if (record.value != .char_shape) continue;
         if (count >= output.len) return error.ResourceCountMismatch;
-        const shape = record.value.char_shape;
-        output[count] = .{ .id = @intCast(count), .height = shape.size, .bold = shape.attributes & 2 != 0, .italic = shape.attributes & 1 != 0, .underline_kind_raw = shape.underlineKindRaw(), .underline_style_raw = shape.underlineStyleRaw(), .underline_color_raw = shape.underline_color, .text_color_raw = shape.text_color };
-        output[count].font_ids = shape.font_ids;
-        output[count].font_metrics = @import("character_font_metrics.zig").Values.fromRaw(shape);
-        output[count].outline_kind_raw = shape.outlineKindRaw();
-        output[count].effects = .{ .emboss = shape.embossed(), .engrave = shape.engraved(), .superscript = shape.superscript(), .subscript = shape.subscript() };
-        output[count].shade_color_raw = shape.shade_color;
-        output[count].strike_kind_raw = shape.strikeKindRaw();
-        output[count].strike_style_raw = shape.strikeStyleRaw();
-        output[count].strike_color_raw = shape.strike_color;
-        output[count].shadow = .{ .kind_raw = shape.shadowKindRaw(), .offset_x = shape.shadow_x, .offset_y = shape.shadow_y, .color_raw = shape.shadow_color };
+        output[count] = fromRaw(@intCast(count), record.value.char_shape);
         count += 1;
     }
     if (count != output.len) return error.ResourceCountMismatch;

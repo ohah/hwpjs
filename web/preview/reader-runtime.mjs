@@ -1083,7 +1083,11 @@ export function createReaderRuntime({
     try {
       if (message.kind === 'formatting-capabilities') {
         if (!editor) throw Error('EditorNotOpen');
-        reply({ kind: message.kind, formattingCapabilities: formattingCapabilities(editor) });
+        reply({
+          kind: message.kind,
+          formattingCapabilities: formattingCapabilities(editor),
+          formattingBatchQueryAvailable: true,
+        });
         return;
       }
       if (message.kind === 'query-formatting') {

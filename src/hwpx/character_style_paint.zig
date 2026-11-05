@@ -73,3 +73,41 @@ pub fn append(a: std.mem.Allocator, output: *std.ArrayList(Span), span: Span, li
     if (output.items.len >= limit) return error.LimitExceeded;
     try output.append(a, span);
 }
+
+/// Pure scalar boundary index, admitted only after successful canonical prepare
+/// on the same request-owned sites/styles. A split adds at most two rows; near
+/// the limit retain canonical preparation so its exact error order is preserved.
+pub const ValidatedPlainBoundaries = struct {
+    allowed: []bool,
+    scalar_reads: usize,
+    pub fn deinit(self: *ValidatedPlainBoundaries, a: std.mem.Allocator) void {
+        a.free(self.allowed);
+    }
+    pub fn validate(self: *const ValidatedPlainBoundaries, start: u32, end: u32) !void {
+        if (start > end or end >= self.allowed.len) return error.InvalidTextPosition;
+        if (!self.allowed[start] or !self.allowed[end]) return error.SplitSurrogatePair;
+    }
+};
+pub fn afterValidatedPlain(a: std.mem.Allocator, sites: *const Sites, current: []const Span, limit: usize) !?ValidatedPlainBoundaries {
+    if (current.len == 0 or current.len > limit or limit - current.len < 2) return null;
+    for (current) |span| if (span.start_unit >= span.end_unit or span.tab_element != null or span.anchor_element != null) return null;
+    const units = current[current.len - 1].end_unit;
+    const allowed = try a.alloc(bool, std.math.add(usize, units, 1) catch return error.LimitExceeded);
+    errdefer a.free(allowed);
+    @memset(allowed, false);
+    var reads: usize = 0;
+    for (current, 0..) |span, index| {
+        if (index != 0 and current[index - 1].site_index == span.site_index) continue;
+        const text = sites.items[span.site_index].text;
+        var byte: usize = 0;
+        var unit = span.site_start_unit;
+        allowed[unit] = true;
+        while (try @import("../xml/scalars.zig").read(text, byte, .utf8)) |scalar| {
+            reads += 1;
+            unit += if (scalar.value > 0xffff) @as(usize, 2) else 1;
+            allowed[unit] = true;
+            byte = scalar.end;
+        }
+    }
+    return .{ .allowed = allowed, .scalar_reads = reads };
+}

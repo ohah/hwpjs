@@ -4,12 +4,15 @@ import type { RuntimeMessage, RuntimeReply } from '@hwpjs/core';
 import type { CommandResult } from '@hwpjs/core';
 
 /** Admission and acknowledgement only; the editor owns the document queue. */
-export function createControlBridge(options: {
-  state(): EditorState;
-  lease: InputSurfaceLease;
-  acknowledge(reply: RuntimeReply, state?: EditorState): void;
-  error(error: unknown): void;
-}) {
+export function createControlBridge(
+  options: {
+    state(): EditorState;
+    lease: InputSurfaceLease;
+    acknowledge(reply: RuntimeReply, state?: EditorState): void;
+    error(error: unknown): void;
+  },
+  observeResult?: (result: CommandResult, message: RuntimeMessage) => void,
+) {
   let closed = false;
   type PendingRequest = {
     id: symbol;
@@ -67,6 +70,12 @@ export function createControlBridge(options: {
             const result = answer as CommandResult;
             if (options.state().operationRevision !== result.state.operationRevision) return;
             acknowledged = true;
+            let observationError: unknown;
+            try {
+              observeResult?.(result, owned);
+            } catch (error) {
+              observationError = error;
+            }
             options.acknowledge(
               {
                 ...owned,
@@ -80,6 +89,7 @@ export function createControlBridge(options: {
               },
               result.state,
             );
+            if (observationError !== undefined) options.error(observationError);
           } else {
             acknowledged = true;
             options.acknowledge(answer as RuntimeReply);

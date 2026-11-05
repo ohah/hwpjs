@@ -7,16 +7,19 @@ export interface FontNameViewState {
   languages: readonly CharacterFontLanguage[];
   values: Readonly<Record<CharacterFontLanguage, CharacterFontNameValue>>;
   reasons: Readonly<Record<CharacterFontLanguage, string | null>>;
-  language: CharacterFontLanguage | null;
+  language: CharacterFontLanguage | 'representative' | null;
+  representativeReason?: string | null;
   draft: string;
   suggestions: readonly string[];
   pending: boolean;
   refreshRequired: boolean;
+  reopenRequired?: boolean;
   stale: boolean;
   error: string | null;
   canApply: boolean;
 }
 export interface FontNameView {
+  getDialogElement?(): HTMLDialogElement;
   update(state: FontNameViewState): void;
   show(): void;
   dispose(): void;
@@ -24,6 +27,15 @@ export interface FontNameView {
 }
 function reasonText(reason: string | null) {
   if (!reason) return '';
+  if (reason === 'SurfaceFormattingSettlementUnknown')
+    return '요청 결과를 확인하지 못했습니다. 반영 여부를 확인한 뒤 창을 다시 열어주세요.';
+  if (reason === 'SurfaceFormattingCurrentUnknown')
+    return '요청 처리는 끝났지만 현재 표시 상태를 확인하지 못했습니다.';
+  if (reason === 'SurfaceSettlementUnavailable')
+    return '현재 호스트에서 서식 처리 완료를 확인할 수 없습니다.';
+  if (reason === 'AtomicFontNamesUnavailable')
+    return '모든 언어의 글꼴을 한 번에 적용할 수 있는 현재 경로가 없습니다.';
+  if (reason === 'FormattingPreparing') return '현재 범위의 편집 권한을 확인하고 있습니다.';
   if (reason === 'FontNameRefreshRequired')
     return '글꼴은 반영됐지만 문서 상태를 다시 확인해야 합니다.';
   if (reason === 'SelectFontLanguage') return '변경할 언어를 선택해주세요.';
@@ -74,6 +86,11 @@ export function createFontNameView(
   placeholder.value = '';
   placeholder.textContent = '언어를 선택해주세요';
   language.append(placeholder);
+  const representative = doc.createElement('option');
+  representative.value = 'representative';
+  representative.textContent = '대표';
+  representative.title = '모든 언어의 글꼴 이름을 한 번에 적용';
+  language.append(representative);
   const inputLabel = doc.createElement('label'),
     input = doc.createElement('input');
   input.type = 'text';
@@ -131,6 +148,7 @@ export function createFontNameView(
   layer.body.append(current, languageLabel, inputLabel, choiceLabel, note, status);
   layer.footer.append(apply, cancel);
   return {
+    getDialogElement: () => layer.element,
     update(state) {
       if (disposed) return;
       pending = state.pending;
@@ -155,6 +173,10 @@ export function createFontNameView(
         cell.dataset.kind = state.values[id].kind;
       }
       language.value = state.language ?? '';
+      note.textContent =
+        state.language === 'representative'
+          ? '대표는 한글·영문·한자·일어·외국어·기호·사용자 글꼴을 한 번의 요청으로 변경합니다.'
+          : '선택한 언어의 글꼴만 변경합니다. 문서에 없는 이름도 직접 입력할 수 있습니다.';
       if (input.value !== state.draft) input.value = state.draft;
       const representable = input.value === state.draft;
       if (previousSuggestions !== state.suggestions) {
@@ -174,9 +196,15 @@ export function createFontNameView(
         choice.value = '';
         previousSuggestions = state.suggestions;
       }
-      const reason = state.language ? state.reasons[state.language] : 'SelectFontLanguage';
-      language.disabled = pending || state.refreshRequired || state.stale;
-      input.disabled = pending || state.refreshRequired || state.stale || reason !== null;
+      const reason =
+        state.language === 'representative'
+          ? (state.representativeReason ?? null)
+          : state.language
+            ? state.reasons[state.language]
+            : 'SelectFontLanguage';
+      language.disabled = pending || state.refreshRequired || state.reopenRequired || state.stale;
+      input.disabled =
+        pending || state.refreshRequired || state.reopenRequired || state.stale || reason !== null;
       choice.disabled = input.disabled || !state.suggestions.length;
       apply.disabled = !state.canApply || !representable;
       cancel.disabled = pending;
@@ -184,15 +212,19 @@ export function createFontNameView(
       if (x) x.disabled = pending;
       input.setAttribute('aria-invalid', String(!!state.error));
       status.dataset.reason = reason ?? '';
-      status.textContent = state.refreshRequired
-        ? reasonText('FontNameRefreshRequired')
-        : state.stale
-          ? '문서나 선택이 바뀌었습니다. 창을 닫고 다시 열어주세요.'
-          : pending
-            ? '글꼴 이름을 반영하고 있습니다.'
-            : !representable
-              ? '이 이름은 입력란에 그대로 표시할 수 없습니다.'
-              : reasonText(state.error ?? reason);
+      status.textContent =
+        state.reopenRequired && !state.refreshRequired
+          ? (state.error ? reasonText(state.error) + ' ' : '') +
+            '재시도하려면 창을 닫고 현재 범위를 다시 열어주세요.'
+          : state.refreshRequired
+            ? reasonText('FontNameRefreshRequired')
+            : state.stale
+              ? '문서나 선택이 바뀌었습니다. 창을 닫고 다시 열어주세요.'
+              : pending
+                ? '글꼴 이름을 반영하고 있습니다.'
+                : !representable
+                  ? '이 이름은 입력란에 그대로 표시할 수 없습니다.'
+                  : reasonText(state.error ?? reason);
     },
     show() {
       if (!disposed) layer.show(language);

@@ -43,6 +43,18 @@ pub fn writeUnderline(a: std.mem.Allocator, input: []const u8, version: Version,
     return cloneResource(a, input, version, source_id, .{ .underline = kind }, limit);
 }
 fn cloneResource(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, mutation: Mutation, limit: usize) !Result {
+    const scanned = try scanResources(a, input, version, source_id, limit, null);
+    const source = scanned.template orelse return error.InvalidCharacterShapeReference;
+    const payload = switch (mutation) {
+        .properties => |patch| try payload_writer.write(a, source, version, patch, limit),
+        .underline => |kind| try underline_writer.write(a, source, version, kind, limit),
+    };
+    defer a.free(payload);
+    return .{ .bytes = try @import("docinfo_resource_append.zig").write(a, input, scanned.insertion.?, scanned.offset, scanned.declared, @backingInt(Tag.char_shape), payload, limit), .id = @intCast(scanned.count) };
+}
+
+const Scan = struct { offset: usize, declared: i32, count: usize, template: ?[]const u8, insertion: ?usize };
+fn scanResources(a: std.mem.Allocator, input: []const u8, version: Version, source_id: u32, limit: usize, templates: ?*std.ArrayList([]const u8)) !Scan {
     if (input.len > limit) return error.LimitExceeded;
     var iterator = @import("../record.zig").Iterator.init(input, .{});
     var mapping_offset: ?usize = null;
@@ -63,6 +75,7 @@ fn cloneResource(a: std.mem.Allocator, input: []const u8, version: Version, sour
             if (record.level != 1) return error.InvalidDocInfoLevel;
             _ = try @import("../docinfo/char_shape.zig").CharShape.parse(record.payload, version);
             if (count == source_id) template = record.payload;
+            if (templates) |list| try list.append(a, record.payload);
             count += 1;
             insertion = record.offset + record.raw.len;
             within_shape = true;
@@ -73,13 +86,45 @@ fn cloneResource(a: std.mem.Allocator, input: []const u8, version: Version, sour
     const offset = mapping_offset orelse return error.MissingIdMappings;
     if (declared < 0) return error.NegativeMappingCount;
     if (@as(usize, @intCast(declared)) != count) return error.ResourceCountMismatch;
-    const source = template orelse return error.InvalidCharacterShapeReference;
-    const payload = switch (mutation) {
-        .properties => |patch| try payload_writer.write(a, source, version, patch, limit),
-        .underline => |kind| try underline_writer.write(a, source, version, kind, limit),
-    };
-    defer a.free(payload);
-    return .{ .bytes = try @import("docinfo_resource_append.zig").write(a, input, insertion.?, offset, declared, @backingInt(Tag.char_shape), payload, limit), .id = @intCast(count) };
+    return .{ .offset = offset, .declared = declared, .count = count, .template = template, .insertion = insertion };
+}
+
+/// Owned formatting context only. All logical resource entries are retained.
+/// Prefix byte limits are checked after each canonical payload, before later entries.
+pub fn writeBatch(a: std.mem.Allocator, input: []const u8, version: Version, entries: []const @import("../../model/document.zig").CharacterResourceIntent, original_count: usize, limit: usize) ![]u8 {
+    if (input.len > limit) return error.LimitExceeded;
+    if (original_count > std.math.maxInt(i32)) return error.InvalidCharacterShapeReference;
+    if (entries.len == 0) return a.dupe(u8, input);
+    // Border-fill changes have their own resource dependencies: keep their original path.
+    for (entries) |entry| if (entry.properties.border_fill != null) return error.UnsupportedBatchCharacterResource;
+    if (entries[0].source_id >= original_count) return error.InvalidCharacterShapeReference;
+    var templates: std.ArrayList([]const u8) = .empty;
+    defer templates.deinit(a);
+    const scanned = try scanResources(a, input, version, entries[0].source_id, limit, &templates);
+    if (scanned.template == null) return error.InvalidCharacterShapeReference;
+    var additions: std.ArrayList(u8) = .empty;
+    defer additions.deinit(a);
+    var count = scanned.count;
+    for (entries, 0..) |entry, index| {
+        if (entry.source_id >= original_count) return error.InvalidCharacterShapeReference;
+        if (entry.source_id >= templates.items.len) return error.InvalidCharacterShapeReference;
+        const payload = try payload_writer.write(a, templates.items[entry.source_id], version, entry.properties, limit);
+        defer a.free(payload);
+        // Same count-overflow and prefix-size checks as one-resource append.
+        if (count == std.math.maxInt(i32)) return error.ResourceCountOverflow;
+        try @import("../record_writer.zig").append(a, &additions, @backingInt(Tag.char_shape), 1, payload, limit - input.len);
+        if (count != std.math.add(usize, original_count, index) catch return error.InvalidCharacterShapeReference) return error.ResourceCountMismatch;
+        count += 1;
+    }
+    const at = scanned.insertion.?;
+    var output: std.ArrayList(u8) = .empty;
+    errdefer output.deinit(a);
+    try output.appendSlice(a, input[0..at]);
+    try output.appendSlice(a, additions.items);
+    try output.appendSlice(a, input[at..]);
+    const offset = scanned.offset + if (scanned.offset >= at) additions.items.len else @as(usize, 0);
+    std.mem.writeInt(i32, output.items[offset..][0..4], @intCast(count), .little);
+    return output.toOwnedSlice(a);
 }
 
 test "HWP5 character property DocInfo clones actual resource without changing existing records" {

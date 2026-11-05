@@ -19,12 +19,50 @@ fn copyStyles(a: std.mem.Allocator, styles: []const @import("character_style_pai
 }
 
 pub fn read(session: *const editor.Session, section_index: usize, paragraph_index: usize) ![]Span {
+    return readScoped(session, section_index, paragraph_index, null);
+}
+pub const SourceIndex = struct {
+    allocator: std.mem.Allocator,
+    sections: std.AutoHashMapUnmanaged(usize, std.AutoHashMapUnmanaged(usize, std.ArrayList(usize))) = .empty,
+    source_visits: usize = 0,
+    builds: usize = 0,
+    pub fn deinit(self: *SourceIndex) void {
+        var sections = self.sections.valueIterator();
+        while (sections.next()) |map| {
+            var rows = map.valueIterator();
+            while (rows.next()) |indices| indices.deinit(self.allocator);
+            map.deinit(self.allocator);
+        }
+        self.sections.deinit(self.allocator);
+    }
+    fn selectedIndices(self: *SourceIndex, section: *const editor.Section, section_index: usize, paragraph: usize) ![]const usize {
+        if (!self.sections.contains(section_index)) {
+            var map: std.AutoHashMapUnmanaged(usize, std.ArrayList(usize)) = .empty;
+            errdefer {
+                var rows = map.valueIterator();
+                while (rows.next()) |list| list.deinit(self.allocator);
+                map.deinit(self.allocator);
+            }
+            for (section.locations, 0..) |location, i| {
+                const row = try map.getOrPut(self.allocator, location.paragraph_ordinal);
+                if (!row.found_existing) row.value_ptr.* = .empty;
+                try row.value_ptr.append(self.allocator, i);
+                self.source_visits += 1;
+            }
+            try self.sections.put(self.allocator, section_index, map);
+            self.builds += 1;
+        }
+        const map = self.sections.getPtr(section_index).?;
+        return if (map.get(paragraph)) |row| row.items else &.{};
+    }
+};
+pub fn readScoped(session: *const editor.Session, section_index: usize, paragraph_index: usize, context: ?*SourceIndex) ![]Span {
     if (section_index >= session.sections.len) return error.InvalidSectionIndex;
     const section = &session.sections[section_index];
     if (paragraph_index < section.first_paragraph or paragraph_index > section.last_paragraph) return error.InvalidParagraphIndex;
     if (section.structure_values != null and section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
     const a = session.allocator;
-    const values = if (section.structure_values) |*current| current else return readOriginal(session, section, paragraph_index);
+    const values = if (section.structure_values) |*current| current else return readOriginal(session, section, section_index, paragraph_index, context);
     const ordinal = paragraph_index - section.first_paragraph;
     if (ordinal >= values.paragraphs.len) return error.InvalidParagraphIndex;
     const paragraph = &values.paragraphs[ordinal];
@@ -59,18 +97,21 @@ pub fn read(session: *const editor.Session, section_index: usize, paragraph_inde
     return display.build(a, &section.tree, &paragraph.sites, positions, session.options.max_sites);
 }
 
-fn readOriginal(session: *const editor.Session, section: *const editor.Section, paragraph: usize) ![]Span {
+fn readOriginal(session: *const editor.Session, section: *const editor.Section, section_index: usize, paragraph: usize, context: ?*SourceIndex) ![]Span {
     const a = session.allocator;
     if (section.locations.len != section.sites.items.len) return error.InvalidTextSites;
-    var count: usize = 0;
-    for (section.locations) |location| if (location.paragraph_ordinal == paragraph) {
-        count += 1;
+    const selected = if (context) |index| try index.selectedIndices(section, section_index, paragraph) else null;
+    var count: usize = if (selected) |indices| indices.len else 0;
+    if (selected == null) for (section.locations) |location| {
+        if (location.paragraph_ordinal == paragraph) count += 1;
     };
     if (count == 0) {
         const id = try @import("runless_paragraph_session.zig").characterShapeId(session, section.tree.section_ordinal orelse return error.InvalidSectionIndex, paragraph);
         return a.dupe(Span, &.{.{ .start_unit = 0, .end_unit = 0, .char_shape_id = id }});
     }
-    if (try @import("character_style_formula_snapshot.zig").read(session, section.tree.section_ordinal orelse return error.InvalidSectionIndex, paragraph)) |ranges| return ranges;
+    if (context == null) {
+        if (try @import("character_style_formula_snapshot.zig").read(session, section.tree.section_ordinal orelse return error.InvalidSectionIndex, paragraph)) |ranges| return ranges;
+    }
     // Only descriptors are copied. Strings remain borrowed from Session until
     // the detached numeric projection has been built.
     const rows = try a.alloc(@import("text_sites.zig").Site, count);
@@ -78,13 +119,23 @@ fn readOriginal(session: *const editor.Session, section: *const editor.Section, 
     const locations = try a.alloc(@import("section_text.zig").Location, count);
     defer a.free(locations);
     var next: usize = 0;
-    for (section.sites.items, section.locations) |site, location| {
+    if (selected) |indices| {
+        for (indices) |i| {
+            rows[next] = section.sites.items[i];
+            locations[next] = section.locations[i];
+            next += 1;
+        }
+    } else for (section.sites.items, section.locations) |site, location| {
         if (location.paragraph_ordinal != paragraph) continue;
         rows[next] = site;
         locations[next] = location;
         next += 1;
     }
     const sites: @import("text_sites.zig").Sites = .{ .items = rows };
+    if (context != null) {
+        const template = try @import("paragraph_site_owner.zig").resolve(&section.tree, &sites, locations, paragraph);
+        if (try @import("character_style_formula_snapshot.zig").readForTemplate(session, section.tree.section_ordinal orelse return error.InvalidSectionIndex, paragraph, template)) |ranges| return ranges;
+    }
     const positions = try displayPositions(a, &section.tree, &sites, locations, paragraph);
     defer a.free(positions);
     return display.build(a, &section.tree, &sites, positions, session.options.max_sites);

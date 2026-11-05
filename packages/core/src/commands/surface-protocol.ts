@@ -22,6 +22,7 @@ export const SURFACE_READ_KINDS = Object.freeze([
   'dutmal-text-query',
 ] as const);
 export const SURFACE_MUTATION_KINDS = Object.freeze([
+  'formatting-patch',
   'splice',
   'splice-current',
   'splice-font-name',

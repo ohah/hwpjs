@@ -25,15 +25,41 @@ pub fn fontIds(a: std.mem.Allocator, ids: @import("character_fonts.zig").Values)
     for (ids, languages) |id, language| try p.put(a, &value, language, p.integer(id orelse return p.unknown("MissingFontLanguage", "MissingSourceField")));
     return p.known(value, true, null, "language-scoped-id");
 }
+pub const FontFaceIndex = struct {
+    allocator: std.mem.Allocator,
+    maps: [7]std.AutoHashMapUnmanaged(u32, usize) = @splat(.empty),
+    visits: usize = 0,
+    pub fn init(a: std.mem.Allocator, faces: []const @import("font_face_value.zig").Value) !FontFaceIndex {
+        var value: FontFaceIndex = .{ .allocator = a };
+        errdefer value.deinit();
+        for (faces, 0..) |face, i| {
+            value.visits += 1;
+            const language = @backingInt(face.language);
+            if (language >= 7) continue;
+            const entry = try value.maps[language].getOrPut(a, face.id);
+            if (!entry.found_existing) entry.value_ptr.* = i;
+        }
+        return value;
+    }
+    pub fn deinit(self: *FontFaceIndex) void {
+        for (&self.maps) |*map| map.deinit(self.allocator);
+    }
+};
+fn fontFace(faces: []const @import("font_face_value.zig").Value, language: usize, id: u32, index: ?*const FontFaceIndex) ?@import("font_face_value.zig").Value {
+    if (index) |known| {
+        return if (known.maps[language].get(id)) |at| faces[at] else null;
+    }
+    for (faces) |face| if (@backingInt(face.language) == language and face.id == id) return face;
+    return null;
+}
 pub fn fontNames(a: std.mem.Allocator, ids: @import("character_fonts.zig").Values, faces: []const @import("font_face_value.zig").Value) !p.Observation {
+    return fontNamesIndexed(a, ids, faces, null);
+}
+pub fn fontNamesIndexed(a: std.mem.Allocator, ids: @import("character_fonts.zig").Values, faces: []const @import("font_face_value.zig").Value, lookup: ?*const FontFaceIndex) !p.Observation {
     var value = p.map(a);
     for (ids, languages, 0..) |id, language, index| {
         const selected = id orelse return p.unknown("MissingFontLanguage", "MissingSourceField");
-        var name: ?[]const u8 = null;
-        for (faces) |face| if (@backingInt(face.language) == index and face.id == selected) {
-            name = face.name;
-            break;
-        };
+        const name = if (fontFace(faces, index, selected, lookup)) |face| face.name else null;
         try p.put(a, &value, language, try p.text(a, name orelse return p.unknown("MissingFontName", "MissingSourceField")));
     }
     return p.known(value, true, null, null);
@@ -50,14 +76,17 @@ pub fn metrics(a: std.mem.Allocator, values: anytype, comptime field: []const u8
 }
 
 pub fn fontField(a: std.mem.Allocator, ids: @import("character_fonts.zig").Values, faces: ?[]const @import("font_face_value.zig").Value, field: []const u8) !p.Observation {
+    return fontFieldIndexed(a, ids, faces, field, null);
+}
+pub fn fontFieldIndexed(a: std.mem.Allocator, ids: @import("character_fonts.zig").Values, faces: ?[]const @import("font_face_value.zig").Value, field: []const u8, lookup: ?*const FontFaceIndex) !p.Observation {
     inline for (.{ "hangul", "latin", "hanja", "japanese", "other", "symbol", "user" }, 0..) |language, index| {
         if (eq(field, "character.fonts." ++ language ++ ".id")) return if (ids[index]) |id| p.known(p.integer(id), true, null, "language-scoped-id") else p.unknown("MissingFontLanguage", "MissingSourceField");
         if (eq(field, "character.fonts." ++ language ++ ".name")) {
             const id = ids[index] orelse return p.unknown("MissingFontLanguage", "MissingSourceField");
-            for (faces orelse return error.MissingFontProjection) |face| if (@backingInt(face.language) == index and face.id == id) {
+            if (fontFace(faces orelse return error.MissingFontProjection, index, id, lookup)) |face| {
                 const name = face.name orelse return p.unknown("MissingFontName", "MissingSourceField");
                 return p.known(try p.text(a, name), true, null, null);
-            };
+            }
             return error.InvalidFontId;
         }
     }

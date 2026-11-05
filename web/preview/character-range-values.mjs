@@ -8,6 +8,7 @@ export function characterRangeValues(
   ranges,
   valueAt,
   { isBoundary = graphemeBoundary } = {},
+  paragraphAt = undefined,
 ) {
   if (
     !Array.isArray(content?.paragraphs) ||
@@ -19,9 +20,12 @@ export function characterRangeValues(
   const values = [];
   for (const range of ranges) {
     if (!range) return null;
-    const paragraph = content.paragraphs.find(
-      (row) => row.section === range.section && row.paragraph === range.paragraph,
-    );
+    const paragraph =
+      typeof paragraphAt === 'function'
+        ? paragraphAt(range.section, range.paragraph)
+        : content.paragraphs.find(
+            (row) => row.section === range.section && row.paragraph === range.paragraph,
+          );
     const { startUnit: start, endUnit: end } = range;
     if (
       !paragraph ||

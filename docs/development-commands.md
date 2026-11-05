@@ -1306,3 +1306,33 @@ node --experimental-transform-types --max-old-space-size=256 \
   --test --test-concurrency=1 \
   ./packages/vanilla/tests/multiblock-format-history-selection.test.mjs
 ```
+
+
+## 원자 서식 Native 요청·COW 회귀
+
+정규 자체 합성 13개는 `src/root.zig`에서 명시 import하는 네 모듈이다. 외부 Noori 입력·WASM 실증과 합산하지 않는다.
+
+```sh
+nice -n 19 zig test src/formatting_batch_cow_tests.zig -O ReleaseSafe --test-filter 'atomic formatting regression:'
+nice -n 19 zig test src/formatting_font_index_tests.zig -O ReleaseSafe --test-filter 'atomic formatting regression:'
+nice -n 19 zig test src/formatting_request_scope_tests.zig -O ReleaseSafe --test-filter 'atomic formatting regression:'
+nice -n 19 zig test src/formatting_count_limit_tests.zig -O ReleaseSafe --test-filter 'atomic formatting regression:'
+```
+
+Zig 변경의 전체 정규 진입점은 `nice -n 19 zig build test -j1`이다. 고정 build 파일은 core, shipping reference, text-splice 세 실행 대상을 연결한다. 집중 13개 성공이나 별도 ReleaseSafe WASM 성공은 전체 `zig build test` 성공을 대신하지 않는다.
+
+격리 검증의 제품 코드는 HEAD+선택 gate로 고정한다. 테스트 데이터는 정확한 파일 목록과 Git blob 또는 원본 local SHA·길이를 따로 기록하여 복사하며 원본을 변경하지 않는다. 절대금지 fixture는 읽기 전에 제외하고 sandbox로 접근을 차단한다. 이름에 HWP3가 있어도 HWP5/HWPX 변환 자료일 수 있으므로 허용된 최소 형식 확인과 실제 parser callsite로 구분한다. 원시 HWP3 구현·지원은 별도 범위다. 전체 디렉터리를 스캔·복사하지 않는다. 누락·제외·guard 초과·실패·skip 수는 원자료와 함께 구분하며 full pass로 바꾸지 않는다.
+
+실제 b18/6ee batch/history, OOM11개씩, 외부 HX query fixture 및 새 WASM의 실제 API 검사는 별도 sidecar 증거다. 일반 H5 run 반복 검증 및 raw/formula/nested fallback까지 전체 API O(n)이라고 주장하지 않는다. 실제 Core의 Native geometry 권위·브라우저·배포 gate도 별도다.
+
+해당 test-only 후보의 집중 검사는 13pass·0fail·0skip이었다. 같은 소스의 전체 Debug `zig build test -j1`은 3GiB와 수동 승인된 4GiB 예산에서 각각 합산 RSS3,192,000KiB/55.12초, 4,201,424KiB/40.73초로 guard 중단됐다. 이는 전체 컴파일 예산 초과이며 제품 시험 실패나 전체 통과로 계상하지 않는다. 원자료와 종료 뒤 잔류 `[]`를 별도로 기록했다.
+
+공식 진단 옵션 `nice -n 19 zig build test -j1 -Dnative-stack-traces=false`는 core의 같은 설치 Zig runner·test root·import·최적화 모드·회계를 유지하면서 `std.Options.allow_stack_tracing=false`를 설정한다. shipping-reference/text-splice 대상은 원래 설정을 유지한다. 이 공식 모드도 별도 승인된 단 한 번의 실제 실행에서 합산 RSS4,198,320KiB/40.77초로 4GiB guard에 도달해 중단됐다. 전체 성공이나 제품 테스트 실패로 계상하지 않는다. 각 대상의 시험 실행·성공·skip 수는 확정되지 않았다. 이전 두 기본 모드의 guard와 이번 원로그를 모두 보존했고 잔류 `[]`를 확인했다. 추가 상향·옵션 변경·자동 재실행은 없다. runtime safety를 제거하는 최적화 모드로 바꾸지 않는다.
+
+
+별도 수동 승인된 RSS8GiB 기본 trace 실행(`zig build test -j1`)은 합산 최고 RSS5,235,120KiB/메모리 여유 최저44%로 실제 test 바이너리 실행까지 도달했다. 이후 180.18초 wall guard로 종료되어 전체 test 수·pass/fail/skip은 확정되지 않았다. 제품 실패나 전체 성공으로 계상하지 않으며, 소유 프로세스 최종 잔류 `[]`를 확인하고 슬롯을 반환했다. 이 실행은 기능 검증이고 벽시간 속도 성공 주장이 아니다. 추가 실행이나 예산 조정은 자동으로 하지 않는다.
+
+
+동일 캐시 실행체의 직접 terminal 전수 실행 시도는 별도 cohort다. core의 컴파일 배열 5,059개 중 285개가 시작됐고 284개의 완료 outcome(관측 OK281·FAIL3·SKIP0)을 확인했다. case285는 미완료이고 나머지 4,774개는 미시작이다. core 실행 phase는 300초 wall guard로 중단됐다. 전체 core 최종 회계·leak 수는 미확정이다. 실패는 case106 `source_field_analysis`, case279 `paragraph_structure_save`, case281 `column_page_area_group_validate`의 `NondeterministicMemoryUsage`이며, 새 제품37의 영향인지 기존 baseline인지 미확정이다. 기대나 범위는 바꾸지 않았다. reference7과 text9는 각각 전수 pass, skip/fail/leak0 및 exit0였다. 진행 index·전체 N·case명은 바이너리의 builtin 배열과 대조했고 seed/cwd/명시 환경 구성을 유지했다. 신규 runtime filter는 없으며 기존 text compile filter를 보존했다. 재컴파일 없이 기존 실행체만 사용했지만 이를 원래 `zig build test -j1` exit0 또는 전체5,075 통과로 바꾸어 주장하지 않는다. 제품/test/binary와 원본 fixture84는 실행 뒤 동일 SHA였고 최종 잔류 `[]` 확인 후 슬롯을 반환했다.
+
+case285의 긴 체류는 후속 소스 allocation sweep 분석 대상이며, 개별 함수 실행 시간을 정확히 계측한 결과나 무한루프 확정이 아니다. 추가 Native 실행과 기대 변경은 하지 않았다. core 전체 완료·5,075개 전체 pass·원래 build 명령 exit0는 여전히 미완료이며, reference7/text9의 전수 성공과 구분한다.

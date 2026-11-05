@@ -1,3 +1,7 @@
+import {
+  captureSurfaceFormatting,
+  type FormattingPresentation,
+} from './surface-formatting-capture.ts';
 import { formattingObservationLabels, readSelectionSize } from './formatting-observation-label.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
 // Public core entry only; no runtime protocol, native facade or private selection helpers.
@@ -65,6 +69,7 @@ export interface FormattingBridgeOptions {
     Partial<Pick<HeadlessEditor, 'update'>>;
   readonly onStatus: (message: string) => void;
   readonly onResult?: (result: CommandResult) => void;
+  readonly onFocus?: () => void;
   readonly getSurfaceFormattingHost?: () => SurfaceFormattingHost | undefined;
 }
 /** A partial shell API: caller composes this with file/history/zoom actions. */
@@ -72,6 +77,7 @@ export function createFormattingBridge({
   editor,
   onStatus,
   onResult,
+  onFocus,
   getSurfaceFormattingHost,
 }: FormattingBridgeOptions) {
   const alignments = {
@@ -88,6 +94,7 @@ export function createFormattingBridge({
     command === 'set-font-size' ||
     Object.hasOwn(alignments, command);
   let pending = false;
+  let disposed = false;
   function surfaceCapture(
     property: 'underline' | 'strike',
     state: ReturnType<HeadlessEditor['getEditorState']>,
@@ -172,9 +179,117 @@ export function createFormattingBridge({
   /** Returns false only for commands belonging to another bridge. */
   async function action(action: DemoAction): Promise<boolean> {
     if (!supported(action.command)) return false;
+    if (disposed) return true;
     // Fresh selection/target at invocation; never retain the presentation's token.
     const state = editor.getEditorState();
     const formatting = getSelectionFormatting(state);
+    const rangeCapture = captureSurfaceFormatting(
+      editor,
+      getSurfaceFormattingHost,
+      state,
+      formatting,
+    );
+    if (rangeCapture) {
+      const observed = rangeCapture.observation;
+      if (action.command === 'strike' && observed.strike === null) {
+        onStatus('UnknownCharacterFormatting');
+        return true;
+      }
+      const available = presentation(observed).actions?.[action.command];
+      if (!available?.enabled) {
+        onStatus(available?.reason ?? 'SurfaceFormattingUnavailable');
+        return true;
+      }
+      let intent: import('./surface-formatting-port.ts').SurfaceFormattingIntent;
+      if (action.command === 'bold' || action.command === 'italic')
+        intent = {
+          kind: 'character-properties',
+          properties: { [action.command]: observed[action.command] !== true },
+        };
+      else if (action.command === 'underline')
+        intent = {
+          kind: 'underline',
+          underlineKind: observed.underline === true ? 'none' : 'bottom',
+        };
+      else if (action.command === 'strike')
+        intent = { kind: 'strike', enabled: observed.strike !== true };
+      else if (action.command === 'set-font-size') {
+        try {
+          intent = {
+            kind: 'character-properties',
+            properties: { size: characterSizeFromPoints(action.points) },
+          };
+        } catch {
+          onStatus('InvalidCharacterSize');
+          return true;
+        }
+        if (intent.properties.size === observed.size) return true;
+      } else {
+        const alignment = alignments[action.command as keyof typeof alignments];
+        if (observed.align === alignment) return true;
+        intent = { kind: 'alignment', alignment };
+      }
+      pending = true;
+      try {
+        if (!editor.update) {
+          onStatus('FormattingBarrierUnavailable');
+          return true;
+        }
+        await editor.update(() => {});
+        if (
+          disposed ||
+          !(await rangeCapture.prepare(intent)) ||
+          disposed ||
+          !rangeCapture.current() ||
+          disposed
+        ) {
+          if (!disposed) onStatus('StaleSurfaceFormatting');
+          return true;
+        }
+        const admitted = rangeCapture.request(intent);
+        if (disposed) return true;
+        onStatus(
+          admitted
+            ? '서식 변경을 접수했습니다.'
+            : '선택 범위가 바뀌었거나 현재 서식을 변경할 수 없습니다.',
+        );
+        if (!admitted || disposed || !rangeCapture.hasSettlement) return true;
+        const settled = await rangeCapture.settle();
+        if (disposed) return true;
+        const result = settled.result;
+        const focusState = settled.current ? editor.getEditorState() : undefined;
+        if (!result) {
+          onStatus('SurfaceFormattingSettlementUnknown');
+          return true;
+        }
+        onResult?.(result);
+        if (disposed) return true;
+        if (result.error) {
+          onStatus(result.error);
+          return true;
+        }
+        if (
+          (result.status === 'committed-with-snapshot' || result.status === 'known-no-op') &&
+          settled.current
+        ) {
+          onStatus('서식을 적용했습니다.');
+          if (
+            !disposed &&
+            focusState !== undefined &&
+            editor.getEditorState() === focusState &&
+            rangeCapture.settledCurrent() &&
+            editor.getEditorState() === focusState &&
+            !disposed
+          )
+            onFocus?.();
+        } else onStatus('서식 결과와 현재 선택 범위를 다시 확인해야 합니다.');
+      } catch (error) {
+        if (!disposed) onStatus(error instanceof Error ? error.message : String(error));
+      } finally {
+        pending = false;
+      }
+      return true;
+    }
     if (
       (action.command === 'underline' || action.command === 'strike') &&
       formatting.target === null &&
@@ -346,9 +461,25 @@ export function createFormattingBridge({
     }
   }
 
-  const getPresentation = () => {
+  const getPresentation = (shared?: FormattingPresentation) => {
     const state = editor.getEditorState(),
-      formatting = getSelectionFormatting(state);
+      formatting =
+        shared && shared.state === state ? shared.formatting : getSelectionFormatting(state);
+    const rangeCapture = shared
+      ? shared.state === state && shared.capture?.current()
+        ? shared.capture
+        : null
+      : captureSurfaceFormatting(editor, getSurfaceFormattingHost, state, formatting);
+    if (rangeCapture) {
+      const rangePresentation = presentation(rangeCapture.observation);
+      const actions = Object.fromEntries(
+        Object.entries(rangePresentation.actions ?? {}).map(([key, value]) => [
+          key,
+          { ...value, surfaceSelection: value.enabled === true },
+        ]),
+      );
+      return Object.freeze({ ...rangePresentation, actions: Object.freeze(actions) });
+    }
     const base = presentation(formatting, readSelectionSize(state, formatting));
     if (
       formatting.target !== null ||
@@ -370,5 +501,13 @@ export function createFormattingBridge({
     }
     return Object.freeze({ ...base, actions: Object.freeze(actions) });
   };
-  return Object.freeze({ action, getPresentation, captureDialog, applyDialog });
+  return Object.freeze({
+    action,
+    getPresentation,
+    captureDialog,
+    applyDialog,
+    dispose() {
+      disposed = true;
+    },
+  });
 }

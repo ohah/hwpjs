@@ -1,3 +1,4 @@
+import { demoCommandAction } from './demo-command-action.ts';
 import { mountFormattingMarksShortcut } from './formatting-marks-shortcut.ts';
 import {
   DEFAULT_KEYMAP,
@@ -71,9 +72,14 @@ export function mountShortcutSettings(options: {
     platform,
     fallback: DEFAULT_KEYMAP,
     nativePaste: options.nativePaste,
-    isAvailable: (command) => options.available(command as DemoCommand),
-    execute: (command) =>
-      options.execute({ command: command as Exclude<DemoCommand, 'set-font-size' | 'set-zoom'> }),
+    isAvailable: (command) => {
+      const action = demoCommandAction(command);
+      return action !== null && options.available(action.command);
+    },
+    execute: (command) => {
+      const action = demoCommandAction(command);
+      if (action) options.execute(action);
+    },
     onUnavailable: (command) =>
       options.onStatus(
         `${DEMO_COMMAND_REGISTRY[command as DemoCommand].label}: 현재 실행할 수 없습니다.`,

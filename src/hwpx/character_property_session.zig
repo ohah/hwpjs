@@ -13,6 +13,7 @@ pub fn applyDeferredSave(session: *editor.Session, section: usize, paragraph: us
 }
 
 fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: u32, end: u32, patch: Patch, validate_save: bool) !bool {
+    errdefer if (session.formatting_batch) |context| context.invalidateSections();
     try @import("../model/character_properties.zig").validate(patch);
     if (patch.outline_kind) |kind| _ = try @import("character_outline_kind.zig").token(kind);
     const a = session.allocator;
@@ -22,13 +23,22 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
     const validation_id = spans[0].char_shape_id orelse return error.InvalidCharacterShapeReference;
     try @import("character_style_session.zig").validate(session, section, paragraph, start, end, validation_id);
     if (start == end or (!@import("../model/border_fill_patch.zig").has(patch.border_fill orelse .{}) and patch.shadow == null and patch.ratio == null and patch.char_spacing == null and patch.relative_size == null and patch.offset == null and patch.underline_style == null and patch.strike_style == null and patch.strike_color == null and patch.outline_kind == null and !@import("../model/character_properties.zig").hasEffects(patch) and patch.shade == null and patch.strike_enabled == null and patch.size == null and patch.bold == null and patch.italic == null and patch.underline_kind == null and patch.underline_color == null and patch.text_color == null and patch.font_ids == null)) return false;
-    const shapes = try @import("character_style_resources.zig").displayShapes(session);
-    defer a.free(shapes);
-    var document = try @import("package.zig").inspectDocument(a, session.source, .{});
-    defer document.deinit(a);
+    const shapes = if (session.formatting_batch == null) try @import("character_style_resources.zig").displayShapes(session) else null;
+    defer if (shapes) |values| a.free(values);
+    if (session.formatting_batch != null) _ = try @import("character_style_resources.zig").batchShape(session, validation_id);
+    var owned_document: ?@import("package.zig").Document = null;
+    const document = if (session.formatting_batch) |context| try context.originalDocument(a, session.source) else block: {
+        owned_document = try @import("package.zig").inspectDocument(a, session.source, .{});
+        break :block &owned_document.?;
+    };
+    defer if (owned_document) |*value| value.deinit(a);
     if (patch.font_ids) |ids| {
-        var fonts = try document.inspectFontReferences(a, .{});
-        defer fonts.deinit(a);
+        var owned_fonts: ?@import("package.zig").FontReferenceReport = null;
+        const fonts = if (session.formatting_batch) |context| try context.originalFonts(a, document) else block: {
+            owned_fonts = try document.inspectFontReferences(a, .{});
+            break :block &owned_fonts.?;
+        };
+        defer if (owned_fonts) |*value| value.deinit(a);
         for (ids, 0..) |id, language| if (id) |value| {
             const original = std.mem.indexOfScalar(u32, fonts.faces.tables[language].ids.items, value) != null;
             const created = for (session.font_resources.entries.items) |font| {
@@ -37,8 +47,12 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
             if (!original and !created) return error.InvalidFontId;
         };
     }
-    var resources = try document.inspectHeaderResources(a, .{});
-    defer resources.deinit(a);
+    var owned_resources: ?@import("package.zig").HeaderResourceReport = null;
+    const resources = if (session.formatting_batch) |context| try context.originalResources(a, document) else block: {
+        owned_resources = try document.inspectHeaderResources(a, .{});
+        break :block &owned_resources.?;
+    };
+    defer if (owned_resources) |*value| value.deinit(a);
     var underline_tree: ?@import("xml_part_tree.zig").Tree = if (patch.underline_kind != null or patch.strike_enabled != null or patch.strike_color != null) try document.readHeaderTree(a, .{}) else null;
     defer if (underline_tree) |*tree| tree.deinit(a);
     const underlines = @import("character_underline_snapshot.zig");
@@ -46,19 +60,23 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
     defer if (color_rows) |rows| underlines.deinit(a, rows);
     var ids: std.ArrayList(u32) = .empty;
     defer ids.deinit(a);
-    try ids.appendSlice(a, resources.table(.char_shape).ids.items);
-    for (session.character_resources.entries.items) |entry| try ids.append(a, entry.id);
-    var before = try @import("editor_checkpoint.zig").capture(session, std.math.maxInt(usize));
-    defer before.deinit();
-    errdefer before.rollback(session) catch unreachable;
+    if (session.formatting_batch == null) {
+        try ids.appendSlice(a, resources.table(.char_shape).ids.items);
+        for (session.character_resources.entries.items) |entry| try ids.append(a, entry.id);
+    }
+    // The formatting-patch batch has already captured its History checkpoint.
+    // Raw setters retain their original independent atomic checkpoint.
+    var before: ?@import("editor_checkpoint.zig").Checkpoint = if (session.formatting_batch == null) try @import("editor_checkpoint.zig").capture(session, std.math.maxInt(usize)) else null;
+    defer if (before) |*value| value.deinit();
+    errdefer if (before) |*value| value.rollback(session) catch unreachable;
     var changed = false;
     for (spans) |span| {
         const low = @max(span.start_unit, start);
         const high = @min(span.end_unit, end);
         if (low >= high) continue;
         const current_id = span.char_shape_id orelse return error.InvalidCharacterShapeReference;
-        const shape = block: {
-            for (shapes) |value| if (value.id == current_id) break :block value;
+        const shape = if (session.formatting_batch != null) try @import("character_style_resources.zig").batchShape(session, current_id) else block: {
+            for (shapes.?) |value| if (value.id == current_id) break :block value;
             return error.InvalidCharacterShapeReference;
         };
         if ((patch.border_fill == null or try @import("paragraph_border_fill_session.zig").matchesCharacterCurrent(session, current_id, patch.border_fill.?)) and (try @import("character_shadow_patch.zig").matchesCurrent(session, current_id, patch.shadow)) and (try @import("character_metric_patch.zig").matchesCurrent(session, current_id, patch)) and (patch.strike_color == null or patch.strike_color.? == try @import("character_strike_color_current.zig").read(session, &underline_tree.?, current_id)) and @import("character_outline_display.zig").matches(shape.outline, patch.outline_kind) and @import("../model/character_properties.zig").effectsMatch(patch, shape.effects) and (patch.strike_enabled == null or patch.strike_enabled.? == try @import("character_strike_current.zig").read(session, &underline_tree.?, current_id)) and
@@ -72,14 +90,20 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
             (patch.underline_color == null or patch.underline_color.? == currentColor(color_rows.?, current_id))) continue;
         var source_id = current_id;
         var merged: Patch = .{};
-        for (session.character_resources.entries.items) |entry| if (entry.id == current_id) {
+        if (session.formatting_batch) |context| {
+            if (context.intent_indices.get(current_id)) |index| {
+                const entry = session.character_resources.entries.items[index];
+                source_id = entry.source_id;
+                merged = entry.properties;
+            }
+        } else for (session.character_resources.entries.items) |entry| if (entry.id == current_id) {
             source_id = entry.source_id;
             merged = entry.properties;
             break;
         };
         merged = @import("../model/character_properties.zig").merge(merged, patch);
-        const id = try session.character_resources.add(a, resources.table(.char_shape).ids.items, source_id, merged);
-        if (std.mem.indexOfScalar(u32, ids.items, id) == null) try ids.append(a, id);
+        const id = if (session.formatting_batch) |context| try session.character_resources.addIndexed(a, resources.table(.char_shape).ids.items, source_id, merged, &context.resource_index) else try session.character_resources.add(a, resources.table(.char_shape).ids.items, source_id, merged);
+        if (session.formatting_batch == null and std.mem.indexOfScalar(u32, ids.items, id) == null) try ids.append(a, id);
         changed = (try @import("character_style_session.zig").applyInTransaction(session, section, paragraph, std.math.cast(u32, low) orelse return error.InvalidTextPosition, std.math.cast(u32, high) orelse return error.InvalidTextPosition, id, ids.items)) or changed;
     }
     if (changed and validate_save) {

@@ -13,6 +13,22 @@ pub fn writePreparedWithProfile(a: std.mem.Allocator, tree: *const Tree, node: u
     if (properties.border_fill != null) return error.UnpreparedBorderFillIntent;
     return compose(a, tree, node, id, properties, properties.underline_kind, limit, profile);
 }
+/// 내부 bulk header 거래 전용이다. 최종 header 검증과 설치는 호출자가 소유한다.
+/// 일반 write/writePreparedWithProfile은 기존 경로를 유지한다.
+pub const BatchStats = struct { fragments: usize = 0, fallback: usize = 0 };
+pub fn writePreparedBatchWithProfile(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+    return writePreparedBatchCounted(a, tree, node, id, properties, limit, profile, null);
+}
+pub fn writePreparedBatchCounted(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile, stats: ?*BatchStats) ![]u8 {
+    if (properties.border_fill != null) return error.UnpreparedBorderFillIntent;
+    if (try composeBasicFragment(a, tree, node, id, properties, limit, profile)) |fragment| {
+        if (stats) |value| value.fragments += 1;
+        return fragment;
+    }
+    if (stats) |value| value.fallback += 1;
+    return compose(a, tree, node, id, properties, properties.underline_kind, limit, profile);
+}
+
 pub fn writeUnderline(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, kind: UnderlineKind, limit: usize) ![]u8 {
     return compose(a, tree, node, id, .{}, kind, limit, .{});
 }
@@ -85,6 +101,106 @@ fn identity(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, limit
     defer a.free(replacement);
     const start = @intFromPtr(attribute.raw.ptr) - @intFromPtr(fragment.ptr);
     return @import("xml_source_writer.zig").write(a, fragment, &.{.{ .start = start, .end = start + attribute.raw.len, .text = "", .serialized_xml = replacement }}, limit);
+}
+
+const FragmentDiff = struct { start: usize, end: usize, replacement: []u8, step: u8 };
+fn diffBefore(left: FragmentDiff, right: FragmentDiff) bool {
+    return left.start < right.start or (left.start == right.start and left.step < right.step);
+}
+/// 기존 namespace 해석과 field patcher의 출력만 합친다. 새 XML 문법을 해석하지 않는다.
+fn composeBasicFragment(a: std.mem.Allocator, tree: *const Tree, node: usize, id: u32, properties: @import("../model/document.zig").CharacterPropertyPatch, limit: usize, profile: @import("source_color_profile.zig").Profile) !?[]u8 {
+    const Patch = @import("../model/document.zig").CharacterPropertyPatch;
+    inline for (@import("../reflection.zig").fields(Patch)) |field| {
+        if (comptime !std.mem.eql(u8, field.name, "size") and !std.mem.eql(u8, field.name, "italic") and
+            !std.mem.eql(u8, field.name, "bold") and !std.mem.eql(u8, field.name, "text_color") and
+            !std.mem.eql(u8, field.name, "font_ids"))
+        {
+            if (@field(properties, field.name) != null) return null;
+        }
+    }
+    try @import("../model/character_properties.zig").validate(properties);
+    _ = try @import("character_shape_display.zig").read(a, tree, node, 4096);
+    if (tree.source.len > limit) return error.LimitExceeded;
+    const original = tree.sourceOf(node);
+    var diffs: std.ArrayList(FragmentDiff) = .empty;
+    defer {
+        for (diffs.items) |diff| a.free(diff.replacement);
+        diffs.deinit(a);
+    }
+    var prefix_bytes = tree.source.len;
+    for (0..14) |step| {
+        if (step == 4 or step == 5) continue;
+        if (step == 1 and properties.size == null or step == 2 and properties.italic == null or step == 3 and properties.bold == null or step == 6 and properties.text_color == null) continue;
+        if (step >= 7 and (properties.font_ids == null or properties.font_ids.?[step - 7] == null)) continue;
+        const changed = switch (step) {
+            0 => try identity(a, tree, node, id, limit),
+            1 => try @import("character_size_patch.zig").write(a, tree, node, properties.size.?, limit),
+            2 => try @import("character_emphasis_patch.zig").write(a, tree, node, .italic, properties.italic.?, limit),
+            3 => try @import("character_emphasis_patch.zig").write(a, tree, node, .bold, properties.bold.?, limit),
+            6 => try @import("character_color_patch.zig").writeWithProfile(a, tree, node, properties.text_color.?, limit, profile),
+            else => try @import("character_font_patch.zig").write(a, tree, node, @fromBackingInt(@intCast(step - 7)), properties.font_ids.?[step - 7].?, limit),
+        };
+        defer a.free(changed);
+        if (std.mem.eql(u8, original, changed)) continue;
+        var start: usize = 0;
+        while (start < original.len and start < changed.len and original[start] == changed[start]) start += 1;
+        var end = original.len;
+        var replacement_end = changed.len;
+        while (end > start and replacement_end > start and original[end - 1] == changed[replacement_end - 1]) {
+            end -= 1;
+            replacement_end -= 1;
+        }
+        // 모호한 구조 겹침이면 prefix 크기를 추정하지 않고 원래 compose로 돌아간다.
+        for (diffs.items) |previous| {
+            const both_insertions = start == end and previous.start == previous.end;
+            if (start == previous.start and !both_insertions) return null;
+            if (start < previous.end and previous.start < end) return null;
+            if (start == end and previous.start < start and start < previous.end) return null;
+            if (previous.start == previous.end and start < previous.start and previous.start < end) return null;
+        }
+        const removed = end - start;
+        if (removed > prefix_bytes) return error.InvalidSourceSpan;
+        prefix_bytes = std.math.add(usize, prefix_bytes - removed, replacement_end - start) catch return error.LimitExceeded;
+        if (prefix_bytes > limit) return error.LimitExceeded;
+        const replacement = try a.dupe(u8, changed[start..replacement_end]);
+        diffs.append(a, .{ .start = start, .end = end, .replacement = replacement, .step = @intCast(step) }) catch |err| {
+            a.free(replacement);
+            return err;
+        };
+    }
+    // 필드 수는 최대 12개다. 동일 위치 삽입은 canonical step/언어 순서를 유지한다.
+    var i: usize = 1;
+    while (i < diffs.items.len) : (i += 1) {
+        var j = i;
+        while (j > 0 and diffBefore(diffs.items[j], diffs.items[j - 1])) : (j -= 1)
+            std.mem.swap(FragmentDiff, &diffs.items[j], &diffs.items[j - 1]);
+    }
+    const writer = @import("xml_source_writer.zig");
+    var changes: std.ArrayList(writer.Change) = .empty;
+    defer changes.deinit(a);
+    var joined: std.ArrayList([]u8) = .empty;
+    defer {
+        for (joined.items) |bytes| a.free(bytes);
+        joined.deinit(a);
+    }
+    for (diffs.items) |diff| {
+        if (changes.items.len != 0) {
+            const previous = &changes.items[changes.items.len - 1];
+            if (diff.start == previous.start) {
+                if (diff.end != diff.start or previous.end != previous.start) return null;
+                const combined = try std.mem.concat(a, u8, &.{ previous.serialized_xml.?, diff.replacement });
+                joined.append(a, combined) catch |err| {
+                    a.free(combined);
+                    return err;
+                };
+                previous.serialized_xml = combined;
+                continue;
+            }
+            if (diff.start < previous.end) return null;
+        }
+        try changes.append(a, .{ .start = diff.start, .end = diff.end, .text = "", .serialized_xml = diff.replacement });
+    }
+    return try writer.write(a, original, changes.items, limit);
 }
 
 test "HWPX character resource clone merges shade identity and bold without touching template" {
@@ -163,4 +279,58 @@ test "HWPX character resource clone handles actual header without changing templ
         return;
     }
     return error.MissingCharacterShapeReference;
+}
+
+fn batchBasicAllocationCase(a: std.mem.Allocator) !void {
+    const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head' xmlns:f='urn:foreign'><h:charPr id='&#57;' height='1000' textColor='#123456' opaque='keep'><f:bold/><!--keep--><h:fontRef hangul='1' latin='2' hanja='3' japanese='4' other='5' symbol='6' user='7'/><h:underline/></h:charPr></h:head>";
+    var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
+    defer tree.deinit(a);
+    const properties: @import("../model/document.zig").CharacterPropertyPatch = .{ .size = 2400, .italic = true, .bold = true, .text_color = 0x654321, .font_ids = .{ 10, 11, 12, 13, 14, 15, 16 } };
+    const expected = try writePreparedWithProfile(a, &tree, 1, 30, properties, 4096, .{});
+    defer a.free(expected);
+    const actual = try writePreparedBatchWithProfile(a, &tree, 1, 30, properties, 4096, .{});
+    defer a.free(actual);
+    try std.testing.expectEqualSlices(u8, expected, actual);
+    try std.testing.expectEqualStrings(input, tree.source);
+    try std.testing.expect(std.mem.indexOf(u8, actual, "<f:bold/><!--keep-->") != null);
+}
+test "HWPX batch basic fragment matches canonical mixed fields namespaces and allocation failures" {
+    try @import("../testing/allocation_failures.zig").check(batchBasicAllocationCase, .{});
+}
+test "HWPX batch basic fragment preserves seven missing attribute insertion order and zero" {
+    const a = std.testing.allocator;
+    const input = "<head xmlns='http://www.hancom.co.kr/hwpml/2011/head'><charPr id='0'><fontRef opaque='keep'/></charPr></head>";
+    var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
+    defer tree.deinit(a);
+    const properties: @import("../model/document.zig").CharacterPropertyPatch = .{ .font_ids = .{ 0, 1, 2, 3, 4, 5, 6 } };
+    const expected = try writePreparedWithProfile(a, &tree, 1, 1, properties, 4096, .{});
+    defer a.free(expected);
+    const actual = (try composeBasicFragment(a, &tree, 1, 1, properties, 4096, .{})).?;
+    defer a.free(actual);
+    try std.testing.expectEqualSlices(u8, expected, actual);
+    try std.testing.expect(std.mem.indexOf(u8, actual, "hangul=\"0\" latin=\"1\" hanja=\"2\" japanese=\"3\" other=\"4\" symbol=\"5\" user=\"6\"") != null);
+}
+test "HWPX batch basic fragment declines structural overlap and rich properties" {
+    const a = std.testing.allocator;
+    const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'><h:charPr id='0'/></h:head>";
+    var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
+    defer tree.deinit(a);
+    const properties: @import("../model/document.zig").CharacterPropertyPatch = .{ .italic = true, .bold = true };
+    try std.testing.expect((try composeBasicFragment(a, &tree, 1, 1, properties, 4096, .{})) == null);
+    const expected = try writePreparedWithProfile(a, &tree, 1, 1, properties, 4096, .{});
+    defer a.free(expected);
+    const actual = try writePreparedBatchWithProfile(a, &tree, 1, 1, properties, 4096, .{});
+    defer a.free(actual);
+    try std.testing.expectEqualSlices(u8, expected, actual);
+    try std.testing.expect((try composeBasicFragment(a, &tree, 1, 1, .{ .shade = .none }, 4096, .{})) == null);
+}
+test "HWPX batch basic fragment keeps invalid property missing ref and byte bounds" {
+    const a = std.testing.allocator;
+    const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'><h:charPr id='0'/></h:head>";
+    var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
+    defer tree.deinit(a);
+    try std.testing.expectError(error.InvalidCharacterSize, writePreparedBatchWithProfile(a, &tree, 1, 1, .{ .size = -1 }, 4096, .{}));
+    try std.testing.expectError(error.MissingCharacterFontReference, writePreparedBatchWithProfile(a, &tree, 1, 1, .{ .font_ids = .{ 1, null, null, null, null, null, null } }, 4096, .{}));
+    try std.testing.expectError(error.LimitExceeded, writePreparedBatchWithProfile(a, &tree, 1, 1, .{ .size = 2400 }, input.len, .{}));
+    try std.testing.expectEqualStrings(input, tree.source);
 }

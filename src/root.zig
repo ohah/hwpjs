@@ -1534,3 +1534,11 @@ test {
     _ = @import("hwpx/character_border_fill_noop_tests.zig");
     _ = @import("hwpx/resource_snapshot_exact_capacity_tests.zig");
 }
+
+// Atomic formatting request/index/batch synthetic regressions (no external fixtures).
+test {
+    _ = @import("formatting_batch_cow_tests.zig");
+    _ = @import("formatting_font_index_tests.zig");
+    _ = @import("formatting_request_scope_tests.zig");
+    _ = @import("formatting_count_limit_tests.zig");
+}

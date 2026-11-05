@@ -1,4 +1,23 @@
-// @ts-ignore Canonical host descriptor boundary shared with the renderer.
+import {
+  atomicRangePatch,
+  atomicRangeUnavailable,
+  prepareAtomicRangeRequest,
+} from '../../../web/preview/range-atomic-formatting.mjs';
+import {
+  captureFormattingRangeBinding,
+  formattingRangeBindingMatches,
+  formattingRangeSelectors,
+} from '../../../web/preview/range-formatting-binding.mjs';
+// @ts-ignore 실제 현재 geometry의 기존 판정을 재사용한다.
+import { caretGeometry } from '../../../web/preview/text-geometry.mjs';
+// @ts-ignore 같은 Native 모델에서 발생한 metadata 관측만 기존 규칙으로 허용한다.
+import { sameHistoryModelObservation } from '../../../web/preview/history-model-readiness.mjs';
+// @ts-ignore 글꼴 언어 순서는 기존 단일 출처를 재사용한다.
+import { FONT_LANGUAGES } from '../../../js/font-face-identity.mjs';
+// @ts-ignore 정규화된 현재 범위의 읽기 전용 관측을 공유한다.
+import { rangeFormattingObservation } from '../../../web/preview/range-formatting-observation.mjs';
+// @ts-ignore 기존 현재 범위와 UTF16·소유자 검증을 재사용한다.
+import { paragraphSelectionRanges } from '../../../web/preview/paragraph-selection.mjs';
 import {
   HOST_EPOCH_KEYS,
   createHostEpochReaders,
@@ -22,6 +41,41 @@ import { canvasSurfacePageFrame } from './page-frame.ts';
 // @ts-ignore Canonical owner projection shared with headless selection validation.
 import { paragraphSelectionOwner } from '../../../web/preview/paragraph-selection.mjs';
 
+export type SurfaceFormattingIntent =
+  | {
+      readonly kind: 'character-properties';
+      readonly properties: {
+        readonly size?: number;
+        readonly bold?: boolean;
+        readonly italic?: boolean;
+      };
+    }
+  | { readonly kind: 'underline'; readonly underlineKind: 'none' | 'bottom' | 'center' | 'top' }
+  | { readonly kind: 'strike'; readonly enabled: boolean }
+  | { readonly kind: 'text-color'; readonly color: string }
+  | {
+      readonly kind: 'font-name';
+      readonly language: import('@hwpjs/core').CharacterFontLanguage;
+      readonly name: string;
+    }
+  | {
+      readonly kind: 'font-id';
+      readonly language: import('@hwpjs/core').CharacterFontLanguage;
+      readonly fontId: number;
+    }
+  | { readonly kind: 'shade'; readonly color: string | null }
+  | { readonly kind: 'outline'; readonly outlineKind: string }
+  | {
+      readonly kind: 'effect';
+      readonly effect: string;
+      readonly enabled: boolean;
+      readonly exclusive?: boolean;
+    }
+  | {
+      readonly kind: 'font-names';
+      readonly names: Readonly<Record<import('@hwpjs/core').CharacterFontLanguage, string>>;
+    }
+  | { readonly kind: 'alignment'; readonly alignment: string };
 type HostEditor = HeadlessEditor & {
   acquireInputSurface(hooks: InputSurfaceHooks): InputSurfaceLease;
   readResource(
@@ -105,6 +159,30 @@ export function createCanvasSurface({
   let historySelectionPublication:
     | { state: ReturnType<HeadlessEditor['getEditorState']>; target: SelectionTarget }
     | undefined;
+  let formattingReceipt:
+    | { kind: string; result: import('@hwpjs/core').CommandResult | null }
+    | undefined;
+  const formattingTasks = new Set<Promise<unknown>>();
+  const trackFormattingTask = <T>(task: Promise<T>): Promise<T> => {
+    formattingTasks.add(task);
+    void task.then(
+      () => formattingTasks.delete(task),
+      () => formattingTasks.delete(task),
+    );
+    return task;
+  };
+  let formattingPreparation: object | undefined;
+  let atomicProfile:
+    | {
+        documentId: string | null;
+        generation: number;
+        format: unknown;
+        pending: boolean;
+        alignment: string | null;
+        fonts: string | null;
+      }
+    | undefined;
+  let atomicProfileTask: Promise<unknown> = Promise.resolve();
   let explicitClearPending: ReturnType<HeadlessEditor['getEditorState']> | undefined;
   const status = (message: string) => {
     if (!closed) onStatus(message);
@@ -185,6 +263,7 @@ export function createCanvasSurface({
     const changedDocument =
       displayed.split(':').slice(0, -2).join(':') !== key.split(':').slice(0, -2).join(':');
     if (changedDocument) {
+      atomicProfile = undefined;
       direct?.reset({ selectionOrigin: 'core' });
       renderer.clear();
       selectionKey = '';
@@ -222,6 +301,7 @@ export function createCanvasSurface({
   };
   const cleanup = () => {
     closed = true;
+    atomicProfile = undefined;
     nonTextHistoryAdmissionReady = false;
     nonTextHistoryPending = undefined;
     explicitClearPending = undefined;
@@ -260,47 +340,52 @@ export function createCanvasSurface({
       },
       cancelComposition: () => direct?.cancelComposition(),
     });
-    bridge = createControlBridge({
-      state: () => editor.getEditorState(),
-      lease,
-      acknowledge(reply, state) {
-        const priorAcknowledgement = activeHistoryAcknowledgement;
-        deferredTypingAcknowledgement = undefined;
-        activeHistoryAcknowledgement = state;
-        const finish = (modelPrepared = false) => {
-          const deferred = deferredTypingAcknowledgement;
+    bridge = createControlBridge(
+      {
+        state: () => editor.getEditorState(),
+        lease,
+        acknowledge(reply, state) {
+          const priorAcknowledgement = activeHistoryAcknowledgement;
           deferredTypingAcknowledgement = undefined;
-          const currentTyping =
-            deferred &&
-            deferred === state &&
-            !closed &&
-            editor.getEditorState() === deferred &&
-            lease?.isActive() &&
-            direct.consumeDeferredTypingProjection?.() === true;
-          if (!closed && !modelPrepared && !currentTyping && !direct.historyModelReady())
-            renderer.flushProjection();
-        };
-        try {
-          if (state) render(state);
-          const prepared = direct.message(reply);
-          if (prepared && typeof prepared.then === 'function') {
-            void Promise.resolve(prepared).then(
-              (value) => finish(value === true),
-              (error) => {
-                status(String(error));
-                finish();
-              },
-            );
-          } else finish();
-        } catch (error) {
-          finish();
-          throw error;
-        } finally {
-          activeHistoryAcknowledgement = priorAcknowledgement;
-        }
+          activeHistoryAcknowledgement = state;
+          const finish = (modelPrepared = false) => {
+            const deferred = deferredTypingAcknowledgement;
+            deferredTypingAcknowledgement = undefined;
+            const currentTyping =
+              deferred &&
+              deferred === state &&
+              !closed &&
+              editor.getEditorState() === deferred &&
+              lease?.isActive() &&
+              direct.consumeDeferredTypingProjection?.() === true;
+            if (!closed && !modelPrepared && !currentTyping && !direct.historyModelReady())
+              renderer.flushProjection();
+          };
+          try {
+            if (state) render(state);
+            const prepared = direct.message(reply);
+            if (prepared && typeof prepared.then === 'function') {
+              void Promise.resolve(prepared).then(
+                (value) => finish(value === true),
+                (error) => {
+                  status(String(error));
+                  finish();
+                },
+              );
+            } else finish();
+          } catch (error) {
+            finish();
+            throw error;
+          } finally {
+            activeHistoryAcknowledgement = priorAcknowledgement;
+          }
+        },
+        error: (error) => status(String(error)),
       },
-      error: (error) => status(String(error)),
-    });
+      (result, message) => {
+        if (formattingReceipt?.kind === message.kind) formattingReceipt.result = result;
+      },
+    );
     direct = createCanvasEditor({
       canvas,
       viewport,
@@ -688,8 +773,8 @@ export function createCanvasSurface({
       return false;
     }
   };
-  const rangeViewState = () => {
-    if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy() || modalOpen())
+  const rangeViewState = (modalCurrent: () => boolean = () => !modalOpen()) => {
+    if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy() || !modalCurrent())
       return undefined;
     const state = editor.getEditorState();
     const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
@@ -745,6 +830,58 @@ export function createCanvasSurface({
       clipboard?: { writeText?: (text: string) => Promise<void> } | null;
     } = {},
   ) => captureSurfaceSelection(options)?.() ?? Promise.resolve(false);
+  const prepareAtomicProfile = (state: ReturnType<HeadlessEditor['getEditorState']>) => {
+    if (closed || !lease?.isActive() || state.status !== 'ready') return Promise.resolve(false);
+    if (
+      atomicProfile?.documentId === state.documentId &&
+      atomicProfile.generation === state.generation &&
+      atomicProfile.format === (state.content as any)?.format
+    )
+      return atomicProfile.pending ? atomicProfileTask.then(() => !closed) : Promise.resolve(true);
+    const profile = {
+      documentId: state.documentId,
+      generation: state.generation,
+      format: (state.content as any)?.format,
+      pending: true,
+      alignment: 'AtomicCapabilitiesPending' as string | null,
+      fonts: 'AtomicCapabilitiesPending' as string | null,
+    };
+    atomicProfile = profile;
+    atomicProfileTask = trackFormattingTask(
+      Promise.resolve()
+        .then(() => editor.readResource({ kind: 'formatting-capabilities' }, state.token))
+        .then((answer) => {
+          if (
+            closed ||
+            atomicProfile !== profile ||
+            editor.getEditorState().documentId !== profile.documentId ||
+            editor.getEditorState().generation !== profile.generation
+          )
+            return;
+          const cap = (answer as any).formattingCapabilities;
+          const transport =
+            (answer as any).formattingBatchQueryAvailable === true
+              ? null
+              : 'AtomicBatchQueryUnavailable';
+          profile.alignment = transport ?? atomicRangeUnavailable(cap, 'alignment', profile.format);
+          profile.fonts = transport ?? atomicRangeUnavailable(cap, 'font-names', profile.format);
+          profile.pending = false;
+          try {
+            status('서식 지원 정보를 확인했습니다.');
+          } catch {
+            /* 표시 실패로 실제 Native 관측을 바꾸지 않는다. */
+          }
+        })
+        .catch((error) => {
+          if (closed || atomicProfile !== profile) return;
+          const reason = error instanceof Error ? error.message : String(error);
+          profile.pending = false;
+          profile.alignment = profile.fonts = reason;
+          if (['StaleTarget', 'StaleReply'].includes(reason)) atomicProfile = undefined;
+        }),
+    );
+    return atomicProfileTask.then(() => !closed);
+  };
   nonTextHistoryAdmissionReady = true;
   let disposal: Promise<void> | undefined;
   return {
@@ -834,6 +971,251 @@ export function createCanvasSurface({
     ): Promise<boolean> {
       return transferSurfaceSelection(options);
     },
+    captureSelectionFormatting() {
+      const state = rangeViewState();
+      if (!state) return null;
+      let ownedDialog: HTMLDialogElement | undefined,
+        dialogBound = false,
+        dialogInvalid = false;
+      const dialogCurrent = () => {
+        if (dialogInvalid) return false;
+        if (!dialogBound) return !modalOpen();
+        try {
+          const active = doc.querySelectorAll('dialog:modal');
+          return (
+            ownedDialog?.ownerDocument === doc &&
+            ownedDialog.isConnected === true &&
+            ownedDialog.open === true &&
+            active.length === 1 &&
+            active[0] === ownedDialog
+          );
+        } catch {
+          return false;
+        }
+      };
+      const current = () => rangeViewState(dialogCurrent) === state;
+      let binding: ReturnType<typeof captureFormattingRangeBinding> = null;
+      const captured = direct.captureSelectionFormatting(
+        current,
+        (anchor: unknown, focus: unknown) => {
+          binding = captureFormattingRangeBinding(state, { anchor, focus });
+          const ranges = paragraphSelectionRanges(
+            (state.content as any)?.paragraphs,
+            anchor,
+            focus,
+            undefined,
+            { sourcePositions: false },
+          );
+          return rangeFormattingObservation(state.content, ranges);
+        },
+        () => dialogBound && dialogCurrent(),
+      );
+      if (!captured || !current()) return null;
+      if (rangeWritable(state)) void prepareAtomicProfile(state);
+      const atomicReason = (kind: string): string | null => {
+        if (!rangeWritable(state)) return 'ReadOnlyDocument';
+        if (!binding) return 'UnsupportedFormattingSelection';
+        const profile = atomicProfile;
+        if (
+          !profile ||
+          profile.documentId !== state.documentId ||
+          profile.generation !== state.generation ||
+          profile.pending
+        )
+          return 'AtomicCapabilitiesPending';
+        return kind === 'alignment' ? profile.alignment : profile.fonts;
+      };
+      const reason = (kind: string): string | null =>
+        !rangeWritable(state)
+          ? 'ReadOnlyDocument'
+          : captured.supported(kind)
+            ? null
+            : 'RangeFormattingUnsupported';
+      const reasons = () =>
+        Object.freeze({
+          characterAvailableReason: reason('character-properties'),
+          underlineAvailableReason: reason('underline'),
+          strikeAvailableReason: reason('strike'),
+          textColorAvailableReason:
+            reason('text-color') ??
+            (captured.observation.colorBindingValid ? null : 'UnknownCharacterTextColor'),
+          fontNameAvailableReasons: Object.freeze(
+            Object.fromEntries(
+              FONT_LANGUAGES.map((language: import('@hwpjs/core').CharacterFontLanguage) => [
+                language,
+                reason('font-name') ??
+                  (captured.observation.fontBindings[language] ? null : 'UnknownCharacterFontName'),
+              ]),
+            ),
+          ) as Readonly<Record<import('@hwpjs/core').CharacterFontLanguage, string | null>>,
+          fontNamesAvailableReason: atomicReason('font-names'),
+          paragraphAvailableReason: atomicReason('alignment'),
+        });
+      let used = false,
+        prepared: Awaited<ReturnType<typeof prepareAtomicRangeRequest>> | undefined,
+        completion:
+          | Promise<{ result: import('@hwpjs/core').CommandResult | null; current: boolean }>
+          | undefined;
+      let settledResult: import('@hwpjs/core').CommandResult | null | undefined;
+      const viewCurrent = () => {
+        const fresh = editor.getEditorState();
+        const selection = direct.currentFormattingSelection();
+        return (
+          !closed &&
+          lease?.isActive() === true &&
+          fresh.status === 'ready' &&
+          renderer.historyModelMatches(fresh) === true &&
+          formattingRangeBindingMatches(binding, fresh, selection) &&
+          Boolean(
+            caretGeometry(renderer.layout(), selection.anchor) &&
+            caretGeometry(renderer.layout(), selection.focus),
+          ) &&
+          !closed &&
+          lease?.isActive() === true &&
+          editor.getEditorState() === fresh &&
+          renderer.historyModelMatches(fresh) === true
+        );
+      };
+      const resultCurrent = (
+        result: import('@hwpjs/core').CommandResult | null | undefined,
+      ): boolean => {
+        if (!result) return false;
+        try {
+          const fresh = editor.getEditorState();
+          return Boolean(
+            (result.state === fresh || sameHistoryModelObservation(result.state, fresh)) &&
+            viewCurrent(),
+          );
+        } catch {
+          // 완료 뒤 화면 관측 실패도 원 Core 결과를 바꾸지 않는다.
+          return false;
+        }
+      };
+      return Object.freeze({
+        state,
+        observation: captured.observation,
+        get reasons() {
+          return reasons();
+        },
+        current: () => current() && captured.current(),
+        bindDialog(element: HTMLDialogElement): boolean {
+          if (dialogBound) return false;
+          dialogBound = true;
+          ownedDialog = element;
+          const valid = current() && captured.current();
+          if (!valid) dialogInvalid = true;
+          return valid;
+        },
+        async prepare(intent?: SurfaceFormattingIntent): Promise<boolean> {
+          if (used || !current() || !captured.current()) return false;
+          if (!intent) {
+            await prepareAtomicProfile(state);
+            return current() && captured.current();
+          }
+          if (!['alignment', 'font-names'].includes(intent.kind))
+            return current() && captured.current() && rangeWritable(state);
+          if (!binding || !rangeWritable(state) || formattingPreparation) return false;
+          const record = {};
+          formattingPreparation = record;
+          const task = prepareAtomicRangeRequest({
+            read: (message, token) => editor.readResource(message, token),
+            selectors: formattingRangeSelectors(binding, intent.kind === 'font-names'),
+            intent,
+            token: state.token,
+            revision: state.nativeHistoryRevision,
+            format: (state.content as any).format,
+            current: () => current() && captured.current() && rangeWritable(state),
+          })
+            .then((request) => {
+              prepared = request;
+              return current() && captured.current();
+            })
+            .finally(() => {
+              if (formattingPreparation === record) formattingPreparation = undefined;
+            });
+          trackFormattingTask(task);
+          return task;
+        },
+        request(intent: SurfaceFormattingIntent): boolean {
+          if (used) return false;
+          used = true;
+          if (!current() || !rangeWritable(state)) return false;
+          if (intent.kind === 'text-color' && reasons().textColorAvailableReason !== null)
+            return false;
+          if (
+            intent.kind === 'font-name' &&
+            reasons().fontNameAvailableReasons[intent.language] !== null
+          )
+            return false;
+          const atomic = ['alignment', 'font-names'].includes(intent.kind);
+          if (atomic) {
+            if (!prepared || atomicReason(intent.kind) !== null) return false;
+            const patch = atomicRangePatch(intent);
+            if (JSON.stringify(patch) !== JSON.stringify(prepared.patch)) return false;
+          }
+          const receipt = {
+            kind: atomic
+              ? 'formatting-patch'
+              : (
+                  {
+                    'character-properties': 'character-properties-ranges',
+                    underline: 'character-underline-ranges',
+                    strike: 'character-strike-ranges',
+                    'text-color': 'character-text-color-ranges',
+                    'font-name': 'character-font-name-ranges',
+                    'font-id': 'character-font-ranges',
+                    shade: 'character-shade-ranges',
+                    outline: 'character-outline-ranges',
+                    effect: 'character-effect-ranges',
+                  } as Record<string, string>
+                )[intent.kind],
+            result: null as import('@hwpjs/core').CommandResult | null,
+          };
+          formattingReceipt = receipt;
+          const accepted = atomic
+            ? direct.requestAtomicFormatting(prepared, () => current() && captured.current())
+            : captured.request(intent) === true;
+          if (!accepted) {
+            if (formattingReceipt === receipt) formattingReceipt = undefined;
+            return false;
+          }
+          void direct.startFormattingPaint(
+            () => activeHistoryAcknowledgement === editor.getEditorState() && viewCurrent(),
+            () =>
+              atomic &&
+              receipt.result?.status === 'rejected-unapplied' &&
+              receipt.result.state === state &&
+              editor.getEditorState() === state &&
+              rangeWritable(state) &&
+              viewCurrent(),
+          );
+          completion = bridge!
+            .flush()
+            .then(async () => {
+              await Promise.resolve();
+              const result = receipt.result;
+              const currentView = resultCurrent(result);
+              settledResult = result;
+              return Object.freeze({ result, current: currentView });
+            })
+            .finally(() => {
+              if (formattingReceipt === receipt) formattingReceipt = undefined;
+            });
+          return true;
+        },
+        settledCurrent(): boolean {
+          try {
+            if (modalOpen() && !dialogCurrent()) return false;
+            return resultCurrent(settledResult);
+          } catch {
+            return false;
+          }
+        },
+        settle() {
+          return completion ?? Promise.resolve(Object.freeze({ result: null, current: false }));
+        },
+      });
+    },
     captureRangeFormatting(property: 'underline' | 'strike') {
       const state = rangeViewState();
       if (!state) return null;
@@ -918,7 +1300,15 @@ export function createCanvasSurface({
     dispose(): Promise<void> {
       if (!disposal) {
         cleanup();
-        disposal = Promise.all([bridge!.flush(), nonTextHistoryTask]).then(() => {});
+        disposal = Promise.allSettled([
+          bridge!.flush(),
+          nonTextHistoryTask,
+          ...formattingTasks,
+        ]).then((results) => {
+          // 기존 Native 처리 오류는 유지하되 새 readonly 작업도 먼저 모두 정리한다.
+          for (const result of results.slice(0, 2))
+            if (result.status === 'rejected') throw result.reason;
+        });
       }
       return disposal;
     },

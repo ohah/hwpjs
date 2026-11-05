@@ -52,6 +52,7 @@ pub const Checkpoint = @import("table_checkpoint.zig").Checkpoint;
 
 // Allocated once; the public opaque pointer prevents direct model/sidecar writes.
 const State = struct {
+    formatting_batch: ?*FormattingBatch = null,
     live_text: ?@import("live_text_backing.zig").Backing = null,
     live_incarnation: u64 = 0,
     live_totals: @import("live_text_backing.zig").Counters = .{},
@@ -84,7 +85,59 @@ const State = struct {
     }
 };
 
+/// Request-only original-input preparation. History remains the transaction owner.
+/// This is not a replacement for the pending resource/paragraph COW journal.
+pub const FormattingBatch = struct {
+    original_info: ?[]u8 = null,
+    characters: @import("character_property_apply.zig").Context = .{},
+    docinfo_decodes: usize = 0,
+    pub fn deinit(self: *FormattingBatch, a: std.mem.Allocator) void {
+        self.characters.deinit(a);
+        if (self.original_info) |bytes| a.free(bytes);
+        self.* = .{};
+    }
+};
+
 pub const Session = opaque {
+    fn formattingDocument(self: *const Session) model.Document {
+        const state = self.stateConst();
+        var current = state.document;
+        if (state.formatting_batch) |context| current.character_resources = @constCast(context.characters.entries(&state.document));
+        return current;
+    }
+    pub fn finishFormattingBatch(self: *Session) !void {
+        const state = self.getState();
+        const context = state.formatting_batch orelse return;
+        errdefer context.characters.abort(state.allocator);
+        if (context.characters.disabled or context.characters.installed or !context.characters.changed) return;
+        const info = context.original_info orelse return error.FormattingBatchNotPrepared;
+        const current = self.formattingDocument();
+        const verified = try @import("resource_docinfo.zig").writeBatch(state.allocator, info, state.source.header.version(), &current, state.para_count, state.char_count, max_stream);
+        defer state.allocator.free(verified);
+        try context.characters.install(state.allocator, &state.document);
+        context.characters.final_flushes += 1;
+    }
+    pub fn beginFormattingBatch(self: *Session, context: *FormattingBatch) !void {
+        if (self.getState().formatting_batch != null) return error.FormattingBatchAlreadyActive;
+        self.getState().formatting_batch = context;
+    }
+    pub fn endFormattingBatch(self: *Session, context: *FormattingBatch) void {
+        const state = self.getState();
+        if (state.formatting_batch == context) state.formatting_batch = null;
+        context.deinit(state.allocator);
+    }
+    fn originalInfo(self: *Session) !struct { bytes: []const u8, owned: bool } {
+        const state = self.getState();
+        if (state.formatting_batch) |context| {
+            if (context.original_info == null) {
+                context.original_info = try state.source.decodeDocInfo(state.allocator, max_stream);
+                context.docinfo_decodes += 1;
+            }
+            return .{ .bytes = context.original_info.?, .owned = false };
+        }
+        return .{ .bytes = try state.source.decodeDocInfo(state.allocator, max_stream), .owned = true };
+    }
+
     /// 기존 WASM open 내부 전용 관리 연결. 모델/포인터를 외부에 내보내지 않는다.
     pub fn enableHistoryDelta(self: *Session) void {
         if (self.getState().history_epoch == null) self.getState().history_epoch = .{ .binding = .{ .document = @intFromPtr(self), .generation = 1, .owner = @intFromPtr(self) } };
@@ -469,7 +522,13 @@ pub const Session = opaque {
     }
     fn applyBatchCheckpointedBody(self: *Session, checkpoint: *Checkpoint, limit: usize, commands: []const Command) !bool {
         if (!try self.matchesCheckpoint(checkpoint)) return error.SourceBindingMismatch;
-        for (commands) |command| self.apply(command) catch |err| {
+        var font_cache: @import("../../model/batch_font_lookup.zig").Cache = .{};
+        for (commands) |command| self.applyWithFontCache(command, &font_cache) catch |err| {
+            const state = self.getState();
+            try @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables);
+            return err;
+        };
+        self.finishFormattingBatch() catch |err| {
             const state = self.getState();
             try @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables);
             return err;
@@ -660,7 +719,8 @@ pub const Session = opaque {
     }
 
     pub fn characterShapeCount(self: *const Session) usize {
-        return self.stateConst().char_count + self.stateConst().document.character_resources.len;
+        const state = self.stateConst();
+        return state.char_count + if (state.formatting_batch) |context| context.characters.entries(&state.document).len else state.document.character_resources.len;
     }
     pub fn paragraphShapeCount(self: *const Session) usize {
         return self.stateConst().para_count + self.stateConst().document.paragraph_resources.len;
@@ -693,7 +753,7 @@ pub const Session = opaque {
         var pending = try state.document.font_resources.clone(a);
         defer pending.deinit(a);
         _ = try pending.add(a, language, count, name, 4096);
-        var candidate = state.document;
+        var candidate = self.formattingDocument();
         candidate.font_resources = pending;
         const decoded = try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
@@ -1118,7 +1178,8 @@ pub const Session = opaque {
         const state = self.stateConst();
         const decoded = try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
-        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        const effective = self.formattingDocument();
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
         defer a.free(current);
         return @import("border_fill_sources.zig").read(a, current, state.source.header.version(), 1_000_000);
     }
@@ -1127,7 +1188,8 @@ pub const Session = opaque {
         const state = self.stateConst();
         const decoded = try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
-        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        const effective = self.formattingDocument();
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
         defer a.free(current);
         const snapshot = @import("font_face_snapshot.zig");
         return if (metadata) snapshot.readMetadata(a, current, state.source.header.version(), 1_000_000, 4096) else snapshot.read(a, current, state.source.header.version(), 1_000_000, 4096);
@@ -1139,7 +1201,8 @@ pub const Session = opaque {
         const state = self.stateConst();
         const decoded = try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
-        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        const effective = self.formattingDocument();
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
         defer a.free(current);
         return @import("character_display_shapes.zig").read(a, current, state.source.header.version(), self.characterShapeCount());
     }
@@ -1150,7 +1213,8 @@ pub const Session = opaque {
         const state = self.stateConst();
         const decoded = try state.source.decodeDocInfo(a, max_stream);
         defer a.free(decoded);
-        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &state.document, state.para_count, state.char_count, max_stream);
+        const effective = self.formattingDocument();
+        const current = try @import("resource_docinfo.zig").write(a, decoded, state.source.header.version(), &effective, state.para_count, state.char_count, max_stream);
         defer a.free(current);
         return @import("paragraph_display_shapes.zig").read(a, current, state.source.header.version(), self.paragraphShapeCount());
     }
@@ -1229,15 +1293,24 @@ pub const Session = opaque {
         return window;
     }
     pub fn apply(self: *Session, command: Command) !void {
+        return self.applyWithFontCache(command, null);
+    }
+    pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
+        errdefer if (font_cache) |cache| cache.clear();
+        errdefer if (self.getState().formatting_batch) |context| context.characters.abort(self.getState().allocator);
+        if (font_cache) |cache| switch (command) {
+            .set_character_font_name, .set_character_properties, .set_character_format, .set_paragraph_format, .set_paragraph_alignment, .set_paragraph_flags, .set_paragraph_border_fill, .set_paragraph_margins, .set_paragraph_spacing => {},
+            else => cache.clear(),
+        };
         try self.materializeLiveText();
         const before = try self.externalHistoryBegin();
-        self.applyBody(command) catch |err| {
+        self.applyBody(command, font_cache) catch |err| {
             try self.externalHistoryEnd(before, err);
             return err;
         };
         try self.externalHistoryEnd(before, null);
     }
-    fn applyBody(self: *Session, command: Command) anyerror!void {
+    fn applyBody(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) anyerror!void {
         try self.materializeLiveText();
         // Formula-definition label rebasing with pending objects is not wired.
         switch (command) {
@@ -1279,10 +1352,12 @@ pub const Session = opaque {
                 try @import("../../model/font_name.zig").validate(edit.name, 4096);
                 if (edit.start_unit == edit.end_unit) return self.apply(.{ .set_character_properties = .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.start_unit, .end_unit = edit.end_unit, .properties = .{} } });
                 const state = self.getState();
-                const checkpoint = try self.createCheckpoint(max_bytes);
-                defer checkpoint.deinit();
-                errdefer @import("table_checkpoint.zig").rollback(checkpoint, state.allocator, self, &state.document, &state.created_tables) catch unreachable;
-                const id = try self.ensureFont(edit.language, edit.name);
+                const checkpoint = if (state.formatting_batch == null) try self.createCheckpoint(max_bytes) else null;
+                defer if (checkpoint) |value| value.deinit();
+                errdefer if (checkpoint) |value| @import("table_checkpoint.zig").rollback(value, state.allocator, self, &state.document, &state.created_tables) catch unreachable;
+                const cached = if (font_cache) |cache| cache.get(@backingInt(edit.language), edit.name) else null;
+                const id = cached orelse try self.ensureFont(edit.language, edit.name);
+                if (font_cache) |cache| cache.put(@backingInt(edit.language), edit.name, id);
                 var ids: @import("../../model/character_fonts.zig").Values = @splat(null);
                 ids[@backingInt(edit.language)] = id;
                 try self.apply(.{ .set_character_properties = .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = edit.start_unit, .end_unit = edit.end_unit, .properties = .{ .font_ids = ids } } });
@@ -1290,32 +1365,36 @@ pub const Session = opaque {
             .set_paragraph_border_fill => |edit| {
                 const state = self.getState();
                 const a = state.allocator;
-                const decoded = try state.source.decodeDocInfo(a, max_stream);
-                defer a.free(decoded);
+                const prepared_info = try self.originalInfo();
+                const decoded = prepared_info.bytes;
+                defer if (prepared_info.owned) a.free(decoded);
                 try @import("paragraph_alignment_apply.zig").applyWithResources(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, null, .{}, null, edit.flags, edit.patch, max_stream);
             },
             .set_paragraph_flags => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 const a = state.allocator;
-                const decoded = try state.source.decodeDocInfo(a, max_stream);
-                defer a.free(decoded);
+                const prepared_info = try self.originalInfo();
+                const decoded = prepared_info.bytes;
+                defer if (prepared_info.owned) a.free(decoded);
                 try @import("paragraph_flags_apply.zig").apply(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, edit.flags, max_stream);
             },
             .set_paragraph_spacing => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 const a = state.allocator;
-                const decoded = try state.source.decodeDocInfo(a, max_stream);
-                defer a.free(decoded);
+                const prepared_info = try self.originalInfo();
+                const decoded = prepared_info.bytes;
+                defer if (prepared_info.owned) a.free(decoded);
                 try @import("paragraph_alignment_apply.zig").applyWithProperties(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, null, .{}, edit.spacing, max_stream);
             },
             .set_paragraph_margins => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 const a = state.allocator;
-                const decoded = try state.source.decodeDocInfo(a, max_stream);
-                defer a.free(decoded);
+                const prepared_info = try self.originalInfo();
+                const decoded = prepared_info.bytes;
+                defer if (prepared_info.owned) a.free(decoded);
                 try @import("paragraph_alignment_apply.zig").applyWithMargins(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, null, edit.margins, max_stream);
             },
             .set_paragraph_alignment => |edit| {
@@ -1323,8 +1402,9 @@ pub const Session = opaque {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
                 const a = state.allocator;
-                const decoded = try state.source.decodeDocInfo(a, max_stream);
-                defer a.free(decoded);
+                const prepared_info = try self.originalInfo();
+                const decoded = prepared_info.bytes;
+                defer if (prepared_info.owned) a.free(decoded);
                 try @import("paragraph_alignment_apply.zig").apply(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, edit.alignment, max_stream);
             },
             .set_paragraph_format => |edit| {
@@ -1407,9 +1487,10 @@ pub const Session = opaque {
                 for (state.decoded, 0..) |bytes, index| {
                     if (index != edit.section) try @import("source_policy.zig").validateUnselectedCharacterFormat(state.allocator, bytes, state.source.header.version());
                 }
-                const info = try state.source.decodeDocInfo(state.allocator, max_stream);
-                defer state.allocator.free(info);
-                try @import("character_property_apply.zig").apply(state.allocator, state.decoded[edit.section], info, state.source.header.version(), &state.document, edit, state.char_count, max_stream);
+                const prepared_info = try self.originalInfo();
+                const info = prepared_info.bytes;
+                defer if (prepared_info.owned) state.allocator.free(info);
+                try @import("character_property_apply.zig").applyScoped(state.allocator, state.decoded[edit.section], info, state.source.header.version(), &state.document, edit, state.char_count, max_stream, if (state.formatting_batch) |context| &context.characters else null);
             },
             .set_character_format => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;

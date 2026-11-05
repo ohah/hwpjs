@@ -7,10 +7,12 @@ export interface TextColorViewState {
   draft: string;
   pending: boolean;
   stale: boolean;
+  reopenRequired?: boolean;
   error: string | null;
   canApply: boolean;
 }
 export interface TextColorView {
+  getDialogElement?(): HTMLDialogElement;
   update(state: TextColorViewState): void;
   show(): void;
   dispose(): void;
@@ -108,6 +110,7 @@ export function createTextColorView(
   layer.body.append(current, label, palette, status);
   layer.footer.append(apply, cancel);
   return {
+    getDialogElement: () => layer.element,
     update(state) {
       current.textContent =
         state.value === 'mixed'
@@ -116,7 +119,8 @@ export function createTextColorView(
             ? '현재 글자색: 알 수 없음'
             : `현재 글자색: ${state.value}`;
       if (input.value !== state.draft) input.value = state.draft;
-      const disabled = state.pending || state.stale || state.reason !== null;
+      const disabled =
+        state.pending || state.stale || state.reopenRequired || state.reason !== null;
       input.disabled = disabled;
       for (const button of swatches) button.disabled = disabled;
       apply.disabled = !state.canApply;
@@ -127,18 +131,24 @@ export function createTextColorView(
       if (dismissButton) dismissButton.disabled = state.pending;
       input.setAttribute('aria-invalid', String(state.error === 'InvalidCharacterColor'));
       status.dataset.reason = state.reason ?? '';
-      status.textContent = state.stale
-        ? '문서나 선택이 바뀌었습니다. 창을 닫고 다시 열어주세요.'
-        : (state.error ??
-          (state.reason === 'EmptyCharacterSelection'
-            ? '글자 범위를 선택해주세요.'
-            : state.reason === 'SelectionNotEditable' || state.reason === 'ReadOnlyDocument'
-              ? '이 선택은 변경할 수 없습니다.'
-              : state.reason
-                ? '현재 선택에는 글자색을 적용할 수 없습니다.'
-                : state.value === null
-                  ? '색을 직접 지정하면 선택한 글자색을 바꿉니다.'
-                  : ''));
+      status.textContent = state.reopenRequired
+        ? (state.error === 'SurfaceFormattingSettlementUnknown'
+            ? '요청 결과를 확인하지 못했습니다. '
+            : state.error
+              ? state.error + ' '
+              : '') + '재시도하려면 창을 닫고 현재 범위를 다시 열어주세요.'
+        : state.stale
+          ? '문서나 선택이 바뀌었습니다. 창을 닫고 다시 열어주세요.'
+          : (state.error ??
+            (state.reason === 'EmptyCharacterSelection'
+              ? '글자 범위를 선택해주세요.'
+              : state.reason === 'SelectionNotEditable' || state.reason === 'ReadOnlyDocument'
+                ? '이 선택은 변경할 수 없습니다.'
+                : state.reason
+                  ? '현재 선택에는 글자색을 적용할 수 없습니다.'
+                  : state.value === null
+                    ? '색을 직접 지정하면 선택한 글자색을 바꿉니다.'
+                    : ''));
     },
     show() {
       layer.show(input.disabled ? cancel : input);

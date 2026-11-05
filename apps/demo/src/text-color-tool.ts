@@ -1,4 +1,9 @@
 import {
+  captureSurfaceFormatting,
+  type FormattingPresentation,
+} from './surface-formatting-capture.ts';
+import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
+import {
   getSelectionFormatting,
   SET_CHARACTER_TEXT_COLOR_COMMAND,
   type HeadlessEditor,
@@ -9,6 +14,7 @@ import { characterColorArg } from '../../../js/character-color-args.mjs';
 import { createTextColorView, type TextColorView } from './text-color-view.ts';
 
 export interface TextColorToolOptions {
+  getSurfaceFormattingHost?: () => SurfaceFormattingHost | undefined;
   root: HTMLElement;
   editor: Pick<
     HeadlessEditor,
@@ -41,7 +47,15 @@ export function createTextColorTool(options: TextColorToolOptions) {
       }
     }
   };
-  const stale = () => captured !== undefined && editor.getEditorState() !== captured;
+  let surfaceBindingFailed = false;
+  let preparing = false;
+  let rangeConsumed = false;
+  let rangeCapture: ReturnType<typeof captureSurfaceFormatting> = null;
+  const stale = () =>
+    captured !== undefined &&
+    (surfaceBindingFailed ||
+      editor.getEditorState() !== captured ||
+      (rangeCapture !== null && !rangeCapture.current()));
   const valid = () => {
     try {
       characterColorArg(draft);
@@ -54,35 +68,52 @@ export function createTextColorTool(options: TextColorToolOptions) {
   const refresh = () => {
     view?.update({
       value: formatting?.textColor ?? null,
-      reason: formatting?.textColorAvailableReason ?? null,
+      reason: preparing ? 'FormattingPreparing' : (formatting?.textColorAvailableReason ?? null),
       draft,
       pending,
+      reopenRequired: rangeConsumed && !pending,
       stale: stale(),
       error,
       canApply:
         !closed &&
         !pending &&
+        !rangeConsumed &&
+        !preparing &&
         !stale() &&
-        formatting?.target != null &&
-        formatting.textColorAvailableReason === null &&
+        (formatting?.target != null || rangeCapture !== null) &&
+        formatting?.textColorAvailableReason === null &&
         valid() &&
         changed(),
     });
   };
-  const close = (restore: boolean) => {
+  const close = (restore: boolean, settledState?: ReturnType<HeadlessEditor['getEditorState']>) => {
     const before = captured;
+    const completedRange = settledState !== undefined ? rangeCapture : null;
+    const hadRange = rangeCapture !== null;
     view?.dispose();
     view = undefined;
     captured = undefined;
     formatting = undefined;
+    rangeCapture = null;
+    surfaceBindingFailed = false;
+    rangeConsumed = false;
+    preparing = false;
     if (!closed) notify(options.onPresentationChange);
     const latest = editor.getEditorState();
     if (
       restore &&
+      !closed &&
+      view === undefined &&
       before &&
       latest.documentId === before.documentId &&
       latest.generation === before.generation &&
-      latest.selection != null
+      (settledState !== undefined
+        ? latest === settledState &&
+          completedRange?.settledCurrent() === true &&
+          editor.getEditorState() === settledState &&
+          !closed &&
+          view === undefined
+        : latest.selection != null || (hadRange && latest === before))
     )
       notify(options.onClose);
   };
@@ -91,7 +122,7 @@ export function createTextColorTool(options: TextColorToolOptions) {
     close(true);
   };
   const apply = async () => {
-    if (closed || pending || !view || view.isComposing()) return;
+    if (closed || pending || preparing || rangeConsumed || !view || view.isComposing()) return;
     if (stale()) {
       error = 'StaleTextColorSelection';
       refresh();
@@ -104,10 +135,16 @@ export function createTextColorTool(options: TextColorToolOptions) {
       refresh();
       return;
     }
-    if (!formatting?.target || formatting.textColorAvailableReason !== null || !changed()) {
+    if (
+      !formatting ||
+      (!formatting.target && !rangeCapture) ||
+      formatting.textColorAvailableReason !== null ||
+      !changed()
+    ) {
       refresh();
       return;
     }
+    const initialRange = rangeCapture;
     const target = formatting.target,
       before = captured,
       color = draft.toLowerCase();
@@ -118,8 +155,61 @@ export function createTextColorTool(options: TextColorToolOptions) {
     try {
       await editor.update(() => {});
       if (closed) return;
-      if (editor.getEditorState() !== before) {
+      if (
+        editor.getEditorState() !== before ||
+        (initialRange !== null && !initialRange.current())
+      ) {
         error = 'StaleTextColorSelection';
+        return;
+      }
+      if (initialRange) {
+        if (!initialRange.hasSettlement) {
+          error = 'SurfaceSettlementUnavailable';
+          return;
+        }
+        if (
+          !(await initialRange.prepare({ kind: 'text-color', color })) ||
+          !initialRange.current()
+        ) {
+          error = 'StaleTextColorSelection';
+          return;
+        }
+        rangeConsumed = true;
+        if (!initialRange.request({ kind: 'text-color', color })) {
+          error = 'StaleTextColorSelection';
+          return;
+        }
+        const settled = await initialRange.settle();
+        if (closed || captured !== before) return;
+        const result = settled.result;
+        const focusState = settled.current ? editor.getEditorState() : undefined;
+        if (!result) {
+          error = 'SurfaceFormattingSettlementUnknown';
+          return;
+        }
+        notify(() => options.onResult?.(result));
+        if (closed || captured !== before) return;
+        if (result.error) {
+          error = result.error;
+          return;
+        }
+        if (
+          (result.status === 'committed-with-snapshot' || result.status === 'known-no-op') &&
+          settled.current
+        ) {
+          notify(() => options.onStatus('글자색을 적용했습니다.'));
+          if (!closed && captured === before) close(true, focusState);
+        } else
+          error =
+            result.status === 'committed-refresh-required' ||
+            result.status === 'committed-with-snapshot' ||
+            result.status === 'known-no-op'
+              ? '색은 반영됐지만 문서 상태를 다시 확인해야 합니다.'
+              : '글자색을 적용하지 못했습니다.';
+        return;
+      }
+      if (!target) {
+        error = 'MissingSelection';
         return;
       }
       const result = await editor.dispatchCommand(SET_CHARACTER_TEXT_COLOR_COMMAND, {
@@ -152,11 +242,32 @@ export function createTextColorTool(options: TextColorToolOptions) {
     if (!closed) refresh();
   });
   return {
-    presentation() {
+    presentation(shared?: FormattingPresentation) {
+      const state = editor.getEditorState();
+      const surface = shared
+        ? shared.state === state && shared.capture?.current()
+          ? shared.capture
+          : null
+        : options.getSurfaceFormattingHost && state.status === 'ready' && state.selection == null
+          ? captureSurfaceFormatting(
+              editor,
+              options.getSurfaceFormattingHost,
+              state,
+              getSelectionFormatting(state),
+            )
+          : null;
       return {
         'text-color': {
-          enabled: !closed && !pending && editor.getEditorState().status === 'ready',
-          reason: pending ? 'TextColorPending' : undefined,
+          enabled:
+            !closed &&
+            !pending &&
+            state.status === 'ready' &&
+            (!surface || surface.observation.textColorAvailableReason === null),
+          reason: pending
+            ? 'TextColorPending'
+            : (surface?.observation.textColorAvailableReason ?? undefined),
+          surfaceSelection:
+            surface !== null && surface.observation.textColorAvailableReason === null,
         },
       };
     },
@@ -169,6 +280,13 @@ export function createTextColorTool(options: TextColorToolOptions) {
       }
       captured = editor.getEditorState();
       formatting = getSelectionFormatting(captured);
+      rangeCapture = captureSurfaceFormatting(
+        editor,
+        options.getSurfaceFormattingHost,
+        captured,
+        formatting,
+      );
+      if (rangeCapture) formatting = rangeCapture.observation;
       draft =
         typeof formatting.textColor === 'string' && formatting.textColor !== 'mixed'
           ? formatting.textColor
@@ -187,6 +305,40 @@ export function createTextColorTool(options: TextColorToolOptions) {
       });
       refresh();
       view.show();
+      if (
+        rangeCapture &&
+        (!view.getDialogElement || !rangeCapture.bindDialog(view.getDialogElement()))
+      ) {
+        surfaceBindingFailed = true;
+        error = 'StaleTextColorSelection';
+      }
+      if (rangeCapture && !surfaceBindingFailed) {
+        const initial = rangeCapture,
+          owner = captured;
+        preparing = true;
+        void initial
+          .prepare()
+          .then((ready) => {
+            if (closed || rangeCapture !== initial || captured !== owner) return;
+            if (!ready || !initial.current()) {
+              surfaceBindingFailed = true;
+              error = 'StaleTextColorSelection';
+            } else formatting = initial.observation;
+          })
+          .catch((failure) => {
+            if (!closed && rangeCapture === initial)
+              error = failure instanceof Error ? failure.message : String(failure);
+          })
+          .finally(() => {
+            if (!closed && rangeCapture === initial && captured === owner) {
+              preparing = false;
+              notify(refresh);
+              if (!closed && rangeCapture === initial && captured === owner)
+                notify(options.onPresentationChange);
+            }
+          });
+      }
+      refresh();
       notify(options.onPresentationChange);
       return true;
     },
