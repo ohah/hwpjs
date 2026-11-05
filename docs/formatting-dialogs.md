@@ -215,3 +215,5 @@ Native 최종 소스 37파일의 gate와 별도 producer 결과를 구분합니�
 별도 bd9d 후보·EDE WASM·AE5 Worker의 HWPX 50% 배율에서 기존 BD cohort와 같은 6ee 입력·대표 굴림·caret 0:19:28·selection 2:28로 검증했습니다. trusted Apply부터 같은 일곱 ready 조건이 처음 참이 된 시점은 rAF 관측 893.8ms였습니다. 일곱 GUI 값이 모두 굴림임을 확인하고 모달 취소 후 textarea 포커스에서 재선택 없이 Cmd+Z 한 번으로 원래 일곱 값을 모두 복원했습니다.
 
 기존 별도 BD 단일 샘플 12194.6ms와는 실행 시점이 다른 각 1회 관측입니다. 평균·ABBA 비교·모든 UI 개선으로 일반화하지 않으며 원래 BD 12초 실패 판정도 유지합니다. 직접 Native 필드·저장·영문 단독·R입력·redo는 이 EDE cohort에서 실행하지 않았습니다. 최초 cleanup 실패와 updater 두 개 잔류 기록을 보존하고, 신호 없이 자연 종료를 추적해 최종 Chrome inactive·pid null·소유 PS 빈 목록을 확인했습니다. 명시 Native 회귀는 같은 39종을 두 엔진에서 각각 통과한 별도 근거입니다. 전체 Zig5059·case285·전체 선형성·공개 배포 완료는 주장하지 않습니다.
+
+접힌 커서의 읽기 관측·다음 입력 의도와 생성 readonly 후보의 검증 경계는 [커서 입력 서식](collapsed-caret-formatting.md)을 따릅니다. 일반 범위 writer의 거부 계약을 커서 UI 표시로 우회하지 않습니다.

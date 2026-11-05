@@ -9,24 +9,33 @@ export function captureSurfaceFormatting(
   state: ReturnType<HeadlessEditor['getEditorState']>,
   core: SelectionFormatting,
 ) {
+  if (!getHost || state.status !== 'ready') return null;
+  const caret =
+    state.selection != null &&
+    core.target !== null &&
+    Number.isSafeInteger(core.target.startUnit) &&
+    core.target.startUnit >= 0 &&
+    core.target.startUnit === core.target.endUnit;
   if (
-    !getHost ||
-    state.status !== 'ready' ||
-    state.selection != null ||
-    core.target !== null ||
-    core.characterAvailableReason !== 'MissingSelection'
+    !caret &&
+    (state.selection != null ||
+      core.target !== null ||
+      core.characterAvailableReason !== 'MissingSelection')
   )
     return null;
   try {
     const host = getHost();
-    const capture = host?.captureSelectionFormatting?.();
+    const capture = caret ? host?.captureCaretFormatting?.() : host?.captureSelectionFormatting?.();
     if (!capture || capture.state !== state) return null;
     const currentCall = capture.current.bind(capture);
     const requestCall = capture.request.bind(capture);
     const bindDialogCall = capture.bindDialog?.bind(capture);
-    const settledCurrentCall = capture.settledCurrent?.bind(capture);
-    const settleCall = capture.settle?.bind(capture);
-    const prepareCall = capture.prepare?.bind(capture);
+    const settledCurrentCall =
+      'appliedCurrent' in capture
+        ? capture.appliedCurrent.bind(capture)
+        : capture.settledCurrent?.bind(capture);
+    const settleCall = 'settle' in capture ? capture.settle?.bind(capture) : undefined;
+    const prepareCall = 'prepare' in capture ? capture.prepare?.bind(capture) : undefined;
     let reasons = capture.reasons;
     let observation = { ...core, ...capture.observation, ...reasons, target: null };
     if (observation.strike === null && observation.strikeAvailableReason === null)
@@ -47,6 +56,7 @@ export function captureSurfaceFormatting(
     if (!current()) return null;
     let used = false;
     return Object.freeze({
+      mode: caret ? ('typing' as const) : ('range' as const),
       get observation() {
         return observation;
       },

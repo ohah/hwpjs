@@ -29,6 +29,40 @@ jobs:
           test -f ./tools/build-packages.mjs || exit 1
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Test caret formatting and terminal focus source regressions
+        timeout-minutes: 2
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          export HWPJS_TEST_CORE_DIST=packages/core/dist
+          set -- \
+            ./packages/core/tests/caret-formatting.test.mjs \
+            ./packages/core/tests/state/formatting-readonly-source.test.mjs \
+            ./packages/core/tests/state/formatting-state.test.ts \
+            ./packages/core/tests/commands/formatting.test.ts \
+            ./apps/demo/tests/caret-core-readonly-integration.test.mjs \
+            ./apps/demo/tests/caret-formatting-app.test.mjs \
+            ./apps/demo/tests/caret-formatting-typing.test.mjs \
+            ./apps/demo/tests/caret-font-name-tool.test.mjs \
+            ./apps/demo/tests/caret-noop-focus.test.mjs \
+            ./apps/demo/tests/core-single-terminal-focus.test.mjs \
+            ./packages/vanilla/tests/caret-formatting.test.mjs \
+            ./packages/vanilla/tests/caret-pointer-presentation.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 --test-timeout=50000 "$@"
+      - name: Test symbol catalog and six-alignment quick actions
+        timeout-minutes: 2
+        run: |
+          set -- \
+            ./apps/demo/tests/symbol-buffer.test.ts \
+            ./apps/demo/tests/symbol-category-data.test.ts \
+            ./apps/demo/tests/symbol-dialog.test.ts \
+            ./apps/demo/tests/symbol-insertion-boundary.test.ts \
+            ./apps/demo/tests/quick-alignment-six.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          bun test --no-install "$@"
       - name: Share official Native WASM input pin
         run: |
           test -f ./packages/core/dist/build-manifest.json || exit 1

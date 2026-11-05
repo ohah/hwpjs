@@ -1,3 +1,7 @@
+// @ts-ignore 기존 Canvas 입력 상속의 UTF16 caret span을 관측에만 재사용한다.
+import { typingSourceSpan } from '../../../../web/preview/character-typing-properties.mjs';
+// @ts-ignore 같은 scalar 경계·연속 source span 검증의 단일 출처.
+import { characterRangeValues } from '../../../../web/preview/character-range-values.mjs';
 import { characterFontNameObservations, type CharacterFontNameValue } from './font-name-state.ts';
 import type { CharacterFontLanguage } from '../commands/commands.ts';
 // @ts-ignore Canonical language partition order.
@@ -106,53 +110,52 @@ export function getSelectionFormatting(state: EditorState): SelectionFormatting 
   const underlineAvailableReason = reason(true, 'characterUnderlineAvailable');
   const strikeTargetReason = reason(true, 'characterStrikeAvailable');
   const content = state.content;
+  const caret = target.startUnit === target.endUnit;
+  const span = caret ? typingSourceSpan(row.text, target.startUnit) : null;
+  const start = span?.start ?? target.startUnit;
+  const end = span?.end ?? target.endUnit;
+  // 토큰·owner가 확인된 행에서 같은 scalar 경계와 연속 span만 읽는다. Native 쓰기 참조는 만들지 않는다.
+  const observedSpan = characterRangeValues(
+    { paragraphs: [row] },
+    [{ section: target.section, paragraph: target.paragraph, startUnit: start, endUnit: end }],
+    () => true,
+    { isBoundary: isUtf16Boundary },
+  );
+  const canObserve = (capability: string) =>
+    observedSpan !== null && (content as Record<string, unknown>)[capability] === true;
   // Helpers deliberately consume display offsets, not the mapped native offsets.
-  const bold =
-    characterAvailableReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'bold')
-      : null;
-  const italic =
-    characterAvailableReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'italic')
-      : null;
-  const underline =
-    underlineAvailableReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'underline')
-      : null;
-  const strike =
-    strikeTargetReason === null
-      ? characterSelectionState(content, row, target.startUnit, target.endUnit, 'strike')
-      : null;
+  const bold = canObserve('characterPropertiesAvailable')
+    ? characterSelectionState(content, row, start, end, 'bold')
+    : null;
+  const italic = canObserve('characterPropertiesAvailable')
+    ? characterSelectionState(content, row, start, end, 'italic')
+    : null;
+  const underline = canObserve('characterUnderlineAvailable')
+    ? characterSelectionState(content, row, start, end, 'underline')
+    : null;
+  const strike = canObserve('characterStrikeAvailable')
+    ? characterSelectionState(content, row, start, end, 'strike')
+    : null;
   const strikeAvailableReason =
     strikeTargetReason ?? (strike === null ? 'UnknownCharacterStrike' : null);
   const textColorTargetReason = reason(true, 'characterTextColorAvailable');
-  const colorObservation =
-    textColorTargetReason === null
-      ? characterTextColorObservation(content, row, target.startUnit, target.endUnit)
-      : null;
+  const colorObservation = canObserve('characterTextColorAvailable')
+    ? characterTextColorObservation(content, row, start, end)
+    : null;
   const textColor = colorObservation?.value ?? null;
   const textColorAvailableReason =
     textColorTargetReason ?? (colorObservation?.bindingValid ? null : 'UnknownCharacterTextColor');
-  const size =
-    characterAvailableReason === null
-      ? characterSizeState(content, row, target.startUnit, target.endUnit, {
-          isBoundary: isUtf16Boundary,
-        })
-      : null;
-  const align =
-    paragraphAvailableReason === null
-      ? paragraphAlignmentKey(
-          (row as typeof row & { paragraphShape?: { alignment?: number } }).paragraphShape
-            ?.alignment,
-        )
-      : null;
-  const fontTargetReason = reason(true, 'characterFontNameAvailable');
-  const fontObserved = characterFontNameObservations(
-    content,
-    row,
-    target.startUnit,
-    target.endUnit,
+  const size = canObserve('characterPropertiesAvailable')
+    ? characterSizeState(content, row, start, end, {
+        isBoundary: isUtf16Boundary,
+      })
+    : null;
+  // 문단 원본 enum 관측은 문자 span 및 Native 문단 쓰기 가용성과 독립이다.
+  const align = paragraphAlignmentKey(
+    (row as typeof row & { paragraphShape?: { alignment?: number } }).paragraphShape?.alignment,
   );
+  const fontTargetReason = reason(true, 'characterFontNameAvailable');
+  const fontObserved = characterFontNameObservations(content, row, start, end);
   const fontNames = Object.freeze(
     Object.fromEntries(
       FONT_LANGUAGES.map((language: CharacterFontLanguage) => [

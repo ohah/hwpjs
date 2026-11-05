@@ -1,3 +1,4 @@
+import { ownCaretTypingIntent } from './caret-formatting-intent.mjs';
 import { characterPropertyArgs } from '../../js/character-property-args.mjs';
 import { characterColorArg } from '../../js/character-color-args.mjs';
 import { FONT_LANGUAGES } from '../../js/font-face-identity.mjs';
@@ -119,6 +120,14 @@ export function createCanvasEditor({
   let selectionOrigin = 'canvas';
   const viewScale = () => renderer.viewScale?.() ?? 1;
   let pictureResizeAvailable = false;
+  // 다음 입력 의도의 private 수명이다. Native 토큰이나 문서 권위를 발급하지 않는다.
+  let typingIntentRevision = 0;
+  const changedTypingIntent = () => {
+    typingIntentRevision =
+      Number.isSafeInteger(typingIntentRevision) && typingIntentRevision < Number.MAX_SAFE_INTEGER
+        ? typingIntentRevision + 1
+        : NaN;
+  };
   let typingFont = null;
   let typingProperties = null;
   let multiComposition = null;
@@ -560,11 +569,32 @@ export function createCanvasEditor({
     updateReadOnly();
     paint({ deferGeometry, preserveQueuedTyping: deferGeometry });
   };
+  const resetTypingForUserSelection = (a, f) => {
+    if (
+      anchor &&
+      focus &&
+      (!sameParagraph(anchor, a) ||
+        anchor.unit !== a.unit ||
+        !sameParagraph(focus, f) ||
+        focus.unit !== f.unit)
+    ) {
+      changedTypingIntent();
+      typingFont = null;
+      changedTypingIntent();
+      typingProperties = null;
+    }
+  };
   const setSelection = (a, f, nextX = null, origin = 'canvas') => {
     selectionOrigin = origin;
     if (draftSelection && !sameParagraph(draftSelection.focus, f)) draftSelection = null;
-    if (typingFont && !sameParagraph(typingFont, f)) typingFont = null;
-    if (typingProperties && !sameParagraph(typingProperties, f)) typingProperties = null;
+    if (typingFont && !sameParagraph(typingFont, f)) {
+      changedTypingIntent();
+      typingFont = null;
+    }
+    if (typingProperties && !sameParagraph(typingProperties, f)) {
+      changedTypingIntent();
+      typingProperties = null;
+    }
     preferredX = nextX;
     anchor = a;
     focus = f;
@@ -745,7 +775,10 @@ export function createCanvasEditor({
       !pending && !composing && !historyPending && input.value === committed ? point(event) : null;
     const ranges = free ? renderer.selectionRanges?.(anchor, free) : null;
     const next = ranges ? free : point(event, target);
-    if (next) setSelection(anchor, next);
+    if (next) {
+      resetTypingForUserSelection(anchor, next);
+      setSelection(anchor, next);
+    }
   });
   listen(canvas, 'pointerdown', (event) => {
     if (event.button !== 0) return;
@@ -770,7 +803,9 @@ export function createCanvasEditor({
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       rangePermission.invalidate();
       splitPermission.invalidate();
+      changedTypingIntent();
       typingFont = null;
+      changedTypingIntent();
       typingProperties = null;
       draftSelection = null;
       selectionOrigin = 'canvas';
@@ -817,6 +852,7 @@ export function createCanvasEditor({
       input.value = committed;
     }
     target = paragraphTarget(next);
+    resetTypingForUserSelection(extended, next);
     setSelection(extended, next);
     input.disabled = false;
     updateReadOnly();
@@ -835,6 +871,16 @@ export function createCanvasEditor({
       drag = null;
       if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
       paint();
+      // 드래그 중 게시된 같은 caret도 종료 뒤에는 입력 서식 가용성을 다시 읽는다.
+      // 기존 표시 알림만 보낸다. 선택 게시·포커스·문서 권한은 변경하지 않는다.
+      if (
+        event.type === 'pointerup' &&
+        anchor &&
+        focus &&
+        sameParagraph(anchor, focus) &&
+        anchor.unit === focus.unit
+      )
+        report('커서 위치를 선택했습니다.');
     }
   };
   listen(canvas, 'pointerup', release);
@@ -958,6 +1004,7 @@ export function createCanvasEditor({
     if (inputType === 'navigation') {
       const action = JSON.parse(data);
       if (action.key === 'SelectAll') {
+        resetTypingForUserSelection({ ...target, unit: 0 }, { ...target, unit: committed.length });
         setSelection({ ...target, unit: 0 }, { ...target, unit: committed.length });
         reveal();
         return true;
@@ -969,6 +1016,7 @@ export function createCanvasEditor({
         committed = renderer.paragraph(target).text;
         input.value = committed;
       }
+      resetTypingForUserSelection(next.anchor, next.focus);
       setSelection(next.anchor, next.focus, next.preferredX);
       reveal();
       return true;
@@ -1120,6 +1168,23 @@ export function createCanvasEditor({
       return null;
     return renderer.selectionRanges?.(anchor, focus) ?? null;
   };
+  const setTypingProperties = (properties, onCommit = null) => {
+    const previous =
+      typingProperties && sameParagraph(typingProperties, target)
+        ? typingProperties.properties
+        : {};
+    let merged;
+    try {
+      merged = mergeTypingProperties(previous, properties);
+    } catch {
+      return false;
+    }
+    changedTypingIntent();
+    typingProperties = { ...target, properties: merged };
+    onCommit?.(typingIntentRevision);
+    report('다음 입력의 글자 속성을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.');
+    return true;
+  };
   const setCharacterProperties = (properties, guard = null) => {
     if (multipleParagraphs()) {
       const ranges = selectedCharacterPropertyRanges();
@@ -1144,19 +1209,7 @@ export function createCanvasEditor({
     if (!range) return false;
     if (range.startUnit === range.endUnit) {
       if (!canSetTypingProperties()) return false;
-      const previous =
-        typingProperties && sameParagraph(typingProperties, target)
-          ? typingProperties.properties
-          : {};
-      let merged;
-      try {
-        merged = mergeTypingProperties(previous, properties);
-      } catch {
-        return false;
-      }
-      typingProperties = { ...target, properties: merged };
-      report('다음 입력의 글자 속성을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.');
-      return true;
+      return setTypingProperties(properties);
     }
     pending = {
       kind: 'character-properties',
@@ -1636,6 +1689,7 @@ export function createCanvasEditor({
       } catch {
         return false;
       }
+      changedTypingIntent();
       typingFont = { ...target, language, name };
       report('다음 입력의 글꼴을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.');
       return true;
@@ -2203,6 +2257,7 @@ export function createCanvasEditor({
         if (!paragraph || !navigation) return;
         const next = extendedNavigation(key, navigation.paragraphEdge, true, navigation.word);
         if (next && renderer.selectionRanges?.(next.anchor, next.focus)) {
+          resetTypingForUserSelection(next.anchor, next.focus);
           setSelection(next.anchor, next.focus, next.preferredX);
           reveal();
         }
@@ -2216,10 +2271,14 @@ export function createCanvasEditor({
       target = paragraphTarget(point);
       committed = renderer.paragraph(target).text;
       input.value = committed;
+      resetTypingForUserSelection(point, point);
       setSelection(point, point);
       if (key !== event.key) {
         const next = extendedNavigation(key, navigation.paragraphEdge, false, navigation.word);
-        if (next) setSelection(next.anchor, next.focus, next.preferredX);
+        if (next) {
+          resetTypingForUserSelection(next.anchor, next.focus);
+          setSelection(next.anchor, next.focus, next.preferredX);
+        }
       }
       reveal();
       return;
@@ -2261,6 +2320,7 @@ export function createCanvasEditor({
       committed = renderer.paragraph(target).text;
       input.value = committed;
       updateReadOnly();
+      resetTypingForUserSelection(next, next);
       setSelection(next, next);
       reveal();
       return;
@@ -2276,6 +2336,7 @@ export function createCanvasEditor({
         queueOrderedInput('navigation', JSON.stringify({ key: 'SelectAll' }));
         return;
       }
+      resetTypingForUserSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length });
       setSelection({ ...target, unit: 0 }, { ...target, unit: input.value.length });
       reveal();
       return;
@@ -2331,6 +2392,7 @@ export function createCanvasEditor({
       committed = renderer.paragraph(target).text;
       input.value = committed;
     }
+    resetTypingForUserSelection(next.anchor, next.focus);
     setSelection(next.anchor, next.focus, next.preferredX);
     reveal();
   });
@@ -2642,6 +2704,118 @@ export function createCanvasEditor({
     input.setAttribute('aria-busy', 'true');
     return true;
   };
+  // 실제 단일 caret의 다음 입력 의도만 소유한다. Native 명령이나 가짜 범위를 만들지 않는다.
+  const captureCaretFormatting = (isCurrent, postCurrent, ownedModalCurrent) => {
+    const saved = settledSelection(true);
+    if (
+      !saved ||
+      saved.target.createdCell ||
+      multipleParagraphs() ||
+      saved.start !== saved.end ||
+      saved.anchor.unit !== saved.focus.unit ||
+      !sameParagraph(saved.anchor, saved.focus)
+    )
+      return null;
+    let expectedTypingRevision = typingIntentRevision;
+    const stable = (post = false) => {
+      const modal = ownedModalCurrent?.() === true;
+      if (!post && !modal && !selectionCurrent(saved)) return false;
+      return (
+        Number.isSafeInteger(expectedTypingRevision) &&
+        typingIntentRevision === expectedTypingRevision &&
+        !events.signal.aborted &&
+        !composing &&
+        !pending &&
+        !historyPending &&
+        !inputIntents.size &&
+        !historyInputPending() &&
+        drag === null &&
+        controls.ready() &&
+        !controls.busy() &&
+        target === saved.target &&
+        anchor === saved.anchor &&
+        focus === saved.focus &&
+        historyRevision === saved.revision &&
+        committed === saved.committed &&
+        input.value === saved.committed &&
+        renderer.paragraph(target)?.text === saved.committed &&
+        (post ? postCurrent() : isCurrent()) === true &&
+        target === saved.target &&
+        anchor === saved.anchor &&
+        focus === saved.focus &&
+        input.value === saved.committed &&
+        !composing &&
+        !pending &&
+        !controls.busy() &&
+        typingIntentRevision === expectedTypingRevision
+      );
+    };
+    if (!stable()) return null;
+    const caretEditable = () => {
+      if (wholeTextEditable()) return true;
+      try {
+        const mapped = sourceTextChange(
+          { startUnit: saved.anchor.unit, endUnit: saved.anchor.unit, text: '' },
+          renderer.paragraph(target)?.sourceOffsets,
+        );
+        return rangePermission.allowed({
+          ...target,
+          startUnit: mapped.startUnit,
+          endUnit: mapped.endUnit,
+        });
+      } catch {
+        return false;
+      }
+    };
+    const supported = (kind) => {
+      if (!stable() || !caretEditable()) return false;
+      if (kind === 'character-properties')
+        return (
+          renderer.characterPropertyTextAvailable?.() === true &&
+          (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true)
+        );
+      return (
+        kind === 'font-name' &&
+        renderer.namedFontTextAvailable?.() === true &&
+        (!typingProperties || renderer.namedFontPropertyTextAvailable?.() === true)
+      );
+    };
+    let used = false,
+      accepted = false;
+    return Object.freeze({
+      current: () => !used && stable(),
+      supported,
+      typing: Object.freeze({
+        properties:
+          typingProperties && sameParagraph(typingProperties, target)
+            ? Object.freeze({ ...typingProperties.properties })
+            : null,
+        font:
+          typingFont && sameParagraph(typingFont, target)
+            ? Object.freeze({ language: typingFont.language, name: typingFont.name })
+            : null,
+      }),
+      request(intent) {
+        if (used) return false;
+        const owned = ownCaretTypingIntent(intent);
+        if (!owned || !supported(owned.kind) || !stable()) return false;
+        used = true;
+        if (owned.kind === 'character-properties')
+          accepted = setTypingProperties(owned.properties, (revision) => {
+            expectedTypingRevision = revision;
+          });
+        else {
+          changedTypingIntent();
+          typingFont = { ...target, language: owned.language, name: owned.name };
+          expectedTypingRevision = typingIntentRevision;
+          accepted = true;
+          report('다음 입력의 글꼴을 지정했습니다. 입력 전에는 문서가 변경되지 않습니다.');
+        }
+        return accepted;
+      },
+      appliedCurrent: () => used && accepted && stable(true),
+    });
+  };
   const captureSelectionFormatting = (
     isCurrent = () => true,
     observe = () => ({}),
@@ -2874,6 +3048,7 @@ export function createCanvasEditor({
     hasMultiParagraphSelection: () => multipleParagraphs(),
     captureRangeFormatting,
     captureSelectionFormatting,
+    captureCaretFormatting,
     startFormattingPaint,
     requestAtomicFormatting,
     currentFormattingSelection: () =>
@@ -2918,6 +3093,11 @@ export function createCanvasEditor({
       committed = row.text;
       input.value = committed;
       input.disabled = false;
+      if (origin === 'canvas')
+        resetTypingForUserSelection(
+          { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
+          { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
+        );
       setSelection(
         { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
         { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
@@ -3479,7 +3659,9 @@ export function createCanvasEditor({
       renderer.selectPicture?.(null);
       rangePermission.invalidate();
       splitPermission.invalidate();
+      changedTypingIntent();
       typingFont = null;
+      changedTypingIntent();
       typingProperties = null;
       draftSelection = null;
       clearInputIntents();
@@ -3633,7 +3815,9 @@ export function createCanvasEditor({
       }
       try {
         if (['undo', 'redo', 'merge'].includes(message.kind)) {
+          changedTypingIntent();
           typingFont = null;
+          changedTypingIntent();
           typingProperties = null;
         }
         if (message.kind === 'save') {
@@ -3718,21 +3902,25 @@ export function createCanvasEditor({
             );
             return;
           }
-          if (message.kind === 'split' && typingFont && sameParagraph(typingFont, target))
+          if (message.kind === 'split' && typingFont && sameParagraph(typingFont, target)) {
+            changedTypingIntent();
             typingFont = {
               ...paragraphTarget(next),
               language: typingFont.language,
               name: typingFont.name,
             };
+          }
           if (
             message.kind === 'split' &&
             typingProperties &&
             sameParagraph(typingProperties, target)
-          )
+          ) {
+            changedTypingIntent();
             typingProperties = {
               ...paragraphTarget(next),
               properties: { ...typingProperties.properties },
             };
+          }
           target = paragraphTarget(next);
           committed = paragraph.text;
           input.value = committed;
@@ -3964,9 +4152,11 @@ export function createCanvasEditor({
             report('교체는 적용됐지만 표시 범위에서 입력을 계속할 수 없습니다.');
             return;
           }
+          changedTypingIntent();
           typingFont = previous.font
             ? { ...previous.target, language: previous.font.language, name: previous.font.name }
             : null;
+          changedTypingIntent();
           typingProperties = previous.properties
             ? { ...previous.target, properties: { ...previous.properties } }
             : null;
@@ -4009,9 +4199,14 @@ export function createCanvasEditor({
         }
         if (message.error) {
           clearInputIntents();
-          if (previous.kind === 'splice-font-name') typingFont = null;
-          if (['splice-font-name', 'splice-character-properties'].includes(previous.kind))
+          if (previous.kind === 'splice-font-name') {
+            changedTypingIntent();
+            typingFont = null;
+          }
+          if (['splice-font-name', 'splice-character-properties'].includes(previous.kind)) {
+            changedTypingIntent();
             typingProperties = null;
+          }
           if (
             [
               'format',

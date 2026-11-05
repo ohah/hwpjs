@@ -1,21 +1,71 @@
 .hwp-symbol-dialog {
-  width: min(34rem, calc(100vw - 32px));
+  width: min(780px, calc(100vw - 32px));
+}
+.hwp-symbol-dialog[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem;
+}
+.hwp-symbol-dialog .hwp-dialog-header {
+  grid-column: 1 / -1;
+}
+.hwp-symbol-dialog .hwp-dialog-footer {
+  grid-column: 2;
+  grid-row: 2;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-self: start;
+  min-width: 0;
+  padding: 14px 14px 14px 0;
+}
+.hwp-symbol-dialog .hwp-dialog-footer button {
+  width: 100%;
 }
 .hwp-symbol-dialog .hwp-dialog-body {
   display: grid;
+  grid-column: 1;
+  min-width: 0;
+  grid-template-columns: minmax(8rem, 0.8fr) minmax(0, 1.2fr);
   gap: 0.75rem;
 }
-.hwp-symbol-grid {
+.hwp-symbol-categories,
+.hwp-symbol-characters,
+.hwp-symbol-buffer {
   display: grid;
-  grid-template-columns: repeat(5, minmax(2.5rem, 1fr));
+  min-width: 0;
+  align-content: start;
+  gap: 0.5rem;
+}
+.hwp-symbol-characters {
+  min-height: 16rem;
+}
+.hwp-symbol-categories select {
+  min-width: 0;
+  width: 100%;
+}
+.hwp-symbol-grid {
+  max-height: 18rem;
+  overflow: auto;
+  align-content: start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(2.5rem, 1fr));
   gap: 0.3rem;
 }
 .hwp-symbol-grid button {
   min-height: 2.5rem;
   font-size: 1.35rem;
 }
+.hwp-symbol-grid button[aria-pressed='true'] {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+.hwp-symbol-buffer,
+.hwp-symbol-dialog [role='status'] {
+  grid-column: 1 / -1;
+}
 .hwp-symbol-dialog input {
   min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   font-size: 1.2rem;
 }
 .hwp-symbol-dialog output {
@@ -25,4 +75,23 @@
 .hwp-symbol-dialog [role='status'] {
   min-height: 1.5em;
   margin: 0;
+}
+@media (max-width: 640px) {
+  .hwp-symbol-dialog[open] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hwp-symbol-dialog .hwp-dialog-footer {
+    grid-column: 1;
+    grid-row: 3;
+    flex-direction: row;
+    padding: 0 14px 14px;
+  }
+  .hwp-symbol-dialog .hwp-dialog-footer button {
+    width: auto;
+  }
+}
+@media (max-width: 480px) {
+  .hwp-symbol-dialog .hwp-dialog-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

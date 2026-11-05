@@ -74,7 +74,7 @@ test('셀 도구는 기존 명령 ID를 재사용하고 capability를 만들지 
     assert.ok(contextCommandIds('table-cell').includes(id));
   assert.ok(!contextCommandIds('none').includes('paste'));
 });
-function harness() {
+function harness(surfaceText = false) {
   const document: any = new EventTarget();
   document.defaultView = Object.assign(new EventTarget(), { innerWidth: 600, innerHeight: 400 });
   class Node extends EventTarget {
@@ -137,22 +137,44 @@ function harness() {
   input.focus();
   let target: ContextTarget = { kind: 'body', key: 'e:d:1:2:3:body' },
     enabled = true;
+  let textCurrent = true,
+    textEpoch = 0,
+    textKey = 'range:A';
+  let textCaptureThrows = false;
+  let onTextCurrent: (() => void) | undefined;
+  let onState: (() => void) | undefined;
   const calls: string[] = [],
     listeners = new Set<() => void>(),
     errors: unknown[] = [];
   const control = mountDemoContextMenu({
     root,
     getTarget: () => target,
-    getState: () => ({
-      title: '',
-      status: '',
-      actions: {
-        copy: { enabled },
-        bold: { enabled },
-        'paragraph-properties': { enabled },
-        'object-properties': { enabled },
-      },
-    }),
+    captureTextSelection: surfaceText
+      ? () => {
+          if (textCaptureThrows) throw Error('UnavailableSelection');
+          const epoch = textEpoch,
+            key = textKey;
+          return {
+            current() {
+              onTextCurrent?.();
+              return textCurrent && epoch === textEpoch && key === textKey;
+            },
+          };
+        }
+      : undefined,
+    getState: () => (
+      onState?.(),
+      {
+        title: '',
+        status: '',
+        actions: {
+          copy: { enabled },
+          bold: { enabled },
+          'paragraph-properties': { enabled },
+          'object-properties': { enabled },
+        },
+      }
+    ),
     execute: (a) => {
       calls.push(a.command);
     },
@@ -190,6 +212,28 @@ function harness() {
     setFocus: (f: () => void) => {
       onFocus = f;
     },
+    setTextCurrent: (value: boolean) => {
+      textCurrent = value;
+    },
+    setSurfaceSelection: (key: string) => {
+      textKey = key;
+      textEpoch++;
+    },
+    setSurfaceKeyOnly: (key: string) => {
+      textKey = key;
+    },
+    setCaptureThrows: () => {
+      textCaptureThrows = true;
+    },
+    onTextCurrent: (fn: () => void) => {
+      onTextCurrent = fn;
+    },
+    onState: (fn: () => void) => {
+      onState = fn;
+    },
+    keyboardOpen: (values: Record<string, unknown> = {}) =>
+      send(root, 'keydown', { key: 'F10', shiftKey: true, ...values }),
+    escape: () => send(menu, 'keydown', { key: 'Escape' }),
   };
 }
 for (const change of ['owner', 'document', 'undo', 'view', 'range'])
@@ -301,3 +345,196 @@ for (const change of ['disabled', 'picture', 'document', 'body', 'focus'] as con
       h.control.close();
     }
   });
+
+test('Surface 다문단 캡처는 owner 분류 없이 기존 텍스트 명령을 한 번 전달한다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'canvas-multi' });
+    h.open();
+    assert.ok(h.menu.children.some((n: any) => n.dataset.commandId === 'bold' && !n.disabled));
+    assert.ok(h.menu.children.some((n: any) => n.dataset.commandId === 'copy' && !n.disabled));
+    assert.ok(
+      !h.menu.children.some((n: any) =>
+        ['object-properties', 'table-cell-properties', 'insert-image'].includes(
+          n.dataset.commandId,
+        ),
+      ),
+    );
+    h.click('bold');
+    assert.deepEqual(h.calls, ['bold']);
+  } finally {
+    h.control.close();
+  }
+});
+for (const unavailable of ['absent', 'false', 'throw'] as const)
+  test(`다문단 캡처 ${unavailable}는 기존 문서 목록으로만 fallback한다`, () => {
+    const h = harness(unavailable !== 'absent');
+    try {
+      h.setTarget({ kind: 'none', key: 'none' });
+      if (unavailable === 'false') h.setTextCurrent(false);
+      if (unavailable === 'throw') h.setCaptureThrows();
+      h.open();
+      assert.deepEqual(
+        h.menu.children.map((n: any) => n.dataset.commandId),
+        contextCommandIds('none'),
+      );
+      h.click('bold');
+      assert.deepEqual(h.calls, []);
+    } finally {
+      h.control.close();
+    }
+  });
+for (const change of ['Canvas A→B', '외부 선택 null', 'IME', 'pending', 'lease 종료'] as const)
+  test(`동일 Core token의 ${change}도 캡처가 무효하면 실행하지 않는다`, () => {
+    const h = harness(true);
+    try {
+      h.setTarget({ kind: 'none', key: 'same-core-token' });
+      h.open();
+      h.setTextCurrent(false);
+      h.click('copy');
+      assert.deepEqual(h.calls, []);
+    } finally {
+      h.control.close();
+    }
+  });
+test('다문단 포커스 복원 중 current 무효화는 dispatch 전에 거부한다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'multi' });
+    h.open();
+    h.setFocus(() => h.setTextCurrent(false));
+    h.click('copy');
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+test('다문단 표시 콜백 재진입 후에는 이미 보인 버튼도 실행하지 않는다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'multi' });
+    h.open();
+    h.onState(() => h.setTextCurrent(false));
+    h.click('bold');
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+test('다문단 캡처 current의 예외와 종료 재진입은 fail closed다', () => {
+  for (const mode of ['throw', 'close']) {
+    const h = harness(true);
+    try {
+      h.setTarget({ kind: 'none', key: 'multi' });
+      h.open();
+      h.onTextCurrent(() => {
+        if (mode === 'throw') throw Error('CurrentUnavailable');
+        h.control.close();
+      });
+      h.click('bold');
+      assert.deepEqual(h.calls, []);
+    } finally {
+      h.control.close();
+    }
+  }
+});
+test('그림과 단일 셀은 다문단 캡처 포트가 있어도 기존 메뉴를 유지한다', () => {
+  for (const kind of ['picture', 'table-cell'] as const) {
+    const h = harness(true);
+    try {
+      h.setCaptureThrows();
+      h.setTarget({ kind, key: kind });
+      h.open();
+      assert.deepEqual(
+        h.menu.children.map((n: any) => n.dataset.commandId),
+        contextCommandIds(kind),
+      );
+    } finally {
+      h.control.close();
+    }
+  }
+});
+test('ShiftF10은 다문단 메뉴를 열고 Escape는 편집 없이 닫는다; IME는 열지 않는다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'multi' });
+    h.keyboardOpen({ isComposing: true });
+    assert.equal(h.menu.hidden, true);
+    h.keyboardOpen();
+    assert.equal(h.menu.hidden, false);
+    assert.ok(h.menu.children.some((n: any) => n.dataset.commandId === 'copy'));
+    h.escape();
+    assert.equal(h.menu.hidden, true);
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+
+test('Core token과 Surface key가 원복돼도 capture epoch가 다르면 stale이다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'same-core' });
+    h.open();
+    h.setSurfaceSelection('range:B');
+    h.setSurfaceSelection('range:A');
+    h.click('bold');
+    assert.deepEqual(h.calls, []);
+    h.open();
+    h.click('bold');
+    assert.deepEqual(h.calls, ['bold']);
+  } finally {
+    h.control.close();
+  }
+});
+test('epoch를 바꾸지 않아도 Surface key 변경은 기존 캡처를 무효화한다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'same-core' });
+    h.open();
+    h.setSurfaceKeyOnly('range:B');
+    h.click('copy');
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+test('getState 재진입으로 새 캡처가 생겨도 이전 실행은 새 캡처를 빌리지 않는다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'same-core' });
+    h.open();
+    let once = false;
+    h.onState(() => {
+      if (once) return;
+      once = true;
+      h.setSurfaceSelection('range:B');
+      h.open();
+    });
+    h.click('bold');
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+
+test('숨긴 메뉴도 문서 변경 시 이전 Surface 캡처 callback을 버린다', () => {
+  const h = harness(true);
+  try {
+    h.setTarget({ kind: 'none', key: 'old-document' });
+    h.open();
+    h.escape();
+    let reads = 0;
+    h.onTextCurrent(() => {
+      reads++;
+    });
+    h.setTarget({ kind: 'none', key: 'new-document' });
+    for (const listener of h.listeners) listener();
+    const afterInvalidation = reads;
+    for (const listener of h.listeners) listener();
+    assert.equal(reads, afterInvalidation);
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});

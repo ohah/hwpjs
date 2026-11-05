@@ -500,6 +500,7 @@ export async function mountDemo(
     ? mountDemoContextMenu({
         root: shell.surfaceMount,
         getState: presentation,
+        captureTextSelection: () => captureFormattingPresentation(editor, () => host).capture,
         getTarget: () =>
           contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null),
         execute: runAction,

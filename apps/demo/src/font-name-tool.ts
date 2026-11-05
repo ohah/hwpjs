@@ -131,7 +131,8 @@ export function createFontNameTool(options: FontNameToolOptions) {
   const reasonFor = (ctx: Context): string | null => {
     if (!ctx.language) return 'SelectFontLanguage';
     if (ctx.preparing) return 'FormattingPreparing';
-    if (ctx.rangeCapture && !ctx.rangeCapture.hasSettlement) return 'SurfaceSettlementUnavailable';
+    if (ctx.rangeCapture && ctx.rangeCapture.mode !== 'typing' && !ctx.rangeCapture.hasSettlement)
+      return 'SurfaceSettlementUnavailable';
     if (ctx.language !== 'representative')
       return ctx.observation.fontNameAvailableReasons[ctx.language];
     const denial = languages
@@ -246,7 +247,7 @@ export function createFontNameTool(options: FontNameToolOptions) {
         return;
       }
       if (ctx.rangeCapture) {
-        if (!ctx.rangeCapture.hasSettlement) {
+        if (ctx.rangeCapture.mode !== 'typing' && !ctx.rangeCapture.hasSettlement) {
           ctx.error = 'SurfaceSettlementUnavailable';
           return;
         }
@@ -271,6 +272,12 @@ export function createFontNameTool(options: FontNameToolOptions) {
         ctx.rangeConsumed = true;
         if (!ctx.rangeCapture.request(intent)) {
           ctx.error = 'StaleFontNameSelection';
+          return;
+        }
+        if (ctx.rangeCapture.mode === 'typing') {
+          const focusState = editor.getEditorState();
+          notify(() => options.onStatus('다음 입력에 사용할 글꼴을 설정했습니다.'));
+          if (active(ctx)) close(true, focusState);
           return;
         }
         const settled = await ctx.rangeCapture.settle();

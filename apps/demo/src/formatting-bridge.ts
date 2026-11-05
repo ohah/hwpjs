@@ -85,6 +85,8 @@ export function createFormattingBridge({
     'align-center': 'CENTER',
     'align-right': 'RIGHT',
     'align-justify': 'JUSTIFY',
+    'align-distribute': 'DISTRIBUTE',
+    'align-distribute-space': 'DISTRIBUTE_SPACE',
   } as const;
   const supported = (command: string) =>
     command === 'bold' ||
@@ -189,8 +191,22 @@ export function createFormattingBridge({
       state,
       formatting,
     );
-    if (rangeCapture) {
+    if (
+      rangeCapture &&
+      (rangeCapture.mode !== 'typing' || !Object.hasOwn(alignments, action.command))
+    ) {
       const observed = rangeCapture.observation;
+      // 값이 같은 Apply도 기존 host의 포커스 복귀만 요청한다. 쓰기/ACK를 만들지 않는다.
+      const focusUnchanged = () => {
+        if (
+          !disposed &&
+          editor.getEditorState() === state &&
+          rangeCapture.current() &&
+          editor.getEditorState() === state &&
+          !disposed
+        )
+          onFocus?.();
+      };
       if (action.command === 'strike' && observed.strike === null) {
         onStatus('UnknownCharacterFormatting');
         return true;
@@ -223,10 +239,16 @@ export function createFormattingBridge({
           onStatus('InvalidCharacterSize');
           return true;
         }
-        if (intent.properties.size === observed.size) return true;
+        if (intent.properties.size === observed.size) {
+          focusUnchanged();
+          return true;
+        }
       } else {
         const alignment = alignments[action.command as keyof typeof alignments];
-        if (observed.align === alignment) return true;
+        if (observed.align === alignment) {
+          focusUnchanged();
+          return true;
+        }
         intent = { kind: 'alignment', alignment };
       }
       pending = true;
@@ -253,7 +275,21 @@ export function createFormattingBridge({
             ? '서식 변경을 접수했습니다.'
             : '선택 범위가 바뀌었거나 현재 서식을 변경할 수 없습니다.',
         );
-        if (!admitted || disposed || !rangeCapture.hasSettlement) return true;
+        if (!admitted || disposed) return true;
+        if (rangeCapture.mode === 'typing') {
+          const focusState = editor.getEditorState();
+          onStatus('다음 입력에 사용할 서식을 설정했습니다.');
+          if (
+            !disposed &&
+            editor.getEditorState() === focusState &&
+            rangeCapture.settledCurrent() &&
+            editor.getEditorState() === focusState &&
+            !disposed
+          )
+            onFocus?.();
+          return true;
+        }
+        if (!rangeCapture.hasSettlement) return true;
         const settled = await rangeCapture.settle();
         if (disposed) return true;
         const result = settled.result;
@@ -329,6 +365,9 @@ export function createFormattingBridge({
     const target = formatting.target;
     pending = true;
     try {
+      const focusHost = getSurfaceFormattingHost?.();
+      // 호스트 조회도 외부 콜백이므로 요청 직전 원래 상태를 다시 확인한다.
+      if (disposed || editor.getEditorState() !== state) return true;
       let result: CommandResult;
       if (action.command === 'bold' || action.command === 'italic') {
         const property = action.command;
@@ -366,6 +405,18 @@ export function createFormattingBridge({
       }
       onStatus(result.error ? `${result.status}: ${result.error}` : result.status);
       onResult?.(result);
+      // 결과 콜백 뒤에도 같은 terminal 상태와 호스트인 경우 기존 focus 경로만 요청한다.
+      if (
+        !disposed &&
+        !result.error &&
+        (result.status === 'committed-with-snapshot' || result.status === 'known-no-op') &&
+        focusHost !== undefined &&
+        editor.getEditorState() === result.state &&
+        getSurfaceFormattingHost?.() === focusHost &&
+        editor.getEditorState() === result.state &&
+        !disposed
+      )
+        onFocus?.();
     } catch (error) {
       onStatus(error instanceof Error ? error.message : String(error));
     } finally {
@@ -475,7 +526,12 @@ export function createFormattingBridge({
       const actions = Object.fromEntries(
         Object.entries(rangePresentation.actions ?? {}).map(([key, value]) => [
           key,
-          { ...value, surfaceSelection: value.enabled === true },
+          {
+            ...value,
+            surfaceSelection:
+              value.enabled === true &&
+              (rangeCapture.mode !== 'typing' || !Object.hasOwn(alignments, key)),
+          },
         ]),
       );
       return Object.freeze({ ...rangePresentation, actions: Object.freeze(actions) });

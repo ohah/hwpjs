@@ -1,12 +1,13 @@
-export const SYMBOL_CATEGORIES = Object.freeze(
-  [
-    { label: '일반', values: ['※', '§', '¶', '•', '○', '●', '□', '■', '☆', '★'] },
-    { label: '화살표', values: ['←', '↑', '→', '↓', '↔', '⇒', '⇔', '↗'] },
-    { label: '수학', values: ['±', '×', '÷', '≠', '≤', '≥', '∞', '√', '∑', '∫'] },
-    { label: '괄호와 통화', values: ['〈', '〉', '《', '》', '「', '」', '₩', '€', '£', '¥'] },
-    { label: '확장 문자', values: ['e\u0301', '😀', '𝄞', '👩‍💻', '🇰🇷'] },
-  ].map((category) => Object.freeze({ ...category, values: Object.freeze(category.values) })),
-);
+import { SYMBOL_CATEGORY_DATA } from './symbol-category-data.ts';
+
+export const SYMBOL_CATEGORIES = SYMBOL_CATEGORY_DATA;
+export const DEFAULT_SYMBOL_CATEGORY_ID = 'general-punctuation';
+const categoryById = new Map(SYMBOL_CATEGORIES.map((category) => [category.id, category]));
+
+/** 공유 Map을 노출하지 않고 안정 ID만 조회한다. */
+export function getSymbolCategory(id: string) {
+  return categoryById.get(id) ?? null;
+}
 
 /** UTF-16 검증은 표준 문자열 API에 맡기며 별도 분절 알고리즘을 만들지 않는다. */
 export function symbolTextError(text: string): string | null {

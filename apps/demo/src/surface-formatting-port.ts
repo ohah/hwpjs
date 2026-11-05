@@ -50,7 +50,20 @@ export interface SurfaceSelectionFormattingCapture {
   settledCurrent?(): boolean;
   settle?(): Promise<{ readonly result: CommandResult | null; readonly current: boolean }>;
 }
+/** 현재 caret의 입력 대기 서식. 문서 편집/Native 결과를 발급하지 않는다. */
+export interface SurfaceCaretFormattingCapture {
+  readonly mode: 'typing';
+  readonly state: SurfaceSelectionFormattingCapture['state'];
+  readonly observation: SurfaceSelectionFormattingCapture['observation'];
+  readonly reasons: SurfaceSelectionFormattingCapture['reasons'];
+  current(): boolean;
+  bindDialog(element: HTMLDialogElement): boolean;
+  request(intent: SurfaceFormattingIntent): boolean;
+  /** 동일 caret에 입력 대기 서식이 접수된 뒤의 현재성. Native ACK가 아니다. */
+  appliedCurrent(): boolean;
+}
 export interface SurfaceFormattingHost {
+  captureCaretFormatting?(): SurfaceCaretFormattingCapture | null;
   captureSelectionFormatting?(): SurfaceSelectionFormattingCapture | null;
   captureRangeFormatting?(property: 'underline' | 'strike'): SurfaceFormattingCapture | null;
 }

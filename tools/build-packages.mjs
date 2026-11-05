@@ -180,7 +180,10 @@ for (const name of selected) {
         paths: {
           ...JSON.parse(await readFile(join(root, 'tsconfig.json'), 'utf8')).compilerOptions.paths,
           '@hwpjs/core/_internal/native-geometry': [
-            join(root, 'packages/core/src/_internal/native-geometry.ts'),
+            join(
+              root,
+              `packages/core/${name === 'core' ? 'src' : 'dist'}/_internal/native-geometry.${name === 'core' ? 'ts' : 'd.ts'}`,
+            ),
           ],
         },
         noEmit: false,

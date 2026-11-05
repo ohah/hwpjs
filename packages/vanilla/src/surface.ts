@@ -35,7 +35,11 @@ import type { HeadlessEditor } from '@hwpjs/core';
 import type { InputSurfaceHooks, InputSurfaceLease } from '@hwpjs/core';
 import type { SelectionTarget } from '@hwpjs/core';
 import type { RuntimeMessage, RuntimeReply } from '@hwpjs/core';
-import { getHistoryAvailability, createParagraphSelection } from '@hwpjs/core';
+import {
+  getHistoryAvailability,
+  createParagraphSelection,
+  getSelectionFormatting,
+} from '@hwpjs/core';
 import { createControlBridge } from './core-bridge.ts';
 import { canvasSurfacePageFrame } from './page-frame.ts';
 // @ts-ignore Canonical owner projection shared with headless selection validation.
@@ -773,6 +777,40 @@ export function createCanvasSurface({
       return false;
     }
   };
+  // 서식 캡처가 소유한 단일 실제 모달만 허용한다. 두 캡처가 같은 수명을 공유한다.
+  const formattingModalOwner = () => {
+    let dialog: HTMLDialogElement | undefined,
+      bound = false,
+      invalid = false;
+    const current = () => {
+      if (invalid) return false;
+      if (!bound) return !modalOpen();
+      try {
+        const active = doc.querySelectorAll('dialog:modal');
+        return (
+          dialog?.ownerDocument === doc &&
+          dialog.isConnected === true &&
+          dialog.open === true &&
+          active.length === 1 &&
+          active[0] === dialog
+        );
+      } catch {
+        return false;
+      }
+    };
+    return {
+      current,
+      isOwned: () => bound && current(),
+      bind(element: HTMLDialogElement, verify: () => boolean) {
+        if (bound) return false;
+        bound = true;
+        dialog = element;
+        const valid = verify();
+        if (!valid) invalid = true;
+        return valid;
+      },
+    };
+  };
   const rangeViewState = (modalCurrent: () => boolean = () => !modalOpen()) => {
     if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy() || !modalCurrent())
       return undefined;
@@ -971,28 +1009,106 @@ export function createCanvasSurface({
     ): Promise<boolean> {
       return transferSurfaceSelection(options);
     },
+    captureCaretFormatting() {
+      const state = editor.getEditorState();
+      if (
+        closed ||
+        nonTextHistoryPending ||
+        !lease?.isActive() ||
+        bridge?.busy() ||
+        modalOpen() ||
+        state.status !== 'ready'
+      )
+        return null;
+      const source = getSelectionFormatting(state);
+      const selected = source.target;
+      if (!selected || source.characterAvailableReason === 'CreatedCellRequiresSurfacePort')
+        return null;
+      const canonical = () => {
+        if (
+          closed ||
+          nonTextHistoryPending ||
+          !lease?.isActive() ||
+          bridge?.busy() ||
+          state !== editor.getEditorState() ||
+          state.status !== 'ready' ||
+          observedStateVersion !== state.stateVersion ||
+          displayed !==
+            `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` ||
+          !direct.settled() ||
+          !renderer.historyModelMatches(state) ||
+          !selected ||
+          selected.startUnit !== selected.endUnit
+        )
+          return false;
+        const points = direct.currentFormattingSelection();
+        return (
+          points &&
+          points.anchor.section === selected.section &&
+          points.focus.section === selected.section &&
+          points.anchor.paragraph === selected.paragraph &&
+          points.focus.paragraph === selected.paragraph &&
+          points.anchor.unit === selected.startUnit &&
+          points.focus.unit === selected.endUnit &&
+          Boolean(caretGeometry(renderer.layout(), points.anchor)) &&
+          editor.getEditorState() === state
+        );
+      };
+      if (modalOpen() || !canonical()) return null;
+      const modal = formattingModalOwner();
+      const current = () => canonical() && modal.current();
+      const postCurrent = () => canonical() && (!modalOpen() || modal.isOwned());
+      const captured = direct.captureCaretFormatting(current, postCurrent, modal.isOwned);
+      if (!captured || !current()) return null;
+      const writable = rangeWritable(state);
+      const properties =
+        writable && captured.supported('character-properties')
+          ? null
+          : 'CaretTypingPropertiesUnavailable';
+      const font =
+        writable && captured.supported('font-name') ? null : 'CaretTypingFontUnavailable';
+      const readonlyReason = writable ? null : 'ReadOnlyDocument';
+      const pending = captured.typing;
+      const fontNames = { ...source.fontNames };
+      const fontNameAvailableReasons = { ...source.fontNameAvailableReasons };
+      FONT_LANGUAGES.forEach((language: import('@hwpjs/core').CharacterFontLanguage) => {
+        fontNameAvailableReasons[language] = readonlyReason ?? font;
+      });
+      if (pending.font)
+        fontNames[pending.font.language as import('@hwpjs/core').CharacterFontLanguage] =
+          Object.freeze({ kind: 'single' as const, name: pending.font.name });
+      return Object.freeze({
+        mode: 'typing' as const,
+        state,
+        observation: Object.freeze({
+          ...source,
+          ...pending.properties,
+          fontNames: Object.freeze(fontNames),
+        }),
+        reasons: Object.freeze({
+          characterAvailableReason: readonlyReason ?? properties,
+          paragraphAvailableReason: source.paragraphAvailableReason,
+          fontNameAvailableReasons: Object.freeze(fontNameAvailableReasons),
+          fontNamesAvailableReason: 'CaretRepresentativeFontUnavailable',
+          textColorAvailableReason: 'CaretTypingColorUnavailable',
+          underlineAvailableReason: 'CaretTypingUnderlineUnavailable',
+          strikeAvailableReason: 'CaretTypingStrikeUnavailable',
+        }),
+        current: () => current() && captured.current(),
+        bindDialog(element: HTMLDialogElement) {
+          return modal.bind(element, () => current() && captured.current());
+        },
+        request(intent: SurfaceFormattingIntent) {
+          return writable && current() && captured.current() && captured.request(intent) === true;
+        },
+        appliedCurrent: () => postCurrent() && captured.appliedCurrent(),
+      });
+    },
     captureSelectionFormatting() {
       const state = rangeViewState();
       if (!state) return null;
-      let ownedDialog: HTMLDialogElement | undefined,
-        dialogBound = false,
-        dialogInvalid = false;
-      const dialogCurrent = () => {
-        if (dialogInvalid) return false;
-        if (!dialogBound) return !modalOpen();
-        try {
-          const active = doc.querySelectorAll('dialog:modal');
-          return (
-            ownedDialog?.ownerDocument === doc &&
-            ownedDialog.isConnected === true &&
-            ownedDialog.open === true &&
-            active.length === 1 &&
-            active[0] === ownedDialog
-          );
-        } catch {
-          return false;
-        }
-      };
+      const modal = formattingModalOwner();
+      const dialogCurrent = modal.current;
       const current = () => rangeViewState(dialogCurrent) === state;
       let binding: ReturnType<typeof captureFormattingRangeBinding> = null;
       const captured = direct.captureSelectionFormatting(
@@ -1008,7 +1124,7 @@ export function createCanvasSurface({
           );
           return rangeFormattingObservation(state.content, ranges);
         },
-        () => dialogBound && dialogCurrent(),
+        modal.isOwned,
       );
       if (!captured || !current()) return null;
       if (rangeWritable(state)) void prepareAtomicProfile(state);
@@ -1099,12 +1215,7 @@ export function createCanvasSurface({
         },
         current: () => current() && captured.current(),
         bindDialog(element: HTMLDialogElement): boolean {
-          if (dialogBound) return false;
-          dialogBound = true;
-          ownedDialog = element;
-          const valid = current() && captured.current();
-          if (!valid) dialogInvalid = true;
-          return valid;
+          return modal.bind(element, () => current() && captured.current());
         },
         async prepare(intent?: SurfaceFormattingIntent): Promise<boolean> {
           if (used || !current() || !captured.current()) return false;

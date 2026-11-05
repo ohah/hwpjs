@@ -79,7 +79,7 @@ const settle = async () => {
   await Promise.resolve();
 };
 test('모든 범주와 조합·astral 문자열은 유효하다', () => {
-  expect(SYMBOL_CATEGORIES.length).toBe(5);
+  expect(SYMBOL_CATEGORIES.map((category) => category.id)).toContain('general-punctuation');
   for (const category of SYMBOL_CATEGORIES)
     for (const text of category.values) expect(symbolTextError(text)).toBeNull();
   for (const text of ['e\u0301', '😀', '👩‍💻', '🇰🇷']) expect(symbolTextError(text)).toBeNull();
@@ -91,6 +91,8 @@ test('빈 문자열·제어·짝 없는 서로게이트·과대 문자열은 거
 test('기호 클릭은 선택만 하고 넣기는 단일 명령이다', async () => {
   const f = fixture();
   f.controller.open();
+  f.role('symbol-category').value = 'miscellaneous-symbols';
+  fire(f.role('symbol-category'), 'change');
   const button = all(f.root).find((n) => n.textContent === '★')!;
   fire(button, 'click');
   expect(f.calls).toBe(0);

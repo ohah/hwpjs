@@ -42,6 +42,8 @@ export type DemoCommand =
   | 'align-center'
   | 'align-right'
   | 'align-justify'
+  | 'align-distribute'
+  | 'align-distribute-space'
   | 'toggle-paragraph-marks'
   | 'set-font-size'
   | 'set-zoom'

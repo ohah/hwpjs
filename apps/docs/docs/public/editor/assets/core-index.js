@@ -15,13 +15,13 @@ import {
   characterPropertyArgs,
   characterUnderlineArg,
   characterColorArg
-} from "./index-cczwbjp3.js";
+} from "./index-kf2b2pdg.js";
 import {
   isPlainOwnerBaseline,
   mergeExclusiveOwnerWindow,
   bindGeometryProjectionPort,
   createGeometryEvidenceController
-} from "./index-rt87v632.js";
+} from "./index-xtc22zhc.js";
 import {
   copyOwned,
   freezeDTO,
@@ -29,9 +29,9 @@ import {
   discardPromise,
   isOwnedImmutableObservation,
   ownObservation
-} from "./index-95apdt74.js";
+} from "./index-9k0n9n1h.js";
 
-// source/packages/core/src/commands/formatting-resource-intent.ts
+// ../final-source-r2/packages/core/src/commands/formatting-resource-intent.ts
 var styles = new Set([
   "NONE",
   "SOLID",
@@ -133,7 +133,7 @@ var BORDER_LINE_STYLES = Object.freeze([...styles]);
 var BORDER_WIDTHS_HUNDREDTH_MM = Object.freeze([...widths]);
 var BACKGROUND_HATCH_STYLES = Object.freeze([...hatch]);
 
-// source/packages/core/src/commands/character-formatting-patch.ts
+// ../final-source-r2/packages/core/src/commands/character-formatting-patch.ts
 var characterLineStyles = [
   "SOLID",
   "DASH",
@@ -312,7 +312,7 @@ function validateFormattingReset(value) {
   choice(r.scope, ["character", "paragraph", "all"]);
 }
 
-// source/packages/core/src/commands/original-paragraph-reference.ts
+// ../final-source-r2/packages/core/src/commands/original-paragraph-reference.ts
 function validateOriginalParagraphReference(target, row, errorName) {
   if (target.format !== "hwp5")
     return;
@@ -322,7 +322,7 @@ function validateOriginalParagraphReference(target, row, errorName) {
   }
 }
 
-// source/packages/core/src/internal/paragraph-index.ts
+// ../final-source-r2/packages/core/src/internal/paragraph-index.ts
 var duplicate = Symbol("DuplicateParagraphCoordinate");
 var fallback = Symbol("ParagraphIndexFallback");
 function createParagraphRowLookup(visit) {
@@ -371,7 +371,7 @@ function createParagraphRowLookup(visit) {
 }
 var uniqueParagraphRow = createParagraphRowLookup();
 
-// source/web/preview/paragraph-selection.mjs
+// ../final-source-r2/web/preview/paragraph-selection.mjs
 function paragraphSelectionOwner(paragraph) {
   const cell = paragraph?.tableCell;
   const drawing = paragraph?.drawingText ?? paragraph?.drawingCaption;
@@ -391,7 +391,7 @@ function paragraphSelectionOwner(paragraph) {
   return paragraph?.selectionOwner ?? null;
 }
 
-// source/packages/core/src/commands/selection.ts
+// ../final-source-r2/packages/core/src/commands/selection.ts
 function validateToken(token, state, view = false) {
   if (!token || token.editorId !== state.editorId || token.documentId !== state.documentId || token.generation !== state.generation || token.operationRevision !== state.operationRevision || view && token.viewRevision !== state.viewRevision)
     throw Error("StaleTarget");
@@ -436,7 +436,7 @@ function selectionMessage(target, state) {
   };
 }
 
-// source/packages/core/src/commands/atomic-formatting.ts
+// ../final-source-r2/packages/core/src/commands/atomic-formatting.ts
 function object2(v, allowed) {
   if (!v || typeof v !== "object" || Array.isArray(v))
     throw Error("InvalidFormattingPatch");
@@ -541,7 +541,7 @@ function atomicSelector(target, state, write, character) {
   };
 }
 
-// source/packages/core/src/commands/formatting-patch.ts
+// ../final-source-r2/packages/core/src/commands/formatting-patch.ts
 function assertFormattingAdmission(payload, stateVersion, capability) {
   if (payload.selectionVersion === undefined)
     return;
@@ -553,7 +553,7 @@ function assertFormattingAdmission(payload, stateVersion, capability) {
     throw Error("StaleFormattingSelection");
 }
 
-// source/packages/core/src/editor/write-policy.ts
+// ../final-source-r2/packages/core/src/editor/write-policy.ts
 class EditorWritePolicy {
   editable = false;
   publish(editable, commit) {
@@ -591,7 +591,7 @@ class EditorWritePolicy {
   }
 }
 
-// source/packages/core/src/state/history-state.ts
+// ../final-source-r2/packages/core/src/state/history-state.ts
 var unavailable = Object.freeze({
   available: false,
   canUndo: false,
@@ -611,7 +611,7 @@ function getHistoryAvailability(state) {
   });
 }
 
-// source/packages/core/src/state/selection-history.ts
+// ../final-source-r2/packages/core/src/state/selection-history.ts
 class SelectionHistory {
   #documentId = null;
   #generation = -1;
@@ -690,7 +690,7 @@ class SelectionHistory {
   }
 }
 
-// source/packages/core/src/editor/load-source-options.ts
+// ../final-source-r2/packages/core/src/editor/load-source-options.ts
 function loadSourceOptions(options) {
   if (options.availableSectionCopy === undefined)
     return {};
@@ -703,12 +703,12 @@ function loadSourceOptions(options) {
   return { availableSectionCopy: options.availableSectionCopy };
 }
 
-// source/packages/core/src/state/text-scalar.ts
+// ../final-source-r2/packages/core/src/state/text-scalar.ts
 function isWellFormedText(text) {
   return !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(text);
 }
 
-// source/packages/core/src/state/editor-state.ts
+// ../final-source-r2/packages/core/src/state/editor-state.ts
 class EditorState {
   editorId;
   documentId;
@@ -782,7 +782,7 @@ function localRead(callback, state) {
   return result;
 }
 
-// source/packages/core/src/commands/surface-protocol.ts
+// ../final-source-r2/packages/core/src/commands/surface-protocol.ts
 var SURFACE_READ_KINDS = Object.freeze([
   "formatting-capabilities",
   "query-formatting",
@@ -869,7 +869,7 @@ function surfaceOperation(kind) {
   return reads.has(kind) ? "read" : mutations.has(kind) ? "mutation" : views.has(kind) ? "view" : undefined;
 }
 
-// source/packages/core/src/scheduler/cancellation.ts
+// ../final-source-r2/packages/core/src/scheduler/cancellation.ts
 class CancellationFence {
   #cancelled = false;
   #listeners = new Set;
@@ -918,7 +918,7 @@ async function interruptible(task, fences) {
   }
 }
 
-// source/packages/core/src/scheduler/fifo.ts
+// ../final-source-r2/packages/core/src/scheduler/fifo.ts
 class FifoScheduler {
   #tail = Promise.resolve();
   enqueue(task) {
@@ -931,7 +931,7 @@ class FifoScheduler {
   }
 }
 
-// source/packages/core/src/commands/registry.ts
+// ../final-source-r2/packages/core/src/commands/registry.ts
 class CommandRegistry {
   #handlers = new Map;
   #order = 0;
@@ -982,7 +982,7 @@ class CommandRegistry {
   }
 }
 
-// source/packages/core/src/commands/commands.ts
+// ../final-source-r2/packages/core/src/commands/commands.ts
 function createCommand(name) {
   if (!name)
     throw Error("InvalidCommand");
@@ -1000,7 +1000,7 @@ var SET_CHARACTER_TEXT_COLOR_COMMAND = createCommand("set-character-text-color")
 var SET_CHARACTER_FONT_NAME_COMMAND = createCommand("set-character-font-name");
 var APPLY_FORMATTING_PATCH_COMMAND = createCommand("apply-formatting-patch");
 
-// source/packages/core/src/editor/unlock-policy.ts
+// ../final-source-r2/packages/core/src/editor/unlock-policy.ts
 var passwordErrors = new Set([
   "InvalidPassword",
   "InvalidPasswordUnicode",
@@ -1018,7 +1018,7 @@ class PasswordAttemptError extends Error {
   }
 }
 
-// source/packages/core/src/state/formatting-selection.ts
+// ../final-source-r2/packages/core/src/state/formatting-selection.ts
 var identity = (reference) => reference && typeof reference === "object" ? Object.fromEntries(Object.entries(reference).filter(([key]) => key !== "epoch")) : reference;
 function formattingSelection(previous, patch, revision) {
   const selected = previous.selection;
@@ -1045,7 +1045,7 @@ function formattingSelection(previous, patch, revision) {
   }
 }
 
-// source/packages/core/src/commands/formatting.ts
+// ../final-source-r2/packages/core/src/commands/formatting.ts
 function validateFormattingTarget(target, state, character, capability = character ? "characterPropertiesAvailable" : "paragraphAlignmentAvailable") {
   const row = validateSelection(target, state, true);
   if (row.createdCell)
@@ -1086,14 +1086,14 @@ function formattingMessage(payload, state, character) {
   };
 }
 
-// source/packages/core/src/commands/underline.ts
+// ../final-source-r2/packages/core/src/commands/underline.ts
 function underlineMessage(payload, state) {
   const range = validateFormattingTarget(payload.target, state, true, "characterUnderlineAvailable");
   characterUnderlineArg(payload.kind);
   return { kind: "character-underline", ...range, underlineKind: payload.kind };
 }
 
-// source/web/preview/observation-structure.mjs
+// ../final-source-r2/web/preview/observation-structure.mjs
 var uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function observationRows(rows) {
   if (!Array.isArray(rows))
@@ -1119,7 +1119,7 @@ function observationSpans(paragraph) {
   return spans;
 }
 
-// source/web/preview/text-input.mjs
+// ../final-source-r2/web/preview/text-input.mjs
 var segments;
 function createSegmenter(granularity) {
   const Segmenter = globalThis.Intl?.Segmenter;
@@ -1135,16 +1135,16 @@ function snapUnit(text, unit, forward = false) {
   return forward ? bounds.find((b) => b >= unit) ?? text.length : bounds.filter((b) => b <= unit).at(-1) ?? 0;
 }
 
-// source/web/preview/character-range-values.mjs
+// ../final-source-r2/web/preview/character-range-values.mjs
 var graphemeBoundary = (text, unit, end = false) => snapUnit(text, unit, end) === unit;
-function characterRangeValues(content, ranges, valueAt, { isBoundary = graphemeBoundary } = {}) {
+function characterRangeValues(content, ranges, valueAt, { isBoundary = graphemeBoundary } = {}, paragraphAt = undefined) {
   if (!Array.isArray(content?.paragraphs) || content.paragraphs.some((row) => !row || typeof row !== "object") || !Array.isArray(ranges) || !ranges.length)
     return null;
   const values = [];
   for (const range of ranges) {
     if (!range)
       return null;
-    const paragraph = content.paragraphs.find((row) => row.section === range.section && row.paragraph === range.paragraph);
+    const paragraph = typeof paragraphAt === "function" ? paragraphAt(range.section, range.paragraph) : content.paragraphs.find((row) => row.section === range.section && row.paragraph === range.paragraph);
     const { startUnit: start, endUnit: end } = range;
     if (!paragraph || paragraph.clipped || typeof paragraph.text !== "string" || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start > end || end > paragraph.text.length || !isBoundary(paragraph.text, start) || !isBoundary(paragraph.text, end, true))
       return null;
@@ -1172,7 +1172,7 @@ function characterRangeValues(content, ranges, valueAt, { isBoundary = graphemeB
   return values.length ? values : null;
 }
 
-// source/web/preview/utf16-boundary.mjs
+// ../final-source-r2/web/preview/utf16-boundary.mjs
 function isUtf16Boundary(text, unit) {
   if (typeof text !== "string" || !Number.isSafeInteger(unit) || unit < 0 || unit > text.length)
     return false;
@@ -1180,7 +1180,7 @@ function isUtf16Boundary(text, unit) {
   return !(previous >= 55296 && previous <= 56319 && current >= 56320 && current <= 57343);
 }
 
-// source/packages/core/src/state/font-name-state.ts
+// ../final-source-r2/packages/core/src/state/font-name-state.ts
 var uint2 = (x) => typeof x === "number" && Number.isInteger(x) && x >= 0 && x <= 4294967295;
 var unknownValue = Object.freeze({ kind: "unknown" });
 var unknownObservation = Object.freeze({ value: unknownValue, bindingValid: false });
@@ -1232,7 +1232,7 @@ function characterFontNameObservations(content, paragraph, start, end) {
   })));
 }
 
-// source/packages/core/src/commands/font-name.ts
+// ../final-source-r2/packages/core/src/commands/font-name.ts
 function fontNameMessage(payload, state) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload) || ["target", "language", "name"].some((key) => !Object.hasOwn(payload, key)) || Object.keys(payload).some((key) => !["target", "language", "name"].includes(key)) || Object.values(Object.getOwnPropertyDescriptors(payload)).some((d) => d.get || d.set)) {
     throw Error("InvalidCharacterFontNamePayload");
@@ -1248,7 +1248,7 @@ function fontNameMessage(payload, state) {
   return { kind: "character-font-name", ...range, language: payload.language, name: payload.name };
 }
 
-// source/packages/core/src/commands/table-insert-options.ts
+// ../final-source-r2/packages/core/src/commands/table-insert-options.ts
 var resourceKeys = ["paragraph", "character", "style", "border_fill"];
 function dataObject(value, keys) {
   if (!value || typeof value !== "object" || Array.isArray(value) || ![Object.prototype, null].includes(Object.getPrototypeOf(value)))
@@ -1273,7 +1273,7 @@ function validateTableInsertOptions(options, observed) {
   return options;
 }
 
-// source/packages/core/src/commands/table-insert.ts
+// ../final-source-r2/packages/core/src/commands/table-insert.ts
 function tableInsertMessage(payload, state) {
   if (!payload || typeof payload !== "object" || Array.isArray(payload) || Reflect.ownKeys(payload).length !== 2 || !["target", "options"].every((key) => Object.hasOwn(payload, key)) || Reflect.ownKeys(payload).some((key) => typeof key !== "string" || !["target", "options"].includes(key) || !("value" in Object.getOwnPropertyDescriptor(payload, key))))
     throw Error("InvalidTableInsertPayload");
@@ -1297,7 +1297,7 @@ function tableInsertMessage(payload, state) {
   };
 }
 
-// source/packages/core/src/state/text-color-state.ts
+// ../final-source-r2/packages/core/src/state/text-color-state.ts
 var unavailable2 = () => Object.freeze({ value: null, bindingValid: false });
 function characterTextColorObservation(content, paragraph, start, end) {
   const c = content;
@@ -1331,7 +1331,7 @@ function characterTextColorObservation(content, paragraph, start, end) {
   });
 }
 
-// source/packages/core/src/commands/text-color.ts
+// ../final-source-r2/packages/core/src/commands/text-color.ts
 function textColorMessage(payload, state) {
   const range = validateFormattingTarget(payload.target, state, true, "characterTextColorAvailable");
   characterColorArg(payload.color);
@@ -1341,7 +1341,7 @@ function textColorMessage(payload, state) {
   return { kind: "character-text-color", ...range, color: payload.color };
 }
 
-// source/packages/core/src/commands/strike.ts
+// ../final-source-r2/packages/core/src/commands/strike.ts
 function strikeMessage(payload, state) {
   const range = validateFormattingTarget(payload.target, state, true, "characterStrikeAvailable");
   if (typeof payload.enabled !== "boolean")
@@ -1349,7 +1349,7 @@ function strikeMessage(payload, state) {
   return { kind: "character-strike", ...range, enabled: payload.enabled };
 }
 
-// source/packages/core/src/editor/create-editor.ts
+// ../final-source-r2/packages/core/src/editor/create-editor.ts
 var nextEditorId = 0;
 var nextEditorInstance = 0;
 var usedRuntimes = new WeakSet;
@@ -2643,38 +2643,7 @@ function createEditor(options) {
     }
   });
 }
-// source/web/preview/character-property-selection.mjs
-function characterSelectionState(content, paragraph, start, end, property) {
-  const underline = property === "underline";
-  const strike = property === "strike";
-  if (typeof paragraph?.text !== "string" || (strike ? content?.characterStrikeAvailable : underline ? content?.characterUnderlineAvailable : content?.characterPropertiesAvailable) !== true || !["bold", "italic", "underline", "strike"].includes(property) || paragraph?.clipped || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= end || end > paragraph?.text?.length)
-    return null;
-  const spans = observationSpans(paragraph);
-  const shapes = underline || strike ? null : observationRows(content.characterShapes);
-  const underlines = underline ? observationRows(content.characterUnderlines) : null;
-  const strikes = strike ? observationRows(content.characterStrikes) : null;
-  if (!spans || !(strike ? strikes : underline ? underlines : shapes))
-    return null;
-  let cursor = start, allEnabled = true, anyEnabled = false;
-  for (const span of spans) {
-    const low = Math.max(start, span.start), high = Math.min(end, span.end);
-    if (low >= high)
-      continue;
-    if (!uint(span.charShapeId))
-      return null;
-    const shape = shapes?.get(span.charShapeId);
-    const kind = underlines?.get(span.charShapeId)?.kind;
-    const enabled = strike ? strikes.get(span.charShapeId)?.enabled : underline ? ["none", "bottom", "center", "top"].includes(kind) ? kind !== "none" : null : shape?.[property];
-    if (low !== cursor || typeof enabled !== "boolean")
-      return null;
-    allEnabled &&= enabled;
-    anyEnabled ||= enabled;
-    cursor = high;
-  }
-  return cursor === end ? allEnabled ? true : anyEnabled ? "mixed" : false : null;
-}
-
-// source/web/preview/character-size-selection.mjs
+// ../final-source-r2/web/preview/character-size-selection.mjs
 var isSourceCharacterSize = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function characterSizeState(content, paragraph, start, end, { isBoundary = (text, unit, last = false) => snapUnit(text, unit, last) === unit } = {}) {
   if (content?.characterPropertiesAvailable !== true || typeof paragraph?.text !== "string" || paragraph.clipped || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= end || end > paragraph.text.length || !isBoundary(paragraph.text, start) || !isBoundary(paragraph.text, end, true))
@@ -2702,7 +2671,61 @@ function characterSizeState(content, paragraph, start, end, { isBoundary = (text
   return cursor === end && size !== undefined ? mixed ? "mixed" : size : null;
 }
 
-// source/packages/core/src/state/formatting-state.ts
+// ../final-source-r2/web/preview/character-typing-properties.mjs
+function scalarStart(text, unit) {
+  const previous = text.charCodeAt(unit - 1), current = text.charCodeAt(unit);
+  return previous >= 55296 && previous <= 56319 && current >= 56320 && current <= 57343 ? unit - 1 : unit;
+}
+function typingSourceSpan(text, unit) {
+  if (typeof text !== "string" || !text.length || !Number.isInteger(unit) || unit < 0 || unit > text.length)
+    return null;
+  const at = scalarStart(text, unit);
+  return {
+    start: at > 0 ? scalarStart(text, at - 1) : 0,
+    end: at > 0 ? at : text.codePointAt(0) > 65535 ? 2 : 1
+  };
+}
+
+// ../final-source-r2/web/preview/character-property-selection.mjs
+function characterPropertyResourceValue(property, shape, underline, strike) {
+  if (property === "strike")
+    return strike?.enabled;
+  if (property === "underline") {
+    const kind = underline?.kind;
+    return ["none", "bottom", "center", "top"].includes(kind) ? kind !== "none" : null;
+  }
+  return shape?.[property];
+}
+function characterSelectionState(content, paragraph, start, end, property) {
+  const underline = property === "underline";
+  const strike = property === "strike";
+  if (typeof paragraph?.text !== "string" || (strike ? content?.characterStrikeAvailable : underline ? content?.characterUnderlineAvailable : content?.characterPropertiesAvailable) !== true || !["bold", "italic", "underline", "strike"].includes(property) || paragraph?.clipped || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || start >= end || end > paragraph?.text?.length)
+    return null;
+  const spans = observationSpans(paragraph);
+  const shapes = underline || strike ? null : observationRows(content.characterShapes);
+  const underlines = underline ? observationRows(content.characterUnderlines) : null;
+  const strikes = strike ? observationRows(content.characterStrikes) : null;
+  if (!spans || !(strike ? strikes : underline ? underlines : shapes))
+    return null;
+  let cursor = start, allEnabled = true, anyEnabled = false;
+  for (const span of spans) {
+    const low = Math.max(start, span.start), high = Math.min(end, span.end);
+    if (low >= high)
+      continue;
+    if (!uint(span.charShapeId))
+      return null;
+    const shape = shapes?.get(span.charShapeId);
+    const enabled = characterPropertyResourceValue(property, shape, underlines?.get(span.charShapeId), strikes?.get(span.charShapeId));
+    if (low !== cursor || typeof enabled !== "boolean")
+      return null;
+    allEnabled &&= enabled;
+    anyEnabled ||= enabled;
+    cursor = high;
+  }
+  return cursor === end ? allEnabled ? true : anyEnabled ? "mixed" : false : null;
+}
+
+// ../final-source-r2/packages/core/src/state/formatting-state.ts
 var message = (error) => error instanceof Error ? error.message : String(error);
 function getSelectionFormatting(state) {
   const unavailable = (reason) => Object.freeze({
@@ -2764,21 +2787,27 @@ function getSelectionFormatting(state) {
   const underlineAvailableReason = reason(true, "characterUnderlineAvailable");
   const strikeTargetReason = reason(true, "characterStrikeAvailable");
   const content = state.content;
-  const bold = characterAvailableReason === null ? characterSelectionState(content, row, target.startUnit, target.endUnit, "bold") : null;
-  const italic = characterAvailableReason === null ? characterSelectionState(content, row, target.startUnit, target.endUnit, "italic") : null;
-  const underline = underlineAvailableReason === null ? characterSelectionState(content, row, target.startUnit, target.endUnit, "underline") : null;
-  const strike = strikeTargetReason === null ? characterSelectionState(content, row, target.startUnit, target.endUnit, "strike") : null;
+  const caret = target.startUnit === target.endUnit;
+  const span = caret ? typingSourceSpan(row.text, target.startUnit) : null;
+  const start = span?.start ?? target.startUnit;
+  const end = span?.end ?? target.endUnit;
+  const observedSpan = characterRangeValues({ paragraphs: [row] }, [{ section: target.section, paragraph: target.paragraph, startUnit: start, endUnit: end }], () => true, { isBoundary: isUtf16Boundary });
+  const canObserve = (capability) => observedSpan !== null && content[capability] === true;
+  const bold = canObserve("characterPropertiesAvailable") ? characterSelectionState(content, row, start, end, "bold") : null;
+  const italic = canObserve("characterPropertiesAvailable") ? characterSelectionState(content, row, start, end, "italic") : null;
+  const underline = canObserve("characterUnderlineAvailable") ? characterSelectionState(content, row, start, end, "underline") : null;
+  const strike = canObserve("characterStrikeAvailable") ? characterSelectionState(content, row, start, end, "strike") : null;
   const strikeAvailableReason = strikeTargetReason ?? (strike === null ? "UnknownCharacterStrike" : null);
   const textColorTargetReason = reason(true, "characterTextColorAvailable");
-  const colorObservation = textColorTargetReason === null ? characterTextColorObservation(content, row, target.startUnit, target.endUnit) : null;
+  const colorObservation = canObserve("characterTextColorAvailable") ? characterTextColorObservation(content, row, start, end) : null;
   const textColor = colorObservation?.value ?? null;
   const textColorAvailableReason = textColorTargetReason ?? (colorObservation?.bindingValid ? null : "UnknownCharacterTextColor");
-  const size = characterAvailableReason === null ? characterSizeState(content, row, target.startUnit, target.endUnit, {
+  const size = canObserve("characterPropertiesAvailable") ? characterSizeState(content, row, start, end, {
     isBoundary: isUtf16Boundary
   }) : null;
-  const align = paragraphAvailableReason === null ? paragraphAlignmentKey(row.paragraphShape?.alignment) : null;
+  const align = paragraphAlignmentKey(row.paragraphShape?.alignment);
   const fontTargetReason = reason(true, "characterFontNameAvailable");
-  const fontObserved = characterFontNameObservations(content, row, target.startUnit, target.endUnit);
+  const fontObserved = characterFontNameObservations(content, row, start, end);
   const fontNames = Object.freeze(Object.fromEntries(FONT_LANGUAGES.map((language) => [
     language,
     fontObserved[language].value
@@ -2805,7 +2834,7 @@ function getSelectionFormatting(state) {
     align
   });
 }
-// source/js/document-format.mjs
+// ../final-source-r2/js/document-format.mjs
 var cfbSignature = Uint8Array.of(208, 207, 17, 224, 161, 177, 26, 225);
 var hwp3Signature = new TextEncoder().encode("HWP Document File V3");
 var startsWith = (bytes, signature) => bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
@@ -2822,11 +2851,11 @@ function detectDocumentFormat(input) {
   throw new Error("UnsupportedDocumentSignature");
 }
 
-// source/packages/core/src/document-format.ts
+// ../final-source-r2/packages/core/src/document-format.ts
 function detectDocumentFormat2(input) {
   return detectDocumentFormat(input);
 }
-// source/packages/core/src/state/text-tools.ts
+// ../final-source-r2/packages/core/src/state/text-tools.ts
 function textRows(state) {
   if (state.status !== "ready")
     return [];
@@ -2925,7 +2954,7 @@ function getDocumentTextStatistics(state) {
     words: texts.reduce((count, text) => count + (text.trim() ? text.trim().split(/\s+/u).length : 0), 0)
   });
 }
-// source/packages/core/src/state/clipboard-state.ts
+// ../final-source-r2/packages/core/src/state/clipboard-state.ts
 function getSelectionClipboard(state) {
   const unavailable = (reason) => Object.freeze({
     target: null,
@@ -2974,7 +3003,7 @@ function getSelectionClipboard(state) {
     return unavailable(error instanceof Error ? error.message : String(error));
   }
 }
-// source/packages/core/src/keymap/config.ts
+// ../final-source-r2/packages/core/src/keymap/config.ts
 var platforms = ["mac", "windows", "linux"];
 var modifiers = new Set(["Mod", "Control", "Meta", "Alt", "Shift"]);
 var namedCodes = new Set(("Backquote Backslash Backspace BracketLeft BracketRight Comma Equal Minus Period Quote Semicolon Slash " + "AltLeft AltRight CapsLock ContextMenu ControlLeft ControlRight Enter MetaLeft MetaRight ShiftLeft ShiftRight Space Tab " + "Delete End Help Home Insert PageDown PageUp ArrowDown ArrowLeft ArrowRight ArrowUp Escape NumLock ScrollLock Pause PrintScreen " + "IntlBackslash IntlRo IntlYen Convert NonConvert KanaMode Lang1 Lang2 Lang3 Lang4 Lang5 " + "NumpadAdd NumpadBackspace NumpadClear NumpadClearEntry NumpadComma NumpadDecimal NumpadDivide NumpadEnter NumpadEqual NumpadHash NumpadMemoryAdd NumpadMemoryClear NumpadMemoryRecall NumpadMemoryStore NumpadMemorySubtract NumpadMultiply NumpadParenLeft NumpadParenRight NumpadStar NumpadSubtract " + "AudioVolumeDown AudioVolumeMute AudioVolumeUp MediaPlayPause MediaStop MediaTrackNext MediaTrackPrevious").split(" "));
@@ -3107,7 +3136,7 @@ function resolveShortcutLabel(config, binding, locale) {
   return binding.id;
 }
 var parseKeymapConfig = validateKeymapConfig;
-// source/packages/core/src/keymap/resolve.ts
+// ../final-source-r2/packages/core/src/keymap/resolve.ts
 var compiledIndexes = new WeakMap;
 function compileKeymap(config, platform) {
   if (!["mac", "windows", "linux"].includes(platform))
@@ -3136,7 +3165,7 @@ function resolveKeyboardShortcut(compiled, event) {
     return null;
   return binding;
 }
-// source/packages/core/src/keymap/defaults.json
+// ../final-source-r2/packages/core/src/keymap/defaults.json
 var defaults_default = {
   version: 1,
   bindings: [
@@ -3378,9 +3407,9 @@ var defaults_default = {
   }
 };
 
-// source/packages/core/src/keymap/defaults.ts
+// ../final-source-r2/packages/core/src/keymap/defaults.ts
 var DEFAULT_KEYMAP = parseKeymapConfig(defaults_default);
-// source/packages/core/src/state/paragraph-selection.ts
+// ../final-source-r2/packages/core/src/state/paragraph-selection.ts
 function createParagraphSelection(state, options) {
   if (!options || typeof options !== "object" || Array.isArray(options) || ![Object.prototype, null].includes(Object.getPrototypeOf(options)))
     throw Error("InvalidParagraphSelectionOptions");
@@ -3443,4 +3472,4 @@ export {
   selectionMatchesText
 };
 
-//# debugId=E106CAF56B63D0C764756E2164756E21
+//# debugId=676E29188E8E6B9C64756E2164756E21

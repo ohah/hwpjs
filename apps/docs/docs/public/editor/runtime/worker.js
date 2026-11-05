@@ -1,4 +1,4 @@
-// source/web/preview/atomic-formatting-command.mjs
+// ../final-source-r2/web/preview/atomic-formatting-command.mjs
 function formattingCapabilities(editor) {
   if (!editor?.supportsAtomicFormatting?.())
     return { atomic: false, reason: "AtomicFormattingUnavailable" };
@@ -34,7 +34,7 @@ function queryAtomicFormatting(editor, format, message) {
   });
 }
 
-// source/web/preview/display-resource-cache.mjs
+// ../final-source-r2/web/preview/display-resource-cache.mjs
 var HEADER_READS = new Set([
   "characterShapes",
   "characterUnderlines",
@@ -140,7 +140,7 @@ function createDisplayResourceCache() {
   };
 }
 
-// source/js/wasm-memory.mjs
+// ../final-source-r2/js/wasm-memory.mjs
 function createMemory(wasm) {
   const decoder = new TextDecoder;
   const copy = (ptr, length) => length === 0 ? new Uint8Array(0) : new Uint8Array(wasm.memory.buffer, ptr >>> 0, length).slice();
@@ -165,7 +165,7 @@ function createMemory(wasm) {
   };
 }
 
-// source/js/abi-schema.mjs
+// ../final-source-r2/js/abi-schema.mjs
 var ABI_VERSION = 6;
 var EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
   "hwp5_edit_open",
@@ -243,7 +243,7 @@ var REQUIRED_FUNCTIONS = Object.freeze([
   "hwp5_text_free"
 ]);
 
-// source/js/abi.mjs
+// ../final-source-r2/js/abi.mjs
 function validateAbi(wasm) {
   if (typeof wasm.hwpjs_abi_version !== "function")
     throw new Error("Missing HWPJS ABI version");
@@ -258,10 +258,10 @@ function validateAbi(wasm) {
     throw new Error("Missing HWPJS ABI memory");
 }
 
-// source/js/output-bytes.mjs
+// ../final-source-r2/js/output-bytes.mjs
 var nodeBuffer = typeof Buffer !== "undefined" && typeof process !== "undefined" && process.versions?.node ? Buffer : null;
 
-// source/js/input.mjs
+// ../final-source-r2/js/input.mjs
 var bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
 var typedArrayName = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), Symbol.toStringTag).get;
 function inputBytes(data) {
@@ -286,7 +286,7 @@ function inputBytes(data) {
   return bytes;
 }
 
-// source/js/hwp5-text-wire.mjs
+// ../final-source-r2/js/hwp5-text-wire.mjs
 var decoder = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 function decodeHwp5Text(bytes, { allowGenerated = false } = {}) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -373,7 +373,7 @@ function decodeHwp5Text(bytes, { allowGenerated = false } = {}) {
   };
 }
 
-// source/js/hwp5-section-inventory.mjs
+// ../final-source-r2/js/hwp5-section-inventory.mjs
 var availableSectionExports = Object.freeze([
   "hwp5_text_read_available",
   "hwp5_text_declared_sections",
@@ -391,7 +391,7 @@ function checkedSectionInventory(value) {
   return result;
 }
 
-// source/js/hwp5.mjs
+// ../final-source-r2/js/hwp5.mjs
 async function createHwp5Reader(source) {
   const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
@@ -443,7 +443,7 @@ async function createHwp5Reader(source) {
   };
 }
 
-// source/web/preview/text-offsets.mjs
+// ../final-source-r2/web/preview/text-offsets.mjs
 function retainedTextView(paragraph) {
   const retained = (code) => [2, 3, 4, 8, 9, 11, 16, 17, 18, 21, 22, 23].includes(code);
   if (!paragraph.tokens.some((t) => t.type === "control" && (retained(t.code) || t.code === 10 || t.code === 24 || t.code === 30 || t.code === 31)))
@@ -502,7 +502,7 @@ function sourceDisplayPosition(unit, offsets, displayLength) {
   return result;
 }
 
-// source/web/preview/content.mjs
+// ../final-source-r2/web/preview/content.mjs
 function clipText(text, maxUnits) {
   let end = Math.min(text.length, maxUnits);
   if (end < text.length && end > 0 && text.charCodeAt(end - 1) >= 55296 && text.charCodeAt(end - 1) <= 56319)
@@ -565,7 +565,7 @@ function displayContent(result, { maxUnits = 200000, maxParagraphs = 20000, para
   };
 }
 
-// source/web/preview/hwp5-available-preview.mjs
+// ../final-source-r2/web/preview/hwp5-available-preview.mjs
 function availableSectionsCapability(module) {
   if (!(module instanceof WebAssembly.Module))
     return false;
@@ -587,7 +587,7 @@ function availableSectionsContent(preview) {
   return { ...displayContent(preview), availableSectionsOnly: true, sectionInventory: inventory };
 }
 
-// source/js/hwp5-available-section-copy.mjs
+// ../final-source-r2/js/hwp5-available-section-copy.mjs
 var availableSectionCopyExports = Object.freeze([
   "hwp5_edit_open_available_section_copy",
   "hwp5_edit_available_section_copy_info"
@@ -614,7 +614,7 @@ function decodeAvailableSectionCopyInfo(bytes) {
   };
 }
 
-// source/web/preview/hwp5-available-copy-preview.mjs
+// ../final-source-r2/web/preview/hwp5-available-copy-preview.mjs
 function availableSectionCopyCapability(module) {
   if (!(module instanceof WebAssembly.Module))
     return false;
@@ -631,7 +631,7 @@ function availableSectionCopyRequest(message) {
   return value;
 }
 
-// source/js/hwpx-text-wire.mjs
+// ../final-source-r2/js/hwpx-text-wire.mjs
 var kinds = [
   "paragraph_start",
   "paragraph_end",
@@ -714,7 +714,7 @@ function decodeHwpxText(bytes) {
   return { format: "hwpx", branchPolicy: "selected_default", sectionCount, paragraphCount, events };
 }
 
-// source/js/hwpx.mjs
+// ../final-source-r2/js/hwpx.mjs
 async function createHwpxReader(source) {
   const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
@@ -749,7 +749,7 @@ async function createHwpxReader(source) {
   };
 }
 
-// source/js/atomic-formatting-api.mjs
+// ../final-source-r2/js/atomic-formatting-api.mjs
 function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
   const suffixes = [
     "formatting_capabilities",
@@ -885,7 +885,7 @@ function ownedJSON(value, seen = new Set) {
   }
 }
 
-// source/js/hwpx-table-caption.mjs
+// ../final-source-r2/js/hwpx-table-caption.mjs
 function decodeTableCaption(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   return validateTableCaption(value);
@@ -904,7 +904,7 @@ function validateTableCaption(value) {
   return value;
 }
 
-// source/js/hwpx-shape-source-values.mjs
+// ../final-source-r2/js/hwpx-shape-source-values.mjs
 function validateShapeSourceValues(value) {
   const fail = () => {
     throw new Error("InvalidShapeSourceValues");
@@ -928,7 +928,7 @@ function validateShapeSourceValues(value) {
   return value;
 }
 
-// source/js/hwpx-drawing-text-values.mjs
+// ../final-source-r2/js/hwpx-drawing-text-values.mjs
 function validDrawingTextValues(text, drawingNode) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   const signed = (value) => Number.isSafeInteger(value) && value >= -2147483648 && value <= 4294967295;
@@ -936,7 +936,7 @@ function validDrawingTextValues(text, drawingNode) {
   return Boolean(text && typeof text === "object" && !Array.isArray(text) && uint(drawingNode) && uint(text.node) && text.node > drawingNode && optional(text.list_node, uint) && (text.list_node === null || text.list_node > text.node) && typeof text.margin_present === "boolean" && Array.isArray(text.margins) && text.margins.length === 4 && Array.from(text.margins).every((value) => optional(value, signed)) && [null, false, true].includes(text.editable) && optional(text.last_width, uint) && (text.margin_present || text.margins.every((value) => value === null)) && [text.text_direction, text.line_wrap, text.vertical_alignment].every((value) => optional(value, (n) => uint(n) && n <= 2)));
 }
 
-// source/js/hwpx-drawing-text-snapshot.mjs
+// ../final-source-r2/js/hwpx-drawing-text-snapshot.mjs
 function decodeDrawingTextSnapshot(bytes) {
   const fail = () => {
     throw new Error("InvalidDrawingTextSnapshot");
@@ -1027,7 +1027,7 @@ function decodeDrawingTextSnapshot(bytes) {
   return value;
 }
 
-// source/js/hwpx-drawing-text-requested.mjs
+// ../final-source-r2/js/hwpx-drawing-text-requested.mjs
 var uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function drawingTextRequest(nodes, limit) {
   if (!uint(limit) || limit < 1 || limit > 1024)
@@ -1082,7 +1082,7 @@ function decodeDrawingTextRequested(bytes, requested) {
   });
 }
 
-// source/js/u32-index-request.mjs
+// ../final-source-r2/js/u32-index-request.mjs
 function encodeU32IndexRequest(indices, limit, limitError, requestError) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!uint(limit) || limit === 0)
@@ -1098,7 +1098,7 @@ function encodeU32IndexRequest(indices, limit, limitError, requestError) {
   return bytes;
 }
 
-// source/js/hwpx-line-geometry.mjs
+// ../final-source-r2/js/hwpx-line-geometry.mjs
 function decodeLineGeometry(bytes, expectedNode) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295;
@@ -1107,7 +1107,7 @@ function decodeLineGeometry(bytes, expectedNode) {
   return value;
 }
 
-// source/js/hwpx-picture-geometry-wire.mjs
+// ../final-source-r2/js/hwpx-picture-geometry-wire.mjs
 function decodePictureGeometry(bytes) {
   const fail = () => {
     throw new Error("InvalidPictureGeometry");
@@ -1142,7 +1142,7 @@ function decodePictureGeometry(bytes) {
   return result;
 }
 
-// source/js/hwpx-picture-position-wire.mjs
+// ../final-source-r2/js/hwpx-picture-position-wire.mjs
 function decodePicturePosition(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== 40)
     throw new Error("InvalidPicturePosition");
@@ -1159,7 +1159,7 @@ function decodePicturePosition(bytes) {
   return { flags: fields.slice(0, 4), relations: fields.slice(4) };
 }
 
-// source/js/hwpx-picture-flow-wire.mjs
+// ../final-source-r2/js/hwpx-picture-flow-wire.mjs
 function decodePictureFlow(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== 56)
     throw new Error("InvalidPictureFlow");
@@ -1183,7 +1183,7 @@ function decodePictureFlow(bytes) {
   };
 }
 
-// source/js/hwpx-drawing-placement-wire.mjs
+// ../final-source-r2/js/hwpx-drawing-placement-wire.mjs
 function decodeDrawingPlacement(bytes, errorName = "InvalidDrawingPlacement") {
   if (!(bytes instanceof Uint8Array) || bytes.length !== 144)
     throw new Error(errorName);
@@ -1194,7 +1194,7 @@ function decodeDrawingPlacement(bytes, errorName = "InvalidDrawingPlacement") {
   };
 }
 
-// source/js/hwpx-line-display-wire.mjs
+// ../final-source-r2/js/hwpx-line-display-wire.mjs
 function decodeLinePlacement(bytes) {
   return decodeDrawingPlacement(bytes, "InvalidLinePlacement");
 }
@@ -1243,7 +1243,7 @@ function decodeLineDisplay(bytes) {
   };
 }
 
-// source/js/hwpx-line-display-batch.mjs
+// ../final-source-r2/js/hwpx-line-display-batch.mjs
 function encodeLineDisplayNodes(nodes, limit) {
   return encodeU32IndexRequest(nodes, limit, "InvalidLineDisplayBatchLimit", "InvalidLineDisplayBatchNodes");
 }
@@ -1280,7 +1280,7 @@ function decodeLineDisplayBatch(bytes, nodes) {
   });
 }
 
-// source/js/hwpx-fill-brushes.mjs
+// ../final-source-r2/js/hwpx-fill-brushes.mjs
 function decodeFillBrushes(bytes) {
   const fail = () => {
     throw new Error("InvalidFillBrushes");
@@ -1335,7 +1335,7 @@ function decodeFillBrushes(bytes) {
   return v;
 }
 
-// source/js/hwpx-table-border-sources.mjs
+// ../final-source-r2/js/hwpx-table-border-sources.mjs
 function decodeTableBorderSources(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const fail = () => {
@@ -1370,7 +1370,7 @@ function decodeTableBorderSources(bytes) {
   return value;
 }
 
-// source/js/hwpx-table-border-batch.mjs
+// ../final-source-r2/js/hwpx-table-border-batch.mjs
 var uint2 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function encodeTableBorderSections(sections, limit) {
   return encodeU32IndexRequest(sections, limit, "InvalidTableBorderBatchLimit", "InvalidTableBorderSections");
@@ -1397,7 +1397,7 @@ function decodeTableBorderBatch(bytes, sections) {
   return value;
 }
 
-// source/js/hwpx-shape-layout-values.mjs
+// ../final-source-r2/js/hwpx-shape-layout-values.mjs
 function validShapeLayoutValues(value) {
   const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295;
   const optional = (n, check) => n === null || check(n);
@@ -1408,7 +1408,7 @@ function validShapeLayoutValues(value) {
   return Boolean(g && p && f && [g.width, g.height].every((n) => optional(n, uint)) && optional(g.width_relative, (n) => uint(n) && n <= 4) && optional(g.height_relative, (n) => uint(n) && n <= 2) && bool(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every((n) => optional(n, signed)) && array(p.flags, 4, bool) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((n, i) => optional(n, (n) => uint(n) && n <= [2, 3, 4, 4][i])) && optional(f.text_wrap, (n) => uint(n) && n <= 5) && optional(f.text_flow, (n) => uint(n) && n <= 3) && optional(f.z_order, signed) && array(f.outside_margins, 4, (n) => optional(n, signed)));
 }
 
-// source/js/hwpx-shape-paint-values.mjs
+// ../final-source-r2/js/hwpx-shape-paint-values.mjs
 function validShapePaintValues(source) {
   const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295;
   const optional = (n, check) => n === null || check(n);
@@ -1425,7 +1425,7 @@ function validShapePaintValues(source) {
   return Boolean(paint && [paint.fill_node, paint.shadow_node].every((n) => optional(n, uint)) && optional(paint.shadow_type, (n) => uint(n) && n <= 14) && !(paint.shadow_node === null && paint.shadow_type !== null));
 }
 
-// source/js/hwpx-shape-common-source.mjs
+// ../final-source-r2/js/hwpx-shape-common-source.mjs
 var object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var uint3 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var coordinate = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
@@ -1454,7 +1454,7 @@ function validShapeCommonSource(value) {
   ].includes(r.matrix_error) : Array.isArray(r.matrix) && r.matrix.length === 6 && Array.from(r.matrix).every(Number.isFinite) && r.matrix_error === null;
 }
 
-// source/js/hwpx-group-context.mjs
+// ../final-source-r2/js/hwpx-group-context.mjs
 function validGroupContext(value, node) {
   const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295;
   if (!uint(node))
@@ -1464,7 +1464,7 @@ function validGroupContext(value, node) {
   return Boolean(value && typeof value === "object" && !Array.isArray(value) && [value.parent_container, value.root_anchor, value.depth].every(uint) && value.depth >= 1 && value.root_anchor <= value.parent_container && value.parent_container < node && value.depth <= value.parent_container - value.root_anchor + 1 && value.depth === 1 === (value.parent_container === value.root_anchor));
 }
 
-// source/js/hwpx-curve-geometry.mjs
+// ../final-source-r2/js/hwpx-curve-geometry.mjs
 var object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var uint4 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var coordinate2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
@@ -1475,7 +1475,7 @@ function decodeCurveGeometry(bytes) {
   return value;
 }
 
-// source/js/hwpx-curve-owner.mjs
+// ../final-source-r2/js/hwpx-curve-owner.mjs
 var uint5 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 function decodeCurveOwner(bytes) {
@@ -1486,7 +1486,7 @@ function decodeCurveOwner(bytes) {
   return value;
 }
 
-// source/js/hwpx-tab-sources.mjs
+// ../final-source-r2/js/hwpx-tab-sources.mjs
 var uint6 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 function decodeTabSources(bytes) {
@@ -1507,7 +1507,7 @@ function validateTabSources(value) {
   return value;
 }
 
-// source/js/hwpx-tab-definitions.mjs
+// ../final-source-r2/js/hwpx-tab-definitions.mjs
 var uint7 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
@@ -1532,7 +1532,7 @@ function decodeTabDefinitions(bytes) {
   return validateTabDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwpx-section-tabs.mjs
+// ../final-source-r2/js/hwpx-section-tabs.mjs
 var uint8 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var raw2 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 function validateSectionTabs(rows) {
@@ -1550,7 +1550,7 @@ function decodeSectionTabs(bytes) {
   return validateSectionTabs(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/cell-size-batch.mjs
+// ../final-source-r2/js/cell-size-batch.mjs
 function encodeCellSizes(cells) {
   if (!Array.isArray(cells))
     throw new TypeError("InvalidCellSizeBatch");
@@ -1577,7 +1577,7 @@ function encodeCellSizes(cells) {
   return bytes;
 }
 
-// source/js/font-face-identity.mjs
+// ../final-source-r2/js/font-face-identity.mjs
 var FONT_LANGUAGES = Object.freeze([
   "hangul",
   "latin",
@@ -1599,7 +1599,7 @@ function validFontFaceOrder(rows) {
   return true;
 }
 
-// source/js/font-metadata-wire.mjs
+// ../final-source-r2/js/font-metadata-wire.mjs
 var metadataKeys = (row, names) => row !== null && typeof row === "object" && !Array.isArray(row) && Object.keys(row).length === names.length && names.every((name) => Object.hasOwn(row, name));
 var metadataText = (value) => value === null || typeof value === "string" && value.isWellFormed() && new TextEncoder().encode(value).length <= 4096;
 function decodeMetadataWire(bytes, errorName) {
@@ -1619,7 +1619,7 @@ function decodeMetadataWire(bytes, errorName) {
   return wire.fonts;
 }
 
-// source/js/character-font-metrics.mjs
+// ../final-source-r2/js/character-font-metrics.mjs
 var fields = ["ratio", "spacing", "relativeSize", "offset"];
 function decodeCharacterFontMetrics(bytes, format) {
   const fail = () => {
@@ -1656,7 +1656,7 @@ function decodeCharacterFontMetrics(bytes, format) {
   return wire.shapes;
 }
 
-// source/js/equation-engine.mjs
+// ../final-source-r2/js/equation-engine.mjs
 function createEquationEngine(wasm) {
   for (const name of [
     "equation_process",
@@ -1713,7 +1713,7 @@ function createEquationEngine(wasm) {
   };
 }
 
-// source/js/hwpx-equation-styles.mjs
+// ../final-source-r2/js/hwpx-equation-styles.mjs
 function decodeEquationStyles(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxEquationStyles");
@@ -1751,7 +1751,7 @@ function decodeEquationStyles(bytes) {
   return rows;
 }
 
-// source/js/chart-point-batch.mjs
+// ../final-source-r2/js/chart-point-batch.mjs
 function readChartPointBatchLimits(wasm) {
   if (![
     "hwpx_edit_set_chart_points",
@@ -1811,7 +1811,7 @@ function encodeChartPointBatch(edits, { maxEdits, maxBytes }, encodeValue) {
   return output;
 }
 
-// source/js/hwpx-chart-series-text.mjs
+// ../final-source-r2/js/hwpx-chart-series-text.mjs
 function decodeChartSeriesText(bytes) {
   return validateChartSeriesText(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
@@ -1827,7 +1827,7 @@ function validateChartSeriesText(value) {
   return value;
 }
 
-// source/js/hwpx-chart-rich-text.mjs
+// ../final-source-r2/js/hwpx-chart-rich-text.mjs
 function decodeChartRichText(bytes) {
   return validateChartRichText(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
@@ -1857,7 +1857,7 @@ function validateChartRichText(value) {
   return value;
 }
 
-// source/js/chart-display-fields.mjs
+// ../final-source-r2/js/chart-display-fields.mjs
 var object6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var uint9 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var text = (value) => typeof value === "string" && value.isWellFormed();
@@ -1873,7 +1873,7 @@ function scaling(value, owner) {
   return value === null || object6(value) && uint9(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [value.minimum, value.maximum, value.log_base].every((item) => field(item, number, value.node));
 }
 
-// source/js/chart-display-host.mjs
+// ../final-source-r2/js/chart-display-host.mjs
 var optional = (accepts) => (value) => value === null || accepts(value);
 var bounded = (max) => (value) => uint9(value) && value <= max;
 var boolean = (value) => typeof value === "boolean";
@@ -1885,7 +1885,7 @@ function chartDisplayHost(value, wrapper) {
   return object6(g) && object6(p) && [g.width, g.height].every(optional(uint9)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([2, 3, 4, 4][i]))(v));
 }
 
-// source/js/chart-series-settings.mjs
+// ../final-source-r2/js/chart-series-settings.mjs
 var symbols = [
   "auto",
   "circle",
@@ -1944,7 +1944,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
   return true;
 }
 
-// source/js/chart-point-settings.mjs
+// ../final-source-r2/js/chart-point-settings.mjs
 function validChartPointSettings(values, series, occupied = null) {
   if (!Array.isArray(values))
     return false;
@@ -1964,7 +1964,7 @@ function validChartPointSettings(values, series, occupied = null) {
   return true;
 }
 
-// source/js/chart-stock-settings.mjs
+// ../final-source-r2/js/chart-stock-settings.mjs
 function validChartStockSettings(stock, kind, plotNode, usedNodes) {
   if (kind !== "stockChart")
     return stock === null;
@@ -1997,7 +1997,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
   return true;
 }
 
-// source/js/chart-view-3d.mjs
+// ../final-source-r2/js/chart-view-3d.mjs
 function validChartView3D(value, occupied = null) {
   if (value === undefined || value === null)
     return true;
@@ -2025,7 +2025,7 @@ function validChartView3D(value, occupied = null) {
   return true;
 }
 
-// source/js/chart-spatial-settings.mjs
+// ../final-source-r2/js/chart-spatial-settings.mjs
 function validChartSpatialSettings(value, kind, owner, leaves) {
   if (value === undefined)
     return true;
@@ -2045,7 +2045,7 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
   return true;
 }
 
-// source/js/hwpx-chart-display.mjs
+// ../final-source-r2/js/hwpx-chart-display.mjs
 var plotKinds = new Set([
   "areaChart",
   "area3DChart",
@@ -2283,7 +2283,7 @@ function decodeChartDisplay(bytes) {
   return value;
 }
 
-// source/js/hwpx-chart-api.mjs
+// ../final-source-r2/js/hwpx-chart-api.mjs
 function createHwpxChartApi({ wasm, memory, ready, uint, encodedText }) {
   function chartPointBytes(text, legacyNumeric = false) {
     const nativeLimit = typeof wasm.hwpx_edit_chart_point_max_bytes === "function";
@@ -2446,7 +2446,7 @@ function createHwpxChartApi({ wasm, memory, ready, uint, encodedText }) {
   };
 }
 
-// source/js/hwpx-picture-owners.mjs
+// ../final-source-r2/js/hwpx-picture-owners.mjs
 function decodePictureOwners(bytes) {
   const fail = () => {
     throw new Error("InvalidPictureOwners");
@@ -2486,7 +2486,7 @@ function decodePictureOwners(bytes) {
   });
 }
 
-// source/js/hwpx-inline-string-sources.mjs
+// ../final-source-r2/js/hwpx-inline-string-sources.mjs
 function decodeInlineStringSources(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxInlineStringSources");
@@ -2555,7 +2555,7 @@ function decodeInlineStringSources(bytes) {
   return value;
 }
 
-// source/js/hwpx-dutmal-kind.mjs
+// ../final-source-r2/js/hwpx-dutmal-kind.mjs
 function dutmalKind(value) {
   if (value === "mainText")
     return 0;
@@ -2564,7 +2564,7 @@ function dutmalKind(value) {
   throw new RangeError("InvalidDutmalTextKind");
 }
 
-// source/js/hwpx-dutmal-sites.mjs
+// ../final-source-r2/js/hwpx-dutmal-sites.mjs
 function decodeDutmalSites(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxDutmalSites");
@@ -2587,7 +2587,7 @@ function decodeDutmalSites(bytes) {
   return rows;
 }
 
-// source/js/hwpx-equation-sources.mjs
+// ../final-source-r2/js/hwpx-equation-sources.mjs
 function decodeEquationSources(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxEquationSources");
@@ -2640,7 +2640,7 @@ function validateEquationSources(rows) {
   return rows;
 }
 
-// source/js/hwpx-equation-scripts.mjs
+// ../final-source-r2/js/hwpx-equation-scripts.mjs
 function decodeEquationScripts(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxEquationScripts");
@@ -2678,7 +2678,7 @@ function decodeEquationScripts(bytes) {
   return value;
 }
 
-// source/js/hwpx-equation-sites.mjs
+// ../final-source-r2/js/hwpx-equation-sites.mjs
 function decodeEquationSites(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxEquationSites");
@@ -2709,7 +2709,7 @@ function decodeEquationSites(bytes) {
   return rows;
 }
 
-// source/js/hwpx-field-target-wire.mjs
+// ../final-source-r2/js/hwpx-field-target-wire.mjs
 function validateFieldTargets(targets) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!Array.isArray(targets) || targets.length > 4096 || Array.from(targets).some((target) => !target || ![target.beginElement, target.start, target.end].every(uint) || target.end < target.start))
@@ -2736,7 +2736,7 @@ function decodeFieldTargets(bytes) {
   }));
 }
 
-// source/js/formula-result-paragraphs.mjs
+// ../final-source-r2/js/formula-result-paragraphs.mjs
 function decodeFormulaResultParagraphs(bytes) {
   const values = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   if (!Array.isArray(values))
@@ -2750,7 +2750,7 @@ function decodeFormulaResultParagraphs(bytes) {
   return values;
 }
 
-// source/js/formula-result-display-snapshot.mjs
+// ../final-source-r2/js/formula-result-display-snapshot.mjs
 function decodeFormulaResultDisplaySnapshot(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const invalid = () => {
@@ -2774,7 +2774,7 @@ function decodeFormulaResultDisplaySnapshot(bytes) {
   });
 }
 
-// source/js/hwpx-page-area-declarations.mjs
+// ../final-source-r2/js/hwpx-page-area-declarations.mjs
 function decodePageAreaDeclarations(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const invalid = () => {
@@ -2800,7 +2800,7 @@ function decodePageAreaDeclarations(bytes) {
   });
 }
 
-// source/js/created-table-identity.mjs
+// ../final-source-r2/js/created-table-identity.mjs
 function createdTableIdentity(value) {
   if (typeof value !== "string" || !/^[1-9][0-9]{0,19}$/.test(value))
     throw new RangeError("InvalidCreatedTableIdentity");
@@ -2810,7 +2810,7 @@ function createdTableIdentity(value) {
   return id;
 }
 
-// source/js/hwpx-created-tables.mjs
+// ../final-source-r2/js/hwpx-created-tables.mjs
 function decodeCreatedTables(bytes) {
   const fail = () => {
     throw new Error("InvalidCreatedTables");
@@ -2896,7 +2896,7 @@ function validateCreatedTables(rows, { hostBase = 1 } = {}) {
   return rows;
 }
 
-// source/js/table-creation-resources.mjs
+// ../final-source-r2/js/table-creation-resources.mjs
 var decoder3 = new TextDecoder("utf-8", { fatal: true });
 function decodeTableCreationResources(bytes) {
   const value = JSON.parse(decoder3.decode(bytes));
@@ -2906,7 +2906,7 @@ function decodeTableCreationResources(bytes) {
   return value;
 }
 
-// source/js/hwpx-form-source.mjs
+// ../final-source-r2/js/hwpx-form-source.mjs
 var kinds2 = new Set(["button", "check_button", "combo_box", "radio_button", "edit_box"]);
 var uint10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
@@ -2959,7 +2959,7 @@ function decodeFormSourceLayout(bytes) {
   return value;
 }
 
-// source/js/character-snapshot-json.mjs
+// ../final-source-r2/js/character-snapshot-json.mjs
 function decodeCharacterSnapshot(bytes, keys, errorName) {
   const fail = () => {
     throw new Error(errorName);
@@ -2983,7 +2983,7 @@ function decodeCharacterSnapshot(bytes, keys, errorName) {
   return rows;
 }
 
-// source/js/character-effect-args.mjs
+// ../final-source-r2/js/character-effect-args.mjs
 var CHARACTER_EFFECTS = Object.freeze(["emboss", "engrave", "superscript", "subscript"]);
 function characterEffectMode(exclusive) {
   if (typeof exclusive !== "boolean")
@@ -2997,7 +2997,7 @@ function characterEffectArgs(effect, enabled) {
   return [kind, Number(enabled)];
 }
 
-// source/js/character-effects.mjs
+// ../final-source-r2/js/character-effects.mjs
 function decodeCharacterEffects(bytes) {
   const flags = CHARACTER_EFFECTS;
   const rows = decodeCharacterSnapshot(bytes, ["id", ...flags], "InvalidCharacterEffects");
@@ -3006,7 +3006,7 @@ function decodeCharacterEffects(bytes) {
   return rows;
 }
 
-// source/js/character-outline-args.mjs
+// ../final-source-r2/js/character-outline-args.mjs
 var HWP5_CHARACTER_OUTLINE_KINDS = Object.freeze([
   "none",
   "solid",
@@ -3029,7 +3029,7 @@ function characterOutlineArg(kind) {
   return value;
 }
 
-// source/js/character-outlines.mjs
+// ../final-source-r2/js/character-outlines.mjs
 function decodeCharacterOutlines(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "state", "rawKind"], "InvalidCharacterOutlines");
   for (const row of rows) {
@@ -3044,7 +3044,7 @@ function decodeCharacterOutlines(bytes) {
   return rows;
 }
 
-// source/js/paragraph-spacing-args.mjs
+// ../final-source-r2/js/paragraph-spacing-args.mjs
 var paragraphSpacingTypes = Object.freeze([
   "PERCENT",
   "FIXED",
@@ -3058,7 +3058,7 @@ function paragraphSpacingArgs(type, value) {
   return [kind, value];
 }
 
-// source/js/character-property-args.mjs
+// ../final-source-r2/js/character-property-args.mjs
 function characterPropertyArgs(properties) {
   const names = ["size", "bold", "italic"];
   if (!properties || typeof properties !== "object" || Array.isArray(properties) || Object.keys(properties).some((key) => !names.includes(key)))
@@ -3079,7 +3079,7 @@ function characterPropertyArgs(properties) {
   return [mask, ...values];
 }
 
-// source/js/character-range-batch.mjs
+// ../final-source-r2/js/character-range-batch.mjs
 function encodeCharacterRanges(ranges) {
   if (!Array.isArray(ranges))
     throw new TypeError("InvalidCharacterRanges");
@@ -3105,7 +3105,7 @@ function encodeCharacterRanges(ranges) {
   return bytes;
 }
 
-// source/js/paragraph-replacement.mjs
+// ../final-source-r2/js/paragraph-replacement.mjs
 function normalizeParagraphReplacement(text) {
   return text.replace(/\r\n?/g, `
 `);
@@ -3121,7 +3121,7 @@ function encodeParagraphReplacement(text) {
   return bytes;
 }
 
-// source/js/character-underline-args.mjs
+// ../final-source-r2/js/character-underline-args.mjs
 function characterUnderlineArg(kind) {
   const values = ["none", "bottom", "center", "top"];
   const value = values.indexOf(kind);
@@ -3130,7 +3130,7 @@ function characterUnderlineArg(kind) {
   return value;
 }
 
-// source/js/character-color-args.mjs
+// ../final-source-r2/js/character-color-args.mjs
 function characterColorArg(color) {
   const value = parseCharacterColor(color);
   if (value === null)
@@ -3141,12 +3141,12 @@ function parseCharacterColor(color) {
   return typeof color === "string" && color.length === 7 && /^#[0-9a-f]{6}$/i.test(color) ? Number.parseInt(color.slice(1), 16) : null;
 }
 
-// source/js/character-shade-args.mjs
+// ../final-source-r2/js/character-shade-args.mjs
 function characterShadeArgs(color) {
   return color === null ? [0, 0] : [1, characterColorArg(color)];
 }
 
-// source/js/character-shades.mjs
+// ../final-source-r2/js/character-shades.mjs
 function decodeCharacterShades(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "state", "color"], "InvalidCharacterShades");
   for (const row of rows) {
@@ -3156,7 +3156,7 @@ function decodeCharacterShades(bytes) {
   return rows;
 }
 
-// source/js/font-faces.mjs
+// ../final-source-r2/js/font-faces.mjs
 function decodeFontFaces(bytes) {
   const fail = () => {
     throw new Error("InvalidFontFaces");
@@ -3182,7 +3182,7 @@ function decodeFontFaces(bytes) {
   return rows;
 }
 
-// source/js/character-font-args.mjs
+// ../final-source-r2/js/character-font-args.mjs
 function characterFontArgs(language, fontId) {
   const index = FONT_LANGUAGES.indexOf(language);
   if (index < 0)
@@ -3192,7 +3192,7 @@ function characterFontArgs(language, fontId) {
   return [index, fontId];
 }
 
-// source/js/character-font-name-args.mjs
+// ../final-source-r2/js/character-font-name-args.mjs
 function characterFontNameArgs(language, name) {
   const index = characterFontArgs(language, 0)[0];
   if (typeof name !== "string")
@@ -3214,7 +3214,7 @@ function characterFontNameArgs(language, name) {
   return { language: index, bytes };
 }
 
-// source/js/text-transaction-args.mjs
+// ../final-source-r2/js/text-transaction-args.mjs
 function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
   const positions = [section, paragraph, startUnit, endUnit];
   if (positions.some((value) => !Number.isInteger(value) || value < 0 || value > 4294967295) || endUnit < startUnit)
@@ -3233,7 +3233,7 @@ function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
   return { positions, bytes };
 }
 
-// source/js/named-font-text-args.mjs
+// ../final-source-r2/js/named-font-text-args.mjs
 function namedFontTextArgs({
   section,
   paragraph,
@@ -3253,7 +3253,7 @@ function namedFontTextArgs({
   return { positions, bytes, font: characterFontNameArgs(language, name) };
 }
 
-// source/js/character-underlines.mjs
+// ../final-source-r2/js/character-underlines.mjs
 function decodeCharacterUnderlines(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "kind"], "InvalidCharacterUnderlines");
   for (const row of rows) {
@@ -3263,7 +3263,7 @@ function decodeCharacterUnderlines(bytes) {
   return rows;
 }
 
-// source/js/character-strikes.mjs
+// ../final-source-r2/js/character-strikes.mjs
 function decodeCharacterStrikes(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "enabled"], "InvalidCharacterStrikes");
   for (const row of rows)
@@ -3272,7 +3272,7 @@ function decodeCharacterStrikes(bytes) {
   return rows;
 }
 
-// source/js/character-strike-styles.mjs
+// ../final-source-r2/js/character-strike-styles.mjs
 function decodeCharacterStrikeStyles(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "raw_style", "raw_color", "shape", "color"], "InvalidCharacterStrikeStyles");
   const text = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
@@ -3284,7 +3284,7 @@ function decodeCharacterStrikeStyles(bytes) {
   return rows;
 }
 
-// source/js/hwpx-document-provenance.mjs
+// ../final-source-r2/js/hwpx-document-provenance.mjs
 var object8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var exact = (value, keys) => object8(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
 var uint11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -3329,7 +3329,7 @@ function decodeDocumentProvenance(bytes) {
   return value;
 }
 
-// source/js/character-text-colors.mjs
+// ../final-source-r2/js/character-text-colors.mjs
 function decodeCharacterTextColors(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "color"], "InvalidCharacterTextColors");
   for (const row of rows) {
@@ -3340,7 +3340,7 @@ function decodeCharacterTextColors(bytes) {
   return rows;
 }
 
-// source/js/hwpx-font-face-metadata.mjs
+// ../final-source-r2/js/hwpx-font-face-metadata.mjs
 function decodeHwpxFontFaceMetadata(bytes) {
   const fail = () => {
     throw new Error("InvalidHwpxFontFaceMetadata");
@@ -3366,7 +3366,7 @@ function decodeHwpxFontFaceMetadata(bytes) {
   return rows;
 }
 
-// source/js/character-font-references.mjs
+// ../final-source-r2/js/character-font-references.mjs
 function decodeCharacterFontReferences(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "fontIds"], "InvalidCharacterFontReferences");
   for (const row of rows) {
@@ -3376,7 +3376,7 @@ function decodeCharacterFontReferences(bytes) {
   return rows;
 }
 
-// source/js/character-underline-styles.mjs
+// ../final-source-r2/js/character-underline-styles.mjs
 function decodeCharacterUnderlineStyles(bytes) {
   const rows = decodeCharacterSnapshot(bytes, ["id", "raw_style", "raw_color", "shape", "color"], "InvalidCharacterUnderlineStyles");
   const text = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
@@ -3388,7 +3388,7 @@ function decodeCharacterUnderlineStyles(bytes) {
   return rows;
 }
 
-// source/js/hwpx-paragraph-shapes.mjs
+// ../final-source-r2/js/hwpx-paragraph-shapes.mjs
 function decodeHwpxParagraphShapes(bytes) {
   const result = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const invalid = () => {
@@ -3408,7 +3408,7 @@ function decodeHwpxParagraphShapes(bytes) {
   return result;
 }
 
-// source/js/table-bindings-wire.mjs
+// ../final-source-r2/js/table-bindings-wire.mjs
 function decodeTableBindings(bytes) {
   const fail = () => {
     throw new Error("InvalidTableBindings");
@@ -3456,7 +3456,7 @@ function decodeTableBindings(bytes) {
   });
 }
 
-// source/js/table-placements-wire.mjs
+// ../final-source-r2/js/table-placements-wire.mjs
 function decodeTablePlacements(bytes, format = "hwpx") {
   const fail = () => {
     throw new Error("InvalidTablePlacements");
@@ -3505,7 +3505,7 @@ function decodeTablePlacements(bytes, format = "hwpx") {
   return rows;
 }
 
-// source/js/hwpx-drawing-text-bindings.mjs
+// ../final-source-r2/js/hwpx-drawing-text-bindings.mjs
 function decodeDrawingTextBindings(bytes) {
   const fail = () => {
     throw new Error("InvalidDrawingTextBindings");
@@ -3544,7 +3544,7 @@ function decodeDrawingTextBindings(bytes) {
   });
 }
 
-// source/js/hwpx-drawing-text-snapshots.mjs
+// ../final-source-r2/js/hwpx-drawing-text-snapshots.mjs
 function decodeDrawingTextSnapshots(bytes) {
   if (!(bytes instanceof Uint8Array))
     throw new Error("InvalidDrawingTextSnapshots");
@@ -3560,7 +3560,7 @@ function decodeDrawingTextSnapshots(bytes) {
   });
 }
 
-// source/js/hwpx-container-source.mjs
+// ../final-source-r2/js/hwpx-container-source.mjs
 function decodeContainerSource(bytes) {
   const fail = () => {
     throw new Error("InvalidContainerSource");
@@ -3607,7 +3607,7 @@ function decodeContainerSource(bytes) {
   return v;
 }
 
-// source/js/hwpx-rectangle-rendering-source.mjs
+// ../final-source-r2/js/hwpx-rectangle-rendering-source.mjs
 function decodeRectangleRenderingSource(bytes) {
   const fail = () => {
     throw new Error("InvalidRectangleRenderingSource");
@@ -3654,7 +3654,7 @@ function decodeRectangleRenderingSource(bytes) {
   return value;
 }
 
-// source/js/hwpx-rectangle-rendering-sources.mjs
+// ../final-source-r2/js/hwpx-rectangle-rendering-sources.mjs
 function decodeRectangleRenderingSources(bytes) {
   if (!(bytes instanceof Uint8Array))
     throw new Error("InvalidRectangleRenderingSources");
@@ -3670,7 +3670,7 @@ function decodeRectangleRenderingSources(bytes) {
   });
 }
 
-// source/js/hwpx-ellipse-sources.mjs
+// ../final-source-r2/js/hwpx-ellipse-sources.mjs
 var object9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var uint12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var coordinate3 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
@@ -3685,7 +3685,7 @@ function decodeEllipseSources(bytes) {
   return rows;
 }
 
-// source/js/hwpx-picture-sites-wire.mjs
+// ../final-source-r2/js/hwpx-picture-sites-wire.mjs
 var states = ["located", "conditional", "unsupported_anchor", "missing_host", "ambiguous_host"];
 function decodePictureSites(bytes) {
   const fail = () => {
@@ -3726,7 +3726,7 @@ function decodePictureSites(bytes) {
   return result;
 }
 
-// source/js/hwpx-ole-source.mjs
+// ../final-source-r2/js/hwpx-ole-source.mjs
 var uint13 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
 var errors = new Set([
   "UnsupportedOleDisplayHost",
@@ -3795,7 +3795,7 @@ function decodeOleBytes(bytes) {
   return { declaredExternal: bytes[0] === 1, bytes: bytes.slice(1) };
 }
 
-// source/js/hwpx-picture-owner-wire.mjs
+// ../final-source-r2/js/hwpx-picture-owner-wire.mjs
 function decodePictureOwner(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== 16)
     throw new Error("InvalidPictureOwner");
@@ -3809,7 +3809,7 @@ function decodePictureOwner(bytes) {
   };
 }
 
-// source/js/hwpx-picture-corners-wire.mjs
+// ../final-source-r2/js/hwpx-picture-corners-wire.mjs
 function decodePictureRenderingCorners(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length !== 72)
     throw new Error("InvalidPictureRenderingCorners");
@@ -3824,7 +3824,7 @@ function decodePictureRenderingCorners(bytes) {
   }));
 }
 
-// source/js/hwpx-connector-source.mjs
+// ../final-source-r2/js/hwpx-connector-source.mjs
 var uint14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var object10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var parse2 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -3855,7 +3855,7 @@ function decodeConnectorRenderingSource(bytes, expectedNode) {
   return value;
 }
 
-// source/js/hwpx-drawing-stroke-source.mjs
+// ../final-source-r2/js/hwpx-drawing-stroke-source.mjs
 var fields2 = [
   "color",
   "width",
@@ -3879,7 +3879,7 @@ function decodeDrawingStrokeSource(bytes, expectedNode) {
   return value;
 }
 
-// source/js/hwpx-page-settings.mjs
+// ../final-source-r2/js/hwpx-page-settings.mjs
 function validateColumn(column) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!column || !uint(column.declaration_node) || !uint(column.owner_node) || ![column.count, column.gap].every((value) => value === null || uint(value)) || ![null, true, false].includes(column.same_size) || ![null, "left", "right", "mirror"].includes(column.direction) || ![null, "newspaper", "balanced_newspaper", "parallel"].includes(column.kind) || typeof column.ambiguous !== "boolean")
@@ -3961,7 +3961,7 @@ function decodePageSettings(bytes) {
   return rows;
 }
 
-// source/js/hwpx-note-shapes.mjs
+// ../final-source-r2/js/hwpx-note-shapes.mjs
 function decodeNoteShapes(bytes) {
   const report = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -4002,7 +4002,7 @@ function decodeNoteShapes(bytes) {
   return report;
 }
 
-// source/js/hwpx-table-pagination.mjs
+// ../final-source-r2/js/hwpx-table-pagination.mjs
 function decodeTablePagination(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -4019,7 +4019,7 @@ function decodeTablePagination(bytes) {
   return rows;
 }
 
-// source/js/hwpx-table-geometry.mjs
+// ../final-source-r2/js/hwpx-table-geometry.mjs
 function decodeTableGeometry(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   if (!value || typeof value !== "object")
@@ -4050,7 +4050,7 @@ function decodeTableGeometry(bytes) {
   return value;
 }
 
-// source/js/caption-bindings-wire.mjs
+// ../final-source-r2/js/caption-bindings-wire.mjs
 function decodeCaptionBindings(bytes, ownerField, errorName) {
   if (!["table_node", "picture_node", "container_node"].includes(ownerField))
     throw new Error("InvalidCaptionBindingOwnerField");
@@ -4068,12 +4068,12 @@ function decodeCaptionBindings(bytes, ownerField, errorName) {
   return rows;
 }
 
-// source/js/hwpx-table-caption-bindings.mjs
+// ../final-source-r2/js/hwpx-table-caption-bindings.mjs
 function decodeTableCaptionBindings(bytes) {
   return decodeCaptionBindings(bytes, "table_node", "InvalidTableCaptionBindings");
 }
 
-// source/js/hwpx-automatic-number-sites.mjs
+// ../final-source-r2/js/hwpx-automatic-number-sites.mjs
 function decodeAutomaticNumberSites(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -4089,7 +4089,7 @@ function decodeAutomaticNumberSites(bytes) {
   return rows;
 }
 
-// source/js/hwpx-automatic-number-sources.mjs
+// ../final-source-r2/js/hwpx-automatic-number-sources.mjs
 function decodeAutomaticNumberSources(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
@@ -4108,7 +4108,7 @@ function decodeAutomaticNumberSources(bytes) {
   return rows;
 }
 
-// source/js/hwpx-note-reference-sites.mjs
+// ../final-source-r2/js/hwpx-note-reference-sites.mjs
 function decodeNoteReferenceSites(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -4125,7 +4125,7 @@ function decodeNoteReferenceSites(bytes) {
   return rows;
 }
 
-// source/js/hwpx-paragraph-text-snapshot.mjs
+// ../final-source-r2/js/hwpx-paragraph-text-snapshot.mjs
 function decodeParagraphTextSnapshot(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   if (!Array.isArray(rows) || rows.length > 1e5)
@@ -4139,7 +4139,7 @@ function decodeParagraphTextSnapshot(bytes) {
   return rows;
 }
 
-// source/js/hwpx-formula-field-sources.mjs
+// ../final-source-r2/js/hwpx-formula-field-sources.mjs
 function decodeFormulaFieldSources(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -4156,7 +4156,7 @@ function decodeFormulaFieldSources(bytes) {
   return rows;
 }
 
-// source/js/hwpx-table-cell-margin.mjs
+// ../final-source-r2/js/hwpx-table-cell-margin.mjs
 function decodeTableCellMargin(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const bool = (v) => [null, false, true].includes(v);
@@ -4170,7 +4170,7 @@ function decodeTableCellMargin(bytes) {
   return value;
 }
 
-// source/js/hwpx-formula-sources.mjs
+// ../final-source-r2/js/hwpx-formula-sources.mjs
 function decodeFormulaSources(bytes, { current = false } = {}) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   if (!Array.isArray(rows) || rows.length > 4096)
@@ -4197,7 +4197,7 @@ function decodeFormulaSources(bytes, { current = false } = {}) {
   return rows;
 }
 
-// source/js/hwpx-picture-crop-wire.mjs
+// ../final-source-r2/js/hwpx-picture-crop-wire.mjs
 function decodePictureCrop(bytes) {
   const fail = () => {
     throw new Error("InvalidPictureCrop");
@@ -4224,7 +4224,7 @@ function decodePictureCrop(bytes) {
   return { clip, imageDimensions };
 }
 
-// source/js/hwpx-picture-transform-wire.mjs
+// ../final-source-r2/js/hwpx-picture-transform-wire.mjs
 function decodePictureTransform(bytes) {
   const fail = () => {
     throw new Error("InvalidPictureTransform");
@@ -4264,7 +4264,7 @@ function decodePictureTransform(bytes) {
   };
 }
 
-// source/js/character-shapes-wire.mjs
+// ../final-source-r2/js/character-shapes-wire.mjs
 function decodeCharacterShapes(bytes) {
   const fail = () => {
     throw new Error("InvalidCharacterShapes");
@@ -4312,7 +4312,7 @@ function decodeCharacterRanges(bytes) {
     return { start, end, charShapeId: flags ? id : null };
   });
 }
-// source/js/paragraph-break-api.mjs
+// ../final-source-r2/js/paragraph-break-api.mjs
 function createParagraphBreakApi({
   wasm,
   memory,
@@ -4345,7 +4345,7 @@ function createParagraphBreakApi({
   };
 }
 
-// source/js/editor-history.mjs
+// ../final-source-r2/js/editor-history.mjs
 function createHistoryApi({ wasm, memory, check, uint, prefix, unavailable }) {
   const travel = (kind) => {
     check();
@@ -4495,7 +4495,7 @@ function createHistoryApi({ wasm, memory, check, uint, prefix, unavailable }) {
   return api;
 }
 
-// source/js/paragraph-margin-args.mjs
+// ../final-source-r2/js/paragraph-margin-args.mjs
 function paragraphMarginArgs(margins) {
   const names = ["left", "right", "indent", "before", "after"];
   if (!margins || typeof margins !== "object" || Array.isArray(margins) || Object.keys(margins).some((key) => !names.includes(key)))
@@ -4513,7 +4513,7 @@ function paragraphMarginArgs(margins) {
   return [mask, ...values];
 }
 
-// source/js/hwpx-editor.mjs
+// ../final-source-r2/js/hwpx-editor.mjs
 async function createHwpxEditor(source) {
   const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
@@ -6780,7 +6780,7 @@ async function createHwpxEditor(source) {
   };
 }
 
-// source/web/preview/paragraph-split-command.mjs
+// ../final-source-r2/web/preview/paragraph-split-command.mjs
 function paragraphBreakIntent(message) {
   if (!Object.hasOwn(message, "breakBefore"))
     return null;
@@ -6803,7 +6803,7 @@ function applyParagraphSplit(editor, target, message, allowAnchored = false) {
   return editor.splitParagraph(target);
 }
 
-// source/web/preview/hwpx-chart-content.mjs
+// ../final-source-r2/web/preview/hwpx-chart-content.mjs
 function attachHwpxCharts(editor, content, exports, allowObservedRepairs) {
   content.chartDisplayAvailable = exports.has("hwpx_edit_chart_display");
   content.chartEditAvailable = [
@@ -6851,7 +6851,7 @@ function attachHwpxCharts(editor, content, exports, allowObservedRepairs) {
   return content;
 }
 
-// source/web/preview/chart-point-batch-command.mjs
+// ../final-source-r2/web/preview/chart-point-batch-command.mjs
 function samePair(expected, current) {
   return expected && typeof expected === "object" && !Array.isArray(expected) && ["chart_path", "ole_path", "wrapper_node", "section_ordinal", "declared_external"].every((key) => expected[key] === current[key]) && Array.isArray(expected.section_sha256) && expected.section_sha256.length === current.section_sha256.length && Array.from(expected.section_sha256).every((byte, i) => byte === current.section_sha256[i]);
 }
@@ -6875,7 +6875,7 @@ function applyChartPointBatchCommand(editor, message) {
   editor.setChartPoints(message.section, message.wrapper, edits);
 }
 
-// source/web/preview/table-source-columns.mjs
+// ../final-source-r2/web/preview/table-source-columns.mjs
 function sourceTableColumns(table) {
   const unavailable = (error) => ({ state: "unavailable", error });
   if (!Number.isSafeInteger(table?.columns) || table.columns < 1 || table.columns > 1e4 || !Array.isArray(table.cells) || table.cells.length > 1e5)
@@ -6925,7 +6925,7 @@ function sourceTableColumns(table) {
   return { state: "resolved", columns, positions, width: positions.at(-1) };
 }
 
-// source/web/preview/source-table-row-horizontals.mjs
+// ../final-source-r2/web/preview/source-table-row-horizontals.mjs
 function sourceTableRowHorizontals(table, { maxCoveredCells = 1e6 } = {}) {
   const fail = (error) => ({ state: "unavailable", error });
   if (!Number.isSafeInteger(table?.rows) || table.rows < 1 || table.rows > 1e4 || !Number.isSafeInteger(table.columns) || table.columns < 1 || table.columns > 1e4 || !Array.isArray(table.cells) || !table.cells.length || table.cells.length > 1e5 || !Number.isSafeInteger(maxCoveredCells) || maxCoveredCells < 1)
@@ -6974,7 +6974,7 @@ function sourceTableRowHorizontals(table, { maxCoveredCells = 1e6 } = {}) {
   };
 }
 
-// source/web/preview/table-column-width-plan.mjs
+// ../final-source-r2/web/preview/table-column-width-plan.mjs
 function tableColumnWidthPlan(table, request) {
   const fail = (error) => ({ state: "unavailable", error });
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -7023,14 +7023,14 @@ function tableColumnWidthPlan(table, request) {
   return { state: "planned", cells, boundary, delta };
 }
 
-// source/web/preview/hwpx-field-range-target.mjs
+// ../final-source-r2/web/preview/hwpx-field-range-target.mjs
 function hwpxFieldRangeTarget(editor, createdTablesPending, section, paragraph, start, end) {
   if (createdTablesPending && !editor.createdTableFieldLabelMode(section))
     return null;
   return editor.fieldRangeTarget(section, paragraph, start, end);
 }
 
-// source/web/preview/checkbox-content.mjs
+// ../final-source-r2/web/preview/checkbox-content.mjs
 function attachCheckBoxes(editor, content, available) {
   content.checkBoxStateAvailable = available;
   content.checkBoxes = [];
@@ -7082,7 +7082,7 @@ function attachCheckBoxes(editor, content, available) {
   }
 }
 
-// source/web/preview/hwpx-content.mjs
+// ../final-source-r2/web/preview/hwpx-content.mjs
 var inlineText = {
   tab: "\t",
   fw_space: "　",
@@ -7165,7 +7165,7 @@ function displayHwpxContent(result, {
   };
 }
 
-// source/web/preview/dutmal-content.mjs
+// ../final-source-r2/web/preview/dutmal-content.mjs
 function attachDutmal(editor, content, available) {
   content.dutmalAvailable = available;
   content.dutmalErrors = [];
@@ -7220,7 +7220,7 @@ function attachDutmal(editor, content, available) {
   return content;
 }
 
-// source/web/preview/equation-content.mjs
+// ../final-source-r2/web/preview/equation-content.mjs
 function attachEquations(editor, content, available) {
   content.equationAvailable = available;
   content.equationErrors = [];
@@ -7261,7 +7261,7 @@ function attachEquations(editor, content, available) {
   return content;
 }
 
-// source/web/preview/equation-font-measure.mjs
+// ../final-source-r2/web/preview/equation-font-measure.mjs
 function equationFont(request, family) {
   if (typeof family !== "string" || !family.trim() || /[\x00-\x1f\x7f]/u.test(family))
     throw new Error("InvalidEquationFontFamily");
@@ -7316,10 +7316,10 @@ function measureEquationRequests(ctx, requests, family, { maxRequests = 65536, m
   }
 }
 
-// source/web/preview/hwp-units.mjs
+// ../final-source-r2/web/preview/hwp-units.mjs
 var hwpUnitPixels = (value) => value * 96 / 7200;
 
-// source/web/preview/equation-display-style.mjs
+// ../final-source-r2/web/preview/equation-display-style.mjs
 var EQUATION_PREVIEW_FAMILY = "Times New Roman";
 function equationDisplayStyle(source = null) {
   if (source?.error_name)
@@ -7350,7 +7350,7 @@ function equationDisplayStyle(source = null) {
   };
 }
 
-// source/web/preview/equation-render-content.mjs
+// ../final-source-r2/web/preview/equation-render-content.mjs
 var options = {
   fraction: { padding: 0.1, gap: 0.1, rule_thickness: 0.05, axis: 0.25 },
   script: { gap: 0.05, superscript_shift: 0.5, subscript_shift: 0.3, clearance: 0.1 },
@@ -7488,7 +7488,7 @@ function attachEquationRendering(editor, content, available, getContext = hostCo
   return content;
 }
 
-// source/web/preview/field-label-display-content.mjs
+// ../final-source-r2/web/preview/field-label-display-content.mjs
 function projectFieldLabelDisplay(editor, paragraph, maxUnits) {
   if (!paragraph.fieldLabels?.length)
     return 0;
@@ -7506,7 +7506,7 @@ function projectFieldLabelDisplay(editor, paragraph, maxUnits) {
   }
 }
 
-// source/web/preview/formula-result-text-command.mjs
+// ../final-source-r2/web/preview/formula-result-text-command.mjs
 var exportsRequired = [
   "hwpx_edit_splice_manual_formula_result",
   "hwpx_edit_manual_formula_result_max_bytes",
@@ -7564,7 +7564,7 @@ function uint16(value) {
   return Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }
 
-// source/web/preview/formula-result-paragraph-filter.mjs
+// ../final-source-r2/web/preview/formula-result-paragraph-filter.mjs
 function createFormulaResultParagraphFilter(editor, exportNames) {
   if (!exportNames.has("hwpx_edit_manual_formula_result_paragraphs") || typeof editor.manualFormulaResultParagraphs !== "function")
     return () => true;
@@ -7576,7 +7576,7 @@ function createFormulaResultParagraphFilter(editor, exportNames) {
   };
 }
 
-// source/web/preview/formula-result-display-lookup.mjs
+// ../final-source-r2/web/preview/formula-result-display-lookup.mjs
 function createFormulaResultDisplayLookup(editor, exports) {
   const available = exports.has("hwpx_edit_manual_formula_result_display_snapshot") && typeof editor.manualFormulaResultDisplaySnapshot === "function";
   const sections = new Map;
@@ -7608,7 +7608,7 @@ function createFormulaResultDisplayLookup(editor, exports) {
   };
 }
 
-// source/web/preview/hwpx-page-area-declarations.mjs
+// ../final-source-r2/web/preview/hwpx-page-area-declarations.mjs
 function attachHwpxPageAreaDeclarations(editor, content, available) {
   if (!available)
     return content;
@@ -7626,7 +7626,7 @@ function attachHwpxPageAreaDeclarations(editor, content, available) {
   return content;
 }
 
-// source/web/preview/hwpx-ole-content.mjs
+// ../final-source-r2/web/preview/hwpx-ole-content.mjs
 function attachHwpxOleSources(editor, content, available) {
   content.oleSourceAvailable = available === true;
   delete content.oles;
@@ -7693,7 +7693,7 @@ function attachHwpxOleSources(editor, content, available) {
   return content;
 }
 
-// source/web/preview/dutmal-edit-command.mjs
+// ../final-source-r2/web/preview/dutmal-edit-command.mjs
 function dutmalQueryIdentity(message) {
   if (message.kind === "inline-string-sources")
     return { requestId: message.requestId };
@@ -7719,7 +7719,7 @@ function writeDutmalText(editor, message) {
   return readDutmalText(editor, message);
 }
 
-// source/web/preview/equation-edit-command.mjs
+// ../final-source-r2/web/preview/equation-edit-command.mjs
 function equationQueryIdentity(message) {
   if (!["equation-sources", "equation-script-query", "equation-script-set"].includes(message.kind))
     return {};
@@ -7743,7 +7743,7 @@ function writeEquationScript(editor, message) {
   editor.setEquationScript(message.section, message.node, message.value);
 }
 
-// source/js/password-decoder.mjs
+// ../final-source-r2/js/password-decoder.mjs
 async function createPasswordDecoder(source, prefix, unavailable) {
   const module = source instanceof WebAssembly.Module ? source : await WebAssembly.compile(source);
   const { exports: wasm } = await WebAssembly.instantiate(module, {});
@@ -7795,23 +7795,23 @@ async function createPasswordDecoder(source, prefix, unavailable) {
   };
 }
 
-// source/js/hwpx-password.mjs
+// ../final-source-r2/js/hwpx-password.mjs
 function createHwpxPasswordDecoder(source) {
   return createPasswordDecoder(source, "hwpx_password", "HwpxPasswordAbiUnavailable");
 }
 
-// source/js/hwp5-password.mjs
+// ../final-source-r2/js/hwp5-password.mjs
 function createHwp5PasswordDecoder(source) {
   return createPasswordDecoder(source, "hwp5_password", "Hwp5PasswordAbiUnavailable");
 }
 
-// source/web/preview/password-policy.mjs
+// ../final-source-r2/web/preview/password-policy.mjs
 function requirePasswordRemovalConsent(protectionRemoved, consent) {
   if (protectionRemoved && consent !== true)
     throw new Error("PasswordProtectionRemovalNotAcknowledged");
 }
 
-// source/web/preview/hwpx-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwpx-window-dependencies.mjs
 function hwpxWindowDependencies(editor, projection) {
   displayHwpxContent(projection, { maxUnits: 0, maxParagraphs: 0 });
   const ordinals = new Map, parents = new Map, sections = new Set, stack = [], groups = [];
@@ -7866,7 +7866,7 @@ function hwpxWindowDependencies(editor, projection) {
   return groups;
 }
 
-// source/web/preview/paragraph-window-plan.mjs
+// ../final-source-r2/web/preview/paragraph-window-plan.mjs
 function planParagraphWindow({ total, offset, count, groups, maxParagraphs }) {
   for (const value of [total, offset, count, maxParagraphs]) {
     if (!Number.isSafeInteger(value) || value < 0)
@@ -7912,7 +7912,7 @@ function planParagraphWindow({ total, offset, count, groups, maxParagraphs }) {
   return { paragraphOffset: start, maxParagraphs: end - start };
 }
 
-// source/web/preview/hwpx-window-projection.mjs
+// ../final-source-r2/web/preview/hwpx-window-projection.mjs
 function projectHwpxWindow(editor, projection, {
   offset,
   count,
@@ -7951,7 +7951,7 @@ function projectHwpxWindow(editor, projection, {
   };
 }
 
-// source/web/preview/character-underline-content.mjs
+// ../final-source-r2/web/preview/character-underline-content.mjs
 function attachCharacterUnderlines(editor, content) {
   content.characterUnderlines = null;
   content.characterUnderlinesError = null;
@@ -7974,7 +7974,7 @@ function attachCharacterUnderlines(editor, content) {
   return content;
 }
 
-// source/web/preview/character-text-color-content.mjs
+// ../final-source-r2/web/preview/character-text-color-content.mjs
 function attachCharacterTextColors(editor, content) {
   content.characterTextColors = null;
   content.characterTextColorsError = null;
@@ -7988,7 +7988,7 @@ function attachCharacterTextColors(editor, content) {
   return content;
 }
 
-// source/web/preview/character-shade-content.mjs
+// ../final-source-r2/web/preview/character-shade-content.mjs
 function attachCharacterShades(editor, content) {
   content.characterShades = null;
   content.characterShadesError = null;
@@ -8002,7 +8002,7 @@ function attachCharacterShades(editor, content) {
   return content;
 }
 
-// source/web/preview/character-effect-content.mjs
+// ../final-source-r2/web/preview/character-effect-content.mjs
 function attachCharacterEffects(editor, content) {
   content.characterEffects = null;
   content.characterEffectsError = null;
@@ -8016,7 +8016,7 @@ function attachCharacterEffects(editor, content) {
   return content;
 }
 
-// source/web/preview/character-outline-content.mjs
+// ../final-source-r2/web/preview/character-outline-content.mjs
 function attachCharacterOutlines(editor, content) {
   content.characterOutlines = null;
   content.characterOutlinesError = null;
@@ -8030,7 +8030,7 @@ function attachCharacterOutlines(editor, content) {
   return content;
 }
 
-// source/web/preview/character-font-content.mjs
+// ../final-source-r2/web/preview/character-font-content.mjs
 function attachCharacterFonts(editor, content) {
   for (const key of [
     "fontFaces",
@@ -8051,7 +8051,7 @@ function attachCharacterFonts(editor, content) {
   return content;
 }
 
-// source/web/preview/character-strike-content.mjs
+// ../final-source-r2/web/preview/character-strike-content.mjs
 function attachCharacterStrikes(editor, content) {
   content.characterStrikes = null;
   content.characterStrikesError = null;
@@ -8074,7 +8074,7 @@ function attachCharacterStrikes(editor, content) {
   return content;
 }
 
-// source/web/preview/tab-source-content.mjs
+// ../final-source-r2/web/preview/tab-source-content.mjs
 function attachTabSources(editor, content) {
   for (const paragraph of content.paragraphs) {
     paragraph.tabSources = null;
@@ -8101,7 +8101,7 @@ function attachTabSources(editor, content) {
   return content;
 }
 
-// source/web/preview/hwpx-style-content.mjs
+// ../final-source-r2/web/preview/hwpx-style-content.mjs
 function attachHwpxStyles(editor, content, available) {
   content.characterShapes = null;
   content.characterShapesError = null;
@@ -8131,7 +8131,7 @@ function attachHwpxStyles(editor, content, available) {
   return attachTabSources(editor, attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content))))))));
 }
 
-// source/web/preview/tab-definition-content.mjs
+// ../final-source-r2/web/preview/tab-definition-content.mjs
 function attachTabDefinitions(editor, content) {
   content.tabDefinitions = null;
   delete content.tabDefinitionsError;
@@ -8166,7 +8166,7 @@ function attachTabDefinitions(editor, content) {
   return content;
 }
 
-// source/js/xml-integer-text.mjs
+// ../final-source-r2/js/xml-integer-text.mjs
 function integer(raw, minimum, maximum) {
   if (typeof raw !== "string" || raw.length > 4096 || !/^[ \t\r\n]*[+-]?\d+[ \t\r\n]*$/.test(raw))
     return null;
@@ -8175,7 +8175,7 @@ function integer(raw, minimum, maximum) {
 }
 var xmlSigned32 = (raw) => integer(raw, -2147483648, 2147483647);
 
-// source/web/preview/section-tab-interval.mjs
+// ../final-source-r2/web/preview/section-tab-interval.mjs
 function resolveSectionTabInterval(rows, section) {
   const unavailable = (error) => ({ state: "unavailable", error });
   if (!Number.isInteger(section) || section < 0 || section > 4294967295)
@@ -8225,7 +8225,7 @@ function resolveSectionTabInterval(rows, section) {
   };
 }
 
-// source/web/preview/section-tab-content.mjs
+// ../final-source-r2/web/preview/section-tab-content.mjs
 function attachSectionTabSources(editor, content) {
   content.sectionTabSources = null;
   delete content.sectionTabSourcesError;
@@ -8256,7 +8256,7 @@ function attachSectionTabSources(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-style-content.mjs
+// ../final-source-r2/web/preview/hwp5-style-content.mjs
 function projectHwp5Ranges(ranges, source, text) {
   const rawUnits = source.tokens.reduce((sum, token) => sum + token.raw.length / 2, 0);
   if ((ranges.at(-1)?.end ?? 0) !== rawUnits)
@@ -8325,7 +8325,7 @@ function attachHwp5Styles(editor, preview, content, openError = null) {
   return attachCharacterOutlines(editor, attachCharacterEffects(editor, attachCharacterShades(editor, attachCharacterStrikes(editor, attachCharacterFonts(editor, attachCharacterTextColors(editor, attachCharacterUnderlines(editor, content)))))));
 }
 
-// source/js/hwp5-text-source-protection.mjs
+// ../final-source-r2/js/hwp5-text-source-protection.mjs
 function validateHwp5TextSourceProtection(value, count) {
   const fail = () => {
     throw new Error("InvalidHwp5TextSourceProtection");
@@ -8357,7 +8357,7 @@ function decodeHwp5TextSourceProtection(bytes, count) {
   return validateHwp5TextSourceProtection(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)), count);
 }
 
-// source/web/preview/hwp5-retained-click-policy.mjs
+// ../final-source-r2/web/preview/hwp5-retained-click-policy.mjs
 function retainedClickProtection(editor, section, failure) {
   if (!["UnsupportedCrossParagraphField", "UnsupportedSectionControl"].includes(failure) || editor.supportsTextSourceProtection?.() !== true)
     return null;
@@ -8375,7 +8375,7 @@ function restoreRetainedWindowCandidate(paragraph) {
     delete paragraph.fieldTopologyError;
 }
 
-// source/web/preview/hwp5-text-source-policy.mjs
+// ../final-source-r2/web/preview/hwp5-text-source-policy.mjs
 function attachHwp5TextSourcePolicy(editor, content) {
   content.textSourcePolicyAvailable = editor?.supportsTextSourcePolicy?.() === true;
   if (!content.textSourcePolicyAvailable)
@@ -8425,7 +8425,7 @@ function attachHwp5TextSourcePolicy(editor, content) {
   return content;
 }
 
-// source/web/preview/table-content.mjs
+// ../final-source-r2/web/preview/table-content.mjs
 function attachTables(editor, preview, content) {
   content.tables = [];
   content.tableBindingsErrors = [];
@@ -8497,7 +8497,7 @@ function attachTables(editor, preview, content) {
   return content;
 }
 
-// source/web/preview/table-placements-content.mjs
+// ../final-source-r2/web/preview/table-placements-content.mjs
 function attachTablePlacements(editor, sections, content, paragraphOffset = 0) {
   content.tablePlacementsErrors = [];
   for (const section of sections) {
@@ -8523,7 +8523,7 @@ function attachTablePlacements(editor, sections, content, paragraphOffset = 0) {
   return content;
 }
 
-// source/web/preview/hwp5-table-layout-content.mjs
+// ../final-source-r2/web/preview/hwp5-table-layout-content.mjs
 function attachHwp5TableLayoutSources(editor, content) {
   content.tableLayoutSourceErrors = [];
   for (const table of content.tables)
@@ -8559,7 +8559,7 @@ function attachHwp5TableLayoutSources(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-cell-layout-content.mjs
+// ../final-source-r2/web/preview/hwp5-cell-layout-content.mjs
 function attachHwp5CellLayoutSources(editor, content) {
   content.cellLayoutSourceErrors = [];
   for (const table of content.tables)
@@ -8609,7 +8609,7 @@ function attachHwp5CellLayoutSources(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-table-anchor-content.mjs
+// ../final-source-r2/web/preview/hwp5-table-anchor-content.mjs
 function attachHwp5TableAnchors(editor, content) {
   content.tableAnchorErrors = [];
   for (const table of content.tables) {
@@ -8651,7 +8651,7 @@ function attachHwp5TableAnchors(editor, content) {
   return content;
 }
 
-// source/js/hwp5-table-layout-sources.mjs
+// ../final-source-r2/js/hwp5-table-layout-sources.mjs
 function decodeHwp5TableLayoutSources(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   return validateHwp5TableLayoutSources(rows);
@@ -8680,7 +8680,7 @@ function validateHwp5TableLayoutSources(rows) {
   return rows;
 }
 
-// source/web/preview/hwp5-object-flags.mjs
+// ../final-source-r2/web/preview/hwp5-object-flags.mjs
 function hwp5UnsupportedObjectFlags(flags, { allowObservedLock = false } = {}) {
   if (!Number.isInteger(flags) || flags < 0 || flags > 4294967295)
     return null;
@@ -8716,7 +8716,7 @@ function hwp5ObjectFlags(flags, options) {
   };
 }
 
-// source/web/preview/hwp5-table-flags.mjs
+// ../final-source-r2/web/preview/hwp5-table-flags.mjs
 function hwp5TableFlags(flags) {
   if (!Number.isInteger(flags) || flags < 0 || flags > 4294967295)
     throw new Error("InvalidHwp5TableFlags");
@@ -8729,12 +8729,12 @@ function hwp5TableFlags(flags) {
   };
 }
 
-// source/web/preview/hwp5-table-object-tail.mjs
+// ../final-source-r2/web/preview/hwp5-table-object-tail.mjs
 function hasObservedZeroTableObjectTail(source) {
   return source?.object_extra_bytes === 2 && Object.hasOwn(source, "object_extra_u16") && source.object_extra_u16 === 0;
 }
 
-// source/web/preview/hwp5-table-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-table-geometry.mjs
 function hwp5TableUnsupportedObjectFlags(flags) {
   return hwp5UnsupportedObjectFlags(flags, { allowObservedLock: true });
 }
@@ -8797,7 +8797,7 @@ function hwp5TablePagination(source, { allowOpaqueTableFlags = false } = {}) {
   };
 }
 
-// source/web/preview/hwp5-table-geometry-content.mjs
+// ../final-source-r2/web/preview/hwp5-table-geometry-content.mjs
 function attachHwp5TableGeometry(content) {
   content.tableGeometryErrors = [];
   for (const table of content.tables) {
@@ -8828,7 +8828,7 @@ function attachHwp5TableGeometry(content) {
   return content;
 }
 
-// source/web/preview/hwp5-window-table-sources.mjs
+// ../final-source-r2/web/preview/hwp5-window-table-sources.mjs
 function hwp5WindowTableSourceEditor(editor, content) {
   const scoped = Object.create(editor);
   const select = (section, query, key, selected, error) => {
@@ -8848,7 +8848,7 @@ function hwp5WindowTableSourceEditor(editor, content) {
   return scoped;
 }
 
-// source/web/preview/hwp5-table-border-content.mjs
+// ../final-source-r2/web/preview/hwp5-table-border-content.mjs
 function attachHwp5TableBorderSources(editor, content) {
   content.hwp5BorderFillSources = null;
   content.hwp5BorderFillSourceError = null;
@@ -8864,7 +8864,7 @@ function attachHwp5TableBorderSources(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-table-content.mjs
+// ../final-source-r2/web/preview/hwp5-table-content.mjs
 function attachHwp5Tables(editor, preview, content) {
   attachTables(editor, preview, content);
   attachHwp5TableBorderSources(editor, content);
@@ -8877,7 +8877,7 @@ function attachHwp5Tables(editor, preview, content) {
   return attachHwp5TableGeometry(attachHwp5TableAnchors(sources, attachHwp5CellLayoutSources(sources, attachHwp5TableLayoutSources(sources, content))));
 }
 
-// source/web/preview/paragraph-alignments.mjs
+// ../final-source-r2/web/preview/paragraph-alignments.mjs
 var paragraphAlignments = Object.freeze([
   { value: 0, key: "JUSTIFY", label: "양쪽 정렬" },
   { value: 1, key: "LEFT", label: "왼쪽 정렬" },
@@ -8888,7 +8888,7 @@ var paragraphAlignments = Object.freeze([
 ].map(Object.freeze));
 var paragraphAlignmentValue = (key) => paragraphAlignments.find((entry) => entry.key === key)?.value;
 var paragraphAlignmentLabel = (value) => paragraphAlignments.find((entry) => entry.value === value)?.label;
-// source/web/preview/paragraph-spacing-source.mjs
+// ../final-source-r2/web/preview/paragraph-spacing-source.mjs
 function currentParagraphSpacing(shape) {
   const modern = shape?.modernSpacing;
   const hasModern = modern !== undefined && modern !== null;
@@ -8912,10 +8912,10 @@ function currentParagraphSpacing(shape) {
   return { kind, value };
 }
 
-// source/web/preview/paragraph-geometry.mjs
+// ../final-source-r2/web/preview/paragraph-geometry.mjs
 var paragraphSpacing = (shape) => currentParagraphSpacing(shape) ?? { kind: undefined, value: undefined };
 
-// source/web/preview/paragraph-format-options.mjs
+// ../final-source-r2/web/preview/paragraph-format-options.mjs
 function paragraphFormatOptions(ids, shapes = []) {
   const byId = new Map(shapes.map((shape) => [shape.id, shape]));
   return ids.map((id) => {
@@ -8932,12 +8932,12 @@ function paragraphFormatOptions(ids, shapes = []) {
   });
 }
 
-// source/web/preview/hwp5-paragraph-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-paragraph-geometry.mjs
 function hwp5ParagraphGeometry(shape) {
   return shape ? { ...shape, spacingFormat: "hwp5" } : shape;
 }
 
-// source/web/preview/hwp5-paragraph-formats.mjs
+// ../final-source-r2/web/preview/hwp5-paragraph-formats.mjs
 function attachHwp5ParagraphFormats(editor, content, available) {
   content.paragraphFormatAvailable = false;
   if (!editor || content.readOnly || !available)
@@ -8963,7 +8963,7 @@ function attachHwp5ParagraphFormats(editor, content, available) {
   return content;
 }
 
-// source/web/preview/hwpx-paragraph-geometry.mjs
+// ../final-source-r2/web/preview/hwpx-paragraph-geometry.mjs
 function hwpxParagraphGeometry(shape) {
   const unitValue = (measure) => measure && (measure.unit == null || measure.unit === "HWPUNIT") ? measure.value : undefined;
   const marginValue = (measure) => measure && (measure.unit == null || measure.unit === "HWPUNIT") ? measure.value : undefined;
@@ -8984,7 +8984,7 @@ function hwpxParagraphGeometry(shape) {
   };
 }
 
-// source/web/preview/hwpx-paragraph-formats.mjs
+// ../final-source-r2/web/preview/hwpx-paragraph-formats.mjs
 function attachHwpxParagraphFormats(editor, content, available) {
   content.paragraphFormatAvailable = false;
   for (const paragraph of content.paragraphs)
@@ -9025,7 +9025,7 @@ function attachHwpxParagraphFormats(editor, content, available) {
   return content;
 }
 
-// source/web/preview/hwpx-formulas-content.mjs
+// ../final-source-r2/web/preview/hwpx-formulas-content.mjs
 function attachHwpxFormulas(editor, content) {
   if (content.window && !Array.isArray(content.tables))
     throw new Error("MissingWindowTableOwnership");
@@ -9055,7 +9055,7 @@ function attachHwpxFormulas(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-formulas-content.mjs
+// ../final-source-r2/web/preview/hwp5-formulas-content.mjs
 function attachHwp5Formulas(editor, content, available) {
   content.formulas = [];
   content.formulaErrors = [];
@@ -9080,7 +9080,7 @@ function attachHwp5Formulas(editor, content, available) {
   return content;
 }
 
-// source/js/hwp5-form-sources.mjs
+// ../final-source-r2/js/hwp5-form-sources.mjs
 var uint17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 var uniqueRows = (rows, inspect) => {
@@ -9118,7 +9118,7 @@ var decode2 = (bytes, validate) => validate(JSON.parse(new TextDecoder("utf-8", 
 var decodeHwp5FormSources = (bytes) => decode2(bytes, validateHwp5FormSources);
 var decodeHwp5FormAnchors = (bytes) => decode2(bytes, validateHwp5FormAnchors);
 
-// source/web/preview/hwp5-form-content.mjs
+// ../final-source-r2/web/preview/hwp5-form-content.mjs
 function attachHwp5Forms(editor, content) {
   content.hwp5FormSourcesAvailable = editor?.supportsFormSources?.() === true;
   content.hwp5Forms = [];
@@ -9166,7 +9166,7 @@ function attachHwp5Forms(editor, content) {
   }
 }
 
-// source/js/hwp5-form-properties.mjs
+// ../final-source-r2/js/hwp5-form-properties.mjs
 var uint18 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function validateHwp5FormProperties(rows) {
   const fail = () => {
@@ -9200,7 +9200,7 @@ function decodeHwp5FormProperties(bytes) {
   return validateHwp5FormProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-form-property-content.mjs
+// ../final-source-r2/web/preview/hwp5-form-property-content.mjs
 function attachHwp5FormProperties(editor, content) {
   content.hwp5FormPropertiesAvailable = editor?.supportsFormProperties?.() === true;
   content.hwp5FormPropertyErrors = [];
@@ -9235,7 +9235,7 @@ function attachHwp5FormProperties(editor, content) {
   }
 }
 
-// source/web/preview/table-caption-content.mjs
+// ../final-source-r2/web/preview/table-caption-content.mjs
 function attachTableCaptions(editor, sections, content) {
   content.tableCaptionBindingErrors = [];
   for (const paragraph of content.paragraphs)
@@ -9283,7 +9283,7 @@ function attachTableCaptions(editor, sections, content) {
   return content;
 }
 
-// source/web/preview/hwpx-table-content.mjs
+// ../final-source-r2/web/preview/hwpx-table-content.mjs
 function attachHwpxTables(editor, content) {
   const sections = [...new Set(content.paragraphs.map((p) => p.section))].map((index) => ({
     index
@@ -9350,7 +9350,7 @@ function attachHwpxTables(editor, content) {
   return content;
 }
 
-// source/web/preview/hwpx-table-border-content.mjs
+// ../final-source-r2/web/preview/hwpx-table-border-content.mjs
 function attachHwpxTableBorders(editor, content, available) {
   if (!available)
     return content;
@@ -9411,7 +9411,7 @@ function attachHwpxTableBorders(editor, content, available) {
   return content;
 }
 
-// source/web/preview/table-insets.mjs
+// ../final-source-r2/web/preview/table-insets.mjs
 function tableInsets(value) {
   const insets = typeof value === "number" ? { left: value, right: value, top: value, bottom: value } : value;
   if (!insets || ![insets.left, insets.right, insets.top, insets.bottom].every((v) => Number.isFinite(v) && v >= 0) || !Number.isFinite(insets.left + insets.right) || !Number.isFinite(insets.top + insets.bottom))
@@ -9419,7 +9419,7 @@ function tableInsets(value) {
   return { left: insets.left, right: insets.right, top: insets.top, bottom: insets.bottom };
 }
 
-// source/web/preview/table-source-insets.mjs
+// ../final-source-r2/web/preview/table-source-insets.mjs
 function sourceTableCellInsets(table, cell) {
   const flag = cell?.sourceMargin?.has_margin;
   const values = flag === true ? cell.sourceMargin.margin : flag === false ? table?.sourceGeometry?.in_margin : null;
@@ -9429,7 +9429,7 @@ function sourceTableCellInsets(table, cell) {
   return tableInsets({ left, right, top, bottom });
 }
 
-// source/web/preview/hwpx-created-cell-display.mjs
+// ../final-source-r2/web/preview/hwpx-created-cell-display.mjs
 function hwpxCreatedCellDisplay(table, shapes) {
   const shape = shapes?.find((shape) => shape.id === table.resources.paragraph);
   if (!shape)
@@ -9442,7 +9442,7 @@ function hwpxCreatedCellDisplay(table, shapes) {
   };
 }
 
-// source/web/preview/created-table-content.mjs
+// ../final-source-r2/web/preview/created-table-content.mjs
 function attachCreatedTables(editor, content, available, maxUnits, sectionCount) {
   const visible = new Set(content.paragraphs.map((p) => `${p.section}:${p.paragraph}`));
   const rows = [];
@@ -9514,7 +9514,7 @@ function attachCreatedTables(editor, content, available, maxUnits, sectionCount)
   return content;
 }
 
-// source/web/preview/curve-owner-content.mjs
+// ../final-source-r2/web/preview/curve-owner-content.mjs
 function queryCurveOwner(editor, section, node, root) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   try {
@@ -9531,7 +9531,7 @@ function queryCurveOwner(editor, section, node, root) {
   }
 }
 
-// source/web/preview/curve-text-content.mjs
+// ../final-source-r2/web/preview/curve-text-content.mjs
 function readCurveTextSource(editor, section, node, bindings, paragraphs) {
   let source;
   try {
@@ -9565,7 +9565,7 @@ function readCurveTextSource(editor, section, node, bindings, paragraphs) {
   };
 }
 
-// source/web/preview/drawing-text-content.mjs
+// ../final-source-r2/web/preview/drawing-text-content.mjs
 function attachDrawingTextBindings(editor, content) {
   content.drawingTextBindingErrors = [];
   content.drawingTextSnapshotErrors = [];
@@ -9682,7 +9682,7 @@ function attachDrawingTextBindings(editor, content) {
   return content;
 }
 
-// source/web/preview/ellipse-content.mjs
+// ../final-source-r2/web/preview/ellipse-content.mjs
 function attachEllipses(editor, content, available) {
   if (!available)
     return content;
@@ -9706,7 +9706,7 @@ function attachEllipses(editor, content, available) {
   return content;
 }
 
-// source/web/preview/automatic-number-display-snapshot.mjs
+// ../final-source-r2/web/preview/automatic-number-display-snapshot.mjs
 function createAutomaticNumberDisplaySnapshot(editor) {
   const sections = new Map;
   return (section) => {
@@ -9719,7 +9719,7 @@ function createAutomaticNumberDisplaySnapshot(editor) {
   };
 }
 
-// source/web/preview/automatic-number-content.mjs
+// ../final-source-r2/web/preview/automatic-number-content.mjs
 function retainedNoteSource(source, site) {
   return source && source.anchor_node === site.anchor_node && site.anchor_unit === 0 && ["FOOTNOTE", "ENDNOTE"].includes(source.values?.raw?.[1]);
 }
@@ -9784,7 +9784,7 @@ function attachAutomaticNumbers(editor, content, snapshot = createAutomaticNumbe
   return content;
 }
 
-// source/web/preview/note-reference-content.mjs
+// ../final-source-r2/web/preview/note-reference-content.mjs
 function attachNoteReferences(editor, content) {
   content.noteReferenceErrors = [];
   for (const paragraph of content.paragraphs)
@@ -9821,7 +9821,7 @@ function attachNoteReferences(editor, content) {
   return content;
 }
 
-// source/web/preview/hwpx-picture-content.mjs
+// ../final-source-r2/web/preview/hwpx-picture-content.mjs
 function attachHwpxPictures(editor, content) {
   content.pictures = [];
   content.pictureErrors = [];
@@ -9953,7 +9953,7 @@ function attachHwpxPictures(editor, content) {
   return content;
 }
 
-// source/web/preview/hwpx-picture-captions.mjs
+// ../final-source-r2/web/preview/hwpx-picture-captions.mjs
 function attachHwpxPictureCaptions(editor, content, available) {
   const pictureIds = new Set((content.pictures ?? []).map((p) => `${p.section}:${p.pictureNode}`));
   for (const paragraph of content.paragraphs)
@@ -10016,7 +10016,7 @@ function attachHwpxPictureCaptions(editor, content, available) {
   return content;
 }
 
-// source/web/preview/drawing-stroke-source-content.mjs
+// ../final-source-r2/web/preview/drawing-stroke-source-content.mjs
 function drawingStrokeSourceContent(editor, section, node) {
   try {
     if (typeof editor.drawingStrokeSource !== "function")
@@ -10030,7 +10030,7 @@ function drawingStrokeSourceContent(editor, section, node) {
   }
 }
 
-// source/web/preview/arrow-reference-dimensions.mjs
+// ../final-source-r2/web/preview/arrow-reference-dimensions.mjs
 var levels = ["SMALL", "MEDIUM", "LARGE"];
 function arrowReferenceDimensions(strokeWidth, lineLength, size) {
   if (!Number.isFinite(strokeWidth) || strokeWidth <= 0 || !Number.isFinite(lineLength) || lineLength <= 0 || typeof size !== "string")
@@ -10048,7 +10048,7 @@ function arrowReferenceDimensions(strokeWidth, lineLength, size) {
   return { length: extent, width: height, policy: "rhwp_reference" };
 }
 
-// source/web/preview/decorated-line-plan.mjs
+// ../final-source-r2/web/preview/decorated-line-plan.mjs
 function decoratedLinePlan(geometry, source) {
   const attr = source?.attributes;
   const fail = (error) => ({ state: "unavailable", error });
@@ -10105,7 +10105,7 @@ function decoratedLinePlan(geometry, source) {
   };
 }
 
-// source/web/preview/hwpx-line-content.mjs
+// ../final-source-r2/web/preview/hwpx-line-content.mjs
 function attachHwpxLines(editor, content) {
   content.lines = [];
   content.lineErrors = [];
@@ -10227,7 +10227,7 @@ function attachHwpxLines(editor, content) {
   return content;
 }
 
-// source/web/preview/connector-reference-path.mjs
+// ../final-source-r2/web/preview/connector-reference-path.mjs
 function connectorReferencePath(source, rendering) {
   const fail = (error) => ({ state: "unavailable", error });
   if (source?.sourceOnly !== true || rendering?.sourceOnly !== true || source.node !== rendering.node || rendering.coordinateSpace !== "renderingInfo")
@@ -10247,7 +10247,7 @@ function connectorReferencePath(source, rendering) {
   return { state: "planned", policy: "rhwp_reference", endpoints: points.map((p) => p.slice()) };
 }
 
-// source/web/preview/connector-reference-content.mjs
+// ../final-source-r2/web/preview/connector-reference-content.mjs
 function connectorReferenceContent(editor, section, node, source, stroke, owner) {
   try {
     for (const point of [source.geometry.start, source.geometry.end]) {
@@ -10292,7 +10292,7 @@ function connectorReferenceContent(editor, section, node, source, stroke, owner)
   }
 }
 
-// source/web/preview/hwpx-connector-content.mjs
+// ../final-source-r2/web/preview/hwpx-connector-content.mjs
 function attachHwpxConnectors(editor, content) {
   content.connectors = [];
   content.connectorErrors = [];
@@ -10360,7 +10360,7 @@ function attachHwpxConnectors(editor, content) {
   return content;
 }
 
-// source/js/hwp5-drawing-line-endpoints.mjs
+// ../final-source-r2/js/hwp5-drawing-line-endpoints.mjs
 function validateHwp5DrawingLineEndpoints(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   const pair = (value, valid) => Array.isArray(value) && value.length === 2 && Array.from(value).every((point) => Array.isArray(point) && point.length === 2 && Array.from(point).every(valid));
@@ -10379,7 +10379,7 @@ function decodeHwp5DrawingLineEndpoints(bytes) {
   return validateHwp5DrawingLineEndpoints(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-drawing-style-sources.mjs
+// ../final-source-r2/js/hwp5-drawing-style-sources.mjs
 function drawingStyleLayoutArgs(options) {
   if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => !["border", "tail"].includes(key)))
     throw new Error("InvalidDrawingStyleLayout");
@@ -10456,7 +10456,7 @@ function decodeHwp5DrawingStyleSources(bytes) {
   return validateHwp5DrawingStyleSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-paint-tail.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-paint-tail.mjs
 function hwp5DrawingPaintTail(style) {
   if (!style?.fill_known)
     return { state: "unavailable", error: "UnselectedHwp5DrawingPaintTail" };
@@ -10469,7 +10469,7 @@ function hwp5DrawingPaintTail(style) {
   return { state: "selected", policy: "selected-tail", shadowType: style.shadow.kind };
 }
 
-// source/js/hwp5-drawing-sources.mjs
+// ../final-source-r2/js/hwp5-drawing-sources.mjs
 function validateHwp5DrawingSources(rows) {
   const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
   if (!Array.isArray(rows))
@@ -10514,7 +10514,7 @@ function decodeHwp5DrawingSources(bytes) {
   return validateHwp5DrawingSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-object-extension.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-object-extension.mjs
 var version = 83951872;
 var uint19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function hasObservedDrawingObjectExtension(source) {
@@ -10551,7 +10551,7 @@ function withObservedDrawingObjectExtensions(editor, sources, section) {
   return prepared;
 }
 
-// source/web/preview/hwp5-drawing-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-geometry.mjs
 function hwp5DrawingGeometry(source) {
   validateHwp5DrawingSources([source]);
   if (source.object_extra_bytes !== 0 && !hasObservedDrawingObjectExtension(source) || !Array.isArray(source.outer_margins))
@@ -10618,7 +10618,7 @@ function attachHwp5DrawingGeometry(content) {
   return content;
 }
 
-// source/web/preview/stroke-dash-pattern.mjs
+// ../final-source-r2/web/preview/stroke-dash-pattern.mjs
 var patterns = Object.freeze([
   null,
   ...[[], [2, 2], [6, 3], [6, 3, 2, 3], [6, 3, 2, 3, 2, 3]].map(Object.freeze)
@@ -10627,12 +10627,12 @@ function strokeDashPattern(style) {
   return Number.isInteger(style) && style >= 1 && style < patterns.length ? patterns[style] : null;
 }
 
-// source/web/preview/colorref-css.mjs
+// ../final-source-r2/web/preview/colorref-css.mjs
 function colorrefCss(raw) {
   return Number.isInteger(raw) && raw >= 0 && raw <= 16777215 ? `#${[raw & 255, raw >>> 8 & 255, raw >>> 16 & 255].map((value) => value.toString(16).padStart(2, "0")).join("")}` : null;
 }
 
-// source/web/preview/hwp5-stroke-display.mjs
+// ../final-source-r2/web/preview/hwp5-stroke-display.mjs
 function hwp5StrokeDisplay(border) {
   const raw = border?.attributes?.raw, width = border?.width, color = border?.color;
   if (!Number.isInteger(raw) || raw < 0 || raw > 4294967295 || !Number.isInteger(width) || width < -2147483648 || width > 2147483647 || !Number.isInteger(color) || color < 0 || color > 4294967295)
@@ -10647,7 +10647,7 @@ function hwp5StrokeDisplay(border) {
   };
 }
 
-// source/web/preview/hwp5-line-content.mjs
+// ../final-source-r2/web/preview/hwp5-line-content.mjs
 function attachHwp5Lines(editor, content) {
   content.lines = [];
   content.lineErrors = [];
@@ -10740,7 +10740,7 @@ function attachHwp5Lines(editor, content) {
   return content;
 }
 
-// source/web/preview/table-geometry-failure-evidence.mjs
+// ../final-source-r2/web/preview/table-geometry-failure-evidence.mjs
 function tableGeometryFailureEvidence(table, diagnostics = []) {
   if (!table || !Array.isArray(diagnostics))
     return {};
@@ -10756,7 +10756,7 @@ function tableGeometryFailureEvidence(table, diagnostics = []) {
   return evidence;
 }
 
-// source/web/preview/mixed-inline-table-policy.mjs
+// ../final-source-r2/web/preview/mixed-inline-table-policy.mjs
 function mixedInlineTablePolicy(table, { whole = false, captions = false, diagnostics = [] } = {}) {
   const reasons = [];
   if (table.parentTableNode !== null)
@@ -10787,7 +10787,7 @@ function mixedInlineTablePolicy(table, { whole = false, captions = false, diagno
   } : { state: "supported" };
 }
 
-// source/web/preview/note-source-table-owners.mjs
+// ../final-source-r2/web/preview/note-source-table-owners.mjs
 function selectNoteSourceTables(content, { floatingNotes = false } = {}) {
   const fail = (error) => ({ state: "unavailable", error });
   if (!content || typeof content !== "object")
@@ -10878,7 +10878,7 @@ function selectNoteSourceTables(content, { floatingNotes = false } = {}) {
   return selected();
 }
 
-// source/web/preview/drawing-column-context.mjs
+// ../final-source-r2/web/preview/drawing-column-context.mjs
 function drawingColumnContext(drawing, paragraphs, flows) {
   const unavailable = (error) => ({ state: "unavailable", error });
   if (!drawing?.source || !Array.isArray(paragraphs) || !Array.isArray(flows))
@@ -10922,7 +10922,7 @@ function drawingColumnContext(drawing, paragraphs, flows) {
   return { state: "selected", source: "list-declaration", declaration: structuredClone(selected) };
 }
 
-// source/web/preview/drawing-note-reference-owners.mjs
+// ../final-source-r2/web/preview/drawing-note-reference-owners.mjs
 function selectDrawingNoteReferenceOwners(content) {
   const fail = (error) => ({ state: "unavailable", error });
   if (!Array.isArray(content?.paragraphs) || !Array.isArray(content.paragraphFlows) || !Array.isArray(content.drawings))
@@ -10958,7 +10958,7 @@ function selectDrawingNoteReferenceOwners(content) {
   return { state: "selected", owners };
 }
 
-// source/web/preview/note-body-bindings.mjs
+// ../final-source-r2/web/preview/note-body-bindings.mjs
 function bindSourceNoteBodies(content, sourceTables, maxNotes = 1e4, options = {}) {
   if (!sourceTables)
     return bindNoteBodies(content, maxNotes, options);
@@ -11089,7 +11089,7 @@ function bindNoteBodies(content, maxNotes = 1e4, { bodyCellTables = [], allowDra
   };
 }
 
-// source/web/preview/grouped-shape-content.mjs
+// ../final-source-r2/web/preview/grouped-shape-content.mjs
 function attachGroupedShapeSources(editor, content) {
   content.containers = [];
   content.containerSourceErrors = [];
@@ -11258,7 +11258,7 @@ function attachGroupedShapeSources(editor, content) {
   return content;
 }
 
-// source/web/preview/container-caption-content.mjs
+// ../final-source-r2/web/preview/container-caption-content.mjs
 function attachContainerCaptions(editor, content) {
   content.containerCaptionErrors = [];
   for (const p of content.paragraphs)
@@ -11314,7 +11314,7 @@ function attachContainerCaptions(editor, content) {
   return content;
 }
 
-// source/web/preview/fill-brush-content.mjs
+// ../final-source-r2/web/preview/fill-brush-content.mjs
 function attachFillBrushSources(editor, content) {
   content.fillBrushReports = [];
   content.fillBrushErrors = [];
@@ -11330,7 +11330,7 @@ function attachFillBrushSources(editor, content) {
   return content;
 }
 
-// source/web/preview/rectangle-content.mjs
+// ../final-source-r2/web/preview/rectangle-content.mjs
 function attachRectangleSources(editor, content) {
   content.rectangles = [];
   content.rectangleSourceErrors = [];
@@ -11370,7 +11370,7 @@ function attachRectangleSources(editor, content) {
   return content;
 }
 
-// source/web/preview/hwpx-page-content.mjs
+// ../final-source-r2/web/preview/hwpx-page-content.mjs
 function attachHwpxPageSettings(editor, content) {
   const sections = new Set(content.paragraphs.map((row) => row.section));
   const displayed = content.window ? new Set(content.paragraphs.map((row) => `${row.section}:${row.paragraph}`)) : null;
@@ -11418,7 +11418,7 @@ function attachHwpxPageSettings(editor, content) {
   return content;
 }
 
-// source/js/hwp5-structural-anchors.mjs
+// ../final-source-r2/js/hwp5-structural-anchors.mjs
 var HWP5_STRUCTURAL_ANCHOR_KINDS = Object.freeze([
   "section",
   "column",
@@ -11440,7 +11440,7 @@ function decodeHwp5StructuralAnchors(bytes) {
   return rows;
 }
 
-// source/web/preview/hwp5-structural-anchor-content.mjs
+// ../final-source-r2/web/preview/hwp5-structural-anchor-content.mjs
 function attachHwp5StructuralAnchors(editor, content) {
   content.structuralAnchorErrors = [];
   for (const paragraph of content.paragraphs)
@@ -11473,7 +11473,7 @@ function attachHwp5StructuralAnchors(editor, content) {
   return content;
 }
 
-// source/js/hwp5-page-area-sources.mjs
+// ../final-source-r2/js/hwp5-page-area-sources.mjs
 function decodeHwp5PageAreaSources(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   return validateHwp5PageAreaSources(rows);
@@ -11503,7 +11503,7 @@ function validateHwp5PageAreaSources(rows) {
   return rows;
 }
 
-// source/web/preview/hwp5-page-area-content.mjs
+// ../final-source-r2/web/preview/hwp5-page-area-content.mjs
 function attachHwp5PageAreas(editor, content) {
   content.pageAreaSources = [];
   content.pageAreaSourceErrors = [];
@@ -11532,7 +11532,7 @@ function attachHwp5PageAreas(editor, content) {
   return content;
 }
 
-// source/js/hwp5-master-page-sources.mjs
+// ../final-source-r2/js/hwp5-master-page-sources.mjs
 function decodeHwp5MasterPageSources(bytes) {
   return validateHwp5MasterPageSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
@@ -11557,7 +11557,7 @@ function validateHwp5MasterPageSources(rows) {
   return rows;
 }
 
-// source/web/preview/hwp5-master-page-content.mjs
+// ../final-source-r2/web/preview/hwp5-master-page-content.mjs
 function attachHwp5MasterPages(editor, content) {
   content.masterPageSources = [];
   content.masterPageSourceErrors = [];
@@ -11579,7 +11579,7 @@ function attachHwp5MasterPages(editor, content) {
   return content;
 }
 
-// source/js/hwp5-note-sources.mjs
+// ../final-source-r2/js/hwp5-note-sources.mjs
 function validateHwp5NoteSources(rows) {
   const uint = (value, max) => Number.isInteger(value) && value >= 0 && value <= max;
   if (!Array.isArray(rows))
@@ -11624,7 +11624,7 @@ function decodeHwp5NoteSources(bytes) {
   return validateHwp5NoteSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-note-shape-sources.mjs
+// ../final-source-r2/js/hwp5-note-shape-sources.mjs
 function validateHwp5NoteShapeSources(rows) {
   const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
   if (!Array.isArray(rows) || rows.length !== 2)
@@ -11641,7 +11641,7 @@ function decodeHwp5NoteShapeSources(bytes) {
   return validateHwp5NoteShapeSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/normalized-note-page-policy.mjs
+// ../final-source-r2/web/preview/normalized-note-page-policy.mjs
 function normalizedNotePagePolicy({
   section,
   kind,
@@ -11674,7 +11674,7 @@ function normalizedNotePagePolicy({
   };
 }
 
-// source/web/preview/hwp5-note-page-policy.mjs
+// ../final-source-r2/web/preview/hwp5-note-page-policy.mjs
 var widths = Object.freeze([
   "0.1 mm",
   "0.12 mm",
@@ -11723,7 +11723,7 @@ function selectHwp5NotePagePolicy(rows, section, kind) {
   });
 }
 
-// source/web/preview/hwp5-note-shape-content.mjs
+// ../final-source-r2/web/preview/hwp5-note-shape-content.mjs
 function attachHwp5NoteShapes(editor, content) {
   content.hwp5NoteShapes = [];
   content.hwp5NotePolicies = [];
@@ -11753,7 +11753,7 @@ function attachHwp5NoteShapes(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-note-content.mjs
+// ../final-source-r2/web/preview/hwp5-note-content.mjs
 function attachHwp5Notes(editor, content) {
   content.hwp5Notes = [];
   content.hwp5NoteErrors = [];
@@ -11807,7 +11807,7 @@ function attachHwp5Notes(editor, content) {
   return attachHwp5NoteShapes(editor, content);
 }
 
-// source/js/hwp5-caption-sources.mjs
+// ../final-source-r2/js/hwp5-caption-sources.mjs
 function validateHwp5CaptionSources(rows) {
   const integer = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
   if (!Array.isArray(rows))
@@ -11834,7 +11834,7 @@ function decodeHwp5CaptionSources(bytes) {
   return validateHwp5CaptionSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-caption-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-caption-geometry.mjs
 function hwp5CaptionGeometry(source) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!source || ![source.flags, source.attributes, source.list_node].every(uint) || ![0, 8].includes(source.extra_bytes) || source.extra_bytes === 8 && source.extra_nonzero !== false || (source.flags & ~7) !== 0 || (source.attributes & ~127) !== 0 || !Number.isInteger(source.width) || source.width < 0 || source.width > 4294967295 || !Number.isInteger(source.gap) || source.gap < -32768 || source.gap > 32767)
@@ -11918,7 +11918,7 @@ function attachHwp5CaptionGeometry(content) {
   return content;
 }
 
-// source/web/preview/hwp5-caption-content.mjs
+// ../final-source-r2/web/preview/hwp5-caption-content.mjs
 function attachHwp5Captions(editor, content) {
   content.hwp5Captions = [];
   content.hwp5CaptionErrors = [];
@@ -11960,7 +11960,7 @@ function attachHwp5Captions(editor, content) {
   return attachHwp5CaptionGeometry(content);
 }
 
-// source/js/hwp5-drawing-anchors.mjs
+// ../final-source-r2/js/hwp5-drawing-anchors.mjs
 function validateHwp5DrawingAnchors(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!Array.isArray(rows))
@@ -11978,7 +11978,7 @@ function decodeHwp5DrawingAnchors(bytes) {
   return validateHwp5DrawingAnchors(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-drawing-list-sources.mjs
+// ../final-source-r2/js/hwp5-drawing-list-sources.mjs
 function validateHwp5DrawingListSources(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!Array.isArray(rows))
@@ -12009,7 +12009,7 @@ function decodeHwp5DrawingListSources(bytes) {
   return validateHwp5DrawingListSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-body-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-body-content.mjs
 function attachHwp5DrawingBodies(editor, content) {
   content.hwp5DrawingBodies = [];
   content.hwp5DrawingBodyErrors = [];
@@ -12055,7 +12055,7 @@ function attachHwp5DrawingBodies(editor, content) {
   return content;
 }
 
-// source/js/hwp5-drawing-matrix-sources.mjs
+// ../final-source-r2/js/hwp5-drawing-matrix-sources.mjs
 function validateHwp5DrawingMatrixSources(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!Array.isArray(rows))
@@ -12088,7 +12088,7 @@ function decodeHwp5DrawingMatrixSources(bytes) {
   return validateHwp5DrawingMatrixSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-matrix-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-matrix-content.mjs
 function attachHwp5DrawingMatrices(editor, content) {
   content.hwp5DrawingMatrices = [];
   content.hwp5DrawingMatrixErrors = [];
@@ -12124,7 +12124,7 @@ function attachHwp5DrawingMatrices(editor, content) {
   return content;
 }
 
-// source/js/hwp5-drawing-local-transforms.mjs
+// ../final-source-r2/js/hwp5-drawing-local-transforms.mjs
 function validateHwp5DrawingLocalTransforms(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!Array.isArray(rows))
@@ -12141,7 +12141,7 @@ function decodeHwp5DrawingLocalTransforms(bytes) {
   return validateHwp5DrawingLocalTransforms(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-local-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-local-content.mjs
 function attachHwp5DrawingLocalTransforms(editor, content) {
   content.hwp5DrawingLocalTransforms = [];
   content.hwp5DrawingLocalErrors = [];
@@ -12168,7 +12168,7 @@ function attachHwp5DrawingLocalTransforms(editor, content) {
   return content;
 }
 
-// source/js/hwp5-drawing-rectangle-corners.mjs
+// ../final-source-r2/js/hwp5-drawing-rectangle-corners.mjs
 function validateHwp5DrawingRectangleCorners(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   if (!Array.isArray(rows))
@@ -12188,7 +12188,7 @@ function decodeHwp5DrawingRectangleCorners(bytes) {
   return validateHwp5DrawingRectangleCorners(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-corner-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-corner-content.mjs
 function attachHwp5DrawingCorners(editor, content) {
   content.hwp5DrawingCorners = [];
   content.hwp5DrawingCornerErrors = [];
@@ -12217,7 +12217,7 @@ function attachHwp5DrawingCorners(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-drawing-style-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-style-content.mjs
 function attachHwp5DrawingStyles(editor, content) {
   content.hwp5DrawingStyles = [];
   content.hwp5DrawingStyleErrors = [];
@@ -12258,7 +12258,7 @@ function attachHwp5DrawingStyles(editor, content) {
   return content;
 }
 
-// source/js/hwp5-drawing-component-sources.mjs
+// ../final-source-r2/js/hwp5-drawing-component-sources.mjs
 function validateHwp5DrawingComponentSources(rows) {
   const fail = () => {
     throw new Error("InvalidHwp5DrawingComponentSources");
@@ -12298,7 +12298,7 @@ function decodeHwp5DrawingComponentSources(bytes) {
   return validateHwp5DrawingComponentSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-drawing-component-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-component-content.mjs
 function attachHwp5DrawingComponents(editor, content) {
   content.hwp5DrawingComponents = [];
   content.hwp5DrawingComponentErrors = [];
@@ -12340,7 +12340,7 @@ function attachHwp5DrawingComponents(editor, content) {
   return content;
 }
 
-// source/js/hwp5-counted-point-layout.mjs
+// ../final-source-r2/js/hwp5-counted-point-layout.mjs
 function countedPointLayoutArg(layout, error) {
   if (layout === "specified_i16_axes")
     return 0;
@@ -12349,7 +12349,7 @@ function countedPointLayoutArg(layout, error) {
   throw new Error(error);
 }
 
-// source/js/hwp5-drawing-polygon-points.mjs
+// ../final-source-r2/js/hwp5-drawing-polygon-points.mjs
 function polygonLayoutArg(layout) {
   return countedPointLayoutArg(layout, "InvalidPolygonLayout");
 }
@@ -12371,7 +12371,7 @@ function decodeHwp5DrawingPolygonPoints(bytes) {
   return validateHwp5DrawingPolygonPoints(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-shape-point-content.mjs
+// ../final-source-r2/web/preview/hwp5-shape-point-content.mjs
 function attachHwp5ShapePoints(editor, content, contract) {
   content[contract.rows] = [];
   content[contract.errors] = [];
@@ -12403,7 +12403,7 @@ function attachHwp5ShapePoints(editor, content, contract) {
   return content;
 }
 
-// source/web/preview/hwp5-polygon-point-content.mjs
+// ../final-source-r2/web/preview/hwp5-polygon-point-content.mjs
 function attachHwp5PolygonPoints(editor, content) {
   return attachHwp5ShapePoints(editor, content, {
     kind: 611348332,
@@ -12417,7 +12417,7 @@ function attachHwp5PolygonPoints(editor, content) {
   });
 }
 
-// source/js/hwp5-drawing-curve-points.mjs
+// ../final-source-r2/js/hwp5-drawing-curve-points.mjs
 var curveLayoutArg = (layout) => countedPointLayoutArg(layout, "InvalidCurvePointLayout");
 function validateHwp5DrawingCurvePoints(rows) {
   const uint = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
@@ -12441,7 +12441,7 @@ function decodeHwp5DrawingCurvePoints(bytes) {
   return validateHwp5DrawingCurvePoints(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-curve-point-content.mjs
+// ../final-source-r2/web/preview/hwp5-curve-point-content.mjs
 function attachHwp5CurvePoints(editor, content) {
   return attachHwp5ShapePoints(editor, content, {
     kind: 610497906,
@@ -12455,7 +12455,7 @@ function attachHwp5CurvePoints(editor, content) {
   });
 }
 
-// source/web/preview/hwp5-drawing-content.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-content.mjs
 function attachHwp5Drawings(editor, content) {
   content.hwp5Drawings = [];
   content.hwp5DrawingErrors = [];
@@ -12516,7 +12516,7 @@ function attachHwp5Drawings(editor, content) {
   return attachHwp5CurvePoints(editor, attachHwp5PolygonPoints(editor, prepared));
 }
 
-// source/web/preview/hwp5-memo-content.mjs
+// ../final-source-r2/web/preview/hwp5-memo-content.mjs
 function attachHwp5Memos(content) {
   content.hwp5Memos = [];
   content.hwp5MemoErrors = [];
@@ -12587,7 +12587,7 @@ function attachHwp5Memos(content) {
   return content;
 }
 
-// source/web/preview/hwp5-flow-content.mjs
+// ../final-source-r2/web/preview/hwp5-flow-content.mjs
 function attachHwp5FlowSources(editor, content) {
   content.currentParagraphFlows = [];
   content.columnSources = [];
@@ -12612,7 +12612,7 @@ function attachHwp5FlowSources(editor, content) {
   return attachHwp5Drawings(editor, attachHwp5Captions(editor, attachHwp5Notes(editor, attachHwp5MasterPages(editor, attachHwp5PageAreas(editor, attachHwp5StructuralAnchors(editor, attachHwp5Memos(content)))))));
 }
 
-// source/web/preview/hwp5-column-display.mjs
+// ../final-source-r2/web/preview/hwp5-column-display.mjs
 function attachHwp5ColumnDisplay(content) {
   content.columnDisplaySources = [];
   content.columnDisplayErrors = [];
@@ -12638,7 +12638,7 @@ function attachHwp5ColumnDisplay(content) {
   return content;
 }
 
-// source/js/hwp5-document-properties.mjs
+// ../final-source-r2/js/hwp5-document-properties.mjs
 function validateHwp5DocumentProperties(value) {
   const uint = (number, max) => Number.isInteger(number) && number >= 0 && number <= max;
   if (!value || !["source_record", "caret_list", "caret_paragraph", "caret_character", "extra_bytes"].every((key) => uint(value[key], 4294967295)) || ![
@@ -12657,7 +12657,7 @@ function decodeHwp5DocumentProperties(bytes) {
   return validateHwp5DocumentProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-page-control-sources.mjs
+// ../final-source-r2/js/hwp5-page-control-sources.mjs
 function validateHwp5PageControlSources(rows) {
   const fail = () => {
     throw new Error("InvalidHwp5PageControlSources");
@@ -12693,7 +12693,7 @@ function decodeHwp5PageControlSources(bytes) {
   return validateHwp5PageControlSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-document-numbering.mjs
+// ../final-source-r2/web/preview/hwp5-document-numbering.mjs
 function attachHwp5DocumentProperties(editor, content) {
   content.documentPropertySource = null;
   content.documentPropertySourceError = null;
@@ -12707,7 +12707,7 @@ function attachHwp5DocumentProperties(editor, content) {
   return content;
 }
 
-// source/js/hwp5-automatic-number-sources.mjs
+// ../final-source-r2/js/hwp5-automatic-number-sources.mjs
 function validateHwp5AutomaticNumberSources(rows) {
   const uint = (value, max) => Number.isInteger(value) && value >= 0 && value <= max;
   if (!Array.isArray(rows))
@@ -12735,7 +12735,7 @@ function decodeHwp5AutomaticNumberSources(bytes) {
   return validateHwp5AutomaticNumberSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/cardinal-number.mjs
+// ../final-source-r2/web/preview/cardinal-number.mjs
 function cardinalNumber(number, language) {
   if (!Number.isInteger(number) || number < 0 || number > 4294967295 || !["hangul", "hanja"].includes(language))
     return null;
@@ -12760,7 +12760,7 @@ function cardinalNumber(number, language) {
   return parts.join("");
 }
 
-// source/web/preview/number-format.mjs
+// ../final-source-r2/web/preview/number-format.mjs
 var binaryNames = Object.freeze([
   "DIGIT",
   "CIRCLED_DIGIT",
@@ -12851,7 +12851,7 @@ function formatNumber(number, kind, symbol = "") {
   return null;
 }
 
-// source/web/preview/automatic-number-text.mjs
+// ../final-source-r2/web/preview/automatic-number-text.mjs
 function storedAutomaticNumberText(source) {
   const { values, format } = source ?? {};
   if (!values?.type_known || !format?.type_known || !Array.isArray(format.raw) || typeof format.supscript !== "boolean" || typeof format.raw[2] !== "string" || typeof format.raw[3] !== "string")
@@ -12860,7 +12860,7 @@ function storedAutomaticNumberText(source) {
   return text === null ? null : format.raw[2] + text + format.raw[3];
 }
 
-// source/web/preview/hwp5-note-reference-display.mjs
+// ../final-source-r2/web/preview/hwp5-note-reference-display.mjs
 function attachHwp5NoteReferenceDisplay(content) {
   const paragraphs = new Map(content.paragraphs.map((p) => [`${p.section}:${p.paragraph}`, p]));
   for (const note of content.hwp5Notes ?? []) {
@@ -12886,7 +12886,7 @@ function attachHwp5NoteReferenceDisplay(content) {
   return content;
 }
 
-// source/web/preview/hwp5-automatic-number-content.mjs
+// ../final-source-r2/web/preview/hwp5-automatic-number-content.mjs
 function ornament(unit) {
   if (unit >= 55296 && unit <= 57343)
     throw new Error("UnsupportedHwp5NumberOrnament");
@@ -12950,7 +12950,7 @@ function attachHwp5AutomaticNumbers(editor, content) {
   return attachHwp5NoteReferenceDisplay(content);
 }
 
-// source/web/preview/hwp5-page-control-content.mjs
+// ../final-source-r2/web/preview/hwp5-page-control-content.mjs
 function attachHwp5PageControls(editor, content) {
   content.pageControlSources = [];
   content.pageControlSourceErrors = [];
@@ -12981,7 +12981,7 @@ function attachHwp5PageControls(editor, content) {
   return content;
 }
 
-// source/web/preview/hwp5-page-declaration-content.mjs
+// ../final-source-r2/web/preview/hwp5-page-declaration-content.mjs
 function attachHwp5PageDeclarations(editor, content, selectedSections = null) {
   content.pageSources = [];
   content.pageSourceErrors = [];
@@ -13017,7 +13017,7 @@ function attachHwp5PageDeclarations(editor, content, selectedSections = null) {
   return content;
 }
 
-// source/web/preview/hwp5-page-content.mjs
+// ../final-source-r2/web/preview/hwp5-page-content.mjs
 function attachHwp5PageSources(editor, content) {
   attachHwp5PageDeclarations(editor, content);
   if (!editor)
@@ -13025,7 +13025,7 @@ function attachHwp5PageSources(editor, content) {
   return attachHwp5DocumentProperties(editor, attachHwp5PageControls(editor, attachHwp5AutomaticNumbers(editor, attachHwp5ColumnDisplay(attachHwp5FlowSources(editor, content)))));
 }
 
-// source/web/preview/hwp5-rectangle-geometry-projection.mjs
+// ../final-source-r2/web/preview/hwp5-rectangle-geometry-projection.mjs
 function projectHwp5RectangleGeometry(content) {
   const fail = (error) => ({ state: "unavailable", error });
   try {
@@ -13078,7 +13078,7 @@ function projectHwp5RectangleGeometry(content) {
   }
 }
 
-// source/web/preview/projection-pair-index.mjs
+// ../final-source-r2/web/preview/projection-pair-index.mjs
 var none = Object.freeze({ count: 0, first: undefined });
 function createProjectionPairIndex(rows, firstKey, secondKey, { enabled = true } = {}) {
   rows ??= [];
@@ -13183,7 +13183,7 @@ function isProjectionDataOnly(value) {
   }
 }
 
-// source/web/preview/hwp5-drawing-text-source.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-text-source.mjs
 function hwp5DrawingTextSource(source) {
   validateHwp5DrawingListSources([source]);
   if (source.kind !== "body")
@@ -13201,7 +13201,7 @@ function hwp5DrawingTextSource(source) {
   };
 }
 
-// source/web/preview/hwp5-drawing-text-projection.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-text-projection.mjs
 function projectHwp5DrawingText(content) {
   const fail = (error) => ({ state: "unavailable", error });
   try {
@@ -13289,7 +13289,7 @@ function projectHwp5DrawingText(content) {
   }
 }
 
-// source/web/preview/gradient-step-stops.mjs
+// ../final-source-r2/web/preview/gradient-step-stops.mjs
 function gradientStepStops(colors, steps, centerPercent) {
   if (!Array.isArray(colors) || colors.length < 2 || colors.length > 256 || !colors.every((c) => /^#[0-9a-f]{6}$/i.test(c)) || !Number.isInteger(steps) || steps < 0 || steps > 255 || !Number.isInteger(centerPercent) || centerPercent < 0 || centerPercent > 100)
     throw new Error("InvalidGradientStepStops");
@@ -13313,7 +13313,7 @@ function gradientStepStops(colors, steps, centerPercent) {
   return stops;
 }
 
-// source/web/preview/hwp5-drawing-paint-plan.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-paint-plan.mjs
 var hatches = ["HORIZONTAL", "VERTICAL", "BACK_SLASH", "SLASH", "CROSS", "CROSS_DIAGONAL"];
 function hwp5DrawingPaintPlan(style) {
   const fail = (error) => ({ state: "unavailable", error });
@@ -13365,7 +13365,7 @@ function hwp5DrawingPaintPlan(style) {
   return { state: "planned", stroke, fill, shadowType: tail.shadowType, tailPolicy: tail.policy };
 }
 
-// source/web/preview/hwp5-rectangle-content-projection.mjs
+// ../final-source-r2/web/preview/hwp5-rectangle-content-projection.mjs
 function projectHwp5RectangleContent(content) {
   const geometry = projectHwp5RectangleGeometry(content);
   if (geometry.state !== "projected")
@@ -13406,7 +13406,7 @@ function assembleHwp5RectangleContent(content, geometry, text) {
   };
 }
 
-// source/web/preview/hwp5-polygon-path-source.mjs
+// ../final-source-r2/web/preview/hwp5-polygon-path-source.mjs
 function hwp5PolygonPathSource(row) {
   try {
     validateHwp5DrawingPolygonPoints([row]);
@@ -13429,7 +13429,7 @@ function hwp5PolygonPathSource(row) {
   };
 }
 
-// source/web/preview/affine-point-geometry.mjs
+// ../final-source-r2/web/preview/affine-point-geometry.mjs
 var valid = (matrix) => Array.isArray(matrix) && matrix.length === 6 && Array.from(matrix).every(Number.isFinite);
 function affinePoint(matrix, point) {
   if (!valid(matrix) || !Array.isArray(point) || point.length !== 2 || !Array.from(point).every(Number.isFinite))
@@ -13439,7 +13439,7 @@ function affinePoint(matrix, point) {
   return result.every(Number.isFinite) ? result : null;
 }
 
-// source/web/preview/hwp5-group-polygon-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-group-polygon-geometry.mjs
 function projectHwp5GroupPolygonGeometry(content, component, local) {
   const fail = (error) => ({ state: "unavailable", error });
   if (!component || !local || component.kind_id !== 611348332 || component.second_id !== null || component.component_node !== local.component_node || component.owner_node !== local.owner_node)
@@ -13472,7 +13472,7 @@ function projectHwp5GroupPolygonGeometry(content, component, local) {
   };
 }
 
-// source/web/preview/hwp5-group-geometry-projection.mjs
+// ../final-source-r2/web/preview/hwp5-group-geometry-projection.mjs
 var kinds3 = new Map([
   [610496366, "container"],
   [611476835, "rectangle"],
@@ -13593,7 +13593,7 @@ function projectHwp5GroupGeometry(content) {
   }
 }
 
-// source/js/hwp5-picture-sources.mjs
+// ../final-source-r2/js/hwp5-picture-sources.mjs
 function picturePrefixArg(prefix) {
   const value = ["base73", "with_opacity74", "with_instance78"].indexOf(prefix);
   if (value < 0)
@@ -13627,7 +13627,7 @@ function decodeHwp5PictureSources(bytes) {
   return validateHwp5PictureSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-picture-shadow-source.mjs
+// ../final-source-r2/js/hwp5-picture-shadow-source.mjs
 function validateHwp5PictureShadowSource(shadow, flags) {
   if (shadow === undefined)
     return;
@@ -13652,7 +13652,7 @@ function validateHwp5PictureShadowSource(shadow, flags) {
     throw Error("InvalidHwp5PictureShadowSource");
 }
 
-// source/js/hwp5-picture-tail-sources.mjs
+// ../final-source-r2/js/hwp5-picture-tail-sources.mjs
 function pictureTailLayoutArg(layout) {
   const value = ["effects_only", "dimensions8", "with_alpha9"].indexOf(layout);
   if (value < 0)
@@ -13684,7 +13684,7 @@ function decodeHwp5PictureTailSources(bytes) {
   return validateHwp5PictureTailSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/web/preview/hwp5-picture-geometry-owner.mjs
+// ../final-source-r2/web/preview/hwp5-picture-geometry-owner.mjs
 function hwp5PictureGeometryOwner(content, item) {
   const roots = (content.hwp5Drawings ?? []).filter((row) => row.section === item.section && row.componentNode === item.pictureNode);
   if (roots.length === 1) {
@@ -13724,7 +13724,7 @@ function hwp5PictureGeometryOwner(content, item) {
   };
 }
 
-// source/web/preview/hwp5-picture-resize-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-picture-resize-geometry.mjs
 function hwp5PictureResizeGeometry(corners, rootGeometry) {
   if (rootGeometry?.width_relative !== 4 || rootGeometry?.height_relative !== 2)
     return null;
@@ -13741,7 +13741,7 @@ function hwp5PictureResizeGeometry(corners, rootGeometry) {
   return { width, height, widthRelative: 4, heightRelative: 2 };
 }
 
-// source/web/preview/hwp5-picture-border-plan.mjs
+// ../final-source-r2/web/preview/hwp5-picture-border-plan.mjs
 function hwp5PictureBorderPlan(picture) {
   const source = picture?.source;
   if (!source || source.border_width === undefined)
@@ -13770,7 +13770,7 @@ function hwp5PictureBorderPlan(picture) {
   };
 }
 
-// source/web/preview/picture-shadow-bounds.mjs
+// ../final-source-r2/web/preview/picture-shadow-bounds.mjs
 function pictureShadowBounds(plan, borderWidth = 0) {
   if (plan?.state !== "outer" || ![plan.width, plan.height, plan.blur, plan.offsetX, plan.offsetY, borderWidth].every(Number.isFinite) || plan.width <= 0 || plan.height <= 0 || plan.blur < 0 || borderWidth < 0)
     return null;
@@ -13783,7 +13783,7 @@ function pictureShadowBounds(plan, borderWidth = 0) {
   return [left, right, top, bottom, width, height].every(Number.isFinite) ? { left, right, top, bottom, width, height } : null;
 }
 
-// source/web/preview/picture-shadow-raster-budget.mjs
+// ../final-source-r2/web/preview/picture-shadow-raster-budget.mjs
 function pictureShadowRasterSize(bounds, scale) {
   if (!bounds || ![bounds.width, bounds.height, scale].every(Number.isFinite) || bounds.width <= 0 || bounds.height <= 0 || !Number.isSafeInteger(scale) || scale < 1 || scale > 16)
     return null;
@@ -13793,7 +13793,7 @@ function pictureShadowRasterSize(bounds, scale) {
   return { width, height };
 }
 
-// source/web/preview/hwp5-picture-shadow-plan.mjs
+// ../final-source-r2/web/preview/hwp5-picture-shadow-plan.mjs
 function hwp5PictureShadowPlan(picture) {
   const tail = picture?.tailSource;
   if (!tail || tail.effects_flags === 0)
@@ -13841,7 +13841,7 @@ function hwp5PictureShadowPlan(picture) {
   return plan;
 }
 
-// source/web/preview/hwp5-picture-absent-tail-profile.mjs
+// ../final-source-r2/web/preview/hwp5-picture-absent-tail-profile.mjs
 var profiles = Object.freeze([
   Object.freeze({
     version: 83886343,
@@ -13901,7 +13901,7 @@ function hwp5PictureBaseMatches(base, selected) {
   return baseFields.every((field) => JSON.stringify(base[field]) === JSON.stringify(selected[field]));
 }
 
-// source/web/preview/hwp5-picture-tail-profile.mjs
+// ../final-source-r2/web/preview/hwp5-picture-tail-profile.mjs
 function hwp5PictureTailLayout(version) {
   return version === 83951617 || version === 83951872 ? "with_alpha9" : version === 83887360 || version === 83886852 ? "dimensions8" : version === 83886848 ? "effects_only" : null;
 }
@@ -13914,7 +13914,7 @@ function hwp5PictureTailAlphaSupported(tail) {
   return ["dimensions8", "effects_only"].includes(layout) && tail.image_alpha === null;
 }
 
-// source/web/preview/hwp5-picture-geometry.mjs
+// ../final-source-r2/web/preview/hwp5-picture-geometry.mjs
 function projectHwp5PictureGeometry(content) {
   const fail = (error) => ({ state: "unavailable", error });
   try {
@@ -14026,7 +14026,7 @@ function projectHwp5PictureGeometry(content) {
   }
 }
 
-// source/web/preview/hwp5-picture-caption-bindings.mjs
+// ../final-source-r2/web/preview/hwp5-picture-caption-bindings.mjs
 function bindHwp5RootPictureCaptions(content, pictures, bindings) {
   const fail = (error) => ({ state: "unavailable", error });
   const projected = new Map;
@@ -14047,7 +14047,7 @@ function bindHwp5RootPictureCaptions(content, pictures, bindings) {
   };
 }
 
-// source/web/preview/hwp5-group-caption-bindings.mjs
+// ../final-source-r2/web/preview/hwp5-group-caption-bindings.mjs
 function bindHwp5RootGroupCaptions(content, containers, bindings) {
   const fail = (error) => ({ state: "unavailable", error });
   if (!Array.isArray(containers) || !Array.isArray(bindings))
@@ -14095,7 +14095,7 @@ function bindHwp5RootGroupCaptions(content, containers, bindings) {
   }
 }
 
-// source/web/preview/hwp5-group-content-projection.mjs
+// ../final-source-r2/web/preview/hwp5-group-content-projection.mjs
 function projectHwp5GroupContent(content) {
   if ((content.hwp5Drawings ?? []).some((row) => row.source.kind_id !== 610496366))
     return { state: "unavailable", error: "UnsupportedMixedHwp5GroupRoots" };
@@ -14192,7 +14192,7 @@ function assembleHwp5GroupContent(content) {
   };
 }
 
-// source/web/preview/hwp5-mixed-root-content-projection.mjs
+// ../final-source-r2/web/preview/hwp5-mixed-root-content-projection.mjs
 function projectHwp5MixedRootContent(content) {
   const fail = (error) => ({ state: "unavailable", error });
   const roots = content.hwp5Drawings ?? [];
@@ -14221,7 +14221,7 @@ function projectHwp5MixedRootContent(content) {
   return { state: "projected", content: { ...rectangles.content, pictures: projected.pictures } };
 }
 
-// source/web/preview/hwp5-grouped-mixed-content.mjs
+// ../final-source-r2/web/preview/hwp5-grouped-mixed-content.mjs
 function projectHwp5GroupedMixedContent(content) {
   const fail = (error) => ({ state: "unavailable", error });
   try {
@@ -14289,7 +14289,7 @@ function projectHwp5GroupedMixedContent(content) {
   }
 }
 
-// source/web/preview/hwp5-root-content-projection.mjs
+// ../final-source-r2/web/preview/hwp5-root-content-projection.mjs
 function projectHwp5RootContent(content) {
   const roots = content.hwp5Drawings ?? [];
   if (!roots.length)
@@ -14316,7 +14316,7 @@ function projectHwp5RootContent(content) {
   };
 }
 
-// source/web/preview/hwp5-picture-content.mjs
+// ../final-source-r2/web/preview/hwp5-picture-content.mjs
 function attachHwp5Pictures(editor, content) {
   content.hwp5Pictures = [];
   content.hwp5PictureErrors = [];
@@ -14361,7 +14361,7 @@ function readHwp5PictureBytes(editor, section, pictureNode) {
   return editor.binaryResource(selected[0].bin_data_id, { maxBytes: 32 * 1024 * 1024 });
 }
 
-// source/web/preview/hwp5-picture-tail-content.mjs
+// ../final-source-r2/web/preview/hwp5-picture-tail-content.mjs
 function attachHwp5PictureTails(editor, content) {
   content.hwp5PictureTails = [];
   content.hwp5PictureTailErrors = [];
@@ -14421,7 +14421,7 @@ function attachHwp5PictureTails(editor, content) {
   return content;
 }
 
-// source/js/hwp5-drawing-object-extras.mjs
+// ../final-source-r2/js/hwp5-drawing-object-extras.mjs
 function decodeHwp5DrawingObjectExtras(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   if (!Array.isArray(rows) || rows.length > 1e6)
@@ -14436,7 +14436,7 @@ function decodeHwp5DrawingObjectExtras(bytes) {
   return rows;
 }
 
-// source/js/font-face-metadata.mjs
+// ../final-source-r2/js/font-face-metadata.mjs
 function decodeFontFaceMetadata(bytes) {
   const fail = () => {
     throw new Error("InvalidFontFaceMetadata");
@@ -14463,7 +14463,7 @@ function decodeFontFaceMetadata(bytes) {
   return rows;
 }
 
-// source/js/paragraph-shapes-wire.mjs
+// ../final-source-r2/js/paragraph-shapes-wire.mjs
 function decodeParagraphShapes(bytes) {
   const fail = () => {
     throw new Error("InvalidParagraphShapes");
@@ -14507,7 +14507,7 @@ function decodeParagraphShapes(bytes) {
   });
 }
 
-// source/js/hwp5-page-settings.mjs
+// ../final-source-r2/js/hwp5-page-settings.mjs
 function decodeHwp5PageSettings(bytes) {
   const row = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   return validateHwp5PageSettings(row);
@@ -14534,7 +14534,7 @@ function validateHwp5PageSettings(row) {
   return row;
 }
 
-// source/js/hwp5-section-settings.mjs
+// ../final-source-r2/js/hwp5-section-settings.mjs
 function decodeHwp5SectionSettings(bytes) {
   const row = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value, max = 4294967295) => Number.isInteger(value) && value >= 0 && value <= max;
@@ -14578,7 +14578,7 @@ function decodeHwp5SectionSettings(bytes) {
   return row;
 }
 
-// source/js/hwp5-cell-layout-sources.mjs
+// ../final-source-r2/js/hwp5-cell-layout-sources.mjs
 function decodeHwp5CellLayoutSources(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value, max = 4294967295) => Number.isInteger(value) && value >= 0 && value <= max;
@@ -14603,7 +14603,7 @@ function decodeHwp5CellLayoutSources(bytes) {
   return rows;
 }
 
-// source/js/hwp5-border-fill-sources.mjs
+// ../final-source-r2/js/hwp5-border-fill-sources.mjs
 function decodeHwp5BorderFillSources(bytes) {
   if (!(bytes instanceof Uint8Array) || bytes.length > 64 * 1024 * 1024)
     throw new Error("InvalidHwp5BorderFillSources");
@@ -14654,7 +14654,7 @@ function validateHwp5BorderFillSources(rows) {
   return rows;
 }
 
-// source/js/hwp5-table-anchors.mjs
+// ../final-source-r2/js/hwp5-table-anchors.mjs
 function decodeHwp5TableAnchors(bytes) {
   const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
@@ -14669,7 +14669,7 @@ function decodeHwp5TableAnchors(bytes) {
   return rows;
 }
 
-// source/js/hwp5-flow-sources.mjs
+// ../final-source-r2/js/hwp5-flow-sources.mjs
 var uint21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var parse3 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 function decodeHwp5ParagraphFlow(bytes) {
@@ -14729,7 +14729,7 @@ function decodeHwp5ColumnSources(bytes) {
   return rows;
 }
 
-// source/js/hwp5-formula-sources.mjs
+// ../final-source-r2/js/hwp5-formula-sources.mjs
 var decoder4 = new TextDecoder("utf-8", { fatal: true });
 var uint22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 function decodeHwp5FormulaSources(bytes) {
@@ -14745,7 +14745,7 @@ function decodeHwp5FormulaSources(bytes) {
   return rows;
 }
 
-// source/js/hwp5-field-spans.mjs
+// ../final-source-r2/js/hwp5-field-spans.mjs
 function validateHwp5FieldSpans(rows) {
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
   const sources = new Set;
@@ -14762,7 +14762,7 @@ function decodeHwp5FieldSpans(bytes) {
   return validateHwp5FieldSpans(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-field-topology.mjs
+// ../final-source-r2/js/hwp5-field-topology.mjs
 var uint23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var position = (value) => value && uint23(value.paragraph) && uint23(value.unit);
 var before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
@@ -14807,7 +14807,7 @@ function decodeHwp5FieldTopology(bytes) {
   return validateHwp5FieldTopology(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 
-// source/js/hwp5-normalization-info.mjs
+// ../final-source-r2/js/hwp5-normalization-info.mjs
 var decoder5 = new TextDecoder("utf-8", { fatal: true });
 var counts = [
   "zero_fat_tail_slots",
@@ -14843,7 +14843,7 @@ function decodeHwp5NormalizationInfo(bytes) {
   };
 }
 
-// source/js/hwp5-observed-docinfo.mjs
+// ../final-source-r2/js/hwp5-observed-docinfo.mjs
 function validateObservedDocInfoOption(value, distribution, availableSectionCopy) {
   if (typeof value !== "boolean")
     throw new TypeError("Invalid observed DocInfo option");
@@ -14866,7 +14866,7 @@ function decodeObservedDocInfoDiagnostics(bytes) {
   return value;
 }
 
-// source/js/hwp5-exclusive-text-delta.mjs
+// ../final-source-r2/js/hwp5-exclusive-text-delta.mjs
 var uint24 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
 var epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 0xffffffffffffffffn;
 var bad = () => {
@@ -15017,7 +15017,7 @@ function createHwp5ExclusiveTextApi({
   };
 }
 
-// source/js/hwp5-current-references.mjs
+// ../final-source-r2/js/hwp5-current-references.mjs
 var utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 var utf16 = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 var encoder = new TextEncoder;
@@ -15157,7 +15157,7 @@ function createHwp5CurrentReferenceApi({
   };
 }
 
-// source/js/hwp5-created-tables.mjs
+// ../final-source-r2/js/hwp5-created-tables.mjs
 var decoder6 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 var keys = (v, names) => v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === names.length && names.every((k) => Object.hasOwn(v, k));
 var integer2 = (v, low, high) => Number.isInteger(v) && v >= low && v <= high;
@@ -15193,7 +15193,7 @@ function decodeHwp5CreatedTables(bytes) {
   return rows;
 }
 
-// source/js/hwp5-table-creation.mjs
+// ../final-source-r2/js/hwp5-table-creation.mjs
 var encoder2 = new TextEncoder;
 var decoder7 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
@@ -15235,7 +15235,7 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
   };
 }
 
-// source/js/hwp5-editor.mjs
+// ../final-source-r2/js/hwp5-editor.mjs
 var encoder3 = new TextEncoder;
 var decoder8 = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true });
 var u32 = (value, name) => {
@@ -16321,7 +16321,7 @@ async function createExperimentalHwp5Editor(source, input, {
   };
 }
 
-// source/web/preview/document-save.mjs
+// ../final-source-r2/web/preview/document-save.mjs
 function saveDocument(editor, format, allowStaleLayout = false) {
   if (!editor)
     throw new Error("EditorNotOpen");
@@ -16334,7 +16334,7 @@ function saveDocument(editor, format, allowStaleLayout = false) {
   throw new Error("UnknownDocumentFormat");
 }
 
-// source/web/preview/field-link-display-guard.mjs
+// ../final-source-r2/web/preview/field-link-display-guard.mjs
 function createFieldLinkDisplayGuard() {
   const failures = new Map;
   const reasons = new Map;
@@ -16360,7 +16360,7 @@ function createFieldLinkDisplayGuard() {
   };
 }
 
-// source/web/preview/paragraph-dependency-plan.mjs
+// ../final-source-r2/web/preview/paragraph-dependency-plan.mjs
 function planParagraphDependencies({ total, offset, count, dependencies, maxParagraphs }) {
   if (![total, offset, count, maxParagraphs].every((value) => Number.isSafeInteger(value) && value >= 0) || offset > total || count > total - offset || !(dependencies instanceof Map))
     throw new RangeError("InvalidParagraphWindow");
@@ -16392,7 +16392,7 @@ function planParagraphDependencies({ total, offset, count, dependencies, maxPara
   };
 }
 
-// source/web/preview/hwp5-window-identities.mjs
+// ../final-source-r2/web/preview/hwp5-window-identities.mjs
 function hwp5WindowIdentities(projection) {
   const ordinals = new Map;
   for (const [index, section] of projection.sections.entries()) {
@@ -16412,7 +16412,7 @@ function hwp5WindowIdentities(projection) {
   return { total: ordinals.size, ordinals, resolve };
 }
 
-// source/web/preview/hwp5-table-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-table-window-dependencies.mjs
 function hwp5TableWindowDependencies(editor, projection) {
   const { ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map;
   const link = (child, parent) => {
@@ -16466,7 +16466,7 @@ function hwp5TableWindowDependencies(editor, projection) {
   return { total: ordinals.size, ordinals, dependencies };
 }
 
-// source/web/preview/hwp5-list-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-list-window-dependencies.mjs
 function hwp5ListWindowDependencies(editor, projection) {
   const { total, ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map;
   const link = (child, parent) => {
@@ -16531,7 +16531,7 @@ function hwp5ListWindowDependencies(editor, projection) {
   return { total, ordinals, dependencies };
 }
 
-// source/web/preview/hwp5-drawing-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-drawing-window-dependencies.mjs
 function hwp5DrawingWindowDependencies(editor, projection) {
   const { total, ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map;
   const link = (child, parent) => {
@@ -16605,7 +16605,7 @@ function hwp5DrawingWindowDependencies(editor, projection) {
   return { total, ordinals, dependencies };
 }
 
-// source/web/preview/hwp5-field-window-topology.mjs
+// ../final-source-r2/web/preview/hwp5-field-window-topology.mjs
 function readHwp5WindowFields(editor, section) {
   try {
     return { spans: validateHwp5FieldSpans(editor.fieldSpans(section)), unresolved: [] };
@@ -16619,7 +16619,7 @@ function readHwp5WindowFields(editor, section) {
   }
 }
 
-// source/web/preview/hwp5-unresolved-field-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-unresolved-field-dependencies.mjs
 var key = (row) => JSON.stringify([row.host, row.parent_node, row.list_node]);
 function linkHwp5UnresolvedFieldOwners(section, flows, markers, resolve, link) {
   if (markers.length === 0)
@@ -16648,7 +16648,7 @@ function linkHwp5UnresolvedFieldOwners(section, flows, markers, resolve, link) {
   }
 }
 
-// source/web/preview/hwp5-field-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-field-window-dependencies.mjs
 function hwp5FieldWindowDependencies(editor, projection) {
   const { total, ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map;
   const fieldTopologyDiagnostics = new Map;
@@ -16688,7 +16688,7 @@ function hwp5FieldWindowDependencies(editor, projection) {
   return { total, ordinals, dependencies, fieldTopologyDiagnostics };
 }
 
-// source/web/preview/hwp5-column-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-column-window-dependencies.mjs
 function boundHwp5ColumnSources(editor, section, flows) {
   const declarations = new Map;
   for (const source of editor.columnSources(section)) {
@@ -16725,7 +16725,7 @@ function hwp5ColumnWindowDependencies(editor, projection) {
   return { total, ordinals, dependencies };
 }
 
-// source/web/preview/hwp5-repeated-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-repeated-window-dependencies.mjs
 function hwp5RepeatedWindowDependencies(editor, projection) {
   const { total, ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map;
   const link = (child, parent) => {
@@ -16779,7 +16779,7 @@ function hwp5RepeatedWindowDependencies(editor, projection) {
   return { total, ordinals, dependencies };
 }
 
-// source/web/preview/hwp5-page-control-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-page-control-window-dependencies.mjs
 function hwp5PageControlWindowDependencies(editor, projection) {
   const { total, ordinals, resolve } = hwp5WindowIdentities(projection), dependencies = new Map;
   for (const section of projection.sections) {
@@ -16799,7 +16799,7 @@ function hwp5PageControlWindowDependencies(editor, projection) {
   return { total, ordinals, dependencies };
 }
 
-// source/web/preview/hwp5-window-flows.mjs
+// ../final-source-r2/web/preview/hwp5-window-flows.mjs
 function memoHwp5WindowFlows(editor) {
   const scoped = Object.create(editor), flows = new Map;
   scoped.paragraphFlow = (section) => {
@@ -16828,7 +16828,7 @@ function hwp5WindowFlows(editor, content) {
   return { displayed, completeFlows, selectedFlows };
 }
 
-// source/web/preview/hwp5-owned-window-dependencies.mjs
+// ../final-source-r2/web/preview/hwp5-owned-window-dependencies.mjs
 function compose([first, ...rest]) {
   for (const found of rest)
     if (first.total !== found.total || first.ordinals.size !== found.ordinals.size || [...first.ordinals].some(([key, ordinal]) => found.ordinals.get(key) !== ordinal))
@@ -16867,7 +16867,7 @@ function hwp5FieldOwnedWindowDependencies(editor, projection) {
   };
 }
 
-// source/web/preview/hwp5-window-projection.mjs
+// ../final-source-r2/web/preview/hwp5-window-projection.mjs
 function projectHwp5DependencyWindow(editor, projection, { offset, count, maxParagraphs = 20000, maxUnits = 200000 }, discover) {
   if (!Number.isSafeInteger(maxUnits) || maxUnits < 0)
     throw new RangeError("InvalidDisplayBounds");
@@ -16919,7 +16919,7 @@ function projectHwp5FieldOwnedWindow(editor, projection, options) {
   return projectHwp5DependencyWindow(editor, projection, options, hwp5FieldOwnedWindowDependencies);
 }
 
-// source/web/preview/hwp5-window-note-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-note-content.mjs
 function attachHwp5WindowNotes(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
   content.currentParagraphFlows = selectedFlows;
@@ -16938,7 +16938,7 @@ function attachHwp5WindowNotes(editor, content) {
   return attachHwp5Notes(scoped, content);
 }
 
-// source/web/preview/hwp5-window-caption-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-caption-content.mjs
 function attachHwp5WindowCaptions(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
   content.currentParagraphFlows = selectedFlows;
@@ -16958,7 +16958,7 @@ function attachHwp5WindowCaptions(editor, content) {
   return attachHwp5Captions(scoped, content);
 }
 
-// source/web/preview/hwp5-window-drawing-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-drawing-content.mjs
 function attachHwp5WindowDrawings(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
   content.currentParagraphFlows = selectedFlows;
@@ -17000,7 +17000,7 @@ function attachHwp5WindowDrawings(editor, content) {
   return attachHwp5Drawings(scoped, content);
 }
 
-// source/web/preview/hwp5-window-picture-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-picture-content.mjs
 function attachHwp5WindowPictures(editor, content) {
   if (!content.window)
     throw new Error("MissingParagraphWindow");
@@ -17012,7 +17012,7 @@ function attachHwp5WindowPictures(editor, content) {
   return attachHwp5PictureTails(scoped, attachHwp5Pictures(scoped, content));
 }
 
-// source/web/preview/hwp5-window-object-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-object-content.mjs
 function attachHwp5WindowObjects(editor, preview, content) {
   if (!content.window)
     throw new Error("MissingParagraphWindow");
@@ -17024,7 +17024,7 @@ function attachHwp5WindowObjects(editor, preview, content) {
   return attachHwp5WindowPictures(scoped, content);
 }
 
-// source/web/preview/hwp5-window-column-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-column-content.mjs
 function attachHwp5WindowColumns(editor, content) {
   const { displayed, completeFlows } = hwp5WindowFlows(editor, content);
   content.columnSources = [];
@@ -17037,7 +17037,7 @@ function attachHwp5WindowColumns(editor, content) {
   return attachHwp5ColumnDisplay(content);
 }
 
-// source/web/preview/hwp5-window-selection.mjs
+// ../final-source-r2/web/preview/hwp5-window-selection.mjs
 function validateHwp5WindowSelection(content) {
   const window = content.window, uint = (value) => Number.isSafeInteger(value) && value >= 0;
   if (!window || !Array.isArray(content.paragraphs) || ![
@@ -17076,7 +17076,7 @@ function validateHwp5WindowSelection(content) {
   };
 }
 
-// source/web/preview/hwp5-window-structural-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-structural-content.mjs
 function attachHwp5WindowStructuralAnchors(editor, content) {
   const { displayed, completeFlows } = hwp5WindowFlows(editor, content), scoped = Object.create(editor);
   scoped.structuralAnchors = (section) => {
@@ -17093,7 +17093,7 @@ function attachHwp5WindowStructuralAnchors(editor, content) {
   return attachHwp5StructuralAnchors(scoped, content);
 }
 
-// source/web/preview/hwp5-window-repeated-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-repeated-content.mjs
 function attachHwp5WindowRepeatedAreas(editor, content) {
   const { displayed, completeFlows, selectedFlows } = hwp5WindowFlows(editor, content);
   const areas = new Map, masters = new Map, scoped = Object.create(editor);
@@ -17117,7 +17117,7 @@ function attachHwp5WindowRepeatedAreas(editor, content) {
   return attachHwp5MasterPages(scoped, attachHwp5PageAreas(scoped, content));
 }
 
-// source/web/preview/hwp5-window-numbering-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-numbering-content.mjs
 function attachHwp5WindowNumbering(editor, content) {
   const { displayed, completeFlows } = hwp5WindowFlows(editor, content), scoped = Object.create(editor);
   scoped.automaticNumberSources = (section) => completeFlows.has(section) ? validateHwp5AutomaticNumberSources(editor.automaticNumberSources(section)).filter((row) => displayed.has(`${section}:${row.paragraph}`)) : [];
@@ -17134,7 +17134,7 @@ function attachHwp5WindowNumbering(editor, content) {
   return attachHwp5DocumentProperties(scoped, attachHwp5PageControls(scoped, attachHwp5AutomaticNumbers(scoped, content)));
 }
 
-// source/web/preview/hwp5-window-query-content.mjs
+// ../final-source-r2/web/preview/hwp5-window-query-content.mjs
 function queryHwp5WindowContent(editor, preview, options, paragraphFormatsAvailable) {
   editor = memoHwp5WindowFlows(editor);
   const content = projectHwp5FieldOwnedWindow(editor, preview, options);
@@ -17165,7 +17165,7 @@ function queryHwp5WindowContent(editor, preview, options, paragraphFormatsAvaila
   return content;
 }
 
-// source/web/preview/hwp5-current-reference-command.mjs
+// ../final-source-r2/web/preview/hwp5-current-reference-command.mjs
 function currentReferenceCommand(editor, format, enabled, message) {
   if (!editor || !enabled)
     throw new Error("EditorNotOpen");
@@ -17195,7 +17195,7 @@ function currentReferenceCommand(editor, format, enabled, message) {
   return null;
 }
 
-// source/web/preview/hwp5-current-reference-content.mjs
+// ../final-source-r2/web/preview/hwp5-current-reference-content.mjs
 function attachHwp5CurrentReferences(editor, preview, content) {
   for (const row of content.paragraphs)
     delete row.currentReference;
@@ -17231,7 +17231,7 @@ function attachHwp5CurrentReferences(editor, preview, content) {
   return content;
 }
 
-// source/web/preview/hwp5-note-selection-owner.mjs
+// ../final-source-r2/web/preview/hwp5-note-selection-owner.mjs
 var uint26 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295;
 var epoch2 = (s) => typeof s === "string" && /^[1-9][0-9]{0,19}$/.test(s) && BigInt(s) <= 0xffffffffffffffffn;
 var key2 = (s, p) => `${s}:${p}`;
@@ -17283,7 +17283,7 @@ function attachHwp5NoteSelectionOwners(content) {
   };
 }
 
-// source/web/preview/hwp5-created-cell-display.mjs
+// ../final-source-r2/web/preview/hwp5-created-cell-display.mjs
 function hwp5CreatedCellDisplay(table, options, shapes) {
   const shape = shapes?.find((shape) => shape.id === table.resources.paragraph);
   if (!shape || options.cell.attributes !== 0)
@@ -17298,7 +17298,7 @@ function hwp5CreatedCellDisplay(table, options, shapes) {
   };
 }
 
-// source/web/preview/hwp5-created-table-content.mjs
+// ../final-source-r2/web/preview/hwp5-created-table-content.mjs
 function attachHwp5CreatedTables(editor, content, available, sectionCount, maxUnits = 200000) {
   content.tableCreationAvailable = available;
   content.tableCreationResources = available ? editor.tableCreationResources() : null;
@@ -17357,7 +17357,7 @@ function attachHwp5CreatedTables(editor, content, available, sectionCount, maxUn
   return content;
 }
 
-// source/web/preview/hwp5-table-creation-command.mjs
+// ../final-source-r2/web/preview/hwp5-table-creation-command.mjs
 function hwp5TableCreationRequest(message) {
   const o = message.options;
   if (!o || typeof o !== "object" || Array.isArray(o) || Object.keys(o).some((key) => !["rows", "columns", "width", "rowHeight", "resources"].includes(key)))
@@ -17402,7 +17402,7 @@ function setHwp5CreatedCellText(editor, message) {
   });
 }
 
-// source/web/preview/selection-edit-query.mjs
+// ../final-source-r2/web/preview/selection-edit-query.mjs
 function selectionEditQuery(message, { active, format, canEdit }) {
   return selectionQuery(message, { active, format, query: canEdit, kind: "query-edit-range" });
 }
@@ -17433,7 +17433,7 @@ function selectionQuery(message, { active, format, query, kind }) {
   };
 }
 
-// source/web/preview/reader-runtime.mjs
+// ../final-source-r2/web/preview/reader-runtime.mjs
 function copyRuntimeMessage(message) {
   const ancestors = new Set;
   function validate(value) {
@@ -19448,7 +19448,7 @@ function createReaderRuntime({
   };
 }
 
-// source/packages/core/src/state/owned.ts
+// ../final-source-r2/packages/core/src/state/owned.ts
 function copyOwned(value, observation = false, seen = new Set) {
   if (observation && value !== null && typeof value === "object" && immutableObservations.has(value))
     return value;
@@ -19541,7 +19541,7 @@ function ownObservation(value) {
   return () => stable;
 }
 
-// source/packages/core/src/internal/worker-reader-data-runtime.ts
+// ../final-source-r2/packages/core/src/internal/worker-reader-data-runtime.ts
 function createWorkerReaderDataRuntime(options) {
   const backend = createReaderRuntime(options);
   return {
@@ -19555,7 +19555,7 @@ function createWorkerReaderDataRuntime(options) {
   };
 }
 
-// source/packages/core/src/internal/worker-resource-reply.ts
+// ../final-source-r2/packages/core/src/internal/worker-resource-reply.ts
 function workerResourceReply(id, requestKind, reply) {
   if (!isOwnedImmutableObservation(reply) || reply.kind !== requestKind || !["picture-bytes", "table-background-bytes"].includes(reply.kind) || reply.error !== undefined || typeof Object.getOwnPropertyDescriptor(reply, "bytes")?.get !== "function")
     return { envelope: { id, reply } };
@@ -19566,7 +19566,7 @@ function workerResourceReply(id, requestKind, reply) {
   return { envelope: { id, reply: wire } };
 }
 
-// source/packages/core/src/worker.ts
+// ../final-source-r2/packages/core/src/worker.ts
 var scope = globalThis;
 var runtime;
 var queue = Promise.resolve();

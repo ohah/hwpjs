@@ -120,3 +120,35 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 4. **실패·자원**: 지원 범위를 늘리는 Native 변경에는 예산/overflow/OOM/clone·수명 검사를 별도로 요구한다. 거부는 문서 불변을 증명한다. 테스트 존재·합성 통과·저수준 decoder 성공을 전체 제품 지원으로 집계하지 않는다.
 
 기존 소스 증거의 위치: [core integration tests](../packages/core/tests/integration/), [core state tests](../packages/core/tests/state/), [core editor tests](../packages/core/tests/editor/). 이 문서는 그 테스트들의 최신 통과 수를 주장하지 않으며, 보호된 사용자 staged 테스트는 조사 입력으로 읽지 않았다.
+
+
+## 현재 데모의 퀵·문맥 메뉴 연결 후보
+
+이 절은 `apps/demo/src/`의 소스 지원 범위이며 public core API의 새 권한이나 공식 WebHwpCtrl 메뉴 전체 동등성을 선언하지 않습니다. 검색 도구의 바꾸기, 도구 메뉴의 문서 통계, 서식 메뉴의 왼쪽·가운데·오른쪽·양쪽·배분·나눔 정렬은 기존 명령과 가용성 판정을 재사용합니다. 메뉴에 노출했다는 이유만으로 지원하지 않는 명령을 활성화하지 않습니다.
+
+다중 문단의 public Core target이 없을 때 원본 body나 cell로 추정하지 않습니다. controller가 기존 Surface 선택 캡처의 `current()`를 문맥 메뉴에 전달하고, 메뉴는 Core 선택 키·자체 캡처 세대·Surface 현재성을 실행 전후 확인합니다. 메뉴가 오래됐거나 동기 재진입 중 선택·권한이 바뀌면 실행을 거부합니다. 실제 편집과 Native 원본 권한은 기존 명령 경로에 남습니다. 우클릭과 ContextMenu·Shift+F10 키 경로도 같은 소유 선택 검증을 거칩니다.
+
+formatted-r2의 context 집중 검사는 기존39통과·3실패에서 후보42통과로, 노출 검사는 기존16통과·3실패에서 후보19통과로 바뀌었습니다. 서로 다른 검사 묶음이며 strict 검사는 context·command-support·shell과 정확한 controller 연결 식으로 제한됩니다. 전체 demo-controller·패키지 strict나 실제 Worker·Native·Canvas·브라우저·배포 완료의 증거가 아닙니다. 메뉴 가시성과 실제 키보드·포커스·다중 선택 동작은 아래 서로 다른 브라우저 검증 범위로 구분합니다. 과거 web/preview 앱의 메뉴 검증을 이 후보의 실제 성공으로 승계하지 않습니다.
+
+### 현재 quick 후보의 HWP5 부분 검증
+
+C2에서는 문단18:2→19:26의 다중 선택에서 우클릭 굵게 mixed→true와 undo mixed, Shift+F10, 다른 선택으로 이동했을 때 이전 메뉴 닫힘, 바꾸기·문서 통계 모달 실제 진입을 확인했습니다. 정렬4는 C2에서 DOM 존재만 확인했고 포인터 CLI 인자 오류로 멈췄습니다. 별도 C3에서 정수 좌표 포인터로 서식 메뉴를 열어 기존4 모두 visible·enabled·양수rect와 PNG를 확인했습니다. C3는 정렬 변경이나 C2의 굵게·이력 검사를 반복하지 않았습니다. 원실패를 보존하며 제품 실패로 단정하지 않습니다. 저장/재열기·전체 quick 메뉴 동등성·배포 완료로 확대하지 않습니다.
+
+커서 관측·다음 입력과 생성 readonly 후속 후보의 경계는 [커서 입력 서식](collapsed-caret-formatting.md)을 따릅니다.
+
+### 여섯 정렬의 소스 계약
+
+추가 두 명령은 기존 `DISTRIBUTE`·`DISTRIBUTE_SPACE`에 연결하며 전자는 배분, 후자는 공백에만 배분하는 나눔 정렬입니다. label·지원 여부·변환은 기존 정렬 정본과 가용성을 재사용하며 controller의 새 편집 경로나 Native 권한을 추가하지 않습니다. 기존4의 가시성은 C3에서 확인했고, 후속 HWP5/HWPX 별도 cohort에서 메뉴6 노출과 추가2의 실제 적용·undo/redo를 확인했습니다. 모든6 정렬의 원본 조판·시각 동등성을 검증한 것은 아닙니다. 공식 primary 자료와의 의미 일치를 공식 화면 동등성으로 확대하지 않습니다.
+
+최종 readonly 관측은 검증된 source 자료의 문자 속성과 알려진 문단 정렬 enum을 읽되 writer 권한을 확대하지 않습니다. 소스53 통과와 후속 형식별 실제 UI의 한정 범위는 [커서 입력 서식](collapsed-caret-formatting.md)의 관측·쓰기 경계를 따릅니다.
+
+
+### 완료 결과와 host 수명
+
+단일 Core 서식 명령의 포커스 복귀는 오류 없는 committed-with-snapshot 또는 known-no-op의 실제 result.state와 현재 host에 묶입니다. 외부 status/result callback 뒤 exact state·host·dispose를 다시 확인하고 기존 focus를 한 번만 요청합니다. Surface의 자체 모달 lease와 선택 현재성 검사는 유지하며 다른 선택의 존재로 통과시키지 않습니다. 접힌 커서의 HWP5/HWPX 실제 입력·원서식 복원 범위와 reset·저장 미검증은 [커서 입력 서식](collapsed-caret-formatting.md)을 따릅니다. QA E2E 통과는 실제 운영 배포 검증과 별도입니다.
+
+### 추가 두 정렬의 실제 HWP5·HWPX 검증
+
+각 한 문서의 별도 cohort에서 JUSTIFY→DISTRIBUTE→DISTRIBUTE_SPACE→undo DISTRIBUTE→redo DISTRIBUTE_SPACE를 확인했습니다. operation/view는 각 단계1→2→3→4→5였고 원래 ready 조건·예상 pressed·textarea focus·논리/painted caret0:18:2를 유지했습니다. 각 적용·undo·redo는 한 번씩이며 추가 클릭이나 Native 재시도는 없었습니다. 메뉴6의 실제 노출·양수rect·PNG와, HWPX에서 막대의 새2 항목도 확인했습니다.
+
+HWPX의 완료 poll은 감시·전송을 포함한 관측이므로 응답 속도나 성능 보장으로 쓰지 않습니다. 원래 준비·조기관측·포커스 실패와 성공은 각각 보존합니다. 저장·재열기·Native 필드 독립 해독과 모든6 정렬의 조판 동등성·전체 UI 완료는 이 검증 범위가 아닙니다. 양 형식의 소유 Chrome 종료·독립 PS 빈 목록·정확한 postHTTP manifest는 기능 근거와 별도로 확인했습니다. QA 후보의 검증을 운영·공개 배포 완료로 승계하지 않습니다.

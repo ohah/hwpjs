@@ -120,7 +120,7 @@ test('collapsed, created, unknown binding/capability and missing shape have expl
   assert.equal(missing.size, null);
   assert.equal(missing.align, null);
 });
-test('paragraph selection may include protected anchors, character may not', () => {
+test('protected-anchor selection retains readonly source values while character writes remain denied', () => {
   const f = getSelectionFormatting(
     snapshot(target, {
       sourceOffsets: [
@@ -130,7 +130,8 @@ test('paragraph selection may include protected anchors, character may not', () 
     }),
   );
   assert.equal(f.characterAvailableReason, 'ProtectedAnchorRange');
-  assert.equal(f.bold, null);
+  assert.equal(f.bold, 'mixed');
+  assert.equal(f.size, 'mixed');
   assert.equal(f.paragraphAvailableReason, null);
   assert.equal(f.align, 'CENTER');
 });
@@ -206,5 +207,5 @@ test('underline observes its own capability and current resource inventory indep
   assert.equal(unavailable.bold, 'mixed');
   const collapsed = getSelectionFormatting(snapshot({ ...target, endUnit: 0 }, {}, inventories));
   assert.equal(collapsed.underlineAvailableReason, 'EmptyCharacterSelection');
-  assert.equal(collapsed.underline, null);
+  assert.equal(collapsed.underline, true);
 });

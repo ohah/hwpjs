@@ -1,9 +1,18 @@
+// @ts-ignore Existing display enum owns the alignment names, not Native ordinals.
+import { paragraphAlignments } from '../../../web/preview/paragraph-alignments.mjs';
 import type { ActionAvailability, DemoCommand } from './shell-contract.ts';
 
 // UI intent metadata, not claims about Native implementation. A bridge owns
 // current capability and must revalidate its target at dispatch.
 const entry = (label: string, category: string, selection = false, document = true) =>
   Object.freeze({ label, category, selection, document });
+const alignmentLabel = (key: 'DISTRIBUTE' | 'DISTRIBUTE_SPACE'): string => {
+  const found = paragraphAlignments.find(
+    (value: { key: string; label: string }) => value.key === key,
+  );
+  if (!found) throw Error('UnknownParagraphAlignment');
+  return found.label;
+};
 export const DEMO_COMMAND_REGISTRY = Object.freeze({
   save: entry('저장', '문서'),
   undo: entry('실행 취소', '편집'),
@@ -43,6 +52,8 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'align-center': entry('가운데 정렬', '서식', true),
   'align-right': entry('오른쪽 정렬', '서식', true),
   'align-justify': entry('양쪽 정렬', '서식', true),
+  'align-distribute': entry(alignmentLabel('DISTRIBUTE'), '서식', true),
+  'align-distribute-space': entry(alignmentLabel('DISTRIBUTE_SPACE'), '서식', true),
   'zoom-in': entry('확대', '보기', false, false),
   'zoom-out': entry('축소', '보기', false, false),
   'set-font-size': entry('글자 크기', '서식', true),
@@ -110,6 +121,8 @@ export function resolveCommandSupport(
       'align-center',
       'align-right',
       'align-justify',
+      'align-distribute',
+      'align-distribute-space',
     ].includes(command) &&
     input.availability?.enabled === true &&
     input.availability.surfaceSelection === true;
@@ -180,6 +193,8 @@ const textContextCommands: readonly ContextCommand[] = Object.freeze([
   'align-center',
   'align-right',
   'align-justify',
+  'align-distribute',
+  'align-distribute-space',
 ]);
 const editableContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,
@@ -209,4 +224,9 @@ export function contextCommandLabel(command: ContextCommand, kind: ContextTarget
     if (command === 'paragraph-properties') return '셀 문단 속성';
   }
   return DEMO_COMMAND_REGISTRY[command].label;
+}
+
+/** Surface가 소유한 여러 문단 선택의 표시 목록. body/cell owner로 재분류하지 않는다. */
+export function surfaceTextContextCommandIds(): readonly ContextCommand[] {
+  return editableContextCommands;
 }

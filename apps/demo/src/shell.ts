@@ -1,3 +1,4 @@
+import { DEMO_COMMAND_REGISTRY } from './command-support.ts';
 import { fontLanguageLabels, selectionFontNameTooltip } from './formatting-observation-label.ts';
 import type { CharacterFontLanguage } from '@hwpjs/core';
 import { createShellIcon, type ShellIcon } from './shell-icons.ts';
@@ -78,11 +79,18 @@ const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
       ['insert-footer', '꼬리말', 'insert-footer'],
     ],
   ],
-  ['찾기', [['find', '찾기', 'find']]],
+  [
+    '찾기',
+    [
+      ['find', '찾기', 'find'],
+      ['replace', '바꾸기', 'find'],
+    ],
+  ],
 ];
 const extraTools: readonly Tool[] = [
   ['save', '저장하기', 'save'],
   ['insert-chart', '차트', 'insert-chart'],
+  ['word-count', '문서 통계', 'paragraph-properties'],
 ];
 const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
 const menus: readonly [string, readonly DemoCommand[]][] = [
@@ -101,6 +109,12 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
       'font-name',
       'character-properties',
       'paragraph-properties',
+      'align-left',
+      'align-center',
+      'align-right',
+      'align-justify',
+      'align-distribute',
+      'align-distribute-space',
     ],
   ],
   ['쪽', ['insert-header', 'insert-footer']],
@@ -125,6 +139,8 @@ const labels = new Map<DemoCommand, string>([
   ['align-center', '가운데 정렬'],
   ['align-right', '오른쪽 정렬'],
   ['align-justify', '양쪽 정렬'],
+  ['align-distribute', DEMO_COMMAND_REGISTRY['align-distribute'].label],
+  ['align-distribute-space', DEMO_COMMAND_REGISTRY['align-distribute-space'].label],
   ['set-font-size', '글자 크기'],
   ['set-zoom', '확대'],
   ['insert-comment', '메모'],
@@ -431,6 +447,8 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     ['align-center', '가운데 정렬'],
     ['align-right', '오른쪽 정렬'],
     ['align-justify', '양쪽 정렬'],
+    ['align-distribute', DEMO_COMMAND_REGISTRY['align-distribute'].label],
+    ['align-distribute-space', DEMO_COMMAND_REGISTRY['align-distribute-space'].label],
   ] as const) {
     const item = commandButton(id, label);
     formatbar.append(item.node, item.description);
