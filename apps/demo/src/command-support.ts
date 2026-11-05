@@ -7,8 +7,8 @@ import type { ActionAvailability, DemoCommand } from './shell-contract.ts';
 const entry = (label: string, category: string, selection = false, document = true) =>
   Object.freeze({ label, category, selection, document });
 const alignmentLabel = (key: 'DISTRIBUTE' | 'DISTRIBUTE_SPACE'): string => {
-  const found = paragraphAlignments.find(
-    (value: { key: string; label: string }) => value.key === key,
+  const found = (paragraphAlignments as readonly { key: string; label: string }[]).find(
+    (value) => value.key === key,
   );
   if (!found) throw Error('UnknownParagraphAlignment');
   return found.label;
