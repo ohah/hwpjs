@@ -1,12 +1,12 @@
 {
   "workerAssets": {
     "version": 1,
-    "activeWorkerPath": "runtime/worker-1f2e10899ea38116de7bad79b62c093be48f7b4c2776c891fb9688586a07fa35.js",
-    "activeWorkerSha256": "1f2e10899ea38116de7bad79b62c093be48f7b4c2776c891fb9688586a07fa35",
+    "activeWorkerPath": "runtime/worker-ae5df7cf672527635c866b0bce9158f35163bf99c2e7ec922a49fceb204c026f.js",
+    "activeWorkerSha256": "ae5df7cf672527635c866b0bce9158f35163bf99c2e7ec922a49fceb204c026f",
     "legacyWorkerPath": "runtime/worker.js",
-    "legacyWorkerSha256": "e30f0f4cd0cf45b4055bb2ae3d840518c153b6d397f1faaad49366c74ade83df",
+    "legacyWorkerSha256": "ae5df7cf672527635c866b0bce9158f35163bf99c2e7ec922a49fceb204c026f",
     "activeRuntimePaths": [
-      "assets/runtime-DYbeZFQa.js"
+      "assets/core-runtime.js"
     ]
   },
   "schemaVersion": 1,
@@ -125,7 +125,7 @@
     "8be5c2e023ac0541-noori.hwp",
     "575815ede337626f-noori.hwp"
   ],
-  "wasmSha256": "d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb",
+  "wasmSha256": "ede6256ef063765cfb1f4489d2bece3a971aa715041c993fec87d4eb374855fa",
   "licenses": {
     "project": "LICENSE.txt",
     "thirdParty": "THIRD_PARTY_NOTICES.txt",
@@ -151,13 +151,7 @@
     ]
   },
   "verification": {
-    "staticURLPrefixes": [
-      "/hwpjs/editor/",
-      "/docs/editor/"
-    ],
-    "moduleSyntax": true,
-    "fixtureAllowlist": true,
-    "browserE2E": "separate"
+    "scope": "선택 source94 공개101 최종 정적 포장 및 동일 Core 등록 검증; 공개 배포는 main 후속"
   },
   "files": [
     {
@@ -177,13 +171,18 @@
     },
     {
       "path": "api/main.js",
-      "bytes": 32,
-      "sha256": "1161d54a2255528be57ed4370a33ddec062bcd092240aff5a7e200b2ff680e3a"
+      "bytes": 814,
+      "sha256": "771a06bf476ebb6c10fe6e61480146ebf5d7fc60d294c038af1d339673654e4d"
     },
     {
       "path": "api/playground.js",
       "bytes": 13950,
       "sha256": "dd5682c375c76176a64a6bb2acf5a8e18b8be25733dd1c0649a6764defccc13d"
+    },
+    {
+      "path": "assets/_internal/native-geometry.js",
+      "bytes": 268,
+      "sha256": "673c01dcd6b4d5bd7594859f44522c2474eabe12dd5f00ba77da9198a55e63b2"
     },
     {
       "path": "assets/api-main.js",
@@ -214,6 +213,16 @@
       "path": "assets/chunk-mkqyz5wc-C8rmfEA6.js",
       "bytes": 108621,
       "sha256": "7e94ae94acd1c583fc69c079ebcf40f24f403e7af16693879ad124eaace97145"
+    },
+    {
+      "path": "assets/core-index.js",
+      "bytes": 130502,
+      "sha256": "554f02959fd3d55627637d994716d4a9dcae09d57a62e0b8d7c5cfc3bf6d0827"
+    },
+    {
+      "path": "assets/core-runtime.js",
+      "bytes": 890821,
+      "sha256": "ac314efb6f38c4a87c05c54da65c3b2089514f29ae73be3f2c08bfab010d3d33"
     },
     {
       "path": "assets/demo-7xg_I7Q3.css",
@@ -321,6 +330,11 @@
       "sha256": "ee9ef053e2586420877c9467ea288e6749d1448a591a457f021976cf3b9422d6"
     },
     {
+      "path": "assets/index-95apdt74.js",
+      "bytes": 4202,
+      "sha256": "81ae5cd54d85c8fb3c55635302a04dbc966ed007bfb6c01aad872e165ae4b243"
+    },
+    {
       "path": "assets/index-B3JJBMlr.js",
       "bytes": 432254,
       "sha256": "9ae87d5d720d6e0acbfca2c8e9fff3d50121d3d4105c06314a929f7447bdab66"
@@ -351,9 +365,24 @@
       "sha256": "f5a5906b40e57eb04239fa4447170a0bc1b4dbbe13ea5941c08b44ed9273bf9c"
     },
     {
+      "path": "assets/index-KlrnD-F5.js",
+      "bytes": 478280,
+      "sha256": "2b7128d780f93f56d1cf2f7c0d2d0b5c46084ab611f8ea624fd2242e2672025b"
+    },
+    {
+      "path": "assets/index-cczwbjp3.js",
+      "bytes": 19735,
+      "sha256": "61cd122972313bbfc9198bc32ec22ad7e7f330d1c7a7a3c7e48374e3d91c466f"
+    },
+    {
       "path": "assets/index-pse72t3d-D27BAp8q.js",
       "bytes": 11503,
       "sha256": "b2f4cc334fb27fb8471fa2f5e550e99d486561da98239037bdd967f618f85f3f"
+    },
+    {
+      "path": "assets/index-rt87v632.js",
+      "bytes": 48463,
+      "sha256": "c25221a1711252d11caed9c5f781cf87e52935b0bcc3acaf19159ffa55aa6fbe"
     },
     {
       "path": "assets/index-tdX0uD1N.css",
@@ -431,6 +460,11 @@
       "sha256": "24fc00ed8c888d59c93fdd752afb28ee56a3a32c2b0da5a6ad7dfe8fc5f5a317"
     },
     {
+      "path": "assets/src-BZ1qyuzB.js",
+      "bytes": 56,
+      "sha256": "a0783d36c9a2f90ffbe6b522da7f533a01552090d5fb50532e81bd12ed855434"
+    },
+    {
       "path": "assets/src-BdRv3h0u.js",
       "bytes": 83,
       "sha256": "c59d18918b6f93d1bf8fcf1658794eb241c35d0f679fe6899fcc8543654c2fc9"
@@ -501,6 +535,11 @@
       "sha256": "6dc09c158c2d74eb0cecd7921ef33a8f7790e0ca3a54c5d3069ef1f8c86c034c"
     },
     {
+      "path": "assets/src-DY1SZ_Os.js",
+      "bytes": 1140138,
+      "sha256": "af0494bf8f83de70c0d56485d96ced90f53f2218e7ebae3b0f5a0587cd2b8657"
+    },
+    {
       "path": "assets/src-DdtME6Kr.js",
       "bytes": 83,
       "sha256": "fc616536c3e18df2b3056547a44501a989b357521630aa4353b8982823417c87"
@@ -563,22 +602,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 491,
-      "sha256": "44d704b7d165a0a7856c51acbf74574d2c05834f9249feb7da605895545bde97"
+      "sha256": "4a95feb5d9441ccdc7da15063339cb339a91bb42d0778dc0af2582bfb701882d"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 491,
-      "sha256": "44d704b7d165a0a7856c51acbf74574d2c05834f9249feb7da605895545bde97"
+      "sha256": "4a95feb5d9441ccdc7da15063339cb339a91bb42d0778dc0af2582bfb701882d"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 491,
-      "sha256": "44d704b7d165a0a7856c51acbf74574d2c05834f9249feb7da605895545bde97"
+      "sha256": "4a95feb5d9441ccdc7da15063339cb339a91bb42d0778dc0af2582bfb701882d"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 491,
-      "sha256": "44d704b7d165a0a7856c51acbf74574d2c05834f9249feb7da605895545bde97"
+      "sha256": "4a95feb5d9441ccdc7da15063339cb339a91bb42d0778dc0af2582bfb701882d"
     },
     {
       "path": "fixture-catalog.json",
@@ -1092,28 +1131,33 @@
     },
     {
       "path": "hwpjs/hwpjs.wasm",
-      "bytes": 6329678,
-      "sha256": "d849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb"
+      "bytes": 6486607,
+      "sha256": "ede6256ef063765cfb1f4489d2bece3a971aa715041c993fec87d4eb374855fa"
     },
     {
       "path": "index.html",
       "bytes": 479,
-      "sha256": "2de73d5c7ffe118d9dd288ce090264c71f40de381e2eb7a3f8e40776c57727a9"
+      "sha256": "7ab8855f3f7d9e4e80e0ee811a248e425d14b5fe93385751a2db68b06e805aad"
     },
     {
       "path": "runtime/index.js",
-      "bytes": 43,
-      "sha256": "dc7c485da79cb75d8d6eab0965644a1ffd0250f747e7835ce6da6e342182ba6d"
+      "bytes": 41,
+      "sha256": "c170537d5cc79244dd5c1691778ab529ca5c88bf67e5fcf3caff9f121a06ad0f"
     },
     {
       "path": "runtime/runtime.js",
-      "bytes": 45,
-      "sha256": "377a810d9831f0b71aab543bd0f5a5a39e459f10f33be4af6b63a01cb6ec75c2"
+      "bytes": 43,
+      "sha256": "c8ee913df0b723bab3f0be7157903758c00a1f6d2c31f9ad7ee5f6d8fb2cb503"
     },
     {
       "path": "runtime/worker-1f2e10899ea38116de7bad79b62c093be48f7b4c2776c891fb9688586a07fa35.js",
       "bytes": 886759,
       "sha256": "1f2e10899ea38116de7bad79b62c093be48f7b4c2776c891fb9688586a07fa35"
+    },
+    {
+      "path": "runtime/worker-ae5df7cf672527635c866b0bce9158f35163bf99c2e7ec922a49fceb204c026f.js",
+      "bytes": 893056,
+      "sha256": "ae5df7cf672527635c866b0bce9158f35163bf99c2e7ec922a49fceb204c026f"
     },
     {
       "path": "runtime/worker-c382f17fdf624d26c18b9a0edc34173d5a0f804c31f9d3f8a00b0f2ab1225e7d.js",
@@ -1122,8 +1166,23 @@
     },
     {
       "path": "runtime/worker.js",
-      "bytes": 881042,
-      "sha256": "e30f0f4cd0cf45b4055bb2ae3d840518c153b6d397f1faaad49366c74ade83df"
+      "bytes": 893056,
+      "sha256": "ae5df7cf672527635c866b0bce9158f35163bf99c2e7ec922a49fceb204c026f"
+    },
+    {
+      "path": "sdk/current/core.js",
+      "bytes": 44,
+      "sha256": "e4d8c397eebeae731bf20ed2e3bc66ee599816155f142ae1e4015f771b52a8c4"
+    },
+    {
+      "path": "sdk/current/native-geometry.js",
+      "bytes": 59,
+      "sha256": "70d92f16a7f091ad66924016dd510ddc3fb77834de80cf5341778580105a6b1c"
+    },
+    {
+      "path": "sdk/current/runtime.js",
+      "bytes": 46,
+      "sha256": "07d915bbe670f4fe8505725868e32a0e17e78033bc170119223999de75fe3a7e"
     },
     {
       "path": "sdk05/core.js",

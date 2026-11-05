@@ -1,1 +1,1 @@
-export * from '../assets/public-index.js';
+export * from '../assets/core-index.js';

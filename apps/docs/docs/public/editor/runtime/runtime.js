@@ -1,1 +1,1 @@
-export * from '../assets/public-runtime.js';
+export * from '../assets/core-runtime.js';
