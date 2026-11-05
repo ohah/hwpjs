@@ -24,6 +24,11 @@ jobs:
           node-version: '24.20.0'
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build core for demo formatting regressions
+        run: |
+          test -f ./tools/build-packages.mjs || exit 1
+          test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
+          bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs
       - name: Test owned observation freeze boundaries
@@ -86,11 +91,6 @@ jobs:
           test -f ./tests/hwpx/demo-fixture-provider-root.test.mjs || exit 1
           test -f ./tools/pages-demo/public-gallery-fixtures.json || exit 1
           node --test --test-concurrency=1 ./tests/hwpx/demo-fixture-provider-root.test.mjs ./tests/hwpx/demo-server-fixture-policy.test.mjs ./tests/hwpx/demo-server-bundle.test.mjs
-      - name: Build core for demo formatting regressions
-        run: |
-          test -f ./tools/build-packages.mjs || exit 1
-          test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
-          bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
       - name: Test selected table object and formatting command regressions
         timeout-minutes: 2
         run: |
