@@ -1,3 +1,4 @@
+import { nativeWasmExpectedSHA256 } from './helpers/native-wasm-pin.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, realpathSync, lstatSync } from 'node:fs';
@@ -41,10 +42,7 @@ function input(name, sha) {
   assert.equal(createHash('sha256').update(bytes).digest('hex'), sha, name + ' SHA');
   return bytes;
 }
-const wasm = input(
-  'HWPJS_TEST_WASM',
-  'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb',
-);
+const wasm = input('HWPJS_TEST_WASM', nativeWasmExpectedSHA256());
 const bytes = input(
   'HWPJS_TEST_NOORI',
   'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f',

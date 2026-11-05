@@ -1,3 +1,4 @@
+import { nativeWasmExpectedSHA256 } from './native-wasm-pin.mjs';
 import {
   assertReplyShape,
   assertHistoryPacket,
@@ -30,10 +31,7 @@ function load(name, sha) {
   assert.equal(createHash('sha256').update(b).digest('hex'), sha, name);
   return b;
 }
-export const wasm = load(
-  'HWPJS_TEST_WASM',
-  'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb',
-);
+export const wasm = load('HWPJS_TEST_WASM', nativeWasmExpectedSHA256());
 export const bytes = new Uint8Array(
   load('HWPJS_TEST_NOORI', 'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f'),
 );
