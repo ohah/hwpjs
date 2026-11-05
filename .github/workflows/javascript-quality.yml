@@ -29,6 +29,11 @@ jobs:
           test -f ./tools/build-packages.mjs || exit 1
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+      - name: Share official Native WASM input pin
+        run: |
+          test -f ./packages/core/dist/build-manifest.json || exit 1
+          HWPJS_TEST_WASM_EXPECTED_SHA256="$(node ./tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)" || exit 1
+          printf 'HWPJS_TEST_WASM_EXPECTED_SHA256=%s\n' "$HWPJS_TEST_WASM_EXPECTED_SHA256" >> "$GITHUB_ENV"
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs
       - name: Test owned observation freeze boundaries
@@ -62,9 +67,6 @@ jobs:
           HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
           HWPJS_TEST_NOORI: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwp
         run: |
-          test -f ./packages/core/dist/build-manifest.json || exit 1
-          HWPJS_TEST_WASM_EXPECTED_SHA256="$(node ./tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)" || exit 1
-          export HWPJS_TEST_WASM_EXPECTED_SHA256
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=50000 \
             ./tools/tests/native-wasm-pin.test.mjs \
             ./tools/tests/hwp5-native-text-reuse.test.mjs \
@@ -258,7 +260,6 @@ jobs:
           test -f ./packages/core/dist/build-manifest.json || exit 1
           export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           test -f "$HWPJS_TEST_WASM" || exit 1
-          export HWPJS_TEST_WASM_EXPECTED_SHA256="$(bun -e 'const m=JSON.parse(await Bun.file("packages/core/dist/build-manifest.json").text());const s=m.files?.["hwpjs.wasm"];if(typeof s!=="string"||!/^[a-f0-9]{64}$/.test(s))throw Error("WasmManifestPinMissing");console.log(s)')"
           export TABLE_FIXTURE_ROOT="$PWD/legacy/rust/crates/hwp-core/tests/fixtures"
           export TABLE_INSERT_OUTPUT="$RUNNER_TEMP/table-insert-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           test ! -e "$TABLE_INSERT_OUTPUT" || exit 1

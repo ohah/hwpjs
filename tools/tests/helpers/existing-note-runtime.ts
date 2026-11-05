@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { nativeWasmExpectedSHA256 } from './native-wasm-pin.mjs';
 import {
   createEditor,
   createParagraphSelection,
@@ -25,7 +26,7 @@ export function guardedRead(path: string) {
 const path = process.env.HWPJS_TEST_WASM;
 if (!path || !isAbsolute(path)) throw Error('ExplicitWasmRequired');
 export const wasmBytes = guardedRead(path);
-assert.equal(sha(wasmBytes), 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb');
+assert.equal(sha(wasmBytes), nativeWasmExpectedSHA256());
 export const wasmModule = await WebAssembly.compile(wasmBytes);
 const fixturePath =
   process.env.HWPJS_TEST_NOTE_FIXTURE ??
