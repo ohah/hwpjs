@@ -65,7 +65,38 @@ fn indexGroup(a: std.mem.Allocator, tree: *const Tree, group: *Group, character:
     if (actual != group.count) return if (character) error.CharacterResourceCountMismatch else error.ParagraphResourceCountMismatch;
     return true;
 }
+// Canonical raw writers enforce the XML limit at every append. Only use the
+// bulk planner when rewriting existing counts cannot shorten the input header.
+// Inspect raw quoted bytes: decoded numeric equality is not enough for this.
+fn canonicalCount(raw: []const u8) bool {
+    if (raw.len < 3) return false;
+    const quote = raw[0];
+    if ((quote != '\'' and quote != '"') or raw[raw.len - 1] != quote) return false;
+    const digits = raw[1 .. raw.len - 1];
+    if (digits.len > 1 and digits[0] == '0') return false;
+    for (digits) |byte| if (byte < '0' or byte > '9') return false;
+    return true;
+}
+fn canonicalCounts(a: std.mem.Allocator, tree: *const Tree) !bool {
+    // Conservatively decline even untouched noncanonical counts. Missing counts
+    // in font groups are inserted by the original writer and only add bytes.
+    for (tree.elements, 0..) |_, node| {
+        for ([_][]const u8{ "itemCnt", "fontCnt" }) |name| {
+            if (try tree.attributeValue(a, node, "", name)) |value| {
+                if (!canonicalCount(value.raw)) return false;
+            }
+        }
+    }
+    return true;
+}
+
 pub fn replacement(a: std.mem.Allocator, source: []const u8, paragraphs: *const paras.Values, characters: *const chars.Values, fonts: *const @import("../model/font_resource_values.zig").Values, limit: usize, stats: *Stats) !?@import("../zip/replace_writer.zig").Replacement {
+    return replacementImpl(a, source, paragraphs, characters, fonts, limit, stats, false);
+}
+pub fn replacementCanonical(a: std.mem.Allocator, source: []const u8, paragraphs: *const paras.Values, characters: *const chars.Values, fonts: *const @import("../model/font_resource_values.zig").Values, limit: usize, stats: *Stats) !?@import("../zip/replace_writer.zig").Replacement {
+    return replacementImpl(a, source, paragraphs, characters, fonts, limit, stats, true);
+}
+fn replacementImpl(a: std.mem.Allocator, source: []const u8, paragraphs: *const paras.Values, characters: *const chars.Values, fonts: *const @import("../model/font_resource_values.zig").Values, limit: usize, stats: *Stats, canonical: bool) !?@import("../zip/replace_writer.zig").Replacement {
     for (paragraphs.entries.items) |intent| if (!basicParagraph(intent)) return null;
     for (characters.entries.items) |intent| if (!basicCharacter(intent.properties)) return null;
     for (fonts.entries.items) |font| if (font.name == null) return null;
@@ -77,6 +108,7 @@ pub fn replacement(a: std.mem.Allocator, source: []const u8, paragraphs: *const 
     var tree = try document.readHeaderTree(a, .{ .tree = .{ .max_xml_bytes = limit } });
     defer tree.deinit(a);
     const entry_index = document.manifest.items[tree.item_index].entry_index orelse return error.ExternalHeaderXml;
+    if (canonical and !try canonicalCounts(a, &tree)) return null;
     var pg: Group = .{};
     defer pg.deinit(a);
     var cg: Group = .{};

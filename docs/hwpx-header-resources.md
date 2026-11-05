@@ -17,3 +17,26 @@
 2026-09-23 당시 검증 실행 결과는 HWPX 전용 Debug·ReleaseFast 각각 47/47, 선택적 corpus 조사 ReleaseFast 22/22, 전체 기본 테스트 2069/2069 통과입니다. 전체 audit는 Debug·ReleaseSafe·ReleaseFast 각각 40/40 단계·2108/2108 테스트가 통과했고, ReleaseSafe 제품 빌드와 비교 검증도 통과했습니다. 이 개수는 현재 전체 테스트 수가 아니며 section 내부 참조 검증 완료로 확대하지 않습니다.
 
 2026-09-27 현재 소스의 `HWPX header resource` 합성 테스트 5개와 실파일 두 표본 검사를 Debug·ReleaseSafe·ReleaseFast에서 통과했습니다. 단독 ReleaseFast corpus 조사는 당시 일곱 그룹 순서로 선언 불일치 `[0,0,0,0,0,0,0]`, 그룹 부재 `[0,0,21,125,442,0,21]`을 다시 확인했습니다. `example.hwpx`의 글자 모양 12·문단 모양 16·스타일 18, borderFill ID 1·2·3과 `noori.hwpx`의 bullet ID 1은 별도 ZIP/XML 조회로도 확인했습니다. 이 일곱 그룹 조사는 여덟 번째 메모 그룹의 corpus 수치를 증명하지 않으며, 그 범위는 위에 연결한 별도 문서가 소유합니다. 전체 audit와 과거 변이 검사는 이번에 다시 실행하지 않았습니다.
+
+
+## 표시 조회용 헤더 합성
+
+위의 읽기 전용 ID 색인 API와 달리, 이 절은 편집 의도를 현재 header에 반영하는 내부 합성 경로를 다룹니다. `header_resource_save.zig`는 기존 `header_batch_resource_save.zig`의 fragment planner를 canonical header 생성에도 재사용합니다. 표시 조회는 저장과 같은 원본·편집 의도에서 임시 헤더를 합성하며 새 지속 캐시·저장 모델·Native ABI를 추가하지 않습니다. 임시 값은 호출 안에서 해제하고 세션 간 보관하지 않습니다.
+
+기존 inventory 검사와 리소스 생성 순서·ID를 유지합니다. `itemCnt`·`fontCnt`는 디코딩 숫자뿐 아니라 원문 어휘가 canonical 표기인지 확인합니다. 비정규 어휘나 미지원 형태는 기존 raw 순차 writer로 돌아갑니다. 개수 표기 변경으로 XML이 짧아질 수 있는 입력을 일괄 조립해 기존 중간 `maxXML` 예산 오류를 없애지 않습니다. planner의 비할당 오류도 기존 writer가 검증·오류 우선순위를 결정하도록 돌아가며 OOM은 그대로 전달합니다. 최종 XML 검사와 raw 경로를 생략하지 않습니다.
+
+### 같은 SDK의 직접 비교
+
+같은 SDK manifest 75e1·진단 코드·입력으로 BD/EDE를 단일 순차 비교했습니다. 13개 헤더 조회의 10 snapshot과 정렬·글꼴 redo 저장본 2개의 raw 바이트가 각각 같았고 기능·history·rollback 검사를 통과했습니다.
+
+| 관측 구간 | BD | EDE |
+| --- | ---: | ---: |
+| 두 대상 일곱 글꼴 적용의 SDK 대기 | 7096ms | 1637ms |
+| 그 요청 안의 Reader display | 6367ms | 880ms |
+| 직후 query의 SDK 대기 | 1697ms | 198ms |
+| 글꼴 redo의 SDK 대기 | 6992ms | 985ms |
+| 글꼴 undo의 SDK 대기 | 296ms | 351ms |
+
+반올림한 단일 샘플이며 display에 포함된 Styles 시간을 중복 합산하지 않습니다. undo는 이 샘플에서 늘었으므로 모든 연산 개선을 주장하지 않습니다. redo의 raw apply 계측 0은 해당 ABI 미계측이며 Native 미실행이 아닙니다. 서로 다른 SDK의 이전 시간과 합산하지 않습니다. 이 결과는 직접 Node SDK 진단이며 실제 Web UI·Canvas 지연·배포 속도·전체 API O(n)의 근거가 아닙니다. 후속 명시 Native6와 pure1은 닫힌 공통 Core479·provider75e1·같은 Noori 입력에서 BD/EDE 각각 39통과·실패/skip0·guard null·drift/잔류 없음으로 완료됐습니다. 같은 39종의 엔진별 실행이며 독립 78종이 아닙니다. 해당 CI 핀 변경이 포함된 HEAD a2ffa의 JavaScript Quality 41973821370 성공은 이 직접 비교와 별도 근거입니다. 전체 Zig5059·case285 완료나 전체 Native 통과로 확대하지 않습니다.
+
+후속 실제 EDE Canvas 대표 글꼴 검증은 [서식 UI 검증 경계](formatting-dialogs.md#헤더-합성-후속-검증의-경계)에 구분해 기록합니다. 이 단일 SDK 비교만으로 전체 UI 평균·전체 선형성·공개 배포 완료를 주장하지 않습니다.

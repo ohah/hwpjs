@@ -8,7 +8,7 @@ pub fn replacementBatch(a: std.mem.Allocator, source: []const u8, values: *const
     const empty_characters: @import("character_resource_values.zig").Values = .{};
     const empty_fonts: @import("../model/font_resource_values.zig").Values = .{};
     if (try @import("header_batch_resource_save.zig").replacement(a, source, values, characters orelse &empty_characters, fonts orelse &empty_fonts, max_bytes, stats)) |result| return result;
-    return replacementWithFonts(a, source, values, characters, fonts, max_bytes);
+    return replacementSequential(a, source, values, characters, fonts, max_bytes);
 }
 pub fn replacement(a: std.mem.Allocator, source: []const u8, values: *const resources.Values, max_bytes: usize) !@import("../zip/replace_writer.zig").Replacement {
     return replacementWithCharacters(a, source, values, null, max_bytes);
@@ -17,6 +17,23 @@ pub fn replacementWithCharacters(a: std.mem.Allocator, source: []const u8, value
     return replacementWithFonts(a, source, values, characters, null, max_bytes);
 }
 pub fn replacementWithFonts(a: std.mem.Allocator, source: []const u8, values: *const resources.Values, characters: ?*const @import("character_resource_values.zig").Values, fonts: ?*const @import("../model/font_resource_values.zig").Values, max_bytes: usize) !@import("../zip/replace_writer.zig").Replacement {
+    // Reuse the existing fragment planner without retaining any session data.
+    // Unsupported profiles and non-allocation planner errors keep the canonical
+    // sequential writer as the authority for validation and error precedence.
+    const empty_characters: @import("character_resource_values.zig").Values = .{};
+    const empty_fonts: @import("../model/font_resource_values.zig").Values = .{};
+    var stats: @import("header_batch_resource_save.zig").Stats = .{};
+    const planned = @import("header_batch_resource_save.zig").replacementCanonical(a, source, values, characters orelse &empty_characters, fonts orelse &empty_fonts, max_bytes, &stats) catch |err| switch (err) {
+        error.OutOfMemory => return err,
+        else => return replacementSequential(a, source, values, characters, fonts, max_bytes),
+    };
+    if (planned) |result| return result;
+    return replacementSequential(a, source, values, characters, fonts, max_bytes);
+}
+
+// Original writer body is retained byte-for-byte. Batch fallback must call this
+// directly so an unsupported batch does not retry the same fragment planner.
+fn replacementSequential(a: std.mem.Allocator, source: []const u8, values: *const resources.Values, characters: ?*const @import("character_resource_values.zig").Values, fonts: ?*const @import("../model/font_resource_values.zig").Values, max_bytes: usize) !@import("../zip/replace_writer.zig").Replacement {
     var document = try @import("package.zig").inspectDocument(a, source, .{});
     defer document.deinit(a);
     var inventory = try document.inspectHeaderResources(a, .{});
@@ -114,4 +131,9 @@ pub fn replacementWithFonts(a: std.mem.Allocator, source: []const u8, values: *c
         tree = next;
     };
     return .{ .entry_index = entry_index, .bytes = try a.dupe(u8, tree.source) };
+}
+
+// Regular synthetic regressions use this module's original fallback as oracle.
+test {
+    _ = @import("header_resource_save_tests.zig").Cases(replacementSequential);
 }

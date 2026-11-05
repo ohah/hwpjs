@@ -1542,3 +1542,8 @@ test {
     _ = @import("formatting_request_scope_tests.zig");
     _ = @import("formatting_count_limit_tests.zig");
 }
+
+// Canonical current-header generation: synthetic budget and fallback regressions.
+test {
+    _ = @import("hwpx/header_resource_save.zig");
+}
