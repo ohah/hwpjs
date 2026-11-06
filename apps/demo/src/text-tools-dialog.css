@@ -19,25 +19,6 @@
 .hwp-dialog-layer[data-role='text-search'] .hwp-dialog-footer:empty {
   display: none;
 }
-.hwp-dialog-layer[data-role='text-search'] .hwp-search-tabs {
-  display: flex;
-  gap: 2px;
-  border-bottom: 1px solid #d6deed;
-  margin: 0 0 8px;
-}
-.hwp-dialog-layer[data-role='text-search'] .hwp-search-tabs button {
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  padding: 4px 12px;
-  color: #667183;
-}
-.hwp-dialog-layer[data-role='text-search'] .hwp-search-tabs button[aria-selected='true'] {
-  color: #1f55a5;
-  border-bottom-color: #2463c4;
-  font-weight: 600;
-}
 .hwp-dialog-layer[data-role='text-search'] .hwp-search-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 80px;

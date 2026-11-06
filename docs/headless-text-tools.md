@@ -20,6 +20,18 @@ clipboard 관측은 검증된 단일 문단 선택의 텍스트·타깃·읽기/
 
 코어 검사는 `packages/core/tests/state/text-tools.test.ts`와 `clipboard-state.test.ts`가 소유합니다. 공개 API만 사용하는 데모의 clipboard 권한 거부·지연 선택 변경은 `apps/demo/tests/clipboard-bridge.test.ts`, 찾기/바꾸기의 중복·닫기·dispose 경합은 `text-tools-bridge.test.ts`가 검사합니다. fake DOM 검사는 실제 Canvas·OS clipboard E2E를 대체하지 않습니다. 브라우저 증거와 배포 상태는 [통합 검증 기록](headless-editor-verification.md)을 따릅니다.
 
+## 2026-11-06 찾기 창의 구성과 Enter
+
+[공개 UI 비교 기준](webhwpctrl-ui-reference.md)에 이어 reviewer가 제공한 공식 찾기·찾아 바꾸기 PNG 두 장을 직접 확인했습니다. 공식은 내부 모드 탭이 없고, 찾기는 다음 찾기→닫기, 찾아 바꾸기는 바꾸기→다음 찾기→모두 바꾸기→닫기 순서입니다. 데모도 내부 탭과 관련 CSS를 제거하고 같은 역할 순서로 배치합니다. 기존 외부 메뉴·단축키의 `setMode`/창 재사용·초안 보존 경로를 유지하며 내부 탭의 방향키 전환은 제거한 정책입니다. 폭422px·모델리스 창·범위 안내는 유지합니다. 실제 변경은 기존 선택에만 적용하므로 버튼 이름은 ‘선택 바꾸기’를 유지합니다. ‘모두 바꾸기’는 항상 비활성이고, title과 `aria-describedby`가 기존 전체 바꾸기 미지원 안내를 가리킵니다. 빈 검색에서는 다음 찾기·선택 바꾸기도 비활성입니다.
+
+두 텍스트 입력란에서 Enter는 다음 찾기를 실행합니다. 바꿀 내용 입력 뒤 Enter로 첫 일치를 찾는 흐름은 [공식 도움말](https://help.hancom.com/hoffice120/ko-KR/Hwp/edit/replace_with.htm)과 대조했습니다. IME 조합 중 Enter와 keyCode229는 가로채지 않고, 빈 쿼리·busy에서는 다음 찾기 버튼과 동일하게 실행하지 않습니다. 입력 포커스·초안·방향을 보존하며 Enter 자체로 교체를 수행하지 않습니다. 공식의 바꾸기 후 자동 다음 검색·전체 바꾸기와 같은 동작을 구현했다는 뜻은 아닙니다.
+
+검증 기준은 `708c4c4ce`입니다. HEAD에서 명시 두 테스트(`text-tools-dialog-density.test.ts`, `shell.test.mjs`)와 직접 상대 import 의존25파일만 임시 경로에 추출했습니다. HEAD22통과, 새 정책 테스트+수정 전 소스20통과·5실패, 후보+HEAD 테스트19통과·3실패, 후보+갱신 테스트25통과입니다. 후보+HEAD의3실패는 삭제한 내부 탭·방향키·CSS 요구이며 shell12개는 모든 집합에서 통과했습니다. 후보의 root 집중 검사 `bun test --no-install ./apps/demo/tests/text-tools-dialog-density.test.ts ./apps/demo/tests/text-tools-bridge.test.ts`는34통과·0실패입니다. 이 집합들을 합산하지 않습니다.
+
+reviewer의 분리된 이전 닫기 버튼 반례는 새 창이 닫히고 focus 콜백이2회 호출되는 실패였습니다. view의 `destroyed` 검사로 모든 자체 click·keydown·input·change 이벤트를 차단하고, 공통 layer는 기존 destroy의 listener 해제를 유지합니다. 닫기뿐 아니라 검색·교체·계속 찾기·두 입력란 Enter/입력·방향 change가 폐기 뒤 콜백이나 refresh를 실행하지 않는 정규 회귀를 추가했습니다. 최초 시각/Enter 후보에 이 회귀를 적용하면1실패, 수명 보정 뒤에는 통과합니다. 실제 bridge 반례도 새 창 유지·focus1회로 바뀌었고 reviewer 원본 실패 파일은 보존합니다.
+
+별도 root의 `text-tools-window.test.ts`·`text-tools-presentation.test.ts`는4통과·10실패였습니다. 현재 트리에서 dialog 소스만 HEAD로 메모리 대체해도 같은10개가 실패했습니다. 전자는 fixture의 classList 누락1개, 후자는 createElementNS 누락9개이며 이 수정의 제품 회귀로 판단하지 않습니다. 해당 fixture나 shell을 수정하지 않았고 이전 동일 재현 로그를 별도로 보존합니다. frozen 후보·SHA·명시 시험 목록·대조 로그는 `zig-out/verification/webhwp-ui-followup-r1/find/FINAL-HANDOFF.json`에 연결합니다. 브라우저 슬롯을 사용하지 않았으며 실제 후보 픽셀·trusted keyboard·OS IME·공식 대비 E2E는 reviewer 검증 전입니다. Native 빌드·전체 테스트·배포·커밋·푸시는 이 담당 범위에 포함하지 않습니다.
+
 ## 좌표 기반 문단 선택
 
 `createParagraphSelection(state, { section, paragraph, startUnit, endUnit?, affinity? })`는 현재 표시 문단의 좌표로 frozen `SelectionTarget` 하나를 만듭니다. `endUnit` 기본은 `startUnit`, affinity 기본은 `forward`이고 단위는 UTF-16입니다. 빈 문단/빈 원본 표셀의 `0..0` caret과 같은 문구를 가진 서로 다른 셀을 텍스트 검색 없이 선택할 수 있습니다. 문단 번호는 현재 snapshot의 `section`/`paragraph` 좌표이며 Native ID를 추정하거나 텍스트로 역검색하지 않습니다.

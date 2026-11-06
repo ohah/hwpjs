@@ -385,9 +385,23 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   const formatbar = el('div', 'hwp-demo-formatbar');
   formatbar.setAttribute('role', 'group');
   formatbar.setAttribute('aria-label', '글자와 문단 서식');
+  const formatGroup = (label: string) => {
+    const group = el('div', 'hwp-demo-format-group');
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', label);
+    formatbar.append(group);
+    return group;
+  };
+  const formatButton = (command: DemoCommand, label: string, icon: ShellIcon) => {
+    const item = commandButton(command, label, icon);
+    item.node.className = 'hwp-demo-format-tool';
+    item.node.children[1].className = 'hwp-demo-sr';
+    return item;
+  };
+  const historyGroup = formatGroup('실행 취소와 다시 실행');
   for (const id of ['undo', 'redo'] as const) {
-    const item = commandButton(id);
-    formatbar.append(item.node, item.description);
+    const item = formatButton(id, labels.get(id)!, id);
+    historyGroup.append(item.node, item.description);
   }
   const language = el('select');
   const fontCommand = commandButton('font-name', '글꼴 선택');
@@ -436,6 +450,8 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     dispatch({ command: 'set-font-size', points });
   });
   formatbar.append(language, font, fontCommand.description, sizeForm);
+  const characterGroup = formatGroup('문자 서식');
+  const alignmentGroup = formatGroup('문단 정렬');
   for (const [id, label] of [
     ['bold', '굵게'],
     ['italic', '기울임'],
@@ -450,8 +466,9 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     ['align-distribute', DEMO_COMMAND_REGISTRY['align-distribute'].label],
     ['align-distribute-space', DEMO_COMMAND_REGISTRY['align-distribute-space'].label],
   ] as const) {
-    const item = commandButton(id, label);
-    formatbar.append(item.node, item.description);
+    const item = formatButton(id, label, id === 'font-name' ? 'character-properties' : id);
+    const group = id.startsWith('align-') ? alignmentGroup : characterGroup;
+    group.append(item.node, item.description);
   }
   const picker = el('div', 'hwp-demo-file-options');
   picker.dataset.role = 'save-options-mount';

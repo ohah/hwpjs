@@ -27,21 +27,17 @@ export function createTextToolsDialog(
       onDismiss: options.onDismiss,
     });
   let replace = options.replace,
-    busy = false;
-  const tabs = doc.createElement('div');
-  tabs.className = 'hwp-search-tabs';
-  tabs.setAttribute('role', 'tablist');
-  tabs.setAttribute('aria-label', '찾기와 바꾸기');
-  const findTab = doc.createElement('button'),
-    replaceTab = doc.createElement('button');
-  findTab.type = replaceTab.type = 'button';
-  findTab.textContent = '찾기';
-  replaceTab.textContent = '바꾸기';
-  findTab.setAttribute('role', 'tab');
-  replaceTab.setAttribute('role', 'tab');
-  findTab.dataset.role = 'search-tab-find';
-  replaceTab.dataset.role = 'search-tab-replace';
-  tabs.append(findTab, replaceTab);
+    busy = false,
+    destroyed = false;
+  const listen = <K extends keyof HTMLElementEventMap>(
+    node: HTMLElement,
+    type: K,
+    handler: (event: HTMLElementEventMap[K]) => void,
+  ) => {
+    node.addEventListener(type, (event) => {
+      if (!destroyed) handler(event);
+    });
+  };
   const grid = doc.createElement('div'),
     fields = doc.createElement('div'),
     actions = doc.createElement('div');
@@ -84,7 +80,7 @@ export function createTextToolsDialog(
     radio.dataset.role = 'search-direction-' + value;
     radio.value = value;
     radio.checked = value === direction;
-    radio.addEventListener('change', () => {
+    listen(radio, 'change', () => {
       if (radio.checked) {
         direction = value;
         for (const other of radios) other.checked = other === radio;
@@ -100,13 +96,16 @@ export function createTextToolsDialog(
     node.type = 'button';
     node.textContent = label;
     node.dataset.role = role;
-    node.addEventListener('click', click);
+    listen(node, 'click', click);
     return node;
   };
   const next = button('다음 찾기', 'find-next', () => options.onFind()),
     continuation = button('계속 찾기', 'continue-search', () => options.onFind(true)),
     apply = button('선택 바꾸기', 'replace-selection', options.onReplace),
+    replaceAll = button('모두 바꾸기', 'replace-all', () => {}),
     close = button('닫기', 'close-text-tool', options.onDismiss);
+  replaceAll.disabled = true;
+  replaceAll.setAttribute('title', '전체 바꾸기는 지원하지 않습니다.');
   continuation.hidden = true;
   const message = doc.createElement('p');
   message.dataset.role = 'search-status';
@@ -115,44 +114,38 @@ export function createTextToolsDialog(
   message.className = 'hwp-search-message';
   message.textContent = '현재 불러온 내용에서 찾습니다.';
   const limit = doc.createElement('p');
+  const limitId = directionName + '-limit';
+  limit.setAttribute('id', limitId);
   limit.className = 'hwp-search-limit';
   limit.textContent =
     '현재 불러온 표시 범위의 텍스트만 검색합니다. 전체 바꾸기는 지원하지 않습니다.';
+  replaceAll.setAttribute('aria-describedby', limitId);
   fields.append(query.wrap, replacement.wrap, directions);
-  actions.append(next, apply, continuation, close);
+  actions.append(apply, next, replaceAll, continuation, close);
   grid.append(fields, actions);
-  layer.body.append(tabs, grid, message, limit);
+  layer.body.append(grid, message, limit);
   const changed = () => options.onChange();
-  query.input.addEventListener('input', changed);
-  replacement.input.addEventListener('input', changed);
-  query.input.addEventListener('keydown', (event) => {
+  listen(query.input, 'input', changed);
+  listen(replacement.input, 'input', changed);
+  const findOnEnter = (event: KeyboardEvent) => {
     if (event.key === 'Enter' && !event.isComposing && event.keyCode !== 229) {
       event.preventDefault();
-      options.onFind();
+      if (!next.disabled) options.onFind();
     }
-  });
-  findTab.addEventListener('click', () => options.onMode(false));
-  replaceTab.addEventListener('click', () => options.onMode(true));
-  tabs.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      event.preventDefault();
-      options.onMode(!replace);
-      (replace ? replaceTab : findTab).focus();
-    }
-  });
+  };
+  listen(query.input, 'keydown', findOnEnter);
+  listen(replacement.input, 'keydown', findOnEnter);
   const refresh = () => {
     replacement.wrap.hidden = !replace;
     apply.hidden = !replace;
+    replaceAll.hidden = !replace;
     layer.setTitle(replace ? '찾아 바꾸기' : '찾기');
-    findTab.setAttribute('aria-selected', String(!replace));
-    replaceTab.setAttribute('aria-selected', String(replace));
-    findTab.tabIndex = replace ? -1 : 0;
-    replaceTab.tabIndex = replace ? 0 : -1;
     for (const node of [query.input, replacement.input, ...radios, next, apply, continuation])
       node.disabled = busy;
     next.disabled = busy || !query.input.value;
+    apply.disabled = busy || !query.input.value;
   };
-  query.input.addEventListener('input', refresh);
+  listen(query.input, 'input', refresh);
   refresh();
   return {
     element: layer.element,
@@ -181,6 +174,7 @@ export function createTextToolsDialog(
       if (label) continuation.textContent = label;
     },
     destroy() {
+      destroyed = true;
       layer.destroy();
     },
   };

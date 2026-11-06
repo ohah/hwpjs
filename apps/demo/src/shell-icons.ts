@@ -6,6 +6,22 @@ const paper: Part = [
   { x: '7', y: '4', width: '18', height: '25', rx: '1', fill: 'var(--hwp-icon-paper, white)' },
 ];
 const icons = {
+  undo: [line('M12 7 5 13l7 6M5 13h13a9 9 0 0 1 9 9')],
+  redo: [line('m20 7 7 6-7 6m7-6H14a9 9 0 0 0-9 9')],
+  bold: [line('M10 5v22h8a6 6 0 0 0 0-12h-8m0-10h7a5 5 0 0 1 0 10')],
+  italic: [line('M14 5h12M6 27h12M21 5 11 27')],
+  underline: [line('M9 5v12a7 7 0 0 0 14 0V5M6 28h20')],
+  strike: [line('M23 8c-2-5-15-5-15 2 0 4 5 5 8 6s8 2 8 6c0 7-14 7-17 2M4 16h24')],
+  'text-color': [
+    line('m8 23 8-19 8 19M11 16h10'),
+    ['rect', { x: '5', y: '27', width: '22', height: '3', fill: 'currentColor', stroke: 'none' }],
+  ],
+  'align-left': [line('M5 6h22M5 12h14M5 18h22M5 24h14')],
+  'align-center': [line('M5 6h22M9 12h14M5 18h22M9 24h14')],
+  'align-right': [line('M5 6h22M13 12h14M5 18h22M13 24h14')],
+  'align-justify': [line('M5 6h22M5 12h22M5 18h22M5 24h14')],
+  'align-distribute': [line('M5 6h22M5 12h22M5 18h22M5 24h22M3 28V2m26 0v26')],
+  'align-distribute-space': [line('M5 6h22M5 12h22M5 18h22M5 24h22M11 10v16m10-16v16')],
   save: [line('M16 4v17m-6-6 6 6 6-6M6 23v5h20v-5')],
   cut: [
     ['circle', { cx: '8', cy: '23', r: '4' }],

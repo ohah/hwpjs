@@ -245,9 +245,41 @@
   align-items: center;
   gap: 5px;
   flex-wrap: wrap;
-  padding: 5px 16px;
-  min-height: 35px;
+  padding: 1px 16px;
+  min-height: 25px;
   border-bottom: 1px solid var(--hwp-line);
+}
+.hwp-demo-format-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+  padding-inline-end: 5px;
+  border-inline-end: 1px solid var(--hwp-line);
+}
+.hwp-demo-format-group:last-child {
+  border-inline-end: 0;
+}
+.hwp-demo-format-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 21px;
+  padding: 0;
+  position: relative;
+}
+.hwp-demo-format-tool .hwp-demo-symbol {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+}
+.hwp-demo-format-tool:focus-visible {
+  outline-offset: -2px;
+}
+.hwp-demo-format-tool:disabled .hwp-demo-symbol {
+  color: #8591a0;
 }
 .hwp-demo-button {
   padding: 4px 7px;

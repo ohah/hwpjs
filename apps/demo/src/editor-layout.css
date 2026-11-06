@@ -41,6 +41,17 @@
 #app .hwp-demo-formatbar > * {
   flex-shrink: 0;
 }
+/* Keep icon groups inside the existing 25px grid row, including its padding/border. */
+#app .hwp-demo-format-group {
+  height: 21px;
+  flex-wrap: nowrap;
+}
+#app .hwp-demo-formatbar [data-role='format-font-picker'] {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 #app .hwp-demo-formatbar .hwp-demo-button {
   padding: 0 6px;
   height: 21px;

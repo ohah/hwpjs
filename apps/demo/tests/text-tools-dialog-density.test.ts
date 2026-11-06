@@ -84,23 +84,47 @@ test('좌우 그룹·모델리스 포커스·상태와 제한 문구를 유지�
     f.view.destroy();
   }
 });
-test('찾기·바꾸기 탭 전환이 초안과 버튼·ARIA 상태를 보존한다', () => {
+test('내부 탭 없이 외부 모드 전환이 제목·초안과 공식 버튼 순서를 보존한다', () => {
   const f = fixture();
   try {
+    assert.equal(
+      all(f.root).some((node) => node.getAttribute('role') === 'tablist'),
+      false,
+    );
+    const actions = () => f.klass('hwp-search-actions').children.filter((node) => !node.hidden);
+    assert.deepEqual(
+      actions().map((node) => node.textContent),
+      ['다음 찾기', '닫기'],
+    );
+    assert.equal(f.role('text-search').getAttribute('aria-label'), '찾기');
     assert.equal(f.role('search-replacement').parentElement?.hidden, true);
     assert.equal(f.role('replace-selection').hidden, true);
-    fire(f.role('search-tab-replace'), 'click');
-    assert.deepEqual(f.modes, [true]);
+    f.view.setMode(true);
+    assert.deepEqual(
+      actions().map((node) => node.textContent),
+      ['선택 바꾸기', '다음 찾기', '모두 바꾸기', '닫기'],
+    );
+    assert.equal(f.role('text-search').getAttribute('aria-label'), '찾아 바꾸기');
     assert.equal(f.role('search-replacement').parentElement?.hidden, false);
     assert.equal(f.role('replace-selection').hidden, false);
-    assert.equal(f.role('search-tab-replace').getAttribute('aria-selected'), 'true');
-    assert.equal(f.role('search-tab-replace').tabIndex, 0);
-    assert.equal(f.role('search-tab-find').tabIndex, -1);
+    const unsupported = f.role('replace-all');
+    assert.equal(unsupported.disabled, true);
+    assert.match(unsupported.getAttribute('title')!, /전체 바꾸기는 지원하지 않습니다/);
+    assert.equal(
+      unsupported.getAttribute('aria-describedby'),
+      f.klass('hwp-search-limit').getAttribute('id'),
+    );
+    fire(unsupported, 'click');
+    assert.equal(f.replaced, 0);
     fire(f.role('replace-selection'), 'click');
     assert.equal(f.replaced, 1);
-    fire(f.role('search-tab-find'), 'click');
+    f.view.setBusy(true);
+    f.view.setBusy(false);
+    assert.equal(unsupported.disabled, true);
+    f.view.setMode(false);
     assert.deepEqual(f.view.getDraft(), { query: '찾기', replacement: '교체', direction: 'down' });
-    assert.equal(f.role('search-tab-find').getAttribute('aria-selected'), 'true');
+    assert.equal(f.role('text-search').getAttribute('aria-label'), '찾기');
+    assert.equal(unsupported.hidden, true);
   } finally {
     f.view.destroy();
   }
@@ -144,16 +168,52 @@ test('Enter는 찾기, IME Enter는 접수하지 않는다', () => {
     f.view.destroy();
   }
 });
-test('탭 방향키·Escape 및 모델리스 Tab 동작을 유지한다', () => {
+test('바꿀 내용 입력 뒤 Enter는 교체 없이 다음 일치를 찾는다', () => {
   const f = fixture();
   try {
-    fire(f.klass('hwp-search-tabs'), 'keydown', { key: 'ArrowRight' });
-    assert.deepEqual(f.modes, [true]);
-    assert.equal(f.doc.activeElement, f.role('search-tab-replace'));
-    fire(f.klass('hwp-search-tabs'), 'keydown', { key: 'ArrowLeft' });
-    assert.deepEqual(f.modes, [true, false]);
-    assert.equal(f.doc.activeElement, f.role('search-tab-find'));
+    f.view.setMode(true);
+    const input = f.role('search-replacement');
+    input.focus();
+    for (const patch of [{ isComposing: true }, { keyCode: 229 }]) {
+      const event = fire(input, 'keydown', { key: 'Enter', ...patch });
+      assert.equal(event.defaultPrevented, false);
+    }
+    assert.deepEqual(f.finds, []);
+    assert.equal(fire(input, 'keydown', { key: 'Enter' }).defaultPrevented, true);
+    assert.deepEqual(f.finds, [false]);
+    assert.equal(f.replaced, 0);
+    assert.equal(f.doc.activeElement, input);
+    assert.deepEqual(f.view.getDraft(), { query: '찾기', replacement: '교체', direction: 'down' });
+  } finally {
+    f.view.destroy();
+  }
+});
+test('두 입력란의 Enter는 빈 검색과 처리 중 검색을 접수하지 않고 복구된다', () => {
+  const f = fixture({ query: '', replacement: '교체', direction: 'up' });
+  try {
+    f.view.setMode(true);
+    const inputs = [f.role('search-query'), f.role('search-replacement')];
+    for (const input of inputs) fire(input, 'keydown', { key: 'Enter' });
+    assert.deepEqual(f.finds, []);
+    f.role('search-query').value = '가';
+    fire(f.role('search-query'), 'input');
+    f.view.setBusy(true);
+    for (const input of inputs) fire(input, 'keydown', { key: 'Enter' });
+    assert.deepEqual(f.finds, []);
+    f.view.setBusy(false);
+    for (const input of inputs) fire(input, 'keydown', { key: 'Enter' });
+    assert.deepEqual(f.finds, [false, false]);
+    assert.equal(f.replaced, 0);
+    assert.equal(f.view.getDraft().direction, 'up');
+  } finally {
+    f.view.destroy();
+  }
+});
+test('내부 모드 탭을 제거해도 Escape 및 모델리스 Tab 동작을 유지한다', () => {
+  const f = fixture();
+  try {
     const dialog = f.role('text-search');
+    assert.equal(f.doc.activeElement, f.role('search-query'));
     assert.equal(fire(dialog, 'keydown', { key: 'Tab' }).defaultPrevented, false);
     fire(dialog, 'keydown', { key: 'Escape', isComposing: true });
     fire(dialog, 'keydown', { key: 'Escape', keyCode: 229 });
@@ -213,6 +273,38 @@ test('조건적 계속 찾기와 상태 변경이 범위 제한 안내를 숨기
     f.view.destroy();
   }
 });
+test('destroy 뒤 분리된 버튼·Enter·입력·방향 이벤트는 모든 콜백과 갱신을 차단한다', () => {
+  const f = fixture();
+  f.view.setMode(true);
+  f.view.continueFromEnd('처음부터 계속 찾기');
+  const nodes = new Map(all(f.root).map((node) => [node.dataset.role, node]));
+  f.view.destroy();
+  for (const role of [
+    'close-text-tool',
+    'find-next',
+    'replace-selection',
+    'continue-search',
+    'dialog-dismiss',
+  ])
+    fire(nodes.get(role)!, 'click');
+  for (const role of ['search-query', 'search-replacement']) {
+    const input = nodes.get(role)!;
+    input.value = '';
+    fire(input, 'input');
+    fire(input, 'keydown', { key: 'Enter' });
+  }
+  const up = nodes.get('search-direction-up')! as unknown as HTMLInputElement;
+  up.checked = true;
+  fire(up, 'change');
+  fire(nodes.get('text-search')!, 'keydown', { key: 'Escape' });
+  assert.equal(f.dismissed, 0);
+  assert.equal(f.changed, 0);
+  assert.equal(f.replaced, 0);
+  assert.deepEqual(f.finds, []);
+  assert.equal(f.view.getDraft().direction, 'down');
+  assert.equal(nodes.get('find-next')!.disabled, false);
+  f.view.destroy();
+});
 const css = readFileSync(new URL('../src/text-tools-dialog.css', import.meta.url), 'utf8');
 const scope = ".hwp-dialog-layer[data-role='text-search']";
 const rules = Array.from(
@@ -250,7 +342,7 @@ test('CSS는 422 폭·80 버튼 열·24 입력·28 제목과 좌측 단일 프�
   assert.equal(rule(scope + ' .hwp-dialog-header').get('height'), '28px');
   assert.equal(rule(scope + ' .hwp-search-fields').get('border'), '1px solid #d4d6da');
   assert.equal(rule(scope + ' .hwp-search-fields fieldset').get('border'), '0');
-  assert.equal(rule(scope + ' .hwp-search-tabs').get('margin'), '0 0 8px');
+  assert.equal(css.includes('.hwp-search-tabs'), false);
 });
 test('입력 focus는 겹친 단일2px이며 다른 키보드 focus도 남는다', () => {
   for (const pseudo of [':focus', ':focus-visible']) {
