@@ -44,6 +44,8 @@ Noori HWP5/HWPX 두 문서의 실제 UI 경로에서 높이 원값12578→12678 
 
 ## 셀 테두리·배경 쓰기의 미지원 경계
 
+아래는 고정 d849 세대의 감사 기록이다. 후속 단일 셀 단색 배경 구현·새 엔진·검증 상태는 [셀 배경 전용 계약](cell-background-editing.md)이 소유한다. 테두리 및 여러 셀 편집의 제한은 계속 별도다.
+
 고정 SDK05/Worker1f2/d849 감사에서는 원본 셀 테두리·배경색 쓰기를 연결하는 Native·wire·공개 target 경로가 없었다. `FormattingPatch`의 문자/문단 배경은 셀 전체 배경이 아니며, 기존 `cell-size`·`table-column-width`나 임의 experimental 요청을 색 쓰기로 확대하지 않는다. 읽기/표시 자원의 존재도 쓰기 지원을 뜻하지 않는다. 이 판정은 source·고정 asset·export 부분집합 감사이며 새 Native 실행이나 UI 성공 증거가 아니다.
 
 최소 후속 단계는 현재 원본 단일 셀의 단색 배경과 명시 cell owner/membership 검증부터다. 공유 BorderFill은 clone-on-write로 새 자원을 만들고 대상 셀 참조만 교체하며, HWP5 DocInfo/LIST_HEADER와 HWPX header/cell 참조는 각 형식의 기존 자원·저장 SSOT가 소유해야 한다. 비대상 공유 자원·미지원 필드 보존, 단일 history batch, undo/redo·실패 원자성 및 독립 CFB/XML 저장·재열기를 먼저 검증해야 한다. 테두리 sparse patch는 그 뒤의 별도 범위다. 이 단계들은 아직 구현하지 않았다.

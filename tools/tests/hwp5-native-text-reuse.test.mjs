@@ -142,7 +142,16 @@ async function session(paragraph = 15, mode = 'registered') {
             );
             assert.equal(Object.hasOwn(state.capabilities, 'changed'), true);
             assert.equal(state.capabilities.changed, true);
-            assert.equal(Reflect.ownKeys(state.capabilities).length, 13);
+            assert.equal(
+              Reflect.ownKeys(state.capabilities).length,
+              Reflect.ownKeys(originalCaps).length + 1,
+            );
+            assert.deepEqual(
+              Reflect.ownKeys(state.capabilities).filter(
+                (key) => !Object.hasOwn(originalCaps, key),
+              ),
+              ['changed'],
+            );
           } else
             assert.equal(state.capabilities, before.capabilities, 'same cap metadata reuses root');
         }

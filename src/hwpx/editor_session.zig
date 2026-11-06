@@ -95,6 +95,7 @@ pub const Session = struct {
     character_resources: @import("character_resource_values.zig").Values = .{},
     font_resources: @import("../model/font_resource_values.zig").Values = .{},
     chart_resources: @import("chart_resource_values.zig").Values = .{},
+    cell_backgrounds: @import("table_cell_background_session.zig").Values = .empty,
 
     pub fn deinit(self: *Session) void {
         if (self.source_fields) |*fields| fields.deinit(self.allocator);
@@ -102,6 +103,7 @@ pub const Session = struct {
         self.character_resources.deinit(self.allocator);
         self.font_resources.deinit(self.allocator);
         self.chart_resources.deinit(self.allocator);
+        self.cell_backgrounds.deinit(self.allocator);
         for (self.sections) |*section| section.deinit(self.allocator);
         self.allocator.free(self.sections);
         self.allocator.free(self.source);
@@ -523,6 +525,17 @@ pub const Session = struct {
     pub fn fieldLabels(self: *const Session, section_index: usize, paragraph: usize) ![]@import("field_label_targets.zig").Target {
         return @import("field_label_targets.zig").list(self, section_index, paragraph, 4096);
     }
+    pub fn setCellBackground(self: *Session, section: usize, table_node: usize, list_node: usize, color: u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("table_cell_background_session.zig").apply(self, section, table_node, list_node, color);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try @import("table_cell_background_session.zig").apply(self, section, table_node, list_node, color);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+
     pub fn setCellSize(self: *Session, section_index: usize, cell_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
         if (!self.history_delta_managed or self.history_transaction_active) return self.setCellSizeHistoryBody(section_index, cell_node, size);
         if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
@@ -777,8 +790,18 @@ pub const Session = struct {
             replacements.deinit(a);
         }
         var xml_bytes: usize = 0;
-        if (self.paragraph_resources.entries.items.len != 0 or self.character_resources.entries.items.len != 0 or self.font_resources.entries.items.len != 0) {
-            const header = if (self.formatting_batch) |context| try @import("header_resource_save.zig").replacementBatch(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes, &context.header_stats) else try @import("header_resource_save.zig").replacementWithFonts(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes);
+        var cell_background_plan: ?@import("table_cell_background_save.zig").CurrentHeader = null;
+        defer if (cell_background_plan) |plan| {
+            a.free(plan.ids);
+            a.free(plan.offsets);
+            a.free(plan.indices);
+        };
+        if (self.paragraph_resources.entries.items.len != 0 or self.character_resources.entries.items.len != 0 or self.font_resources.entries.items.len != 0 or self.cell_backgrounds.items.len != 0) {
+            const header = if (self.cell_backgrounds.items.len != 0) block: {
+                const prepared = try @import("table_cell_background_save.zig").currentHeader(self);
+                cell_background_plan = prepared;
+                break :block prepared.replacement;
+            } else if (self.formatting_batch) |context| try @import("header_resource_save.zig").replacementBatch(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes, &context.header_stats) else try @import("header_resource_save.zig").replacementWithFonts(a, self.source, &self.paragraph_resources, &self.character_resources, &self.font_resources, self.options.max_xml_bytes);
             errdefer a.free(header.bytes);
             try replacements.append(a, header);
             xml_bytes += header.bytes.len;
@@ -798,9 +821,15 @@ pub const Session = struct {
                 defer a.free(base);
                 break :block try @import("table_cell_size_save.zig").write(a, &section.tree, base, section.cell_sizes.items, self.options.max_xml_bytes -| xml_bytes);
             };
-            const dimensions = if (section.picture_dimensions.items.len == 0) sized else block: {
+            const background = if (cell_background_plan) |plan| block: {
+                const indices = plan.forSection(index);
+                if (indices.len == 0) break :block sized;
                 defer a.free(sized);
-                break :block try @import("picture_dimension_save.zig").write(a, &section.tree, sized, section.picture_dimensions.items, self.options.max_xml_bytes -| xml_bytes);
+                break :block try @import("table_cell_background_save.zig").section(a, &section.tree, sized, self.cell_backgrounds.items, plan.ids, indices, index, self.options.max_xml_bytes -| xml_bytes);
+            } else sized;
+            const dimensions = if (section.picture_dimensions.items.len == 0) background else block: {
+                defer a.free(background);
+                break :block try @import("picture_dimension_save.zig").write(a, &section.tree, background, section.picture_dimensions.items, self.options.max_xml_bytes -| xml_bytes);
             };
             const matrices = if (section.picture_matrices.items.len == 0) dimensions else block: {
                 defer a.free(dimensions);

@@ -1,6 +1,7 @@
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { validateAbi } from './abi.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
+import { validateCellBackground } from './cell-background-command.mjs';
 import { decodeCharacterFontMetrics } from './character-font-metrics.mjs';
 import { decodeCharacterEffects } from './character-effects.mjs';
 import { characterEffectArgs, characterEffectMode } from './character-effect-args.mjs';
@@ -461,6 +462,20 @@ export async function createExperimentalHwp5Editor(
         throw new Error('Hwp5TableBindingsAbiUnavailable');
       return decodeTableBindings(
         output(() => wasm.hwp5_edit_table_bindings(u32(section, 'section'))).bytes,
+      );
+    },
+    setCellBackground(input) {
+      check();
+      const value = validateCellBackground(input);
+      if (typeof wasm.hwp5_edit_set_cell_background !== 'function')
+        throw new Error('Hwp5CellBackgroundAbiUnavailable');
+      success(
+        wasm.hwp5_edit_set_cell_background(
+          value.section,
+          value.tableNode,
+          value.listNode,
+          value.color,
+        ),
       );
     },
     setCellSize({ section, listNode, width, height }) {

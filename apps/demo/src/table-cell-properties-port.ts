@@ -250,8 +250,127 @@ export function createTableCellPropertiesPort(
     if (!reason && tableForCapture) tablesByCapture.set(value, tableForCapture);
     return value;
   }
+  /** App-internal single mutation admission; selection authority remains in capture(). */
+  async function applyCapturedMutation(
+    captured: TableCellCapture,
+    build: (current: TableCellCapture) => {
+      message?: Readonly<Record<string, string | number>>;
+      writeReason?: string | null;
+      noOp?: boolean;
+    },
+  ) {
+    let admitted = false,
+      dispatched = false;
+    const writable = () => {
+      assertCurrent(captured);
+      if (captured.state.status !== 'ready') throw Error('EditorNotReady');
+      if ((captured.state.content as { readOnly?: boolean } | null)?.readOnly === true)
+        throw Error('ReadOnlyDocument');
+      if (captured.state.historyRecoveryRequired) throw Error('HistoryRecoveryRequired');
+      assertCurrent(captured);
+    };
+    const planFor = (now: TableCellCapture) => {
+      writable();
+      const plan = build(now);
+      writable();
+      if (plan.writeReason) throw Error(plan.writeReason);
+      return plan;
+    };
+    const freezeMessage = (value: Readonly<Record<string, string | number>> | undefined) => {
+      if (!value) throw Error('InvalidTableCellMutation');
+      const result: Record<string, string | number> = {};
+      for (const key of Reflect.ownKeys(value)) {
+        writable();
+        if (typeof key !== 'string' || key === '__proto__') throw Error('InvalidTableCellMutation');
+        const field = value[key];
+        writable();
+        if (typeof field !== 'string' && (typeof field !== 'number' || !Number.isFinite(field)))
+          throw Error('InvalidTableCellMutation');
+        result[key] = field;
+      }
+      return Object.freeze(result);
+    };
+    try {
+      if (
+        disposed ||
+        pending ||
+        !issued.has(captured) ||
+        consumed.has(captured) ||
+        captured.reason ||
+        !captured.cell
+      )
+        throw Error(
+          disposed ? 'TableCellDisposed' : pending ? 'CellSizePending' : 'InvalidTableCellCapture',
+        );
+      writable();
+      const now = capture();
+      writable();
+      if (now.reason) throw Error(now.reason);
+      if (!sameCapture(captured, now)) throw Error('StaleTableCellSelection');
+      const initial = planFor(now);
+      if (initial.noOp) return { status: 'known-no-op' as const };
+      const message = freezeMessage(initial.message);
+      const fingerprint = JSON.stringify(message);
+      pending = true;
+      admitted = true;
+      await editor.update(() => {});
+      writable();
+      const final = capture();
+      writable();
+      if (!sameCapture(captured, final) || final.reason) throw Error('StaleTableCellSelection');
+      const finalPlan = planFor(final);
+      if (finalPlan.noOp || JSON.stringify(freezeMessage(finalPlan.message)) !== fingerprint)
+        throw Error('StaleTableCellSelection');
+      // Property getters may reenter: validate before reading send/token and again before dispatch.
+      writable();
+      const send = editor.requestExperimental;
+      const requestOptions = Object.freeze({
+        mutation: true,
+        token: Object.freeze({ ...captured.state.token }),
+      });
+      const requestArguments = [message, requestOptions] as const;
+      writable();
+      if (typeof send !== 'function') throw Error('CellMutationApiUnavailable');
+      const lastPlan = planFor(final);
+      if (lastPlan.noOp || JSON.stringify(freezeMessage(lastPlan.message)) !== fingerprint)
+        throw Error('StaleTableCellSelection');
+      writable();
+      dispatched = true;
+      consumed.add(captured);
+      const result: Awaited<ReturnType<typeof editor.requestExperimental>> = await invokeRequest(
+        send,
+        editor,
+        requestArguments,
+      );
+      if (
+        'status' in result &&
+        (result.status === 'rejected-unapplied' || result.status === 'known-no-op')
+      )
+        consumed.delete(captured);
+      return result;
+    } catch (error) {
+      if (dispatched) throw error;
+      return {
+        status: 'rejected-unapplied' as const,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    } finally {
+      if (admitted) pending = false;
+    }
+  }
   return {
     capture,
+    isCurrent(captured: TableCellCapture) {
+      if (!issued.has(captured) || consumed.has(captured)) return false;
+      try {
+        assertCurrent(captured);
+        const now = capture();
+        assertCurrent(captured);
+        return !now.reason && sameCapture(captured, now);
+      } catch {
+        return false;
+      }
+    },
     subscribe: (listener: (state: EditorState) => void) => editor.registerStateListener(listener),
     // 닫힌 창의 표시 경로에는 문단·표 검색이나 서식 조회를 추가하지 않는다.
     presentation() {
@@ -259,100 +378,60 @@ export function createTableCellPropertiesPort(
       const enabled = !disposed && !pending && state.status === 'ready' && !!state.selection;
       return { enabled, reason: enabled ? undefined : '문서의 표 셀을 선택하세요.' };
     },
-    async apply(captured: TableCellCapture, draft: TableCellDraft) {
-      let admitted = false,
-        dispatched = false;
-      try {
-        if (
-          disposed ||
-          pending ||
-          !issued.has(captured) ||
-          consumed.has(captured) ||
-          captured.reason ||
-          !captured.cell
-        )
-          throw Error(
-            disposed
-              ? 'TableCellDisposed'
-              : pending
-                ? 'CellSizePending'
-                : 'InvalidTableCellCapture',
-          );
-        assertCurrent(captured);
-        const now = capture();
-        assertCurrent(captured);
-        if (now.reason || now.writeReason) throw Error(now.reason ?? now.writeReason!);
-        if (!sameCapture(captured, now)) throw Error('StaleTableCellSelection');
+    applyCapturedMutation,
+    apply(captured: TableCellCapture, draft: TableCellDraft) {
+      let message: Record<string, string | number> | undefined;
+      return applyCapturedMutation(captured, (now) => {
+        const caps = now.state.capabilities as { cellSizeAvailable?: boolean };
+        const writeReason =
+          caps?.cellSizeAvailable !== true
+            ? 'CellSizeApiUnavailable'
+            : now.writeReason === 'CellSizePending'
+              ? null
+              : now.writeReason;
+        if (writeReason) return { writeReason };
         if (draft.mode === 'column' && !now.columnAvailable)
-          throw Error(now.columnReason ?? 'CellSizeBatchApiUnavailable');
-        const { width, height } = tableCellDimensions(draft, captured.cell),
-          selected = captured.cell;
-        if (width === selected.width && height === selected.height)
-          return { status: 'known-no-op' as const };
-        pending = true;
-        admitted = true;
-        await editor.update(() => {});
-        if (disposed || editor.getEditorState() !== captured.state)
-          throw Error('StaleTableCellSelection');
-        const final = capture();
-        assertCurrent(captured);
-        if (
-          !sameCapture(captured, final) ||
-          final.reason ||
-          (final.writeReason && final.writeReason !== 'CellSizePending') ||
-          (draft.mode === 'column' && !final.columnAvailable)
-        )
-          throw Error('StaleTableCellSelection');
-        const message =
-          draft.mode === 'column'
-            ? {
-                kind: 'table-column-width',
-                section: selected.section,
-                tableNode: selected.tableNode,
-                listNode: selected.listNode,
-                width,
-                expectedWidth: selected.width,
-                ...(height !== selected.height ? { height, expectedHeight: selected.height } : {}),
-              }
-            : {
-                kind: 'cell-size',
-                section: selected.section,
-                listNode: selected.listNode,
-                width,
-                height,
-              };
-        if (draft.mode === 'column') {
-          const plan = tableColumnWidthPlan(tablesByCapture.get(final), message);
+          return { writeReason: now.columnReason ?? 'CellSizeBatchApiUnavailable' };
+        const selected = captured.cell!;
+        if (!message) {
+          const { width, height } = tableCellDimensions(draft, selected);
+          if (width === selected.width && height === selected.height) return { noOp: true };
+          message =
+            draft.mode === 'column'
+              ? {
+                  kind: 'table-column-width',
+                  section: selected.section,
+                  tableNode: selected.tableNode,
+                  listNode: selected.listNode,
+                  width,
+                  expectedWidth: selected.width,
+                  ...(height !== selected.height
+                    ? { height, expectedHeight: selected.height }
+                    : {}),
+                }
+              : {
+                  kind: 'cell-size',
+                  section: selected.section,
+                  listNode: selected.listNode,
+                  width,
+                  height,
+                };
+        }
+        if (message.kind === 'table-column-width') {
+          const plan = tableColumnWidthPlan(tablesByCapture.get(now), message);
           if (plan.state !== 'planned') throw Error(plan.error);
           encodeCellSizes(plan.cells);
         } else
           encodeCellSizes([
-            { section: selected.section, listNode: selected.listNode, width, height },
+            {
+              section: message.section,
+              listNode: message.listNode,
+              width: message.width,
+              height: message.height,
+            },
           ]);
-        const send = editor.requestExperimental;
-        const requestOptions = { mutation: true, token: captured.state.token };
-        const requestArguments = [message, requestOptions] as const;
-        if (typeof send !== 'function') throw Error('CellSizeApiUnavailable');
-        assertCurrent(captured);
-        // 공식 queue가 이 시점의 명령을 접수한다. 이후 선택 이동은 접수된 이력을 삭제하지 않는다.
-        dispatched = true;
-        consumed.add(captured);
-        const result: Awaited<ReturnType<typeof editor.requestExperimental>> = await invokeRequest(
-          send,
-          editor,
-          requestArguments,
-        );
-        if ('status' in result && result.status === 'rejected-unapplied') consumed.delete(captured);
-        return result;
-      } catch (error) {
-        if (dispatched) throw error;
-        return {
-          status: 'rejected-unapplied' as const,
-          error: error instanceof Error ? error.message : String(error),
-        };
-      } finally {
-        if (admitted) pending = false;
-      }
+        return { message };
+      });
     },
     async restoreSelection(captured: TableCellCapture, result: unknown) {
       const reply = result as any,

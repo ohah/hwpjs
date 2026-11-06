@@ -27,6 +27,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'insert-image': entry('그림', '삽입', true),
   'insert-table': entry('표', '삽입', true),
   'table-cell-properties': entry('표/셀 속성', '표', true),
+  'table-cell-background': entry('셀 배경', '표', true),
   'insert-chart': entry('차트', '삽입', true),
   'insert-footnote': entry('각주', '삽입', true),
   'insert-endnote': entry('미주', '삽입', true),
@@ -203,6 +204,7 @@ const editableContextCommands: readonly ContextCommand[] = Object.freeze([
 const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
   ...editableContextCommands,
   'table-cell-properties',
+  'table-cell-background',
 ]);
 const pictureContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,

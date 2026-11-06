@@ -60,6 +60,7 @@ pub fn readTrees(a: std.mem.Allocator, section: *const Tree, header: *const Tree
 }
 pub fn read(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session, section: usize) !Report {
     if (section >= session.sections.len) return error.InvalidSectionIndex;
+    if (session.cell_backgrounds.items.len != 0) return @import("table_cell_background_save.zig").borderSources(a, session, section);
     // 테두리 편집 intent는 아직 없으므로 보존 중인 header가 단일 원본입니다.
     var document = try @import("package.zig").inspectDocument(a, session.source, .{});
     defer document.deinit(a);

@@ -202,12 +202,14 @@ pub const Checkpoint = struct {
     character_resources: Characters.Values,
     chart_resources: @import("chart_resource_values.zig").Values = .{},
     font_resources: @import("../model/font_resource_values.zig").Values,
+    cell_backgrounds: @import("table_cell_background_session.zig").Values = .empty,
 
     pub fn deinit(self: *Checkpoint) void {
         self.paragraph_resources.deinit(self.allocator);
         self.character_resources.deinit(self.allocator);
         self.chart_resources.deinit(self.allocator);
         self.font_resources.deinit(self.allocator);
+        self.cell_backgrounds.deinit(self.allocator);
         for (self.states) |*state| state.deinit(self.allocator);
         self.allocator.free(self.states);
         self.* = undefined;
@@ -238,6 +240,7 @@ pub const Checkpoint = struct {
         std.mem.swap(Characters.Values, &self.character_resources, &session.character_resources);
         std.mem.swap(@import("chart_resource_values.zig").Values, &self.chart_resources, &session.chart_resources);
         std.mem.swap(@import("../model/font_resource_values.zig").Values, &self.font_resources, &session.font_resources);
+        std.mem.swap(@import("table_cell_background_session.zig").Values, &self.cell_backgrounds, &session.cell_backgrounds);
         for (self.states, session.sections) |*state, *section| {
             std.mem.swap(sites_mod.Sites, &state.sites, &section.sites);
             std.mem.swap(@import("form_checkbox_state_values.zig").Values, &state.checkbox_states, &section.checkbox_states);
@@ -299,6 +302,7 @@ pub fn cloneForRestore(self: *const Checkpoint, session: *const editor.Session, 
     view.character_resources = self.character_resources;
     view.chart_resources = self.chart_resources;
     view.font_resources = self.font_resources;
+    view.cell_backgrounds = self.cell_backgrounds;
     return capture(&view, limit);
 }
 
@@ -313,6 +317,8 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
     errdefer font_resources.deinit(a);
     var chart_resources = try session.chart_resources.clone(a);
     errdefer chart_resources.deinit(a);
+    const background_items = try a.dupe(@import("table_cell_background_session.zig").Entry, session.cell_backgrounds.items);
+    errdefer a.free(background_items);
     const states = try a.alloc(State, session.sections.len);
     var initialized: usize = 0;
     errdefer {
@@ -356,12 +362,13 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
         state.picture_frames = .{ .items = picture_frames, .capacity = picture_frames.len, .pointer_stability = .{} };
         initialized += 1;
     }
-    return .{ .allocator = a, .source_pointer = session.source.ptr, .source_len = session.source.len, .states = states, .max_bytes = max_bytes, .display_resource_generation = session.display_resource_generation, .paragraph_resources = paragraph_resources, .character_resources = character_resources, .font_resources = font_resources, .chart_resources = chart_resources };
+    return .{ .allocator = a, .source_pointer = session.source.ptr, .source_len = session.source.len, .states = states, .max_bytes = max_bytes, .display_resource_generation = session.display_resource_generation, .paragraph_resources = paragraph_resources, .character_resources = character_resources, .font_resources = font_resources, .chart_resources = chart_resources, .cell_backgrounds = .{ .items = background_items, .capacity = background_items.len, .pointer_stability = .{} } };
 }
 
 pub fn size(session: *const editor.Session, limit: usize) !usize {
     var total: usize = 0;
     try add(&total, try session.chart_resources.byteSize(limit), limit);
+    try add(&total, try multiply(session.cell_backgrounds.capacity, @sizeOf(@import("table_cell_background_session.zig").Entry)), limit);
     try add(&total, try multiply(session.paragraph_resources.entries.capacity, @sizeOf(Resources.Entry)), limit);
     try add(&total, try multiply(session.character_resources.entries.capacity, @sizeOf(Characters.Entry)), limit);
     try add(&total, try multiply(session.font_resources.entries.capacity, @sizeOf(@import("../model/font_face_value.zig").Value)), limit);
@@ -697,5 +704,5 @@ pub fn matches(snapshot: *const Checkpoint, session: *const editor.Session, limi
     var live = try capture(session, limit);
     defer live.deinit();
     const eql = @import("../model/history_value_equal.zig").equal;
-    return snapshot.display_resource_generation == live.display_resource_generation and snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and eql(@TypeOf(live.states), snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources);
+    return snapshot.display_resource_generation == live.display_resource_generation and snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and eql(@TypeOf(live.states), snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources) and eql(@TypeOf(live.cell_backgrounds), snapshot.cell_backgrounds, live.cell_backgrounds);
 }

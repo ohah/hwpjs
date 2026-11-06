@@ -16,6 +16,7 @@ import { applyParagraphSplit, paragraphBreakIntent } from './paragraph-split-com
 import { attachHwpxCharts } from './hwpx-chart-content.mjs';
 import { applyChartPointBatchCommand } from './chart-point-batch-command.mjs';
 import { tableColumnWidthPlan } from './table-column-width-plan.mjs';
+import { validateCellBackgroundMessage } from '../../js/cell-background-command.mjs';
 import { hwpxFieldRangeTarget } from './hwpx-field-range-target.mjs';
 import { attachCheckBoxes } from './checkbox-content.mjs';
 import { attachDutmal } from './dutmal-content.mjs';
@@ -2193,6 +2194,17 @@ export function createReaderRuntime({
           kind: 'table-column-width',
           content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
         });
+      } else if (message.kind === 'cell-background') {
+        if (format !== 'hwpx' && format !== 'hwp5')
+          throw new Error('UnsupportedCellBackgroundEditing');
+        if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        const value = validateCellBackgroundMessage(message);
+        editor.setCellBackground(value);
+        applied = true;
+        reply({
+          kind: 'cell-background',
+          content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
+        });
       } else if (message.kind === 'cell-size') {
         if (format !== 'hwpx' && format !== 'hwp5') throw new Error('UnsupportedCellSizeEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
@@ -2258,6 +2270,9 @@ export function createReaderRuntime({
           const cellSizeAvailable = WebAssembly.Module.exports(module).some(
             (entry) => entry.name === 'hwpx_edit_set_cell_size' && entry.kind === 'function',
           );
+          const cellBackgroundAvailable = WebAssembly.Module.exports(module).some(
+            (entry) => entry.name === 'hwpx_edit_set_cell_background' && entry.kind === 'function',
+          );
           const cellSizeBatchAvailable = WebAssembly.Module.exports(module).some(
             (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
           );
@@ -2304,6 +2319,7 @@ export function createReaderRuntime({
             splitQueryAvailable,
             mergeAvailable,
             cellSizeAvailable,
+            cellBackgroundAvailable,
             cellSizeBatchAvailable,
             pictureDimensionsAvailable,
             pictureResizeAvailable,
@@ -2366,6 +2382,9 @@ export function createReaderRuntime({
         const cellSizeAvailable = WebAssembly.Module.exports(module).some(
           (entry) => entry.name === 'hwp5_edit_set_cell_size' && entry.kind === 'function',
         );
+        const cellBackgroundAvailable = WebAssembly.Module.exports(module).some(
+          (entry) => entry.name === 'hwp5_edit_set_cell_background' && entry.kind === 'function',
+        );
         const cellSizeBatchAvailable = WebAssembly.Module.exports(module).some(
           (entry) => entry.name === 'hwp5_edit_set_cell_sizes' && entry.kind === 'function',
         );
@@ -2387,6 +2406,7 @@ export function createReaderRuntime({
           structureAvailable,
           mergeAvailable,
           cellSizeAvailable,
+          cellBackgroundAvailable,
           cellSizeBatchAvailable,
           pictureCurrentSizeAvailable,
           pictureResizeAvailable,

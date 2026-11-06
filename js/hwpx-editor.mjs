@@ -10,6 +10,7 @@ import { decodeTabSources } from './hwpx-tab-sources.mjs';
 import { decodeTabDefinitions } from './hwpx-tab-definitions.mjs';
 import { decodeSectionTabs } from './hwpx-section-tabs.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
+import { validateCellBackground } from './cell-background-command.mjs';
 import { decodeCharacterFontMetrics } from './character-font-metrics.mjs';
 import { createEquationEngine } from './equation-engine.mjs';
 import { decodeEquationStyles } from './hwpx-equation-styles.mjs';
@@ -762,6 +763,21 @@ export async function createHwpxEditor(source) {
       if (typeof wasm.hwpx_edit_set_character_outline !== 'function')
         throw new Error('HwpxCharacterOutlineAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_outline(section, paragraph, startUnit, endUnit, value))
+        throw memory.error();
+    },
+    setCellBackground(input) {
+      ready();
+      const value = validateCellBackground(input);
+      if (typeof wasm.hwpx_edit_set_cell_background !== 'function')
+        throw new Error('HwpxCellBackgroundAbiUnavailable');
+      if (
+        !wasm.hwpx_edit_set_cell_background(
+          value.section,
+          value.tableNode,
+          value.listNode,
+          value.color,
+        )
+      )
         throw memory.error();
     },
     setCellSize({ section, listNode, width, height }) {

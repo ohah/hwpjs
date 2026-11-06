@@ -118,7 +118,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
     ],
   ],
   ['쪽', ['insert-header', 'insert-footer']],
-  ['표', ['insert-table', 'table-cell-properties', 'object-properties']],
+  ['표', ['insert-table', 'table-cell-properties', 'table-cell-background', 'object-properties']],
   ['검토', ['insert-comment']],
   ['도구', ['word-count']],
 ];
@@ -139,6 +139,7 @@ const labels = new Map<DemoCommand, string>([
   ['align-center', '가운데 정렬'],
   ['align-right', '오른쪽 정렬'],
   ['align-justify', '양쪽 정렬'],
+  ['table-cell-background', DEMO_COMMAND_REGISTRY['table-cell-background'].label],
   ['align-distribute', DEMO_COMMAND_REGISTRY['align-distribute'].label],
   ['align-distribute-space', DEMO_COMMAND_REGISTRY['align-distribute-space'].label],
   ['set-font-size', '글자 크기'],

@@ -1,0 +1,23 @@
+.hwp-cell-background-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.hwp-cell-background-body p {
+  margin: 0;
+}
+.hwp-cell-background-body label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.hwp-cell-background-body input[type='text'] {
+  width: 8em;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
+}

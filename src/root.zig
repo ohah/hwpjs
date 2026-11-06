@@ -13,6 +13,7 @@ pub const equation = @import("equation/root.zig");
 pub const model = @import("model/document.zig");
 
 test {
+    _ = @import("cell_background_probe.zig");
     _ = @import("hwp5/body/note_shape_attributes_tests.zig");
     _ = @import("hwpx/ole_outside_margin_domain_tests.zig");
     _ = @import("model/history_budget_tests.zig");

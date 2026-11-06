@@ -952,6 +952,9 @@ fn apply(command: histories.Command) !void {
         .cell_size => {
             _ = try session.setCellSizeForList(command.section, command.list_node, command.cell_size);
         },
+        .cell_background => {
+            _ = try session.setCellBackground(command.section, command.table_node, command.list_node, command.cell_background_color);
+        },
         .picture_dimensions => {
             _ = try session.setPictureDimensions(command.section, command.picture_node, command.picture_dimensions);
         },
@@ -999,6 +1002,11 @@ export fn hwpx_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
     const commands = wire.build(.hwpx, a, ptr[0..length]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_cell_background(section: u32, table_node: u32, list_node: u32, color: u32) u32 {
+    @import("../model/rgb_color.zig").validate(color) catch |err| return fail(err);
+    apply(.{ .kind = .cell_background, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .table_node = table_node, .list_node = list_node, .cell_background_color = color }) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_set_cell_size(section: u32, list_node: u32, width: u32, height: u32) u32 {

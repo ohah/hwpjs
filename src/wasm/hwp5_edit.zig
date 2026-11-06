@@ -683,6 +683,11 @@ export fn hwp5_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_set_cell_background(section: u32, table_node: u32, list_node: u32, color: u32) u32 {
+    @import("../model/rgb_color.zig").validate(color) catch |err| return fail(err);
+    apply(.{ .set_cell_background = .{ .section = section, .table_node = table_node, .list_node = list_node, .color = color } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_set_cell_size(section: u32, list_node: u32, width: u32, height: u32) u32 {
     apply(.{ .set_cell_size = .{ .section = section, .list_node = list_node, .width = width, .height = height } }) catch |err| return fail(err);
     return 1;

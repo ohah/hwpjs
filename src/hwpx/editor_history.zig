@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, cell_background, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -25,6 +25,8 @@ pub const Command = struct {
     paragraph_margins: @import("paragraph_margin_patch.zig").Patch = .{},
     paragraph_spacing: @import("paragraph_spacing_patch.zig").Spacing = .{ .kind = 0, .value = 160 },
     list_node: usize = 0,
+    table_node: usize = 0,
+    cell_background_color: u32 = 0,
     cell_size: @import("table_cell_size_write.zig").Size = .{ .width = 0, .height = 0 },
     picture_node: usize = 0,
     picture_dimensions: @import("picture_dimension_write.zig").Update = .{},
@@ -207,6 +209,10 @@ pub const History = struct {
             .paragraph_format => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidParagraphFormatCommand;
                 break :block try session.setParagraphFormat(command.section, command.paragraph, command.paragraph_shape_id);
+            },
+            .cell_background => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidCellBackgroundCommand;
+                break :block try session.setCellBackground(command.section, command.table_node, command.list_node, command.cell_background_color);
             },
             .cell_size => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidCellSizeCommand;
