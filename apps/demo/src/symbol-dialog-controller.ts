@@ -22,6 +22,8 @@ export function createSymbolDialogController(options: {
     disposed = false,
     pending = false,
     epoch = 0;
+  let recent: string[] = [],
+    recentDocument: EditorState | undefined;
   const close = (restore = false) => {
     const closingView = view,
       closingCapture = captured,
@@ -81,6 +83,11 @@ export function createSymbolDialogController(options: {
     pending = true;
     view.setBusy(true);
     try {
+      // 분절 실패가 이미 반영된 삽입을 재시도 가능한 실패로 바꾸지 않도록 명령 전에 계산한다.
+      const segments = Array.from(
+        new Intl.Segmenter('ko', { granularity: 'grapheme' }).segment(text),
+        (part) => part.segment,
+      );
       const result = await options.port.insert(target, text);
       if (disposed || epoch !== ticket) return;
       if (result.status !== 'committed-with-snapshot' && result.status.startsWith('committed')) {
@@ -101,6 +108,16 @@ export function createSymbolDialogController(options: {
         close(false);
         return;
       }
+      const now = options.port.capture().state;
+      if (
+        !disposed &&
+        epoch === ticket &&
+        now.status === 'ready' &&
+        sameDocument(target.state, now)
+      ) {
+        recent = [...new Set([...segments, ...recent])].slice(0, 16);
+        recentDocument = now;
+      }
       options.onStatus('기호를 넣었습니다.');
       close(true);
     } catch (error) {
@@ -115,6 +132,10 @@ export function createSymbolDialogController(options: {
     }
   };
   const unsubscribe = options.port.subscribe((state) => {
+    if (recentDocument && (state.status !== 'ready' || !sameDocument(recentDocument, state))) {
+      recent = [];
+      recentDocument = undefined;
+    }
     if (!captured) return;
     if (!sameDocument(captured.state, state) || state.status !== 'ready') close(false);
     else if (!pending) view?.setAvailability(reason());
@@ -127,12 +148,20 @@ export function createSymbolDialogController(options: {
         return;
       }
       captured = options.port.capture();
+      if (
+        recentDocument &&
+        (captured.state.status !== 'ready' || !sameDocument(recentDocument, captured.state))
+      ) {
+        recent = [];
+        recentDocument = undefined;
+      }
       if (captured.state.status !== 'ready') {
         options.onStatus('문서를 먼저 열어주세요.');
         captured = undefined;
         return;
       }
       view = createSymbolDialog(options.root, {
+        recent,
         onInsert: (text) => {
           void insert(text);
         },
@@ -146,6 +175,8 @@ export function createSymbolDialogController(options: {
     dispose() {
       if (disposed) return;
       disposed = true;
+      recent = [];
+      recentDocument = undefined;
       unsubscribe();
       close(false);
     },

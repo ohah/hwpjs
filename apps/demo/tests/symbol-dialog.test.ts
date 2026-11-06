@@ -504,3 +504,169 @@ test('문서 교체 뒤 늦은 caret 결과는 상태 알림과 포커스를 남
   expect(f.calls).toBe(1);
   f.controller.dispose();
 });
+
+const recentTexts = (f: ReturnType<typeof fixture>) =>
+  f.role('symbol-recent').children.map((button) => button.textContent);
+test('최근 문자는 성공 뒤 재열기에만 나타나며 조합·ZWJ를 분리하지 않는다', async () => {
+  const f = fixture();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual([]);
+  f.submit('※※e\u0301👩‍💻');
+  expect(recentTexts(f)).toEqual([]);
+  await settle();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual(['※', 'e\u0301', '👩‍💻']);
+  expect(f.role('symbol-text').value).toBe('');
+  f.submit('★※');
+  await settle();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual(['★', '※', 'e\u0301', '👩‍💻']);
+  f.controller.dispose();
+});
+test('최근 목록은 controller별 격리·중복제거·16개 상한을 지킨다', async () => {
+  const f = fixture(),
+    other = fixture();
+  f.controller.open();
+  f.submit('ABCDEFGHIJKLMNOPQRST');
+  await settle();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual(Array.from('ABCDEFGHIJKLMNOP'));
+  other.controller.open();
+  expect(recentTexts(other)).toEqual([]);
+  f.submit('Z');
+  await settle();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual(Array.from('ZABCDEFGHIJKLMNO'));
+  f.controller.dispose();
+  other.controller.dispose();
+});
+test('취소·실패·불확실 commit·stale caret은 최근 성공 목록을 갱신하지 않는다', async () => {
+  const f = fixture();
+  f.controller.open();
+  f.submit('※');
+  await settle();
+  f.controller.open();
+  f.role('symbol-text').value = '취소';
+  fire(f.role('symbol-cancel'), 'click');
+  for (const result of [
+    { status: 'rejected-unapplied', error: 'ProtectedSelection' },
+    { status: 'rejected-unapplied', error: 'StaleSymbolSelection' },
+    { status: 'committed-refresh-required' },
+    { status: 'committed-unsure', error: 'SnapshotUnavailable' },
+    { status: 'committed-with-snapshot', error: 'SnapshotError' },
+    {
+      status: 'committed-with-snapshot',
+      caretRestored: false,
+      caretError: 'StaleSelectionObservation',
+    },
+  ]) {
+    f.execute(async () => result);
+    f.controller.open();
+    f.submit('★');
+    await settle();
+    f.controller.close();
+    f.controller.open();
+    expect(recentTexts(f)).toEqual(['※']);
+    f.controller.close();
+  }
+  f.execute(async () => {
+    throw Error('PortFailure');
+  });
+  f.controller.open();
+  f.submit('★');
+  await settle();
+  f.controller.close();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual(['※']);
+  f.controller.dispose();
+});
+test('닫힌 epoch의 늦은 성공은 최근 목록에 반영하지 않는다', async () => {
+  const f = fixture();
+  let resolve!: (value: any) => void;
+  f.execute(
+    () =>
+      new Promise((r) => {
+        resolve = r;
+      }),
+  );
+  f.controller.open();
+  f.submit('★');
+  f.controller.close();
+  resolve({ status: 'committed-with-snapshot', caretRestored: true });
+  await settle();
+  f.controller.open();
+  expect(recentTexts(f)).toEqual([]);
+  f.controller.dispose();
+});
+test('문서 교체는 닫힌 창의 최근 목록도 파기하고 늦은 이전 문서 성공을 버린다', async () => {
+  for (const silent of [false, true]) {
+    const f = fixture();
+    f.controller.open();
+    f.submit('※');
+    await settle();
+    if (silent) f.updateSilently({ documentId: 'b' });
+    else f.update({ documentId: 'b' });
+    f.controller.open();
+    expect(recentTexts(f)).toEqual([]);
+    let resolve!: (value: any) => void;
+    f.execute(
+      () =>
+        new Promise((r) => {
+          resolve = r;
+        }),
+    );
+    f.submit('★');
+    if (silent) f.updateSilently({ documentId: 'c' });
+    else f.update({ documentId: 'c' });
+    resolve({ status: 'committed-with-snapshot', caretRestored: true });
+    await settle();
+    f.controller.open();
+    expect(recentTexts(f)).toEqual([]);
+    f.controller.dispose();
+  }
+});
+
+test('dispose 뒤 늦은 성공과 문서 세대·ready 이탈은 최근 목록을 남기지 않는다', async () => {
+  for (const delta of [{ generation: 2 }, { status: 'loading' }]) {
+    const f = fixture();
+    f.controller.open();
+    f.submit('※');
+    await settle();
+    f.update(delta);
+    f.update({ status: 'ready' });
+    f.controller.open();
+    expect(recentTexts(f)).toEqual([]);
+    f.controller.dispose();
+  }
+  const f = fixture();
+  let resolve!: (value: any) => void;
+  f.execute(
+    () =>
+      new Promise((r) => {
+        resolve = r;
+      }),
+  );
+  f.controller.open();
+  f.submit('★');
+  f.controller.dispose();
+  resolve({ status: 'committed-with-snapshot', caretRestored: true });
+  await settle();
+  f.controller.open();
+  expect(f.role('symbol-dialog')).toBeUndefined();
+  expect(f.statuses).toEqual([]);
+});
+
+test('이전 창의 분리된 취소 버튼은 재열린 창과 포커스를 건드리지 않는다', () => {
+  const f = fixture();
+  f.controller.open();
+  const oldCancel = f.role('symbol-cancel');
+  fire(oldCancel, 'click');
+  expect(f.focus).toBe(1);
+  f.controller.open();
+  const reopened = f.role('symbol-dialog');
+  fire(oldCancel, 'click');
+  expect(f.role('symbol-dialog') === reopened).toBe(true);
+  expect(f.focus).toBe(1);
+  expect(f.calls).toBe(0);
+  f.controller.dispose();
+});

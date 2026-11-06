@@ -1,11 +1,12 @@
 import { expect, test } from 'bun:test';
 import { createSymbolDialog } from '../src/symbol-dialog-view.ts';
 import { documentFixture, fire, all } from './formatting-dialog-test-dom.ts';
-function setup() {
+function setup(recent?: readonly string[]) {
   const dom = documentFixture(),
     inserts: string[] = [];
   let cancels = 0;
   const view = createSymbolDialog(dom.root as any, {
+    recent,
     onInsert: (text) => {
       inserts.push(text);
     },
@@ -107,5 +108,179 @@ test('대기·readonly·취소 경계는 문서 삽입을 만들지 않는다', 
   fire(f.role('symbol-cancel'), 'click');
   expect(f.inserts).toEqual([]);
   expect(f.cancels).toBe(1);
+  f.view.destroy();
+});
+
+// 행 좌표는 합성한다. 실제 CSS 배치·브라우저 키 활성화 증거가 아니다.
+function navigation() {
+  const f = setup();
+  let columns = 5;
+  const cells = () => f.role('symbol-grid').children;
+  const layout = () => {
+    cells().forEach((cell, index) => {
+      (cell as any).getBoundingClientRect = () => ({ top: Math.floor(index / columns) * 40 });
+    });
+  };
+  layout();
+  return {
+    ...f,
+    cells,
+    layout,
+    resize(value: number) {
+      columns = value;
+    },
+    key(key: string, values: Record<string, unknown> = {}) {
+      return fire(f.doc.activeElement, 'keydown', { key, ...values });
+    },
+  };
+}
+test('격자는 Tab 진입점 하나이며 방향키는 누적·삽입 없이 포커스만 이동한다', () => {
+  const f = navigation(),
+    cells = f.cells();
+  expect(cells.filter((cell) => cell.tabIndex === 0)).toEqual([cells[0]]);
+  cells[0].focus();
+  expect(f.key('ArrowRight').defaultPrevented).toBe(true);
+  expect(f.doc.activeElement).toBe(cells[1]);
+  f.key('ArrowDown');
+  expect(f.doc.activeElement).toBe(cells[6]);
+  f.key('ArrowLeft');
+  f.key('ArrowUp');
+  expect(f.doc.activeElement).toBe(cells[0]);
+  f.key('ArrowLeft');
+  f.key('ArrowUp');
+  expect(f.doc.activeElement).toBe(cells[0]);
+  expect(cells.filter((cell) => cell.tabIndex === 0)).toEqual([cells[0]]);
+  expect(f.role('symbol-text').value).toBe('');
+  expect(f.role('symbol-selected').textContent).toBe('');
+  expect(f.inserts).toEqual([]);
+  f.view.destroy();
+});
+test('Home/End는 현재 행, Ctrl은 전체 범위이며 부분 마지막 행을 벗어나지 않는다', () => {
+  const f = navigation(),
+    cells = f.cells();
+  cells[7].focus();
+  f.key('Home');
+  expect(f.doc.activeElement).toBe(cells[5]);
+  f.key('End');
+  expect(f.doc.activeElement).toBe(cells[9]);
+  f.key('End', { ctrlKey: true });
+  expect(f.doc.activeElement).toBe(cells.at(-1));
+  f.key('ArrowDown');
+  f.key('ArrowRight');
+  expect(f.doc.activeElement).toBe(cells.at(-1));
+  f.key('Home', { ctrlKey: true });
+  expect(f.doc.activeElement).toBe(cells[0]);
+  // 마지막 행보다 앞 행의 마지막 열에서 짧은 마지막 행으로 이동한다.
+  const lastRow = Math.floor((cells.length - 1) / 5) * 5;
+  cells[lastRow - 1].focus();
+  f.key('ArrowDown');
+  expect(f.doc.activeElement).toBe(cells.at(-1));
+  f.view.destroy();
+});
+test('열 수는 폭 변경마다 재관측하고 단일 열·단일 행도 탐색한다', () => {
+  const f = navigation(),
+    cells = f.cells();
+  cells[1].focus();
+  f.resize(3);
+  f.key('ArrowDown');
+  expect(f.doc.activeElement).toBe(cells[4]);
+  f.resize(1);
+  f.key('ArrowDown');
+  expect(f.doc.activeElement).toBe(cells[5]);
+  f.resize(cells.length);
+  f.key('ArrowDown');
+  expect(f.doc.activeElement).toBe(cells[5]);
+  f.key('End');
+  expect(f.doc.activeElement).toBe(cells.at(-1));
+  f.view.destroy();
+});
+test('busy·조합·229·dispose는 탐색을 막고 Tab·Enter·Space는 기본 동작을 보존한다', () => {
+  const f = navigation(),
+    cells = f.cells();
+  cells[0].focus();
+  f.view.setBusy(true);
+  f.key('ArrowRight');
+  expect(f.doc.activeElement).toBe(cells[0]);
+  f.view.setBusy(false);
+  fire(f.role('symbol-dialog'), 'compositionstart');
+  f.key('ArrowRight');
+  expect(f.doc.activeElement).toBe(cells[0]);
+  fire(f.role('symbol-dialog'), 'compositionend');
+  for (const values of [{ isComposing: true }, { keyCode: 229 }]) {
+    f.key('ArrowRight', values);
+    expect(f.doc.activeElement).toBe(cells[0]);
+  }
+  for (const key of ['Tab', 'Enter', ' ']) expect(f.key(key).defaultPrevented).toBe(false);
+  expect(f.key('ArrowRight', { altKey: true }).defaultPrevented).toBe(false);
+  expect(f.key('ArrowRight', { ctrlKey: true }).defaultPrevented).toBe(false);
+  f.key('ArrowRight');
+  expect(f.doc.activeElement).toBe(cells[1]);
+  f.view.destroy();
+  f.key('ArrowRight');
+  expect(f.doc.activeElement).toBe(cells[1]);
+  expect(f.role('symbol-dialog')).toBeUndefined();
+  expect(f.inserts).toEqual([]);
+});
+test('click 진입점과 범주별 초기화를 유지하고 이전 범주 버튼은 무효화한다', () => {
+  const f = navigation(),
+    old = f.cells()[2];
+  fire(old, 'click');
+  expect(f.cells().filter((cell) => cell.tabIndex === 0)).toEqual([old]);
+  const buffer = f.role('symbol-text').value;
+  f.role('symbol-category').value = 'arrows';
+  fire(f.role('symbol-category'), 'change');
+  f.layout();
+  const cells = f.cells();
+  expect(cells.filter((cell) => cell.tabIndex === 0)).toEqual([cells[0]]);
+  cells[0].focus();
+  fire(old, 'keydown', { key: 'ArrowRight' });
+  fire(old, 'click');
+  expect(f.doc.activeElement).toBe(cells[0]);
+  expect(f.role('symbol-text').value).toBe(buffer);
+  f.key('ArrowRight');
+  fire(f.doc.activeElement, 'click');
+  expect(f.role('symbol-text').value).toBe(buffer + cells[1].textContent);
+  expect(f.inserts).toEqual([]);
+  f.view.destroy();
+});
+
+test('최근 버튼도 누적·UTF16 상한·IME·busy·readonly·dispose 검사를 공유한다', () => {
+  const f = setup(['👩‍💻', '※']);
+  const recent = f.role('symbol-recent').children;
+  fire(recent[0], 'click');
+  expect(f.role('symbol-text').value).toBe('👩‍💻');
+  f.view.setBusy(true);
+  fire(recent[1], 'click');
+  expect(f.role('symbol-text').value).toBe('👩‍💻');
+  f.view.setBusy(false);
+  fire(f.role('symbol-dialog'), 'compositionstart');
+  fire(recent[1], 'click');
+  expect(f.role('symbol-text').value).toBe('👩‍💻');
+  fire(f.role('symbol-dialog'), 'compositionend');
+  const input = f.role('symbol-text');
+  input.value = 'a'.repeat(63);
+  fire(input, 'input');
+  fire(recent[0], 'click');
+  expect(input.value.length).toBe(63);
+  expect(f.role('symbol-status').textContent).not.toBe('');
+  fire(recent[1], 'click');
+  expect(input.value).toBe('a'.repeat(63) + '※');
+  f.view.setAvailability('선택이 바뀌었습니다.');
+  fire(f.role('symbol-insert'), 'click');
+  expect(f.inserts).toEqual([]);
+  f.view.destroy();
+  fire(recent[1], 'click');
+  expect(input.value.length).toBe(64);
+});
+
+test('최근 영역은 문자 선택과 같은 열 안에 있고 빈 행과 15개 가시 범주를 구성한다', () => {
+  const f = setup();
+  const recent = f.role('symbol-recent');
+  const section = f.role('symbol-recent-section');
+  expect(section.className).toBe('hwp-symbol-recent');
+  expect(recent.parentElement === section).toBe(true);
+  expect(section.parentElement === f.role('symbol-grid').parentElement).toBe(true);
+  expect(recent.children.length).toBe(0);
+  expect((f.role('symbol-category') as any).size).toBe(15);
   f.view.destroy();
 });

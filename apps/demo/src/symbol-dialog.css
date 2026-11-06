@@ -38,6 +38,14 @@
 .hwp-symbol-characters {
   min-height: 16rem;
 }
+.hwp-symbol-recent {
+  display: grid;
+  min-width: 0;
+  gap: 0.5rem;
+}
+.hwp-symbol-recent .hwp-symbol-grid {
+  min-height: 2.5rem;
+}
 .hwp-symbol-categories select {
   min-width: 0;
   width: 100%;
