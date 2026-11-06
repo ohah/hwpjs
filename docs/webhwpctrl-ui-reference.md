@@ -176,3 +176,11 @@ UI5 마감에서 다음 항목으로 남겼던 상단 파일열기 진입을 공
 저장·재열기는 첫 후보에서 별도로 수행했으며 두 번째 후보에서 반복하지 않았습니다. HWP5는 최초 `LayoutReflowRequired` 거부 뒤 정규 UI의 조판 경고 동의를 거쳐 저장했고 HWPX는 일반 저장을 사용했습니다. 새 파일을 다시 열어 편집 문자열을 찾은 결과이며 전체 조판 동치·모든 필드 무손실 저장의 증명이 아닙니다.
 
 선택 소스는 최종9개이며 두 후보 사이 제품 변경은 설명문의 위치 기준을 지정한 CSS 한 파일입니다. Core·SDK·Worker·WASM은 바꾸지 않았습니다. 공개 후보 manifest는 `84062334de4a16965782807d10b5b51c80a2fad98dea6403d46516c6d34bccea`이며 기존217경로·예제101개를 보존하고219파일로 검증했습니다. 실제 브라우저 원자료와 종료 검증은 위 묶음의 `independent-candidate-r1/` 및 후속 독립 보고서가 소유합니다. 공개 배포·실운영 확인은 이 후보 검증과 별도로 수행합니다.
+
+### main 배포와 운영 확인
+
+제품 소스와 공개 자산은 `dee6af2747205b593d5deabd0a81f4d70189893c`로 main에 푸시했습니다. 해당 [JavaScript Quality](https://github.com/ohah/hwpjs/actions/runs/42152658353)와 [문서 배포](https://github.com/ohah/hwpjs/actions/runs/42152658340)의 quality·build·deploy가 성공했습니다. [공개 Vanilla 데모](https://ohah.github.io/hwpjs/editor/demo/vanilla/)와 사설 서비스의 manifest·HTML·활성 CSS·Worker·WASM, 두 주소 합계10응답을 메인도 독립 대조했습니다. 선택9개 Git blob은 최종 후보와 모두 같았습니다. 공개 자산 검증의220개 파일은 manifest 한 개와219개 payload를 포함하며 예제 수와 다릅니다.
+
+후보 검증용 서버 두 개는 종료하고 잔류 프로세스·포트0을 확인했습니다. 운영 서버와 되돌릴 수 있는 기존 release·실패 원자료는 보존했습니다. 공개·사설 서비스 전환은 같은 검증 바이트를 사용하며 새 SDK·Native·Worker를 빌드하지 않았습니다. 이 검증으로 전체 웹한글 기안기 UI나 조판·고급 기능의 동등성이 완료된 것은 아닙니다.
+
+배포 뒤에도 공개 HWP5·사설 HWPX를 각각375px 화면에서 실제로 열어 찾기·문자 삽입·undo·redo·최근 문자·포커스와 루트 가로 넘침0을 확인했습니다. 실제 로드한 entry JS·preload·CSS·Worker·WASM 응답도 각 manifest 소유 바이트와 일치했습니다. 사설 첫 시도의 UI 준비 전 메뉴 탐색 실패는 원자료로 남겼고, 제한된 UI 준비 대기를 추가한 같은 경로의 성공과 구분합니다. 두 실서비스 사례는 후보의 네 사례나 소스105개에 합산하지 않습니다. 근거는 위 검증 묶음의 `independent-live-smoke/FINAL-LIVE-HANDOFF.json`, `LIVE-HTTP-ASSETS.json`, `CLEANUP.json`이며 마지막 소유 브라우저도 종료·잔류0을 확인했습니다.
