@@ -112,7 +112,7 @@ test('파일열기 추가는 예제 선택·없는 fixture 거부·선택 유지
   assert.deepEqual(h.calls, ['one']);
   h.ui.destroy();
 });
-test('상단 진입·메뉴 진입·공유 설명은 인스턴스별로 존재하며 도구25개를 유지한다', () => {
+test('상단 진입·메뉴 진입·공유 설명은 인스턴스별로 존재하며 기존 도구25개와 새 문서 도구 하나를 유지한다', () => {
   const doc = new Document(),
     roots = [],
     shells = [],
@@ -148,7 +148,10 @@ test('상단 진입·메뉴 진입·공유 설명은 인스턴스별로 존재�
       assert.equal(reason.parentElement.tagName, 'HEADER');
       assert.equal(reason.textContent, '열기 대기');
     }
-    assert.equal(all(root, (n) => n.className === 'hwp-demo-tool').length, 25);
+    const tools = all(root, (n) => n.className === 'hwp-demo-tool');
+    assert.equal(tools.length, 26);
+    assert.equal(tools.filter((n) => n.dataset.command === 'new-document').length, 1);
+    assert.equal(tools.filter((n) => n.dataset.command !== 'new-document').length, 25);
     ids.push(new Set(all(root, (n) => n.id).map((n) => n.id)));
   }
   assert.equal(

@@ -37,6 +37,7 @@ test('기본 순서와 추가 도구 및 장식 SVG 접근성을 보존한다', 
   assert.deepEqual(
     buttons(h.primary).map((n) => n.dataset.command),
     [
+      'new-document',
       'cut',
       'copy',
       'paste',
@@ -61,7 +62,7 @@ test('기본 순서와 추가 도구 및 장식 SVG 접근성을 보존한다', 
       'replace',
     ],
   );
-  assert.equal(h.primary.children.length, 8);
+  assert.equal(h.primary.children.length, 9);
   assert.ok(
     h.primary.children.every(
       (n) => n.getAttribute('role') === 'group' && n.getAttribute('aria-label'),
@@ -110,7 +111,8 @@ test('추가 도구의 판정·실행·닫기·키보드 복귀와 기존 메뉴
   fire(menu, 'toggle');
   assert.equal(h.extra.open, false);
   assert.equal(h.extra.contains(all(h.root, (n) => n.className === 'hwp-demo-support')[0]), false);
-  const cut = buttons(h.primary)[0];
+  const cut = buttons(h.primary).find((n) => n.dataset.command === 'cut');
+  assert.ok(cut);
   assert.equal(fire(cut, 'pointerdown', { button: 0 }).defaultPrevented, true);
   assert.equal(fire(cut, 'pointerdown', { button: 1 }).defaultPrevented, false);
   h.shell.destroy();
