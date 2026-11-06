@@ -241,6 +241,8 @@
   text-align: left;
 }
 .hwp-demo-formatbar {
+  /* Keep absolute command descriptions inside this horizontal scroll owner. */
+  position: relative;
   display: flex;
   align-items: center;
   gap: 5px;
@@ -250,6 +252,7 @@
   border-bottom: 1px solid var(--hwp-line);
 }
 .hwp-demo-format-group {
+  position: relative;
   display: flex;
   align-items: center;
   flex-wrap: wrap;

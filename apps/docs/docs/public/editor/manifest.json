@@ -151,7 +151,7 @@
     ]
   },
   "verification": {
-    "scope": "최종선택44 공개101 앱 overlay와 별도 동결SDK 재사용 정적검증;배포는main후속"
+    "scope": "pinned708 plus selected9 UI-only Vite once; shipped runtime unchanged; candidate only, browser and deploy pending"
   },
   "files": [
     {
@@ -353,6 +353,11 @@
       "path": "assets/index-B4N-x2Kw.js",
       "bytes": 463349,
       "sha256": "f6cd66839f85d464ede2d0d0f67b8d6b11483dedc1a72074b1e8100347bfeee0"
+    },
+    {
+      "path": "assets/index-BmwC67MQ.css",
+      "bytes": 25684,
+      "sha256": "84682eaf6370ce0698a0d1281291d2694e70b7eba23fcb2153688504dd1ce537"
     },
     {
       "path": "assets/index-C-kVoeEm.js",
@@ -625,6 +630,11 @@
       "sha256": "f96decbe01917d9b6771aa0b075f6409f95f9e60dd11b8b1951a54759629dbd5"
     },
     {
+      "path": "assets/ui-public-ba409b225fc22e34.js",
+      "bytes": 504808,
+      "sha256": "ba409b225fc22e34011f565497d7d1bdd41f21c999dfa942d502100b8f0bf165"
+    },
+    {
       "path": "assets/vanilla-B93FfkT3.js",
       "bytes": 60,
       "sha256": "1444563a855b11aa6563dedd5b3ec4bf7043826ac5c4295cbc2ad87454a48a85"
@@ -636,23 +646,23 @@
     },
     {
       "path": "demo/headless/index.html",
-      "bytes": 491,
-      "sha256": "d98b673c05023276c0ee2bfad045430dc31039b026cff81814243f904c2abf78"
+      "bytes": 503,
+      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
     },
     {
       "path": "demo/react/index.html",
-      "bytes": 491,
-      "sha256": "d98b673c05023276c0ee2bfad045430dc31039b026cff81814243f904c2abf78"
+      "bytes": 503,
+      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
     },
     {
       "path": "demo/svelte/index.html",
-      "bytes": 491,
-      "sha256": "d98b673c05023276c0ee2bfad045430dc31039b026cff81814243f904c2abf78"
+      "bytes": 503,
+      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
     },
     {
       "path": "demo/vanilla/index.html",
-      "bytes": 491,
-      "sha256": "d98b673c05023276c0ee2bfad045430dc31039b026cff81814243f904c2abf78"
+      "bytes": 503,
+      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
     },
     {
       "path": "fixture-catalog.json",
@@ -1171,8 +1181,8 @@
     },
     {
       "path": "index.html",
-      "bytes": 479,
-      "sha256": "54b35d2548affb227cbf7a48042f6e74ec3fc130014f4ad154b11793e1c13bb2"
+      "bytes": 491,
+      "sha256": "a25218ca6d028ae9418d79b02ca47af085c21e731b1cfeeca342718363f93225"
     },
     {
       "path": "runtime/index.js",
