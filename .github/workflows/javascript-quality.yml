@@ -24,11 +24,12 @@ jobs:
           node-version: '24.20.0'
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
-      - name: Build core for demo formatting regressions
+      - name: Build core and vanilla for demo source regressions
         run: |
           test -f ./tools/build-packages.mjs || exit 1
           test -f ./apps/docs/docs/public/editor/hwpjs/hwpjs.wasm || exit 1
           bun ./tools/build-packages.mjs --package=core --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+          bun ./tools/build-packages.mjs --package=vanilla --web --wasm="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
       - name: Test caret formatting and terminal focus source regressions
         timeout-minutes: 2
         run: |
