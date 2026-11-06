@@ -10,6 +10,8 @@ HWPX load 직후 enable의 표시 재사용·폐기·소유권과 실측은 [최
 
 문자표의 선택·단일 삽입·커서 복원과 검증 한계는 [기호 삽입](symbol-insertion.md)을 따릅니다.
 
+2026-11-06 선택 정정: 표 삽입과 문자·문단 원자 patch 및 조회 API는 현재 public 소스와 활성 공개 Core JS에 있습니다. 아래 부분 지원 표기는 UI 연결·타깃·capability 경계를 뜻하며 Native 전 필드의 known/쓰기·저장 완료를 뜻하지 않습니다. 로컬 dist와 활성 Core/Worker/EDE의 세대 및 검증 범위는 [웹한글 차이 감사](webhwp-gap-audit.md)를 따릅니다.
+
 ## 기준과 책임
 
 사용자 목표는 DOM 없이 문서를 읽고 편집·저장할 수 있는 API와 이를 사용하는 데모다. 공식 HwpCtrl 문서는 필요한 사용자 작업을 찾는 기준이며, ActiveX/기존 WebHwpCtrl의 이름·좌표·ParameterSet·UI를 동일 구현한다는 계약은 아니다. 레거시 호환 facade는 이후 선택 사항이다. HWP5/HWPX가 대상이며 HWP3는 범위 밖이다.
@@ -50,7 +52,7 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 | 필드 조회·이동 | FieldExist, GetCurFieldName, GetFieldList, GetFieldText, MoveToField | `js/hwpx-editor.mjs`의 `fieldLabels`, `fieldRangeTarget`; HWP5 field source 모듈 | 엔진/저수준만. 필드 ID/이름/중복명/현재 위치의 typed public 조회·선택 계약 필요 |
 | 필드 생성·수정 | CreateField, PutFieldText, RenameField, SetCurFieldName, ModifyFieldProperties | 기존 field/formula/form transport와 저수준 편집 기능은 존재 | 부분 저수준 기반, 전용 public 필드 명령 미제공. 임의 필드 생성/이름 변경 지원을 이 근거로 주장하지 않음 |
 | 표·셀 주소 | GetTableCellAddr | 선택 owner와 snapshot을 소비하는 셀 내부 텍스트/서식 경로 | 부분. 일반 텍스트 명령의 지원되는 CELL 타깃과 typed 셀 주소 API는 별개 |
-| 개체 삽입/삭제 | InsertCtrl, DeleteCtrl | 내부 `insert-table`, 폼·수식·차트 등 개별 transport/저수준 모듈 | 엔진/저수준만(일부). 일반 개체 생성/삭제·컨트롤 tree public 계약 없음 |
+| 개체 삽입/삭제 | InsertCtrl, DeleteCtrl | `INSERT_TABLE_COMMAND`의 body caret 표 삽입; 폼·수식·차트 등은 개별 transport/저수준 모듈 | 부분. 표 삽입은 public 명령과 데모 연결이 있음. 일반 개체 생성/삭제·컨트롤 tree public 계약은 별개 |
 | 그림·배경 | InsertPicture, InsertBackgroundPicture | picture bytes 조회와 resize/geometry 저수준 경로 | 부분 저수준 기반. 이미지 삽입 public 명령이나 배경 그림 지원 완료가 아님 |
 | 페이지 이미지·인쇄 | CreatePageImage, CreatePageImageEx, PrintDocument | core에는 전용 메서드 없음. Canvas surface/미리보기는 adapter/web 계층 | public 미제공 + host 책임. Canvas 표시를 완전 조판·페이지 export 증거로 쓰지 않음 |
 | 개요·메타데이터 | GetHeadingString, GetMetaTag, GetMetaTagAll, SetMetaTag | 범용 typed public 대응 없음 | public 미제공. raw snapshot 값이 있더라도 공통 스키마 계약은 별도 필요 |
@@ -65,12 +67,12 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 | --- | --- | --- |
 | 텍스트 삽입·삭제·교체 | `SPLICE_TEXT_COMMAND`, `SpliceTextPayload.target/text/selectionVersion` | public 구현. 보호 필드/개체·clipped/unknown owner·stale selection은 실제 타깃 검증 결과를 따름 |
 | 실행 취소·다시 실행 | `UNDO_COMMAND`, `REDO_COMMAND`, `editor.undo/redo`, `getHistoryAvailability` | public 구현. Native 이력이 SSOT; 새 command handler가 외부에서 처리했다는 사실만으로 Native 편집 완료가 되지는 않음 |
-| 문자 서식 | `SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic, `SET_CHARACTER_UNDERLINE_COMMAND`, `SET_CHARACTER_STRIKE_COMMAND`, `SET_CHARACTER_TEXT_COLOR_COMMAND`, `SET_CHARACTER_FONT_NAME_COMMAND`; `getSelectionFormatting` | 부분. 취소선과 `#RRGGBB` 글자색의 typed 명령·선택 조회가 소스에 있다. 글자색은 유효한 원본 바인딩·비어 있지 않은 편집 가능 선택·capability를 검증하며 RGB 변환은 Native 정책을 따른다. 독립 글자색 창은 소스에 연결되어 있으며 검증·게시 범위는 [대화상자 범위](formatting-dialogs.md)를 따름. 언어별 글꼴 이름의 typed 명령·선택 조회 경계는 [글꼴 이름 계약](headless-font-name.md)을 따른다. 글꼴의 모든 속성·음영·모든 효과의 공개 완료를 뜻하지 않음 |
-| 문단 서식·구조 | `SET_PARAGRAPH_ALIGNMENT_COMMAND`; split/merge/spacing/margins는 내부 transport에 존재 | 부분. 일반 문단 구조 및 전체 문단 속성 typed public 명령 필요 |
+| 문자 서식 | `SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic, `SET_CHARACTER_UNDERLINE_COMMAND`, `SET_CHARACTER_STRIKE_COMMAND`, `SET_CHARACTER_TEXT_COLOR_COMMAND`, `SET_CHARACTER_FONT_NAME_COMMAND`; `APPLY_FORMATTING_PATCH_COMMAND`의 확장 문자 속성; `getSelectionFormatting`, `getFormattingCapabilities`, `queryFormatting` | 부분. 취소선과 `#RRGGBB` 글자색의 typed 명령·선택 조회가 소스에 있다. 글자색은 유효한 원본 바인딩·비어 있지 않은 편집 가능 선택·capability를 검증하며 RGB 변환은 Native 정책을 따른다. 독립 글자색 창은 소스에 연결되어 있으며 검증·게시 범위는 [대화상자 범위](formatting-dialogs.md)를 따름. 언어별 글꼴 이름의 typed 명령·선택 조회 경계는 [글꼴 이름 계약](headless-font-name.md)을 따른다. 확장 글자 모양 UI와 typed patch가 있으며 필드별 capability·조회 writable 검사를 따름. Native 모든 필드·타깃의 적용·저장 완료를 뜻하지 않음 |
+| 문단 서식·구조 | `SET_PARAGRAPH_ALIGNMENT_COMMAND`; `APPLY_FORMATTING_PATCH_COMMAND`의 alignment/margins/spacing/grid/borderConnect/border/background; `getFormattingCapabilities`, `queryFormatting` | 부분. 문단 모양 UI와 typed patch는 연결되어 있으며 필드별 capability·조회 writable 검사를 따름. 문단 split/merge의 전용 typed 계약과 전체 문단 속성 지원은 별개 |
 | 찾기·바꾸기·통계 | 위 pure text helper + `setSelection`/splice 조합 | 부분. literal 순방향/역방향 match, 선택적 wraparound, 현재 snapshot 범위. 정규식·전체 replace transaction·한글의 통계 정의 동등성은 없음 |
 | clipboard | `getSelectionClipboard`가 plain text/target/copyReason/editReason/stateVersion 반환 | 부분. OS 권한·read/write·paste form은 host, rich clipboard/object 복사는 미제공. 비동기 결과는 selectionVersion/token을 다시 검증 |
 | 양식·수식 | checkbox/radio/form-text/formula 등 내부 mutation 분류와 저수준 API | 엔진/저수준만. typed 조회/권한/명령/이력 계약을 기능별 공개해야 함 |
-| 표 구조·배치 | insert-table/cell-size/table-column-width 등 내부 경로 | 엔진/저수준만. 셀 내 문자·정렬 public 기능이 표 생성/행열 조작 public 지원을 뜻하지 않음 |
+| 표 구조·배치 | `INSERT_TABLE_COMMAND`와 데모 표 삽입 창; cell-size/table-column-width는 requestExperimental 경로 | 부분. 표 생성은 body caret·원본 바인딩·생성 resource/capability 검사를 따름. 원본 셀 크기 UI도 연결되어 있으나 전용 typed 셀 크기·기존 표 행열 조작 public 명령과 생성 셀의 일반 편집은 별개 |
 | media objects | 그림/차트/수식/도형의 개별 source/query/edit 경로, 제한된 미리보기 | 엔진/저수준만(일부). OLE 표시/실행·개체 전체 편집·삽입을 한 번에 지원한다고 쓰지 않음 |
 | 페이지·layout | state의 content/capabilities 관측, 제한된 resource query 및 host surface | 부분. 표준 typed page/layout model·완전한 재조판·PDF/bitmap export API는 미제공 |
 | 변경·오류 이벤트 | `registerStateListener`, `registerUpdateListener`, `registerErrorListener`, 생성 시 `onError`; 해제 함수 | public 구현. 공식 HwpCtrl 이벤트와 이름/발생 순서가 같은 호환 계약은 이번 문서에서 확인하지 않음 |
@@ -106,8 +108,8 @@ public SSOT는 [index.ts](../packages/core/src/index.ts), [create-editor.ts](../
 | 다음 명령군 | 필요한 public 계약 | 실물 검증 경계 |
 | --- | --- | --- |
 | 필드·양식 | typed field inventory/identity/선택·값 변경, 중복명/수식/보호/폼별 capability; 읽기와 변경 분리 | HWP5/HWPX 실제 필드·빈 필드·복수 필드·current/source 혼합. 원본 보호·dirty/continuation·필드 외부 문자 보존 |
-| 표·셀 구조 | typed table/cell target, 생성·행열/크기 변경의 명시적 지원 범위 | noori 등 실제 표 + 중첩/병합/새 생성 셀. 셀 외부·이력·저장/재열기 보존 |
-| 문자/문단 확장·구조 | 글꼴, 문단 split/join 등 기존 경로의 typed 승격과 문자·문단 속성의 원자 통합 적용 확장 | 실제 혼합 서식·title/field/zero site·보호 구간. source+command 독립 XML/CFB 기대값 |
+| 표·셀 구조 | 기존 `INSERT_TABLE_COMMAND` 이후의 typed cell/행열·크기 변경 계약과 명시적 지원 범위 | noori 등 실제 표 + 중첩/병합/새 생성 셀. 셀 외부·이력·저장/재열기 보존 |
+| 문자/문단 확장·구조 | 기존 문자·문단 `APPLY_FORMATTING_PATCH_COMMAND`/조회 API의 타깃·필드 확장과 문단 split/join의 typed 승격 | 실제 혼합 서식·title/field/zero site·보호 구간. source+command 독립 XML/CFB 기대값 |
 | 개체·media | typed object identity/resource bytes/개별 편집; 그림·차트·수식부터 기능별 공개 | 원본 관계/BinData·개체 외 XML/ZIP·배치 보존. OLE presentation 표시와 active OLE 실행은 분리하며 자동 실행하지 않음 |
 | 문서 텍스트·layout/export | complete/partial 명시 텍스트 순회, typed 페이지 관측, 형식별 export capability | 긴/windowed 문서의 누락 검출. 페이지 수·이미지·인쇄는 동일 원본의 실제 조판 증거와 연결 |
 | 문서 관리·메타·facade | 재사용 clear/new 문서, 명시적 메타 schema; 필요할 때만 HwpCtrl facade | 취소/실패 시 기존 문서 유지, 리소스 해제·형식 보존. facade 부재를 core 편집 불가능과 혼동하지 않음 |
