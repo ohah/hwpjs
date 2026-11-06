@@ -77,6 +77,7 @@ export const SURFACE_MUTATION_KINDS = Object.freeze([
   'table-column-width',
   'cell-size',
   'cell-background',
+  'cell-border',
 ] as const);
 export const SURFACE_VIEW_KINDS = Object.freeze(['enable', 'set-edit-window'] as const);
 const reads = new Set<string>(SURFACE_READ_KINDS);

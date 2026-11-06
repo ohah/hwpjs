@@ -1,0 +1,34 @@
+.hwp-cell-border-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.hwp-cell-border-body p {
+  margin: 0;
+}
+.hwp-cell-border-body label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.hwp-cell-border-body input[type='text'] {
+  width: 8em;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: inherit;
+}
+
+.hwp-cell-border-body fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0;
+}
+.hwp-cell-border-body select {
+  max-width: 100%;
+  font: inherit;
+}

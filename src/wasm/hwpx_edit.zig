@@ -952,6 +952,9 @@ fn apply(command: histories.Command) !void {
         .cell_size => {
             _ = try session.setCellSizeForList(command.section, command.list_node, command.cell_size);
         },
+        .cell_border => {
+            _ = try session.setCellBorder(command.section, command.table_node, command.list_node, command.cell_border_edges, command.cell_border_style, command.cell_border_width, command.cell_border_color);
+        },
         .cell_background => {
             _ = try session.setCellBackground(command.section, command.table_node, command.list_node, command.cell_background_color);
         },
@@ -1002,6 +1005,11 @@ export fn hwpx_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
     const commands = wire.build(.hwpx, a, ptr[0..length]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_cell_border(section: u32, table_node: u32, list_node: u32, edges: u32, style: u32, width: u32, color: u32) u32 {
+    const value = @import("cell_border.zig").parse(edges, style, width, color) catch |err| return fail(err);
+    apply(.{ .kind = .cell_border, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .table_node = table_node, .cell_border_edges = value.edges, .cell_border_style = value.style, .cell_border_width = value.width, .cell_border_color = value.color, .list_node = list_node }) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_set_cell_background(section: u32, table_node: u32, list_node: u32, color: u32) u32 {

@@ -536,6 +536,17 @@ pub const Session = struct {
         return changed;
     }
 
+    pub fn setCellBorder(self: *Session, section: usize, table_node: usize, list_node: usize, edges: u8, style: @import("../model/border_fill_patch.zig").Style, width: u16, color: u32) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("table_cell_border_session.zig").apply(self, section, table_node, list_node, edges, style, width, color);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try @import("table_cell_border_session.zig").apply(self, section, table_node, list_node, edges, style, width, color);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+
     pub fn setCellSize(self: *Session, section_index: usize, cell_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {
         if (!self.history_delta_managed or self.history_transaction_active) return self.setCellSizeHistoryBody(section_index, cell_node, size);
         if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;

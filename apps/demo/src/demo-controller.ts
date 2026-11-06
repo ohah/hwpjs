@@ -29,6 +29,7 @@ import { createTableInsertTool } from './table-insert-tool.ts';
 import { createObjectPropertiesTool } from './object-properties-tool.ts';
 import { createTableCellPropertiesTool } from './table-cell-properties-tool.ts';
 import { createTableCellBackgroundTool } from './table-cell-background-tool.ts';
+import { createTableCellBorderTool } from './table-cell-border-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions } from './command-support.ts';
 import { mountDemoContextMenu, contextTarget, type ContextPicture } from './context-menu.ts';
@@ -209,6 +210,16 @@ export async function mountDemo(
     },
     onPresentationChange: () => shell.update(),
   });
+  const tableCellBorder = createTableCellBorderTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    onStatus: note,
+    onClose: () => {
+      host?.focus?.();
+    },
+    onPresentationChange: () => shell.update(),
+  });
   const tableInsert = createTableInsertTool({
     root,
     editor,
@@ -273,6 +284,7 @@ export async function mountDemo(
       'object-properties': objectProperties.presentation(),
       'table-cell-properties': tableCellProperties.presentation(),
       'table-cell-background': tableCellBackground.presentation(),
+      'table-cell-border': tableCellBorder.presentation(),
       'insert-symbol': {
         enabled: ready && !!state.selection,
         reason: !ready
@@ -398,6 +410,10 @@ export async function mountDemo(
     }
     if (action.command === 'table-cell-background') {
       tableCellBackground.open();
+      return;
+    }
+    if (action.command === 'table-cell-border') {
+      tableCellBorder.open();
       return;
     }
     if (action.command === 'insert-table') {
@@ -577,6 +593,7 @@ export async function mountDemo(
     symbols.dispose();
     tableCellProperties.dispose();
     tableCellBackground.dispose();
+    tableCellBorder.dispose();
     tableInsert.dispose();
     objectProperties.dispose();
     paragraphShape.dispose();
@@ -616,6 +633,7 @@ export async function mountDemo(
       symbols.dispose();
       tableCellProperties.dispose();
       tableCellBackground.dispose();
+      tableCellBorder.dispose();
       tableInsert.dispose();
       objectProperties.dispose();
       paragraphShape.dispose();

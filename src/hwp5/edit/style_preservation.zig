@@ -30,6 +30,7 @@ pub const Command = union(enum) {
     merge_paragraph: @import("merge_session.zig").Merge,
     set_cell_size: @import("table_cell_size_values.zig").Edit,
     set_cell_background: @import("cell_background_values.zig").Edit,
+    set_cell_border: @import("cell_border_values.zig").Edit,
     set_picture_current_size: @import("picture_current_size_values.zig").Edit,
     resize_picture: @import("picture_resize_values.zig").Edit,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
@@ -1455,12 +1456,19 @@ pub const Session = opaque {
                 }
                 try @import("formula_definition.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount(), max_stream);
             },
+            .set_cell_border => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                const original = try self.originalInfo();
+                defer if (original.owned) state.allocator.free(original.bytes);
+                try state.cell_backgrounds.applyBorder(state.allocator, state.decoded[edit.section], state.source.header.version(), state.document.sections[edit.section], original.bytes, edit, max_stream);
+            },
             .set_cell_background => |edit| {
                 const state = self.getState();
                 if (edit.section >= state.document.sections.len) return error.InvalidSection;
-                const info = try state.source.decodeDocInfo(state.allocator, max_stream);
-                defer state.allocator.free(info);
-                try state.cell_backgrounds.apply(state.allocator, state.decoded[edit.section], state.source.header.version(), state.document.sections[edit.section], info, edit, max_stream);
+                const original = try self.originalInfo();
+                defer if (original.owned) state.allocator.free(original.bytes);
+                try state.cell_backgrounds.apply(state.allocator, state.decoded[edit.section], state.source.header.version(), state.document.sections[edit.section], original.bytes, edit, max_stream);
             },
             .set_cell_size => |edit| {
                 const state = self.getState();

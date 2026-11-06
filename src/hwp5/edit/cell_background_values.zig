@@ -3,7 +3,17 @@ const std = @import("std");
 const model = @import("../../model/document.zig");
 const Version = @import("../version.zig").Version;
 pub const Edit = struct { section: usize, table_node: u32, list_node: u32, color: u32 };
-pub const Entry = struct { edit: Edit, source_id: u16 };
+const patch_model = @import("../../model/border_fill_patch.zig");
+/// Null patch accepts the existing background-only Entry constructor.
+/// All new intents store a canonical sparse patch in this SAME owner entry.
+pub const Entry = struct {
+    edit: Edit,
+    source_id: u16,
+    patch: ?patch_model.Patch = null,
+    pub fn effectivePatch(self: Entry, payload: []const u8) !patch_model.Patch {
+        return self.patch orelse try solidPatch(payload, self.edit.color);
+    }
+};
 /// New-cell-fill construction, not an observed fallback/default. Existing pattern
 /// foreground (including inactive sentinels) is preserved by the strict writer.
 pub fn solidPatch(input: []const u8, color_rgb: u32) !@import("../../model/border_fill_patch.zig").Patch {
@@ -39,42 +49,67 @@ pub const Values = struct {
         return false;
     }
     pub fn color(self: Values, edit: Edit) ?u32 {
-        for (self.entries) |entry| if (sameOwner(entry.edit, edit)) return entry.edit.color;
+        for (self.entries) |entry| if (sameOwner(entry.edit, edit)) {
+            if (entry.patch) |patch| {
+                const bg = patch.background orelse return null;
+                return if (bg == .solid) bg.solid.color else null;
+            }
+            return entry.edit.color;
+        };
         return null;
     }
     pub fn apply(self: *Values, a: std.mem.Allocator, source: []const u8, version: Version, section: model.Section, info: []const u8, edit: Edit, limit: usize) !void {
         try @import("../../model/rgb_color.zig").validate(edit.color);
         const id = try reference(a, source, version, section, edit);
         const payload = try @import("border_fill_docinfo_patch.zig").resource(info, id);
-        const observed = try @import("border_fill_payload_patch.zig").observe(payload);
-        // No-fill construction derives the new inactive field from user intent;
-        // every opaque/alpha/image/extension refusal remains in the strict writer.
-        const prepared = try @import("border_fill_payload_patch.zig").write(a, payload, try solidPatch(payload, edit.color), limit);
-        defer a.free(prepared);
-        const original_color: ?u32 = if (observed.background) |b| if (b == .solid) b.solid.color else null else null;
+        try self.applyResolved(a, payload, edit, id, try solidPatch(payload, edit.color), limit);
+    }
+    pub fn applyBorder(self: *Values, a: std.mem.Allocator, source: []const u8, version: Version, section: model.Section, info: []const u8, edit: @import("cell_border_values.zig").Edit, limit: usize) !void {
+        const patch = try @import("cell_border_values.zig").toPatch(edit);
+        const owner: Edit = .{ .section = edit.section, .table_node = edit.table_node, .list_node = edit.list_node, .color = 0 };
+        const id = try reference(a, source, version, section, owner);
+        const payload = try @import("border_fill_docinfo_patch.zig").resource(info, id);
+        try self.applyResolved(a, payload, owner, id, patch, limit);
+    }
+    /// Validate and allocate before publishing. History owns the surrounding transaction.
+    pub fn applyResolved(self: *Values, a: std.mem.Allocator, payload: []const u8, owner: Edit, id: u16, requested: patch_model.Patch, limit: usize) !void {
         var position: ?usize = null;
-        for (self.entries, 0..) |entry, i| if (sameOwner(entry.edit, edit)) {
+        for (self.entries, 0..) |entry, i| if (sameOwner(entry.edit, owner)) {
+            if (entry.source_id != id) return error.SourceBindingMismatch;
             position = i;
             break;
         };
-        if (position) |i| {
-            if (self.entries[i].edit.color == edit.color) return;
-            if (original_color == edit.color) {
+        const old: patch_model.Patch = if (position) |i| try self.entries[i].effectivePatch(payload) else .{};
+        const merged = patch_model.merge(old, requested);
+        // Preserve the background constructor and strict refusal rules. Border-only
+        // requests do not synthesize or interpret unknown/image/hatch fills.
+        const prepared = try @import("border_fill_payload_patch.zig").write(a, payload, merged, limit);
+        defer a.free(prepared);
+        const observed = try @import("border_fill_payload_patch.zig").observe(payload);
+        const next_patch = canonical(observed, merged);
+        if (std.meta.eql(old, next_patch)) return;
+        if (!patch_model.has(next_patch)) {
+            if (position) |i| {
                 const next = try a.alloc(Entry, self.entries.len - 1);
                 @memcpy(next[0..i], self.entries[0..i]);
                 @memcpy(next[i..], self.entries[i + 1 ..]);
                 a.free(self.entries);
                 self.entries = next;
-            } else self.entries[i].edit.color = edit.color;
+            }
             return;
         }
-        if (original_color == edit.color) return;
+        var entry: Entry = .{ .edit = owner, .source_id = id, .patch = next_patch };
+        entry.edit.color = if (next_patch.background) |bg| if (bg == .solid) bg.solid.color else 0 else 0;
+        if (position) |i| {
+            self.entries[i] = entry;
+            return;
+        }
         if (self.entries.len >= 100_000) return error.LimitExceeded;
         const bytes = std.math.mul(usize, self.entries.len + 1, @sizeOf(Entry)) catch return error.LimitExceeded;
         if (bytes > limit) return error.LimitExceeded;
         const next = try a.alloc(Entry, self.entries.len + 1);
         @memcpy(next[0..self.entries.len], self.entries);
-        next[self.entries.len] = .{ .edit = edit, .source_id = id };
+        next[self.entries.len] = entry;
         a.free(self.entries);
         self.entries = next;
     }
@@ -97,4 +132,23 @@ pub fn reference(a: std.mem.Allocator, source: []const u8, version: Version, sec
     defer a.free(bindings);
     for (bindings) |binding| if (binding.table_node == edit.table_node and binding.list_node == edit.list_node) return selected;
     return error.InvalidCellDisplayOwner;
+}
+
+/// Drop only matching scalar components; siblings and the other operation survive.
+pub fn canonical(original: patch_model.Value, patch: patch_model.Patch) patch_model.Patch {
+    var out = patch;
+    for (&out.border.edges, original.edges) |*edge, source| if (edge.*) |*value| {
+        inline for (.{ "style", "width_hundredth_mm", "color" }) |field| {
+            if (@field(value, field) != null and @field(value, field) == @field(source, field)) @field(value, field) = null;
+        }
+        if (!patch_model.edgeHas(value.*)) edge.* = null;
+    };
+    if (out.background) |bg| {
+        // A background RGB command owns the background component, including its
+        // derived no-fill foreground. Returning to source releases that component.
+        if (bg == .solid) if (original.background) |source| {
+            if (source == .solid and source.solid.color == bg.solid.color) out.background = null;
+        };
+    }
+    return out;
 }

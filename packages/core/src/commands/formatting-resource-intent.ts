@@ -1,3 +1,5 @@
+// @ts-ignore Shared wire resource values; Native validates the same domain.
+import * as borderValues from '../../../../js/border-fill-values.mjs';
 /** 원본 BorderFill을 clone하는 명시 intent. shade/table-cell intent와 다릅니다. */
 export type BorderLineStyle =
   | 'NONE'
@@ -52,26 +54,8 @@ export type BackgroundPatch =
       readonly step: number;
       readonly stepCenter: number;
     };
-const styles = new Set<BorderLineStyle>([
-  'NONE',
-  'SOLID',
-  'DASH',
-  'DOT',
-  'DASH_DOT',
-  'DASH_DOT_DOT',
-  'LONG_DASH',
-  'DOUBLE_SLIM',
-  'SLIM_THICK',
-  'THICK_SLIM',
-  'SLIM_THICK_SLIM',
-  'WAVE',
-  'DOUBLEWAVE',
-  'THICK3D',
-  'THICKREV3D',
-  '3D',
-  'REV3D',
-]);
-const widths = new Set([10, 12, 15, 20, 25, 30, 40, 50, 60, 70, 100, 150, 200, 300, 400, 500]);
+const styles = new Set<BorderLineStyle>(borderValues.BORDER_LINE_STYLES);
+const widths = new Set<number>(borderValues.BORDER_WIDTHS_HUNDREDTH_MM);
 const hatch = new Set(['HORIZONTAL', 'VERTICAL', 'BACK_SLASH', 'SLASH', 'CROSS', 'CROSS_DIAGONAL']);
 function object(value: unknown): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value))

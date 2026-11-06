@@ -84,6 +84,7 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, source_id: u32, patch: @im
 /// The original header is indexed once and serialized once. Full-header write()
 /// above is deliberately not called in the per-request loop.
 pub const SolidRequest = struct { source_id: u32, color: u32 };
+pub const PatchRequest = struct { source_id: u32, patch: @import("../model/border_fill_patch.zig").Patch };
 pub const SolidBatch = struct { bytes: []u8, ids: []u32 };
 pub const SolidBatchStats = struct { resources: usize = 0, fragments: usize = 0, reused: usize = 0, header_writes: usize = 0 };
 
@@ -117,17 +118,20 @@ fn solidContext(a: std.mem.Allocator, tree: *const Tree, container: usize) ![]u8
     return output.toOwnedSlice(a);
 }
 
-fn solidFragment(a: std.mem.Allocator, source: *const Tree, node: usize, identity: u32, color: u32, context: []const u8, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
+fn solidFragment(a: std.mem.Allocator, source: *const Tree, node: usize, identity: u32, patch: @import("../model/border_fill_patch.zig").Patch, context: []const u8, limit: usize, profile: @import("source_color_profile.zig").Profile) ![]u8 {
     const prefix = try std.fmt.allocPrint(a, "<cellbgctx:head xmlns:cellbgctx=\"{s}\"{s}>", .{ head, context });
     defer a.free(prefix);
     const wrapped = try std.fmt.allocPrint(a, "{s}{s}</cellbgctx:head>", .{ prefix, source.sourceOf(node) });
     defer a.free(wrapped);
     var local = try @import("header_tree.zig").parse(a, wrapped, 0, .{ .max_xml_bytes = limit });
     defer local.deinit(a);
-    const observed = try helpers.observeSelected(a, &local, 1, profile, @splat(false), true);
-    const background = observed.background orelse return error.UnsupportedCellBackgroundContents;
-    if (background != .none and background != .solid) return error.UnsupportedCellBackgroundContents;
-    const changed = try helpers.write(a, &local, 1, .{ .background = .{ .solid = .{ .color = color } } }, limit, profile);
+    // Border-only patches must never interpret or replace opaque/image fills.
+    if (patch.background != null) {
+        const observed = try helpers.observeSelected(a, &local, 1, profile, @splat(false), true);
+        const background = observed.background orelse return error.UnsupportedCellBackgroundContents;
+        if (background != .none and background != .solid) return error.UnsupportedCellBackgroundContents;
+    }
+    const changed = try helpers.write(a, &local, 1, patch, limit, profile);
     defer a.free(changed);
     const rewrapped = try std.fmt.allocPrint(a, "{s}{s}</cellbgctx:head>", .{ prefix, changed });
     defer a.free(rewrapped);
@@ -142,7 +146,7 @@ fn solidFragment(a: std.mem.Allocator, source: *const Tree, node: usize, identit
     return a.dupe(u8, final.sourceOf(1));
 }
 
-pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []const SolidRequest, limit: usize, profile: @import("source_color_profile.zig").Profile, stats: *SolidBatchStats) !SolidBatch {
+pub fn writePatchBatch(a: std.mem.Allocator, tree: *const Tree, requests: []const PatchRequest, limit: usize, profile: @import("source_color_profile.zig").Profile, stats: *SolidBatchStats) !SolidBatch {
     if (!profile.verified) return error.UnsupportedCellBackgroundProfile;
     if (tree.source.len > limit or requests.len > 100000) return error.LimitExceeded;
     if (tree.elements.len == 0 or !tree.elements[0].is(head, "head")) return error.InvalidBorderFillHeader;
@@ -173,8 +177,7 @@ pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
     if (try @import("table_xml_fields.zig").unsigned(a, raw_count, 4096) != templates.count()) return error.BorderFillCountMismatch;
     const context = try solidContext(a, tree, parent);
     defer a.free(context);
-    const Key = struct { source_id: u32, color: u32 };
-    var clones = std.AutoHashMap(Key, u32).init(a);
+    var clones = std.AutoHashMap([32]u32, u32).init(a);
     defer clones.deinit();
     const ids = try a.alloc(u32, requests.len);
     errdefer a.free(ids);
@@ -182,16 +185,17 @@ pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
     defer added.deinit(a);
     var next_id: u32 = 0;
     for (requests, 0..) |request, i| {
-        try @import("../model/rgb_color.zig").validate(request.color);
+        try @import("../model/border_fill_patch.zig").validate(request.patch);
+        if (!@import("../model/border_fill_patch.zig").has(request.patch)) return error.EmptyCellResourcePatch;
         const template = templates.get(request.source_id) orelse return error.MissingBorderFillId;
-        const key: Key = .{ .source_id = request.source_id, .color = request.color };
+        const key = patchKey(request);
         if (clones.get(key)) |known| {
             ids[i] = known;
             stats.reused += 1;
             continue;
         }
         while (occupied.contains(next_id)) next_id = std.math.add(u32, next_id, 1) catch return error.LimitExceeded;
-        const fragment = try solidFragment(a, tree, template, next_id, request.color, context, limit, profile);
+        const fragment = try solidFragment(a, tree, template, next_id, request.patch, context, limit, profile);
         defer a.free(fragment);
         const length = std.math.add(usize, added.items.len, fragment.len) catch return error.LimitExceeded;
         if (length > limit - tree.source.len) return error.LimitExceeded;
@@ -209,4 +213,54 @@ pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
     const bytes = try @import("xml_source_writer.zig").write(a, tree.source, &.{ .{ .start = start, .end = start + raw_count.raw.len, .text = "", .serialized_xml = token }, .{ .start = ending.start, .end = ending.start, .text = "", .serialized_xml = added.items } }, limit);
     stats.header_writes += 1;
     return .{ .bytes = bytes, .ids = ids };
+}
+
+/// Preserve the original background API and tests while sharing the sparse plan.
+pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []const SolidRequest, limit: usize, profile: @import("source_color_profile.zig").Profile, stats: *SolidBatchStats) !SolidBatch {
+    if (!profile.verified) return error.UnsupportedCellBackgroundProfile;
+    if (tree.source.len > limit or requests.len > 100000) return error.LimitExceeded;
+    if (tree.elements.len == 0 or !tree.elements[0].is(head, "head")) return error.InvalidBorderFillHeader;
+    const patches = try a.alloc(PatchRequest, requests.len);
+    defer a.free(patches);
+    for (requests, patches) |request, *patch| patch.* = .{ .source_id = request.source_id, .patch = .{ .background = .{ .solid = .{ .color = request.color } } } };
+    return writePatchBatch(a, tree, patches, limit, profile, stats);
+}
+
+// Canonical complete-patch key: no padding, inactive union bytes or pointer hash.
+// Presence has its own bit/value, so explicit black and NONE differ from absent.
+fn patchKey(request: PatchRequest) [32]u32 {
+    var key: [32]u32 = @splat(0);
+    key[0] = request.source_id;
+    for (request.patch.border.edges, 0..) |edge, i| if (edge) |value| {
+        const offset = 1 + i * 4;
+        key[offset] = 1;
+        key[offset + 1] = if (value.style) |v| @as(u32, @backingInt(v)) + 1 else 0;
+        key[offset + 2] = if (value.width_hundredth_mm) |v| @as(u32, v) + 1 else 0;
+        key[offset + 3] = if (value.color) |v| v + 1 else 0;
+    };
+    if (request.patch.background) |background| {
+        key[17] = @as(u32, @backingInt(std.meta.activeTag(background))) + 1;
+        switch (background) {
+            .none => {},
+            .solid => |v| {
+                key[18] = v.color;
+                key[19] = if (v.hatch_color) |h| h + 1 else 0;
+            },
+            .hatch => |v| {
+                key[18] = v.face;
+                key[19] = v.hatch;
+                key[20] = @backingInt(v.style);
+            },
+            .linear => |v| {
+                key[18] = v.colors[0];
+                key[19] = v.colors[1];
+                key[20] = v.angle;
+                key[21] = v.center_x;
+                key[22] = v.center_y;
+                key[23] = v.step;
+                key[24] = v.step_center;
+            },
+        }
+    }
+    return key;
 }

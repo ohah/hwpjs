@@ -1,9 +1,9 @@
-//! One original cell's solid RGB intent. Header templates remain immutable.
+//! One original cell resource intent: solid RGB plus sparse outer borders.
 const std = @import("std");
 const editor = @import("editor_session.zig");
 const resource = @import("border_fill_resource_patch.zig");
 pub const Owner = struct { section: usize, table_node: usize, cell_node: usize, list_node: usize, source_id: u32 };
-pub const Entry = struct { section: usize, table_node: usize, cell_node: usize, list_node: usize, source_id: u32, color: u32 };
+pub const Entry = struct { section: usize, table_node: usize, cell_node: usize, list_node: usize, source_id: u32, color: ?u32 = null, border: @import("../model/border_fill_patch.zig").Border = .{} };
 pub const Values = std.ArrayList(Entry);
 pub const Observation = struct { source_id: u32, color: ?u32 };
 
@@ -28,7 +28,7 @@ pub fn target(session: *const editor.Session, section: usize, table: usize, list
 pub fn validateEntry(session: *const editor.Session, entry: Entry) !void {
     const current = try target(session, entry.section, entry.table_node, entry.list_node);
     if (current.cell_node != entry.cell_node or current.source_id != entry.source_id) return error.SourceBindingMismatch;
-    try @import("../model/rgb_color.zig").validate(entry.color);
+    try @import("../model/border_fill_patch.zig").validate(patch(entry));
 }
 
 pub fn profile(session: *const editor.Session) !@import("source_color_profile.zig").Profile {
@@ -66,7 +66,7 @@ pub fn observe(session: *const editor.Session, section: usize, table: usize, lis
     for (session.cell_backgrounds.items) |entry| {
         if (entry.section == section and entry.list_node == list) {
             try validateEntry(session, entry);
-            return .{ .source_id = owner.source_id, .color = entry.color };
+            return .{ .source_id = owner.source_id, .color = entry.color orelse color };
         }
     }
     return .{ .source_id = owner.source_id, .color = color };
@@ -85,7 +85,7 @@ pub fn apply(session: *editor.Session, section: usize, table: usize, list: usize
             found = i;
         }
     }
-    const current: ?u32 = if (found) |i| session.cell_backgrounds.items[i].color else before_color;
+    const current: ?u32 = if (found) |i| session.cell_backgrounds.items[i].color orelse before_color else before_color;
     if (current != null and current.? == color) return false;
     const a = session.allocator;
     const copied = try a.dupe(Entry, session.cell_backgrounds.items);
@@ -93,8 +93,9 @@ pub fn apply(session: *editor.Session, section: usize, table: usize, list: usize
     defer candidate.deinit(a);
     if (found) |i| {
         if (before_color != null and before_color.? == color) {
-            _ = candidate.orderedRemove(i);
-        } else candidate.items[i] = next;
+            candidate.items[i].color = null;
+            if (!@import("../model/border_fill_patch.zig").has(patch(candidate.items[i]))) _ = candidate.orderedRemove(i);
+        } else candidate.items[i].color = color;
     } else {
         if (candidate.items.len >= 100000) return error.LimitExceeded;
         try candidate.append(a, next);
@@ -106,4 +107,9 @@ pub fn apply(session: *editor.Session, section: usize, table: usize, list: usize
     a.free(saved);
     committed = true;
     return true;
+}
+
+/// Both operations serialize exactly one complete sparse patch for this owner.
+pub fn patch(entry: Entry) @import("../model/border_fill_patch.zig").Patch {
+    return .{ .border = entry.border, .background = if (entry.color) |color| .{ .solid = .{ .color = color } } else null };
 }

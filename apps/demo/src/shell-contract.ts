@@ -19,6 +19,7 @@ export type DemoCommand =
   | 'insert-table'
   | 'table-cell-properties'
   | 'table-cell-background'
+  | 'table-cell-border'
   | 'insert-chart'
   | 'insert-footnote'
   | 'insert-endnote'

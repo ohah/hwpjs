@@ -51,3 +51,5 @@ Noori HWP5/HWPX 두 문서의 실제 UI 경로에서 높이 원값12578→12678 
 최소 후속 단계는 현재 원본 단일 셀의 단색 배경과 명시 cell owner/membership 검증부터다. 공유 BorderFill은 clone-on-write로 새 자원을 만들고 대상 셀 참조만 교체하며, HWP5 DocInfo/LIST_HEADER와 HWPX header/cell 참조는 각 형식의 기존 자원·저장 SSOT가 소유해야 한다. 비대상 공유 자원·미지원 필드 보존, 단일 history batch, undo/redo·실패 원자성 및 독립 CFB/XML 저장·재열기를 먼저 검증해야 한다. 테두리 sparse patch는 그 뒤의 별도 범위다. 이 단계들은 아직 구현하지 않았다.
 
 [공식 테두리 도움말](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/cellborder/cellborder%28border%29.htm)은 선 종류·목록형 굵기·색·방향과 선택 셀/모든 셀 범위를 설명한다. [공식 배경 도움말](https://help.hancom.com/hoffice110/ko-KR/Hwp/table/cellborder/cellborder%28background%29.htm)은 색·무늬·그러데이션·그림 및 채우기 없음을 구분한다. [표 배경](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/tableborder/tableborder.htm)은 여러 셀에 각각 같은 배경을 주는 것과 다르다. 채우기 없음은 흰색·alpha=0·필드 생략과 동의어로 확정하지 않았다. 데스크톱 도움말의 UI 의미를 WebHwpCtrl API나 HWP5/HWPX 저장 계약으로 승계하지 않으며, API 상세 필드·수치 단위·공통 기본값·투명색 인코딩은 미확정이다.
+
+선택한 원본 셀의 바깥 테두리 쓰기는 [셀 테두리 편집](cell-border-editing.md)의 별도 범위·검증 상태를 따른다. 크기·배경 capability로 테두리 쓰기 지원을 추정하지 않는다.

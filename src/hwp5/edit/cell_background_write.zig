@@ -86,8 +86,31 @@ fn validateSection(a: std.mem.Allocator, source: []const u8, version: Version, c
 }
 
 const Resource = struct { payload: []const u8, children: bool = false };
-const CloneKey = struct { source_id: u16, color: u32 };
-/// One input scan, one payload per distinct (source,color), one record append batch.
+const patch_model = @import("../../model/border_fill_patch.zig");
+// Scalar key avoids hashing union storage/padding and groups equal owner patches.
+const CloneKey = struct {
+    source_id: u16,
+    styles: [4]?patch_model.Style = @splat(null),
+    widths: [4]?u16 = @splat(null),
+    colors: [4]?u32 = @splat(null),
+    background: ?u32 = null,
+    foreground: ?u32 = null,
+    fn init(id: u16, patch: patch_model.Patch) !CloneKey {
+        var key: CloneKey = .{ .source_id = id };
+        for (patch.border.edges, 0..) |edge, i| if (edge) |v| {
+            key.styles[i] = v.style;
+            key.widths[i] = v.width_hundredth_mm;
+            key.colors[i] = v.color;
+        };
+        if (patch.background) |bg| {
+            if (bg != .solid) return error.UnsupportedCellBackgroundIntent;
+            key.background = bg.solid.color;
+            key.foreground = bg.solid.hatch_color;
+        }
+        return key;
+    }
+};
+/// One input scan, one payload per distinct (source,sparse patch), one append batch.
 pub fn info(a: std.mem.Allocator, input: []const u8, version: Version, entries: []const values.Entry, limit: usize) !Prepared {
     if (input.len > limit) return error.LimitExceeded;
     var resources: std.ArrayList(Resource) = .empty;
@@ -127,15 +150,16 @@ pub fn info(a: std.mem.Allocator, input: []const u8, version: Version, entries: 
     const refs = try a.alloc(Ref, entries.len);
     errdefer a.free(refs);
     for (entries, refs) |entry, *ref| {
-        const key: CloneKey = .{ .source_id = entry.source_id, .color = entry.edit.color };
+        if (entry.source_id == 0) return error.MissingBorderFillReference;
+        if (entry.source_id > resources.items.len) return error.InvalidBorderFillReference;
+        const source = resources.items[entry.source_id - 1];
+        const patch = try entry.effectivePatch(source.payload);
+        const key = try CloneKey.init(entry.source_id, patch);
         const slot = try clones.getOrPut(key);
         if (!slot.found_existing) {
-            if (entry.source_id == 0) return error.MissingBorderFillReference;
-            if (entry.source_id > resources.items.len) return error.InvalidBorderFillReference;
             if (resources.items.len + payloads.items.len >= std.math.maxInt(u16)) return error.InvalidBorderFillReference;
-            const source = resources.items[entry.source_id - 1];
             if (source.children) return error.UnsupportedBorderFillChildren;
-            const payload = try @import("border_fill_payload_patch.zig").write(a, source.payload, try values.solidPatch(source.payload, entry.edit.color), limit);
+            const payload = try @import("border_fill_payload_patch.zig").write(a, source.payload, patch, limit);
             errdefer a.free(payload);
             try payloads.append(a, payload);
             slot.value_ptr.* = @intCast(resources.items.len + payloads.items.len);

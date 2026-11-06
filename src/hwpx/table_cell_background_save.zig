@@ -117,11 +117,11 @@ pub fn currentHeader(session: *const editor.Session) !CurrentHeader {
     errdefer a.free(base.bytes);
     var tree = try @import("header_tree.zig").parse(a, base.bytes, 0, .{ .max_xml_bytes = session.options.max_xml_bytes });
     defer tree.deinit(a);
-    const requests = try a.alloc(@import("border_fill_resource_patch.zig").SolidRequest, values.len);
+    const requests = try a.alloc(@import("border_fill_resource_patch.zig").PatchRequest, values.len);
     defer a.free(requests);
-    for (values, requests) |entry, *request| request.* = .{ .source_id = entry.source_id, .color = entry.color };
+    for (values, requests) |entry, *request| request.* = .{ .source_id = entry.source_id, .patch = cell.patch(entry) };
     var stats: @import("border_fill_resource_patch.zig").SolidBatchStats = .{};
-    const result = try @import("border_fill_resource_patch.zig").writeSolidBatch(a, &tree, requests, session.options.max_xml_bytes, try cell.profile(session), &stats);
+    const result = try @import("border_fill_resource_patch.zig").writePatchBatch(a, &tree, requests, session.options.max_xml_bytes, try cell.profile(session), &stats);
     a.free(base.bytes);
     base.bytes = result.bytes;
     return .{ .replacement = base, .ids = result.ids, .offsets = offsets, .indices = indices, .stats = stats };

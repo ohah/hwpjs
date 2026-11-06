@@ -31,7 +31,8 @@ export function createWasmModuleLoader(options: { url?: string | URL; fetch?: ty
         key === 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb' ||
         key === 'bd095cdf56892d5b5708a567ca91ae271846a3949bfc41c3a717bdee6513684f' ||
         key === 'ede6256ef063765cfb1f4489d2bece3a971aa715041c993fec87d4eb374855fa' ||
-        key === '25998a7513b73938abe5e9e614a18733059b42f71f00b13cf663f073c26396b3'
+        key === '25998a7513b73938abe5e9e614a18733059b42f71f00b13cf663f073c26396b3' ||
+        key === 'f25c1a4807f428a8a392e8ef0be6dadced309825a6a9704305694969fd9c40bb'
       )
         knownModules.set(
           module,
