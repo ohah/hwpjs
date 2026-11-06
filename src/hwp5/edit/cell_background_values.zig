@@ -144,14 +144,10 @@ pub fn canonical(original: patch_model.Value, patch: patch_model.Patch) patch_mo
         if (!patch_model.edgeHas(value.*)) edge.* = null;
     };
     if (out.background) |bg| {
-        // A background RGB command owns the background component, including its
-        // derived no-fill foreground. Returning to source releases that component.
-        if (bg == .solid) if (original.background) |source| {
-            if (source == .solid and source.solid.color == bg.solid.color) out.background = null;
-        };
-        if (bg != .solid) if (original.background) |source| {
-            if (std.meta.eql(source, bg)) out.background = null;
-        };
+        // A solid request may retain a resolved CURRENT foreground. Returning
+        // only its face to source must not discard a different foreground.
+        // Unspecified components remain wildcards, preserving legacy no-ops.
+        if (patch_model.matches(original, .{ .background = bg })) out.background = null;
     }
     return out;
 }

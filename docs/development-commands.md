@@ -7,6 +7,7 @@
 ```sh
 node --max-old-space-size=256 --test --test-concurrency=1 \
   tests/cell-fill-command.test.mjs tests/table-border-plan.test.mjs \
+  tools/tests/hwpx-table-border-raw-fields.test.mjs \
   tools/tests/table-cell-appearance-observation.test.mjs \
   tools/tests/table-cell-appearance-official-hatch.test.mjs \
   tests/hwp5/table-border-fill-plan.test.mjs tests/hwp5/table-variant-fill-plan.test.mjs
@@ -23,7 +24,8 @@ node --experimental-transform-types --max-old-space-size=256 \
 
 ```sh
 node --max-old-space-size=512 --test --test-concurrency=1 \
-  --test-timeout=45000 tests/cell-style-fill-native.test.mjs
+  --test-timeout=45000 tests/cell-style-fill-native.test.mjs \
+  tools/tests/hwpx-border-source-raw-native.test.mjs
 ```
 
 독립 CFB/XML 저장값과 실제 setter·이력·재열기 검증입니다. 실제 Canvas·대화상자·배포 증거와 구분합니다.

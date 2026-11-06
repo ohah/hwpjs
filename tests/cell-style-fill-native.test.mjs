@@ -546,3 +546,78 @@ test(
     }
   }),
 );
+
+test(
+  'hwp5 returning source face preserves current pending foreground through canonicalization',
+  receipt('hwp5-source-face-pending-foreground', async () => {
+    const format = 'hwp5',
+      input = fixture(format),
+      target = targets.hwp5[0],
+      original = h5Document(input);
+    const read = (bytes) => {
+      const doc = h5Document(bytes),
+        cell = records(doc.decode('BodyText/Section0'))[target.listNode],
+        resourceId = cell.payload.readUInt16LE(32),
+        payload = doc.fills[resourceId - 1].payload;
+      assert.equal(payload.readUInt32LE(32), 1);
+      return {
+        resourceId,
+        face: swap(payload.readUInt32LE(36)),
+        foregroundRaw: payload.readUInt32LE(40),
+        patternKind: payload.readInt32LE(44),
+      };
+    };
+    const before = read(input);
+    assert.equal(before.face, 0xe7e7a5);
+    assert.equal(before.foregroundRaw, 0xffffffff, 'original inactive sentinel stays raw');
+    const sdk = await openSDK(format, input);
+    try {
+      sdk.enableHistory(options);
+      const initialRevision = sdk.historyRevision();
+      sdk.setCellFills([{ ...owner(target), fill: { kind: 'solid', color: before.face } }]);
+      assert.equal(sdk.historyRevision(), initialRevision);
+      assert.deepEqual(saveSDK(format, sdk), input, 'initial source face remains exact no-op');
+      const hatch = { kind: 'hatch', face: 0x123456, hatch: 0xabcdef, style: 'SLASH' };
+      sdk.setCellFills([{ ...owner(target), fill: hatch }]);
+      const pending = saveSDK(format, sdk);
+      assert.equal(read(pending).foregroundRaw, swap(hatch.hatch));
+      sdk.setCellFills([{ ...owner(target), fill: { kind: 'solid', color: before.face } }]);
+      const saved = saveSDK(format, sdk),
+        observed = read(saved),
+        actualQuery = sdk.borderFillSources().find((row) => row.id === observed.resourceId);
+      artifact('hwp5-source-face-pending-foreground.hwp', saved);
+      assert.equal(observed.face, before.face);
+      assert.equal(observed.patternKind, -1);
+      assert.equal(
+        observed.foregroundRaw,
+        swap(hatch.hatch),
+        `resolved current foreground must survive source-face canonicalization: ${JSON.stringify(observed)}`,
+      );
+      assert.equal(actualQuery.pattern.foreground, observed.foregroundRaw);
+      assert.notDeepEqual(saved, input, 'source face alone must not discard pending foreground');
+      const revision = sdk.historyRevision();
+      sdk.setCellFills([{ ...owner(target), fill: { kind: 'solid', color: before.face } }]);
+      assert.equal(sdk.historyRevision(), revision);
+      assert.deepEqual(saveSDK(format, sdk), saved);
+      assert.equal(sdk.undo(), true);
+      assert.deepEqual(saveSDK(format, sdk), pending);
+      assert.equal(sdk.redo(), true);
+      assert.deepEqual(saveSDK(format, sdk), saved);
+      const reopened = await openSDK(format, saved);
+      try {
+        assert.equal(read(saveSDK(format, reopened)).foregroundRaw, swap(hatch.hatch));
+        assert.equal(
+          reopened.borderFillSources().find((row) => row.id === observed.resourceId).pattern
+            .foreground,
+          swap(hatch.hatch),
+        );
+      } finally {
+        reopened.close();
+      }
+      assert.equal(original.fills[before.resourceId - 1].payload.readUInt32LE(40), 0xffffffff);
+      return { before, pending: read(pending), saved: observed, actualQuery };
+    } finally {
+      sdk.close();
+    }
+  }),
+);

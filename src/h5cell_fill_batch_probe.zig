@@ -612,3 +612,58 @@ test "cell fill batch HWP5 pending hatch foreground precedes source nofill solid
         try expectBytes(reopened, solid);
     }
 }
+
+test "cell fill batch HWP5 returning source face retains resolved pending foreground canonical undo redo query reopen" {
+    const original = try fixture();
+    defer a.free(original);
+    for ([_]u8{ 0, 1, 2 }) |mode| {
+        const session = try edit.Session.open(a, original);
+        defer session.close();
+        var req = try owners(session);
+        req[0] = .{ .section = 0, .table_node = 20, .list_node = 21, .fill = .none };
+        const source_ids = try ids(session, &req);
+        var source_info = try session.formattingSource(a);
+        defer source_info.deinit();
+        const source = try payloads.observe(try resources.resource(source_info.bytes, source_ids[0]));
+        try std.testing.expect(source.background != null and source.background.? == .solid);
+        const source_face = source.background.?.solid.color;
+        try std.testing.expectEqual(@as(u32, 0xe7e7a5), source_face);
+        const source_dto = try session.borderFillSources(a);
+        defer @import("hwp5/edit/border_fill_sources.zig").deinit(a, source_dto);
+        try std.testing.expectEqual(@as(u32, 0xffffffff), source_dto[source_ids[0] - 1].pattern.?.foreground);
+        // Unspecified foreground on the initial source still matches the source:
+        // no invented replacement for its inactive sentinel, and exact no-op.
+        req[0].fill = .{ .solid = .{ .color = source_face } };
+        try session.applyCellFills(req[0..1]);
+        try expectBytes(session, original);
+        req[0].fill = .{ .hatch = .{ .face = 0x123456, .hatch = 0xabcdef, .style = .SLASH } };
+        try session.applyCellFills(req[0..1]);
+        const pending = try saved(session);
+        defer a.free(pending);
+        var history = try historyFor(a, session, mode);
+        defer history.deinit();
+        req[0].fill = .{ .solid = .{ .color = source_face } };
+        try std.testing.expect(try history.apply(session, .{ .set_cell_fills = req[0..1] }));
+        try expectPendingForeground(session, &req, source_face, 0xabcdef);
+        const current_ids = try ids(session, &req);
+        const query = try session.borderFillSources(a);
+        defer @import("hwp5/edit/border_fill_sources.zig").deinit(a, query);
+        try std.testing.expectEqual(@as(u32, 0x00efcdab), query[current_ids[0] - 1].pattern.?.foreground);
+        const changed = try saved(session);
+        defer a.free(changed);
+        try std.testing.expect(!std.mem.eql(u8, original, changed));
+        const revision = history.revision();
+        try std.testing.expect(!try history.apply(session, .{ .set_cell_fills = req[0..1] }));
+        try std.testing.expectEqual(revision, history.revision());
+        try std.testing.expect(try history.undo(session));
+        try expectBytes(session, pending);
+        try std.testing.expect(!try history.undo(session));
+        try std.testing.expect(try history.redo(session));
+        try expectBytes(session, changed);
+        try expectPendingForeground(session, &req, source_face, 0xabcdef);
+        const reopened = try edit.Session.open(a, changed);
+        defer reopened.close();
+        try expectPendingForeground(reopened, &req, source_face, 0xabcdef);
+        try expectBytes(reopened, changed);
+    }
+}

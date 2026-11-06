@@ -33,6 +33,13 @@ export function decodeTableBorderSources(bytes) {
       !style.edges.every(edge) ||
       !edge(style.diagonal) ||
       !['slash', 'back_slash', 'three_d', 'shadow', 'center_line'].every((k) => text(style[k])) ||
+      ![
+        'slash_crooked',
+        'slash_is_counter',
+        'back_slash_crooked',
+        'back_slash_is_counter',
+        'break_cell_separate_line',
+      ].every((k) => !Object.hasOwn(style, k) || text(style[k])) ||
       !['slash_node', 'back_slash_node', 'fill_node'].every((k) => optionalUint(style[k])) ||
       !uint(style.unknown_children) ||
       (style.unknown_attributes !== undefined && !uint(style.unknown_attributes))

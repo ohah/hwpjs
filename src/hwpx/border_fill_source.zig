@@ -13,11 +13,16 @@ pub const Source = struct {
     diagonal: ?Edge = null,
     slash: ?[]const u8 = null,
     back_slash: ?[]const u8 = null,
+    slash_crooked: ?[]const u8 = null,
+    slash_is_counter: ?[]const u8 = null,
+    back_slash_crooked: ?[]const u8 = null,
+    back_slash_is_counter: ?[]const u8 = null,
     slash_node: ?usize = null,
     back_slash_node: ?usize = null,
     three_d: ?[]const u8 = null,
     shadow: ?[]const u8 = null,
     center_line: ?[]const u8 = null,
+    break_cell_separate_line: ?[]const u8 = null,
     fill_node: ?usize = null,
     fill_report: ?@import("fill_brush.zig").Report = null,
     semantic_fill_colors: ?[]@import("source_color_profile.zig").SemanticFillColor = null,
@@ -179,6 +184,7 @@ fn decodeSelected(a: std.mem.Allocator, tree: *const Tree, id: u32, node: usize)
     result.three_d = try attribute(owned, tree, node, "threeD");
     result.shadow = try attribute(owned, tree, node, "shadow");
     result.center_line = try attribute(owned, tree, node, "centerLine");
+    result.break_cell_separate_line = try attribute(owned, tree, node, "breakCellSeparateLine");
     var seen: [8]bool = @splat(false);
     var cursor = tree.elements[node].first_child;
     while (cursor) |child| : (cursor = tree.elements[child].next_sibling) {
@@ -205,10 +211,14 @@ fn decodeSelected(a: std.mem.Allocator, tree: *const Tree, id: u32, node: usize)
             5 => {
                 result.slash_node = child;
                 result.slash = try attribute(owned, tree, child, "type");
+                result.slash_crooked = try attribute(owned, tree, child, "Crooked");
+                result.slash_is_counter = try attribute(owned, tree, child, "isCounter");
             },
             6 => {
                 result.back_slash_node = child;
                 result.back_slash = try attribute(owned, tree, child, "type");
+                result.back_slash_crooked = try attribute(owned, tree, child, "Crooked");
+                result.back_slash_is_counter = try attribute(owned, tree, child, "isCounter");
             },
             7 => result.fill_node = child,
             else => unreachable,

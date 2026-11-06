@@ -66,6 +66,7 @@ jobs:
             ./tests/cell-border-batch.test.mjs \
             ./tests/cell-appearance-command.test.mjs \
             ./tests/cell-fill-command.test.mjs \
+            ./tools/tests/hwpx-table-border-raw-fields.test.mjs \
             ./tests/hwp5/table-border-fill-plan.test.mjs \
             ./tests/hwp5/table-variant-fill-plan.test.mjs \
             ./tools/tests/table-cell-appearance-observation.test.mjs \
@@ -106,7 +107,8 @@ jobs:
         run: |
           export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
           node --max-old-space-size=512 --test --test-concurrency=1 \
-            --test-timeout=45000 ./tests/cell-style-fill-native.test.mjs
+            --test-timeout=45000 ./tests/cell-style-fill-native.test.mjs \
+            ./tools/tests/hwpx-border-source-raw-native.test.mjs
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs
       - name: Test owned observation freeze boundaries
