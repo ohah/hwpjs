@@ -86,3 +86,7 @@ Noori HWP5의 동일 ‘국민’ 범위0..2에서는 두 프레임워크의 크
 두 번째 수정은 상태 observer의 shell 표시 갱신만 `presentation-refresh.ts`로 분리해 동기 observer 순회가 끝난 뒤 한 microtask에서 최신 상태를 다시 읽는다. 같은 알림 묶음은 한 번으로 합치며 요청당 시간·보관 공간은 O(1)이다. Native 작업·선택 게시·Surface 검증 조건은 바꾸지 않는다. 처음 예약한 요청만 Promise를 반환해 기존 Core 오류 채널로 전달하고, 중복 오류 통지를 피한다. 갱신 전 pending을 해제해 재진입·오류 후 복구를 허용하고, dispose와 closed guard로 종료 후 표시 갱신을 차단한다.
 
 실제 controller·shell·서식 bridge와 통제 Runtime을 연결한 늦은 Surface observer 회귀는 수정 전 실패하고 수정 후 통과했다. 이 회귀와 순서/병합/종료/재진입/오류 시험6개, 별도 기존 캐럿 계약16개, 소스 strict·lint·포맷을 통과했다. 이는 Native·브라우저 성공과 구분하며 두 번째 UI 후보의 실제 검증은 별도다. 소스 동결 근거는 `zig-out/verification/framework-caret-presentation-fix-r2/HANDOFF.json`이 소유한다.
+
+두 번째 후보의 React/Svelte/Vanilla × HWP5/HWPX 실제 브라우저6사례는 모두 통과했다. Noori 원본 제목 셀에서 찾기0..2→캐럿2..2→17pt·굵게·기울임 의도 설정→한 글자 입력→입력 문자2..3의17pt/굵게/기울임 확인→undo 원문·18pt·원래 서식·캐럿 포커스 복원을 수행했다. 언어 선택 전환으로 표시를 강제 갱신하지 않았다. 캐럿 밑줄·취소선·색의 기존 제한도 유지됐으며, 의도 설정만으로 본문·이력이 바뀌지 않았다. 저장·재열기와 독립 Native ACK 횟수는 이 검사 범위가 아니다. 소유 브라우저 종료 뒤 active=false/pid=null·잔류0을 확인했다.
+
+근거는 같은 r2 경로의 `qa/browser-r1/QUICK-HANDOFF.json`, 각 사례의 원본 JSON/PNG와 `CLEANUP.json`이다. 공개 후보 manifest는 `7eb64a503d02afd70c3a54583745b9ac971bf37ac8f9662167e91f61d04d9ff5`, 비공개 후보 manifest는 `8eaa9df98d70bf1f2ab5e7a39bcc2bbe701ed57c6fbcb401cd3cbdbc6775c716`이며 기존 SDK·Worker·WASM을 유지한다. 이6사례를 위19개 메뉴 후보나 모든 fixture·기능의 검증 완료로 확대하지 않는다. 실제 운영 반영은 별도 배포·HTTP 확인 기록을 따른다.

@@ -151,7 +151,7 @@
     ]
   },
   "verification": {
-    "scope": "pinned708 plus selected9 UI-only Vite once; shipped runtime unchanged; candidate only, browser and deploy pending"
+    "scope": "pinned526 plus selected3 main/controller/helper UI-only Vite once; shipped runtime unchanged; candidate only, browser and deploy pending"
   },
   "files": [
     {
@@ -630,6 +630,11 @@
       "sha256": "f96decbe01917d9b6771aa0b075f6409f95f9e60dd11b8b1951a54759629dbd5"
     },
     {
+      "path": "assets/ui-public-4fefa6f6abbfb543.js",
+      "bytes": 505143,
+      "sha256": "4fefa6f6abbfb5434c0941fb7375052c00902986abf26ef7effb95c77e6ddbca"
+    },
+    {
       "path": "assets/ui-public-ba409b225fc22e34.js",
       "bytes": 504808,
       "sha256": "ba409b225fc22e34011f565497d7d1bdd41f21c999dfa942d502100b8f0bf165"
@@ -647,22 +652,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 503,
-      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
+      "sha256": "7474cca62ce7d10279021bca0b99ecb01122e11c23f912efa9661221187140bf"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 503,
-      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
+      "sha256": "7474cca62ce7d10279021bca0b99ecb01122e11c23f912efa9661221187140bf"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 503,
-      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
+      "sha256": "7474cca62ce7d10279021bca0b99ecb01122e11c23f912efa9661221187140bf"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 503,
-      "sha256": "ac3276e20824b7055f8686ceb087858ebcdc3c4da4d74ac96aece582a6b3190d"
+      "sha256": "7474cca62ce7d10279021bca0b99ecb01122e11c23f912efa9661221187140bf"
     },
     {
       "path": "fixture-catalog.json",
@@ -1182,7 +1187,7 @@
     {
       "path": "index.html",
       "bytes": 491,
-      "sha256": "a25218ca6d028ae9418d79b02ca47af085c21e731b1cfeeca342718363f93225"
+      "sha256": "b6d8e9c678592d98cc7afee46f8a1415581b168bf68239edb7481e4a0431a555"
     },
     {
       "path": "runtime/index.js",
