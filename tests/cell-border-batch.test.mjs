@@ -31,16 +31,20 @@ test('border batch owns values and encodes exact little-endian seven-scalar ABI'
   assert.equal(encodeCellBorders([]).length, 0);
 });
 test('batch rejects holes, extra metadata, duplicate owners and over-budget arrays', () => {
+  const sparse = [];
+  sparse.length = 1;
   for (const input of [
     null,
     {},
-    new Array(1),
+    sparse,
     [undefined],
     Object.assign([value], { extra: true }),
     [value, { ...value, tableNode: 9 }],
   ])
     assert.throws(() => validateCellBorders(input));
-  assert.throws(() => validateCellBorders(new Array(4097)), /LimitExceeded/);
+  const oversized = [];
+  oversized.length = 4097;
+  assert.throws(() => validateCellBorders(oversized), /LimitExceeded/);
   assert.deepEqual(validateCellBordersMessage({ kind: 'cell-borders', cells: [value] }), [value]);
   for (const input of [
     { kind: 'cell-borders', cells: [value], extra: 1 },
