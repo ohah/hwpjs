@@ -1,3 +1,4 @@
+import { createPresentationRefresh } from './presentation-refresh.ts';
 import { captureFormattingPresentation } from './surface-formatting-capture.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
 import type { SurfaceClipboardPort } from './clipboard-bridge.ts';
@@ -512,13 +513,17 @@ export async function mountDemo(
   const normalizationNotice = mountNormalizationNotice(shell.saveOptionsMount, editor);
   const observedNotice = mountObservedDocInfoNotice(shell.saveOptionsMount, editor);
   const sourcePolicyNotice = mountSourcePolicyNotice(shell.saveOptionsMount, editor);
+  const presentationRefresh = createPresentationRefresh(() => {
+    if (!closed) shell.update();
+  });
   let unsubscribe = () => {};
   let headless: ReturnType<typeof mountHeadlessPanel> | undefined;
   let shortcuts: ReturnType<typeof mountShortcutSettings> | undefined;
   void refreshFixtures();
   try {
     if (shell.surfaceMount && mountHost) host = await mountHost(shell.surfaceMount, editor, note);
-    // Surface 먼저 관측한 뒤 현재 대상 기반 presentation을 읽습니다.
+    // Async hosts may register Surface observers later. Refresh presentation only
+    // after all synchronous state observers have seen the current state.
     unsubscribe = editor.registerStateListener((state) => {
       if (closed) return;
       traces.push({
@@ -527,7 +532,7 @@ export async function mountDemo(
       });
       if (traces.length > 100) traces.shift();
       shell.setTrace(traces);
-      shell.update();
+      return presentationRefresh.request();
     });
     if (shell.surfaceMount)
       shortcuts = mountShortcutSettings({
@@ -548,6 +553,7 @@ export async function mountDemo(
   } catch (error) {
     closed = true;
     cancelFixtureRefresh();
+    presentationRefresh.dispose();
     unsubscribe();
     shortcuts?.dispose();
     contextMenu?.close();
@@ -584,6 +590,7 @@ export async function mountDemo(
       formatting.dispose();
       cancelFixtureRefresh();
       const drained = admission.dispose();
+      presentationRefresh.dispose();
       unsubscribe();
       headless?.dispose();
       shortcuts?.dispose();

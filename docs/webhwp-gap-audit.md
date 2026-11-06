@@ -10,7 +10,7 @@
 
 ## 실제로 재현한 통합 결함
 
-React/Svelte 데모는 `apps/demo/src/main.ts`의 어댑터에서 `captureCaretFormatting`을 전달하지 않는다. 계약은 `surface-formatting-port.ts`, 구현은 Vanilla Surface가 소유한다. 같은 fake Surface/포트셋으로 호출1회/0회 차이를 확인하고 운영 화면에서도 별도로 재현했다.
+감사 기준 버전의 React/Svelte 데모는 `apps/demo/src/main.ts`의 어댑터에서 `captureCaretFormatting`을 전달하지 않았다. 계약은 `surface-formatting-port.ts`, 구현은 Vanilla Surface가 소유한다. 같은 fake Surface/포트셋으로 호출1회/0회 차이를 확인하고 운영 화면에서도 별도로 재현했다. 위임 추가 이후의 상태는 아래 후속 검증을 따른다.
 
 Noori HWP5의 동일 ‘국민’ 범위0..2에서는 두 프레임워크의 크기·굵게·기울임이 활성이다. ArrowRight로2..2 캐럿을 만들면 세 도구가 `EmptyCharacterSelection`으로 비활성이 된다. Vanilla 같은 문맥은 활성이고17pt 의도·실제 입력이 된다. React/Svelte의 일반 R/S 입력·undo는 정상이며, 비활성 도구를 강제로 실행하지 않았다. 이는 프레임워크 데모의 다음 입력 서식 연결 누락이고, 전체 React/Svelte 편집 또는 Native 실패라는 뜻은 아니다. React/Svelte HWPX는 미관측이다.
 
@@ -76,3 +76,13 @@ Noori HWP5의 동일 ‘국민’ 범위0..2에서는 두 프레임워크의 크
 같은 실제 host factory와 동일한 통제 Surface를 사용한 수정 전 검사에서 Vanilla만 호출1회, React/Svelte는0회였다. 수정 후 세 경로가 각각1회 같은 포트에 위임했다. 실제 패키지 소스 타입 경계의 strict 검사와 lint·format·transpile은 통과했다. 다만 오래된 설치 dist 타입 경계는 수정 전26개, 수정 후28개 진단으로 실패한다. 추가2개는 새 caret 메서드를 모르는 오래된 선언이며, 캐스트·임시 선언으로 숨기지 않았다. 전체 저장소/설치 SDK 타입 검사가 모두 통과했다는 뜻은 아니다.
 
 이 통제 검사로 실서비스 성공을 선언하지 않는다. 고정된 기존 SDK·Worker·WASM을 재사용해 UI 번들만 만들고 React/Svelte × HWP5/HWPX 네 사례에서 실제 다음 입력 서식·실행 취소·포커스를 확인해야 한다. 이 수정은 위19개 직접 메뉴 후보와 다른 고급 기능을 구현하는 작업이 아니다. 후속 근거는 `zig-out/verification/framework-caret-forwarding-fix-r1/HANDOFF.json`이 소유한다.
+
+후속 첫 후보 번들에서 React/Svelte × HWP5/HWPX 네 사례를 실제 브라우저로 실행했으나, 찾기 결과0..2에서 오른쪽 화살표로 캐럿2..2를 만든 뒤 크기·굵게·기울임이 모두 `EmptyCharacterSelection`으로 비활성인 상태가 남았다. 각8초 대기 뒤에도 동일했다. 선행 가용성 조건을 통과하지 못해 다음 입력 서식과 undo 단계는 실행하지 않았다. 이 후보는 배포하지 않았으며, 소스 검사·위임 테스트 통과를 제품 수정 완료로 해석하지 않는다.
+
+후보 HTML과 실제 HTTP entry, 소스 맵의 두 위임 메서드 및 단일 Surface 구현을 대조해 오래된 진입점과 중복 Surface 가설을 제외했다. 실패 원본은 같은 경로의 `qa/browser-r1/QUICK-HANDOFF.json`과 `REPORT.md`에 보존한다. 기존 운영 제품은 유지한다.
+
+추가 실제 React HWP5 진단에서 캐럿2..2를 유지한 채 글꼴 적용 언어만 대표→한글로 바꾸자 크기·굵게·기울임이 즉시 활성화됐다. 대표로 되돌려도 유지됐고 본문·캐럿·이력 가용성·state trace는 변하지 않았다. 이는 문서 수정 없이 shell presentation을 갱신한 결과다. 소스에서는 Core가 등록 순서대로 listener를 동기 호출하며, 비동기 React/Svelte 마운트에서 앱 listener가 Surface보다 먼저 등록될 수 있음을 확인했다. 따라서 새 Core state와 아직 관측하지 않은 Surface를 함께 읽어 가용성을 거부한 뒤 재갱신하지 않는 경로가 성립한다. 브라우저에서 listener 순서를 직접 계측한 것은 아니다. 진단 원본은 `qa/diagnostic-shell-refresh-r1/RESULT.json`과 `REPORT.md`에 보존한다.
+
+두 번째 수정은 상태 observer의 shell 표시 갱신만 `presentation-refresh.ts`로 분리해 동기 observer 순회가 끝난 뒤 한 microtask에서 최신 상태를 다시 읽는다. 같은 알림 묶음은 한 번으로 합치며 요청당 시간·보관 공간은 O(1)이다. Native 작업·선택 게시·Surface 검증 조건은 바꾸지 않는다. 처음 예약한 요청만 Promise를 반환해 기존 Core 오류 채널로 전달하고, 중복 오류 통지를 피한다. 갱신 전 pending을 해제해 재진입·오류 후 복구를 허용하고, dispose와 closed guard로 종료 후 표시 갱신을 차단한다.
+
+실제 controller·shell·서식 bridge와 통제 Runtime을 연결한 늦은 Surface observer 회귀는 수정 전 실패하고 수정 후 통과했다. 이 회귀와 순서/병합/종료/재진입/오류 시험6개, 별도 기존 캐럿 계약16개, 소스 strict·lint·포맷을 통과했다. 이는 Native·브라우저 성공과 구분하며 두 번째 UI 후보의 실제 검증은 별도다. 소스 동결 근거는 `zig-out/verification/framework-caret-presentation-fix-r2/HANDOFF.json`이 소유한다.
