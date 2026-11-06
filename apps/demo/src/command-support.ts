@@ -14,6 +14,7 @@ const alignmentLabel = (key: 'DISTRIBUTE' | 'DISTRIBUTE_SPACE'): string => {
   return found.label;
 };
 export const DEMO_COMMAND_REGISTRY = Object.freeze({
+  'new-document': entry('새 문서', '문서', false, false),
   save: entry('저장', '문서'),
   undo: entry('실행 취소', '편집'),
   redo: entry('다시 실행', '편집'),
@@ -27,6 +28,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'insert-image': entry('그림', '삽입', true),
   'insert-table': entry('표', '삽입', true),
   'table-cell-properties': entry('표/셀 속성', '표', true),
+  'table-cell-appearance': entry('셀 테두리/배경', '표', true),
   'table-cell-background': entry('셀 배경', '표', true),
   'table-cell-border': entry('셀 테두리', '표', true),
   'insert-chart': entry('차트', '삽입', true),
@@ -205,8 +207,7 @@ const editableContextCommands: readonly ContextCommand[] = Object.freeze([
 const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
   ...editableContextCommands,
   'table-cell-properties',
-  'table-cell-background',
-  'table-cell-border',
+  'table-cell-appearance',
 ]);
 const pictureContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,

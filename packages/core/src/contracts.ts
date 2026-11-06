@@ -36,4 +36,7 @@ export interface EditorRuntime {
   dispose(): void | Promise<void>;
 }
 
-export type RuntimeFactory = () => EditorRuntime | Promise<EditorRuntime>;
+export type RuntimeFactory = (() => EditorRuntime | Promise<EditorRuntime>) & {
+  /** Returns owned constructor bytes; the editor clears them after candidate admission. */
+  createDocumentBytes?(format: 'hwp5' | 'hwpx'): Promise<Uint8Array>;
+};

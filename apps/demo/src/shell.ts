@@ -24,6 +24,7 @@ const frameworks: readonly [DemoFramework, string][] = [
 type Tool = readonly [DemoCommand, string, ShellIcon];
 // 표시 순서만 소유한다. 지원 여부와 실행은 기존 명령 가용성 경로가 결정한다.
 const toolGroups: readonly (readonly [string, readonly Tool[]])[] = [
+  ['문서', [['new-document', DEMO_COMMAND_REGISTRY['new-document'].label, 'insert-header']]],
   [
     '클립보드',
     [
@@ -94,7 +95,7 @@ const extraTools: readonly Tool[] = [
 ];
 const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
 const menus: readonly [string, readonly DemoCommand[]][] = [
-  ['파일', ['save']],
+  ['파일', ['new-document', 'save']],
   ['편집', ['undo', 'redo', 'cut', 'copy', 'paste', 'format-copy', 'find', 'replace']],
   ['보기', ['zoom-in', 'zoom-out', 'toggle-marks', 'toggle-paragraph-marks', 'toggle-grid']],
   ['입력', ['insert-image', 'insert-table', 'insert-shape', 'insert-link', 'insert-symbol']],
@@ -118,16 +119,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
     ],
   ],
   ['쪽', ['insert-header', 'insert-footer']],
-  [
-    '표',
-    [
-      'insert-table',
-      'table-cell-properties',
-      'table-cell-background',
-      'table-cell-border',
-      'object-properties',
-    ],
-  ],
+  ['표', ['insert-table', 'table-cell-properties', 'table-cell-appearance', 'object-properties']],
   ['검토', ['insert-comment']],
   ['도구', ['word-count']],
 ];
@@ -148,6 +140,7 @@ const labels = new Map<DemoCommand, string>([
   ['align-center', '가운데 정렬'],
   ['align-right', '오른쪽 정렬'],
   ['align-justify', '양쪽 정렬'],
+  ['table-cell-appearance', DEMO_COMMAND_REGISTRY['table-cell-appearance'].label],
   ['table-cell-background', DEMO_COMMAND_REGISTRY['table-cell-background'].label],
   ['table-cell-border', DEMO_COMMAND_REGISTRY['table-cell-border'].label],
   ['align-distribute', DEMO_COMMAND_REGISTRY['align-distribute'].label],

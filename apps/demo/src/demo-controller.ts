@@ -16,7 +16,7 @@ import {
   SET_CHARACTER_FONT_NAME_COMMAND,
 } from '@hwpjs/core';
 import { createEditor, type HeadlessEditor } from '@hwpjs/core';
-import { createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
+import { createReaderRuntimeFactory, createWorkerRuntimeFactory } from '@hwpjs/core/runtime';
 import { demoRuntimeAssets } from './runtime-assets.ts';
 import { createFormattingDialogController } from './formatting-dialog-controller.ts';
 import { createFontNameTool } from './font-name-tool.ts';
@@ -28,8 +28,7 @@ import { createSymbolInsertionPort } from './symbol-insertion-port.ts';
 import { createTableInsertTool } from './table-insert-tool.ts';
 import { createObjectPropertiesTool } from './object-properties-tool.ts';
 import { createTableCellPropertiesTool } from './table-cell-properties-tool.ts';
-import { createTableCellBackgroundTool } from './table-cell-background-tool.ts';
-import { createTableCellBorderTool } from './table-cell-border-tool.ts';
+import { createTableCellAppearanceTool } from './table-cell-appearance-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
 import { commandSupportActions } from './command-support.ts';
 import { mountDemoContextMenu, contextTarget, type ContextPicture } from './context-menu.ts';
@@ -43,6 +42,11 @@ import type {
 } from './shell-contract.ts';
 import { mountHeadlessPanel } from './headless-panel.ts';
 import { requireOpenConsent } from './document-open-consent.ts';
+import { askNewDocumentFormat, newDocumentName } from './new-document-dialog.ts';
+import { focusNewDocumentAfterPaint } from './new-document-focus.ts';
+import { confirmDocumentReplacement } from './new-document-replacement.ts';
+import { askConsent } from './consent-dialog.ts';
+import { DocumentOpenCancelledError } from './document-open-consent.ts';
 import { createDocumentAdmission } from './document-admission.ts';
 import { mountSavePolicy } from './save-policy.ts';
 import { askDocumentPassword } from './password-dialog.ts';
@@ -110,11 +114,16 @@ export async function mountDemo(
   };
   let host: DemoHost | undefined;
   const traces: DemoTraceEntry[] = [];
-  const runtimeFactory = createWorkerRuntimeFactory(
+  const workerFactory = createWorkerRuntimeFactory(
     import.meta.env?.DEV
       ? { workerURL: '/hwpjs/worker.js', wasmURL: '/hwpjs/hwpjs.wasm' }
       : demoRuntimeAssets(import.meta.url),
   );
+  const runtimeFactory = Object.assign(workerFactory, {
+    createDocumentBytes: createReaderRuntimeFactory({
+      loadWasmModule: workerFactory.preload,
+    }).createDocumentBytes!,
+  });
   const editor = createEditor({
     runtimeFactory,
     onError: () => {
@@ -200,17 +209,7 @@ export async function mountDemo(
     },
     onPresentationChange: () => shell.update(),
   });
-  const tableCellBackground = createTableCellBackgroundTool({
-    root,
-    editor,
-    core: paragraphShapeCore,
-    onStatus: note,
-    onClose: () => {
-      host?.focus?.();
-    },
-    onPresentationChange: () => shell.update(),
-  });
-  const tableCellBorder = createTableCellBorderTool({
+  const tableCellAppearance = createTableCellAppearanceTool({
     root,
     editor,
     core: paragraphShapeCore,
@@ -283,8 +282,9 @@ export async function mountDemo(
       'insert-table': tableInsert.presentation(),
       'object-properties': objectProperties.presentation(),
       'table-cell-properties': tableCellProperties.presentation(),
-      'table-cell-background': tableCellBackground.presentation(),
-      'table-cell-border': tableCellBorder.presentation(),
+      'table-cell-background': tableCellAppearance.presentation(),
+      'table-cell-border': tableCellAppearance.presentation(),
+      'table-cell-appearance': tableCellAppearance.presentation(),
       'insert-symbol': {
         enabled: ready && !!state.selection,
         reason: !ready
@@ -304,6 +304,7 @@ export async function mountDemo(
         : {}),
       ...viewOptions.presentation(ready),
       ...clipboard.getPresentation().actions,
+      'new-document': { enabled: !busy },
       save: { enabled: ready, reason: ready ? undefined : '문서를 먼저 열어주세요.' },
       undo: {
         enabled: host?.canRequestHistory?.('undo') ?? history.canUndo,
@@ -371,6 +372,17 @@ export async function mountDemo(
   });
   const admission = createDocumentAdmission({
     cancelLoad: () => editor.cancelLoad(),
+    confirmReplace: (signal) =>
+      confirmDocumentReplacement(editor, signal, () =>
+        askConsent(root, signal, {
+          role: 'replace-unsaved-document',
+          label: '저장하지 않은 변경 사항',
+          message: '저장하지 않은 변경 사항이 있습니다. 문서를 교체하면 이 변경 사항은 사라집니다.',
+          accept: '저장하지 않고 계속',
+          acceptRole: 'accept-unsaved-replacement',
+          cancelRole: 'cancel-unsaved-replacement',
+        }),
+      ),
     load: open,
     loading: (name) => {
       busy = true;
@@ -404,16 +416,41 @@ export async function mountDemo(
       note(available?.reason ?? '현재 사용할 수 없습니다.');
       return;
     }
+    if (action.command === 'new-document') {
+      await admission.replace('새 문서', async (signal) => {
+        const format = await askNewDocumentFormat(root, signal);
+        if (signal.aborted) return;
+        if (!format) throw new DocumentOpenCancelledError();
+        const state = await editor.createDocument({ format });
+        if (signal.aborted) return;
+        const view = root.ownerDocument.defaultView;
+        // The constructor publishes its verified initial caret with the document.
+        if (view && host?.focus && state.selection)
+          focusNewDocumentAfterPaint({
+            signal,
+            current: () => !closed && editor.getEditorState().documentId === state.documentId,
+            focus: () => host?.focus?.() === true,
+            requestFrame: (callback) => view.requestAnimationFrame(callback),
+            cancelFrame: (handle) => view.cancelAnimationFrame(handle),
+          });
+        return newDocumentName(format);
+      });
+      return;
+    }
+    if (action.command === 'table-cell-appearance') {
+      tableCellAppearance.open();
+      return;
+    }
     if (action.command === 'table-cell-properties') {
       tableCellProperties.open();
       return;
     }
     if (action.command === 'table-cell-background') {
-      tableCellBackground.open();
+      tableCellAppearance.open();
       return;
     }
     if (action.command === 'table-cell-border') {
-      tableCellBorder.open();
+      tableCellAppearance.open();
       return;
     }
     if (action.command === 'insert-table') {
@@ -573,7 +610,7 @@ export async function mountDemo(
         available: (command) =>
           !closed &&
           !busy &&
-          editor.getEditorState().status === 'ready' &&
+          (command === 'new-document' || editor.getEditorState().status === 'ready') &&
           ((command === 'paste' && host?.canPasteInput?.() === true) ||
             presentation().actions?.[command]?.enabled === true),
         execute: runAction,
@@ -592,8 +629,7 @@ export async function mountDemo(
     textTools.dispose();
     symbols.dispose();
     tableCellProperties.dispose();
-    tableCellBackground.dispose();
-    tableCellBorder.dispose();
+    tableCellAppearance.dispose();
     tableInsert.dispose();
     objectProperties.dispose();
     paragraphShape.dispose();
@@ -632,8 +668,7 @@ export async function mountDemo(
       textTools.dispose();
       symbols.dispose();
       tableCellProperties.dispose();
-      tableCellBackground.dispose();
-      tableCellBorder.dispose();
+      tableCellAppearance.dispose();
       tableInsert.dispose();
       objectProperties.dispose();
       paragraphShape.dispose();

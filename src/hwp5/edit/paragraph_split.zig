@@ -36,6 +36,10 @@ fn prepareSource(a: std.mem.Allocator, source: []const u8, version: Version, p: 
     }
     if (p.source_node != null) {
         for (p.tokens) |token| {
+            if (token.kind == .control and token.raw.len == 16 and std.mem.readInt(u16, token.raw[0..2], .little) == 2 and std.mem.readInt(u32, token.raw[2..6], .little) == @import("../body/control_rules.zig").section_id)
+                return @import("section_prefix_split.zig").prepare(a, source, version, p, at, new_id, char_count);
+        }
+        for (p.tokens) |token| {
             if (token.kind == .control and token.raw.len == 16 and std.mem.readInt(u16, token.raw[0..2], .little) == 2 and std.mem.readInt(u32, token.raw[2..6], .little) == @import("../body/column_def.zig").control_id)
                 return @import("column_split_draft.zig").prepare(a, source, version, p, at, new_id, char_count);
         }

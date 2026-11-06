@@ -27,6 +27,11 @@ pub fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), template: framing.R
     defer a.free(header);
     Header.writeTextCounts(header, units, @intCast(p.character_runs.len), 0);
     try @import("line_break_mask.zig").write(header, p.tokens);
+    // This writer accepts plain generated text only. Section/column anchor
+    // subtrees remain with the source paragraph, so their shared bit must not
+    // leak from its header template into a continuation. Preserve other bits.
+    const mask = header[Header.control_mask_offset..][0..4];
+    std.mem.writeInt(u32, mask, std.mem.readInt(u32, mask, .little) & ~@as(u32, 1 << 2), .little);
     std.mem.writeInt(u32, header[0..4], units | (if (last_in_owner) @as(u32, 0x80000000) else 0), .little);
     std.mem.writeInt(u16, header[Header.para_shape_id_offset..][0..2], p.para_shape_id, .little);
     header[Header.style_id_offset] = p.style_id;

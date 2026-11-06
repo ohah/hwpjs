@@ -268,12 +268,17 @@ export function createCanvasSurface({
       displayed.split(':').slice(0, -2).join(':') !== key.split(':').slice(0, -2).join(':');
     if (changedDocument) {
       atomicProfile = undefined;
-      direct?.reset({ selectionOrigin: 'core' });
+      // Reset the old projection without clearing the new document's Core selection.
+      nonTextSelectionProjection = state;
+      try {
+        direct?.reset({ selectionOrigin: 'core' });
+      } finally {
+        nonTextSelectionProjection = undefined;
+      }
       renderer.clear();
       selectionKey = '';
     }
-    const retained =
-      !changedDocument && state.selection ? (state.selection as SelectionTarget) : undefined;
+    const retained = state.selection ? (state.selection as SelectionTarget) : undefined;
     if (!nonTextHistoryPending && !retained && !changedDocument && displayed && !bridge?.busy())
       direct?.external({ kind: 'external-update', origin: 'core' });
     displayed = key;
@@ -287,14 +292,19 @@ export function createCanvasSurface({
       deferLayout:
         !changedDocument && ['splice', 'undo', 'redo'].includes(bridge?.pendingKind() ?? ''),
     });
-    if (!nonTextHistoryPending && retained && !bridge?.busy()) {
+    if (!nonTextHistoryPending && retained && lease?.isActive() && !bridge?.busy()) {
       direct?.initializeCapabilities({
         ...(state.capabilities as object),
         historyRevision: state.nativeHistoryRevision,
         historyRevisions: state.nativeHistoryRevisions,
       });
-      if (!direct?.selectTextRange(retained, { focusInput: false, selectionOrigin: 'core' }))
-        direct?.external({ kind: 'external-update', origin: 'core' });
+      if (changedDocument) nonTextSelectionProjection = state;
+      try {
+        if (!direct?.selectTextRange(retained, { focusInput: false, selectionOrigin: 'core' }))
+          direct?.external({ kind: 'external-update', origin: 'core' });
+      } finally {
+        if (changedDocument) nonTextSelectionProjection = undefined;
+      }
     }
     if (changedDocument)
       direct?.initializeCapabilities({

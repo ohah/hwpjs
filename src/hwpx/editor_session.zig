@@ -536,15 +536,20 @@ pub const Session = struct {
         return changed;
     }
 
-    pub fn setCellBorder(self: *Session, section: usize, table_node: usize, list_node: usize, edges: u8, style: @import("../model/border_fill_patch.zig").Style, width: u16, color: u32) !bool {
-        if (!self.history_delta_managed or self.history_transaction_active) return @import("table_cell_border_session.zig").apply(self, section, table_node, list_node, edges, style, width, color);
+    pub const CellBorderRequest = @import("hxcell_border_batch.zig").Request;
+    pub fn applyCellBorders(self: *Session, requests: []const CellBorderRequest) !bool {
+        if (requests.len == 0) return false;
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("table_cell_border_session.zig").applyBatch(self, requests);
         if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
         try @import("suffix_text_delta.zig").normalize(self);
         self.history_transaction_active = true;
         defer self.history_transaction_active = false;
-        const changed = try @import("table_cell_border_session.zig").apply(self, section, table_node, list_node, edges, style, width, color);
+        const changed = try @import("table_cell_border_session.zig").applyBatch(self, requests);
         if (changed) self.mutation_serial += 1;
         return changed;
+    }
+    pub fn setCellBorder(self: *Session, section: usize, table_node: usize, list_node: usize, edges: u8, style: @import("../model/border_fill_patch.zig").Style, width: u16, color: u32) !bool {
+        return self.applyCellBorders(&.{.{ .section = section, .table_node = std.math.cast(u32, table_node) orelse return error.InvalidCellBackgroundOwner, .list_node = std.math.cast(u32, list_node) orelse return error.InvalidCellBackgroundOwner, .edges = edges, .style = style, .width_hundredth_mm = width, .color = color }});
     }
 
     pub fn setCellSize(self: *Session, section_index: usize, cell_node: usize, size: @import("table_cell_size_write.zig").Size) !bool {

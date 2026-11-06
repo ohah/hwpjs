@@ -1,3 +1,4 @@
+import './table-insert-dialog.css';
 import { createDialogLayer } from './dialog-layer.ts';
 import { tableInsertDimensions, type TableInsertDraft } from './table-insert-bridge.ts';
 export function createTableInsertDialog(
@@ -10,11 +11,21 @@ export function createTableInsertDialog(
     mode: 'modal',
     onDismiss: options.onDismiss,
   });
+  layer.element.classList.add('hwp-table-insert-dialog');
   const doc = root.ownerDocument,
     fields = {} as Record<keyof TableInsertDraft, HTMLInputElement>;
+  const counts = doc.createElement('fieldset'),
+    size = doc.createElement('fieldset');
+  const countLegend = doc.createElement('legend'),
+    sizeLegend = doc.createElement('legend');
+  countLegend.textContent = '줄/칸';
+  sizeLegend.textContent = '크기 지정';
+  counts.append(countLegend);
+  size.append(sizeLegend);
+  layer.body.append(counts, size);
   for (const [key, label, value] of [
-    ['rows', '줄 수', '2'],
-    ['columns', '칸 수', '2'],
+    ['rows', '줄 개수', '5'],
+    ['columns', '칸 개수', '5'],
     ['widthPoints', '표 너비 (pt)', '360'],
     ['rowHeightPoints', '한 줄 높이 (pt)', '18'],
   ] as const) {
@@ -27,15 +38,14 @@ export function createTableInsertDialog(
     input.dataset.role = 'table-' + key;
     input.setAttribute('aria-label', label);
     row.append(input);
-    layer.body.append(row);
+    (key === 'rows' || key === 'columns' ? counts : size).append(row);
     fields[key] = input;
   }
   const note = doc.createElement('p'),
     status = doc.createElement('p'),
     insert = doc.createElement('button'),
     cancel = doc.createElement('button');
-  note.textContent =
-    '본문 커서 위치에 표를 넣습니다. 새 표 자동 선택과 셀 편집은 연결되지 않았습니다.';
+  note.textContent = '본문 커서 위치에 표를 넣습니다. 너비와 한 줄 높이를 직접 지정합니다.';
   status.dataset.role = 'table-status';
   status.setAttribute('role', 'status');
   insert.type = cancel.type = 'button';

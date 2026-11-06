@@ -42,6 +42,12 @@ pub fn fromParagraphs(a: std.mem.Allocator, section: *const editor.Section, para
     defer output.deinit(a);
     var source_owners: @import("table_display_owner_query.zig").Query = .{ .allocator = a, .tree = &section.tree };
     defer source_owners.deinit();
+    // Size overrides use first-match semantics, including existing duplicate
+    // entries. Build lazily after resolving the first actual cell so non-cell
+    // and invalid paragraph validation retains its original order.
+    var sizes = std.AutoHashMap(usize, @import("table_cell_size_write.zig").Size).init(a);
+    defer sizes.deinit();
+    var sizes_indexed = false;
     for (paragraphs, 0..) |paragraph, index| {
         const resolved = try source_owners.resolve(paragraph.template_element);
         if (paragraph.joined()) |joined| {
@@ -54,11 +60,17 @@ pub fn fromParagraphs(a: std.mem.Allocator, section: *const editor.Section, para
         }
         if (resolved) |cell_owner| {
             var displayed = cell_owner;
-            for (section.cell_sizes.items) |entry| if (entry.cell_node == displayed.cell_node) {
-                displayed.cell.width = entry.size.width;
-                displayed.cell.height = entry.size.height;
-                break;
-            };
+            if (!sizes_indexed) {
+                for (section.cell_sizes.items) |entry| {
+                    const slot = try sizes.getOrPut(entry.cell_node);
+                    if (!slot.found_existing) slot.value_ptr.* = entry.size;
+                }
+                sizes_indexed = true;
+            }
+            if (sizes.get(displayed.cell_node)) |size| {
+                displayed.cell.width = size.width;
+                displayed.cell.height = size.height;
+            }
             try output.append(a, .{ .paragraph = section.first_paragraph + index, .owner = displayed });
         }
     }

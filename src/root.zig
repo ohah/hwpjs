@@ -15,6 +15,9 @@ pub const model = @import("model/document.zig");
 test {
     _ = @import("cell_background_probe.zig");
     _ = @import("cell_border_probe.zig");
+    _ = @import("new_document_probe.zig");
+    _ = @import("h5cell_border_batch_probe.zig");
+    _ = @import("hxcell_border_batch_probe.zig");
     _ = @import("hwp5/body/note_shape_attributes_tests.zig");
     _ = @import("hwpx/ole_outside_margin_domain_tests.zig");
     _ = @import("model/history_budget_tests.zig");

@@ -1,0 +1,58 @@
+.hwp-table-insert-dialog {
+  width: min(480px, calc(100vw - 24px));
+}
+.hwp-table-insert-dialog[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+}
+.hwp-table-insert-dialog > .hwp-dialog-header {
+  grid-column: 1 / -1;
+}
+.hwp-table-insert-dialog > .hwp-dialog-body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.hwp-table-insert-dialog fieldset {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #d2d9e6;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+}
+.hwp-table-insert-dialog legend {
+  color: #28569a;
+  padding: 0 4px;
+  font-weight: 600;
+}
+.hwp-table-insert-dialog label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 8px;
+}
+.hwp-table-insert-dialog input {
+  min-width: 0;
+  width: 100%;
+  font: inherit;
+}
+.hwp-table-insert-dialog p {
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.hwp-table-insert-dialog > .hwp-dialog-footer {
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 14px 14px 14px 0;
+}
+@media (max-width: 380px) {
+  .hwp-table-insert-dialog[open] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hwp-table-insert-dialog > .hwp-dialog-footer {
+    flex-direction: row;
+    padding: 0 14px 14px;
+  }
+}

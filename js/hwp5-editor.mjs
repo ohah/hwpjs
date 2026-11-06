@@ -1,6 +1,8 @@
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { validateAbi } from './abi.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
+import { encodeCellBorders } from './cell-border-batch.mjs';
+import { validateCellAppearance } from './cell-appearance-command.mjs';
 import { validateCellBackground } from './cell-background-command.mjs';
 import { validateCellBorder, cellBorderStyleCode } from './cell-border-command.mjs';
 import { decodeCharacterFontMetrics } from './character-font-metrics.mjs';
@@ -464,6 +466,34 @@ export async function createExperimentalHwp5Editor(
       return decodeTableBindings(
         output(() => wasm.hwp5_edit_table_bindings(u32(section, 'section'))).bytes,
       );
+    },
+    setCellAppearance(input) {
+      check();
+      const value = validateCellAppearance(input),
+        bytes = encodeCellBorders(value.cells),
+        bg = value.background;
+      if (typeof wasm.hwp5_edit_set_cell_appearance !== 'function')
+        throw Error('Hwp5CellAppearanceAbiUnavailable');
+      memory.withBytes(bytes, (ptr, size) => {
+        success(
+          wasm.hwp5_edit_set_cell_appearance(
+            ptr,
+            size,
+            bg ? 1 : 0,
+            bg?.section ?? 0,
+            bg?.tableNode ?? 0,
+            bg?.listNode ?? 0,
+            bg?.color ?? 0,
+          ),
+        );
+      });
+    },
+    setCellBorders(cells) {
+      check();
+      const bytes = encodeCellBorders(cells);
+      if (typeof wasm.hwp5_edit_set_cell_borders !== 'function')
+        throw Error('Hwp5CellBorderBatchAbiUnavailable');
+      memory.withBytes(bytes, (ptr, size) => success(wasm.hwp5_edit_set_cell_borders(ptr, size)));
     },
     setCellBorder(input) {
       check();

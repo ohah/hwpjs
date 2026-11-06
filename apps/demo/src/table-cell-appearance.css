@@ -1,0 +1,109 @@
+.hwp-cell-appearance-dialog {
+  width: min(660px, calc(100vw - 24px));
+}
+.hwp-cell-appearance-dialog[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 108px;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.hwp-cell-appearance-dialog > .hwp-dialog-header {
+  grid-column: 1 / -1;
+}
+.hwp-cell-appearance-dialog > .hwp-dialog-body {
+  min-width: 0;
+  padding: 12px;
+  max-height: calc(100dvh - 100px);
+}
+.hwp-cell-appearance-dialog > .hwp-dialog-footer {
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 12px 12px 12px 0;
+  gap: 6px;
+}
+.hwp-cell-appearance-dialog > .hwp-dialog-footer > button:last-child {
+  margin-top: 16px;
+}
+.hwp-cell-appearance-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #cbd4e6;
+  margin-bottom: 12px;
+}
+.hwp-cell-appearance-tabs button[aria-selected='true'] {
+  color: #174da2;
+  border-bottom: 2px solid #4263c8;
+  background: #edf3fc;
+}
+.hwp-cell-appearance-panel {
+  display: grid;
+  gap: 12px;
+}
+.hwp-cell-appearance-panel fieldset {
+  border: 1px solid #d2d9e6;
+  margin: 0;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+.hwp-cell-appearance-panel legend {
+  color: #28569a;
+  font-weight: 600;
+  padding: 0 4px;
+}
+.hwp-cell-appearance-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: 8px;
+}
+.hwp-cell-appearance-field > span {
+  overflow-wrap: anywhere;
+}
+.hwp-cell-appearance-field input,
+.hwp-cell-appearance-field select {
+  width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+.hwp-cell-appearance-field input[type='checkbox'] {
+  width: auto;
+  justify-self: start;
+}
+.hwp-cell-appearance-field input[type='color'] {
+  max-width: 6em;
+}
+.hwp-cell-appearance-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.hwp-cell-appearance-colors {
+  display: grid;
+  gap: 8px;
+}
+.hwp-cell-appearance-note,
+.hwp-cell-appearance-dialog [role='status'] {
+  margin: 8px 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .hwp-cell-appearance-dialog[open] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hwp-cell-appearance-dialog > .hwp-dialog-footer {
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 0 12px 12px;
+  }
+  .hwp-cell-appearance-dialog > .hwp-dialog-footer > button:last-child {
+    margin-top: 0;
+  }
+  .hwp-cell-appearance-dialog > .hwp-dialog-body {
+    max-height: calc(100dvh - 160px);
+  }
+  .hwp-cell-appearance-range {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

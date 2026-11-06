@@ -1,7 +1,15 @@
 import type { CanvasSurface, CanvasSurfaceProps, SurfaceFactory } from './types.ts';
 
 /** Serial surface replacement, never a second document/command queue. */
-export function createSurfaceLifecycle(root: HTMLElement, create: SurfaceFactory) {
+export function createSurfaceLifecycle(
+  root: HTMLElement,
+  create: SurfaceFactory,
+): {
+  update(props: CanvasSurfaceProps): void;
+  getSurface(): CanvasSurface | undefined;
+  settled(): Promise<void>;
+  destroy(): Promise<void>;
+} {
   let latest: CanvasSurfaceProps | undefined, mounted: CanvasSurfaceProps | undefined;
   let surface: CanvasSurface | undefined,
     closed = false,

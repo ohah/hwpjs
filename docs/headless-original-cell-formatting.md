@@ -53,3 +53,5 @@ Noori HWP5/HWPX 두 문서의 실제 UI 경로에서 높이 원값12578→12678 
 [공식 테두리 도움말](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/cellborder/cellborder%28border%29.htm)은 선 종류·목록형 굵기·색·방향과 선택 셀/모든 셀 범위를 설명한다. [공식 배경 도움말](https://help.hancom.com/hoffice110/ko-KR/Hwp/table/cellborder/cellborder%28background%29.htm)은 색·무늬·그러데이션·그림 및 채우기 없음을 구분한다. [표 배경](https://help.hancom.com/docs/ko-KR/mergedProjects/hoffice_hwp/topics/hancomoffice/hwp/table/tableborder/tableborder.htm)은 여러 셀에 각각 같은 배경을 주는 것과 다르다. 채우기 없음은 흰색·alpha=0·필드 생략과 동의어로 확정하지 않았다. 데스크톱 도움말의 UI 의미를 WebHwpCtrl API나 HWP5/HWPX 저장 계약으로 승계하지 않으며, API 상세 필드·수치 단위·공통 기본값·투명색 인코딩은 미확정이다.
 
 선택한 원본 셀의 바깥 테두리 쓰기는 [셀 테두리 편집](cell-border-editing.md)의 별도 범위·검증 상태를 따른다. 크기·배경 capability로 테두리 쓰기 지원을 추정하지 않는다.
+
+여러 원본 셀·표 전체와 통합 테두리/배경은 [범위 서식](table-range-formatting.md), 공식 창의 대조는 [표 대화상자 관측](table-dialog-reference.md)을 따른다.

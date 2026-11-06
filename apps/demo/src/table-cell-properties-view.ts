@@ -18,6 +18,7 @@ export function createTableCellPropertiesView(
     mode: 'modal',
     onDismiss: callbacks.dismiss,
   });
+  layer.element.classList.add('hwp-table-cell-properties-dialog');
   layer.body.classList.add('hwp-table-cell-properties-body');
   const doc = root.ownerDocument;
   const width = doc.createElement('input'),
@@ -40,9 +41,15 @@ export function createTableCellPropertiesView(
   width.dataset.role = 'cell-width';
   height.dataset.role = 'cell-height';
   mode.dataset.role = 'cell-size-mode';
+  const dimensions = doc.createElement('fieldset'),
+    legend = doc.createElement('legend');
+  dimensions.className = 'hwp-table-cell-properties-group';
+  legend.textContent = '셀 크기';
+  dimensions.append(legend);
+  layer.body.append(dimensions);
   for (const [input, label] of [
     [width, '셀 너비 (pt)'],
-    [height, '셀 높이 원값 (pt)'],
+    [height, '셀 높이 (pt)'],
     [mode, '너비 적용 범위'],
   ] as const) {
     const field = doc.createElement('label');
@@ -52,7 +59,7 @@ export function createTableCellPropertiesView(
     field.append(caption);
     input.setAttribute('aria-label', label);
     field.append(input);
-    layer.body.append(field);
+    dimensions.append(field);
   }
   for (const [value, label] of [
     ['cell', '선택 셀만'],
@@ -65,8 +72,7 @@ export function createTableCellPropertiesView(
     mode.append(option);
   }
   mode.value = 'cell';
-  note.textContent =
-    '원본 셀 크기를 바꿉니다. 표시 높이는 내용의 최소 크기와 다를 수 있습니다. 셀 배경·테두리·병합/분할 편집은 연결되지 않았습니다.';
+  note.textContent = '셀 높이는 내용에 따라 지정한 값보다 늘어날 수 있습니다.';
   if (!capture.columnAvailable)
     note.textContent +=
       ' 공유 열 경계: ' + tableCellReason(capture.columnReason ?? 'CellSizeBatchApiUnavailable');
@@ -75,7 +81,7 @@ export function createTableCellPropertiesView(
   status.dataset.role = 'cell-properties-status';
   status.setAttribute('role', 'status');
   apply.type = cancel.type = 'button';
-  apply.textContent = '적용';
+  apply.textContent = '확인';
   cancel.textContent = '취소';
   apply.dataset.role = 'cell-properties-apply';
   cancel.dataset.role = 'cell-properties-cancel';

@@ -8,6 +8,7 @@ export type {
   UpdateCollector,
   EditorError,
   LoadOptions,
+  CreateDocumentOptions,
   SaveOptions,
   SaveResult,
   SelectionOptions,

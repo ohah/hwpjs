@@ -5,6 +5,7 @@ import type { CharacterFontLanguage, SelectionFormatting } from '@hwpjs/core';
  */
 export type DemoFramework = 'headless' | 'vanilla' | 'react' | 'svelte';
 export type DemoCommand =
+  | 'new-document'
   | 'save'
   | 'undo'
   | 'redo'
@@ -18,6 +19,7 @@ export type DemoCommand =
   | 'insert-image'
   | 'insert-table'
   | 'table-cell-properties'
+  | 'table-cell-appearance'
   | 'table-cell-background'
   | 'table-cell-border'
   | 'insert-chart'

@@ -5,12 +5,13 @@ export type CellToolCapture = {
   reason: string | null;
   writeReason: string | null;
 };
-export type CellToolView = {
+export type CellToolView<Capture extends CellToolCapture = CellToolCapture> = {
   focus(): void;
   setBusy(value: boolean): void;
   setStale(value: string): void;
   setStatus(value: string): void;
   destroy(): void;
+  reset?(capture: Capture): void;
 };
 export type CellToolPort<Capture extends CellToolCapture, Draft> = {
   capture(): Capture;
@@ -31,15 +32,15 @@ export function createTableCellToolController<Capture extends CellToolCapture, D
   createView: (
     root: HTMLElement,
     captured: Capture,
-    callbacks: { apply: (draft: Draft) => void; dismiss: () => void },
-  ) => CellToolView;
+    callbacks: { apply: (draft: Draft, keepOpen?: boolean) => void; dismiss: () => void },
+  ) => CellToolView<Capture>;
   reason: (code: string) => string;
   messages: { applied: string; refresh: string; failed: string; uncertain: string };
 }) {
   let disposed = false,
     pending = false,
     epoch = 0;
-  let view: CellToolView | undefined, captured: Capture | undefined;
+  let view: CellToolView<Capture> | undefined, captured: Capture | undefined;
   const sameDocument = (a: Capture, b: Capture) =>
     a.state.editorId === b.state.editorId &&
     a.state.documentId === b.state.documentId &&
@@ -66,7 +67,7 @@ export function createTableCellToolController<Capture extends CellToolCapture, D
         options.onClose();
     }
   }
-  async function submit(draft: Draft, ticket: number) {
+  async function submit(draft: Draft, ticket: number, keepOpen = false) {
     if (disposed || pending || ticket !== epoch || !view || !captured) return;
     const lease = captured,
       currentView = view;
@@ -80,7 +81,30 @@ export function createTableCellToolController<Capture extends CellToolCapture, D
       if (status.startsWith('committed')) {
         const restored = await options.port.restoreSelection(lease, result);
         if (disposed || ticket !== epoch || !sameDocument(lease, options.port.capture())) return;
-        const finalState = options.port.capture().state;
+        const recaptured = options.port.capture();
+        const finalState = recaptured.state;
+        if (keepOpen && status === 'committed-with-snapshot' && currentView.reset) {
+          const oldCell = lease.cell as Record<string, unknown> | null;
+          const newCell = recaptured.cell as Record<string, unknown> | null;
+          const sameCell =
+            !!oldCell &&
+            !!newCell &&
+            ['section', 'tableNode', 'listNode'].every((key) => oldCell[key] === newCell[key]);
+          if (
+            sameCell &&
+            !recaptured.reason &&
+            !recaptured.writeReason &&
+            options.port.isCurrent(recaptured)
+          ) {
+            captured = recaptured;
+            currentView.reset(recaptured);
+            options.onStatus(options.messages.applied);
+            return;
+          }
+          close(false);
+          options.onStatus('변경을 적용했습니다. 선택 상태를 확인한 뒤 창을 다시 열어주세요.');
+          return;
+        }
         close(false);
         const completed = epoch;
         options.onStatus(
@@ -96,8 +120,20 @@ export function createTableCellToolController<Capture extends CellToolCapture, D
           options.port.capture().state === finalState
         )
           options.onClose();
-      } else if (status === 'known-no-op') close(true, true);
-      else
+      } else if (status === 'known-no-op') {
+        const next = options.port.capture();
+        if (
+          keepOpen &&
+          currentView.reset &&
+          !next.reason &&
+          !next.writeReason &&
+          options.port.isCurrent(lease) &&
+          options.port.isCurrent(next)
+        ) {
+          captured = next;
+          currentView.reset(next);
+        } else close(true, true);
+      } else
         currentView.setStatus(
           'error' in result && typeof result.error === 'string'
             ? options.reason(result.error)
@@ -148,8 +184,8 @@ export function createTableCellToolController<Capture extends CellToolCapture, D
       captured = lease;
       const ticket = ++epoch;
       view = options.createView(options.root, lease, {
-        apply: (draft) => {
-          if (ticket === epoch) void submit(draft, ticket);
+        apply: (draft, keepOpen) => {
+          if (ticket === epoch) void submit(draft, ticket, keepOpen);
         },
         dismiss: () => {
           if (!disposed && ticket === epoch) close(true);

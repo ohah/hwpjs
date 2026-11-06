@@ -30,3 +30,40 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.hwp-table-cell-properties-dialog {
+  width: min(600px, calc(100vw - 24px));
+}
+.hwp-table-cell-properties-dialog[open] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+}
+.hwp-table-cell-properties-dialog > .hwp-dialog-header {
+  grid-column: 1 / -1;
+}
+.hwp-table-cell-properties-dialog > .hwp-dialog-footer {
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 14px 14px 14px 0;
+}
+.hwp-table-cell-properties-group {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #d2d9e6;
+}
+.hwp-table-cell-properties-group legend {
+  color: #28569a;
+  font-weight: 600;
+  padding: 0 4px;
+}
+@media (max-width: 420px) {
+  .hwp-table-cell-properties-dialog[open] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .hwp-table-cell-properties-dialog > .hwp-dialog-footer {
+    flex-direction: row;
+    padding: 0 14px 14px;
+  }
+}

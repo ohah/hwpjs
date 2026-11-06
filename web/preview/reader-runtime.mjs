@@ -18,6 +18,8 @@ import { applyChartPointBatchCommand } from './chart-point-batch-command.mjs';
 import { tableColumnWidthPlan } from './table-column-width-plan.mjs';
 import { validateCellBackgroundMessage } from '../../js/cell-background-command.mjs';
 import { validateCellBorderMessage } from '../../js/cell-border-command.mjs';
+import { validateCellBordersMessage } from '../../js/cell-border-batch.mjs';
+import { validateCellAppearanceMessage } from '../../js/cell-appearance-command.mjs';
 import { hwpxFieldRangeTarget } from './hwpx-field-range-target.mjs';
 import { attachCheckBoxes } from './checkbox-content.mjs';
 import { attachDutmal } from './dutmal-content.mjs';
@@ -2195,6 +2197,23 @@ export function createReaderRuntime({
           kind: 'table-column-width',
           content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
         });
+      } else if (message.kind === 'cell-appearance') {
+        if (format !== 'hwpx' && format !== 'hwp5') throw Error('UnsupportedCellAppearanceEditing');
+        if (!editor || !historyEnabled) throw Error('EditorNotOpen');
+        const value = validateCellAppearanceMessage(message);
+        editor.setCellAppearance({ cells: value.cells, background: value.background });
+        applied = true;
+        reply({
+          kind: 'cell-appearance',
+          content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
+        });
+      } else if (message.kind === 'cell-borders') {
+        if (format !== 'hwpx' && format !== 'hwp5') throw Error('UnsupportedCellBorderEditing');
+        if (!editor || !historyEnabled) throw Error('EditorNotOpen');
+        const cells = validateCellBordersMessage(message);
+        editor.setCellBorders(cells);
+        applied = true;
+        reply({ kind: 'cell-borders', content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
       } else if (message.kind === 'cell-border') {
         if (format !== 'hwpx' && format !== 'hwp5') throw new Error('UnsupportedCellBorderEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
@@ -2284,6 +2303,12 @@ export function createReaderRuntime({
           const cellBorderAvailable = WebAssembly.Module.exports(module).some(
             (entry) => entry.name === 'hwpx_edit_set_cell_border' && entry.kind === 'function',
           );
+          const cellBorderBatchAvailable = WebAssembly.Module.exports(module).some(
+            (entry) => entry.name === 'hwpx_edit_set_cell_borders' && entry.kind === 'function',
+          );
+          const cellAppearanceAvailable = WebAssembly.Module.exports(module).some(
+            (entry) => entry.name === 'hwpx_edit_set_cell_appearance' && entry.kind === 'function',
+          );
           const cellSizeBatchAvailable = WebAssembly.Module.exports(module).some(
             (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
           );
@@ -2332,6 +2357,8 @@ export function createReaderRuntime({
             cellSizeAvailable,
             cellBackgroundAvailable,
             cellBorderAvailable,
+            cellBorderBatchAvailable,
+            cellAppearanceAvailable,
             cellSizeBatchAvailable,
             pictureDimensionsAvailable,
             pictureResizeAvailable,
@@ -2400,6 +2427,12 @@ export function createReaderRuntime({
         const cellBorderAvailable = WebAssembly.Module.exports(module).some(
           (entry) => entry.name === 'hwp5_edit_set_cell_border' && entry.kind === 'function',
         );
+        const cellBorderBatchAvailable = WebAssembly.Module.exports(module).some(
+          (entry) => entry.name === 'hwp5_edit_set_cell_borders' && entry.kind === 'function',
+        );
+        const cellAppearanceAvailable = WebAssembly.Module.exports(module).some(
+          (entry) => entry.name === 'hwp5_edit_set_cell_appearance' && entry.kind === 'function',
+        );
         const cellSizeBatchAvailable = WebAssembly.Module.exports(module).some(
           (entry) => entry.name === 'hwp5_edit_set_cell_sizes' && entry.kind === 'function',
         );
@@ -2423,6 +2456,8 @@ export function createReaderRuntime({
           cellSizeAvailable,
           cellBackgroundAvailable,
           cellBorderAvailable,
+          cellBorderBatchAvailable,
+          cellAppearanceAvailable,
           cellSizeBatchAvailable,
           pictureCurrentSizeAvailable,
           pictureResizeAvailable,

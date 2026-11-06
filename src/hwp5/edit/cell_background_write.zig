@@ -85,17 +85,17 @@ fn validateSection(a: std.mem.Allocator, source: []const u8, version: Version, c
     }
 }
 
-const Resource = struct { payload: []const u8, children: bool = false };
+pub const Resource = struct { payload: []const u8, children: bool = false };
 const patch_model = @import("../../model/border_fill_patch.zig");
 // Scalar key avoids hashing union storage/padding and groups equal owner patches.
-const CloneKey = struct {
+pub const CloneKey = struct {
     source_id: u16,
     styles: [4]?patch_model.Style = @splat(null),
     widths: [4]?u16 = @splat(null),
     colors: [4]?u32 = @splat(null),
     background: ?u32 = null,
     foreground: ?u32 = null,
-    fn init(id: u16, patch: patch_model.Patch) !CloneKey {
+    pub fn init(id: u16, patch: patch_model.Patch) !CloneKey {
         var key: CloneKey = .{ .source_id = id };
         for (patch.border.edges, 0..) |edge, i| if (edge) |v| {
             key.styles[i] = v.style;
@@ -112,9 +112,27 @@ const CloneKey = struct {
 };
 /// One input scan, one payload per distinct (source,sparse patch), one append batch.
 pub fn info(a: std.mem.Allocator, input: []const u8, version: Version, entries: []const values.Entry, limit: usize) !Prepared {
+    var indexed = try resourceIndex(a, input, version, limit);
+    defer indexed.deinit(a);
+    return infoIndexed(a, input, indexed, entries, limit);
+}
+pub const Index = struct {
+    resources: []Resource,
+    mapping: ?usize,
+    insertion: ?usize,
+    pub fn deinit(self: *Index, a: std.mem.Allocator) void {
+        a.free(self.resources);
+    }
+    pub fn resource(self: Index, id: u16) !Resource {
+        if (id == 0) return error.MissingBorderFillReference;
+        if (id > self.resources.len) return error.InvalidBorderFillReference;
+        return self.resources[id - 1];
+    }
+};
+pub fn resourceIndex(a: std.mem.Allocator, input: []const u8, version: Version, limit: usize) !Index {
     if (input.len > limit) return error.LimitExceeded;
     var resources: std.ArrayList(Resource) = .empty;
-    defer resources.deinit(a);
+    errdefer resources.deinit(a);
     var it = @import("../record.zig").Iterator.init(input, .{});
     var mapping: ?usize = null;
     var declared: i32 = 0;
@@ -140,6 +158,13 @@ pub fn info(a: std.mem.Allocator, input: []const u8, version: Version, entries: 
         }
     }
     if (declared < 0 or @as(usize, @intCast(declared)) != resources.items.len) return error.ResourceCountMismatch;
+    return .{ .resources = try resources.toOwnedSlice(a), .mapping = mapping, .insertion = insertion };
+}
+pub fn infoIndexed(a: std.mem.Allocator, input: []const u8, indexed: Index, entries: []const values.Entry, limit: usize) !Prepared {
+    if (input.len > limit) return error.LimitExceeded;
+    const resources = indexed.resources;
+    const insertion = indexed.insertion;
+    const mapping = indexed.mapping;
     var clones = std.AutoHashMap(CloneKey, u16).init(a);
     defer clones.deinit();
     var payloads: std.ArrayList([]u8) = .empty;
@@ -151,18 +176,18 @@ pub fn info(a: std.mem.Allocator, input: []const u8, version: Version, entries: 
     errdefer a.free(refs);
     for (entries, refs) |entry, *ref| {
         if (entry.source_id == 0) return error.MissingBorderFillReference;
-        if (entry.source_id > resources.items.len) return error.InvalidBorderFillReference;
-        const source = resources.items[entry.source_id - 1];
+        if (entry.source_id > resources.len) return error.InvalidBorderFillReference;
+        const source = resources[entry.source_id - 1];
         const patch = try entry.effectivePatch(source.payload);
         const key = try CloneKey.init(entry.source_id, patch);
         const slot = try clones.getOrPut(key);
         if (!slot.found_existing) {
-            if (resources.items.len + payloads.items.len >= std.math.maxInt(u16)) return error.InvalidBorderFillReference;
+            if (resources.len + payloads.items.len >= std.math.maxInt(u16)) return error.InvalidBorderFillReference;
             if (source.children) return error.UnsupportedBorderFillChildren;
             const payload = try @import("border_fill_payload_patch.zig").write(a, source.payload, patch, limit);
             errdefer a.free(payload);
             try payloads.append(a, payload);
-            slot.value_ptr.* = @intCast(resources.items.len + payloads.items.len);
+            slot.value_ptr.* = @intCast(resources.len + payloads.items.len);
         }
         ref.* = .{ .section = entry.edit.section, .table_node = entry.edit.table_node, .list_node = entry.edit.list_node, .source_id = entry.source_id, .id = slot.value_ptr.* };
     }
@@ -177,7 +202,7 @@ pub fn info(a: std.mem.Allocator, input: []const u8, version: Version, entries: 
         for (payloads.items) |payload| try @import("../record_writer.zig").append(a, &output, 20, 1, payload, limit);
         try output.appendSlice(a, input[at..]);
         if (output.items.len > limit) return error.LimitExceeded;
-        std.mem.writeInt(i32, output.items[count_offset..][0..4], @intCast(resources.items.len + payloads.items.len), .little);
+        std.mem.writeInt(i32, output.items[count_offset..][0..4], @intCast(resources.len + payloads.items.len), .little);
     }
     const bytes = try output.toOwnedSlice(a);
     errdefer a.free(bytes);

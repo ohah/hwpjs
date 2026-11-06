@@ -3,6 +3,9 @@ const std = @import("std");
 const model = @import("../../model/document.zig");
 pub fn validateTemplate(tree: @import("../body/tree.zig").Tree, source: usize) !void {
     if (source >= tree.nodes.len or tree.nodes[source].record.value != .header) return error.SourceBindingMismatch;
+    if (@import("section_prefix_split.zig").hasSection(tree, source)) {
+        return @import("section_prefix_split.zig").validateTemplate(tree, source);
+    }
     var count: usize = 0;
     var index = source + 1;
     while (index < tree.nodes[source].subtree_end) {

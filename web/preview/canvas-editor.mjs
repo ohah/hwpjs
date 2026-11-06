@@ -1,4 +1,5 @@
 import { ownCaretTypingIntent } from './caret-formatting-intent.mjs';
+import { hwp5StructuralEditableStart } from '../../js/hwp5-structural-edit-boundary.mjs';
 import { characterPropertyArgs } from '../../js/character-property-args.mjs';
 import { characterColorArg } from '../../js/character-color-args.mjs';
 import { FONT_LANGUAGES } from '../../js/font-face-identity.mjs';
@@ -535,8 +536,11 @@ export function createCanvasEditor({
     if (historyPaintBarrier.pending) return;
     if (!target || multipleParagraphs()) return;
     const backward = input.selectionDirection === 'backward';
-    const start = snapUnit(input.value, input.selectionStart),
-      end = snapUnit(input.value, input.selectionEnd, true);
+    const minimum = hwp5StructuralEditableStart(renderer.paragraph(target));
+    const start = Math.max(minimum, snapUnit(input.value, input.selectionStart)),
+      end = Math.max(minimum, snapUnit(input.value, input.selectionEnd, true));
+    if (input.selectionStart < minimum || input.selectionEnd < minimum)
+      input.setSelectionRange(start, end, backward ? 'backward' : 'forward');
     const anchorUnit = backward ? end : start,
       focusUnit = backward ? start : end;
     if (anchor?.unit !== anchorUnit || focus?.unit !== focusUnit) preferredX = null;
@@ -584,7 +588,14 @@ export function createCanvasEditor({
       typingProperties = null;
     }
   };
+  const editablePoint = (point) => {
+    if (!point) return point;
+    const minimum = hwp5StructuralEditableStart(renderer.paragraph(point));
+    return point.unit < minimum ? { ...point, unit: minimum } : point;
+  };
   const setSelection = (a, f, nextX = null, origin = 'canvas') => {
+    a = editablePoint(a);
+    f = editablePoint(f);
     selectionOrigin = origin;
     if (draftSelection && !sameParagraph(draftSelection.focus, f)) draftSelection = null;
     if (typingFont && !sameParagraph(typingFont, f)) {
@@ -1040,6 +1051,8 @@ export function createCanvasEditor({
       ) {
         const unit = input.selectionStart;
         const backward = inputType.endsWith('Backward');
+        const minimum = hwp5StructuralEditableStart(renderer.paragraph(target));
+        if (backward && minimum > 0 && unit <= minimum) return true;
         const next = inputType.startsWith('deleteWord')
           ? wordBoundary(committed, unit, !backward)
           : snapUnit(committed, unit + (backward ? -1 : 1), !backward);
@@ -1769,6 +1782,10 @@ export function createCanvasEditor({
     return true;
   };
   const mergeBoundary = (backward) => {
+    if (backward && target && input.selectionStart === input.selectionEnd) {
+      const minimum = hwp5StructuralEditableStart(renderer.paragraph(target));
+      if (minimum > 0 && input.selectionStart <= minimum) return true;
+    }
     if (target?.createdCell) return false;
     if (!textEditable()) return false;
     if (

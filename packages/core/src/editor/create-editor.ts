@@ -28,6 +28,7 @@ import type { HistoryOptions } from '../history-options.ts';
 import { EditorWritePolicy } from './write-policy.ts';
 import type { SynchronousCallback, UpdateCallback } from '../state/synchronous-callback.ts';
 import { SelectionHistory } from '../state/selection-history.ts';
+import { createNewDocumentSelection } from './new-document-selection.ts';
 import { loadSourceOptions } from './load-source-options.ts';
 import { isWellFormedText } from '../state/text-scalar.ts';
 import type {
@@ -123,6 +124,12 @@ export interface LoadOptions {
   readonly password?: string;
   readonly allowObservedChartOleDeviations?: boolean;
   readonly availableSectionCopy?: boolean;
+  readonly enableOptions?: Readonly<Record<string, unknown>>;
+}
+export interface CreateDocumentOptions {
+  readonly format?: 'hwp5' | 'hwpx';
+  readonly history?: HistoryOptions;
+  readonly editable?: boolean;
   readonly enableOptions?: Readonly<Record<string, unknown>>;
 }
 export interface SaveOptions {
@@ -547,6 +554,7 @@ export function createEditor(options: CreateEditorOptions) {
     enableOptions?: Readonly<Record<string, unknown>>,
     first?: RuntimeReply,
     guard: () => void = () => {},
+    initializeNewDocument = false,
   ): Promise<EditorState> {
     let publicationContext = ctx;
     let reply = first ?? (await runtime.request(message, ctx));
@@ -574,7 +582,7 @@ export function createEditor(options: CreateEditorOptions) {
       savedOperationRevision: nextRevision,
       status: 'ready' as const,
     };
-    new EditorState(
+    const candidateState = new EditorState(
       {
         editorId,
         viewRevision: state.viewRevision + 1,
@@ -583,6 +591,8 @@ export function createEditor(options: CreateEditorOptions) {
       },
       runRead,
     );
+    if (initializeNewDocument && editable)
+      nextData.selection = createNewDocumentSelection(candidateState);
     const previous = active;
     writePolicy.publish(editable, () => {
       active = runtime;
@@ -602,9 +612,32 @@ export function createEditor(options: CreateEditorOptions) {
   }
   function load(input: Uint8Array | ArrayBuffer, loadOptions: LoadOptions): Promise<EditorState> {
     assertPublicMutation();
-    const bytes = copyOwned(input);
-    if (!(bytes instanceof Uint8Array) && !(bytes instanceof ArrayBuffer))
+    return loadSource(copyOwned(input), loadOptions);
+  }
+  function createDocument(createOptions: CreateDocumentOptions = {}): Promise<EditorState> {
+    assertPublicMutation();
+    const owned = copyOwned(createOptions);
+    const format = owned.format ?? 'hwpx';
+    if (!['hwp5', 'hwpx'].includes(format)) throw Error('InvalidDocumentFormat');
+    const producer = options.runtimeFactory.createDocumentBytes;
+    if (typeof producer !== 'function') throw Error('NewDocumentUnsupported');
+    return loadSource(undefined, { ...owned, format }, () =>
+      producer.call(options.runtimeFactory, format),
+    );
+  }
+  function loadSource(
+    input: Uint8Array | ArrayBuffer | undefined,
+    loadOptions: LoadOptions,
+    producer?: () => Promise<Uint8Array>,
+  ): Promise<EditorState> {
+    assertPublicMutation();
+    let bytes = input;
+    if (!producer && !(bytes instanceof Uint8Array) && !(bytes instanceof ArrayBuffer))
       throw TypeError('InvalidDocumentBytes');
+    const clearBytes = () => {
+      if (bytes instanceof Uint8Array) bytes.fill(0);
+      else if (bytes instanceof ArrayBuffer) new Uint8Array(bytes).fill(0);
+    };
     const owned = copyOwned(loadOptions);
     if (!owned || !['hwp5', 'hwpx'].includes(owned.format)) throw Error('InvalidDocumentFormat');
     if (owned.history !== undefined && Object.hasOwn(owned.enableOptions ?? {}, 'history'))
@@ -652,6 +685,26 @@ export function createEditor(options: CreateEditorOptions) {
             await release(old.runtime);
           }
           guard();
+          if (producer) {
+            const producing = Promise.resolve()
+              .then(producer)
+              .then((result) => {
+                if (!(result instanceof Uint8Array)) throw TypeError('InvalidDocumentBytes');
+                bytes = result;
+                if (job.cancelled || terminal) {
+                  result.fill(0);
+                  throw Error(terminal ? 'EditorDisposed' : 'LoadCancelled');
+                }
+                return result;
+              });
+            bytes = await interruptible(producing, [
+              { fence: cancellation, error: 'LoadCancelled' },
+              { fence: disposedFence, error: 'EditorDisposed' },
+            ]);
+            message.bytes = bytes;
+            assertLive();
+            guard();
+          }
           candidate = await newRuntime();
           assertLive();
           guard();
@@ -680,6 +733,7 @@ export function createEditor(options: CreateEditorOptions) {
             enableOptions,
             reply,
             guard,
+            producer !== undefined,
           );
         } catch (error) {
           if (!terminal) install({ status: previousState.status });
@@ -687,8 +741,7 @@ export function createEditor(options: CreateEditorOptions) {
           throw error;
         } finally {
           if (candidate && candidate !== active && !keepLocked) await release(candidate);
-          if (bytes instanceof Uint8Array) bytes.fill(0);
-          else new Uint8Array(bytes).fill(0);
+          clearBytes();
           delete message.password;
           loads.delete(job);
         }
@@ -696,8 +749,7 @@ export function createEditor(options: CreateEditorOptions) {
       { replace: 'load', abort: cancellation, guard },
     ).finally(() => {
       loads.delete(job);
-      if (bytes instanceof Uint8Array) bytes.fill(0);
-      else new Uint8Array(bytes).fill(0);
+      clearBytes();
       delete message.password;
     });
   }
@@ -1789,6 +1841,7 @@ export function createEditor(options: CreateEditorOptions) {
     getEditorState: () => state,
     read: <T>(callback: SynchronousCallback<[EditorState], T>): T => runRead(callback, state),
     load: geometryGuard(load),
+    createDocument: geometryGuard(createDocument),
     unlock: geometryGuard(unlock),
     cancelLoad: geometryGuard(cancelLoad),
     dispatchCommand: geometryGuard(dispatchCommand),

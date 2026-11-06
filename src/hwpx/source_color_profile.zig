@@ -13,6 +13,8 @@ fn equals(value: ?[]u8, expected: []const u8) bool {
 }
 pub fn classify(value: ?*const Version) Profile {
     const v = value orelse return .{};
+    const authored = @import("../model/authored_hwpx_profile.zig");
+    if (v.major == authored.major and v.minor == authored.minor and v.micro == authored.micro and v.build_number == authored.build_number and v.os == authored.os and v.patch == null and v.revision == null and equals(v.target_application, authored.target_application) and equals(v.application, authored.application) and equals(v.xml_version, authored.xml_version) and equals(v.app_version, authored.app_version)) return .{ .id = "hwpjs-authored-v1-rgb24", .encoding = .rgb24, .verified = true };
     if (v.major != 5 or v.minor != 1 or v.os != 1 or v.patch != null or v.revision != null or !equals(v.target_application, "WORDPROCESSOR") or !equals(v.application, "Hancom Office Hangul")) return .{};
     if (v.micro == 0 and v.build_number == 1 and equals(v.xml_version, "1.2") and equals(v.app_version, "10, 0, 0, 5060 WIN32LEWindows_8")) return old;
     if (v.micro == 1 and v.build_number == 0 and equals(v.xml_version, "1.5") and equals(v.app_version, "12, 0, 0, 4426 WIN32LEWindows_10")) return modern;

@@ -31,6 +31,8 @@ pub const Command = union(enum) {
     set_cell_size: @import("table_cell_size_values.zig").Edit,
     set_cell_background: @import("cell_background_values.zig").Edit,
     set_cell_border: @import("cell_border_values.zig").Edit,
+    /// Borrowed for synchronous apply; history retains owned checkpoints only.
+    set_cell_borders: []const @import("cell_border_values.zig").Edit,
     set_picture_current_size: @import("picture_current_size_values.zig").Edit,
     resize_picture: @import("picture_resize_values.zig").Edit,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
@@ -1314,6 +1316,19 @@ pub const Session = opaque {
         state.live_totals.window_copy_units += end - start;
         return window;
     }
+    /// Synchronous borrowed input; one command and one surrounding history event.
+    pub fn applyCellBorders(self: *Session, edits: []const @import("cell_border_values.zig").Edit) !void {
+        if (edits.len == 0) return;
+        return self.apply(.{ .set_cell_borders = edits });
+    }
+    fn applyCellBordersBody(self: *Session, edits: []const @import("cell_border_values.zig").Edit) !void {
+        if (edits.len == 0) return;
+        const state = self.getState();
+        const original = try self.originalInfo();
+        defer if (original.owned) state.allocator.free(original.bytes);
+        try @import("h5cell_border_batch.zig").apply(state.allocator, &state.cell_backgrounds, state.decoded, state.source.header.version(), &state.document, original.bytes, edits, max_stream);
+    }
+
     pub fn apply(self: *Session, command: Command) !void {
         return self.applyWithFontCache(command, null);
     }
@@ -1457,11 +1472,10 @@ pub const Session = opaque {
                 try @import("formula_definition.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount(), max_stream);
             },
             .set_cell_border => |edit| {
-                const state = self.getState();
-                if (edit.section >= state.document.sections.len) return error.InvalidSection;
-                const original = try self.originalInfo();
-                defer if (original.owned) state.allocator.free(original.bytes);
-                try state.cell_backgrounds.applyBorder(state.allocator, state.decoded[edit.section], state.source.header.version(), state.document.sections[edit.section], original.bytes, edit, max_stream);
+                try self.applyCellBordersBody(&.{edit});
+            },
+            .set_cell_borders => |edits| {
+                try self.applyCellBordersBody(edits);
             },
             .set_cell_background => |edit| {
                 const state = self.getState();

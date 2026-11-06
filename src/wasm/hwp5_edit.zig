@@ -683,6 +683,35 @@ export fn hwp5_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
     applyBatch(s, commands) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_set_cell_appearance(ptr: [*]const u8, length: usize, has_background: u32, section: u32, table_node: u32, list_node: u32, color: u32) u32 {
+    const wire = @import("cell_border_batch.zig");
+    if (length > wire.max_cells * wire.stride) return fail(error.LimitExceeded);
+    if (has_background > 1) return fail(error.InvalidCellAppearance);
+    if (has_background == 1) @import("../model/rgb_color.zig").validate(color) catch |err| return fail(err);
+    const s: *Session = if (active) |value| value else return fail(error.EditorNotOpen);
+    const cells = wire.build(.hwp5, a, ptr[0..length]) catch |err| return fail(err);
+    defer a.free(cells);
+    var commands: [2]edit.Command = undefined;
+    var count: usize = 0;
+    if (cells.len != 0) {
+        commands[count] = .{ .set_cell_borders = cells };
+        count += 1;
+    }
+    if (has_background == 1) {
+        commands[count] = .{ .set_cell_background = .{ .section = section, .table_node = table_node, .list_node = list_node, .color = color } };
+        count += 1;
+    }
+    if (count != 0) applyBatch(s, commands[0..count]) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_set_cell_borders(ptr: [*]const u8, length: usize) u32 {
+    const wire = @import("cell_border_batch.zig");
+    if (length > wire.max_cells * wire.stride) return fail(error.LimitExceeded);
+    const cells = wire.build(.hwp5, a, ptr[0..length]) catch |err| return fail(err);
+    defer a.free(cells);
+    apply(.{ .set_cell_borders = cells }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_set_cell_border(section: u32, table_node: u32, list_node: u32, edges: u32, style: u32, width: u32, color: u32) u32 {
     const value = @import("cell_border.zig").parse(edges, style, width, color) catch |err| return fail(err);
     apply(.{ .set_cell_border = .{ .section = section, .table_node = table_node, .list_node = list_node, .edges = value.edges, .style = value.style, .width_hundredth_mm = value.width, .color = value.color } }) catch |err| return fail(err);

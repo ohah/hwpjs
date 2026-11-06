@@ -1,3 +1,7 @@
+// @ts-ignore Structured cell payload admission shares the SDK wire validators.
+import { validateCellAppearanceMessage } from '../../../js/cell-appearance-command.mjs';
+// @ts-ignore Batch shape admission is shared with Native transport.
+import { validateCellBordersMessage } from '../../../js/cell-border-batch.mjs';
 import type { HeadlessEditor, EditorState, SelectionTarget } from '@hwpjs/core';
 import { exactParagraphNumber } from './paragraph-shape-number.ts';
 // @ts-ignore 기존 Native 호출 계획을 표시 적격성에도 재사용한다.
@@ -254,7 +258,7 @@ export function createTableCellPropertiesPort(
   async function applyCapturedMutation(
     captured: TableCellCapture,
     build: (current: TableCellCapture) => {
-      message?: Readonly<Record<string, string | number>>;
+      message?: Readonly<Record<string, unknown>>;
       writeReason?: string | null;
       noOp?: boolean;
     },
@@ -276,18 +280,29 @@ export function createTableCellPropertiesPort(
       if (plan.writeReason) throw Error(plan.writeReason);
       return plan;
     };
-    const freezeMessage = (value: Readonly<Record<string, string | number>> | undefined) => {
+    const freezeMessage = (value: Readonly<Record<string, unknown>> | undefined) => {
       if (!value) throw Error('InvalidTableCellMutation');
-      const result: Record<string, string | number> = {};
+      const result: Record<string, unknown> = {};
       for (const key of Reflect.ownKeys(value)) {
         writable();
         if (typeof key !== 'string' || key === '__proto__') throw Error('InvalidTableCellMutation');
         const field = value[key];
         writable();
-        if (typeof field !== 'string' && (typeof field !== 'number' || !Number.isFinite(field)))
-          throw Error('InvalidTableCellMutation');
         result[key] = field;
       }
+      if (result.kind === 'cell-appearance') {
+        const normalized = validateCellAppearanceMessage(result);
+        writable();
+        return normalized;
+      }
+      if (result.kind === 'cell-borders') {
+        const cells = validateCellBordersMessage(result);
+        writable();
+        return Object.freeze({ kind: 'cell-borders', cells });
+      }
+      for (const field of Object.values(result))
+        if (typeof field !== 'string' && (typeof field !== 'number' || !Number.isFinite(field)))
+          throw Error('InvalidTableCellMutation');
       return Object.freeze(result);
     };
     try {

@@ -7,6 +7,8 @@ import type {
   RuntimeRequestContext,
   RuntimeReply,
 } from '../contracts.ts';
+// @ts-ignore Shared constructor ABI owns byte allocation and copying.
+import { createNewDocumentBytes } from '../../../../js/new-document.mjs';
 import { createReaderRuntime } from '../../../../web/preview/reader-runtime.mjs';
 import { copyOwned, ownObservation } from '../state/owned.ts';
 import { readKnownNativeModule } from '../wasm-module-loader.ts';
@@ -130,5 +132,11 @@ export function createReaderEditorRuntime(options: ReaderRuntimeOptions = {}): E
 }
 export function createReaderRuntimeFactory(options: ReaderRuntimeOptions = {}): RuntimeFactory {
   const captured = { ...options };
-  return () => createReaderEditorRuntime(captured);
+  return Object.assign(() => createReaderEditorRuntime(captured), {
+    async createDocumentBytes(format: 'hwp5' | 'hwpx'): Promise<Uint8Array> {
+      const module = captured.wasmModule ?? (await captured.loadWasmModule?.());
+      if (!module) throw Error('ExplicitWasmRequired');
+      return createNewDocumentBytes(module, format);
+    },
+  });
 }

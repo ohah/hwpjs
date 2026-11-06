@@ -10,6 +10,8 @@ import { decodeTabSources } from './hwpx-tab-sources.mjs';
 import { decodeTabDefinitions } from './hwpx-tab-definitions.mjs';
 import { decodeSectionTabs } from './hwpx-section-tabs.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
+import { encodeCellBorders } from './cell-border-batch.mjs';
+import { validateCellAppearance } from './cell-appearance-command.mjs';
 import { validateCellBackground } from './cell-background-command.mjs';
 import { validateCellBorder, cellBorderStyleCode } from './cell-border-command.mjs';
 import { decodeCharacterFontMetrics } from './character-font-metrics.mjs';
@@ -765,6 +767,37 @@ export async function createHwpxEditor(source) {
         throw new Error('HwpxCharacterOutlineAbiUnavailable');
       if (!wasm.hwpx_edit_set_character_outline(section, paragraph, startUnit, endUnit, value))
         throw memory.error();
+    },
+    setCellAppearance(input) {
+      ready();
+      const value = validateCellAppearance(input),
+        bytes = encodeCellBorders(value.cells),
+        bg = value.background;
+      if (typeof wasm.hwpx_edit_set_cell_appearance !== 'function')
+        throw Error('HwpxCellAppearanceAbiUnavailable');
+      memory.withBytes(bytes, (ptr, size) => {
+        if (
+          !wasm.hwpx_edit_set_cell_appearance(
+            ptr,
+            size,
+            bg ? 1 : 0,
+            bg?.section ?? 0,
+            bg?.tableNode ?? 0,
+            bg?.listNode ?? 0,
+            bg?.color ?? 0,
+          )
+        )
+          throw memory.error();
+      });
+    },
+    setCellBorders(cells) {
+      ready();
+      const bytes = encodeCellBorders(cells);
+      if (typeof wasm.hwpx_edit_set_cell_borders !== 'function')
+        throw Error('HwpxCellBorderBatchAbiUnavailable');
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_cell_borders(ptr, size)) throw memory.error();
+      });
     },
     setCellBorder(input) {
       ready();

@@ -29,3 +29,5 @@ HWPX 색상 해석은 필드별 계약을 따른다. 테두리의 `color`는 직
 3. Vanilla/React/Svelte × HWP5/HWPX의 실제 Canvas6개를 통과했다. 정상 메뉴 진입·초기 미관측/적용 비활성, HWP5 아래 변/HWPX 네 변의 SOLID·1.50mm·RGB123456 적용, 조밀한 선 픽셀·기존 배경 내부 영역·본문 보존, paint 완료 후 undo/redo, 취소·동일값 재적용 후 한 번 undo와 포커스를 확인했다. 공용 컨트롤러의 기존 배경 편집도 Vanilla HWP5에서 실제 적용·undo로 검사했다. 브라우저 Native ACK 횟수는 측정하지 않았다.
 
 HWP5 사전 Native14개와 HWPX19개에는 기존 배경 회귀가 포함된다. 최초 넓은 Native 필터의 추가 fixture 누락, HWPX 할당 검사의 resize/remap 가정, 독립 오라클의 배경/선 색상 영역 혼동, 브라우저 raw SDK와 URL 재작성 후 제공 본문의 SHA 혼동은 원로그를 보존하고 각각 바로잡았다. 통과한 부분을 전 코퍼스·모든 선 종류·공식 한글과의 완전 동치로 확대하지 않는다. 최종 검증 브라우저는 active=false·pid=null·소유 잔류0으로 종료했다.
+
+후속 [원본 셀 범위 서식](table-range-formatting.md)은 여러 셀·표 전체의 별도 범위와 검증을 소유한다. 위 단일 셀 기록을 전체 표 편집의 증거로 소급하지 않는다.

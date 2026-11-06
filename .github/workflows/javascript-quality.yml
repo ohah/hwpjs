@@ -46,12 +46,25 @@ jobs:
             ./apps/demo/tests/caret-noop-focus.test.mjs \
             ./apps/demo/tests/core-single-terminal-focus.test.mjs \
             ./packages/vanilla/tests/caret-formatting.test.mjs \
-            ./packages/vanilla/tests/caret-pointer-presentation.test.mjs
+            ./packages/vanilla/tests/caret-pointer-presentation.test.mjs \
+            ./packages/vanilla/tests/new-document-initial-selection.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           node --experimental-transform-types --max-old-space-size=512 \
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 --test-timeout=50000 "$@"
+      - name: Test new document and table appearance contracts
+        timeout-minutes: 2
+        run: |
+          bun test --no-install \
+            ./packages/core/tests/editor/new-document.test.ts \
+            ./packages/core/tests/editor/new-document-selection.test.ts \
+            ./apps/demo/tests/new-document.test.ts \
+            ./apps/demo/tests/new-document-shortcut.test.ts
+          node --max-old-space-size=256 --test --test-concurrency=1 \
+            ./tests/cell-border-batch.test.mjs \
+            ./tests/cell-appearance-command.test.mjs \
+            ./tests/table-border-plan.test.mjs
       - name: Test symbol catalog and six-alignment quick actions
         timeout-minutes: 2
         run: |
