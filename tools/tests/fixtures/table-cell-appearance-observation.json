@@ -1,0 +1,3099 @@
+{
+  "provenance": {
+    "artifact": "zig-out/verification/table-range-new-document-r1/integration/r3-browser-80138/results.json",
+    "sha256": "6e4fc2dcc7a288f178a45d46a9f29e33f20b6c34194ec72ed0a369cd627bbf96",
+    "json_paths": ["$.results[0].observed.content", "$.results[1].observed.content"],
+    "projection": "Only selected source table and complete current resource DTOs; no source values changed"
+  },
+  "cases": {
+    "hwp5": {
+      "format": "hwp5",
+      "limited": false,
+      "hwp5BorderFillSources": [
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 1,
+          "image": null,
+          "pattern": {
+            "background": 4294967295,
+            "foreground": 4278190080,
+            "kind": -1
+          },
+          "record_index": 79,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 2,
+          "image": null,
+          "pattern": null,
+          "record_index": 80,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 3,
+          "image": null,
+          "pattern": {
+            "background": 12463412,
+            "foreground": 0,
+            "kind": -1
+          },
+          "record_index": 81,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 1
+            },
+            {
+              "color": 6297371,
+              "kind": 0,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 4,
+          "image": null,
+          "pattern": null,
+          "record_index": 82,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 1
+            },
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 6297371,
+              "kind": 1,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 5,
+          "image": null,
+          "pattern": null,
+          "record_index": 83,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 4278190080,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 4278190080,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 4278190080,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 4278190080,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 6,
+          "image": null,
+          "pattern": {
+            "background": 4294967295,
+            "foreground": 4278190080,
+            "kind": -1
+          },
+          "record_index": 84,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 7,
+          "image": null,
+          "pattern": null,
+          "record_index": 85,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 8,
+          "image": null,
+          "pattern": null,
+          "record_index": 86,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 9,
+          "image": null,
+          "pattern": null,
+          "record_index": 87,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 10,
+          "image": null,
+          "pattern": null,
+          "record_index": 88,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 11,
+          "image": null,
+          "pattern": null,
+          "record_index": 89,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 8,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 8,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 8,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 8,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 12,
+          "image": null,
+          "pattern": null,
+          "record_index": 90,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 13,
+          "image": null,
+          "pattern": null,
+          "record_index": 91,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 14,
+          "image": null,
+          "pattern": null,
+          "record_index": 92,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 15,
+          "image": null,
+          "pattern": {
+            "background": 10872807,
+            "foreground": 4294967295,
+            "kind": -1
+          },
+          "record_index": 93,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 2
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 6
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 16,
+          "image": null,
+          "pattern": {
+            "background": 10872807,
+            "foreground": 4294967295,
+            "kind": -1
+          },
+          "record_index": 94,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 1
+            },
+            {
+              "color": 0,
+              "kind": 8,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 8,
+              "width": 7
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 17,
+          "image": null,
+          "pattern": {
+            "background": 15921906,
+            "foreground": 4294967295,
+            "kind": -1
+          },
+          "record_index": 95,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 0,
+              "width": 0
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 18,
+          "image": null,
+          "pattern": {
+            "background": 14277081,
+            "foreground": 0,
+            "kind": -1
+          },
+          "record_index": 96,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 19,
+          "image": null,
+          "pattern": {
+            "background": 10872807,
+            "foreground": 4294967295,
+            "kind": -1
+          },
+          "record_index": 97,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": {
+            "gradient": null,
+            "image": null,
+            "pattern": 0
+          },
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 1,
+          "fill_known": true,
+          "gradient": null,
+          "id": 20,
+          "image": null,
+          "pattern": {
+            "background": 10872807,
+            "foreground": 4294967295,
+            "kind": -1
+          },
+          "record_index": 98,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 21,
+          "image": null,
+          "pattern": null,
+          "record_index": 99,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 22,
+          "image": null,
+          "pattern": null,
+          "record_index": 100,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 23,
+          "image": null,
+          "pattern": null,
+          "record_index": 101,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 24,
+          "image": null,
+          "pattern": null,
+          "record_index": 102,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 25,
+          "image": null,
+          "pattern": null,
+          "record_index": 103,
+          "unknown_fill_bytes": null
+        },
+        {
+          "additional_bytes": 0,
+          "additional_present": true,
+          "alpha": null,
+          "attributes": 0,
+          "borders": [
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 2179941,
+              "kind": 1,
+              "width": 9
+            },
+            {
+              "color": 0,
+              "kind": 1,
+              "width": 0
+            }
+          ],
+          "extra_bytes": 0,
+          "fill_flags": 0,
+          "fill_known": true,
+          "gradient": null,
+          "id": 26,
+          "image": null,
+          "pattern": null,
+          "record_index": 104,
+          "unknown_fill_bytes": null
+        }
+      ],
+      "hwp5BorderFillSourceError": null,
+      "tables": [
+        {
+          "anchorSource": {
+            "control_node": 19,
+            "current_unit": 0,
+            "paragraph": 1,
+            "source_unit": 0,
+            "table_record_node": 20
+          },
+          "anchorUnit": 0,
+          "captionParagraphs": [],
+          "cells": [
+            {
+              "column": 0,
+              "columnSpan": 1,
+              "height": 2149,
+              "layoutSource": {
+                "attributes": 67108896,
+                "border_fill_id": 19,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 21,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 21,
+              "paragraphs": [2],
+              "row": 0,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5720
+            },
+            {
+              "column": 1,
+              "columnSpan": 3,
+              "height": 2149,
+              "layoutSource": {
+                "attributes": 32,
+                "border_fill_id": 20,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 26,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 26,
+              "paragraphs": [3],
+              "row": 0,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 42510
+            },
+            {
+              "column": 0,
+              "columnSpan": 1,
+              "height": 2294,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 21,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 31,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 31,
+              "paragraphs": [4],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5720
+            },
+            {
+              "column": 1,
+              "columnSpan": 1,
+              "height": 2294,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 22,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 36,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 36,
+              "paragraphs": [5],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18410
+            },
+            {
+              "column": 2,
+              "columnSpan": 1,
+              "height": 2294,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 22,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 41,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 41,
+              "paragraphs": [6],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5739
+            },
+            {
+              "column": 3,
+              "columnSpan": 1,
+              "height": 2294,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 23,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 46,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 46,
+              "paragraphs": [7],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18361
+            },
+            {
+              "column": 0,
+              "columnSpan": 1,
+              "height": 2426,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 24,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 51,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 51,
+              "paragraphs": [8],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5720
+            },
+            {
+              "column": 1,
+              "columnSpan": 1,
+              "height": 2426,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 25,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 56,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 56,
+              "paragraphs": [9],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18410
+            },
+            {
+              "column": 2,
+              "columnSpan": 1,
+              "height": 2426,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 25,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 61,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 61,
+              "paragraphs": [10],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5739
+            },
+            {
+              "column": 3,
+              "columnSpan": 1,
+              "height": 2426,
+              "layoutSource": {
+                "attributes": 16777248,
+                "border_fill_id": 26,
+                "editable": false,
+                "extra_bytes": 13,
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "list_node": 66,
+                "margins": [0, 0, 0, 0],
+                "protected": false,
+                "table_record_node": 20,
+                "text_direction": 0,
+                "unknown": 0,
+                "vertical_alignment": 1
+              },
+              "listNode": 66,
+              "paragraphs": [11],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "margin": [0, 0, 0, 0]
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18361
+            }
+          ],
+          "columns": 4,
+          "hostParagraph": 1,
+          "layoutSource": {
+            "border_fill_id": 0,
+            "cell_spacing": 0,
+            "columns": 4,
+            "description_bytes": 0,
+            "height": 6869,
+            "inner_margins": [0, 0, 0, 0],
+            "instance_id": 1938967211,
+            "object_extra_bytes": 0,
+            "object_extra_u16": null,
+            "object_flags": 136970769,
+            "offset_x": 0,
+            "offset_y": 0,
+            "outer_margins": [0, 0, 0, 0],
+            "prevent_page_break": 0,
+            "rows": 3,
+            "table_extra_bytes": 0,
+            "table_flags": 235211596,
+            "table_node": 19,
+            "table_record_node": 20,
+            "width": 48230,
+            "z_order": 0,
+            "zone_count": 0
+          },
+          "parentListNode": null,
+          "parentTableNode": null,
+          "partial": false,
+          "rows": 3,
+          "section": 0,
+          "tableNode": 20
+        }
+      ]
+    },
+    "hwpx": {
+      "format": "hwpx",
+      "limited": false,
+      "tableBorderSources": [
+        {
+          "cells": [
+            {
+              "border_fill_id": 0,
+              "cell_node": 65,
+              "list_node": 66,
+              "style_index": 0,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 20,
+              "cell_node": 76,
+              "list_node": 77,
+              "style_index": 1,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 21,
+              "cell_node": 99,
+              "list_node": 100,
+              "style_index": 2,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 11,
+              "cell_node": 110,
+              "list_node": 111,
+              "style_index": 3,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 11,
+              "cell_node": 121,
+              "list_node": 122,
+              "style_index": 3,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 22,
+              "cell_node": 132,
+              "list_node": 133,
+              "style_index": 4,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 23,
+              "cell_node": 145,
+              "list_node": 146,
+              "style_index": 5,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 24,
+              "cell_node": 156,
+              "list_node": 157,
+              "style_index": 6,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 24,
+              "cell_node": 167,
+              "list_node": 168,
+              "style_index": 6,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 25,
+              "cell_node": 178,
+              "list_node": 179,
+              "style_index": 7,
+              "table_node": 59
+            },
+            {
+              "border_fill_id": 18,
+              "cell_node": 208,
+              "list_node": 209,
+              "style_index": 8,
+              "table_node": 202
+            },
+            {
+              "border_fill_id": 13,
+              "cell_node": 452,
+              "list_node": 453,
+              "style_index": 9,
+              "table_node": 446
+            },
+            {
+              "border_fill_id": 13,
+              "cell_node": 485,
+              "list_node": 486,
+              "style_index": 9,
+              "table_node": 446
+            },
+            {
+              "border_fill_id": 4,
+              "cell_node": 512,
+              "list_node": 513,
+              "style_index": 10,
+              "table_node": 506
+            },
+            {
+              "border_fill_id": 5,
+              "cell_node": 523,
+              "list_node": 524,
+              "style_index": 11,
+              "table_node": 506
+            },
+            {
+              "border_fill_id": 6,
+              "cell_node": 533,
+              "list_node": 534,
+              "style_index": 12,
+              "table_node": 506
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 555,
+              "list_node": 556,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 566,
+              "list_node": 567,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 577,
+              "list_node": 578,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 589,
+              "list_node": 590,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 600,
+              "list_node": 601,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 634,
+              "list_node": 635,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 669,
+              "list_node": 670,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 680,
+              "list_node": 681,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 700,
+              "list_node": 701,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 713,
+              "list_node": 714,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 724,
+              "list_node": 725,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 735,
+              "list_node": 736,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 747,
+              "list_node": 748,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 758,
+              "list_node": 759,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 769,
+              "list_node": 770,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 781,
+              "list_node": 782,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 792,
+              "list_node": 793,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 803,
+              "list_node": 804,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 815,
+              "list_node": 816,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 826,
+              "list_node": 827,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 837,
+              "list_node": 838,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 849,
+              "list_node": 850,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 860,
+              "list_node": 861,
+              "style_index": 13,
+              "table_node": 549
+            },
+            {
+              "border_fill_id": 3,
+              "cell_node": 871,
+              "list_node": 872,
+              "style_index": 13,
+              "table_node": 549
+            }
+          ],
+          "section": 0,
+          "sourceOnly": true,
+          "styles": [
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 314,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": 320,
+              "fill_report": {
+                "attribute_bytes": 17,
+                "brushes": [
+                  {
+                    "child_counts": [1, 0, 0],
+                    "direct_children": 1,
+                    "element_index": 320,
+                    "other_attributes": 0,
+                    "parent_element_index": 312,
+                    "part_item_index": 0,
+                    "part_kind": "header",
+                    "section_ordinal": null
+                  }
+                ],
+                "color_count_mismatch": 0,
+                "direct_children": 1,
+                "header_and_sections": 1,
+                "kind_counts": [1, 0, 0, 0, 0],
+                "master_pages": 0,
+                "nodes": [
+                  {
+                    "attribute_bytes": 17,
+                    "brush_index": 0,
+                    "direct_children": 0,
+                    "element_index": 321,
+                    "kind": "win_brush",
+                    "non_six_hex_colors": 1,
+                    "other_attributes": 0,
+                    "parent_node_index": null,
+                    "raw": [
+                      "#A5E7E7",
+                      "#FFFFFFFF",
+                      null,
+                      "0",
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null
+                    ],
+                    "recognized_children": 0,
+                    "unknown_enums": 0
+                  }
+                ],
+                "non_six_hex_colors": 1,
+                "other_attributes": 0,
+                "unknown_enums": 0
+              },
+              "id": 0,
+              "node": 312,
+              "semantic_face_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 321,
+                  "rgb": 15198117
+                }
+              ],
+              "semantic_fill_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 321,
+                  "rgb": 15198117
+                },
+                {
+                  "field": "winBrush.hatchColor",
+                  "node": 321,
+                  "rgb": null
+                }
+              ],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 313,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 324,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": 330,
+              "fill_report": {
+                "attribute_bytes": 17,
+                "brushes": [
+                  {
+                    "child_counts": [1, 0, 0],
+                    "direct_children": 1,
+                    "element_index": 330,
+                    "other_attributes": 0,
+                    "parent_element_index": 322,
+                    "part_item_index": 0,
+                    "part_kind": "header",
+                    "section_ordinal": null
+                  }
+                ],
+                "color_count_mismatch": 0,
+                "direct_children": 1,
+                "header_and_sections": 1,
+                "kind_counts": [1, 0, 0, 0, 0],
+                "master_pages": 0,
+                "nodes": [
+                  {
+                    "attribute_bytes": 17,
+                    "brush_index": 0,
+                    "direct_children": 0,
+                    "element_index": 331,
+                    "kind": "win_brush",
+                    "non_six_hex_colors": 1,
+                    "other_attributes": 0,
+                    "parent_node_index": null,
+                    "raw": [
+                      "#A5E7E7",
+                      "#FFFFFFFF",
+                      null,
+                      "0",
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null
+                    ],
+                    "recognized_children": 0,
+                    "unknown_enums": 0
+                  }
+                ],
+                "non_six_hex_colors": 1,
+                "other_attributes": 0,
+                "unknown_enums": 0
+              },
+              "id": 20,
+              "node": 322,
+              "semantic_face_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 331,
+                  "rgb": 15198117
+                }
+              ],
+              "semantic_fill_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 331,
+                  "rgb": 15198117
+                },
+                {
+                  "field": "winBrush.hatchColor",
+                  "node": 331,
+                  "rgb": null
+                }
+              ],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 323,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 334,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 21,
+              "node": 332,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 333,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 235,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 11,
+              "node": 233,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 234,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 342,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 22,
+              "node": 340,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 341,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 350,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 23,
+              "node": 348,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 349,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 358,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 24,
+              "node": 356,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 357,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 366,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.15 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#654321",
+                  "style": "SOLID",
+                  "width": "0.70 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 25,
+              "node": 364,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 365,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 294,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "NONE",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "NONE",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "DOUBLE_SLIM",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "DOUBLE_SLIM",
+                  "width": "0.5 mm"
+                }
+              ],
+              "fill_node": 300,
+              "fill_report": {
+                "attribute_bytes": 17,
+                "brushes": [
+                  {
+                    "child_counts": [1, 0, 0],
+                    "direct_children": 1,
+                    "element_index": 300,
+                    "other_attributes": 0,
+                    "parent_element_index": 292,
+                    "part_item_index": 0,
+                    "part_kind": "header",
+                    "section_ordinal": null
+                  }
+                ],
+                "color_count_mismatch": 0,
+                "direct_children": 1,
+                "header_and_sections": 1,
+                "kind_counts": [1, 0, 0, 0, 0],
+                "master_pages": 0,
+                "nodes": [
+                  {
+                    "attribute_bytes": 17,
+                    "brush_index": 0,
+                    "direct_children": 0,
+                    "element_index": 301,
+                    "kind": "win_brush",
+                    "non_six_hex_colors": 1,
+                    "other_attributes": 0,
+                    "parent_node_index": null,
+                    "raw": [
+                      "#F2F2F2",
+                      "#FFFFFFFF",
+                      null,
+                      "0",
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null
+                    ],
+                    "recognized_children": 0,
+                    "unknown_enums": 0
+                  }
+                ],
+                "non_six_hex_colors": 1,
+                "other_attributes": 0,
+                "unknown_enums": 0
+              },
+              "id": 18,
+              "node": 292,
+              "semantic_face_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 301,
+                  "rgb": 15921906
+                }
+              ],
+              "semantic_fill_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 301,
+                  "rgb": 15921906
+                },
+                {
+                  "field": "winBrush.hatchColor",
+                  "node": 301,
+                  "rgb": null
+                }
+              ],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 293,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 251,
+              "center_line": "NONE",
+              "diagonal": null,
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "DOUBLE_SLIM",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "DOUBLE_SLIM",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "DOUBLE_SLIM",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "DOUBLE_SLIM",
+                  "width": "0.5 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 13,
+              "node": 249,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 250,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 176,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                }
+              ],
+              "fill_node": 182,
+              "fill_report": {
+                "attribute_bytes": 15,
+                "brushes": [
+                  {
+                    "child_counts": [1, 0, 0],
+                    "direct_children": 1,
+                    "element_index": 182,
+                    "other_attributes": 0,
+                    "parent_element_index": 174,
+                    "part_item_index": 0,
+                    "part_kind": "header",
+                    "section_ordinal": null
+                  }
+                ],
+                "color_count_mismatch": 0,
+                "direct_children": 1,
+                "header_and_sections": 1,
+                "kind_counts": [1, 0, 0, 0, 0],
+                "master_pages": 0,
+                "nodes": [
+                  {
+                    "attribute_bytes": 15,
+                    "brush_index": 0,
+                    "direct_children": 0,
+                    "element_index": 183,
+                    "kind": "win_brush",
+                    "non_six_hex_colors": 0,
+                    "other_attributes": 0,
+                    "parent_node_index": null,
+                    "raw": [
+                      "#BE2D34",
+                      "#000000",
+                      null,
+                      "0",
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null,
+                      null
+                    ],
+                    "recognized_children": 0,
+                    "unknown_enums": 0
+                  }
+                ],
+                "non_six_hex_colors": 0,
+                "other_attributes": 0,
+                "unknown_enums": 0
+              },
+              "id": 4,
+              "node": 174,
+              "semantic_face_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 183,
+                  "rgb": 3419582
+                }
+              ],
+              "semantic_fill_colors": [
+                {
+                  "field": "winBrush.faceColor",
+                  "node": 183,
+                  "rgb": 3419582
+                },
+                {
+                  "field": "winBrush.hatchColor",
+                  "node": 183,
+                  "rgb": 0
+                }
+              ],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 175,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 186,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "NONE",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#60171B",
+                  "style": "NONE",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "NONE",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 5,
+              "node": 184,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 185,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 194,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "NONE",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "NONE",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                },
+                {
+                  "color": "#60171B",
+                  "style": "SOLID",
+                  "width": "0.5 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 6,
+              "node": 192,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 193,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            },
+            {
+              "back_slash": "NONE",
+              "back_slash_node": 168,
+              "center_line": "NONE",
+              "diagonal": {
+                "color": "#000000",
+                "style": "SOLID",
+                "width": "0.1 mm"
+              },
+              "edges": [
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                },
+                {
+                  "color": "#000000",
+                  "style": "SOLID",
+                  "width": "0.12 mm"
+                }
+              ],
+              "fill_node": null,
+              "fill_report": null,
+              "id": 3,
+              "node": 166,
+              "semantic_face_colors": [],
+              "semantic_fill_colors": [],
+              "shadow": "0",
+              "slash": "NONE",
+              "slash_node": 167,
+              "source_color_profile": {
+                "encoding": "colorref24",
+                "id": "hangul-10.0.0.5060-xml1.2",
+                "verified": true
+              },
+              "three_d": "0",
+              "unknown_attributes": 0,
+              "unknown_children": 0
+            }
+          ]
+        }
+      ],
+      "tableBorderSourceErrors": [],
+      "tables": [
+        {
+          "anchorUnit": 0,
+          "captionParagraphs": [],
+          "cells": [
+            {
+              "column": 0,
+              "columnSpan": 1,
+              "height": 2149,
+              "listNode": 66,
+              "paragraphs": [2],
+              "row": 0,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5720
+            },
+            {
+              "column": 1,
+              "columnSpan": 3,
+              "height": 2149,
+              "listNode": 77,
+              "paragraphs": [3],
+              "row": 0,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 42510
+            },
+            {
+              "column": 0,
+              "columnSpan": 1,
+              "height": 2294,
+              "listNode": 100,
+              "paragraphs": [4],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5720
+            },
+            {
+              "column": 1,
+              "columnSpan": 1,
+              "height": 2294,
+              "listNode": 111,
+              "paragraphs": [5],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18410
+            },
+            {
+              "column": 2,
+              "columnSpan": 1,
+              "height": 2294,
+              "listNode": 122,
+              "paragraphs": [6],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5739
+            },
+            {
+              "column": 3,
+              "columnSpan": 1,
+              "height": 2294,
+              "listNode": 133,
+              "paragraphs": [7],
+              "row": 1,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18361
+            },
+            {
+              "column": 0,
+              "columnSpan": 1,
+              "height": 2426,
+              "listNode": 146,
+              "paragraphs": [8],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5720
+            },
+            {
+              "column": 1,
+              "columnSpan": 1,
+              "height": 2426,
+              "listNode": 157,
+              "paragraphs": [9],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18410
+            },
+            {
+              "column": 2,
+              "columnSpan": 1,
+              "height": 2426,
+              "listNode": 168,
+              "paragraphs": [10],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 5739
+            },
+            {
+              "column": 3,
+              "columnSpan": 1,
+              "height": 2426,
+              "listNode": 179,
+              "paragraphs": [11],
+              "row": 2,
+              "rowSpan": 1,
+              "sourceLineWrap": 0,
+              "sourceMargin": {
+                "has_margin": false,
+                "header": false,
+                "line_wrap": 0,
+                "margin": [0, 0, 0, 0],
+                "text_direction": 0,
+                "vertical_alignment": 1
+              },
+              "sourceTextDirection": 0,
+              "sourceVerticalAlignment": 1,
+              "width": 18361
+            }
+          ],
+          "columns": 4,
+          "hostParagraph": 1,
+          "pagination": {
+            "border_fill_id": 1,
+            "cell_spacing": 0,
+            "no_adjust": true,
+            "page_break": "none",
+            "repeat_header": true
+          },
+          "parentListNode": null,
+          "parentTableNode": null,
+          "partial": false,
+          "rows": 3,
+          "section": 0,
+          "sourceCaption": null,
+          "sourceGeometry": {
+            "affect_line_spacing": false,
+            "allow_overlap": false,
+            "flow_with_text": false,
+            "geometry": {
+              "height": 6869,
+              "height_relative": 2,
+              "horizontal_offset": 0,
+              "treat_as_character": true,
+              "vertical_offset": 0,
+              "width": 48230,
+              "width_relative": 4
+            },
+            "hold_anchor": false,
+            "horizontal_alignment": 0,
+            "horizontal_relative": 2,
+            "in_margin": [0, 0, 0, 0],
+            "out_margin": [0, 0, 0, 0],
+            "text_flow": 0,
+            "text_wrap": 0,
+            "vertical_alignment": 0,
+            "vertical_relative": 2,
+            "z_order": 0
+          },
+          "tableNode": 59
+        }
+      ]
+    }
+  }
+}

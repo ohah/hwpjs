@@ -80,6 +80,7 @@ export const SURFACE_MUTATION_KINDS = Object.freeze([
   'cell-border',
   'cell-borders',
   'cell-appearance',
+  'cell-styles',
 ] as const);
 export const SURFACE_VIEW_KINDS = Object.freeze(['enable', 'set-edit-window'] as const);
 const reads = new Set<string>(SURFACE_READ_KINDS);

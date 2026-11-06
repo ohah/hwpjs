@@ -33,6 +33,8 @@ pub const Command = union(enum) {
     set_cell_border: @import("cell_border_values.zig").Edit,
     /// Borrowed for synchronous apply; history retains owned checkpoints only.
     set_cell_borders: []const @import("cell_border_values.zig").Edit,
+    set_cell_fills: []const @import("h5cell_fill_batch.zig").Request,
+    set_cell_styles: []const @import("h5cell_style_batch.zig").Request,
     set_picture_current_size: @import("picture_current_size_values.zig").Edit,
     resize_picture: @import("picture_resize_values.zig").Edit,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
@@ -1329,6 +1331,29 @@ pub const Session = opaque {
         try @import("h5cell_border_batch.zig").apply(state.allocator, &state.cell_backgrounds, state.decoded, state.source.header.version(), &state.document, original.bytes, edits, max_stream);
     }
 
+    pub fn applyCellStyles(self: *Session, edits: []const @import("h5cell_style_batch.zig").Request) !void {
+        if (edits.len == 0) return;
+        return self.apply(.{ .set_cell_styles = edits });
+    }
+    fn applyCellStylesBody(self: *Session, edits: []const @import("h5cell_style_batch.zig").Request) !void {
+        if (edits.len == 0) return;
+        const state = self.getState();
+        const original = try self.originalInfo();
+        defer if (original.owned) state.allocator.free(original.bytes);
+        try @import("h5cell_style_batch.zig").apply(state.allocator, &state.cell_backgrounds, state.decoded, state.source.header.version(), &state.document, original.bytes, edits, max_stream);
+    }
+    pub fn applyCellFills(self: *Session, edits: []const @import("h5cell_fill_batch.zig").Request) !void {
+        if (edits.len == 0) return;
+        return self.apply(.{ .set_cell_fills = edits });
+    }
+    fn applyCellFillsBody(self: *Session, edits: []const @import("h5cell_fill_batch.zig").Request) !void {
+        if (edits.len == 0) return;
+        const state = self.getState();
+        const original = try self.originalInfo();
+        defer if (original.owned) state.allocator.free(original.bytes);
+        try @import("h5cell_fill_batch.zig").apply(state.allocator, &state.cell_backgrounds, state.decoded, state.source.header.version(), &state.document, original.bytes, edits, max_stream);
+    }
+
     pub fn apply(self: *Session, command: Command) !void {
         return self.applyWithFontCache(command, null);
     }
@@ -1476,6 +1501,12 @@ pub const Session = opaque {
             },
             .set_cell_borders => |edits| {
                 try self.applyCellBordersBody(edits);
+            },
+            .set_cell_fills => |edits| {
+                try self.applyCellFillsBody(edits);
+            },
+            .set_cell_styles => |edits| {
+                try self.applyCellStylesBody(edits);
             },
             .set_cell_background => |edit| {
                 const state = self.getState();

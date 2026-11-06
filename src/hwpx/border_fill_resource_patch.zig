@@ -129,7 +129,7 @@ fn solidFragment(a: std.mem.Allocator, source: *const Tree, node: usize, identit
     if (patch.background != null) {
         const observed = try helpers.observeSelected(a, &local, 1, profile, @splat(false), true);
         const background = observed.background orelse return error.UnsupportedCellBackgroundContents;
-        if (background != .none and background != .solid) return error.UnsupportedCellBackgroundContents;
+        try @import("../model/border_fill_patch.zig").validate(.{ .background = background });
     }
     const changed = try helpers.write(a, &local, 1, patch, limit, profile);
     defer a.free(changed);
@@ -228,7 +228,7 @@ pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
 
 // Canonical complete-patch key: no padding, inactive union bytes or pointer hash.
 // Presence has its own bit/value, so explicit black and NONE differ from absent.
-fn patchKey(request: PatchRequest) [32]u32 {
+pub fn patchKey(request: PatchRequest) [32]u32 {
     var key: [32]u32 = @splat(0);
     key[0] = request.source_id;
     for (request.patch.border.edges, 0..) |edge, i| if (edge) |value| {

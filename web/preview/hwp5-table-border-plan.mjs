@@ -1,4 +1,6 @@
 import { colorrefCss } from './colorref-css.mjs';
+import { gradientStepStops } from './gradient-step-stops.mjs';
+import { hwp5HatchStyle } from '../../js/hwp5-hatch-style.mjs';
 import { tableBorderStrokeParts } from './table-border-stroke.mjs';
 
 // HWP5 width codes are source enums. The common painter consumes pixel strokes.
@@ -6,30 +8,73 @@ const widths = [0.1, 0.12, 0.15, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 1, 1.5, 2, 
 export function hwp5TableBorderPaintPlan(style) {
   let fill;
   const fail = (error) => ({ state: 'unavailable', error, ...(fill ? { fill } : {}) });
-  if (
-    !style?.fill_known ||
-    style.unknown_fill_bytes !== null ||
-    style.extra_bytes !== 0 ||
-    style.additional_bytes !== 0
-  )
+  if (!style?.fill_known || style.unknown_fill_bytes !== null || style.extra_bytes !== 0)
     return fail('UnsupportedHwp5TableFill');
   if (style.fill_flags === 1) {
     const p = style.pattern;
     if (
       !p ||
-      p.kind !== -1 ||
+      style.additional_bytes !== 0 ||
       style.gradient !== null ||
       style.image !== null ||
       (style.alpha !== null &&
         (style.alpha?.pattern !== 0 || style.alpha.gradient !== null || style.alpha.image !== null))
     )
       return fail('UnsupportedHwp5TableFill');
-    if (p.background !== 0xffffffff) {
+    if (p.kind !== -1 || p.background !== 0xffffffff) {
       const color = colorrefCss(p.background);
       if (!color) return fail('UnsupportedHwp5TableFillColor');
-      fill = { state: 'solid', color };
+      if (p.kind === -1) fill = { state: 'solid', color };
+      else {
+        const kind = hwp5HatchStyle(p.kind),
+          foreground = colorrefCss(p.foreground);
+        if (!kind) return fail('UnsupportedHwp5TableFill');
+        if (!foreground) return fail('UnsupportedHwp5TableFillColor');
+        fill = {
+          state: 'pattern',
+          background: color,
+          color: foreground,
+          kind,
+          rasterParity: 'unverified',
+        };
+      }
     }
-  } else if (style.fill_flags !== 0) return fail('UnsupportedHwp5TableFill');
+  } else if (style.fill_flags === 4) {
+    const g = style.gradient;
+    if (
+      !g ||
+      style.pattern !== null ||
+      style.image !== null ||
+      style.additional_bytes !== 1 ||
+      g.kind !== 1 ||
+      !Array.isArray(g.positions) ||
+      g.positions.length !== 0 ||
+      !Array.isArray(g.colors) ||
+      !Number.isSafeInteger(g.angle) ||
+      g.angle < 0 ||
+      g.angle > 0xffffffff ||
+      ![g.center_x, g.center_y].every(
+        (value) => Number.isInteger(value) && value >= 0 && value <= 100,
+      ) ||
+      (style.alpha !== null &&
+        (style.alpha?.gradient !== 0 || style.alpha.pattern !== null || style.alpha.image !== null))
+    )
+      return fail('UnsupportedHwp5TableFill');
+    try {
+      const stops = gradientStepStops(g.colors.map(colorrefCss), g.blur, g.blur_center);
+      if (stops.length)
+        fill = { state: 'linear_gradient', angle: g.angle, stops, rasterParity: 'unverified' };
+    } catch {
+      return fail('UnsupportedHwp5TableFill');
+    }
+  } else if (
+    style.fill_flags !== 0 ||
+    style.additional_bytes !== 0 ||
+    style.pattern !== null ||
+    style.gradient !== null ||
+    style.image !== null
+  )
+    return fail('UnsupportedHwp5TableFill');
   if (style.attributes !== 0 || !Array.isArray(style.borders) || style.borders.length !== 5)
     return fail('UnsupportedHwp5TableBorder');
   const strokes = [];

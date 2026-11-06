@@ -1,3 +1,6 @@
+import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
+import { validateCellStyles } from './cell-style-command.mjs';
+import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { validateAbi } from './abi.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
@@ -466,6 +469,27 @@ export async function createExperimentalHwp5Editor(
       return decodeTableBindings(
         output(() => wasm.hwp5_edit_table_bindings(u32(section, 'section'))).bytes,
       );
+    },
+    setCellStyles(input) {
+      check();
+      const value = validateCellStyles(input),
+        borders = encodeCellBorderPatches(value.borders),
+        fills = encodeCellFills(value.fills);
+      if (typeof wasm.hwp5_edit_set_cell_styles !== 'function')
+        throw Error('CellStylesAbiUnavailable');
+      memory.withBytes(borders, (borderPtr, borderLength) =>
+        memory.withBytes(fills, (fillPtr, fillLength) => {
+          success(wasm.hwp5_edit_set_cell_styles(borderPtr, borderLength, fillPtr, fillLength));
+        }),
+      );
+    },
+    setCellFills(input) {
+      check();
+      const values = validateCellFills(input),
+        bytes = encodeCellFills(values);
+      if (typeof wasm.hwp5_edit_set_cell_fills !== 'function')
+        throw Error('CellFillBatchAbiUnavailable');
+      memory.withBytes(bytes, (ptr, length) => success(wasm.hwp5_edit_set_cell_fills(ptr, length)));
     },
     setCellAppearance(input) {
       check();

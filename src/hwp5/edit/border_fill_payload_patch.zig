@@ -21,8 +21,8 @@ pub fn observe(input: []const u8) !p.Value {
             out.background = .{ .solid = .{ .color = RGB.hwp5(pattern.background), .hatch_color = if (pattern.foreground <= 0xffffff) RGB.hwp5(pattern.foreground) else null } };
             return out;
         }
-        if (pattern.kind < 1 or pattern.kind > 6 or pattern.foreground > 0xffffff) return out;
-        out.background = .{ .hatch = .{ .face = RGB.hwp5(pattern.background), .hatch = RGB.hwp5(pattern.foreground), .style = @fromBackingInt(@intCast(pattern.kind - 1)) } };
+        if (p.fromHwp5Hatch(pattern.kind) == null or pattern.foreground > 0xffffff) return out;
+        out.background = .{ .hatch = .{ .face = RGB.hwp5(pattern.background), .hatch = RGB.hwp5(pattern.foreground), .style = p.fromHwp5Hatch(pattern.kind).? } };
         return out;
     }
     if (source.fill.flags == 4) {
@@ -59,7 +59,7 @@ pub fn write(a: std.mem.Allocator, input: []const u8, patch: p.Patch, limit: usi
         const old = source.fill.data.known;
         if (old.image != null or source.fill.flags & ~@as(u32, 7) != 0) return error.UnsupportedOpaqueBackground;
         if (old.extra.len != 0 and !(old.extra.len == 1 and (source.fill.flags == 1 or source.fill.flags == 4))) return error.UnsupportedBackgroundAlphaCombination;
-        if (old.pattern) |pattern| if (pattern.kind != -1 and (pattern.kind < 1 or pattern.kind > 6)) return error.UnsupportedBackgroundPattern;
+        if (old.pattern) |pattern| if (pattern.kind != -1 and (p.fromHwp5Hatch(pattern.kind) == null)) return error.UnsupportedBackgroundPattern;
         if (old.gradient) |g| if (g.kind != 1 or old.additional.len != 1) return error.UnsupportedBackgroundGradient;
         if (old.additional.len != 0 and old.gradient == null) return error.UnsupportedBackgroundExtension;
         switch (background) {
@@ -75,7 +75,7 @@ pub fn write(a: std.mem.Allocator, input: []const u8, patch: p.Patch, limit: usi
                 try appendInt(a, &out, u32, 1);
                 try appendInt(a, &out, u32, RGB.hwp5(v.face));
                 try appendInt(a, &out, u32, RGB.hwp5(v.hatch));
-                try appendInt(a, &out, i32, @intCast(@backingInt(v.style) + 1));
+                try appendInt(a, &out, i32, p.hwp5Hatch(v.style));
             },
             .linear => |g| {
                 try appendInt(a, &out, u32, 4);

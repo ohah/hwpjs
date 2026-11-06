@@ -5,7 +5,12 @@ import {
   type TableCellCore,
   type TableCellCapture,
 } from './table-cell-properties-port.ts';
-import { tableCellBorderValues, type TableCellBorderDraft } from './table-cell-border-port.ts';
+import { tableCellBorderValues } from './table-cell-border-port.ts';
+import type { TableCellAppearanceDraft } from './table-cell-fill-draft.ts';
+export type { TableCellAppearanceDraft } from './table-cell-fill-draft.ts';
+import { tableCellStyleValues } from './table-cell-style-values.ts';
+// @ts-ignore Native source reports own current appearance, including unknown/none distinctions.
+import { observeTableCellAppearance } from '../../../js/table-cell-appearance-observation.mjs';
 // @ts-ignore The shared planner owns rectangle coverage, merged boundaries and per-cell edges.
 import { tableBorderPlan } from '../../../js/table-border-plan.mjs';
 // @ts-ignore The runtime boundary owns exact batch/background wire validation.
@@ -13,26 +18,14 @@ import { validateCellAppearance } from '../../../js/cell-appearance-command.mjs'
 // @ts-ignore Existing RGB parsing owns #RRGGBB validation.
 import { characterColorArg } from '../../../js/character-color-args.mjs';
 
-export type TableCellAppearanceDraft = {
-  border:
-    | (TableCellBorderDraft & {
-        mode: 'cell' | 'range' | 'table';
-        region: 'outer' | 'inner' | 'all';
-        startRow: string;
-        endRow: string;
-        startColumn: string;
-        endColumn: string;
-      })
-    | null;
-  background: { color: string; dirty: boolean } | null;
-};
 export type TableCellAppearanceCapture = Readonly<{
   state: EditorState;
   cell: TableCellCapture['cell'];
   reason: string | null;
   writeReason: string | null;
-  currentBorder: null;
-  currentColor: null;
+  currentBorder: Readonly<{ style: string; width: number; color: string }> | null;
+  currentColor: string | null;
+  observed?: ReturnType<typeof observeTableCellAppearance>;
 }>;
 export function tableCellAppearanceReason(code: string) {
   const messages: Record<string, string> = {
@@ -56,6 +49,12 @@ export function tableCellAppearanceReason(code: string) {
     InvalidCellBackgroundColor: '#RRGGBB 형식의 단색을 선택하세요.',
     EmptyCellBorderRegion: '이 범위에는 적용할 안쪽 테두리가 없습니다.',
     LimitExceeded: '한 번에 변경할 수 있는 셀 수를 초과했습니다.',
+    InvalidCellFill: '채우기 종류·색·각도·중심·번짐 값을 확인하세요.',
+    InvalidCellStyles: '셀 모양 입력을 확인하세요.',
+    InvalidCellBorderPatch: '바꿀 테두리의 선·굵기·색을 확인하세요.',
+    InconsistentCellStyleTarget: '테두리와 배경의 적용 범위를 같은 값으로 선택하세요.',
+    CellStylesAbiUnavailable: '현재 엔진은 확장 셀 모양 변경을 제공하지 않습니다.',
+    AmbiguousCellStyleOwner: '같은 셀의 소유 정보가 서로 다릅니다.',
   };
   return messages[code] ?? tableCellReason(code);
 }
@@ -82,9 +81,17 @@ export function tableCellAppearanceValues(
   draft: TableCellAppearanceDraft,
   captured: TableCellAppearanceCapture,
 ) {
+  if (
+    (captured.state.capabilities as { cellStyleBatchAvailable?: boolean })
+      ?.cellStyleBatchAvailable === true
+  )
+    return tableCellStyleValues(draft, captured);
   const cell = captured.cell;
   if (!cell || captured.reason) throw Error('InvalidCellAppearanceCapture');
   if (!draft.border && !draft.background) throw Error('CellAppearanceChoiceRequired');
+  if (draft.background && draft.background.kind !== undefined && draft.background.kind !== 'solid')
+    throw Error('CellAppearanceApiUnavailable');
+  if (draft.target && draft.target.mode !== 'cell') throw Error('BulkCellBackgroundUnsupported');
   if (draft.background && draft.border && draft.border.mode !== 'cell')
     throw Error('BulkCellBackgroundUnsupported');
   let cells: readonly unknown[] = [];
@@ -140,6 +147,42 @@ export function tableCellAppearanceValues(
   }
   return validateCellAppearance({ cells, background });
 }
+function readCurrent(state: EditorState, cell: TableCellAppearanceCapture['cell']) {
+  const observed = cell
+    ? observeTableCellAppearance(state.content, {
+        section: cell.section,
+        tableNode: cell.tableNode,
+        listNode: cell.listNode,
+      })
+    : undefined;
+  const edges = observed
+    ? ['left', 'right', 'top', 'bottom'].map((key) => observed.edges?.[key])
+    : [];
+  const first = edges[0];
+  const uniform =
+    first &&
+    edges.length === 4 &&
+    edges.every(
+      (edge) =>
+        (edge?.state === 'known' || edge?.state === 'none') &&
+        ['style', 'width', 'color'].every(
+          (key) => first[key] !== undefined && first[key] === edge[key],
+        ),
+    );
+  const currentBorder =
+    uniform && ['NONE', 'SOLID', 'DOUBLE_SLIM'].includes(first.style)
+      ? Object.freeze({
+          style: first.style as string,
+          width: first.width as number,
+          color: first.color as string,
+        })
+      : null;
+  const currentColor =
+    observed?.fill?.state === 'known' && observed.fill.kind === 'solid'
+      ? (observed.fill.color as string)
+      : null;
+  return { observed, currentBorder, currentColor };
+}
 export function createTableCellAppearancePort(
   editor: HeadlessEditor,
   core: Partial<TableCellCore>,
@@ -156,7 +199,9 @@ export function createTableCellAppearancePort(
     if (state.historyRecoveryRequired) return 'HistoryRecoveryRequired';
     if (
       (state.capabilities as { cellAppearanceAvailable?: boolean })?.cellAppearanceAvailable !==
-      true
+        true &&
+      (state.capabilities as { cellStyleBatchAvailable?: boolean })?.cellStyleBatchAvailable !==
+        true
     )
       return 'CellAppearanceApiUnavailable';
     if (typeof editor.requestExperimental !== 'function') return 'CellAppearanceApiUnavailable';
@@ -170,8 +215,7 @@ export function createTableCellAppearancePort(
         cell: source.cell,
         reason: source.reason,
         writeReason: writeReason(source.state),
-        currentBorder: null,
-        currentColor: null,
+        ...readCurrent(source.state, source.cell),
       });
       sources.set(captured, source);
       return captured;
@@ -213,6 +257,7 @@ export function createTableCellAppearancePort(
       const fixed: TableCellAppearanceDraft = {
         border: draft.border ? { ...draft.border, dirty: { ...draft.border.dirty } } : null,
         background: draft.background ? { ...draft.background } : null,
+        ...(draft.target ? { target: { ...draft.target } } : {}),
       };
       const fingerprint = JSON.stringify(values);
       pending = true;
@@ -225,12 +270,16 @@ export function createTableCellAppearancePort(
             cell: current.cell,
             reason: current.reason,
             writeReason: null,
-            currentBorder: null,
-            currentColor: null,
+            ...readCurrent(current.state, current.cell),
           });
           if (JSON.stringify(checked) !== fingerprint)
             return { writeReason: 'StaleTableCellSelection' };
-          return { message: Object.freeze({ kind: 'cell-appearance', ...values }) };
+          return {
+            message: Object.freeze({
+              kind: 'fills' in values ? 'cell-styles' : 'cell-appearance',
+              ...values,
+            }),
+          };
         });
       } finally {
         pending = false;

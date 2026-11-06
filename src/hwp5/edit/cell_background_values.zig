@@ -149,6 +149,9 @@ pub fn canonical(original: patch_model.Value, patch: patch_model.Patch) patch_mo
         if (bg == .solid) if (original.background) |source| {
             if (source == .solid and source.solid.color == bg.solid.color) out.background = null;
         };
+        if (bg != .solid) if (original.background) |source| {
+            if (std.meta.eql(source, bg)) out.background = null;
+        };
     }
     return out;
 }

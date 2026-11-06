@@ -5,6 +5,29 @@ pub const widths = [_]u16{ 10, 12, 15, 20, 25, 30, 40, 50, 60, 70, 100, 150, 200
 pub const Edge = struct { style: ?Style = null, width_hundredth_mm: ?u16 = null, color: ?u32 = null };
 pub const Border = struct { edges: [4]?Edge = @splat(null) };
 pub const Hatch = enum { HORIZONTAL, VERTICAL, BACK_SLASH, SLASH, CROSS, CROSS_DIAGONAL };
+/// Canonical XML names and HWP5 BorderFill ordinals differ for the two diagonals.
+/// Verified by official paired HWP/HWPX exports; the published table 29 differs.
+pub fn hwp5Hatch(style: Hatch) i32 {
+    return switch (style) {
+        .HORIZONTAL => 0,
+        .VERTICAL => 1,
+        .SLASH => 2,
+        .BACK_SLASH => 3,
+        .CROSS => 4,
+        .CROSS_DIAGONAL => 5,
+    };
+}
+pub fn fromHwp5Hatch(raw: i32) ?Hatch {
+    return switch (raw) {
+        0 => .HORIZONTAL,
+        1 => .VERTICAL,
+        2 => .SLASH,
+        3 => .BACK_SLASH,
+        4 => .CROSS,
+        5 => .CROSS_DIAGONAL,
+        else => null,
+    };
+}
 pub const Solid = struct { color: u32, hatch_color: ?u32 = null };
 pub const Pattern = struct { face: u32, hatch: u32, style: Hatch };
 pub const Linear = struct { colors: [2]u32, angle: u16, center_x: u8, center_y: u8, step: u8, step_center: u8 };

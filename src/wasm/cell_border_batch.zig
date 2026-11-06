@@ -1,7 +1,7 @@
 //! Decode one atomic Native batch. Format sessions own grouped preflight and publication.
 const std = @import("std");
 const Format = @import("../model/document.zig").Format;
-pub const max_cells = 4096;
+pub const max_cells = @import("../model/cell_edit_budget.zig").max_cells;
 pub const stride = 28;
 pub fn Request(comptime format: Format) type {
     return if (format == .hwp5) @import("../hwp5/edit/cell_border_values.zig").Edit else @import("../hwpx/hxcell_border_batch.zig").Request;

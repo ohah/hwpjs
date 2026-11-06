@@ -1,3 +1,4 @@
+import { validateCellStylesMessage } from '../../js/cell-style-command.mjs';
 import { formattingCapabilities, queryAtomicFormatting } from './atomic-formatting-command.mjs';
 import { createDisplayResourceCache } from './display-resource-cache.mjs';
 import { createHwp5Reader } from '../../js/hwp5.mjs';
@@ -2197,6 +2198,13 @@ export function createReaderRuntime({
           kind: 'table-column-width',
           content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
         });
+      } else if (message.kind === 'cell-styles') {
+        if (format !== 'hwpx' && format !== 'hwp5') throw Error('UnsupportedCellStyleEditing');
+        if (!editor || !historyEnabled) throw Error('EditorNotOpen');
+        const value = validateCellStylesMessage(message);
+        editor.setCellStyles({ borders: value.borders, fills: value.fills });
+        applied = true;
+        reply({ kind: 'cell-styles', content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
       } else if (message.kind === 'cell-appearance') {
         if (format !== 'hwpx' && format !== 'hwp5') throw Error('UnsupportedCellAppearanceEditing');
         if (!editor || !historyEnabled) throw Error('EditorNotOpen');
@@ -2309,6 +2317,9 @@ export function createReaderRuntime({
           const cellAppearanceAvailable = WebAssembly.Module.exports(module).some(
             (entry) => entry.name === 'hwpx_edit_set_cell_appearance' && entry.kind === 'function',
           );
+          const cellStyleBatchAvailable = WebAssembly.Module.exports(module).some(
+            (entry) => entry.name === 'hwpx_edit_set_cell_styles' && entry.kind === 'function',
+          );
           const cellSizeBatchAvailable = WebAssembly.Module.exports(module).some(
             (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
           );
@@ -2359,6 +2370,7 @@ export function createReaderRuntime({
             cellBorderAvailable,
             cellBorderBatchAvailable,
             cellAppearanceAvailable,
+            cellStyleBatchAvailable,
             cellSizeBatchAvailable,
             pictureDimensionsAvailable,
             pictureResizeAvailable,
@@ -2433,6 +2445,9 @@ export function createReaderRuntime({
         const cellAppearanceAvailable = WebAssembly.Module.exports(module).some(
           (entry) => entry.name === 'hwp5_edit_set_cell_appearance' && entry.kind === 'function',
         );
+        const cellStyleBatchAvailable = WebAssembly.Module.exports(module).some(
+          (entry) => entry.name === 'hwp5_edit_set_cell_styles' && entry.kind === 'function',
+        );
         const cellSizeBatchAvailable = WebAssembly.Module.exports(module).some(
           (entry) => entry.name === 'hwp5_edit_set_cell_sizes' && entry.kind === 'function',
         );
@@ -2458,6 +2473,7 @@ export function createReaderRuntime({
           cellBorderAvailable,
           cellBorderBatchAvailable,
           cellAppearanceAvailable,
+          cellStyleBatchAvailable,
           cellSizeBatchAvailable,
           pictureCurrentSizeAvailable,
           pictureResizeAvailable,

@@ -1,3 +1,5 @@
+// @ts-ignore Canonical structured cell-style mutation validation.
+import { validateCellStylesMessage } from '../../../js/cell-style-command.mjs';
 // @ts-ignore Structured cell payload admission shares the SDK wire validators.
 import { validateCellAppearanceMessage } from '../../../js/cell-appearance-command.mjs';
 // @ts-ignore Batch shape admission is shared with Native transport.
@@ -289,6 +291,11 @@ export function createTableCellPropertiesPort(
         const field = value[key];
         writable();
         result[key] = field;
+      }
+      if (result.kind === 'cell-styles') {
+        const normalized = validateCellStylesMessage(result);
+        writable();
+        return normalized;
       }
       if (result.kind === 'cell-appearance') {
         const normalized = validateCellAppearanceMessage(result);

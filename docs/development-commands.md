@@ -1,5 +1,33 @@
 # 개발·검증 명령
 
+## 원본 셀 테두리·채우기 배치
+
+[원본 셀 배치 계약](table-cell-fill-batches.md)과 [표 대화상자 관측](table-dialog-reference.md)을 따릅니다.
+
+```sh
+node --max-old-space-size=256 --test --test-concurrency=1 \
+  tests/cell-fill-command.test.mjs tests/table-border-plan.test.mjs \
+  tools/tests/table-cell-appearance-observation.test.mjs \
+  tools/tests/table-cell-appearance-official-hatch.test.mjs \
+  tests/hwp5/table-border-fill-plan.test.mjs tests/hwp5/table-variant-fill-plan.test.mjs
+node --experimental-transform-types --max-old-space-size=256 \
+  --import ./tools/object-properties-test-css.mjs \
+  --import ./apps/demo/tests/table-cell-appearance-style-preload.mjs \
+  --test --test-isolation=none --test-concurrency=1 \
+  apps/demo/tests/table-cell-appearance-port.test.mjs \
+  apps/demo/tests/table-cell-appearance-view.test.mjs \
+  apps/demo/tests/table-cell-appearance-tool.test.mjs
+```
+
+실제 파일 검사는 `HWPJS_TEST_WASM`에 WASM 절대경로, `HWPJS_TEST_WASM_SHA256`에 정확 SHA256, `HWPJS_TEST_NOORI`와 `HWPJS_TEST_NOORI_HWPX`에 허용된 Noori 파일의 절대경로를 지정합니다. fixture는 `legacy/rust/crates/hwp-core/tests/fixtures/` 또는 `apps/docs/docs/public/editor/fixtures/`의 해당 이름만 허용합니다. 입력 누락·해시 불일치는 실패이며 이전 WASM으로 대체하지 않습니다.
+
+```sh
+node --max-old-space-size=512 --test --test-concurrency=1 \
+  --test-timeout=45000 tests/cell-style-fill-native.test.mjs
+```
+
+독립 CFB/XML 저장값과 실제 setter·이력·재열기 검증입니다. 실제 Canvas·대화상자·배포 증거와 구분합니다.
+
 ## 그림 대기 중 문단 측정 캐시 보존
 
 [수명과 검증 범위](resource-geometry-lifetime.md)를 따릅니다. 다음 4개 진입점은 그림 저장소·연속성 gate·디코딩 epoch·다음 측정 준비의 회귀 47개를 실행합니다. 실제 브라우저와 속도 검증은 별도입니다.

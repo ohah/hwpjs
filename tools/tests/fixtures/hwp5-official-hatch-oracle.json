@@ -1,0 +1,66 @@
+{
+  "versions": [
+    {
+      "input": "5.0.1.7",
+      "inputRaw": 0,
+      "opened": true,
+      "outputVersion": "5.1.0.1",
+      "outputRaw": 0,
+      "outputHatch": "HORIZONTAL"
+    },
+    {
+      "input": "5.0.3.0",
+      "inputRaw": 0,
+      "opened": true,
+      "outputVersion": "5.1.0.1",
+      "outputRaw": 0,
+      "outputHatch": "HORIZONTAL"
+    },
+    {
+      "input": "5.1.0.1",
+      "inputRaw": 0,
+      "opened": true,
+      "outputVersion": "5.1.0.1",
+      "outputRaw": 0,
+      "outputHatch": "HORIZONTAL"
+    }
+  ],
+  "swatches": [
+    {
+      "ui": "수평선",
+      "raw": 0,
+      "hx": "HORIZONTAL"
+    },
+    {
+      "ui": "수직선",
+      "raw": 1,
+      "hx": "VERTICAL"
+    },
+    {
+      "ui": "하향 대각선",
+      "raw": 2,
+      "hx": "SLASH"
+    },
+    {
+      "ui": "상향 대각선",
+      "raw": 3,
+      "hx": "BACK_SLASH"
+    },
+    {
+      "ui": "눈금 무늬",
+      "raw": 4,
+      "hx": "CROSS"
+    },
+    {
+      "ui": "체크 무늬",
+      "raw": 5,
+      "hx": "CROSS_DIAGONAL"
+    }
+  ],
+  "provenance": {
+    "artifact": "zig-out/verification/table-cell-fill-dialog-r1/pattern-version-oracle/SUMMARY.json",
+    "sha256": "31579bd7e224d52cb697fb403739e7e03e86b38770166ac4c0a6682a2d003599",
+    "scope": "Current official Hancom importer and self-authored UI swatches; header-only copies do not prove every historical producer",
+    "hwpVersion": "5.1.0.1"
+  }
+}

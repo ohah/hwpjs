@@ -536,6 +536,36 @@ pub const Session = struct {
         return changed;
     }
 
+    pub const CellStyleRequest = @import("hxcell_style_batch.zig").Request;
+    /// One source binding/validation/publication pass for premerged sparse
+    /// borders and fills. The borrowed request slice is never retained.
+    pub fn setCellStyles(self: *Session, requests: []const CellStyleRequest) !bool {
+        if (requests.len == 0) return false;
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("hxcell_style_batch.zig").apply(self, requests);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try @import("hxcell_style_batch.zig").apply(self, requests);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+
+    pub const CellFillRequest = @import("hxcell_fill_batch.zig").Request;
+    /// Requests are borrowed only for this synchronous call. Checkpoints retain
+    /// the scalar Entry values, never the request slice or ABI buffers.
+    pub fn setCellFills(self: *Session, requests: []const CellFillRequest) !bool {
+        if (requests.len == 0) return false;
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("hxcell_fill_batch.zig").apply(self, requests);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try @import("hxcell_fill_batch.zig").apply(self, requests);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+
     pub const CellBorderRequest = @import("hxcell_border_batch.zig").Request;
     pub fn applyCellBorders(self: *Session, requests: []const CellBorderRequest) !bool {
         if (requests.len == 0) return false;

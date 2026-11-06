@@ -955,6 +955,12 @@ fn apply(command: histories.Command) !void {
         .cell_borders => {
             _ = try session.applyCellBorders(command.cell_borders);
         },
+        .cell_fills => {
+            _ = try session.setCellFills(command.cell_fills);
+        },
+        .cell_styles => {
+            _ = try session.setCellStyles(command.cell_styles);
+        },
         .cell_border => {
             _ = try session.setCellBorder(command.section, command.table_node, command.list_node, command.cell_border_edges, command.cell_border_style, command.cell_border_width, command.cell_border_color);
         },
@@ -1008,6 +1014,25 @@ export fn hwpx_edit_set_cell_sizes(ptr: [*]const u8, length: usize) u32 {
     const commands = wire.build(.hwpx, a, ptr[0..length]) catch |err| return fail(err);
     defer a.free(commands);
     applyBatch(s, commands) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_cell_styles(border_ptr: [*]const u8, border_len: usize, fill_ptr: [*]const u8, fill_len: usize) u32 {
+    const wire = @import("cell_style_batch.zig");
+    const fw = @import("cell_fill_batch.zig");
+    if (border_len > wire.max_cells * wire.border_stride or fill_len > fw.max_cells * fw.stride) return fail(error.LimitExceeded);
+    const s: *editor.Session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const requests = wire.build(.hwpx, a, border_ptr[0..border_len], fill_ptr[0..fill_len]) catch |err| return fail(err);
+    defer a.free(requests);
+    if (requests.len != 0) applyBatch(s, &.{.{ .kind = .cell_styles, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .cell_styles = requests }}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_cell_fills(ptr: [*]const u8, length: usize) u32 {
+    const wire = @import("cell_fill_batch.zig");
+    if (length > wire.max_cells * wire.stride) return fail(error.LimitExceeded);
+    const s: *editor.Session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const fills = wire.build(.hwpx, a, ptr[0..length]) catch |err| return fail(err);
+    defer a.free(fills);
+    if (fills.len != 0) applyBatch(s, &.{.{ .kind = .cell_fills, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .cell_fills = fills }}) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_set_cell_appearance(ptr: [*]const u8, length: usize, has_background: u32, section: u32, table_node: u32, list_node: u32, color: u32) u32 {

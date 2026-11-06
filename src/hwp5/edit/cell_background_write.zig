@@ -93,8 +93,7 @@ pub const CloneKey = struct {
     styles: [4]?patch_model.Style = @splat(null),
     widths: [4]?u16 = @splat(null),
     colors: [4]?u32 = @splat(null),
-    background: ?u32 = null,
-    foreground: ?u32 = null,
+    background: ?patch_model.Background = null,
     pub fn init(id: u16, patch: patch_model.Patch) !CloneKey {
         var key: CloneKey = .{ .source_id = id };
         for (patch.border.edges, 0..) |edge, i| if (edge) |v| {
@@ -102,11 +101,8 @@ pub const CloneKey = struct {
             key.widths[i] = v.width_hundredth_mm;
             key.colors[i] = v.color;
         };
-        if (patch.background) |bg| {
-            if (bg != .solid) return error.UnsupportedCellBackgroundIntent;
-            key.background = bg.solid.color;
-            key.foreground = bg.solid.hatch_color;
-        }
+        try patch_model.validate(patch);
+        key.background = patch.background;
         return key;
     }
 };
