@@ -7,6 +7,10 @@
 ```sh
 node --max-old-space-size=256 --test --test-concurrency=1 \
   tests/cell-fill-command.test.mjs tests/table-border-plan.test.mjs \
+  tests/cell-diagonal-command.test.mjs \
+  tests/hwp5/table-diagonal-paint-plan.test.mjs tests/hwpx/table-diagonal-paint.test.mjs \
+  tests/hwpx/table-border-paint.test.mjs tests/hwpx/table-semantic-face-fill.test.mjs \
+  tests/hwpx/table-semantic-fill-source.test.mjs \
   tools/tests/hwpx-table-border-raw-fields.test.mjs \
   tools/tests/table-cell-appearance-observation.test.mjs \
   tools/tests/table-cell-appearance-official-hatch.test.mjs \
@@ -25,6 +29,8 @@ node --experimental-transform-types --max-old-space-size=256 \
 ```sh
 node --max-old-space-size=512 --test --test-concurrency=1 \
   --test-timeout=45000 tests/cell-style-fill-native.test.mjs \
+  tests/cell-diagonal-native.test.mjs \
+  tools/tests/cell-diagonal-runtime.test.mjs \
   tools/tests/hwpx-border-source-raw-native.test.mjs
 ```
 

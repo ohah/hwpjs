@@ -4,7 +4,7 @@ const editor = @import("editor_session.zig");
 const p = @import("../model/border_fill_patch.zig");
 const resource = @import("border_fill_resource_patch.zig");
 pub const Owner = struct { section: usize, table_node: usize, cell_node: usize, list_node: usize, source_id: u32 };
-pub const Entry = struct { section: usize, table_node: usize, cell_node: usize, list_node: usize, source_id: u32, color: ?u32 = null, background: ?p.Background = null, border: @import("../model/border_fill_patch.zig").Border = .{} };
+pub const Entry = struct { section: usize, table_node: usize, cell_node: usize, list_node: usize, source_id: u32, color: ?u32 = null, background: ?p.Background = null, border: @import("../model/border_fill_patch.zig").Border = .{}, diagonal: ?p.DiagonalPatch = null };
 pub const Values = std.ArrayList(Entry);
 pub const Observation = struct { source_id: u32, color: ?u32 };
 
@@ -85,5 +85,5 @@ pub fn apply(session: *editor.Session, section: usize, table: usize, list: usize
 
 /// Both operations serialize exactly one complete sparse patch for this owner.
 pub fn patch(entry: Entry) @import("../model/border_fill_patch.zig").Patch {
-    return .{ .border = entry.border, .background = entry.background orelse if (entry.color) |color| .{ .solid = .{ .color = color } } else null };
+    return .{ .border = entry.border, .diagonal = entry.diagonal, .background = entry.background orelse if (entry.color) |color| .{ .solid = .{ .color = color } } else null };
 }

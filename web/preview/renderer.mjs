@@ -40,6 +40,7 @@ import {
   tableBackgroundFillForSource,
 } from './table-border-plan.mjs';
 import { paintTableBorder } from './table-border-paint.mjs';
+import { paintTableDiagonals } from './table-diagonal-paint.mjs';
 import { createdTableWidthHint } from './created-table-width-hint.mjs';
 import { dutmalAt, dutmalPaintPlan, paintDutmal } from './dutmal-paint.mjs';
 import { dutmalAnchorAtPoint } from './dutmal-anchor-geometry.mjs';
@@ -616,6 +617,9 @@ export function createRenderer(
       none: 0,
       source: 0,
       proxy: 0,
+      partial: 0,
+      diagonalUnavailableCount: 0,
+      paintFailureCount: 0,
       unavailableCount: 0,
       unavailable: [],
     };
@@ -642,26 +646,63 @@ export function createRenderer(
             paintPendingPicture(box, box.x, top, true),
           );
         if (border.state !== 'proxy') {
+          const coverage = layout.tableBorderCoverage;
+          const unavailable = (error, component) => {
+            coverage.unavailableCount++;
+            if (coverage.unavailable.length < 100)
+              coverage.unavailable.push({
+                section: box.section,
+                tableNode: box.tableNode,
+                listNode: box.listNode,
+                error,
+                ...(component ? { component } : {}),
+              });
+          };
+          const diagonalDiagnostic = border.diagonalDiagnostic;
+          if (diagonalDiagnostic) {
+            coverage.diagonalUnavailableCount++;
+            unavailable(diagonalDiagnostic.reason, 'diagonal');
+          }
           if (border.state === 'unavailable') {
             // A known cell background is independent of an unsupported edge type.
             if (border.fill)
               paintRowTransform(ctx, box, viewport.scrollTop, () =>
                 paintTableBackground(ctx, box, border.fill, viewport.scrollTop, bitmap),
               );
-            layout.tableBorderCoverage.unavailableCount++;
-            if (layout.tableBorderCoverage.unavailable.length < 100)
-              layout.tableBorderCoverage.unavailable.push({
-                section: box.section,
-                tableNode: box.tableNode,
-                listNode: box.listNode,
-                error: border.error,
-              });
-          } else if (
-            paintRowTransform(ctx, box, viewport.scrollTop, () =>
-              paintTableBorder(ctx, box, border, viewport.scrollTop, { bitmap }),
-            )
-          ) {
-            layout.tableBorderCoverage[border.state === 'none' ? 'none' : 'source']++;
+            if (border.diagonals?.length) {
+              let painted = false,
+                transformed = false;
+              try {
+                transformed = paintRowTransform(ctx, box, viewport.scrollTop, () => {
+                  painted =
+                    paintTableDiagonals(ctx, box, border.diagonals, viewport.scrollTop) === true;
+                });
+              } catch {
+                // A Canvas failure must not count this partial source as painted.
+                painted = false;
+              }
+              if (transformed && painted) coverage.partial++;
+              else {
+                coverage.paintFailureCount++;
+                // The outer diagnostic below already counts this unavailable cell.
+              }
+            }
+            if (!diagonalDiagnostic) unavailable(border.error);
+          } else {
+            // paintRowTransform reports transform validity, not its callback's result.
+            let painted = false;
+            const transformed = paintRowTransform(ctx, box, viewport.scrollTop, () => {
+              painted = paintTableBorder(ctx, box, border, viewport.scrollTop, { bitmap }) === true;
+            });
+            if (!transformed || !painted) {
+              coverage.paintFailureCount++;
+              if (!diagonalDiagnostic) unavailable('TableBorderPaintFailed');
+            } else if (diagonalDiagnostic) {
+              // Known siblings painted, but this cell is not complete source coverage.
+              coverage.partial++;
+            } else {
+              coverage[border.state === 'none' && !border.diagonals?.length ? 'none' : 'source']++;
+            }
           }
           return;
         }

@@ -1026,6 +1026,17 @@ export fn hwpx_edit_set_cell_styles(border_ptr: [*]const u8, border_len: usize, 
     if (requests.len != 0) applyBatch(s, &.{.{ .kind = .cell_styles, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .cell_styles = requests }}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_set_cell_styles_v2(border_ptr: [*]const u8, border_len: usize, fill_ptr: [*]const u8, fill_len: usize, diagonal_ptr: [*]const u8, diagonal_len: usize) u32 {
+    const wire = @import("cell_style_batch.zig");
+    const fw = @import("cell_fill_batch.zig");
+    const dw = @import("cell_diagonal_batch.zig");
+    if (border_len > wire.max_cells * wire.border_stride or fill_len > fw.max_cells * fw.stride or diagonal_len > dw.max_cells * dw.stride) return fail(error.LimitExceeded);
+    const s: *editor.Session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const requests = wire.buildV2(.hwpx, a, border_ptr[0..border_len], fill_ptr[0..fill_len], diagonal_ptr[0..diagonal_len]) catch |err| return fail(err);
+    defer a.free(requests);
+    if (requests.len != 0) applyBatch(s, &.{.{ .kind = .cell_styles, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .cell_styles = requests }}) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_set_cell_fills(ptr: [*]const u8, length: usize) u32 {
     const wire = @import("cell_fill_batch.zig");
     if (length > wire.max_cells * wire.stride) return fail(error.LimitExceeded);

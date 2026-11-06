@@ -54,6 +54,13 @@ export function tableCellAppearanceReason(code: string) {
     InvalidCellBorderPatch: '바꿀 테두리의 선·굵기·색을 확인하세요.',
     InconsistentCellStyleTarget: '테두리와 배경의 적용 범위를 같은 값으로 선택하세요.',
     CellStylesAbiUnavailable: '현재 엔진은 확장 셀 모양 변경을 제공하지 않습니다.',
+    CellDiagonalAbiUnavailable: '현재 엔진은 대각선 변경을 제공하지 않습니다.',
+    CellDiagonalChoiceRequired: '바꿀 대각선 방향 또는 선 속성을 직접 선택하세요.',
+    InvalidCellDiagonal: '대각선 방향·종류·굵기·색을 확인하세요.',
+    UnsupportedHwp5DiagonalDirections: '이 원본의 복합 대각선 방향은 아직 변경할 수 없습니다.',
+    UnsupportedHwpxDiagonalDirections: '이 원본의 복합 대각선 방향은 아직 변경할 수 없습니다.',
+    UnsupportedCellDiagonalGeometry: '이 원본의 복합 대각선 방향은 아직 변경할 수 없습니다.',
+    IncompleteCellDiagonalStroke: '새 대각선의 선 종류·굵기·색을 모두 선택하세요.',
     AmbiguousCellStyleOwner: '같은 셀의 소유 정보가 서로 다릅니다.',
   };
   return messages[code] ?? tableCellReason(code);
@@ -86,6 +93,7 @@ export function tableCellAppearanceValues(
       ?.cellStyleBatchAvailable === true
   )
     return tableCellStyleValues(draft, captured);
+  if (draft.diagonal) throw Error('CellDiagonalAbiUnavailable');
   const cell = captured.cell;
   if (!cell || captured.reason) throw Error('InvalidCellAppearanceCapture');
   if (!draft.border && !draft.background) throw Error('CellAppearanceChoiceRequired');
@@ -257,6 +265,9 @@ export function createTableCellAppearancePort(
       const fixed: TableCellAppearanceDraft = {
         border: draft.border ? { ...draft.border, dirty: { ...draft.border.dirty } } : null,
         background: draft.background ? { ...draft.background } : null,
+        ...(draft.diagonal
+          ? { diagonal: { ...draft.diagonal, dirty: { ...draft.diagonal.dirty } } }
+          : {}),
         ...(draft.target ? { target: { ...draft.target } } : {}),
       };
       const fingerprint = JSON.stringify(values);

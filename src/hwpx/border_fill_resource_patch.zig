@@ -177,7 +177,7 @@ pub fn writePatchBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
     if (try @import("table_xml_fields.zig").unsigned(a, raw_count, 4096) != templates.count()) return error.BorderFillCountMismatch;
     const context = try solidContext(a, tree, parent);
     defer a.free(context);
-    var clones = std.AutoHashMap([32]u32, u32).init(a);
+    var clones = std.AutoHashMap(PatchKey, u32).init(a);
     defer clones.deinit();
     const ids = try a.alloc(u32, requests.len);
     errdefer a.free(ids);
@@ -228,8 +228,9 @@ pub fn writeSolidBatch(a: std.mem.Allocator, tree: *const Tree, requests: []cons
 
 // Canonical complete-patch key: no padding, inactive union bytes or pointer hash.
 // Presence has its own bit/value, so explicit black and NONE differ from absent.
-pub fn patchKey(request: PatchRequest) [32]u32 {
-    var key: [32]u32 = @splat(0);
+pub const PatchKey = [40]u32;
+pub fn patchKey(request: PatchRequest) PatchKey {
+    var key: PatchKey = @splat(0);
     key[0] = request.source_id;
     for (request.patch.border.edges, 0..) |edge, i| if (edge) |value| {
         const offset = 1 + i * 4;
@@ -261,6 +262,13 @@ pub fn patchKey(request: PatchRequest) [32]u32 {
                 key[24] = v.step_center;
             },
         }
+    }
+    if (request.patch.diagonal) |diagonal| {
+        key[25] = 1;
+        key[26] = if (diagonal.directions) |v| @as(u32, @backingInt(v)) + 1 else 0;
+        key[27] = if (diagonal.stroke.style) |v| @as(u32, @backingInt(v)) + 1 else 0;
+        key[28] = if (diagonal.stroke.width_hundredth_mm) |v| @as(u32, v) + 1 else 0;
+        key[29] = if (diagonal.stroke.color) |v| v + 1 else 0;
     }
     return key;
 }

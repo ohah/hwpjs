@@ -2,7 +2,6 @@
 const std = @import("std");
 const editor = @import("editor_session.zig");
 const cell = @import("table_cell_background_session.zig");
-const border = @import("table_cell_border_session.zig");
 const p = @import("../model/border_fill_patch.zig");
 const resource = @import("border_fill_resource_patch.zig");
 pub const Request = struct {
@@ -104,7 +103,7 @@ pub fn apply(session: *editor.Session, requests: []const Request) !bool {
     // shared by the complete canonical patch, without hashing union padding.
     var observed = std.AutoHashMap([2]u32, p.Value).init(a);
     defer observed.deinit();
-    var validated = std.AutoHashMap([32]u32, void).init(a);
+    var validated = std.AutoHashMap(resource.PatchKey, void).init(a);
     defer validated.deinit();
     var changed = false;
     for (requests) |r| {
@@ -119,13 +118,18 @@ pub fn apply(session: *editor.Session, requests: []const Request) !bool {
             mask[i] = edge != null;
             if (mask[i]) bits |= @as(u32, 1) << @intCast(i);
         }
+        if (patch.diagonal) |diagonal| {
+            if (diagonal.directions != null) bits |= 32;
+            if (diagonal.stroke.style != null) bits |= 64;
+            if (diagonal.stroke.width_hundredth_mm != null) bits |= 128;
+            if (diagonal.stroke.color != null) bits |= 256;
+        }
         const observation = try observed.getOrPut(.{ owner.source_id, bits });
-        if (!observation.found_existing) observation.value_ptr.* = try @import("border_fill_xml_patch.zig").observeSelected(a, &header, node, profile, mask, patch.background != null);
+        if (!observation.found_existing) observation.value_ptr.* = try @import("border_fill_xml_patch.zig").observeSelectedWithDiagonal(a, &header, node, profile, mask, patch.background != null, patch.diagonal);
         const source = observation.value_ptr.*;
         const found = indices.get(key);
         const before: cell.Entry = if (found) |i| candidate.items[i] else .{ .section = r.section, .table_node = r.table_node, .cell_node = owner.cell_node, .list_node = r.list_node, .source_id = owner.source_id };
         var next = before;
-        next.border = border.normalized(before.border, patch, source);
         if (patch.background != null) {
             const original = source.background orelse return error.UnsupportedCellBackgroundContents;
             // A solid request without hatch_color retains the CURRENT effective
@@ -136,14 +140,16 @@ pub fn apply(session: *editor.Session, requests: []const Request) !bool {
             // still has no explicit foreground (e.g. after none/linear).
             const resolved = p.merge(.{ .background = original }, .{ .background = pending }).background.?;
             patch.background = resolved;
-            if (!std.meta.eql(current, resolved)) {
-                const normalized: ?p.Background = if (p.matches(source, .{ .background = resolved })) null else resolved;
-                next.background = normalized;
-                next.color = if (normalized) |fill| (if (fill == .solid) fill.solid.color else null) else null;
-            }
         }
-        const validation = try validated.getOrPut(resource.patchKey(.{ .source_id = owner.source_id, .patch = patch }));
-        if (!validation.found_existing) try validateFragment(a, &header, node, patch, context, session.options.max_xml_bytes, profile);
+        const normalized = p.canonical(source, p.merge(cell.patch(before), patch));
+        next.border = normalized.border;
+        next.diagonal = normalized.diagonal;
+        next.background = normalized.background;
+        next.color = if (normalized.background) |fill| (if (fill == .solid) fill.solid.color else null) else null;
+        if (p.has(normalized)) {
+            const validation = try validated.getOrPut(resource.patchKey(.{ .source_id = owner.source_id, .patch = normalized }));
+            if (!validation.found_existing) try validateFragment(a, &header, node, normalized, context, session.options.max_xml_bytes, profile);
+        }
         if (std.meta.eql(before, next)) continue;
         changed = true;
         if (found) |i| candidate.items[i] = next else {

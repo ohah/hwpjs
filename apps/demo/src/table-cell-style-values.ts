@@ -1,3 +1,4 @@
+import { tableCellDiagonalValues } from './table-cell-diagonal-values.ts';
 import type { TableCellAppearanceCapture } from './table-cell-appearance-port.ts';
 import type {
   TableCellAppearanceDraft,
@@ -86,7 +87,9 @@ export function tableCellStyleValues(
 ) {
   const cell = captured.cell;
   if (!cell || captured.reason) throw Error('InvalidCellAppearanceCapture');
-  if (!draft.border && !draft.background) throw Error('CellAppearanceChoiceRequired');
+  if (!draft.border && !draft.background && !draft.diagonal)
+    throw Error('CellAppearanceChoiceRequired');
+  const diagonal = draft.diagonal ? tableCellDiagonalValues(draft.diagonal, captured) : null;
   const border = draft.border;
   const target: TableCellAppearanceTargetDraft = draft.target ??
     border ?? { mode: 'cell', startRow: '', endRow: '', startColumn: '', endColumn: '' };
@@ -161,7 +164,8 @@ export function tableCellStyleValues(
           ...patch,
         });
     }
-    if (!borders.length && !draft.background) throw Error('EmptyCellBorderRegion');
+    if (!borders.length && !draft.background && !draft.diagonal)
+      throw Error('EmptyCellBorderRegion');
   }
   const fill = draft.background ? fillValue(draft.background) : null;
   const fills = fill
@@ -172,5 +176,13 @@ export function tableCellStyleValues(
         fill,
       }))
     : [];
-  return validateCellStyles({ borders, fills });
+  const diagonals = diagonal
+    ? (target.mode === 'cell' ? [cell] : selected).map((row) => ({
+        section: cell.section,
+        tableNode: cell.tableNode,
+        listNode: row.listNode,
+        ...diagonal,
+      }))
+    : undefined;
+  return validateCellStyles({ borders, fills, ...(diagonals ? { diagonals } : {}) });
 }

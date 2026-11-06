@@ -63,6 +63,8 @@
 
 - [원본 셀 테두리·채우기 배치](table-cell-fill-batches.md)
 
+- [원본 셀의 기본 대각선](table-cell-diagonal.md)
+
 - [떠 있는 그림 묶음과 캡션의 본문 배치](floating-picture-group-body.md)
 
 - [HWPX 묶음 그림 캡션 원본과 소유 문단](hwpx-container-caption-source.md)

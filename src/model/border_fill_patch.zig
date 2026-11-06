@@ -4,6 +4,8 @@ pub const Style = enum { NONE, SOLID, DASH, DOT, DASH_DOT, DASH_DOT_DOT, LONG_DA
 pub const widths = [_]u16{ 10, 12, 15, 20, 25, 30, 40, 50, 60, 70, 100, 150, 200, 300, 400, 500 };
 pub const Edge = struct { style: ?Style = null, width_hundredth_mm: ?u16 = null, color: ?u32 = null };
 pub const Border = struct { edges: [4]?Edge = @splat(null) };
+pub const DiagonalDirections = @import("table_diagonal_values.zig").Directions;
+pub const DiagonalPatch = struct { directions: ?DiagonalDirections = null, stroke: Edge = .{} };
 pub const Hatch = enum { HORIZONTAL, VERTICAL, BACK_SLASH, SLASH, CROSS, CROSS_DIAGONAL };
 /// Canonical XML names and HWP5 BorderFill ordinals differ for the two diagonals.
 /// Verified by official paired HWP/HWPX exports; the published table 29 differs.
@@ -32,12 +34,16 @@ pub const Solid = struct { color: u32, hatch_color: ?u32 = null };
 pub const Pattern = struct { face: u32, hatch: u32, style: Hatch };
 pub const Linear = struct { colors: [2]u32, angle: u16, center_x: u8, center_y: u8, step: u8, step_center: u8 };
 pub const Background = union(enum) { none, solid: Solid, hatch: Pattern, linear: Linear };
-pub const Patch = struct { border: Border = .{}, background: ?Background = null };
+pub const Patch = struct { border: Border = .{}, background: ?Background = null, diagonal: ?DiagonalPatch = null };
 pub fn edgeHas(v: Edge) bool {
     return v.style != null or v.width_hundredth_mm != null or v.color != null;
 }
+pub fn diagonalHas(v: DiagonalPatch) bool {
+    return v.directions != null or edgeHas(v.stroke);
+}
 pub fn has(v: Patch) bool {
     if (v.background != null) return true;
+    if (v.diagonal) |diagonal| if (diagonalHas(diagonal)) return true;
     for (v.border.edges) |e| if (e) |x| if (edgeHas(x)) return true;
     return false;
 }
@@ -50,6 +56,11 @@ pub fn validate(patch: Patch) !void {
         if (x.width_hundredth_mm) |width| _ = try widthCode(width);
         if (x.color) |color| try @import("rgb_color.zig").validate(color);
     };
+    if (patch.diagonal) |diagonal| {
+        if (!diagonalHas(diagonal)) return error.InvalidCellDiagonal;
+        if (diagonal.stroke.width_hundredth_mm) |width| _ = try widthCode(width);
+        if (diagonal.stroke.color) |color| try @import("rgb_color.zig").validate(color);
+    }
     if (patch.background) |background| switch (background) {
         .none => {},
         .solid => |v| {
@@ -75,6 +86,14 @@ pub fn merge(old: Patch, patch: Patch) Patch {
         };
         out.border.edges[i] = current;
     };
+    if (patch.diagonal) |value| {
+        var current = out.diagonal orelse DiagonalPatch{};
+        if (value.directions) |directions| current.directions = directions;
+        inline for (.{ "style", "width_hundredth_mm", "color" }) |name| if (@field(value.stroke, name)) |v| {
+            @field(current.stroke, name) = v;
+        };
+        out.diagonal = current;
+    }
     if (patch.background) |b| {
         var next = b;
         if (next == .solid and next.solid.hatch_color == null) if (old.background) |previous| {
@@ -107,13 +126,20 @@ pub fn fromHwp5(raw: u8) ?Style {
     };
 }
 pub const EdgeValue = struct { style: ?Style = null, width_hundredth_mm: ?u16 = null, color: ?u32 = null };
-pub const Value = struct { edges: [4]EdgeValue = @splat(.{}), background: ?Background = null };
+pub const DiagonalValue = struct { directions: ?DiagonalDirections = null, stroke: EdgeValue = .{} };
+pub const Value = struct { edges: [4]EdgeValue = @splat(.{}), background: ?Background = null, diagonal: DiagonalValue = .{} };
 pub fn matches(value: Value, patch: Patch) bool {
     for (patch.border.edges, 0..) |edge, i| if (edge) |expected| {
         if (expected.style) |v| if (value.edges[i].style != v) return false;
         if (expected.width_hundredth_mm) |v| if (value.edges[i].width_hundredth_mm != v) return false;
         if (expected.color) |v| if (value.edges[i].color != v) return false;
     };
+    if (patch.diagonal) |diagonal| {
+        if (diagonal.directions) |directions| if (value.diagonal.directions != directions) return false;
+        inline for (.{ "style", "width_hundredth_mm", "color" }) |name| if (@field(diagonal.stroke, name)) |v| {
+            if (@field(value.diagonal.stroke, name) != v) return false;
+        };
+    }
     if (patch.background) |background| {
         if (value.background == null or std.meta.activeTag(value.background.?) != std.meta.activeTag(background)) return false;
         if (background == .solid) {
@@ -122,4 +148,30 @@ pub fn matches(value: Value, patch: Patch) bool {
         } else if (!std.meta.eql(value.background.?, background)) return false;
     }
     return true;
+}
+
+/// Release only source-matching scalar components. Unknown source fields are
+/// nullable observations, never defaults. Resolved solid foreground participates.
+pub fn canonical(original: Value, patch: Patch) Patch {
+    var out = patch;
+    for (&out.border.edges, original.edges) |*edge, source| if (edge.*) |value| {
+        const next = canonicalEdge(source, value);
+        edge.* = if (edgeHas(next)) next else null;
+    };
+    if (out.diagonal) |*diagonal| {
+        if (diagonal.directions != null and diagonal.directions == original.diagonal.directions) diagonal.directions = null;
+        diagonal.stroke = canonicalEdge(original.diagonal.stroke, diagonal.stroke);
+        if (!diagonalHas(diagonal.*)) out.diagonal = null;
+    }
+    if (out.background) |background| {
+        if (matches(original, .{ .background = background })) out.background = null;
+    }
+    return out;
+}
+fn canonicalEdge(source: EdgeValue, patch: Edge) Edge {
+    var out = patch;
+    inline for (.{ "style", "width_hundredth_mm", "color" }) |name| {
+        if (@field(out, name) != null and @field(out, name) == @field(source, name)) @field(out, name) = null;
+    }
+    return out;
 }

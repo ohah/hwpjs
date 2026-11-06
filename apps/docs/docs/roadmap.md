@@ -4,12 +4,20 @@
 
 이 페이지는 현재 작업 트리의 공개 소스와 기존 검증 기록을 대조한 상태표입니다. 이번 문서 조사에서 Native 빌드나 전수감사를 새로 실행하지 않았습니다. 소스의 public export, 패키지 빌드, npm registry 공개 설치, 실제 브라우저, RN 기기 지원은 서로 다른 증거입니다. 완료 기준이 다른 항목을 합쳐 진행률을 계산하지 않습니다.
 
-## 지금 사용할 수 있는 배포와 준비 중인 작업
+## 2026-11-07 원본 셀 편집 후속
+
+HWP5·HWPX의 원본 셀에서 네 변·채우기·기본 대각선을 같은 원자 명령으로 편집하는 경로를 확장했습니다. 채우기는 없음·단색·무늬·두 색 선형 그라데이션, 대각선은 없음·상향·하향·양방향을 다룹니다. 현재 셀·검증된 범위·표 전체의 적용과 바꾸지 않은 성분 보존을 구분합니다. 그라데이션·무늬를 포함한 모든 한/글 픽셀 동치나 모든 표 형식의 지원을 뜻하지 않습니다.
+
+실제 WASM·독립 CFB/ZIP/XML 저장·이력·재열기의 CI 동등 검사33개를 통과했습니다. 원본 Noori 두 형식의 브라우저에서는8개 방향 표시와2개 저장 후 재열기, 대화상자 탭·버튼 배치 및 키보드 이동을 확인했습니다. 미지원 바깥 선과 알려진 대각선의 부분 표시를 보완한 후 실제 저장 회귀12개도 별도로 다시 확인했습니다. 원본과 구분한 HWPX 파생1개에서는 미지원 바깥 선이 있어도 알려진 대각선이 Canvas에 남는 것을 확인했습니다. 이는 전체 예제101개의 편집 전수검사가 아닙니다. 복합 모양·중심선·이중선 대각선은 미지원이며, 미확인 필드를 기본값으로 만들어 덮어쓰지 않습니다.
+
+이 후속의 상세 계약·반례·최종 배포 증거는 [원본 셀 기본 대각선](https://github.com/ohah/hwpjs/blob/main/docs/table-cell-diagonal.md)과 [테두리·채우기 배치](https://github.com/ohah/hwpjs/blob/main/docs/table-cell-fill-batches.md)가 소유합니다. 현재 웹 아티팩트의 지문은 [공개 manifest](https://ohah.github.io/hwpjs/editor/manifest.json)에서 확인합니다. 아래는2026-10-30 당시의 별도 배포·패키지 조사 이력입니다.
+
+## 2026-10-30 배포·패키지 조사 이력
 
 | 사용자 진입점 | 현재 확인한 범위 | 완료로 해석하면 안 되는 범위 |
 | --- | --- | --- |
 | [웹 Canvas 데모](./playground.mdx) · [API 직접 실행](./api/playground.mdx) | 2026-10-30 검증한 공개 정적 배포는 d849 WASM과 공개 예제 101개를 제공합니다. 기존 HWP5 한 사례에서 입력 80회·실행 취소 80회·저장을 확인했습니다. 예제 101개 전체의 편집·저장 검증은 아닙니다. 과거 b7 API 검사에서 두 형식의 열기·선택·삽입·이력·저장·재열기를 확인한 기록과 현재 배포 확인은 별도입니다 | Company/Enter 후속 소스의 이 배포 포함 여부는 이 확인만으로 판정하지 않으며, 모든 위치·명령·완전 조판의 증거도 아닙니다 |
-| [새 canonical 패키지 예제](./guide/package-names.md) | 단일 `@ohah/hwpjs`와 `/runtime`, `/react`, `/svelte`, `/vanilla`, `/react-native` subpath 후보를 tarball로 검사했습니다 | 새 Zig/WASM API는 npm 미게시입니다. 현재 npm의 `0.1.0-rc.10`은 구 Rust 패키지이며, 패키지 소비 검증이 새 엔진 배포 완료를 뜻하지 않습니다 |
+| [새 canonical 패키지 예제](./guide/package-names.md) | 단일 `@ohah/hwpjs`와 `/runtime`, `/react`, `/svelte`, `/vanilla`, `/react-native` subpath 후보를 tarball로 검사했습니다 | 새 Zig/WASM API는 npm 미게시입니다. 2026-10-30 조사 시점 npm의 `0.1.0-rc.10`은 구 Rust 패키지이며, 패키지 소비 검증이 새 엔진 배포 완료를 뜻하지 않습니다 |
 | Company/Enter 후속 | 준비 소스·격리 후보의 개별 검증은 위에서 검증한 d849 배포 및 과거 b7 감사와 별도입니다 | 소스 존재·commit·후보 빌드만으로 현재 웹 배포 반영이나 전체 corpus/형식 지원을 선언하지 않습니다 |
 | [RN](./frameworks/react-native.md) | provider/JSI 기반 및 제한된 iOS 시뮬레이터 저수준 진단 harness의 근거가 있습니다 | 정식 HeadlessEditor provider 연결·Native Canvas 전체 조판·Android/iOS 제품 release·실기기·OS IME는 미완료입니다 |
 

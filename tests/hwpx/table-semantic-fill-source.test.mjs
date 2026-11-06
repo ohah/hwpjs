@@ -28,6 +28,12 @@ function source(nodes) {
     center_line: 'NONE',
     slash: 'NONE',
     back_slash: 'NONE',
+    // This no-diagonal fixture explicitly supplies the complete shape DTO.
+    slash_crooked: '0',
+    slash_is_counter: '0',
+    back_slash_crooked: '0',
+    back_slash_is_counter: '0',
+    diagonal: { style: 'NONE', width: null, color: null },
     edges: Array.from({ length: 4 }, () => ({ style: 'NONE' })),
     fill_report: {
       brushes: [
@@ -346,4 +352,25 @@ test('optional hook defaults preserve ordinary drawing plans and unsupported res
     state: 'unavailable',
     error: 'UnsupportedDrawingGradientPlan',
   });
+});
+
+test('old Native missing diagonal raw fields preserves canonical generic solid without inventing known-none geometry', () => {
+  const style = genericSolid();
+  for (const key of [
+    'slash_crooked',
+    'slash_is_counter',
+    'back_slash_crooked',
+    'back_slash_is_counter',
+    'diagonal',
+  ])
+    delete style[key];
+  style.edges[2] = { style: 'SOLID', width: '0.1 mm', color: '#2973a1' };
+  const before = structuredClone(style);
+  assert.deepEqual(tableBorderPaintPlan(style), {
+    state: 'strokes',
+    strokes: [{ edge: 2, width: (0.1 * 96) / 25.4, color: '#2973a1' }],
+    fill: { state: 'solid', color: '#e7e7a5' },
+    diagonalDiagnostic: { state: 'unsupported', reason: 'UnsupportedTableDiagonalShape' },
+  });
+  assert.deepEqual(style, before);
 });

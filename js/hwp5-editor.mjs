@@ -1,3 +1,4 @@
+import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
 import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
@@ -475,6 +476,28 @@ export async function createExperimentalHwp5Editor(
       const value = validateCellStyles(input),
         borders = encodeCellBorderPatches(value.borders),
         fills = encodeCellFills(value.fills);
+      if (Object.hasOwn(value, 'diagonals')) {
+        if (typeof wasm.hwp5_edit_set_cell_styles_v2 !== 'function')
+          throw Error('CellDiagonalAbiUnavailable');
+        const diagonals = encodeCellDiagonals(value.diagonals);
+        memory.withBytes(borders, (borderPtr, borderLength) =>
+          memory.withBytes(fills, (fillPtr, fillLength) =>
+            memory.withBytes(diagonals, (diagonalPtr, diagonalLength) => {
+              success(
+                wasm.hwp5_edit_set_cell_styles_v2(
+                  borderPtr,
+                  borderLength,
+                  fillPtr,
+                  fillLength,
+                  diagonalPtr,
+                  diagonalLength,
+                ),
+              );
+            }),
+          ),
+        );
+        return;
+      }
       if (typeof wasm.hwp5_edit_set_cell_styles !== 'function')
         throw Error('CellStylesAbiUnavailable');
       memory.withBytes(borders, (borderPtr, borderLength) =>

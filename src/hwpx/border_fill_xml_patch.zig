@@ -73,6 +73,10 @@ pub fn observe(a: std.mem.Allocator, tree: *const Tree, node: usize, profile: pr
     return observeSelected(a, tree, node, profile, @splat(true), true);
 }
 pub fn observeSelected(a: std.mem.Allocator, tree: *const Tree, node: usize, profile: profile_mod.Profile, mask: [4]bool, background: bool) !p.Value {
+    return observeSelectedWithDiagonal(a, tree, node, profile, mask, background, null);
+}
+/// Additive selected diagonal observation; old callers keep their exact field scope.
+pub fn observeSelectedWithDiagonal(a: std.mem.Allocator, tree: *const Tree, node: usize, profile: profile_mod.Profile, mask: [4]bool, background: bool, diagonal: ?p.DiagonalPatch) !p.Value {
     if (!tree.elements[node].is(head, "borderFill")) return error.InvalidBorderFillElement;
     var out: p.Value = .{};
     for (edge_names, 0..) |name, i| {
@@ -87,6 +91,20 @@ pub fn observeSelected(a: std.mem.Allocator, tree: *const Tree, node: usize, pro
                 out.edges[i].width_hundredth_mm = try readWidth(a, token);
             }
             out.edges[i].color = try readColor(a, tree, edge, "color", profile, .other);
+        }
+    }
+    if (diagonal) |selected| {
+        if (selected.directions != null) out.diagonal.directions = try basicDiagonalDirections(a, tree, node);
+        if (try direct(tree, node, head, "diagonal")) |stroke| {
+            if (selected.stroke.style != null) if (try readText(a, tree, stroke, "type")) |token| {
+                defer a.free(token);
+                out.diagonal.stroke.style = std.meta.stringToEnum(p.Style, token);
+            };
+            if (selected.stroke.width_hundredth_mm != null) if (try readText(a, tree, stroke, "width")) |token| {
+                defer a.free(token);
+                out.diagonal.stroke.width_hundredth_mm = try readWidth(a, token);
+            };
+            if (selected.stroke.color != null) out.diagonal.stroke.color = try readColor(a, tree, stroke, "color", profile, .other);
         }
     }
     if (!background) return out;
@@ -140,6 +158,25 @@ pub fn observeSelected(a: std.mem.Allocator, tree: *const Tree, node: usize, pro
         out.background = .{ .linear = .{ .colors = colors, .angle = @intCast(angle), .center_x = @intCast(x), .center_y = @intCast(y), .step = @intCast(step), .step_center = @intCast(center) } };
     }
     return out;
+}
+fn textIs(a: std.mem.Allocator, tree: *const Tree, node: usize, name: []const u8, expected: []const u8) !bool {
+    const value = (try readText(a, tree, node, name)) orelse return false;
+    defer a.free(value);
+    return std.mem.eql(u8, value, expected);
+}
+/// Only independently proven straight directions; absence never means zero.
+fn basicDiagonalDirections(a: std.mem.Allocator, tree: *const Tree, node: usize) !?p.DiagonalDirections {
+    if (!try textIs(a, tree, node, "centerLine", "NONE")) return null;
+    const slash = (try direct(tree, node, head, "slash")) orelse return null;
+    const back = (try direct(tree, node, head, "backSlash")) orelse return null;
+    for ([_]usize{ slash, back }) |child| {
+        if (!try textIs(a, tree, child, "Crooked", "0") or !try textIs(a, tree, child, "isCounter", "0")) return null;
+    }
+    const rising = try textIs(a, tree, slash, "type", "CENTER");
+    const falling = try textIs(a, tree, back, "type", "CENTER");
+    if (!rising and !try textIs(a, tree, slash, "type", "NONE")) return null;
+    if (!falling and !try textIs(a, tree, back, "type", "NONE")) return null;
+    return if (rising) (if (falling) .cross else .rising) else (if (falling) .falling else .none);
 }
 fn parse(a: std.mem.Allocator, bytes: []const u8, tree: *const Tree, limit: usize) !Tree {
     return @import("xml_part_tree.zig").parse(a, bytes, .header, null, tree.item_index, .{ .max_xml_bytes = limit });
@@ -213,6 +250,56 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, patch: p.Patc
             current = next;
         };
     };
+    if (patch.diagonal) |diagonal| {
+        if (diagonal.directions) |directions| {
+            var parsed = try parse(a, current, tree, limit);
+            defer parsed.deinit(a);
+            if (try basicDiagonalDirections(a, &parsed, node) == null) return error.UnsupportedCellDiagonalGeometry;
+            if (directions != .none and (try direct(&parsed, node, head, "diagonal")) == null and
+                (diagonal.stroke.style == null or diagonal.stroke.width_hundredth_mm == null or diagonal.stroke.color == null)) return error.IncompleteCellDiagonalStroke;
+            const rising = directions == .rising or directions == .cross;
+            const falling = directions == .falling or directions == .cross;
+            const slash = (try direct(&parsed, node, head, "slash")).?;
+            const next = try attribute(a, &parsed, slash, "type", if (rising) "CENTER" else "NONE", limit);
+            a.free(current);
+            current = next;
+            var reparsed = try parse(a, current, tree, limit);
+            defer reparsed.deinit(a);
+            const back = (try direct(&reparsed, node, head, "backSlash")).?;
+            const final = try attribute(a, &reparsed, back, "type", if (falling) "CENTER" else "NONE", limit);
+            a.free(current);
+            current = final;
+        }
+        if (p.edgeHas(diagonal.stroke)) {
+            var parsed = try parse(a, current, tree, limit);
+            defer parsed.deinit(a);
+            if (try direct(&parsed, node, head, "diagonal") == null) {
+                const stroke = diagonal.stroke;
+                if (stroke.style == null or stroke.width_hundredth_mm == null or stroke.color == null) return error.IncompleteCellDiagonalStroke;
+                const color = try @import("../model/rgb_color.zig").format(a, stroke.color.?);
+                defer a.free(color);
+                const width = stroke.width_hundredth_mm.?;
+                const fragment = try std.fmt.allocPrint(a, "<diagonal xmlns=\"{s}\" type=\"{s}\" width=\"{d}.{d:0>2} mm\" color=\"{s}\"/>", .{ head, @tagName(stroke.style.?), width / 100, width % 100, color });
+                defer a.free(fragment);
+                const ending = parsed.elements[node].end_tag orelse return error.MissingBorderFillEndTag;
+                const next = try @import("xml_source_writer.zig").write(a, current, &.{.{ .start = ending.start, .end = ending.start, .text = "", .serialized_xml = fragment }}, limit);
+                a.free(current);
+                current = next;
+            } else {
+                inline for (.{ "style", "width_hundredth_mm", "color" }) |field| if (@field(diagonal.stroke, field)) |value| {
+                    var selected = try parse(a, current, tree, limit);
+                    defer selected.deinit(a);
+                    const child = (try direct(&selected, node, head, "diagonal")).?;
+                    const rendered = if (comptime std.mem.eql(u8, field, "style")) try a.dupe(u8, @tagName(value)) else if (comptime std.mem.eql(u8, field, "color")) try @import("../model/rgb_color.zig").format(a, value) else try std.fmt.allocPrint(a, "{d}.{d:0>2} mm", .{ value / 100, value % 100 });
+                    defer a.free(rendered);
+                    const name = if (comptime std.mem.eql(u8, field, "style")) "type" else if (comptime std.mem.eql(u8, field, "color")) "color" else "width";
+                    const next = try attribute(a, &selected, child, name, rendered, limit);
+                    a.free(current);
+                    current = next;
+                };
+            }
+        }
+    }
     if (patch.background) |background| {
         var parsed = try parse(a, current, tree, limit);
         defer parsed.deinit(a);

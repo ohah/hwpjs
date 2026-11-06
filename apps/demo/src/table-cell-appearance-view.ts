@@ -9,6 +9,7 @@ import type {
   TableCellAppearanceDraft,
   TableCellFillKind,
   TableCellHatchStyle,
+  TableCellDiagonalDirections,
 } from './table-cell-fill-draft.ts';
 // @ts-ignore Wire validators own the supported line vocabulary and millimetre widths.
 import { CELL_BORDER_STYLES, CELL_BORDER_WIDTHS } from '../../../js/cell-border-command.mjs';
@@ -31,6 +32,12 @@ export function createTableCellAppearanceView(
     stale: string | null = null,
     reported: string | null = null,
     dirty = { style: false, width: false, color: false };
+  let diagonalDirty = { directions: false, style: false, width: false, color: false };
+  const diagonalAvailable = () =>
+    (capture.state.capabilities as { cellDiagonalAvailable?: boolean })?.cellDiagonalAvailable ===
+    true;
+  const hasDiagonalTab = diagonalAvailable();
+  let activeTab = 0;
   const doc = root.ownerDocument;
   const dismiss = () => {
     if (!disposed && !composing) callbacks.dismiss();
@@ -46,30 +53,37 @@ export function createTableCellAppearanceView(
   tabs.className = 'hwp-cell-appearance-tabs';
   tabs.setAttribute('role', 'tablist');
   tabs.setAttribute('aria-label', '셀 테두리/배경');
-  const panels = [doc.createElement('div'), doc.createElement('div')];
-  const tabButtons = ['테두리', '배경'].map((name, i) => {
+  const panels = Array.from({ length: hasDiagonalTab ? 3 : 2 }, () => doc.createElement('div'));
+  const tabButtons = ['테두리', '배경', ...(hasDiagonalTab ? ['대각선'] : [])].map((name, i) => {
     const button = doc.createElement('button');
     button.type = 'button';
     button.textContent = name;
-    button.dataset.role = i === 0 ? 'appearance-border-tab' : 'appearance-background-tab';
+    button.dataset.role = [
+      'appearance-border-tab',
+      'appearance-background-tab',
+      'appearance-diagonal-tab',
+    ][i];
     button.setAttribute('role', 'tab');
     panels[i].setAttribute('role', 'tabpanel');
     panels[i].setAttribute('aria-label', name);
     panels[i].className = 'hwp-cell-appearance-panel';
     tabs.append(button);
     button.addEventListener('click', () => {
-      if (!disposed && !composing) selectTab(i);
+      if (!disposed && !composing && !button.disabled && !button.hidden) selectTab(i);
     });
     button.addEventListener('keydown', (event) => {
       if (event.isComposing || composing) return;
+      const count = hasDiagonalTab && diagonalAvailable() ? 3 : 2;
       const next =
-        event.key === 'ArrowRight' || event.key === 'ArrowLeft'
-          ? 1 - i
-          : event.key === 'Home'
-            ? 0
-            : event.key === 'End'
-              ? 1
-              : null;
+        event.key === 'ArrowRight'
+          ? (i + 1) % count
+          : event.key === 'ArrowLeft'
+            ? (i + count - 1) % count
+            : event.key === 'Home'
+              ? 0
+              : event.key === 'End'
+                ? count - 1
+                : null;
       if (next === null) return;
       event.preventDefault();
       selectTab(next);
@@ -78,6 +92,7 @@ export function createTableCellAppearanceView(
     return button;
   });
   function selectTab(index: number) {
+    activeTab = index = index === 2 && !diagonalAvailable() ? 0 : index;
     tabButtons.forEach((button, i) => {
       button.setAttribute('aria-selected', String(i === index));
       button.tabIndex = i === index ? 0 : -1;
@@ -299,6 +314,54 @@ export function createTableCellAppearanceView(
   fillNote.className = 'hwp-cell-appearance-note';
   fillNote.dataset.role = 'appearance-fill-note';
   fillFields.append(fillNote);
+  const diagonalPanel = panels[2] ?? doc.createElement('div');
+  const diagonalCurrent = doc.createElement('p');
+  diagonalCurrent.className = 'hwp-cell-appearance-note';
+  diagonalCurrent.dataset.role = 'appearance-diagonal-current';
+  diagonalCurrent.textContent = '현재 대각선: 미확인';
+  const diagonalFields = group(diagonalPanel, '대각선');
+  const diagonalEnabled = checkbox(diagonalFields, 'appearance-diagonal-enabled', '대각선 변경');
+  const diagonalDirections = select(diagonalFields, 'appearance-diagonal-directions', '방향', [
+    ['', '직접 선택하세요'],
+    ['none', '대각선 없음'],
+    ['rising', '오른쪽 위로 (/)'],
+    ['falling', '오른쪽 아래로 (\\)'],
+    ['cross', '교차 (X)'],
+  ]);
+  const diagonalStyle = select(diagonalFields, 'appearance-diagonal-style', '종류', [
+    ['', '직접 선택하세요'],
+    ['NONE', '선 없음'],
+    ['SOLID', '실선'],
+    ['DOUBLE_SLIM', '가는 두 줄 (지원하지 않음)'],
+  ]);
+  diagonalStyle.children[3].setAttribute('disabled', '');
+  (diagonalStyle.children[3] as HTMLOptionElement).disabled = true;
+  const diagonalWidth = select(diagonalFields, 'appearance-diagonal-width', '굵기 (mm)', [
+    ['', '직접 선택하세요'],
+    ...CELL_BORDER_WIDTHS.map(
+      (value: number) => [String(value), (value / 100).toFixed(2)] as const,
+    ),
+  ]);
+  const diagonalColor = colors(diagonalFields, 'appearance-diagonal', '색');
+  const diagonalComplex = doc.createElement('button');
+  diagonalComplex.type = 'button';
+  diagonalComplex.disabled = true;
+  diagonalComplex.dataset.role = 'appearance-diagonal-complex';
+  diagonalComplex.textContent = '복합 모양·중심선 (미지원)';
+  diagonalComplex.title = '꺾인 대각선·회전·중심선은 아직 편집할 수 없습니다.';
+  const diagonalNote = doc.createElement('p');
+  diagonalNote.className = 'hwp-cell-appearance-note';
+  diagonalNote.textContent =
+    '복합 모양·중심선·이중선 대각선은 아직 지원하지 않습니다. 방향 없음은 대각선 방향만 끄고, 선 없음은 방향 설정을 유지한 채 선을 숨깁니다.';
+  diagonalFields.append(diagonalCurrent, diagonalComplex, diagonalNote);
+  const diagonalControls = [
+    diagonalEnabled,
+    diagonalDirections,
+    diagonalStyle,
+    diagonalWidth,
+    diagonalColor.picker,
+    diagonalColor.hex,
+  ];
   const status = doc.createElement('p');
   status.dataset.role = 'appearance-status';
   status.setAttribute('role', 'status');
@@ -324,7 +387,18 @@ export function createTableCellAppearanceView(
     endColumn: rangeFields.endColumn.value,
   });
   const draft = (): TableCellAppearanceDraft => ({
-    ...(styleBatchAvailable() ? { target: targetDraft() } : {}),
+    ...(styleBatchAvailable() || diagonalAvailable() ? { target: targetDraft() } : {}),
+    ...(diagonalEnabled.checked
+      ? {
+          diagonal: {
+            dirty: { ...diagonalDirty },
+            directions: diagonalDirections.value as TableCellDiagonalDirections,
+            style: diagonalStyle.value,
+            width: diagonalWidth.value,
+            color: diagonalColor.hex.value,
+          },
+        }
+      : {}),
     border: borderEnabled.checked
       ? {
           mode: mode.value as 'cell' | 'range' | 'table',
@@ -370,7 +444,7 @@ export function createTableCellAppearanceView(
     const reason =
       stale ?? (capture.writeReason ? tableCellAppearanceReason(capture.writeReason) : null);
     let invalid = '';
-    const changed = borderEnabled.checked || backgroundEnabled.checked;
+    const changed = borderEnabled.checked || backgroundEnabled.checked || diagonalEnabled.checked;
     if (changed) {
       try {
         tableCellAppearanceValues(draft(), capture);
@@ -417,6 +491,12 @@ export function createTableCellAppearanceView(
           ? (Number(preview.dataset.edges) & bit) !== 0
           : region.value !== 'inner',
       );
+    if (tabButtons[2]) {
+      tabButtons[2].hidden = !diagonalAvailable();
+      tabButtons[2].disabled = !diagonalAvailable();
+      if (!diagonalAvailable() && activeTab === 2) selectTab(0);
+    }
+    for (const input of diagonalControls) input.disabled = locked || !diagonalAvailable();
     const advanced = styleBatchAvailable();
     fillKind.parentElement!.hidden = !advanced;
     hatchFields.hidden = !advanced || fillKind.value !== 'hatch';
@@ -429,7 +509,9 @@ export function createTableCellAppearanceView(
     for (const input of [endColor.picker, endColor.hex, ...Object.values(linearInputs)])
       input.disabled = locked || !advanced || fillKind.value !== 'linear';
     fillNote.textContent = advanced
-      ? '그림·대각선은 지원하지 않습니다. 그라데이션은 제품의 추가 기능입니다.'
+      ? diagonalAvailable()
+        ? '그림은 지원하지 않습니다. 그라데이션은 제품의 추가 기능입니다.'
+        : '그림·대각선은 지원하지 않습니다. 그라데이션은 제품의 추가 기능입니다.'
       : '배경은 현재 셀의 단색만 바꿀 수 있습니다. 무늬·그림·대각선은 지원하지 않습니다.';
     // Do not silently apply bulk background to just one of the requested cells.
     backgroundColor.picker.disabled = backgroundColor.hex.disabled =
@@ -452,7 +534,26 @@ export function createTableCellAppearanceView(
       borderEnabled.checked = true;
       refresh();
     });
+  for (const [name, input] of [
+    ['directions', diagonalDirections],
+    ['style', diagonalStyle],
+    ['width', diagonalWidth],
+  ] as const)
+    input.addEventListener('change', () => {
+      if (disposed || input.disabled) return;
+      if (name === 'style' && input.value === 'DOUBLE_SLIM') return;
+      diagonalDirty[name] = true;
+      diagonalEnabled.checked = true;
+      refresh();
+    });
   for (const [color, onChange] of [
+    [
+      diagonalColor,
+      () => {
+        diagonalDirty.color = true;
+        diagonalEnabled.checked = true;
+      },
+    ],
     [
       borderColor,
       () => {
@@ -504,6 +605,7 @@ export function createTableCellAppearanceView(
   for (const input of [
     borderEnabled,
     backgroundEnabled,
+    diagonalEnabled,
     mode,
     region,
     ...Object.values(rangeFields),
@@ -523,7 +625,7 @@ export function createTableCellAppearanceView(
   });
   confirm.addEventListener('click', (event) => {
     if (disposed || confirm.disabled || (event as any).isComposing) return;
-    if (!borderEnabled.checked && !backgroundEnabled.checked) dismiss();
+    if (!borderEnabled.checked && !backgroundEnabled.checked && !diagonalEnabled.checked) dismiss();
     else callbacks.apply(draft(), false);
   });
   apply.addEventListener('click', (event) => {
@@ -534,6 +636,11 @@ export function createTableCellAppearanceView(
     const observed = (
       capture as TableCellAppearanceCapture & {
         observed?: {
+          diagonal?: {
+            state?: string;
+            directions?: TableCellDiagonalDirections | null;
+            stroke?: { state?: string; style?: string; width?: number; color?: string };
+          };
           edges?: Record<
             string,
             { state?: string; style?: string; width?: number; color?: string }
@@ -558,6 +665,46 @@ export function createTableCellAppearanceView(
       current.textContent = '현재 값은 미확인입니다. 바꿀 항목을 선택하세요.';
       return;
     }
+    const diagonal = observed.diagonal,
+      stroke = diagonal?.stroke;
+    if (
+      diagonal?.directions &&
+      ['none', 'rising', 'falling', 'cross'].includes(diagonal.directions)
+    )
+      diagonalDirections.value = diagonal.directions;
+    if (stroke && ['known', 'none'].includes(stroke.state ?? '')) {
+      if (CELL_BORDER_STYLES.includes(stroke.style)) diagonalStyle.value = stroke.style!;
+      if (CELL_BORDER_WIDTHS.includes(stroke.width)) diagonalWidth.value = String(stroke.width);
+      if (typeof stroke.color === 'string' && parseCharacterColor(stroke.color) !== null)
+        diagonalColor.hex.value = diagonalColor.picker.value = stroke.color;
+    }
+    const directionsText = {
+      none: '없음',
+      rising: '오른쪽 위로 (/)',
+      falling: '오른쪽 아래로 (\\)',
+      cross: '교차 (X)',
+    };
+    diagonalCurrent.textContent =
+      '현재 대각선: ' +
+      (diagonal?.directions
+        ? directionsText[diagonal.directions as keyof typeof directionsText]
+        : '미확인·복합 모양') +
+      ' · 선: ' +
+      (stroke && ['known', 'none'].includes(stroke.state ?? '')
+        ? [
+            (
+              {
+                NONE: '선 없음',
+                SOLID: '실선',
+                DOUBLE_SLIM: '가는 두 줄 (지원하지 않음)',
+              } as Record<string, string>
+            )[stroke.style ?? ''] ?? '미지원',
+            typeof stroke.width === 'number' ? (stroke.width / 100).toFixed(2) + 'mm' : '',
+            stroke.color,
+          ]
+            .filter(Boolean)
+            .join(' ')
+        : '미확인');
     const edgeNames = { left: '왼쪽', right: '오른쪽', top: '위쪽', bottom: '아래쪽' };
     const edges = Object.entries(edgeNames).map(([key, label]) => {
       const edge = observed.edges?.[key];
@@ -684,6 +831,14 @@ export function createTableCellAppearanceView(
       reported = null;
       borderEnabled.checked = backgroundEnabled.checked = false;
       dirty = { style: false, width: false, color: false };
+      diagonalDirty = { directions: false, style: false, width: false, color: false };
+      diagonalEnabled.checked = false;
+      diagonalDirections.value =
+        diagonalStyle.value =
+        diagonalWidth.value =
+        diagonalColor.hex.value =
+          '';
+      diagonalCurrent.textContent = '현재 대각선: 미확인';
       style.value = width.value = borderColor.hex.value = backgroundColor.hex.value = '';
       hatchColor.hex.value = endColor.hex.value = hatchStyle.value = '';
       fillKind.value = 'solid';

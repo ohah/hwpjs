@@ -7,6 +7,11 @@ pub fn observe(input: []const u8) !p.Value {
     const source = try @import("../docinfo/border_fill.zig").BorderFill.parseWithAdditionalPolicy(input, .observed_absent);
     var out: p.Value = .{};
     for (source.borders[0..4], 0..) |edge, i| out.edges[i] = .{ .style = p.fromHwp5(edge.kind), .width_hundredth_mm = if (edge.width < p.widths.len) p.widths[edge.width] else null, .color = if (edge.color <= 0xffffff) RGB.hwp5(edge.color) else null };
+    const diagonal = source.borders[4];
+    out.diagonal = .{
+        .directions = @import("../../model/table_diagonal_values.zig").fromHwp5(source.attributes),
+        .stroke = .{ .style = p.fromHwp5(diagonal.kind), .width_hundredth_mm = if (diagonal.width < p.widths.len) p.widths[diagonal.width] else null, .color = if (diagonal.color <= 0xffffff) RGB.hwp5(diagonal.color) else null },
+    };
     if (source.fill.data != .known) return out;
     const f = source.fill.data.known;
     if (f.image != null or (f.extra.len != 0 and !(f.extra.len == 1 and (source.fill.flags == 1 or source.fill.flags == 4)))) return out;
@@ -54,6 +59,15 @@ pub fn write(a: std.mem.Allocator, input: []const u8, patch: p.Patch, limit: usi
         if (value.width_hundredth_mm) |width| out.items[offset + 1] = try p.widthCode(width);
         if (value.color) |color| std.mem.writeInt(u32, out.items[offset + 2 ..][0..4], RGB.hwp5(color), .little);
     };
+    if (patch.diagonal) |diagonal| {
+        if (diagonal.directions) |directions| {
+            const attributes = try @import("../../model/table_diagonal_values.zig").writeHwp5(source.attributes, directions);
+            std.mem.writeInt(u16, out.items[0..2], attributes, .little);
+        }
+        if (diagonal.stroke.style) |style| out.items[26] = try p.hwp5Style(style);
+        if (diagonal.stroke.width_hundredth_mm) |width| out.items[27] = try p.widthCode(width);
+        if (diagonal.stroke.color) |color| std.mem.writeInt(u32, out.items[28..32], RGB.hwp5(color), .little);
+    }
     if (patch.background) |background| {
         if (source.fill.data != .known) return error.UnsupportedOpaqueBackground;
         const old = source.fill.data.known;

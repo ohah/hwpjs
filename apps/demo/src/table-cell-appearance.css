@@ -219,3 +219,10 @@
 .hwp-cell-appearance-dialog [hidden] {
   display: none;
 }
+.hwp-cell-appearance-panel[aria-label='대각선'] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.hwp-cell-appearance-dialog [data-role='appearance-diagonal-complex'] {
+  justify-self: start;
+  font-size: 12px;
+}

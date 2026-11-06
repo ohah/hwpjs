@@ -1,3 +1,5 @@
+import { hwpxDiagonalDirections } from '../../js/table-diagonal-directions.mjs';
+import { tableDiagonalPaintPlan } from './table-diagonal-paint.mjs';
 import { tableSemanticFillProjection } from './table-semantic-fill-source.mjs';
 import { tableSemanticFaceFill } from './table-semantic-face-fill.mjs';
 import { selectedTableImageFill } from './table-image-fill.mjs';
@@ -6,11 +8,12 @@ import { selectedFillPlan } from './selected-fill-plan.mjs';
 import { hwp5TableBorderPaintIndex } from './hwp5-table-border-plan.mjs';
 import { tableBorderStrokeParts } from './table-border-stroke.mjs';
 export function tableBorderPaintPlan(style) {
-  let fill;
+  let fill, diagonal;
   const fail = () => ({
     state: 'unavailable',
     error: 'UnsupportedTableBorderPaint',
     ...(fill ? { fill } : {}),
+    ...(diagonal?.diagonals?.length ? { diagonals: diagonal.diagonals } : {}),
   });
   if (!style || style.unknown_children !== 0 || style.unknown_attributes !== 0) return fail();
   if (style.fill_node !== null) {
@@ -59,38 +62,48 @@ export function tableBorderPaintPlan(style) {
   if (
     !['0', 'false'].includes(style.three_d) ||
     !['0', 'false'].includes(style.shadow) ||
-    style.center_line !== 'NONE' ||
-    style.slash !== 'NONE' ||
-    style.back_slash !== 'NONE' ||
     !Array.isArray(style.edges) ||
     style.edges.length !== 4
   )
     return fail();
+  // Missing versioned shape scalars are unknown, including inactive-looking type fields.
+  const direction = hwpxDiagonalDirections(style);
+  const source = style.diagonal;
+  const stroke = source?.style === 'NONE' ? { none: true } : hwpxBorderStroke(source);
+  diagonal = tableDiagonalPaintPlan(direction, stroke);
   const strokes = [];
   for (const [index, edge] of style.edges.entries()) {
     if (!edge) return fail();
     if (edge.style === 'NONE') continue;
-    if (
-      !['SOLID', 'DOUBLE_SLIM'].includes(edge.style) ||
-      typeof edge.width !== 'string' ||
-      !/^(?:0|[1-9]\d*)(?:\.\d+)? mm$/.test(edge.width) ||
-      typeof edge.color !== 'string' ||
-      !/^#[0-9a-f]{6}$/i.test(edge.color)
-    )
-      return fail();
-    const width = (Number(edge.width.slice(0, -3)) * 96) / 25.4;
-    if (!Number.isFinite(width) || width <= 0) return fail();
-    const stroke = {
-      edge: index,
-      width,
-      color: edge.color,
-      ...(edge.style === 'DOUBLE_SLIM' ? { compound: 'DOUBLE_SLIM' } : {}),
-    };
-    if (!tableBorderStrokeParts(stroke)) return fail();
+    const stroke = hwpxBorderStroke(edge, index);
+    if (!stroke) return fail();
     strokes.push(stroke);
   }
-  const plan = strokes.length ? { state: 'strokes', strokes } : { state: 'none' };
+  const plan = {
+    ...(strokes.length ? { state: 'strokes', strokes } : { state: 'none' }),
+    ...diagonal,
+  };
   return fill ? { ...plan, fill } : plan;
+}
+// Border XML colors are canonical RGB, independent of the fill source profile.
+function hwpxBorderStroke(edge, index) {
+  if (
+    !['SOLID', 'DOUBLE_SLIM'].includes(edge?.style) ||
+    typeof edge.width !== 'string' ||
+    !/^(?:0|[1-9]\d*)(?:\.\d+)? mm$/.test(edge.width) ||
+    typeof edge.color !== 'string' ||
+    !/^#[0-9a-f]{6}$/i.test(edge.color)
+  )
+    return null;
+  const width = (Number(edge.width.slice(0, -3)) * 96) / 25.4;
+  if (!Number.isFinite(width) || width <= 0) return null;
+  const stroke = {
+    ...(index === undefined ? {} : { edge: index }),
+    width,
+    color: edge.color,
+    ...(edge.style === 'DOUBLE_SLIM' ? { compound: 'DOUBLE_SLIM' } : {}),
+  };
+  return tableBorderStrokeParts(stroke) ? stroke : null;
 }
 const key = (box) => `${box.section}:${box.tableNode}:${box.listNode}`;
 export function tableBorderPaintIndex(content) {

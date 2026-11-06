@@ -59,3 +59,30 @@ pub fn build(comptime format: Format, a: std.mem.Allocator, border_bytes: []cons
     }
     return rows.toOwnedSlice(a);
 }
+
+/// V2 adds a separate diagonal wire; legacy strides and entrypoints stay intact.
+pub fn buildV2(comptime format: Format, a: std.mem.Allocator, border_bytes: []const u8, fill_bytes: []const u8, diagonal_bytes: []const u8) ![]Request(format) {
+    const base = try build(format, a, border_bytes, fill_bytes);
+    defer a.free(base);
+    const diagonals = try @import("cell_diagonal_batch.zig").build(format, a, diagonal_bytes);
+    defer a.free(diagonals);
+    var rows: std.ArrayList(Request(format)) = .empty;
+    defer rows.deinit(a);
+    try rows.appendSlice(a, base);
+    var positions = std.AutoHashMap(Key, usize).init(a);
+    defer positions.deinit();
+    for (base, 0..) |row, index| try positions.put(.{ .section = row.section, .list = row.list_node }, index);
+    for (diagonals) |row| {
+        const slot = try positions.getOrPut(.{ .section = row.section, .list = row.list_node });
+        if (slot.found_existing) {
+            const current = &rows.items[slot.value_ptr.*];
+            if (current.table_node != row.table_node) return error.AmbiguousCellStyleOwner;
+            current.patch = p.merge(current.patch, row.patch);
+        } else {
+            if (rows.items.len >= max_cells) return error.LimitExceeded;
+            slot.value_ptr.* = rows.items.len;
+            try rows.append(a, row);
+        }
+    }
+    return rows.toOwnedSlice(a);
+}

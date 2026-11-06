@@ -31,7 +31,16 @@ export type TableCellAppearanceTargetDraft = {
   startColumn: string;
   endColumn: string;
 };
+export type TableCellDiagonalDirections = '' | 'none' | 'rising' | 'falling' | 'cross';
+export type TableCellDiagonalDraft = {
+  dirty: { directions: boolean; style: boolean; width: boolean; color: boolean };
+  directions: TableCellDiagonalDirections;
+  style: string;
+  width: string;
+  color: string;
+};
 export type TableCellAppearanceDraft = {
+  diagonal?: TableCellDiagonalDraft;
   border:
     | (TableCellBorderDraft &
         TableCellAppearanceTargetDraft & {

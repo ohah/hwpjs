@@ -658,3 +658,217 @@ test('source colors HWP5 unknown color does not become black in a seed array', (
   f.style.gradient.colors[0] = 0xffffffff;
   assert.equal(f.observe().fill.colors, undefined);
 });
+
+function simpleDiagonalHX(style, slash = 'NONE', back = 'NONE') {
+  Object.assign(style, {
+    slash,
+    back_slash: back,
+    center_line: 'NONE',
+    slash_crooked: '0',
+    slash_is_counter: '0',
+    back_slash_crooked: '0',
+    back_slash_is_counter: '0',
+    diagonal: { style: 'SOLID', width: '0.5 mm', color: '#112233' },
+  });
+}
+for (const [raw, directions] of [
+  [0, 'none'],
+  [0x8, 'rising'],
+  [0x40, 'falling'],
+  [0x48, 'cross'],
+])
+  test(
+    'diagonal HWP5 official attribute ' +
+      raw +
+      ' maps ' +
+      directions +
+      ' independently of fifth stroke',
+    () => {
+      const f = fixture('hwp5');
+      f.style.attributes = raw;
+      f.style.borders[4] = { kind: 1, width: 7, color: 0x332211 };
+      const before = structuredClone(f.content),
+        value = f.observe();
+      assert.equal(value.diagonal.directions, directions);
+      assert.equal(value.diagonal.state, 'known');
+      assert.equal(value.diagonal.stroke.style, 'SOLID');
+      assert.equal(value.diagonal.stroke.width, 50);
+      assert.equal(value.diagonal.stroke.color, '#112233');
+      assert.equal(value.fill.color, '#e7e7a5');
+      assert.deepEqual(f.content, before);
+      assert.ok(Object.isFrozen(value.diagonal.raw.border));
+    },
+  );
+for (const [slash, back, directions] of [
+  ['NONE', 'NONE', 'none'],
+  ['CENTER', 'NONE', 'rising'],
+  ['NONE', 'CENTER', 'falling'],
+  ['CENTER', 'CENTER', 'cross'],
+])
+  test(
+    'diagonal HWPX explicit geometry ' +
+      directions +
+      ' uses canonical border RGB even with colourref fill profile',
+    () => {
+      const f = fixture('hwpx');
+      simpleDiagonalHX(f.style, slash, back);
+      f.style.source_color_profile = { ...f.style.source_color_profile, encoding: 'colorref24' };
+      // Only the diagonal is asserted here; existing fill profile agreement remains independent.
+      const v = f.observe().diagonal;
+      assert.equal(v.state, 'known');
+      assert.equal(v.directions, directions);
+      assert.equal(v.stroke.color, '#112233');
+      assert.equal(v.stroke.width, 50);
+      assert.equal(v.stroke.style, 'SOLID');
+    },
+  );
+
+test('direction absence and stroke NONE are independent observations', () => {
+  const f = fixture('hwp5');
+  f.style.attributes = 0x40;
+  f.style.borders[4] = { kind: 0, width: 0, color: 0 };
+  const v = f.observe().diagonal;
+  assert.equal(v.directions, 'falling');
+  assert.equal(v.stroke.state, 'none');
+  assert.equal(v.stroke.style, 'NONE');
+  assert.equal(v.state, 'known');
+  f.style.attributes = 0;
+  f.style.borders[4] = { kind: 8, width: 7, color: 0x332211 };
+  const none = f.observe().diagonal;
+  assert.equal(none.directions, 'none');
+  assert.equal(none.stroke.style, 'DOUBLE_SLIM');
+  assert.equal(none.stroke.state, 'known');
+});
+
+test('complex HWP5 directions preserve verified fifth stroke and do not downgrade existing outer observation', () => {
+  for (const raw of [0x248, 0x10e8, 0x11e8, 0x2100, 0x4]) {
+    const f = fixture('hwp5');
+    f.style.attributes = raw;
+    f.style.borders[4] = { kind: 1, width: 7, color: 0x332211 };
+    const v = f.observe();
+    assert.equal(v.state, 'known');
+    assert.equal(v.diagonal.state, 'unsupported');
+    assert.equal(v.diagonal.directions, null);
+    assert.equal(v.diagonal.stroke.state, 'known');
+    assert.equal(v.diagonal.stroke.color, '#112233');
+  }
+});
+
+test('curved/counter/center or missing HX metadata never become direction none; stroke remains independent', () => {
+  for (const change of [
+    (s) => {
+      s.slash_crooked = '1';
+    },
+    (s) => {
+      s.back_slash_is_counter = '1';
+    },
+    (s) => {
+      s.center_line = 'VERTICAL';
+    },
+    (s) => {
+      s.slash = 'ALL';
+    },
+    (s) => {
+      delete s.slash_crooked;
+    },
+    (s) => {
+      s.slash_is_counter = null;
+    },
+  ]) {
+    const f = fixture('hwpx');
+    simpleDiagonalHX(f.style);
+    change(f.style);
+    const v = f.observe();
+    assert.equal(v.state, 'known');
+    assert.equal(v.diagonal.state, 'unsupported');
+    assert.equal(v.diagonal.directions, null);
+    assert.equal(v.diagonal.stroke.state, 'known');
+    assert.equal(v.diagonal.stroke.color, '#112233');
+  }
+});
+
+test('known diagonal geometry survives unsupported stroke while verified source failure cannot fabricate values', () => {
+  const h5 = fixture('hwp5');
+  h5.style.attributes = 0x8;
+  h5.style.borders[4].kind = 2;
+  const a = h5.observe();
+  assert.equal(a.state, 'known');
+  assert.equal(a.diagonal.directions, 'rising');
+  assert.equal(a.diagonal.stroke.state, 'unsupported');
+  assert.equal(a.diagonal.state, 'unsupported');
+  const hx = fixture('hwpx');
+  simpleDiagonalHX(hx.style, 'CENTER');
+  hx.style.source_color_profile.verified = false;
+  const b = hx.observe().diagonal;
+  assert.equal(b.directions, 'rising');
+  assert.equal(b.stroke.state, 'unavailable');
+  assert.equal(b.state, 'unavailable');
+  assert.equal('color' in b.stroke, false);
+  hx.owner.listNode++;
+  const missing = hx.observe().diagonal;
+  assert.equal(missing.directions, null);
+  assert.equal(missing.state, 'unavailable');
+  assert.equal(missing.stroke.state, 'unavailable');
+});
+
+test('diagonal round2 missing stroke scalars are not invented for NONE or malformed width/color', () => {
+  const f = fixture('hwp5');
+  f.style.attributes = 0;
+  f.style.borders[4] = { kind: 0, width: 255, color: 0xffffffff };
+  const none = f.observe().diagonal;
+  assert.equal(none.directions, 'none');
+  assert.equal(none.stroke.state, 'none');
+  assert.equal('width' in none.stroke, false);
+  assert.equal('color' in none.stroke, false);
+  const hx = fixture('hwpx');
+  simpleDiagonalHX(hx.style, 'CENTER');
+  hx.style.diagonal.width = '1e2 mm';
+  hx.style.diagonal.color = '#fff';
+  const unknown = hx.observe().diagonal;
+  assert.equal(unknown.directions, 'rising');
+  assert.equal(unknown.stroke.state, 'unavailable');
+  assert.equal('width' in unknown.stroke, false);
+  assert.equal('color' in unknown.stroke, false);
+});
+
+test('diagonal round2 unknown HX resource extensions do not imply none but retain verified stroke independently', () => {
+  for (const field of ['unknown_children', 'unknown_attributes']) {
+    const f = fixture('hwpx');
+    simpleDiagonalHX(f.style);
+    f.style[field] = 1;
+    const v = f.observe().diagonal;
+    assert.equal(v.directions, null);
+    assert.equal(v.state, 'unsupported');
+    assert.equal(v.stroke.state, 'known');
+    assert.equal(v.stroke.color, '#112233');
+  }
+});
+
+test('diagonal round3 raw observations are owned/frozen and each source edit is reobserved without caching', () => {
+  for (const format of ['hwp5', 'hwpx']) {
+    const f = fixture(format);
+    if (format === 'hwp5') {
+      f.style.attributes = 0x40;
+      f.style.borders[4] = { kind: 1, width: 7, color: 0x332211 };
+    } else simpleDiagonalHX(f.style, 'NONE', 'CENTER');
+    const first = f.observe().diagonal;
+    assert.equal(first.directions, 'falling');
+    assert.ok(Object.isFrozen(first));
+    assert.ok(Object.isFrozen(first.stroke.raw));
+    if (format === 'hwp5') {
+      assert.notEqual(first.raw.border, f.style.borders[4]);
+      f.style.attributes = 0x8;
+      f.style.borders[4].color = 0;
+    } else {
+      assert.notEqual(first.raw.diagonal, f.style.diagonal);
+      f.style.slash = 'CENTER';
+      f.style.back_slash = 'NONE';
+      f.style.diagonal.color = '#000000';
+    }
+    const second = f.observe().diagonal;
+    assert.equal(second.directions, 'rising');
+    assert.equal(second.stroke.color, '#000000');
+    assert.equal(first.directions, 'falling');
+    assert.equal(first.stroke.color, '#112233');
+  }
+});

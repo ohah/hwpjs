@@ -94,6 +94,10 @@ pub const CloneKey = struct {
     widths: [4]?u16 = @splat(null),
     colors: [4]?u32 = @splat(null),
     background: ?patch_model.Background = null,
+    diagonal_directions: ?patch_model.DiagonalDirections = null,
+    diagonal_style: ?patch_model.Style = null,
+    diagonal_width: ?u16 = null,
+    diagonal_color: ?u32 = null,
     pub fn init(id: u16, patch: patch_model.Patch) !CloneKey {
         var key: CloneKey = .{ .source_id = id };
         for (patch.border.edges, 0..) |edge, i| if (edge) |v| {
@@ -102,6 +106,12 @@ pub const CloneKey = struct {
             key.colors[i] = v.color;
         };
         try patch_model.validate(patch);
+        if (patch.diagonal) |diagonal| {
+            key.diagonal_directions = diagonal.directions;
+            key.diagonal_style = diagonal.stroke.style;
+            key.diagonal_width = diagonal.stroke.width_hundredth_mm;
+            key.diagonal_color = diagonal.stroke.color;
+        }
         key.background = patch.background;
         return key;
     }

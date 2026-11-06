@@ -11,6 +11,7 @@ import { selectedFillPlan } from '../web/preview/selected-fill-plan.mjs';
 import { selectedTableImageFill } from '../web/preview/table-image-fill.mjs';
 import { hwp5HatchStyle } from './hwp5-hatch-style.mjs';
 import { gradientStepStops } from '../web/preview/gradient-step-stops.mjs';
+import { hwp5DiagonalDirections, hwpxDiagonalDirections } from './table-diagonal-directions.mjs';
 
 const uint = (n) => Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
 const names = ['left', 'right', 'top', 'bottom'];
@@ -38,9 +39,10 @@ function missing(reason) {
     reason,
     edges: Object.fromEntries(names.map((name) => [name, unavailable(reason)])),
     fill: { ...unavailable(reason), kind: 'unknown' },
+    diagonal: { ...unavailable(reason), directions: null, stroke: unavailable(reason) },
   });
 }
-function finish(source, edges, fill) {
+function finish(source, edges, fill, diagonal) {
   const parts = [...Object.values(edges), fill];
   const failed =
     parts.find((part) => part.state === 'unavailable') ??
@@ -51,6 +53,7 @@ function finish(source, edges, fill) {
     source,
     edges,
     fill,
+    diagonal,
   });
 }
 function h5Edge(border) {
@@ -76,6 +79,52 @@ function h5Edge(border) {
   if (width === undefined || color === null)
     return { ...unavailable('UnknownBorderWidthOrColor', raw), ...fields };
   return { state: 'known', ...fields, raw };
+}
+function diagonalPart(directions, stroke, raw) {
+  if (directions === null)
+    return {
+      state: 'unsupported',
+      directions: null,
+      stroke,
+      raw,
+      reason: 'UnsupportedCellDiagonalDirections',
+    };
+  return {
+    state: ['known', 'none'].includes(stroke.state) ? 'known' : stroke.state,
+    directions,
+    stroke,
+    raw,
+    ...(stroke.reason ? { reason: stroke.reason } : {}),
+  };
+}
+function h5Diagonal(style) {
+  return diagonalPart(hwp5DiagonalDirections(style.attributes), h5Edge(style.borders[4]), {
+    domain: 'hwp5-border-fill',
+    attributes: style.attributes,
+    border: style.borders[4],
+  });
+}
+function hxDiagonal(style) {
+  // Edge colours are canonical RGB, exactly like the four existing XML border edges.
+  return diagonalPart(
+    style.unknown_attributes === 0 && style.unknown_children === 0
+      ? hwpxDiagonalDirections(style)
+      : null,
+    hxEdge(style.diagonal, style.source_color_profile),
+    {
+      domain: 'hwpx-border-fill',
+      diagonal: style.diagonal,
+      slash: style.slash,
+      back_slash: style.back_slash,
+      center_line: style.center_line,
+      unknown_attributes: style.unknown_attributes,
+      unknown_children: style.unknown_children,
+      slash_crooked: style.slash_crooked,
+      slash_is_counter: style.slash_is_counter,
+      back_slash_crooked: style.back_slash_crooked,
+      back_slash_is_counter: style.back_slash_is_counter,
+    },
+  );
 }
 function linearFields(centerX, centerY, step, stepCenter) {
   return Object.fromEntries(
@@ -326,6 +375,7 @@ export function observeTableCellAppearance(content, target) {
         },
         Object.fromEntries(names.map((name, i) => [name, h5Edge(style.borders[i])])),
         h5Fill(style),
+        h5Diagonal(style),
       );
     }
     if (content.tableBorderSourceErrors?.some((entry) => entry?.section === target.section))
@@ -358,6 +408,7 @@ export function observeTableCellAppearance(content, target) {
         names.map((name, i) => [name, hxEdge(style.edges[i], style.source_color_profile)]),
       ),
       hxFill(style),
+      hxDiagonal(style),
     );
   } catch {
     return missing('InvalidAppearanceSource');

@@ -66,6 +66,12 @@ jobs:
             ./tests/cell-border-batch.test.mjs \
             ./tests/cell-appearance-command.test.mjs \
             ./tests/cell-fill-command.test.mjs \
+            ./tests/cell-diagonal-command.test.mjs \
+            ./tests/hwp5/table-diagonal-paint-plan.test.mjs \
+            ./tests/hwpx/table-diagonal-paint.test.mjs \
+            ./tests/hwpx/table-border-paint.test.mjs \
+            ./tests/hwpx/table-semantic-face-fill.test.mjs \
+            ./tests/hwpx/table-semantic-fill-source.test.mjs \
             ./tools/tests/hwpx-table-border-raw-fields.test.mjs \
             ./tests/hwp5/table-border-fill-plan.test.mjs \
             ./tests/hwp5/table-variant-fill-plan.test.mjs \
@@ -108,6 +114,8 @@ jobs:
           export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
           node --max-old-space-size=512 --test --test-concurrency=1 \
             --test-timeout=45000 ./tests/cell-style-fill-native.test.mjs \
+            ./tests/cell-diagonal-native.test.mjs \
+            ./tools/tests/cell-diagonal-runtime.test.mjs \
             ./tools/tests/hwpx-border-source-raw-native.test.mjs
       - name: Test public package JSX runtime compatibility
         run: bun test ./tests/public-package-jsx-runtime.test.mjs

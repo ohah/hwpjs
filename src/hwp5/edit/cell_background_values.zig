@@ -136,18 +136,5 @@ pub fn reference(a: std.mem.Allocator, source: []const u8, version: Version, sec
 
 /// Drop only matching scalar components; siblings and the other operation survive.
 pub fn canonical(original: patch_model.Value, patch: patch_model.Patch) patch_model.Patch {
-    var out = patch;
-    for (&out.border.edges, original.edges) |*edge, source| if (edge.*) |*value| {
-        inline for (.{ "style", "width_hundredth_mm", "color" }) |field| {
-            if (@field(value, field) != null and @field(value, field) == @field(source, field)) @field(value, field) = null;
-        }
-        if (!patch_model.edgeHas(value.*)) edge.* = null;
-    };
-    if (out.background) |bg| {
-        // A solid request may retain a resolved CURRENT foreground. Returning
-        // only its face to source must not discard a different foreground.
-        // Unspecified components remain wildcards, preserving legacy no-ops.
-        if (patch_model.matches(original, .{ .background = bg })) out.background = null;
-    }
-    return out;
+    return patch_model.canonical(original, patch);
 }
