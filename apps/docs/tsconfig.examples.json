@@ -49,6 +49,9 @@
       ],
       "@ohah/hwpjs/react-native": [
         "../../packages/hwpjs/src/react-native.ts"
+      ],
+      "@hwpjs/core/_internal/native-geometry": [
+        "../../packages/core/src/_internal/native-geometry.ts"
       ]
     }
   },

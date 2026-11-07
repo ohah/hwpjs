@@ -18,7 +18,7 @@
   "sideEffects": false,
   "peerDependencies": {
     "@hwpjs/core": "0.1.x",
-    "react": "^19.2.0"
+    "react": "^19.3.1"
   },
   "devDependencies": {
     "@hwpjs/core": "workspace:*"

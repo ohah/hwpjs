@@ -74,9 +74,9 @@
     "./react-native/canvas/podspec": "./dist/native/react-native/HwpjsNativeCanvas.podspec"
   },
   "peerDependencies": {
-    "react": "^19.2.0",
-    "svelte": "^5.57.2",
-    "react-native": ">=0.83.1 <0.84"
+    "react": "^19.3.1",
+    "svelte": "^5.57.3",
+    "react-native": ">=0.88.1 <0.89"
   },
   "peerDependenciesMeta": {
     "react": {

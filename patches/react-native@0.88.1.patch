@@ -1,0 +1,36 @@
+diff --git a/types_generated/Libraries/Animated/nodes/AnimatedProps.d.ts b/types_generated/Libraries/Animated/nodes/AnimatedProps.d.ts
+--- a/types_generated/Libraries/Animated/nodes/AnimatedProps.d.ts
++++ b/types_generated/Libraries/Animated/nodes/AnimatedProps.d.ts
+@@ -17,7 +17,7 @@
+ import AnimatedNode from "./AnimatedNode";
+ export type AnimatedPropsAllowlist = Readonly<{
+   style?: AnimatedStyleAllowlist | undefined;
+-  [key: string]: true | AnimatedStyleAllowlist;
++  [key: string]: true | AnimatedStyleAllowlist | undefined;
+ }>;
+ type TargetViewInstance = React.ComponentRef<React.ElementType>;
+ declare class AnimatedProps extends AnimatedNode {
+diff --git a/types_generated/Libraries/Lists/VirtualizedList.d.ts b/types_generated/Libraries/Lists/VirtualizedList.d.ts
+--- a/types_generated/Libraries/Lists/VirtualizedList.d.ts
++++ b/types_generated/Libraries/Lists/VirtualizedList.d.ts
+@@ -14,7 +14,7 @@
+ import * as React from "react";
+ type VirtualizedListType = typeof VirtualizedLists.VirtualizedList;
+ declare const VirtualizedListComponent: VirtualizedListType;
+-export type VirtualizedListInstance = React.ComponentRef<VirtualizedListType>;
++export type VirtualizedListInstance = InstanceType<VirtualizedListType>;
+ export type { ListRenderItemInfo, ListRenderItem, ListViewToken, Separators, VirtualizedListProps } from "@react-native/virtualized-lists";
+ declare const $$VirtualizedList: typeof VirtualizedListComponent;
+ declare type $$VirtualizedList = typeof $$VirtualizedList;
+diff --git a/types_generated/src/private/webapis/dom/nodes/ReadOnlyNode.d.ts b/types_generated/src/private/webapis/dom/nodes/ReadOnlyNode.d.ts
+--- a/types_generated/src/private/webapis/dom/nodes/ReadOnlyNode.d.ts
++++ b/types_generated/src/private/webapis/dom/nodes/ReadOnlyNode.d.ts
+@@ -42,7 +42,7 @@
+   /**
+    * @abstract
+    */
+-  get textContent(): string;
++  get textContent(): string | null;
+   compareDocumentPosition(otherNode: ReadOnlyNode): number;
+   contains(otherNode: ReadOnlyNode): boolean;
+   getRootNode(): ReadOnlyNode;

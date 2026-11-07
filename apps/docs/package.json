@@ -12,6 +12,6 @@
     "check:public": "bun scripts/check-public.mjs"
   },
   "devDependencies": {
-    "@rspress/core": "2.0.23"
+    "@rspress/core": "2.1.1"
   }
 }

@@ -34,8 +34,8 @@
   "sideEffects": false,
   "peerDependencies": {
     "@hwpjs/core": "0.1.x",
-    "react": "^19.2.0",
-    "react-native": ">=0.83.1 <0.84"
+    "react": "^19.3.1",
+    "react-native": ">=0.88.1 <0.89"
   },
   "devDependencies": {
     "@hwpjs/core": "workspace:*"
