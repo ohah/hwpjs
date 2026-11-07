@@ -1167,11 +1167,12 @@ source70+controlled Surface/frame6+기존 renderer18+source 관측6=100개 고�
 
 ## 원본 표 셀 속성 UI 순수 검사
 
-[셀 크기 UI 계약과 실제 Native의 별도 범위](headless-original-cell-formatting.md#원본-표-셀-크기-ui)를 따릅니다. 선택 제품·시험·공용 DOM fixture를 반영한 소스에서 Node24.20의 TypeScript 변환을 사용합니다. CSS preload는 공용 CSS 하나의 JS 평가만 생략하며 화면 검증이 아닙니다. SDK/Native/실제 fixture를 로드하지 않습니다.
+[셀 크기 UI 계약과 실제 Native의 별도 범위](headless-original-cell-formatting.md#원본-표-셀-크기-ui)를 따릅니다. 선택 제품·시험·공용 DOM fixture를 반영한 소스에서 Node24.20의 TypeScript 변환을 사용합니다. CSS preload는 정확히 두 CSS의 JS 평가만 생략하며 화면 검증이 아닙니다. SDK/Native/실제 fixture를 로드하지 않습니다.
 
 ```sh
 test -f ./apps/demo/tests/table-cell-properties-style-preload.mjs || exit 1
 set -- \
+  ./apps/demo/tests/table-cell-size-units.test.mjs \
   ./apps/demo/tests/table-cell-properties-port.test.mjs \
   ./apps/demo/tests/table-cell-properties-view.test.mjs \
   ./apps/demo/tests/table-cell-properties-tool.test.mjs
@@ -1181,7 +1182,7 @@ nice -n 19 mise exec -- node --experimental-transform-types --max-old-space-size
   --test --test-isolation=none --test-concurrency=1 "$@"
 ```
 
-52pass는 대역 계약 검사입니다. 실제 셀 높이·공유 열의 SDK05/Native 증거와 저장·브라우저 검증을 대신하지 않습니다.
+기존52개에서 [mm·pt 단위 후보](table-cell-size-units.md)의 helper·view 검사를 추가한 최종83pass는 대역 계약 검사입니다. 실제 셀 높이·공유 열의 SDK05/Native 증거와 저장·브라우저 검증을 대신하지 않습니다.
 
 <a id="canvas-formatting-marks-tests"></a>
 

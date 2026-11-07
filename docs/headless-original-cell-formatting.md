@@ -20,7 +20,7 @@ Canvas surface는 본문용 `row.selectionOwner`만 읽지 않고 같은 `paragr
 
 표 셀 문단의 문자/문단 서식과 셀 자체의 크기 변경은 별도입니다. UI는 현재 공개 선택을 검증한 뒤 원본 table/list/membership와 원 HWPUNIT 크기를 현재 state에서 읽고, 기존 공개 `requestExperimental`의 한 `cell-size` 또는 `table-column-width` 요청으로 연결합니다. 안정된 typed table API가 추가됐다는 뜻이 아닙니다. capability와 실제 canonical 공유 열 계획이 거부하면 명시 이유를 표시하며, 병합 셀의 영향 범위는 기존 계획기가 소유합니다. 선택/문서/undo/headless 변경 뒤 이전 모달을 새 셀로 재타깃하지 않습니다.
 
-pt 표시는 기존 정확 정수 변환을 사용합니다. untouched 필드는 표시 문자열을 재해석하지 않고 원 정수를 그대로 보존하며, 명시0과 부재/null은 구분합니다. 단일 셀 wire가 두 크기를 모두 요구해도 변경하지 않은 값은 원값이고, 공유 열의 optional 높이는 실제 변경일 때만 포함합니다. 취소/no-op은 SDK 편집 요청을 보내지 않으며 접수 후 commit-refresh 또는 불확실 결과는 재접수하지 않습니다. 성공 뒤 선택 복원은 현재 state의 공식 `createParagraphSelection`과 stateVersion fence를 사용하는 selection-only 명령입니다.
+기존 배포의 pt 표시는 정확 정수 변환을 사용합니다. 후속 mm·pt 선택의 소스 구현과 검증 경계는 [셀 크기 단위](table-cell-size-units.md)가 소유합니다. untouched 필드는 표시 문자열을 재해석하지 않고 원 정수를 그대로 보존하며, 명시0과 부재/null은 구분합니다. 단일 셀 wire가 두 크기를 모두 요구해도 변경하지 않은 값은 원값이고, 공유 열의 optional 높이는 실제 변경일 때만 포함합니다. 취소/no-op은 SDK 편집 요청을 보내지 않으며 접수 후 commit-refresh 또는 불확실 결과는 재접수하지 않습니다. 성공 뒤 선택 복원은 현재 state의 공식 `createParagraphSelection`과 stateVersion fence를 사용하는 selection-only 명령입니다.
 
 명시 순수52개는 모달/포트의 HWP5/HWPX 계약과 stale/readonly/IME/pending/cleanup을 검사합니다. 모의 성공을 Native나 브라우저 검증으로 확대하지 않습니다. [정규 명령](development-commands.md#table-cell-properties-ui-tests)은 기존 호환 wire를 사용하는 포트·뷰·도구 시험이며 새 Native/SDK 빌드를 실행하지 않습니다.
 

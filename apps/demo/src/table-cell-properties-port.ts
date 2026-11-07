@@ -53,7 +53,7 @@ export function tableCellReason(code: string) {
     SelectOriginalTableCell: '문서에서 원본 표 셀을 선택하세요.',
     OriginalTableCellRequired: '현재 선택은 지원하는 원본 표 셀이 아닙니다.',
     EditorNotReady: '문서를 먼저 열어주세요.',
-    InvalidCellDimensions: '셀 크기를 허용 범위의 정확한 pt 값으로 입력하세요.',
+    InvalidCellDimensions: '셀 크기를 허용 범위 안의 값으로 입력하세요.',
   };
   return messages[code] ?? '현재 셀 속성을 사용할 수 없습니다. (' + code + ')';
 }
@@ -219,7 +219,7 @@ export function createTableCellPropertiesPort(
           expectedWidth: cell.width,
         });
         columnAvailable = plan.state === 'planned';
-        if (!columnAvailable) columnReason = plan.error;
+        if (plan.state !== 'planned') columnReason = plan.error;
       }
       writeReason =
         content.readOnly === true

@@ -67,3 +67,13 @@
     padding: 0 14px 14px;
   }
 }
+
+.hwp-table-cell-properties-unit select {
+  max-width: 8rem;
+  justify-self: start;
+}
+.hwp-table-cell-properties-field input:focus-visible,
+.hwp-table-cell-properties-field select:focus-visible {
+  outline: 2px solid #28569a;
+  outline-offset: 2px;
+}

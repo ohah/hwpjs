@@ -3,6 +3,9 @@ import { sourceTableRowHorizontals } from './source-table-row-horizontals.mjs';
 
 // Move the selected cell's right boundary and translate all boundaries to its right.
 // This is distinct from editing one cell's raw width or redistributing a fixed total.
+/**
+ * @returns {{ state: 'planned', cells: Array<{section: number, listNode: number, width: number, height: number}>, boundary: number, delta: number } | { state: 'unavailable', error: string }}
+ */
 export function tableColumnWidthPlan(table, request) {
   const fail = (error) => ({ state: 'unavailable', error });
   const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;

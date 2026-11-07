@@ -187,6 +187,7 @@ jobs:
           test -f ./tools/object-properties-test-css.mjs || exit 1
           test -f ./apps/demo/tests/table-cell-properties-style-preload.mjs || exit 1
           set -- \
+            ./apps/demo/tests/table-cell-size-units.test.mjs \
             ./apps/demo/tests/table-cell-properties-port.test.mjs \
             ./apps/demo/tests/table-cell-properties-view.test.mjs \
             ./apps/demo/tests/table-cell-properties-tool.test.mjs \
