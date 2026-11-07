@@ -506,3 +506,5 @@ CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명
 [첫 실행 취소와 화면 투영](undo-onset-projection.md)은 대기 입력 FIFO·private frame hold·최종 fresh 투영의 지원 계약과 검증 범위를 소유합니다.
 
 [텍스트 선택 없는 크기 편집 뒤의 이력](canvas-edit-history.md#텍스트-선택-없는-크기-편집-뒤의-이력)은 Core FIFO와 Canvas none/text/blocked 분기·포커스 및 현재성 검증을 소유합니다.
+
+[AI 문서 CLI](cli-ai-document-view.md)는 기존 Native 문서의 읽기 투영과 파일 호스트를 분리합니다. 읽기 모델을 편집·저장 원본으로 사용하지 않습니다.

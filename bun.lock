@@ -37,6 +37,10 @@
         "@rspress/core": "2.0.23",
       },
     },
+    "packages/cli": {
+      "name": "@hwpjs/cli",
+      "version": "0.0.0",
+    },
     "packages/core": {
       "name": "@hwpjs/core",
       "version": "0.1.0",
@@ -44,6 +48,9 @@
     "packages/hwpjs": {
       "name": "@ohah/hwpjs",
       "version": "0.1.0-umbrella.0",
+      "bin": {
+        "hwpjs": "./dist/cli.mjs",
+      },
       "peerDependencies": {
         "react": "^19.2.0",
         "react-native": ">=0.83.1 <0.84",
@@ -182,6 +189,8 @@
     "@emnapi/runtime": ["@emnapi/runtime@1.11.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA=="],
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.3", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-ELEBe8PsLvvJ6QMr0zLt8ffvOHW/dc1m3CEzNMg7aJUv3bMaoDtw2TXyDAwkYBuroxxuHEwhRTLJSe5sya547g=="],
+
+    "@hwpjs/cli": ["@hwpjs/cli@workspace:packages/cli"],
 
     "@hwpjs/core": ["@hwpjs/core@workspace:packages/core"],
 

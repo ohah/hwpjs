@@ -9,3 +9,5 @@ ESM 패키지입니다. root/runtime의 browser·node 조건은 같은 core 모�
 기존 내부 패키지의 dist는 읽거나 재빌드하지 않습니다. JS는 현재 canonical source에서, 선언은 같은 source의 새 declaration emit으로 생성합니다. WASM은 명시 입력을 바이트 그대로 포함합니다. 빌드 지문은 `dist/build-manifest.json`에 기록됩니다.
 
 현재 private prerelease 후보이며 npm에 게시되지 않았습니다. pack 검증과 npm 공개는 별개입니다. Native/WASM 기능 범위는 명시 엔진과 해당 검증 자료에 한정합니다.
+
+Node CLI 후보는 이 패키지의 `hwpjs` 실행 파일입니다. 설치된 패키지에서는 `hwpjs read document.hwpx`로 머리말·본문·꼬리말·표·이미지의 논리 구조를 읽습니다. 문단의 문자열 교체·삭제와 새 HWP5/HWPX 파일 저장도 지원하며, 원문 SHA256과 대상 식별자를 요구합니다. [실행 방법과 제한](https://github.com/ohah/hwpjs/blob/main/docs/cli-ai-document-view.md)을 따릅니다. CLI 검증 환경은 Node.js 24.20.0과 Bun 1.4.4입니다.

@@ -23,7 +23,8 @@
     "format:check": "bun tools/quality.mjs format:check",
     "check": "bun tools/quality.mjs check",
     "quality:files": "bun tools/quality.mjs files",
-    "quality:config": "bun tools/sync-quality-config.mjs --check"
+    "quality:config": "bun tools/sync-quality-config.mjs --check",
+    "cli": "bun packages/cli/src/bin.mjs"
   },
   "engines": {
     "bun": ">=1.4.4"

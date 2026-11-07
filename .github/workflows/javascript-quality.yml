@@ -410,6 +410,26 @@ jobs:
             ./tests/hwp5/measurement-placement.test.mjs \
             ./tests/hwpx/renderer-projection-measure.test.mjs \
             ./tests/hwp5/line-spacing-compat.test.mjs
+      - name: Test AI document CLI and independent save oracles
+        timeout-minutes: 3
+        run: |
+          export HWPJS_CLI_NATIVE=1
+          export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+          export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
+          export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
+          export HWPJS_TEST_NOORI_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwpx"
+          export HWPJS_TEST_HEADERFOOTER="$PWD/apps/docs/docs/public/editor/fixtures/headerfooter.hwp"
+          export HWPJS_TEST_HEADERFOOTER_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/headerfooter.hwpx"
+          export HWPJS_TEST_CLI_ENTRY="$PWD/packages/cli/src/bin.mjs"
+          export HWPJS_TEST_CLI_ENTRY_SHA256="$(node --input-type=module -e 'import{readFileSync}from"node:fs";import{createHash}from"node:crypto";console.log(createHash("sha256").update(readFileSync(process.env.HWPJS_TEST_CLI_ENTRY)).digest("hex"))')"
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 \
+            packages/cli/tests/host-arguments.test.mjs \
+            packages/cli/tests/host-files.test.mjs \
+            packages/cli/tests/host-main.test.mjs \
+            packages/cli/tests/document-model.test.mjs \
+            packages/cli/tests/render-document.test.mjs \
+            packages/cli/tests/engine.test.mjs \
+            tools/tests/cli-document-e2e.test.mjs
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

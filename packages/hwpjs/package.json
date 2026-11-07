@@ -88,5 +88,8 @@
     "react-native": {
       "optional": true
     }
+  },
+  "bin": {
+    "hwpjs": "./dist/cli.mjs"
   }
 }

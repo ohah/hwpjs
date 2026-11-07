@@ -8,6 +8,7 @@ import {
   mkdir,
   readdir,
   copyFile,
+  chmod,
   mkdtemp,
   rename,
   unlink,
@@ -131,6 +132,7 @@ const metadata = [
   join(pkg, 'README.md'),
   join(pkg, 'react-native.config.cjs'),
   join(pkg, 'HwpjsNativeCanvas.podspec'),
+  join(root, 'packages/cli/package.json'),
   join(root, 'tools/build-public-package.mjs'),
   join(pkg, 'build/source-policy.mjs'),
   join(root, 'package.json'),
@@ -200,6 +202,20 @@ const ssr = await Bun.build({
   plugins: [namespace, runtimeInputs, svelte('server')],
 });
 assert(ssr.success, ssr.logs.map(String).join('\n'));
+// Node CLI uses the same format facades and the single adjacent WASM artifact.
+// It has its own entry so importing the browser editor never loads filesystem code.
+const cli = await Bun.build({
+  entrypoints: [join(root, 'packages/cli/src/bin.mjs')],
+  outdir: dist,
+  target: 'node',
+  format: 'esm',
+  splitting: false,
+  sourcemap: 'none',
+  naming: 'cli.mjs',
+  plugins: [runtimeInputs],
+});
+assert(cli.success, cli.logs.map(String).join('\n'));
+await chmod(join(dist, 'cli.mjs'), 0o755);
 const config = join(staging, 'types.json');
 const declarationSources = [
   join(root, 'packages/core/src/index.ts'),

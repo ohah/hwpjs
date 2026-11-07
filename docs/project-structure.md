@@ -448,3 +448,5 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 [HWPX 차트 주 눈금선](hwpx-chart-major-ticks.md)은 공통 축 원값·선택 wire·2D 막대 preview 기하/paint의 책임을 분리합니다. [차트 레이아웃 지원 경계](hwpx-chart-layout-coverage.md)는 타입/축/범례/데이터 레이블/좌표/페이지 및 unknown 보존의 남은 범위를 소유합니다.
 
 [커서 입력 서식](collapsed-caret-formatting.md)은 접힌 커서의 readonly 관측과 다음 입력 의도를 구분합니다. 현재 앱의 [문자표](symbol-insertion.md)와 [퀵·문맥 메뉴 지원 범위](headless-api-coverage.md)는 각각 소유 주제에서 검증 경계를 관리합니다.
+
+- `packages/cli/`: [AI 문서 읽기·편집 CLI](cli-ai-document-view.md)의 명령·파일 호스트·Native 엔진·논리 모델·출력. 공개 실행 파일은 `@ohah/hwpjs`의 `hwpjs`입니다.

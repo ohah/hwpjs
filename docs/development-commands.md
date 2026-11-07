@@ -1373,3 +1373,29 @@ Zig 변경의 전체 정규 진입점은 `nice -n 19 zig build test -j1`이다. 
 동일 캐시 실행체의 직접 terminal 전수 실행 시도는 별도 cohort다. core의 컴파일 배열 5,059개 중 285개가 시작됐고 284개의 완료 outcome(관측 OK281·FAIL3·SKIP0)을 확인했다. case285는 미완료이고 나머지 4,774개는 미시작이다. core 실행 phase는 300초 wall guard로 중단됐다. 전체 core 최종 회계·leak 수는 미확정이다. 실패는 case106 `source_field_analysis`, case279 `paragraph_structure_save`, case281 `column_page_area_group_validate`의 `NondeterministicMemoryUsage`이며, 새 제품37의 영향인지 기존 baseline인지 미확정이다. 기대나 범위는 바꾸지 않았다. reference7과 text9는 각각 전수 pass, skip/fail/leak0 및 exit0였다. 진행 index·전체 N·case명은 바이너리의 builtin 배열과 대조했고 seed/cwd/명시 환경 구성을 유지했다. 신규 runtime filter는 없으며 기존 text compile filter를 보존했다. 재컴파일 없이 기존 실행체만 사용했지만 이를 원래 `zig build test -j1` exit0 또는 전체5,075 통과로 바꾸어 주장하지 않는다. 제품/test/binary와 원본 fixture84는 실행 뒤 동일 SHA였고 최종 잔류 `[]` 확인 후 슬롯을 반환했다.
 
 case285의 긴 체류는 후속 소스 allocation sweep 분석 대상이며, 개별 함수 실행 시간을 정확히 계측한 결과나 무한루프 확정이 아니다. 추가 Native 실행과 기대 변경은 하지 않았다. core 전체 완료·5,075개 전체 pass·원래 build 명령 exit0는 여전히 미완료이며, reference7/text9의 전수 성공과 구분한다.
+
+## AI 문서 CLI
+
+`bun run cli read ./document.hwpx --wasm /absolute/path/hwpjs.wasm`로 실행합니다. 수정·신규 저장 및 검증 계약은 [AI 문서 CLI](cli-ai-document-view.md)를 따릅니다.
+
+집중·실제 파일 CLI 검사는 아래 명시 입력으로 실행합니다. `HWPJS_CLI_NATIVE=1`을 생략하면 engine의 실제 파일 검사 두 개가 생략되므로 전체 통과로 기록하지 않습니다. 패키지 E2E는 `HWPJS_TEST_CLI_ENTRY`와 해당 해시를 실제 빌드 결과로 바꿔 별도 실행합니다.
+
+```sh
+export HWPJS_CLI_NATIVE=1
+export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
+export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
+export HWPJS_TEST_NOORI_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwpx"
+export HWPJS_TEST_HEADERFOOTER="$PWD/apps/docs/docs/public/editor/fixtures/headerfooter.hwp"
+export HWPJS_TEST_HEADERFOOTER_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/headerfooter.hwpx"
+export HWPJS_TEST_CLI_ENTRY="$PWD/packages/cli/src/bin.mjs"
+export HWPJS_TEST_CLI_ENTRY_SHA256="$(node --input-type=module -e 'import{readFileSync}from"node:fs";import{createHash}from"node:crypto";console.log(createHash("sha256").update(readFileSync(process.env.HWPJS_TEST_CLI_ENTRY)).digest("hex"))')"
+node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 \
+  packages/cli/tests/host-arguments.test.mjs \
+  packages/cli/tests/host-files.test.mjs \
+  packages/cli/tests/host-main.test.mjs \
+  packages/cli/tests/document-model.test.mjs \
+  packages/cli/tests/render-document.test.mjs \
+  packages/cli/tests/engine.test.mjs \
+  tools/tests/cli-document-e2e.test.mjs
+```
