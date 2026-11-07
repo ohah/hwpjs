@@ -1,5 +1,12 @@
 # Third-party notices
 
+The Node MCP distribution bundles the official Model Context Protocol server
+and core packages (Apache-2.0) and Zod (MIT). The canonical package builder
+collects the actual bundled dependency package versions, SPDX identifiers,
+complete license texts and available NOTICE files into its generated
+`THIRD_PARTY_NOTICES.md`. The installable HWPJS skill copies that same notice
+file together with the canonical CLI, MCP and WASM outputs.
+
 `tests/fixtures/curves/hancom-curves.hwpx` is an unchanged fixture from
 airmang/python-hwpx revision `7ca45822076b9feb7cf3a7cfb2c924d121162b4b`.
 Copyright 2025-2026 airmang (Dr. Wily), Apache-2.0.
