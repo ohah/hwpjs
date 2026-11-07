@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'apps/docs/**'
+      - 'packages/cli/src/**'
+      - 'js/**'
+      - 'web/preview/*.mjs'
       - '.github/workflows/docs.yml'
       - '.github/workflows/javascript-quality.yml'
       - 'tools/build-pages-demo.mjs'
@@ -39,13 +42,17 @@ jobs:
         run: bun tools/build-pages-demo.mjs --verify --fixture-policy tools/pages-demo/public-gallery-fixtures.json
       - name: Prepare independent documentation workspace
         run: |
-          mkdir -p "$RUNNER_TEMP/hwpjs-docs"
-          cp -R apps/docs/package.json apps/docs/bun.lock apps/docs/rspress.config.ts apps/docs/docs apps/docs/scripts apps/docs/components apps/docs/theme "$RUNNER_TEMP/hwpjs-docs/"
+          docs_root="$RUNNER_TEMP/hwpjs-docs"
+          mkdir -p "$docs_root/apps/docs" "$docs_root/packages/cli" "$docs_root/js" "$docs_root/web/preview"
+          cp -R apps/docs/package.json apps/docs/bun.lock apps/docs/rspress.config.ts apps/docs/docs apps/docs/scripts apps/docs/components apps/docs/theme "$docs_root/apps/docs/"
+          cp -R packages/cli/src "$docs_root/packages/cli/"
+          cp js/*.mjs "$docs_root/js/"
+          cp web/preview/*.mjs "$docs_root/web/preview/"
       - name: Install documentation dependencies
-        working-directory: ${{ runner.temp }}/hwpjs-docs
+        working-directory: ${{ runner.temp }}/hwpjs-docs/apps/docs
         run: bun install --frozen-lockfile
       - name: Build and check public documentation
-        working-directory: ${{ runner.temp }}/hwpjs-docs
+        working-directory: ${{ runner.temp }}/hwpjs-docs/apps/docs
         env:
           HWPJS_DOCS_BASE: /hwpjs/
         run: |
@@ -56,7 +63,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: ${{ runner.temp }}/hwpjs-docs/doc_build
+          path: ${{ runner.temp }}/hwpjs-docs/apps/docs/doc_build
   deploy:
     needs: build
     runs-on: ubuntu-latest
