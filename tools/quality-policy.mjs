@@ -7,6 +7,7 @@ export const SOURCE_ROOTS = Object.freeze([
   'tools',
   'tests',
   'src',
+  'skills',
 ]);
 export const LINT_EXTENSIONS = new Set([
   '.js',
@@ -58,6 +59,11 @@ const policy = [
     kind: 'prefix',
     reason: 'public snapshot',
     values: ['apps/docs/docs/public/editor', 'apps/demo/public', 'public'],
+  },
+  {
+    kind: 'prefix',
+    reason: '생성된 Skill 실행 자산',
+    values: ['skills/hwpjs/assets/hwpjs'],
   },
   {
     kind: 'below',

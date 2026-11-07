@@ -1,7 +1,11 @@
 import { existsSync } from 'node:fs';
 /** Build only the public umbrella; never writes internal package metadata/dist. */
 import assert from 'node:assert/strict';
-import { isProductionSource } from '../packages/hwpjs/build/source-policy.mjs';
+import {
+  isProductionSource,
+  selectDeclarationInputs,
+} from '../packages/hwpjs/build/source-policy.mjs';
+import { collectPublicPackageNotices } from './public-package-notices.mjs';
 import {
   readFile,
   writeFile,
@@ -134,6 +138,7 @@ const metadata = [
   join(pkg, 'HwpjsNativeCanvas.podspec'),
   join(root, 'packages/cli/package.json'),
   join(root, 'tools/build-public-package.mjs'),
+  join(root, 'tools/public-package-notices.mjs'),
   join(pkg, 'build/source-policy.mjs'),
   join(root, 'package.json'),
   join(root, 'bun.lock'),
@@ -216,6 +221,23 @@ const cli = await Bun.build({
 });
 assert(cli.success, cli.logs.map(String).join('\n'));
 await chmod(join(dist, 'cli.mjs'), 0o755);
+const mcp = await Bun.build({
+  entrypoints: [join(root, 'packages/cli/src/mcp-bin.mjs')],
+  outdir: dist,
+  target: 'node',
+  format: 'esm',
+  splitting: false,
+  sourcemap: 'none',
+  naming: 'mcp.mjs',
+  plugins: [runtimeInputs],
+});
+assert(mcp.success, mcp.logs.map(String).join('\n'));
+await chmod(join(dist, 'mcp.mjs'), 0o755);
+const bundledNotices = await collectPublicPackageNotices({
+  root,
+  sourcePaths: [...observed.keys()].map((path) => join(root, path)),
+  observe,
+});
 const config = join(staging, 'types.json');
 const declarationSources = [
   join(root, 'packages/core/src/index.ts'),
@@ -265,10 +287,16 @@ const graph = spawnSync(join(root, 'node_modules/.bin/tsc'), ['-p', config, '--l
   encoding: 'utf8',
 });
 assert(graph.status === 0, 'TypeDependencyGraphFailed:' + graph.stdout + graph.stderr);
-const typeInputs = graph.stdout
-  .split(/\r?\n/)
-  .filter((p) => p.startsWith(join(root, 'packages') + '/') && /\.(?:ts|tsx)$/.test(p));
-for (const path of typeInputs) await observe(path, 'public-types-source');
+const selectedTypeInputs = selectDeclarationInputs(root, graph.stdout);
+// 관측은 전체 로컬 그래프, 기존 ambient 선언 복사는 패키지 범위를 유지합니다.
+const typeInputs = selectedTypeInputs.projectInputs.filter(
+  (p) => p.startsWith(join(root, 'packages') + '/') && /\.(?:ts|tsx)$/.test(p),
+);
+for (const path of selectedTypeInputs.projectInputs) await observe(path, 'public-types-source');
+await writeFile(
+  join(staging, 'public-type-input-selection.json'),
+  JSON.stringify(selectedTypeInputs, null, 2),
+);
 const declaration = spawnSync(join(root, 'node_modules/.bin/tsc'), ['-p', config], {
   cwd: root,
   encoding: 'utf8',
@@ -340,10 +368,12 @@ assert(
   nativeGraph.status === 0,
   'NativeTypeDependencyGraphFailed:' + nativeGraph.stdout + nativeGraph.stderr,
 );
-for (const path of nativeGraph.stdout
-  .split(/\r?\n/)
-  .filter((p) => p.startsWith(join(root, 'packages') + '/') && /\.(?:ts|tsx)$/.test(p)))
-  await observe(path, 'native-types-source');
+const nativeTypeInputs = selectDeclarationInputs(root, nativeGraph.stdout);
+for (const path of nativeTypeInputs.projectInputs) await observe(path, 'native-types-source');
+await writeFile(
+  join(staging, 'native-type-input-selection.json'),
+  JSON.stringify(nativeTypeInputs, null, 2),
+);
 const nativeDeclaration = spawnSync(join(root, 'node_modules/.bin/tsc'), ['-p', nativeConfig], {
   cwd: root,
   encoding: 'utf8',
@@ -526,7 +556,10 @@ try {
 }
 await rename(dist, destination);
 await copyFile(join(root, 'LICENSE'), join(pkg, 'LICENSE'));
-await copyFile(join(root, 'docs/third-party-notices.md'), join(pkg, 'THIRD_PARTY_NOTICES.md'));
+await writeFile(
+  join(pkg, 'THIRD_PARTY_NOTICES.md'),
+  (await readFile(join(root, 'docs/third-party-notices.md'), 'utf8')) + bundledNotices,
+);
 console.log(
   JSON.stringify({
     destination,

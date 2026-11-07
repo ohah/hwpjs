@@ -1399,3 +1399,16 @@ node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 \
   packages/cli/tests/engine.test.mjs \
   tools/tests/cli-document-e2e.test.mjs
 ```
+
+## 문서 정보와 이미지 추출
+
+소스 실행에서는 WASM 경로를 명시합니다. 아래 SHA와 ID 자리에는 같은 원문을 조회한 실제 값을 사용합니다.
+
+```sh
+bun run cli info ./document.hwp --wasm /absolute/path/hwpjs.wasm
+bun run cli images ./document.hwpx --wasm /absolute/path/hwpjs.wasm
+bun run cli extract-images ./document.hwpx --output ./new-images --wasm /absolute/path/hwpjs.wasm
+bun run mcp --wasm /absolute/path/hwpjs.wasm
+```
+
+MCP는 stdout을 프로토콜 전용으로 사용합니다. 추출 범위·단건 SHA/ID·부분 결과와 출력 한도는 [정보·이미지 도구](cli-resource-tools.md)를 따릅니다.

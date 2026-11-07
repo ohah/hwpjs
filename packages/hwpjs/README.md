@@ -11,3 +11,7 @@ ESM 패키지입니다. root/runtime의 browser·node 조건은 같은 core 모�
 현재 private prerelease 후보이며 npm에 게시되지 않았습니다. pack 검증과 npm 공개는 별개입니다. Native/WASM 기능 범위는 명시 엔진과 해당 검증 자료에 한정합니다.
 
 Node CLI 후보는 이 패키지의 `hwpjs` 실행 파일입니다. 설치된 패키지에서는 `hwpjs read document.hwpx`로 머리말·본문·꼬리말·표·이미지의 논리 구조를 읽습니다. 문단의 문자열 교체·삭제와 새 HWP5/HWPX 파일 저장도 지원하며, 원문 SHA256과 대상 식별자를 요구합니다. [실행 방법과 제한](https://github.com/ohah/hwpjs/blob/main/docs/cli-ai-document-view.md)을 따릅니다. CLI 검증 환경은 Node.js 24.20.0과 Bun 1.4.4입니다.
+
+같은 패키지의 `hwpjs-mcp` 실행 파일은 stdio MCP 서버입니다. `read_document`와 `edit_document`가 CLI의 파일·Native 엔진·출력 경계를 재사용합니다. WASM은 두 실행 파일 옆에 한 벌만 포함합니다.
+
+Skill은 `npx skills add ohah/hwpjs --skill hwpjs`로 설치합니다. Skill에 포함된 런처와 CLI·MCP·WASM은 같은 패키지 산출물에서 생성하므로 별도의 실행 엔진을 설치하지 않습니다. [CLI·MCP 설치 가이드와 브라우저 실습](https://ohah.github.io/hwpjs/guide/cli)을 참고하세요. 브라우저 실습은 같은 Native 엔진을 호출하며 로컬 Node 프로세스나 stdio 연결을 실행하는 기능과는 구분합니다.

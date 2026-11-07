@@ -450,3 +450,5 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 [커서 입력 서식](collapsed-caret-formatting.md)은 접힌 커서의 readonly 관측과 다음 입력 의도를 구분합니다. 현재 앱의 [문자표](symbol-insertion.md)와 [퀵·문맥 메뉴 지원 범위](headless-api-coverage.md)는 각각 소유 주제에서 검증 경계를 관리합니다.
 
 - `packages/cli/`: [AI 문서 읽기·편집 CLI](cli-ai-document-view.md)의 명령·파일 호스트·Native 엔진·논리 모델·출력. 공개 실행 파일은 `@ohah/hwpjs`의 `hwpjs`입니다.
+
+문서 정보·이미지 도구의 `packages/cli/src/inspect-document.mjs`와 `document-images.mjs`는 바이트 기반 Native 관측을 소유합니다. CLI 파일 접근·출력과 MCP 도구는 기존 호스트를 재사용합니다. 책임·범위·제한은 [정보·이미지 도구](cli-resource-tools.md), 플랫폼 제공 원칙은 [플랫폼 계약](platform-compatibility.md)을 따릅니다.

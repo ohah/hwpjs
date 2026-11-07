@@ -24,7 +24,8 @@
     "check": "bun tools/quality.mjs check",
     "quality:files": "bun tools/quality.mjs files",
     "quality:config": "bun tools/sync-quality-config.mjs --check",
-    "cli": "bun packages/cli/src/bin.mjs"
+    "cli": "bun packages/cli/src/bin.mjs",
+    "mcp": "bun packages/cli/src/mcp-bin.mjs"
   },
   "engines": {
     "bun": ">=1.4.4"

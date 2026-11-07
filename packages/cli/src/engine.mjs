@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { detectDocumentFormat } from '../../../js/document-format.mjs';
 import { createExperimentalHwp5Editor } from '../../../js/hwp5-editor.mjs';
 import { createHwpxEditor } from '../../../js/hwpx-editor.mjs';
@@ -11,7 +10,7 @@ function byteInput(value, name) {
   if (!(value instanceof Uint8Array)) throw new TypeError(`Expected${name}Uint8Array`);
   if (!value.byteLength || value.byteLength > MAX_INPUT_BYTES)
     throw new RangeError(`${name}LimitExceeded`);
-  return Uint8Array.from(value); // Buffer.slice() would borrow caller-owned storage.
+  return Uint8Array.from(value); // Copy caller-owned views, including subclasses.
 }
 
 function captureTarget(target) {
@@ -44,14 +43,21 @@ function position(target, sectionCount, format) {
  */
 export async function openDocument({ bytes, wasm, expectedSha256 } = {}) {
   const input = byteInput(bytes, 'Document');
-  const sourceSha256 = createHash('sha256').update(input).digest('hex');
   if (expectedSha256 !== undefined) {
     if (typeof expectedSha256 !== 'string' || !/^[a-f0-9]{64}$/.test(expectedSha256))
       throw new TypeError('InvalidExpectedSha256');
-    if (sourceSha256 !== expectedSha256) throw new Error('SourceSha256Mismatch');
   }
-  const format = detectDocumentFormat(input);
+  // Own both buffers before hashing yields to the caller. Never compile a WASM
+  // view that the caller can modify while the source digest is in flight.
   const binary = byteInput(wasm, 'Wasm');
+  if (!globalThis.crypto?.subtle) throw new Error('WebCryptoUnavailable');
+  const digest = await globalThis.crypto.subtle.digest('SHA-256', input);
+  const sourceSha256 = Array.from(new Uint8Array(digest), (byte) =>
+    byte.toString(16).padStart(2, '0'),
+  ).join('');
+  if (expectedSha256 !== undefined && sourceSha256 !== expectedSha256)
+    throw new Error('SourceSha256Mismatch');
+  const format = detectDocumentFormat(input);
   let sdk;
   try {
     let sectionCount;
@@ -156,7 +162,7 @@ export async function edit({
   with: replacement,
   allowStaleLayout = false,
 }) {
-  // Input bytes and WASM are copied by openDocument before it awaits compilation;
+  // Input bytes and WASM are copied by openDocument before its first await;
   // capture the caller-owned address at the same request boundary.
   const capturedTarget = captureTarget(target);
   const document = await openDocument({ bytes, wasm });

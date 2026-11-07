@@ -117,3 +117,36 @@ test('literal option-looking text, whitespace and decomposed Unicode stay unchan
   surrogate[7] = '\ud800';
   assert.throws(() => parse(surrogate), /InvalidArguments/);
 });
+
+test('info/images retain optional snapshot SHA and reject unrelated editing options', () => {
+  for (const command of ['info', 'images']) {
+    assert.deepEqual(parse([command, 'input']), { command, input: 'input' });
+    assert.equal(
+      parse([command, 'input', '--expect-sha256=' + sha.toUpperCase()]).expectSha256,
+      sha,
+    );
+    assert.throws(() => parse([command, 'input', '--format=json']), /UnknownOption/);
+  }
+});
+test('extract-images names a new directory; selecting an ID requires exact snapshot SHA', () => {
+  assert.deepEqual(parse(['extract-images', 'in', '--output=dir']), {
+    command: 'extract-images',
+    input: 'in',
+    output: 'dir',
+  });
+  assert.throws(
+    () => parse(['extract-images', 'in', '--output=dir', '--id=hwpx:s0:i3']),
+    /ImageIDRequiresSHA256/,
+  );
+  assert.equal(
+    parse(['extract-images', 'in', '--output=dir', '--id=hwpx:s0:i3', '--expect-sha256=' + sha]).id,
+    'hwpx:s0:i3',
+  );
+  for (const extra of [
+    ['--output=-'],
+    [],
+    ['--output=x', '--expect-sha256=no'],
+    ['--output=x', '--id='],
+  ])
+    assert.throws(() => parse(['extract-images', 'in', ...extra]));
+});

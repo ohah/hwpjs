@@ -3,6 +3,7 @@ import test from 'node:test';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { openDocument, edit, read } from '../src/engine.mjs';
 import { findUniqueLiteral, validateLiteral } from '../src/literal-match.mjs';
 
@@ -38,6 +39,56 @@ test('open validates bounded byte inputs and original snapshot SHA before openin
     /Mismatch/,
   );
   await assert.rejects(openDocument({ bytes, wasm: new ArrayBuffer(4) }), /WasmUint8Array/);
+  // Malformed expected SHA is rejected first. Valid expected SHA still requires
+  // a WASM snapshot before async hashing, even when its value would mismatch.
+  await assert.rejects(openDocument({ bytes, wasm: null, expectedSha256: 'X' }), /ExpectedSha/);
+  await assert.rejects(
+    openDocument({ bytes, wasm: null, expectedSha256: '0'.repeat(64) }),
+    /WasmUint8Array/,
+  );
+});
+
+test('browser engine/model/render dependency graph imports without Node modules or globals', () => {
+  const urls = ['engine.mjs', 'literal-match.mjs', 'document-model.mjs', 'render.mjs'].map(
+    (name) => new URL('../src/' + name, import.meta.url).href,
+  );
+  const program = `
+    import assert from 'node:assert/strict';
+    import {registerHooks} from 'node:module';
+    const hostProcess = process;
+    const webCrypto = globalThis.crypto;
+    registerHooks({resolve(specifier, context, next) {
+      if (specifier.startsWith('node:') || (!specifier.startsWith('.') && !specifier.startsWith('file:')))
+        throw Error('NonBrowserDependency:' + specifier);
+      return next(specifier, context);
+    }});
+    globalThis.Buffer = undefined;
+    globalThis.process = undefined;
+    globalThis.require = undefined;
+    globalThis.module = undefined;
+    globalThis.__dirname = undefined;
+    globalThis.__filename = undefined;
+    assert.equal(globalThis.crypto, webCrypto);
+    const [engine, literal, model, renderer] = await Promise.all(${JSON.stringify(urls)}.map(url => import(url)));
+    assert.equal(typeof model.readDocumentModel, 'function');
+    assert.equal(typeof renderer.renderDocument, 'function');
+    assert.equal(literal.validateLiteral('🙂한글'), '🙂한글');
+    assert.equal(literal.findUniqueLiteral('🙂앞 ABC 뒤', 'ABC'), 4);
+    assert.throws(() => literal.validateLiteral('\\ud800'), /InvalidLiteral/);
+    assert.throws(() => literal.validateLiteral('🙂'.repeat(1024 * 1024 + 1)), /LiteralLimit/);
+    // Known independent SHA-256("abc") reaches signature rejection, proving
+    // async digest/hex validation without compiling any WASM or opening Native.
+    await assert.rejects(engine.openDocument({bytes: Uint8Array.of(97,98,99), wasm: Uint8Array.of(1),
+      expectedSha256: 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'}), /UnsupportedDocumentSignature/);
+    hostProcess.stdout.write('browser dependency and WebCrypto vector passed\\n');
+  `;
+  const result = spawnSync(
+    process.execPath,
+    ['--max-old-space-size=128', '--input-type=module', '-e', program],
+    { encoding: 'utf8', timeout: 10_000 },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /WebCrypto vector passed/);
 });
 
 test('adversarial exhaustive literal oracle is exact over overlaps and supplementary Unicode', () => {

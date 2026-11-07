@@ -1,0 +1,22 @@
+---
+title: CLI·MCP 브라우저 체험
+---
+
+import CliSimulation from '../components/CliSimulation';
+
+# CLI·MCP 브라우저 체험
+
+공개 Noori HWP5/HWPX를 실제 Native WASM으로 읽고 한 문단을 수정해 보세요. 미리 저장한 실행 결과를 재생하지 않습니다. [CLI 사용법](./guide/cli.md), [MCP 도구 계약](./guide/mcp.md), [Skill 설치](./guide/skill.md)를 같은 작업에 연결합니다.
+
+이 페이지는 브라우저에서 공통 CLI engine·model·renderer를 호출합니다. 표시되는 명령·`tools/call` 요청과 결과는 로컬 실행 흐름을 설명하는 시뮬레이션이며 Node 프로세스나 MCP stdio 서버를 브라우저에서 실행하는 것은 아닙니다. 문서 전체 JSON 변환도 제공하지 않습니다.
+
+<CliSimulation />
+
+## 결과를 해석하는 방법
+
+- **원문 ID와 SHA:** Native 원문 번호를 그대로 사용합니다. 읽기 뷰의 순서는 편집 좌표가 아닙니다.
+- **미관측 항목:** 빈 문자열과 unknown을 구분합니다. 이미지 placeholder는 이미지 내용을 설명하는 OCR 결과가 아닙니다.
+- **수정본:** 입력 샘플은 변경하지 않고 새 문서 bytes를 만듭니다. 다운로드 이름의 충돌 처리는 브라우저 설정에 따르며, 로컬 CLI/MCP의 기존 파일 거부와 구분합니다.
+- **HWP5 배치:** 저장된 줄 배치 무효화를 수용할 때만 명시적으로 허용하세요. 이 선택은 새 조판 결과를 만들지 않습니다.
+
+내 문서와 로컬 파일 경로를 다룰 때는 CLI 또는 MCP를 사용하세요. 이 체험은 공개 샘플만 가져오며 사용자의 로컬 디렉터리나 AI 도구 설정에 접근하지 않습니다.

@@ -508,3 +508,7 @@ CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명
 [텍스트 선택 없는 크기 편집 뒤의 이력](canvas-edit-history.md#텍스트-선택-없는-크기-편집-뒤의-이력)은 Core FIFO와 Canvas none/text/blocked 분기·포커스 및 현재성 검증을 소유합니다.
 
 [AI 문서 CLI](cli-ai-document-view.md)는 기존 Native 문서의 읽기 투영과 파일 호스트를 분리합니다. 읽기 모델을 편집·저장 원본으로 사용하지 않습니다.
+
+## 플랫폼 공통 기능과 문서 도구
+
+[플랫폼 기능 계약](platform-compatibility.md)은 Node·Web·CLI·React Native에서 제공할 기능과 현재 검증 범위를 구분합니다. Rust의 호출 형식이나 출력 문자열을 그대로 복제하는 것을 요구하지 않습니다. [정보·이미지 도구](cli-resource-tools.md)는 공통 관측, Native 수명, 파일 호스트와 결과 보고의 책임을 분리합니다.

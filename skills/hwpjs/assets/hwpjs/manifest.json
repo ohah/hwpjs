@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "namespace": "@ohah/hwpjs",
+  "runtime": "node>=24.20.0",
+  "files": {
+    "cli.mjs": {
+      "sha256": "66603119794380325bc0d66f00d32c04adfb59341a2716dabc801f715d608fd0",
+      "bytes": 530765
+    },
+    "mcp.mjs": {
+      "sha256": "f629bbcd92e99e8a811f92de9f1b7eb2e2f1ae0b63fffa4f84421bc96c7ae0fd",
+      "bytes": 1344127
+    },
+    "hwpjs.wasm": {
+      "sha256": "82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc",
+      "bytes": 6758420
+    },
+    "LICENSE": {
+      "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56",
+      "bytes": 1086
+    },
+    "THIRD_PARTY_NOTICES.md": {
+      "sha256": "6bfbd9cf7b5ba7543da3fdb62b8b3705040c743d7bda9a4903969338b69f4059",
+      "bytes": 31967
+    }
+  },
+  "sourceFingerprint": "a957d0f95f77bdb07d155b0347edb0b0affc0446a64405428cb6b75200bfca96"
+}

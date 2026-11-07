@@ -365,3 +365,360 @@ test('default Writable callback EPIPE then error event retains published status'
   assert.match(result.stderr, /error: EPIPE\npublished: true\noutput: \/out.hwp/);
   assert.doesNotMatch(result.stderr, /Unhandled|triggerUncaughtException/);
 });
+
+async function imageHost(t, { failure, inventoryFailure, closeFailure, images = 2 } = {}) {
+  const f = await setup(t);
+  const counts = { opened: 0, documentClosed: 0, imagesClosed: 0, reads: [] };
+  const rows = Array.from({ length: images }, (_, i) => ({
+    id: `hwp5:s0:i${i + 1}`,
+    status: 'unread',
+    mime: null,
+    extension: null,
+    byteLength: null,
+  }));
+  f.engine.openDocument = async (options) => {
+    counts.opened++;
+    assert.equal(options.expectedSha256, hash('original'));
+    return {
+      format: 'hwp5',
+      sourceSha256: hash('original'),
+      sectionCount: 1,
+      sdk: { borrowed: true },
+      close() {
+        counts.documentClosed++;
+      },
+    };
+  };
+  f.deps.createDocumentImages = ({ sdk }) => {
+    assert.equal(sdk.borrowed, true);
+    if (inventoryFailure) throw Error('ImageInventoryUnavailable');
+    return {
+      list: () => ({
+        version: 1,
+        format: 'hwp5',
+        sourceSha256: hash('original'),
+        images: rows.map((r) => ({ ...r })),
+        coverage: {
+          scope: 'section-picture-sites',
+          masterPagesIncluded: false,
+          imageBrushesIncluded: false,
+        },
+      }),
+      read(id, { sourceSha256 }) {
+        assert.equal(sourceSha256, hash('original'));
+        counts.reads.push(id);
+        const row = rows.find((r) => r.id === id);
+        if (id === failure) {
+          Object.assign(row, { status: 'unsupported', reason: 'ExternalImageLink' });
+          throw Error('ExternalImageLink');
+        }
+        Object.assign(row, {
+          status: 'ready',
+          mime: 'application/octet-stream',
+          extension: '.bin',
+          recognized: false,
+          byteLength: 3,
+        });
+        return { ...row, sourceSha256, bytes: Uint8Array.of(9, 8, 7) };
+      },
+      close() {
+        counts.imagesClosed++;
+        if (closeFailure) throw Error('ImageCloseFailed');
+      },
+    };
+  };
+  return { ...f, counts };
+}
+test('info preserves unknown observations and source hash without loading editing engine', async (t) => {
+  const f = await setup(t);
+  f.deps.engine = new Proxy(
+    {},
+    {
+      get() {
+        throw Error('MustNotLoadEngine');
+      },
+    },
+  );
+  f.deps.inspectDocument = async ({ bytes }) => ({
+    schemaVersion: 1,
+    format: 'hwp5',
+    sourceSha256: hash(bytes),
+    sourceByteLength: bytes.length,
+    sectionCount: 1,
+    security: { encryption: { status: 'unknown', value: null, reason: 'Unobserved' } },
+  });
+  assert.equal(await runCLI(['info', 'input.any', '--wasm=native.wasm'], f.deps), 0);
+  assert.match(
+    f.out.join(''),
+    /security.encryption.status: unknown\nsecurity.encryption.value: unknown/,
+  );
+  assert.doesNotMatch(f.out.join(''), /encryption.*false/);
+});
+test('images lists failed/unsupported and raw unknown metadata with scoped coverage and closes borrowed lifetime', async (t) => {
+  const f = await imageHost(t, { failure: 'hwp5:s0:i2' });
+  assert.equal(await runCLI(['images', 'input.any', '--wasm=native.wasm'], f.deps), 0);
+  assert.match(f.out.join(''), /images.0.recognized: false/);
+  assert.match(f.out.join(''), /images.1.status: unsupported/);
+  assert.match(f.out.join(''), /coverage.masterPagesIncluded: false/);
+  assert.match(f.out.join(''), /scopeDiagnostic: .*unreferenced resources/);
+  assert.equal(f.counts.documentClosed, 1);
+  assert.equal(f.counts.imagesClosed, 1);
+});
+test('all extraction uses one snapshot, safe generated names, preserves raw bytes and refuses retry', async (t) => {
+  const f = await imageHost(t);
+  const args = ['extract-images', 'input.any', '--output=images', '--wasm=native.wasm'];
+  assert.equal(await runCLI(args, f.deps), 0);
+  assert.equal(f.counts.opened, 1);
+  assert.deepEqual(await fs.readdir(join(f.dir, 'images')), ['image-0001.bin', 'image-0002.bin']);
+  assert.deepEqual([...(await fs.readFile(join(f.dir, 'images', 'image-0001.bin')))], [9, 8, 7]);
+  assert.match(f.out.join(''), /completeWithinListedScope: true/);
+  assert.equal(await runCLI(args, f.deps), 1);
+  assert.match(f.err.join(''), /OutputExists/);
+  assert.equal(await fs.readFile(join(f.dir, 'input.any'), 'utf8'), 'original');
+});
+test('partial extraction fails honestly and retains first publication on later source/read/output failures', async (t) => {
+  const f = await imageHost(t, { failure: 'hwp5:s0:i2' });
+  assert.equal(
+    await runCLI(['extract-images', 'input.any', '--output=partial', '--wasm=native.wasm'], f.deps),
+    1,
+  );
+  assert.match(f.out.join(''), /completeWithinListedScope: false/);
+  assert.match(f.err.join(''), /IncompleteImageExtraction\npublished: true/);
+  assert.match(f.err.join(''), /publishedImages.0.path: .*image-0001.bin/);
+  assert.deepEqual(await fs.readdir(join(f.dir, 'partial')), ['image-0001.bin']);
+  assert.equal(f.counts.imagesClosed, 1);
+  assert.equal(f.counts.documentClosed, 1);
+});
+test('ID snapshot mismatch rejects before WASM/native; unknown ID and inventory failure create no output', async (t) => {
+  const f = await imageHost(t);
+  assert.equal(
+    await runCLI(
+      [
+        'extract-images',
+        'input.any',
+        '--output=bad',
+        '--id=hwp5:s0:i1',
+        '--expect-sha256=' + '0'.repeat(64),
+        '--wasm=absent',
+      ],
+      f.deps,
+    ),
+    1,
+  );
+  assert.equal(f.counts.opened, 0);
+  assert.equal(
+    await runCLI(
+      [
+        'extract-images',
+        'input.any',
+        '--output=bad',
+        '--id=hwp5:s0:i999',
+        '--expect-sha256=' + hash('original'),
+        '--wasm=native.wasm',
+      ],
+      f.deps,
+    ),
+    1,
+  );
+  await assert.rejects(fs.lstat(join(f.dir, 'bad')), { code: 'ENOENT' });
+  const unavailable = await imageHost(t, { inventoryFailure: true });
+  assert.equal(
+    await runCLI(
+      ['extract-images', 'input.any', '--output=bad', '--wasm=native.wasm'],
+      unavailable.deps,
+    ),
+    1,
+  );
+  assert.equal(unavailable.counts.documentClosed, 1);
+  await assert.rejects(fs.lstat(join(unavailable.dir, 'bad')), { code: 'ENOENT' });
+});
+test('MCP single-file internal host mode requires ID and guards output extension, no overwrite', async (t) => {
+  const f = await imageHost(t);
+  f.deps.imageOutputMode = 'file';
+  const args = [
+    'extract-images',
+    'input.any',
+    '--output=single.bin',
+    '--id=hwp5:s0:i1',
+    '--expect-sha256=' + hash('original'),
+    '--wasm=native.wasm',
+  ];
+  assert.equal(await runCLI(args, f.deps), 0);
+  assert.deepEqual([...(await fs.readFile(join(f.dir, 'single.bin')))], [9, 8, 7]);
+  assert.equal(await runCLI(args, f.deps), 1);
+  assert.match(f.err.join(''), /OutputExists/);
+  assert.equal(
+    await runCLI(
+      args.map((s) => (s === '--output=single.bin' ? '--output=wrong.png' : s)),
+      f.deps,
+    ),
+    1,
+  );
+  assert.match(f.out.join('') + f.err.join(''), /OutputImageExtensionMismatch/);
+  await assert.rejects(fs.lstat(join(f.dir, 'wrong.png')), { code: 'ENOENT' });
+});
+test('post-publication stream/close failures retain publication and always close document', async (t) => {
+  for (const closeFailure of [false, true]) {
+    const f = await imageHost(t, { closeFailure, images: 1 });
+    if (!closeFailure)
+      f.deps.io.stdout.write = () => {
+        throw Error('BrokenStdout');
+      };
+    assert.equal(
+      await runCLI(['extract-images', 'input.any', '--output=done', '--wasm=native.wasm'], f.deps),
+      1,
+    );
+    assert.match(f.err.join(''), /published: true/);
+    assert.equal(f.counts.documentClosed, 1);
+    assert.equal(f.counts.imagesClosed, 1);
+  }
+});
+
+function receiptBudgetHost({
+  count = 4096,
+  path = '/' + Array(5).fill('a'.repeat(180)).join('/'),
+  warning,
+} = {}) {
+  const source = 'a'.repeat(64),
+    rows = Array.from({ length: count }, (_, i) => ({ id: `hwpx:s0:i${i}` }));
+  const calls = { published: 0, closed: 0, reads: 0, out: [], err: [] };
+  const deps = {
+    files: {
+      async readInputSnapshot() {
+        return { bytes: Uint8Array.of(1), sha256: source };
+      },
+      resolveWasmPath() {
+        return 'wasm';
+      },
+      async createImageDirectory() {
+        return { path };
+      },
+      async assertNewOutput({ outputPath }) {
+        return { path: outputPath };
+      },
+      assertImageFormat() {},
+      async publishNewOutput({ target }) {
+        calls.published++;
+        return {
+          published: true,
+          path: target.path,
+          sha256: source,
+          bytes: 1,
+          warnings: warning ? [{ phase: 'injected', code: warning }] : [],
+        };
+      },
+    },
+    engine: {
+      async openDocument() {
+        return {
+          format: 'hwpx',
+          sourceSha256: source,
+          sectionCount: 1,
+          sdk: {},
+          close() {
+            calls.closed++;
+          },
+        };
+      },
+    },
+    createDocumentImages() {
+      return {
+        list() {
+          return {
+            version: 1,
+            format: 'hwpx',
+            sourceSha256: source,
+            images: rows,
+            coverage: { references: count, inventoryComplete: true },
+          };
+        },
+        read(id) {
+          calls.reads++;
+          return {
+            id,
+            sourceSha256: source,
+            status: 'ready',
+            bytes: Uint8Array.of(1),
+            extension: '.bin',
+          };
+        },
+        close() {
+          calls.closed++;
+        },
+      };
+    },
+    io: {
+      stdout: {
+        write(text) {
+          calls.out.push(text);
+        },
+      },
+      stderr: {
+        write(text) {
+          calls.err.push(text);
+        },
+      },
+    },
+  };
+  return {
+    calls,
+    deps,
+    run: () => runCLI(['extract-images', 'source', '--output=out', '--wasm=wasm'], deps),
+  };
+}
+test('4096 valid refs with NAME_MAX/PATH_MAX compliant long paths reject receipt budget BEFORE publication', async () => {
+  const f = receiptBudgetHost();
+  assert.equal(await f.run(), 1);
+  assert.equal(f.calls.published, 0);
+  assert.equal(f.calls.reads, 0);
+  assert.equal(f.calls.closed, 2);
+  assert.match(f.calls.err.join(''), /ImageReceiptBudgetExceeded/);
+  assert.match(f.calls.err.join(''), /published: false/);
+  assert.match(f.calls.err.join(''), /publishedImageCount: 0/);
+});
+test('4096 short-path receipts stay admitted with one read/publication per reference', async () => {
+  const f = receiptBudgetHost({ path: '/short' });
+  assert.equal(await f.run(), 0);
+  assert.equal(f.calls.published, 4096);
+  assert.equal(f.calls.reads, 4096);
+  assert.equal(f.calls.closed, 2);
+  assert.match(f.calls.out.join(''), /completeWithinListedScope: true/);
+});
+test('unexpected postpublication receipt overflow returns bounded truthful location/count and primary error', async () => {
+  const f = receiptBudgetHost({
+    count: 1,
+    path: '/saved-images',
+    warning: 'w'.repeat(4 * 1024 * 1024),
+  });
+  assert.equal(await f.run(), 1);
+  assert.equal(f.calls.published, 1);
+  assert.equal(f.calls.closed, 2);
+  const diagnostic = f.calls.err.join('');
+  assert.match(diagnostic, /error: ObservationOutputLimit/);
+  assert.match(diagnostic, /published: true/);
+  assert.match(diagnostic, /publishedImageCount: 1/);
+  assert.match(diagnostic, /outputDirectory: \/saved-images/);
+  assert.match(diagnostic, /receiptDetailsOmitted: 1/);
+  assert.ok(diagnostic.length < 65536);
+});
+test('secondary stderr failures never escape or mask the attempted primary write failure diagnostic', async () => {
+  for (const alwaysReject of [false, true]) {
+    const f = receiptBudgetHost({ count: 1, path: '/saved-images' });
+    f.deps.io.stdout.write = () => {
+      throw Error('PrimaryStdoutFault');
+    };
+    let attempts = 0;
+    f.deps.io.stderr.write = (text) => {
+      f.calls.err.push(text);
+      if (++attempts === 1 || alwaysReject) throw Error('SecondaryStderrFault');
+    };
+    assert.equal(await f.run(), 1);
+    assert.equal(f.calls.closed, 2);
+    assert.equal(f.calls.published, 1);
+    assert.equal(attempts, 2);
+    assert.match(f.calls.err[0], /error: PrimaryStdoutFault/);
+    assert.match(f.calls.err[1], /error: PrimaryStdoutFault/);
+    assert.match(f.calls.err[1], /diagnosticFailure: SecondaryStderrFault/);
+    assert.match(f.calls.err[1], /publishedImageCount: 1/);
+  }
+});

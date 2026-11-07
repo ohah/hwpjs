@@ -1,5 +1,6 @@
 const MAX_LITERAL_BYTES = 4 * 1024 * 1024;
 export const MAX_TEXT_UNITS = 32 * 1024 * 1024;
+const encoder = new TextEncoder();
 
 // A replacement cannot create paragraph boundaries or inject native controls.
 // Empty replacement is deletion. CR/LF, NEL, Unicode line/paragraph separators
@@ -7,7 +8,7 @@ export const MAX_TEXT_UNITS = 32 * 1024 * 1024;
 export function validateLiteral(value, { empty = false } = {}) {
   if (typeof value !== 'string' || !value.isWellFormed()) throw new TypeError('InvalidLiteralText');
   if (!empty && value.length === 0) throw new Error('EmptySearchText');
-  if (value.length > MAX_LITERAL_BYTES || Buffer.byteLength(value, 'utf8') > MAX_LITERAL_BYTES)
+  if (value.length > MAX_LITERAL_BYTES || encoder.encode(value).byteLength > MAX_LITERAL_BYTES)
     throw new RangeError('LiteralLimitExceeded');
   // eslint-disable-next-line no-control-regex -- Reject literal native controls before splice.
   if (/[\u0000-\u001f\u0085\u2028\u2029]/u.test(value))

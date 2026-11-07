@@ -1,0 +1,128 @@
+.hwpjs-cli-simulation {
+  --simulation-gap: 1rem;
+  display: grid;
+  gap: var(--simulation-gap);
+  min-width: 0;
+  margin-block: 1.5rem;
+  color: var(--rp-c-text-1);
+}
+.hwpjs-cli-simulation-notice,
+.hwpjs-cli-simulation-download {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--hwpjs-line);
+  border-left: 3px solid var(--hwpjs-accent);
+  border-radius: 0.6rem;
+  background: var(--hwpjs-surface);
+}
+.hwpjs-cli-simulation p {
+  margin-block: 0.5rem;
+}
+.hwpjs-cli-simulation fieldset {
+  display: grid;
+  gap: var(--simulation-gap);
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--hwpjs-line);
+  border-radius: 0.6rem;
+  background: var(--hwpjs-panel);
+}
+.hwpjs-cli-simulation legend {
+  padding-inline: 0.4rem;
+  font-weight: 650;
+}
+.hwpjs-cli-simulation-inputs,
+.hwpjs-cli-simulation-edit {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.hwpjs-cli-simulation label {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+.hwpjs-cli-simulation input:not([type='checkbox']),
+.hwpjs-cli-simulation select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--rp-c-divider);
+  border-radius: 0.35rem;
+  color: var(--rp-c-text-0);
+  background: var(--rp-c-bg);
+  font: inherit;
+}
+.hwpjs-cli-simulation-sha input {
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+.hwpjs-cli-simulation button {
+  justify-self: start;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--hwpjs-accent);
+  border-radius: 0.4rem;
+  color: var(--rp-c-bg);
+  background: var(--hwpjs-accent);
+  font-weight: 650;
+  cursor: pointer;
+}
+.hwpjs-cli-simulation button:disabled,
+.hwpjs-cli-simulation fieldset:disabled {
+  opacity: 0.65;
+}
+.hwpjs-cli-simulation button:disabled {
+  cursor: default;
+}
+.hwpjs-cli-simulation :is(button, input, select, a, summary):focus-visible {
+  outline: 2px solid var(--hwpjs-accent);
+  outline-offset: 3px;
+}
+.hwpjs-cli-simulation .hwpjs-cli-simulation-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  grid-column: 1 / -1;
+}
+.hwpjs-cli-simulation-checkbox input {
+  margin-top: 0.2rem;
+}
+.hwpjs-cli-simulation-edit > :is(p, button) {
+  grid-column: 1 / -1;
+}
+.hwpjs-cli-simulation-status {
+  color: var(--hwpjs-muted);
+}
+.hwpjs-cli-simulation details {
+  min-width: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--hwpjs-line);
+  border-radius: 0.5rem;
+}
+.hwpjs-cli-simulation summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.hwpjs-cli-simulation pre {
+  max-height: 28rem;
+  margin-block: 0.75rem;
+  padding: 0.8rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 0.35rem;
+  background: var(--rp-c-bg-soft);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+.hwpjs-cli-simulation-download code {
+  overflow-wrap: anywhere;
+}
+.hwpjs-cli-simulation-command {
+  min-width: 0;
+}
+@media (max-width: 640px) {
+  .hwpjs-cli-simulation-inputs,
+  .hwpjs-cli-simulation-edit {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

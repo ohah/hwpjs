@@ -34,6 +34,7 @@
     "apps/docs/docs/public/editor/**",
     "apps/demo/public/**",
     "public/**",
+    "skills/hwpjs/assets/hwpjs/**",
     "packages/react-native/examples/**/ios/build/**",
     "packages/react-native/examples/**/android/app/build/**",
     "**/*.min.*",

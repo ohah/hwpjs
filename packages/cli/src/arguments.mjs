@@ -1,10 +1,15 @@
 export const USAGE = `Usage:
   hwpjs read INPUT [--format text|markdown] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
+  hwpjs info INPUT [--expect-sha256 SHA256] [--wasm PATH]
+  hwpjs images INPUT [--expect-sha256 SHA256] [--wasm PATH]
+  hwpjs extract-images INPUT --output NEWDIR [--id ID --expect-sha256 SHA256] [--wasm PATH]
   hwpjs --help
 
 Read defaults to text. Targets are exact Native IDs printed by read.
 Use --with '' to delete. Use --option=VALUE when VALUE starts with --.
+extract-images --output is a NEW DIRECTORY, never a single image file.
+Selecting --id requires the SHA from images; all images use one opened snapshot.
 Output must be new; existing files are never overwritten.
 `;
 
@@ -24,12 +29,17 @@ export function parseArguments(argv) {
   if (!Array.isArray(argv) || !Array.from(argv).every(string)) fail('InvalidArguments');
   if (argv.length === 1 && argv[0] === '--help') return Object.freeze({ command: 'help' });
   const command = argv[0];
-  if (!['read', 'edit'].includes(command)) fail('UnknownCommand');
+  if (!['read', 'edit', 'info', 'images', 'extract-images'].includes(command))
+    fail('UnknownCommand');
   if (argv.length === 2 && argv[1] === '--help') return Object.freeze({ command: 'help' });
   const allowed = new Set(
-    command === 'read'
-      ? ['format', 'wasm']
-      : ['target', 'replace', 'with', 'expect-sha256', 'output', 'wasm', 'allow-stale-layout'],
+    {
+      read: ['format', 'wasm'],
+      edit: ['target', 'replace', 'with', 'expect-sha256', 'output', 'wasm', 'allow-stale-layout'],
+      info: ['wasm', 'expect-sha256'],
+      images: ['wasm', 'expect-sha256'],
+      'extract-images': ['wasm', 'expect-sha256', 'output', 'id'],
+    }[command],
   );
   const options = new Map(),
     positional = [];
@@ -60,6 +70,24 @@ export function parseArguments(argv) {
   const input = positional[0],
     wasm = options.get('wasm');
   if (wasm !== undefined && !wasm) fail('InvalidWasmPath');
+  if (['info', 'images', 'extract-images'].includes(command)) {
+    const expected = options.get('expect-sha256');
+    if (expected !== undefined && !/^[0-9a-f]{64}$/i.test(expected)) fail('InvalidExpectedSHA256');
+    const id = options.get('id');
+    if (id !== undefined && (!id || id.length > 128)) fail('InvalidImageID');
+    if (id !== undefined && expected === undefined) fail('ImageIDRequiresSHA256');
+    const output = options.get('output');
+    if (command === 'extract-images' && (!output || output === '-'))
+      fail('ExpectedOutputDirectory');
+    return Object.freeze({
+      command,
+      input,
+      ...(expected === undefined ? {} : { expectSha256: expected.toLowerCase() }),
+      ...(wasm === undefined ? {} : { wasm }),
+      ...(id === undefined ? {} : { id }),
+      ...(output === undefined ? {} : { output }),
+    });
+  }
   if (command === 'read') {
     const format = options.get('format') ?? 'text';
     if (!['text', 'markdown'].includes(format)) fail('InvalidReadFormat');

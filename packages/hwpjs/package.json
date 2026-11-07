@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "license": "MIT",
+  "engines": {
+    "node": ">=24.20.0"
+  },
   "files": [
     "dist",
     "LICENSE",
@@ -90,6 +93,7 @@
     }
   },
   "bin": {
-    "hwpjs": "./dist/cli.mjs"
+    "hwpjs": "./dist/cli.mjs",
+    "hwpjs-mcp": "./dist/mcp.mjs"
   }
 }

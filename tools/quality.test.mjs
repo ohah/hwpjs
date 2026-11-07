@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { syncQualityConfigs } from './sync-quality-config.mjs';
-import { toolConfigs } from './quality-policy.mjs';
+import { SOURCE_ROOTS, toolConfigs } from './quality-policy.mjs';
 import { readFileSync, chmodSync } from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -47,6 +47,40 @@ test('모든 활성 root와 저작 build helper, Svelte/CSS/TSX/MJS를 포함', 
     ];
     for (const p of names) f.put(p);
     assert.deepEqual(collectFiles(f.root, { filesystem: true }).files, names.sort());
+  } finally {
+    f.close();
+  }
+});
+test('Skill 소스와 런처는 검사하고 정확한 생성 자산 디렉터리만 제외한다', () => {
+  const f = fixture();
+  try {
+    const included = [
+      'skills/hwpjs/scripts/hwpjs.mjs',
+      'skills/hwpjs/scripts/bootstrap.mjs',
+      'skills/hwpjs/assets/hwpjs-helper/source.mjs',
+      'skills/hwpjs/assets/hwpjs.mjs',
+      'skills/other/assets/hwpjs/source.mjs',
+    ];
+    for (const path of [
+      ...included,
+      'skills/hwpjs/assets/hwpjs/cli.mjs',
+      'skills/hwpjs/assets/hwpjs/mcp.mjs',
+      'skills/hwpjs/assets/hwpjs/nested/a.mjs',
+    ])
+      f.put(path);
+    const inventory = collectFiles(f.root, { filesystem: true });
+    assert(SOURCE_ROOTS.includes('skills'));
+    assert.deepEqual(inventory.files, included.sort());
+    assert.deepEqual(inventory.excluded, [
+      { path: 'skills/hwpjs/assets/hwpjs', reason: '생성된 Skill 실행 자산' },
+    ]);
+    assert.equal(excludedPath('skills/hwpjs/assets/hwpjs'), '생성된 Skill 실행 자산');
+    for (const config of Object.values(toolConfigs())) {
+      assert(config.ignorePatterns.includes('skills/hwpjs/assets/hwpjs/**'));
+      assert(!config.ignorePatterns.includes('skills/**'));
+      assert(!config.ignorePatterns.includes('skills/hwpjs/assets/**'));
+    }
+    assert.equal(toolConfigs()['.oxfmtrc.json'].singleQuote, true);
   } finally {
     f.close();
   }

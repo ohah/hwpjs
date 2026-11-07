@@ -27,6 +27,7 @@ export default defineConfig({
       { text: '시작하기', link: '/guide/installation' },
       { text: '샘플·데모', link: '/guide/demo' },
       { text: '문서 데모', link: '/playground' },
+      { text: 'CLI · MCP', link: '/guide/cli' },
       { text: '공개 API', link: '/api/editor' },
       { text: '프레임워크', link: '/frameworks/vanilla' },
       { text: '지원 범위', link: '/guide/limitations' },
@@ -42,6 +43,15 @@ export default defineConfig({
             { text: '열기 → 선택 → 입력 → 저장', link: '/guide/editing' },
             { text: 'HWP 샘플·데모', link: '/guide/demo' },
             { text: 'HWPX 샘플·데모', link: '/guide/demo-hwpx' },
+          ],
+        },
+        {
+          text: 'CLI · MCP · Skill',
+          items: [
+            { text: 'CLI 설치와 사용', link: '/guide/cli' },
+            { text: 'MCP 도구 연결', link: '/guide/mcp' },
+            { text: 'Skill 설치', link: '/guide/skill' },
+            { text: '브라우저 Native 체험', link: '/cli-simulation' },
           ],
         },
         {

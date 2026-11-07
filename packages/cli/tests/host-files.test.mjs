@@ -272,3 +272,97 @@ test('unsupported atomic hardlink is refused without rename/copy fallback', asyn
   });
   await assertClean(f.dir, f.input, token.path);
 });
+
+test('image publication reuses exclusive guarded save without granting document extensions', async (t) => {
+  const f = await fixture(t);
+  const directory = await f.files.createImageDirectory({
+    input: f.snapshot,
+    outputPath: join(f.dir, 'images'),
+  });
+  assert.equal((await fs.stat(directory.path)).mode & 0o777, 0o700);
+  const token = await f.files.assertNewOutput({
+    input: f.snapshot,
+    outputPath: join(directory.path, 'image-0001.bin'),
+    kind: 'image',
+    directory,
+  });
+  assert.throws(() => f.files.assertOutputFormat(token, 'hwp5'), /InvalidOutputTarget/);
+  assert.throws(() => f.files.assertImageFormat(token, '.png'), /OutputImageExtensionMismatch/);
+  f.files.assertImageFormat(token, '.bin');
+  const receipt = await f.files.publishNewOutput({
+    target: token,
+    bytes: Uint8Array.of(0xd7, 0xcd, 1),
+  });
+  assert.equal(receipt.published, true);
+  assert.deepEqual([...(await fs.readFile(receipt.path))], [0xd7, 0xcd, 1]);
+  await assert.rejects(
+    f.files.createImageDirectory({ input: f.snapshot, outputPath: directory.path }),
+    /OutputExists/,
+  );
+  await assert.rejects(
+    f.files.assertNewOutput({
+      input: f.snapshot,
+      outputPath: join(f.dir, 'wrong.hwp'),
+      kind: 'image',
+    }),
+    /InvalidOutputExtension/,
+  );
+  await assert.rejects(
+    f.files.assertNewOutput({ input: f.snapshot, outputPath: join(f.dir, 'wrong.png') }),
+    /InvalidOutputExtension/,
+  );
+});
+test('image outputs reject symlink parents/finals and swapped directory ownership', async (t) => {
+  const f = await fixture(t);
+  await fs.mkdir(join(f.dir, 'real'));
+  await fs.symlink(join(f.dir, 'real'), join(f.dir, 'alias'));
+  await fs.symlink(join(f.dir, 'absent'), join(f.dir, 'dangling.bin'));
+  await assert.rejects(
+    f.files.createImageDirectory({ input: f.snapshot, outputPath: join(f.dir, 'alias', 'out') }),
+    /OutputSymlink/,
+  );
+  await assert.rejects(
+    f.files.assertNewOutput({
+      input: f.snapshot,
+      outputPath: join(f.dir, 'alias', 'out.bin'),
+      kind: 'image',
+    }),
+    /OutputSymlink/,
+  );
+  await assert.rejects(
+    f.files.assertNewOutput({
+      input: f.snapshot,
+      outputPath: join(f.dir, 'dangling.bin'),
+      kind: 'image',
+    }),
+    /OutputExists/,
+  );
+  const directory = await f.files.createImageDirectory({
+    input: f.snapshot,
+    outputPath: join(f.dir, 'images'),
+  });
+  await fs.rename(directory.path, join(f.dir, 'old-images'));
+  await fs.mkdir(directory.path);
+  await assert.rejects(
+    f.files.assertNewOutput({
+      input: f.snapshot,
+      outputPath: join(directory.path, 'x.bin'),
+      kind: 'image',
+      directory,
+    }),
+    /OutputParentChanged/,
+  );
+  const token = await f.files.assertNewOutput({
+    input: f.snapshot,
+    outputPath: join(f.dir, 'real', 'x.bin'),
+    kind: 'image',
+  });
+  f.files.assertImageFormat(token, '.bin');
+  await fs.rename(join(f.dir, 'real'), join(f.dir, 'real-old'));
+  await fs.symlink(join(f.dir, 'real-old'), join(f.dir, 'real'));
+  await assert.rejects(
+    f.files.publishNewOutput({ target: token, bytes: Uint8Array.of(1) }),
+    /OutputSymlink/,
+  );
+  assert.deepEqual(await fs.readdir(join(f.dir, 'real-old')), []);
+});

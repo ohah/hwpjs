@@ -434,6 +434,40 @@ jobs:
             packages/cli/tests/render-document.test.mjs \
             packages/cli/tests/engine.test.mjs \
             tools/tests/cli-document-e2e.test.mjs
+      - name: Test metadata, image extraction and MCP tools
+        timeout-minutes: 3
+        run: |
+          export HWPJS_CLI_NATIVE=1
+          export HWPJS_MCP_NATIVE=1
+          export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
+          export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
+          export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
+          export HWPJS_TEST_NOORI_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwpx"
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 \
+            packages/cli/tests/inspect-document.test.mjs \
+            packages/cli/tests/document-images.test.mjs \
+            packages/cli/tests/mcp.test.mjs \
+            packages/hwpjs/tests/declaration-inputs.test.mjs \
+            tools/tests/public-package-notices.test.mjs \
+            tools/tests/build-agent-skill.test.mjs \
+            tools/tests/hwpjs-skill-launcher.test.mjs
+      - name: Verify generated Skill assets against the package build
+        timeout-minutes: 3
+        run: |
+          bun tools/build-public-package.mjs --js-only --wasm=apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          node tools/build-agent-skill.mjs --package-dir packages/hwpjs --out zig-out/verification/ci-agent-skill
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { readFile, readdir } from 'node:fs/promises';
+          const names = ['LICENSE', 'THIRD_PARTY_NOTICES.md', 'cli.mjs', 'hwpjs.wasm', 'manifest.json', 'mcp.mjs'];
+          const shipped = 'skills/hwpjs/assets/hwpjs';
+          const entries = await readdir(shipped, { withFileTypes: true });
+          assert(entries.every((entry) => entry.isFile()), 'SkillAssetsMustBeRegularFiles');
+          assert.deepEqual(entries.map((entry) => entry.name).sort(), [...names].sort());
+          for (const name of names) {
+            assert.deepEqual(await readFile(`${shipped}/${name}`), await readFile(`zig-out/verification/ci-agent-skill/${name}`), `SkillAssetOutOfDate:${name}`);
+          }
+          JS
       - name: Check derived quality configuration
         run: bun run quality:config
       - name: Test quality scope and safety contracts

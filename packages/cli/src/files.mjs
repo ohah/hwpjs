@@ -1,6 +1,6 @@
 import * as nodeFS from 'node:fs/promises';
 import { constants } from 'node:fs';
-import { resolve, dirname, basename, join, extname } from 'node:path';
+import { resolve, dirname, basename, join, extname, parse } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash, randomBytes } from 'node:crypto';
 
@@ -21,6 +21,7 @@ export function createFiles({
   random = () => randomBytes(12).toString('hex'),
 } = {}) {
   const targets = new WeakMap();
+  const directories = new WeakMap();
   async function readInputSnapshot(path, { maxBytes = MAX_DOCUMENT_BYTES } = {}) {
     validPath(path);
     if (!Number.isSafeInteger(maxBytes) || maxBytes < 0 || maxBytes > MAX_DOCUMENT_BYTES)
@@ -83,23 +84,102 @@ export function createFiles({
     }
     throw error(sameIdentity(stat, input.identity) ? 'SourceOutputCollision' : 'OutputExists');
   }
-  async function assertNewOutput({ input, outputPath }) {
+  const imageExtensions = new Set([
+    '.bin',
+    '.png',
+    '.jpg',
+    '.jpeg',
+    '.gif',
+    '.bmp',
+    '.webp',
+    '.tif',
+    '.tiff',
+  ]);
+  // Extraction refuses symlink ancestors, including dangling final links. Keep
+  // document save admission unchanged; images opt into this stricter policy.
+  async function imageParent(path) {
+    const parent = dirname(path),
+      root = parse(parent).root;
+    let cursor = root;
+    for (const part of parent.slice(root.length).split('/').filter(Boolean)) {
+      cursor = join(cursor, part);
+      const stat = await fs.lstat(cursor, { bigint: true });
+      if (stat.isSymbolicLink()) throw error('OutputSymlink');
+      if (!stat.isDirectory()) throw error('OutputParentNotDirectory');
+    }
+    const stat = await fs.lstat(parent, { bigint: true });
+    return { parent, identity: { dev: String(stat.dev), ino: String(stat.ino) } };
+  }
+  async function verifyImageParent(record) {
+    const current = await imageParent(record.path);
+    if (!sameIdentity(await fs.lstat(current.parent, { bigint: true }), record.parentIdentity))
+      throw error('OutputParentChanged');
+  }
+  async function createImageDirectory({ input, outputPath }) {
+    validPath(outputPath);
+    const path = resolve(cwd(), outputPath);
+    await imageParent(path);
+    await vacant(path, input);
+    await fs.mkdir(path, { mode: 0o700 }); // Exclusive: no recursive mkdir, no retry.
+    try {
+      const stat = await fs.lstat(path, { bigint: true });
+      if (!stat.isDirectory() || stat.isSymbolicLink()) throw error('OutputParentChanged');
+      const directory = Object.freeze({ path });
+      directories.set(directory, { dev: String(stat.dev), ino: String(stat.ino) });
+      return directory;
+    } catch (cause) {
+      cause.createdDirectory = path;
+      throw cause;
+    }
+  }
+  async function assertNewOutput({ input, outputPath, kind = 'document', directory }) {
     validPath(outputPath);
     if (!input || typeof input.path !== 'string') throw error('InvalidInputSnapshot');
-    const absolute = resolve(cwd(), outputPath),
-      parent = await fs.realpath(dirname(absolute));
+    if (!['document', 'image'].includes(kind)) throw error('InvalidOutputKind');
+    const absolute = resolve(cwd(), outputPath);
+    const image = kind === 'image' ? await imageParent(absolute) : null;
+    if (directory !== undefined) {
+      const identity = directories.get(directory);
+      if (
+        kind !== 'image' ||
+        !identity ||
+        dirname(absolute) !== directory.path ||
+        !sameIdentity(await fs.lstat(directory.path, { bigint: true }), identity)
+      )
+        throw error('OutputParentChanged');
+    }
+    const parent = image?.parent ?? (await fs.realpath(dirname(absolute)));
     if (!(await fs.stat(parent)).isDirectory()) throw error('OutputParentNotDirectory');
     const path = join(parent, basename(absolute));
-    if (!['.hwp', '.hwpx'].includes(extname(path).toLowerCase()))
+    if (
+      !(kind === 'image' ? imageExtensions : new Set(['.hwp', '.hwpx'])).has(
+        extname(path).toLowerCase(),
+      )
+    )
       throw error('InvalidOutputExtension');
     await vacant(path, input);
     const target = Object.freeze({ path });
-    targets.set(target, { path, parent, input, used: false });
+    targets.set(target, {
+      path,
+      parent,
+      input,
+      used: false,
+      kind,
+      parentIdentity: image?.identity,
+    });
     return target;
+  }
+  function assertImageFormat(target, extension) {
+    const record = targets.get(target);
+    if (!record || record.used || record.kind !== 'image') throw error('InvalidOutputTarget');
+    if (!imageExtensions.has(extension)) throw error('InvalidImageExtension');
+    if (extname(record.path).toLowerCase() !== extension)
+      throw error('OutputImageExtensionMismatch');
+    record.format = 'image';
   }
   function assertOutputFormat(target, format) {
     const record = targets.get(target);
-    if (!record || record.used) throw error('InvalidOutputTarget');
+    if (!record || record.used || record.kind !== 'document') throw error('InvalidOutputTarget');
     if (!['hwp5', 'hwpx'].includes(format)) throw error('InvalidEngineFormat');
     if (extname(record.path).toLowerCase() !== (format === 'hwp5' ? '.hwp' : '.hwpx'))
       throw error('OutputFormatMismatch');
@@ -133,6 +213,7 @@ export function createFiles({
         }),
       );
     try {
+      if (record.kind === 'image') await verifyImageParent(record);
       await vacant(record.path, record.input);
       for (let attempt = 0; attempt < 8; attempt++) {
         const nonce = random();
@@ -153,6 +234,7 @@ export function createFiles({
       await handle.close();
       handle = undefined;
       // link is the commit point: atomic no-replace, never a rename/copy fallback.
+      if (record.kind === 'image') await verifyImageParent(record);
       await fs.link(temporary, record.path);
       published = true;
     } catch (cause) {
@@ -206,6 +288,8 @@ export function createFiles({
     resolveWasmPath,
     assertNewOutput,
     assertOutputFormat,
+    assertImageFormat,
+    createImageDirectory,
     publishNewOutput,
   });
 }
@@ -214,5 +298,7 @@ export const {
   resolveWasmPath,
   assertNewOutput,
   assertOutputFormat,
+  assertImageFormat,
+  createImageDirectory,
   publishNewOutput,
 } = createFiles();
