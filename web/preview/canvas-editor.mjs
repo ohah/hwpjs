@@ -140,6 +140,8 @@ export function createCanvasEditor({
   const clearInputIntents = () => {
     if (composing) compositionInvalidated = true;
     inputIntents.clear();
+    // Ordered operations descend from this draft and cannot survive its rejection.
+    historyIntents.clear();
     queuedInputCapture = compositionInputCapture = null;
   };
   const textPending = () =>
@@ -155,6 +157,8 @@ export function createCanvasEditor({
     !multipleParagraphs() &&
     (textPending() || inputIntents.size > 0) &&
     Boolean(renderer.paragraph(target)?.selectable || renderer.paragraph(target)?.editable);
+  const textAwaitingCommit = () =>
+    pendingDraftEditable() || Boolean(target && input.value !== committed);
   const historySelections = createHistorySelectionStore();
   let historyRevision = null;
   let historyAvailable = false,
@@ -1847,6 +1851,17 @@ export function createCanvasEditor({
       travel(event.inputType === 'historyUndo' ? 'undo' : 'redo');
       return;
     }
+    // A textarea may emit the newline before compositionend. Keep the intent
+    // behind the composed text and its Native acknowledgement instead of
+    // preventing the event and immediately attempting a still-blocked split.
+    if (
+      (composing || event.isComposing || textAwaitingCommit()) &&
+      ['insertLineBreak', 'insertParagraph'].includes(event.inputType)
+    ) {
+      event.preventDefault();
+      if (target && controls.ready()) queueOrderedInput(event.inputType);
+      return;
+    }
     if (deferredComposition) return;
     if (historyInputPending() && !composing && !event.isComposing) {
       event.preventDefault();
@@ -2183,7 +2198,7 @@ export function createCanvasEditor({
       return;
     }
     if (
-      historyInputPending() &&
+      (historyInputPending() || textAwaitingCommit()) &&
       !event.altKey &&
       !event.metaKey &&
       !event.ctrlKey &&

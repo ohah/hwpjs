@@ -41,3 +41,5 @@ agent-browser Chromium의 외부 공개 화면에서 실제 `charshape.hwp`로 I
 브라우저의 기본 Meta+A에 위임했을 때 전체 선택이 되지 않은 반례를 확인했습니다. Ctrl/Meta+A 명시적 선택 처리로 수정한 뒤 Chromium에서 선택 범위 `[0, 6)`과 native 반영 완료까지의 전체 삭제, 빈 문단에 `복원😀` 재입력 성공을 확인했습니다. 이는 기본 OS 키 동작 전체를 검증한 결과가 아닙니다.
 
 최종 집중 API/직접 입력 검사 21개는 Debug·ReleaseSafe·ReleaseFast에서 통과했습니다. 기존 CFB/미리보기/문서 검사와 합친 Node 51개, ReleaseSafe 전체 Zig 2,687개와 제품 WASM 빌드도 통과했습니다. 완전한 문서 편집기나 전체 명세 완료를 뜻하지 않습니다.
+
+[조합 입력 뒤 줄바꿈](canvas-composition-newline.md)은 조합 확정·Native 반영 뒤의 문단 분할 순서와 초안 폐기 시 대기 명령 취소를 소유합니다.

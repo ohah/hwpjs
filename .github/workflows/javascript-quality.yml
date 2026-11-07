@@ -410,6 +410,9 @@ jobs:
             ./tests/hwp5/measurement-placement.test.mjs \
             ./tests/hwpx/renderer-projection-measure.test.mjs \
             ./tests/hwp5/line-spacing-compat.test.mjs
+      - name: Test composition newline ordering
+        timeout-minutes: 1
+        run: node --max-old-space-size=256 --test --test-concurrency=1 tests/hwpx/composition-newline.test.mjs
       - name: Test AI document CLI and independent save oracles
         timeout-minutes: 3
         run: |
