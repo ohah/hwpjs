@@ -3,10 +3,16 @@ export function collectHwp5({ sdk, sectionCount }) {
   const warnings = [],
     sections = [];
   const preview = call(sdk, 'currentTextPreview', [], warnings);
-  const previewSections =
-    preview.ok && Array.isArray(preview.value?.sections)
-      ? new Map(preview.value.sections.map((s) => [s.index, s]))
-      : new Map();
+  const previewSections = unique(
+    array(
+      { ok: preview.ok, value: preview.value?.sections },
+      warnings,
+      'currentTextPreview.sections',
+    ),
+    (row) => row.index,
+    warnings,
+    'preview section',
+  );
   for (let section = 0; section < sectionCount; section++) {
     const source = { section };
     const get = (name) => call(sdk, name, [section], warnings, source);
@@ -20,35 +26,38 @@ export function collectHwp5({ sdk, sectionCount }) {
         : null;
     const previewRows = previewSections.get(section)?.paragraphs;
     const paragraphs = [];
-    if (count !== null)
-      for (let paragraph = 0; paragraph < count; paragraph++) {
-        const p = previewRows?.[paragraph],
-          flow = flowMap.get(paragraph);
-        const node = uint(flow?.source_node)
-          ? flow.source_node
-          : uint(p?.nodeIndex)
-            ? p.nodeIndex
-            : null;
-        let displayText = typeof p?.text === 'string' && p.textPresent === true ? p.text : null;
-        let identityKnown = uint(node) && flow?.generated !== true;
-        if (uint(p?.nodeIndex) && uint(flow?.source_node) && p.nodeIndex !== flow.source_node) {
-          identityKnown = false;
-          displayText = null;
-          warnings.push(
-            diagnostic('ParagraphSourceMismatch', 'Native source identities disagree', {
-              section,
-              paragraph,
-            }),
-          );
-        }
-        paragraphs.push({
-          paragraph,
-          node,
-          identityKnown,
-          displayText,
-          flow: flow ?? null,
-        });
+    const ordinals =
+      count !== null
+        ? Array.from({ length: count }, (_, ordinal) => ordinal)
+        : [...new Set(flows.map((row) => row.paragraph))];
+    for (const paragraph of ordinals) {
+      const p = previewRows?.[paragraph],
+        flow = flowMap.get(paragraph);
+      const node = uint(flow?.source_node)
+        ? flow.source_node
+        : uint(p?.nodeIndex)
+          ? p.nodeIndex
+          : null;
+      let displayText = typeof p?.text === 'string' && p.textPresent === true ? p.text : null;
+      let identityKnown = uint(node) && flow?.generated !== true;
+      if (uint(p?.nodeIndex) && uint(flow?.source_node) && p.nodeIndex !== flow.source_node) {
+        identityKnown = false;
+        displayText = null;
+        warnings.push(
+          diagnostic('ParagraphSourceMismatch', 'Native source identities disagree', {
+            section,
+            paragraph,
+          }),
+        );
       }
+      paragraphs.push({
+        paragraph,
+        node,
+        identityKnown,
+        displayText,
+        flow: flow ?? null,
+      });
+    }
     const bindings = get('tableBindings'),
       placements = get('tablePlacements'),
       tableInventory = get('tableLayoutSources'),

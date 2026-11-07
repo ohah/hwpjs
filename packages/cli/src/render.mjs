@@ -4,9 +4,9 @@ const LIMITS = Object.freeze({
   maxTextUnits: 4 * 1024 * 1024,
   maxOutputUnits: 32 * 1024 * 1024,
 });
-// Control matching is intentional: terminal control bytes must become visible display escapes.
+// Controls and isolated UTF-16 surrogates become visible escapes. Unicode mode keeps valid pairs intact.
 // oxlint-disable-next-line no-control-regex
-const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069]/gu;
+const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ud800-\udfff]/gu;
 const MARKDOWN = /[\\`*_{}[\]()#+.!|<>~-]/gu;
 const own = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 

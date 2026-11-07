@@ -14,20 +14,27 @@ function byteInput(value, name) {
   return Uint8Array.from(value); // Buffer.slice() would borrow caller-owned storage.
 }
 
-function position(target, sectionCount, format) {
+function captureTarget(target) {
   if (!target || typeof target !== 'object' || Array.isArray(target))
     throw new TypeError('InvalidTarget');
   const { section, paragraph } = target;
   if (
     !Number.isInteger(section) ||
     section < 0 ||
-    section >= sectionCount ||
+    section > 0xffffffff ||
     !Number.isInteger(paragraph) ||
-    paragraph < (format === 'hwpx' ? 1 : 0) ||
+    paragraph < 0 ||
     paragraph > 0xffffffff
   )
     throw new RangeError('InvalidTarget');
   return { section, paragraph };
+}
+
+function position(target, sectionCount, format) {
+  const captured = captureTarget(target);
+  if (captured.section >= sectionCount || (format === 'hwpx' && captured.paragraph === 0))
+    throw new RangeError('InvalidTarget');
+  return captured;
 }
 
 /** No filesystem, DOM, Canvas, normalization or permissive source-open policy.
@@ -93,11 +100,10 @@ export async function openDocument({ bytes, wasm, expectedSha256 } = {}) {
         const startUnit = findUniqueLiteral(text, oldText);
         const endUnit = startUnit + oldText.length;
         const changed = oldText !== newText;
-        if (changed) {
-          if (format === 'hwp5')
-            sdk.splice({ section, paragraph, startUnit, endUnit, text: newText });
-          else sdk.splice(section, paragraph, startUnit, oldText.length, newText);
-        }
+        // Native still validates protected/control-token boundaries for a no-op.
+        if (format === 'hwp5')
+          sdk.splice({ section, paragraph, startUnit, endUnit, text: newText });
+        else sdk.splice(section, paragraph, startUnit, oldText.length, newText);
         return { changed, section, paragraph, startUnit, endUnit };
       },
       save({ allowStaleLayout = false } = {}) {
@@ -105,7 +111,11 @@ export async function openDocument({ bytes, wasm, expectedSha256 } = {}) {
         if (typeof allowStaleLayout !== 'boolean') throw new TypeError('InvalidAllowStaleLayout');
         const saved = format === 'hwp5' ? sdk.save({ allowStaleLayout }) : sdk.save();
         const output = format === 'hwp5' ? saved.bytes : saved;
-        if (!(output instanceof Uint8Array) || output.byteLength > MAX_OUTPUT_BYTES)
+        if (
+          !(output instanceof Uint8Array) ||
+          !output.byteLength ||
+          output.byteLength > MAX_OUTPUT_BYTES
+        )
           throw new RangeError('OutputLimitExceeded');
         return format === 'hwp5' ? saved : output;
       },
@@ -146,9 +156,16 @@ export async function edit({
   with: replacement,
   allowStaleLayout = false,
 }) {
+  // Input bytes and WASM are copied by openDocument before it awaits compilation;
+  // capture the caller-owned address at the same request boundary.
+  const capturedTarget = captureTarget(target);
   const document = await openDocument({ bytes, wasm });
   try {
-    const { changed } = document.replaceText({ target, oldText: replace, newText: replacement });
+    const { changed } = document.replaceText({
+      target: capturedTarget,
+      oldText: replace,
+      newText: replacement,
+    });
     const saved = document.save({ allowStaleLayout });
     return {
       format: document.format,

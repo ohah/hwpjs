@@ -400,3 +400,101 @@ test('inherited displayText and invalid explicit limits never become permissive 
   assert.throws(() => render(model([p])), /InvalidDocumentView/);
   assert.throws(() => render(model(), { maxOutputUnits: -1 }), /InvalidRenderLimit/);
 });
+
+test('adversarial Unicode: isolated high/low surrogates escape visibly but real emoji remain exact', () => {
+  const input = model([paragraph(0, '\ud800🙂\udfff')]);
+  for (const format of ['text', 'markdown']) {
+    const text = render(input, { format });
+    assert.equal(text.isWellFormed(), true);
+    assert.ok(text.includes('🙂'));
+    assert.ok(text.includes(format === 'text' ? '\\ud800🙂\\udfff' : '\\\\ud800🙂\\\\udfff'));
+    assert.equal(input.sections[0].body[0].displayText, '\ud800🙂\udfff');
+  }
+});
+
+test('adversarial model integration: a truncated observation error cannot suppress readable document text', async () => {
+  const { readDocumentModel } = await import('../src/document-model.mjs');
+  const message = 'x'.repeat(511 - 'pictureSources: '.length) + '🙂';
+  const sdk = {
+    currentTextPreview: () => ({
+      sections: [
+        { index: 0, paragraphs: [{ nodeIndex: 7, text: 'Readable content', textPresent: true }] },
+      ],
+    }),
+    paragraphCount: () => 1,
+    paragraphFlow: () => [
+      {
+        paragraph: 0,
+        source_node: 7,
+        template_node: 7,
+        generated: false,
+        host: 'body',
+        top_level: true,
+      },
+    ],
+    tableBindings: () => [],
+    tablePlacements: () => [],
+    tableLayoutSources: () => [],
+    cellLayoutSources: () => [],
+    pageAreaSources: () => [],
+    tableAnchors: () => [],
+    drawingSources: () => [],
+    drawingAnchors: () => [],
+    pictureSources: () => {
+      throw Error(message);
+    },
+  };
+  const input = await readDocumentModel({
+    format: 'hwp5',
+    sourceSha256: 'a'.repeat(64),
+    sectionCount: 1,
+    sdk,
+  });
+  const before = structuredClone(input);
+  for (const format of ['text', 'markdown']) {
+    const output = render(input, { format });
+    assert.equal(output.isWellFormed(), true, 'host must be able to publish the logical view');
+    assert.ok(output.includes('Readable content'));
+    assert.ok(output.includes('ObservationUnavailable:'));
+  }
+  assert.deepEqual(input, before);
+});
+
+test('adversarial budgets count lone-surrogate display expansion including Markdown backslashes', () => {
+  for (const format of ['text', 'markdown']) {
+    const baseline = render(model([paragraph(0, '')]), { format }).length;
+    const input = model([paragraph(0, '\ud800')]);
+    const extra = format === 'text' ? 6 : 7;
+    assert.equal(render(input, { format }).length, baseline + extra);
+    assert.throws(
+      () => render(input, { format, maxOutputUnits: baseline + extra - 1 }),
+      /OutputLimit/,
+    );
+    assert.equal(
+      render(input, { format, maxOutputUnits: baseline + extra }).length,
+      baseline + extra,
+    );
+  }
+});
+
+test('adversarial Unicode diagnostics and alt metadata never emit malformed terminal strings', () => {
+  const input = model([
+    {
+      id: 'image:\ud800',
+      type: 'image',
+      alt: 'alt\udfff🙂',
+      altState: 'provided',
+      sourceInfo: { pictureNode: 7 },
+      width: 3,
+      sizeUnit: '\ud800units',
+    },
+  ]);
+  input.warnings = [{ code: 'truncated\udfff', message: 'warning\ud800' }];
+  for (const format of ['text', 'markdown']) {
+    const output = render(input, { format });
+    assert.equal(output.isWellFormed(), true);
+    assert.ok(output.includes('🙂'));
+    assert.ok(output.includes('ud800'));
+    assert.ok(output.includes('udfff'));
+  }
+});

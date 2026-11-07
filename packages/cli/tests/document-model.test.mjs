@@ -437,3 +437,104 @@ test('model malformed HX snapshot preserves observed flow identities with unknow
   assert.equal(paragraphs(m).length, 4);
   assert.ok(paragraphs(m).every((p) => p.displayText === null));
 });
+
+// Adversarial round 1: canonical source identities must not be first-wins.
+test('adversarial r1 conflicting original cell nodes reject instead of retaining first owner', async () => {
+  const { data, sdk } = hx();
+  data.inventory.cells.push({ table_node: 10, list_node: 12, cell_node: 99 });
+  await assert.rejects(read('hwpx', sdk), /ConflictingCellSourceIdentity/);
+});
+test('adversarial r1 one original list node cannot belong to two tables', async () => {
+  const { data, sdk } = hx();
+  data.inventory.cells.push({ table_node: 90, list_node: 12, cell_node: 11 });
+  await assert.rejects(read('hwpx', sdk), /ConflictingCellSourceIdentity/);
+});
+test('adversarial r1 duplicate paragraph source node cannot grant two identities', async () => {
+  const { data, sdk } = hx();
+  data.flows[1].source_node = data.flows[0].source_node;
+  await assert.rejects(read('hwpx', sdk), /DuplicateParagraphSourceIdentity/);
+});
+
+test('adversarial r1 duplicate H5 preview section cannot silently replace display text', async () => {
+  const { sdk } = h5();
+  const first = sdk.currentTextPreview().sections[0];
+  sdk.currentTextPreview = () => ({
+    sections: [
+      first,
+      { ...first, paragraphs: [{ ...first.paragraphs[0], text: 'forged-last-wins' }] },
+    ],
+  });
+  const m = await read('hwp5', sdk);
+  assert.equal(paragraphs(m)[0].displayText, null);
+  assert.ok(m.warnings.some((w) => w.code === 'AmbiguousSourceIdentity'));
+  assert.equal(JSON.stringify(m).includes('forged-last-wins'), false);
+});
+test('adversarial r1 H5 count unavailable preserves already observed flow paragraph', async () => {
+  const { sdk } = h5();
+  sdk.paragraphCount = () => {
+    throw Error('CountUnavailable');
+  };
+  const m = await read('hwp5', sdk);
+  assert.equal(m.coverage.paragraphTotal, null);
+  assert.equal(m.coverage.inventoryComplete, false);
+  assert.equal(paragraphs(m).length, 1);
+  assert.equal(paragraphs(m)[0].id, 's0:p0');
+  assert.equal(paragraphs(m)[0].displayText, 'readable');
+});
+test('adversarial r1 late invalid cell geometry rejects without mutating observations', async () => {
+  const { data, sdk } = hx();
+  data.bindings.push({ ...data.bindings[0], paragraph: 77, rowSpan: 0 });
+  const before = JSON.stringify(data);
+  await assert.rejects(read('hwpx', sdk), /InvalidCellGeometry/);
+  assert.equal(JSON.stringify(data), before);
+});
+test('adversarial r1 header footer same owner collision is refused', async () => {
+  const { data, sdk } = hx();
+  data.flows[3].page_area = { ...data.flows[2].page_area };
+  await assert.rejects(read('hwpx', sdk), /AmbiguousPageAreaDefinition/);
+});
+test('adversarial r1 reverse ordered sparse fanout retains exactonce without dense geometry', async () => {
+  const { data, sdk } = hx();
+  const n = 1024;
+  data.paragraphs = [{ paragraph: 1, text: 'root' }];
+  data.flows = [{ paragraph: 1, source_node: 1, host: 'body', top_level: true }];
+  data.bindings = [];
+  data.placements = [];
+  data.inventory.cells = [];
+  data.areas = [];
+  data.sites = [];
+  data.owners = [];
+  for (let i = n; i >= 1; i--) {
+    const p = i + 1,
+      t = 10000 + i,
+      l = 20000 + i;
+    data.paragraphs.push({ paragraph: p, text: `cell${i}` });
+    data.flows.push({ paragraph: p, source_node: 30000 + i, host: 'other', top_level: false });
+    data.bindings.push({
+      paragraph: p,
+      tableNode: t,
+      listNode: l,
+      rows: 1000000000,
+      columns: 1000000000,
+      row: i,
+      column: i,
+      rowSpan: 2,
+      columnSpan: 3,
+    });
+    data.placements.push({
+      tableNode: t,
+      paragraph: 1,
+      parentTableNode: null,
+      parentListNode: null,
+    });
+    data.inventory.cells.push({ table_node: t, list_node: l, cell_node: 40000 + i });
+  }
+  const m = await read('hwpx', sdk);
+  assert.equal(m.coverage.placed, n + 1);
+  assert.equal(m.coverage.unplaced, 0);
+  assert.equal(new Set(paragraphs(m).map((p) => p.id)).size, n + 1);
+  const tables = m.sections[0].body.filter((b) => b.type === 'table');
+  assert.equal(tables.length, n);
+  assert.ok(tables.every((t) => t.cells.length === 1 && t.cells[0].rowSpan === 2));
+  assert.ok(JSON.stringify(m).length < 2000000);
+});

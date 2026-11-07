@@ -40,6 +40,64 @@ test('open validates bounded byte inputs and original snapshot SHA before openin
   await assert.rejects(openDocument({ bytes, wasm: new ArrayBuffer(4) }), /WasmUint8Array/);
 });
 
+test('adversarial exhaustive literal oracle is exact over overlaps and supplementary Unicode', () => {
+  const strings = [''];
+  let level = [''];
+  for (let depth = 1; depth <= 4; depth++) {
+    level = level.flatMap((prefix) => ['a', 'b', '🙂'].map((char) => prefix + char));
+    strings.push(...level);
+  }
+  const patterns = strings.filter((value) => value.length > 0 && [...value].length <= 2);
+  for (const text of strings)
+    for (const pattern of patterns) {
+      const offsets = [];
+      for (let at = 0; at < text.length; at++)
+        if (text.slice(at, at + pattern.length) === pattern) offsets.push(at);
+      if (offsets.length === 1) assert.equal(findUniqueLiteral(text, pattern), offsets[0]);
+      else
+        assert.throws(
+          () => findUniqueLiteral(text, pattern),
+          offsets.length ? /Ambiguous/ : /NotFound/,
+        );
+    }
+  assert.throws(() => findUniqueLiteral('e\u0301', 'é'), /NotFound/);
+  assert.equal(findUniqueLiteral('é e\u0301', 'e\u0301'), 2);
+});
+
+test('adversarial null and numeric target errors reject before any async Native open', async () => {
+  for (const target of [
+    null,
+    [],
+    {},
+    { section: NaN, paragraph: 0 },
+    { section: 0, paragraph: Infinity },
+    { section: -1, paragraph: 0 },
+    { section: 0, paragraph: 0x100000000 },
+  ])
+    await assert.rejects(
+      edit({ bytes: null, wasm: null, target, replace: 'x', with: 'y' }),
+      /Target/,
+    );
+  for (const value of [null, undefined, 1, {}, ['x']])
+    assert.throws(() => validateLiteral(value), /InvalidLiteral/);
+});
+
+test('adversarial byte and decoded-text bounds reject oversized inputs', async () => {
+  await assert.rejects(
+    openDocument({ bytes: new Uint8Array(64 * 1024 * 1024 + 1), wasm: null }),
+    /DocumentLimit/,
+  );
+  await assert.rejects(
+    openDocument({
+      bytes: Uint8Array.of(0x50, 0x4b, 3, 4),
+      wasm: new Uint8Array(64 * 1024 * 1024 + 1),
+    }),
+    /WasmLimit/,
+  );
+  assert.throws(() => validateLiteral('🙂'.repeat(1024 * 1024 + 1)), /LiteralLimit/);
+  assert.throws(() => findUniqueLiteral('x'.repeat(32 * 1024 * 1024 + 1), 'x'), /DecodedTextLimit/);
+});
+
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const pins = {
   wasm: '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
@@ -94,6 +152,117 @@ function editable(document) {
 }
 
 for (const format of ['hwp5', 'hwpx']) {
+  test(
+    `actual Native820 ${format}: input/output ownership, no-op history and failed-edit atomicity`,
+    { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
+    async () => {
+      const input = pinnedInputs(format);
+      const bytes = Uint8Array.from(input.bytes),
+        wasm = Uint8Array.from(input.wasm);
+      const opening = openDocument({ bytes, wasm, expectedSha256: pins[format] });
+      bytes.fill(0);
+      wasm.fill(0);
+      const document = await opening;
+      try {
+        const { target, literal, text } = editable(document);
+        assert.equal(document.sourceSha256, pins[format]);
+        document.sdk.enableHistory({ maxEntries: 8, maxCheckpointBytes: 8 * 1024 * 1024 });
+        const revision = document.sdk.historyRevision();
+        const beforeSaved = document.save();
+        const before = Uint8Array.from(format === 'hwp5' ? beforeSaved.bytes : beforeSaved);
+        assert.equal(
+          document.replaceText({ target, oldText: literal, newText: literal }).changed,
+          false,
+        );
+        assert.equal(current(document, target), text);
+        assert.equal(
+          document.sdk.historyRevision(),
+          revision,
+          'Native valid no-op adds no revision',
+        );
+        for (const request of [
+          { target: null, oldText: literal, newText: 'x' },
+          { target: { section: NaN, paragraph: target.paragraph }, oldText: literal, newText: 'x' },
+          {
+            target: { section: target.section, paragraph: 0xffffffff },
+            oldText: literal,
+            newText: 'x',
+          },
+          { target, oldText: 'UNIQUE_MISSING_LITERAL_7817', newText: 'x' },
+          { target, oldText: literal, newText: '\ud800' },
+          { target, oldText: '', newText: 'x' },
+          { target, oldText: literal, newText: '\r\n' },
+        ])
+          assert.throws(() => document.replaceText(request));
+        assert.equal(document.sdk.historyRevision(), revision);
+        assert.equal(current(document, target), text);
+        const afterSaved = document.save();
+        const after = format === 'hwp5' ? afterSaved.bytes : afterSaved;
+        assert.deepEqual(after, before, 'no-op and rejected requests do not rewrite native bytes');
+        after.fill(0);
+        const fresh = document.save();
+        assert.deepEqual(
+          format === 'hwp5' ? fresh.bytes : fresh,
+          before,
+          'save output owns copied bytes',
+        );
+        for (const allowStaleLayout of [null, 0, 1, 'true'])
+          assert.throws(() => document.save({ allowStaleLayout }), /AllowStaleLayout/);
+        // Fault injection checks the adapter boundary, not Native save correctness.
+        const nativeSave = document.sdk.save;
+        try {
+          for (const invalid of [
+            new Uint8Array(),
+            new ArrayBuffer(8),
+            new Uint8Array(128 * 1024 * 1024 + 1),
+          ]) {
+            document.sdk.save = () =>
+              format === 'hwp5' ? { bytes: invalid, layoutRequiresReflow: false } : invalid;
+            assert.throws(() => document.save(), /OutputLimitExceeded/);
+          }
+        } finally {
+          document.sdk.save = nativeSave;
+        }
+      } finally {
+        document.close();
+      }
+      await assert.rejects(openDocument({ ...input, expectedSha256: '0'.repeat(64) }), /Mismatch/);
+    },
+  );
+  test(
+    `actual Native820 ${format}: edit captures target before its first async boundary`,
+    { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
+    async () => {
+      const input = pinnedInputs(format);
+      const initial = await openDocument(input);
+      let selected;
+      try {
+        selected = editable(initial);
+      } finally {
+        initial.close();
+      }
+      const target = { ...selected.target };
+      const pending = edit({
+        ...input,
+        target,
+        replace: selected.literal,
+        with: 'TARGET🙂',
+        allowStaleLayout: true,
+      });
+      target.section = 4096;
+      target.paragraph = 0xffffffff;
+      const result = await pending;
+      const reopened = await openDocument({ bytes: result.bytes, wasm: input.wasm });
+      try {
+        assert.equal(
+          current(reopened, selected.target),
+          selected.text.replace(selected.literal, 'TARGET🙂'),
+        );
+      } finally {
+        reopened.close();
+      }
+    },
+  );
   test(
     `actual Native820 ${format}: current coordinates, save/reopen, ambiguity, deletion and SHA`,
     { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
@@ -204,3 +373,42 @@ for (const format of ['hwp5', 'hwpx']) {
     },
   );
 }
+
+test(
+  'actual Native820 hwp5: no-op cannot bypass protected control-token boundary validation',
+  { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
+  async () => {
+    const input = pinnedInputs('hwp5');
+    const document = await openDocument(input);
+    try {
+      const original = document.sdk.text(0, 0);
+      const literal = /[\u3400-\u9fff]{2,}/u.exec(original)?.[0];
+      assert.ok(literal, 'pinned H5 section-control token payload has a literal CJK range');
+      const at = findUniqueLiteral(original, literal);
+      // Independent existing Native facade is the permission oracle, including same-text input.
+      assert.throws(
+        () =>
+          document.sdk.splice({
+            section: 0,
+            paragraph: 0,
+            startUnit: at,
+            endUnit: at + literal.length,
+            text: literal,
+          }),
+        /SplitControlToken/,
+      );
+      assert.throws(
+        () =>
+          document.replaceText({
+            target: { section: 0, paragraph: 0 },
+            oldText: literal,
+            newText: literal,
+          }),
+        /SplitControlToken/,
+      );
+      assert.equal(document.sdk.text(0, 0), original, 'failed boundary request is atomic');
+    } finally {
+      document.close();
+    }
+  },
+);

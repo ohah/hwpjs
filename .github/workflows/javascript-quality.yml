@@ -426,6 +426,7 @@ jobs:
             packages/cli/tests/host-arguments.test.mjs \
             packages/cli/tests/host-files.test.mjs \
             packages/cli/tests/host-main.test.mjs \
+            packages/cli/tests/host-adversarial.test.mjs \
             packages/cli/tests/document-model.test.mjs \
             packages/cli/tests/render-document.test.mjs \
             packages/cli/tests/engine.test.mjs \

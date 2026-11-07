@@ -72,7 +72,9 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
     const byOrdinal = new Map(),
       defs = new Map(),
       byTable = new Map(),
-      cells = new Map();
+      cells = new Map(),
+      cellOwners = new Map(),
+      paragraphSources = new Set();
     const placementMap = unique(
       list(observation.placements),
       (r) => r.tableNode,
@@ -215,7 +217,19 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
       if (!uint(listNode)) throw new Error('InvalidCellIdentity');
       const t = table(tableNode),
         id = cellKey(s, tableNode, listNode);
-      if (cells.has(id)) return cells.get(id);
+      const previousOwner = cellOwners.get(listNode);
+      if (previousOwner !== undefined && previousOwner !== tableNode)
+        throw new Error('ConflictingCellSourceIdentity');
+      cellOwners.set(listNode, tableNode);
+      if (cells.has(id)) {
+        const existing = cells.get(id);
+        if (uint(cellNode)) {
+          if (uint(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode)
+            throw new Error('ConflictingCellSourceIdentity');
+          existing.block.source.cellNode = cellNode;
+        }
+        return existing;
+      }
       const block = {
         id,
         source: { section: s, tableNode, listNode, ...(uint(cellNode) ? { cellNode } : {}) },
@@ -274,6 +288,10 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
       const id = paragraphId(s, p.paragraph),
         pSource = { section: s, paragraph: p.paragraph, ...(uint(p.node) ? { node: p.node } : {}) };
       if (paragraphs.has(id)) throw new Error('DuplicateParagraphIdentity');
+      if (p.identityKnown && uint(p.node)) {
+        if (paragraphSources.has(p.node)) throw new Error('DuplicateParagraphSourceIdentity');
+        paragraphSources.add(p.node);
+      }
       const displayText = typeof p.displayText === 'string' ? p.displayText : null;
       if (displayText !== null && !displayText.isWellFormed())
         throw new Error('InvalidDocumentText');
