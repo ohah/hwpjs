@@ -212,9 +212,10 @@ function assertCurrent(view, c, original, ops) {
       ? style.pattern
         ? swap(style.pattern.background)
         : null
-      : ((style.semantic_face_colors ??
-          style.semantic_fill_colors?.filter((x) => x.field === 'winBrush.faceColor'))?.[0]?.rgb ??
-        null);
+      : ((
+          style.semantic_face_colors ??
+          style.semantic_fill_colors?.filter((x) => x.field === 'winBrush.faceColor')
+        )?.[0]?.rgb ?? null);
   assert.equal(actualColor, color, 'current merged background preserved');
 }
 for (const c of manifest.cases)
