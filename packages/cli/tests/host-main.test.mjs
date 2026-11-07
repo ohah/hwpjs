@@ -722,3 +722,249 @@ test('secondary stderr failures never escape or mask the attempted primary write
     assert.match(f.calls.err[1], /publishedImageCount: 1/);
   }
 });
+
+test('read-many는 동일 읽기·표시 경로를 쓰고 WASM은 동시 배치에서도 한 번만 읽는다', async (t) => {
+  const f = await setup(t);
+  await fs.writeFile(join(f.dir, 'second.any'), 'second');
+  const paths = [];
+  const original = f.files.readInputSnapshot;
+  f.deps.files = {
+    ...f.files,
+    readInputSnapshot: async (...args) => {
+      paths.push(args[0]);
+      return original(...args);
+    },
+  };
+  assert.equal(
+    await runCLI(
+      [
+        'read-many',
+        'input.any',
+        'second.any',
+        '--wasm=native.wasm',
+        '--concurrency=2',
+        '--format=markdown',
+      ],
+      f.deps,
+    ),
+    0,
+  );
+  assert.equal(paths.filter((p) => p === join(f.dir, 'native.wasm')).length, 1);
+  assert.equal(f.calls.filter((row) => row.kind === 'read').length, 2);
+  assert.match(f.out.join(''), /^# 여러 문서 읽기/);
+  assert.equal((f.out.join('').match(/documentSHA256:/g) || []).length, 2);
+  assert.ok(f.out.join('').indexOf('input.any') < f.out.join('').indexOf('second.any'));
+  assert.match(f.out.join(''), /opaque-model markdown/);
+  assert.equal(await fs.readFile(join(f.dir, 'input.any'), 'utf8'), 'original');
+  assert.equal(await fs.readFile(join(f.dir, 'second.any'), 'utf8'), 'second');
+});
+test('read-many는 누락·폴더 뒤에도 성공을 보존하며 쓰기 작업을 호출하지 않는다', async (t) => {
+  const f = await setup(t);
+  await fs.mkdir(join(f.dir, 'folder'));
+  const argv = ['read-many', 'missing', 'folder', 'input.any', '--wasm=native.wasm'];
+  f.deps.files = { ...f.files };
+  for (const name of ['assertNewOutput', 'publishNewOutput', 'createImageDirectory'])
+    f.deps.files[name] = () => {
+      throw Error('쓰기 경로 호출 금지');
+    };
+  assert.equal(await runCLI(argv, f.deps), 1);
+  const text = f.out.join('');
+  assert.match(text, /batchStatus: partial/);
+  assert.match(text, /failed: 2/);
+  assert.match(text, /InputNotRegularFile/);
+  assert.match(text, /documentSHA256:/);
+  assert.equal(f.calls.length, 1);
+  assert.equal(await fs.readFile(join(f.dir, 'input.any'), 'utf8'), 'original');
+});
+test('read-many 예산 오류는 다른 파일을 계속 읽고 스트림 오류는 재시도 없이 요약한다', async (t) => {
+  const f = await setup(t);
+  await fs.writeFile(join(f.dir, 'second.any'), 'second');
+  f.deps.renderDocument = (model) =>
+    model.sourceSha256 === hash('original') ? 'x'.repeat(10000) : '정상';
+  assert.equal(
+    await runCLI(
+      ['read-many', 'input.any', 'second.any', '--wasm=native.wasm', '--max-output-bytes=12000'],
+      f.deps,
+    ),
+    1,
+  );
+  assert.match(f.out.join(''), /OutputBudgetExceeded/);
+  assert.match(f.out.join(''), /정상/);
+  f.out.length = 0;
+  f.err.length = 0;
+  let writes = 0;
+  f.deps.io.stdout.write = () => {
+    writes++;
+    throw Error('전달 실패');
+  };
+  assert.equal(await runCLI(['read-many', 'input.any', '--wasm=native.wasm'], f.deps), 1);
+  assert.equal(writes, 1);
+  assert.match(f.err.join(''), /batchReadSucceeded: 1/);
+  assert.match(f.err.join(''), /batchDelivery: failed-or-partial/);
+});
+
+test(
+  '실제 Noori 두 포맷의 CLI read-many는 원본·기존 결과를 보존하고 WASM을 한 번 읽는다',
+  { skip: process.env.HWPJS_READ_MANY_NATIVE !== '1', timeout: 30000 },
+  async (t) => {
+    const required = (key) => {
+      const path = process.env[key];
+      assert.ok(path && path.startsWith('/') && !/hwpers|title-column-roundtrip/i.test(path));
+      return path;
+    };
+    const wasm = required('HWPJS_TEST_WASM'),
+      h5 = required('HWPJS_TEST_NOORI'),
+      hx = required('HWPJS_TEST_NOORI_HWPX');
+    const pins = [
+      '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
+      'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f',
+      '6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab',
+    ];
+    assert.equal(process.env.HWPJS_TEST_WASM_SHA256, pins[0]);
+    const paths = [wasm, h5, hx];
+    for (let index = 0; index < paths.length; index++)
+      assert.equal(hash(await fs.readFile(paths[index])), pins[index]);
+    const dir = await fs.mkdtemp(join(tmpdir(), 'hwpjs-read-many-native-'));
+    t.after(() => fs.rm(dir, { recursive: true, force: true }));
+    const existing = join(dir, 'existing.hwpx');
+    await fs.writeFile(existing, '기존 결과 보존');
+    const files = createFiles();
+    const reads = [];
+    const out = [],
+      err = [];
+    const deps = {
+      files: {
+        ...files,
+        readInputSnapshot: async (...args) => {
+          reads.push(args[0]);
+          return files.readInputSnapshot(...args);
+        },
+      },
+      io: {
+        stdout: { write: (text) => out.push(text) },
+        stderr: { write: (text) => err.push(text) },
+      },
+    };
+    for (const name of ['publishNewOutput', 'assertNewOutput', 'createImageDirectory'])
+      deps.files[name] = () => {
+        throw Error('읽기에서 쓰기 호출 금지');
+      };
+    for (const format of ['text', 'markdown']) {
+      out.length = 0;
+      reads.length = 0;
+      assert.equal(
+        await runCLI(
+          ['read-many', h5, hx, '--wasm=' + wasm, '--format=' + format, '--concurrency=2'],
+          deps,
+        ),
+        0,
+      );
+      const text = out.join('');
+      assert.match(text, /batchStatus: success/);
+      assert.match(text, /보도일시/);
+      assert.equal((text.match(/documentSHA256:/g) || []).length, 2);
+      assert.equal(reads.filter((path) => path === wasm).length, 1);
+      assert.ok(Buffer.byteLength(text) <= 4194304);
+      if (format === 'markdown') assert.match(text, /^# 여러 문서 읽기/);
+    }
+    out.length = 0;
+    reads.length = 0;
+    assert.equal(
+      await runCLI(['read-many', h5, join(dir, 'missing.hwp'), dir, hx, '--wasm=' + wasm], deps),
+      1,
+    );
+    assert.match(out.join(''), /batchStatus: partial/);
+    assert.match(out.join(''), /failed: 2/);
+    assert.match(out.join(''), /InputNotRegularFile/);
+    assert.equal(reads.filter((path) => path === wasm).length, 1);
+    for (let index = 0; index < paths.length; index++)
+      assert.equal(hash(await fs.readFile(paths[index])), pins[index]);
+    assert.equal(await fs.readFile(existing, 'utf8'), '기존 결과 보존');
+    assert.deepEqual(err, []);
+  },
+);
+
+test('배치의 엔진 스탬프 오류는 해당 파일만 실패시키고 다음 파일은 같은 경로로 읽는다', async (t) => {
+  const f = await setup(t);
+  await fs.writeFile(join(f.dir, 'second.any'), 'second');
+  const read = f.engine.read;
+  f.deps.engine = {
+    ...f.engine,
+    read: async (args) => {
+      const result = await read(args);
+      if (hash(args.bytes) === hash('original')) result.model.sourceSha256 = '0'.repeat(64);
+      return result;
+    },
+  };
+  assert.equal(
+    await runCLI(['read-many', 'input.any', 'second.any', '--wasm=native.wasm'], f.deps),
+    1,
+  );
+  assert.match(f.out.join(''), /InvalidEngineModel/);
+  assert.match(f.out.join(''), /batchStatus: partial/);
+  assert.equal((f.out.join('').match(/documentSHA256:/g) || []).length, 1);
+  assert.match(f.out.join(''), new RegExp('documentSHA256: ' + hash('second')));
+});
+test('배치 WASM 읽기 거부도 한 번만 시도하고 모든 파일 실패를 가시화한다', async (t) => {
+  const f = await setup(t);
+  await fs.writeFile(join(f.dir, 'second.any'), 'second');
+  const read = f.files.readInputSnapshot;
+  let wasmReads = 0;
+  f.deps.files = {
+    ...f.files,
+    readInputSnapshot: async (path, options) => {
+      if (path === join(f.dir, 'native.wasm')) {
+        wasmReads++;
+        assert.equal(options.maxBytes, 32 * 1024 * 1024);
+        throw Error('WASM 접근 실패');
+      }
+      return read(path, options);
+    },
+  };
+  assert.equal(
+    await runCLI(
+      ['read-many', 'input.any', 'second.any', '--wasm=native.wasm', '--concurrency=2'],
+      f.deps,
+    ),
+    1,
+  );
+  assert.equal(wasmReads, 1);
+  assert.equal(f.calls.length, 0);
+  assert.match(f.out.join(''), /batchStatus: failure/);
+  assert.match(f.out.join(''), /failed: 2/);
+});
+
+test('Markdown 파일별 헤더도 출력 예산 안에 예약하며 작은 예산은 입력 읽기 전에 거부한다', async (t) => {
+  const f = await setup(t);
+  const paths = Array.from({ length: 10 }, (_, index) => '입력' + index);
+  for (const path of paths) await fs.writeFile(join(f.dir, path), path);
+  f.deps.renderDocument = () => '본문'.repeat(400);
+  assert.equal(
+    await runCLI(
+      [
+        'read-many',
+        ...paths,
+        '--format=markdown',
+        '--max-output-bytes=50000',
+        '--wasm=native.wasm',
+      ],
+      f.deps,
+    ),
+    0,
+  );
+  assert.ok(Buffer.byteLength(f.out.join('')) <= 50000);
+  assert.equal((f.out.join('').match(/documentSHA256:/g) || []).length, 10);
+  let reads = 0;
+  f.out.length = 0;
+  f.err.length = 0;
+  f.deps.files = {
+    ...f.files,
+    readInputSnapshot: () => {
+      reads++;
+      throw Error('읽으면 안 됩니다.');
+    },
+  };
+  assert.equal(await runCLI(['read-many', 'input.any', '--max-output-bytes=1'], f.deps), 1);
+  assert.equal(reads, 0);
+  assert.match(f.err.join(''), /OutputBudgetTooSmall/);
+});

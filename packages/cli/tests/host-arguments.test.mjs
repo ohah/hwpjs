@@ -150,3 +150,65 @@ test('extract-images names a new directory; selecting an ID requires exact snaps
   ])
     assert.throws(() => parse(['extract-images', 'in', ...extra]));
 });
+
+test('read-many는 명시 경로와 한도 옵션을 소유하고 옵션 같은 경로는 리터럴로 보존한다', () => {
+  const argv = [
+    'read-many',
+    '--format=markdown',
+    '--concurrency=2',
+    '--max-output-bytes=8000',
+    '--wasm=w',
+    '--',
+    '--문서.hwp',
+    'b.hwpx',
+  ];
+  const options = parse(argv);
+  argv[7] = '변경';
+  assert.deepEqual(options.inputPaths, ['--문서.hwp', 'b.hwpx']);
+  assert.equal(options.format, 'markdown');
+  assert.equal(options.concurrency, 2);
+  assert.equal(options.maxOutputBytes, 8000);
+  assert.equal(options.wasm, 'w');
+  assert.ok(Object.isFrozen(options.inputPaths));
+  const defaults = parse(['read-many', 'a']);
+  assert.equal(defaults.concurrency, 1);
+  assert.equal(defaults.maxOutputBytes, 4194304);
+});
+test('read-many의 빈 입력·중복·128 초과·HTML·JSON·폴더 옵션·일괄 편집을 거부한다', () => {
+  for (const argv of [
+    ['read-many'],
+    ['read-many', 'a', 'a'],
+    ['read-many', ...Array.from({ length: 129 }, (_, i) => String(i))],
+    ['read-many', 'a', '--format=html'],
+    ['read-many', 'a', '--format=json'],
+    ['read-many', 'a', '--recursive'],
+    ['read-many', 'a', '--output=x'],
+    ['read-many', 'a', '--concurrency=3'],
+    ['read-many', 'a', '--concurrency=1.5'],
+    ['read-many', 'a', '--max-output-bytes=0'],
+    ['read-many', 'a', '--max-output-bytes=16777217'],
+    ['read-many', '-'],
+    ['read-many', '줄\n바꿈'],
+    ['read-many', 'a', '--max-output-bytes=NaN'],
+  ])
+    assert.throws(() => parse(argv));
+  assert.equal(
+    parse(['read-many', ...Array.from({ length: 128 }, (_, i) => String(i))]).inputPaths.length,
+    128,
+  );
+});
+test('프로그램에서 전달한 argv도 길이를 한 번 포착하고 반복기를 사용하지 않는다', () => {
+  let reads = 0;
+  const argv = new Proxy(['read-many', 'a'], {
+    get(array, key, receiver) {
+      if (key === 'length') {
+        reads++;
+        return 2;
+      }
+      if (key === Symbol.iterator) throw Error('반복기 접근 금지');
+      return Reflect.get(array, key, receiver);
+    },
+  });
+  assert.deepEqual(parse(argv).inputPaths, ['a']);
+  assert.equal(reads, 1);
+});

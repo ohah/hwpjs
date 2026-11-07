@@ -417,6 +417,7 @@ jobs:
         timeout-minutes: 3
         run: |
           export HWPJS_CLI_NATIVE=1
+          export HWPJS_READ_MANY_NATIVE=1
           export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
           export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
@@ -432,6 +433,7 @@ jobs:
             packages/cli/tests/host-adversarial.test.mjs \
             packages/cli/tests/document-model.test.mjs \
             packages/cli/tests/render-document.test.mjs \
+            packages/cli/tests/read-operation.test.mjs \
             packages/cli/tests/engine.test.mjs \
             tools/tests/cli-document-e2e.test.mjs
       - name: Test metadata, image extraction and MCP tools
@@ -439,12 +441,14 @@ jobs:
         run: |
           export HWPJS_CLI_NATIVE=1
           export HWPJS_MCP_NATIVE=1
+          export HWPJS_READ_MANY_NATIVE=1
           export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
           export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
           export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
           export HWPJS_TEST_NOORI_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwpx"
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 \
             packages/cli/tests/inspect-document.test.mjs \
+            packages/cli/tests/batch-read.test.mjs \
             packages/cli/tests/document-images.test.mjs \
             packages/cli/tests/mcp.test.mjs \
             packages/hwpjs/tests/declaration-inputs.test.mjs \

@@ -137,6 +137,7 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
     'get_document_info',
     'list_document_images',
     'read_document',
+    'read_documents',
   ]);
   const result = await client.callTool({
     name: 'read_document',
@@ -224,7 +225,7 @@ for (const format of ['hwp5', 'hwpx'])
       });
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 5);
+      assert.equal(listed.tools.length, 6);
       const observed = await client.callTool({
         name: 'read_document',
         arguments: { inputPath: input },
@@ -445,3 +446,171 @@ test('official MCP SDK validates image SHA/ID/output before host and returns par
   for (const raw of lines) assert.equal(JSON.parse(raw).jsonrpc, '2.0');
   assert.deepEqual(errors, []);
 });
+
+test('read_documents 어댑터는 명시 배열을 리터럴로 전달하고 내부 JSON을 노출하지 않는다', async () => {
+  const seen = [];
+  const tool = documentTools({
+    wasmPath: '--wasm처럼보이는경로',
+    executeCLI: async (argv, { io }) => {
+      seen.push(parseArguments(argv));
+      await io.stdout.write('파일별 읽기 보고서\n');
+      return 1;
+    },
+  }).find((item) => item.name === 'read_documents');
+  const result = await tool.invoke({
+    inputPaths: ['--문서.hwp', 'b.hwpx'],
+    format: 'markdown',
+    concurrency: 2,
+    maxOutputBytes: 8000,
+  });
+  assert.equal(result.isError, true);
+  assert.equal(result.structuredContent, undefined);
+  assert.equal(textOf(result), '파일별 읽기 보고서\n');
+  assert.deepEqual(seen[0].inputPaths, ['--문서.hwp', 'b.hwpx']);
+  assert.equal(seen[0].wasm, '--wasm처럼보이는경로');
+  assert.equal(seen[0].concurrency, 2);
+});
+test('공식 SDK의 read_documents 스키마는 잘못된 배치와 추가 필드를 호스트 전에 거부한다', async (t) => {
+  const calls = [];
+  const { client, errors } = await wire(t, {
+    executeCLI: async (argv, { io }) => {
+      calls.push(parseArguments(argv));
+      await io.stdout.write('batchStatus: partial\nerror: ReadFailed\n');
+      return 1;
+    },
+  });
+  for (const args of [
+    { inputPaths: [] },
+    { inputPaths: ['a', 'a'] },
+    { inputPaths: Array(129).fill('a') },
+    { inputPaths: ['a'], concurrency: 3 },
+    { inputPaths: ['a'], concurrency: 1.5 },
+    { inputPaths: ['a'], format: 'html' },
+    { inputPaths: ['a'], format: 'json' },
+    { inputPaths: ['a'], maxOutputBytes: 16777217 },
+    { inputPaths: ['a'], outputPath: 'out' },
+    { inputPaths: ['a'], recursive: true },
+    { inputPaths: ['줄\n바꿈'] },
+    { inputPaths: ['\ud800'] },
+    { inputPaths: ['-'] },
+  ]) {
+    const result = await client.callTool({ name: 'read_documents', arguments: args });
+    assert.equal(result.isError, true);
+  }
+  assert.equal(calls.length, 0);
+  const result = await client.callTool({
+    name: 'read_documents',
+    arguments: { inputPaths: ['a', 'b'] },
+  });
+  assert.equal(result.isError, true);
+  assert.match(textOf(result), /partial/);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].concurrency, 1);
+  assert.equal(calls[0].maxOutputBytes, 4194304);
+  assert.equal(result.structuredContent, undefined);
+  assert.deepEqual(errors, []);
+});
+
+test(
+  '공식 MCP read_documents로 실제 Noori 두 포맷을 읽고 부분 실패를 숨기지 않는다',
+  { skip: process.env.HWPJS_READ_MANY_NATIVE !== '1', timeout: 30000 },
+  async (t) => {
+    const h5 = await actualPaths('hwp5');
+    const hx = await actualPaths('hwpx');
+    const { createFiles } = await import('../src/files.mjs');
+    const files = createFiles();
+    const reads = [];
+    const readOnly = {
+      ...files,
+      readInputSnapshot: async (...args) => {
+        reads.push(args[0]);
+        return files.readInputSnapshot(...args);
+      },
+    };
+    for (const name of ['publishNewOutput', 'assertNewOutput', 'createImageDirectory'])
+      readOnly[name] = () => {
+        throw Error('읽기 도구의 쓰기 호출 금지');
+      };
+    const { client, errors } = await wire(t, {
+      wasmPath: h5.wasm,
+      cliDependencies: { files: readOnly },
+    });
+    for (const format of ['text', 'markdown']) {
+      reads.length = 0;
+      const result = await client.callTool({
+        name: 'read_documents',
+        arguments: { inputPaths: [h5.input, hx.input], format, concurrency: 2 },
+      });
+      assert.notEqual(result.isError, true);
+      const text = textOf(result);
+      assert.match(text, /batchStatus: success/);
+      assert.match(text, /보도일시/);
+      assert.match(text, new RegExp('documentSHA256: ' + nativePins.hwp5));
+      assert.match(text, new RegExp('documentSHA256: ' + nativePins.hwpx));
+      assert.equal(reads.filter((path) => path === h5.wasm).length, 1);
+      assert.equal(result.structuredContent, undefined);
+    }
+    const result = await client.callTool({
+      name: 'read_documents',
+      arguments: { inputPaths: [h5.input, hx.input + '.missing', hx.input] },
+    });
+    assert.equal(result.isError, true);
+    assert.match(textOf(result), /batchStatus: partial/);
+    assert.match(textOf(result), /failed: 1/);
+    assert.match(textOf(result), /ReadFailed/);
+    assert.match(textOf(result), /보도일시/);
+    assert.equal(hash(await readFile(h5.input)), nativePins.hwp5);
+    assert.equal(hash(await readFile(hx.input)), nativePins.hwpx);
+    assert.equal(hash(await readFile(h5.wasm)), nativePins.wasm);
+    assert.deepEqual(errors, []);
+  },
+);
+
+test(
+  '실제 MCP 소스 프로세스의 read_documents는 Noori 두 포맷과 부분 실패를 텍스트로 전송한다',
+  { skip: process.env.HWPJS_READ_MANY_NATIVE !== '1', timeout: 30000 },
+  async (t) => {
+    const h5 = await actualPaths('hwp5'),
+      hx = await actualPaths('hwpx');
+    const transport = new StdioClientTransport({
+      command: process.execPath,
+      args: [...childArgs(), '--wasm', h5.wasm],
+      stderr: 'pipe',
+      maxBufferSize: 64 * 1024 * 1024,
+    });
+    let stderr = '';
+    transport.stderr.on('data', (bytes) => {
+      stderr += bytes.toString();
+    });
+    const client = new Client({ name: 'hwpjs-batch-source-test', version: '1.0.0' });
+    const errors = [];
+    client.onerror = (error) => errors.push(error);
+    t.after(async () => {
+      await client.close();
+    });
+    await client.connect(transport);
+    const tools = await client.listTools();
+    assert.ok(tools.tools.some((tool) => tool.name === 'read_documents'));
+    const result = await client.callTool({
+      name: 'read_documents',
+      arguments: { inputPaths: [h5.input, hx.input], format: 'markdown', concurrency: 2 },
+    });
+    assert.notEqual(result.isError, true);
+    assert.equal(result.structuredContent, undefined);
+    assert.match(textOf(result), /^# 여러 문서 읽기/);
+    assert.match(textOf(result), /보도일시/);
+    assert.match(textOf(result), new RegExp('documentSHA256: ' + nativePins.hwp5));
+    assert.match(textOf(result), new RegExp('documentSHA256: ' + nativePins.hwpx));
+    const partial = await client.callTool({
+      name: 'read_documents',
+      arguments: { inputPaths: [h5.input, hx.input + '.missing', hx.input] },
+    });
+    assert.equal(partial.isError, true);
+    assert.match(textOf(partial), /batchStatus: partial/);
+    assert.match(textOf(partial), /ReadFailed/);
+    assert.equal(hash(await readFile(h5.input)), nativePins.hwp5);
+    assert.equal(hash(await readFile(hx.input)), nativePins.hwpx);
+    assert.equal(stderr, '');
+    assert.deepEqual(errors, []);
+  },
+);

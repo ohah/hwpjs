@@ -58,6 +58,33 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 `markdown`도 같은 논리 뷰이며 전용 문서 Markdown 변환기의 서식·이미지 출력과는 구분합니다. 과거 Rust API의 함수 이름·옵션·문자열을 그대로 재현하는 계약은 아닙니다.
 
+### 여러 명시 파일 읽기
+
+`read_documents`는 이번 동봉 CLI·MCP·Skill의 설치 후 실행을 확인한 읽기 전용 도구입니다. 기존 설치분에는 없을 수 있으므로 갱신된 패키지나 Skill의 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인합니다. 현재 공개 브라우저 체험의 단일 문서 실행 증거는 이 배치 도구를 포함하지 않습니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "method": "tools/call",
+  "params": {
+    "name": "read_documents",
+    "arguments": {
+      "inputPaths": ["./one.hwp", "./two.hwpx"],
+      "format": "text",
+      "concurrency": 1,
+      "maxOutputBytes": 4194304
+    }
+  }
+}
+```
+
+`inputPaths`는 명시 파일 1~128개의 목록입니다. `format`은 기본 `text` 또는 `markdown`, `concurrency`는 기본 1·최대 2입니다. 폴더 자동 탐색·자동 쓰기·일괄 편집·이미지 추출·HTML 전용 변환은 수행하지 않습니다.
+
+응답의 text content에는 입력 순서대로 파일별 경로·상태·본문 또는 오류가 남습니다. 일부 실패 시 `isError: true`여도 성공한 문서 본문을 함께 유지하므로 오류 여부만 보고 전체 결과를 버리지 않습니다. 문서 전체 JSON 변환 결과를 반환하지 않습니다.
+
+`maxOutputBytes`는 UTF-8 보고서 예산으로 기본 4 MiB(`4194304`), 상한 16 MiB(`16777216`)입니다. 전체 메모리나 MCP 프로토콜 프레임의 상한이 아닙니다. 본문을 절단하지 않으며, 예산을 넘는 항목은 실패로 보고하고 보고 공간 자체가 부족하면 요청을 거부할 수 있습니다. 제한과 stdout 부분 전달 오류의 의미는 [CLI 배치 읽기](./cli.md#여러-명시-파일-읽기)와 같습니다.
+
 ### 수정 요청 예시
 
 `target`과 `expectedSha256`은 같은 읽기 스냅샷에서 얻은 실제 값으로 바꿉니다. 아래 SHA는 형식 설명용 자리표시자입니다.

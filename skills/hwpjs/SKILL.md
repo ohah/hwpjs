@@ -32,6 +32,21 @@ node "$SKILL_DIR/scripts/hwpjs.mjs" edit ./document.hwpx \
 
 편집 성공 시 출력 경로와 SHA가 표시됩니다. 저장 후 보고 오류가 발생하면 `published: true`가 남을 수 있으므로 무조건 재실행하지 말고 해당 파일부터 확인합니다. 저장본을 다시 읽어 의도한 텍스트를 확인하고 후속 편집은 저장본의 새 ID·SHA를 사용합니다. 표시용 출력의 제어문자 이스케이프(`\uXXXX`)를 원문으로 복사하지 않습니다.
 
+## 여러 명시 파일 읽기
+
+동봉 CLI·MCP·Skill에서 여러 파일 읽기의 설치 후 실행을 확인했습니다. 기존 설치분에는 없을 수 있으므로 갱신된 패키지나 Skill의 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인합니다. 없다면 기존 `read`를 명시 파일별로 사용하며, 임의의 대체 실행 코드를 다운로드하지 않습니다.
+
+```sh
+node "$SKILL_DIR/scripts/hwpjs.mjs" read-many ./one.hwp ./two.hwpx \
+  --format text --concurrency 1 --max-output-bytes 4194304
+```
+
+사용자가 명시한 파일 1~128개만 읽습니다. 기본 동시성은 1, 최대 2이며 결과는 입력 순서로 보고합니다. `text`가 기본이고 `markdown`도 같은 논리 뷰입니다. 폴더 자동 탐색·자동 쓰기·일괄 편집·이미지 추출·HTML 전용 변환으로 확대하지 않습니다.
+
+UTF-8 보고서 출력 예산은 기본 4 MiB, 상한 16 MiB이며 `--max-output-bytes`에 바이트 수를 지정합니다. 전체 메모리 상한이 아닙니다. 본문을 절단하지 않고 예산 초과 항목을 실패로 남기며, 상태를 보고할 공간조차 부족하면 요청을 거부할 수 있습니다.
+
+일부 파일 실패 시 CLI 종료코드가 1이어도 성공한 파일의 본문·SHA·원문 ID를 유지합니다. 후속 편집은 각 파일의 실제 SHA·ID로 개별 수행합니다. stdout 전달 오류는 일부 내용이 이미 전달됐을 수 있으므로 진단을 확인하고 자동 재시도하지 않습니다. 현재 공개 브라우저의 단일 문서 실습은 이 배치 명령을 실행하지 않습니다.
+
 ## 메타데이터와 그림 조회·추출
 
 ```sh
@@ -68,6 +83,7 @@ stdio 서버 명령을 받는 클라이언트에는 실제 설치된 절대 스�
 사용자가 클라이언트 구성을 요청한 경우에만 설정에 추가합니다. 런처는 포함된 MCP 서버로 연결하고 표준 출력은 프로토콜용으로 유지합니다.
 
 - `read_document`: `inputPath`, 선택 사항 `format`(`text` 또는 `markdown`).
+- `read_documents`: `inputPaths`, 선택 사항 `format`, `concurrency`, `maxOutputBytes`. 명시 파일·동시성·출력 예산은 위 배치 읽기와 같으며 입력 순서의 text content를 반환합니다. 일부 실패 시 `isError: true`여도 성공 본문을 함께 유지합니다. MCP 프레임 자체는 본문 출력 예산과 구분합니다.
 - `edit_document`: `inputPath`, `outputPath`, `target`, `expectedSha256`, `findText`, `replacement`, 선택 사항 `allowStaleLayout`.
 - `get_document_info`: `inputPath`, 선택 사항 `expectedSha256`.
 - `list_document_images`: `inputPath`, 선택 사항 `expectedSha256`.

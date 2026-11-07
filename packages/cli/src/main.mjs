@@ -1,6 +1,8 @@
 import { parseArguments, ArgumentsError, USAGE } from './arguments.mjs';
 import * as defaultFiles from './files.mjs';
 import { join } from 'node:path';
+import { readDocuments } from './batch-read.mjs';
+import { readDocumentOperation, renderBatchReadReport } from './read-operation.mjs';
 
 // Scalar metadata must never inject additional terminal lines or C0 controls.
 const scalar = (value) =>
@@ -130,6 +132,51 @@ export async function runCLI(argv, dependencies = {}) {
       await io.stdout.write(USAGE);
       return 0;
     }
+    const loadWasm = async () => {
+      const wasmPath = files.resolveWasmPath(options.wasm, dependencies.mainModuleURL);
+      try {
+        return (await files.readInputSnapshot(wasmPath, { maxBytes: defaultFiles.MAX_WASM_BYTES }))
+          .bytes;
+      } catch (cause) {
+        if (options.wasm === undefined && cause.code === 'ENOENT')
+          throw Error('ExplicitWasmRequired: pass --wasm PATH', { cause });
+        throw cause;
+      }
+    };
+    if (options.command === 'read-many') {
+      // Markdown 들여쓰기·파일별 제목 등 보고서 장식은 내부 JSON 예산과 별도로 예약합니다.
+      const reportOverhead = 1024 + 512 * options.inputPaths.length;
+      if (options.maxOutputBytes <= reportOverhead)
+        throw Object.assign(new Error('파일별 결과를 보고하기에 출력 예산이 부족합니다.'), {
+          code: 'OutputBudgetTooSmall',
+        });
+      const engine = dependencies.engine ?? (await import('./engine.mjs'));
+      const renderDocument =
+        dependencies.renderDocument ?? (await import('./render.mjs')).renderDocument;
+      let wasmPromise;
+      // Promise를 공유하므로 동시 작업도 WASM 파일은 최대 한 번만 읽습니다.
+      const loadOnce = () => (wasmPromise ??= loadWasm());
+      const batch = await readDocuments({
+        inputPaths: options.inputPaths,
+        concurrency: options.concurrency,
+        maxOutputBytes: options.maxOutputBytes - reportOverhead,
+        readOne: ({ inputPath }) =>
+          readDocumentOperation(
+            { inputPath, format: options.format },
+            { files, engine, renderDocument, loadWasm: loadOnce },
+          ),
+      });
+      try {
+        const text = renderBatchReadReport(batch, options);
+        await io.stdout.write(text);
+      } catch (cause) {
+        // 출력 전달은 이미 일부 진행됐을 수 있습니다. 자동 재시도하거나 읽기를 취소했다고 하지 않습니다.
+        throw Object.assign(new Error(cause?.message ?? 'ReadManyOutputFailed', { cause }), {
+          batchSummary: batch.summary,
+        });
+      }
+      return batch.summary.failed ? 1 : 0;
+    }
     const input = await files.readInputSnapshot(options.input, {
       maxBytes: defaultFiles.MAX_DOCUMENT_BYTES,
     });
@@ -139,15 +186,7 @@ export async function runCLI(argv, dependencies = {}) {
       options.command === 'edit'
         ? await files.assertNewOutput({ input, outputPath: options.output })
         : undefined;
-    const wasmPath = files.resolveWasmPath(options.wasm, dependencies.mainModuleURL);
-    let wasm;
-    try {
-      wasm = await files.readInputSnapshot(wasmPath, { maxBytes: defaultFiles.MAX_WASM_BYTES });
-    } catch (cause) {
-      if (options.wasm === undefined && cause.code === 'ENOENT')
-        throw Error('ExplicitWasmRequired: pass --wasm PATH', { cause });
-      throw cause;
-    }
+    const wasm = { bytes: await loadWasm() };
     if (options.command === 'info') {
       const inspect =
         dependencies.inspectDocument ?? (await import('./inspect-document.mjs')).inspectDocument;
@@ -286,18 +325,13 @@ export async function runCLI(argv, dependencies = {}) {
       }
     }
     if (options.command === 'read') {
-      const result = await engine.read({ bytes: input.bytes, wasm: wasm.bytes });
-      engineFormat(result.format);
-      if (
-        result.model?.version !== 1 ||
-        result.model.format !== result.format ||
-        result.model.sourceSha256 !== input.sha256
-      )
-        throw Error('InvalidEngineModel');
       const renderDocument =
         dependencies.renderDocument ?? (await import('./render.mjs')).renderDocument;
-      const body = await renderDocument(result.model, { format: options.format });
-      if (typeof body !== 'string' || !body.isWellFormed()) throw Error('InvalidRenderedDocument');
+      const result = await readDocumentOperation(
+        { inputSnapshot: input, wasm: wasm.bytes, format: options.format },
+        { files, engine, renderDocument },
+      );
+      const body = result.text;
       await io.stdout.write(
         `format: ${result.format}\ndocumentSHA256: ${input.sha256}\n${body}${body.endsWith('\n') ? '' : '\n'}`,
       );
@@ -331,6 +365,11 @@ export async function runCLI(argv, dependencies = {}) {
     try {
       const diagnostic =
         line('error', primary) +
+        (cause?.batchSummary
+          ? line('batchReadSucceeded', cause.batchSummary.readSucceeded) +
+            line('batchReadFailed', cause.batchSummary.readFailed) +
+            line('batchDelivery', 'failed-or-partial')
+          : '') +
         line('published', Boolean(published) || imagePublished.length > 0) +
         (directory || imagePublished.length
           ? line('publishedImageCount', imagePublished.length)

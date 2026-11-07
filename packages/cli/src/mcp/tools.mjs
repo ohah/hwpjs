@@ -1,5 +1,6 @@
 import * as z from 'zod/v4';
 import { runCLI } from '../main.mjs';
+import { BATCH_READ_LIMITS } from '../batch-read.mjs';
 
 /** Only adapts MCP fields to the existing CLI. Parser, model, Native and IO
  * admission remain owned by runCLI. Paths have the CLI's local-path semantics.
@@ -46,6 +47,16 @@ export function documentTools({
       };
     }
   };
+  const batchPath = z
+    .string()
+    .min(1)
+    .max(BATCH_READ_LIMITS.maxInputPathUnits)
+    .refine((value) => {
+      if (value === '-' || !value.isWellFormed()) return false;
+      for (let index = 0; index < value.length; index++)
+        if (value.charCodeAt(index) < 32 || value.charCodeAt(index) === 127) return false;
+      return true;
+    }, '명시한 파일 경로가 올바르지 않습니다.');
   return [
     {
       name: 'read_document',
@@ -199,6 +210,57 @@ export function documentTools({
           ],
           { imageOutputMode: 'file' },
         ),
+    },
+    {
+      name: 'read_documents',
+      config: {
+        title: '여러 HWP/HWPX 문서 읽기',
+        description:
+          '명시한 파일 1~128개를 기존 공통 엔진으로 읽어 입력 순서의 텍스트/Markdown으로 보고합니다. 기본 동시성1·최대2이며 일부 실패도 숨기지 않습니다. 폴더 탐색·편집·HTML·문서 JSON 출력은 제공하지 않습니다.',
+        inputSchema: z.strictObject({
+          inputPaths: z
+            .array(batchPath)
+            .min(1)
+            .max(BATCH_READ_LIMITS.maxInputs)
+            .refine((paths) => {
+              const seen = new Map();
+              for (const path of paths) {
+                if (seen.has(path)) return false;
+                seen.set(path, true);
+              }
+              return true;
+            }, '중복된 입력 경로가 있습니다.'),
+          format: z.enum(['text', 'markdown']).default('text'),
+          concurrency: z.number().int().min(1).max(BATCH_READ_LIMITS.maxConcurrency).default(1),
+          maxOutputBytes: z
+            .number()
+            .int()
+            .min(1)
+            .max(BATCH_READ_LIMITS.maxOutputBytes)
+            .default(BATCH_READ_LIMITS.defaultOutputBytes),
+        }),
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: true,
+        },
+      },
+      invoke: ({
+        inputPaths,
+        format = 'text',
+        concurrency = 1,
+        maxOutputBytes = BATCH_READ_LIMITS.defaultOutputBytes,
+      }) =>
+        invoke([
+          'read-many',
+          `--format=${format}`,
+          `--concurrency=${concurrency}`,
+          `--max-output-bytes=${maxOutputBytes}`,
+          ...wasm,
+          '--',
+          ...inputPaths,
+        ]),
     },
   ];
 }

@@ -10652,7 +10652,7 @@ __export(exports_engine, {
 function byteInput(value, name) {
   if (!(value instanceof Uint8Array))
     throw new TypeError(`Expected${name}Uint8Array`);
-  if (!value.byteLength || value.byteLength > MAX_INPUT_BYTES)
+  if (!value.byteLength || value.byteLength > MAX_INPUT_BYTES2)
     throw new RangeError(`${name}LimitExceeded`);
   return Uint8Array.from(value);
 }
@@ -10807,413 +10807,14 @@ async function edit({
     document.close();
   }
 }
-var MAX_INPUT_BYTES, MAX_OUTPUT_BYTES;
+var MAX_INPUT_BYTES2, MAX_OUTPUT_BYTES;
 var init_engine = __esm(() => {
   init_document_format();
   init_hwp5_editor();
   init_hwpx_editor();
   init_literal_match();
-  MAX_INPUT_BYTES = 64 * 1024 * 1024;
-  MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
-});
-
-// packages/cli/src/inspect-document.mjs
-var exports_inspect_document = {};
-__export(exports_inspect_document, {
-  inspectDocument: () => inspectDocument
-});
-function failedObservation(diagnostics, method, error, source) {
-  diagnostics.push(diagnostic("ObservationUnavailable", `${method}: ${error?.message ?? "UnknownError"}`, source));
-  return unknown("NativeObservationFailed");
-}
-function fileVersion(document, diagnostics) {
-  if (document.format !== "hwp5" || typeof document.sdk.fileVersion !== "function")
-    return unsupported("FileVersionNotExposedBySdk");
-  try {
-    const value = document.sdk.fileVersion();
-    if (!uint24(value) || value === 0)
-      throw Error("InvalidFileVersionObservation");
-    return observed(value, "sdk.fileVersion");
-  } catch (error) {
-    return failedObservation(diagnostics, "fileVersion", error);
-  }
-}
-function textSourceProtection(document, diagnostics) {
-  const sdk = document.sdk;
-  if (document.format !== "hwp5" || typeof sdk.textSourceProtection !== "function")
-    return unsupported("TextSourceProtectionNotExposedBySdk");
-  try {
-    if (typeof sdk.supportsTextSourceProtection === "function") {
-      const supported = sdk.supportsTextSourceProtection();
-      if (supported === false)
-        return unsupported("TextSourceProtectionAbiUnavailable");
-      if (supported !== true)
-        throw Error("InvalidProtectionCapabilityObservation");
-    }
-  } catch (error) {
-    return failedObservation(diagnostics, "supportsTextSourceProtection", error);
-  }
-  if (typeof sdk.paragraphCount !== "function")
-    return unsupported("ProtectionParagraphCountNotExposedBySdk");
-  const sections = [];
-  let paragraphs = 0;
-  for (let section = 0;section < document.sectionCount; section++) {
-    try {
-      const count = sdk.paragraphCount(section);
-      if (!uint24(count) || count > 1e5)
-        throw Error("InvalidParagraphCountObservation");
-      paragraphs += count;
-      if (paragraphs > LIMITS.maxBlocks) {
-        diagnostics.push(diagnostic("ObservationLimitExceeded", "textSourceProtection", { section }));
-        return unknown("ProtectionObservationLimitExceeded");
-      }
-      const value = validateHwp5TextSourceProtection(sdk.textSourceProtection(section), count);
-      sections.push({
-        section,
-        paragraphCount: count,
-        protectedParagraphCount: value.protected_paragraphs.reduce((total, bit) => total + Number(bit), 0),
-        mode: value.mode,
-        retainedHeaders: value.retained_headers
-      });
-    } catch (error) {
-      return failedObservation(diagnostics, "textSourceProtection", error, { section });
-    }
-  }
-  return observed(sections, "sdk.paragraphCount + sdk.textSourceProtection");
-}
-async function inspectDocument({ bytes, wasm, expectedSha256 } = {}, { openDocument: openDocument2 = openDocument } = {}) {
-  if (!(bytes instanceof Uint8Array))
-    throw new TypeError("ExpectedDocumentUint8Array");
-  if (!bytes.byteLength || bytes.byteLength > MAX_INPUT_BYTES2)
-    throw new RangeError("DocumentLimitExceeded");
-  if (expectedSha256 !== undefined && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256)))
-    throw new TypeError("InvalidExpectedSha256");
-  if (typeof openDocument2 !== "function")
-    throw new TypeError("InvalidDocumentOpener");
-  if (!globalThis.crypto?.subtle)
-    throw Error("WebCryptoUnavailable");
-  const sourceByteLength = bytes.byteLength;
-  const snapshot = Uint8Array.from(bytes);
-  const format = detectDocumentFormat(snapshot);
-  const digest = globalThis.crypto.subtle.digest("SHA-256", snapshot).then((value) => ({ value }), (error) => ({ error }));
-  const document = await openDocument2({ bytes: snapshot, wasm, expectedSha256 });
-  let result;
-  let failure;
-  let failed = false;
-  try {
-    const hash = await digest;
-    if ("error" in hash)
-      throw hash.error;
-    const sourceSha256 = Array.from(new Uint8Array(hash.value), (byte) => byte.toString(16).padStart(2, "0")).join("");
-    if (!document || typeof document.close !== "function" || !document.sdk || typeof document.sdk !== "object")
-      throw Error("InvalidOpenedDocument");
-    if (document.format !== format)
-      throw Error("DocumentFormatMismatch");
-    if (document.sourceSha256 !== sourceSha256)
-      throw Error("DocumentSnapshotSha256Mismatch");
-    if (expectedSha256 !== undefined && sourceSha256 !== expectedSha256)
-      throw Error("SourceSha256Mismatch");
-    if (!Number.isInteger(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096)
-      throw new RangeError("SectionLimitExceeded");
-    const diagnostics = [];
-    result = {
-      schemaVersion: 1,
-      format,
-      sourceSha256,
-      sourceByteLength,
-      sectionCount: document.sectionCount,
-      fileVersion: fileVersion(document, diagnostics),
-      security: {
-        encryption: unknown("EncryptionNotExposedBySdk"),
-        passwordProtection: unknown("PasswordProtectionNotExposedBySdk"),
-        digitalSignature: unknown("DigitalSignatureNotExposedBySdk")
-      },
-      editing: {
-        documentEditable: unknown("RequiresNativeValidationForEachTargetAndOperation"),
-        textSourceProtection: textSourceProtection(document, diagnostics)
-      },
-      inspection: {
-        scope: "native-open-and-metadata",
-        performance: "not-measured",
-        documentModelCollected: false,
-        contentTotals: unknown("ParagraphTableImageAndPageTotalsNotCollected")
-      },
-      diagnostics
-    };
-  } catch (error) {
-    failed = true;
-    failure = error;
-  }
-  try {
-    if (typeof document?.close === "function")
-      await document.close();
-  } catch (error) {
-    if (failed)
-      throw new AggregateError([failure, error], "DocumentInspectionAndCloseFailed", {
-        cause: failure
-      });
-    throw new Error("DocumentInspectionCloseFailed", { cause: error });
-  }
-  if (failed)
-    throw failure;
-  return result;
-}
-var MAX_INPUT_BYTES2, observed = (value, source) => ({ status: "observed", value, source }), unknown = (reason) => ({ status: "unknown", value: null, reason }), unsupported = (reason) => ({ status: "unsupported", value: null, reason });
-var init_inspect_document = __esm(() => {
-  init_engine();
-  init_document_format();
-  init_common();
   MAX_INPUT_BYTES2 = 64 * 1024 * 1024;
-});
-
-// packages/cli/src/document-images.mjs
-var exports_document_images = {};
-__export(exports_document_images, {
-  createDocumentImages: () => createDocumentImages
-});
-function identify(bytes) {
-  const at = (offset, text) => [...text].every((c, i) => bytes[offset + i] === c.charCodeAt(0));
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  let type;
-  if (bytes.length >= 33 && bytes[0] === 137 && at(1, `PNG\r
-\x1A
-`) && view.getUint32(8) === 13 && at(12, "IHDR") && view.getUint32(16) > 0 && view.getUint32(20) > 0 && bytes[26] === 0 && bytes[27] === 0 && bytes[28] <= 1 && { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] }[bytes[25]]?.includes(bytes[24]))
-    type = ["image/png", ".png"];
-  else if (bytes.length >= 13 && (at(0, "GIF87a") || at(0, "GIF89a")) && view.getUint16(6, true) > 0 && view.getUint16(8, true) > 0)
-    type = ["image/gif", ".gif"];
-  else if (bytes.length >= 54 && at(0, "BM") && view.getUint32(2, true) === bytes.length && view.getUint32(10, true) >= 54 && view.getUint32(10, true) <= bytes.length && view.getUint32(14, true) >= 40 && view.getUint32(14, true) <= bytes.length - 14 && view.getInt32(18, true) > 0 && view.getInt32(22, true) !== 0 && view.getUint16(26, true) === 1)
-    type = ["image/bmp", ".bmp"];
-  else if (bytes.length >= 20 && at(0, "RIFF") && at(8, "WEBP") && view.getUint32(4, true) === bytes.length - 8 && ["VP8 ", "VP8L", "VP8X"].some((tag) => at(12, tag)) && view.getUint32(16, true) <= bytes.length - 20)
-    type = ["image/webp", ".webp"];
-  else if (bytes.length >= 12 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 && bytes.at(-2) === 255 && bytes.at(-1) === 217) {
-    let offset = 2, markers = 0;
-    while (offset + 4 <= bytes.length && markers++ < 4096) {
-      if (bytes[offset] !== 255)
-        break;
-      const marker = bytes[offset + 1], length = view.getUint16(offset + 2);
-      if (length < 2 || length > bytes.length - offset - 2)
-        break;
-      if ([192, 193, 194, 195, 197, 198, 199, 201, 202, 203, 205, 206, 207].includes(marker)) {
-        if (length >= 8 && view.getUint16(offset + 5) > 0 && view.getUint16(offset + 7) > 0)
-          type = ["image/jpeg", ".jpg"];
-        break;
-      }
-      if (marker === 218 || marker === 217)
-        break;
-      offset += 2 + length;
-    }
-  }
-  return type ? {
-    mime: type[0],
-    extension: type[1],
-    recognized: true,
-    validation: "signature-and-header-only"
-  } : {
-    mime: "application/octet-stream",
-    extension: ".bin",
-    recognized: false,
-    validation: "unrecognized-or-unsupported-header"
-  };
-}
-function createDocumentImages({
-  sdk,
-  format,
-  sourceSha256,
-  sectionCount,
-  limits = {}
-} = {}) {
-  if (!["hwp5", "hwpx"].includes(format))
-    fail3("InvalidDocumentFormat");
-  if (!digest(sourceSha256))
-    fail3("InvalidSourceSha256");
-  if (!sdk || typeof sdk !== "object")
-    fail3("MissingSdk");
-  if (!Number.isInteger(sectionCount) || sectionCount < 1 || sectionCount > 4096)
-    fail3("SectionLimitExceeded");
-  if (!limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((key) => !Object.hasOwn(DOCUMENT_IMAGE_LIMITS, key)))
-    fail3("InvalidImageLimits");
-  const budget = { ...DOCUMENT_IMAGE_LIMITS, ...limits };
-  for (const [key, value] of Object.entries(budget))
-    if (!Number.isSafeInteger(value) || value < 1 || value > { maxImages: 4096, maxBytes: 32 * 1024 * 1024, maxTotalBytes: 64 * 1024 * 1024 }[key])
-      fail3("InvalidImageLimits");
-  const rows = new Map, resources = new Map;
-  let totalBytes = 0, closed = false, borrowed = sdk;
-  const ready = () => {
-    if (closed)
-      fail3("DocumentImagesClosed");
-  };
-  for (let section = 0;section < sectionCount; section++) {
-    let sites;
-    const inventoryMethod = format === "hwp5" ? "pictureSources" : "pictureSites";
-    if (typeof sdk[inventoryMethod] !== "function")
-      throw new DocumentImageError("ImageInventoryUnavailable", "unsupported", "PictureInventoryApiUnavailable");
-    try {
-      sites = format === "hwp5" ? sdk.pictureSources(section, "base73") : sdk.pictureSites(section);
-    } catch (error) {
-      throw new DocumentImageError("ImageInventoryUnavailable", /AbiUnavailable|Unsupported/.test(error?.message ?? "") ? "unsupported" : "failed");
-    }
-    if (!Array.isArray(sites))
-      fail3("InvalidImageInventory");
-    if (sites.length > budget.maxImages - rows.size)
-      fail3("ImageCountLimitExceeded");
-    if (format === "hwp5")
-      validateHwp5PictureSources(sites);
-    for (const row of sites) {
-      const node = format === "hwp5" ? row.component_node : row?.pictureNode;
-      if (!uint25(node))
-        fail3("InvalidImageIdentity");
-      if (format === "hwpx" && (!siteStates.has(row.state) || !(row.paragraph === null || uint25(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint25(row.anchorUnit))))
-        fail3("InvalidImageInventory");
-      const id = `${format}:s${section}:i${node}`;
-      if (rows.has(id))
-        fail3("DuplicateImageIdentity");
-      const source = format === "hwp5" ? {
-        section,
-        pictureNode: node,
-        recordNode: row.picture_node,
-        ownerNode: row.owner_node,
-        resourceOrdinal: row.bin_data_id
-      } : { section, pictureNode: node, paragraph: row.paragraph, anchorUnit: row.anchorUnit };
-      const resourceKey = format === "hwp5" ? `docinfo:${row.bin_data_id}` : `source:${section}:${node}`;
-      const entry = {
-        id,
-        source,
-        resourceKey,
-        status: "unread",
-        reason: "PayloadNotRead",
-        mime: null,
-        extension: null,
-        recognized: null,
-        validation: "not-read",
-        byteLength: null
-      };
-      rows.set(id, entry);
-      if (!resources.has(resourceKey))
-        resources.set(resourceKey, { refs: [], bytes: null, error: null });
-      resources.get(resourceKey).refs.push(entry);
-    }
-  }
-  sdk = null;
-  const copy = (entry) => ({ ...entry, source: { ...entry.source } });
-  return {
-    list() {
-      ready();
-      return {
-        version: 1,
-        format,
-        sourceSha256,
-        images: [...rows.values()].map(copy),
-        limits: { ...budget },
-        budget: { retainedUniqueBytes: totalBytes, resourceKeys: resources.size },
-        coverage: {
-          scope: "section-picture-sites",
-          sectionCount,
-          references: rows.size,
-          inventoryComplete: true,
-          payloadsRead: [...rows.values()].filter((row) => row.status === "ready").length,
-          payloadsFailed: [...rows.values()].filter((row) => row.status === "failed" || row.status === "unsupported").length,
-          resourceIdentity: format === "hwp5" ? "docinfo-ordinal" : "picture-source-node",
-          masterPagesIncluded: false,
-          imageBrushesIncluded: false
-        },
-        nativePayloadLimitBytes: format === "hwp5" ? budget.maxBytes : 64 * 1024 * 1024,
-        jsByteLimitTiming: format === "hwp5" ? "native-decoded-payload-limit" : "after-native-payload-copy"
-      };
-    },
-    read(id, options) {
-      ready();
-      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((k) => k !== "sourceSha256") || !digest(options.sourceSha256))
-        fail3("InvalidSourceSha256");
-      if (options.sourceSha256 !== sourceSha256)
-        fail3("SourceSha256Mismatch");
-      if (typeof id !== "string" || id.length > 80 || !/^(hwp5|hwpx):s(0|[1-9][0-9]*):i(0|[1-9][0-9]*)$/.test(id))
-        fail3("InvalidImageId");
-      const entry = rows.get(id);
-      if (!entry)
-        fail3("UnknownImageId");
-      const resource = resources.get(entry.resourceKey);
-      if (!resource.bytes && !resource.error) {
-        try {
-          const bytesMethod = format === "hwp5" ? "binaryResource" : "pictureBytes";
-          if (typeof borrowed[bytesMethod] !== "function")
-            throw new Error(format === "hwp5" ? "Hwp5BinaryResourceAbiUnavailable" : "HwpxPictureBytesAbiUnavailable");
-          const result = format === "hwp5" ? borrowed.binaryResource(entry.source.resourceOrdinal, { maxBytes: budget.maxBytes }) : borrowed.pictureBytes(entry.source.section, entry.source.pictureNode);
-          if (!(result instanceof Uint8Array))
-            fail3("InvalidImageBytes");
-          if (!result.length)
-            fail3("EmptyImageBytes");
-          if (result.length > budget.maxBytes)
-            fail3("ImageBytesLimitExceeded");
-          if (result.length > budget.maxTotalBytes - totalBytes)
-            fail3("ImageTotalBytesLimitExceeded");
-          const bytes = Uint8Array.from(result), metadata = identify(bytes);
-          resource.bytes = bytes;
-          totalBytes += bytes.length;
-          for (const ref of resource.refs)
-            Object.assign(ref, metadata, {
-              status: "ready",
-              reason: metadata.recognized ? null : "UnrecognizedOrUnsupportedImageHeader",
-              byteLength: bytes.length
-            });
-        } catch (error) {
-          const code = error instanceof DocumentImageError ? error.code : unsupported2.has(error?.message) ? error.message : error?.message === "LimitExceeded" ? "ImageBytesLimitExceeded" : "NativeImageReadFailed";
-          const status = unsupported2.has(code) ? "unsupported" : "failed";
-          resource.error = { code, status };
-          for (const ref of resource.refs)
-            Object.assign(ref, { status, reason: code });
-        }
-      }
-      if (resource.error)
-        throw new DocumentImageError(resource.error.code, resource.error.status);
-      return { ...copy(entry), sourceSha256, bytes: Uint8Array.from(resource.bytes) };
-    },
-    close() {
-      closed = true;
-      borrowed = null;
-      resources.clear();
-      rows.clear();
-      totalBytes = 0;
-    }
-  };
-}
-var DOCUMENT_IMAGE_LIMITS, uint25 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295, digest = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s), siteStates, unsupported2, DocumentImageError, fail3 = (code) => {
-  throw new DocumentImageError(code);
-};
-var init_document_images = __esm(() => {
-  DOCUMENT_IMAGE_LIMITS = Object.freeze({
-    maxImages: 4096,
-    maxBytes: 8 * 1024 * 1024,
-    maxTotalBytes: 32 * 1024 * 1024
-  });
-  siteStates = new Set([
-    "located",
-    "conditional",
-    "unsupported_anchor",
-    "missing_host",
-    "ambiguous_host"
-  ]);
-  unsupported2 = new Set([
-    "ExternalLink",
-    "ExternalPictureImage",
-    "UnsupportedBinDataType",
-    "AbsentBinaryResource",
-    "MissingPictureImage",
-    "UnsupportedPictureDisplayHost",
-    "UnsupportedPictureDisplayNode",
-    "UnsupportedPictureSwitchHost",
-    "UnsupportedPictureAnchor",
-    "Hwp5BinaryResourceAbiUnavailable",
-    "HwpxPictureBytesAbiUnavailable"
-  ]);
-  DocumentImageError = class DocumentImageError extends Error {
-    constructor(code, status = "failed", reason = code) {
-      super(code);
-      this.name = "DocumentImageError";
-      this.code = code;
-      this.status = status;
-      this.reason = reason;
-    }
-  };
+  MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
 });
 
 // packages/cli/src/render.mjs
@@ -11501,6 +11102,405 @@ var init_render = __esm(() => {
   MARKDOWN = /[\\`*_{}[\]()#+.!|<>~-]/gu;
 });
 
+// packages/cli/src/inspect-document.mjs
+var exports_inspect_document = {};
+__export(exports_inspect_document, {
+  inspectDocument: () => inspectDocument
+});
+function failedObservation(diagnostics, method, error, source) {
+  diagnostics.push(diagnostic("ObservationUnavailable", `${method}: ${error?.message ?? "UnknownError"}`, source));
+  return unknown("NativeObservationFailed");
+}
+function fileVersion(document, diagnostics) {
+  if (document.format !== "hwp5" || typeof document.sdk.fileVersion !== "function")
+    return unsupported("FileVersionNotExposedBySdk");
+  try {
+    const value = document.sdk.fileVersion();
+    if (!uint24(value) || value === 0)
+      throw Error("InvalidFileVersionObservation");
+    return observed(value, "sdk.fileVersion");
+  } catch (error) {
+    return failedObservation(diagnostics, "fileVersion", error);
+  }
+}
+function textSourceProtection(document, diagnostics) {
+  const sdk = document.sdk;
+  if (document.format !== "hwp5" || typeof sdk.textSourceProtection !== "function")
+    return unsupported("TextSourceProtectionNotExposedBySdk");
+  try {
+    if (typeof sdk.supportsTextSourceProtection === "function") {
+      const supported = sdk.supportsTextSourceProtection();
+      if (supported === false)
+        return unsupported("TextSourceProtectionAbiUnavailable");
+      if (supported !== true)
+        throw Error("InvalidProtectionCapabilityObservation");
+    }
+  } catch (error) {
+    return failedObservation(diagnostics, "supportsTextSourceProtection", error);
+  }
+  if (typeof sdk.paragraphCount !== "function")
+    return unsupported("ProtectionParagraphCountNotExposedBySdk");
+  const sections = [];
+  let paragraphs = 0;
+  for (let section = 0;section < document.sectionCount; section++) {
+    try {
+      const count = sdk.paragraphCount(section);
+      if (!uint24(count) || count > 1e5)
+        throw Error("InvalidParagraphCountObservation");
+      paragraphs += count;
+      if (paragraphs > LIMITS.maxBlocks) {
+        diagnostics.push(diagnostic("ObservationLimitExceeded", "textSourceProtection", { section }));
+        return unknown("ProtectionObservationLimitExceeded");
+      }
+      const value = validateHwp5TextSourceProtection(sdk.textSourceProtection(section), count);
+      sections.push({
+        section,
+        paragraphCount: count,
+        protectedParagraphCount: value.protected_paragraphs.reduce((total, bit) => total + Number(bit), 0),
+        mode: value.mode,
+        retainedHeaders: value.retained_headers
+      });
+    } catch (error) {
+      return failedObservation(diagnostics, "textSourceProtection", error, { section });
+    }
+  }
+  return observed(sections, "sdk.paragraphCount + sdk.textSourceProtection");
+}
+async function inspectDocument({ bytes, wasm, expectedSha256 } = {}, { openDocument: openDocument2 = openDocument } = {}) {
+  if (!(bytes instanceof Uint8Array))
+    throw new TypeError("ExpectedDocumentUint8Array");
+  if (!bytes.byteLength || bytes.byteLength > MAX_INPUT_BYTES3)
+    throw new RangeError("DocumentLimitExceeded");
+  if (expectedSha256 !== undefined && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256)))
+    throw new TypeError("InvalidExpectedSha256");
+  if (typeof openDocument2 !== "function")
+    throw new TypeError("InvalidDocumentOpener");
+  if (!globalThis.crypto?.subtle)
+    throw Error("WebCryptoUnavailable");
+  const sourceByteLength = bytes.byteLength;
+  const snapshot = Uint8Array.from(bytes);
+  const format = detectDocumentFormat(snapshot);
+  const digest = globalThis.crypto.subtle.digest("SHA-256", snapshot).then((value) => ({ value }), (error) => ({ error }));
+  const document = await openDocument2({ bytes: snapshot, wasm, expectedSha256 });
+  let result;
+  let failure;
+  let failed = false;
+  try {
+    const hash = await digest;
+    if ("error" in hash)
+      throw hash.error;
+    const sourceSha256 = Array.from(new Uint8Array(hash.value), (byte) => byte.toString(16).padStart(2, "0")).join("");
+    if (!document || typeof document.close !== "function" || !document.sdk || typeof document.sdk !== "object")
+      throw Error("InvalidOpenedDocument");
+    if (document.format !== format)
+      throw Error("DocumentFormatMismatch");
+    if (document.sourceSha256 !== sourceSha256)
+      throw Error("DocumentSnapshotSha256Mismatch");
+    if (expectedSha256 !== undefined && sourceSha256 !== expectedSha256)
+      throw Error("SourceSha256Mismatch");
+    if (!Number.isInteger(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096)
+      throw new RangeError("SectionLimitExceeded");
+    const diagnostics = [];
+    result = {
+      schemaVersion: 1,
+      format,
+      sourceSha256,
+      sourceByteLength,
+      sectionCount: document.sectionCount,
+      fileVersion: fileVersion(document, diagnostics),
+      security: {
+        encryption: unknown("EncryptionNotExposedBySdk"),
+        passwordProtection: unknown("PasswordProtectionNotExposedBySdk"),
+        digitalSignature: unknown("DigitalSignatureNotExposedBySdk")
+      },
+      editing: {
+        documentEditable: unknown("RequiresNativeValidationForEachTargetAndOperation"),
+        textSourceProtection: textSourceProtection(document, diagnostics)
+      },
+      inspection: {
+        scope: "native-open-and-metadata",
+        performance: "not-measured",
+        documentModelCollected: false,
+        contentTotals: unknown("ParagraphTableImageAndPageTotalsNotCollected")
+      },
+      diagnostics
+    };
+  } catch (error) {
+    failed = true;
+    failure = error;
+  }
+  try {
+    if (typeof document?.close === "function")
+      await document.close();
+  } catch (error) {
+    if (failed)
+      throw new AggregateError([failure, error], "DocumentInspectionAndCloseFailed", {
+        cause: failure
+      });
+    throw new Error("DocumentInspectionCloseFailed", { cause: error });
+  }
+  if (failed)
+    throw failure;
+  return result;
+}
+var MAX_INPUT_BYTES3, observed = (value, source) => ({ status: "observed", value, source }), unknown = (reason) => ({ status: "unknown", value: null, reason }), unsupported = (reason) => ({ status: "unsupported", value: null, reason });
+var init_inspect_document = __esm(() => {
+  init_engine();
+  init_document_format();
+  init_common();
+  MAX_INPUT_BYTES3 = 64 * 1024 * 1024;
+});
+
+// packages/cli/src/document-images.mjs
+var exports_document_images = {};
+__export(exports_document_images, {
+  createDocumentImages: () => createDocumentImages
+});
+function identify(bytes) {
+  const at = (offset, text) => [...text].every((c, i) => bytes[offset + i] === c.charCodeAt(0));
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let type;
+  if (bytes.length >= 33 && bytes[0] === 137 && at(1, `PNG\r
+\x1A
+`) && view.getUint32(8) === 13 && at(12, "IHDR") && view.getUint32(16) > 0 && view.getUint32(20) > 0 && bytes[26] === 0 && bytes[27] === 0 && bytes[28] <= 1 && { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] }[bytes[25]]?.includes(bytes[24]))
+    type = ["image/png", ".png"];
+  else if (bytes.length >= 13 && (at(0, "GIF87a") || at(0, "GIF89a")) && view.getUint16(6, true) > 0 && view.getUint16(8, true) > 0)
+    type = ["image/gif", ".gif"];
+  else if (bytes.length >= 54 && at(0, "BM") && view.getUint32(2, true) === bytes.length && view.getUint32(10, true) >= 54 && view.getUint32(10, true) <= bytes.length && view.getUint32(14, true) >= 40 && view.getUint32(14, true) <= bytes.length - 14 && view.getInt32(18, true) > 0 && view.getInt32(22, true) !== 0 && view.getUint16(26, true) === 1)
+    type = ["image/bmp", ".bmp"];
+  else if (bytes.length >= 20 && at(0, "RIFF") && at(8, "WEBP") && view.getUint32(4, true) === bytes.length - 8 && ["VP8 ", "VP8L", "VP8X"].some((tag) => at(12, tag)) && view.getUint32(16, true) <= bytes.length - 20)
+    type = ["image/webp", ".webp"];
+  else if (bytes.length >= 12 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 && bytes.at(-2) === 255 && bytes.at(-1) === 217) {
+    let offset = 2, markers = 0;
+    while (offset + 4 <= bytes.length && markers++ < 4096) {
+      if (bytes[offset] !== 255)
+        break;
+      const marker = bytes[offset + 1], length = view.getUint16(offset + 2);
+      if (length < 2 || length > bytes.length - offset - 2)
+        break;
+      if ([192, 193, 194, 195, 197, 198, 199, 201, 202, 203, 205, 206, 207].includes(marker)) {
+        if (length >= 8 && view.getUint16(offset + 5) > 0 && view.getUint16(offset + 7) > 0)
+          type = ["image/jpeg", ".jpg"];
+        break;
+      }
+      if (marker === 218 || marker === 217)
+        break;
+      offset += 2 + length;
+    }
+  }
+  return type ? {
+    mime: type[0],
+    extension: type[1],
+    recognized: true,
+    validation: "signature-and-header-only"
+  } : {
+    mime: "application/octet-stream",
+    extension: ".bin",
+    recognized: false,
+    validation: "unrecognized-or-unsupported-header"
+  };
+}
+function createDocumentImages({
+  sdk,
+  format,
+  sourceSha256,
+  sectionCount,
+  limits = {}
+} = {}) {
+  if (!["hwp5", "hwpx"].includes(format))
+    fail3("InvalidDocumentFormat");
+  if (!digest(sourceSha256))
+    fail3("InvalidSourceSha256");
+  if (!sdk || typeof sdk !== "object")
+    fail3("MissingSdk");
+  if (!Number.isInteger(sectionCount) || sectionCount < 1 || sectionCount > 4096)
+    fail3("SectionLimitExceeded");
+  if (!limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((key) => !Object.hasOwn(DOCUMENT_IMAGE_LIMITS, key)))
+    fail3("InvalidImageLimits");
+  const budget = { ...DOCUMENT_IMAGE_LIMITS, ...limits };
+  for (const [key, value] of Object.entries(budget))
+    if (!Number.isSafeInteger(value) || value < 1 || value > { maxImages: 4096, maxBytes: 32 * 1024 * 1024, maxTotalBytes: 64 * 1024 * 1024 }[key])
+      fail3("InvalidImageLimits");
+  const rows = new Map, resources = new Map;
+  let totalBytes = 0, closed = false, borrowed = sdk;
+  const ready = () => {
+    if (closed)
+      fail3("DocumentImagesClosed");
+  };
+  for (let section = 0;section < sectionCount; section++) {
+    let sites;
+    const inventoryMethod = format === "hwp5" ? "pictureSources" : "pictureSites";
+    if (typeof sdk[inventoryMethod] !== "function")
+      throw new DocumentImageError("ImageInventoryUnavailable", "unsupported", "PictureInventoryApiUnavailable");
+    try {
+      sites = format === "hwp5" ? sdk.pictureSources(section, "base73") : sdk.pictureSites(section);
+    } catch (error) {
+      throw new DocumentImageError("ImageInventoryUnavailable", /AbiUnavailable|Unsupported/.test(error?.message ?? "") ? "unsupported" : "failed");
+    }
+    if (!Array.isArray(sites))
+      fail3("InvalidImageInventory");
+    if (sites.length > budget.maxImages - rows.size)
+      fail3("ImageCountLimitExceeded");
+    if (format === "hwp5")
+      validateHwp5PictureSources(sites);
+    for (const row of sites) {
+      const node = format === "hwp5" ? row.component_node : row?.pictureNode;
+      if (!uint25(node))
+        fail3("InvalidImageIdentity");
+      if (format === "hwpx" && (!siteStates.has(row.state) || !(row.paragraph === null || uint25(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint25(row.anchorUnit))))
+        fail3("InvalidImageInventory");
+      const id = `${format}:s${section}:i${node}`;
+      if (rows.has(id))
+        fail3("DuplicateImageIdentity");
+      const source = format === "hwp5" ? {
+        section,
+        pictureNode: node,
+        recordNode: row.picture_node,
+        ownerNode: row.owner_node,
+        resourceOrdinal: row.bin_data_id
+      } : { section, pictureNode: node, paragraph: row.paragraph, anchorUnit: row.anchorUnit };
+      const resourceKey = format === "hwp5" ? `docinfo:${row.bin_data_id}` : `source:${section}:${node}`;
+      const entry = {
+        id,
+        source,
+        resourceKey,
+        status: "unread",
+        reason: "PayloadNotRead",
+        mime: null,
+        extension: null,
+        recognized: null,
+        validation: "not-read",
+        byteLength: null
+      };
+      rows.set(id, entry);
+      if (!resources.has(resourceKey))
+        resources.set(resourceKey, { refs: [], bytes: null, error: null });
+      resources.get(resourceKey).refs.push(entry);
+    }
+  }
+  sdk = null;
+  const copy = (entry) => ({ ...entry, source: { ...entry.source } });
+  return {
+    list() {
+      ready();
+      return {
+        version: 1,
+        format,
+        sourceSha256,
+        images: [...rows.values()].map(copy),
+        limits: { ...budget },
+        budget: { retainedUniqueBytes: totalBytes, resourceKeys: resources.size },
+        coverage: {
+          scope: "section-picture-sites",
+          sectionCount,
+          references: rows.size,
+          inventoryComplete: true,
+          payloadsRead: [...rows.values()].filter((row) => row.status === "ready").length,
+          payloadsFailed: [...rows.values()].filter((row) => row.status === "failed" || row.status === "unsupported").length,
+          resourceIdentity: format === "hwp5" ? "docinfo-ordinal" : "picture-source-node",
+          masterPagesIncluded: false,
+          imageBrushesIncluded: false
+        },
+        nativePayloadLimitBytes: format === "hwp5" ? budget.maxBytes : 64 * 1024 * 1024,
+        jsByteLimitTiming: format === "hwp5" ? "native-decoded-payload-limit" : "after-native-payload-copy"
+      };
+    },
+    read(id, options) {
+      ready();
+      if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((k) => k !== "sourceSha256") || !digest(options.sourceSha256))
+        fail3("InvalidSourceSha256");
+      if (options.sourceSha256 !== sourceSha256)
+        fail3("SourceSha256Mismatch");
+      if (typeof id !== "string" || id.length > 80 || !/^(hwp5|hwpx):s(0|[1-9][0-9]*):i(0|[1-9][0-9]*)$/.test(id))
+        fail3("InvalidImageId");
+      const entry = rows.get(id);
+      if (!entry)
+        fail3("UnknownImageId");
+      const resource = resources.get(entry.resourceKey);
+      if (!resource.bytes && !resource.error) {
+        try {
+          const bytesMethod = format === "hwp5" ? "binaryResource" : "pictureBytes";
+          if (typeof borrowed[bytesMethod] !== "function")
+            throw new Error(format === "hwp5" ? "Hwp5BinaryResourceAbiUnavailable" : "HwpxPictureBytesAbiUnavailable");
+          const result = format === "hwp5" ? borrowed.binaryResource(entry.source.resourceOrdinal, { maxBytes: budget.maxBytes }) : borrowed.pictureBytes(entry.source.section, entry.source.pictureNode);
+          if (!(result instanceof Uint8Array))
+            fail3("InvalidImageBytes");
+          if (!result.length)
+            fail3("EmptyImageBytes");
+          if (result.length > budget.maxBytes)
+            fail3("ImageBytesLimitExceeded");
+          if (result.length > budget.maxTotalBytes - totalBytes)
+            fail3("ImageTotalBytesLimitExceeded");
+          const bytes = Uint8Array.from(result), metadata = identify(bytes);
+          resource.bytes = bytes;
+          totalBytes += bytes.length;
+          for (const ref of resource.refs)
+            Object.assign(ref, metadata, {
+              status: "ready",
+              reason: metadata.recognized ? null : "UnrecognizedOrUnsupportedImageHeader",
+              byteLength: bytes.length
+            });
+        } catch (error) {
+          const code = error instanceof DocumentImageError ? error.code : unsupported2.has(error?.message) ? error.message : error?.message === "LimitExceeded" ? "ImageBytesLimitExceeded" : "NativeImageReadFailed";
+          const status = unsupported2.has(code) ? "unsupported" : "failed";
+          resource.error = { code, status };
+          for (const ref of resource.refs)
+            Object.assign(ref, { status, reason: code });
+        }
+      }
+      if (resource.error)
+        throw new DocumentImageError(resource.error.code, resource.error.status);
+      return { ...copy(entry), sourceSha256, bytes: Uint8Array.from(resource.bytes) };
+    },
+    close() {
+      closed = true;
+      borrowed = null;
+      resources.clear();
+      rows.clear();
+      totalBytes = 0;
+    }
+  };
+}
+var DOCUMENT_IMAGE_LIMITS, uint25 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295, digest = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s), siteStates, unsupported2, DocumentImageError, fail3 = (code) => {
+  throw new DocumentImageError(code);
+};
+var init_document_images = __esm(() => {
+  DOCUMENT_IMAGE_LIMITS = Object.freeze({
+    maxImages: 4096,
+    maxBytes: 8 * 1024 * 1024,
+    maxTotalBytes: 32 * 1024 * 1024
+  });
+  siteStates = new Set([
+    "located",
+    "conditional",
+    "unsupported_anchor",
+    "missing_host",
+    "ambiguous_host"
+  ]);
+  unsupported2 = new Set([
+    "ExternalLink",
+    "ExternalPictureImage",
+    "UnsupportedBinDataType",
+    "AbsentBinaryResource",
+    "MissingPictureImage",
+    "UnsupportedPictureDisplayHost",
+    "UnsupportedPictureDisplayNode",
+    "UnsupportedPictureSwitchHost",
+    "UnsupportedPictureAnchor",
+    "Hwp5BinaryResourceAbiUnavailable",
+    "HwpxPictureBytesAbiUnavailable"
+  ]);
+  DocumentImageError = class DocumentImageError extends Error {
+    constructor(code, status = "failed", reason = code) {
+      super(code);
+      this.name = "DocumentImageError";
+      this.code = code;
+      this.status = status;
+      this.reason = reason;
+    }
+  };
+});
+
 // packages/cli/src/files.mjs
 var exports_files = {};
 __export(exports_files, {
@@ -11516,9 +11516,272 @@ __export(exports_files, {
   resolveWasmPath: () => resolveWasmPath
 });
 
+// packages/cli/src/batch-read.mjs
+var BATCH_READ_LIMITS = Object.freeze({
+  maxInputs: 128,
+  maxConcurrency: 2,
+  defaultOutputBytes: 4 * 1024 * 1024,
+  maxOutputBytes: 16 * 1024 * 1024,
+  maxInputPathUnits: 4096,
+  maxErrorDetailUnits: 256
+});
+var messages = Object.freeze({
+  ReadFailed: "문서 읽기 작업에 실패했습니다.",
+  InvalidReadResult: "읽기 콜백의 결과 형식이 올바르지 않습니다.",
+  OutputBudgetExceeded: "문서 결과가 배치 출력 예산을 초과했습니다. 본문을 절단하지 않았습니다.",
+  ResultHookFailed: "결과 전달 콜백에 실패했습니다. 이미 읽은 결과와 발생한 부작용은 취소되지 않습니다."
+});
+function argumentError(code, message) {
+  const error = new TypeError(message);
+  error.code = code;
+  return error;
+}
+function detail(error) {
+  try {
+    const value = typeof error?.message === "string" ? error.message : String(error);
+    return value.slice(0, BATCH_READ_LIMITS.maxErrorDetailUnits).toWellFormed();
+  } catch {
+    return "오류의 상세 설명을 읽지 못했습니다.";
+  }
+}
+function failure(phase, code, error) {
+  return {
+    phase,
+    code,
+    message: messages[code],
+    ...error === undefined ? {} : { detail: detail(error) }
+  };
+}
+function utf8Length(text, limit = Infinity) {
+  let bytes = 0;
+  for (let index = 0;index < text.length; index++) {
+    const code = text.charCodeAt(index);
+    if (code < 128)
+      bytes++;
+    else if (code < 2048)
+      bytes += 2;
+    else if (code >= 55296 && code <= 56319) {
+      bytes += 4;
+      index++;
+    } else
+      bytes += 3;
+    if (bytes > limit)
+      return bytes;
+  }
+  return bytes;
+}
+var recordBytes = (record, limit) => utf8Length(JSON.stringify(record), limit);
+function errorRecord(index, inputPath, code, error, readStatus = "failure") {
+  return {
+    index,
+    inputPath,
+    status: "failure",
+    readStatus,
+    outputStatus: "failure",
+    deliveryStatus: "not-requested",
+    value: null,
+    errors: [failure(code === "OutputBudgetExceeded" ? "output" : "read", code, error)]
+  };
+}
+function copyRecord(record) {
+  return {
+    ...record,
+    value: record.value === null ? null : { ...record.value },
+    errors: record.errors.map((error) => ({ ...error }))
+  };
+}
+function validateReadResult(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    return null;
+  const { format, sourceSha256, text } = value;
+  if (!["hwp5", "hwpx"].includes(format) || typeof sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(sourceSha256) || typeof text !== "string" || !text.isWellFormed())
+    return null;
+  return { format, sourceSha256, text };
+}
+function hasPathControl(text) {
+  for (let index = 0;index < text.length; index++) {
+    const code = text.charCodeAt(index);
+    if (code < 32 || code === 127)
+      return true;
+  }
+  return false;
+}
+function gate() {
+  let release;
+  const promise = new Promise((resolve) => {
+    release = resolve;
+  });
+  return { promise, release };
+}
+async function readDocuments({
+  inputPaths,
+  readOne,
+  concurrency = 1,
+  maxOutputBytes = BATCH_READ_LIMITS.defaultOutputBytes,
+  onResult
+} = {}) {
+  const inputCount = Array.isArray(inputPaths) ? inputPaths.length : 0;
+  if (!Number.isInteger(inputCount) || inputCount < 1 || inputCount > BATCH_READ_LIMITS.maxInputs)
+    throw argumentError("InvalidInputPaths", "입력 경로는 1개 이상 128개 이하의 배열이어야 합니다.");
+  if (typeof readOne !== "function")
+    throw argumentError("InvalidReadRunner", "단일 읽기 콜백이 필요합니다.");
+  if (!Number.isInteger(concurrency) || concurrency < 1 || concurrency > BATCH_READ_LIMITS.maxConcurrency)
+    throw argumentError("InvalidConcurrency", "동시 작업 수는 1 또는 2여야 합니다.");
+  if (!Number.isSafeInteger(maxOutputBytes) || maxOutputBytes < 1 || maxOutputBytes > BATCH_READ_LIMITS.maxOutputBytes)
+    throw argumentError("InvalidOutputBudget", "출력 예산은 1바이트 이상 16MiB 이하의 정수여야 합니다.");
+  if (onResult !== undefined && typeof onResult !== "function")
+    throw argumentError("InvalidResultHook", "결과 전달 콜백은 함수여야 합니다.");
+  const paths = [];
+  const seen = new Map;
+  for (let index = 0;index < inputCount; index++) {
+    const path = inputPaths[index];
+    if (typeof path !== "string" || path.length < 1 || path.length > BATCH_READ_LIMITS.maxInputPathUnits || !path.isWellFormed() || hasPathControl(path))
+      throw argumentError("InvalidInputPath", "입력 경로는 제어 문자 없는 올바른 Unicode 문자열이어야 합니다.");
+    if (seen.has(path))
+      throw argumentError("DuplicateInputPath", "중복된 입력 경로가 있습니다.");
+    seen.set(path, index);
+    paths.push(path);
+  }
+  const count = paths.length;
+  const makeEnvelope = (results, summary) => ({
+    schemaVersion: 1,
+    status: "partial",
+    results,
+    summary,
+    limits: { maxOutputBytes, concurrency },
+    outputBytes: maxOutputBytes
+  });
+  const maximumSummary = {
+    total: count,
+    readSucceeded: count,
+    readFailed: count,
+    outputFailed: count,
+    deliveryFailed: count,
+    succeeded: count,
+    failed: count
+  };
+  const worstDetail = "\x00".repeat(BATCH_READ_LIMITS.maxErrorDetailUnits);
+  const worstHook = { ...failure("delivery", "ResultHookFailed"), detail: worstDetail };
+  const reservations = paths.map((path, index) => {
+    let maximum = 0;
+    for (const code of ["ReadFailed", "InvalidReadResult", "OutputBudgetExceeded"]) {
+      const row = errorRecord(index, path, code);
+      row.errors[0].detail = worstDetail;
+      if (onResult)
+        row.errors.push(worstHook);
+      maximum = Math.max(maximum, recordBytes(row));
+    }
+    return maximum;
+  });
+  let remaining = reservations.reduce((sum, size) => sum + size, 0);
+  let used = recordBytes(makeEnvelope([], maximumSummary)) + count - 1;
+  if (used + remaining > maxOutputBytes)
+    throw argumentError("OutputBudgetTooSmall", "모든 입력의 실패 상태를 표시하기에도 출력 예산이 부족합니다.");
+  const results = Array(count);
+  const gates = Array.from({ length: count + 1 }, gate);
+  gates[0].release();
+  let nextIndex = 0;
+  async function runOne(index) {
+    let raw;
+    try {
+      raw = await readOne({ inputPath: paths[index], index });
+    } catch (error) {
+      return errorRecord(index, paths[index], "ReadFailed", error);
+    }
+    let value;
+    try {
+      value = validateReadResult(raw);
+    } catch (error) {
+      return errorRecord(index, paths[index], "InvalidReadResult", error);
+    }
+    if (!value)
+      return errorRecord(index, paths[index], "InvalidReadResult");
+    if (value.text.length > maxOutputBytes)
+      return errorRecord(index, paths[index], "OutputBudgetExceeded", undefined, "success");
+    return {
+      index,
+      inputPath: paths[index],
+      status: "success",
+      readStatus: "success",
+      outputStatus: "success",
+      deliveryStatus: "not-requested",
+      value,
+      errors: []
+    };
+  }
+  async function finish(index, record) {
+    remaining -= reservations[index];
+    const worst = copyRecord(record);
+    if (onResult)
+      worst.errors.push(worstHook);
+    if (used + remaining + recordBytes(worst, maxOutputBytes) > maxOutputBytes) {
+      record = errorRecord(index, paths[index], "OutputBudgetExceeded", undefined, record.readStatus);
+    }
+    if (onResult) {
+      record.deliveryStatus = "pending";
+      try {
+        await onResult(copyRecord(record));
+        record.deliveryStatus = "success";
+      } catch (error) {
+        record.deliveryStatus = "failure";
+        record.status = "failure";
+        record.errors.push(failure("delivery", "ResultHookFailed", error));
+      }
+    }
+    results[index] = record;
+    used += recordBytes(record);
+  }
+  async function worker() {
+    while (nextIndex < count) {
+      const index = nextIndex++;
+      const record = await runOne(index);
+      await gates[index].promise;
+      try {
+        await finish(index, record);
+      } finally {
+        gates[index + 1].release();
+      }
+    }
+  }
+  const settled = await Promise.allSettled(Array.from({ length: Math.min(concurrency, count) }, worker));
+  const failures = settled.filter((row) => row.status === "rejected").map((row) => row.reason);
+  if (failures.length)
+    throw new AggregateError(failures, "배치 읽기 관리 중 오류가 발생했습니다. 시작한 작업은 모두 종료됐습니다.");
+  const summary = {
+    total: count,
+    readSucceeded: 0,
+    readFailed: 0,
+    outputFailed: 0,
+    deliveryFailed: 0,
+    succeeded: 0,
+    failed: 0
+  };
+  for (const row of results) {
+    summary[row.readStatus === "success" ? "readSucceeded" : "readFailed"]++;
+    if (row.outputStatus === "failure")
+      summary.outputFailed++;
+    if (row.deliveryStatus === "failure")
+      summary.deliveryFailed++;
+    summary[row.status === "success" ? "succeeded" : "failed"]++;
+  }
+  const result = makeEnvelope(results, summary);
+  result.status = summary.failed === 0 ? "success" : summary.succeeded === 0 ? "failure" : "partial";
+  result.outputBytes = 0;
+  for (let pass = 0;pass < 4; pass++) {
+    const size = recordBytes(result);
+    if (size === result.outputBytes)
+      break;
+    result.outputBytes = size;
+  }
+  if (recordBytes(result) !== result.outputBytes || result.outputBytes > maxOutputBytes)
+    throw new Error("배치 결과의 출력 예산 검증에 실패했습니다.");
+  return result;
+}
+
 // packages/cli/src/arguments.mjs
 var USAGE = `Usage:
   hwpjs read INPUT [--format text|markdown] [--wasm PATH]
+  hwpjs read-many INPUT... [--format text|markdown] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs info INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs images INPUT [--expect-sha256 SHA256] [--wasm PATH]
@@ -11530,6 +11793,8 @@ Use --with '' to delete. Use --option=VALUE when VALUE starts with --.
 extract-images --output is a NEW DIRECTORY, never a single image file.
 Selecting --id requires the SHA from images; all images use one opened snapshot.
 Output must be new; existing files are never overwritten.
+read-many는 명시 파일 1~128개만 읽습니다. 기본 동시성은 1, 최대 2이며 일부 실패도 보고합니다.
+출력 예산은 기본 4MiB, 최대 16MiB입니다. 폴더 탐색·일괄 편집·HTML·문서 JSON 출력은 제공하지 않습니다.
 `;
 
 class ArgumentsError extends Error {
@@ -11545,17 +11810,27 @@ var fail = (code) => {
 var string = (value) => typeof value === "string" && value.isWellFormed();
 var uint = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
 function parseArguments(argv) {
-  if (!Array.isArray(argv) || !Array.from(argv).every(string))
+  const argc = Array.isArray(argv) ? argv.length : -1;
+  if (!Number.isInteger(argc) || argc < 0 || argc > 256)
     fail("InvalidArguments");
+  const captured = [];
+  for (let index = 0;index < argc; index++) {
+    const value = argv[index];
+    if (!string(value))
+      fail("InvalidArguments");
+    captured.push(value);
+  }
+  argv = captured;
   if (argv.length === 1 && argv[0] === "--help")
     return Object.freeze({ command: "help" });
   const command = argv[0];
-  if (!["read", "edit", "info", "images", "extract-images"].includes(command))
+  if (!["read", "read-many", "edit", "info", "images", "extract-images"].includes(command))
     fail("UnknownCommand");
   if (argv.length === 2 && argv[1] === "--help")
     return Object.freeze({ command: "help" });
   const allowed = new Set({
     read: ["format", "wasm"],
+    "read-many": ["format", "wasm", "concurrency", "max-output-bytes"],
     edit: ["target", "replace", "with", "expect-sha256", "output", "wasm", "allow-stale-layout"],
     info: ["wasm", "expect-sha256"],
     images: ["wasm", "expect-sha256"],
@@ -11589,11 +11864,44 @@ function parseArguments(argv) {
     } else
       positional.push(arg);
   }
-  if (positional.length !== 1 || !positional[0] || positional[0] === "-")
-    fail("ExpectedInputFile");
-  const input = positional[0], wasm = options.get("wasm");
+  const wasm = options.get("wasm");
   if (wasm !== undefined && !wasm)
     fail("InvalidWasmPath");
+  if (command === "read-many") {
+    if (positional.length < 1 || positional.length > BATCH_READ_LIMITS.maxInputs)
+      fail("InvalidInputPaths");
+    const paths = new Map;
+    for (const path of positional) {
+      if (!path || path === "-" || path.length > BATCH_READ_LIMITS.maxInputPathUnits)
+        fail("InvalidInputPath");
+      for (let at = 0;at < path.length; at++)
+        if (path.charCodeAt(at) < 32 || path.charCodeAt(at) === 127)
+          fail("InvalidInputPath");
+      if (paths.has(path))
+        fail("DuplicateInputPath");
+      paths.set(path, true);
+    }
+    const format = options.get("format") ?? "text";
+    if (!["text", "markdown"].includes(format))
+      fail("InvalidReadFormat");
+    const concurrency = options.get("concurrency") ?? "1";
+    if (!/^[12]$/.test(concurrency))
+      fail("InvalidConcurrency");
+    const budget = options.get("max-output-bytes") ?? String(BATCH_READ_LIMITS.defaultOutputBytes);
+    if (!/^[1-9]\d*$/.test(budget) || !Number.isSafeInteger(Number(budget)) || Number(budget) > BATCH_READ_LIMITS.maxOutputBytes)
+      fail("InvalidOutputBudget");
+    return Object.freeze({
+      command,
+      inputPaths: Object.freeze([...positional]),
+      format,
+      concurrency: Number(concurrency),
+      maxOutputBytes: Number(budget),
+      ...wasm === undefined ? {} : { wasm }
+    });
+  }
+  if (positional.length !== 1 || !positional[0] || positional[0] === "-")
+    fail("ExpectedInputFile");
+  const input = positional[0];
   if (["info", "images", "extract-images"].includes(command)) {
     const expected = options.get("expect-sha256");
     if (expected !== undefined && !/^[0-9a-f]{64}$/i.test(expected))
@@ -11944,13 +12252,73 @@ var {
 
 // packages/cli/src/main.mjs
 import { join as join2 } from "node:path";
+
+// packages/cli/src/read-operation.mjs
+var MAX_INPUT_BYTES = 64 * 1024 * 1024;
+async function readDocumentOperation({ inputPath, inputSnapshot, wasm, format = "text" }, { files, engine, renderDocument, loadWasm }) {
+  if (!["text", "markdown"].includes(format))
+    throw Error("InvalidReadFormat");
+  const input = inputSnapshot ?? await files.readInputSnapshot(inputPath, { maxBytes: MAX_INPUT_BYTES });
+  if (!(input?.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? ""))
+    throw Error("InvalidInputSnapshot");
+  const binary = wasm ?? await loadWasm();
+  const result = await engine.read({ bytes: input.bytes, wasm: binary });
+  if (!["hwp5", "hwpx"].includes(result?.format))
+    throw Error("InvalidEngineFormat");
+  if (result.model?.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256)
+    throw Error("InvalidEngineModel");
+  const text = await renderDocument(result.model, { format });
+  if (typeof text !== "string" || !text.isWellFormed())
+    throw Error("InvalidRenderedDocument");
+  return { format: result.format, sourceSha256: input.sha256, text };
+}
 var scalar = (value) => Array.from(String(value), (character) => {
   const code = character.charCodeAt(0);
   return code <= 31 || code === 127 ? "\\u" + code.toString(16).padStart(4, "0") : character;
 }).join("");
-var line = (key, value) => `${key}: ${scalar(value)}
+function renderBatchReadReport(batch, { format = "text", maxOutputBytes }) {
+  if (!["text", "markdown"].includes(format))
+    throw Error("InvalidReadFormat");
+  const indent = format === "markdown" ? "    " : "";
+  const lines = [format === "markdown" ? `# 여러 문서 읽기
+` : `여러 문서 읽기
+`];
+  const line = (key, value) => `${indent}${key}: ${scalar(value)}
 `;
-var warningLines = (warnings = []) => warnings.map((warning) => line("warning", typeof warning === "string" ? warning : Object.entries(warning).map(([key, value]) => `${key}=${scalar(value)}`).join(" "))).join("");
+  lines.push(line("batchStatus", batch.status), line("requested", batch.summary.total), line("succeeded", batch.summary.succeeded), line("failed", batch.summary.failed));
+  for (const row of batch.results) {
+    lines.push(format === "markdown" ? `
+## 문서 ${row.index + 1}
+` : `
+[${row.index + 1}]
+`);
+    lines.push(line("inputPath", row.inputPath), line("status", row.status), line("readStatus", row.readStatus), line("outputStatus", row.outputStatus), line("deliveryStatus", row.deliveryStatus));
+    if (row.value) {
+      lines.push(line("format", row.value.format), line("documentSHA256", row.value.sourceSha256), `
+`, row.value.text, row.value.text.endsWith(`
+`) ? "" : `
+`);
+    }
+    for (const error of row.errors) {
+      lines.push(line("error", error.code), line("message", error.message));
+      if (error.detail !== undefined)
+        lines.push(line("detail", error.detail));
+    }
+  }
+  const text = lines.join("");
+  if (!text.isWellFormed() || new TextEncoder().encode(text).byteLength > maxOutputBytes)
+    throw Error("ReadManyReportBudgetExceeded");
+  return text;
+}
+
+// packages/cli/src/main.mjs
+var scalar2 = (value) => Array.from(String(value), (character) => {
+  const code = character.charCodeAt(0);
+  return code <= 31 || code === 127 ? "\\u" + code.toString(16).padStart(4, "0") : character;
+}).join("");
+var line = (key, value) => `${key}: ${scalar2(value)}
+`;
+var warningLines = (warnings = []) => warnings.map((warning) => line("warning", typeof warning === "string" ? warning : Object.entries(warning).map(([key, value]) => `${key}=${scalar2(value)}`).join(" "))).join("");
 var engineFormat = (value) => {
   if (!["hwp5", "hwpx"].includes(value))
     throw Error("InvalidEngineFormat");
@@ -12041,21 +12409,49 @@ async function runCLI(argv, dependencies = {}) {
       await io.stdout.write(USAGE);
       return 0;
     }
+    const loadWasm = async () => {
+      const wasmPath = files.resolveWasmPath(options.wasm, dependencies.mainModuleURL);
+      try {
+        return (await files.readInputSnapshot(wasmPath, { maxBytes: MAX_WASM_BYTES })).bytes;
+      } catch (cause) {
+        if (options.wasm === undefined && cause.code === "ENOENT")
+          throw Error("ExplicitWasmRequired: pass --wasm PATH", { cause });
+        throw cause;
+      }
+    };
+    if (options.command === "read-many") {
+      const reportOverhead = 1024 + 512 * options.inputPaths.length;
+      if (options.maxOutputBytes <= reportOverhead)
+        throw Object.assign(new Error("파일별 결과를 보고하기에 출력 예산이 부족합니다."), {
+          code: "OutputBudgetTooSmall"
+        });
+      const engine = dependencies.engine ?? await Promise.resolve().then(() => (init_engine(), exports_engine));
+      const renderDocument = dependencies.renderDocument ?? (await Promise.resolve().then(() => (init_render(), exports_render))).renderDocument;
+      let wasmPromise;
+      const loadOnce = () => wasmPromise ??= loadWasm();
+      const batch = await readDocuments({
+        inputPaths: options.inputPaths,
+        concurrency: options.concurrency,
+        maxOutputBytes: options.maxOutputBytes - reportOverhead,
+        readOne: ({ inputPath }) => readDocumentOperation({ inputPath, format: options.format }, { files, engine, renderDocument, loadWasm: loadOnce })
+      });
+      try {
+        const text = renderBatchReadReport(batch, options);
+        await io.stdout.write(text);
+      } catch (cause) {
+        throw Object.assign(new Error(cause?.message ?? "ReadManyOutputFailed", { cause }), {
+          batchSummary: batch.summary
+        });
+      }
+      return batch.summary.failed ? 1 : 0;
+    }
     const input = await files.readInputSnapshot(options.input, {
       maxBytes: MAX_DOCUMENT_BYTES
     });
     if (options.expectSha256 !== undefined && input.sha256 !== options.expectSha256)
       throw Error("SourceSHA256Mismatch");
     const target = options.command === "edit" ? await files.assertNewOutput({ input, outputPath: options.output }) : undefined;
-    const wasmPath = files.resolveWasmPath(options.wasm, dependencies.mainModuleURL);
-    let wasm;
-    try {
-      wasm = await files.readInputSnapshot(wasmPath, { maxBytes: MAX_WASM_BYTES });
-    } catch (cause) {
-      if (options.wasm === undefined && cause.code === "ENOENT")
-        throw Error("ExplicitWasmRequired: pass --wasm PATH", { cause });
-      throw cause;
-    }
+    const wasm = { bytes: await loadWasm() };
     if (options.command === "info") {
       const inspect = dependencies.inspectDocument ?? (await Promise.resolve().then(() => (init_inspect_document(), exports_inspect_document))).inspectDocument;
       const result = await inspect({
@@ -12159,14 +12555,9 @@ async function runCLI(argv, dependencies = {}) {
       }
     }
     if (options.command === "read") {
-      const result = await engine.read({ bytes: input.bytes, wasm: wasm.bytes });
-      engineFormat(result.format);
-      if (result.model?.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256)
-        throw Error("InvalidEngineModel");
       const renderDocument = dependencies.renderDocument ?? (await Promise.resolve().then(() => (init_render(), exports_render))).renderDocument;
-      const body = await renderDocument(result.model, { format: options.format });
-      if (typeof body !== "string" || !body.isWellFormed())
-        throw Error("InvalidRenderedDocument");
+      const result = await readDocumentOperation({ inputSnapshot: input, wasm: wasm.bytes, format: options.format }, { files, engine, renderDocument });
+      const body = result.text;
       await io.stdout.write(`format: ${result.format}
 documentSHA256: ${input.sha256}
 ${body}${body.endsWith(`
@@ -12193,7 +12584,7 @@ ${body}${body.endsWith(`
     const primary = cause?.code ?? (cause instanceof Error ? cause.message : String(cause));
     const directory = outputDirectory?.path ?? cause?.createdDirectory;
     try {
-      const diagnostic = line("error", primary) + line("published", Boolean(published) || imagePublished.length > 0) + (directory || imagePublished.length ? line("publishedImageCount", imagePublished.length) : "") + (directory ? line("outputDirectory", directory) : "") + observationLines(imagePublished, "publishedImages") + (published ? line("output", published.path) + line("sha256", published.sha256) : "") + warningLines(cause?.cleanupWarnings);
+      const diagnostic = line("error", primary) + (cause?.batchSummary ? line("batchReadSucceeded", cause.batchSummary.readSucceeded) + line("batchReadFailed", cause.batchSummary.readFailed) + line("batchDelivery", "failed-or-partial") : "") + line("published", Boolean(published) || imagePublished.length > 0) + (directory || imagePublished.length ? line("publishedImageCount", imagePublished.length) : "") + (directory ? line("outputDirectory", directory) : "") + observationLines(imagePublished, "publishedImages") + (published ? line("output", published.path) + line("sha256", published.sha256) : "") + warningLines(cause?.cleanupWarnings);
       await io.stderr.write(diagnostic);
     } catch (diagnosticFailure) {
       try {
