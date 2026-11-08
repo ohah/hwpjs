@@ -70,6 +70,8 @@ function h5() {
     text: 'native\r',
     display: 'readable',
     present: true,
+    declaredUnits: 1,
+    tokens: [],
     flow: {
       paragraph: 0,
       source_node: 7,
@@ -91,6 +93,8 @@ function h5() {
               nodeIndex: 7,
               text: data.display,
               textPresent: data.present,
+              declaredUnits: data.declaredUnits,
+              tokens: data.tokens,
               rawUnknown: { text: 'DO NOT RECOVER' },
             },
           ],
@@ -196,6 +200,52 @@ test('model missing displayText remains own null with coverage warning', async (
   assert.equal(m.sections[0].body[0].displayText, null);
   assert.equal(m.coverage.unknownBlocks, 1);
   assert.ok(m.warnings.some((w) => w.code === 'DisplayTextUnavailable'));
+});
+test('model observed empty H5 paragraphs do not require a text record', async () => {
+  for (const units of [0, 1]) {
+    const { data, sdk } = h5();
+    data.display = '';
+    data.present = false;
+    data.declaredUnits = units;
+    const m = await read('hwp5', sdk);
+    assert.equal(m.sections[0].body[0].displayText, '');
+    assert.equal(m.coverage.unknownBlocks, 0);
+    assert.equal(
+      m.warnings.some((w) => w.code === 'DisplayTextUnavailable'),
+      false,
+    );
+    assert.equal(sdk.currentTextPreview().sections[0].paragraphs[0].textPresent, false);
+  }
+});
+test('model absent H5 text cannot conceal inconsistent or unavailable observations', async () => {
+  for (const change of [
+    { declaredUnits: 2 },
+    { declaredUnits: undefined },
+    { declaredUnits: -1 },
+    { tokens: undefined },
+    { tokens: [{ type: 'control', code: 13 }] },
+    { display: undefined },
+    { present: undefined },
+  ]) {
+    const { data, sdk } = h5();
+    Object.assign(data, { display: '', present: false }, change);
+    const m = await read('hwp5', sdk);
+    assert.equal(m.sections[0].body[0].displayText, null);
+    assert.ok(m.warnings.some((w) => w.code === 'DisplayTextUnavailable'));
+  }
+});
+test('model empty H5 text cannot conceal missing preview or mismatched identity', async () => {
+  for (const mismatch of [false, true]) {
+    const { data, sdk } = h5();
+    data.display = '';
+    data.present = false;
+    if (mismatch) data.flow.source_node = 8;
+    else sdk.currentTextPreview = () => ({ sections: [{ index: 0, paragraphs: [] }] });
+    const m = await read('hwp5', sdk);
+    assert.equal(paragraphs(m)[0].displayText, null);
+    assert.ok(m.warnings.some((w) => w.code === 'DisplayTextUnavailable'));
+    if (mismatch) assert.ok(m.warnings.some((w) => w.code === 'ParagraphSourceMismatch'));
+  }
 });
 test('model never calls raw editing text getters', async () => {
   const { sdk } = h5();

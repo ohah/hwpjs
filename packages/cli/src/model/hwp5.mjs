@@ -38,7 +38,17 @@ export function collectHwp5({ sdk, sectionCount }) {
         : uint(p?.nodeIndex)
           ? p.nodeIndex
           : null;
-      let displayText = typeof p?.text === 'string' && p.textPresent === true ? p.text : null;
+      // 텍스트 레코드의 부재와 표시 텍스트의 미관측은 다릅니다.
+      const emptyParagraph =
+        p?.textPresent === false &&
+        p.text === '' &&
+        uint(p.nodeIndex) &&
+        uint(p.declaredUnits) &&
+        p.declaredUnits <= 1 &&
+        Array.isArray(p.tokens) &&
+        p.tokens.length === 0;
+      let displayText =
+        typeof p?.text === 'string' && (p.textPresent === true || emptyParagraph) ? p.text : null;
       let identityKnown = uint(node) && flow?.generated !== true;
       if (uint(p?.nodeIndex) && uint(flow?.source_node) && p.nodeIndex !== flow.source_node) {
         identityKnown = false;

@@ -10008,7 +10008,8 @@ function collectHwp5({ sdk, sectionCount }) {
     for (const paragraph of ordinals) {
       const p = previewRows?.[paragraph], flow = flowMap.get(paragraph);
       const node = uint24(flow?.source_node) ? flow.source_node : uint24(p?.nodeIndex) ? p.nodeIndex : null;
-      let displayText = typeof p?.text === "string" && p.textPresent === true ? p.text : null;
+      const emptyParagraph = p?.textPresent === false && p.text === "" && uint24(p.nodeIndex) && uint24(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
+      let displayText = typeof p?.text === "string" && (p.textPresent === true || emptyParagraph) ? p.text : null;
       let identityKnown = uint24(node) && flow?.generated !== true;
       if (uint24(p?.nodeIndex) && uint24(flow?.source_node) && p.nodeIndex !== flow.source_node) {
         identityKnown = false;

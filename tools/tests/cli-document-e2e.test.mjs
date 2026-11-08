@@ -191,11 +191,14 @@ function assertRead(result, fixture, outputFormat) {
     assert.match(text, /row=0 column=1 rowSpan=1 columnSpan=3/);
     assert.match(text, /Image .*alt not observed/);
     assert.match(text, /content=observed/);
-    assert.equal(
-      (text.match(/\[Unknown display text/g) ?? []).length,
-      fixture.format === 'hwp5' ? 4 : 0,
-    );
-    if (fixture.format === 'hwp5') assert.match(text, /DisplayTextUnavailable:/);
+    assert.equal((text.match(/\[Unknown display text/g) ?? []).length, 0);
+    assert.doesNotMatch(text, /DisplayTextUnavailable:/);
+    if (fixture.format === 'hwp5')
+      for (const paragraph of [29, 30, 31, 38])
+        assert.match(
+          text,
+          new RegExp(`Paragraph s0:p${paragraph} [(]native paragraph=${paragraph}[)]: *$`, 'm'),
+        );
   } else {
     assert.equal((text.match(/Definition s0:/g) ?? []).length, 2);
     assert.equal((text.match(/Header 이것은 머리말입니다/g) ?? []).length, 1);
