@@ -37,7 +37,15 @@ export function documentTools({
         io,
       });
       return {
-        content: [{ type: 'text', text: stdout + stderr || `CLI exited with code ${exitCode}.` }],
+        content: [
+          {
+            type: 'text',
+            text:
+              exitCode === 0
+                ? stdout + stderr
+                : stdout + stderr || `CLI exited with code ${exitCode}.`,
+          },
+        ],
         ...(exitCode === 0 ? {} : { isError: true }),
       };
     } catch (error) {
@@ -63,7 +71,7 @@ export function documentTools({
       config: {
         title: 'Read HWP/HWPX document',
         description:
-          'Read a local document as a bounded logical text/Markdown view. Returns documentSHA256 and exact Native paragraph IDs. Display text is not an editing-offset map; unknown ownership and unsupported content remain diagnostic.',
+          '로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.',
         inputSchema: z.strictObject({
           inputPath: z
             .string()
@@ -72,6 +80,7 @@ export function documentTools({
               'Local input file path, relative to the server working directory or absolute.',
             ),
           format: z.enum(['text', 'markdown']).default('text'),
+          view: z.enum(['content', 'structure']).default('content'),
         }),
         annotations: {
           readOnlyHint: true,
@@ -80,26 +89,28 @@ export function documentTools({
           openWorldHint: true,
         },
       },
-      invoke: ({ inputPath, format = 'text' }) =>
-        invoke(['read', `--format=${format}`, ...wasm, '--', inputPath]),
+      invoke: ({ inputPath, format = 'text', view = 'content' }) =>
+        invoke(['read', `--format=${format}`, `--view=${view}`, ...wasm, '--', inputPath]),
     },
     {
       name: 'edit_document',
       config: {
         title: 'Edit HWP/HWPX literal text into a new file',
         description:
-          'Replace exactly one literal occurrence in a Native paragraph ID from read_document, gated by that read snapshot SHA. Overlapping matches are ambiguous. Empty replacement deletes text; paragraph controls/newlines are rejected. Output must be a new path; the original and existing outputs are never overwritten. Stale HWP5 layout is rejected unless explicitly allowed.',
+          'read_document의 view: structure에서 조회한 Native 문단 ID와 같은 원문 SHA를 사용해 정확히 한 문자열을 교체합니다. 겹치는 일치는 거부하며 빈 교체문은 삭제입니다. 문단 제어와 줄바꿈은 거부합니다. 새 출력 경로만 허용하고 원본이나 기존 파일을 덮어쓰지 않습니다. HWP5의 오래된 배치 정보는 명시 허용 없이는 거부합니다.',
         inputSchema: z.strictObject({
           inputPath: z.string().min(1),
           outputPath: z.string().min(1),
           target: z
             .string()
             .min(1)
-            .describe('Exact s<section>:p<NativeOrdinal> ID from read_document.'),
+            .describe(
+              'read_document의 view: structure에서 얻은 정확한 s<section>:p<NativeOrdinal> ID.',
+            ),
           expectedSha256: z
             .string()
             .min(1)
-            .describe('documentSHA256 from the same read_document snapshot.'),
+            .describe('read_document의 view: structure로 조회한 동일 스냅샷의 documentSHA256.'),
           findText: z.string().min(1),
           replacement: z
             .string()
@@ -216,7 +227,7 @@ export function documentTools({
       config: {
         title: '여러 HWP/HWPX 문서 읽기',
         description:
-          '명시한 파일 1~128개를 기존 공통 엔진으로 읽어 입력 순서의 텍스트/Markdown으로 보고합니다. 기본 동시성1·최대2이며 일부 실패도 숨기지 않습니다. 폴더 탐색·편집·HTML·문서 JSON 출력은 제공하지 않습니다.',
+          '명시한 파일 1~128개를 기존 공통 엔진으로 읽어 입력 순서의 텍스트/Markdown으로 보고합니다. 기본 view는 content이며 파일명과 본문, 한국어 실패 안내를 반환합니다. 편집용 ID와 SHA 및 상세 상태는 structure로 조회합니다. 기본 동시성1·최대2이며 일부 실패도 숨기지 않습니다. 폴더 탐색·편집·HTML·문서 JSON 출력은 제공하지 않습니다.',
         inputSchema: z.strictObject({
           inputPaths: z
             .array(batchPath)
@@ -231,6 +242,7 @@ export function documentTools({
               return true;
             }, '중복된 입력 경로가 있습니다.'),
           format: z.enum(['text', 'markdown']).default('text'),
+          view: z.enum(['content', 'structure']).default('content'),
           concurrency: z.number().int().min(1).max(BATCH_READ_LIMITS.maxConcurrency).default(1),
           maxOutputBytes: z
             .number()
@@ -249,12 +261,14 @@ export function documentTools({
       invoke: ({
         inputPaths,
         format = 'text',
+        view = 'content',
         concurrency = 1,
         maxOutputBytes = BATCH_READ_LIMITS.defaultOutputBytes,
       }) =>
         invoke([
           'read-many',
           `--format=${format}`,
+          `--view=${view}`,
           `--concurrency=${concurrency}`,
           `--max-output-bytes=${maxOutputBytes}`,
           ...wasm,

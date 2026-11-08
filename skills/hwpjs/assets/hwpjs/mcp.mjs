@@ -25,6 +25,32 @@ var __esm = (fn, res, err) => () => {
   return res;
 };
 
+// packages/cli/src/render-escape.mjs
+function createDisplayEscaper(options) {
+  if (options === null || typeof options !== "object" || Array.isArray(options) || !["text", "markdown"].includes(options.format))
+    throw new TypeError("InvalidRenderFormat");
+  const view = options.view === undefined ? "content" : options.view;
+  if (!["content", "structure"].includes(view))
+    throw new TypeError("InvalidRenderView");
+  const markdown = options.format === "markdown";
+  return (text) => {
+    if (typeof text !== "string")
+      throw new TypeError("InvalidRenderString");
+    const display = text.replace(CONTROL, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
+    if (!markdown)
+      return display;
+    if (view === "structure")
+      return display.replace(MARKDOWN, "\\$&");
+    return display.replace(/&/gu, "&amp;").replace(CONTENT_MARKDOWN, "\\$&").replace(/^ {4}/u, "&#32;   ").replace(/^( {0,3})(#{1,6}(?=\s|$)|[-+](?=\s|$)|\d{1,9}[.)](?=\s|$)|-{3,}(?=\s|$))/u, (_, indent, token) => indent + token.replace(/[#+.\-)]/gu, "\\$&"));
+  };
+}
+var CONTROL, MARKDOWN, CONTENT_MARKDOWN;
+var init_render_escape = __esm(() => {
+  CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ud800-\udfff]/gu;
+  MARKDOWN = /[\\`*_{}[\]()#+.!|<>~-]/gu;
+  CONTENT_MARKDOWN = /[\\`*_[\]<>|~]/gu;
+});
+
 // js/document-format.mjs
 function detectDocumentFormat(input) {
   const bytes = input instanceof Uint8Array ? input : input instanceof ArrayBuffer ? new Uint8Array(input) : null;
@@ -10818,6 +10844,116 @@ var init_engine = __esm(() => {
   MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
 });
 
+// packages/cli/src/render-content.mjs
+function simpleCells(table) {
+  const { rows, columns, cells } = table;
+  const slots = rows * columns;
+  if (!rows || !columns || !Number.isSafeInteger(slots) || slots > 8 * cells.length)
+    return null;
+  const grid = new Map;
+  for (const cell of cells) {
+    if (!cell.geometryKnown || cell.contentState !== "observed" || cell.row === null || cell.column === null || cell.row >= rows || cell.column >= columns || cell.rowSpan === null || cell.columnSpan === null || cell.row + cell.rowSpan > rows || cell.column + cell.columnSpan > columns || (cell.rowSpan !== 1 || cell.columnSpan !== 1) && slots > 4096 || cell.blocks.some((block) => block.type !== "paragraph" && block.type !== "image"))
+      return null;
+    for (let row = cell.row;row < cell.row + cell.rowSpan; row++) {
+      for (let column = cell.column;column < cell.column + cell.columnSpan; column++) {
+        const key = row * columns + column;
+        if (grid.has(key))
+          return null;
+        grid.set(key, row === cell.row && column === cell.column ? cell : null);
+      }
+    }
+  }
+  return grid.size === slots ? grid : null;
+}
+function renderContent(model, { markdown, escape: escape2, line, maxOutputUnits }) {
+  const join = (parts, separator) => {
+    let units = 0;
+    for (let i = 0;i < parts.length; i++) {
+      units += parts[i].length + (i ? separator.length : 0);
+      if (units > maxOutputUnits)
+        throw new RangeError("RenderOutputLimitExceeded");
+    }
+    return parts.join(separator);
+  };
+  const inline = (block) => {
+    if (block.type === "paragraph")
+      return block.displayText === null ? "[문단 내용 확인 불가]" : escape2(block.displayText);
+    return block.altState === "provided" && block.alt !== "" ? escape2(block.alt) : "[이미지]";
+  };
+  let previous = null;
+  const emit = (text, kind, context) => {
+    if (text !== "" && context?.label) {
+      if (markdown && previous)
+        line("");
+      line(context.label);
+      if (markdown)
+        line("");
+      context.label = null;
+      previous = "label";
+    }
+    if (markdown && previous && previous !== "label" && kind !== "table-row")
+      line("");
+    if (markdown && kind === "table-row" && previous && previous !== "table-row" && previous !== "table-start")
+      line("");
+    line(text);
+    previous = kind;
+  };
+  const blocks = (values, context) => {
+    for (const block of values) {
+      if (block.type === "paragraph" || block.type === "image") {
+        emit(inline(block), "paragraph", context);
+      } else if (block.type === "unknown") {
+        emit("[알 수 없는 내용]", "paragraph", context);
+      } else {
+        const grid = simpleCells(block);
+        if (grid) {
+          if (markdown) {
+            emit("| " + Array(block.columns).fill("").join(" | ") + " |", "table-start", context);
+            emit("| " + Array(block.columns).fill("---").join(" | ") + " |", "table-row", context);
+          } else if (previous === "table-row")
+            emit("", "paragraph", context);
+          for (let row = 0;row < block.rows; row++) {
+            const parts = [];
+            for (let column = 0;column < block.columns; column++) {
+              const cell = grid.get(row * block.columns + column);
+              parts.push(cell === null ? "" : join(cell.blocks.map(inline), markdown ? "<br><br>" : " / "));
+            }
+            const text = join(parts, markdown ? " | " : "\t");
+            emit(markdown ? "| " + text + " |" : text, "table-row", context);
+          }
+        } else {
+          emit("[표 배치를 단순화했습니다: 관측된 내용 순서]", "paragraph", context);
+          if (!block.cells.length)
+            emit("[관측된 셀 없음]", "paragraph", context);
+          for (const cell of block.cells) {
+            if (cell.contentState !== "observed")
+              emit("[셀 내용 확인 불가]", "paragraph", context);
+            blocks(cell.blocks, context);
+          }
+        }
+      }
+    }
+  };
+  const area = (value, label) => {
+    const context = { label };
+    if (value.declarations === "unavailable")
+      emit("[" + label + " 확인 불가]", "paragraph", null);
+    for (const definition of value.definitions)
+      blocks(definition.blocks, context);
+  };
+  for (const section of model.sections) {
+    area(section.header, "머리말");
+    blocks(section.body, null);
+    area(section.footer, "꼬리말");
+  }
+  for (const entry of model.unplaced) {
+    emit("[위치를 확인할 수 없는 내용]", "paragraph", null);
+    blocks([entry.block], null);
+  }
+  if (!model.coverage.inventoryComplete || model.warnings.length)
+    emit("[일부 내용의 관측이 불완전합니다]", "paragraph", null);
+}
+
 // packages/cli/src/render.mjs
 var exports_render = {};
 __export(exports_render, {
@@ -10826,6 +10962,8 @@ __export(exports_render, {
 function optionsFor(options) {
   if (!own2(options) || !["text", "markdown"].includes(options.format))
     throw new TypeError("InvalidRenderFormat");
+  if (options.view !== undefined && !["content", "structure"].includes(options.view))
+    throw new TypeError("InvalidRenderView");
   const limits = {};
   for (const key of Object.keys(LIMITS2)) {
     const value = options[key] ?? LIMITS2[key];
@@ -10999,12 +11137,10 @@ function renderDocument(model, options) {
   const limits = optionsFor(options);
   validate5(model, limits);
   const markdown = options.format === "markdown";
+  const content = (options.view ?? "content") === "content";
   const chunks = [];
   let outputUnits = 0;
-  const escape2 = (text) => {
-    const display = text.replace(CONTROL, (c) => "\\u" + c.charCodeAt(0).toString(16).padStart(4, "0"));
-    return markdown ? display.replace(MARKDOWN, "\\$&") : display;
-  };
+  const escape2 = createDisplayEscaper({ format: options.format, view: options.view });
   const line = (text) => {
     outputUnits += text.length + 1;
     if (outputUnits > limits.maxOutputUnits)
@@ -11012,6 +11148,10 @@ function renderDocument(model, options) {
     chunks.push(text, `
 `);
   };
+  if (content) {
+    renderContent(model, { markdown, escape: escape2, line, maxOutputUnits: limits.maxOutputUnits });
+    return chunks.join("");
+  }
   const item = (depth, text) => line("  ".repeat(depth) + (markdown ? "- " : "") + text);
   const heading = (level, text) => line((markdown ? "#".repeat(level) + " " : "") + text);
   const value = (x) => x === null || x === undefined ? "unknown" : String(x);
@@ -11091,16 +11231,15 @@ function renderDocument(model, options) {
   }
   return chunks.join("");
 }
-var LIMITS2, CONTROL, MARKDOWN, own2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var LIMITS2, own2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var init_render = __esm(() => {
+  init_render_escape();
   LIMITS2 = Object.freeze({
     maxDepth: 32,
     maxNodes: 200000,
     maxTextUnits: 4 * 1024 * 1024,
     maxOutputUnits: 32 * 1024 * 1024
   });
-  CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ud800-\udfff]/gu;
-  MARKDOWN = /[\\`*_{}[\]()#+.!|<>~-]/gu;
 });
 
 // packages/cli/src/inspect-document.mjs
@@ -33929,15 +34068,16 @@ async function readDocuments({
 
 // packages/cli/src/arguments.mjs
 var USAGE = `Usage:
-  hwpjs read INPUT [--format text|markdown] [--wasm PATH]
-  hwpjs read-many INPUT... [--format text|markdown] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
+  hwpjs read INPUT [--format text|markdown] [--view content|structure] [--wasm PATH]
+  hwpjs read-many INPUT... [--format text|markdown] [--view content|structure] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs info INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs images INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs extract-images INPUT --output NEWDIR [--id ID --expect-sha256 SHA256] [--wasm PATH]
   hwpjs --help
 
-Read defaults to text. Targets are exact Native IDs printed by read.
+Read defaults to text. 기본 보기는 문서 내용(content)입니다.
+편집용 Native ID와 SHA는 read --view structure로 확인합니다.
 Use --with '' to delete. Use --option=VALUE when VALUE starts with --.
 extract-images --output is a NEW DIRECTORY, never a single image file.
 Selecting --id requires the SHA from images; all images use one opened snapshot.
@@ -33978,8 +34118,8 @@ function parseArguments(argv) {
   if (argv.length === 2 && argv[1] === "--help")
     return Object.freeze({ command: "help" });
   const allowed = new Set({
-    read: ["format", "wasm"],
-    "read-many": ["format", "wasm", "concurrency", "max-output-bytes"],
+    read: ["format", "view", "wasm"],
+    "read-many": ["format", "view", "wasm", "concurrency", "max-output-bytes"],
     edit: ["target", "replace", "with", "expect-sha256", "output", "wasm", "allow-stale-layout"],
     info: ["wasm", "expect-sha256"],
     images: ["wasm", "expect-sha256"],
@@ -34030,6 +34170,9 @@ function parseArguments(argv) {
         fail("DuplicateInputPath");
       paths.set(path, true);
     }
+    const view = options.get("view") ?? "content";
+    if (!["content", "structure"].includes(view))
+      fail("InvalidReadView");
     const format = options.get("format") ?? "text";
     if (!["text", "markdown"].includes(format))
       fail("InvalidReadFormat");
@@ -34043,6 +34186,7 @@ function parseArguments(argv) {
       command,
       inputPaths: Object.freeze([...positional]),
       format,
+      view,
       concurrency: Number(concurrency),
       maxOutputBytes: Number(budget),
       ...wasm === undefined ? {} : { wasm }
@@ -34073,10 +34217,13 @@ function parseArguments(argv) {
     });
   }
   if (command === "read") {
+    const view = options.get("view") ?? "content";
+    if (!["content", "structure"].includes(view))
+      fail("InvalidReadView");
     const format = options.get("format") ?? "text";
     if (!["text", "markdown"].includes(format))
       fail("InvalidReadFormat");
-    return Object.freeze({ command, input, format, ...wasm === undefined ? {} : { wasm } });
+    return Object.freeze({ command, input, format, view, ...wasm === undefined ? {} : { wasm } });
   }
   for (const key of ["target", "replace", "with", "expect-sha256", "output"])
     if (!options.has(key))
@@ -34403,10 +34550,13 @@ var {
 import { join as join2 } from "node:path";
 
 // packages/cli/src/read-operation.mjs
+init_render_escape();
 var MAX_INPUT_BYTES = 64 * 1024 * 1024;
-async function readDocumentOperation({ inputPath, inputSnapshot, wasm, format = "text" }, { files, engine, renderDocument, loadWasm }) {
+async function readDocumentOperation({ inputPath, inputSnapshot, wasm, format = "text", view = "content" }, { files, engine, renderDocument, loadWasm }) {
   if (!["text", "markdown"].includes(format))
     throw Error("InvalidReadFormat");
+  if (!["content", "structure"].includes(view))
+    throw Error("InvalidReadView");
   const input = inputSnapshot ?? await files.readInputSnapshot(inputPath, { maxBytes: MAX_INPUT_BYTES });
   if (!(input?.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? ""))
     throw Error("InvalidInputSnapshot");
@@ -34416,24 +34566,71 @@ async function readDocumentOperation({ inputPath, inputSnapshot, wasm, format = 
     throw Error("InvalidEngineFormat");
   if (result.model?.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256)
     throw Error("InvalidEngineModel");
-  const text = await renderDocument(result.model, { format });
+  const text = await renderDocument(result.model, { format, view });
   if (typeof text !== "string" || !text.isWellFormed())
     throw Error("InvalidRenderedDocument");
   return { format: result.format, sourceSha256: input.sha256, text };
 }
-var scalar = (value) => Array.from(String(value), (character) => {
-  const code = character.charCodeAt(0);
-  return code <= 31 || code === 127 ? "\\u" + code.toString(16).padStart(4, "0") : character;
-}).join("");
-function renderBatchReadReport(batch, { format = "text", maxOutputBytes }) {
+function renderReadResponse(result, { view = "content" } = {}) {
+  if (!result || typeof result !== "object" || Array.isArray(result))
+    throw Error("InvalidReadResult");
+  const { format, sourceSha256, text } = result;
+  if (!["hwp5", "hwpx"].includes(format))
+    throw Error("InvalidEngineFormat");
+  if (typeof sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(sourceSha256))
+    throw Error("InvalidReadSourceSHA256");
+  if (!["content", "structure"].includes(view))
+    throw Error("InvalidReadView");
+  if (typeof text !== "string" || !text.isWellFormed())
+    throw Error("InvalidRenderedDocument");
+  if (view === "content")
+    return text;
+  return `format: ${format}
+documentSHA256: ${sourceSha256}
+${text}${text.endsWith(`
+`) ? "" : `
+`}`;
+}
+var metadataEscape = createDisplayEscaper({ format: "text", view: "structure" });
+var scalar = (value) => metadataEscape(String(value));
+function renderBatchReadReport(batch, { format = "text", view = "content", maxOutputBytes }) {
   if (!["text", "markdown"].includes(format))
     throw Error("InvalidReadFormat");
+  if (!["content", "structure"].includes(view))
+    throw Error("InvalidReadView");
   const indent = format === "markdown" ? "    " : "";
   const lines = [format === "markdown" ? `# 여러 문서 읽기
 ` : `여러 문서 읽기
 `];
   const line = (key, value) => `${indent}${key}: ${scalar(value)}
 `;
+  if (view === "content") {
+    const escape2 = createDisplayEscaper({ format, view });
+    for (const row of batch.results) {
+      const label = escape2(row.inputPath);
+      lines.push(format === "markdown" ? `
+## ${row.index + 1}. ${label}
+` : `
+[${row.index + 1}] ${label}
+`);
+      if (row.value)
+        lines.push(row.value.text, row.value.text.endsWith(`
+`) ? "" : `
+`);
+      for (const error of row.errors) {
+        const detail = error.detail === undefined ? "" : ` (${escape2(error.detail)})`;
+        lines.push(`읽기 실패: ${escape2(error.message)}${detail}
+`);
+      }
+      if (row.status === "failure" && row.errors.length === 0)
+        lines.push(`읽기 실패: 문서 결과를 제공하지 못했습니다.
+`);
+    }
+    lines.push(`
+읽기 결과: 성공 ${batch.summary.succeeded}개, 실패 ${batch.summary.failed}개
+`);
+    return checkedReport(lines, maxOutputBytes);
+  }
   lines.push(line("batchStatus", batch.status), line("requested", batch.summary.total), line("succeeded", batch.summary.succeeded), line("failed", batch.summary.failed));
   for (const row of batch.results) {
     lines.push(format === "markdown" ? `
@@ -34454,6 +34651,9 @@ function renderBatchReadReport(batch, { format = "text", maxOutputBytes }) {
         lines.push(line("detail", error.detail));
     }
   }
+  return checkedReport(lines, maxOutputBytes);
+}
+function checkedReport(lines, maxOutputBytes) {
   const text = lines.join("");
   if (!text.isWellFormed() || new TextEncoder().encode(text).byteLength > maxOutputBytes)
     throw Error("ReadManyReportBudgetExceeded");
@@ -34582,7 +34782,7 @@ async function runCLI(argv, dependencies = {}) {
         inputPaths: options.inputPaths,
         concurrency: options.concurrency,
         maxOutputBytes: options.maxOutputBytes - reportOverhead,
-        readOne: ({ inputPath }) => readDocumentOperation({ inputPath, format: options.format }, { files, engine, renderDocument, loadWasm: loadOnce })
+        readOne: ({ inputPath }) => readDocumentOperation({ inputPath, format: options.format, view: options.view }, { files, engine, renderDocument, loadWasm: loadOnce })
       });
       try {
         const text = renderBatchReadReport(batch, options);
@@ -34705,13 +34905,8 @@ async function runCLI(argv, dependencies = {}) {
     }
     if (options.command === "read") {
       const renderDocument = dependencies.renderDocument ?? (await Promise.resolve().then(() => (init_render(), exports_render))).renderDocument;
-      const result = await readDocumentOperation({ inputSnapshot: input, wasm: wasm.bytes, format: options.format }, { files, engine, renderDocument });
-      const body = result.text;
-      await io.stdout.write(`format: ${result.format}
-documentSHA256: ${input.sha256}
-${body}${body.endsWith(`
-`) ? "" : `
-`}`);
+      const result = await readDocumentOperation({ inputSnapshot: input, wasm: wasm.bytes, format: options.format, view: options.view }, { files, engine, renderDocument });
+      await io.stdout.write(renderReadResponse(result, { view: options.view }));
       return 0;
     }
     const result = await engine.edit({
@@ -34776,7 +34971,12 @@ function documentTools({
         io
       });
       return {
-        content: [{ type: "text", text: stdout + stderr || `CLI exited with code ${exitCode}.` }],
+        content: [
+          {
+            type: "text",
+            text: exitCode === 0 ? stdout + stderr : stdout + stderr || `CLI exited with code ${exitCode}.`
+          }
+        ],
         ...exitCode === 0 ? {} : { isError: true }
       };
     } catch (error) {
@@ -34799,10 +34999,11 @@ function documentTools({
       name: "read_document",
       config: {
         title: "Read HWP/HWPX document",
-        description: "Read a local document as a bounded logical text/Markdown view. Returns documentSHA256 and exact Native paragraph IDs. Display text is not an editing-offset map; unknown ownership and unsupported content remain diagnostic.",
+        description: "로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.",
         inputSchema: strictObject({
           inputPath: string2().min(1).describe("Local input file path, relative to the server working directory or absolute."),
-          format: _enum(["text", "markdown"]).default("text")
+          format: _enum(["text", "markdown"]).default("text"),
+          view: _enum(["content", "structure"]).default("content")
         }),
         annotations: {
           readOnlyHint: true,
@@ -34811,18 +35012,18 @@ function documentTools({
           openWorldHint: true
         }
       },
-      invoke: ({ inputPath, format = "text" }) => invoke(["read", `--format=${format}`, ...wasm, "--", inputPath])
+      invoke: ({ inputPath, format = "text", view = "content" }) => invoke(["read", `--format=${format}`, `--view=${view}`, ...wasm, "--", inputPath])
     },
     {
       name: "edit_document",
       config: {
         title: "Edit HWP/HWPX literal text into a new file",
-        description: "Replace exactly one literal occurrence in a Native paragraph ID from read_document, gated by that read snapshot SHA. Overlapping matches are ambiguous. Empty replacement deletes text; paragraph controls/newlines are rejected. Output must be a new path; the original and existing outputs are never overwritten. Stale HWP5 layout is rejected unless explicitly allowed.",
+        description: "read_document의 view: structure에서 조회한 Native 문단 ID와 같은 원문 SHA를 사용해 정확히 한 문자열을 교체합니다. 겹치는 일치는 거부하며 빈 교체문은 삭제입니다. 문단 제어와 줄바꿈은 거부합니다. 새 출력 경로만 허용하고 원본이나 기존 파일을 덮어쓰지 않습니다. HWP5의 오래된 배치 정보는 명시 허용 없이는 거부합니다.",
         inputSchema: strictObject({
           inputPath: string2().min(1),
           outputPath: string2().min(1),
-          target: string2().min(1).describe("Exact s<section>:p<NativeOrdinal> ID from read_document."),
-          expectedSha256: string2().min(1).describe("documentSHA256 from the same read_document snapshot."),
+          target: string2().min(1).describe("read_document의 view: structure에서 얻은 정확한 s<section>:p<NativeOrdinal> ID."),
+          expectedSha256: string2().min(1).describe("read_document의 view: structure로 조회한 동일 스냅샷의 documentSHA256."),
           findText: string2().min(1),
           replacement: string2().describe("Literal replacement; empty string deletes the unique match."),
           allowStaleLayout: boolean2().default(false)
@@ -34924,7 +35125,7 @@ function documentTools({
       name: "read_documents",
       config: {
         title: "여러 HWP/HWPX 문서 읽기",
-        description: "명시한 파일 1~128개를 기존 공통 엔진으로 읽어 입력 순서의 텍스트/Markdown으로 보고합니다. 기본 동시성1·최대2이며 일부 실패도 숨기지 않습니다. 폴더 탐색·편집·HTML·문서 JSON 출력은 제공하지 않습니다.",
+        description: "명시한 파일 1~128개를 기존 공통 엔진으로 읽어 입력 순서의 텍스트/Markdown으로 보고합니다. 기본 view는 content이며 파일명과 본문, 한국어 실패 안내를 반환합니다. 편집용 ID와 SHA 및 상세 상태는 structure로 조회합니다. 기본 동시성1·최대2이며 일부 실패도 숨기지 않습니다. 폴더 탐색·편집·HTML·문서 JSON 출력은 제공하지 않습니다.",
         inputSchema: strictObject({
           inputPaths: array(batchPath).min(1).max(BATCH_READ_LIMITS.maxInputs).refine((paths) => {
             const seen = new Map;
@@ -34936,6 +35137,7 @@ function documentTools({
             return true;
           }, "중복된 입력 경로가 있습니다."),
           format: _enum(["text", "markdown"]).default("text"),
+          view: _enum(["content", "structure"]).default("content"),
           concurrency: number2().int().min(1).max(BATCH_READ_LIMITS.maxConcurrency).default(1),
           maxOutputBytes: number2().int().min(1).max(BATCH_READ_LIMITS.maxOutputBytes).default(BATCH_READ_LIMITS.defaultOutputBytes)
         }),
@@ -34949,11 +35151,13 @@ function documentTools({
       invoke: ({
         inputPaths,
         format = "text",
+        view = "content",
         concurrency = 1,
         maxOutputBytes = BATCH_READ_LIMITS.defaultOutputBytes
       }) => invoke([
         "read-many",
         `--format=${format}`,
+        `--view=${view}`,
         `--concurrency=${concurrency}`,
         `--max-output-bytes=${maxOutputBytes}`,
         ...wasm,

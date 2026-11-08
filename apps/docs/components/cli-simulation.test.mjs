@@ -90,9 +90,9 @@ const draft = (snapshot, extra = {}) => ({
   ...extra,
 });
 
-test('read calls shared engine, displays actual returned model, and emits no document JSON tree', async () => {
+test('명시한 편집 구조 보기는 원문 ID와 SHA를 한 번만 출력한다', async () => {
   const { simulation, input, calls } = setup();
-  const snapshot = await simulation.read(input);
+  const snapshot = await simulation.read({ ...input, view: 'structure' });
   assert.equal(calls.length, 1);
   assert.equal(calls[0].operation, 'read');
   assert.equal(snapshot.sourceSha256, hash(input.bytes));
@@ -103,8 +103,86 @@ test('read calls shared engine, displays actual returned model, and emits no doc
   assert.equal(snapshot.response.result.content[0].text.split('documentSHA256: ').length - 1, 1);
   assert.equal(snapshot.request.params.name, 'read_document');
   assert.ok(snapshot.command.startsWith('npx --no-install hwpjs read '));
-  assert.deepEqual(snapshot.request.params.arguments, { inputPath: './noori.hwp', format: 'text' });
+  assert.ok(snapshot.command.endsWith('--view structure'));
+  assert.equal(snapshot.view, 'structure');
+  assert.deepEqual(snapshot.request.params.arguments, {
+    inputPath: './noori.hwp',
+    format: 'text',
+    view: 'structure',
+  });
   assert.ok(Object.isFrozen(snapshot) && Object.isFrozen(snapshot.paragraphs[0]));
+});
+
+for (const format of ['text', 'markdown']) {
+  test(`기본 문서 내용 ${format} 응답은 공통 본문만 반환하고 내부 편집 식별자는 유지한다`, async () => {
+    const { simulation, input, calls } = setup();
+    const snapshot = await simulation.read({ ...input, format });
+    const text = snapshot.response.result.content[0].text;
+    assert.equal(snapshot.view, 'content');
+    assert.equal(text, snapshot.body);
+    assert.ok(text.includes('보도일시'));
+    assert.doesNotMatch(text, /Paragraph s0:p2|Table s0:t10|documentSHA256:|^format: /m);
+    assert.deepEqual(snapshot.request.params.arguments, {
+      inputPath: './noori.hwp',
+      format,
+      view: 'content',
+    });
+    assert.ok(snapshot.command.endsWith('--view content'));
+    assert.equal(snapshot.paragraphs[0].id, 's0:p2');
+    assert.equal(snapshot.sourceSha256, hash(input.bytes));
+    assert.equal(calls.length, 1);
+  });
+}
+
+test('문서 내용과 편집 구조 전환은 같은 원본 SHA와 편집 좌표를 유지한다', async () => {
+  const { simulation, input } = setup({ format: 'hwpx', ordinal: 91 });
+  const content = await simulation.read(input);
+  const structure = await simulation.read({ ...input, view: 'structure', format: 'markdown' });
+  assert.equal(content.sourceSha256, structure.sourceSha256);
+  assert.deepEqual(content.paragraphs, structure.paragraphs);
+  assert.equal(content.response.result.content[0].text, content.body);
+  assert.equal(
+    structure.response.result.content[0].text,
+    `format: hwpx\ndocumentSHA256: ${structure.sourceSha256}\n${structure.body}`,
+  );
+  assert.ok(structure.body.includes('Paragraph s0:p91'));
+});
+
+test('알 수 없는 보기는 Native 읽기를 호출하기 전에 거부한다', async () => {
+  const { simulation, input, calls } = setup();
+  for (const view of ['html', '', null, false])
+    await assert.rejects(simulation.read({ ...input, view }), /InvalidSimulationView/);
+  assert.equal(calls.length, 0);
+});
+
+test('구조 레이블처럼 생긴 원문은 본문 보기에서도 삭제하지 않는다', async () => {
+  const literal = 'Paragraph s0:p2 / documentSHA256: 문서에 적힌 실제 내용';
+  const simulation = createSimulation({
+    read: async ({ bytes }) => {
+      const model = makeModel(bytes);
+      model.sections[0].body[0].cells[0].blocks[0].displayText = literal;
+      return { format: 'hwp5', model };
+    },
+  });
+  for (const format of ['text', 'markdown']) {
+    const snapshot = await simulation.read({ ...setup().input, format });
+    assert.ok(snapshot.body.includes(literal));
+    assert.equal(snapshot.response.result.content[0].text, snapshot.body);
+  }
+});
+
+test('빈 문서 내용에는 공통 응답 조립에서도 접두사나 개행을 추가하지 않는다', async () => {
+  const simulation = createSimulation({
+    read: async ({ bytes }) => {
+      const model = makeModel(bytes);
+      model.sections[0].body = [];
+      return { format: 'hwp5', model };
+    },
+  });
+  const snapshot = await simulation.read(setup().input);
+  assert.equal(snapshot.body, '');
+  assert.equal(snapshot.response.result.content[0].text, '');
+  assert.equal(snapshot.sourceSha256, hash(setup().input.bytes));
 });
 
 test('read captures original input and WASM before hashing awaits', async () => {

@@ -1,15 +1,16 @@
 import { BATCH_READ_LIMITS } from './batch-read.mjs';
 
 export const USAGE = `Usage:
-  hwpjs read INPUT [--format text|markdown] [--wasm PATH]
-  hwpjs read-many INPUT... [--format text|markdown] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
+  hwpjs read INPUT [--format text|markdown] [--view content|structure] [--wasm PATH]
+  hwpjs read-many INPUT... [--format text|markdown] [--view content|structure] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs info INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs images INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs extract-images INPUT --output NEWDIR [--id ID --expect-sha256 SHA256] [--wasm PATH]
   hwpjs --help
 
-Read defaults to text. Targets are exact Native IDs printed by read.
+Read defaults to text. 기본 보기는 문서 내용(content)입니다.
+편집용 Native ID와 SHA는 read --view structure로 확인합니다.
 Use --with '' to delete. Use --option=VALUE when VALUE starts with --.
 extract-images --output is a NEW DIRECTORY, never a single image file.
 Selecting --id requires the SHA from images; all images use one opened snapshot.
@@ -47,8 +48,8 @@ export function parseArguments(argv) {
   if (argv.length === 2 && argv[1] === '--help') return Object.freeze({ command: 'help' });
   const allowed = new Set(
     {
-      read: ['format', 'wasm'],
-      'read-many': ['format', 'wasm', 'concurrency', 'max-output-bytes'],
+      read: ['format', 'view', 'wasm'],
+      'read-many': ['format', 'view', 'wasm', 'concurrency', 'max-output-bytes'],
       edit: ['target', 'replace', 'with', 'expect-sha256', 'output', 'wasm', 'allow-stale-layout'],
       info: ['wasm', 'expect-sha256'],
       images: ['wasm', 'expect-sha256'],
@@ -94,6 +95,8 @@ export function parseArguments(argv) {
       if (paths.has(path)) fail('DuplicateInputPath');
       paths.set(path, true);
     }
+    const view = options.get('view') ?? 'content';
+    if (!['content', 'structure'].includes(view)) fail('InvalidReadView');
     const format = options.get('format') ?? 'text';
     if (!['text', 'markdown'].includes(format)) fail('InvalidReadFormat');
     const concurrency = options.get('concurrency') ?? '1';
@@ -109,6 +112,7 @@ export function parseArguments(argv) {
       command,
       inputPaths: Object.freeze([...positional]),
       format,
+      view,
       concurrency: Number(concurrency),
       maxOutputBytes: Number(budget),
       ...(wasm === undefined ? {} : { wasm }),
@@ -135,9 +139,11 @@ export function parseArguments(argv) {
     });
   }
   if (command === 'read') {
+    const view = options.get('view') ?? 'content';
+    if (!['content', 'structure'].includes(view)) fail('InvalidReadView');
     const format = options.get('format') ?? 'text';
     if (!['text', 'markdown'].includes(format)) fail('InvalidReadFormat');
-    return Object.freeze({ command, input, format, ...(wasm === undefined ? {} : { wasm }) });
+    return Object.freeze({ command, input, format, view, ...(wasm === undefined ? {} : { wasm }) });
   }
   for (const key of ['target', 'replace', 'with', 'expect-sha256', 'output'])
     if (!options.has(key)) fail('MissingRequiredOption:' + key);

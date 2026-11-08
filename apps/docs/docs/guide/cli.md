@@ -1,6 +1,6 @@
 # CLI로 원본 읽기·정보 확인·이미지 추출·편집
 
-HWP5와 HWPX 원본을 읽고 정보를 확인하거나, 관측된 그림을 추출하고 한 문단의 문자열을 바꿔 새 문서로 저장합니다. 읽기에서는 머리말·본문·꼬리말, 표의 셀, 이미지 메타데이터를 구분하며 미관측 텍스트와 소속을 확인하지 못한 개체를 경고로 남깁니다.
+HWP5와 HWPX 원본을 읽고 정보를 확인하거나, 관측된 그림을 추출하고 한 문단의 문자열을 바꿔 새 문서로 저장합니다. 기본 읽기는 관측한 문서 내용을 텍스트나 Markdown 본문으로 출력합니다. 편집에 필요한 원문 ID·SHA와 진단 상세는 편집 구조 보기에서 확인합니다.
 
 [브라우저 체험](../cli-simulation.mdx)은 로컬 Node CLI 실행과 별개입니다. 페이지가 사용자의 로컬 파일 시스템이나 설치된 CLI를 대신 실행하지는 않습니다.
 
@@ -25,30 +25,42 @@ bun run cli read ./document.hwp --wasm /absolute/path/to/hwpjs.wasm
 
 빌드된 CLI의 기본 WASM은 실행 파일 옆의 `hwpjs.wasm`입니다. `--wasm PATH`로 다른 파일을 명시할 수 있으며 상대 경로는 현재 작업 디렉터리 기준입니다. CLI 도움말은 문서나 WASM 없이 볼 수 있습니다.
 
-## 논리 구조 읽기
+## 문서 내용 읽기
 
 ```bash
 npx --no-install hwpjs read ./document.hwp
 npx --no-install hwpjs read ./document.hwpx --format markdown
+hwpjs read ./문서.hwp --format markdown > ./문서.md
 ```
 
-출력 첫 부분의 `format`과 `documentSHA256`을 확인하세요. 이후 `Paragraph s0:p3` 같은 원문 ID와 읽기용 표시 텍스트가 이어집니다. HWP5 문단 번호는 구역 안에서 0부터 시작하고, HWPX 문단 번호는 문서 전체에서 1부터 시작합니다. 출력 순서로 번호를 새로 만들지 않습니다.
+기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기의 stdout에는 관측한 문서 본문만 출력하며 `format`·`documentSHA256` 접두사나 `Paragraph`·`Table` 원문 ID를 붙이지 않습니다. `--view content`를 명시해도 같습니다. `>`는 셸의 리다이렉션이며 새 읽기 `--output` 옵션이나 stdin·URI 읽기를 뜻하지 않습니다.
 
-`text`가 기본값이며 `markdown`도 같은 논리 뷰입니다. 전용 문서 변환기의 서식·이미지 포함 Markdown 출력과는 구분합니다. 기존 Rust 변환기의 출력 문자열·옵션·함수 이름을 그대로 재현하는 계약도 아닙니다. HTML·PDF 변환이나 시각적 페이지 재현, 문서 전체 JSON 변환을 제공하는 명령은 아닙니다.
+Markdown은 관측한 문서 내용을 표현합니다. HTML·PDF 변환, 원본 조판·물리 페이지의 완전한 재현, 이미지 OCR이나 문서 전체 JSON 변환을 제공하는 명령이 아닙니다. 관측하지 못한 내용과 구조는 짧은 미확정 표시로 남길 수 있으며, 상세 원인은 편집 구조 보기에서 확인합니다.
+
+## 편집 구조 조회
+
+```bash
+npx --no-install hwpjs read ./document.hwp --view structure
+npx --no-install hwpjs read ./document.hwpx --format markdown --view structure
+```
+
+`--view structure`는 머리말·본문·꼬리말 정의, 표의 셀, 그림 메타데이터와 진단 상세를 구분하는 기존 구조 출력을 제공합니다. 출력 첫 부분의 `format`·`documentSHA256`과 `Paragraph s0:p3` 같은 실제 원문 ID를 확인하세요. HWP5 문단 번호는 구역 안에서 0부터, HWPX 문단 번호는 문서 전체에서 1부터 시작합니다. 출력 순서로 번호를 만들지 않습니다.
+
+수정할 대상을 정하려면 이 구조 보기를 읽어 같은 원본의 ID·SHA를 얻습니다. 기본 문서 내용에는 이 편집 정보가 포함되지 않습니다. 두 보기는 같은 관측 모델과 공통 renderer를 사용하며 원본 파싱·편집·저장 모델을 바꾸지 않습니다. 갱신된 패키지·Skill이 필요한 옵션이므로 기존 설치분은 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
 
 ## 여러 명시 파일 읽기
 
-`read-many`는 명시한 여러 파일을 읽는 읽기 전용 명령입니다. 이번 동봉 CLI·MCP·Skill의 설치 후 실행을 확인했습니다. 기존 설치분에는 없을 수 있으므로 갱신된 패키지나 Skill의 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
+`read-many`는 명시한 여러 파일을 읽는 읽기 전용 명령입니다. 기존 배치 읽기의 설치 실측은 구조가 기본이던 버전의 증거로 보존합니다. 아래 `view` 계약의 새 패키지·Skill 설치 검증은 별도로 확인하며, 기존 설치분은 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
 
 ```bash
 npx --no-install hwpjs read-many ./one.hwp ./two.hwpx
 npx --no-install hwpjs read-many ./one.hwp ./two.hwpx \
-  --format markdown --concurrency 2 --max-output-bytes 8388608
+  --format markdown --view content --concurrency 2 --max-output-bytes 8388608
 ```
 
 입력은 사용자가 명시한 파일 1~128개입니다. 기본 출력은 `text`이며 `markdown`도 선택할 수 있습니다. 동시성은 기본 1, 최대 2입니다. 폴더를 자동 탐색하거나 파일을 자동으로 쓰지 않으며, 일괄 편집·이미지 추출·HTML 전용 변환 명령이 아닙니다.
 
-결과는 입력 순서로 경로·상태와 성공한 문서의 형식·원문 SHA·논리 본문, 실패한 파일의 오류를 보고합니다. 일부 파일이 실패해도 다른 파일의 성공 결과를 유지하며 종료코드는 1입니다. 후속 편집에는 해당 문서에서 얻은 SHA와 원문 ID를 각각 사용합니다.
+기본 `content` 결과는 입력 순서로 파일 출처·본문과 읽기 실패, 성공·실패 개수를 보고합니다. 일부 파일이 실패해도 다른 파일의 성공 본문을 유지하며 종료코드는 1입니다. 기계 키·원문 SHA·원문 ID와 진단 상세가 필요하면 `--view structure`로 읽습니다. 후속 편집에는 해당 문서의 구조 보기에서 얻은 SHA와 ID를 각각 사용합니다.
 
 `--max-output-bytes`는 UTF-8 보고서 출력 예산입니다. 기본은 4 MiB(`4194304`바이트), 상한은 16 MiB(`16777216`바이트)이며 문서 입력 크기나 전체 메모리 상한이 아닙니다. 본문을 잘라 성공으로 보고하지 않습니다. 예산을 넘는 항목은 실패로 남으며, 파일별 상태를 보고할 공간조차 부족하면 작업 전에 거부할 수 있습니다. 짧은 입력 거부 진단은 본문 보고서 예산과 구분합니다.
 
@@ -93,7 +105,7 @@ CLI의 `--output`은 **새 디렉터리**입니다. 단일 파일 경로가 아�
 
 ## 한 문단의 문자열 교체
 
-먼저 읽기에서 얻은 원문 ID와 SHA를 사용합니다. 아래 ID·SHA·문자열은 대상 문서의 실제 값으로 바꾸세요.
+먼저 `read --view structure`에서 얻은 원문 ID와 SHA를 사용합니다. 아래 ID·SHA·문자열은 대상 문서의 실제 값으로 바꾸세요.
 
 ```bash
 npx --no-install hwpjs edit ./document.hwpx \
@@ -103,7 +115,7 @@ npx --no-install hwpjs edit ./document.hwpx \
 
 찾는 문자열은 선택한 문단에서 정확히 한 번 일치해야 합니다. 겹치는 중복 일치도 거부합니다. `--with ''`는 삭제이며 개행·제어 문자 삽입과 문단 경계를 넘는 교체는 지원하지 않습니다. 읽기에 보이는 문단이라도 네이티브 엔진의 보호·편집 범위 검사를 통과해야 합니다.
 
-원본과 기존 출력 파일은 덮어쓰지 않습니다. 원본이 바뀌면 다시 읽어 새 SHA와 ID로 수정하세요. 저장 결과를 다시 읽으면 다음 작업에 사용할 새 문서 SHA를 얻을 수 있습니다.
+원본과 기존 출력 파일은 덮어쓰지 않습니다. 원본이 바뀌면 다시 읽어 새 SHA와 ID로 수정하세요. 저장 결과를 기본 읽기로 확인하고, 다음 편집에는 `read --view structure`에서 새 문서 SHA와 ID를 얻습니다.
 
 HWP5는 저장된 줄 배치가 무효화되는 편집을 기본적으로 거부합니다. 이를 수용할 때만 `--allow-stale-layout`을 추가하세요. 이 옵션은 새 조판 결과를 만들지 않습니다. 저장 후 출력 스트림 오류가 나면 `published: true` 진단이 있을 수 있으므로 결과 파일을 확인하고 무조건 재실행하지 않습니다.
 

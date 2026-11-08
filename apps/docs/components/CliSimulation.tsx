@@ -45,6 +45,7 @@ function explainError(error: unknown) {
 export default function CliSimulation() {
   const [sample, setSample] = useState(samples[0].name);
   const [viewFormat, setViewFormat] = useState<'text' | 'markdown'>('text');
+  const [readView, setReadView] = useState<'content' | 'structure'>('content');
   const [snapshot, setSnapshot] = useState<SimulationSnapshot | null>(null);
   const [targetId, setTargetId] = useState('');
   const [findText, setFindText] = useState('보도일시');
@@ -109,6 +110,7 @@ export default function CliSimulation() {
     const pending = simulationRequest('read_document', {
       inputPath: './' + sample,
       format: viewFormat,
+      view: readView,
     });
     controller.current = new AbortController();
     setSnapshot(null);
@@ -128,6 +130,7 @@ export default function CliSimulation() {
         wasm,
         filename: sample,
         format: viewFormat,
+        view: readView,
       });
       if (!current(sequence)) return;
       const target =
@@ -141,7 +144,11 @@ export default function CliSimulation() {
       setCommand(next.command);
       setRequest(next.request);
       setResponse(next.response);
-      setStatus('읽었습니다. 원문 ID와 SHA를 기준으로 한 문단을 수정할 수 있습니다.');
+      setStatus(
+        readView === 'structure'
+          ? '편집 구조를 읽었습니다. 원문 ID와 SHA를 기준으로 한 문단을 수정할 수 있습니다.'
+          : '문서 내용을 읽었습니다. 수정하려면 편집 구조 보기를 선택하고 다시 읽으세요.',
+      );
     } catch (error) {
       if (current(sequence)) {
         setResponse(simulationError(pending, error));
@@ -232,7 +239,20 @@ export default function CliSimulation() {
           </select>
         </label>
         <label>
-          논리 뷰
+          보기
+          <select
+            value={readView}
+            onChange={(e) => {
+              reset();
+              setReadView(e.target.value as 'content' | 'structure');
+            }}
+          >
+            <option value="content">문서 내용</option>
+            <option value="structure">편집 구조</option>
+          </select>
+        </label>
+        <label>
+          출력 형식
           <select
             value={viewFormat}
             onChange={(e) => {
@@ -257,98 +277,110 @@ export default function CliSimulation() {
       </p>
       {snapshot && (
         <>
-          <label className="hwpjs-cli-simulation-sha">
-            읽은 문서 SHA256
-            <input readOnly value={snapshot.sourceSha256} />
-          </label>
+          {snapshot.view === 'structure' && (
+            <label className="hwpjs-cli-simulation-sha">
+              읽은 문서 SHA256
+              <input readOnly value={snapshot.sourceSha256} />
+            </label>
+          )}
           <details open className="hwpjs-cli-simulation-outline">
-            <summary>읽은 논리 구조 · {snapshot.format === 'hwp5' ? 'HWP5' : 'HWPX'}</summary>
+            <summary>
+              {snapshot.view === 'structure' ? '읽은 편집 구조' : '읽은 문서 내용'} ·{' '}
+              {snapshot.format === 'hwp5' ? 'HWP5' : 'HWPX'}
+            </summary>
             <pre>{snapshot.body}</pre>
           </details>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void editSample();
-            }}
-          >
-            <fieldset disabled={busy} className="hwpjs-cli-simulation-edit">
-              <legend>한 문단의 리터럴 문자열 교체</legend>
-              <label>
-                원문 Native ID
-                <select
-                  value={targetId}
-                  onChange={(e) => {
-                    clearDownload();
-                    setTargetId(e.target.value);
-                  }}
-                >
-                  <option value="">문단을 선택하세요</option>
-                  {snapshot.paragraphs.map((p) => (
-                    <option
-                      key={p.id}
-                      value={p.id}
-                      disabled={p.editability !== 'range-check-required'}
-                    >
-                      {p.id} ·{' '}
-                      {p.displayText === null
-                        ? '읽기 미확정'
-                        : p.displayText.slice(0, 72) || '(빈 문단)'}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                찾을 문자열
-                <input
-                  value={findText}
-                  onChange={(e) => {
-                    clearDownload();
-                    setFindText(e.target.value);
-                  }}
-                />
-              </label>
-              <label>
-                바꿀 문자열 · 비우면 삭제
-                <input
-                  value={replacement}
-                  onChange={(e) => {
-                    clearDownload();
-                    setReplacement(e.target.value);
-                  }}
-                />
-              </label>
-              <label>
-                새 파일 이름
-                <input
-                  value={outputName}
-                  onChange={(e) => {
-                    clearDownload();
-                    setOutputName(e.target.value);
-                  }}
-                />
-              </label>
-              {snapshot.format === 'hwp5' && (
-                <label className="hwpjs-cli-simulation-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={allowStaleLayout}
+          {snapshot.view === 'content' && (
+            <p>
+              관측한 문서 내용입니다. 원문 ID와 SHA로 수정하려면 편집 구조를 선택하고 다시 읽으세요.
+            </p>
+          )}
+          {snapshot.view === 'structure' && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                void editSample();
+              }}
+            >
+              <fieldset disabled={busy} className="hwpjs-cli-simulation-edit">
+                <legend>한 문단의 리터럴 문자열 교체</legend>
+                <label>
+                  원문 Native ID
+                  <select
+                    value={targetId}
                     onChange={(e) => {
                       clearDownload();
-                      setAllowStaleLayout(e.target.checked);
+                      setTargetId(e.target.value);
+                    }}
+                  >
+                    <option value="">문단을 선택하세요</option>
+                    {snapshot.paragraphs.map((p) => (
+                      <option
+                        key={p.id}
+                        value={p.id}
+                        disabled={p.editability !== 'range-check-required'}
+                      >
+                        {p.id} ·{' '}
+                        {p.displayText === null
+                          ? '읽기 미확정'
+                          : p.displayText.slice(0, 72) || '(빈 문단)'}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  찾을 문자열
+                  <input
+                    value={findText}
+                    onChange={(e) => {
+                      clearDownload();
+                      setFindText(e.target.value);
                     }}
                   />
-                  저장된 줄 배치 무효화를 수용합니다 (--allow-stale-layout)
                 </label>
-              )}
-              <p>
-                표시 순서로 좌표를 만들지 않습니다. Native가 대상·보호 상태·유일한 일치를 다시
-                검사합니다. 입력 원본은 변경하지 않습니다.
-              </p>
-              <button type="submit" disabled={!targetId || !findText}>
-                수정본 만들기
-              </button>
-            </fieldset>
-          </form>
+                <label>
+                  바꿀 문자열 · 비우면 삭제
+                  <input
+                    value={replacement}
+                    onChange={(e) => {
+                      clearDownload();
+                      setReplacement(e.target.value);
+                    }}
+                  />
+                </label>
+                <label>
+                  새 파일 이름
+                  <input
+                    value={outputName}
+                    onChange={(e) => {
+                      clearDownload();
+                      setOutputName(e.target.value);
+                    }}
+                  />
+                </label>
+                {snapshot.format === 'hwp5' && (
+                  <label className="hwpjs-cli-simulation-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={allowStaleLayout}
+                      onChange={(e) => {
+                        clearDownload();
+                        setAllowStaleLayout(e.target.checked);
+                      }}
+                    />
+                    저장된 줄 배치 무효화를 수용합니다 (--allow-stale-layout)
+                  </label>
+                )}
+                <p>
+                  표시 순서로 좌표를 만들지 않습니다. Native가 대상·보호 상태·유일한 일치를 다시
+                  검사합니다. 입력 원본은 변경하지 않습니다.
+                </p>
+                <button type="submit" disabled={!targetId || !findText}>
+                  수정본 만들기
+                </button>
+              </fieldset>
+            </form>
+          )}
         </>
       )}
       {download && (

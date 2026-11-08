@@ -2,7 +2,11 @@ import { parseArguments, ArgumentsError, USAGE } from './arguments.mjs';
 import * as defaultFiles from './files.mjs';
 import { join } from 'node:path';
 import { readDocuments } from './batch-read.mjs';
-import { readDocumentOperation, renderBatchReadReport } from './read-operation.mjs';
+import {
+  readDocumentOperation,
+  renderBatchReadReport,
+  renderReadResponse,
+} from './read-operation.mjs';
 
 // Scalar metadata must never inject additional terminal lines or C0 controls.
 const scalar = (value) =>
@@ -162,7 +166,7 @@ export async function runCLI(argv, dependencies = {}) {
         maxOutputBytes: options.maxOutputBytes - reportOverhead,
         readOne: ({ inputPath }) =>
           readDocumentOperation(
-            { inputPath, format: options.format },
+            { inputPath, format: options.format, view: options.view },
             { files, engine, renderDocument, loadWasm: loadOnce },
           ),
       });
@@ -328,13 +332,10 @@ export async function runCLI(argv, dependencies = {}) {
       const renderDocument =
         dependencies.renderDocument ?? (await import('./render.mjs')).renderDocument;
       const result = await readDocumentOperation(
-        { inputSnapshot: input, wasm: wasm.bytes, format: options.format },
+        { inputSnapshot: input, wasm: wasm.bytes, format: options.format, view: options.view },
         { files, engine, renderDocument },
       );
-      const body = result.text;
-      await io.stdout.write(
-        `format: ${result.format}\ndocumentSHA256: ${input.sha256}\n${body}${body.endsWith('\n') ? '' : '\n'}`,
-      );
+      await io.stdout.write(renderReadResponse(result, { view: options.view }));
       return 0;
     }
     const result = await engine.edit({

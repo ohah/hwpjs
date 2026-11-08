@@ -208,6 +208,28 @@ function assertRead(result, fixture, outputFormat) {
   }
 }
 
+function assertContentRead(result, fixture, format) {
+  success(result);
+  const text = result.stdout;
+  assert.ok(text.trim(), '문서 내용이 비어 있지 않아야 합니다.');
+  assert.doesNotMatch(
+    text,
+    /^(?:format: |documentSHA256: |AI logical view|#* ?Section s|#* ?Body$)|(?:Paragraph s\d+:p\d+|Table s\d+:t\d+|Cell s\d+:t\d+:c\d+)/m,
+    '기본 읽기에는 구현용 구조·메타데이터를 추가하지 않습니다.',
+  );
+  assert.equal(text.includes(fixture.sha256), false);
+  assert.doesNotMatch(text, /Unknown display text|DisplayTextUnavailable/);
+  assert.equal(text.includes('捤獥'), false);
+  if (fixture.name.startsWith('noori')) {
+    for (const content of ['보도일시', '과학기술정보통신부', '용찬재', '한국형발사체', '붙임'])
+      assert.ok(text.includes(content), content + ' 본문·표 내용 보존');
+    if (format === 'markdown') assert.doesNotMatch(text, /native paragraph=|rowSpan=/);
+  } else {
+    assert.ok(text.includes('이것은 머리말입니다'));
+    assert.ok(text.includes('이것은 꼬리말입니다'));
+  }
+}
+
 test(
   'actual CLI source or packaged: four pinned reads, atomic new-file edits and independent byte oracles',
   { timeout: 60_000 },
@@ -228,15 +250,34 @@ test(
       for (const fixture of fixtures) {
         for (const format of ['text', 'markdown']) {
           await caseTest(
-            `read ${fixture.name} ${format}: native IDs and honest logical structures`,
+            `read ${fixture.name} ${format} structure: native IDs and honest logical structures`,
             () => {
               assertRead(
-                cli(`read-${fixture.name}-${format}`, ['read', fixture.path, '--format', format]),
+                cli(`read-${fixture.name}-${format}`, [
+                  'read',
+                  fixture.path,
+                  '--format',
+                  format,
+                  '--view',
+                  'structure',
+                ]),
                 fixture,
                 format,
               );
             },
           );
+          await caseTest(`read ${fixture.name} ${format}: document content by default`, () => {
+            assertContentRead(
+              cli(`read-content-${fixture.name}-${format}`, [
+                'read',
+                fixture.path,
+                '--format',
+                format,
+              ]),
+              fixture,
+              format,
+            );
+          });
         }
       }
       for (const fixture of fixtures.slice(0, 2)) {
@@ -308,7 +349,7 @@ test(
                 assert.match(wrong.stderr, /Whole XML mismatch/);
               }
             }
-            const reread = cli('reopen-' + fixture.format, ['read', output]);
+            const reread = cli('reopen-' + fixture.format, ['read', output, '--view', 'structure']);
             success(reread);
             assert.ok(reread.stdout.includes('documentSHA256: ' + outputSHA + '\n'));
             assert.match(reread.stdout, /Paragraph s0:p[23] \(native paragraph=[23]\): CLI🙂CLI🙂/);

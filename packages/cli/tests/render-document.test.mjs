@@ -48,7 +48,8 @@ function frozen(value) {
   }
   return value;
 }
-const render = (m, options = {}) => renderDocument(m, { format: 'text', ...options });
+const render = (m, options = {}) =>
+  renderDocument(m, { format: 'text', view: 'structure', ...options });
 
 test('exact body-only text outline preserves native IDs, header/body/footer order and source model', () => {
   const m = frozen(model([paragraph(0, 'Hello🙂')]));

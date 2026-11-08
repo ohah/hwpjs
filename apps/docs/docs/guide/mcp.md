@@ -30,13 +30,14 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 | 도구                     | 입력                                                                                                        | 결과                                                           |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `read_document`          | `inputPath`, 선택적 `format`: `text` 또는 `markdown`                                                        | 문서 SHA·원문 ID·논리 뷰를 담은 text content                   |
+| `read_document`          | `inputPath`, 선택적 `format`: `text` 또는 `markdown`, `view`: `content` 또는 `structure`                    | 기본 문서 본문, `view: structure`는 SHA·원문 ID·진단 상세      |
+| `read_documents`         | `inputPaths`, 선택적 `format`, `view`, `concurrency`, `maxOutputBytes`                                      | 입력 순서의 문서 내용 또는 편집 구조와 파일별 실패             |
 | `edit_document`          | `inputPath`, `outputPath`, `target`, `expectedSha256`, `findText`, `replacement`, 선택적 `allowStaleLayout` | 새 문서 경로·SHA·변경 및 줄 배치 상태를 담은 text content      |
 | `get_document_info`      | `inputPath`, 선택적 `expectedSha256`                                                                        | 포맷·SHA·크기·구역 수와 관측 가능한 메타데이터                 |
 | `list_document_images`   | `inputPath`, 선택적 `expectedSha256`                                                                        | 원문 SHA와 그림 ID·상태·MIME·확장자·바이트 수·제한된 관측 범위 |
 | `extract_document_image` | `inputPath`, `outputPath`, `id`, `expectedSha256`                                                           | 새 이미지 **파일** 경로·SHA 또는 실패 및 게시 영수증           |
 
-`format` 기본값은 `text`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
+`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
 
 문서 정보에서 확인하지 못한 버전·보안·편집 상태·내용 집계는 `unknown`과 사유로 남습니다. 특정 편집의 허용 여부나 서명 유효성을 정보 조회만으로 판단하지 않습니다.
 
@@ -56,11 +57,27 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 }
 ```
 
-`markdown`도 같은 논리 뷰이며 전용 문서 Markdown 변환기의 서식·이미지 출력과는 구분합니다. 과거 Rust API의 함수 이름·옵션·문자열을 그대로 재현하는 계약은 아닙니다.
+기본 `view: "content"`는 관측한 문서 본문만 text content로 반환하며 `format`·`documentSHA256` 접두사나 원문 ID를 붙이지 않습니다. `markdown`도 이 본문 보기의 출력 형식이며 HTML·원본 조판 전체 변환이나 OCR을 뜻하지 않습니다. 오류는 `isError: true`의 별도 오류 응답으로 확인합니다.
+
+편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 새 도구 이름을 추가하지 않으며 도구는 여전히 6개입니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 5,
+  "method": "tools/call",
+  "params": {
+    "name": "read_document",
+    "arguments": { "inputPath": "./document.hwpx", "view": "structure" }
+  }
+}
+```
+
+두 보기는 공통 관측 모델·renderer를 사용합니다. 갱신된 서버가 필요한 옵션이므로 기존 설치분은 `tools/list`의 입력 스키마에서 확인하세요.
 
 ### 여러 명시 파일 읽기
 
-`read_documents`는 이번 동봉 CLI·MCP·Skill의 설치 후 실행을 확인한 읽기 전용 도구입니다. 기존 설치분에는 없을 수 있으므로 갱신된 패키지나 Skill의 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인합니다. 현재 공개 브라우저 체험의 단일 문서 실행 증거는 이 배치 도구를 포함하지 않습니다.
+`read_documents`는 여러 명시 파일을 읽는 읽기 전용 도구입니다. 기존 설치 실측은 구조가 기본이던 버전의 증거로 보존하고 새 `view` 계약의 설치·프로토콜 검증은 별도로 확인합니다. 갱신된 패키지나 Skill의 `tools/list`에서 제공 여부를 확인합니다. 현재 공개 브라우저 체험의 단일 문서 실행 증거는 이 배치 도구를 포함하지 않습니다.
 
 ```json
 {
@@ -72,6 +89,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
     "arguments": {
       "inputPaths": ["./one.hwp", "./two.hwpx"],
       "format": "text",
+      "view": "content",
       "concurrency": 1,
       "maxOutputBytes": 4194304
     }
@@ -81,13 +99,13 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 `inputPaths`는 명시 파일 1~128개의 목록입니다. `format`은 기본 `text` 또는 `markdown`, `concurrency`는 기본 1·최대 2입니다. 폴더 자동 탐색·자동 쓰기·일괄 편집·이미지 추출·HTML 전용 변환은 수행하지 않습니다.
 
-응답의 text content에는 입력 순서대로 파일별 경로·상태·본문 또는 오류가 남습니다. 일부 실패 시 `isError: true`여도 성공한 문서 본문을 함께 유지하므로 오류 여부만 보고 전체 결과를 버리지 않습니다. 문서 전체 JSON 변환 결과를 반환하지 않습니다.
+응답은 기본 `content`에서 입력 순서의 파일 출처·본문과 읽기 실패, 성공·실패 개수를 제공합니다. `view: "structure"`는 기존 기계 키·원문 SHA·ID와 진단 상세를 제공합니다. 일부 실패 시 `isError: true`여도 성공한 문서 본문을 함께 유지하므로 전체 결과를 버리지 않습니다. 문서 전체 JSON 변환 결과를 반환하지 않습니다.
 
 `maxOutputBytes`는 UTF-8 보고서 예산으로 기본 4 MiB(`4194304`), 상한 16 MiB(`16777216`)입니다. 전체 메모리나 MCP 프로토콜 프레임의 상한이 아닙니다. 본문을 절단하지 않으며, 예산을 넘는 항목은 실패로 보고하고 보고 공간 자체가 부족하면 요청을 거부할 수 있습니다. 제한과 stdout 부분 전달 오류의 의미는 [CLI 배치 읽기](./cli.md#여러-명시-파일-읽기)와 같습니다.
 
 ### 수정 요청 예시
 
-`target`과 `expectedSha256`은 같은 읽기 스냅샷에서 얻은 실제 값으로 바꿉니다. 아래 SHA는 형식 설명용 자리표시자입니다.
+`target`과 `expectedSha256`은 `read_document`의 `view: "structure"`에서 얻은 같은 원본의 실제 값으로 바꿉니다. 아래 SHA는 형식 설명용 자리표시자입니다.
 
 ```json
 {

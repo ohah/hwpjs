@@ -78,7 +78,11 @@ test('MCP argv adapter reuses CLI parser and cannot turn literal/path values int
       return 0;
     },
   });
-  const read = await tools[0].invoke({ inputPath: '--input.hwp', format: 'markdown' });
+  const read = await tools[0].invoke({
+    inputPath: '--input.hwp',
+    format: 'markdown',
+    view: 'structure',
+  });
   assert.equal(textOf(read), 'source text\n');
   assert.equal(read.structuredContent, undefined);
   const edited = await tools[1].invoke({
@@ -92,6 +96,7 @@ test('MCP argv adapter reuses CLI parser and cannot turn literal/path values int
   });
   assert.equal(textOf(edited), 'source text\n');
   assert.equal(seen[0].options.input, '--input.hwp');
+  assert.equal(seen[0].options.view, 'structure');
   assert.equal(seen[0].options.wasm, '--runtime.wasm');
   assert.equal(seen[1].options.replace, '--with=evil');
   assert.equal(seen[1].options.with, '');
@@ -141,7 +146,7 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
   ]);
   const result = await client.callTool({
     name: 'read_document',
-    arguments: { inputPath: 'a.hwp' },
+    arguments: { inputPath: 'a.hwp', view: 'structure' },
   });
   assert.match(textOf(result), /documentSHA256:/);
   assert.equal(calls.length, 1);
@@ -228,7 +233,7 @@ for (const format of ['hwp5', 'hwpx'])
       assert.equal(listed.tools.length, 6);
       const observed = await client.callTool({
         name: 'read_document',
-        arguments: { inputPath: input },
+        arguments: { inputPath: input, view: 'structure' },
       });
       assert.notEqual(observed.isError, true);
       const text = textOf(observed);
@@ -354,7 +359,7 @@ for (const format of ['hwp5', 'hwpx'])
       assert.match(textOf(collision), /SourceOutputCollision/);
       const reopened = await client.callTool({
         name: 'read_document',
-        arguments: { inputPath: output },
+        arguments: { inputPath: output, view: 'structure' },
       });
       assert.notEqual(reopened.isError, true);
       assert.match(textOf(reopened), /MCP🙂/);
@@ -469,6 +474,7 @@ test('read_documents 어댑터는 명시 배열을 리터럴로 전달하고 내
   assert.deepEqual(seen[0].inputPaths, ['--문서.hwp', 'b.hwpx']);
   assert.equal(seen[0].wasm, '--wasm처럼보이는경로');
   assert.equal(seen[0].concurrency, 2);
+  assert.equal(seen[0].view, 'content');
 });
 test('공식 SDK의 read_documents 스키마는 잘못된 배치와 추가 필드를 호스트 전에 거부한다', async (t) => {
   const calls = [];
@@ -539,7 +545,7 @@ test(
       reads.length = 0;
       const result = await client.callTool({
         name: 'read_documents',
-        arguments: { inputPaths: [h5.input, hx.input], format, concurrency: 2 },
+        arguments: { inputPaths: [h5.input, hx.input], format, concurrency: 2, view: 'structure' },
       });
       assert.notEqual(result.isError, true);
       const text = textOf(result);
@@ -552,7 +558,7 @@ test(
     }
     const result = await client.callTool({
       name: 'read_documents',
-      arguments: { inputPaths: [h5.input, hx.input + '.missing', hx.input] },
+      arguments: { inputPaths: [h5.input, hx.input + '.missing', hx.input], view: 'structure' },
     });
     assert.equal(result.isError, true);
     assert.match(textOf(result), /batchStatus: partial/);
@@ -593,7 +599,12 @@ test(
     assert.ok(tools.tools.some((tool) => tool.name === 'read_documents'));
     const result = await client.callTool({
       name: 'read_documents',
-      arguments: { inputPaths: [h5.input, hx.input], format: 'markdown', concurrency: 2 },
+      arguments: {
+        inputPaths: [h5.input, hx.input],
+        format: 'markdown',
+        concurrency: 2,
+        view: 'structure',
+      },
     });
     assert.notEqual(result.isError, true);
     assert.equal(result.structuredContent, undefined);
@@ -603,7 +614,7 @@ test(
     assert.match(textOf(result), new RegExp('documentSHA256: ' + nativePins.hwpx));
     const partial = await client.callTool({
       name: 'read_documents',
-      arguments: { inputPaths: [h5.input, hx.input + '.missing', hx.input] },
+      arguments: { inputPaths: [h5.input, hx.input + '.missing', hx.input], view: 'structure' },
     });
     assert.equal(partial.isError, true);
     assert.match(textOf(partial), /batchStatus: partial/);
@@ -614,3 +625,82 @@ test(
     assert.deepEqual(errors, []);
   },
 );
+
+test('공식 MCP의 기본 내용과 structure 옵션은 같은 공통 호스트를 사용하고 빈 성공도 보존한다', async (t) => {
+  const sha = 'a'.repeat(64),
+    seen = [];
+  const { client, errors } = await wire(t, {
+    cliDependencies: {
+      files: {
+        resolveWasmPath: () => '/wasm',
+        readInputSnapshot: async (path) => {
+          if (path === 'missing') throw Error('파일 누락');
+          return { bytes: Uint8Array.of(1), sha256: sha };
+        },
+      },
+      engine: {
+        read: async () => ({
+          format: 'hwp5',
+          model: { version: 1, format: 'hwp5', sourceSha256: sha },
+        }),
+      },
+      renderDocument: (_model, options) => {
+        seen.push(options);
+        return options.view === 'structure' ? '문단 s0:p1\n' : '';
+      },
+    },
+  });
+  const content = await client.callTool({ name: 'read_document', arguments: { inputPath: 'a' } });
+  assert.notEqual(content.isError, true);
+  assert.equal(textOf(content), '');
+  assert.equal(content.structuredContent, undefined);
+  const structure = await client.callTool({
+    name: 'read_document',
+    arguments: { inputPath: 'a', view: 'structure', format: 'markdown' },
+  });
+  assert.match(textOf(structure), new RegExp('documentSHA256: ' + sha));
+  assert.match(textOf(structure), /문단 s0:p1/);
+  const partial = await client.callTool({
+    name: 'read_documents',
+    arguments: { inputPaths: ['missing', 'a'], format: 'markdown' },
+  });
+  assert.equal(partial.isError, true);
+  assert.match(textOf(partial), /읽기 실패:.*파일 누락/);
+  assert.match(textOf(partial), /성공 1개, 실패 1개/);
+  assert.doesNotMatch(textOf(partial), /(?:batchStatus|readStatus|documentSHA256):/);
+  const structuredBatch = await client.callTool({
+    name: 'read_documents',
+    arguments: { inputPaths: ['a', 'b'], view: 'structure' },
+  });
+  assert.notEqual(structuredBatch.isError, true);
+  assert.match(textOf(structuredBatch), /batchStatus: success/);
+  assert.equal((textOf(structuredBatch).match(/documentSHA256:/g) ?? []).length, 2);
+  assert.deepEqual(seen, [
+    { format: 'text', view: 'content' },
+    { format: 'markdown', view: 'structure' },
+    { format: 'markdown', view: 'content' },
+    { format: 'text', view: 'structure' },
+    { format: 'text', view: 'structure' },
+  ]);
+  assert.deepEqual(errors, []);
+});
+
+test('두 MCP 읽기 도구는 잘못된 view를 호스트 호출 전에 거부한다', async (t) => {
+  let calls = 0;
+  const { client } = await wire(t, {
+    executeCLI: async () => {
+      calls++;
+      return 0;
+    },
+  });
+  for (const view of ['json', '', 'CONTENT', null, 0]) {
+    for (const [name, args] of [
+      ['read_document', { inputPath: 'a' }],
+      ['read_documents', { inputPaths: ['a'] }],
+    ]) {
+      const result = await client.callTool({ name, arguments: { ...args, view } });
+      assert.equal(result.isError, true);
+    }
+  }
+  assert.equal(calls, 0);
+});

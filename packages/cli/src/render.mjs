@@ -1,18 +1,19 @@
+import { renderContent } from './render-content.mjs';
+import { createDisplayEscaper } from './render-escape.mjs';
+
 const LIMITS = Object.freeze({
   maxDepth: 32,
   maxNodes: 200_000,
   maxTextUnits: 4 * 1024 * 1024,
   maxOutputUnits: 32 * 1024 * 1024,
 });
-// Controls and isolated UTF-16 surrogates become visible escapes. Unicode mode keeps valid pairs intact.
-// oxlint-disable-next-line no-control-regex
-const CONTROL = /[\u0000-\u001f\u007f-\u009f\u2028\u2029\u202a-\u202e\u2066-\u2069\ud800-\udfff]/gu;
-const MARKDOWN = /[\\`*_{}[\]()#+.!|<>~-]/gu;
 const own = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 function optionsFor(options) {
   if (!own(options) || !['text', 'markdown'].includes(options.format))
     throw new TypeError('InvalidRenderFormat');
+  if (options.view !== undefined && !['content', 'structure'].includes(options.view))
+    throw new TypeError('InvalidRenderView');
   const limits = {};
   for (const key of Object.keys(LIMITS)) {
     const value = options[key] ?? LIMITS[key];
@@ -180,20 +181,19 @@ export function renderDocument(model, options) {
   const limits = optionsFor(options);
   validate(model, limits);
   const markdown = options.format === 'markdown';
+  const content = (options.view ?? 'content') === 'content';
   const chunks = [];
   let outputUnits = 0;
-  const escape = (text) => {
-    const display = text.replace(
-      CONTROL,
-      (c) => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'),
-    );
-    return markdown ? display.replace(MARKDOWN, '\\$&') : display;
-  };
+  const escape = createDisplayEscaper({ format: options.format, view: options.view });
   const line = (text) => {
     outputUnits += text.length + 1;
     if (outputUnits > limits.maxOutputUnits) throw new RangeError('RenderOutputLimitExceeded');
     chunks.push(text, '\n');
   };
+  if (content) {
+    renderContent(model, { markdown, escape, line, maxOutputUnits: limits.maxOutputUnits });
+    return chunks.join('');
+  }
   const item = (depth, text) => line('  '.repeat(depth) + (markdown ? '- ' : '') + text);
   const heading = (level, text) => line((markdown ? '#'.repeat(level) + ' ' : '') + text);
   const value = (x) => (x === null || x === undefined ? 'unknown' : String(x));

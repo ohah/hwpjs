@@ -83,7 +83,7 @@ test('help and malformed arguments never preprocess input/WASM or call engine', 
   assert.equal(await runCLI(['edit', 'x', '--force'], deps), 2);
   assert.match(err.join(''), /UnknownOption/);
 });
-test('text/markdown read render body-only with source SHA exactly once and no engine FS path', async (t) => {
+test('structure 읽기는 기존 포맷과 원문 SHA를 한 번만 포함한다', async (t) => {
   for (const format of [undefined, 'markdown']) {
     const f = await setup(t);
     let rendered;
@@ -93,6 +93,7 @@ test('text/markdown read render body-only with source SHA exactly once and no en
     };
     const argv = [
       'read',
+      '--view=structure',
       'input.any',
       '--wasm=native.wasm',
       ...(format ? ['--format=' + format] : []),
@@ -739,6 +740,7 @@ test('read-many는 동일 읽기·표시 경로를 쓰고 WASM은 동시 배치�
     await runCLI(
       [
         'read-many',
+        '--view=structure',
         'input.any',
         'second.any',
         '--wasm=native.wasm',
@@ -761,7 +763,14 @@ test('read-many는 동일 읽기·표시 경로를 쓰고 WASM은 동시 배치�
 test('read-many는 누락·폴더 뒤에도 성공을 보존하며 쓰기 작업을 호출하지 않는다', async (t) => {
   const f = await setup(t);
   await fs.mkdir(join(f.dir, 'folder'));
-  const argv = ['read-many', 'missing', 'folder', 'input.any', '--wasm=native.wasm'];
+  const argv = [
+    'read-many',
+    '--view=structure',
+    'missing',
+    'folder',
+    'input.any',
+    '--wasm=native.wasm',
+  ];
   f.deps.files = { ...f.files };
   for (const name of ['assertNewOutput', 'publishNewOutput', 'createImageDirectory'])
     f.deps.files[name] = () => {
@@ -783,7 +792,14 @@ test('read-many 예산 오류는 다른 파일을 계속 읽고 스트림 오류
     model.sourceSha256 === hash('original') ? 'x'.repeat(10000) : '정상';
   assert.equal(
     await runCLI(
-      ['read-many', 'input.any', 'second.any', '--wasm=native.wasm', '--max-output-bytes=12000'],
+      [
+        'read-many',
+        '--view=structure',
+        'input.any',
+        'second.any',
+        '--wasm=native.wasm',
+        '--max-output-bytes=12000',
+      ],
       f.deps,
     ),
     1,
@@ -797,7 +813,10 @@ test('read-many 예산 오류는 다른 파일을 계속 읽고 스트림 오류
     writes++;
     throw Error('전달 실패');
   };
-  assert.equal(await runCLI(['read-many', 'input.any', '--wasm=native.wasm'], f.deps), 1);
+  assert.equal(
+    await runCLI(['read-many', '--view=structure', 'input.any', '--wasm=native.wasm'], f.deps),
+    1,
+  );
   assert.equal(writes, 1);
   assert.match(f.err.join(''), /batchReadSucceeded: 1/);
   assert.match(f.err.join(''), /batchDelivery: failed-or-partial/);
@@ -854,7 +873,15 @@ test(
       reads.length = 0;
       assert.equal(
         await runCLI(
-          ['read-many', h5, hx, '--wasm=' + wasm, '--format=' + format, '--concurrency=2'],
+          [
+            'read-many',
+            '--view=structure',
+            h5,
+            hx,
+            '--wasm=' + wasm,
+            '--format=' + format,
+            '--concurrency=2',
+          ],
           deps,
         ),
         0,
@@ -870,7 +897,10 @@ test(
     out.length = 0;
     reads.length = 0;
     assert.equal(
-      await runCLI(['read-many', h5, join(dir, 'missing.hwp'), dir, hx, '--wasm=' + wasm], deps),
+      await runCLI(
+        ['read-many', '--view=structure', h5, join(dir, 'missing.hwp'), dir, hx, '--wasm=' + wasm],
+        deps,
+      ),
       1,
     );
     assert.match(out.join(''), /batchStatus: partial/);
@@ -897,7 +927,10 @@ test('배치의 엔진 스탬프 오류는 해당 파일만 실패시키고 다�
     },
   };
   assert.equal(
-    await runCLI(['read-many', 'input.any', 'second.any', '--wasm=native.wasm'], f.deps),
+    await runCLI(
+      ['read-many', '--view=structure', 'input.any', 'second.any', '--wasm=native.wasm'],
+      f.deps,
+    ),
     1,
   );
   assert.match(f.out.join(''), /InvalidEngineModel/);
@@ -923,7 +956,14 @@ test('배치 WASM 읽기 거부도 한 번만 시도하고 모든 파일 실패�
   };
   assert.equal(
     await runCLI(
-      ['read-many', 'input.any', 'second.any', '--wasm=native.wasm', '--concurrency=2'],
+      [
+        'read-many',
+        '--view=structure',
+        'input.any',
+        'second.any',
+        '--wasm=native.wasm',
+        '--concurrency=2',
+      ],
       f.deps,
     ),
     1,
@@ -943,6 +983,7 @@ test('Markdown 파일별 헤더도 출력 예산 안에 예약하며 작은 예�
     await runCLI(
       [
         'read-many',
+        '--view=structure',
         ...paths,
         '--format=markdown',
         '--max-output-bytes=50000',
@@ -964,7 +1005,72 @@ test('Markdown 파일별 헤더도 출력 예산 안에 예약하며 작은 예�
       throw Error('읽으면 안 됩니다.');
     },
   };
-  assert.equal(await runCLI(['read-many', 'input.any', '--max-output-bytes=1'], f.deps), 1);
+  assert.equal(
+    await runCLI(['read-many', '--view=structure', 'input.any', '--max-output-bytes=1'], f.deps),
+    1,
+  );
   assert.equal(reads, 0);
   assert.match(f.err.join(''), /OutputBudgetTooSmall/);
+});
+
+test('기본 content 읽기는 text와 Markdown 본문 및 빈 본문을 그대로 stdout에 반환한다', async (t) => {
+  for (const format of ['text', 'markdown']) {
+    for (const body of ['문서 본문', '']) {
+      const f = await setup(t);
+      f.deps.renderDocument = (_model, options) => {
+        assert.deepEqual(options, { format, view: 'content' });
+        return body;
+      };
+      assert.equal(
+        await runCLI(['read', 'input.any', '--wasm=native.wasm', '--format=' + format], f.deps),
+        0,
+      );
+      assert.equal(f.out.join(''), body);
+      assert.equal(f.err.join(''), '');
+      assert.equal(await fs.readFile(join(f.dir, 'input.any'), 'utf8'), 'original');
+    }
+  }
+});
+
+test('기본 배치 내용은 파일 출처와 정상 본문 및 읽기 실패를 보존하며 종료1을 유지한다', async (t) => {
+  const f = await setup(t);
+  const observed = [];
+  f.deps.renderDocument = (_model, options) => {
+    observed.push(options);
+    return '정상 본문';
+  };
+  assert.equal(
+    await runCLI(['read-many', 'missing', 'input.any', '--wasm=native.wasm'], f.deps),
+    1,
+  );
+  const report = f.out.join('');
+  assert.match(report, /missing/);
+  assert.match(report, /input\.any/);
+  assert.match(report, /정상 본문/);
+  assert.match(report, /읽기 실패:/);
+  assert.match(report, /성공 1개, 실패 1개/);
+  assert.doesNotMatch(
+    report,
+    /(?:batchStatus|readStatus|outputStatus|deliveryStatus|documentSHA256|inputPath):/,
+  );
+  assert.ok(report.indexOf('missing') < report.indexOf('정상 본문'));
+  assert.deepEqual(observed, [{ format: 'text', view: 'content' }]);
+  assert.equal(f.err.join(''), '');
+});
+
+test('기본 배치 내용의 예산 거부도 성공한 다음 문서를 보존한다', async (t) => {
+  const f = await setup(t);
+  await fs.writeFile(join(f.dir, 'second.any'), 'second');
+  f.deps.renderDocument = (model) =>
+    model.sourceSha256 === hash('original') ? 'x'.repeat(10000) : '다음 본문';
+  assert.equal(
+    await runCLI(
+      ['read-many', 'input.any', 'second.any', '--wasm=native.wasm', '--max-output-bytes=12000'],
+      f.deps,
+    ),
+    1,
+  );
+  assert.match(f.out.join(''), /읽기 실패:.*출력 예산/);
+  assert.match(f.out.join(''), /다음 본문/);
+  assert.ok(Buffer.byteLength(f.out.join('')) <= 12000);
 });

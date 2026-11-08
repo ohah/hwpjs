@@ -24,6 +24,7 @@ export interface SimulationParagraph {
 }
 export interface SimulationSnapshot {
   readonly format: 'hwp5' | 'hwpx';
+  readonly view: 'content' | 'structure';
   readonly sourceSha256: string;
   readonly inputPath: string;
   readonly body: string;
@@ -56,6 +57,7 @@ export interface Simulation {
     wasm: Uint8Array;
     filename: string;
     format?: 'text' | 'markdown';
+    view?: 'content' | 'structure';
   }): Promise<SimulationSnapshot>;
   edit(snapshot: SimulationSnapshot, draft: SimulationDraft): Promise<SimulationSave>;
 }

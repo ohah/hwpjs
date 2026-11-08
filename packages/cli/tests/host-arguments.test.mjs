@@ -23,11 +23,13 @@ test('read defaults text and optional markdown/relative WASM are explicit', () =
     command: 'read',
     input: 'input.hwpx',
     format: 'text',
+    view: 'content',
   });
   assert.deepEqual(parse(['read', '--format=markdown', '--wasm', '../native.wasm', 'input.hwpx']), {
     command: 'read',
     input: 'input.hwpx',
     format: 'markdown',
+    view: 'content',
     wasm: '../native.wasm',
   });
 });
@@ -211,4 +213,24 @@ test('프로그램에서 전달한 argv도 길이를 한 번 포착하고 반복
   });
   assert.deepEqual(parse(argv).inputPaths, ['a']);
   assert.equal(reads, 1);
+});
+
+test('읽기 view는 content가 기본이며 structure는 명시 옵션이다', () => {
+  for (const command of ['read', 'read-many']) {
+    assert.equal(parse([command, 'a']).view, 'content');
+    for (const view of ['content', 'structure']) {
+      const options = parse([command, 'a', '--view', view, '--format=markdown']);
+      assert.equal(options.view, view);
+      assert.equal(options.format, 'markdown');
+    }
+    for (const extra of [
+      ['--view='],
+      ['--view=json'],
+      ['--view=CONTENT'],
+      ['--view'],
+      ['--view=content', '--view=structure'],
+    ])
+      assert.throws(() => parse([command, 'a', ...extra]));
+  }
+  assert.throws(() => parse(edit('--view=content')), /UnknownOption/);
 });

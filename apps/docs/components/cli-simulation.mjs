@@ -1,5 +1,6 @@
 import { read, edit } from '../../../packages/cli/src/engine.mjs';
 import { renderDocument } from '../../../packages/cli/src/render.mjs';
+import { renderReadResponse } from '../../../packages/cli/src/read-operation.mjs';
 
 const MAX_BYTES = 64 * 1024 * 1024;
 const snapshots = new WeakMap();
@@ -30,7 +31,7 @@ function quote(value) {
 export function simulationCommand(request) {
   const a = request.params.arguments;
   if (request.params.name === 'read_document')
-    return `npx --no-install hwpjs read ${quote(a.inputPath)} --format ${a.format}`;
+    return `npx --no-install hwpjs read ${quote(a.inputPath)} --format ${a.format} --view ${a.view ?? 'content'}`;
   return [
     'npx --no-install hwpjs edit',
     quote(a.inputPath),
@@ -131,14 +132,14 @@ function draftArguments(snapshot, draft) {
 export function simulationEditRequest(snapshot, draft) {
   return simulationRequest('edit_document', draftArguments(snapshot, draft));
 }
-/** Browser transport only. Native parsing, target validation, editing and lifetime
- * stay in the same portable CLI engine. This never invokes Node or MCP stdio.
- * Injection is for pure tests; the exported default uses the real shared engine.
+/** 브라우저 전송만 담당하며 파싱·검증·편집·수명은 공통 CLI 엔진에 둡니다.
+ * Node나 MCP stdio를 실행하지 않습니다. 주입은 순수 검사에만 사용합니다.
  */
 export function createSimulation(engine = { read, edit }) {
   return {
-    async read({ bytes, wasm, filename, format = 'text' }) {
+    async read({ bytes, wasm, filename, format = 'text', view = 'content' }) {
       if (!['text', 'markdown'].includes(format)) throw Error('InvalidSimulationFormat');
+      if (!['content', 'structure'].includes(view)) throw Error('InvalidSimulationView');
       const input = copy(bytes),
         runtime = copy(wasm, 32 * 1024 * 1024),
         path = './' + inputPath(filename);
@@ -153,10 +154,11 @@ export function createSimulation(engine = { read, edit }) {
         result.model?.sourceSha256 !== sourceSha256
       )
         throw Error('InvalidSimulationReadResult');
-      const body = renderDocument(result.model, { format });
-      const request = simulationRequest('read_document', { inputPath: path, format });
+      const body = renderDocument(result.model, { format, view });
+      const request = simulationRequest('read_document', { inputPath: path, format, view });
       const snapshot = Object.freeze({
         format: result.format,
+        view,
         sourceSha256,
         inputPath: path,
         body,
@@ -164,7 +166,7 @@ export function createSimulation(engine = { read, edit }) {
         request,
         response: response(
           request,
-          `format: ${result.format}\ndocumentSHA256: ${sourceSha256}\n${body}`,
+          renderReadResponse({ format: result.format, sourceSha256, text: body }, { view }),
         ),
         command: simulationCommand(request),
       });
