@@ -33,9 +33,34 @@ npx --no-install hwpjs read ./document.hwpx --format markdown
 hwpjs read ./문서.hwp --format markdown > ./문서.md
 ```
 
-기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기의 stdout에는 관측한 문서 본문만 출력하며 `format`·`documentSHA256` 접두사나 `Paragraph`·`Table` 원문 ID를 붙이지 않습니다. `--view content`를 명시해도 같습니다. `>`는 셸의 리다이렉션이며 새 읽기 `--output` 옵션이나 stdin·URI 읽기를 뜻하지 않습니다.
+기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기의 stdout에는 관측한 문서 본문만 출력하며 `format`·`documentSHA256` 접두사나 `Paragraph`·`Cell` 구조 레이블을 붙이지 않습니다. 이미지·표 등에는 후속 조회를 위한 논리 개체 참조가 포함될 수 있습니다. `--view content`를 명시해도 같습니다. `>`는 셸의 리다이렉션이며 새 읽기 `--output` 옵션이나 stdin·URI 읽기를 뜻하지 않습니다.
 
 Markdown은 관측한 문서 내용을 표현합니다. HTML·PDF 변환, 원본 조판·물리 페이지의 완전한 재현, 이미지 OCR이나 문서 전체 JSON 변환을 제공하는 명령이 아닙니다. 관측하지 못한 내용과 구조는 짧은 미확정 표시로 남길 수 있으며, 상세 원인은 편집 구조 보기에서 확인합니다.
+
+## 본문의 이미지·표 참조로 개체 조회
+
+본문에는 관측된 이미지·표·차트·수식·도형·OLE 등의 논리 참조가 표시될 수 있습니다. 참조 형식은 다음과 같으며, 아래 꺾쇠 부분은 문법 설명입니다. 실제 명령에는 읽기 결과의 참조 전체를 복사합니다.
+
+```text
+hwpjs-object:<SHA>/<hwp5|hwpx>/s<section>/<kind>/<node>
+```
+
+Markdown의 이미지는 `![이미지 N](참조)`, 텍스트에서는 `[이미지 N: 참조]`로 표시하며 관측된 대체 설명이 있으면 함께 남습니다. 표는 짧은 참조와 실제 셀 내용을 함께 표시합니다. `N`은 출력 순회에서 붙인 표시 순번으로 이미지 추출 ID가 아닙니다.
+
+이 참조는 HTTP 주소·파일 링크·MCP 리소스 URI가 아닙니다. 브라우저에서 열거나 클릭해 추출하지 않고, 같은 입력 파일의 CLI 또는 MCP 인수로 사용합니다.
+
+```bash
+npx --no-install hwpjs object ./document.hwpx --ref "$OBJECT_REF"
+npx --no-install hwpjs object ./document.hwp --ref "$OBJECT_REF" --format markdown
+```
+
+실제 그림이 관측됐지만 추출 inventory와 연결되는 참조를 확인하지 못하면 `[이미지: 추출 참조 확인 불가]`로 표시합니다. 이는 그림이 없다는 뜻이 아니며, 가짜 조회 URI를 만들지 않습니다.
+
+`OBJECT_REF`는 해당 문서를 읽어 얻은 실제 참조입니다. `object`의 `--format`은 기본 `text` 또는 `markdown`이며 기존 `read`의 본문/구조 보기 선택과 별개입니다. 원문 SHA·실제 형식·관측 종류와 inventory 멤버를 검증하므로 오래된 참조, 다른 형식·종류·노드를 가리키는 참조는 거부합니다. 원본이 바뀌면 다시 읽습니다.
+
+CLI 출력은 `상태: available` 또는 `상태: unavailable`로 표시합니다. 내부 JS 조회 결과의 `status` 필드와 터미널에 표시하는 문자열은 구분합니다. 관측 가능한 메타데이터·표 내용·추가 행동 안내와 상세 내용이 미지원인 사유를 구분해 확인합니다. `available`이 완전한 시각적 해석이나 이미지 추출 성공을 보장하지는 않습니다. 이미지 조회는 바이트를 디코딩하지 않으며 추출은 별도 명령입니다.
+
+전용 HWP5 차트·수식 source API가 노출되지 않은 개체는 종류를 추측하지 않고 미분류·참조 미확정으로 남깁니다. 참조가 없는 개체에 가짜 참조를 만들거나 모든 개체가 열거됐다고 판단하지 않습니다. 새 조회·참조 추출 계약은 갱신된 패키지·서버가 필요하며, 설치 후 CLI/MCP 연결 검증은 기존 읽기·편집 증거와 별도로 확인합니다.
 
 ## 편집 구조 조회
 
@@ -88,14 +113,23 @@ npx --no-install hwpjs extract-images ./document.hwpx --output ./images-new
 
 `images`는 원문 SHA와 각 그림 ID, 상태·사유·MIME·확장자·바이트 수 등을 출력합니다. 출력에 나온 ID는 해당 SHA의 스냅샷에만 유효합니다. 읽기 실패·미지원 항목도 목록에 남으며, 형식 이름이나 확장자만으로 원시 바이트를 신뢰하지 않습니다.
 
-목록에서 고른 한 ID만 추출하려면 같은 원본의 SHA도 지정합니다.
+본문의 **이미지** 참조가 있으면 다음과 같이 추출할 수 있습니다.
+
+```bash
+npx --no-install hwpjs extract-images ./document.hwpx \
+  --ref "$IMAGE_REF" --output ./referenced-image-new
+```
+
+참조에 원문 SHA가 결속돼 있으므로 `--ref` 방식에는 `--id`나 `--expect-sha256`을 함께 전달하지 않습니다. 두 선택 방식의 혼용은 거부합니다. 이미지 외 종류의 참조는 이미지 추출에 사용할 수 없습니다.
+
+기존 방식으로 목록에서 고른 한 ID만 추출하려면 같은 원본의 SHA도 지정합니다.
 
 ```bash
 npx --no-install hwpjs extract-images ./document.hwpx \
   --id "$IMAGE_ID" --expect-sha256 "$SOURCE_SHA" --output ./selected-images-new
 ```
 
-CLI의 `--output`은 **새 디렉터리**입니다. 단일 파일 경로가 아닙니다. `--id`를 지정해도 새 디렉터리를 만들고, 파일명은 `image-0001.png`처럼 생성합니다. 실제 확장자는 관측 결과에 따릅니다. ID를 지정하면 SHA가 필수이며, 전체 추출은 SHA를 생략해도 한 번 열린 원본 스냅샷을 사용합니다.
+CLI의 `--output`은 **새 디렉터리**입니다. 단일 파일 경로가 아닙니다. `--ref`나 `--id`로 단건을 선택해도 새 디렉터리를 만들고, 파일명은 `image-0001.png`처럼 생성합니다. 실제 확장자는 관측 결과에 따릅니다. 기존 ID 방식에서는 SHA가 필수이며, 참조 방식은 결속된 SHA를 검증합니다. 전체 추출은 선택 인수를 생략해도 한 번 열린 원본 스냅샷을 사용합니다. 결과는 생성한 파일의 호스트 경로·SHA이며 이미지 Content나 자동 OCR 결과가 아닙니다.
 
 추출 범위는 구역에서 관측된 그림 참조인 `section-picture-sites`입니다. 마스터 페이지 그림·이미지 채우기·참조되지 않은 리소스는 포함하지 않습니다. 이미지 전체를 빠짐없이 추출하거나 기존 도구와 동일한 범위를 제공한다는 뜻이 아닙니다. OCR·이미지 변환도 수행하지 않습니다. 형식을 판별하지 못한 원시 데이터는 WMF/EMF 등을 포함해 변환 없이 `.bin`으로 보존합니다. 헤더로 형식을 인식했더라도 픽셀 디코딩의 유효성을 검증한 것은 아닙니다.
 

@@ -1,4 +1,5 @@
 import { BATCH_READ_LIMITS } from './batch-read.mjs';
+import { parseObjectReference, canonicalImageId } from './object-reference.mjs';
 
 export const USAGE = `Usage:
   hwpjs read INPUT [--format text|markdown] [--view content|structure] [--wasm PATH]
@@ -6,7 +7,8 @@ export const USAGE = `Usage:
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs info INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs images INPUT [--expect-sha256 SHA256] [--wasm PATH]
-  hwpjs extract-images INPUT --output NEWDIR [--id ID --expect-sha256 SHA256] [--wasm PATH]
+  hwpjs object INPUT --ref REFERENCE [--format text|markdown] [--wasm PATH]
+  hwpjs extract-images INPUT --output NEWDIR [--ref REFERENCE | --id ID --expect-sha256 SHA256] [--wasm PATH]
   hwpjs --help
 
 Read defaults to text. 기본 보기는 문서 내용(content)입니다.
@@ -14,6 +16,8 @@ Read defaults to text. 기본 보기는 문서 내용(content)입니다.
 Use --with '' to delete. Use --option=VALUE when VALUE starts with --.
 extract-images --output is a NEW DIRECTORY, never a single image file.
 Selecting --id requires the SHA from images; all images use one opened snapshot.
+본문의 개체 참조는 object --ref로 조회합니다. 이미지 참조는 extract-images --ref로 추출할 수 있습니다.
+참조는 네트워크 주소가 아닙니다. --ref는 --id/--expect-sha256와 함께 사용할 수 없습니다.
 Output must be new; existing files are never overwritten.
 read-many는 명시 파일 1~128개만 읽습니다. 기본 동시성은 1, 최대 2이며 일부 실패도 보고합니다.
 출력 예산은 기본 4MiB, 최대 16MiB입니다. 폴더 탐색·일괄 편집·HTML·문서 JSON 출력은 제공하지 않습니다.
@@ -31,6 +35,13 @@ const fail = (code) => {
 };
 const string = (value) => typeof value === 'string' && value.isWellFormed();
 const uint = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff;
+const reference = (value) => {
+  try {
+    return parseObjectReference(value);
+  } catch {
+    fail('InvalidObjectReference');
+  }
+};
 export function parseArguments(argv) {
   const argc = Array.isArray(argv) ? argv.length : -1;
   if (!Number.isInteger(argc) || argc < 0 || argc > 256) fail('InvalidArguments');
@@ -43,7 +54,9 @@ export function parseArguments(argv) {
   argv = captured;
   if (argv.length === 1 && argv[0] === '--help') return Object.freeze({ command: 'help' });
   const command = argv[0];
-  if (!['read', 'read-many', 'edit', 'info', 'images', 'extract-images'].includes(command))
+  if (
+    !['read', 'read-many', 'edit', 'info', 'images', 'extract-images', 'object'].includes(command)
+  )
     fail('UnknownCommand');
   if (argv.length === 2 && argv[1] === '--help') return Object.freeze({ command: 'help' });
   const allowed = new Set(
@@ -53,7 +66,8 @@ export function parseArguments(argv) {
       edit: ['target', 'replace', 'with', 'expect-sha256', 'output', 'wasm', 'allow-stale-layout'],
       info: ['wasm', 'expect-sha256'],
       images: ['wasm', 'expect-sha256'],
-      'extract-images': ['wasm', 'expect-sha256', 'output', 'id'],
+      'extract-images': ['wasm', 'expect-sha256', 'output', 'id', 'ref'],
+      object: ['wasm', 'ref', 'format'],
     }[command],
   );
   const options = new Map(),
@@ -120,12 +134,34 @@ export function parseArguments(argv) {
   }
   if (positional.length !== 1 || !positional[0] || positional[0] === '-') fail('ExpectedInputFile');
   const input = positional[0];
+  if (command === 'object') {
+    const ref = options.get('ref');
+    const parsed = reference(ref);
+    const format = options.get('format') ?? 'text';
+    if (!['text', 'markdown'].includes(format)) fail('InvalidReadFormat');
+    return Object.freeze({
+      command,
+      input,
+      reference: ref,
+      format,
+      expectSha256: parsed.sourceSha256,
+      ...(wasm === undefined ? {} : { wasm }),
+    });
+  }
   if (['info', 'images', 'extract-images'].includes(command)) {
-    const expected = options.get('expect-sha256');
+    let expected = options.get('expect-sha256');
     if (expected !== undefined && !/^[0-9a-f]{64}$/i.test(expected)) fail('InvalidExpectedSHA256');
-    const id = options.get('id');
+    let id = options.get('id');
     if (id !== undefined && (!id || id.length > 128)) fail('InvalidImageID');
     if (id !== undefined && expected === undefined) fail('ImageIDRequiresSHA256');
+    const ref = options.get('ref');
+    if (ref !== undefined) {
+      if (options.has('id') || options.has('expect-sha256')) fail('ConflictingImageReference');
+      const parsed = reference(ref);
+      if (parsed.kind !== 'image') fail('ExpectedImageReference');
+      expected = parsed.sourceSha256;
+      id = canonicalImageId(parsed);
+    }
     const output = options.get('output');
     if (command === 'extract-images' && (!output || output === '-'))
       fail('ExpectedOutputDirectory');
@@ -136,6 +172,7 @@ export function parseArguments(argv) {
       ...(wasm === undefined ? {} : { wasm }),
       ...(id === undefined ? {} : { id }),
       ...(output === undefined ? {} : { output }),
+      ...(ref === undefined ? {} : { reference: ref }),
     });
   }
   if (command === 'read') {

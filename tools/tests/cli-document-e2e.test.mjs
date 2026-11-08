@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, isAbsolute, join, extname } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { verifyRaw } from '../../tests/hwp5/style-preservation/text-record-oracle.mjs';
+import { parseObjectReference } from '../../packages/cli/src/object-reference.mjs';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -217,10 +218,17 @@ function assertContentRead(result, fixture, format) {
     /^(?:format: |documentSHA256: |AI logical view|#* ?Section s|#* ?Body$)|(?:Paragraph s\d+:p\d+|Table s\d+:t\d+|Cell s\d+:t\d+:c\d+)/m,
     '기본 읽기에는 구현용 구조·메타데이터를 추가하지 않습니다.',
   );
-  assert.equal(text.includes(fixture.sha256), false);
+  const referencePattern =
+    /hwpjs-object:[a-f0-9]{64}\/(?:hwp5|hwpx)\/s\d+\/(?:image|table|chart|equation|drawing|ole|unknown)\/\d+/gu;
+  const references = [...text.matchAll(referencePattern)].map((match) =>
+    parseObjectReference(match[0], { sourceSha256: fixture.sha256, format: fixture.format }),
+  );
+  assert.equal(text.replace(referencePattern, '').includes(fixture.sha256), false);
   assert.doesNotMatch(text, /Unknown display text|DisplayTextUnavailable/);
   assert.equal(text.includes('捤獥'), false);
   if (fixture.name.startsWith('noori')) {
+    assert.ok(references.some((reference) => reference.kind === 'image'));
+    assert.ok(references.some((reference) => reference.kind === 'table'));
     for (const content of ['보도일시', '과학기술정보통신부', '용찬재', '한국형발사체', '붙임'])
       assert.ok(text.includes(content), content + ' 본문·표 내용 보존');
     if (format === 'markdown') assert.doesNotMatch(text, /native paragraph=|rowSpan=/);

@@ -25,6 +25,54 @@ var __esm = (fn, res, err) => () => {
   return res;
 };
 
+// packages/cli/src/object-reference.mjs
+function buildObjectReference(value) {
+  if (!object2(value))
+    throw new TypeError("InvalidObjectReferenceFields");
+  const { sourceSha256, format: documentFormat, section, kind, node } = value;
+  if (!identity({ format: documentFormat, section, node }) || typeof sourceSha256 !== "string" || sourceSha256.length !== 64 || !SHA.test(sourceSha256) || !KINDS.has(kind))
+    throw new TypeError("InvalidObjectReferenceFields");
+  return `hwpjs-object:${sourceSha256}/${documentFormat}/s${section}/${kind}/${node}`;
+}
+function parseObjectReference(reference, expected = {}) {
+  if (typeof reference !== "string" || reference.length > 128 || !object2(expected))
+    throw new TypeError("InvalidObjectReference");
+  const { sourceSha256: expectedSha256, format: expectedFormat } = expected;
+  if (expectedSha256 !== undefined && (typeof expectedSha256 !== "string" || expectedSha256.length !== 64 || !SHA.test(expectedSha256)) || expectedFormat !== undefined && !format(expectedFormat))
+    throw new TypeError("InvalidObjectReferenceExpectation");
+  const match = REFERENCE.exec(reference);
+  if (!match || match[0] !== reference)
+    throw new TypeError("InvalidObjectReference");
+  const result = {
+    sourceSha256: match[1],
+    format: match[2],
+    section: Number(match[3]),
+    kind: match[4],
+    node: Number(match[5])
+  };
+  if (!uint(result.section) || !uint(result.node))
+    throw new TypeError("InvalidObjectReference");
+  if (expectedSha256 !== undefined && expectedSha256 !== result.sourceSha256)
+    throw new Error("StaleObjectReference");
+  if (expectedFormat !== undefined && expectedFormat !== result.format)
+    throw new Error("ObjectReferenceFormatMismatch");
+  return result;
+}
+function canonicalImageId(value) {
+  if (!object2(value))
+    throw new TypeError("InvalidImageIdentity");
+  const { format: documentFormat, section, node } = value;
+  if (!identity({ format: documentFormat, section, node }))
+    throw new TypeError("InvalidImageIdentity");
+  return `${documentFormat}:s${section}:i${node}`;
+}
+var KINDS, SHA, REFERENCE, object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint = (value) => Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295, format = (value) => value === "hwp5" || value === "hwpx", identity = (value) => object2(value) && format(value.format) && uint(value.section) && uint(value.node);
+var init_object_reference = __esm(() => {
+  KINDS = new Set(["image", "table", "chart", "equation", "drawing", "ole", "unknown"]);
+  SHA = /^[a-f0-9]{64}$/u;
+  REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
+});
+
 // packages/cli/src/render-escape.mjs
 function createDisplayEscaper(options) {
   if (options === null || typeof options !== "object" || Array.isArray(options) || !["text", "markdown"].includes(options.format))
@@ -1206,17 +1254,17 @@ function validateHwp5FormSources(rows) {
     "property_bytes",
     "property_nodes",
     "other_direct_children"
-  ].every((k) => uint2(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && ["unknown", "push_button", "check_box", "combo_box", "radio_button", "edit"].includes(row.kind) && uint2(row.type_id) && uint2(row.secondary_type_id) && ["offset_x", "offset_y", "z_order", "prevent_page_break"].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint2(row.description_bytes)));
+  ].every((k) => uint3(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && ["unknown", "push_button", "check_box", "combo_box", "radio_button", "edit"].includes(row.kind) && uint3(row.type_id) && uint3(row.secondary_type_id) && ["offset_x", "offset_y", "z_order", "prevent_page_break"].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint3(row.description_bytes)));
 }
 function validateHwp5FormAnchors(rows) {
-  return uniqueRows(rows, (row) => uint2(row.paragraph) && uint2(row.source_unit) && row.source_unit <= 4294967287 && uint2(row.current_unit) && row.current_unit <= 4294967287);
+  return uniqueRows(rows, (row) => uint3(row.paragraph) && uint3(row.source_unit) && row.source_unit <= 4294967287 && uint3(row.current_unit) && row.current_unit <= 4294967287);
 }
-var uint2 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max, uniqueRows = (rows, inspect) => {
+var uint3 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max, uniqueRows = (rows, inspect) => {
   const controls = new Set, objects = new Set;
   if (!Array.isArray(rows))
     throw Error("InvalidHwp5FormSources");
   for (const row of rows) {
-    if (!row || !uint2(row.control_node) || !uint2(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row))
+    if (!row || !uint3(row.control_node) || !uint3(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row))
       throw Error("InvalidHwp5FormSources");
     controls.add(row.control_node);
     objects.add(row.object_node);
@@ -1234,7 +1282,7 @@ function validateHwp5FormProperties(rows) {
   let totalUnits = 0, totalFields = 0;
   const controls = new Set, objects = new Set;
   for (const row of rows) {
-    if (!row || !["control_node", "object_node", "known_nodes", "deferred_nodes"].every((k) => uint3(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields))
+    if (!row || !["control_node", "object_node", "known_nodes", "deferred_nodes"].every((k) => uint4(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields))
       fail();
     const fields = new Set;
     for (const property of row.fields) {
@@ -1256,7 +1304,7 @@ function validateHwp5FormProperties(rows) {
 function decodeHwp5FormProperties(bytes) {
   return validateHwp5FormProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint3 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint4 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 
 // js/hwp5-note-shape-sources.mjs
 function validateHwp5NoteShapeSources(rows) {
@@ -2746,7 +2794,7 @@ function decodeHwp5ParagraphFlow(bytes) {
     if (row?.empty_line_eligible !== undefined && (typeof row.empty_line_eligible !== "boolean" || row.empty_line_eligible && row.top_level !== true))
       throw new Error("InvalidHwp5ParagraphFlow");
     if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
-      if (!(row.memo_index === null && row.memo_node === null) && !(uint4(row.memo_index) && uint4(row.memo_node) && row.host === "other" && row.top_level === false && uint4(row.list_node) && row.memo_node + 1 === row.list_node))
+      if (!(row.memo_index === null && row.memo_node === null) && !(uint5(row.memo_index) && uint5(row.memo_node) && row.host === "other" && row.top_level === false && uint5(row.list_node) && row.memo_node + 1 === row.list_node))
         throw new Error("InvalidHwp5ParagraphFlow");
     }
     if (row?.host !== undefined) {
@@ -2761,10 +2809,10 @@ function decodeHwp5ParagraphFlow(bytes) {
         "master_page",
         "drawing",
         "other"
-      ].includes(row.host) || !(row.list_node === null || uint4(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null))
+      ].includes(row.host) || !(row.list_node === null || uint5(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null))
         throw new Error("InvalidHwp5ParagraphFlow");
     }
-    if (!row || row.paragraph !== index || !uint4(row.template_node) || !(row.source_node === null || uint4(row.source_node)) || !(row.parent_node === null || uint4(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![0, 4, 8].includes(row.break_flags) || row.break_flags !== 0 && !row.top_level) || !row.generated && row.source_node !== row.template_node)
+    if (!row || row.paragraph !== index || !uint5(row.template_node) || !(row.source_node === null || uint5(row.source_node)) || !(row.parent_node === null || uint5(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![0, 4, 8].includes(row.break_flags) || row.break_flags !== 0 && !row.top_level) || !row.generated && row.source_node !== row.template_node)
       throw new Error("InvalidHwp5ParagraphFlow");
     for (const [name, mask] of [
       ["section_break", 1],
@@ -2782,9 +2830,9 @@ function decodeHwp5ColumnSources(bytes) {
   if (!Array.isArray(rows))
     throw new Error("InvalidHwp5ColumnSources");
   for (const row of rows) {
-    if (!row || !uint4(row.current_paragraph) || !uint4(row.current_unit))
+    if (!row || !uint5(row.current_paragraph) || !uint5(row.current_unit))
       throw new Error("InvalidHwp5ColumnSources");
-    if (!row || !["source_node", "paragraph_node", "flags", "color", "extra_bytes"].every((name) => uint4(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![0, 1, 2, 3].includes(row.kind) || ![0, 1, 2, 3].includes(row.direction) || typeof row.same_width !== "boolean" || !(row.spacing === null || Number.isInteger(row.spacing) && row.spacing >= -32768 && row.spacing <= 32767) || ![row.line_type, row.line_width].every((value) => Number.isInteger(value) && value >= 0 && value <= 255) || !Array.isArray(row.columns))
+    if (!row || !["source_node", "paragraph_node", "flags", "color", "extra_bytes"].every((name) => uint5(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![0, 1, 2, 3].includes(row.kind) || ![0, 1, 2, 3].includes(row.direction) || typeof row.same_width !== "boolean" || !(row.spacing === null || Number.isInteger(row.spacing) && row.spacing >= -32768 && row.spacing <= 32767) || ![row.line_type, row.line_width].every((value) => Number.isInteger(value) && value >= 0 && value <= 255) || !Array.isArray(row.columns))
       throw new Error("InvalidHwp5ColumnSources");
     if ((row.flags >>> 2 & 255) !== row.count || (row.flags & 3) !== row.kind || (row.flags >>> 10 & 3) !== row.direction || Boolean(row.flags & 4096) !== row.same_width || row.columns.length !== (row.count < 2 || row.same_width ? 0 : row.count) || row.columns.length > 0 !== (row.spacing === null))
       throw new Error("InvalidHwp5ColumnSources");
@@ -2794,7 +2842,7 @@ function decodeHwp5ColumnSources(bytes) {
   }
   return rows;
 }
-var uint4 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, parse5 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+var uint5 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, parse5 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 
 // js/hwp5-formula-sources.mjs
 function decodeHwp5FormulaSources(bytes) {
@@ -2803,13 +2851,13 @@ function decodeHwp5FormulaSources(bytes) {
     throw new Error("InvalidHwp5FormulaSources");
   const seen = new Set;
   for (const row of rows) {
-    if (!row || !uint5(row.source_node) || row.source_node === 0 || !uint5(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed())
+    if (!row || !uint6(row.source_node) || row.source_node === 0 || !uint6(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed())
       throw new Error("InvalidHwp5FormulaSources");
     seen.add(row.source_node);
   }
   return rows;
 }
-var decoder, uint5 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var decoder, uint6 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var init_hwp5_formula_sources = __esm(() => {
   decoder = new TextDecoder("utf-8", { fatal: true });
 });
@@ -2840,7 +2888,7 @@ function validateHwp5FieldTopology(value) {
     fail();
   const starts = new Set;
   for (const row of value.spans) {
-    if (!row || !uint6(row.field_id) || !uint6(row.ordinal) || !position(row.begin) || !position(row.end) || before(row.end, row.begin))
+    if (!row || !uint7(row.field_id) || !uint7(row.ordinal) || !position(row.begin) || !position(row.end) || before(row.end, row.begin))
       fail();
     const key = row.begin.paragraph + ":" + row.ordinal;
     if (starts.has(key))
@@ -2849,13 +2897,13 @@ function validateHwp5FieldTopology(value) {
   }
   let previous = null;
   for (const row of value.unresolved) {
-    if (!row || !position(row.position) || !uint6(row.marker_id) || !(row.list_node === null || uint6(row.list_node)))
+    if (!row || !position(row.position) || !uint7(row.marker_id) || !(row.list_node === null || uint7(row.list_node)))
       fail();
     if (previous && !before(previous, row.position))
       fail();
     previous = row.position;
     if (row.kind === "unclosed_start") {
-      if (!uint6(row.ordinal))
+      if (!uint7(row.ordinal))
         fail();
       const key = row.position.paragraph + ":" + row.ordinal;
       if (starts.has(key))
@@ -2872,7 +2920,7 @@ function validateHwp5FieldTopology(value) {
 function decodeHwp5FieldTopology(bytes) {
   return validateHwp5FieldTopology(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint6 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, position = (value) => value && uint6(value.paragraph) && uint6(value.unit), before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
+var uint7 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, position = (value) => value && uint7(value.paragraph) && uint7(value.unit), before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
 
 // js/hwp5-text-source-protection.mjs
 function validateHwp5TextSourceProtection(value, count) {
@@ -3021,7 +3069,7 @@ function decodeHwp5TextWindow(bytes) {
   const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const n = (i) => v.getUint32(4 + i * 4, true);
   const e = (BigInt(n(2)) << 32n | BigInt(n(1))).toString();
-  if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint7(n(3)) || !uint7(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10))
+  if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint8(n(3)) || !uint8(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10))
     bad();
   const text = new TextDecoder("utf-16le", { fatal: true, ignoreBOM: true }).decode(bytes.slice(48));
   return {
@@ -3064,9 +3112,9 @@ function decodeHwp5TextDelta(bytes) {
     "startUnit",
     "totalUnits"
   ])
-    if (!uint7(r[k]))
+    if (!uint8(r[k]))
       bad();
-  if (r.parentNode !== null && !uint7(r.parentNode))
+  if (r.parentNode !== null && !uint8(r.parentNode))
     bad();
   for (const k of ["removed", "inserted"])
     if (!Array.isArray(r[k]) || r[k].length > 4096 || r[k].some((x) => !Number.isInteger(x) || x < 0 || x > 65535))
@@ -3075,7 +3123,7 @@ function decodeHwp5TextDelta(bytes) {
     bad();
   let prev = -1;
   for (const run of r.runs) {
-    if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint7(run.start_unit) || !uint7(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits)
+    if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint8(run.start_unit) || !uint8(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits)
       bad();
     prev = run.start_unit;
   }
@@ -3121,7 +3169,7 @@ function createHwp5ExclusiveTextApi({
       const length = w.text.length - 1;
       let cursor = 0;
       for (const range of raw) {
-        if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint7(range.charShapeId))
+        if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint8(range.charShapeId))
           bad();
         cursor = range.end;
         const start = Math.min(length, range.start), end = Math.min(length, range.end), charShapeId = range.charShapeId;
@@ -3159,7 +3207,7 @@ function createHwp5ExclusiveTextApi({
     }
   };
 }
-var uint7 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295, epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 0xffffffffffffffffn, bad = () => {
+var uint8 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295, epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 0xffffffffffffffffn, bad = () => {
   throw Error("InvalidExclusiveTextDelta");
 };
 var init_hwp5_exclusive_text_delta = () => {};
@@ -3171,7 +3219,7 @@ function validate4(reference) {
   if (Object.keys(reference).length !== fields2.length || fields2.some((key) => !Object.hasOwn(reference, key)))
     invalid();
   const { epoch, kind, section, id, row, column } = reference;
-  if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint8(section) || !uint8(row) || !uint8(column))
+  if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint9(section) || !uint9(row) || !uint9(column))
     invalid();
   if (!["original", "generated", "cell"].includes(kind))
     invalid();
@@ -3185,7 +3233,7 @@ function decodeHwp5CurrentReferences(bytes) {
   const value = JSON.parse(utf8.decode(bytes));
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version")
     invalid();
-  if (value.version !== 1 || !uint8(value.total) || !uint8(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total)
+  if (value.version !== 1 || !uint9(value.total) || !uint9(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total)
     invalid();
   for (const reference of value.references)
     validate4(reference);
@@ -3295,7 +3343,7 @@ function createHwp5CurrentReferenceApi({
 }
 var utf8, utf16, encoder, fields2, scopeSequence = 0n, invalid = () => {
   throw new Error("InvalidHwp5CurrentReference");
-}, uint8 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 0xffffffffffffffffn;
+}, uint9 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 0xffffffffffffffffn;
 var init_hwp5_current_references = __esm(() => {
   init_hwp5_exclusive_text_delta();
   utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
@@ -4916,19 +4964,19 @@ var init_hwpx_drawing_text_snapshot = () => {};
 
 // js/hwpx-drawing-text-requested.mjs
 function drawingTextRequest(nodes, limit) {
-  if (!uint9(limit) || limit < 1 || limit > 1024)
+  if (!uint10(limit) || limit < 1 || limit > 1024)
     throw Error("InvalidDrawingTextRequestLimit");
   if (!Array.isArray(nodes))
     throw Error("InvalidDrawingTextRequest");
   const count = nodes.length;
-  if (!uint9(count) || count > limit)
+  if (!uint10(count) || count > limit)
     throw Error("InvalidDrawingTextRequest");
   const requested = [];
   for (let index = 0;index < count; index++) {
     if (!Object.hasOwn(nodes, index))
       throw Error("InvalidDrawingTextRequest");
     const node = nodes[index];
-    if (!uint9(node))
+    if (!uint10(node))
       throw Error("InvalidDrawingTextRequest");
     requested.push(node);
   }
@@ -4967,7 +5015,7 @@ function decodeDrawingTextRequested(bytes, requested) {
     return { node: row.node, source };
   });
 }
-var uint9 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var init_hwpx_drawing_text_requested = __esm(() => {
   init_hwpx_drawing_text_snapshot();
 });
@@ -5286,7 +5334,7 @@ function decodeTableBorderBatch(bytes, sections) {
   if (!Array.isArray(value) || value.length !== sections.length)
     fail();
   for (const [index, entry] of value.entries()) {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint10(entry.section))
+    if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint11(entry.section))
       fail();
     if (Object.hasOwn(entry, "error")) {
       if (Object.hasOwn(entry, "value") || Object.keys(entry).length !== 2 || typeof entry.error !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(entry.error) || entry.error === "OutOfMemory")
@@ -5299,7 +5347,7 @@ function decodeTableBorderBatch(bytes, sections) {
   }
   return value;
 }
-var uint10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var uint11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var init_hwpx_table_border_batch = __esm(() => {
   init_hwpx_table_border_sources();
 });
@@ -5338,17 +5386,17 @@ function validShapeCommonSource(value) {
     return false;
   if (Object.hasOwn(value, "component_sizes")) {
     const sizes = value.component_sizes;
-    if (!object2(sizes) || !["original", "current"].every((key) => sizes[key] === null || object2(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint11(n))))
+    if (!object3(sizes) || !["original", "current"].every((key) => sizes[key] === null || object3(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint12(n))))
       return false;
   }
-  if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint11(value.stroke_style) && value.stroke_style <= 17))
+  if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint12(value.stroke_style) && value.stroke_style <= 17))
     return false;
   if (value.stroke && value.stroke_style !== undefined && value.stroke_style !== value.stroke.style)
     return false;
   if (["stroke", "stroke_error", "paint"].some((key) => Object.hasOwn(value, key)) && !validShapePaintValues(value))
     return false;
   const r = value.rendering;
-  if (!object2(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint11(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate))
+  if (!object3(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint12(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate))
     return false;
   return r.matrix === null ? [
     "UnsupportedPictureMatrixSequence",
@@ -5356,7 +5404,7 @@ function validShapeCommonSource(value) {
     "NonFinitePictureMatrix"
   ].includes(r.matrix_error) : Array.isArray(r.matrix) && r.matrix.length === 6 && Array.from(r.matrix).every(Number.isFinite) && r.matrix_error === null;
 }
-var object2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, coordinate = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295, optionalBoolean = (value) => value === null || typeof value === "boolean";
+var object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, coordinate = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295, optionalBoolean = (value) => value === null || typeof value === "boolean";
 var init_hwpx_shape_common_source = () => {};
 
 // js/hwpx-group-context.mjs
@@ -5372,11 +5420,11 @@ function validGroupContext(value, node) {
 // js/hwpx-curve-geometry.mjs
 function decodeCurveGeometry(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  if (!object3(value) || value.sourceOnly !== true || !uint12(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object3(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && ["x1", "y1", "x2", "y2"].every((key) => coordinate2(segment[key]))))
+  if (!object4(value) || value.sourceOnly !== true || !uint13(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object4(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && ["x1", "y1", "x2", "y2"].every((key) => coordinate2(segment[key]))))
     throw new Error("InvalidCurveGeometry");
   return value;
 }
-var object3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, coordinate2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
+var object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint13 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, coordinate2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 var init_hwpx_curve_geometry = __esm(() => {
   init_hwpx_shape_common_source();
 });
@@ -5385,11 +5433,11 @@ var init_hwpx_curve_geometry = __esm(() => {
 function decodeCurveOwner(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const owner = value?.owner;
-  if (!object4(value) || value.sourceOnly !== true || !uint13(value.node) || owner !== null && (!object4(owner) || ![owner.paragraph, owner.anchor_node, owner.anchor_unit].every(uint13) || owner.paragraph === 0 || owner.anchor_node >= value.node))
+  if (!object5(value) || value.sourceOnly !== true || !uint14(value.node) || owner !== null && (!object5(owner) || ![owner.paragraph, owner.anchor_node, owner.anchor_unit].every(uint14) || owner.paragraph === 0 || owner.anchor_node >= value.node))
     throw new Error("InvalidCurveOwner");
   return value;
 }
-var uint13 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var uint14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 
 // js/hwpx-tab-sources.mjs
 function decodeTabSources(bytes) {
@@ -5397,19 +5445,19 @@ function decodeTabSources(bytes) {
   return validateTabSources(value);
 }
 function validateTabSources(value) {
-  if (!object5(value) || !uint14(value.section) || !uint14(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows))
+  if (!object6(value) || !uint15(value.section) || !uint15(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows))
     throw new Error("InvalidTabSources");
   let previous = -1;
   const nodes = new Set;
   for (const row of value.rows) {
-    if (!object5(row) || !uint14(row.unit) || !uint14(row.node) || row.unit <= previous || nodes.has(row.node) || ![row.width, row.tab_type, row.leader].every((raw) => raw === null || typeof raw === "string" && new TextEncoder().encode(raw).length <= 4096))
+    if (!object6(row) || !uint15(row.unit) || !uint15(row.node) || row.unit <= previous || nodes.has(row.node) || ![row.width, row.tab_type, row.leader].every((raw) => raw === null || typeof raw === "string" && new TextEncoder().encode(raw).length <= 4096))
       throw new Error("InvalidTabSources");
     previous = row.unit;
     nodes.add(row.node);
   }
   return value;
 }
-var uint14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var uint15 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 
 // js/hwpx-tab-definitions.mjs
 function validateTabDefinitions(rows) {
@@ -5417,14 +5465,14 @@ function validateTabDefinitions(rows) {
     throw new Error("InvalidTabDefinitions");
   let previous = -1, count = 0;
   for (const row of rows) {
-    if (!object6(row) || !uint15(row.id) || row.id <= previous || !raw(row.auto_left) || !raw(row.auto_right) || !Array.isArray(row.items))
+    if (!object7(row) || !uint16(row.id) || row.id <= previous || !raw(row.auto_left) || !raw(row.auto_right) || !Array.isArray(row.items))
       throw new Error("InvalidTabDefinitions");
     previous = row.id;
     count += row.items.length;
     if (count > 1e6)
       throw new Error("InvalidTabDefinitions");
     for (const item of row.items)
-      if (!object6(item) || !raw(item.pos) || !raw(item.kind) || !raw(item.leader) || Object.hasOwn(item, "unit") && !raw(item.unit))
+      if (!object7(item) || !raw(item.pos) || !raw(item.kind) || !raw(item.leader) || Object.hasOwn(item, "unit") && !raw(item.unit))
         throw new Error("InvalidTabDefinitions");
   }
   return rows;
@@ -5432,7 +5480,7 @@ function validateTabDefinitions(rows) {
 function decodeTabDefinitions(bytes) {
   return validateTabDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint15 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
+var uint16 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 
 // js/hwpx-section-tabs.mjs
 function validateSectionTabs(rows) {
@@ -5440,7 +5488,7 @@ function validateSectionTabs(rows) {
     throw new Error("InvalidSectionTabSources");
   let previous = null;
   for (const row of rows) {
-    if (!row || typeof row !== "object" || Array.isArray(row) || !uint16(row.section) || !uint16(row.node) || ![row.tab_stop, row.tab_stop_val, row.tab_stop_unit].every(raw2) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint16(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node))
+    if (!row || typeof row !== "object" || Array.isArray(row) || !uint17(row.section) || !uint17(row.node) || ![row.tab_stop, row.tab_stop_val, row.tab_stop_unit].every(raw2) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint17(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node))
       throw new Error("InvalidSectionTabSources");
     previous = row;
   }
@@ -5449,7 +5497,7 @@ function validateSectionTabs(rows) {
 function decodeSectionTabs(bytes) {
   return validateSectionTabs(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint16 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, raw2 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
+var uint17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, raw2 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 
 // js/equation-engine.mjs
 function createEquationEngine(wasm) {
@@ -5655,24 +5703,24 @@ function validateChartRichText(value) {
 
 // js/chart-display-fields.mjs
 function field(value, accepts, owner) {
-  return value === null || object7(value) && uint17(value.node) && value.node > owner && (value.value === null || accepts(value.value));
+  return value === null || object8(value) && uint18(value.node) && value.node > owner && (value.value === null || accepts(value.value));
 }
 function number5(value) {
-  return object7(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : ["positive_infinity", "negative_infinity", "not_a_number"].includes(value.kind) && value.value === null);
+  return object8(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : ["positive_infinity", "negative_infinity", "not_a_number"].includes(value.kind) && value.value === null);
 }
 function scaling(value, owner) {
-  return value === null || object7(value) && uint17(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [value.minimum, value.maximum, value.log_base].every((item) => field(item, number5, value.node));
+  return value === null || object8(value) && uint18(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [value.minimum, value.maximum, value.log_base].every((item) => field(item, number5, value.node));
 }
-var object7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, text = (value) => typeof value === "string" && value.isWellFormed(), nullableUint = (value) => value === null || uint17(value), oneOf = (values) => (value) => values.includes(value);
+var object8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint18 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, text = (value) => typeof value === "string" && value.isWellFormed(), nullableUint = (value) => value === null || uint18(value), oneOf = (values) => (value) => values.includes(value);
 
 // js/chart-display-host.mjs
 function chartDisplayHost(value, wrapper) {
-  if (!object7(value) || value.wrapper_node !== wrapper || !uint17(value.chart_node) || value.chart_node <= wrapper)
+  if (!object8(value) || value.wrapper_node !== wrapper || !uint18(value.chart_node) || value.chart_node <= wrapper)
     return false;
   const { geometry: g, position: p } = value;
-  return object7(g) && object7(p) && [g.width, g.height].every(optional4(uint17)) && optional4(bounded(4))(g.width_relative) && optional4(bounded(2))(g.height_relative) && optional4(boolean3)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional4(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional4(boolean3)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional4(bounded([2, 3, 4, 4][i]))(v));
+  return object8(g) && object8(p) && [g.width, g.height].every(optional4(uint18)) && optional4(bounded(4))(g.width_relative) && optional4(bounded(2))(g.height_relative) && optional4(boolean3)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional4(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional4(boolean3)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional4(bounded([2, 3, 4, 4][i]))(v));
 }
-var optional4 = (accepts) => (value) => value === null || accepts(value), bounded = (max) => (value) => uint17(value) && value <= max, boolean3 = (value) => typeof value === "boolean", offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
+var optional4 = (accepts) => (value) => value === null || accepts(value), bounded = (max) => (value) => uint18(value) && value <= max, boolean3 = (value) => typeof value === "boolean", offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 var init_chart_display_host = () => {};
 
 // js/chart-series-settings.mjs
@@ -5682,19 +5730,19 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
   let index = 0;
   for (const [node, plotNode] of series) {
     const row = values[index++], kind = plots.get(plotNode)?.kind;
-    if (!object7(row) || row.series_node !== node || row.plot_node !== plotNode || !field(row.smooth, (v) => typeof v === "boolean", node))
+    if (!object8(row) || row.series_node !== node || row.plot_node !== plotNode || !field(row.smooth, (v) => typeof v === "boolean", node))
       return false;
-    if (!field(row.index, uint17, node) || !field(row.order, uint17, node))
+    if (!field(row.index, uint18, node) || !field(row.order, uint18, node))
       return false;
     const line = ["lineChart", "line3DChart", "stockChart", "scatterChart"].includes(kind);
     if (row.smooth !== null && !line)
       return false;
-    if (!field(row.explosion, uint17, node))
+    if (!field(row.explosion, uint18, node))
       return false;
     if (row.explosion !== null && !["pieChart", "pie3DChart", "ofPieChart", "doughnutChart"].includes(kind))
       return false;
     const marker = row.marker;
-    if (marker !== null && (!line && kind !== "radarChart" || !object7(marker) || !uint17(marker.node) || marker.node <= node || !field(marker.symbol, oneOf(symbols), marker.node) || !field(marker.size, (v) => uint17(v) && v >= 2 && v <= 72, marker.node)))
+    if (marker !== null && (!line && kind !== "radarChart" || !object8(marker) || !uint18(marker.node) || marker.node <= node || !field(marker.symbol, oneOf(symbols), marker.node) || !field(marker.size, (v) => uint18(v) && v >= 2 && v <= 72, marker.node)))
       return false;
     const leaves = [
       row.index,
@@ -5705,7 +5753,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
     ].filter((value) => value !== null);
     const stroke = row.stroke, strokeNodes = [];
     if (stroke !== undefined && stroke !== null) {
-      if (!object7(stroke) || !uint17(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint17(stroke.no_fill_node) && stroke.no_fill_node > stroke.node))
+      if (!object8(stroke) || !uint18(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint18(stroke.no_fill_node) && stroke.no_fill_node > stroke.node))
         return false;
       strokeNodes.push(stroke.node);
       if (stroke.no_fill_node !== null)
@@ -5743,7 +5791,7 @@ function validChartPointSettings(values, series, occupied = null) {
     return false;
   let previous = -1;
   for (const row of values) {
-    if (!object7(row) || !uint17(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field(row.index, uint17, row.node) || !field(row.explosion, uint17, row.node))
+    if (!object8(row) || !uint18(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field(row.index, uint18, row.node) || !field(row.explosion, uint18, row.node))
       return false;
     if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node)
       return false;
@@ -5762,7 +5810,7 @@ var init_chart_point_settings = () => {};
 function validChartStockSettings(stock, kind, plotNode, usedNodes) {
   if (kind !== "stockChart")
     return stock === null;
-  if (!object7(stock))
+  if (!object8(stock))
     return false;
   for (const key of ["high_low_node", "up_down_node", "up_node", "down_node"])
     if (!nullableUint(stock[key]))
@@ -5770,7 +5818,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
   if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null))
     return false;
   const parent = stock.up_down_node ?? plotNode;
-  if (!field(stock.gap_width, (value) => uint17(value) && value <= 500, parent))
+  if (!field(stock.gap_width, (value) => uint18(value) && value <= 500, parent))
     return false;
   for (const key of ["up_node", "down_node"])
     if (stock[key] !== null && stock[key] <= parent)
@@ -5796,7 +5844,7 @@ var init_chart_stock_settings = () => {};
 function validChartView3D(value, occupied = null) {
   if (value === undefined || value === null)
     return true;
-  if (!object7(value) || !uint17(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean")
+  if (!object8(value) || !uint18(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean")
     return false;
   const ranges = {
     rotation_x: [-90, 90],
@@ -5828,7 +5876,7 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
   const spatial = ["bar3DChart", "line3DChart", "area3DChart"].includes(kind);
   if (!spatial)
     return value === null;
-  if (!object7(value) || !field(value.gap_depth, (v) => uint17(v) && v <= 500, owner) || !field(value.shape, oneOf(["box", "cone", "coneToMax", "cylinder", "pyramid", "pyramidToMax"]), owner))
+  if (!object8(value) || !field(value.gap_depth, (v) => uint18(v) && v <= 500, owner) || !field(value.shape, oneOf(["box", "cone", "coneToMax", "cylinder", "pyramid", "pyramidToMax"]), owner))
     return false;
   if (kind !== "bar3DChart" && value.shape !== null)
     return false;
@@ -5845,7 +5893,7 @@ var init_chart_spatial_settings = () => {};
 // js/hwpx-chart-display.mjs
 function decodeChartDisplay(bytes) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-  require2(object7(value) && value.kind === "chart_display");
+  require2(object8(value) && value.kind === "chart_display");
   for (const name of [
     "plots",
     "plot_settings",
@@ -5858,7 +5906,7 @@ function decodeChartDisplay(bytes) {
   ])
     require2(Array.isArray(value[name]));
   const pair = value.pair;
-  require2(object7(pair) && text(pair.chart_path) && pair.chart_path.length > 0 && text(pair.ole_path) && pair.ole_path.length > 0 && uint17(pair.wrapper_node) && uint17(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint17(n) && n <= 255));
+  require2(object8(pair) && text(pair.chart_path) && pair.chart_path.length > 0 && text(pair.ole_path) && pair.ole_path.length > 0 && uint18(pair.wrapper_node) && uint18(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint18(n) && n <= 255));
   require2(chartDisplayHost(value.host, pair.wrapper_node));
   require2(value.plots.length === value.plot_settings.length);
   const plots = new Map, series = new Map, references = new Map;
@@ -5867,28 +5915,28 @@ function decodeChartDisplay(bytes) {
   const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks ? null : new Set;
   let previousPlot = -1;
   for (const [index, plot] of value.plots.entries()) {
-    require2(object7(plot) && uint17(plot.node) && plot.node > previousPlot && uint17(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
+    require2(object8(plot) && uint18(plot.node) && plot.node > previousPlot && uint18(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
     plots.set(plot.node, plot);
     previousPlot = plot.node;
     occupied?.add(plot.node);
     occupied?.add(plot.area_node);
     let previousSeries = plot.node;
     for (const node of plot.series_nodes) {
-      require2(uint17(node) && node > previousSeries && !series.has(node));
+      require2(uint18(node) && node > previousSeries && !series.has(node));
       series.set(node, plot.node);
       previousSeries = node;
       occupied?.add(node);
     }
     const settings = value.plot_settings[index];
-    require2(object7(settings) && field(settings.direction, oneOf(["bar", "col"]), plot.node) && field(settings.grouping, oneOf(["standard", "clustered", "stacked", "percentStacked"]), plot.node) && field(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-    require2(field(settings.gap_width, (v) => uint17(v) && v <= 500, plot.node) && field(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+    require2(object8(settings) && field(settings.direction, oneOf(["bar", "col"]), plot.node) && field(settings.grouping, oneOf(["standard", "clustered", "stacked", "percentStacked"]), plot.node) && field(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
+    require2(field(settings.gap_width, (v) => uint18(v) && v <= 500, plot.node) && field(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
     require2(field(settings.scatter_style, oneOf(["line", "lineMarker", "marker", "smooth", "smoothMarker"]), plot.node));
     if (settings.scatter_style !== null)
       require2(plot.kind === "scatterChart");
-    require2(field(settings.first_slice_angle, (v) => uint17(v) && v <= 360, plot.node));
+    require2(field(settings.first_slice_angle, (v) => uint18(v) && v <= 360, plot.node));
     if (settings.first_slice_angle !== null)
       require2(["pieChart", "doughnutChart"].includes(plot.kind));
-    require2(field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field(settings.second_pie_size, (v) => uint17(v) && v >= 5 && v <= 200, plot.node) && field(settings.split_type, oneOf(["auto", "cust", "percent", "pos", "val"]), plot.node) && field(settings.split_position, number5, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
+    require2(field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field(settings.second_pie_size, (v) => uint18(v) && v >= 5 && v <= 200, plot.node) && field(settings.split_type, oneOf(["auto", "cust", "percent", "pos", "val"]), plot.node) && field(settings.split_position, number5, plot.node) && nullableUint(settings.custom_split_node) && (settings.custom_split_node === null || settings.custom_split_node > plot.node));
     if ([
       settings.of_pie_type,
       settings.second_pie_size,
@@ -5925,7 +5973,7 @@ function decodeChartDisplay(bytes) {
       ...settings.axis_references
     ])
       if (leaf !== null) {
-        require2(object7(leaf) && uint17(leaf.node) && !leaves.has(leaf.node));
+        require2(object8(leaf) && uint18(leaf.node) && !leaves.has(leaf.node));
         leaves.add(leaf.node);
       }
     require2(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
@@ -5933,7 +5981,7 @@ function decodeChartDisplay(bytes) {
     for (const node of leaves)
       occupied?.add(node);
     for (const reference of settings.axis_references) {
-      require2(reference !== null && field(reference, uint17, plot.node));
+      require2(reference !== null && field(reference, uint18, plot.node));
       const key = plot.node + ":" + reference.node;
       require2(!references.has(key));
       references.set(key, reference.value);
@@ -5943,7 +5991,7 @@ function decodeChartDisplay(bytes) {
   require2(validChartSeriesSettings(value.series_settings, plots, series, occupied));
   require2(validChartPointSettings(value.point_settings, series, occupied));
   for (const axis of value.axes) {
-    require2(object7(axis) && uint17(axis.node) && !axes.has(axis.node) && uint17(axis.area_node) && axis.area_node < axis.node && ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) && field(axis.id, uint17, axis.node) && field(axis.cross_axis, uint17, axis.node) && field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) && field(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node) && (axis.major_tick_mark === undefined || field(axis.major_tick_mark, oneOf(["cross", "in", "none", "out"]), axis.node)));
+    require2(object8(axis) && uint18(axis.node) && !axes.has(axis.node) && uint18(axis.area_node) && axis.area_node < axis.node && ["catAx", "valAx", "dateAx", "serAx"].includes(axis.kind) && field(axis.id, uint18, axis.node) && field(axis.cross_axis, uint18, axis.node) && field(axis.position, oneOf(["b", "l", "r", "t"]), axis.node) && field(axis.deleted, (v) => typeof v === "boolean", axis.node) && scaling(axis.scaling, axis.node) && (axis.major_tick_mark === undefined || field(axis.major_tick_mark, oneOf(["cross", "in", "none", "out"]), axis.node)));
     axes.set(axis.node, axis);
     occupied?.add(axis.node);
     occupied?.add(axis.area_node);
@@ -5972,7 +6020,7 @@ function decodeChartDisplay(bytes) {
   require2(value.axis_links.length === references.size);
   const seenLinks = new Set;
   for (const link of value.axis_links) {
-    require2(object7(link) && uint17(link.plot_node) && plots.has(link.plot_node) && uint17(link.reference_node) && nullableUint(link.id) && object7(link.target));
+    require2(object8(link) && uint18(link.plot_node) && plots.has(link.plot_node) && uint18(link.reference_node) && nullableUint(link.id) && object8(link.target));
     const key = link.plot_node + ":" + link.reference_node;
     require2(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
     seenLinks.add(key);
@@ -5984,14 +6032,14 @@ function decodeChartDisplay(bytes) {
   let previousLeaf = -1;
   const pointNodes = new Set;
   for (const [index, point] of value.points.entries()) {
-    require2(object7(point) && [point.cache_node, point.point_node, point.value_node, point.index].every(uint17) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+    require2(object8(point) && [point.cache_node, point.point_node, point.value_node, point.index].every(uint18) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
     previousLeaf = point.value_node;
     pointNodes.add(point.point_node);
     for (const node of [point.cache_node, point.point_node, point.value_node, point.level_node])
       if (node !== null)
         occupied?.add(node);
     const binding = value.bindings[index];
-    require2(object7(binding) && binding.point === index && [binding.series_node, binding.plot_node, binding.role_node].every(nullableUint) && roles.has(binding.role));
+    require2(object8(binding) && binding.point === index && [binding.series_node, binding.plot_node, binding.role_node].every(nullableUint) && roles.has(binding.role));
     for (const node of [binding.series_node, binding.plot_node, binding.role_node])
       if (node !== null)
         occupied?.add(node);
@@ -6622,26 +6670,26 @@ function decode3(bytes, maximum) {
 }
 function decodeFormSourceNodes(bytes) {
   const value = decode3(bytes, 8 * 1024 * 1024);
-  if (!object8(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object8(row) && uint18(row.formNode) && kinds.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode)))
+  if (!object9(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object9(row) && uint19(row.formNode) && kinds.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode)))
     throw new Error("InvalidFormSource");
   return value;
 }
 function decodeFormSourceAttributes(bytes) {
   const value = decode3(bytes, 1024 * 1024);
-  const group = (data, check) => object8(data) && Object.keys(data).length <= 128 && Object.entries(data).every(([key, item]) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && key.length <= 128 && (item === null || check(item)));
-  if (!object8(value) || value.sourceOnly !== true || !kinds.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint18))
+  const group = (data, check) => object9(data) && Object.keys(data).length <= 128 && Object.entries(data).every(([key, item]) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && key.length <= 128 && (item === null || check(item)));
+  if (!object9(value) || value.sourceOnly !== true || !kinds.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint19))
     throw new Error("InvalidFormSource");
   return value;
 }
 function decodeFormSites(bytes) {
   const sites = decode3(bytes, 16 * 1024 * 1024);
   if (!Array.isArray(sites) || sites.length > 1e5 || !sites.every((site, i) => {
-    if (!object8(site) || !uint18(site.formNode) || !kinds.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode)
+    if (!object9(site) || !uint19(site.formNode) || !kinds.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode)
       return false;
     if (site.state === "located")
-      return uint18(site.paragraph) && site.paragraph > 0 && uint18(site.anchorUnit);
+      return uint19(site.paragraph) && site.paragraph > 0 && uint19(site.anchorUnit);
     if (site.state === "unsupported_anchor")
-      return uint18(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
+      return uint19(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
     return ["conditional", "missing_host", "ambiguous_host"].includes(site.state) && site.paragraph === null && site.anchorUnit === null;
   }))
     throw new Error("InvalidFormSource");
@@ -6650,7 +6698,7 @@ function decodeFormSites(bytes) {
 function decodeFormSourceLayout(bytes) {
   const value = decode3(bytes, 65536);
   const bool = (value) => value === null || typeof value === "boolean";
-  if (!object8(value) || value.sourceOnly !== true || !uint18(value.formNode) || !kinds.has(value.kind) || !validShapeLayoutValues(value) || !object8(value.character) || !(value.character.id === null || uint18(value.character.id)) || ![
+  if (!object9(value) || value.sourceOnly !== true || !uint19(value.formNode) || !kinds.has(value.kind) || !validShapeLayoutValues(value) || !object9(value.character) || !(value.character.id === null || uint19(value.character.id)) || ![
     value.character.follow_context,
     value.character.auto_size,
     value.character.word_wrap,
@@ -6659,7 +6707,7 @@ function decodeFormSourceLayout(bytes) {
     throw new Error("InvalidFormSource");
   return value;
 }
-var kinds, uint18 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var kinds, uint19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var init_hwpx_form_source = __esm(() => {
   kinds = new Set(["button", "check_button", "combo_box", "radio_button", "edit_box"]);
 });
@@ -6697,14 +6745,14 @@ function decodeDocumentProvenance(bytes) {
       "application",
       "app_version",
       "xml_bytes"
-    ]) || ![version.major, version.minor, version.xml_bytes].every(uint19) || !["micro", "build_number", "patch", "revision", "os"].every((key) => version[key] === null || uint19(version[key])) || !["xml_version", "target_application", "application", "app_version"].every((key) => version[key] === null || text2(version[key])))
+    ]) || ![version.major, version.minor, version.xml_bytes].every(uint20) || !["micro", "build_number", "patch", "revision", "os"].every((key) => version[key] === null || uint20(version[key])) || !["xml_version", "target_application", "application", "app_version"].every((key) => version[key] === null || text2(version[key])))
       return fail();
   }
   if (value.sourceVersionError !== null && (version !== null || typeof value.sourceVersionError !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value.sourceVersionError)))
     return fail();
   return value;
 }
-var object9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), exact2 = (value, keys) => object9(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)), uint19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, text2 = (value) => typeof value === "string" && value.length <= 4096;
+var object10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), exact2 = (value, keys) => object10(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)), uint20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, text2 = (value) => typeof value === "string" && value.length <= 4096;
 
 // js/hwpx-font-face-metadata.mjs
 function decodeHwpxFontFaceMetadata(bytes) {
@@ -6934,12 +6982,12 @@ function decodeEllipseSources(bytes) {
   const text = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
   if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((row, index) => {
     const owner = row?.owner, geometry = row?.geometry;
-    return !object10(row) || row.sourceOnly !== true || !uint20(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object10(owner) || !["paragraph", "anchor_node", "anchor_unit"].every((key) => uint20(owner[key])) || owner.paragraph < 1 || !object10(geometry) || !["interval_dirty", "has_arc_properties", "arc_type"].every((key) => text(geometry[key])) || !Array.isArray(geometry.points) || geometry.points.length !== 7 || !Array.from(geometry.points).every((point) => point === null || object10(point) && coordinate3(point.x) && coordinate3(point.y));
+    return !object11(row) || row.sourceOnly !== true || !uint21(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object11(owner) || !["paragraph", "anchor_node", "anchor_unit"].every((key) => uint21(owner[key])) || owner.paragraph < 1 || !object11(geometry) || !["interval_dirty", "has_arc_properties", "arc_type"].every((key) => text(geometry[key])) || !Array.isArray(geometry.points) || geometry.points.length !== 7 || !Array.from(geometry.points).every((point) => point === null || object11(point) && coordinate3(point.x) && coordinate3(point.y));
   }))
     throw new Error("InvalidEllipseSources");
   return rows;
 }
-var object10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, coordinate3 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
+var object11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), uint21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, coordinate3 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 var init_hwpx_ellipse_sources = __esm(() => {
   init_hwpx_shape_common_source();
 });
@@ -7006,9 +7054,9 @@ function decodeOleSites(bytes) {
   if (!Array.isArray(value) || value.length > 1e5)
     fail();
   for (const row of value) {
-    if (!row || !uint21(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint21(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint21(row.anchor_unit)))
+    if (!row || !uint22(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint22(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint22(row.anchor_unit)))
       fail();
-    if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint21(row.chart_wrapper))
+    if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint22(row.chart_wrapper))
       fail();
     if (row.error_name === null ? row.paragraph === null || row.anchor_unit === null : !errors3.has(row.error_name) || row.anchor_unit !== null)
       fail();
@@ -7045,7 +7093,7 @@ function decodeOleBytes(bytes) {
   }
   return { declaredExternal: bytes[0] === 1, bytes: bytes.slice(1) };
 }
-var uint21 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295, errors3;
+var uint22 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295, errors3;
 var init_hwpx_ole_source = __esm(() => {
   errors3 = new Set([
     "UnsupportedOleDisplayHost",
@@ -7091,41 +7139,41 @@ function decodePictureRenderingCorners(bytes) {
 // js/hwpx-connector-source.mjs
 function decodeConnectorNodes(bytes) {
   const nodes = parse7(bytes);
-  if (!Array.isArray(nodes) || !nodes.every((value, index) => uint22(value) && (index === 0 || value > nodes[index - 1])))
+  if (!Array.isArray(nodes) || !nodes.every((value, index) => uint23(value) && (index === 0 || value > nodes[index - 1])))
     throw new Error("InvalidConnectorNodes");
   return nodes;
 }
 function decodeConnectorSource(bytes) {
   const value = parse7(bytes), geometry = value?.geometry;
-  const point = (item) => item === null || object11(item) && ["x", "y", "subject_id_ref", "subject_index", "control_type"].every((name) => item[name] === null || typeof item[name] === "string");
-  if (!object11(value) || value.sourceOnly !== true || !uint22(value.node) || !object11(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint22(geometry.unexpected_children))
+  const point = (item) => item === null || object12(item) && ["x", "y", "subject_id_ref", "subject_index", "control_type"].every((name) => item[name] === null || typeof item[name] === "string");
+  if (!object12(value) || value.sourceOnly !== true || !uint23(value.node) || !object12(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint23(geometry.unexpected_children))
     throw new Error("InvalidConnectorSource");
   return value;
 }
 function decodeConnectorOwner(bytes, expectedNode) {
   const value = parse7(bytes);
-  if (!object11(value) || value.current !== true || value.sourceOnly === true || !["node", "paragraph", "anchor_node", "anchor_unit"].every((name) => uint22(value[name])) || value.paragraph < 1 || expectedNode !== undefined && value.node !== expectedNode)
+  if (!object12(value) || value.current !== true || value.sourceOnly === true || !["node", "paragraph", "anchor_node", "anchor_unit"].every((name) => uint23(value[name])) || value.paragraph < 1 || expectedNode !== undefined && value.node !== expectedNode)
     throw new Error("InvalidConnectorOwner");
   return value;
 }
 function decodeConnectorRenderingSource(bytes, expectedNode) {
   const value = parse7(bytes);
   const point = (row) => Array.isArray(row) && row.length === 2 && row.every(Number.isFinite);
-  if (!object11(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint22(value.node) || expectedNode !== undefined && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point))
+  if (!object12(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint23(value.node) || expectedNode !== undefined && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point))
     throw new Error("InvalidConnectorRenderingSource");
   return value;
 }
-var uint22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), parse7 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+var uint23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, object12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value), parse7 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 
 // js/hwpx-drawing-stroke-source.mjs
 function decodeDrawingStrokeSource(bytes, expectedNode) {
   const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   const attr = value?.attributes;
-  if (!value || value.sourceOnly !== true || !uint23(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint23(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint23(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields3.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096))
+  if (!value || value.sourceOnly !== true || !uint24(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint24(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint24(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields3.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096))
     throw new Error("InvalidDrawingStrokeSource");
   return value;
 }
-var fields3, uint23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+var fields3, uint24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 var init_hwpx_drawing_stroke_source = __esm(() => {
   fields3 = [
     "color",
@@ -10003,7 +10051,7 @@ function unique(rows, key, warnings, name) {
   }
   return map;
 }
-var LIMITS, uint24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, diagnostic = (code, message, source) => ({
+var LIMITS, uint25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, diagnostic = (code, message, source) => ({
   code,
   message: String(message).slice(0, 512),
   ...source ? { source: { ...source } } : {}
@@ -10027,17 +10075,18 @@ function collectHwp5({ sdk, sectionCount }) {
     const flowResult = get("paragraphFlow"), flows = array2(flowResult, warnings, "paragraphFlow", source);
     const flowMap = unique(flows, (r) => r.paragraph, warnings, "paragraphFlow");
     const countResult = get("paragraphCount");
-    const count = countResult.ok && uint24(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
+    const count = countResult.ok && uint25(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
     const previewRows = previewSections.get(section)?.paragraphs;
-    const paragraphs = [];
+    const paragraphs = [], objectTokens = [];
+    let objectTokensKnown = count !== null && preview.ok && Array.isArray(previewRows) && previewRows.length === count;
     const ordinals = count !== null ? Array.from({ length: count }, (_, ordinal) => ordinal) : [...new Set(flows.map((row) => row.paragraph))];
     for (const paragraph of ordinals) {
       const p = previewRows?.[paragraph], flow = flowMap.get(paragraph);
-      const node = uint24(flow?.source_node) ? flow.source_node : uint24(p?.nodeIndex) ? p.nodeIndex : null;
-      const emptyParagraph = p?.textPresent === false && p.text === "" && uint24(p.nodeIndex) && uint24(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
+      const node = uint25(flow?.source_node) ? flow.source_node : uint25(p?.nodeIndex) ? p.nodeIndex : null;
+      const emptyParagraph = p?.textPresent === false && p.text === "" && uint25(p.nodeIndex) && uint25(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
       let displayText = typeof p?.text === "string" && (p.textPresent === true || emptyParagraph) ? p.text : null;
-      let identityKnown = uint24(node) && flow?.generated !== true;
-      if (uint24(p?.nodeIndex) && uint24(flow?.source_node) && p.nodeIndex !== flow.source_node) {
+      let identityKnown = uint25(node) && flow?.generated !== true;
+      if (uint25(p?.nodeIndex) && uint25(flow?.source_node) && p.nodeIndex !== flow.source_node) {
         identityKnown = false;
         displayText = null;
         warnings.push(diagnostic("ParagraphSourceMismatch", "Native source identities disagree", {
@@ -10052,6 +10101,18 @@ function collectHwp5({ sdk, sectionCount }) {
         displayText,
         flow: flow ?? null
       });
+      if (!Array.isArray(p?.tokens))
+        objectTokensKnown = false;
+      else
+        for (const token of p.tokens) {
+          if (token?.type !== "control" || token.code !== 11)
+            continue;
+          if (!uint25(token.startUnit)) {
+            objectTokensKnown = false;
+            continue;
+          }
+          objectTokens.push({ paragraph, anchorUnit: token.startUnit, identityKnown });
+        }
     }
     const bindings = get("tableBindings"), placements = get("tablePlacements"), tableInventory = get("tableLayoutSources"), cellInventory = get("cellLayoutSources"), areas = get("pageAreaSources");
     for (const [name, result] of Object.entries({
@@ -10070,8 +10131,9 @@ function collectHwp5({ sdk, sectionCount }) {
       const draw = drawByComponent.get(row.component_node), anchor = anchorByComponent.get(row.component_node);
       const owner = draw?.control_node === row.owner_node && anchor?.control_node === row.owner_node;
       return {
+        inventorySiteKnown: uint25(row.component_node) && uint25(row.picture_node) && uint25(row.owner_node) && uint25(row.bin_data_id) && row.bin_data_id > 0,
         pictureNode: row.component_node,
-        parentParagraph: owner && uint24(anchor.paragraph) ? anchor.paragraph : null,
+        parentParagraph: owner && uint25(anchor.paragraph) ? anchor.paragraph : null,
         sourceInfo: {
           section,
           pictureNode: row.component_node,
@@ -10080,8 +10142,8 @@ function collectHwp5({ sdk, sectionCount }) {
           ownerNode: row.owner_node,
           resourceId: row.bin_data_id
         },
-        width: owner && uint24(draw.width) ? draw.width : null,
-        height: owner && uint24(draw.height) ? draw.height : null,
+        width: owner && uint25(draw.width) ? draw.width : null,
+        height: owner && uint25(draw.height) ? draw.height : null,
         reason: owner ? null : "PictureOwnerUnverified"
       };
     });
@@ -10091,8 +10153,9 @@ function collectHwp5({ sdk, sectionCount }) {
       if (draw?.kind_id !== 611346787 || representedPictures.has(draw.component_node))
         continue;
       const anchor = anchorByComponent.get(draw.component_node);
-      const ownerKnown = anchor?.control_node === draw.control_node && uint24(anchor?.paragraph);
+      const ownerKnown = anchor?.control_node === draw.control_node && uint25(anchor?.paragraph);
       pictures.push({
+        inventorySiteKnown: false,
         pictureNode: draw.component_node,
         parentParagraph: ownerKnown ? anchor.paragraph : null,
         sourceInfo: {
@@ -10101,12 +10164,91 @@ function collectHwp5({ sdk, sectionCount }) {
           componentNode: draw.component_node,
           ownerNode: draw.control_node
         },
-        width: uint24(draw.width) ? draw.width : null,
-        height: uint24(draw.height) ? draw.height : null,
+        width: uint25(draw.width) ? draw.width : null,
+        height: uint25(draw.height) ? draw.height : null,
         reason: "PictureSourceUnobserved"
       });
+      representedPictures.add(draw.component_node);
       fallbackPictures++;
       warnings.push(diagnostic("PictureSourceUnobserved", "Native drawing proves an image exists, but its picture profile metadata is unavailable", { section }));
+    }
+    const objects = [];
+    const componentsResult = get("drawingComponentSources");
+    const components = unique(array2(componentsResult, warnings, "drawingComponentSources", source), (r) => r.component_node, warnings, "drawing component inventory");
+    let componentsKnown = componentsResult.ok;
+    for (const row of components.values()) {
+      if (!row || !uint25(row.component_node) || !uint25(row.kind_id) || !uint25(row.owner_node)) {
+        componentsKnown = false;
+        continue;
+      }
+      if (row.kind_id === 611346787) {
+        if (!representedPictures.has(row.component_node)) {
+          representedPictures.add(row.component_node);
+          pictures.push({
+            pictureNode: row.component_node,
+            inventorySiteKnown: false,
+            parentParagraph: null,
+            sourceInfo: {
+              section,
+              pictureNode: row.component_node,
+              componentNode: row.component_node,
+              ownerNode: row.owner_node
+            },
+            reason: "PictureSourceUnobserved"
+          });
+          fallbackPictures++;
+        }
+        continue;
+      }
+      const drawing = drawByComponent.get(row.component_node), anchor = anchorByComponent.get(row.component_node);
+      const ownerKnown = drawing && anchor && drawing.control_node === anchor.control_node && drawing.control_node === row.owner_node;
+      objects.push({
+        kind: "drawing",
+        node: row.component_node,
+        siteKnown: true,
+        parentParagraph: ownerKnown && uint25(anchor.paragraph) ? anchor.paragraph : null,
+        parentObjectNode: components.get(row.owner_node)?.kind_id === 610496366 ? row.owner_node : null,
+        nativeKind: row.kind_id,
+        reason: ownerKnown ? "ObjectDetailsDeferred" : "ObjectOwnerUnverified"
+      });
+    }
+    const knownAnchors = new Set;
+    let anchorsKnown = anchors.ok && drawingAnchors.ok;
+    for (const row of [
+      ...array2(anchors, warnings, "tableAnchors", source),
+      ...array2(drawingAnchors, warnings, "drawingAnchors", source)
+    ]) {
+      if (!uint25(row?.paragraph) || !uint25(row?.current_unit)) {
+        anchorsKnown = false;
+        continue;
+      }
+      knownAnchors.add(`${row.paragraph}:${row.current_unit}`);
+    }
+    const tokenCounts = new Map;
+    for (const token of objectTokens) {
+      const key = `${token.paragraph}:${token.anchorUnit}`;
+      tokenCounts.set(key, (tokenCounts.get(key) ?? 0) + 1);
+    }
+    const seenTokens = new Set;
+    for (const token of objectTokens) {
+      const key = `${token.paragraph}:${token.anchorUnit}`;
+      if (seenTokens.has(key)) {
+        objectTokensKnown = false;
+        continue;
+      }
+      seenTokens.add(key);
+      const located = anchorsKnown && token.identityKnown && tokenCounts.get(key) === 1;
+      if (located && knownAnchors.has(key))
+        continue;
+      objects.push({
+        kind: "unknown",
+        node: null,
+        siteKnown: false,
+        parentParagraph: located ? token.paragraph : null,
+        paragraph: token.paragraph,
+        anchorUnit: token.anchorUnit,
+        reason: located ? "UnclassifiedExtendedObject" : "ObjectAnchorInventoryUnavailable"
+      });
     }
     sections.push({
       section,
@@ -10121,6 +10263,9 @@ function collectHwp5({ sdk, sectionCount }) {
       anchors,
       pictures,
       picturesKnown: pictureResult.ok && fallbackPictures === 0,
+      objects,
+      objectsKnown: componentsKnown && objectTokensKnown && anchorsKnown,
+      objectInventoryScope: "hwp5-drawing-components-and-typed-code11-signals",
       format: "hwp5"
     });
   }
@@ -10148,8 +10293,8 @@ function collectHwpx({ sdk, sectionCount }) {
       const flow = flowMap.get(row.paragraph);
       return {
         paragraph: row.paragraph,
-        node: uint24(flow?.source_node) ? flow.source_node : null,
-        identityKnown: uint24(flow?.source_node),
+        node: uint25(flow?.source_node) ? flow.source_node : null,
+        identityKnown: uint25(flow?.source_node),
         displayText: typeof row.text === "string" ? row.text : null,
         flow: flow ?? null
       };
@@ -10164,6 +10309,7 @@ function collectHwpx({ sdk, sectionCount }) {
     const sitesResult = get("pictureSites"), ownersResult = get("pictureOwners");
     const owners = unique(array2(ownersResult, warnings, "pictureOwners", source), (row) => row.pictureNode, warnings, "picture owner");
     const sites = array2(sitesResult, warnings, "pictureSites", source).slice();
+    const inventoryPictures = new Set(sites.filter((row) => uint25(row?.pictureNode)).map((row) => row.pictureNode));
     const seenPictures = new Set(sites.map((row) => row.pictureNode));
     for (const owner of owners.values())
       if (owner && !seenPictures.has(owner.pictureNode)) {
@@ -10174,14 +10320,83 @@ function collectHwpx({ sdk, sectionCount }) {
       const owner = owners.get(row.pictureNode), proof = owner?.owner;
       const parentParagraph = proof && row.paragraph === proof.paragraph ? proof.paragraph : null;
       return {
+        inventorySiteKnown: inventoryPictures.has(row.pictureNode),
         pictureNode: row.pictureNode,
         parentParagraph,
         sourceInfo: { section, pictureNode: row.pictureNode },
         width: null,
         height: null,
-        reason: uint24(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
+        reason: uint25(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
       };
     });
+    const objects = new Map;
+    let objectsKnown = true;
+    const addObject = (row) => {
+      if (!uint25(row.node)) {
+        objectsKnown = false;
+        return;
+      }
+      const previous = objects.get(row.node);
+      if (previous && previous.kind !== row.kind)
+        throw new Error("ConflictingObjectKind");
+      if (!previous)
+        objects.set(row.node, { ...row, siteKnown: true });
+    };
+    const inventory = (method) => {
+      const result = get(method);
+      const rows = array2(result, warnings, method, source);
+      objectsKnown &&= result.ok;
+      return rows;
+    };
+    for (const row of inventory("chartSites"))
+      addObject({
+        kind: "chart",
+        node: row?.wrapper,
+        parentParagraph: row?.error_name === null && uint25(row?.paragraph) && uint25(row?.anchorUnit) ? row.paragraph : null,
+        detailUnavailable: row?.error_name !== null,
+        reason: row?.error_name ?? "ObjectDetailsDeferred"
+      });
+    for (const row of inventory("equationSites"))
+      addObject({
+        kind: "equation",
+        node: row?.source?.node,
+        parentParagraph: row?.source?.issue === null && row?.error_name === null && uint25(row?.paragraph) ? row.paragraph : null,
+        detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
+        reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred"
+      });
+    for (const row of inventory("oleSites"))
+      addObject({
+        kind: "ole",
+        node: row?.ole_node,
+        parentParagraph: row?.error_name === null && uint25(row?.paragraph) ? row.paragraph : null,
+        detailUnavailable: row?.error_name !== null,
+        reason: row?.error_name ?? "ObjectDetailsDeferred"
+      });
+    for (const method of ["rectangleNodes", "lineNodes", "connectorNodes"])
+      for (const node of inventory(method))
+        addObject({
+          kind: "drawing",
+          node,
+          parentParagraph: null,
+          subtype: method,
+          reason: "ObjectOwnerUnverified"
+        });
+    for (const row of inventory("ellipseSources"))
+      addObject({
+        kind: "drawing",
+        node: row?.node,
+        parentParagraph: uint25(row?.owner?.paragraph) ? row.owner.paragraph : null,
+        subtype: "ellipse",
+        reason: "ObjectDetailsDeferred"
+      });
+    for (const row of inventory("drawingTextBindings"))
+      addObject({
+        kind: "drawing",
+        node: row?.drawingNode,
+        parentParagraph: null,
+        subtype: "text-bearing",
+        reason: "ObjectOwnerUnverified"
+      });
     sections.push({
       section,
       paragraphs,
@@ -10194,6 +10409,9 @@ function collectHwpx({ sdk, sectionCount }) {
       areas,
       pictures,
       picturesKnown: sitesResult.ok && ownersResult.ok,
+      objects: [...objects.values()],
+      objectsKnown,
+      objectInventoryScope: "hwpx-chart-equation-ole-and-supported-drawing-sites",
       format: "hwpx"
     });
   }
@@ -10233,7 +10451,13 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       imagesKnown: true,
       pageAreaInheritanceKnown: false,
       tablesWithCompleteCellInventory: 0,
-      inventoryComplete: true
+      inventoryComplete: true,
+      objectsKnown: true,
+      objectInventoryComplete: false,
+      objectInventoryScope: "supported-native-inventories-only",
+      objectTotal: 0,
+      objectsPlaced: 0,
+      objectsUnplaced: 0
     }
   };
   const nodes = new Map, children = new Map, paragraphs = new Map;
@@ -10262,7 +10486,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
   });
   for (const observation of observations.sections) {
     let definition = function(kind, owner, listNode, apply, declaredParagraphs, declaration) {
-      if (!uint24(owner) || !uint24(listNode))
+      if (!uint25(owner) || !uint25(listNode))
         throw new Error("InvalidPageAreaIdentity");
       const key = `${owner}:${listNode}`;
       const existing = defs.get(key);
@@ -10279,23 +10503,30 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
         range: { state: "unresolved" },
         blocks: [],
         observedParagraphs: 0,
-        ...uint24(declaredParagraphs) ? { declaredParagraphs } : {}
+        ...uint25(declaredParagraphs) ? { declaredParagraphs } : {}
       };
       section[kind].definitions.push(block);
       const node = add({ id: block.id, root: true, target: block.blocks, block, kind: "area" });
       defs.set(key, node);
       return node;
     }, table = function(tableNode, rows = null, columns = null) {
-      if (!uint24(tableNode))
+      if (!uint25(tableNode))
         throw new Error("InvalidTableIdentity");
       if (byTable.has(tableNode))
         return byTable.get(tableNode);
       const block = {
         id: `s${s}:t${tableNode}`,
         type: "table",
+        reference: buildObjectReference({
+          sourceSha256,
+          format,
+          section: s,
+          kind: "table",
+          node: tableNode
+        }),
         source: { section: s, tableNode },
-        rows: uint24(rows) ? rows : null,
-        columns: uint24(columns) ? columns : null,
+        rows: uint25(rows) ? rows : null,
+        columns: uint25(columns) ? columns : null,
         cells: []
       };
       const node = add({
@@ -10307,9 +10538,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
         native: tableNode
       });
       byTable.set(tableNode, node);
+      model.coverage.objectTotal++;
       return node;
     }, cell = function(tableNode, listNode, cellNode) {
-      if (!uint24(listNode))
+      if (!uint25(listNode))
         throw new Error("InvalidCellIdentity");
       const t = table(tableNode), id = cellKey(s, tableNode, listNode);
       const previousOwner = cellOwners.get(listNode);
@@ -10318,8 +10550,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       cellOwners.set(listNode, tableNode);
       if (cells.has(id)) {
         const existing = cells.get(id);
-        if (uint24(cellNode)) {
-          if (uint24(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode)
+        if (uint25(cellNode)) {
+          if (uint25(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode)
             throw new Error("ConflictingCellSourceIdentity");
           existing.block.source.cellNode = cellNode;
         }
@@ -10327,7 +10559,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       }
       const block = {
         id,
-        source: { section: s, tableNode, listNode, ...uint24(cellNode) ? { cellNode } : {} },
+        source: { section: s, tableNode, listNode, ...uint25(cellNode) ? { cellNode } : {} },
         row: null,
         column: null,
         rowSpan: null,
@@ -10376,9 +10608,9 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       model.coverage.pageAreasKnown = false;
     } else if (format === "hwp5") {
       for (const area of list(observation.areas)) {
-        if (!["header", "footer"].includes(area.kind) || !uint24(area.owner_node) || !uint24(area.list_node))
+        if (!["header", "footer"].includes(area.kind) || !uint25(area.owner_node) || !uint25(area.list_node))
           throw new Error("InvalidPageAreaObservation");
-        const apply = uint24(area.control_attributes) ? ["both", "even", "odd"][area.control_attributes & 3] ?? null : null;
+        const apply = uint25(area.control_attributes) ? ["both", "even", "odd"][area.control_attributes & 3] ?? null : null;
         definition(area.kind, area.owner_node, area.list_node, apply, area.paragraph_count);
       }
     } else {
@@ -10418,7 +10650,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
         warn("CellInventoryUnavailable", "Native original-cell inventory unavailable", source);
     }
     for (const binding of bindings) {
-      if (!uint24(binding.rows) || !binding.rows || !uint24(binding.columns) || !binding.columns)
+      if (!uint25(binding.rows) || !binding.rows || !uint25(binding.columns) || !binding.columns)
         throw new Error("InvalidTableGeometry");
       const t = table(binding.tableNode, binding.rows, binding.columns), c = cell(binding.tableNode, binding.listNode);
       if (t.block.rows === null)
@@ -10428,7 +10660,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       if (t.block.rows !== binding.rows || t.block.columns !== binding.columns)
         throw new Error("ConflictingTableGeometry");
       const names = ["row", "column", "rowSpan", "columnSpan"];
-      if (!names.every((n) => uint24(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns)
+      if (!names.every((n) => uint25(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns)
         throw new Error("InvalidCellGeometry");
       if (c.block.geometryKnown && names.some((n) => c.block[n] !== binding[n]))
         throw new Error("ConflictingCellGeometry");
@@ -10437,12 +10669,12 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       c.block.geometryKnown = true;
     }
     for (const p of observation.paragraphs) {
-      if (!uint24(p.paragraph) || format === "hwpx" && !p.paragraph)
+      if (!uint25(p.paragraph) || format === "hwpx" && !p.paragraph)
         throw new Error("InvalidNativeParagraphOrdinal");
-      const id = paragraphId(s, p.paragraph), pSource = { section: s, paragraph: p.paragraph, ...uint24(p.node) ? { node: p.node } : {} };
+      const id = paragraphId(s, p.paragraph), pSource = { section: s, paragraph: p.paragraph, ...uint25(p.node) ? { node: p.node } : {} };
       if (paragraphs.has(id))
         throw new Error("DuplicateParagraphIdentity");
-      if (p.identityKnown && uint24(p.node)) {
+      if (p.identityKnown && uint25(p.node)) {
         if (paragraphSources.has(p.node))
           throw new Error("DuplicateParagraphSourceIdentity");
         paragraphSources.add(p.node);
@@ -10531,12 +10763,12 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
       if (t.block.cells.length > 0 && geometryCount.get(n) === t.block.cells.length && known(observation.tableInventory) && (format !== "hwp5" || known(observation.cellInventory)))
         model.coverage.tablesWithCompleteCellInventory++;
     for (const def of defs.values())
-      if (uint24(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs)
+      if (uint25(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs)
         warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
     if (!observation.picturesKnown)
       model.coverage.imagesKnown = false;
     for (const image of observation.pictures) {
-      if (!uint24(image.pictureNode))
+      if (!uint25(image.pictureNode))
         throw new Error("InvalidPictureIdentity");
       const id = `s${s}:i${image.pictureNode}`;
       const sourceInfo = {};
@@ -10548,27 +10780,83 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
         "ownerNode",
         "resourceId"
       ])
-        if (uint24(image.sourceInfo?.[name]))
+        if (uint25(image.sourceInfo?.[name]))
           sourceInfo[name] = image.sourceInfo[name];
       const block = {
         id,
         type: "image",
+        reference: image.inventorySiteKnown === true ? buildObjectReference({
+          sourceSha256,
+          format,
+          section: s,
+          kind: "image",
+          node: image.pictureNode
+        }) : null,
+        imageId: image.inventorySiteKnown === true ? canonicalImageId({ format, section: s, node: image.pictureNode }) : null,
         label: "image",
         alt: null,
         altState: "not-exposed",
         sourceInfo,
-        ...uint24(image.width) ? { width: image.width } : {},
-        ...uint24(image.height) ? { height: image.height } : {},
+        ...uint25(image.width) ? { width: image.width } : {},
+        ...uint25(image.height) ? { height: image.height } : {},
         sizeUnit: "hwp-unit"
       };
       add({
         id,
         kind: "image",
         block,
-        parent: uint24(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
+        parent: uint25(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
         reason: image.reason ?? "PictureOwnerUnverified",
         native: image.pictureNode
       });
+      model.coverage.objectTotal++;
+    }
+    if (observation.objectsKnown !== true) {
+      model.coverage.objectsKnown = false;
+      model.coverage.inventoryComplete = false;
+      warn("ObjectInventoryIncomplete", observation.objectInventoryScope ?? "Native object inventory unavailable", source);
+    }
+    const objectNodes = new Map;
+    for (const object of observation.objects ?? []) {
+      const nodeKnown = object.siteKnown === true && uint25(object.node);
+      const id = nodeKnown ? `s${s}:o${object.node}` : `s${s}:object:p${object.paragraph}:u${object.anchorUnit}`;
+      const objectSource = {
+        section: s,
+        ...uint25(object.node) ? { node: object.node } : {},
+        ...uint25(object.paragraph) ? { paragraph: object.paragraph } : {},
+        ...uint25(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
+      };
+      const block = {
+        ...unknown(id, object.kind, object.reason ?? "ObjectDetailsDeferred", objectSource),
+        reference: nodeKnown ? buildObjectReference({
+          sourceSha256,
+          format,
+          section: s,
+          kind: object.kind,
+          node: object.node
+        }) : null,
+        detailUnavailable: object.detailUnavailable === true,
+        ...uint25(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
+        ...typeof object.subtype === "string" ? { subtype: object.subtype } : {}
+      };
+      const node = add({
+        id,
+        kind: "object",
+        block,
+        parent: uint25(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
+        reason: object.reason ?? "ObjectOwnerUnverified"
+      });
+      if (nodeKnown)
+        objectNodes.set(object.node, node);
+      model.coverage.unknownBlocks++;
+      model.coverage.objectTotal++;
+    }
+    for (const object of observation.objects ?? []) {
+      if (!uint25(object.node) || !uint25(object.parentObjectNode))
+        continue;
+      const node = objectNodes.get(object.node), parent = objectNodes.get(object.parentObjectNode);
+      if (node && parent && node.parent === null)
+        node.parent = parent.id;
     }
   }
   const resolved = new Map;
@@ -10621,6 +10909,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
         output.push(node.block);
       if (node.kind === "paragraph")
         model.coverage[placed ? "placed" : "unplaced"]++;
+      if (["image", "table", "object"].includes(node.kind))
+        model.coverage[placed ? "objectsPlaced" : "objectsUnplaced"]++;
       const descendants = children.get(node.id) ?? [];
       for (let i = descendants.length - 1;i >= 0; i--)
         stack.push({ node: descendants[i], target: next, depth: depth + 1 });
@@ -10647,6 +10937,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS) {
 var cellKey = (s, t, l) => `s${s}:t${t}:c${l}`, paragraphId = (s, p) => `s${s}:p${p}`, list = (result) => result?.ok && Array.isArray(result.value) ? result.value : [], known = (result) => result?.ok === true;
 var init_project = __esm(() => {
   init_common();
+  init_object_reference();
 });
 
 // packages/cli/src/document-model.mjs
@@ -10865,7 +11156,27 @@ function simpleCells(table) {
   }
   return grid.size === slots ? grid : null;
 }
-function renderContent(model, { markdown, escape: escape2, line, maxOutputUnits }) {
+function renderContent(model, { markdown, escape: escape2, line, references, maxOutputUnits }) {
+  const names = new Map([
+    ["image", "이미지"],
+    ["table", "표"],
+    ["chart", "차트"],
+    ["equation", "수식"],
+    ["drawing", "도형"],
+    ["ole", "임베디드 개체"],
+    ["unknown", "알 수 없는 개체"]
+  ]);
+  const captions = new Map;
+  let ordinal = 0;
+  const caption = (block) => {
+    const reference = references.get(block);
+    if (!reference)
+      return null;
+    if (!captions.has(block))
+      captions.set(block, names.get(reference.kind) + " " + ++ordinal);
+    const label = captions.get(block);
+    return markdown ? (reference.kind === "image" ? "!" : "") + "[" + label + "](" + reference.text + ")" : "[" + label + ": " + reference.text + "]";
+  };
   const join = (parts, separator) => {
     let units = 0;
     for (let i = 0;i < parts.length; i++) {
@@ -10878,7 +11189,9 @@ function renderContent(model, { markdown, escape: escape2, line, maxOutputUnits 
   const inline = (block) => {
     if (block.type === "paragraph")
       return block.displayText === null ? "[문단 내용 확인 불가]" : escape2(block.displayText);
-    return block.altState === "provided" && block.alt !== "" ? escape2(block.alt) : "[이미지]";
+    const label = caption(block);
+    const alt = block.altState === "provided" && block.alt !== "" ? escape2(block.alt) : null;
+    return (label ?? "[이미지: 추출 참조 확인 불가]") + (alt ? " " + alt : "");
   };
   let previous = null;
   const emit = (text, kind, context) => {
@@ -10903,8 +11216,13 @@ function renderContent(model, { markdown, escape: escape2, line, maxOutputUnits 
       if (block.type === "paragraph" || block.type === "image") {
         emit(inline(block), "paragraph", context);
       } else if (block.type === "unknown") {
-        emit("[알 수 없는 내용]", "paragraph", context);
+        const label = caption(block);
+        const name = names.get(block.kind);
+        emit(label ? label + " [내용 확인 불가]" : name ? "[" + name + ": 내용·참조 확인 불가]" : "[알 수 없는 내용]", "paragraph", context);
       } else {
+        const label = caption(block);
+        if (label)
+          emit(label, "paragraph", context);
         const grid = simpleCells(block);
         if (grid) {
           if (markdown) {
@@ -10974,6 +11292,8 @@ function optionsFor(options) {
   return limits;
 }
 function validate5(model, limits) {
+  const references = new Map;
+  const referenceIds = new Set;
   let nodes = 0, units = 0;
   const seen = new Set;
   const ids = new Set;
@@ -11086,6 +11406,29 @@ function validate5(model, limits) {
       array(v.blocks, "block", depth + 1);
     } else if (type === "block") {
       id(v.id);
+      const referenceText = v.reference;
+      if (referenceText !== undefined && referenceText !== null) {
+        string(referenceText);
+        if (typeof model.sourceSha256 !== "string")
+          throw new TypeError("InvalidDocumentReferenceSource");
+        const reference = parseObjectReference(referenceText, {
+          sourceSha256: model.sourceSha256,
+          format: model.format
+        });
+        const kind = v.type === "unknown" ? ["chart", "equation", "drawing", "ole"].includes(v.kind) ? v.kind : "unknown" : v.type;
+        if (reference.kind !== kind || v.type === "paragraph")
+          throw new TypeError("ObjectReferenceKindMismatch");
+        if (referenceIds.has(referenceText))
+          throw new TypeError("DuplicateObjectReference");
+        const source = v.type === "image" ? v.sourceInfo : v.source;
+        if (!own2(source) || source.section !== reference.section)
+          throw new TypeError("ObjectReferenceSourceMismatch");
+        const node = v.type === "image" ? source?.pictureNode : v.type === "table" ? source?.tableNode : source?.node;
+        if (node !== reference.node)
+          throw new TypeError("ObjectReferenceSourceMismatch");
+        referenceIds.add(referenceText);
+        references.set(v, { ...reference, text: referenceText });
+      }
       if (v.type === "paragraph") {
         if (!Object.hasOwn(v, "displayText") || v.displayText !== null && typeof v.displayText !== "string")
           throw new TypeError("InvalidDocumentViewDisplayText");
@@ -11132,10 +11475,11 @@ function validate5(model, limits) {
         throw new TypeError("UnsupportedRenderBlockType");
     }
   }
+  return references;
 }
 function renderDocument(model, options) {
   const limits = optionsFor(options);
-  validate5(model, limits);
+  const references = validate5(model, limits);
   const markdown = options.format === "markdown";
   const content = (options.view ?? "content") === "content";
   const chunks = [];
@@ -11149,7 +11493,13 @@ function renderDocument(model, options) {
 `);
   };
   if (content) {
-    renderContent(model, { markdown, escape: escape2, line, maxOutputUnits: limits.maxOutputUnits });
+    renderContent(model, {
+      markdown,
+      escape: escape2,
+      line,
+      references,
+      maxOutputUnits: limits.maxOutputUnits
+    });
     return chunks.join("");
   }
   const item = (depth, text) => line("  ".repeat(depth) + (markdown ? "- " : "") + text);
@@ -11165,6 +11515,9 @@ function renderDocument(model, options) {
   const drain = () => {
     while (stack.length) {
       const { type, value: v, depth } = stack.pop();
+      const reference = references.get(v);
+      if (reference)
+        item(depth, "Reference " + escape2(reference.text));
       if (type === "cell") {
         item(depth, "Cell " + escape2(v.id) + " row=" + value(v.row) + " column=" + value(v.column) + " rowSpan=" + value(v.rowSpan) + " columnSpan=" + value(v.columnSpan) + (v.geometryKnown ? "" : " [geometry unknown]") + " content=" + escape2(v.contentState));
         pushBlocks(v.blocks, depth + 1);
@@ -11234,12 +11587,278 @@ function renderDocument(model, options) {
 var LIMITS2, own2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 var init_render = __esm(() => {
   init_render_escape();
+  init_object_reference();
   LIMITS2 = Object.freeze({
     maxDepth: 32,
     maxNodes: 200000,
     maxTextUnits: 4 * 1024 * 1024,
     maxOutputUnits: 32 * 1024 * 1024
   });
+});
+
+// packages/cli/src/document-objects.mjs
+var exports_document_objects = {};
+__export(exports_document_objects, {
+  inspectDocumentObject: () => inspectDocumentObject
+});
+function findObject(model, reference, expected) {
+  if (model?.version !== 1 || model.format !== expected.format || model.sourceSha256 !== expected.sourceSha256 || !Array.isArray(model.sections) || !Array.isArray(model.unplaced))
+    throw new Error("InvalidObjectModel");
+  const stack = [];
+  for (const section of model.sections) {
+    if (!Array.isArray(section.body))
+      throw new Error("InvalidObjectModel");
+    for (const block of section.body)
+      stack.push(block);
+    for (const name of ["header", "footer"]) {
+      if (!Array.isArray(section[name]?.definitions))
+        throw new Error("InvalidObjectModel");
+      for (const definition of section[name].definitions) {
+        if (!Array.isArray(definition.blocks))
+          throw new Error("InvalidObjectModel");
+        for (const block of definition.blocks)
+          stack.push(block);
+      }
+    }
+  }
+  for (const row of model.unplaced)
+    stack.push(row.block);
+  const visited = new Set, references = new Set, identities = new Set;
+  let found;
+  while (stack.length) {
+    const block = stack.pop();
+    if (!record2(block) || visited.has(block) || typeof block.id !== "string" || block.id.length === 0 || identities.has(block.id))
+      throw new Error("InvalidObjectModel");
+    identities.add(block.id);
+    visited.add(block);
+    if (visited.size > MAX_ROWS)
+      throw new RangeError("ObjectInventoryLimitExceeded");
+    if (block.reference !== null && block.reference !== undefined) {
+      const parsed = parseObjectReference(block.reference, expected);
+      const kind = block.type === "unknown" ? block.kind : block.type;
+      const source = block.type === "image" ? block.sourceInfo : block.source;
+      const node = block.type === "image" ? source?.pictureNode : block.type === "table" ? source?.tableNode : source?.node;
+      if (kind !== parsed.kind || source?.section !== parsed.section || node !== parsed.node || references.has(block.reference))
+        throw new Error("InvalidObjectModel");
+      references.add(block.reference);
+      if (block.reference === reference)
+        found = block;
+    }
+    if (block.type === "table") {
+      if (!Array.isArray(block.cells) || block.cells.length > MAX_ROWS)
+        throw new Error("InvalidObjectModel");
+      for (const cell of block.cells) {
+        if (!Array.isArray(cell.blocks))
+          throw new Error("InvalidObjectModel");
+        for (const child of cell.blocks)
+          stack.push(child);
+      }
+    }
+  }
+  if (!found)
+    throw new Error("ObjectReferenceNotFound");
+  return found;
+}
+async function inspectDocumentObject({ bytes, wasm, reference, format = "text" } = {}, dependencies = {}) {
+  if (!["text", "markdown"].includes(format))
+    throw new TypeError("InvalidRenderFormat");
+  const target = parseObjectReference(reference);
+  const open = dependencies.openDocument ?? (await Promise.resolve().then(() => (init_engine(), exports_engine))).openDocument;
+  const collect = dependencies.readDocumentModel ?? readDocumentModel;
+  const document = await open({ bytes, wasm, expectedSha256: target.sourceSha256 });
+  let failed = false, failure, output;
+  try {
+    parseObjectReference(reference, {
+      sourceSha256: document.sourceSha256,
+      format: document.format
+    });
+    if (!uint26(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096 || target.section >= document.sectionCount)
+      throw new Error("InvalidObjectSection");
+    const model = await collect({
+      sdk: document.sdk,
+      format: document.format,
+      sourceSha256: document.sourceSha256,
+      sectionCount: document.sectionCount
+    });
+    const block = findObject(model, reference, {
+      sourceSha256: document.sourceSha256,
+      format: document.format
+    });
+    const escape2 = createDisplayEscaper({ format, view: "content" });
+    const lines = [];
+    let size = 0, status = "available";
+    const line = (value) => {
+      if (typeof value !== "string" || value.length > MAX_TEXT_BYTES)
+        throw new RangeError("ObjectDetailLimitExceeded");
+      const output = escape2(value);
+      size += new TextEncoder().encode(output).length + 1;
+      if (size > MAX_TEXT_BYTES)
+        throw new RangeError("ObjectDetailLimitExceeded");
+      lines.push(output);
+    };
+    const unavailable = (reason) => {
+      status = "unavailable";
+      line(`상세 조회 불가: ${reason}`);
+    };
+    const scalarFields = (source, keys) => {
+      if (!record2(source))
+        throw new Error("InvalidObjectDetail");
+      for (const key of keys) {
+        const value = source[key];
+        if (value === null || value === undefined)
+          continue;
+        if (!["string", "boolean", "number"].includes(typeof value) || typeof value === "number" && !Number.isFinite(value))
+          throw new Error("InvalidObjectDetail");
+        line(`${key}: ${value}`);
+      }
+    };
+    const rows = (value) => {
+      if (!Array.isArray(value) || value.length > MAX_ROWS)
+        throw new Error("InvalidObjectDetail");
+      return value;
+    };
+    const query = (method, ...args) => {
+      if (typeof document.sdk[method] !== "function") {
+        unavailable(`${method} 미지원`);
+        return { ok: false };
+      }
+      try {
+        return { ok: true, value: document.sdk[method](...args) };
+      } catch (error) {
+        unavailable(`${method}: ${error?.message ?? "원인 미확인"}`);
+        return { ok: false };
+      }
+    };
+    line(`개체 종류: ${target.kind}`);
+    line(`참조: ${reference}`);
+    line(`원본 위치: 구역 ${target.section}, 노드 ${target.node}`);
+    if (block.detailUnavailable === true)
+      unavailable(block.diagnostic?.code ?? "원본 재고에 상세 조회 오류가 관측됨");
+    else if (target.kind === "image") {
+      scalarFields(block.sourceInfo, ["recordNode", "componentNode", "ownerNode", "resourceId"]);
+      scalarFields(block, ["width", "height", "sizeUnit", "alt"]);
+      line(`이미지 ID: ${canonicalImageId(target)}`);
+      line(`이미지 추출: hwpjs extract-images 입력파일 --ref ${reference} --output 새출력폴더`);
+      line("이미지 바이트는 읽지 않았습니다. 렌더링 지원 여부와 추출 가능 여부는 별도입니다.");
+    } else if (target.kind === "table") {
+      scalarFields(block, ["rows", "columns"]);
+      for (const cell of rows(block.cells)) {
+        line(`셀 원본: ${cell.source?.listNode ?? "미확인"}`);
+        scalarFields(cell, [
+          "row",
+          "column",
+          "rowSpan",
+          "columnSpan",
+          "geometryKnown",
+          "contentState"
+        ]);
+        for (const child of rows(cell.blocks)) {
+          if (child.type === "paragraph") {
+            if (child.displayText === null) {
+              status = "unavailable";
+              line("문단 내용 미관측");
+            } else if (typeof child.displayText !== "string")
+              throw new Error("InvalidObjectDetail");
+            else
+              line(child.displayText);
+          } else
+            line(`포함 개체: ${child.type === "unknown" ? child.kind : child.type}${child.reference ? `, 참조: ${child.reference}` : ", 상세 참조 없음"}`);
+        }
+      }
+    } else if (target.kind === "chart" && document.format === "hwpx") {
+      const result = query("chartDisplay", target.section, target.node);
+      if (result.ok) {
+        const detail = result.value;
+        if (detail?.kind !== "chart_display" || detail.pair?.wrapper_node !== target.node || detail.pair?.section_ordinal !== target.section)
+          throw new Error("InvalidObjectDetail");
+        scalarFields(detail.pair, ["chart_path", "ole_path", "declared_external"]);
+        for (const row of rows(detail.rich_text))
+          scalarFields(row, ["owner_role", "owner_node", "text", "plain_text_complete"]);
+        for (const row of rows(detail.series_text))
+          scalarFields(row, ["series_node", "text"]);
+        const bindings = new Map;
+        if (detail.bindings !== undefined)
+          for (const binding of rows(detail.bindings)) {
+            if (!record2(binding) || !uint26(binding.point) || bindings.has(binding.point))
+              throw new Error("InvalidObjectDetail");
+            bindings.set(binding.point, binding);
+          }
+        let pointOrdinal = 0;
+        for (const row of rows(detail.points)) {
+          line(`값 순번: ${pointOrdinal}`);
+          scalarFields(row, ["kind", "index", "value"]);
+          const binding = bindings.get(pointOrdinal++);
+          if (binding)
+            scalarFields(binding, ["series_node", "plot_node", "role_node", "role"]);
+          else
+            line("계열과 역할 관계 미관측");
+        }
+        for (const ordinal of bindings.keys())
+          if (ordinal >= pointOrdinal)
+            throw new Error("InvalidObjectDetail");
+        line("차트 메타데이터 조회이며 외부 자원 다운로드나 바이너리 추출은 하지 않았습니다.");
+      }
+    } else if (target.kind === "equation" && document.format === "hwpx") {
+      const result = query("equationScript", target.section, target.node);
+      if (result.ok) {
+        if (typeof result.value !== "string")
+          throw new Error("InvalidObjectDetail");
+        line(`수식 원문: ${result.value}`);
+      }
+    } else if (target.kind === "ole" && document.format === "hwpx") {
+      const result = query("oleSource", target.section, target.node);
+      if (result.ok) {
+        const keys = [
+          "binary_item_id",
+          "object_type",
+          "draw_aspect",
+          "has_moniker",
+          "transform_identity"
+        ];
+        scalarFields(result.value, keys);
+        if (!keys.some((key) => result.value[key] !== null && result.value[key] !== undefined))
+          unavailable("OLE 원본 상세 필드가 관측되지 않았습니다.");
+      }
+      line("OLE 바이너리는 읽지 않았습니다.");
+    } else {
+      scalarFields(block, ["nativeKind", "subtype"]);
+      unavailable("종류와 원본 위치는 관측했으나 현재 공통 상세 조회가 지원되지 않습니다.");
+    }
+    line(`상태: ${status}`);
+    output = {
+      schemaVersion: 1,
+      format: document.format,
+      sourceSha256: document.sourceSha256,
+      reference,
+      kind: target.kind,
+      status,
+      text: lines.join(`
+`) + `
+`
+    };
+  } catch (error) {
+    failed = true;
+    failure = error;
+  }
+  try {
+    await document.close();
+  } catch (error) {
+    if (failed)
+      throw new AggregateError([failure, error], "DocumentObjectInspectionAndCloseFailed", {
+        cause: failure
+      });
+    throw new Error("DocumentObjectInspectionCloseFailed", { cause: error });
+  }
+  if (failed)
+    throw failure;
+  return output;
+}
+var MAX_ROWS = 200000, MAX_TEXT_BYTES, uint26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295, record2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+var init_document_objects = __esm(() => {
+  init_object_reference();
+  init_render_escape();
+  init_document_model();
+  MAX_TEXT_BYTES = 64 * 1024;
 });
 
 // packages/cli/src/inspect-document.mjs
@@ -11256,7 +11875,7 @@ function fileVersion(document, diagnostics) {
     return unsupported("FileVersionNotExposedBySdk");
   try {
     const value = document.sdk.fileVersion();
-    if (!uint24(value) || value === 0)
+    if (!uint25(value) || value === 0)
       throw Error("InvalidFileVersionObservation");
     return observed(value, "sdk.fileVersion");
   } catch (error) {
@@ -11285,7 +11904,7 @@ function textSourceProtection(document, diagnostics) {
   for (let section = 0;section < document.sectionCount; section++) {
     try {
       const count = sdk.paragraphCount(section);
-      if (!uint24(count) || count > 1e5)
+      if (!uint25(count) || count > 1e5)
         throw Error("InvalidParagraphCountObservation");
       paragraphs += count;
       if (paragraphs > LIMITS.maxBlocks) {
@@ -11485,11 +12104,11 @@ function createDocumentImages({
       validateHwp5PictureSources(sites);
     for (const row of sites) {
       const node = format === "hwp5" ? row.component_node : row?.pictureNode;
-      if (!uint25(node))
+      if (!uint27(node))
         fail3("InvalidImageIdentity");
-      if (format === "hwpx" && (!siteStates.has(row.state) || !(row.paragraph === null || uint25(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint25(row.anchorUnit))))
+      if (format === "hwpx" && (!siteStates.has(row.state) || !(row.paragraph === null || uint27(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint27(row.anchorUnit))))
         fail3("InvalidImageInventory");
-      const id = `${format}:s${section}:i${node}`;
+      const id = canonicalImageId({ format, section, node });
       if (rows.has(id))
         fail3("DuplicateImageIdentity");
       const source = format === "hwp5" ? {
@@ -11601,10 +12220,11 @@ function createDocumentImages({
     }
   };
 }
-var DOCUMENT_IMAGE_LIMITS, uint25 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295, digest = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s), siteStates, unsupported2, DocumentImageError, fail3 = (code) => {
+var DOCUMENT_IMAGE_LIMITS, uint27 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295, digest = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s), siteStates, unsupported2, DocumentImageError, fail3 = (code) => {
   throw new DocumentImageError(code);
 };
 var init_document_images = __esm(() => {
+  init_object_reference();
   DOCUMENT_IMAGE_LIMITS = Object.freeze({
     maxImages: 4096,
     maxBytes: 8 * 1024 * 1024,
@@ -34067,13 +34687,15 @@ async function readDocuments({
 }
 
 // packages/cli/src/arguments.mjs
+init_object_reference();
 var USAGE = `Usage:
   hwpjs read INPUT [--format text|markdown] [--view content|structure] [--wasm PATH]
   hwpjs read-many INPUT... [--format text|markdown] [--view content|structure] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs info INPUT [--expect-sha256 SHA256] [--wasm PATH]
   hwpjs images INPUT [--expect-sha256 SHA256] [--wasm PATH]
-  hwpjs extract-images INPUT --output NEWDIR [--id ID --expect-sha256 SHA256] [--wasm PATH]
+  hwpjs object INPUT --ref REFERENCE [--format text|markdown] [--wasm PATH]
+  hwpjs extract-images INPUT --output NEWDIR [--ref REFERENCE | --id ID --expect-sha256 SHA256] [--wasm PATH]
   hwpjs --help
 
 Read defaults to text. 기본 보기는 문서 내용(content)입니다.
@@ -34081,6 +34703,8 @@ Read defaults to text. 기본 보기는 문서 내용(content)입니다.
 Use --with '' to delete. Use --option=VALUE when VALUE starts with --.
 extract-images --output is a NEW DIRECTORY, never a single image file.
 Selecting --id requires the SHA from images; all images use one opened snapshot.
+본문의 개체 참조는 object --ref로 조회합니다. 이미지 참조는 extract-images --ref로 추출할 수 있습니다.
+참조는 네트워크 주소가 아닙니다. --ref는 --id/--expect-sha256와 함께 사용할 수 없습니다.
 Output must be new; existing files are never overwritten.
 read-many는 명시 파일 1~128개만 읽습니다. 기본 동시성은 1, 최대 2이며 일부 실패도 보고합니다.
 출력 예산은 기본 4MiB, 최대 16MiB입니다. 폴더 탐색·일괄 편집·HTML·문서 JSON 출력은 제공하지 않습니다.
@@ -34097,7 +34721,14 @@ var fail = (code) => {
   throw new ArgumentsError(code);
 };
 var string3 = (value) => typeof value === "string" && value.isWellFormed();
-var uint = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
+var uint2 = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
+var reference = (value) => {
+  try {
+    return parseObjectReference(value);
+  } catch {
+    fail("InvalidObjectReference");
+  }
+};
 function parseArguments(argv) {
   const argc = Array.isArray(argv) ? argv.length : -1;
   if (!Number.isInteger(argc) || argc < 0 || argc > 256)
@@ -34113,7 +34744,7 @@ function parseArguments(argv) {
   if (argv.length === 1 && argv[0] === "--help")
     return Object.freeze({ command: "help" });
   const command = argv[0];
-  if (!["read", "read-many", "edit", "info", "images", "extract-images"].includes(command))
+  if (!["read", "read-many", "edit", "info", "images", "extract-images", "object"].includes(command))
     fail("UnknownCommand");
   if (argv.length === 2 && argv[1] === "--help")
     return Object.freeze({ command: "help" });
@@ -34123,7 +34754,8 @@ function parseArguments(argv) {
     edit: ["target", "replace", "with", "expect-sha256", "output", "wasm", "allow-stale-layout"],
     info: ["wasm", "expect-sha256"],
     images: ["wasm", "expect-sha256"],
-    "extract-images": ["wasm", "expect-sha256", "output", "id"]
+    "extract-images": ["wasm", "expect-sha256", "output", "id", "ref"],
+    object: ["wasm", "ref", "format"]
   }[command]);
   const options = new Map, positional = [];
   let literal = false;
@@ -34195,15 +34827,40 @@ function parseArguments(argv) {
   if (positional.length !== 1 || !positional[0] || positional[0] === "-")
     fail("ExpectedInputFile");
   const input = positional[0];
+  if (command === "object") {
+    const ref = options.get("ref");
+    const parsed = reference(ref);
+    const format = options.get("format") ?? "text";
+    if (!["text", "markdown"].includes(format))
+      fail("InvalidReadFormat");
+    return Object.freeze({
+      command,
+      input,
+      reference: ref,
+      format,
+      expectSha256: parsed.sourceSha256,
+      ...wasm === undefined ? {} : { wasm }
+    });
+  }
   if (["info", "images", "extract-images"].includes(command)) {
-    const expected = options.get("expect-sha256");
+    let expected = options.get("expect-sha256");
     if (expected !== undefined && !/^[0-9a-f]{64}$/i.test(expected))
       fail("InvalidExpectedSHA256");
-    const id = options.get("id");
+    let id = options.get("id");
     if (id !== undefined && (!id || id.length > 128))
       fail("InvalidImageID");
     if (id !== undefined && expected === undefined)
       fail("ImageIDRequiresSHA256");
+    const ref = options.get("ref");
+    if (ref !== undefined) {
+      if (options.has("id") || options.has("expect-sha256"))
+        fail("ConflictingImageReference");
+      const parsed = reference(ref);
+      if (parsed.kind !== "image")
+        fail("ExpectedImageReference");
+      expected = parsed.sourceSha256;
+      id = canonicalImageId(parsed);
+    }
     const output = options.get("output");
     if (command === "extract-images" && (!output || output === "-"))
       fail("ExpectedOutputDirectory");
@@ -34213,7 +34870,8 @@ function parseArguments(argv) {
       ...expected === undefined ? {} : { expectSha256: expected.toLowerCase() },
       ...wasm === undefined ? {} : { wasm },
       ...id === undefined ? {} : { id },
-      ...output === undefined ? {} : { output }
+      ...output === undefined ? {} : { output },
+      ...ref === undefined ? {} : { reference: ref }
     });
   }
   if (command === "read") {
@@ -34229,7 +34887,7 @@ function parseArguments(argv) {
     if (!options.has(key))
       fail("MissingRequiredOption:" + key);
   const address = /^s(0|[1-9]\d*):p(0|[1-9]\d*)$/.exec(options.get("target"));
-  if (!address || !uint(Number(address[1])) || !uint(Number(address[2])))
+  if (!address || !uint2(Number(address[1])) || !uint2(Number(address[2])))
     fail("InvalidTarget");
   if (!options.get("replace"))
     fail("EmptySearch");
@@ -34548,6 +35206,7 @@ var {
 
 // packages/cli/src/main.mjs
 import { join as join2 } from "node:path";
+init_object_reference();
 
 // packages/cli/src/read-operation.mjs
 init_render_escape();
@@ -34801,6 +35460,23 @@ async function runCLI(argv, dependencies = {}) {
       throw Error("SourceSHA256Mismatch");
     const target = options.command === "edit" ? await files.assertNewOutput({ input, outputPath: options.output }) : undefined;
     const wasm = { bytes: await loadWasm() };
+    if (options.command === "object") {
+      const inspect = dependencies.inspectDocumentObject ?? (await Promise.resolve().then(() => (init_document_objects(), exports_document_objects))).inspectDocumentObject;
+      const result = await inspect({
+        bytes: input.bytes,
+        wasm: wasm.bytes,
+        reference: options.reference,
+        format: options.format
+      });
+      const expected = parseObjectReference(options.reference);
+      if (!result || typeof result !== "object" || Array.isArray(result))
+        throw Error("InvalidObjectInspection");
+      const { schemaVersion, sourceSha256, format, reference, kind, status, text } = result;
+      if (schemaVersion !== 1 || sourceSha256 !== input.sha256 || format !== expected.format || reference !== options.reference || kind !== expected.kind || !["available", "unavailable"].includes(status) || typeof text !== "string" || !text.isWellFormed() || text.length > OBSERVATION_CHAR_LIMIT)
+        throw Error("InvalidObjectInspection");
+      await io.stdout.write(text);
+      return 0;
+    }
     if (options.command === "info") {
       const inspect = dependencies.inspectDocument ?? (await Promise.resolve().then(() => (init_inspect_document(), exports_inspect_document))).inspectDocument;
       const result = await inspect({
@@ -34826,6 +35502,11 @@ async function runCLI(argv, dependencies = {}) {
         engineFormat(document.format);
         if (document.sourceSha256 !== input.sha256)
           throw Error("SourceSHA256Mismatch");
+        if (options.reference !== undefined)
+          parseObjectReference(options.reference, {
+            sourceSha256: input.sha256,
+            format: document.format
+          });
         const create = dependencies.createDocumentImages ?? (await Promise.resolve().then(() => (init_document_images(), exports_document_images))).createDocumentImages;
         images = await create({
           sdk: document.sdk,
@@ -34940,6 +35621,7 @@ async function runCLI(argv, dependencies = {}) {
 }
 
 // packages/cli/src/mcp/tools.mjs
+init_object_reference();
 function documentTools({
   wasmPath,
   mainModuleURL,
@@ -34949,6 +35631,14 @@ function documentTools({
   if (wasmPath !== undefined && (typeof wasmPath !== "string" || !wasmPath))
     throw new TypeError("InvalidMcpWasmPath");
   const wasm = wasmPath === undefined ? [] : [`--wasm=${wasmPath}`];
+  const objectReference = string2().max(128).refine((value) => {
+    try {
+      parseObjectReference(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "본문에서 얻은 유효한 개체 참조가 필요합니다.");
   const invoke = async (argv, hostOptions = {}) => {
     let stdout = "", stderr = "";
     const io = {
@@ -34999,7 +35689,7 @@ function documentTools({
       name: "read_document",
       config: {
         title: "Read HWP/HWPX document",
-        description: "로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.",
+        description: "로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 본문의 개체 참조는 get_document_object로 조회하고 이미지 참조는 extract_document_image로 추출합니다. 참조는 네트워크 주소가 아닙니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.",
         inputSchema: strictObject({
           inputPath: string2().min(1).describe("Local input file path, relative to the server working directory or absolute."),
           format: _enum(["text", "markdown"]).default("text"),
@@ -35097,13 +35787,14 @@ function documentTools({
       name: "extract_document_image",
       config: {
         title: "Extract one image into a new file",
-        description: "Read one exact image ID from list_document_images using its source SHA and publish raw bytes to a NEW FILE outputPath (CLI extract-images --output is instead a new directory). Section picture sites only; excludes master-page images, brushes and unreferenced resources. No conversion; unknown payloads require .bin. Existing files/symlink paths are refused. A failed response may report an already-published file.",
+        description: "본문의 이미지 reference 또는 list_document_images의 id+expectedSha256 중 하나로 원본 바이트를 새 파일 outputPath에 추출합니다. 두 방식을 함께 전달하지 마세요. CLI extract-images의 output은 새 폴더입니다. 구역의 그림 위치만 대상으로 하며 바탕쪽·브러시·미참조 자원은 제외합니다. 변환하지 않으며 알 수 없는 형식은 .bin입니다. 기존 파일·심볼릭 링크는 거부하고 실패 응답에도 이미 생성된 파일이 보고될 수 있습니다.",
         inputSchema: strictObject({
           inputPath: string2().min(1),
           outputPath: string2().min(1),
-          id: string2().min(1),
-          expectedSha256: string2().regex(/^[a-f0-9]{64}$/i)
-        }),
+          reference: objectReference.optional(),
+          id: string2().min(1).optional(),
+          expectedSha256: string2().regex(/^[a-f0-9]{64}$/i).optional()
+        }).refine((value) => value.reference !== undefined ? value.id === undefined && value.expectedSha256 === undefined : value.id !== undefined && value.expectedSha256 !== undefined, "reference 또는 id와 expectedSha256 중 한 방식만 전달하세요."),
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
@@ -35111,11 +35802,12 @@ function documentTools({
           openWorldHint: true
         }
       },
-      invoke: ({ inputPath, outputPath, id, expectedSha256 }) => invoke([
+      invoke: ({ inputPath, outputPath, reference, id, expectedSha256 }) => invoke([
         "extract-images",
         `--output=${outputPath}`,
-        `--id=${id}`,
-        `--expect-sha256=${expectedSha256}`,
+        ...reference === undefined ? [] : [`--ref=${reference}`],
+        ...id === undefined ? [] : [`--id=${id}`],
+        ...expectedSha256 === undefined ? [] : [`--expect-sha256=${expectedSha256}`],
         ...wasm,
         "--",
         inputPath
@@ -35164,6 +35856,25 @@ function documentTools({
         "--",
         ...inputPaths
       ])
+    },
+    {
+      name: "get_document_object",
+      config: {
+        title: "문서 개체 상세 조회",
+        description: "read_document 본문에 표시된 reference로 같은 스냅샷의 표·그림·차트·수식·도형·OLE를 조회합니다. 관측된 종류만 허용하며 없는 개체나 오래된 참조는 거부합니다. 이미지는 바이트를 읽지 않고 추출에 필요한 ID와 상태를 안내합니다. 이미지 파일은 extract_document_image로 추출하세요. 지원하지 않는 상세 내용은 unavailable로 명시합니다. 참조는 웹 주소나 MCP 리소스 URI가 아닙니다.",
+        inputSchema: strictObject({
+          inputPath: string2().min(1),
+          reference: objectReference,
+          format: _enum(["text", "markdown"]).default("text")
+        }),
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: true
+        }
+      },
+      invoke: ({ inputPath, reference, format = "text" }) => invoke(["object", `--ref=${reference}`, `--format=${format}`, ...wasm, "--", inputPath])
     }
   ];
 }

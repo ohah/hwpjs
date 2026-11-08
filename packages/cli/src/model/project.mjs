@@ -1,4 +1,5 @@
 import { LIMITS, uint, diagnostic, unique } from './common.mjs';
+import { buildObjectReference, canonicalImageId } from '../object-reference.mjs';
 const cellKey = (s, t, l) => `s${s}:t${t}:c${l}`;
 const paragraphId = (s, p) => `s${s}:p${p}`;
 const list = (result) => (result?.ok && Array.isArray(result.value) ? result.value : []);
@@ -35,6 +36,12 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
       pageAreaInheritanceKnown: false,
       tablesWithCompleteCellInventory: 0,
       inventoryComplete: true,
+      objectsKnown: true,
+      objectInventoryComplete: false,
+      objectInventoryScope: 'supported-native-inventories-only',
+      objectTotal: 0,
+      objectsPlaced: 0,
+      objectsUnplaced: 0,
     },
   };
   const nodes = new Map(),
@@ -197,6 +204,13 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
       const block = {
         id: `s${s}:t${tableNode}`,
         type: 'table',
+        reference: buildObjectReference({
+          sourceSha256,
+          format,
+          section: s,
+          kind: 'table',
+          node: tableNode,
+        }),
         source: { section: s, tableNode },
         rows: uint(rows) ? rows : null,
         columns: uint(columns) ? columns : null,
@@ -211,6 +225,7 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
         native: tableNode,
       });
       byTable.set(tableNode, node);
+      model.coverage.objectTotal++;
       return node;
     }
     function cell(tableNode, listNode, cellNode) {
@@ -408,6 +423,20 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
       const block = {
         id,
         type: 'image',
+        reference:
+          image.inventorySiteKnown === true
+            ? buildObjectReference({
+                sourceSha256,
+                format,
+                section: s,
+                kind: 'image',
+                node: image.pictureNode,
+              })
+            : null,
+        imageId:
+          image.inventorySiteKnown === true
+            ? canonicalImageId({ format, section: s, node: image.pictureNode })
+            : null,
         label: 'image',
         alt: null,
         altState: 'not-exposed',
@@ -427,6 +456,63 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
         reason: image.reason ?? 'PictureOwnerUnverified',
         native: image.pictureNode,
       });
+      model.coverage.objectTotal++;
+    }
+    if (observation.objectsKnown !== true) {
+      model.coverage.objectsKnown = false;
+      model.coverage.inventoryComplete = false;
+      warn(
+        'ObjectInventoryIncomplete',
+        observation.objectInventoryScope ?? 'Native object inventory unavailable',
+        source,
+      );
+    }
+    const objectNodes = new Map();
+    for (const object of observation.objects ?? []) {
+      const nodeKnown = object.siteKnown === true && uint(object.node);
+      const id = nodeKnown
+        ? `s${s}:o${object.node}`
+        : `s${s}:object:p${object.paragraph}:u${object.anchorUnit}`;
+      const objectSource = {
+        section: s,
+        ...(uint(object.node) ? { node: object.node } : {}),
+        ...(uint(object.paragraph) ? { paragraph: object.paragraph } : {}),
+        ...(uint(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}),
+      };
+      const block = {
+        ...unknown(id, object.kind, object.reason ?? 'ObjectDetailsDeferred', objectSource),
+        reference: nodeKnown
+          ? buildObjectReference({
+              sourceSha256,
+              format,
+              section: s,
+              kind: object.kind,
+              node: object.node,
+            })
+          : null,
+        detailUnavailable: object.detailUnavailable === true,
+        ...(uint(object.nativeKind) ? { nativeKind: object.nativeKind } : {}),
+        ...(typeof object.subtype === 'string' ? { subtype: object.subtype } : {}),
+      };
+      const node = add({
+        id,
+        kind: 'object',
+        block,
+        parent:
+          uint(object.parentParagraph) && byOrdinal.has(object.parentParagraph)
+            ? paragraphId(s, object.parentParagraph)
+            : null,
+        reason: object.reason ?? 'ObjectOwnerUnverified',
+      });
+      if (nodeKnown) objectNodes.set(object.node, node);
+      model.coverage.unknownBlocks++;
+      model.coverage.objectTotal++;
+    }
+    for (const object of observation.objects ?? []) {
+      if (!uint(object.node) || !uint(object.parentObjectNode)) continue;
+      const node = objectNodes.get(object.node),
+        parent = objectNodes.get(object.parentObjectNode);
+      if (node && parent && node.parent === null) node.parent = parent.id;
     }
   }
 
@@ -478,6 +564,8 @@ export function project({ format, sourceSha256, observations }, limits = LIMITS)
       if (node.kind === 'cell' || node.root) next = node.target;
       else output.push(node.block);
       if (node.kind === 'paragraph') model.coverage[placed ? 'placed' : 'unplaced']++;
+      if (['image', 'table', 'object'].includes(node.kind))
+        model.coverage[placed ? 'objectsPlaced' : 'objectsUnplaced']++;
       const descendants = children.get(node.id) ?? [];
       for (let i = descendants.length - 1; i >= 0; i--)
         stack.push({ node: descendants[i], target: next, depth: depth + 1 });

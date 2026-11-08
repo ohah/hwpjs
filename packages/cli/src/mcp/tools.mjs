@@ -1,6 +1,7 @@
 import * as z from 'zod/v4';
 import { runCLI } from '../main.mjs';
 import { BATCH_READ_LIMITS } from '../batch-read.mjs';
+import { parseObjectReference } from '../object-reference.mjs';
 
 /** Only adapts MCP fields to the existing CLI. Parser, model, Native and IO
  * admission remain owned by runCLI. Paths have the CLI's local-path semantics.
@@ -14,6 +15,17 @@ export function documentTools({
   if (wasmPath !== undefined && (typeof wasmPath !== 'string' || !wasmPath))
     throw new TypeError('InvalidMcpWasmPath');
   const wasm = wasmPath === undefined ? [] : [`--wasm=${wasmPath}`];
+  const objectReference = z
+    .string()
+    .max(128)
+    .refine((value) => {
+      try {
+        parseObjectReference(value);
+        return true;
+      } catch {
+        return false;
+      }
+    }, '본문에서 얻은 유효한 개체 참조가 필요합니다.');
   const invoke = async (argv, hostOptions = {}) => {
     let stdout = '',
       stderr = '';
@@ -71,7 +83,7 @@ export function documentTools({
       config: {
         title: 'Read HWP/HWPX document',
         description:
-          '로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.',
+          '로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 본문의 개체 참조는 get_document_object로 조회하고 이미지 참조는 extract_document_image로 추출합니다. 참조는 네트워크 주소가 아닙니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.',
         inputSchema: z.strictObject({
           inputPath: z
             .string()
@@ -194,13 +206,25 @@ export function documentTools({
       config: {
         title: 'Extract one image into a new file',
         description:
-          'Read one exact image ID from list_document_images using its source SHA and publish raw bytes to a NEW FILE outputPath (CLI extract-images --output is instead a new directory). Section picture sites only; excludes master-page images, brushes and unreferenced resources. No conversion; unknown payloads require .bin. Existing files/symlink paths are refused. A failed response may report an already-published file.',
-        inputSchema: z.strictObject({
-          inputPath: z.string().min(1),
-          outputPath: z.string().min(1),
-          id: z.string().min(1),
-          expectedSha256: z.string().regex(/^[a-f0-9]{64}$/i),
-        }),
+          '본문의 이미지 reference 또는 list_document_images의 id+expectedSha256 중 하나로 원본 바이트를 새 파일 outputPath에 추출합니다. 두 방식을 함께 전달하지 마세요. CLI extract-images의 output은 새 폴더입니다. 구역의 그림 위치만 대상으로 하며 바탕쪽·브러시·미참조 자원은 제외합니다. 변환하지 않으며 알 수 없는 형식은 .bin입니다. 기존 파일·심볼릭 링크는 거부하고 실패 응답에도 이미 생성된 파일이 보고될 수 있습니다.',
+        inputSchema: z
+          .strictObject({
+            inputPath: z.string().min(1),
+            outputPath: z.string().min(1),
+            reference: objectReference.optional(),
+            id: z.string().min(1).optional(),
+            expectedSha256: z
+              .string()
+              .regex(/^[a-f0-9]{64}$/i)
+              .optional(),
+          })
+          .refine(
+            (value) =>
+              value.reference !== undefined
+                ? value.id === undefined && value.expectedSha256 === undefined
+                : value.id !== undefined && value.expectedSha256 !== undefined,
+            'reference 또는 id와 expectedSha256 중 한 방식만 전달하세요.',
+          ),
         annotations: {
           readOnlyHint: false,
           destructiveHint: false,
@@ -208,13 +232,14 @@ export function documentTools({
           openWorldHint: true,
         },
       },
-      invoke: ({ inputPath, outputPath, id, expectedSha256 }) =>
+      invoke: ({ inputPath, outputPath, reference, id, expectedSha256 }) =>
         invoke(
           [
             'extract-images',
             `--output=${outputPath}`,
-            `--id=${id}`,
-            `--expect-sha256=${expectedSha256}`,
+            ...(reference === undefined ? [] : [`--ref=${reference}`]),
+            ...(id === undefined ? [] : [`--id=${id}`]),
+            ...(expectedSha256 === undefined ? [] : [`--expect-sha256=${expectedSha256}`]),
             ...wasm,
             '--',
             inputPath,
@@ -275,6 +300,27 @@ export function documentTools({
           '--',
           ...inputPaths,
         ]),
+    },
+    {
+      name: 'get_document_object',
+      config: {
+        title: '문서 개체 상세 조회',
+        description:
+          'read_document 본문에 표시된 reference로 같은 스냅샷의 표·그림·차트·수식·도형·OLE를 조회합니다. 관측된 종류만 허용하며 없는 개체나 오래된 참조는 거부합니다. 이미지는 바이트를 읽지 않고 추출에 필요한 ID와 상태를 안내합니다. 이미지 파일은 extract_document_image로 추출하세요. 지원하지 않는 상세 내용은 unavailable로 명시합니다. 참조는 웹 주소나 MCP 리소스 URI가 아닙니다.',
+        inputSchema: z.strictObject({
+          inputPath: z.string().min(1),
+          reference: objectReference,
+          format: z.enum(['text', 'markdown']).default('text'),
+        }),
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: true,
+        },
+      },
+      invoke: ({ inputPath, reference, format = 'text' }) =>
+        invoke(['object', `--ref=${reference}`, `--format=${format}`, ...wasm, '--', inputPath]),
     },
   ];
 }

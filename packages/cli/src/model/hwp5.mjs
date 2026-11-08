@@ -25,7 +25,10 @@ export function collectHwp5({ sdk, sectionCount }) {
         ? countResult.value
         : null;
     const previewRows = previewSections.get(section)?.paragraphs;
-    const paragraphs = [];
+    const paragraphs = [],
+      objectTokens = [];
+    let objectTokensKnown =
+      count !== null && preview.ok && Array.isArray(previewRows) && previewRows.length === count;
     const ordinals =
       count !== null
         ? Array.from({ length: count }, (_, ordinal) => ordinal)
@@ -67,6 +70,16 @@ export function collectHwp5({ sdk, sectionCount }) {
         displayText,
         flow: flow ?? null,
       });
+      if (!Array.isArray(p?.tokens)) objectTokensKnown = false;
+      else
+        for (const token of p.tokens) {
+          if (token?.type !== 'control' || token.code !== 11) continue;
+          if (!uint(token.startUnit)) {
+            objectTokensKnown = false;
+            continue;
+          }
+          objectTokens.push({ paragraph, anchorUnit: token.startUnit, identityKnown });
+        }
     }
     const bindings = get('tableBindings'),
       placements = get('tablePlacements'),
@@ -103,6 +116,12 @@ export function collectHwp5({ sdk, sectionCount }) {
       const owner =
         draw?.control_node === row.owner_node && anchor?.control_node === row.owner_node;
       return {
+        inventorySiteKnown:
+          uint(row.component_node) &&
+          uint(row.picture_node) &&
+          uint(row.owner_node) &&
+          uint(row.bin_data_id) &&
+          row.bin_data_id > 0,
         pictureNode: row.component_node,
         parentParagraph: owner && uint(anchor.paragraph) ? anchor.paragraph : null,
         sourceInfo: {
@@ -125,6 +144,7 @@ export function collectHwp5({ sdk, sectionCount }) {
       const anchor = anchorByComponent.get(draw.component_node);
       const ownerKnown = anchor?.control_node === draw.control_node && uint(anchor?.paragraph);
       pictures.push({
+        inventorySiteKnown: false,
         pictureNode: draw.component_node,
         parentParagraph: ownerKnown ? anchor.paragraph : null,
         sourceInfo: {
@@ -137,6 +157,7 @@ export function collectHwp5({ sdk, sectionCount }) {
         height: uint(draw.height) ? draw.height : null,
         reason: 'PictureSourceUnobserved',
       });
+      representedPictures.add(draw.component_node);
       fallbackPictures++;
       warnings.push(
         diagnostic(
@@ -145,6 +166,95 @@ export function collectHwp5({ sdk, sectionCount }) {
           { section },
         ),
       );
+    }
+    const objects = [];
+    const componentsResult = get('drawingComponentSources');
+    const components = unique(
+      array(componentsResult, warnings, 'drawingComponentSources', source),
+      (r) => r.component_node,
+      warnings,
+      'drawing component inventory',
+    );
+    let componentsKnown = componentsResult.ok;
+    for (const row of components.values()) {
+      if (!row || !uint(row.component_node) || !uint(row.kind_id) || !uint(row.owner_node)) {
+        componentsKnown = false;
+        continue;
+      }
+      if (row.kind_id === 0x24706963) {
+        if (!representedPictures.has(row.component_node)) {
+          representedPictures.add(row.component_node);
+          pictures.push({
+            pictureNode: row.component_node,
+            inventorySiteKnown: false,
+            parentParagraph: null,
+            sourceInfo: {
+              section,
+              pictureNode: row.component_node,
+              componentNode: row.component_node,
+              ownerNode: row.owner_node,
+            },
+            reason: 'PictureSourceUnobserved',
+          });
+          fallbackPictures++;
+        }
+        continue;
+      }
+      const drawing = drawByComponent.get(row.component_node),
+        anchor = anchorByComponent.get(row.component_node);
+      const ownerKnown =
+        drawing &&
+        anchor &&
+        drawing.control_node === anchor.control_node &&
+        drawing.control_node === row.owner_node;
+      objects.push({
+        kind: 'drawing',
+        node: row.component_node,
+        siteKnown: true,
+        parentParagraph: ownerKnown && uint(anchor.paragraph) ? anchor.paragraph : null,
+        parentObjectNode:
+          components.get(row.owner_node)?.kind_id === 0x24636f6e ? row.owner_node : null,
+        nativeKind: row.kind_id,
+        reason: ownerKnown ? 'ObjectDetailsDeferred' : 'ObjectOwnerUnverified',
+      });
+    }
+    // 객체 토큰은 SDK가 분류한 code와 현재 위치만 사용합니다. raw 제어 ID를 해석하지 않습니다.
+    const knownAnchors = new Set();
+    let anchorsKnown = anchors.ok && drawingAnchors.ok;
+    for (const row of [
+      ...array(anchors, warnings, 'tableAnchors', source),
+      ...array(drawingAnchors, warnings, 'drawingAnchors', source),
+    ]) {
+      if (!uint(row?.paragraph) || !uint(row?.current_unit)) {
+        anchorsKnown = false;
+        continue;
+      }
+      knownAnchors.add(`${row.paragraph}:${row.current_unit}`);
+    }
+    const tokenCounts = new Map();
+    for (const token of objectTokens) {
+      const key = `${token.paragraph}:${token.anchorUnit}`;
+      tokenCounts.set(key, (tokenCounts.get(key) ?? 0) + 1);
+    }
+    const seenTokens = new Set();
+    for (const token of objectTokens) {
+      const key = `${token.paragraph}:${token.anchorUnit}`;
+      if (seenTokens.has(key)) {
+        objectTokensKnown = false;
+        continue;
+      }
+      seenTokens.add(key);
+      const located = anchorsKnown && token.identityKnown && tokenCounts.get(key) === 1;
+      if (located && knownAnchors.has(key)) continue;
+      objects.push({
+        kind: 'unknown',
+        node: null,
+        siteKnown: false,
+        parentParagraph: located ? token.paragraph : null,
+        paragraph: token.paragraph,
+        anchorUnit: token.anchorUnit,
+        reason: located ? 'UnclassifiedExtendedObject' : 'ObjectAnchorInventoryUnavailable',
+      });
     }
     sections.push({
       section,
@@ -159,6 +269,9 @@ export function collectHwp5({ sdk, sectionCount }) {
       anchors,
       pictures,
       picturesKnown: pictureResult.ok && fallbackPictures === 0,
+      objects,
+      objectsKnown: componentsKnown && objectTokensKnown && anchorsKnown,
+      objectInventoryScope: 'hwp5-drawing-components-and-typed-code11-signals',
       format: 'hwp5',
     });
   }

@@ -2,6 +2,7 @@ import { parseArguments, ArgumentsError, USAGE } from './arguments.mjs';
 import * as defaultFiles from './files.mjs';
 import { join } from 'node:path';
 import { readDocuments } from './batch-read.mjs';
+import { parseObjectReference } from './object-reference.mjs';
 import {
   readDocumentOperation,
   renderBatchReadReport,
@@ -191,6 +192,35 @@ export async function runCLI(argv, dependencies = {}) {
         ? await files.assertNewOutput({ input, outputPath: options.output })
         : undefined;
     const wasm = { bytes: await loadWasm() };
+    if (options.command === 'object') {
+      const inspect =
+        dependencies.inspectDocumentObject ??
+        (await import('./document-objects.mjs')).inspectDocumentObject;
+      const result = await inspect({
+        bytes: input.bytes,
+        wasm: wasm.bytes,
+        reference: options.reference,
+        format: options.format,
+      });
+      const expected = parseObjectReference(options.reference);
+      if (!result || typeof result !== 'object' || Array.isArray(result))
+        throw Error('InvalidObjectInspection');
+      const { schemaVersion, sourceSha256, format, reference, kind, status, text } = result;
+      if (
+        schemaVersion !== 1 ||
+        sourceSha256 !== input.sha256 ||
+        format !== expected.format ||
+        reference !== options.reference ||
+        kind !== expected.kind ||
+        !['available', 'unavailable'].includes(status) ||
+        typeof text !== 'string' ||
+        !text.isWellFormed() ||
+        text.length > OBSERVATION_CHAR_LIMIT
+      )
+        throw Error('InvalidObjectInspection');
+      await io.stdout.write(text);
+      return 0;
+    }
     if (options.command === 'info') {
       const inspect =
         dependencies.inspectDocument ?? (await import('./inspect-document.mjs')).inspectDocument;
@@ -220,6 +250,11 @@ export async function runCLI(argv, dependencies = {}) {
       try {
         engineFormat(document.format);
         if (document.sourceSha256 !== input.sha256) throw Error('SourceSHA256Mismatch');
+        if (options.reference !== undefined)
+          parseObjectReference(options.reference, {
+            sourceSha256: input.sha256,
+            format: document.format,
+          });
         const create =
           dependencies.createDocumentImages ??
           (await import('./document-images.mjs')).createDocumentImages;

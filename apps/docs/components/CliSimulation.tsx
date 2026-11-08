@@ -290,6 +290,27 @@ export default function CliSimulation() {
             </summary>
             <pre>{snapshot.body}</pre>
           </details>
+          <details>
+            <summary>이미지·표 등 개체 참조 사용법</summary>
+            <p>
+              본문의 <code>hwpjs-object:</code> 참조는 같은 원본의 개체를 조회하는 논리
+              식별자입니다. 웹 주소·파일 경로·MCP 리소스 URI가 아니며, 클릭하면 이미지가 추출되는
+              링크가 아닙니다. 이 실습은 참조를 텍스트로 표시합니다.
+            </p>
+            <p>
+              실제 참조를 복사해 로컬 CLI의 <code>object INPUT --ref REF</code> 또는 MCP의{' '}
+              <code>get_document_object</code>에 전달하세요. 이미지 참조는{' '}
+              <code>extract-images INPUT --ref REF --output NEWDIR</code> 또는{' '}
+              <code>extract_document_image</code>의 <code>reference</code>로 추출합니다. 조회·추출은
+              이 페이지에서 실행하지 않습니다.
+            </p>
+            <p>
+              이미지·표의 번호는 표시 순번이며 추출 ID가 아닙니다. 추출 참조를 확인하지 못한 그림은
+              [이미지: 추출 참조 확인 불가]로 표시하며 가짜 URI를 만들지 않습니다. 참조가 있어도
+              모든 상세 내용이나 이미지 추출을 지원한다는 뜻은 아닙니다. 추출은 새 파일의 호스트
+              경로를 반환하며 자동 OCR이나 MCP 이미지 콘텐츠를 만들지 않습니다.
+            </p>
+          </details>
           {snapshot.view === 'content' && (
             <p>
               관측한 문서 내용입니다. 원문 ID와 SHA로 수정하려면 편집 구조를 선택하고 다시 읽으세요.

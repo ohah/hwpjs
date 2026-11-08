@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readDocumentModel } from '../src/document-model.mjs';
 const hash = 'a'.repeat(64);
+import { buildObjectReference, canonicalImageId } from '../src/object-reference.mjs';
 function hx() {
   const data = {
     paragraphs: [
@@ -134,6 +135,216 @@ function paragraphs(model) {
   }
   return out;
 }
+
+function objectBlocks(model) {
+  const output = [];
+  const stack = [
+    ...model.sections.flatMap((s) => [
+      ...s.body,
+      ...s.header.definitions.flatMap((d) => d.blocks),
+      ...s.footer.definitions.flatMap((d) => d.blocks),
+    ]),
+    ...model.unplaced.map((r) => r.block),
+  ];
+  while (stack.length) {
+    const block = stack.pop();
+    if (block.type !== 'paragraph') output.push(block);
+    if (block.type === 'table')
+      for (const cell of block.cells) for (const child of cell.blocks) stack.push(child);
+  }
+  return output;
+}
+
+test('개체 참조는 실제 표와 이미지 재고의 원본 노드 및 문서 SHA를 사용한다', async () => {
+  const { sdk } = hx();
+  const model = await read('hwpx', sdk);
+  const table = objectBlocks(model).find((b) => b.type === 'table');
+  const image = objectBlocks(model).find((b) => b.type === 'image');
+  assert.equal(
+    table.reference,
+    buildObjectReference({
+      sourceSha256: hash,
+      format: 'hwpx',
+      section: 0,
+      kind: 'table',
+      node: 10,
+    }),
+  );
+  assert.equal(
+    image.reference,
+    buildObjectReference({
+      sourceSha256: hash,
+      format: 'hwpx',
+      section: 0,
+      kind: 'image',
+      node: 50,
+    }),
+  );
+  assert.equal(image.imageId, canonicalImageId({ format: 'hwpx', section: 0, node: 50 }));
+});
+
+test('그림 위치 재고가 없으면 소유자 대체 관측은 추출 참조를 만들지 않는다', async () => {
+  const { sdk } = hx();
+  sdk.pictureSites = () => {
+    throw new Error('미지원');
+  };
+  const image = objectBlocks(await read('hwpx', sdk)).find((b) => b.type === 'image');
+  assert.equal(image.reference, null);
+  assert.equal(image.imageId, null);
+});
+
+test('H5 확인된 그림과 프로필 대체 그림은 동일 노드를 중복하지 않으며 참조가 구분된다', async () => {
+  const { sdk } = h5();
+  sdk.pictureSources = () => [
+    { component_node: 9, picture_node: 10, owner_node: 8, bin_data_id: 1 },
+  ];
+  sdk.drawingSources = () => [{ component_node: 9, control_node: 8, kind_id: 0x24706963 }];
+  sdk.drawingComponentSources = () => [{ component_node: 9, owner_node: 8, kind_id: 0x24706963 }];
+  const first = objectBlocks(await read('hwp5', sdk)).filter((b) => b.type === 'image');
+  assert.equal(first.length, 1);
+  assert.equal(first[0].imageId, 'hwp5:s0:i9');
+  sdk.pictureSources = () => {
+    throw new Error('프로필 미지원');
+  };
+  const fallback = objectBlocks(await read('hwp5', sdk)).filter((b) => b.type === 'image');
+  assert.equal(fallback.length, 1);
+  assert.equal(fallback[0].reference, null);
+});
+
+test('H5 잔여 code11은 현재 위치의 정식 앵커 합집합을 제외하고 raw 없이 미분류로 표시한다', async () => {
+  const { sdk, data } = h5();
+  const token = (unit) => ({
+    type: 'control',
+    code: 11,
+    startUnit: unit,
+    get raw() {
+      throw new Error('raw 접근 금지');
+    },
+  });
+  data.tokens = [token(8), token(16), token(24)];
+  sdk.tableAnchors = () => [{ paragraph: 0, current_unit: 8, source_unit: 24 }];
+  sdk.drawingAnchors = () => [
+    { paragraph: 0, current_unit: 16, source_unit: 24, component_node: 99 },
+  ];
+  sdk.drawingComponentSources = () => [];
+  const model = await read('hwp5', sdk);
+  const residual = objectBlocks(model).filter((b) => b.kind === 'unknown');
+  assert.equal(residual.length, 1);
+  assert.equal(residual[0].source.anchorUnit, 24);
+  assert.equal(residual[0].reference, null);
+  assert.equal(Object.hasOwn(residual[0].source, 'node'), false);
+  assert.equal(model.coverage.objectInventoryComplete, false);
+});
+
+test('H5 앵커 미관측과 중복 토큰은 위치를 추정하지 않고 불완전 재고로 남긴다', async () => {
+  for (const duplicate of [false, true]) {
+    const { sdk, data } = h5();
+    data.tokens = Array.from({ length: duplicate ? 2 : 1 }, () => ({
+      type: 'control',
+      code: 11,
+      startUnit: 8,
+    }));
+    sdk.drawingComponentSources = () => [];
+    if (!duplicate)
+      sdk.tableAnchors = () => {
+        throw new Error('앵커 미지원');
+      };
+    const model = await read('hwp5', sdk);
+    assert.equal(model.coverage.objectsKnown, false);
+    assert.equal(model.unplaced.filter((r) => r.block.kind === 'unknown').length, 1);
+    assert.equal(model.coverage.objectsUnplaced, 1);
+  }
+});
+
+test('HX 실제 종류 재고만 읽고 차트 수식 OLE 상세와 바이너리는 읽지 않는다', async () => {
+  const { sdk } = hx();
+  sdk.chartSites = () => [{ wrapper: 60, paragraph: 1, anchorUnit: 8, error_name: null }];
+  sdk.equationSites = () => [
+    { source: { node: 61, issue: null }, paragraph: 1, anchor_unit: 16, error_name: null },
+  ];
+  sdk.oleSites = () => [{ ole_node: 62, paragraph: 1, error_name: 'UnsupportedSource' }];
+  sdk.rectangleNodes = () => [63];
+  sdk.lineNodes = sdk.connectorNodes = sdk.ellipseSources = () => [];
+  sdk.drawingTextBindings = () => [{ drawingNode: 63, paragraph: 2 }];
+  for (const key of ['chartDisplay', 'chartPoints', 'equationScript', 'oleBytes', 'binaryResource'])
+    sdk[key] = () => {
+      throw new Error('읽기에서 상세 호출 금지');
+    };
+  const model = await read('hwpx', sdk);
+  const objects = objectBlocks(model);
+  for (const kind of ['chart', 'equation', 'ole', 'drawing'])
+    assert.equal(objects.filter((b) => b.kind === kind).length, 1);
+  assert.equal(objects.find((b) => b.kind === 'ole').detailUnavailable, true);
+  assert.equal(model.coverage.objectsKnown, true);
+  assert.equal(model.coverage.objectInventoryComplete, false);
+  assert.ok(model.unplaced.some((r) => r.block.kind === 'drawing'));
+});
+
+test('추가 개체 재고의 실패와 잘못된 행은 관측된 영 개로 숨기지 않는다', async () => {
+  for (const value of [null, [{ wrapper: '잘못된 노드' }]]) {
+    const { sdk } = hx();
+    sdk.chartSites = () => value;
+    const model = await read('hwpx', sdk);
+    assert.equal(model.coverage.objectsKnown, false);
+    assert.equal(model.coverage.inventoryComplete, false);
+    assert.ok(model.warnings.some((w) => w.code === 'ObjectInventoryIncomplete'));
+  }
+  const { sdk } = h5();
+  sdk.drawingComponentSources = () => [{ component_node: 9, owner_node: null, kind_id: 1 }];
+  assert.equal((await read('hwp5', sdk)).coverage.objectsKnown, false);
+});
+
+test('HX 동일 원본 노드의 충돌하는 종류를 첫 행 우선으로 숨기지 않는다', async () => {
+  const { sdk } = hx();
+  sdk.chartSites = () => [{ wrapper: 60, paragraph: 1, anchorUnit: 0, error_name: null }];
+  sdk.oleSites = () => [{ ole_node: 60, paragraph: 1, error_name: null }];
+  await assert.rejects(read('hwpx', sdk), /ConflictingObjectKind/);
+});
+
+test('H5 토큰 재고는 문단 개수와 preview 전체 범위가 확인된 경우에만 알려짐으로 표시한다', async () => {
+  for (const mode of [
+    'count-unavailable',
+    'preview-unavailable',
+    'rows-unavailable',
+    'rows-mismatch',
+    'complete',
+  ]) {
+    const { sdk, data } = h5();
+    sdk.drawingComponentSources = () => [];
+    data.tokens = [{ type: 'control', code: 11, startUnit: 8 }];
+    if (mode === 'count-unavailable') {
+      sdk.paragraphCount = () => {
+        throw new Error('문단 개수 미관측');
+      };
+      sdk.paragraphFlow = () => [];
+    } else if (mode === 'preview-unavailable') {
+      sdk.currentTextPreview = () => {
+        throw new Error('preview 미관측');
+      };
+    } else if (mode === 'rows-unavailable') {
+      sdk.currentTextPreview = () => ({ sections: [{ index: 0, paragraphs: null }] });
+    } else if (mode === 'rows-mismatch') {
+      const preview = sdk.currentTextPreview();
+      preview.sections[0].paragraphs.push({
+        nodeIndex: 99,
+        text: '',
+        textPresent: true,
+        tokens: data.tokens,
+      });
+      sdk.currentTextPreview = () => preview;
+    }
+    const model = await read('hwp5', sdk);
+    assert.equal(model.coverage.objectsKnown, mode === 'complete', mode);
+    if (mode === 'count-unavailable') {
+      assert.equal(model.coverage.objectTotal, 0);
+      assert.equal(model.coverage.inventoryComplete, false);
+      assert.equal(
+        model.sections[0].body.some((block) => block.reference),
+        false,
+      );
+    }
+  }
+});
 test('model H5 native zero ordinal and owned displayText without raw text', async () => {
   const { sdk } = h5();
   const m = await read('hwp5', sdk);

@@ -36,7 +36,7 @@ bun run cli read ./document.hwpx --format markdown --wasm /absolute/path/hwpjs.w
 bun run cli read ./document.hwpx --view structure --wasm /absolute/path/hwpjs.wasm
 ```
 
-기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기는 관측한 문서 본문만 stdout으로 전달하며 `format`·`documentSHA256` 접두사와 내부 원문 ID를 붙이지 않습니다. `--view structure`에서 기존 구조 레이블·원문 ID·SHA·진단 상세를 조회합니다. `markdown`은 두 보기에서 선택 가능한 출력 형식이며, HTML·원본 조판 전체 변환·페이지 위치 재현·OCR은 범위에 포함하지 않습니다.
+기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기는 관측한 문서 본문만 stdout으로 전달하며 `format`·`documentSHA256` 접두사와 문단 편집용 ID를 붙이지 않습니다. 관측 개체의 논리 참조는 본문에 포함될 수 있습니다. `--view structure`에서 기존 구조 레이블·원문 ID·SHA·진단 상세를 조회합니다. `markdown`은 두 보기에서 선택 가능한 출력 형식이며, HTML·원본 조판 전체 변환·페이지 위치 재현·OCR은 범위에 포함하지 않습니다.
 
 본문을 파일로 받는 것은 일반 셸 리다이렉션입니다. 읽기 `--output` 옵션, stdin 입력, URI fetch를 추가하지 않습니다.
 
@@ -45,6 +45,24 @@ hwpjs read ./문서.hwp --format markdown > ./문서.md
 ```
 
 공개 패키지 후보를 빌드·설치하면 `@ohah/hwpjs`의 `hwpjs` 실행 파일을 사용합니다. 기본 WASM은 실행 파일과 나란한 `dist/hwpjs.wasm`입니다. 별도 CLI npm 패키지나 `/core` 설치 경로를 추가하지 않습니다. 현재 npm 공개 여부와 로컬 빌드 검증은 별개입니다.
+
+## 개체 논리 참조와 후속 조회
+
+읽기 모델의 관측 개체에는 `reference`를 노출할 수 있습니다. 공통 `object-reference.mjs`의 `buildObjectReference`·`parseObjectReference`·`canonicalImageId`를 단일 출처로 사용하며 호스트나 웹에서 별도 참조 문법을 만들지 않습니다.
+
+```text
+hwpjs-object:<SHA>/<hwp5|hwpx>/s<section>/<kind>/<node>
+```
+
+이 값은 HTTP·파일 링크나 MCP resources URI가 아닌 도구 인수입니다. Markdown 이미지는 `![이미지 N](참조)`, 텍스트 이미지는 `[이미지 N: 참조]`로 표시하고 관측된 대체 설명을 함께 유지합니다. 표는 짧은 참조와 셀 내용을 보존합니다. `N`은 출력 순회 표시 순번이며 canonical 이미지 추출 ID가 아닙니다. 차트·수식·도형·OLE 등의 참조도 실제 관측 종류에만 부여하며 미확정 위치·종류에는 가짜 참조를 만들지 않습니다.
+
+실제 그림이 관측됐지만 추출 inventory와 연결되는 참조를 확인하지 못하면 `[이미지: 추출 참조 확인 불가]`로 표시합니다. 이는 그림이 없다는 뜻이 아니며, 가짜 조회 URI를 만들지 않습니다.
+
+CLI는 `object INPUT --ref REF --format text|markdown`, MCP는 `get_document_object(inputPath, reference, format?)`로 연결합니다. inspector는 원문 SHA·실제 형식·종류·inventory 멤버를 확인한 뒤 관측 메타데이터·내용·사유를 텍스트로 반환합니다. JS 반환 객체는 `status: available|unavailable` 필드를 가지며 CLI/MCP는 그 객체의 `text`를 출력합니다. 표시 줄은 `상태: available`·`상태: unavailable`이며 별도 MCP 상태 필드와 구분합니다. 이를 완전한 렌더링이나 파일 추출 성공으로 확대하지 않습니다. 이미지 조회에서 바이트를 디코딩하지 않습니다. HWP5의 전용 차트·수식 source API 미노출은 미분류·참조 미확정으로 표시하며 전수 열거 완료로 간주하지 않습니다.
+
+이미지 참조는 CLI `extract-images INPUT --ref REF --output NEWDIR` 또는 MCP `extract_document_image(inputPath, outputPath, reference)`로 별도 추출합니다. 기존 `id`·`expectedSha256` 선택 방식도 유지하지만 참조 방식과 혼용하지 않습니다. 두 방식 모두 같은 원본 스냅샷·이미지 inventory 검증·예산·신규 출력 보호를 적용합니다. 결과는 호스트의 새 파일 경로·SHA이며 자동 OCR이나 MCP 이미지 Content가 아닙니다.
+
+웹 실습은 공통 renderer의 참조가 포함된 본문을 텍스트로 표시합니다. 별도 URL 처리기·이미지 자동 로드·조회/추출 버튼을 추가하지 않으며 실제 로컬 CLI/MCP 인수로 복사하도록 안내합니다. 실습 응답은 참조와 내용을 그대로 유지하고 오래된 SHA의 참조는 정상 본문으로 만들지 않습니다. 이 전송 경계의 주입형 검사는 실제 inventory·CLI/MCP 설치·이미지 추출·공개 브라우저 검증과 분리합니다. 과거 기본 본문 3,741바이트·동일 SHA 기록은 개체 참조를 추가하기 전 코호트이며, 형식별 참조가 포함된 새 출력의 바이트 동일성을 주장하지 않습니다.
 
 ## 편집
 
@@ -75,7 +93,7 @@ HWP5 저장이 재조판을 요구하면 기본적으로 실패합니다. 원본
 
 ## 본문 반환과 편집 구조의 분리
 
-CLI·MCP·공개 실습은 같은 `renderDocument(model, { format, view })`를 사용합니다. 단건 읽기 응답은 `read-operation.mjs`의 순수 `renderReadResponse`로 조립해 content의 본문 그대로 반환과 structure의 형식·SHA 접두사를 공유합니다. 기본 content는 관측 본문을 제공하고, 명시한 structure는 편집에 필요한 식별자와 진단을 제공합니다. 파서·Native·편집 원본은 이 출력 선택으로 바뀌지 않습니다. MCP는 기존 `read_document`·`read_documents`에 `view`를 전달하며 도구는 6개를 유지합니다. 단건 content의 오류는 CLI 진단이나 MCP 오류 응답으로 분리하고, 배치의 부분 실패는 성공 본문과 함께 유지합니다.
+CLI·MCP·공개 실습은 같은 `renderDocument(model, { format, view })`를 사용합니다. 단건 읽기 응답은 `read-operation.mjs`의 순수 `renderReadResponse`로 조립해 content의 본문 그대로 반환과 structure의 형식·SHA 접두사를 공유합니다. 기본 content는 관측 본문을 제공하고, 명시한 structure는 편집에 필요한 식별자와 진단을 제공합니다. 파서·Native·편집 원본은 이 출력 선택으로 바뀌지 않습니다. MCP는 기존 `read_document`·`read_documents`에 `view`를 전달하며 이후 추가된 `get_document_object`를 포함해 현재 도구는 7개입니다. 단건 content의 오류는 CLI 진단이나 MCP 오류 응답으로 분리하고, 배치의 부분 실패는 성공 본문과 함께 유지합니다.
 
 주된 참고는 [MarkItDown MCP 공식 구현](https://github.com/microsoft/markitdown/blob/main/packages/markitdown-mcp/src/markitdown_mcp/__main__.py)입니다. 문서 변환 결과의 Markdown을 직접 반환하고 변환 실패를 `ToolError`로 분리합니다. [공식 CLI](https://github.com/microsoft/markitdown/blob/main/packages/markitdown/src/markitdown/__main__.py)는 본문을 stdout으로 출력합니다. [DOCX 변환기](https://github.com/microsoft/markitdown/blob/main/packages/markitdown/src/markitdown/converters/_docx_converter.py)는 mammoth의 HTML 결과를 공통 HTML 변환기에 전달하고, [XLSX 변환기](https://github.com/microsoft/markitdown/blob/main/packages/markitdown/src/markitdown/converters/_xlsx_converter.py)는 시트별 표를 같은 출력 경로로 처리합니다. 여기서는 공통 출력 경로를 공유하는 책임 분리만 참고하며 외부 코드·Python 의존성을 도입하지 않습니다.
 

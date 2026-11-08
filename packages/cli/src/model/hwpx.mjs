@@ -49,6 +49,9 @@ export function collectHwpx({ sdk, sectionCount }) {
       'picture owner',
     );
     const sites = array(sitesResult, warnings, 'pictureSites', source).slice();
+    const inventoryPictures = new Set(
+      sites.filter((row) => uint(row?.pictureNode)).map((row) => row.pictureNode),
+    );
     const seenPictures = new Set(sites.map((row) => row.pictureNode));
     for (const owner of owners.values())
       if (owner && !seenPictures.has(owner.pictureNode)) {
@@ -61,6 +64,7 @@ export function collectHwpx({ sdk, sectionCount }) {
       const parentParagraph = proof && row.paragraph === proof.paragraph ? proof.paragraph : null;
       // No per-picture resource/byte requests, OCR or derived dimensions.
       return {
+        inventorySiteKnown: inventoryPictures.has(row.pictureNode),
         pictureNode: row.pictureNode,
         parentParagraph,
         sourceInfo: { section, pictureNode: row.pictureNode },
@@ -69,6 +73,78 @@ export function collectHwpx({ sdk, sectionCount }) {
         reason: uint(parentParagraph) ? null : (owner?.error ?? 'PictureOwnerUnverified'),
       };
     });
+    const objects = new Map();
+    let objectsKnown = true;
+    const addObject = (row) => {
+      if (!uint(row.node)) {
+        objectsKnown = false;
+        return;
+      }
+      const previous = objects.get(row.node);
+      if (previous && previous.kind !== row.kind) throw new Error('ConflictingObjectKind');
+      if (!previous) objects.set(row.node, { ...row, siteKnown: true });
+    };
+    const inventory = (method) => {
+      const result = get(method);
+      const rows = array(result, warnings, method, source);
+      objectsKnown &&= result.ok;
+      return rows;
+    };
+    for (const row of inventory('chartSites'))
+      addObject({
+        kind: 'chart',
+        node: row?.wrapper,
+        parentParagraph:
+          row?.error_name === null && uint(row?.paragraph) && uint(row?.anchorUnit)
+            ? row.paragraph
+            : null,
+        detailUnavailable: row?.error_name !== null,
+        reason: row?.error_name ?? 'ObjectDetailsDeferred',
+      });
+    for (const row of inventory('equationSites'))
+      addObject({
+        kind: 'equation',
+        node: row?.source?.node,
+        parentParagraph:
+          row?.source?.issue === null && row?.error_name === null && uint(row?.paragraph)
+            ? row.paragraph
+            : null,
+        detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
+        reason: row?.source?.issue ?? row?.error_name ?? 'ObjectDetailsDeferred',
+      });
+    for (const row of inventory('oleSites'))
+      addObject({
+        kind: 'ole',
+        node: row?.ole_node,
+        parentParagraph: row?.error_name === null && uint(row?.paragraph) ? row.paragraph : null,
+        detailUnavailable: row?.error_name !== null,
+        reason: row?.error_name ?? 'ObjectDetailsDeferred',
+      });
+    for (const method of ['rectangleNodes', 'lineNodes', 'connectorNodes'])
+      for (const node of inventory(method))
+        addObject({
+          kind: 'drawing',
+          node,
+          parentParagraph: null,
+          subtype: method,
+          reason: 'ObjectOwnerUnverified',
+        });
+    for (const row of inventory('ellipseSources'))
+      addObject({
+        kind: 'drawing',
+        node: row?.node,
+        parentParagraph: uint(row?.owner?.paragraph) ? row.owner.paragraph : null,
+        subtype: 'ellipse',
+        reason: 'ObjectDetailsDeferred',
+      });
+    for (const row of inventory('drawingTextBindings'))
+      addObject({
+        kind: 'drawing',
+        node: row?.drawingNode,
+        parentParagraph: null,
+        subtype: 'text-bearing',
+        reason: 'ObjectOwnerUnverified',
+      });
     sections.push({
       section,
       paragraphs,
@@ -81,6 +157,9 @@ export function collectHwpx({ sdk, sectionCount }) {
       areas,
       pictures,
       picturesKnown: sitesResult.ok && ownersResult.ok,
+      objects: [...objects.values()],
+      objectsKnown,
+      objectInventoryScope: 'hwpx-chart-equation-ole-and-supported-drawing-sites',
       format: 'hwpx',
     });
   }

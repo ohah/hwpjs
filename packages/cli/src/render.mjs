@@ -1,5 +1,6 @@
 import { renderContent } from './render-content.mjs';
 import { createDisplayEscaper } from './render-escape.mjs';
+import { parseObjectReference } from './object-reference.mjs';
 
 const LIMITS = Object.freeze({
   maxDepth: 32,
@@ -27,6 +28,8 @@ function optionsFor(options) {
 // Validate the complete containment tree before escaping or constructing output.
 // Unused source/style metadata is never traversed or rendered as recovered text.
 function validate(model, limits) {
+  const references = new Map();
+  const referenceIds = new Set();
   let nodes = 0,
     units = 0;
   const seen = new Set();
@@ -123,6 +126,37 @@ function validate(model, limits) {
       array(v.blocks, 'block', depth + 1);
     } else if (type === 'block') {
       id(v.id);
+      const referenceText = v.reference;
+      if (referenceText !== undefined && referenceText !== null) {
+        string(referenceText);
+        if (typeof model.sourceSha256 !== 'string')
+          throw new TypeError('InvalidDocumentReferenceSource');
+        const reference = parseObjectReference(referenceText, {
+          sourceSha256: model.sourceSha256,
+          format: model.format,
+        });
+        const kind =
+          v.type === 'unknown'
+            ? ['chart', 'equation', 'drawing', 'ole'].includes(v.kind)
+              ? v.kind
+              : 'unknown'
+            : v.type;
+        if (reference.kind !== kind || v.type === 'paragraph')
+          throw new TypeError('ObjectReferenceKindMismatch');
+        if (referenceIds.has(referenceText)) throw new TypeError('DuplicateObjectReference');
+        const source = v.type === 'image' ? v.sourceInfo : v.source;
+        if (!own(source) || source.section !== reference.section)
+          throw new TypeError('ObjectReferenceSourceMismatch');
+        const node =
+          v.type === 'image'
+            ? source?.pictureNode
+            : v.type === 'table'
+              ? source?.tableNode
+              : source?.node;
+        if (node !== reference.node) throw new TypeError('ObjectReferenceSourceMismatch');
+        referenceIds.add(referenceText);
+        references.set(v, { ...reference, text: referenceText });
+      }
       if (v.type === 'paragraph') {
         if (
           !Object.hasOwn(v, 'displayText') ||
@@ -171,6 +205,7 @@ function validate(model, limits) {
       } else throw new TypeError('UnsupportedRenderBlockType');
     }
   }
+  return references;
 }
 
 /** AI logical text/Markdown view, not the legacy full document converter.
@@ -179,7 +214,7 @@ function validate(model, limits) {
  */
 export function renderDocument(model, options) {
   const limits = optionsFor(options);
-  validate(model, limits);
+  const references = validate(model, limits);
   const markdown = options.format === 'markdown';
   const content = (options.view ?? 'content') === 'content';
   const chunks = [];
@@ -191,7 +226,13 @@ export function renderDocument(model, options) {
     chunks.push(text, '\n');
   };
   if (content) {
-    renderContent(model, { markdown, escape, line, maxOutputUnits: limits.maxOutputUnits });
+    renderContent(model, {
+      markdown,
+      escape,
+      line,
+      references,
+      maxOutputUnits: limits.maxOutputUnits,
+    });
     return chunks.join('');
   }
   const item = (depth, text) => line('  '.repeat(depth) + (markdown ? '- ' : '') + text);
@@ -212,6 +253,8 @@ export function renderDocument(model, options) {
   const drain = () => {
     while (stack.length) {
       const { type, value: v, depth } = stack.pop();
+      const reference = references.get(v);
+      if (reference) item(depth, 'Reference ' + escape(reference.text));
       if (type === 'cell') {
         item(
           depth,

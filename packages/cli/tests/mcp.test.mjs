@@ -140,6 +140,7 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
     'edit_document',
     'extract_document_image',
     'get_document_info',
+    'get_document_object',
     'list_document_images',
     'read_document',
     'read_documents',
@@ -230,7 +231,7 @@ for (const format of ['hwp5', 'hwpx'])
       });
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 6);
+      assert.equal(listed.tools.length, 7);
       const observed = await client.callTool({
         name: 'read_document',
         arguments: { inputPath: input, view: 'structure' },

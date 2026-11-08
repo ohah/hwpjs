@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { buildObjectReference } from '../../../packages/cli/src/object-reference.mjs';
 import {
   createSimulation,
   simulationEditRequest,
@@ -183,6 +184,99 @@ test('빈 문서 내용에는 공통 응답 조립에서도 접두사나 개행�
   assert.equal(snapshot.body, '');
   assert.equal(snapshot.response.result.content[0].text, '');
   assert.equal(snapshot.sourceSha256, hash(setup().input.bytes));
+});
+
+for (const documentFormat of ['hwp5', 'hwpx']) {
+  test(`${documentFormat} 본문의 표·이미지 참조와 실제 내용은 실습 응답까지 그대로 전달된다`, async () => {
+    let references;
+    const simulation = createSimulation({
+      read: async ({ bytes }) => {
+        const model = makeModel(bytes, documentFormat, documentFormat === 'hwp5' ? 2 : 3);
+        const reference = (kind, node) =>
+          buildObjectReference({
+            sourceSha256: model.sourceSha256,
+            format: documentFormat,
+            section: 0,
+            kind,
+            node,
+          });
+        references = { table: reference('table', 10), image: reference('image', 13) };
+        const table = model.sections[0].body[0];
+        table.source = { section: 0, tableNode: 10 };
+        table.reference = references.table;
+        table.cells[0].blocks.push({
+          id: 's0:i13',
+          type: 'image',
+          reference: references.image,
+          sourceInfo: { section: 0, pictureNode: 13 },
+          altState: 'provided',
+          alt: '관측한 그림 설명',
+        });
+        return { format: documentFormat, model };
+      },
+    });
+    for (const format of ['text', 'markdown']) {
+      const snapshot = await simulation.read({
+        ...setup().input,
+        filename: documentFormat === 'hwp5' ? 'noori.hwp' : 'noori.hwpx',
+        format,
+      });
+      assert.equal(snapshot.response.result.content[0].text, snapshot.body);
+      assert.ok(snapshot.body.includes('보도일시'));
+      assert.ok(snapshot.body.includes('관측한 그림 설명'));
+      assert.ok(snapshot.body.includes(references.table));
+      assert.ok(snapshot.body.includes(references.image));
+      assert.ok(
+        snapshot.body.includes(
+          format === 'markdown'
+            ? `![이미지 2](${references.image})`
+            : `[이미지 2: ${references.image}]`,
+        ),
+      );
+      assert.equal(snapshot.body.includes(`${documentFormat}:s0:i13`), false);
+      assert.equal(snapshot.body.includes('<img'), false);
+      assert.equal(snapshot.body.includes('https://'), false);
+    }
+  });
+}
+
+test('다른 원본 SHA의 개체 참조는 정상 읽기 응답으로 만들지 않는다', async () => {
+  const simulation = createSimulation({
+    read: async ({ bytes }) => {
+      const model = makeModel(bytes),
+        table = model.sections[0].body[0];
+      table.reference = buildObjectReference({
+        sourceSha256: '0'.repeat(64),
+        format: 'hwp5',
+        section: 0,
+        kind: 'table',
+        node: 10,
+      });
+      return { format: 'hwp5', model };
+    },
+  });
+  await assert.rejects(simulation.read(setup().input), /StaleObjectReference/);
+});
+
+test('참조 미확정 이미지는 실습에서 임의의 조회 URI로 승격하지 않는다', async () => {
+  const simulation = createSimulation({
+    read: async ({ bytes }) => {
+      const model = makeModel(bytes);
+      model.sections[0].body.push({
+        id: 's0:i13',
+        type: 'image',
+        reference: null,
+        sourceInfo: { section: 0, pictureNode: 13 },
+        altState: 'not-exposed',
+        alt: null,
+      });
+      return { format: 'hwp5', model };
+    },
+  });
+  const snapshot = await simulation.read({ ...setup().input, format: 'markdown' });
+  assert.ok(snapshot.body.includes('[이미지: 추출 참조 확인 불가]'));
+  assert.equal(snapshot.body.includes('hwpjs-object:'), false);
+  assert.equal(snapshot.response.result.content[0].text, snapshot.body);
 });
 
 test('read captures original input and WASM before hashing awaits', async () => {

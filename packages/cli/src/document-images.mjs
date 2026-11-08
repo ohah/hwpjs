@@ -1,4 +1,5 @@
 import { validateHwp5PictureSources } from '../../../js/hwp5-picture-sources.mjs';
+import { canonicalImageId } from './object-reference.mjs';
 
 export const DOCUMENT_IMAGE_LIMITS = Object.freeze({
   maxImages: 4096,
@@ -203,7 +204,7 @@ export function createDocumentImages({
           !(row.anchorUnit === null || uint(row.anchorUnit)))
       )
         fail('InvalidImageInventory');
-      const id = `${format}:s${section}:i${node}`;
+      const id = canonicalImageId({ format, section, node });
       if (rows.has(id)) fail('DuplicateImageIdentity');
       const source =
         format === 'hwp5'

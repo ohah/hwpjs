@@ -33,7 +33,27 @@ function simpleCells(table) {
   return grid.size === slots ? grid : null;
 }
 
-export function renderContent(model, { markdown, escape, line, maxOutputUnits }) {
+export function renderContent(model, { markdown, escape, line, references, maxOutputUnits }) {
+  const names = new Map([
+    ['image', '이미지'],
+    ['table', '표'],
+    ['chart', '차트'],
+    ['equation', '수식'],
+    ['drawing', '도형'],
+    ['ole', '임베디드 개체'],
+    ['unknown', '알 수 없는 개체'],
+  ]);
+  const captions = new Map();
+  let ordinal = 0;
+  const caption = (block) => {
+    const reference = references.get(block);
+    if (!reference) return null;
+    if (!captions.has(block)) captions.set(block, names.get(reference.kind) + ' ' + ++ordinal);
+    const label = captions.get(block);
+    return markdown
+      ? (reference.kind === 'image' ? '!' : '') + '[' + label + '](' + reference.text + ')'
+      : '[' + label + ': ' + reference.text + ']';
+  };
   // 한 행을 조립할 때도 예산보다 큰 중간 문자열을 만들지 않습니다.
   const join = (parts, separator) => {
     let units = 0;
@@ -46,7 +66,9 @@ export function renderContent(model, { markdown, escape, line, maxOutputUnits })
   const inline = (block) => {
     if (block.type === 'paragraph')
       return block.displayText === null ? '[문단 내용 확인 불가]' : escape(block.displayText);
-    return block.altState === 'provided' && block.alt !== '' ? escape(block.alt) : '[이미지]';
+    const label = caption(block);
+    const alt = block.altState === 'provided' && block.alt !== '' ? escape(block.alt) : null;
+    return (label ?? '[이미지: 추출 참조 확인 불가]') + (alt ? ' ' + alt : '');
   };
   let previous = null;
   const emit = (text, kind, context) => {
@@ -75,8 +97,20 @@ export function renderContent(model, { markdown, escape, line, maxOutputUnits })
       if (block.type === 'paragraph' || block.type === 'image') {
         emit(inline(block), 'paragraph', context);
       } else if (block.type === 'unknown') {
-        emit('[알 수 없는 내용]', 'paragraph', context);
+        const label = caption(block);
+        const name = names.get(block.kind);
+        emit(
+          label
+            ? label + ' [내용 확인 불가]'
+            : name
+              ? '[' + name + ': 내용·참조 확인 불가]'
+              : '[알 수 없는 내용]',
+          'paragraph',
+          context,
+        );
       } else {
+        const label = caption(block);
+        if (label) emit(label, 'paragraph', context);
         const grid = simpleCells(block);
         if (grid) {
           // 빈 헤더는 pipe 표 문법일 뿐 문서의 첫 데이터 행을 제목으로 승격하지 않습니다.

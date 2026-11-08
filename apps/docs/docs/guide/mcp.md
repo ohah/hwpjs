@@ -28,14 +28,15 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 ## 제공 도구
 
-| 도구                     | 입력                                                                                                        | 결과                                                           |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `read_document`          | `inputPath`, 선택적 `format`: `text` 또는 `markdown`, `view`: `content` 또는 `structure`                    | 기본 문서 본문, `view: structure`는 SHA·원문 ID·진단 상세      |
-| `read_documents`         | `inputPaths`, 선택적 `format`, `view`, `concurrency`, `maxOutputBytes`                                      | 입력 순서의 문서 내용 또는 편집 구조와 파일별 실패             |
-| `edit_document`          | `inputPath`, `outputPath`, `target`, `expectedSha256`, `findText`, `replacement`, 선택적 `allowStaleLayout` | 새 문서 경로·SHA·변경 및 줄 배치 상태를 담은 text content      |
-| `get_document_info`      | `inputPath`, 선택적 `expectedSha256`                                                                        | 포맷·SHA·크기·구역 수와 관측 가능한 메타데이터                 |
-| `list_document_images`   | `inputPath`, 선택적 `expectedSha256`                                                                        | 원문 SHA와 그림 ID·상태·MIME·확장자·바이트 수·제한된 관측 범위 |
-| `extract_document_image` | `inputPath`, `outputPath`, `id`, `expectedSha256`                                                           | 새 이미지 **파일** 경로·SHA 또는 실패 및 게시 영수증           |
+| 도구                     | 입력                                                                                                        | 결과                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `read_document`          | `inputPath`, 선택적 `format`: `text` 또는 `markdown`, `view`: `content` 또는 `structure`                    | 기본 본문과 개체 참조, `structure`는 편집 ID·SHA·상세                            |
+| `read_documents`         | `inputPaths`, 선택적 `format`, `view`, `concurrency`, `maxOutputBytes`                                      | 입력 순서의 문서 내용 또는 편집 구조와 파일별 실패                               |
+| `edit_document`          | `inputPath`, `outputPath`, `target`, `expectedSha256`, `findText`, `replacement`, 선택적 `allowStaleLayout` | 새 문서 경로·SHA·변경 및 줄 배치 상태를 담은 text content                        |
+| `get_document_info`      | `inputPath`, 선택적 `expectedSha256`                                                                        | 포맷·SHA·크기·구역 수와 관측 가능한 메타데이터                                   |
+| `list_document_images`   | `inputPath`, 선택적 `expectedSha256`                                                                        | 원문 SHA와 그림 ID·상태·MIME·확장자·바이트 수·제한된 관측 범위                   |
+| `extract_document_image` | `inputPath`, `outputPath`, `reference` 또는 `id`와 `expectedSha256`                                         | 새 이미지 **파일** 경로·SHA 또는 실패 및 게시 영수증                             |
+| `get_document_object`    | `inputPath`, `reference`, 선택적 `format`: `text` 또는 `markdown`                                           | 관측 개체 정보·내용·미지원 사유, `상태: available` 또는 `상태: unavailable` 표시 |
 
 `format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
 
@@ -57,9 +58,9 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 }
 ```
 
-기본 `view: "content"`는 관측한 문서 본문만 text content로 반환하며 `format`·`documentSHA256` 접두사나 원문 ID를 붙이지 않습니다. `markdown`도 이 본문 보기의 출력 형식이며 HTML·원본 조판 전체 변환이나 OCR을 뜻하지 않습니다. 오류는 `isError: true`의 별도 오류 응답으로 확인합니다.
+기본 `view: "content"`는 관측한 문서 본문만 text content로 반환하며 `format`·`documentSHA256` 접두사나 문단 편집용 ID를 붙이지 않습니다. 이미지·표 등 관측된 개체의 논리 참조는 본문에 포함될 수 있습니다. `markdown`도 이 본문 보기의 출력 형식이며 HTML·원본 조판 전체 변환이나 OCR을 뜻하지 않습니다. 오류는 `isError: true`의 별도 오류 응답으로 확인합니다.
 
-편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 새 도구 이름을 추가하지 않으며 도구는 여전히 6개입니다.
+편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 읽기 보기는 기존 도구를 사용합니다. 개체 조회용 `get_document_object`가 기존 6개 도구 뒤에 추가돼 서버 도구는 총 7개입니다.
 
 ```json
 {
@@ -129,9 +130,55 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 기존 파일 덮어쓰기·모호한 일치·잘못된 원문 SHA는 CLI와 동일하게 거부합니다. `replacement`를 빈 문자열로 지정하면 유일한 일치를 삭제합니다. HWP5의 줄 배치 무효화 허용은 저장된 배치 무효화를 수용하는 선택이며 새 배치를 생성하지 않습니다.
 
+### 본문의 논리 참조로 개체 조회
+
+본문의 `hwpjs-object:<SHA>/<format>/s<section>/<kind>/<node>`는 HTTP·파일 URL이나 MCP resources URI가 아닙니다. `![이미지 N](참조)` 등의 `N`은 표시 순번이며 추출 ID가 아닙니다. 실제 참조 전체를 `get_document_object`의 `reference`로 전달합니다. 아래 `OBJECT_REFERENCE_FROM_READ`는 읽기 결과로 바꾸세요.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 6,
+  "method": "tools/call",
+  "params": {
+    "name": "get_document_object",
+    "arguments": {
+      "inputPath": "./document.hwpx",
+      "reference": "OBJECT_REFERENCE_FROM_READ",
+      "format": "text"
+    }
+  }
+}
+```
+
+실제 그림이 관측됐지만 추출 inventory와 연결되는 참조를 확인하지 못하면 `[이미지: 추출 참조 확인 불가]`로 표시합니다. 이는 그림이 없다는 뜻이 아니며, 가짜 조회 URI를 만들지 않습니다.
+
+원문 SHA·실제 형식·종류·실제 inventory 멤버를 검증하며 없는 개체나 오래된 참조는 거부합니다. 응답은 inspector의 `text`를 MCP text content로 반환하며, 관측 정보·내용과 `상태: available` 또는 `상태: unavailable`, 미지원 사유를 표시합니다. 내부 JS 반환 객체의 `status` 필드는 상태 값이며, MCP가 별도 `status` 필드를 응답한다는 뜻은 아닙니다. 이미지 조회는 바이트 디코딩을 하지 않으며 실제 파일 추출은 별도입니다. 모든 개체의 완전한 열거·렌더링을 뜻하지 않습니다. 전용 source API가 없는 HWP5 차트·수식은 종류를 추측하지 않고 미분류·참조 미확정으로 남길 수 있습니다.
+
+객체 조회와 참조 추출은 갱신된 서버가 필요한 확장입니다. 기존 설치의 `tools/list` 스키마와 새 패키지 검증 범위를 확인합니다. 이 웹 실습은 본문 참조를 텍스트로 표시하며 실제 조회·추출 stdio 도구를 실행하지 않습니다.
+
 ### 그림 선택과 단일 파일 추출
 
-먼저 `list_document_images`에 `inputPath`를 보내 원문 SHA·그림 ID·실제 확장자를 확인합니다. 선택한 ID와 같은 원본의 SHA를 사용해 다음 요청을 보냅니다. 아래 ID·SHA는 실제 목록의 값으로 바꾸며, `.png` 경로는 관측된 확장자가 `.png`인 경우의 예시입니다.
+본문에서 얻은 **이미지** 참조가 있으면 `extract_document_image`의 `reference`로 전달합니다. 이 경우 `id`·`expectedSha256`은 함께 보내지 않습니다. 두 방식의 혼용과 이미지가 아닌 참조는 거부합니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 7,
+  "method": "tools/call",
+  "params": {
+    "name": "extract_document_image",
+    "arguments": {
+      "inputPath": "./document.hwpx",
+      "outputPath": "./referenced-image.jpg",
+      "reference": "IMAGE_REFERENCE_FROM_READ"
+    }
+  }
+}
+```
+
+위 출력 확장자는 실제 관측 결과가 `.jpg`인 경우의 예시입니다. 필요한 경우 `list_document_images`에서 확장자를 확인합니다. 추출 응답은 새 파일의 호스트 경로·SHA이며 MCP 이미지 Content나 OCR 결과를 반환하지 않습니다.
+
+기존 ID·SHA 방식도 유지합니다. 먼저 `list_document_images`에 `inputPath`를 보내 원문 SHA·그림 ID·실제 확장자를 확인합니다. 선택한 ID와 같은 원본의 SHA를 사용해 다음 요청을 보냅니다. 아래 ID·SHA는 실제 목록의 값으로 바꾸며, `.png` 경로는 관측된 확장자가 `.png`인 경우의 예시입니다.
 
 ```json
 {

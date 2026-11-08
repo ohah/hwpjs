@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { renderDocument } from '../src/render.mjs';
 import { createDisplayEscaper } from '../src/render-escape.mjs';
+import {
+  buildObjectReference,
+  parseObjectReference,
+  canonicalImageId,
+} from '../src/object-reference.mjs';
 
 let ordinal = 0;
 const paragraph = (displayText) => ({
@@ -119,7 +124,10 @@ test('이미지는 관측된 대체 설명 또는 이미지 표식만 노출한�
     image({ altState: 'not-provided', alt: '노출하지 않을 값' }),
     image({ altState: 'provided', alt: '' }),
   ]);
-  assert.equal(render(value), '[이미지]\n관측 설명\n[이미지]\n[이미지]\n');
+  assert.equal(
+    render(value),
+    '[이미지: 추출 참조 확인 불가]\n[이미지: 추출 참조 확인 불가] 관측 설명\n[이미지: 추출 참조 확인 불가]\n[이미지: 추출 참조 확인 불가]\n',
+  );
   assert.equal(render(value).includes('123'), false);
 });
 
@@ -478,4 +486,411 @@ test('단독 목록 마커 문단과 연속 문단은 목록 의미를 만들지
   assert.equal(render(value, 'markdown'), expected.join('\n\n') + '\n');
   assert.equal(render(value), sources.join('\n') + '\n');
   assert.deepEqual(value, original);
+});
+
+const reference = (kind, node, extra = {}) =>
+  buildObjectReference({
+    sourceSha256: 'a'.repeat(64),
+    format: 'hwp5',
+    section: 0,
+    kind,
+    node,
+    ...extra,
+  });
+const referencedImage = (node) =>
+  image({
+    reference: reference('image', node),
+    sourceInfo: { section: 0, pictureNode: node },
+  });
+
+test('개체 참조는 모든 허용 종류·형식의 canonical uint32를 왕복하고 실제 이미지 ID와 구분한다', () => {
+  for (const format of ['hwp5', 'hwpx']) {
+    for (const kind of ['image', 'table', 'chart', 'equation', 'drawing', 'ole', 'unknown']) {
+      for (const node of [0, 0xffffffff]) {
+        const fields = { sourceSha256: 'a'.repeat(64), format, section: node, kind, node };
+        const ref = buildObjectReference(fields);
+        assert.deepEqual(parseObjectReference(ref), fields);
+        assert.equal(buildObjectReference(parseObjectReference(ref)), ref);
+        assert.deepEqual(
+          parseObjectReference(ref, { sourceSha256: fields.sourceSha256, format }),
+          fields,
+        );
+      }
+    }
+    assert.equal(canonicalImageId({ format, section: 2, node: 123 }), format + ':s2:i123');
+  }
+});
+
+test('개체 참조 parser와 builder는 경로·외부URL·비정규 수치·잘못된 필드·stale 문서를 거부한다', () => {
+  const valid = reference('image', 12);
+  const prefix = 'hwpjs-object:' + 'a'.repeat(64) + '/hwp5/';
+  const invalid = [
+    undefined,
+    null,
+    {},
+    [],
+    '',
+    'https://example.com/image',
+    valid + '\n',
+    valid + '\r',
+    valid + '/extra',
+    valid + '?x=1',
+    valid + '#part',
+    prefix + 's00/image/12',
+    prefix + 's0/image/012',
+    prefix + 's-1/image/12',
+    prefix + 's0/image/+12',
+    prefix + 's0/image/1e2',
+    prefix + 's0/image/4294967296',
+    prefix + 's4294967296/image/12',
+    prefix + 's0/Image/12',
+    prefix + 's0/video/12',
+    prefix + 's0/image/%31%32',
+    prefix + 's0/image/../12',
+    valid.replace('hwp5', 'HWP5'),
+    valid.replace('a'.repeat(64), 'A'.repeat(64)),
+  ];
+  for (const value of invalid)
+    assert.throws(() => parseObjectReference(value), /InvalidObjectReference/);
+  for (const fields of [
+    null,
+    { sourceSha256: undefined },
+    { format: 'other' },
+    { sourceSha256: 'a'.repeat(64) + '\n' },
+    { kind: 'video' },
+    { section: -0 },
+    { node: -1 },
+    { node: 0x100000000 },
+    { node: '1' },
+  ]) {
+    const value =
+      fields === null
+        ? null
+        : {
+            sourceSha256: 'a'.repeat(64),
+            format: 'hwp5',
+            section: 0,
+            kind: 'image',
+            node: 1,
+            ...fields,
+          };
+    assert.throws(() => buildObjectReference(value), /InvalidObjectReferenceFields/);
+  }
+  assert.throws(
+    () => parseObjectReference(valid, { sourceSha256: 'b'.repeat(64) }),
+    /StaleObjectReference/,
+  );
+  assert.throws(
+    () => parseObjectReference(valid, { format: 'hwpx' }),
+    /ObjectReferenceFormatMismatch/,
+  );
+  assert.throws(
+    () => parseObjectReference(valid, { sourceSha256: 'a'.repeat(64) + '\n' }),
+    /InvalidObjectReferenceExpectation/,
+  );
+  assert.throws(() => parseObjectReference(valid, null), /InvalidObjectReference/);
+  assert.throws(
+    () => canonicalImageId({ format: 'hwp5', section: -1, node: 1 }),
+    /InvalidImageIdentity/,
+  );
+});
+
+test('이미지 참조는 번호와 관측 설명을 보여주며 fallback 이미지에서 ID를 만들지 않는다', () => {
+  const ref = reference('image', 55);
+  const value = model([
+    image({
+      reference: ref,
+      sourceInfo: { section: 0, pictureNode: 55, recordNode: 99 },
+      altState: 'provided',
+      alt: '관측 | 설명',
+    }),
+    image({ reference: null }),
+    image({ metadata: { href: 'https://fake/image' }, sourceInfo: { pictureNode: 100 } }),
+  ]);
+  assert.equal(
+    render(value),
+    '[이미지 1: ' +
+      ref +
+      '] 관측 | 설명\n[이미지: 추출 참조 확인 불가]\n[이미지: 추출 참조 확인 불가]\n',
+  );
+  assert.equal(
+    render(value, 'markdown'),
+    '![이미지 1](' +
+      ref +
+      ') 관측 \\| 설명\n\n[이미지: 추출 참조 확인 불가]\n\n[이미지: 추출 참조 확인 불가]\n',
+  );
+  assert.equal(render(value).includes('https://'), false);
+  const structure = render(value, 'text', { view: 'structure' });
+  assert.ok(structure.includes(value.sections[0].body[0].id));
+  assert.ok(structure.includes('Reference ' + ref));
+});
+
+test('표·이미지·차트의 공개 순번은 출력 순회에서 전역 결정적이며 실제 표 내용을 유지한다', () => {
+  const imageRef = reference('image', 2);
+  const tableRef = reference('table', 1);
+  const chartRef = reference('chart', 3);
+  const observedTable = {
+    ...table(1, 1, [cell(0, 0, [referencedImage(2)])]),
+    reference: tableRef,
+    source: { section: 0, tableNode: 1 },
+  };
+  const chart = {
+    id: 'chart',
+    type: 'unknown',
+    kind: 'chart',
+    reference: chartRef,
+    source: { section: 0, node: 3 },
+    diagnostic: { code: 'not-read', message: 'not-read' },
+  };
+  const value = model([observedTable, chart, paragraph('실제 본문')]);
+  const original = structuredClone(value);
+  const markdown = render(value, 'markdown');
+  assert.ok(markdown.includes('[표 1](' + tableRef + ')'));
+  assert.ok(markdown.includes('| ![이미지 2](' + imageRef + ') |'));
+  assert.ok(markdown.includes('[차트 3](' + chartRef + ') [내용 확인 불가]'));
+  assert.ok(markdown.includes('실제 본문'));
+  assert.equal(markdown, render(value, 'markdown'));
+  assert.deepEqual(value, original);
+});
+
+test('관측된 개체 종류만 명명하며 이미지 없는 모델에서 차트를 추측하지 않는다', () => {
+  const blocks = [];
+  for (const kind of ['chart', 'equation', 'drawing', 'ole', 'unknown'])
+    blocks.push({
+      id: kind,
+      type: 'unknown',
+      kind,
+      reference: reference(kind, blocks.length),
+      source: { section: 0, node: blocks.length },
+      diagnostic: { code: 'unsupported', message: 'unsupported' },
+    });
+  const out = render(model(blocks));
+  for (const name of ['차트 1', '수식 2', '도형 3', '임베디드 개체 4', '알 수 없는 개체 5'])
+    assert.ok(out.includes(name));
+  assert.equal(render(model([image()])).includes('차트'), false);
+});
+
+test('renderer는 문서·종류·source·중복 참조를 검증한 뒤에만 출력한다', () => {
+  const bad = [
+    image({ reference: reference('image', 1, { sourceSha256: 'b'.repeat(64) }) }),
+    image({ reference: reference('image', 1, { format: 'hwpx' }) }),
+    image({ reference: reference('table', 1) }),
+    image({ reference: 'https://fake/image' }),
+    image({ reference: reference('image', 1), sourceInfo: { section: 1, pictureNode: 1 } }),
+    image({ reference: reference('image', 1), sourceInfo: { section: 0, pictureNode: 2 } }),
+  ];
+  for (const block of bad)
+    for (const view of ['content', 'structure'])
+      assert.throws(() => render(model([block]), 'markdown', { view }));
+  assert.throws(
+    () => render(model([referencedImage(1), referencedImage(1)])),
+    /DuplicateObjectReference/,
+  );
+  const missingSha = model([referencedImage(1)]);
+  delete missingSha.sourceSha256;
+  assert.throws(() => render(missingSha), /InvalidDocumentReferenceSource/);
+  assert.throws(
+    () => render(model([{ ...paragraph('본문'), reference: reference('unknown', 1) }])),
+    /ObjectReferenceKindMismatch/,
+  );
+});
+
+test('개체 참조와 순번도 공통 출력 예산에 포함하며 일부 결과를 절단하지 않는다', () => {
+  const value = model([referencedImage(1)]);
+  for (const format of ['text', 'markdown']) {
+    const expected = render(value, format);
+    assert.equal(render(value, format, { maxOutputUnits: expected.length }), expected);
+    assert.throws(
+      () => render(value, format, { maxOutputUnits: expected.length - 1 }),
+      /RenderOutputLimitExceeded/,
+    );
+  }
+});
+
+test('머리말·중첩표·꼬리말·미배치 개체의 순번을 공유하고 원본 내부 ID를 노출 순번으로 바꾸지 않는다', () => {
+  const first = referencedImage(100);
+  const nested = {
+    ...table(1, 1, [cell(0, 0, [referencedImage(200)])]),
+    reference: reference('table', 20),
+    source: { section: 0, tableNode: 20 },
+  };
+  const value = model([nested]);
+  value.sections[0].header.definitions.push(definition('header', [first]));
+  value.sections[0].footer.definitions.push(definition('footer', [referencedImage(300)]));
+  value.unplaced.push({
+    block: referencedImage(400),
+    diagnostic: { code: 'unplaced', message: 'unplaced' },
+  });
+  const original = structuredClone(value);
+  const out = render(value);
+  for (const [label, ref] of [
+    ['이미지 1', first.reference],
+    ['표 2', nested.reference],
+    ['이미지 3', reference('image', 200)],
+    ['이미지 4', reference('image', 300)],
+    ['이미지 5', reference('image', 400)],
+  ])
+    assert.ok(out.includes('[' + label + ': ' + ref + ']'));
+  assert.deepEqual(value, original);
+  assert.equal(canonicalImageId(parseObjectReference(first.reference)), 'hwp5:s0:i100');
+});
+
+test('개체 참조 builder는 검증한 필드를 한 번 포착해 getter의 후속 값으로 바꾸지 않는다', () => {
+  let kindReads = 0;
+  const fields = {
+    sourceSha256: 'a'.repeat(64),
+    format: 'hwp5',
+    section: 0,
+    node: 1,
+    get kind() {
+      return ++kindReads === 1 ? 'image' : 'image/../fake';
+    },
+  };
+  assert.equal(buildObjectReference(fields), reference('image', 1));
+  assert.equal(kindReads, 1);
+  let nodeReads = 0;
+  assert.equal(
+    canonicalImageId({
+      format: 'hwp5',
+      section: 0,
+      get node() {
+        return ++nodeReads === 1 ? 1 : 'fake';
+      },
+    }),
+    'hwp5:s0:i1',
+  );
+  assert.equal(nodeReads, 1);
+});
+
+test('null·구형 미지정 이미지 참조는 관측 alt를 보존하면서 추출 참조 미확인을 명시한다', () => {
+  for (const reference of [null, undefined]) {
+    const value = model([image({ reference, altState: 'provided', alt: '관측 | 설명 <그림>' })]);
+    assert.equal(render(value), '[이미지: 추출 참조 확인 불가] 관측 | 설명 <그림>\n');
+    assert.equal(
+      render(value, 'markdown'),
+      '[이미지: 추출 참조 확인 불가] 관측 \\| 설명 \\<그림\\>\n',
+    );
+    assert.equal(render(value, 'markdown').includes('hwpjs-object:'), false);
+    assert.equal(render(value, 'markdown').includes('!['), false);
+  }
+  assert.equal(render(model([paragraph('[이미지]')])), '[이미지]\n');
+});
+
+test('참조가 있는 개체는 source 객체와 section·정식 node 키가 없으면 광고하지 않는다', () => {
+  for (const kind of ['image', 'table', 'chart', 'equation', 'drawing', 'ole', 'unknown']) {
+    const sourceKey = kind === 'image' ? 'sourceInfo' : 'source';
+    const nodeKey = kind === 'image' ? 'pictureNode' : kind === 'table' ? 'tableNode' : 'node';
+    const shapes = [
+      {},
+      { section: 0 },
+      { [nodeKey]: 1 },
+      undefined,
+      null,
+      { section: null, [nodeKey]: 1 },
+      { section: 0, [nodeKey]: null },
+      Object.assign([], { section: 0, [nodeKey]: 1 }),
+    ];
+    for (const source of shapes) {
+      const block =
+        kind === 'image'
+          ? image()
+          : kind === 'table'
+            ? table(1, 1, [])
+            : {
+                id: kind,
+                type: 'unknown',
+                kind,
+                diagnostic: { code: 'deferred', message: 'deferred' },
+              };
+      block.reference = reference(kind, 1);
+      block[sourceKey] = source;
+      for (const format of ['text', 'markdown'])
+        for (const view of ['content', 'structure'])
+          assert.throws(
+            () => render(model([block]), format, { view }),
+            /ObjectReferenceSourceMismatch/,
+          );
+    }
+  }
+});
+
+test('참조 없는 레거시 모델은 source 위치가 없어도 기존 관측 내용을 유지한다', () => {
+  for (const reference of [null, undefined]) {
+    const value = model([
+      image({ reference, sourceInfo: {}, altState: 'provided', alt: '관측 설명' }),
+      { ...table(1, 1, [cell(0, 0, [paragraph('관측 셀')])]), reference },
+      {
+        id: 'legacy-chart',
+        type: 'unknown',
+        kind: 'chart',
+        reference,
+        diagnostic: { code: 'unavailable', message: 'unavailable' },
+      },
+    ]);
+    for (const view of ['content', 'structure']) {
+      const out = render(value, 'text', { view });
+      assert.ok(out.includes('관측 설명'));
+      assert.ok(out.includes('관측 셀'));
+      assert.equal(out.includes('hwpjs-object:'), false);
+    }
+  }
+});
+
+test('참조 getter는 한 번만 읽고 본문·구조의 모든 출력에는 검증한 값만 쓴다', () => {
+  for (const kind of ['image', 'table', 'chart', 'equation', 'drawing', 'ole', 'unknown'])
+    for (const format of ['text', 'markdown'])
+      for (const view of ['content', 'structure']) {
+        const valid = reference(kind, 55);
+        const block =
+          kind === 'image'
+            ? referencedImage(55)
+            : kind === 'table'
+              ? { ...table(1, 1, []), source: { section: 0, tableNode: 55 } }
+              : {
+                  id: kind,
+                  type: 'unknown',
+                  kind,
+                  source: { section: 0, node: 55 },
+                  diagnostic: { code: 'deferred', message: 'deferred' },
+                };
+        let reads = 0;
+        Object.defineProperty(block, 'reference', {
+          get() {
+            return ++reads <= 6 ? valid : 'https://example.invalid/fake-image';
+          },
+        });
+        const out = render(model([block]), format, { view });
+        assert.equal(reads, 1);
+        const expected =
+          view === 'structure' ? createDisplayEscaper({ format, view })(valid) : valid;
+        assert.ok(out.includes(expected));
+        assert.equal(out.includes('https://'), false);
+      }
+});
+
+test('중복 참조와 참조 없는 fallback 판정도 getter의 후속 값에 영향을 받지 않는다', () => {
+  const blocks = [referencedImage(1), referencedImage(1)];
+  const reads = [0, 0];
+  for (let index = 0; index < blocks.length; index++)
+    Object.defineProperty(blocks[index], 'reference', {
+      get() {
+        return ++reads[index] === 1 ? reference('image', 1) : reference('image', index + 2);
+      },
+    });
+  assert.throws(() => render(model(blocks)), /DuplicateObjectReference/);
+  assert.deepEqual(reads, [1, 1]);
+  for (const first of [null, undefined]) {
+    let reads = 0;
+    const block = image();
+    Object.defineProperty(block, 'reference', {
+      get() {
+        return ++reads === 1 ? first : 'https://example.invalid/fake-image';
+      },
+    });
+    const out = render(model([block]), 'markdown');
+    assert.equal(reads, 1);
+    assert.equal(out, '[이미지: 추출 참조 확인 불가]\n');
+  }
+  const literal = 'https://example.invalid/원문';
+  assert.equal(render(model([paragraph(literal)]), 'markdown'), literal + '\n');
 });
