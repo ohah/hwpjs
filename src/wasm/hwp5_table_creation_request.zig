@@ -13,6 +13,7 @@ pub const Request = struct {
     row_height: u32,
     resources: model.Resources,
     options: @import("../hwp5/edit/created_table_records.zig").Options,
+    cell_texts: ?@import("../hwp5/edit/created_table_initial_text.zig").Grid = null,
 };
 pub const Prepared = struct {
     parsed: std.json.Parsed(Request),
@@ -29,6 +30,7 @@ pub const Prepared = struct {
 
 pub fn parse(a: std.mem.Allocator, bytes: []const u8) !std.json.Parsed(Request) {
     if (bytes.len > 1024 * 1024) return error.LimitExceeded;
+    try @import("../hwp5/edit/created_table_initial_text.zig").validateWire(a, bytes);
     const parsed = std.json.parseFromSlice(Request, a, bytes, .{ .allocate = .alloc_always }) catch |err| switch (err) {
         error.OutOfMemory => return err,
         else => return error.InvalidTableCreationRequest,
@@ -36,6 +38,7 @@ pub fn parse(a: std.mem.Allocator, bytes: []const u8) !std.json.Parsed(Request) 
     errdefer parsed.deinit();
     if (parsed.value.version != 1) return error.UnsupportedTableCreationRequest;
     _ = try @import("../model/table_creation_plan.zig").create(parsed.value.rows, parsed.value.columns, parsed.value.width, parsed.value.row_height, Session.tableCreationLimits().max_cells);
+    if (parsed.value.cell_texts) |texts| try @import("../hwp5/edit/created_table_initial_text.zig").validateTexts(parsed.value.rows, parsed.value.columns, texts, Session.tableCreationLimits().max_bytes);
     return parsed;
 }
 
@@ -47,5 +50,8 @@ pub fn prepare(a: std.mem.Allocator, session: *const Session, bytes: []const u8)
     const plan = try @import("../model/table_creation_plan.zig").create(r.rows, r.columns, r.width, r.row_height, limit);
     var ids = try session.planTableIdsWithAllocator(a, @as(usize, r.rows) * r.columns);
     defer ids.deinit(a);
-    return .{ .parsed = parsed, .table = try model.create(a, ids.identity, ids.instance_id, plan, ids.paragraph_ids, r.resources, limit) };
+    var table = try model.create(a, ids.identity, ids.instance_id, plan, ids.paragraph_ids, r.resources, limit);
+    errdefer table.deinit(a);
+    if (r.cell_texts) |texts| try @import("../hwp5/edit/created_table_initial_text.zig").populate(a, &table, texts, Session.tableCreationLimits().max_bytes);
+    return .{ .parsed = parsed, .table = table };
 }

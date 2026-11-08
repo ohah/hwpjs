@@ -347,6 +347,10 @@ export fn hwp5_edit_insert_table(ptr: [*]const u8, size: usize) u32 {
     output = response;
     return 1;
 }
+// Additive capability: old WASM must never silently discard initial cell text.
+export fn hwp5_edit_insert_table_with_texts(ptr: [*]const u8, size: usize) u32 {
+    return hwp5_edit_insert_table(ptr, size);
+}
 export fn hwp5_edit_created_tables(section: u32) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

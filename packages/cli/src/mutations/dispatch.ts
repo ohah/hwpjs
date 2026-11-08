@@ -37,6 +37,11 @@ const METHODS = Object.freeze({
   'picture-resize': 'resizePicture',
   'table-insert': 'insertTable',
 } as const);
+function requireInitialCellTexts(document: OperationDocument): void {
+  const supports: unknown = Reflect.get(document.sdk, 'supportsTableInitialTexts');
+  if (typeof supports !== 'function' || Reflect.apply(supports, document.sdk, []) !== true)
+    throw new Error('CreatedCellTextUnavailable');
+}
 interface Target {
   readonly section: number;
   readonly paragraph?: number;
@@ -76,6 +81,7 @@ export function prepareOperationSession(
   for (const operation of operations) {
     if (typeof document.sdk[METHODS[operation.kind]] !== 'function')
       throw new Error(`DocumentOperationUnavailable:${operation.kind}`);
+    if (operation.kind === 'table-insert' && operation.cellTexts) requireInitialCellTexts(document);
     for (const target of targets(operation)) {
       if (
         target.section >= document.sectionCount ||
@@ -248,10 +254,25 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
       break;
     case 'table-insert': {
       const { section, paragraph, unit, rows, columns, width, rowHeight, resources } = operation;
-      const options = { rows, columns, width, rowHeight, resources };
-      return document.format === 'hwp5'
-        ? document.sdk.insertTable(hwp5TableCreationRequest({ section, paragraph, unit, options }))
-        : document.sdk.insertTable(section, paragraph, unit, options);
+      const options = {
+        rows,
+        columns,
+        width,
+        rowHeight,
+        resources,
+      };
+      if (document.format === 'hwp5') {
+        const request = {
+          ...hwp5TableCreationRequest({ section, paragraph, unit, options }),
+          ...(operation.cellTexts ? { cell_texts: operation.cellTexts } : {}),
+        };
+        return document.sdk.insertTable(request);
+      }
+      const initialOptions = {
+        ...options,
+        ...(operation.cellTexts ? { cellTexts: operation.cellTexts } : {}),
+      };
+      return document.sdk.insertTable(section, paragraph, unit, initialOptions);
     }
   }
   return null;

@@ -1,5 +1,26 @@
 # 개발·검증 명령
 
+## 표 생성의 초기 셀 본문
+
+[초기 셀 본문 계약](table-initial-texts.md)을 따릅니다. JS 요청 캡처·구형 WASM 거부와 Native 준비·할당 실패·단일 이력을 구분해 검사합니다.
+
+```sh
+node --max-old-space-size=512 --test --test-concurrency=1 \
+  tools/tests/table-initial-sdk.test.mjs packages/cli/tests/table-cell-text.test.mjs
+zig test src/h5_created_table_initial_text_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'HWP5 initial'
+zig test src/hx_created_table_initial_text_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter '초기 셀 본문'
+```
+
+실물 SDK·CLI·MCP 검사는 `node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/table-initial-texts-native.test.mjs`입니다. 다음 환경변수를 명시하며 누락·해시 불일치는 실패입니다.
+
+- `HWPJS_TEST_SOURCE_ROOT`: `zig-out/verification` 아래 격리 후보의 절대경로. `src`·`js`·`packages/cli`·`packages/hwpjs/package.json` 및 Git 기준 `web/preview/hwp5-table-creation-command.mjs`를 포함합니다. 후보 CLI에서 공식 MCP client·server·Zod 의존성을 해결할 수 있어야 합니다.
+- `HWPJS_TEST_WASM`, `HWPJS_TEST_WASM_SHA256`: 같은 후보의 새 WASM 절대경로와 정확한 SHA256.
+- `HWPJS_TEST_NOORI`, `HWPJS_TEST_NOORI_HWPX`: 공식 Noori 두 원본의 절대경로. 검사에 고정한 해시와 같아야 합니다.
+- `HWPJS_TEST_ORACLE_ROOT`: Git 기준 `legacy/cfb.js`를 갖는 독립 비교기 루트의 절대경로.
+- `HWPJS_TEST_EVIDENCE_DIR`: `zig-out/verification` 아래 부모가 존재하는 새 디렉터리의 절대경로. 이전 결과를 덮어쓰지 않습니다.
+
+SDK의 단일 생성·undo/redo·독립 CFB/XML 저장·재열기와 실제 CLI/MCP 적용·잘못된 후행 셀의 출력 거부를 확인합니다. 공개 npm 설치 패키지·배포된 브라우저의 지원 증거와 구분합니다.
+
 ## 원본 셀 테두리·채우기 배치
 
 [원본 셀 배치 계약](table-cell-fill-batches.md)과 [표 대화상자 관측](table-dialog-reference.md)을 따릅니다.

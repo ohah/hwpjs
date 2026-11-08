@@ -7,6 +7,7 @@ import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-t
 import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
 import { encodeTableBorderSections, decodeTableBorderBatch } from './hwpx-table-border-batch.mjs';
 import { createMemory } from './wasm-memory.mjs';
+import { captureTableInitialTexts, encodeTableTextRequest } from './table-initial-texts.mjs';
 import { decodeTableBorderSources } from './hwpx-table-border-sources.mjs';
 import { decodeCurveGeometry } from './hwpx-curve-geometry.mjs';
 import { decodeCurveOwner } from './hwpx-curve-owner.mjs';
@@ -1445,6 +1446,10 @@ export async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
+    supportsTableInitialTexts() {
+      ready();
+      return typeof wasm.hwpx_edit_insert_table_with_texts === 'function';
+    },
     insertTable(section, paragraph, unit, options) {
       ready();
       [section, paragraph, unit].forEach(uint);
@@ -1466,8 +1471,36 @@ export async function createHwpxEditor(source) {
       args.forEach(uint);
       if (typeof wasm.hwpx_edit_insert_table !== 'function')
         throw new Error('HwpxTableCreationAbiUnavailable');
+      const withTexts = Object.hasOwn(options, 'cellTexts');
+      let request;
+      if (withTexts) {
+        if (typeof wasm.hwpx_edit_insert_table_with_texts !== 'function')
+          throw new Error('HwpxTableInitialTextsAbiUnavailable');
+        request = encodeTableTextRequest({
+          version: 1,
+          section,
+          paragraph,
+          unit,
+          rows,
+          columns,
+          width,
+          row_height: rowHeight,
+          resources: {
+            paragraph: args[4],
+            character: args[5],
+            style: args[6],
+            border_fill: args[7],
+          },
+          cell_texts: captureTableInitialTexts(rows, columns, options.cellTexts),
+        });
+      }
       try {
-        if (!wasm.hwpx_edit_insert_table(section, paragraph, unit, ...args)) throw memory.error();
+        const changed = withTexts
+          ? memory.withBytes(request, (ptr, size) =>
+              wasm.hwpx_edit_insert_table_with_texts(ptr, size),
+            )
+          : wasm.hwpx_edit_insert_table(section, paragraph, unit, ...args);
+        if (!changed) throw memory.error();
         const identity = JSON.parse(
           new TextDecoder('utf-8', { fatal: true }).decode(
             memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),

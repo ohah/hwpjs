@@ -283,6 +283,21 @@ export fn hwpx_edit_insert_table(section: u32, paragraph: u32, unit: u32, rows: 
     output = result;
     return 1;
 }
+export fn hwpx_edit_insert_table_with_texts(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    var prepared = @import("../hwpx/created_table_initial_text.zig").prepare(session, ptr[0..size]) catch |err| return fail(err);
+    defer prepared.deinit(a);
+    const identity = std.fmt.allocPrint(a, "{d}", .{prepared.table.identity}) catch |err| return fail(err);
+    defer a.free(identity);
+    const result = std.json.Stringify.valueAlloc(a, identity, .{}) catch |err| return fail(err);
+    apply(prepared.command()) catch |err| {
+        a.free(result);
+        return fail(err);
+    };
+    output = result;
+    return 1;
+}
 export fn hwpx_edit_table_bindings(section: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

@@ -65,6 +65,14 @@ function operationSchema() {
     const field = (name: string): z.ZodType => {
       if (coordinateFields.has(name)) return uint();
       if (textFields.has(name)) return z.string();
+      if (name === 'cellTexts')
+        return z
+          .array(z.array(z.string()).min(1).max(4096))
+          .min(1)
+          .max(4096)
+          .describe(
+            '표 생성 시 rows × columns의 행 우선 초기 본문입니다. 각 셀은 한 문단 문자열입니다.',
+          );
       if (name === 'value') return z.number().finite();
       if (name === 'properties')
         return z

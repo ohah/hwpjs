@@ -95,6 +95,7 @@ export type DocumentOperation = OperationBase &
         readonly width: number;
         readonly rowHeight: number;
         readonly resources: TableResources;
+        readonly cellTexts?: readonly (readonly string[])[];
       } & AtParagraph)
   );
 export type DocumentOperationKind = DocumentOperation['kind'];
@@ -137,7 +138,7 @@ export const DOCUMENT_OPERATION_SPECS = Object.freeze({
   'picture-resize': spec([...common, 'section', 'pictureNode', 'width', 'height']),
   'table-insert': spec(
     [...paragraph, 'unit', 'rows', 'columns', 'width', 'rowHeight', 'resources'],
-    ['expectedText'],
+    ['expectedText', 'cellTexts'],
   ),
 });
 
@@ -362,6 +363,23 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
           throw new RangeError('InvalidOperationTableSize');
         fields(operation.resources, ['paragraph', 'character', 'style', 'border_fill']);
         for (const value of Object.values(operation.resources)) uint(value);
+        if (Object.hasOwn(operation, 'cellTexts')) {
+          if (!Array.isArray(operation.cellTexts) || operation.cellTexts.length !== operation.rows)
+            throw new TypeError('InvalidOperationCellTexts');
+          for (const row of operation.cellTexts) {
+            if (!Array.isArray(row) || row.length !== operation.columns)
+              throw new TypeError('InvalidOperationCellTexts');
+            for (const text of row) {
+              string(text);
+              // 초기 셀 본문은 한 문단입니다. 구조 변경은 별도 문단 작업으로 요청합니다.
+              for (let index = 0; index < text.length; index++) {
+                const unit = text.charCodeAt(index);
+                if (unit < 0x20 || unit === 0x7f)
+                  throw new TypeError('InvalidOperationCellTextControl');
+              }
+            }
+          }
+        }
         break;
       default:
         throw new Error(`UnsupportedDocumentOperation:${operation.kind}`);

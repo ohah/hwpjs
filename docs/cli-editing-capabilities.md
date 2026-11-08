@@ -36,6 +36,8 @@
 
 apply의 현재 작업 종류는 다음 14개입니다. 이 목록은 버전 있는 명시 작업 스키마의 범위이며 임의 SDK 호출 목록이 아닙니다.
 
+표 생성의 선택적 초기 셀 본문과 구형 WASM 거부는 [초기 셀 본문 계약](table-initial-texts.md)을 따릅니다. 이는 개발 후보의 확장이며 공개 0.1.0의 지원 범위에 합산하지 않습니다.
+
 - `splice`, `replace-paragraph-ranges`, `split-paragraph`, `merge-paragraph`
 - `character-properties`, `character-format`
 - `paragraph-format`, `paragraph-alignment`, `paragraph-margins`, `paragraph-spacing`
