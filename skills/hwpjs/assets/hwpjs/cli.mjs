@@ -4410,7 +4410,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$2.length + 1) throw new Error("InvalidCurrentReferenceScope");
 		const wire = Object.fromEntries(fields$2.map((key) => [key, reference[key]]));
 		validate$1(wire);
-		return encoder$6.encode(JSON.stringify(wire));
+		return encoder$7.encode(JSON.stringify(wire));
 	};
 	const copyCurrentText = (reference) => {
 		ready();
@@ -4474,13 +4474,13 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 			if (typeof text !== "string") throw new TypeError("Text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
 			if (text.length > 4194304) throw new RangeError("LimitExceeded");
-			const bytes = encoder$6.encode(text);
+			const bytes = encoder$7.encode(text);
 			if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
 			memory.withBytes(encode(reference), (ptr, size) => memory.withBytes(bytes, (textPtr, textSize) => success(wasm.hwp5_edit_splice_current(ptr, size, ...range, textPtr, textSize))));
 		}
 	};
 }
-var utf8, utf16, encoder$6, fields$2, scopeSequence, invalid, uint$20, decimal;
+var utf8, utf16, encoder$7, fields$2, scopeSequence, invalid, uint$20, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
 	utf8 = new TextDecoder("utf-8", {
@@ -4491,7 +4491,7 @@ var init_hwp5_current_references = __esmMin((() => {
 		fatal: true,
 		ignoreBOM: true
 	});
-	encoder$6 = new TextEncoder();
+	encoder$7 = new TextEncoder();
 	fields$2 = [
 		"epoch",
 		"kind",
@@ -4684,9 +4684,84 @@ var decoder$3;
 var init_table_creation_resources = __esmMin((() => {
 	decoder$3 = new TextDecoder("utf-8", { fatal: true });
 }));
+// ../../js/table-initial-texts.mjs
+function captureTableTextRequest(input) {
+	const active = /* @__PURE__ */ new Set();
+	let nodes = 0, units = 0;
+	const capture = (value, depth = 0) => {
+		if (++nodes > 1e5 || depth > 32) throw new RangeError("LimitExceeded");
+		if (typeof value === "string") {
+			units += value.length;
+			if (units > 4194304) throw new RangeError("LimitExceeded");
+			return value;
+		}
+		if (value === null || typeof value === "boolean" || typeof value === "number" && Number.isFinite(value)) return value;
+		if (!value || typeof value !== "object" || active.has(value)) throw new TypeError("InvalidTableCreationRequest");
+		active.add(value);
+		try {
+			const array = Array.isArray(value);
+			if (!array && ![Object.prototype, null].includes(Object.getPrototypeOf(value))) throw new TypeError("InvalidTableCreationRequest");
+			const result = array ? [] : Object.create(null);
+			const keys = array ? Array.from({ length: Math.min(value.length, 100001) }, (_, i) => String(i)) : Reflect.ownKeys(value);
+			if (keys.length > 1e5) throw new RangeError("LimitExceeded");
+			for (const key of keys) {
+				const field = Object.getOwnPropertyDescriptor(value, key);
+				if (typeof key !== "string" || !field || !Object.hasOwn(field, "value")) throw new TypeError("InvalidTableCreationRequest");
+				if (!array && !field.enumerable) continue;
+				if (key === "toJSON") throw new TypeError("InvalidTableCreationRequest");
+				units += key.length;
+				if (units > 4194304) throw new RangeError("LimitExceeded");
+				result[key] = capture(field.value, depth + 1);
+			}
+			return result;
+		} finally {
+			active.delete(value);
+		}
+	};
+	return capture(input);
+}
+function captureTableInitialTexts(rows, columns, input) {
+	if (!Number.isInteger(rows) || rows < 1 || !Number.isInteger(columns) || columns < 1 || rows * columns > 4096 || !Array.isArray(input) || input.length !== rows) throw new TypeError("InvalidTableCellTexts");
+	let bytes = 0;
+	return Array.from({ length: rows }, (_, row) => {
+		const entry = Object.getOwnPropertyDescriptor(input, String(row));
+		if (!entry || !Object.hasOwn(entry, "value")) throw new TypeError("InvalidTableCellTexts");
+		const cells = entry.value;
+		if (!Array.isArray(cells) || cells.length !== columns) throw new TypeError("InvalidTableCellTexts");
+		return Array.from({ length: columns }, (_, column) => {
+			const entry = Object.getOwnPropertyDescriptor(cells, String(column));
+			if (!entry || !Object.hasOwn(entry, "value")) throw new TypeError("InvalidTableCellTexts");
+			const text = entry.value;
+			if (typeof text !== "string" || !text.isWellFormed()) throw new TypeError("InvalidTableCellText");
+			if (text.length > 4194304) throw new RangeError("LimitExceeded");
+			for (let index = 0; index < text.length; index++) {
+				const unit = text.charCodeAt(index);
+				if (unit < 32 || unit === 127) throw new TypeError("InvalidTableCellText");
+			}
+			bytes += encoder$6.encode(text).length;
+			if (bytes > 4194304) throw new RangeError("LimitExceeded");
+			return text;
+		});
+	});
+}
+function encodeTableTextRequest(request) {
+	const json = JSON.stringify(request);
+	if (json.length > 4194304) throw new RangeError("LimitExceeded");
+	const bytes = encoder$6.encode(json);
+	if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
+	return bytes;
+}
+var encoder$6;
+var init_table_initial_texts = __esmMin((() => {
+	encoder$6 = new TextEncoder();
+}));
 // ../../js/hwp5-table-creation.mjs
 function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 	return {
+		supportsTableInitialTexts() {
+			check();
+			return typeof wasm.hwp5_edit_insert_table_with_texts === "function";
+		},
 		supportsTableCreation() {
 			check();
 			return typeof wasm.hwp5_edit_insert_table === "function";
@@ -4705,11 +4780,20 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 			check();
 			if (typeof wasm.hwp5_edit_insert_table !== "function") throw new Error("Hwp5TableCreationAbiUnavailable");
 			if (!request || typeof request !== "object" || Array.isArray(request)) throw new TypeError("InvalidTableCreationRequest");
-			const json = JSON.stringify(request);
-			if (json.length > 1048576) throw new RangeError("LimitExceeded");
-			const bytes = encoder$5.encode(json);
-			if (bytes.length > 1048576) throw new RangeError("LimitExceeded");
-			const response = memory.withBytes(bytes, (ptr, size) => output(() => wasm.hwp5_edit_insert_table(ptr, size)).bytes);
+			const withTexts = Object.hasOwn(request, "cell_texts");
+			let bytes;
+			if (withTexts) {
+				if (typeof wasm.hwp5_edit_insert_table_with_texts !== "function") throw new Error("Hwp5TableInitialTextsAbiUnavailable");
+				const captured = captureTableTextRequest(request);
+				captured.cell_texts = captureTableInitialTexts(captured.rows, captured.columns, captured.cell_texts);
+				bytes = encodeTableTextRequest(captured);
+			} else {
+				const json = JSON.stringify(request);
+				if (json.length > 1048576) throw new RangeError("LimitExceeded");
+				bytes = encoder$5.encode(json);
+				if (bytes.length > 1048576) throw new RangeError("LimitExceeded");
+			}
+			const response = memory.withBytes(bytes, (ptr, size) => output(() => withTexts ? wasm.hwp5_edit_insert_table_with_texts(ptr, size) : wasm.hwp5_edit_insert_table(ptr, size)).bytes);
 			const value = JSON.parse(decoder$2.decode(response));
 			if (!value || Object.keys(value).join() !== "identity" || typeof value.identity !== "string" || !/^[1-9][0-9]{0,19}$/.test(value.identity) || BigInt(value.identity) > 18446744073709551615n) throw new Error("InvalidCreatedTableIdentity");
 			return value.identity;
@@ -4720,6 +4804,7 @@ var encoder$5, decoder$2;
 var init_hwp5_table_creation = __esmMin((() => {
 	init_hwp5_created_tables();
 	init_table_creation_resources();
+	init_table_initial_texts();
 	encoder$5 = new TextEncoder();
 	decoder$2 = new TextDecoder("utf-8", {
 		fatal: true,
@@ -9983,6 +10068,10 @@ async function createHwpxEditor(source) {
 				wasm.hwpx_edit_output_free();
 			}
 		},
+		supportsTableInitialTexts() {
+			ready();
+			return typeof wasm.hwpx_edit_insert_table_with_texts === "function";
+		},
 		insertTable(section, paragraph, unit, options) {
 			ready();
 			[
@@ -10005,8 +10094,30 @@ async function createHwpxEditor(source) {
 			];
 			args.forEach(uint);
 			if (typeof wasm.hwpx_edit_insert_table !== "function") throw new Error("HwpxTableCreationAbiUnavailable");
+			const withTexts = Object.hasOwn(options, "cellTexts");
+			let request;
+			if (withTexts) {
+				if (typeof wasm.hwpx_edit_insert_table_with_texts !== "function") throw new Error("HwpxTableInitialTextsAbiUnavailable");
+				request = encodeTableTextRequest({
+					version: 1,
+					section,
+					paragraph,
+					unit,
+					rows,
+					columns,
+					width,
+					row_height: rowHeight,
+					resources: {
+						paragraph: args[4],
+						character: args[5],
+						style: args[6],
+						border_fill: args[7]
+					},
+					cell_texts: captureTableInitialTexts(rows, columns, options.cellTexts)
+				});
+			}
 			try {
-				if (!wasm.hwpx_edit_insert_table(section, paragraph, unit, ...args)) throw memory.error();
+				if (!(withTexts ? memory.withBytes(request, (ptr, size) => wasm.hwpx_edit_insert_table_with_texts(ptr, size)) : wasm.hwpx_edit_insert_table(section, paragraph, unit, ...args))) throw memory.error();
 				const identity = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len())));
 				createdTableIdentity(identity);
 				return identity;
@@ -11031,6 +11142,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_hwpx_line_display_batch();
 	init_hwpx_table_border_batch();
 	init_wasm_memory();
+	init_table_initial_texts();
 	init_hwpx_table_border_sources();
 	init_hwpx_curve_geometry();
 	init_hwpx_curve_owner();
@@ -12965,6 +13077,19 @@ function validateDocumentOperations(input) {
 					"border_fill"
 				]);
 				for (const value of Object.values(operation.resources)) uint$3(value);
+				if (Object.hasOwn(operation, "cellTexts")) {
+					if (!Array.isArray(operation.cellTexts) || operation.cellTexts.length !== operation.rows) throw new TypeError("InvalidOperationCellTexts");
+					for (const row of operation.cellTexts) {
+						if (!Array.isArray(row) || row.length !== operation.columns) throw new TypeError("InvalidOperationCellTexts");
+						for (const text of row) {
+							string(text);
+							for (let index = 0; index < text.length; index++) {
+								const unit = text.charCodeAt(index);
+								if (unit < 32 || unit === 127) throw new TypeError("InvalidOperationCellTextControl");
+							}
+						}
+					}
+				}
 				break;
 			default: throw new Error(`UnsupportedDocumentOperation:${operation.kind}`);
 		}
@@ -13042,7 +13167,7 @@ var init_validate = __esmMin((() => {
 			"width",
 			"rowHeight",
 			"resources"
-		], ["expectedText"])
+		], ["expectedText", "cellTexts"])
 	});
 }));
 // ../../web/preview/hwp5-table-creation-command.mjs
@@ -13113,6 +13238,10 @@ function replaceParagraphRanges(sdk, request) {
 		properties: request.properties
 	});
 }
+function requireInitialCellTexts(document) {
+	const supports = Reflect.get(document.sdk, "supportsTableInitialTexts");
+	if (typeof supports !== "function" || Reflect.apply(supports, document.sdk, []) !== true) throw new Error("CreatedCellTextUnavailable");
+}
 function targets(operation) {
 	if (operation.kind === "cell-sizes") return operation.cells;
 	if (operation.kind === "cell-styles") return [
@@ -13132,6 +13261,7 @@ function prepareOperationSession(document, operations) {
 	const protectedSections = /* @__PURE__ */ new Set();
 	for (const operation of operations) {
 		if (typeof document.sdk[METHODS[operation.kind]] !== "function") throw new Error(`DocumentOperationUnavailable:${operation.kind}`);
+		if (operation.kind === "table-insert" && operation.cellTexts) requireInitialCellTexts(document);
 		for (const target of targets(operation)) {
 			if (target.section >= document.sectionCount || "paragraph" in target && document.format === "hwpx" && target.paragraph === 0) throw new RangeError("InvalidOperationTarget");
 			if (document.format === "hwp5" && [
@@ -13278,12 +13408,23 @@ function applyOperation(document, operation) {
 				rowHeight,
 				resources
 			};
-			return document.format === "hwp5" ? document.sdk.insertTable(hwp5TableCreationRequest({
-				section,
-				paragraph,
-				unit,
-				options
-			})) : document.sdk.insertTable(section, paragraph, unit, options);
+			if (document.format === "hwp5") {
+				const request = {
+					...hwp5TableCreationRequest({
+						section,
+						paragraph,
+						unit,
+						options
+					}),
+					...operation.cellTexts ? { cell_texts: operation.cellTexts } : {}
+				};
+				return document.sdk.insertTable(request);
+			}
+			const initialOptions = {
+				...options,
+				...operation.cellTexts ? { cellTexts: operation.cellTexts } : {}
+			};
+			return document.sdk.insertTable(section, paragraph, unit, initialOptions);
 		}
 	}
 	return null;

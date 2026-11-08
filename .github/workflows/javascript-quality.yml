@@ -469,7 +469,7 @@ jobs:
           assert(entries.every((entry) => entry.isFile()), 'SkillAssetsMustBeRegularFiles');
           assert.deepEqual(entries.map((entry) => entry.name).sort(), [...names].sort());
           for (const name of names) {
-            assert.deepEqual(await readFile(`${shipped}/${name}`), await readFile(`zig-out/verification/ci-agent-skill/${name}`), `SkillAssetOutOfDate:${name}`);
+            assert((await readFile(`${shipped}/${name}`)).equals(await readFile(`zig-out/verification/ci-agent-skill/${name}`)), `SkillAssetOutOfDate:${name}`);
           }
           JS
       - name: Check derived quality configuration
