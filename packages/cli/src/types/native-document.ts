@@ -1,9 +1,6 @@
-import type { createExperimentalHwp5Editor } from '../../../../js/hwp5-editor.mjs';
-import type { createHwpxEditor } from '../../../../js/hwpx-editor.mjs';
+import type { Hwp5Sdk, HwpxSdk } from '../../../document/src/types/native.ts';
+export type { DocumentFormat, Hwp5Sdk, HwpxSdk } from '../../../document/src/types/native.ts';
 
-export type DocumentFormat = 'hwp5' | 'hwpx';
-export type Hwp5Sdk = Awaited<ReturnType<typeof createExperimentalHwp5Editor>>;
-export type HwpxSdk = Awaited<ReturnType<typeof createHwpxEditor>>;
 export type NativeEditor = { format: 'hwp5'; sdk: Hwp5Sdk } | { format: 'hwpx'; sdk: HwpxSdk };
 
 export interface DocumentOpenOptions {

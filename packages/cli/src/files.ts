@@ -38,14 +38,14 @@ interface OutputState {
   parent: string;
   input?: InputSnapshot;
   used: boolean;
-  kind: 'document' | 'image';
+  kind: 'document' | 'image' | 'html';
   parentIdentity?: FileIdentity;
-  format?: DocumentFormat | 'image';
+  format?: DocumentFormat | 'image' | 'html';
 }
 interface OutputOptions {
   input?: InputSnapshot;
   outputPath: string;
-  kind?: 'document' | 'image';
+  kind?: 'document' | 'image' | 'html';
   directory?: ImageDirectory;
 }
 interface FileDependencies {
@@ -217,9 +217,9 @@ export function createFiles({
     directory,
   }: OutputOptions): Promise<OutputTarget> {
     validPath(outputPath);
-    if (!['document', 'image'].includes(kind)) throw error('InvalidOutputKind');
+    if (!['document', 'image', 'html'].includes(kind)) throw error('InvalidOutputKind');
     const absolute = resolve(cwd(), outputPath);
-    const image = kind === 'image' ? await imageParent(absolute) : null;
+    const image = kind !== 'document' ? await imageParent(absolute) : null;
     if (directory !== undefined) {
       const identity = directories.get(directory);
       if (
@@ -234,9 +234,13 @@ export function createFiles({
     if (!(await fs.stat(parent)).isDirectory()) throw error('OutputParentNotDirectory');
     const path = join(parent, basename(absolute));
     if (
-      !(kind === 'image' ? imageExtensions : new Set(['.hwp', '.hwpx'])).has(
-        extname(path).toLowerCase(),
-      )
+      !(
+        kind === 'image'
+          ? imageExtensions
+          : kind === 'html'
+            ? new Set(['.html', '.htm'])
+            : new Set(['.hwp', '.hwpx'])
+      ).has(extname(path).toLowerCase())
     )
       throw error('InvalidOutputExtension');
     await vacant(path, input);
@@ -272,6 +276,11 @@ export function createFiles({
     if (extname(record.path).toLowerCase() !== extension)
       throw error('OutputImageExtensionMismatch');
     record.format = 'image';
+  }
+  function assertHTMLFormat(target: OutputTarget): void {
+    const record = targets.get(target);
+    if (!record || record.used || record.kind !== 'html') throw error('InvalidOutputTarget');
+    record.format = 'html';
   }
   function assertOutputFormat(target: OutputTarget, format: DocumentFormat): void {
     const record = targets.get(target);
@@ -316,7 +325,7 @@ export function createFiles({
       );
     };
     try {
-      if (record.kind === 'image') await verifyImageParent(record);
+      if (record.kind !== 'document') await verifyImageParent(record);
       await vacant(record.path, record.input);
       for (let attempt = 0; attempt < 8; attempt++) {
         const nonce = random();
@@ -337,7 +346,7 @@ export function createFiles({
       await handle.close();
       handle = undefined;
       // link is the commit point: atomic no-replace, never a rename/copy fallback.
-      if (record.kind === 'image') await verifyImageParent(record);
+      if (record.kind !== 'document') await verifyImageParent(record);
       await fs.link(temporary, record.path);
       published = true;
     } catch (cause) {
@@ -397,6 +406,7 @@ export function createFiles({
     assertNewDocumentOutput,
     assertOutputFormat,
     assertImageFormat,
+    assertHTMLFormat,
     createImageDirectory,
     publishNewOutput,
   });
@@ -409,6 +419,7 @@ export const {
   assertNewDocumentOutput,
   assertOutputFormat,
   assertImageFormat,
+  assertHTMLFormat,
   createImageDirectory,
   publishNewOutput,
 } = createFiles();

@@ -73,6 +73,14 @@ export async function runExtendedCommand(
   options: ExtendedCommandOptions,
   { files, io, loadWasm, dependencies = {}, onPublished }: ExtendedHostContext,
 ): Promise<number> {
+  if (
+    options.command === 'delete-table' ||
+    options.command === 'insert-image' ||
+    options.command === 'export-html'
+  ) {
+    const { runStructuralCommand } = await import('./structural-host.ts');
+    return runStructuralCommand(options, { files, io, loadWasm, dependencies, onPublished });
+  }
   const input =
     options.command === 'create'
       ? undefined

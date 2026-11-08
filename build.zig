@@ -23,6 +23,27 @@ pub fn build(b: *std.Build) void {
     const core_test_step = b.step("test", "Run core and controlled text unit tests");
     core_test_step.dependOn(&run_tests.step);
 
+    const file_transform_tests = b.addTest(.{ .use_llvm = true, .filters = &.{
+        "표 삭제 보호",
+        "파일 변환 보호",
+        "HWP5 표 전체 삭제",
+        "표삭제",
+        "파일표삭제",
+        "표 파일 삭제 ABI",
+        "표 파일 삭제 실물",
+        "image insertion",
+    }, .root_module = b.createModule(.{
+        .root_source_file = b.path("src/table_deletion_protection_probe.zig"),
+        .target = target,
+        .optimize = optimize,
+    }) });
+    const run_file_transform_tests = b.addRunArtifact(file_transform_tests);
+    // 픽스쳐 읽기는 실행마다 확인하고 컴파일 결과만 재사용한다.
+    run_file_transform_tests.has_side_effects = true;
+    const file_transform_step = b.step("test-file-transforms", "Verify bounded table deletion and image insertion file transforms");
+    file_transform_step.dependOn(&run_file_transform_tests.step);
+    core_test_step.dependOn(&run_file_transform_tests.step);
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

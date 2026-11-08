@@ -178,7 +178,7 @@ test(
     try {
       await client.connect(transport);
       const list = await client.listTools();
-      assert.equal(list.tools.length, 13);
+      assert.equal(list.tools.length, 16);
       const call = async (name, args, expectedError = false) => {
         const result = await client.callTool({ name, arguments: args });
         assert.equal(Boolean(result.isError), expectedError, name + ': ' + content(result));

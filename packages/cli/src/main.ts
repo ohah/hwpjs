@@ -187,6 +187,9 @@ export async function runCLI(
       options.command === 'convert' ||
       options.command === 'ocr' ||
       options.command === 'paragraph' ||
+      options.command === 'delete-table' ||
+      options.command === 'insert-image' ||
+      options.command === 'export-html' ||
       options.command === 'replace-image'
     )
       throw Error('UnknownExtendedCommand');

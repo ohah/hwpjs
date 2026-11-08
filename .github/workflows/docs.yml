@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/docs/**'
       - 'packages/cli/src/**'
+      - 'packages/document/src/**'
       - 'js/**'
       - 'web/preview/*.mjs'
       - '.github/workflows/docs.yml'
@@ -43,9 +44,10 @@ jobs:
       - name: Prepare independent documentation workspace
         run: |
           docs_root="$RUNNER_TEMP/hwpjs-docs"
-          mkdir -p "$docs_root/apps/docs" "$docs_root/packages/cli" "$docs_root/js" "$docs_root/web/preview"
+          mkdir -p "$docs_root/apps/docs" "$docs_root/packages/cli" "$docs_root/packages/document" "$docs_root/js" "$docs_root/web/preview"
           cp -R apps/docs/package.json apps/docs/bun.lock apps/docs/rspress.config.ts apps/docs/docs apps/docs/scripts apps/docs/components apps/docs/theme "$docs_root/apps/docs/"
           cp -R packages/cli/src "$docs_root/packages/cli/"
+          cp -R packages/document/package.json packages/document/src "$docs_root/packages/document/"
           cp js/*.mjs "$docs_root/js/"
           cp web/preview/*.mjs "$docs_root/web/preview/"
       - name: Install documentation dependencies

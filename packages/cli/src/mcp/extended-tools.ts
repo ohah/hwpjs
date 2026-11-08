@@ -128,6 +128,112 @@ function operationSchema() {
 export function extendedDocumentTools({ invoke, wasm }: { invoke: InvokeCLI; wasm: string[] }) {
   return [
     defineDocumentTool({
+      name: 'delete_document_table',
+      config: {
+        title: '지정한 표 전체를 새 문서에서 삭제',
+        description:
+          '원본 SHA가 포함된 표 reference로 표 자체와 셀 내용을 제거합니다. 셀 비우기와 다릅니다. 다른 개체와 공유 자원은 보존하며 새 파일만 저장합니다. 전체 재조판은 수행하지 않으므로 allowStaleLayout 동의가 필요합니다. 열린 편집기 undo에는 추가되지 않습니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          outputPath: path(),
+          reference: z
+            .string()
+            .min(1)
+            .max(128)
+            .refine((value) => {
+              try {
+                return parseObjectReference(value).kind === 'table';
+              } catch {
+                return false;
+              }
+            }, '표 참조가 필요합니다.'),
+          allowStaleLayout: z.boolean().default(false),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({ inputPath, outputPath, reference, allowStaleLayout = false }) =>
+        invoke([
+          'delete-table',
+          `--ref=${reference}`,
+          `--output=${outputPath}`,
+          ...(allowStaleLayout ? ['--allow-stale-layout'] : []),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
+      name: 'insert_document_image',
+      config: {
+        title: '본문 문단에 새 PNG 또는 JPEG 삽입',
+        description:
+          'get_document_paragraph의 Native target과 expectedText 원문 및 SHA를 사용해 기존 최상위 본문 문단에 인라인 그림을 삽입합니다. unit은 UTF-16 좌표, width/height는 HWPUNIT(1/7200인치)입니다. 표 셀·글상자 등 중첩 문맥은 지원하지 않습니다. 새 파일만 저장하며 전체 재조판과 열린 세션 undo는 제공하지 않습니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          outputPath: path(),
+          expectedSha256: sha(),
+          target: z.string().regex(/^s\d+:p\d+$/u),
+          unit: uint(),
+          expectedText: z.string().max(1024 * 1024),
+          imagePath: path(),
+          width: uint().min(1).max(0x7fffffff),
+          height: uint().min(1).max(0x7fffffff),
+          allowStaleLayout: z.boolean().default(false),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({
+        inputPath,
+        outputPath,
+        expectedSha256,
+        target,
+        unit,
+        expectedText,
+        imagePath,
+        width,
+        height,
+        allowStaleLayout = false,
+      }) =>
+        invoke([
+          'insert-image',
+          `--target=${target}`,
+          `--unit=${unit}`,
+          `--expect-text=${expectedText}`,
+          `--expect-sha256=${expectedSha256}`,
+          `--image=${imagePath}`,
+          `--width=${width}`,
+          `--height=${height}`,
+          `--output=${outputPath}`,
+          ...(allowStaleLayout ? ['--allow-stale-layout'] : []),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
+      name: 'export_document_html',
+      config: {
+        title: '문서의 의미 구조를 HTML로 내보내기',
+        description:
+          '문단·표·이미지·머리말/꼬리말 등 관측된 의미 구조를 새 HTML 파일로 내보냅니다. 지원하는 내장 raster 이미지는 data URI로 포함할 수 있습니다. 원본 서식이나 페이지 배치의 완전 재현은 아니며 누락·미지원 이미지는 경고와 참조로 표시합니다. 외부 이미지를 가져오거나 스크립트를 실행하지 않습니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          outputPath: path(),
+          embedImages: z.enum(['supported', 'none']).default('supported'),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({ inputPath, outputPath, embedImages = 'supported' }) =>
+        invoke([
+          'export-html',
+          `--output=${outputPath}`,
+          `--embed-images=${embedImages}`,
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
       name: 'replace_document_image',
       config: {
         title: '문서 그림을 새 파일에서 교체',

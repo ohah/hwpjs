@@ -101,7 +101,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tests=(packages/cli/tests/*.test.mjs)
+          tests=(
+            packages/cli/tests/*.test.mjs
+            tools/tests/picture-replacement-sdk.test.mjs
+            tools/tests/picture-replacement-service.test.mjs
+            tools/tests/table-deletion-sdk.test.mjs
+            tools/tests/image-insertion-sdk.test.mjs
+            tools/tests/structural-host-review.test.mjs
+            tools/tests/html-export-review.test.mjs
+          )
           test -f "${tests[0]}"
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 --test-reporter=tap "${tests[@]}" | tee "$RUNNER_TEMP/hwpjs-cli-ts-source.tap"
           grep -Eq '^# tests [1-9][0-9]*$' "$RUNNER_TEMP/hwpjs-cli-ts-source.tap"

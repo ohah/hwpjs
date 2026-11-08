@@ -28,7 +28,9 @@ Selecting --id requires the SHA from images; all images use one opened snapshot.
 참조는 네트워크 주소가 아닙니다. --ref는 --id/--expect-sha256와 함께 사용할 수 없습니다.
 Output must be new; existing files are never overwritten.
 read-many는 명시 파일 1~128개만 읽습니다. 기본 동시성은 1, 최대 2이며 일부 실패도 보고합니다.
-출력 예산은 기본 4MiB, 최대 16MiB입니다. 폴더 탐색·일괄 편집·HTML·문서 JSON 출력은 제공하지 않습니다.
+출력 예산은 기본 4MiB, 최대 16MiB입니다. 폴더 탐색·일괄 편집·문서 JSON 출력은 제공하지 않습니다.
+export-html은 의미 구조를 HTML로 변환하며 원본 서식·페이지 배치를 재현하지 않습니다.
+insert-image의 width/height는 HWPUNIT(1/7200인치), unit은 Native UTF-16 좌표입니다.
 `;
 
 export class ArgumentsError extends Error {

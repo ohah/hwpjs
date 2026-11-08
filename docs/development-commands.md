@@ -1471,3 +1471,11 @@ node tools/build-agent-skill.mjs --package-dir packages/hwpjs
 ```
 
 기존 CI의 Skill 여섯 파일 바이트 동등성 검사를 유지합니다. 사용자 WIP가 있는 작업 트리에서는 소유 변경만 포함한 격리 입력을 빌드하고, 그 출력으로 생성한 자산만 적용합니다. 정규 고지 변경 시 공개 데모의 고지와 manifest 해시도 함께 갱신하고 정적 자산 검증을 수행합니다.
+
+## 문서 파일 변환 Native 회귀 검사
+
+```sh
+zig build test-file-transforms -Doptimize=ReleaseSafe -j1
+```
+
+표 삭제·이미지 삽입의 합성 입력, 필드·서명 거부, 할당 실패, Noori 저장·재열기를 검사합니다. 검증 파일을 별도 경로에 쓰지 않으므로 반복 실행할 수 있습니다. 지원 계약과 CLI·MCP 사용법은 [파일 변환 주제 문서](document-file-transforms.md)를 따릅니다.

@@ -54,6 +54,10 @@
       "name": "@hwpjs/core",
       "version": "0.1.0",
     },
+    "packages/document": {
+      "name": "@hwpjs/document",
+      "version": "0.1.0",
+    },
     "packages/hwpjs": {
       "name": "@ohah/hwpjs",
       "version": "0.1.0",
@@ -174,6 +178,8 @@
     "@hwpjs/cli": ["@hwpjs/cli@workspace:packages/cli"],
 
     "@hwpjs/core": ["@hwpjs/core@workspace:packages/core"],
+
+    "@hwpjs/document": ["@hwpjs/document@workspace:packages/document"],
 
     "@hwpjs/demo": ["@hwpjs/demo@workspace:apps/demo"],
 

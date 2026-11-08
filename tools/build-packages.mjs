@@ -111,6 +111,12 @@ for (const name of selected) {
   ].map((path) => join(root, path));
   const inputs = [
     ...(await files(source)),
+    ...(name === 'core'
+      ? [
+          ...(await files(resolve(root, 'packages/document/src'))),
+          resolve(root, 'packages/document/package.json'),
+        ]
+      : []),
     ...legacy,
     ...buildInputs,
     join(directory, 'package.json'),

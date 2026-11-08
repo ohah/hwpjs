@@ -141,6 +141,7 @@ const metadata = [
   join(pkg, 'react-native.config.cjs'),
   join(pkg, 'HwpjsNativeCanvas.podspec'),
   join(root, 'packages/cli/package.json'),
+  join(root, 'packages/document/package.json'),
   join(root, 'packages/cli/tsconfig.json'),
   join(root, 'packages/cli/tsdown.config.ts'),
   join(root, 'tools/build-public-package.mjs'),
@@ -342,7 +343,7 @@ assert(graph.status === 0, 'TypeDependencyGraphFailed:' + graph.stdout + graph.s
 const selectedTypeInputs = selectDeclarationInputs(root, graph.stdout);
 // 관측은 전체 로컬 그래프, 기존 ambient 선언 복사는 패키지 범위를 유지합니다.
 const typeInputs = selectedTypeInputs.projectInputs.filter(
-  (p) => p.startsWith(join(root, 'packages') + '/') && /\.(?:ts|tsx)$/.test(p),
+  (p) => p.startsWith(join(root, 'packages') + '/') && /\.(?:ts|tsx|mts)$/.test(p),
 );
 for (const path of selectedTypeInputs.projectInputs) await observe(path, 'public-types-source');
 await writeFile(
@@ -359,13 +360,13 @@ assert(
   'DeclarationBuildFailed:' + declaration.stdout + declaration.stderr,
 );
 for (const p of typeInputs)
-  if (p.endsWith('.d.ts') && isProductionSource(p)) {
+  if (/\.d\.(?:ts|mts)$/.test(p) && isProductionSource(p)) {
     const dest = join(dist, 'types', relative(join(root, 'packages'), p));
     await mkdir(dirname(dest), { recursive: true });
     await copyFile(p, dest);
   }
 for (const p of await files(join(dist, 'types')))
-  if (p.endsWith('.d.ts'))
+  if (/\.d\.(?:ts|mts)$/.test(p))
     await writeFile(
       p,
       remap(await readFile(p, 'utf8')).replace(/(["'][^"']+)\.tsx?(["'])/g, '$1.js$2'),
@@ -475,12 +476,13 @@ while (queue.length) {
     let target;
     if (spec.startsWith('.')) {
       const raw = resolve(dirname(path), spec);
-      // oxlint-disable-next-line unicorn/prefer-string-starts-ends-with -- 기존 파일 suffix 정규식의 종결자 처리 계약을 보존한다.
-      target = /\.js$/.test(raw)
-        ? raw.replace(/\.js$/, '.d.ts')
-        : raw.endsWith('.d.ts')
-          ? raw
-          : raw + '.d.ts';
+      target = raw.endsWith('.mjs')
+        ? raw.slice(0, -4) + '.d.mts'
+        : raw.endsWith('.js')
+          ? raw.slice(0, -3) + '.d.ts'
+          : /\.d\.(?:ts|mts)$/.test(raw)
+            ? raw
+            : raw + '.d.ts';
     } else if (spec === '@ohah/hwpjs' || spec.startsWith('@ohah/hwpjs/')) {
       const key = spec === '@ohah/hwpjs' ? '.' : './' + spec.slice('@ohah/hwpjs/'.length),
         entry = publicManifest.exports[key];
@@ -495,7 +497,7 @@ while (queue.length) {
 }
 const prunedTypes = [];
 for (const path of await files(join(dist, 'types')))
-  if (path.endsWith('.d.ts') && !keptTypes.has(path)) {
+  if (/\.d\.(?:ts|mts)$/.test(path) && !keptTypes.has(path)) {
     prunedTypes.push(relative(dist, path));
     await unlink(path);
   }

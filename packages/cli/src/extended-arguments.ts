@@ -14,6 +14,20 @@ export const EXTENDED_OPTIONS = Object.freeze({
   ocr: ['ref', 'provider', 'languages', 'executable', 'format', 'expect-sha256', 'wasm'],
   paragraph: ['target', 'format', 'expect-sha256', 'wasm'],
   'replace-image': ['ref', 'image', 'output', 'wasm'],
+  'delete-table': ['ref', 'output', 'wasm', 'allow-stale-layout'],
+  'insert-image': [
+    'target',
+    'unit',
+    'expect-text',
+    'expect-sha256',
+    'image',
+    'width',
+    'height',
+    'output',
+    'wasm',
+    'allow-stale-layout',
+  ],
+  'export-html': ['output', 'embed-images', 'wasm'],
 });
 
 export const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations JSON) --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
@@ -21,7 +35,10 @@ export const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations 
   hwpjs convert INPUT --to hwp5|hwpx --output OUTPUT [--loss-policy reject|text-only] [--expect-sha256 SHA256] [--allow-stale-layout] [--wasm PATH]
   hwpjs ocr INPUT [--ref IMAGE_REFERENCE] [--provider tesseract|vision] [--languages kor+eng] [--executable PATH] [--format text|markdown] [--wasm PATH]
   hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]
-  hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]`;
+  hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]
+  hwpjs delete-table INPUT --ref TABLE_REFERENCE --output NEWFILE --allow-stale-layout [--wasm PATH]
+  hwpjs insert-image INPUT --target s0:p3 --unit 0 --expect-text RAW --expect-sha256 SHA256 --image IMAGE_FILE --width HWPUNIT --height HWPUNIT --output NEWFILE --allow-stale-layout [--wasm PATH]
+  hwpjs export-html INPUT --output NEW.html [--embed-images supported|none] [--wasm PATH]`;
 
 type Fail = (code: string) => never;
 type Options = ReadonlyMap<string, string>;
@@ -66,6 +83,26 @@ export function interpretExtendedArguments(
   if (positional.length !== 1 || !positional[0] || positional[0] === '-')
     return fail('ExpectedInputFile');
   const input = positional[0];
+  if (command === 'export-html') {
+    const embedImages = options.get('embed-images') ?? 'supported';
+    if (embedImages !== 'supported' && embedImages !== 'none') return fail('InvalidHtmlImageMode');
+    return Object.freeze({
+      ...common,
+      command,
+      input,
+      output: required('output', 'ExpectedOutputFile'),
+      embedImages,
+    });
+  }
+  if (command === 'delete-table') {
+    const reference = required('ref', 'MissingRequiredOption:ref');
+    try {
+      if (parseObjectReference(reference).kind !== 'table') return fail('ExpectedTableReference');
+    } catch {
+      return fail('InvalidTableReference');
+    }
+    return Object.freeze({ ...common, ...save(), command, input, reference });
+  }
   if (command === 'replace-image') {
     const reference = required('ref', 'MissingRequiredOption:ref');
     try {
@@ -90,6 +127,42 @@ export function interpretExtendedArguments(
     input,
     ...(expected === undefined ? {} : { expectSha256: expected.toLowerCase() }),
   };
+  if (command === 'insert-image') {
+    if (expected === undefined) return fail('MissingRequiredOption:expect-sha256');
+    let target;
+    try {
+      target = parseNativeTarget(options.get('target'));
+    } catch {
+      return fail('InvalidTarget');
+    }
+    const number = (name: string, minimum: number, maximum = 0xffffffff) => {
+      const text = required(name, 'MissingRequiredOption:' + name);
+      const value = Number(text);
+      if (
+        !/^(0|[1-9]\d*)$/u.test(text) ||
+        !Number.isSafeInteger(value) ||
+        value < minimum ||
+        value > maximum
+      )
+        return fail('InvalidImageInsertion:' + name);
+      return value;
+    };
+    const expectedText = options.get('expect-text');
+    if (expectedText === undefined) return fail('MissingRequiredOption:expect-text');
+    if (expectedText.length > 1024 * 1024) return fail('ExpectedTextLimitExceeded');
+    return Object.freeze({
+      ...source,
+      ...save(),
+      command,
+      expectSha256: expected.toLowerCase(),
+      target,
+      unit: number('unit', 0),
+      expectedText,
+      imagePath: required('image', 'MissingRequiredOption:image'),
+      width: number('width', 1, 0x7fffffff),
+      height: number('height', 1, 0x7fffffff),
+    });
+  }
   if (command === 'apply') {
     if (options.has('patch') === options.has('operations'))
       return fail('ExpectedOneOperationSource');

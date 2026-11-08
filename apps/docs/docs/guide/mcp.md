@@ -8,8 +8,8 @@ MCP 클라이언트에 로컬 stdio 서버를 연결하면 HWP5/HWPX 읽기·문
 
 ```bash
 npm install @ohah/hwpjs@0.1.0 --ignore-scripts --omit=peer --no-audit --no-fund
-npx --no-install hwpjs-mcp
-npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
+npx hwpjs-mcp
+npx hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 ```
 
 공개 레지스트리에서 인증 없이 새로 설치한 서버에 공식 SDK 클라이언트로 실제 stdio 연결해 버전 `0.1.0`과 12도구 목록을 확인했습니다. 생성·문단 조회·명시 변경·읽기·text-only 변환 및 거부 동작의 설치 검사는 별도 범위의 증거이며, 이번 공개 설치에서 모든 도구 호출을 다시 실행한 것은 아닙니다. OCR 제공자 부재 거부는 실제 Tesseract 인식 성공을 뜻하지 않습니다. 이전 npm 패키지나 Skill 설치분은 자동 갱신되지 않으므로 갱신한 서버의 `tools/list`를 확인하세요.
@@ -36,7 +36,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 이 객체를 등록하는 위치와 서버 설정의 바깥 구조는 MCP 클라이언트마다 다릅니다. 문서 페이지나 브라우저 체험이 사용자의 클라이언트 설정을 변경하지는 않습니다. 설치된 Skill이 어느 도구 세대인지도 함께 확인하세요.
 
-## 제공 도구
+## 공개 npm 0.1.0의 제공 도구
 
 | 도구                     | 입력                                                                                                        | 결과                                                                             |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
@@ -53,7 +53,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 | `convert_document`       | `inputPath`, `outputPath`, `to`, 선택적 `expectedSha256`, `lossPolicy`, `allowStaleLayout`                  | 명시 text-only 변환의 새 파일·미보존 보고 또는 기본 거부                         |
 | `ocr_document`           | `inputPath`, 선택적 `reference`, `provider`, `languages`, `executable`, `format`                            | 로컬 그림 인식 텍스트·이미지별 상태·실패 사유                                    |
 
-`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. `apply_document_changes`의 지원 작업은 [CLI의 14종 계약](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 표 전체 삭제와 이미지 삽입·교체는 지원하지 않습니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
+`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. `apply_document_changes`의 지원 작업은 [CLI의 14종 계약](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 공개 npm 0.1.0에는 표 전체 삭제와 이미지 삽입·교체가 없습니다. 현재 소스의 추가 도구는 아래에서 별도로 구분합니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
 
 문서 정보에서 확인하지 못한 버전·보안·편집 상태·내용 집계는 `unknown`과 사유로 남습니다. 특정 편집의 허용 여부나 서명 유효성을 정보 조회만으로 판단하지 않습니다.
 
@@ -75,7 +75,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 기본 `view: "content"`는 관측한 문서 본문만 text content로 반환하며 `format`·`documentSHA256` 접두사나 문단 편집용 ID를 붙이지 않습니다. 이미지·표 등 관측된 개체의 논리 참조는 본문에 포함될 수 있습니다. `markdown`도 이 본문 보기의 출력 형식이며 HTML·원본 조판 전체 변환이나 OCR을 뜻하지 않습니다. 오류는 `isError: true`의 별도 오류 응답으로 확인합니다.
 
-편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 읽기 보기는 기존 도구를 사용합니다. 개체 조회용 `get_document_object`까지의 기존 7도구 뒤에 문단 조회·명시 변경·생성·변환·OCR을 추가해 총 12도구입니다.
+편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 읽기 보기는 기존 도구를 사용합니다. 공개 npm 0.1.0은 총 12도구입니다. 현재 소스의 16도구 목록과 구분합니다.
 
 ```json
 {
@@ -304,3 +304,33 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 기존 출력이나 symlink 경로는 거부합니다. 실패 응답에서도 이미 파일이 게시됐을 수 있으므로 `published`·경로·SHA를 확인하세요. 영수증 출력량이 제한되면 상세 항목 대신 게시 개수·위치·생략 표시가 남을 수 있습니다. 같은 경로로 무조건 재시도하지 않습니다. `completeWithinListedScope`도 제한된 목록 안의 완료 여부일 뿐 문서 전체 완전성의 증거는 아닙니다. 크기·개수 및 부분 실패의 경계는 [CLI 이미지 추출](./cli.md#그림-목록과-추출)과 같습니다.
 
 [브라우저 체험](../cli-simulation.mdx)은 네이티브 엔진의 결과와 도구 메시지 형식을 설명합니다. 브라우저에서 실제 Node CLI·로컬 파일 시스템·MCP stdio 연결을 실행하거나, 새 도구가 설치된 서버를 대신 검증하지는 않습니다. 현재 실습의 보기 전환·대표 문자열 편집을 apply/create/convert/OCR 화면의 지원으로 해석하지 않습니다.
+
+## 현재 소스의 새 파일 도구
+
+공개 npm `@ohah/hwpjs@0.1.0`에 없는 추가 기능입니다. 현재 소스 서버에는 기존 그림 교체 1도구와 아래 3도구를 포함해 총 16도구가 있습니다. 해당 변경을 담은 후속 배포 전에는 npm 0.1.0 설치만으로 호출할 수 없습니다. 갱신한 서버의 `tools/list`와 엄격한 입력 스키마를 확인하세요.
+
+| 도구                     | 요청에 사용하는 값                                                                                                                      |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `delete_document_table`  | `inputPath`, `outputPath`, 원본에 결속된 `reference`, `allowStaleLayout: true`                                                          |
+| `insert_document_image`  | `inputPath`, `outputPath`, `target`, `unit`, `expectedText`, `expectedSha256`, `imagePath`, `width`, `height`, `allowStaleLayout: true` |
+| `export_document_html`   | `inputPath`, `outputPath`, 선택적 `embedImages`: `supported` 또는 `none`                                                                |
+| `replace_document_image` | `inputPath`, `outputPath`, 같은 원본의 이미지 `reference`, `imagePath`                                                                  |
+
+초기화된 MCP 세션에서의 도구 호출 인수 예시입니다. 파일은 서버 작업 디렉터리 기준이며 새 출력 경로를 사용합니다.
+
+```json
+{
+  "name": "export_document_html",
+  "arguments": {
+    "inputPath": "./document.hwpx",
+    "outputPath": "./document.html",
+    "embedImages": "supported"
+  }
+}
+```
+
+표 삭제·그림 삽입에는 신규 선택 ABI를 담은 통합 후보 WASM이 필요합니다. 공개 npm 0.1.0의 기존 WASM820을 새 소스에 그대로 연결하면 `ABIUnavailable`이 될 수 있으므로 후보 경로·SHA가 확정된 후 서버에 지정합니다.
+
+삽입의 `expectedText`는 정규화한 표시 본문이 아니라 같은 원본의 Native 문단 원문입니다. JSON의 `\u0000`은 인프로세스 문자열로 전달할 수 있어 OS argv의 NUL 제한과 구분됩니다. `expectedText` 상한은 1Mi UTF-16 코드 유닛이며 실제 제어 문맥의 삽입 가능성은 서비스가 판정합니다. 폭·높이는 1~2147483647 HWPUNIT이고 `unit`은 Native UTF-16 좌표입니다. 그림 삽입은 필드 없는 구역의 plain 최상위 본문 문단에 새 인라인 PNG/JPEG 하나로 제한됩니다. 구역 내 필드는 문단 중간도 `ProtectedFieldRange`로 거부하며 기존 개체 문단·표 셀·글상자는 지원하지 않습니다. 표 삭제·그림 삽입은 stale-layout 동의가 필요하며 재조판·미리보기는 오래된 상태로 보고합니다. HTML은 의미 구조 출력이며 서식·페이지 배치 동등성이 아닙니다.
+
+모든 도구는 같은 CLI 파일 호스트를 사용합니다. 현재 웹 UI·열린 편집 세션 undo와는 연결되지 않았습니다. 결과·현재 지원 제한·원자적 게시와 게시 후 오류의 해석은 [문서 파일 변환 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)과 [CLI 사용법](./cli.md#새-파일의-표-삭제그림-삽입의미-html)을 따릅니다.

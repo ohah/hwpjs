@@ -20,8 +20,32 @@ export type ExtendedCommandName =
   | 'convert'
   | 'ocr'
   | 'paragraph'
+  | 'delete-table'
+  | 'insert-image'
+  | 'export-html'
   | 'replace-image';
 export type ExtendedCommandOptions =
+  | (InputOption &
+      NewOutput & {
+        readonly command: 'delete-table';
+        readonly reference: string;
+      })
+  | (InputOption &
+      NewOutput & {
+        readonly command: 'insert-image';
+        readonly expectSha256: string;
+        readonly target: NativeTarget;
+        readonly unit: number;
+        readonly expectedText: string;
+        readonly imagePath: string;
+        readonly width: number;
+        readonly height: number;
+      })
+  | (InputOption & {
+      readonly command: 'export-html';
+      readonly output: string;
+      readonly embedImages: 'supported' | 'none';
+    })
   | (WasmOption & {
       readonly command: 'replace-image';
       readonly input: string;
