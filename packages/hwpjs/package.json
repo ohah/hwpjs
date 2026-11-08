@@ -3,6 +3,28 @@
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",
+  "keywords": [
+    "hwp",
+    "hwp5",
+    "hwpx",
+    "hangul",
+    "hancom",
+    "한글",
+    "document",
+    "document-editor",
+    "document-parser",
+    "wasm",
+    "webassembly",
+    "zig",
+    "headless",
+    "canvas",
+    "cli",
+    "mcp",
+    "markdown",
+    "react",
+    "svelte",
+    "react-native"
+  ],
   "engines": {
     "node": ">=24.20.0"
   },
