@@ -4,13 +4,31 @@ MCP 클라이언트에 로컬 stdio 서버를 연결하면 HWP5/HWPX 읽기·문
 
 ## 서버 준비와 설치 상태
 
-`@ohah/hwpjs@0.1.0`은 공개 npm 패키지이며 `hwpjs-mcp` 실행 파일을 포함합니다. Node.js 24.20 이상에서 서버를 실행할 프로젝트 디렉터리에 설치합니다. [CLI 설치 안내](./cli.md#공개-npm-설치)도 참고하세요.
+`@ohah/hwpjs@0.1.0`은 공개 npm 패키지이며 서버 실행 파일과 WASM을 함께 포함합니다. Node.js 24.20 이상에서 별도 설치 없이 다음 명령으로 실행할 수 있습니다.
 
 ```bash
-npm install @ohah/hwpjs@0.1.0 --ignore-scripts --omit=peer --no-audit --no-fund
-npx hwpjs-mcp
-npx hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
+npx --yes --package=@ohah/hwpjs@0.1.0 hwpjs-mcp
 ```
+
+MCP 클라이언트에는 다음 실행 설정을 등록합니다. 이 객체를 넣는 위치와 작업 디렉터리 지정 방법은 클라이언트마다 다릅니다.
+
+```json
+{
+  "command": "npx",
+  "args": ["--yes", "--package=@ohah/hwpjs@0.1.0", "hwpjs-mcp"]
+}
+```
+
+`--package`는 패키지 이름과 실행 파일 이름이 다르므로 명시합니다. `--yes`는 최초 다운로드 확인 질문 때문에 MCP 연결이 대기하지 않도록 합니다. 첫 실행에는 패키지를 내려받을 네트워크 연결이 필요합니다.
+
+프로젝트에 직접 설치해 사용할 수도 있습니다. 다음 두 줄은 위 방식의 대안입니다.
+
+```bash
+npm install @ohah/hwpjs@0.1.0
+npx hwpjs-mcp
+```
+
+`--ignore-scripts`, `--omit=peer`, `--no-audit`, `--no-fund`는 MCP 연결에 필수인 옵션이 아닙니다. `--wasm /absolute/path/to/hwpjs.wasm`도 자체 빌드한 엔진으로 교체할 때만 지정합니다. 일반 사용에는 패키지에 포함된 WASM을 사용합니다. [CLI 설치 안내](./cli.md#공개-npm-설치)도 참고하세요.
 
 공개 레지스트리에서 인증 없이 새로 설치한 서버에 공식 SDK 클라이언트로 실제 stdio 연결해 버전 `0.1.0`과 12도구 목록을 확인했습니다. 생성·문단 조회·명시 변경·읽기·text-only 변환 및 거부 동작의 설치 검사는 별도 범위의 증거이며, 이번 공개 설치에서 모든 도구 호출을 다시 실행한 것은 아닙니다. OCR 제공자 부재 거부는 실제 Tesseract 인식 성공을 뜻하지 않습니다. 이전 npm 패키지나 Skill 설치분은 자동 갱신되지 않으므로 갱신한 서버의 `tools/list`를 확인하세요.
 
