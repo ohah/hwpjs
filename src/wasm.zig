@@ -15,6 +15,7 @@ comptime {
     _ = @import("wasm/equation.zig");
     _ = @import("wasm/pcx.zig");
     _ = @import("wasm/new_document.zig");
+    _ = @import("wasm/picture_file_replace.zig");
 }
 
 export fn hwpjs_abi_version() u32 {

@@ -1,5 +1,33 @@
 # 개발·검증 명령
 
+## 선택 그림 PNG/JPEG 교체
+
+[선택 그림 교체 계약](picture-resource-replacement.md)을 따릅니다. 원본을 읽어 발급한 이미지 참조를 사용하고 결과는 새 파일에 저장합니다. 소스 CLI 실행에는 새 교체 ABI를 포함한 WASM을 명시합니다.
+
+```sh
+bun run cli read ./누리.hwp --format markdown --wasm /absolute/path/new-engine.wasm
+bun run cli replace-image ./누리.hwp --ref 'IMAGE_REFERENCE_FROM_READ' \
+  --image ./새그림.png --output ./누리-수정.hwp --wasm /absolute/path/new-engine.wasm
+node --max-old-space-size=512 --test --test-concurrency=1 \
+  tools/tests/picture-replacement-sdk.test.mjs tools/tests/picture-replacement-service.test.mjs \
+  packages/cli/tests/replace-image-host.test.mjs
+zig test src/picture_file_replace_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'picture resource'
+```
+
+MCP는 `replace_document_image(inputPath, outputPath, reference, imagePath)`를 제공합니다. 입력·이미지 파일 읽기와 새 파일 게시는 공통 CLI 호스트가 수행합니다. 참조 문법·SHA·최대 용량과 미리보기 상태는 주제 계약이 소유합니다.
+
+실물 검사는 `node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/picture-replacement-native.test.mjs`입니다. 다음 환경변수는 절대경로와 정확한 고정 SHA로 지정하고, 새 증거 디렉터리를 사용합니다. 환경 누락·해시 불일치는 skip가 아닌 실패입니다.
+
+- `HWPJS_TEST_SOURCE_ROOT`: 허용 소스만 포함한 `zig-out/verification` 아래 격리 후보.
+- `HWPJS_TEST_WASM`, `HWPJS_TEST_WASM_SHA256`: 교체 ABI를 포함한 새 WASM과 SHA.
+- `HWPJS_TEST_OLD_WASM`: 새 ABI가 없는 기존 WASM. 검사에 고정한 Native820 해시와 같아야 합니다.
+- `HWPJS_TEST_NOORI`, `HWPJS_TEST_NOORI_HWPX`: 고정된 공식 Noori 두 원본.
+- `HWPJS_TEST_PNG`, `HWPJS_TEST_PNG_SHA256`, `HWPJS_TEST_JPEG`, `HWPJS_TEST_JPEG_SHA256`: 서로 다른 유효 PNG·JPEG 입력과 SHA.
+- `HWPJS_TEST_ORACLE_ROOT`, `HWPJS_TEST_CFB_SHA256`: Git 기준 `legacy/cfb.js` 비교기 루트와 SHA.
+- `HWPJS_TEST_EVIDENCE_DIR`: 부모가 존재하는 새 증거 디렉터리. 후보 CLI에서 공식 MCP client·server·Zod 의존성을 해결할 수 있어야 합니다.
+
+검사는 실제 교체·독립 CFB/ZIP/XML 대조·재열기·다시 추출한 이미지의 일치와 거부 시 신규 출력 부재를 확인합니다. 설치 패키지·브라우저 화면·열린 세션 undo의 증거와 구분합니다.
+
 ## 표 생성의 초기 셀 본문
 
 [초기 셀 본문 계약](table-initial-texts.md)을 따릅니다. JS 요청 캡처·구형 WASM 거부와 Native 준비·할당 실패·단일 이력을 구분해 검사합니다.

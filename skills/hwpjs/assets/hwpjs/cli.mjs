@@ -305,7 +305,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$27(result.section) || !uint$27(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$29(result.section) || !uint$29(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -320,7 +320,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$10, uint$27, format, identity;
+var KINDS, SHA, REFERENCE, object$10, uint$29, format, identity;
 var init_object_reference = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -334,9 +334,9 @@ var init_object_reference = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
 	object$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$27 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$29 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format = (value) => value === "hwp5" || value === "hwpx";
-	identity = (value) => object$10(value) && format(value.format) && uint$27(value.section) && uint$27(value.node);
+	identity = (value) => object$10(value) && format(value.format) && uint$29(value.section) && uint$29(value.node);
 }));
 // src/native-target.ts
 init_object_reference();
@@ -390,13 +390,20 @@ const EXTENDED_OPTIONS = Object.freeze({
 		"format",
 		"expect-sha256",
 		"wasm"
+	],
+	"replace-image": [
+		"ref",
+		"image",
+		"output",
+		"wasm"
 	]
 });
 const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations JSON) --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs create --format hwp5|hwpx --output OUTPUT [--text-file FILE] [--allow-stale-layout] [--wasm PATH]
   hwpjs convert INPUT --to hwp5|hwpx --output OUTPUT [--loss-policy reject|text-only] [--expect-sha256 SHA256] [--allow-stale-layout] [--wasm PATH]
   hwpjs ocr INPUT [--ref IMAGE_REFERENCE] [--provider tesseract|vision] [--languages kor+eng] [--executable PATH] [--format text|markdown] [--wasm PATH]
-  hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]`;
+  hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]
+  hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]`;
 function interpretExtendedArguments(command, options, positional, fail) {
 	const wasm = options.get("wasm");
 	const common = wasm === void 0 ? {} : { wasm };
@@ -431,6 +438,22 @@ function interpretExtendedArguments(command, options, positional, fail) {
 	}
 	if (positional.length !== 1 || !positional[0] || positional[0] === "-") return fail("ExpectedInputFile");
 	const input = positional[0];
+	if (command === "replace-image") {
+		const reference = required("ref", "MissingRequiredOption:ref");
+		try {
+			if (parseObjectReference(reference).kind !== "image") return fail("InvalidImageReference");
+		} catch {
+			return fail("InvalidImageReference");
+		}
+		return Object.freeze({
+			...common,
+			command,
+			input,
+			reference,
+			imagePath: required("image", "MissingRequiredOption:image"),
+			output: required("output", "ExpectedOutputFile")
+		});
+	}
 	const expected = options.get("expect-sha256");
 	if (expected !== void 0 && !/^[a-f0-9]{64}$/iu.test(expected)) return fail("InvalidExpectedSHA256");
 	const source = {
@@ -1110,13 +1133,13 @@ var init_render_escape = __esmMin((() => {
 init_files();
 init_host_output();
 init_render_escape();
-const record$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const MAX_INPUT_BYTES$2 = 67108864;
 /** 단일·배치 읽기가 공유하는 스냅샷 → 기존 엔진 → 기존 표시 경로입니다.
 * 파일 호스트만 주입하며 새 파서·편집 모델·Native 수명 관리자를 만들지 않습니다.
 */
 async function readDocumentOperation(options, { files, engine, renderDocument, loadWasm }) {
-	if (!record$8(options)) throw Error("InvalidReadFormat");
+	if (!record$9(options)) throw Error("InvalidReadFormat");
 	const { inputPath, inputSnapshot, wasm, format = "text", view = "content" } = options;
 	if (format !== "text" && format !== "markdown") throw Error("InvalidReadFormat");
 	if (view !== "content" && view !== "structure") throw Error("InvalidReadView");
@@ -1125,15 +1148,15 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 		return files.readInputSnapshot(inputPath, { maxBytes: MAX_INPUT_BYTES$2 });
 	};
 	const input = inputSnapshot ?? await loadSnapshot();
-	if (!record$8(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
+	if (!record$9(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
 	const binary = wasm ?? await loadWasm();
 	if (!(binary instanceof Uint8Array)) throw Error("InvalidWasmBytes");
 	const result = await engine.read({
 		bytes: input.bytes,
 		wasm: binary
 	});
-	if (!record$8(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
-	if (!record$8(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
+	if (!record$9(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
+	if (!record$9(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
 	const text = await renderDocument(result.model, {
 		format,
 		view
@@ -1147,9 +1170,9 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 }
 /** CLI와 웹 실습이 공유하는 단일 읽기 응답입니다. 원문으로 대체하지 않습니다. */
 function renderReadResponse(result, options = {}) {
-	if (!record$8(options)) throw Error("InvalidReadView");
+	if (!record$9(options)) throw Error("InvalidReadView");
 	const { view = "content" } = options;
-	if (!record$8(result)) throw Error("InvalidReadResult");
+	if (!record$9(result)) throw Error("InvalidReadResult");
 	const { format, sourceSha256, text } = result;
 	if (format !== "hwp5" && format !== "hwpx") throw Error("InvalidEngineFormat");
 	if (typeof sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(sourceSha256)) throw Error("InvalidReadSourceSHA256");
@@ -2368,32 +2391,32 @@ function validateHwp5FormSources(rows) {
 		"property_bytes",
 		"property_nodes",
 		"other_direct_children"
-	].every((k) => uint$26(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
+	].every((k) => uint$28(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
 		"unknown",
 		"push_button",
 		"check_box",
 		"combo_box",
 		"radio_button",
 		"edit"
-	].includes(row.kind) && uint$26(row.type_id) && uint$26(row.secondary_type_id) && [
+	].includes(row.kind) && uint$28(row.type_id) && uint$28(row.secondary_type_id) && [
 		"offset_x",
 		"offset_y",
 		"z_order",
 		"prevent_page_break"
-	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$26(row.description_bytes)));
+	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$28(row.description_bytes)));
 }
 function validateHwp5FormAnchors(rows) {
-	return uniqueRows(rows, (row) => uint$26(row.paragraph) && uint$26(row.source_unit) && row.source_unit <= 4294967287 && uint$26(row.current_unit) && row.current_unit <= 4294967287);
+	return uniqueRows(rows, (row) => uint$28(row.paragraph) && uint$28(row.source_unit) && row.source_unit <= 4294967287 && uint$28(row.current_unit) && row.current_unit <= 4294967287);
 }
-var uint$26, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
+var uint$28, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
 var init_hwp5_form_sources = __esmMin((() => {
-	uint$26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$28 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 	uniqueRows = (rows, inspect) => {
 		const controls = /* @__PURE__ */ new Set(), objects = /* @__PURE__ */ new Set();
 		if (!Array.isArray(rows)) throw Error("InvalidHwp5FormSources");
 		for (const row of rows) {
-			if (!row || !uint$26(row.control_node) || !uint$26(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
+			if (!row || !uint$28(row.control_node) || !uint$28(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
 			controls.add(row.control_node);
 			objects.add(row.object_node);
 		}
@@ -2417,7 +2440,7 @@ function validateHwp5FormProperties(rows) {
 			"object_node",
 			"known_nodes",
 			"deferred_nodes"
-		].every((k) => uint$25(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
+		].every((k) => uint$27(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
 		const fields = /* @__PURE__ */ new Set();
 		for (const property of row.fields) {
 			if (!property || typeof property.field !== "string" || !/^[a-z][a-z0-9_]{0,63}$/.test(property.field) || fields.has(property.field) || ![
@@ -2439,9 +2462,9 @@ function validateHwp5FormProperties(rows) {
 function decodeHwp5FormProperties(bytes) {
 	return validateHwp5FormProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$25;
+var uint$27;
 var init_hwp5_form_properties = __esmMin((() => {
-	uint$25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$27 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-note-shape-sources.mjs
 function validateHwp5NoteShapeSources(rows) {
@@ -3352,7 +3375,7 @@ function inputBytes(data) {
 	if (ArrayBuffer.isView(data) && typedArrayName.call(data) === "Uint8Array") return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 	let isBuffer = false;
 	try {
-		bufferLength.call(data);
+		bufferLength$1.call(data);
 		isBuffer = true;
 	} catch {}
 	if (isBuffer) return new Uint8Array(data);
@@ -3365,10 +3388,10 @@ function inputBytes(data) {
 	}
 	return bytes;
 }
-var bufferLength, typedArrayName;
+var bufferLength$1, typedArrayName;
 var init_input = __esmMin((() => {
 	init_output_bytes();
-	bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
+	bufferLength$1 = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
 	typedArrayName = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), Symbol.toStringTag).get;
 }));
 // ../../js/editor-history.mjs
@@ -3959,7 +3982,7 @@ function decodeHwp5ParagraphFlow(bytes) {
 	for (const [index, row] of rows.entries()) {
 		if (row?.empty_line_eligible !== void 0 && (typeof row.empty_line_eligible !== "boolean" || row.empty_line_eligible && row.top_level !== true)) throw new Error("InvalidHwp5ParagraphFlow");
 		if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
-			if (!(row.memo_index === null && row.memo_node === null) && !(uint$24(row.memo_index) && uint$24(row.memo_node) && row.host === "other" && row.top_level === false && uint$24(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
+			if (!(row.memo_index === null && row.memo_node === null) && !(uint$26(row.memo_index) && uint$26(row.memo_node) && row.host === "other" && row.top_level === false && uint$26(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
 		if (row?.host !== void 0) {
 			if (![
@@ -3973,9 +3996,9 @@ function decodeHwp5ParagraphFlow(bytes) {
 				"master_page",
 				"drawing",
 				"other"
-			].includes(row.host) || !(row.list_node === null || uint$24(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
+			].includes(row.host) || !(row.list_node === null || uint$26(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
-		if (!row || row.paragraph !== index || !uint$24(row.template_node) || !(row.source_node === null || uint$24(row.source_node)) || !(row.parent_node === null || uint$24(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
+		if (!row || row.paragraph !== index || !uint$26(row.template_node) || !(row.source_node === null || uint$26(row.source_node)) || !(row.parent_node === null || uint$26(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
 			0,
 			4,
 			8
@@ -3993,14 +4016,14 @@ function decodeHwp5ColumnSources(bytes) {
 	const rows = parse$3(bytes);
 	if (!Array.isArray(rows)) throw new Error("InvalidHwp5ColumnSources");
 	for (const row of rows) {
-		if (!row || !uint$24(row.current_paragraph) || !uint$24(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
+		if (!row || !uint$26(row.current_paragraph) || !uint$26(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
 		if (!row || ![
 			"source_node",
 			"paragraph_node",
 			"flags",
 			"color",
 			"extra_bytes"
-		].every((name) => uint$24(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
+		].every((name) => uint$26(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
 			0,
 			1,
 			2,
@@ -4016,9 +4039,9 @@ function decodeHwp5ColumnSources(bytes) {
 	}
 	return rows;
 }
-var uint$24, parse$3;
+var uint$26, parse$3;
 var init_hwp5_flow_sources = __esmMin((() => {
-	uint$24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	parse$3 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }));
 // ../../js/hwp5-formula-sources.mjs
@@ -4027,15 +4050,15 @@ function decodeHwp5FormulaSources(bytes) {
 	if (!Array.isArray(rows) || rows.length > 1e6) throw new Error("InvalidHwp5FormulaSources");
 	const seen = /* @__PURE__ */ new Set();
 	for (const row of rows) {
-		if (!row || !uint$23(row.source_node) || row.source_node === 0 || !uint$23(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
+		if (!row || !uint$25(row.source_node) || row.source_node === 0 || !uint$25(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
 		seen.add(row.source_node);
 	}
 	return rows;
 }
-var decoder$6, uint$23;
+var decoder$6, uint$25;
 var init_hwp5_formula_sources = __esmMin((() => {
 	decoder$6 = new TextDecoder("utf-8", { fatal: true });
-	uint$23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-field-spans.mjs
 function validateHwp5FieldSpans(rows) {
@@ -4064,18 +4087,18 @@ function validateHwp5FieldTopology(value) {
 	if (!value || !Array.isArray(value.spans) || !Array.isArray(value.unresolved)) fail();
 	const starts = /* @__PURE__ */ new Set();
 	for (const row of value.spans) {
-		if (!row || !uint$22(row.field_id) || !uint$22(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
+		if (!row || !uint$24(row.field_id) || !uint$24(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
 		const key = row.begin.paragraph + ":" + row.ordinal;
 		if (starts.has(key)) fail();
 		starts.add(key);
 	}
 	let previous = null;
 	for (const row of value.unresolved) {
-		if (!row || !position$2(row.position) || !uint$22(row.marker_id) || !(row.list_node === null || uint$22(row.list_node))) fail();
+		if (!row || !position$2(row.position) || !uint$24(row.marker_id) || !(row.list_node === null || uint$24(row.list_node))) fail();
 		if (previous && !before(previous, row.position)) fail();
 		previous = row.position;
 		if (row.kind === "unclosed_start") {
-			if (!uint$22(row.ordinal)) fail();
+			if (!uint$24(row.ordinal)) fail();
 			const key = row.position.paragraph + ":" + row.ordinal;
 			if (starts.has(key)) fail();
 			starts.add(key);
@@ -4091,10 +4114,10 @@ function validateHwp5FieldTopology(value) {
 function decodeHwp5FieldTopology(bytes) {
 	return validateHwp5FieldTopology(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$22, position$2, before;
+var uint$24, position$2, before;
 var init_hwp5_field_topology = __esmMin((() => {
-	uint$22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	position$2 = (value) => value && uint$22(value.paragraph) && uint$22(value.unit);
+	uint$24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	position$2 = (value) => value && uint$24(value.paragraph) && uint$24(value.unit);
 	before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
 }));
 // ../../js/hwp5-text-source-protection.mjs
@@ -4225,7 +4248,7 @@ function decodeHwp5TextWindow(bytes) {
 	const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const n = (i) => v.getUint32(4 + i * 4, true);
 	const e = (BigInt(n(2)) << 32n | BigInt(n(1))).toString();
-	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$21(n(3)) || !uint$21(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
+	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$23(n(3)) || !uint$23(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
 	const text = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -4268,13 +4291,13 @@ function decodeHwp5TextDelta(bytes) {
 		"sourceNode",
 		"startUnit",
 		"totalUnits"
-	]) if (!uint$21(r[k])) bad();
-	if (r.parentNode !== null && !uint$21(r.parentNode)) bad();
+	]) if (!uint$23(r[k])) bad();
+	if (r.parentNode !== null && !uint$23(r.parentNode)) bad();
 	for (const k of ["removed", "inserted"]) if (!Array.isArray(r[k]) || r[k].length > 4096 || r[k].some((x) => !Number.isInteger(x) || x < 0 || x > 65535)) bad();
 	if (!Array.isArray(r.runs) || !r.runs.length || r.runs.length > 4096) bad();
 	let prev = -1;
 	for (const run of r.runs) {
-		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$21(run.start_unit) || !uint$21(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
+		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$23(run.start_unit) || !uint$23(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
 		prev = run.start_unit;
 	}
 	if (r.runs[0].start_unit !== 0 || r.totalUnits < 1 || r.totalUnits > 4096) bad();
@@ -4312,7 +4335,7 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 			const length = w.text.length - 1;
 			let cursor = 0;
 			for (const range of raw) {
-				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$21(range.charShapeId)) bad();
+				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$23(range.charShapeId)) bad();
 				cursor = range.end;
 				const start = Math.min(length, range.start), end = Math.min(length, range.end), charShapeId = range.charShapeId;
 				if (start === end) {
@@ -4363,10 +4386,10 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 		}
 	};
 }
-var uint$21, epoch, bad;
+var uint$23, epoch, bad;
 var init_hwp5_exclusive_text_delta = __esmMin((() => {
 	init_character_shapes_wire();
-	uint$21 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
+	uint$23 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
 	epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 18446744073709551615n;
 	bad = () => {
 		throw Error("InvalidExclusiveTextDelta");
@@ -4377,7 +4400,7 @@ function validate$1(reference) {
 	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid();
 	if (Object.keys(reference).length !== fields$2.length || fields$2.some((key) => !Object.hasOwn(reference, key))) invalid();
 	const { epoch, kind, section, id, row, column } = reference;
-	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$20(section) || !uint$20(row) || !uint$20(column)) invalid();
+	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$22(section) || !uint$22(row) || !uint$22(column)) invalid();
 	if (![
 		"original",
 		"generated",
@@ -4390,7 +4413,7 @@ function validate$1(reference) {
 function decodeHwp5CurrentReferences(bytes) {
 	const value = JSON.parse(utf8.decode(bytes));
 	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid();
-	if (value.version !== 1 || !uint$20(value.total) || !uint$20(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
+	if (value.version !== 1 || !uint$22(value.total) || !uint$22(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
 	for (const reference of value.references) validate$1(reference);
 	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid();
 	return value;
@@ -4480,7 +4503,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8, utf16, encoder$7, fields$2, scopeSequence, invalid, uint$20, decimal;
+var utf8, utf16, encoder$7, fields$2, scopeSequence, invalid, uint$22, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
 	utf8 = new TextDecoder("utf-8", {
@@ -4504,7 +4527,7 @@ var init_hwp5_current_references = __esmMin((() => {
 	invalid = () => {
 		throw new Error("InvalidHwp5CurrentReference");
 	};
-	uint$20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 18446744073709551615n;
 }));
 // ../../js/created-table-identity.mjs
@@ -6170,15 +6193,15 @@ var init_hwpx_drawing_text_snapshot = __esmMin((() => {
 }));
 // ../../js/hwpx-drawing-text-requested.mjs
 function drawingTextRequest(nodes, limit) {
-	if (!uint$19(limit) || limit < 1 || limit > 1024) throw Error("InvalidDrawingTextRequestLimit");
+	if (!uint$21(limit) || limit < 1 || limit > 1024) throw Error("InvalidDrawingTextRequestLimit");
 	if (!Array.isArray(nodes)) throw Error("InvalidDrawingTextRequest");
 	const count = nodes.length;
-	if (!uint$19(count) || count > limit) throw Error("InvalidDrawingTextRequest");
+	if (!uint$21(count) || count > limit) throw Error("InvalidDrawingTextRequest");
 	const requested = [];
 	for (let index = 0; index < count; index++) {
 		if (!Object.hasOwn(nodes, index)) throw Error("InvalidDrawingTextRequest");
 		const node = nodes[index];
-		if (!uint$19(node)) throw Error("InvalidDrawingTextRequest");
+		if (!uint$21(node)) throw Error("InvalidDrawingTextRequest");
 		requested.push(node);
 	}
 	if (nodes.length !== count) throw Error("InvalidDrawingTextRequest");
@@ -6218,10 +6241,10 @@ function decodeDrawingTextRequested(bytes, requested) {
 		};
 	});
 }
-var uint$19;
+var uint$21;
 var init_hwpx_drawing_text_requested = __esmMin((() => {
 	init_hwpx_drawing_text_snapshot();
-	uint$19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/u32-index-request.mjs
 /** Shared bounded count+u32 request envelope; callers own semantic errors. */
@@ -6555,7 +6578,7 @@ function decodeTableBorderBatch(bytes, sections) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	if (!Array.isArray(value) || value.length !== sections.length) fail();
 	for (const [index, entry] of value.entries()) {
-		if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint$18(entry.section)) fail();
+		if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint$20(entry.section)) fail();
 		if (Object.hasOwn(entry, "error")) {
 			if (Object.hasOwn(entry, "value") || Object.keys(entry).length !== 2 || typeof entry.error !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(entry.error) || entry.error === "OutOfMemory") fail();
 		} else {
@@ -6565,11 +6588,11 @@ function decodeTableBorderBatch(bytes, sections) {
 	}
 	return value;
 }
-var uint$18;
+var uint$20;
 var init_hwpx_table_border_batch = __esmMin((() => {
 	init_u32_index_request();
 	init_hwpx_table_border_sources();
-	uint$18 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwpx-shape-layout-values.mjs
 function validShapeLayoutValues(value) {
@@ -6607,9 +6630,9 @@ function validShapeCommonSource(value) {
 	if (!validShapeLayoutValues(value)) return false;
 	if (Object.hasOwn(value, "component_sizes")) {
 		const sizes = value.component_sizes;
-		if (!object$9(sizes) || !["original", "current"].every((key) => sizes[key] === null || object$9(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint$17(n)))) return false;
+		if (!object$9(sizes) || !["original", "current"].every((key) => sizes[key] === null || object$9(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint$19(n)))) return false;
 	}
-	if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint$17(value.stroke_style) && value.stroke_style <= 17)) return false;
+	if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint$19(value.stroke_style) && value.stroke_style <= 17)) return false;
 	if (value.stroke && value.stroke_style !== void 0 && value.stroke_style !== value.stroke.style) return false;
 	if ([
 		"stroke",
@@ -6617,19 +6640,19 @@ function validShapeCommonSource(value) {
 		"paint"
 	].some((key) => Object.hasOwn(value, key)) && !validShapePaintValues(value)) return false;
 	const r = value.rendering;
-	if (!object$9(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint$17(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate$2)) return false;
+	if (!object$9(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint$19(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate$2)) return false;
 	return r.matrix === null ? [
 		"UnsupportedPictureMatrixSequence",
 		"IncompletePictureMatrix",
 		"NonFinitePictureMatrix"
 	].includes(r.matrix_error) : Array.isArray(r.matrix) && r.matrix.length === 6 && Array.from(r.matrix).every(Number.isFinite) && r.matrix_error === null;
 }
-var object$9, uint$17, coordinate$2, optionalBoolean;
+var object$9, uint$19, coordinate$2, optionalBoolean;
 var init_hwpx_shape_common_source = __esmMin((() => {
 	init_hwpx_shape_layout_values();
 	init_hwpx_shape_paint_values();
 	object$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$19 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate$2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 	optionalBoolean = (value) => value === null || typeof value === "boolean";
 }));
@@ -6648,7 +6671,7 @@ var init_hwpx_group_context = __esmMin((() => {}));
 // ../../js/hwpx-curve-geometry.mjs
 function decodeCurveGeometry(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!object$8(value) || value.sourceOnly !== true || !uint$16(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object$8(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && [
+	if (!object$8(value) || value.sourceOnly !== true || !uint$18(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object$8(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && [
 		"x1",
 		"y1",
 		"x2",
@@ -6656,29 +6679,29 @@ function decodeCurveGeometry(bytes) {
 	].every((key) => coordinate$1(segment[key])))) throw new Error("InvalidCurveGeometry");
 	return value;
 }
-var object$8, uint$16, coordinate$1;
+var object$8, uint$18, coordinate$1;
 var init_hwpx_curve_geometry = __esmMin((() => {
 	init_hwpx_shape_common_source();
 	init_hwpx_group_context();
 	init_hwpx_drawing_text_values();
 	object$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$16 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$18 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate$1 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
 // ../../js/hwpx-curve-owner.mjs
 function decodeCurveOwner(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	const owner = value?.owner;
-	if (!object$7(value) || value.sourceOnly !== true || !uint$15(value.node) || owner !== null && (!object$7(owner) || ![
+	if (!object$7(value) || value.sourceOnly !== true || !uint$17(value.node) || owner !== null && (!object$7(owner) || ![
 		owner.paragraph,
 		owner.anchor_node,
 		owner.anchor_unit
-	].every(uint$15) || owner.paragraph === 0 || owner.anchor_node >= value.node)) throw new Error("InvalidCurveOwner");
+	].every(uint$17) || owner.paragraph === 0 || owner.anchor_node >= value.node)) throw new Error("InvalidCurveOwner");
 	return value;
 }
-var uint$15, object$7;
+var uint$17, object$7;
 var init_hwpx_curve_owner = __esmMin((() => {
-	uint$15 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$17 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-tab-sources.mjs
@@ -6686,11 +6709,11 @@ function decodeTabSources(bytes) {
 	return validateTabSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 function validateTabSources(value) {
-	if (!object$6(value) || !uint$14(value.section) || !uint$14(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows)) throw new Error("InvalidTabSources");
+	if (!object$6(value) || !uint$16(value.section) || !uint$16(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows)) throw new Error("InvalidTabSources");
 	let previous = -1;
 	const nodes = /* @__PURE__ */ new Set();
 	for (const row of value.rows) {
-		if (!object$6(row) || !uint$14(row.unit) || !uint$14(row.node) || row.unit <= previous || nodes.has(row.node) || ![
+		if (!object$6(row) || !uint$16(row.unit) || !uint$16(row.node) || row.unit <= previous || nodes.has(row.node) || ![
 			row.width,
 			row.tab_type,
 			row.leader
@@ -6700,9 +6723,9 @@ function validateTabSources(value) {
 	}
 	return value;
 }
-var uint$14, object$6;
+var uint$16, object$6;
 var init_hwpx_tab_sources = __esmMin((() => {
-	uint$14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$16 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-tab-definitions.mjs
@@ -6710,7 +6733,7 @@ function validateTabDefinitions(rows) {
 	if (!Array.isArray(rows)) throw new Error("InvalidTabDefinitions");
 	let previous = -1, count = 0;
 	for (const row of rows) {
-		if (!object$5(row) || !uint$13(row.id) || row.id <= previous || !raw$1(row.auto_left) || !raw$1(row.auto_right) || !Array.isArray(row.items)) throw new Error("InvalidTabDefinitions");
+		if (!object$5(row) || !uint$15(row.id) || row.id <= previous || !raw$1(row.auto_left) || !raw$1(row.auto_right) || !Array.isArray(row.items)) throw new Error("InvalidTabDefinitions");
 		previous = row.id;
 		count += row.items.length;
 		if (count > 1e6) throw new Error("InvalidTabDefinitions");
@@ -6721,9 +6744,9 @@ function validateTabDefinitions(rows) {
 function decodeTabDefinitions(bytes) {
 	return validateTabDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$13, object$5, raw$1;
+var uint$15, object$5, raw$1;
 var init_hwpx_tab_definitions = __esmMin((() => {
-	uint$13 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$15 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	raw$1 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 }));
@@ -6732,11 +6755,11 @@ function validateSectionTabs(rows) {
 	if (!Array.isArray(rows)) throw new Error("InvalidSectionTabSources");
 	let previous = null;
 	for (const row of rows) {
-		if (!row || typeof row !== "object" || Array.isArray(row) || !uint$12(row.section) || !uint$12(row.node) || ![
+		if (!row || typeof row !== "object" || Array.isArray(row) || !uint$14(row.section) || !uint$14(row.node) || ![
 			row.tab_stop,
 			row.tab_stop_val,
 			row.tab_stop_unit
-		].every(raw) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint$12(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node)) throw new Error("InvalidSectionTabSources");
+		].every(raw) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint$14(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node)) throw new Error("InvalidSectionTabSources");
 		previous = row;
 	}
 	return rows;
@@ -6744,9 +6767,9 @@ function validateSectionTabs(rows) {
 function decodeSectionTabs(bytes) {
 	return validateSectionTabs(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$12, raw;
+var uint$14, raw;
 var init_hwpx_section_tabs = __esmMin((() => {
-	uint$12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 }));
 // ../../js/equation-engine.mjs
@@ -6961,7 +6984,7 @@ function validateChartRichText(value) {
 var init_hwpx_chart_rich_text = __esmMin((() => {}));
 // ../../js/chart-display-fields.mjs
 function field(value, accepts, owner) {
-	return value === null || object$4(value) && uint$11(value.node) && value.node > owner && (value.value === null || accepts(value.value));
+	return value === null || object$4(value) && uint$13(value.node) && value.node > owner && (value.value === null || accepts(value.value));
 }
 function number(value) {
 	return object$4(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : [
@@ -6971,25 +6994,25 @@ function number(value) {
 	].includes(value.kind) && value.value === null);
 }
 function scaling(value, owner) {
-	return value === null || object$4(value) && uint$11(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
+	return value === null || object$4(value) && uint$13(value.node) && value.node > owner && field(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
 		value.minimum,
 		value.maximum,
 		value.log_base
 	].every((item) => field(item, number, value.node));
 }
-var object$4, uint$11, text$1, nullableUint, oneOf;
+var object$4, uint$13, text$1, nullableUint, oneOf;
 var init_chart_display_fields = __esmMin((() => {
 	object$4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$13 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	text$1 = (value) => typeof value === "string" && value.isWellFormed();
-	nullableUint = (value) => value === null || uint$11(value);
+	nullableUint = (value) => value === null || uint$13(value);
 	oneOf = (values) => (value) => values.includes(value);
 }));
 // ../../js/chart-display-host.mjs
 function chartDisplayHost(value, wrapper) {
-	if (!object$4(value) || value.wrapper_node !== wrapper || !uint$11(value.chart_node) || value.chart_node <= wrapper) return false;
+	if (!object$4(value) || value.wrapper_node !== wrapper || !uint$13(value.chart_node) || value.chart_node <= wrapper) return false;
 	const g = value.geometry, p = value.position;
-	return object$4(g) && object$4(p) && [g.width, g.height].every(optional(uint$11)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
+	return object$4(g) && object$4(p) && [g.width, g.height].every(optional(uint$13)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
 		2,
 		3,
 		4,
@@ -7000,7 +7023,7 @@ var optional, bounded, boolean, offset;
 var init_chart_display_host = __esmMin((() => {
 	init_chart_display_fields();
 	optional = (accepts) => (value) => value === null || accepts(value);
-	bounded = (max) => (value) => uint$11(value) && value <= max;
+	bounded = (max) => (value) => uint$13(value) && value <= max;
 	boolean = (value) => typeof value === "boolean";
 	offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
@@ -7012,7 +7035,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 	for (const [node, plotNode] of series) {
 		const row = values[index++], kind = plots.get(plotNode)?.kind;
 		if (!object$4(row) || row.series_node !== node || row.plot_node !== plotNode || !field(row.smooth, (v) => typeof v === "boolean", node)) return false;
-		if (!field(row.index, uint$11, node) || !field(row.order, uint$11, node)) return false;
+		if (!field(row.index, uint$13, node) || !field(row.order, uint$13, node)) return false;
 		const line = [
 			"lineChart",
 			"line3DChart",
@@ -7020,7 +7043,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 			"scatterChart"
 		].includes(kind);
 		if (row.smooth !== null && !line) return false;
-		if (!field(row.explosion, uint$11, node)) return false;
+		if (!field(row.explosion, uint$13, node)) return false;
 		if (row.explosion !== null && ![
 			"pieChart",
 			"pie3DChart",
@@ -7028,7 +7051,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 			"doughnutChart"
 		].includes(kind)) return false;
 		const marker = row.marker;
-		if (marker !== null && (!line && kind !== "radarChart" || !object$4(marker) || !uint$11(marker.node) || marker.node <= node || !field(marker.symbol, oneOf(symbols), marker.node) || !field(marker.size, (v) => uint$11(v) && v >= 2 && v <= 72, marker.node))) return false;
+		if (marker !== null && (!line && kind !== "radarChart" || !object$4(marker) || !uint$13(marker.node) || marker.node <= node || !field(marker.symbol, oneOf(symbols), marker.node) || !field(marker.size, (v) => uint$13(v) && v >= 2 && v <= 72, marker.node))) return false;
 		const leaves = [
 			row.index,
 			row.order,
@@ -7042,7 +7065,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 		].filter((value) => value !== null);
 		const stroke = row.stroke, strokeNodes = [];
 		if (stroke !== void 0 && stroke !== null) {
-			if (!object$4(stroke) || !uint$11(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$11(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
+			if (!object$4(stroke) || !uint$13(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$13(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
 			strokeNodes.push(stroke.node);
 			if (stroke.no_fill_node !== null) strokeNodes.push(stroke.no_fill_node);
 		}
@@ -7076,7 +7099,7 @@ function validChartPointSettings(values, series, occupied = null) {
 	if (!Array.isArray(values)) return false;
 	let previous = -1;
 	for (const row of values) {
-		if (!object$4(row) || !uint$11(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field(row.index, uint$11, row.node) || !field(row.explosion, uint$11, row.node)) return false;
+		if (!object$4(row) || !uint$13(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field(row.index, uint$13, row.node) || !field(row.explosion, uint$13, row.node)) return false;
 		if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node) return false;
 		occupied?.add(row.node);
 		if (row.index !== null) occupied?.add(row.index.node);
@@ -7100,7 +7123,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
 	]) if (!nullableUint(stock[key])) return false;
 	if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null)) return false;
 	const parent = stock.up_down_node ?? plotNode;
-	if (!field(stock.gap_width, (value) => uint$11(value) && value <= 500, parent)) return false;
+	if (!field(stock.gap_width, (value) => uint$13(value) && value <= 500, parent)) return false;
 	for (const key of ["up_node", "down_node"]) if (stock[key] !== null && stock[key] <= parent) return false;
 	for (const node of [
 		stock.high_low_node,
@@ -7121,7 +7144,7 @@ var init_chart_stock_settings = __esmMin((() => {
 // ../../js/chart-view-3d.mjs
 function validChartView3D(value, occupied = null) {
 	if (value === void 0 || value === null) return true;
-	if (!object$4(value) || !uint$11(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
+	if (!object$4(value) || !uint$13(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
 	const ranges = {
 		rotation_x: [-90, 90],
 		rotation_y: [0, 360],
@@ -7152,7 +7175,7 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
 		"line3DChart",
 		"area3DChart"
 	].includes(kind)) return value === null;
-	if (!object$4(value) || !field(value.gap_depth, (v) => uint$11(v) && v <= 500, owner) || !field(value.shape, oneOf([
+	if (!object$4(value) || !field(value.gap_depth, (v) => uint$13(v) && v <= 500, owner) || !field(value.shape, oneOf([
 		"box",
 		"cone",
 		"coneToMax",
@@ -7185,7 +7208,7 @@ function decodeChartDisplay(bytes) {
 		"rich_text"
 	]) require(Array.isArray(value[name]));
 	const pair = value.pair;
-	require(object$4(pair) && text$1(pair.chart_path) && pair.chart_path.length > 0 && text$1(pair.ole_path) && pair.ole_path.length > 0 && uint$11(pair.wrapper_node) && uint$11(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$11(n) && n <= 255));
+	require(object$4(pair) && text$1(pair.chart_path) && pair.chart_path.length > 0 && text$1(pair.ole_path) && pair.ole_path.length > 0 && uint$13(pair.wrapper_node) && uint$13(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$13(n) && n <= 255));
 	require(chartDisplayHost(value.host, pair.wrapper_node));
 	require(value.plots.length === value.plot_settings.length);
 	const plots = /* @__PURE__ */ new Map(), series = /* @__PURE__ */ new Map(), references = /* @__PURE__ */ new Map();
@@ -7194,14 +7217,14 @@ function decodeChartDisplay(bytes) {
 	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks ? null : /* @__PURE__ */ new Set();
 	let previousPlot = -1;
 	for (const [index, plot] of value.plots.entries()) {
-		require(object$4(plot) && uint$11(plot.node) && plot.node > previousPlot && uint$11(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
+		require(object$4(plot) && uint$13(plot.node) && plot.node > previousPlot && uint$13(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
 		plots.set(plot.node, plot);
 		previousPlot = plot.node;
 		occupied?.add(plot.node);
 		occupied?.add(plot.area_node);
 		let previousSeries = plot.node;
 		for (const node of plot.series_nodes) {
-			require(uint$11(node) && node > previousSeries && !series.has(node));
+			require(uint$13(node) && node > previousSeries && !series.has(node));
 			series.set(node, plot.node);
 			previousSeries = node;
 			occupied?.add(node);
@@ -7213,7 +7236,7 @@ function decodeChartDisplay(bytes) {
 			"stacked",
 			"percentStacked"
 		]), plot.node) && field(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-		require(field(settings.gap_width, (v) => uint$11(v) && v <= 500, plot.node) && field(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+		require(field(settings.gap_width, (v) => uint$13(v) && v <= 500, plot.node) && field(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
 		require(field(settings.scatter_style, oneOf([
 			"line",
 			"lineMarker",
@@ -7222,9 +7245,9 @@ function decodeChartDisplay(bytes) {
 			"smoothMarker"
 		]), plot.node));
 		if (settings.scatter_style !== null) require(plot.kind === "scatterChart");
-		require(field(settings.first_slice_angle, (v) => uint$11(v) && v <= 360, plot.node));
+		require(field(settings.first_slice_angle, (v) => uint$13(v) && v <= 360, plot.node));
 		if (settings.first_slice_angle !== null) require(["pieChart", "doughnutChart"].includes(plot.kind));
-		require(field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field(settings.second_pie_size, (v) => uint$11(v) && v >= 5 && v <= 200, plot.node) && field(settings.split_type, oneOf([
+		require(field(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field(settings.second_pie_size, (v) => uint$13(v) && v >= 5 && v <= 200, plot.node) && field(settings.split_type, oneOf([
 			"auto",
 			"cust",
 			"percent",
@@ -7269,14 +7292,14 @@ function decodeChartDisplay(bytes) {
 			...settings.custom_split_node === null ? [] : [{ node: settings.custom_split_node }],
 			...settings.axis_references
 		]) if (leaf !== null) {
-			require(object$4(leaf) && uint$11(leaf.node) && !leaves.has(leaf.node));
+			require(object$4(leaf) && uint$13(leaf.node) && !leaves.has(leaf.node));
 			leaves.add(leaf.node);
 		}
 		require(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
 		require(validChartSpatialSettings(settings.spatial, plot.kind, plot.node, leaves));
 		for (const node of leaves) occupied?.add(node);
 		for (const reference of settings.axis_references) {
-			require(reference !== null && field(reference, uint$11, plot.node));
+			require(reference !== null && field(reference, uint$13, plot.node));
 			const key = plot.node + ":" + reference.node;
 			require(!references.has(key));
 			references.set(key, reference.value);
@@ -7286,12 +7309,12 @@ function decodeChartDisplay(bytes) {
 	require(validChartSeriesSettings(value.series_settings, plots, series, occupied));
 	require(validChartPointSettings(value.point_settings, series, occupied));
 	for (const axis of value.axes) {
-		require(object$4(axis) && uint$11(axis.node) && !axes.has(axis.node) && uint$11(axis.area_node) && axis.area_node < axis.node && [
+		require(object$4(axis) && uint$13(axis.node) && !axes.has(axis.node) && uint$13(axis.area_node) && axis.area_node < axis.node && [
 			"catAx",
 			"valAx",
 			"dateAx",
 			"serAx"
-		].includes(axis.kind) && field(axis.id, uint$11, axis.node) && field(axis.cross_axis, uint$11, axis.node) && field(axis.position, oneOf([
+		].includes(axis.kind) && field(axis.id, uint$13, axis.node) && field(axis.cross_axis, uint$13, axis.node) && field(axis.position, oneOf([
 			"b",
 			"l",
 			"r",
@@ -7328,7 +7351,7 @@ function decodeChartDisplay(bytes) {
 	require(value.axis_links.length === references.size);
 	const seenLinks = /* @__PURE__ */ new Set();
 	for (const link of value.axis_links) {
-		require(object$4(link) && uint$11(link.plot_node) && plots.has(link.plot_node) && uint$11(link.reference_node) && nullableUint(link.id) && object$4(link.target));
+		require(object$4(link) && uint$13(link.plot_node) && plots.has(link.plot_node) && uint$13(link.reference_node) && nullableUint(link.id) && object$4(link.target));
 		const key = link.plot_node + ":" + link.reference_node;
 		require(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
 		seenLinks.add(key);
@@ -7345,7 +7368,7 @@ function decodeChartDisplay(bytes) {
 			point.point_node,
 			point.value_node,
 			point.index
-		].every(uint$11) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$1(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+		].every(uint$13) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$1(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
 		previousLeaf = point.value_node;
 		pointNodes.add(point.point_node);
 		for (const node of [
@@ -7971,21 +7994,21 @@ function decode(bytes, maximum) {
 }
 function decodeFormSourceNodes(bytes) {
 	const value = decode(bytes, 8388608);
-	if (!object$3(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object$3(row) && uint$10(row.formNode) && kinds.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode))) throw new Error("InvalidFormSource");
+	if (!object$3(value) || value.sourceOnly !== true || !Array.isArray(value.nodes) || value.nodes.length > 1e5 || !value.nodes.every((row, i) => object$3(row) && uint$12(row.formNode) && kinds.has(row.kind) && (i === 0 || row.formNode > value.nodes[i - 1].formNode))) throw new Error("InvalidFormSource");
 	return value;
 }
 function decodeFormSourceAttributes(bytes) {
 	const value = decode(bytes, 1048576);
 	const group = (data, check) => object$3(data) && Object.keys(data).length <= 128 && Object.entries(data).every(([key, item]) => /^[A-Za-z][A-Za-z0-9]*$/.test(key) && key.length <= 128 && (item === null || check(item)));
-	if (!object$3(value) || value.sourceOnly !== true || !kinds.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint$10)) throw new Error("InvalidFormSource");
+	if (!object$3(value) || value.sourceOnly !== true || !kinds.has(value.kind) || !group(value.strings, (item) => typeof item === "string" && item.isWellFormed() && new TextEncoder().encode(item).length <= 65536) || !group(value.booleans, (item) => typeof item === "boolean") || !group(value.integers, uint$12)) throw new Error("InvalidFormSource");
 	return value;
 }
 function decodeFormSites(bytes) {
 	const sites = decode(bytes, 16777216);
 	if (!Array.isArray(sites) || sites.length > 1e5 || !sites.every((site, i) => {
-		if (!object$3(site) || !uint$10(site.formNode) || !kinds.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode) return false;
-		if (site.state === "located") return uint$10(site.paragraph) && site.paragraph > 0 && uint$10(site.anchorUnit);
-		if (site.state === "unsupported_anchor") return uint$10(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
+		if (!object$3(site) || !uint$12(site.formNode) || !kinds.has(site.kind) || i > 0 && site.formNode <= sites[i - 1].formNode) return false;
+		if (site.state === "located") return uint$12(site.paragraph) && site.paragraph > 0 && uint$12(site.anchorUnit);
+		if (site.state === "unsupported_anchor") return uint$12(site.paragraph) && site.paragraph > 0 && site.anchorUnit === null;
 		return [
 			"conditional",
 			"missing_host",
@@ -7997,7 +8020,7 @@ function decodeFormSites(bytes) {
 function decodeFormSourceLayout(bytes) {
 	const value = decode(bytes, 65536);
 	const bool = (value) => value === null || typeof value === "boolean";
-	if (!object$3(value) || value.sourceOnly !== true || !uint$10(value.formNode) || !kinds.has(value.kind) || !validShapeLayoutValues(value) || !object$3(value.character) || !(value.character.id === null || uint$10(value.character.id)) || ![
+	if (!object$3(value) || value.sourceOnly !== true || !uint$12(value.formNode) || !kinds.has(value.kind) || !validShapeLayoutValues(value) || !object$3(value.character) || !(value.character.id === null || uint$12(value.character.id)) || ![
 		value.character.follow_context,
 		value.character.auto_size,
 		value.character.word_wrap,
@@ -8005,7 +8028,7 @@ function decodeFormSourceLayout(bytes) {
 	].every(bool)) throw new Error("InvalidFormSource");
 	return value;
 }
-var kinds, uint$10, object$3;
+var kinds, uint$12, object$3;
 var init_hwpx_form_source = __esmMin((() => {
 	init_hwpx_shape_layout_values();
 	kinds = /* @__PURE__ */ new Set([
@@ -8015,7 +8038,7 @@ var init_hwpx_form_source = __esmMin((() => {
 		"radio_button",
 		"edit_box"
 	]);
-	uint$10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$12 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-document-provenance.mjs
@@ -8063,13 +8086,13 @@ function decodeDocumentProvenance(bytes) {
 			version.major,
 			version.minor,
 			version.xml_bytes
-		].every(uint$9) || ![
+		].every(uint$11) || ![
 			"micro",
 			"build_number",
 			"patch",
 			"revision",
 			"os"
-		].every((key) => version[key] === null || uint$9(version[key])) || ![
+		].every((key) => version[key] === null || uint$11(version[key])) || ![
 			"xml_version",
 			"target_application",
 			"application",
@@ -8079,11 +8102,11 @@ function decodeDocumentProvenance(bytes) {
 	if (value.sourceVersionError !== null && (version !== null || typeof value.sourceVersionError !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(value.sourceVersionError))) return fail();
 	return value;
 }
-var object$2, exact, uint$9, text;
+var object$2, exact, uint$11, text;
 var init_hwpx_document_provenance = __esmMin((() => {
 	object$2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	exact = (value, keys) => object$2(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
-	uint$9 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$11 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	text = (value) => typeof value === "string" && value.length <= 4096;
 }));
 // ../../js/hwpx-font-face-metadata.mjs
@@ -8308,11 +8331,11 @@ function decodeEllipseSources(bytes) {
 	const text = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 	if (!Array.isArray(rows) || rows.length > 1e5 || rows.some((row, index) => {
 		const owner = row?.owner, geometry = row?.geometry;
-		return !object$1(row) || row.sourceOnly !== true || !uint$8(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object$1(owner) || ![
+		return !object$1(row) || row.sourceOnly !== true || !uint$10(row.node) || index > 0 && row.node <= rows[index - 1].node || Object.hasOwn(row, "common") && !validShapeCommonSource(row.common) || row.common && Object.hasOwn(row.common, "group_context") && !validGroupContext(row.common.group_context, row.node) || row.common?.group_context && row.common.group_context.root_anchor !== owner?.anchor_node || !object$1(owner) || ![
 			"paragraph",
 			"anchor_node",
 			"anchor_unit"
-		].every((key) => uint$8(owner[key])) || owner.paragraph < 1 || !object$1(geometry) || ![
+		].every((key) => uint$10(owner[key])) || owner.paragraph < 1 || !object$1(geometry) || ![
 			"interval_dirty",
 			"has_arc_properties",
 			"arc_type"
@@ -8320,12 +8343,12 @@ function decodeEllipseSources(bytes) {
 	})) throw new Error("InvalidEllipseSources");
 	return rows;
 }
-var object$1, uint$8, coordinate;
+var object$1, uint$10, coordinate;
 var init_hwpx_ellipse_sources = __esmMin((() => {
 	init_hwpx_shape_common_source();
 	init_hwpx_group_context();
 	object$1 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$8 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$10 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
 // ../../js/hwpx-picture-sites-wire.mjs
@@ -8385,8 +8408,8 @@ function decodeOleSites(bytes) {
 	const value = parse$2(bytes, 16777216, "InvalidOleSites"), seen = /* @__PURE__ */ new Set();
 	if (!Array.isArray(value) || value.length > 1e5) fail();
 	for (const row of value) {
-		if (!row || !uint$7(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint$7(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint$7(row.anchor_unit))) fail();
-		if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint$7(row.chart_wrapper)) fail();
+		if (!row || !uint$9(row.ole_node) || seen.has(row.ole_node) || !(row.paragraph === null || uint$9(row.paragraph) && row.paragraph > 0) || !(row.anchor_unit === null || uint$9(row.anchor_unit))) fail();
+		if (Object.hasOwn(row, "chart_wrapper") && row.chart_wrapper !== null && !uint$9(row.chart_wrapper)) fail();
 		if (row.error_name === null ? row.paragraph === null || row.anchor_unit === null : !errors.has(row.error_name) || row.anchor_unit !== null) fail();
 		seen.add(row.ole_node);
 	}
@@ -8430,10 +8453,10 @@ function decodeOleBytes(bytes) {
 		bytes: bytes.slice(1)
 	};
 }
-var uint$7, errors;
+var uint$9, errors;
 var init_hwpx_ole_source = __esmMin((() => {
 	init_hwpx_shape_source_values();
-	uint$7 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
+	uint$9 = (v) => Number.isInteger(v) && v >= 0 && v <= 4294967295;
 	errors = /* @__PURE__ */ new Set([
 		"UnsupportedOleDisplayHost",
 		"MissingCurrentParagraphDisplayHost",
@@ -8472,7 +8495,7 @@ var init_hwpx_picture_corners_wire = __esmMin((() => {}));
 // ../../js/hwpx-connector-source.mjs
 function decodeConnectorNodes(bytes) {
 	const nodes = parse$1(bytes);
-	if (!Array.isArray(nodes) || !nodes.every((value, index) => uint$6(value) && (index === 0 || value > nodes[index - 1]))) throw new Error("InvalidConnectorNodes");
+	if (!Array.isArray(nodes) || !nodes.every((value, index) => uint$8(value) && (index === 0 || value > nodes[index - 1]))) throw new Error("InvalidConnectorNodes");
 	return nodes;
 }
 function decodeConnectorSource(bytes) {
@@ -8484,7 +8507,7 @@ function decodeConnectorSource(bytes) {
 		"subject_index",
 		"control_type"
 	].every((name) => item[name] === null || typeof item[name] === "string");
-	if (!object(value) || value.sourceOnly !== true || !uint$6(value.node) || !object(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint$6(geometry.unexpected_children)) throw new Error("InvalidConnectorSource");
+	if (!object(value) || value.sourceOnly !== true || !uint$8(value.node) || !object(geometry) || !(geometry.raw_type === null || typeof geometry.raw_type === "string") || typeof geometry.known_type !== "boolean" || !point(geometry.start) || !point(geometry.end) || typeof geometry.controls_present !== "boolean" || !Array.isArray(geometry.controls) || geometry.controls.length > 4096 || !geometry.controls.every((item) => item !== null && point(item)) || !geometry.controls_present && geometry.controls.length !== 0 || !uint$8(geometry.unexpected_children)) throw new Error("InvalidConnectorSource");
 	return value;
 }
 function decodeConnectorOwner(bytes, expectedNode) {
@@ -8494,18 +8517,18 @@ function decodeConnectorOwner(bytes, expectedNode) {
 		"paragraph",
 		"anchor_node",
 		"anchor_unit"
-	].every((name) => uint$6(value[name])) || value.paragraph < 1 || expectedNode !== void 0 && value.node !== expectedNode) throw new Error("InvalidConnectorOwner");
+	].every((name) => uint$8(value[name])) || value.paragraph < 1 || expectedNode !== void 0 && value.node !== expectedNode) throw new Error("InvalidConnectorOwner");
 	return value;
 }
 function decodeConnectorRenderingSource(bytes, expectedNode) {
 	const value = parse$1(bytes);
 	const point = (row) => Array.isArray(row) && row.length === 2 && row.every(Number.isFinite);
-	if (!object(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint$6(value.node) || expectedNode !== void 0 && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point)) throw new Error("InvalidConnectorRenderingSource");
+	if (!object(value) || value.sourceOnly !== true || value.coordinateSpace !== "renderingInfo" || !uint$8(value.node) || expectedNode !== void 0 && value.node !== expectedNode || !Array.isArray(value.endpoints) || value.endpoints.length !== 2 || !value.endpoints.every(point) || !Array.isArray(value.controls) || value.controls.length > 4096 || !value.controls.every(point)) throw new Error("InvalidConnectorRenderingSource");
 	return value;
 }
-var uint$6, object, parse$1;
+var uint$8, object, parse$1;
 var init_hwpx_connector_source = __esmMin((() => {
-	uint$6 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$8 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	parse$1 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }));
@@ -8513,10 +8536,10 @@ var init_hwpx_connector_source = __esmMin((() => {
 function decodeDrawingStrokeSource(bytes, expectedNode) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	const attr = value?.attributes;
-	if (!value || value.sourceOnly !== true || !uint$5(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint$5(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint$5(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields$1.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096)) throw new Error("InvalidDrawingStrokeSource");
+	if (!value || value.sourceOnly !== true || !uint$7(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint$7(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint$7(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields$1.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096)) throw new Error("InvalidDrawingStrokeSource");
 	return value;
 }
-var fields$1, uint$5;
+var fields$1, uint$7;
 var init_hwpx_drawing_stroke_source = __esmMin((() => {
 	fields$1 = [
 		"color",
@@ -8532,7 +8555,7 @@ var init_hwpx_drawing_stroke_source = __esmMin((() => {
 		"outlineStyle",
 		"alpha"
 	];
-	uint$5 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$7 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwpx-page-settings.mjs
 /** Source observations, not a page layout or default-value resolver. */
@@ -11315,14 +11338,14 @@ function unique(rows, key, warnings, name) {
 	}
 	return map;
 }
-var LIMITS$1, uint$4, diagnostic;
+var LIMITS$1, uint$6, diagnostic;
 var init_common$1 = __esmMin((() => {
 	LIMITS$1 = Object.freeze({
 		maxDepth: 32,
 		maxBlocks: 2e5,
 		maxTextUnits: 4194304
 	});
-	uint$4 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$6 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	diagnostic = (code, message, source) => ({
 		code,
 		message: String(message).slice(0, 512),
@@ -11343,18 +11366,18 @@ function collectHwp5({ sdk, sectionCount }) {
 		const flowResult = get("paragraphFlow"), flows = array(flowResult, warnings, "paragraphFlow", source);
 		const flowMap = unique(flows, (r) => r.paragraph, warnings, "paragraphFlow");
 		const countResult = get("paragraphCount");
-		const count = countResult.ok && uint$4(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
+		const count = countResult.ok && uint$6(countResult.value) && countResult.value <= 1e5 ? countResult.value : null;
 		const previewRows = previewSections.get(section)?.paragraphs;
 		const paragraphs = [], objectTokens = [];
 		let objectTokensKnown = count !== null && preview.ok && Array.isArray(previewRows) && previewRows.length === count;
 		const ordinals = count !== null ? Array.from({ length: count }, (_, ordinal) => ordinal) : [...new Set(flows.map((row) => row.paragraph))];
 		for (const paragraph of ordinals) {
 			const p = previewRows?.[paragraph], flow = flowMap.get(paragraph);
-			const node = uint$4(flow?.source_node) ? flow.source_node : uint$4(p?.nodeIndex) ? p.nodeIndex : null;
-			const emptyParagraph = p?.textPresent === false && p.text === "" && uint$4(p.nodeIndex) && uint$4(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
+			const node = uint$6(flow?.source_node) ? flow.source_node : uint$6(p?.nodeIndex) ? p.nodeIndex : null;
+			const emptyParagraph = p?.textPresent === false && p.text === "" && uint$6(p.nodeIndex) && uint$6(p.declaredUnits) && p.declaredUnits <= 1 && Array.isArray(p.tokens) && p.tokens.length === 0;
 			let displayText = typeof p?.text === "string" && (p.textPresent === true || emptyParagraph) ? p.text : null;
-			let identityKnown = uint$4(node) && flow?.generated !== true;
-			if (uint$4(p?.nodeIndex) && uint$4(flow?.source_node) && p.nodeIndex !== flow.source_node) {
+			let identityKnown = uint$6(node) && flow?.generated !== true;
+			if (uint$6(p?.nodeIndex) && uint$6(flow?.source_node) && p.nodeIndex !== flow.source_node) {
 				identityKnown = false;
 				displayText = null;
 				warnings.push(diagnostic("ParagraphSourceMismatch", "Native source identities disagree", {
@@ -11372,7 +11395,7 @@ function collectHwp5({ sdk, sectionCount }) {
 			if (!Array.isArray(p?.tokens)) objectTokensKnown = false;
 			else for (const token of p.tokens) {
 				if (token?.type !== "control" || token.code !== 11) continue;
-				if (!uint$4(token.startUnit)) {
+				if (!uint$6(token.startUnit)) {
 					objectTokensKnown = false;
 					continue;
 				}
@@ -11399,9 +11422,9 @@ function collectHwp5({ sdk, sectionCount }) {
 			const draw = drawByComponent.get(row.component_node), anchor = anchorByComponent.get(row.component_node);
 			const owner = draw?.control_node === row.owner_node && anchor?.control_node === row.owner_node;
 			return {
-				inventorySiteKnown: uint$4(row.component_node) && uint$4(row.picture_node) && uint$4(row.owner_node) && uint$4(row.bin_data_id) && row.bin_data_id > 0,
+				inventorySiteKnown: uint$6(row.component_node) && uint$6(row.picture_node) && uint$6(row.owner_node) && uint$6(row.bin_data_id) && row.bin_data_id > 0,
 				pictureNode: row.component_node,
-				parentParagraph: owner && uint$4(anchor?.paragraph) ? anchor.paragraph : null,
+				parentParagraph: owner && uint$6(anchor?.paragraph) ? anchor.paragraph : null,
 				sourceInfo: {
 					section,
 					pictureNode: row.component_node,
@@ -11410,8 +11433,8 @@ function collectHwp5({ sdk, sectionCount }) {
 					ownerNode: row.owner_node,
 					resourceId: row.bin_data_id
 				},
-				width: owner && uint$4(draw?.width) ? draw.width : null,
-				height: owner && uint$4(draw?.height) ? draw.height : null,
+				width: owner && uint$6(draw?.width) ? draw.width : null,
+				height: owner && uint$6(draw?.height) ? draw.height : null,
 				reason: owner ? null : "PictureOwnerUnverified"
 			};
 		});
@@ -11420,7 +11443,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		for (const draw of drawByComponent.values()) {
 			if (draw?.kind_id !== 611346787 || representedPictures.has(draw.component_node)) continue;
 			const anchor = anchorByComponent.get(draw.component_node);
-			const ownerKnown = anchor?.control_node === draw.control_node && uint$4(anchor?.paragraph);
+			const ownerKnown = anchor?.control_node === draw.control_node && uint$6(anchor?.paragraph);
 			pictures.push({
 				inventorySiteKnown: false,
 				pictureNode: draw.component_node,
@@ -11431,8 +11454,8 @@ function collectHwp5({ sdk, sectionCount }) {
 					componentNode: draw.component_node,
 					ownerNode: draw.control_node
 				},
-				width: uint$4(draw?.width) ? draw.width : null,
-				height: uint$4(draw?.height) ? draw.height : null,
+				width: uint$6(draw?.width) ? draw.width : null,
+				height: uint$6(draw?.height) ? draw.height : null,
 				reason: "PictureSourceUnobserved"
 			});
 			representedPictures.add(draw.component_node);
@@ -11444,7 +11467,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		const components = unique(array(componentsResult, warnings, "drawingComponentSources", source), (r) => r.component_node, warnings, "drawing component inventory");
 		let componentsKnown = componentsResult.ok;
 		for (const row of components.values()) {
-			if (!row || !uint$4(row.component_node) || !uint$4(row.kind_id) || !uint$4(row.owner_node)) {
+			if (!row || !uint$6(row.component_node) || !uint$6(row.kind_id) || !uint$6(row.owner_node)) {
 				componentsKnown = false;
 				continue;
 			}
@@ -11473,7 +11496,7 @@ function collectHwp5({ sdk, sectionCount }) {
 				kind: "drawing",
 				node: row.component_node,
 				siteKnown: true,
-				parentParagraph: ownerKnown && uint$4(anchor?.paragraph) ? anchor.paragraph : null,
+				parentParagraph: ownerKnown && uint$6(anchor?.paragraph) ? anchor.paragraph : null,
 				parentObjectNode: components.get(row.owner_node)?.kind_id === 610496366 ? row.owner_node : null,
 				nativeKind: row.kind_id,
 				reason: ownerKnown ? "ObjectDetailsDeferred" : "ObjectOwnerUnverified"
@@ -11482,7 +11505,7 @@ function collectHwp5({ sdk, sectionCount }) {
 		const knownAnchors = /* @__PURE__ */ new Set();
 		let anchorsKnown = anchors.ok && drawingAnchors.ok;
 		for (const row of [...array(anchors, warnings, "tableAnchors", source), ...array(drawingAnchors, warnings, "drawingAnchors", source)]) {
-			if (!uint$4(row?.paragraph) || !uint$4(row?.current_unit)) {
+			if (!uint$6(row?.paragraph) || !uint$6(row?.current_unit)) {
 				anchorsKnown = false;
 				continue;
 			}
@@ -11557,8 +11580,8 @@ function collectHwpx({ sdk, sectionCount }) {
 			const flow = flowMap.get(row.paragraph);
 			return {
 				paragraph: row.paragraph,
-				node: uint$4(flow?.source_node) ? flow.source_node : null,
-				identityKnown: uint$4(flow?.source_node),
+				node: uint$6(flow?.source_node) ? flow.source_node : null,
+				identityKnown: uint$6(flow?.source_node),
 				displayText: typeof row.text === "string" ? row.text : null,
 				flow: flow ?? null
 			};
@@ -11580,7 +11603,7 @@ function collectHwpx({ sdk, sectionCount }) {
 		const sitesResult = get("pictureSites"), ownersResult = get("pictureOwners");
 		const owners = unique(array(ownersResult, warnings, "pictureOwners", source), (row) => row.pictureNode, warnings, "picture owner");
 		const sites = array(sitesResult, warnings, "pictureSites", source).slice();
-		const inventoryPictures = new Set(sites.filter((row) => uint$4(row?.pictureNode)).map((row) => row.pictureNode));
+		const inventoryPictures = new Set(sites.filter((row) => uint$6(row?.pictureNode)).map((row) => row.pictureNode));
 		const seenPictures = new Set(sites.map((row) => row.pictureNode));
 		for (const owner of owners.values()) if (owner && !seenPictures.has(owner.pictureNode)) {
 			sites.push({
@@ -11602,13 +11625,13 @@ function collectHwpx({ sdk, sectionCount }) {
 				},
 				width: null,
 				height: null,
-				reason: uint$4(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
+				reason: uint$6(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
 			};
 		});
 		const objects = /* @__PURE__ */ new Map();
 		let objectsKnown = true;
 		const addObject = (row) => {
-			if (!uint$4(row.node)) {
+			if (!uint$6(row.node)) {
 				objectsKnown = false;
 				return;
 			}
@@ -11629,21 +11652,21 @@ function collectHwpx({ sdk, sectionCount }) {
 		for (const row of inventory("chartSites")) addObject({
 			kind: "chart",
 			node: row?.wrapper,
-			parentParagraph: row?.error_name === null && uint$4(row?.paragraph) && uint$4(row?.anchorUnit) ? row.paragraph : null,
+			parentParagraph: row?.error_name === null && uint$6(row?.paragraph) && uint$6(row?.anchorUnit) ? row.paragraph : null,
 			detailUnavailable: row?.error_name !== null,
 			reason: row?.error_name ?? "ObjectDetailsDeferred"
 		});
 		for (const row of inventory("equationSites")) addObject({
 			kind: "equation",
 			node: row?.source?.node,
-			parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$4(row?.paragraph) ? row.paragraph : null,
+			parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$6(row?.paragraph) ? row.paragraph : null,
 			detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
 			reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred"
 		});
 		for (const row of inventory("oleSites")) addObject({
 			kind: "ole",
 			node: row?.ole_node,
-			parentParagraph: row?.error_name === null && uint$4(row?.paragraph) ? row.paragraph : null,
+			parentParagraph: row?.error_name === null && uint$6(row?.paragraph) ? row.paragraph : null,
 			detailUnavailable: row?.error_name !== null,
 			reason: row?.error_name ?? "ObjectDetailsDeferred"
 		});
@@ -11661,7 +11684,7 @@ function collectHwpx({ sdk, sectionCount }) {
 		for (const row of inventory("ellipseSources")) addObject({
 			kind: "drawing",
 			node: row?.node,
-			parentParagraph: uint$4(row?.owner?.paragraph) ? row.owner.paragraph : null,
+			parentParagraph: uint$6(row?.owner?.paragraph) ? row.owner.paragraph : null,
 			subtype: "ellipse",
 			reason: "ObjectDetailsDeferred"
 		});
@@ -11799,7 +11822,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 		}
 		if (!observation.flowsKnown || !observation.areas?.ok || !observation.picturesKnown) model.coverage.inventoryComplete = false;
 		function definition(kind, owner, listNode, apply, declaredParagraphs, declaration) {
-			if (!uint$4(owner) || !uint$4(listNode)) throw new Error("InvalidPageAreaIdentity");
+			if (!uint$6(owner) || !uint$6(listNode)) throw new Error("InvalidPageAreaIdentity");
 			const key = `${owner}:${listNode}`;
 			const existing = defs.get(key);
 			if (existing) {
@@ -11819,7 +11842,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				range: { state: "unresolved" },
 				blocks: [],
 				observedParagraphs: 0,
-				...uint$4(declaredParagraphs) ? { declaredParagraphs } : {}
+				...uint$6(declaredParagraphs) ? { declaredParagraphs } : {}
 			};
 			section[kind].definitions.push(block);
 			const node = add({
@@ -11836,8 +11859,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			section.header.declarations = section.footer.declarations = "unavailable";
 			model.coverage.pageAreasKnown = false;
 		} else if (format === "hwp5") for (const area of list(observation.areas)) {
-			if (!isPageArea(area.kind) || !uint$4(area.owner_node) || !uint$4(area.list_node)) throw new Error("InvalidPageAreaObservation");
-			const apply = uint$4(area.control_attributes) ? [
+			if (!isPageArea(area.kind) || !uint$6(area.owner_node) || !uint$6(area.list_node)) throw new Error("InvalidPageAreaObservation");
+			const apply = uint$6(area.control_attributes) ? [
 				"both",
 				"even",
 				"odd"
@@ -11870,7 +11893,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			}
 		}
 		function table(tableNode, rows = null, columns = null) {
-			if (!uint$4(tableNode)) throw new Error("InvalidTableIdentity");
+			if (!uint$6(tableNode)) throw new Error("InvalidTableIdentity");
 			const previous = byTable.get(tableNode);
 			if (previous) return previous;
 			const block = {
@@ -11887,8 +11910,8 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					section: s,
 					tableNode
 				},
-				rows: uint$4(rows) ? rows : null,
-				columns: uint$4(columns) ? columns : null,
+				rows: uint$6(rows) ? rows : null,
+				columns: uint$6(columns) ? columns : null,
 				cells: []
 			};
 			const node = add({
@@ -11904,15 +11927,15 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			return node;
 		}
 		function cell(tableNode, listNode, cellNode) {
-			if (!uint$4(listNode)) throw new Error("InvalidCellIdentity");
+			if (!uint$6(listNode)) throw new Error("InvalidCellIdentity");
 			const t = table(tableNode), id = cellKey(s, tableNode, listNode);
 			const previousOwner = cellOwners.get(listNode);
 			if (previousOwner !== void 0 && previousOwner !== tableNode) throw new Error("ConflictingCellSourceIdentity");
 			cellOwners.set(listNode, tableNode);
 			if (cells.has(id)) {
 				const existing = cells.get(id);
-				if (uint$4(cellNode)) {
-					if (uint$4(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode) throw new Error("ConflictingCellSourceIdentity");
+				if (uint$6(cellNode)) {
+					if (uint$6(existing.block.source.cellNode) && existing.block.source.cellNode !== cellNode) throw new Error("ConflictingCellSourceIdentity");
 					existing.block.source.cellNode = cellNode;
 				}
 				return existing;
@@ -11923,7 +11946,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					section: s,
 					tableNode,
 					listNode,
-					...uint$4(cellNode) ? { cellNode } : {}
+					...uint$6(cellNode) ? { cellNode } : {}
 				},
 				row: null,
 				column: null,
@@ -11954,7 +11977,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			else warn("CellInventoryUnavailable", "Native original-cell inventory unavailable", source);
 		}
 		for (const binding of bindings) {
-			if (!uint$4(binding.rows) || !binding.rows || !uint$4(binding.columns) || !binding.columns) throw new Error("InvalidTableGeometry");
+			if (!uint$6(binding.rows) || !binding.rows || !uint$6(binding.columns) || !binding.columns) throw new Error("InvalidTableGeometry");
 			const t = table(binding.tableNode, binding.rows, binding.columns), c = cell(binding.tableNode, binding.listNode);
 			if (t.block.rows === null) t.block.rows = binding.rows;
 			if (t.block.columns === null) t.block.columns = binding.columns;
@@ -11965,20 +11988,20 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				"rowSpan",
 				"columnSpan"
 			];
-			if (!names.every((n) => uint$4(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns) throw new Error("InvalidCellGeometry");
+			if (!names.every((n) => uint$6(binding[n])) || !binding.rowSpan || !binding.columnSpan || binding.row + binding.rowSpan > binding.rows || binding.column + binding.columnSpan > binding.columns) throw new Error("InvalidCellGeometry");
 			if (c.block.geometryKnown && names.some((n) => c.block[n] !== binding[n])) throw new Error("ConflictingCellGeometry");
 			for (const n of names) c.block[n] = binding[n];
 			c.block.geometryKnown = true;
 		}
 		for (const p of observation.paragraphs) {
-			if (!uint$4(p.paragraph) || format === "hwpx" && !p.paragraph) throw new Error("InvalidNativeParagraphOrdinal");
+			if (!uint$6(p.paragraph) || format === "hwpx" && !p.paragraph) throw new Error("InvalidNativeParagraphOrdinal");
 			const id = paragraphId(s, p.paragraph), pSource = {
 				section: s,
 				paragraph: p.paragraph,
-				...uint$4(p.node) ? { node: p.node } : {}
+				...uint$6(p.node) ? { node: p.node } : {}
 			};
 			if (paragraphs.has(id)) throw new Error("DuplicateParagraphIdentity");
-			if (p.identityKnown && uint$4(p.node)) {
+			if (p.identityKnown && uint$6(p.node)) {
 				if (paragraphSources.has(p.node)) throw new Error("DuplicateParagraphSourceIdentity");
 				paragraphSources.add(p.node);
 			}
@@ -12055,10 +12078,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			warn(code, code, c.block.source);
 		} else geometryCount.set(c.block.source.tableNode, (geometryCount.get(c.block.source.tableNode) ?? 0) + 1);
 		for (const [n, t] of byTable) if (t.block.cells.length > 0 && geometryCount.get(n) === t.block.cells.length && known(observation.tableInventory) && (format !== "hwp5" || known(observation.cellInventory))) model.coverage.tablesWithCompleteCellInventory++;
-		for (const def of defs.values()) if (uint$4(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs) warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
+		for (const def of defs.values()) if (uint$6(def.block.declaredParagraphs) && def.block.observedParagraphs !== def.block.declaredParagraphs) warn("PageAreaParagraphCountMismatch", "Native definition count differs from observed direct paragraph owners", def.block.source);
 		if (!observation.picturesKnown) model.coverage.imagesKnown = false;
 		for (const image of observation.pictures) {
-			if (!uint$4(image.pictureNode)) throw new Error("InvalidPictureIdentity");
+			if (!uint$6(image.pictureNode)) throw new Error("InvalidPictureIdentity");
 			const id = `s${s}:i${image.pictureNode}`;
 			const sourceInfo = {};
 			for (const name of [
@@ -12068,7 +12091,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 				"componentNode",
 				"ownerNode",
 				"resourceId"
-			]) if (uint$4(image.sourceInfo?.[name])) sourceInfo[name] = image.sourceInfo[name];
+			]) if (uint$6(image.sourceInfo?.[name])) sourceInfo[name] = image.sourceInfo[name];
 			add({
 				id,
 				kind: "image",
@@ -12091,11 +12114,11 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 					alt: null,
 					altState: "not-exposed",
 					sourceInfo,
-					...uint$4(image.width) ? { width: image.width } : {},
-					...uint$4(image.height) ? { height: image.height } : {},
+					...uint$6(image.width) ? { width: image.width } : {},
+					...uint$6(image.height) ? { height: image.height } : {},
 					sizeUnit: "hwp-unit"
 				},
-				parent: uint$4(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
+				parent: uint$6(image.parentParagraph) && byOrdinal.has(image.parentParagraph) ? paragraphId(s, image.parentParagraph) : null,
 				reason: image.reason ?? "PictureOwnerUnverified",
 				native: image.pictureNode
 			});
@@ -12108,13 +12131,13 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 		}
 		const objectNodes = /* @__PURE__ */ new Map();
 		for (const object of observation.objects ?? []) {
-			const nodeKnown = object.siteKnown === true && uint$4(object.node);
+			const nodeKnown = object.siteKnown === true && uint$6(object.node);
 			const id = nodeKnown ? `s${s}:o${object.node}` : `s${s}:object:p${object.paragraph}:u${object.anchorUnit}`;
 			const objectSource = {
 				section: s,
-				...uint$4(object.node) ? { node: object.node } : {},
-				...uint$4(object.paragraph) ? { paragraph: object.paragraph } : {},
-				...uint$4(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
+				...uint$6(object.node) ? { node: object.node } : {},
+				...uint$6(object.paragraph) ? { paragraph: object.paragraph } : {},
+				...uint$6(object.anchorUnit) ? { anchorUnit: object.anchorUnit } : {}
 			};
 			const node = add({
 				id,
@@ -12129,10 +12152,10 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 						node: object.node
 					}) : null,
 					detailUnavailable: object.detailUnavailable === true,
-					...uint$4(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
+					...uint$6(object.nativeKind) ? { nativeKind: object.nativeKind } : {},
 					...typeof object.subtype === "string" ? { subtype: object.subtype } : {}
 				},
-				parent: uint$4(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
+				parent: uint$6(object.parentParagraph) && byOrdinal.has(object.parentParagraph) ? paragraphId(s, object.parentParagraph) : null,
 				reason: object.reason ?? "ObjectOwnerUnverified"
 			});
 			if (nodeKnown) objectNodes.set(object.node, node);
@@ -12140,7 +12163,7 @@ function project({ format, sourceSha256, observations }, limits = LIMITS$1) {
 			model.coverage.objectTotal++;
 		}
 		for (const object of observation.objects ?? []) {
-			if (!uint$4(object.node) || !uint$4(object.parentObjectNode)) continue;
+			if (!uint$6(object.node) || !uint$6(object.parentObjectNode)) continue;
 			const node = objectNodes.get(object.node), parent = objectNodes.get(object.parentObjectNode);
 			if (node && parent && node.parent === null) node.parent = parent.id;
 		}
@@ -12280,7 +12303,7 @@ function byteInput(value, name) {
 	return Uint8Array.from(value);
 }
 function captureTarget(target) {
-	if (!record$7(target)) throw new TypeError("InvalidTarget");
+	if (!record$8(target)) throw new TypeError("InvalidTarget");
 	const { section, paragraph } = target;
 	if (typeof section !== "number" || !Number.isInteger(section) || section < 0 || section > 4294967295 || typeof paragraph !== "number" || !Number.isInteger(paragraph) || paragraph < 0 || paragraph > 4294967295) throw new RangeError("InvalidTarget");
 	return {
@@ -12298,7 +12321,7 @@ function outputBytes(value) {
 	return value;
 }
 async function openDocument(options = {}) {
-	if (!record$7(options)) throw new TypeError("InvalidDocumentOpenOptions");
+	if (!record$8(options)) throw new TypeError("InvalidDocumentOpenOptions");
 	const { bytes, wasm, expectedSha256 } = options;
 	const input = byteInput(bytes, "Document");
 	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256))) throw new TypeError("InvalidExpectedSha256");
@@ -12435,7 +12458,7 @@ async function read(options) {
 	}
 }
 async function edit(options) {
-	if (!record$7(options)) throw new TypeError("InvalidEditOptions");
+	if (!record$8(options)) throw new TypeError("InvalidEditOptions");
 	const { bytes, wasm, target, replace, with: replacement, allowStaleLayout = false } = options;
 	const capturedTarget = captureTarget(target);
 	const document = await openDocument({
@@ -12468,7 +12491,7 @@ async function edit(options) {
 		document.close();
 	}
 }
-var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, record$7;
+var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, record$8;
 var init_engine = __esmMin((() => {
 	init_document_format();
 	init_hwp5_editor();
@@ -12476,7 +12499,7 @@ var init_engine = __esmMin((() => {
 	init_literal_match();
 	MAX_INPUT_BYTES$1 = 67108864;
 	MAX_OUTPUT_BYTES$1 = 134217728;
-	record$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // src/render-content.ts
 function simpleCells(table) {
@@ -12942,22 +12965,22 @@ function capture(value, budget, active = /* @__PURE__ */ new Set(), depth = 0) {
 	return Object.freeze(output);
 }
 function fields(value, required, optional = []) {
-	if (!record$6(value) || required.some((key) => !Object.hasOwn(value, key)) || Object.keys(value).some((key) => !required.includes(key) && !optional.includes(key))) throw new TypeError("InvalidOperationFields");
+	if (!record$7(value) || required.some((key) => !Object.hasOwn(value, key)) || Object.keys(value).some((key) => !required.includes(key) && !optional.includes(key))) throw new TypeError("InvalidOperationFields");
 }
-function uint$3(value) {
+function uint$5(value) {
 	if (typeof value !== "number" || !Number.isInteger(value) || Object.is(value, -0) || value < 0 || value > 4294967295) throw new RangeError("InvalidOperationInteger");
 }
 function string(value) {
 	if (typeof value !== "string") throw new TypeError("InvalidOperationText");
 }
 function position(operation) {
-	uint$3(operation.section);
-	uint$3(operation.paragraph);
+	uint$5(operation.section);
+	uint$5(operation.paragraph);
 }
 function range(operation) {
 	position(operation);
-	uint$3(operation.startUnit);
-	uint$3(operation.endUnit);
+	uint$5(operation.startUnit);
+	uint$5(operation.endUnit);
 	string(operation.expectedRangeText);
 	if (operation.endUnit < operation.startUnit || operation.expectedRangeText.length !== operation.endUnit - operation.startUnit) throw new RangeError("InvalidOperationRange");
 }
@@ -12971,7 +12994,7 @@ function validateDocumentOperations(input) {
 	if (!Array.isArray(captured)) throw new TypeError("InvalidOperationData");
 	const operations = captured;
 	for (const operation of operations) {
-		if (!record$6(operation) || typeof operation.kind !== "string") throw new TypeError("InvalidOperationKind");
+		if (!record$7(operation) || typeof operation.kind !== "string") throw new TypeError("InvalidOperationKind");
 		if (operation.coordinates !== "current-transaction") throw new TypeError("OperationCoordinatesRequired");
 		if (!Object.hasOwn(DOCUMENT_OPERATION_SPECS, operation.kind)) throw new Error(`UnsupportedDocumentOperation:${operation.kind}`);
 		const shape = DOCUMENT_OPERATION_SPECS[operation.kind];
@@ -13005,10 +13028,10 @@ function validateDocumentOperations(input) {
 				break;
 			case "split-paragraph":
 				position(operation);
-				uint$3(operation.atUnit);
+				uint$5(operation.atUnit);
 				string(operation.expectedText);
 				if (Object.hasOwn(operation, "endUnit")) {
-					uint$3(operation.endUnit);
+					uint$5(operation.endUnit);
 					if (operation.endUnit < operation.atUnit) throw new RangeError("InvalidOperationRange");
 				}
 				break;
@@ -13022,11 +13045,11 @@ function validateDocumentOperations(input) {
 				break;
 			case "character-format":
 				range(operation);
-				uint$3(operation.charShapeId);
+				uint$5(operation.charShapeId);
 				break;
 			case "paragraph-format":
 				position(operation);
-				uint$3(operation.paraShapeId);
+				uint$5(operation.paraShapeId);
 				break;
 			case "paragraph-alignment":
 				position(operation);
@@ -13059,16 +13082,16 @@ function validateDocumentOperations(input) {
 					"pictureNode",
 					"width",
 					"height"
-				]) uint$3(operation[key]);
+				]) uint$5(operation[key]);
 				if (!operation.width || !operation.height) throw new RangeError("InvalidResizeAxisSize");
 				break;
 			case "table-insert":
 				position(operation);
-				uint$3(operation.unit);
-				uint$3(operation.rows);
-				uint$3(operation.columns);
-				uint$3(operation.width);
-				uint$3(operation.rowHeight);
+				uint$5(operation.unit);
+				uint$5(operation.rows);
+				uint$5(operation.columns);
+				uint$5(operation.width);
+				uint$5(operation.rowHeight);
 				if (!operation.rows || !operation.columns || !operation.width || !operation.rowHeight || operation.rows * operation.columns > 4096) throw new RangeError("InvalidOperationTableSize");
 				fields(operation.resources, [
 					"paragraph",
@@ -13076,7 +13099,7 @@ function validateDocumentOperations(input) {
 					"style",
 					"border_fill"
 				]);
-				for (const value of Object.values(operation.resources)) uint$3(value);
+				for (const value of Object.values(operation.resources)) uint$5(value);
 				if (Object.hasOwn(operation, "cellTexts")) {
 					if (!Array.isArray(operation.cellTexts) || operation.cellTexts.length !== operation.rows) throw new TypeError("InvalidOperationCellTexts");
 					for (const row of operation.cellTexts) {
@@ -13097,7 +13120,7 @@ function validateDocumentOperations(input) {
 	}
 	return operations;
 }
-var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$6, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
+var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$7, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
 var init_validate = __esmMin((() => {
 	init_character_property_args();
 	init_paragraph_margin_args();
@@ -13109,7 +13132,7 @@ var init_validate = __esmMin((() => {
 	MAX_OPERATIONS = 256;
 	MAX_NODES = 1e5;
 	MAX_UNITS = 4194304;
-	record$6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	encoder$2 = new TextEncoder();
 	common = ["kind", "coordinates"];
 	paragraph = [
@@ -13456,7 +13479,7 @@ var document_operations_exports = /* @__PURE__ */ __exportAll({
 	validateDocumentOperations: () => validateDocumentOperations
 });
 async function applyDocumentOperations(input = {}, dependencies = {}) {
-	if (!record$5(input)) throw new TypeError("InvalidDocumentOperationsInput");
+	if (!record$6(input)) throw new TypeError("InvalidDocumentOperationsInput");
 	const { bytes, wasm, expectedSha256, operations, allowStaleLayout = false } = input;
 	if (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/u.test(expectedSha256)) throw new TypeError("InvalidExpectedSha256");
 	if (typeof allowStaleLayout !== "boolean") throw new TypeError("InvalidAllowStaleLayout");
@@ -13487,9 +13510,9 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 		}
 		const saved = captured.length ? await document.save({ allowStaleLayout }) : original;
 		const hwp5Saved = document.format === "hwp5" && captured.length !== 0;
-		const output = hwp5Saved && record$5(saved) ? saved.bytes : saved;
+		const output = hwp5Saved && record$6(saved) ? saved.bytes : saved;
 		if (!(output instanceof Uint8Array) || output.byteLength === 0 || output.byteLength > 134217728) throw new RangeError("OperationOutputLimitExceeded");
-		const reflow = hwp5Saved && record$5(saved) ? saved.layoutRequiresReflow : false;
+		const reflow = hwp5Saved && record$6(saved) ? saved.layoutRequiresReflow : false;
 		if (typeof reflow !== "boolean") throw new Error("InvalidOperationLayoutState");
 		const owned = Uint8Array.from(output);
 		const changed = original.length !== owned.length || original.some((byte, index) => byte !== owned[index]);
@@ -13516,11 +13539,540 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 	if (result === void 0) throw new Error("MissingOperationResult");
 	return result;
 }
-var record$5;
+var record$6;
 var init_document_operations = __esmMin((() => {
 	init_validate();
 	init_dispatch();
+	record$6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+}));
+// ../../js/picture-replacement-input.mjs
+function copyPictureInput(value, limit, name) {
+	let length, buffer, offset = 0;
+	try {
+		if (ArrayBuffer.isView(value) && tag.call(value) === "Uint8Array") {
+			length = lengthOf.call(value);
+			offset = offsetOf.call(value);
+			buffer = bufferOf.call(value);
+			bufferLength.call(buffer);
+		} else {
+			length = bufferLength.call(value);
+			buffer = value;
+		}
+	} catch {
+		throw new TypeError(`Invalid${name}Bytes`);
+	}
+	if (length < 1 || length > limit) throw new RangeError(`${name}ByteLimitExceeded`);
+	const result = new Uint8Array(length);
+	result.set(new Uint8Array(buffer, offset, length));
+	return result;
+}
+var typed, tag, lengthOf, offsetOf, bufferOf, bufferLength, PICTURE_REPLACEMENT_LIMITS;
+var init_picture_replacement_input = __esmMin((() => {
+	typed = Object.getPrototypeOf(Uint8Array.prototype);
+	tag = Object.getOwnPropertyDescriptor(typed, Symbol.toStringTag).get;
+	lengthOf = Object.getOwnPropertyDescriptor(typed, "byteLength").get;
+	offsetOf = Object.getOwnPropertyDescriptor(typed, "byteOffset").get;
+	bufferOf = Object.getOwnPropertyDescriptor(typed, "buffer").get;
+	bufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
+	PICTURE_REPLACEMENT_LIMITS = Object.freeze({
+		documentBytes: 67108864,
+		imageBytes: 8388608,
+		wasmBytes: 33554432,
+		outputBytes: 67108864
+	});
+}));
+// ../../js/picture-resource-replacement.mjs
+async function createPictureReplacer(source, { instantiate = WebAssembly.instantiate } = {}) {
+	const binary = source instanceof WebAssembly.Module ? source : copyPictureInput(source, PICTURE_REPLACEMENT_LIMITS.wasmBytes, "Wasm");
+	const { exports: wasm } = await instantiate(binary instanceof WebAssembly.Module ? binary : await WebAssembly.compile(binary), {});
+	for (const name of [
+		"hwpjs_abi_version",
+		"cfb_alloc",
+		"cfb_free",
+		"cfb_error_ptr",
+		"cfb_error_len",
+		"picture_file_replace",
+		"picture_file_replace_ptr",
+		"picture_file_replace_len",
+		"picture_file_replace_free"
+	]) if (typeof wasm?.[name] !== "function") throw new Error("PictureReplacementAbiUnavailable");
+	if (wasm.hwpjs_abi_version() !== 6) throw new Error("PictureReplacementAbiVersionMismatch");
+	if (!(wasm.memory instanceof WebAssembly.Memory)) throw new Error("MissingPictureReplacementMemory");
+	const memory = createMemory(wasm);
+	let closed = false;
+	return {
+		replace(input, request) {
+			if (closed) throw new Error("PictureReplacerClosed");
+			if (!request || typeof request !== "object" || Array.isArray(request) || Reflect.ownKeys(request).some((key) => ![
+				"format",
+				"section",
+				"pictureNode",
+				"bytes"
+			].includes(key))) throw new TypeError("InvalidPictureReplacementTarget");
+			const fields = Object.create(null);
+			for (const name of [
+				"format",
+				"section",
+				"pictureNode",
+				"bytes"
+			]) {
+				const descriptor = Object.getOwnPropertyDescriptor(request, name);
+				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidPictureReplacementTarget");
+				fields[name] = descriptor.value;
+			}
+			const { format, section, pictureNode, bytes } = fields;
+			if (!["hwp5", "hwpx"].includes(format) || !uint$4(section) || !uint$4(pictureNode)) throw new TypeError("InvalidPictureReplacementTarget");
+			const document = copyPictureInput(input, PICTURE_REPLACEMENT_LIMITS.documentBytes, "Document");
+			const image = copyPictureInput(bytes, PICTURE_REPLACEMENT_LIMITS.imageBytes, "Image");
+			let result, failure, failed = false;
+			try {
+				result = memory.withBytes(document, (ptr, size) => memory.withBytes(image, (imagePtr, imageSize) => {
+					if (wasm.picture_file_replace(format === "hwp5" ? 1 : 2, ptr, size, section, pictureNode, imagePtr, imageSize) !== 1) throw memory.error();
+					const outputPtr = wasm.picture_file_replace_ptr(), length = wasm.picture_file_replace_len();
+					if (!uint$4(outputPtr) || outputPtr === 0 || !uint$4(length) || length === 0 || length > PICTURE_REPLACEMENT_LIMITS.outputBytes || outputPtr > wasm.memory.buffer.byteLength - length) throw new RangeError("InvalidPictureReplacementOutput");
+					return memory.copy(outputPtr, length);
+				}));
+			} catch (error) {
+				failed = true;
+				failure = error;
+			}
+			try {
+				wasm.picture_file_replace_free();
+			} catch (error) {
+				if (failed) throw new AggregateError([failure, error], "PictureReplacementAndCleanupFailed");
+				throw error;
+			}
+			if (failed) throw failure;
+			return result;
+		},
+		close() {
+			if (!closed) {
+				closed = true;
+				wasm.picture_file_replace_free();
+			}
+		}
+	};
+}
+var uint$4;
+var init_picture_resource_replacement = __esmMin((() => {
+	init_abi_schema();
+	init_wasm_memory();
+	init_picture_replacement_input();
+	uint$4 = (value) => Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+}));
+// src/document-images.ts
+var document_images_exports = /* @__PURE__ */ __exportAll({
+	DOCUMENT_IMAGE_LIMITS: () => DOCUMENT_IMAGE_LIMITS,
+	DocumentImageError: () => DocumentImageError,
+	createDocumentImages: () => createDocumentImages
+});
+function fail(code) {
+	throw new DocumentImageError(code);
+}
+/** Encoded header identification only, never pixel decoding/image validity.
+* Unknown or malformed headers remain extractable raw data; names/MIME declarations
+* from a document are deliberately not consulted. */
+function identify(bytes) {
+	const at = (offset, text) => [...text].every((c, i) => bytes[offset + i] === c.charCodeAt(0));
+	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+	let type;
+	if (bytes.length >= 33 && bytes[0] === 137 && at(1, "PNG\r\n\n") && view.getUint32(8) === 13 && at(12, "IHDR") && view.getUint32(16) > 0 && view.getUint32(20) > 0 && bytes[26] === 0 && bytes[27] === 0 && bytes[28] <= 1 && pngDepths[bytes[25]]?.includes(bytes[24])) type = ["image/png", ".png"];
+	else if (bytes.length >= 13 && (at(0, "GIF87a") || at(0, "GIF89a")) && view.getUint16(6, true) > 0 && view.getUint16(8, true) > 0) type = ["image/gif", ".gif"];
+	else if (bytes.length >= 54 && at(0, "BM") && view.getUint32(2, true) === bytes.length && view.getUint32(10, true) >= 54 && view.getUint32(10, true) <= bytes.length && view.getUint32(14, true) >= 40 && view.getUint32(14, true) <= bytes.length - 14 && view.getInt32(18, true) > 0 && view.getInt32(22, true) !== 0 && view.getUint16(26, true) === 1) type = ["image/bmp", ".bmp"];
+	else if (bytes.length >= 20 && at(0, "RIFF") && at(8, "WEBP") && view.getUint32(4, true) === bytes.length - 8 && [
+		"VP8 ",
+		"VP8L",
+		"VP8X"
+	].some((tag) => at(12, tag)) && view.getUint32(16, true) <= bytes.length - 20) type = ["image/webp", ".webp"];
+	else if (bytes.length >= 12 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 && bytes.at(-2) === 255 && bytes.at(-1) === 217) {
+		let offset = 2, markers = 0;
+		while (offset + 4 <= bytes.length && markers++ < 4096) {
+			if (bytes[offset] !== 255) break;
+			const marker = bytes[offset + 1], length = view.getUint16(offset + 2);
+			if (length < 2 || length > bytes.length - offset - 2) break;
+			if ([
+				192,
+				193,
+				194,
+				195,
+				197,
+				198,
+				199,
+				201,
+				202,
+				203,
+				205,
+				206,
+				207
+			].includes(marker)) {
+				if (length >= 8 && view.getUint16(offset + 5) > 0 && view.getUint16(offset + 7) > 0) type = ["image/jpeg", ".jpg"];
+				break;
+			}
+			if (marker === 218 || marker === 217) break;
+			offset += 2 + length;
+		}
+	}
+	return type ? {
+		mime: type[0],
+		extension: type[1],
+		recognized: true,
+		validation: "signature-and-header-only"
+	} : {
+		mime: "application/octet-stream",
+		extension: ".bin",
+		recognized: false,
+		validation: "unrecognized-or-unsupported-header"
+	};
+}
+function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits = {} } = {}) {
+	if (format !== "hwp5" && format !== "hwpx") fail("InvalidDocumentFormat");
+	if (!digest$1(sourceSha256)) fail("InvalidSourceSha256");
+	if (!sdk || typeof sdk !== "object") fail("MissingSdk");
+	if (typeof sectionCount !== "number" || !Number.isInteger(sectionCount) || sectionCount < 1 || sectionCount > 4096) fail("SectionLimitExceeded");
+	if (!limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((key) => !Object.hasOwn(DOCUMENT_IMAGE_LIMITS, key))) fail("InvalidImageLimits");
+	const budget = {
+		...DOCUMENT_IMAGE_LIMITS,
+		...limits
+	};
+	for (const [key, value] of Object.entries(budget)) if (!Number.isSafeInteger(value) || value < 1 || value > {
+		maxImages: 4096,
+		maxBytes: 33554432,
+		maxTotalBytes: 67108864
+	}[key]) fail("InvalidImageLimits");
+	const rows = /* @__PURE__ */ new Map(), resources = /* @__PURE__ */ new Map();
+	let totalBytes = 0, closed = false, borrowed = sdk;
+	const ready = () => {
+		if (closed) fail("DocumentImagesClosed");
+	};
+	for (let section = 0; section < sectionCount; section++) {
+		let sites;
+		const inventoryMethod = format === "hwp5" ? "pictureSources" : "pictureSites";
+		if (typeof Reflect.get(sdk, inventoryMethod) !== "function") throw new DocumentImageError("ImageInventoryUnavailable", "unsupported", "PictureInventoryApiUnavailable");
+		try {
+			sites = invoke$1(sdk, inventoryMethod, format === "hwp5" ? [section, "base73"] : [section]);
+		} catch (error) {
+			throw new DocumentImageError("ImageInventoryUnavailable", /AbiUnavailable|Unsupported/.test(errorMessage(error) ?? "") ? "unsupported" : "failed");
+		}
+		if (!isRows(sites)) fail("InvalidImageInventory");
+		if (sites.length > budget.maxImages - rows.size) fail("ImageCountLimitExceeded");
+		if (format === "hwp5") validateHwp5PictureSources(sites);
+		for (const row of sites) {
+			if (!record$5(row)) fail("InvalidImageIdentity");
+			const node = format === "hwp5" ? row.component_node : row.pictureNode;
+			if (!uint$3(node)) fail("InvalidImageIdentity");
+			if (format === "hwpx" && (typeof row.state !== "string" || !siteStates.has(row.state) || !(row.paragraph === null || uint$3(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint$3(row.anchorUnit)))) fail("InvalidImageInventory");
+			if (format === "hwp5" && (!uint$3(row.picture_node) || !uint$3(row.owner_node) || !uint$3(row.bin_data_id))) fail("InvalidImageInventory");
+			const id = canonicalImageId({
+				format,
+				section,
+				node
+			});
+			if (rows.has(id)) fail("DuplicateImageIdentity");
+			const source = format === "hwp5" ? {
+				section,
+				pictureNode: node,
+				recordNode: row.picture_node,
+				ownerNode: row.owner_node,
+				resourceOrdinal: row.bin_data_id
+			} : {
+				section,
+				pictureNode: node,
+				paragraph: row.paragraph,
+				anchorUnit: row.anchorUnit
+			};
+			const resourceKey = format === "hwp5" ? `docinfo:${row.bin_data_id}` : `source:${section}:${node}`;
+			const entry = {
+				id,
+				source,
+				resourceKey,
+				status: "unread",
+				reason: "PayloadNotRead",
+				mime: null,
+				extension: null,
+				recognized: null,
+				validation: "not-read",
+				byteLength: null
+			};
+			rows.set(id, entry);
+			if (!resources.has(resourceKey)) resources.set(resourceKey, {
+				refs: [],
+				bytes: null,
+				error: null
+			});
+			resources.get(resourceKey).refs.push(entry);
+		}
+	}
+	sdk = null;
+	const copy = (entry) => ({
+		...entry,
+		source: { ...entry.source }
+	});
+	return {
+		list() {
+			ready();
+			return {
+				version: 1,
+				format,
+				sourceSha256,
+				images: [...rows.values()].map(copy),
+				limits: { ...budget },
+				budget: {
+					retainedUniqueBytes: totalBytes,
+					resourceKeys: resources.size
+				},
+				coverage: {
+					scope: "section-picture-sites",
+					sectionCount,
+					references: rows.size,
+					inventoryComplete: true,
+					payloadsRead: [...rows.values()].filter((row) => row.status === "ready").length,
+					payloadsFailed: [...rows.values()].filter((row) => row.status === "failed" || row.status === "unsupported").length,
+					resourceIdentity: format === "hwp5" ? "docinfo-ordinal" : "picture-source-node",
+					masterPagesIncluded: false,
+					imageBrushesIncluded: false
+				},
+				nativePayloadLimitBytes: format === "hwp5" ? budget.maxBytes : 67108864,
+				jsByteLimitTiming: format === "hwp5" ? "native-decoded-payload-limit" : "after-native-payload-copy"
+			};
+		},
+		read(id, options) {
+			ready();
+			if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((k) => k !== "sourceSha256") || !("sourceSha256" in options) || !digest$1(options.sourceSha256)) fail("InvalidSourceSha256");
+			if (!options || typeof options !== "object" || !("sourceSha256" in options) || options.sourceSha256 !== sourceSha256) fail("SourceSha256Mismatch");
+			if (typeof id !== "string" || id.length > 80 || !/^(hwp5|hwpx):s(0|[1-9][0-9]*):i(0|[1-9][0-9]*)$/.test(id)) fail("InvalidImageId");
+			const entry = rows.get(id);
+			if (!entry) fail("UnknownImageId");
+			const resource = resources.get(entry.resourceKey);
+			if (!resource) fail("UnknownImageResource");
+			if (!borrowed) fail("DocumentImagesClosed");
+			if (!resource.bytes && !resource.error) try {
+				if (typeof Reflect.get(borrowed, format === "hwp5" ? "binaryResource" : "pictureBytes") !== "function") throw new Error(format === "hwp5" ? "Hwp5BinaryResourceAbiUnavailable" : "HwpxPictureBytesAbiUnavailable");
+				const result = format === "hwp5" ? invoke$1(borrowed, "binaryResource", [entry.source.resourceOrdinal, { maxBytes: budget.maxBytes }]) : invoke$1(borrowed, "pictureBytes", [entry.source.section, entry.source.pictureNode]);
+				if (!(result instanceof Uint8Array)) fail("InvalidImageBytes");
+				if (!result.length) fail("EmptyImageBytes");
+				if (result.length > budget.maxBytes) fail("ImageBytesLimitExceeded");
+				if (result.length > budget.maxTotalBytes - totalBytes) fail("ImageTotalBytesLimitExceeded");
+				const bytes = Uint8Array.from(result), metadata = identify(bytes);
+				resource.bytes = bytes;
+				totalBytes += bytes.length;
+				for (const ref of resource.refs) Object.assign(ref, metadata, {
+					status: "ready",
+					reason: metadata.recognized ? null : "UnrecognizedOrUnsupportedImageHeader",
+					byteLength: bytes.length
+				});
+			} catch (error) {
+				const code = error instanceof DocumentImageError ? error.code : unsupported$1.has(errorMessage(error) ?? "") ? errorMessage(error) : errorMessage(error) === "LimitExceeded" ? "ImageBytesLimitExceeded" : "NativeImageReadFailed";
+				const status = unsupported$1.has(code) ? "unsupported" : "failed";
+				resource.error = {
+					code,
+					status
+				};
+				for (const ref of resource.refs) Object.assign(ref, {
+					status,
+					reason: code
+				});
+			}
+			if (resource.error) throw new DocumentImageError(resource.error.code, resource.error.status);
+			if (!resource.bytes) fail("InvalidImageBytes");
+			return {
+				...copy(entry),
+				sourceSha256,
+				bytes: Uint8Array.from(resource.bytes)
+			};
+		},
+		close() {
+			closed = true;
+			borrowed = null;
+			resources.clear();
+			rows.clear();
+			totalBytes = 0;
+		}
+	};
+}
+var DOCUMENT_IMAGE_LIMITS, uint$3, digest$1, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$5, errorMessage, invoke$1;
+var init_document_images = __esmMin((() => {
+	init_hwp5_picture_sources();
+	init_object_reference();
+	DOCUMENT_IMAGE_LIMITS = Object.freeze({
+		maxImages: 4096,
+		maxBytes: 8388608,
+		maxTotalBytes: 33554432
+	});
+	uint$3 = (n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 4294967295;
+	digest$1 = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s);
+	siteStates = /* @__PURE__ */ new Set([
+		"located",
+		"conditional",
+		"unsupported_anchor",
+		"missing_host",
+		"ambiguous_host"
+	]);
+	unsupported$1 = /* @__PURE__ */ new Set([
+		"ExternalLink",
+		"ExternalPictureImage",
+		"UnsupportedBinDataType",
+		"AbsentBinaryResource",
+		"MissingPictureImage",
+		"UnsupportedPictureDisplayHost",
+		"UnsupportedPictureDisplayNode",
+		"UnsupportedPictureSwitchHost",
+		"UnsupportedPictureAnchor",
+		"Hwp5BinaryResourceAbiUnavailable",
+		"HwpxPictureBytesAbiUnavailable"
+	]);
+	DocumentImageError = class extends Error {
+		code;
+		status;
+		reason;
+		constructor(code, status = "failed", reason = code) {
+			super(code);
+			this.name = "DocumentImageError";
+			this.code = code;
+			this.status = status;
+			this.reason = reason;
+		}
+	};
+	pngDepths = {
+		0: [
+			1,
+			2,
+			4,
+			8,
+			16
+		],
+		2: [8, 16],
+		3: [
+			1,
+			2,
+			4,
+			8
+		],
+		4: [8, 16],
+		6: [8, 16]
+	};
+	isRows = (value) => Array.isArray(value);
 	record$5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	errorMessage = (error) => error !== null && typeof error === "object" && "message" in error && typeof error.message === "string" ? error.message : void 0;
+	invoke$1 = (sdk, method, args) => {
+		const fn = Reflect.get(sdk, method);
+		if (typeof fn !== "function") throw Error("MissingSdkMethod");
+		return Reflect.apply(fn, sdk, args);
+	};
+}));
+// src/replace-image.ts
+var replace_image_exports = /* @__PURE__ */ __exportAll({ replaceDocumentImage: () => replaceDocumentImage });
+async function replaceDocumentImage(input, dependencies = {}) {
+	if (!record$4(input)) throw new TypeError("InvalidPictureReplacementInput");
+	const fields = Object.create(null);
+	if (Reflect.ownKeys(input).some((key) => ![
+		"bytes",
+		"wasm",
+		"reference",
+		"imageBytes"
+	].includes(String(key)))) throw new TypeError("InvalidPictureReplacementInput");
+	for (const key of [
+		"bytes",
+		"wasm",
+		"reference",
+		"imageBytes"
+	]) {
+		const descriptor = Object.getOwnPropertyDescriptor(input, key);
+		if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidPictureReplacementInput");
+		fields[key] = descriptor.value;
+	}
+	const source = copyPictureInput(fields.bytes, PICTURE_REPLACEMENT_LIMITS.documentBytes, "Document");
+	const wasm = copyPictureInput(fields.wasm, PICTURE_REPLACEMENT_LIMITS.wasmBytes, "Wasm");
+	const image = copyPictureInput(fields.imageBytes, PICTURE_REPLACEMENT_LIMITS.imageBytes, "Image");
+	const reference = parseObjectReference(fields.reference);
+	if (reference.kind !== "image") throw new TypeError("ExpectedImageReference");
+	const format = detectDocumentFormat(source);
+	if (format !== reference.format) throw new Error("ObjectReferenceFormatMismatch");
+	const open = dependencies.openDocument ?? openDocument;
+	const images = dependencies.createDocumentImages ?? createDocumentImages;
+	const createReplacer = dependencies.createReplacer ?? createPictureReplacer;
+	const [sourceSha256, imageSha256] = await Promise.all([digest(source), digest(image)]);
+	if (sourceSha256 !== reference.sourceSha256) throw new Error("StaleObjectReference");
+	let document;
+	let inventory;
+	let replacer;
+	let result;
+	let failed = false, failure;
+	try {
+		document = await open({
+			bytes: Uint8Array.from(source),
+			wasm: Uint8Array.from(wasm),
+			expectedSha256: sourceSha256
+		});
+		if (!document || document.format !== format || document.sourceSha256 !== sourceSha256 || !uint$2(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096 || !record$4(document.sdk) || typeof document.close !== "function") throw new Error("InvalidPictureReplacementDocument");
+		inventory = images({
+			sdk: document.sdk,
+			format,
+			sourceSha256,
+			sectionCount: document.sectionCount
+		});
+		const listing = inventory.list();
+		if (listing.version !== 1 || listing.format !== format || listing.sourceSha256 !== sourceSha256 || !Array.isArray(listing.images) || listing.images.length > 4096) throw new Error("InvalidImageInventory");
+		const members = /* @__PURE__ */ new Map();
+		for (const row of listing.images) {
+			if (!record$4(row) || !record$4(row.source) || !uint$2(row.source.section) || row.source.section >= document.sectionCount || !uint$2(row.source.pictureNode) || row.id !== canonicalImageId({
+				format,
+				section: row.source.section,
+				node: row.source.pictureNode
+			}) || members.has(row.id)) throw new Error("InvalidImageInventory");
+			members.set(row.id, row);
+		}
+		const selected = members.get(canonicalImageId(reference));
+		if (!selected) throw new Error("ImageReferenceNotFound");
+		const pictureNode = format === "hwp5" ? selected.source.recordNode : selected.source.pictureNode;
+		if (!uint$2(pictureNode)) throw new Error("InvalidImageInventory");
+		replacer = await createReplacer(Uint8Array.from(wasm));
+		const bytes = copyPictureInput(replacer.replace(source, {
+			format,
+			section: reference.section,
+			pictureNode,
+			bytes: image
+		}), PICTURE_REPLACEMENT_LIMITS.outputBytes, "Output");
+		if (detectDocumentFormat(bytes) !== format) throw new Error("PictureReplacementFormatMismatch");
+		result = {
+			format,
+			sourceSha256,
+			bytes,
+			imageSha256,
+			previewStale: true
+		};
+	} catch (error) {
+		failed = true;
+		failure = error;
+	}
+	const errors = [];
+	for (const resource of [
+		replacer,
+		inventory,
+		document
+	]) if (resource && typeof resource.close === "function") try {
+		await resource.close();
+	} catch (error) {
+		errors.push(error);
+	}
+	if (errors.length) throw new AggregateError(failed ? [failure, ...errors] : errors, "PictureReplacementCleanupFailed");
+	if (failed) throw failure;
+	if (!result) throw new Error("InvalidPictureReplacementResult");
+	return result;
+}
+var record$4, uint$2, digest;
+var init_replace_image = __esmMin((() => {
+	init_document_format();
+	init_picture_resource_replacement();
+	init_picture_replacement_input();
+	init_engine();
+	init_document_images();
+	init_object_reference();
+	record$4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$2 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	digest = async (bytes) => {
+		const hash = await crypto.subtle.digest("SHA-256", bytes);
+		return Array.from(new Uint8Array(hash), (n) => n.toString(16).padStart(2, "0")).join("");
+	};
 }));
 // src/document-paragraph.ts
 var document_paragraph_exports = /* @__PURE__ */ __exportAll({ inspectDocumentParagraph: () => inspectDocumentParagraph });
@@ -13559,9 +14111,9 @@ function paragraphSnapshot(sdk, section, paragraph) {
 	const seen = /* @__PURE__ */ new Set();
 	let found, size = 0;
 	for (const row of rows) {
-		if (!record$4(row)) throw new Error("InvalidParagraphInventory");
+		if (!record$3(row)) throw new Error("InvalidParagraphInventory");
 		const { paragraph: id, text, section: observedSection } = row;
-		if (!uint$2(id) || id === 0 || seen.has(id) || observedSection !== void 0 && observedSection !== section) throw new Error("InvalidParagraphInventory");
+		if (!uint$1(id) || id === 0 || seen.has(id) || observedSection !== void 0 && observedSection !== section) throw new Error("InvalidParagraphInventory");
 		seen.add(id);
 		const display = checkText(text);
 		size += encoder$1.encode(display).byteLength;
@@ -13576,7 +14128,7 @@ function shapeId(sdk, section, paragraph) {
 	if (!getter) return null;
 	try {
 		const value = getter(section, paragraph);
-		return uint$2(value) ? value : null;
+		return uint$1(value) ? value : null;
 	} catch {
 		return null;
 	}
@@ -13590,9 +14142,9 @@ function characterRanges(sdk, section, paragraph, units) {
 		const result = [];
 		let cursor = 0;
 		for (const row of rows) {
-			if (!record$4(row)) return null;
+			if (!record$3(row)) return null;
 			const { start, end, charShapeId } = row;
-			if (!uint$2(start) || !uint$2(end) || start !== cursor || end < start || end > units || charShapeId !== null && !uint$2(charShapeId)) return null;
+			if (!uint$1(start) || !uint$1(end) || start !== cursor || end < start || end > units || charShapeId !== null && !uint$1(charShapeId)) return null;
 			cursor = end;
 			result.push({
 				start,
@@ -13608,12 +14160,12 @@ function characterRanges(sdk, section, paragraph, units) {
 }
 /** 원문은 이번 요청에서만 읽으며 문서 모델이나 전역 캐시에 보관하지 않습니다. */
 async function inspectDocumentParagraph(options = {}, dependencies = {}) {
-	if (!record$4(options)) throw new TypeError("InvalidParagraphTarget");
+	if (!record$3(options)) throw new TypeError("InvalidParagraphTarget");
 	const { bytes, wasm, target, expectedSha256, format = "text" } = options;
 	if (format !== "text" && format !== "markdown") throw new TypeError("InvalidRenderFormat");
-	if (!record$4(target)) throw new TypeError("InvalidParagraphTarget");
+	if (!record$3(target)) throw new TypeError("InvalidParagraphTarget");
 	const { section, paragraph } = target;
-	if (!uint$2(section) || !uint$2(paragraph)) throw new RangeError("InvalidParagraphTarget");
+	if (!uint$1(section) || !uint$1(paragraph)) throw new RangeError("InvalidParagraphTarget");
 	const suppliedOpen = dependencies.openDocument;
 	if (suppliedOpen !== void 0 && typeof suppliedOpen !== "function") throw new TypeError("InvalidDocumentOpener");
 	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256))) throw new TypeError("InvalidExpectedSha256");
@@ -13638,17 +14190,17 @@ async function inspectDocumentParagraph(options = {}, dependencies = {}) {
 	try {
 		close = document?.close;
 		const sdk = document?.sdk;
-		if (!document || typeof close !== "function" || !record$4(sdk)) throw new Error("InvalidOpenedDocument");
+		if (!document || typeof close !== "function" || !record$3(sdk)) throw new Error("InvalidOpenedDocument");
 		if (document.format !== actualFormat) throw new Error("DocumentFormatMismatch");
 		if (document.sourceSha256 !== sourceSha256) throw new Error("DocumentSnapshotSha256Mismatch");
-		if (!uint$2(document.sectionCount) || document.sectionCount === 0 || document.sectionCount > 4096 || section >= document.sectionCount) throw new RangeError("InvalidParagraphSection");
+		if (!uint$1(document.sectionCount) || document.sectionCount === 0 || document.sectionCount > 4096 || section >= document.sectionCount) throw new RangeError("InvalidParagraphSection");
 		let displayText = null;
 		let nativeText;
 		if (actualFormat === "hwp5") {
 			const countGetter = method(sdk, "paragraphCount"), textGetter = method(sdk, "text");
 			if (!countGetter || !textGetter) throw new Error("ParagraphTextUnavailable");
 			const count = countGetter(section);
-			if (!uint$2(count)) throw new Error("InvalidParagraphInventory");
+			if (!uint$1(count)) throw new Error("InvalidParagraphInventory");
 			if (paragraph >= count) throw new RangeError("ParagraphNotFound");
 			nativeText = checkText(textGetter(section, paragraph));
 		} else {
@@ -13702,7 +14254,7 @@ async function inspectDocumentParagraph(options = {}, dependencies = {}) {
 	if (failed) throw failure;
 	return output;
 }
-var MAX_DOCUMENT_BYTES, MAX_WASM_BYTES, MAX_TEXT_BYTES$2, MAX_OUTPUT_BYTES, MAX_ROWS$1, encoder$1, uint$2, record$4;
+var MAX_DOCUMENT_BYTES, MAX_WASM_BYTES, MAX_TEXT_BYTES$2, MAX_OUTPUT_BYTES, MAX_ROWS$1, encoder$1, uint$1, record$3;
 var init_document_paragraph = __esmMin((() => {
 	init_document_format();
 	init_render_escape();
@@ -13712,8 +14264,8 @@ var init_document_paragraph = __esmMin((() => {
 	MAX_OUTPUT_BYTES = 65536;
 	MAX_ROWS$1 = 1e5;
 	encoder$1 = new TextEncoder();
-	uint$2 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	record$4 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	uint$1 = (value) => typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	record$3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // src/ocr/common.ts
 function ownedBytes(value, maxBytes, name = "Ocr", allowEmpty = false) {
@@ -14075,305 +14627,6 @@ function createTesseractProvider(options = {}) {
 var init_tesseract = __esmMin((() => {
 	init_common();
 	init_process();
-}));
-// src/document-images.ts
-var document_images_exports = /* @__PURE__ */ __exportAll({
-	DOCUMENT_IMAGE_LIMITS: () => DOCUMENT_IMAGE_LIMITS,
-	DocumentImageError: () => DocumentImageError,
-	createDocumentImages: () => createDocumentImages
-});
-function fail(code) {
-	throw new DocumentImageError(code);
-}
-/** Encoded header identification only, never pixel decoding/image validity.
-* Unknown or malformed headers remain extractable raw data; names/MIME declarations
-* from a document are deliberately not consulted. */
-function identify(bytes) {
-	const at = (offset, text) => [...text].every((c, i) => bytes[offset + i] === c.charCodeAt(0));
-	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-	let type;
-	if (bytes.length >= 33 && bytes[0] === 137 && at(1, "PNG\r\n\n") && view.getUint32(8) === 13 && at(12, "IHDR") && view.getUint32(16) > 0 && view.getUint32(20) > 0 && bytes[26] === 0 && bytes[27] === 0 && bytes[28] <= 1 && pngDepths[bytes[25]]?.includes(bytes[24])) type = ["image/png", ".png"];
-	else if (bytes.length >= 13 && (at(0, "GIF87a") || at(0, "GIF89a")) && view.getUint16(6, true) > 0 && view.getUint16(8, true) > 0) type = ["image/gif", ".gif"];
-	else if (bytes.length >= 54 && at(0, "BM") && view.getUint32(2, true) === bytes.length && view.getUint32(10, true) >= 54 && view.getUint32(10, true) <= bytes.length && view.getUint32(14, true) >= 40 && view.getUint32(14, true) <= bytes.length - 14 && view.getInt32(18, true) > 0 && view.getInt32(22, true) !== 0 && view.getUint16(26, true) === 1) type = ["image/bmp", ".bmp"];
-	else if (bytes.length >= 20 && at(0, "RIFF") && at(8, "WEBP") && view.getUint32(4, true) === bytes.length - 8 && [
-		"VP8 ",
-		"VP8L",
-		"VP8X"
-	].some((tag) => at(12, tag)) && view.getUint32(16, true) <= bytes.length - 20) type = ["image/webp", ".webp"];
-	else if (bytes.length >= 12 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255 && bytes.at(-2) === 255 && bytes.at(-1) === 217) {
-		let offset = 2, markers = 0;
-		while (offset + 4 <= bytes.length && markers++ < 4096) {
-			if (bytes[offset] !== 255) break;
-			const marker = bytes[offset + 1], length = view.getUint16(offset + 2);
-			if (length < 2 || length > bytes.length - offset - 2) break;
-			if ([
-				192,
-				193,
-				194,
-				195,
-				197,
-				198,
-				199,
-				201,
-				202,
-				203,
-				205,
-				206,
-				207
-			].includes(marker)) {
-				if (length >= 8 && view.getUint16(offset + 5) > 0 && view.getUint16(offset + 7) > 0) type = ["image/jpeg", ".jpg"];
-				break;
-			}
-			if (marker === 218 || marker === 217) break;
-			offset += 2 + length;
-		}
-	}
-	return type ? {
-		mime: type[0],
-		extension: type[1],
-		recognized: true,
-		validation: "signature-and-header-only"
-	} : {
-		mime: "application/octet-stream",
-		extension: ".bin",
-		recognized: false,
-		validation: "unrecognized-or-unsupported-header"
-	};
-}
-function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits = {} } = {}) {
-	if (format !== "hwp5" && format !== "hwpx") fail("InvalidDocumentFormat");
-	if (!digest(sourceSha256)) fail("InvalidSourceSha256");
-	if (!sdk || typeof sdk !== "object") fail("MissingSdk");
-	if (typeof sectionCount !== "number" || !Number.isInteger(sectionCount) || sectionCount < 1 || sectionCount > 4096) fail("SectionLimitExceeded");
-	if (!limits || typeof limits !== "object" || Array.isArray(limits) || Object.keys(limits).some((key) => !Object.hasOwn(DOCUMENT_IMAGE_LIMITS, key))) fail("InvalidImageLimits");
-	const budget = {
-		...DOCUMENT_IMAGE_LIMITS,
-		...limits
-	};
-	for (const [key, value] of Object.entries(budget)) if (!Number.isSafeInteger(value) || value < 1 || value > {
-		maxImages: 4096,
-		maxBytes: 33554432,
-		maxTotalBytes: 67108864
-	}[key]) fail("InvalidImageLimits");
-	const rows = /* @__PURE__ */ new Map(), resources = /* @__PURE__ */ new Map();
-	let totalBytes = 0, closed = false, borrowed = sdk;
-	const ready = () => {
-		if (closed) fail("DocumentImagesClosed");
-	};
-	for (let section = 0; section < sectionCount; section++) {
-		let sites;
-		const inventoryMethod = format === "hwp5" ? "pictureSources" : "pictureSites";
-		if (typeof Reflect.get(sdk, inventoryMethod) !== "function") throw new DocumentImageError("ImageInventoryUnavailable", "unsupported", "PictureInventoryApiUnavailable");
-		try {
-			sites = invoke$1(sdk, inventoryMethod, format === "hwp5" ? [section, "base73"] : [section]);
-		} catch (error) {
-			throw new DocumentImageError("ImageInventoryUnavailable", /AbiUnavailable|Unsupported/.test(errorMessage(error) ?? "") ? "unsupported" : "failed");
-		}
-		if (!isRows(sites)) fail("InvalidImageInventory");
-		if (sites.length > budget.maxImages - rows.size) fail("ImageCountLimitExceeded");
-		if (format === "hwp5") validateHwp5PictureSources(sites);
-		for (const row of sites) {
-			if (!record$3(row)) fail("InvalidImageIdentity");
-			const node = format === "hwp5" ? row.component_node : row.pictureNode;
-			if (!uint$1(node)) fail("InvalidImageIdentity");
-			if (format === "hwpx" && (typeof row.state !== "string" || !siteStates.has(row.state) || !(row.paragraph === null || uint$1(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint$1(row.anchorUnit)))) fail("InvalidImageInventory");
-			if (format === "hwp5" && (!uint$1(row.picture_node) || !uint$1(row.owner_node) || !uint$1(row.bin_data_id))) fail("InvalidImageInventory");
-			const id = canonicalImageId({
-				format,
-				section,
-				node
-			});
-			if (rows.has(id)) fail("DuplicateImageIdentity");
-			const source = format === "hwp5" ? {
-				section,
-				pictureNode: node,
-				recordNode: row.picture_node,
-				ownerNode: row.owner_node,
-				resourceOrdinal: row.bin_data_id
-			} : {
-				section,
-				pictureNode: node,
-				paragraph: row.paragraph,
-				anchorUnit: row.anchorUnit
-			};
-			const resourceKey = format === "hwp5" ? `docinfo:${row.bin_data_id}` : `source:${section}:${node}`;
-			const entry = {
-				id,
-				source,
-				resourceKey,
-				status: "unread",
-				reason: "PayloadNotRead",
-				mime: null,
-				extension: null,
-				recognized: null,
-				validation: "not-read",
-				byteLength: null
-			};
-			rows.set(id, entry);
-			if (!resources.has(resourceKey)) resources.set(resourceKey, {
-				refs: [],
-				bytes: null,
-				error: null
-			});
-			resources.get(resourceKey).refs.push(entry);
-		}
-	}
-	sdk = null;
-	const copy = (entry) => ({
-		...entry,
-		source: { ...entry.source }
-	});
-	return {
-		list() {
-			ready();
-			return {
-				version: 1,
-				format,
-				sourceSha256,
-				images: [...rows.values()].map(copy),
-				limits: { ...budget },
-				budget: {
-					retainedUniqueBytes: totalBytes,
-					resourceKeys: resources.size
-				},
-				coverage: {
-					scope: "section-picture-sites",
-					sectionCount,
-					references: rows.size,
-					inventoryComplete: true,
-					payloadsRead: [...rows.values()].filter((row) => row.status === "ready").length,
-					payloadsFailed: [...rows.values()].filter((row) => row.status === "failed" || row.status === "unsupported").length,
-					resourceIdentity: format === "hwp5" ? "docinfo-ordinal" : "picture-source-node",
-					masterPagesIncluded: false,
-					imageBrushesIncluded: false
-				},
-				nativePayloadLimitBytes: format === "hwp5" ? budget.maxBytes : 67108864,
-				jsByteLimitTiming: format === "hwp5" ? "native-decoded-payload-limit" : "after-native-payload-copy"
-			};
-		},
-		read(id, options) {
-			ready();
-			if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((k) => k !== "sourceSha256") || !("sourceSha256" in options) || !digest(options.sourceSha256)) fail("InvalidSourceSha256");
-			if (!options || typeof options !== "object" || !("sourceSha256" in options) || options.sourceSha256 !== sourceSha256) fail("SourceSha256Mismatch");
-			if (typeof id !== "string" || id.length > 80 || !/^(hwp5|hwpx):s(0|[1-9][0-9]*):i(0|[1-9][0-9]*)$/.test(id)) fail("InvalidImageId");
-			const entry = rows.get(id);
-			if (!entry) fail("UnknownImageId");
-			const resource = resources.get(entry.resourceKey);
-			if (!resource) fail("UnknownImageResource");
-			if (!borrowed) fail("DocumentImagesClosed");
-			if (!resource.bytes && !resource.error) try {
-				if (typeof Reflect.get(borrowed, format === "hwp5" ? "binaryResource" : "pictureBytes") !== "function") throw new Error(format === "hwp5" ? "Hwp5BinaryResourceAbiUnavailable" : "HwpxPictureBytesAbiUnavailable");
-				const result = format === "hwp5" ? invoke$1(borrowed, "binaryResource", [entry.source.resourceOrdinal, { maxBytes: budget.maxBytes }]) : invoke$1(borrowed, "pictureBytes", [entry.source.section, entry.source.pictureNode]);
-				if (!(result instanceof Uint8Array)) fail("InvalidImageBytes");
-				if (!result.length) fail("EmptyImageBytes");
-				if (result.length > budget.maxBytes) fail("ImageBytesLimitExceeded");
-				if (result.length > budget.maxTotalBytes - totalBytes) fail("ImageTotalBytesLimitExceeded");
-				const bytes = Uint8Array.from(result), metadata = identify(bytes);
-				resource.bytes = bytes;
-				totalBytes += bytes.length;
-				for (const ref of resource.refs) Object.assign(ref, metadata, {
-					status: "ready",
-					reason: metadata.recognized ? null : "UnrecognizedOrUnsupportedImageHeader",
-					byteLength: bytes.length
-				});
-			} catch (error) {
-				const code = error instanceof DocumentImageError ? error.code : unsupported$1.has(errorMessage(error) ?? "") ? errorMessage(error) : errorMessage(error) === "LimitExceeded" ? "ImageBytesLimitExceeded" : "NativeImageReadFailed";
-				const status = unsupported$1.has(code) ? "unsupported" : "failed";
-				resource.error = {
-					code,
-					status
-				};
-				for (const ref of resource.refs) Object.assign(ref, {
-					status,
-					reason: code
-				});
-			}
-			if (resource.error) throw new DocumentImageError(resource.error.code, resource.error.status);
-			if (!resource.bytes) fail("InvalidImageBytes");
-			return {
-				...copy(entry),
-				sourceSha256,
-				bytes: Uint8Array.from(resource.bytes)
-			};
-		},
-		close() {
-			closed = true;
-			borrowed = null;
-			resources.clear();
-			rows.clear();
-			totalBytes = 0;
-		}
-	};
-}
-var DOCUMENT_IMAGE_LIMITS, uint$1, digest, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$3, errorMessage, invoke$1;
-var init_document_images = __esmMin((() => {
-	init_hwp5_picture_sources();
-	init_object_reference();
-	DOCUMENT_IMAGE_LIMITS = Object.freeze({
-		maxImages: 4096,
-		maxBytes: 8388608,
-		maxTotalBytes: 33554432
-	});
-	uint$1 = (n) => typeof n === "number" && Number.isInteger(n) && n >= 0 && n <= 4294967295;
-	digest = (s) => typeof s === "string" && /^[a-f0-9]{64}$/.test(s);
-	siteStates = /* @__PURE__ */ new Set([
-		"located",
-		"conditional",
-		"unsupported_anchor",
-		"missing_host",
-		"ambiguous_host"
-	]);
-	unsupported$1 = /* @__PURE__ */ new Set([
-		"ExternalLink",
-		"ExternalPictureImage",
-		"UnsupportedBinDataType",
-		"AbsentBinaryResource",
-		"MissingPictureImage",
-		"UnsupportedPictureDisplayHost",
-		"UnsupportedPictureDisplayNode",
-		"UnsupportedPictureSwitchHost",
-		"UnsupportedPictureAnchor",
-		"Hwp5BinaryResourceAbiUnavailable",
-		"HwpxPictureBytesAbiUnavailable"
-	]);
-	DocumentImageError = class extends Error {
-		code;
-		status;
-		reason;
-		constructor(code, status = "failed", reason = code) {
-			super(code);
-			this.name = "DocumentImageError";
-			this.code = code;
-			this.status = status;
-			this.reason = reason;
-		}
-	};
-	pngDepths = {
-		0: [
-			1,
-			2,
-			4,
-			8,
-			16
-		],
-		2: [8, 16],
-		3: [
-			1,
-			2,
-			4,
-			8
-		],
-		4: [8, 16],
-		6: [8, 16]
-	};
-	isRows = (value) => Array.isArray(value);
-	record$3 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	errorMessage = (error) => error !== null && typeof error === "object" && "message" in error && typeof error.message === "string" ? error.message : void 0;
-	invoke$1 = (sdk, method, args) => {
-		const fn = Reflect.get(sdk, method);
-		if (typeof fn !== "function") throw Error("MissingSdkMethod");
-		return Reflect.apply(fn, sdk, args);
-	};
 }));
 // src/document-ocr.ts
 var document_ocr_exports = /* @__PURE__ */ __exportAll({
@@ -14920,11 +15173,19 @@ function textResult(value, input) {
 }
 async function runExtendedCommand(options, { files, io, loadWasm, dependencies = {}, onPublished }) {
 	const input = options.command === "create" ? void 0 : await files.readInputSnapshot(options.input, { maxBytes: MAX_DOCUMENT_BYTES$1 });
-	if (options.command !== "create" && options.expectSha256 !== void 0 && input?.sha256 !== options.expectSha256) throw new Error("SourceSHA256Mismatch");
+	if (options.command !== "create" && "expectSha256" in options && options.expectSha256 !== void 0 && input?.sha256 !== options.expectSha256) throw new Error("SourceSHA256Mismatch");
 	const requireInput = () => {
 		if (!input) throw new Error("MissingDocumentInput");
 		return input;
 	};
+	let replacementImage;
+	let replacementFormat;
+	if (options.command === "replace-image") {
+		const reference = parseObjectReference(options.reference, { sourceSha256: requireInput().sha256 });
+		if (reference.kind !== "image") throw new Error("InvalidImageReference");
+		replacementFormat = reference.format;
+		replacementImage = await files.readInputSnapshot(options.imagePath, { maxBytes: MAX_IMAGE_BYTES });
+	}
 	let text = "";
 	if (options.command === "create" && options.textFile !== void 0) {
 		const snapshot = await files.readInputSnapshot(options.textFile, { maxBytes: MAX_TEXT_BYTES$1 });
@@ -14951,14 +15212,36 @@ async function runExtendedCommand(options, { files, io, loadWasm, dependencies =
 		operations = operationService.validateDocumentOperations(raw);
 	}
 	let target;
-	if (options.command === "create" || options.command === "apply" || options.command === "convert") {
+	if (options.command === "create" || options.command === "apply" || options.command === "convert" || options.command === "replace-image") {
 		target = options.command === "create" ? await files.assertNewDocumentOutput({ outputPath: options.output }) : await files.assertNewOutput({
 			input: requireInput(),
 			outputPath: options.output
 		});
-		if (options.command !== "apply") files.assertOutputFormat(target, options.command === "create" ? options.format : options.to);
+		const expectedFormat = options.command === "create" ? options.format : options.command === "convert" ? options.to : replacementFormat;
+		if (expectedFormat !== void 0) files.assertOutputFormat(target, expectedFormat);
 	}
 	const wasm = await loadWasm();
+	if (options.command === "replace-image") {
+		const source = requireInput();
+		if (!replacementImage || !replacementFormat || !target) throw new Error("MissingImageReplacementInput");
+		const value = await (dependencies.replaceDocumentImage ?? (await Promise.resolve().then(() => (init_replace_image(), replace_image_exports))).replaceDocumentImage)({
+			bytes: source.bytes,
+			wasm,
+			reference: options.reference,
+			imageBytes: replacementImage.bytes
+		});
+		if (!record$2(value)) throw new Error("InvalidImageReplacementResult");
+		const { format, sourceSha256, imageSha256, bytes, previewStale } = value;
+		if (!documentFormat(format) || format !== replacementFormat || sourceSha256 !== source.sha256 || imageSha256 !== replacementImage.sha256 || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864) throw new Error("InvalidImageReplacementResult");
+		files.assertOutputFormat(target, format);
+		const receipt = await files.publishNewOutput({
+			target,
+			bytes: Uint8Array.from(bytes)
+		});
+		onPublished(receipt);
+		await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + line("imageSHA256", imageSha256) + line("previewStale", previewStale) + warningLines(receipt.warnings));
+		return 0;
+	}
 	if (options.command === "paragraph") {
 		const source = requireInput();
 		const result = await (dependencies.inspectDocumentParagraph ?? (await Promise.resolve().then(() => (init_document_paragraph(), document_paragraph_exports))).inspectDocumentParagraph)({
@@ -15065,11 +15348,12 @@ async function runExtendedCommand(options, { files, io, loadWasm, dependencies =
 	await io.stdout.write(line("output", receipt.path) + line("format", saved.format) + line("sha256", receipt.sha256) + line("layoutRequiresReflow", saved.layoutRequiresReflow) + extra + warningLines(receipt.warnings));
 	return 0;
 }
-var MAX_PATCH_BYTES, MAX_TEXT_BYTES$1, encoder, record$2, documentFormat;
+var MAX_PATCH_BYTES, MAX_TEXT_BYTES$1, MAX_IMAGE_BYTES, encoder, record$2, documentFormat;
 var init_extended_host = __esmMin((() => {
 	init_object_reference();
 	MAX_PATCH_BYTES = 1048576;
 	MAX_TEXT_BYTES$1 = 4194304;
+	MAX_IMAGE_BYTES = 8388608;
 	encoder = new TextEncoder();
 	record$2 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	documentFormat = (value) => value === "hwp5" || value === "hwpx";
@@ -15351,7 +15635,7 @@ function fileVersion(document, diagnostics) {
 	if (document.format !== "hwp5" || !has(document.sdk, "fileVersion")) return unsupported("FileVersionNotExposedBySdk");
 	try {
 		const value = invoke(document.sdk, "fileVersion");
-		if (!uint$4(value) || value === 0) throw Error("InvalidFileVersionObservation");
+		if (!uint$6(value) || value === 0) throw Error("InvalidFileVersionObservation");
 		return observed(value, "sdk.fileVersion");
 	} catch (error) {
 		return failedObservation(diagnostics, "fileVersion", error);
@@ -15374,7 +15658,7 @@ function textSourceProtection(document, diagnostics) {
 	let paragraphs = 0;
 	for (let section = 0; section < document.sectionCount; section++) try {
 		const count = invoke(sdk, "paragraphCount", [section]);
-		if (!uint$4(count) || count > 1e5) throw Error("InvalidParagraphCountObservation");
+		if (!uint$6(count) || count > 1e5) throw Error("InvalidParagraphCountObservation");
 		paragraphs += count;
 		if (paragraphs > LIMITS$1.maxBlocks) {
 			diagnostics.push(diagnostic("ObservationLimitExceeded", "textSourceProtection", { section }));
@@ -15617,7 +15901,7 @@ async function runCLI(argv, dependencies = {}) {
 				}
 			});
 		}
-		if (options.command === "create" || options.command === "apply" || options.command === "convert" || options.command === "ocr" || options.command === "paragraph") throw Error("UnknownExtendedCommand");
+		if (options.command === "create" || options.command === "apply" || options.command === "convert" || options.command === "ocr" || options.command === "paragraph" || options.command === "replace-image") throw Error("UnknownExtendedCommand");
 		const input = await files.readInputSnapshot(options.input, { maxBytes: MAX_DOCUMENT_BYTES$1 });
 		if ("expectSha256" in options && options.expectSha256 !== void 0 && input.sha256 !== options.expectSha256) throw Error("SourceSHA256Mismatch");
 		const target = options.command === "edit" ? await files.assertNewOutput({

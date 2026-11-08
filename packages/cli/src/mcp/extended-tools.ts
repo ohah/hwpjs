@@ -6,6 +6,7 @@ import type {
   CallToolResult,
 } from '@modelcontextprotocol/server';
 import type { CLIHostDependencies } from '../types/host.ts';
+import { parseObjectReference } from '../object-reference.ts';
 
 export type InvokeCLI = (argv: string[], options?: CLIHostDependencies) => Promise<CallToolResult>;
 
@@ -126,6 +127,41 @@ function operationSchema() {
 // 같은 CLI 호스트를 호출하며 별도 편집 엔진이나 저장 경로를 만들지 않습니다.
 export function extendedDocumentTools({ invoke, wasm }: { invoke: InvokeCLI; wasm: string[] }) {
   return [
+    defineDocumentTool({
+      name: 'replace_document_image',
+      config: {
+        title: '문서 그림을 새 파일에서 교체',
+        description:
+          '원본 SHA에 결속된 이미지 reference를 사용해 PNG 또는 JPEG로 교체하고 새 문서를 저장합니다. 참조는 list_document_images 또는 read_document로 확인합니다. 기존 파일은 덮어쓰지 않으며 미리보기는 오래된 상태가 됩니다. 그림 삽입이나 열린 세션 undo가 아닙니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          outputPath: path(),
+          reference: z
+            .string()
+            .min(1)
+            .max(128)
+            .refine((value) => {
+              try {
+                return parseObjectReference(value).kind === 'image';
+              } catch {
+                return false;
+              }
+            }, '같은 원본의 이미지 참조가 필요합니다.'),
+          imagePath: path(),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({ inputPath, outputPath, reference, imagePath }) =>
+        invoke([
+          'replace-image',
+          `--ref=${reference}`,
+          `--image=${imagePath}`,
+          `--output=${outputPath}`,
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
     defineDocumentTool({
       name: 'get_document_paragraph',
       config: {

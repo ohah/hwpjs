@@ -13,13 +13,15 @@ export const EXTENDED_OPTIONS = Object.freeze({
   convert: ['to', 'output', 'expect-sha256', 'loss-policy', 'wasm', 'allow-stale-layout'],
   ocr: ['ref', 'provider', 'languages', 'executable', 'format', 'expect-sha256', 'wasm'],
   paragraph: ['target', 'format', 'expect-sha256', 'wasm'],
+  'replace-image': ['ref', 'image', 'output', 'wasm'],
 });
 
 export const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations JSON) --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
   hwpjs create --format hwp5|hwpx --output OUTPUT [--text-file FILE] [--allow-stale-layout] [--wasm PATH]
   hwpjs convert INPUT --to hwp5|hwpx --output OUTPUT [--loss-policy reject|text-only] [--expect-sha256 SHA256] [--allow-stale-layout] [--wasm PATH]
   hwpjs ocr INPUT [--ref IMAGE_REFERENCE] [--provider tesseract|vision] [--languages kor+eng] [--executable PATH] [--format text|markdown] [--wasm PATH]
-  hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]`;
+  hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]
+  hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]`;
 
 type Fail = (code: string) => never;
 type Options = ReadonlyMap<string, string>;
@@ -64,6 +66,22 @@ export function interpretExtendedArguments(
   if (positional.length !== 1 || !positional[0] || positional[0] === '-')
     return fail('ExpectedInputFile');
   const input = positional[0];
+  if (command === 'replace-image') {
+    const reference = required('ref', 'MissingRequiredOption:ref');
+    try {
+      if (parseObjectReference(reference).kind !== 'image') return fail('InvalidImageReference');
+    } catch {
+      return fail('InvalidImageReference');
+    }
+    return Object.freeze({
+      ...common,
+      command,
+      input,
+      reference,
+      imagePath: required('image', 'MissingRequiredOption:image'),
+      output: required('output', 'ExpectedOutputFile'),
+    });
+  }
   const expected = options.get('expect-sha256');
   if (expected !== undefined && !/^[a-f0-9]{64}$/iu.test(expected))
     return fail('InvalidExpectedSHA256');

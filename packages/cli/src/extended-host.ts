@@ -8,6 +8,7 @@ import { line, observationLines, warningLines } from './host-output.ts';
 
 const MAX_PATCH_BYTES = 1024 * 1024;
 const MAX_TEXT_BYTES = 4 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const encoder = new TextEncoder();
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -78,6 +79,7 @@ export async function runExtendedCommand(
       : await files.readInputSnapshot(options.input, { maxBytes: MAX_DOCUMENT_BYTES });
   if (
     options.command !== 'create' &&
+    'expectSha256' in options &&
     options.expectSha256 !== undefined &&
     input?.sha256 !== options.expectSha256
   )
@@ -86,6 +88,18 @@ export async function runExtendedCommand(
     if (!input) throw new Error('MissingDocumentInput');
     return input;
   };
+  let replacementImage: InputSnapshot | undefined;
+  let replacementFormat: DocumentFormat | undefined;
+  if (options.command === 'replace-image') {
+    const reference = parseObjectReference(options.reference, {
+      sourceSha256: requireInput().sha256,
+    });
+    if (reference.kind !== 'image') throw new Error('InvalidImageReference');
+    replacementFormat = reference.format;
+    replacementImage = await files.readInputSnapshot(options.imagePath, {
+      maxBytes: MAX_IMAGE_BYTES,
+    });
+  }
   let text = '';
   if (options.command === 'create' && options.textFile !== undefined) {
     const snapshot = await files.readInputSnapshot(options.textFile, { maxBytes: MAX_TEXT_BYTES });
@@ -128,16 +142,62 @@ export async function runExtendedCommand(
   if (
     options.command === 'create' ||
     options.command === 'apply' ||
-    options.command === 'convert'
+    options.command === 'convert' ||
+    options.command === 'replace-image'
   ) {
     target =
       options.command === 'create'
         ? await files.assertNewDocumentOutput({ outputPath: options.output })
         : await files.assertNewOutput({ input: requireInput(), outputPath: options.output });
-    if (options.command !== 'apply')
-      files.assertOutputFormat(target, options.command === 'create' ? options.format : options.to);
+    const expectedFormat =
+      options.command === 'create'
+        ? options.format
+        : options.command === 'convert'
+          ? options.to
+          : replacementFormat;
+    if (expectedFormat !== undefined) files.assertOutputFormat(target, expectedFormat);
   }
   const wasm = await loadWasm();
+  if (options.command === 'replace-image') {
+    const source = requireInput();
+    if (!replacementImage || !replacementFormat || !target)
+      throw new Error('MissingImageReplacementInput');
+    const replace =
+      dependencies.replaceDocumentImage ??
+      (await import('./replace-image.ts')).replaceDocumentImage;
+    const value: unknown = await replace({
+      bytes: source.bytes,
+      wasm,
+      reference: options.reference,
+      imageBytes: replacementImage.bytes,
+    });
+    if (!record(value)) throw new Error('InvalidImageReplacementResult');
+    const { format, sourceSha256, imageSha256, bytes, previewStale } = value;
+    if (
+      !documentFormat(format) ||
+      format !== replacementFormat ||
+      sourceSha256 !== source.sha256 ||
+      imageSha256 !== replacementImage.sha256 ||
+      previewStale !== true ||
+      !(bytes instanceof Uint8Array) ||
+      bytes.byteLength === 0 ||
+      bytes.byteLength > MAX_DOCUMENT_BYTES
+    )
+      throw new Error('InvalidImageReplacementResult');
+    files.assertOutputFormat(target, format);
+    const receipt = await files.publishNewOutput({ target, bytes: Uint8Array.from(bytes) });
+    onPublished(receipt);
+    await io.stdout.write(
+      line('output', receipt.path) +
+        line('format', format) +
+        line('sha256', receipt.sha256) +
+        line('sourceSHA256', sourceSha256) +
+        line('imageSHA256', imageSha256) +
+        line('previewStale', previewStale) +
+        warningLines(receipt.warnings),
+    );
+    return 0;
+  }
   if (options.command === 'paragraph') {
     const source = requireInput();
     const inspect =

@@ -14,8 +14,21 @@ interface NewOutput {
   readonly output: string;
   readonly allowStaleLayout: boolean;
 }
-export type ExtendedCommandName = 'apply' | 'create' | 'convert' | 'ocr' | 'paragraph';
+export type ExtendedCommandName =
+  | 'apply'
+  | 'create'
+  | 'convert'
+  | 'ocr'
+  | 'paragraph'
+  | 'replace-image';
 export type ExtendedCommandOptions =
+  | (WasmOption & {
+      readonly command: 'replace-image';
+      readonly input: string;
+      readonly output: string;
+      readonly reference: string;
+      readonly imagePath: string;
+    })
   | (InputOption &
       NewOutput & {
         readonly command: 'apply';

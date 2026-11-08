@@ -186,7 +186,8 @@ export async function runCLI(
       options.command === 'apply' ||
       options.command === 'convert' ||
       options.command === 'ocr' ||
-      options.command === 'paragraph'
+      options.command === 'paragraph' ||
+      options.command === 'replace-image'
     )
       throw Error('UnknownExtendedCommand');
     const input = await files.readInputSnapshot(options.input, {

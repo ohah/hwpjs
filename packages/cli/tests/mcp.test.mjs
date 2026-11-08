@@ -149,6 +149,7 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
     'ocr_document',
     'read_document',
     'read_documents',
+    'replace_document_image',
   ]);
   const result = await client.callTool({
     name: 'read_document',
@@ -236,7 +237,7 @@ for (const format of ['hwp5', 'hwpx'])
       });
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 12);
+      assert.equal(listed.tools.length, 13);
       const observed = await client.callTool({
         name: 'read_document',
         arguments: { inputPath: input, view: 'structure' },
@@ -711,7 +712,7 @@ test('두 MCP 읽기 도구는 잘못된 view를 호스트 호출 전에 거부�
   assert.equal(calls, 0);
 });
 
-test('추가 다섯 MCP 도구는 스키마 기본값과 리터럴을 같은 CLI 호스트에 전달한다', async (t) => {
+test('추가 MCP 도구는 스키마 기본값과 리터럴을 같은 CLI 호스트에 전달한다', async (t) => {
   const calls = [];
   const { client, errors } = await wire(t, {
     executeCLI: async (argv, dependencies) => {
@@ -721,6 +722,7 @@ test('추가 다섯 MCP 도구는 스키마 기본값과 리터럴을 같은 CLI
     },
   });
   const sha = 'a'.repeat(64);
+  const imageReference = `hwpjs-object:${sha}/hwp5/s0/image/13`;
   const cases = [
     [
       'get_document_paragraph',
@@ -746,6 +748,23 @@ test('추가 다섯 MCP 도구는 스키마 기본값과 리터럴을 같은 CLI
       'ocr_document',
       { inputPath: 'a.hwp', provider: 'vision' },
       ['ocr', '--provider=vision', '--languages=kor+eng', '--format=text', '--', 'a.hwp'],
+    ],
+    [
+      'replace_document_image',
+      {
+        inputPath: '--a.hwp',
+        outputPath: 'new.hwp',
+        reference: imageReference,
+        imagePath: '--image.png',
+      },
+      [
+        'replace-image',
+        `--ref=${imageReference}`,
+        '--image=--image.png',
+        '--output=new.hwp',
+        '--',
+        '--a.hwp',
+      ],
     ],
   ];
   for (const [name, arguments_, expected] of cases) {

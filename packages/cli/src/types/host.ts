@@ -8,6 +8,7 @@ import type { inspectDocumentParagraph } from '../document-paragraph.ts';
 import type { ocrDocument } from '../document-ocr.ts';
 import type { createDocument } from '../document-create.ts';
 import type { convertDocument } from '../document-convert.ts';
+import type { replaceDocumentImage } from '../replace-image.ts';
 import type * as operations from '../document-operations.ts';
 export interface TextWriter {
   write(text: string): void | Promise<void>;
@@ -29,6 +30,7 @@ export interface CLIHostDependencies {
   ocrDocument?: typeof ocrDocument;
   createDocument?: typeof createDocument;
   convertDocument?: typeof convertDocument;
+  replaceDocumentImage?: typeof replaceDocumentImage;
   operationService?: Pick<
     typeof operations,
     'applyDocumentOperations' | 'validateDocumentOperations'
