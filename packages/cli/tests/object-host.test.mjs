@@ -448,6 +448,7 @@ test('MCP 새 도구는 맨 끝에 등록되고 schema가 ref/legacy 혼용과 �
       'extract_document_image',
       'read_documents',
       'get_document_object',
+      'replace_document_image',
       'get_document_paragraph',
       'apply_document_changes',
       'create_document',
