@@ -76,6 +76,16 @@
         "svelte",
       ],
     },
+    "packages/hwpjs-mcp": {
+      "name": "@ohah/hwpjs-mcp",
+      "version": "0.1.0",
+      "bin": {
+        "hwpjs-mcp": "./dist/index.mjs",
+      },
+      "dependencies": {
+        "@ohah/hwpjs": "0.1.0",
+      },
+    },
     "packages/react": {
       "name": "@hwpjs/react",
       "version": "0.1.0",
@@ -179,11 +189,11 @@
 
     "@hwpjs/core": ["@hwpjs/core@workspace:packages/core"],
 
-    "@hwpjs/document": ["@hwpjs/document@workspace:packages/document"],
-
     "@hwpjs/demo": ["@hwpjs/demo@workspace:apps/demo"],
 
     "@hwpjs/docs": ["@hwpjs/docs@workspace:apps/docs"],
+
+    "@hwpjs/document": ["@hwpjs/document@workspace:packages/document"],
 
     "@hwpjs/react": ["@hwpjs/react@workspace:packages/react"],
 
@@ -224,6 +234,8 @@
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.2.6", "", { "dependencies": { "@tybys/wasm-util": "^0.10.3" }, "peerDependencies": { "@emnapi/core": "^1.7.1 || 2.0.0-beta.2", "@emnapi/runtime": "^1.7.1 || 2.0.0-beta.2" } }, "sha512-mRyDmEw9/fCDXCGfL1sbgIw/GUK0PVxRW4YwgPN61F3LQ+fSyoBFarJVzgGyhF6kRzEQZ0FejDqm4WLXSeqQmw=="],
 
     "@ohah/hwpjs": ["@ohah/hwpjs@workspace:packages/hwpjs"],
+
+    "@ohah/hwpjs-mcp": ["@ohah/hwpjs-mcp@workspace:packages/hwpjs-mcp"],
 
     "@oxc-project/types": ["@oxc-project/types@0.157.0", "", {}, "sha512-95iTox1qdt6WGWce3xwNOVayByOfLaYAq+qGPpub6NWbBh9sv0GG3+zyfh9ZBCO/jVu5A0EWI+qQI7g6fevjxg=="],
 
