@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { readDocuments, BATCH_READ_LIMITS } from '../src/batch-read.mjs';
+import { readDocuments, BATCH_READ_LIMITS } from '../src/batch-read.ts';
 
 const good = (text = '', format = 'hwp5') => ({ format, sourceSha256: 'a'.repeat(64), text });
 const later = () => {
@@ -548,7 +548,7 @@ test('Proxy 길이는 한 번만 조회하고 정수·상한 검증 뒤 재조�
 });
 
 test('Node 전용 모듈과 전역 없이 스케줄러를 실행할 수 있다', () => {
-  const url = new URL('../src/batch-read.mjs', import.meta.url).href;
+  const url = new URL('../src/batch-read.ts', import.meta.url).href;
   const program = `import assert from 'node:assert/strict'; import {registerHooks} from 'node:module';
     registerHooks({resolve(name,context,next){if(name.startsWith('node:')||(!name.startsWith('.')&&!name.startsWith('file:')))throw Error('Node 의존성 금지');return next(name,context)}});
     globalThis.Buffer=undefined;globalThis.process=undefined;globalThis.require=undefined;globalThis.module=undefined;

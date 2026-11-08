@@ -1,6 +1,6 @@
-import { read, edit } from '../../../packages/cli/src/engine.mjs';
-import { renderDocument } from '../../../packages/cli/src/render.mjs';
-import { renderReadResponse } from '../../../packages/cli/src/read-operation.mjs';
+import { read, edit } from '../../../packages/cli/src/engine.ts';
+import { renderDocument } from '../../../packages/cli/src/render.ts';
+import { renderReadResponse } from '../../../packages/cli/src/read-operation.ts';
 
 const MAX_BYTES = 64 * 1024 * 1024;
 const snapshots = new WeakMap();

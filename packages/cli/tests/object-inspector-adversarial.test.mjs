@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
-import { inspectDocumentObject } from '../src/document-objects.mjs';
-import { buildObjectReference } from '../src/object-reference.mjs';
+import { inspectDocumentObject } from '../src/document-objects.ts';
+import { buildObjectReference } from '../src/object-reference.ts';
 
 // 실제 서비스의 DI 경계 검사입니다. SDK 인스턴스·Native·파일 입력을 사용하지 않습니다.
 const bytes = new TextEncoder().encode('상세 조회용 합성 스냅샷');

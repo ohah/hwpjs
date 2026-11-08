@@ -1,0 +1,272 @@
+import * as z from 'zod/v4';
+import type {
+  McpServer,
+  ToolCallback,
+  ToolAnnotations,
+  CallToolResult,
+} from '@modelcontextprotocol/server';
+import type { CLIHostDependencies } from '../types/host.ts';
+
+export type InvokeCLI = (argv: string[], options?: CLIHostDependencies) => Promise<CallToolResult>;
+
+// 스키마와 콜백의 타입 관계를 각 도구가 등록될 때까지 유지합니다.
+export function defineDocumentTool<S extends z.ZodObject>(tool: {
+  name: string;
+  config: { title: string; description: string; inputSchema: S; annotations: ToolAnnotations };
+  invoke: ToolCallback<S>;
+}) {
+  return {
+    ...tool,
+    register: (server: McpServer) => server.registerTool(tool.name, tool.config, tool.invoke),
+  };
+}
+
+import { DOCUMENT_OPERATION_SPECS, validateDocumentOperations } from '../document-operations.ts';
+
+const uint = () => z.number().int().min(0).max(0xffffffff);
+const sha = () => z.string().regex(/^[a-f0-9]{64}$/iu);
+const path = () => z.string().min(1);
+const readOnly = {
+  readOnlyHint: true,
+  destructiveHint: false,
+  idempotentHint: true,
+  openWorldHint: true,
+};
+const writeNew = {
+  readOnlyHint: false,
+  destructiveHint: false,
+  idempotentHint: false,
+  openWorldHint: true,
+};
+const coordinateFields = new Set([
+  'section',
+  'paragraph',
+  'startUnit',
+  'endUnit',
+  'atUnit',
+  'charShapeId',
+  'paraShapeId',
+  'pictureNode',
+  'unit',
+  'rows',
+  'columns',
+  'width',
+  'height',
+  'rowHeight',
+]);
+const textFields = new Set(['expectedRangeText', 'expectedText', 'text', 'alignment', 'type']);
+
+function operationSchema() {
+  const variants = Object.entries(DOCUMENT_OPERATION_SPECS).map(([kind, spec]) => {
+    const fields: Record<string, z.ZodType> = {
+      kind: z.literal(kind),
+      coordinates: z.literal('current-transaction'),
+    };
+    const field = (name: string): z.ZodType => {
+      if (coordinateFields.has(name)) return uint();
+      if (textFields.has(name)) return z.string();
+      if (name === 'value') return z.number().finite();
+      if (name === 'properties')
+        return z
+          .strictObject({
+            size: z.number().int().min(0).max(409600).nullable().optional(),
+            bold: z.boolean().nullable().optional(),
+            italic: z.boolean().nullable().optional(),
+          })
+          .describe('글자 크기 size는 1/100pt 단위입니다.');
+      if (name === 'ranges')
+        return z
+          .array(
+            z.strictObject({
+              section: uint(),
+              paragraph: uint(),
+              startUnit: uint(),
+              endUnit: uint(),
+              expectedRangeText: z.string(),
+            }),
+          )
+          .min(1)
+          .max(4096);
+      if (name === 'resources')
+        return z.strictObject({
+          paragraph: uint(),
+          character: uint(),
+          style: uint(),
+          border_fill: uint(),
+        });
+      return z.unknown().nonoptional();
+    };
+    for (const name of spec.required) if (!Object.hasOwn(fields, name)) fields[name] = field(name);
+    for (const name of spec.optional) fields[name] = field(name).optional();
+    return z.strictObject(fields);
+  });
+  const [first, ...rest] = variants;
+  if (!first) throw new Error('MissingDocumentOperationSpecs');
+  return z
+    .array(z.discriminatedUnion('kind', [first, ...rest]))
+    .max(256)
+    .refine((value) => {
+      try {
+        validateDocumentOperations(value);
+        return true;
+      } catch {
+        return false;
+      }
+    }, '작업 종류·좌표·원문 조건·예산을 확인하세요.');
+}
+
+// 같은 CLI 호스트를 호출하며 별도 편집 엔진이나 저장 경로를 만들지 않습니다.
+export function extendedDocumentTools({ invoke, wasm }: { invoke: InvokeCLI; wasm: string[] }) {
+  return [
+    defineDocumentTool({
+      name: 'get_document_paragraph',
+      config: {
+        title: '문단 편집 원문과 좌표 조회',
+        description:
+          '같은 원본의 Native 문단을 조회합니다. target은 read_document structure의 s<section>:p<NativeOrdinal>입니다. expectedText JSON ASCII 문자열은 apply_document_changes의 원문 조건에 복사할 수 있습니다. 표시 본문과 편집 원문·UTF16 좌표는 다릅니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          target: z.string().min(1),
+          expectedSha256: sha().optional(),
+          format: z.enum(['text', 'markdown']).default('text'),
+        }),
+        annotations: readOnly,
+      },
+      invoke: ({ inputPath, target, expectedSha256, format = 'text' }) =>
+        invoke([
+          'paragraph',
+          `--target=${target}`,
+          `--format=${format}`,
+          ...(expectedSha256 === undefined ? [] : [`--expect-sha256=${expectedSha256}`]),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
+      name: 'apply_document_changes',
+      config: {
+        title: '문서 변경 묶음을 새 파일에 저장',
+        description:
+          '명시한 작업들을 독립 Native 세션에서 순서대로 적용하고 한 번 저장합니다. coordinates는 current-transaction 필수이며 직전 작업 이후 실제 Native 좌표입니다. 구조 변경 뒤 문단 번호를 자동 보정하지 않습니다. expectedText와 expectedRangeText는 get_document_paragraph로 확인한 Native 원문 조건입니다. 실패하면 새 파일을 게시하지 않습니다. 기존 원본·출력은 덮어쓰지 않습니다. HWP5 오래된 배치 허용은 새 조판 생성을 뜻하지 않습니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          outputPath: path(),
+          expectedSha256: sha(),
+          operations: operationSchema(),
+          allowStaleLayout: z.boolean().default(false),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({ inputPath, outputPath, expectedSha256, operations, allowStaleLayout = false }) =>
+        invoke([
+          'apply',
+          `--operations=${JSON.stringify(operations)}`,
+          `--output=${outputPath}`,
+          `--expect-sha256=${expectedSha256}`,
+          ...(allowStaleLayout ? ['--allow-stale-layout'] : []),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
+      name: 'create_document',
+      config: {
+        title: 'HWP5/HWPX 새 문서 생성',
+        description:
+          '공통 Native 생성기로 새 문서를 만들고 선택한 초기 본문 문자열을 넣습니다. 기존 템플릿 파일을 복사하지 않습니다. 출력은 새 경로여야 하며 HWP5 본문 초기화의 배치 무효화는 allowStaleLayout을 명시해야 합니다.',
+        inputSchema: z.strictObject({
+          outputPath: path(),
+          format: z.enum(['hwp5', 'hwpx']),
+          text: z.string().default(''),
+          allowStaleLayout: z.boolean().default(false),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({ outputPath, format, text = '', allowStaleLayout = false }) =>
+        invoke(
+          [
+            'create',
+            `--format=${format}`,
+            `--output=${outputPath}`,
+            ...(allowStaleLayout ? ['--allow-stale-layout'] : []),
+            ...wasm,
+          ],
+          { creationText: text },
+        ),
+    }),
+    defineDocumentTool({
+      name: 'convert_document',
+      config: {
+        title: '문서 내용을 다른 형식의 새 문서로 이관',
+        description:
+          '기본 lossPolicy reject는 전체 보존 변환을 지원하지 않으면 실패합니다. text-only를 명시하면 관측 본문 문자열·빈 문단·Unicode를 새 문서에 이관하며 표 구조·서식·개체·머리말·꼬리말 등은 보존하지 않습니다. 손실 보고서를 함께 반환합니다. 원본 조판이나 무손실 변환으로 간주하지 마세요.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          outputPath: path(),
+          to: z.enum(['hwp5', 'hwpx']),
+          expectedSha256: sha().optional(),
+          lossPolicy: z.enum(['reject', 'text-only']).default('reject'),
+          allowStaleLayout: z.boolean().default(false),
+        }),
+        annotations: writeNew,
+      },
+      invoke: ({
+        inputPath,
+        outputPath,
+        to,
+        expectedSha256,
+        lossPolicy = 'reject',
+        allowStaleLayout = false,
+      }) =>
+        invoke([
+          'convert',
+          `--to=${to}`,
+          `--output=${outputPath}`,
+          `--loss-policy=${lossPolicy}`,
+          ...(expectedSha256 === undefined ? [] : [`--expect-sha256=${expectedSha256}`]),
+          ...(allowStaleLayout ? ['--allow-stale-layout'] : []),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
+      name: 'ocr_document',
+      config: {
+        title: '문서 그림의 로컬 OCR',
+        description:
+          '구역 그림 전체 또는 지정한 이미지 reference만 로컬 공급자로 인식합니다. 기본 tesseract는 설치된 실행 파일과 언어 자료가 필요하며 vision은 macOS 전용입니다. 공급자를 자동 대체하거나 외부 서버로 업로드하지 않습니다. 언어·도구 부재와 실제 빈 인식 결과를 구분합니다. 일부 그림 실패는 성공 텍스트와 함께 오류로 보고합니다.',
+        inputSchema: z.strictObject({
+          inputPath: path(),
+          reference: z.string().max(128).optional(),
+          provider: z.enum(['tesseract', 'vision']).default('tesseract'),
+          languages: z.string().min(1).max(128).default('kor+eng'),
+          executable: path().optional(),
+          format: z.enum(['text', 'markdown']).default('text'),
+        }),
+        annotations: readOnly,
+      },
+      invoke: ({
+        inputPath,
+        reference,
+        provider = 'tesseract',
+        languages = 'kor+eng',
+        executable,
+        format = 'text',
+      }) =>
+        invoke([
+          'ocr',
+          `--provider=${provider}`,
+          `--languages=${languages}`,
+          `--format=${format}`,
+          ...(reference === undefined ? [] : [`--ref=${reference}`]),
+          ...(executable === undefined ? [] : [`--executable=${executable}`]),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+  ];
+}

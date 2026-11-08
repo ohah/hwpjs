@@ -5,8 +5,8 @@ import {
   readDocumentOperation,
   renderBatchReadReport,
   renderReadResponse,
-} from '../src/read-operation.mjs';
-import { readDocuments } from '../src/batch-read.mjs';
+} from '../src/read-operation.ts';
+import { readDocuments } from '../src/batch-read.ts';
 const sha = 'a'.repeat(64);
 const snapshot = { bytes: Uint8Array.of(1), sha256: sha };
 function setup(overrides = {}) {
@@ -268,7 +268,7 @@ test('단일 응답 공유 함수는 getter 값을 한 번 포착해 검증 뒤 
 });
 
 test('단일 응답 공유 함수는 Node 모듈 및 전역 없이도 같은 문자열을 반환한다', () => {
-  const url = new URL('../src/read-operation.mjs', import.meta.url).href;
+  const url = new URL('../src/read-operation.ts', import.meta.url).href;
   const program = `import assert from 'node:assert/strict'; import {registerHooks} from 'node:module';
     registerHooks({resolve(name,context,next){if(name.startsWith('node:')||(!name.startsWith('.')&&!name.startsWith('file:')))throw Error('Node 의존성 금지');return next(name,context)}});
     globalThis.Buffer=undefined;globalThis.process=undefined;globalThis.require=undefined;globalThis.module=undefined;

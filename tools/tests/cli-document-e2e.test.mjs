@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, isAbsolute, join, extname } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { verifyRaw } from '../../tests/hwp5/style-preservation/text-record-oracle.mjs';
-import { parseObjectReference } from '../../packages/cli/src/object-reference.mjs';
+import { parseObjectReference } from '../../packages/cli/src/object-reference.ts';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -21,7 +21,10 @@ function requiredPath(name) {
   return value;
 }
 const entry = requiredPath('HWPJS_TEST_CLI_ENTRY');
-assert.ok(['.mjs', '.js', '.cjs'].includes(extname(entry)), 'source or main-packaged JS entry');
+assert.ok(
+  ['.mjs', '.js', '.cjs', '.ts'].includes(extname(entry)),
+  'source TypeScript or packaged JavaScript entry',
+);
 const entrySHA = process.env.HWPJS_TEST_CLI_ENTRY_SHA256;
 assert.match(entrySHA ?? '', /^[a-f0-9]{64}$/, 'explicit CLI entry SHA mandatory');
 assert.equal(hash(readFileSync(entry)), entrySHA);

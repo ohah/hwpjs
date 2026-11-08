@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderDocument } from '../src/render.mjs';
+import { renderDocument } from '../src/render.ts';
 
 const area = () => ({
   declarations: 'known',
@@ -414,7 +414,7 @@ test('adversarial Unicode: isolated high/low surrogates escape visibly but real 
 });
 
 test('adversarial model integration: a truncated observation error cannot suppress readable document text', async () => {
-  const { readDocumentModel } = await import('../src/document-model.mjs');
+  const { readDocumentModel } = await import('../src/document-model.ts');
   const message = 'x'.repeat(511 - 'pictureSources: '.length) + '🙂';
   const sdk = {
     currentTextPreview: () => ({

@@ -1,11 +1,11 @@
 ---
 name: hwpjs
-description: HWP5·HWPX 원본의 내용을 읽고 문단 텍스트를 편집하거나 메타데이터와 그림을 조회·추출할 때 사용합니다. 포함된 CLI 또는 MCP 서버를 사용하며 HTML 변환이나 OCR 도구는 아닙니다.
+description: HWP5·HWPX 원본 읽기·문단 원문 조회·명시 편집·새 문서·text-only 변환·그림 조회/추출·로컬 OCR에 사용합니다. 포함된 CLI/MCP를 사용하며 전체 조판이나 무손실 교차 변환을 보장하지 않습니다.
 ---
 
 # HWPJS 문서 도구
 
-Node.js 24.20.0 이상을 사용합니다. 설치된 스킬에는 CLI·MCP 서버·WASM 실행 자산이 포함되므로 실행 중 npm 설치나 추가 다운로드가 필요하지 않습니다. 심볼릭 링크 설치도 고려해 `SKILL_DIR`을 실제 스킬 디렉터리로 정합니다. 작업 디렉터리는 사용자의 프로젝트로 유지해 상대 문서 경로의 의미를 보존합니다.
+Node.js 24.20.0 이상을 사용합니다. 설치된 스킬에는 CLI·MCP 서버·WASM 실행 자산이 포함되므로 일반 읽기·편집에 실행 중 npm 설치가 필요하지 않습니다. OCR의 로컬 실행 파일·언어 데이터는 별도이며 자동 설치하거나 내려받지 않습니다. 심볼릭 링크 설치도 고려해 `SKILL_DIR`을 실제 스킬 디렉터리로 정합니다. 작업 디렉터리는 사용자의 프로젝트로 유지해 상대 문서 경로의 의미를 보존합니다.
 
 ## 원본 읽기와 텍스트 편집
 
@@ -36,11 +36,44 @@ node "$SKILL_DIR/scripts/hwpjs.mjs" edit ./document.hwpx \
   --expect-sha256 "$SOURCE_SHA" --output ./document-edited.hwpx
 ```
 
-`TARGET_ID`와 `SOURCE_SHA`는 실제 읽기 결과로 바꿉니다. 한 문단 안에서 비어 있지 않은 문자열이 정확히 한 번 일치해야 합니다. 삭제는 `--with ''`를 사용합니다. 정규식·전체 치환·문단 경계를 넘는 수정·제어문자 삽입은 지원하지 않습니다. 보이는 문단도 Native 보호 검사에서 편집이 거부될 수 있습니다.
+`TARGET_ID`와 `SOURCE_SHA`는 실제 읽기 결과로 바꿉니다. 한 문단 안에서 비어 있지 않은 문자열이 정확히 한 번 일치해야 합니다. 삭제는 `--with ''`를 사용합니다. 이 `edit` 명령은 정규식·전체 치환·문단 경계를 넘는 수정·제어문자 삽입을 지원하지 않습니다. 문단 분할·여러 문단 교체·서식 변경은 아래 명시 작업 묶음을 사용합니다. 보이는 문단도 Native 보호 검사에서 편집이 거부될 수 있습니다.
 
 사용자가 요청한 수정만 수행합니다. 감지된 원본 형식의 새 경로(`.hwp` 또는 `.hwpx`)로 저장하며 원본이나 기존 출력은 덮어쓰지 않습니다. 원본이 바뀌면 다시 읽고 새 ID·SHA를 선택합니다. HWP5는 저장된 줄 배치를 무효화하는 데 사용자가 동의할 때 `--allow-stale-layout`을 사용할 수 있습니다. 이 옵션이 새 조판을 생성하지는 않습니다.
 
 편집 성공 시 출력 경로와 SHA가 표시됩니다. 저장 후 보고 오류가 발생하면 `published: true`가 남을 수 있으므로 무조건 재실행하지 말고 해당 파일부터 확인합니다. 저장본을 기본 읽기로 확인하고 후속 편집의 새 ID·SHA는 저장본을 `--view structure`로 읽어 얻습니다. 표시용 출력의 제어문자 이스케이프(`\uXXXX`)를 원문으로 복사하지 않습니다.
+
+## 명시 편집·새 문서·변환·OCR
+
+갱신한 실행 자산의 `--help`에서 `paragraph`, `apply`, `create`, `convert`, `ocr`를 확인합니다. 기존 읽기·조회·추출을 포함한 CLI 명령은 12개이며 이전 설치에는 확장 명령이 없을 수 있습니다. 새 기능은 실제 설치된 런처와 MCP `tools/list`의 스키마를 따릅니다.
+
+복수 편집은 구조 보기의 원본 SHA·Native ID를 얻은 뒤 `paragraph`로 실제 Native 원문을 확인합니다.
+
+```sh
+node "$SKILL_DIR/scripts/hwpjs.mjs" paragraph ./document.hwpx \
+  --target "$TARGET_ID" --expect-sha256 "$SOURCE_SHA"
+node "$SKILL_DIR/scripts/hwpjs.mjs" apply ./document.hwpx \
+  --patch ./changes.json --expect-sha256 "$SOURCE_SHA" --output ./applied-new.hwpx
+```
+
+문단 조회의 `expectedText (JSON ASCII)`는 JSON 문자열입니다. 이 값을 JSON으로 해석한 원문을 `expectedText`·`expectedRangeText` 조건에 사용합니다. HWP5의 CR과 구조 컨트롤도 이스케이프되어 있으므로 삭제하거나 표시 텍스트로 대체하지 않습니다. 모든 좌표는 Native UTF-16 기준이며 작업의 `coordinates`는 `current-transaction`입니다. 뒤 작업은 앞 작업 후의 실제 문단·범위를 지목하고 문단 번호를 자동 보정하지 않습니다.
+
+apply의 지원 작업은 `splice`, `replace-paragraph-ranges`, `split-paragraph`, `merge-paragraph`, `character-properties`, `character-format`, `paragraph-format`, `paragraph-alignment`, `paragraph-margins`, `paragraph-spacing`, `cell-sizes`, `cell-styles`, `picture-resize`, `table-insert`입니다. 스키마를 전체 사전 검증하고 사전조건이 맞는 작업을 순서대로 실행한 뒤 한 번 저장합니다. 마지막 작업 실패 시 새 문서 파일을 게시하지 않습니다. 실제 리소스 ID·셀/그림 소유자·지원 속성을 추측하지 말고 알 수 없으면 필요한 관측부터 확인합니다.
+
+```sh
+node "$SKILL_DIR/scripts/hwpjs.mjs" create --format hwpx \
+  --text-file ./body.txt --output ./created-new.hwpx
+node "$SKILL_DIR/scripts/hwpjs.mjs" convert ./document.hwp --to hwpx \
+  --loss-policy text-only --output ./converted-new.hwpx
+```
+
+create는 Native 빈 문서를 생성하고 초기 본문을 넣습니다. 교차 변환은 사용자가 text-only 손실을 명시적으로 선택한 경우에만 관측한 본문과 빈 문단을 새 문서로 이관합니다. 표 구조·서식·그림·차트·수식·OLE·머리말/꼬리말·페이지 설정은 보존하지 않으며 손실 보고를 확인합니다. 기본 `reject`가 거부하면 text-only로 자동 재시도하지 않습니다. HWP5의 조판 허용도 사용자가 `--allow-stale-layout`을 명시한 경우에만 적용합니다.
+
+```sh
+node "$SKILL_DIR/scripts/hwpjs.mjs" ocr ./document.hwpx \
+  --ref "$IMAGE_REF" --provider tesseract --languages kor+eng
+```
+
+OCR은 사용자가 요청한 그림에만 명시 실행합니다. 기본 `tesseract`는 로컬 실행 파일과 요청 언어 데이터가 필요합니다. `vision`은 명시 선택하는 macOS 로컬 제공자입니다. 제공자를 자동으로 바꾸거나 외부 서버에 업로드하지 않습니다. 제공자 부재·실패·실제 빈 인식 결과를 구분하고, 인식 텍스트로 원본을 자동 수정하지 않습니다. 차트·수식 래스터화나 OLE 실행을 OCR 지원으로 추정하지 않습니다.
 
 ## 본문의 이미지·표 등 개체 참조
 
@@ -119,6 +152,14 @@ stdio 서버 명령을 받는 클라이언트에는 실제 설치된 절대 스�
 
 - `get_document_object`: `inputPath`, `reference`, 선택 사항 `format`(`text` 기본 또는 `markdown`). 본문 참조의 개체 관측 정보를 조회하며 텍스트의 `상태: available`·`상태: unavailable`과 사유를 확인합니다. 기존 6개 뒤에 추가된 일곱 번째 도구입니다.
 
-MCP에도 같은 원본 SHA·정확한 ID·유일한 문자열 일치·새 출력 규칙을 적용합니다. 추출 도구가 오류를 반환해도 이미 게시된 파일이 있을 수 있으므로 반환된 경로·개수·생략 상태부터 확인합니다. JSON은 도구 호출의 전송 형식이며 문서 전체 JSON 변환 API를 제공하는 것은 아닙니다.
+- `get_document_paragraph`: `inputPath`, `target`, 선택 사항 `expectedSha256`, `format`. 같은 문서의 Native 원문과 UTF-16 길이를 조회합니다.
+- `apply_document_changes`: `inputPath`, `outputPath`, `expectedSha256`, `operations`, 선택 사항 `allowStaleLayout`. 위 14종의 명시 작업을 적용합니다.
+- `create_document`: `outputPath`, `format`(`hwp5` 또는 `hwpx`), 선택 사항 `text`, `allowStaleLayout`.
+- `convert_document`: `inputPath`, `outputPath`, `to`, 선택 사항 `expectedSha256`, `lossPolicy`(`reject` 기본 또는 명시 `text-only`), `allowStaleLayout`.
+- `ocr_document`: `inputPath`, 선택 사항 `reference`, `provider`, `languages`, `executable`, `format`. 실행 파일 지정은 Tesseract에만 적용하며 Vision의 실행 파일을 바꾸지 않습니다.
 
-표 구조·셀 크기 편집, 그림 교체, OCR과 새 문서 작성은 이 스킬의 작업 범위가 아닙니다. 표 안의 텍스트는 Native가 허용하는 문단에 한해 수정합니다. 미관측 내용은 미관측 상태로 남기며 부분 관측에서 빈 셀·그림 부재·문서 전체의 완전성을 추정하지 않습니다.
+기존 7도구와 이 5도구를 포함해 12도구이며, 실제 설치분의 `tools/list`에서 제공 여부와 입력 스키마를 확인합니다.
+
+MCP도 도구별 원본 SHA·정확한 Native ID·명시 범위·새 출력 규칙을 적용합니다. 유일한 문자열 일치는 `edit_document`의 조건이며 apply는 명시한 원문 사전조건과 현재 좌표를 검증합니다. 추출 도구가 오류를 반환해도 이미 게시된 파일이 있을 수 있으므로 반환된 경로·개수·생략 상태부터 확인합니다. JSON은 도구 호출의 전송 형식이며 문서 전체 JSON 변환 API를 제공하는 것은 아닙니다.
+
+새 원시 그림 삽입·교체, 임의 행/열 구조 변경, 차트·수식 래스터화, OLE 원시 추출, 전체 의미 보존 교차 변환은 별도 미완료 범위입니다. 현재 apply의 표 생성·셀 크기/서식과 그림 크기 조정 범위를 넘어 성공을 추정하지 않습니다. 표 안의 텍스트도 Native가 허용하는 문단·범위만 수정합니다. 미관측 내용은 미관측 상태로 남기며 부분 관측에서 빈 셀·그림 부재·문서 전체의 완전성을 추정하지 않습니다.

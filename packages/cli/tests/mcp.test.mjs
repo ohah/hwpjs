@@ -11,11 +11,11 @@ import { fileURLToPath } from 'node:url';
 import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
-import { documentTools } from '../src/mcp/tools.mjs';
-import { runMcpServer, parseMcpArguments } from '../src/mcp/server.mjs';
-import { parseArguments } from '../src/arguments.mjs';
+import { documentTools } from '../src/mcp/tools.ts';
+import { runMcpServer, parseMcpArguments } from '../src/mcp/server.ts';
+import { parseArguments } from '../src/arguments.ts';
 
-const entry = fileURLToPath(new URL('../src/mcp-bin.mjs', import.meta.url));
+const entry = fileURLToPath(new URL('../src/mcp-bin.ts', import.meta.url));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const textOf = (result) =>
   result.content
@@ -137,11 +137,16 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
   assert.equal(client.getServerVersion().name, 'hwpjs');
   const listed = await client.listTools();
   assert.deepEqual(listed.tools.map((tool) => tool.name).sort(), [
+    'apply_document_changes',
+    'convert_document',
+    'create_document',
     'edit_document',
     'extract_document_image',
     'get_document_info',
     'get_document_object',
+    'get_document_paragraph',
     'list_document_images',
+    'ocr_document',
     'read_document',
     'read_documents',
   ]);
@@ -231,7 +236,7 @@ for (const format of ['hwp5', 'hwpx'])
       });
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 7);
+      assert.equal(listed.tools.length, 12);
       const observed = await client.callTool({
         name: 'read_document',
         arguments: { inputPath: input, view: 'structure' },
@@ -303,7 +308,7 @@ for (const format of ['hwp5', 'hwpx'])
           ...(process.env.HWPJS_MCP_TEST_IMPORT
             ? ['--import', process.env.HWPJS_MCP_TEST_IMPORT]
             : []),
-          fileURLToPath(new URL('../src/bin.mjs', import.meta.url)),
+          fileURLToPath(new URL('../src/bin.ts', import.meta.url)),
           'extract-images',
           input,
           '--output=' + cliDirectory,
@@ -524,7 +529,7 @@ test(
   async (t) => {
     const h5 = await actualPaths('hwp5');
     const hx = await actualPaths('hwpx');
-    const { createFiles } = await import('../src/files.mjs');
+    const { createFiles } = await import('../src/files.ts');
     const files = createFiles();
     const reads = [];
     const readOnly = {
@@ -704,4 +709,103 @@ test('두 MCP 읽기 도구는 잘못된 view를 호스트 호출 전에 거부�
     }
   }
   assert.equal(calls, 0);
+});
+
+test('추가 다섯 MCP 도구는 스키마 기본값과 리터럴을 같은 CLI 호스트에 전달한다', async (t) => {
+  const calls = [];
+  const { client, errors } = await wire(t, {
+    executeCLI: async (argv, dependencies) => {
+      calls.push({ argv, creationText: dependencies.creationText });
+      await dependencies.io.stdout.write('관측 본문\n');
+      return 0;
+    },
+  });
+  const sha = 'a'.repeat(64);
+  const cases = [
+    [
+      'get_document_paragraph',
+      { inputPath: '--input.hwp', target: 's0:p1' },
+      ['paragraph', '--target=s0:p1', '--format=text', '--', '--input.hwp'],
+    ],
+    [
+      'apply_document_changes',
+      { inputPath: 'a.hwp', outputPath: '--out.hwp', expectedSha256: sha, operations: [] },
+      ['apply', '--operations=[]', '--output=--out.hwp', `--expect-sha256=${sha}`, '--', 'a.hwp'],
+    ],
+    [
+      'create_document',
+      { outputPath: 'new.hwpx', format: 'hwpx', text: '--내용=한글\nEnglish' },
+      ['create', '--format=hwpx', '--output=new.hwpx'],
+    ],
+    [
+      'convert_document',
+      { inputPath: 'a.hwp', outputPath: 'new.hwpx', to: 'hwpx' },
+      ['convert', '--to=hwpx', '--output=new.hwpx', '--loss-policy=reject', '--', 'a.hwp'],
+    ],
+    [
+      'ocr_document',
+      { inputPath: 'a.hwp', provider: 'vision' },
+      ['ocr', '--provider=vision', '--languages=kor+eng', '--format=text', '--', 'a.hwp'],
+    ],
+  ];
+  for (const [name, arguments_, expected] of cases) {
+    const response = await client.callTool({ name, arguments: arguments_ });
+    assert.equal(response.isError, undefined);
+    assert.equal(textOf(response), '관측 본문\n');
+    assert.deepEqual(calls.at(-1).argv, expected);
+  }
+  assert.equal(calls[2].creationText, '--내용=한글\nEnglish');
+  assert.deepEqual(errors, []);
+});
+
+test('추가 MCP 스키마의 잘못된 작업·공급자·형식은 CLI 호출 전에 거부된다', async (t) => {
+  let calls = 0;
+  const { client, errors } = await wire(t, {
+    executeCLI: async () => {
+      calls++;
+      return 0;
+    },
+  });
+  const cases = [
+    ['get_document_paragraph', { inputPath: 'a', target: '' }],
+    [
+      'apply_document_changes',
+      {
+        inputPath: 'a',
+        outputPath: 'b',
+        expectedSha256: 'a'.repeat(64),
+        operations: [{ kind: '가짜작업', coordinates: 'current-transaction' }],
+      },
+    ],
+    ['create_document', { outputPath: 'b', format: 'html' }],
+    ['convert_document', { inputPath: 'a', outputPath: 'b', to: 'hwpx', lossPolicy: 'silent' }],
+    ['ocr_document', { inputPath: 'a', provider: 'cloud' }],
+  ];
+  for (const [name, arguments_] of cases) {
+    assert.equal((await client.callTool({ name, arguments: arguments_ })).isError, true);
+  }
+  assert.equal(calls, 0);
+  assert.deepEqual(errors, []);
+});
+
+test('MCP는 일반 throw 객체의 message와 nullish·원시값 오류 표시를 보존한다', async () => {
+  for (const [error, expected] of [
+    [{ message: '일반 오류' }, '일반 오류'],
+    [new Error('Error 오류'), 'Error 오류'],
+    [{ message: '' }, ''],
+    [{ message: 0 }, '0'],
+    [{ message: null }, '[object Object]'],
+    ['문자열 오류', '문자열 오류'],
+    [null, 'null'],
+    [undefined, 'undefined'],
+  ]) {
+    const tool = documentTools({
+      executeCLI: async () => {
+        throw error;
+      },
+    })[0];
+    const response = await tool.invoke({ inputPath: 'a.hwp' });
+    assert.equal(response.isError, true);
+    assert.equal(textOf(response), 'CLI failed: ' + expected);
+  }
 });

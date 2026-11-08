@@ -6,8 +6,8 @@ import { tmpdir } from 'node:os';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { runCLI } from '../src/main.mjs';
-import { createFiles } from '../src/files.mjs';
+import { runCLI } from '../src/main.ts';
+import { createFiles } from '../src/files.ts';
 const metadata = (text) =>
   Object.fromEntries(
     text
@@ -218,7 +218,7 @@ test('a published result remains explicit if stdout reporting fails after commit
   assert.deepEqual([...(await fs.readFile(err.output))], [1, 2, 3]);
 });
 test('main import has no argv autorun and bin help works without engine or Native', () => {
-  const url = new URL('../src/main.mjs', import.meta.url).href;
+  const url = new URL('../src/main.ts', import.meta.url).href;
   const text = execFileSync(
     process.execPath,
     [
@@ -232,11 +232,7 @@ test('main import has no argv autorun and bin help works without engine or Nativ
   assert.equal(text.trim(), 'pure');
   const help = execFileSync(
     process.execPath,
-    [
-      '--max-old-space-size=64',
-      fileURLToPath(new URL('../src/bin.mjs', import.meta.url)),
-      '--help',
-    ],
+    ['--max-old-space-size=64', fileURLToPath(new URL('../src/bin.ts', import.meta.url)), '--help'],
     { encoding: 'utf8', timeout: 5000 },
   );
   assert.match(help, /hwpjs read INPUT/);
@@ -282,7 +278,7 @@ test('WASM limit failure still refuses before engine without reducing document64
 });
 
 test('default Node stdout callback failure becomes a diagnostic exit instead of uncaught pipe error', () => {
-  const url = new URL('../src/main.mjs', import.meta.url).href;
+  const url = new URL('../src/main.ts', import.meta.url).href;
   const code = `const {runCLI}=await import(${JSON.stringify(url)});process.stdout.write=(_text,callback)=>{const error=Object.assign(Error('PipeClosed'),{code:'EPIPE'});queueMicrotask(()=>{callback(error);process.stdout.emit('error',error);});return false;};process.exitCode=await runCLI(['--help']);`;
   const result = spawnSync(
     process.execPath,
@@ -343,7 +339,7 @@ test('scalar output paths and error messages escape C0 instead of injecting meta
 });
 
 test('default Writable callback is awaited even when write returns false', () => {
-  const url = new URL('../src/main.mjs', import.meta.url).href;
+  const url = new URL('../src/main.ts', import.meta.url).href;
   const code = `const {runCLI}=await import(${JSON.stringify(url)});let flushed=false;process.stdout.write=(_text,callback)=>{setTimeout(()=>{flushed=true;callback();},20);return false;};const status=await runCLI(['--help']);process.stderr.write(flushed&&status===0?'flushed':'premature');`;
   const result = spawnSync(
     process.execPath,
@@ -355,7 +351,7 @@ test('default Writable callback is awaited even when write returns false', () =>
 });
 
 test('default Writable callback EPIPE then error event retains published status', () => {
-  const url = new URL('../src/main.mjs', import.meta.url).href;
+  const url = new URL('../src/main.ts', import.meta.url).href;
   const code = `const {runCLI}=await import(${JSON.stringify(url)});process.stdout.write=(_text,callback)=>{const error=Object.assign(Error('PipeClosed'),{code:'EPIPE'});queueMicrotask(()=>{callback(error);process.stdout.emit('error',error);});return false;};const sha='a'.repeat(64);process.exitCode=await runCLI(['edit','input','--target=s0:p0','--replace=a','--with=b','--expect-sha256='+sha,'--output=out.hwp'],{files:{readInputSnapshot:async()=>({bytes:new Uint8Array([1]),sha256:sha}),assertNewOutput:async()=>({}),resolveWasmPath:()=>'/wasm',assertOutputFormat:()=>{},publishNewOutput:async()=>({path:'/out.hwp',sha256:sha,warnings:[]})},engine:{edit:async()=>({format:'hwp5',bytes:new Uint8Array([2]),changed:true,layoutRequiresReflow:false})}});`;
   const result = spawnSync(
     process.execPath,

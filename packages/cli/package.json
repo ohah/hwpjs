@@ -12,6 +12,11 @@
     "@modelcontextprotocol/client": "2.4.0"
   },
   "scripts": {
-    "start": "bun src/bin.mjs"
+    "start": "node src/bin.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsdown --config tsdown.config.ts"
+  },
+  "engines": {
+    "node": ">=24.11.0"
   }
 }

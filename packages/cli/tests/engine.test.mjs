@@ -4,8 +4,8 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { openDocument, edit, read } from '../src/engine.mjs';
-import { findUniqueLiteral, validateLiteral } from '../src/literal-match.mjs';
+import { openDocument, edit, read } from '../src/engine.ts';
+import { findUniqueLiteral, validateLiteral } from '../src/literal-match.ts';
 
 test('literal search rejects overlap and prefix ambiguities, preserving exact UTF16 offsets', () => {
   assert.throws(() => findUniqueLiteral('aaa', 'aa'), /Ambiguous/);
@@ -49,7 +49,7 @@ test('open validates bounded byte inputs and original snapshot SHA before openin
 });
 
 test('browser engine/model/render dependency graph imports without Node modules or globals', () => {
-  const urls = ['engine.mjs', 'literal-match.mjs', 'document-model.mjs', 'render.mjs'].map(
+  const urls = ['engine.ts', 'literal-match.ts', 'document-model.ts', 'render.ts'].map(
     (name) => new URL('../src/' + name, import.meta.url).href,
   );
   const program = `

@@ -17,9 +17,10 @@ import {
   rename,
   unlink,
 } from 'node:fs/promises';
-import { resolve, join, dirname, relative } from 'node:path';
+import { resolve, join, dirname, relative, isAbsolute, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
+import { isBuiltin } from 'node:module';
 import { spawnSync } from 'node:child_process';
 assert(globalThis.Bun, 'BuildRequiresBun');
 const root = fileURLToPath(new URL('../', import.meta.url)),
@@ -137,6 +138,8 @@ const metadata = [
   join(pkg, 'react-native.config.cjs'),
   join(pkg, 'HwpjsNativeCanvas.podspec'),
   join(root, 'packages/cli/package.json'),
+  join(root, 'packages/cli/tsconfig.json'),
+  join(root, 'packages/cli/tsdown.config.ts'),
   join(root, 'tools/build-public-package.mjs'),
   join(root, 'tools/public-package-notices.mjs'),
   join(pkg, 'build/source-policy.mjs'),
@@ -207,31 +210,77 @@ const ssr = await Bun.build({
   plugins: [namespace, runtimeInputs, svelte('server')],
 });
 assert(ssr.success, ssr.logs.map(String).join('\n'));
-// Node CLI uses the same format facades and the single adjacent WASM artifact.
-// It has its own entry so importing the browser editor never loads filesystem code.
-const cli = await Bun.build({
-  entrypoints: [join(root, 'packages/cli/src/bin.mjs')],
-  outdir: dist,
-  target: 'node',
-  format: 'esm',
-  splitting: false,
-  sourcemap: 'none',
-  naming: 'cli.mjs',
-  plugins: [runtimeInputs],
+// CLI만 별도의 엄격한 Node 타입 진입점을 사용합니다. 기존 SDK JS는 소비만 합니다.
+const cliConfig = join(root, 'packages/cli/tsconfig.json');
+const cliGraph = spawnSync(
+  join(root, 'node_modules/.bin/tsc'),
+  ['-p', cliConfig, '--listFilesOnly'],
+  {
+    cwd: root,
+    encoding: 'utf8',
+    maxBuffer: 32 * 1024 * 1024,
+  },
+);
+assert(cliGraph.status === 0, 'CliTypeDependencyGraphFailed:' + cliGraph.stdout + cliGraph.stderr);
+const cliGraphPaths = cliGraph.stdout.split(/\r?\n/).filter(Boolean);
+const cliTypeInputs = selectDeclarationInputs(
+  root,
+  cliGraphPaths.filter((path) => !/\.(?:[cm]?js|jsx)$/.test(path)).join('\n'),
+);
+for (const path of cliTypeInputs.projectInputs) await observe(path, 'cli-types-source');
+for (const path of cliGraphPaths.filter((path) => /\.(?:[cm]?js|jsx)$/.test(path))) {
+  assert(isAbsolute(path), 'NonAbsoluteCliTypeGraphInput:' + path);
+  if (path.split(sep).includes('node_modules')) continue;
+  await observe(path, 'cli-types-sdk-source');
+}
+const cliTypes = spawnSync(join(root, 'node_modules/.bin/tsc'), ['-p', cliConfig], {
+  cwd: root,
+  encoding: 'utf8',
+  maxBuffer: 32 * 1024 * 1024,
 });
-assert(cli.success, cli.logs.map(String).join('\n'));
+await writeFile(join(staging, 'cli-types.log'), cliTypes.stdout + cliTypes.stderr);
+assert(cliTypes.status === 0, 'CliStrictTypesFailed:' + cliTypes.stdout + cliTypes.stderr);
+// Rolldown이 실제로 읽는 모듈은 기존 지문·고지 수집기에 그대로 공급합니다.
+const cliRuntimeInputs = {
+  name: 'observed-cli-runtime-inputs',
+  async load(id) {
+    // 가상 모듈은 tsdown/Rolldown 도구 버전과 lock으로 고정합니다.
+    if (id.startsWith('\0')) return null;
+    assert(isAbsolute(id), 'UnobservedCliModule:' + id);
+    await observe(id, 'runtime-module');
+    return null;
+  },
+};
+const { build: buildCli, version: tsdownVersion } = await import('tsdown');
+assert(tsdownVersion === '0.23.7', 'UnexpectedTsdownVersion');
+const cliBuild = await buildCli({
+  config: join(root, 'packages/cli/tsdown.config.ts'),
+  outDir: dist,
+  concurrency: 1,
+  plugins: [cliRuntimeInputs],
+  report: false,
+});
+try {
+  assert(cliBuild.bundles.length === 2, 'UnexpectedCliBundleCount');
+  const names = cliBuild.bundles
+    .flatMap((bundle) =>
+      bundle.chunks.map((chunk) => {
+        assert(chunk.type === 'chunk' && chunk.isEntry, 'UnexpectedCliSharedAsset');
+        assert(chunk.imports.every(isBuiltin), 'ExternalCliDependency');
+        // 같은 단일 파일로 접힌 동적 참조도 Rolldown 메타데이터에는 자기 파일명으로 남습니다.
+        assert(
+          chunk.dynamicImports.every((name) => isBuiltin(name) || name === chunk.fileName),
+          'ExternalCliDynamicDependency',
+        );
+        return chunk.fileName;
+      }),
+    )
+    .sort();
+  assert.deepEqual(names, ['cli.mjs', 'mcp.mjs'], 'UnexpectedCliOutputs');
+} finally {
+  for (const bundle of cliBuild.bundles) await bundle[Symbol.asyncDispose]();
+}
 await chmod(join(dist, 'cli.mjs'), 0o755);
-const mcp = await Bun.build({
-  entrypoints: [join(root, 'packages/cli/src/mcp-bin.mjs')],
-  outdir: dist,
-  target: 'node',
-  format: 'esm',
-  splitting: false,
-  sourcemap: 'none',
-  naming: 'mcp.mjs',
-  plugins: [runtimeInputs],
-});
-assert(mcp.success, mcp.logs.map(String).join('\n'));
 await chmod(join(dist, 'mcp.mjs'), 0o755);
 const bundledNotices = await collectPublicPackageNotices({
   root,
@@ -532,6 +581,7 @@ await writeFile(
         : 'not-verified-js-only',
       buildVersions: {
         bun: Bun.version,
+        tsdown: tsdownVersion,
         typescript: JSON.parse(
           await readFile(join(root, 'node_modules/typescript/package.json'), 'utf8'),
         ).version,

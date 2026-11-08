@@ -1,6 +1,6 @@
 # MCP로 문서 도구 연결
 
-MCP 클라이언트에 로컬 stdio 서버를 연결하면 HWP5/HWPX 읽기·문서 정보·그림 목록·단일 그림 추출과 한 문단의 문자열 교체를 도구로 사용할 수 있습니다. 서버는 공통 CLI의 파일·SHA·네이티브 검증을 호출하며 별도 문서 파서를 두지 않습니다.
+MCP 클라이언트에 로컬 stdio 서버를 연결하면 HWP5/HWPX 읽기·문서/개체 조회·그림 추출과 문단 편집, 명시 변경 묶음·새 문서·text-only 변환·로컬 OCR을 사용할 수 있습니다. 서버는 공통 CLI의 파일·SHA·네이티브 검증을 호출하며 별도 문서 파서를 두지 않습니다.
 
 ## 서버 준비와 설치 상태
 
@@ -11,7 +11,7 @@ npx --no-install hwpjs-mcp
 npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 ```
 
-문서 정보·그림 목록·추출 도구가 포함된 새 로컬 패키지에서 설치 후 공식 SDK 클라이언트로 서버를 연결해 두 형식의 실제 조회·추출을 확인했습니다. 앞선 패키지와 동결된 Skill 자산은 별도 세대이며, 새 Skill 자산도 따로 설치 검증합니다. 공개 npm 게시나 배포 완료를 뜻하지 않습니다.
+독립 JS 산출물을 별도 소비자에 npm 설치한 뒤 공식 SDK 클라이언트로 stdio 서버에 연결해 12도구와 생성·문단 조회·명시 변경·읽기·text-only 변환 및 거부 동작을 확인했습니다. OCR 제공자 부재도 오류로 확인했으며 실제 Tesseract 인식 성공을 뜻하지 않습니다. 이전 패키지와 Skill은 별도 세대이므로 갱신된 설치의 `tools/list`로 기능과 스키마를 확인합니다. 공개 npm 게시나 공개 실습의 새 기능 배포 완료를 뜻하지 않습니다.
 
 서버 실행 파일과 나란한 WASM이 기본값입니다. stdout은 MCP 프로토콜 전용이며 서버 진단은 stderr로 전달됩니다. 도구 실행의 실패 내용은 응답의 text content에도 포함됩니다. 서버의 작업 디렉터리가 상대 문서 경로의 기준입니다. 실제 경로와 클라이언트의 권한 범위는 사용자가 설정합니다.
 
@@ -37,6 +37,11 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 | `list_document_images`   | `inputPath`, 선택적 `expectedSha256`                                                                        | 원문 SHA와 그림 ID·상태·MIME·확장자·바이트 수·제한된 관측 범위                   |
 | `extract_document_image` | `inputPath`, `outputPath`, `reference` 또는 `id`와 `expectedSha256`                                         | 새 이미지 **파일** 경로·SHA 또는 실패 및 게시 영수증                             |
 | `get_document_object`    | `inputPath`, `reference`, 선택적 `format`: `text` 또는 `markdown`                                           | 관측 개체 정보·내용·미지원 사유, `상태: available` 또는 `상태: unavailable` 표시 |
+| `get_document_paragraph` | `inputPath`, `target`, 선택적 `expectedSha256`, `format`                                                    | 선택한 Native 원문을 ASCII JSON과 UTF-16 길이로 조회                             |
+| `apply_document_changes` | `inputPath`, `outputPath`, `expectedSha256`, `operations`, 선택적 `allowStaleLayout`                        | 명시한 지원 작업을 적용해 새 파일 게시                                           |
+| `create_document`        | `outputPath`, `format`: `hwp5` 또는 `hwpx`, 선택적 `text`, `allowStaleLayout`                               | Native 새 문서와 초기 본문 저장                                                  |
+| `convert_document`       | `inputPath`, `outputPath`, `to`, 선택적 `expectedSha256`, `lossPolicy`, `allowStaleLayout`                  | 명시 text-only 변환의 새 파일·미보존 보고 또는 기본 거부                         |
+| `ocr_document`           | `inputPath`, 선택적 `reference`, `provider`, `languages`, `executable`, `format`                            | 로컬 그림 인식 텍스트·이미지별 상태·실패 사유                                    |
 
 `format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
 
@@ -60,7 +65,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 기본 `view: "content"`는 관측한 문서 본문만 text content로 반환하며 `format`·`documentSHA256` 접두사나 문단 편집용 ID를 붙이지 않습니다. 이미지·표 등 관측된 개체의 논리 참조는 본문에 포함될 수 있습니다. `markdown`도 이 본문 보기의 출력 형식이며 HTML·원본 조판 전체 변환이나 OCR을 뜻하지 않습니다. 오류는 `isError: true`의 별도 오류 응답으로 확인합니다.
 
-편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 읽기 보기는 기존 도구를 사용합니다. 개체 조회용 `get_document_object`가 기존 6개 도구 뒤에 추가돼 서버 도구는 총 7개입니다.
+편집할 대상의 원문 ID·SHA와 진단 상세는 같은 `read_document`에 `view: "structure"`를 명시해 조회합니다. 읽기 보기는 기존 도구를 사용합니다. 개체 조회용 `get_document_object`까지의 기존 7도구 뒤에 문단 조회·명시 변경·생성·변환·OCR을 추가해 총 12도구입니다.
 
 ```json
 {
@@ -129,6 +134,91 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 ```
 
 기존 파일 덮어쓰기·모호한 일치·잘못된 원문 SHA는 CLI와 동일하게 거부합니다. `replacement`를 빈 문자열로 지정하면 유일한 일치를 삭제합니다. HWP5의 줄 배치 무효화 허용은 저장된 배치 무효화를 수용하는 선택이며 새 배치를 생성하지 않습니다.
+
+### Native 문단 원문과 작업 묶음
+
+`get_document_paragraph`는 structure에서 얻은 `target`과 선택적 원본 SHA로 정확한 문단을 조회합니다. `nativeTextUnits`는 Native UTF-16 길이이며 `expectedText (JSON ASCII)`의 JSON 문자열을 해석하면 CR·컨트롤까지 보존한 실제 원문을 얻습니다. 이 값을 apply의 원문 사전조건에 사용하고 표시 텍스트와 혼동하지 않습니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 8,
+  "method": "tools/call",
+  "params": {
+    "name": "get_document_paragraph",
+    "arguments": { "inputPath": "./document.hwpx", "target": "s0:p3", "format": "text" }
+  }
+}
+```
+
+예시 ID는 실제 구조 보기의 값으로 바꿉니다. `apply_document_changes`에는 같은 원본의 `expectedSha256`, 새 `outputPath`, 명시 `operations` 배열을 전달합니다. 모든 작업의 `coordinates`는 `current-transaction`이어야 하며 뒤 작업은 직전 작업 이후의 실제 좌표입니다. 전체 스키마를 사전 검증하고 Native `expectedText`·`expectedRangeText` 조건을 확인한 뒤 한 번 저장합니다. 마지막 작업 실패 시 앞 변경만 적용한 문서를 게시하지 않습니다.
+
+지원하는 14종과 실제 patch 예시는 [CLI 명시 작업 적용](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 임의 SDK 호출이나 모든 표/그림 편집을 제공하지 않습니다. HWP5 줄 배치 무효화는 사용자가 `allowStaleLayout: true`를 명시한 경우에만 허용하며 새 조판을 생성하지 않습니다.
+
+### 새 문서와 text-only 변환
+
+`create_document`는 Native 빈 문서를 만들고 선택한 초기 본문을 저장합니다. 기존 입력 파일은 없으며 형식과 새 출력이 필수입니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 9,
+  "method": "tools/call",
+  "params": {
+    "name": "create_document",
+    "arguments": {
+      "outputPath": "./created-new.hwpx",
+      "format": "hwpx",
+      "text": "첫 문단\n\n마지막 문단"
+    }
+  }
+}
+```
+
+`convert_document`의 기본 `lossPolicy: "reject"`는 미구현 전체 보존 변환을 거부하며 새 파일을 만들지 않습니다. 사용자가 본문만 이관하는 손실을 선택한 경우 `text-only`를 명시합니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 10,
+  "method": "tools/call",
+  "params": {
+    "name": "convert_document",
+    "arguments": {
+      "inputPath": "./document.hwp",
+      "outputPath": "./converted-new.hwpx",
+      "to": "hwpx",
+      "lossPolicy": "text-only"
+    }
+  }
+}
+```
+
+본문 문단·빈 문단·Unicode를 새 문서로 생성하지만 표는 관측 셀 본문으로 평탄화합니다. 표 구조·서식·그림·차트·수식·OLE·머리말/꼬리말·페이지/구역 설정·메타데이터는 보존하지 않습니다. 손실 보고를 확인하며 기본 거부를 text-only로 자동 재시도하지 않습니다. 원본은 유지하고 신규 출력만 게시합니다. 같은 형식 요청과 미관측·미배치 본문은 거부하며 HTML/PDF·완전 조판·무손실 변환으로 안내하지 않습니다.
+
+### 로컬 그림 OCR
+
+`ocr_document`는 기본 `tesseract`, 기본 언어 `kor+eng`입니다. 설치된 로컬 실행 파일·언어 데이터가 필요하며 `executable`은 Tesseract 경로를 명시할 때만 사용합니다. macOS에서 OS Vision을 명시 선택하는 예시는 다음과 같습니다.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 11,
+  "method": "tools/call",
+  "params": {
+    "name": "ocr_document",
+    "arguments": {
+      "inputPath": "./document.hwpx",
+      "provider": "vision",
+      "languages": "kor+eng"
+    }
+  }
+}
+```
+
+`reference`로 실제 이미지 참조 한 개를 지정할 수 있고 생략하면 관측 구역 그림 범위를 처리합니다. Vision은 macOS 로컬 제공자이며 `executable`로 바꾸지 않습니다. 제공자·언어 부재, 실행 실패, 실제 빈 인식 결과를 구분하며 일부 실패 시 성공 텍스트도 유지합니다. 제공자 자동 fallback·외부 업로드·자동 다운로드·원본 자동 수정은 없습니다.
+
+기존 실제 Vision의 한국어·영어 인식 증거와 새 설치의 제공자 부재 오류 검증을 구분합니다. 실제 Tesseract 인식의 양성은 미검증입니다. 페이지 전체·바탕쪽·브러시·차트/수식 래스터화나 OLE 처리를 이 도구의 완료 범위로 추정하지 않습니다. 일반 `read_document`는 OCR을 호출하지 않습니다.
 
 ### 본문의 논리 참조로 개체 조회
 
@@ -203,4 +293,4 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 
 기존 출력이나 symlink 경로는 거부합니다. 실패 응답에서도 이미 파일이 게시됐을 수 있으므로 `published`·경로·SHA를 확인하세요. 영수증 출력량이 제한되면 상세 항목 대신 게시 개수·위치·생략 표시가 남을 수 있습니다. 같은 경로로 무조건 재시도하지 않습니다. `completeWithinListedScope`도 제한된 목록 안의 완료 여부일 뿐 문서 전체 완전성의 증거는 아닙니다. 크기·개수 및 부분 실패의 경계는 [CLI 이미지 추출](./cli.md#그림-목록과-추출)과 같습니다.
 
-[브라우저 체험](../cli-simulation.mdx)은 네이티브 엔진의 결과와 도구 메시지 형식을 설명합니다. 브라우저에서 실제 Node CLI·로컬 파일 시스템·MCP stdio 연결을 실행하거나, 새 도구가 설치된 서버를 대신 검증하지는 않습니다.
+[브라우저 체험](../cli-simulation.mdx)은 네이티브 엔진의 결과와 도구 메시지 형식을 설명합니다. 브라우저에서 실제 Node CLI·로컬 파일 시스템·MCP stdio 연결을 실행하거나, 새 도구가 설치된 서버를 대신 검증하지는 않습니다. 현재 실습의 보기 전환·대표 문자열 편집을 apply/create/convert/OCR 화면의 지원으로 해석하지 않습니다.

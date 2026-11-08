@@ -1,14 +1,14 @@
-# CLI로 원본 읽기·정보 확인·이미지 추출·편집
+# CLI로 원본 읽기·편집·새 문서·변환
 
-HWP5와 HWPX 원본을 읽고 정보를 확인하거나, 관측된 그림을 추출하고 한 문단의 문자열을 바꿔 새 문서로 저장합니다. 기본 읽기는 관측한 문서 내용을 텍스트나 Markdown 본문으로 출력합니다. 편집에 필요한 원문 ID·SHA와 진단 상세는 편집 구조 보기에서 확인합니다.
+HWP5와 HWPX 원본 읽기·정보/개체 조회·그림 추출과 명시 편집을 공통 Native 엔진으로 처리합니다. 새 문서 생성, 명시적인 text-only 교차 변환과 로컬 OCR도 제공합니다. 기본 읽기는 관측한 문서 내용을 텍스트나 Markdown 본문으로 출력합니다. 편집에 필요한 원문 ID·SHA와 진단 상세는 편집 구조 보기에서 확인합니다.
 
-[브라우저 체험](../cli-simulation.mdx)은 로컬 Node CLI 실행과 별개입니다. 페이지가 사용자의 로컬 파일 시스템이나 설치된 CLI를 대신 실행하지는 않습니다.
+[브라우저 체험](../cli-simulation.mdx)은 로컬 Node CLI 실행과 별개입니다. 페이지가 사용자의 로컬 파일 시스템이나 설치된 CLI를 대신 실행하지는 않습니다. 현재 실습의 읽기·보기 전환·대표 문자열 편집이 아래 apply/create/convert/OCR 화면을 모두 제공한다는 뜻은 아닙니다.
 
 ## 설치 상태와 로컬 패키지
 
 새 CLI가 포함된 `@ohah/hwpjs`는 npm 게시 전의 로컬 패키지 후보입니다. 기존 npm 패키지를 설치했다고 아래 명령이 모두 포함되는 것은 아닙니다. [현재 게시 상태](./package-names.md)를 확인하세요.
 
-`info`·`images`·`extract-images`가 포함된 새 로컬 패키지에서 설치 후 CLI/MCP의 두 형식 조회·추출을 확인했습니다. 앞선 패키지나 동결된 Skill 자산이 자동 갱신되는 것은 아니며, 공개 npm 게시·배포 완료와도 구분합니다.
+새 TypeScript 소스를 JS 실행 파일로 묶은 후보를 별도 소비자에 npm 설치해 create·paragraph·apply·양방향 text-only 변환·읽기와 거부 동작을 확인했습니다. 공식 SDK 클라이언트의 MCP stdio에서도 12도구 목록과 새 서비스 호출을 확인했습니다. OCR의 설치 경로 검사는 제공자 부재 거부를 포함하며, 실제 Tesseract 인식 성공을 확인한 것은 아닙니다. 앞선 패키지나 Skill 자산이 자동 갱신되는 것은 아니므로 갱신된 실행 파일의 `--help`를 확인합니다. 공개 npm 게시·공개 실습 배포 완료와도 구분합니다.
 
 Node.js 24.20 이상과 새 CLI·WASM을 포함한 로컬 tarball을 준비했다면 다음과 같이 설치합니다. 경로는 실제로 전달받거나 빌드한 파일로 바꾸세요. 이 명령은 npm 공개 버전의 존재를 뜻하지 않습니다.
 
@@ -22,6 +22,8 @@ npx --no-install hwpjs --help
 ```bash
 bun run cli read ./document.hwp --wasm /absolute/path/to/hwpjs.wasm
 ```
+
+소스는 Node24의 type stripping으로 실행하고 strict 타입 검사는 별도로 수행합니다. 설치 패키지의 bin은 TypeScript 원문이 아닌 JS입니다.
 
 빌드된 CLI의 기본 WASM은 실행 파일 옆의 `hwpjs.wasm`입니다. `--wasm PATH`로 다른 파일을 명시할 수 있으며 상대 경로는 현재 작업 디렉터리 기준입니다. CLI 도움말은 문서나 WASM 없이 볼 수 있습니다.
 
@@ -153,8 +155,89 @@ npx --no-install hwpjs edit ./document.hwpx \
 
 HWP5는 저장된 줄 배치가 무효화되는 편집을 기본적으로 거부합니다. 이를 수용할 때만 `--allow-stale-layout`을 추가하세요. 이 옵션은 새 조판 결과를 만들지 않습니다. 저장 후 출력 스트림 오류가 나면 `published: true` 진단이 있을 수 있으므로 결과 파일을 확인하고 무조건 재실행하지 않습니다.
 
+## 문단 원문 조회와 명시 작업 적용
+
+표시 본문과 Native 편집 원문은 다릅니다. `read --view structure`에서 얻은 같은 원본의 SHA·문단 ID로 실제 원문을 조회합니다.
+
+```bash
+npx --no-install hwpjs paragraph ./document.hwpx \
+  --target "$TARGET_ID" --expect-sha256 "$SOURCE_SHA" --format text
+```
+
+출력의 `nativeTextUnits`는 UTF-16 길이입니다. `expectedText (JSON ASCII)` 아래 문자열은 CR·컨트롤·비ASCII·따옴표·역슬래시를 이스케이프한 JSON입니다. 이 JSON을 해석한 문자열을 작업의 `expectedText`·`expectedRangeText` 조건에 사용합니다. HWP5의 종결 CR을 삭제하거나 표시 본문의 이스케이프를 그대로 원문으로 넣지 않습니다. `displayText`나 서식 메타데이터를 관측하지 못하면 미관측으로 표시합니다.
+
+`apply`는 `--patch FILE` 또는 `--operations JSON` 중 하나를 받고 같은 원본 SHA와 새 출력이 필수입니다. patch 파일은 명시 작업 배열이며 문서 전체 JSON 덤프가 아닙니다. 예를 들어, 구조 보기와 문단 조회로 `s0:p3`의 첫 네 단위가 실제로 `보도일시`임을 확인한 경우 다음 배열로 교체할 수 있습니다. 다른 문서는 실제 주소·범위·원문 조건으로 바꿉니다.
+
+```json
+[
+  {
+    "kind": "splice",
+    "coordinates": "current-transaction",
+    "section": 0,
+    "paragraph": 3,
+    "startUnit": 0,
+    "endUnit": 4,
+    "expectedRangeText": "보도일시",
+    "text": "내용검증"
+  }
+]
+```
+
+```bash
+npx --no-install hwpjs apply ./document.hwpx --patch ./changes.json \
+  --expect-sha256 "$SOURCE_SHA" --output ./applied-new.hwpx
+```
+
+`coordinates: "current-transaction"`은 모든 작업에 필수입니다. 뒤 작업은 앞 작업 이후의 실제 Native 문단·범위를 사용하며 문단 번호를 자동 보정하지 않습니다. 전체 배열의 타입·키·범위·예산을 먼저 검증하고, 실행 중 Native 원문 사전조건을 대조한 뒤 한 번 저장합니다. 마지막 작업이 실패해도 앞 작업만 적용한 파일을 게시하지 않습니다.
+
+| 작업                                                                                | 지원 범위                                                      |
+| ----------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `splice`, `replace-paragraph-ranges`                                                | 명시 범위 교체·여러 문단 교체                                  |
+| `split-paragraph`, `merge-paragraph`                                                | 원문 조건을 확인한 문단 분할·병합                              |
+| `character-properties`, `character-format`                                          | 크기·bold·italic의 sparse 속성 또는 기존 글자 모양 ID          |
+| `paragraph-format`, `paragraph-alignment`, `paragraph-margins`, `paragraph-spacing` | 기존 문단 모양 ID·정렬·여백·간격                               |
+| `cell-sizes`, `cell-styles`                                                         | 실제 원본 셀 소유자에 결속된 크기·테두리/채우기 등의 지원 배치 |
+| `picture-resize`, `table-insert`                                                    | 실제 그림 크기 조정·관측 리소스로 표 생성                      |
+
+이 14종은 임의 SDK 메서드 호출이나 모든 표 구조 편집을 뜻하지 않습니다. 지원하지 않는 속성·보호된 대상은 거부합니다. 기존 서식·리소스 ID·소유자 좌표를 추측하지 않습니다. 글자 크기 `size`는 1/100pt이며, 표·그림 길이는 Native 단위입니다. 생성한 표의 identity는 결과에 반환됩니다. 일반 `edit`의 한 문단 리터럴 교체는 그대로 유지합니다.
+
+## 새 문서 생성
+
+```bash
+npx --no-install hwpjs create --format hwpx \
+  --text-file ./body.txt --output ./created-new.hwpx
+```
+
+`--format hwp5|hwpx`와 새 출력은 필수이며 `--text-file`을 생략하면 Native 빈 문서를 만듭니다. 초기 본문은 UTF-8 텍스트 파일이며 CRLF/CR은 문단 경계로 정규화합니다. 빈 문단과 끝 빈 문단·Unicode를 유지하고 임의 제어문자는 거부합니다. 본문은 4MiB·최대 4096문단 범위입니다. 샘플 원본을 템플릿으로 복사하지 않습니다.
+
+HWP5 초기 텍스트 저장이 조판 갱신을 요구하면 기본적으로 거부합니다. 사용자가 저장된 줄 배치 무효화를 수용한 경우에만 `--allow-stale-layout`을 명시합니다. 이 옵션은 새 조판을 만들지 않습니다.
+
+## 명시 text-only 교차 변환
+
+```bash
+npx --no-install hwpjs convert ./document.hwp --to hwpx \
+  --loss-policy text-only --output ./converted-new.hwpx
+```
+
+이는 관측한 본문 문자열·빈 문단·Unicode를 타형식 새 문서로 재생성하는 손실 있는 변환입니다. 표의 셀 본문은 관측 순서로 평탄화하고 **표 구조·서식·그림·차트·수식·OLE·머리말/꼬리말·페이지 설정·메타데이터를 보존하지 않습니다.** 원본은 유지하고 결과의 미보존 보고를 확인합니다.
+
+기본 `--loss-policy reject`는 전체 보존 변환이 미구현이므로 `UnsupportedDocumentConversion`과 보고를 반환하고 새 파일을 만들지 않습니다. text-only로 자동 대체하지 않습니다. 같은 형식 요청과 미관측·미배치 본문은 거부하며, HWP5 출력의 조판 허용도 별도 명시가 필요할 수 있습니다. HTML/PDF·완전한 원본 조판·무손실 교차 변환은 제공하지 않습니다.
+
+## 그림의 로컬 OCR
+
+```bash
+npx --no-install hwpjs ocr ./document.hwpx \
+  --ref "$IMAGE_REF" --provider tesseract --languages kor+eng
+```
+
+`--ref`는 실제 이미지 참조이며 생략하면 관측 범위의 구역 그림들을 처리합니다. 기본 제공자는 `tesseract`이며 로컬 실행 파일과 요청 언어 데이터가 있어야 합니다. `--executable PATH`로 Tesseract 실행 파일을 명시할 수 있습니다. macOS에서는 `--provider vision`을 명시해 OS 로컬 Vision을 사용할 수 있으며 이 제공자의 실행 파일은 바꾸지 않습니다.
+
+제공자나 언어 데이터가 없으면 `ProviderUnavailable`로 보고하며 다른 제공자로 자동 전환하지 않습니다. 외부 서버 업로드·자동 다운로드·원본 자동 수정은 수행하지 않습니다. 일부 그림 실패와 실제 빈 인식 결과는 구분하고 성공한 텍스트도 함께 남깁니다. 바탕쪽·이미지 브러시·페이지 전체 렌더링·차트/수식 래스터화는 이 OCR의 범위가 아닙니다.
+
+기존 로컬 Vision의 한국어·영어 이미지/문서 실행 증거와 새 설치의 제공자 부재 거부를 구분합니다. 실제 Tesseract 인식의 양성 사례는 아직 검증하지 않았습니다. 기본 `read`는 OCR을 실행하지 않습니다.
+
 ## 한도와 공통 기능 범위
 
 문서 입출력은 각각 64 MiB, WASM 입력은 32 MiB로 제한됩니다. 이미지 참조는 최대 4096개, 수집기에서 허용하는 개별 이미지 바이트는 8 MiB, 보관하는 고유 이미지 바이트와 추출 게시 총량은 각각 32 MiB입니다. HWPX는 네이티브에서 최대 64 MiB 복사가 선행될 수 있어 개별 이미지의 8 MiB 검사가 전체 메모리 상한을 뜻하지는 않습니다.
 
-읽기·편집·저장·변환·이미지를 공통 엔진/API로 연결하는 방향이며, 지원 여부는 각 명령의 실제 관측 범위로 구분합니다. 표 구조·셀 크기·이미지 교체·새 문서 작성은 현재 문자열 편집 명령의 범위가 아닙니다. [MCP 도구](./mcp.md)도 같은 파일·SHA·추출 경계를 사용합니다. 기존 [Skill](./skill.md) 안내와 배포된 자산은 별도로 동결된 세대일 수 있으므로 새 명령이 자동 추가됐다고 가정하지 마세요.
+읽기·편집·저장·변환·이미지를 공통 엔진/API로 연결하는 방향이며, 지원 여부는 각 명령의 실제 관측 범위로 구분합니다. 문자열 `edit`와 명시 `apply`·`create`·`convert`·`ocr`는 서로 다른 범위입니다. 새 원시 그림 삽입/교체·임의 표 행/열 구조 변경·차트/수식 래스터화·OLE 원시 추출·전체 의미 보존 변환은 미완료 범위입니다. [MCP 도구](./mcp.md)도 같은 파일·SHA·추출 경계를 사용합니다. 기존 [Skill](./skill.md) 안내와 배포된 자산은 별도로 동결된 세대일 수 있으므로 새 명령이 자동 추가됐다고 가정하지 마세요.

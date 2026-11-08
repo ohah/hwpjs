@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
-import { createFiles, MAX_DOCUMENT_BYTES, MAX_WASM_BYTES } from '../src/files.mjs';
+import { createFiles, MAX_DOCUMENT_BYTES, MAX_WASM_BYTES } from '../src/files.ts';
 const hash = (b) => createHash('sha256').update(b).digest('hex');
 const fail = () => {
   throw Object.assign(Error('injected'), { code: 'EIO' });
@@ -365,4 +365,40 @@ test('image outputs reject symlink parents/finals and swapped directory ownershi
     /OutputSymlink/,
   );
   assert.deepEqual(await fs.readdir(join(f.dir, 'real-old')), []);
+});
+
+test('plain filesystem error objects retain ENOENT admission and post-publication warning codes', async (t) => {
+  const f = await fixture(t);
+  const output = join(f.dir, 'plain.hwp');
+  const files = createFiles({
+    fs: {
+      ...fs,
+      async lstat(path, ...options) {
+        if (path === output) {
+          try {
+            return await fs.lstat(path, ...options);
+          } catch (cause) {
+            if (cause.code === 'ENOENT') throw { code: 'ENOENT' };
+            throw cause;
+          }
+        }
+        return fs.lstat(path, ...options);
+      },
+      async unlink(path) {
+        await fs.unlink(path);
+        throw { code: 'EIO', message: 'injected plain cleanup failure' };
+      },
+    },
+  });
+  const token = await files.assertNewDocumentOutput({ outputPath: output });
+  files.assertOutputFormat(token, 'hwp5');
+  const receipt = await files.publishNewOutput({ target: token, bytes: Uint8Array.of(7) });
+  assert.equal(receipt.published, true);
+  assert.ok(
+    receipt.warnings.some(
+      (warning) => warning.phase === 'unlink-temporary' && warning.code === 'EIO',
+    ),
+  );
+  assert.deepEqual([...(await fs.readFile(output))], [7]);
+  assert.equal(await fs.readFile(f.input, 'utf8'), 'original');
 });

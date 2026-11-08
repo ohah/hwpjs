@@ -451,4 +451,4 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 
 - `packages/cli/`: [AI 문서 읽기·편집 CLI](cli-ai-document-view.md)의 명령·파일 호스트·Native 엔진·논리 모델·출력. 공개 실행 파일은 `@ohah/hwpjs`의 `hwpjs`입니다.
 
-문서 정보·이미지 도구의 `packages/cli/src/inspect-document.mjs`와 `document-images.mjs`는 바이트 기반 Native 관측을 소유합니다. CLI 파일 접근·출력과 MCP 도구는 기존 호스트를 재사용합니다. 책임·범위·제한은 [정보·이미지 도구](cli-resource-tools.md), 플랫폼 제공 원칙은 [플랫폼 계약](platform-compatibility.md)을 따릅니다.
+문서 정보·이미지 도구의 `packages/cli/src/inspect-document.ts`와 `document-images.ts`는 바이트 기반 Native 관측을 소유합니다. CLI 파일 접근·출력과 MCP 도구는 기존 호스트를 재사용합니다. 책임·범위·제한은 [정보·이미지 도구](cli-resource-tools.md), 플랫폼 제공 원칙은 [플랫폼 계약](platform-compatibility.md)을 따릅니다.

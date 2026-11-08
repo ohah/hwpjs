@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": false,
+    "allowJs": true,
+    "checkJs": false,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "resolveJsonModule": true,
+    "types": ["node"],
+    "lib": ["ES2023", "ES2024.String", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/**/*.ts"]
+}

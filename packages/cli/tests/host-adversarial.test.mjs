@@ -5,9 +5,9 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { parseArguments } from '../src/arguments.mjs';
-import { createFiles } from '../src/files.mjs';
-import { runCLI } from '../src/main.mjs';
+import { parseArguments } from '../src/arguments.ts';
+import { createFiles } from '../src/files.ts';
+import { runCLI } from '../src/main.ts';
 const evidence = resolve('zig-out/verification/cli-ai-adversarial-r1/.tmp');
 const sha = (value) => createHash('sha256').update(value).digest('hex');
 const argv = (target = 's0:p3', hash = 'a'.repeat(64)) => [
@@ -222,7 +222,7 @@ test('round2 committed output retains SHA when an async stdout partially writes 
   assert.equal(await fs.readFile(f.input.path, 'utf8'), 'source');
 });
 test('round3 actual Node Writable callback EPIPE is consumed and a broken stderr is bounded', () => {
-  const url = new URL('../src/main.mjs', import.meta.url).href;
+  const url = new URL('../src/main.ts', import.meta.url).href;
   for (const brokenStderr of [false, true]) {
     const code = `import {Writable} from 'node:stream';const {runCLI}=await import(${JSON.stringify(url)});const failing=()=>new Writable({write(_c,_e,cb){setImmediate(()=>cb(Object.assign(Error('pipe'),{code:'EPIPE'})));}});Object.defineProperty(process,'stdout',{value:failing()});${brokenStderr ? "Object.defineProperty(process,'stderr',{value:failing()});" : ''}process.exitCode=await runCLI(['--help']);`;
     const result = spawnSync(
@@ -239,7 +239,7 @@ test('round3 actual Node Writable callback EPIPE is consumed and a broken stderr
   }
 });
 test('round3 actual Node Writable backpressure waits for delayed successful flush', () => {
-  const url = new URL('../src/main.mjs', import.meta.url).href;
+  const url = new URL('../src/main.ts', import.meta.url).href;
   const code = `import{Writable}from'node:stream';const {runCLI}=await import(${JSON.stringify(url)});let completed=false;Object.defineProperty(process,'stdout',{value:new Writable({highWaterMark:1,write(_c,_e,cb){setTimeout(()=>{completed=true;cb();},15);}})});const result=await runCLI(['--help']);process.stderr.write(completed&&result===0?'flushed':'premature');`;
   const result = spawnSync(
     process.execPath,

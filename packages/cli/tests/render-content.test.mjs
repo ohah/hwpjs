@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderDocument } from '../src/render.mjs';
-import { createDisplayEscaper } from '../src/render-escape.mjs';
+import { renderDocument } from '../src/render.ts';
+import { createDisplayEscaper } from '../src/render-escape.ts';
 import {
   buildObjectReference,
   parseObjectReference,
   canonicalImageId,
-} from '../src/object-reference.mjs';
+} from '../src/object-reference.ts';
 
 let ordinal = 0;
 const paragraph = (displayText) => ({

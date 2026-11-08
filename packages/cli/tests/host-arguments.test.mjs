@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { parseArguments as parse } from '../src/arguments.mjs';
+import { parseArguments as parse } from '../src/arguments.ts';
 const sha = 'a'.repeat(64);
 const edit = (...extra) => [
   'edit',

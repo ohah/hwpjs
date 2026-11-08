@@ -24,11 +24,13 @@
     "check": "bun tools/quality.mjs check",
     "quality:files": "bun tools/quality.mjs files",
     "quality:config": "bun tools/sync-quality-config.mjs --check",
-    "cli": "bun packages/cli/src/bin.mjs",
-    "mcp": "bun packages/cli/src/mcp-bin.mjs"
+    "cli": "node packages/cli/src/bin.ts",
+    "mcp": "node packages/cli/src/mcp-bin.ts",
+    "cli:typecheck": "tsc -p packages/cli/tsconfig.json"
   },
   "engines": {
-    "bun": ">=1.4.4"
+    "bun": ">=1.4.4",
+    "node": ">=24.11.0"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",
@@ -43,7 +45,9 @@
     "vite": "8.3.6",
     "oxlint": "1.92.0",
     "oxfmt": "0.77.0",
-    "react-native": "0.88.1"
+    "react-native": "0.88.1",
+    "tsdown": "0.23.7",
+    "@types/node": "24.19.2"
   },
   "patchedDependencies": {
     "react-native@0.88.1": "patches/react-native@0.88.1.patch"

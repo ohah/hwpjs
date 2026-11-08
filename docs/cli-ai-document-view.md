@@ -48,7 +48,7 @@ hwpjs read ./문서.hwp --format markdown > ./문서.md
 
 ## 개체 논리 참조와 후속 조회
 
-읽기 모델의 관측 개체에는 `reference`를 노출할 수 있습니다. 공통 `object-reference.mjs`의 `buildObjectReference`·`parseObjectReference`·`canonicalImageId`를 단일 출처로 사용하며 호스트나 웹에서 별도 참조 문법을 만들지 않습니다.
+읽기 모델의 관측 개체에는 `reference`를 노출할 수 있습니다. 공통 `object-reference.ts`의 `buildObjectReference`·`parseObjectReference`·`canonicalImageId`를 단일 출처로 사용하며 호스트나 웹에서 별도 참조 문법을 만들지 않습니다.
 
 ```text
 hwpjs-object:<SHA>/<hwp5|hwpx>/s<section>/<kind>/<node>
@@ -77,7 +77,7 @@ bun run cli edit ./document.hwpx \
 
 식별자는 HWP5에서는 0부터 시작하는 구역 내 문단 번호, HWPX에서는 1부터 시작하는 문서 전체 문단 번호입니다. 화면상의 순서로 번호를 새로 만들지 않습니다. 해당 원문 해시의 스냅샷에만 유효하며 편집 후에는 새 파일을 읽어 결과를 확인하고, 다음 편집용 ID·SHA는 새 파일의 구조 보기에서 얻습니다.
 
-현재 편집은 한 문단 안에서 정확히 한 번 발견되는 리터럴 문자열 교체·삭제입니다. 정규식·문단 삽입·표 구조 변경·이미지 교체·일괄 변경은 제공하지 않습니다. 겹치는 중복 일치도 모호한 대상으로 거부합니다. `--with ''`는 삭제이며 개행·제어 문자와 잘못된 Unicode는 거부합니다. Native 보호·편집 가능 범위 검사도 통과해야 합니다. 읽기에 표시되는 모든 문단이 편집 가능하다는 의미는 아닙니다.
+`edit` 명령의 편집은 한 문단 안에서 정확히 한 번 발견되는 리터럴 문자열 교체·삭제입니다. 이 명령은 정규식·문단 삽입·표 구조 변경·이미지 교체·일괄 변경을 제공하지 않습니다. 추가 apply·생성·변환·OCR 서비스의 범위와 검증 경계는 [기능 계약](cli-editing-capabilities.md)을 따릅니다. 겹치는 중복 일치도 모호한 대상으로 거부합니다. `--with ''`는 삭제이며 개행·제어 문자와 잘못된 Unicode는 거부합니다. Native 보호·편집 가능 범위 검사도 통과해야 합니다. 읽기에 표시되는 모든 문단이 편집 가능하다는 의미는 아닙니다.
 
 HWP5 저장이 재조판을 요구하면 기본적으로 실패합니다. 원본의 저장된 줄 배치가 무효화되는 것을 수용하는 경우에만 `--allow-stale-layout`을 명시합니다. 이 옵션은 새 조판 결과를 생성하지 않습니다.
 
@@ -85,7 +85,9 @@ HWP5 저장이 재조판을 요구하면 기본적으로 실패합니다. 원본
 
 ## 책임 분리와 검증
 
-`packages/cli/src/arguments.mjs`는 명령 계약, `files.mjs`는 파일 스냅샷·신규 출력, `engine.mjs`는 Native 수명·편집·저장을 소유합니다. `document-model.mjs`와 `model/`은 관측·소유권 투영, `render.mjs`는 content·structure 읽기 출력을 소유하며 두 보기가 모델 검증과 출력 예산을 공유합니다. `main.mjs`는 이 경계를 연결하고 `bin.mjs`만 실행 시점을 소유합니다.
+CLI/MCP 개발 소스는 TypeScript이며 설치 패키지는 JS 실행 파일을 제공합니다. [소스 실행·타입 검사·배포 빌드의 구분](cli-typescript-build.md)을 따릅니다.
+
+`packages/cli/src/arguments.ts`는 명령 계약, `files.ts`는 파일 스냅샷·신규 출력, `engine.ts`는 Native 수명·편집·저장을 소유합니다. `document-model.ts`와 `model/`은 관측·소유권 투영, `render.ts`는 content·structure 읽기 출력을 소유하며 두 보기가 모델 검증과 출력 예산을 공유합니다. `main.ts`는 이 경계를 연결하고 `bin.ts`만 실행 시점을 소유합니다.
 
 소유권 투영은 Map·Set과 메모이제이션으로 관측 노드·관계 수에 비례해 처리하고, 표의 행×열 크기만큼 빈 셀을 만들지 않습니다. 문자열 일치는 KMP로 원문과 검색어 길이에 비례합니다. Native 파싱·저장 전체의 복잡도나 시각적 레이아웃까지 이 보장이 확장되는 것은 아닙니다. 모델 깊이·노드 수·텍스트와 출력 길이에도 제한을 둡니다.
 

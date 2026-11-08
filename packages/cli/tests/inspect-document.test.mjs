@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { inspectDocument } from '../src/inspect-document.mjs';
+import { inspectDocument } from '../src/inspect-document.ts';
 
 const bytesFor = (format) =>
   format === 'hwp5'
@@ -343,7 +343,7 @@ test('invalid inputs fail before opening Native', async () => {
 });
 
 test('module and byte-only fake inspection run with Node imports/globals blocked', () => {
-  const url = new URL('../src/inspect-document.mjs', import.meta.url).href;
+  const url = new URL('../src/inspect-document.ts', import.meta.url).href;
   const program = `import assert from 'node:assert/strict'; import {registerHooks} from 'node:module';
     registerHooks({resolve(name,context,next){if(name.startsWith('node:')||(!name.startsWith('.')&&!name.startsWith('file:')))throw Error('NonBrowserDependency:'+name);return next(name,context)}});
     globalThis.Buffer=undefined;globalThis.process=undefined;globalThis.require=undefined;globalThis.module=undefined;

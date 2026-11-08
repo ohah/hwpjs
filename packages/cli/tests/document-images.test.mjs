@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createDocumentImages, DocumentImageError } from '../src/document-images.mjs';
+import { createDocumentImages, DocumentImageError } from '../src/document-images.ts';
 const sourceSha256 = 'a'.repeat(64),
   scope = { sourceSha256 };
 const png = () =>

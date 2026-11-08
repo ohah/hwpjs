@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { buildObjectReference } from '../../../packages/cli/src/object-reference.mjs';
+import { buildObjectReference } from '../../../packages/cli/src/object-reference.ts';
 import {
   createSimulation,
   simulationEditRequest,

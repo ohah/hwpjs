@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readDocumentModel } from '../src/document-model.mjs';
+import { readDocumentModel } from '../src/document-model.ts';
 const hash = 'a'.repeat(64);
-import { buildObjectReference, canonicalImageId } from '../src/object-reference.mjs';
+import { buildObjectReference, canonicalImageId } from '../src/object-reference.ts';
 function hx() {
   const data = {
     paragraphs: [

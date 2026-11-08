@@ -9,12 +9,12 @@ import { PassThrough } from 'node:stream';
 import { createInterface } from 'node:readline';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
-import { parseArguments } from '../src/arguments.mjs';
-import { runCLI } from '../src/main.mjs';
-import { createFiles } from '../src/files.mjs';
-import { documentTools } from '../src/mcp/tools.mjs';
-import { runMcpServer } from '../src/mcp/server.mjs';
-import { buildObjectReference } from '../src/object-reference.mjs';
+import { parseArguments } from '../src/arguments.ts';
+import { runCLI } from '../src/main.ts';
+import { createFiles } from '../src/files.ts';
+import { documentTools } from '../src/mcp/tools.ts';
+import { runMcpServer } from '../src/mcp/server.ts';
+import { buildObjectReference } from '../src/object-reference.ts';
 
 // 가짜 문서·WASM 바이트와 DI만 사용합니다. 실제 Native·설치 패키지 검증이 아닙니다.
 const original = Buffer.from('개체 호스트 읽기 전용 스냅샷');
@@ -448,9 +448,14 @@ test('MCP 새 도구는 맨 끝에 등록되고 schema가 ref/legacy 혼용과 �
       'extract_document_image',
       'read_documents',
       'get_document_object',
+      'get_document_paragraph',
+      'apply_document_changes',
+      'create_document',
+      'convert_document',
+      'ocr_document',
     ],
   );
-  const object = tools.at(-1);
+  const object = tools.find((tool) => tool.name === 'get_document_object');
   assert.equal(object.config.annotations.readOnlyHint, true);
   assert.equal(
     object.config.inputSchema.parse({ inputPath: 'x', reference: ref() }).format,

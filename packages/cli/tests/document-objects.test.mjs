@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { inspectDocumentObject } from '../src/document-objects.mjs';
-import { buildObjectReference } from '../src/object-reference.mjs';
+import { inspectDocumentObject } from '../src/document-objects.ts';
+import { buildObjectReference } from '../src/object-reference.ts';
 
 const hash = 'a'.repeat(64);
 const ref = (kind, node = 10, format = 'hwpx') =>
