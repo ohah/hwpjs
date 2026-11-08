@@ -1412,3 +1412,13 @@ bun run mcp --wasm /absolute/path/hwpjs.wasm
 ```
 
 MCP는 stdout을 프로토콜 전용으로 사용합니다. 추출 범위·단건 SHA/ID·부분 결과와 출력 한도는 [정보·이미지 도구](cli-resource-tools.md)를 따릅니다.
+
+## 공개 패키지 메타데이터와 Skill 동기화
+
+`packages/hwpjs/package.json`의 keywords·version과 README, 빌더·타입 설정, 잠금 파일, 라이선스·고지는 정규 패키지의 입력 지문에 포함됩니다. 이 입력을 수정하면 실행 코드가 같아도 Skill manifest를 함께 갱신해야 합니다. 같은 Git 소스와 명시 WASM으로 위 정규 패키지를 빌드한 뒤 다음 명령으로 Skill 자산을 재생성합니다.
+
+```sh
+node tools/build-agent-skill.mjs --package-dir packages/hwpjs
+```
+
+기존 CI의 Skill 여섯 파일 바이트 동등성 검사를 유지합니다. 사용자 WIP가 있는 작업 트리에서는 소유 변경만 포함한 격리 입력을 빌드하고, 그 출력으로 생성한 자산만 적용합니다. 정규 고지 변경 시 공개 데모의 고지와 manifest 해시도 함께 갱신하고 정적 자산 검증을 수행합니다.

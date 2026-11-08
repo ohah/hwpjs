@@ -3,7 +3,39 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
-import { collectPublicPackageNotices } from '../public-package-notices.mjs';
+import {
+  collectPublicPackageNotices,
+  composePublicPackageNotices,
+} from '../public-package-notices.mjs';
+
+test('공개 고지는 한컴 원문과 프로젝트 고지 및 의존성 LICENSE/NOTICE 전문을 함께 보존한다', async (t) => {
+  const f = await fixture(t);
+  const license = '\uFEFF원문 LICENSE\r\n마지막 줄';
+  const notice = '원문 NOTICE\n';
+  const p = await f.pkg('node_modules/fixture', undefined, { LICENSE: license, NOTICE: notice });
+  const project = await readFile(
+    new URL('../../docs/third-party-notices.md', import.meta.url),
+    'utf8',
+  );
+  const exactHancom =
+    '본 제품은 한글과컴퓨터의 \uF53A글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.';
+  const bundled = await f.collect([p.entry]);
+  const output = composePublicPackageNotices(project, bundled);
+  assert.ok(output.includes(exactHancom), '한컴 참고 고지가 생성된 배포 고지에 있어야 합니다.');
+  assert.ok(output.startsWith(project), '프로젝트 고지 전체 원문을 보존해야 합니다.');
+  assert.equal(output.split(exactHancom).length - 1, 1);
+  assert.ok(output.includes('## Bundled dependency: fixture@1.2.3'));
+  assert.ok(output.includes('SPDX: MIT'));
+  assert.ok(output.includes(license));
+  assert.ok(output.includes(notice));
+});
+
+test('프로젝트 고지 없이 의존성 고지만 배포하지 않으며 의존성 없는 고지도 보존한다', () => {
+  for (const missing of [undefined, null, '', ' \n'])
+    assert.throws(() => composePublicPackageNotices(missing, 'LICENSE'), /MissingProjectNotices/);
+  assert.throws(() => composePublicPackageNotices('고지', undefined), /InvalidBundledNotices/);
+  assert.equal(composePublicPackageNotices('고지\r\n', ''), '고지\r\n');
+});
 
 async function fixture(t) {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'hwpjs-notices-')));

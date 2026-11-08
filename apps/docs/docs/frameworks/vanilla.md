@@ -1,5 +1,12 @@
 # Vanilla
 
+```sh
+npm install @ohah/hwpjs@0.1.0
+```
+
+먼저 [웹 Worker·WASM 배치](../guide/installation.md#웹에서-worker와-wasm-제공)를 진행하세요. <a href="__HWPJS_DOCS_BASE__editor/demo/vanilla/">이 프레임워크의 실행 데모</a>에서 HWP·HWPX 파일을 직접 열 수 있습니다.
+
+
 `createCanvasSurface`는 현재 렌더러와 직접 입력 구현을 연결합니다. 빈 호스트 요소와 editor를 전달하고 실제 마운트 높이를 지정하세요. 예: 호스트 CSS에 `height: 70vh`. 호스트의 자식 노드는 surface가 소유하므로 다른 프레임워크로 자식을 동시에 렌더링하지 않습니다.
 
 아래 예제는 [브라우저 runtime helper](../guide/runtime.md)의 `createBrowserEditor`를 같은 앱 모듈에서 가져옵니다. 호출 앱은 파일 picker에서 받은 `File`과 배포한 asset URL을 전달합니다.

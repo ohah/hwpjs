@@ -1,5 +1,9 @@
 # Third-party notices
 
+## HWP 파일 형식 참고
+
+본 제품은 한글과컴퓨터의 글 문서 파일(.hwp) 공개 문서를 참고하여 개발하였습니다.
+
 The Node MCP distribution bundles the official Model Context Protocol server
 and core packages (Apache-2.0) and Zod (MIT). The canonical package builder
 collects the actual bundled dependency package versions, SPDX identifiers,

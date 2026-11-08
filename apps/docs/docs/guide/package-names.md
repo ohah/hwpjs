@@ -1,33 +1,45 @@
 # 패키지 이름과 게시 상태
 
-정식 core 배포 이름은 **`@ohah/hwpjs`**입니다. 현재 개발 workspace의 이름과 지금 npm에서 설치되는 패키지는 구분해야 합니다.
+공개 배포 이름은 **`@ohah/hwpjs`**이며, Zig/WASM 공통 엔진을 포함한 **`0.1.0`이 npm에 게시되어 있습니다.** 내부 개발 workspace 이름과 이전 RC의 API를 현재 공개 API와 구분합니다.
 
-| 대상 | 현재 확인한 상태 | 사용 시 주의 |
-| --- | --- | --- |
-| npm의 `@ohah/hwpjs@0.1.0-rc.10` | 기존 Rust/NAPI·WASI 변환 패키지 | 새 `createEditor`·typed command API가 아님 |
-| 로컬 `@hwpjs/core`, `@hwpjs/vanilla`, `@hwpjs/react`, `@hwpjs/svelte` | 현재 개발 workspace manifest | npm 게시 패키지로 확인되지 않음 |
-| 새 `@ohah/hwpjs` Zig/WASM API | 준비 중, npm 게시하지 않음 | 기존 이름에 설치 명령만 실행해 새 API를 얻을 수 없음 |
+| 대상                                                                | 현재 상태                                                          | 사용 시 주의                                                  |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------- |
+| `@ohah/hwpjs@0.1.0`                                                 | 공개 npm 패키지. 공통 SDK·CLI·stdio MCP·WASM과 공개 타입 선언 포함 | Node.js 24.20 이상, ESM. 아래 공개 진입점 사용                |
+| `@ohah/hwpjs@0.1.0-rc.10`                                           | 이전 Rust/NAPI·WASI 변환 패키지                                    | `0.1.0`의 `createEditor`·typed command API와 호출 형태가 다름 |
+| `@hwpjs/core`, `@hwpjs/vanilla`, `@hwpjs/react`, `@hwpjs/svelte` 등 | 내부 개발 workspace 이름                                           | 외부 프로젝트에서는 `@ohah/hwpjs`의 공개 하위 경로 사용       |
 
-기존 공개 패키지는 루트 `.`의 browser/node/react-native 조건과 `./package.json`을 export합니다. `/runtime`, `/worker`, `/wasm`은 현재 공개 rc.10의 export가 아닙니다. 이 문서가 설명하는 새 API로 기존 패키지의 함수를 바꿔 읽지 마세요.
+## 공개 설치
 
-## 새 배포 구조 검토
+문서를 다룰 프로젝트 디렉터리에서 실행합니다.
 
-내부 모노레포의 core·Vanilla·React·Svelte·React Native 분리는 유지하면서, 외부에는 단일 `@ohah/hwpjs`와 하위 경로를 제공하는 umbrella 구성을 사용합니다. 실제 tarball 소비 검증과 npm 게시는 별개입니다.
+```bash
+npm install @ohah/hwpjs@0.1.0 --ignore-scripts --omit=peer --no-audit --no-fund
+npx --no-install hwpjs --help
+```
 
-| 후보 import 경로 | 의미 |
-| --- | --- |
-| `@ohah/hwpjs` | canonical core API |
-| `@ohah/hwpjs/runtime` | Reader/Worker runtime과 WASM loader |
-| `@ohah/hwpjs/worker`, `@ohah/hwpjs/wasm` | 배포된 Worker/WASM asset export |
-| `@ohah/hwpjs/vanilla` | Canvas surface |
-| `@ohah/hwpjs/react` | React adapter, 선택적인 React peer 필요 |
-| `@ohah/hwpjs/svelte` | Svelte adapter, 선택적인 Svelte peer 및 SSR 경계 필요 |
-| `@ohah/hwpjs/react-native` | experimental Native provider 기반; 기기 연결·검증 별도 |
+이 설치 방식은 CLI/MCP를 위한 선택적 UI peer 생략 예시입니다. React·Svelte·React Native 어댑터를 사용한다면 해당 peer도 준비합니다. [CLI 가이드](./cli.md)와 [MCP 가이드](./mcp.md)의 명령은 이 공개 버전을 기준으로 합니다. 이전 설치분은 자동 갱신되지 않습니다.
 
-`@ohah/hwpjs/core`는 별도로 npm에 게시하는 이름이 아닙니다. 단일 패키지의 `./core` export로 제공할 수 있지만, 여기서는 core의 canonical 경로를 루트 `@ohah/hwpjs`로 둡니다. 어댑터를 `@ohah/hwpjs-react` 같은 별도 패키지로 발행하는 방식은 비교안이며 확정 정책이 아닙니다.
+인증 없는 새 소비자와 새 캐시에서 실제 공개 레지스트리 설치를 확인했습니다. 레지스트리 tarball 무결성과 설치 파일 110개가 준비한 릴리스와 일치했고, 설치된 CLI의 도움말·HWPX 생성·Noori HWP5 편집/재열기 및 실제 MCP 버전 `0.1.0`·12도구 목록을 확인했습니다. 이 확인은 모든 문서·기능·플랫폼의 검증 완료를 뜻하지 않습니다.
 
-## 지금 예제를 실행하려면
+## 공개 진입점
 
-가이드 예제의 canonical imports는 새 단일 umbrella tarball을 clean consumer에 설치하고 실제 packed 선언 파일로 검사했습니다. 이 검증은 npm 게시를 뜻하지 않습니다. 기존 내부 workspace 이름과 외부 subpath는 별도로 유지될 수 있습니다. 아직 공개하지 않은 API에 `bun add @ohah/hwpjs`만 안내해 설치 성공처럼 보이게 하지 않습니다.
+내부 모노레포의 core·Vanilla·React·Svelte·React Native 분리는 유지하며, 외부에는 단일 패키지와 다음 하위 경로를 제공합니다.
 
-[공개 API 직접 실행](../api/playground.mdx)은 배포에 포함된 실제 내부 패키지·WASM을 사용합니다. 실행 화면의 `@ohah/hwpjs` 코드 표기는 새 canonical 이름을 설명하며, npm에서 동일 API가 이미 게시됐다는 뜻은 아닙니다.
+| import 경로                              | 의미                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------- |
+| `@ohah/hwpjs`                            | canonical core API                                               |
+| `@ohah/hwpjs/runtime`                    | Reader/Worker runtime과 WASM loader                              |
+| `@ohah/hwpjs/worker`, `@ohah/hwpjs/wasm` | 배포된 Worker/WASM asset export                                  |
+| `@ohah/hwpjs/vanilla`                    | Canvas surface                                                   |
+| `@ohah/hwpjs/react`                      | React adapter, 선택적인 React peer 필요                          |
+| `@ohah/hwpjs/svelte`                     | Svelte adapter, 선택적인 Svelte peer 및 SSR 경계 필요            |
+| `@ohah/hwpjs/react-native`               | Native provider 기반 JavaScript 경계; 기기 연결·검증 별도        |
+| `@ohah/hwpjs/react-native/canvas`        | 별도 Native Canvas 연결 경계; 기기 바이너리를 자동 설치하지 않음 |
+
+core의 canonical 경로는 루트 `@ohah/hwpjs`입니다. `@ohah/hwpjs/core`는 `0.1.0`의 export가 아니며, `@ohah/hwpjs-react` 같은 별도 이름으로 어댑터를 설치하지 않습니다. 이전 `rc.10`의 export와 함수 계약을 현재 하위 경로에 그대로 적용하지 마세요.
+
+`hwpjs`와 `hwpjs-mcp`는 같은 패키지의 실행 파일입니다. 설치된 bin은 TypeScript 원문이 아닌 독립 JavaScript이며, 인접한 WASM 한 벌을 사용합니다. SDK root/runtime import는 React/Svelte 설치나 DOM 접근을 요구하지 않습니다. `/worker`는 Worker 환경 전용으로 일반 Node main에서 직접 실행하는 파일이 아닙니다.
+
+## 설치와 브라우저 체험의 구분
+
+[공개 API 직접 실행](../api/playground.mdx)과 [문서 체험](../cli-simulation.mdx)은 각각 배포에 포함된 동결 소스·WASM을 사용합니다. npm 공개 설치는 별도로 확인된 경로이며, 브라우저가 설치된 Node CLI나 실제 stdio 서버를 실행하는 것은 아닙니다. 미게시 개발 소스와 후속 기능도 `0.1.0`에 포함됐다고 간주하지 않습니다.

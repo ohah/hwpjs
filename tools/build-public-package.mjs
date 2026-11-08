@@ -5,7 +5,10 @@ import {
   isProductionSource,
   selectDeclarationInputs,
 } from '../packages/hwpjs/build/source-policy.mjs';
-import { collectPublicPackageNotices } from './public-package-notices.mjs';
+import {
+  collectPublicPackageNotices,
+  composePublicPackageNotices,
+} from './public-package-notices.mjs';
 import {
   readFile,
   writeFile,
@@ -608,7 +611,10 @@ await rename(dist, destination);
 await copyFile(join(root, 'LICENSE'), join(pkg, 'LICENSE'));
 await writeFile(
   join(pkg, 'THIRD_PARTY_NOTICES.md'),
-  (await readFile(join(root, 'docs/third-party-notices.md'), 'utf8')) + bundledNotices,
+  composePublicPackageNotices(
+    await readFile(join(root, 'docs/third-party-notices.md'), 'utf8'),
+    bundledNotices,
+  ),
 );
 console.log(
   JSON.stringify({

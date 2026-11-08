@@ -1,6 +1,13 @@
 # React
 
-React 어댑터는 외부에서 소유한 `HeadlessEditor`를 받아 Canvas 호스트만 관리합니다. 현재 workspace의 React는 19.3.1입니다. 이 문서 사이트를 추가하면서 버전을 올리지 않았습니다.
+```sh
+npm install @ohah/hwpjs@0.1.0 react@19.3.1 react-dom@19.3.1
+```
+
+먼저 [웹 Worker·WASM 배치](../guide/installation.md#웹에서-worker와-wasm-제공)를 진행하세요. <a href="__HWPJS_DOCS_BASE__editor/demo/react/">이 프레임워크의 실행 데모</a>에서 HWP·HWPX 파일을 직접 열 수 있습니다.
+
+
+React 어댑터는 외부에서 소유한 `HeadlessEditor`를 받아 Canvas 호스트만 관리합니다. 예제는 공개 패키지 0.1.0과 React 19.3.1을 사용합니다.
 
 <!-- example:react.tsx -->
 ```tsx

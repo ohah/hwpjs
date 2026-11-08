@@ -4,18 +4,18 @@ HWP5와 HWPX 원본 읽기·정보/개체 조회·그림 추출과 명시 편집
 
 [브라우저 체험](../cli-simulation.mdx)은 로컬 Node CLI 실행과 별개입니다. 페이지가 사용자의 로컬 파일 시스템이나 설치된 CLI를 대신 실행하지는 않습니다. 현재 실습의 읽기·보기 전환·대표 문자열 편집이 아래 apply/create/convert/OCR 화면을 모두 제공한다는 뜻은 아닙니다.
 
-## 설치 상태와 로컬 패키지
+## 공개 npm 설치
 
-새 CLI가 포함된 `@ohah/hwpjs`는 npm 게시 전의 로컬 패키지 후보입니다. 기존 npm 패키지를 설치했다고 아래 명령이 모두 포함되는 것은 아닙니다. [현재 게시 상태](./package-names.md)를 확인하세요.
-
-새 TypeScript 소스를 JS 실행 파일로 묶은 후보를 별도 소비자에 npm 설치해 create·paragraph·apply·양방향 text-only 변환·읽기와 거부 동작을 확인했습니다. 공식 SDK 클라이언트의 MCP stdio에서도 12도구 목록과 새 서비스 호출을 확인했습니다. OCR의 설치 경로 검사는 제공자 부재 거부를 포함하며, 실제 Tesseract 인식 성공을 확인한 것은 아닙니다. 앞선 패키지나 Skill 자산이 자동 갱신되는 것은 아니므로 갱신된 실행 파일의 `--help`를 확인합니다. 공개 npm 게시·공개 실습 배포 완료와도 구분합니다.
-
-Node.js 24.20 이상과 새 CLI·WASM을 포함한 로컬 tarball을 준비했다면 다음과 같이 설치합니다. 경로는 실제로 전달받거나 빌드한 파일로 바꾸세요. 이 명령은 npm 공개 버전의 존재를 뜻하지 않습니다.
+`@ohah/hwpjs@0.1.0`이 npm에 공개되어 있습니다. Node.js 24.20 이상에서 문서를 다룰 프로젝트 디렉터리로 이동한 뒤 설치합니다. [패키지 이름과 게시 상태](./package-names.md)에서 이전 RC와의 차이를 확인하세요.
 
 ```bash
-npm install --ignore-scripts /absolute/path/to/hwpjs-candidate.tgz
+npm install @ohah/hwpjs@0.1.0 --ignore-scripts --omit=peer --no-audit --no-fund
 npx --no-install hwpjs --help
 ```
+
+`--omit=peer`는 CLI/MCP만 사용할 때 선택적인 UI 프레임워크 peer 설치를 생략합니다. React·Svelte·React Native 어댑터를 쓰는 프로젝트는 해당 peer를 별도로 준비합니다. 설치된 CLI는 `npx --no-install`로 실행하며 추가 패키지를 자동으로 내려받지 않습니다.
+
+인증 정보를 제거한 새 소비자에서 공개 레지스트리 설치와 배포 파일 110개의 일치를 확인했습니다. 실제 설치본의 도움말·HWPX 생성·Noori HWP5 편집/재열기와 독립 CFB/XML 검사, MCP 버전 `0.1.0`·12도구 목록도 확인했습니다. 생성·문단 조회·apply·text-only 변환과 거부 동작의 앞선 설치 검사는 같은 CLI 바이트의 증거이며, 공개 설치 확인만으로 모든 명령을 전수 검증한 것은 아닙니다. OCR 제공자 부재 거부와 실제 Tesseract 인식 성공도 구분합니다. 이전 npm 패키지나 Skill 설치분은 자동 갱신되지 않으며, 브라우저 체험은 별도 실행 경로입니다.
 
 저장소에서는 의존성을 준비한 작업 사본과 명시한 WASM을 사용합니다.
 
@@ -32,7 +32,7 @@ bun run cli read ./document.hwp --wasm /absolute/path/to/hwpjs.wasm
 ```bash
 npx --no-install hwpjs read ./document.hwp
 npx --no-install hwpjs read ./document.hwpx --format markdown
-hwpjs read ./문서.hwp --format markdown > ./문서.md
+npx --no-install hwpjs read ./문서.hwp --format markdown > ./문서.md
 ```
 
 기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기의 stdout에는 관측한 문서 본문만 출력하며 `format`·`documentSHA256` 접두사나 `Paragraph`·`Cell` 구조 레이블을 붙이지 않습니다. 이미지·표 등에는 후속 조회를 위한 논리 개체 참조가 포함될 수 있습니다. `--view content`를 명시해도 같습니다. `>`는 셸의 리다이렉션이며 새 읽기 `--output` 옵션이나 stdin·URI 읽기를 뜻하지 않습니다.
@@ -62,7 +62,7 @@ npx --no-install hwpjs object ./document.hwp --ref "$OBJECT_REF" --format markdo
 
 CLI 출력은 `상태: available` 또는 `상태: unavailable`로 표시합니다. 내부 JS 조회 결과의 `status` 필드와 터미널에 표시하는 문자열은 구분합니다. 관측 가능한 메타데이터·표 내용·추가 행동 안내와 상세 내용이 미지원인 사유를 구분해 확인합니다. `available`이 완전한 시각적 해석이나 이미지 추출 성공을 보장하지는 않습니다. 이미지 조회는 바이트를 디코딩하지 않으며 추출은 별도 명령입니다.
 
-전용 HWP5 차트·수식 source API가 노출되지 않은 개체는 종류를 추측하지 않고 미분류·참조 미확정으로 남깁니다. 참조가 없는 개체에 가짜 참조를 만들거나 모든 개체가 열거됐다고 판단하지 않습니다. 새 조회·참조 추출 계약은 갱신된 패키지·서버가 필요하며, 설치 후 CLI/MCP 연결 검증은 기존 읽기·편집 증거와 별도로 확인합니다.
+전용 HWP5 차트·수식 source API가 노출되지 않은 개체는 종류를 추측하지 않고 미분류·참조 미확정으로 남깁니다. 참조가 없는 개체에 가짜 참조를 만들거나 모든 개체가 열거됐다고 판단하지 않습니다. 조회·참조 추출은 `0.1.0`에 포함됩니다. 이전 설치분은 갱신하고, 설치 후 CLI/MCP 연결은 실제 사용할 환경에서 확인하세요.
 
 ## 편집 구조 조회
 
@@ -73,11 +73,11 @@ npx --no-install hwpjs read ./document.hwpx --format markdown --view structure
 
 `--view structure`는 머리말·본문·꼬리말 정의, 표의 셀, 그림 메타데이터와 진단 상세를 구분하는 기존 구조 출력을 제공합니다. 출력 첫 부분의 `format`·`documentSHA256`과 `Paragraph s0:p3` 같은 실제 원문 ID를 확인하세요. HWP5 문단 번호는 구역 안에서 0부터, HWPX 문단 번호는 문서 전체에서 1부터 시작합니다. 출력 순서로 번호를 만들지 않습니다.
 
-수정할 대상을 정하려면 이 구조 보기를 읽어 같은 원본의 ID·SHA를 얻습니다. 기본 문서 내용에는 이 편집 정보가 포함되지 않습니다. 두 보기는 같은 관측 모델과 공통 renderer를 사용하며 원본 파싱·편집·저장 모델을 바꾸지 않습니다. 갱신된 패키지·Skill이 필요한 옵션이므로 기존 설치분은 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
+수정할 대상을 정하려면 이 구조 보기를 읽어 같은 원본의 ID·SHA를 얻습니다. 기본 문서 내용에는 이 편집 정보가 포함되지 않습니다. 두 보기는 같은 관측 모델과 공통 renderer를 사용하며 원본 파싱·편집·저장 모델을 바꾸지 않습니다. `0.1.0`의 보기 계약이며, 이전 설치분은 갱신한 뒤 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
 
 ## 여러 명시 파일 읽기
 
-`read-many`는 명시한 여러 파일을 읽는 읽기 전용 명령입니다. 기존 배치 읽기의 설치 실측은 구조가 기본이던 버전의 증거로 보존합니다. 아래 `view` 계약의 새 패키지·Skill 설치 검증은 별도로 확인하며, 기존 설치분은 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
+`read-many`는 `0.1.0`에 포함된 여러 명시 파일의 읽기 전용 명령입니다. 아래의 기본 `content`와 선택적 `structure` 보기 계약을 사용합니다. 이전 설치분은 갱신한 뒤 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
 
 ```bash
 npx --no-install hwpjs read-many ./one.hwp ./two.hwpx
@@ -240,4 +240,4 @@ npx --no-install hwpjs ocr ./document.hwpx \
 
 문서 입출력은 각각 64 MiB, WASM 입력은 32 MiB로 제한됩니다. 이미지 참조는 최대 4096개, 수집기에서 허용하는 개별 이미지 바이트는 8 MiB, 보관하는 고유 이미지 바이트와 추출 게시 총량은 각각 32 MiB입니다. HWPX는 네이티브에서 최대 64 MiB 복사가 선행될 수 있어 개별 이미지의 8 MiB 검사가 전체 메모리 상한을 뜻하지는 않습니다.
 
-읽기·편집·저장·변환·이미지를 공통 엔진/API로 연결하는 방향이며, 지원 여부는 각 명령의 실제 관측 범위로 구분합니다. 문자열 `edit`와 명시 `apply`·`create`·`convert`·`ocr`는 서로 다른 범위입니다. 새 원시 그림 삽입/교체·임의 표 행/열 구조 변경·차트/수식 래스터화·OLE 원시 추출·전체 의미 보존 변환은 미완료 범위입니다. [MCP 도구](./mcp.md)도 같은 파일·SHA·추출 경계를 사용합니다. 기존 [Skill](./skill.md) 안내와 배포된 자산은 별도로 동결된 세대일 수 있으므로 새 명령이 자동 추가됐다고 가정하지 마세요.
+읽기·편집·저장·변환·이미지를 공통 엔진/API로 연결하는 방향이며, 지원 여부는 각 명령의 실제 관측 범위로 구분합니다. 문자열 `edit`와 명시 `apply`·`create`·`convert`·`ocr`는 서로 다른 범위입니다. 표 전체 삭제·새 원시 그림 삽입/교체·임의 표 행/열 구조 변경·차트/수식 래스터화·OLE 원시 추출·전체 의미 보존 변환은 미지원 범위입니다. 빈 문서에서 누리 문서 전체를 동일하게 재생성하는 작업도 완료되지 않았습니다. [MCP 도구](./mcp.md)도 같은 파일·SHA·추출 경계를 사용합니다. 기존 [Skill](./skill.md) 안내와 배포된 자산은 별도로 동결된 세대일 수 있으므로 새 명령이 자동 추가됐다고 가정하지 마세요.

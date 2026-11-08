@@ -1,6 +1,14 @@
 import { realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
+// 프로젝트 고지와 실제 번들 의존성 고지의 원문을 바꾸지 않고 함께 배포합니다.
+export function composePublicPackageNotices(projectNotices, bundledNotices) {
+  if (typeof projectNotices !== 'string' || !projectNotices.trim())
+    throw new TypeError('MissingProjectNotices');
+  if (typeof bundledNotices !== 'string') throw new TypeError('InvalidBundledNotices');
+  return projectNotices + bundledNotices;
+}
+
 // Unknown identifiers fail closed. Extend this list deliberately when a bundled
 // package introduces another SPDX license; never infer a license from its text.
 const licenses = new Set([

@@ -40,6 +40,68 @@ MCP 도구는 `read_document`, `read_documents`, `edit_document`, `get_document_
 
 Svelte는 browser 조건에서 client, 기본 Node에서는 SSR 진입점을 사용합니다. React Native 진입점은 JavaScript provider·transport 계약이며 네이티브 기기 바이너리나 OS IME 지원을 자동 설치하지 않습니다. `/worker`는 Worker 환경의 진입점으로 일반 Node main에서 직접 실행하는 파일이 아닙니다.
 
+## 브라우저 WASM 사용
+
+브라우저에서도 같은 WASM으로 HWP5·HWPX를 열 수 있습니다. 번들러가 있는 웹 앱에서 사용하며, Worker·WASM 두 파일을 앱의 정적 자산으로 배포합니다. 아래는 `public/`을 정적 루트로 사용하는 앱의 준비 명령입니다.
+
+```sh
+mkdir -p public/hwpjs
+cp node_modules/@ohah/hwpjs/dist/worker.js public/hwpjs/worker.js
+cp node_modules/@ohah/hwpjs/dist/hwpjs.wasm public/hwpjs/hwpjs.wasm
+```
+
+두 파일은 같은 버전에서 가져오세요. 하위 경로에 배포하면 아래 URL에도 배포 base를 포함합니다. HTTP(S) 서버에서 실행하고 WASM은 `application/wasm`, Worker는 JavaScript MIME으로 제공합니다.
+
+```js
+import { createEditor, detectDocumentFormat } from '@ohah/hwpjs';
+import { createWorkerRuntimeFactory } from '@ohah/hwpjs/runtime';
+import { createCanvasSurface } from '@ohah/hwpjs/vanilla';
+
+// root: 높이가 지정된 빈 HTMLElement, file: 파일 선택으로 받은 File
+export async function openDocument(root, file) {
+  const editor = createEditor({
+    runtimeFactory: createWorkerRuntimeFactory({
+      workerURL: '/hwpjs/worker.js',
+      wasmURL: '/hwpjs/hwpjs.wasm',
+    }),
+  });
+  let surface;
+  try {
+    surface = createCanvasSurface({ root, editor });
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    await editor.load(bytes, { format: detectDocumentFormat(bytes), editable: true });
+    surface.focus();
+    return {
+      editor,
+      async dispose() {
+        try {
+          await surface.dispose();
+        } finally {
+          await editor.dispose();
+        }
+      },
+    };
+  } catch (error) {
+    try {
+      await surface?.dispose();
+    } finally {
+      await editor.dispose();
+    }
+    throw error;
+  }
+}
+```
+
+호스트 요소에는 `height: 70vh`처럼 실제 높이를 지정합니다. 파일 선택·리본·저장 다운로드 UI는 앱이 소유합니다. React·Svelte에서는 Vanilla surface 대신 각 프레임워크의 컴포넌트에 같은 editor를 전달합니다. 한 editor에 Canvas를 중복 연결하지 마세요.
+
+| 환경 | 공개 API | 사용 예제 | 실행 데모 |
+| --- | --- | --- | --- |
+| Vanilla JavaScript | `createCanvasSurface` from `@ohah/hwpjs/vanilla` | [파일 열기·Canvas·종료](https://ohah.github.io/hwpjs/frameworks/vanilla) | [Vanilla](https://ohah.github.io/hwpjs/editor/demo/vanilla/) |
+| React | `CanvasSurface`, `useEditorState` from `@ohah/hwpjs/react` | [React 컴포넌트](https://ohah.github.io/hwpjs/frameworks/react) | [React](https://ohah.github.io/hwpjs/editor/demo/react/) |
+| Svelte | `CanvasEditor`, `canvasSurface` from `@ohah/hwpjs/svelte` | [Svelte 마운트·종료](https://ohah.github.io/hwpjs/frameworks/svelte) | [Svelte](https://ohah.github.io/hwpjs/editor/demo/svelte/) |
+
+[공통 Runtime 설정](https://ohah.github.io/hwpjs/guide/runtime) · [선택·편집·저장](https://ohah.github.io/hwpjs/guide/editing)
+
 ## 문서와 검증
 
 - [CLI 설치·사용 가이드](https://ohah.github.io/hwpjs/guide/cli)

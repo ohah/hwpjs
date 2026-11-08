@@ -1,6 +1,13 @@
 # Svelte
 
-`@ohah/hwpjs/svelte`는 `CanvasEditor` 컴포넌트와 `canvasSurface` action을 공개합니다. 현재 workspace는 Svelte 5.57.2입니다. 아래는 실제 데모와 같은 `mount` 경계의 TypeScript 예제이며, 제품 컴포넌트의 public export 타입으로 검사합니다.
+```sh
+npm install @ohah/hwpjs@0.1.0 svelte@5.57.3
+```
+
+먼저 [웹 Worker·WASM 배치](../guide/installation.md#웹에서-worker와-wasm-제공)를 진행하세요. <a href="__HWPJS_DOCS_BASE__editor/demo/svelte/">이 프레임워크의 실행 데모</a>에서 HWP·HWPX 파일을 직접 열 수 있습니다.
+
+
+`@ohah/hwpjs/svelte`는 `CanvasEditor` 컴포넌트와 `canvasSurface` action을 공개합니다. 예제는 공개 패키지 0.1.0과 Svelte 5.57.3을 사용합니다. 아래는 실제 데모와 같은 `mount` 경계의 TypeScript 예제이며, 제품 컴포넌트의 public export 타입으로 검사합니다.
 
 <!-- example:svelte.ts -->
 ```ts

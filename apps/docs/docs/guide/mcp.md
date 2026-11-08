@@ -4,16 +4,26 @@ MCP 클라이언트에 로컬 stdio 서버를 연결하면 HWP5/HWPX 읽기·문
 
 ## 서버 준비와 설치 상태
 
-새 패키지는 npm 게시 전의 로컬 후보입니다. [CLI 설치 상태](./cli.md)를 먼저 확인하세요. 새 패키지를 로컬에 설치한 환경의 실행 명령은 다음과 같습니다.
+`@ohah/hwpjs@0.1.0`은 공개 npm 패키지이며 `hwpjs-mcp` 실행 파일을 포함합니다. Node.js 24.20 이상에서 서버를 실행할 프로젝트 디렉터리에 설치합니다. [CLI 설치 안내](./cli.md#공개-npm-설치)도 참고하세요.
 
 ```bash
+npm install @ohah/hwpjs@0.1.0 --ignore-scripts --omit=peer --no-audit --no-fund
 npx --no-install hwpjs-mcp
 npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 ```
 
-독립 JS 산출물을 별도 소비자에 npm 설치한 뒤 공식 SDK 클라이언트로 stdio 서버에 연결해 12도구와 생성·문단 조회·명시 변경·읽기·text-only 변환 및 거부 동작을 확인했습니다. OCR 제공자 부재도 오류로 확인했으며 실제 Tesseract 인식 성공을 뜻하지 않습니다. 이전 패키지와 Skill은 별도 세대이므로 갱신된 설치의 `tools/list`로 기능과 스키마를 확인합니다. 공개 npm 게시나 공개 실습의 새 기능 배포 완료를 뜻하지 않습니다.
+공개 레지스트리에서 인증 없이 새로 설치한 서버에 공식 SDK 클라이언트로 실제 stdio 연결해 버전 `0.1.0`과 12도구 목록을 확인했습니다. 생성·문단 조회·명시 변경·읽기·text-only 변환 및 거부 동작의 설치 검사는 별도 범위의 증거이며, 이번 공개 설치에서 모든 도구 호출을 다시 실행한 것은 아닙니다. OCR 제공자 부재 거부는 실제 Tesseract 인식 성공을 뜻하지 않습니다. 이전 npm 패키지나 Skill 설치분은 자동 갱신되지 않으므로 갱신한 서버의 `tools/list`를 확인하세요.
 
 서버 실행 파일과 나란한 WASM이 기본값입니다. stdout은 MCP 프로토콜 전용이며 서버 진단은 stderr로 전달됩니다. 도구 실행의 실패 내용은 응답의 text content에도 포함됩니다. 서버의 작업 디렉터리가 상대 문서 경로의 기준입니다. 실제 경로와 클라이언트의 권한 범위는 사용자가 설정합니다.
+
+클라이언트가 설치 프로젝트와 다른 작업 디렉터리에서 서버를 시작한다면, 설치된 JS 진입점의 절대경로를 사용할 수 있습니다. 설정의 바깥 구조와 작업 디렉터리 지정 방법은 클라이언트에 맞춥니다.
+
+```json
+{
+  "command": "node",
+  "args": ["/absolute/path/to/project/node_modules/@ohah/hwpjs/dist/mcp.mjs"]
+}
+```
 
 자체 CLI·서버·WASM을 포함한 [Skill](./skill.md)을 설치했다면 해당 Skill의 실제 절대경로로 실행할 수도 있습니다.
 
@@ -43,7 +53,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 | `convert_document`       | `inputPath`, `outputPath`, `to`, 선택적 `expectedSha256`, `lossPolicy`, `allowStaleLayout`                  | 명시 text-only 변환의 새 파일·미보존 보고 또는 기본 거부                         |
 | `ocr_document`           | `inputPath`, 선택적 `reference`, `provider`, `languages`, `executable`, `format`                            | 로컬 그림 인식 텍스트·이미지별 상태·실패 사유                                    |
 
-`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
+`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. `apply_document_changes`의 지원 작업은 [CLI의 14종 계약](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 표 전체 삭제와 이미지 삽입·교체는 지원하지 않습니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
 
 문서 정보에서 확인하지 못한 버전·보안·편집 상태·내용 집계는 `unknown`과 사유로 남습니다. 특정 편집의 허용 여부나 서명 유효성을 정보 조회만으로 판단하지 않습니다.
 
@@ -83,7 +93,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 ### 여러 명시 파일 읽기
 
-`read_documents`는 여러 명시 파일을 읽는 읽기 전용 도구입니다. 기존 설치 실측은 구조가 기본이던 버전의 증거로 보존하고 새 `view` 계약의 설치·프로토콜 검증은 별도로 확인합니다. 갱신된 패키지나 Skill의 `tools/list`에서 제공 여부를 확인합니다. 현재 공개 브라우저 체험의 단일 문서 실행 증거는 이 배치 도구를 포함하지 않습니다.
+`read_documents`는 `0.1.0`에 포함된 여러 명시 파일의 읽기 전용 도구입니다. 아래의 기본 `content`와 선택적 `structure` 보기 계약을 사용합니다. 이전 설치분은 갱신한 뒤 `tools/list`에서 제공 여부를 확인하세요. 현재 공개 브라우저 체험의 단일 문서 실행 증거는 이 배치 도구를 포함하지 않습니다.
 
 ```json
 {
@@ -244,7 +254,7 @@ npx --no-install hwpjs-mcp --wasm /absolute/path/to/hwpjs.wasm
 
 원문 SHA·실제 형식·종류·실제 inventory 멤버를 검증하며 없는 개체나 오래된 참조는 거부합니다. 응답은 inspector의 `text`를 MCP text content로 반환하며, 관측 정보·내용과 `상태: available` 또는 `상태: unavailable`, 미지원 사유를 표시합니다. 내부 JS 반환 객체의 `status` 필드는 상태 값이며, MCP가 별도 `status` 필드를 응답한다는 뜻은 아닙니다. 이미지 조회는 바이트 디코딩을 하지 않으며 실제 파일 추출은 별도입니다. 모든 개체의 완전한 열거·렌더링을 뜻하지 않습니다. 전용 source API가 없는 HWP5 차트·수식은 종류를 추측하지 않고 미분류·참조 미확정으로 남길 수 있습니다.
 
-객체 조회와 참조 추출은 갱신된 서버가 필요한 확장입니다. 기존 설치의 `tools/list` 스키마와 새 패키지 검증 범위를 확인합니다. 이 웹 실습은 본문 참조를 텍스트로 표시하며 실제 조회·추출 stdio 도구를 실행하지 않습니다.
+객체 조회와 참조 추출은 `0.1.0`에 포함됩니다. 이전 설치분은 갱신한 뒤 `tools/list` 스키마를 확인하세요. 이 웹 실습은 본문 참조를 텍스트로 표시하며 실제 조회·추출 stdio 도구를 실행하지 않습니다.
 
 ### 그림 선택과 단일 파일 추출
 
