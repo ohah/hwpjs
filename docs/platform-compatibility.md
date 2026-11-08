@@ -31,3 +31,52 @@
 공개 레지스트리 설치 검사, 같은 CLI 바이트의 앞선 설치 검사, 기능별 CLI/MCP 소스 검사, 브라우저의 독립 저장 검사, React Native 타입 검사는 각각 다른 범위의 증거입니다. 공개 설치 검사에서 MCP는 초기화 버전과 12도구 목록을 확인했으며 모든 도구 호출을 다시 실행하지 않았습니다. 후속 이미지 출력 예산 검사 역시 합성 파일시스템·수집기를 사용한 경계 검사이며, 실제 대량 파일 저장이나 새 설치 패키지의 검증으로 확대하지 않습니다.
 
 남은 작업은 함수·옵션의 1:1 복제가 아니라, 위 기능의 플랫폼별 누락을 구현하고 새 API의 사용법·지원 환경·제한을 공개하며 실제 실행 경로를 확인하는 것입니다. 과거 비교표와 동등성 감사는 당시 상태의 증거로 보존하고, 현재 구현 목표는 이 문서의 기능 대응 기준을 따릅니다.
+
+## Rust rc.10과 공개 0.1.0 비교
+
+비교 기준은 npm의 실제 `@ohah/hwpjs@0.1.0-rc.10`과 `@ohah/hwpjs@0.1.0`입니다. rc.10의 배포 파일 66개와 대응 Git 태그를 확인하고, 현재 공개 설치본의 110개 파일을 고정했습니다. 개발 중인 초기 셀 본문 일괄 삽입·표 전체 삭제·이미지 바이너리 교체·용량 후처리 후보를 공개 0.1.0의 기능으로 계산하지 않습니다.
+
+### 공개 함수와 기능의 대응
+
+| rc.10의 함수·기능 | 공개 0.1.0의 대응 | 해석 |
+| --- | --- | --- |
+| `fileHeader(data)` | CLI `info`, MCP `get_document_info`, 공개 editor/runtime의 관측 | 목적을 나누어 제공하며 같은 함수명·JSON 문자열 반환의 호환 API는 없음 |
+| `toMarkdown(data, options)` | CLI `read --format markdown`, `read-many`, 별도 이미지 조회·추출 | AI용 논리 읽기 뷰. 기존 `{ markdown, images }` 및 base64/blob·HTML 옵션을 보존하는 변환기의 동등 구현은 아님 |
+| `toHtml(data, options)` | 대응 HTML 변환 API 없음 | Canvas 뷰어는 제공하지만 HTML 문자열·CSS·이미지 파일을 내보내는 기존 기능의 해결 또는 동등 지원으로 계산하지 않음 |
+| `toJson(data)` | 전체 문서 JSON 출력은 현재 요구 범위에서 제외 | `read --view structure`의 편집용 좌표·진단은 원래 전체 AST 출력과 다름 |
+| 기존 `to-html`·`to-markdown`·`to-json`·`batch` CLI 이름 | 새 `read`·`read-many`·`info`·`images`·`extract-images` 등 | 이전 명령은 호환 별칭이 아님. 단순 이름 변경과 의미·옵션 차이를 구분해야 함 |
+| HWP 읽기·단방향 변환 | HWP5·HWPX 읽기와 선택·명령·편집·저장 | 지원하는 문서·개체 경계에서 기능 확장. 전체 조판·변환 동치 완료는 아님 |
+
+rc.10은 네 공개 변환/정보 함수를 실제 Native에서 확인했습니다. 새 root의 32개 export에는 상수·클래스·도우미도 포함되므로 이를 32개 문서 처리 기능으로 세지 않습니다. WASM export 14개에서 446개로 바뀐 수치도 ABI 분할 방식이 달라 기능 수나 구현 완성도 비율로 사용하지 않습니다.
+
+새 공개 API는 `createEditor`로 만든 editor의 `load`, `createDocument`, `setSelection`, `dispatchCommand`, `save`, `undo`, `redo`, `queryFormatting`, `getFormattingCapabilities`, 상태·업데이트·오류·명령 콜백과 `dispose` 수명을 제공합니다. 공개 CLI에는 조건부 텍스트 편집과 `apply` 14종, 새 문서 작성, 명시적 text-only 형식 변환, 이미지 자원 도구와 OCR 연결이 있고, MCP는 같은 파일 호스트를 쓰는 12도구입니다. 표 생성·셀 크기와 서식·기존 그림 크기 변경은 제공하지만 표 전체 삭제·그림 삽입과 바이너리 교체는 이 버전에 없습니다.
+
+웹은 공통 WASM과 Worker를 사용하며 Vanilla·React·Svelte를 공개 subpath로 제공합니다. 공개 0.1.0을 실제 설치하고 같은 두 자산만 배치한 각 프레임워크에서 누리 HWP5/HWPX를 여는 여섯 경우를 확인했습니다. 이는 첫 화면 Canvas·Worker 종료 검증이며 전체 페이지 조판·IME·모든 편집의 검증을 대신하지 않습니다. Node는 최소 24.20.0과 ESM으로 바뀌었고, React Native는 새 provider·Canvas 통합 경계와 기기 검증을 별도로 확인해야 합니다.
+
+### 같은 실제 파일 91개의 읽기 결과
+
+2026-11-08 공개 예제 목록 101항목을 원문 SHA로 중복 제거해 91개 파일을 대조했습니다. rc.10은 실제 macOS arm64 Native의 `toMarkdown`, 0.1.0은 공개 CLI `read`와 원본 `82031994…` WASM을 사용했습니다. HWP3와 보호된 파일은 대상에서 제외했고 원본은 변경하지 않았습니다.
+
+| 결과 | HWP5 | HWPX | 합계 |
+| --- | ---: | ---: | ---: |
+| 양쪽 읽기 성공 | 44 | 0 | 44 |
+| 이전 거부·현재 성공 | 1 | 44 | 45 |
+| 이전 성공·현재 기본 CLI 거부 | 2 | 0 | 2 |
+| 양쪽 거부·실행 중단 | 0 | 0 | 0 |
+
+HWPX 44개는 rc.10이 ZIP 입력을 CFB로 해석하다 거부했고 새 파서에서 읽혔습니다. `latex.hwp`는 rc.10의 EqEdit 레코드 해석 오류로 문서 전체가 거부됐지만 새 CLI는 본문과 미분류 개체 표시를 반환했습니다. 이를 수식 표시·편집 완료로 확대하지 않습니다. 양쪽 성공 44개도 Markdown 변환 결과와 논리 읽기 뷰의 계약이 달라 출력 동치로 판정하지 않았습니다.
+
+`distribution.hwp`와 `viewtext.hwp`는 rc.10에서 읽혔으나 현재 기본 CLI가 `UnsupportedDistribution`으로 거부합니다. 기본 CLI의 지원 누락으로 남기며, Native의 명시적 배포 문서 관측 정책이나 다른 플랫폼 경로까지 미지원이라고 일반화하지 않습니다. 예제 집합의 성공 수는 모든 HWP 버전·손상·암호 문서에 대한 지원율이 아닙니다.
+
+### 기존 GitHub 이슈의 상태와 이번 릴리즈
+
+2026-11-08 조회한 이슈는 다섯 개이며 [#109](https://github.com/ohah/hwpjs/issues/109)만 열려 있습니다. 닫힘 상태 자체를 기능 완료나 새 0.1.0의 해결 근거로 사용하지 않습니다.
+
+| 이슈 | 확인한 상태·근거 | 0.1.0에서의 해석 |
+| --- | --- | --- |
+| [#100 하이퍼링크 HTML 겹침](https://github.com/ohah/hwpjs/issues/100) | Rust 시기 닫힘. [PR #111](https://github.com/ohah/hwpjs/pull/111)의 해결 커밋이 rc.7과 rc.10에 이미 포함됨 | 이번 릴리즈의 신규 수정으로 중복 집계하지 않음 |
+| [#109 HTML 표 셀 겹침](https://github.com/ohah/hwpjs/issues/109) | 열림. 댓글에 재현 원본의 첨부가 없고 파일 전달을 요청한 기록이 있음 | 새 Canvas의 다른 표본 성공과 구 `toHtml` 문제의 해결은 별개. 동일 문서 해결 미확정 |
+| [#121 내부 여백](https://github.com/ohah/hwpjs/issues/121), [#122 인라인 배치](https://github.com/ohah/hwpjs/issues/122) | Rust 시기 닫힘. 현재까지 특정 해결 커밋과의 연결은 미확정 | 이번 신규 수정으로 집계하지 않음. 원문에서 문제로 지목한 ‘주제’ 개체는 독립 HWPX XML상 도형의 글상자이며 표로 단정할 수 없음 |
+| [#8 역변환 요청](https://github.com/ohah/hwpjs/issues/8) | 닫혔지만 당시 댓글은 우선순위가 낮다는 계획 안내 | 새 작성·편집·저장은 추가됐으나 JSON/Markdown에서 전체 문서를 복원하는 역변환 완료를 뜻하지 않음 |
+
+이슈 상태·댓글의 실제 조회, Git 태그 포함 관계, Native/CLI 읽기, Worker 관측과 Canvas 화면은 서로 다른 증거입니다. 기존 이슈의 상태나 댓글을 이번 감사에서 변경하지 않았습니다.
