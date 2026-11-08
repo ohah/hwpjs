@@ -7,17 +7,28 @@ HWP5와 HWPX의 읽기·편집·저장을 제공하는 ESM 패키지입니다. �
 Node.js 24.20.0 이상이 필요합니다. npm에는 TypeScript 원문 대신 JavaScript 실행 파일과 공개 타입 선언이 포함됩니다.
 
 ```sh
-npm install @ohah/hwpjs@0.1.0
-npx --package=@ohah/hwpjs@0.1.0 hwpjs --help
-npx --package=@ohah/hwpjs@0.1.0 hwpjs read document.hwpx
-npx --package=@ohah/hwpjs@0.1.0 hwpjs-mcp
+npm install @ohah/hwpjs
+npx -y @ohah/hwpjs --help
+npx -y @ohah/hwpjs read document.hwpx
+npx -y @ohah/hwpjs mcp
 ```
 
-CLI와 stdio MCP 서버는 같은 패키지의 WASM 한 벌을 사용합니다. 로컬 파일 경로를 받으며 HTTP 서버를 열지 않습니다. MCP 클라이언트에서는 위 `hwpjs-mcp` 명령을 stdio 서버로 등록합니다.
+CLI와 stdio MCP 서버는 같은 패키지의 WASM 한 벌을 사용합니다. 로컬 파일 경로를 받으며 HTTP 서버를 열지 않습니다. MCP 클라이언트에서는 다음 설정을 등록합니다.
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "@ohah/hwpjs", "mcp"]
+}
+```
+
+같은 패키지의 기존 `hwpjs-mcp` bin도 호환 대안으로 유지합니다(`npx -y --package=@ohah/hwpjs hwpjs-mcp`).
+
+`@ohah/hwpjs@0.1.1`은 위 통합 진입점과 16개 MCP 도구를 제공합니다. 이전 `0.1.0`은 12개 도구이며 `hwpjs mcp` 진입점이 없습니다. 이전 설치는 자동 갱신되지 않으므로 설치 버전과 `--help`·MCP `tools/list`를 확인하세요.
 
 ## CLI와 MCP 지원 범위
 
-| 기능           | 현재 지원                                                                                                                                             |
+| 기능           | 공개 0.1.0 지원                                                                                                                                       |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 읽기           | 기본 본문 중심 텍스트·Markdown, `--view structure`의 원문 SHA와 Native 문단 ID, 명시한 여러 문서의 배치 읽기                                          |
 | 문서 정보·개체 | 정보 관측과 미관측 진단, 본문 개체 참조의 표·이미지·차트·수식 등 상세 조회. 형식별 Native 관측 범위가 다릅니다.                                       |
@@ -28,11 +39,13 @@ CLI와 stdio MCP 서버는 같은 패키지의 WASM 한 벌을 사용합니다. 
 | 형식 변환      | 명시한 `--loss-policy text-only`의 HWP5↔HWPX 본문 텍스트 이관. 서식·표 구조·개체 등 손실을 보고하며, 기본 정책은 거부입니다.                          |
 | OCR            | 이미지 추출과 별도 설치한 Tesseract 또는 macOS Vision 연결. 외부 실행 환경·언어 데이터가 필요하며 OCR 엔진·언어 모델을 이 패키지에 포함하지 않습니다. |
 
-MCP 도구는 `read_document`, `read_documents`, `edit_document`, `get_document_info`, `list_document_images`, `extract_document_image`, `get_document_object`, `get_document_paragraph`, `apply_document_changes`, `create_document`, `convert_document`, `ocr_document`입니다. CLI의 파일·원문·Native 검증과 저장 경계를 재사용합니다.
+공개 0.1.0의 MCP 12도구는 `read_document`, `read_documents`, `edit_document`, `get_document_info`, `list_document_images`, `extract_document_image`, `get_document_object`, `get_document_paragraph`, `apply_document_changes`, `create_document`, `convert_document`, `ocr_document`입니다. CLI의 파일·원문·Native 검증과 저장 경계를 재사용합니다.
 
 읽기용 표시 문자열은 편집 좌표가 아닙니다. 편집 대상은 `--view structure`에서 얻은 같은 스냅샷의 SHA와 Native ID를 사용해야 합니다. 개체 참조는 네트워크 주소가 아닙니다. 출력은 새 경로만 허용하며 원본이나 기존 파일을 덮어쓰지 않습니다. HWP5 변경 문서의 오래된 조판 정보는 `--allow-stale-layout` 명시 동의가 필요한 경우가 있으며, 이 옵션은 조판 갱신 완료를 뜻하지 않습니다.
 
-전체 표 삭제, 이미지 삽입·교체, 서식과 개체를 보존하는 일반 형식 변환은 제공하지 않습니다. AI가 빈 문서에서 누리 문서 전체를 동일하게 재생성하는 기능도 완료되지 않았습니다. 알 수 없는 내용과 미지원 기능을 성공으로 숨기지 않습니다.
+0.1.1은 `delete_document_table`, `insert_document_image`, `replace_document_image`, `export_document_html`을 더해 총 16도구입니다. 공개 0.1.0에는 이 4도구가 없습니다. 표 전체 삭제·그림 삽입에 필요한 신규 선택 ABI는 포함된 WASM이 제공합니다. 그림 삽입은 필드 없는 구역의 plain 최상위 본문 문단에 새 인라인 PNG/JPEG 하나를 넣는 범위이며 기존 개체 문단·표 셀·글상자는 지원하지 않습니다. 그림 교체는 같은 원본의 이미지 참조를 사용합니다. 표 삭제·그림 삽입은 stale-layout 동의가 필요하며 새 조판·미리보기 완료를 뜻하지 않습니다. 이 명령들은 새 파일에 저장하며 웹 UI나 열린 편집 세션의 undo/redo에 연결되지 않습니다. HTML 내보내기는 관측한 의미 구조의 출력으로 원본 서식·페이지 배치의 동등성을 보장하지 않습니다. 상세 사용법과 제한은 [CLI 가이드](https://ohah.github.io/hwpjs/guide/cli)를 따릅니다.
+
+서식과 개체를 보존하는 일반 형식 변환은 제공하지 않습니다. AI가 빈 문서에서 누리 문서 전체를 동일하게 재생성하는 기능도 완료되지 않았습니다. 알 수 없는 내용과 미지원 기능을 성공으로 숨기지 않습니다.
 
 ## SDK 진입점
 
@@ -94,11 +107,11 @@ export async function openDocument(root, file) {
 
 호스트 요소에는 `height: 70vh`처럼 실제 높이를 지정합니다. 파일 선택·리본·저장 다운로드 UI는 앱이 소유합니다. React·Svelte에서는 Vanilla surface 대신 각 프레임워크의 컴포넌트에 같은 editor를 전달합니다. 한 editor에 Canvas를 중복 연결하지 마세요.
 
-| 환경 | 공개 API | 사용 예제 | 실행 데모 |
-| --- | --- | --- | --- |
-| Vanilla JavaScript | `createCanvasSurface` from `@ohah/hwpjs/vanilla` | [파일 열기·Canvas·종료](https://ohah.github.io/hwpjs/frameworks/vanilla) | [Vanilla](https://ohah.github.io/hwpjs/editor/demo/vanilla/) |
-| React | `CanvasSurface`, `useEditorState` from `@ohah/hwpjs/react` | [React 컴포넌트](https://ohah.github.io/hwpjs/frameworks/react) | [React](https://ohah.github.io/hwpjs/editor/demo/react/) |
-| Svelte | `CanvasEditor`, `canvasSurface` from `@ohah/hwpjs/svelte` | [Svelte 마운트·종료](https://ohah.github.io/hwpjs/frameworks/svelte) | [Svelte](https://ohah.github.io/hwpjs/editor/demo/svelte/) |
+| 환경               | 공개 API                                                   | 사용 예제                                                                | 실행 데모                                                    |
+| ------------------ | ---------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Vanilla JavaScript | `createCanvasSurface` from `@ohah/hwpjs/vanilla`           | [파일 열기·Canvas·종료](https://ohah.github.io/hwpjs/frameworks/vanilla) | [Vanilla](https://ohah.github.io/hwpjs/editor/demo/vanilla/) |
+| React              | `CanvasSurface`, `useEditorState` from `@ohah/hwpjs/react` | [React 컴포넌트](https://ohah.github.io/hwpjs/frameworks/react)          | [React](https://ohah.github.io/hwpjs/editor/demo/react/)     |
+| Svelte             | `CanvasEditor`, `canvasSurface` from `@ohah/hwpjs/svelte`  | [Svelte 마운트·종료](https://ohah.github.io/hwpjs/frameworks/svelte)     | [Svelte](https://ohah.github.io/hwpjs/editor/demo/svelte/)   |
 
 [공통 Runtime 설정](https://ohah.github.io/hwpjs/guide/runtime) · [선택·편집·저장](https://ohah.github.io/hwpjs/guide/editing)
 

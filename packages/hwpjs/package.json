@@ -1,6 +1,6 @@
 {
   "name": "@ohah/hwpjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "license": "MIT",
   "keywords": [
@@ -114,7 +114,7 @@
     }
   },
   "bin": {
-    "hwpjs": "./dist/cli.mjs",
+    "hwpjs": "./dist/hwpjs.mjs",
     "hwpjs-mcp": "./dist/mcp.mjs"
   }
 }

@@ -1481,16 +1481,10 @@ zig build test-file-transforms -Doptimize=ReleaseSafe -j1
 표 삭제·이미지 삽입의 합성 입력, 필드·서명 거부, 할당 실패, Noori 저장·재열기를 검사합니다. 검증 파일을 별도 경로에 쓰지 않으므로 반복 실행할 수 있습니다. 지원 계약과 CLI·MCP 사용법은 [파일 변환 주제 문서](document-file-transforms.md)를 따릅니다.
 
 
-## MCP 전용 npm 진입점
+## 단일 npm 패키지의 MCP 진입점
 
-`@ohah/hwpjs-mcp`는 공개 `@ohah/hwpjs` 서버를 재사용합니다. 새 도구 구현이나 별도 WASM 복사본을 만들지 않습니다.
+`@ohah/hwpjs` 하나가 SDK·CLI·MCP와 WASM을 제공합니다. 별도 MCP npm 패키지는 사용하지 않습니다. 설치·실행·클라이언트 설정은 [MCP 사용법](../apps/docs/docs/guide/mcp.md)을 따릅니다. 단일 실행 파일의 라우팅 검사는 다음과 같습니다.
 
 ```sh
-bun run --cwd packages/hwpjs-mcp build
-# 별도 설치 환경에 tarball을 설치한 뒤 실행합니다.
-HWPJS_MCP_CONSUMER=/absolute/path/to/consumer \
-  HWPJS_MCP_FIXTURES=/absolute/path/to/fixtures \
-  node --test packages/hwpjs-mcp/tests/installed.test.mjs
+node --test tools/tests/public-cli-entry.test.mjs
 ```
-
-설치·실행·클라이언트 설정은 [MCP 사용법](../apps/docs/docs/guide/mcp.md)을 따릅니다. 정규 CI는 `.github/workflows/mcp-package.yml`에서 독립 설치·실제 두 형식 읽기·오류 전달을 검사합니다.

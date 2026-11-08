@@ -458,6 +458,6 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 `packages/document/src/`는 파일 I/O 없는 문서 관측 모델·개체 참조·이미지 재고와 text/Markdown/의미 HTML 출력을 소유합니다. `packages/cli/src/`의 기존 관측·출력 경로는 이 단일 구현을 재노출하며, 경로 읽기와 새 파일 게시·CLI/MCP 입력은 CLI 호스트가 소유합니다. `packages/core/src/conversion.ts`는 같은 계층의 공개 `toHtml` 경계입니다. 읽기 모델은 Native 편집·저장 원본을 대체하지 않습니다.
 
 
-## MCP 전용 배포 패키지
+## 단일 공개 CLI·MCP 진입점
 
-`packages/hwpjs-mcp/`는 `npx -y @ohah/hwpjs-mcp`를 위한 독립 공개 실행 패키지입니다. `src/index.ts`의 얇은 진입점은 버전이 고정된 `@ohah/hwpjs`의 기존 서버를 실행합니다. 도구·파일 호스트·파서·WASM의 구현은 복제하지 않습니다. `tsdown.config.ts`는 Node용 실행 파일 하나를 출력하고 `tests/installed.test.mjs`는 실제 설치 경계를 검사합니다.
+`packages/hwpjs/src/cli.ts`는 `hwpjs mcp`를 기존 MCP 실행 파일에, 나머지 인수를 기존 CLI 실행 파일에 전달하는 공개 진입점입니다. `@ohah/hwpjs` 한 패키지의 서버·파일 호스트·파서·WASM을 재사용하며 별도 MCP 패키지와 중복 서버 구현을 두지 않습니다.

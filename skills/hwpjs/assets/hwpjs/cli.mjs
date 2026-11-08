@@ -617,6 +617,7 @@ function interpretExtendedArguments(command, options, positional, fail) {
 // src/arguments.ts
 init_object_reference();
 const USAGE = `Usage:
+  hwpjs mcp [--wasm PATH]
   hwpjs read INPUT [--format text|markdown] [--view content|structure] [--wasm PATH]
   hwpjs read-many INPUT... [--format text|markdown] [--view content|structure] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]

@@ -286,6 +286,19 @@ try {
 }
 await chmod(join(dist, 'cli.mjs'), 0o755);
 await chmod(join(dist, 'mcp.mjs'), 0o755);
+// Keep the dispatcher separate from the two standalone CLI/MCP bundles.
+const launcher = await Bun.build({
+  entrypoints: [join(pkg, 'src/cli.ts')],
+  outdir: dist,
+  target: 'node',
+  format: 'esm',
+  splitting: false,
+  sourcemap: 'none',
+  naming: 'hwpjs.mjs',
+  plugins: [runtimeInputs],
+});
+assert(launcher.success, launcher.logs.map(String).join('\n'));
+await chmod(join(dist, 'hwpjs.mjs'), 0o755);
 const bundledNotices = await collectPublicPackageNotices({
   root,
   sourcePaths: [...observed.keys()].map((path) => join(root, path)),

@@ -88,7 +88,9 @@ export async function buildAgentSkill(
   if (
     packageManifest.name !== '@ohah/hwpjs' ||
     !object(packageManifest.bin) ||
-    !['dist/cli.mjs', './dist/cli.mjs'].includes(packageManifest.bin.hwpjs) ||
+    !['dist/cli.mjs', './dist/cli.mjs', 'dist/hwpjs.mjs', './dist/hwpjs.mjs'].includes(
+      packageManifest.bin.hwpjs,
+    ) ||
     !['dist/mcp.mjs', './dist/mcp.mjs'].includes(packageManifest.bin['hwpjs-mcp'])
   )
     fail('InvalidCanonicalSkillPackage');
@@ -96,6 +98,11 @@ export async function buildAgentSkill(
     fail('InvalidCanonicalBuildManifest');
   if (build.sourceFingerprint !== undefined && !validHash(build.sourceFingerprint))
     fail('InvalidCanonicalBuildManifest');
+  if (packageManifest.bin.hwpjs.replace(/^\.\//, '') === 'dist/hwpjs.mjs') {
+    const launcher = await read(join(pkg, 'dist/hwpjs.mjs'));
+    if (!validHash(build.files['hwpjs.mjs']) || digest(launcher) !== build.files['hwpjs.mjs'])
+      fail('CanonicalSkillDigestMismatch:hwpjs.mjs');
+  }
   const bytes = new Map();
   for (const name of FILES) {
     const value = await read(

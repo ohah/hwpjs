@@ -6,16 +6,16 @@ HWP5와 HWPX 원본 읽기·정보/개체 조회·그림 추출과 명시 편집
 
 ## 공개 npm 설치
 
-`@ohah/hwpjs@0.1.0`이 npm에 공개되어 있습니다. Node.js 24.20 이상에서 문서를 다룰 프로젝트 디렉터리로 이동한 뒤 설치합니다. [패키지 이름과 게시 상태](./package-names.md)에서 이전 RC와의 차이를 확인하세요.
+CLI와 MCP는 단일 `@ohah/hwpjs` 패키지로 제공하며 WASM이 포함됩니다. Node.js 24.20.0 이상이 필요합니다. 0.1.1은 통합 `hwpjs mcp` 진입점과 16개 MCP 도구를 제공합니다. 이전 0.1.0은 12개 도구입니다. [패키지 이름과 게시 상태](./package-names.md)에서 이전 RC와의 차이를 확인하세요.
 
 ```bash
-npm install @ohah/hwpjs@0.1.0 --ignore-scripts --omit=peer --no-audit --no-fund
-npx hwpjs --help
+npx -y @ohah/hwpjs --help
+npx -y @ohah/hwpjs read ./document.hwpx
 ```
 
-`--omit=peer`는 CLI/MCP만 사용할 때 선택적인 UI 프레임워크 peer 설치를 생략합니다. React·Svelte·React Native 어댑터를 쓰는 프로젝트는 해당 peer를 별도로 준비합니다. 아래 예시는 설치 프로젝트에서 `npx hwpjs`로 로컬 CLI를 실행합니다.
+프로젝트 의존성으로 설치하려면 `npm install @ohah/hwpjs`를 사용합니다. React·Svelte·React Native 어댑터를 쓰는 프로젝트는 해당 peer를 별도로 준비합니다. 기존 설치는 자동 갱신되지 않습니다. 설치 버전과 `--help`, MCP `tools/list`로 제공 기능을 확인하세요. MCP 기본 연결은 `npx -y @ohah/hwpjs mcp`이며 [MCP 연결 가이드](./mcp.md)를 따릅니다.
 
-인증 정보를 제거한 새 소비자에서 공개 레지스트리 설치와 배포 파일 110개의 일치를 확인했습니다. 실제 설치본의 도움말·HWPX 생성·Noori HWP5 편집/재열기와 독립 CFB/XML 검사, MCP 버전 `0.1.0`·12도구 목록도 확인했습니다. 생성·문단 조회·apply·text-only 변환과 거부 동작의 앞선 설치 검사는 같은 CLI 바이트의 증거이며, 공개 설치 확인만으로 모든 명령을 전수 검증한 것은 아닙니다. OCR 제공자 부재 거부와 실제 Tesseract 인식 성공도 구분합니다. 이전 npm 패키지나 Skill 설치분은 자동 갱신되지 않으며, 브라우저 체험은 별도 실행 경로입니다.
+공개 0.1.0은 인증 정보를 제거한 새 소비자에서 공개 레지스트리 설치와 배포 파일 110개의 일치를 확인했습니다. 실제 설치본의 도움말·HWPX 생성·Noori HWP5 편집/재열기와 독립 CFB/XML 검사, MCP 버전 `0.1.0`·12도구 목록도 확인했습니다. 생성·문단 조회·apply·text-only 변환과 거부 동작의 앞선 설치 검사는 같은 CLI 바이트의 증거이며, 공개 설치 확인만으로 모든 명령을 전수 검증한 것은 아닙니다. OCR 제공자 부재 거부와 실제 Tesseract 인식 성공도 구분합니다. 이전 npm 패키지나 Skill 설치분은 자동 갱신되지 않으며, 브라우저 체험은 별도 실행 경로입니다.
 
 저장소에서는 의존성을 준비한 작업 사본과 명시한 WASM을 사용합니다.
 
@@ -30,9 +30,9 @@ bun run cli read ./document.hwp --wasm /absolute/path/to/hwpjs.wasm
 ## 문서 내용 읽기
 
 ```bash
-npx hwpjs read ./document.hwp
-npx hwpjs read ./document.hwpx --format markdown
-npx hwpjs read ./문서.hwp --format markdown > ./문서.md
+npx -y @ohah/hwpjs read ./document.hwp
+npx -y @ohah/hwpjs read ./document.hwpx --format markdown
+npx -y @ohah/hwpjs read ./문서.hwp --format markdown > ./문서.md
 ```
 
 기본 `view`는 `content`, 기본 `format`은 `text`입니다. 성공한 단일 읽기의 stdout에는 관측한 문서 본문만 출력하며 `format`·`documentSHA256` 접두사나 `Paragraph`·`Cell` 구조 레이블을 붙이지 않습니다. 이미지·표 등에는 후속 조회를 위한 논리 개체 참조가 포함될 수 있습니다. `--view content`를 명시해도 같습니다. `>`는 셸의 리다이렉션이며 새 읽기 `--output` 옵션이나 stdin·URI 읽기를 뜻하지 않습니다.
@@ -52,8 +52,8 @@ Markdown의 이미지는 `![이미지 N](참조)`, 텍스트에서는 `[이미�
 이 참조는 HTTP 주소·파일 링크·MCP 리소스 URI가 아닙니다. 브라우저에서 열거나 클릭해 추출하지 않고, 같은 입력 파일의 CLI 또는 MCP 인수로 사용합니다.
 
 ```bash
-npx hwpjs object ./document.hwpx --ref "$OBJECT_REF"
-npx hwpjs object ./document.hwp --ref "$OBJECT_REF" --format markdown
+npx -y @ohah/hwpjs object ./document.hwpx --ref "$OBJECT_REF"
+npx -y @ohah/hwpjs object ./document.hwp --ref "$OBJECT_REF" --format markdown
 ```
 
 실제 그림이 관측됐지만 추출 inventory와 연결되는 참조를 확인하지 못하면 `[이미지: 추출 참조 확인 불가]`로 표시합니다. 이는 그림이 없다는 뜻이 아니며, 가짜 조회 URI를 만들지 않습니다.
@@ -67,8 +67,8 @@ CLI 출력은 `상태: available` 또는 `상태: unavailable`로 표시합니�
 ## 편집 구조 조회
 
 ```bash
-npx hwpjs read ./document.hwp --view structure
-npx hwpjs read ./document.hwpx --format markdown --view structure
+npx -y @ohah/hwpjs read ./document.hwp --view structure
+npx -y @ohah/hwpjs read ./document.hwpx --format markdown --view structure
 ```
 
 `--view structure`는 머리말·본문·꼬리말 정의, 표의 셀, 그림 메타데이터와 진단 상세를 구분하는 기존 구조 출력을 제공합니다. 출력 첫 부분의 `format`·`documentSHA256`과 `Paragraph s0:p3` 같은 실제 원문 ID를 확인하세요. HWP5 문단 번호는 구역 안에서 0부터, HWPX 문단 번호는 문서 전체에서 1부터 시작합니다. 출력 순서로 번호를 만들지 않습니다.
@@ -80,8 +80,8 @@ npx hwpjs read ./document.hwpx --format markdown --view structure
 `read-many`는 `0.1.0`에 포함된 여러 명시 파일의 읽기 전용 명령입니다. 아래의 기본 `content`와 선택적 `structure` 보기 계약을 사용합니다. 이전 설치분은 갱신한 뒤 `--help` 또는 MCP `tools/list`에서 제공 여부를 확인하세요.
 
 ```bash
-npx hwpjs read-many ./one.hwp ./two.hwpx
-npx hwpjs read-many ./one.hwp ./two.hwpx \
+npx -y @ohah/hwpjs read-many ./one.hwp ./two.hwpx
+npx -y @ohah/hwpjs read-many ./one.hwp ./two.hwpx \
   --format markdown --view content --concurrency 2 --max-output-bytes 8388608
 ```
 
@@ -98,8 +98,8 @@ stdout 전달 오류가 나면 이미 전달한 내용이 있을 수 있습니�
 ## 문서 정보 확인
 
 ```bash
-npx hwpjs info ./document.hwp
-npx hwpjs info ./document.hwpx --expect-sha256 "$SOURCE_SHA"
+npx -y @ohah/hwpjs info ./document.hwp
+npx -y @ohah/hwpjs info ./document.hwpx --expect-sha256 "$SOURCE_SHA"
 ```
 
 포맷·원문 SHA·바이트 크기·구역 수와 SDK에서 확인할 수 있는 버전·보호 관련 관측을 텍스트로 출력합니다. 확인하지 못한 값은 `unknown`과 사유로 남습니다. 문단·표·그림·페이지 전체 개수를 수집하는 명령이나 서명 유효성·암호 해제 가능성 검사로 해석하지 마세요. 특정 대상의 편집 가능 여부는 실제 편집 명령에서 네이티브 엔진이 다시 검사합니다.
@@ -109,8 +109,8 @@ npx hwpjs info ./document.hwpx --expect-sha256 "$SOURCE_SHA"
 ## 그림 목록과 추출
 
 ```bash
-npx hwpjs images ./document.hwpx
-npx hwpjs extract-images ./document.hwpx --output ./images-new
+npx -y @ohah/hwpjs images ./document.hwpx
+npx -y @ohah/hwpjs extract-images ./document.hwpx --output ./images-new
 ```
 
 `images`는 원문 SHA와 각 그림 ID, 상태·사유·MIME·확장자·바이트 수 등을 출력합니다. 출력에 나온 ID는 해당 SHA의 스냅샷에만 유효합니다. 읽기 실패·미지원 항목도 목록에 남으며, 형식 이름이나 확장자만으로 원시 바이트를 신뢰하지 않습니다.
@@ -118,7 +118,7 @@ npx hwpjs extract-images ./document.hwpx --output ./images-new
 본문의 **이미지** 참조가 있으면 다음과 같이 추출할 수 있습니다.
 
 ```bash
-npx hwpjs extract-images ./document.hwpx \
+npx -y @ohah/hwpjs extract-images ./document.hwpx \
   --ref "$IMAGE_REF" --output ./referenced-image-new
 ```
 
@@ -127,7 +127,7 @@ npx hwpjs extract-images ./document.hwpx \
 기존 방식으로 목록에서 고른 한 ID만 추출하려면 같은 원본의 SHA도 지정합니다.
 
 ```bash
-npx hwpjs extract-images ./document.hwpx \
+npx -y @ohah/hwpjs extract-images ./document.hwpx \
   --id "$IMAGE_ID" --expect-sha256 "$SOURCE_SHA" --output ./selected-images-new
 ```
 
@@ -144,7 +144,7 @@ CLI의 `--output`은 **새 디렉터리**입니다. 단일 파일 경로가 아�
 먼저 `read --view structure`에서 얻은 원문 ID와 SHA를 사용합니다. 아래 ID·SHA·문자열은 대상 문서의 실제 값으로 바꾸세요.
 
 ```bash
-npx hwpjs edit ./document.hwpx \
+npx -y @ohah/hwpjs edit ./document.hwpx \
   --target s0:p3 --replace '기존 내용' --with '수정 내용' \
   --expect-sha256 "$SOURCE_SHA" --output ./document-edited.hwpx
 ```
@@ -160,7 +160,7 @@ HWP5는 저장된 줄 배치가 무효화되는 편집을 기본적으로 거부
 표시 본문과 Native 편집 원문은 다릅니다. `read --view structure`에서 얻은 같은 원본의 SHA·문단 ID로 실제 원문을 조회합니다.
 
 ```bash
-npx hwpjs paragraph ./document.hwpx \
+npx -y @ohah/hwpjs paragraph ./document.hwpx \
   --target "$TARGET_ID" --expect-sha256 "$SOURCE_SHA" --format text
 ```
 
@@ -184,7 +184,7 @@ npx hwpjs paragraph ./document.hwpx \
 ```
 
 ```bash
-npx hwpjs apply ./document.hwpx --patch ./changes.json \
+npx -y @ohah/hwpjs apply ./document.hwpx --patch ./changes.json \
   --expect-sha256 "$SOURCE_SHA" --output ./applied-new.hwpx
 ```
 
@@ -204,7 +204,7 @@ npx hwpjs apply ./document.hwpx --patch ./changes.json \
 ## 새 문서 생성
 
 ```bash
-npx hwpjs create --format hwpx \
+npx -y @ohah/hwpjs create --format hwpx \
   --text-file ./body.txt --output ./created-new.hwpx
 ```
 
@@ -215,7 +215,7 @@ HWP5 초기 텍스트 저장이 조판 갱신을 요구하면 기본적으로 �
 ## 명시 text-only 교차 변환
 
 ```bash
-npx hwpjs convert ./document.hwp --to hwpx \
+npx -y @ohah/hwpjs convert ./document.hwp --to hwpx \
   --loss-policy text-only --output ./converted-new.hwpx
 ```
 
@@ -226,7 +226,7 @@ npx hwpjs convert ./document.hwp --to hwpx \
 ## 그림의 로컬 OCR
 
 ```bash
-npx hwpjs ocr ./document.hwpx \
+npx -y @ohah/hwpjs ocr ./document.hwpx \
   --ref "$IMAGE_REF" --provider tesseract --languages kor+eng
 ```
 
@@ -244,7 +244,7 @@ npx hwpjs ocr ./document.hwpx \
 
 ## 새 파일의 표 삭제·그림 삽입·의미 HTML
 
-아래는 **현재 개발 소스**의 파일 명령입니다. 공개 npm `@ohah/hwpjs@0.1.0`에 포함되지 않았으므로 위 설치 명령만으로 사용할 수 없습니다. 해당 변경이 포함된 후속 배포에서는 `--help`로 제공 여부를 확인합니다. 저장소 소스는 준비한 의존성과 명시 WASM을 사용합니다. 제한과 게시·오류 계약은 [문서 파일 변환 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)이 소유합니다.
+아래 새 파일 명령은 `@ohah/hwpjs@0.1.1`에 포함됩니다. 이전 0.1.0에는 없으므로 설치 버전과 `--help`를 확인하세요. 패키지에는 필요한 Native WASM이 포함됩니다. 저장소 소스에서 실행할 때는 준비한 의존성과 명시 WASM을 사용합니다. 제한과 게시·오류 계약은 [문서 파일 변환 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)이 소유합니다.
 
 표 삭제·그림 삽입 예시의 `$WASM`은 신규 선택 ABI를 포함한 통합 후보입니다. 공개 npm 0.1.0의 기존 WASM820에는 신규 export 8개가 없으므로 현재 소스만 바꿔 실행하면 표 삭제·그림 삽입이 `ABIUnavailable`로 거부될 수 있습니다. 후보 경로·SHA가 확정된 뒤 명시해 사용합니다. 의미 HTML의 읽기 경로는 신규 구조 편집 ABI를 요구하지 않아 기존 WASM820도 사용할 수 있습니다.
 
@@ -267,7 +267,7 @@ bun run cli export-html ./input.hwpx --output ./document.html \
 
 ### 기존 그림 교체와의 구분
 
-현재 소스의 `replace-image`는 같은 원본의 이미지 참조로 기존 그림을 교체하는 별도 기능이며 공개 0.1.0에는 포함되지 않습니다.
+0.1.1의 `replace-image`는 같은 원본의 이미지 참조로 기존 그림을 교체하는 별도 기능입니다. 이전 0.1.0에는 없습니다.
 
 ```bash
 bun run cli replace-image ./input.hwpx --ref "$IMAGE_REF" \

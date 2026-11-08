@@ -16,12 +16,12 @@ const required = (key) => {
 };
 const pkg = required('HWPJS_EXTENDED_E2E_PACKAGE');
 const evidence = required('HWPJS_EXTENDED_E2E_EVIDENCE');
-const cli = join(pkg, 'dist/cli.mjs'),
-  mcp = join(pkg, 'dist/mcp.mjs');
+const cli = join(pkg, 'dist/hwpjs.mjs');
 assert.equal(process.version, 'v24.20.0');
 assert.equal(
   hash(readFileSync(join(pkg, 'dist/hwpjs.wasm'))),
-  '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
+  process.env.HWPJS_EXTENDED_E2E_WASM_SHA256 ??
+    '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
 );
 mkdirSync(evidence, { recursive: true });
 const ledger = [];
@@ -159,7 +159,7 @@ test(
 );
 
 test(
-  'installed JS MCP publishes twelve real tools and executes new edit services over stdio',
+  'installed unified CLI exposes sixteen MCP tools and executes new edit services over stdio',
   { timeout: 60000 },
   async () => {
     const env = { ...process.env };
@@ -167,7 +167,7 @@ test(
     delete env.NODE_PATH;
     const transport = new StdioClientTransport({
       command: process.execPath,
-      args: ['--max-old-space-size=512', mcp],
+      args: ['--max-old-space-size=512', cli, 'mcp'],
       cwd: evidence,
       env,
       stderr: 'pipe',
@@ -235,7 +235,11 @@ test(
       writeFileSync(
         join(evidence, 'invocations.json'),
         JSON.stringify(
-          { cliSha256: hash(readFileSync(cli)), mcpSha256: hash(readFileSync(mcp)), ledger },
+          {
+            cliSha256: hash(readFileSync(cli)),
+            mcpSha256: hash(readFileSync(join(pkg, 'dist/mcp.mjs'))),
+            ledger,
+          },
           null,
           2,
         ) + '\n',

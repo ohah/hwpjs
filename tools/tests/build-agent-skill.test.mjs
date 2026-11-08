@@ -301,3 +301,18 @@ test('failed stage with an unexpected file preserves it and exposes the cleanup 
   assert.equal(await fs.readFile(join(warning.path, 'foreign'), 'utf8'), 'retain');
   assert.deepEqual(await f.snapshot(), before);
 });
+
+test('unified npm launcher is verified while Skill reuses standalone CLI and MCP', async (t) => {
+  const f = await fixture(t);
+  const launcher = Buffer.from('#!/usr/bin/env node\n// dispatcher\n');
+  f.packageManifest.bin.hwpjs = './dist/hwpjs.mjs';
+  f.build.files['hwpjs.mjs'] = hash(launcher);
+  await fs.writeFile(join(f.pkg, 'dist/hwpjs.mjs'), launcher);
+  await f.save();
+  await f.run();
+  assert.deepEqual(await fs.readdir(f.output).then((entries) => entries.sort()), names);
+  const before = await f.snapshot();
+  await fs.writeFile(join(f.pkg, 'dist/hwpjs.mjs'), 'changed');
+  await assert.rejects(f.run(), /CanonicalSkillDigestMismatch:hwpjs.mjs/);
+  assert.deepEqual(await f.snapshot(), before);
+});
