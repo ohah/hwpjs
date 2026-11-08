@@ -1,7 +1,6 @@
 {
   "name": "@ohah/hwpjs",
-  "version": "0.1.0-umbrella.0",
-  "private": true,
+  "version": "0.1.0",
   "type": "module",
   "license": "MIT",
   "engines": {

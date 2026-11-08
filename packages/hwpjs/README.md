@@ -1,17 +1,53 @@
-# @ohah/hwpjs — 공개 패키지 후보
+# @ohah/hwpjs
 
-내부 패키지는 유지하며 공개 소비자는 이 패키지의 root와 `/runtime`, `/vanilla`, `/react`, `/svelte`, `/react-native`, `/worker`, `/wasm`을 사용합니다. root/core와 runtime import는 React/Svelte 설치나 DOM 접근을 요구하지 않습니다. React와 Svelte는 해당 subpath 소비자만 설치하는 optional peer입니다.
+HWP5와 HWPX의 읽기·편집·저장을 제공하는 ESM 패키지입니다. 브라우저·Node.js·CLI·MCP는 공통 Native/WASM 엔진을 사용합니다. 지원하는 명령과 관측 범위 안에서 동작하며, 모든 한글 문서의 서식·개체·조판을 완전히 재현하는 엔진은 아닙니다.
 
-ESM 패키지입니다. root/runtime의 browser·node 조건은 같은 core 모듈을 가리킵니다. Svelte는 browser 조건에서 client, 기본 Node에서는 SSR entry를 사용합니다. RN subpath는 JavaScript provider/transport 계약이며 네이티브 기기 바이너리나 OS IME 지원을 설치하지 않습니다. `/worker`는 Worker 환경의 진입점이고 일반 Node main entry가 아닙니다.
+## 설치와 실행
 
-빌드: `mise exec -- bun tools/build-public-package.mjs --wasm=/absolute/explicit/hwpjs.wasm`
+Node.js 24.20.0 이상이 필요합니다. npm에는 TypeScript 원문 대신 JavaScript 실행 파일과 공개 타입 선언이 포함됩니다.
 
-기존 내부 패키지의 dist는 읽거나 재빌드하지 않습니다. JS는 현재 canonical source에서, 선언은 같은 source의 새 declaration emit으로 생성합니다. WASM은 명시 입력을 바이트 그대로 포함합니다. 빌드 지문은 `dist/build-manifest.json`에 기록됩니다.
+```sh
+npm install @ohah/hwpjs@0.1.0
+npx --package=@ohah/hwpjs@0.1.0 hwpjs --help
+npx --package=@ohah/hwpjs@0.1.0 hwpjs read document.hwpx
+npx --package=@ohah/hwpjs@0.1.0 hwpjs-mcp
+```
 
-현재 private prerelease 후보이며 npm에 게시되지 않았습니다. pack 검증과 npm 공개는 별개입니다. Native/WASM 기능 범위는 명시 엔진과 해당 검증 자료에 한정합니다.
+CLI와 stdio MCP 서버는 같은 패키지의 WASM 한 벌을 사용합니다. 로컬 파일 경로를 받으며 HTTP 서버를 열지 않습니다. MCP 클라이언트에서는 위 `hwpjs-mcp` 명령을 stdio 서버로 등록합니다.
 
-Node CLI 후보는 이 패키지의 `hwpjs` 실행 파일입니다. 설치된 패키지에서는 `hwpjs read document.hwpx`로 머리말·본문·꼬리말·표·이미지의 논리 구조를 읽습니다. 문단의 문자열 교체·삭제와 새 HWP5/HWPX 파일 저장도 지원하며, 원문 SHA256과 대상 식별자를 요구합니다. [실행 방법과 제한](https://github.com/ohah/hwpjs/blob/main/docs/cli-ai-document-view.md)을 따릅니다. CLI 검증 환경은 Node.js 24.20.0과 Bun 1.4.4입니다.
+## CLI와 MCP 지원 범위
 
-같은 패키지의 `hwpjs-mcp` 실행 파일은 stdio MCP 서버입니다. `read_document`와 `edit_document`가 CLI의 파일·Native 엔진·출력 경계를 재사용합니다. WASM은 두 실행 파일 옆에 한 벌만 포함합니다.
+| 기능           | 현재 지원                                                                                                                                             |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 읽기           | 기본 본문 중심 텍스트·Markdown, `--view structure`의 원문 SHA와 Native 문단 ID, 명시한 여러 문서의 배치 읽기                                          |
+| 문서 정보·개체 | 정보 관측과 미관측 진단, 본문 개체 참조의 표·이미지·차트·수식 등 상세 조회. 형식별 Native 관측 범위가 다릅니다.                                       |
+| 이미지         | 관측된 구역 그림 참조의 목록·원본 바이트 추출. master·brush·미참조 자원까지 전체 이미지 추출을 보장하지 않습니다.                                     |
+| 편집           | 문단의 정확한 문자열 교체·삭제와 조건부 명령 배치. 원문 SHA·Native 좌표·원문 조건을 확인하고 새 파일에 저장합니다.                                    |
+| 표·서식        | 지원 경계에서 표 생성, 셀 서식·크기, 글자·문단 서식, 기존 이미지 크기 변경을 포함한 `apply` 14종 명령                                                 |
+| 새 문서        | 공통 Native 빈 문서로 HWP5/HWPX 생성, 문단 순서·빈줄·Unicode 텍스트 초기화                                                                            |
+| 형식 변환      | 명시한 `--loss-policy text-only`의 HWP5↔HWPX 본문 텍스트 이관. 서식·표 구조·개체 등 손실을 보고하며, 기본 정책은 거부입니다.                          |
+| OCR            | 이미지 추출과 별도 설치한 Tesseract 또는 macOS Vision 연결. 외부 실행 환경·언어 데이터가 필요하며 OCR 엔진·언어 모델을 이 패키지에 포함하지 않습니다. |
 
-Skill은 `npx skills add ohah/hwpjs --skill hwpjs`로 설치합니다. Skill에 포함된 런처와 CLI·MCP·WASM은 같은 패키지 산출물에서 생성하므로 별도의 실행 엔진을 설치하지 않습니다. [CLI·MCP 설치 가이드와 브라우저 실습](https://ohah.github.io/hwpjs/guide/cli)을 참고하세요. 브라우저 실습은 같은 Native 엔진을 호출하며 로컬 Node 프로세스나 stdio 연결을 실행하는 기능과는 구분합니다.
+MCP 도구는 `read_document`, `read_documents`, `edit_document`, `get_document_info`, `list_document_images`, `extract_document_image`, `get_document_object`, `get_document_paragraph`, `apply_document_changes`, `create_document`, `convert_document`, `ocr_document`입니다. CLI의 파일·원문·Native 검증과 저장 경계를 재사용합니다.
+
+읽기용 표시 문자열은 편집 좌표가 아닙니다. 편집 대상은 `--view structure`에서 얻은 같은 스냅샷의 SHA와 Native ID를 사용해야 합니다. 개체 참조는 네트워크 주소가 아닙니다. 출력은 새 경로만 허용하며 원본이나 기존 파일을 덮어쓰지 않습니다. HWP5 변경 문서의 오래된 조판 정보는 `--allow-stale-layout` 명시 동의가 필요한 경우가 있으며, 이 옵션은 조판 갱신 완료를 뜻하지 않습니다.
+
+전체 표 삭제, 이미지 삽입·교체, 서식과 개체를 보존하는 일반 형식 변환은 제공하지 않습니다. AI가 빈 문서에서 누리 문서 전체를 동일하게 재생성하는 기능도 완료되지 않았습니다. 알 수 없는 내용과 미지원 기능을 성공으로 숨기지 않습니다.
+
+## SDK 진입점
+
+공개 소비자는 패키지 root와 `/runtime`, `/vanilla`, `/react`, `/svelte`, `/react-native`, `/react-native/canvas`, `/worker`, `/wasm`을 사용합니다. root와 runtime import는 React/Svelte 설치나 DOM 접근을 요구하지 않습니다. React·Svelte·React Native는 해당 진입점 소비자를 위한 선택 peer입니다.
+
+Svelte는 browser 조건에서 client, 기본 Node에서는 SSR 진입점을 사용합니다. React Native 진입점은 JavaScript provider·transport 계약이며 네이티브 기기 바이너리나 OS IME 지원을 자동 설치하지 않습니다. `/worker`는 Worker 환경의 진입점으로 일반 Node main에서 직접 실행하는 파일이 아닙니다.
+
+## 문서와 검증
+
+- [CLI 설치·사용 가이드](https://ohah.github.io/hwpjs/guide/cli)
+- [MCP 연결 가이드](https://ohah.github.io/hwpjs/guide/mcp)
+- [편집·원문 보호와 지원 제한](https://github.com/ohah/hwpjs/blob/main/docs/cli-ai-document-view.md)
+
+Skill은 `npx skills add ohah/hwpjs --skill hwpjs`로 설치합니다. Skill의 CLI·MCP·WASM은 같은 정규 패키지 산출물에서 생성합니다. 브라우저 실습의 공통 엔진 호출은 로컬 Node 프로세스나 실제 stdio 연결과 구분합니다.
+
+빌드 입력과 산출물 지문은 `dist/build-manifest.json`에 기록합니다. 공개 타입 선언은 같은 소스에서 새로 생성하고, 명시한 WASM을 그대로 포함합니다. 로컬 설치 검증·원격 CI·레지스트리 게시·브라우저 검증은 서로 다른 증거이며 패키지 준비를 게시 완료로 표현하지 않습니다.
+
+라이선스는 MIT이며 포함된 의존성의 고지는 `THIRD_PARTY_NOTICES.md`를 참고하세요.

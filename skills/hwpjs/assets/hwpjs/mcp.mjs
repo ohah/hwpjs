@@ -1463,7 +1463,7 @@ var Doc = class {
 	}
 };
 // ../../node_modules/.bun/zod@4.6.7/node_modules/zod/v4/core/versions.js
-const version = {
+const version$1 = {
 	major: 4,
 	minor: 6,
 	patch: 7
@@ -1474,7 +1474,7 @@ const $ZodType = /*@__PURE__*/ $constructor("$ZodType", (inst, def) => {
 	inst ?? (inst = {});
 	inst._zod.def = def;
 	inst._zod.bag = inst._zod.bag || {};
-	inst._zod.version = version;
+	inst._zod.version = version$1;
 	const defChecks = inst._zod.def.checks;
 	const checks = inst._zod.traits.has("$ZodCheck") ? [inst, ...defChecks ?? []] : defChecks?.length ? [...defChecks] : [];
 	for (const ch of checks) for (const fn of ch._zod.onattach) fn(inst);
@@ -24120,6 +24120,8 @@ function serveStdio(factory, options = {}) {
 function toError(value) {
 	return value instanceof Error ? value : new Error(String(value));
 }
+// ../hwpjs/package.json
+var version = "0.1.0";
 // src/batch-read.ts
 const BATCH_READ_LIMITS = Object.freeze({
 	maxInputs: 128,
@@ -40230,7 +40232,7 @@ function parseMcpArguments(argv) {
 function createMcpServer(options = {}) {
 	const server = new McpServer({
 		name: "hwpjs",
-		version: "0.0.0"
+		version
 	});
 	for (const tool of documentTools(options)) tool.register(server);
 	return server;

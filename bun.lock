@@ -56,7 +56,7 @@
     },
     "packages/hwpjs": {
       "name": "@ohah/hwpjs",
-      "version": "0.1.0-umbrella.0",
+      "version": "0.1.0",
       "bin": {
         "hwpjs": "./dist/cli.mjs",
         "hwpjs-mcp": "./dist/mcp.mjs",

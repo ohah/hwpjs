@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
+import publicPackage from '../../../hwpjs/package.json' with { type: 'json' };
 import { documentTools, describeMcpError } from './tools.ts';
 import type { DocumentToolsOptions } from './tools.ts';
 import type { ServeStdioOptions } from '@modelcontextprotocol/server/stdio';
@@ -17,7 +18,7 @@ export function parseMcpArguments(argv: unknown): { wasmPath?: string } {
 }
 
 export function createMcpServer(options: DocumentToolsOptions = {}) {
-  const server = new McpServer({ name: 'hwpjs', version: '0.0.0' });
+  const server = new McpServer({ name: 'hwpjs', version: publicPackage.version });
   for (const tool of documentTools(options)) tool.register(server);
   return server;
 }
