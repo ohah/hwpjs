@@ -149,6 +149,8 @@ const Builder = struct {
     elements: std.ArrayList(Element) = .empty,
     uris: std.ArrayList([]u8) = .empty,
     uri_map: std.StringHashMapUnmanaged(usize) = .empty,
+    // Values borrow our owned URI pool; keys never borrow namespace allocations.
+    bound_uris: std.AutoHashMapUnmanaged(usize, []const u8) = .empty,
     stack: std.ArrayList(usize) = .empty,
     content_events: ?*CapturedContent = null,
 
@@ -160,6 +162,7 @@ const Builder = struct {
 
     fn deinit(self: *Builder) void {
         self.stack.deinit(self.allocator);
+        self.bound_uris.deinit(self.allocator);
         self.uri_map.deinit(self.allocator);
         for (self.uris.items) |uri| self.allocator.free(uri);
         self.uris.deinit(self.allocator);
@@ -184,6 +187,14 @@ const Builder = struct {
         errdefer _ = self.uris.pop();
         try self.uri_map.put(self.allocator, copy, index);
         return copy;
+    }
+
+    fn internBoundUri(self: *Builder, binding_id: usize, uri: []const u8) ![]const u8 {
+        if (self.bound_uris.get(binding_id)) |owned| return owned;
+        const owned = try self.internUri(uri);
+        // On failure the owned URI remains in the pool for Builder.deinit.
+        try self.bound_uris.put(self.allocator, binding_id, owned);
+        return owned;
     }
 
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
@@ -222,8 +233,9 @@ const Builder = struct {
             }
         }
         if (self.elements.items.len == self.max_nodes) return error.LimitExceeded;
-        const name = try scope.expandElement(tag.name);
-        const owned_uri = try self.internUri(name.uri);
+        const expanded = try scope.expandElementBinding(tag.name);
+        const name = expanded.name;
+        const owned_uri = try self.internBoundUri(expanded.binding_id, name.uri);
         const opening = try self.span(tag.raw);
         const parent: ?usize = if (self.stack.items.len == 0) null else self.stack.items[self.stack.items.len - 1];
         const index = self.elements.items.len;
@@ -245,7 +257,7 @@ const Builder = struct {
 /// The returned tree owns a copy of bytes, independent of the ZIP archive and
 /// the caller's buffer. XML syntax and namespace checks use the common SSOT.
 pub fn parse(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options) !Tree {
-    return parseInternal(a, bytes, part_kind, part_ordinal, item_index, options, null);
+    return parseInternal(a, bytes, part_kind, part_ordinal, item_index, options, null, null);
 }
 
 /// Request-local content borrows tree.source. Consume before changing or freeing
@@ -255,19 +267,26 @@ pub const ParsedWithContent = struct { tree: Tree, events: ?[]content.Event };
 pub fn parseWithContent(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options) !ParsedWithContent {
     var events: CapturedContent = .{};
     defer events.events.deinit(a);
-    var tree = try parseInternal(a, bytes, part_kind, part_ordinal, item_index, options, &events);
+    var tree = try parseInternal(a, bytes, part_kind, part_ordinal, item_index, options, &events, null);
     errdefer tree.deinit(a);
     return .{ .tree = tree, .events = if (events.enabled) try events.events.toOwnedSlice(a) else null };
 }
 
-fn parseInternal(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options, events: ?*CapturedContent) !Tree {
+fn parseInternal(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options, events: ?*CapturedContent, inspector: ?*document_xml.Inspector) !Tree {
     if ((part_kind == .header or part_kind == .chart) != (part_ordinal == null)) return error.InvalidPartOrdinal;
     if (bytes.len > options.max_xml_bytes) return error.LimitExceeded;
     const source = try a.dupe(u8, bytes);
     errdefer a.free(source);
     var builder: Builder = .{ .allocator = a, .source = source, .max_nodes = options.max_nodes, .part_kind = part_kind, .content_events = events };
     defer builder.deinit();
-    const report = try document_xml.visitBytes(a, source, options.max_xml_bytes, options.xml, .{ .context = &builder, .on_tag = Builder.onTag, .on_content = if (events != null) Builder.onContent else null });
+    var inspected = HeaderInspection{ .builder = &builder, .inspector = inspector };
+    const report = try document_xml.visitBytes(a, source, options.max_xml_bytes, options.xml, if (inspector != null)
+        .{ .context = &inspected, .on_tag = HeaderInspection.onTag }
+    else
+        .{ .context = &builder, .on_tag = Builder.onTag, .on_content = if (events != null) Builder.onContent else null });
+    // A non-header is fully syntax/namespace validated before root classification,
+    // just as document_structure.inspect's report-only path does.
+    if (inspector) |value| if (value.kind != .header) return error.InvalidHeaderRoot;
     if (builder.stack.items.len != 0 or builder.elements.items.len != report.elements) return error.InvalidSectionTreeDepth;
     const elements = try builder.elements.toOwnedSlice(a);
     errdefer a.free(elements);
@@ -282,3 +301,29 @@ fn parseInternal(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, p
         .xml_report = report,
     };
 }
+
+/// Build the immutable header index in the same pass as structure metadata.
+/// The caller owns both returned values independently.
+pub const InspectedHeader = struct { tree: Tree, report: document_xml.Report };
+pub fn parseInspectedHeader(a: std.mem.Allocator, bytes: []const u8, item_index: usize, options: Options) !InspectedHeader {
+    var inspector: document_xml.Inspector = .{ .allocator = a, .max_attribute_bytes = options.xml.max_attribute_bytes };
+    errdefer if (inspector.header_version) |version| a.free(version);
+    const tree = try parseInternal(a, bytes, .header, null, item_index, options, null, &inspector);
+    return .{ .tree = tree, .report = .{
+        .kind = inspector.kind,
+        .xml_bytes = bytes.len,
+        .elements = tree.xml_report.elements,
+        .direct_paragraphs = inspector.direct_paragraphs,
+        .declared_section_count = inspector.declared_section_count,
+        .header_version = inspector.header_version,
+    } };
+}
+const HeaderInspection = struct {
+    builder: *Builder,
+    inspector: ?*document_xml.Inspector,
+    fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
+        const self: *HeaderInspection = @ptrCast(@alignCast(raw));
+        try document_xml.Inspector.onTag(self.inspector.?, tag, scope, depth);
+        if (self.inspector.?.kind == .header) try Builder.onTag(self.builder, tag, scope, depth);
+    }
+};

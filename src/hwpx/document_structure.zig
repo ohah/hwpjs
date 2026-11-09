@@ -2,6 +2,7 @@ const std = @import("std");
 const zip = @import("../zip/archive.zig");
 const content_manifest = @import("content_manifest.zig");
 const protection = @import("encryption_manifest.zig");
+const tree_module = @import("xml_part_tree.zig");
 const document_xml = @import("document_xml.zig");
 
 const header_path = "Contents/header.xml";
@@ -57,8 +58,28 @@ fn sectionNumber(path: []const u8) ?u32 {
 }
 
 pub fn inspect(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, options: Options) !Report {
+    return inspectInternal(a, archive, manifest, options, null);
+}
+
+pub const WithHeader = struct { report: Report, header: tree_module.Tree };
+/// Header ownership transfers only on success, including successful spine validation.
+pub fn inspectWithHeader(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, options: Options) !WithHeader {
+    var header: ?tree_module.Tree = null;
+    errdefer if (header) |*value| value.deinit(a);
+    const report = try inspectInternal(a, archive, manifest, options, &header);
+    return .{ .report = report, .header = header.? };
+}
+
+fn inspectInternal(a: std.mem.Allocator, archive: zip.Archive, manifest: content_manifest.Manifest, options: Options, header_out: ?*?tree_module.Tree) !Report {
     const selected_header = try plainHeaderEntry(a, archive, manifest, options.protection);
-    var header = try document_xml.read(a, archive, selected_header.entry, @min(options.max_header_xml_bytes, options.max_total_xml_bytes), options.xml);
+    const limit = @min(options.max_header_xml_bytes, options.max_total_xml_bytes);
+    var header = if (header_out) |output| block: {
+        const bytes = try archive.decode(selected_header.entry, limit);
+        defer archive.allocator.free(bytes);
+        const parsed = try tree_module.parseInspectedHeader(a, bytes, selected_header.item_index, .{ .max_xml_bytes = limit, .max_nodes = options.xml.max_elements, .xml = options.xml });
+        output.* = parsed.tree;
+        break :block parsed.report;
+    } else try document_xml.read(a, archive, selected_header.entry, limit, options.xml);
     errdefer header.deinit(a);
     if (header.kind != .header) return error.InvalidHeaderRoot;
     var remaining = options.max_total_xml_bytes - header.xml_bytes;

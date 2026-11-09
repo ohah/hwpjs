@@ -84,6 +84,9 @@ pub const Session = struct {
     history_transaction_active: bool = false,
     allocator: std.mem.Allocator,
     source: []u8,
+    /// Immutable source index, never the current resource-intent projection.
+    original_header: ?tree_module.Tree = null,
+    original_header_source: []const u8 = "",
     // 표시 자원 증명 전용이며 원시 Session 사용자는 기본적으로 허용하지 않는다.
     display_resource_document: u64 = 0,
     display_resource_generation: u64 = 0,
@@ -100,6 +103,7 @@ pub const Session = struct {
     cell_backgrounds: @import("table_cell_background_session.zig").Values = .empty,
 
     pub fn deinit(self: *Session) void {
+        if (self.original_header) |*header| header.deinit(self.allocator);
         if (self.source_fields) |*fields| fields.deinit(self.allocator);
         self.paragraph_resources.deinit(self.allocator);
         self.character_resources.deinit(self.allocator);
@@ -932,8 +936,10 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
     errdefer a.free(source);
     var document = try package.inspectDocument(a, source, .{});
     defer document.deinit(a);
-    var structure = try document.inspectStructure(a, .{ .max_sections = options.max_sections });
+    var inspected = try @import("document_structure.zig").inspectWithHeader(a, document.archive, document.manifest, .{ .max_sections = options.max_sections });
+    var structure = inspected.report;
     defer structure.deinit(a);
+    errdefer inspected.header.deinit(a);
     var sections: std.ArrayList(Section) = .empty;
     defer {
         for (sections.items) |*section| section.deinit(a);
@@ -972,7 +978,7 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
         else => null,
     };
     errdefer if (source_fields) |*fields| fields.deinit(a);
-    return .{ .allocator = a, .source = source, .sections = try sections.toOwnedSlice(a), .options = options, .source_fields = source_fields };
+    return .{ .allocator = a, .source = source, .original_header = inspected.header, .original_header_source = source, .sections = try sections.toOwnedSlice(a), .options = options, .source_fields = source_fields };
 }
 
 /// Shared collection/serialization policy for session-bound site provenance.

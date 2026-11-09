@@ -32,7 +32,7 @@ pub const Report = struct {
     }
 };
 
-const Context = struct {
+pub const Inspector = struct {
     allocator: std.mem.Allocator,
     max_attribute_bytes: usize,
     kind: Kind = .other,
@@ -40,8 +40,8 @@ const Context = struct {
     declared_section_count: ?u32 = null,
     header_version: ?[]u8 = null,
 
-    fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
-        const self: *Context = @ptrCast(@alignCast(raw));
+    pub fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
+        const self: *Inspector = @ptrCast(@alignCast(raw));
         if (tag.kind == .end) return;
         if (depth == 1) {
             if (try attrs.element(tag, scope, head_uri, "head")) {
@@ -68,9 +68,9 @@ const Context = struct {
 pub fn read(a: std.mem.Allocator, archive: zip.Archive, entry: zip.Entry, max_xml_bytes: usize, options: Options) !Report {
     const bytes = try archive.decode(entry, max_xml_bytes);
     defer archive.allocator.free(bytes);
-    var context: Context = .{ .allocator = a, .max_attribute_bytes = options.max_attribute_bytes };
+    var context: Inspector = .{ .allocator = a, .max_attribute_bytes = options.max_attribute_bytes };
     errdefer if (context.header_version) |value| a.free(value);
-    const parsed = try visitBytes(a, bytes, max_xml_bytes, options, .{ .context = &context, .on_tag = Context.onTag });
+    const parsed = try visitBytes(a, bytes, max_xml_bytes, options, .{ .context = &context, .on_tag = Inspector.onTag });
     return .{
         .kind = context.kind,
         .xml_bytes = bytes.len,

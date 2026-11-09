@@ -22,7 +22,7 @@ Noori HWPX의 이전 Node/WASM 읽기는 열기 약 16ms와 모델 수집 약 11
 
 전용 실제 WASM 회귀는 scope 중 변경 명령이 거부되는 것까지 확인하므로 준비 실패 후 fallback만 통과한 것으로 scope 재사용을 증명하지 않는다. 단건 표 inventory와 전체 AI 모델·text·Markdown·warnings, 6파일의 원본/편집 저장 ZIP 바이트를 기존 엔진과 비교한다. 경고와 coverage까지 비교하여 관측 누락으로 빨라진 후보를 배제한다.
 
-## 최종 실측
+## XML·표 최적화 단계의 실측
 
 최종 표준 `zig build -Doptimize=ReleaseSafe` 산출물은 6,988,059바이트, SHA256 `965d67b73e78db2ef1378bcd30761e0c513af291e15920a7cd56df1c3b445bdb`다. 외부 진단 import가 없고 공개 export 목록은 기준 38c4와 같다. 사용자 WIP를 제외한 격리 소스에서 빌드했다.
 
@@ -57,3 +57,38 @@ Noori HWPX의 이전 Node/WASM 읽기는 열기 약 16ms와 모델 수집 약 11
 전체 저장소 테스트·전체 fixture 코퍼스·모든 조판의 완료 검사는 아니다. Source/ABI 변경과 검증 결과를 로컬 후보로 구분하며 npm 게시·main 푸시·데모 배포는 하지 않았다.
 
 원자료는 `zig-out/verification/hwpx-read-r3/`다. 최종 근거는 `read-cost-final-tests.log`, `standard-build.log`, `standard-full-native-regression.log`, `standard-read-comparison.json`, `accepted-summary.json`, `runtime-standard.json`, `edit-standard.json`, `consumer-standard.json`, `installed-e2e.log`, `browser/e2e-final/`이다. `runtime-final` 측정은 SDK 빌드와 겹쳤으므로 기능 동치 근거만 사용하고 속도 집계에서 제외했다. 잘못된 작업 디렉터리에서 시작한 진단/allocator 빌드와 Source 미반영 중단 실행도 최종 후보에서 제외한다.
+
+
+## 원본 헤더 인덱스의 세션 소유
+
+후속 후보는 최초 구조 검사에서 헤더 XML을 검증하면서 동일 visitor 순회로 원본 Tree도 만든다. 기존에는 이 검증 후 첫 표·서식 조회에서 같은 헤더를 다시 decode/parse했다. `document_xml.Inspector`가 metadata 판독을 소유하고 `xml_part_tree.parseInspectedHeader`가 Inspector와 기존 Builder를 합성한다. 별도 XML 파서나 영구 current-value cache를 추가하지 않는다. `document_structure.inspect`는 기존 report-only 경로를 유지한다.
+
+- Inspector가 먼저 실행된다. 일반적인 잘못된 루트는 Builder를 건너뛰고 XML 전체 검증 후 분류하므로, 후반 XML 오류와 `InvalidHeaderRoot`의 기존 우선순위가 유지된다. 잘못된 `secCnt`와 미지원 namespace profile 오류도 기존 시점에 반환한다.
+- Tree는 자신의 owned source에서 생성한다. source span과 local-name은 해당 버퍼를, URI는 intern 복사를 참조한다. Tree와 metadata version 문자열은 독립 소유이며, 후속 spine/section 실패와 allocation failure에서 각각 해제한다. node 예산은 구조 XML의 `max_elements`에 맞춘다.
+- Session이 `original_header`를 소유하고 종료 시 해제한다. `header_read_context`는 Native-owned trust와 원본 source ptr/len 일치가 모두 있을 때만 빌린다. borrowed Tree를 Context의 owned 슬롯에 넣지 않는다. raw/untrusted Session과 source 교체는 기존 재파싱 경로다. 기존 serial/source/options stale 검사는 유지한다.
+- 원본 인덱스는 원본 자원만 설명한다. 편집 intent와 formatting batch의 현재 헤더는 기존 `currentHeader` 경로가 계산한다. checkpoint는 편집값만 소유하며 원본 Tree를 복제하거나 해제하지 않는다.
+
+헤더 크기와 노드 수에 비례하는 인덱스를 Session 수명 동안 유지하는 메모리 비용이 있다. 값 변경 후 같은 캐시를 갱신하는 설계는 아니다. 이번 변경은 반복 전체 파싱을 없앤 것이며 엔진 전체의 최악 시간 복잡도를 O(n)으로 입증한 결과는 아니다. 리뷰에서 기존 Builder의 `internUri`가 요소마다 URI 전체를 다시 해싱하여, 길이 L인 URI를 N개 요소가 공유할 때 O(N×L) 비용이 생기는 것을 찾았다. Noori에 확장 요소 1만 개를 추가한 실제 WASM 입력에서 최초 capture 후보는 URI 64→4,000바이트 변경 시 open 중앙값이 17.34→31.33ms로 늘었다. 직전 엔진은 15.23→15.39ms였다. 이 비용을 헤더 open에 새로 연결한 채 두지 않도록 namespace binding의 파싱 수명 식별자를 도입했다. Builder는 같은 binding의 URI를 숫자-key map으로 재사용하고, 새 binding에만 기존 URI 문자열 interning을 적용한다. 주소만 비교하지 않으므로 scope 종료 후 allocator 주소 재사용·재선언을 동일 namespace로 오인하지 않는다. 빈 URI와 예약 xml identity는 별도로 유지하며, 기존 ExpandedName·attribute 중복 판정은 바꾸지 않는다.
+
+
+최종 WASM에서 같은 확장 요소 1만 개의 URI 64/4,000바이트 open은 17.50/17.28ms였다. 동일 집단에서 capture-only 후보는 17.81/32.13ms, 직전 엔진은 15.72/15.81ms였다. 반복 URI 길이에 따른 추가 비용은 제거됐지만 인덱스를 보관하지 않는 직전 raw open보다 약 1.5~1.8ms의 생성 비용은 남는다. 세 엔진 모두 저장 결과가 각 입력 ZIP과 같았다.
+
+### 후속 후보 실측과 검증
+
+최종 ReleaseSafe 표준 빌드는 6,993,172바이트이며 WASM SHA256은 `2fb2942b972249d543f798d2f8e3b5ec343ea25c99c951a5ede81a36b534ab30`다. 기준은 직전 965d67 후보이며 import가 없고 공개 export 목록은 동일하다. Node 24.20.0에서 기준/후보/후보/기준 순으로 같은 방식의 집단을 실행하고, 집단별 첫 회를 제외해 구현별 12회의 중앙값을 비교했다. 원본/WASM/JS pins와 전체 text 해시, warnings 부재도 확인했다.
+
+| Noori HWPX | 직전 후보 | 후속 후보 |
+| --- | ---: | ---: |
+| open + 전체 모델 + text | 23.80ms | 19.92ms |
+| open | 14.49ms | 14.36ms |
+| 모델 수집 | 9.17ms | 5.55ms |
+
+전체 약 16.3%, 모델 수집 약 39.5% 감소다. 개별 중앙값을 더해 전체를 재구성하지 않는다. 같은 후보 집단의 rhwp 0.9.0 HWPX text 읽기는 약 4.95ms로, 차이는 여전히 약 4.0배다. CLI 전체 프로세스 시작 시간이나 rhwp 웹 UI의 비교는 아니다.
+
+실제 Vanilla UI에서 동일 Worker/UI와 각각의 WASM을 사용해 Noori를 3회씩 교대 업로드했다. Worker load 중앙값은 103.1→101.4ms, enable은 40.8→37.5ms, 연결된 Canvas 첫 텍스트는 179.1→179.9ms였다. 첫 회 편차가 크며 이번 결과에서 브라우저 체감 개선은 확정하지 않는다. 6회 모두 실제 메시지·본문 열기·caret의 입력/서식 활성화를 확인했고, 선택 전 스크린샷 6개는 PNG 바이트까지 같았다. 전용 브라우저와 서버는 종료했다.
+
+합성 capture 검사는 최종 소스의 Debug/ReleaseSafe 각 16개가 통과했다. namespace identity 검사는 두 모드 각 10개, 최종 기존 header-context 12개·XML namespace/document 29개·read-cost 22개도 통과했다. UTF-16/namespace/metadata와 tree의 독립 수명, 오류 우선순위, byte/attribute/node/XML 예산, raw source의 제자리 변경과 교체 fallback, stale fences, parse/structure/Session open의 전체 allocation-failure sweep을 포함한다. 실제 WASM 회귀 3개는 cold/warm/repeated 표 inventory, 전체 AI 모델·text·Markdown·진단 동치와 6파일 원본/편집 저장 바이트 동치를 확인한다. 9개 문서 전체 runtime 응답과 6문서 서식 편집/undo/redo/재열기 검사도 통과했다.
+
+격리 SDK의 strict declaration 빌드, 설치된 파일 126개 바이트 비교, CLI 생성/조회/편집/변환과 stdio MCP 16개 도구 E2E도 통과했다. 전체 저장소·모든 fixture·조판 완성 검사는 아니다. 공개 npm/데모/문서는 배포하지 않았다. 재현 진입점은 [개발·검증 명령](development-commands.md#hwpx-original-header-capture)이 소유한다.
+
+최종 근거는 `zig-out/verification/hwpx-read-r4/`의 `indexed-build.log`, `indexed-capture-debug.log`, `indexed-capture-safe.log`, `namespace-debug.log`, `namespace-safe.log`, `indexed-native-regression.log`, `runtime-indexed.json`, `edit-indexed.json`, `accepted-indexed-summary.json`, `namespace-indexed.json`, `consumer-indexed.json`, `installed-e2e-indexed.log`, `source-pins-final.json`, `browser/e2e-indexed/`이다. 초기 capture-only b7 후보와 19.05ms 측정은 중간 단계로 보존하며 최종 후보 수치로 사용하지 않는다. URI 65,536바이트 예제는 기준 엔진부터 LimitExceeded여서 비교에서 제외했고, 잘못 생성된 최초 ZIP과 격리 소스에서 probe 누락으로 실패한 명령도 제품 결과에 합산하지 않는다.

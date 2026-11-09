@@ -4,9 +4,10 @@ const uris = @import("namespace_uri.zig");
 const Tag = @import("tags.zig").Tag;
 const View = @import("text.zig").View;
 pub const Options = struct { max_bindings: usize = 65536, max_uri_bytes: usize = 16 * 1024 * 1024 };
-const Binding = struct { prefix: []const u8, uri: []u8, previous: ?usize };
-const Expanded = struct { uri: []const u8, local: []const u8 };
+const Binding = struct { prefix: []const u8, uri: []u8, previous: ?usize, binding_id: usize };
+const Expanded = struct { uri: []const u8, local: []const u8, binding_id: usize };
 pub const ExpandedName = struct { uri: []const u8, local: View };
+pub const ExpandedElementBinding = struct { name: ExpandedName, binding_id: usize };
 const ExpandedContext = struct {
     pub fn hash(_: @This(), key: Expanded) u64 {
         return std.hash.Wyhash.hash(std.hash.Wyhash.hash(0, key.uri), key.local);
@@ -21,6 +22,8 @@ pub const State = struct {
     bindings: std.ArrayList(Binding) = .empty,
     current: std.StringHashMapUnmanaged(usize) = .empty,
     uri_bytes: usize = 0,
+    // Never rewound by leave or a failed enter. 0 is empty, 1 is reserved xml.
+    next_binding_id: usize = 2,
     pub fn deinit(self: *State, a: std.mem.Allocator) void {
         self.leave(a, 0);
         self.bindings.deinit(a);
@@ -37,6 +40,7 @@ pub const State = struct {
     }
     fn bind(self: *State, a: std.mem.Allocator, prefix: View, value: @import("attribute_value.zig").Value, options: Options) !void {
         if (self.bindings.items.len >= options.max_bindings or self.uri_bytes > options.max_uri_bytes) return error.LimitExceeded;
+        const next_id = std.math.add(usize, self.next_binding_id, 1) catch return error.LimitExceeded;
         const uri = try uris.normalize(a, value, options.max_uri_bytes - self.uri_bytes);
         errdefer a.free(uri);
         try uris.validate(prefix, uri);
@@ -44,27 +48,36 @@ pub const State = struct {
         try self.current.ensureUnusedCapacity(a, 1);
         const previous = self.current.get(prefix.raw);
         self.current.putAssumeCapacity(prefix.raw, self.bindings.items.len);
-        self.bindings.appendAssumeCapacity(.{ .prefix = prefix.raw, .uri = uri, .previous = previous });
+        self.bindings.appendAssumeCapacity(.{ .prefix = prefix.raw, .uri = uri, .previous = previous, .binding_id = self.next_binding_id });
+        self.next_binding_id = next_id;
         self.uri_bytes += uri.len;
     }
     fn resolve(self: *const State, name: qname.QName, attribute: bool) !Expanded {
         if (name.prefix) |prefix| {
             if (prefix.equals("xmlns", false)) return error.ReservedXmlNamespace;
-            if (prefix.equals("xml", false)) return .{ .uri = uris.xml, .local = name.local.raw };
+            if (prefix.equals("xml", false)) return .{ .uri = uris.xml, .local = name.local.raw, .binding_id = 1 };
             const index = self.current.get(prefix.raw) orelse return error.UnboundXmlPrefix;
-            return .{ .uri = self.bindings.items[index].uri, .local = name.local.raw };
+            const binding = self.bindings.items[index];
+            return .{ .uri = binding.uri, .local = name.local.raw, .binding_id = binding.binding_id };
         }
-        const uri = if (!attribute) blk: {
-            const index = self.current.get("") orelse break :blk "";
-            break :blk self.bindings.items[index].uri;
-        } else "";
-        return .{ .uri = uri, .local = name.local.raw };
+        if (!attribute) {
+            if (self.current.get("")) |index| {
+                const binding = self.bindings.items[index];
+                return .{ .uri = binding.uri, .local = name.local.raw, .binding_id = if (binding.uri.len == 0) 0 else binding.binding_id };
+            }
+        }
+        return .{ .uri = "", .local = name.local.raw, .binding_id = 0 };
     }
     /// Returned URI borrows this scope; local name borrows the XML input.
     pub fn expandElement(self: *const State, name: View) !ExpandedName {
+        return (try self.expandElementBinding(name)).name;
+    }
+    /// Nonreserved identity is unique within this State's parse lifetime, even
+    /// after scope exit and allocator address reuse. Name keeps the old borrow.
+    pub fn expandElementBinding(self: *const State, name: View) !ExpandedElementBinding {
         const parsed = try qname.parse(name);
         const resolved = try self.resolve(parsed, false);
-        return .{ .uri = resolved.uri, .local = parsed.local };
+        return .{ .name = .{ .uri = resolved.uri, .local = parsed.local }, .binding_id = resolved.binding_id };
     }
     pub fn expandAttribute(self: *const State, name: View) !ExpandedName {
         const parsed = try qname.parse(name);

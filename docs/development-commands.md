@@ -1560,3 +1560,16 @@ HWPJS_TEST_NOORI_HWPX=/absolute/noori.hwpx \
 node --max-old-space-size=512 --test --test-concurrency=1 \
   tools/tests/hwpx-read-cost-native.test.mjs
 ```
+
+## HWPX 원본 헤더 인덱스
+
+<a id="hwpx-original-header-capture"></a>
+
+[소유권과 실측](hwpx-read-cost.md#원본-헤더-인덱스의-세션-소유)을 따릅니다. 파일시스템 fixture가 없는 합성 검사이며, 실제 WASM/설치 패키지/브라우저 증거를 대체하지 않습니다.
+
+```sh
+zig test src/hwpx_header_capture_probe.zig -O Debug -fllvm -j1 --test-filter 'header capture'
+zig test src/hwpx_header_capture_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'header capture'
+zig test src/hwpx_header_read_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'header read context'
+zig test src/hwpx_header_namespace_identity_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'namespace identity'
+```

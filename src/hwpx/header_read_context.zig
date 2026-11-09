@@ -47,6 +47,13 @@ pub const Context = struct {
     }
     pub fn originalHeader(self: *Context) !*const Tree {
         try self.check();
+        // Only the Native-owned immutable input contract permits this borrow.
+        // Raw Sessions retain fresh parsing so direct source changes remain visible.
+        if (self.owner.display_resource_trusted and self.owner.original_header_source.ptr == self.source.ptr and self.owner.original_header_source.len == self.source.len) {
+            if (self.owner.original_header) |*header| {
+                return header;
+            }
+        }
         if (self.original_tree == null) self.original_tree = try (try self.document()).readHeaderTree(self.allocator, .{});
         return &self.original_tree.?;
     }
