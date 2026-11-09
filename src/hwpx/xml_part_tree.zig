@@ -61,21 +61,38 @@ pub const Tree = struct {
         return self.source[element.start_tag.start..element.end];
     }
 
-    /// Bind a visitor's exact borrowed start tag to this immutable tree.
-    pub fn startTagIndex(self: *const Tree, raw: []const u8) !usize {
+    fn startTagSpan(self: *const Tree, raw: []const u8) !Span {
         const base = @intFromPtr(self.source.ptr);
         const pointer = @intFromPtr(raw.ptr);
         if (pointer < base or pointer - base > self.source.len) return error.InvalidSourceSpan;
         const at = pointer - base;
         if (raw.len > self.source.len - at) return error.InvalidSourceSpan;
+        return .{ .start = at, .end = at + raw.len };
+    }
+
+    /// Bind a visitor's exact borrowed start tag to this immutable tree.
+    pub fn startTagIndex(self: *const Tree, raw: []const u8) !usize {
+        const span = try self.startTagSpan(raw);
         var low: usize = 0;
         var high = self.elements.len;
         while (low < high) {
             const mid = low + (high - low) / 2;
-            if (self.elements[mid].start_tag.start < at) low = mid + 1 else high = mid;
+            if (self.elements[mid].start_tag.start < span.start) low = mid + 1 else high = mid;
         }
-        if (low == self.elements.len or self.elements[low].start_tag.start != at or self.elements[low].start_tag.end != at + raw.len) return error.SourceBindingMismatch;
+        if (low == self.elements.len or self.elements[low].start_tag.start != span.start or self.elements[low].start_tag.end != span.end) return error.SourceBindingMismatch;
         return low;
+    }
+
+    /// For source-ordered visitor events, advance over each indexed element at
+    /// most once. Keep the caller cursor unchanged on an invalid source span.
+    pub fn startTagIndexForward(self: *const Tree, raw: []const u8, cursor: *usize) !usize {
+        const span = try self.startTagSpan(raw);
+        var index = cursor.*;
+        if (index > self.elements.len) return error.InvalidStartTagCursor;
+        while (index < self.elements.len and self.elements[index].start_tag.start < span.start) : (index += 1) {}
+        if (index == self.elements.len or self.elements[index].start_tag.start != span.start or self.elements[index].start_tag.end != span.end) return error.SourceBindingMismatch;
+        cursor.* = index + 1;
+        return index;
     }
 
     /// Returns the original XML value of one expanded attribute. Null means

@@ -3,6 +3,7 @@ import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
+import { createHwpxReadScopeApi } from './hwpx-read-scope.mjs';
 import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-text-requested.mjs';
 import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
 import { encodeTableBorderSections, decodeTableBorderBatch } from './hwpx-table-border-batch.mjs';
@@ -203,6 +204,7 @@ export async function createHwpxEditor(source) {
     }
   }
   return {
+    ...createHwpxReadScopeApi({ wasm, ready, uint, error: () => memory.error() }),
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createParagraphBreakApi({
       wasm,

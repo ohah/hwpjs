@@ -19,6 +19,7 @@ pub fn buildWithCounters(a: std.mem.Allocator, tree: *const tree_module.Tree, si
     const Context = struct {
         tree: *const tree_module.Tree,
         locations: []?scanner.Location,
+        next_element: usize = 0,
         fn event(raw: *anyopaque, value: scanner.Event) anyerror!void {
             const self: *@This() = @ptrCast(@alignCast(raw));
             const start: scanner.BoundaryEvent = switch (value) {
@@ -26,7 +27,7 @@ pub fn buildWithCounters(a: std.mem.Allocator, tree: *const tree_module.Tree, si
                 .run_start => |item| item,
                 else => return,
             };
-            const low = try self.tree.startTagIndex(start.tag.raw);
+            const low = try self.tree.startTagIndexForward(start.tag.raw, &self.next_element);
             if (self.locations[low] != null) return error.SourceBindingMismatch;
             self.locations[low] = start.location;
         }

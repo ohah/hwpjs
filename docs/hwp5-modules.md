@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [HWPX 동기 읽기의 문단 뷰 공유와 성능 검증](hwpx-read-observation-scope.md)
+
 - [문서 파일의 표 삭제·이미지 삽입·의미 HTML 내보내기](document-file-transforms.md)
 
 - [단일단 plain 각주의 연속 페이지](plain-footnote-continuation.md)

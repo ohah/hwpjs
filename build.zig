@@ -44,6 +44,21 @@ pub fn build(b: *std.Build) void {
     file_transform_step.dependOn(&run_file_transform_tests.step);
     core_test_step.dependOn(&run_file_transform_tests.step);
 
+    const read_scope_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"paragraph read scope"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/hwpx_paragraph_read_scope_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_read_scope_tests = b.addRunArtifact(read_scope_tests);
+    run_read_scope_tests.has_side_effects = true;
+    const read_scope_step = b.step("test-read-performance", "Verify scoped HWPX observation ownership and cleanup");
+    read_scope_step.dependOn(&run_read_scope_tests.step);
+    core_test_step.dependOn(&run_read_scope_tests.step);
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

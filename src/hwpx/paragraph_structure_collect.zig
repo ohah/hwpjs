@@ -11,6 +11,7 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, current: *const sites_mo
     const Context = struct {
         a: std.mem.Allocator,
         tree: *const Tree,
+        next_element: usize = 0,
         paragraphs: std.ArrayList(values.Paragraph) = .empty,
         fn event(raw: *anyopaque, value: scanner.Event) anyerror!void {
             const self: *@This() = @ptrCast(@alignCast(raw));
@@ -18,7 +19,7 @@ pub fn collect(a: std.mem.Allocator, tree: *const Tree, current: *const sites_mo
                 .paragraph_start => |item| item,
                 else => return,
             };
-            const node = try self.tree.startTagIndex(boundary.tag.raw);
+            const node = try self.tree.startTagIndexForward(boundary.tag.raw, &self.next_element);
             const empty = try self.a.alloc(sites_mod.Site, 0);
             errdefer self.a.free(empty);
             try self.paragraphs.append(self.a, .{ .template_element = node, .source_ordinal = boundary.location.paragraph_ordinal, .sites = .{ .items = empty } });

@@ -4,6 +4,38 @@ const a = @import("memory.zig").allocator;
 const errors = @import("cfb.zig");
 const editor = @import("../hwpx/editor_session.zig");
 const histories = @import("../hwpx/editor_history.zig");
+const ReadScope = @import("../hwpx/paragraph_read_scope.zig").Scope;
+var read_scope: ?ReadScope = null;
+var read_scope_token: u32 = 0;
+var last_read_scope_token: u32 = 0;
+
+fn requireNoReadScope() !void {
+    if (read_scope != null) return error.ReadObservationScopeActive;
+}
+fn closeReadScope() void {
+    if (read_scope) |*scope| scope.deinit();
+    read_scope = null;
+    read_scope_token = 0;
+}
+export fn hwpx_edit_read_scope_begin(section: u32) u32 {
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (last_read_scope_token == std.math.maxInt(u32)) return fail(error.ReadScopeTokenExhausted);
+    read_scope = ReadScope.init(session, section) catch |err| return fail(err);
+    read_scope.?.attach() catch |err| {
+        closeReadScope();
+        return fail(err);
+    };
+    last_read_scope_token += 1;
+    read_scope_token = last_read_scope_token;
+    return read_scope_token;
+}
+export fn hwpx_edit_read_scope_end(token: u32) u32 {
+    if (read_scope == null) return 1;
+    if (token != read_scope_token) return fail(error.InvalidReadScopeToken);
+    closeReadScope();
+    return 1;
+}
 var active: ?editor.Session = null;
 var history: ?histories.History = null;
 var output: ?[]u8 = null;
@@ -43,6 +75,7 @@ export fn hwpx_edit_table_creation_resources() u32 {
     return 1;
 }
 export fn hwpx_edit_close() void {
+    closeReadScope();
     formatting_lifetime.close();
     hwpx_edit_output_free();
     if (history) |*value| value.deinit();
@@ -854,6 +887,7 @@ export fn hwpx_edit_history_revision_at(index: u32) u32 {
     return std.math.maxInt(u32);
 }
 export fn hwpx_edit_history_enable_options(ptr: [*]const u8, size: usize) u32 {
+    requireNoReadScope() catch |err| return fail(err);
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
     if (history != null) return fail(error.HistoryAlreadyEnabled);
     const options = @import("../model/history_policy.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
@@ -867,6 +901,7 @@ export fn hwpx_edit_history_stats() u32 {
     return 1;
 }
 export fn hwpx_edit_history_enable(entries: u32, checkpoint_bytes: u32) u32 {
+    requireNoReadScope() catch |err| return fail(err);
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     if (history != null) return fail(error.HistoryAlreadyEnabled);
     if (@as(u64, entries) * checkpoint_bytes > 128 * 1024 * 1024) return fail(error.LimitExceeded);
@@ -874,6 +909,10 @@ export fn hwpx_edit_history_enable(entries: u32, checkpoint_bytes: u32) u32 {
     return 1;
 }
 fn travel(redo: bool) u32 {
+    requireNoReadScope() catch |err| {
+        _ = fail(err);
+        return 2;
+    };
     const session = if (active) |*value| value else {
         _ = fail(error.EditorNotOpen);
         return 2;
@@ -897,6 +936,7 @@ export fn hwpx_edit_redo() u32 {
     return travel(true);
 }
 fn apply(command: histories.Command) !void {
+    try requireNoReadScope();
     const session = if (active) |*value| value else return error.EditorNotOpen;
     errdefer @import("../hwpx/display_resource_generation.zig").pauseReceipt(session);
     if (history == null) @import("../hwpx/display_resource_generation.zig").block(session);
@@ -1143,6 +1183,7 @@ export fn hwpx_edit_set_character_properties_ranges(ptr: [*]const u8, length: us
     return 1;
 }
 fn applyBatch(s: *editor.Session, commands: []const histories.Command) !void {
+    try requireNoReadScope();
     errdefer @import("../hwpx/display_resource_generation.zig").pauseReceipt(s);
     if (history == null) @import("../hwpx/display_resource_generation.zig").block(s);
     if (history) |*value| {
@@ -1990,6 +2031,7 @@ export fn hwpx_edit_query_formatting(ptr: [*]const u8, size: usize) u32 {
     return 1;
 }
 export fn hwpx_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
+    requireNoReadScope() catch |err| return fail(err);
     hwpx_edit_output_free();
     if (size > @import("../model/formatting_patch.zig").limits.request_bytes) return fail(error.LimitExceeded);
     const service = formattingService() catch |err| return fail(err);

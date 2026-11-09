@@ -110,6 +110,7 @@ jobs:
             tools/tests/structural-host-review.test.mjs
             tools/tests/html-export-review.test.mjs
             tools/tests/public-cli-entry.test.mjs
+            tools/tests/hwpx-read-scope.test.mjs
           )
           test -f "${tests[0]}"
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 --test-reporter=tap "${tests[@]}" | tee "$RUNNER_TEMP/hwpjs-cli-ts-source.tap"

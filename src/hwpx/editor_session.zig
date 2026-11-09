@@ -17,6 +17,7 @@ pub const Options = struct {
     max_sections: usize = 4096,
 };
 pub const Section = struct {
+    paragraph_query_cache: ?*const @import("paragraph_query_cache.zig").Cache = null,
     tree: tree_module.Tree,
     sites: sites_module.Sites,
     /// When present this owns current text; sites must be empty, never a cache.

@@ -461,3 +461,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 ## 단일 공개 CLI·MCP 진입점
 
 `packages/hwpjs/src/cli.ts`는 `hwpjs mcp`를 기존 MCP 실행 파일에, 나머지 인수를 기존 CLI 실행 파일에 전달하는 공개 진입점입니다. `@ohah/hwpjs` 한 패키지의 서버·파일 호스트·파서·WASM을 재사용하며 별도 MCP 패키지와 중복 서버 구현을 두지 않습니다.
+
+## HWPX 동기 관측 재사용
+
+`src/hwpx/paragraph_query_cache.zig`는 빌린 값의 정체성, `paragraph_read_scope.zig`는 그 수명, `display_current_paragraphs.zig`는 현재 문단 투영을 소유합니다. `js/hwpx-read-scope.mjs`가 선택 ABI의 동기 callback 수명을 연결하고 `packages/document/src/model/hwpx.ts`가 기존 관측을 Section별로 조립합니다. 세부 계약은 [동기 읽기 Scope](hwpx-read-observation-scope.md)를 따릅니다.

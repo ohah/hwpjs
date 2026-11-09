@@ -12,6 +12,18 @@ pub const View = struct {
 };
 
 pub fn read(a: std.mem.Allocator, section: *const editor.Section, options: editor.Options) !View {
+    if (section.paragraph_query_cache) |cache| {
+        // Temporary Session/Section proxies may copy the borrowed pointer.
+        // Such copies must derive current values from their own editable state.
+        if (cache.owner != section) return readUncached(a, section, options);
+        // Reject before touching borrowed paragraphs: a raw mutation may free them.
+        if (!cache.valid()) return error.StaleParagraphReadScope;
+        return .{ .paragraphs = cache.paragraphs };
+    }
+    return readUncached(a, section, options);
+}
+
+pub fn readUncached(a: std.mem.Allocator, section: *const editor.Section, options: editor.Options) !View {
     if (section.structure_values) |*values| {
         if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
         if (values.paragraphs.len > 100000) return error.LimitExceeded;

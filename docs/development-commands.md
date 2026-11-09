@@ -1488,3 +1488,14 @@ zig build test-file-transforms -Doptimize=ReleaseSafe -j1
 ```sh
 node --test tools/tests/public-cli-entry.test.mjs
 ```
+
+## HWPX 동기 관측의 문단 뷰 공유
+
+[읽기 Scope 계약](hwpx-read-observation-scope.md)의 소유권·해제와 모델 동치를 검사합니다.
+
+```sh
+zig build test-read-performance -Doptimize=ReleaseSafe -j1
+node --test tools/tests/hwpx-read-scope.test.mjs packages/cli/tests/document-model.test.mjs
+```
+
+실물 후보와 성능 원자료는 `zig-out/verification/read-performance-r1/`에 보존합니다. 같은 바이너리의 scoped/unscoped 대조와 공개 CLI 시간을 분리합니다.
