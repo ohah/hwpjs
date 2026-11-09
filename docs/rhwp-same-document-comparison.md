@@ -55,3 +55,20 @@ rhwp의 해당 저장 필드 문제와 hwpjs가 읽기에서도 CFB 보정을 �
 ## 재현 증거
 
 원자료는 `zig-out/verification/rhwp-same-work-r1/`에 보존합니다. `hwpjs/report.ko.md`와 `rhwp/report.ko.md`는 명령·반복별 시간·실패와 성공 코호트를 구분합니다. `rhwp/published-provenance.json`은 배포 SHA와 버전을, `rhwp/cfb-root-created-experiment/`는 단일 필드 실험을, `main-independent-control.json`은 메인의 독립 재현을 기록합니다. 초기 환경·경로·검사 스크립트 오류를 제품 실패나 정상 성능 표본에 포함하지 않았습니다.
+
+## 최신 로컬 후보의 Node/WASM 재측정
+
+2026-11-09 로컬 `77d9e0ccd` 변경을 포함한 격리 소스와 최종 Native `38c4dd02eafacefb89318b46c001f787716c997cf15f660e66d44a92b08aecc0`를 같은 rhwp 0.9.0 고정 Node/WASM 패키지와 비교했습니다. 공개 npm 배포본이나 rhwp 최신 릴리스 전체의 측정이라고 부르지 않습니다.
+
+같은 Node 24.20.0 프로세스에서 Noori HWP/HWPX를 7라운드씩 처리했습니다. 라운드마다 양쪽 순서를 교대했고 각 구현·형식 first 1회와 후속 6회를 구분했습니다. 총 28개 문서의 open/close가 성공했고 JSON·유니코드 숫자 참조를 해제한 출력에서 주요 본문 19항목을 모두 확인했습니다. 출력 전체 동치나 조판·개체 보존 검사는 아닙니다. 소스·입력·양쪽 WASM의 전후 pin이 같았습니다.
+
+| open·본문 API 반환 | hwpjs first / warm 중앙값(ms) | rhwp first / warm 중앙값(ms) |
+| --- | ---: | ---: |
+| HWP | 20.473 / 4.809 | 52.791 / 6.282 |
+| HWPX | 44.160 / 27.190 | 16.468 / 5.025 |
+
+이번 표본에서 HWP는 hwpjs가 짧았고 HWPX는 여전히 약 5.4배 길었습니다. hwpjs는 입력/WASM 복사·입력 SHA·새 Instance·현재 모델 수집·text 렌더를 포함하며 컴파일된 Module은 프로세스 안에서 재사용합니다. rhwp는 전역 WASM Instance를 재사용하고 `HwpDocument`/`getTextFileText`를 호출합니다. 양쪽 출력 구조와 내부 작업량은 다르므로 순수 파서·언어·모든 문서의 성능 순위로 일반화하지 않습니다.
+
+초기 import와 rhwp 전역 init은 표에서 제외했습니다. hwpjs engine import 37.779ms, rhwp import 2.660ms와 별도 init 27.416ms를 따로 기록했습니다. CLI 새 프로세스 전체 시간이나 브라우저 첫 화면 시간과도 구분합니다. 이번 재측정은 최근 문단/열기/Module 재사용 변경을 합친 최신 후보의 현재 상태이며, [웹 헤더 재사용](web-hwpx-open-performance.md) 한 변경만의 개선량으로 해석하지 않습니다.
+
+원자료는 `zig-out/verification/rhwp-latest-read-r1/`의 `run.mjs`, `pins.json`, `result.json`, `stdout.jsonl`, `text/`에 있습니다. 문자열 디코딩·내용 확인은 open·본문 타이머 종료 후 수행했고 검사용 Native export 래퍼는 사용하지 않았습니다. 실제 compile/instantiate 호출 시간만 관찰했습니다. 미기록 예열이나 source/WASM 교체는 없었습니다. npm 게시·main 푸시·데모 배포는 수행하지 않았습니다.
