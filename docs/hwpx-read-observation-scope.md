@@ -4,6 +4,8 @@ HWPX CLI/MCP 본문 수집은 문단·표·그림 등 16개 관측을 조립합�
 
 열기 안의 Tree/텍스트 수집 중복 파싱 제거는 [별도 수명 계약](hwpx-open-content-reuse.md)이 소유합니다.
 
+CLI·MCP의 반복 컴파일과 입력 복사 비용은 [WASM 준비 계약](wasm-preparation.md)이 소유하며 관측 재사용의 개선량과 합산하지 않습니다.
+
 ## 소유권과 수명
 
 원본 XML 트리, 현재 텍스트 사이트와 구조 편집값이 계속 SSOT입니다. 새 `paragraph_read_scope.Scope`는 한 Section을 읽는 동기 구간에서만 문단 뷰를 공유합니다. 현재 문서 모델이나 편집 원문의 별도 영구 복사본을 보관하지 않습니다.

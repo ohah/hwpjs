@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [CLI·MCP의 WASM 준비 재사용과 검증](wasm-preparation.md)
+
 - [HWPX 열기의 텍스트 이벤트 재사용](hwpx-open-content-reuse.md)
 
 - [HWPX 동기 읽기의 문단 뷰 공유와 성능 검증](hwpx-read-observation-scope.md)

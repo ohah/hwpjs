@@ -2,6 +2,7 @@ import { detectDocumentFormat } from '../../../js/document-format.mjs';
 import { createExperimentalHwp5Editor } from '../../../js/hwp5-editor.mjs';
 import { createHwpxEditor } from '../../../js/hwpx-editor.mjs';
 import { findUniqueLiteral, validateLiteral, MAX_TEXT_UNITS } from './literal-match.ts';
+import { createWasmModuleCache } from './wasm-module.ts';
 import type { DocumentView } from './types/document-view.ts';
 import type {
   DocumentFormat,
@@ -16,6 +17,7 @@ import type {
 
 const MAX_INPUT_BYTES = 64 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 128 * 1024 * 1024;
+const wasmModules = createWasmModuleCache();
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 function byteInput(value: unknown, name: string): Uint8Array<ArrayBuffer> {
@@ -74,13 +76,14 @@ export async function openDocument(options: unknown = {}): Promise<OpenedDocumen
   if (detected !== 'hwp5' && detected !== 'hwpx') throw new TypeError('InvalidDocumentFormat');
   let native: NativeEditor | undefined;
   try {
+    const module = await wasmModules.compileOwned(binary);
     let sectionCount: number;
     if (detected === 'hwp5') {
-      const sdk = await createExperimentalHwp5Editor(binary, input);
+      const sdk = await createExperimentalHwp5Editor(module, input);
       native = { format: 'hwp5', sdk };
       sectionCount = sdk.sectionCount();
     } else {
-      const sdk = await createHwpxEditor(binary);
+      const sdk = await createHwpxEditor(module);
       native = { format: 'hwpx', sdk };
       sectionCount = sdk.open(input).sectionCount;
     }

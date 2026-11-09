@@ -469,3 +469,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 ## HWPX 열기 중 content 재사용
 
 `src/hwpx/xml_part_tree.zig`는 기존 파서의 임시 content 이벤트와 capture 예산을, `text_sites.zig`는 기존 텍스트 수집·fallback을 소유합니다. `editor_session.open`이 신선한 결과의 즉시 소비와 해제를 연결합니다. 검증 진입점은 `src/hwpx_fused_text_probe.zig`이며, 계약은 [열기 중 이벤트 재사용](hwpx-open-content-reuse.md)을 따릅니다.
+
+## CLI·MCP의 WASM 준비 소유권
+
+`packages/cli/src/wasm-module.ts`는 private WASM 바이트와 컴파일된 Module 한 entry의 수명을 소유합니다. `engine.ts`는 기존 입력 스냅샷·SHA·형식 검사와 문서별 새 Instance를 연결합니다. 파일 호스트·문서·이력 모델은 캐시하지 않습니다. 계약과 실측은 [WASM 준비 재사용](wasm-preparation.md)에 있습니다.

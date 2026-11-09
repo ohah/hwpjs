@@ -1509,3 +1509,14 @@ zig build test-hwpx-open-content -Doptimize=ReleaseSafe -j1
 ```
 
 실물 후보·기본 로더 CLI·독립 정적 리뷰의 근거는 `zig-out/verification/read-performance-r2/`에 보존합니다. 전체 사용자 작업 트리의 빌드와 분리한 검증 소스·WASM의 정확한 SHA 및 실행 Node 버전을 함께 확인합니다.
+
+## CLI·MCP의 컴파일된 WASM 모듈 재사용
+
+[준비 수명 계약](wasm-preparation.md)의 실제 소형 모듈·동시 요청·실패 복구·캐시 한도 회귀를 실행합니다. Node 24.20 이상을 사용합니다.
+
+```sh
+node --max-old-space-size=512 --test --test-concurrency=1 \
+  packages/cli/tests/wasm-module-cache.test.mjs
+```
+
+기존 Native820을 명시한 CLI 전체 검사는 기존 CLI 검증과 같은 환경변수를 사용합니다. 최신 후보의 실제 문서·설치형 CLI/MCP 검사와 성능 원자료는 `zig-out/verification/read-preparation-r1/`에서 구분해 확인합니다. 새 Native 빌드는 필요하지 않습니다.
