@@ -517,3 +517,5 @@
 - [본문·머리말·꼬리말의 원본 도형 소유권](page-area-object-roots.md)
 
 - [데모 미리보기 쪽 상태](demo-page-status.md) — 가시 쪽·부분 배치·framework 구독 수명.
+
+- [HWPX XML·표 읽기 비용](hwpx-read-cost.md) — ASCII·namespace 검증, 임시 헤더 재사용과 WASM 할당자 identity.

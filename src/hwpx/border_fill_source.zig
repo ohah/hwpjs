@@ -52,17 +52,19 @@ pub const Source = struct {
         self.* = undefined;
     }
 };
-fn attribute(a: std.mem.Allocator, tree: *const Tree, node: usize, name: []const u8) !?[]const u8 {
-    const raw = (try tree.attributeValue(a, node, "", name)) orelse return null;
-    return try raw.toUtf8(a, 4096);
+const lexical = @import("../xml/root.zig");
+fn attribute(a: std.mem.Allocator, tag: *const lexical.tags.Tag, name: []const u8) !?[]const u8 {
+    for (tag.attributes) |value| {
+        if (try lexical.namespaces.isDeclaration(value.name)) continue;
+        const selected = try lexical.qname.parse(value.name);
+        if (selected.prefix == null and selected.local.equals(name, false)) return try value.value.toUtf8(a, 4096);
+    }
+    return null;
 }
-fn edge(a: std.mem.Allocator, tree: *const Tree, node: usize) !Edge {
-    return .{ .style = try attribute(a, tree, node, "type"), .width = try attribute(a, tree, node, "width"), .color = try attribute(a, tree, node, "color") };
+fn edge(a: std.mem.Allocator, tag: *const lexical.tags.Tag) !Edge {
+    return .{ .style = try attribute(a, tag, "type"), .width = try attribute(a, tag, "width"), .color = try attribute(a, tag, "color") };
 }
-fn unknownAttributes(a: std.mem.Allocator, tree: *const Tree, node: usize, names: []const []const u8) !usize {
-    var tag = try @import("xml_part_attributes.zig").parseStartTag(a, tree, node);
-    defer tag.deinit(a);
-    const lexical = @import("../xml/root.zig");
+fn unknownAttributes(tag: *const lexical.tags.Tag, names: []const []const u8) !usize {
     var count: usize = 0;
     for (tag.attributes) |attribute_value| {
         if (try lexical.namespaces.isDeclaration(attribute_value.name)) continue;
@@ -180,11 +182,15 @@ fn decodeSelected(a: std.mem.Allocator, tree: *const Tree, id: u32, node: usize)
     var result: Source = .{ .arena = std.heap.ArenaAllocator.init(a), .id = id, .node = node };
     errdefer result.deinit();
     const owned = result.arena.allocator();
-    result.unknown_attributes = try unknownAttributes(owned, tree, node, &.{ "id", "threeD", "shadow", "centerLine", "breakCellSeparateLine" });
-    result.three_d = try attribute(owned, tree, node, "threeD");
-    result.shadow = try attribute(owned, tree, node, "shadow");
-    result.center_line = try attribute(owned, tree, node, "centerLine");
-    result.break_cell_separate_line = try attribute(owned, tree, node, "breakCellSeparateLine");
+    // Keep the original unknown-count and named-value validation order. Only
+    // reuse this immutable start tag; every returned string is still owned.
+    var source_tag = try @import("xml_part_attributes.zig").parseStartTag(owned, tree, node);
+    defer source_tag.deinit(owned);
+    result.unknown_attributes = try unknownAttributes(&source_tag, &.{ "id", "threeD", "shadow", "centerLine", "breakCellSeparateLine" });
+    result.three_d = try attribute(owned, &source_tag, "threeD");
+    result.shadow = try attribute(owned, &source_tag, "shadow");
+    result.center_line = try attribute(owned, &source_tag, "centerLine");
+    result.break_cell_separate_line = try attribute(owned, &source_tag, "breakCellSeparateLine");
     var seen: [8]bool = @splat(false);
     var cursor = tree.elements[node].first_child;
     while (cursor) |child| : (cursor = tree.elements[child].next_sibling) {
@@ -204,23 +210,28 @@ fn decodeSelected(a: std.mem.Allocator, tree: *const Tree, id: u32, node: usize)
         };
         if (seen[index]) return error.DuplicateBorderFillChild;
         seen[index] = true;
-        if (index < 5) result.unknown_attributes += try unknownAttributes(owned, tree, child, &.{ "type", "width", "color" });
-        if (index == 5 or index == 6) result.unknown_attributes += try unknownAttributes(owned, tree, child, &.{ "type", "Crooked", "isCounter" });
-        if (index < 4) result.edges[index] = try edge(owned, tree, child) else switch (index) {
-            4 => result.diagonal = try edge(owned, tree, child),
+        if (index == 7) {
+            result.fill_node = child;
+            continue;
+        }
+        var tag = try @import("xml_part_attributes.zig").parseStartTag(owned, tree, child);
+        defer tag.deinit(owned);
+        if (index < 5) result.unknown_attributes += try unknownAttributes(&tag, &.{ "type", "width", "color" });
+        if (index == 5 or index == 6) result.unknown_attributes += try unknownAttributes(&tag, &.{ "type", "Crooked", "isCounter" });
+        if (index < 4) result.edges[index] = try edge(owned, &tag) else switch (index) {
+            4 => result.diagonal = try edge(owned, &tag),
             5 => {
                 result.slash_node = child;
-                result.slash = try attribute(owned, tree, child, "type");
-                result.slash_crooked = try attribute(owned, tree, child, "Crooked");
-                result.slash_is_counter = try attribute(owned, tree, child, "isCounter");
+                result.slash = try attribute(owned, &tag, "type");
+                result.slash_crooked = try attribute(owned, &tag, "Crooked");
+                result.slash_is_counter = try attribute(owned, &tag, "isCounter");
             },
             6 => {
                 result.back_slash_node = child;
-                result.back_slash = try attribute(owned, tree, child, "type");
-                result.back_slash_crooked = try attribute(owned, tree, child, "Crooked");
-                result.back_slash_is_counter = try attribute(owned, tree, child, "isCounter");
+                result.back_slash = try attribute(owned, &tag, "type");
+                result.back_slash_crooked = try attribute(owned, &tag, "Crooked");
+                result.back_slash_is_counter = try attribute(owned, &tag, "isCounter");
             },
-            7 => result.fill_node = child,
             else => unreachable,
         }
     }

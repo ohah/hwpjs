@@ -73,6 +73,21 @@ pub fn build(b: *std.Build) void {
     read_scope_step.dependOn(&run_header_read_tests.step);
     core_test_step.dependOn(&run_header_read_tests.step);
 
+    const read_cost_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{ "attribute ASCII", "XML namespace", "table border linear" },
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/hwpx_read_cost_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_read_cost_tests = b.addRunArtifact(read_cost_tests);
+    run_read_cost_tests.has_side_effects = true;
+    const read_cost_step = b.step("test-hwpx-read-cost", "Verify XML lexical and table read optimizations");
+    read_cost_step.dependOn(&run_read_cost_tests.step);
+    core_test_step.dependOn(&run_read_cost_tests.step);
+
     const open_content_tests = b.addTest(.{
         .use_llvm = true,
         .filters = &.{"fused text content"},

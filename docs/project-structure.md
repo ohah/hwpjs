@@ -477,3 +477,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 ## Canvas 미리보기 쪽 상태
 
 `packages/vanilla/src/surface.ts`는 현재 painted frame의 가시 쪽 관측과 수명을, `apps/demo/src/page-status.ts`는 상태바 문구와 framework relay를 소유합니다. controller와 main은 기존 host 수명에 연결합니다. 세부 계약은 [데모 쪽 상태](demo-page-status.md)를 따릅니다.
+
+## HWPX XML·표 읽기 비용
+
+`src/xml/attribute_ascii.zig`는 일반 ASCII 속성 구간만 소비하고 기존 attribute parser가 나머지 검증과 commit을 소유합니다. namespace의 작은 중복 집합과 기존 map은 같은 expanded-name 동등성을 공유합니다. 표 원값의 선택/소유권은 기존 HWPX 모듈에 유지하며 `src/wasm/allocator.zig`가 Native allocator identity를 제공합니다. [읽기 비용 계약](hwpx-read-cost.md)을 따릅니다.

@@ -60,3 +60,31 @@ test "XML namespace transient duplicate set resets between sibling elements" {
     try t.expectEqual(baseline.allocations, counted.allocations);
     try t.expectEqual(counted.allocated_bytes, counted.freed_bytes);
 }
+
+test "XML namespace small set preserves alias duplicates at the eight-entry handoff" {
+    for ([_][]const u8{
+        "<r xmlns:p='urn:a' xmlns:q='urn:a' p:x='1' q:x='2'/>",
+        "<r xmlns:p='urn:a' xmlns:q='urn:a' a='1' b='2' c='3' d='4' e='5' f='6' g='7' p:x='1' q:x='2'/>",
+        "<r xmlns:p='urn:a' xmlns:q='urn:a' a='1' b='2' c='3' d='4' e='5' f='6' g='7' h='8' p:x='1' q:x='2'/>",
+    }) |source| {
+        var tag = try readTag(source);
+        defer tag.deinit(t.allocator);
+        var scope: namespaces.State = .{};
+        defer scope.deinit(t.allocator);
+        try t.expectError(error.DuplicateXmlExpandedAttribute, scope.enter(t.allocator, tag, .{}));
+        try t.expectEqual(@as(usize, 0), scope.bindings.items.len);
+        try t.expectEqual(@as(usize, 0), scope.current.count());
+    }
+}
+
+test "XML namespace standalone tag still rejects raw duplicates and validates QName before element binding" {
+    var tag = try readTag("<r a='1' b='2'/>");
+    defer tag.deinit(t.allocator);
+    tag.attributes[1].name = tag.attributes[0].name;
+    var scope: namespaces.State = .{};
+    defer scope.deinit(t.allocator);
+    try t.expectError(error.DuplicateXmlExpandedAttribute, scope.enter(t.allocator, tag, .{}));
+    tag.name = .{ .raw = "unbound:r", .encoding = .utf8 };
+    tag.attributes[0].name = .{ .raw = "bad::name", .encoding = .utf8 };
+    try t.expectError(error.InvalidXmlQName, scope.enter(t.allocator, tag, .{}));
+}

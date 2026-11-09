@@ -43,3 +43,5 @@ WASM Scope 안에서는 중앙 편집·배치·이력 이동 및 이력 설정 �
 포맷 검출 뒤 해당 editor만 초기화하는 dynamic import 후보도 비교했습니다. 같은 WASM·단일 파일 번들을 사용한 두 집단에서 CLI 시간이 일관되게 줄지 않아 채택하지 않았습니다. 208회 읽기의 text·Markdown 출력은 일치했으며, 이 결과는 `startup-implementation/REPORT.md`에 보존합니다. 남은 프로세스 시작·문서 열기·표 관측 비용을 문단 뷰 공유의 개선량에 합산하지 않습니다.
 
 이 변경은 로컬 검증 후보입니다. 사용자의 배포 전 확인 요청에 따라 npm 게시·main 푸시·배포 산출물 교체를 수행하지 않습니다.
+
+할당자 identity의 WASM 고정 주소와 Raw 비-Scope 경로의 조건, 임의 custom context의 경계는 [읽기 비용 계약](hwpx-read-cost.md#실제-wasm에서-발견하고-고친-할당자-식별-문제)을 따른다.

@@ -72,3 +72,5 @@ rhwp의 해당 저장 필드 문제와 hwpjs가 읽기에서도 CFB 보정을 �
 초기 import와 rhwp 전역 init은 표에서 제외했습니다. hwpjs engine import 37.779ms, rhwp import 2.660ms와 별도 init 27.416ms를 따로 기록했습니다. CLI 새 프로세스 전체 시간이나 브라우저 첫 화면 시간과도 구분합니다. 이번 재측정은 최근 문단/열기/Module 재사용 변경을 합친 최신 후보의 현재 상태이며, [웹 헤더 재사용](web-hwpx-open-performance.md) 한 변경만의 개선량으로 해석하지 않습니다.
 
 원자료는 `zig-out/verification/rhwp-latest-read-r1/`의 `run.mjs`, `pins.json`, `result.json`, `stdout.jsonl`, `text/`에 있습니다. 문자열 디코딩·내용 확인은 open·본문 타이머 종료 후 수행했고 검사용 Native export 래퍼는 사용하지 않았습니다. 실제 compile/instantiate 호출 시간만 관찰했습니다. 미기록 예열이나 source/WASM 교체는 없었습니다. npm 게시·main 푸시·데모 배포는 수행하지 않았습니다.
+
+후속 XML·표 조회 최적화의 최종 WASM965d67 후보는 같은 방식의 Noori HWPX open+본문 반환 중앙값을 기준27.13ms에서22.68ms로 줄였습니다(구현별 후속12회). 같은 집단의 rhwp0.9.0은 약4.95ms로 여전히 약4.6배 차이가 있습니다. 표 누락이 있던 초기 후보는 제외했습니다. 성능·저장 동치와 실제 브라우저의 별도 분모는 [후속 읽기 비용 검증](hwpx-read-cost.md#최종-실측)을 따릅니다.

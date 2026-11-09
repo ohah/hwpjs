@@ -62,11 +62,22 @@ pub fn read(a: std.mem.Allocator, session: *const @import("editor_session.zig").
     if (section >= session.sections.len) return error.InvalidSectionIndex;
     if (session.cell_backgrounds.items.len != 0) return @import("table_cell_background_save.zig").borderSources(a, session, section);
     // No cell resource intents: the immutable header supplies the original values.
+    // Reuse only a live, exact-owner context with the same allocator. A stale
+    // context must not precede the original package/header/cell errors; the
+    // existing provenance query checks it after readTrees, as before.
+    if (@import("header_read_context.zig").lookup(session) catch null) |context| {
+        if (a.vtable == context.allocator.vtable and a.ptr == context.allocator.ptr) {
+            return readHeader(a, session, section, try context.originalHeader());
+        }
+    }
     var document = try @import("package.zig").inspectDocument(a, session.source, .{});
     defer document.deinit(a);
     var header = try document.readHeaderTree(a, .{});
     defer header.deinit(a);
-    var result = try readTrees(a, &session.sections[section].tree, &header);
+    return readHeader(a, session, section, &header);
+}
+fn readHeader(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session, section: usize, header: *const Tree) !Report {
+    var result = try readTrees(a, &session.sections[section].tree, header);
     errdefer result.deinit(a);
     const selected_profile = try @import("document_provenance.zig").profile(session);
     try @import("source_color_projection.zig").enrichReport(&result, selected_profile);

@@ -1540,3 +1540,23 @@ HWPJS_TEST_CORE_DIST=packages/core/dist mise exec -- node \
   packages/vanilla/src/surface.ts apps/demo/tests/page-status.test.mjs \
   apps/demo/tests/page-status-surface.test.mjs apps/demo/tests/page-status-controller.test.mjs
 ```
+
+## HWPX XML·표 읽기 비용
+
+[읽기 비용 계약](hwpx-read-cost.md)의 원값·오류 순서·예산·할당자 경계를 검사합니다.
+
+```sh
+zig build test-hwpx-read-cost -Doptimize=ReleaseSafe -j1
+```
+
+실제 WASM 회귀는 필수 입력을 명시합니다. 기준 WASM은 SHA38c4, Noori HWPX는 SHA6ee9014f로 고정되며 누락·해시 불일치는 실패입니다. candidate의 전체 모델·text·Markdown·진단과 6문서 저장 바이트를 비교합니다. SOURCE_ROOT에는 같은 후보의 production JS와 명시 fixture 6개가 있어야 합니다.
+
+```sh
+HWPJS_TEST_SOURCE_ROOT=/absolute/controlled-source \
+HWPJS_TEST_WASM=/absolute/candidate.wasm \
+HWPJS_TEST_WASM_SHA256=EXACT_CANDIDATE_SHA256 \
+HWPJS_TEST_BASE_WASM=/absolute/38c4-baseline.wasm \
+HWPJS_TEST_NOORI_HWPX=/absolute/noori.hwpx \
+node --max-old-space-size=512 --test --test-concurrency=1 \
+  tools/tests/hwpx-read-cost-native.test.mjs
+```

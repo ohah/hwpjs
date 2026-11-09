@@ -90,6 +90,11 @@ pub fn parse(cursor: *Cursor, options: references.Options, remaining_references:
             return value;
         }
         if (c == '&' and remaining == 0) return error.LimitExceeded;
+        const plain = @import("attribute_ascii.zig").consume(&local, quote);
+        if (plain != 0) {
+            stats.scalars += plain;
+            continue;
+        }
         const part = (try nextPart(&local, options)).?;
         if (part == .reference) {
             stats.references += 1;

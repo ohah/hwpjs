@@ -86,11 +86,23 @@ pub const State = struct {
         const transient = scratch.get();
         var seen: std.HashMapUnmanaged(Expanded, void, ExpandedContext, 80) = .empty;
         defer seen.deinit(transient);
+        var initial: [8]Expanded = undefined;
+        var initial_count: usize = 0;
         for (tag.attributes) |attribute| {
             const name = try qname.parse(attribute.name);
             if (declaration(name) != null) continue;
             const expanded = try self.resolve(name, true);
-            if ((try seen.getOrPut(transient, expanded)).found_existing) return error.DuplicateXmlExpandedAttribute;
+            if (initial_count < initial.len) {
+                for (initial[0..initial_count]) |previous| if ((ExpandedContext{}).eql(previous, expanded)) return error.DuplicateXmlExpandedAttribute;
+                initial[initial_count] = expanded;
+                initial_count += 1;
+            } else {
+                if (seen.count() == 0) {
+                    try seen.ensureTotalCapacity(transient, 9);
+                    for (initial) |previous| _ = try seen.getOrPut(transient, previous);
+                }
+                if ((try seen.getOrPut(transient, expanded)).found_existing) return error.DuplicateXmlExpandedAttribute;
+            }
         }
         return marker;
     }
