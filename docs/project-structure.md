@@ -473,3 +473,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 ## CLI·MCP의 WASM 준비 소유권
 
 `packages/cli/src/wasm-module.ts`는 private WASM 바이트와 컴파일된 Module 한 entry의 수명을 소유합니다. `engine.ts`는 기존 입력 스냅샷·SHA·형식 검사와 문서별 새 Instance를 연결합니다. 파일 호스트·문서·이력 모델은 캐시하지 않습니다. 계약과 실측은 [WASM 준비 재사용](wasm-preparation.md)에 있습니다.
+
+## Canvas 미리보기 쪽 상태
+
+`packages/vanilla/src/surface.ts`는 현재 painted frame의 가시 쪽 관측과 수명을, `apps/demo/src/page-status.ts`는 상태바 문구와 framework relay를 소유합니다. controller와 main은 기존 host 수명에 연결합니다. 세부 계약은 [데모 쪽 상태](demo-page-status.md)를 따릅니다.

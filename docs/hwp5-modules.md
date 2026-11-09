@@ -515,3 +515,5 @@
 - [공통 개체의 선택적 꼬리 원값](hwp5-object-extra-word.md)
 
 - [본문·머리말·꼬리말의 원본 도형 소유권](page-area-object-roots.md)
+
+- [데모 미리보기 쪽 상태](demo-page-status.md) — 가시 쪽·부분 배치·framework 구독 수명.

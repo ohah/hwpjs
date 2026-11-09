@@ -196,6 +196,86 @@ export function createCanvasSurface({
       status(value);
     },
   };
+  const pageStatusListeners = new Set<() => void>();
+  let pageStatusPending = false,
+    lastPageStatus = '';
+  let visiblePageCache:
+    | {
+        frame: unknown;
+        top: number;
+        height: number;
+        current: number | null;
+      }
+    | undefined;
+  function getPageStatus(): Readonly<{
+    current: number | null;
+    total: number | null;
+    partial: boolean;
+  }> | null {
+    if (closed) return null;
+    const state = editor.getEditorState();
+    const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+    if (
+      !lease?.isActive() ||
+      state.status !== 'ready' ||
+      key !== displayed ||
+      !renderer?.isPaintedFrameCurrent?.()
+    )
+      return null;
+    const frame = renderer.paintedFrame();
+    if (
+      frame?.resourceDocument !== `${state.documentId}:${state.generation}` ||
+      frame?.resourceEpoch !== `${state.documentId}:${state.generation}:${state.operationRevision}`
+    )
+      return null;
+    const layout = frame.layout;
+    if (layout?.state !== 'paginated' || !Array.isArray(layout.pages) || !layout.pages.length)
+      return null;
+    const scale = renderer.viewScale();
+    const top = viewport.scrollTop / scale,
+      height = viewport.clientHeight / scale;
+    if (![top, height, scale].every(Number.isFinite) || top < 0 || height <= 0 || scale <= 0)
+      return null;
+    // First paper intersecting the viewport. A viewport wholly in a gap has no current page.
+    const cache = visiblePageCache;
+    let current: number | null = cache?.current ?? null;
+    if (!cache || cache.frame !== frame || cache.top !== top || cache.height !== height) {
+      current = null;
+      for (const [index, page] of layout.pages.entries()) {
+        const paper = page?.paper;
+        if (
+          !paper ||
+          !Number.isFinite(paper.y) ||
+          !Number.isFinite(paper.height) ||
+          paper.height <= 0
+        )
+          return null;
+        if (current === null && paper.y < top + height && paper.y + paper.height > top)
+          current = index + 1;
+      }
+      visiblePageCache = { frame, top, height, current };
+    }
+    const partial =
+      layout.limited === true ||
+      frame.content?.limited === true ||
+      Boolean(frame.content?.window) ||
+      layout.layoutScope === 'paragraph-window-fragment' ||
+      layout.documentPageNumbersExact === false;
+    return Object.freeze({ current, total: partial ? null : layout.pages.length, partial });
+  }
+  function notifyPageStatus() {
+    if (closed || !pageStatusListeners.size || pageStatusPending) return;
+    pageStatusPending = true;
+    void Promise.resolve().then(() => {
+      pageStatusPending = false;
+      if (closed) return;
+      const next = JSON.stringify(getPageStatus());
+      if (next === lastPageStatus) return;
+      lastPageStatus = next;
+      const listenersSnapshot = Array.from(pageStatusListeners);
+      for (const listener of listenersSnapshot) listener();
+    });
+  }
   const alignFrame = (layout = renderer?.layout()) => {
     if (closed) return;
     const gutter = viewport.offsetWidth - viewport.clientWidth;
@@ -315,6 +395,8 @@ export function createCanvasSurface({
   };
   const cleanup = () => {
     closed = true;
+    visiblePageCache = undefined;
+    pageStatusListeners.clear();
     atomicProfile = undefined;
     nonTextHistoryAdmissionReady = false;
     nonTextHistoryPending = undefined;
@@ -343,7 +425,16 @@ export function createCanvasSurface({
     Object.defineProperty(rendererEnvironment, 'nativeGeometryEvidenceReader', {
       value: readNativeGeometryEvidence,
     });
-    renderer = createSurfaceRenderer(canvas, viewport, spacer, alignFrame, rendererEnvironment);
+    renderer = createSurfaceRenderer(
+      canvas,
+      viewport,
+      spacer,
+      (layout: any) => {
+        alignFrame(layout);
+        notifyPageStatus();
+      },
+      rendererEnvironment,
+    );
     if (environment.decodeImage) renderer.pictureDecoder(environment.decodeImage);
     lease = editor.acquireInputSurface({
       commitComposition: async () => {
@@ -933,6 +1024,15 @@ export function createCanvasSurface({
   nonTextHistoryAdmissionReady = true;
   let disposal: Promise<void> | undefined;
   return {
+    /** Measured visible page only; never a source page number or caret page. */
+    getPageStatus,
+    subscribePageStatus(listener: () => void): () => void {
+      if (closed) return () => {};
+      pageStatusListeners.add(listener);
+      return () => {
+        pageStatusListeners.delete(listener);
+      };
+    },
     canRequestHistory(kind: 'undo' | 'redo'): boolean {
       if (!historyKind(kind) || closed || nonTextHistoryPending) return false;
       const route = direct.historyRoute();

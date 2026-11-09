@@ -1520,3 +1520,23 @@ node --max-old-space-size=512 --test --test-concurrency=1 \
 ```
 
 기존 Native820을 명시한 CLI 전체 검사는 기존 CLI 검증과 같은 환경변수를 사용합니다. 최신 후보의 실제 문서·설치형 CLI/MCP 검사와 성능 원자료는 `zig-out/verification/read-preparation-r1/`에서 구분해 확인합니다. 새 Native 빌드는 필요하지 않습니다.
+
+## Canvas 미리보기 쪽 상태
+
+[데모 쪽 상태 계약](demo-page-status.md)을 따릅니다.
+
+저장소 루트에서 기존 공식 Core dist를 명시한다. 새 SDK·Native 빌드는 필요 없다.
+
+```sh
+HWPJS_TEST_CORE_DIST=packages/core/dist mise exec -- node \
+  --max-old-space-size=256 --experimental-transform-types \
+  --import ./tools/renderer-test-core-provider.mjs \
+  --test --test-concurrency=1 \
+  apps/demo/tests/page-status.test.mjs \
+  apps/demo/tests/page-status-surface.test.mjs \
+  apps/demo/tests/page-status-controller.test.mjs
+./node_modules/.bin/oxlint apps/demo/src/page-status.ts \
+  apps/demo/src/demo-controller.ts apps/demo/src/main.ts \
+  packages/vanilla/src/surface.ts apps/demo/tests/page-status.test.mjs \
+  apps/demo/tests/page-status-surface.test.mjs apps/demo/tests/page-status-controller.test.mjs
+```

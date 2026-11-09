@@ -6,6 +6,7 @@ import { CanvasSurface, type CanvasSurfaceHandle } from '@hwpjs/react';
 import { mount, unmount } from 'svelte';
 import { CanvasEditor, type CanvasSurface as SvelteSurface } from '@hwpjs/svelte';
 import { mountDemo, type MountDemoHost } from './demo-controller.ts';
+import { createPageStatusRelay, type DemoPageStatusHost } from './page-status.ts';
 import type { DemoFramework } from './shell-contract.ts';
 import './shell.css';
 import './demo-viewport.css';
@@ -20,6 +21,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
   vanilla: (root, editor, onStatus) =>
     createCanvasSurface({ root, editor, onStatus, environment: createDemoSurfaceEnvironment() }),
   react: (root, editor, onStatus) => {
+    const pages = createPageStatusRelay();
     const tree = createRoot(root),
       ref = createRef<CanvasSurfaceHandle>();
     tree.render(
@@ -30,12 +32,15 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
           editor,
           environment: createDemoSurfaceEnvironment(),
           onStatus,
+          onReady: (surface) => pages.connect(surface as DemoPageStatusHost),
           ref,
           style: { height: '100%' },
         }),
       ),
     );
     return {
+      getPageStatus: pages.getPageStatus,
+      subscribePageStatus: pages.subscribePageStatus,
       focus: () => ref.current?.focus() ?? false,
       canPasteInput: () => ref.current?.surface?.canPasteInput() ?? false,
       canRequestHistory: (kind) => ref.current?.surface?.canRequestHistory(kind) ?? false,
@@ -56,10 +61,14 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         ref.current?.surface?.captureTransferSelection?.(options) ?? null,
       focusForPaste: () => ref.current?.surface?.focusForPaste() ?? false,
       setScale: (value) => ref.current?.setScale(value) ?? false,
-      dispose: () => tree.unmount(),
+      dispose: () => {
+        pages.dispose();
+        tree.unmount();
+      },
     };
   },
   svelte: (root, editor, onStatus) => {
+    const pages = createPageStatusRelay();
     let surface: SvelteSurface | undefined;
     const component = mount(CanvasEditor, {
       target: root,
@@ -70,10 +79,13 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         style: 'height:100%',
         onReady: (value: SvelteSurface) => {
           surface = value;
+          pages.connect(value as DemoPageStatusHost);
         },
       },
     });
     return {
+      getPageStatus: pages.getPageStatus,
+      subscribePageStatus: pages.subscribePageStatus,
       focus: () => surface?.focus() ?? false,
       canPasteInput: () => surface?.canPasteInput() ?? false,
       canRequestHistory: (kind) => surface?.canRequestHistory(kind) ?? false,
@@ -91,7 +103,10 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       captureTransferSelection: (options) => surface?.captureTransferSelection?.(options) ?? null,
       focusForPaste: () => surface?.focusForPaste() ?? false,
       setScale: (value) => surface?.setScale(value) ?? false,
-      dispose: () => unmount(component),
+      dispose: () => {
+        pages.dispose();
+        return unmount(component);
+      },
     };
   },
 };

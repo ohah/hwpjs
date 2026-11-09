@@ -1,4 +1,5 @@
 import { createPresentationRefresh } from './presentation-refresh.ts';
+import { pageStatusLabel, type DemoPageStatusHost } from './page-status.ts';
 import { captureFormattingPresentation } from './surface-formatting-capture.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
 import type { SurfaceClipboardPort } from './clipboard-bridge.ts';
@@ -62,7 +63,7 @@ import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available
 // @ts-ignore Canonical fixture catalog is shared with the server.
 import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
-export interface DemoHost extends SurfaceFormattingHost, SurfaceClipboardPort {
+export interface DemoHost extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
@@ -350,7 +351,7 @@ export async function mountDemo(
       openFile: { enabled: !busy },
       openFixture: { enabled: !busy },
       zoomPercent: zoom,
-      pageLabel: ready ? '문서 열림' : '',
+      pageLabel: pageStatusLabel(ready && !closed, busy, host),
       selectionLabel: selectionStatusLabel(state),
       actions,
     };
@@ -586,11 +587,16 @@ export async function mountDemo(
     if (!closed) shell.update();
   });
   let unsubscribe = () => {};
+  let unsubscribePages = () => {};
   let headless: ReturnType<typeof mountHeadlessPanel> | undefined;
   let shortcuts: ReturnType<typeof mountShortcutSettings> | undefined;
   void refreshFixtures();
   try {
     if (shell.surfaceMount && mountHost) host = await mountHost(shell.surfaceMount, editor, note);
+    unsubscribePages =
+      host?.subscribePageStatus?.(() => {
+        presentationRefresh.request();
+      }) ?? (() => {});
     // Async hosts may register Surface observers later. Refresh presentation only
     // after all synchronous state observers have seen the current state.
     unsubscribe = editor.registerStateListener((state) => {
@@ -623,6 +629,7 @@ export async function mountDemo(
     closed = true;
     cancelFixtureRefresh();
     presentationRefresh.dispose();
+    unsubscribePages();
     unsubscribe();
     shortcuts?.dispose();
     contextMenu?.close();
@@ -661,6 +668,7 @@ export async function mountDemo(
       cancelFixtureRefresh();
       const drained = admission.dispose();
       presentationRefresh.dispose();
+      unsubscribePages();
       unsubscribe();
       headless?.dispose();
       shortcuts?.dispose();
