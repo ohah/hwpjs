@@ -18,6 +18,7 @@ pub fn encode(a: std.mem.Allocator, session: *const Session) ![]u8 {
     return bytes;
 }
 pub fn profile(session: *const Session) !policy.Profile {
+    if (try @import("header_read_context.zig").lookup(session)) |context| return context.profile();
     var producer = try metadata.read(session.allocator, session.source, .{ .max_xml_bytes = @min(session.options.max_xml_bytes, 1024 * 1024), .max_attribute_bytes = 4096 });
     defer producer.deinit(session.allocator);
     return policy.classify(if (producer.sourceVersion) |*v| v else null);

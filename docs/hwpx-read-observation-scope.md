@@ -18,6 +18,8 @@ Native의 선택 ABI `hwpx_edit_read_scope_begin(section)`은 0이 아닌 토큰
 
 WASM Scope 안에서는 중앙 편집·배치·이력 이동 및 이력 설정 가드가 변경을 거부합니다. raw Zig 내부 Scope는 호출자가 읽기 수명을 지켜야 합니다. 기본 Session의 직접 변경과 임의 필드 쓰기까지 serial이 자동으로 추적한다고 주장하지 않습니다. 관리되지 않은 변경을 한 뒤 기존 뷰를 계속 사용하는 것은 이 내부 수명 계약 밖입니다.
 
+공통 원본 헤더·현재 리소스 준비는 같은 Scope 수명에서 공유합니다. 소유권·오류 순서·웹 연결과 실측은 [웹 헤더 읽기 계약](web-hwpx-open-performance.md#동기-화면-투영의-임시-헤더-컨텍스트--로컬-구현)이 소유합니다.
+
 ## JS와 모델 연결
 
 `hwpx-read-scope.mjs`는 선택 ABI가 둘 다 있는 경우에만 동기 `withReadObservations`를 제공합니다. 구형 WASM에는 capability가 없습니다. 준비 실패는 재사용만 생략하고 기존 getter를 그대로 실행하므로 데이터·오류 검사를 생략하지 않습니다. callback은 한 번만 실행하며 원래 getter와 codec을 재사용합니다. 별도 집계 wire나 중복 관측 파서는 없습니다.

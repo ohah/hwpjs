@@ -59,6 +59,20 @@ pub fn build(b: *std.Build) void {
     read_scope_step.dependOn(&run_read_scope_tests.step);
     core_test_step.dependOn(&run_read_scope_tests.step);
 
+    const header_read_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{ "header read context", "header managed edit" },
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/hwpx_header_read_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_header_read_tests = b.addRunArtifact(header_read_tests);
+    run_header_read_tests.has_side_effects = true;
+    read_scope_step.dependOn(&run_header_read_tests.step);
+    core_test_step.dependOn(&run_header_read_tests.step);
+
     const open_content_tests = b.addTest(.{
         .use_llvm = true,
         .filters = &.{"fused text content"},

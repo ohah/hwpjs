@@ -2,10 +2,9 @@
 const std = @import("std");
 pub fn ids(session: *const @import("editor_session.zig").Session) ![]u32 {
     const a = session.allocator;
-    var document = try @import("package.zig").inspectDocument(a, session.source, .{});
-    defer document.deinit(a);
-    var resources = try document.inspectHeaderResources(a, .{});
-    defer resources.deinit(a);
+    var preparation = try @import("header_read_context.zig").lease(session);
+    defer preparation.deinit();
+    const resources = try preparation.get().originalResources();
     const original = resources.table(.char_shape).ids.items;
     var output: std.ArrayList(u32) = .empty;
     errdefer output.deinit(a);
@@ -76,6 +75,13 @@ pub fn batchShape(session: *const @import("editor_session.zig").Session, id: u32
 
 /// Temporary read-only resource projection, never an editable style cache.
 pub fn displayShapes(session: *const @import("editor_session.zig").Session) ![]@import("character_shape_display.zig").Shape {
+    if (try @import("header_read_context.zig").lookup(session)) |context| {
+        if (context.shapes == null) context.shapes = try displayShapesCurrent(session);
+        return session.allocator.dupe(@import("character_shape_display.zig").Shape, context.shapes.?);
+    }
+    return displayShapesCurrent(session);
+}
+fn displayShapesCurrent(session: *const @import("editor_session.zig").Session) ![]@import("character_shape_display.zig").Shape {
     if (session.paragraph_resources.entries.items.len != 0 or session.font_resources.entries.items.len != 0) return displayShapesSerialized(session);
     return displayShapesProjected(session);
 }
@@ -86,20 +92,17 @@ pub fn displayShapesSerialized(session: *const @import("editor_session.zig").Ses
     if (session.character_resources.entries.items.len != 0 or session.paragraph_resources.entries.items.len != 0 or session.font_resources.entries.items.len != 0) {
         const expected = try ids(session);
         defer a.free(expected);
-        const header = try @import("header_resource_save.zig").replacementWithFonts(a, session.source, &session.paragraph_resources, &session.character_resources, &session.font_resources, session.options.max_xml_bytes);
-        defer a.free(header.bytes);
-        var tree = try @import("header_tree.zig").parse(a, header.bytes, 0, .{ .max_xml_bytes = session.options.max_xml_bytes });
-        defer tree.deinit(a);
-        return normalizeColors(session, try collect(a, &tree, expected));
+        var preparation = try @import("header_read_context.zig").lease(session);
+        defer preparation.deinit();
+        const tree = try preparation.get().currentHeader(false);
+        return normalizeColors(session, try collect(a, tree, expected));
     }
-    var document = try @import("package.zig").inspectDocument(a, session.source, .{});
-    defer document.deinit(a);
-    var resources = try document.inspectHeaderResources(a, .{});
-    defer resources.deinit(a);
-    var tree = try document.readHeaderTree(a, .{});
-    defer tree.deinit(a);
+    var preparation = try @import("header_read_context.zig").lease(session);
+    defer preparation.deinit();
+    const resources = try preparation.get().originalResources();
+    const tree = try preparation.get().originalHeader();
     const expected = resources.table(.char_shape).ids.items;
-    return normalizeColors(session, try collect(a, &tree, expected));
+    return normalizeColors(session, try collect(a, tree, expected));
 }
 fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, expected: []const u32) ![]@import("character_shape_display.zig").Shape {
     const Shape = @import("character_shape_display.zig").Shape;
@@ -127,13 +130,11 @@ fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree,
 pub fn displayShapesProjected(session: *const @import("editor_session.zig").Session) ![]@import("character_shape_display.zig").Shape {
     const a = session.allocator;
     const Shape = @import("character_shape_display.zig").Shape;
-    var document = try @import("package.zig").inspectDocument(a, session.source, .{});
-    defer document.deinit(a);
-    var resources = try document.inspectHeaderResources(a, .{});
-    defer resources.deinit(a);
-    var tree = try document.readHeaderTree(a, .{});
-    defer tree.deinit(a);
-    const originals = try normalizeColors(session, try collect(a, &tree, resources.table(.char_shape).ids.items));
+    var preparation = try @import("header_read_context.zig").lease(session);
+    defer preparation.deinit();
+    const resources = try preparation.get().originalResources();
+    const tree = try preparation.get().originalHeader();
+    const originals = try normalizeColors(session, try collect(a, tree, resources.table(.char_shape).ids.items));
     defer a.free(originals);
     const output = try a.alloc(Shape, try std.math.add(usize, originals.len, session.character_resources.entries.items.len));
     errdefer a.free(output);

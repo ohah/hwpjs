@@ -1,4 +1,4 @@
-//! Owned font creation and current read projection; no retained header cache.
+//! Owned font creation and current read projection through a scoped header lease.
 const std = @import("std");
 const editor = @import("editor_session.zig");
 const Value = @import("../model/font_face_value.zig").Value;
@@ -11,12 +11,12 @@ pub fn metadata(session: *const editor.Session) ![]@import("font_face_metadata.z
 }
 fn listRows(session: *const editor.Session, comptime include_metadata: bool) ![]if (include_metadata) @import("font_face_metadata.zig").Value else Value {
     const a = session.allocator;
-    const header = if (session.formatting_batch) |context| try @import("header_resource_save.zig").replacementBatch(a, session.source, &session.paragraph_resources, &session.character_resources, &session.font_resources, session.options.max_xml_bytes, &context.header_stats) else try @import("header_resource_save.zig").replacementWithFonts(a, session.source, &session.paragraph_resources, &session.character_resources, &session.font_resources, session.options.max_xml_bytes);
-    defer a.free(header.bytes);
-    var tree = try @import("header_tree.zig").parse(a, header.bytes, 0, .{ .max_xml_bytes = session.options.max_xml_bytes });
-    defer tree.deinit(a);
+    var lease = try @import("header_read_context.zig").lease(session);
+    defer lease.deinit();
+    const ctx = lease.get();
+    const tree = try ctx.currentHeader(true);
     const snapshot = @import("font_face_snapshot.zig");
-    return if (include_metadata) snapshot.collectMetadata(a, &tree, 1_000_000, 4096) else snapshot.collect(a, &tree, 1_000_000, 4096);
+    return if (include_metadata) snapshot.collectMetadata(a, tree, 1_000_000, 4096) else snapshot.collect(a, tree, 1_000_000, 4096);
 }
 
 pub fn ensure(session: *editor.Session, language: @import("font_faces.zig").Language, name: []const u8) !u32 {
@@ -27,6 +27,11 @@ pub fn ensure(session: *editor.Session, language: @import("font_faces.zig").Lang
     for (current) |face| if (face.language == language) {
         if (face.name) |existing| if (std.mem.eql(u8, existing, name)) return face.id;
     };
+    // This helper also serves direct Zig callers outside the central ABI guard.
+    // Reusing an existing face is read-only; adding one must end the borrow first.
+    if (session.header_read_context) |context| {
+        if (context.owner == session) return error.ReadObservationScopeActive;
+    }
     var id: u32 = 0;
     for (current) |face| if (face.language == language) {
         id = @max(id, std.math.add(u32, face.id, 1) catch return error.InvalidFontId);

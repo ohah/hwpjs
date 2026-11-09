@@ -24,22 +24,20 @@ pub fn read(session: *const @import("editor_session.zig").Session) ![]Row {
 }
 pub fn readFull(session: *const @import("editor_session.zig").Session) ![]FullRow {
     const a = session.allocator;
-    var document = try @import("package.zig").inspectDocument(a, session.source, .{});
-    defer document.deinit(a);
-    var resources = try document.inspectHeaderResources(a, .{});
-    defer resources.deinit(a);
-    var tree = try document.readHeaderTree(a, .{});
-    defer tree.deinit(a);
+    var preparation = try @import("header_read_context.zig").lease(session);
+    defer preparation.deinit();
+    const resources = try preparation.get().originalResources();
+    const tree = try preparation.get().originalHeader();
     const expected = resources.table(.char_shape).ids.items;
     const output = try a.alloc(FullRow, expected.len + session.character_resources.entries.items.len);
     @memset(output, .{});
     errdefer deinit(a, output);
     var count: usize = 0;
     for (tree.elements, 0..) |_, index| {
-        if (!@import("character_shape_owner.zig").contains(&tree, index)) continue;
+        if (!@import("character_shape_owner.zig").contains(tree, index)) continue;
         if (count == expected.len) return error.SourceBindingMismatch;
-        const shape = try @import("character_shape_display.zig").read(a, &tree, index, 4096);
-        var values = try @import("character_underline_values.zig").read(a, &tree, index, 4096);
+        const shape = try @import("character_shape_display.zig").read(a, tree, index, 4096);
+        var values = try @import("character_underline_values.zig").read(a, tree, index, 4096);
         defer values.deinit(a);
         output[count] = .{ .id = shape.id orelse return error.SourceBindingMismatch, .kind = if (values.present) values.kind else .none, .present = values.present, .shape = values.shape, .color = values.color };
         values.shape = null;

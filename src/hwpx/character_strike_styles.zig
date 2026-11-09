@@ -1,4 +1,4 @@
-//! Read current serialized header styles without caching or publishing edits.
+//! Read current serialized header styles through a scoped header lease.
 const std = @import("std");
 pub const Row = @import("../model/character_strike_snapshot.zig").StyleRow;
 pub fn deinit(a: std.mem.Allocator, rows: []Row) void {
@@ -12,11 +12,11 @@ pub fn read(session: *const @import("editor_session.zig").Session) ![]Row {
     const a = session.allocator;
     const expected = try @import("character_style_resources.zig").ids(session);
     defer a.free(expected);
-    const header = try @import("header_resource_save.zig").replacementWithFonts(a, session.source, &session.paragraph_resources, &session.character_resources, &session.font_resources, session.options.max_xml_bytes);
-    defer a.free(header.bytes);
-    var tree = try @import("header_tree.zig").parse(a, header.bytes, 0, .{ .max_xml_bytes = session.options.max_xml_bytes });
-    defer tree.deinit(a);
-    return collect(a, &tree, expected);
+    var lease = try @import("header_read_context.zig").lease(session);
+    defer lease.deinit();
+    const ctx = lease.get();
+    const tree = try ctx.currentHeader(false);
+    return collect(a, tree, expected);
 }
 fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, expected: []const u32) ![]Row {
     const rows = try a.alloc(Row, expected.len);

@@ -76,6 +76,7 @@ pub const Section = struct {
     }
 };
 pub const Session = struct {
+    header_read_context: ?*@import("header_read_context.zig").Context = null,
     formatting_batch: ?*@import("formatting_batch_context.zig").Context = null,
     /// WASM open만 설정한다. 기존 direct Zig Session은 snapshot guard를 유지한다.
     history_delta_managed: bool = false,

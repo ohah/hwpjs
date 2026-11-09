@@ -512,6 +512,11 @@ export function createReaderRuntime({
     }
   }
   function hwpxDisplay(projected) {
+    if (typeof editor?.withReadObservations === 'function')
+      return editor.withReadObservations(0, () => hwpxDisplayCurrent(projected));
+    return hwpxDisplayCurrent(projected);
+  }
+  function hwpxDisplayCurrent(projected) {
     const resources = displayResources.view(editor);
     if (!projected && documentWindow) {
       const offset = Math.min(documentWindow.offset, Math.max(0, preview.paragraphCount - 1));
