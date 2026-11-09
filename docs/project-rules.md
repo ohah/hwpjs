@@ -12,6 +12,8 @@
 
 ## 명세와 레거시
 
+새 구현과 기존 참조분의 대체는 [클린룸 우선 구현 방침](clean-room-policy.md)을 따릅니다. rhwp 등의 구현 코드·알고리즘·측정 데이터를 새 구현의 기본 자료로 사용하지 않으며, 과거 참조분과 새 구현의 출처를 구분합니다.
+
 HWP5 구현 시 `legacy/rust/documents/docs/spec/hwp-5.0.md`와 `legacy/rust/.claude/skills/hwp-spec/`의 해당 파트를 확인합니다. 레거시 설계·개발 규칙을 신규 Zig 코드에 그대로 적용하지 않습니다.
 
 ## 작업과 커밋
