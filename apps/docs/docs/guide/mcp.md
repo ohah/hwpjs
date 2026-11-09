@@ -351,3 +351,24 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 삽입의 `expectedText`는 정규화한 표시 본문이 아니라 같은 원본의 Native 문단 원문입니다. JSON의 `\u0000`은 인프로세스 문자열로 전달할 수 있어 OS argv의 NUL 제한과 구분됩니다. `expectedText` 상한은 1Mi UTF-16 코드 유닛이며 실제 제어 문맥의 삽입 가능성은 서비스가 판정합니다. 폭·높이는 1~2147483647 HWPUNIT이고 `unit`은 Native UTF-16 좌표입니다. 그림 삽입은 필드 없는 구역의 plain 최상위 본문 문단에 새 인라인 PNG/JPEG 하나로 제한됩니다. 구역 내 필드는 문단 중간도 `ProtectedFieldRange`로 거부하며 기존 개체 문단·표 셀·글상자는 지원하지 않습니다. 표 삭제·그림 삽입은 stale-layout 동의가 필요하며 재조판·미리보기는 오래된 상태로 보고합니다. HTML은 의미 구조 출력이며 서식·페이지 배치 동등성이 아닙니다.
 
 모든 도구는 같은 CLI 파일 호스트를 사용합니다. 현재 웹 UI·열린 편집 세션 undo와는 연결되지 않았습니다. 결과·현재 지원 제한·원자적 게시와 게시 후 오류의 해석은 [문서 파일 변환 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)과 [CLI 사용법](./cli.md#새-파일의-표-삭제그림-삽입의미-html)을 따릅니다.
+
+
+## 개발 중: 반복 읽기 세션
+
+아래 도구 세 개는 새 로컬 후보에 추가한 기능이며 npm 0.1.1에는 아직 배포하지 않았습니다. 기존 16개 파일 도구는 유지하며 새 서버의 `tools/list`는 19개입니다. 같은 Native 문서를 유지해 반복 읽기 때 다시 열지 않습니다.
+
+| 도구 | 입력 | 결과 |
+| --- | --- | --- |
+| `open_document_session` | `inputPath`, 선택적 `expectedSha256` | `sessionId`, 포맷, 원본 SHA, 구역 수 |
+| `read_document_session` | `sessionId`, 선택적 `format`, `view` | 기존 읽기와 같은 text/Markdown·개체 참조 |
+| `close_document_session` | `sessionId` | 핸들 종료와 Native 자원 해제 |
+
+```json
+{"name":"open_document_session","arguments":{"inputPath":"/documents/noori.hwpx"}}
+{"name":"read_document_session","arguments":{"sessionId":"SERVER_RETURNED_SESSION_ID","format":"markdown"}}
+{"name":"close_document_session","arguments":{"sessionId":"SERVER_RETURNED_SESSION_ID"}}
+```
+
+세션은 열린 시점의 읽기 전용 스냅샷입니다. 디스크 변경을 자동 반영하지 않으며 세션 편집·undo/redo는 이번 범위에 없습니다. 파일 편집은 기존 `apply_document_changes` 등을 사용합니다. 같은 세션에 읽기를 겹쳐 보내면 `DocumentSessionBusy`로 거부하므로 이전 읽기를 기다린 뒤 다음 요청을 보냅니다.
+
+동시 세션은 4개, 입력은 파일당 64MiB·예약 포함 합계 128MiB, 한 읽기 응답은 UTF-8 16MiB입니다. 입력 한도는 전체 파서 heap/RSS의 상한이 아닙니다. 다른 서버의 핸들이나 종료한 핸들은 사용할 수 없고, 사용 후 close해야 합니다. 서버 종료도 자원을 정리합니다.

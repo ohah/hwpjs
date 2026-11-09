@@ -27,3 +27,5 @@ CLI의 `extract-images`는 새 디렉터리에 생성한 파일명으로 저장�
 합성 경계 검사에서는 유효한 경로 구성 요소를 사용한 긴 경로와 참조 4,096개의 조합이 이미지 읽기·저장 전에 거부되는 것을 확인했습니다. 저장 후 경고가 커지는 경우와 오류 출력 실패도 확인했습니다. 이 결과를 모든 문서·모든 자원의 추출 또는 RN 실제 실행의 증거로 확대하지 않습니다. 검증 자료는 `zig-out/verification/cli-info-r1/`, `cli-images-r1/`, `cli-info-images-r1/`에 보존합니다.
 
 OCR 실행파일 선택과 자식 환경의 보안 경계는 [로컬 OCR 실행 권한](ocr-process-security.md)이 소유합니다.
+
+반복 읽기의 Native 수명·예약·핸들 경계는 [MCP 문서 읽기 세션](mcp-document-sessions.md)이 소유합니다.

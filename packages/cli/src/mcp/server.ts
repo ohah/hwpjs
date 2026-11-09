@@ -5,6 +5,13 @@ import { documentTools, describeMcpError } from './tools.ts';
 import { validateMcpOcrExecutable } from './extended-tools.ts';
 import type { DocumentToolsOptions } from './tools.ts';
 import type { ServeStdioOptions } from '@modelcontextprotocol/server/stdio';
+import { createDocumentSessionManager } from './document-sessions.ts';
+import type { DocumentSessionDependencies } from './document-sessions.ts';
+import { documentSessionTools } from './session-tools.ts';
+
+export type McpServerOptions = DocumentToolsOptions & {
+  sessionDependencies?: DocumentSessionDependencies;
+};
 
 export function parseMcpArguments(
   argv: unknown,
@@ -30,9 +37,43 @@ export function parseMcpArguments(
   return options;
 }
 
-export function createMcpServer(options: DocumentToolsOptions = {}) {
+export function createMcpServer(options: McpServerOptions = {}) {
   const server = new McpServer({ name: 'hwpjs', version: publicPackage.version });
-  for (const tool of documentTools(options)) tool.register(server);
+  const sessions = createDocumentSessionManager(options, {
+    files: options.cliDependencies?.files,
+    openDocument: options.cliDependencies?.engine?.openDocument,
+    renderDocument: options.cliDependencies?.renderDocument,
+    ...options.sessionDependencies,
+  });
+  const report = (error: unknown) =>
+    server.server.onerror?.(error instanceof Error ? error : new Error(String(error)));
+  const originalClose = server.close.bind(server);
+  server.close = async () => {
+    try {
+      await sessions.dispose();
+    } finally {
+      await originalClose();
+    }
+  };
+  server.server.onclose = () => {
+    void sessions.dispose().catch(report);
+  };
+  const originalConnect = server.connect.bind(server);
+  server.connect = async (...args) => {
+    try {
+      await originalConnect(...args);
+    } catch (error) {
+      await sessions.dispose();
+      throw error;
+    }
+  };
+  try {
+    for (const tool of documentTools(options)) tool.register(server);
+    for (const tool of documentSessionTools(sessions)) tool.register(server);
+  } catch (error) {
+    void sessions.dispose().catch(report);
+    throw error;
+  }
   return server;
 }
 
@@ -41,7 +82,7 @@ export function runMcpServer({
   transport,
   onerror,
   ...options
-}: DocumentToolsOptions & Pick<ServeStdioOptions, 'transport' | 'onerror'> = {}) {
+}: McpServerOptions & Pick<ServeStdioOptions, 'transport' | 'onerror'> = {}) {
   return serveStdio(() => createMcpServer(options), {
     ...(transport ? { transport } : {}),
     onerror:

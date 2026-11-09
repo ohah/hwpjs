@@ -138,6 +138,7 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
   const listed = await client.listTools();
   assert.deepEqual(listed.tools.map((tool) => tool.name).sort(), [
     'apply_document_changes',
+    'close_document_session',
     'convert_document',
     'create_document',
     'delete_document_table',
@@ -150,7 +151,9 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
     'insert_document_image',
     'list_document_images',
     'ocr_document',
+    'open_document_session',
     'read_document',
+    'read_document_session',
     'read_documents',
     'replace_document_image',
   ]);
@@ -240,7 +243,7 @@ for (const format of ['hwp5', 'hwpx'])
       });
       await client.connect(transport);
       const listed = await client.listTools();
-      assert.equal(listed.tools.length, 16);
+      assert.equal(listed.tools.length, 19);
       const observed = await client.callTool({
         name: 'read_document',
         arguments: { inputPath: input, view: 'structure' },

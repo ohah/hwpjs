@@ -67,7 +67,15 @@ test('official MCP OCR schema removes executable and rejects it before CLI or fi
     },
   });
   const listed = (await client.listTools()).tools;
-  assert.deepEqual(listed.map((tool) => tool.name).sort(), toolNames);
+  assert.deepEqual(
+    listed.map((tool) => tool.name).sort(),
+    [
+      ...toolNames,
+      'open_document_session',
+      'read_document_session',
+      'close_document_session',
+    ].sort(),
+  );
   const schema = listed.find((tool) => tool.name === 'ocr_document');
   assert.equal(schema.inputSchema.additionalProperties, false);
   assert.equal(Object.hasOwn(schema.inputSchema.properties, 'executable'), false);
@@ -149,7 +157,15 @@ test('trusted executable is forwarded exactly for Tesseract only on repeated MCP
       assert.equal(parseArguments(argv).executable, provider === 'vision' ? undefined : executable);
     }
   }
-  assert.deepEqual((await client.listTools()).tools.map((tool) => tool.name).sort(), toolNames);
+  assert.deepEqual(
+    (await client.listTools()).tools.map((tool) => tool.name).sort(),
+    [
+      ...toolNames,
+      'open_document_session',
+      'read_document_session',
+      'close_document_session',
+    ].sort(),
+  );
   assert.equal(calls.length, 9);
 });
 

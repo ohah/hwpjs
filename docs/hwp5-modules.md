@@ -523,3 +523,5 @@
 - [rhwp 참조 출처와 사용 범위](rhwp-reference-inventory.md)
 
 - [생성 표의 직사각형 격자 변경](created-table-grid-edit.md)
+
+- [MCP 문서 읽기 세션](mcp-document-sessions.md)

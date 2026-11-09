@@ -1616,3 +1616,14 @@ zig test src/section_text_transition_parity_probe.zig -O Debug -fllvm -j1 --test
 zig build test-created-table-grid -Doptimize=ReleaseSafe -j1 --summary all
 zig test src/created_table_grid_probe.zig -O Debug -fllvm -j1 --test-filter 'created table grid'
 ```
+
+## MCP 문서 읽기 세션
+
+[읽기 전용 세션 계약](mcp-document-sessions.md)을 따릅니다.
+
+```sh
+node --test --test-concurrency=1 packages/cli/tests/document-sessions.test.mjs packages/cli/tests/mcp.test.mjs packages/cli/tests/mcp-ocr-security.test.mjs
+bunx --no-install tsc --noEmit -p packages/cli/tsconfig.json
+```
+
+설치 검증은 `tools/tests/mcp-sessions-installed.test.mjs`입니다. `HWPJS_SESSION_TEST_PACKAGE`·`HWPJS_SESSION_TEST_EVIDENCE`·`HWPJS_TEST_NOORI`·`HWPJS_TEST_NOORI_HWPX`는 절대 경로, `HWPJS_SESSION_TEST_WASM_SHA256`은 정확한 WASM SHA256을 지정합니다. 증거 디렉터리는 부모만 존재하는 새 경로여야 하며 기존 파일을 덮어쓰지 않습니다.
