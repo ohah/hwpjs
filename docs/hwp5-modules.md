@@ -521,3 +521,5 @@
 - [HWPX XML·표 읽기 비용](hwpx-read-cost.md) — ASCII·namespace 검증, 임시 헤더 재사용과 WASM 할당자 identity.
 
 - [rhwp 참조 출처와 사용 범위](rhwp-reference-inventory.md)
+
+- [생성 표의 직사각형 격자 변경](created-table-grid-edit.md)

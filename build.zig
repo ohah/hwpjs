@@ -123,6 +123,21 @@ pub fn build(b: *std.Build) void {
         core_test_step.dependOn(&run_probe.step);
     }
 
+    const created_grid_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"created table grid"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/created_table_grid_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_created_grid_tests = b.addRunArtifact(created_grid_tests);
+    run_created_grid_tests.has_side_effects = true;
+    const created_grid_step = b.step("test-created-table-grid", "Verify owned rectangular table grid transactions");
+    created_grid_step.dependOn(&run_created_grid_tests.step);
+    core_test_step.dependOn(&run_created_grid_tests.step);
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

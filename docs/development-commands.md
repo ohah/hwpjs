@@ -1607,3 +1607,12 @@ zig build test-hwpx-parsed-locations -Doptimize=ReleaseSafe -j1 --summary all
 zig test src/hwpx_parsed_location_reuse_probe.zig -O Debug -fllvm -j1 --test-filter 'parsed location reuse'
 zig test src/section_text_transition_parity_probe.zig -O Debug -fllvm -j1 --test-filter 'section transition parity'
 ```
+
+## 생성 표의 행·열 변경 코어
+
+[모델 계약과 현재 연결 범위](created-table-grid-edit.md)를 따릅니다. 새 직사각형 표 모델만 검사하며 원본 표 편집·공개 API·저장·Canvas 검증과 구분합니다.
+
+```sh
+zig build test-created-table-grid -Doptimize=ReleaseSafe -j1 --summary all
+zig test src/created_table_grid_probe.zig -O Debug -fllvm -j1 --test-filter 'created table grid'
+```
