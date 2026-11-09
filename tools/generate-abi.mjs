@@ -1,5 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { ABI_VERSION, FIELD, VALUE, DOCUMENT } from '../js/abi-schema.mjs';
+import {
+  ABI_VERSION,
+  FIELD,
+  VALUE,
+  DOCUMENT,
+  CREATED_TABLE_GRID_ACTION,
+} from '../js/abi-schema.mjs';
 
 const enumeration = (name, entries) =>
   `pub const ${name} = enum(u32) {\n` +
@@ -12,6 +18,7 @@ const generated =
   `pub const version: u32 = ${ABI_VERSION};\n` +
   enumeration('Field', FIELD) +
   enumeration('Value', VALUE) +
+  enumeration('CreatedTableGridAction', CREATED_TABLE_GRID_ACTION) +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)
     .map(([key, value]) => `    pub const ${key}: usize = ${value};\n`)

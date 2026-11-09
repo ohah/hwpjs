@@ -1,3 +1,4 @@
+import { createCreatedTableGridApi } from './created-table-grid.mjs';
 const encoder = new TextEncoder();
 const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
 import { decodeHwp5CreatedTables } from './hwp5-created-tables.mjs';
@@ -10,6 +11,13 @@ import {
 
 export function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
   return {
+    ...createCreatedTableGridApi({
+      wasm,
+      memory,
+      check,
+      prefix: 'hwp5_edit',
+      unavailable: 'Hwp5CreatedTableGridAbiUnavailable',
+    }),
     supportsTableInitialTexts() {
       check();
       return typeof wasm.hwp5_edit_insert_table_with_texts === 'function';

@@ -18,6 +18,7 @@ pub const ParagraphInfo = struct { source_node: ?u32, parent_node: ?u32, style_i
 pub const Command = union(enum) {
     stage_table: @import("created_table_stage.zig").Edit,
     set_created_cell_text: @import("created_cell_text.zig").Edit,
+    edit_created_table_grid: @import("created_table_grid_session.zig").Edit,
     splice_current_paragraph: @import("current_paragraph_edit.zig").Splice,
     set_style: struct { section: usize, paragraph: usize, style_id: u8 },
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
@@ -1408,6 +1409,10 @@ pub const Session = opaque {
             .set_created_cell_text => |edit| {
                 const state = self.getState();
                 try @import("created_cell_text.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
+            },
+            .edit_created_table_grid => |edit| {
+                const state = self.getState();
+                try @import("created_table_grid_session.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
             },
             .set_character_font_name => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;

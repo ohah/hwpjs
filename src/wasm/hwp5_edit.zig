@@ -331,6 +331,14 @@ export fn hwp5_edit_splice_current(ref_ptr: [*]const u8, ref_size: usize, start:
     apply(.{ .splice_current_paragraph = .{ .section = section, .reference = reference, .start_unit = start, .end_unit = end, .utf8 = text_ptr[0..text_size] } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_created_table_grid(section: u32, low: u32, high: u32, action: u32, index: u32) u32 {
+    hwp5_edit_output_free();
+    const request = @import("created_table_grid_request.zig");
+    const identity = request.identity(low, high) catch |err| return fail(err);
+    const command = request.decode(action, index) catch |err| return fail(err);
+    apply(.{ .edit_created_table_grid = .{ .section = section, .table = identity, .command = command } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_insert_table(ptr: [*]const u8, size: usize) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

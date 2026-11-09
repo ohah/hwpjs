@@ -1627,3 +1627,17 @@ bunx --no-install tsc --noEmit -p packages/cli/tsconfig.json
 ```
 
 설치 검증은 `tools/tests/mcp-sessions-installed.test.mjs`입니다. `HWPJS_SESSION_TEST_PACKAGE`·`HWPJS_SESSION_TEST_EVIDENCE`·`HWPJS_TEST_NOORI`·`HWPJS_TEST_NOORI_HWPX`는 절대 경로, `HWPJS_SESSION_TEST_WASM_SHA256`은 정확한 WASM SHA256을 지정합니다. 증거 디렉터리는 부모만 존재하는 새 경로여야 하며 기존 파일을 덮어쓰지 않습니다.
+
+## 생성 표의 행·열 세션 연결
+
+범위와 identity 수명은 [생성 표 격자 계약](created-table-grid-edit.md)을 따릅니다.
+
+```sh
+zig build test-created-table-grid-sessions -Doptimize=ReleaseSafe -j1
+node --test --test-concurrency=1 tools/tests/created-table-grid-sdk.test.mjs packages/cli/tests/created-table-grid.test.mjs
+node --test --test-concurrency=1 tools/tests/created-table-grid-native.test.mjs
+```
+
+실물 검사는 `HWPJS_TEST_SOURCE_ROOT`(통제 소스), `HWPJS_TEST_WASM`, `HWPJS_TEST_WASM_SHA256`, `HWPJS_TEST_EVIDENCE_DIR`(새 디렉터리), `HWPJS_TEST_NOORI`, `HWPJS_TEST_NOORI_HWPX`를 명시합니다. 경로는 절대경로이며 고정 원본 SHA가 다르거나 환경변수가 없으면 실패합니다. CFB/ZIP/XML 독립 검증은 별도 비교기로 수행합니다. 설치 패키지·브라우저 UI·배포 검증과 구분합니다.
+
+독립 CFB 비교기는 `HWPJS_TEST_ORACLE_ROOT`와 `HWPJS_TEST_CFB_SHA256`로 별도 고정합니다. 구현 소스 후보에 레거시 비교기를 복사하지 않습니다.

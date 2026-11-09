@@ -36,6 +36,7 @@ const METHODS = Object.freeze({
   'cell-styles': 'setCellStyles',
   'picture-resize': 'resizePicture',
   'table-insert': 'insertTable',
+  'created-table-grid': 'editCreatedTableGrid',
 } as const);
 function requireInitialCellTexts(document: OperationDocument): void {
   const supports: unknown = Reflect.get(document.sdk, 'supportsTableInitialTexts');
@@ -81,6 +82,15 @@ export function prepareOperationSession(
   for (const operation of operations) {
     if (typeof document.sdk[METHODS[operation.kind]] !== 'function')
       throw new Error(`DocumentOperationUnavailable:${operation.kind}`);
+    if (operation.kind === 'created-table-grid') {
+      const supports: unknown = Reflect.get(document.sdk, 'supportsCreatedTableGrid');
+      if (typeof supports !== 'function' || Reflect.apply(supports, document.sdk, []) !== true)
+        throw new Error(
+          document.format === 'hwp5'
+            ? 'Hwp5CreatedTableGridAbiUnavailable'
+            : 'HwpxCreatedTableGridAbiUnavailable',
+        );
+    }
     if (operation.kind === 'table-insert' && operation.cellTexts) requireInitialCellTexts(document);
     for (const target of targets(operation)) {
       if (
@@ -236,6 +246,14 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
         paragraph: operation.paragraph,
         type: operation.type,
         value: operation.value,
+      });
+      break;
+    case 'created-table-grid':
+      document.sdk.editCreatedTableGrid({
+        section: operation.section,
+        identity: operation.identity,
+        action: operation.action,
+        index: operation.index,
       });
       break;
     case 'cell-sizes':

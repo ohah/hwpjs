@@ -8,6 +8,7 @@ import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-t
 import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
 import { encodeTableBorderSections, decodeTableBorderBatch } from './hwpx-table-border-batch.mjs';
 import { createMemory } from './wasm-memory.mjs';
+import { createCreatedTableGridApi } from './created-table-grid.mjs';
 import { captureTableInitialTexts, encodeTableTextRequest } from './table-initial-texts.mjs';
 import { decodeTableBorderSources } from './hwpx-table-border-sources.mjs';
 import { decodeCurveGeometry } from './hwpx-curve-geometry.mjs';
@@ -204,6 +205,13 @@ export async function createHwpxEditor(source) {
     }
   }
   return {
+    ...createCreatedTableGridApi({
+      wasm,
+      memory,
+      check: ready,
+      prefix: 'hwpx_edit',
+      unavailable: 'HwpxCreatedTableGridAbiUnavailable',
+    }),
     ...createHwpxReadScopeApi({ wasm, ready, uint, error: () => memory.error() }),
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createParagraphBreakApi({

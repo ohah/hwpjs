@@ -295,6 +295,14 @@ export fn hwpx_edit_set_checkbox_state(section: u32, node: u32, ptr: [*]const u8
     apply(.{ .kind = .check_box_state, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .form_node = node, .checkbox_state = state }) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_created_table_grid(section: u32, low: u32, high: u32, action: u32, index: u32) u32 {
+    hwpx_edit_output_free();
+    const request = @import("created_table_grid_request.zig");
+    const identity = request.identity(low, high) catch |err| return fail(err);
+    const command = request.decode(action, index) catch |err| return fail(err);
+    apply(.{ .kind = .created_table_grid, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .created_table_identity = identity, .created_grid = command }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_set_created_cell_text(section: u32, low: u32, high: u32, row: u32, column: u32, ptr: [*]const u8, length: usize) u32 {
     if (length > 64 * 1024 * 1024) return fail(error.LimitExceeded);
     const identity = (@as(u64, high) << 32) | low;
@@ -943,6 +951,9 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
+        .created_table_grid => {
+            _ = try @import("../hwpx/created_table_grid_session.zig").apply(session, command.section, command.created_table_identity, command.created_grid);
+        },
         .created_cell_text => {
             _ = try @import("../hwpx/created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
         },

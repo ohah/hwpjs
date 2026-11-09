@@ -138,6 +138,27 @@ pub fn build(b: *std.Build) void {
     created_grid_step.dependOn(&run_created_grid_tests.step);
     core_test_step.dependOn(&run_created_grid_tests.step);
 
+    const grid_session_step = b.step("test-created-table-grid-sessions", "Verify generated table grid sessions and wire requests");
+    inline for (.{
+        .{ "src/h5_created_table_grid_probe.zig", "HWP5 created table grid" },
+        .{ "src/hx_created_table_grid_probe.zig", "HWPX created table grid" },
+        .{ "src/created_table_grid_request_probe.zig", "created table grid wire" },
+    }) |entry| {
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(entry[0]),
+                .target = target,
+                .optimize = optimize,
+            }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        grid_session_step.dependOn(&run_probe.step);
+        core_test_step.dependOn(&run_probe.step);
+    }
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

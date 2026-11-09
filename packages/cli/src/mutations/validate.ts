@@ -1,3 +1,7 @@
+import {
+  captureCreatedTableGridRequest,
+  type CreatedTableGridRequest,
+} from '../../../../js/created-table-grid.mjs';
 import { characterPropertyArgs } from '../../../../js/character-property-args.mjs';
 import { paragraphMarginArgs } from '../../../../js/paragraph-margin-args.mjs';
 import { paragraphSpacingArgs } from '../../../../js/paragraph-spacing-args.mjs';
@@ -78,6 +82,7 @@ export type DocumentOperation = OperationBase &
         readonly type: string;
         readonly value: number;
       } & AtParagraph)
+    | ({ readonly kind: 'created-table-grid' } & Readonly<CreatedTableGridRequest>)
     | { readonly kind: 'cell-sizes'; readonly cells: readonly CellSize[] }
     | { readonly kind: 'cell-styles'; readonly styles: CellStyles }
     | {
@@ -133,6 +138,7 @@ export const DOCUMENT_OPERATION_SPECS = Object.freeze({
   'paragraph-alignment': spec([...paragraph, 'alignment'], ['expectedText']),
   'paragraph-margins': spec([...paragraph, 'margins'], ['expectedText']),
   'paragraph-spacing': spec([...paragraph, 'type', 'value'], ['expectedText']),
+  'created-table-grid': spec([...common, 'section', 'identity', 'action', 'index']),
   'cell-sizes': spec([...common, 'cells']),
   'cell-styles': spec([...common, 'styles']),
   'picture-resize': spec([...common, 'section', 'pictureNode', 'width', 'height']),
@@ -335,6 +341,14 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
       case 'paragraph-spacing':
         position(operation);
         paragraphSpacingArgs(operation.type, operation.value);
+        break;
+      case 'created-table-grid':
+        captureCreatedTableGridRequest({
+          section: operation.section,
+          identity: operation.identity,
+          action: operation.action,
+          index: operation.index,
+        });
         break;
       case 'cell-sizes':
         encodeCellSizes(operation.cells);

@@ -1,6 +1,13 @@
 // Authoritative ABI schema. tools/generate-abi.mjs derives the Zig declarations.
 // Breaking changes require a version bump and an independently pinned contract test.
 export const ABI_VERSION = 6;
+// Optional generated-table grid command codes, shared by both format adapters.
+export const CREATED_TABLE_GRID_ACTION = Object.freeze({
+  insert_row: 0,
+  delete_row: 1,
+  insert_column: 2,
+  delete_column: 3,
+});
 // Additive, optional experimental surface; old CFB/read-only consumers remain valid.
 export const EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
   'hwp5_edit_open',

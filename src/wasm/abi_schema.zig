@@ -22,6 +22,13 @@ pub const Value = enum(u32) {
     has_content = 11,
     _,
 };
+pub const CreatedTableGridAction = enum(u32) {
+    insert_row = 0,
+    delete_row = 1,
+    insert_column = 2,
+    delete_column = 3,
+    _,
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

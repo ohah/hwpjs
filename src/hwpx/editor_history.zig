@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -42,6 +42,7 @@ pub const Command = struct {
     checkbox_state: @import("form_checkbox_state_session.zig").State = .unchecked,
     created_table: ?*const @import("../model/created_table.zig").Table = null,
     created_table_identity: u64 = 0,
+    created_grid: @import("../model/created_table_grid.zig").Command = .{ .insert_row = 0 },
     created_cell: [2]u32 = .{ 0, 0 },
     chart_node: usize = 0,
     chart_point: usize = 0,
@@ -169,6 +170,10 @@ pub const History = struct {
             .created_cell_text => block: {
                 if (command.start != 0 or command.deleted != 0) return error.InvalidCreatedTableCommand;
                 break :block try @import("created_cell_text_session.zig").set(session, command.section, command.created_table_identity, command.created_cell[0], command.created_cell[1], command.inserted);
+            },
+            .created_table_grid => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidCreatedTableCommand;
+                break :block try @import("created_table_grid_session.zig").apply(session, command.section, command.created_table_identity, command.created_grid);
             },
             .created_table_stage => block: {
                 if (command.deleted != 0 or command.inserted.len != 0) return error.InvalidCreatedTableCommand;

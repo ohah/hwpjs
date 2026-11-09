@@ -70,7 +70,7 @@ npx -y --package=@ohah/hwpjs hwpjs-mcp
 | `convert_document`       | `inputPath`, `outputPath`, `to`, 선택적 `expectedSha256`, `lossPolicy`, `allowStaleLayout`                  | 명시 text-only 변환의 새 파일·미보존 보고 또는 기본 거부                         |
 | `ocr_document`           | `inputPath`, 선택적 `reference`, `provider`, `languages`, `executable`, `format`                            | 로컬 그림 인식 텍스트·이미지별 상태·실패 사유                                    |
 
-`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. `apply_document_changes`의 지원 작업은 [CLI의 14종 계약](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 공개 npm 0.1.0에는 표 전체 삭제와 이미지 삽입·교체가 없습니다. 의미 HTML 내보내기도 공개 npm 0.1.0에는 없습니다. 0.1.1의 16도구 중 추가 도구는 아래에서 별도로 구분합니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
+`format` 기본값은 `text`, 읽기 `view` 기본값은 `content`, `allowStaleLayout` 기본값은 `false`입니다. 도구에서 CLI 실행이 실패하면 `isError: true`와 text content가 포함됩니다. `apply_document_changes`의 지원 작업은 [CLI의 명시 작업 계약](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 공개 npm 0.1.0에는 표 전체 삭제와 이미지 삽입·교체가 없습니다. 의미 HTML 내보내기도 공개 npm 0.1.0에는 없습니다. 0.1.1의 16도구 중 추가 도구는 아래에서 별도로 구분합니다. 이 도구들은 문서 전체 JSON 객체를 반환하는 변환 API가 아닙니다. 프로토콜 JSON과 사용자가 읽는 논리 뷰는 구분합니다.
 
 문서 정보에서 확인하지 못한 버전·보안·편집 상태·내용 집계는 `unknown`과 사유로 남습니다. 특정 편집의 허용 여부나 서명 유효성을 정보 조회만으로 판단하지 않습니다.
 
@@ -180,7 +180,7 @@ npx -y --package=@ohah/hwpjs hwpjs-mcp
 
 예시 ID는 실제 구조 보기의 값으로 바꿉니다. `apply_document_changes`에는 같은 원본의 `expectedSha256`, 새 `outputPath`, 명시 `operations` 배열을 전달합니다. 모든 작업의 `coordinates`는 `current-transaction`이어야 하며 뒤 작업은 직전 작업 이후의 실제 좌표입니다. 전체 스키마를 사전 검증하고 Native `expectedText`·`expectedRangeText` 조건을 확인한 뒤 한 번 저장합니다. 마지막 작업 실패 시 앞 변경만 적용한 문서를 게시하지 않습니다.
 
-지원하는 14종과 실제 patch 예시는 [CLI 명시 작업 적용](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 임의 SDK 호출이나 모든 표/그림 편집을 제공하지 않습니다. HWP5 줄 배치 무효화는 사용자가 `allowStaleLayout: true`를 명시한 경우에만 허용하며 새 조판을 생성하지 않습니다.
+지원 작업과 실제 patch 예시는 [CLI 명시 작업 적용](./cli.md#문단-원문-조회와-명시-작업-적용)을 따릅니다. 임의 SDK 호출이나 모든 표/그림 편집을 제공하지 않습니다. HWP5 줄 배치 무효화는 사용자가 `allowStaleLayout: true`를 명시한 경우에만 허용하며 새 조판을 생성하지 않습니다.
 
 ### 새 문서와 text-only 변환
 

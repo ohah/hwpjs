@@ -61,7 +61,9 @@ type SharedMutationMethods =
   | 'setCellSizes'
   | 'setCellStyles'
   | 'resizePicture'
-  | 'insertTable';
+  | 'insertTable'
+  | 'editCreatedTableGrid'
+  | 'supportsCreatedTableGrid';
 type Hwp5MutationSdk = Pick<Hwp5Sdk, SharedMutationMethods | 'text' | 'validateTextSourcePolicy'>;
 type HwpxMutationSdk = Pick<HwpxSdk, SharedMutationMethods | 'anchorText'>;
 interface OperationDocumentBase {
