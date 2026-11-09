@@ -92,3 +92,35 @@ Noori HWPX의 이전 Node/WASM 읽기는 열기 약 16ms와 모델 수집 약 11
 격리 SDK의 strict declaration 빌드, 설치된 파일 126개 바이트 비교, CLI 생성/조회/편집/변환과 stdio MCP 16개 도구 E2E도 통과했다. 전체 저장소·모든 fixture·조판 완성 검사는 아니다. 공개 npm/데모/문서는 배포하지 않았다. 재현 진입점은 [개발·검증 명령](development-commands.md#hwpx-original-header-capture)이 소유한다.
 
 최종 근거는 `zig-out/verification/hwpx-read-r4/`의 `indexed-build.log`, `indexed-capture-debug.log`, `indexed-capture-safe.log`, `namespace-debug.log`, `namespace-safe.log`, `indexed-native-regression.log`, `runtime-indexed.json`, `edit-indexed.json`, `accepted-indexed-summary.json`, `namespace-indexed.json`, `consumer-indexed.json`, `installed-e2e-indexed.log`, `source-pins-final.json`, `browser/e2e-indexed/`이다. 초기 capture-only b7 후보와 19.05ms 측정은 중간 단계로 보존하며 최종 후보 수치로 사용하지 않는다. URI 65,536바이트 예제는 기준 엔진부터 LimitExceeded여서 비교에서 제외했고, 잘못 생성된 최초 ZIP과 격리 소스에서 probe 누락으로 실패한 명령도 제품 결과에 합산하지 않는다.
+
+## 편집하지 않은 현재 헤더의 복제 제거
+
+글꼴 조회는 원본에 서식 편집이 없어도 `replacementWithFonts`의 검증·canonical 검사·복사·다중 트리 파싱을 수행했다. 빈 intent writer는 원본 바이트를 그대로 돌려주므로, Native-owned 원본이 있는 경우 같은 결과의 비소유 view를 반환하도록 했다. API·파일 포맷이나 writer의 편집 처리를 변경하지 않는다.
+
+`header_read_context`의 `trustedOriginal`이 원본 존재·Native trust·source ptr/len 결합을 한 곳에서 판정한다. `currentHeader`는 여기에 세 resource intent 목록의 길이 0, `formatting_batch == null`, 기존 owned slot 부재를 함께 요구한다. inventory 조회를 먼저 수행해 duplicate/missing/invalid ID 오류가 byte limit보다 먼저 발생하는 기존 순서를 지킨다. 이어 원본 header 길이에 현재 byte limit을 적용한다. 비소유 view는 기존 generated-header parser와 같이 item_index를 0으로 반환하지만 Session 원본의 실제 manifest index는 바꾸지 않는다. source/elements/URI 소유권은 Session에 있고 Context는 이 view를 해제하지 않는다.
+
+raw/untrusted·원본 부재·source 결합 불일치·사실상 no-op을 포함한 intent 하나라도 존재·활성 formatting batch는 기존 writer 경로를 유지한다. 기존 stale 검사는 모든 분기에 선행한다. XML을 생략해서 malformed inventory를 성공으로 바꾸거나 현재 편집값을 원본으로 되돌리는 빠른 모드는 아니다.
+
+### 실측
+
+최종 표준 ReleaseSafe WASM은 6,993,456바이트, SHA256 `5dbdcb394ea7bc2a95992a2c6a8135671952910d71772811073bf512539cb0af`이며 공개 export가 유지되고 진단 import가 없다. 직전 2fb 후보와 같은 Node 24.20.0 집단 방식의 전체 Noori HWPX text 읽기는 19.36→19.45ms로 이번 변경에서 개선됐다고 계산하지 않는다.
+
+별도 fresh document의 같은 observation scope에서 fontFaces와 fontFaceMetadata를 함께 조회하면 첫 회를 제외한 구현별 6회 중앙값이 22.76→7.39ms로 약 67.5% 감소했다. open/compile을 제외하고 scope의 문단 준비와 두 DTO 반환을 포함한다. 빈 결과로 빨라지는 것을 배제하도록 전체 DTO와 비어 있지 않은 inventory를 기준 엔진과 대조했다.
+
+실제 Vanilla UI의 동일 SDK/Worker와 두 WASM을 private localhost에 연결해 Noori를 3회씩 교대 업로드했다. Native 빌드·테스트·설치·Node 측정과 분리한 최종 집단이다.
+
+| 브라우저 3회 중앙값 | 직전 후보 | 새 후보 |
+| --- | ---: | ---: |
+| Worker load 왕복 | 99.2ms | 82.0ms |
+| enable 왕복 | 38.8ms | 36.1ms |
+| file input부터 연결된 Canvas 첫 텍스트 | 176.1ms | 151.8ms |
+
+첫 텍스트 기준 약 13.8% 감소다. 3회 소표본으로 전체 문서/그림 렌더링이나 네트워크 다운로드, 모든 문서·프레임워크의 개선을 증명하지 않는다. Native Worker 메시지, caret의 입력/서식 활성화, page/console error 부재를 확인했고 선택 전 스크린샷 6개가 PNG 바이트까지 같다. 고정한 기존 공개 UI 세대에서 Native 차이를 측정한 것이며 최신 UI 전체의 속도 보장은 아니다. 전용 브라우저와 서버는 종료했다.
+
+### 검증과 제한
+
+새 집중 검사는 Debug/ReleaseSafe 각 9개(대표 계약 7개와 import harness)를 통과했다. canonical writer를 비교기로 삼아 source/elements/URI alias와 비소유 수명, 원본 manifest index와 반환 index, 비정규·참조·부재·불일치 count, UTF-8 BOM/UTF-16LE/BE, 오류 우선순위와 정확한 byte 경계, fallback·stale·allocation failure·warm allocation-free 경로를 검사한다. 기존 header-context 12개·header-capture 16개도 새 소스에서 통과했다.
+
+실제 WASM 회귀 3개, 9개 문서 전체 runtime 응답 동치, 6문서 서식 편집/undo/redo/저장/재열기 검사를 통과했다. SDK strict declaration 빌드와 설치 파일 126개 바이트 비교, 설치 CLI·stdio MCP 16개 도구의 E2E 두 진입점도 통과했다. 전체 저장소 테스트나 모든 조판의 완료 검사는 아니다. npm 게시·main 푸시·데모 배포는 하지 않았다.
+
+원자료는 `zig-out/verification/hwpx-read-r5/`의 `build.log`, `source-pins.json`, `unedited-debug.log`, `unedited-safe.log`, `header-read-tests.log`, `header-capture-tests.log`, `native-regression.log`, `runtime-standard.json`, `edit-standard.json`, `performance-summary.json`, `font-read-benchmark.json`, `consumer-standard.json`, `installed-e2e.log`, `browser/e2e-clean/`이다. 처음 `browser/e2e-final/`은 Native 기능 검사와 시간이 겹쳐 기능 근거만 사용하며 속도 집계에서 제외한다. 실행 명령은 [개발·검증 명령](development-commands.md#hwpx-unedited-current-header)이 소유한다.

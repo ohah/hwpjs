@@ -1573,3 +1573,14 @@ zig test src/hwpx_header_capture_probe.zig -O ReleaseSafe -fllvm -j1 --test-filt
 zig test src/hwpx_header_read_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'header read context'
 zig test src/hwpx_header_namespace_identity_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'namespace identity'
 ```
+
+## HWPX 미편집 현재 헤더 조회
+
+<a id="hwpx-unedited-current-header"></a>
+
+[비소유 view의 조건과 검증](hwpx-read-cost.md#편집하지-않은-현재-헤더의-복제-제거)을 따릅니다. 합성 검사이며 실제 WASM·설치 패키지·브라우저 검증을 대체하지 않습니다.
+
+```sh
+zig test src/hwpx_unedited_header_view_probe.zig -O Debug -fllvm -j1 --test-filter 'unedited header view'
+zig test src/hwpx_unedited_header_view_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'unedited header view'
+```

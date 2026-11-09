@@ -16,6 +16,8 @@ pub const Context = struct {
     resources_value: ?package.HeaderResourceReport = null,
     original_tree: ?Tree = null,
     current_tree: ?Tree = null,
+    // A request-local non-owning view of Session.original_header; never deinit.
+    source_current_view: ?Tree = null,
     batch_tree: ?Tree = null,
     shapes: ?[]Shape = null,
     profile_value: ?@import("source_color_profile.zig").Profile = null,
@@ -45,11 +47,14 @@ pub const Context = struct {
         if (self.resources_value == null) self.resources_value = try (try self.document()).inspectHeaderResources(self.allocator, .{});
         return &self.resources_value.?;
     }
+    fn trustedOriginal(self: *const Context) bool {
+        return self.owner.display_resource_trusted and self.owner.original_header != null and self.owner.original_header_source.ptr == self.source.ptr and self.owner.original_header_source.len == self.source.len;
+    }
     pub fn originalHeader(self: *Context) !*const Tree {
         try self.check();
         // Only the Native-owned immutable input contract permits this borrow.
         // Raw Sessions retain fresh parsing so direct source changes remain visible.
-        if (self.owner.display_resource_trusted and self.owner.original_header_source.ptr == self.source.ptr and self.owner.original_header_source.len == self.source.len) {
+        if (self.trustedOriginal()) {
             if (self.owner.original_header) |*header| {
                 return header;
             }
@@ -63,6 +68,20 @@ pub const Context = struct {
         const session = self.owner;
         const batch = if (allow_formatting_batch) session.formatting_batch else null;
         const slot = if (batch != null) &self.batch_tree else &self.current_tree;
+        if (slot.* == null and session.formatting_batch == null and self.trustedOriginal() and
+            session.paragraph_resources.entries.items.len == 0 and session.character_resources.entries.items.len == 0 and session.font_resources.entries.items.len == 0)
+        {
+            // The canonical no-intent writer first validates the original ID
+            // inventory, then returns exactly the original header bytes. Keep
+            // that error order and byte limit without rewriting/reparsing it.
+            _ = try self.originalResources();
+            const original = try self.originalHeader();
+            if (original.source.len > self.max_xml_bytes) return error.LimitExceeded;
+            self.source_current_view = original.*;
+            // The old current projection parses its generated header with 0.
+            self.source_current_view.?.item_index = 0;
+            return &self.source_current_view.?;
+        }
         if (slot.* == null) {
             const header = if (batch) |context|
                 try @import("header_resource_save.zig").replacementBatch(a, session.source, &session.paragraph_resources, &session.character_resources, &session.font_resources, self.max_xml_bytes, &context.header_stats)
