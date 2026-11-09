@@ -465,3 +465,7 @@ HWP/HWPX 읽기·편집·저장을 목표로 하는 Zig 0.17.0 / WebAssembly 라
 ## HWPX 동기 관측 재사용
 
 `src/hwpx/paragraph_query_cache.zig`는 빌린 값의 정체성, `paragraph_read_scope.zig`는 그 수명, `display_current_paragraphs.zig`는 현재 문단 투영을 소유합니다. `js/hwpx-read-scope.mjs`가 선택 ABI의 동기 callback 수명을 연결하고 `packages/document/src/model/hwpx.ts`가 기존 관측을 Section별로 조립합니다. 세부 계약은 [동기 읽기 Scope](hwpx-read-observation-scope.md)를 따릅니다.
+
+## HWPX 열기 중 content 재사용
+
+`src/hwpx/xml_part_tree.zig`는 기존 파서의 임시 content 이벤트와 capture 예산을, `text_sites.zig`는 기존 텍스트 수집·fallback을 소유합니다. `editor_session.open`이 신선한 결과의 즉시 소비와 해제를 연결합니다. 검증 진입점은 `src/hwpx_fused_text_probe.zig`이며, 계약은 [열기 중 이벤트 재사용](hwpx-open-content-reuse.md)을 따릅니다.

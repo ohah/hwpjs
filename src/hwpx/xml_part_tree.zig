@@ -124,6 +124,23 @@ pub const Tree = struct {
     }
 };
 
+pub const max_captured_content_events = 16384;
+const CapturedContent = struct {
+    events: std.ArrayList(content.Event) = .empty,
+    enabled: bool = true,
+
+    fn append(self: *CapturedContent, a: std.mem.Allocator, event: content.Event) !void {
+        if (!self.enabled) return;
+        if (self.events.items.len == max_captured_content_events) {
+            self.events.deinit(a);
+            self.events = .empty;
+            self.enabled = false;
+            return;
+        }
+        try self.events.append(a, event);
+    }
+};
+
 const Builder = struct {
     allocator: std.mem.Allocator,
     source: []u8,
@@ -133,6 +150,13 @@ const Builder = struct {
     uris: std.ArrayList([]u8) = .empty,
     uri_map: std.StringHashMapUnmanaged(usize) = .empty,
     stack: std.ArrayList(usize) = .empty,
+    content_events: ?*CapturedContent = null,
+
+    fn onContent(raw: *anyopaque, value: xml.text_content.View, depth: usize) anyerror!void {
+        const self: *Builder = @ptrCast(@alignCast(raw));
+        if (depth == 0 or depth != self.stack.items.len) return error.InvalidSectionTreeDepth;
+        try self.content_events.?.append(self.allocator, .{ .parent_index = self.stack.items[depth - 1], .value = value });
+    }
 
     fn deinit(self: *Builder) void {
         self.stack.deinit(self.allocator);
@@ -221,13 +245,29 @@ const Builder = struct {
 /// The returned tree owns a copy of bytes, independent of the ZIP archive and
 /// the caller's buffer. XML syntax and namespace checks use the common SSOT.
 pub fn parse(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options) !Tree {
+    return parseInternal(a, bytes, part_kind, part_ordinal, item_index, options, null);
+}
+
+/// Request-local content borrows tree.source. Consume before changing or freeing
+/// the tree, and free events separately; no content cache survives editor open.
+pub const ParsedWithContent = struct { tree: Tree, events: ?[]content.Event };
+
+pub fn parseWithContent(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options) !ParsedWithContent {
+    var events: CapturedContent = .{};
+    defer events.events.deinit(a);
+    var tree = try parseInternal(a, bytes, part_kind, part_ordinal, item_index, options, &events);
+    errdefer tree.deinit(a);
+    return .{ .tree = tree, .events = if (events.enabled) try events.events.toOwnedSlice(a) else null };
+}
+
+fn parseInternal(a: std.mem.Allocator, bytes: []const u8, part_kind: PartKind, part_ordinal: ?usize, item_index: usize, options: Options, events: ?*CapturedContent) !Tree {
     if ((part_kind == .header or part_kind == .chart) != (part_ordinal == null)) return error.InvalidPartOrdinal;
     if (bytes.len > options.max_xml_bytes) return error.LimitExceeded;
     const source = try a.dupe(u8, bytes);
     errdefer a.free(source);
-    var builder: Builder = .{ .allocator = a, .source = source, .max_nodes = options.max_nodes, .part_kind = part_kind };
+    var builder: Builder = .{ .allocator = a, .source = source, .max_nodes = options.max_nodes, .part_kind = part_kind, .content_events = events };
     defer builder.deinit();
-    const report = try document_xml.visitBytes(a, source, options.max_xml_bytes, options.xml, .{ .context = &builder, .on_tag = Builder.onTag });
+    const report = try document_xml.visitBytes(a, source, options.max_xml_bytes, options.xml, .{ .context = &builder, .on_tag = Builder.onTag, .on_content = if (events != null) Builder.onContent else null });
     if (builder.stack.items.len != 0 or builder.elements.items.len != report.elements) return error.InvalidSectionTreeDepth;
     const elements = try builder.elements.toOwnedSlice(a);
     errdefer a.free(elements);

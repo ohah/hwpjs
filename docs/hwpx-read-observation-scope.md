@@ -2,6 +2,8 @@
 
 HWPX CLI/MCP 본문 수집은 문단·표·그림 등 16개 관측을 조립합니다. 기존 경로는 각 관측에서 `display_current_paragraphs.read`를 호출해 같은 원본 XML을 다시 스캔하고 문단 뷰를 생성했습니다. Noori 실측에서 모델 수집만 약 32ms였으며 WASM 컴파일·문서 열기와 별도인 비용입니다.
 
+열기 안의 Tree/텍스트 수집 중복 파싱 제거는 [별도 수명 계약](hwpx-open-content-reuse.md)이 소유합니다.
+
 ## 소유권과 수명
 
 원본 XML 트리, 현재 텍스트 사이트와 구조 편집값이 계속 SSOT입니다. 새 `paragraph_read_scope.Scope`는 한 Section을 읽는 동기 구간에서만 문단 뷰를 공유합니다. 현재 문서 모델이나 편집 원문의 별도 영구 복사본을 보관하지 않습니다.

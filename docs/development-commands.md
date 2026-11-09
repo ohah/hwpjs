@@ -1499,3 +1499,13 @@ node --test tools/tests/hwpx-read-scope.test.mjs packages/cli/tests/document-mod
 ```
 
 실물 후보와 성능 원자료는 `zig-out/verification/read-performance-r1/`에 보존합니다. 같은 바이너리의 scoped/unscoped 대조와 공개 CLI 시간을 분리합니다.
+
+## HWPX 열기 단계의 텍스트 이벤트 재사용
+
+[열기 수명 계약](hwpx-open-content-reuse.md)의 기존 collector 동치·할당 실패·이벤트 예산 fallback을 검사합니다.
+
+```sh
+zig build test-hwpx-open-content -Doptimize=ReleaseSafe -j1
+```
+
+실물 후보·기본 로더 CLI·독립 정적 리뷰의 근거는 `zig-out/verification/read-performance-r2/`에 보존합니다. 전체 사용자 작업 트리의 빌드와 분리한 검증 소스·WASM의 정확한 SHA 및 실행 Node 버전을 함께 확인합니다.

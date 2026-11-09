@@ -59,6 +59,21 @@ pub fn build(b: *std.Build) void {
     read_scope_step.dependOn(&run_read_scope_tests.step);
     core_test_step.dependOn(&run_read_scope_tests.step);
 
+    const open_content_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"fused text content"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/hwpx_fused_text_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_open_content_tests = b.addRunArtifact(open_content_tests);
+    run_open_content_tests.has_side_effects = true;
+    const open_content_step = b.step("test-hwpx-open-content", "Verify bounded HWPX parse/content reuse and fallback");
+    open_content_step.dependOn(&run_open_content_tests.step);
+    core_test_step.dependOn(&run_open_content_tests.step);
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

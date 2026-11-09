@@ -946,9 +946,11 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
         const entry_index = document.manifest.items[section.item_index].entry_index orelse return error.ExternalSpineXml;
         const xml = try document.archive.decode(document.archive.entries[entry_index], options.max_xml_bytes -| xml_bytes);
         defer a.free(xml);
-        var tree = try tree_module.parse(a, xml, .section, ordinal, section.item_index, .{ .max_xml_bytes = options.max_xml_bytes -| xml_bytes });
+        const parsed = try tree_module.parseWithContent(a, xml, .section, ordinal, section.item_index, .{ .max_xml_bytes = options.max_xml_bytes -| xml_bytes });
+        defer if (parsed.events) |events| a.free(events);
+        var tree = parsed.tree;
         errdefer tree.deinit(a);
-        var sites = try sites_module.collect(a, &tree, siteOptions(options));
+        var sites = try sites_module.collectParsed(a, &parsed, siteOptions(options));
         errdefer sites.deinit(a);
         if (sites.items.len > options.max_sites -| site_count) return error.LimitExceeded;
         site_count += sites.items.len;

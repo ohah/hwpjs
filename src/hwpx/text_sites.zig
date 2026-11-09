@@ -72,6 +72,15 @@ pub const Options = struct {
 /// Owns decoded strings and integer source bindings. Tree must remain unchanged
 /// while applying these bindings. No pointers into source survive this call.
 pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Options) !Sites {
+    return collectInternal(a, tree, options, null);
+}
+
+/// Only use the unchanged tree and its own events from parseWithContent.
+pub fn collectParsed(a: std.mem.Allocator, parsed: *const tree_module.ParsedWithContent, options: Options) !Sites {
+    return collectInternal(a, &parsed.tree, options, parsed.events);
+}
+
+fn collectInternal(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Options, events: ?[]const tree_module.Tree.ContentEvent) !Sites {
     const frames = try @import("xml_tree_selection.zig").build(a, tree, options.branch_policy, options.max_attribute_bytes);
     defer a.free(frames);
     const covered = try a.alloc(bool, tree.elements.len);
@@ -114,7 +123,9 @@ pub fn collect(a: std.mem.Allocator, tree: *const tree_module.Tree, options: Opt
         for (builder.items.items) |item| a.free(item.text);
         builder.items.deinit(a);
     }
-    try tree.visitContent(a, .{ .context = &builder, .on_content = Builder.onContent });
+    if (events) |rows| {
+        for (rows) |event| try Builder.onContent(&builder, event);
+    } else try tree.visitContent(a, .{ .context = &builder, .on_content = Builder.onContent });
     for (tree.elements, 0..) |element, index| {
         if (!frames[index].active or !isTextElement(tree, frames, index)) continue;
         if (element.first_child != null and !@import("retained_markpen_marker.zig").onlyChildren(tree, index)) continue;
