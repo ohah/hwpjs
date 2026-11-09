@@ -225,6 +225,8 @@ npx -y @ohah/hwpjs convert ./document.hwp --to hwpx \
 
 ## 그림의 로컬 OCR
 
+다음 미배포 보안 후보는 OCR 자식에게 모델 경로·언어·시스템 설정만 전달하고 인증·실행기 주입 환경변수는 전달하지 않습니다. 직접 CLI의 `--executable` 선택은 유지합니다.
+
 ```bash
 npx -y @ohah/hwpjs ocr ./document.hwpx \
   --ref "$IMAGE_REF" --provider tesseract --languages kor+eng

@@ -167,7 +167,13 @@ test(
     delete env.NODE_PATH;
     const transport = new StdioClientTransport({
       command: process.execPath,
-      args: ['--max-old-space-size=512', cli, 'mcp'],
+      args: [
+        '--max-old-space-size=512',
+        cli,
+        'mcp',
+        '--ocr-executable',
+        join(evidence, 'missing-tesseract'),
+      ],
       cwd: evidence,
       env,
       stderr: 'pipe',
@@ -222,11 +228,17 @@ test(
         lossPolicy: 'text-only',
         allowStaleLayout: true,
       });
-      await call(
+      const ocrTool = list.tools.find((tool) => tool.name === 'ocr_document');
+      assert.equal(Object.hasOwn(ocrTool.inputSchema.properties, 'executable'), false);
+      assert.equal(ocrTool.annotations.readOnlyHint, false);
+      const rejectedExecutable = await call(
         'ocr_document',
-        { inputPath: 'mcp.hwpx', executable: join(evidence, 'missing-tesseract') },
+        { inputPath: 'mcp.hwpx', executable: process.execPath },
         true,
       );
+      assert.match(rejectedExecutable, /executable|Unrecognized/iu);
+      const unavailableOcr = await call('ocr_document', { inputPath: 'mcp.hwpx' }, true);
+      assert.match(unavailableOcr, /ProviderUnavailable/u);
       await call('create_document', { outputPath: 'mcp.hwpx', format: 'hwpx' }, true);
       assert.equal(xmlText('mcp.hwpx'), 'MCP');
     } finally {

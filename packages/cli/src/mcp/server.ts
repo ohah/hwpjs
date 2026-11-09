@@ -2,19 +2,32 @@ import { McpServer } from '@modelcontextprotocol/server';
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import publicPackage from '../../../hwpjs/package.json' with { type: 'json' };
 import { documentTools, describeMcpError } from './tools.ts';
+import { validateMcpOcrExecutable } from './extended-tools.ts';
 import type { DocumentToolsOptions } from './tools.ts';
 import type { ServeStdioOptions } from '@modelcontextprotocol/server/stdio';
 
-export function parseMcpArguments(argv: unknown): { wasmPath?: string } {
+export function parseMcpArguments(
+  argv: unknown,
+): Pick<DocumentToolsOptions, 'wasmPath' | 'ocrExecutable'> {
+  const usage = 'Usage: hwpjs-mcp [--wasm PATH] [--ocr-executable PATH]';
   if (
     !Array.isArray(argv) ||
     !argv.every((value) => typeof value === 'string' && value.isWellFormed())
   )
-    throw new TypeError('Usage: hwpjs-mcp [--wasm PATH]');
-  if (argv.length === 0) return {};
-  if (argv.length !== 2 || argv[0] !== '--wasm' || !argv[1] || argv[1].includes('\0'))
-    throw new TypeError('Usage: hwpjs-mcp [--wasm PATH]');
-  return { wasmPath: argv[1] };
+    throw new TypeError(usage);
+  const options: Pick<DocumentToolsOptions, 'wasmPath' | 'ocrExecutable'> = {};
+  for (let index = 0; index < argv.length; index += 2) {
+    const flag = argv[index],
+      value = argv[index + 1];
+    if (typeof value !== 'string' || !value || value.includes('\0')) throw new TypeError(usage);
+    if (flag === '--wasm' && options.wasmPath === undefined) options.wasmPath = value;
+    else if (flag === '--ocr-executable' && options.ocrExecutable === undefined) {
+      if (value.startsWith('--')) throw new TypeError(usage);
+      validateMcpOcrExecutable(value);
+      options.ocrExecutable = value;
+    } else throw new TypeError(usage);
+  }
+  return options;
 }
 
 export function createMcpServer(options: DocumentToolsOptions = {}) {

@@ -156,7 +156,7 @@ stdio 서버 명령을 받는 클라이언트에는 실제 설치된 절대 스�
 - `apply_document_changes`: `inputPath`, `outputPath`, `expectedSha256`, `operations`, 선택 사항 `allowStaleLayout`. 위 14종의 명시 작업을 적용합니다.
 - `create_document`: `outputPath`, `format`(`hwp5` 또는 `hwpx`), 선택 사항 `text`, `allowStaleLayout`.
 - `convert_document`: `inputPath`, `outputPath`, `to`, 선택 사항 `expectedSha256`, `lossPolicy`(`reject` 기본 또는 명시 `text-only`), `allowStaleLayout`.
-- `ocr_document`: `inputPath`, 선택 사항 `reference`, `provider`, `languages`, `executable`, `format`. 실행 파일 지정은 Tesseract에만 적용하며 Vision의 실행 파일을 바꾸지 않습니다.
+- `ocr_document`: `inputPath`, 선택 사항 `reference`, `provider`, `languages`, `format`. 다음 미배포 보안 후보는 요청 인수 `executable`을 거부하며, 서버 운영자가 시작할 때 `--ocr-executable PATH`로 Tesseract 경로를 고정합니다. Vision은 기존 OS 실행파일을 사용합니다. 공개 npm 0.1.1에는 이 변경이 아직 반영되지 않았습니다.
 
 기존 7도구와 이 5도구를 포함해 12도구이며, 실제 설치분의 `tools/list`에서 제공 여부와 입력 스키마를 확인합니다.
 

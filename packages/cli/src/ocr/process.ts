@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { ocrProcessEnvironment } from './process-environment.ts';
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 import type { OcrProcessOutput } from './types.ts';
 import { OcrError, ocrLimits, ownedBytes, isRecord, errorCode, ocrSignal } from './common.ts';
@@ -63,7 +64,7 @@ export function runOcrProcess(options: unknown = {}): Promise<OcrProcessOutput> 
         detached: grouped,
         windowsHide: true,
         stdio: ['pipe', 'pipe', 'pipe'],
-        env: { ...process.env, OMP_THREAD_LIMIT: '1' },
+        env: ocrProcessEnvironment(),
       });
     } catch (cause) {
       reject(new OcrError('ProviderUnavailable', { cause }));

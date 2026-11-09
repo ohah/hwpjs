@@ -225,7 +225,7 @@ npx -y --package=@ohah/hwpjs hwpjs-mcp
 
 ### 로컬 그림 OCR
 
-`ocr_document`는 기본 `tesseract`, 기본 언어 `kor+eng`입니다. 설치된 로컬 실행 파일·언어 데이터가 필요하며 `executable`은 Tesseract 경로를 명시할 때만 사용합니다. macOS에서 OS Vision을 명시 선택하는 예시는 다음과 같습니다.
+`ocr_document`는 기본 `tesseract`, 기본 언어 `kor+eng`입니다. 설치된 로컬 실행 파일·언어 데이터가 필요합니다. 다음 미배포 보안 후보에서는 요청 인수 `executable`을 거부하며, 실행파일은 서버 운영자가 시작할 때 `--ocr-executable /absolute/path/tesseract`로 고정합니다. 현재 공개 npm 0.1.1에는 이 변경이 아직 반영되지 않았습니다. macOS에서 OS Vision을 명시 선택하는 예시는 다음과 같습니다.
 
 ```json
 {
@@ -243,7 +243,7 @@ npx -y --package=@ohah/hwpjs hwpjs-mcp
 }
 ```
 
-`reference`로 실제 이미지 참조 한 개를 지정할 수 있고 생략하면 관측 구역 그림 범위를 처리합니다. Vision은 macOS 로컬 제공자이며 `executable`로 바꾸지 않습니다. 제공자·언어 부재, 실행 실패, 실제 빈 인식 결과를 구분하며 일부 실패 시 성공 텍스트도 유지합니다. 제공자 자동 fallback·외부 업로드·자동 다운로드·원본 자동 수정은 없습니다.
+`reference`로 실제 이미지 참조 한 개를 지정할 수 있고 생략하면 관측 구역 그림 범위를 처리합니다. Vision은 macOS 로컬 제공자이며 실행파일을 바꾸지 않습니다. 다음 후보의 OCR 도구는 외부 프로세스 실행을 나타내도록 `readOnlyHint: false`를 사용합니다. 제공자·언어 부재, 실행 실패, 실제 빈 인식 결과를 구분하며 일부 실패 시 성공 텍스트도 유지합니다. 제공자 자동 fallback·외부 업로드·자동 다운로드·원본 자동 수정은 없습니다.
 
 기존 실제 Vision의 한국어·영어 인식 증거와 새 설치의 제공자 부재 오류 검증을 구분합니다. 실제 Tesseract 인식의 양성은 미검증입니다. 페이지 전체·바탕쪽·브러시·차트/수식 래스터화나 OLE 처리를 이 도구의 완료 범위로 추정하지 않습니다. 일반 `read_document`는 OCR을 호출하지 않습니다.
 

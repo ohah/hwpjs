@@ -19,6 +19,8 @@ export function describeMcpError(error: unknown): string {
 
 export interface DocumentToolsOptions {
   wasmPath?: string;
+  /** 신뢰한 서버 운영자가 시작 시 고정하는 Tesseract 실행 파일입니다. */
+  ocrExecutable?: string;
   mainModuleURL?: string;
   executeCLI?: RunCLI;
   cliDependencies?: CLIHostDependencies;
@@ -26,6 +28,7 @@ export interface DocumentToolsOptions {
 // MCP 입력을 기존 CLI로 전달하며 파서·모델·입출력 검증은 CLI가 소유합니다.
 export function documentTools({
   wasmPath,
+  ocrExecutable,
   mainModuleURL,
   executeCLI = runCLI,
   cliDependencies = {},
@@ -347,6 +350,6 @@ export function documentTools({
       invoke: ({ inputPath, reference, format = 'text' }) =>
         invoke(['object', `--ref=${reference}`, `--format=${format}`, ...wasm, '--', inputPath]),
     }),
-    ...extendedDocumentTools({ invoke, wasm }),
+    ...extendedDocumentTools({ invoke, wasm, ocrExecutable }),
   ];
 }

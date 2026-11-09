@@ -27,6 +27,18 @@ import { DOCUMENT_OPERATION_SPECS, validateDocumentOperations } from '../documen
 const uint = () => z.number().int().min(0).max(0xffffffff);
 const sha = () => z.string().regex(/^[a-f0-9]{64}$/iu);
 const path = () => z.string().min(1);
+export function validateMcpOcrExecutable(value: unknown): asserts value is string {
+  if (typeof value !== 'string' || !value.trim() || !value.isWellFormed() || value.includes('\0'))
+    throw new TypeError('InvalidMcpOcrExecutable');
+}
+
+const ocrInputSchema = z.strictObject({
+  inputPath: path(),
+  reference: z.string().max(128).optional(),
+  provider: z.enum(['tesseract', 'vision']).default('tesseract'),
+  languages: z.string().min(1).max(128).default('kor+eng'),
+  format: z.enum(['text', 'markdown']).default('text'),
+});
 const readOnly = {
   readOnlyHint: true,
   destructiveHint: false,
@@ -125,7 +137,16 @@ function operationSchema() {
 }
 
 // 같은 CLI 호스트를 호출하며 별도 편집 엔진이나 저장 경로를 만들지 않습니다.
-export function extendedDocumentTools({ invoke, wasm }: { invoke: InvokeCLI; wasm: string[] }) {
+export function extendedDocumentTools({
+  invoke,
+  wasm,
+  ocrExecutable,
+}: {
+  invoke: InvokeCLI;
+  wasm: string[];
+  ocrExecutable?: string;
+}) {
+  if (ocrExecutable !== undefined) validateMcpOcrExecutable(ocrExecutable);
   return [
     defineDocumentTool({
       name: 'delete_document_table',
@@ -388,35 +409,32 @@ export function extendedDocumentTools({ invoke, wasm }: { invoke: InvokeCLI; was
         title: '문서 그림의 로컬 OCR',
         description:
           '구역 그림 전체 또는 지정한 이미지 reference만 로컬 공급자로 인식합니다. 기본 tesseract는 설치된 실행 파일과 언어 자료가 필요하며 vision은 macOS 전용입니다. 공급자를 자동 대체하거나 외부 서버로 업로드하지 않습니다. 언어·도구 부재와 실제 빈 인식 결과를 구분합니다. 일부 그림 실패는 성공 텍스트와 함께 오류로 보고합니다.',
-        inputSchema: z.strictObject({
-          inputPath: path(),
-          reference: z.string().max(128).optional(),
-          provider: z.enum(['tesseract', 'vision']).default('tesseract'),
-          languages: z.string().min(1).max(128).default('kor+eng'),
-          executable: path().optional(),
-          format: z.enum(['text', 'markdown']).default('text'),
-        }),
-        annotations: readOnly,
+        inputSchema: ocrInputSchema,
+        annotations: { ...readOnly, readOnlyHint: false },
       },
-      invoke: ({
-        inputPath,
-        reference,
-        provider = 'tesseract',
-        languages = 'kor+eng',
-        executable,
-        format = 'text',
-      }) =>
-        invoke([
+      invoke: (input) => {
+        // 직접 호출도 SDK와 같은 경계를 지켜 CLI/파일 접근 전에 거부합니다.
+        const parsed = ocrInputSchema.safeParse(input);
+        if (!parsed.success)
+          return Promise.resolve({
+            isError: true,
+            content: [{ type: 'text' as const, text: 'InvalidMcpOcrInput' }],
+          });
+        const { inputPath, reference, provider, languages, format } = parsed.data;
+        return invoke([
           'ocr',
           `--provider=${provider}`,
           `--languages=${languages}`,
           `--format=${format}`,
           ...(reference === undefined ? [] : [`--ref=${reference}`]),
-          ...(executable === undefined ? [] : [`--executable=${executable}`]),
+          ...(provider === 'tesseract' && ocrExecutable !== undefined
+            ? [`--executable=${ocrExecutable}`]
+            : []),
           ...wasm,
           '--',
           inputPath,
-        ]),
+        ]);
+      },
     }),
   ];
 }

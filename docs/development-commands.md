@@ -1584,3 +1584,14 @@ zig test src/hwpx_header_namespace_identity_probe.zig -O ReleaseSafe -fllvm -j1 
 zig test src/hwpx_unedited_header_view_probe.zig -O Debug -fllvm -j1 --test-filter 'unedited header view'
 zig test src/hwpx_unedited_header_view_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'unedited header view'
 ```
+
+## OCR 프로세스 보안
+
+<a id="ocr-process-security"></a>
+
+[실행 권한 계약](ocr-process-security.md)의 source 검사입니다. 명시된 기존 MCP Native 검사 4개는 환경변수를 지정하지 않으면 skip하며 설치 패키지 검증과 구분합니다.
+
+```sh
+node --test --test-concurrency=1 packages/cli/tests/ocr-environment-security.test.mjs packages/cli/tests/ocr-process.test.mjs packages/cli/tests/mcp-ocr-security.test.mjs packages/cli/tests/mcp.test.mjs packages/cli/tests/ocr-core.test.mjs packages/cli/tests/document-ocr.test.mjs
+bunx --no-install tsc --noEmit -p packages/cli/tsconfig.json
+```

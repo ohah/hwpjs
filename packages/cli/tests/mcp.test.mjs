@@ -171,7 +171,7 @@ test('official SDK initializes, lists exact tools, validates arguments and emits
   assert.deepEqual(errors, []);
 });
 
-test('strict MCP entry arguments accept only the explicit WASM option without side effects', () => {
+test('strict MCP entry arguments preserve the explicit WASM option without side effects', () => {
   assert.deepEqual(parseMcpArguments([]), {});
   assert.deepEqual(parseMcpArguments(['--wasm', '/x.wasm']), { wasmPath: '/x.wasm' });
   for (const args of [
