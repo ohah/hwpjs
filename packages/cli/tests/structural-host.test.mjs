@@ -542,7 +542,13 @@ test('공식 MCP 전송으로 세 도구를 호출하고 CLI 파서까지 같은
     output.destroy();
   });
   await client.connect(clientTransport);
-  assert.equal((await client.listTools()).tools.length, 16);
+  const listedTools = (await client.listTools()).tools;
+  assert.equal(listedTools.length, 19);
+  for (const name of ['open_document_session', 'read_document_session', 'close_document_session'])
+    assert(
+      listedTools.some((tool) => tool.name === name),
+      name,
+    );
   for (const [name, args] of Object.entries(toolInput)) {
     assert.equal(textOf(await client.callTool({ name, arguments: args })), '확인됨\n');
     const before = calls.length;
