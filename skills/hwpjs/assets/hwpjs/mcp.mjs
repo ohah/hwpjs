@@ -24715,7 +24715,7 @@ function interpretExtendedArguments(command, options, positional, fail) {
 // src/arguments.ts
 init_object_reference();
 const USAGE = `Usage:
-  hwpjs mcp [--wasm PATH]
+  hwpjs mcp [--wasm PATH] [--ocr-executable PATH]
   hwpjs read INPUT [--format text|markdown] [--view content|structure] [--wasm PATH]
   hwpjs read-many INPUT... [--format text|markdown] [--view content|structure] [--concurrency 1|2] [--max-output-bytes N] [--wasm PATH]
   hwpjs edit INPUT --target s0:p3 --replace OLD --with NEW --expect-sha256 SHA256 --output OUTPUT [--allow-stale-layout] [--wasm PATH]
@@ -26015,8 +26015,14 @@ function ownedJSON(value, seen = /* @__PURE__ */ new Set()) {
 		seen.delete(value);
 	}
 }
-var init_atomic_formatting_api = __esmMin((() => {})), EXPERIMENTAL_EDITOR_FUNCTIONS, REQUIRED_FUNCTIONS;
+var init_atomic_formatting_api = __esmMin((() => {})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, REQUIRED_FUNCTIONS;
 var init_abi_schema = __esmMin((() => {
+	CREATED_TABLE_GRID_ACTION = Object.freeze({
+		insert_row: 0,
+		delete_row: 1,
+		insert_column: 2,
+		delete_column: 3
+	});
 	EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
 		"hwp5_edit_open",
 		"hwp5_edit_close",
@@ -26243,9 +26249,9 @@ function decodeCharacterFontMetrics(bytes, format) {
 	]) || wire.version !== 1 || wire.format !== format || !["hwp5", "hwpx"].includes(format) || !Array.isArray(wire.shapes) || wire.shapes.length > 1e5) return fail();
 	let previous = -1;
 	for (const row of wire.shapes) {
-		if (!metadataKeys(row, ["id", "values"]) || !Number.isInteger(row.id) || row.id < 0 || row.id > 4294967295 || row.id <= previous || !metadataKeys(row.values, fields$3)) return fail();
+		if (!metadataKeys(row, ["id", "values"]) || !Number.isInteger(row.id) || row.id < 0 || row.id > 4294967295 || row.id <= previous || !metadataKeys(row.values, fields$4)) return fail();
 		previous = row.id;
-		for (const key of fields$3) {
+		for (const key of fields$4) {
 			const values = row.values[key];
 			if (values === null && format === "hwpx") continue;
 			if (!Array.isArray(values) || values.length !== 7) return fail();
@@ -26257,10 +26263,10 @@ function decodeCharacterFontMetrics(bytes, format) {
 	}
 	return wire.shapes;
 }
-var fields$3;
+var fields$4;
 var init_character_font_metrics = __esmMin((() => {
 	init_font_metadata_wire();
-	fields$3 = [
+	fields$4 = [
 		"ratio",
 		"spacing",
 		"relativeSize",
@@ -28600,7 +28606,7 @@ var init_hwp5_exclusive_text_delta = __esmMin((() => {
 // ../../js/hwp5-current-references.mjs
 function validate$1(reference) {
 	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid();
-	if (Object.keys(reference).length !== fields$2.length || fields$2.some((key) => !Object.hasOwn(reference, key))) invalid();
+	if (Object.keys(reference).length !== fields$3.length || fields$3.some((key) => !Object.hasOwn(reference, key))) invalid();
 	const { epoch, kind, section, id, row, column } = reference;
 	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$27(section) || !uint$27(row) || !uint$27(column)) invalid();
 	if (![
@@ -28632,8 +28638,8 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		if (!available()) throw new Error("Hwp5CurrentReferenceAbiUnavailable");
 	};
 	const encode = (reference) => {
-		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$2.length + 1) throw new Error("InvalidCurrentReferenceScope");
-		const wire = Object.fromEntries(fields$2.map((key) => [key, reference[key]]));
+		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$3.length + 1) throw new Error("InvalidCurrentReferenceScope");
+		const wire = Object.fromEntries(fields$3.map((key) => [key, reference[key]]));
 		validate$1(wire);
 		return encoder$9.encode(JSON.stringify(wire));
 	};
@@ -28705,7 +28711,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8, utf16, encoder$9, fields$2, scopeSequence, invalid, uint$27, decimal;
+var utf8, utf16, encoder$9, fields$3, scopeSequence, invalid, uint$27, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
 	utf8 = new TextDecoder("utf-8", {
@@ -28717,7 +28723,7 @@ var init_hwp5_current_references = __esmMin((() => {
 		ignoreBOM: true
 	});
 	encoder$9 = new TextEncoder();
-	fields$2 = [
+	fields$3 = [
 		"epoch",
 		"kind",
 		"section",
@@ -28740,6 +28746,61 @@ function createdTableIdentity(value) {
 	return id;
 }
 var init_created_table_identity = __esmMin((() => {}));
+// ../../js/created-table-grid.mjs
+/** @param {unknown} input @returns {Readonly<CreatedTableGridRequest>} */
+function captureCreatedTableGridRequest(input) {
+	if (!input || typeof input !== "object" || Array.isArray(input) || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw new TypeError("InvalidCreatedTableGridRequest");
+	const keys = Reflect.ownKeys(input);
+	if (keys.length !== fields$2.length || keys.some((key) => !fields$2.includes(key))) throw new TypeError("InvalidCreatedTableGridRequest");
+	const captured = Object.create(null);
+	for (const key of fields$2) {
+		const descriptor = Object.getOwnPropertyDescriptor(input, key);
+		if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidCreatedTableGridRequest");
+		captured[key] = descriptor.value;
+	}
+	for (const key of ["section", "index"]) {
+		const value = captured[key];
+		if (typeof value !== "number" || !Number.isInteger(value) || Object.is(value, -0) || value < 0 || value > 4294967295) throw new RangeError("InvalidCreatedTableGridInteger");
+	}
+	if (createdTableIdentity(captured.identity).toString() !== captured.identity) throw new RangeError("InvalidCreatedTableIdentity");
+	if (typeof captured.action !== "string" || !Object.hasOwn(actions, captured.action)) throw new TypeError("InvalidCreatedTableGridAction");
+	return Object.freeze(captured);
+}
+function createCreatedTableGridApi({ wasm, memory, check, prefix, unavailable }) {
+	const name = `${prefix}_created_table_grid`;
+	return {
+		supportsCreatedTableGrid() {
+			check();
+			return typeof wasm[name] === "function";
+		},
+		/** @param {CreatedTableGridRequest} request */
+		editCreatedTableGrid(request) {
+			check();
+			const captured = captureCreatedTableGridRequest(request);
+			const action = wasm[name];
+			if (typeof action !== "function") throw new Error(unavailable);
+			const identity = BigInt(captured.identity);
+			if (action(captured.section, Number(identity & 4294967295n), Number(identity >> 32n), actions[captured.action], captured.index) !== 1) throw memory.error();
+		}
+	};
+}
+var actions, fields$2;
+var init_created_table_grid = __esmMin((() => {
+	init_abi_schema();
+	init_created_table_identity();
+	actions = Object.freeze({
+		"insert-row": CREATED_TABLE_GRID_ACTION.insert_row,
+		"delete-row": CREATED_TABLE_GRID_ACTION.delete_row,
+		"insert-column": CREATED_TABLE_GRID_ACTION.insert_column,
+		"delete-column": CREATED_TABLE_GRID_ACTION.delete_column
+	});
+	fields$2 = [
+		"section",
+		"identity",
+		"action",
+		"index"
+	];
+}));
 // ../../js/hwpx-created-tables.mjs
 function decodeCreatedTables(bytes) {
 	const fail = () => {
@@ -28983,6 +29044,13 @@ var init_table_initial_texts = __esmMin((() => {
 // ../../js/hwp5-table-creation.mjs
 function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 	return {
+		...createCreatedTableGridApi({
+			wasm,
+			memory,
+			check,
+			prefix: "hwp5_edit",
+			unavailable: "Hwp5CreatedTableGridAbiUnavailable"
+		}),
 		supportsTableInitialTexts() {
 			check();
 			return typeof wasm.hwp5_edit_insert_table_with_texts === "function";
@@ -29027,6 +29095,7 @@ function createHwp5TableCreationApi({ wasm, memory, check, output, u32 }) {
 }
 var encoder$7, decoder$2;
 var init_hwp5_table_creation = __esmMin((() => {
+	init_created_table_grid();
 	init_hwp5_created_tables();
 	init_table_creation_resources();
 	init_table_initial_texts();
@@ -30218,6 +30287,59 @@ var init_hwp5_editor = __esmMin((() => {
 		return value;
 	};
 }));
+// ../../js/hwpx-read-scope.mjs
+/** Optional, synchronous optimization. Existing observation methods remain authoritative. */
+function createHwpxReadScopeApi({ wasm, ready, uint, error }) {
+	const begin = wasm.hwpx_edit_read_scope_begin;
+	const end = wasm.hwpx_edit_read_scope_end;
+	if (typeof begin !== "function" && typeof end !== "function") return {};
+	if (typeof begin !== "function" || typeof end !== "function") throw new Error("InvalidHwpxReadScopeAbi");
+	const invoke = (callback) => {
+		const result = callback();
+		if (result !== null && (typeof result === "object" || typeof result === "function") && typeof result.then === "function") {
+			try {
+				Promise.prototype.then.call(result, void 0, () => {});
+			} catch {}
+			throw new TypeError("AsyncReadObservationScopeUnsupported");
+		}
+		return result;
+	};
+	return { withReadObservations(section, callback) {
+		ready();
+		uint(section);
+		if (typeof callback !== "function") throw new TypeError("ExpectedReadObservationCallback");
+		const token = begin(section);
+		if (!token) return invoke(callback);
+		let failed = false;
+		let primary;
+		let result;
+		let cleanupFailed = false;
+		let cleanup;
+		try {
+			result = invoke(callback);
+		} catch (cause) {
+			failed = true;
+			primary = cause;
+		} finally {
+			try {
+				if (!end(token)) {
+					cleanupFailed = true;
+					cleanup = error();
+				}
+			} catch (cause) {
+				cleanupFailed = true;
+				cleanup = cause;
+			}
+		}
+		if (cleanupFailed) {
+			if (failed) throw new AggregateError([primary, cleanup], "ReadObservationScopeCleanupFailed");
+			throw cleanup;
+		}
+		if (failed) throw primary;
+		return result;
+	} };
+}
+var init_hwpx_read_scope = __esmMin((() => {}));
 // ../../js/hwpx-table-caption.mjs
 /** Source caption scalar values; node numbers belong to the current XML tree. */
 function decodeTableCaption(bytes) {
@@ -33285,6 +33407,19 @@ async function createHwpxEditor(source) {
 		}
 	}
 	return {
+		...createCreatedTableGridApi({
+			wasm,
+			memory,
+			check: ready,
+			prefix: "hwpx_edit",
+			unavailable: "HwpxCreatedTableGridAbiUnavailable"
+		}),
+		...createHwpxReadScopeApi({
+			wasm,
+			ready,
+			uint,
+			error: () => memory.error()
+		}),
 		...createAtomicFormattingApi({
 			wasm,
 			memory,
@@ -35365,10 +35500,12 @@ var init_hwpx_editor = __esmMin((() => {
 	init_cell_style_command();
 	init_cell_fill_command();
 	init_atomic_formatting_api();
+	init_hwpx_read_scope();
 	init_hwpx_drawing_text_requested();
 	init_hwpx_line_display_batch();
 	init_hwpx_table_border_batch();
 	init_wasm_memory();
+	init_created_table_grid();
 	init_table_initial_texts();
 	init_hwpx_table_border_sources();
 	init_hwpx_curve_geometry();
@@ -35507,6 +35644,49 @@ var init_literal_match = __esmMin((() => {
 	MAX_LITERAL_BYTES = 4194304;
 	encoder$5 = new TextEncoder();
 }));
+// src/wasm-module.ts
+/** Internal ownership transfer: bytes must be a private immutable snapshot.
+* The public engine captures that snapshot before its first await. Never pass
+* caller-owned mutable bytes here. One entry bounds retained source/module data.
+*/
+function createWasmModuleCache() {
+	let current;
+	const fingerprint = (bytes) => Promise.resolve().then(() => crypto.subtle.digest("SHA-256", bytes));
+	function start(bytes) {
+		const entry = {
+			bytes,
+			module: WebAssembly.compile(bytes)
+		};
+		entry.module = entry.module.catch((cause) => {
+			if (current === entry) current = void 0;
+			throw cause;
+		});
+		current = entry;
+		return entry.module;
+	}
+	async function compileOwned(bytes) {
+		if (bytes.byteLength > 16777216) {
+			current = void 0;
+			return WebAssembly.compile(bytes);
+		}
+		const previous = current;
+		if (previous && previous.bytes.byteLength === bytes.byteLength) {
+			let same = false;
+			try {
+				const expected = previous.digest ??= fingerprint(previous.bytes);
+				const [left, right] = await Promise.all([expected, fingerprint(bytes)]);
+				const a = new Uint8Array(left), b = new Uint8Array(right);
+				same = a.length === 32 && b.length === 32 && a.every((byte, index) => byte === b[index]);
+			} catch {
+				previous.digest = void 0;
+			}
+			if (same) return previous.module;
+		}
+		return start(bytes);
+	}
+	return { compileOwned };
+}
+var init_wasm_module = __esmMin((() => {}));
 // ../document/src/model/common.ts
 function call(sdk, method, args, warnings, source) {
 	try {
@@ -35768,154 +35948,174 @@ var init_hwp5 = __esmMin((() => {
 	init_common$2();
 }));
 // ../document/src/model/hwpx.ts
+function collectSection(sdk, section, warnings) {
+	const source = { section }, get = (name) => call(sdk, name, [section], warnings, source);
+	const flowResult = get("paragraphFlow"), flows = array(flowResult, warnings, "paragraphFlow", source), flowMap = unique(flows, (r) => r.paragraph, warnings, "paragraphFlow");
+	const snapshot = get("paragraphTextSnapshot"), rows = array(snapshot, warnings, "paragraphTextSnapshot", source);
+	const observedRows = rows.slice();
+	const observedIds = new Set(rows.map((row) => row.paragraph));
+	for (const flow of flows) if (!observedIds.has(flow.paragraph)) {
+		observedRows.push({ paragraph: flow.paragraph });
+		observedIds.add(flow.paragraph);
+	}
+	const paragraphs = observedRows.map((row) => {
+		const flow = flowMap.get(row.paragraph);
+		return {
+			paragraph: row.paragraph,
+			node: uint$11(flow?.source_node) ? flow.source_node : null,
+			identityKnown: uint$11(flow?.source_node),
+			displayText: typeof row.text === "string" ? row.text : null,
+			flow: flow ?? null
+		};
+	});
+	const bindings = get("tableBindings"), placements = get("tablePlacements"), tableInventory = get("tableBorderSources"), areas = get("pageAreaDeclarations");
+	for (const [name, result] of Object.entries({
+		bindings,
+		placements,
+		areas
+	})) array(result, warnings, name, source);
+	if (tableInventory.ok && (!tableInventory.value || !Array.isArray(tableInventory.value.cells))) {
+		warnings.push({
+			code: "InvalidObservation",
+			message: "tableBorderSources",
+			source
+		});
+		tableInventory.ok = false;
+	}
+	const sitesResult = get("pictureSites"), ownersResult = get("pictureOwners");
+	const owners = unique(array(ownersResult, warnings, "pictureOwners", source), (row) => row.pictureNode, warnings, "picture owner");
+	const sites = array(sitesResult, warnings, "pictureSites", source).slice();
+	const inventoryPictures = new Set(sites.filter((row) => uint$11(row?.pictureNode)).map((row) => row.pictureNode));
+	const seenPictures = new Set(sites.map((row) => row.pictureNode));
+	for (const owner of owners.values()) if (owner && !seenPictures.has(owner.pictureNode)) {
+		sites.push({
+			pictureNode: owner.pictureNode,
+			paragraph: owner.owner?.paragraph ?? null
+		});
+		seenPictures.add(owner.pictureNode);
+	}
+	const pictures = sites.map((row) => {
+		const owner = owners.get(row.pictureNode), proof = owner?.owner;
+		const parentParagraph = proof && row.paragraph === proof.paragraph ? proof.paragraph : null;
+		return {
+			inventorySiteKnown: inventoryPictures.has(row.pictureNode),
+			pictureNode: row.pictureNode,
+			parentParagraph,
+			sourceInfo: {
+				section,
+				pictureNode: row.pictureNode
+			},
+			width: null,
+			height: null,
+			reason: uint$11(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
+		};
+	});
+	const objects = /* @__PURE__ */ new Map();
+	let objectsKnown = true;
+	const addObject = (row) => {
+		if (!uint$11(row.node)) {
+			objectsKnown = false;
+			return;
+		}
+		const previous = objects.get(row.node);
+		if (previous && previous.kind !== row.kind) throw new Error("ConflictingObjectKind");
+		if (!previous) objects.set(row.node, {
+			...row,
+			node: row.node,
+			siteKnown: true
+		});
+	};
+	const inventory = (method) => {
+		const result = get(method);
+		const rows = array(result, warnings, method, source);
+		objectsKnown &&= result.ok;
+		return rows;
+	};
+	for (const row of inventory("chartSites")) addObject({
+		kind: "chart",
+		node: row?.wrapper,
+		parentParagraph: row?.error_name === null && uint$11(row?.paragraph) && uint$11(row?.anchorUnit) ? row.paragraph : null,
+		detailUnavailable: row?.error_name !== null,
+		reason: row?.error_name ?? "ObjectDetailsDeferred"
+	});
+	for (const row of inventory("equationSites")) addObject({
+		kind: "equation",
+		node: row?.source?.node,
+		parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$11(row?.paragraph) ? row.paragraph : null,
+		detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
+		reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred"
+	});
+	for (const row of inventory("oleSites")) addObject({
+		kind: "ole",
+		node: row?.ole_node,
+		parentParagraph: row?.error_name === null && uint$11(row?.paragraph) ? row.paragraph : null,
+		detailUnavailable: row?.error_name !== null,
+		reason: row?.error_name ?? "ObjectDetailsDeferred"
+	});
+	for (const method of [
+		"rectangleNodes",
+		"lineNodes",
+		"connectorNodes"
+	]) for (const node of inventory(method)) addObject({
+		kind: "drawing",
+		node,
+		parentParagraph: null,
+		subtype: method,
+		reason: "ObjectOwnerUnverified"
+	});
+	for (const row of inventory("ellipseSources")) addObject({
+		kind: "drawing",
+		node: row?.node,
+		parentParagraph: uint$11(row?.owner?.paragraph) ? row.owner.paragraph : null,
+		subtype: "ellipse",
+		reason: "ObjectDetailsDeferred"
+	});
+	for (const row of inventory("drawingTextBindings")) addObject({
+		kind: "drawing",
+		node: row?.drawingNode,
+		parentParagraph: null,
+		subtype: "text-bearing",
+		reason: "ObjectOwnerUnverified"
+	});
+	return {
+		section,
+		paragraphs,
+		paragraphTotal: snapshot.ok && observedRows.length === rows.length ? rows.length : null,
+		flowsKnown: flowResult.ok,
+		bindings,
+		placements,
+		tableInventory,
+		cellInventory: null,
+		areas,
+		pictures,
+		picturesKnown: sitesResult.ok && ownersResult.ok,
+		objects: [...objects.values()],
+		objectsKnown,
+		objectInventoryScope: "hwpx-chart-equation-ole-and-supported-drawing-sites",
+		format: "hwpx"
+	};
+}
 function collectHwpx({ sdk, sectionCount }) {
 	const warnings = [], sections = [];
+	const scope = Object.hasOwn(sdk, "withReadObservations") ? Reflect.get(sdk, "withReadObservations") : void 0;
 	for (let section = 0; section < sectionCount; section++) {
-		const source = { section }, get = (name) => call(sdk, name, [section], warnings, source);
-		const flowResult = get("paragraphFlow"), flows = array(flowResult, warnings, "paragraphFlow", source), flowMap = unique(flows, (r) => r.paragraph, warnings, "paragraphFlow");
-		const snapshot = get("paragraphTextSnapshot"), rows = array(snapshot, warnings, "paragraphTextSnapshot", source);
-		const observedRows = rows.slice();
-		const observedIds = new Set(rows.map((row) => row.paragraph));
-		for (const flow of flows) if (!observedIds.has(flow.paragraph)) {
-			observedRows.push({ paragraph: flow.paragraph });
-			observedIds.add(flow.paragraph);
+		const read = () => collectSection(sdk, section, warnings);
+		if (typeof scope !== "function") {
+			sections.push(read());
+			continue;
 		}
-		const paragraphs = observedRows.map((row) => {
-			const flow = flowMap.get(row.paragraph);
-			return {
-				paragraph: row.paragraph,
-				node: uint$11(flow?.source_node) ? flow.source_node : null,
-				identityKnown: uint$11(flow?.source_node),
-				displayText: typeof row.text === "string" ? row.text : null,
-				flow: flow ?? null
-			};
-		});
-		const bindings = get("tableBindings"), placements = get("tablePlacements"), tableInventory = get("tableBorderSources"), areas = get("pageAreaDeclarations");
-		for (const [name, result] of Object.entries({
-			bindings,
-			placements,
-			areas
-		})) array(result, warnings, name, source);
-		if (tableInventory.ok && (!tableInventory.value || !Array.isArray(tableInventory.value.cells))) {
-			warnings.push({
-				code: "InvalidObservation",
-				message: "tableBorderSources",
-				source
-			});
-			tableInventory.ok = false;
-		}
-		const sitesResult = get("pictureSites"), ownersResult = get("pictureOwners");
-		const owners = unique(array(ownersResult, warnings, "pictureOwners", source), (row) => row.pictureNode, warnings, "picture owner");
-		const sites = array(sitesResult, warnings, "pictureSites", source).slice();
-		const inventoryPictures = new Set(sites.filter((row) => uint$11(row?.pictureNode)).map((row) => row.pictureNode));
-		const seenPictures = new Set(sites.map((row) => row.pictureNode));
-		for (const owner of owners.values()) if (owner && !seenPictures.has(owner.pictureNode)) {
-			sites.push({
-				pictureNode: owner.pictureNode,
-				paragraph: owner.owner?.paragraph ?? null
-			});
-			seenPictures.add(owner.pictureNode);
-		}
-		const pictures = sites.map((row) => {
-			const owner = owners.get(row.pictureNode), proof = owner?.owner;
-			const parentParagraph = proof && row.paragraph === proof.paragraph ? proof.paragraph : null;
-			return {
-				inventorySiteKnown: inventoryPictures.has(row.pictureNode),
-				pictureNode: row.pictureNode,
-				parentParagraph,
-				sourceInfo: {
-					section,
-					pictureNode: row.pictureNode
-				},
-				width: null,
-				height: null,
-				reason: uint$11(parentParagraph) ? null : owner?.error ?? "PictureOwnerUnverified"
-			};
-		});
-		const objects = /* @__PURE__ */ new Map();
-		let objectsKnown = true;
-		const addObject = (row) => {
-			if (!uint$11(row.node)) {
-				objectsKnown = false;
-				return;
-			}
-			const previous = objects.get(row.node);
-			if (previous && previous.kind !== row.kind) throw new Error("ConflictingObjectKind");
-			if (!previous) objects.set(row.node, {
-				...row,
-				node: row.node,
-				siteKnown: true
-			});
-		};
-		const inventory = (method) => {
-			const result = get(method);
-			const rows = array(result, warnings, method, source);
-			objectsKnown &&= result.ok;
-			return rows;
-		};
-		for (const row of inventory("chartSites")) addObject({
-			kind: "chart",
-			node: row?.wrapper,
-			parentParagraph: row?.error_name === null && uint$11(row?.paragraph) && uint$11(row?.anchorUnit) ? row.paragraph : null,
-			detailUnavailable: row?.error_name !== null,
-			reason: row?.error_name ?? "ObjectDetailsDeferred"
-		});
-		for (const row of inventory("equationSites")) addObject({
-			kind: "equation",
-			node: row?.source?.node,
-			parentParagraph: row?.source?.issue === null && row?.error_name === null && uint$11(row?.paragraph) ? row.paragraph : null,
-			detailUnavailable: row?.source?.issue !== null || row?.error_name !== null,
-			reason: row?.source?.issue ?? row?.error_name ?? "ObjectDetailsDeferred"
-		});
-		for (const row of inventory("oleSites")) addObject({
-			kind: "ole",
-			node: row?.ole_node,
-			parentParagraph: row?.error_name === null && uint$11(row?.paragraph) ? row.paragraph : null,
-			detailUnavailable: row?.error_name !== null,
-			reason: row?.error_name ?? "ObjectDetailsDeferred"
-		});
-		for (const method of [
-			"rectangleNodes",
-			"lineNodes",
-			"connectorNodes"
-		]) for (const node of inventory(method)) addObject({
-			kind: "drawing",
-			node,
-			parentParagraph: null,
-			subtype: method,
-			reason: "ObjectOwnerUnverified"
-		});
-		for (const row of inventory("ellipseSources")) addObject({
-			kind: "drawing",
-			node: row?.node,
-			parentParagraph: uint$11(row?.owner?.paragraph) ? row.owner.paragraph : null,
-			subtype: "ellipse",
-			reason: "ObjectDetailsDeferred"
-		});
-		for (const row of inventory("drawingTextBindings")) addObject({
-			kind: "drawing",
-			node: row?.drawingNode,
-			parentParagraph: null,
-			subtype: "text-bearing",
-			reason: "ObjectOwnerUnverified"
-		});
-		sections.push({
-			section,
-			paragraphs,
-			paragraphTotal: snapshot.ok && observedRows.length === rows.length ? rows.length : null,
-			flowsKnown: flowResult.ok,
-			bindings,
-			placements,
-			tableInventory,
-			cellInventory: null,
-			areas,
-			pictures,
-			picturesKnown: sitesResult.ok && ownersResult.ok,
-			objects: [...objects.values()],
-			objectsKnown,
-			objectInventoryScope: "hwpx-chart-equation-ole-and-supported-drawing-sites",
-			format: "hwpx"
-		});
+		let invoked = false;
+		let completed = false;
+		let observed;
+		const value = Reflect.apply(scope, sdk, [section, () => {
+			if (invoked) throw new Error("DuplicateReadObservationCallback");
+			invoked = true;
+			observed = read();
+			completed = true;
+			return observed;
+		}]);
+		if (!completed || observed === void 0 || value !== observed) throw new Error("InvalidReadObservationScopeResult");
+		sections.push(observed);
 	}
 	return {
 		sections,
@@ -36542,16 +36742,17 @@ async function openDocument(options = {}) {
 	if (detected !== "hwp5" && detected !== "hwpx") throw new TypeError("InvalidDocumentFormat");
 	let native;
 	try {
+		const module = await wasmModules.compileOwned(binary);
 		let sectionCount;
 		if (detected === "hwp5") {
-			const sdk = await createExperimentalHwp5Editor(binary, input);
+			const sdk = await createExperimentalHwp5Editor(module, input);
 			native = {
 				format: "hwp5",
 				sdk
 			};
 			sectionCount = sdk.sectionCount();
 		} else {
-			const sdk = await createHwpxEditor(binary);
+			const sdk = await createHwpxEditor(module);
 			native = {
 				format: "hwpx",
 				sdk
@@ -36699,14 +36900,16 @@ async function edit(options) {
 		document.close();
 	}
 }
-var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, record$10;
+var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$10;
 var init_engine = __esmMin((() => {
 	init_document_format();
 	init_hwp5_editor();
 	init_hwpx_editor();
 	init_literal_match();
+	init_wasm_module();
 	MAX_INPUT_BYTES$1 = 67108864;
 	MAX_OUTPUT_BYTES$1 = 134217728;
+	wasmModules = createWasmModuleCache();
 	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/render-content.ts
@@ -38966,6 +39169,14 @@ function validateDocumentOperations(input) {
 				position(operation);
 				paragraphSpacingArgs(operation.type, operation.value);
 				break;
+			case "created-table-grid":
+				captureCreatedTableGridRequest({
+					section: operation.section,
+					identity: operation.identity,
+					action: operation.action,
+					index: operation.index
+				});
+				break;
 			case "cell-sizes":
 				encodeCellSizes(operation.cells);
 				break;
@@ -39018,6 +39229,7 @@ function validateDocumentOperations(input) {
 }
 var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$6, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
 var init_validate = __esmMin((() => {
+	init_created_table_grid();
 	init_character_property_args();
 	init_paragraph_margin_args();
 	init_paragraph_spacing_args();
@@ -39069,6 +39281,13 @@ var init_validate = __esmMin((() => {
 			"type",
 			"value"
 		], ["expectedText"]),
+		"created-table-grid": spec([
+			...common,
+			"section",
+			"identity",
+			"action",
+			"index"
+		]),
 		"cell-sizes": spec([...common, "cells"]),
 		"cell-styles": spec([...common, "styles"]),
 		"picture-resize": spec([
@@ -39180,6 +39399,10 @@ function prepareOperationSession(document, operations) {
 	const protectedSections = /* @__PURE__ */ new Set();
 	for (const operation of operations) {
 		if (typeof document.sdk[METHODS[operation.kind]] !== "function") throw new Error(`DocumentOperationUnavailable:${operation.kind}`);
+		if (operation.kind === "created-table-grid") {
+			const supports = Reflect.get(document.sdk, "supportsCreatedTableGrid");
+			if (typeof supports !== "function" || Reflect.apply(supports, document.sdk, []) !== true) throw new Error(document.format === "hwp5" ? "Hwp5CreatedTableGridAbiUnavailable" : "HwpxCreatedTableGridAbiUnavailable");
+		}
 		if (operation.kind === "table-insert" && operation.cellTexts) requireInitialCellTexts(document);
 		for (const target of targets(operation)) {
 			if (target.section >= document.sectionCount || "paragraph" in target && document.format === "hwpx" && target.paragraph === 0) throw new RangeError("InvalidOperationTarget");
@@ -39304,6 +39527,14 @@ function applyOperation(document, operation) {
 				value: operation.value
 			});
 			break;
+		case "created-table-grid":
+			document.sdk.editCreatedTableGrid({
+				section: operation.section,
+				identity: operation.identity,
+				action: operation.action,
+				index: operation.index
+			});
+			break;
 		case "cell-sizes":
 			document.sdk.setCellSizes(operation.cells);
 			break;
@@ -39365,7 +39596,8 @@ var init_dispatch = __esmMin((() => {
 		"cell-sizes": "setCellSizes",
 		"cell-styles": "setCellStyles",
 		"picture-resize": "resizePicture",
-		"table-insert": "insertTable"
+		"table-insert": "insertTable",
+		"created-table-grid": "editCreatedTableGrid"
 	});
 }));
 // src/document-operations.ts
@@ -39938,6 +40170,38 @@ var init_common$1 = __esmMin((() => {
 	};
 	byteLength = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(Uint8Array.prototype), "byteLength")?.get;
 }));
+// src/ocr/process-environment.ts
+function ocrProcessEnvironment(source = process.env) {
+	const environment = Object.create(null);
+	for (const name of inheritedNames) {
+		const value = source[name];
+		if (typeof value === "string") environment[name] = value;
+	}
+	environment.PATH ??= source.Path ?? source.path;
+	environment.SystemRoot ??= source.SYSTEMROOT ?? source.systemroot;
+	environment.WINDIR ??= source.windir;
+	environment.OMP_THREAD_LIMIT = "1";
+	return environment;
+}
+var inheritedNames;
+var init_process_environment = __esmMin((() => {
+	inheritedNames = [
+		"PATH",
+		"HOME",
+		"USERPROFILE",
+		"TMPDIR",
+		"TMP",
+		"TEMP",
+		"SystemRoot",
+		"WINDIR",
+		"LANG",
+		"LANGUAGE",
+		"LC_ALL",
+		"LC_CTYPE",
+		"LC_MESSAGES",
+		"TESSDATA_PREFIX"
+	];
+}));
 // src/ocr/process.ts
 function runOcrProcess(options = {}) {
 	if (!isRecord(options)) throw new TypeError("InvalidOcrExecutable");
@@ -39989,10 +40253,7 @@ function runOcrProcess(options = {}) {
 					"pipe",
 					"pipe"
 				],
-				env: {
-					...process.env,
-					OMP_THREAD_LIMIT: "1"
-				}
+				env: ocrProcessEnvironment()
 			});
 		} catch (cause) {
 			reject(new OcrError("ProviderUnavailable", { cause }));
@@ -40051,6 +40312,7 @@ function runOcrProcess(options = {}) {
 	});
 }
 var init_process = __esmMin((() => {
+	init_process_environment();
 	init_common$1();
 }));
 // src/ocr/vision.ts
@@ -41680,6 +41942,16 @@ function defineDocumentTool(tool) {
 const uint = () => number$3().int().min(0).max(4294967295);
 const sha = () => string$2().regex(/^[a-f0-9]{64}$/iu);
 const path = () => string$2().min(1);
+function validateMcpOcrExecutable(value) {
+	if (typeof value !== "string" || !value.trim() || !value.isWellFormed() || value.includes("\0")) throw new TypeError("InvalidMcpOcrExecutable");
+}
+const ocrInputSchema = strictObject({
+	inputPath: path(),
+	reference: string$2().max(128).optional(),
+	provider: _enum(["tesseract", "vision"]).default("tesseract"),
+	languages: string$2().min(1).max(128).default("kor+eng"),
+	format: _enum(["text", "markdown"]).default("text")
+});
 const readOnly = {
 	readOnlyHint: true,
 	destructiveHint: false,
@@ -41760,7 +42032,8 @@ function operationSchema() {
 		}
 	}, "작업 종류·좌표·원문 조건·예산을 확인하세요.");
 }
-function extendedDocumentTools({ invoke, wasm }) {
+function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
+	if (ocrExecutable !== void 0) validateMcpOcrExecutable(ocrExecutable);
 	return [
 		defineDocumentTool({
 			name: "delete_document_table",
@@ -41977,27 +42250,34 @@ function extendedDocumentTools({ invoke, wasm }) {
 			config: {
 				title: "문서 그림의 로컬 OCR",
 				description: "구역 그림 전체 또는 지정한 이미지 reference만 로컬 공급자로 인식합니다. 기본 tesseract는 설치된 실행 파일과 언어 자료가 필요하며 vision은 macOS 전용입니다. 공급자를 자동 대체하거나 외부 서버로 업로드하지 않습니다. 언어·도구 부재와 실제 빈 인식 결과를 구분합니다. 일부 그림 실패는 성공 텍스트와 함께 오류로 보고합니다.",
-				inputSchema: strictObject({
-					inputPath: path(),
-					reference: string$2().max(128).optional(),
-					provider: _enum(["tesseract", "vision"]).default("tesseract"),
-					languages: string$2().min(1).max(128).default("kor+eng"),
-					executable: path().optional(),
-					format: _enum(["text", "markdown"]).default("text")
-				}),
-				annotations: readOnly
+				inputSchema: ocrInputSchema,
+				annotations: {
+					...readOnly,
+					readOnlyHint: false
+				}
 			},
-			invoke: ({ inputPath, reference, provider = "tesseract", languages = "kor+eng", executable, format = "text" }) => invoke([
-				"ocr",
-				`--provider=${provider}`,
-				`--languages=${languages}`,
-				`--format=${format}`,
-				...reference === void 0 ? [] : [`--ref=${reference}`],
-				...executable === void 0 ? [] : [`--executable=${executable}`],
-				...wasm,
-				"--",
-				inputPath
-			])
+			invoke: (input) => {
+				const parsed = ocrInputSchema.safeParse(input);
+				if (!parsed.success) return Promise.resolve({
+					isError: true,
+					content: [{
+						type: "text",
+						text: "InvalidMcpOcrInput"
+					}]
+				});
+				const { inputPath, reference, provider, languages, format } = parsed.data;
+				return invoke([
+					"ocr",
+					`--provider=${provider}`,
+					`--languages=${languages}`,
+					`--format=${format}`,
+					...reference === void 0 ? [] : [`--ref=${reference}`],
+					...provider === "tesseract" && ocrExecutable !== void 0 ? [`--executable=${ocrExecutable}`] : [],
+					...wasm,
+					"--",
+					inputPath
+				]);
+			}
 		})
 	];
 }
@@ -42007,7 +42287,7 @@ function describeMcpError(error) {
 	const message = error !== null && (typeof error === "object" || typeof error === "function") && "message" in error ? error.message : void 0;
 	return String(message ?? error);
 }
-function documentTools({ wasmPath, mainModuleURL, executeCLI = runCLI, cliDependencies = {} } = {}) {
+function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = runCLI, cliDependencies = {} } = {}) {
 	if (wasmPath !== void 0 && (typeof wasmPath !== "string" || !wasmPath)) throw new TypeError("InvalidMcpWasmPath");
 	const wasm = wasmPath === void 0 ? [] : [`--wasm=${wasmPath}`];
 	const objectReference = string$2().max(128).refine((value) => {
@@ -42247,23 +42527,299 @@ function documentTools({ wasmPath, mainModuleURL, executeCLI = runCLI, cliDepend
 		}),
 		...extendedDocumentTools({
 			invoke,
-			wasm
+			wasm,
+			ocrExecutable
+		})
+	];
+}
+// src/mcp/document-sessions.ts
+init_engine();
+init_document_model();
+init_render();
+init_files();
+const DOCUMENT_SESSION_LIMITS = Object.freeze({
+	maxSessions: 4,
+	maxOutputBytes: 16777216,
+	maxOwnedInputBytes: 134217728
+});
+/** Reservations include in-flight opens. Handles and ownership never cross managers. */
+function createDocumentSessionManager(options = {}, dependencies = {}) {
+	const files = dependencies.files ?? createFiles();
+	const open = dependencies.openDocument ?? openDocument;
+	const observe = dependencies.readDocumentModel ?? readDocumentModel;
+	const render = dependencies.renderDocument ?? renderDocument;
+	const sessions = /* @__PURE__ */ new Map();
+	const closing = /* @__PURE__ */ new Set();
+	const pending = /* @__PURE__ */ new Set();
+	let slots = 0, ownedBytes = 0, disposed = false;
+	let disposal;
+	const ready = () => {
+		if (disposed) throw Error("DocumentSessionsDisposed");
+	};
+	const lookup = (sessionId) => {
+		const entry = sessions.get(sessionId);
+		if (!entry) throw Error("InvalidDocumentSession");
+		return entry;
+	};
+	function close(sessionId) {
+		const entry = lookup(sessionId);
+		sessions.delete(sessionId);
+		const operation = Promise.allSettled(entry.reads).then(() => {
+			try {
+				entry.document.close();
+			} finally {
+				slots--;
+				ownedBytes -= entry.bytes;
+			}
+		});
+		closing.add(operation);
+		operation.then(() => closing.delete(operation), () => closing.delete(operation));
+		return operation;
+	}
+	async function openReserved(inputPath, expectedSha256) {
+		ready();
+		if (expectedSha256 !== void 0 && !/^[a-f0-9]{64}$/.test(expectedSha256)) throw Error("InvalidExpectedSha256");
+		if (slots >= DOCUMENT_SESSION_LIMITS.maxSessions) throw Error("DocumentSessionLimitExceeded");
+		if (ownedBytes + 67108864 > DOCUMENT_SESSION_LIMITS.maxOwnedInputBytes) throw Error("DocumentSessionInputLimitExceeded");
+		slots++;
+		ownedBytes += MAX_DOCUMENT_BYTES$1;
+		let reserved = MAX_DOCUMENT_BYTES$1;
+		let document;
+		let retained = false;
+		try {
+			const snapshot = await files.readInputSnapshot(inputPath, { maxBytes: MAX_DOCUMENT_BYTES$1 });
+			ready();
+			if (!(snapshot.bytes instanceof Uint8Array) || !snapshot.bytes.length || snapshot.bytes.length > 67108864 || !/^[a-f0-9]{64}$/.test(snapshot.sha256)) throw Error("InvalidInputSnapshot");
+			if (expectedSha256 !== void 0 && snapshot.sha256 !== expectedSha256) throw Error("SourceSha256Mismatch");
+			ownedBytes -= reserved - snapshot.bytes.length;
+			reserved = snapshot.bytes.length;
+			const wasmPath = files.resolveWasmPath(options.wasmPath, options.mainModuleURL);
+			const wasm = await files.readInputSnapshot(wasmPath, { maxBytes: MAX_WASM_BYTES$1 });
+			ready();
+			document = await open({
+				bytes: snapshot.bytes,
+				wasm: wasm.bytes,
+				expectedSha256: snapshot.sha256
+			});
+			ready();
+			if (document.format !== "hwp5" && document.format !== "hwpx" || document.sourceSha256 !== snapshot.sha256) throw Error("InvalidEngineFormat");
+			let sessionId;
+			do
+				sessionId = randomBytes(32).toString("hex");
+			while (sessions.has(sessionId));
+			sessions.set(sessionId, {
+				document,
+				reads: /* @__PURE__ */ new Set(),
+				bytes: reserved
+			});
+			retained = true;
+			return {
+				sessionId,
+				format: document.format,
+				sourceSha256: document.sourceSha256,
+				sectionCount: document.sectionCount
+			};
+		} finally {
+			if (!retained) {
+				slots--;
+				ownedBytes -= reserved;
+				document?.close();
+			}
+		}
+	}
+	return {
+		open(inputPath, expectedSha256) {
+			const operation = openReserved(inputPath, expectedSha256);
+			pending.add(operation);
+			operation.then(() => pending.delete(operation), () => pending.delete(operation));
+			return operation;
+		},
+		read(sessionId, { format = "text", view = "content" } = {}) {
+			ready();
+			const entry = lookup(sessionId);
+			if (entry.reads.size !== 0) throw Error("DocumentSessionBusy");
+			const operation = (async () => {
+				await Promise.resolve();
+				const document = entry.document;
+				const model = await observe({
+					format: document.format,
+					sourceSha256: document.sourceSha256,
+					sectionCount: document.sectionCount,
+					sdk: document.sdk
+				});
+				if (model.version !== 1 || model.format !== document.format || model.sourceSha256 !== document.sourceSha256) throw Error("InvalidEngineModel");
+				const text = render(model, {
+					format,
+					view,
+					maxOutputUnits: DOCUMENT_SESSION_LIMITS.maxOutputBytes
+				});
+				const response = renderReadResponse({
+					format: document.format,
+					sourceSha256: document.sourceSha256,
+					text
+				}, { view });
+				if (Buffer.byteLength(response, "utf8") > DOCUMENT_SESSION_LIMITS.maxOutputBytes) throw Error("DocumentSessionOutputLimitExceeded");
+				return response;
+			})();
+			entry.reads.add(operation);
+			operation.then(() => entry.reads.delete(operation), () => {
+				entry.reads.delete(operation);
+				if (sessions.has(sessionId)) close(sessionId).catch(() => {});
+			});
+			return operation;
+		},
+		close,
+		dispose() {
+			if (disposal) return disposal;
+			disposed = true;
+			for (const id of sessions.keys()) close(id);
+			const pendingCount = pending.size;
+			disposal = Promise.allSettled([...pending, ...closing]).then((results) => {
+				const failures = results.slice(pendingCount).filter((result) => result.status === "rejected");
+				if (failures.length) throw new AggregateError(failures.map((result) => result.reason), "DocumentSessionCleanupFailed");
+			});
+			return disposal;
+		}
+	};
+}
+// src/mcp/session-tools.ts
+function documentSessionTools(manager) {
+	const sessionId = string$2().regex(/^[a-f0-9]{64}$/);
+	const annotations = {
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: false,
+		openWorldHint: true
+	};
+	const invoke = async (action) => {
+		try {
+			const result = await action();
+			return {
+				content: [{
+					type: "text",
+					text: typeof result === "string" ? result : JSON.stringify(result)
+				}],
+				...typeof result === "object" && result !== null ? { structuredContent: result } : {}
+			};
+		} catch (error) {
+			return {
+				isError: true,
+				content: [{
+					type: "text",
+					text: describeMcpError(error)
+				}]
+			};
+		}
+	};
+	return [
+		defineDocumentTool({
+			name: "open_document_session",
+			config: {
+				title: "Open read-only document session",
+				description: "Open a local HWP5/HWPX once for repeated reads. Returns an opaque sessionId owned by this connection. Maximum 4 sessions, 64 MiB per file and 128 MiB owned input including pending reservations. Close when finished. Session edits are not supported; apply_document_changes remains a separate file transaction.",
+				inputSchema: strictObject({
+					inputPath: string$2().min(1),
+					expectedSha256: string$2().regex(/^[a-f0-9]{64}$/).optional()
+				}),
+				annotations
+			},
+			invoke: ({ inputPath, expectedSha256 }) => invoke(() => manager.open(inputPath, expectedSha256))
+		}),
+		defineDocumentTool({
+			name: "read_document_session",
+			config: {
+				title: "Read opened document session",
+				description: "Read the retained read-only snapshot as text or Markdown, using the same model and image/object references as read_document. Accepts only the server-issued handle and display options. Single UTF-8 text result is limited to 16 MiB; this does not bound model allocations.",
+				inputSchema: strictObject({
+					sessionId,
+					format: _enum(["text", "markdown"]).default("text"),
+					view: _enum(["content", "structure"]).default("content")
+				}),
+				annotations: {
+					...annotations,
+					idempotentHint: true,
+					openWorldHint: false
+				}
+			},
+			invoke: ({ sessionId, format, view }) => invoke(() => manager.read(sessionId, {
+				format,
+				view
+			}))
+		}),
+		defineDocumentTool({
+			name: "close_document_session",
+			config: {
+				title: "Close opened document session",
+				description: "Release the opened engine and input capacity. Closed or foreign handles return InvalidDocumentSession.",
+				inputSchema: strictObject({ sessionId }),
+				annotations: {
+					...annotations,
+					openWorldHint: false
+				}
+			},
+			invoke: ({ sessionId }) => invoke(async () => {
+				await manager.close(sessionId);
+				return { closed: true };
+			})
 		})
 	];
 }
 // src/mcp/server.ts
 function parseMcpArguments(argv) {
-	if (!Array.isArray(argv) || !argv.every((value) => typeof value === "string" && value.isWellFormed())) throw new TypeError("Usage: hwpjs-mcp [--wasm PATH]");
-	if (argv.length === 0) return {};
-	if (argv.length !== 2 || argv[0] !== "--wasm" || !argv[1] || argv[1].includes("\0")) throw new TypeError("Usage: hwpjs-mcp [--wasm PATH]");
-	return { wasmPath: argv[1] };
+	const usage = "Usage: hwpjs-mcp [--wasm PATH] [--ocr-executable PATH]";
+	if (!Array.isArray(argv) || !argv.every((value) => typeof value === "string" && value.isWellFormed())) throw new TypeError(usage);
+	const options = {};
+	for (let index = 0; index < argv.length; index += 2) {
+		const flag = argv[index], value = argv[index + 1];
+		if (typeof value !== "string" || !value || value.includes("\0")) throw new TypeError(usage);
+		if (flag === "--wasm" && options.wasmPath === void 0) options.wasmPath = value;
+		else if (flag === "--ocr-executable" && options.ocrExecutable === void 0) {
+			if (value.startsWith("--")) throw new TypeError(usage);
+			validateMcpOcrExecutable(value);
+			options.ocrExecutable = value;
+		} else throw new TypeError(usage);
+	}
+	return options;
 }
 function createMcpServer(options = {}) {
 	const server = new McpServer({
 		name: "hwpjs",
 		version
 	});
-	for (const tool of documentTools(options)) tool.register(server);
+	const sessions = createDocumentSessionManager(options, {
+		files: options.cliDependencies?.files,
+		openDocument: options.cliDependencies?.engine?.openDocument,
+		renderDocument: options.cliDependencies?.renderDocument,
+		...options.sessionDependencies
+	});
+	const report = (error) => server.server.onerror?.(error instanceof Error ? error : new Error(String(error)));
+	const originalClose = server.close.bind(server);
+	server.close = async () => {
+		try {
+			await sessions.dispose();
+		} finally {
+			await originalClose();
+		}
+	};
+	server.server.onclose = () => {
+		sessions.dispose().catch(report);
+	};
+	const originalConnect = server.connect.bind(server);
+	server.connect = async (...args) => {
+		try {
+			await originalConnect(...args);
+		} catch (error) {
+			await sessions.dispose();
+			throw error;
+		}
+	};
+	try {
+		for (const tool of documentTools(options)) tool.register(server);
+		for (const tool of documentSessionTools(sessions)) tool.register(server);
+	} catch (error) {
+		sessions.dispose().catch(report);
+		throw error;
+	}
 	return server;
 }
 function runMcpServer({ transport, onerror, ...options } = {}) {
