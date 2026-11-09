@@ -103,6 +103,26 @@ pub fn build(b: *std.Build) void {
     open_content_step.dependOn(&run_open_content_tests.step);
     core_test_step.dependOn(&run_open_content_tests.step);
 
+    const parsed_location_step = b.step("test-hwpx-parsed-locations", "Verify fresh parse location reuse and scanner parity");
+    inline for (.{
+        .{ "src/hwpx_parsed_location_reuse_probe.zig", "parsed location reuse" },
+        .{ "src/section_text_transition_parity_probe.zig", "section transition parity" },
+    }) |entry| {
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(entry[0]),
+                .target = target,
+                .optimize = optimize,
+            }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        parsed_location_step.dependOn(&run_probe.step);
+        core_test_step.dependOn(&run_probe.step);
+    }
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

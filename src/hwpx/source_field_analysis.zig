@@ -146,7 +146,7 @@ test "source field analysis open owns failure cleanup and preserves malformed li
     const editor = @import("editor_session.zig");
     const valid = try fixture.zipWithParagraphs(a, "<p:p><p:run><p:ctrl><p:fieldBegin id='8' type='CLICK_HERE'/></p:ctrl><p:t>body</p:t><p:ctrl><p:fieldEnd beginIDRef='8'/></p:ctrl></p:run></p:p>");
     defer a.free(valid);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, input: []const u8) !void {
             var session = try editor.open(allocator, input, .{});
             defer session.deinit();

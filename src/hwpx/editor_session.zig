@@ -966,7 +966,7 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
             text_bytes += site.text.len;
         }
         const first = counters.paragraphs + 1;
-        const locations = try locations_module.buildWithCounters(a, &tree, &sites, siteOptions(options), &counters);
+        const locations = try locations_module.buildParsedWithCounters(a, &parsed, &sites, siteOptions(options), &counters);
         errdefer a.free(locations);
         try sections.append(a, .{ .tree = tree, .sites = sites, .locations = locations, .entry_index = entry_index, .first_paragraph = first, .source_first_paragraph = first, .last_paragraph = counters.paragraphs });
         xml_bytes += xml.len;

@@ -45,7 +45,7 @@ test "HWPX character resource insertion preserves complete header and allocation
     const input = "<h:head xmlns:h='http://www.hancom.co.kr/hwpml/2011/head'><h:refList><h:charProperties itemCnt = '&#49;' opaque='keep'><h:charPr id='9' height='1000'><h:italic/></h:charPr><!--keep--></h:charProperties><h:styles/></h:refList></h:head>";
     var tree = try @import("xml_part_tree.zig").parse(a, input, .header, null, 0, .{});
     defer tree.deinit(a);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: *const Tree) !void {
             const output = try write(allocator, source, 3, 300, .{ .size = 2400, .italic = false, .bold = true }, 4096);
             defer allocator.free(output);

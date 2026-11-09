@@ -1,12 +1,12 @@
 const std = @import("std");
 const xml = @import("../xml/root.zig");
 const zip = @import("../zip/archive.zig");
-const attrs = @import("xml_attributes.zig");
 const document_xml = @import("document_xml.zig");
 const content_manifest = @import("content_manifest.zig");
 const document_structure = @import("document_structure.zig");
 const masterpage_parts = @import("masterpage_parts.zig");
 const namespace_profile = @import("namespace_profile.zig");
+const trees = @import("xml_part_tree.zig");
 const text_child_names = @import("text_child_names.zig");
 const selection = @import("compatibility_selection.zig");
 
@@ -146,8 +146,20 @@ const Node = struct {
     in_scope: bool = true,
 };
 
-fn inlineKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !InlineKind {
-    const model = try text_child_names.modelKind(tag, scope) orelse return .unknown;
+// Both parser callbacks and fresh-tree replay feed these exact transitions.
+const ScanTag = struct {
+    kind: @FieldType(xml.tags.Tag, "kind"),
+    name: xml.namespaces.ExpandedName,
+    element_index: usize = 0,
+    stream: ?struct { tag: xml.tags.Tag, scope: *const xml.namespaces.State } = null,
+
+    fn is(self: ScanTag, uri: []const u8, local: []const u8) bool {
+        return std.mem.eql(u8, self.name.uri, uri) and self.name.local.equals(local, false);
+    }
+};
+
+fn inlineKind(name: xml.namespaces.ExpandedName) InlineKind {
+    const model = text_child_names.modelKindExpanded(name) orelse return .unknown;
     return switch (model) {
         .tab => .tab,
         .fw_space => .fw_space,
@@ -161,8 +173,7 @@ fn inlineKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !InlineKind
     };
 }
 
-fn otherContentKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !OtherContentKind {
-    const name = try scope.expandElement(tag.name);
+fn otherContentKind(name: xml.namespaces.ExpandedName) OtherContentKind {
     if (!std.mem.eql(u8, name.uri, document_xml.paragraph_uri)) return .unknown;
     if (name.local.equals("script", false)) return .script;
     if (name.local.equals("stringParam", false)) return .string_param;
@@ -180,7 +191,8 @@ const Scanner = struct {
     allocator: std.mem.Allocator,
     options: Options,
     report: *Report,
-    visitor: ?Visitor,
+    visitor: ?Visitor = null,
+    location_visitor: ?LocationVisitor = null,
     section_ordinal: usize,
     item_index: usize,
     mode: PartKind = .section,
@@ -205,35 +217,50 @@ const Scanner = struct {
         if (self.visitor) |visitor| try visitor.on_event(visitor.context, event);
     }
 
+    fn boundary(self: *Scanner, comptime kind: std.meta.Tag(Event), tag: ScanTag, node: Node) !void {
+        if (kind == .run_start or kind == .text_start) {
+            if (self.location_visitor) |v| try v.on_location(v.context, tag.element_index, self.location(node));
+        }
+        if (tag.stream) |source| try self.emit(@unionInit(Event, @tagName(kind), .{ .location = self.location(node), .tag = source.tag, .scope = source.scope }));
+    }
+
+    fn inlineEvent(self: *Scanner, comptime kind: std.meta.Tag(Event), tag: ScanTag, node: Node) !void {
+        if (tag.stream) |source| try self.emit(@unionInit(Event, @tagName(kind), .{ .location = self.location(node), .kind = node.inline_kind, .tag = source.tag, .scope = source.scope }));
+    }
+
     fn onTag(raw: *anyopaque, tag: xml.tags.Tag, scope: *const xml.namespaces.State, depth: usize) anyerror!void {
         const self: *Scanner = @ptrCast(@alignCast(raw));
+        try self.consumeTag(.{ .kind = tag.kind, .name = try scope.expandElement(tag.name), .stream = .{ .tag = tag, .scope = scope } }, depth);
+    }
+
+    fn consumeTag(self: *Scanner, value: ScanTag, depth: usize) !void {
         if (depth == 0 or depth > self.nodes.len) return error.LimitExceeded;
-        if (tag.kind == .end) {
+        if (value.kind == .end) {
             const node = self.nodes[depth - 1];
             if (!node.active) return;
             switch (node.kind) {
                 .paragraph => {
                     if (node.direct_runs == 0) self.report.paragraphs_without_direct_run += 1;
-                    try self.emit(.{ .paragraph_end = .{ .location = self.location(node), .tag = tag, .scope = scope } });
+                    try self.boundary(.paragraph_end, value, node);
                 },
-                .run => try self.emit(.{ .run_end = .{ .location = self.location(node), .tag = tag, .scope = scope } }),
+                .run => try self.boundary(.run_end, value, node),
                 .text => {
                     if (self.current_text_bytes == 0) self.report.empty_text_elements += 1;
                     try self.emit(.{ .text_end = self.location(node) });
                     self.current_text_bytes = 0;
                 },
-                .control => try self.emit(.{ .inline_end = .{ .location = self.location(node), .kind = node.inline_kind, .tag = tag, .scope = scope } }),
+                .control => try self.inlineEvent(.inline_end, value, node),
                 else => {},
             }
             return;
         }
         if (depth == 1) {
             const valid_root = switch (self.mode) {
-                .section => try attrs.element(tag, scope, document_xml.section_uri, "sec"),
-                .master_page => try masterpage_parts.isRootTag(tag, scope),
+                .section => value.is(document_xml.section_uri, "sec"),
+                .master_page => value.is("", "masterPage"),
             };
             if (!valid_root) {
-                if (self.mode == .section and namespace_profile.isVersionedRoot(try scope.expandElement(tag.name), "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
+                if (self.mode == .section and namespace_profile.isVersionedRoot(value.name, "sec", "section")) return error.UnsupportedHwpxNamespaceProfile;
                 return if (self.mode == .section) error.InvalidSectionRoot else error.InvalidMasterPageRoot;
             }
         }
@@ -243,7 +270,7 @@ const Scanner = struct {
         node.in_scope = parent.in_scope;
         if (self.mode == .master_page) {
             if (depth == 1) node.in_scope = false else if (depth == 2) {
-                node.in_scope = try masterpage_parts.isDirectSubListTag(tag, scope);
+                node.in_scope = value.is(document_xml.paragraph_uri, "subList");
                 self.sub_lists += @intFromBool(node.in_scope);
                 node.active = node.in_scope;
             }
@@ -252,32 +279,31 @@ const Scanner = struct {
         node.is_branch = false;
         node.selected = .{};
         if (parent.active and parent.is_switch) {
-            const is_case = try attrs.element(tag, scope, document_xml.paragraph_uri, "case");
-            const is_default = if (is_case) false else try attrs.element(tag, scope, document_xml.paragraph_uri, "default");
+            const is_case = value.is(document_xml.paragraph_uri, "case");
+            const is_default = if (is_case) false else value.is(document_xml.paragraph_uri, "default");
             if (is_case or is_default) {
                 node.is_branch = true;
-                node.active = try selection.choose(self.allocator, tag, scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.nodes[depth - 2].selected);
+                node.active = try selection.choose(self.allocator, value.stream.?.tag, value.stream.?.scope, is_case, self.options.max_attribute_bytes, self.options.branch_policy, &self.nodes[depth - 2].selected);
             }
         }
-        if (parent.active and (parent.kind == .run or parent.is_branch) and try attrs.element(tag, scope, document_xml.paragraph_uri, "switch")) node.is_switch = true;
+        if (parent.active and (parent.kind == .run or parent.is_branch) and value.is(document_xml.paragraph_uri, "switch")) node.is_switch = true;
         if (!node.active) {
             node.kind = .other;
-            if (tag.kind == .start) self.nodes[depth - 1] = node;
+            if (value.kind == .start) self.nodes[depth - 1] = node;
             return;
         }
         node.kind = .other;
         node.inline_kind = .unknown;
-        node.other_content_kind = try otherContentKind(tag, scope);
+        node.other_content_kind = otherContentKind(value.name);
         if (parent.text != 0) {
             node.kind = .control;
-            node.inline_kind = try inlineKind(tag, scope);
+            node.inline_kind = inlineKind(value.name);
             const used = inlineTotal(self.report);
             if (used == self.options.max_inline_elements) return error.LimitExceeded;
             self.report.inline_counts[@backingInt(node.inline_kind)] += 1;
             if (parent.kind == .control) self.report.nested_inline_elements += 1;
-            const event: InlineEvent = .{ .location = self.location(node), .kind = node.inline_kind, .tag = tag, .scope = scope };
-            if (tag.kind == .empty) try self.emit(.{ .inline_empty = event }) else try self.emit(.{ .inline_start = event });
-        } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "p")) {
+            if (value.kind == .empty) try self.inlineEvent(.inline_empty, value, node) else try self.inlineEvent(.inline_start, value, node);
+        } else if (value.is(document_xml.paragraph_uri, "p")) {
             self.report.paragraphs += 1;
             self.paragraphs_in_part += 1;
             node.kind = .paragraph;
@@ -285,12 +311,12 @@ const Scanner = struct {
             node.run = 0;
             node.text = 0;
             node.direct_runs = 0;
-            try self.emit(.{ .paragraph_start = .{ .location = self.location(node), .tag = tag, .scope = scope } });
-            if (tag.kind == .empty) {
+            try self.boundary(.paragraph_start, value, node);
+            if (value.kind == .empty) {
                 self.report.paragraphs_without_direct_run += 1;
-                try self.emit(.{ .paragraph_end = .{ .location = self.location(node), .tag = tag, .scope = scope } });
+                try self.boundary(.paragraph_end, value, node);
             }
-        } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "run")) {
+        } else if (value.is(document_xml.paragraph_uri, "run")) {
             self.report.runs += 1;
             node.kind = .run;
             node.run = self.report.runs;
@@ -298,22 +324,22 @@ const Scanner = struct {
             if (parent.kind == .paragraph) {
                 self.nodes[depth - 2].direct_runs += 1;
             } else self.report.non_direct_runs += 1;
-            try self.emit(.{ .run_start = .{ .location = self.location(node), .tag = tag, .scope = scope } });
-            if (tag.kind == .empty) try self.emit(.{ .run_end = .{ .location = self.location(node), .tag = tag, .scope = scope } });
-        } else if (try attrs.element(tag, scope, document_xml.paragraph_uri, "t")) {
+            try self.boundary(.run_start, value, node);
+            if (value.kind == .empty) try self.boundary(.run_end, value, node);
+        } else if (value.is(document_xml.paragraph_uri, "t")) {
             if (self.report.text_elements == self.options.max_text_elements) return error.LimitExceeded;
             self.report.text_elements += 1;
             node.kind = .text;
             node.text = self.report.text_elements;
             self.current_text_bytes = 0;
             if (parent.kind != .run) self.report.non_direct_text_elements += 1;
-            try self.emit(.{ .text_start = .{ .location = self.location(node), .tag = tag, .scope = scope } });
-            if (tag.kind == .empty) {
+            try self.boundary(.text_start, value, node);
+            if (value.kind == .empty) {
                 self.report.empty_text_elements += 1;
                 try self.emit(.{ .text_end = self.location(node) });
             }
         }
-        if (tag.kind == .start) self.nodes[depth - 1] = node;
+        if (value.kind == .start) self.nodes[depth - 1] = node;
     }
 
     fn inlineTotal(report: *const Report) usize {
@@ -379,6 +405,61 @@ pub fn scanSource(a: std.mem.Allocator, bytes: []const u8, ordinal: usize, item_
     try selection.validate(options.branch_policy);
     var scanner: Scanner = .{ .allocator = a, .options = options, .report = report, .visitor = visitor, .section_ordinal = ordinal, .item_index = item_index };
     _ = try document_xml.visitBytes(a, bytes, options.max_section_xml_bytes, options.xml, .{ .context = &scanner, .on_tag = Scanner.onTag, .on_content = Scanner.onContent });
+}
+
+/// Internal fresh parse-chain sink. No parser-owned tag/scope escapes replay.
+pub const LocationVisitor = struct {
+    context: *anyopaque,
+    on_location: *const fn (*anyopaque, usize, Location) anyerror!void,
+};
+
+/// Precondition: unchanged Tree/events from the same fresh parseWithContent.
+/// This is not a raw Tree validator. False leaves report untouched for scanSource.
+pub fn scanParsedLocations(a: std.mem.Allocator, parsed: *const trees.ParsedWithContent, options: Options, report: *Report, visitor: LocationVisitor) !bool {
+    const tree = &parsed.tree;
+    const events = parsed.events orelse return false;
+    if (tree.part_kind != .section or tree.section_ordinal == null or
+        !std.meta.eql(options.xml, document_xml.Options{}) or tree.source.len > options.max_section_xml_bytes) return false;
+    const checked = tree.xml_report;
+    if (!checked.namespaces_validated or checked.elements > options.xml.max_elements or
+        checked.events > options.xml.max_events or checked.attributes > options.xml.max_attributes or
+        checked.references > options.xml.max_references or checked.max_depth > options.xml.max_depth) return false;
+    for (tree.elements) |element| if (element.is(document_xml.paragraph_uri, "switch")) return false;
+    try selection.validate(options.branch_policy);
+    var scanner: Scanner = .{ .allocator = a, .options = options, .report = report, .section_ordinal = tree.section_ordinal.?, .item_index = tree.item_index, .location_visitor = visitor };
+    var stack: [256]usize = undefined;
+    var depth: usize = 0;
+    var next: usize = 0;
+    var content_index: usize = 0;
+    while (next < tree.elements.len or depth != 0) {
+        const closing = if (depth == 0) tree.source.len else tree.elements[stack[depth - 1]].end_tag.?.start;
+        const opening = next < tree.elements.len and tree.elements[next].start_tag.start < closing;
+        const boundary = if (opening) tree.elements[next].start_tag.start else closing;
+        while (content_index < events.len) {
+            const event = events[content_index];
+            const pointer = @intFromPtr(event.value.raw.ptr);
+            const base = @intFromPtr(tree.source.ptr);
+            if (pointer < base or pointer - base > tree.source.len) return error.InvalidSourceSpan;
+            if (pointer - base >= boundary) break;
+            if (depth == 0 or event.parent_index != stack[depth - 1]) return error.SourceBindingMismatch;
+            try Scanner.onContent(&scanner, event.value, depth);
+            content_index += 1;
+        }
+        if (opening) {
+            const element = tree.elements[next];
+            try scanner.consumeTag(.{ .kind = if (element.end_tag == null) .empty else .start, .name = element.name, .element_index = next }, depth + 1);
+            if (element.end_tag != null) {
+                stack[depth] = next;
+                depth += 1;
+            }
+            next += 1;
+        } else {
+            try scanner.consumeTag(.{ .kind = .end, .name = tree.elements[stack[depth - 1]].name }, depth);
+            depth -= 1;
+        }
+    }
+    if (content_index != events.len) return error.SourceBindingMismatch;
+    return true;
 }
 
 /// Reuses the section token scanner for selected master-page subLists while

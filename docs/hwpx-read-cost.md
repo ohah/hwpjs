@@ -93,6 +93,7 @@ Noori HWPX의 이전 Node/WASM 읽기는 열기 약 16ms와 모델 수집 약 11
 
 최종 근거는 `zig-out/verification/hwpx-read-r4/`의 `indexed-build.log`, `indexed-capture-debug.log`, `indexed-capture-safe.log`, `namespace-debug.log`, `namespace-safe.log`, `indexed-native-regression.log`, `runtime-indexed.json`, `edit-indexed.json`, `accepted-indexed-summary.json`, `namespace-indexed.json`, `consumer-indexed.json`, `installed-e2e-indexed.log`, `source-pins-final.json`, `browser/e2e-indexed/`이다. 초기 capture-only b7 후보와 19.05ms 측정은 중간 단계로 보존하며 최종 후보 수치로 사용하지 않는다. URI 65,536바이트 예제는 기준 엔진부터 LimitExceeded여서 비교에서 제외했고, 잘못 생성된 최초 ZIP과 격리 소스에서 probe 누락으로 실패한 명령도 제품 결과에 합산하지 않는다.
 
+
 ## 편집하지 않은 현재 헤더의 복제 제거
 
 글꼴 조회는 원본에 서식 편집이 없어도 `replacementWithFonts`의 검증·canonical 검사·복사·다중 트리 파싱을 수행했다. 빈 intent writer는 원본 바이트를 그대로 돌려주므로, Native-owned 원본이 있는 경우 같은 결과의 비소유 view를 반환하도록 했다. API·파일 포맷이나 writer의 편집 처리를 변경하지 않는다.
@@ -124,3 +125,56 @@ raw/untrusted·원본 부재·source 결합 불일치·사실상 no-op을 포함
 실제 WASM 회귀 3개, 9개 문서 전체 runtime 응답 동치, 6문서 서식 편집/undo/redo/저장/재열기 검사를 통과했다. SDK strict declaration 빌드와 설치 파일 126개 바이트 비교, 설치 CLI·stdio MCP 16개 도구의 E2E 두 진입점도 통과했다. 전체 저장소 테스트나 모든 조판의 완료 검사는 아니다. npm 게시·main 푸시·데모 배포는 하지 않았다.
 
 원자료는 `zig-out/verification/hwpx-read-r5/`의 `build.log`, `source-pins.json`, `unedited-debug.log`, `unedited-safe.log`, `header-read-tests.log`, `header-capture-tests.log`, `native-regression.log`, `runtime-standard.json`, `edit-standard.json`, `performance-summary.json`, `font-read-benchmark.json`, `consumer-standard.json`, `installed-e2e.log`, `browser/e2e-clean/`이다. 처음 `browser/e2e-final/`은 Native 기능 검사와 시간이 겹쳐 기능 근거만 사용하며 속도 집계에서 제외한다. 실행 명령은 [개발·검증 명령](development-commands.md#hwpx-unedited-current-header)이 소유한다.
+
+
+## 구역 파싱 결과의 위치 재사용
+
+Session.open은 구역 Tree와 content event를 만든 뒤, 텍스트 사이트의 문서 전체 위치를 구하려고 같은 XML을 다시 스캔했다. 새 경로는 같은 open 호출 안에서 아직 변경하지 않은 `ParsedWithContent`를 받아 요소·content를 원본 순서로 합쳐 기존 Scanner의 상태 전이를 실행한다. XML 파서가 이미 수행한 어휘·namespace 검증을 반복하지 않는다. 모든 Tree를 신뢰하는 공개 빠른 읽기 옵션이나 편집 후 캐시는 추가하지 않는다.
+
+`section_text`가 raw scan과 replay의 문단·run·text·inline 상태 전이를 소유한다. `text_child_names.modelKindExpanded`가 두 경로의 이름 분류를 공유하므로 이름 사전을 복제하지 않는다. `text_site_locations`는 요소 인덱스에 위치를 넣고 모든 binding과 결과 할당이 성공한 뒤에만 누적 report를 반영한다. Session은 기존 parse→collect→location 연결의 마지막 호출만 바꾼다. raw `buildWithCounters`와 공개 scanner의 검증·visitor 계약은 유지한다.
+
+재사용은 section ordinal과 content 캡처가 존재하고, 기본 XML 옵션·검증 report·크기 한도를 만족하는 fresh Tree에 한정한다. `switch`가 하나라도 있거나 content 캡처 한도를 넘으면 원본 scanner로 돌아간다. 재사용 거부는 report와 위치 sink에 부작용이 없다. 편집하거나 외부에서 조립한 Tree에 이 내부 경로를 호출하는 것은 계약 밖이며 원본 build 경로를 사용해야 한다.
+
+요소 E개·content C개·사이트 S개의 위치 재생과 결과 투영은 O(E+C+S)이며, 재생 stack은 기존 최대 깊이 256에 한정한다. 요소별 위치 배열 O(E)와 결과 O(S)는 기존과 같다. 각 문단마다 XML 전체를 다시 찾거나 재해싱하는 인덱스는 추가하지 않는다. 이 결과가 압축 해제·전체 모델·조판까지 포함한 엔진 전체의 최악 복잡도를 증명하지는 않는다.
+
+### 검증 범위
+
+새 위치 동치 검사는 Debug/ReleaseSafe 각 10개, 변경 전 Scanner를 동결한 별도 비교기는 각 8개가 통과했다. 전체 report 필드와 location, visitor 이벤트 순서·실패 prefix·오류 코드, 빈 문단과 중첩 inline·foreign namespace·재선언, UTF-16, content 캡처 한도, 선택 분기와 master page, 텍스트·inline 예산, 실패 시 report 원복·할당 해제를 비교한다. 기존 section/master-page 집중 검사 22개와 text node 관련 검사 10개도 통과했다. 실제 Noori 구역에서 replay가 실제 채택됐으며 raw scanner report와 일치함을 확인했다.
+
+실제 WASM의 9문서 전체 runtime 응답은 직전 엔진과 같았고, 6문서의 12개 서식 조회·편집·undo/redo·저장·재열기 및 Native 회귀 3개도 통과했다. strict SDK 빌드, 설치 파일 126개 바이트 비교, 설치 CLI·stdio MCP E2E 2개와 OCR 보안 E2E 2개가 같은 최종 WASM에서 통과했다.
+
+추가 text-node probe를 무필터로 실행한 중간 결과는 593개 중 497개 통과·96개 실패였다. 91개는 격리 소스에 없는 실파일을 요구한 FileNotFound이며 통과 근거에서 제외한다. 나머지 5개 할당 횟수 비결정성 실패는 수정 전과 후의 직접 module probe에서도 동일하게 발생했다. 성공 실행과 실패 주입 실행의 할당 수가 달라 주입 지점에 도달하지 못하는 검사기 오류이며, OOM을 삼킨 경우의 오류와 구분된다. 해당 다섯 테스트만 기존 공통 allocation-failure helper로 바꿔 일반 allocator 성공·누수 확인과 resize/remap을 차단한 전체 실패 sweep을 함께 실행했다. 이후 Debug/ReleaseSafe 각 6개가 통과했다. 제품 할당 전략이나 callback assertion은 바꾸지 않았다. 최초 remap 분기를 추적한 결과로 주장하지 않는다.
+
+빌드 연결의 최초 무필터 실행도 의도하지 않은 import 검사까지 포함해 618개 중 91개가 실패했으며 통과 근거에서 제외했다. 집중 target에 두 검사 이름 필터를 명시해 실행 범위를 고정했다.
+
+실측 원자료와 최종 빌드 식별자는 아래에 기록한다. 전체 저장소 테스트·모든 fixture·조판 동치 완료 검사가 아니며 npm 게시·main 푸시·데모 배포는 하지 않았다. 실행 명령은 [개발·검증 명령](development-commands.md#hwpx-parsed-locations)이 소유한다.
+
+
+### 최종 Native 실측
+
+ReleaseSafe 표준 빌드는 6,996,390바이트, SHA256 `c0d688139661d54f65fddf34a940e2aefbd8af9bb17513d82b52d3b470e8dba1`이다. 테스트 호출과 빌드 연결을 보완한 뒤 다시 빌드해 같은 WASM 바이트임을 확인했다. SDK·설치 검증의 WASM과도 같다. 집중 build target은 18/18 검사, 표준 빌드는 6/6 단계가 통과했다. 전체 `zig build test`를 완료한 결과로 읽지 않는다.
+
+Native 빌드·테스트·설치·브라우저와 겹치지 않는 Node 24.20.0 집단에서 기준/후보/후보/기준 순서로 측정했다. 각 집단의 첫 포맷 실행을 제외해 구현별 12회의 중앙값을 비교했다. 기준은 직전 5dbdcb 엔진이며 SDK/CLI source는 고정했다.
+
+| Noori HWPX | 직전 엔진 | 새 엔진 |
+| --- | ---: | ---: |
+| open | 13.99ms | 12.16ms |
+| open + 전체 모델 + text | 19.28ms | 17.39ms |
+| 모델 수집 | 5.14ms | 5.04ms |
+
+open 약 13.1%, 전체 읽기 약 9.8% 감소다. 모델 수집 단계가 주된 개선이라고 주장하지 않는다. 전체 text 해시와 본문 19개 지점, 경고 부재, 원본·source pins를 함께 확인했다. CLI 프로세스 시작·설치·네트워크·조판·연속 입력/undo의 속도를 잰 결과는 아니다. 별도 중간 43a 엔진 측정과 섞지 않는다.
+
+
+같은 Node 집단의 rhwp 0.9.0 HWPX text 읽기 중앙값은 24회 5.10ms였다. 새 엔진의 전체 모델+text 경로는 여전히 약 3.4배이며, 이번 개선으로 같은 속도에 도달했다는 주장은 아니다. 두 API의 반환 범위 차이도 남는다.
+
+최종 WASM과 같은 Worker/UI를 private localhost에 연결한 실제 Vanilla 브라우저에서 Noori를 3회씩 교대 업로드했다. Native 빌드·테스트·설치·Node 측정과 분리했다.
+
+| 브라우저 3회 중앙값 | 직전 엔진 | 새 엔진 |
+| --- | ---: | ---: |
+| Worker load 왕복 | 100.8ms | 84.2ms |
+| enable 왕복 | 40.3ms | 38.4ms |
+| file input부터 연결된 Canvas 첫 텍스트 | 183.6ms | 160.9ms |
+
+첫 텍스트 약 12.4% 감소다. 첫 실행 편차가 큰 소표본이며 전체 이미지 완료·네트워크·최신 UI 전체·연속 입력/undo의 개선으로 일반화하지 않는다. 6회 모두 native Worker 메시지·본문 열기·Canvas 클릭 뒤 caret 입력/서식 활성화를 확인했고 page/console error가 없었다. 선택 전 스크린샷 6개는 PNG 바이트까지 같았다. 전용 브라우저와 두 서버는 종료했다. 최초 `e2e-ssot` 집단은 서버의 관측 연결 옵션을 빠뜨려 메시지 시각을 수집하지 못하고 기준 엔진부터 timeout했다. 해당 결과는 측정에서 제외하고, 명시적으로 관측 연결한 `e2e-accepted`만 집계했다.
+
+최종 근거는 `zig-out/verification/hwpx-read-r6/`의 `fmt-verified.log`, `build-location-focused.log`, `build-final.log`, `ssot-location-{debug,safe}.log`, `ssot-transition-{debug,safe}.log`, `ssot-existing-safe.log`, `ssot-noori-replay.log`, `text-node-targeted.log`, `oom-direct-{baseline,current}.log`, `oom-fixed-{safe,debug}.log`, `runtime-ssot.json`, `edit-ssot.json`, `ssot-native-regression.log`, `ssot-sdk-build.log`, `consumer-ssot.json`, `installed-services-ssot.log`, `installed-ocr-ssot.log`, `performance-ssot.json`, `browser-accepted.json`, `browser/e2e-accepted/`, `source-pins-final.json`이다. 중간 43a 후보와 구분해 최종 c0d 후보 결과만 사용한다.

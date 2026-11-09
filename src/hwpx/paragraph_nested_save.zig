@@ -359,7 +359,7 @@ test "HWPX nested save retains plain generated child paragraphs" {
     try std.testing.expectEqual(@as(usize, 3), std.mem.count(u8, output, "<p:p "));
     try std.testing.expectEqualStrings("A😀B", original.paragraphs[1].sites.items[0].text);
     try std.testing.expectEqualStrings(source, tree.source);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const Tree, now: *const model.Values, before: *const model.Values, element: usize, expected: []const u8) !void {
             const saved = try fold(allocator, parsed, now, before, element, parsed.sourceOf(element), 10000);
             defer allocator.free(saved);

@@ -31,7 +31,11 @@ comptime {
 }
 
 pub fn modelKind(tag: xml.tags.Tag, scope: *const xml.namespaces.State) !?ModelKind {
-    const name = try scope.expandElement(tag.name);
+    return modelKindExpanded(try scope.expandElement(tag.name));
+}
+
+/// Share the same name dictionary with already namespace-validated tree readers.
+pub fn modelKindExpanded(name: xml.namespaces.ExpandedName) ?ModelKind {
     if (!std.mem.eql(u8, name.uri, document_xml.paragraph_uri)) return null;
     for (names, 0..) |candidate, i| {
         if (name.local.equals(candidate, false)) return @fromBackingInt(@intCast(i));

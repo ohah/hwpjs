@@ -97,7 +97,7 @@ test "HWPX formula definition rebind follows explicit identity after shifted ele
     try std.testing.expectEqual(@as(usize, 1), mapped.entries.items.len);
     try std.testing.expect(mapped.entries.items[0].begin_element != node);
     try std.testing.expectEqualStrings("=AVG(A1:A1)", mapped.entries.items[0].formula);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, old: *const Tree, current: *const Tree, values: *const Values) !void {
             var copy = try rebind(allocator, old, current, values);
             defer copy.deinit(allocator);

@@ -88,7 +88,7 @@ test "HWPX field label splice releases every failed allocation and preserves cur
     defer report.deinit();
     const linked = try ranges.build(a, &trees, &report);
     defer a.free(linked);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, parsed: *const @import("xml_part_tree.zig").Tree, field: ranges.Range) !void {
             var sites = try sites_module.collect(allocator, parsed, .{});
             defer sites.deinit(allocator);

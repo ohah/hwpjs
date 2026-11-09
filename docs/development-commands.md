@@ -1595,3 +1595,15 @@ zig test src/hwpx_unedited_header_view_probe.zig -O ReleaseSafe -fllvm -j1 --tes
 node --test --test-concurrency=1 packages/cli/tests/ocr-environment-security.test.mjs packages/cli/tests/ocr-process.test.mjs packages/cli/tests/mcp-ocr-security.test.mjs packages/cli/tests/mcp.test.mjs packages/cli/tests/ocr-core.test.mjs packages/cli/tests/document-ocr.test.mjs
 bunx --no-install tsc --noEmit -p packages/cli/tsconfig.json
 ```
+
+## HWPX 파싱 결과의 위치 재사용
+
+<a id="hwpx-parsed-locations"></a>
+
+[재사용 조건과 실측](hwpx-read-cost.md#구역-파싱-결과의-위치-재사용)을 따릅니다. 아래 집중 빌드 대상은 새 합성 검사 두 개를 실행하고 정규 `test` 단계에도 연결합니다. 전체 저장소 검증과 구분합니다.
+
+```sh
+zig build test-hwpx-parsed-locations -Doptimize=ReleaseSafe -j1 --summary all
+zig test src/hwpx_parsed_location_reuse_probe.zig -O Debug -fllvm -j1 --test-filter 'parsed location reuse'
+zig test src/section_text_transition_parity_probe.zig -O Debug -fllvm -j1 --test-filter 'section transition parity'
+```
