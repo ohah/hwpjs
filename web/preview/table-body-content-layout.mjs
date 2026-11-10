@@ -39,7 +39,7 @@ import { measureInlineTableColumnParagraph } from './inline-table-column-measure
 import { measureBlockTableColumnHost } from './block-table-column-host.mjs';
 import { tableVerticalReference } from './table-vertical-reference.mjs';
 import { paginatePaperTableRows } from './paper-table-page-flow.mjs';
-import { inlineTableRowFitsPaper } from './inline-table-row-fit.mjs';
+import { inlineTableRowFitsPaper, createInlineTableFitRejection } from './inline-table-row-fit.mjs';
 import { tableSourceHorizontalLayout } from './table-source-horizontal-layout.mjs';
 import { inlineTableHostAnchors } from './inline-table-host-anchors.mjs';
 import { hasPictureSourceErrors, hasFinitePictureCrop } from './picture-source-validation.mjs';
@@ -690,6 +690,11 @@ export function layoutTableBodyContent(
   let result = layoutMeasuredMultipleTables(entries, sequence, setting, flows, {
     maxRows,
     rowFitsColumn: inlineTableRowFitsPaper,
+    // These plain table bands keep source widths through column remeasurement.
+    // Positioned pictures/paper-table/custom paginators retain their own retry policy.
+    ...(!bodyPictures.length && !paperEntries.length && paginateRows === undefined
+      ? { createRowFitRejection: createInlineTableFitRejection }
+      : {}),
     rowY,
     minimumRowPage,
     columnBottom,

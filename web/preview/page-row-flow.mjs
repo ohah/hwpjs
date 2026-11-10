@@ -31,6 +31,7 @@ export function paginateBodyRows(
     columnBottom,
     minimumRowPage,
     rowFitsColumn,
+    createRowFitRejection,
   } = {},
 ) {
   const unavailable = (error) => ({ state: 'unavailable', error });
@@ -44,6 +45,14 @@ export function paginateBodyRows(
     return unavailable('InvalidPageFlowBounds');
   const initial = pageReferenceBoxes(setting, { x, y });
   if (initial.state !== 'placed') return unavailable(initial.state);
+  // pageReferenceBoxes currently admits only these page-invariant bindings.
+  // Page-specific horizontal overrides must update this proof before opting in.
+  const horizontalFitInvariant =
+    setting.gutter_type === 'left_only' ||
+    (setting.gutter_type === 'left_right' &&
+      setting.margin.gutter === 0 &&
+      setting.margin.left === setting.margin.right);
+
   const validRow = (row) =>
     row &&
     fitHeight(row) !== null &&
@@ -74,6 +83,8 @@ export function paginateBodyRows(
   if (minimumRowPage !== undefined && typeof minimumRowPage !== 'function')
     return unavailable('InvalidPageFlowBounds');
   if (rowFitsColumn !== undefined && typeof rowFitsColumn !== 'function')
+    return unavailable('InvalidPageFlowBounds');
+  if (createRowFitRejection !== undefined && typeof createRowFitRejection !== 'function')
     return unavailable('InvalidPageFlowBounds');
   if (measurePositionedRow !== undefined && typeof measurePositionedRow !== 'function')
     return unavailable('InvalidPageFlowBounds');
@@ -227,6 +238,15 @@ export function paginateBodyRows(
     }
     const firstColumns = columnsFor(initial.boxes.page);
     if (firstColumns.state !== 'placed') return unavailable(firstColumns.error);
+    // Only the fit owner can prove page-invariant horizontal rejection. A generic
+    // fit callback, or positioned remeasurement, may succeed on a later page.
+    const observeFit =
+      horizontalFitInvariant && !logicalAnchor && !measurePositionedRow && createRowFitRejection
+        ? createRowFitRejection(source, { columns: firstColumns.boxes, paper: initial.boxes.paper })
+        : null;
+    if (observeFit !== null && typeof observeFit !== 'function')
+      return unavailable('InvalidPageRowFitRejection');
+
     if (measureRow && !logicalAnchor)
       row = measureRow(
         source,
@@ -311,19 +331,38 @@ export function paginateBodyRows(
           : fullBottom;
       if (!Number.isFinite(bottom) || bottom < column.y || bottom > fullBottom)
         return unavailable('InvalidPageColumnBottom');
-      const fits =
-        rowFitsColumn && !logicalAnchor
-          ? rowFitsColumn(row, {
-              column,
-              paper: current.paper,
-              page: current.page,
-              pageOrdinal: current.ordinal,
-              columnOrdinal,
-            })
-          : true;
+      const fitContext = {
+        column,
+        paper: current.paper,
+        page: current.page,
+        pageOrdinal: current.ordinal,
+        columnOrdinal,
+        columnCount: current.columns.length,
+      };
+      const fits = rowFitsColumn && !logicalAnchor ? rowFitsColumn(row, fitContext) : true;
       if (typeof fits !== 'boolean') return unavailable('InvalidPageRowFit');
       const requiredHeight = requiredRowHeight(row, keepNextHeight);
       if (requiredHeight === null) return invalidRow(row, 'required-height');
+      if (observeFit) {
+        const rejection = observeFit(row, fitContext, fits);
+        if (rejection !== null) {
+          if (
+            !rejection ||
+            typeof rejection !== 'object' ||
+            Array.isArray(rejection) ||
+            typeof rejection.error !== 'string' ||
+            rejection.error.length === 0
+          )
+            return unavailable('InvalidPageRowFitRejection');
+          return {
+            ...rejection,
+            state: 'unavailable',
+            section: row.section,
+            paragraph: row.paragraph,
+          };
+        }
+      }
+
       if (fits && cursor + requiredHeight <= bottom) break;
       if (
         flowAnchorY === cursor &&

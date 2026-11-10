@@ -82,6 +82,7 @@ jobs:
             ./packages/vanilla/tests/source-table-grid-selection.test.mjs \
             ./packages/vanilla/tests/source-table-grid-history.test.mjs \
             ./packages/vanilla/tests/source-table-grid-multipara-history.test.mjs \
+            ./tests/hwpx/inline-table-fit-rejection.test.mjs \
             ./apps/demo/tests/source-table-grid-port.test.mjs \
             ./apps/demo/tests/source-table-grid-ui.test.mjs \
             ./apps/demo/tests/table-grid-port.test.mjs \

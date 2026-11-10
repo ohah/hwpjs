@@ -1725,3 +1725,23 @@ HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types \
 동일 승인 seed와 새 WASM을 사용한 Reader/Worker 검사는 `bun test ./packages/core/tests/runtime/source-table-grid-multiparagraph.test.ts`입니다. SDK 검사가 생성한 `task-d/old-refusal-final/seeds.json`과 고정된 원본 해시를 사용합니다. 초기 여러 문단·빈 문단의 투영 전체를 독립 오라클과 대조하고 네 명령·Native 이력·저장 재열기를 확인합니다.
 
 실제 브라우저 검사는 `tools/source-table-grid-multiparagraph-browser-audit.mjs`입니다. 새 번들을 소유 서버에 올린 뒤 origin·manifest SHA·WASM SHA와 명시 실행 플래그를 전달해야 합니다. 브라우저 검사를 소스 모형 검사나 공개 배포 확인으로 대체하지 않으며 사용한 브라우저는 종료 후 inactive 상태까지 확인합니다.
+
+
+## 인라인 표의 가로 실패와 이력 예약
+
+[표 가로 실패 계약](inline-table-fit-rejection.md)의 입력 불변·다단 재시도·정밀 오류 검사는 다음과 같습니다.
+
+```sh
+node --test tests/hwpx/inline-table-fit-rejection.test.mjs
+```
+
+[HWPX 이력](hwpx-edit-history.md)의 예약 상한·전체 OOM·기존 한도 회귀는 고정 Noori HWPX를 준비한 통제 소스에서 실행합니다. fixture SHA는 probe가 검사하며 원본 한도·기대값을 유지합니다.
+
+```sh
+zig test src/hx_history_cap_metadata_probe.zig -O ReleaseSafe -fllvm -j1 \
+  --test-filter 'history reservation' --test-filter 'HX resource integration' --test-filter 'owned-v2'
+```
+
+이 집중 결과는 참조 입력이 누락된 전체 Native 검사의 성공을 대신하지 않습니다.
+
+새 WASM의 공개 SDK 한도 검사는 같은 `HWPJS_TEST_SOURCE_ROOT`·`HWPJS_TEST_WASM`·정확한 `HWPJS_TEST_WASM_SHA256` 환경에서 `node --test tools/tests/history-cap-native.test.mjs`로 실행합니다. 기존 202fc 엔진과 공개 Noori의 고정 SHA를 대조하며, WebAssembly 32비트의 실제 메타데이터와 Native 크기를 구분합니다.

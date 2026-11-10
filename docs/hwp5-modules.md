@@ -536,3 +536,5 @@
 - [원본 표 격자 live 편집](source-table-grid-live-edit.md)
 
 - [원본 표 셀의 여러 문단](source-table-grid-cell-paragraphs.md)
+
+- [인라인 표의 영구 가로 비적합 판정](inline-table-fit-rejection.md)

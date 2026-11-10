@@ -1,5 +1,11 @@
 // PREPARATION ONLY until MAIN authorizes a fresh static bundle origin + Native SHA.
 // No server/build/fixture producer. Task D supplies independent archives and oracle.
+// OPTIONAL strict oversize regression, after the unchanged six fitting cases:
+// HWPJS_SOURCE_GRID_OVERSIZE_BROWSER_CASES=1
+// HWPJS_TEST_OVERSIZE_HWP5=<approved browser-r4/vanilla-hwp5-insert-column-applied.hwp>
+// HWPJS_TEST_OVERSIZE_HWP5_SHA256=f7ee823fd6bec74a9e30556952b1e157bb403167969d10c0a15016182452f09d
+// Output MUST be control/zig-out/verification/oversize-table-flow-r1/task-e/browser-r1.
+// MAIN must provide a NEW authorized origin, bundle manifest SHA and Native SHA.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
@@ -50,7 +56,37 @@ const root = safePath(env('HWPJS_TEST_SOURCE_ROOT'));
 assert.equal(root, candidate, 'ControlledShippingSourceRequired');
 assert.equal(resolve(process.cwd()), root, 'RunFromControlledSource');
 const output = safePath(process.argv[3]);
-assert(inside(evidence, output) && output !== evidence, 'NewMultiparagraphEvidenceChildRequired');
+const oversizeFlag = process.env.HWPJS_SOURCE_GRID_OVERSIZE_BROWSER_CASES;
+assert(oversizeFlag === undefined || oversizeFlag === '1', 'InvalidOversizeAuditOptIn');
+const oversizeEnabled = oversizeFlag === '1';
+const oversizeOutput = join(
+  control,
+  'zig-out/verification/oversize-table-flow-r1/task-e/browser-r1',
+);
+if (oversizeEnabled) assert.equal(output, oversizeOutput, 'ExactFreshOversizeEvidencePathRequired');
+else
+  assert(inside(evidence, output) && output !== evidence, 'NewMultiparagraphEvidenceChildRequired');
+let oversizePath, oversizeSha;
+if (oversizeEnabled) {
+  oversizePath = safePath(env('HWPJS_TEST_OVERSIZE_HWP5'));
+  oversizeSha = sha('HWPJS_TEST_OVERSIZE_HWP5_SHA256');
+  assert.equal(
+    oversizePath,
+    join(evidence, 'task-e/browser-r4/vanilla-hwp5-insert-column-applied.hwp'),
+    'OnlyApprovedWideHwp5Source',
+  );
+  assert.equal(
+    oversizeSha,
+    'f7ee823fd6bec74a9e30556952b1e157bb403167969d10c0a15016182452f09d',
+    'OnlyApprovedWideHwp5SHA',
+  );
+} else {
+  assert(
+    process.env.HWPJS_TEST_OVERSIZE_HWP5 === undefined &&
+      process.env.HWPJS_TEST_OVERSIZE_HWP5_SHA256 === undefined,
+    'OversizeInputsRequireExplicitOptIn',
+  );
+}
 const oraclePath = safePath(env('HWPJS_TEST_MULTIPARA_ORACLE'));
 const oracleSha = sha('HWPJS_TEST_MULTIPARA_ORACLE_SHA256');
 assert.equal(
@@ -93,7 +129,13 @@ for (const format of ['hwp5', 'hwpx'])
     ),
     'OnlyPageFittingTaskDSeedCohortApproved',
   );
-for (const path of [root, oraclePath, cfbPath, ...Object.values(fixturePaths)])
+for (const path of [
+  root,
+  oraclePath,
+  cfbPath,
+  ...Object.values(fixturePaths),
+  ...(oversizeEnabled ? [oversizePath] : []),
+])
   assert(!inside(output, path), 'OutputContainsInput');
 const origin = new URL(process.argv[2]);
 assert.equal(origin.protocol, 'http:');
@@ -109,6 +151,12 @@ assert.notEqual(
   '28d2f91917e81d0522ffe04d6ddff150aee2ad815a9ed1ed6d470af905aaacca',
   'OldPublicNativeForbiddenForMultiparagraphAudit',
 );
+if (oversizeEnabled)
+  assert.notEqual(
+    nativeSha,
+    '202fc55283b670ea7c695ef3a326a0e6b8c86af3def7232c8e5bfab003699389',
+    'NewOversizeAndHistoryBoundNativeRequired',
+  );
 const manifestSha = sha('HWPJS_TEST_BUNDLE_MANIFEST_SHA256');
 function noSymlinks(path, newLeaf = false) {
   let current = control;
@@ -146,6 +194,12 @@ for (const format of ['hwp5', 'hwpx']) {
   seedBytes[format] = readFileSync(fixturePaths[format]);
   assert.equal(digest(seedBytes[format]), fixtureShas[format], 'TaskDFixtureSHAMismatch');
 }
+let oversizeBytes;
+if (oversizeEnabled) {
+  noSymlinks(oversizePath);
+  oversizeBytes = readFileSync(oversizePath);
+  assert.equal(digest(oversizeBytes), oversizeSha, 'ApprovedWideSourceSHAMismatch');
+}
 // This oracle must read archives independently; never the candidate Native reader.
 const oracle = await import(pathToFileURL(oraclePath).href);
 assert.equal(oracle.readNative, false, 'IndependentOracleMustDeclareReadNativeFalse');
@@ -167,6 +221,9 @@ const seeds = Object.fromEntries(
     inspectMultiparagraphArchive(seedBytes[format], format),
   ]),
 );
+const oversizeArchive = oversizeEnabled
+  ? inspectMultiparagraphArchive(oversizeBytes, 'hwp5')
+  : null;
 const browserCli = inspectBrowserCli();
 assert.equal(browserCli.mode, 'native-direct', 'BoundedNativeBrowserCLIRequired');
 mkdirSync(output);
@@ -174,7 +231,8 @@ const json = (name, value) =>
   writeFileSync(join(output, name), JSON.stringify(value, null, 2) + '\n');
 const commands = [],
   observations = [],
-  results = [];
+  results = [],
+  oversizeResults = [];
 let stage = 'fresh-bundle',
   session,
   owned = false,
@@ -404,6 +462,70 @@ function history(kind) {
   wait(`${status}?.startsWith('실행 취소/다시 실행 적용 ·')&&${settled}`);
   witness('history-' + kind);
 }
+// This separate regression expects a rejected physical layout, not an editable
+// selection. Never relax witness()/second-paragraph/authority guards for the six cases.
+function strictOversizeCase(framework) {
+  const label = `${framework}-oversize-hwp5`;
+  const startedAt = new Date().toISOString(),
+    start = performance.now();
+  stage = label + ':open';
+  run('open', new URL(`/demo/${framework}/`, origin).href);
+  wait(`!!document.querySelector('input[data-role="file-picker"]')`);
+  reopen(oversizePath);
+  const value = evaluate(
+    `(()=>{const c=document.querySelector('canvas'),i=document.querySelector('${inputSelector}');return {status:${status},trace:${trace},canvas:{...c.dataset},rect:c.getBoundingClientRect().toJSON(),input:{readOnly:i.readOnly,disabled:i.disabled,busy:i.getAttribute('aria-busy')}};})()`,
+  );
+  json(label + '-public-dom.json', value);
+  assert.equal(value.status, openedStatus, 'OversizeSourceMustLoad');
+  assert.equal(
+    value.canvas.pageLayoutError,
+    'InlineTablePaperOverflow',
+    'SpecificBoundedPaperOverflowRequired',
+  );
+  assert.equal(
+    value.canvas.pageLayoutMode,
+    'logical-fallback',
+    'OversizePhysicalLayoutMustBeRejected',
+  );
+  assert.equal(value.canvas.selectionAuthority, 'current', 'OversizeAuthorityMustBeCurrent');
+  assert.equal(value.canvas.paintPending, 'false');
+  assert.equal(value.canvas.composing, 'false');
+  assert.equal(value.input.readOnly, true, 'OversizeInputMustRemainReadOnly');
+  assert.notEqual(value.input.busy, 'true');
+  run('screenshot', join(output, label + '.png'));
+  writeFileSync(join(output, label + '-dom.txt'), run('snapshot'));
+  // Public save only: no shrink, text/grid mutation, selection injection or private reader.
+  stage = label + ':unchanged-save';
+  const saved = save(label + '-unchanged', 'hwp5');
+  const savedBytes = readFileSync(saved.file);
+  assertArchiveEqual(oversizeBytes, savedBytes, { format: 'hwp5' });
+  assertArchiveEqual(oversizeArchive, saved.archive, { format: 'hwp5' });
+  assert.equal(
+    digest(readFileSync(oversizePath)),
+    oversizeSha,
+    'ApprovedSourceFileMustRemainUnchanged',
+  );
+  const errors = run('errors').trim();
+  writeFileSync(join(output, label + '-errors.txt'), errors);
+  assert.equal(errors, '', errors);
+  oversizeResults.push({
+    framework,
+    format: 'hwp5',
+    source: oversizePath,
+    sourceSha256: oversizeSha,
+    saved: saved.file,
+    savedSha256: digest(savedBytes),
+    sourceBytesUnchanged: true,
+    startedAt,
+    elapsedMs: performance.now() - start,
+    expectedError: 'InlineTablePaperOverflow',
+    expectedLayout: 'logical-fallback',
+    physicalRenderSupported: false,
+    readNative: false,
+    passed: true,
+  });
+  json('oversize-results.json', oversizeResults);
+}
 async function remote(path, expected) {
   const response = await fetch(new URL(path, origin), {
     redirect: 'error',
@@ -434,6 +556,9 @@ try {
     cfbSha,
     fixturePaths,
     fixtureShas,
+    oversize: oversizeEnabled
+      ? { path: oversizePath, sha256: oversizeSha, expectedCases: 3 }
+      : null,
     browserCli,
     readNative: false,
   });
@@ -540,6 +665,10 @@ try {
       json('results.json', results);
     }
   assert.equal(results.length, 6);
+  if (oversizeEnabled) {
+    for (const framework of ['vanilla', 'react', 'svelte']) strictOversizeCase(framework);
+    assert.equal(oversizeResults.length, 3);
+  }
 } catch (error) {
   failure = error;
   json('failure.json', { stage, error: String(error), stack: error.stack });
@@ -590,6 +719,8 @@ try {
     stage,
     cases: results.length,
     expectedCases: 6,
+    oversizeCases: oversizeResults.length,
+    expectedOversizeCases: oversizeEnabled ? 3 : 0,
     actionsPerCase: 4,
     verifiedInactive,
     output,
@@ -598,4 +729,12 @@ try {
   });
 }
 if (failure) throw failure;
-console.log(JSON.stringify({ status: 'passed', cases: results.length, output, verifiedInactive }));
+console.log(
+  JSON.stringify({
+    status: 'passed',
+    cases: results.length,
+    oversizeCases: oversizeResults.length,
+    output,
+    verifiedInactive,
+  }),
+);
