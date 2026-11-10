@@ -5358,7 +5358,7 @@ const ZodString = /*@__PURE__*/ $constructor("ZodString", (inst, def) => {
 		return this.check(/* @__PURE__ */ _isoDuration(ZodISODuration, params));
 	}
 });
-function string$2(params) {
+function string$3(params) {
 	return /* @__PURE__ */ _string(ZodString, params);
 }
 const ZodStringFormat = /*@__PURE__*/ $constructor("ZodStringFormat", (inst, def) => {
@@ -5732,7 +5732,7 @@ const ZodRecord = /*@__PURE__*/ $constructor("ZodRecord", (inst, def) => {
 function record$15(keyType, valueType, params) {
 	if (!valueType || !valueType._zod) return new ZodRecord({
 		type: "record",
-		keyType: string$2(),
+		keyType: string$3(),
 		valueType: keyType,
 		...normalizeParams(valueType)
 	});
@@ -6079,23 +6079,23 @@ const SUBSCRIPTION_ID_META_KEY = "io.modelcontextprotocol/subscriptionId";
 */
 const LOG_LEVEL_META_KEY = "io.modelcontextprotocol/logLevel";
 const JSONValueSchema = lazy(() => union([
-	string$2(),
+	string$3(),
 	number$3(),
 	boolean$1(),
 	_null(),
-	record$15(string$2(), JSONValueSchema),
+	record$15(string$3(), JSONValueSchema),
 	array$1(JSONValueSchema)
 ]));
-const JSONObjectSchema = record$15(string$2(), JSONValueSchema);
+const JSONObjectSchema = record$15(string$3(), JSONValueSchema);
 const JSONArraySchema = array$1(JSONValueSchema);
 /**
 * A progress token, used to associate progress notifications with the original request.
 */
-const ProgressTokenSchema = union([string$2(), number$3().int()]);
+const ProgressTokenSchema = union([string$3(), number$3().int()]);
 /**
 * An opaque token used to represent a cursor for pagination.
 */
-const CursorSchema = string$2();
+const CursorSchema = string$3();
 /** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
 const TaskMetadataSchema = object$12({ ttl: number$3().optional() });
 /**
@@ -6104,7 +6104,7 @@ const TaskMetadataSchema = object$12({ ttl: number$3().optional() });
 *
 * @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 */
-const RelatedTaskMetadataSchema = object$12({ taskId: string$2() });
+const RelatedTaskMetadataSchema = object$12({ taskId: string$3() });
 const RequestMetaSchema = looseObject({
 	progressToken: ProgressTokenSchema.optional(),
 	[RELATED_TASK_META_KEY]: RelatedTaskMetadataSchema.optional()
@@ -6120,12 +6120,12 @@ const BaseRequestParamsSchema = object$12({ _meta: RequestMetaSchema.optional() 
 */
 const TaskAugmentedRequestParamsSchema = BaseRequestParamsSchema.extend({ task: TaskMetadataSchema.optional() });
 const RequestSchema = object$12({
-	method: string$2(),
+	method: string$3(),
 	params: BaseRequestParamsSchema.loose().optional()
 });
 const NotificationsParamsSchema = object$12({ _meta: RequestMetaSchema.optional() });
 const NotificationSchema = object$12({
-	method: string$2(),
+	method: string$3(),
 	params: NotificationsParamsSchema.loose().optional()
 });
 /**
@@ -6144,7 +6144,7 @@ const ResultSchema = looseObject({ _meta: ResultMetaObjectSchema.optional() });
 /**
 * A uniquely identifying ID for a request in JSON-RPC.
 */
-const RequestIdSchema = union([string$2(), number$3().int()]);
+const RequestIdSchema = union([string$3(), number$3().int()]);
 /**
 * A request that expects a response.
 */
@@ -6176,7 +6176,7 @@ const JSONRPCErrorResponseSchema = object$12({
 	id: RequestIdSchema.optional(),
 	error: object$12({
 		code: number$3().int(),
-		message: string$2(),
+		message: string$3(),
 		data: unknown$1().optional()
 	})
 }).strict();
@@ -6193,7 +6193,7 @@ const JSONRPCResponseSchema = union([JSONRPCResultResponseSchema, JSONRPCErrorRe
 const EmptyResultSchema = ResultSchema.strict();
 const CancelledNotificationParamsSchema = NotificationsParamsSchema.extend({
 	requestId: RequestIdSchema.optional(),
-	reason: string$2().optional()
+	reason: string$3().optional()
 });
 /**
 * This notification can be sent by either side to indicate that it is cancelling a previously-issued request.
@@ -6212,9 +6212,9 @@ const CancelledNotificationSchema = NotificationSchema.extend({
 * Icon schema for use in {@link Tool | tools}, {@link Prompt | prompts}, {@link Resource | resources}, and {@link Implementation | implementations}.
 */
 const IconSchema = object$12({
-	src: string$2(),
-	mimeType: string$2().optional(),
-	sizes: array$1(string$2()).optional(),
+	src: string$3(),
+	mimeType: string$3().optional(),
+	sizes: array$1(string$3()).optional(),
 	theme: _enum(["light", "dark"]).optional()
 });
 /**
@@ -6226,8 +6226,8 @@ const IconsSchema = object$12({ icons: array$1(IconSchema).optional() });
 * Base metadata interface for common properties across {@link Resource | resources}, {@link Tool | tools}, {@link Prompt | prompts}, and {@link Implementation | implementations}.
 */
 const BaseMetadataSchema = object$12({
-	name: string$2(),
-	title: string$2().optional()
+	name: string$3(),
+	title: string$3().optional()
 });
 /**
 * Describes the name and version of an MCP implementation.
@@ -6235,9 +6235,9 @@ const BaseMetadataSchema = object$12({
 const ImplementationSchema = BaseMetadataSchema.extend({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
-	version: string$2(),
-	websiteUrl: string$2().optional(),
-	description: string$2().optional()
+	version: string$3(),
+	websiteUrl: string$3().optional(),
+	description: string$3().optional()
 });
 const ElicitationCapabilitySchema = preprocess((value) => {
 	if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return { form: {} };
@@ -6273,7 +6273,7 @@ const ServerTasksCapabilitySchema = looseObject({
 * Capabilities a client may support. Known capabilities are defined here, in this schema, but this is not a closed set: any client can define its own, additional capabilities.
 */
 const ClientCapabilitiesSchema = object$12({
-	experimental: record$15(string$2(), JSONObjectSchema).optional(),
+	experimental: record$15(string$3(), JSONObjectSchema).optional(),
 	sampling: object$12({
 		context: JSONObjectSchema.optional(),
 		tools: JSONObjectSchema.optional()
@@ -6281,10 +6281,10 @@ const ClientCapabilitiesSchema = object$12({
 	elicitation: ElicitationCapabilitySchema.optional(),
 	roots: object$12({ listChanged: boolean$1().optional() }).optional(),
 	tasks: ClientTasksCapabilitySchema.optional(),
-	extensions: record$15(string$2(), JSONObjectSchema).optional()
+	extensions: record$15(string$3(), JSONObjectSchema).optional()
 });
 const InitializeRequestParamsSchema = BaseRequestParamsSchema.extend({
-	protocolVersion: string$2(),
+	protocolVersion: string$3(),
 	capabilities: ClientCapabilitiesSchema,
 	clientInfo: ImplementationSchema
 });
@@ -6299,7 +6299,7 @@ const InitializeRequestSchema = RequestSchema.extend({
 * Capabilities that a server may support. Known capabilities are defined here, in this schema, but this is not a closed set: any server can define its own, additional capabilities.
 */
 const ServerCapabilitiesSchema = object$12({
-	experimental: record$15(string$2(), JSONObjectSchema).optional(),
+	experimental: record$15(string$3(), JSONObjectSchema).optional(),
 	logging: JSONObjectSchema.optional(),
 	completions: JSONObjectSchema.optional(),
 	prompts: object$12({ listChanged: boolean$1().optional() }).optional(),
@@ -6309,16 +6309,16 @@ const ServerCapabilitiesSchema = object$12({
 	}).optional(),
 	tools: object$12({ listChanged: boolean$1().optional() }).optional(),
 	tasks: ServerTasksCapabilitySchema.optional(),
-	extensions: record$15(string$2(), JSONObjectSchema).optional()
+	extensions: record$15(string$3(), JSONObjectSchema).optional()
 });
 /**
 * After receiving an initialize request from the client, the server sends this response.
 */
 const InitializeResultSchema = ResultSchema.extend({
-	protocolVersion: string$2(),
+	protocolVersion: string$3(),
 	capabilities: ServerCapabilitiesSchema,
 	serverInfo: ImplementationSchema,
-	instructions: string$2().optional()
+	instructions: string$3().optional()
 });
 /**
 * This notification is sent from the client to the server after initialization has finished.
@@ -6341,9 +6341,9 @@ const DiscoverRequestSchema = RequestSchema.extend({
 * The result returned by the server for a `server/discover` request.
 */
 const DiscoverResultSchema = ResultSchema.extend({
-	supportedVersions: array$1(string$2()),
+	supportedVersions: array$1(string$3()),
 	capabilities: ServerCapabilitiesSchema,
-	instructions: string$2().optional()
+	instructions: string$3().optional()
 });
 /**
 * A ping, issued by either the server or the client, to check that the other party is still alive. The receiver must promptly respond, or else may be disconnected.
@@ -6355,7 +6355,7 @@ const PingRequestSchema = RequestSchema.extend({
 const ProgressSchema = object$12({
 	progress: number$3(),
 	total: optional$3(number$3()),
-	message: optional$3(string$2())
+	message: optional$3(string$3())
 });
 const ProgressNotificationParamsSchema = object$12({
 	...NotificationsParamsSchema.shape,
@@ -6378,17 +6378,17 @@ const PaginatedResultSchema = ResultSchema.extend({ nextCursor: CursorSchema.opt
 * The contents of a specific resource or sub-resource.
 */
 const ResourceContentsSchema = object$12({
-	uri: string$2(),
-	mimeType: optional$3(string$2()),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	uri: string$3(),
+	mimeType: optional$3(string$3()),
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
-const TextResourceContentsSchema = ResourceContentsSchema.extend({ text: string$2() });
+const TextResourceContentsSchema = ResourceContentsSchema.extend({ text: string$3() });
 /**
 * A Zod schema for validating Base64 strings that is more performant and
 * robust for very large inputs than the default regex-based check. It avoids
 * stack overflows by using the native `atob` function for validation.
 */
-const Base64Schema = string$2().refine((val) => {
+const Base64Schema = string$3().refine((val) => {
 	try {
 		atob(val);
 		return true;
@@ -6415,9 +6415,9 @@ const AnnotationsSchema = object$12({
 const ResourceSchema = object$12({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
-	uri: string$2(),
-	description: optional$3(string$2()),
-	mimeType: optional$3(string$2()),
+	uri: string$3(),
+	description: optional$3(string$3()),
+	mimeType: optional$3(string$3()),
 	size: optional$3(number$3()),
 	annotations: AnnotationsSchema.optional(),
 	_meta: optional$3(looseObject({}))
@@ -6428,9 +6428,9 @@ const ResourceSchema = object$12({
 const ResourceTemplateSchema = object$12({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
-	uriTemplate: string$2(),
-	description: optional$3(string$2()),
-	mimeType: optional$3(string$2()),
+	uriTemplate: string$3(),
+	description: optional$3(string$3()),
+	mimeType: optional$3(string$3()),
 	annotations: AnnotationsSchema.optional(),
 	_meta: optional$3(looseObject({}))
 });
@@ -6450,7 +6450,7 @@ const ListResourceTemplatesRequestSchema = PaginatedRequestSchema.extend({ metho
 * The server's response to a {@linkcode ListResourceTemplatesRequest | resources/templates/list} request from the client.
 */
 const ListResourceTemplatesResultSchema = PaginatedResultSchema.extend({ resourceTemplates: array$1(ResourceTemplateSchema) });
-const ResourceRequestParamsSchema = BaseRequestParamsSchema.extend({ uri: string$2() });
+const ResourceRequestParamsSchema = BaseRequestParamsSchema.extend({ uri: string$3() });
 /**
 * Parameters for a {@linkcode ReadResourceRequest | resources/read} request.
 */
@@ -6498,7 +6498,7 @@ const SubscriptionFilterSchema = object$12({
 	toolsListChanged: boolean$1().optional(),
 	promptsListChanged: boolean$1().optional(),
 	resourcesListChanged: boolean$1().optional(),
-	resourceSubscriptions: array$1(string$2()).optional()
+	resourceSubscriptions: array$1(string$3()).optional()
 });
 const SubscriptionsListenRequestParamsSchema = BaseRequestParamsSchema.extend({ notifications: SubscriptionFilterSchema });
 /**
@@ -6539,7 +6539,7 @@ const SubscriptionsListenResultSchema = ResultSchema.extend({ _meta: Subscriptio
 /**
 * Parameters for a {@linkcode ResourceUpdatedNotification | notifications/resources/updated} notification.
 */
-const ResourceUpdatedNotificationParamsSchema = NotificationsParamsSchema.extend({ uri: string$2() });
+const ResourceUpdatedNotificationParamsSchema = NotificationsParamsSchema.extend({ uri: string$3() });
 /**
 * A notification from the server to the client, informing it that a resource has changed and may need to be read again. This should only be sent if the client previously sent a {@linkcode SubscribeRequest | resources/subscribe} request.
 */
@@ -6551,8 +6551,8 @@ const ResourceUpdatedNotificationSchema = NotificationSchema.extend({
 * Describes an argument that a prompt can accept.
 */
 const PromptArgumentSchema = object$12({
-	name: string$2(),
-	description: optional$3(string$2()),
+	name: string$3(),
+	description: optional$3(string$3()),
 	required: optional$3(boolean$1())
 });
 /**
@@ -6561,7 +6561,7 @@ const PromptArgumentSchema = object$12({
 const PromptSchema = object$12({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
-	description: optional$3(string$2()),
+	description: optional$3(string$3()),
 	arguments: optional$3(array$1(PromptArgumentSchema)),
 	_meta: optional$3(looseObject({}))
 });
@@ -6577,8 +6577,8 @@ const ListPromptsResultSchema = PaginatedResultSchema.extend({ prompts: array$1(
 * Parameters for a {@linkcode GetPromptRequest | prompts/get} request.
 */
 const GetPromptRequestParamsSchema = BaseRequestParamsSchema.extend({
-	name: string$2(),
-	arguments: record$15(string$2(), string$2()).optional()
+	name: string$3(),
+	arguments: record$15(string$3(), string$3()).optional()
 });
 /**
 * Used by the client to get a prompt provided by the server.
@@ -6592,9 +6592,9 @@ const GetPromptRequestSchema = RequestSchema.extend({
 */
 const TextContentSchema = object$12({
 	type: literal("text"),
-	text: string$2(),
+	text: string$3(),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * An image provided to or from an LLM.
@@ -6602,9 +6602,9 @@ const TextContentSchema = object$12({
 const ImageContentSchema = object$12({
 	type: literal("image"),
 	data: Base64Schema,
-	mimeType: string$2(),
+	mimeType: string$3(),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * Audio content provided to or from an LLM.
@@ -6612,9 +6612,9 @@ const ImageContentSchema = object$12({
 const AudioContentSchema = object$12({
 	type: literal("audio"),
 	data: Base64Schema,
-	mimeType: string$2(),
+	mimeType: string$3(),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * A tool call request from an assistant (LLM).
@@ -6626,10 +6626,10 @@ const AudioContentSchema = object$12({
 */
 const ToolUseContentSchema = object$12({
 	type: literal("tool_use"),
-	name: string$2(),
-	id: string$2(),
-	input: record$15(string$2(), unknown$1()),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	name: string$3(),
+	id: string$3(),
+	input: record$15(string$3(), unknown$1()),
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * The contents of a resource, embedded into a prompt or tool call result.
@@ -6638,7 +6638,7 @@ const EmbeddedResourceSchema = object$12({
 	type: literal("resource"),
 	resource: union([TextResourceContentsSchema, BlobResourceContentsSchema]),
 	annotations: AnnotationsSchema.optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * A resource that the server is capable of reading, included in a prompt or tool call result.
@@ -6667,7 +6667,7 @@ const PromptMessageSchema = object$12({
 * The server's response to a {@linkcode GetPromptRequest | prompts/get} request from the client.
 */
 const GetPromptResultSchema = ResultSchema.extend({
-	description: string$2().optional(),
+	description: string$3().optional(),
 	messages: array$1(PromptMessageSchema)
 });
 /**
@@ -6688,7 +6688,7 @@ const PromptListChangedNotificationSchema = NotificationSchema.extend({
 * received from untrusted servers.
 */
 const ToolAnnotationsSchema = object$12({
-	title: string$2().optional(),
+	title: string$3().optional(),
 	readOnlyHint: boolean$1().optional(),
 	destructiveHint: boolean$1().optional(),
 	idempotentHint: boolean$1().optional(),
@@ -6708,16 +6708,16 @@ const ToolExecutionSchema = object$12({ taskSupport: _enum([
 const ToolSchema = object$12({
 	...BaseMetadataSchema.shape,
 	...IconsSchema.shape,
-	description: string$2().optional(),
+	description: string$3().optional(),
 	inputSchema: object$12({
 		type: literal("object"),
-		properties: record$15(string$2(), JSONValueSchema).optional(),
-		required: array$1(string$2()).optional()
+		properties: record$15(string$3(), JSONValueSchema).optional(),
+		required: array$1(string$3()).optional()
 	}).catchall(unknown$1()),
-	outputSchema: looseObject({ $schema: string$2().optional() }).optional(),
+	outputSchema: looseObject({ $schema: string$3().optional() }).optional(),
 	annotations: ToolAnnotationsSchema.optional(),
 	execution: ToolExecutionSchema.optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * Sent from the client to request a list of tools the server has.
@@ -6743,8 +6743,8 @@ const CompatibilityCallToolResultSchema = CallToolResultSchema.or(ResultSchema.e
 * Parameters for a `tools/call` request.
 */
 const CallToolRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend({
-	name: string$2(),
-	arguments: record$15(string$2(), unknown$1()).optional()
+	name: string$3(),
+	arguments: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * Used by the client to invoke a tool provided by the server.
@@ -6813,7 +6813,7 @@ const SetLevelRequestSchema = RequestSchema.extend({
 */
 const LoggingMessageNotificationParamsSchema = NotificationsParamsSchema.extend({
 	level: LoggingLevelSchema,
-	logger: string$2().optional(),
+	logger: string$3().optional(),
 	data: unknown$1()
 });
 /**
@@ -6834,7 +6834,7 @@ const LoggingMessageNotificationSchema = NotificationSchema.extend({
 * in the specification for at least twelve months. Migrate to calling LLM
 * provider APIs directly.
 */
-const ModelHintSchema = object$12({ name: string$2().optional() });
+const ModelHintSchema = object$12({ name: string$3().optional() });
 /**
 * The server's preferences for model selection, requested of the client during sampling.
 *
@@ -6870,11 +6870,11 @@ const ToolChoiceSchema = object$12({ mode: _enum([
 */
 const ToolResultContentSchema = object$12({
 	type: literal("tool_result"),
-	toolUseId: string$2().describe("The unique identifier for the corresponding tool call."),
+	toolUseId: string$3().describe("The unique identifier for the corresponding tool call."),
 	content: array$1(ContentBlockSchema),
 	structuredContent: unknown$1().optional(),
 	isError: boolean$1().optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * Basic content types for sampling responses (without tool use).
@@ -6914,7 +6914,7 @@ const SamplingMessageContentBlockSchema = discriminatedUnion("type", [
 const SamplingMessageSchema = object$12({
 	role: RoleSchema,
 	content: union([SamplingMessageContentBlockSchema, array$1(SamplingMessageContentBlockSchema)]),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * Parameters for a `sampling/createMessage` request.
@@ -6926,7 +6926,7 @@ const SamplingMessageSchema = object$12({
 const CreateMessageRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 	messages: array$1(SamplingMessageSchema),
 	modelPreferences: ModelPreferencesSchema.optional(),
-	systemPrompt: string$2().optional(),
+	systemPrompt: string$3().optional(),
 	includeContext: _enum([
 		"none",
 		"thisServer",
@@ -6934,7 +6934,7 @@ const CreateMessageRequestParamsSchema = TaskAugmentedRequestParamsSchema.extend
 	]).optional(),
 	temperature: number$3().optional(),
 	maxTokens: number$3().int(),
-	stopSequences: array$1(string$2()).optional(),
+	stopSequences: array$1(string$3()).optional(),
 	metadata: JSONObjectSchema.optional(),
 	tools: array$1(ToolSchema).optional(),
 	toolChoice: ToolChoiceSchema.optional()
@@ -6960,12 +6960,12 @@ const CreateMessageRequestSchema = RequestSchema.extend({
 * provider APIs directly.
 */
 const CreateMessageResultSchema = ResultSchema.extend({
-	model: string$2(),
+	model: string$3(),
 	stopReason: optional$3(_enum([
 		"endTurn",
 		"stopSequence",
 		"maxTokens"
-	]).or(string$2())),
+	]).or(string$3())),
 	role: RoleSchema,
 	content: SamplingContentSchema
 });
@@ -6978,13 +6978,13 @@ const CreateMessageResultSchema = ResultSchema.extend({
 * provider APIs directly.
 */
 const CreateMessageResultWithToolsSchema = ResultSchema.extend({
-	model: string$2(),
+	model: string$3(),
 	stopReason: optional$3(_enum([
 		"endTurn",
 		"stopSequence",
 		"maxTokens",
 		"toolUse"
-	]).or(string$2())),
+	]).or(string$3())),
 	role: RoleSchema,
 	content: union([SamplingMessageContentBlockSchema, array$1(SamplingMessageContentBlockSchema)])
 });
@@ -6993,8 +6993,8 @@ const CreateMessageResultWithToolsSchema = ResultSchema.extend({
 */
 const BooleanSchemaSchema = object$12({
 	type: literal("boolean"),
-	title: string$2().optional(),
-	description: string$2().optional(),
+	title: string$3().optional(),
+	description: string$3().optional(),
 	default: boolean$1().optional()
 });
 /**
@@ -7002,8 +7002,8 @@ const BooleanSchemaSchema = object$12({
 */
 const StringSchemaSchema = object$12({
 	type: literal("string"),
-	title: string$2().optional(),
-	description: string$2().optional(),
+	title: string$3().optional(),
+	description: string$3().optional(),
 	minLength: number$3().optional(),
 	maxLength: number$3().optional(),
 	format: _enum([
@@ -7012,15 +7012,15 @@ const StringSchemaSchema = object$12({
 		"date",
 		"date-time"
 	]).optional(),
-	default: string$2().optional()
+	default: string$3().optional()
 });
 /**
 * Primitive schema definition for number fields.
 */
 const NumberSchemaSchema = object$12({
 	type: _enum(["number", "integer"]),
-	title: string$2().optional(),
-	description: string$2().optional(),
+	title: string$3().optional(),
+	description: string$3().optional(),
 	minimum: number$3().optional(),
 	maximum: number$3().optional(),
 	default: number$3().optional()
@@ -7030,23 +7030,23 @@ const NumberSchemaSchema = object$12({
 */
 const UntitledSingleSelectEnumSchemaSchema = object$12({
 	type: literal("string"),
-	title: string$2().optional(),
-	description: string$2().optional(),
-	enum: array$1(string$2()),
-	default: string$2().optional()
+	title: string$3().optional(),
+	description: string$3().optional(),
+	enum: array$1(string$3()),
+	default: string$3().optional()
 });
 /**
 * Schema for single-selection enumeration with display titles for each option.
 */
 const TitledSingleSelectEnumSchemaSchema = object$12({
 	type: literal("string"),
-	title: string$2().optional(),
-	description: string$2().optional(),
+	title: string$3().optional(),
+	description: string$3().optional(),
 	oneOf: array$1(object$12({
-		const: string$2(),
-		title: string$2()
+		const: string$3(),
+		title: string$3()
 	})),
-	default: string$2().optional()
+	default: string$3().optional()
 });
 /**
 * Use {@linkcode TitledSingleSelectEnumSchema} instead.
@@ -7054,11 +7054,11 @@ const TitledSingleSelectEnumSchemaSchema = object$12({
 */
 const LegacyTitledEnumSchemaSchema = object$12({
 	type: literal("string"),
-	title: string$2().optional(),
-	description: string$2().optional(),
-	enum: array$1(string$2()),
-	enumNames: array$1(string$2()).optional(),
-	default: string$2().optional()
+	title: string$3().optional(),
+	description: string$3().optional(),
+	enum: array$1(string$3()),
+	enumNames: array$1(string$3()).optional(),
+	default: string$3().optional()
 });
 const SingleSelectEnumSchemaSchema = union([UntitledSingleSelectEnumSchemaSchema, TitledSingleSelectEnumSchemaSchema]);
 /**
@@ -7066,30 +7066,30 @@ const SingleSelectEnumSchemaSchema = union([UntitledSingleSelectEnumSchemaSchema
 */
 const UntitledMultiSelectEnumSchemaSchema = object$12({
 	type: literal("array"),
-	title: string$2().optional(),
-	description: string$2().optional(),
+	title: string$3().optional(),
+	description: string$3().optional(),
 	minItems: number$3().optional(),
 	maxItems: number$3().optional(),
 	items: object$12({
 		type: literal("string"),
-		enum: array$1(string$2())
+		enum: array$1(string$3())
 	}),
-	default: array$1(string$2()).optional()
+	default: array$1(string$3()).optional()
 });
 /**
 * Schema for multiple-selection enumeration with display titles for each option.
 */
 const TitledMultiSelectEnumSchemaSchema = object$12({
 	type: literal("array"),
-	title: string$2().optional(),
-	description: string$2().optional(),
+	title: string$3().optional(),
+	description: string$3().optional(),
 	minItems: number$3().optional(),
 	maxItems: number$3().optional(),
 	items: object$12({ anyOf: array$1(object$12({
-		const: string$2(),
-		title: string$2()
+		const: string$3(),
+		title: string$3()
 	})) }),
-	default: array$1(string$2()).optional()
+	default: array$1(string$3()).optional()
 });
 /**
 * Combined schema for multiple-selection enumeration
@@ -7117,11 +7117,11 @@ const PrimitiveSchemaDefinitionSchema = union([
 */
 const ElicitRequestFormParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 	mode: literal("form").optional(),
-	message: string$2(),
+	message: string$3(),
 	requestedSchema: object$12({
 		type: literal("object"),
-		properties: record$15(string$2(), PrimitiveSchemaDefinitionSchema),
-		required: array$1(string$2()).optional()
+		properties: record$15(string$3(), PrimitiveSchemaDefinitionSchema),
+		required: array$1(string$3()).optional()
 	}).catchall(unknown$1())
 });
 /**
@@ -7129,9 +7129,9 @@ const ElicitRequestFormParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 */
 const ElicitRequestURLParamsSchema = TaskAugmentedRequestParamsSchema.extend({
 	mode: literal("url"),
-	message: string$2(),
-	elicitationId: string$2(),
-	url: string$2().url()
+	message: string$3(),
+	elicitationId: string$3(),
+	url: string$3().url()
 });
 /**
 * The parameters for a request to elicit additional information from the user via the client.
@@ -7155,7 +7155,7 @@ const ElicitRequestSchema = RequestSchema.extend({
 * only. The 2026-07-28 wire codec excludes this notification.
 * @category notifications/elicitation/complete
 */
-const ElicitationCompleteNotificationParamsSchema = NotificationsParamsSchema.extend({ elicitationId: string$2() });
+const ElicitationCompleteNotificationParamsSchema = NotificationsParamsSchema.extend({ elicitationId: string$3() });
 /**
 * A notification from the server to the client, informing it of a completion of an out-of-band elicitation request.
 *
@@ -7178,11 +7178,11 @@ const ElicitResultSchema = ResultSchema.extend({
 		"decline",
 		"cancel"
 	]),
-	content: preprocess((val) => val === null ? void 0 : val, record$15(string$2(), union([
-		string$2(),
+	content: preprocess((val) => val === null ? void 0 : val, record$15(string$3(), union([
+		string$3(),
 		number$3(),
 		boolean$1(),
-		array$1(string$2())
+		array$1(string$3())
 	])).optional())
 });
 /**
@@ -7190,14 +7190,14 @@ const ElicitResultSchema = ResultSchema.extend({
 */
 const ResourceTemplateReferenceSchema = object$12({
 	type: literal("ref/resource"),
-	uri: string$2()
+	uri: string$3()
 });
 /**
 * Identifies a prompt.
 */
 const PromptReferenceSchema = object$12({
 	type: literal("ref/prompt"),
-	name: string$2()
+	name: string$3()
 });
 /**
 * Parameters for a {@linkcode CompleteRequest | completion/complete} request.
@@ -7205,10 +7205,10 @@ const PromptReferenceSchema = object$12({
 const CompleteRequestParamsSchema = BaseRequestParamsSchema.extend({
 	ref: union([PromptReferenceSchema, ResourceTemplateReferenceSchema]),
 	argument: object$12({
-		name: string$2(),
-		value: string$2()
+		name: string$3(),
+		value: string$3()
 	}),
-	context: object$12({ arguments: record$15(string$2(), string$2()).optional() }).optional()
+	context: object$12({ arguments: record$15(string$3(), string$3()).optional() }).optional()
 });
 /**
 * A request from the client to the server, to ask for completion options.
@@ -7221,7 +7221,7 @@ const CompleteRequestSchema = RequestSchema.extend({
 * The server's response to a {@linkcode CompleteRequest | completion/complete} request
 */
 const CompleteResultSchema = ResultSchema.extend({ completion: looseObject({
-	values: array$1(string$2()).max(100),
+	values: array$1(string$3()).max(100),
 	total: optional$3(number$3().int()),
 	hasMore: optional$3(boolean$1())
 }) });
@@ -7233,9 +7233,9 @@ const CompleteResultSchema = ResultSchema.extend({ completion: looseObject({
 * tool parameters, resource URIs, or configuration.
 */
 const RootSchema = object$12({
-	uri: string$2().startsWith("file://"),
-	name: string$2().optional(),
-	_meta: record$15(string$2(), unknown$1()).optional()
+	uri: string$3().startsWith("file://"),
+	name: string$3().optional(),
+	_meta: record$15(string$3(), unknown$1()).optional()
 });
 /**
 * Sent from the server to request a list of root URIs from the client.
@@ -7294,13 +7294,13 @@ const TaskStatusSchema = _enum([
 * @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 */
 const TaskSchema = object$12({
-	taskId: string$2(),
+	taskId: string$3(),
 	status: TaskStatusSchema,
 	ttl: union([number$3(), _null()]),
-	createdAt: string$2(),
-	lastUpdatedAt: string$2(),
+	createdAt: string$3(),
+	lastUpdatedAt: string$3(),
 	pollInterval: optional$3(number$3()),
-	statusMessage: optional$3(string$2())
+	statusMessage: optional$3(string$3())
 });
 /**
 * Result returned when a task is created, containing the task data wrapped in a `task` field.
@@ -7330,7 +7330,7 @@ const TaskStatusNotificationSchema = NotificationSchema.extend({
 */
 const GetTaskRequestSchema = RequestSchema.extend({
 	method: literal("tasks/get"),
-	params: BaseRequestParamsSchema.extend({ taskId: string$2() })
+	params: BaseRequestParamsSchema.extend({ taskId: string$3() })
 });
 /**
 * The response to a {@linkcode GetTaskRequest | tasks/get} request.
@@ -7345,7 +7345,7 @@ const GetTaskResultSchema = ResultSchema.merge(TaskSchema);
 */
 const GetTaskPayloadRequestSchema = RequestSchema.extend({
 	method: literal("tasks/result"),
-	params: BaseRequestParamsSchema.extend({ taskId: string$2() })
+	params: BaseRequestParamsSchema.extend({ taskId: string$3() })
 });
 /**
 * The response to a `tasks/result` request.
@@ -7375,7 +7375,7 @@ const ListTasksResultSchema = PaginatedResultSchema.extend({ tasks: array$1(Task
 */
 const CancelTaskRequestSchema = RequestSchema.extend({
 	method: literal("tasks/cancel"),
-	params: BaseRequestParamsSchema.extend({ taskId: string$2() })
+	params: BaseRequestParamsSchema.extend({ taskId: string$3() })
 });
 /**
 * The response to a {@linkcode CancelTaskRequest | tasks/cancel} request.
@@ -7465,46 +7465,46 @@ const SafeUrlSchema = url().superRefine((val, ctx) => {
 * RFC 9728 OAuth Protected Resource Metadata
 */
 const OAuthProtectedResourceMetadataSchema = looseObject({
-	resource: string$2().url(),
+	resource: string$3().url(),
 	authorization_servers: array$1(SafeUrlSchema).optional(),
-	jwks_uri: string$2().url().optional(),
-	scopes_supported: array$1(string$2()).optional(),
-	bearer_methods_supported: array$1(string$2()).optional(),
-	resource_signing_alg_values_supported: array$1(string$2()).optional(),
-	resource_name: string$2().optional(),
-	resource_documentation: string$2().optional(),
-	resource_policy_uri: string$2().url().optional(),
-	resource_tos_uri: string$2().url().optional(),
+	jwks_uri: string$3().url().optional(),
+	scopes_supported: array$1(string$3()).optional(),
+	bearer_methods_supported: array$1(string$3()).optional(),
+	resource_signing_alg_values_supported: array$1(string$3()).optional(),
+	resource_name: string$3().optional(),
+	resource_documentation: string$3().optional(),
+	resource_policy_uri: string$3().url().optional(),
+	resource_tos_uri: string$3().url().optional(),
 	tls_client_certificate_bound_access_tokens: boolean$1().optional(),
-	authorization_details_types_supported: array$1(string$2()).optional(),
-	dpop_signing_alg_values_supported: array$1(string$2()).optional(),
+	authorization_details_types_supported: array$1(string$3()).optional(),
+	dpop_signing_alg_values_supported: array$1(string$3()).optional(),
 	dpop_bound_access_tokens_required: boolean$1().optional()
 });
 /**
 * RFC 8414 OAuth 2.0 Authorization Server Metadata
 */
 const OAuthMetadataSchema = looseObject({
-	issuer: string$2(),
+	issuer: string$3(),
 	authorization_endpoint: SafeUrlSchema,
 	token_endpoint: SafeUrlSchema,
 	registration_endpoint: SafeUrlSchema.optional(),
-	scopes_supported: array$1(string$2()).optional(),
-	response_types_supported: array$1(string$2()),
-	response_modes_supported: array$1(string$2()).optional(),
-	grant_types_supported: array$1(string$2()).optional(),
-	token_endpoint_auth_methods_supported: array$1(string$2()).optional(),
-	token_endpoint_auth_signing_alg_values_supported: array$1(string$2()).optional(),
+	scopes_supported: array$1(string$3()).optional(),
+	response_types_supported: array$1(string$3()),
+	response_modes_supported: array$1(string$3()).optional(),
+	grant_types_supported: array$1(string$3()).optional(),
+	token_endpoint_auth_methods_supported: array$1(string$3()).optional(),
+	token_endpoint_auth_signing_alg_values_supported: array$1(string$3()).optional(),
 	service_documentation: SafeUrlSchema.optional(),
 	revocation_endpoint: SafeUrlSchema.optional(),
-	revocation_endpoint_auth_methods_supported: array$1(string$2()).optional(),
-	revocation_endpoint_auth_signing_alg_values_supported: array$1(string$2()).optional(),
-	introspection_endpoint: string$2().optional(),
-	introspection_endpoint_auth_methods_supported: array$1(string$2()).optional(),
-	introspection_endpoint_auth_signing_alg_values_supported: array$1(string$2()).optional(),
-	code_challenge_methods_supported: array$1(string$2()).optional(),
+	revocation_endpoint_auth_methods_supported: array$1(string$3()).optional(),
+	revocation_endpoint_auth_signing_alg_values_supported: array$1(string$3()).optional(),
+	introspection_endpoint: string$3().optional(),
+	introspection_endpoint_auth_methods_supported: array$1(string$3()).optional(),
+	introspection_endpoint_auth_signing_alg_values_supported: array$1(string$3()).optional(),
+	code_challenge_methods_supported: array$1(string$3()).optional(),
 	client_id_metadata_document_supported: boolean$1().optional(),
 	authorization_response_iss_parameter_supported: boolean$1().optional().catch(void 0),
-	dpop_signing_alg_values_supported: array$1(string$2()).optional()
+	dpop_signing_alg_values_supported: array$1(string$3()).optional()
 });
 /**
 * OpenID Connect Discovery 1.0 Provider Metadata
@@ -7512,35 +7512,35 @@ const OAuthMetadataSchema = looseObject({
 * @see https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
 */
 const OpenIdProviderMetadataSchema = looseObject({
-	issuer: string$2(),
+	issuer: string$3(),
 	authorization_endpoint: SafeUrlSchema,
 	token_endpoint: SafeUrlSchema,
 	userinfo_endpoint: SafeUrlSchema.optional(),
 	jwks_uri: SafeUrlSchema,
 	registration_endpoint: SafeUrlSchema.optional(),
-	scopes_supported: array$1(string$2()).optional(),
-	response_types_supported: array$1(string$2()),
-	response_modes_supported: array$1(string$2()).optional(),
-	grant_types_supported: array$1(string$2()).optional(),
-	acr_values_supported: array$1(string$2()).optional(),
-	subject_types_supported: array$1(string$2()),
-	id_token_signing_alg_values_supported: array$1(string$2()),
-	id_token_encryption_alg_values_supported: array$1(string$2()).optional(),
-	id_token_encryption_enc_values_supported: array$1(string$2()).optional(),
-	userinfo_signing_alg_values_supported: array$1(string$2()).optional(),
-	userinfo_encryption_alg_values_supported: array$1(string$2()).optional(),
-	userinfo_encryption_enc_values_supported: array$1(string$2()).optional(),
-	request_object_signing_alg_values_supported: array$1(string$2()).optional(),
-	request_object_encryption_alg_values_supported: array$1(string$2()).optional(),
-	request_object_encryption_enc_values_supported: array$1(string$2()).optional(),
-	token_endpoint_auth_methods_supported: array$1(string$2()).optional(),
-	token_endpoint_auth_signing_alg_values_supported: array$1(string$2()).optional(),
-	display_values_supported: array$1(string$2()).optional(),
-	claim_types_supported: array$1(string$2()).optional(),
-	claims_supported: array$1(string$2()).optional(),
-	service_documentation: string$2().optional(),
-	claims_locales_supported: array$1(string$2()).optional(),
-	ui_locales_supported: array$1(string$2()).optional(),
+	scopes_supported: array$1(string$3()).optional(),
+	response_types_supported: array$1(string$3()),
+	response_modes_supported: array$1(string$3()).optional(),
+	grant_types_supported: array$1(string$3()).optional(),
+	acr_values_supported: array$1(string$3()).optional(),
+	subject_types_supported: array$1(string$3()),
+	id_token_signing_alg_values_supported: array$1(string$3()),
+	id_token_encryption_alg_values_supported: array$1(string$3()).optional(),
+	id_token_encryption_enc_values_supported: array$1(string$3()).optional(),
+	userinfo_signing_alg_values_supported: array$1(string$3()).optional(),
+	userinfo_encryption_alg_values_supported: array$1(string$3()).optional(),
+	userinfo_encryption_enc_values_supported: array$1(string$3()).optional(),
+	request_object_signing_alg_values_supported: array$1(string$3()).optional(),
+	request_object_encryption_alg_values_supported: array$1(string$3()).optional(),
+	request_object_encryption_enc_values_supported: array$1(string$3()).optional(),
+	token_endpoint_auth_methods_supported: array$1(string$3()).optional(),
+	token_endpoint_auth_signing_alg_values_supported: array$1(string$3()).optional(),
+	display_values_supported: array$1(string$3()).optional(),
+	claim_types_supported: array$1(string$3()).optional(),
+	claims_supported: array$1(string$3()).optional(),
+	service_documentation: string$3().optional(),
+	claims_locales_supported: array$1(string$3()).optional(),
+	ui_locales_supported: array$1(string$3()).optional(),
 	claims_parameter_supported: boolean$1().optional(),
 	request_parameter_supported: boolean$1().optional(),
 	request_uri_parameter_supported: boolean$1().optional(),
@@ -7563,13 +7563,13 @@ const OpenIdProviderDiscoveryMetadataSchema = object$12({
 * OAuth 2.1 token response
 */
 const OAuthTokensSchema = object$12({
-	access_token: string$2(),
-	id_token: string$2().optional(),
-	token_type: string$2(),
+	access_token: string$3(),
+	id_token: string$3().optional(),
+	token_type: string$3(),
 	expires_in: number$2().optional(),
-	scope: string$2().optional(),
-	refresh_token: string$2().optional(),
-	issuer: string$2().optional().catch(void 0)
+	scope: string$3().optional(),
+	refresh_token: string$3().optional(),
+	issuer: string$3().optional().catch(void 0)
 }).strip();
 /**
 * RFC 8693 §2.2.1 Token Exchange response for ID-JAG tokens.
@@ -7580,18 +7580,18 @@ const OAuthTokensSchema = object$12({
 */
 const IdJagTokenExchangeResponseSchema = object$12({
 	issued_token_type: literal("urn:ietf:params:oauth:token-type:id-jag"),
-	access_token: string$2(),
-	token_type: string$2().optional(),
+	access_token: string$3(),
+	token_type: string$3().optional(),
 	expires_in: number$3().optional(),
-	scope: string$2().optional()
+	scope: string$3().optional()
 }).strip();
 /**
 * OAuth 2.1 error response
 */
 const OAuthErrorResponseSchema = object$12({
-	error: string$2(),
-	error_description: string$2().optional(),
-	error_uri: string$2().optional()
+	error: string$3(),
+	error_description: string$3().optional(),
+	error_uri: string$3().optional()
 });
 /**
 * Optional version of {@linkcode SafeUrlSchema} that allows empty string for backward compatibility on `tos_uri` and `logo_uri`
@@ -7602,32 +7602,32 @@ const OptionalSafeUrlSchema = SafeUrlSchema.optional().or(literal("").transform(
 */
 const OAuthClientMetadataSchema = object$12({
 	redirect_uris: array$1(SafeUrlSchema),
-	token_endpoint_auth_method: string$2().optional(),
-	grant_types: array$1(string$2()).optional(),
-	response_types: array$1(string$2()).optional(),
-	application_type: string$2().optional(),
-	client_name: string$2().optional(),
+	token_endpoint_auth_method: string$3().optional(),
+	grant_types: array$1(string$3()).optional(),
+	response_types: array$1(string$3()).optional(),
+	application_type: string$3().optional(),
+	client_name: string$3().optional(),
 	client_uri: SafeUrlSchema.optional(),
 	logo_uri: OptionalSafeUrlSchema,
-	scope: string$2().optional(),
-	contacts: array$1(string$2()).optional(),
+	scope: string$3().optional(),
+	contacts: array$1(string$3()).optional(),
 	tos_uri: OptionalSafeUrlSchema,
-	policy_uri: string$2().optional(),
+	policy_uri: string$3().optional(),
 	jwks_uri: SafeUrlSchema.optional(),
 	jwks: any().optional(),
-	software_id: string$2().optional(),
-	software_version: string$2().optional(),
-	software_statement: string$2().optional()
+	software_id: string$3().optional(),
+	software_version: string$3().optional(),
+	software_statement: string$3().optional()
 }).strip();
 /**
 * RFC 7591 OAuth 2.0 Dynamic Client Registration client information
 */
 const OAuthClientInformationSchema = object$12({
-	client_id: string$2(),
-	client_secret: string$2().optional(),
+	client_id: string$3(),
+	client_secret: string$3().optional(),
 	client_id_issued_at: number$3().optional(),
 	client_secret_expires_at: number$3().optional(),
-	issuer: string$2().optional().catch(void 0)
+	issuer: string$3().optional().catch(void 0)
 }).strip();
 /**
 * RFC 7591 OAuth 2.0 Dynamic Client Registration full response (client information plus metadata)
@@ -7637,15 +7637,15 @@ const OAuthClientInformationFullSchema = OAuthClientMetadataSchema.merge(OAuthCl
 * RFC 7591 OAuth 2.0 Dynamic Client Registration error response
 */
 const OAuthClientRegistrationErrorSchema = object$12({
-	error: string$2(),
-	error_description: string$2().optional()
+	error: string$3(),
+	error_description: string$3().optional()
 }).strip();
 /**
 * RFC 7009 OAuth 2.0 Token Revocation request
 */
 const OAuthTokenRevocationRequestSchema = object$12({
-	token: string$2(),
-	token_type_hint: string$2().optional()
+	token: string$3(),
+	token_type_hint: string$3().optional()
 }).strip();
 // ../../node_modules/.bun/@modelcontextprotocol+server@2.4.0/node_modules/@modelcontextprotocol/server/dist/src-DdvbAHrR.mjs
 /**
@@ -8141,22 +8141,22 @@ function normalizeContentlessToolResult(value) {
 */
 function build$1() {
 	const JSONValueSchema$1 = lazy(() => union([
-		string$2(),
+		string$3(),
 		number$3(),
 		boolean$1(),
 		_null(),
-		record$15(string$2(), JSONValueSchema$1),
+		record$15(string$3(), JSONValueSchema$1),
 		array$1(JSONValueSchema$1)
 	]));
-	const JSONObjectSchema$1 = record$15(string$2(), JSONValueSchema$1);
+	const JSONObjectSchema$1 = record$15(string$3(), JSONValueSchema$1);
 	/**
 	* A progress token, used to associate progress notifications with the original request.
 	*/
-	const ProgressTokenSchema$1 = union([string$2(), number$3().int()]);
+	const ProgressTokenSchema$1 = union([string$3(), number$3().int()]);
 	/**
 	* An opaque token used to represent a cursor for pagination.
 	*/
-	const CursorSchema$1 = string$2();
+	const CursorSchema$1 = string$3();
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
 	const TaskMetadataSchema$1 = object$12({ ttl: number$3().optional() });
 	/**
@@ -8165,7 +8165,7 @@ function build$1() {
 	*
 	* @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 	*/
-	const RelatedTaskMetadataSchema$1 = object$12({ taskId: string$2() });
+	const RelatedTaskMetadataSchema$1 = object$12({ taskId: string$3() });
 	const RequestMetaSchema$1 = looseObject({
 		progressToken: ProgressTokenSchema$1.optional(),
 		"io.modelcontextprotocol/related-task": RelatedTaskMetadataSchema$1.optional()
@@ -8181,26 +8181,26 @@ function build$1() {
 	*/
 	const TaskAugmentedRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({ task: TaskMetadataSchema$1.optional() });
 	const RequestSchema$1 = object$12({
-		method: string$2(),
+		method: string$3(),
 		params: BaseRequestParamsSchema$1.loose().optional()
 	});
 	const NotificationsParamsSchema$1 = object$12({ _meta: RequestMetaSchema$1.optional() });
 	const NotificationSchema$1 = object$12({
-		method: string$2(),
+		method: string$3(),
 		params: NotificationsParamsSchema$1.loose().optional()
 	});
 	const ResultSchema$1 = looseObject({ _meta: RequestMetaSchema$1.optional() });
 	/**
 	* A uniquely identifying ID for a request in JSON-RPC.
 	*/
-	const RequestIdSchema$1 = union([string$2(), number$3().int()]);
+	const RequestIdSchema$1 = union([string$3(), number$3().int()]);
 	/**
 	* A response that indicates success but carries no data.
 	*/
 	const EmptyResultSchema$1 = ResultSchema$1.strict();
 	const CancelledNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({
 		requestId: RequestIdSchema$1.optional(),
-		reason: string$2().optional()
+		reason: string$3().optional()
 	});
 	/**
 	* This notification can be sent by either side to indicate that it is cancelling a previously-issued request.
@@ -8219,9 +8219,9 @@ function build$1() {
 	* Icon schema for use in {@link Tool | tools}, {@link Prompt | prompts}, {@link Resource | resources}, and {@link Implementation | implementations}.
 	*/
 	const IconSchema$1 = object$12({
-		src: string$2(),
-		mimeType: string$2().optional(),
-		sizes: array$1(string$2()).optional(),
+		src: string$3(),
+		mimeType: string$3().optional(),
+		sizes: array$1(string$3()).optional(),
 		theme: _enum(["light", "dark"]).optional()
 	});
 	/**
@@ -8233,8 +8233,8 @@ function build$1() {
 	* Base metadata interface for common properties across {@link Resource | resources}, {@link Tool | tools}, {@link Prompt | prompts}, and {@link Implementation | implementations}.
 	*/
 	const BaseMetadataSchema$1 = object$12({
-		name: string$2(),
-		title: string$2().optional()
+		name: string$3(),
+		title: string$3().optional()
 	});
 	/**
 	* Describes the name and version of an MCP implementation.
@@ -8242,9 +8242,9 @@ function build$1() {
 	const ImplementationSchema$1 = BaseMetadataSchema$1.extend({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		version: string$2(),
-		websiteUrl: string$2().optional(),
-		description: string$2().optional()
+		version: string$3(),
+		websiteUrl: string$3().optional(),
+		description: string$3().optional()
 	});
 	const ElicitationCapabilitySchema = preprocess((value) => {
 		if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return { form: {} };
@@ -8280,7 +8280,7 @@ function build$1() {
 	* Capabilities a client may support. Known capabilities are defined here, in this schema, but this is not a closed set: any client can define its own, additional capabilities.
 	*/
 	const ClientCapabilitiesSchema$1 = object$12({
-		experimental: record$15(string$2(), JSONObjectSchema$1).optional(),
+		experimental: record$15(string$3(), JSONObjectSchema$1).optional(),
 		sampling: object$12({
 			context: JSONObjectSchema$1.optional(),
 			tools: JSONObjectSchema$1.optional()
@@ -8288,10 +8288,10 @@ function build$1() {
 		elicitation: ElicitationCapabilitySchema.optional(),
 		roots: object$12({ listChanged: boolean$1().optional() }).optional(),
 		tasks: ClientTasksCapabilitySchema$1.optional(),
-		extensions: record$15(string$2(), JSONObjectSchema$1).optional()
+		extensions: record$15(string$3(), JSONObjectSchema$1).optional()
 	});
 	const InitializeRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
-		protocolVersion: string$2(),
+		protocolVersion: string$3(),
 		capabilities: ClientCapabilitiesSchema$1,
 		clientInfo: ImplementationSchema$1
 	});
@@ -8306,7 +8306,7 @@ function build$1() {
 	* Capabilities that a server may support. Known capabilities are defined here, in this schema, but this is not a closed set: any server can define its own, additional capabilities.
 	*/
 	const ServerCapabilitiesSchema$1 = object$12({
-		experimental: record$15(string$2(), JSONObjectSchema$1).optional(),
+		experimental: record$15(string$3(), JSONObjectSchema$1).optional(),
 		logging: JSONObjectSchema$1.optional(),
 		completions: JSONObjectSchema$1.optional(),
 		prompts: object$12({ listChanged: boolean$1().optional() }).optional(),
@@ -8316,16 +8316,16 @@ function build$1() {
 		}).optional(),
 		tools: object$12({ listChanged: boolean$1().optional() }).optional(),
 		tasks: ServerTasksCapabilitySchema$1.optional(),
-		extensions: record$15(string$2(), JSONObjectSchema$1).optional()
+		extensions: record$15(string$3(), JSONObjectSchema$1).optional()
 	});
 	/**
 	* After receiving an initialize request from the client, the server sends this response.
 	*/
 	const InitializeResultSchema$1 = ResultSchema$1.extend({
-		protocolVersion: string$2(),
+		protocolVersion: string$3(),
 		capabilities: ServerCapabilitiesSchema$1,
 		serverInfo: ImplementationSchema$1,
-		instructions: string$2().optional()
+		instructions: string$3().optional()
 	});
 	/**
 	* This notification is sent from the client to the server after initialization has finished.
@@ -8344,7 +8344,7 @@ function build$1() {
 	const ProgressSchema$1 = object$12({
 		progress: number$3(),
 		total: optional$3(number$3()),
-		message: optional$3(string$2())
+		message: optional$3(string$3())
 	});
 	const ProgressNotificationParamsSchema$1 = object$12({
 		...NotificationsParamsSchema$1.shape,
@@ -8367,17 +8367,17 @@ function build$1() {
 	* The contents of a specific resource or sub-resource.
 	*/
 	const ResourceContentsSchema$1 = object$12({
-		uri: string$2(),
-		mimeType: optional$3(string$2()),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		uri: string$3(),
+		mimeType: optional$3(string$3()),
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
-	const TextResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ text: string$2() });
+	const TextResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ text: string$3() });
 	/**
 	* A Zod schema for validating Base64 strings that is more performant and
 	* robust for very large inputs than the default regex-based check. It avoids
 	* stack overflows by using the native `atob` function for validation.
 	*/
-	const Base64Schema = string$2().refine((val) => {
+	const Base64Schema = string$3().refine((val) => {
 		try {
 			atob(val);
 			return true;
@@ -8404,9 +8404,9 @@ function build$1() {
 	const ResourceSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		uri: string$2(),
-		description: optional$3(string$2()),
-		mimeType: optional$3(string$2()),
+		uri: string$3(),
+		description: optional$3(string$3()),
+		mimeType: optional$3(string$3()),
 		size: optional$3(number$3()),
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: optional$3(looseObject({}))
@@ -8417,9 +8417,9 @@ function build$1() {
 	const ResourceTemplateSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		uriTemplate: string$2(),
-		description: optional$3(string$2()),
-		mimeType: optional$3(string$2()),
+		uriTemplate: string$3(),
+		description: optional$3(string$3()),
+		mimeType: optional$3(string$3()),
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: optional$3(looseObject({}))
 	});
@@ -8439,7 +8439,7 @@ function build$1() {
 	* The server's response to a {@linkcode ListResourceTemplatesRequest | resources/templates/list} request from the client.
 	*/
 	const ListResourceTemplatesResultSchema$1 = PaginatedResultSchema$1.extend({ resourceTemplates: array$1(ResourceTemplateSchema$1) });
-	const ResourceRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({ uri: string$2() });
+	const ResourceRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({ uri: string$3() });
 	/**
 	* Parameters for a {@linkcode ReadResourceRequest | resources/read} request.
 	*/
@@ -8481,7 +8481,7 @@ function build$1() {
 	/**
 	* Parameters for a {@linkcode ResourceUpdatedNotification | notifications/resources/updated} notification.
 	*/
-	const ResourceUpdatedNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({ uri: string$2() });
+	const ResourceUpdatedNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({ uri: string$3() });
 	/**
 	* A notification from the server to the client, informing it that a resource has changed and may need to be read again. This should only be sent if the client previously sent a {@linkcode SubscribeRequest | resources/subscribe} request.
 	*/
@@ -8493,8 +8493,8 @@ function build$1() {
 	* Describes an argument that a prompt can accept.
 	*/
 	const PromptArgumentSchema$1 = object$12({
-		name: string$2(),
-		description: optional$3(string$2()),
+		name: string$3(),
+		description: optional$3(string$3()),
 		required: optional$3(boolean$1())
 	});
 	/**
@@ -8503,7 +8503,7 @@ function build$1() {
 	const PromptSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		description: optional$3(string$2()),
+		description: optional$3(string$3()),
 		arguments: optional$3(array$1(PromptArgumentSchema$1)),
 		_meta: optional$3(looseObject({}))
 	});
@@ -8519,8 +8519,8 @@ function build$1() {
 	* Parameters for a {@linkcode GetPromptRequest | prompts/get} request.
 	*/
 	const GetPromptRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
-		name: string$2(),
-		arguments: record$15(string$2(), string$2()).optional()
+		name: string$3(),
+		arguments: record$15(string$3(), string$3()).optional()
 	});
 	/**
 	* Used by the client to get a prompt provided by the server.
@@ -8534,9 +8534,9 @@ function build$1() {
 	*/
 	const TextContentSchema$1 = object$12({
 		type: literal("text"),
-		text: string$2(),
+		text: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* An image provided to or from an LLM.
@@ -8544,9 +8544,9 @@ function build$1() {
 	const ImageContentSchema$1 = object$12({
 		type: literal("image"),
 		data: Base64Schema,
-		mimeType: string$2(),
+		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* Audio content provided to or from an LLM.
@@ -8554,9 +8554,9 @@ function build$1() {
 	const AudioContentSchema$1 = object$12({
 		type: literal("audio"),
 		data: Base64Schema,
-		mimeType: string$2(),
+		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* A tool call request from an assistant (LLM).
@@ -8568,10 +8568,10 @@ function build$1() {
 	*/
 	const ToolUseContentSchema$1 = object$12({
 		type: literal("tool_use"),
-		name: string$2(),
-		id: string$2(),
-		input: record$15(string$2(), unknown$1()),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		name: string$3(),
+		id: string$3(),
+		input: record$15(string$3(), unknown$1()),
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* The contents of a resource, embedded into a prompt or tool call result.
@@ -8580,7 +8580,7 @@ function build$1() {
 		type: literal("resource"),
 		resource: union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* A resource that the server is capable of reading, included in a prompt or tool call result.
@@ -8609,7 +8609,7 @@ function build$1() {
 	* The server's response to a {@linkcode GetPromptRequest | prompts/get} request from the client.
 	*/
 	const GetPromptResultSchema$1 = ResultSchema$1.extend({
-		description: string$2().optional(),
+		description: string$3().optional(),
 		messages: array$1(PromptMessageSchema$1)
 	});
 	/**
@@ -8630,7 +8630,7 @@ function build$1() {
 	* received from untrusted servers.
 	*/
 	const ToolAnnotationsSchema$1 = object$12({
-		title: string$2().optional(),
+		title: string$3().optional(),
 		readOnlyHint: boolean$1().optional(),
 		destructiveHint: boolean$1().optional(),
 		idempotentHint: boolean$1().optional(),
@@ -8650,20 +8650,20 @@ function build$1() {
 	const ToolSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		description: string$2().optional(),
+		description: string$3().optional(),
 		inputSchema: object$12({
 			type: literal("object"),
-			properties: record$15(string$2(), JSONValueSchema$1).optional(),
-			required: array$1(string$2()).optional()
+			properties: record$15(string$3(), JSONValueSchema$1).optional(),
+			required: array$1(string$3()).optional()
 		}).catchall(unknown$1()),
 		outputSchema: object$12({
 			type: literal("object"),
-			properties: record$15(string$2(), JSONValueSchema$1).optional(),
-			required: array$1(string$2()).optional()
+			properties: record$15(string$3(), JSONValueSchema$1).optional(),
+			required: array$1(string$3()).optional()
 		}).catchall(unknown$1()).optional(),
 		annotations: ToolAnnotationsSchema$1.optional(),
 		execution: ToolExecutionSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* Sent from the client to request a list of tools the server has.
@@ -8678,15 +8678,15 @@ function build$1() {
 	*/
 	const CallToolResultSchema$1 = ResultSchema$1.extend({
 		content: array$1(ContentBlockSchema$1),
-		structuredContent: record$15(string$2(), unknown$1()).optional(),
+		structuredContent: record$15(string$3(), unknown$1()).optional(),
 		isError: boolean$1().optional()
 	});
 	/**
 	* Parameters for a `tools/call` request.
 	*/
 	const CallToolRequestParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
-		name: string$2(),
-		arguments: record$15(string$2(), unknown$1()).optional()
+		name: string$3(),
+		arguments: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* Used by the client to invoke a tool provided by the server.
@@ -8747,7 +8747,7 @@ function build$1() {
 	*/
 	const LoggingMessageNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({
 		level: LoggingLevelSchema$1,
-		logger: string$2().optional(),
+		logger: string$3().optional(),
 		data: unknown$1()
 	});
 	/**
@@ -8768,7 +8768,7 @@ function build$1() {
 	* in the specification for at least twelve months. Migrate to calling LLM
 	* provider APIs directly.
 	*/
-	const ModelHintSchema$1 = object$12({ name: string$2().optional() });
+	const ModelHintSchema$1 = object$12({ name: string$3().optional() });
 	/**
 	* The server's preferences for model selection, requested of the client during sampling.
 	*
@@ -8804,11 +8804,11 @@ function build$1() {
 	*/
 	const ToolResultContentSchema$1 = object$12({
 		type: literal("tool_result"),
-		toolUseId: string$2().describe("The unique identifier for the corresponding tool call."),
+		toolUseId: string$3().describe("The unique identifier for the corresponding tool call."),
 		content: array$1(ContentBlockSchema$1),
 		structuredContent: object$12({}).loose().optional(),
 		isError: boolean$1().optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* Basic content types for sampling responses (without tool use).
@@ -8848,7 +8848,7 @@ function build$1() {
 	const SamplingMessageSchema$1 = object$12({
 		role: RoleSchema$1,
 		content: union([SamplingMessageContentBlockSchema$1, array$1(SamplingMessageContentBlockSchema$1)]),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* Parameters for a `sampling/createMessage` request.
@@ -8860,7 +8860,7 @@ function build$1() {
 	const CreateMessageRequestParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		messages: array$1(SamplingMessageSchema$1),
 		modelPreferences: ModelPreferencesSchema$1.optional(),
-		systemPrompt: string$2().optional(),
+		systemPrompt: string$3().optional(),
 		includeContext: _enum([
 			"none",
 			"thisServer",
@@ -8868,7 +8868,7 @@ function build$1() {
 		]).optional(),
 		temperature: number$3().optional(),
 		maxTokens: number$3().int(),
-		stopSequences: array$1(string$2()).optional(),
+		stopSequences: array$1(string$3()).optional(),
 		metadata: JSONObjectSchema$1.optional(),
 		tools: array$1(ToolSchema$1).optional(),
 		toolChoice: ToolChoiceSchema$1.optional()
@@ -8894,12 +8894,12 @@ function build$1() {
 	* provider APIs directly.
 	*/
 	const CreateMessageResultSchema$1 = ResultSchema$1.extend({
-		model: string$2(),
+		model: string$3(),
 		stopReason: optional$3(_enum([
 			"endTurn",
 			"stopSequence",
 			"maxTokens"
-		]).or(string$2())),
+		]).or(string$3())),
 		role: RoleSchema$1,
 		content: SamplingContentSchema$1
 	});
@@ -8912,13 +8912,13 @@ function build$1() {
 	* provider APIs directly.
 	*/
 	const CreateMessageResultWithToolsSchema$1 = ResultSchema$1.extend({
-		model: string$2(),
+		model: string$3(),
 		stopReason: optional$3(_enum([
 			"endTurn",
 			"stopSequence",
 			"maxTokens",
 			"toolUse"
-		]).or(string$2())),
+		]).or(string$3())),
 		role: RoleSchema$1,
 		content: union([SamplingMessageContentBlockSchema$1, array$1(SamplingMessageContentBlockSchema$1)])
 	});
@@ -8927,8 +8927,8 @@ function build$1() {
 	*/
 	const BooleanSchemaSchema$1 = object$12({
 		type: literal("boolean"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		default: boolean$1().optional()
 	});
 	/**
@@ -8936,8 +8936,8 @@ function build$1() {
 	*/
 	const StringSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minLength: number$3().optional(),
 		maxLength: number$3().optional(),
 		format: _enum([
@@ -8946,15 +8946,15 @@ function build$1() {
 			"date",
 			"date-time"
 		]).optional(),
-		default: string$2().optional()
+		default: string$3().optional()
 	});
 	/**
 	* Primitive schema definition for number fields.
 	*/
 	const NumberSchemaSchema$1 = object$12({
 		type: _enum(["number", "integer"]),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minimum: number$3().optional(),
 		maximum: number$3().optional(),
 		default: number$3().optional()
@@ -8964,23 +8964,23 @@ function build$1() {
 	*/
 	const UntitledSingleSelectEnumSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
-		enum: array$1(string$2()),
-		default: string$2().optional()
+		title: string$3().optional(),
+		description: string$3().optional(),
+		enum: array$1(string$3()),
+		default: string$3().optional()
 	});
 	/**
 	* Schema for single-selection enumeration with display titles for each option.
 	*/
 	const TitledSingleSelectEnumSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		oneOf: array$1(object$12({
-			const: string$2(),
-			title: string$2()
+			const: string$3(),
+			title: string$3()
 		})),
-		default: string$2().optional()
+		default: string$3().optional()
 	});
 	/**
 	* Use {@linkcode TitledSingleSelectEnumSchema} instead.
@@ -8988,11 +8988,11 @@ function build$1() {
 	*/
 	const LegacyTitledEnumSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
-		enum: array$1(string$2()),
-		enumNames: array$1(string$2()).optional(),
-		default: string$2().optional()
+		title: string$3().optional(),
+		description: string$3().optional(),
+		enum: array$1(string$3()),
+		enumNames: array$1(string$3()).optional(),
+		default: string$3().optional()
 	});
 	const SingleSelectEnumSchemaSchema$1 = union([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
 	/**
@@ -9000,30 +9000,30 @@ function build$1() {
 	*/
 	const UntitledMultiSelectEnumSchemaSchema$1 = object$12({
 		type: literal("array"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
 		items: object$12({
 			type: literal("string"),
-			enum: array$1(string$2())
+			enum: array$1(string$3())
 		}),
-		default: array$1(string$2()).optional()
+		default: array$1(string$3()).optional()
 	});
 	/**
 	* Schema for multiple-selection enumeration with display titles for each option.
 	*/
 	const TitledMultiSelectEnumSchemaSchema$1 = object$12({
 		type: literal("array"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
 		items: object$12({ anyOf: array$1(object$12({
-			const: string$2(),
-			title: string$2()
+			const: string$3(),
+			title: string$3()
 		})) }),
-		default: array$1(string$2()).optional()
+		default: array$1(string$3()).optional()
 	});
 	/**
 	* Combined schema for multiple-selection enumeration
@@ -9051,11 +9051,11 @@ function build$1() {
 	*/
 	const ElicitRequestFormParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		mode: literal("form").optional(),
-		message: string$2(),
+		message: string$3(),
 		requestedSchema: object$12({
 			type: literal("object"),
-			properties: record$15(string$2(), PrimitiveSchemaDefinitionSchema$1),
-			required: array$1(string$2()).optional()
+			properties: record$15(string$3(), PrimitiveSchemaDefinitionSchema$1),
+			required: array$1(string$3()).optional()
 		}).catchall(unknown$1())
 	});
 	/**
@@ -9063,9 +9063,9 @@ function build$1() {
 	*/
 	const ElicitRequestURLParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		mode: literal("url"),
-		message: string$2(),
-		elicitationId: string$2(),
-		url: string$2().url()
+		message: string$3(),
+		elicitationId: string$3(),
+		url: string$3().url()
 	});
 	/**
 	* The parameters for a request to elicit additional information from the user via the client.
@@ -9085,7 +9085,7 @@ function build$1() {
 	*
 	* @category notifications/elicitation/complete
 	*/
-	const ElicitationCompleteNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({ elicitationId: string$2() });
+	const ElicitationCompleteNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({ elicitationId: string$3() });
 	/**
 	* A notification from the server to the client, informing it of a completion of an out-of-band elicitation request.
 	*
@@ -9104,11 +9104,11 @@ function build$1() {
 			"decline",
 			"cancel"
 		]),
-		content: preprocess((val) => val === null ? void 0 : val, record$15(string$2(), union([
-			string$2(),
+		content: preprocess((val) => val === null ? void 0 : val, record$15(string$3(), union([
+			string$3(),
 			number$3(),
 			boolean$1(),
-			array$1(string$2())
+			array$1(string$3())
 		])).optional())
 	});
 	/**
@@ -9116,14 +9116,14 @@ function build$1() {
 	*/
 	const ResourceTemplateReferenceSchema$1 = object$12({
 		type: literal("ref/resource"),
-		uri: string$2()
+		uri: string$3()
 	});
 	/**
 	* Identifies a prompt.
 	*/
 	const PromptReferenceSchema$1 = object$12({
 		type: literal("ref/prompt"),
-		name: string$2()
+		name: string$3()
 	});
 	/**
 	* Parameters for a {@linkcode CompleteRequest | completion/complete} request.
@@ -9131,10 +9131,10 @@ function build$1() {
 	const CompleteRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({
 		ref: union([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
 		argument: object$12({
-			name: string$2(),
-			value: string$2()
+			name: string$3(),
+			value: string$3()
 		}),
-		context: object$12({ arguments: record$15(string$2(), string$2()).optional() }).optional()
+		context: object$12({ arguments: record$15(string$3(), string$3()).optional() }).optional()
 	});
 	/**
 	* A request from the client to the server, to ask for completion options.
@@ -9147,7 +9147,7 @@ function build$1() {
 	* The server's response to a {@linkcode CompleteRequest | completion/complete} request
 	*/
 	const CompleteResultSchema$1 = ResultSchema$1.extend({ completion: looseObject({
-		values: array$1(string$2()).max(100),
+		values: array$1(string$3()).max(100),
 		total: optional$3(number$3().int()),
 		hasMore: optional$3(boolean$1())
 	}) });
@@ -9159,9 +9159,9 @@ function build$1() {
 	* tool parameters, resource URIs, or configuration.
 	*/
 	const RootSchema$1 = object$12({
-		uri: string$2().startsWith("file://"),
-		name: string$2().optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		uri: string$3().startsWith("file://"),
+		name: string$3().optional(),
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/**
 	* Sent from the server to request a list of root URIs from the client.
@@ -9220,13 +9220,13 @@ function build$1() {
 	* @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only.
 	*/
 	const TaskSchema$1 = object$12({
-		taskId: string$2(),
+		taskId: string$3(),
 		status: TaskStatusSchema$1,
 		ttl: union([number$3(), _null()]),
-		createdAt: string$2(),
-		lastUpdatedAt: string$2(),
+		createdAt: string$3(),
+		lastUpdatedAt: string$3(),
 		pollInterval: optional$3(number$3()),
-		statusMessage: optional$3(string$2())
+		statusMessage: optional$3(string$3())
 	});
 	/**
 	* Result returned when a task is created, containing the task data wrapped in a `task` field.
@@ -9256,7 +9256,7 @@ function build$1() {
 	*/
 	const GetTaskRequestSchema$1 = RequestSchema$1.extend({
 		method: literal("tasks/get"),
-		params: BaseRequestParamsSchema$1.extend({ taskId: string$2() })
+		params: BaseRequestParamsSchema$1.extend({ taskId: string$3() })
 	});
 	/**
 	* The response to a {@linkcode GetTaskRequest | tasks/get} request.
@@ -9271,7 +9271,7 @@ function build$1() {
 	*/
 	const GetTaskPayloadRequestSchema$1 = RequestSchema$1.extend({
 		method: literal("tasks/result"),
-		params: BaseRequestParamsSchema$1.extend({ taskId: string$2() })
+		params: BaseRequestParamsSchema$1.extend({ taskId: string$3() })
 	});
 	/**
 	* The response to a `tasks/result` request.
@@ -9301,7 +9301,7 @@ function build$1() {
 	*/
 	const CancelTaskRequestSchema$1 = RequestSchema$1.extend({
 		method: literal("tasks/cancel"),
-		params: BaseRequestParamsSchema$1.extend({ taskId: string$2() })
+		params: BaseRequestParamsSchema$1.extend({ taskId: string$3() })
 	});
 	return {
 		JSONValueSchema: JSONValueSchema$1,
@@ -9914,26 +9914,26 @@ const rev2025Codec = {
 */
 function build() {
 	const JSONValueSchema$1 = lazy(() => union([
-		string$2(),
+		string$3(),
 		number$3(),
 		boolean$1(),
 		_null(),
-		record$15(string$2(), JSONValueSchema$1),
+		record$15(string$3(), JSONValueSchema$1),
 		array$1(JSONValueSchema$1)
 	]));
-	const JSONObjectSchema$1 = record$15(string$2(), JSONValueSchema$1);
+	const JSONObjectSchema$1 = record$15(string$3(), JSONValueSchema$1);
 	/**
 	* A progress token, used to associate progress notifications with the original request.
 	*/
-	const ProgressTokenSchema$1 = union([string$2(), number$3().int()]);
+	const ProgressTokenSchema$1 = union([string$3(), number$3().int()]);
 	/**
 	* An opaque token used to represent a cursor for pagination.
 	*/
-	const CursorSchema$1 = string$2();
+	const CursorSchema$1 = string$3();
 	/**
 	* A uniquely identifying ID for a request in JSON-RPC.
 	*/
-	const RequestIdSchema$1 = union([string$2(), number$3().int()]);
+	const RequestIdSchema$1 = union([string$3(), number$3().int()]);
 	/**
 	* The sender or recipient of messages and data in a conversation.
 	*/
@@ -9956,7 +9956,7 @@ function build() {
 	* robust for very large inputs than the default regex-based check. It avoids
 	* stack overflows by using the native `atob` function for validation.
 	*/
-	const Base64Schema = string$2().refine((val) => {
+	const Base64Schema = string$3().refine((val) => {
 		try {
 			atob(val);
 			return true;
@@ -9967,7 +9967,7 @@ function build() {
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
 	const TaskMetadataSchema$1 = object$12({ ttl: number$3().optional() });
 	/** @deprecated 2025-11-25 wire vocabulary with no SDK runtime; kept importable for interoperability only. */
-	const RelatedTaskMetadataSchema$1 = object$12({ taskId: string$2() });
+	const RelatedTaskMetadataSchema$1 = object$12({ taskId: string$3() });
 	const RequestMetaSchema$1 = looseObject({
 		progressToken: ProgressTokenSchema$1.optional(),
 		"io.modelcontextprotocol/related-task": RelatedTaskMetadataSchema$1.optional()
@@ -9977,26 +9977,26 @@ function build() {
 	const TaskAugmentedRequestParamsSchema$1 = BaseRequestParamsSchema$1.extend({ task: TaskMetadataSchema$1.optional() });
 	const NotificationsParamsSchema$1 = object$12({ _meta: RequestMetaSchema$1.optional() });
 	const NotificationSchema$1 = object$12({
-		method: string$2(),
+		method: string$3(),
 		params: NotificationsParamsSchema$1.loose().optional()
 	});
 	const IconSchema$1 = object$12({
-		src: string$2(),
-		mimeType: string$2().optional(),
-		sizes: array$1(string$2()).optional(),
+		src: string$3(),
+		mimeType: string$3().optional(),
+		sizes: array$1(string$3()).optional(),
 		theme: _enum(["light", "dark"]).optional()
 	});
 	const IconsSchema$1 = object$12({ icons: array$1(IconSchema$1).optional() });
 	const BaseMetadataSchema$1 = object$12({
-		name: string$2(),
-		title: string$2().optional()
+		name: string$3(),
+		title: string$3().optional()
 	});
 	const ImplementationSchema$1 = BaseMetadataSchema$1.extend({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		version: string$2(),
-		websiteUrl: string$2().optional(),
-		description: string$2().optional()
+		version: string$3(),
+		websiteUrl: string$3().optional(),
+		description: string$3().optional()
 	});
 	const ElicitationCapabilitySchema = preprocess((value) => {
 		if (value && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === 0) return { form: {} };
@@ -10021,7 +10021,7 @@ function build() {
 		requests: looseObject({ tools: looseObject({ call: JSONObjectSchema$1.optional() }).optional() }).optional()
 	});
 	const ClientCapabilitiesSchema$1 = object$12({
-		experimental: record$15(string$2(), JSONObjectSchema$1).optional(),
+		experimental: record$15(string$3(), JSONObjectSchema$1).optional(),
 		sampling: object$12({
 			context: JSONObjectSchema$1.optional(),
 			tools: JSONObjectSchema$1.optional()
@@ -10029,10 +10029,10 @@ function build() {
 		elicitation: ElicitationCapabilitySchema.optional(),
 		roots: object$12({ listChanged: boolean$1().optional() }).optional(),
 		tasks: ClientTasksCapabilitySchema$1.optional(),
-		extensions: record$15(string$2(), JSONObjectSchema$1).optional()
+		extensions: record$15(string$3(), JSONObjectSchema$1).optional()
 	});
 	const ServerCapabilitiesSchema$1 = object$12({
-		experimental: record$15(string$2(), JSONObjectSchema$1).optional(),
+		experimental: record$15(string$3(), JSONObjectSchema$1).optional(),
 		logging: JSONObjectSchema$1.optional(),
 		completions: JSONObjectSchema$1.optional(),
 		prompts: object$12({ listChanged: boolean$1().optional() }).optional(),
@@ -10042,12 +10042,12 @@ function build() {
 		}).optional(),
 		tools: object$12({ listChanged: boolean$1().optional() }).optional(),
 		tasks: ServerTasksCapabilitySchema$1.optional(),
-		extensions: record$15(string$2(), JSONObjectSchema$1).optional()
+		extensions: record$15(string$3(), JSONObjectSchema$1).optional()
 	});
 	const ProgressSchema$1 = object$12({
 		progress: number$3(),
 		total: optional$3(number$3()),
-		message: optional$3(string$2())
+		message: optional$3(string$3())
 	});
 	const ProgressNotificationParamsSchema$1 = object$12({
 		...NotificationsParamsSchema$1.shape,
@@ -10060,7 +10060,7 @@ function build() {
 	});
 	const LoggingMessageNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({
 		level: LoggingLevelSchema$1,
-		logger: string$2().optional(),
+		logger: string$3().optional(),
 		data: unknown$1()
 	});
 	const LoggingMessageNotificationSchema$1 = NotificationSchema$1.extend({
@@ -10068,11 +10068,11 @@ function build() {
 		params: LoggingMessageNotificationParamsSchema$1
 	});
 	const ResourceContentsSchema$1 = object$12({
-		uri: string$2(),
-		mimeType: optional$3(string$2()),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		uri: string$3(),
+		mimeType: optional$3(string$3()),
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
-	const TextResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ text: string$2() });
+	const TextResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ text: string$3() });
 	const BlobResourceContentsSchema$1 = ResourceContentsSchema$1.extend({ blob: Base64Schema });
 	const AnnotationsSchema$1 = object$12({
 		audience: array$1(RoleSchema$1).optional(),
@@ -10082,9 +10082,9 @@ function build() {
 	const ResourceSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		uri: string$2(),
-		description: optional$3(string$2()),
-		mimeType: optional$3(string$2()),
+		uri: string$3(),
+		description: optional$3(string$3()),
+		mimeType: optional$3(string$3()),
 		size: optional$3(number$3()),
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: optional$3(looseObject({}))
@@ -10092,9 +10092,9 @@ function build() {
 	const ResourceTemplateSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		uriTemplate: string$2(),
-		description: optional$3(string$2()),
-		mimeType: optional$3(string$2()),
+		uriTemplate: string$3(),
+		description: optional$3(string$3()),
+		mimeType: optional$3(string$3()),
 		annotations: AnnotationsSchema$1.optional(),
 		_meta: optional$3(looseObject({}))
 	});
@@ -10102,20 +10102,20 @@ function build() {
 		method: literal("notifications/resources/list_changed"),
 		params: NotificationsParamsSchema$1.optional()
 	});
-	const ResourceUpdatedNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({ uri: string$2() });
+	const ResourceUpdatedNotificationParamsSchema$1 = NotificationsParamsSchema$1.extend({ uri: string$3() });
 	const ResourceUpdatedNotificationSchema$1 = NotificationSchema$1.extend({
 		method: literal("notifications/resources/updated"),
 		params: ResourceUpdatedNotificationParamsSchema$1
 	});
 	const PromptArgumentSchema$1 = object$12({
-		name: string$2(),
-		description: optional$3(string$2()),
+		name: string$3(),
+		description: optional$3(string$3()),
 		required: optional$3(boolean$1())
 	});
 	const PromptSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		description: optional$3(string$2()),
+		description: optional$3(string$3()),
 		arguments: optional$3(array$1(PromptArgumentSchema$1)),
 		_meta: optional$3(looseObject({}))
 	});
@@ -10125,36 +10125,36 @@ function build() {
 	});
 	const TextContentSchema$1 = object$12({
 		type: literal("text"),
-		text: string$2(),
+		text: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	const ImageContentSchema$1 = object$12({
 		type: literal("image"),
 		data: Base64Schema,
-		mimeType: string$2(),
+		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	const AudioContentSchema$1 = object$12({
 		type: literal("audio"),
 		data: Base64Schema,
-		mimeType: string$2(),
+		mimeType: string$3(),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	const ToolUseContentSchema$1 = object$12({
 		type: literal("tool_use"),
-		name: string$2(),
-		id: string$2(),
-		input: record$15(string$2(), unknown$1()),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		name: string$3(),
+		id: string$3(),
+		input: record$15(string$3(), unknown$1()),
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	const EmbeddedResourceSchema$1 = object$12({
 		type: literal("resource"),
 		resource: union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]),
 		annotations: AnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	const ResourceLinkSchema$1 = ResourceSchema$1.extend({ type: literal("resource_link") });
 	const ContentBlockSchema$1 = union([
@@ -10169,7 +10169,7 @@ function build() {
 		content: ContentBlockSchema$1
 	});
 	const ToolAnnotationsSchema$1 = object$12({
-		title: string$2().optional(),
+		title: string$3().optional(),
 		readOnlyHint: boolean$1().optional(),
 		destructiveHint: boolean$1().optional(),
 		idempotentHint: boolean$1().optional(),
@@ -10179,7 +10179,7 @@ function build() {
 		method: literal("notifications/tools/list_changed"),
 		params: NotificationsParamsSchema$1.optional()
 	});
-	const ModelHintSchema$1 = object$12({ name: string$2().optional() });
+	const ModelHintSchema$1 = object$12({ name: string$3().optional() });
 	const ModelPreferencesSchema$1 = object$12({
 		hints: array$1(ModelHintSchema$1).optional(),
 		costPriority: number$3().min(0).max(1).optional(),
@@ -10193,14 +10193,14 @@ function build() {
 	]).optional() });
 	const BooleanSchemaSchema$1 = object$12({
 		type: literal("boolean"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		default: boolean$1().optional()
 	});
 	const StringSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minLength: number$3().optional(),
 		maxLength: number$3().optional(),
 		format: _enum([
@@ -10209,65 +10209,65 @@ function build() {
 			"date",
 			"date-time"
 		]).optional(),
-		default: string$2().optional()
+		default: string$3().optional()
 	});
 	const NumberSchemaSchema$1 = object$12({
 		type: _enum(["number", "integer"]),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minimum: number$3().optional(),
 		maximum: number$3().optional(),
 		default: number$3().optional()
 	});
 	const UntitledSingleSelectEnumSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
-		enum: array$1(string$2()),
-		default: string$2().optional()
+		title: string$3().optional(),
+		description: string$3().optional(),
+		enum: array$1(string$3()),
+		default: string$3().optional()
 	});
 	const TitledSingleSelectEnumSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		oneOf: array$1(object$12({
-			const: string$2(),
-			title: string$2()
+			const: string$3(),
+			title: string$3()
 		})),
-		default: string$2().optional()
+		default: string$3().optional()
 	});
 	const LegacyTitledEnumSchemaSchema$1 = object$12({
 		type: literal("string"),
-		title: string$2().optional(),
-		description: string$2().optional(),
-		enum: array$1(string$2()),
-		enumNames: array$1(string$2()).optional(),
-		default: string$2().optional()
+		title: string$3().optional(),
+		description: string$3().optional(),
+		enum: array$1(string$3()),
+		enumNames: array$1(string$3()).optional(),
+		default: string$3().optional()
 	});
 	const SingleSelectEnumSchemaSchema$1 = union([UntitledSingleSelectEnumSchemaSchema$1, TitledSingleSelectEnumSchemaSchema$1]);
 	const UntitledMultiSelectEnumSchemaSchema$1 = object$12({
 		type: literal("array"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
 		items: object$12({
 			type: literal("string"),
-			enum: array$1(string$2())
+			enum: array$1(string$3())
 		}),
-		default: array$1(string$2()).optional()
+		default: array$1(string$3()).optional()
 	});
 	const TitledMultiSelectEnumSchemaSchema$1 = object$12({
 		type: literal("array"),
-		title: string$2().optional(),
-		description: string$2().optional(),
+		title: string$3().optional(),
+		description: string$3().optional(),
 		minItems: number$3().optional(),
 		maxItems: number$3().optional(),
 		items: object$12({ anyOf: array$1(object$12({
-			const: string$2(),
-			title: string$2()
+			const: string$3(),
+			title: string$3()
 		})) }),
-		default: array$1(string$2()).optional()
+		default: array$1(string$3()).optional()
 	});
 	const MultiSelectEnumSchemaSchema$1 = union([UntitledMultiSelectEnumSchemaSchema$1, TitledMultiSelectEnumSchemaSchema$1]);
 	const EnumSchemaSchema$1 = union([
@@ -10283,25 +10283,25 @@ function build() {
 	]);
 	const ElicitRequestFormParamsSchema$1 = TaskAugmentedRequestParamsSchema$1.extend({
 		mode: literal("form").optional(),
-		message: string$2(),
+		message: string$3(),
 		requestedSchema: object$12({
 			type: literal("object"),
-			properties: record$15(string$2(), PrimitiveSchemaDefinitionSchema$1),
-			required: array$1(string$2()).optional()
+			properties: record$15(string$3(), PrimitiveSchemaDefinitionSchema$1),
+			required: array$1(string$3()).optional()
 		}).catchall(unknown$1())
 	});
 	const ResourceTemplateReferenceSchema$1 = object$12({
 		type: literal("ref/resource"),
-		uri: string$2()
+		uri: string$3()
 	});
 	const PromptReferenceSchema$1 = object$12({
 		type: literal("ref/prompt"),
-		name: string$2()
+		name: string$3()
 	});
 	const RootSchema$1 = object$12({
-		uri: string$2().startsWith("file://"),
-		name: string$2().optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		uri: string$3().startsWith("file://"),
+		name: string$3().optional(),
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	const sharedClientCapabilityShape = ClientCapabilitiesSchema$1.shape;
 	const ClientCapabilities2026Schema = object$12({
@@ -10334,7 +10334,7 @@ function build() {
 	*/
 	const RequestMetaEnvelopeSchema = looseObject({
 		progressToken: ProgressTokenSchema$1.optional(),
-		[PROTOCOL_VERSION_META_KEY]: string$2(),
+		[PROTOCOL_VERSION_META_KEY]: string$3(),
 		[CLIENT_INFO_META_KEY]: ImplementationSchema$1.optional(),
 		[CLIENT_CAPABILITIES_META_KEY]: ClientCapabilities2026Schema,
 		[LOG_LEVEL_META_KEY]: LoggingLevelSchema$1.optional()
@@ -10343,23 +10343,23 @@ function build() {
 	const ToolSchema$1 = object$12({
 		...BaseMetadataSchema$1.shape,
 		...IconsSchema$1.shape,
-		description: string$2().optional(),
+		description: string$3().optional(),
 		inputSchema: looseObject({
-			$schema: string$2().optional(),
+			$schema: string$3().optional(),
 			type: literal("object")
 		}),
-		outputSchema: looseObject({ $schema: string$2().optional() }).optional(),
+		outputSchema: looseObject({ $schema: string$3().optional() }).optional(),
 		annotations: ToolAnnotationsSchema$1.optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/** 2026-era ToolResultContent (anchor-exact: `structuredContent?: unknown`). */
 	const ToolResultContentSchema$1 = object$12({
 		type: literal("tool_result"),
-		toolUseId: string$2(),
+		toolUseId: string$3(),
 		content: array$1(ContentBlockSchema$1),
 		structuredContent: unknown$1().optional(),
 		isError: boolean$1().optional(),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/** 2026-era sampling content union (composes the forked tool-result shape). */
 	const SamplingMessageContentBlockSchema$1 = union([
@@ -10373,10 +10373,10 @@ function build() {
 	const SamplingMessageSchema$1 = object$12({
 		role: RoleSchema$1,
 		content: union([SamplingMessageContentBlockSchema$1, array$1(SamplingMessageContentBlockSchema$1)]),
-		_meta: record$15(string$2(), unknown$1()).optional()
+		_meta: record$15(string$3(), unknown$1()).optional()
 	});
 	/** Open union per the anchor: 'complete' | 'input_required' | string. */
-	const ResultTypeSchema = string$2();
+	const ResultTypeSchema = string$3();
 	/**
 	* Result `_meta` (anchor `ResultMetaObject`, added by spec PR #3002):
 	* loose, with the serverInfo key typed when present; the outbound stamp
@@ -10411,7 +10411,7 @@ function build() {
 		nextCursor: CursorSchema$1.optional()
 	});
 	const GetPromptResultSchema$1 = wireResult({
-		description: string$2().optional(),
+		description: string$3().optional(),
 		messages: array$1(PromptMessageSchema$1)
 	});
 	const ListResourcesResultSchema$1 = wireResult({
@@ -10432,7 +10432,7 @@ function build() {
 		contents: array$1(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
 	});
 	const CompleteResultSchema$1 = wireResult({ completion: object$12({
-		values: array$1(string$2()).max(100),
+		values: array$1(string$3()).max(100),
 		total: number$3().int().optional(),
 		hasMore: boolean$1().optional()
 	}).loose() });
@@ -10444,15 +10444,15 @@ function build() {
 	const DiscoverResultSchema$1 = wireResult({
 		ttlMs: number$3().int().min(0).catch(0),
 		cacheScope: _enum(["public", "private"]).catch("private"),
-		supportedVersions: array$1(string$2()),
+		supportedVersions: array$1(string$3()),
 		capabilities: ServerCapabilities2026Schema,
-		instructions: string$2().optional()
+		instructions: string$3().optional()
 	});
 	/** 2026-era CreateMessageRequestParams (anchor-exact: forked SamplingMessage/Tool, no task augmentation). */
 	const CreateMessageRequestParamsSchema$1 = object$12({
 		messages: array$1(SamplingMessageSchema$1),
 		modelPreferences: ModelPreferencesSchema$1.optional(),
-		systemPrompt: string$2().optional(),
+		systemPrompt: string$3().optional(),
 		includeContext: _enum([
 			"none",
 			"thisServer",
@@ -10460,7 +10460,7 @@ function build() {
 		]).optional(),
 		temperature: number$3().optional(),
 		maxTokens: number$3().int(),
-		stopSequences: array$1(string$2()).optional(),
+		stopSequences: array$1(string$3()).optional(),
 		metadata: JSONObjectSchema$1.optional(),
 		tools: array$1(ToolSchema$1).optional(),
 		toolChoice: ToolChoiceSchema$1.optional()
@@ -10477,13 +10477,13 @@ function build() {
 	*/
 	const ListRootsRequestSchema$1 = object$12({
 		method: literal("roots/list"),
-		params: object$12({ _meta: record$15(string$2(), unknown$1()).optional() }).optional()
+		params: object$12({ _meta: record$15(string$3(), unknown$1()).optional() }).optional()
 	});
 	/** 2026-era embedded sampling response (anchor-exact: extends the forked SamplingMessage). */
 	const CreateMessageResultSchema$1 = object$12({
 		...SamplingMessageSchema$1.shape,
-		model: string$2(),
-		stopReason: string$2().optional()
+		model: string$3(),
+		stopReason: string$3().optional()
 	});
 	/** 2026-era embedded roots listing response (anchor-exact: bare `roots` array). */
 	const ListRootsResultSchema$1 = object$12({ roots: array$1(RootSchema$1) });
@@ -10494,11 +10494,11 @@ function build() {
 			"decline",
 			"cancel"
 		]),
-		content: record$15(string$2(), union([
-			string$2(),
+		content: record$15(string$3(), union([
+			string$3(),
 			number$3(),
 			boolean$1(),
-			array$1(string$2())
+			array$1(string$3())
 		])).optional()
 	});
 	/**
@@ -10509,8 +10509,8 @@ function build() {
 	*/
 	const ElicitRequestURLParamsSchema$1 = object$12({
 		mode: literal("url"),
-		message: string$2(),
-		url: string$2().url()
+		message: string$3(),
+		url: string$3().url()
 	});
 	/** 2026-era elicitation params (form mode is revision-identical; URL mode is the fork above). */
 	const ElicitRequestParamsSchema$1 = union([ElicitRequestFormParamsSchema$1, ElicitRequestURLParamsSchema$1]);
@@ -10532,9 +10532,9 @@ function build() {
 		ElicitResultSchema$1
 	]);
 	/** Map of embedded input requests, keyed by server-assigned identifiers. */
-	const InputRequestsSchema = record$15(string$2(), InputRequestSchema);
+	const InputRequestsSchema = record$15(string$3(), InputRequestSchema);
 	/** Map of embedded input responses, keyed by the corresponding request identifiers. */
-	const InputResponsesSchema = record$15(string$2(), InputResponseSchema);
+	const InputResponsesSchema = record$15(string$3(), InputResponseSchema);
 	/**
 	* The wire InputRequiredResult: `resultType: 'input_required'` plus at least
 	* one of `inputRequests` / `requestState` (the at-least-one rule is enforced
@@ -10542,12 +10542,12 @@ function build() {
 	*/
 	const InputRequiredResultSchema = wireResult({
 		inputRequests: InputRequestsSchema.optional(),
-		requestState: string$2().optional()
+		requestState: string$3().optional()
 	});
 	/** The retry-channel members carried by client-initiated requests on this revision. */
 	const retryParamsShape = {
 		inputResponses: InputResponsesSchema.optional(),
-		requestState: string$2().optional()
+		requestState: string$3().optional()
 	};
 	/** Anchor InputResponseRequestParams: the retry channel on top of the required request `_meta` envelope. */
 	const InputResponseRequestParamsSchema = object$12({
@@ -10575,8 +10575,8 @@ function build() {
 		});
 	}
 	const callToolParamsShape = {
-		name: string$2(),
-		arguments: record$15(string$2(), unknown$1()).optional(),
+		name: string$3(),
+		arguments: record$15(string$3(), unknown$1()).optional(),
 		...retryParamsShape
 	};
 	const paginatedParamsShape = { cursor: CursorSchema$1.optional() };
@@ -10584,23 +10584,23 @@ function build() {
 	const ListToolsRequestSchema$1 = wireRequest("tools/list", paginatedParamsShape);
 	const ListPromptsRequestSchema$1 = wireRequest("prompts/list", paginatedParamsShape);
 	const GetPromptRequestSchema$1 = wireRequest("prompts/get", {
-		name: string$2(),
-		arguments: record$15(string$2(), string$2()).optional(),
+		name: string$3(),
+		arguments: record$15(string$3(), string$3()).optional(),
 		...retryParamsShape
 	});
 	const ListResourcesRequestSchema$1 = wireRequest("resources/list", paginatedParamsShape);
 	const ListResourceTemplatesRequestSchema$1 = wireRequest("resources/templates/list", paginatedParamsShape);
 	const ReadResourceRequestSchema$1 = wireRequest("resources/read", {
-		uri: string$2(),
+		uri: string$3(),
 		...retryParamsShape
 	});
 	const completeParamsShape = {
 		ref: union([PromptReferenceSchema$1, ResourceTemplateReferenceSchema$1]),
 		argument: object$12({
-			name: string$2(),
-			value: string$2()
+			name: string$3(),
+			value: string$3()
 		}),
-		context: object$12({ arguments: record$15(string$2(), string$2()).optional() }).optional()
+		context: object$12({ arguments: record$15(string$3(), string$3()).optional() }).optional()
 	};
 	const CompleteRequestSchema$1 = wireRequest("completion/complete", completeParamsShape);
 	const DiscoverRequestSchema$1 = wireRequest("server/discover", {});
@@ -10609,7 +10609,7 @@ function build() {
 		toolsListChanged: boolean$1().optional(),
 		promptsListChanged: boolean$1().optional(),
 		resourcesListChanged: boolean$1().optional(),
-		resourceSubscriptions: array$1(string$2()).optional()
+		resourceSubscriptions: array$1(string$3()).optional()
 	});
 	const subscriptionsListenParamsShape = { notifications: SubscriptionFilterSchema$1 };
 	const SubscriptionsListenRequestSchema$1 = wireRequest("subscriptions/listen", subscriptionsListenParamsShape);
@@ -10634,13 +10634,13 @@ function build() {
 		"tools/call": dispatchRequest("tools/call", callToolParamsShape),
 		"tools/list": dispatchRequest("tools/list", paginatedParamsShape),
 		"prompts/get": dispatchRequest("prompts/get", {
-			name: string$2(),
-			arguments: record$15(string$2(), string$2()).optional()
+			name: string$3(),
+			arguments: record$15(string$3(), string$3()).optional()
 		}),
 		"prompts/list": dispatchRequest("prompts/list", paginatedParamsShape),
 		"resources/list": dispatchRequest("resources/list", paginatedParamsShape),
 		"resources/templates/list": dispatchRequest("resources/templates/list", paginatedParamsShape),
-		"resources/read": dispatchRequest("resources/read", { uri: string$2() }),
+		"resources/read": dispatchRequest("resources/read", { uri: string$3() }),
 		"completion/complete": dispatchRequest("completion/complete", completeParamsShape),
 		"server/discover": dispatchRequest("server/discover", {}),
 		"subscriptions/listen": dispatchRequest("subscriptions/listen", subscriptionsListenParamsShape)
@@ -10666,7 +10666,7 @@ function build() {
 			nextCursor: CursorSchema$1.optional()
 		}),
 		"prompts/get": liftedResult({
-			description: string$2().optional(),
+			description: string$3().optional(),
 			messages: array$1(PromptMessageSchema$1)
 		}),
 		"prompts/list": liftedResult({
@@ -10693,16 +10693,16 @@ function build() {
 			contents: array$1(union([TextResourceContentsSchema$1, BlobResourceContentsSchema$1]))
 		}),
 		"completion/complete": liftedResult({ completion: object$12({
-			values: array$1(string$2()).max(100),
+			values: array$1(string$3()).max(100),
 			total: number$3().int().optional(),
 			hasMore: boolean$1().optional()
 		}).loose() }),
 		"server/discover": liftedResult({
 			ttlMs: number$3().int().min(0).catch(0),
 			cacheScope: _enum(["public", "private"]).catch("private"),
-			supportedVersions: array$1(string$2()),
+			supportedVersions: array$1(string$3()),
 			capabilities: ServerCapabilities2026Schema,
-			instructions: string$2().optional()
+			instructions: string$3().optional()
 		}),
 		"subscriptions/listen": liftedResult({})
 	};
@@ -10731,7 +10731,7 @@ function build() {
 	const CancelledNotificationParamsSchema$1 = object$12({
 		_meta: NotificationMetaSchema.optional(),
 		requestId: RequestIdSchema$1,
-		reason: string$2().optional()
+		reason: string$3().optional()
 	});
 	/** 2026-era `notifications/cancelled` (see the params fork above). */
 	const CancelledNotificationSchema$1 = object$12({
@@ -10750,7 +10750,7 @@ function build() {
 	};
 	const wireResultResponse = (result) => object$12({
 		jsonrpc: literal("2.0"),
-		id: union([string$2(), number$3().int()]),
+		id: union([string$3(), number$3().int()]),
 		result
 	}).strict();
 	return {
@@ -24797,7 +24797,7 @@ var ArgumentsError = class extends Error {
 const fail$2 = (code) => {
 	throw new ArgumentsError(code);
 };
-const string$1 = (value) => typeof value === "string" && value.isWellFormed();
+const string$2 = (value) => typeof value === "string" && value.isWellFormed();
 const reference = (value) => {
 	try {
 		return parseObjectReference(value);
@@ -24812,7 +24812,7 @@ function parseArguments(argv) {
 	const captured = [];
 	for (let index = 0; index < argc; index++) {
 		const value = argv[index];
-		if (!string$1(value)) fail$2("InvalidArguments");
+		if (!string$2(value)) fail$2("InvalidArguments");
 		captured.push(value);
 	}
 	if (captured.length === 1 && captured[0] === "--help") return Object.freeze({ command: "help" });
@@ -29656,7 +29656,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 	memory.withBytes(bytes, (ptr, size) => success(retainObservedDocInfo ? open(ptr, size, normalizeObservedCfb ? 1 : 0) : open(ptr, size)));
 	const copyText = (section, paragraph) => {
 		check();
-		return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes;
+		return output(() => wasm.hwp5_edit_copy_text(u32$1(section, "section"), u32$1(paragraph, "paragraph"))).bytes;
 	};
 	return {
 		...createSourceTableGridApi({
@@ -29687,7 +29687,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			wasm,
 			memory,
 			check,
-			uint: u32,
+			uint: u32$1,
 			prefix: "hwp5_edit",
 			endAsCount: false,
 			unavailable: "Hwp5ParagraphBreakAbiUnavailable"
@@ -29716,14 +29716,14 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		textSourceProtection(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_text_source_protection !== "function") throw new Error("Hwp5TextSourceProtectionAbiUnavailable");
 			const bytes = output(() => wasm.hwp5_edit_text_source_protection(index)).bytes;
 			return decodeHwp5TextSourceProtection(bytes, wasm.hwp5_edit_paragraph_count(index));
 		},
 		validateTextSourcePolicy(section) {
 			check();
-			u32(section, "section");
+			u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_validate_text_source_policy !== "function") throw new Error("Hwp5TextSourcePolicyAbiUnavailable");
 			success(wasm.hwp5_edit_validate_text_source_policy(section));
 		},
@@ -29731,7 +29731,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			wasm,
 			memory,
 			check,
-			uint: u32,
+			uint: u32$1,
 			prefix: "hwp5_edit",
 			unavailable: "Hwp5HistoryAbiUnavailable"
 		}),
@@ -29741,7 +29741,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check,
 			output,
 			success,
-			u32,
+			u32: u32$1,
 			referenceScope
 		}),
 		...createHwp5TableCreationApi({
@@ -29749,7 +29749,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			memory,
 			check,
 			output,
-			u32
+			u32: u32$1
 		}),
 		supportsCurrentTextPreview() {
 			check();
@@ -29766,7 +29766,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		paragraphCount(section) {
 			check();
-			return count(wasm.hwp5_edit_paragraph_count(u32(section, "section")));
+			return count(wasm.hwp5_edit_paragraph_count(u32$1(section, "section")));
 		},
 		characterShapeCount() {
 			check();
@@ -29780,14 +29780,14 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		paragraphShapeId(section, paragraph) {
 			check();
 			if (typeof wasm.hwp5_edit_para_shape_id !== "function") throw new Error("Hwp5ParagraphFormatAbiUnavailable");
-			return count(wasm.hwp5_edit_para_shape_id(u32(section, "section"), u32(paragraph, "paragraph")));
+			return count(wasm.hwp5_edit_para_shape_id(u32$1(section, "section"), u32$1(paragraph, "paragraph")));
 		},
 		setParagraphFormat({ section, paragraph, paraShapeId }) {
 			check();
 			const values = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(paraShapeId, "paraShapeId")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(paraShapeId, "paraShapeId")
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_format !== "function") throw new Error("Hwp5ParagraphFormatAbiUnavailable");
 			success(wasm.hwp5_edit_set_paragraph_format(...values));
@@ -29804,8 +29804,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			].indexOf(alignment);
 			if (value < 0) throw new RangeError("InvalidParagraphAlignment");
 			const values = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
 				value
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_alignment !== "function") throw new Error("Hwp5ParagraphAlignmentAbiUnavailable");
@@ -29813,7 +29813,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setParagraphMargins({ section, paragraph, margins }) {
 			check();
-			const args = [u32(section, "section"), u32(paragraph, "paragraph")];
+			const args = [u32$1(section, "section"), u32$1(paragraph, "paragraph")];
 			const [mask, ...values] = paragraphMarginArgs(margins);
 			if (typeof wasm.hwp5_edit_set_paragraph_margins !== "function") throw new Error("Hwp5ParagraphMarginsAbiUnavailable");
 			success(wasm.hwp5_edit_set_paragraph_margins(...args, mask, ...values));
@@ -29821,8 +29821,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setParagraphSpacing({ section, paragraph, type, value }) {
 			check();
 			const args = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
 				...paragraphSpacingArgs(type, value)
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_spacing !== "function") throw new Error("Hwp5ParagraphSpacingAbiUnavailable");
@@ -29901,12 +29901,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		characterRanges(section, paragraph) {
 			check();
 			if (typeof wasm.hwp5_edit_character_ranges !== "function") throw new Error("Hwp5CharacterRangesAbiUnavailable");
-			return decodeCharacterRanges(output(() => wasm.hwp5_edit_character_ranges(u32(section, "section"), u32(paragraph, "paragraph"))).bytes);
+			return decodeCharacterRanges(output(() => wasm.hwp5_edit_character_ranges(u32$1(section, "section"), u32$1(paragraph, "paragraph"))).bytes);
 		},
 		tableBindings(section) {
 			check();
 			if (typeof wasm.hwp5_edit_table_bindings !== "function") throw new Error("Hwp5TableBindingsAbiUnavailable");
-			return decodeTableBindings(output(() => wasm.hwp5_edit_table_bindings(u32(section, "section"))).bytes);
+			return decodeTableBindings(output(() => wasm.hwp5_edit_table_bindings(u32$1(section, "section"))).bytes);
 		},
 		setCellStyles(input) {
 			check();
@@ -29959,10 +29959,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCellSize({ section, listNode, width, height }) {
 			check();
 			const values = [
-				u32(section, "section"),
-				u32(listNode, "listNode"),
-				u32(width, "width"),
-				u32(height, "height")
+				u32$1(section, "section"),
+				u32$1(listNode, "listNode"),
+				u32$1(width, "width"),
+				u32$1(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_set_cell_size !== "function") throw new Error("Hwp5CellSizeAbiUnavailable");
 			success(wasm.hwp5_edit_set_cell_size(...values));
@@ -29976,10 +29976,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setPictureCurrentSize({ section, pictureNode, width, height }) {
 			check();
 			const values = [
-				u32(section, "section"),
-				u32(pictureNode, "pictureNode"),
-				u32(width, "width"),
-				u32(height, "height")
+				u32$1(section, "section"),
+				u32$1(pictureNode, "pictureNode"),
+				u32$1(width, "width"),
+				u32$1(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_set_picture_current_size !== "function") throw new Error("Hwp5PictureCurrentSizeAbiUnavailable");
 			success(wasm.hwp5_edit_set_picture_current_size(...values));
@@ -29987,10 +29987,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		resizePicture({ section, pictureNode, width, height }) {
 			check();
 			const values = [
-				u32(section, "section"),
-				u32(pictureNode, "pictureNode"),
-				u32(width, "width"),
-				u32(height, "height")
+				u32$1(section, "section"),
+				u32$1(pictureNode, "pictureNode"),
+				u32$1(width, "width"),
+				u32$1(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_resize_picture !== "function") throw new Error("Hwp5PictureResizeAbiUnavailable");
 			success(wasm.hwp5_edit_resize_picture(...values));
@@ -29998,17 +29998,17 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		tablePlacements(section) {
 			check();
 			if (typeof wasm.hwp5_edit_table_placements !== "function") throw new Error("Hwp5TablePlacementsAbiUnavailable");
-			return decodeTablePlacements(output(() => wasm.hwp5_edit_table_placements(u32(section, "section"))).bytes, "hwp5");
+			return decodeTablePlacements(output(() => wasm.hwp5_edit_table_placements(u32$1(section, "section"))).bytes, "hwp5");
 		},
 		tableLayoutSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_table_layout_sources !== "function") throw new Error("Hwp5TableLayoutSourcesAbiUnavailable");
 			return decodeHwp5TableLayoutSources(output(() => wasm.hwp5_edit_table_layout_sources(index)).bytes);
 		},
 		cellLayoutSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_cell_layout_sources !== "function") throw new Error("Hwp5CellLayoutSourcesAbiUnavailable");
 			return decodeHwp5CellLayoutSources(output(() => wasm.hwp5_edit_cell_layout_sources(index)).bytes);
 		},
@@ -30019,25 +30019,25 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		tableAnchors(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_table_anchors !== "function") throw new Error("Hwp5TableAnchorsAbiUnavailable");
 			return decodeHwp5TableAnchors(output(() => wasm.hwp5_edit_table_anchors(index)).bytes);
 		},
 		structuralAnchors(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_structural_anchors !== "function") throw new Error("Hwp5StructuralAnchorsAbiUnavailable");
 			return decodeHwp5StructuralAnchors(output(() => wasm.hwp5_edit_structural_anchors(index)).bytes);
 		},
 		noteShapeSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_note_shape_sources !== "function") throw new Error("Hwp5NoteShapeSourcesAbiUnavailable");
 			return decodeHwp5NoteShapeSources(output(() => wasm.hwp5_edit_note_shape_sources(index)).bytes);
 		},
 		captionSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_caption_sources !== "function") throw new Error("Hwp5CaptionSourcesAbiUnavailable");
 			return decodeHwp5CaptionSources(output(() => wasm.hwp5_edit_caption_sources(index)).bytes);
 		},
@@ -30067,7 +30067,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		selectRadioButton(section, formNode) {
 			check();
-			const positions = [u32(section, "section"), u32(formNode, "formNode")];
+			const positions = [u32$1(section, "section"), u32$1(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_select_form_radio !== "function") throw new Error("Hwp5RadioSelectAbiUnavailable");
 			success(wasm.hwp5_edit_select_form_radio(...positions));
 		},
@@ -30077,7 +30077,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setCheckBoxState(section, formNode, state) {
 			check();
-			const positions = [u32(section, "section"), u32(formNode, "formNode")];
+			const positions = [u32$1(section, "section"), u32$1(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_set_form_choice !== "function") throw new Error("Hwp5FormChoiceEditAbiUnavailable");
 			const value = [
 				"UNCHECKED",
@@ -30089,7 +30089,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setFormText({ section, formNode, text }) {
 			check();
-			const positions = [u32(section, "section"), u32(formNode, "formNode")];
+			const positions = [u32$1(section, "section"), u32$1(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_set_form_text !== "function") throw new Error("Hwp5FormTextEditAbiUnavailable");
 			if (typeof text !== "string") throw new TypeError("Form text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -30100,97 +30100,97 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		formProperties(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_form_properties !== "function") throw new Error("Hwp5FormPropertiesAbiUnavailable");
 			return decodeHwp5FormProperties(output(() => wasm.hwp5_edit_form_properties(index)).bytes);
 		},
 		formSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_form_sources !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
 			return decodeHwp5FormSources(output(() => wasm.hwp5_edit_form_sources(index)).bytes);
 		},
 		formAnchors(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_form_anchors !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
 			return decodeHwp5FormAnchors(output(() => wasm.hwp5_edit_form_anchors(index)).bytes);
 		},
 		drawingSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_sources !== "function") throw new Error("Hwp5DrawingSourcesAbiUnavailable");
 			return decodeHwp5DrawingSources(output(() => wasm.hwp5_edit_drawing_sources(index)).bytes);
 		},
 		drawingObjectExtras(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_object_extras !== "function") throw new Error("Hwp5DrawingObjectExtrasAbiUnavailable");
 			return decodeHwp5DrawingObjectExtras(output(() => wasm.hwp5_edit_drawing_object_extras(index)).bytes);
 		},
 		drawingComponentSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_component_sources !== "function") throw new Error("Hwp5DrawingComponentSourcesAbiUnavailable");
 			return decodeHwp5DrawingComponentSources(output(() => wasm.hwp5_edit_drawing_component_sources(index)).bytes);
 		},
 		drawingAnchors(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_anchors !== "function") throw new Error("Hwp5DrawingAnchorsAbiUnavailable");
 			return decodeHwp5DrawingAnchors(output(() => wasm.hwp5_edit_drawing_anchors(index)).bytes);
 		},
 		drawingListSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_list_sources !== "function") throw new Error("Hwp5DrawingListSourcesAbiUnavailable");
 			return decodeHwp5DrawingListSources(output(() => wasm.hwp5_edit_drawing_list_sources(index)).bytes);
 		},
 		drawingMatrixSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_matrix_sources !== "function") throw new Error("Hwp5DrawingMatrixSourcesAbiUnavailable");
 			return decodeHwp5DrawingMatrixSources(output(() => wasm.hwp5_edit_drawing_matrix_sources(index)).bytes);
 		},
 		drawingLocalTransforms(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_local_transforms !== "function") throw new Error("Hwp5DrawingLocalTransformsAbiUnavailable");
 			return decodeHwp5DrawingLocalTransforms(output(() => wasm.hwp5_edit_drawing_local_transforms(index)).bytes);
 		},
 		drawingRectangleCorners(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_rectangle_corners !== "function") throw new Error("Hwp5DrawingRectangleCornersAbiUnavailable");
 			return decodeHwp5DrawingRectangleCorners(output(() => wasm.hwp5_edit_drawing_rectangle_corners(index)).bytes);
 		},
 		drawingCurvePoints(section, layout) {
 			check();
-			const index = u32(section, "section"), selected = curveLayoutArg(layout);
+			const index = u32$1(section, "section"), selected = curveLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_drawing_curve_points !== "function") throw new Error("Hwp5DrawingCurvePointsAbiUnavailable");
 			return decodeHwp5DrawingCurvePoints(output(() => wasm.hwp5_edit_drawing_curve_points(index, selected)).bytes);
 		},
 		drawingPolygonPoints(section, layout) {
 			check();
-			const index = u32(section, "section"), layoutId = polygonLayoutArg(layout);
+			const index = u32$1(section, "section"), layoutId = polygonLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_drawing_polygon_points !== "function") throw new Error("Hwp5DrawingPolygonPointsAbiUnavailable");
 			return decodeHwp5DrawingPolygonPoints(output(() => wasm.hwp5_edit_drawing_polygon_points(index, layoutId)).bytes);
 		},
 		drawingLineEndpoints(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_line_endpoints !== "function") throw new Error("Hwp5DrawingLineEndpointsAbiUnavailable");
 			return decodeHwp5DrawingLineEndpoints(output(() => wasm.hwp5_edit_drawing_line_endpoints(index)).bytes);
 		},
 		noteSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_note_sources !== "function") throw new Error("Hwp5NoteSourcesAbiUnavailable");
 			return decodeHwp5NoteSources(output(() => wasm.hwp5_edit_note_sources(index)).bytes);
 		},
 		drawingStyleSources(section, options) {
 			check();
-			const index = u32(section, "section"), [border, tail] = drawingStyleLayoutArgs(options);
+			const index = u32$1(section, "section"), [border, tail] = drawingStyleLayoutArgs(options);
 			if (typeof wasm.hwp5_edit_drawing_style_sources !== "function") throw new Error("Hwp5DrawingStyleSourcesAbiUnavailable");
 			return decodeHwp5DrawingStyleSources(output(() => wasm.hwp5_edit_drawing_style_sources(index, border, tail)).bytes);
 		},
@@ -30203,13 +30203,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		pictureSources(section, prefix) {
 			check();
-			const index = u32(section, "section"), selection = picturePrefixArg(prefix);
+			const index = u32$1(section, "section"), selection = picturePrefixArg(prefix);
 			if (typeof wasm.hwp5_edit_picture_sources !== "function") throw new Error("Hwp5PictureSourcesAbiUnavailable");
 			return decodeHwp5PictureSources(output(() => wasm.hwp5_edit_picture_sources(index, selection)).bytes);
 		},
 		pictureTailSources(section, layout) {
 			check();
-			const index = u32(section, "section"), selection = pictureTailLayoutArg(layout);
+			const index = u32$1(section, "section"), selection = pictureTailLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_picture_tail_sources !== "function") throw new Error("Hwp5PictureTailSourcesAbiUnavailable");
 			return decodeHwp5PictureTailSources(output(() => wasm.hwp5_edit_picture_tail_sources(index, selection)).bytes);
 		},
@@ -30217,7 +30217,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check();
 			if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => key !== "maxBytes")) throw new Error("Invalid binary options");
 			const { maxBytes = 33554432 } = options;
-			const id = u32(ordinal, "binary ordinal"), limit = u32(maxBytes, "binary limit");
+			const id = u32$1(ordinal, "binary ordinal"), limit = u32$1(maxBytes, "binary limit");
 			if (id > 65535) throw new RangeError("Invalid binary ordinal");
 			if (limit > 33554432) throw new RangeError("Invalid binary limit");
 			if (typeof wasm.hwp5_edit_binary_resource !== "function") throw new Error("Hwp5BinaryResourceAbiUnavailable");
@@ -30225,13 +30225,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		automaticNumberSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_automatic_number_sources !== "function") throw new Error("Hwp5AutomaticNumberSourcesAbiUnavailable");
 			return decodeHwp5AutomaticNumberSources(output(() => wasm.hwp5_edit_automatic_number_sources(index)).bytes);
 		},
 		pageControlSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_page_control_sources !== "function") throw new Error("Hwp5PageControlSourcesAbiUnavailable");
 			return decodeHwp5PageControlSources(output(() => wasm.hwp5_edit_page_control_sources(index)).bytes);
 		},
@@ -30242,44 +30242,44 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		masterPageSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_master_page_sources !== "function") throw new Error("Hwp5MasterPageSourcesAbiUnavailable");
 			return decodeHwp5MasterPageSources(output(() => wasm.hwp5_edit_master_page_sources(index)).bytes);
 		},
 		pageAreaSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_page_area_sources !== "function") throw new Error("Hwp5PageAreaSourcesAbiUnavailable");
 			return decodeHwp5PageAreaSources(output(() => wasm.hwp5_edit_page_area_sources(index)).bytes);
 		},
 		pageSettings(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_page_settings !== "function") throw new Error("Hwp5PageSettingsAbiUnavailable");
 			return decodeHwp5PageSettings(output(() => wasm.hwp5_edit_page_settings(index)).bytes);
 		},
 		sectionSettings(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_section_settings !== "function") throw new Error("Hwp5SectionSettingsAbiUnavailable");
 			return decodeHwp5SectionSettings(output(() => wasm.hwp5_edit_section_settings(index)).bytes);
 		},
 		paragraphFlow(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_paragraph_flow !== "function") throw new Error("Hwp5ParagraphFlowAbiUnavailable");
 			return decodeHwp5ParagraphFlow(output(() => wasm.hwp5_edit_paragraph_flow(index)).bytes);
 		},
 		columnSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_column_sources !== "function") throw new Error("Hwp5ColumnSourcesAbiUnavailable");
 			return decodeHwp5ColumnSources(output(() => wasm.hwp5_edit_column_sources(index)).bytes);
 		},
 		copyText,
 		fieldSpans(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_field_spans !== "function") throw new Error("Hwp5FieldSpansAbiUnavailable");
 			return decodeHwp5FieldSpans(output(() => wasm.hwp5_edit_field_spans(index)).bytes);
 		},
@@ -30289,19 +30289,19 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		fieldTopology(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_field_topology !== "function") throw new Error("Hwp5FieldTopologyAbiUnavailable");
 			return decodeHwp5FieldTopology(output(() => wasm.hwp5_edit_field_topology(index)).bytes);
 		},
 		formulaSources(section) {
 			check();
-			const index = u32(section, "section");
+			const index = u32$1(section, "section");
 			if (typeof wasm.hwp5_edit_formula_sources !== "function") throw new Error("Hwp5FormulaSourcesAbiUnavailable");
 			return decodeHwp5FormulaSources(output(() => wasm.hwp5_edit_formula_sources(index)).bytes);
 		},
 		setFormulaDefinition({ section, sourceNode, formula }) {
 			check();
-			const positions = [u32(section, "section"), u32(sourceNode, "sourceNode")];
+			const positions = [u32$1(section, "section"), u32$1(sourceNode, "sourceNode")];
 			if (typeof wasm.hwp5_edit_set_formula_definition !== "function") throw new Error("Hwp5FormulaDefinitionAbiUnavailable");
 			if (typeof formula !== "string") throw new TypeError("Formula must be a string");
 			if (!formula.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -30317,10 +30317,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		splice({ section, paragraph, startUnit, endUnit, text, rangePolicy = "reject" }) {
 			check();
 			const values = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (typeof text !== "string") throw new TypeError("Text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -30333,11 +30333,11 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		splitParagraph({ section, paragraph, atUnit, endUnit = atUnit }) {
 			check();
 			const values = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(atUnit, "atUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(atUnit, "atUnit")
 			];
-			u32(endUnit, "endUnit");
+			u32$1(endUnit, "endUnit");
 			if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
 			if (endUnit !== atUnit) {
 				if (typeof wasm.hwp5_edit_split_range !== "function") throw new Error("Hwp5StructureAbiUnavailable");
@@ -30349,21 +30349,21 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		mergeParagraph({ section, paragraph }) {
 			check();
-			const values = [u32(section, "section"), u32(paragraph, "paragraph")];
+			const values = [u32$1(section, "section"), u32$1(paragraph, "paragraph")];
 			if (typeof wasm.hwp5_edit_merge !== "function") throw new Error("Hwp5StructureAbiUnavailable");
 			success(wasm.hwp5_edit_merge(...values));
 		},
 		setCharacterFormat({ section, paragraph, startUnit, endUnit, charShapeId }) {
 			check();
-			success(wasm.hwp5_edit_format(u32(section, "section"), u32(paragraph, "paragraph"), u32(startUnit, "startUnit"), u32(endUnit, "endUnit"), u32(charShapeId, "charShapeId")));
+			success(wasm.hwp5_edit_format(u32$1(section, "section"), u32$1(paragraph, "paragraph"), u32$1(startUnit, "startUnit"), u32$1(endUnit, "endUnit"), u32$1(charShapeId, "charShapeId")));
 		},
 		setCharacterProperties({ section, paragraph, startUnit, endUnit, properties }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterPropertyArgs(properties);
@@ -30452,10 +30452,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterStrike({ section, paragraph, startUnit, endUnit, enabled }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			if (typeof enabled !== "boolean") throw new TypeError("InvalidCharacterProperties");
@@ -30465,10 +30465,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterUnderline({ section, paragraph, startUnit, endUnit, kind }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterUnderlineArg(kind);
@@ -30478,10 +30478,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterStrikeColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -30491,10 +30491,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterUnderlineColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -30504,10 +30504,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterFont({ section, paragraph, startUnit, endUnit, language, fontId }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterFontArgs(language, fontId);
@@ -30518,10 +30518,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterFontName({ section, paragraph, startUnit, endUnit, language, name }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterFontNameArgs(language, name);
@@ -30547,10 +30547,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterTextColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -30560,10 +30560,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterShade({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterShadeArgs(color);
@@ -30573,10 +30573,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterEffect({ section, paragraph, startUnit, endUnit, effect, enabled, exclusive = false }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterEffectArgs(effect, enabled);
@@ -30587,10 +30587,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterOutline({ section, paragraph, startUnit, endUnit, kind }) {
 			check();
 			const positions = [
-				u32(section, "section"),
-				u32(paragraph, "paragraph"),
-				u32(startUnit, "startUnit"),
-				u32(endUnit, "endUnit")
+				u32$1(section, "section"),
+				u32$1(paragraph, "paragraph"),
+				u32$1(startUnit, "startUnit"),
+				u32$1(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = hwp5CharacterOutlineArg(kind);
@@ -30609,7 +30609,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		}
 	};
 }
-var encoder$6, decoder, u32;
+var encoder$6, decoder, u32$1;
 var init_hwp5_editor = __esmMin((() => {
 	init_cell_diagonal_command();
 	init_cell_border_patch_command();
@@ -30706,10 +30706,39 @@ var init_hwp5_editor = __esmMin((() => {
 		fatal: true,
 		ignoreBOM: true
 	});
-	u32 = (value, name) => {
+	u32$1 = (value, name) => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295) throw new RangeError(`Invalid ${name}`);
 		return value;
 	};
+}));
+// ../../js/hwpx-page-number-display-wire.mjs
+function decodeHwpxPageNumberDisplaySource(bytes) {
+	const invalid = () => {
+		throw Error("InvalidHwpxPageNumberDisplaySource");
+	};
+	if (bytes.length > 4194304) invalid();
+	const packet = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+	if (packet?.version !== 1 || !u32(packet.initialPage) || packet.initialPage === 0 || packet.charShapeId !== null && !u32(packet.charShapeId) || !Array.isArray(packet.sections) || packet.sections.length > 4096) invalid();
+	let count = 0;
+	for (const [index, section] of packet.sections.entries()) {
+		const position = section?.position;
+		if (section?.section !== index || !u32(section.startPage) || !string$1(section.parity, 16) || typeof section.hideFirst !== "boolean" || !Array.isArray(section.controls) || position !== null && (!owner(position) || !string$1(position.position, 32) || !string$1(position.format, 32) || !string$1(position.sideChar, 32))) invalid();
+		count += section.controls.length;
+		if (count > 2e4) invalid();
+		for (const control of section.controls) {
+			if (!owner(control)) invalid();
+			if (control.kind === "hide" && typeof control.value === "boolean") continue;
+			if (control.kind === "restart" && u32(control.value)) continue;
+			invalid();
+		}
+	}
+	return packet;
+}
+var u32, owner, string$1;
+var init_hwpx_page_number_display_wire = __esmMin((() => {
+	u32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	owner = (value) => value && u32(value.sourceNode) && (value.paragraph === null || u32(value.paragraph));
+	string$1 = (value, limit) => typeof value === "string" && value.length <= limit;
 }));
 // ../../js/hwpx-read-scope.mjs
 /** Optional, synchronous optimization. Existing observation methods remain authoritative. */
@@ -35175,6 +35204,16 @@ async function createHwpxEditor(source) {
 				wasm.hwpx_edit_output_free();
 			}
 		},
+		pageNumberDisplaySource() {
+			ready();
+			if (typeof wasm.hwpx_edit_page_number_display_source !== "function") return null;
+			try {
+				if (!wasm.hwpx_edit_page_number_display_source()) throw memory.error();
+				return decodeHwpxPageNumberDisplaySource(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
 		pageSettings() {
 			ready();
 			if (typeof wasm.hwpx_edit_page_settings !== "function") throw new Error("HwpxPageSettingsAbiUnavailable");
@@ -35932,6 +35971,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_hwpx_page_number_display_wire();
 	init_cell_diagonal_command();
 	init_cell_border_patch_command();
 	init_cell_style_command();
@@ -42698,16 +42738,16 @@ function defineDocumentTool(tool) {
 	};
 }
 const uint = () => number$3().int().min(0).max(4294967295);
-const sha = () => string$2().regex(/^[a-f0-9]{64}$/iu);
-const path = () => string$2().min(1);
+const sha = () => string$3().regex(/^[a-f0-9]{64}$/iu);
+const path = () => string$3().min(1);
 function validateMcpOcrExecutable(value) {
 	if (typeof value !== "string" || !value.trim() || !value.isWellFormed() || value.includes("\0")) throw new TypeError("InvalidMcpOcrExecutable");
 }
 const ocrInputSchema = strictObject({
 	inputPath: path(),
-	reference: string$2().max(128).optional(),
+	reference: string$3().max(128).optional(),
 	provider: _enum(["tesseract", "vision"]).default("tesseract"),
-	languages: string$2().min(1).max(128).default("kor+eng"),
+	languages: string$3().min(1).max(128).default("kor+eng"),
 	format: _enum(["text", "markdown"]).default("text")
 });
 const readOnly = {
@@ -42753,8 +42793,8 @@ function operationSchema() {
 		};
 		const field = (name) => {
 			if (coordinateFields.has(name)) return uint();
-			if (textFields.has(name)) return string$2();
-			if (name === "cellTexts") return array$1(array$1(string$2()).min(1).max(4096)).min(1).max(4096).describe("표 생성 시 rows × columns의 행 우선 초기 본문입니다. 각 셀은 한 문단 문자열입니다.");
+			if (textFields.has(name)) return string$3();
+			if (name === "cellTexts") return array$1(array$1(string$3()).min(1).max(4096)).min(1).max(4096).describe("표 생성 시 rows × columns의 행 우선 초기 본문입니다. 각 셀은 한 문단 문자열입니다.");
 			if (name === "value") return number$3().finite();
 			if (name === "properties") return strictObject({
 				size: number$3().int().min(0).max(409600).nullable().optional(),
@@ -42766,7 +42806,7 @@ function operationSchema() {
 				paragraph: uint(),
 				startUnit: uint(),
 				endUnit: uint(),
-				expectedRangeText: string$2()
+				expectedRangeText: string$3()
 			})).min(1).max(4096);
 			if (name === "resources") return strictObject({
 				paragraph: uint(),
@@ -42801,7 +42841,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 				inputSchema: strictObject({
 					inputPath: path(),
 					outputPath: path(),
-					reference: string$2().min(1).max(128).refine((value) => {
+					reference: string$3().min(1).max(128).refine((value) => {
 						try {
 							return parseObjectReference(value).kind === "table";
 						} catch {
@@ -42848,7 +42888,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 				inputSchema: strictObject({
 					inputPath: path(),
 					outputPath: path(),
-					reference: string$2().min(1).max(128).refine((value) => {
+					reference: string$3().min(1).max(128).refine((value) => {
 						try {
 							return parseObjectReference(value).kind === "table";
 						} catch {
@@ -42878,9 +42918,9 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 					inputPath: path(),
 					outputPath: path(),
 					expectedSha256: sha(),
-					target: string$2().regex(/^s\d+:p\d+$/u),
+					target: string$3().regex(/^s\d+:p\d+$/u),
 					unit: uint(),
-					expectedText: string$2().max(1048576),
+					expectedText: string$3().max(1048576),
 					imagePath: path(),
 					width: uint().min(1).max(2147483647),
 					height: uint().min(1).max(2147483647),
@@ -42933,7 +42973,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 				inputSchema: strictObject({
 					inputPath: path(),
 					outputPath: path(),
-					reference: string$2().min(1).max(128).refine((value) => {
+					reference: string$3().min(1).max(128).refine((value) => {
 						try {
 							return parseObjectReference(value).kind === "image";
 						} catch {
@@ -42961,7 +43001,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 				description: "같은 원본의 Native 문단을 조회합니다. target은 read_document structure의 s<section>:p<NativeOrdinal>입니다. expectedText JSON ASCII 문자열은 apply_document_changes의 원문 조건에 복사할 수 있습니다. 표시 본문과 편집 원문·UTF16 좌표는 다릅니다.",
 				inputSchema: strictObject({
 					inputPath: path(),
-					target: string$2().min(1),
+					target: string$3().min(1),
 					expectedSha256: sha().optional(),
 					format: _enum(["text", "markdown"]).default("text")
 				}),
@@ -43010,7 +43050,7 @@ function extendedDocumentTools({ invoke, wasm, ocrExecutable }) {
 				inputSchema: strictObject({
 					outputPath: path(),
 					format: _enum(["hwp5", "hwpx"]),
-					text: string$2().default(""),
+					text: string$3().default(""),
 					allowStaleLayout: boolean$1().default(false)
 				}),
 				annotations: writeNew
@@ -43095,7 +43135,7 @@ function describeMcpError(error) {
 function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = runCLI, cliDependencies = {} } = {}) {
 	if (wasmPath !== void 0 && (typeof wasmPath !== "string" || !wasmPath)) throw new TypeError("InvalidMcpWasmPath");
 	const wasm = wasmPath === void 0 ? [] : [`--wasm=${wasmPath}`];
-	const objectReference = string$2().max(128).refine((value) => {
+	const objectReference = string$3().max(128).refine((value) => {
 		try {
 			parseObjectReference(value);
 			return true;
@@ -43137,7 +43177,7 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 			};
 		}
 	};
-	const batchPath = string$2().min(1).max(BATCH_READ_LIMITS.maxInputPathUnits).refine((value) => {
+	const batchPath = string$3().min(1).max(BATCH_READ_LIMITS.maxInputPathUnits).refine((value) => {
 		if (value === "-" || !value.isWellFormed()) return false;
 		for (let index = 0; index < value.length; index++) if (value.charCodeAt(index) < 32 || value.charCodeAt(index) === 127) return false;
 		return true;
@@ -43149,7 +43189,7 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 				title: "Read HWP/HWPX document",
 				description: "로컬 문서의 내용을 텍스트 또는 Markdown으로 읽습니다. 기본 view는 content이며, 편집용 Native 문단 ID와 원문 SHA는 view: structure로 조회합니다. 본문의 개체 참조는 get_document_object로 조회하고 이미지 참조는 extract_document_image로 추출합니다. 참조는 네트워크 주소가 아닙니다. 표시 텍스트는 편집 좌표가 아니며 알 수 없는 내용은 진단으로 남깁니다.",
 				inputSchema: strictObject({
-					inputPath: string$2().min(1).describe("Local input file path, relative to the server working directory or absolute."),
+					inputPath: string$3().min(1).describe("Local input file path, relative to the server working directory or absolute."),
 					format: _enum(["text", "markdown"]).default("text"),
 					view: _enum(["content", "structure"]).default("content")
 				}),
@@ -43175,12 +43215,12 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 				title: "Edit HWP/HWPX literal text into a new file",
 				description: "read_document의 view: structure에서 조회한 Native 문단 ID와 같은 원문 SHA를 사용해 정확히 한 문자열을 교체합니다. 겹치는 일치는 거부하며 빈 교체문은 삭제입니다. 문단 제어와 줄바꿈은 거부합니다. 새 출력 경로만 허용하고 원본이나 기존 파일을 덮어쓰지 않습니다. HWP5의 오래된 배치 정보는 명시 허용 없이는 거부합니다.",
 				inputSchema: strictObject({
-					inputPath: string$2().min(1),
-					outputPath: string$2().min(1),
-					target: string$2().min(1).describe("read_document의 view: structure에서 얻은 정확한 s<section>:p<NativeOrdinal> ID."),
-					expectedSha256: string$2().min(1).describe("read_document의 view: structure로 조회한 동일 스냅샷의 documentSHA256."),
-					findText: string$2().min(1),
-					replacement: string$2().describe("Literal replacement; empty string deletes the unique match."),
+					inputPath: string$3().min(1),
+					outputPath: string$3().min(1),
+					target: string$3().min(1).describe("read_document의 view: structure에서 얻은 정확한 s<section>:p<NativeOrdinal> ID."),
+					expectedSha256: string$3().min(1).describe("read_document의 view: structure로 조회한 동일 스냅샷의 documentSHA256."),
+					findText: string$3().min(1),
+					replacement: string$3().describe("Literal replacement; empty string deletes the unique match."),
 					allowStaleLayout: boolean$1().default(false)
 				}),
 				annotations: {
@@ -43219,8 +43259,8 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 				title,
 				description,
 				inputSchema: strictObject({
-					inputPath: string$2().min(1),
-					expectedSha256: string$2().regex(/^[a-f0-9]{64}$/i).optional()
+					inputPath: string$3().min(1),
+					expectedSha256: string$3().regex(/^[a-f0-9]{64}$/i).optional()
 				}),
 				annotations: {
 					readOnlyHint: true,
@@ -43243,11 +43283,11 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 				title: "Extract one image into a new file",
 				description: "본문의 이미지 reference 또는 list_document_images의 id+expectedSha256 중 하나로 원본 바이트를 새 파일 outputPath에 추출합니다. 두 방식을 함께 전달하지 마세요. CLI extract-images의 output은 새 폴더입니다. 구역의 그림 위치만 대상으로 하며 바탕쪽·브러시·미참조 자원은 제외합니다. 변환하지 않으며 알 수 없는 형식은 .bin입니다. 기존 파일·심볼릭 링크는 거부하고 실패 응답에도 이미 생성된 파일이 보고될 수 있습니다.",
 				inputSchema: strictObject({
-					inputPath: string$2().min(1),
-					outputPath: string$2().min(1),
+					inputPath: string$3().min(1),
+					outputPath: string$3().min(1),
 					reference: objectReference.optional(),
-					id: string$2().min(1).optional(),
-					expectedSha256: string$2().regex(/^[a-f0-9]{64}$/i).optional()
+					id: string$3().min(1).optional(),
+					expectedSha256: string$3().regex(/^[a-f0-9]{64}$/i).optional()
 				}).refine((value) => value.reference !== void 0 ? value.id === void 0 && value.expectedSha256 === void 0 : value.id !== void 0 && value.expectedSha256 !== void 0, "reference 또는 id와 expectedSha256 중 한 방식만 전달하세요."),
 				annotations: {
 					readOnlyHint: false,
@@ -43310,7 +43350,7 @@ function documentTools({ wasmPath, ocrExecutable, mainModuleURL, executeCLI = ru
 				title: "문서 개체 상세 조회",
 				description: "read_document 본문에 표시된 reference로 같은 스냅샷의 표·그림·차트·수식·도형·OLE를 조회합니다. 관측된 종류만 허용하며 없는 개체나 오래된 참조는 거부합니다. 이미지는 바이트를 읽지 않고 추출에 필요한 ID와 상태를 안내합니다. 이미지 파일은 extract_document_image로 추출하세요. 지원하지 않는 상세 내용은 unavailable로 명시합니다. 참조는 웹 주소나 MCP 리소스 URI가 아닙니다.",
 				inputSchema: strictObject({
-					inputPath: string$2().min(1),
+					inputPath: string$3().min(1),
 					reference: objectReference,
 					format: _enum(["text", "markdown"]).default("text")
 				}),
@@ -43489,7 +43529,7 @@ function createDocumentSessionManager(options = {}, dependencies = {}) {
 }
 // src/mcp/session-tools.ts
 function documentSessionTools(manager) {
-	const sessionId = string$2().regex(/^[a-f0-9]{64}$/);
+	const sessionId = string$3().regex(/^[a-f0-9]{64}$/);
 	const annotations = {
 		readOnlyHint: true,
 		destructiveHint: false,
@@ -43523,8 +43563,8 @@ function documentSessionTools(manager) {
 				title: "Open read-only document session",
 				description: "Open a local HWP5/HWPX once for repeated reads. Returns an opaque sessionId owned by this connection. Maximum 4 sessions, 64 MiB per file and 128 MiB owned input including pending reservations. Close when finished. Session edits are not supported; apply_document_changes remains a separate file transaction.",
 				inputSchema: strictObject({
-					inputPath: string$2().min(1),
-					expectedSha256: string$2().regex(/^[a-f0-9]{64}$/).optional()
+					inputPath: string$3().min(1),
+					expectedSha256: string$3().regex(/^[a-f0-9]{64}$/).optional()
 				}),
 				annotations
 			},
