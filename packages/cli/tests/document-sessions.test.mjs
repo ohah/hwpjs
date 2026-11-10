@@ -352,10 +352,10 @@ async function connected(t, h = harness()) {
   return { client, server, h, transport: b };
 }
 
-test('official in-memory SDK exposes 19 tools, strict schemas, metadata and exact read response', async (t) => {
+test('official in-memory SDK exposes 20 tools, strict schemas, metadata and exact read response', async (t) => {
   const { client, h } = await connected(t);
   const listed = await client.listTools();
-  assert.equal(listed.tools.length, 19);
+  assert.equal(listed.tools.length, 20);
   for (const name of ['open_document_session', 'read_document_session', 'close_document_session']) {
     assert.equal(
       listed.tools.find((tool) => tool.name === name).inputSchema.additionalProperties,
