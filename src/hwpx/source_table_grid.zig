@@ -18,7 +18,7 @@ pub const Request = struct {
     max_bytes: usize = 16 * 1024 * 1024,
     max_cells: usize = 4096,
 };
-const Cell = struct { node: usize, addr: usize, size: usize, paragraph: usize, texts: []const tree_mod.Span, width: u32, height: u32 };
+const Cell = struct { node: usize, addr: usize, size: usize, paragraph: usize, blank_spans: []const tree_mod.Span, width: u32, height: u32 };
 const Grid = struct { rows: []usize, cells: []Cell, size: usize, width: u32, height: u32 };
 fn number(a: std.mem.Allocator, t: *const Tree, node: usize, name: []const u8) !u32 {
     return try fields.optionalUnsigned(a, t, node, name, 4096) orelse error.InvalidSourceTableGrid;
@@ -94,6 +94,44 @@ const ContentCheck = struct {
         for (decoded) |c| if (c != ' ' and c != '\t' and c != '\r' and c != '\n') return error.UnsupportedSourceTableStructure;
     }
 };
+// Each paragraph is checked once through direct sibling links. Only the first
+// paragraph contributes t-body blanks; later paragraphs contribute whole spans.
+fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*std.ArrayList(tree_mod.Span)) !void {
+    try attributes(a, t, p, &.{ "id", "paraPrIDRef", "styleIDRef", "pageBreak", "columnBreak", "merged" });
+    try zero(a, t, p, &.{ "pageBreak", "columnBreak", "merged" });
+    try allowed(t, p, &.{"run"});
+    // Direct plain runs only. Empty runs are valid formatting shells,
+    // including those preserved by an earlier blank-cell insertion.
+    if (t.elements[p].first_child == null) return error.UnsupportedSourceTableStructure;
+    var runs = t.elements[p].first_child;
+    while (runs) |run| : (runs = t.elements[run].next_sibling) {
+        try attributes(a, t, run, &.{"charPrIDRef"});
+        try allowed(t, run, &.{"t"});
+        var next_text = t.elements[run].first_child;
+        while (next_text) |text| : (next_text = t.elements[text].next_sibling) {
+            try attributes(a, t, text, &.{});
+            try allowed(t, text, &.{});
+            const e = t.elements[text];
+            if (blanks) |spans| {
+                if (e.end_tag) |end| try spans.append(a, .{ .start = e.start_tag.end, .end = end.start });
+            }
+        }
+    }
+}
+const Paragraphs = struct { first: usize, blanks: []const tree_mod.Span };
+fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize) !Paragraphs {
+    const first = t.elements[sub].first_child orelse return error.UnsupportedSourceTableStructure;
+    var blanks: std.ArrayList(tree_mod.Span) = .empty;
+    var cursor: ?usize = first;
+    while (cursor) |p| : (cursor = t.elements[p].next_sibling) {
+        try inspectParagraph(a, t, p, if (p == first) &blanks else null);
+        if (p != first) {
+            const e = t.elements[p];
+            try blanks.append(a, .{ .start = e.start_tag.start, .end = e.end });
+        }
+    }
+    return .{ .first = first, .blanks = blanks.items };
+}
 fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize) !Grid {
     if (rows == 0 or cols == 0 or @as(u64, rows) * cols > limit) return error.LimitExceeded;
     if (try number(a, t, table, "rowCnt") != rows or try number(a, t, table, "colCnt") != cols) return error.StaleSourceTableGrid;
@@ -149,26 +187,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
             try allowed(t, sub, &.{"p"});
             try attributes(a, t, sub, &.{ "id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef" });
             try emptyId(a, t, sub);
-            const p = try child(t, sub, "p");
-            try attributes(a, t, p, &.{ "id", "paraPrIDRef", "styleIDRef", "pageBreak", "columnBreak", "merged" });
-            try zero(a, t, p, &.{ "pageBreak", "columnBreak", "merged" });
-            try allowed(t, p, &.{"run"});
-            // Direct plain runs only. Empty runs are valid formatting shells,
-            // including those preserved by an earlier blank-cell insertion.
-            if (t.elements[p].first_child == null) return error.UnsupportedSourceTableStructure;
-            var texts: std.ArrayList(tree_mod.Span) = .empty;
-            var runs = t.elements[p].first_child;
-            while (runs) |run| : (runs = t.elements[run].next_sibling) {
-                try attributes(a, t, run, &.{"charPrIDRef"});
-                try allowed(t, run, &.{"t"});
-                var next_text = t.elements[run].first_child;
-                while (next_text) |text| : (next_text = t.elements[text].next_sibling) {
-                    try attributes(a, t, text, &.{});
-                    try allowed(t, text, &.{});
-                    const e = t.elements[text];
-                    if (e.end_tag) |end| try texts.append(a, .{ .start = e.start_tag.end, .end = end.start });
-                }
-            }
+            const paragraphs = try inspectParagraphs(a, t, sub);
             inline for (.{ .{ addr, &.{ "rowAddr", "colAddr" } }, .{ span, &.{ "rowSpan", "colSpan" } }, .{ sz, &.{ "width", "height" } } }) |item| {
                 try attributes(a, t, item[0], item[1]);
                 try allowed(t, item[0], &.{});
@@ -183,7 +202,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
             const w = try number(a, t, sz, "width");
             const h = try number(a, t, sz, "height");
             if (w == 0 or h == 0 or (r > 0 and w != cells[c].width) or (c > 0 and h != cells[r * cols].height)) return error.UnsupportedSourceTableGeometry;
-            cells[r * cols + c] = .{ .node = cell, .addr = addr, .size = sz, .paragraph = p, .texts = texts.items, .width = w, .height = h };
+            cells[r * cols + c] = .{ .node = cell, .addr = addr, .size = sz, .paragraph = paragraphs.first, .blank_spans = paragraphs.blanks, .width = w, .height = h };
             c += 1;
         }
         if (c != cols) return error.InvalidSourceTableGrid;
@@ -219,13 +238,13 @@ fn cellXml(a: std.mem.Allocator, t: *const Tree, cell: Cell, r: u32, c: u32, fre
     if (fresh) |id| {
         try patch(a, t, &changes, cell.paragraph, &.{"id"}, .{id}, limit);
     }
-    // Only the two shell attributes need constant-size sorting. Text spans
-    // were collected once in source order; never sort or rescan per clone.
+    // Only two shell attributes need constant-size sorting. First-p t bodies
+    // and later-p subtrees were collected once in source order.
     std.mem.sort(writer.Change, changes.items, {}, less);
     if (fresh != null) {
         var ordered: std.ArrayList(writer.Change) = .empty;
         var attribute: usize = 0;
-        for (cell.texts) |span| {
+        for (cell.blank_spans) |span| {
             while (attribute < changes.items.len and changes.items[attribute].start < span.start) : (attribute += 1)
                 try ordered.append(a, changes.items[attribute]);
             try ordered.append(a, .{ .start = span.start, .end = span.end, .text = "", .serialized_xml = "" });

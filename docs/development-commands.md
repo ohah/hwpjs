@@ -1704,3 +1704,24 @@ HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types --ma
 이 그룹은 합성 Core/renderer와 SDK 모형을 포함한 집중 회귀이며 실제 새 Native 엔진·브라우저 E2E·저장 재열기·배포 통과 근거가 아닙니다. 실물 Native 검사는 승인된 엔진·fixture·manifest를 별도로 고정한 실행으로 구분하며 이 CI 단계에 추가하지 않습니다.
 
 원본 기준·다중 구역 suffix 좌표의 synthetic Native 검사는 `zig build test-section-source-bases -Doptimize=ReleaseSafe -j1`입니다. 실제 원본 표 세션 검사는 승인한 단순 표 파일의 절대경로를 `HWPJS_TEST_SOURCE_GRID_HWP5`와 `HWPJS_TEST_SOURCE_GRID_HWPX`로 명시하고 `zig build test-source-table-grid-live -Doptimize=ReleaseSafe -j1`을 실행합니다. 일반 Native 테스트가 임의 fixture를 찾아 읽도록 연결하지 않습니다.
+
+
+## 원본 표 셀의 여러 문단
+
+[셀 문단 계약](source-table-grid-cell-paragraphs.md)의 구역 변환과 선택 이력은 별도로 검사합니다. Native 집중 검사는 외부 fixture를 읽지 않는 합성 입력입니다.
+
+```sh
+zig build test-source-table-grid-paragraphs -Doptimize=ReleaseSafe -j1
+HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types \
+  --import ./tools/renderer-test-core-provider.mjs \
+  --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+  --test --test-concurrency=1 \
+  ./packages/vanilla/tests/source-table-grid-history.test.mjs \
+  ./packages/vanilla/tests/source-table-grid-multipara-history.test.mjs
+```
+
+실파일 SDK 검사는 `tools/tests/source-table-grid-multiparagraph-native.test.mjs`입니다. `HWPJS_TEST_MULTIPARA_MODE=fresh`, 통제 소스의 절대경로 `HWPJS_TEST_SOURCE_ROOT`, 새 엔진 절대경로와 정확한 SHA인 `HWPJS_TEST_WASM`·`HWPJS_TEST_WASM_SHA256`, `source-grid-multipara-r1` 아래 새 `HWPJS_TEST_EVIDENCE_DIR`를 지정합니다. 승인된 기존 표 두 파일을 독립 CFB/ZIP/XML 도구로 확장하며 원본 28d2 엔진은 새 엔진 성공 근거로 사용하지 않습니다. 환경 누락·다른 입력·기존 출력 디렉터리는 실패입니다.
+
+동일 승인 seed와 새 WASM을 사용한 Reader/Worker 검사는 `bun test ./packages/core/tests/runtime/source-table-grid-multiparagraph.test.ts`입니다. SDK 검사가 생성한 `task-d/old-refusal-final/seeds.json`과 고정된 원본 해시를 사용합니다. 초기 여러 문단·빈 문단의 투영 전체를 독립 오라클과 대조하고 네 명령·Native 이력·저장 재열기를 확인합니다.
+
+실제 브라우저 검사는 `tools/source-table-grid-multiparagraph-browser-audit.mjs`입니다. 새 번들을 소유 서버에 올린 뒤 origin·manifest SHA·WASM SHA와 명시 실행 플래그를 전달해야 합니다. 브라우저 검사를 소스 모형 검사나 공개 배포 확인으로 대체하지 않으며 사용한 브라우저는 종료 후 inactive 상태까지 확인합니다.

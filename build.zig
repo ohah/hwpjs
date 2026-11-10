@@ -180,6 +180,22 @@ pub fn build(b: *std.Build) void {
         core_test_step.dependOn(&run_probe.step);
     }
 
+    const source_grid_paragraphs_step = b.step("test-source-table-grid-paragraphs", "Verify plain paragraph lists in source table cells");
+    inline for (.{
+        .{ "src/h5_source_table_grid_multipara_probe.zig", "HWP5 multipara source grid" },
+        .{ "src/hx_source_table_grid_multipara_probe.zig", "source grid multipara" },
+    }) |entry| {
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{ .root_source_file = b.path(entry[0]), .target = target, .optimize = optimize }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        source_grid_paragraphs_step.dependOn(&run_probe.step);
+        core_test_step.dependOn(&run_probe.step);
+    }
+
     const source_grid_abi_step = b.step("test-source-table-grid-abi", "Verify immutable source grid ABI ownership and boundaries");
     const source_grid_abi_probe = b.addTest(.{
         .use_llvm = true,

@@ -13,8 +13,45 @@ const unique = (array, match) => {
   const found = Array.isArray(array) ? array.filter(match) : [];
   return found.length === 1 ? found[0] : null;
 };
+// Canonical DTO order defines the complete owner sequence, never the cell's ID declaration.
+// Index each snapshot once; duplicate IDs remain ambiguous rather than overwriting an owner.
+function cellParagraphs(content, section, tableNode, cell) {
+  if (!Array.isArray(cell?.paragraphs) || cell.paragraphs.length === 0) return null;
+  const byId = new Map(),
+    byOwner = new Map();
+  for (const p of content.paragraphs) {
+    if (p.section !== section) continue;
+    byId.set(p.paragraph, byId.has(p.paragraph) ? null : p);
+    if (p.tableCell) {
+      const key = `section:${section}:table:${p.tableCell.tableNode}:list:${p.tableCell.listNode}`;
+      let owned = byOwner.get(key);
+      if (!owned) byOwner.set(key, (owned = []));
+      owned.push(p);
+    }
+  }
+  const owner = `section:${section}:table:${tableNode}:list:${cell.listNode}`;
+  const paragraphs = byOwner.get(owner);
+  if (!paragraphs || paragraphs.length !== cell.paragraphs.length) return null;
+  for (let i = 0; i < paragraphs.length; i++) {
+    const id = cell.paragraphs[i],
+      p = paragraphs[i];
+    if (
+      !Number.isInteger(id) ||
+      id < 0 ||
+      id > 0xffffffff ||
+      p.paragraph !== id ||
+      byId.get(id) !== p ||
+      typeof p.text !== 'string' ||
+      p.tableCell?.tableNode !== tableNode ||
+      p.tableCell?.listNode !== cell.listNode ||
+      paragraphSelectionOwner(p) !== owner
+    )
+      return null;
+  }
+  return paragraphs;
+}
 /** Auxiliary bookmarks for a proven SOURCE mutation, never another undo stack.
- * Cell/list/paragraph IDs belong to each snapshot. Only logical cell coordinates are mapped.
+ * IDs belong to each snapshot. Map logical cell coordinates and the surviving paragraph ordinal.
  */
 export function sourceTableGridHistory({ before, after, request }) {
   try {
@@ -106,6 +143,15 @@ export function sourceTableGridHistory({ before, after, request }) {
     const ordinal = beforeTables.findIndex((t) => t.tableNode === source.tableNode);
     const table = afterTables[ordinal];
     if (!table || table.rows !== rows || table.columns !== columns) return null;
+    const priorCell = unique(beforeTables[ordinal].cells, (c) => c.listNode === source.listNode);
+    const priorParagraphs = cellParagraphs(
+      before.content,
+      source.section,
+      source.tableNode,
+      priorCell,
+    );
+    const paragraphOrdinal = priorParagraphs?.indexOf(paragraph) ?? -1;
+    if (paragraphOrdinal < 0) return null;
     let row = source.row,
       column = source.column;
     const axis = rowAxis ? row : column;
@@ -118,11 +164,15 @@ export function sourceTableGridHistory({ before, after, request }) {
     if (rowAxis) row = mapped;
     else column = mapped;
     const cell = unique(table.cells, (c) => c.row === row && c.column === column);
-    if (!cell || cell.paragraphs?.length !== 1) return null;
-    const next = unique(
-      after.content.paragraphs,
-      (p) => p.section === source.section && p.paragraph === cell.paragraphs[0],
-    );
+    const nextParagraphs = cellParagraphs(after.content, source.section, table.tableNode, cell);
+    if (
+      !nextParagraphs ||
+      (!removed &&
+        (nextParagraphs.length !== priorParagraphs.length ||
+          nextParagraphs.some((p, i) => p.text !== priorParagraphs[i].text)))
+    )
+      return null;
+    const next = nextParagraphs[removed ? 0 : paragraphOrdinal];
     const destination = captureSourceTableGridSelection({
       content: after.content,
       paragraph: next,

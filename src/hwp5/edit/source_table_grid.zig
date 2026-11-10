@@ -17,7 +17,7 @@ pub const Request = struct {
     new_paragraph_ids: []const u32 = &.{},
 };
 pub const Limits = struct { max_bytes: usize = 64 * 1024 * 1024, max_records: usize = 1_000_000, max_cells: usize = 100_000 };
-const Cell = struct { group: @import("../body/list_groups.zig").Group, header: usize, runs: usize, value: body.Cell };
+const Cell = struct { group: @import("../body/list_groups.zig").Group, header: usize, last_header: usize, runs: usize, value: body.Cell };
 
 /// Source is immutable on all failures. Returned bytes are allocator-owned.
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, request: Request, limits: Limits) ![]u8 {
@@ -50,8 +50,11 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     var found: usize = 0;
     for (groups.items) |group| {
         if (group.parent_node != owner) continue;
-        if (group.header_node < request.table_node or group.paragraph_count != 1 or group.intervening_records != 0) return error.UnsupportedSourceTableGrid;
+        if (group.header_node < request.table_node or group.paragraph_count == 0 or group.intervening_records != 0) return error.UnsupportedSourceTableGrid;
         const list = tree.nodes[group.header_node].record.value.list_header;
+        // The source-grid writer supports only positive official INT16 counts.
+        // The shared parser/Groups retain their wider raw preservation policy.
+        if (list.signedCount() <= 0) return error.UnsupportedSourceTableGrid;
         const view = try list.view(request.layout);
         // Refuse the whole edit before cloning templates or deleting any cell.
         if (body.CellAttributes.fromList(view).isProtected()) return error.UnsupportedSourceTableGrid;
@@ -62,34 +65,16 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         if (index != found) return error.UnsupportedSourceTableGrid;
         if (present[index]) return error.InvalidSourceTableGrid;
         present[index] = true;
-        const header_index = group.begin;
-        if (header_index >= group.end or tree.nodes[header_index].record.value != .header or tree.nodes[header_index].subtree_end != group.end) return error.UnsupportedSourceTableGrid;
-        const header = tree.nodes[header_index].record.value.header;
-        if ((header.merge_tracking orelse 0) != 0) return error.UnsupportedSourceTableGrid;
-        if (header.control_mask != 0 or header.break_flags != 0 or header.range_tag_count != 0 or header.line_segment_count != 0 or header.extra.len != 0) return error.UnsupportedSourceTableGrid;
-        var runs: ?usize = null;
-        var text: ?usize = null;
-        var child = header_index + 1;
-        while (child < group.end) : (child = tree.nodes[child].subtree_end) {
-            switch (tree.nodes[child].record.value) {
-                .char_runs => {
-                    if (runs != null) return error.UnsupportedSourceTableGrid;
-                    runs = child;
-                },
-                .text => {
-                    if (text != null) return error.UnsupportedSourceTableGrid;
-                    text = child;
-                },
-                else => return error.UnsupportedSourceTableGrid,
-            }
+        var paragraph = group.begin;
+        var first_runs: ?usize = null;
+        var last_header = paragraph;
+        while (paragraph < group.end) {
+            const runs = try validateParagraph(tree, paragraph, group.end);
+            if (first_runs == null) first_runs = runs;
+            last_header = paragraph;
+            paragraph = tree.nodes[paragraph].subtree_end;
         }
-        const text_bytes = tree.nodes[text orelse return error.UnsupportedSourceTableGrid].record.framing.payload;
-        try @import("plain_text_content.zig").validatePlain(text_bytes);
-        if (header.characterUnits() != text_bytes.len / 2) return error.SourceBindingMismatch;
-        const run_index = runs orelse return error.UnsupportedSourceTableGrid;
-        const run_bytes = tree.nodes[run_index].record.framing.payload;
-        if (run_bytes.len < 8 or run_bytes.len % 8 != 0 or header.char_shape_count != run_bytes.len / 8 or std.mem.readInt(u32, run_bytes[0..4], .little) != 0) return error.UnsupportedSourceTableGrid;
-        cells[index] = .{ .group = group, .header = header_index, .runs = run_index, .value = cell };
+        cells[index] = .{ .group = group, .header = group.begin, .last_header = last_header, .runs = first_runs orelse return error.UnsupportedSourceTableGrid, .value = cell };
         found += 1;
     }
     if (found != old_count) return error.InvalidSourceTableGrid;
@@ -158,6 +143,12 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         const base: usize = if (request.layout == .spec6) 6 else 8;
         std.mem.writeInt(u16, list_bytes[base..][0..2], @intCast(c), .little);
         std.mem.writeInt(u16, list_bytes[base + 2 ..][0..2], @intCast(r), .little);
+        if (prior == null) {
+            const count = try @import("paragraph_list_count.zig").read(tree, template.group.header_node);
+            var encoded: [4]u8 = undefined;
+            const bytes = try count.encode(&encoded, 0, count.value - 1);
+            @memcpy(list_bytes[0..bytes.len], bytes);
+        }
         try framing.append(scratch, &out, 72, list_record.level, list_bytes, limits.max_bytes);
         if (prior != null) {
             const start = tree.nodes[template.header].record.framing.offset;
@@ -166,6 +157,11 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         } else {
             const header_record = tree.nodes[template.header].record.framing;
             const header = try scratch.dupe(u8, header_record.payload);
+            // Keep first-paragraph formatting; inherit only the opaque count high
+            // bit from the final template header. This is a template policy,
+            // not a new interpretation of that bit in the official specification.
+            const last = tree.nodes[template.last_header].record.value.header;
+            std.mem.writeInt(u32, header[Header.character_count_offset..][0..4], last.chars_raw, .little);
             Header.writeTextCounts(header, 1, 1, 0);
             std.mem.writeInt(u32, header[Header.instance_id_offset..][0..4], request.new_paragraph_ids[fresh], .little);
             fresh += 1;
@@ -187,4 +183,54 @@ fn recordEnd(tree: Tree, index: usize, length: usize) usize {
 fn append(a: std.mem.Allocator, out: *std.ArrayList(u8), bytes: []const u8, limit: usize) !void {
     if (out.items.len > limit or bytes.len > limit - out.items.len) return error.LimitExceeded;
     try out.appendSlice(a, bytes);
+}
+
+/// Validate every direct paragraph once, including paragraphs later discarded.
+/// Only leaf plain-text/style records belong to this deliberately narrow editor.
+fn validateParagraph(tree: Tree, index: usize, end: usize) !usize {
+    const node = tree.nodes[index];
+    if (node.record.value != .header or node.subtree_end > end) return error.UnsupportedSourceTableGrid;
+    const header = node.record.value.header;
+    if ((header.merge_tracking orelse 0) != 0 or header.control_mask != 0 or header.break_flags != 0 or header.range_tag_count != 0 or header.line_segment_count != 0 or header.extra.len != 0) return error.UnsupportedSourceTableGrid;
+    var runs: ?usize = null;
+    var text: ?usize = null;
+    var child = index + 1;
+    while (child < node.subtree_end) : (child = tree.nodes[child].subtree_end) {
+        const entry = tree.nodes[child];
+        if (entry.parent != index or entry.subtree_end != child + 1) return error.UnsupportedSourceTableGrid;
+        switch (entry.record.value) {
+            .char_runs => {
+                if (runs != null) return error.UnsupportedSourceTableGrid;
+                runs = child;
+            },
+            .text => {
+                if (text != null) return error.UnsupportedSourceTableGrid;
+                text = child;
+            },
+            else => return error.UnsupportedSourceTableGrid,
+        }
+    }
+    const run_index = runs orelse return error.UnsupportedSourceTableGrid;
+    const rows = tree.nodes[run_index].record.value.char_runs;
+    if (rows.count() == 0 or header.char_shape_count != rows.count()) return error.UnsupportedSourceTableGrid;
+    const text_bytes = if (text) |t| tree.nodes[t].record.framing.payload else &.{};
+    // Local source-grid eligibility for the spec's zero-character paragraph.
+    // Never synthesize a terminator into surviving source records, nor allow a
+    // run at position 1 by treating an implicit break as a real source unit.
+    if (header.characterUnits() == 0 and text_bytes.len == 0) {
+        if (rows.count() != 1 or rows.get(0).?.start != 0) return error.UnsupportedSourceTableGrid;
+        return run_index;
+    }
+    if (text == null) return error.UnsupportedSourceTableGrid;
+    const plain = @import("plain_text_content.zig");
+    try plain.validatePlain(text_bytes);
+    if (header.characterUnits() != text_bytes.len / 2) return error.SourceBindingMismatch;
+    var previous: u32 = 0;
+    for (0..rows.count()) |i| {
+        const run = rows.get(i).?;
+        if ((i == 0 and run.start != 0) or (i > 0 and run.start <= previous)) return error.UnsupportedSourceTableGrid;
+        try plain.boundary(text_bytes, run.start);
+        previous = run.start;
+    }
+    return run_index;
 }

@@ -4,11 +4,11 @@
 
 입력은 현재 구역 트리의 `tbl` 요소 번호 또는 시작부터 닫는 태그 끝까지의 정확한 바이트 범위, 예상 행·열 수, 행/열 삽입·삭제 명령, 새 셀의 문단 ID다. 요소 번호와 범위는 현재 입력에만 유효하며 영구 ID가 아니다. 예상 크기는 오래된 크기를 거부하지만 같은 크기의 다른 원본을 검출하는 내용 지문은 아니다. 전체 문서의 모든 part를 조사해 신선한 ID를 공급하는 책임은 호출자에게 있다. 모듈은 해당 구역의 모든 문단과 새 ID의 중복 및 새 ID 0을 추가로 거부한다.
 
-좌표는 공유 `model/table_grid_edit_plan.zig`에서 계획한다. 새 셀은 직전 행/열의 셀을 복제하고 삽입 인덱스가 0이면 첫 행/열을 복제한다. 복제한 셀의 문단 ID를 교체하고 `t` 내부를 비운다. 셀·subList·문단·run의 지원하는 원본 서식과 namespace 선언은 유지한다. 빈 self-closing `t`도 그대로 사용할 수 있다. 생존 셀은 `cellAddr` 외의 원문 XML·본문·문단 ID·크기를 유지한다.
+좌표는 공유 `model/table_grid_edit_plan.zig`에서 계획한다. 새 셀은 직전 행/열의 셀을 복제하고 삽입 인덱스가 0이면 첫 행/열을 복제한다. 복제한 셀에서는 첫 문단만 남겨 ID 하나를 교체하고 그 문단의 모든 `t` 내부를 비운다. 두 번째 이후 문단은 서브트리 전체를 제거하여 기존 ID를 복제하지 않는다. 생존 문단 보존과 새 셀의 단일 빈 문단 생성은 프로젝트의 편집 정책이며 명세가 강제하는 편집 동작이 아니다. 셀·subList·문단·run의 지원하는 원본 서식과 namespace 선언은 유지한다. 빈 self-closing `t`도 그대로 사용할 수 있다. 생존 셀은 `cellAddr` 외의 원문 XML·본문·문단 ID·크기를 유지한다.
 
 크기는 이 후보의 편집 정책이다. 각 열의 폭은 행에 걸쳐 같고 각 행의 높이는 열에 걸쳐 같아야 하며 모두 양수다. `sz`의 폭·높이는 각 열 폭·행 높이의 합과 정확히 같고 ABSOLUTE여야 한다. 셀 간격은 부재 또는 0만 수용한다. 삽입은 복제한 열 폭/행 높이만큼 전체 폭/높이를 늘리고, 삭제는 제거한 열 폭/행 높이만큼 줄인다. 생존 셀을 재분배하지 않는다. 이 정책은 파일 포맷이 요구하는 편집 규칙이라는 주장이 아니다.
 
-지원 입력은 모든 span이 1×1이고 주소가 행 우선 순서와 일치하는 완전한 격자다. 각 셀은 단일 subList, 단일 p와 하나 이상의 지원 plain run/t를 가져야 한다. 빈 run도 허용한다. 구조 요소의 직접 비공백 문자, 줄 캐시, 필드, 중첩 표, 조건 분기, caption/cellzone 및 처리하지 못하는 자식 구조를 거부한다. table의 알려지지 않은 속성은 그대로 보존하되 복제되는 셀 껍질의 미지원 속성은 알 수 없는 ID/참조를 복제하지 않도록 거부한다. 보호·lock, 이름이 있는 셀, 비어 있지 않은 subList ID, 연결 목록·텍스트/번호 참조와 비영 textWidth/textHeight 캐시도 거부한다. 마지막 행이나 열의 삭제는 거부한다. UTF-8 XML만 편집한다.
+지원 입력은 모든 span이 1×1이고 주소가 행 우선 순서와 일치하는 완전한 격자다. 각 셀은 단일 subList와 하나 이상의 p를 가져야 한다. 모든 p는 하나 이상의 직접 plain run을 가져야 하며 run의 직접 t는 0개 이상 허용한다. self-closing/짝 태그 빈 run 및 t는 허용하지만, run이 없는 p(닫힌 빈 p, self-closing p, 공백·주석만 있는 p 포함)는 기존 정책대로 거부한다. 첫 문단뿐 아니라 삭제될 셀을 포함한 모든 문단을 같은 속성·자식·보호·캐시 규칙으로 검사한다. 구조 요소의 직접 비공백 문자, 줄 캐시, 필드, 중첩 표, 조건 분기, caption/cellzone 및 처리하지 못하는 자식 구조를 거부한다. table의 알려지지 않은 속성은 그대로 보존하되 복제되는 셀 껍질의 미지원 속성은 알 수 없는 ID/참조를 복제하지 않도록 거부한다. 보호·lock, 이름이 있는 셀, 비어 있지 않은 subList ID, 연결 목록·텍스트/번호 참조와 비영 textWidth/textHeight 캐시도 거부한다. 마지막 행이나 열의 삭제는 거부한다. UTF-8 XML만 편집한다.
 
 기존 namespace-aware section tree, 숫자 속성 writer, source patch builder로 원문 범위만 조립한다. table 속성의 unknown 값·따옴표·이스케이프, 비대상 구역 XML은 바이트 단위로 유지한다. 행/셀 사이 원문 공백·주석은 보존하지만 새 셀의 삽입 위치와 관련한 주석 의미나 전체 XSD 적합성을 추론하지 않는다. 출력은 다시 구역 XML로 파싱하고 예상 새 격자와 기하를 검사한 뒤에만 반환한다. 임시 준비는 arena가 소유하고 최종 복사 성공 전에는 외부 상태를 바꾸지 않는다.
 
@@ -40,10 +40,27 @@ XML part 분류에서 entry마다 manifest를 다시 찾던 순회를 색인으�
 
 ## Task AA: 직접 plain run/t 여러 개
 
-위의 단일 run/t 제한을 확장했다. 셀의 단일 subList·단일 p는 유지하고, p의 직접 run은 하나 이상, 각 run의 직접 t는 0개 이상 허용한다. self-closing run/t와 명시적으로 닫는 빈 run/t도 다음 편집의 템플릿으로 수용한다. run 속성은 기존 charPrIDRef와 namespace 선언, t 속성은 namespace 선언만 허용한다. 필드·중첩·컨트롤·캐시·미지원 속성/자식 및 여러 subList/p의 거부는 유지한다. 공개 API·ABI와 native binding은 변경하지 않았다.
+위의 단일 run/t 제한을 확장했다. 당시에는 셀의 단일 subList·단일 p를 유지했고(현재 다중 p 계약은 아래 절이 확장), p의 직접 run은 하나 이상, 각 run의 직접 t는 0개 이상 허용한다. self-closing run/t와 명시적으로 닫는 빈 run/t도 다음 편집의 템플릿으로 수용한다. run 속성은 기존 charPrIDRef와 namespace 선언, t 속성은 namespace 선언만 허용한다. 필드·중첩·컨트롤·캐시·미지원 속성/자식 및 여러 subList/p의 거부는 유지한다. 공개 API·ABI와 native binding은 변경하지 않았다.
 
 생존 셀은 주소 외의 모든 원문 run 순서·charPr 참조·prefix/namespace·텍스트를 유지한다. 삽입 셀은 템플릿의 서식 껍질을 복제하되 모든 t 내부를 비우고 새 문단 ID를 적용한다. 검사 시 직접 t 본문 범위를 셀별로 한 번 수집한다. 셀 조립은 최대 두 속성 변경만 정렬하고 이미 순서가 있는 본문 범위와 선형 병합한다. 셀마다 전체 트리를 재검색하거나 다중 t 변경 전체를 정렬하지 않는다. 노드·텍스트 바이트·출력 크기에 따른 이 조립 경계를 기존 파서 전체의 최악 복잡도 보장으로 확대하지 않는다.
 
 집중 명령은 `mise exec -- zig test src/hx_source_table_grid_multirun_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'source grid multirun'`과 기존 `hx_source_table_grid_probe.zig`의 `source grid` 필터다. 신규 검사는 독립 전체 XML 기대값으로 네 명령의 생존 원문/모든 t 비우기, 혼합 prefix·Unicode·문자 참조·빈 태그, 결과 재파싱 후 빈 셀 재복제, t가 없는 run만 가진 템플릿, 미지원 속성/구조 거부, 공유 allocation_failures helper로 네 명령의 전체 할당 실패, 2048행·셀당64 run/80 t 입력을 확인한다. 기존 8개 검사는 수정하지 않았다.
 
 root/control의 수정 전 소유 파일은 `zig-out/verification/document-transforms-connect-r1/task-aa-20261110T014531Z/{root,control}/`에 별도 보존했다. 수정 전 control은 기존8개 통과·신규 의미 검사5개 실패(harness1 통과)를 기록했고, 최종 root/control은 각각 기존8개와 신규6개(harness1 포함) 통과·skip0을 기록했다. 로그·소유 델타·SHA 목록은 같은 증거 디렉터리에 둔다. 소스 XML/native 집중 시험이며 live 세션·SDK bridge·브라우저·전체 기능 완료의 증거가 아니다. 독립 합성 기대값과 기존 프로젝트 API를 사용했으며 엄격한 클린룸 인증을 주장하지 않는다.
+
+
+## 원본 셀의 여러 plain 문단
+
+`inspectParagraph`는 각 문단의 지원 plain run/t와 속성을 검사하고, `inspectParagraphs`는 직접 형제 링크를 한 번 따라가며 첫 문단과 복제 시 비울 원문 범위를 수집한다. 첫 문단의 모든 t 본문과 후속 p 전체 범위는 원문 순서대로 수집한다. `cellXml`은 최대 두 속성 변경과 이 범위를 선형 병합한다. 후속 p 내부 주석은 해당 서브트리와 함께 제거하고, p 사이의 공백·주석은 그대로 둔다. 원본 셀의 기하·prefix·namespace와 생존하는 모든 문단의 바이트·스타일·ID·순서를 유지한다. 새 셀 ID 개수는 계속 셀당 하나이며 기존 구역 전체 Map 기반 ID inventory가 후속 문단 ID도 검사한다.
+
+새 검사/조립 단계는 셀·문단마다 전체 트리를 다시 검색하지 않는다. 순회는 입력 노드/바이트와 출력 크기에 비례하며, 전체 XML 파서·속성 처리의 최악 복잡도까지 보장한다는 주장은 아니다. 파일/live 래퍼는 기존 primitive를 재사용하며 이 변경에서 세션·이력·다른 포맷 책임을 추가하지 않는다.
+
+검증 자료는 기존 namespace-aware 프로젝트 XML 계층과 독립 합성 XML 기대값이다. 사용자가 제공한 공식 자료 위치는 [한컴 HWPX 파싱 설명](https://tech.hancom.com/python-hwpx-parsing-2/)과 [공식 HWP/OWPML 다운로드](https://download.hancom.com/support/downloadCenter/hwpOwpml)이며, 이번 작업은 XSD를 직접 내려받거나 전체 적합성을 검증하지 않았다. 타 구현 코드·알고리즘·역분석 보고서 및 역분석 주석이 혼합된 로컬 명세는 열람하지 않았다. 이 정책 확장을 명세의 필수 편집 결과나 엄격한 클린룸 인증으로 표시하지 않는다.
+
+실행 명령은 [개발 명령](development-commands.md)의 원본 표 셀 여러 문단 절을 따릅니다.
+
+신규 검사는 네 명령의 독립 전체 XML 기대값, 서로 다른 문단/글자 스타일, 다중 run/t·혼합 prefix·Unicode·이스케이프, 반복 삽입, 단일 새 ID와 후속 문단 ID 충돌, 첫/후속 bare p 거부, 비템플릿·삭제 대상 셀 마지막 문단의 위험 구조/속성/필드/캐시/보호 거부를 검사한다. 네 명령의 전체 backing 할당 실패 sweep도 독립 전체 XML 기대값을 사용한다. 별도 대형 입력은 1,024행×1열·셀당 8문단(첫 문단 16 run/20 t)을 전체 XML로 대조한다. 실제 파일/live 이력·SDK·브라우저·배포·전체 엔진 완료의 증거와 구분한다.
+
+수정 전 신규 의미 검사4개는 기존 단일 문단 guard에서 실패했고 harness1개만 통과했다. 증거 경로는 `zig-out/verification/source-grid-multipara-r1/task-b-*.log`이며, 기준본은 같은 경로의 `task-b-baseline/`에 보존한다. 최종 소유 파일·root/control 동일성·SHA256은 `task-b-manifest.json`에 기록한다.
+
+최종 root/control은 각각 신규8개(의미 검사7+harness1), 기존 격자8개, 기존 다중 run6개(의미 검사5+harness1)가 통과했고 skip0이다. 이는 각 소스에서 의미 검사20개+harness2개를 실행한 결과이며 두 소스의 같은 검사를 고유44개로 합산하지 않는다. 네 명령 OOM sweep은 신규와 기존 다중 run에서 각각 성공했다.

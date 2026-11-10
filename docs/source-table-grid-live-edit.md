@@ -24,7 +24,7 @@ HWP5 웹 선택은 기존 Reader의 `observed8` 정책을 사용하며 파일 �
 
 ## 지원 경계
 
-두 형식 모두 비병합 직사각형·단일 문단의 일반 셀 범위입니다. HWPX는 여러 plain run/t를 보존하며 새 셀의 모든 t를 비웁니다. source 필드·개체·캡션·줄 캐시·불명확한 구조, 보호 셀과 서명 등 기존 [HWP5](hwp5-source-table-grid.md)·[HWPX](hwpx-source-table-grid.md) 거부 정책을 유지합니다. 대상 구역에 보류 중인 생성 표나 별도 cell style/background intent가 있으면 node·resource remap을 완료하기 전까지 거부합니다. 글자 서식 변경과 이 제한을 혼동하지 않습니다. 병합/복합 표 전체 및 한컴 조판 동치 완료가 아닙니다.
+두 형식 모두 비병합 직사각형의 일반 셀 범위이며, [여러 문단 처리](source-table-grid-cell-paragraphs.md)를 지원합니다. HWPX는 여러 plain run/t를 보존하며 새 셀은 첫 문단의 서식을 사용한 빈 문단 하나로 만듭니다. source 필드·개체·캡션·줄 캐시·불명확한 구조, 보호 셀과 서명 등 기존 [HWP5](hwp5-source-table-grid.md)·[HWPX](hwpx-source-table-grid.md) 거부 정책을 유지합니다. 대상 구역에 보류 중인 생성 표나 별도 cell style/background intent가 있으면 node·resource remap을 완료하기 전까지 거부합니다. 글자 서식 변경과 이 제한을 혼동하지 않습니다. 병합/복합 표 전체 및 한컴 조판 동치 완료가 아닙니다.
 
 ## 현재 검증
 

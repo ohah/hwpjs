@@ -103,7 +103,7 @@ export async function withEditor<T>(
 
 현재 소스와 GitHub 데모에서는 단순한 비병합 원본 표의 행·열 추가·삭제를 같은 Native 세션과 실행 취소 이력으로 처리합니다. 공개 npm 0.1.1의 지원 범위와 구분합니다. SDK는 `supportsSourceTableGrid()`와 `editSourceTableGrid()`, 헤드리스 Core는 `EDIT_SOURCE_TABLE_GRID_COMMAND`를 제공합니다. 표 주소는 현재 관측에서 다시 구하고 이전 문서·편집의 주소를 재사용하지 않습니다.
 
-데모에서는 셀을 선택한 뒤 표 메뉴를 사용합니다. 인쇄 테두리가 없는 표는 보기의 격자 옵션으로 경계를 표시할 수 있으며 이 안내선은 파일 서식을 바꾸지 않습니다. 저장 후 재열기와 현재 세션의 undo/redo는 별개로 검증합니다. 병합 셀·필드·복합 개체 등 지원 경계와 payload는 [열린 세션 격자 계약](https://github.com/ohah/hwpjs/blob/main/docs/source-table-grid-live-edit.md)을 따릅니다.
+데모에서는 셀을 선택한 뒤 표 메뉴를 사용합니다. 셀의 일반 문단이 여러 개여도 기존 본문·서식·순서를 보존하며, 새 셀은 첫 문단의 서식을 사용한 빈 문단 하나로 만듭니다. 인쇄 테두리가 없는 표는 보기의 격자 옵션으로 경계를 표시할 수 있으며 이 안내선은 파일 서식을 바꾸지 않습니다. 저장 후 재열기와 현재 세션의 undo/redo는 별개로 검증합니다. 병합 셀·필드·복합 개체 등 지원 경계와 payload는 [열린 세션 격자 계약](https://github.com/ohah/hwpjs/blob/main/docs/source-table-grid-live-edit.md)을 따릅니다.
 
 ## 저장 동의와 수명
 

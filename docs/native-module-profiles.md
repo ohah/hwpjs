@@ -13,3 +13,5 @@
 원본 표 파일 ABI를 추가한 `e2e0333e3e703328a970126aab88e9d2a302a7fb1897e6822cc15b727f4684cc`도 같은 검증 프로필에 추가했습니다. 기존 Native 텍스트·Worker 이력과 원본 셀 표시 검사를 다시 실행했습니다. 첫 묶음의 55개 중 하나는 독립 Python 오라클의 30초 시작/응답 대기에서 시간 초과했고, 해당 입력 단독 재검사는 1개 통과했습니다. 이를 제품 결함 수정이나 최초 묶음 전체 성공으로 표시하지 않습니다. 실패 로그와 단독 재검사 로그는 `source-grid-known-regression-final.log`·`source-grid-independent-oracle-recheck.log`로 보존합니다. 실제 Runtime 대각선·원시 XML 검사와 공개 정적 후보 브라우저 검증도 별도로 구분합니다.
 
 열린 세션 격자 편집의 `28d2f91917e81d0522ffe04d6ddff150aee2ad815a9ed1ed6d470af905aaacca`를 추가했습니다. Node 24.20.0의 실제 SDK 18개, Reader/Worker 4개, COW·이력·모듈 소유권 49개와 셀 표시 33개를 통과했습니다. 신규 capability가 COW schema에서 빠져 발생한 최초 실패는 `source-table-live-r1/runtime-regressions-r1.log`, boolean 검사와 허용 목록 보완 후 결과는 `runtime-regressions-final.log`로 구분합니다. 기대 SHA·export 존재만으로 private 등록을 허용하지 않습니다.
+
+여러 문단이 있는 원본 표 셀의 격자 편집 엔진 `202fc55283b670ea7c695ef3a326a0e6b8c86af3def7232c8e5bfab003699389`를 추가했습니다. 기존 `28d2` 프로필을 유지하며 실제 SDK 33개, Reader/Worker 6개, 모듈 소유권·COW·이력 회귀 49개를 통과했습니다. primitive·독립 파일 오라클·실제 브라우저·공개 배포의 근거는 [셀 문단 계약](source-table-grid-cell-paragraphs.md)에서 구분합니다. 새 지문 등록은 전체 문서의 조판 동치를 보증하지 않습니다.
