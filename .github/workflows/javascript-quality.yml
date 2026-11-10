@@ -189,6 +189,15 @@ jobs:
         run: |
           test -f ./tools/tsconfig.demo-shell.json || exit 1
           bunx --no-install tsc --noEmit -p ./tools/tsconfig.demo-shell.json
+      - name: Test table insertion target availability and resource defaults
+        run: |
+          test -f ./packages/core/tests/commands/table-insert-availability.test.ts || exit 1
+          test -f ./apps/demo/tests/table-insert-target-availability.test.ts || exit 1
+          bun test --no-install ./packages/core/tests/commands/table-insert.test.ts ./packages/core/tests/commands/table-insert-availability.test.ts ./apps/demo/tests/table-insert.test.ts ./apps/demo/tests/table-insert-uncertain.test.ts ./apps/demo/tests/table-insert-target-availability.test.ts
+      - name: Test API playground canonical targets and table availability
+        run: |
+          test -f ./apps/demo/tests/api-playground-selection-owner.test.mjs || exit 1
+          bun test --no-install ./apps/demo/tests/api-playground-selection-owner.test.mjs
       - name: Test demo toolbar and find dialog
         run: |
           bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts ./apps/demo/tests/file-open-direct.test.mjs

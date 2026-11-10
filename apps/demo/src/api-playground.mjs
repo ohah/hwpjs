@@ -29,6 +29,7 @@ export function createApiPlayground({
   spliceCommand,
   loadFixture,
   getHistoryAvailability,
+  getTableInsertAvailability: queryTableInsertAvailability,
   createParagraphSelection,
   operations,
 }) {
@@ -72,6 +73,12 @@ export function createApiPlayground({
     },
     select(args) {
       return editor.setSelection(target(args));
+    },
+    getTableInsertAvailability(args) {
+      if (typeof queryTableInsertAvailability !== 'function')
+        throw Error('ApiTableInsertAvailabilityUnavailable');
+      const selected = target(args);
+      return queryTableInsertAvailability(editor.getEditorState(), selected);
     },
     splice(args) {
       if (typeof args.text !== 'string') throw Error('InvalidArgument:text');
@@ -167,6 +174,7 @@ const examples = Object.freeze({
   read: {},
   select: { section: 0, paragraph: 0, start: 0, end: 0 },
   splice: { section: 0, paragraph: 0, start: 0, end: 0, text: 'API 검증' },
+  getTableInsertAvailability: { section: 0, paragraph: 0, start: 0, end: 0 },
   undo: {},
   redo: {},
   save: {},
@@ -178,6 +186,7 @@ const snippets = Object.freeze({
   read: 'editor.read(' + readApiProjection.toString() + ');',
   select: 'await editor.setSelection(target);',
   splice: 'await editor.dispatchCommand(SPLICE_TEXT_COMMAND, { target, text });',
+  getTableInsertAvailability: 'getTableInsertAvailability(editor.getEditorState(), target);',
   undo: 'await editor.undo();',
   redo: 'await editor.redo();',
   save: 'await editor.save({});',
@@ -190,7 +199,7 @@ export function apiSampleCode(operation, args = {}) {
       : operation === 'save'
         ? 'await editor.save(' + JSON.stringify(args) + ');'
         : snippets[operation];
-  const prepare = ['select', 'splice'].includes(operation)
+  const prepare = ['select', 'splice', 'getTableInsertAvailability'].includes(operation)
     ? 'const createTarget = ' +
       apiSelectionTarget.toString() +
       ';\n' +
@@ -202,7 +211,9 @@ export function apiSampleCode(operation, args = {}) {
     : '';
   return (
     '// 전제: 문서를 이미 연 ready editor를 주입합니다.\n' +
-    'import { createEditor, SPLICE_TEXT_COMMAND, createParagraphSelection } from "@ohah/hwpjs";\nimport { createWorkerRuntimeFactory } from "@ohah/hwpjs/runtime";\n\n' +
+    (operation === 'getTableInsertAvailability'
+      ? "import { createParagraphSelection, getTableInsertAvailability } from '@ohah/hwpjs';\n\n"
+      : 'import { createEditor, SPLICE_TEXT_COMMAND, createParagraphSelection } from "@ohah/hwpjs";\nimport { createWorkerRuntimeFactory } from "@ohah/hwpjs/runtime";\n\n') +
     prepare +
     call
   );

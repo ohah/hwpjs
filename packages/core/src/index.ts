@@ -142,7 +142,9 @@ export type {
   InsertTablePayload,
   InsertTableOptions,
   TableInsertResources,
+  TableInsertAvailability,
 } from './commands/table-insert.ts';
+export { getTableInsertAvailability } from './commands/table-insert.ts';
 
 export { toHtml } from './conversion.ts';
 export type { HTMLConversionOptions } from './conversion.ts';

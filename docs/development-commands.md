@@ -1779,3 +1779,17 @@ node --test tests/hwpx/visible-overflow-cell-edit.test.mjs \
 ```
 
 기존 Surface 연결 검사는 Node 24.20.0과 `tools/renderer-test-core-provider.mjs`·`packages/vanilla/tests/non-text-history-renderer-hook.mjs`를 import한 소스 grid 검사 묶음에서 실행합니다. 실제 Canvas clipboard·Native 저장과 원본 CFB/XML 대조는 별도 브라우저 근거로 구분합니다.
+
+## 표 삽입 가용성 조회
+
+[대상·기본 리소스의 공유 검증](table-insert-target-availability.md)을 따릅니다.
+
+```sh
+bun test --no-install packages/core/tests/commands/table-insert.test.ts \
+  packages/core/tests/commands/table-insert-availability.test.ts \
+  apps/demo/tests/table-insert.test.ts apps/demo/tests/table-insert-uncertain.test.ts \
+  apps/demo/tests/table-insert-target-availability.test.ts \
+  apps/demo/tests/api-playground-selection-owner.test.mjs
+```
+
+공유 검증과 UI/플레이그라운드 연결의 source 검사입니다. 실제 Native 문서·독립 저장·브라우저 증거는 해당 주제 문서에 따로 기록합니다.

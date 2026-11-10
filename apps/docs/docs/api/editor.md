@@ -103,3 +103,24 @@ export async function collectInsert(editor: HeadlessEditor, target: SelectionTar
   return { results: result.results, stoppedIndex: result.stoppedIndex };
 }
 ```
+
+## 표 삽입 전 대상 확인
+
+`getTableInsertAvailability(state, target)`는 현재 선택에서 표를 삽입할 수 있는지 조회합니다. UI와 실제 삽입 명령이 같은 대상 검증을 사용합니다. `allowed`와 `reason`을 확인하세요. 허용 시에는 검증된 기본 리소스 `resources`도 반환합니다. 실제 크기·리소스와 대상은 명령 실행 시 다시 검증합니다. 플레이그라운드에서 같은 이름의 항목을 선택하면 문서를 변경하지 않고 실제 함수를 호출합니다.
+
+이 API는 현재 main 소스와 공개 웹 데모 SDK에 제공하며 npm에는 아직 게시하지 않았습니다. HWP5의 편집 중 생성된 문단은 현재 지원 대상에서 제외됩니다. 이 제약을 문서 포맷 자체의 제약으로 해석하지 않습니다.
+
+<!-- example:table-insert-availability.ts -->
+```ts
+import {
+  getSelectionFormatting,
+  getTableInsertAvailability,
+  type HeadlessEditor,
+} from '@ohah/hwpjs';
+
+export function getTableInsertionState(editor: HeadlessEditor) {
+  return editor.read((state) =>
+    getTableInsertAvailability(state, getSelectionFormatting(state).target),
+  );
+}
+```

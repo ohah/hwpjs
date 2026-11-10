@@ -3,7 +3,7 @@ import { exactParagraphNumber } from './paragraph-shape-number.ts';
 
 export type TableInsertCore = Pick<
   typeof import('@hwpjs/core'),
-  'INSERT_TABLE_COMMAND' | 'getSelectionFormatting'
+  'INSERT_TABLE_COMMAND' | 'getSelectionFormatting' | 'getTableInsertAvailability'
 >;
 export interface TableInsertDraft {
   rows: string;
@@ -17,7 +17,6 @@ export interface TableInsertCapture {
   readonly resources: InsertTableOptions['resources'] | null;
   readonly reason: string | null;
 }
-const keys = ['paragraph', 'character', 'style', 'border_fill'] as const;
 const uint = (n: unknown): n is number =>
   typeof n === 'number' && Number.isInteger(n) && n >= 0 && n <= 0xffffffff;
 /** Presentation only. The public command/Native remain the final validators. */
@@ -48,13 +47,6 @@ export function createTableInsertBridge(editor: HeadlessEditor, core: Partial<Ta
     let target: SelectionTarget | null = null,
       resources: InsertTableOptions['resources'] | null = null,
       reason: string | null = null;
-    const content = state.content as
-      | {
-          readOnly?: boolean;
-          tableCreationAvailable?: boolean;
-          tableCreationResources?: Record<string, unknown>;
-        }
-      | undefined;
     try {
       if (disposed) throw Error('TableInsertDisposed');
       if (pending) throw Error('TableInsertPending');
@@ -62,30 +54,19 @@ export function createTableInsertBridge(editor: HeadlessEditor, core: Partial<Ta
       if (
         core.INSERT_TABLE_COMMAND?.name !== 'insert-table' ||
         typeof core.INSERT_TABLE_COMMAND.id !== 'symbol' ||
-        typeof core.getSelectionFormatting !== 'function'
+        typeof core.getSelectionFormatting !== 'function' ||
+        typeof core.getTableInsertAvailability !== 'function'
       )
         throw Error('TableInsertApiUnavailable');
-      if (state.historyRecoveryRequired) throw Error('HistoryRecoveryRequired');
-      if (content?.readOnly) throw Error('ReadOnlyDocument');
       target = core.getSelectionFormatting(state).target;
-      if (!target) throw Error('MissingSelection');
-      if (target.owner !== `section:${target.section}:body`)
-        throw Error('UnsupportedTableInsertOwner');
-      if (target.startUnit !== target.endUnit) throw Error('TableInsertionRequiresCaret');
-      if (content?.tableCreationAvailable !== true) throw Error('TableCreationUnavailable');
-      const ids = content.tableCreationResources;
-      const chosen: Record<string, number> = {};
-      for (const key of keys) {
-        const values = ids?.[key];
-        if (
-          !Array.isArray(values) ||
-          !values.length ||
-          !Array.from(values).every((id, i) => uint(id) && (i === 0 || values[i - 1] < id))
-        )
-          throw Error('InvalidTableCreationResources');
-        chosen[key] = values[0];
-      }
-      resources = Object.freeze(chosen) as unknown as InsertTableOptions['resources'];
+      const availability = core.getTableInsertAvailability(state, target);
+      if (availability.allowed !== true || availability.reason !== null)
+        throw Error(
+          availability.reason === 'UnsupportedTableInsertReference'
+            ? '현재 문단에는 표를 삽입할 수 없습니다. 다른 본문 문단을 선택하세요.'
+            : (availability.reason ?? 'TableInsertUnavailable'),
+        );
+      resources = availability.resources;
     } catch (error) {
       reason = error instanceof Error ? error.message : String(error);
     }
