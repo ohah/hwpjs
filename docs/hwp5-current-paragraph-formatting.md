@@ -19,3 +19,11 @@ Runtime은 참조가 포함된 HWP5 명령에 `hwp5-current-body-reference.mjs`�
 ## 크기 입력 초안
 
 크기 입력창에서 적용 버튼으로 포커스를 옮기는 동안의 관측 갱신이 입력 초안을 기존 서식 값으로 덮지 않도록 합니다. 포인터 적용은 다른 도구 모음 버튼과 같은 기본 포커스 이동 방지 정책을 사용하고, 키보드로 적용 버튼에 포커스가 있을 때도 초안을 유지합니다. 명시적 `resetFormatDraft`는 이 경우에도 초안을 폐기합니다. 선택 token과 명령 허용 검사는 기존 bridge가 계속 수행합니다. 통제된 실패와 수정 검사는 `size-focus-before-fix.log`·`size-focus-after-fix.log`에 분리합니다.
+
+## 실제 검사 결과와 후속 경계
+
+같은 세션의 HWP5 생성 문단은 원본 표가 앞에 있는 경우를 포함해 canonical 공개 명령과 Native 저장 값·범위·다른 문단 보존·undo/redo를 독립 CFB로 대조했습니다. 브라우저는 Vanilla/React에서 HWP5 생성 본문과 원본 본문의 드래그 선택·굵게·기울임·19pt·가운데 정렬·입력 복구·저장 재열기를 확인했습니다. 크기 적용 클릭의 초안 덮임은 수정 전 실제 이벤트 순서와 저장 불변을 보존했고, 수정 후 19pt 저장을 확인했습니다.
+
+HWPX의 저장·재열기 후 본문 서식은 같은 두 프레임워크에서 회귀 검사를 통과했습니다. 반면 새 문서를 여러 문단으로 나눈 같은 세션의 생성 본문에 굵게를 적용하면 `UnsupportedInlineControl`로 거부되는 별도 경계가 확인됐습니다. 직전 배포 번들에서도 같은 사례가 재현됐고, 거부 시 저장 바이트는 변하지 않았습니다. 이는 이번 HWP5 지원 확대로 해결된 것으로 계수하지 않습니다. 기존 거부를 우회하거나 문서를 자동 저장·재열어 성공한 것처럼 처리하지 않습니다. 정확한 UI/API/Native 경계와 원인은 별도 후속 조사 대상입니다.
+
+Native·canonical 근거는 `contract/receipt.json`, UI 근거는 `browser/cohort-r6-r2-full/summary.json`의 HWP5 사례와 `browser/cohort-r9-r2-persisted-hwpx/summary.json`입니다. 같은 세션 HWPX 거부의 이전 배포 비교는 `browser/cohort-r8-previous-hwpx/summary.json`에 분리합니다.
