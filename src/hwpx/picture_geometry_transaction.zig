@@ -53,7 +53,7 @@ test "picture geometry transaction preserves both owners on every injected alloc
     const xml = "<s:sec xmlns:s='http://www.hancom.co.kr/hwpml/2011/section' xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph' xmlns:c='http://www.hancom.co.kr/hwpml/2011/core'><p:p><p:run><p:pic><p:sz width='12' height='8'/><p:renderingInfo><c:scaMatrix e1='1' e2='0' e3='0' e4='0' e5='1' e6='0'/></p:renderingInfo></p:pic></p:run></p:p></s:sec>";
     const bytes = try @import("test_formula_fixture.zig").zipWithSection(a, xml);
     defer a.free(bytes);
-    try std.testing.checkAllAllocationFailures(a, struct {
+    try @import("../testing/allocation_failures.zig").check(struct {
         fn run(allocator: std.mem.Allocator, source: []const u8) !void {
             var session = try editor.open(allocator, source, .{});
             defer session.deinit();

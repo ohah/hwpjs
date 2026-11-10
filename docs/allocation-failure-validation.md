@@ -41,3 +41,9 @@ zig test src/testing/allocation_failures_negative.zig -O ReleaseSafe --test-filt
 실제 build 경로와 게시할 파일만 반영한 HEAD 격리 환경 각각 Debug9/9·ReleaseSafe9/9를 통과했다. helper 자체4/4와 의도적 누수3건의 TestAllocatorLeak·exit1 부정 대조도 확인했다. ReleaseSafe WASM 전체 빌드가 성공했고 기존 fc7f 산출물과 전체 SHA·runtime sections가 같다. 근거는 `zig-out/verification/hwp5-allocation-publication/` 및 `hwp5-retained-anchor-isolated-run/actual-build-*.log`다.
 
 이전 전체 gate는 다른 모듈의 실패가 이미 확정된 상태에서 남은 root의 약13GB trace 비용을 회수하기 위해 의도적으로 종료했다. `actual-native-deterministic-closure/intentional-stop.json`에 incomplete-failed로 기록했고, 별도 trace0 후보는 유지했다. 이 집중 통과를 전체 Native gate 통과로 계수하지 않는다. 실행 명령은 개발·검증 명령의 test-text-splice 항목을 따른다.
+
+## 그림 기하 거래의 실패 주입
+
+원본 표 여러 문단 후속 검사에서 `picture_geometry_transaction`의 raw std 실패 주입이 `NondeterministicMemoryUsage`로 재현됐습니다. 진단 실행은 제자리 resize 성공에 따라 지정한 실패 할당 지점에 도달하지 않는 경로를 확인했습니다. 테스트 호출 한 곳만 기존 공통 helper로 연결해 정상 resize 성공 대조와 NoResize fallback의 전체 실패 지점을 모두 유지합니다. 본문·크기·행렬·원본 불변·실패 후 복원 단언과 제품 코드는 변경하지 않았습니다.
+
+그림 집중 검사 4개는 의미 검사 2개와 import 진입점 2개입니다. 변경 전 실패와 변경 후 통과는 `source-grid-multipara-r1/task-next-native-review/{picture-before,picture-after}.log`에 보존합니다. 전체 Native 성공이나 배포 엔진의 그림 기능 추가로 표시하지 않습니다.

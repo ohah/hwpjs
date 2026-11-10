@@ -123,12 +123,32 @@ test "closed field labels outside an unmatched cell scope remain queryable and e
     const redone = try session.save();
     defer a.free(redone);
     try std.testing.expectEqualSlices(u8, saved, redone);
-    const nested_begin = for (session.sections[0].tree.elements, 0..) |element, index| {
-        if (element.is(@import("document_xml.zig").paragraph_uri, "fieldBegin") and index != safe[0].begin_element and index != session.source_fields.?.report.markers[0].element_index) break index;
+    const current_safe = try session.fieldLabels(0, 3);
+    defer a.free(current_safe);
+    try std.testing.expectEqual(@as(usize, 1), current_safe.len);
+    try std.testing.expectEqual(safe[0].begin_element, current_safe[0].begin_element);
+    try std.testing.expectEqual(safe[0].end + 6, current_safe[0].end);
+    const current_protected = try session.fieldLabels(0, 2);
+    defer a.free(current_protected);
+    try std.testing.expectEqual(@as(usize, 0), current_protected.len);
+    // History retires derived caches; use a current owned-or-borrowed analysis.
+    var analysis = try @import("source_field_analysis.zig").leaseForLabels(&session, 0);
+    defer analysis.deinit(a);
+    const report = &analysis.source.report;
+    try std.testing.expect(report.markers.len != 0);
+    const first = report.markers[0];
+    try std.testing.expectEqual(@import("field_markers.zig").Kind.begin, first.kind);
+    try std.testing.expectEqual(@as(?u32, 8), (first.begin orelse return error.MissingFieldBegin).id);
+    try std.testing.expect(first.matched_marker_index == null);
+    const nested_begin = for (report.markers) |marker| {
+        if (marker.section_ordinal != 0 or marker.kind != .begin) continue;
+        if ((marker.begin orelse return error.MissingFieldBegin).id != 2) continue;
+        try std.testing.expect(marker.matched_marker_index != null);
+        break marker.element_index;
     } else return error.MissingFieldBegin;
     try std.testing.expectError(error.UnsupportedFieldLabel, session.spliceFieldLabel(0, 2, nested_begin, 0, 0, "blocked"));
     const unchanged = try session.save();
     defer a.free(unchanged);
     try std.testing.expectEqualSlices(u8, saved, unchanged);
-    try std.testing.expectEqual(@as(usize, 1), session.source_fields.?.report.unmatched_begins);
+    try std.testing.expectEqual(@as(usize, 1), report.unmatched_begins);
 }

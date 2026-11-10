@@ -215,3 +215,13 @@ native-remaining-after-joined-guard.jsonl/.stderr는94/94·fail/skip/logErrors/l
 ## 0.16 무필터 전체 재빌드
 
 10978ca9의 추적 src2,635개와 보관 사본의 blob이 모두 같은 상태에서 Zig0.16.0 ReleaseSafe 무필터 빌드 native-current-after-joined-safe가 exit0으로 완료됐습니다. SHA256은f17bb92ee236af46d149d8d19e512cd8ec2b069f4f8617a2b295f98d738fb33c입니다. 표준 runner의 metadata만 조회해 원래4,114개 전체 이름과 순서까지 동일함을 확인했습니다. 이 새 바이너리의 전체 테스트 본문을 실행한 결과는 아니며 전체 runtime gate 성공으로 처리하지 않습니다. 이후 요청된 별도 Zig0.17 업그레이드 검증과 고비용 작업이 중복되지 않도록 이 바이너리의 전체 실행은 시작하지 않았습니다.
+
+## 2026-11-10 원본 표 여러 문단 후속 검사
+
+통제 소스의 추가 `zig build test -Doptimize=ReleaseSafe -j1 --summary all`은 4,799/5,441 통과·46생략·595실패·1중단으로 종료했습니다. 별도 기존 text runner의 소스 파일 부재로 컴파일 단계도 실패했습니다. 이는 [표 셀 여러 문단](source-table-grid-cell-paragraphs.md)의 집중 Native·실제 SDK·브라우저·공개 배포 성공과 별개이며 전체 통과가 아닙니다. 원본 로그는 `source-grid-multipara-r1/native-full-final.log`입니다.
+
+누락된 text runner를 정확한 HEAD 바이트로 준비한 집중 재검사는 9/9 통과했습니다. Git에 포함된 기존 HWP/HWPX 93개 중 통제 작업 공간에 없는 79개도 HEAD 바이트로 준비하고 기존 14개를 보존했습니다. 이후 실패 이름 595개와 import 검사 21개를 선택한 재검사는 188개 종료 시점에 통과156·FileNotFound30·할당 주입 비결정성1·이력 한도 단언 실패1을 확인했습니다. 참조 입력이 없는 상태의 추가 전체 반복은 중단했으며 189번째 검사 이후는 이 실행의 완료 근거가 아닙니다. 실패한 전체 실행을 소급 성공 처리하지 않습니다. 준비·실행 인자·부분 결과·중단 소유권은 같은 폴더의 `native-head-fixture-preparation.json`, `native-residual-invocation.json`, `native-residual-partial-summary.json`, `native-residual-stop.json`에 둡니다.
+
+중단된 필드 검사는 이력 복원 후 폐기된 캐시를 테스트가 직접 unwrap한 것입니다. 현재 Lease로 검사하도록 수정한 결과와 수명 계약은 [필드 마커](hwpx-field-markers.md)의 이력 복원 후 분석 수명을 따릅니다. 그림의 실패 주입 수정은 [공통 할당 실패 검증](allocation-failure-validation.md)을 따릅니다. 이 두 테스트 수정은 제품 편집 동작의 수정과 구분합니다.
+
+이력 메모리 한도 단언은 아직 실패합니다. 서로 다른 체크포인트 11,668/35,800/35,996바이트, entry당 360바이트와 메타데이터 4,544바이트를 합하면 89,088바이트로 설정 한도 88,662바이트를 426바이트 초과합니다. 가장 오래된 12,028바이트가 퇴출되어 77,060바이트·undo 1개가 남는 것을 독립 계수와 대조했습니다. 이 관측에서 중복 계수는 확인하지 못했고, 역사상 어느 변경이 경계를 넘겼는지는 미확정입니다. 기존 한도와 undo 2개 기대값은 그대로 유지하며 테스트를 통과시키려고 한도를 올리지 않았습니다. 근거는 `task-next-native-review/diagnostic.log`와 `history-original-still-red.log`입니다.

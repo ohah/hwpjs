@@ -23,3 +23,9 @@
 2026-09-26 기준 Debug 전체 `zig build test --summary all`은 최종 코드 상태에서 종료 코드 0, 2,609/2,609 테스트 및 5/5 빌드 단계를 통과했습니다. 집중 테스트는 Debug·ReleaseSafe·ReleaseFast 각각 9/9, ReleaseSafe 제품 빌드와 `zig fmt --check build.zig src`, 독립 Python oracle의 일반/`-O` 변이 self-test, 전체 476개 허용 파일별 해시 대조, 기존 known 문서 샤드 0~7도 통과했습니다. 전체 테스트 출력의 `failed command:` 문자열은 후속 [Zig stderr 독립 재현](zig-test-stderr.md)에서 성공한 테스트의 진단 출력으로 설명됐습니다. 이 문구만으로 실패를 판정하지 않으며 종료 코드와 최종 테스트 상태를 함께 확인합니다. 실파일 corpus와 known 연결은 기본 전체 테스트 밖의 선택 검사입니다.
 
 2026-09-27 재검증: 한컴 고정 버전 모델의 시작·끝 속성과 직접 자식, 현재 필드·링크·보고서 모듈의 책임을 대조했습니다. 전용 필터는 Debug·ReleaseSafe·ReleaseFast 각각 9/9, 실파일 단독/known 연결은 1/1, 독립 오라클의 일반·`-O` 자체검사는 각각 통과했습니다. 전체 파일별 대조는 허용 476개·ZIP 거부 6개·암호화 2개, 시작 874개·끝 868개·미연결 시작 6개·미해결 끝 0개로 일치했습니다. 별도 독립 XML 집계에서도 모델 밖 속성 11개가 모두 `fieldBegin/@metaTag`임을 확인했습니다. 앞서 같은 제품 코드에서 통과한 known-inspections 8개 shard는 이번에 다시 실행하지 않았습니다. 필드 평가·편집·저장은 이 결과로 검증되지 않습니다.
+
+## 이력 복원 후 분석 수명
+
+undo/redo는 파생 원본 필드 캐시를 폐기할 수 있습니다. `fieldLabels` 등의 현재 조회가 성공해도 `Session.source_fields`가 다시 상주한다는 계약은 아닙니다. 내부 테스트에서 분석 보고서를 확인할 때도 `leaseForLabels`로 현재 분석을 얻어 수명 동안만 사용하고 `deinit`해야 합니다.
+
+기존 필드 범위 검사는 redo 뒤 캐시를 직접 unwrap해 중단됐습니다. 동일 합성 입력에서 공개 라벨·보호 편집 거부·저장 이력은 정상이며, 테스트만 현재 Lease와 ID 기반 마커 확인으로 수정했습니다. 기존 필드 범위 5개·Lease 할당 실패 1개·import 진입점 1개가 통과했습니다. 제품 필드 편집이나 WASM 변경의 근거가 아닙니다. 증거는 `source-grid-multipara-r1/task-next-layout-review/test-fix/`입니다.
