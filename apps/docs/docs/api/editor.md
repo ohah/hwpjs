@@ -15,6 +15,7 @@
 | 묶음 수집 | `update(collector)` | 동기 명령 수집, 전체를 무조건 원자적 성공으로 보장하지 않음 |
 | 저장 | `save(options?)` | 현재 문서 형식의 bytes 반환 |
 | 이력 | `undo()`, `redo()`, `getHistoryAvailability(state)` | Native 이력과 capability에 따른 사용 가능 상태 |
+| 전체 바꾸기 | `getReplaceAllCapabilities()`, `planReplaceAll(state, request)`, `REPLACE_ALL_COMMAND` | 현재 main·웹 데모의 리터럴 일괄 교체. npm 게시는 별도 |
 | 재관측 | `refresh()` | refresh-required 상태의 관측 갱신 |
 | 구독 | `registerStateListener`, `registerUpdateListener`, `registerErrorListener` | 반환된 해제 함수로 구독 정리 |
 | 종료 | `dispose()` | terminal 종료; 같은 객체 재사용 불가 |
@@ -38,6 +39,37 @@
 ## 저수준 연계
 
 `requestExperimental`, `readResource`, `acquireInputSurface`와 lease는 제한된 runtime/호스트 연계 포트입니다. 전용 typed field/table/object API가 모두 준비됐다는 뜻이 아닙니다. 새 기능은 [지원 범위](../guide/limitations.md)의 전용 공개 계약 여부부터 확인하세요.
+
+## 문서 전체 리터럴 바꾸기
+
+현재 main과 함께 배포하는 웹 SDK는 아래 API를 제공합니다. 이번 추가분은 npm에 게시하지 않았습니다. <a href="__HWPJS_DOCS_BASE__editor/demo/vanilla/">웹 데모</a>의 찾기/바꾸기 창에서도 사용할 수 있습니다.
+
+`planReplaceAll`은 현재 완전한 관측 snapshot에서 변경 계획만 만듭니다. 반환값의 `executionAuthority`는 `false`이며 실제 쓰기 권한을 부여하지 않습니다. `getReplaceAllCapabilities` 역시 기본 가용성 조회입니다. 명령 실행 시 Native가 원문·대상·보호 영역·전체 범위를 다시 검사합니다.
+
+<!-- example:replace-all.ts -->
+```ts
+import { REPLACE_ALL_COMMAND, planReplaceAll, type HeadlessEditor } from '@ohah/hwpjs';
+
+// ready editor와, 호스트가 대기 입력을 반영한 뒤 호출합니다.
+export async function replaceLiteral(editor: HeadlessEditor, query: string, replacement: string) {
+  const capabilities = await editor.getReplaceAllCapabilities();
+  if (!capabilities.available) throw Error(capabilities.reason ?? 'ReplaceAllUnavailable');
+  const state = editor.getEditorState();
+  const request = {
+    schemaVersion: 1 as const,
+    query,
+    replacement,
+    layoutToken: state.token,
+    stateVersion: state.stateVersion,
+  };
+  const plan = planReplaceAll(state, request);
+  const result = await editor.dispatchCommand(REPLACE_ALL_COMMAND, request);
+  // committed-refresh-required이면 재관측하며 같은 편집을 다시 보내지 않습니다.
+  return { matchCount: plan.matchCount, result };
+}
+```
+
+지원하는 리터럴 교체는 하나의 Native 이력으로 적용합니다. 문단을 가로지르는 검색·정규식·개행 삽입은 지원하지 않습니다. 필드·수식·생성 셀 등 대상별 제한이 있고, 일부 문단만 관측한 snapshot은 거부합니다. 미지원 일치를 조용히 건너뛰지 않습니다. 상세 경계는 [전체 바꾸기 계약](https://github.com/ohah/hwpjs/blob/main/docs/headless-replace-all.md)을 따릅니다. API 플레이그라운드의 선택 목록에는 아직 이 세 API가 연결되지 않았으며 편집기 데모에서 실행할 수 있습니다.
 
 ## 명령 등록·동기 수집·구독 해제
 

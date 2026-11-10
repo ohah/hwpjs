@@ -1,6 +1,6 @@
 # 전문서 리터럴 전체 바꾸기
 
-현재 상태는 격리 소스의 Core·Runtime 통합 후보다. 공개 데모·설치 패키지에서 제공되는 기능으로 해석하지 않는다. 기존 한 곳 바꾸기와 별도이며, HWP5/HWPX 전체 의미·모든 owner의 편집 완료도 아니다.
+현재 main과 공개 웹 데모에서 지원한다. npm 설치 패키지에는 이번 변경을 게시하지 않았다. 기존 한 곳 바꾸기와 별도이며, HWP5/HWPX 전체 의미·모든 owner의 편집 완료도 아니다.
 
 ## 책임과 실행
 
@@ -12,11 +12,11 @@
 
 Native가 발급한 binding·각 owner ref·beforeUnits와 원문 기대값을 하나의 `applyIndependentText`에 전달한다. 반복 splice로 내리지 않는다. Native의 실제 completion은 기존 공통 판정기를 사용한다. 적용 후 표시 문서는 한 번 재생성하고, 이후 실패하면 `committed-refresh-required`로 남긴다. 같은 편집을 재시도하지 않는다. 알려진 거부·no-op은 미적용 상태를 유지하고 불확정 적용은 History 복구 경계를 사용한다.
 
-## 공개 API 후보와 UI
+## 공개 API와 UI
 
 `getReplaceAllCapabilities({token?})`는 기존 Runtime admission에서 현재 엔진의 기본 가용성과 개행 지원 여부를 조회한다. 읽기 관측이며 실행 권한·모든 owner의 쓰기 보장이 아니다. 구형 ABI·읽기 전용·불완전 snapshot은 비가용으로 표시한다. 명령 실행 때에는 별도로 현재 source/coverage/기대값을 다시 확인한다.
 
-모두 바꾸기 버튼은 창을 열 때 기존 입력 barrier를 반영하고 가용성 응답을 받은 뒤 활성화한다. 처리 중에는 다시 누를 수 없고, 닫힌 창·바뀐 문서에 늦은 응답을 적용하지 않는다. 실행 시에도 입력 barrier 이후 최신 state/token으로 `REPLACE_ALL_COMMAND` 하나를 보낸다. 검색 방향은 다음/이전 찾기에만 사용하며 모두 바꾸기는 문서 전체 범위다. 현재는 제어된 DOM·명령 연결과 아래 후보 번들의 실제 Worker/브라우저 E2E를 확인한 미게시 후보이며, 최종 Native 결합 후보와 공개 배포는 별도 완료 조건이다.
+모두 바꾸기 버튼은 창을 열 때 기존 입력 barrier를 반영하고 가용성 응답을 받은 뒤 활성화한다. 처리 중에는 다시 누를 수 없고, 닫힌 창·바뀐 문서에 늦은 응답을 적용하지 않는다. 실행 시에도 입력 barrier 이후 최신 state/token으로 `REPLACE_ALL_COMMAND` 하나를 보낸다. 검색 방향은 다음/이전 찾기에만 사용하며 모두 바꾸기는 문서 전체 범위다. 아래 최종 결합 번들과 별도로 공개 GitHub Pages에서도 실제 Worker·Native를 거치는 UI 실행을 확인했다.
 
 ## 제한과 비용
 
@@ -32,6 +32,10 @@ HWPX도 실제 Core에서 합성 문서·emoji·Noori를 검사하고 저장 ZIP
 
 최종 결합 Native `d3369b3b66d9b40d1ec7ea59c29f1e2cca6046adac0d2057b1e5c4517814e8e6`와 해당 JS의 후보 번들에서 Vanilla·React·Svelte 각각 HWP5/HWPX를 열고 실제 모두 바꾸기 버튼으로 4곳을 교체했다. 다운로드 파일의 독립 CFB/XML 대조는 원문 비대상 내용·서식과 첫 교체 문자 서식을 검사했다. 단일 undo/redo 저장 바이트 복원, 실제 Node Worker 데이터 경로 49개와 등록 Native profile 경로 14개도 확인했다. 브라우저·임시 서버는 종료했다.
 
-현재 소스와 후보 산출물의 검증 결과이며 공개 배포·설치 패키지는 별도다. 구형 WASM에서는 기능 가용성을 거부하고 반복 setter로 대체하지 않는다. 원래 한글의 전체 조판·모든 owner·OS IME 동치와 나머지 미지원 기능의 완료로 해석하지 않는다.
+소스 커밋 `981286118`과 자산 커밋 `249158bd6`을 main에 반영했다. GitHub Actions의 JavaScript Quality·CLI TypeScript·Docs 배포가 성공했고, 공개 manifest·WASM·활성 Worker 및 세 framework HTML의 HTTP 응답을 검증 후보와 바이트 단위로 대조했다. 공개 manifest는 `f36eee830190109e7428a66f3f707e643179952c9ab1be1c1be999a530ac9a24`다.
+
+실제 공개 GitHub Pages에서 Vanilla·React·Svelte × HWP5/HWPX 여섯 사례를 실행했다. 각 Noori 파일의 ‘국민’ 네 곳을 UI로 교체하고, 다운로드 파일의 독립 텍스트 대조와 한 번의 undo/redo에 따른 정확한 저장 바이트 복원을 확인했다. 소유 브라우저는 종료했다. 이 공개 실행은 앞서 로컬 후보에서 수행한 전체 서식 오라클과 구분한다. 전달 근거는 `zig-out/verification/independent-text-transaction-r1/main/g05-source-promotion-r1/`의 `live-delivery-http.json`과 `public-browser-r1/report.json`이다.
+
+npm 게시는 하지 않았다. 구형 WASM에서는 기능 가용성을 거부하고 반복 setter로 대체하지 않는다. 원래 한글의 전체 조판·모든 owner·OS IME 동치와 나머지 미지원 기능의 완료로 해석하지 않는다.
 
 재현 원자료는 `zig-out/verification/independent-text-transaction-r1/main/runtime-connect-r1/`에 보존한다. 실패했던 source-Node JSON import 실행과 stale 관측을 사용한 초기 probe도 성공 증거로 합산하지 않는다.
