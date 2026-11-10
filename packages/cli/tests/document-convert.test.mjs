@@ -1,3 +1,4 @@
+import { nativeArtifactExpectedSHA256 } from './native-artifact-pin.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -251,12 +252,14 @@ test('생성 단계의 실패에도 변환 손실 보고와 원래 원인을 보
 
 for (const from of ['hwp5', 'hwpx'])
   test(
-    `실제 Native820 text-only ${from} 반대형식: 문단·빈줄·Unicode·저장·재열기`,
+    `실제 Native text-only ${from} 반대형식: 문단·빈줄·Unicode·저장·재열기`,
     { skip: process.env.HWPJS_CREATE_CONVERT_NATIVE !== '1' },
     async () => {
+      const expectedWasmSHA = nativeArtifactExpectedSHA256();
+      assert.equal(process.env.HWPJS_TEST_WASM_SHA256, expectedWasmSHA);
       const wasm = readFileSync(process.env.HWPJS_TEST_WASM),
         sha = (b) => createHash('sha256').update(b).digest('hex');
-      assert.equal(sha(wasm), '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc');
+      assert.equal(sha(wasm), expectedWasmSHA);
       const text = '첫🙂\n\n둘é\n',
         to = from === 'hwp5' ? 'hwpx' : 'hwp5';
       const source = await createDocument({ format: from, text, wasm, allowStaleLayout: true }),

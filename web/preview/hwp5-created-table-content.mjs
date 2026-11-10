@@ -10,6 +10,7 @@ export function attachHwp5CreatedTables(
   maxUnits = 200000,
 ) {
   content.tableCreationAvailable = available;
+  content.createdTableGridAvailable = available && editor.supportsCreatedTableGrid?.() === true;
   content.tableCreationResources = available ? editor.tableCreationResources() : null;
   const tables = [];
   let units = 0;

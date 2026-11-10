@@ -168,6 +168,10 @@ function harness(surfaceText = false) {
         title: '',
         status: '',
         actions: {
+          'generated-table-insert-row': { enabled },
+          'generated-table-delete-row': { enabled },
+          'generated-table-insert-column': { enabled },
+          'generated-table-delete-column': { enabled },
           copy: { enabled },
           bold: { enabled },
           'paragraph-properties': { enabled },
@@ -534,6 +538,55 @@ test('숨긴 메뉴도 문서 변경 시 이전 Surface 캡처 callback을 버�
     for (const listener of h.listeners) listener();
     assert.equal(reads, afterInvalidation);
     assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+
+test('생성 셀 메뉴는 같은 key의 Surface 선택 epoch 변경도 거부한다', () => {
+  const h = harness();
+  let live = true;
+  try {
+    h.setTarget({ kind: 'generated-table-cell', key: 'generated:1', current: () => live });
+    h.open();
+    assert.ok(
+      h.menu.children.some((n: any) => n.dataset.commandId === 'generated-table-insert-row'),
+    );
+    live = false;
+    h.click('generated-table-insert-row');
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+for (const phase of ['focus', 'state'])
+  test(`생성 셀 메뉴 ${phase} callback에서 선택이 바뀌면 dispatch하지 않는다`, () => {
+    const h = harness();
+    let live = true;
+    try {
+      h.setTarget({ kind: 'generated-table-cell', key: 'generated:1', current: () => live });
+      h.open();
+      if (phase === 'focus')
+        h.setFocus(() => {
+          live = false;
+        });
+      else
+        h.onState(() => {
+          live = false;
+        });
+      h.click('generated-table-insert-row');
+      assert.deepEqual(h.calls, []);
+    } finally {
+      h.control.close();
+    }
+  });
+test('현재 생성 셀 메뉴는 기존 command dispatcher에 한 번 전달한다', () => {
+  const h = harness();
+  try {
+    h.setTarget({ kind: 'generated-table-cell', key: 'generated:1', current: () => true });
+    h.open();
+    h.click('generated-table-insert-column');
+    assert.deepEqual(h.calls, ['generated-table-insert-column']);
   } finally {
     h.control.close();
   }

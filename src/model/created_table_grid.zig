@@ -11,12 +11,8 @@ const std = @import("std");
 const created = @import("created_table.zig");
 const creation = @import("table_creation_plan.zig");
 pub const Table = created.Table;
-pub const Command = union(enum) {
-    insert_row: u32,
-    delete_row: u32,
-    insert_column: u32,
-    delete_column: u32,
-};
+const edit_plan = @import("table_grid_edit_plan.zig");
+pub const Command = edit_plan.Command;
 pub const Limits = struct {
     max_cells: usize,
     /// Total source UTF-8 bytes, including cells that will be deleted.
@@ -37,26 +33,12 @@ pub fn edit(a: std.mem.Allocator, source: *const Table, command: Command, new_pa
     const old_count = try std.math.mul(usize, old.rows, old.columns);
     if (source.cells.len != old_count) return error.InvalidTableCell;
 
-    const row_edit = switch (command) {
-        .insert_row, .delete_row => true,
-        else => false,
-    };
-    const insertion = switch (command) {
-        .insert_row, .insert_column => true,
-        else => false,
-    };
-    const index = switch (command) {
-        inline else => |value| value,
-    };
-    const dimension = if (row_edit) old.rows else old.columns;
-    if (index > dimension or (!insertion and (index == dimension or dimension == 1))) return error.InvalidTableGridEdit;
-    const next_dimension = if (insertion) try std.math.add(u32, dimension, 1) else dimension - 1;
-    // Generated-table policy, not a file-format requirement: keep total width
-    // and uniform row height. Plan repartitions width with positive columns.
-    const plan = try creation.create(if (row_edit) next_dimension else old.rows, if (row_edit) old.columns else next_dimension, old.width, old.row_height, limits.max_cells);
+    const mapping = try edit_plan.create(old.rows, old.columns, command, limits.max_cells);
+    // Generated-table policy: retain total width and uniform row height.
+    const plan = try creation.create(mapping.rows, mapping.columns, old.width, old.row_height, limits.max_cells);
     const count = try std.math.mul(usize, plan.rows, plan.columns);
     _ = try std.math.mul(usize, count, @sizeOf(created.Cell));
-    const new_count: usize = if (!insertion) 0 else if (row_edit) old.columns else old.rows;
+    const new_count = mapping.inserted_count;
     if (new_paragraph_ids.len != new_count) return error.InvalidTableParagraphIds;
 
     var ids: std.AutoHashMap(u32, void) = .init(a);
@@ -84,15 +66,12 @@ pub fn edit(a: std.mem.Allocator, source: *const Table, command: Command, new_pa
     for (cells, 0..) |*target, offset| {
         const row = offset / plan.columns;
         const column = offset % plan.columns;
-        const coordinate = if (row_edit) row else column;
-        if (insertion and coordinate == index) {
-            target.* = .{ .paragraph_id = new_paragraph_ids[inserted], .text = &.{} };
-            inserted += 1;
-        } else {
-            const prior = if (insertion) coordinate - @intFromBool(coordinate > index) else coordinate + @intFromBool(coordinate >= index);
-            const source_offset = if (row_edit) prior * old.columns + column else row * old.columns + prior;
+        if (try mapping.sourceIndex(@intCast(row), @intCast(column))) |source_offset| {
             const cell = source.cells[source_offset];
             target.* = .{ .paragraph_id = cell.paragraph_id, .text = try a.dupe(u8, cell.text) };
+        } else {
+            target.* = .{ .paragraph_id = new_paragraph_ids[inserted], .text = &.{} };
+            inserted += 1;
         }
         initialized += 1;
     }

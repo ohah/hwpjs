@@ -54,6 +54,19 @@ jobs:
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
             --test --test-concurrency=1 --test-timeout=50000 "$@"
+      - name: Test generated table grid commands and actual surface selection
+        timeout-minutes: 2
+        run: |
+          bun test --no-install ./packages/core/tests/commands/created-table-grid.test.ts
+          HWPJS_TEST_CORE_DIST=packages/core/dist node --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+            --test --test-concurrency=1 \
+            ./packages/vanilla/tests/generated-table-grid-selection.test.mjs \
+            ./apps/demo/tests/generated-table-grid-port.test.mjs \
+            ./apps/demo/tests/generated-table-grid-ui.test.mjs \
+            ./tools/tests/created-table-grid-sdk.test.mjs \
+            ./tools/tests/public-demo-fixtures.test.mjs
       - name: Test new document and table appearance contracts
         timeout-minutes: 2
         run: |
@@ -419,7 +432,7 @@ jobs:
           export HWPJS_CLI_NATIVE=1
           export HWPJS_READ_MANY_NATIVE=1
           export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
-          export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
           export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
           export HWPJS_TEST_NOORI_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwpx"
           export HWPJS_TEST_HEADERFOOTER="$PWD/apps/docs/docs/public/editor/fixtures/headerfooter.hwp"
@@ -443,7 +456,7 @@ jobs:
           export HWPJS_MCP_NATIVE=1
           export HWPJS_READ_MANY_NATIVE=1
           export HWPJS_TEST_WASM="$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm"
-          export HWPJS_TEST_WASM_SHA256=82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
           export HWPJS_TEST_NOORI="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwp"
           export HWPJS_TEST_NOORI_HWPX="$PWD/apps/docs/docs/public/editor/fixtures/noori.hwpx"
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=60000 \

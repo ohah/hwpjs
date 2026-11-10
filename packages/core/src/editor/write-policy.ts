@@ -37,6 +37,7 @@ export class EditorWritePolicy {
           ...(value && typeof value === 'object' ? value : {}),
           readOnly: true,
           historyAvailable: false,
+          createdTableGridAvailable: false,
         };
   }
 }

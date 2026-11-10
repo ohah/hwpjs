@@ -33,6 +33,10 @@ export const REDO_COMMAND = createCommand<HistoryPayload>('redo');
 import type { InsertTablePayload } from './table-insert.ts';
 export const INSERT_TABLE_COMMAND = createCommand<InsertTablePayload>('insert-table');
 
+import type { EditCreatedTableGridPayload } from './created-table-grid.ts';
+export const EDIT_CREATED_TABLE_GRID_COMMAND =
+  createCommand<EditCreatedTableGridPayload>('created-table-grid');
+
 export interface CharacterProperties {
   readonly size?: number | null;
   readonly bold?: boolean | null;

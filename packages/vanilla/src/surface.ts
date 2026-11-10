@@ -1119,6 +1119,40 @@ export function createCanvasSurface({
     ): Promise<boolean> {
       return transferSurfaceSelection(options);
     },
+    captureGeneratedTableGridSelection() {
+      const state = editor.getEditorState();
+      const current = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        !modalOpen() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        (state.capabilities as any)?.createdTableGridAvailable === true &&
+        (state.capabilities as any)?.readOnly !== true &&
+        (state.content as any)?.readOnly !== true &&
+        direct.settled() &&
+        renderer.historyModelMatches(state);
+      if (!current()) return null;
+      const captured = direct.captureGeneratedTableGridSelection();
+      if (!captured || !current() || !captured.current()) return null;
+      let invalid = false;
+      return Object.freeze({
+        state,
+        section: captured.section,
+        createdCell: captured.createdCell,
+        current() {
+          if (invalid) return false;
+          if (current() && captured.current() && current()) return true;
+          invalid = true;
+          return false;
+        },
+      });
+    },
     captureCaretFormatting() {
       const state = editor.getEditorState();
       if (

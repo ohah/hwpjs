@@ -1,3 +1,4 @@
+import { nativeArtifactExpectedSHA256 } from './native-artifact-pin.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
@@ -151,7 +152,7 @@ test('adversarial byte and decoded-text bounds reject oversized inputs', async (
 
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
 const pins = {
-  wasm: '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
+  wasm: nativeArtifactExpectedSHA256(),
   hwp5: 'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f',
   hwpx: '6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab',
 };
@@ -204,7 +205,7 @@ function editable(document) {
 
 for (const format of ['hwp5', 'hwpx']) {
   test(
-    `actual Native820 ${format}: input/output ownership, no-op history and failed-edit atomicity`,
+    `actual Native ${format}: input/output ownership, no-op history and failed-edit atomicity`,
     { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
     async () => {
       const input = pinnedInputs(format);
@@ -281,7 +282,7 @@ for (const format of ['hwp5', 'hwpx']) {
     },
   );
   test(
-    `actual Native820 ${format}: edit captures target before its first async boundary`,
+    `actual Native ${format}: edit captures target before its first async boundary`,
     { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
     async () => {
       const input = pinnedInputs(format);
@@ -315,7 +316,7 @@ for (const format of ['hwp5', 'hwpx']) {
     },
   );
   test(
-    `actual Native820 ${format}: current coordinates, save/reopen, ambiguity, deletion and SHA`,
+    `actual Native ${format}: current coordinates, save/reopen, ambiguity, deletion and SHA`,
     { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
     async (t) => {
       const input = pinnedInputs(format);
@@ -426,7 +427,7 @@ for (const format of ['hwp5', 'hwpx']) {
 }
 
 test(
-  'actual Native820 hwp5: no-op cannot bypass protected control-token boundary validation',
+  'actual Native hwp5: no-op cannot bypass protected control-token boundary validation',
   { skip: process.env.HWPJS_CLI_NATIVE !== '1', timeout: 25_000 },
   async () => {
     const input = pinnedInputs('hwp5');

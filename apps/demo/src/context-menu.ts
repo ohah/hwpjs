@@ -25,6 +25,8 @@ export interface ContextPicture {
 export interface ContextTarget {
   readonly kind: ContextTargetKind;
   readonly key: string;
+  /** Surface selection fence; includes generated-cell A→B→A and pending input. */
+  readonly current?: () => boolean;
 }
 /** 그림 관측 undefined는 미연결/불확실, null만 그림 선택 없음입니다. */
 export function contextTarget(
@@ -152,6 +154,13 @@ export function mountDemoContextMenu(options: {
       return false;
     };
     const value = options.getTarget();
+    if (saved?.current) {
+      try {
+        if (saved.current() !== true) return reject();
+      } catch {
+        return reject();
+      }
+    }
     if (closed || !saved || value.key !== saved.key || value.kind !== saved.kind) return reject();
     if (!text) return captured === saved && sequence === ticket;
     try {
@@ -194,7 +203,7 @@ export function mountDemoContextMenu(options: {
           };
         });
         // 표시 callbacks가 캡처를 무효화했으면 메뉴를 권한 근거로 남기지 않는다.
-        if (text && (sequence !== ticket || textSelection !== text || !current()))
+        if (captured && (sequence !== ticket || textSelection !== text || !current()))
           for (const row of rows) {
             row.enabled = false;
             row.reason = '선택이나 문서가 변경되었습니다. 메뉴를 다시 여세요.';
@@ -213,8 +222,7 @@ export function mountDemoContextMenu(options: {
           return;
         try {
           const action = demoCommandAction(id);
-          if (!action || (text && (sequence !== ticket || textSelection !== text || !current())))
-            return;
+          if (!action || sequence !== ticket || textSelection !== text || !current()) return;
           void Promise.resolve(options.execute(action)).catch(options.onError);
         } catch (error) {
           options.onError(error);

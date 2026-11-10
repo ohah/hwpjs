@@ -99,6 +99,7 @@ import {
   setHwp5CreatedCellText,
 } from './hwp5-table-creation-command.mjs';
 import { selectionEditQuery, selectionSplitQuery } from './selection-edit-query.mjs';
+import { applyCreatedTableGridCommand } from './created-table-grid-command.mjs';
 
 /** Copy before the first await; no caller buffers or shared memory cross the queue. */
 export function copyRuntimeMessage(message) {
@@ -1044,6 +1045,8 @@ export function createReaderRuntime({
         response = {
           origin: message.origin,
           ...value,
+          createdTableGridAvailable:
+            historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
           ...(historyPoisoned ? { historyPoisoned: true } : {}),
           ...(historyStats === undefined ? {} : { historyStats }),
           ...(historyRevision === undefined ? {} : { historyRevision }),
@@ -1139,6 +1142,22 @@ export function createReaderRuntime({
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, requestId: message.requestId, content: hwp5Display() });
         }
+        return;
+      }
+      if (message.kind === 'created-table-grid') {
+        applyCreatedTableGridCommand(editor, format, historyEnabled, message);
+        // Mark application before any fallible projection/save work. Native owns the
+        // single history transaction and rollback on rejected grid preparation.
+        applied = true;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({
+          kind: message.kind,
+          identity: message.identity,
+          content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
+        });
         return;
       }
       if (message.kind === 'insert-table' || message.kind === 'created-cell-text') {

@@ -159,6 +159,26 @@ pub fn build(b: *std.Build) void {
         core_test_step.dependOn(&run_probe.step);
     }
 
+    const source_grid_step = b.step("test-source-table-grid-candidates", "Verify private original-table grid candidates");
+    inline for (.{
+        .{ "src/h5_source_table_grid_probe.zig", "HWP5 source table grid" },
+        .{ "src/hx_source_table_grid_probe.zig", "source grid" },
+    }) |entry| {
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{
+                .root_source_file = b.path(entry[0]),
+                .target = target,
+                .optimize = optimize,
+            }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        source_grid_step.dependOn(&run_probe.step);
+        core_test_step.dependOn(&run_probe.step);
+    }
+
     // Explicit shipping reference regressions; never infer their collection from imports.
     const reference_tests_module = b.createModule(.{
         .root_source_file = b.path("src/testing/hwp5_history_reference_tests.zig"),

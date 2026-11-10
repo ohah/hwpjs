@@ -1,3 +1,4 @@
+import { nativeArtifactExpectedSHA256 } from './native-artifact-pin.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { PassThrough } from 'node:stream';
@@ -195,7 +196,7 @@ test('strict MCP entry arguments preserve the explicit WASM option without side 
 });
 
 const nativePins = {
-  wasm: '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
+  wasm: nativeArtifactExpectedSHA256(),
   hwp5: 'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f',
   hwpx: '6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab',
 };
@@ -217,7 +218,7 @@ async function actualPaths(format) {
 
 for (const format of ['hwp5', 'hwpx'])
   test(
-    `official SDK stdio subprocess + actual Native820 ${format}: read/edit/SHA/no-overwrite/readback`,
+    `official SDK stdio subprocess + actual Native ${format}: read/edit/SHA/no-overwrite/readback`,
     { skip: process.env.HWPJS_MCP_NATIVE !== '1', timeout: 25_000 },
     async (t) => {
       const { wasm, input } = await actualPaths(format);

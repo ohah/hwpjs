@@ -10,6 +10,7 @@ on:
       - 'tools/build-public-package.mjs'
       - 'tools/public-package-notices.mjs'
       - 'packages/cli/e2e/installed.test.mjs'
+      - 'apps/docs/docs/public/editor/manifest.json'
       - 'apps/docs/docs/public/editor/hwpjs/hwpjs.wasm'
       - 'apps/docs/docs/public/editor/fixtures/noori.hwp'
       - 'apps/docs/docs/public/editor/fixtures/noori.hwpx'
@@ -27,6 +28,7 @@ on:
       - 'tools/build-public-package.mjs'
       - 'tools/public-package-notices.mjs'
       - 'packages/cli/e2e/installed.test.mjs'
+      - 'apps/docs/docs/public/editor/manifest.json'
       - 'apps/docs/docs/public/editor/hwpjs/hwpjs.wasm'
       - 'apps/docs/docs/public/editor/fixtures/noori.hwp'
       - 'apps/docs/docs/public/editor/fixtures/noori.hwpx'
@@ -49,7 +51,6 @@ jobs:
     timeout-minutes: 10
     env:
       HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
-      HWPJS_TEST_WASM_SHA256: '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc'
       HWPJS_TEST_NOORI: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwp
       HWPJS_TEST_NOORI_HWPX: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwpx
       HWPJS_CLI_NATIVE: '1'
@@ -76,6 +77,12 @@ jobs:
           echo "HWPJS_EXTENDED_E2E_EVIDENCE=$RUNNER_TEMP/hwpjs-cli-ts-canonical-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
       - name: 동결 의존성 설치
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: 공개 데모 Native WASM 기대 핀 공유
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(node ./packages/cli/tests/native-artifact-pin.mjs --manifest ./apps/docs/docs/public/editor/manifest.json)"
+          printf 'HWPJS_TEST_WASM_EXPECTED_SHA256=%s\nHWPJS_TEST_WASM_SHA256=%s\nHWPJS_EXTENDED_E2E_WASM_SHA256=%s\n' "$expected" "$expected" "$expected" >> "$GITHUB_ENV"
       - name: 실행 도구와 원본 입력 핀 확인
         shell: bash
         run: |

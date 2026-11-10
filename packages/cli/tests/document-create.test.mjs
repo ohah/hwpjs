@@ -1,3 +1,4 @@
+import { nativeArtifactExpectedSHA256 } from './native-artifact-pin.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -195,14 +196,13 @@ test('생성 종료 실패·잘못된 Native 문단 수·다른 출력 형식을
 const native = process.env.HWPJS_CREATE_CONVERT_NATIVE === '1';
 for (const format of ['hwp5', 'hwpx'])
   test(
-    `실제 Native820 생성 ${format}: blank·빈줄·Unicode·저장·재열기`,
+    `실제 Native 생성 ${format}: blank·빈줄·Unicode·저장·재열기`,
     { skip: !native },
     async () => {
+      const expectedWasmSHA = nativeArtifactExpectedSHA256();
+      assert.equal(process.env.HWPJS_TEST_WASM_SHA256, expectedWasmSHA);
       const wasm = readFileSync(process.env.HWPJS_TEST_WASM);
-      assert.equal(
-        createHash('sha256').update(wasm).digest('hex'),
-        '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
-      );
+      assert.equal(createHash('sha256').update(wasm).digest('hex'), expectedWasmSHA);
       const blank = await createNewDocumentBytes(wasm, format);
       const text = '첫🙂\n\n둘é\n';
       const result = await createDocument({ format, text, wasm, allowStaleLayout: true });

@@ -86,7 +86,7 @@ fn allocationCase(allocator: std.mem.Allocator, command: grid.Command) !void {
 }
 test "HWP5 created table grid private apply all allocation failures preserve original values" {
     for ([_]grid.Command{ .{ .insert_row = 1 }, .{ .insert_column = 1 }, .{ .delete_row = 0 }, .{ .delete_column = 1 } }) |command| {
-        try std.testing.checkAllAllocationFailures(a, allocationCase, .{command});
+        try @import("../../testing/allocation_failures.zig").check(allocationCase, .{command});
     }
 }
 test "HWP5 created table grid four commands beginning middle end mappings and cross section IDs" {

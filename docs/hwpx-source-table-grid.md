@@ -1,0 +1,29 @@
+# 원본 HWPX 직사각형 표 격자 후보
+
+`src/hwpx/source_table_grid.zig`의 `prepare(allocator, source_section_xml, request)`는 호출자가 해제할 새 구역 XML만 반환한다. public ABI, 세션, 이력, 저장 ZIP, 배포에는 연결하지 않는다. 이 후보의 검증을 원본 표 편집의 제품 지원 완료로 읽지 않는다.
+
+입력은 현재 구역 트리의 `tbl` 요소 번호 또는 시작부터 닫는 태그 끝까지의 정확한 바이트 범위, 예상 행·열 수, 행/열 삽입·삭제 명령, 새 셀의 문단 ID다. 요소 번호와 범위는 현재 입력에만 유효하며 영구 ID가 아니다. 예상 크기는 오래된 크기를 거부하지만 같은 크기의 다른 원본을 검출하는 내용 지문은 아니다. 전체 문서의 모든 part를 조사해 신선한 ID를 공급하는 책임은 호출자에게 있다. 모듈은 해당 구역의 모든 문단과 새 ID의 중복 및 새 ID 0을 추가로 거부한다.
+
+좌표는 공유 `model/table_grid_edit_plan.zig`에서 계획한다. 새 셀은 직전 행/열의 셀을 복제하고 삽입 인덱스가 0이면 첫 행/열을 복제한다. 복제한 셀의 문단 ID를 교체하고 `t` 내부를 비운다. 셀·subList·문단·run의 지원하는 원본 서식과 namespace 선언은 유지한다. 빈 self-closing `t`도 그대로 사용할 수 있다. 생존 셀은 `cellAddr` 외의 원문 XML·본문·문단 ID·크기를 유지한다.
+
+크기는 이 후보의 편집 정책이다. 각 열의 폭은 행에 걸쳐 같고 각 행의 높이는 열에 걸쳐 같아야 하며 모두 양수다. `sz`의 폭·높이는 각 열 폭·행 높이의 합과 정확히 같고 ABSOLUTE여야 한다. 셀 간격은 부재 또는 0만 수용한다. 삽입은 복제한 열 폭/행 높이만큼 전체 폭/높이를 늘리고, 삭제는 제거한 열 폭/행 높이만큼 줄인다. 생존 셀을 재분배하지 않는다. 이 정책은 파일 포맷이 요구하는 편집 규칙이라는 주장이 아니다.
+
+지원 입력은 모든 span이 1×1이고 주소가 행 우선 순서와 일치하는 완전한 격자다. 각 셀은 단일 subList, 단일 p, 단일 run, 단일 t를 가져야 한다. 구조 요소의 직접 비공백 문자, 줄 캐시, 필드, 중첩 표, 조건 분기, caption/cellzone 및 처리하지 못하는 자식 구조를 거부한다. table의 알려지지 않은 속성은 그대로 보존하되 복제되는 셀 껍질의 미지원 속성은 알 수 없는 ID/참조를 복제하지 않도록 거부한다. 보호·lock, 이름이 있는 셀, 비어 있지 않은 subList ID, 연결 목록·텍스트/번호 참조와 비영 textWidth/textHeight 캐시도 거부한다. 마지막 행이나 열의 삭제는 거부한다. UTF-8 XML만 편집한다.
+
+기존 namespace-aware section tree, 숫자 속성 writer, source patch builder로 원문 범위만 조립한다. table 속성의 unknown 값·따옴표·이스케이프, 비대상 구역 XML은 바이트 단위로 유지한다. 행/셀 사이 원문 공백·주석은 보존하지만 새 셀의 삽입 위치와 관련한 주석 의미나 전체 XSD 적합성을 추론하지 않는다. 출력은 다시 구역 XML로 파싱하고 예상 새 격자와 기하를 검사한 뒤에만 반환한다. 임시 준비는 arena가 소유하고 최종 복사 성공 전에는 외부 상태를 바꾸지 않는다.
+
+주요 거부 오류는 `InvalidSourceTableTarget`, `StaleSourceTableGrid`, `InvalidSourceTableCommand`, `LastSourceTableDimension`, `InvalidSourceTableGrid`, `MergedSourceTable`, `UnsupportedSourceTableStructure`, `UnsupportedSourceTableAttributes`, `UnsupportedSourceTableGeometry`, `ProtectedSourceTable`, `ProtectedFieldRange`, `InvalidTableParagraphIds`, `LimitExceeded`다. XML 문법·숫자 해석·할당 오류는 기존 API의 오류를 전파한다.
+
+자료 범위는 프로젝트의 기존 table shape/geometry/deletion/XML patch API와 독립 합성 입력이다. 실제 Noori, 타 구현 소스·역공학 보고서·과거 포트 crypto/metrics/arrow는 사용하지 않았다. 새 컨텍스트만으로 엄격한 클린룸 인증을 주장하지 않는다.
+
+집중 검증 명령:
+
+```sh
+mise exec -- zig test src/hx_source_table_grid_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'source grid'
+```
+
+합성 검사는 네 명령, 앞/중간/끝 삽입·삭제, namespace URI 문자 참조와 원본 prefix, stale/invalid 대상, 마지막 차원 거부, 구역 ID 충돌, 비대상 앞뒤 바이트와 별도 표 보존, 생존 문단 원문, 위험 구조 거부, 비균등 열 폭과 직전 열 복제, 네 명령의 모든 backing 할당 실패를 검사한다. arena의 선택적 resize fallback이 주입 실패를 회복하지 않도록 OOM 검사 전용 backing allocator는 resize/remap을 비활성화한다. 정상 경로는 일반 allocator에서도 별도로 검사한다. 실제 문서·제품 세션·브라우저·저장 재열기 검증은 포함하지 않는다.
+
+2026-11-10 이 명령은 작업 루트와 공유 후보 `zig-out/verification/document-transforms-connect-r1/source`에서 각각 **7/7 통과, skip 0**을 기록했다. 후보 반영 전 소유 파일의 존재/기준본은 `zig-out/verification/document-transforms-connect-r1/task-c-baselines/20261110T000817844059Z/manifest.json`에 보존했다. 반영 파일은 이 문서와 `src/hwpx/source_table_grid.zig`, `src/hx_source_table_grid_probe.zig` 세 개뿐이다. 커밋·푸시·배포는 수행하지 않았다.
+
+후속 리뷰에서 원본 행마다 전체 출력 행을 다시 찾는 중첩 순회를 발견해 단조로운 목적지 커서로 교체했습니다. 출력 행을 한 번씩 소비하고, 이미 원문 순서인 셀/행 변경은 전체 정렬하지 않습니다. 두 속성 변경만 상수 크기로 정렬해 행 변경과 선형 병합합니다. 2048×1 표의 가운데 행 삽입 회귀를 포함한8개가 통과했습니다. 이 조립 단계의 개선을 기존 XML 파서·속성 writer를 포함한 전체 작업의 최악 복잡도 보장으로 확대하지 않습니다.

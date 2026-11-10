@@ -1,6 +1,1 @@
-import {createEditor,SPLICE_TEXT_COMMAND,getHistoryAvailability,createParagraphSelection} from '../sdk/current/core.js';
-import {createWorkerRuntimeFactory} from '../sdk/current/runtime.js';
-import {mountApiPlayground} from './playground.js';
-const editor=createEditor({runtimeFactory:createWorkerRuntimeFactory()});
-const panel=mountApiPlayground(document.querySelector('main'),{editor,spliceCommand:SPLICE_TEXT_COMMAND,getHistoryAvailability,createParagraphSelection,async loadFixture(format){const name=format==='hwp5'?'noori.hwp':'noori.hwpx';const response=await fetch(new URL('../fixtures/'+name,import.meta.url));if(!response.ok)throw Error('FixtureFetchFailed');return new Uint8Array(await response.arrayBuffer());}});
-addEventListener('pagehide',()=>{panel.dispose();void editor.dispose();},{once:true});
+import{S as e,_ as t,g as n,m as r}from"../assets/dist-BPdWIoWd.js";import{a as i}from"../assets/runtime-Ci_jlcCS.js";import{t as a}from"../assets/api-playground-C2Xz6S74.js";var o=n({runtimeFactory:i({wasmURL:new URL(`../hwpjs/hwpjs.wasm`,``+import.meta.url)})}),s=a(document.querySelector(`main`),{editor:o,spliceCommand:r,getHistoryAvailability:e,createParagraphSelection:t,async loadFixture(e){let t=await fetch(new URL(`../fixtures/`+(e===`hwp5`?`noori.hwp`:`noori.hwpx`),import.meta.url));if(!t.ok)throw Error(`FixtureFetchFailed`);return new Uint8Array(await t.arrayBuffer())}});addEventListener(`pagehide`,()=>{s.dispose(),o.dispose()},{once:!0});

@@ -1,4 +1,5 @@
 import { ownCaretTypingIntent } from './caret-formatting-intent.mjs';
+import { captureGeneratedTableSelection } from './generated-table-selection.mjs';
 import { hwp5StructuralEditableStart } from '../../js/hwp5-structural-edit-boundary.mjs';
 import { characterPropertyArgs } from '../../js/character-property-args.mjs';
 import { characterColorArg } from '../../js/character-color-args.mjs';
@@ -101,6 +102,11 @@ export function createCanvasEditor({
     (() => input.getRootNode?.().activeElement ?? ownerDocument?.activeElement);
   const events = new AbortController(),
     listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
+  let generatedGridSelectionEpoch = 0;
+  // Interaction identity must survive neither A→B→A nor a cancelled composition.
+  for (const type of ['select', 'beforeinput', 'compositionstart', 'compositionend', 'keydown'])
+    listen(input, type, () => generatedGridSelectionEpoch++);
+  listen(canvas, 'pointerdown', () => generatedGridSelectionEpoch++);
   let historyPaintBarrier;
   const hostControls = controls;
   controls = {
@@ -495,6 +501,9 @@ export function createCanvasEditor({
       if (ownerDocument.visibilityState !== 'hidden') historyPaintBarrier.notify();
     });
   const paint = ({ deferGeometry = false, preserveQueuedTyping = false } = {}) => {
+    if (composing || pending || historyPending || historyPaintBarrier?.pending || inputIntents.size)
+      generatedGridSelectionEpoch++;
+
     let composition;
     if (multiComposition) composition = compositionProjection()?.composition;
     const change = composing && !multiComposition && draftTextChange();
@@ -3081,6 +3090,41 @@ export function createCanvasEditor({
     captureRangeFormatting,
     captureSelectionFormatting,
     captureCaretFormatting,
+    captureGeneratedTableGridSelection() {
+      const saved = settledSelection(true);
+      if (
+        !saved?.target.createdCell ||
+        multipleParagraphs() ||
+        drag ||
+        inputIntents.size ||
+        historyPaintBarrier.pending ||
+        !controls.ready()
+      )
+        return null;
+      const paragraph = renderer.paragraph(saved.target);
+      if (
+        !paragraph ||
+        paragraph.clipped ||
+        paragraph.editable !== true ||
+        paragraph.createdCell?.identity !== saved.target.createdCell.identity ||
+        paragraph.createdCell?.row !== saved.target.createdCell.row ||
+        paragraph.createdCell?.column !== saved.target.createdCell.column
+      )
+        return null;
+      const epoch = generatedGridSelectionEpoch;
+      return captureGeneratedTableSelection({
+        section: saved.target.section,
+        createdCell: saved.target.createdCell,
+        current: () =>
+          generatedGridSelectionEpoch === epoch &&
+          !drag &&
+          !inputIntents.size &&
+          !historyPaintBarrier.pending &&
+          controls.ready() &&
+          selectionCurrent(saved) &&
+          renderer.paragraph(saved.target) === paragraph,
+      });
+    },
     startFormattingPaint,
     requestAtomicFormatting,
     currentFormattingSelection: () =>

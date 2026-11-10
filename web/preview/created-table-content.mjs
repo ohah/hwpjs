@@ -72,5 +72,6 @@ export function attachCreatedTables(editor, content, available, maxUnits, sectio
     }
   content.readOnly = !content.paragraphs.some((paragraph) => paragraph.editable);
   content.tableCreationAvailable = available;
+  content.createdTableGridAvailable = available && editor.supportsCreatedTableGrid?.() === true;
   return content;
 }

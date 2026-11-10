@@ -1,3 +1,8 @@
+import {
+  createGeneratedTableGridPort,
+  type GeneratedTableGridHost,
+} from './generated-table-grid-port.ts';
+import { createGeneratedTableGridTool } from './generated-table-grid-tool.ts';
 import { createPresentationRefresh } from './presentation-refresh.ts';
 import { pageStatusLabel, type DemoPageStatusHost } from './page-status.ts';
 import { captureFormattingPresentation } from './surface-formatting-capture.ts';
@@ -63,7 +68,8 @@ import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available
 // @ts-ignore Canonical fixture catalog is shared with the server.
 import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
-export interface DemoHost extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost {
+export interface DemoHost
+  extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, GeneratedTableGridHost {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
@@ -200,6 +206,12 @@ export async function mountDemo(
     onPresentationChange: () => shell.update(),
     resolveShortcut: (event) => shortcuts?.resolveCommand(event),
   });
+  const generatedTableGrid = createGeneratedTableGridTool({
+    root,
+    port: createGeneratedTableGridPort(editor, paragraphShapeCore, () => host),
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+  });
   const tableCellProperties = createTableCellPropertiesTool({
     root,
     editor,
@@ -282,6 +294,7 @@ export async function mountDemo(
       ...textTools.presentation(),
       'insert-table': tableInsert.presentation(),
       'object-properties': objectProperties.presentation(),
+      ...generatedTableGrid.presentation(),
       'table-cell-properties': tableCellProperties.presentation(),
       'table-cell-background': tableCellAppearance.presentation(),
       'table-cell-border': tableCellAppearance.presentation(),
@@ -438,6 +451,10 @@ export async function mountDemo(
       });
       return;
     }
+    if (generatedTableGrid.handles(action.command)) {
+      await generatedTableGrid.execute(action.command);
+      return;
+    }
     if (action.command === 'table-cell-appearance') {
       tableCellAppearance.open();
       return;
@@ -573,6 +590,7 @@ export async function mountDemo(
         getState: presentation,
         captureTextSelection: () => captureFormattingPresentation(editor, () => host).capture,
         getTarget: () =>
+          generatedTableGrid.contextTarget() ??
           contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null),
         execute: runAction,
         subscribe: (listener) => editor.registerStateListener(() => listener()),
@@ -635,6 +653,7 @@ export async function mountDemo(
     contextMenu?.close();
     textTools.dispose();
     symbols.dispose();
+    generatedTableGrid.dispose();
     tableCellProperties.dispose();
     tableCellAppearance.dispose();
     tableInsert.dispose();
@@ -675,6 +694,7 @@ export async function mountDemo(
       contextMenu?.close();
       textTools.dispose();
       symbols.dispose();
+      generatedTableGrid.dispose();
       tableCellProperties.dispose();
       tableCellAppearance.dispose();
       tableInsert.dispose();

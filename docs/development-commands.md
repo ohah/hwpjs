@@ -1641,3 +1641,18 @@ node --test --test-concurrency=1 tools/tests/created-table-grid-native.test.mjs
 실물 검사는 `HWPJS_TEST_SOURCE_ROOT`(통제 소스), `HWPJS_TEST_WASM`, `HWPJS_TEST_WASM_SHA256`, `HWPJS_TEST_EVIDENCE_DIR`(새 디렉터리), `HWPJS_TEST_NOORI`, `HWPJS_TEST_NOORI_HWPX`를 명시합니다. 경로는 절대경로이며 고정 원본 SHA가 다르거나 환경변수가 없으면 실패합니다. CFB/ZIP/XML 독립 검증은 별도 비교기로 수행합니다. 설치 패키지·브라우저 UI·배포 검증과 구분합니다.
 
 독립 CFB 비교기는 `HWPJS_TEST_ORACLE_ROOT`와 `HWPJS_TEST_CFB_SHA256`로 별도 고정합니다. 구현 소스 후보에 레거시 비교기를 복사하지 않습니다.
+
+## 생성 표 웹 메뉴·원본 격자 후보
+
+공개 생성 표의 범위는 [격자 계약](created-table-grid-edit.md), 원본 후보는 [HWP5](hwp5-source-table-grid.md)·[HWPX](hwpx-source-table-grid.md)를 따릅니다.
+
+```sh
+zig build test-created-table-grid test-created-table-grid-sessions -Doptimize=ReleaseSafe -j1
+zig test src/h5_source_table_grid_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'HWP5 source table grid'
+zig test src/hx_source_table_grid_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'source grid'
+node tools/created-table-grid-browser-audit.mjs http://127.0.0.1:OWNED_PORT /absolute/path/NEW_EVIDENCE_DIR
+```
+
+브라우저 감사는 이미 실행한 소유 테스트 서버를 사용하고 자기 agent-browser 세션을 finally 종료합니다. 서버는 호출자가 검사 종료 후 닫습니다. 실제 네 명령·이력·다운로드·재열기를6조합으로 실행하며 저장 파일의 독립 구조 검사는 별도입니다.
+
+공개 정적 후보는 `node tools/build-public-demo.mjs --source /absolute/path/CONTROLLED_SOURCE --wasm /absolute/path/PINNED_ENGINE.wasm --out /absolute/path/NEW_VERIFICATION_DIR`로 생성합니다. 공개 fixture allowlist에서 저장소 경로를 제외한 모듈을 빌드 시 제공하며 기존 내부 경로 검사를 완화하지 않습니다. 후보 producer 자체는 소스·공개 asset·Git을 수정하지 않습니다. 실제 반영은 `build-pages-demo.mjs --bundle-dir`의 검증과 별도 소유 변경 커밋을 거칩니다.

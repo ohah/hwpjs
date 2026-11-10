@@ -1,6 +1,6 @@
 # 생성 표의 직사각형 격자 변경
 
-이 모듈은 같은 편집 세션에서 생성한 병합 없는 `model.created_table.Table`의 행·열 삽입/삭제를 HWP5/HWPX 세션, optional WASM ABI, SDK와 CLI/MCP 배치 명령에 연결합니다. 원본 표·저장 후 재열어 원본이 된 표·병합/중첩 표와 UI 메뉴 연결은 지원 범위에 포함하지 않습니다.
+이 모듈은 같은 편집 세션에서 생성한 병합 없는 `model.created_table.Table`의 행·열 삽입/삭제를 HWP5/HWPX 세션, optional WASM ABI, SDK와 CLI/MCP 배치 명령에 연결합니다. 원본 표·저장 후 재열어 원본이 된 표·병합/중첩 표는 지원 범위에 포함하지 않습니다. 생성 표의 Worker·헤드리스 명령과 웹 메뉴 연결은 아래 후속 범위를 따릅니다.
 
 ## 참고 자료와 정책의 구분
 
@@ -42,3 +42,15 @@ CLI `apply`와 MCP `apply_document_changes`의 같은 patch 배열은 다음 항
 새 WASM SHA256은 `a750d1d1a02ab48eab0d5eacfa6330a027e85e2722850ddea36eba35c833cb79`입니다. 고정 Noori HWP/HWPX의 실제 SDK 검사와 CLI/MCP 검사는 4/4 통과했습니다. 네 action의 셀 순서·본문·ID·크기, 한 단계 undo/redo와 저장 바이트 복원, 실패 후 redo 보존을 확인했습니다. 독립 CFB record/ZIP XML 비교기로 기존 표와 대상 외 스트림 보존을 검사했습니다. 원본 표의 확장 ListHeader는 생성 표의 26바이트 셀 꼬리로 추측 해석하지 않고 원시 레코드 보존으로 대조합니다. 원본 표 내부 삽입 시 부모 표가 달라지는 영향과 구분하기 위해 이 보존 검사는 독립적으로 찾은 최상위 일반 문단에 삽입합니다.
 
 로컬 tarball 설치 후 126개 파일을 후보와 바이트 대조했고 설치된 CLI/MCP로 두 포맷의 실제 적용·동일 출력·후행 오류 시 출력 부재 검사 2/2를 통과했습니다. 증거는 `zig-out/verification/created-table-grid-connect-r1/`의 `native-final.log`, `installed-final.log`, `consumer-final.json`, `session-build.log`, `focused-controlled-final.log`입니다. 초기 실패 로그도 보존합니다. 이번 검사는 브라우저 UI·페이지 조판 동치·공개 배포의 증거가 아닙니다.
+
+## Worker·헤드리스·웹 표 메뉴 연결
+
+`EDIT_CREATED_TABLE_GRID_COMMAND`(`created-table-grid`)는 동일한 section/identity/action/index를 기존 Core 큐·토큰 검사와 Worker SDK 호출에 전달합니다. `createdTableGridAvailable`은 optional ABI의 실제 제공 여부로 관측하며 구형 엔진에서는 false입니다. Native 반영 직후 적용 사실을 기록하므로 이후 표시 갱신 실패를 미적용으로 보고 재시도하지 않습니다. 변경 뒤에는 셀을 다시 선택합니다.
+
+생성 셀은 Core의 원본 문단 목록에 가짜 번호로 넣지 않습니다. Canvas가 실제 선택한 `createdCell` 주소를 `captureGeneratedTableGridSelection()`으로 캡처하고 Vanilla Surface가 Core state·문서/보기 수명·권한과 결속합니다. React·Svelte 데모는 같은 Surface 메서드를 전달합니다. 선택 A→B→A, 조합 입력·대기 입력·이력, 모달·닫힘·권한 변경 뒤 이전 캡처를 거부합니다. 일반 문단/원본 표의 ID나 serialized instance를 생성 identity로 추측하지 않습니다.
+
+표 메뉴와 생성 셀 컨텍스트 메뉴는 ‘아래에 행 삽입’, ‘선택 행 삭제’, ‘오른쪽에 열 삽입’, ‘선택 열 삭제’를 제공합니다. 마지막 행·열 삭제와 원본 표 선택은 비활성화합니다. 실제 Canvas의 선택 변경은 Core null→null 관측만으로 누락될 수 있어, 데모의 소유 surface 이벤트 뒤 같은 포트를 다시 조회합니다.
+
+통제 소스의 Worker/명령 연결 34개(실제 WASM 6개 포함), SDK 회귀 10개, 데모 집중 60개·Bun 8개와 실제 Canvas/Surface 집중 8개가 통과했습니다. `zig-out/verification/created-table-ui-r1/browser-six-r3`의 개발 서버 6개와 `browser-public-r1`의 배포용 정적 후보 6개는 Vanilla/React/Svelte × HWP5/HWPX에서 새 문서·2×2 표 생성·네 명령·undo/redo·다운로드·재열기·원본 표의 생성 명령 거부를 검사했습니다. 다운로드 결과는 별도 CFB 레코드/ZIP XML로 2×2 및 셀 문단 ID 유일성을 검사합니다. 실제 한글 프로그램 조판 동치나 원본 표 편집 완료를 뜻하지 않습니다.
+
+공통 좌표 변환은 `src/model/table_grid_edit_plan.zig`가 소유하고 생성 모델과 두 원본 후보가 재사용합니다. 원본 후보의 추가 기하·거부 범위는 [HWP5 후보](hwp5-source-table-grid.md)와 [HWPX 후보](hwpx-source-table-grid.md)를 따르며 아직 공개 편집 API에 연결하지 않았습니다.

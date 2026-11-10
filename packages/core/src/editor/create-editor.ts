@@ -60,6 +60,7 @@ import { CommandRegistry } from '../commands/registry.ts';
 import {
   SPLICE_TEXT_COMMAND,
   INSERT_TABLE_COMMAND,
+  EDIT_CREATED_TABLE_GRID_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -88,6 +89,8 @@ import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
 import { fontNameMessage } from '../commands/font-name.ts';
 import { tableInsertMessage } from '../commands/table-insert.ts';
+import { createdTableGridMessage } from '../commands/created-table-grid.ts';
+import type { EditCreatedTableGridPayload } from '../commands/created-table-grid.ts';
 import type { InsertTablePayload } from '../commands/table-insert.ts';
 import { textColorMessage } from '../commands/text-color.ts';
 import { strikeMessage } from '../commands/strike.ts';
@@ -1157,6 +1160,14 @@ export function createEditor(options: CreateEditorOptions) {
           throw Error('InvalidText');
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
+      }
+      if (pending.command.id === EDIT_CREATED_TABLE_GRID_COMMAND.id) {
+        requireReady(pending.token, true);
+        const message = createdTableGridMessage(
+          pending.payload as EditCreatedTableGridPayload,
+          state,
+        );
+        return await mutate(message, pending.token);
       }
       if (pending.command.id === INSERT_TABLE_COMMAND.id) {
         const payload = pending.payload as InsertTablePayload;

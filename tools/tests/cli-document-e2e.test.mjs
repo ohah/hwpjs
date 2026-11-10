@@ -1,3 +1,4 @@
+import { nativeArtifactExpectedSHA256 } from '../../packages/cli/tests/native-artifact-pin.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
@@ -29,8 +30,8 @@ const entrySHA = process.env.HWPJS_TEST_CLI_ENTRY_SHA256;
 assert.match(entrySHA ?? '', /^[a-f0-9]{64}$/, 'explicit CLI entry SHA mandatory');
 assert.equal(hash(readFileSync(entry)), entrySHA);
 const wasm = requiredPath('HWPJS_TEST_WASM');
-const wasmSHA = '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc';
-assert.equal(process.env.HWPJS_TEST_WASM_SHA256, wasmSHA, 'exact Native820 only');
+const wasmSHA = nativeArtifactExpectedSHA256();
+assert.equal(process.env.HWPJS_TEST_WASM_SHA256, wasmSHA, 'exact declared Native artifact only');
 assert.equal(hash(readFileSync(wasm)), wasmSHA);
 assert.equal(process.version, 'v24.20.0', 'run source and packaged E2E on explicit Node24.20.0');
 const fixtures = [

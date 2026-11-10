@@ -525,3 +525,6 @@
 - [생성 표의 직사각형 격자 변경](created-table-grid-edit.md)
 
 - [MCP 문서 읽기 세션](mcp-document-sessions.md)
+
+- [HWP5 원본 표 격자 후보](hwp5-source-table-grid.md)
+- [HWPX 원본 표 격자 후보](hwpx-source-table-grid.md)

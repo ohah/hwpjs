@@ -1,3 +1,4 @@
+import { nativeArtifactExpectedSHA256 } from './native-artifact-pin.mjs';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as fs from 'node:fs/promises';
@@ -831,7 +832,7 @@ test(
       h5 = required('HWPJS_TEST_NOORI'),
       hx = required('HWPJS_TEST_NOORI_HWPX');
     const pins = [
-      '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc',
+      nativeArtifactExpectedSHA256(),
       'b18be0217a5d9f81e587705edc0c514cdd11e6314bbe434f17d256aa21b75a7f',
       '6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab',
     ];

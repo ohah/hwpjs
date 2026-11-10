@@ -66,7 +66,7 @@ export function createTableInsertController(options: {
       if (result.status.startsWith('committed')) {
         options.onStatus(
           result.status === 'committed-with-snapshot'
-            ? '표를 만들었습니다. 새 표 자동 선택·셀 편집은 지원하지 않습니다.'
+            ? '표를 만들었습니다. 셀을 선택해주세요.'
             : '표는 반영됐지만 표시 확인이 필요합니다. 다시 만들지 마세요.',
         );
         close(false);

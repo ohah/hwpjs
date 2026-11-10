@@ -29,6 +29,7 @@ export const SURFACE_MUTATION_KINDS = Object.freeze([
   'splice-character-properties',
   'created-cell-text',
   'insert-table',
+  'created-table-grid',
   'undo',
   'redo',
   'split',

@@ -201,6 +201,8 @@ npx -y @ohah/hwpjs apply ./document.hwpx --patch ./changes.json \
 
 | `created-table-grid` | 같은 세션에서 생성한 비병합 표의 행·열 추가·삭제 |
 
+`created-table-grid`는 GitHub 개발 소스와 해당 optional ABI를 포함한 엔진에서 제공합니다. npm 0.1.1에 새 작업이 게시됐다는 뜻은 아닙니다.
+
 이 15종은 임의 SDK 메서드 호출이나 모든 표 구조 편집을 뜻하지 않습니다. 지원하지 않는 속성·보호된 대상은 거부합니다. 기존 서식·리소스 ID·소유자 좌표를 추측하지 않습니다. 글자 크기 `size`는 1/100pt이며, 표·그림 길이는 Native 단위입니다. 생성한 표의 identity는 결과에 반환됩니다. 일반 `edit`의 한 문단 리터럴 교체는 그대로 유지합니다.
 
 ## 새 문서 생성

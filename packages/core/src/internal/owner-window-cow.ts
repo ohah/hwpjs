@@ -15,6 +15,7 @@ const ROOT_KEYS = new Set([
   'observedDocInfoDiagnostics',
   'currentReferenceErrors',
   'tableCreationAvailable',
+  'createdTableGridAvailable',
   'tableCreationResources',
   'createdTables',
   'normalizationEditingAvailable',
