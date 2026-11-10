@@ -322,7 +322,7 @@ test('모달submit중복은단1/성공후자동선택0', async () => {
     await settle();
     expect(f.count()).toBe(1);
     expect(f.role('table-insert-dialog')).toBeUndefined();
-    expect(f.statuses.join()).toContain('자동 선택');
+    expect(f.statuses).toEqual(['표를 만들었습니다. 셀을 선택해주세요.']);
     expect(f.focus).toBe(0);
   } finally {
     await f.dispose();
