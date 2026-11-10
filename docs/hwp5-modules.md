@@ -1,5 +1,7 @@
 # HWP5 모듈 계약 인덱스
 
+- [독립 텍스트 요청의 공통 모델·binding·admission](independent-text-requests.md)
+
 - [웹 HWPX 열기의 서식 조회 병목 실측](web-hwpx-open-performance.md)
 
 - [CLI·MCP의 WASM 준비 재사용과 검증](wasm-preparation.md)

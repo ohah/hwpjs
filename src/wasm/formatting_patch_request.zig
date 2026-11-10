@@ -66,6 +66,12 @@ pub fn decodeRanges(a: std.mem.Allocator, value: V) ![]const m.Range {
     }
     return ranges;
 }
+/// Shared sparse character intent for versioned text insertion transactions.
+/// It deliberately excludes paragraph/reset intents from this call site.
+pub fn decodeCharacterInsertion(root: V) !m.Patch {
+    try keys(root, &.{"character"});
+    return decodePatch(root);
+}
 fn decodePatch(root: V) !m.Patch {
     try keys(root, &.{ "character", "paragraph", "reset" });
     var result: m.Patch = .{};

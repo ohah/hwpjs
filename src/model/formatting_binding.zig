@@ -34,7 +34,7 @@ pub const State = struct {
         return std.fmt.allocPrint(a, "p{d}:{d}:{d}", .{ self.epoch, owner.section, owner.paragraph });
     }
     /// This parses a coordinate, not an ownership proof. The caller MUST resolve
-    /// it against the current Native SSOT and reject generated/invalid owners.
+    /// it against the current Native SSOT and enforce the operation's owner policy.
     pub fn coordinate(self: State, ref: []const u8) !m.Owner {
         if (!self.opened) return error.EditorNotOpen;
         var parts = std.mem.splitScalar(u8, ref, ':');
@@ -47,7 +47,7 @@ pub const State = struct {
         return .{ .section = @intCast(section), .paragraph = @intCast(paragraph) };
     }
 };
-fn decimal(text: []const u8) !u64 {
+pub fn decimal(text: []const u8) !u64 {
     if (text.len == 0 or (text.len > 1 and text[0] == '0')) return error.InvalidFormattingReference;
     for (text) |c| if (!std.ascii.isDigit(c)) return error.InvalidFormattingReference;
     return std.fmt.parseInt(u64, text, 10) catch error.InvalidFormattingReference;
