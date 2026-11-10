@@ -1,9 +1,5 @@
-import {
-  SPLICE_TEXT_COMMAND,
-  getHistoryAvailability,
-  createParagraphSelection,
-  type HeadlessEditor,
-} from '@hwpjs/core';
+import * as core from '@hwpjs/core';
+import type { HeadlessEditor } from '@hwpjs/core';
 // @ts-ignore Browser samples are also packaged directly as static JavaScript.
 import { mountApiPlayground } from './api-playground.mjs';
 
@@ -15,10 +11,23 @@ export function mountHeadlessPanel(
 ) {
   const panel = mountApiPlayground(root, {
     editor,
-    spliceCommand: SPLICE_TEXT_COMMAND,
-    getHistoryAvailability,
-    createParagraphSelection,
-    operations: ['read', 'select', 'splice', 'undo', 'redo', 'save', 'reopen'],
+    spliceCommand: core.SPLICE_TEXT_COMMAND,
+    getHistoryAvailability: core.getHistoryAvailability,
+    createParagraphSelection: core.createParagraphSelection,
+    planReplaceAll: core.planReplaceAll,
+    replaceAllCommand: core.REPLACE_ALL_COMMAND,
+    operations: [
+      'read',
+      'select',
+      'splice',
+      'getReplaceAllCapabilities',
+      'planReplaceAll',
+      'replaceAll',
+      'undo',
+      'redo',
+      'save',
+      'reopen',
+    ],
   });
   onStatus(
     '실제 Headless API 함수를 선택해 실행하세요. 문서 열기는 위 파일·예제 메뉴를 사용합니다.',

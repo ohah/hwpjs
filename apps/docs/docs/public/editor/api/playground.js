@@ -24,6 +24,32 @@ export function apiSelectionTarget(editor, args, createParagraphSelection) {
   });
 }
 
+function replaceAllArgs(args, keys) {
+  if (
+    !args ||
+    typeof args !== 'object' ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(args))
+  )
+    throw Error('InvalidArguments');
+  for (const key of Reflect.ownKeys(args)) {
+    if (!keys.includes(key)) throw Error('InvalidArgument:' + String(key));
+  }
+  for (const key of keys) {
+    if (!Object.hasOwn(args, key) || typeof args[key] !== 'string')
+      throw Error('InvalidArgument:' + key);
+  }
+}
+
+const replaceAllKeys = ['query', 'replacement'];
+const replaceAllOperations = ['getReplaceAllCapabilities', 'planReplaceAll', 'replaceAll'];
+const replaceAllRequest = (state, { query, replacement }) => ({
+  schemaVersion: 1,
+  query,
+  replacement,
+  layoutToken: state.token,
+  stateVersion: state.stateVersion,
+});
+
 export function createApiPlayground({
   editor,
   spliceCommand,
@@ -31,6 +57,8 @@ export function createApiPlayground({
   getHistoryAvailability,
   getTableInsertAvailability: queryTableInsertAvailability,
   createParagraphSelection,
+  planReplaceAll: queryReplaceAllPlan,
+  replaceAllCommand,
   operations,
 }) {
   let saved = null,
@@ -80,6 +108,29 @@ export function createApiPlayground({
       const selected = target(args);
       return queryTableInsertAvailability(editor.getEditorState(), selected);
     },
+    getReplaceAllCapabilities(args) {
+      replaceAllArgs(args, []);
+      return editor.getReplaceAllCapabilities({ token: editor.getEditorState().token });
+    },
+    planReplaceAll(args) {
+      replaceAllArgs(args, replaceAllKeys);
+      const state = editor.getEditorState();
+      return queryReplaceAllPlan(state, replaceAllRequest(state, args));
+    },
+    async replaceAll(args) {
+      replaceAllArgs(args, replaceAllKeys);
+      const { query, replacement } = args;
+      const { documentId, generation } = editor.getEditorState();
+      await editor.update(() => {});
+      if (closed) throw Error('ApiPlaygroundDisposed');
+      const state = editor.getEditorState();
+      if (state.documentId !== documentId || state.generation !== generation)
+        throw Error('StaleTarget');
+      return editor.dispatchCommand(
+        replaceAllCommand,
+        replaceAllRequest(state, { query, replacement }),
+      );
+    },
     splice(args) {
       if (typeof args.text !== 'string') throw Error('InvalidArgument:text');
       return editor.dispatchCommand(spliceCommand, { target: target(args), text: args.text });
@@ -113,9 +164,22 @@ export function createApiPlayground({
       return editor.load(saved.bytes.slice(), { format: saved.format });
     },
   });
+  const hasReplaceAll =
+    typeof editor.getReplaceAllCapabilities === 'function' &&
+    typeof editor.update === 'function' &&
+    typeof editor.dispatchCommand === 'function' &&
+    typeof queryReplaceAllPlan === 'function' &&
+    typeof replaceAllCommand?.id === 'symbol';
+  const allowedOperations = Object.freeze(
+    (operations ?? Object.keys(registry)).filter(
+      (operation) =>
+        Object.hasOwn(registry, operation) &&
+        (hasReplaceAll || !replaceAllOperations.includes(operation)),
+    ),
+  );
   return Object.freeze({
     snapshot,
-    operations: operations ?? Object.keys(registry),
+    operations: allowedOperations,
     async execute(operation, args = {}) {
       if (closed) throw Error('ApiPlaygroundDisposed');
       if (pending) throw Error('ApiPlaygroundBusy');
@@ -124,8 +188,7 @@ export function createApiPlayground({
         startedAt = performance.now();
       let effectiveArgs = args;
       try {
-        if (!Object.hasOwn(registry, operation) || (operations && !operations.includes(operation)))
-          throw Error('UnknownApiSample');
+        if (!allowedOperations.includes(operation)) throw Error('UnknownApiSample');
         if (!args || typeof args !== 'object' || Array.isArray(args))
           throw Error('InvalidArguments');
         effectiveArgs = operation === 'load' ? apiLoadOptions(args) : args;
@@ -175,6 +238,9 @@ const examples = Object.freeze({
   select: { section: 0, paragraph: 0, start: 0, end: 0 },
   splice: { section: 0, paragraph: 0, start: 0, end: 0, text: 'API 검증' },
   getTableInsertAvailability: { section: 0, paragraph: 0, start: 0, end: 0 },
+  getReplaceAllCapabilities: {},
+  planReplaceAll: { query: '누리', replacement: '우리' },
+  replaceAll: { query: '누리', replacement: '우리' },
   undo: {},
   redo: {},
   save: {},
@@ -193,6 +259,42 @@ const snippets = Object.freeze({
   reopen: 'await editor.load(saved.bytes, { format: saved.format });',
 });
 export function apiSampleCode(operation, args = {}) {
+  if (operation === 'getReplaceAllCapabilities') {
+    replaceAllArgs(args, []);
+    return (
+      '// 전제: 문서를 이미 연 ready editor를 주입합니다.\n' +
+      'await editor.getReplaceAllCapabilities({ token: editor.getEditorState().token });'
+    );
+  }
+  if (operation === 'planReplaceAll' || operation === 'replaceAll') {
+    replaceAllArgs(args, replaceAllKeys);
+    const planOnly = operation === 'planReplaceAll';
+    return (
+      '// 전제: 문서를 이미 연 ready editor를 주입합니다.\n' +
+      'import { ' +
+      (planOnly ? 'planReplaceAll' : 'REPLACE_ALL_COMMAND') +
+      " } from '@ohah/hwpjs';\n\n" +
+      (planOnly
+        ? ''
+        : 'const { documentId, generation } = editor.getEditorState();\n' +
+          'await editor.update(() => {});\n') +
+      'const state = editor.getEditorState();\n' +
+      (planOnly
+        ? ''
+        : 'if (state.documentId !== documentId || state.generation !== generation)\n' +
+          "  throw Error('StaleTarget');\n") +
+      'const args = ' +
+      JSON.stringify(args, null, 2) +
+      ';\n' +
+      'const request = (' +
+      replaceAllRequest.toString() +
+      ')(state, args);\n' +
+      (planOnly
+        ? 'const plan = planReplaceAll(state, request); // executionAuthority: false'
+        : 'const result = await editor.dispatchCommand(REPLACE_ALL_COMMAND, request);\n' +
+          '// committed-refresh-required이면 상태를 다시 읽고 같은 편집을 재전송하지 않습니다.')
+    );
+  }
   const call =
     operation === 'load'
       ? 'await editor.load(bytes, ' + JSON.stringify(apiLoadOptions(args)) + ');'
@@ -327,11 +429,14 @@ export function mountApiPlayground(root, options) {
       output.textContent = JSON.stringify(record, null, 2);
       output.dataset.sequence = String(sequence);
       output.dataset.ok = String(record.ok);
-      status.textContent = record.ok
-        ? '완료'
-        : record.error === 'ReadOnlyDocument'
-          ? '읽기 전용: 쓰기가 거부되었습니다.'
-          : '오류: ' + record.error;
+      status.textContent =
+        record.operation === 'replaceAll' && record.result?.status === 'committed-refresh-required'
+          ? '변경은 이미 반영되었습니다. 상태 복구가 필요하므로 같은 요청을 다시 실행하지 마세요.'
+          : record.ok
+            ? '완료'
+            : record.error === 'ReadOnlyDocument'
+              ? '읽기 전용: 쓰기가 거부되었습니다.'
+              : '오류: ' + record.error;
       download.disabled = !api.getSaved();
     } catch (error) {
       if (!disposed) {

@@ -65,11 +65,11 @@ const modules = publicFixtureModules(policy),
   catalog = resolve(source, 'web/preview/fixture-catalog.mjs'),
   inventory = resolve(source, 'web/preview/fixture-inventory.mjs');
 const apiId = '\0public-demo-api';
-const api = `import {createEditor,SPLICE_TEXT_COMMAND,getHistoryAvailability,getTableInsertAvailability,createParagraphSelection} from '@hwpjs/core';
+const api = `import * as core from '@hwpjs/core';
 import {createWorkerRuntimeFactory} from '@hwpjs/core/runtime';
 import {mountApiPlayground} from ${JSON.stringify(resolve(source, 'apps/demo/src/api-playground.mjs'))};
-const editor=createEditor({runtimeFactory:createWorkerRuntimeFactory({wasmURL:new URL('../hwpjs/hwpjs.wasm',import.meta.url)})});
-const panel=mountApiPlayground(document.querySelector('main'),{editor,spliceCommand:SPLICE_TEXT_COMMAND,getHistoryAvailability,getTableInsertAvailability,createParagraphSelection,async loadFixture(format){const name=format==='hwp5'?'noori.hwp':'noori.hwpx';const response=await fetch(new URL('../fixtures/'+name,import.meta.url));if(!response.ok)throw Error('FixtureFetchFailed');return new Uint8Array(await response.arrayBuffer());}});
+const editor=core.createEditor({runtimeFactory:createWorkerRuntimeFactory({wasmURL:new URL('../hwpjs/hwpjs.wasm',import.meta.url)})});
+const panel=mountApiPlayground(document.querySelector('main'),{editor,spliceCommand:core.SPLICE_TEXT_COMMAND,getHistoryAvailability:core.getHistoryAvailability,getTableInsertAvailability:core.getTableInsertAvailability,createParagraphSelection:core.createParagraphSelection,planReplaceAll:core.planReplaceAll,replaceAllCommand:core.REPLACE_ALL_COMMAND,async loadFixture(format){const name=format==='hwp5'?'noori.hwp':'noori.hwpx';const response=await fetch(new URL('../fixtures/'+name,import.meta.url));if(!response.ok)throw Error('FixtureFetchFailed');return new Uint8Array(await response.arrayBuffer());}});
 addEventListener('pagehide',()=>{panel.dispose();void editor.dispose();},{once:true});`;
 const alias = [
   { find: '@hwpjs/core/runtime', replacement: runtimePath },

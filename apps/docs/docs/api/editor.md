@@ -69,7 +69,7 @@ export async function replaceLiteral(editor: HeadlessEditor, query: string, repl
 }
 ```
 
-지원하는 리터럴 교체는 하나의 Native 이력으로 적용합니다. 문단을 가로지르는 검색·정규식·개행 삽입은 지원하지 않습니다. 필드·수식·생성 셀 등 대상별 제한이 있고, 일부 문단만 관측한 snapshot은 거부합니다. 미지원 일치를 조용히 건너뛰지 않습니다. 상세 경계는 [전체 바꾸기 계약](https://github.com/ohah/hwpjs/blob/main/docs/headless-replace-all.md)을 따릅니다. API 플레이그라운드의 선택 목록에는 아직 이 세 API가 연결되지 않았으며 편집기 데모에서 실행할 수 있습니다.
+지원하는 리터럴 교체는 하나의 Native 이력으로 적용합니다. 문단을 가로지르는 검색·정규식·개행 삽입은 지원하지 않습니다. 필드·수식·생성 셀 등 대상별 제한이 있고, 일부 문단만 관측한 snapshot은 거부합니다. 미지원 일치를 조용히 건너뛰지 않습니다. 상세 경계는 [전체 바꾸기 계약](https://github.com/ohah/hwpjs/blob/main/docs/headless-replace-all.md)을 따릅니다. [공개 API 직접 실행](./playground.mdx)에서 가용성 조회, 변경 계획, 실제 적용을 각각 실행할 수 있습니다.
 
 ## 명령 등록·동기 수집·구독 해제
 
