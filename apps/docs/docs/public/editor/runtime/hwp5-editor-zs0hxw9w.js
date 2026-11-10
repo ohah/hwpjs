@@ -1,0 +1,1 @@
+export{createExperimentalHwp5Editor2 as createExperimentalHwp5Editor}from"./index-cs0wxz2y.js";import"./index-m29hzayr.js";

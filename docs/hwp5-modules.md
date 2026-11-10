@@ -528,3 +528,5 @@
 
 - [HWP5 원본 표 격자 후보](hwp5-source-table-grid.md)
 - [HWPX 원본 표 격자 후보](hwpx-source-table-grid.md)
+
+- [검증된 Native 모듈 프로필](native-module-profiles.md)

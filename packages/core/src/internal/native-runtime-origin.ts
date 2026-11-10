@@ -1,3 +1,4 @@
+import { verifiedOwnerWindowProfile } from './native-module-profiles.ts';
 import type { RuntimeReply, RuntimeRequestContext } from '../contracts.ts';
 import type { GeometryOwner } from './native-geometry-evidence.ts';
 export type NativeModuleContract = Readonly<{
@@ -8,15 +9,7 @@ export type NativeModuleContract = Readonly<{
 export function allowsOwnerWindowProjection(contract: NativeModuleContract | undefined): boolean {
   return (
     contract?.contract === 'hwp5-exclusive-text-delta-v1' &&
-    (contract.sha256 === 'd849a4b22357e62d2425c3f1632edc07f2948ac18ce6d97009aede9d2b6cb1eb' ||
-      contract.sha256 === 'bd095cdf56892d5b5708a567ca91ae271846a3949bfc41c3a717bdee6513684f' ||
-      contract.sha256 === 'ede6256ef063765cfb1f4489d2bece3a971aa715041c993fec87d4eb374855fa' ||
-      contract.sha256 === '25998a7513b73938abe5e9e614a18733059b42f71f00b13cf663f073c26396b3' ||
-      contract.sha256 === 'f25c1a4807f428a8a392e8ef0be6dadced309825a6a9704305694969fd9c40bb' ||
-      contract.sha256 === '4b7fd814e32a03ea88f6adcd4ef8458be344dfc8a94a698b29e21df0b255d34a' ||
-      contract.sha256 === 'aa4161ae261a37cff5cfe05ba78d7e9d8ad236c1999ddf5d978ac6b1a60bf122' ||
-      contract.sha256 === 'c14f11aaa9a278298f469d1dec9bfbdba2e33f1a0433925f2c0b073866e6de02' ||
-      contract.sha256 === '82031994b4b7f066c28c725495954eebc67bb25570869c06528ea328e0155ccc')
+    verifiedOwnerWindowProfile(contract.sha256)
   );
 }
 export type NativeRuntimeOrigin = Readonly<{
