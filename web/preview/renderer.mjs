@@ -2069,12 +2069,14 @@ export function createRenderer(
     viewContent: () => viewPolicy().content,
     findText: (query) => findText(viewPolicy().content.paragraphs, query),
     adjacentCell: (point, backward) => {
+      flushProjection();
       const policy = viewPolicy();
       if (!policy.allowsPoint(point)) return null;
       const next = adjacentCell(policy.content, layout, point, backward);
       return next && policy.allowsPoint(next) ? next : null;
     },
     adjacentParagraph: (point, forward) => {
+      flushProjection();
       const policy = viewPolicy();
       if (!policy.allowsPoint(point)) return null;
       const next = adjacentOwnedParagraph(policy.content.paragraphs, point, forward);
