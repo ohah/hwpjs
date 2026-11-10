@@ -538,3 +538,5 @@
 - [원본 표 셀의 여러 문단](source-table-grid-cell-paragraphs.md)
 
 - [인라인 표의 영구 가로 비적합 판정](inline-table-fit-rejection.md)
+
+- [Native 픽스처 사전 점검](native-fixture-preflight.md)

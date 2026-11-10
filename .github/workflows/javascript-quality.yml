@@ -24,6 +24,10 @@ jobs:
           node-version: '24.20.0'
       - name: Install frozen workspace dependencies
         run: bun install --frozen-lockfile --ignore-scripts
+      - name: Test bounded Native fixture preflight
+        run: |
+          test -f ./tools/tests/native-fixture-preflight.test.mjs || exit 1
+          node --test ./tools/tests/native-fixture-preflight.test.mjs
       - name: Build core and vanilla for demo source regressions
         run: |
           test -f ./tools/build-packages.mjs || exit 1

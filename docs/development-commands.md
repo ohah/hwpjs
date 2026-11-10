@@ -1745,3 +1745,15 @@ zig test src/hx_history_cap_metadata_probe.zig -O ReleaseSafe -fllvm -j1 \
 이 집중 결과는 참조 입력이 누락된 전체 Native 검사의 성공을 대신하지 않습니다.
 
 새 WASM의 공개 SDK 한도 검사는 같은 `HWPJS_TEST_SOURCE_ROOT`·`HWPJS_TEST_WASM`·정확한 `HWPJS_TEST_WASM_SHA256` 환경에서 `node --test tools/tests/history-cap-native.test.mjs`로 실행합니다. 기존 202fc 엔진과 공개 Noori의 고정 SHA를 대조하며, WebAssembly 32비트의 실제 메타데이터와 Native 크기를 구분합니다.
+
+## Native 픽스처 사전 점검
+
+[사전 점검의 범위와 제한](native-fixture-preflight.md)을 따릅니다. 전체 Native 실행이나 입력 복원을 대신하지 않습니다.
+
+```sh
+node --test tools/tests/native-fixture-preflight.test.mjs
+node tools/native-fixture-preflight.mjs \
+  --source-root /absolute/workspace/zig-out/verification/document-transforms-connect-r1/source \
+  --failures /absolute/workspace/zig-out/verification/prior-failures.json \
+  --report /absolute/workspace/zig-out/verification/fresh-preflight.json
+```
