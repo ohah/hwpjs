@@ -198,6 +198,10 @@ jobs:
         run: |
           test -f ./apps/demo/tests/api-playground-selection-owner.test.mjs || exit 1
           bun test --no-install ./apps/demo/tests/api-playground-selection-owner.test.mjs
+      - name: Test contextual table row shortcut
+        run: |
+          test -f ./apps/demo/tests/contextual-table-row-shortcut.test.ts || exit 1
+          bun test --no-install ./apps/demo/tests/contextual-table-row-shortcut.test.ts
       - name: Test demo toolbar and find dialog
         run: |
           bun test --no-install ./apps/demo/tests/shell.test.mjs ./apps/demo/tests/shell-fixture-availability.test.mjs ./apps/demo/tests/toolbox.test.mjs ./apps/demo/tests/text-tools-dialog-density.test.ts ./apps/demo/tests/file-open-direct.test.mjs

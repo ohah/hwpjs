@@ -1,6 +1,13 @@
 import { demoCommandAction } from './demo-command-action.ts';
 import { mountFormattingMarksShortcut } from './formatting-marks-shortcut.ts';
 import {
+  TABLE_ROW_COMMAND,
+  TABLE_ROW_KEYMAP,
+  tableRowShortcutConfig,
+  mountContextualTableRowShortcut,
+  type TableRowShortcutContext,
+} from './contextual-table-row-shortcut.ts';
+import {
   DEFAULT_KEYMAP,
   mergeKeymap,
   parseKeymapConfig,
@@ -22,6 +29,7 @@ export function mountShortcutSettings(options: {
   onStatus: (message: string) => void;
   config?: unknown;
   locale?: string;
+  tableRowContext?: () => TableRowShortcutContext;
 }) {
   const doc = options.root.ownerDocument,
     nav = doc.defaultView?.navigator;
@@ -39,20 +47,24 @@ export function mountShortcutSettings(options: {
         throw Error('UnknownShortcutCommand:' + b.command);
     return config;
   };
+  const defaults = mergeKeymap(DEFAULT_KEYMAP, TABLE_ROW_KEYMAP);
   let config = known(
       options.config === undefined
-        ? DEFAULT_KEYMAP
-        : mergeKeymap(DEFAULT_KEYMAP, parseKeymapConfig(options.config)),
+        ? defaults
+        : mergeKeymap(defaults, parseKeymapConfig(options.config)),
     ),
     closed = false,
     generation = 0;
+  let compiled = compileKeymap(config, platform);
+  const initialShortcuts = tableRowShortcutConfig(config);
+  let globalCompiled = compileKeymap(initialShortcuts.global, platform);
   const marksKeyboard = mountFormattingMarksShortcut({
     root: options.surface,
     available: options.available,
     execute: (command) => options.execute({ command }),
     claimed: (event) =>
       Boolean(
-        resolveKeyboardShortcut(compileKeymap(config, platform), {
+        resolveKeyboardShortcut(compiled, {
           code: event.code,
           ctrlKey: event.ctrlKey,
           metaKey: event.metaKey,
@@ -66,9 +78,32 @@ export function mountShortcutSettings(options: {
       ),
     onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
   });
+  // Active global claims win. A contextual reassignment runs before the host's
+  // disabled-default fallback, which otherwise also suppresses its former chord.
+  const tableKeyboard = mountContextualTableRowShortcut({
+    root: options.surface,
+    platform,
+    binding: initialShortcuts.contextual,
+    claimed: (event) =>
+      Boolean(
+        resolveKeyboardShortcut(globalCompiled, {
+          code: event.code,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          altKey: event.altKey,
+          shiftKey: event.shiftKey,
+          repeat: false,
+        }),
+      ),
+    context: options.tableRowContext ?? (() => 'body'),
+    available: () => options.available(TABLE_ROW_COMMAND),
+    execute: () => options.execute({ command: TABLE_ROW_COMMAND }),
+    onUnavailable: () => options.onStatus('현재 선택에서는 아래에 행을 삽입할 수 없습니다.'),
+    onError: (error) => options.onStatus(error instanceof Error ? error.message : String(error)),
+  });
   const keyboard = createKeyboardShortcuts({
     root: options.surface,
-    config,
+    config: initialShortcuts.global,
     platform,
     fallback: DEFAULT_KEYMAP,
     nativePaste: options.nativePaste,
@@ -131,9 +166,15 @@ export function mountShortcutSettings(options: {
   };
   const commit = (input: unknown) => {
     if (closed) throw Error('ShortcutSettingsDisposed');
-    const next = known(mergeKeymap(DEFAULT_KEYMAP, parseKeymapConfig(input)));
-    keyboard.setConfig(next);
+    const next = known(mergeKeymap(defaults, parseKeymapConfig(input)));
+    const nextCompiled = compileKeymap(next, platform);
+    const partition = tableRowShortcutConfig(next);
+    const nextGlobalCompiled = compileKeymap(partition.global, platform);
+    keyboard.setConfig(partition.global);
+    tableKeyboard.setBinding(partition.contextual);
     config = next;
+    compiled = nextCompiled;
+    globalCompiled = nextGlobalCompiled;
     render();
   };
   // Every explicit replacement fences previous asynchronous imports, even on validation failure.
@@ -167,7 +208,7 @@ export function mountShortcutSettings(options: {
   reset.textContent = '기본값 복원';
   reset.onclick = () => {
     if (closed) return;
-    apply(DEFAULT_KEYMAP);
+    apply(defaults);
   };
   const download = doc.createElement('button');
   download.type = 'button';
@@ -190,7 +231,7 @@ export function mountShortcutSettings(options: {
   options.root.append(details);
   render();
   const resolveCommand = (event: KeyboardEvent) =>
-    resolveKeyboardShortcut(compileKeymap(config, platform), {
+    resolveKeyboardShortcut(compiled, {
       code: event.code,
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
@@ -211,6 +252,7 @@ export function mountShortcutSettings(options: {
       generation++;
       marksKeyboard.dispose();
       keyboard.dispose();
+      tableKeyboard.dispose();
       reset.onclick = null;
       download.onclick = null;
       file.removeEventListener('change', changed);

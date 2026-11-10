@@ -546,3 +546,5 @@
 - [너비 초과 표의 완전히 보이는 셀 편집](visible-overflow-cell-edit.md)
 
 - [표 삽입 대상 가용성과 기본 리소스 조회](table-insert-target-availability.md)
+
+- [표 안 Ctrl+Enter 행 삽입과 문맥 단축키](contextual-table-row-shortcut.md)

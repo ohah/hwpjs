@@ -1793,3 +1793,16 @@ bun test --no-install packages/core/tests/commands/table-insert.test.ts \
 ```
 
 공유 검증과 UI/플레이그라운드 연결의 source 검사입니다. 실제 Native 문서·독립 저장·브라우저 증거는 해당 주제 문서에 따로 기록합니다.
+
+## 표 안의 문맥별 행 삽입 단축키
+
+[단축키 계약](contextual-table-row-shortcut.md)을 따릅니다.
+
+```sh
+bun test --no-install apps/demo/tests/contextual-table-row-shortcut.test.ts \
+  apps/demo/tests/new-document-shortcut.test.ts packages/vanilla/tests/shortcuts.test.ts \
+  packages/core/tests/keymap/defaults.test.ts packages/core/tests/keymap/resolve.test.ts \
+  packages/core/tests/keymap/config.test.ts
+```
+
+이는 실제 shortcut host·port·합성 Surface 회귀입니다. 신뢰된 키 이벤트·독립 CFB/ZIP/XML 저장의 실제 브라우저 검증은 별도입니다.

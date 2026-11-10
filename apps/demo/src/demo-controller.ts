@@ -634,6 +634,26 @@ export async function mountDemo(
       shortcuts = mountShortcutSettings({
         root: shell.saveOptionsMount,
         surface: shell.surfaceMount,
+        tableRowContext: () => {
+          if (closed || busy) return 'blocked';
+          const table = generatedTableGrid.contextTarget();
+          if (table?.current?.() === true) return 'table';
+          const state = editor.getEditorState(),
+            selected = state.selection;
+          // Body fallthrough grants no edit authority; Canvas keeps its own page-break gate.
+          return state.status === 'ready' &&
+            typeof selected === 'object' &&
+            selected !== null &&
+            'owner' in selected &&
+            'section' in selected &&
+            typeof selected.section === 'number' &&
+            Number.isSafeInteger(selected.section) &&
+            selected.section >= 0 &&
+            selected.owner === `section:${selected.section}:body` &&
+            host?.getContextPicture?.() === null
+            ? 'body'
+            : 'blocked';
+        },
         available: (command) =>
           !closed &&
           !busy &&
