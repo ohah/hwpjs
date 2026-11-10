@@ -1128,6 +1128,22 @@ export function createCanvasSurface({
         pageStatusListeners.delete(listener);
       };
     },
+    canEditCellProperties(section: number, listNode: number): boolean {
+      const state = editor.getEditorState();
+      const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+      if (
+        closed ||
+        !lease?.isActive() ||
+        state.status !== 'ready' ||
+        state.stateVersion !== observedStateVersion ||
+        key !== displayed ||
+        ![section, listNode].every(
+          (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff && !Object.is(n, -0),
+        )
+      )
+        return false;
+      return viewAllowsRequest({ kind: 'cell-size', section, listNode } as RuntimeMessage);
+    },
     canRequestHistory(kind: 'undo' | 'redo'): boolean {
       if (!historyKind(kind) || closed || nonTextHistoryPending) return false;
       const route = direct.historyRoute();
@@ -1283,7 +1299,17 @@ export function createCanvasSurface({
       };
       if (!current()) return null;
       const captured = direct.captureSourceTableGridSelection(content);
-      if (!captured || !captured.current() || !current()) return null;
+      if (
+        !captured ||
+        !viewAllowsRequest({
+          kind: 'source-table-grid',
+          section: captured.section,
+          tableNode: captured.tableNode,
+        } as RuntimeMessage) ||
+        !captured.current() ||
+        !current()
+      )
+        return null;
       let invalid = false,
         historyRecorded = false;
       return Object.freeze({

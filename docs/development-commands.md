@@ -1767,3 +1767,15 @@ node --test tests/hwpx/inline-table-fit-rejection.test.mjs \
   tests/hwpx/inline-table-paper-preview.test.mjs \
   packages/vanilla/tests/preview-edit-policy.test.mjs
 ```
+
+## 너비 초과 표의 보이는 셀 편집
+
+[셀 편집과 재조판 실패 경계](visible-overflow-cell-edit.md)를 따릅니다.
+
+```sh
+node --test tests/hwpx/visible-overflow-cell-edit.test.mjs \
+  tests/hwpx/overflow-preview-barrier.test.mjs \
+  packages/vanilla/tests/preview-visible-cell-policy.test.mjs
+```
+
+기존 Surface 연결 검사는 Node 24.20.0과 `tools/renderer-test-core-provider.mjs`·`packages/vanilla/tests/non-text-history-renderer-hook.mjs`를 import한 소스 grid 검사 묶음에서 실행합니다. 실제 Canvas clipboard·Native 저장과 원본 CFB/XML 대조는 별도 브라우저 근거로 구분합니다.

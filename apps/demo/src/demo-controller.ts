@@ -70,6 +70,7 @@ export interface DemoHost
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
+  canEditCellProperties?(section: number, listNode: number): boolean;
   requestHistory?(kind: 'undo' | 'redo'): boolean;
   focus?(): boolean;
   canPasteInput?(): boolean;
@@ -209,10 +210,15 @@ export async function mountDemo(
     onStatus: note,
     onPresentationChange: () => shell.update(),
   });
+  const cellCore = {
+    ...paragraphShapeCore,
+    canEditCellProperties: (section: number, listNode: number) =>
+      host?.canEditCellProperties?.(section, listNode) === true,
+  };
   const tableCellProperties = createTableCellPropertiesTool({
     root,
     editor,
-    core: paragraphShapeCore,
+    core: cellCore,
     onStatus: note,
     onClose: () => {
       host?.focus?.();
@@ -222,7 +228,7 @@ export async function mountDemo(
   const tableCellAppearance = createTableCellAppearanceTool({
     root,
     editor,
-    core: paragraphShapeCore,
+    core: cellCore,
     onStatus: note,
     onClose: () => {
       host?.focus?.();

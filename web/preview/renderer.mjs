@@ -1,3 +1,5 @@
+import { retainOverflowPreviewBarrier } from './overflow-preview-barrier.mjs';
+import { projectVisibleOverflowCells } from './visible-overflow-cell-edit.mjs';
 import { createPreviewEditPolicy } from './preview-edit-policy.mjs';
 import {
   createMeasurementPlacementPort,
@@ -66,6 +68,7 @@ import { paintCharacterOutline } from './character-outline-paint.mjs';
 import { selectedFontIds } from './character-font-selection.mjs';
 import {
   rowAtY,
+  rowAtPoint,
   rowLeft,
   rowVisualHeight,
   rowTop,
@@ -163,7 +166,7 @@ export function createRenderer(
     layout = { rows: [], limited: false };
   let projectionDeferred = false;
   const paragraphLookup = createParagraphLookup();
-  let policyContent, policyLayout, cachedViewPolicy;
+  let policyContent, policyLayout, cachedViewPolicy, overflowPreviewDocument;
   const viewPolicy = () => {
     // Normal queued typing keeps its deferred projection. Only an active
     // partial-preview barrier needs fresh Native identities before permission.
@@ -1409,6 +1412,10 @@ export function createRenderer(
       });
   };
   const reflow = ({ scrollOrigin = null, scheduleFrame = true } = {}) => {
+    const previousOverflowLayout =
+      resourceDocument !== undefined && resourceDocument === overflowPreviewDocument
+        ? layout
+        : null;
     queuedTypingHold = null;
     refreshFontWatch();
     layoutGeneration++;
@@ -1532,6 +1539,9 @@ export function createRenderer(
             pageLayoutPolicyReason: pageLayout.policyReason,
           };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
+    layout = projectVisibleOverflowCells(content, layout, display);
+    layout = retainOverflowPreviewBarrier(content, layout, previousOverflowLayout);
+    overflowPreviewDocument = resourceDocument;
     pictureLayers = previewPictureLayers(pictureDisplay, layout, logicalWidth);
     chartLayers = previewChartLayers(content, layout, logicalWidth, (section, wrapper) =>
       chartResources.status(section, wrapper),
@@ -2062,6 +2072,30 @@ export function createRenderer(
             Object.entries(content.tableCreationResources).map(([key, ids]) => [key, ids.slice()]),
           )
         : null,
+    readOnlyPreviewAtLogicalPoint(x, y) {
+      flushProjection();
+      const index = rowAtPoint(layout, x, y),
+        row = layout.rows[index];
+      if (row?.previewOnly) return !(row.editable || row.selectable);
+      const box = layout.boxes?.find(
+        (b) =>
+          b.previewOnly &&
+          rowPageClipContains(b, x, y) &&
+          x >= b.x &&
+          x < b.x + b.width &&
+          y >= b.y &&
+          y < b.y + b.height,
+      );
+      if (!box) return false;
+      const table = content.tables?.find(
+        (t) => t.section === box.section && t.tableNode === box.tableNode,
+      );
+      const cell = table?.cells?.find((c) => c.listNode === box.listNode);
+      return (
+        !cell?.paragraphs?.length ||
+        !viewPolicy().allowsPoint({ section: box.section, paragraph: cell.paragraphs[0] })
+      );
+    },
     viewEditPolicyActive: () => viewPolicy().active,
     viewAllowsPoint: (point) => viewPolicy().allowsPoint(point),
     viewAllowsRange: (anchor, focus) => viewPolicy().allowsRange(anchor, focus),
@@ -2168,7 +2202,10 @@ export function createRenderer(
         }),
       ),
     tableCreationWidthHint: (point) =>
-      viewPolicy().allowsPoint(point) ? createdTableWidthHint(content, point) : null,
+      viewPolicy().allowsPoint(point) &&
+      viewPolicy().allowsRequest({ kind: 'insert-table', ...point })
+        ? createdTableWidthHint(content, point)
+        : null,
     cell: (point, { includeTableNode = false } = {}) => {
       if (!viewPolicy().allowsPoint(point)) return null;
       if (content.format !== 'hwpx' && content.format !== 'hwp5') return null;
@@ -2178,6 +2215,15 @@ export function createRenderer(
       );
       if (!table || table.partial) return null;
       const cell = table.cells.find((c) => c.listNode === p.tableCell.listNode);
+      if (
+        cell &&
+        !viewPolicy().allowsRequest({
+          kind: 'cell-size',
+          section: point.section,
+          listNode: cell.listNode,
+        })
+      )
+        return null;
       return cell && Number.isInteger(cell.width) && Number.isInteger(cell.height)
         ? {
             section: point.section,

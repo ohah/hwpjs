@@ -15,7 +15,7 @@ const invokeRequest = Reflect.apply;
 export type TableCellCore = Pick<
   typeof import('@hwpjs/core'),
   'getSelectionFormatting' | 'createParagraphSelection'
->;
+> & { canEditCellProperties?: (section: number, listNode: number) => boolean };
 export type TableCellDraft = {
   widthPoints: string;
   heightPoints: string;
@@ -53,6 +53,7 @@ export function tableCellReason(code: string) {
     SelectOriginalTableCell: '문서에서 원본 표 셀을 선택하세요.',
     OriginalTableCellRequired: '현재 선택은 지원하는 원본 표 셀이 아닙니다.',
     EditorNotReady: '문서를 먼저 열어주세요.',
+    PreviewCellPropertiesUnavailable: '현재 미리보기에서는 이 셀의 속성을 변경할 수 없습니다.',
     InvalidCellDimensions: '셀 크기를 허용 범위 안의 값으로 입력하세요.',
   };
   return messages[code] ?? '현재 셀 속성을 사용할 수 없습니다. (' + code + ')';
@@ -112,6 +113,17 @@ export function createTableCellPropertiesPort(
       : null;
   const sameValues = (a: readonly unknown[] | null, b: readonly unknown[] | null) =>
     a === null || b === null ? a === b : a.length === b.length && a.every((v, i) => v === b[i]);
+  function assertPreviewEligible(cell: NonNullable<TableCellCapture['cell']>) {
+    try {
+      const guard = core.canEditCellProperties;
+      if (guard === undefined) return;
+      if (typeof guard === 'function' && guard.call(core, cell.section, cell.listNode) === true)
+        return;
+    } catch {
+      // Host/view observation failures cannot grant mutation eligibility.
+    }
+    throw Error('PreviewCellPropertiesUnavailable');
+  }
   function assertCurrent(captured: TableCellCapture) {
     const current = editor.getEditorState(),
       fence = fences.get(captured);
@@ -119,6 +131,7 @@ export function createTableCellPropertiesPort(
       throw Error('StaleTableCellSelection');
     const token = current.token,
       selection = selectedValues(current.selection);
+    if (captured.cell) assertPreviewEligible(captured.cell);
     if (
       !sameValues(
         fence.token,
@@ -208,6 +221,7 @@ export function createTableCellPropertiesPort(
         row: selected.row,
         column: selected.column,
       });
+      assertPreviewEligible(cell);
       const caps = state.capabilities as any;
       if (caps?.cellSizeBatchAvailable !== true) columnReason = 'CellSizeBatchApiUnavailable';
       else {
@@ -394,10 +408,18 @@ export function createTableCellPropertiesPort(
       }
     },
     subscribe: (listener: (state: EditorState) => void) => editor.registerStateListener(listener),
-    // 닫힌 창의 표시 경로에는 문단·표 검색이나 서식 조회를 추가하지 않는다.
+    // Headless 표시 경로는 기존처럼 가볍게 유지하고, view guard가 있으면 현재 셀을 확인한다.
     presentation() {
       const state = editor.getEditorState();
       const enabled = !disposed && !pending && state.status === 'ready' && !!state.selection;
+      try {
+        if (enabled && core.canEditCellProperties !== undefined) {
+          const current = capture();
+          if (current.reason) return { enabled: false, reason: tableCellReason(current.reason) };
+        }
+      } catch {
+        return { enabled: false, reason: tableCellReason('PreviewCellPropertiesUnavailable') };
+      }
       return { enabled, reason: enabled ? undefined : '문서의 표 셀을 선택하세요.' };
     },
     applyCapturedMutation,

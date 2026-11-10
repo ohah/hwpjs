@@ -874,6 +874,18 @@ export function createCanvasEditor({
       return;
     }
     const location = coordinates(event);
+    if (renderer.readOnlyPreviewAtLogicalPoint?.(location.x, location.y) === true) {
+      event.preventDefault();
+      if (historyPending || composing || pending || input.value !== committed || controls.busy()) {
+        report('입력 반영 중에는 선택을 변경할 수 없습니다.');
+        return;
+      }
+      resetExternalSelection(controller);
+      input.readOnly = true;
+      input.blur();
+      report('이 셀은 현재 읽기 전용입니다. 편집 가능한 셀을 선택하세요.');
+      return;
+    }
     const picture =
       !event.shiftKey && !event.metaKey && !event.ctrlKey
         ? renderer.pictureAtLogicalPoint?.(location.x, location.y, {
@@ -2638,8 +2650,12 @@ export function createCanvasEditor({
     textEditable() &&
     renderer.characterPropertyTextAvailable?.() === true &&
     (!typingFont || renderer.namedFontPropertyTextAvailable?.() === true);
-  const resetExternalSelection = (controller, origin = 'canvas') => {
-    if (historyRevision !== null && anchor && focus)
+  const resetExternalSelection = (
+    controller,
+    origin = 'canvas',
+    { rememberSelection = true } = {},
+  ) => {
+    if (rememberSelection && historyRevision !== null && anchor && focus)
       historySelections.remember(historyRevision, { anchor, focus });
     const available = historyAvailable,
       structure = structureAvailable,
@@ -4582,10 +4598,24 @@ export function createCanvasEditor({
       return false;
     resettingPreview = true;
     try {
-      resetExternalSelection(controller);
+      const discardedDraft = Boolean(
+        input.value !== committed ||
+        composing ||
+        multiComposition ||
+        deferredComposition ||
+        inputIntents.size,
+      );
+      // These coordinates can belong to a draft or a new model projection,
+      // not historyRevision. Keep its last proven bookmark instead.
+      resetExternalSelection(controller, 'canvas', { rememberSelection: false });
       input.readOnly = true;
       input.setSelectionRange(0, 0);
       compositionInvalidated = false; // The draft and target were explicitly cancelled.
+      report(
+        discardedDraft
+          ? '현재 미리보기에서 편집 범위를 확인할 수 없어 미확정 입력을 취소했습니다. 편집 가능한 문단을 다시 선택해주세요.'
+          : '현재 미리보기에서 이 선택 범위를 편집할 수 없습니다. 편집 가능한 문단을 다시 선택해주세요.',
+      );
     } finally {
       resettingPreview = false;
     }

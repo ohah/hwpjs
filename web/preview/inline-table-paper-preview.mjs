@@ -6,6 +6,17 @@ import { hwpUnitPixels } from './hwp-units.mjs';
 const uint = (value) => Number.isSafeInteger(value) && value >= 0;
 const key = (section, paragraph) => `${section}:${paragraph}`;
 
+// Formats expose different absence proofs; an omitted value is not false.
+export function inlineTableHasNoCaption(format, table) {
+  const flag = table?.sourceGeometry?.has_caption;
+  return (
+    (flag === false ||
+      (format === 'hwpx' && flag === undefined && table?.sourceCaption === null)) &&
+    table?.sourceCaption == null &&
+    !table?.captionParagraphs?.length
+  );
+}
+
 // A view policy only. No source dimensions, paragraph identities or Native DTOs change.
 export function createInlineTablePaperPreview(content, entries) {
   if (
@@ -39,12 +50,6 @@ export function createInlineTablePaperPreview(content, entries) {
     table = entry?.table,
     source = table?.sourceGeometry,
     g = source?.geometry;
-  // HWP5 has an explicit flag; HWPX proves absence through the caption reader.
-  const noCaption =
-    source?.has_caption === false ||
-    (content.format === 'hwpx' &&
-      source?.has_caption === undefined &&
-      table?.sourceCaption === null);
   if (
     !table ||
     table !== content.tables[0] ||
@@ -65,9 +70,7 @@ export function createInlineTablePaperPreview(content, entries) {
     g.height_relative !== 2 ||
     g.horizontal_offset !== 0 ||
     g.vertical_offset !== 0 ||
-    !noCaption ||
-    table.sourceCaption != null ||
-    table.captionParagraphs?.length ||
+    !inlineTableHasNoCaption(content.format, table) ||
     table.pagination?.page_break !== 'table' ||
     table.pagination?.repeat_header !== false ||
     table.pagination?.cell_spacing !== 0 ||
