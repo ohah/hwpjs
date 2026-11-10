@@ -1,6 +1,6 @@
 # 원본 HWPX 직사각형 표 격자 후보
 
-`src/hwpx/source_table_grid.zig`의 `prepare(allocator, source_section_xml, request)`는 호출자가 해제할 새 구역 XML만 반환한다. public ABI, 세션, 이력, 저장 ZIP, 배포에는 연결하지 않는다. 이 후보의 검증을 원본 표 편집의 제품 지원 완료로 읽지 않는다.
+`src/hwpx/source_table_grid.zig`의 `prepare(allocator, source_section_xml, request)`는 호출자가 해제할 새 구역 XML만 반환한다. public ABI, 세션, 이력, 배포에는 연결하지 않는다. 저장 ZIP은 아래 private 파일 어댑터로 별도 검증한다. 이 후보의 검증을 원본 표 편집의 제품 지원 완료로 읽지 않는다.
 
 입력은 현재 구역 트리의 `tbl` 요소 번호 또는 시작부터 닫는 태그 끝까지의 정확한 바이트 범위, 예상 행·열 수, 행/열 삽입·삭제 명령, 새 셀의 문단 ID다. 요소 번호와 범위는 현재 입력에만 유효하며 영구 ID가 아니다. 예상 크기는 오래된 크기를 거부하지만 같은 크기의 다른 원본을 검출하는 내용 지문은 아니다. 전체 문서의 모든 part를 조사해 신선한 ID를 공급하는 책임은 호출자에게 있다. 모듈은 해당 구역의 모든 문단과 새 ID의 중복 및 새 ID 0을 추가로 거부한다.
 
@@ -27,3 +27,9 @@ mise exec -- zig test src/hx_source_table_grid_probe.zig -O ReleaseSafe -fllvm -
 2026-11-10 이 명령은 작업 루트와 공유 후보 `zig-out/verification/document-transforms-connect-r1/source`에서 각각 **7/7 통과, skip 0**을 기록했다. 후보 반영 전 소유 파일의 존재/기준본은 `zig-out/verification/document-transforms-connect-r1/task-c-baselines/20261110T000817844059Z/manifest.json`에 보존했다. 반영 파일은 이 문서와 `src/hwpx/source_table_grid.zig`, `src/hx_source_table_grid_probe.zig` 세 개뿐이다. 커밋·푸시·배포는 수행하지 않았다.
 
 후속 리뷰에서 원본 행마다 전체 출력 행을 다시 찾는 중첩 순회를 발견해 단조로운 목적지 커서로 교체했습니다. 출력 행을 한 번씩 소비하고, 이미 원문 순서인 셀/행 변경은 전체 정렬하지 않습니다. 두 속성 변경만 상수 크기로 정렬해 행 변경과 선형 병합합니다. 2048×1 표의 가운데 행 삽입 회귀를 포함한8개가 통과했습니다. 이 조립 단계의 개선을 기존 XML 파서·속성 writer를 포함한 전체 작업의 최악 복잡도 보장으로 확대하지 않습니다.
+
+## 파일 단위 후보
+
+`src/hwpx/source_table_grid_file.zig`는 패키지 보안 검사와 전체 XML 파트의 문단 ID 색인 뒤 대상 구역만 교체한 새 ZIP을 반환합니다. 서명·암호화 선언, 오래된 대상 크기, 합계 예산 초과는 거부합니다. 출력 패키지 자신의 section→manifest→entry 연결로 대상을 다시 해결하고 후보 XML과 비대상 payload·메타데이터를 확인합니다. ZIP의 물리 압축 배치 동일성을 주장하지 않습니다.
+
+XML part 분류에서 entry마다 manifest를 다시 찾던 순회를 색인으로 교체했습니다. 새 분류 단계는 entries와 manifest를 각각 한 번 순회합니다. 전체 XML 파싱·압축의 최악 복잡도를 보장한다는 뜻은 아닙니다. ReleaseSafe 집중 검사 9개는 네 명령, 문서 전체 ID 충돌 방지, 비대상 ZIP 보존, 출력 성장·합계 예산, 서명 거부와 OOM, 명시된 생성 표 파일의 재열기를 포함합니다. 공개 SDK·CLI와 실제 브라우저 원본 표 편집은 아직 연결하지 않았습니다. 필수 환경변수와 실행은 [개발 명령](development-commands.md)의 파일 단위 표 격자 후보를 따릅니다.

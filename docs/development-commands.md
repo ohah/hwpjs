@@ -1656,3 +1656,15 @@ node tools/created-table-grid-browser-audit.mjs http://127.0.0.1:OWNED_PORT /abs
 브라우저 감사는 이미 실행한 소유 테스트 서버를 사용하고 자기 agent-browser 세션을 finally 종료합니다. 서버는 호출자가 검사 종료 후 닫습니다. 실제 네 명령·이력·다운로드·재열기를6조합으로 실행하며 저장 파일의 독립 구조 검사는 별도입니다.
 
 공개 정적 후보는 `node tools/build-public-demo.mjs --source /absolute/path/CONTROLLED_SOURCE --wasm /absolute/path/PINNED_ENGINE.wasm --out /absolute/path/NEW_VERIFICATION_DIR`로 생성합니다. 공개 fixture allowlist에서 저장소 경로를 제외한 모듈을 빌드 시 제공하며 기존 내부 경로 검사를 완화하지 않습니다. 후보 producer 자체는 소스·공개 asset·Git을 수정하지 않습니다. 실제 반영은 `build-pages-demo.mjs --bundle-dir`의 검증과 별도 소유 변경 커밋을 거칩니다.
+
+## 파일 단위 표 격자 후보
+
+실행은 허용 소스만 복사한 격리 후보에서 수행합니다. 단순 표 파일을 명시해야 하며 누락은 skip가 아닌 실패입니다. HWP5 입력은 `zig-out/verification/created-table-ui-r1/browser-public-r1/vanilla-hwp5.hwp`로 제한합니다. 기존 브라우저 검사 출력이 없으면 먼저 해당 승인된 생성 절차로 준비합니다.
+
+```sh
+HWPJS_TEST_SOURCE_GRID_HWP5=/absolute/repository/zig-out/verification/created-table-ui-r1/browser-public-r1/vanilla-hwp5.hwp \
+HWPJS_TEST_SOURCE_GRID_HWPX=/absolute/repository/zig-out/verification/created-table-ui-r1/browser-public-r1/vanilla-hwpx.hwpx \
+nice -n 10 mise exec -- zig build test-source-table-grid-files -Doptimize=ReleaseSafe -j1
+```
+
+[HWP5 계약](hwp5-source-table-grid.md)과 [HWPX 계약](hwpx-source-table-grid.md)의 private 파일 변환만 검사합니다. 공개 명령·세션 이력·배포 검증과 구분합니다.
