@@ -1836,3 +1836,7 @@ zig build test-generated-formatting -Doptimize=ReleaseSafe -j1
 ```
 
 직접 실행 시에는 `zig test src/hwpx_generated_formatting_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'HWPX generated formatting regression'`을 사용합니다. 익명 import 등록 테스트와 실제 이름을 가진 회귀의 수를 구분합니다. `zig build test`도 이 step에 의존하지만 전체 Native suite 통과와 집중 step 통과는 구분합니다.
+
+## HWP5 생성 본문의 확장 서식
+
+Core 계약은 `bun test --no-install packages/core/tests/commands/generated-extended-formatting.test.ts packages/core/tests/state/formatting-state.test.ts`입니다. 실제 Native·독립 CFB 검사는 `HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm HWPJS_TEST_WASM_SHA256=EXACT_SHA256 node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/hwp5-generated-extended-formatting.test.mjs`로 실행합니다. 환경 누락은 실패이며 [소유권·검증 범위](hwp5-generated-extended-formatting.md)를 따릅니다.

@@ -130,3 +130,11 @@ export function underlineResultMessage(result: CommandResult): string {
 | 필드가 있는 두 형식 문서 | **필드 밖** 선택 변경과 필드 시작/종료 원본 보존 | 필드 내부 취소선 편집은 미검증 |
 
 이 typed 명령의 지원 근거는 명시 b7 엔진의 실제 API·이력·저장/재열기, 독립 CFB/XML/ZIP 보존 검사와 별도 packed ESM/DTS 소비 검증입니다. **공개 demo의 UI 연결·현재 선택 전달·빈 선택 처리는 해당 배포 자산과 일치하는 실제 브라우저 검증으로 따로 판정합니다.** SDK export나 pack 성공, 메뉴 존재만으로 공개 UI의 동작 또는 배포 완료를 판정하지 않습니다. 실제 bitmap 변화나 Boolean 관측도 원본 한/글 앱의 위치·선 높이·색을 포함한 시각 동치 검증이 아니며, 전체 필드/Canvas 지원으로 확대하지 않습니다.
+
+## HWP5 생성 본문의 확장 서식
+
+`SET_CHARACTER_UNDERLINE_COMMAND`, `SET_CHARACTER_STRIKE_COMMAND`, `SET_CHARACTER_TEXT_COLOR_COMMAND`, `SET_CHARACTER_FONT_NAME_COMMAND`는 같은 편집 세션에서 분할로 만든 최상위 HWP5 본문의 비어 있지 않은 선택에도 적용합니다. 기존의 종류·색·글꼴 인수를 그대로 사용합니다. 글꼴은 명령 한 번에 언어 하나를 지정합니다.
+
+호스트는 현재 선택과 token을 전달합니다. Core가 현재 생성 문단 참조를 복사하고 Runtime이 Native 참조와 본문 소유권을 다시 확인합니다. 표시 문단 번호를 생성 ID로 바꾸거나, 저장·재열기를 거쳐 원본 문단으로 만들 필요는 없습니다. 실행 취소·재실행·다른 텍스트 변경 후 이전 참조를 재사용하면 `InvalidCurrentFormattingReference`로 거부합니다. 최신 token과 실제 관측을 사용해 새 대상을 만들어야 합니다.
+
+빈 선택의 다음 입력 서식과 생성 셀·글상자·각주에 대한 확장 지원은 별도입니다. 원본 선택 및 HWPX의 기존 계약을 대체하지 않습니다.

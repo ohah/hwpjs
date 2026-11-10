@@ -1,6 +1,6 @@
 # HWP5 생성 본문 문단의 공개 서식 명령
 
-`SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic과 `SET_PARAGRAPH_ALIGNMENT_COMMAND`는 같은 편집 세션에서 분할로 만들어진 HWP5 본문 문단도 대상으로 받습니다. 글자 속성은 비어 있지 않은 선택에 적용하고, 문단 정렬은 caret에서도 사용할 수 있습니다. caret의 다음 입력 서식, 생성 셀·글상자·각주, 다른 속성 명령과 atomic formatting patch의 지원 범위를 함께 확대하지 않습니다.
+`SET_CHARACTER_PROPERTIES_COMMAND`의 size/bold/italic과 `SET_PARAGRAPH_ALIGNMENT_COMMAND`는 같은 편집 세션에서 분할로 만들어진 HWP5 본문 문단도 대상으로 받습니다. 글자 속성은 비어 있지 않은 선택에 적용하고, 문단 정렬은 caret에서도 사용할 수 있습니다. 같은 생성 본문의 비어 있지 않은 선택에는 밑줄·취소선·글자색·언어 하나의 글꼴 이름 명령도 적용합니다. caret의 다음 입력 서식, 생성 셀·글상자·각주와 atomic formatting patch는 별도 범위입니다. 확장 명령의 원인·계약은 [생성 본문 확장 서식](hwp5-generated-extended-formatting.md)을 따릅니다.
 
 ## 대상과 실행 경계
 

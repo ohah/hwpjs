@@ -1535,6 +1535,13 @@ export function createReaderRuntime({
         if (format !== 'hwp5' && format !== 'hwpx')
           throw new Error('UnsupportedCharacterFontNameEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        if (format === 'hwp5')
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentFormattingReference',
+            'UnsupportedFormattingOwner',
+          );
         if (
           !Number.isInteger(message.paragraph) ||
           message.paragraph < 0 ||
@@ -1649,6 +1656,13 @@ export function createReaderRuntime({
         if (format !== 'hwp5' && format !== 'hwpx')
           throw new Error('UnsupportedCharacterTextColorEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        if (format === 'hwp5')
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentFormattingReference',
+            'UnsupportedFormattingOwner',
+          );
         editor.setCharacterTextColor({
           section: message.section,
           paragraph: message.paragraph + (format === 'hwpx' ? 1 : 0),
@@ -1703,6 +1717,13 @@ export function createReaderRuntime({
         if (format !== 'hwp5' && format !== 'hwpx')
           throw new Error('UnsupportedCharacterStrikeEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        if (format === 'hwp5')
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentFormattingReference',
+            'UnsupportedFormattingOwner',
+          );
         if (
           !Number.isInteger(message.paragraph) ||
           message.paragraph < 0 ||
@@ -1725,6 +1746,13 @@ export function createReaderRuntime({
         if (format !== 'hwp5' && format !== 'hwpx')
           throw new Error('UnsupportedCharacterUnderlineEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        if (format === 'hwp5')
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentFormattingReference',
+            'UnsupportedFormattingOwner',
+          );
         editor.setCharacterUnderline({
           section: message.section,
           paragraph: message.paragraph + (format === 'hwpx' ? 1 : 0),

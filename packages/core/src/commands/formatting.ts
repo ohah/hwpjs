@@ -55,7 +55,12 @@ export function validateFormattingTarget(
   let reference: unknown;
   if (
     generated &&
-    (capability === 'characterPropertiesAvailable' || capability === 'paragraphAlignmentAvailable')
+    (capability === 'characterPropertiesAvailable' ||
+      capability === 'paragraphAlignmentAvailable' ||
+      capability === 'characterUnderlineAvailable' ||
+      capability === 'characterStrikeAvailable' ||
+      capability === 'characterTextColorAvailable' ||
+      capability === 'characterFontNameAvailable')
   ) {
     reference = currentParagraphReference(
       row.currentReference,

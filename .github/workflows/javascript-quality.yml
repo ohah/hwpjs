@@ -165,6 +165,25 @@ jobs:
           test -f ./packages/core/dist/build-manifest.json || exit 1
           HWPJS_TEST_WASM_EXPECTED_SHA256="$(node ./tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)" || exit 1
           printf 'HWPJS_TEST_WASM_EXPECTED_SHA256=%s\n' "$HWPJS_TEST_WASM_EXPECTED_SHA256" >> "$GITHUB_ENV"
+      - name: Test generated paragraph extended formatting Core admission
+        timeout-minutes: 2
+        run: |
+          test -f ./packages/core/tests/commands/generated-extended-formatting.test.ts || exit 1
+          test -f ./packages/core/tests/state/formatting-state.test.ts || exit 1
+          bun test --no-install \
+            ./packages/core/tests/commands/generated-extended-formatting.test.ts \
+            ./packages/core/tests/state/formatting-state.test.ts
+      - name: Test generated paragraph extended formatting actual Native binding
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_ORACLE_ROOT: ${{ github.workspace }}
+        run: |
+          test -f ./tools/tests/hwp5-generated-extended-formatting.test.mjs || exit 1
+          test -n "$HWPJS_TEST_WASM_EXPECTED_SHA256" || exit 1
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=45000 \
+            ./tools/tests/hwp5-generated-extended-formatting.test.mjs
       - name: Test original table style and fill Native transactions
         timeout-minutes: 2
         env:

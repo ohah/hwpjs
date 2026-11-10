@@ -210,7 +210,7 @@ test('underline observes its own capability and current resource inventory indep
   assert.equal(collapsed.underline, true);
 });
 
-test('complete generated body binding enables only properties and paragraph alignment', () => {
+test('complete generated body binding enables each advertised formatting capability', () => {
   const reference = {
     epoch: '4',
     scope: 'session:1',
@@ -223,16 +223,55 @@ test('complete generated body binding enables only properties and paragraph alig
   const s = snapshot(
     target,
     { currentReference: reference },
-    { characterUnderlineAvailable: true, characterStrikeAvailable: true },
+    {
+      characterUnderlineAvailable: true,
+      characterStrikeAvailable: true,
+      characterTextColorAvailable: true,
+      characterFontNameAvailable: true,
+      characterUnderlines: [
+        { id: 0, kind: 'bottom' },
+        { id: 1, kind: 'none' },
+      ],
+      characterStrikes: [
+        { id: 0, enabled: true },
+        { id: 1, enabled: false },
+      ],
+      characterTextColors: [
+        { id: 0, color: 0x123456 },
+        { id: 1, color: 0x123456 },
+      ],
+      fontFaces: ['hangul', 'latin', 'hanja', 'japanese', 'other', 'symbol', 'user'].map(
+        (language) => ({ language, id: 0, name: 'Source Font' }),
+      ),
+      characterFontReferences: [
+        { id: 0, fontIds: Array(7).fill(0) },
+        { id: 1, fontIds: Array(7).fill(0) },
+      ],
+    },
   );
   const f = getSelectionFormatting(s);
   assert.equal(f.characterAvailableReason, null);
   assert.equal(f.paragraphAvailableReason, null);
-  assert.equal(f.underlineAvailableReason, 'UnsupportedFormattingReference');
-  assert.equal(f.strikeAvailableReason, 'UnsupportedFormattingReference');
+  assert.equal(f.underlineAvailableReason, null);
+  assert.equal(f.strikeAvailableReason, null);
+  assert.equal(f.textColorAvailableReason, null);
+  assert.equal(f.fontNameAvailableReasons.hangul, null);
+  assert.equal(f.underline, 'mixed');
+  assert.equal(f.strike, 'mixed');
+  assert.equal(f.textColor, '#123456');
+  assert.deepEqual(f.fontNames.hangul, { kind: 'single', name: 'Source Font' });
+  const absent = getSelectionFormatting(snapshot(target, { currentReference: reference }));
+  assert.equal(absent.underlineAvailableReason, 'FormattingCapabilityUnavailable');
+  assert.equal(absent.strikeAvailableReason, 'FormattingCapabilityUnavailable');
+  assert.equal(absent.textColorAvailableReason, 'FormattingCapabilityUnavailable');
+  assert.equal(absent.fontNameAvailableReasons.hangul, 'FormattingCapabilityUnavailable');
   const caret = getSelectionFormatting(
-    snapshot({ ...target, endUnit: 0 }, { currentReference: reference }),
+    snapshot({ ...target, endUnit: 0 }, { currentReference: reference }, s.content),
   );
   assert.equal(caret.characterAvailableReason, 'EmptyCharacterSelection');
   assert.equal(caret.paragraphAvailableReason, null);
+  assert.equal(caret.underlineAvailableReason, 'EmptyCharacterSelection');
+  assert.equal(caret.strikeAvailableReason, 'EmptyCharacterSelection');
+  assert.equal(caret.textColorAvailableReason, 'EmptyCharacterSelection');
+  assert.equal(caret.fontNameAvailableReasons.hangul, 'EmptyCharacterSelection');
 });

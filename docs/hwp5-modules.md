@@ -552,3 +552,5 @@
 - [HWP5 생성 본문 문단의 공개 서식 명령](hwp5-current-paragraph-formatting.md)
 
 - [HWPX 편집 중 생성 문단의 서식 저장](hwpx-live-generated-formatting.md)
+
+[HWP5 생성 본문의 확장 서식](hwp5-generated-extended-formatting.md)은 같은 세션의 밑줄·취소선·글자색·언어별 글꼴과 현재 참조 검증을 소유합니다.
