@@ -1990,6 +1990,51 @@ var init_source_table_grid = __esmMin((() => {
 		"delete-column": CREATED_TABLE_GRID_ACTION.delete_column
 	});
 }));
+// ../../js/native-edit-outcome.mjs
+function applyNativeEdit(memory, bytes, invoke, invalidResult) {
+	let started = false, readingDiagnostic = false, completed;
+	try {
+		return memory.withBytes(bytes, (ptr, size) => {
+			started = true;
+			const code = invoke(ptr, size);
+			if (![
+				0,
+				1,
+				2,
+				3
+			].includes(code)) return completed = {
+				application: "unknown",
+				changed: null,
+				error: invalidResult
+			};
+			completed = {
+				nativeCode: code,
+				application: code === 1 ? "applied" : code === 3 ? "unknown" : "unapplied",
+				changed: code === 3 ? null : code === 1
+			};
+			if (code === 0 || code === 3) {
+				readingDiagnostic = true;
+				completed.error = memory.error().message;
+				readingDiagnostic = false;
+			}
+			return completed;
+		});
+	} catch (error) {
+		if (!started) throw error;
+		const message = error?.message || String(error);
+		if (completed) return {
+			...completed,
+			...readingDiagnostic ? { error: message } : { cleanupError: message },
+			refreshRequired: true
+		};
+		return {
+			application: "unknown",
+			changed: null,
+			error: message
+		};
+	}
+}
+var init_native_edit_outcome = __esmMin((() => {}));
 // ../../js/atomic-formatting-api.mjs
 function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
 	const suffixes = [
@@ -2049,43 +2094,7 @@ function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
 		},
 		applyFormattingPatch(request) {
 			const policy = caps();
-			const bytes = encode(request, policy.limits.requestBytes);
-			let started = false, completed;
-			try {
-				return memory.withBytes(bytes, (ptr, size) => {
-					started = true;
-					const nativeCode = wasm[`${prefix}_apply_formatting_patch`](ptr, size);
-					if (![
-						0,
-						1,
-						2,
-						3
-					].includes(nativeCode)) return {
-						application: "unknown",
-						changed: null,
-						error: "InvalidAtomicFormattingResult"
-					};
-					const error = nativeCode === 0 || nativeCode === 3 ? memory.error().message : void 0;
-					return completed = {
-						nativeCode,
-						application: nativeCode === 1 ? "applied" : nativeCode === 3 ? "unknown" : "unapplied",
-						changed: nativeCode === 3 ? null : nativeCode === 1,
-						...error ? { error } : {}
-					};
-				});
-			} catch (error) {
-				if (!started) throw error;
-				if (completed) return {
-					...completed,
-					cleanupError: error?.message || String(error),
-					refreshRequired: true
-				};
-				return {
-					application: "unknown",
-					changed: null,
-					error: error?.message || String(error)
-				};
-			}
+			return applyNativeEdit(memory, encode(request, policy.limits.requestBytes), (ptr, size) => wasm[`${prefix}_apply_formatting_patch`](ptr, size), "InvalidAtomicFormattingResult");
 		}
 	};
 }
@@ -2120,7 +2129,9 @@ function ownedJSON(value, seen = /* @__PURE__ */ new Set()) {
 		seen.delete(value);
 	}
 }
-var init_atomic_formatting_api = __esmMin((() => {}));
+var init_atomic_formatting_api = __esmMin((() => {
+	init_native_edit_outcome();
+}));
 // ../../js/abi.mjs
 function validateAbi(wasm) {
 	if (typeof wasm.hwpjs_abi_version !== "function") throw new Error("Missing HWPJS ABI version");
