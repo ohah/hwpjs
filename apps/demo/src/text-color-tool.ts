@@ -163,7 +163,7 @@ export function createTextColorTool(options: TextColorToolOptions) {
         return;
       }
       if (initialRange) {
-        if (!initialRange.hasSettlement) {
+        if (initialRange.mode !== 'typing' && !initialRange.hasSettlement) {
           error = 'SurfaceSettlementUnavailable';
           return;
         }
@@ -177,6 +177,12 @@ export function createTextColorTool(options: TextColorToolOptions) {
         rangeConsumed = true;
         if (!initialRange.request({ kind: 'text-color', color })) {
           error = 'StaleTextColorSelection';
+          return;
+        }
+        if (initialRange.mode === 'typing') {
+          const focusState = editor.getEditorState();
+          notify(() => options.onStatus('다음 입력에 사용할 글자색을 설정했습니다.'));
+          if (!closed && captured === before) close(true, focusState);
           return;
         }
         const settled = await initialRange.settle();
@@ -248,7 +254,7 @@ export function createTextColorTool(options: TextColorToolOptions) {
         ? shared.state === state && shared.capture?.current()
           ? shared.capture
           : null
-        : options.getSurfaceFormattingHost && state.status === 'ready' && state.selection == null
+        : options.getSurfaceFormattingHost && state.status === 'ready'
           ? captureSurfaceFormatting(
               editor,
               options.getSurfaceFormattingHost,

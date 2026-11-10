@@ -948,18 +948,27 @@ export function createEditor(options: CreateEditorOptions) {
       }
       if (application === 'unapplied') {
         if (
-          ['formatting-patch', 'independent-text'].includes(message.kind) &&
+          ['formatting-patch', 'independent-text', 'splice-rich-character'].includes(
+            message.kind,
+          ) &&
           reply.formattingRefreshRequired === true
         )
           install({ status: 'refresh-required' });
         if (
-          ['formatting-patch', 'independent-text'].includes(message.kind) &&
+          ['formatting-patch', 'independent-text', 'splice-rich-character'].includes(
+            message.kind,
+          ) &&
           reply.formattingNativeCode === 2
         ) {
           if (reply.error) notifyError(reply.error, ctx, false);
           return result('known-no-op', ctx, reply.error, reply);
         }
-        if (['formatting-patch', 'independent-text'].includes(message.kind) && reply.error) {
+        if (
+          ['formatting-patch', 'independent-text', 'splice-rich-character'].includes(
+            message.kind,
+          ) &&
+          reply.error
+        ) {
           notifyError(reply.error, ctx, false);
           return result('rejected-unapplied', ctx, reply.error, reply);
         }

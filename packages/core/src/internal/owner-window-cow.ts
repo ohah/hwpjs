@@ -50,6 +50,7 @@ const ROOT_KEYS = new Set([
   'namedFontTextAvailable',
   'characterPropertyTextAvailable',
   'namedFontPropertyTextAvailable',
+  'richTypingScope',
   'namedFontReplacementAvailable',
   'characterPropertyReplacementAvailable',
   'namedFontPropertyReplacementAvailable',

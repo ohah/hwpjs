@@ -158,7 +158,7 @@ test "H5 text service admission late failures aliases expected scalar controls a
     try std.testing.expectError(error.UnsupportedTextControl, h.service().apply(a, requestFor(&q, &g)));
     try sameSave(&h, before, stats);
     g = groupsFor(&q);
-    g[1].insertion.character.bold = true;
+    g[1].insertion.reset = .character;
     try std.testing.expectError(error.UnsupportedTextInsertionFormatting, h.service().apply(a, requestFor(&q, &g)));
     try sameSave(&h, before, stats);
     g = groupsFor(&q);
@@ -667,4 +667,31 @@ test "H5 text service policy preserves selected purpose before unrelated source 
     try std.testing.expectError(error.UnsupportedIndependentTextPurpose, h.query(&.{.{ .section = 2, .paragraph = 1 }}));
     try std.testing.expectError(error.UnsupportedSectionRecord, h.query(&.{.{ .section = 1, .paragraph = 1 }}));
     try sameSave(&h, before, stats);
+}
+
+test "H5 H01 rich grouped other-section protection scans each section once" {
+    const bytes = try twoSectionInput();
+    defer a.free(bytes);
+    const session = try edit.Session.open(a, bytes);
+    defer session.close();
+    session.enableHistoryDelta();
+    var history = try History.initV2(a, session, .{ .max_entries = 8 });
+    defer history.deinit();
+    var state: State = .{};
+    try state.open();
+    const service: tx.Service = .{ .session = session, .history = &history, .lifetime = &state };
+    var q = try service.query(a, .{ .session = "s1", .revision = 0 }, &.{ owners[0], owners[1], .{ .section = 1, .paragraph = 2 } });
+    defer q.deinit();
+    const edits = [_]m.edits.Edit{.{ .start = 0, .end = 0, .text = "Q", .expected = "" }};
+    var g: [3]m.Group = undefined;
+    for (q.rows, &g) |row, *group| group.* = .{ .ref = row.ref, .before_units = row.before_units, .edits = &edits, .insertion = .{ .character = .{ .text_color = 0x123456 } } };
+    var work: tx.Service.Testing.Work = .{};
+    try std.testing.expect(try tx.Service.Testing.applyMeasured(service, a, requestFor(&q, &g), &work));
+    try std.testing.expectEqual(@as(usize, 2), work.unselected_sections);
+    try std.testing.expectEqual(@as(usize, 3), work.paragraphs);
+    try std.testing.expectEqual(@as(u32, 1), history.revision());
+    try std.testing.expect(try history.undo(session));
+    const after = (try session.save(a, .{ .allow_stale_layout = true })).bytes;
+    defer a.free(after);
+    try std.testing.expectEqualSlices(u8, bytes, after);
 }

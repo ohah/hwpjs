@@ -91,19 +91,42 @@ pub fn validateContext(a: std.mem.Allocator, session: *@import("editor_session.z
     profile = context.profile orelse .{};
     const spans = try @import("character_style_snapshot.zig").read(session, owner.section, owner.paragraph);
     defer session.allocator.free(spans);
-    var checked: std.ArrayList(u32) = .empty;
+    var checked: std.AutoHashMapUnmanaged(u32, void) = .empty;
     defer checked.deinit(a);
-    for (spans) |span| {
-        var selected = false;
-        for (ranges) |range| if (@max(span.start_unit, range.startUnit) < @min(span.end_unit, range.endUnit)) {
-            selected = true;
+    // Native insertion and normalized formatting provide sorted disjoint ranges.
+    // Keep the previous overlap behavior for other callers with unordered input.
+    var ordered = true;
+    var previous_end: usize = 0;
+    for (ranges) |range| {
+        if (range.startUnit < previous_end or range.startUnit >= range.endUnit) {
+            ordered = false;
             break;
-        };
+        }
+        previous_end = range.endUnit;
+    }
+    for (spans, 0..) |span, i| {
+        if (i != 0 and span.start_unit < spans[i - 1].start_unit) {
+            ordered = false;
+            break;
+        }
+    }
+    var cursor: usize = 0;
+    for (spans) |span| {
+        const selected = if (ordered) selected: {
+            while (cursor < ranges.len and ranges[cursor].endUnit <= span.start_unit) cursor += 1;
+            if (cursor == ranges.len) break;
+            break :selected overlaps(span, ranges[cursor]);
+        } else for (ranges) |range| {
+            if (overlaps(span, range)) break true;
+        } else false;
         if (!selected) continue;
         const id = span.char_shape_id orelse return error.InvalidCharacterShapeReference;
-        if (std.mem.indexOfScalar(u32, checked.items, id) != null) continue;
+        if ((try checked.getOrPut(a, id)).found_existing) continue;
         const bytes = try @import("character_resource_clone.zig").writeWithProfile(a, tree, try node(a, tree, "charPr", id), id, properties, session.options.max_xml_bytes, profile);
         a.free(bytes);
-        try checked.append(a, id);
     }
+}
+
+fn overlaps(span: @import("character_style_display_ranges.zig").Range, range: m.Range) bool {
+    return @max(span.start_unit, range.startUnit) < @min(span.end_unit, range.endUnit);
 }

@@ -29,7 +29,7 @@ pub fn continuationStyle(rows: []const model.CharacterRun, bytes: []const u8, at
     return styleAt(rows, if (at == 0) 0 else at - 1);
 }
 
-fn append(a: std.mem.Allocator, rows: *std.ArrayList(model.CharacterRun), at: u32, id: u32) !void {
+pub fn append(a: std.mem.Allocator, rows: *std.ArrayList(model.CharacterRun), at: u32, id: u32) !void {
     if (rows.items.len > 0) {
         const last = &rows.items[rows.items.len - 1];
         if (last.start_unit == at) {

@@ -62,6 +62,36 @@ pub fn apply(a: std.mem.Allocator, source: []const u8, original_info: []const u8
     return applyScoped(a, source, original_info, version, document, edit, original_count, limit, null);
 }
 pub fn applyScoped(a: std.mem.Allocator, source: []const u8, original_info: []const u8, version: @import("../version.zig").Version, document: *model.Document, edit: Edit, original_count: usize, limit: usize, batch: ?*Context) !void {
+    return applyInternal(a, source, original_info, version, document, edit, original_count, limit, batch, null, if (testing) null else {});
+}
+const testing = @import("builtin").is_test;
+const Range = @import("../../model/formatting_patch.zig").Range;
+pub const Work = if (testing) struct {
+    paragraphs: usize = 0,
+    materialized_bytes: usize = 0,
+    validated_runs: usize = 0,
+    run_rows: usize = 0,
+    range_rows: usize = 0,
+    range_advances: usize = 0,
+    intersections: usize = 0,
+    resource_lookups: usize = 0,
+    output_rows: usize = 0,
+    controls: usize = 0,
+    font_names: usize = 0,
+    unselected_sections: usize = 0,
+} else void;
+const Measure = if (testing) ?*Work else void;
+pub const GroupEdit = struct { section: usize, paragraph: usize, ranges: []const Range, insertion: @import("../../model/formatting_patch.zig").Patch };
+fn tick(work: Measure, comptime field: []const u8, count: usize) void {
+    if (testing) if (work) |w| {
+        @field(w, field) += count;
+    };
+}
+pub fn applyGrouped(a: std.mem.Allocator, source: []const u8, original_info: []const u8, version: @import("../version.zig").Version, document: *model.Document, section: usize, paragraph: usize, properties: model.CharacterPropertyPatch, ranges: []const Range, original_count: usize, limit: usize, batch: *Context, work: Measure) !void {
+    if (ranges.len == 0) return error.EmptyCharacterSelection;
+    return applyInternal(a, source, original_info, version, document, .{ .section = section, .paragraph = paragraph, .start_unit = ranges[0].startUnit, .end_unit = ranges[ranges.len - 1].endUnit, .properties = properties }, original_count, limit, batch, ranges, work);
+}
+fn applyInternal(a: std.mem.Allocator, source: []const u8, original_info: []const u8, version: @import("../version.zig").Version, document: *model.Document, edit: Edit, original_count: usize, limit: usize, batch: ?*Context, grouped: ?[]const Range, work: Measure) !void {
     try @import("character_property_payload.zig").validate(edit.properties);
     if (batch) |context| {
         var unsupported = context.disabled or context.installed or edit.properties.border_fill != null;
@@ -77,11 +107,92 @@ pub fn applyScoped(a: std.mem.Allocator, source: []const u8, original_info: []co
                 try context.install(a, document);
             }
             context.disabled = true;
-            return applyScoped(a, source, original_info, version, document, edit, original_count, limit, null);
+            return applyInternal(a, source, original_info, version, document, edit, original_count, limit, null, grouped, work);
         }
     }
     const resources = if (batch) |context| context.entries(document) else document.character_resources;
-    if (edit.properties.font_ids) |ids| {
+    try validateFontIds(a, original_info, version, document, edit.properties, batch);
+    if (edit.section >= document.sections.len) return error.InvalidSection;
+    if (edit.paragraph >= document.sections[edit.section].paragraphs.len) return error.InvalidParagraph;
+    const target = &document.sections[edit.section].paragraphs[edit.paragraph];
+    const count = original_count + resources.len;
+    const source_context = if (batch) |context| block: {
+        const slot = try context.source_contexts.getOrPut(a, edit.section);
+        if (!slot.found_existing) slot.value_ptr.* = .{ .source = source, .version = version };
+        break :block slot.value_ptr;
+    } else null;
+    const validated = if (source_context) |context|
+        try @import("plain_text_source.zig").validateCharacterFormatScoped(a, context, source, version, target.*, count)
+    else
+        try @import("plain_text_source.zig").validateCharacterFormat(a, source, version, target.*, count);
+    const text = try @import("plain_text_content.zig").editableTextBytes(a, target.*);
+    defer a.free(text);
+    const controls = @import("control_boundaries.zig");
+    try controls.validateRetainedText(text);
+    if (grouped) |ranges| {
+        var previous: u32 = 0;
+        for (ranges) |range| {
+            tick(work, "range_rows", 1);
+            if (range.startUnit < previous or range.startUnit >= range.endUnit) return error.InvalidTextPosition;
+            previous = range.endUnit;
+        }
+        const visited = try controls.validateFormattingRanges(text, ranges);
+        if (testing) tick(work, "controls", visited);
+    } else try controls.validate(text, edit.start_unit, edit.end_unit);
+    try @import("character_runs.zig").validate(target.character_runs, text, count);
+    tick(work, "paragraphs", 1);
+    tick(work, "materialized_bytes", text.len);
+    tick(work, "validated_runs", target.character_runs.len);
+    if (edit.start_unit == edit.end_unit) return;
+    const borrowed: Values = .{ .entries = .{ .items = @constCast(resources), .capacity = resources.len, .pointer_stability = .{} } };
+    var current_owned: ?[]u8 = null;
+    defer if (current_owned) |bytes| a.free(bytes);
+    var shapes_owned: ?[]@import("character_display_shapes.zig").Shape = null;
+    defer if (shapes_owned) |values| a.free(values);
+    var pending_owned: ?Values = null;
+    defer if (pending_owned) |*value| value.deinit(a);
+    const pending = if (batch) |context| block: {
+        try context.prepare(a, original_info, version, original_count, document, limit);
+        break :block &context.pending.?;
+    } else block: {
+        current_owned = try borrowed.write(a, original_info, version, original_count, limit);
+        shapes_owned = try @import("character_display_shapes.zig").read(a, current_owned.?, version, count);
+        pending_owned = try borrowed.clone(a);
+        break :block &pending_owned.?;
+    };
+    if (grouped) |ranges| {
+        const output = (try paintGrouped(a, version, target.*, ranges, edit.properties, original_count, current_owned, shapes_owned, pending, batch, work)) orelse return;
+        errdefer a.free(output);
+        const tags = try @import("character_format.zig").prepareRanges(a, target.*, validated.ranges, text);
+        errdefer a.free(tags);
+        try installResources(a, original_info, version, document, original_count, limit, pending, batch);
+        a.free(target.character_runs);
+        if (target.range_tags) |old| a.free(old);
+        target.character_runs = output;
+        target.range_tags = tags;
+        target.deferred_direct_records = validated.preserved_direct_records;
+        return;
+    }
+    var paragraph = try @import("../../model/clone.zig").paragraph(a, target.*);
+    defer paragraph.deinit(a);
+    var changed = false;
+    for (target.character_runs, 0..) |run, index| {
+        const end = if (index + 1 < target.character_runs.len) target.character_runs[index + 1].start_unit else target.declared_units;
+        const start = @max(run.start_unit, edit.start_unit);
+        const stop = @min(end, edit.end_unit);
+        if (start >= stop) continue;
+        const id = (try patchedId(a, version, original_count, current_owned, shapes_owned, pending, batch, run.char_shape_id, edit.properties)) orelse continue;
+        try @import("character_format.zig").applyScoped(a, source, version, &paragraph, .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = start, .end_unit = stop, .char_shape_id = id }, original_count + pending.entries.items.len, source_context);
+        if (batch) |context| _ = (try context.shapes.?.resolve(a, pending.entries.items, id)) orelse return error.UnsupportedBatchCharacterResource;
+        changed = true;
+    }
+    if (!changed) return;
+    try installResources(a, original_info, version, document, original_count, limit, pending, batch);
+    std.mem.swap(model.Paragraph, target, &paragraph);
+}
+
+pub fn validateFontIds(_: std.mem.Allocator, original_info: []const u8, version: @import("../version.zig").Version, document: *const model.Document, properties: model.CharacterPropertyPatch, batch: ?*Context) !void {
+    if (properties.font_ids) |ids| {
         if (batch) |context| {
             if (context.font_counts == null or document.font_resources.entries.items.len < context.font_overlay_seen) {
                 const fonts = try @import("../docinfo/resources.zig").inspect(original_info, version, .{});
@@ -117,73 +228,32 @@ pub fn applyScoped(a: std.mem.Allocator, source: []const u8, original_info: []co
             };
         }
     }
-    if (edit.section >= document.sections.len) return error.InvalidSection;
-    if (edit.paragraph >= document.sections[edit.section].paragraphs.len) return error.InvalidParagraph;
-    const target = &document.sections[edit.section].paragraphs[edit.paragraph];
-    const count = original_count + resources.len;
-    const source_context = if (batch) |context| block: {
-        const slot = try context.source_contexts.getOrPut(a, edit.section);
-        if (!slot.found_existing) slot.value_ptr.* = .{ .source = source, .version = version };
-        break :block slot.value_ptr;
-    } else null;
-    if (source_context) |context| {
-        _ = try @import("plain_text_source.zig").validateCharacterFormatScoped(a, context, source, version, target.*, count);
-    } else _ = try @import("plain_text_source.zig").validateCharacterFormat(a, source, version, target.*, count);
-    const text = try @import("plain_text_content.zig").editableTextBytes(a, target.*);
-    defer a.free(text);
-    try @import("control_boundaries.zig").validateRetainedText(text);
-    try @import("control_boundaries.zig").validate(text, edit.start_unit, edit.end_unit);
-    try @import("character_runs.zig").validate(target.character_runs, text, count);
-    if (edit.start_unit == edit.end_unit) return;
-    const borrowed: Values = .{ .entries = .{ .items = @constCast(resources), .capacity = resources.len, .pointer_stability = .{} } };
-    var current_owned: ?[]u8 = null;
-    defer if (current_owned) |bytes| a.free(bytes);
-    var shapes_owned: ?[]@import("character_display_shapes.zig").Shape = null;
-    defer if (shapes_owned) |values| a.free(values);
-    var pending_owned: ?Values = null;
-    defer if (pending_owned) |*value| value.deinit(a);
-    const pending = if (batch) |context| block: {
-        try context.prepare(a, original_info, version, original_count, document, limit);
-        break :block &context.pending.?;
-    } else block: {
-        current_owned = try borrowed.write(a, original_info, version, original_count, limit);
-        shapes_owned = try @import("character_display_shapes.zig").read(a, current_owned.?, version, count);
-        pending_owned = try borrowed.clone(a);
-        break :block &pending_owned.?;
-    };
-    var paragraph = try @import("../../model/clone.zig").paragraph(a, target.*);
-    defer paragraph.deinit(a);
-    var changed = false;
-    for (target.character_runs, 0..) |run, index| {
-        const end = if (index + 1 < target.character_runs.len) target.character_runs[index + 1].start_unit else target.declared_units;
-        const start = @max(run.start_unit, edit.start_unit);
-        const stop = @min(end, edit.end_unit);
-        if (start >= stop) continue;
-        const shape = if (batch) |context| (try context.shapes.?.resolve(a, pending.entries.items, run.char_shape_id)) orelse return error.UnsupportedBatchCharacterResource else shapes_owned.?[run.char_shape_id];
-        const border_matches = if (edit.properties.border_fill) |border| try @import("border_fill_character_current.zig").matches(current_owned.?, version, run.char_shape_id, border) else true;
-        const decoration = @import("character_decoration_compat.zig").resolve(shape);
-        const strike_color_matches = edit.properties.strike_color == null or (shape.strike_kind_raw <= 1 and decoration.strike_color != null and @import("../../model/rgb_color.zig").hwp5(edit.properties.strike_color.?) == decoration.strike_color.?);
-        const extra_matches = (edit.properties.shadow == null or @import("../../model/character_shadow.zig").matches(shape.shadow, edit.properties.shadow.?)) and @import("../../model/character_metric_patch.zig").matches(shape.font_metrics, edit.properties) and
-            (edit.properties.underline_style == null or @import("../../model/character_line_style.zig").hwp5(edit.properties.underline_style.?) == shape.underline_style_raw) and
-            (edit.properties.strike_style == null or @import("../../model/character_line_style.zig").hwp5(edit.properties.strike_style.?) == decoration.strike_style);
-        if (border_matches and extra_matches and strike_color_matches and (edit.properties.outline_kind == null or shape.outline_kind_raw == @import("character_outline_kind.zig").raw(edit.properties.outline_kind.?)) and @import("../../model/character_properties.zig").effectsMatch(edit.properties, shape.effects) and (edit.properties.shade == null or try @import("../../model/shade_color.zig").encodeHwp5(edit.properties.shade.?) == shape.shade_color_raw))
-            if ((edit.properties.strike_enabled == null or edit.properties.strike_enabled.? == decoration.strike_enabled) and (edit.properties.size == null or edit.properties.size.? == shape.height) and (edit.properties.bold == null or edit.properties.bold.? == shape.bold) and (edit.properties.italic == null or edit.properties.italic.? == shape.italic) and (edit.properties.underline_kind == null or @backingInt(edit.properties.underline_kind.?) == decoration.underline_kind) and (edit.properties.underline_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.underline_color.?) == shape.underline_color_raw) and (edit.properties.text_color == null or @import("../../model/rgb_color.zig").hwp5(edit.properties.text_color.?) == shape.text_color_raw) and (edit.properties.font_ids == null or @import("../../model/character_fonts.zig").matches(@import("../../model/character_fonts.zig").fromHwp5(shape.font_ids), edit.properties.font_ids.?))) continue;
-        var source_id = run.char_shape_id;
-        var properties: model.CharacterPropertyPatch = .{};
-        if (source_id >= original_count) {
-            const intent = pending.entries.items[source_id - original_count];
-            source_id = intent.source_id;
-            properties = intent.properties;
-        }
-        const source_shape = if (batch) |context| (try context.shapes.?.resolve(a, pending.entries.items, source_id)) orelse return error.UnsupportedBatchCharacterResource else shapes_owned.?[source_id];
-        properties = try @import("character_decoration_patch_merge.zig").merge(source_shape, shape, properties, edit.properties);
-        const indexed = if (batch) |context| try pending.addIndexed(a, &context.intent_index, original_count, source_id, properties) else null;
-        const id = indexed orelse try pending.add(a, original_count, source_id, properties);
-        try @import("character_format.zig").applyScoped(a, source, version, &paragraph, .{ .section = edit.section, .paragraph = edit.paragraph, .start_unit = start, .end_unit = stop, .char_shape_id = id }, original_count + pending.entries.items.len, source_context);
-        if (batch) |context| _ = (try context.shapes.?.resolve(a, pending.entries.items, id)) orelse return error.UnsupportedBatchCharacterResource;
-        changed = true;
+}
+fn patchedId(a: std.mem.Allocator, version: @import("../version.zig").Version, original_count: usize, current_owned: ?[]const u8, shapes_owned: ?[]const @import("character_display_shapes.zig").Shape, pending: *Values, batch: ?*Context, run_id: u32, patch: model.CharacterPropertyPatch) !?u32 {
+    const shape = if (batch) |context| (try context.shapes.?.resolve(a, pending.entries.items, run_id)) orelse return error.UnsupportedBatchCharacterResource else shapes_owned.?[run_id];
+    const border_matches = if (patch.border_fill) |border| try @import("border_fill_character_current.zig").matches(current_owned.?, version, run_id, border) else true;
+    const decoration = @import("character_decoration_compat.zig").resolve(shape);
+    const strike_color_matches = patch.strike_color == null or (shape.strike_kind_raw <= 1 and decoration.strike_color != null and @import("../../model/rgb_color.zig").hwp5(patch.strike_color.?) == decoration.strike_color.?);
+    const extra_matches = (patch.shadow == null or @import("../../model/character_shadow.zig").matches(shape.shadow, patch.shadow.?)) and @import("../../model/character_metric_patch.zig").matches(shape.font_metrics, patch) and
+        (patch.underline_style == null or @import("../../model/character_line_style.zig").hwp5(patch.underline_style.?) == shape.underline_style_raw) and
+        (patch.strike_style == null or @import("../../model/character_line_style.zig").hwp5(patch.strike_style.?) == decoration.strike_style);
+    if (border_matches and extra_matches and strike_color_matches and (patch.outline_kind == null or shape.outline_kind_raw == @import("character_outline_kind.zig").raw(patch.outline_kind.?)) and @import("../../model/character_properties.zig").effectsMatch(patch, shape.effects) and (patch.shade == null or try @import("../../model/shade_color.zig").encodeHwp5(patch.shade.?) == shape.shade_color_raw))
+        if ((patch.strike_enabled == null or patch.strike_enabled.? == decoration.strike_enabled) and (patch.size == null or patch.size.? == shape.height) and (patch.bold == null or patch.bold.? == shape.bold) and (patch.italic == null or patch.italic.? == shape.italic) and (patch.underline_kind == null or @backingInt(patch.underline_kind.?) == decoration.underline_kind) and (patch.underline_color == null or @import("../../model/rgb_color.zig").hwp5(patch.underline_color.?) == shape.underline_color_raw) and (patch.text_color == null or @import("../../model/rgb_color.zig").hwp5(patch.text_color.?) == shape.text_color_raw) and (patch.font_ids == null or @import("../../model/character_fonts.zig").matches(@import("../../model/character_fonts.zig").fromHwp5(shape.font_ids), patch.font_ids.?))) return null;
+    var source_id = run_id;
+    var properties: model.CharacterPropertyPatch = .{};
+    if (source_id >= original_count) {
+        const intent = pending.entries.items[source_id - original_count];
+        source_id = intent.source_id;
+        properties = intent.properties;
     }
-    if (!changed) return;
+    const source_shape = if (batch) |context| (try context.shapes.?.resolve(a, pending.entries.items, source_id)) orelse return error.UnsupportedBatchCharacterResource else shapes_owned.?[source_id];
+    properties = try @import("character_decoration_patch_merge.zig").merge(source_shape, shape, properties, patch);
+    const indexed = if (batch) |context| try pending.addIndexed(a, &context.intent_index, original_count, source_id, properties) else null;
+    const id = indexed orelse try pending.add(a, original_count, source_id, properties);
+    return id;
+}
+
+fn installResources(a: std.mem.Allocator, original_info: []const u8, version: @import("../version.zig").Version, document: *model.Document, original_count: usize, limit: usize, pending: *Values, batch: ?*Context) !void {
     if (batch) |context| {
         context.changed = true;
     } else {
@@ -193,5 +263,51 @@ pub fn applyScoped(a: std.mem.Allocator, source: []const u8, original_info: []co
         a.free(document.character_resources);
         document.character_resources = entries;
     }
-    std.mem.swap(model.Paragraph, target, &paragraph);
+}
+/// Each source run is visited once. Intersections of two ordered partitions
+/// are linear in their combined sizes. Reuse the resolved resource per old ID.
+fn paintGrouped(a: std.mem.Allocator, version: @import("../version.zig").Version, target: model.Paragraph, ranges: []const Range, patch: model.CharacterPropertyPatch, original_count: usize, current_info: ?[]const u8, shapes: ?[]const @import("character_display_shapes.zig").Shape, pending: *Values, batch: ?*Context, work: Measure) !?[]model.CharacterRun {
+    const runs = @import("character_runs.zig");
+    var out: std.ArrayList(model.CharacterRun) = .empty;
+    defer out.deinit(a);
+    var resolved: std.AutoHashMapUnmanaged(u32, u32) = .empty;
+    defer resolved.deinit(a);
+    var range_index: usize = 0;
+    var changed = false;
+    for (target.character_runs, 0..) |row, index| {
+        tick(work, "run_rows", 1);
+        var at = row.start_unit;
+        const end = if (index + 1 < target.character_runs.len) target.character_runs[index + 1].start_unit else target.declared_units;
+        while (range_index < ranges.len and ranges[range_index].endUnit <= at) : (range_index += 1) {
+            tick(work, "range_advances", 1);
+        }
+        while (range_index < ranges.len and ranges[range_index].startUnit < end and at < end) {
+            const range = ranges[range_index];
+            const start = @max(at, range.startUnit);
+            const stop = @min(end, range.endUnit);
+            if (at < start) try runs.append(a, &out, at, row.char_shape_id);
+            tick(work, "intersections", 1);
+            const id = resolved.get(row.char_shape_id) orelse blk: {
+                tick(work, "resource_lookups", 1);
+                const value = (try patchedId(a, version, original_count, current_info, shapes, pending, batch, row.char_shape_id, patch)) orelse row.char_shape_id;
+                if (value != row.char_shape_id) if (batch) |context| {
+                    _ = (try context.shapes.?.resolve(a, pending.entries.items, value)) orelse return error.UnsupportedBatchCharacterResource;
+                };
+                try resolved.put(a, row.char_shape_id, value);
+                break :blk value;
+            };
+            changed = changed or id != row.char_shape_id;
+            try runs.append(a, &out, start, id);
+            at = stop;
+            if (at == range.endUnit) {
+                range_index += 1;
+                tick(work, "range_advances", 1);
+            }
+        }
+        if (at < end or row.start_unit == end) try runs.append(a, &out, at, row.char_shape_id);
+    }
+    if (!changed) return null;
+    if (out.items.len > 65535) return error.LimitExceeded;
+    tick(work, "output_rows", out.items.len);
+    return try out.toOwnedSlice(a);
 }

@@ -1,3 +1,4 @@
+import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
 import { validateHwp5CurrentBodyReference } from './hwp5-current-body-reference.mjs';
 import { validateCellStylesMessage } from '../../js/cell-style-command.mjs';
@@ -163,6 +164,8 @@ export function createReaderRuntime({
   let module, bytes, preview, editor, format;
   const displayResources = createDisplayResourceCache();
   let historyEnabled = false;
+  let richTypingScope = 0;
+  let hwpxRichTypingOwners = null;
   let historyPoisoned = false;
   let hwpxChartOlePolicy = false;
   let protectionRemoved = false;
@@ -1048,6 +1051,14 @@ export function createReaderRuntime({
         response = {
           origin: message.origin,
           ...value,
+          ...(value.content?.format === format &&
+          historyStats?.protocolVersion === 2 &&
+          Number.isInteger(historyRevision) &&
+          !historyPoisoned &&
+          !hwpxCreatedTablesPending &&
+          editor?.supportsRichTypingAbi?.() === true
+            ? { content: { ...value.content, richTypingScope } }
+            : {}),
           sourceTableGridAvailable: historyEnabled && editor?.supportsSourceTableGrid?.() === true,
           createdTableGridAvailable:
             historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
@@ -1525,6 +1536,71 @@ export function createReaderRuntime({
           ...saved,
           ...(protectionRemoved ? { passwordProtectionRemoved: true } : {}),
         });
+      } else if (message.kind === 'splice-rich-character') {
+        if (!editor || !historyEnabled || editor.supportsRichTypingAbi?.() !== true)
+          throw Error('RichTypingUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        if (
+          message.richTypingScope !== richTypingScope ||
+          !Number.isInteger(message.expectedHistoryRevision) ||
+          message.expectedHistoryRevision !== editor.historyRevision()
+        )
+          throw Error('StaleRichTypingBinding');
+        if (message.rangePolicy !== undefined && message.rangePolicy !== 'reject')
+          throw Error('InvalidRangePolicy');
+        if (typeof message.text !== 'string' || !message.text || /[\r\n]/.test(message.text))
+          throw Error('UnsupportedRichTypingText');
+        const maximum = format === 'hwpx' ? 0xfffffffe : 0xffffffff;
+        if (
+          !Number.isInteger(message.paragraph) ||
+          message.paragraph < 0 ||
+          message.paragraph > maximum
+        )
+          throw RangeError('Invalid paragraph');
+        const paragraph = message.paragraph + (format === 'hwpx' ? 1 : 0);
+        if (format === 'hwp5') {
+          if (!['original', 'generated'].includes(message.reference?.kind))
+            throw Error('UnsupportedRichTypingOwner');
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentTextTransactionReference',
+            'UnsupportedRichTypingOwner',
+          );
+        } else if (format === 'hwpx') {
+          const projected = hwpxRichTypingOwners;
+          if (
+            hwpxCreatedTablesPending ||
+            projected?.editor !== editor ||
+            projected.scope !== richTypingScope ||
+            projected.revision !== message.expectedHistoryRevision ||
+            !projected.owners.get(message.section)?.has(message.paragraph) ||
+            !editor.canEdit(message.section, paragraph)
+          )
+            throw Error('UnsupportedRichTypingOwner');
+        } else throw Error('RichTypingUnavailable');
+        atomicOutcome = editor.spliceWithRichCharacter({
+          section: message.section,
+          paragraph,
+          startUnit: message.startUnit,
+          endUnit: message.endUnit,
+          text: message.text,
+          insertion: message.insertion,
+        });
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
       } else if (
         message.kind === 'splice-font-name' ||
         message.kind === 'splice-character-properties'
@@ -3035,6 +3111,22 @@ export function createReaderRuntime({
           changed: atomicOutcome.changed,
         };
       const revision = response.historyRevision;
+      if (format === 'hwpx') {
+        if (response.content || historyPoisoned || (response.error && applied))
+          hwpxRichTypingOwners = null;
+        if (!response.error && response.content?.richTypingScope === richTypingScope) {
+          // The display projection already proves top-level ownership and plain
+          // editability. Keep only coordinate membership, bound to its exact epoch.
+          const owners = new Map();
+          for (const row of response.content.paragraphs) {
+            if (!richTypingOwnerAllowed(format, row)) continue;
+            let section = owners.get(row.section);
+            if (!section) owners.set(row.section, (section = new Set()));
+            section.add(row.paragraph);
+          }
+          hwpxRichTypingOwners = { editor, scope: richTypingScope, revision, owners };
+        }
+      }
       const changed =
         typeof response.changed === 'boolean'
           ? response.changed
@@ -3072,6 +3164,7 @@ export function createReaderRuntime({
   let disposal;
   function clear() {
     hwp5PreviewDirty = false;
+    hwpxRichTypingOwners = null;
     displayResources.reset();
     try {
       editor?.close();
@@ -3114,6 +3207,8 @@ export function createReaderRuntime({
           if (loaded && !allowReload) throw new Error('RuntimeDocumentAlreadyLoaded');
           hwp5PreviewDirty = false;
           loaded = true;
+          richTypingScope = requestTicket;
+          hwpxRichTypingOwners = null;
           lastHistoryRevision = undefined;
         }
         admission?.();

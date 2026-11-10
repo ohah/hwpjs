@@ -1,3 +1,4 @@
+import { createRichTypingApi } from './rich-typing-api.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 import { prepareIndependentTextRequest } from './independent-text-request.mjs';
 
@@ -93,6 +94,7 @@ export function createIndependentTextApi({ wasm, memory, check, prefix }) {
     return ranges;
   };
   return {
+    ...createRichTypingApi({ wasm, memory, check, prefix, available, capabilities }),
     supportsIndependentTextAbi() {
       check();
       return available();

@@ -1452,7 +1452,7 @@ export fn hwp5_edit_text_transaction_capabilities() u32 {
     const revision = service.currentRevision() catch |err| return fail(err);
     const id = formatting_lifetime.session(a) catch |err| return fail(err);
     defer a.free(id);
-    output = @import("text_transaction_reply.zig").capabilities(a, .hwp5, .{ .session = id, .revision = revision }) catch |err| return fail(err);
+    output = @import("text_transaction_reply.zig").capabilities(a, .hwp5, .{ .session = id, .revision = revision }, true) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_query_text_transaction(ptr: [*]const u8, size: usize) u32 {
@@ -1487,4 +1487,39 @@ export fn hwp5_edit_apply_text_transaction(ptr: [*]const u8, size: usize) u32 {
         reflow = true;
     }
     return if (changed) 1 else 2;
+}
+
+export fn hwp5_edit_splice_rich_character(section: u32, paragraph: u32, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize, request_ptr: [*]const u8, request_size: usize) u32 {
+    const wire = @import("rich_typing_request.zig");
+    if (text_size > @import("../model/text_transaction.zig").limits.inserted_bytes or request_size > wire.max_bytes) return fail(error.LimitExceeded);
+    var request = wire.decode(a, request_ptr[0..request_size]) catch |err| return fail(err);
+    defer request.deinit();
+    const changed = applyRichCharacter(.{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size] }, request) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    return if (changed) 1 else 2;
+}
+
+fn applyRichCharacter(input: @import("text_transaction_commands.zig").Input, request: @import("rich_typing_request.zig").Request) !bool {
+    const service = try textTransactionService();
+    const revision = try service.currentRevision();
+    try formatting_lifetime.check(request.binding, revision);
+    const commands = try @import("character_property_text_commands.zig").buildRich(.hwp5, a, input, request.patch);
+    defer a.free(commands);
+    const next_epoch = try view_epoch.next();
+    var batch: edit.FormattingBatch = .{};
+    try service.session.beginFormattingBatch(&batch);
+    defer service.session.endFormattingBatch(&batch);
+    const changed = try service.history.applyBatch(service.session, commands);
+    if (changed) {
+        last_delta = null;
+        view_epoch.value = next_epoch;
+        reflow = true;
+    }
+    return changed;
 }

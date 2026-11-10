@@ -9,6 +9,14 @@ pub fn build(comptime format: Format, a: std.mem.Allocator, operations: []const 
     if (operations.len > m.limits.commands) return error.LimitExceeded;
     const output = try a.alloc(Command(format), operations.len);
     errdefer a.free(output);
+    try lowerInto(format, operations, output);
+    return output;
+}
+
+/// Lowers into caller-owned memory, including slices of a larger edit batch.
+pub fn lowerInto(comptime format: Format, operations: []const m.Operation, output: []Command(format)) !void {
+    if (operations.len > m.limits.commands) return error.LimitExceeded;
+    if (operations.len != output.len) return error.InvalidFormattingCommandBuffer;
     for (operations, output) |op, *command| {
         command.* = if (format == .hwp5) switch (op) {
             .character_resource => |v| .{ .set_character_format = .{ .section = v.owner.section, .paragraph = v.owner.paragraph, .start_unit = v.range.startUnit, .end_unit = v.range.endUnit, .char_shape_id = v.id } },
@@ -32,7 +40,6 @@ pub fn build(comptime format: Format, a: std.mem.Allocator, operations: []const 
             .spacing => |v| .{ .kind = .paragraph_spacing, .section = v.owner.section, .paragraph = v.owner.paragraph, .start = 0, .deleted = 0, .inserted = "", .paragraph_spacing = v.value },
         };
     }
-    return output;
 }
 pub fn apply(comptime format: Format, a: std.mem.Allocator, history: anytype, session: anytype, operations: []const m.Operation) !bool {
     if (operations.len == 0) return false;

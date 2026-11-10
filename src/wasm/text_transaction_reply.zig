@@ -27,7 +27,7 @@ fn encode(a: std.mem.Allocator, value: anytype) ![]u8 {
     if (writer.buffered().len != bytes.len) return error.InvalidTextTransactionReply;
     return bytes;
 }
-pub fn capabilities(a: std.mem.Allocator, format: Format, binding: Binding) ![]u8 {
+pub fn capabilities(a: std.mem.Allocator, format: Format, binding: Binding, supports_rich_insertion: bool) ![]u8 {
     return encode(a, .{
         .schemaVersion = @as(u32, 1),
         .atomic = true,
@@ -47,7 +47,7 @@ pub fn capabilities(a: std.mem.Allocator, format: Format, binding: Binding) ![]u
             .sections = m.limits.sections,
             .snapshotParagraphs = m.limits.snapshot_paragraphs,
         },
-        .supportsRichInsertion = false,
+        .supportsRichInsertion = supports_rich_insertion,
         .supportsNewlines = false,
         .ordinaryOnly = true,
     });

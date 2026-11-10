@@ -1,6 +1,6 @@
 //! Ordinary H5 source-backed text transactions. This service owns no document,
 //! history, lifetime issuer or persistent source cache. Public feature remains
-//! disabled until the special-purpose/created-host and insertion writers exist.
+//! limited to ordinary source owners; special-purpose/created-host remain unsupported.
 const std = @import("std");
 const edit = @import("style_preservation.zig");
 const History = @import("editor_history.zig").History;
@@ -114,6 +114,16 @@ pub const Service = struct {
     /// Admission resolves all refs/duplicates/global limits first. Every target
     /// dry-run finishes before ONE existing History command; no new queue/history.
     pub fn apply(self: Service, a: std.mem.Allocator, input: m.Apply) !bool {
+        return self.applyInner(a, input, if (@import("builtin").is_test) null else {});
+    }
+    pub const Testing = if (@import("builtin").is_test) struct {
+        pub const Work = @import("character_property_apply.zig").Work;
+        pub fn applyMeasured(self: Service, a: std.mem.Allocator, input: m.Apply, work: *Work) !bool {
+            work.* = .{};
+            return self.applyInner(a, input, work);
+        }
+    } else struct {};
+    fn applyInner(self: Service, a: std.mem.Allocator, input: m.Apply, work: if (@import("builtin").is_test) ?*@import("character_property_apply.zig").Work else void) !bool {
         const revision = try self.checkBinding(input.binding);
         var resolver: Resolver = .{ .service = self, .sources = .{ .allocator = a, .session = self.session } };
         defer resolver.sources.deinit();
@@ -122,8 +132,37 @@ pub const Service = struct {
         const groups = try a.alloc(@import("independent_text_session.zig").Group, plan.len);
         defer a.free(groups);
         for (plan, groups) |item, *group| group.* = .{ .section = item.target.owner.section, .paragraph = item.target.owner.paragraph, .edits = item.request.edits };
+        var rich: std.ArrayList(edit.Command) = .empty;
+        defer {
+            for (rich.items) |command| a.free(command.set_character_grouped_insertion.ranges);
+            rich.deinit(a);
+        }
+        var operation_count: usize = 0;
+        for (plan) |item| {
+            if (!item.request.insertion.hasCharacter()) continue;
+            const ranges = try @import("../../model/text_transaction_insertions.zig").prepare(a, item.request.edits, item.request.before_units);
+            errdefer a.free(ranges);
+            // Preserve the prior expanded operation budget, even though the
+            // writer now consumes a whole group in one command.
+            const count = try formatting.operationCount(.{ .binding = input.binding, .targets = &.{.{ .ref = item.request.ref, .ranges = ranges }}, .patch = item.request.insertion });
+            if (count > formatting.limits.commands - operation_count) return error.LimitExceeded;
+            operation_count += count;
+            try rich.append(a, .{ .set_character_grouped_insertion = .{ .section = item.target.owner.section, .paragraph = item.target.owner.paragraph, .ranges = ranges, .insertion = item.request.insertion } });
+        }
         _ = try self.checkBinding(input.binding);
-        return self.history.apply(self.session, .{ .splice_independent_text = groups });
+        if (rich.items.len == 0) return self.history.apply(self.session, .{ .splice_independent_text = groups });
+        const commands = try a.alloc(edit.Command, rich.items.len + 1);
+        defer a.free(commands);
+        commands[0] = .{ .splice_independent_text = groups };
+        @memcpy(commands[1..], rich.items);
+        var formatting_context: edit.FormattingBatch = .{};
+        try self.session.beginFormattingBatch(&formatting_context);
+        defer self.session.endFormattingBatch(&formatting_context);
+        defer if (@import("builtin").is_test) {
+            if (work) |measurement| measurement.* = formatting_context.grouped_work;
+        };
+        _ = try self.checkBinding(input.binding);
+        return self.history.applyBatch(self.session, commands);
     }
 };
 const Resolver = struct {
@@ -138,8 +177,19 @@ const Resolver = struct {
     }
     pub fn validate(self: *Resolver, target: refs.Target, group: m.Group) !void {
         if (target.kind != .plain or target.begin_element != 0) return error.UnsupportedTextTransactionTarget;
-        if (group.insertion.hasCharacter()) return error.UnsupportedTextInsertionFormatting;
+        if (group.insertion.hasCharacter()) try validateInsertion(group.insertion);
         const context = try self.sources.get(target.owner.section);
         try self.service.session.validateIndependentTextTarget(context, target.owner.section, target.owner.paragraph, group.before_units, group.edits);
     }
 };
+
+// Pure sparse intent checks only. Range/resource/source-version permission is
+// enforced by the existing writers AFTER the text command, inside ONE History.
+fn validateInsertion(patch: formatting.Patch) !void {
+    try @import("../../model/character_properties.zig").validate(patch.character);
+    if (patch.character.font_ids) |ids| try @import("../../model/character_fonts.zig").validateHwp5(ids);
+    for (patch.fonts) |intent| if (intent) |font| switch (font) {
+        .id => |id| if (id > std.math.maxInt(u16)) return error.InvalidFontId,
+        .name => |name| try @import("../../model/font_name.zig").validate(name, formatting.limits.font_name_bytes),
+    };
+}

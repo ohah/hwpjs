@@ -1,3 +1,4 @@
+import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { retainOverflowPreviewBarrier } from './overflow-preview-barrier.mjs';
 import { projectVisibleOverflowCells } from './visible-overflow-cell-edit.mjs';
 import { createPreviewEditPolicy } from './preview-edit-policy.mjs';
@@ -89,6 +90,7 @@ import { projectCreatedCellDraft } from './created-cell-draft.mjs';
 import { adjacentCell } from './table-navigation.mjs';
 import {
   characterTogglePatch,
+  characterPropertyResourceValue,
   characterSelectionState,
   characterRangesState,
 } from './character-property-selection.mjs';
@@ -2134,6 +2136,33 @@ export function createRenderer(
     characterStrikeColorAvailable: () => content.characterStrikeColorAvailable === true,
     characterFontAvailable: () => content.characterFontAvailable === true,
     characterFontNameAvailable: () => content.characterFontNameAvailable === true,
+    richTypingScope(point) {
+      const policy = viewPolicy();
+      if (
+        point?.createdCell ||
+        !policy.allowsPoint(point) ||
+        !Number.isSafeInteger(content.richTypingScope)
+      )
+        return null;
+      const row = paragraphLookup.find(policy.content.paragraphs, point);
+      return richTypingOwnerAllowed(content.format, row) ? content.richTypingScope : null;
+    },
+    emptyCaretDecoration(point, property) {
+      if (this.richTypingScope(point) === null) return null;
+      const row = paragraphLookup.find(content.paragraphs, point);
+      const spans = row?.characterRanges;
+      if (row?.text !== '' || spans?.length !== 1 || spans[0].start !== 0 || spans[0].end !== 0)
+        return null;
+      const id = spans[0].charShapeId;
+      if (!Number.isInteger(id) || id < 0) return null;
+      const value = characterPropertyResourceValue(
+        property,
+        null,
+        content.characterUnderlines?.find((entry) => entry.id === id),
+        content.characterStrikes?.find((entry) => entry.id === id),
+      );
+      return typeof value === 'boolean' ? value : null;
+    },
     namedFontTextAvailable: () => content.namedFontTextAvailable === true,
     characterPropertyTextAvailable: () => content.characterPropertyTextAvailable === true,
     namedFontPropertyTextAvailable: () => content.namedFontPropertyTextAvailable === true,

@@ -26,7 +26,7 @@ test "text transaction reply exact shared DTO ordering and coverage subset" {
 }
 test "text transaction reply tiny capabilities allocate exact dynamic bytes" {
     var measured = std.testing.FailingAllocator.init(a, .{});
-    const bytes = try reply.capabilities(measured.allocator(), .hwp5, binding);
+    const bytes = try reply.capabilities(measured.allocator(), .hwp5, binding, false);
     defer measured.allocator().free(bytes);
     try std.testing.expectEqual(@as(usize, 1), measured.alloc_index);
     try std.testing.expectEqual(bytes.len, measured.allocated_bytes);
@@ -69,11 +69,20 @@ test "text transaction reply hard bound counts escaped bytes before allocation a
     try std.testing.expectError(error.LimitExceeded, reply.query(fail.allocator(), binding, coverage, &large));
     try std.testing.expectEqual(@as(usize, 0), fail.alloc_index);
     try std.testing.expectError(error.OutOfMemory, reply.query(fail.allocator(), binding, coverage, &rows));
-    try std.testing.expectError(error.OutOfMemory, reply.capabilities(fail.allocator(), .hwp5, binding));
+    try std.testing.expectError(error.OutOfMemory, reply.capabilities(fail.allocator(), .hwp5, binding, false));
     try std.testing.checkAllAllocationFailures(a, struct {
         fn run(allocator: std.mem.Allocator) !void {
             const bytes = try reply.query(allocator, binding, coverage, &rows);
             defer allocator.free(bytes);
         }
     }.run, .{});
+}
+
+test "text transaction reply reports only the declared rich insertion capability" {
+    const bytes = try reply.capabilities(a, .hwpx, binding, true);
+    defer a.free(bytes);
+    var parsed = try std.json.parseFromSlice(std.json.Value, a, bytes, .{});
+    defer parsed.deinit();
+    try std.testing.expect(parsed.value.object.get("supportsRichInsertion").?.bool);
+    try std.testing.expect(!parsed.value.object.get("supportsNewlines").?.bool);
 }

@@ -178,7 +178,7 @@ test "HX text service r4 all admission and late source failure precede mutation 
     try h.text(0, 2, "!OTHER");
 }
 
-test "HX text service r4 noops coverage scope duplicate selectors unsupported kinds and rich insertion" {
+test "HX text service r4 noops coverage scope duplicate selectors unsupported kinds and sparse rich insertion" {
     const bytes = try input(a, plain);
     defer a.free(bytes);
     var h = try Harness.init(a, bytes);
@@ -205,7 +205,8 @@ test "HX text service r4 noops coverage scope duplicate selectors unsupported ki
     try std.testing.expectError(error.UnsupportedTextTransactionTarget, h.service().apply(a, request(&q, &gs)));
     gs[0].ref = q.rows[0].ref;
     gs[0].insertion.character.bold = true;
-    try std.testing.expectError(error.UnsupportedTextInsertionFormatting, h.service().apply(a, request(&q, &gs)));
+    try std.testing.expect(try h.service().apply(a, request(&q, &gs)));
+    try std.testing.expect(try h.history.undo(h.session));
     try savedEqual(h.session, bytes);
 }
 

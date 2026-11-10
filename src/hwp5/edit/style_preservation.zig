@@ -28,6 +28,7 @@ pub const Command = union(enum) {
     splice_independent_text: []const @import("independent_text_session.zig").Group,
     set_character_format: CharacterFormat,
     set_character_properties: @import("character_property_apply.zig").Edit,
+    set_character_grouped_insertion: @import("character_property_apply.zig").GroupEdit,
     set_character_font_name: struct { section: usize, paragraph: usize, start_unit: u32, end_unit: u32, language: @import("../../model/character_fonts.zig").Language, name: []const u8 },
     split_paragraph: @import("structure_session.zig").Split,
     merge_paragraph: @import("merge_session.zig").Merge,
@@ -117,6 +118,10 @@ pub const FormattingBatch = struct {
     original_info: ?[]u8 = null,
     characters: @import("character_property_apply.zig").Context = .{},
     docinfo_decodes: usize = 0,
+    grouped_work: @import("character_property_apply.zig").Work = if (@import("builtin").is_test) .{} else {},
+    grouped_source: ?[]const []u8 = null,
+    grouped_version: u32 = 0,
+    grouped_excluded_section: ?usize = null,
     pub fn deinit(self: *FormattingBatch, a: std.mem.Allocator) void {
         self.characters.deinit(a);
         if (self.original_info) |bytes| a.free(bytes);
@@ -1419,8 +1424,14 @@ pub const Session = opaque {
         defer if (self.getState().has_source_rebases) self.getState().refreshSourceViews();
         errdefer if (font_cache) |cache| cache.clear();
         errdefer if (self.getState().formatting_batch) |context| context.characters.abort(self.getState().allocator);
+        // Grouped policy proof borrows immutable section sources only across
+        // adjacent grouped paints. Other commands can rebase a section in place.
+        if (command != .set_character_grouped_insertion) if (self.getState().formatting_batch) |context| {
+            context.grouped_source = null;
+            context.grouped_excluded_section = null;
+        };
         if (font_cache) |cache| switch (command) {
-            .set_character_font_name, .set_character_properties, .set_character_format, .set_paragraph_format, .set_paragraph_alignment, .set_paragraph_flags, .set_paragraph_border_fill, .set_paragraph_margins, .set_paragraph_spacing => {},
+            .set_character_font_name, .set_character_properties, .set_character_grouped_insertion, .set_character_format, .set_paragraph_format, .set_paragraph_alignment, .set_paragraph_flags, .set_paragraph_border_fill, .set_paragraph_margins, .set_paragraph_spacing => {},
             else => cache.clear(),
         };
         try self.materializeLiveText();
@@ -1649,6 +1660,7 @@ pub const Session = opaque {
                     try @import("created_table_host_splice.zig").apply(state.allocator, state.decoded[edit.section], &state.document.sections[edit.section], &state.created_tables[edit.section], state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
                 } else try @import("paragraph_splice.zig").apply(state.allocator, state.decoded[edit.section], state.source.header.version(), &state.document.sections[edit.section], edit, self.characterShapeCount());
             },
+            .set_character_grouped_insertion => |edit| try self.applyGroupedInsertion(edit, font_cache),
             .set_character_properties => |edit| {
                 const state = self.getState();
                 if (edit.section >= state.document.sections.len) return error.InvalidSection;
@@ -1671,6 +1683,71 @@ pub const Session = opaque {
             // No promise to relocate unknown cross-references after structure edits.
             .insert_text, .delete_paragraph => return error.UnsupportedStructuralEdit,
         }
+    }
+
+    /// Rich-only group. Source policy and resource allocation remain inside
+    /// the same managed History transaction as the preceding bulk text.
+    fn applyGroupedInsertion(self: *Session, edit: @import("character_property_apply.zig").GroupEdit, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
+        const state = self.getState();
+        const a = state.allocator;
+        const batch = state.formatting_batch orelse return error.HistoryProtocolRequired;
+        if (!self.historyTransactionActive()) return error.HistoryProtocolRequired;
+        if (edit.section >= state.decoded.len) return error.InvalidSection;
+        if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
+        if (edit.insertion.hasParagraph() or edit.insertion.reset != null) return error.UnsupportedTextInsertionFormatting;
+        if (edit.ranges.len == 0) return error.EmptyCharacterSelection;
+        const version = state.source.header.version();
+        if (batch.grouped_source) |source| {
+            if (source.ptr != state.decoded.ptr or source.len != state.decoded.len or batch.grouped_version != version.raw) return error.SourceBindingMismatch;
+            if (batch.grouped_excluded_section) |excluded| if (excluded != edit.section) {
+                try @import("source_policy.zig").validateUnselectedCharacterFormat(a, source[excluded], version);
+                if (@import("builtin").is_test) batch.grouped_work.unselected_sections += 1;
+                batch.grouped_excluded_section = null;
+            };
+        } else {
+            for (state.decoded, 0..) |bytes, index| if (index != edit.section) {
+                try @import("source_policy.zig").validateUnselectedCharacterFormat(a, bytes, version);
+                if (@import("builtin").is_test) batch.grouped_work.unselected_sections += 1;
+            };
+            batch.grouped_source = state.decoded;
+            batch.grouped_version = version.raw;
+            batch.grouped_excluded_section = edit.section;
+        }
+        const prepared = try self.originalInfo();
+        defer if (prepared.owned) a.free(prepared.bytes);
+        var properties = edit.insertion.character;
+        const fonts = @import("../../model/character_fonts.zig");
+        var ids = properties.font_ids orelse @as(fonts.Values, @splat(null));
+        var has_ids = properties.font_ids != null;
+        for (edit.insertion.fonts, 0..) |intent, index| if (intent) |font| switch (font) {
+            .id => |id| {
+                ids[index] = id;
+                has_ids = true;
+            },
+            .name => {},
+        };
+        if (has_ids) properties.font_ids = ids;
+        const writer = @import("character_property_apply.zig");
+        // Explicit IDs must still be valid even if a later name in that
+        // language overrides them (same precedence as the former commands).
+        try @import("character_property_payload.zig").validate(properties);
+        try writer.validateFontIds(a, prepared.bytes, version, &state.document, properties, &batch.characters);
+        for (edit.insertion.fonts, 0..) |intent, index| if (intent) |font| switch (font) {
+            .id => {},
+            .name => |name| {
+                const language: fonts.Language = @fromBackingInt(@intCast(index));
+                const cached = if (font_cache) |cache| cache.get(@intCast(index), name) else null;
+                ids[index] = cached orelse blk: {
+                    if (@import("builtin").is_test) batch.grouped_work.font_names += 1;
+                    const id = try self.ensureFont(language, name);
+                    if (font_cache) |cache| cache.put(@intCast(index), name, id);
+                    break :blk id;
+                };
+                has_ids = true;
+            },
+        };
+        if (has_ids) properties.font_ids = ids;
+        try writer.applyGrouped(a, state.decoded[edit.section], prepared.bytes, version, &state.document, edit.section, edit.paragraph, properties, edit.ranges, state.char_count, max_stream, &batch.characters, if (@import("builtin").is_test) &batch.grouped_work else {});
     }
 
     pub fn save(self: *const Session, a: std.mem.Allocator, options: SaveOptions) !Saved {

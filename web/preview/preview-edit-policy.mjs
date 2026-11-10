@@ -18,6 +18,7 @@ const paragraphs = new Set([
   'splice',
   'splice-font-name',
   'splice-character-properties',
+  'splice-rich-character',
   'split',
   'merge',
   'insert-table',

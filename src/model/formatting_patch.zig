@@ -110,30 +110,10 @@ pub fn plan(a: std.mem.Allocator, input: Apply, resolver: anytype) ![]Operation 
             } else return error.UnsupportedFormattingReset;
             continue;
         }
-        var character = input.patch.character;
-        var ids = character.font_ids orelse @as(@import("character_fonts.zig").Values, @splat(null));
-        var has_ids = character.font_ids != null;
-        for (input.patch.fonts, 0..) |font, language| if (font) |intent| switch (intent) {
-            .id => |id| {
-                ids[language] = id;
-                has_ids = true;
-            },
-            .name => {},
-        };
-        if (has_ids) character.font_ids = ids;
         if (input.patch.hasCharacter()) {
             if (target.ranges.len == 0) return error.EmptyCharacterSelection;
-            for (target.ranges) |range| {
-                var has_properties = false;
-                inline for (@import("../reflection.zig").fields(model.CharacterPropertyPatch)) |field| {
-                    has_properties = has_properties or @field(character, field.name) != null;
-                }
-                if (has_properties) try append(a, &ops, .{ .character = .{ .owner = owner, .range = range, .patch = character } });
-                for (input.patch.fonts, 0..) |font, language| if (font) |intent| switch (intent) {
-                    .id => {},
-                    .name => |name| try append(a, &ops, .{ .font_name = .{ .owner = owner, .range = range, .language = @fromBackingInt(@intCast(language)), .name = name } }),
-                };
-            }
+            const character = CharacterIntent.init(input.patch);
+            for (target.ranges) |range| try character.appendRange(a, &ops, owner, range);
         }
         if (@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill)) try append(a, &ops, .{ .paragraph_border_fill = .{ .owner = owner, .value = input.patch.paragraph.border_fill, .flags = input.patch.paragraph.flags } });
         if (@import("paragraph_flags.zig").has(input.patch.paragraph.flags) and !@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill)) try append(a, &ops, .{ .paragraph_flags = .{ .owner = owner, .value = input.patch.paragraph.flags } });
@@ -147,6 +127,42 @@ pub fn plan(a: std.mem.Allocator, input: Apply, resolver: anytype) ![]Operation 
     }
     return ops.toOwnedSlice(a);
 }
+/// Resolves sparse font IDs once. A name, if present, is applied after the
+/// properties command so it can replace the ID for that language.
+pub const CharacterIntent = struct {
+    properties: ?model.CharacterPropertyPatch,
+    fonts: [7]?Font,
+
+    pub fn init(patch: Patch) CharacterIntent {
+        var character = patch.character;
+        var ids = character.font_ids orelse @as(@import("character_fonts.zig").Values, @splat(null));
+        var has_ids = character.font_ids != null;
+        for (patch.fonts, 0..) |font, language| if (font) |intent| switch (intent) {
+            .id => |id| {
+                ids[language] = id;
+                has_ids = true;
+            },
+            .name => {},
+        };
+        if (has_ids) character.font_ids = ids;
+        var has_properties = false;
+        inline for (@import("../reflection.zig").fields(model.CharacterPropertyPatch)) |field| {
+            has_properties = has_properties or @field(character, field.name) != null;
+        }
+        return .{ .properties = if (has_properties) character else null, .fonts = patch.fonts };
+    }
+
+    /// Builds operations for a caller-validated owner and nonempty range.
+    /// Any font name borrows the request buffer until the batch returns.
+    pub fn appendRange(self: CharacterIntent, a: std.mem.Allocator, ops: *std.ArrayList(Operation), owner: Owner, range: Range) !void {
+        if (self.properties) |value| try append(a, ops, .{ .character = .{ .owner = owner, .range = range, .patch = value } });
+        for (self.fonts, 0..) |font, language| if (font) |intent| switch (intent) {
+            .id => {},
+            .name => |name| try append(a, ops, .{ .font_name = .{ .owner = owner, .range = range, .language = @fromBackingInt(@intCast(language)), .name = name } }),
+        };
+    }
+};
+
 pub fn operationCount(input: Apply) !usize {
     if (input.patch.reset) |reset| {
         var total: usize = 0;

@@ -26347,6 +26347,92 @@ var invalid$1;
 var init_independent_text_request = __esmMin((() => {
 	invalid$1 = () => Error("InvalidTextTransactionDTO");
 }));
+// ../../js/text-transaction-args.mjs
+function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
+	const positions = [
+		section,
+		paragraph,
+		startUnit,
+		endUnit
+	];
+	if (positions.some((value) => !Number.isInteger(value) || value < 0 || value > 4294967295) || endUnit < startUnit) throw new RangeError("InvalidTextPosition");
+	if (typeof text !== "string") throw new TypeError("Text must be a string");
+	if (!text.isWellFormed()) throw new RangeError("InvalidUnicodeEncoding");
+	if (text.length === 0 || startUnit + text.length > 4294967295) throw new RangeError("InvalidTextPosition");
+	if (text.length > 4194304) throw new RangeError("LimitExceeded");
+	const bytes = new TextEncoder().encode(text);
+	if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
+	return {
+		positions,
+		bytes
+	};
+}
+var init_text_transaction_args = __esmMin((() => {}));
+// ../../js/rich-typing-api.mjs
+function createRichTypingApi({ wasm, memory, check, prefix, available, capabilities }) {
+	const action = wasm[`${prefix}_splice_rich_character`];
+	const hwp5 = prefix === "hwp5_edit";
+	const supported = () => typeof action === "function" && available();
+	return {
+		supportsRichTypingAbi() {
+			check();
+			return supported();
+		},
+		spliceWithRichCharacter(input) {
+			check();
+			if (!supported()) throw Error("RichTypingUnavailable");
+			const { binding, limits } = capabilities();
+			if (!input || typeof input !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw Error("InvalidRichTypingRequest");
+			const request = Object.create(null);
+			for (const key of Reflect.ownKeys(input)) {
+				if (!keys$2.has(key)) throw Error("InvalidRichTypingRequest");
+				const descriptor = Object.getOwnPropertyDescriptor(input, key);
+				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
+				request[key] = descriptor.value;
+			}
+			const { positions, bytes } = textTransactionArgs(request);
+			const kind = modes.indexOf(request.textMode ?? "plain");
+			const begin = request.beginElement ?? 0;
+			if (kind < 0 || hwp5 && (kind !== 0 || begin !== 0)) throw Error("InvalidTextKind");
+			if (!Number.isInteger(begin) || begin < 0 || begin > 4294967295) throw Error("InvalidTextPosition");
+			const { bytes: wire } = prepareIndependentTextRequest({
+				schemaVersion: 1,
+				binding,
+				insertion: request.insertion
+			}, {
+				...limits,
+				requestBytes: Math.min(limits.requestBytes, requestLimit)
+			});
+			const payload = new Uint8Array(bytes.length + wire.length);
+			payload.set(bytes);
+			payload.set(wire, bytes.length);
+			const mode = hwp5 ? [] : [kind, begin];
+			return applyNativeEdit(memory, payload, (ptr) => action(...positions, ptr, bytes.length, ptr + bytes.length, wire.length, ...mode), "InvalidRichTypingResult");
+		}
+	};
+}
+var keys$2, modes, requestLimit;
+var init_rich_typing_api = __esmMin((() => {
+	init_independent_text_request();
+	init_native_edit_outcome();
+	init_text_transaction_args();
+	keys$2 = /* @__PURE__ */ new Set([
+		"section",
+		"paragraph",
+		"startUnit",
+		"endUnit",
+		"text",
+		"textMode",
+		"beginElement",
+		"insertion"
+	]);
+	modes = [
+		"plain",
+		"anchored",
+		"field"
+	];
+	requestLimit = 65536;
+}));
 // ../../js/independent-text-api.mjs
 function createIndependentTextApi({ wasm, memory, check, prefix }) {
 	const suffixes = [
@@ -26408,6 +26494,14 @@ function createIndependentTextApi({ wasm, memory, check, prefix }) {
 		return ranges;
 	};
 	return {
+		...createRichTypingApi({
+			wasm,
+			memory,
+			check,
+			prefix,
+			available,
+			capabilities
+		}),
 		supportsIndependentTextAbi() {
 			check();
 			return available();
@@ -26436,6 +26530,7 @@ function createIndependentTextApi({ wasm, memory, check, prefix }) {
 	};
 }
 var init_independent_text_api = __esmMin((() => {
+	init_rich_typing_api();
 	init_native_edit_outcome();
 	init_independent_text_request();
 }));
@@ -27737,27 +27832,6 @@ function characterFontNameArgs(language, name) {
 var init_character_font_name_args = __esmMin((() => {
 	init_character_font_args();
 }));
-// ../../js/text-transaction-args.mjs
-function textTransactionArgs({ section, paragraph, startUnit, endUnit, text }) {
-	const positions = [
-		section,
-		paragraph,
-		startUnit,
-		endUnit
-	];
-	if (positions.some((value) => !Number.isInteger(value) || value < 0 || value > 4294967295) || endUnit < startUnit) throw new RangeError("InvalidTextPosition");
-	if (typeof text !== "string") throw new TypeError("Text must be a string");
-	if (!text.isWellFormed()) throw new RangeError("InvalidUnicodeEncoding");
-	if (text.length === 0 || startUnit + text.length > 4294967295) throw new RangeError("InvalidTextPosition");
-	if (text.length > 4194304) throw new RangeError("LimitExceeded");
-	const bytes = new TextEncoder().encode(text);
-	if (bytes.length > 4194304) throw new RangeError("LimitExceeded");
-	return {
-		positions,
-		bytes
-	};
-}
-var init_text_transaction_args = __esmMin((() => {}));
 // ../../js/named-font-text-args.mjs
 function namedFontTextArgs({ section, paragraph, startUnit, endUnit, text, language, name }) {
 	const { positions, bytes } = textTransactionArgs({

@@ -87,9 +87,12 @@ pub const Service = struct {
         const plan = try @import("../model/text_transaction_admission.zig").prepare(a, self.lifetime.*, revision, input, &resolver);
         defer a.free(plan);
         if (resolver.context) |*value| try value.validatePrepared();
+        var rich = false;
+        for (plan) |item| rich = rich or item.request.insertion.hasCharacter();
+        if (rich) try resolver.context.?.validateInsertionFormatting(a, self.lifetime, self.history, input.binding, plan);
         const commands = try a.alloc(history_mod.Command, plan.len);
         defer a.free(commands);
-        for (plan, commands) |item, *command| command.* = .{
+        for (plan, commands) |*item, *command| command.* = .{
             .kind = .independent_text,
             .section = item.target.owner.section,
             .paragraph = item.target.owner.paragraph,
@@ -97,10 +100,17 @@ pub const Service = struct {
             .deleted = 0,
             .inserted = "",
             .independent_text_edits = item.request.edits,
+            .independent_text_insertion = if (item.request.insertion.hasCharacter()) &item.request.insertion else null,
         };
         // Retire every dry-run candidate before entering the actual owner.
         resolver.deinit();
         _ = try self.checkBinding(input.binding);
+        if (!rich) return self.history.applyBatch(self.session, commands);
+        // Resource creation and text/style commits belong exclusively to this
+        // one existing History owner, including rollback and redo preservation.
+        var batch: @import("formatting_batch_context.zig").Context = .{};
+        try self.session.beginFormattingBatch(&batch);
+        defer self.session.endFormattingBatch(&batch);
         return self.history.applyBatch(self.session, commands);
     }
 };
@@ -120,7 +130,10 @@ const Resolver = struct {
     }
     pub fn validate(self: *Resolver, target: refs.Target, group: m.Group) !void {
         if (target.kind != .plain or target.begin_element != 0) return error.UnsupportedTextTransactionTarget;
-        if (group.insertion.hasCharacter()) return error.UnsupportedTextInsertionFormatting;
+        for (group.insertion.fonts) |font| if (font) |value| switch (value) {
+            .name => |name| try @import("../model/font_name.zig").validate(name, formatting.limits.font_name_bytes),
+            .id => {},
+        };
         for (group.edits) |edit| if (std.mem.indexOfAny(u8, edit.text, "\r\n") != null) return error.UnsupportedTextInsertionNewline;
         if (self.context == null) self.context = try Context.init(self.service.session);
         try self.context.?.preflight(target.owner.section, target.owner.paragraph, group.before_units, group.edits);

@@ -19,15 +19,8 @@ pub fn applyScoped(a: std.mem.Allocator, source: []const u8, version: Version, p
     try @import("control_boundaries.zig").validateRetainedText(text);
     try @import("control_boundaries.zig").validate(text, edit.start_unit, edit.end_unit);
     try runs.validate(p.character_runs, text, count);
-    const range_count = if (p.range_tags) |r| r.len else if (original_ranges) |r| r.count() else 0;
-    // Length does not change: preserve even zero-length ranges without affinity.
-    const ranges = try a.alloc(model.TextRange, range_count);
+    const ranges = try prepareRanges(a, p.*, original_ranges, text);
     errdefer a.free(ranges);
-    for (ranges, 0..) |*r, i| {
-        r.* = if (p.range_tags) |rr| rr[i] else .{ .start_unit = original_ranges.?.get(i).?.start, .end_unit = original_ranges.?.get(i).?.end, .tag = original_ranges.?.get(i).?.tag };
-        try plain.boundary(text, r.start_unit);
-        try plain.boundary(text, r.end_unit);
-    }
     if (edit.start_unit == edit.end_unit) {
         a.free(ranges);
         return;
@@ -48,4 +41,18 @@ pub fn applyScoped(a: std.mem.Allocator, source: []const u8, version: Version, p
     p.character_runs = owned;
     p.range_tags = ranges;
     p.deferred_direct_records = validated.preserved_direct_records;
+}
+
+/// Same-length formatting preserves current or source range metadata verbatim.
+pub fn prepareRanges(a: std.mem.Allocator, p: model.Paragraph, original_ranges: ?@import("../body/reader.zig").Ranges, text: []const u8) ![]model.TextRange {
+    const range_count = if (p.range_tags) |r| r.len else if (original_ranges) |r| r.count() else 0;
+    // Length does not change: preserve even zero-length ranges without affinity.
+    const ranges = try a.alloc(model.TextRange, range_count);
+    errdefer a.free(ranges);
+    for (ranges, 0..) |*r, i| {
+        r.* = if (p.range_tags) |rr| rr[i] else .{ .start_unit = original_ranges.?.get(i).?.start, .end_unit = original_ranges.?.get(i).?.end, .tag = original_ranges.?.get(i).?.tag };
+        try plain.boundary(text, r.start_unit);
+        try plain.boundary(text, r.end_unit);
+    }
+    return ranges;
 }

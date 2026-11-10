@@ -101,6 +101,46 @@ pub const Context = struct {
         a.free(self.global_digests);
         self.* = undefined;
     }
+    /// Validate sparse insertion intent against the actual private after model.
+    /// The shallow section view borrows this Context's drafts and immutable live
+    /// source/resources for this call only. It is never published, saved, mutated
+    /// or deinitialized as a Session. Normal owner/source checks still run.
+    pub fn validateInsertionFormatting(self: *Context, a: std.mem.Allocator, state: *const @import("../model/formatting_binding.zig").State, history: *@import("editor_history.zig").History, binding: @import("../model/formatting_patch.zig").Binding, groups: []const @import("../model/text_transaction_admission.zig").Group) !void {
+        const f = @import("../model/formatting_patch.zig");
+        try self.validatePrepared();
+        const sections = try a.dupe(editor.Section, self.session.sections);
+        defer a.free(sections);
+        for (sections, 0..) |*section, index| {
+            section.paragraph_query_cache = null;
+            if (self.drafts.getPtr(index)) |draft| {
+                section.structure_values = draft.values;
+                section.sites = .{ .items = &.{} };
+            }
+        }
+        var after = self.session.*;
+        after.sections = sections;
+        after.header_read_context = null;
+        after.formatting_batch = null;
+        var operation_count: usize = 0;
+        for (groups) |item| {
+            if (!item.request.insertion.hasCharacter()) continue;
+            const ranges = try @import("../model/text_transaction_insertions.zig").prepare(a, item.request.edits, item.request.before_units);
+            defer a.free(ranges);
+            if (ranges.len == 0) return error.EmptyStyledTextInsertion;
+            const count = try f.operationCount(.{ .binding = binding, .targets = &.{.{ .ref = "", .ranges = ranges }}, .patch = item.request.insertion });
+            if (count > f.limits.commands - operation_count) return error.LimitExceeded;
+            operation_count += count;
+            const section = &after.sections[item.target.owner.section];
+            const paragraph = &section.structure_values.?.paragraphs[item.target.owner.paragraph - section.first_paragraph];
+            var selection = try prepareInsertionSelection(a, section, paragraph, ranges, after.options.max_sites);
+            defer selection.deinit(a);
+            const budget = @import("rich_insertion_ranges.zig").SpanBudget.init(&selection, after.options.max_sites);
+            for (selection.cuts.items) |cut| try budget.validate(&selection, cut);
+            try @import("rich_insertion_plan.zig").validate(a, &after, state, history, binding, item.target.owner, selection.representatives.items, item.request.insertion);
+        }
+        try self.validatePrepared();
+    }
+
     fn check(self: *const Context) !void {
         const s = self.session;
         if (self.consumed or s.source.ptr != self.source or s.sections.ptr != self.section_pointer or s.sections.len != self.fields.len or s.mutation_serial != self.serial or s.history_transaction_active != self.active or !std.meta.eql(s.options, self.options)) return error.StaleIndependentTextContext;
@@ -382,12 +422,48 @@ fn moveProtected(a: std.mem.Allocator, rows: []const model.ProtectedPosition, ed
     }
     return result;
 }
-pub fn applyBatch(session: *editor.Session, commands: []const Command) !bool {
+fn prepareInsertionSelection(a: std.mem.Allocator, section: *const editor.Section, paragraph: *const model.Paragraph, ranges: []const @import("../model/formatting_patch.zig").Range, limit: usize) !@import("rich_insertion_ranges.zig").Plan {
+    if (paragraph.source_ordinal == null) try @import("formatting_generated_owner.zig").validate(section, paragraph);
+    const positions = try currentPositions(a, &section.tree, paragraph);
+    defer a.free(positions);
+    const base = try originalStyles(a, &section.tree, &paragraph.sites, positions, limit);
+    defer a.free(base);
+    return @import("rich_insertion_ranges.zig").prepare(a, &paragraph.sites, base, paragraph.character_styles orelse base, ranges);
+}
+
+pub fn applyBatch(session: *editor.Session, commands: []const Command, fonts: *@import("../model/batch_font_lookup.zig").Cache) !bool {
+    const a = session.allocator;
     var context = try Context.init(session);
     defer context.deinit();
-    for (commands) |command| {
+    const Insertion = struct { command: *const Command, before_units: u32 };
+    var insertions: std.ArrayList(Insertion) = .empty;
+    defer insertions.deinit(a);
+    for (commands) |*command| {
         if (command.kind != .independent_text or command.start != 0 or command.deleted != 0 or command.inserted.len != 0 or command.break_before != null) return error.InvalidIndependentTextCommand;
-        _ = try context.apply(command.section, command.paragraph, command.independent_text_edits);
+        const text = try context.prepareTarget(command.section, command.paragraph, null, command.independent_text_edits);
+        if (command.independent_text_insertion != null) try insertions.append(a, .{ .command = command, .before_units = text.before_units });
+    }
+    if (insertions.items.len != 0) try context.validatePrepared();
+    for (insertions.items) |item| {
+        const command = item.command;
+        const ranges = try @import("../model/text_transaction_insertions.zig").prepare(a, command.independent_text_edits, item.before_units);
+        defer a.free(ranges);
+        if (ranges.len == 0) return error.EmptyStyledTextInsertion;
+        const draft = context.drafts.getPtr(command.section).?;
+        var section = session.sections[command.section];
+        section.structure_values = draft.values;
+        section.sites = .{ .items = &.{} };
+        const paragraph = &draft.values.paragraphs[command.paragraph - section.first_paragraph];
+        var selection = try prepareInsertionSelection(a, &section, paragraph, ranges, session.options.max_sites);
+        defer selection.deinit(a);
+        const changed = try @import("rich_insertion_writer.zig").apply(session, &selection, command.independent_text_insertion.?.*, fonts);
+        if (changed) {
+            const painted = try selection.emit(a, session.options.max_sites);
+            if (paragraph.character_styles) |old| a.free(old);
+            paragraph.character_styles = painted;
+            draft.changed = true;
+        }
+        if (@import("builtin").is_test) @import("rich_insertion_grouped_tests.zig").record(selection.work);
     }
     return context.finish();
 }

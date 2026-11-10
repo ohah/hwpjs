@@ -26,6 +26,7 @@ export function createInputIntentQueue({ maxOperations = 1024, maxUnits = 16 * 1
     return {
       ...entry,
       beforeSelection: structuredClone(entry.beforeSelection),
+      ...(entry.richTyping ? { richTyping: structuredClone(entry.richTyping) } : {}),
       afterText: base.slice(0, entry.startUnit) + entry.text + base.slice(entry.endUnit),
     };
   };
@@ -39,7 +40,7 @@ export function createInputIntentQueue({ maxOperations = 1024, maxUnits = 16 * 1
     get hasCapacity() {
       return entries.length < maxOperations && units < maxUnits;
     },
-    append(before, after, selection, beforeSelection) {
+    append(before, after, selection, beforeSelection, richTyping = null) {
       if (
         typeof before !== 'string' ||
         typeof after !== 'string' ||
@@ -53,7 +54,11 @@ export function createInputIntentQueue({ maxOperations = 1024, maxUnits = 16 * 1
       if (entries.length >= maxOperations || change.text.length > maxUnits - units)
         throw new RangeError('InputIntentLimit');
       const savedSelection = structuredClone(beforeSelection);
-      entries.push({ ...change, beforeSelection: savedSelection });
+      entries.push({
+        ...change,
+        beforeSelection: savedSelection,
+        ...(richTyping ? { richTyping: structuredClone(richTyping) } : {}),
+      });
       if (base === null) base = before;
       projected = after;
       units += change.text.length;

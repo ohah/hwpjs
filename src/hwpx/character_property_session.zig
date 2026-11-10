@@ -22,7 +22,7 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
     if (spans.len == 0) return error.InvalidTextPosition;
     const validation_id = spans[0].char_shape_id orelse return error.InvalidCharacterShapeReference;
     try @import("character_style_session.zig").validate(session, section, paragraph, start, end, validation_id);
-    if (start == end or (!@import("../model/border_fill_patch.zig").has(patch.border_fill orelse .{}) and patch.shadow == null and patch.ratio == null and patch.char_spacing == null and patch.relative_size == null and patch.offset == null and patch.underline_style == null and patch.strike_style == null and patch.strike_color == null and patch.outline_kind == null and !@import("../model/character_properties.zig").hasEffects(patch) and patch.shade == null and patch.strike_enabled == null and patch.size == null and patch.bold == null and patch.italic == null and patch.underline_kind == null and patch.underline_color == null and patch.text_color == null and patch.font_ids == null)) return false;
+    if (start == end or !hasProperties(patch)) return false;
     const shapes = if (session.formatting_batch == null) try @import("character_style_resources.zig").displayShapes(session) else null;
     defer if (shapes) |values| a.free(values);
     if (session.formatting_batch != null) _ = try @import("character_style_resources.zig").batchShape(session, validation_id);
@@ -39,13 +39,7 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
             break :block &owned_fonts.?;
         };
         defer if (owned_fonts) |*value| value.deinit(a);
-        for (ids, 0..) |id, language| if (id) |value| {
-            const original = std.mem.indexOfScalar(u32, fonts.faces.tables[language].ids.items, value) != null;
-            const created = for (session.font_resources.entries.items) |font| {
-                if (@backingInt(font.language) == language and font.id == value) break true;
-            } else false;
-            if (!original and !created) return error.InvalidFontId;
-        };
+        try validateFontIds(session, fonts, ids);
     }
     var owned_resources: ?@import("package.zig").HeaderResourceReport = null;
     const resources = if (session.formatting_batch) |context| try context.originalResources(a, document) else block: {
@@ -75,34 +69,7 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
         const high = @min(span.end_unit, end);
         if (low >= high) continue;
         const current_id = span.char_shape_id orelse return error.InvalidCharacterShapeReference;
-        const shape = if (session.formatting_batch != null) try @import("character_style_resources.zig").batchShape(session, current_id) else block: {
-            for (shapes.?) |value| if (value.id == current_id) break :block value;
-            return error.InvalidCharacterShapeReference;
-        };
-        if ((patch.border_fill == null or try @import("paragraph_border_fill_session.zig").matchesCharacterCurrent(session, current_id, patch.border_fill.?)) and (try @import("character_shadow_patch.zig").matchesCurrent(session, current_id, patch.shadow)) and (try @import("character_metric_patch.zig").matchesCurrent(session, current_id, patch)) and (patch.strike_color == null or patch.strike_color.? == try @import("character_strike_color_current.zig").read(session, &underline_tree.?, current_id)) and @import("character_outline_display.zig").matches(shape.outline, patch.outline_kind) and @import("../model/character_properties.zig").effectsMatch(patch, shape.effects) and (patch.strike_enabled == null or patch.strike_enabled.? == try @import("character_strike_current.zig").read(session, &underline_tree.?, current_id)) and
-            (patch.size == null or patch.size.? == (shape.height orelse 1000)) and
-            (patch.bold == null or patch.bold.? == shape.bold) and
-            (patch.italic == null or patch.italic.? == shape.italic) and
-            (patch.text_color == null or patch.text_color.? == shape.text_color) and
-            (patch.shade == null or std.meta.eql(shape.shade, @as(?@import("../model/shade_color.zig").Value, @import("../model/shade_color.zig").hwp5(try @import("../model/shade_color.zig").encodeHwp5(patch.shade.?))))) and
-            (patch.font_ids == null or @import("../model/character_fonts.zig").matches(shape.font_ids orelse @as(@import("../model/character_fonts.zig").Values, @splat(null)), patch.font_ids.?)) and
-            (patch.underline_kind == null or patch.underline_kind.? == try @import("character_underline_current.zig").read(session, &underline_tree.?, current_id)) and
-            (patch.underline_color == null or patch.underline_color.? == currentColor(color_rows.?, current_id))) continue;
-        var source_id = current_id;
-        var merged: Patch = .{};
-        if (session.formatting_batch) |context| {
-            if (context.intent_indices.get(current_id)) |index| {
-                const entry = session.character_resources.entries.items[index];
-                source_id = entry.source_id;
-                merged = entry.properties;
-            }
-        } else for (session.character_resources.entries.items) |entry| if (entry.id == current_id) {
-            source_id = entry.source_id;
-            merged = entry.properties;
-            break;
-        };
-        merged = @import("../model/character_properties.zig").merge(merged, patch);
-        const id = if (session.formatting_batch) |context| try session.character_resources.addIndexed(a, resources.table(.char_shape).ids.items, source_id, merged, &context.resource_index) else try session.character_resources.add(a, resources.table(.char_shape).ids.items, source_id, merged);
+        const id = (try resolveResource(session, current_id, patch, resources.table(.char_shape).ids.items, shapes, if (underline_tree) |*tree| tree else null, color_rows)) orelse continue;
         if (session.formatting_batch == null and std.mem.indexOfScalar(u32, ids.items, id) == null) try ids.append(a, id);
         changed = (try @import("character_style_session.zig").applyInTransaction(session, section, paragraph, std.math.cast(u32, low) orelse return error.InvalidTextPosition, std.math.cast(u32, high) orelse return error.InvalidTextPosition, id, ids.items)) or changed;
     }
@@ -115,4 +82,74 @@ fn applyMode(session: *editor.Session, section: usize, paragraph: usize, start: 
 fn currentColor(rows: []const @import("character_underline_snapshot.zig").FullRow, id: u32) ?u32 {
     for (rows) |row| if (row.id == id) return if (row.color) |color| @import("../model/rgb_color.zig").xml(color) else null;
     return null;
+}
+
+/// Shared with grouped insertion. Null means the requested resource already matches.
+pub fn resolveResource(session: *editor.Session, current_id: u32, patch: Patch, original_ids: []const u32, shapes: ?[]const @import("character_shape_display.zig").Shape, underline_tree: ?*const @import("xml_part_tree.zig").Tree, color_rows: ?[]const @import("character_underline_snapshot.zig").FullRow) !?u32 {
+    const a = session.allocator;
+    const shape = if (session.formatting_batch != null) try @import("character_style_resources.zig").batchShape(session, current_id) else block: {
+        for (shapes.?) |value| if (value.id == current_id) break :block value;
+        return error.InvalidCharacterShapeReference;
+    };
+    if ((patch.border_fill == null or try @import("paragraph_border_fill_session.zig").matchesCharacterCurrent(session, current_id, patch.border_fill.?)) and (try @import("character_shadow_patch.zig").matchesCurrent(session, current_id, patch.shadow)) and (try @import("character_metric_patch.zig").matchesCurrent(session, current_id, patch)) and (patch.strike_color == null or patch.strike_color.? == try @import("character_strike_color_current.zig").read(session, underline_tree.?, current_id)) and @import("character_outline_display.zig").matches(shape.outline, patch.outline_kind) and @import("../model/character_properties.zig").effectsMatch(patch, shape.effects) and (patch.strike_enabled == null or patch.strike_enabled.? == try @import("character_strike_current.zig").read(session, underline_tree.?, current_id)) and
+        (patch.size == null or patch.size.? == (shape.height orelse 1000)) and
+        (patch.bold == null or patch.bold.? == shape.bold) and
+        (patch.italic == null or patch.italic.? == shape.italic) and
+        (patch.text_color == null or patch.text_color.? == shape.text_color) and
+        (patch.shade == null or std.meta.eql(shape.shade, @as(?@import("../model/shade_color.zig").Value, @import("../model/shade_color.zig").hwp5(try @import("../model/shade_color.zig").encodeHwp5(patch.shade.?))))) and
+        (patch.font_ids == null or @import("../model/character_fonts.zig").matches(shape.font_ids orelse @as(@import("../model/character_fonts.zig").Values, @splat(null)), patch.font_ids.?)) and
+        (patch.underline_kind == null or patch.underline_kind.? == try @import("character_underline_current.zig").read(session, underline_tree.?, current_id)) and
+        (patch.underline_color == null or patch.underline_color.? == currentColor(color_rows.?, current_id))) return null;
+    var source_id = current_id;
+    var merged: Patch = .{};
+    if (session.formatting_batch) |context| {
+        if (context.intent_indices.get(current_id)) |index| {
+            const entry = session.character_resources.entries.items[index];
+            source_id = entry.source_id;
+            merged = entry.properties;
+        }
+    } else for (session.character_resources.entries.items) |entry| if (entry.id == current_id) {
+        source_id = entry.source_id;
+        merged = entry.properties;
+        break;
+    };
+    merged = @import("../model/character_properties.zig").merge(merged, patch);
+    return if (session.formatting_batch) |context| try session.character_resources.addIndexed(a, original_ids, source_id, merged, &context.resource_index) else try session.character_resources.add(a, original_ids, source_id, merged);
+}
+
+pub fn hasProperties(patch: Patch) bool {
+    return @import("../model/border_fill_patch.zig").has(patch.border_fill orelse .{}) or
+        patch.shadow != null or
+        patch.ratio != null or
+        patch.char_spacing != null or
+        patch.relative_size != null or
+        patch.offset != null or
+        patch.underline_style != null or
+        patch.strike_style != null or
+        patch.strike_color != null or
+        patch.outline_kind != null or
+        @import("../model/character_properties.zig").hasEffects(patch) or
+        patch.shade != null or
+        patch.strike_enabled != null or
+        patch.size != null or
+        patch.bold != null or
+        patch.italic != null or
+        patch.underline_kind != null or
+        patch.underline_color != null or
+        patch.text_color != null or
+        patch.font_ids != null;
+}
+
+pub fn validateBatchFontIds(session: *editor.Session, document: *const @import("package.zig").Document, ids: @import("../model/character_fonts.zig").Values) !void {
+    try validateFontIds(session, try session.formatting_batch.?.originalFonts(session.allocator, document), ids);
+}
+
+fn validateFontIds(session: *const editor.Session, fonts: *const @import("package.zig").FontReferenceReport, ids: @import("../model/character_fonts.zig").Values) !void {
+    for (ids, 0..) |id, language| if (id) |value| {
+        const original = std.mem.indexOfScalar(u32, fonts.faces.tables[language].ids.items, value) != null;
+        const created = for (session.font_resources.entries.items) |font| {
+            if (@backingInt(font.language) == language and font.id == value) break true;
+        } else false;
+        if (!original and !created) return error.InvalidFontId;
+    };
 }

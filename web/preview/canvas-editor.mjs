@@ -1,4 +1,8 @@
-import { ownCaretTypingIntent } from './caret-formatting-intent.mjs';
+import {
+  caretRichCharacter,
+  mergeCaretRichCharacter,
+  ownCaretTypingIntent,
+} from './caret-formatting-intent.mjs';
 import { captureGeneratedTableSelection } from './generated-table-selection.mjs';
 import { captureSourceTableGridSelection } from './source-table-grid-selection.mjs';
 import { hwp5StructuralEditableStart } from '../../js/hwp5-structural-edit-boundary.mjs';
@@ -178,6 +182,7 @@ export function createCanvasEditor({
         ? typingIntentRevision + 1
         : NaN;
   };
+  let richTyping = null;
   let typingFont = null;
   let typingProperties = null;
   let multiComposition = null;
@@ -194,9 +199,13 @@ export function createCanvasEditor({
     queuedInputCapture = compositionInputCapture = null;
   };
   const textPending = () =>
-    ['splice', 'splice-font-name', 'splice-character-properties', 'created-cell-text'].includes(
-      pending?.kind,
-    );
+    [
+      'splice',
+      'splice-font-name',
+      'splice-character-properties',
+      'splice-rich-character',
+      'created-cell-text',
+    ].includes(pending?.kind);
   // Buffer only a draft descended from an active text edit. Native submission
   // still uses textEditable(), including a fresh selection-scoped permission.
   const pendingDraftEditable = () =>
@@ -654,6 +663,7 @@ export function createCanvasEditor({
     ) {
       changedTypingIntent();
       typingFont = null;
+      richTyping = null;
       changedTypingIntent();
       typingProperties = null;
     }
@@ -677,6 +687,10 @@ export function createCanvasEditor({
       changedTypingIntent();
       typingFont = null;
     }
+    if (richTyping && !sameParagraph(richTyping, f)) {
+      changedTypingIntent();
+      richTyping = null;
+    }
     if (typingProperties && !sameParagraph(typingProperties, f)) {
       changedTypingIntent();
       typingProperties = null;
@@ -693,6 +707,43 @@ export function createCanvasEditor({
     updateReadOnly();
     paint();
   };
+  const richTypingAvailable = () =>
+    Number.isInteger(historyRevision) &&
+    historyRevision >= 0 &&
+    wholeTextEditable() &&
+    Number.isSafeInteger(renderer.richTypingScope?.(target));
+  const currentRichTyping = () =>
+    richTyping && sameParagraph(richTyping, target) ? richTyping : null;
+  const currentRichCharacter = () => currentRichTyping()?.character ?? null;
+  const setRichTyping = (owned, onCommit = null) => {
+    if (!richTypingAvailable()) return false;
+    const patch = caretRichCharacter(owned);
+    if (!patch || !Object.keys(patch).length) return false;
+    const scope = renderer.richTypingScope(target);
+    const current = currentRichTyping();
+    let previous = current?.scope === scope ? current.character : {};
+    if (typingProperties && sameParagraph(typingProperties, target))
+      previous = mergeCaretRichCharacter(previous, typingProperties.properties);
+    if (typingFont && sameParagraph(typingFont, target))
+      previous = mergeCaretRichCharacter(
+        previous,
+        caretRichCharacter({ kind: 'font-name', ...typingFont }),
+      );
+    richTyping = { ...target, scope, character: mergeCaretRichCharacter(previous, patch) };
+    typingProperties = typingFont = null;
+    changedTypingIntent();
+    onCommit?.(typingIntentRevision);
+    report('다음 입력에 적용할 글자 서식을 지정했습니다.');
+    return true;
+  };
+  const rejectRichDraft = (message) => {
+    clearInputIntents();
+    draftSelection = null;
+    input.value = committed;
+    renderer.preview(null);
+    if (anchor && focus) setSelection(anchor, focus);
+    report(message);
+  };
   const pump = (requestedChange = null) => {
     if (!target || composing || pending || historyPending || !controls.ready() || controls.busy())
       return;
@@ -707,7 +758,11 @@ export function createCanvasEditor({
           endUnit: sourceRange.endUnit,
         })
       : textEditable();
-    if (!permitted) return;
+    if (!permitted) {
+      if (currentRichTyping() && input.value !== committed)
+        rejectRichDraft('현재 입력 위치에 지정한 서식을 적용할 수 없습니다.');
+      return;
+    }
     let queued = null,
       change;
     try {
@@ -725,6 +780,18 @@ export function createCanvasEditor({
       draftSelection = null;
       return;
     }
+    const intent = change.text ? (queued ? queued.richTyping : currentRichTyping()) : null;
+    const character = intent?.character;
+    if (
+      intent &&
+      (!richTypingAvailable() ||
+        !sameParagraph(intent, target) ||
+        intent.scope !== renderer.richTypingScope(target) ||
+        /[\r\n]/.test(change.text))
+    ) {
+      rejectRichDraft('현재 입력 위치 또는 여러 줄 입력에 지정한 서식을 적용할 수 없습니다.');
+      return;
+    }
     preferredX = null;
     const font = change.text && typingFont && sameParagraph(typingFont, target) ? typingFont : null;
     const properties =
@@ -734,11 +801,13 @@ export function createCanvasEditor({
     pending = {
       kind: target.createdCell
         ? 'created-cell-text'
-        : font
-          ? 'splice-font-name'
-          : properties
-            ? 'splice-character-properties'
-            : 'splice',
+        : character
+          ? 'splice-rich-character'
+          : font
+            ? 'splice-font-name'
+            : properties
+              ? 'splice-character-properties'
+              : 'splice',
       start: change.startUnit,
       end: change.endUnit,
       afterText:
@@ -770,12 +839,24 @@ export function createCanvasEditor({
           ...command,
           ...(font ? { language: font.language, name: font.name } : {}),
           ...(properties ? { properties } : {}),
+          ...(intent
+            ? {
+                insertion: { character },
+                expectedHistoryRevision: historyRevision,
+                richTypingScope: intent.scope,
+              }
+            : {}),
         };
     const reference = renderer.paragraph(target)?.currentReference;
-    if (['splice', 'created-cell-text'].includes(pending.kind) && reference)
+    if (
+      ['splice', 'splice-rich-character', 'created-cell-text'].includes(pending.kind) &&
+      reference
+    )
       request.reference = reference;
-    if (!controls.request(request)) pending = null;
-    else if (queued) inputIntents.consume(committed);
+    if (!controls.request(request)) {
+      pending = null;
+      if (character) rejectRichDraft('서식 입력 요청을 접수하지 못했습니다.');
+    } else if (queued) inputIntents.consume(committed);
     input.setAttribute('aria-busy', String(Boolean(pending)));
   };
   const reveal = () => {
@@ -903,6 +984,7 @@ export function createCanvasEditor({
       splitPermission.invalidate();
       changedTypingIntent();
       typingFont = null;
+      richTyping = null;
       changedTypingIntent();
       typingProperties = null;
       draftSelection = null;
@@ -1178,6 +1260,10 @@ export function createCanvasEditor({
     return accepted;
   };
   const split = (breakBefore = null) => {
+    if (currentRichCharacter()) {
+      report('입력 대기 서식이 지정된 상태에서는 문단 분할을 지원하지 않습니다.');
+      return false;
+    }
     if (breakBefore !== null && !paragraphBreakAvailable) {
       report('수정키+Enter 명령은 아직 지원하지 않습니다. 문단은 변경하지 않았습니다.');
       return false;
@@ -1269,6 +1355,10 @@ export function createCanvasEditor({
     return renderer.selectionRanges?.(anchor, focus) ?? null;
   };
   const setTypingProperties = (properties, onCommit = null) => {
+    if (currentRichCharacter() || richTypingAvailable()) {
+      const owned = ownCaretTypingIntent({ kind: 'character-properties', properties });
+      return Boolean(owned && setRichTyping(owned, onCommit));
+    }
     const previous =
       typingProperties && sameParagraph(typingProperties, target)
         ? typingProperties.properties
@@ -1308,7 +1398,8 @@ export function createCanvasEditor({
     const range = selectedRange();
     if (!range) return false;
     if (range.startUnit === range.endUnit) {
-      if (!canSetTypingProperties()) return false;
+      if (!canSetTypingProperties() && !richTypingAvailable()) return false;
+      if (guard && guard() !== true) return false;
       return setTypingProperties(properties);
     }
     pending = {
@@ -1345,6 +1436,13 @@ export function createCanvasEditor({
       controls.busy()
     )
       return false;
+    if (currentRichTyping()) {
+      if (multipleParagraphs() || /[\r\n]/.test(text)) {
+        report('이 교체 범위에는 입력 대기 서식을 적용할 수 없습니다.');
+        return false;
+      }
+      return replaceSelectedText(text, guard);
+    }
     if (target.createdCell) {
       const normalized = normalizeParagraphReplacement(text);
       if (
@@ -1433,6 +1531,17 @@ export function createCanvasEditor({
   };
   const queueSplitTyping = (text) =>
     structureTarget?.kind === 'split' && historyPending && queueTyping(structureTarget, text);
+  const caretDecorationState = (property) => {
+    const character = currentRichCharacter();
+    if (property === 'underline' && character?.underline?.kind !== undefined)
+      return character.underline.kind !== 'none';
+    if (property === 'strike' && character?.strike?.enabled !== undefined)
+      return character.strike.enabled;
+    const span = typingSourceSpan(committed, input.selectionStart);
+    return span
+      ? (renderer.characterState?.(target, span.start, span.end, property) ?? null)
+      : (renderer.emptyCaretDecoration?.(target, property) ?? null);
+  };
   const selectedCharacterPropertyState = (property) => {
     if (multipleParagraphs()) {
       if (
@@ -1450,9 +1559,10 @@ export function createCanvasEditor({
       return renderer.selectionCharacterState?.(anchor, focus, property) ?? null;
     }
     if (!selectedRange()) return null;
-    if (property === 'strike' && input.selectionStart === input.selectionEnd) return null;
+    if (input.selectionStart === input.selectionEnd && ['underline', 'strike'].includes(property))
+      return richTypingAvailable() ? caretDecorationState(property) : null;
     if (input.selectionStart === input.selectionEnd) {
-      if (!canSetTypingProperties()) return null;
+      if (!canSetTypingProperties() && !richTypingAvailable()) return null;
       const properties =
         typingProperties && sameParagraph(typingProperties, target)
           ? typingProperties.properties
@@ -1461,7 +1571,7 @@ export function createCanvasEditor({
         committed,
         input.selectionStart,
         property,
-        properties,
+        currentRichCharacter() ?? properties,
         (start, end, key) => renderer.characterState?.(target, start, end, key),
       );
     }
@@ -1498,7 +1608,11 @@ export function createCanvasEditor({
       return true;
     }
     const range = selectedRange();
-    if (!range || range.startUnit === range.endUnit) return false;
+    if (!range) return false;
+    if (range.startUnit === range.endUnit) {
+      const owned = ownCaretTypingIntent({ kind: 'underline', underlineKind });
+      return Boolean(owned && (!guard || guard() === true) && setRichTyping(owned));
+    }
     pending = { kind: 'character-underline', start: input.selectionStart, end: input.selectionEnd };
     if (
       !controls.request({ kind: 'character-underline', origin: 'canvas', ...range, underlineKind })
@@ -1542,7 +1656,12 @@ export function createCanvasEditor({
         return true;
       }
       const range = selectedRange();
-      if (!range || range.startUnit === range.endUnit) return false;
+      if (!range) return false;
+      if (range.startUnit === range.endUnit) {
+        const state = caretDecorationState('strike');
+        if (state === null || state === 'mixed' || (guard && guard() !== true)) return false;
+        return setRichTyping({ kind: 'strike', enabled: !state });
+      }
       const state = selectedCharacterPropertyState(property);
       if (state === null) return false;
       pending = { kind: 'character-strike', start: input.selectionStart, end: input.selectionEnd };
@@ -1584,9 +1703,13 @@ export function createCanvasEditor({
       ? setCharacterUnderline(properties.underline ? 'bottom' : 'none')
       : setCharacterProperties(properties);
   };
-  const setCharacterColor = (kind, color) => {
+  const setCharacterColor = (kind, color, guard = null) => {
     const range = selectedRange();
-    if (!range || range.startUnit === range.endUnit) return false;
+    if (!range || (guard && guard() !== true)) return false;
+    if (range.startUnit === range.endUnit) {
+      const owned = ownCaretTypingIntent({ kind: kind.replace(/^character-/, ''), color });
+      return Boolean(owned && setRichTyping(owned));
+    }
     pending = { kind, start: input.selectionStart, end: input.selectionEnd };
     if (!controls.request({ kind, origin: 'canvas', ...range, color })) {
       pending = null;
@@ -1755,7 +1878,11 @@ export function createCanvasEditor({
     }
     if (renderer.characterFontAvailable?.() !== true) return false;
     const range = selectedRange();
-    if (!range || range.startUnit === range.endUnit) return false;
+    if (!range) return false;
+    if (range.startUnit === range.endUnit) {
+      const owned = ownCaretTypingIntent({ kind: 'font-id', language, fontId });
+      return Boolean(owned && (!guard || guard() === true) && setRichTyping(owned));
+    }
     pending = { kind: 'character-font', start: input.selectionStart, end: input.selectionEnd };
     if (
       !controls.request({ kind: 'character-font', origin: 'canvas', ...range, language, fontId })
@@ -1782,6 +1909,10 @@ export function createCanvasEditor({
     const range = selectedRange();
     if (!range) return false;
     if (range.startUnit === range.endUnit) {
+      if (currentRichCharacter() || richTypingAvailable()) {
+        const owned = ownCaretTypingIntent({ kind: 'font-name', language, name });
+        return Boolean(owned && (!guard || guard() === true) && setRichTyping(owned));
+      }
       if (renderer.namedFontTextAvailable?.() !== true || !textEditable()) return false;
       if (typingProperties && renderer.namedFontPropertyTextAvailable?.() !== true) return false;
       try {
@@ -1856,7 +1987,7 @@ export function createCanvasEditor({
     return renderer.selectionRanges?.(anchor, focus) ?? null;
   };
   const setCharacterTextColor = (color, guard = null) => {
-    if (!multipleParagraphs()) return setCharacterColor('character-text-color', color);
+    if (!multipleParagraphs()) return setCharacterColor('character-text-color', color, guard);
     const ranges = selectedTextColorRanges();
     if (!ranges?.some((range) => range.startUnit < range.endUnit)) return false;
     if (guard && guard() !== true) return false;
@@ -2038,6 +2169,7 @@ export function createCanvasEditor({
           inputType: event.inputType,
         },
         beforeSelection: { anchor: { ...anchor }, focus: { ...focus } },
+        richTyping: currentRichTyping(),
       };
     }
     if (!pending && !composing && input.value === committed) {
@@ -2093,6 +2225,7 @@ export function createCanvasEditor({
         before: inputIntents.projected ?? pending?.afterText,
         selection: null,
         beforeSelection: null,
+        richTyping: currentRichTyping(),
       };
       queuedInputCapture = null;
       try {
@@ -2101,6 +2234,7 @@ export function createCanvasEditor({
           input.value,
           capture.selection,
           capture.beforeSelection,
+          capture.richTyping,
         );
       } catch (error) {
         input.value = capture.before;
@@ -2154,12 +2288,13 @@ export function createCanvasEditor({
       return;
     }
     if (!textEditable() && !pendingDraftEditable()) return;
-    if (textPending() || inputIntents.size) {
+    if (textPending() || inputIntents.size || currentRichTyping()) {
       sync();
       compositionInputCapture = {
         before: input.value,
         selection: { startUnit: input.selectionStart, endUnit: input.selectionEnd },
         beforeSelection: { anchor: { ...anchor }, focus: { ...focus } },
+        richTyping: currentRichTyping(),
       };
       queuedInputCapture = null;
     }
@@ -2217,6 +2352,19 @@ export function createCanvasEditor({
       return;
     }
     composing = false;
+    if (event.data === '' && (currentRichCharacter() || compositionInputCapture?.richTyping)) {
+      const capture = compositionInputCapture;
+      compositionInputCapture = null;
+      draftSelection = null;
+      input.value = capture?.before ?? committed;
+      if (capture?.selection)
+        input.setSelectionRange(capture.selection.startUnit, capture.selection.endUnit);
+      if (input.value === committed) renderer.preview(null);
+      else preview();
+      sync();
+      historyIntents.wake();
+      return;
+    }
     if (compositionInputCapture) {
       const capture = compositionInputCapture;
       compositionInputCapture = null;
@@ -2226,6 +2374,7 @@ export function createCanvasEditor({
           input.value,
           capture.selection,
           capture.beforeSelection,
+          capture.richTyping,
         );
       } catch (error) {
         input.value = capture.before;
@@ -2743,7 +2892,8 @@ export function createCanvasEditor({
     const start = snapUnit(committed, input.selectionStart),
       end = snapUnit(committed, input.selectionEnd, true);
     const next = committed.slice(0, start) + text + committed.slice(end);
-    if (next === committed) return true;
+    if (next === committed && !(text && currentRichTyping())) return true;
+    if (guard && guard() !== true) return false;
     const previous = { anchor: { ...anchor }, focus: { ...focus } };
     draftSelection = previous;
     input.value = next;
@@ -2901,6 +3051,21 @@ export function createCanvasEditor({
     };
     const supported = (kind) => {
       if (!stable() || !caretEditable()) return false;
+      if (richTypingAvailable())
+        return (
+          [
+            'character-properties',
+            'font-name',
+            'font-names',
+            'font-id',
+            'underline',
+            'strike',
+            'text-color',
+            'underline-color',
+          ].includes(kind) ||
+          (kind === 'strike-color' && renderer.characterStrikeColorAvailable?.() === true)
+        );
+      if (currentRichCharacter()) return false;
       if (kind === 'character-properties')
         return (
           renderer.characterPropertyTextAvailable?.() === true &&
@@ -2918,6 +3083,9 @@ export function createCanvasEditor({
       current: () => !used && stable(),
       supported,
       typing: Object.freeze({
+        character: currentRichCharacter() ? structuredClone(currentRichCharacter()) : null,
+        underline: caretDecorationState('underline'),
+        strike: caretDecorationState('strike'),
         properties:
           typingProperties && sameParagraph(typingProperties, target)
             ? Object.freeze({ ...typingProperties.properties })
@@ -2932,11 +3100,15 @@ export function createCanvasEditor({
         const owned = ownCaretTypingIntent(intent);
         if (!owned || !supported(owned.kind) || !stable()) return false;
         used = true;
-        if (owned.kind === 'character-properties')
+        if (richTypingAvailable()) {
+          accepted = setRichTyping(owned, (revision) => {
+            expectedTypingRevision = revision;
+          });
+        } else if (owned.kind === 'character-properties')
           accepted = setTypingProperties(owned.properties, (revision) => {
             expectedTypingRevision = revision;
           });
-        else {
+        else if (owned.kind === 'font-name') {
           changedTypingIntent();
           typingFont = { ...target, language: owned.language, name: owned.name };
           expectedTypingRevision = typingIntentRevision;
@@ -3283,7 +3455,7 @@ export function createCanvasEditor({
       committed = row.text;
       input.value = committed;
       input.disabled = false;
-      if (origin === 'canvas')
+      if (origin === 'canvas' || richTyping)
         resetTypingForUserSelection(
           { ...next, unit: affinity === 'backward' ? endUnit : startUnit },
           { ...next, unit: affinity === 'backward' ? startUnit : endUnit },
@@ -3321,8 +3493,11 @@ export function createCanvasEditor({
           typingProperties && sameParagraph(typingProperties, target)
             ? typingProperties.properties
             : null;
-        return characterTypingSize(committed, input.selectionStart, properties, (start, end) =>
-          renderer.characterSize?.(target, start, end),
+        return characterTypingSize(
+          committed,
+          input.selectionStart,
+          currentRichCharacter() ?? properties,
+          (start, end) => renderer.characterSize?.(target, start, end),
         );
       }
       return (
@@ -3872,6 +4047,7 @@ export function createCanvasEditor({
       splitPermission.invalidate();
       changedTypingIntent();
       typingFont = null;
+      richTyping = null;
       changedTypingIntent();
       typingProperties = null;
       draftSelection = null;
@@ -4028,6 +4204,7 @@ export function createCanvasEditor({
         if (['undo', 'redo', 'merge'].includes(message.kind)) {
           changedTypingIntent();
           typingFont = null;
+          richTyping = null;
           changedTypingIntent();
           typingProperties = null;
         }
@@ -4035,7 +4212,11 @@ export function createCanvasEditor({
           pump();
           return;
         }
-        if (message.applied && message.error) {
+        if (
+          (message.applied && message.error) ||
+          (message.kind === 'splice-rich-character' &&
+            (message.historyPoisoned || message.formattingRefreshRequired))
+        ) {
           this.reset();
           return;
         }
@@ -4505,6 +4686,7 @@ export function createCanvasEditor({
           !multiComposition &&
           !historyPending &&
           !historyPaintBarrier.pending &&
+          !richTyping &&
           !typingFont &&
           !typingProperties &&
           !target.createdCell &&
@@ -4523,6 +4705,7 @@ export function createCanvasEditor({
             !multiComposition &&
             !historyPending &&
             !historyPaintBarrier.pending &&
+            !richTyping &&
             !typingFont &&
             !typingProperties &&
             historyIntents.nextKind === 'history';
@@ -4545,8 +4728,17 @@ export function createCanvasEditor({
           // callback의 문서/선택 교체 뒤에는 이전 ACK의 preview/pump를 실행하지 않는다.
           if (!current()) return;
         }
-        preview();
-        pump();
+        if (previous.kind === 'splice-rich-character' && input.value === committed) {
+          renderer.preview(null);
+          sync();
+          reveal();
+        } else preview();
+        if (previous.kind === 'splice-rich-character' || currentRichTyping()) {
+          const owner = target;
+          queueMicrotask(() => {
+            if (target === owner) pump();
+          });
+        } else pump();
       } finally {
         reconcilePreviewPolicy?.();
         if (versioned && !message.error) {

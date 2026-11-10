@@ -38,17 +38,25 @@ pub fn validate(bytes: []const u8, start: u32, end: u32) !void {
 /// one forward control cursor. Caller validates retained text once beforehand.
 /// Returns actual tokens visited for bounded work accounting.
 pub fn validateIndependent(bytes: []const u8, edits: []const @import("../../model/independent_text_edits.zig").Edit) !if (@import("builtin").is_test) usize else void {
+    return validateOrdered(bytes, edits, "start", "end");
+}
+pub fn validateFormattingRanges(bytes: []const u8, ranges: []const @import("../../model/formatting_patch.zig").Range) !if (@import("builtin").is_test) usize else void {
+    return validateOrdered(bytes, ranges, "startUnit", "endUnit");
+}
+fn validateOrdered(bytes: []const u8, rows: anytype, comptime start_field: []const u8, comptime end_field: []const u8) !if (@import("builtin").is_test) usize else void {
     const text = try Text.parse(bytes);
     if (bytes.len < 2 or std.mem.readInt(u16, bytes[bytes.len - 2 ..][0..2], .little) != 13) return error.UnsupportedParagraphTerminator;
     var iterator = text.tokens();
     var control: ?@import("../body/text.zig").Token = null;
     var exhausted = false;
     var visited: if (@import("builtin").is_test) usize else void = if (@import("builtin").is_test) 0 else {};
-    for (edits) |edit| {
-        if (edit.start > edit.end or edit.end > bytes.len / 2 - 1) return error.InvalidTextPosition;
-        try content.boundary(bytes, edit.start);
-        try content.boundary(bytes, edit.end);
-        while (!exhausted and (control == null or control.?.start_unit + control.?.raw.len / 2 <= edit.start)) {
+    for (rows) |row| {
+        const start = @field(row, start_field);
+        const end = @field(row, end_field);
+        if (start > end or end > bytes.len / 2 - 1) return error.InvalidTextPosition;
+        try content.boundary(bytes, start);
+        try content.boundary(bytes, end);
+        while (!exhausted and (control == null or control.?.start_unit + control.?.raw.len / 2 <= start)) {
             control = null;
             while (try iterator.next()) |token| {
                 if (@import("builtin").is_test) visited += 1;
@@ -61,8 +69,8 @@ pub fn validateIndependent(bytes: []const u8, edits: []const @import("../../mode
         if (control) |token| {
             const first = token.start_unit;
             const last = first + token.raw.len / 2;
-            if ((edit.start > first and edit.start < last) or (edit.end > first and edit.end < last)) return error.SplitControlToken;
-            if (edit.start < last and edit.end > first) return error.UnsupportedControlDeletion;
+            if ((start > first and start < last) or (end > first and end < last)) return error.SplitControlToken;
+            if (start < last and end > first) return error.UnsupportedControlDeletion;
         }
     }
     return visited;

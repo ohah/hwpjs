@@ -72,6 +72,8 @@ export function underlineResultMessage(result: CommandResult): string {
 
 함수 반환값도 `CommandResult`이므로 호출자는 status/error를 확인해야 합니다. 캐럿의 다음 입력 서식과 기존 범위의 서식 변경은 다릅니다. 보호된 범위·지원되지 않는 owner·오래된 token은 거부될 수 있습니다.
 
+웹 편집기에서는 지원하는 본문에 커서를 두고 밑줄·취소선·글자색·언어별 글꼴을 고를 수 있습니다. 지정한 서식은 다음 입력부터 적용되며, 입력한 글자와 서식은 한 번에 실행 취소됩니다. 아래 선택 범위 명령에 길이 0의 범위를 넘기면 기존 `EmptyCharacterSelection` 계약이 적용됩니다.
+
 ## 대표 typed 명령
 
 | export | payload 핵심 | 범위 |

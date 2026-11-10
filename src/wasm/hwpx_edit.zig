@@ -2092,7 +2092,7 @@ export fn hwpx_edit_text_transaction_capabilities() u32 {
     const revision = service.currentRevision() catch |err| return fail(err);
     const id = formatting_lifetime.session(a) catch |err| return fail(err);
     defer a.free(id);
-    output = @import("text_transaction_reply.zig").capabilities(a, .hwpx, .{ .session = id, .revision = revision }) catch |err| return fail(err);
+    output = @import("text_transaction_reply.zig").capabilities(a, .hwpx, .{ .session = id, .revision = revision }, true) catch |err| return fail(err);
     return 1;
 }
 export fn hwpx_edit_query_text_transaction(ptr: [*]const u8, size: usize) u32 {
@@ -2125,4 +2125,34 @@ export fn hwpx_edit_apply_text_transaction(ptr: [*]const u8, size: usize) u32 {
         return fail(err);
     };
     return if (changed) 1 else 2;
+}
+
+export fn hwpx_edit_splice_rich_character(section: u32, paragraph: u32, start: u32, end: u32, text_ptr: [*]const u8, text_size: usize, request_ptr: [*]const u8, request_size: usize, kind: u32, begin: u32) u32 {
+    requireNoReadScope() catch |err| return fail(err);
+    if (kind > 2) return fail(error.InvalidTextKind);
+    const wire = @import("rich_typing_request.zig");
+    if (text_size > @import("../model/text_transaction.zig").limits.inserted_bytes or request_size > wire.max_bytes) return fail(error.LimitExceeded);
+    var request = wire.decode(a, request_ptr[0..request_size]) catch |err| return fail(err);
+    defer request.deinit();
+    const changed = applyRichCharacter(.{ .section = section, .paragraph = paragraph, .start = start, .end = end, .text = text_ptr[0..text_size], .kind = @fromBackingInt(@intCast(kind)), .begin_element = begin }, request) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    return if (changed) 1 else 2;
+}
+
+fn applyRichCharacter(input: @import("text_transaction_commands.zig").Input, request: @import("rich_typing_request.zig").Request) !bool {
+    const service = try textTransactionService();
+    const revision = try service.currentRevision();
+    try formatting_lifetime.check(request.binding, revision);
+    const commands = try @import("character_property_text_commands.zig").buildRich(.hwpx, a, input, request.patch);
+    defer a.free(commands);
+    var batch: @import("../hwpx/formatting_batch_context.zig").Context = .{};
+    try service.session.beginFormattingBatch(&batch);
+    defer service.session.endFormattingBatch(&batch);
+    return @import("../hwpx/display_resource_generation.zig").applyOwned(service.history, service.session, commands);
 }

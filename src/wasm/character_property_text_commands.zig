@@ -18,6 +18,31 @@ pub fn buildWithFont(comptime format: Format, input: @import("named_font_text_co
     return .{ font[0], font[1], styled[1] };
 }
 
+/// Prepares a single splice followed by formatting of its inserted UTF-16
+/// range. The caller executes the resulting commands as one History batch.
+/// The caller owns the slice. Text and font names borrow the request buffers.
+pub fn buildRich(comptime format: Format, a: @import("std").mem.Allocator, input: text.Input, patch: @import("../model/formatting_patch.zig").Patch) ![]text.Command(format) {
+    const std = @import("std");
+    const formatting = @import("../model/formatting_patch.zig");
+    if (patch.reset != null or patch.hasParagraph() or !patch.hasCharacter()) return error.UnsupportedTextInsertionFormatting;
+    if (input.text.len == 0) return error.EmptyStyledTextInsertion;
+    const intent = formatting.CharacterIntent.init(patch);
+    if (intent.properties) |value| try properties.validate(value);
+    for (patch.fonts) |font| if (font) |value| switch (value) {
+        .id => {},
+        .name => |name| try @import("../model/font_name.zig").validate(name, formatting.limits.font_name_bytes),
+    };
+    const inserted = try text.build(format, input);
+    var ops: std.ArrayList(formatting.Operation) = .empty;
+    defer ops.deinit(a);
+    try intent.appendRange(a, &ops, .{ .section = input.section, .paragraph = input.paragraph }, .{ .startUnit = input.start, .endUnit = inserted.end });
+    const commands = try a.alloc(text.Command(format), 1 + ops.items.len);
+    errdefer a.free(commands);
+    commands[0] = inserted.command;
+    try @import("formatting_patch_commands.zig").lowerInto(format, ops.items, commands[1..]);
+    return commands;
+}
+
 test "character property text commands combine font and properties without duplicate insertion" {
     const std = @import("std");
     const input: @import("named_font_text_commands.zig").Input = .{ .section = 0, .paragraph = 2, .start = 1, .end = 5, .text = "한😀", .language = .hangul, .name = "Combined Font" };
@@ -56,4 +81,45 @@ test "character property text commands format only inserted Unicode and validate
     try std.testing.expectEqual(.anchored, anchored[0].kind);
     try std.testing.expectEqual(@as(usize, 17), anchored[0].begin_element);
     try std.testing.expectError(error.InvalidTextKind, build(.hwp5, protected, .{ .bold = true }));
+}
+
+test "rich single insertion preserves splice mode and formats only inserted units" {
+    const std = @import("std");
+    const a = std.testing.allocator;
+    const formatting = @import("../model/formatting_patch.zig");
+    const input: text.Input = .{ .section = 0, .paragraph = 2, .start = 4, .end = 9, .text = "한😀" };
+    var patch: formatting.Patch = .{ .character = .{ .bold = false, .text_color = 0 } };
+    patch.fonts[0] = .{ .id = 0 };
+    patch.fonts[1] = .{ .name = "Latin" };
+    patch.fonts[6] = .{ .name = "User" };
+    const h5 = try buildRich(.hwp5, a, input, patch);
+    defer a.free(h5);
+    try std.testing.expectEqual(@as(usize, 4), h5.len);
+    try std.testing.expectEqual(@as(u32, 9), h5[0].splice_text.end_unit);
+    try std.testing.expectEqual(@as(u32, 7), h5[1].set_character_properties.end_unit);
+    try std.testing.expectEqual(@as(?bool, false), h5[1].set_character_properties.properties.bold);
+    try std.testing.expectEqual(@as(?u32, 0), h5[1].set_character_properties.properties.text_color);
+    try std.testing.expectEqual(@as(?u32, 0), h5[1].set_character_properties.properties.font_ids.?[0]);
+    try std.testing.expectEqualStrings("Latin", h5[2].set_character_font_name.name);
+    try std.testing.expectEqualStrings("User", h5[3].set_character_font_name.name);
+
+    var protected = input;
+    protected.kind = .anchored;
+    protected.begin_element = 37;
+    const hx = try buildRich(.hwpx, a, protected, patch);
+    defer a.free(hx);
+    try std.testing.expectEqual(.anchored, hx[0].kind);
+    try std.testing.expectEqual(@as(usize, 37), hx[0].begin_element);
+    try std.testing.expectEqual(@as(u32, 5), hx[0].deleted);
+    try std.testing.expectEqual(@as(u32, 3), hx[1].deleted);
+    try std.testing.expectEqualStrings("User", hx[3].font_name);
+    try std.testing.expectError(error.InvalidTextKind, buildRich(.hwp5, a, protected, patch));
+
+    protected.text = "";
+    try std.testing.expectError(error.EmptyStyledTextInsertion, buildRich(.hwpx, a, protected, patch));
+    patch.reset = .character;
+    try std.testing.expectError(error.UnsupportedTextInsertionFormatting, buildRich(.hwp5, a, input, patch));
+    patch.reset = null;
+    patch.fonts[6] = .{ .name = "" };
+    try std.testing.expectError(error.InvalidFontName, buildRich(.hwp5, a, input, patch));
 }

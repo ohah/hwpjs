@@ -1457,10 +1457,14 @@ export function createCanvasSurface({
         writable && captured.supported('font-name') ? null : 'CaretTypingFontUnavailable';
       const readonlyReason = writable ? null : 'ReadOnlyDocument';
       const pending = captured.typing;
+      const character = pending.character;
       const fontNames = { ...source.fontNames };
       const fontNameAvailableReasons = { ...source.fontNameAvailableReasons };
       FONT_LANGUAGES.forEach((language: import('@hwpjs/core').CharacterFontLanguage) => {
         fontNameAvailableReasons[language] = readonlyReason ?? font;
+        const name = character?.fonts?.[language]?.name;
+        if (typeof name === 'string')
+          fontNames[language] = Object.freeze({ kind: 'single' as const, name });
       });
       if (pending.font)
         fontNames[pending.font.language as import('@hwpjs/core').CharacterFontLanguage] =
@@ -1471,16 +1475,33 @@ export function createCanvasSurface({
         observation: Object.freeze({
           ...source,
           ...pending.properties,
+          ...(character?.size === undefined ? {} : { size: character.size }),
+          ...(character?.bold === undefined ? {} : { bold: character.bold }),
+          ...(character?.italic === undefined ? {} : { italic: character.italic }),
+          underline: pending.underline ?? source.underline,
+          strike: pending.strike ?? source.strike,
+          textColor:
+            character?.textColor === undefined
+              ? source.textColor
+              : `#${character.textColor.toString(16).padStart(6, '0')}`,
           fontNames: Object.freeze(fontNames),
         }),
         reasons: Object.freeze({
           characterAvailableReason: readonlyReason ?? properties,
           paragraphAvailableReason: source.paragraphAvailableReason,
           fontNameAvailableReasons: Object.freeze(fontNameAvailableReasons),
-          fontNamesAvailableReason: 'CaretRepresentativeFontUnavailable',
-          textColorAvailableReason: 'CaretTypingColorUnavailable',
-          underlineAvailableReason: 'CaretTypingUnderlineUnavailable',
-          strikeAvailableReason: 'CaretTypingStrikeUnavailable',
+          fontNamesAvailableReason:
+            readonlyReason ??
+            (captured.supported('font-names') ? null : 'CaretRepresentativeFontUnavailable'),
+          textColorAvailableReason:
+            readonlyReason ??
+            (captured.supported('text-color') ? null : 'CaretTypingColorUnavailable'),
+          underlineAvailableReason:
+            readonlyReason ??
+            (captured.supported('underline') ? null : 'CaretTypingUnderlineUnavailable'),
+          strikeAvailableReason:
+            readonlyReason ??
+            (captured.supported('strike') ? null : 'CaretTypingStrikeUnavailable'),
         }),
         current: () => current() && captured.current(),
         bindDialog(element: HTMLDialogElement) {
