@@ -50,7 +50,7 @@ function fixtureState(options: Record<string, any> = {}) {
       characterTextColorAvailable: !options.unsupported,
       characterFontNameAvailable: !options.unsupported,
       characterShapes: [
-        { id: 0, height: 1200, bold: true, italic: false },
+        { id: 0, height: options.size ?? 1200, bold: true, italic: false },
         { id: 1, height: 1400, bold: false, italic: true },
       ],
       characterUnderlines: [
@@ -717,5 +717,195 @@ test('atomic 초기 조회 오류는 초안 변경으로 legacy setter 우회되
   await tick();
   expect(f.calls.length).toBe(0);
   expect(f.text()).toContain('NativeQueryUnavailable');
+  f.tool.dispose();
+});
+
+function enableSizeAtomic(f: ReturnType<typeof setup>, writable = true) {
+  enableAtomic(f);
+  const capabilities = f.editor.getFormattingCapabilities;
+  const query = f.editor.queryFormatting;
+  f.editor.getFormattingCapabilities = async () => ({
+    ...(await capabilities()),
+    fields: {
+      'character.size': { readable: true, writable },
+      'character.bold': { readable: true, writable: true },
+    },
+  });
+  f.editor.queryFormatting = async () => ({
+    ...(await query()),
+    observations: {
+      aggregate: {
+        'character.size': {
+          state: 'known',
+          value: getSelectionFormatting(f.state()).size,
+          writable,
+          ...(!writable ? { writeUnavailableReason: 'SizeReadOnly' } : {}),
+        },
+      },
+      perTarget: [],
+    },
+  });
+}
+for (const atomic of [false, true]) {
+  test(`크기 지우기 뒤 연속 19 입력의 payload에 관측값 접두사가 붙지 않는다 (${atomic ? 'atomic' : 'legacy'})`, async () => {
+    const f = setup({ size: 1100 });
+    if (atomic) enableSizeAtomic(f);
+    f.open();
+    await tick();
+    f.input('character-size', '');
+    for (const character of ['1', '9'])
+      f.input('character-size', f.role('character-size').value + character);
+    fire(f.role('character-confirm'), 'click');
+    await tick();
+    expect(f.calls.length).toBe(1);
+    expect(atomic ? f.calls[0].payload.patch.character : f.calls[0].payload.properties).toEqual({
+      size: 1900,
+    });
+    f.tool.dispose();
+  });
+  test(`크기 빈 초안은 다른 필드·refresh 뒤에도 유지하고 19 입력은 1900만 전달한다 (${atomic ? 'atomic' : 'legacy'})`, async () => {
+    const f = setup({ size: 1100 });
+    if (atomic) enableSizeAtomic(f);
+    f.open();
+    await tick();
+    expect(f.role('character-size').disabled).toBe(false);
+    expect(f.role('character-size').value).toBe('11');
+    f.input('character-size', '');
+    expect(f.role('character-size').value).toBe('');
+    f.input('character-bold', 'false', 'change');
+    fire(f.role('character-shape'), 'keyup');
+    expect(f.role('character-size').value).toBe('');
+    for (const character of ['1', '9'])
+      f.input('character-size', f.role('character-size').value + character);
+    expect(f.role('character-size').value).toBe('19');
+    fire(f.role('character-confirm'), 'click');
+    await tick();
+    expect(f.calls.length).toBe(1);
+    expect(f.calls[0].command).toBe(
+      atomic ? APPLY_FORMATTING_PATCH_COMMAND : SET_CHARACTER_PROPERTIES_COMMAND,
+    );
+    expect(atomic ? f.calls[0].payload.patch.character : f.calls[0].payload.properties).toEqual({
+      size: 1900,
+      bold: false,
+    });
+    f.tool.dispose();
+  });
+  test(`크기 빈 초안 취소·재열기는 관측값을 새로 표시한다 (${atomic ? 'atomic' : 'legacy'})`, async () => {
+    const f = setup({ size: 1100 });
+    if (atomic) enableSizeAtomic(f);
+    for (const raw of ['', '19']) {
+      f.open();
+      await tick();
+      f.input('character-size', raw);
+      fire(f.role('character-cancel'), 'click');
+      expect(f.calls.length).toBe(0);
+      f.open();
+      await tick();
+      expect(f.role('character-size').value).toBe('11');
+      fire(f.role('character-cancel'), 'click');
+    }
+    f.tool.dispose();
+  });
+}
+test('명시 atomic reset은 빈·유효·잘못된 크기 raw 초안을 버리고 reset만 보낸다', async () => {
+  for (const raw of ['', '19', '19.123']) {
+    const f = setup({ size: 1100 });
+    atomicFields(f);
+    const capabilities = f.editor.getFormattingCapabilities;
+    const query = f.editor.queryFormatting;
+    f.editor.getFormattingCapabilities = async () => {
+      const c = await capabilities();
+      return {
+        ...c,
+        fields: { ...c.fields, 'character.size': { readable: true, writable: true } },
+      };
+    };
+    f.editor.queryFormatting = async () => {
+      const q = await query();
+      return {
+        ...q,
+        observations: {
+          ...q.observations,
+          aggregate: {
+            ...q.observations.aggregate,
+            'character.size': { state: 'known', value: 1100, writable: true },
+          },
+        },
+      };
+    };
+    f.open();
+    await tick();
+    f.input('character-size', raw);
+    fire(f.role('character-atomic-reset'), 'click');
+    expect(f.role('character-size').value).toBe('11');
+    fire(f.role('character-confirm'), 'click');
+    await tick();
+    expect(f.calls.length).toBe(1);
+    expect(f.calls[0].command).toBe(APPLY_FORMATTING_PATCH_COMMAND);
+    expect(f.calls[0].payload.patch).toEqual({
+      reset: { basis: 'paragraph-style', scope: 'character' },
+    });
+    f.tool.dispose();
+  }
+});
+test('크기 raw 소수와 잘못된 입력을 유지하면서 기존 유효성·상한 검증을 적용한다', async () => {
+  const f = setup({ size: 1100 });
+  f.open();
+  for (const raw of ['19.123', 'invalid', '4096.01', '0']) {
+    f.input('character-size', raw);
+    f.input('character-bold', 'false', 'change');
+    expect(f.role('character-size').value).toBe(raw);
+    expect(f.role('character-confirm').disabled).toBe(true);
+    fire(f.role('character-confirm'), 'click');
+    await tick();
+    expect(f.calls.length).toBe(0);
+  }
+  f.input('character-size', '19.');
+  fire(f.role('character-shape'), 'keyup');
+  expect(f.role('character-size').value).toBe('19.');
+  f.input('character-size', '19.25');
+  fire(f.role('character-confirm'), 'click');
+  await tick();
+  expect(f.calls[0].payload.properties.size).toBe(1925);
+  f.tool.dispose();
+});
+test('빈 크기 raw는 조합·229 중 적용되지 않고 pending에도 되살아나지 않는다', async () => {
+  let release!: (value: any) => void;
+  const pending = new Promise<any>((resolve) => {
+    release = resolve;
+  });
+  const f = setup({ size: 1100, dispatch: () => pending });
+  f.open();
+  f.input('character-size', '');
+  f.input('character-bold', 'false', 'change');
+  fire(f.role('character-shape'), 'compositionstart');
+  expect(f.role('character-size').value).toBe('');
+  f.key('Enter', 'character-size');
+  f.key('Escape', 'character-size');
+  expect(f.calls.length).toBe(0);
+  fire(f.role('character-shape'), 'compositionend');
+  f.key('Enter', 'character-size', { keyCode: 229 });
+  expect(f.calls.length).toBe(0);
+  fire(f.role('character-shape'), 'keyup');
+  fire(f.role('character-confirm'), 'click');
+  await tick();
+  expect(f.calls.length).toBe(1);
+  expect(f.calls[0].payload.properties).toEqual({ bold: false });
+  expect(f.role('character-size').disabled).toBe(true);
+  expect(f.role('character-size').value).toBe('');
+  release({ status: 'rejected-unapplied', changed: false, error: 'RejectedForTest' });
+  await tick();
+  expect(f.role('character-size').value).toBe('');
+  expect(f.role('character-size').disabled).toBe(false);
+  f.tool.dispose();
+});
+test('크기 Native capability가 읽기 전용이면 초안 보존과 별개로 입력을 잠근다', async () => {
+  const f = setup({ size: 1100 });
+  enableSizeAtomic(f, false);
+  f.open();
+  await tick();
+  expect(f.role('character-size').value).toBe('11');
+  expect(f.role('character-size').disabled).toBe(true);
+  expect(f.calls.length).toBe(0);
   f.tool.dispose();
 });

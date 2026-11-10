@@ -32,6 +32,8 @@ export function createCharacterShapeView(
     last229 = false,
     disposed = false;
   let current: CharacterShapeViewState | undefined;
+  // undefined is untouched; an empty string is still the user's input draft.
+  let sizeRaw: string | undefined;
   const dismiss = () => {
     if (!disposed && !composing && !last229 && !current?.pending) callbacks.onDismiss();
   };
@@ -119,7 +121,8 @@ export function createCharacterShapeView(
         input.append(o);
       }
     input.addEventListener(key === 'size' ? 'input' : 'change', () => {
-      if (!current) return;
+      if (!current || current.pending || current.stale || current.refreshRequired) return;
+      if (key === 'size') sizeRaw = input.value;
       const properties = { ...current.draft.properties };
       if (!input.value) delete properties[key];
       else if (key === 'size') {
@@ -356,7 +359,8 @@ export function createCharacterShapeView(
       c.node.disabled = locked || !!why;
       c.node.title = why || '';
     }
-    if (!current.draft.properties || current.draft.properties.size === undefined) {
+    if (sizeRaw !== undefined) setValue(size.input, sizeRaw);
+    else if (!current.draft.properties || current.draft.properties.size === undefined) {
       const value = typeof f.size === 'number' ? String(f.size / 100) : '';
       setValue(size.input, value);
     }
@@ -395,6 +399,7 @@ export function createCharacterShapeView(
   }
   return {
     update(state: CharacterShapeViewState) {
+      if (state.draft.reset && state.draft.reset !== current?.draft.reset) sizeRaw = undefined;
       current = state;
       refresh();
     },
