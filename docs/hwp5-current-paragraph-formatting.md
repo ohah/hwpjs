@@ -27,3 +27,5 @@ Runtime은 참조가 포함된 HWP5 명령에 `hwp5-current-body-reference.mjs`�
 HWPX의 저장·재열기 후 본문 서식은 같은 두 프레임워크에서 회귀 검사를 통과했습니다. 반면 새 문서를 여러 문단으로 나눈 같은 세션의 생성 본문에 굵게를 적용하면 `UnsupportedInlineControl`로 거부되는 별도 경계가 확인됐습니다. 직전 배포 번들에서도 같은 사례가 재현됐고, 거부 시 저장 바이트는 변하지 않았습니다. 이는 이번 HWP5 지원 확대로 해결된 것으로 계수하지 않습니다. 기존 거부를 우회하거나 문서를 자동 저장·재열어 성공한 것처럼 처리하지 않습니다. 정확한 UI/API/Native 경계와 원인은 별도 후속 조사 대상입니다.
 
 Native·canonical 근거는 `contract/receipt.json`, UI 근거는 `browser/cohort-r6-r2-full/summary.json`의 HWP5 사례와 `browser/cohort-r9-r2-persisted-hwpx/summary.json`입니다. 같은 세션 HWPX 거부의 이전 배포 비교는 `browser/cohort-r8-previous-hwpx/summary.json`에 분리합니다.
+
+HWPX 생성 문단의 `UnsupportedInlineControl`은 이후 수정됐습니다. 이 문서의 HWPX 거부 사례는 이전 후보의 재현 기록이며, 현재 원인·수정·검증은 [HWPX 생성 문단 서식 저장](hwpx-live-generated-formatting.md)을 따릅니다.

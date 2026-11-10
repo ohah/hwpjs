@@ -550,3 +550,5 @@
 - [표 안 Ctrl+Enter 행 삽입과 문맥 단축키](contextual-table-row-shortcut.md)
 
 - [HWP5 생성 본문 문단의 공개 서식 명령](hwp5-current-paragraph-formatting.md)
+
+- [HWPX 편집 중 생성 문단의 서식 저장](hwpx-live-generated-formatting.md)

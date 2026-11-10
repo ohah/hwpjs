@@ -65,7 +65,8 @@ fn writePolicy(a: std.mem.Allocator, tree: *const Tree, sites: *const Sites, spa
         } else if (tree.elements[index].is(uri, "t") and tree.elements[index].first_child == null) {
             if (!found) prefix_start = tree.elements[index].end;
             if (found and keep_suffix) return error.SourceBindingMismatch;
-        } else if (!(owned_fields != null and tree.elements[index].is(uri, "secPr")) and !@import("retained_field_marker.zig").supported(tree, index) and
+        } // Section properties have no text units; continuation removal belongs to the caller.
+        else if (!tree.elements[index].is(uri, "secPr") and !@import("retained_field_marker.zig").supported(tree, index) and
             !@import("retained_run_metadata.zig").supported(tree, index) and
             !@import("retained_note_number.zig").supported(tree, index, paragraph_index, first_text_start)) return error.UnsupportedInlineControl;
         child = tree.elements[index].next_sibling;

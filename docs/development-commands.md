@@ -1825,3 +1825,14 @@ node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.te
 bun test packages/core/tests/commands/formatting.test.ts packages/core/tests/state/formatting-state.test.ts
 node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.test.mjs
 ```
+
+
+## HWPX 생성 문단의 서식 저장 회귀
+
+[HWPX 생성 문단 서식 계약](hwpx-live-generated-formatting.md)을 따릅니다. 메모리 문서만 사용하는 집중 Native 회귀를 실행합니다.
+
+```sh
+zig build test-generated-formatting -Doptimize=ReleaseSafe -j1
+```
+
+직접 실행 시에는 `zig test src/hwpx_generated_formatting_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'HWPX generated formatting regression'`을 사용합니다. 익명 import 등록 테스트와 실제 이름을 가진 회귀의 수를 구분합니다. `zig build test`도 이 step에 의존하지만 전체 Native suite 통과와 집중 step 통과는 구분합니다.

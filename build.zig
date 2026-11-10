@@ -23,6 +23,21 @@ pub fn build(b: *std.Build) void {
     const core_test_step = b.step("test", "Run core and controlled text unit tests");
     core_test_step.dependOn(&run_tests.step);
 
+    const generated_format_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"HWPX generated formatting regression"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/hwpx_generated_formatting_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_generated_format_tests = b.addRunArtifact(generated_format_tests);
+    run_generated_format_tests.has_side_effects = true;
+    const generated_format_step = b.step("test-generated-formatting", "Verify same-session HWPX formatting and section metadata preservation");
+    generated_format_step.dependOn(&run_generated_format_tests.step);
+    core_test_step.dependOn(&run_generated_format_tests.step);
+
     const file_transform_tests = b.addTest(.{ .use_llvm = true, .filters = &.{
         "표 삭제 보호",
         "파일 변환 보호",
