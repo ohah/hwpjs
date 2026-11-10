@@ -1,3 +1,4 @@
+import { tableParagraphReference } from '../../src/commands/table-paragraph-reference.ts';
 import { test, expect } from 'bun:test';
 import * as core from '../../src/index.ts';
 import { tableInsertMessage } from '../../src/commands/table-insert.ts';
@@ -77,7 +78,7 @@ const query = (state: core.EditorState, target: core.SelectionTarget | null) =>
 
 for (const [format, generated, allowed, reason] of [
   ['hwp5', false, true, null],
-  ['hwp5', true, false, 'UnsupportedTableInsertReference'],
+  ['hwp5', true, true, null],
   ['hwpx', false, true, null],
 ] as const)
   test(`${format}/${generated ? 'generated' : 'original'}: public target availability is pure and agrees with mutation target checks`, async () => {
@@ -250,4 +251,56 @@ test('defaults are copied and frozen from validated advertised resources', async
   } finally {
     await f.editor.dispose();
   }
+});
+
+test('generated current reference is copied into table request without exposing observation ownership', async () => {
+  const f = await tableTargetFixture('hwp5', true);
+  try {
+    const state = f.editor.getEditorState();
+    const message = tableInsertMessage({ target: f.target(), options }, state);
+    expect(message.reference).toEqual(f.content.paragraphs[0].currentReference);
+    expect(message.reference).not.toBe(f.content.paragraphs[0].currentReference);
+    expect(Object.isFrozen(message.reference)).toBe(true);
+    expect(message.paragraph).toBe(0);
+    expect(message.reference?.id).toBe('3');
+  } finally {
+    await f.editor.dispose();
+  }
+});
+
+test('table reference admission rejects forged shape without invoking accessors', async () => {
+  const valid = {
+    epoch: '3',
+    scope: 'fixture',
+    kind: 'generated',
+    section: 0,
+    id: '3',
+    row: 0,
+    column: 0,
+  };
+  let reads = 0;
+  const getter = { ...valid };
+  Object.defineProperty(getter, 'scope', {
+    get() {
+      reads++;
+      return 'fixture';
+    },
+  });
+  for (const reference of [
+    { ...valid, epoch: '0' },
+    { ...valid, epoch: '18446744073709551616' },
+    { ...valid, id: '4294967296' },
+    { ...valid, id: '0' },
+    { ...valid, id: '01' },
+    { ...valid, scope: '' },
+    { ...valid, kind: 'cell' },
+    { ...valid, row: 1 },
+    { ...valid, extra: true },
+    { ...valid, [Symbol()]: true },
+    Object.create(valid),
+    getter,
+  ]) {
+    expect(() => tableParagraphReference(reference, 0)).toThrow('UnsupportedTableInsertReference');
+  }
+  expect(reads).toBe(0);
 });

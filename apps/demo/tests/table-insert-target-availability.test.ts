@@ -60,7 +60,7 @@ async function setup(format = 'hwp5', generated = false) {
   return { editor, messages, errors, content };
 }
 
-test('generated HWP5 target is disabled with Korean reason before Core dispatch or modal creation', async () => {
+test('generated HWP5 body target opens the same table dialog as an original target', async () => {
   const f = await setup('hwp5', true),
     bridge = createTableInsertBridge(f.editor, core),
     dom = documentFixture(),
@@ -74,13 +74,11 @@ test('generated HWP5 target is disabled with Korean reason before Core dispatch 
   try {
     const before = f.editor.getEditorState(),
       capture = bridge.capture();
-    expect(capture.reason).not.toBeNull();
-    expect(capture.reason).toMatch(/[가-힣]/);
-    expect(bridge.presentation().enabled).toBe(false);
-    expect((await bridge.insert(capture, draft)).status).toBe('rejected-unapplied');
+    expect(capture.reason).toBeNull();
+    expect(bridge.presentation().enabled).toBe(true);
     controller.open();
-    expect(dom.role('table-insert-dialog')).toBeUndefined();
-    expect(statuses.join()).toMatch(/[가-힣]/);
+    expect(dom.role('table-insert-dialog')).toBeDefined();
+    expect(statuses).toEqual([]);
     expect(f.messages.filter((m) => m.kind === 'insert-table')).toEqual([]);
     expect(f.errors).toEqual([]);
     expect(f.editor.getEditorState()).toBe(before);

@@ -1806,3 +1806,12 @@ bun test --no-install apps/demo/tests/contextual-table-row-shortcut.test.ts \
 ```
 
 이는 실제 shortcut host·port·합성 Surface 회귀입니다. 신뢰된 키 이벤트·독립 CFB/ZIP/XML 저장의 실제 브라우저 검증은 별도입니다.
+
+
+## HWP5 표 삽입의 현재 문단 바인딩
+
+[표 삽입 대상 계약](table-insert-target-availability.md)을 따릅니다. 참조 전체 대조와 source 슬롯·ID 분리, 오래된 참조·ABI 부재의 삽입 전 거부를 확인합니다.
+
+```sh
+node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.test.mjs
+```

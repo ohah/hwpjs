@@ -38,7 +38,17 @@ async function setup(
         editable: true,
         selectionOwner: 'section:0:body',
         ...(config.format === 'hwp5'
-          ? { currentReference: { kind: 'original', section: 0, id: '42', epoch: '2', scope: '1' } }
+          ? {
+              currentReference: {
+                kind: 'original',
+                section: 0,
+                id: '42',
+                epoch: '2',
+                scope: '1',
+                row: 0,
+                column: 0,
+              },
+            }
           : {}),
         ...config.row,
       },
@@ -265,7 +275,7 @@ test('capability의 누락·unknown·false를 true로 간주하지 않음', asyn
     }
   }
 });
-test('HWP5 미지원 생성reference는 ordinal ABI에 전달하지 않음', async () => {
+test('HWP5 불완전한 생성reference는 Native에 전달하지 않음', async () => {
   const h = await setup({
     format: 'hwp5',
     row: { currentReference: { kind: 'generated', section: 0, id: '1' } },

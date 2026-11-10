@@ -94,10 +94,7 @@ import { currentReferenceCommand } from './hwp5-current-reference-command.mjs';
 import { attachHwp5CurrentReferences } from './hwp5-current-reference-content.mjs';
 import { attachHwp5NoteSelectionOwners } from './hwp5-note-selection-owner.mjs';
 import { attachHwp5CreatedTables } from './hwp5-created-table-content.mjs';
-import {
-  hwp5TableCreationRequest,
-  setHwp5CreatedCellText,
-} from './hwp5-table-creation-command.mjs';
+import { insertHwp5Table, setHwp5CreatedCellText } from './hwp5-table-creation-command.mjs';
 import { selectionEditQuery, selectionSplitQuery } from './selection-edit-query.mjs';
 import { applySourceTableGridCommand } from './source-table-grid-command.mjs';
 import { applyCreatedTableGridCommand } from './created-table-grid-command.mjs';
@@ -1182,9 +1179,7 @@ export function createReaderRuntime({
         if (format === 'hwp5') {
           if (!hwp5TableCreationAvailable()) throw new Error('Hwp5TableCreationAbiUnavailable');
           const identity =
-            message.kind === 'insert-table'
-              ? editor.insertTable(hwp5TableCreationRequest(message))
-              : message.identity;
+            message.kind === 'insert-table' ? insertHwp5Table(editor, message) : message.identity;
           if (message.kind === 'created-cell-text') setHwp5CreatedCellText(editor, message);
           applied = true;
           reply({ kind: message.kind, identity, content: hwp5Display() });

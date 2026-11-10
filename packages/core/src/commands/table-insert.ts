@@ -3,7 +3,7 @@ import type { EditorState } from '../state/editor-state.ts';
 import type { InsertTableOptions, TableInsertResources } from './table-insert-options.ts';
 import { validateTableInsertOptions } from './table-insert-options.ts';
 import { selectionMessage, validateSelection } from './selection.ts';
-import { validateOriginalParagraphReference } from './original-paragraph-reference.ts';
+import { tableParagraphReference } from './table-paragraph-reference.ts';
 export type { InsertTableOptions, TableInsertResources } from './table-insert-options.ts';
 export interface InsertTablePayload {
   readonly target: SelectionTarget;
@@ -12,7 +12,7 @@ export interface InsertTablePayload {
 export type TableInsertAvailability =
   | { readonly allowed: true; readonly reason: null; readonly resources: TableInsertResources }
   | { readonly allowed: false; readonly reason: string; readonly resources: null };
-/** Shared target admission. This does not expand the original HWP5 reference ABI. */
+/** Shared target admission; Native rechecks the current source binding before mutation. */
 function tableInsertTarget(state: EditorState, target: SelectionTarget | null) {
   if (state.status !== 'ready') throw Error('EditorNotReady');
   if (state.historyRecoveryRequired) throw Error('HistoryRecoveryRequired');
@@ -36,9 +36,16 @@ function tableInsertTarget(state: EditorState, target: SelectionTarget | null) {
     row.drawingCaption
   )
     throw Error('UnsupportedTableInsertOwner');
-  validateOriginalParagraphReference(target, row, 'UnsupportedTableInsertReference');
+  const reference =
+    target.format === 'hwp5'
+      ? tableParagraphReference(row.currentReference, target.section)
+      : undefined;
   if (content?.tableCreationAvailable !== true) throw Error('TableCreationUnavailable');
-  return { mapped: selectionMessage(target, state), resources: content.tableCreationResources };
+  return {
+    mapped: selectionMessage(target, state),
+    reference,
+    resources: content.tableCreationResources,
+  };
 }
 /** Pure snapshot query; dimensions and selected resources are validated again on dispatch. */
 export function getTableInsertAvailability(
@@ -87,10 +94,11 @@ export function tableInsertMessage(payload: InsertTablePayload, state: EditorSta
     )
   )
     throw Error('InvalidTableInsertPayload');
-  const { mapped, resources } = tableInsertTarget(state, payload.target);
+  const { mapped, reference, resources } = tableInsertTarget(state, payload.target);
   const options = validateTableInsertOptions(payload.options, resources);
   return {
     kind: 'insert-table',
+    ...(reference === undefined ? {} : { reference }),
     section: mapped.section,
     paragraph: mapped.paragraph,
     unit: mapped.startUnit,

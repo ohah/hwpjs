@@ -194,6 +194,11 @@ jobs:
           test -f ./packages/core/tests/commands/table-insert-availability.test.ts || exit 1
           test -f ./apps/demo/tests/table-insert-target-availability.test.ts || exit 1
           bun test --no-install ./packages/core/tests/commands/table-insert.test.ts ./packages/core/tests/commands/table-insert-availability.test.ts ./apps/demo/tests/table-insert.test.ts ./apps/demo/tests/table-insert-uncertain.test.ts ./apps/demo/tests/table-insert-target-availability.test.ts
+      - name: Test HWP5 current source binding before table insertion
+        timeout-minutes: 2
+        run: |
+          test -f ./tools/tests/hwp5-current-table-insertion.test.mjs || exit 1
+          node --max-old-space-size=256 --test ./tools/tests/hwp5-current-table-insertion.test.mjs
       - name: Test API playground canonical targets and table availability
         run: |
           test -f ./apps/demo/tests/api-playground-selection-owner.test.mjs || exit 1
