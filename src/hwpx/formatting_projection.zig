@@ -14,6 +14,10 @@ pub const Backend = struct {
         range_validation: ?@import("character_style_session.zig").QueryValidation = null,
         character_ids: ?std.AutoHashMapUnmanaged(u32, usize) = null,
         paragraph_ids: ?std.AutoHashMapUnmanaged(u32, usize) = null,
+        reset_styles: ?@import("formatting_style_reset.zig").Index = null,
+        resets: std.AutoHashMapUnmanaged(m.Owner, m.ResetResources) = .empty,
+        generated_sections: std.AutoHashMapUnmanaged(usize, void) = .empty,
+        generated_owners: std.AutoHashMapUnmanaged(m.Owner, void) = .empty,
         owner_views: std.AutoHashMapUnmanaged(usize, @import("display_current_paragraphs.zig").View) = .empty,
         characters: ?[]@import("character_shape_display.zig").Shape = null,
         paragraphs: ?[]@import("paragraph_display_owned.zig").Shape = null,
@@ -30,6 +34,10 @@ pub const Backend = struct {
             var views = self.owner_views.valueIterator();
             while (views.next()) |view| view.deinit(self.allocator);
             self.owner_views.deinit(self.allocator);
+            if (self.reset_styles) |*index| index.deinit();
+            self.resets.deinit(self.allocator);
+            self.generated_owners.deinit(self.allocator);
+            self.generated_sections.deinit(self.allocator);
             if (self.underlines) |rows| @import("character_underline_snapshot.zig").deinit(self.allocator, rows);
             if (self.metrics) |rows| self.allocator.free(rows);
             if (self.strikes) |rows| @import("character_strike_styles.zig").deinit(self.allocator, rows);
@@ -98,11 +106,42 @@ pub const Backend = struct {
         return @import("character_strike_styles.zig").read(self.session);
     }
     pub fn resetResources(self: Backend, selected: m.Owner, a: std.mem.Allocator) !m.ResetResources {
+        // Even direct callers use a single request scope: owner proof, current
+        // view, and reset resource reads share one lifetime, never Session state.
+        if (self.snapshot == null) {
+            var snapshot: Snapshot = .{ .allocator = self.allocator };
+            defer snapshot.deinit();
+            var backend = self;
+            backend.snapshot = &snapshot;
+            return backend.resetResources(selected, a);
+        }
         _ = try self.owner(selected);
+        const snapshot = self.snapshot.?;
+        if (snapshot.resets.get(selected)) |resources| return resources;
         var local: ?@import("formatting_preflight.zig").Context = null;
         defer if (local) |*value| value.deinit();
         const context = try self.currentContext(a, &local);
-        return @import("formatting_style_reset.zig").readWithContext(a, self.session, selected, context);
+        if (snapshot.reset_styles == null) snapshot.reset_styles = .{ .allocator = snapshot.allocator };
+        const resources = try @import("formatting_style_reset.zig").readWithContext(a, self, selected, context, &snapshot.reset_styles.?);
+        try snapshot.resets.put(snapshot.allocator, selected, resources);
+        return resources;
+    }
+    /// Resolve the real style only through the same live owner proof. No trusted
+    /// flag or externally supplied template can skip generated admission.
+    pub fn resetStyleIdentity(self: Backend, a: std.mem.Allocator, selected: m.Owner) !u32 {
+        if (self.snapshot == null) {
+            var snapshot: Snapshot = .{ .allocator = self.allocator };
+            defer snapshot.deinit();
+            var backend = self;
+            backend.snapshot = &snapshot;
+            return backend.resetStyleIdentity(a, selected);
+        }
+        _ = try self.owner(selected);
+        const section = &self.session.sections[selected.section];
+        const view = self.snapshot.?.owner_views.get(selected.section).?;
+        const paragraph = view.paragraphs[selected.paragraph - section.first_paragraph];
+        const raw = (try section.tree.attributeValue(a, paragraph.template_element, "", "styleIDRef")) orelse return error.MissingResetStyle;
+        return @import("table_xml_fields.zig").unsigned(a, raw, 4096);
     }
     pub fn owner(self: Backend, value: m.Owner) !m.Owner {
         if (value.section >= self.session.sections.len) return error.InvalidSectionIndex;
@@ -118,11 +157,23 @@ pub const Backend = struct {
                 };
             }
             const paragraphs = entry.value_ptr.paragraphs;
-            if (index >= paragraphs.len or paragraphs[index].source_ordinal == null) return error.UnsupportedFormattingOwner;
+            if (index >= paragraphs.len) return error.UnsupportedFormattingOwner;
+            if (paragraphs[index].source_ordinal == null and !snapshot.generated_owners.contains(value)) {
+                if (!snapshot.generated_sections.contains(value.section)) {
+                    try section.validateSourceBasis();
+                    try snapshot.generated_sections.put(snapshot.allocator, value.section, {});
+                }
+                try @import("formatting_generated_owner.zig").validate(section, &paragraphs[index]);
+                try snapshot.generated_owners.put(snapshot.allocator, value, {});
+            }
         } else {
             var view = try @import("display_current_paragraphs.zig").read(self.allocator, section, self.session.options);
             defer view.deinit(self.allocator);
-            if (index >= view.paragraphs.len or view.paragraphs[index].source_ordinal == null) return error.UnsupportedFormattingOwner;
+            if (index >= view.paragraphs.len) return error.UnsupportedFormattingOwner;
+            if (view.paragraphs[index].source_ordinal == null) {
+                try section.validateSourceBasis();
+                try @import("formatting_generated_owner.zig").validate(section, &view.paragraphs[index]);
+            }
         }
         return value;
     }

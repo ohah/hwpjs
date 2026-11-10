@@ -52,6 +52,19 @@ pub fn build(b: *std.Build) void {
     const generated_atomic_step = b.step("test-generated-atomic-formatting", "Verify generated HWP5 atomic formatting and query-scoped caches");
     generated_atomic_step.dependOn(&run_generated_atomic_tests.step);
     core_test_step.dependOn(&run_generated_atomic_tests.step);
+    const hwpx_generated_atomic_tests = b.addTest(.{
+        .root_module = b.createModule(.{
+            .target = b.graph.host,
+            .optimize = .ReleaseSafe,
+            .root_source_file = b.path("src/hwpx_generated_atomic_r1_tests.zig"),
+        }),
+        .filters = &.{"HX generated atomic r1"},
+    });
+    const run_hwpx_generated_atomic_tests = b.addRunArtifact(hwpx_generated_atomic_tests);
+    run_hwpx_generated_atomic_tests.has_side_effects = true;
+    const hwpx_generated_atomic_step = b.step("test-hwpx-generated-atomic-formatting", "Verify generated HWPX atomic formatting ownership and history");
+    hwpx_generated_atomic_step.dependOn(&run_hwpx_generated_atomic_tests.step);
+    core_test_step.dependOn(&run_hwpx_generated_atomic_tests.step);
 
     const file_transform_tests = b.addTest(.{ .use_llvm = true, .filters = &.{
         "표 삭제 보호",

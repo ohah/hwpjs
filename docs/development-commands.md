@@ -1844,3 +1844,7 @@ Core 계약은 `bun test --no-install packages/core/tests/commands/generated-ext
 ## HWP5 생성 본문의 일괄 서식
 
 Native 집중 검사는 `zig build test-generated-atomic-formatting -Doptimize=ReleaseSafe -j1`입니다. Core 검사는 `bun test --no-install ./packages/core/tests/commands/generated-atomic-formatting.test.ts ./packages/core/tests/commands/generated-atomic-runtime.test.mjs`입니다. 실제 저장·이력은 `HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm HWPJS_TEST_WASM_SHA256=EXACT_SHA256 node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/hwp5-generated-atomic-formatting.test.mjs`로 실행합니다. Git에 추적된 오라클만 사용하며 일반 checkout root에서 실행합니다. 격리 후보는 정확한 HEAD 오라클 root를 `HWPJS_TEST_ORACLE_ROOT`와 cwd에 같이 지정합니다. [지원·비용·증거 계약](hwp5-generated-atomic-formatting.md)을 따릅니다.
+
+## HWPX 생성 본문의 일괄 서식
+
+Native 집중 검사는 `zig build test-hwpx-generated-atomic-formatting -Doptimize=ReleaseSafe -j1 --summary all`입니다. 실제 Core·독립 ZIP/XML 검사는 정확한 절대경로 `HWPJS_TEST_WASM`과 `HWPJS_TEST_WASM_SHA256`을 지정해 `node --max-old-space-size=512 --test --test-concurrency=1 ./tools/tests/hwpx-generated-atomic-formatting.test.mjs`로 실행합니다. Python 표준 라이브러리와 Git에 추적된 정확한 오라클을 사용합니다. [범위·소유권·비용 계약](hwpx-generated-atomic-formatting.md)을 따릅니다.

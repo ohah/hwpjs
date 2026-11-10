@@ -203,6 +203,16 @@ jobs:
           export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=45000 \
             ./tools/tests/hwp5-generated-atomic-formatting.test.mjs
+      - name: Test generated HWPX atomic formatting actual Native save and history
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+        run: |
+          test -f ./tools/tests/hwpx-generated-atomic-formatting.test.mjs || exit 1
+          test -n "$HWPJS_TEST_WASM_EXPECTED_SHA256" || exit 1
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=45000 \
+            ./tools/tests/hwpx-generated-atomic-formatting.test.mjs
       - name: Test original table style and fill Native transactions
         timeout-minutes: 2
         env:

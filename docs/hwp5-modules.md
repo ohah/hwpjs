@@ -556,3 +556,5 @@
 [HWP5 생성 본문의 확장 서식](hwp5-generated-extended-formatting.md)은 같은 세션의 밑줄·취소선·글자색·언어별 글꼴과 현재 참조 검증을 소유합니다.
 
 [HWP5 생성 본문의 일괄 서식](hwp5-generated-atomic-formatting.md)은 query·결합 patch·스타일 초기화와 현재 참조·조회별 캐시·성능 경계를 소유합니다.
+
+[HWPX 생성 본문의 일괄 서식](hwpx-generated-atomic-formatting.md)은 생성 BODY 소유권·query/patch/reset·요청별 인덱스와 오류 순서·단일 이력·독립 ZIP/XML 검증을 소유합니다.

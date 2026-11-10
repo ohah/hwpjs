@@ -26,4 +26,4 @@ Native 메모리 검사는 결합 적용·세 reset·사용자 지정 및 없는
 
 격리된 공개 데모 r2에서 Vanilla·React·Svelte 각각 생성 HWP5 본문의 글자(굵게·크기·색)와 문단(가운데 정렬·grid) 결합 적용을 검사했습니다. 6개 시나리오 모두 저장/재열기 이전의 첫 조회·한 Apply·한 undo/redo, 독립 CFB의 비대상 문단 보존과 후속 입력/재열기를 통과했습니다. 노출된 character reset과 API의 세 reset 검증은 구분합니다. 문단 여백은 `hwp5-source-unit`의 물리 단위 연결이 남아 있어 이 UI 검증에 포함하지 않습니다. [크기 빈 초안](formatting-dialogs.md#글자-크기를-지우고-다시-입력할-때)의 잘못된 관측값 복원도 별도로 수정했습니다. HWPX 생성 문단과 공개 서버 반영은 이 6개 양성 결과로 증명하지 않습니다.
 
-HWPX의 분할 생성 본문은 이전 승인 빌드와 r2 모두 `UnsupportedFormattingOwner`로 복합 서식 조회가 거부됩니다. HWPX 원본 본문의 동일 모달 적용·단일 undo/redo는 r2에서 독립 XML로 확인했으며, 생성 본문의 실패를 양성 결과에 합치지 않습니다. 이 기존 제한의 확장은 후속 작업입니다.
+G02 비교에서 확인한 HWPX 생성 본문의 기존 거부 조건은 별도 [HWPX 생성 본문 계약](hwpx-generated-atomic-formatting.md)에서 수정·검증합니다. HWP5의 6개 양성 GUI 결과를 HWPX의 증거로 합산하지 않습니다.

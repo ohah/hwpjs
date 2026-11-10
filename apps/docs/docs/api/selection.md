@@ -156,3 +156,7 @@ export function underlineResultMessage(result: CommandResult): string {
 결합 예시는 `patch: { character: { bold: true, size: 1900 }, paragraph: { alignment: 'CENTER' } }`입니다. 현재 문단 스타일을 기준으로 초기화하려면 `patch: { reset: { basis: 'paragraph-style', scope: 'character' } }`를 사용합니다. scope는 `character`, `paragraph`, `all`이며 reset과 일반 변경 값을 같은 patch에 섞지 않습니다.
 
 한 적용은 한 실행 취소 항목이고 같은 값은 no-op입니다. query 후 문서가 바뀌었다면 이전 대상이나 binding을 재사용하지 말고 현재 상태에서 새 대상을 만드세요. unknown 관측을 기본값으로 바꾸지 않고 writable과 반환된 status/error를 확인합니다. 보호된 범위·잘못된 scalar·오래된 참조와 지원 밖 owner는 미반영 거부됩니다. 생성 셀·글상자·각주의 확대와 캐럿의 다음 입력 서식은 별도 범위입니다.
+
+### HWPX 생성 본문의 결합 서식
+
+같은 세션에서 분할·병합으로 만든 최상위 HWPX 본문도 `queryFormatting`과 `APPLY_FORMATTING_PATCH_COMMAND`를 지원합니다. 글자·문단 결합 적용과 현재 문단 스타일 기준 `character`·`paragraph`·`all` 초기화는 한 번의 적용과 실행 취소로 처리합니다. 현재 token·선택 범위·capability를 확인하며, 생성 셀·그리기·각주·캡션 등 중첩 문단까지 확대하지 않습니다.
