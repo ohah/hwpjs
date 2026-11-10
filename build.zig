@@ -38,6 +38,21 @@ pub fn build(b: *std.Build) void {
     generated_format_step.dependOn(&run_generated_format_tests.step);
     core_test_step.dependOn(&run_generated_format_tests.step);
 
+    const generated_atomic_tests = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"G02 generated atomic"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/h5_generated_atomic_formatting_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_generated_atomic_tests = b.addRunArtifact(generated_atomic_tests);
+    run_generated_atomic_tests.has_side_effects = true;
+    const generated_atomic_step = b.step("test-generated-atomic-formatting", "Verify generated HWP5 atomic formatting and query-scoped caches");
+    generated_atomic_step.dependOn(&run_generated_atomic_tests.step);
+    core_test_step.dependOn(&run_generated_atomic_tests.step);
+
     const file_transform_tests = b.addTest(.{ .use_llvm = true, .filters = &.{
         "표 삭제 보호",
         "파일 변환 보호",

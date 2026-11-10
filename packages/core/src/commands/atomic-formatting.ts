@@ -5,6 +5,7 @@ import {
 } from './character-formatting-patch.ts';
 import type { FormattingPatch } from './formatting-patch.ts';
 import { validateOriginalParagraphReference } from './original-paragraph-reference.ts';
+import { currentParagraphReference } from './current-paragraph-reference.ts';
 import { validateBorderPatch, validateBackgroundPatch } from './formatting-resource-intent.ts';
 import type { SelectionTarget } from './commands.ts';
 import type { EditorState } from '../state/editor-state.ts';
@@ -110,7 +111,26 @@ export function atomicSelector(
     target.owner !== `section:${target.section}:body`
   )
     throw Error('UnsupportedFormattingOwner');
-  validateOriginalParagraphReference(target, row, 'UnsupportedFormattingReference');
+  let reference: unknown;
+  if (
+    target.format === 'hwp5' &&
+    (row.currentReference as { kind?: unknown } | undefined)?.kind === 'generated'
+  ) {
+    reference = currentParagraphReference(
+      row.currentReference,
+      target.section,
+      'UnsupportedFormattingReference',
+    );
+    if (
+      target.owner !== `section:${target.section}:body` ||
+      row.tableCell ||
+      row.drawingText ||
+      row.drawingCaption
+    )
+      throw Error('UnsupportedFormattingOwner');
+  } else {
+    validateOriginalParagraphReference(target, row, 'UnsupportedFormattingReference');
+  }
   let ranges: readonly { startUnit: number; endUnit: number }[] | undefined;
   if (character && target.startUnit !== target.endUnit) {
     const change = {
@@ -125,9 +145,11 @@ export function atomicSelector(
     ranges = [{ startUnit: mapped.startUnit, endUnit: mapped.endUnit }];
   }
   return {
+    // Legacy Native kind names a current source slot, not the reference's kind.
     kind: 'original-paragraph',
     section: target.section,
     paragraph: target.paragraph,
+    ...(reference === undefined ? {} : { reference }),
     ...(ranges ? { ranges } : {}),
   };
 }

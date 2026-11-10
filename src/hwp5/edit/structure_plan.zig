@@ -4,6 +4,24 @@ const model = @import("../../model/document.zig");
 const Tree = @import("../body/tree.zig").Tree;
 const Version = @import("../version.zig").Version;
 const owners = @import("paragraph_owner.zig");
+const absent = std.math.maxInt(usize);
+pub const TestWork = struct {
+    source_visits: usize = 0,
+    current_visits: usize = 0,
+    instance_probes: usize = 0,
+    following_probes: usize = 0,
+    owner_validations: usize = 0,
+    restart_presence_checks: usize = 0,
+    restart_checks: usize = 0,
+    removal_visits: usize = 0,
+};
+pub var test_work: if (@import("builtin").is_test) TestWork else void = if (@import("builtin").is_test) .{} else {};
+
+fn logicalOwner(tree: Tree, flows: @import("../body/paragraph_flows.zig").Flows, node: usize) !?usize {
+    if (node >= tree.nodes.len or tree.nodes[node].record.value != .header) return error.SourceBindingMismatch;
+    const owner = flows.get(node) catch return error.OrphanListParagraph;
+    return if (owner == 0) null else owner;
+}
 
 pub const Insertion = struct {
     paragraph: usize,
@@ -35,6 +53,68 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
     if (section.source_record_count != tree.nodes.len) return error.SourceBindingMismatch;
     var groups = try owners.inspectGroups(a, tree, version);
     defer groups.deinit(a);
+    var flows = try @import("../body/paragraph_flows.zig").Flows.build(a, tree, groups.items);
+    defer flows.deinit(a);
+    // Include original IDs: generated IDs must not collide with either kind.
+    var instance_counts: std.AutoHashMapUnmanaged(u32, u2) = .empty;
+    defer instance_counts.deinit(a);
+    // Borrowed paragraph values, preserving the original declaration order.
+    // The common no-restart deletion case must not rescan all current rows for
+    // each removed source header. Retained restart validation stays in its SSOT.
+    var restart_paragraphs: std.ArrayList(model.Paragraph) = .empty;
+    defer restart_paragraphs.deinit(a);
+    for (section.paragraphs) |paragraph| {
+        if (@import("builtin").is_test) test_work.instance_probes += 1;
+        if (@import("builtin").is_test) test_work.restart_presence_checks += 1;
+        if (paragraph.restart_control_source != null) try restart_paragraphs.append(a, paragraph);
+        const entry = try instance_counts.getOrPut(a, paragraph.instance_id);
+        if (!entry.found_existing) entry.value_ptr.* = 1 else entry.value_ptr.* = 2;
+    }
+    const last_source = try a.alloc(usize, tree.nodes.len + 1);
+    defer a.free(last_source);
+    @memset(last_source, absent);
+    for (tree.nodes, 0..) |node, index| {
+        if (@import("builtin").is_test) test_work.source_visits += 1;
+        if (node.record.value != .header) continue;
+        const owner = try logicalOwner(tree, flows, index);
+        last_source[owner orelse tree.nodes.len] = index;
+    }
+    const last_current = try a.alloc(usize, tree.nodes.len + 1);
+    defer a.free(last_current);
+    @memset(last_current, absent);
+    const next_owner = try a.alloc(usize, section.paragraphs.len);
+    defer a.free(next_owner);
+    const next_bad = try a.alloc(usize, section.paragraphs.len);
+    defer a.free(next_bad);
+    const owner_errors = try a.alloc(?anyerror, section.paragraphs.len);
+    defer a.free(owner_errors);
+    @memset(owner_errors, null);
+    // Preserve the old following scan's error priority: an invalid reference is
+    // observed only if it occurs before the first later matching owner.
+    var bad: usize = absent;
+    var reverse = section.paragraphs.len;
+    while (reverse > 0) {
+        reverse -= 1;
+        if (@import("builtin").is_test) test_work.current_visits += 1;
+        next_bad[reverse] = bad;
+        next_owner[reverse] = absent;
+        const paragraph = section.paragraphs[reverse];
+        const template = paragraph.source_node orelse paragraph.header_template orelse {
+            owner_errors[reverse] = error.MissingParagraphTemplate;
+            bad = reverse;
+            continue;
+        };
+        const owner = logicalOwner(tree, flows, template) catch |err| {
+            owner_errors[reverse] = err;
+            bad = reverse;
+            continue;
+        };
+        const key = owner orelse tree.nodes.len;
+        next_owner[reverse] = last_current[key];
+        last_current[key] = reverse;
+    }
+    var validated_templates: std.AutoHashMapUnmanaged(u32, void) = .empty;
+    defer validated_templates.deinit(a);
     const additions = try a.alloc(u16, tree.nodes.len);
     errdefer a.free(additions);
     @memset(additions, 0);
@@ -48,6 +128,7 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
     var original_cursor: usize = 0;
     var previous: ?u32 = null;
     for (section.paragraphs, 0..) |p, index| {
+        if (@import("builtin").is_test) test_work.current_visits += 1;
         if (p.source_node) |node| {
             _ = try p.originalNode();
             if (node >= tree.nodes.len or node < original_cursor or tree.nodes[node].record.value != .header) return error.SourceBindingMismatch;
@@ -67,28 +148,20 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
         const parent: ?usize = if (p.parent_node) |node| @as(usize, node) else null;
         if (tree.nodes[template].parent != parent) return error.SourceBindingMismatch;
         if (p.instance_id == 0) return error.InvalidParagraphInstanceId;
-        for (section.paragraphs, 0..) |other, other_index| {
-            if (other_index != index and other.instance_id == p.instance_id) return error.InvalidParagraphInstanceId;
+        if (@import("builtin").is_test) test_work.instance_probes += 1;
+        if (instance_counts.get(p.instance_id).? != 1) return error.InvalidParagraphInstanceId;
+        if (!validated_templates.contains(template)) {
+            if (@import("builtin").is_test) test_work.owner_validations += 1;
+            try owners.validate(a, tree, template, version);
+            try validated_templates.put(a, template, {});
         }
-        try owners.validate(a, tree, template, version);
-        const owner = try owners.logicalOwner(tree, groups, template);
-        var last = true;
-        for (tree.nodes[template + 1 ..], template + 1..) |node, ni| {
-            if (node.record.value == .header and try owners.logicalOwner(tree, groups, ni) == owner) {
-                last = false;
-                break;
-            }
-        }
+        const owner = try logicalOwner(tree, flows, template);
+        if (@import("builtin").is_test) test_work.following_probes += 1;
+        var last = last_source[owner orelse tree.nodes.len] == template;
         if (index + 1 < section.paragraphs.len and section.paragraphs[index + 1].source_node == null and section.paragraphs[index + 1].header_template == template) last = false;
         if (allow_deletions) {
-            last = true;
-            for (section.paragraphs[index + 1 ..]) |following| {
-                const next = following.source_node orelse following.header_template orelse return error.MissingParagraphTemplate;
-                if (try owners.logicalOwner(tree, groups, next) == owner) {
-                    last = false;
-                    break;
-                }
-            }
+            if (next_bad[index] < next_owner[index]) return owner_errors[next_bad[index]].?;
+            last = next_owner[index] == absent;
         }
         if (owner) |list| {
             additions[list] = std.math.add(u16, additions[list], 1) catch return error.LimitExceeded;
@@ -102,17 +175,19 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
         try removals.append(a, @intCast(original_cursor));
     }
     for (removals.items) |node| {
+        if (@import("builtin").is_test) test_work.removal_visits += 1;
         const header = tree.nodes[node];
         if (header.record.value.header.extra.len != 0 or (header.record.value.header.merge_tracking orelse 0) != 0) return error.UnsupportedParagraphExtension;
         var retained_restart = false;
-        for (section.paragraphs) |p| if (p.restart_control_source != null) {
+        for (restart_paragraphs.items) |p| {
+            if (@import("builtin").is_test) test_work.restart_checks += 1;
             var links = try @import("../body/control_links.zig").Links.build(a, tree);
             defer links.deinit(a);
             const index = (try @import("page_restart_source.zig").forParagraph(links.items, p)).?;
             if (links.items[index].paragraph_node != node) continue;
             _ = try @import("current_restart_anchor.zig").resolve(a, tree, links.items, index, section.paragraphs);
             retained_restart = true;
-        };
+        }
         // Do not silently delete containers, controls or unrepresented content.
         for (tree.nodes[node + 1 .. header.subtree_end]) |child| {
             if (retained_restart) continue; // Exact leaf scope was checked by resolver.
@@ -129,7 +204,7 @@ pub fn buildWithDeletions(a: std.mem.Allocator, tree: Tree, section: model.Secti
                 else => return error.UnsupportedStructuralControl,
             }
         }
-        if (try owners.logicalOwner(tree, groups, node)) |list| {
+        if (try logicalOwner(tree, flows, node)) |list| {
             removed_counts[list] = std.math.add(u16, removed_counts[list], 1) catch return error.LimitExceeded;
         }
     }

@@ -184,6 +184,25 @@ jobs:
           export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=45000 \
             ./tools/tests/hwp5-generated-extended-formatting.test.mjs
+      - name: Test generated paragraph atomic formatting admission
+        timeout-minutes: 2
+        run: |
+          test -f ./packages/core/tests/commands/generated-atomic-formatting.test.ts || exit 1
+          test -f ./packages/core/tests/commands/generated-atomic-runtime.test.mjs || exit 1
+          bun test --no-install \
+            ./packages/core/tests/commands/generated-atomic-formatting.test.ts \
+            ./packages/core/tests/commands/generated-atomic-runtime.test.mjs
+      - name: Test generated paragraph atomic formatting actual Native save and history
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_ORACLE_ROOT: ${{ github.workspace }}
+        run: |
+          test -f ./tools/tests/hwp5-generated-atomic-formatting.test.mjs || exit 1
+          test -n "$HWPJS_TEST_WASM_EXPECTED_SHA256" || exit 1
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=45000 \
+            ./tools/tests/hwp5-generated-atomic-formatting.test.mjs
       - name: Test original table style and fill Native transactions
         timeout-minutes: 2
         env:

@@ -1840,3 +1840,7 @@ zig build test-generated-formatting -Doptimize=ReleaseSafe -j1
 ## HWP5 생성 본문의 확장 서식
 
 Core 계약은 `bun test --no-install packages/core/tests/commands/generated-extended-formatting.test.ts packages/core/tests/state/formatting-state.test.ts`입니다. 실제 Native·독립 CFB 검사는 `HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm HWPJS_TEST_WASM_SHA256=EXACT_SHA256 node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/hwp5-generated-extended-formatting.test.mjs`로 실행합니다. 환경 누락은 실패이며 [소유권·검증 범위](hwp5-generated-extended-formatting.md)를 따릅니다.
+
+## HWP5 생성 본문의 일괄 서식
+
+Native 집중 검사는 `zig build test-generated-atomic-formatting -Doptimize=ReleaseSafe -j1`입니다. Core 검사는 `bun test --no-install ./packages/core/tests/commands/generated-atomic-formatting.test.ts ./packages/core/tests/commands/generated-atomic-runtime.test.mjs`입니다. 실제 저장·이력은 `HWPJS_TEST_WASM=/absolute/path/hwpjs.wasm HWPJS_TEST_WASM_SHA256=EXACT_SHA256 node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/hwp5-generated-atomic-formatting.test.mjs`로 실행합니다. Git에 추적된 오라클만 사용하며 일반 checkout root에서 실행합니다. 격리 후보는 정확한 HEAD 오라클 root를 `HWPJS_TEST_ORACLE_ROOT`와 cwd에 같이 지정합니다. [지원·비용·증거 계약](hwp5-generated-atomic-formatting.md)을 따릅니다.

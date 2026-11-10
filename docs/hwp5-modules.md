@@ -554,3 +554,5 @@
 - [HWPX 편집 중 생성 문단의 서식 저장](hwpx-live-generated-formatting.md)
 
 [HWP5 생성 본문의 확장 서식](hwp5-generated-extended-formatting.md)은 같은 세션의 밑줄·취소선·글자색·언어별 글꼴과 현재 참조 검증을 소유합니다.
+
+[HWP5 생성 본문의 일괄 서식](hwp5-generated-atomic-formatting.md)은 query·결합 patch·스타일 초기화와 현재 참조·조회별 캐시·성능 경계를 소유합니다.

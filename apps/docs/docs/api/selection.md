@@ -86,6 +86,7 @@ export function underlineResultMessage(result: CommandResult): string {
 | INSERT_TABLE_COMMAND | target, options | 현재 본문 caret에 표 삽입. `getTableInsertAvailability`와 현재 관측 자원·크기 제한 확인 |
 | EDIT_CREATED_TABLE_GRID_COMMAND | section, identity, action, index | 현재 세션의 생성 표 identity 대상 행·열 삽입/삭제. capability와 현재 생성 표 관측 필요 |
 | EDIT_SOURCE_TABLE_GRID_COMMAND | section, tableNode, expectedRows, expectedColumns, action, index, layout? | 현재 원본 단순 표 주소 대상 행·열 삽입/삭제. capability·예상 격자·형식별 제한 확인 |
+| APPLY_FORMATTING_PATCH_COMMAND | target, patch | 지원 대상의 글자·문단 결합 서식 또는 스타일 기준 초기화 |
 | UNDO_COMMAND / REDO_COMMAND | token | Native 이력 |
 
 위 표는 대표 명령이며 모든 export의 목록은 아닙니다. 기능별 계약·capability·대상 제한을 함께 확인하세요. 저수준 문자열 메시지가 있다는 사실만으로 typed public API라고 안내하지 않습니다.
@@ -147,3 +148,11 @@ export function underlineResultMessage(result: CommandResult): string {
 호스트는 현재 선택과 token을 전달합니다. Core가 현재 생성 문단 참조를 복사하고 Runtime이 Native 참조와 본문 소유권을 다시 확인합니다. 표시 문단 번호를 생성 ID로 바꾸거나, 저장·재열기를 거쳐 원본 문단으로 만들 필요는 없습니다. 실행 취소·재실행·다른 텍스트 변경 후 이전 참조를 재사용하면 `InvalidCurrentFormattingReference`로 거부합니다. 최신 token과 실제 관측을 사용해 새 대상을 만들어야 합니다.
 
 빈 선택의 다음 입력 서식과 생성 셀·글상자·각주에 대한 확장 지원은 별도입니다. 원본 선택 및 HWPX의 기존 계약을 대체하지 않습니다.
+
+## HWP5 생성 본문의 결합 서식과 초기화
+
+`editor.queryFormatting(target, { fields })`로 현재 Native 관측과 쓰기 가능 여부를 조회하고, `APPLY_FORMATTING_PATCH_COMMAND`로 글자·문단 값을 한 요청에 적용합니다. 같은 세션에서 분할한 최상위 HWP5 본문도 대상으로 받으며 저장·재열기는 필요하지 않습니다.
+
+결합 예시는 `patch: { character: { bold: true, size: 1900 }, paragraph: { alignment: 'CENTER' } }`입니다. 현재 문단 스타일을 기준으로 초기화하려면 `patch: { reset: { basis: 'paragraph-style', scope: 'character' } }`를 사용합니다. scope는 `character`, `paragraph`, `all`이며 reset과 일반 변경 값을 같은 patch에 섞지 않습니다.
+
+한 적용은 한 실행 취소 항목이고 같은 값은 no-op입니다. query 후 문서가 바뀌었다면 이전 대상이나 binding을 재사용하지 말고 현재 상태에서 새 대상을 만드세요. unknown 관측을 기본값으로 바꾸지 않고 writable과 반환된 status/error를 확인합니다. 보호된 범위·잘못된 scalar·오래된 참조와 지원 밖 owner는 미반영 거부됩니다. 생성 셀·글상자·각주의 확대와 캐럿의 다음 입력 서식은 별도 범위입니다.

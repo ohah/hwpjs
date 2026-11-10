@@ -5,6 +5,17 @@ const m = @import("../../model/formatting_patch.zig");
 const common = @import("../../model/formatting_source_values.zig");
 const eq = common.eq;
 const Session = @import("style_preservation.zig").Session;
+pub const TestWork = struct {
+    ownership_reads: usize = 0,
+    protection_reads: usize = 0,
+    formatting_sources: usize = 0,
+    reset_reads: usize = 0,
+    character_border_reads: usize = 0,
+    paragraph_border_reads: usize = 0,
+    paragraph_alignment_reads: usize = 0,
+};
+// Instrumentation has no storage or instructions in a product build.
+pub var test_work: if (@import("builtin").is_test) TestWork else void = if (@import("builtin").is_test) .{} else {};
 pub const Backend = struct {
     session: *Session,
     allocator: std.mem.Allocator,
@@ -18,7 +29,27 @@ pub const Backend = struct {
         paragraphs: ?[]@import("paragraph_display_shapes.zig").Shape = null,
         faces: ?[]@import("../../model/font_face_value.zig").Value = null,
         preflight_source: ?Session.FormattingSource = null,
+        // Immutable-template ownership, scoped to one query/preflight. A section
+        // is inspected once even when several generated targets share it.
+        ownership_flows: std.AutoHashMapUnmanaged(usize, []@import("paragraph_flow_snapshot.zig").Flow) = .empty,
+        protections: std.AutoHashMapUnmanaged(usize, @import("text_source_protection.zig").Snapshot) = .empty,
+        protection_errors: std.AutoHashMapUnmanaged(usize, anyerror) = .empty,
+        reset_resources: std.AutoHashMapUnmanaged(u8, anyerror!m.ResetResources) = .empty,
+        character_borders: std.AutoHashMapUnmanaged(u32, anyerror!@import("../../model/border_fill_patch.zig").Value) = .empty,
+        paragraph_borders: std.AutoHashMapUnmanaged(u32, anyerror!@import("../../model/border_fill_patch.zig").Value) = .empty,
+        border_alignments: std.AutoHashMapUnmanaged(u32, anyerror!u32) = .empty,
         pub fn deinit(self: *Snapshot) void {
+            var protections = self.protections.valueIterator();
+            while (protections.next()) |value| value.deinit(self.allocator);
+            self.protections.deinit(self.allocator);
+            self.protection_errors.deinit(self.allocator);
+            self.reset_resources.deinit(self.allocator);
+            self.character_borders.deinit(self.allocator);
+            self.paragraph_borders.deinit(self.allocator);
+            self.border_alignments.deinit(self.allocator);
+            var flows = self.ownership_flows.valueIterator();
+            while (flows.next()) |rows| self.allocator.free(rows.*);
+            self.ownership_flows.deinit(self.allocator);
             if (self.face_index) |*index| index.deinit();
             if (self.character_ids) |*ids| ids.deinit(self.allocator);
             if (self.paragraph_ids) |*ids| ids.deinit(self.allocator);
@@ -58,14 +89,84 @@ pub const Backend = struct {
     }
     pub fn resetResources(self: Backend, selected: m.Owner, a: std.mem.Allocator) !m.ResetResources {
         _ = try self.owner(selected);
+        if (self.snapshot) |snapshot| {
+            const style = (try self.session.paragraph(selected.section, selected.paragraph)).style_id;
+            if (snapshot.reset_resources.get(style)) |value| return value;
+            if (@import("builtin").is_test) test_work.reset_reads += 1;
+            const result = @import("formatting_style_reset.zig").read(self.session, snapshot.allocator, selected);
+            if (result) |_| {} else |err| if (err == error.OutOfMemory) return err;
+            try snapshot.reset_resources.put(snapshot.allocator, style, result);
+            return result;
+        }
         return @import("formatting_style_reset.zig").read(self.session, a, selected);
+    }
+    fn readFormattingSource(self: Backend, a: std.mem.Allocator) !Session.FormattingSource {
+        if (self.snapshot) |snapshot| {
+            if (snapshot.preflight_source) |source| return source;
+            if (@import("builtin").is_test) test_work.formatting_sources += 1;
+            const source = try self.session.formattingSource(snapshot.allocator);
+            snapshot.preflight_source = source;
+            return source;
+        }
+        return self.session.formattingSource(a);
+    }
+    fn readBorder(self: Backend, source: Session.FormattingSource, id: u32, comptime character: bool) !@import("../../model/border_fill_patch.zig").Value {
+        if (self.snapshot) |snapshot| {
+            const cache = if (character) &snapshot.character_borders else &snapshot.paragraph_borders;
+            if (cache.get(id)) |value| return value;
+            if (@import("builtin").is_test) {
+                if (character) test_work.character_border_reads += 1 else test_work.paragraph_border_reads += 1;
+            }
+            const resolver = if (character) @import("border_fill_character_current.zig") else @import("border_fill_paragraph_current.zig");
+            const result = resolver.observe(source.bytes, source.version, id);
+            if (result) |_| {} else |err| if (err == error.OutOfMemory) return err;
+            try cache.put(snapshot.allocator, id, result);
+            return result;
+        }
+        return if (character) @import("border_fill_character_current.zig").observe(source.bytes, source.version, id) else @import("border_fill_paragraph_current.zig").observe(source.bytes, source.version, id);
+    }
+    fn borderAlignment(self: Backend, source: Session.FormattingSource, id: u32) !u32 {
+        if (self.snapshot) |snapshot| {
+            if (snapshot.border_alignments.get(id)) |value| return value;
+            if (@import("builtin").is_test) test_work.paragraph_alignment_reads += 1;
+            const result = @import("border_fill_paragraph_current.zig").alignment(source.bytes, source.version, id);
+            if (result) |_| {} else |err| if (err == error.OutOfMemory) return err;
+            try snapshot.border_alignments.put(snapshot.allocator, id, result);
+            return result;
+        }
+        return @import("border_fill_paragraph_current.zig").alignment(source.bytes, source.version, id);
     }
     pub fn owner(self: Backend, value: m.Owner) !m.Owner {
         const info = try self.session.paragraph(value.section, value.paragraph);
-        if (info.source_node == null) return error.UnsupportedFormattingOwner;
         const ref = try self.session.currentSourceParagraphReference(value.section, value.paragraph);
-        if (ref != .source or ref.source.host != .original_node) return error.UnsupportedFormattingOwner;
+        if (info.source_node != null) {
+            // Preserve the existing original-owner admission, including nested
+            // original text. Only the new generated branch is BODY-specific.
+            if (ref != .source or ref.source.host != .original_node) return error.UnsupportedFormattingOwner;
+            return value;
+        }
+        if (ref != .source or ref.source.host != .generated_instance or info.parent_node != null) return error.UnsupportedFormattingOwner;
+        const rows = try self.ownershipFlow(value.section);
+        defer if (self.snapshot == null) self.allocator.free(rows);
+        if (value.paragraph >= rows.len) return error.SourceBindingMismatch;
+        const row = rows[value.paragraph];
+        // paragraphFlow validates current parent/instance/template against the
+        // immutable source tree. A mutable parent == null alone is not proof.
+        if (row.paragraph != value.paragraph or !row.generated or row.source_node != null or
+            !row.top_level or row.parent_node != null or row.host != .body)
+            return error.UnsupportedFormattingOwner;
         return value;
+    }
+    fn ownershipFlow(self: Backend, section: usize) ![]@import("paragraph_flow_snapshot.zig").Flow {
+        if (self.snapshot) |snapshot| {
+            if (snapshot.ownership_flows.get(section)) |rows| return rows;
+            if (@import("builtin").is_test) test_work.ownership_reads += 1;
+            const rows = try self.session.paragraphFlow(snapshot.allocator, section);
+            errdefer snapshot.allocator.free(rows);
+            try snapshot.ownership_flows.put(snapshot.allocator, section, rows);
+            return rows;
+        }
+        return self.session.paragraphFlow(self.allocator, section);
     }
     pub fn authorize(self: Backend, selected: m.Owner, ranges: []const m.Range, field: []const u8) !void {
         try self.authorizeOwner(selected);
@@ -77,10 +178,26 @@ pub const Backend = struct {
     }
     pub fn authorizeOwner(self: Backend, selected: m.Owner) !void {
         _ = try self.owner(selected);
-        var protection = try self.session.textSourceProtection(self.allocator, selected.section);
-        defer protection.deinit(self.allocator);
+        var protection = try self.readProtection(selected.section);
+        defer if (self.snapshot == null) protection.deinit(self.allocator);
         if (selected.paragraph >= protection.protected_paragraphs.len) return error.SourceBindingMismatch;
         if (protection.protected_paragraphs[selected.paragraph]) return error.ProtectedFormattingOwner;
+    }
+    fn readProtection(self: Backend, section: usize) !@import("text_source_protection.zig").Snapshot {
+        if (self.snapshot) |snapshot| {
+            if (snapshot.protections.get(section)) |value| return value;
+            if (snapshot.protection_errors.get(section)) |err| return err;
+            if (@import("builtin").is_test) test_work.protection_reads += 1;
+            var value = self.session.textSourceProtection(snapshot.allocator, section) catch |err| {
+                if (err == error.OutOfMemory) return err;
+                try snapshot.protection_errors.put(snapshot.allocator, section, err);
+                return err;
+            };
+            errdefer value.deinit(snapshot.allocator);
+            try snapshot.protections.put(snapshot.allocator, section, value);
+            return value;
+        }
+        return self.session.textSourceProtection(self.allocator, section);
     }
     pub fn validateRange(self: Backend, selected: m.Owner, range: m.Range) !void {
         _ = try self.owner(selected);
@@ -92,7 +209,7 @@ pub const Backend = struct {
     pub fn authorizeField(_: Backend, _: std.mem.Allocator, _: m.Owner, _: []const u8) !void {}
     pub fn preflight(self: Backend, a: std.mem.Allocator, selected: m.Owner, ranges: []const m.Range, patch: m.Patch) !void {
         if (self.snapshot) |snapshot| {
-            if (patch.hasCharacter() and snapshot.preflight_source == null) snapshot.preflight_source = try self.session.formattingSource(a);
+            if (patch.hasCharacter() and snapshot.preflight_source == null) _ = try self.readFormattingSource(a);
             return self.session.validateFormattingSource(a, selected, ranges, patch, if (snapshot.preflight_source) |*source| source else null);
         }
         try self.session.validateFormattingSource(a, selected, ranges, patch, null);
@@ -136,9 +253,9 @@ pub const Backend = struct {
     }
     pub fn characterField(self: Backend, a: std.mem.Allocator, id: u32, field: []const u8) !p.Observation {
         if (eq(field, "character.border") or eq(field, "character.background")) {
-            var source = try self.session.formattingSource(a);
-            defer source.deinit();
-            const value = @import("border_fill_character_current.zig").observe(source.bytes, source.version, id) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), "MissingSourceField");
+            var source = try self.readFormattingSource(a);
+            defer if (self.snapshot == null) source.deinit();
+            const value = self.readBorder(source, id, true) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), "MissingSourceField");
             return @import("../../model/border_fill_projection.zig").field(a, value, field);
         }
 
@@ -204,12 +321,12 @@ pub const Backend = struct {
             return p.known(row, resources.character != null or resources.paragraph != null, null, null);
         }
         if (eq(field, "paragraph.border") or eq(field, "paragraph.background")) {
-            var source = try self.session.formattingSource(a);
-            defer source.deinit();
+            var source = try self.readFormattingSource(a);
+            defer if (self.snapshot == null) source.deinit();
             const identity = try self.session.paragraphShapeId(selected.section, selected.paragraph);
-            const value = @import("border_fill_paragraph_current.zig").observe(source.bytes, source.version, identity) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), "MissingSourceField");
+            const value = self.readBorder(source, identity, false) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), "MissingSourceField");
             var result = try @import("../../model/border_fill_projection.zig").field(a, value, field);
-            if (try @import("border_fill_paragraph_current.zig").alignment(source.bytes, source.version, identity) > 5) {
+            if (try self.borderAlignment(source, identity) > 5) {
                 result.writable = false;
                 result.writeUnavailableReason = "UnsupportedSourceAlignment";
             }
