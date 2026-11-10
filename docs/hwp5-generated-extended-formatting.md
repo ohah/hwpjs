@@ -17,3 +17,5 @@ Core는 기존 `validateFormattingTarget`에서 네 capability도 생성 본문�
 Core 검사는 생성 ID와 ordinal이 다른 대상, 복사된 일곱 필드, token·범위·capability·소유권·관측 오류를 확인합니다. 실제 WASM 검사는 같은 세션의 공개 Core dispatch, 네 서식의 누적 보존, no-op·undo/redo, 오래된/다른 세션/다른 문단/잘못된 참조의 저장 바이트 불변을 확인합니다. 독립 CFB 비교기는 DocInfo·본문·다른 스트림과 메타데이터를 검사합니다. Native setter 성공만으로 공개 UI 전체의 완료를 주장하지 않습니다.
 
 근거는 `zig-out/verification/hwp5-generated-extended-formatting-r1/`에 보관합니다. 사용한 Native WASM은 `72dadc5054047db9af10bf2eff69ea186804d4451644ba9cba7ad9abd3c87d74`이며 이 확장에는 Native 변경이 없습니다. npm 게시와 모든 서식·조판 완료는 별도입니다.
+
+실제 Canvas에서는 Vanilla·React·Svelte의 같은 세션 생성 본문에 네 서식을 도구 모음·대화상자로 적용하고 undo/redo·저장·재열기를 확인했습니다. 글꼴은 latin의 Arial을 적용하고 다른 여섯 언어와 대상 외 문단을 독립 저장 검사로 확인했습니다. 글자색 재선택 검사의 초기 실패는 파란 채널을 제외하던 픽셀 검출 조건의 문제였으며, 제품 색상 값은 그대로 둔 채 검출기를 수정해 재검증했습니다. UI의 토글 또는 같은 값 적용 버튼 비활성은 SDK setter no-op의 증거와 구분합니다.

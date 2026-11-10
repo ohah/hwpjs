@@ -72,18 +72,20 @@ export function underlineResultMessage(result: CommandResult): string {
 
 함수 반환값도 `CommandResult`이므로 호출자는 status/error를 확인해야 합니다. 캐럿의 다음 입력 서식과 기존 범위의 서식 변경은 다릅니다. 보호된 범위·지원되지 않는 owner·오래된 token은 거부될 수 있습니다.
 
-## 현재 typed 명령
+## 대표 typed 명령
 
 | export | payload 핵심 | 범위 |
 | --- | --- | --- |
 | SPLICE_TEXT_COMMAND | target, text, selectionVersion? | 지원 선택의 삽입/삭제/교체 |
 | SET_CHARACTER_PROPERTIES_COMMAND | target, properties | size(1/100pt), bold, italic |
 | SET_CHARACTER_UNDERLINE_COMMAND | target, kind | none / bottom / center / top |
-| SET_CHARACTER_STRIKE_COMMAND | target, enabled: boolean | 비어 있지 않은 원본 선택의 취소선 on/off |
+| SET_CHARACTER_STRIKE_COMMAND | target, enabled: boolean | 원본 및 HWP5 생성 본문의 비어 있지 않은 선택의 취소선 on/off |
+| SET_CHARACTER_TEXT_COLOR_COMMAND | target, color | 관측 가능한 선택의 `#RRGGBB` 글자색 |
+| SET_CHARACTER_FONT_NAME_COMMAND | target, language, name | 관측 가능한 선택의 언어 하나의 글꼴 이름 |
 | SET_PARAGRAPH_ALIGNMENT_COMMAND | target, alignment | 지원 문단 정렬 |
 | UNDO_COMMAND / REDO_COMMAND | token | Native 이력 |
 
-글꼴·색·문단 여백/간격·표 생성·개체 삽입의 저수준 코드가 있어도 이 명령 목록 전체로 승격된 것은 아닙니다. 임의 문자열 메시지를 typed public API라고 안내하지 않습니다.
+위 표는 대표 명령이며 모든 export의 목록은 아닙니다. 기능별 계약·capability·대상 제한을 함께 확인하세요. 저수준 문자열 메시지가 있다는 사실만으로 typed public API라고 안내하지 않습니다.
 
 찾기·통계는 `findTextMatch`, `selectionMatchesText`, `getDocumentTextStatistics`가 제공합니다. 통계의 complete=false는 부분 관측입니다. OS clipboard는 `getSelectionClipboard`의 조회 결과와 호스트의 권한/읽기/쓰기를 연결해야 하며 rich clipboard를 보장하지 않습니다.
 
