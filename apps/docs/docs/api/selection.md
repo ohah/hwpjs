@@ -83,9 +83,14 @@ export function underlineResultMessage(result: CommandResult): string {
 | SET_CHARACTER_TEXT_COLOR_COMMAND | target, color | 관측 가능한 선택의 `#RRGGBB` 글자색 |
 | SET_CHARACTER_FONT_NAME_COMMAND | target, language, name | 관측 가능한 선택의 언어 하나의 글꼴 이름 |
 | SET_PARAGRAPH_ALIGNMENT_COMMAND | target, alignment | 지원 문단 정렬 |
+| INSERT_TABLE_COMMAND | target, options | 현재 본문 caret에 표 삽입. `getTableInsertAvailability`와 현재 관측 자원·크기 제한 확인 |
+| EDIT_CREATED_TABLE_GRID_COMMAND | section, identity, action, index | 현재 세션의 생성 표 identity 대상 행·열 삽입/삭제. capability와 현재 생성 표 관측 필요 |
+| EDIT_SOURCE_TABLE_GRID_COMMAND | section, tableNode, expectedRows, expectedColumns, action, index, layout? | 현재 원본 단순 표 주소 대상 행·열 삽입/삭제. capability·예상 격자·형식별 제한 확인 |
 | UNDO_COMMAND / REDO_COMMAND | token | Native 이력 |
 
 위 표는 대표 명령이며 모든 export의 목록은 아닙니다. 기능별 계약·capability·대상 제한을 함께 확인하세요. 저수준 문자열 메시지가 있다는 사실만으로 typed public API라고 안내하지 않습니다.
+
+표 격자의 `action`은 `insert-row`, `delete-row`, `insert-column`, `delete-column`입니다. 생성 표의 `identity`와 원본 표의 `tableNode`는 서로 다른 주소이며 임의로 변환하지 않습니다. 현재 문서·보기의 관측과 Core dispatch 수명을 사용하고, Native가 대상 소유권과 격자 정책을 다시 확인합니다. 전용 명령의 존재는 범용 표/셀 선택 API나 모든 owner·표 작업의 완료를 뜻하지 않습니다.
 
 찾기·통계는 `findTextMatch`, `selectionMatchesText`, `getDocumentTextStatistics`가 제공합니다. 통계의 complete=false는 부분 관측입니다. OS clipboard는 `getSelectionClipboard`의 조회 결과와 호스트의 권한/읽기/쓰기를 연결해야 하며 rich clipboard를 보장하지 않습니다.
 
@@ -100,7 +105,9 @@ export function underlineResultMessage(result: CommandResult): string {
 | 문단 정렬 | 정렬 도구 연결 | `SET_PARAGRAPH_ALIGNMENT_COMMAND` | `paragraphAvailableReason` 확인. 여백·간격 전체 대화상자 지원과 다름 |
 | 글자/문단 속성 대화상자 | 개별 명령과 전체 대화상자는 별도 | 위 제한된 typed 명령 | 대화상자 미연결이 개별 명령 부재를 뜻하지 않음 |
 | 취소선 | UI 연결·선택 전달은 배포별 실브라우저 검증으로 별도 판정 | `SET_CHARACTER_STRIKE_COMMAND` | `strikeAvailableReason` 확인. caret/readonly/unknown source 및 아래 형식별 한계 유지 |
-| 표/그림 삽입 등 | 메뉴 목록만으로 실행 지원 판정 불가 | 대응 전용 typed 명령은 현재 미제공 | 저수준 transport의 존재를 typed public 지원으로 표시하지 않음 |
+| 표 삽입 | 표 만들기 도구 연결; 메뉴 존재와 배포별 실제 적용 검증은 구분 | `INSERT_TABLE_COMMAND`, `getTableInsertAvailability` | 현재 본문의 접힌 caret·편집 권한·참조·관측 자원·크기/capability 제한 확인. 표셀·글상자·각주 등 임의 owner의 삽입 지원 아님 |
+| 표 행·열 삽입/삭제 | 생성/원본 표의 선택과 capability에 따른 메뉴 연결 | `EDIT_CREATED_TABLE_GRID_COMMAND`, `EDIT_SOURCE_TABLE_GRID_COMMAND` | 생성 identity와 원본 tableNode를 구분하고 현재 관측을 사용. 모든 병합·분할·중첩 표나 임의 격자의 편집 지원 아님 |
+| 그림 삽입 | 메뉴 목록만으로 실행 지원 판정 불가 | 이 표는 대응 전용 typed Core 그림 삽입 명령을 안내하지 않음 | 엔진·SDK·CLI/저수준 transport의 그림 기능을 별도 검증 없이 typed Core 지원으로 표시하지 않음 |
 
 `MissingSelection`은 선택 필요, capability reason은 현재 대상의 제한, `StaleTarget`은 오래된 관측 대상, `UnsupportedCharacterUnderlineKind`는 해당 형식의 종류 제한입니다. 서로 같은 미구현 상태로 표시하지 마세요. 앱의 진행 중·문서 없음·UI 미연결 상태 역시 엔진 미구현과 별개입니다.
 

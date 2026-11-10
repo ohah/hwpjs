@@ -4,14 +4,14 @@
 
 | 영역 | 현재 안내 범위 | 제한 |
 | --- | --- | --- |
-| 문서 | HWP5 · HWPX 열기/편집/현재 형식 저장 | HWP3 제외; 모든 버전·암호·문서 특성 보장 아님 |
+| 문서 | HWP5 · HWPX 열기/편집/현재 형식 저장, `createDocument()`의 새 문서 생성 | 새 문서는 기본 HWPX이며 HWP5도 명시 가능. 생성기를 제공하는 runtime factory 필요. HWP3 제외; 모든 버전·암호·문서 특성 보장 아님 |
 | 텍스트 | display 선택, 지원 범위의 splice | 보호/필드/개체/unknown/clipped 대상 제한 |
 | 서식 | size/bold/italic, 밑줄, 취소선, 문단 정렬 typed 명령 | 취소선은 [검증한 원본 및 생성 본문의 비어 있지 않은 선택](../api/selection.md#취소선의-선택-범위와-형식별-경계)에 적용하며 caret의 다음 입력 서식은 지원하지 않음. 모든 글자/문단 속성 public 완료 아님 |
 | 검색 | 현재 snapshot의 literal 검색·통계 | 정규식·전체 문서 순회·모두 바꾸기 transaction 보장 없음 |
-| 표·셀 | 지원 셀 내부의 텍스트/서식 경로 | typed 표 주소·생성·행열 조작 API 전체 미제공 |
+| 표·셀 | 지원 셀 내부의 텍스트/서식, 본문 caret의 typed 표 삽입, 생성 표와 지원 원본 단순 표의 행·열 삽입/삭제 | 현재 owner·참조·capability·관측 자원과 격자 제한을 확인해야 함. 범용 표/셀 주소 체계·모든 병합/분할·중첩 표 편집 지원 아님 |
 | 필드·개체·media | 일부 엔진/저수준 기능 | typed 공개 생성/조회/편집 전체로 안내하지 않음 |
 | Canvas | 공통 웹 호스트의 제한된 표시·직접 입력 | 완전한 한글 조판·인쇄·페이지 이미지 export 아님 |
-| 저장 | 현재 형식 bytes | 무손실 일반 보장·임의 형식 변환·PDF/HTML export 아님 |
+| 저장·HTML | `save()`의 현재 형식 bytes 저장, 별도 `toHtml(bytes, { wasm, ... })`의 의미 기반 HTML 변환 | 무손실 일반 보장·임의 형식 변환·PDF export 아님. HTML은 명시 WASM과 이미지/출력 정책을 따르며 원본 페이지 배치·인쇄·시각 동치를 보장하지 않음 |
 | RN | TypeScript provider/transport 기반 | Native 아티팩트·기기 E2E까지 experimental |
 
 ## 조판과 저장
