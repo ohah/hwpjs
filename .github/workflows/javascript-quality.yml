@@ -70,7 +70,10 @@ jobs:
       - name: Test source table live grid SDK, Core, selection and UI
         timeout-minutes: 2
         run: |
-          bun test --no-install ./packages/core/tests/commands/source-table-grid.test.ts ./packages/vanilla/tests/table-grid-view-surface.test.ts
+          bun test --no-install ./packages/core/tests/commands/source-table-grid.test.ts
+          HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types --max-old-space-size=512 \
+            --import ./tools/renderer-test-core-provider.mjs \
+            --test ./packages/vanilla/tests/table-grid-view-surface.test.ts
           HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types --max-old-space-size=512 \
             --import ./tools/renderer-test-core-provider.mjs \
             --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \

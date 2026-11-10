@@ -47,6 +47,7 @@ const indexImporters = new Set([
   importer('web/preview/owned-body-draft-paragraph-index.mjs'),
   surface,
   importer('packages/vanilla/tests/undo-onset-surface-fixture.ts'),
+  importer('packages/vanilla/tests/table-grid-view-surface.test.ts'),
 ]);
 registerHooks({
   resolve(specifier, context, nextResolve) {
