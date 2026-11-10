@@ -12,7 +12,12 @@ import { Document, all } from './fake-dom.mjs';
 import { paragraphBreakShortcut } from '../../../web/preview/paragraph-break-shortcut.mjs';
 // Use the existing renderer-only boundary; actual Canvas/Surface remain real.
 import { createSurfaceRenderer } from '../../../packages/vanilla/tests/non-text-history-fixture.mjs';
-mock.module('../../../web/preview/renderer.mjs', () => ({ createSurfaceRenderer }));
+mock.module('../../../web/preview/renderer.mjs', () => ({
+  createSurfaceRenderer,
+  createDocumentOutputRenderer() {
+    throw Error('UnexpectedPrintRenderer');
+  },
+}));
 const { createCanvasSurface } = await import('../../../packages/vanilla/src/surface.ts');
 // @ts-ignore Actual Surface/Canvas with controlled Core and renderer; no Native IO.
 import {
