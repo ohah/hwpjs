@@ -343,6 +343,7 @@ const bindTableBoxPainter = Function(
   'ctx',
   'height',
   'viewport',
+  'displayOptions',
   'tableBoxPaintBounds',
   'tableBorderPlanForBox',
   'tableBorders',
@@ -379,6 +380,7 @@ function rendererTableFixture(
     ctx,
     200,
     { scrollTop: 20 },
+    { showTableGrid: false },
     tableBoxPaintBounds,
     tableBorderPlanForBox,
     index,
@@ -402,7 +404,7 @@ test('renderer counts supported diagonal-only cells as source and explicit empty
     e.style = 'NONE';
   });
   const f = rendererTableFixture([cross, empty]);
-  f.boxes.forEach(f.paint);
+  f.boxes.forEach((box) => f.paint(box));
   assert.deepEqual(f.coverage, {
     none: 1,
     source: 1,
@@ -467,7 +469,7 @@ test('renderer bounds diagnostic detail to 100 while retaining every incomplete 
     diagonal: { style: 'DOUBLE_SLIM', width: '0.5 mm', color: '#2973a1' },
   };
   const f = rendererTableFixture(Array.from({ length: 105 }, () => raw));
-  f.boxes.forEach(f.paint);
+  f.boxes.forEach((box) => f.paint(box));
   assert.equal(f.coverage.partial, 105);
   assert.equal(f.coverage.diagonalUnavailableCount, 105);
   assert.equal(f.coverage.unavailableCount, 105);
@@ -585,6 +587,7 @@ const bindPartialTableBoxPainter = Function(
   'ctx',
   'height',
   'viewport',
+  'displayOptions',
   'tableBoxPaintBounds',
   'tableBorderPlanForBox',
   'tableBorders',
@@ -609,6 +612,7 @@ function partialSourceFixture(
     ctx,
     200,
     { scrollTop: 20 },
+    { showTableGrid: false },
     tableBoxPaintBounds,
     tableBorderPlanForBox,
     index,
