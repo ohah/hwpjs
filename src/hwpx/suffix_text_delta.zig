@@ -19,11 +19,14 @@ pub fn locate(s: *editor.Session, section: usize, paragraph: usize) !?Lane {
     if (section >= s.sections.len) return null;
     const row = &s.sections[section];
     if (row.structure_values != null or row.created_tables.entries.items.len != 0 or row.field_dirty.items.len != 0) return null;
-    @import("plain_paragraph_policy.zig").validateWithTabs(&row.tree, &row.sites, row.locations, paragraph, true) catch |err| {
+    // Earlier sections can move public ordinals while these locations retain
+    // their immutable source coordinates. Keep Lane.paragraph on the public axis.
+    const source_paragraph = try row.sourceParagraph(paragraph);
+    @import("plain_paragraph_policy.zig").validateWithTabs(&row.tree, &row.sites, row.locations, source_paragraph, true) catch |err| {
         if (err == error.OutOfMemory) return err;
         return null;
     };
-    const positions = @import("paragraph_text_positions.zig").build(s.allocator, &row.tree, &row.sites, row.locations, paragraph) catch |err| {
+    const positions = @import("paragraph_text_positions.zig").build(s.allocator, &row.tree, &row.sites, row.locations, source_paragraph) catch |err| {
         if (err == error.OutOfMemory) return err;
         return null;
     };

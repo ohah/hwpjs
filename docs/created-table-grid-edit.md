@@ -53,4 +53,4 @@ CLI `apply`와 MCP `apply_document_changes`의 같은 patch 배열은 다음 항
 
 통제 소스의 Worker/명령 연결 34개(실제 WASM 6개 포함), SDK 회귀 10개, 데모 집중 60개·Bun 8개와 실제 Canvas/Surface 집중 8개가 통과했습니다. `zig-out/verification/created-table-ui-r1/browser-six-r3`의 개발 서버 6개와 `browser-public-r1`의 배포용 정적 후보 6개는 Vanilla/React/Svelte × HWP5/HWPX에서 새 문서·2×2 표 생성·네 명령·undo/redo·다운로드·재열기·원본 표의 생성 명령 거부를 검사했습니다. 다운로드 결과는 별도 CFB 레코드/ZIP XML로 2×2 및 셀 문단 ID 유일성을 검사합니다. 실제 한글 프로그램 조판 동치나 원본 표 편집 완료를 뜻하지 않습니다.
 
-공통 좌표 변환은 `src/model/table_grid_edit_plan.zig`가 소유하고 생성 모델과 두 원본 후보가 재사용합니다. 원본 후보의 추가 기하·거부 범위는 [HWP5 후보](hwp5-source-table-grid.md)와 [HWPX 후보](hwpx-source-table-grid.md)를 따르며 아직 공개 편집 API에 연결하지 않았습니다.
+공통 좌표 변환은 `src/model/table_grid_edit_plan.zig`가 소유하고 생성 모델과 두 원본 구현이 재사용합니다. 원본 표의 추가 기하·거부 범위는 [HWP5 계약](hwp5-source-table-grid.md)과 [HWPX 계약](hwpx-source-table-grid.md)을 따릅니다. 원본 표의 공개 파일 변환은 [파일 API](source-table-grid-file-api.md), 같은 세션의 SDK·Core·선택·메뉴와 undo 연결은 [열린 세션 편집 계약](source-table-grid-live-edit.md)이 소유합니다.

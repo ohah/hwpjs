@@ -4,7 +4,13 @@ import { validDrawingFill } from './drawing-fill-validation.mjs';
 import { paintTableBackground } from './table-background-paint.mjs';
 import { validTableImageFill } from './table-image-fill.mjs';
 import { tableBorderStrokeParts } from './table-border-stroke.mjs';
-export function paintTableBorder(ctx, box, plan, scrollTop, { bitmap } = {}) {
+export function paintTableBorder(
+  ctx,
+  box,
+  plan,
+  scrollTop,
+  { bitmap, showTableGrid = false } = {},
+) {
   if (
     !box ||
     ![
@@ -45,7 +51,7 @@ export function paintTableBorder(ctx, box, plan, scrollTop, { bitmap } = {}) {
     return false;
   const parts = strokes.map(tableBorderStrokeParts);
   if (parts.some((value) => value === null)) return false;
-  if (plan.state === 'none' && !diagonals.length)
+  if (plan.state === 'none' && !diagonals.length && showTableGrid !== true)
     return (
       !plan.fill ||
       (plan.fill.state === 'image' && !bitmap) ||
@@ -69,6 +75,12 @@ export function paintTableBorder(ctx, box, plan, scrollTop, { bitmap } = {}) {
       !paintTableBackground(ctx, box, plan.fill, scrollTop, bitmap)
     )
       return false;
+    if (showTableGrid === true) {
+      ctx.setLineDash([]);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#aaaaaa';
+      ctx.strokeRect(x, y, box.width, box.height);
+    }
     if (!paintTableDiagonals(ctx, box, diagonals, scrollTop)) return false;
     ctx.setLineDash([]);
     ctx.lineCap = 'butt';

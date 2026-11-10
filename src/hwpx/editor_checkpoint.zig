@@ -158,7 +158,11 @@ test "HWPX checkpoint exchanges owned protected positions without modifying sour
     try std.testing.expectError(error.SourceBindingMismatch, session.save());
     try std.testing.expectEqualSlices(u8, input, session.source);
 }
+const Basis = @import("section_source_basis.zig").Basis;
 const State = struct {
+    original_basis: ?*Basis,
+    owned_rebased_basis: ?Basis,
+    source_first_paragraph: ?usize,
     sites: sites_mod.Sites,
     structure_values: ?Values,
     first_paragraph: usize,
@@ -175,6 +179,7 @@ const State = struct {
     formula_result_overrides: @import("formula_result_override_values.zig").Values,
     created_tables: @import("created_table_values.zig").Values,
     fn deinit(self: *State, a: std.mem.Allocator) void {
+        if (self.owned_rebased_basis) |*basis| basis.deinit(a);
         self.sites.deinit(a);
         if (self.structure_values) |*values| values.deinit(a);
         self.dirty.deinit(a);
@@ -230,11 +235,26 @@ pub const Checkpoint = struct {
         self.swap(session);
     }
 
+    fn bindSource(self: *const Checkpoint, session: *const editor.Session) !void {
+        if (self.source_pointer != session.source.ptr or self.source_len != session.source.len or self.states.len != session.sections.len) return error.SourceBindingMismatch;
+        for (self.states, session.sections) |*state, *section| {
+            if (state.original_basis != section.original_basis) return error.SourceBindingMismatch;
+            try section.validateSourceBasis();
+            if (state.owned_rebased_basis) |*basis| {
+                try basis.validate();
+                if (state.original_basis == null or basis.tree.section_ordinal != section.original_basis.?.tree.section_ordinal or basis.tree.item_index != section.original_basis.?.tree.item_index or state.source_first_paragraph != basis.first_paragraph) return error.SourceBindingMismatch;
+            } else if (state.original_basis) |basis| {
+                if (state.source_first_paragraph != basis.first_paragraph) return error.SourceBindingMismatch;
+            }
+        }
+    }
     fn bind(self: *const Checkpoint, session: *const editor.Session) !void {
+        try self.bindSource(session);
         if (self.source_pointer != session.source.ptr or self.source_len != session.source.len or self.states.len != session.sections.len or self.allocator.ptr != session.allocator.ptr or self.allocator.vtable != session.allocator.vtable) return error.SourceBindingMismatch;
     }
 
     fn swap(self: *Checkpoint, session: *editor.Session) void {
+        session.invalidateSectionSourceCaches();
         std.mem.swap(u64, &self.display_resource_generation, &session.display_resource_generation);
         std.mem.swap(Resources.Values, &self.paragraph_resources, &session.paragraph_resources);
         std.mem.swap(Characters.Values, &self.character_resources, &session.character_resources);
@@ -242,6 +262,9 @@ pub const Checkpoint = struct {
         std.mem.swap(@import("../model/font_resource_values.zig").Values, &self.font_resources, &session.font_resources);
         std.mem.swap(@import("table_cell_background_session.zig").Values, &self.cell_backgrounds, &session.cell_backgrounds);
         for (self.states, session.sections) |*state, *section| {
+            std.mem.swap(?Basis, &state.owned_rebased_basis, &section.owned_rebased_basis);
+            std.mem.swap(?usize, &state.source_first_paragraph, &section.source_first_paragraph);
+            section.refreshSourceAliases();
             std.mem.swap(sites_mod.Sites, &state.sites, &section.sites);
             std.mem.swap(@import("form_checkbox_state_values.zig").Values, &state.checkbox_states, &section.checkbox_states);
             std.mem.swap(@import("dutmal_text_values.zig").Values, &state.dutmal_texts, &section.dutmal_texts);
@@ -285,7 +308,7 @@ test "HWPX checkpoint font intents own names include budget and exchange allocat
 /// Copy the stored mutable values into the original session allocator without
 /// moving arena allocations into live state. Section views are borrowed only.
 pub fn cloneForRestore(self: *const Checkpoint, session: *const editor.Session, limit: usize) !Checkpoint {
-    if (self.source_pointer != session.source.ptr or self.source_len != session.source.len or self.states.len != session.sections.len) return error.SourceBindingMismatch;
+    try self.bindSource(session);
     const a = session.allocator;
     const sections = try a.dupe(editor.Section, session.sections);
     defer a.free(sections);
@@ -294,6 +317,7 @@ pub fn cloneForRestore(self: *const Checkpoint, session: *const editor.Session, 
             const name = if (comptime std.mem.eql(u8, field, "dirty")) "field_dirty" else field;
             @field(section, name) = @field(state, field);
         }
+        section.refreshSourceAliases();
     }
     var view = session.*;
     view.sections = sections;
@@ -326,6 +350,8 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
         a.free(states);
     }
     for (session.sections, states) |section, *state| {
+        var rebased = if (section.owned_rebased_basis) |*basis| try basis.clone(a) else null;
+        errdefer if (rebased) |*basis| basis.deinit(a);
         var sites = try section.sites.clone(a);
         errdefer sites.deinit(a);
         var structure_values = if (section.structure_values) |*values| try values.clone(a) else null;
@@ -357,7 +383,7 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
             overrides.deinit(a);
         }
         const created_tables = try section.created_tables.clone(a);
-        state.* = .{ .sites = sites, .structure_values = structure_values, .first_paragraph = section.first_paragraph, .last_paragraph = section.last_paragraph, .dirty = .{ .items = dirty, .capacity = dirty.len, .pointer_stability = .{} }, .cell_sizes = .{ .items = cell_sizes, .capacity = cell_sizes.len, .pointer_stability = .{} }, .picture_dimensions = .{ .items = picture_dimensions, .capacity = picture_dimensions.len, .pointer_stability = .{} }, .picture_matrices = .{ .items = picture_matrices, .capacity = picture_matrices.len, .pointer_stability = .{} }, .checkbox_states = .{ .items = checkbox_states, .capacity = checkbox_states.len, .pointer_stability = .{} }, .dutmal_texts = dutmal_texts, .formula_definitions = formula_definitions, .formula_result_overrides = formula_result_overrides, .created_tables = created_tables };
+        state.* = .{ .original_basis = section.original_basis, .owned_rebased_basis = rebased, .source_first_paragraph = section.source_first_paragraph, .sites = sites, .structure_values = structure_values, .first_paragraph = section.first_paragraph, .last_paragraph = section.last_paragraph, .dirty = .{ .items = dirty, .capacity = dirty.len, .pointer_stability = .{} }, .cell_sizes = .{ .items = cell_sizes, .capacity = cell_sizes.len, .pointer_stability = .{} }, .picture_dimensions = .{ .items = picture_dimensions, .capacity = picture_dimensions.len, .pointer_stability = .{} }, .picture_matrices = .{ .items = picture_matrices, .capacity = picture_matrices.len, .pointer_stability = .{} }, .checkbox_states = .{ .items = checkbox_states, .capacity = checkbox_states.len, .pointer_stability = .{} }, .dutmal_texts = dutmal_texts, .formula_definitions = formula_definitions, .formula_result_overrides = formula_result_overrides, .created_tables = created_tables };
         state.equation_scripts = equation_scripts;
         state.picture_frames = .{ .items = picture_frames, .capacity = picture_frames.len, .pointer_stability = .{} };
         initialized += 1;
@@ -375,6 +401,8 @@ pub fn size(session: *const editor.Session, limit: usize) !usize {
     for (session.font_resources.entries.items) |font| if (font.name) |name| try add(&total, name.len, limit);
     try add(&total, try multiply(session.sections.len, @sizeOf(State)), limit);
     for (session.sections) |section| {
+        try section.validateSourceBasis();
+        if (section.owned_rebased_basis) |*basis| try add(&total, try basis.byteSize(limit -| total), limit);
         try add(&total, try section.created_tables.byteSize(limit -| total), limit);
         if (section.structure_values) |*values| {
             if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
@@ -701,8 +729,29 @@ test "HWPX checkpoint transfers structural topology without duplicate text owner
 
 /// Compare every mutable captured field, including protected source coordinates.
 pub fn matches(snapshot: *const Checkpoint, session: *const editor.Session, limit: usize) !bool {
+    try snapshot.bindSource(session);
     var live = try capture(session, limit);
     defer live.deinit();
     const eql = @import("../model/history_value_equal.zig").equal;
-    return snapshot.display_resource_generation == live.display_resource_generation and snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and eql(@TypeOf(live.states), snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources) and eql(@TypeOf(live.cell_backgrounds), snapshot.cell_backgrounds, live.cell_backgrounds);
+    return snapshot.display_resource_generation == live.display_resource_generation and snapshot.source_pointer == live.source_pointer and snapshot.source_len == live.source_len and try statesMatch(snapshot.states, live.states) and eql(@TypeOf(live.paragraph_resources), snapshot.paragraph_resources, live.paragraph_resources) and eql(@TypeOf(live.character_resources), snapshot.character_resources, live.character_resources) and eql(@TypeOf(live.chart_resources), snapshot.chart_resources, live.chart_resources) and eql(@TypeOf(live.font_resources), snapshot.font_resources, live.font_resources) and eql(@TypeOf(live.cell_backgrounds), snapshot.cell_backgrounds, live.cell_backgrounds);
+}
+
+// Source owners bind by identity. Rebased bases compare canonical metadata;
+// generic deep equality would repeatedly compare shared namespace URI bytes.
+fn statesMatch(left: []const State, right: []const State) !bool {
+    if (left.len != right.len) return false;
+    const eql = @import("../model/history_value_equal.zig").equal;
+    for (left, right) |*l, *r| {
+        inline for (@typeInfo(State).@"struct".field_names) |name| {
+            if (comptime std.mem.eql(u8, name, "original_basis")) {
+                if (l.original_basis != r.original_basis) return false;
+            } else if (comptime std.mem.eql(u8, name, "owned_rebased_basis")) {
+                if (l.owned_rebased_basis) |*basis| {
+                    const other = if (r.owned_rebased_basis) |*value| value else return false;
+                    if (!try basis.equal(other)) return false;
+                } else if (r.owned_rebased_basis != null) return false;
+            } else if (!eql(@TypeOf(@field(l, name)), @field(l, name), @field(r, name))) return false;
+        }
+    }
+    return true;
 }

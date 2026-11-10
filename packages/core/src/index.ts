@@ -20,6 +20,7 @@ export {
   SPLICE_TEXT_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
+  EDIT_SOURCE_TABLE_GRID_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -146,6 +147,10 @@ export type {
 export { toHtml } from './conversion.ts';
 export type { HTMLConversionOptions } from './conversion.ts';
 
+export type {
+  EditSourceTableGridPayload,
+  SourceTableGridAction,
+} from './commands/source-table-grid.ts';
 export type {
   EditCreatedTableGridPayload,
   CreatedTableGridAction,

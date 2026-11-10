@@ -91,6 +91,8 @@ export interface CanvasDisplayOptions {
   readonly paragraphMarks: boolean;
   /** 공백·검증된 탭·강제 줄바꿈의 화면 전용 표시입니다. */
   readonly formattingMarks?: boolean;
+  /** 화면 전용 표 셀 경계 안내선. 저장·인쇄 서식에는 포함하지 않습니다. */
+  readonly showTableGrid?: boolean;
 }
 export interface CanvasSurfaceEnvironment extends Record<string, any> {
   /** 측정 함수 내부 의미가 바뀌기 전에 새 frozen 빈 객체를 반환해야 합니다. */
@@ -393,8 +395,42 @@ export function createCanvasSurface({
         historyRevisions: state.nativeHistoryRevisions,
       });
   };
+  // Remember dialog entry/exit even when a caller checks only after it has closed.
+  let sourceGridModalEpoch = 0;
+  const sourceGridDialogEvent = (event: Event) => {
+    if ((event.target as Element | null)?.tagName === 'DIALOG') sourceGridModalEpoch++;
+  };
+  doc.addEventListener?.('beforetoggle', sourceGridDialogEvent, true);
+  const sourceGridDialogRecords = (records: MutationRecord[]) => {
+    for (const record of records) {
+      const dialog = (node: Node) =>
+        node.nodeType === 1 &&
+        ((node as Element).tagName === 'DIALOG' || (node as Element).querySelector?.('dialog'));
+      if (
+        (record.type === 'attributes' && (record.target as Element).tagName === 'DIALOG') ||
+        [...record.addedNodes, ...record.removedNodes].some(dialog)
+      )
+        sourceGridModalEpoch++;
+    }
+  };
+  const sourceGridModalObserver =
+    realm.MutationObserver && doc.documentElement
+      ? new realm.MutationObserver(sourceGridDialogRecords)
+      : undefined;
+  sourceGridModalObserver?.observe(doc.documentElement, {
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['open'],
+    childList: true,
+  });
+  const sourceGridModalRevision = () => {
+    sourceGridDialogRecords(sourceGridModalObserver?.takeRecords() ?? []);
+    return sourceGridModalEpoch;
+  };
   const cleanup = () => {
     closed = true;
+    doc.removeEventListener?.('beforetoggle', sourceGridDialogEvent, true);
+    sourceGridModalObserver?.disconnect();
     visiblePageCache = undefined;
     pageStatusListeners.clear();
     atomicProfile = undefined;
@@ -1118,6 +1154,126 @@ export function createCanvasSurface({
       } = {},
     ): Promise<boolean> {
       return transferSurfaceSelection(options);
+    },
+    /** SOURCE selection lease only; Native grid command support is checked by its future caller. */
+    captureSourceTableGridSelection() {
+      const state = editor.getEditorState();
+      const selection = state.selection;
+      const content = state.content;
+      const modalEpoch = sourceGridModalRevision();
+      const viewOptions = renderer.getDisplayOptions();
+      const tokenKeys = [
+        'editorId',
+        'documentId',
+        'generation',
+        'operationRevision',
+        'viewRevision',
+      ] as const;
+      const token = tokenKeys.map((key) => state.token[key]);
+      const selected = getSelectionFormatting(state).target;
+      if (!selected) return null;
+      const selectionKeys = [
+        ...tokenKeys,
+        'coordinateSpace',
+        'format',
+        'owner',
+        'section',
+        'paragraph',
+        'startUnit',
+        'endUnit',
+        'affinity',
+      ] as const;
+      const values = selectionKeys.map((key) => selected[key]);
+      const current = () => {
+        if (
+          closed ||
+          nonTextHistoryPending ||
+          lease?.isActive() !== true ||
+          bridge?.busy() ||
+          sourceGridModalRevision() !== modalEpoch ||
+          modalOpen() ||
+          renderer.getDisplayOptions() !== viewOptions ||
+          editor.getEditorState() !== state ||
+          state.status !== 'ready' ||
+          state.selection !== selection ||
+          state.content !== content ||
+          state.stateVersion !== observedStateVersion ||
+          displayed !==
+            `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` ||
+          tokenKeys.some((key, i) => state.token[key] !== token[i] || state[key] !== token[i]) ||
+          (state.capabilities as any)?.readOnly === true ||
+          (content as any)?.readOnly === true ||
+          !direct.settled() ||
+          !renderer.historyModelMatches(state)
+        )
+          return false;
+        const target = getSelectionFormatting(state).target;
+        if (!target || selectionKeys.some((key, i) => target[key] !== values[i])) return false;
+        const points = direct.currentFormattingSelection();
+        return Boolean(
+          points &&
+          points.anchor.section === selected.section &&
+          points.focus.section === selected.section &&
+          points.anchor.paragraph === selected.paragraph &&
+          points.focus.paragraph === selected.paragraph &&
+          Math.min(points.anchor.unit, points.focus.unit) === selected.startUnit &&
+          Math.max(points.anchor.unit, points.focus.unit) === selected.endUnit &&
+          editor.getEditorState() === state,
+        );
+      };
+      if (!current()) return null;
+      const captured = direct.captureSourceTableGridSelection(content);
+      if (!captured || !captured.current() || !current()) return null;
+      let invalid = false,
+        historyRecorded = false;
+      return Object.freeze({
+        ...captured,
+        state,
+        recordHistory(
+          result: import('@hwpjs/core').CommandResult,
+          request: Readonly<import('@hwpjs/core').EditSourceTableGridPayload>,
+        ): boolean {
+          if (historyRecorded) return false;
+          historyRecorded = true;
+          const after = result.state;
+          if (
+            closed ||
+            nonTextHistoryPending ||
+            lease?.isActive() !== true ||
+            bridge?.busy() ||
+            result.status !== 'committed-with-snapshot' ||
+            result.error ||
+            result.changed !== true ||
+            result.reply?.historyRevision !== after.nativeHistoryRevision ||
+            editor.getEditorState() !== after ||
+            after.status !== 'ready' ||
+            after.stateVersion !== observedStateVersion ||
+            displayed !==
+              `${after.documentId}:${after.generation}:${after.operationRevision}:${after.viewRevision}` ||
+            !renderer.historyModelMatches(after) ||
+            !direct.settled() ||
+            tokenKeys.some((key, i) => state.token[key] !== token[i] || state[key] !== token[i]) ||
+            state.selection !== selection ||
+            selectionKeys.some((key, i) => (state.selection as any)?.[key] !== values[i]) ||
+            request.section !== captured.section ||
+            request.tableNode !== captured.tableNode ||
+            request.expectedRows !== captured.rows ||
+            request.expectedColumns !== captured.columns
+          )
+            return false;
+          return direct.observeSourceTableGridHistory({ before: state, after, request });
+        },
+        current() {
+          if (invalid) return false;
+          try {
+            if (current() && captured.current() && current()) return true;
+          } catch {
+            /* A lost source/model/token cannot revive the lease. */
+          }
+          invalid = true;
+          return false;
+        },
+      });
     },
     captureGeneratedTableGridSelection() {
       const state = editor.getEditorState();

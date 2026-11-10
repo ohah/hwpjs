@@ -1,4 +1,4 @@
-//! Owned model values for undo. Immutable format sidecars stay in Session.
+//! Owned model values and rebased section source for undo. Original sidecars stay in Session.
 const std = @import("std");
 const model = @import("../../model/document.zig");
 const clone = @import("../../model/clone.zig");
@@ -245,13 +245,35 @@ pub fn rollback(checkpoint: *Checkpoint, a: std.mem.Allocator, owner: *const any
 fn bind(state: *const State, a: std.mem.Allocator, owner: *const anyopaque, current: *const model.Document) !void {
     if (state.owner != owner or state.allocator.ptr != a.ptr or state.allocator.vtable != a.vtable or state.document.format != current.format or state.document.coverage != current.coverage or state.document.sections.len != current.sections.len) return error.SourceBindingMismatch;
     for (state.document.sections, current.sections) |before, after| {
-        if (before.source_record_count != after.source_record_count) return error.SourceBindingMismatch;
+        if (originalRecordCount(before) != originalRecordCount(after)) return error.SourceBindingMismatch;
         try validateProvenance(before);
         try validateProvenance(after);
     }
 }
 
+/// Canonical immutable source identity count, independent of current rebase size.
+pub fn originalRecordCount(section: model.Section) usize {
+    return if (section.rebased_source) |basis| basis.original_record_count else section.source_record_count;
+}
+
+fn validateSourceBasis(section: model.Section) !void {
+    const basis = section.rebased_source orelse return;
+    if (basis.original_record_count == 0) return error.SourceBindingMismatch;
+    var records = @import("../record.zig").Iterator.init(basis.bytes, .{});
+    var styles: usize = 0;
+    while (records.next() catch return error.SourceBindingMismatch) |record| {
+        if (record.tag != 66) continue; // PARA_HEADER; field location belongs to its parser.
+        const style_offset = @import("../body/paragraph_header.zig").Header.style_id_offset;
+        if (record.payload.len <= style_offset or styles >= basis.style_offsets.len) return error.SourceBindingMismatch;
+        const offset = record.offset + (record.raw.len - record.payload.len) + style_offset;
+        if (basis.style_offsets[styles] != offset) return error.SourceBindingMismatch;
+        styles += 1;
+    }
+    if (records.count != section.source_record_count or styles != basis.style_offsets.len) return error.SourceBindingMismatch;
+}
+
 fn validateProvenance(section: model.Section) !void {
+    try validateSourceBasis(section);
     if (section.form_values) |values| for (values, 0..) |value, i| {
         if (value.source_node >= section.source_record_count or value.text.len % 2 != 0) return error.SourceBindingMismatch;
         if (i > 0 and values[i - 1].source_node >= value.source_node) return error.SourceBindingMismatch;
@@ -282,6 +304,8 @@ pub fn size(document: *const model.Document, limit: usize) !usize {
     try add(&total, document.font_resources.entries.capacity, @sizeOf(@import("../../model/font_face_value.zig").Value), limit);
     for (document.font_resources.entries.items) |font| if (font.name) |name| try add(&total, name.len, 1, limit);
     for (document.sections) |section| {
+        try validateSourceBasis(section);
+        if (section.rebased_source) |basis| try add(&total, try basis.byteSize(), 1, limit);
         if (section.form_values) |values| {
             try add(&total, values.len, @sizeOf(@import("../../model/form_values.zig").Value), limit);
             for (values) |value| try add(&total, value.text.len, 1, limit);

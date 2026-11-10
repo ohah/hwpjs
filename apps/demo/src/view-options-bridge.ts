@@ -40,7 +40,17 @@ export function createViewOptionsBridge({
         (current?.value.formattingMarks === true
           ? '조판 부호를 끄면 문단 부호를 따로 설정할 수 있습니다.'
           : undefined);
+      const gridReason =
+        reason ??
+        (typeof current?.value.showTableGrid === 'boolean'
+          ? undefined
+          : '표 격자 표시 정책이 연결되지 않았습니다.');
       return {
+        'toggle-grid': {
+          enabled: !gridReason,
+          reason: gridReason,
+          pressed: gridReason ? undefined : current!.value.showTableGrid,
+        },
         'toggle-marks': {
           enabled: !marksReason,
           reason: marksReason,
@@ -56,13 +66,18 @@ export function createViewOptionsBridge({
       };
     },
     action(action: DemoAction): boolean {
-      if (action.command !== 'toggle-paragraph-marks' && action.command !== 'toggle-marks')
+      if (
+        action.command !== 'toggle-paragraph-marks' &&
+        action.command !== 'toggle-marks' &&
+        action.command !== 'toggle-grid'
+      )
         return false;
       if (closed) return true;
       const current = observe();
       if (
         !current ||
-        (action.command === 'toggle-marks' && typeof current.value.formattingMarks !== 'boolean')
+        (action.command === 'toggle-marks' && typeof current.value.formattingMarks !== 'boolean') ||
+        (action.command === 'toggle-grid' && typeof current.value.showTableGrid !== 'boolean')
       ) {
         onStatus('Canvas 표시 상태를 확인할 수 없습니다.');
         return true;
@@ -74,9 +89,11 @@ export function createViewOptionsBridge({
       try {
         const next = {
           ...current.value,
-          ...(action.command === 'toggle-marks'
-            ? { formattingMarks: !current.value.formattingMarks }
-            : { paragraphMarks: !current.value.paragraphMarks }),
+          ...(action.command === 'toggle-grid'
+            ? { showTableGrid: !current.value.showTableGrid }
+            : action.command === 'toggle-marks'
+              ? { formattingMarks: !current.value.formattingMarks }
+              : { paragraphMarks: !current.value.paragraphMarks }),
         };
         if (current.host.setDisplayOptions!(next)) {
           current.host.focus?.();

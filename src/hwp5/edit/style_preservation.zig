@@ -19,6 +19,7 @@ pub const Command = union(enum) {
     stage_table: @import("created_table_stage.zig").Edit,
     set_created_cell_text: @import("created_cell_text.zig").Edit,
     edit_created_table_grid: @import("created_table_grid_session.zig").Edit,
+    edit_source_table_grid: @import("source_table_grid_session.zig").Edit,
     splice_current_paragraph: @import("current_paragraph_edit.zig").Splice,
     set_style: struct { section: usize, paragraph: usize, style_id: u8 },
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
@@ -68,9 +69,12 @@ const State = struct {
     history_poison_observer: ?*bool = null,
     allocator: std.mem.Allocator,
     source: Source,
+    has_source_rebases: bool = false,
+    original_decoded: [][]u8,
     decoded: [][]u8,
     document: model.Document,
     created_tables: []@import("created_table_values.zig").Values,
+    original_style_offsets: [][]usize,
     style_offsets: [][]usize,
     style_count: usize,
     char_count: usize,
@@ -79,16 +83,28 @@ const State = struct {
     memo_shape_count: usize,
     observed_docinfo: ?@import("observed_docinfo.zig").Diagnostics = null,
 
+    // Views never own source bytes. A restored model carries its exact source basis.
+    fn refreshSourceViews(self: *State) void {
+        self.has_source_rebases = false;
+        for (self.document.sections, 0..) |section, i| {
+            if (section.rebased_source != null) self.has_source_rebases = true;
+            self.decoded[i] = if (section.rebased_source) |basis| basis.bytes else self.original_decoded[i];
+            self.style_offsets[i] = if (section.rebased_source) |basis| basis.style_offsets else self.original_style_offsets[i];
+        }
+    }
+
     fn deinit(self: *State) void {
         const a = self.allocator;
         if (self.live_text) |*backing| backing.deinit();
-        for (self.style_offsets) |offsets| a.free(offsets);
+        for (self.original_style_offsets) |offsets| a.free(offsets);
+        a.free(self.original_style_offsets);
         a.free(self.style_offsets);
         self.cell_backgrounds.deinit(a);
         self.document.deinit(a);
         for (self.created_tables) |*tables| tables.deinit(a);
         a.free(self.created_tables);
-        for (self.decoded) |bytes| a.free(bytes);
+        for (self.original_decoded) |bytes| a.free(bytes);
+        a.free(self.original_decoded);
         a.free(self.decoded);
         self.source.deinit();
     }
@@ -535,17 +551,20 @@ pub const Session = opaque {
         for (commands) |command| self.applyWithFontCache(command, &font_cache) catch |err| {
             const state = self.getState();
             try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+            state.refreshSourceViews();
             return err;
         };
         self.finishFormattingBatch() catch |err| {
             const state = self.getState();
             try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+            state.refreshSourceViews();
             return err;
         };
         if (try self.matchesCheckpoint(checkpoint)) return false;
         _ = self.checkpointSize(limit) catch |err| {
             const state = self.getState();
             try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+            state.refreshSourceViews();
             return err;
         };
         return true;
@@ -601,6 +620,7 @@ pub const Session = opaque {
         // 이 함수는 bind/목적지 size 검증을 모두 끝낸 뒤에만 swap한다. 실패 전 gap 폐기 금지.
         // 현재 canonical tokens는 이때 checkpoint로 이동하며 즉시 deinit될 소비값이다.
         try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+        state.refreshSourceViews();
         // checkpoint 검증/교환 성공 이후에는 오류·할당·model 역참조가 없다.
         if (state.live_text) |*backing| {
             inline for (@typeInfo(@TypeOf(state.live_totals)).@"struct".field_names) |field_name| {
@@ -616,6 +636,7 @@ pub const Session = opaque {
         try self.materializeLiveText();
         const state = self.getState();
         try @import("table_checkpoint.zig").rollbackWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+        state.refreshSourceViews();
     }
 
     pub fn restoreCheckpoint(self: *Session, checkpoint: *Checkpoint) !void {
@@ -631,6 +652,7 @@ pub const Session = opaque {
         try self.materializeLiveText();
         const state = self.getState();
         try @import("table_checkpoint.zig").exchangeWithCells(checkpoint, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds);
+        state.refreshSourceViews();
     }
 
     pub fn open(a: std.mem.Allocator, input: []const u8) !*Session {
@@ -709,8 +731,12 @@ pub const Session = opaque {
         const created_tables = try a.alloc(@import("created_table_values.zig").Values, document.sections.len);
         errdefer a.free(created_tables);
         for (created_tables) |*tables| tables.* = .{};
+        const decoded_views = try a.dupe([]u8, decoded);
+        errdefer a.free(decoded_views);
+        const offset_views = try a.dupe([]usize, offsets);
+        errdefer a.free(offset_views);
         const owned = try a.create(State);
-        owned.* = .{ .allocator = a, .source = source, .decoded = decoded, .document = document, .created_tables = created_tables, .style_offsets = offsets, .style_count = style_count, .char_count = resources.count(.char_shape), .para_count = resources.count(.para_shape), .border_count = resources.count(.border_fill), .memo_shape_count = resources.memo_shape_count };
+        owned.* = .{ .allocator = a, .source = source, .original_decoded = decoded, .decoded = decoded_views, .document = document, .created_tables = created_tables, .original_style_offsets = offsets, .style_offsets = offset_views, .style_count = style_count, .char_count = resources.count(.char_shape), .para_count = resources.count(.para_shape), .border_count = resources.count(.border_fill), .memo_shape_count = resources.memo_shape_count };
         owned.observed_docinfo = observed;
         return @ptrCast(owned);
     }
@@ -1359,6 +1385,8 @@ pub const Session = opaque {
         return self.applyWithFontCache(command, null);
     }
     pub fn applyWithFontCache(self: *Session, command: Command, font_cache: ?*@import("../../model/batch_font_lookup.zig").Cache) !void {
+        // Helpers may replace a whole Section clone. Refresh borrowed bases before returning.
+        defer if (self.getState().has_source_rebases) self.getState().refreshSourceViews();
         errdefer if (font_cache) |cache| cache.clear();
         errdefer if (self.getState().formatting_batch) |context| context.characters.abort(self.getState().allocator);
         if (font_cache) |cache| switch (command) {
@@ -1414,6 +1442,23 @@ pub const Session = opaque {
                 const state = self.getState();
                 try @import("created_table_grid_session.zig").apply(state.allocator, state.decoded, &state.document, state.created_tables, state.source.header.version(), edit, self.createdTableResources(), created_table_limits);
             },
+            .edit_source_table_grid => |edit| {
+                const state = self.getState();
+                if (edit.section >= state.document.sections.len) return error.InvalidSection;
+                if (state.formatting_batch != null) return error.MutationInProgress;
+                if (state.source.header.has(.distribution)) return error.UnsupportedSourceTableGrid;
+                if (state.created_tables[edit.section].entries.len != 0) return error.UnsupportedSourceTableGridPendingObjects;
+                // These transient DocInfo clones require an explicit node/resource remap.
+                for (state.cell_backgrounds.entries) |entry| if (entry.edit.section == edit.section) return error.UnsupportedSourceTableGridPendingCellStyle;
+                const saved = try self.save(state.allocator, .{ .allow_stale_layout = true });
+                defer state.allocator.free(saved.bytes);
+                const current = state.document.sections[edit.section];
+                const original_count = if (current.rebased_source) |basis| basis.original_record_count else current.source_record_count;
+                var candidate = try @import("source_table_grid_session.zig").prepare(state.allocator, saved.bytes, state.decoded[edit.section], state.source.header.version(), edit, original_count, state.style_count);
+                defer candidate.deinit(state.allocator);
+                std.mem.swap(model.Section, &state.document.sections[edit.section], &candidate);
+                state.refreshSourceViews();
+            },
             .set_character_font_name => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 try @import("../../model/font_name.zig").validate(edit.name, 4096);
@@ -1421,7 +1466,10 @@ pub const Session = opaque {
                 const state = self.getState();
                 const checkpoint = if (state.formatting_batch == null) try self.createCheckpoint(max_bytes) else null;
                 defer if (checkpoint) |value| value.deinit();
-                errdefer if (checkpoint) |value| @import("table_checkpoint.zig").rollbackWithCells(value, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds) catch unreachable;
+                errdefer if (checkpoint) |value| {
+                    @import("table_checkpoint.zig").rollbackWithCells(value, state.allocator, self, &state.document, &state.created_tables, &state.cell_backgrounds) catch unreachable;
+                    state.refreshSourceViews();
+                };
                 const cached = if (font_cache) |cache| cache.get(@backingInt(edit.language), edit.name) else null;
                 const id = cached orelse try self.ensureFont(edit.language, edit.name);
                 if (font_cache) |cache| cache.put(@backingInt(edit.language), edit.name, id);
@@ -1671,6 +1719,7 @@ pub const Session = opaque {
 };
 
 fn sectionChanged(state: *const State, index: usize, section: model.Section) bool {
+    if (section.rebased_source != null) return true;
     if (section.form_values) |values| if (values.len != 0) return true;
     if (state.created_tables[index].entries.len != 0) return true;
     if (section.picture_current_sizes) |sizes| if (sizes.len != 0) return true;

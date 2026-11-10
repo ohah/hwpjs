@@ -295,6 +295,13 @@ export fn hwpx_edit_set_checkbox_state(section: u32, node: u32, ptr: [*]const u8
     apply(.{ .kind = .check_box_state, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .form_node = node, .checkbox_state = state }) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_source_table_grid(section: u32, table_node: u32, rows: u32, columns: u32, action: u32, index: u32, layout: u32) u32 {
+    if (layout != 0) return fail(error.InvalidSourceTableGridLayout);
+    const command = @import("created_table_grid_request.zig").decode(action, index) catch |err| return fail(err);
+    _ = @import("../model/table_grid_edit_plan.zig").create(rows, columns, command, 4096) catch |err| return fail(err);
+    apply(.{ .kind = .source_table_grid, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .source_grid_node = table_node, .source_grid_expected_rows = rows, .source_grid_expected_columns = columns, .source_grid_action = command }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_created_table_grid(section: u32, low: u32, high: u32, action: u32, index: u32) u32 {
     hwpx_edit_output_free();
     const request = @import("created_table_grid_request.zig");
@@ -951,6 +958,10 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
+        .source_table_grid => {
+            _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
+        },
+
         .created_table_grid => {
             _ = try @import("../hwpx/created_table_grid_session.zig").apply(session, command.section, command.created_table_identity, command.created_grid);
         },

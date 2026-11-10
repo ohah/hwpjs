@@ -1,4 +1,8 @@
 // 실제 Canvas/Surface를 사용하며 renderer·Core 응답만 통제한다. Native·픽셀 증거가 아니다.
+import {
+  DEFAULT_CANVAS_DISPLAY_OPTIONS,
+  canvasDisplayOptions,
+} from '../../../web/preview/canvas-display-options.mjs';
 export function fixture() {
   const frames = new Map();
   let sequence = 0,
@@ -172,7 +176,21 @@ export function fixture() {
       },
     ],
   });
+  let displayOptions = DEFAULT_CANVAS_DISPLAY_OPTIONS;
   const renderer = {
+    getDisplayOptions: () => displayOptions,
+    setDisplayOptions(options) {
+      const parsed = canvasDisplayOptions(options);
+      const next = Object.freeze({ ...parsed, showTableGrid: parsed.showTableGrid === true });
+      if (
+        next.paragraphMarks === displayOptions.paragraphMarks &&
+        (next.formattingMarks === true) === (displayOptions.formattingMarks === true) &&
+        next.showTableGrid === displayOptions.showTableGrid
+      )
+        return true;
+      displayOptions = next;
+      return true;
+    },
     layout,
     viewScale: () => 1,
     show() {},

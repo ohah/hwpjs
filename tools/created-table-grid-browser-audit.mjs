@@ -84,8 +84,8 @@ try {
         evaluate(
           `document.querySelector('${menu} button[data-command="generated-table-insert-row"]').disabled`,
         ),
-        true,
-        'Reopened source table must not forge a generated identity',
+        false,
+        'Reopened source table uses the separate source port; see source-table-grid-browser-audit.mjs',
       );
       const errors = run('errors').trim();
       assert.equal(errors, '', errors);
@@ -97,7 +97,7 @@ try {
         undoRedo: true,
         downloaded: true,
         reopened: true,
-        sourceGridRefused: true,
+        sourceGridAvailable: true,
       });
       writeFileSync(join(output, 'results.json'), JSON.stringify(results, null, 2));
     }

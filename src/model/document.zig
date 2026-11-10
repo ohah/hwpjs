@@ -92,6 +92,7 @@ pub const Section = struct {
     paragraphs: []Paragraph,
     /// All source records, including those outside represented paragraphs.
     source_record_count: usize,
+    rebased_source: ?@import("section_source_basis.zig").Basis = null,
     table_cell_sizes: ?[]TableCellSize = null,
     picture_current_sizes: ?[]PictureCurrentSize = null,
     form_values: ?[]@import("form_values.zig").Value = null,
@@ -102,6 +103,7 @@ pub const Section = struct {
         if (self.table_cell_sizes) |values| a.free(values);
         if (self.picture_current_sizes) |values| a.free(values);
         if (self.form_values) |values| @import("form_values.zig").deinit(a, values);
+        if (self.rebased_source) |*basis| basis.deinit(a);
         self.* = undefined;
     }
 };

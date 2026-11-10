@@ -339,6 +339,21 @@ export fn hwp5_edit_created_table_grid(section: u32, low: u32, high: u32, action
     apply(.{ .edit_created_table_grid = .{ .section = section, .table = identity, .command = command } }) catch |err| return fail(err);
     return 1;
 }
+export fn hwp5_edit_source_table_grid(section: u32, table_node: u32, rows: u32, columns: u32, action: u32, index: u32, layout: u32) u32 {
+    hwp5_edit_output_free();
+    const command = @import("created_table_grid_request.zig").decode(action, index) catch |err| return fail(err);
+    if (layout > 1) return fail(error.InvalidSourceTableGridLayout);
+    _ = @import("../model/table_grid_edit_plan.zig").create(rows, columns, command, 100_000) catch |err| return fail(err);
+    apply(.{ .edit_source_table_grid = .{
+        .section = section,
+        .table_node = table_node,
+        .expected_rows = rows,
+        .expected_columns = columns,
+        .command = command,
+        .layout = if (layout == 0) .spec6 else .observed8,
+    } }) catch |err| return fail(err);
+    return 1;
+}
 export fn hwp5_edit_insert_table(ptr: [*]const u8, size: usize) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);

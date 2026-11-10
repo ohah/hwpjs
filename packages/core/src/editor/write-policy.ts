@@ -38,6 +38,7 @@ export class EditorWritePolicy {
           readOnly: true,
           historyAvailable: false,
           createdTableGridAvailable: false,
+          sourceTableGridAvailable: false,
         };
   }
 }

@@ -178,7 +178,13 @@ export function unsupportedCommandCategories(connectedCommands: ReadonlySet<Demo
 }
 
 /** 선택 종류는 검증된 공개 관측값이며 명령 실행 권한을 새로 만들지 않습니다. */
-export type ContextTargetKind = 'body' | 'table-cell' | 'generated-table-cell' | 'picture' | 'none';
+export type ContextTargetKind =
+  | 'body'
+  | 'table-cell'
+  | 'generated-table-cell'
+  | 'source-table-cell'
+  | 'picture'
+  | 'none';
 export type ContextCommand = Exclude<DemoCommand, 'set-font-size' | 'set-zoom'>;
 const documentContextCommands: readonly ContextCommand[] = Object.freeze([
   'undo',
@@ -224,6 +230,13 @@ const generatedTableContextCommands: readonly ContextCommand[] = Object.freeze([
   'generated-table-insert-column',
   'generated-table-delete-column',
 ]);
+const sourceTableContextCommands: readonly ContextCommand[] = Object.freeze([
+  ...tableCellContextCommands,
+  'generated-table-insert-row',
+  'generated-table-delete-row',
+  'generated-table-insert-column',
+  'generated-table-delete-column',
+]);
 const pictureContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,
   'object-properties',
@@ -239,12 +252,13 @@ export const CONTEXT_COMMAND_IDS: readonly ContextCommand[] = Object.freeze([
 /** 목록은 표시 범위만 정하며 실행 시 기존 가용성·대상 검증을 유지합니다. */
 export function contextCommandIds(kind: ContextTargetKind): readonly ContextCommand[] {
   if (kind === 'generated-table-cell') return generatedTableContextCommands;
+  if (kind === 'source-table-cell') return sourceTableContextCommands;
   if (kind === 'table-cell') return tableCellContextCommands;
   if (kind === 'picture') return pictureContextCommands;
   return kind === 'body' ? editableContextCommands : documentContextCommands;
 }
 export function contextCommandLabel(command: ContextCommand, kind: ContextTargetKind): string {
-  if (kind === 'table-cell') {
+  if (kind === 'table-cell' || kind === 'source-table-cell') {
     if (command === 'character-properties') return '셀 글자 속성';
     if (command === 'paragraph-properties') return '셀 문단 속성';
   }

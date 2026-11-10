@@ -16,6 +16,7 @@ const ROOT_KEYS = new Set([
   'currentReferenceErrors',
   'tableCreationAvailable',
   'createdTableGridAvailable',
+  'sourceTableGridAvailable',
   'tableCreationResources',
   'createdTables',
   'normalizationEditingAvailable',
@@ -218,6 +219,8 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
       content.paragraphs.length !== content.totalParagraphs ||
       content.window ||
       content.viewKind ||
+      (Object.hasOwn(content, 'sourceTableGridAvailable') &&
+        typeof content.sourceTableGridAvailable !== 'boolean') ||
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))
     )
       return false;

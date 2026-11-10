@@ -532,3 +532,5 @@
 - [검증된 Native 모듈 프로필](native-module-profiles.md)
 
 - [원본 표 파일 격자 API](source-table-grid-file-api.md)
+
+- [원본 표 격자 live 편집](source-table-grid-live-edit.md)

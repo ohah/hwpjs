@@ -61,6 +61,7 @@ import {
   SPLICE_TEXT_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
+  EDIT_SOURCE_TABLE_GRID_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -89,6 +90,10 @@ import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
 import { fontNameMessage } from '../commands/font-name.ts';
 import { tableInsertMessage } from '../commands/table-insert.ts';
+import { sourceTableGridMessage } from '../commands/source-table-grid.ts';
+import type { EditSourceTableGridPayload } from '../commands/source-table-grid.ts';
+// @ts-ignore Preserve strict descriptors before the general payload copier normalizes them.
+import { captureSourceTableGridRequest } from '../../../../js/source-table-grid.mjs';
 import { createdTableGridMessage } from '../commands/created-table-grid.ts';
 import type { EditCreatedTableGridPayload } from '../commands/created-table-grid.ts';
 import type { InsertTablePayload } from '../commands/table-insert.ts';
@@ -866,6 +871,11 @@ export function createEditor(options: CreateEditorOptions) {
     try {
       requireReady(token);
       writePolicy.assertWritable();
+      if (message.kind === 'source-table-grid') {
+        requireReady(token, true);
+        if ((state.content as any)?.sourceTableGridAvailable !== true)
+          throw Error('SourceTableGridUnavailable');
+      }
       admissionGuard?.();
       reserved = ++revisionClock;
       const historyCapture = geometry.captureHistory(state, message.kind);
@@ -1075,7 +1085,10 @@ export function createEditor(options: CreateEditorOptions) {
     snapshot: EditorState = state,
   ): PendingCommand {
     if (!command || typeof command.id !== 'symbol') throw Error('InvalidCommand');
-    const owned = copyOwned(payload);
+    const owned =
+      command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+        ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
+        : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
@@ -1160,6 +1173,14 @@ export function createEditor(options: CreateEditorOptions) {
           throw Error('InvalidText');
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
+      }
+      if (pending.command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id) {
+        requireReady(pending.token, true);
+        const message = sourceTableGridMessage(
+          pending.payload as EditSourceTableGridPayload,
+          state,
+        );
+        return await mutate(message, pending.token);
       }
       if (pending.command.id === EDIT_CREATED_TABLE_GRID_COMMAND.id) {
         requireReady(pending.token, true);

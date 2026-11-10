@@ -1,5 +1,6 @@
 import { ownCaretTypingIntent } from './caret-formatting-intent.mjs';
 import { captureGeneratedTableSelection } from './generated-table-selection.mjs';
+import { captureSourceTableGridSelection } from './source-table-grid-selection.mjs';
 import { hwp5StructuralEditableStart } from '../../js/hwp5-structural-edit-boundary.mjs';
 import { characterPropertyArgs } from '../../js/character-property-args.mjs';
 import { characterColorArg } from '../../js/character-color-args.mjs';
@@ -47,6 +48,7 @@ import {
 } from './character-typing-properties.mjs';
 import { projectTypingDraftRanges } from './typing-format-draft.mjs';
 import { createHistorySelectionStore } from './history-selection.mjs';
+import { sourceTableGridHistory } from './source-table-grid-history.mjs';
 import { hitDrawingBoundary } from './drawing-boundary-hit.mjs';
 import { hitTableBoundary } from './table-boundary-geometry.mjs';
 import { appendQueuedText } from './queued-input.mjs';
@@ -3090,6 +3092,28 @@ export function createCanvasEditor({
     captureRangeFormatting,
     captureSelectionFormatting,
     captureCaretFormatting,
+    // The Surface supplies its settled source DTO; the actual Canvas selection owns the address.
+    captureSourceTableGridSelection(content) {
+      const saved = settledSelection(true);
+      if (!saved || saved.target.createdCell || multipleParagraphs()) return null;
+      const paragraph = renderer.paragraph(saved.target);
+      const epoch = generatedGridSelectionEpoch;
+      return captureSourceTableGridSelection({
+        content,
+        paragraph,
+        point: saved.target,
+        current: () =>
+          generatedGridSelectionEpoch === epoch &&
+          !drag &&
+          !inputIntents.size &&
+          !historyPaintBarrier.pending &&
+          controls.ready() &&
+          selectionCurrent(saved) &&
+          renderer.paragraph(saved.target) === paragraph &&
+          Boolean(caretGeometry(renderer.layout(), saved.anchor)) &&
+          Boolean(caretGeometry(renderer.layout(), saved.focus)),
+      });
+    },
     captureGeneratedTableGridSelection() {
       const saved = settledSelection(true);
       if (
@@ -3658,6 +3682,21 @@ export function createCanvasEditor({
         return false;
       }
       input.setAttribute('aria-busy', 'true');
+      return true;
+    },
+    observeSourceTableGridHistory(observation) {
+      if (events.signal.aborted || !this.settled() || drag || historyPaintBarrier.pending)
+        return false;
+      const mapped = sourceTableGridHistory(observation);
+      if (!mapped) return false;
+      // Register the actual Native destination even when the structural edit cleared the caret.
+      this.initializeCapabilities({
+        ...observation.after.capabilities,
+        historyRevision: mapped.afterRevision,
+        historyRevisions: observation.after.nativeHistoryRevisions,
+      });
+      historySelections.remember(mapped.beforeRevision, mapped.beforeSelection);
+      historySelections.remember(mapped.afterRevision, mapped.afterSelection);
       return true;
     },
     initializeCapabilities(value = {}) {

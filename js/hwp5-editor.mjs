@@ -2,6 +2,7 @@ import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
 import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
+import { createSourceTableGridApi } from './source-table-grid.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { validateAbi } from './abi.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
@@ -202,6 +203,13 @@ export async function createExperimentalHwp5Editor(
     ).bytes;
   };
   return {
+    ...createSourceTableGridApi({
+      wasm,
+      memory,
+      check: check,
+      prefix: 'hwp5_edit',
+      unavailable: 'Hwp5SourceTableGridAbiUnavailable',
+    }),
     ...createAtomicFormattingApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     observedDocInfoDiagnostics() {
       check();

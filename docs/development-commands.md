@@ -1681,3 +1681,26 @@ node --test --test-concurrency=1 tools/tests/table-file-grid-sdk.test.mjs \
 ```
 
 실물 source gate는 `tools/tests/source-table-grid-file-native.test.mjs`와 `source-table-grid-host-native.test.mjs`입니다. `HWPJS_TEST_SOURCE_ROOT`에 격리 후보, `HWPJS_TEST_WASM`·`HWPJS_TEST_WASM_SHA256`에 새 엔진과 고정 SHA, `HWPJS_TEST_SOURCE_GRID_HWP5`·`HWPJS_TEST_SOURCE_GRID_HWPX`에 위 승인된 브라우저 생성 파일을 지정합니다. `HWPJS_TEST_ORACLE_ROOT`는 정확한 `legacy/cfb.js` 오라클을 가진 루트이며 `HWPJS_TEST_CFB_SHA256`을 별도로 고정합니다. 각 실행의 `HWPJS_TEST_EVIDENCE_DIR`은 기존에 없는 디렉터리여야 합니다. SDK gate에는 선택 ABI가 없는 `HWPJS_TEST_OLD_WASM`도 필요합니다. host gate는 `source-table-grid-api-r1/install/bin/hwpjs.wasm` 위치를 추가 확인하며 공식 MCP Client와 stdio transport를 사용합니다. npm 설치 패키지 검증과 구분합니다.
+
+
+## 원본 표 열린 세션 격자 편집 집중 검사
+
+[열린 세션 편집 계약](source-table-grid-live-edit.md)의 SDK·Core·실제 Surface 선택·공유 메뉴 router를 명시 파일로만 검사합니다. 아래 명령은 저장소 또는 통제 소스 루트에서 실행하며, Node 그룹은 기존 생성 표 검사와 같은 Core dist 및 renderer hook을 사용합니다. `packages/core/dist`는 검사할 소스로 미리 빌드되어 있어야 합니다.
+
+```sh
+bun test --no-install ./packages/core/tests/commands/source-table-grid.test.ts
+HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types --max-old-space-size=512 \
+  --import ./tools/renderer-test-core-provider.mjs \
+  --import ./packages/vanilla/tests/non-text-history-renderer-hook.mjs \
+  --test --test-concurrency=1 \
+  ./tools/tests/source-table-grid-sdk.test.mjs \
+  ./packages/vanilla/tests/source-table-grid-selection.test.mjs \
+  ./packages/vanilla/tests/source-table-grid-history.test.mjs \
+  ./apps/demo/tests/source-table-grid-port.test.mjs \
+  ./apps/demo/tests/source-table-grid-ui.test.mjs \
+  ./apps/demo/tests/table-grid-port.test.mjs
+```
+
+이 그룹은 합성 Core/renderer와 SDK 모형을 포함한 집중 회귀이며 실제 새 Native 엔진·브라우저 E2E·저장 재열기·배포 통과 근거가 아닙니다. 실물 Native 검사는 승인된 엔진·fixture·manifest를 별도로 고정한 실행으로 구분하며 이 CI 단계에 추가하지 않습니다.
+
+원본 기준·다중 구역 suffix 좌표의 synthetic Native 검사는 `zig build test-section-source-bases -Doptimize=ReleaseSafe -j1`입니다. 실제 원본 표 세션 검사는 승인한 단순 표 파일의 절대경로를 `HWPJS_TEST_SOURCE_GRID_HWP5`와 `HWPJS_TEST_SOURCE_GRID_HWPX`로 명시하고 `zig build test-source-table-grid-live -Doptimize=ReleaseSafe -j1`을 실행합니다. 일반 Native 테스트가 임의 fixture를 찾아 읽도록 연결하지 않습니다.

@@ -99,6 +99,7 @@ import {
   setHwp5CreatedCellText,
 } from './hwp5-table-creation-command.mjs';
 import { selectionEditQuery, selectionSplitQuery } from './selection-edit-query.mjs';
+import { applySourceTableGridCommand } from './source-table-grid-command.mjs';
 import { applyCreatedTableGridCommand } from './created-table-grid-command.mjs';
 
 /** Copy before the first await; no caller buffers or shared memory cross the queue. */
@@ -250,6 +251,7 @@ export function createReaderRuntime({
     }
     const content = projected ?? displayContent(hwp5DisplayProjection());
     content.editorSessionAvailable = Boolean(editor);
+    content.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     const observedDocInfoAvailable = [
       'hwp5_edit_open_observed_docinfo',
       'hwp5_edit_observed_docinfo_diagnostics',
@@ -999,6 +1001,8 @@ export function createReaderRuntime({
       HWPX_DISPLAY_BOUNDS.maxUnits,
       preview.sectionCount,
     );
+    // The reusable load snapshot describes ABI availability; reply capability also gates history.
+    result.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     hwpxCreatedTablesPending = result.createdTableHostPending;
     return result;
   }
@@ -1045,6 +1049,7 @@ export function createReaderRuntime({
         response = {
           origin: message.origin,
           ...value,
+          sourceTableGridAvailable: historyEnabled && editor?.supportsSourceTableGrid?.() === true,
           createdTableGridAvailable:
             historyEnabled && editor?.supportsCreatedTableGrid?.() === true,
           ...(historyPoisoned ? { historyPoisoned: true } : {}),
@@ -1142,6 +1147,18 @@ export function createReaderRuntime({
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, requestId: message.requestId, content: hwp5Display() });
         }
+        return;
+      }
+      if (message.kind === 'source-table-grid') {
+        applySourceTableGridCommand(editor, format, historyEnabled, message);
+        // Native committed: every later failure requires refresh, never another edit.
+        applied = true;
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'created-table-grid') {

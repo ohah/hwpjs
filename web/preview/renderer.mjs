@@ -27,7 +27,6 @@ import {
   tableBackgroundCoverage,
   tableBoxPaintBounds,
 } from './table-background-targets.mjs';
-import { paintTableBackground } from './table-background-paint.mjs';
 import { FONT, displayRunText } from './layout.mjs';
 import { createPreviewTextMeasure } from './preview-text-measure.mjs';
 import { createRendererGlyphMetrics } from './renderer-glyph-metrics.mjs';
@@ -325,6 +324,7 @@ export function createRenderer(
     const bounds = canvas.getBoundingClientRect?.();
     return [
       layoutGeneration,
+      displayOptions,
       resourceGeneration,
       content,
       display,
@@ -623,7 +623,7 @@ export function createRenderer(
       unavailableCount: 0,
       unavailable: [],
     };
-    const paintTableBox = (box) => {
+    const paintTableBox = (box, underlay = false) => {
       const top = box.y - viewport.scrollTop;
       const visual = tableBoxPaintBounds(box);
       if (
@@ -641,10 +641,23 @@ export function createRenderer(
             ? pictureStatus(box.section, box.listNode, 'table-background')
             : null;
         const bitmap = backgroundResource?.bitmap;
-        if (backgroundResource?.refreshing)
+        if (backgroundResource?.refreshing && (underlay || displayOptions.showTableGrid !== true))
           paintRowTransform(ctx, box, viewport.scrollTop, () =>
             paintPendingPicture(box, box.x, top, true),
           );
+        // Paint every background/guide in this layer before any cell ink. Adjacent
+        // cells can share an edge; a later gray guide must not cover earlier ink.
+        if (underlay) {
+          paintRowTransform(ctx, box, viewport.scrollTop, () =>
+            paintTableBorder(ctx, box, { state: 'none', fill: border.fill }, viewport.scrollTop, {
+              bitmap,
+              showTableGrid: true,
+            }),
+          );
+          return;
+        }
+        const inkOnly = displayOptions.showTableGrid === true;
+        const inkBorder = inkOnly ? { ...border, fill: undefined } : border;
         if (border.state !== 'proxy') {
           const coverage = layout.tableBorderCoverage;
           const unavailable = (error, component) => {
@@ -665,10 +678,17 @@ export function createRenderer(
           }
           if (border.state === 'unavailable') {
             // A known cell background is independent of an unsupported edge type.
-            if (border.fill)
-              paintRowTransform(ctx, box, viewport.scrollTop, () =>
-                paintTableBackground(ctx, box, border.fill, viewport.scrollTop, bitmap),
-              );
+            paintRowTransform(ctx, box, viewport.scrollTop, () =>
+              paintTableBorder(
+                ctx,
+                box,
+                { state: 'none', fill: inkBorder.fill },
+                viewport.scrollTop,
+                {
+                  bitmap,
+                },
+              ),
+            );
             if (border.diagonals?.length) {
               let painted = false,
                 transformed = false;
@@ -692,7 +712,8 @@ export function createRenderer(
             // paintRowTransform reports transform validity, not its callback's result.
             let painted = false;
             const transformed = paintRowTransform(ctx, box, viewport.scrollTop, () => {
-              painted = paintTableBorder(ctx, box, border, viewport.scrollTop, { bitmap }) === true;
+              painted =
+                paintTableBorder(ctx, box, inkBorder, viewport.scrollTop, { bitmap }) === true;
             });
             if (!transformed || !painted) {
               coverage.paintFailureCount++;
@@ -1145,11 +1166,31 @@ export function createRenderer(
       });
     };
     const sceneRows = [...layout.rows, ...(layout.repeatedTableHeaderRows ?? [])];
-    for (const command of tablePaintScene(
+    const scene = tablePaintScene(
       [...(layout.boxes ?? []), ...(layout.repeatedTableHeaderBoxes ?? [])],
       sceneRows,
       first,
-    )) {
+    );
+    let guideBatchEnd = 0;
+    for (const [sceneIndex, command] of scene.entries()) {
+      if (
+        displayOptions.showTableGrid === true &&
+        command.kind === 'box' &&
+        sceneIndex >= guideBatchEnd
+      ) {
+        guideBatchEnd = sceneIndex;
+        while (guideBatchEnd < scene.length) {
+          const next = scene[guideBatchEnd];
+          if (
+            next.kind !== 'box' ||
+            next.item.tablePaintLayer !== command.item.tablePaintLayer ||
+            next.item.tablePaintZOrder !== command.item.tablePaintZOrder
+          )
+            break;
+          paintTableBox(next.item, true);
+          guideBatchEnd++;
+        }
+      }
       if (command.kind === 'box') {
         paintTableBox(command.item);
         continue;
@@ -1280,6 +1321,7 @@ export function createRenderer(
     canvas.dataset.effectiveParagraphMarks = String(
       displayOptions.paragraphMarks || displayOptions.formattingMarks === true,
     );
+    canvas.dataset.showTableGrid = String(displayOptions.showTableGrid === true);
     canvas.dataset.paragraphMarks = String(displayOptions.paragraphMarks);
     canvas.dataset.paragraphMarkCount = String(paintedParagraphMarks);
     paintedFrame = {
@@ -1580,10 +1622,12 @@ export function createRenderer(
     getDisplayOptions: () => displayOptions,
     setDisplayOptions(options) {
       if (closed) return false;
-      const next = canvasDisplayOptions(options);
+      const parsed = canvasDisplayOptions(options);
+      const next = Object.freeze({ ...parsed, showTableGrid: parsed.showTableGrid === true });
       if (
         next.paragraphMarks === displayOptions.paragraphMarks &&
-        (next.formattingMarks === true) === (displayOptions.formattingMarks === true)
+        (next.formattingMarks === true) === (displayOptions.formattingMarks === true) &&
+        (next.showTableGrid === true) === (displayOptions.showTableGrid === true)
       )
         return true;
       displayOptions = next;

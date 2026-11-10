@@ -18,6 +18,10 @@ pub const Options = struct {
 };
 pub const Section = struct {
     paragraph_query_cache: ?*const @import("paragraph_query_cache.zig").Cache = null,
+    /// Stable session-owned original identity; never exchanged with history.
+    original_basis: ?*@import("section_source_basis.zig").Basis = null,
+    owned_rebased_basis: ?@import("section_source_basis.zig").Basis = null,
+    /// Borrowed aliases of activeSourceBasis when original_basis is present.
     tree: tree_module.Tree,
     sites: sites_module.Sites,
     /// When present this owns current text; sites must be empty, never a cache.
@@ -57,7 +61,33 @@ pub const Section = struct {
         }
         return bytes;
     }
+    pub fn activeSourceBasis(self: *const Section) ?*const @import("section_source_basis.zig").Basis {
+        if (self.owned_rebased_basis) |*basis| return basis;
+        return self.original_basis;
+    }
+    pub fn validateSourceBasis(self: *const Section) !void {
+        if (self.owned_rebased_basis != null and self.original_basis == null) return error.SourceBindingMismatch;
+        if (self.activeSourceBasis()) |basis| {
+            try basis.validate();
+            if (self.tree.source.ptr != basis.tree.source.ptr or self.tree.source.len != basis.tree.source.len or self.tree.elements.ptr != basis.tree.elements.ptr or self.tree.elements.len != basis.tree.elements.len or self.tree.uris.ptr != basis.tree.uris.ptr or self.tree.uris.len != basis.tree.uris.len or self.tree.part_kind != basis.tree.part_kind or self.tree.section_ordinal != basis.tree.section_ordinal or self.tree.item_index != basis.tree.item_index or self.locations.ptr != basis.locations.ptr or self.locations.len != basis.locations.len or self.source_first_paragraph != basis.first_paragraph) return error.SourceBindingMismatch;
+        } else if (self.owned_rebased_basis != null) return error.SourceBindingMismatch;
+    }
+    pub fn refreshSourceAliases(self: *Section) void {
+        if (self.activeSourceBasis()) |basis| {
+            self.tree = basis.tree;
+            self.locations = basis.locations;
+        }
+    }
     fn deinit(self: *Section, a: std.mem.Allocator) void {
+        self.deinitCurrent(a);
+        if (self.original_basis) |basis| {
+            basis.deinit(a);
+            a.destroy(basis);
+        }
+    }
+    /// Release current owned values only. Staged candidates borrow the live
+    /// original_basis; this never destroys that shared session owner.
+    pub fn deinitCurrent(self: *Section, a: std.mem.Allocator) void {
         if (self.structure_values) |*values| values.deinit(a);
         self.field_dirty.deinit(a);
         self.cell_sizes.deinit(a);
@@ -70,9 +100,12 @@ pub const Section = struct {
         self.formula_definitions.deinit(a);
         self.formula_result_overrides.deinit(a);
         self.created_tables.deinit(a);
-        a.free(self.locations);
         self.sites.deinit(a);
-        self.tree.deinit(a);
+        if (self.owned_rebased_basis) |*basis| basis.deinit(a);
+        if (self.original_basis == null) {
+            a.free(self.locations);
+            self.tree.deinit(a);
+        }
     }
 };
 pub const Session = struct {
@@ -114,6 +147,57 @@ pub const Session = struct {
         self.allocator.free(self.sections);
         self.allocator.free(self.source);
         self.* = undefined;
+    }
+
+    /// Retire only derived caches, before any source/model backing is freed.
+    pub fn invalidateSectionSourceCaches(self: *Session) void {
+        if (self.source_fields) |*fields| fields.deinit(self.allocator);
+        self.source_fields = null;
+        for (self.sections) |*section| section.paragraph_query_cache = null;
+        if (self.formatting_batch) |context| context.invalidateSections();
+    }
+    /// Consumes a complete candidate Section only on success. All buffers must
+    /// use Session.allocator; caller owns serialization/reference validation and
+    /// rebasing or baking every node-based intent. No history entry is created.
+    /// Use inside the existing history transaction; direct managed writes refuse.
+    pub fn installSectionSourceBasis(self: *Session, index: usize, prepared: *Section) !void {
+        if (index >= self.sections.len) return error.InvalidSectionIndex;
+        if (self.history_delta_managed and !self.history_transaction_active) return error.MutationInProgress;
+        const old = &self.sections[index];
+        if (old.original_basis == null or prepared.original_basis != old.original_basis or prepared.entry_index != old.entry_index or prepared.owned_rebased_basis == null or prepared.first_paragraph != old.first_paragraph) return error.SourceBindingMismatch;
+        try old.validateSourceBasis();
+        try prepared.validateSourceBasis();
+        if (prepared.tree.source.ptr == old.original_basis.?.tree.source.ptr or prepared.tree.source.ptr == old.tree.source.ptr or (prepared.sites.items.len != 0 and prepared.sites.items.ptr == old.sites.items.ptr)) return error.SourceBindingMismatch;
+        var counters: scanner.Report = .{ .paragraphs = prepared.source_first_paragraph.? - 1 };
+        const checked_locations = try locations_module.buildWithCounters(self.allocator, &prepared.tree, &prepared.sites, siteOptions(self.options), &counters);
+        defer self.allocator.free(checked_locations);
+        if (!@import("../model/history_value_equal.zig").equal(@TypeOf(checked_locations), checked_locations, prepared.locations) or counters.paragraphs != prepared.last_paragraph or prepared.structure_values != null) return error.SourceBindingMismatch;
+        if (prepared.tree.section_ordinal != index or prepared.tree.item_index != old.tree.item_index or prepared.source_first_paragraph != prepared.first_paragraph or prepared.last_paragraph != prepared.owned_rebased_basis.?.last_paragraph) return error.SourceBindingMismatch;
+        const projected = try self.allocator.dupe(Section, self.sections);
+        defer self.allocator.free(projected);
+        projected[index] = prepared.*;
+        for (projected[index + 1 ..]) |*section| {
+            section.first_paragraph = try shiftParagraph(section.first_paragraph, old.last_paragraph, prepared.last_paragraph);
+            section.last_paragraph = try shiftParagraph(section.last_paragraph, old.last_paragraph, prepared.last_paragraph);
+        }
+        try @import("paragraph_structure_budget.zig").validate(projected, self.options);
+        var xml_bytes: usize = 0;
+        for (projected) |section| {
+            if (section.tree.source.len > self.options.max_xml_bytes -| xml_bytes) return error.LimitExceeded;
+            xml_bytes += section.tree.source.len;
+        }
+        self.invalidateSectionSourceCaches();
+        var retired = old.*;
+        old.* = prepared.*;
+        prepared.* = undefined;
+        for (self.sections[index + 1 ..], projected[index + 1 ..]) |*section, next| {
+            section.first_paragraph = next.first_paragraph;
+            section.last_paragraph = next.last_paragraph;
+        }
+        retired.deinitCurrent(self.allocator);
+    }
+    fn shiftParagraph(value: usize, before: usize, after: usize) !usize {
+        return if (after >= before) std.math.add(usize, value, after - before) catch error.LimitExceeded else std.math.sub(usize, value, before - after) catch error.InvalidParagraphIndex;
     }
 
     pub fn setParagraphMargins(self: *Session, section: usize, paragraph: usize, margins: @import("paragraph_margin_patch.zig").Patch) !bool {
@@ -968,7 +1052,11 @@ pub fn open(a: std.mem.Allocator, input: []const u8, options: Options) !Session 
         const first = counters.paragraphs + 1;
         const locations = try locations_module.buildParsedWithCounters(a, &parsed, &sites, siteOptions(options), &counters);
         errdefer a.free(locations);
-        try sections.append(a, .{ .tree = tree, .sites = sites, .locations = locations, .entry_index = entry_index, .first_paragraph = first, .source_first_paragraph = first, .last_paragraph = counters.paragraphs });
+        const original_basis = try a.create(@import("section_source_basis.zig").Basis);
+        errdefer a.destroy(original_basis);
+        original_basis.* = try @import("section_source_basis.zig").Basis.init(a, tree, locations, first, counters.paragraphs);
+        errdefer a.free(original_basis.uri_indices);
+        try sections.append(a, .{ .original_basis = original_basis, .tree = tree, .sites = sites, .locations = locations, .entry_index = entry_index, .first_paragraph = first, .source_first_paragraph = first, .last_paragraph = counters.paragraphs });
         xml_bytes += xml.len;
     }
     // Malformed field semantics remain query errors, not a new open failure.

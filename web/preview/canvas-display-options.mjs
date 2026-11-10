@@ -2,6 +2,7 @@
 export const DEFAULT_CANVAS_DISPLAY_OPTIONS = Object.freeze({
   paragraphMarks: false,
   formattingMarks: false,
+  showTableGrid: false,
 });
 export function canvasDisplayOptions(value) {
   if (
@@ -13,7 +14,9 @@ export function canvasDisplayOptions(value) {
   const keys = Reflect.ownKeys(value);
   if (
     !keys.includes('paragraphMarks') ||
-    keys.some((key) => key !== 'paragraphMarks' && key !== 'formattingMarks')
+    keys.some(
+      (key) => key !== 'paragraphMarks' && key !== 'formattingMarks' && key !== 'showTableGrid',
+    )
   )
     throw new TypeError('InvalidCanvasDisplayOptions');
   const descriptor = Object.getOwnPropertyDescriptor(value, 'paragraphMarks');
@@ -26,6 +29,12 @@ export function canvasDisplayOptions(value) {
     if (!marks || !('value' in marks) || typeof marks.value !== 'boolean')
       throw new TypeError('InvalidCanvasDisplayOptions');
     result.formattingMarks = marks.value;
+  }
+  if (keys.includes('showTableGrid')) {
+    const grid = Object.getOwnPropertyDescriptor(value, 'showTableGrid');
+    if (!grid || !('value' in grid) || typeof grid.value !== 'boolean')
+      throw new TypeError('InvalidCanvasDisplayOptions');
+    result.showTableGrid = grid.value;
   }
   return Object.freeze(result);
 }

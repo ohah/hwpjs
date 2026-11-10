@@ -1,3 +1,5 @@
+import type { EditorState } from '@hwpjs/core';
+import type { ContextTarget } from './context-menu.ts';
 import {
   generatedTableGridCommands,
   generatedTableGridReason,
@@ -5,9 +7,21 @@ import {
   type GeneratedTableGridPort,
 } from './generated-table-grid-port.ts';
 
-export function createGeneratedTableGridTool(options: {
+export function createGeneratedTableGridTool<
+  Capture extends { readonly state: EditorState },
+>(options: {
   root?: HTMLElement;
-  port: GeneratedTableGridPort;
+  port: {
+    capture(): Capture;
+    apply(
+      lease: Capture,
+      command: GeneratedTableGridCommand,
+    ): ReturnType<GeneratedTableGridPort['apply']>;
+    presentation: GeneratedTableGridPort['presentation'];
+    contextTarget(): ContextTarget | null;
+    reason?(code: string): string;
+    dispose(): void;
+  };
   onStatus: (message: string) => void;
   onPresentationChange: () => void;
 }) {
@@ -63,7 +77,7 @@ export function createGeneratedTableGridTool(options: {
               ? '변경은 반영됐지만 표시 확인이 필요합니다. 다시 적용하지 마세요.'
               : result.status === 'known-no-op'
                 ? '표의 행·열 변경이 없습니다.'
-                : generatedTableGridReason(
+                : (options.port.reason ?? generatedTableGridReason)(
                     typeof result.error === 'string' ? result.error : 'Failed',
                   ),
         );

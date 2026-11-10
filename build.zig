@@ -163,6 +163,7 @@ pub fn build(b: *std.Build) void {
     inline for (.{
         .{ "src/h5_source_table_grid_probe.zig", "HWP5 source table grid" },
         .{ "src/hx_source_table_grid_probe.zig", "source grid" },
+        .{ "src/hx_source_table_grid_multirun_probe.zig", "source grid multirun" },
     }) |entry| {
         const probe = b.addTest(.{
             .use_llvm = true,
@@ -193,6 +194,37 @@ pub fn build(b: *std.Build) void {
     run_source_grid_abi.has_side_effects = true;
     source_grid_abi_step.dependOn(&run_source_grid_abi.step);
     core_test_step.dependOn(&run_source_grid_abi.step);
+
+    const source_basis_step = b.step("test-section-source-bases", "Verify current source provenance checkpoint ownership");
+    inline for (.{
+        .{ "src/h5_section_source_basis_probe.zig", "basis" },
+        .{ "src/hx_section_source_basis_probe.zig", "section source basis" },
+        .{ "src/hx_suffix_source_coordinates_probe.zig", "suffix source coordinates" },
+    }) |entry| {
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{ .root_source_file = b.path(entry[0]), .target = target, .optimize = optimize }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        source_basis_step.dependOn(&run_probe.step);
+        core_test_step.dependOn(&run_probe.step);
+    }
+    const source_live_step = b.step("test-source-table-grid-live", "Verify source grid native sessions with explicit approved fixtures");
+    inline for (.{
+        .{ "src/h5_source_table_grid_session_probe.zig", "HWP5 live source grid" },
+        .{ "src/hx_source_table_grid_session_probe.zig", "source grid session" },
+    }) |entry| {
+        const probe = b.addTest(.{
+            .use_llvm = true,
+            .filters = &.{entry[1]},
+            .root_module = b.createModule(.{ .root_source_file = b.path(entry[0]), .target = target, .optimize = optimize }),
+        });
+        const run_probe = b.addRunArtifact(probe);
+        run_probe.has_side_effects = true;
+        source_live_step.dependOn(&run_probe.step);
+    }
 
     // Whole-file candidates require explicit approved fixture inputs; keep out of generic tests.
     const source_grid_file_step = b.step("test-source-table-grid-files", "Verify bounded original-table file transforms with explicit fixtures");

@@ -1833,6 +1833,162 @@ var init_cell_style_command = __esmMin((() => {
 	init_cell_border_batch();
 	init_cell_border_patch_command();
 	init_cell_fill_command();
+})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, REQUIRED_FUNCTIONS;
+var init_abi_schema = __esmMin((() => {
+	CREATED_TABLE_GRID_ACTION = Object.freeze({
+		insert_row: 0,
+		delete_row: 1,
+		insert_column: 2,
+		delete_column: 3
+	});
+	EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
+		"hwp5_edit_open",
+		"hwp5_edit_close",
+		"hwp5_edit_section_count",
+		"hwp5_edit_paragraph_count",
+		"hwp5_edit_char_shape_count",
+		"hwp5_edit_copy_text",
+		"hwp5_edit_splice",
+		"hwp5_edit_format",
+		"hwp5_edit_save",
+		"hwp5_edit_output_ptr",
+		"hwp5_edit_output_len",
+		"hwp5_edit_output_free",
+		"hwp5_edit_reflow"
+	]);
+	Object.freeze(["hwpx_edit_document_provenance"]);
+	Object.freeze({
+		header_bytes: 8,
+		node_bytes: 56,
+		parent: 0,
+		kind: 4,
+		name_len: 8,
+		content_len: 12,
+		state: 16,
+		reserved: 20,
+		created: 24,
+		modified: 32,
+		clsid: 40
+	});
+	Object.freeze({
+		name: 0,
+		path: 1,
+		content: 2,
+		clsid: 3
+	});
+	Object.freeze({
+		kind: 0,
+		color: 1,
+		left: 2,
+		right: 3,
+		child: 4,
+		state: 5,
+		created: 6,
+		modified: 7,
+		start: 8,
+		size: 9,
+		uses_fat: 10,
+		has_content: 11
+	});
+	REQUIRED_FUNCTIONS = Object.freeze([
+		"hwpjs_abi_version",
+		"cfb_alloc",
+		"cfb_free",
+		"cfb_open",
+		"cfb_open_strict",
+		"cfb_find_exact",
+		"cfb_write",
+		"cfb_document",
+		"cfb_output_ptr",
+		"cfb_output_len",
+		"cfb_output_free",
+		"cfb_close",
+		"cfb_error_ptr",
+		"cfb_error_len",
+		"cfb_error_code_ptr",
+		"cfb_error_code_len",
+		"cfb_count",
+		"cfb_find",
+		"cfb_find_snapshot",
+		"cfb_field_ptr",
+		"cfb_field_len",
+		"cfb_value",
+		"cfb_sector_count",
+		"cfb_raw_ptr",
+		"cfb_raw_len",
+		"hwp5_text_read",
+		"hwp5_text_ptr",
+		"hwp5_text_len",
+		"hwp5_text_free"
+	]);
+}));
+// ../../js/source-table-grid.mjs
+/** @typedef {{section: number, tableNode: number, expectedRows: number, expectedColumns: number, action: 'insert-row' | 'delete-row' | 'insert-column' | 'delete-column', index: number, layout?: 'spec6' | 'observed8'}} SourceTableGridRequest */
+/** Capture only owned data; never invoke getters or caller conversion hooks. */
+function captureSourceTableGridRequest(input, format) {
+	if (!input || typeof input !== "object" || Array.isArray(input) || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw new TypeError("InvalidSourceTableGridRequest");
+	const captured = Object.create(null);
+	for (const key of Reflect.ownKeys(input)) {
+		if (!fields$6.includes(key) && key !== "layout") throw new TypeError("InvalidSourceTableGridRequest");
+		const descriptor = Object.getOwnPropertyDescriptor(input, key);
+		if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidSourceTableGridRequest");
+		captured[key] = descriptor.value;
+	}
+	for (const key of [
+		"section",
+		"tableNode",
+		"expectedRows",
+		"expectedColumns",
+		"index"
+	]) {
+		const value = captured[key];
+		if (typeof value !== "number" || !Number.isInteger(value) || Object.is(value, -0) || value < 0 || value > 4294967295) throw new RangeError("InvalidSourceTableGridInteger");
+	}
+	if (!captured.expectedRows || !captured.expectedColumns) throw new RangeError("InvalidSourceTableGridDimensions");
+	if (typeof captured.action !== "string" || !Object.hasOwn(actions$2, captured.action)) throw new TypeError("InvalidSourceTableGridAction");
+	if (Object.hasOwn(captured, "layout") && captured.layout !== "spec6" && !(captured.layout === "observed8" && format === "hwp5")) throw new TypeError("InvalidSourceTableGridLayout");
+	const row = captured.action === "insert-row" || captured.action === "delete-row";
+	const insert = captured.action === "insert-row" || captured.action === "insert-column";
+	const axis = row ? captured.expectedRows : captured.expectedColumns;
+	if (captured.index > axis || !insert && (captured.index === axis || axis === 1) || insert && axis === 4294967295) throw new RangeError("InvalidSourceTableGridBounds");
+	return Object.freeze(captured);
+}
+/** Optional ABI 6 addition: presence of the actual export is the capability. */
+function createSourceTableGridApi({ wasm, memory, check, prefix, unavailable }) {
+	const name = `${prefix}_source_table_grid`;
+	const format = prefix === "hwp5_edit" ? "hwp5" : "hwpx";
+	return {
+		supportsSourceTableGrid() {
+			check();
+			return typeof wasm[name] === "function";
+		},
+		/** @param {SourceTableGridRequest} request */
+		editSourceTableGrid(request) {
+			check();
+			const value = captureSourceTableGridRequest(request, format);
+			const action = wasm[name];
+			if (typeof action !== "function") throw new Error(unavailable);
+			if (action(value.section, value.tableNode, value.expectedRows, value.expectedColumns, actions$2[value.action], value.index, value.layout === "observed8" ? 1 : 0) !== 1) throw memory.error();
+		}
+	};
+}
+var fields$6, actions$2;
+var init_source_table_grid = __esmMin((() => {
+	init_abi_schema();
+	fields$6 = [
+		"section",
+		"tableNode",
+		"expectedRows",
+		"expectedColumns",
+		"action",
+		"index"
+	];
+	actions$2 = Object.freeze({
+		"insert-row": CREATED_TABLE_GRID_ACTION.insert_row,
+		"delete-row": CREATED_TABLE_GRID_ACTION.delete_row,
+		"insert-column": CREATED_TABLE_GRID_ACTION.insert_column,
+		"delete-column": CREATED_TABLE_GRID_ACTION.delete_column
+	});
 }));
 // ../../js/atomic-formatting-api.mjs
 function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
@@ -1964,95 +2120,7 @@ function ownedJSON(value, seen = /* @__PURE__ */ new Set()) {
 		seen.delete(value);
 	}
 }
-var init_atomic_formatting_api = __esmMin((() => {})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, REQUIRED_FUNCTIONS;
-var init_abi_schema = __esmMin((() => {
-	CREATED_TABLE_GRID_ACTION = Object.freeze({
-		insert_row: 0,
-		delete_row: 1,
-		insert_column: 2,
-		delete_column: 3
-	});
-	EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
-		"hwp5_edit_open",
-		"hwp5_edit_close",
-		"hwp5_edit_section_count",
-		"hwp5_edit_paragraph_count",
-		"hwp5_edit_char_shape_count",
-		"hwp5_edit_copy_text",
-		"hwp5_edit_splice",
-		"hwp5_edit_format",
-		"hwp5_edit_save",
-		"hwp5_edit_output_ptr",
-		"hwp5_edit_output_len",
-		"hwp5_edit_output_free",
-		"hwp5_edit_reflow"
-	]);
-	Object.freeze(["hwpx_edit_document_provenance"]);
-	Object.freeze({
-		header_bytes: 8,
-		node_bytes: 56,
-		parent: 0,
-		kind: 4,
-		name_len: 8,
-		content_len: 12,
-		state: 16,
-		reserved: 20,
-		created: 24,
-		modified: 32,
-		clsid: 40
-	});
-	Object.freeze({
-		name: 0,
-		path: 1,
-		content: 2,
-		clsid: 3
-	});
-	Object.freeze({
-		kind: 0,
-		color: 1,
-		left: 2,
-		right: 3,
-		child: 4,
-		state: 5,
-		created: 6,
-		modified: 7,
-		start: 8,
-		size: 9,
-		uses_fat: 10,
-		has_content: 11
-	});
-	REQUIRED_FUNCTIONS = Object.freeze([
-		"hwpjs_abi_version",
-		"cfb_alloc",
-		"cfb_free",
-		"cfb_open",
-		"cfb_open_strict",
-		"cfb_find_exact",
-		"cfb_write",
-		"cfb_document",
-		"cfb_output_ptr",
-		"cfb_output_len",
-		"cfb_output_free",
-		"cfb_close",
-		"cfb_error_ptr",
-		"cfb_error_len",
-		"cfb_error_code_ptr",
-		"cfb_error_code_len",
-		"cfb_count",
-		"cfb_find",
-		"cfb_find_snapshot",
-		"cfb_field_ptr",
-		"cfb_field_len",
-		"cfb_value",
-		"cfb_sector_count",
-		"cfb_raw_ptr",
-		"cfb_raw_len",
-		"hwp5_text_read",
-		"hwp5_text_ptr",
-		"hwp5_text_len",
-		"hwp5_text_free"
-	]);
-}));
+var init_atomic_formatting_api = __esmMin((() => {}));
 // ../../js/abi.mjs
 function validateAbi(wasm) {
 	if (typeof wasm.hwpjs_abi_version !== "function") throw new Error("Missing HWPJS ABI version");
@@ -5199,6 +5267,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		return output(() => wasm.hwp5_edit_copy_text(u32(section, "section"), u32(paragraph, "paragraph"))).bytes;
 	};
 	return {
+		...createSourceTableGridApi({
+			wasm,
+			memory,
+			check,
+			prefix: "hwp5_edit",
+			unavailable: "Hwp5SourceTableGridAbiUnavailable"
+		}),
 		...createAtomicFormattingApi({
 			wasm,
 			memory,
@@ -6142,6 +6217,7 @@ var init_hwp5_editor = __esmMin((() => {
 	init_cell_border_patch_command();
 	init_cell_style_command();
 	init_cell_fill_command();
+	init_source_table_grid();
 	init_atomic_formatting_api();
 	init_abi();
 	init_cell_size_batch();
@@ -9369,6 +9445,13 @@ async function createHwpxEditor(source) {
 			uint,
 			error: () => memory.error()
 		}),
+		...createSourceTableGridApi({
+			wasm,
+			memory,
+			check: ready,
+			prefix: "hwpx_edit",
+			unavailable: "HwpxSourceTableGridAbiUnavailable"
+		}),
 		...createAtomicFormattingApi({
 			wasm,
 			memory,
@@ -11448,6 +11531,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_cell_border_patch_command();
 	init_cell_style_command();
 	init_cell_fill_command();
+	init_source_table_grid();
 	init_atomic_formatting_api();
 	init_hwpx_read_scope();
 	init_hwpx_drawing_text_requested();

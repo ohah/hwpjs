@@ -18,7 +18,7 @@ pub const Request = struct {
     max_bytes: usize = 16 * 1024 * 1024,
     max_cells: usize = 4096,
 };
-const Cell = struct { node: usize, addr: usize, size: usize, paragraph: usize, text: usize, width: u32, height: u32 };
+const Cell = struct { node: usize, addr: usize, size: usize, paragraph: usize, texts: []const tree_mod.Span, width: u32, height: u32 };
 const Grid = struct { rows: []usize, cells: []Cell, size: usize, width: u32, height: u32 };
 fn number(a: std.mem.Allocator, t: *const Tree, node: usize, name: []const u8) !u32 {
     return try fields.optionalUnsigned(a, t, node, name, 4096) orelse error.InvalidSourceTableGrid;
@@ -153,12 +153,22 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
             try attributes(a, t, p, &.{ "id", "paraPrIDRef", "styleIDRef", "pageBreak", "columnBreak", "merged" });
             try zero(a, t, p, &.{ "pageBreak", "columnBreak", "merged" });
             try allowed(t, p, &.{"run"});
-            const run = try child(t, p, "run");
-            try attributes(a, t, run, &.{"charPrIDRef"});
-            try allowed(t, run, &.{"t"});
-            const text = try child(t, run, "t");
-            try attributes(a, t, text, &.{});
-            try allowed(t, text, &.{});
+            // Direct plain runs only. Empty runs are valid formatting shells,
+            // including those preserved by an earlier blank-cell insertion.
+            if (t.elements[p].first_child == null) return error.UnsupportedSourceTableStructure;
+            var texts: std.ArrayList(tree_mod.Span) = .empty;
+            var runs = t.elements[p].first_child;
+            while (runs) |run| : (runs = t.elements[run].next_sibling) {
+                try attributes(a, t, run, &.{"charPrIDRef"});
+                try allowed(t, run, &.{"t"});
+                var next_text = t.elements[run].first_child;
+                while (next_text) |text| : (next_text = t.elements[text].next_sibling) {
+                    try attributes(a, t, text, &.{});
+                    try allowed(t, text, &.{});
+                    const e = t.elements[text];
+                    if (e.end_tag) |end| try texts.append(a, .{ .start = e.start_tag.end, .end = end.start });
+                }
+            }
             inline for (.{ .{ addr, &.{ "rowAddr", "colAddr" } }, .{ span, &.{ "rowSpan", "colSpan" } }, .{ sz, &.{ "width", "height" } } }) |item| {
                 try attributes(a, t, item[0], item[1]);
                 try allowed(t, item[0], &.{});
@@ -173,7 +183,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
             const w = try number(a, t, sz, "width");
             const h = try number(a, t, sz, "height");
             if (w == 0 or h == 0 or (r > 0 and w != cells[c].width) or (c > 0 and h != cells[r * cols].height)) return error.UnsupportedSourceTableGeometry;
-            cells[r * cols + c] = .{ .node = cell, .addr = addr, .size = sz, .paragraph = p, .text = text, .width = w, .height = h };
+            cells[r * cols + c] = .{ .node = cell, .addr = addr, .size = sz, .paragraph = p, .texts = texts.items, .width = w, .height = h };
             c += 1;
         }
         if (c != cols) return error.InvalidSourceTableGrid;
@@ -208,10 +218,22 @@ fn cellXml(a: std.mem.Allocator, t: *const Tree, cell: Cell, r: u32, c: u32, fre
     try patch(a, t, &changes, cell.addr, &.{ "rowAddr", "colAddr" }, .{ r, c }, limit);
     if (fresh) |id| {
         try patch(a, t, &changes, cell.paragraph, &.{"id"}, .{id}, limit);
-        const text = t.elements[cell.text];
-        if (text.end_tag) |end| try changes.append(a, .{ .start = text.start_tag.end, .end = end.start, .text = "", .serialized_xml = "" });
     }
-    return fragment(a, t, cell.node, changes.items, limit, false);
+    // Only the two shell attributes need constant-size sorting. Text spans
+    // were collected once in source order; never sort or rescan per clone.
+    std.mem.sort(writer.Change, changes.items, {}, less);
+    if (fresh != null) {
+        var ordered: std.ArrayList(writer.Change) = .empty;
+        var attribute: usize = 0;
+        for (cell.texts) |span| {
+            while (attribute < changes.items.len and changes.items[attribute].start < span.start) : (attribute += 1)
+                try ordered.append(a, changes.items[attribute]);
+            try ordered.append(a, .{ .start = span.start, .end = span.end, .text = "", .serialized_xml = "" });
+        }
+        try ordered.appendSlice(a, changes.items[attribute..]);
+        return fragment(a, t, cell.node, ordered.items, limit, true);
+    }
+    return fragment(a, t, cell.node, changes.items, limit, true);
 }
 /// Source borrowed; caller owns successful bytes. Arena isolates all preparation
 /// allocations; validation completes before the final owned copy is returned.

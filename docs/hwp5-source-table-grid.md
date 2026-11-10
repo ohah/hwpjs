@@ -1,6 +1,6 @@
 # HWP5 원본 표 격자 후보
 
-`src/hwp5/edit/source_table_grid.zig`는 명시된 원본 Section의 TABLE 레코드와 예상 행·열 수를 받아 새 구역 바이트만 반환하는 private 후보입니다. 세션·이력·WASM에는 아직 연결하지 않았습니다. 파일 컨테이너 저장은 아래 private 어댑터에서 별도로 검증합니다. 생성 표의 웹 명령 지원과 구분합니다.
+`src/hwp5/edit/source_table_grid.zig`는 명시된 원본 Section의 TABLE 레코드와 예상 행·열 수를 받아 새 구역 바이트만 반환하는 private 후보입니다. 세션·이력·WASM 연결은 [live 편집 계약](source-table-grid-live-edit.md)을 따릅니다. 파일 컨테이너 저장은 아래 어댑터에서 별도로 검증합니다. 생성 표의 웹 명령 지원과 구분합니다.
 
 공식 HWP5 revision1.2의 표75/79/80과 기존 프로젝트 framing/tree/list-group 모듈을 사용합니다. ListHeader는 spec6/observed8을 호출자가 명시하며 길이나 버전으로 추측하지 않습니다. 전체 문서의 새 문단 ID 발급은 호출자 책임이고 후보는 현재 구역 내 충돌·중복·0값을 추가 거부합니다. 현재 레코드 번호와 예상 크기는 내용 지문이나 영구 identity가 아닙니다.
 

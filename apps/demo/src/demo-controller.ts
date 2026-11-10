@@ -1,7 +1,4 @@
-import {
-  createGeneratedTableGridPort,
-  type GeneratedTableGridHost,
-} from './generated-table-grid-port.ts';
+import { createTableGridPort, type TableGridHost } from './table-grid-port.ts';
 import { createGeneratedTableGridTool } from './generated-table-grid-tool.ts';
 import { createPresentationRefresh } from './presentation-refresh.ts';
 import { pageStatusLabel, type DemoPageStatusHost } from './page-status.ts';
@@ -69,7 +66,7 @@ import { getInitialAvailableFixtures, fetchAvailableFixtures } from './available
 import { fixtureUrl } from '../../../web/preview/fixture-catalog.mjs';
 
 export interface DemoHost
-  extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, GeneratedTableGridHost {
+  extends SurfaceFormattingHost, SurfaceClipboardPort, DemoPageStatusHost, TableGridHost {
   /** undefined는 관측 미연결/불확실, null은 현재 그림 선택 없음입니다. */
   getContextPicture?(): ContextPicture | null | undefined;
   canRequestHistory?(kind: 'undo' | 'redo'): boolean;
@@ -208,7 +205,7 @@ export async function mountDemo(
   });
   const generatedTableGrid = createGeneratedTableGridTool({
     root,
-    port: createGeneratedTableGridPort(editor, paragraphShapeCore, () => host),
+    port: createTableGridPort(editor, paragraphShapeCore, () => host),
     onStatus: note,
     onPresentationChange: () => shell.update(),
   });
