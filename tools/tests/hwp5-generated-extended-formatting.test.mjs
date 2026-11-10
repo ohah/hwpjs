@@ -23,9 +23,6 @@ const oracleRoot = process.env.HWPJS_TEST_ORACLE_ROOT
 const { verifyCharacterProperties } = await import(
   new URL('tests/hwp5/style-preservation/character-property-oracle.mjs', oracleRoot)
 );
-const { verifyNamedFontBatch } = await import(
-  new URL('tests/hwp5/character-font-name-batch-oracle.mjs', oracleRoot)
-);
 const { inspect, records } = await import(
   new URL('tests/hwp5/style-preservation/text-record-oracle.mjs', oracleRoot)
 );
@@ -95,8 +92,19 @@ function independent(before, after, entry) {
       ...range,
       properties: { textColor: 0x123456 },
     });
-  if (entry.kind === 'character-font-name')
-    return verifyNamedFontBatch(before, after, 0, entry.wire.name, [range]);
+  if (entry.kind === 'character-font-name') {
+    const source = inspect(before);
+    const mapping = records(source.decode(source.streams.get('DocInfo'))).find(
+      (record) => record.tag === 17,
+    );
+    const fontIds = [mapping.payload.readInt32LE(4), null, null, null, null, null, null];
+    assert.deepEqual(source.metadata, inspect(after).metadata);
+    return verifyCharacterProperties(before, after, {
+      ...range,
+      properties: { fontIds },
+      fontResource: { language: 0, name: entry.wire.name },
+    });
+  }
   const a = inspect(before),
     b = inspect(after);
   const oldShapes = records(a.decode(a.streams.get('DocInfo'))).filter((r) => r.tag === 21);
