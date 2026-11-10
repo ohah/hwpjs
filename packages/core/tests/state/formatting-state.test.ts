@@ -209,3 +209,30 @@ test('underline observes its own capability and current resource inventory indep
   assert.equal(collapsed.underlineAvailableReason, 'EmptyCharacterSelection');
   assert.equal(collapsed.underline, true);
 });
+
+test('complete generated body binding enables only properties and paragraph alignment', () => {
+  const reference = {
+    epoch: '4',
+    scope: 'session:1',
+    kind: 'generated',
+    section: 0,
+    id: '19',
+    row: 0,
+    column: 0,
+  };
+  const s = snapshot(
+    target,
+    { currentReference: reference },
+    { characterUnderlineAvailable: true, characterStrikeAvailable: true },
+  );
+  const f = getSelectionFormatting(s);
+  assert.equal(f.characterAvailableReason, null);
+  assert.equal(f.paragraphAvailableReason, null);
+  assert.equal(f.underlineAvailableReason, 'UnsupportedFormattingReference');
+  assert.equal(f.strikeAvailableReason, 'UnsupportedFormattingReference');
+  const caret = getSelectionFormatting(
+    snapshot({ ...target, endUnit: 0 }, { currentReference: reference }),
+  );
+  assert.equal(caret.characterAvailableReason, 'EmptyCharacterSelection');
+  assert.equal(caret.paragraphAvailableReason, null);
+});

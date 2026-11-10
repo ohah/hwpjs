@@ -5,6 +5,7 @@ import type {
 } from './commands.ts';
 import type { EditorState } from '../state/editor-state.ts';
 import { selectionMessage, validateSelection } from './selection.ts';
+import { currentParagraphReference } from './current-paragraph-reference.ts';
 import { validateOriginalParagraphReference } from './original-paragraph-reference.ts';
 // @ts-ignore Canonical native facade argument encoder; no independent bit definitions.
 import { characterPropertyArgs } from '../../../../js/character-property-args.mjs';
@@ -48,11 +49,32 @@ export function validateFormattingTarget(
     target.owner !== `section:${target.section}:body`
   )
     throw Error('UnsupportedFormattingOwner');
-  validateOriginalParagraphReference(target, row, 'UnsupportedFormattingReference');
-  // reference is deliberately not sent: the canonical commands do not consume it.
+  const generated =
+    target.format === 'hwp5' &&
+    (row.currentReference as { kind?: unknown } | undefined)?.kind === 'generated';
+  let reference: unknown;
+  if (
+    generated &&
+    (capability === 'characterPropertiesAvailable' || capability === 'paragraphAlignmentAvailable')
+  ) {
+    reference = currentParagraphReference(
+      row.currentReference,
+      target.section,
+      'UnsupportedFormattingReference',
+    );
+    if (
+      target.owner !== `section:${target.section}:body` ||
+      row.tableCell ||
+      row.drawingText ||
+      row.drawingCaption
+    )
+      throw Error('UnsupportedFormattingOwner');
+  } else {
+    validateOriginalParagraphReference(target, row, 'UnsupportedFormattingReference');
+  }
   const { reference: _, ...range } = position;
   if (character && target.startUnit === target.endUnit) throw Error('EmptyCharacterSelection');
-  return range;
+  return { ...range, ...(reference === undefined ? {} : { reference }) };
 }
 
 export function formattingMessage(
@@ -73,5 +95,6 @@ export function formattingMessage(
     section: range.section,
     paragraph: range.paragraph,
     alignment,
+    ...(range.reference === undefined ? {} : { reference: range.reference }),
   };
 }

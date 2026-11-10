@@ -104,6 +104,10 @@ export async function collectInsert(editor: HeadlessEditor, target: SelectionTar
 }
 ```
 
+## 편집 중 새로 만든 HWP5 문단의 서식
+
+현재 main과 웹 데모 SDK에서는 HWP5 본문에서 Enter로 만든 문단도 `SET_CHARACTER_PROPERTIES_COMMAND`의 굵게·기울임·글자 크기와 `SET_PARAGRAPH_ALIGNMENT_COMMAND`의 대상으로 사용할 수 있습니다. 글자 속성은 텍스트 선택에 적용하고 문단 정렬은 커서만 있어도 적용할 수 있습니다. 명령 실행 직전에 현재 문단 참조와 본문 소유권을 확인합니다. 글자 모양 전체·밑줄·취소선·글꼴·atomic patch·생성 셀의 지원을 함께 확대한 것은 아닙니다. npm 게시는 별도입니다.
+
 ## 표 삽입 전 대상 확인
 
 `getTableInsertAvailability(state, target)`는 현재 선택에서 표를 삽입할 수 있는지 조회합니다. UI와 실제 삽입 명령이 같은 대상 검증을 사용합니다. `allowed`와 `reason`을 확인하세요. 허용 시에는 검증된 기본 리소스 `resources`도 반환합니다. 실제 크기·리소스와 대상은 명령 실행 시 다시 검증합니다. 플레이그라운드에서 같은 이름의 항목을 선택하면 문서를 변경하지 않고 실제 함수를 호출합니다.

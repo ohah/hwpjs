@@ -1,3 +1,4 @@
+import { validateHwp5CurrentBodyReference } from './hwp5-current-body-reference.mjs';
 import { validateCellStylesMessage } from '../../js/cell-style-command.mjs';
 import { formattingCapabilities, queryAtomicFormatting } from './atomic-formatting-command.mjs';
 import { createDisplayResourceCache } from './display-resource-cache.mjs';
@@ -1932,6 +1933,13 @@ export function createReaderRuntime({
         if (format !== 'hwp5' && format !== 'hwpx')
           throw new Error('UnsupportedCharacterPropertiesEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        if (format === 'hwp5')
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentFormattingReference',
+            'UnsupportedFormattingOwner',
+          );
         editor.setCharacterProperties({
           section: message.section,
           paragraph: message.paragraph + (format === 'hwpx' ? 1 : 0),
@@ -1977,6 +1985,13 @@ export function createReaderRuntime({
         if (format !== 'hwpx' && format !== 'hwp5')
           throw new Error('UnsupportedParagraphAlignmentEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
+        if (format === 'hwp5')
+          validateHwp5CurrentBodyReference(
+            editor,
+            message,
+            'InvalidCurrentFormattingReference',
+            'UnsupportedFormattingOwner',
+          );
         editor.setParagraphAlignment({
           section: message.section,
           paragraph: message.paragraph + (format === 'hwpx' ? 1 : 0),

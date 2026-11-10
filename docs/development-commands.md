@@ -1815,3 +1815,13 @@ bun test --no-install apps/demo/tests/contextual-table-row-shortcut.test.ts \
 ```sh
 node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.test.mjs
 ```
+
+
+## HWP5 생성 본문 문단의 공개 서식
+
+[현재 문단 서식 계약](hwp5-current-paragraph-formatting.md)을 따릅니다. 공개 명령·순수 관측과 공통 Native 바인딩 검사 회귀는 다음과 같습니다.
+
+```sh
+bun test packages/core/tests/commands/formatting.test.ts packages/core/tests/state/formatting-state.test.ts
+node --max-old-space-size=256 --test tools/tests/hwp5-current-table-insertion.test.mjs
+```

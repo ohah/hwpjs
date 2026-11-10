@@ -548,3 +548,5 @@
 - [표 삽입 대상 가용성과 기본 리소스 조회](table-insert-target-availability.md)
 
 - [표 안 Ctrl+Enter 행 삽입과 문맥 단축키](contextual-table-row-shortcut.md)
+
+- [HWP5 생성 본문 문단의 공개 서식 명령](hwp5-current-paragraph-formatting.md)

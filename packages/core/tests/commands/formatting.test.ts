@@ -152,3 +152,91 @@ test('paragraph permits anchor-spanning selection while character rejects protec
     await e.dispose();
   }
 });
+
+const generatedReference = {
+  epoch: '4',
+  scope: 'session:1',
+  kind: 'generated',
+  section: 0,
+  id: '19',
+  row: 0,
+  column: 0,
+};
+for (const properties of [{ bold: true }, { italic: true }, { size: 1800 }])
+  test(`generated body public properties ${JSON.stringify(properties)} keep current reference and source slot`, async () => {
+    const { e, calls, target } = await setup({}, { currentReference: generatedReference });
+    try {
+      const result = await e.dispatchCommand(CHAR, { target, properties });
+      assert.equal(result.status, 'committed-with-snapshot', result.error);
+      const request = calls.find((x) => x.kind === 'character-properties');
+      assert(request);
+      assert.equal(request.paragraph, 0);
+      assert.deepEqual(request.reference, generatedReference);
+      assert.notEqual(request.reference, generatedReference);
+      assert.deepEqual({ ...request.properties }, properties);
+    } finally {
+      await e.dispose();
+    }
+  });
+test('generated body paragraph alignment carries binding even at collapsed caret', async () => {
+  const { e, calls, target } = await setup({}, { currentReference: generatedReference });
+  try {
+    const result = await e.dispatchCommand(ALIGN, {
+      target: { ...target, endUnit: 0 },
+      alignment: 'CENTER',
+    });
+    assert.equal(result.status, 'committed-with-snapshot', result.error);
+    const request = calls.find((x) => x.kind === 'paragraph-alignment');
+    assert.equal(request.paragraph, 0);
+    assert.equal(request.alignment, 'CENTER');
+    assert.deepEqual(request.reference, generatedReference);
+  } finally {
+    await e.dispose();
+  }
+});
+test('generated body property selection reuses existing display-to-source offset mapping', async () => {
+  const { e, calls, target } = await setup(
+    {},
+    {
+      currentReference: generatedReference,
+      sourceOffsets: [
+        { at: 0, source: 0 },
+        { at: 1, source: 8 },
+      ],
+    },
+  );
+  try {
+    const result = await e.dispatchCommand(CHAR, {
+      target: { ...target, startUnit: 1, endUnit: 3 },
+      properties: { bold: true },
+    });
+    assert.equal(result.status, 'committed-with-snapshot', result.error);
+    const request = calls.find((x) => x.kind === 'character-properties');
+    assert.equal(request.startUnit, 8);
+    assert.equal(request.endUnit, 10);
+  } finally {
+    await e.dispose();
+  }
+});
+test('generated reference never expands formatting into a table cell or drawing owner', async () => {
+  for (const extra of [
+    { tableCell: { tableNode: 1, listNode: 2 }, selectionOwner: 'section:0:table:1:list:2' },
+    { drawingText: {}, selectionOwner: 'section:0:drawing:1' },
+  ]) {
+    const { e, calls, target } = await setup(
+      {},
+      { ...extra, currentReference: generatedReference },
+    );
+    try {
+      const before = calls.length;
+      const result = await e.dispatchCommand(CHAR, {
+        target: { ...target, owner: extra.selectionOwner },
+        properties: { bold: true },
+      });
+      assert.equal(result.status, 'rejected-unapplied');
+      assert.equal(calls.length, before);
+    } finally {
+      await e.dispose();
+    }
+  }
+});
