@@ -474,7 +474,7 @@ const textOf = (result) =>
 
 test('MCP 세 도구의 엄격 스키마는 누락·추가 키·형식 혼용을 거부한다', () => {
   const tools = documentTools({ executeCLI: async () => 0 });
-  assert.equal(tools.length, 16);
+  assert.equal(tools.length, 17);
   for (const [name, input] of Object.entries(toolInput)) {
     const tool = tools.find((value) => value.name === name);
     assert.ok(tool, name);
@@ -543,7 +543,7 @@ test('공식 MCP 전송으로 세 도구를 호출하고 CLI 파서까지 같은
   });
   await client.connect(clientTransport);
   const listedTools = (await client.listTools()).tools;
-  assert.equal(listedTools.length, 19);
+  assert.equal(listedTools.length, 20);
   for (const name of ['open_document_session', 'read_document_session', 'close_document_session'])
     assert(
       listedTools.some((tool) => tool.name === name),

@@ -9,3 +9,5 @@
 새 지문을 통제 후보에 등록한 뒤 실제 Native의 원본 셀 테두리·채움·대각선, 증분 텍스트의 fresh full 대조, Worker COW·이력과 공개 Worker의 unknown/registered 분기를 검사했습니다. 프로필·입력 사본 소유권 검사도 포함했습니다. 테스트 준비 중 CFB 독립 오라클 부재/허용 fixture 경로 차이로 실패한 실행과 최종 실제 경로 검사를 구분합니다. 근거는 `zig-out/verification/created-table-ui-r1/registered-native-regression-r2.log`, `registered-cell-runtime-final.log`, `registered-public-worker-final.log`입니다. 새 엔진의 전체 문서·조판 동치를 인증한 것은 아닙니다.
 
 빌드한 공개 정적 후보에서 실제 표 편집과 이력을 다시 검사합니다. 프로필 등록과 별개인 CLI fixture 기대 SHA는 [개발 명령](development-commands.md)의 공개 manifest 계약을 사용하며, CI 환경값은 검증된 모듈 지문 목록에 대한 쓰기 통로가 아닙니다.
+
+원본 표 파일 ABI를 추가한 `e2e0333e3e703328a970126aab88e9d2a302a7fb1897e6822cc15b727f4684cc`도 같은 검증 프로필에 추가했습니다. 기존 Native 텍스트·Worker 이력과 원본 셀 표시 검사를 다시 실행했습니다. 첫 묶음의 55개 중 하나는 독립 Python 오라클의 30초 시작/응답 대기에서 시간 초과했고, 해당 입력 단독 재검사는 1개 통과했습니다. 이를 제품 결함 수정이나 최초 묶음 전체 성공으로 표시하지 않습니다. 실패 로그와 단독 재검사 로그는 `source-grid-known-regression-final.log`·`source-grid-independent-oracle-recheck.log`로 보존합니다. 실제 Runtime 대각선·원시 XML 검사와 공개 정적 후보 브라우저 검증도 별도로 구분합니다.

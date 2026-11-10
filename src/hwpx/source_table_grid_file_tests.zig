@@ -165,6 +165,7 @@ test "HWPX source file grid synthetic four commands ZIP preservation and full-pa
 test "HWPX source file grid approved generated real file four commands save reopen" {
     const path = try std.process.Environ.getAlloc(std.testing.environ, a, "HWPJS_TEST_SOURCE_GRID_HWPX");
     defer a.free(path);
+    try requireApprovedFixture("/Users/yoonhb/Documents/workspace/hwpjs", path);
     const input = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(64 * 1024 * 1024));
     defer a.free(input);
     try four(input, "Contents/section0.xml");
@@ -300,11 +301,6 @@ test "HWPX source file grid manifest XML media exact paths and missing entries" 
         };
         try std.testing.expectEqual(@as(usize, 2), fresh);
     }
-    // Media matching stays case-sensitive; suffix matching stays insensitive.
-    const opaque_input = try appendParts(input, "<p:item id='opaque' href='raw.bin' media-type='Application/XML'/>", &.{.{ .name = "raw.bin", .data = "not XML" }});
-    defer a.free(opaque_input);
-    const output = try file.transform(a, opaque_input, req, .{});
-    defer a.free(output);
     for ([_]struct { item: []const u8, extra: []const fixture.Source, err: anyerror }{
         .{ .item = "<p:item id='missing' href='missing.bin' media-type='application/xml'/>", .extra = &.{}, .err = error.MissingEmbeddedEntry },
         .{ .item = "<p:item id='missing' href='DATA.bin' media-type='application/xml'/>", .extra = &.{.{ .name = "data.bin", .data = paragraph }}, .err = error.MissingEmbeddedEntry },
@@ -377,4 +373,197 @@ test "HWPX source file grid large opaque manifest classification" {
     const output = try file.transform(a, bytes, try request(bytes, .{ .delete_column = 1 }, false), .{});
     defer a.free(output);
     try preserved(bytes, output, "Contents/chapter-B.xml");
+}
+
+// Each MIME spelling is a separate test so a failing case cannot mask another.
+fn mediaIds(media: []const u8) !void {
+    const base = try synthetic();
+    defer a.free(base);
+    const item = try std.fmt.allocPrint(a, "<p:item id='mime' href='mime.bin' media-type='{s}'/>", .{media});
+    defer a.free(item);
+    const input = try appendParts(base, item, &.{.{ .name = "mime.bin", .data = "<extra xmlns:p='http://www.hancom.co.kr/hwpml/2011/paragraph'><p:p id='5'/><p:p id='6'/></extra>" }});
+    defer a.free(input);
+    const output = try file.transform(a, input, try request(input, .{ .insert_row = 1 }, false), .{});
+    defer a.free(output);
+    try preserved(input, output, "Contents/chapter-B.xml");
+    var d = try package.inspectDocument(a, output, .{});
+    defer d.deinit(a);
+    var tree = try d.readSectionTree(a, 0, .{});
+    defer tree.deinit(a);
+    var fresh: usize = 0;
+    for (tree.elements, 0..) |_, i| if (fields.childIs(&tree, i, "p")) {
+        const id = (try fields.optionalUnsigned(a, &tree, i, "id", 4096)).?;
+        try std.testing.expect(id != 5 and id != 6);
+        if (id == 7 or id == 8) fresh += 1;
+    };
+    try std.testing.expectEqual(@as(usize, 2), fresh);
+    // Count this .bin XML in the full input inventory too.
+    const remove_req = try request(input, .{ .delete_row = 0 }, false);
+    try std.testing.expectError(error.LimitExceeded, file.transform(a, input, remove_req, .{ .max_paragraphs = 10 }));
+    var before = try package.inspectDocument(a, input, .{});
+    defer before.deinit(a);
+    var total_xml: usize = 0;
+    for (before.archive.entries) |entry| {
+        if (std.mem.eql(u8, entry.name, "mimetype") or std.mem.eql(u8, entry.name, "BinData/opaque.bin")) continue;
+        const bytes = try before.archive.decode(entry, 1024 * 1024);
+        defer a.free(bytes);
+        total_xml += bytes.len;
+    }
+    // Input fits exactly. Deletion fits; insertion fails only on output reopen.
+    const remove = try file.transform(a, input, remove_req, .{ .max_total_xml_bytes = total_xml });
+    defer a.free(remove);
+    try std.testing.expectError(error.LimitExceeded, file.transform(a, input, try request(input, .{ .insert_row = 1 }, false), .{ .max_total_xml_bytes = total_xml }));
+}
+fn mediaSignature(media: []const u8) !void {
+    const base = try synthetic();
+    defer a.free(base);
+    const item = try std.fmt.allocPrint(a, "<p:item id='mime' href='mime.bin' media-type='{s}'/>", .{media});
+    defer a.free(item);
+    const input = try appendParts(base, item, &.{.{ .name = "mime.bin", .data = "<sig:Signature xmlns:sig='http://www.w3.org/2000/09/xmldsig#'/>" }});
+    defer a.free(input);
+    const snapshot = try a.dupe(u8, input);
+    defer a.free(snapshot);
+    if (file.transform(a, input, try request(input, .{ .insert_row = 1 }, false), .{})) |unexpected| {
+        a.free(unexpected);
+        return error.ExpectedSignatureRejection;
+    } else |err| try std.testing.expectEqual(error.SignedDocument, err);
+    try std.testing.expectEqualSlices(u8, snapshot, input);
+}
+test "HWPX source file grid MIME lowercase control IDs" {
+    try mediaIds("application/xml");
+}
+test "HWPX source file grid MIME lowercase control Signature" {
+    try mediaSignature("application/xml");
+}
+test "HWPX source file grid MIME Application/XML IDs" {
+    try mediaIds("Application/XML");
+}
+test "HWPX source file grid MIME Application/XML Signature" {
+    try mediaSignature("Application/XML");
+}
+test "HWPX source file grid MIME APPLICATION/FOO+XML IDs" {
+    try mediaIds("APPLICATION/FOO+XML");
+}
+test "HWPX source file grid MIME APPLICATION/FOO+XML Signature" {
+    try mediaSignature("APPLICATION/FOO+XML");
+}
+test "HWPX source file grid MIME parameters IDs" {
+    for ([_][]const u8{ "application/xml;charset=UTF-8", "Text/Xml ; charset=&quot;UTF-8&quot;", "APPLICATION/FOO+XML; CHARSET=utf-8; note=&quot;a;b&quot;" }) |media| try mediaIds(media);
+}
+test "HWPX source file grid MIME parameters Signature" {
+    for ([_][]const u8{ "application/xml;charset=UTF-8", "Text/Xml ; charset=&quot;UTF-8&quot;", "APPLICATION/FOO+XML; CHARSET=utf-8; note=&quot;a;b&quot;" }) |media| try mediaSignature(media);
+}
+fn aliasedPackage() ![]u8 {
+    const source = try section(a);
+    defer a.free(source);
+    // Distinct manifest IDs and spine references, complete declared two-section
+    // package; only the physical ownership is aliased. No weakened package gate.
+    const hpf = try std.mem.replaceOwned(u8, a, fixture.structure_hpf, "Contents/chapter-A.xml", "Contents/chapter-B.xml");
+    defer a.free(hpf);
+    return fixture.syntheticStructureZipWithHpf(a, hpf, fixture.structure_header, source);
+}
+test "HWPX source file grid section entry alias rejected before mutation" {
+    const input = try aliasedPackage();
+    defer a.free(input);
+    const snapshot = try a.dupe(u8, input);
+    defer a.free(snapshot);
+    var d = try package.inspectDocument(a, input, .{});
+    defer d.deinit(a);
+    var structure = try d.inspectStructure(a, .{});
+    defer structure.deinit(a);
+    try std.testing.expectEqual(@as(usize, 2), structure.sections.len);
+    try std.testing.expectEqual(@as(?bool, true), structure.declared_count_matches);
+    const first = d.manifest.items[structure.sections[0].item_index];
+    const second = d.manifest.items[structure.sections[1].item_index];
+    try std.testing.expect(structure.sections[0].item_index != structure.sections[1].item_index);
+    try std.testing.expectEqual(first.entry_index, second.entry_index);
+    var req = try request(input, .{ .insert_row = 1 }, false);
+    for (0..2) |ordinal| {
+        req.section = ordinal;
+        if (file.transform(a, input, req, .{})) |unexpected| {
+            defer a.free(unexpected);
+            // Retain causal evidence that the old guard edits both logical sections.
+            var after = try package.inspectDocument(a, unexpected, .{});
+            defer after.deinit(a);
+            var other = try after.readSectionTree(a, 1 - ordinal, .{});
+            defer other.deinit(a);
+            for (other.elements, 0..) |_, i| if (fields.childIs(&other, i, "tbl")) {
+                try std.testing.expectEqual(@as(?u32, 3), try fields.optionalUnsigned(a, &other, i, "rowCnt", 4096));
+            };
+            std.debug.print("alias repro: editing section {d} also changed section {d} to 3 rows\n", .{ ordinal, 1 - ordinal });
+            return error.ExpectedSectionAliasRejection;
+        } else |err| try std.testing.expectEqual(error.DuplicateSourceSectionEntry, err);
+    }
+    // Ownership must be checked before the grid mutation/target validation.
+    req.expected_rows = 99;
+    try std.testing.expectError(error.DuplicateSourceSectionEntry, file.transform(a, input, req, .{}));
+    try std.testing.expectEqualSlices(u8, snapshot, input);
+}
+
+const approved_fixture = "/zig-out/verification/created-table-ui-r1/browser-public-r1/vanilla-hwpx.hwpx";
+// Pure lexical check. Do not stat, resolve, open or hash a supplied path.
+fn requireApprovedFixture(root: []const u8, supplied: []const u8) !void {
+    if (!std.fs.path.isAbsolute(supplied) or supplied.len != root.len + approved_fixture.len or
+        !std.mem.startsWith(u8, supplied, root) or !std.mem.endsWith(u8, supplied, approved_fixture) or
+        std.mem.indexOf(u8, supplied, "hwpers") != null or
+        std.mem.indexOf(u8, supplied, "title-column-roundtrip") != null or
+        std.mem.indexOfAny(u8, supplied, "\x00\\") != null) return error.UnapprovedSourceGridFixture;
+    var components = std.mem.splitScalar(u8, supplied[1..], '/');
+    while (components.next()) |component| {
+        if (component.len == 0 or std.mem.eql(u8, component, ".") or std.mem.eql(u8, component, "..")) return error.UnapprovedSourceGridFixture;
+    }
+}
+test "HWPX source file grid fixture gate rejects protected malformed paths before IO" {
+    const root = "/independent-workspace";
+    try requireApprovedFixture(root, root ++ approved_fixture);
+    for ([_][]const u8{
+        "",                                        "relative.hwpx",                                         root ++ "/legacy/hwpers/private.hwp",
+        root ++ "/hwpers_test4_complex_table.hwp", root ++ "/tests/hwpx/title-column-roundtrip.test.mjs",   "/unowned" ++ approved_fixture,
+        root ++ "/other.hwpx",                     root ++ "/../independent-workspace" ++ approved_fixture, root ++ "/." ++ approved_fixture,
+        root ++ "/" ++ approved_fixture,           root ++ approved_fixture ++ "/..",                       root ++ approved_fixture ++ "\x00",
+    }) |path| try std.testing.expectError(error.UnapprovedSourceGridFixture, requireApprovedFixture(root, path));
+    // Even a malformed or protected root cannot bless a matching suffix.
+    for ([_][]const u8{ "/x/../independent-workspace", "/x/./independent-workspace", "/x//independent-workspace", "/x/hwpers", "/x/title-column-roundtrip" }) |bad_root| {
+        const path = try std.mem.concat(a, u8, &.{ bad_root, approved_fixture });
+        defer a.free(path);
+        try std.testing.expectError(error.UnapprovedSourceGridFixture, requireApprovedFixture(bad_root, path));
+    }
+}
+
+test "HWPX source file grid alias among non-target sections is rejected" {
+    const source = try section(a);
+    defer a.free(source);
+    const aliases = try std.mem.replaceOwned(u8, a, fixture.structure_hpf, "Contents/chapter-A.xml", "Contents/chapter-B.xml");
+    defer a.free(aliases);
+    const items = try std.mem.replaceOwned(u8, a, aliases, "</p:manifest>", "<p:item id='third' href='Contents/section1.xml' media-type='application/xml'/></p:manifest>");
+    defer a.free(items);
+    const hpf = try std.mem.replaceOwned(u8, a, items, "</p:spine>", "<p:itemref idref='third'/></p:spine>");
+    defer a.free(hpf);
+    const header = try std.mem.replaceOwned(u8, a, fixture.structure_header, "secCnt=\"2\"", "secCnt=\"3\"");
+    defer a.free(header);
+    const input = try fixture.syntheticStructureZipWithHpf(a, hpf, header, source);
+    defer a.free(input);
+    const snapshot = try a.dupe(u8, input);
+    defer a.free(snapshot);
+    var d = try package.inspectDocument(a, input, .{});
+    defer d.deinit(a);
+    var structure = try d.inspectStructure(a, .{});
+    defer structure.deinit(a);
+    try std.testing.expectEqual(@as(usize, 3), structure.sections.len);
+    try std.testing.expectEqual(@as(?bool, true), structure.declared_count_matches);
+    const target_entry = d.manifest.items[structure.sections[2].item_index].entry_index;
+    try std.testing.expect(target_entry != d.manifest.items[structure.sections[0].item_index].entry_index);
+    var req = try request(input, .{ .delete_row = 0 }, false);
+    req.section = 2;
+    try std.testing.expectError(error.DuplicateSourceSectionEntry, file.transform(a, input, req, .{}));
+    try std.testing.expectEqualSlices(u8, snapshot, input);
+}
+test "HWPX source file grid MIME opaque parameter value is not a subtype" {
+    const base = try synthetic();
+    defer a.free(base);
+    const input = try appendParts(base, "<p:item id='opaque' href='mime.bin' media-type='application/octet-stream; note=&quot;application/foo+xml&quot;'/>", &.{.{ .name = "mime.bin", .data = "not XML" }});
+    defer a.free(input);
+    const output = try file.transform(a, input, try request(input, .{ .delete_row = 0 }, false), .{});
+    defer a.free(output);
+    try preserved(input, output, "Contents/chapter-B.xml");
 }

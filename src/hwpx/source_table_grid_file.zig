@@ -50,7 +50,14 @@ const Inventory = struct {
     }
 };
 fn xmlMediaType(media: []const u8) bool {
-    return std.mem.eql(u8, media, "application/xml") or std.mem.eql(u8, media, "text/xml") or std.mem.endsWith(u8, media, "+xml");
+    // RFC 9110 section 8.3.1: type/subtype are case-insensitive and
+    // semicolon-delimited parameters do not change the XML classification.
+    // This is a conservative inventory selector, not a parameter validator.
+    const end = std.mem.indexOfScalar(u8, media, ';') orelse media.len;
+    const essence = std.mem.trim(u8, media[0..end], " \t");
+    return std.ascii.eqlIgnoreCase(essence, "application/xml") or
+        std.ascii.eqlIgnoreCase(essence, "text/xml") or
+        (essence.len >= 4 and std.ascii.eqlIgnoreCase(essence[essence.len - 4 ..], "+xml"));
 }
 // Entry indices are resolved by the package parser using exact ZIP paths.
 // Visit each manifest item once; never search the manifest per archive entry.
@@ -97,6 +104,19 @@ fn open(a: std.mem.Allocator, input: []const u8, options: Options) !package.Docu
 fn structureOptions(options: Options) package.StructureOptions {
     return .{ .max_sections = options.max_sections, .max_header_xml_bytes = options.max_xml_bytes, .max_spine_xml_bytes = options.max_xml_bytes, .max_total_xml_bytes = options.max_total_xml_bytes, .xml = .{ .max_elements = options.max_nodes } };
 }
+// Distinct manifest IDs may still resolve to the same physical ZIP entry.
+// Check every section, including non-targets, before preparing any mutation.
+// Initialization plus one section pass costs O(entries + sections).
+fn uniqueSectionEntries(a: std.mem.Allocator, d: *const package.Document, structure: *const package.StructureReport) !void {
+    const seen = try a.alloc(bool, d.archive.entries.len);
+    defer a.free(seen);
+    @memset(seen, false);
+    for (structure.sections) |section| {
+        const entry = d.manifest.items[section.item_index].entry_index orelse return error.ExternalSpineXml;
+        if (seen[entry]) return error.DuplicateSourceSectionEntry;
+        seen[entry] = true;
+    }
+}
 /// Borrow input; return a newly owned ZIP only after package/payload/XML reopen.
 /// IDs are reserved in a temporary package-wide paragraph-only inventory.
 pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, options: Options) ![]u8 {
@@ -109,6 +129,7 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     try inspect(a, &d, options, &inventory);
     var structure = try d.inspectStructure(a, structureOptions(options));
     defer structure.deinit(a);
+    try uniqueSectionEntries(a, &d, &structure);
     if (request.section >= structure.sections.len) return error.InvalidSectionIndex;
     const item = structure.sections[request.section].item_index;
     const entry = d.manifest.items[item].entry_index orelse return error.ExternalSpineXml;
@@ -135,6 +156,7 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     try inspect(a, &reopened, options, &check);
     var reopened_structure = try reopened.inspectStructure(a, structureOptions(options));
     defer reopened_structure.deinit(a);
+    try uniqueSectionEntries(a, &reopened, &reopened_structure);
     if (reopened_structure.sections.len != structure.sections.len) return error.SourceTableFileValidationFailed;
     // An archive index belongs to its own Document. Resolve the section again
     // rather than relying on the replacement writer's current central order.

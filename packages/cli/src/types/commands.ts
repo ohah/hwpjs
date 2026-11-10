@@ -20,11 +20,22 @@ export type ExtendedCommandName =
   | 'convert'
   | 'ocr'
   | 'paragraph'
+  | 'edit-table-grid'
   | 'delete-table'
   | 'insert-image'
   | 'export-html'
   | 'replace-image';
 export type ExtendedCommandOptions =
+  | (InputOption &
+      NewOutput & {
+        readonly command: 'edit-table-grid';
+        readonly reference: string;
+        readonly action: 'insert-row' | 'delete-row' | 'insert-column' | 'delete-column';
+        readonly index: number;
+        readonly expectedRows: number;
+        readonly expectedColumns: number;
+        readonly layout?: 'spec6' | 'observed8';
+      })
   | (InputOption &
       NewOutput & {
         readonly command: 'delete-table';

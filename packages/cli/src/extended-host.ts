@@ -73,6 +73,10 @@ export async function runExtendedCommand(
   options: ExtendedCommandOptions,
   { files, io, loadWasm, dependencies = {}, onPublished }: ExtendedHostContext,
 ): Promise<number> {
+  if (options.command === 'edit-table-grid') {
+    const { runGridFileCommand } = await import('./grid-file-host.ts');
+    return runGridFileCommand(options, { files, io, loadWasm, dependencies, onPublished });
+  }
   if (
     options.command === 'delete-table' ||
     options.command === 'insert-image' ||

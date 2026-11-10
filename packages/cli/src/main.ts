@@ -187,6 +187,7 @@ export async function runCLI(
       options.command === 'convert' ||
       options.command === 'ocr' ||
       options.command === 'paragraph' ||
+      options.command === 'edit-table-grid' ||
       options.command === 'delete-table' ||
       options.command === 'insert-image' ||
       options.command === 'export-html' ||

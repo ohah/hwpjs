@@ -1668,3 +1668,16 @@ nice -n 10 mise exec -- zig build test-source-table-grid-files -Doptimize=Releas
 ```
 
 [HWP5 계약](hwp5-source-table-grid.md)과 [HWPX 계약](hwpx-source-table-grid.md)의 private 파일 변환만 검사합니다. 공개 명령·세션 이력·배포 검증과 구분합니다.
+
+## 원본 표 파일 격자 API 검증
+
+[파일 API 계약](source-table-grid-file-api.md)의 ABI 경계와 소유권은 `zig build test-source-table-grid-abi -Doptimize=ReleaseSafe -j1`로 검사합니다. JS facade·서비스와 삭제 공유 resolver는 아래 명시 파일만 실행합니다.
+
+```sh
+node --test --test-concurrency=1 tools/tests/table-file-grid-sdk.test.mjs \
+  packages/cli/tests/edit-table-grid-service.test.mjs \
+  packages/cli/tests/table-reference-resolution.test.mjs \
+  packages/cli/tests/delete-table-service.test.mjs
+```
+
+실물 source gate는 `tools/tests/source-table-grid-file-native.test.mjs`와 `source-table-grid-host-native.test.mjs`입니다. `HWPJS_TEST_SOURCE_ROOT`에 격리 후보, `HWPJS_TEST_WASM`·`HWPJS_TEST_WASM_SHA256`에 새 엔진과 고정 SHA, `HWPJS_TEST_SOURCE_GRID_HWP5`·`HWPJS_TEST_SOURCE_GRID_HWPX`에 위 승인된 브라우저 생성 파일을 지정합니다. `HWPJS_TEST_ORACLE_ROOT`는 정확한 `legacy/cfb.js` 오라클을 가진 루트이며 `HWPJS_TEST_CFB_SHA256`을 별도로 고정합니다. 각 실행의 `HWPJS_TEST_EVIDENCE_DIR`은 기존에 없는 디렉터리여야 합니다. SDK gate에는 선택 ABI가 없는 `HWPJS_TEST_OLD_WASM`도 필요합니다. host gate는 `source-table-grid-api-r1/install/bin/hwpjs.wasm` 위치를 추가 확인하며 공식 MCP Client와 stdio transport를 사용합니다. npm 설치 패키지 검증과 구분합니다.

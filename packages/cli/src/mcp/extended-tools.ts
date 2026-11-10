@@ -149,6 +149,68 @@ export function extendedDocumentTools({
   if (ocrExecutable !== undefined) validateMcpOcrExecutable(ocrExecutable);
   return [
     defineDocumentTool({
+      name: 'edit_document_table_grid',
+      config: {
+        title: '원본 표 행·열을 새 파일에서 편집',
+        description:
+          '같은 원본 SHA를 포함한 표 reference와 현재 행·열 수를 확인해 행 또는 열 하나를 삽입·삭제합니다. index는 0부터 시작하며 삽입은 축 끝도 허용합니다. HWP5/HWPX 모두 allowStaleLayout 동의가 필요합니다. 새 파일만 게시하며 layoutRequiresReflow와 previewStale은 true입니다. layout observed8은 HWP5 전용입니다.',
+        inputSchema: z
+          .strictObject({
+            inputPath: path(),
+            outputPath: path(),
+            reference: z
+              .string()
+              .min(1)
+              .max(128)
+              .refine((value) => {
+                try {
+                  return parseObjectReference(value).kind === 'table';
+                } catch {
+                  return false;
+                }
+              }, '표 참조가 필요합니다.'),
+            action: z.enum(['insert-row', 'delete-row', 'insert-column', 'delete-column']),
+            index: uint(),
+            expectedRows: uint().min(1),
+            expectedColumns: uint().min(1),
+            layout: z.enum(['spec6', 'observed8']).optional(),
+            allowStaleLayout: z.boolean().default(false),
+          })
+          .refine(({ action, index, expectedRows, expectedColumns }) => {
+            const axis = action.endsWith('row') ? expectedRows : expectedColumns;
+            return action.startsWith('insert')
+              ? index <= axis && axis < 0xffffffff
+              : index < axis && axis > 1;
+          }, '행·열 인덱스 또는 예상 크기가 범위를 벗어났습니다.'),
+        annotations: writeNew,
+      },
+      invoke: ({
+        inputPath,
+        outputPath,
+        reference,
+        action,
+        index,
+        expectedRows,
+        expectedColumns,
+        layout,
+        allowStaleLayout = false,
+      }) =>
+        invoke([
+          'edit-table-grid',
+          `--ref=${reference}`,
+          `--action=${action}`,
+          `--index=${index}`,
+          `--rows=${expectedRows}`,
+          `--columns=${expectedColumns}`,
+          `--output=${outputPath}`,
+          ...(layout === undefined ? [] : [`--layout=${layout}`]),
+          ...(allowStaleLayout ? ['--allow-stale-layout'] : []),
+          ...wasm,
+          '--',
+          inputPath,
+        ]),
+    }),
+    defineDocumentTool({
       name: 'delete_document_table',
       config: {
         title: '지정한 표 전체를 새 문서에서 삭제',

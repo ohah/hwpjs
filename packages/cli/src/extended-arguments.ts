@@ -14,6 +14,17 @@ export const EXTENDED_OPTIONS = Object.freeze({
   ocr: ['ref', 'provider', 'languages', 'executable', 'format', 'expect-sha256', 'wasm'],
   paragraph: ['target', 'format', 'expect-sha256', 'wasm'],
   'replace-image': ['ref', 'image', 'output', 'wasm'],
+  'edit-table-grid': [
+    'ref',
+    'action',
+    'index',
+    'rows',
+    'columns',
+    'output',
+    'allow-stale-layout',
+    'layout',
+    'wasm',
+  ],
   'delete-table': ['ref', 'output', 'wasm', 'allow-stale-layout'],
   'insert-image': [
     'target',
@@ -36,6 +47,7 @@ export const EXTENDED_USAGE = `  hwpjs apply INPUT (--patch FILE | --operations 
   hwpjs ocr INPUT [--ref IMAGE_REFERENCE] [--provider tesseract|vision] [--languages kor+eng] [--executable PATH] [--format text|markdown] [--wasm PATH]
   hwpjs paragraph INPUT --target s0:p3 [--expect-sha256 SHA256] [--format text|markdown] [--wasm PATH]
   hwpjs replace-image INPUT --ref IMAGE_REFERENCE --image IMAGE_FILE --output NEWFILE [--wasm PATH]
+  hwpjs edit-table-grid INPUT --ref TABLE_REFERENCE --action insert-row|delete-row|insert-column|delete-column --index N --rows EXPECTED --columns EXPECTED --output NEWFILE --allow-stale-layout [--layout spec6|observed8] [--wasm PATH]
   hwpjs delete-table INPUT --ref TABLE_REFERENCE --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs insert-image INPUT --target s0:p3 --unit 0 --expect-text RAW --expect-sha256 SHA256 --image IMAGE_FILE --width HWPUNIT --height HWPUNIT --output NEWFILE --allow-stale-layout [--wasm PATH]
   hwpjs export-html INPUT --output NEW.html [--embed-images supported|none] [--wasm PATH]`;
@@ -92,6 +104,59 @@ export function interpretExtendedArguments(
       input,
       output: required('output', 'ExpectedOutputFile'),
       embedImages,
+    });
+  }
+  if (command === 'edit-table-grid') {
+    const reference = required('ref', 'MissingRequiredOption:ref');
+    try {
+      if (parseObjectReference(reference).kind !== 'table') return fail('ExpectedTableReference');
+    } catch {
+      return fail('InvalidTableReference');
+    }
+    const action = required('action', 'MissingRequiredOption:action');
+    if (
+      action !== 'insert-row' &&
+      action !== 'delete-row' &&
+      action !== 'insert-column' &&
+      action !== 'delete-column'
+    )
+      return fail('InvalidTableGridAction');
+    const integer = (name: string, minimum: number) => {
+      const text = required(name, 'MissingRequiredOption:' + name);
+      const value = Number(text);
+      if (
+        !/^(0|[1-9]\d*)$/u.test(text) ||
+        !Number.isSafeInteger(value) ||
+        value < minimum ||
+        value > 0xffffffff
+      )
+        return fail('InvalidTableGridInteger:' + name);
+      return value;
+    };
+    const index = integer('index', 0);
+    const expectedRows = integer('rows', 1);
+    const expectedColumns = integer('columns', 1);
+    const axis = action.endsWith('row') ? expectedRows : expectedColumns;
+    if (
+      action.startsWith('insert')
+        ? index > axis || axis === 0xffffffff
+        : index >= axis || axis === 1
+    )
+      return fail('InvalidTableGridIndex');
+    const layout = options.get('layout');
+    if (layout !== undefined && layout !== 'spec6' && layout !== 'observed8')
+      return fail('InvalidTableGridLayout');
+    return Object.freeze({
+      ...common,
+      ...save(),
+      command,
+      input,
+      reference,
+      action,
+      index,
+      expectedRows,
+      expectedColumns,
+      ...(layout === undefined ? {} : { layout }),
     });
   }
   if (command === 'delete-table') {

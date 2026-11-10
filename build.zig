@@ -179,6 +179,21 @@ pub fn build(b: *std.Build) void {
         core_test_step.dependOn(&run_probe.step);
     }
 
+    const source_grid_abi_step = b.step("test-source-table-grid-abi", "Verify immutable source grid ABI ownership and boundaries");
+    const source_grid_abi_probe = b.addTest(.{
+        .use_llvm = true,
+        .filters = &.{"table file grid"},
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/table_file_grid_probe.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
+    });
+    const run_source_grid_abi = b.addRunArtifact(source_grid_abi_probe);
+    run_source_grid_abi.has_side_effects = true;
+    source_grid_abi_step.dependOn(&run_source_grid_abi.step);
+    core_test_step.dependOn(&run_source_grid_abi.step);
+
     // Whole-file candidates require explicit approved fixture inputs; keep out of generic tests.
     const source_grid_file_step = b.step("test-source-table-grid-files", "Verify bounded original-table file transforms with explicit fixtures");
     inline for (.{

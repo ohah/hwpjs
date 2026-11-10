@@ -17,6 +17,7 @@ comptime {
     _ = @import("wasm/new_document.zig");
     _ = @import("wasm/picture_file_replace.zig");
     _ = @import("wasm/table_file_delete.zig");
+    _ = @import("wasm/table_file_grid.zig");
     _ = @import("wasm/image_file_insert.zig");
 }
 

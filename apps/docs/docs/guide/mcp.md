@@ -355,7 +355,7 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 
 ## 개발 중: 반복 읽기 세션
 
-아래 도구 세 개는 새 로컬 후보에 추가한 기능이며 npm 0.1.1에는 아직 배포하지 않았습니다. 기존 16개 파일 도구는 유지하며 새 서버의 `tools/list`는 19개입니다. 같은 Native 문서를 유지해 반복 읽기 때 다시 열지 않습니다.
+아래 도구 세 개는 새 로컬 후보에 추가한 기능이며 npm 0.1.1에는 아직 배포하지 않았습니다. 기존 파일 도구에 아래 원본 표 grid 도구를 더한 소스 후보는 파일 도구 17개와 세션 도구 3개로, `tools/list`는 20개입니다. 같은 Native 문서를 유지해 반복 읽기 때 다시 열지 않습니다.
 
 | 도구 | 입력 | 결과 |
 | --- | --- | --- |
@@ -372,3 +372,27 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 세션은 열린 시점의 읽기 전용 스냅샷입니다. 디스크 변경을 자동 반영하지 않으며 세션 편집·undo/redo는 이번 범위에 없습니다. 파일 편집은 기존 `apply_document_changes` 등을 사용합니다. 같은 세션에 읽기를 겹쳐 보내면 `DocumentSessionBusy`로 거부하므로 이전 읽기를 기다린 뒤 다음 요청을 보냅니다.
 
 동시 세션은 4개, 입력은 파일당 64MiB·예약 포함 합계 128MiB, 한 읽기 응답은 UTF-8 16MiB입니다. 입력 한도는 전체 파서 heap/RSS의 상한이 아닙니다. 다른 서버의 핸들이나 종료한 핸들은 사용할 수 없고, 사용 후 close해야 합니다. 서버 종료도 자원을 정리합니다.
+
+
+## 원본 표 행·열 파일 편집 (소스 후보)
+
+`edit_document_table_grid`는 현재 소스 서버에 추가된 도구이며 공개 npm 0.1.1에는 포함되지 않습니다. 소스 후보의 목록은 파일 도구 17개+세션 도구 3개, 총 20개입니다.
+
+```json
+{
+  "name": "edit_document_table_grid",
+  "arguments": {
+    "inputPath": "./input.hwpx",
+    "outputPath": "./grid-edited.hwpx",
+    "reference": "TABLE_REFERENCE_FROM_STRUCTURE",
+    "action": "insert-row",
+    "index": 2,
+    "expectedRows": 2,
+    "expectedColumns": 3,
+    "layout": "spec6",
+    "allowStaleLayout": true
+  }
+}
+```
+
+`reference`는 같은 원본 SHA를 포함한 실제 표 참조로 바꿔야 합니다. `action`·0 기반 `index`·현재 예상 크기와 선택 `layout`의 범위는 [CLI 계약](./cli.md#원본-표-행열-파일-편집-소스-후보)을 따릅니다. 알 수 없는 키는 거부하며 `allowStaleLayout` 기본값은 false입니다. HWP5/HWPX 모두 명시 동의해야 저장합니다. MCP는 공통 CLI 파일 호스트를 호출하고 별도 파일 쓰기를 수행하지 않습니다. 응답에는 새 파일의 경로·SHA·원본 SHA와 `layoutRequiresReflow: true`, `previewStale: true`가 포함됩니다. 열린 세션을 편집하는 도구가 아닙니다.

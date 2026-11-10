@@ -281,3 +281,19 @@ bun run cli replace-image ./input.hwpx --ref "$IMAGE_REF" \
 ```
 
 이 파일 명령들은 원본을 덮어쓰지 않고 새 파일을 만듭니다. 현재 웹 UI나 열린 헤드리스 세션의 undo/redo에 연결됐다는 뜻은 아니며 기존 편집기는 저장 결과를 별도로 다시 열어야 합니다. 현재 지원 제한은 [공통 계약](https://github.com/ohah/hwpjs/blob/main/docs/document-file-transforms.md)을 따릅니다.
+
+
+## 원본 표 행·열 파일 편집 (소스 후보)
+
+현재 소스 CLI에는 `edit-table-grid`가 추가되어 있습니다. 공개 npm 0.1.1의 지원 범위와 구분합니다.
+
+```sh
+bun run cli edit-table-grid ./input.hwpx --ref "$TABLE_REF" \
+  --action insert-row --index 2 --rows 2 --columns 3 \
+  --output ./grid-edited.hwpx --allow-stale-layout --layout spec6 \
+  --wasm /absolute/path/candidate.wasm
+```
+
+`--action`은 `insert-row`, `delete-row`, `insert-column`, `delete-column` 중 하나입니다. `--ref`는 같은 원본의 구조 보기에서 발급한 표 참조이며 원본 SHA 조건을 포함합니다. `--rows`·`--columns`는 현재 표의 예상 크기(1~4294967295)입니다. `--index`는 0부터 시작하며 삽입은 해당 축 크기까지, 삭제는 크기 미만까지 허용합니다. 마지막 행·열 삭제와 U32 최대 크기의 축 삽입은 거부합니다. 실제 표 지원 여부와 예상 크기 일치는 서비스가 검사합니다.
+
+HWP5와 HWPX 모두 `--allow-stale-layout`이 필수이며 결과는 `layoutRequiresReflow: true`, `previewStale: true`입니다. 선택 `--layout`은 `spec6` 또는 HWP5 전용 `observed8`이며 생략하면 서비스 기본값을 사용합니다. 기존 원본·출력을 덮어쓰지 않고 새 파일 게시 영수증에 출력 경로·SHA·원본 SHA를 보고합니다. 이 연결의 집중 검증은 주입 서비스를 이용한 CLI·공식 MCP 전송 검사이며 실제 Native 저장 검증은 별도입니다.

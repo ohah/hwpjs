@@ -10,7 +10,7 @@ const a = std.testing.allocator;
 const version = @import("../version.zig").Version{ .raw = 0x05000302 };
 const budget = 16384;
 const fresh = [_]u32{ 901, 902 };
-const Mutation = enum { none, merged, extra_cell, extra_table, zones, caption, nested, cache, unknown_child, tracking };
+const Mutation = enum { none, protected_cell, protected_last_cell, other_attributes, merged, extra_cell, extra_table, zones, caption, nested, cache, unknown_child, tracking };
 fn put(comptime T: type, bytes: []u8, at: usize, value: T) void {
     std.mem.writeInt(T, bytes[at..][0..@sizeOf(T)], value, .little);
 }
@@ -70,6 +70,10 @@ fn fixture(layout: Layout, mutation: Mutation) ![]u8 {
         const attr: usize = if (layout == .spec6) 2 else 4;
         if (layout == .observed8) put(u16, &cell, 2, 0x1234);
         put(u32, &cell, attr, @intCast(0x20 + i));
+        // Independent wire input; production protection semantics belong to CellAttributes.
+        if (mutation == .protected_cell and i == 0) put(u32, &cell, attr, 0x20 | (1 << 17));
+        if (mutation == .protected_last_cell and i == 3) put(u32, &cell, attr, 0x23 | (1 << 17));
+        if (mutation == .other_attributes) put(u32, &cell, attr, @as(u32, @intCast(0x20 + i)) | 0x800d0000);
         put(u16, &cell, base, @intCast(i % 2));
         put(u16, &cell, base + 2, @intCast(i / 2));
         put(u16, &cell, base + 4, if (mutation == .merged and i == 0) 2 else 1);
@@ -192,8 +196,8 @@ const cases = [_]Case{
     .{ .command = .{ .delete_column = 1 }, .rows = 2, .columns = 1, .matrix = &.{ 0, 2 }, .templates = &.{ 0, 2 } },
 };
 test "HWP5 source table grid explicit spec6 observed8 all actions independent matrix and exact record survival" {
-    for ([_]Layout{ .spec6, .observed8 }) |layout| {
-        const source = try fixture(layout, .none);
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for ([_]Mutation{ .none, .other_attributes }) |mutation| {
+        const source = try fixture(layout, mutation);
         defer a.free(source);
         const baseline = try a.dupe(u8, source);
         defer a.free(baseline);
@@ -203,7 +207,54 @@ test "HWP5 source table grid explicit spec6 observed8 all actions independent ma
             try check(source, output, layout, c.rows, c.columns, c.matrix, c.templates);
             try std.testing.expectEqualSlices(u8, baseline, source);
         }
-    }
+    };
+}
+test "HWP5 source table grid protected first or last cell refuses every action including deletion target zero" {
+    var accepted: usize = 0;
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for ([_]Mutation{ .protected_cell, .protected_last_cell }) |mutation| {
+        const source = try fixture(layout, mutation);
+        defer a.free(source);
+        const baseline = try a.dupe(u8, source);
+        defer a.free(baseline);
+        for (cases) |c| {
+            if (grid.prepare(a, source, version, request(c.command, layout), .{})) |output| {
+                defer a.free(output);
+                accepted += 1;
+                const after = try records(output);
+                defer a.free(after);
+                const attr: usize = if (layout == .spec6) 2 else 4;
+                var protected_count: usize = 0;
+                for (after) |record| if (record.tag == 72) {
+                    const flags = std.mem.readInt(u32, record.payload[attr..][0..4], .little);
+                    protected_count += @intFromBool(flags & (1 << 17) != 0);
+                };
+                std.debug.print("UNEXPECTED accepted layout={s} mutation={s} command={any} protected_output_cells={d}\n", .{ @tagName(layout), @tagName(mutation), c.command, protected_count });
+            } else |err| {
+                try std.testing.expectEqual(error.UnsupportedSourceTableGrid, err);
+            }
+            try std.testing.expectEqualSlices(u8, baseline, source);
+        }
+    };
+    try std.testing.expectEqual(@as(usize, 0), accepted);
+}
+fn protectedAllocationAttempt(allocator: std.mem.Allocator, source: []const u8, baseline: []const u8, layout: Layout, command: Command) !void {
+    defer std.testing.expectEqualSlices(u8, baseline, source) catch @panic("protected source changed on allocation failure");
+    const output = grid.prepare(allocator, source, version, request(command, layout), .{}) catch |err| switch (err) {
+        error.UnsupportedSourceTableGrid => return,
+        else => return err,
+    };
+    defer allocator.free(output);
+    return error.TestExpectedError;
+}
+test "HWP5 source table grid protected rejection every allocation failure four actions preserves source" {
+    for ([_]Layout{ .spec6, .observed8 }) |layout| for ([_]Mutation{ .protected_cell, .protected_last_cell }) |mutation| {
+        const source = try fixture(layout, mutation);
+        defer a.free(source);
+        const baseline = try a.dupe(u8, source);
+        defer a.free(baseline);
+        for ([_]usize{ 1, 4, 6, 8 }) |i|
+            try @import("../../testing/allocation_failures.zig").check(protectedAllocationAttempt, .{ source, baseline, layout, cases[i].command });
+    };
 }
 fn refusal(source: []const u8, r: grid.Request, expected: anyerror) !void {
     const baseline = try a.dupe(u8, source);

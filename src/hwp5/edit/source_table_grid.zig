@@ -53,6 +53,8 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         if (group.header_node < request.table_node or group.paragraph_count != 1 or group.intervening_records != 0) return error.UnsupportedSourceTableGrid;
         const list = tree.nodes[group.header_node].record.value.list_header;
         const view = try list.view(request.layout);
+        // Refuse the whole edit before cloning templates or deleting any cell.
+        if (body.CellAttributes.fromList(view).isProtected()) return error.UnsupportedSourceTableGrid;
         const cell = try body.Cell.parse(view.extra);
         if (cell.extra.len != 0 or cell.row_span != 1 or cell.column_span != 1 or cell.row >= table.row_count or cell.column >= table.column_count) return error.UnsupportedSourceTableGrid;
         if (cell.width == 0 or cell.height == 0) return error.UnsupportedSourceTableGrid;

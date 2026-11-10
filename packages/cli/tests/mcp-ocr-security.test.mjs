@@ -11,6 +11,7 @@ const toolNames = [
   'create_document',
   'delete_document_table',
   'edit_document',
+  'edit_document_table_grid',
   'export_document_html',
   'extract_document_image',
   'get_document_info',
@@ -196,7 +197,8 @@ test('default MCP OCR leaves binary selection to host while CLI keeps operator e
     ]);
     assert.equal(parsed.executable, '/operator/custom OCR');
   }
-  assert.equal(documentTools().length, 16);
+  assert.equal(documentTools().length, 17);
+  assert(documentTools().some((tool) => tool.name === 'edit_document_table_grid'));
 });
 
 test('server startup validates trusted executable and rejects malformed/duplicate/missing/unknown options', () => {

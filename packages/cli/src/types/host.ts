@@ -9,6 +9,7 @@ import type { ocrDocument } from '../document-ocr.ts';
 import type { createDocument } from '../document-create.ts';
 import type { convertDocument } from '../document-convert.ts';
 import type { replaceDocumentImage } from '../replace-image.ts';
+import type { editDocumentTableGrid } from '../edit-table-grid.ts';
 import type { deleteDocumentTable } from '../delete-table.ts';
 import type { insertDocumentImage } from '../insert-image.ts';
 import type { exportDocumentHTML } from '../export-html.ts';
@@ -34,6 +35,7 @@ export interface CLIHostDependencies {
   createDocument?: typeof createDocument;
   convertDocument?: typeof convertDocument;
   replaceDocumentImage?: typeof replaceDocumentImage;
+  editDocumentTableGrid?: typeof editDocumentTableGrid;
   deleteDocumentTable?: typeof deleteDocumentTable;
   insertDocumentImage?: typeof insertDocumentImage;
   exportDocumentHTML?: typeof exportDocumentHTML;

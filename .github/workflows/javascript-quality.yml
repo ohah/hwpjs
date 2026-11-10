@@ -67,6 +67,16 @@ jobs:
             ./apps/demo/tests/generated-table-grid-ui.test.mjs \
             ./tools/tests/created-table-grid-sdk.test.mjs \
             ./tools/tests/public-demo-fixtures.test.mjs
+      - name: Test immutable source table file facade and shared reference resolution
+        timeout-minutes: 2
+        run: |
+          set -- \
+            ./tools/tests/table-file-grid-sdk.test.mjs \
+            ./packages/cli/tests/edit-table-grid-service.test.mjs \
+            ./packages/cli/tests/table-reference-resolution.test.mjs \
+            ./packages/cli/tests/delete-table-service.test.mjs
+          for path in "$@"; do test -f "$path" || exit 1; done
+          node --max-old-space-size=512 --test --test-concurrency=1 "$@"
       - name: Test new document and table appearance contracts
         timeout-minutes: 2
         run: |
