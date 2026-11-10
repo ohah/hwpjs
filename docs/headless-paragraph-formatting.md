@@ -6,7 +6,7 @@
 
 공개 타입은 `ParagraphFormattingPatch`, `FormattingPatch`, `ApplyFormattingPatchPayload`, `FormattingObservation`, `FormattingBinding`, `FormattingNativeTarget`, `FormattingQueryResult`, `QueryFormattingOptions`, `FormattingCapabilities`, `FormattingCapabilityOptions`입니다. `queryFormatting(target)`의 fields 누락은 지원 필드 조회, `{ fields: [] }`는 binding만 조회하며 같은 의미가 아닙니다. unknown/unavailable을 false 또는 빈 값으로 바꾸지 않습니다.
 
-관측 조회는 core state identity와 token scalar를 바꾸지 않습니다. Native가 readonly 거부 이유를 제공하면 그대로 유지합니다. 공개 Core operationRevision과 Native history revision은 서로 다른 축입니다. Native 원자 쓰기 직전 session/revision을 검사하며 조회 뒤 바뀐 binding은 적용하지 않습니다. dispatch 뒤 projection이 실패하면 이미 적용된 사실을 보존하고 `committed-refresh-required`로 분류합니다. 자동 재시도하지 않습니다.
+관측 조회는 core state identity와 token scalar를 바꾸지 않습니다. Native가 readonly 거부 이유를 제공하면 그대로 유지합니다. 공개 Core operationRevision과 Native history revision은 서로 다른 축입니다. Native 원자 쓰기 직전 session/revision을 검사하며 조회 뒤 바뀐 binding은 적용하지 않습니다. dispatch 뒤 projection이 실패하면 이미 적용된 사실을 보존하고 `committed-refresh-required`로 분류합니다. 자동 재시도하지 않습니다. 진단 읽기·메모리 정리 실패에서도 적용 사실을 보존하는 규칙은 [Native 편집 완료 판정](native-edit-completion.md)을 따릅니다.
 
 ## 조회 참조의 수명
 

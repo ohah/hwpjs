@@ -1,3 +1,5 @@
+import { applyNativeEdit } from './native-edit-outcome.mjs';
+
 // Optional atomic ABI. No fallback to repeated setters or an editor.update collector.
 export function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
   const suffixes = [
@@ -87,38 +89,12 @@ export function createAtomicFormattingApi({ wasm, memory, check, prefix }) {
     applyFormattingPatch(request) {
       const policy = caps();
       const bytes = encode(request, policy.limits.requestBytes);
-      let started = false,
-        completed;
-      try {
-        return memory.withBytes(bytes, (ptr, size) => {
-          started = true;
-          const nativeCode = wasm[`${prefix}_apply_formatting_patch`](ptr, size);
-          if (![0, 1, 2, 3].includes(nativeCode))
-            return {
-              application: 'unknown',
-              changed: null,
-              error: 'InvalidAtomicFormattingResult',
-            };
-          const error = nativeCode === 0 || nativeCode === 3 ? memory.error().message : undefined;
-          return (completed = {
-            nativeCode,
-            application: nativeCode === 1 ? 'applied' : nativeCode === 3 ? 'unknown' : 'unapplied',
-            changed: nativeCode === 3 ? null : nativeCode === 1,
-            ...(error ? { error } : {}),
-          });
-        });
-      } catch (error) {
-        if (!started) throw error;
-        // Preserve a primitive completion already returned by Native even when
-        // releasing input memory fails. Only a missing result is uncertain.
-        if (completed)
-          return {
-            ...completed,
-            cleanupError: error?.message || String(error),
-            refreshRequired: true,
-          };
-        return { application: 'unknown', changed: null, error: error?.message || String(error) };
-      }
+      return applyNativeEdit(
+        memory,
+        bytes,
+        (ptr, size) => wasm[`${prefix}_apply_formatting_patch`](ptr, size),
+        'InvalidAtomicFormattingResult',
+      );
     },
   };
 }
