@@ -15,3 +15,5 @@
 열린 세션 격자 편집의 `28d2f91917e81d0522ffe04d6ddff150aee2ad815a9ed1ed6d470af905aaacca`를 추가했습니다. Node 24.20.0의 실제 SDK 18개, Reader/Worker 4개, COW·이력·모듈 소유권 49개와 셀 표시 33개를 통과했습니다. 신규 capability가 COW schema에서 빠져 발생한 최초 실패는 `source-table-live-r1/runtime-regressions-r1.log`, boolean 검사와 허용 목록 보완 후 결과는 `runtime-regressions-final.log`로 구분합니다. 기대 SHA·export 존재만으로 private 등록을 허용하지 않습니다.
 
 여러 문단이 있는 원본 표 셀의 격자 편집 엔진 `202fc55283b670ea7c695ef3a326a0e6b8c86af3def7232c8e5bfab003699389`를 추가했습니다. 기존 `28d2` 프로필을 유지하며 실제 SDK 33개, Reader/Worker 6개, 모듈 소유권·COW·이력 회귀 49개를 통과했습니다. primitive·독립 파일 오라클·실제 브라우저·공개 배포의 근거는 [셀 문단 계약](source-table-grid-cell-paragraphs.md)에서 구분합니다. 새 지문 등록은 전체 문서의 조판 동치를 보증하지 않습니다.
+
+새 이력 포인터 예약 엔진 `438044e0060fb0f40ab8a4a76eee2027e387f68579d547487fcd74ca88129088`도 등록했습니다. 202fc를 포함한 기존 프로필을 유지하며 실제 SDK 33개, Reader/Worker 6개, 소유권·COW·모듈 등록 회귀 26개가 통과했습니다. 예약 하한과 플랫폼별 실측은 [HWPX 이력](hwpx-edit-history.md), 표의 정밀 실패는 [인라인 표 판정](inline-table-fit-rejection.md)이 소유합니다. 현재 Native 전체 통과를 뜻하지 않습니다.

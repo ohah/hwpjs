@@ -10,7 +10,7 @@ const older = [
   '8e0ff0d0e80f185f255024cb9d946b0469648fd5eb175ef6c7aa3562124c91ff',
   'a38f4df7993c8f645fd28fd13df0108f9be4ba5ca55736e76e334d7d8968343f',
 ];
-const current = '202fc55283b670ea7c695ef3a326a0e6b8c86af3def7232c8e5bfab003699389';
+const current = '438044e0060fb0f40ab8a4a76eee2027e387f68579d547487fcd74ca88129088';
 test('verified profile preserves known-only and owner-window tiers', () => {
   for (const sha of older) {
     assert(verifiedNativeContract(sha));
@@ -18,6 +18,7 @@ test('verified profile preserves known-only and owner-window tiers', () => {
   }
   for (const sha of [
     current,
+    '202fc55283b670ea7c695ef3a326a0e6b8c86af3def7232c8e5bfab003699389',
     'e2e0333e3e703328a970126aab88e9d2a302a7fb1897e6822cc15b727f4684cc',
     '28d2f91917e81d0522ffe04d6ddff150aee2ad815a9ed1ed6d470af905aaacca',
     'fee47642df3a3626d3b37662e13d4130b02f44e1b86843b207ab6d64b99f3ab6',
