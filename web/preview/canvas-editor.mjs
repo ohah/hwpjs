@@ -191,11 +191,11 @@ export function createCanvasEditor({
   let queuedInputCapture = null;
   let compositionInputCapture = null;
   let compositionInvalidated = false;
-  const clearInputIntents = () => {
+  const clearInputIntents = ({ preserveHistoryIntents = false } = {}) => {
     if (composing) compositionInvalidated = true;
     inputIntents.clear();
     // Ordered operations descend from this draft and cannot survive its rejection.
-    historyIntents.clear();
+    if (!preserveHistoryIntents) historyIntents.clear();
     queuedInputCapture = compositionInputCapture = null;
   };
   const textPending = () =>
@@ -2802,7 +2802,7 @@ export function createCanvasEditor({
   const resetExternalSelection = (
     controller,
     origin = 'canvas',
-    { rememberSelection = true } = {},
+    { rememberSelection = true, preserveHistoryIntents = false } = {},
   ) => {
     if (rememberSelection && historyRevision !== null && anchor && focus)
       historySelections.remember(historyRevision, { anchor, focus });
@@ -2811,7 +2811,7 @@ export function createCanvasEditor({
       merge = mergeAvailable,
       splitQuery = splitQueryAvailable,
       breaks = paragraphBreakAvailable;
-    controller.reset({ preserveHistory: true, selectionOrigin: origin });
+    controller.reset({ preserveHistory: true, preserveHistoryIntents, selectionOrigin: origin });
     historyAvailable = available;
     structureAvailable = structure;
     mergeAvailable = merge;
@@ -4025,7 +4025,11 @@ export function createCanvasEditor({
     canRequestHistory,
     historyModelReady,
     requestHistory: travel,
-    reset({ preserveHistory = false, selectionOrigin: origin = 'canvas' } = {}) {
+    reset({
+      preserveHistory = false,
+      preserveHistoryIntents = false,
+      selectionOrigin: origin = 'canvas',
+    } = {}) {
       ackProjectionSequence++;
       deferredTypingCheck = null;
       historyPresentationReport = null;
@@ -4038,7 +4042,7 @@ export function createCanvasEditor({
       historyModelPreparation = null;
       historyPaintBarrier.reset();
       canvas.dataset.selectionAuthority = 'current';
-      historyIntents.clear();
+      if (!preserveHistoryIntents) historyIntents.clear();
       deferredComposition = null;
       deferredReplies = [];
       if (!preserveHistory) pictureResizeAvailable = false;
@@ -4051,7 +4055,7 @@ export function createCanvasEditor({
       changedTypingIntent();
       typingProperties = null;
       draftSelection = null;
-      clearInputIntents();
+      clearInputIntents({ preserveHistoryIntents });
       if (drag !== null && canvas.hasPointerCapture(drag)) canvas.releasePointerCapture(drag);
       composing = false;
       multiComposition = null;
@@ -4480,6 +4484,27 @@ export function createCanvasEditor({
             return;
           }
           if (message.changed) {
+            if (
+              pendingHistoryReply &&
+              message.applied === true &&
+              !restored &&
+              modelState?.nativeHistoryRevision === revision &&
+              modelState.selection == null &&
+              historyIntents.nextKind !== 'input' &&
+              !composing &&
+              !deferredComposition &&
+              !inputIntents.size &&
+              input.value === committed
+            ) {
+              // A committed revision can have no caret (e.g. replace all). A history
+              // intent can still run, but typing at the head must wait for a valid caret.
+              resetExternalSelection(this, 'core', {
+                rememberSelection: false,
+                preserveHistoryIntents: true,
+              });
+              report('실행 취소/다시 실행 적용 · 텍스트 복원 위치 없음');
+              return;
+            }
             // 복원 권한이 없으면 대기 입력을 보존하며 임의 위치로 보내지 않습니다.
             target = anchor = focus = null;
             input.disabled = true;

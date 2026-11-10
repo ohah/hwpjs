@@ -309,6 +309,11 @@ function fixture(t, initial = 'AB', unit = 1, modelPort = true) {
   };
   return {
     direct,
+    addRedoWithoutCaret(text) {
+      assert.equal(cursor, stack.length - 1);
+      stack.push({ text, revision: ++clock, caret: null });
+      clearHistorySelection = true;
+    },
     formatRange(startUnit = 0, endUnit = 2) {
       // surface가 공개 서식 snapshot과 retained selection을 받는 순서만 모델링합니다.
       assert(direct.selectTextRange({ section: 0, paragraph: 0, startUnit, endUnit }));
@@ -425,6 +430,74 @@ async function prepared(t, modelPort = true) {
   f.frame();
   await tick();
   return f;
+}
+
+for (const queued of [false, true]) {
+  test(`committed redo without a caret ${queued ? 'holds queued typing' : 'allows save and reselection'}`, async (t) => {
+    const f = fixture(t, 'A😀A', 4);
+    f.addRedoWithoutCaret('끝😀끝');
+    assert.equal(f.direct.requestHistory('redo'), true);
+    if (queued) assert.equal(f.type('!').defaultPrevented, true);
+    f.ack();
+    f.frame();
+    await tick();
+    assert.equal(f.text, '끝😀끝');
+    assert.deepEqual(
+      f.requests.map(({ kind }) => kind),
+      ['redo'],
+    );
+    assert.equal(f.input.disabled, true);
+    assert.equal(f.canvas.dataset.selectionAuthority, queued ? 'history-unresolved' : 'current');
+    assert.equal(f.direct.flushComposition(), queued ? 'blocked' : 'unchanged');
+    if (!queued) {
+      assert.equal(f.direct.historyRoute(), 'none');
+      f.pointer(4);
+      assert.equal(f.input.disabled, false);
+      f.type('!');
+      f.ack();
+      assert.equal(f.text, '끝😀끝!');
+    }
+  });
+}
+
+for (const typing of [false, true]) {
+  test(`selectionless redo drains a queued undo ${typing ? 'before queued typing' : 'without a caret'}`, async (t) => {
+    const f = fixture(t, 'A😀A', 4);
+    f.addRedoWithoutCaret('끝😀끝');
+    assert.equal(f.direct.requestHistory('redo'), true);
+    assert.equal(f.direct.requestHistory('undo'), true);
+    if (typing) assert.equal(f.type('!').defaultPrevented, true);
+
+    f.ack();
+    await tick();
+    assert.equal(f.text, '끝😀끝');
+    assert.deepEqual(
+      f.requests.map(({ kind }) => kind),
+      ['redo', 'undo'],
+    );
+    f.ack();
+    await tick();
+    assert.deepEqual(
+      f.requests.map(({ kind }) => kind),
+      ['redo', 'undo'],
+    );
+    f.frame();
+    await tick();
+    assert.equal(f.text, 'A😀A');
+    if (typing) {
+      assert.deepEqual(
+        f.requests.map(({ kind }) => kind),
+        ['redo', 'undo', 'splice'],
+      );
+      assert.equal(f.requests[2].startUnit, 4);
+      assert.equal(f.requests[2].text, '!');
+      f.ack();
+      assert.equal(f.text, 'A😀A!');
+    } else {
+      assert.equal(f.canvas.dataset.selectionAuthority, 'current');
+      assert.equal(f.direct.flushComposition(), 'unchanged');
+    }
+  });
 }
 test('연속 undo는 Native 요청·ACK 순서를 유지하고 중간 layout 조회를 생략한다', async (t) => {
   const f = await prepared(t),

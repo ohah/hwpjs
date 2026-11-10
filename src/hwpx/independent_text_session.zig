@@ -9,7 +9,14 @@ const Segment = @import("paragraph_text_positions.zig").Segment;
 const Span = @import("character_style_paint.zig").Span;
 const xml = @import("document_xml.zig");
 const Range = struct { start: usize, end: usize };
-const Flags = struct { field: bool = false, title: bool = false, page: bool = false, tracked: bool = false, column_at: ?usize = null };
+const PrefixColumns = @import("independent_prefix_columns.zig");
+const Flags = struct {
+    field: bool = false,
+    title: bool = false,
+    page: bool = false,
+    tracked: bool = false,
+    prefix: PrefixColumns.Source = .{},
+};
 const SectionDraft = struct {
     values: model.Values,
     flags: []Flags,
@@ -193,7 +200,7 @@ pub const Context = struct {
             if (active != 0 or element.is(xml.paragraph_uri, "fieldBegin") or element.is(xml.paragraph_uri, "fieldEnd")) f.field = true;
             if (element.is(xml.paragraph_uri, "titleMark") or element.is(xml.paragraph_uri, "bookmark") or element.is(xml.paragraph_uri, "autoNum")) f.title = true;
             if (element.is(xml.paragraph_uri, "header") or element.is(xml.paragraph_uri, "footer") or element.is(xml.paragraph_uri, "pageNum") or element.is(xml.paragraph_uri, "newNum")) f.page = true;
-            if (element.is(xml.paragraph_uri, "colPr")) f.column_at = if (f.column_at) |old| @min(old, element.start_tag.start) else element.start_tag.start;
+            f.prefix.observe(element, i);
             if (element.is(xml.paragraph_uri, "p") or element.is(xml.paragraph_uri, "run")) {
                 for ([_][]const u8{ "paraTcId", "charTcId" }) |name| if (try tree.attributeValue(a, i, "", name)) |raw| {
                     const bytes = try raw.toUtf8(a, 4096);
@@ -209,12 +216,21 @@ pub const Context = struct {
         }
         return flags;
     }
-    fn authorize(_: *const Context, draft: *const SectionDraft, paragraph: *const model.Paragraph) !void {
+    fn authorize(self: *const Context, section: *const editor.Section, draft: *const SectionDraft, paragraph: *const model.Paragraph, ordinal: usize) !void {
         try authorizePart(draft, paragraph);
         if (paragraph.field_positions != null) return error.UnsupportedIndependentFieldMetadata;
         if (paragraph.title_output_projection != null or paragraph.title_fragment_owners != null or (paragraph.title_positions != null and paragraph.title_positions.?.len != 0)) return error.UnsupportedIndependentTitleMetadata;
         if (paragraph.page_area_positions != null and paragraph.page_area_positions.?.len != 0) return error.UnsupportedIndependentPageMetadata;
-        if (paragraph.column_boundaries) |rows| if (rows.len != 0) return error.UnsupportedIndependentColumnMetadata;
+        const prefix = draft.flags[paragraph.template_element].prefix;
+        const owns_column = if (paragraph.column_boundaries) |rows| rows.len != 0 else false;
+        if (owns_column or (paragraph.source_ordinal != null and prefix.column != null)) {
+            try PrefixColumns.validate(self.session.allocator, section, paragraph, ordinal, prefix);
+        } else if (prefix.column) |col| {
+            // A generated continuation can still refer to the immutable template
+            // after its writer has removed the source declaration.
+            const at = section.tree.elements[col].start_tag.start;
+            for (paragraph.sites.items) |site| if (at >= site.start) return error.UnsupportedIndependentColumnMetadata;
+        }
         if (paragraph.synthesized_run_character_id != null or paragraph.sites.items.len == 0) return error.UnsupportedIndependentRunlessParagraph;
         if (paragraph.joined()) |joined| {
             try joined.validate();
@@ -222,6 +238,7 @@ pub const Context = struct {
                 if (piece.output != .current_runs or piece.template_only) return error.UnsupportedIndependentHiddenPiece;
                 const part = try joined.paragraph(i);
                 try authorizePart(draft, &part);
+                if (draft.flags[part.template_element].prefix.column != null) return error.UnsupportedIndependentColumnMetadata;
             }
         }
     }
@@ -247,7 +264,7 @@ pub const Context = struct {
         if (index >= draft.values.paragraphs.len) return error.InvalidParagraphIndex;
         const paragraph = &draft.values.paragraphs[index];
         _ = try @import("current_paragraph_reference.zig").from(paragraph);
-        try self.authorize(draft, paragraph);
+        try self.authorize(selected, draft, paragraph, paragraph_index);
         const tree = &selected.tree;
         const positions = try currentPositions(a, tree, paragraph);
         defer a.free(positions);
@@ -344,11 +361,6 @@ fn authorizePart(draft: *const SectionDraft, paragraph: *const model.Paragraph) 
     if (f.title) return error.UnsupportedIndependentTitleMetadata;
     if (f.page) return error.UnsupportedIndependentPageMetadata;
     if (f.tracked) return error.UnsupportedParagraphTracking;
-    if (f.column_at) |at| {
-        var first: usize = std.math.maxInt(usize);
-        for (paragraph.sites.items) |site| first = @min(first, site.start);
-        if (at >= first) return error.UnsupportedIndependentColumnMetadata;
-    }
 }
 fn validateOwnership(section: *const editor.Section) !void {
     if (section.structure_values) |values| {
@@ -384,6 +396,11 @@ fn digest(section: *const editor.Section) u64 {
             std.hash.autoHash(&hash, paragraph.template_element);
             std.hash.autoHash(&hash, paragraph.generated_id);
             std.hash.autoHash(&hash, paragraph.source_ordinal);
+            std.hash.autoHash(&hash, paragraph.column_structure_changed);
+            std.hash.autoHash(&hash, if (paragraph.column_boundaries) |rows| @as(?usize, rows.len) else null);
+            if (paragraph.column_boundaries) |rows| {
+                for (rows) |row| std.hash.autoHash(&hash, row);
+            }
             for (paragraph.sites.items) |site| digestSite(&hash, site);
             if (paragraph.character_styles) |rows| {
                 for (rows) |row| std.hash.autoHash(&hash, row);
