@@ -1,5 +1,18 @@
 # HWPX native 편집 이력
 
+## V2 메타데이터의 예산 기반 포인터 예약
+
+HWPX V2는 요청된 최대 항목 수를 유지하면서, 전체 retained 예산에 존재할 수 있는 항목 수의 상한만큼 undo/redo 포인터를 미리 예약합니다. full checkpoint만 쓰는 unmanaged 이력은 `Entry`와 section마다 반드시 할당되는 checkpoint `State` 배열을 최소 소유 비용으로 사용합니다. source binding·checkpoint 대조·교환이 section 수를 유지한다는 계약에 의존합니다. managed delta/state 이력은 checkpoint가 없는 항목도 있으므로 `Entry` 크기만 사용합니다. 예약 계산은 O(1)이며 commit에 동적 확장·할당을 추가하지 않습니다.
+
+계산에서 메타데이터를 생략하는 것은 필요한 슬롯 수를 보수적으로 크게 잡기 위한 상한입니다. 실제 예산 청구에서는 생성한 두 포인터 배열·stack·history owner와 모든 entry 소유 메모리를 그대로 포함합니다. 최대 항목 수, payload/owned/retained 한도와 OOM 원자성은 유지합니다. 공통 factory의 기본 예약은 기존과 같으며 HWPX만 증명된 작은 예약을 명시적으로 선택합니다.
+
+AArch64 ReleaseSafe의 고정 Noori HWPX(`6ee9014f23650987803481e7aa51b3b2201f91f549dccfe34880469621d62aab`)에서 두 서식 변경의 checkpoint entry 비용 12028/36160/36356은 그대로이고, 포인터 예약은 각 256개에서 81개로 줄었습니다. 실제 메타데이터는 4544→1744바이트, retained는 필요한 세 entry 합계를 포함해 86288바이트가 되어 원래 88662 한도·두 번 undo 기대를 충족합니다. 이전 실패는 이 경로의 이중 청구가 아니라 불필요한 실제 예약 비용 때문입니다.
+
+집중 probe `src/hx_history_cap_metadata_probe.zig`는 예약 상한, 독립 할당 계수, 두 lane의 count/byte 퇴출·순서·분기, payload 거부 시 redo 보존과 OOM 주입을 검사합니다. 원래 resource 이력 회귀와 공통 `owned-v2` 회귀를 합친 집중 실행은 import 테스트 2개를 포함해 29/29 통과했습니다. OOM 대조는 unmanaged 171개·managed 127개 실패 지점과 각 2개 성공 대조입니다. 전체 Native·새 WASM·UI 검증 결과는 아닙니다.
+
+WASM32 공개 SDK의 같은 두 서식 변경도 기존/새 엔진을 직접 대조했습니다. 이 플랫폼에서는 기존 엔진도 undo 2개를 유지했으며 새 엔진은 메타데이터 2312→1504바이트, retained 54392→53584바이트로 808바이트 줄었습니다. 편집 저장 바이트와 두 번 undo/redo 결과는 동일합니다. AArch64의 2800바이트 절약이나 한도 실패를 웹에서도 같았다고 해석하지 않습니다. 검사는 `tools/tests/history-cap-native.test.mjs`이며 신규 ABI·정확한 WASM SHA·고정 Noori 입력을 요구합니다.
+
+
 쪽 영역 병합 redo의 실제 실패 주입·coverage 음성 대조는 [redo 실패 검증](hwpx-history-redo-failure.md)을 따릅니다.
 
 현재 HWPX 일반·앵커·필드 텍스트 편집의 undo/redo를 지원합니다. HWP5 이력·구조 편집·한컴 조판 호환성은 이 구현의 완료 범위가 아닙니다. [Worker 연결](hwpx-worker-history.md)과 [Canvas 입력](canvas-edit-history.md)은 각 경계 문서가 소유합니다.

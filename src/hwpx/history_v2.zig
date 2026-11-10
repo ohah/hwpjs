@@ -99,7 +99,14 @@ pub const History = struct {
         }
         const self = try a.create(Self);
         errdefer a.destroy(self);
-        const stack = try S.createWithMetadata(a, p, initial, @sizeOf(Self));
+        // Unmanaged history only retains full CPs. Every CP allocates one State
+        // per section; source binding/matches/exchange keep that count fixed.
+        // Managed delta/state lanes may have no CP, so only E itself is a bound.
+        const State = @typeInfo(@TypeOf(initial.value.full.states)).pointer.child;
+        const state_bytes = if (managed) 0 else try std.math.mul(usize, initial.value.full.states.len, @sizeOf(State));
+        const minimum_entry = try std.math.add(usize, @sizeOf(E), state_bytes);
+        const capacity = @import("history_metadata_reservation.zig").capacity(p.max_entries, p.max_retained_bytes, minimum_entry);
+        const stack = try S.createWithReservedEntries(a, p, initial, @sizeOf(Self), capacity);
         self.* = .{ .owner = session, .allocator = a, .requested = options, .stack = stack, .managed = managed, .observed_serial = session.mutation_serial, .source = session.source.ptr, .total_text_bytes = total };
         if (managed) self.installWatches();
         return self;

@@ -68,18 +68,24 @@ fn Engine(comptime E: type, comptime Adapter: type, comptime tracked_plans: bool
             return createWithMetadata(a, p, current, 0);
         }
         pub fn createWithMetadata(a: std.mem.Allocator, p: policies.Policy, current: *E, owner_bytes: usize) !*Self {
+            return createWithReservedEntries(a, p, current, owner_bytes, p.max_entries);
+        }
+        /// Caller may reserve fewer slots only with a proven upper bound on
+        /// feasible retained entries. Requested policy limits remain unchanged.
+        pub fn createWithReservedEntries(a: std.mem.Allocator, p: policies.Policy, current: *E, owner_bytes: usize, capacity: usize) !*Self {
             _ = try policies.resolve(.{ .max_entries = p.max_entries, .max_checkpoint_bytes = p.max_checkpoint_bytes, .max_checkpoint_owned_bytes = p.max_checkpoint_owned_bytes, .max_retained_bytes = p.max_retained_bytes });
+            if (capacity == 0 or capacity > p.max_entries) return error.InvalidHistoryCapacity;
             try check(p, current);
             if (current.retained_by != null) return error.CheckpointAlreadyRetained;
-            const slots = std.math.mul(usize, p.max_entries, 2 * @sizeOf(*E)) catch return error.HistoryRetainedLimitExceeded;
+            const slots = std.math.mul(usize, capacity, 2 * @sizeOf(*E)) catch return error.HistoryRetainedLimitExceeded;
             const metadata = try add(try add(@sizeOf(Self), slots), owner_bytes);
             const total = try add(metadata, current.ownedBytes());
             if (total > p.max_retained_bytes) return error.HistoryRetainedLimitExceeded;
             const self = try a.create(Self);
             errdefer a.destroy(self);
-            var undo = try Ring.init(a, p.max_entries);
+            var undo = try Ring.init(a, capacity);
             errdefer undo.deinit();
-            var redo = try Ring.init(a, p.max_entries);
+            var redo = try Ring.init(a, capacity);
             errdefer redo.deinit();
             current.revision = 0;
             self.* = .{ .allocator = a, .policy = p, .current = current, .undo = undo, .redo = redo, .metadata_bytes = metadata, .retained_bytes = total };
@@ -133,6 +139,9 @@ fn Engine(comptime E: type, comptime Adapter: type, comptime tracked_plans: bool
                 if (counters) |c| c.plan_eviction_entry_visits += 1;
                 retained -= entry.ownedBytes();
             }
+            // Never silently reduce max_entries if a caller's reservation bound
+            // was invalidated. Refuse before commit/restore can touch ring slots.
+            if (self.undo.len - evict + 1 > self.undo.slots.len) return error.HistoryRetainedLimitExceeded;
             return .{ .epoch = self.epoch, .next = next, .evict = evict, .retained = retained, .upgrade = upgrade };
         }
         pub fn commit(self: *Self, p: Plan) !void {
