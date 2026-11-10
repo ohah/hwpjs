@@ -46,14 +46,77 @@ export function retainedTextView(paragraph) {
   return { text: chunks.join(''), offsets };
 }
 
+function sourceBoundary(unit, row) {
+  if (!row) throw new RangeError('InvalidDisplayPosition');
+  return row.source + unit - row.at;
+}
+
 export function sourceTextChange(change, offsets) {
   if (!offsets) return change;
   const map = (unit) => {
     const row = offsets.findLast((r) => r.at <= unit);
-    if (!row) throw new RangeError('InvalidDisplayPosition');
-    return row.source + unit - row.at;
+    return sourceBoundary(unit, row);
   };
   return { ...change, startUnit: map(change.startUnit), endUnit: map(change.endUnit) };
+}
+
+/** Sorted, nonoverlapping display changes; strict validation is confined to
+ * this new bulk path. Single-change compatibility retains its prior behavior.
+ * Each offset is validated once and advanced past at most once per call. */
+export function sourceTextChanges(changes, offsets, visit) {
+  if (!Array.isArray(changes)) throw new RangeError('InvalidDisplayPosition');
+  if (offsets !== undefined && offsets !== null && !Array.isArray(offsets))
+    throw new RangeError('InvalidDisplayPosition');
+  if (offsets) {
+    let previous;
+    for (const row of offsets) {
+      visit?.('offset');
+      if (
+        !row ||
+        !Number.isSafeInteger(row.at) ||
+        !Number.isSafeInteger(row.source) ||
+        row.at < 0 ||
+        row.source < row.at ||
+        row.source > 0xffffffff ||
+        (previous && (row.at <= previous.at || row.source - row.at < previous.source - previous.at))
+      )
+        throw new RangeError('InvalidDisplayPosition');
+      previous = row;
+    }
+    if (!offsets.length || offsets[0].at !== 0 || offsets[0].source !== 0)
+      throw new RangeError('InvalidDisplayPosition');
+  }
+  let index = 0,
+    end = 0;
+  const boundary = (unit) => {
+    if (!offsets) return unit;
+    while (index + 1 < offsets.length && offsets[index + 1].at <= unit) {
+      index++;
+      visit?.('advance');
+    }
+    const mapped = sourceBoundary(unit, offsets[index]);
+    if (!Number.isSafeInteger(mapped) || mapped > 0xffffffff)
+      throw new RangeError('InvalidDisplayPosition');
+    return mapped;
+  };
+  return changes.map((change) => {
+    visit?.('change');
+    if (
+      !change ||
+      !Number.isSafeInteger(change.startUnit) ||
+      !Number.isSafeInteger(change.endUnit) ||
+      change.startUnit < end ||
+      change.endUnit < change.startUnit ||
+      change.endUnit > 0xffffffff
+    )
+      throw new RangeError('InvalidDisplayPosition');
+    end = change.endUnit;
+    const startUnit = boundary(change.startUnit),
+      endUnit = boundary(change.endUnit);
+    if (endUnit - startUnit !== change.endUnit - change.startUnit)
+      throw new RangeError('ProtectedAnchorRange');
+    return { ...change, startUnit, endUnit };
+  });
 }
 
 /** Exact raw boundary -> visible boundary; never maps inside protected anchors. */

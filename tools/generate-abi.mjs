@@ -5,6 +5,8 @@ import {
   VALUE,
   DOCUMENT,
   CREATED_TABLE_GRID_ACTION,
+  HWP5_TEXT_TRANSACTION_FUNCTIONS,
+  HWPX_TEXT_TRANSACTION_FUNCTIONS,
 } from '../js/abi-schema.mjs';
 
 const enumeration = (name, entries) =>
@@ -19,6 +21,12 @@ const generated =
   enumeration('Field', FIELD) +
   enumeration('Value', VALUE) +
   enumeration('CreatedTableGridAction', CREATED_TABLE_GRID_ACTION) +
+  'pub const hwp5_text_transaction_exports = [_][]const u8{\n' +
+  HWP5_TEXT_TRANSACTION_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwpx_text_transaction_exports = [_][]const u8{\n' +
+  HWPX_TEXT_TRANSACTION_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)
     .map(([key, value]) => `    pub const ${key}: usize = ${value};\n`)

@@ -81,3 +81,17 @@ pub fn replacementInsertionSite(sites: *const sites_module.Sites, positions: []c
     }
     return insertionSite(sites, positions, start);
 }
+
+/// Independent edits use original UTF-16 coordinates and a single Sites commit.
+/// Does not apply paragraph/style/field/metadata or History policy for the caller.
+pub const BulkOptions = @import("text_splice_many.zig").Options;
+pub const bulkTesting = @import("text_splice_many.zig").testing;
+pub fn spliceManyProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, edits: []const @import("../model/independent_text_edits.zig").Edit, options: BulkOptions) !bool {
+    return @import("text_splice_many.zig").apply(a, sites, positions, edits, options);
+}
+
+/// Owns ephemeral source receipts, text outputs and effective per-edit metadata.
+pub const Prepared = @import("text_splice_many.zig").Prepared;
+pub fn prepareManyProjected(a: std.mem.Allocator, sites: *sites_module.Sites, positions: []const @import("paragraph_text_positions.zig").Segment, edits: []const @import("../model/independent_text_edits.zig").Edit, options: BulkOptions) !Prepared {
+    return @import("text_splice_many.zig").prepare(a, sites, positions, edits, options);
+}

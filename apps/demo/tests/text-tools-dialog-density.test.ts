@@ -79,7 +79,7 @@ test('좌우 그룹·모델리스 포커스·상태와 제한 문구를 유지�
     const limit = f.klass('hwp-search-limit');
     assert.equal(limit.hidden, false);
     assert.match(limit.textContent, /현재 불러온 표시 범위/);
-    assert.match(limit.textContent, /전체 바꾸기는 지원하지 않습니다/);
+    assert.match(limit.textContent, /전체 바꾸기의 지원 범위를 확인 중입니다/);
   } finally {
     f.view.destroy();
   }
@@ -109,7 +109,7 @@ test('내부 탭 없이 외부 모드 전환이 제목·초안과 공식 버튼 
     assert.equal(f.role('replace-selection').hidden, false);
     const unsupported = f.role('replace-all');
     assert.equal(unsupported.disabled, true);
-    assert.match(unsupported.getAttribute('title')!, /전체 바꾸기는 지원하지 않습니다/);
+    assert.match(unsupported.getAttribute('title')!, /지원 범위를 확인 중입니다/);
     assert.equal(
       unsupported.getAttribute('aria-describedby'),
       f.klass('hwp-search-limit').getAttribute('id'),

@@ -5,7 +5,8 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, source_table_grid, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice } = .plain,
+    kind: enum { plain, anchored, field, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, source_table_grid, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text } = .plain,
+    independent_text_edits: []const @import("../model/independent_text_edits.zig").Edit = &.{},
     section: usize = 0,
     paragraph: usize,
     right_paragraph: ?usize = null,
@@ -111,22 +112,18 @@ pub const History = struct {
         defer if (!transferred) before.deinit();
         try self.stack.prepare();
         var changed = false;
-        var font_cache: @import("../model/batch_font_lookup.zig").Cache = .{};
         const property_batch = commands.len > 1 and for (commands) |command| {
             if (command.kind != .character_properties) break false;
         } else true;
-        for (commands) |command| {
-            const applied = (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command, &font_cache)) catch |err| {
-                try before.rollback(session);
-                return err;
-            };
-            changed = applied or changed;
-        }
+        changed = applySequence(session, commands, property_batch) catch |err| {
+            try before.rollback(session);
+            return err;
+        };
         if (!changed) {
             session.display_resource_trusted = false;
             return false;
         }
-        if (property_batch or session.formatting_batch != null) {
+        if (property_batch or session.formatting_batch != null or hasIndependent(commands)) {
             const saved = session.save() catch |err| {
                 try before.rollback(session);
                 return err;
@@ -147,17 +144,38 @@ pub const History = struct {
         errdefer if (session.formatting_batch) |context| context.invalidateSections();
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
         var changed = false;
-        var font_cache: @import("../model/batch_font_lookup.zig").Cache = .{};
         const property_batch = commands.len > 1 and for (commands) |command| {
             if (command.kind != .character_properties) break false;
         } else true;
-        for (commands) |command| changed = (try (if (property_batch) applyDeferredProperty(session, command) else applyCommand(session, command, &font_cache))) or changed;
-        if (changed and (property_batch or session.formatting_batch != null)) {
+        changed = try applySequence(session, commands, property_batch);
+        if (changed and (property_batch or session.formatting_batch != null or hasIndependent(commands))) {
             const saved = try session.save();
             session.allocator.free(saved);
         }
         if (changed) _ = try checkpoints.size(session, limit);
         @import("display_resource_generation.zig").afterCommands(session, commands, changed);
+        return changed;
+    }
+    fn hasIndependent(commands: []const Command) bool {
+        for (commands) |command| if (command.kind == .independent_text) return true;
+        return false;
+    }
+    fn applySequence(session: *editor.Session, commands: []const Command, property_batch: bool) !bool {
+        var changed = false;
+        var font_cache: @import("../model/batch_font_lookup.zig").Cache = .{};
+        var index: usize = 0;
+        while (index < commands.len) {
+            if (commands[index].kind == .independent_text) {
+                var end = index + 1;
+                while (end < commands.len and commands[end].kind == .independent_text) end += 1;
+                font_cache.clear();
+                changed = (try @import("independent_text_session.zig").applyBatch(session, commands[index..end])) or changed;
+                index = end;
+            } else {
+                changed = (try (if (property_batch) applyDeferredProperty(session, commands[index]) else applyCommand(session, commands[index], &font_cache))) or changed;
+                index += 1;
+            }
+        }
         return changed;
     }
     fn applyDeferredProperty(session: *editor.Session, command: Command) !bool {
@@ -171,6 +189,7 @@ pub const History = struct {
             else => font_cache.clear(),
         }
         return switch (command.kind) {
+            .independent_text => error.InvalidIndependentTextCommand,
             .source_table_grid => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidSourceTableGridCommand;
                 break :block try @import("source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });

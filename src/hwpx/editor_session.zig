@@ -135,6 +135,35 @@ pub const Session = struct {
     chart_resources: @import("chart_resource_values.zig").Values = .{},
     cell_backgrounds: @import("table_cell_background_session.zig").Values = .empty,
 
+    /// Current Native paragraph inventory. Pending created-cell paragraphs are
+    /// included in each section/total, and also reported as a subset.
+    /// Does not consult display/content statistics or materialize paragraphs.
+    pub fn independentTextCoverage(self: *const Session, a: std.mem.Allocator) !@import("../model/text_transaction.zig").Coverage {
+        const m = @import("../model/text_transaction.zig");
+        if (self.sections.len > m.limits.sections) return error.LimitExceeded;
+        const rows = try a.alloc(m.SectionCoverage, self.sections.len);
+        errdefer a.free(rows);
+        var total: u32 = 0;
+        var created: u32 = 0;
+        for (self.sections, rows, 0..) |section, *row, index| {
+            try section.validateSourceBasis();
+            const source_count = if (section.last_paragraph < section.first_paragraph) 0 else try std.math.add(usize, section.last_paragraph - section.first_paragraph, 1);
+            if (section.structure_values) |values| {
+                if (section.sites.items.len != 0) return error.DuplicateCurrentTextOwner;
+                if (values.paragraphs.len != source_count) return error.SourceBindingMismatch;
+            }
+            var count = std.math.cast(u32, source_count) orelse return error.LimitExceeded;
+            for (section.created_tables.entries.items) |entry| {
+                const cells = std.math.cast(u32, entry.table.cells.len) orelse return error.LimitExceeded;
+                count = std.math.add(u32, count, cells) catch return error.LimitExceeded;
+                created = std.math.add(u32, created, cells) catch return error.LimitExceeded;
+            }
+            row.* = .{ .section = @intCast(index), .paragraphs = count };
+            total = std.math.add(u32, total, count) catch return error.LimitExceeded;
+        }
+        return .{ .sections = rows, .paragraphs = total, .created_cell_paragraphs = created };
+    }
+
     pub fn deinit(self: *Session) void {
         if (self.original_header) |*header| header.deinit(self.allocator);
         if (self.source_fields) |*fields| fields.deinit(self.allocator);

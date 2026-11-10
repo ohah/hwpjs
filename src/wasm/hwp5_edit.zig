@@ -1439,3 +1439,52 @@ export fn hwp5_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
     }
     return if (changed) 1 else 2;
 }
+
+const TextTransaction = @import("../hwp5/edit/text_transaction.zig").Service;
+fn textTransactionService() !TextTransaction {
+    const current = try session();
+    const h = if (history) |*value| value else return error.HistoryNotEnabled;
+    return .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+}
+export fn hwp5_edit_text_transaction_capabilities() u32 {
+    hwp5_edit_output_free();
+    const service = textTransactionService() catch |err| return fail(err);
+    const revision = service.currentRevision() catch |err| return fail(err);
+    const id = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(id);
+    output = @import("text_transaction_reply.zig").capabilities(a, .hwp5, .{ .session = id, .revision = revision }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_query_text_transaction(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = textTransactionService() catch |err| return fail(err);
+    var request = @import("text_transaction_query_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    var snapshot = service.query(a, request.value.binding, request.value.owners) catch |err| return fail(err);
+    defer snapshot.deinit();
+    output = @import("text_transaction_reply.zig").query(a, snapshot.binding, snapshot.coverage, snapshot.rows) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_apply_text_transaction(ptr: [*]const u8, size: usize) u32 {
+    hwp5_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = textTransactionService() catch |err| return fail(err);
+    var request = @import("text_transaction_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    // Reserve before mutation. A normal rejection/no-op cannot consume viewEpoch.
+    const next_view_epoch = view_epoch.next() catch |err| return fail(err);
+    const changed = service.apply(a, request.value) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
+    if (changed) {
+        view_epoch.value = next_view_epoch;
+        reflow = true;
+    }
+    return if (changed) 1 else 2;
+}

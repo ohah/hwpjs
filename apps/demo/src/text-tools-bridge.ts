@@ -1,5 +1,6 @@
 import {
   SPLICE_TEXT_COMMAND,
+  REPLACE_ALL_COMMAND,
   findTextMatch,
   selectionMatchesText,
   type HeadlessEditor,
@@ -220,6 +221,33 @@ export function createTextToolsBridge({
       );
       clearContinuation();
     });
+  const replaceAll = () =>
+    run(async (active) => {
+      const values = current();
+      if (!values.query) {
+        status('찾을 내용을 입력하세요.');
+        return;
+      }
+      // Let the existing input admission barrier settle before capturing the
+      // immutable planning fence. No second input queue or per-hit edit loop.
+      await editor.update(() => {});
+      if (!active()) return;
+      const state = editor.getEditorState();
+      const result = await editor.dispatchCommand(REPLACE_ALL_COMMAND, {
+        schemaVersion: 1,
+        query: values.query,
+        replacement: values.replacement,
+        layoutToken: state.token,
+        stateVersion: state.stateVersion,
+      });
+      if (!active()) return;
+      if (result.error) throw Error(result.error);
+      if (result.status === 'known-no-op') status('바뀐 내용이 없습니다.');
+      else if (result.status === 'committed-with-snapshot')
+        status('문서 전체의 일치하는 내용을 바꿨습니다.');
+      else throw Error('내용 적용 상태를 확인해주세요. 문서를 새로고침해야 할 수 있습니다.');
+      clearContinuation();
+    });
   const open = (replace: boolean) => {
     if (view) {
       replaceMode = replace;
@@ -241,6 +269,9 @@ export function createTextToolsBridge({
       onReplace: () => {
         if (epoch === openingEpoch && view) void replaceSelection();
       },
+      onReplaceAll: () => {
+        if (epoch === openingEpoch && view) void replaceAll();
+      },
       onMode: (mode) => {
         if (!pending) {
           replaceMode = mode;
@@ -249,6 +280,23 @@ export function createTextToolsBridge({
       },
     });
     view.show();
+    const openedView = view;
+    if (typeof editor.getReplaceAllCapabilities === 'function') {
+      void editor
+        .update(() => {})
+        .then(() => {
+          if (closed || epoch !== openingEpoch || view !== openedView) return undefined;
+          return editor.getReplaceAllCapabilities();
+        })
+        .then((cap) => {
+          if (!closed && epoch === openingEpoch && view === openedView)
+            openedView.setReplaceAllAvailable(cap?.available === true);
+        })
+        .catch(() => {
+          if (!closed && epoch === openingEpoch && view === openedView)
+            openedView.setReplaceAllAvailable(false);
+        });
+    } else openedView.setReplaceAllAvailable(false);
   };
   const keyboard = (event: KeyboardEvent) => {
     if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229) return;

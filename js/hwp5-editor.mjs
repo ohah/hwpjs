@@ -4,6 +4,7 @@ import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
 import { createSourceTableGridApi } from './source-table-grid.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
+import { createIndependentTextApi } from './independent-text-api.mjs';
 import { validateAbi } from './abi.mjs';
 import { encodeCellSizes } from './cell-size-batch.mjs';
 import { encodeCellBorders } from './cell-border-batch.mjs';
@@ -211,6 +212,7 @@ export async function createExperimentalHwp5Editor(
       unavailable: 'Hwp5SourceTableGridAbiUnavailable',
     }),
     ...createAtomicFormattingApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
+    ...createIndependentTextApi({ wasm, memory, check: check, prefix: 'hwp5_edit' }),
     observedDocInfoDiagnostics() {
       check();
       if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== 'function')

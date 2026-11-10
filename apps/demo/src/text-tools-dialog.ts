@@ -16,6 +16,7 @@ export function createTextToolsDialog(
     onChange: () => void;
     onFind: (continuing?: boolean) => void;
     onReplace: () => void;
+    onReplaceAll?: () => void;
     onMode: (replace: boolean) => void;
   },
 ) {
@@ -28,7 +29,8 @@ export function createTextToolsDialog(
     });
   let replace = options.replace,
     busy = false,
-    destroyed = false;
+    destroyed = false,
+    replaceAllAvailable = false;
   const listen = <K extends keyof HTMLElementEventMap>(
     node: HTMLElement,
     type: K,
@@ -102,10 +104,12 @@ export function createTextToolsDialog(
   const next = button('다음 찾기', 'find-next', () => options.onFind()),
     continuation = button('계속 찾기', 'continue-search', () => options.onFind(true)),
     apply = button('선택 바꾸기', 'replace-selection', options.onReplace),
-    replaceAll = button('모두 바꾸기', 'replace-all', () => {}),
+    replaceAll = button('모두 바꾸기', 'replace-all', () => {
+      if (!replaceAll.disabled) options.onReplaceAll?.();
+    }),
     close = button('닫기', 'close-text-tool', options.onDismiss);
   replaceAll.disabled = true;
-  replaceAll.setAttribute('title', '전체 바꾸기는 지원하지 않습니다.');
+  replaceAll.setAttribute('title', '현재 엔진과 문서의 지원 범위를 확인 중입니다.');
   continuation.hidden = true;
   const message = doc.createElement('p');
   message.dataset.role = 'search-status';
@@ -118,7 +122,7 @@ export function createTextToolsDialog(
   limit.setAttribute('id', limitId);
   limit.className = 'hwp-search-limit';
   limit.textContent =
-    '현재 불러온 표시 범위의 텍스트만 검색합니다. 전체 바꾸기는 지원하지 않습니다.';
+    '찾기는 현재 불러온 표시 범위에서 수행합니다. 전체 바꾸기의 지원 범위를 확인 중입니다.';
   replaceAll.setAttribute('aria-describedby', limitId);
   fields.append(query.wrap, replacement.wrap, directions);
   actions.append(apply, next, replaceAll, continuation, close);
@@ -144,6 +148,8 @@ export function createTextToolsDialog(
       node.disabled = busy;
     next.disabled = busy || !query.input.value;
     apply.disabled = busy || !query.input.value;
+    replaceAll.disabled =
+      busy || !query.input.value || !replaceAllAvailable || !options.onReplaceAll;
   };
   listen(query.input, 'input', refresh);
   refresh();
@@ -164,6 +170,19 @@ export function createTextToolsDialog(
     },
     setBusy(value: boolean) {
       busy = value;
+      refresh();
+    },
+    setReplaceAllAvailable(value: boolean) {
+      replaceAllAvailable = value;
+      replaceAll.setAttribute(
+        'title',
+        value
+          ? '문서 전체에서 일치하는 내용을 한 번에 바꿉니다.'
+          : '현재 엔진 또는 문서에서는 전체 바꾸기를 사용할 수 없습니다.',
+      );
+      limit.textContent = value
+        ? '찾기는 현재 표시 범위에서 수행합니다. 모두 바꾸기는 문서 전체를 검사하며 지원하지 않는 대상이 있으면 변경하지 않습니다.'
+        : '찾기는 현재 표시 범위에서 수행합니다. 현재 엔진 또는 문서에서는 전체 바꾸기를 사용할 수 없습니다.';
       refresh();
     },
     setStatus(value: string) {

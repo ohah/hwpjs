@@ -2,7 +2,7 @@
 
 공개 `@hwpjs/core`는 `createParagraphSelection`, `findTextMatch`, `selectionMatchesText`, `getDocumentTextStatistics`, `getSelectionClipboard`를 제공합니다. DOM이나 OS clipboard를 요구하지 않습니다. 원본 문서·저장·이력은 Native 세션이 계속 소유하고, 이 함수들은 현재 `EditorState` 관측값을 읽습니다.
 
-찾기는 현재 불러온 표시 텍스트의 리터럴 검색입니다. 기본 API는 선택 끝부터 앞으로 순환하며, 세 번째 `FindTextOptions` 인자로 `direction:'forward'|'backward'`, `wrap:boolean`, `origin:'selection'|'document'`를 지정할 수 있습니다. 뒤로 찾기는 선택 시작 이전에서 끝나는 일치를 찾고, document origin은 방향에 따라 관측 범위의 첫/마지막 문단부터 시작합니다. 반환되는 타깃은 UTF-16 좌표와 문서 토큰을 가지므로 `editor.setSelection(target)`에 전달할 수 있습니다. 잘못된 scalar 쿼리·중복 문단 식별자·알 수 없는 옵션은 거부하고, 잘리거나 소유자를 정할 수 없는 문단은 검색 대상에서 제외합니다. 미로딩 문단까지 검색했다고 해석하지 않습니다. 정규식·문단을 가로지르는 검색·전체 바꾸기는 아직 제공하지 않습니다.
+찾기는 현재 불러온 표시 텍스트의 리터럴 검색입니다. 기본 API는 선택 끝부터 앞으로 순환하며, 세 번째 `FindTextOptions` 인자로 `direction:'forward'|'backward'`, `wrap:boolean`, `origin:'selection'|'document'`를 지정할 수 있습니다. 뒤로 찾기는 선택 시작 이전에서 끝나는 일치를 찾고, document origin은 방향에 따라 관측 범위의 첫/마지막 문단부터 시작합니다. 반환되는 타깃은 UTF-16 좌표와 문서 토큰을 가지므로 `editor.setSelection(target)`에 전달할 수 있습니다. 잘못된 scalar 쿼리·중복 문단 식별자·알 수 없는 옵션은 거부하고, 잘리거나 소유자를 정할 수 없는 문단은 검색 대상에서 제외합니다. 미로딩 문단까지 검색했다고 해석하지 않습니다. 정규식·문단을 가로지르는 검색은 제공하지 않습니다. 전체 바꾸기의 미게시 Core·Runtime 후보와 남은 완료 기준은 [전문서 전체 바꾸기](headless-replace-all.md)가 소유합니다.
 
 데모의 아래로/위로는 각각 forward/backward와 `wrap:false`를 사용합니다. 방향 경계에서 자동 순환하지 않고 사용자에게 계속 찾기 단추를 제공합니다. 선택·쿼리·방향이 변경된 이전 확인은 재사용하지 않습니다. ‘문서 전체’는 현재 선택 기준 forward와 `wrap:true`이며 매번 문서 처음으로 돌아가는 옵션이 아닙니다. 이는 [공식 찾기 도움말](https://help.hancom.com/hoffice120/ko-KR/Hwp/edit/find/find.htm)의 방향·계속 찾기 의미를 따른 것입니다. 현재 문단 일부를 블록으로 지정한 검색 범위 제한과 서식 검색까지 구현했다는 뜻은 아닙니다.
 

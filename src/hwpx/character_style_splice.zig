@@ -161,3 +161,10 @@ fn emit(a: std.mem.Allocator, output: *std.ArrayList(paint.Span), source: paint.
     try paint.append(a, output, span, 1_000_000);
     cursor.* = span.end_unit;
 }
+
+/// Bulk metadata only, using the text preparation's original/effective plan.
+pub const PreparedMany = @import("character_style_bulk.zig").Prepared;
+pub const bulkTesting = @import("character_style_bulk.zig").testing;
+pub fn prepareManyProjected(a: std.mem.Allocator, paragraph: *const model.Paragraph, text: *const @import("text_splice_transaction.zig").Prepared, current: []const paint.Span, limit: usize) !PreparedMany {
+    return @import("character_style_bulk.zig").prepare(a, paragraph, text, current, limit);
+}

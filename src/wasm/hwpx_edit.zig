@@ -906,7 +906,14 @@ export fn hwpx_edit_history_enable_options(ptr: [*]const u8, size: usize) u32 {
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);
     if (history != null) return fail(error.HistoryAlreadyEnabled);
     const options = @import("../model/history_policy.zig").parse(a, ptr[0..size]) catch |err| return fail(err);
-    history = histories.History.initV2(s, options) catch |err| return fail(err);
+    // Protocol2 owns the live Native serial/watch ticket used by atomic services.
+    // Legacy history_enable stays on its existing V1 path.
+    const previous_managed = s.history_delta_managed;
+    s.history_delta_managed = true;
+    history = histories.History.initV2(s, options) catch |err| {
+        s.history_delta_managed = previous_managed;
+        return fail(err);
+    };
     return 1;
 }
 export fn hwpx_edit_history_stats() u32 {
@@ -958,6 +965,8 @@ fn apply(command: histories.Command) !void {
     if (history) |*value| {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
+        // Independent source-axis batches require the existing owned History.
+        .independent_text => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2068,5 +2077,52 @@ export fn hwpx_edit_apply_formatting_patch(ptr: [*]const u8, size: usize) u32 {
         return fail(err);
     };
 
+    return if (changed) 1 else 2;
+}
+
+const TextTransaction = @import("../hwpx/text_transaction.zig").Service;
+fn textTransactionService() !TextTransaction {
+    const current = if (active) |*value| value else return error.EditorNotOpen;
+    const h = if (history) |*value| value else return error.HistoryNotEnabled;
+    return .{ .session = current, .history = h, .lifetime = &formatting_lifetime };
+}
+export fn hwpx_edit_text_transaction_capabilities() u32 {
+    hwpx_edit_output_free();
+    const service = textTransactionService() catch |err| return fail(err);
+    const revision = service.currentRevision() catch |err| return fail(err);
+    const id = formatting_lifetime.session(a) catch |err| return fail(err);
+    defer a.free(id);
+    output = @import("text_transaction_reply.zig").capabilities(a, .hwpx, .{ .session = id, .revision = revision }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_query_text_transaction(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = textTransactionService() catch |err| return fail(err);
+    var request = @import("text_transaction_query_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    var snapshot = service.query(a, request.value.binding, request.value.owners) catch |err| return fail(err);
+    defer snapshot.deinit();
+    output = @import("text_transaction_reply.zig").query(a, snapshot.binding, snapshot.coverage, snapshot.rows) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_apply_text_transaction(ptr: [*]const u8, size: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    if (size > @import("../model/text_transaction.zig").limits.request_bytes) return fail(error.LimitExceeded);
+    const service = textTransactionService() catch |err| return fail(err);
+    var request = @import("text_transaction_request.zig").decode(a, ptr[0..size]) catch |err| return fail(err);
+    defer request.deinit();
+    // Hx uses the existing owned Native mutation serial, not a transport epoch.
+    // Check exhaustion before write; History reserves/bump-checks it again.
+    _ = service.currentRevision() catch |err| return fail(err);
+    const changed = service.apply(a, request.value) catch |err| {
+        const poisoned = if (history) |*h| h.stats().poisoned else false;
+        if (poisoned or err == error.MutationUncertain or err == error.HistoryMutationUncertain) {
+            _ = fail(error.MutationUncertain);
+            return 3;
+        }
+        return fail(err);
+    };
     return if (changed) 1 else 2;
 }

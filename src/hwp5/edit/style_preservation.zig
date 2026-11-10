@@ -25,6 +25,7 @@ pub const Command = union(enum) {
     insert_text: struct { section: usize, paragraph: usize, utf8: []const u8 },
     delete_paragraph: struct { section: usize, paragraph: usize },
     splice_text: TextSplice,
+    splice_independent_text: []const @import("independent_text_session.zig").Group,
     set_character_format: CharacterFormat,
     set_character_properties: @import("character_property_apply.zig").Edit,
     set_character_font_name: struct { section: usize, paragraph: usize, start_unit: u32, end_unit: u32, language: @import("../../model/character_fonts.zig").Language, name: []const u8 },
@@ -1272,6 +1273,35 @@ pub const Session = opaque {
         return @import("paragraph_display_shapes.zig").read(a, current, state.source.header.version(), self.paragraphShapeCount());
     }
 
+    /// Scalar inventory only; includes pending created cells without copying text
+    /// or resolving anchor order. It never grants edit ownership or permission.
+    /// Caller owns the returned sections slice. Native wire total is inclusive.
+    pub fn independentTextCoverage(self: *const Session, a: std.mem.Allocator) !@import("../../model/text_transaction.zig").Coverage {
+        const tx = @import("../../model/text_transaction.zig");
+        const state = self.stateConst();
+        if (state.document.sections.len != state.created_tables.len) return error.SourceBindingMismatch;
+        if (state.document.sections.len > tx.limits.sections) return error.LimitExceeded;
+        const sections = try a.alloc(tx.SectionCoverage, state.document.sections.len);
+        errdefer a.free(sections);
+        var total: usize = 0;
+        var created: usize = 0;
+        for (state.document.sections, state.created_tables, sections, 0..) |section, tables, *row, index| {
+            var count = section.paragraphs.len;
+            if (count > tx.limits.snapshot_paragraphs) return error.LimitExceeded;
+            for (tables.entries) |entry| {
+                const cells = std.math.mul(usize, entry.value.table.plan.rows, entry.value.table.plan.columns) catch return error.LimitExceeded;
+                if (cells == 0 or cells != entry.value.table.cells.len) return error.InvalidCreatedTableCells;
+                count = std.math.add(usize, count, cells) catch return error.LimitExceeded;
+                created = std.math.add(usize, created, cells) catch return error.LimitExceeded;
+                if (count > tx.limits.snapshot_paragraphs) return error.LimitExceeded;
+            }
+            total = std.math.add(usize, total, count) catch return error.LimitExceeded;
+            if (total > tx.limits.snapshot_paragraphs) return error.LimitExceeded;
+            row.* = .{ .section = @intCast(index), .paragraphs = @intCast(count) };
+        }
+        return .{ .sections = sections, .paragraphs = @intCast(total), .created_cell_paragraphs = @intCast(created) };
+    }
+
     pub fn paragraphCount(self: *const Session, section: usize) !usize {
         const state = self.stateConst();
         if (section >= state.document.sections.len) return error.InvalidSection;
@@ -1603,6 +1633,10 @@ pub const Session = opaque {
                 if (edit.style_id >= state.style_count) return error.InvalidStyleReference;
                 state.document.sections[edit.section].paragraphs[edit.paragraph].style_id = edit.style_id;
             },
+            .splice_independent_text => |groups| {
+                const state = self.getState();
+                _ = try @import("independent_text_session.zig").apply(state.allocator, state.decoded, state.source.header.version(), &state.document, state.created_tables, groups, self.characterShapeCount());
+            },
             .splice_text => |edit| {
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
                 const state = self.getState();
@@ -1708,6 +1742,55 @@ pub const Session = opaque {
     pub fn createdTableResources(self: *const Session) @import("created_table_records.zig").Resources {
         const state = self.stateConst();
         return .{ .paragraphs = .{ .char_shapes = self.characterShapeCount(), .para_shapes = self.paragraphShapeCount(), .styles = state.style_count }, .border_count = state.border_count };
+    }
+
+    /// Request-local ordinary source proof; caller destroys it before source or
+    /// resource revision changes. No special-purpose dispatcher is granted.
+    pub fn prepareIndependentSourceContext(self: *const Session, section: usize) !*@import("plain_text_source.zig").OrdinaryContext {
+        return self.prepareIndependentSourceContextWith(section, null);
+    }
+    /// Lazily constructor-owned, request-only proof; caller destroys scope on
+    /// every exit, before any source/lifetime change. No trusted success flag.
+    pub fn prepareIndependentSourceContextScoped(self: *const Session, section: usize, scope: *?*@import("text_source_policy.zig").UnselectedContext) !*@import("plain_text_source.zig").OrdinaryContext {
+        return self.prepareIndependentSourceContextWith(section, scope);
+    }
+    fn prepareIndependentSourceContextWith(self: *const Session, section: usize, scope: ?*?*@import("text_source_policy.zig").UnselectedContext) !*@import("plain_text_source.zig").OrdinaryContext {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (section >= state.document.sections.len) return error.InvalidSection;
+        if (state.created_tables[section].entries.len != 0) return error.UnsupportedIndependentCreatedTableHost;
+        const source = state.decoded[section];
+        const version = state.source.header.version();
+        if (try @import("company_source.zig").has(source) or try @import("source_policy.zig").hasNamedFields(source)) return error.UnsupportedIndependentTextPurpose;
+        if (try @import("source_policy.zig").hasFormulas(state.allocator, source, version)) return error.UnsupportedIndependentTextPurpose;
+        if (scope) |slot| {
+            if (self.historyTransactionActive()) return error.MutationInProgress;
+            const ticket = try self.historyTicket();
+            if (slot.* == null) slot.* = try @import("text_source_policy.zig").UnselectedContext.prepareFirst(state.allocator, self, state.decoded, version, ticket, section);
+            try slot.*.?.validate(self, state.decoded, version, ticket, section);
+        } else try @import("text_source_policy.zig").validateUnselected(state.allocator, state.decoded, version, section);
+        return @import("plain_text_source.zig").OrdinaryContext.create(state.allocator, source, version, self.characterShapeCount());
+    }
+
+    /// Readonly semantic dry-run on this target only. Current identity, actual
+    /// length, controls, expected text, runs and default range guards stay live.
+    pub fn validateIndependentTextTarget(self: *const Session, context: *@import("plain_text_source.zig").OrdinaryContext, section: usize, paragraph_index: usize, before_units: u32, edits: []const @import("../../model/independent_text_edits.zig").Edit) !void {
+        try self.materializeLiveText();
+        const state = self.stateConst();
+        if (paragraph_index >= try self.paragraphCount(section)) return error.InvalidParagraph;
+        if (state.created_tables[section].entries.len != 0) return error.UnsupportedIndependentCreatedTableHost;
+        if (before_units != try self.editableTextLength(state.allocator, section, paragraph_index)) return error.TextTransactionBeforeMismatch;
+        const current = try self.currentSourceParagraphReference(section, paragraph_index);
+        if (current != .source or current.source.section != section) return error.SourceBindingMismatch;
+        const p = state.document.sections[section].paragraphs[paragraph_index];
+        if (p.field_attributes != null or p.formula_results != null) return error.UnsupportedIndependentTextPurpose;
+        for (p.tokens) |token| if (token.kind == .control and token.raw.len >= 2) {
+            const code = std.mem.readInt(u16, token.raw[0..2], .little);
+            if (code == 3 or code == 4) return error.UnsupportedIndependentTextPurpose;
+        };
+        var draft = try @import("../../model/clone.zig").paragraph(state.allocator, p);
+        defer draft.deinit(state.allocator);
+        _ = try @import("plain_text.zig").applyIndependentScoped(state.allocator, context, state.decoded[section], state.source.header.version(), &draft, edits, self.characterShapeCount(), .{});
     }
 
     fn getState(self: *Session) *State {

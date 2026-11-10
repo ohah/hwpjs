@@ -16,7 +16,7 @@ pub const Splice = struct {
 
 pub const textBytes = @import("plain_text_content.zig").textBytes;
 
-fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
+pub fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
     if (utf8.len > 4 * 1024 * 1024) return error.LimitExceeded;
     var out: std.ArrayList(u8) = .empty;
     errdefer out.deinit(a);
@@ -40,6 +40,21 @@ fn inserted(a: std.mem.Allocator, utf8: []const u8) ![]u8 {
 
 pub fn apply(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {
     return applyWith(a, source, version, p, edit, char_count, false, false, false, false, false);
+}
+
+/// One ordinary-policy paragraph transaction on immutable source coordinates.
+/// Section field/formula/company dispatch and History integration remain caller
+/// responsibilities. This does not grant any permission beyond ordinary apply.
+pub const IndependentOptions = @import("plain_text_bulk.zig").Options;
+pub const IndependentWork = @import("plain_text_bulk.zig").Work;
+pub fn applyIndependent(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edits: []const @import("../../model/independent_text_edits.zig").Edit, char_count: usize, options: IndependentOptions) !bool {
+    return @import("plain_text_bulk.zig").apply(a, source, version, p, edits, char_count, options);
+}
+
+/// Same ordinary authority as applyIndependent; request-local source preparation
+/// owns immutable evidence while each actual paragraph is validated live.
+pub fn applyIndependentScoped(a: std.mem.Allocator, context: *@import("plain_text_source.zig").OrdinaryContext, source: []const u8, version: Version, p: *model.Paragraph, edits: []const @import("../../model/independent_text_edits.zig").Edit, char_count: usize, options: IndependentOptions) !bool {
+    return @import("plain_text_bulk.zig").applyScoped(a, context, source, version, p, edits, char_count, options);
 }
 
 pub fn applyFormulaTransaction(a: std.mem.Allocator, source: []const u8, version: Version, p: *model.Paragraph, edit: Splice, char_count: usize) !void {

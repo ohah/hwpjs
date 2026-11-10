@@ -101,3 +101,6 @@ export const SET_CHARACTER_FONT_NAME_COMMAND =
 import type { ApplyFormattingPatchPayload } from './formatting-patch.ts';
 export const APPLY_FORMATTING_PATCH_COMMAND =
   createCommand<ApplyFormattingPatchPayload>('apply-formatting-patch');
+
+import type { ReplaceAllPlanRequest } from './replace-all.ts';
+export const REPLACE_ALL_COMMAND = createCommand<ReplaceAllPlanRequest>('replace-all');

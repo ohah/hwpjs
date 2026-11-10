@@ -2,6 +2,8 @@
 export const SURFACE_READ_KINDS = Object.freeze([
   'formatting-capabilities',
   'query-formatting',
+  'prepare-replace-all',
+  'text-transaction-capabilities',
   'query-window',
   'query-edit-window',
   'query-edit-range',
@@ -23,6 +25,7 @@ export const SURFACE_READ_KINDS = Object.freeze([
 ] as const);
 export const SURFACE_MUTATION_KINDS = Object.freeze([
   'formatting-patch',
+  'independent-text',
   'splice',
   'splice-current',
   'splice-font-name',

@@ -23,6 +23,7 @@ const profiles = new Map<string, Profile>(
       ['72dadc5054047db9af10bf2eff69ea186804d4451644ba9cba7ad9abd3c87d74', true],
       ['e140d7ec8388c4bc21440c6fd42c4de833da88d885e118ce82233b9fa18d2447', true],
       ['a5242be8ce0118a22bb9d48fbca4149043e9e21142008deee85ae4503043184f', true],
+      ['d3369b3b66d9b40d1ec7ea59c29f1e2cca6046adac0d2057b1e5c4517814e8e6', true],
     ] as const
   ).map(
     ([sha256, ownerWindow]) =>

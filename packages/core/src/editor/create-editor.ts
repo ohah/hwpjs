@@ -1,3 +1,5 @@
+import { planReplaceAll } from '../commands/replace-all.ts';
+import type { ReplaceAllPlanRequest, ReplaceAllCapabilities } from '../commands/replace-all.ts';
 import { mergeExclusiveOwnerWindow, isPlainOwnerBaseline } from '../internal/owner-window-cow.ts';
 import {
   hasRuntimeAdmission,
@@ -71,6 +73,7 @@ import {
   SET_CHARACTER_TEXT_COLOR_COMMAND,
   SET_CHARACTER_FONT_NAME_COMMAND,
   APPLY_FORMATTING_PATCH_COMMAND,
+  REPLACE_ALL_COMMAND,
 } from '../commands/commands.ts';
 import type {
   EditorCommand,
@@ -944,13 +947,19 @@ export function createEditor(options: CreateEditorOptions) {
         );
       }
       if (application === 'unapplied') {
-        if (message.kind === 'formatting-patch' && reply.formattingRefreshRequired === true)
+        if (
+          ['formatting-patch', 'independent-text'].includes(message.kind) &&
+          reply.formattingRefreshRequired === true
+        )
           install({ status: 'refresh-required' });
-        if (message.kind === 'formatting-patch' && reply.formattingNativeCode === 2) {
+        if (
+          ['formatting-patch', 'independent-text'].includes(message.kind) &&
+          reply.formattingNativeCode === 2
+        ) {
           if (reply.error) notifyError(reply.error, ctx, false);
           return result('known-no-op', ctx, reply.error, reply);
         }
-        if (message.kind === 'formatting-patch' && reply.error) {
+        if (['formatting-patch', 'independent-text'].includes(message.kind) && reply.error) {
           notifyError(reply.error, ctx, false);
           return result('rejected-unapplied', ctx, reply.error, reply);
         }
@@ -1113,6 +1122,31 @@ export function createEditor(options: CreateEditorOptions) {
       assertLive();
       if (handled) return result('handled-without-runtime', ctx);
       writePolicy.assertWritable();
+      if (pending.command.id === REPLACE_ALL_COMMAND.id) {
+        const payload = pending.payload as ReplaceAllPlanRequest;
+        const guard = () => {
+          requireReady(payload.layoutToken, true);
+          if (state.stateVersion !== payload.stateVersion) throw Error('StaleReplaceAllPlan');
+        };
+        guard();
+        const plan = planReplaceAll(state, payload);
+        const prepared = await readRequest(
+          { kind: 'prepare-replace-all', plan },
+          payload.layoutToken,
+          guard,
+          true,
+        );
+        guard();
+        // Coverage is still verified for zero matches. A no-op must retain redo.
+        if (plan.status === 'known-no-op') return result('known-no-op', ctx, undefined, prepared);
+        if (!prepared.textTransaction) throw Error('MalformedTextTransactionQuery');
+        return await mutate(
+          { kind: 'independent-text', request: prepared.textTransaction },
+          payload.layoutToken,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === APPLY_FORMATTING_PATCH_COMMAND.id) {
         const payload = pending.payload as ApplyFormattingPatchPayload;
         if (
@@ -1617,6 +1651,64 @@ export function createEditor(options: CreateEditorOptions) {
       ),
     );
   }
+  function getReplaceAllCapabilities(
+    options: { readonly token?: StateToken } = {},
+  ): Promise<ReplaceAllCapabilities> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidReplaceAllCapabilityOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      if (!hostFormattingWritable())
+        return Object.freeze({
+          available: false,
+          reason: 'ReadOnlyDocument',
+          supportsNewlines: false,
+        });
+      const content = state.content as any;
+      if (
+        !content ||
+        !Array.isArray(content.paragraphs) ||
+        content.totalParagraphs !== content.paragraphs.length ||
+        content.limited === true ||
+        content.window
+      )
+        return Object.freeze({
+          available: false,
+          reason: 'IncompleteReplaceAllSnapshot',
+          supportsNewlines: false,
+        });
+      if (!hasRuntimeAdmission(active))
+        return Object.freeze({
+          available: false,
+          reason: 'UnsupportedAtomicRuntime',
+          supportsNewlines: false,
+        });
+      const reply = await readRequest(
+        { kind: 'text-transaction-capabilities' },
+        token,
+        () => requireReady(token, true),
+        true,
+      );
+      const cap = reply.textTransactionCapabilities as any;
+      if (
+        !cap ||
+        typeof cap.available !== 'boolean' ||
+        typeof cap.supportsNewlines !== 'boolean' ||
+        (cap.reason !== undefined && typeof cap.reason !== 'string')
+      )
+        throw Error('MalformedTextTransactionCapabilities');
+      return freezeDTO(copyOwned(cap));
+    });
+  }
   function getFormattingCapabilities(
     options: FormattingCapabilityOptions = {},
   ): Promise<FormattingCapabilities> {
@@ -1883,6 +1975,7 @@ export function createEditor(options: CreateEditorOptions) {
     requestExperimental: geometryGuard(requestExperimental),
     readResource: geometryGuard(readResource),
     getFormattingCapabilities: geometryGuard(getFormattingCapabilities),
+    getReplaceAllCapabilities: geometryGuard(getReplaceAllCapabilities),
     queryFormatting: geometryGuard(queryFormatting),
     setSelection: geometryGuard(setSelection),
     acquireInputSurface: geometryGuard(acquireInputSurface),

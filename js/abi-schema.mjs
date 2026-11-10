@@ -24,6 +24,18 @@ export const EXPERIMENTAL_EDITOR_FUNCTIONS = Object.freeze([
   'hwp5_edit_output_free',
   'hwp5_edit_reflow',
 ]);
+// Optional ordinary-only H5 text transactions; not REQUIRED_FUNCTIONS or UI activation.
+export const HWP5_TEXT_TRANSACTION_FUNCTIONS = Object.freeze([
+  'hwp5_edit_text_transaction_capabilities',
+  'hwp5_edit_query_text_transaction',
+  'hwp5_edit_apply_text_transaction',
+]);
+// Optional ordinary-only HWPX text transactions; ABI6 required surface is unchanged.
+export const HWPX_TEXT_TRANSACTION_FUNCTIONS = Object.freeze([
+  'hwpx_edit_text_transaction_capabilities',
+  'hwpx_edit_query_text_transaction',
+  'hwpx_edit_apply_text_transaction',
+]);
 // Optional HWPX provenance; intentionally not part of REQUIRED_FUNCTIONS.
 export const HWPX_DOCUMENT_PROVENANCE_FUNCTIONS = Object.freeze(['hwpx_edit_document_provenance']);
 export const DOCUMENT = Object.freeze({

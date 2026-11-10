@@ -1,3 +1,4 @@
+import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
 import { validateHwp5CurrentBodyReference } from './hwp5-current-body-reference.mjs';
 import { validateCellStylesMessage } from '../../js/cell-style-command.mjs';
 import { formattingCapabilities, queryAtomicFormatting } from './atomic-formatting-command.mjs';
@@ -1109,6 +1110,52 @@ export function createReaderRuntime({
       if (message.kind === 'query-formatting') {
         if (!editor) throw Error('EditorNotOpen');
         reply({ kind: message.kind, formatting: queryAtomicFormatting(editor, format, message) });
+        return;
+      }
+      if (message.kind === 'text-transaction-capabilities') {
+        let cap = {
+          available: false,
+          reason: 'IndependentTextTransactionUnavailable',
+          supportsNewlines: false,
+        };
+        if (editor && historyEnabled && editor.supportsIndependentTextAbi?.()) {
+          try {
+            const native = editor.independentTextCapabilities();
+            cap = { available: true, supportsNewlines: native.supportsNewlines === true };
+          } catch (error) {
+            cap.reason = error?.message || String(error);
+          }
+        }
+        reply({ kind: message.kind, textTransactionCapabilities: cap });
+        return;
+      }
+      if (message.kind === 'prepare-replace-all') {
+        if (!editor || !historyEnabled) throw Error('HistoryNotEnabled');
+        reply({
+          kind: message.kind,
+          textTransaction: prepareReplaceAllTransaction(editor, format, message.plan),
+        });
+        return;
+      }
+      if (message.kind === 'independent-text') {
+        if (!editor || !historyEnabled) throw Error('HistoryNotEnabled');
+        atomicOutcome = editor.applyIndependentText(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        // Save/re-read once after Native commit, never once per replacement.
+        documentWindow = null;
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else await refreshHwp5PreviewFallback();
+        reply({ kind: message.kind, content: format === 'hwpx' ? hwpxDisplay() : hwp5Display() });
         return;
       }
       if (message.kind === 'formatting-patch') {

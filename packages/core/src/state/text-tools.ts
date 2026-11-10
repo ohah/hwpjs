@@ -1,17 +1,17 @@
 import type { EditorState } from './editor-state.ts';
 import type { SelectionTarget } from '../commands/commands.ts';
-import { isWellFormedText } from './text-scalar.ts';
+import { validateLiteralQuery } from './literal-matches.ts';
 // @ts-ignore Shared display ownership projection; no alternate coordinate mapper.
 import { paragraphSelectionOwner } from '../../../../web/preview/paragraph-selection.mjs';
 
-interface TextRow {
+export interface TextRow {
   section: number;
   paragraph: number;
   text: string;
   clipped?: boolean;
   [key: string]: unknown;
 }
-function textRows(state: EditorState): TextRow[] {
+export function textRows(state: EditorState): TextRow[] {
   if (state.status !== 'ready') return [];
   const content = state.content as { paragraphs?: unknown };
   if (!Array.isArray(content?.paragraphs)) throw Error('InvalidDocumentTextSnapshot');
@@ -76,8 +76,7 @@ export function findTextMatch(
   options: FindTextOptions = {},
 ): SelectionTarget | null {
   const { direction, wrap, origin } = searchOptions(options);
-  if (typeof query !== 'string' || !query || !isWellFormedText(query))
-    throw Error('InvalidSearchQuery');
+  validateLiteralQuery(query);
   const content = state.content as { format?: string };
   if (state.status !== 'ready' || !['hwp5', 'hwpx'].includes(content?.format ?? ''))
     throw Error('EditorNotReady');

@@ -4,6 +4,7 @@ import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
 import { createSourceTableGridApi } from './source-table-grid.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
+import { createIndependentTextApi } from './independent-text-api.mjs';
 import { createHwpxReadScopeApi } from './hwpx-read-scope.mjs';
 import { drawingTextRequest, decodeDrawingTextRequested } from './hwpx-drawing-text-requested.mjs';
 import { encodeLineDisplayNodes, decodeLineDisplayBatch } from './hwpx-line-display-batch.mjs';
@@ -222,6 +223,7 @@ export async function createHwpxEditor(source) {
       unavailable: 'HwpxSourceTableGridAbiUnavailable',
     }),
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
+    ...createIndependentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createParagraphBreakApi({
       wasm,
       memory,

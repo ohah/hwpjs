@@ -149,25 +149,29 @@ fn inspect(a: std.mem.Allocator, source: []const u8, version: @import("../versio
     return inspectDetailed(a, source, version, allow_formulas, allow_named_fields, retain_object_numbers, retain_revision_signs, false, false);
 }
 fn inspectDetailed(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool, retain_revision_signs: bool, retain_memos: bool, retain_company: bool) !bool {
+    return inspectDetailedWith(a, source, version, allow_formulas, allow_named_fields, retain_object_numbers, retain_revision_signs, retain_memos, retain_company, if (@import("builtin").is_test) null else {});
+}
+/// Test-only actual policy work; production has no work pointer or storage.
+pub const OffsetWork = @import("source_record_offset_cursor.zig").Work;
+pub fn validateOffsetMeasured(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, work: *OffsetWork) !void {
+    if (!@import("builtin").is_test) @compileError("offset measurements are test-only");
+    _ = try inspectDetailedWith(a, source, version, false, false, false, false, false, false, work);
+}
+fn inspectDetailedWith(a: std.mem.Allocator, source: []const u8, version: @import("../version.zig").Version, allow_formulas: bool, allow_named_fields: bool, retain_object_numbers: bool, retain_revision_signs: bool, retain_memos: bool, retain_company: bool, work: if (@import("builtin").is_test) ?*OffsetWork else void) !bool {
     var formulas = false;
     var memos_checked = false;
     var forms: ?@import("form_source_retention.zig").Report = null;
     defer if (forms) |*value| value.deinit(a);
     var tree: ?@import("../body/tree.zig").Tree = null;
+    var offsets: @import("source_record_offset_cursor.zig").Cursor = .{};
     defer if (tree) |*value| value.deinit(a);
     var it = framing.Iterator.init(source, .{});
     while (try it.next()) |entry| {
         const tag = std.enums.fromInt(body.Tag, entry.tag) orelse {
             if (entry.tag == 87) {
                 if (tree == null) tree = try @import("../body/tree.zig").Tree.parseTextPreview(a, source, version, .{});
-                var found = false;
-                for (tree.?.nodes, 0..) |node, index| {
-                    if (node.record.framing.offset != entry.offset) continue;
-                    _ = try @import("control_data_policy.zig").validateRetainedNode(a, tree.?, index);
-                    found = true;
-                    break;
-                }
-                if (!found) return error.SourceBindingMismatch;
+                const index = try offsets.find(tree.?, entry.offset, work);
+                _ = try @import("control_data_policy.zig").validateRetainedNode(a, tree.?, index);
                 continue;
             }
             if (objectRecord(entry.tag)) continue;

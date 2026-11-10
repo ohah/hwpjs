@@ -7,14 +7,32 @@ const controls = @import("../body/control_rules.zig");
 const Version = @import("../version.zig").Version;
 
 pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, before: []const u8, start: u32, end: u32) !?[]model.FieldAttributes {
+    return prepareWith(a, source, version, p, before, .{ .single = .{ .start = start, .end = end } }, null);
+}
+
+/// Called only after ordinary source/control validation. An active edit cannot
+/// cross a retained field marker; its start belongs to every containing label.
+/// Prefix values count active starts, including caret insertions at either edge.
+pub fn prepareIndependent(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, before: []const u8, starts: []const u32) !?[]model.FieldAttributes {
+    return prepareWith(a, source, version, p, before, .{ .starts = starts }, null);
+}
+pub fn prepareIndependentTree(a: std.mem.Allocator, tree: Tree, p: model.Paragraph, before: []const u8, starts: []const u32) !?[]model.FieldAttributes {
+    return prepareWith(a, &.{}, .{ .raw = 0 }, p, before, .{ .starts = starts }, tree);
+}
+const Modification = union(enum) { single: struct { start: u32, end: u32 }, starts: []const u32 };
+fn prepareWith(a: std.mem.Allocator, source: []const u8, version: Version, p: model.Paragraph, before: []const u8, modification: Modification, prepared_tree: ?Tree) !?[]model.FieldAttributes {
     var has_fields = false;
     for (p.tokens) |token| {
         if (token.kind == .control and token.raw.len >= 2 and std.mem.readInt(u16, token.raw[0..2], .little) == 3) has_fields = true;
     }
     if (!has_fields) return null;
     const source_node = try p.originalNode();
-    var tree = try Tree.parseTextPreview(a, source, version, .{});
-    defer tree.deinit(a);
+    var owned_tree: ?Tree = null;
+    const tree = prepared_tree orelse block: {
+        owned_tree = try Tree.parseTextPreview(a, source, version, .{});
+        break :block owned_tree.?;
+    };
+    defer if (owned_tree) |*value| value.deinit(a);
     var fields: std.ArrayList(model.FieldAttributes) = .empty;
     errdefer fields.deinit(a);
     if (source_node >= tree.nodes.len) return error.SourceBindingMismatch;
@@ -57,10 +75,13 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, p: mo
             if (depth == 0) return error.SourceBindingMismatch;
             depth -= 1;
             const opened = stack[depth];
-            const modified = if (start == end)
-                start >= opened.begin and start <= token.start_unit
-            else
-                start < token.start_unit and end > opened.begin;
+            const modified = switch (modification) {
+                .single => |edit| if (edit.start == edit.end)
+                    edit.start >= opened.begin and edit.start <= token.start_unit
+                else
+                    edit.start < token.start_unit and edit.end > opened.begin,
+                .starts => |prefix| prefix[token.start_unit + 1] != prefix[opened.begin],
+            };
             if (modified) fields.items[opened.index].attributes |= @import("../body/field_start.zig").modified_mask;
         }
     }

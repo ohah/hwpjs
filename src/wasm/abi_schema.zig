@@ -29,6 +29,16 @@ pub const CreatedTableGridAction = enum(u32) {
     delete_column = 3,
     _,
 };
+pub const hwp5_text_transaction_exports = [_][]const u8{
+    "hwp5_edit_text_transaction_capabilities",
+    "hwp5_edit_query_text_transaction",
+    "hwp5_edit_apply_text_transaction",
+};
+pub const hwpx_text_transaction_exports = [_][]const u8{
+    "hwpx_edit_text_transaction_capabilities",
+    "hwpx_edit_query_text_transaction",
+    "hwpx_edit_apply_text_transaction",
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

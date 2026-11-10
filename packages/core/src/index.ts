@@ -157,3 +157,11 @@ export type {
   EditCreatedTableGridPayload,
   CreatedTableGridAction,
 } from './commands/created-table-grid.ts';
+
+export { REPLACE_ALL_COMMAND } from './commands/commands.ts';
+export { planReplaceAll } from './commands/replace-all.ts';
+export type {
+  ReplaceAllPlanRequest,
+  ReplaceAllPlan,
+  ReplaceAllCapabilities,
+} from './commands/replace-all.ts';

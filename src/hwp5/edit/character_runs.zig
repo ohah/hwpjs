@@ -60,6 +60,42 @@ pub fn replace(a: std.mem.Allocator, rows: []const model.CharacterRun, start: u3
     return out.toOwnedSlice(a);
 }
 
+pub const Independent = struct { start: u32, end: u32, added: u32 };
+/// Validated active edits only. No per-edit row scan; original start affinity
+/// and right-side restoration use the same canonical append() as replace().
+pub fn replaceIndependent(a: std.mem.Allocator, rows: []const model.CharacterRun, edits: []const Independent, visited: if (@import("builtin").is_test) *usize else void) ![]model.CharacterRun {
+    var output: std.ArrayList(model.CharacterRun) = .empty;
+    errdefer output.deinit(a);
+    var cursor: usize = 0;
+    var style = rows[0].char_shape_id;
+    var delta: i64 = 0;
+    for (edits) |edit| {
+        while (cursor < rows.len and rows[cursor].start_unit < edit.start) : (cursor += 1) {
+            if (@import("builtin").is_test) visited.* += 1;
+            style = rows[cursor].char_shape_id;
+            try append(a, &output, @intCast(@as(i64, rows[cursor].start_unit) + delta), style);
+        }
+        while (cursor < rows.len and rows[cursor].start_unit == edit.start) : (cursor += 1) {
+            if (@import("builtin").is_test) visited.* += 1;
+            style = rows[cursor].char_shape_id;
+        }
+        const start: u32 = @intCast(@as(i64, edit.start) + delta);
+        if (edit.added != 0) try append(a, &output, start, style);
+        while (cursor < rows.len and rows[cursor].start_unit <= edit.end) : (cursor += 1) {
+            if (@import("builtin").is_test) visited.* += 1;
+            style = rows[cursor].char_shape_id;
+        }
+        try append(a, &output, start + edit.added, style);
+        delta += @as(i64, edit.added) - @as(i64, edit.end - edit.start);
+    }
+    while (cursor < rows.len) : (cursor += 1) {
+        if (@import("builtin").is_test) visited.* += 1;
+        try append(a, &output, @intCast(@as(i64, rows[cursor].start_unit) + delta), rows[cursor].char_shape_id);
+    }
+    if (output.items.len > 65535) return error.LimitExceeded;
+    return output.toOwnedSlice(a);
+}
+
 /// Join two validated style maps, excluding the left paragraph terminator.
 /// Right styles (including its terminator/tail boundary) remain authoritative.
 pub fn join(a: std.mem.Allocator, left: []const model.CharacterRun, right: []const model.CharacterRun, left_units: u32) ![]model.CharacterRun {
