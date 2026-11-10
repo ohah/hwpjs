@@ -8,7 +8,7 @@
 
 Core는 기존 선택·범위 검증 뒤 현재 생성 문단의 일곱 data 필드를 소유 복사합니다. Runtime은 같은 Native 세션에서 현재 슬롯·epoch·scope·identity·본문 소유권을 확인한 직후 query합니다. 참조는 Native의 엄격한 selector DTO에 넘기기 전에 제거합니다. 기존 wire 종류 이름 `original-paragraph`는 호환성을 위해 유지하며 현재 source 슬롯을 가리킵니다. 생성 ID와 문단 ordinal을 바꾸어 사용하지 않습니다.
 
-발급된 target과 Native session/revision binding으로 기존 atomic patch와 `History.applyBatch`를 실행합니다. 별도 이력·쓰기 모델·자동 저장/재열기를 만들지 않습니다. 오래된 참조와 binding, 보호·잘못된 scalar 범위는 쓰기 전에 거부합니다. 동일 값은 알려진 no-op이며 한 적용은 한 undo 항목입니다. 후기 실패와 OOM은 기존 rollback·redo·poison 계약을 유지합니다.
+발급된 target과 Native session/revision binding으로 기존 atomic patch와 `History.applyBatch`를 실행합니다. 별도 이력·쓰기 모델·자동 저장/재열기를 만들지 않습니다. 현재 참조와 같은 조회에서 받은 binding을 함께 사용하며, 오래된 binding과 보호·잘못된 scalar 범위는 쓰기 전에 거부합니다. 참조 자체의 수명은 [조회 참조 계약](headless-paragraph-formatting.md#조회-참조의-수명)을 따릅니다. 동일 값은 알려진 no-op이며 한 적용은 한 undo 항목입니다. 후기 실패와 OOM은 기존 rollback·redo·poison 계약을 유지합니다.
 
 ## 조회 수명과 비용
 
