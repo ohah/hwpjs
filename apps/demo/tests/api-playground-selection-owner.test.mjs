@@ -72,7 +72,15 @@ const body = (paragraph, text = '본문값') => ({
   text,
   editable: true,
   selectionOwner: 'section:0:body',
-  currentReference: { epoch: '1', scope: '1', kind: 'original', section: 0, id: String(paragraph) },
+  currentReference: {
+    epoch: '1',
+    scope: '1',
+    kind: 'original',
+    section: 0,
+    id: String(paragraph),
+    row: 0,
+    column: 0,
+  },
 });
 const cell = (paragraph, text = '셀문자') => ({
   section: 0,
@@ -207,17 +215,30 @@ test('표 삽입 조회는 실제 Core 검증을 호출하며 선택·문서를 
   assert.equal(f.state.selection, null);
 });
 
-test('새 HWP5 문단의 미지원 참조도 정상 조회 결과로 반환하며 쓰기0이다', async () => {
+test('새 HWP5 본문 문단의 완전한 참조도 조회 허용하며 쓰기0이다', async () => {
   const row = {
     ...body(0),
-    currentReference: { epoch: '1', scope: '1', kind: 'generated', section: 0, id: '17' },
+    currentReference: {
+      epoch: '1',
+      scope: '1',
+      kind: 'generated',
+      section: 0,
+      id: '17',
+      row: 0,
+      column: 0,
+    },
   };
   const f = setup([row]);
   const result = await f.api.execute('getTableInsertAvailability', {});
   assert.equal(result.ok, true);
-  assert.equal(result.result.allowed, false);
-  assert.equal(result.result.reason, 'UnsupportedTableInsertReference');
-  assert.equal(result.result.resources, null);
+  assert.equal(result.result.allowed, true);
+  assert.equal(result.result.reason, null);
+  assert.deepEqual(result.result.resources, {
+    paragraph: 0,
+    character: 0,
+    style: 0,
+    border_fill: 0,
+  });
   assert.deepEqual(result.before, result.after);
   assert.equal(f.calls.length, 0);
 });
@@ -231,4 +252,16 @@ test('없는 조회 API나 잘못된 좌표는 쓰기 없이 명시적으로 거
   const invalid = setup([body(0)]);
   assert.equal((await invalid.api.execute('getTableInsertAvailability', { start: -1 })).ok, false);
   assert.equal(absent.calls.length + invalid.calls.length, 0);
+});
+
+test('필수 참조 필드가 빠진 대역은 생성 문단이어도 허용하지 않는다', async () => {
+  const row = body(0);
+  delete row.currentReference.row;
+  const f = setup([row]);
+  const result = await f.api.execute('getTableInsertAvailability', {});
+  assert.equal(result.ok, true);
+  assert.equal(result.result.allowed, false);
+  assert.equal(result.result.reason, 'UnsupportedTableInsertReference');
+  assert.deepEqual(result.before, result.after);
+  assert.equal(f.calls.length, 0);
 });
