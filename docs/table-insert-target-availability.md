@@ -17,3 +17,5 @@ HWP5 original/generated 본문 문단을 허용합니다. Core의 `table-paragra
 
 
 현재 후보의 검증은 `zig-out/verification/hwp5-current-table-insertion-r1/`에 분리합니다. source guard·실제 Native 저장·브라우저·배포 증거를 각각 구분하며, 이전 후보의 생성 문단 거부 검사를 현재 지원 범위로 사용하지 않습니다.
+
+최종 canonical SDK/runtime에서도 공개 Core 명령·데모 bridge의 생성 문단 삽입을 기존 표 유무별로 확인했습니다. 독립 CFB 비교로 고유 본문 호스트 위치·기존 표 순서·undo/redo 바이트 일치를 확인했습니다. 최종 웹 번들은 Vanilla/React/Svelte × HWP5/HWPX에서 같은 세션의 hard Enter 생성 문단에 곧바로 UI 삽입하고, 실제 셀 입력·행 추가·소유권 거부·undo/redo·저장 재열기를 검사했습니다. 결과는 `contract/core-canonical-final-results.json`과 `browser-new/cohort-r1/summary.json`에 분리합니다. 전체 미지원 조판 기능의 완료를 뜻하지 않습니다.
