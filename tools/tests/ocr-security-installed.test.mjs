@@ -115,7 +115,7 @@ test('installed stdio MCP rejects request binaries and uses only the operator st
   try {
     await client.connect(transport);
     const list = await client.listTools();
-    assert.equal(list.tools.length, 19);
+    assert.equal(list.tools.length, 20);
     const tool = list.tools.find((t) => t.name === 'ocr_document');
     assert(tool);
     assert.equal(Object.hasOwn(tool.inputSchema.properties, 'executable'), false);

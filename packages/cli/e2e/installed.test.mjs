@@ -159,7 +159,7 @@ test(
 );
 
 test(
-  'installed unified CLI exposes sixteen MCP tools and executes new edit services over stdio',
+  'installed unified CLI exposes twenty MCP tools and executes new edit services over stdio',
   { timeout: 60000 },
   async () => {
     const env = { ...process.env };
@@ -184,7 +184,7 @@ test(
     try {
       await client.connect(transport);
       const list = await client.listTools();
-      assert.equal(list.tools.length, 19);
+      assert.equal(list.tools.length, 20);
       const call = async (name, args, expectedError = false) => {
         const result = await client.callTool({ name, arguments: args });
         assert.equal(Boolean(result.isError), expectedError, name + ': ' + content(result));
