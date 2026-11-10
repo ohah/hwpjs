@@ -456,6 +456,9 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
   size.setAttribute('aria-label', '글자 크기 (pt)');
   const applySize = el('button', 'hwp-demo-button', '적용');
   applySize.type = 'submit';
+  listen(applySize, 'pointerdown', (event) => {
+    if ((event as PointerEvent).button === 0 && !applySize.disabled) event.preventDefault();
+  });
   const sizeDescription = bindCommand(size, 'set-font-size'),
     applyDescription = bindCommand(applySize, 'set-font-size');
   sizeForm.append(sizeLabel, size, applySize, sizeDescription, applyDescription);
@@ -627,7 +630,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     size.placeholder = state.fontSizeHint || '';
     size.dataset.observation = state.fontSizeStatus || 'unknown';
     // Only an ordinary toolbar draft; never write into the host's input/selection.
-    if (resetFormatDraft || doc.activeElement !== size)
+    if (resetFormatDraft || (doc.activeElement !== size && doc.activeElement !== applySize))
       size.value = state.fontSizePoints == null ? '' : String(state.fontSizePoints);
     zoom.value = state.zoomPercent == null ? '' : String(state.zoomPercent);
     shell.setAttribute('aria-busy', String(state.busy === true));

@@ -15,3 +15,7 @@ Runtime은 참조가 포함된 HWP5 명령에 `hwp5-current-body-reference.mjs`�
 참조 조회는 한 문단만 읽습니다. Native flow ABI는 구간 조회가 없어 소유권 확인 시 해당 구역을 한 번 읽는 O(n) 경로를 사용합니다. 일반 텍스트 입력·IME·증분 paint 경로에는 추가하지 않습니다.
 
 검증 증거는 `zig-out/verification/hwp5-current-formatting-r1/`에 둡니다. Core 관측·명령, 실제 Native 및 독립 CFB 저장 비교, canonical SDK, 브라우저·배포를 구분합니다. 새 문단을 저장·재열어 원본 문단으로 바꾼 결과를 같은 세션 생성 문단의 증거로 사용하지 않습니다. npm 게시나 전체 서식·조판 완료를 뜻하지 않습니다.
+
+## 크기 입력 초안
+
+크기 입력창에서 적용 버튼으로 포커스를 옮기는 동안의 관측 갱신이 입력 초안을 기존 서식 값으로 덮지 않도록 합니다. 포인터 적용은 다른 도구 모음 버튼과 같은 기본 포커스 이동 방지 정책을 사용하고, 키보드로 적용 버튼에 포커스가 있을 때도 초안을 유지합니다. 명시적 `resetFormatDraft`는 이 경우에도 초안을 폐기합니다. 선택 token과 명령 허용 검사는 기존 bridge가 계속 수행합니다. 통제된 실패와 수정 검사는 `size-focus-before-fix.log`·`size-focus-after-fix.log`에 분리합니다.

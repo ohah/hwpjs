@@ -309,3 +309,43 @@ test('explicit open cancellation keeps a status outcome without a generic failur
     f.shell.destroy();
   }
 });
+
+test('size draft survives a refresh while Apply owns keyboard focus and resets on target replacement', () => {
+  const f = setup();
+  try {
+    f.state = { ...f.state, fontSizePoints: 11 };
+    f.shell.update();
+    const size = all(
+      f.root,
+      (n) => n.tagName === 'INPUT' && n.dataset.command === 'set-font-size',
+    )[0];
+    const form = all(f.root, (n) => n.className === 'hwp-demo-size')[0];
+    const apply = all(form, (n) => n.tagName === 'BUTTON')[0];
+    size.focus();
+    size.value = '19';
+    apply.focus();
+    f.shell.update();
+    assert.equal(size.value, '19');
+    fire(form, 'submit');
+    assert.deepEqual(f.calls, [{ command: 'set-font-size', points: 19 }]);
+    size.value = '22';
+    f.shell.update({ resetFormatDraft: true });
+    assert.equal(size.value, '11');
+  } finally {
+    f.shell.destroy();
+  }
+});
+
+test('size Apply pointer activation retains draft focus like other toolbar commands', () => {
+  const h = setup();
+  try {
+    const form = all(h.root, (n) => n.className === 'hwp-demo-size')[0];
+    const apply = all(form, (n) => n.tagName === 'BUTTON')[0];
+    assert.equal(fire(apply, 'pointerdown', { button: 0 }).defaultPrevented, true);
+    assert.equal(fire(apply, 'pointerdown', { button: 2 }).defaultPrevented, false);
+    apply.disabled = true;
+    assert.equal(fire(apply, 'pointerdown', { button: 0 }).defaultPrevented, false);
+  } finally {
+    h.shell.destroy();
+  }
+});
