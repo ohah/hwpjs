@@ -41,6 +41,12 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     return {
       getPageStatus: pages.getPageStatus,
       subscribePageStatus: pages.subscribePageStatus,
+      getPrintAvailability: () =>
+        ref.current?.getPrintAvailability() ?? { available: false, reason: 'detached' },
+      openPrintPreview: (options) => {
+        if (!ref.current) throw Error('PrintSurfaceDetached');
+        return ref.current.openPrintPreview(options);
+      },
       focus: () => ref.current?.focus() ?? false,
       canPasteInput: () => ref.current?.surface?.canPasteInput() ?? false,
       canRequestHistory: (kind) => ref.current?.surface?.canRequestHistory(kind) ?? false,
@@ -90,6 +96,12 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
     return {
       getPageStatus: pages.getPageStatus,
       subscribePageStatus: pages.subscribePageStatus,
+      getPrintAvailability: () =>
+        surface?.getPrintAvailability() ?? { available: false, reason: 'detached' },
+      openPrintPreview: (options) => {
+        if (!surface) throw Error('PrintSurfaceDetached');
+        return surface.openPrintPreview(options);
+      },
       focus: () => surface?.focus() ?? false,
       canPasteInput: () => surface?.canPasteInput() ?? false,
       canRequestHistory: (kind) => surface?.canRequestHistory(kind) ?? false,
@@ -112,6 +124,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
+        surface = undefined;
         return unmount(component);
       },
     };

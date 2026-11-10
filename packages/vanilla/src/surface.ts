@@ -1,3 +1,5 @@
+import { openPrintPreview } from '../../../web/preview/print-preview-dialog.mjs';
+import { capturePrintPages } from '../../../web/preview/host-print.mjs';
 import {
   atomicRangePatch,
   atomicRangeUnavailable,
@@ -109,6 +111,43 @@ export interface CanvasSurfaceOptions {
   environment?: CanvasSurfaceEnvironment;
   onStatus?: (message: string) => void;
 }
+export type CanvasPrintAvailability = Readonly<
+  | { available: true }
+  | { available: false; reason: 'detached' | 'unsupported' | 'not-ready' | 'busy' }
+>;
+export interface CanvasPrintPreview {
+  readonly close: () => void;
+  readonly ready: Promise<boolean>;
+}
+export interface CanvasPrintPreviewOptions {
+  filename?: string;
+}
+export interface CanvasPrintRasterOptions {
+  signal?: AbortSignal;
+  scale?: number;
+}
+export interface CanvasPrintRasterPage {
+  readonly ordinal: number;
+  readonly section: number;
+  readonly widthCssPx: number;
+  readonly heightCssPx: number;
+  readonly pixelWidth: number;
+  readonly pixelHeight: number;
+  readonly png: Blob;
+}
+export interface CanvasPrintRasterJob {
+  readonly kind: 'paginated-canvas-print-pages';
+  readonly token: import('@hwpjs/core').StateToken;
+  readonly scale: number;
+  readonly encoding: 'png';
+  readonly pages: readonly CanvasPrintRasterPage[];
+  readonly statistics: Readonly<{
+    totalPixels: number;
+    maxPagePixels: number;
+    sceneVisits: number;
+  }>;
+}
+
 export function createCanvasSurface({
   root,
   editor,
@@ -146,6 +185,7 @@ export function createCanvasSurface({
   viewport.append(stage);
   container.append(viewport);
   root.append(container);
+  const outputLifetime = new AbortController();
   let closed = false,
     renderer: any,
     direct: any,
@@ -170,6 +210,12 @@ export function createCanvasSurface({
     | { kind: string; result: import('@hwpjs/core').CommandResult | null }
     | undefined;
   const formattingTasks = new Set<Promise<unknown>>();
+  const isOutputInputSettled = () =>
+    !closed &&
+    direct?.settled() === true &&
+    bridge?.busy() === false &&
+    !nonTextHistoryPending &&
+    formattingTasks.size === 0;
   const trackFormattingTask = <T>(task: Promise<T>): Promise<T> => {
     formattingTasks.add(task);
     void task.then(
@@ -471,6 +517,7 @@ export function createCanvasSurface({
     return sourceGridModalEpoch;
   };
   const cleanup = () => {
+    outputLifetime.abort(Error('PrintSurfaceDetached'));
     closed = true;
     doc.removeEventListener?.('beforetoggle', sourceGridDialogEvent, true);
     sourceGridModalObserver?.disconnect();
@@ -523,6 +570,7 @@ export function createCanvasSurface({
         await bridge?.flush();
         return direct?.settled() ? 'unchanged' : 'blocked';
       },
+      isOutputInputSettled,
       cancelComposition: () => direct?.cancelComposition(),
     });
     geometryLease = nativeLease; // Private geometry is bound to the original lease identity.
@@ -1118,6 +1166,26 @@ export function createCanvasSurface({
   };
   nonTextHistoryAdmissionReady = true;
   let disposal: Promise<void> | undefined;
+  const getPrintAvailability = (): CanvasPrintAvailability => {
+    if (closed || !lease?.isActive()) return { available: false, reason: 'detached' };
+    if (
+      typeof editor.captureDocumentOutput !== 'function' ||
+      typeof realm.OffscreenCanvas !== 'function' ||
+      typeof realm.HTMLDialogElement?.prototype.showModal !== 'function' ||
+      !doc.fonts
+    )
+      return { available: false, reason: 'unsupported' };
+    const state = editor.getEditorState();
+    if (
+      state.status !== 'ready' ||
+      state.historyRecoveryRequired ||
+      state.nativeHistoryStats?.poisoned === true
+    )
+      return { available: false, reason: 'not-ready' };
+    return isOutputInputSettled() && !modalOpen()
+      ? { available: true }
+      : { available: false, reason: 'busy' };
+  };
   return {
     /** Measured visible page only; never a source page number or caret page. */
     getPageStatus,
@@ -1818,6 +1886,36 @@ export function createCanvasSurface({
     },
     getSelection() {
       return editor.getEditorState().selection ?? null;
+    },
+    getPrintAvailability,
+    capturePrintPages(options: CanvasPrintRasterOptions = {}): Promise<CanvasPrintRasterJob> {
+      const signal = options.signal
+        ? AbortSignal.any([outputLifetime.signal, options.signal])
+        : outputLifetime.signal;
+      return capturePrintPages(editor, doc, { ...options, signal }, environment, canvas);
+    },
+    openPrintPreview(options: CanvasPrintPreviewOptions = {}): CanvasPrintPreview {
+      const availability = getPrintAvailability();
+      if (!availability.available) throw Error(`PrintPreviewUnavailable:${availability.reason}`);
+      return openPrintPreview(
+        doc,
+        (captureOptions) => capturePrintPages(editor, doc, captureOptions, environment, canvas),
+        {
+          ...options,
+          signal: outputLifetime.signal,
+          isCurrent(token) {
+            const state = editor.getEditorState();
+            return (
+              !closed &&
+              state.status === 'ready' &&
+              token.documentId === state.documentId &&
+              token.generation === state.generation &&
+              token.operationRevision === state.operationRevision &&
+              token.viewRevision === state.viewRevision
+            );
+          },
+        },
+      );
     },
     async flushComposition() {
       if (closed) return 'blocked' as const;

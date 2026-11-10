@@ -32,6 +32,13 @@ export interface CanvasSurfaceHandle {
   setScale(value: number): boolean;
   getSelection(): ReturnType<CanvasSurfaceInstance['getSelection']>;
   flushComposition(): ReturnType<CanvasSurfaceInstance['flushComposition']>;
+  getPrintAvailability(): ReturnType<CanvasSurfaceInstance['getPrintAvailability']>;
+  capturePrintPages(
+    ...args: Parameters<CanvasSurfaceInstance['capturePrintPages']>
+  ): ReturnType<CanvasSurfaceInstance['capturePrintPages']>;
+  openPrintPreview(
+    ...args: Parameters<CanvasSurfaceInstance['openPrintPreview']>
+  ): ReturnType<CanvasSurfaceInstance['openPrintPreview']>;
 }
 
 /** Client mount boundary only. Every effect setup constructs a fresh surface.
@@ -75,6 +82,22 @@ export function useCanvasSurface(options: UseCanvasSurfaceOptions) {
       },
       flushComposition() {
         return surfaceRef.current?.flushComposition() ?? Promise.resolve('blocked' as const);
+      },
+      getPrintAvailability() {
+        return (
+          surfaceRef.current?.getPrintAvailability() ?? { available: false, reason: 'detached' }
+        );
+      },
+      capturePrintPages(options) {
+        return (
+          surfaceRef.current?.capturePrintPages(options) ??
+          Promise.reject(Error('PrintSurfaceDetached'))
+        );
+      },
+      openPrintPreview(options) {
+        const surface = surfaceRef.current;
+        if (!surface) throw Error('PrintSurfaceDetached');
+        return surface.openPrintPreview(options);
       },
     }),
     [],

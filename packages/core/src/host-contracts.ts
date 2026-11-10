@@ -6,6 +6,7 @@ import type { SelectionTarget } from './commands/commands.ts';
 export type CompositionSettlement = 'committed' | 'unchanged' | 'blocked';
 export interface InputSurfaceHooks {
   commitComposition(): CompositionSettlement | Promise<CompositionSettlement>;
+  isOutputInputSettled?(): boolean;
   cancelComposition(reason: 'detach' | 'load' | 'external-replace' | 'dispose'): void;
 }
 export interface SurfaceRequestOptions {

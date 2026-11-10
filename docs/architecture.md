@@ -14,6 +14,8 @@
 
 ## 현재 계층과 연결
 
+[웹 인쇄 미리보기와 PDF](host-print.md)는 Core의 읽기 관측, 페이지별 Canvas 출력과 호스트 UI의 책임을 소유합니다.
+
 [원본 표 셀 크기 UI](headless-original-cell-formatting.md#원본-표-셀-크기-ui)는 현재 원본 셀 선택·크기 원값·공유 열 계획 및 검증 경계를 소유합니다.
 
 [조판 부호 일부 표시](canvas-formatting-marks.md)는 화면 전용 표시 옵션과 원문 경계 검증·부분 지원 범위를 소유합니다.

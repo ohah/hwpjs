@@ -279,6 +279,25 @@ test('menu Escape restores summary focus and reports expanded state', () => {
   h.shell.destroy();
 });
 
+test('File print action refreshes availability and gives the modal a visible focus return target', () => {
+  const h = setup();
+  const [menu] = all(h.root, (node) => node.className === 'hwp-demo-menu');
+  const [print] = h.command('print-preview');
+  assert.equal(h.command('print-preview').length, 1);
+  assert.equal(print.getAttribute('aria-haspopup'), 'dialog');
+  assert.equal(print.disabled, true);
+
+  h.state = { ...h.state, actions: { ...h.state.actions, 'print-preview': { enabled: true } } };
+  menu.open = true;
+  fire(menu, 'toggle');
+  assert.equal(print.disabled, false);
+  fire(print, 'click');
+  assert.deepEqual(h.calls, [{ command: 'print-preview' }]);
+  assert.equal(menu.open, false);
+  assert.equal(h.doc.activeElement, menu.children[0]);
+  h.shell.destroy();
+});
+
 test('pure presentation capability policy never enables absent actions', () => {
   assert.equal(actionAvailability({ title: '', status: '' }, 'save', true).enabled, false);
   assert.equal(fontSizePoints('0.01'), 0.01);

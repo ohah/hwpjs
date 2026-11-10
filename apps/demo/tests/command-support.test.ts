@@ -65,6 +65,27 @@ test('a bridge and an explicit positive capability are both required', () => {
   assert.equal(denied.reason, 'RefreshRequired');
   assert.equal(denied.pressed, 'mixed');
 });
+test('document print needs a ready host and no busy work, without requiring a selection', () => {
+  const input = { connected: true, document: 'ready' as const, hasSelection: false };
+  assert.equal(
+    resolveCommandSupport('print-preview', { ...input, availability: { enabled: true } }).enabled,
+    true,
+  );
+  for (const [override, kind] of [
+    [{ connected: false }, 'unconnected'],
+    [{ document: 'none' }, 'no-document'],
+    [{ busy: true }, 'busy'],
+    [{ availability: { enabled: false, reason: 'InputPending' } }, 'unavailable'],
+  ] as const) {
+    const result = resolveCommandSupport('print-preview', {
+      ...input,
+      availability: { enabled: true },
+      ...override,
+    });
+    assert.equal(result.kind, kind);
+    assert.equal(result.enabled, false);
+  }
+});
 test('unimplemented requires explicit reason and evidence, never inferred from missing wiring', () => {
   assert.equal(resolveCommandSupport('insert-chart', { connected: false }).kind, 'unconnected');
   assert.equal(

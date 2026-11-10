@@ -31,6 +31,15 @@ mock.module('@hwpjs/vanilla', () => ({
       async flushComposition() {
         return 'unchanged';
       },
+      getPrintAvailability() {
+        return { available: true };
+      },
+      async capturePrintPages(options: unknown) {
+        return options;
+      },
+      openPrintPreview(options: unknown) {
+        return options;
+      },
       dispose() {
         this.disposed++;
         return Promise.resolve();
@@ -181,6 +190,11 @@ describe('real React lifecycle with an injected surface port', () => {
     expect(ref.current.setScale(125)).toBe(true);
     expect(created.at(-1).scale).toBe(125);
     expect(await ref.current.flushComposition()).toBe('unchanged');
+    expect(ref.current.getPrintAvailability()).toEqual({ available: true });
+    const captureOptions = { scale: 2 };
+    expect(await ref.current.capturePrintPages(captureOptions)).toBe(captureOptions);
+    const previewOptions = { filename: 'sample.pdf' };
+    expect(ref.current.openPrintPreview(previewOptions)).toBe(previewOptions);
     await h.unmount();
     expect(created.every((value) => value.disposed === 1)).toBe(true);
     expect(e.disposed).toBe(0);
@@ -478,5 +492,8 @@ describe('real React lifecycle with an injected surface port', () => {
     expect(handle.setScale(1)).toBe(false);
     expect(handle.getSelection()).toBe(null);
     expect(await handle.flushComposition()).toBe('blocked');
+    expect(handle.getPrintAvailability()).toEqual({ available: false, reason: 'detached' });
+    await expect(handle.capturePrintPages()).rejects.toThrow('PrintSurfaceDetached');
+    expect(() => handle.openPrintPreview()).toThrow('PrintSurfaceDetached');
   });
 });

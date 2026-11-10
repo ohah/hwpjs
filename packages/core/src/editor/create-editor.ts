@@ -1368,6 +1368,50 @@ export function createEditor(options: CreateEditorOptions) {
       }
     });
   }
+  /** Capture a read-only document after the same input and Native barriers as save. */
+  function captureDocumentOutput(signal?: AbortSignal) {
+    assertPublicMutation();
+    const abort = new CancellationFence();
+    const cancel = () => abort.cancel();
+    const check = () => signal?.throwIfAborted();
+    signal?.addEventListener('abort', cancel, { once: true });
+    return admit(
+      async () => {
+        check();
+        const captured = state;
+        const inputSurface = surface;
+        const inputSurfaceEpoch = surfaceEpoch;
+        const isCurrent = () =>
+          !terminal &&
+          surface === inputSurface &&
+          surfaceEpoch === inputSurfaceEpoch &&
+          state.status === 'ready' &&
+          !state.historyRecoveryRequired &&
+          state.nativeHistoryStats?.poisoned !== true &&
+          state.content === captured.content &&
+          state.documentId === captured.documentId &&
+          state.generation === captured.generation &&
+          state.operationRevision === captured.operationRevision &&
+          state.viewRevision === captured.viewRevision &&
+          (!inputSurface || inputSurface.hooks.isOutputInputSettled?.() === true);
+        if (!active || !isCurrent()) throw Error('DocumentOutputInputUnavailable');
+        return Object.freeze({
+          state: captured,
+          isCurrent,
+          confirmCurrent: () =>
+            enqueue(async () => {
+              if (!isCurrent()) throw Error('StalePrintDocument');
+            }),
+        });
+      },
+      { abort, guard: check },
+    )
+      .catch((error) => {
+        check();
+        throw error;
+      })
+      .finally(() => signal?.removeEventListener('abort', cancel));
+  }
   function save(saveOptions: SaveOptions = {}): Promise<SaveResult> {
     assertPublicMutation();
     const owned = copyOwned(saveOptions);
@@ -1802,6 +1846,7 @@ export function createEditor(options: CreateEditorOptions) {
       active: true,
       hooks: {
         commitComposition: hooks.commitComposition.bind(hooks),
+        isOutputInputSettled: hooks.isOutputInputSettled?.bind(hooks),
         cancelComposition: hooks.cancelComposition.bind(hooks),
       },
       fence,
@@ -1980,6 +2025,7 @@ export function createEditor(options: CreateEditorOptions) {
     dispatchCommand: geometryGuard(dispatchCommand),
     update: geometryGuard(update),
     save: geometryGuard(save),
+    captureDocumentOutput,
     refresh: geometryGuard(refresh),
     requestExperimental: geometryGuard(requestExperimental),
     readResource: geometryGuard(readResource),

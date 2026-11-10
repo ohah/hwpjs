@@ -7,6 +7,7 @@ export type DemoFramework = 'headless' | 'vanilla' | 'react' | 'svelte';
 export type DemoCommand =
   | 'new-document'
   | 'save'
+  | 'print-preview'
   | 'undo'
   | 'redo'
   | 'cut'

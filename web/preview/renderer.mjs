@@ -1,3 +1,4 @@
+import { indexPrintPageScene } from './print-page-scene.mjs';
 import { attachHwpxPageNumbers } from './hwpx-page-number-layout.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { retainOverflowPreviewBarrier } from './overflow-preview-barrier.mjs';
@@ -148,6 +149,7 @@ export function createRenderer(
   onLayout = () => {},
   environment = {},
   privatePlacementPort = null,
+  documentOutput = false,
 ) {
   const realm = canvas.ownerDocument?.defaultView ?? globalThis;
   const requestAnimationFrame =
@@ -163,6 +165,7 @@ export function createRenderer(
   const OffscreenCanvas = environment.OffscreenCanvas ?? realm.OffscreenCanvas;
   const viewport = viewportElement;
   const ctx = canvas.getContext('2d');
+  const measureContext = ctx;
   if (!ctx) throw new Error('Canvas2DUnavailable');
   const rendererGlyphMetrics = createRendererGlyphMetrics(ctx);
   let content = { paragraphs: [], limited: false },
@@ -456,7 +459,7 @@ export function createRenderer(
       );
     return { pendingPictures, resourcesPending };
   };
-  const paint = () => {
+  const paint = (output = null) => {
     if (closed) return;
     const held = queuedTypingHold;
     if (held && projectionDeferred) {
@@ -473,41 +476,46 @@ export function createRenderer(
     flushProjection(false);
     const paintInteractionRevision = interactionRevision;
     const paintInteractionStamp = interactionStamp();
-    const paintSelection = interaction.historyPending ? {} : interaction;
-    const metrics = canvasViewportMetrics(
-      viewportElement,
-      viewScale,
-      environment.devicePixelRatio?.() ?? realm.devicePixelRatio ?? 1,
-    );
+    const paintSelection = output || interaction.historyPending ? {} : interaction;
+    const metrics =
+      output?.metrics ??
+      canvasViewportMetrics(
+        viewportElement,
+        viewScale,
+        environment.devicePixelRatio?.() ?? realm.devicePixelRatio ?? 1,
+      );
     if (!metrics) return;
     // Every painter in this frame receives the same logical scroll origin.
     const viewport = { scrollTop: metrics.logicalScrollTop };
     checkBoxPaintScrollTop = viewportElement.scrollTop;
     checkBoxPaintScrollLeft = viewportElement.scrollLeft ?? 0;
     const { logicalWidth: width, logicalHeight: height, ratio, pixelWidth, pixelHeight } = metrics;
-    const { pendingPictures, resourcesPending } = prepareVisibleResources(metrics);
-    // Keep the last complete frame until the visible sources have been checked.
-    // In particular, never erase a picture while an unchanged payload is read
-    // again after a text operation. Failed sources settle and paint diagnostics.
-    canvas.dataset.picturePending = String(Boolean(resourcesPending));
-    if (resourcesPending && !pictureWaitExpired) {
-      holdingFrame = true;
-      canvas.dataset.paintPending = 'true';
-      if (!pictureWaitTimer)
-        pictureWaitTimer = setTimeout(() => {
-          pictureWaitTimer = 0;
-          // This is a frame latency budget, never a resource failure deadline.
-          // Valid slow reads/decodes keep their slots and publish normally later.
-          pictureWaitExpired = true;
-          schedule();
-        }, pictureWaitMs);
-      Promise.all(pendingPictures).then(schedule);
-      return;
+    if (!output) {
+      const { pendingPictures, resourcesPending } = prepareVisibleResources(metrics);
+      // Keep the last complete frame until the visible sources have been checked.
+      // In particular, never erase a picture while an unchanged payload is read
+      // again after a text operation. Failed sources settle and paint diagnostics.
+      canvas.dataset.picturePending = String(Boolean(resourcesPending));
+      if (resourcesPending && !pictureWaitExpired) {
+        holdingFrame = true;
+        canvas.dataset.paintPending = 'true';
+        if (!pictureWaitTimer)
+          pictureWaitTimer = setTimeout(() => {
+            pictureWaitTimer = 0;
+            // This is a frame latency budget, never a resource failure deadline.
+            // Valid slow reads/decodes keep their slots and publish normally later.
+            pictureWaitExpired = true;
+            schedule();
+          }, pictureWaitMs);
+        Promise.all(pendingPictures).then(schedule);
+        return;
+      }
+      stopPictureWait();
+      holdingFrame = false;
+      if (!resourcesPending) pictureWaitExpired = false;
+      canvas.dataset.paintPending = 'false';
     }
-    stopPictureWait();
-    holdingFrame = false;
-    if (!resourcesPending) pictureWaitExpired = false;
-    canvas.dataset.paintPending = 'false';
+    const ctx = output?.context ?? measureContext;
     paintedStamp = null;
     paintedInteractionStamp = null;
     paintedCharts = [];
@@ -520,16 +528,29 @@ export function createRenderer(
     checkBoxPaintScrollLeft = null;
     paintedPictures = { behind: [], front: [] };
     picturePaintOrder = [];
-    canvas.style.width = `${metrics.width}px`;
-    canvas.style.height = `${metrics.height}px`;
-    if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) rendererGlyphMetrics.clear();
-    canvas.width = pixelWidth;
-    canvas.height = pixelHeight;
-    ctx.setTransform(ratio * metrics.scale, 0, 0, ratio * metrics.scale, 0, 0);
+    if (!output) {
+      canvas.style.width = `${metrics.width}px`;
+      canvas.style.height = `${metrics.height}px`;
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight)
+        rendererGlyphMetrics.clear();
+      canvas.width = pixelWidth;
+      canvas.height = pixelHeight;
+    }
+    ctx.setTransform(
+      output?.scaleX ?? ratio * metrics.scale,
+      0,
+      0,
+      output?.scaleY ?? ratio * metrics.scale,
+      0,
+      0,
+    );
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     ctx.translate(-metrics.logicalScrollLeft, 0);
-    paintPagePaper(ctx, layout.pages, viewport.scrollTop, width, height);
+    if (!output) paintPagePaper(ctx, layout.pages, viewport.scrollTop, width, height);
+    const pagePictures = output
+      ? { behind: output.scene.behind, front: output.scene.front }
+      : pictureLayers;
     const paintPendingPicture = (item, x, y, pending) => {
       if (!pending) return;
       ctx.save();
@@ -548,18 +569,24 @@ export function createRenderer(
         ctx.restore();
       }
     };
-    paintMemoPane(ctx, layout.memoPaneBoxes, viewport.scrollTop, height);
-    paintPageNumberGlyphs(ctx, layout.pageNumberGlyphs, viewport.scrollTop, (glyph) =>
-      fontAt(
-        glyph.styleOwner ??
-          display.paragraphs.find(
-            (p) => p.section === glyph.section && p.paragraph === glyph.paragraph,
-          ),
-        glyph.unit,
-      ),
+    if (!output) paintMemoPane(ctx, layout.memoPaneBoxes, viewport.scrollTop, height);
+    paintPageNumberGlyphs(
+      ctx,
+      output?.scene.glyphs ?? layout.pageNumberGlyphs,
+      viewport.scrollTop,
+      (glyph) =>
+        fontAt(
+          glyph.styleOwner ??
+            (output
+              ? output.paragraphs.get(`${glyph.section}:${glyph.paragraph}`)
+              : display.paragraphs.find(
+                  (p) => p.section === glyph.section && p.paragraph === glyph.paragraph,
+                )),
+          glyph.unit,
+        ),
     );
     const rectangleLayers = previewRectangleLayers(pictureDisplay, layout);
-    const groupCommands = groupedPaintOrder(pictureDisplay, layout, rectangleLayers, pictureLayers);
+    const groupCommands = groupedPaintOrder(pictureDisplay, layout, rectangleLayers, pagePictures);
     const groupTextKeys = new Set(
       groupCommands
         .filter((c) => c.kind === 'text' || c.kind === 'curve')
@@ -617,8 +644,8 @@ export function createRenderer(
         }
       }
     };
-    paintPictures(pictureLayers.behind, true);
-    for (const separator of layout.noteSeparators ?? []) {
+    paintPictures(pagePictures.behind, true);
+    for (const separator of output?.scene.separators ?? layout.noteSeparators ?? []) {
       const top = separator.y - viewport.scrollTop;
       if (top + separator.height < 0 || top > height) continue;
       paintNoteSeparator(ctx, separator, viewport.scrollTop);
@@ -855,12 +882,15 @@ export function createRenderer(
       ? 0
       : Math.max(0, rowAtY(layout, viewport.scrollTop - shadowInsets.bottom));
     const paintParagraphLookup =
+      output?.paragraphLookup ??
       ownedBodyDraftProjection?.beginFrame() ??
       createStatePaintParagraphLookup(display.paragraphs, sourceObservationState, display);
     const formattingMarkCellScope = displayOptions.formattingMarks
       ? createFormattingMarkCellScope(display, layout.rows, layout.repeatedTableHeaderRows ?? [])
       : null;
+    const outputFlowPictureAnchors = output?.flowPictureAnchors;
     const paintTextRow = (row, i) => {
+      if (output && row.memoPane) return;
       if (row.kind === 'gap') return;
       if (
         row.transform === undefined &&
@@ -941,12 +971,16 @@ export function createRenderer(
                   d.hostParagraph === row.paragraph &&
                   d.anchorUnit === start.unit,
               ) ||
-              layout.flowPictures?.some(
-                (p) =>
-                  p.section === row.section &&
-                  p.paragraph === row.paragraph &&
-                  p.anchorUnit === start.unit,
-              )
+              (outputFlowPictureAnchors
+                ? outputFlowPictureAnchors.has(
+                    picturePositionKey(row.section, row.paragraph, start.unit),
+                  )
+                : layout.flowPictures?.some(
+                    (p) =>
+                      p.section === row.section &&
+                      p.paragraph === row.paragraph &&
+                      p.anchorUnit === start.unit,
+                  ))
             )
               continue;
             ctx.font = fontAt(paragraph, start.unit);
@@ -1186,12 +1220,13 @@ export function createRenderer(
           );
       });
     };
-    const sceneRows = [...layout.rows, ...(layout.repeatedTableHeaderRows ?? [])];
-    const scene = tablePaintScene(
-      [...(layout.boxes ?? []), ...(layout.repeatedTableHeaderBoxes ?? [])],
-      sceneRows,
-      first,
-    );
+    const scene =
+      output?.scene.commands ??
+      tablePaintScene(
+        [...(layout.boxes ?? []), ...(layout.repeatedTableHeaderBoxes ?? [])],
+        [...layout.rows, ...(layout.repeatedTableHeaderRows ?? [])],
+        first,
+      );
     let guideBatchEnd = 0;
     for (const [sceneIndex, command] of scene.entries()) {
       if (
@@ -1221,7 +1256,7 @@ export function createRenderer(
       if (groupTextKeys.has(`${row.section}:${row.drawingNode}`)) continue;
       paintTextRow(row, i);
     }
-    for (const prefix of layout.hostNumberPrefixes ?? []) {
+    for (const prefix of output?.scene.prefixes ?? layout.hostNumberPrefixes ?? []) {
       if (prefix.y >= viewport.scrollTop + height || prefix.y + prefix.height <= viewport.scrollTop)
         continue;
       const paragraph = display.paragraphs.find(
@@ -1232,9 +1267,7 @@ export function createRenderer(
         paintNumberPrefix(ctx, prefix, 0, paragraph, fontAt, viewport.scrollTop),
       );
     }
-    paintPictures(
-      pictureLayers.front.filter((item) => !groupCommands.some((c) => c.item === item)),
-    );
+    paintPictures(pagePictures.front.filter((item) => !groupCommands.some((c) => c.item === item)));
     paintRectangles(
       rectangleLayers.front.filter((item) => !groupCommands.some((c) => c.item === item)),
     );
@@ -1273,6 +1306,16 @@ export function createRenderer(
         )
       )
         paintedCheckBoxes.push(box);
+    }
+    if (output) {
+      return {
+        pictures: new Set(
+          [...paintedPictures.behind, ...paintedPictures.front].map(
+            ({ picture }) => `${picture.section}:${picture.pictureNode}`,
+          ),
+        ),
+        tableBorders: layout.tableBorderCoverage,
+      };
     }
     let paintedCaret = '';
     if (
@@ -1410,7 +1453,7 @@ export function createRenderer(
   const preserveQueuedTyping = {};
   const schedule = (reason = null) => {
     if (reason !== preserveQueuedTyping) queuedTypingHold = null;
-    if (!closed && !frame)
+    if (!documentOutput && !closed && !frame)
       frame = requestAnimationFrame(() => {
         frame = 0;
         paint();
@@ -1589,7 +1632,7 @@ export function createRenderer(
     }
     // Reserve source reads in this synchronous ACK turn, before the input
     // controller can enqueue its next edit. Paint uses the same visibility policy.
-    prepareVisibleResources();
+    if (!documentOutput) prepareVisibleResources();
     projectionDeferred = false;
     onLayout(layout, content);
     if (scheduleFrame) schedule();
@@ -1986,6 +2029,112 @@ export function createRenderer(
       return layout;
     },
     flushProjection,
+    // Only the disposable document host may drive a non-viewport paint.
+    documentOutputPort: documentOutput
+      ? {
+          reflow() {
+            reflow();
+            return layout;
+          },
+          generations: () => [layoutGeneration, resourceGeneration, measurementEpoch],
+          async settleResources() {
+            const backgroundTargets = tableBackgroundTargets(
+              [...(layout.boxes ?? []), ...(layout.repeatedTableHeaderBoxes ?? [])],
+              tableBorders,
+              { x: 0, y: 0, width: Number.MAX_SAFE_INTEGER, height: Number.MAX_SAFE_INTEGER },
+            );
+            if (backgroundTargets.total !== backgroundTargets.visible.length)
+              throw Error('PrintTableBackgroundPlacementIncomplete');
+            const targets = new Map();
+            for (const picture of content.pictures ?? [])
+              targets.set(`picture:${picture.section}:${picture.pictureNode}`, {
+                section: picture.section,
+                node: picture.pictureNode,
+                kind: 'picture',
+              });
+            for (const target of backgroundTargets.visible)
+              targets.set(`table-background:${target.section}:${target.listNode}`, {
+                section: target.section,
+                node: target.listNode,
+                kind: 'table-background',
+              });
+            if (targets.size > 256) throw Error('PrintResourceCountLimitExceeded');
+            await Promise.all(
+              [...targets.values()].map(async ({ section, node, kind }) => {
+                if (!pictureStatus(section, node, kind)?.bitmap)
+                  await pictureResources.load(section, node, kind);
+                const entry = pictureStatus(section, node, kind);
+                if (!entry?.bitmap)
+                  throw Error(
+                    `PrintResourceUnavailable:${kind}:${section}:${node}:${entry?.error ?? 'NoBitmap'}`,
+                  );
+              }),
+            );
+          },
+          preparePages(pages) {
+            const commands = tablePaintScene(
+              [...(layout.boxes ?? []), ...(layout.repeatedTableHeaderBoxes ?? [])],
+              [...layout.rows, ...(layout.repeatedTableHeaderRows ?? [])],
+            );
+            const shadows = pictureLayers.inlineShadowInsets ?? { top: 0, bottom: 0 };
+            const commandBounds = ({ kind, item, index }) => {
+              if (kind === 'box') return tableBoxPaintBounds(item);
+              if (item.memoPane || item.kind === 'gap') return null;
+              if (item.transform !== undefined) {
+                if (!item.pageClip) throw Error('UnboundedPrintRowTransform');
+                return item.pageClip;
+              }
+              return {
+                y: rowTop(item, index) - shadows.top,
+                height: rowVisualHeight(item) + shadows.top + shadows.bottom,
+              };
+            };
+            const pictureBounds = (item) => item.visualBounds ?? item;
+            const bounds = (item) => item.pageClip ?? item;
+            const { pageScenes, visits } = indexPrintPageScene(pages, [
+              { key: 'commands', items: commands, bounds: commandBounds },
+              { key: 'behind', items: pictureLayers.behind, bounds: pictureBounds },
+              { key: 'front', items: pictureLayers.front, bounds: pictureBounds },
+              { key: 'glyphs', items: layout.pageNumberGlyphs ?? [], bounds },
+              { key: 'prefixes', items: layout.hostNumberPrefixes ?? [], bounds },
+              { key: 'separators', items: layout.noteSeparators ?? [], bounds },
+            ]);
+            const paragraphs = new Map(
+              display.paragraphs.map((p) => [`${p.section}:${p.paragraph}`, p]),
+            );
+            const paragraphLookup = createStatePaintParagraphLookup(
+              display.paragraphs,
+              sourceObservationState,
+              display,
+            );
+            const flowPictureAnchors = new Set(
+              (layout.flowPictures ?? []).map((p) =>
+                picturePositionKey(p.section, p.paragraph, p.anchorUnit),
+              ),
+            );
+            return {
+              visits,
+              paintPage(page, context) {
+                return paint({
+                  scene: pageScenes[page.ordinal],
+                  context,
+                  paragraphs,
+                  paragraphLookup,
+                  flowPictureAnchors,
+                  scaleX: page.pixelWidth / page.width,
+                  scaleY: page.pixelHeight / page.height,
+                  metrics: {
+                    logicalWidth: page.width,
+                    logicalHeight: page.height,
+                    logicalScrollTop: page.y,
+                    logicalScrollLeft: page.x,
+                  },
+                });
+              },
+            };
+          },
+        }
+      : undefined,
     // surface의 실제 현재 snapshot과 show가 소비한 모델이 같은 경우에만 유예합니다.
     observeSourceState(state) {
       if (
@@ -2350,5 +2499,31 @@ export function createSurfaceRenderer(canvas, viewport, spacer, onLayout, enviro
     onLayout,
     environment,
     createMeasurementPlacementPort(),
+  );
+}
+
+/** Own a detached measurement context. Output painting takes its own full-document context. */
+export function createDocumentOutputRenderer(canvas) {
+  const realm = canvas.ownerDocument.defaultView;
+  const viewport = Object.assign(new realm.EventTarget(), {
+    clientWidth: 1,
+    clientHeight: 1,
+    scrollLeft: 0,
+    scrollTop: 0,
+  });
+  return createRenderer(
+    canvas,
+    viewport,
+    { style: {} },
+    undefined,
+    {
+      devicePixelRatio: () => 1,
+      ResizeObserver: class {
+        observe() {}
+        disconnect() {}
+      },
+    },
+    null,
+    true,
   );
 }

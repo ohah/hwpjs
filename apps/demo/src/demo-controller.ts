@@ -9,7 +9,12 @@ import { createCharacterShapePort } from './character-shape-port.ts';
 import { decorateParagraphAlignmentFallback } from './paragraph-shape-fallback-view.ts';
 import * as paragraphShapeCore from '@hwpjs/core';
 import { createParagraphShapeTool } from './paragraph-shape-tool.ts';
-import type { CanvasDisplayOptions } from '@hwpjs/vanilla';
+import type {
+  CanvasDisplayOptions,
+  CanvasPrintAvailability,
+  CanvasPrintPreview,
+  CanvasPrintPreviewOptions,
+} from '@hwpjs/vanilla';
 import { createViewOptionsBridge } from './view-options-bridge.ts';
 import { isMenuZoomPercent, stepViewZoom } from './view-zoom.ts';
 import { mountShortcutSettings } from './shortcut-settings.ts';
@@ -78,6 +83,8 @@ export interface DemoHost
   setScale(value: number): boolean;
   setDisplayOptions?(options: CanvasDisplayOptions): boolean;
   getDisplayOptions?(): Readonly<CanvasDisplayOptions> | undefined;
+  getPrintAvailability?(): CanvasPrintAvailability;
+  openPrintPreview?(options?: CanvasPrintPreviewOptions): CanvasPrintPreview;
   dispose(): void | Promise<void>;
 }
 export type MountDemoHost = (
@@ -85,6 +92,13 @@ export type MountDemoHost = (
   editor: HeadlessEditor,
   onStatus: (message: string) => void,
 ) => DemoHost | Promise<DemoHost>;
+
+const printReasons = {
+  detached: '문서 화면을 준비하는 중입니다.',
+  unsupported: '이 환경에서는 인쇄 미리보기를 사용할 수 없습니다.',
+  'not-ready': '문서를 먼저 열어주세요.',
+  busy: '입력이나 편집 작업이 끝난 뒤 인쇄 미리보기를 열어주세요.',
+};
 
 /** 공개 상태의 검증된 선택만 표시하며 별도 선택 캐시를 만들지 않습니다. */
 export function selectionStatusLabel(state: ReturnType<HeadlessEditor['getEditorState']>): string {
@@ -282,6 +296,7 @@ export async function mountDemo(
     const formatState = formatting.getPresentation(sharedFormatting),
       history = getHistoryAvailability(state),
       fontAvailability = fontName.presentation(sharedFormatting);
+    const print = host?.openPrintPreview && host.getPrintAvailability?.();
     const availability = {
       ...formatState.actions,
       ...textColor.presentation(sharedFormatting),
@@ -323,6 +338,13 @@ export async function mountDemo(
       ...clipboard.getPresentation().actions,
       'new-document': { enabled: !busy },
       save: { enabled: ready, reason: ready ? undefined : '문서를 먼저 열어주세요.' },
+      ...(print
+        ? {
+            'print-preview': print.available
+              ? { enabled: true }
+              : { enabled: false, reason: printReasons[print.reason] },
+          }
+        : {}),
       undo: {
         enabled: host?.canRequestHistory?.('undo') ?? history.canUndo,
         reason: !ready
@@ -431,6 +453,12 @@ export async function mountDemo(
     const available = presentation().actions?.[action.command];
     if (!available?.enabled) {
       note(available?.reason ?? '현재 사용할 수 없습니다.');
+      return;
+    }
+    if (action.command === 'print-preview') {
+      if (!host?.openPrintPreview) throw Error('PrintSurfaceDetached');
+      const name = filename.replace(/\.(?:hwp|hwpx)$/i, '') || '문서';
+      await host.openPrintPreview({ filename: name + '.pdf' }).ready;
       return;
     }
     if (action.command === 'new-document') {

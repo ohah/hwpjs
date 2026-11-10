@@ -95,7 +95,7 @@ const extraTools: readonly Tool[] = [
 ];
 const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
 const menus: readonly [string, readonly DemoCommand[]][] = [
-  ['파일', ['new-document', 'save']],
+  ['파일', ['new-document', 'save', 'print-preview']],
   ['편집', ['undo', 'redo', 'cut', 'copy', 'paste', 'format-copy', 'find', 'replace']],
   ['보기', ['zoom-in', 'zoom-out', 'toggle-marks', 'toggle-paragraph-marks', 'toggle-grid']],
   ['입력', ['insert-image', 'insert-table', 'insert-shape', 'insert-link', 'insert-symbol']],
@@ -137,6 +137,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
 ];
 const labels = new Map<DemoCommand, string>([
   ...commands.map(([id, label]) => [id, label] as [DemoCommand, string]),
+  ['print-preview', DEMO_COMMAND_REGISTRY['print-preview'].label],
   ['zoom-in', '확대'],
   ['zoom-out', '축소'],
   ['undo', '실행 취소'],
@@ -282,6 +283,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     command: DemoCommand,
     label = labels.get(command) || command,
     icon?: ShellIcon,
+    beforeDispatch?: () => void,
   ) => {
     const node = el('button', icon ? 'hwp-demo-tool' : 'hwp-demo-button');
     node.type = 'button';
@@ -294,13 +296,14 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     listen(node, 'pointerdown', (event) => {
       if ((event as PointerEvent).button === 0 && !node.disabled) event.preventDefault();
     });
-    listen(node, 'click', () =>
+    listen(node, 'click', () => {
+      beforeDispatch?.();
       dispatch(
         command === 'font-name'
           ? { command, language: selectedFontLanguage ?? 'representative' }
           : ({ command } as DemoAction),
-      ),
-    );
+      );
+    });
     return { node, description };
   };
   const menuNav = el('nav', 'hwp-demo-menus');
@@ -312,12 +315,15 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     details: HTMLDetailsElement,
     summary: HTMLElement,
     popup: HTMLElement,
+    refreshOnOpen = false,
   ) => {
     disclosures.push({ details, summary, popup });
     listen(details, 'toggle', () => {
       summary.setAttribute('aria-expanded', String(details.open));
-      if (details.open)
+      if (details.open) {
         for (const row of disclosures) if (row.details !== details) row.details.open = false;
+        if (refreshOnOpen) update();
+      }
     });
     summary.setAttribute('aria-expanded', 'false');
     listen(details, 'keydown', (event) => {
@@ -335,11 +341,24 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     popup.id = `${prefix}-menu-${disclosures.length}`;
     summary.setAttribute('aria-controls', popup.id);
     for (const id of items) {
-      const button = commandButton(id);
+      const print = id === 'print-preview';
+      const button = commandButton(
+        id,
+        undefined,
+        undefined,
+        print
+          ? () => {
+              details.open = false;
+              summary.focus();
+            }
+          : undefined,
+      );
+      if (print) button.node.setAttribute('aria-haspopup', 'dialog');
       popup.append(button.node, button.description);
-      listen(button.node, 'click', () => {
-        details.open = false;
-      });
+      if (!print)
+        listen(button.node, 'click', () => {
+          details.open = false;
+        });
     }
     if (label === '보기') {
       const scales = el('details', 'hwp-demo-zoom-menu'),
@@ -362,7 +381,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     }
     details.append(summary, popup);
     menuNav.append(details);
-    trackDisclosure(details, summary, popup);
+    trackDisclosure(details, summary, popup, items.includes('print-preview'));
   }
   listen(doc, 'pointerdown', (event) => {
     if (

@@ -85,7 +85,7 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | Enter 상속·Company 보호 후속 | 준비 소스/격리 후보; 현재 공개 3fc 배포 및 과거 b7 감사와 분리 | 후보별 근거만 유효; 현재 배포 포함 여부·동일 snapshot 실행은 이 문서 조사에서 확인하지 않음 | 미검증(공개 배포의 해당 기능) | 정식 통합·배포와 동일 snapshot 독립 저장·UI 검증 |
 | 탭/머리말 oracle 보완 | 기존 verifier를 재사용한 격리 후보. Native/제품 코드 변경 아님 | `zig-out/verification/oracle-closure-current/REPORT.md`; 동결·미적용 | 미검증 | 부모의 정식 적용 검토 이후 새 verifier 결과로 기록. 기존 b7 oracle 미지원 132를 소급 변경하지 않음 |
 | 전체 HWP5/HWPX 의미·조판·편집 | 포맷 코어·모델·WASM·scene·Canvas를 단계적으로 연결 | `docs/fixture-editor-completion.md`와 b7 미완료 결과 | 부분 | 모든 필드·임의 위치·모든 명령·원본 한/글 조판 및 실제 UI 전수 증명 |
-| PDF/bitmap export·인쇄 | 전용 typed public 메서드 미제공. host 책임과 구분 | public export 정적 대조 | 미구현 | export 계약·폰트·페이지 조판·독립 비교 |
+| PDF/bitmap export·인쇄 | 웹 Canvas Surface의 쪽별 PNG, 인쇄 미리보기, 이미지 PDF 다운로드 | HWP5/HWPX 실문서의 쪽 수·용지·표시 내용 독립 대조 | 부분 | 검색 가능한 PDF와 미지원 조판 확대 |
 | 재사용 clear/new·메타·호환 facade | dispose는 terminal이며 clear/new와 다름. 범용 public 메타/HwpCtrl Action facade 미제공 | public API inventory | 미구현 | 기능별 명시 계약·실물 검증; 기존 HwpCtrl와 동일 시그니처를 약속하지 않음 |
 
 원래 장시간 Trace0 Debug failure sweep는 프로세스·handle이 사라졌지만 최종 `TIMING-EXIT`가 없어 **종료 미확인/미검증**입니다. 중간 진행이나 프로세스 부재를 통과 수에 넣지 않습니다.
@@ -118,7 +118,7 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | 남은 Markdown 표 빈 줄/trailing 2-space/번호 format_string/각주·미주 위치/이미지 출력 | 현행 Markdown export가 없어 해결됐다고 계수하지 않음 | legacy viewer의 명시 남은 작업 | 미구현 | 항목별 출력 구현과 독립 회귀 |
 | 공통 Document HTML·URL/MIME/BinaryStore/CSS font 유틸리티 | 현행 source/resource/Canvas 기반은 있으나 구 Document renderer/API 호환은 아님 | 형식별 source와 구 설계 대조 | 부분 | 변환기 공개와 의미·escaping·ID 관계 검증 |
 | Canvas viewer 예정 | 실제 Canvas 표시·입력 연결이 존재 | 위 UI 사례만 확인 | 부분 | 모든 조판·명령/bitmap export·플랫폼 전수 검증 |
-| PDF viewer 예정 | 전용 public PDF export 없음 | public inventory | 미구현 | PDF 생성·폰트·레이아웃 계약 |
+| PDF 미리보기·출력 | Canvas Surface의 쪽별 미리보기와 이미지 PDF 저장 | 실제 브라우저 다운로드 및 PDF 독립 확인 | 부분 | 벡터·텍스트 PDF, 미지원 문서 범위 |
 | 배포용 문서·차트 명세 내용 준비 중 | legacy 설명 문서가 비어 있다는 사실은 엔진 미구현 판정과 다름 | 구 spec 본문과 현재 모듈·정책 대조 | 부분 | 새 문서에 실제 지원/보호/미해석 범위를 정확히 설명 |
 | HWP3 명세 링크 | 현재 HWP3는 사용자 제외 | 프로젝트 범위 정책 | 사용자 제외 | 지원 완료율/미지원 분모에 넣지 않음 |
 
