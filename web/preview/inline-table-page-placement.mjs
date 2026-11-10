@@ -1,12 +1,21 @@
+import { clipInlineTablePaperPreview } from './inline-table-paper-preview.mjs';
 import { translatePicturePlacement } from './picture-placement-translation.mjs';
 import { paragraphLineGeometry } from './paragraph-geometry.mjs';
 import { tableInsets } from './table-insets.mjs';
 import { isSingleInlineTableHost } from './single-inline-table-host.mjs';
 
 // Position each selected page fragment using the same original inline host.
-export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
+export function placeInlineTablePages(
+  table,
+  paragraph,
+  layout,
+  outerInsets,
+  { allowPaperClip = false } = {},
+) {
   const unavailable = (error) => ({ state: 'unavailable', error });
+  if (typeof allowPaperClip !== 'boolean') return unavailable('InvalidInlineTablePaperPreview');
   const margins = tableInsets(outerInsets);
+  let clipToPaper = false;
   if (
     !margins ||
     (paragraph?.text !== '\ufffc' && !isSingleInlineTableHost(paragraph, table)) ||
@@ -121,15 +130,27 @@ export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
       paper.width <= 0 ||
       start < paper.x ||
       end > paper.x + paper.width + 1e-8
-    )
-      return {
-        ...unavailable('InlineTablePageWidthOverflow'),
-        pageOrdinal: boxes[0].pageOrdinal,
-        columnOrdinal: boxes[0].columnOrdinal,
-        footprint: { start, end, width: end - start },
-        column: { ...column },
-        paper: paper ? { ...paper } : undefined,
-      };
+    ) {
+      if (
+        allowPaperClip &&
+        paper &&
+        [paper.x, paper.y, paper.width, paper.height].every(Number.isFinite) &&
+        paper.width > 0 &&
+        paper.height > 0 &&
+        Number.isFinite(start) &&
+        Number.isFinite(end)
+      )
+        clipToPaper = true;
+      else
+        return {
+          ...unavailable('InlineTablePageWidthOverflow'),
+          pageOrdinal: boxes[0].pageOrdinal,
+          columnOrdinal: boxes[0].columnOrdinal,
+          footprint: { start, end, width: end - start },
+          column: { ...column },
+          paper: paper ? { ...paper } : undefined,
+        };
+    }
   }
   const shift = column.x + line.x + margins.left - left;
   const ownsPosition = (item) =>
@@ -161,5 +182,6 @@ export function placeInlineTablePages(table, paragraph, layout, outerInsets) {
     rows.some((row) => !Number.isFinite(row.x))
   )
     return unavailable('InlineTablePageWidthOverflow');
-  return { ...layout, boxes: projected, rows, ...(flowPictures ? { flowPictures } : {}) };
+  const placed = { ...layout, boxes: projected, rows, ...(flowPictures ? { flowPictures } : {}) };
+  return clipToPaper ? clipInlineTablePaperPreview(table, placed) : placed;
 }

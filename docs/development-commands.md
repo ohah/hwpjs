@@ -1757,3 +1757,13 @@ node tools/native-fixture-preflight.mjs \
   --failures /absolute/workspace/zig-out/verification/prior-failures.json \
   --report /absolute/workspace/zig-out/verification/fresh-preflight.json
 ```
+
+## 종이 너비 초과 표의 부분 미리보기
+
+[부분 미리보기 계약](inline-table-paper-preview.md)을 따릅니다. 실제 Canvas·저장 결과는 단위 검사와 구분합니다.
+
+```sh
+node --test tests/hwpx/inline-table-fit-rejection.test.mjs \
+  tests/hwpx/inline-table-paper-preview.test.mjs \
+  packages/vanilla/tests/preview-edit-policy.test.mjs
+```

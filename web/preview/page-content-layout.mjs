@@ -38,8 +38,11 @@ export function layoutPageContent(
     columnBottom,
     paginateRows,
     chartDisplay,
+    oversizeInlineTablePreview = false,
   } = {},
 ) {
+  if (typeof oversizeInlineTablePreview !== 'boolean')
+    return { state: 'unavailable', error: 'InvalidInlineTablePaperPreview' };
   content = paragraphStylePageBreaks(content);
   const unavailable = (error) => ({ state: 'unavailable', error });
   if (columnBottom !== undefined && typeof columnBottom !== 'function')
@@ -274,6 +277,7 @@ export function layoutPageContent(
     return layoutDrawingBodyContent(content, measure, maxRows, layoutBody);
   if (content.tables?.length)
     return layoutTableBodyContent(content, measure, maxRows, {
+      oversizeInlineTablePreview,
       minimumCellHeight,
       rowY,
       minimumRowPage,

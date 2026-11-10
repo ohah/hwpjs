@@ -149,7 +149,8 @@ export function createCanvasSurface({
   let closed = false,
     renderer: any,
     direct: any,
-    lease: InputSurfaceLease | undefined;
+    lease: InputSurfaceLease | undefined,
+    geometryLease: InputSurfaceLease | undefined;
   let frameObserver: ResizeObserver | undefined;
   let unsubscribe: (() => void) | undefined,
     bridge: ReturnType<typeof createControlBridge> | undefined;
@@ -298,6 +299,43 @@ export function createCanvasSurface({
     stage.style.minWidth = frame ? '0px' : '100%';
     stage.style.overflow = frame ? 'clip' : 'visible';
   };
+  const viewAllowsRequest = (message: RuntimeMessage): boolean => {
+    try {
+      return renderer?.viewAllowsRequest
+        ? renderer.viewAllowsRequest(message) === true
+        : renderer?.viewEditPolicyActive?.() !== true;
+    } catch {
+      return false;
+    }
+  };
+  const viewAllowsSelection = (selection: SelectionTarget | null | undefined): boolean => {
+    if (!selection) return true;
+    try {
+      return renderer?.viewAllowsRange
+        ? renderer.viewAllowsRange(
+            {
+              section: selection.section,
+              paragraph: selection.paragraph,
+              unit: selection.startUnit,
+            },
+            { section: selection.section, paragraph: selection.paragraph, unit: selection.endUnit },
+          ) === true
+        : renderer?.viewEditPolicyActive?.() !== true;
+    } catch {
+      return false;
+    }
+  };
+  const viewAllowsCurrentSelection = (): boolean => {
+    try {
+      if (renderer?.viewEditPolicyActive?.() !== true) return true;
+      const selection = direct?.currentFormattingSelection();
+      return Boolean(
+        selection && renderer.viewAllowsRange?.(selection.anchor, selection.focus) === true,
+      );
+    } catch {
+      return false;
+    }
+  };
   const render = (state: ReturnType<HeadlessEditor['getEditorState']>) => {
     if (closed || !renderer) return;
     // Only new observations may change the projection. Native acknowledgment
@@ -314,7 +352,12 @@ export function createCanvasSurface({
       renderer.suspendGeometryEvidence();
       return;
     }
-    const geometry = lease ? readGeometryProjection(lease, state) : undefined;
+    // Preview owner IDs belong to the full public snapshot. A private edit
+    // window can retain yesterday's table coordinates after ordinary body input.
+    const geometry =
+      geometryLease && renderer.viewEditPolicyActive?.() !== true
+        ? readGeometryProjection(geometryLease, state)
+        : undefined;
     if (key === displayed) {
       renderer.observeSourceState(state);
       renderer.setGeometryEvidence(geometry?.content, geometry?.evidence);
@@ -466,13 +509,14 @@ export function createCanvasSurface({
       viewport,
       spacer,
       (layout: any) => {
+        direct?.reconcilePreviewPolicy?.();
         alignFrame(layout);
         notifyPageStatus();
       },
       rendererEnvironment,
     );
     if (environment.decodeImage) renderer.pictureDecoder(environment.decodeImage);
-    lease = editor.acquireInputSurface({
+    const nativeLease = editor.acquireInputSurface({
       commitComposition: async () => {
         const result = direct?.flushComposition() ?? 'unchanged';
         if (result === 'blocked') return result;
@@ -481,6 +525,18 @@ export function createCanvasSurface({
       },
       cancelComposition: () => direct?.cancelComposition(),
     });
+    geometryLease = nativeLease; // Private geometry is bound to the original lease identity.
+    // Recheck at the actual asynchronous Native gateway, not only at capture.
+    lease = {
+      ...nativeLease,
+      request(message, options) {
+        if (!viewAllowsRequest(message)) return Promise.reject(new Error('PreviewReadOnlyTarget'));
+        return nativeLease.request(message, options);
+      },
+      publishSelection(selected) {
+        return nativeLease.publishSelection(viewAllowsSelection(selected) ? selected : null);
+      },
+    };
     bridge = createControlBridge(
       {
         state: () => editor.getEditorState(),
@@ -536,7 +592,9 @@ export function createCanvasSurface({
         ready: () => nonTextHistoryPending === undefined && bridge!.ready(),
         busy: () => nonTextHistoryPending !== undefined || bridge!.busy(),
         request: (message: RuntimeMessage) =>
-          nonTextHistoryPending === undefined && bridge!.request(message),
+          nonTextHistoryPending === undefined &&
+          viewAllowsRequest(message) &&
+          bridge!.request(message),
       },
       deferQueuedTypingProjection(draft: any, controllerCurrent: () => boolean) {
         const current = activeHistoryAcknowledgement;
@@ -656,8 +714,8 @@ export function createCanvasSurface({
         const state = nonTextHistoryState(kind);
         return state ? requestNonTextHistory(kind, state) : false;
       },
-      queryEditRange: (m: RuntimeMessage) => bridge!.request(m),
-      querySplitRange: (m: RuntimeMessage) => bridge!.request(m),
+      queryEditRange: (m: RuntimeMessage) => viewAllowsRequest(m) && bridge!.request(m),
+      querySplitRange: (m: RuntimeMessage) => viewAllowsRequest(m) && bridge!.request(m),
       onCommittedSelection(value: any, observation?: { origin?: string }) {
         if (closed || !lease?.isActive()) return;
         const state = editor.getEditorState();
@@ -666,7 +724,7 @@ export function createCanvasSurface({
           value &&
           value.anchor.section === value.focus.section &&
           value.anchor.paragraph === value.focus.paragraph;
-        const point = singleOwnerRange ? value.anchor : null,
+        const point = singleOwnerRange && viewAllowsCurrentSelection() ? value.anchor : null,
           row = point && renderer.paragraph(point);
         const owner = paragraphSelectionOwner(row);
         const target: SelectionTarget | null =
@@ -949,6 +1007,7 @@ export function createCanvasSurface({
     };
   };
   const rangeViewState = (modalCurrent: () => boolean = () => !modalOpen()) => {
+    if (!viewAllowsCurrentSelection()) return undefined;
     if (closed || nonTextHistoryPending || !lease?.isActive() || bridge?.busy() || !modalCurrent())
       return undefined;
     const state = editor.getEditorState();
@@ -1196,6 +1255,7 @@ export function createCanvasSurface({
           editor.getEditorState() !== state ||
           state.status !== 'ready' ||
           state.selection !== selection ||
+          !viewAllowsSelection(selected) ||
           state.content !== content ||
           state.stateVersion !== observedStateVersion ||
           displayed !==
@@ -1278,6 +1338,7 @@ export function createCanvasSurface({
     captureGeneratedTableGridSelection() {
       const state = editor.getEditorState();
       const current = () =>
+        viewAllowsCurrentSelection() &&
         !closed &&
         !nonTextHistoryPending &&
         lease?.isActive() === true &&
@@ -1325,6 +1386,7 @@ export function createCanvasSurface({
       if (!selected || source.characterAvailableReason === 'CreatedCellRequiresSurfacePort')
         return null;
       const canonical = () => {
+        if (!viewAllowsSelection(selected) || !viewAllowsCurrentSelection()) return false;
         if (
           closed ||
           nonTextHistoryPending ||
@@ -1686,7 +1748,15 @@ export function createCanvasSurface({
       )
         return undefined;
       const picture = renderer.selectedPicture?.();
-      if (!picture) return null;
+      if (
+        !picture ||
+        !viewAllowsRequest({
+          kind: 'picture-resize',
+          section: picture.section,
+          pictureNode: picture.pictureNode,
+        })
+      )
+        return null;
       if (
         ![picture.section, picture.pictureNode].every(
           (value) => Number.isSafeInteger(value) && value >= 0 && value <= 0xffffffff,

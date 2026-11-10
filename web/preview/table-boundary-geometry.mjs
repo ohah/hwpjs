@@ -34,6 +34,7 @@ export function tableBoundaryFrames(layout) {
       ![box.x, box.y, box.width, box.height, box.x + box.width, box.y + box.height].every(
         Number.isFinite,
       ) ||
+      box.previewOnly === true ||
       box.width <= 0 ||
       box.height <= 0
     ) {

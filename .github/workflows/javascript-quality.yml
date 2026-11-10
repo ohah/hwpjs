@@ -75,6 +75,8 @@ jobs:
         timeout-minutes: 2
         run: |
           bun test --no-install ./packages/core/tests/commands/source-table-grid.test.ts
+          test -f ./tests/hwpx/inline-table-paper-preview.test.mjs || exit 1
+          test -f ./packages/vanilla/tests/preview-edit-policy.test.mjs || exit 1
           HWPJS_TEST_CORE_DIST=packages/core/dist node --experimental-transform-types --max-old-space-size=512 \
             --import ./tools/renderer-test-core-provider.mjs \
             --test ./packages/vanilla/tests/table-grid-view-surface.test.ts
@@ -87,6 +89,8 @@ jobs:
             ./packages/vanilla/tests/source-table-grid-history.test.mjs \
             ./packages/vanilla/tests/source-table-grid-multipara-history.test.mjs \
             ./tests/hwpx/inline-table-fit-rejection.test.mjs \
+            ./tests/hwpx/inline-table-paper-preview.test.mjs \
+            ./packages/vanilla/tests/preview-edit-policy.test.mjs \
             ./apps/demo/tests/source-table-grid-port.test.mjs \
             ./apps/demo/tests/source-table-grid-ui.test.mjs \
             ./apps/demo/tests/table-grid-port.test.mjs \

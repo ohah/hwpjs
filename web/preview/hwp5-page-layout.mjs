@@ -227,7 +227,10 @@ export function layoutHwp5PageContent(content, measure, maxRows = 20000, options
     }
     if (layout.state === 'paginated' && opaque.unverified.length) {
       layout.sourceCoverage = 'incomplete';
-      layout.unverifiedTableSources = opaque.unverified;
+      layout.unverifiedTableSources = [
+        ...(layout.unverifiedTableSources ?? []),
+        ...opaque.unverified,
+      ];
     }
     if (layout.state === 'paginated' && unverifiedSections.length) {
       layout.sourceCoverage = 'incomplete';

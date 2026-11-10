@@ -540,3 +540,5 @@
 - [인라인 표의 영구 가로 비적합 판정](inline-table-fit-rejection.md)
 
 - [Native 픽스처 사전 점검](native-fixture-preflight.md)
+
+- [종이 너비 초과 인라인 표의 부분 미리보기](inline-table-paper-preview.md)

@@ -1,3 +1,4 @@
+import { createPreviewEditPolicy } from './preview-edit-policy.mjs';
 import {
   createMeasurementPlacementPort,
   isMeasurementPlacementPort,
@@ -162,6 +163,18 @@ export function createRenderer(
     layout = { rows: [], limited: false };
   let projectionDeferred = false;
   const paragraphLookup = createParagraphLookup();
+  let policyContent, policyLayout, cachedViewPolicy;
+  const viewPolicy = () => {
+    // Normal queued typing keeps its deferred projection. Only an active
+    // partial-preview barrier needs fresh Native identities before permission.
+    if (layout.previewReadOnlyTables?.length) flushProjection();
+    if (content !== policyContent || layout !== policyLayout) {
+      cachedViewPolicy = createPreviewEditPolicy(content, layout);
+      policyContent = content;
+      policyLayout = layout;
+    }
+    return cachedViewPolicy;
+  };
   const evidenceDescriptor = Object.getOwnPropertyDescriptor(
     environment,
     'nativeGeometryEvidenceReader',
@@ -1495,9 +1508,12 @@ export function createRenderer(
         ? (windowFragment ? layoutHwp5WindowContent : layoutHwp5PageContent)(
             pictureDisplay,
             measure,
+            undefined,
+            windowFragment ? {} : { oversizeInlineTablePreview: true },
           )
         : layoutPageContent(pictureDisplay, measure, undefined, {
             chartDisplay: (section, wrapper) => chartResources.status(section, wrapper),
+            oversizeInlineTablePreview: true,
           });
     const logicalWidth = Math.max(1, viewport.clientWidth / viewScale - 2 * TEXT_LEFT);
     const fallbackLayout =
@@ -2046,17 +2062,38 @@ export function createRenderer(
             Object.entries(content.tableCreationResources).map(([key, ids]) => [key, ids.slice()]),
           )
         : null,
-    findText: (query) => findText(content.paragraphs, query),
-    adjacentCell: (point, backward) => adjacentCell(content, flushProjection(), point, backward),
+    viewEditPolicyActive: () => viewPolicy().active,
+    viewAllowsPoint: (point) => viewPolicy().allowsPoint(point),
+    viewAllowsRange: (anchor, focus) => viewPolicy().allowsRange(anchor, focus),
+    viewAllowsRequest: (message) => viewPolicy().allowsRequest(message),
+    viewContent: () => viewPolicy().content,
+    findText: (query) => findText(viewPolicy().content.paragraphs, query),
+    adjacentCell: (point, backward) => {
+      const policy = viewPolicy();
+      if (!policy.allowsPoint(point)) return null;
+      const next = adjacentCell(policy.content, layout, point, backward);
+      return next && policy.allowsPoint(next) ? next : null;
+    },
     adjacentParagraph: (point, forward) => {
-      const next = adjacentOwnedParagraph(content.paragraphs, point, forward);
-      return next && caretGeometry(flushProjection(), next) ? next : null;
+      const policy = viewPolicy();
+      if (!policy.allowsPoint(point)) return null;
+      const next = adjacentOwnedParagraph(policy.content.paragraphs, point, forward);
+      return next && policy.allowsPoint(next) && caretGeometry(layout, next) ? next : null;
     },
     paragraph: (point) => {
       if (projectionDeferred && point?.createdCell) flushProjection();
-      return createdCellParagraph(layout, point) ?? paragraphLookup.find(content.paragraphs, point);
+      const policy = viewPolicy();
+      return (
+        createdCellParagraph(layout, point) ??
+        paragraphLookup.find(policy.content.paragraphs, point)
+      );
     },
-    selectionRanges: (anchor, focus) => paragraphSelectionRanges(content.paragraphs, anchor, focus),
+    selectionRanges: (anchor, focus) => {
+      const policy = viewPolicy();
+      return policy.allowsRange(anchor, focus)
+        ? paragraphSelectionRanges(policy.content.paragraphs, anchor, focus)
+        : [];
+    },
     textColorRangesAvailable: () => content.characterTextColorRangesAvailable === true,
     characterStrikeColorAvailable: () => content.characterStrikeColorAvailable === true,
     characterFontAvailable: () => content.characterFontAvailable === true,
@@ -2071,12 +2108,21 @@ export function createRenderer(
       content.namedFontPropertyReplacementAvailable === true,
     characterFontNameRangesAvailable: () => content.characterFontNameRangesAvailable === true,
     characterFontRangesAvailable: () => content.characterFontRangesAvailable === true,
-    replacementRanges: (anchor, focus) =>
-      paragraphSelectionRanges(content.paragraphs, anchor, focus, undefined, {
-        includeEmpty: true,
-      }),
+    replacementRanges: (anchor, focus) => {
+      const policy = viewPolicy();
+      return policy.allowsRange(anchor, focus)
+        ? paragraphSelectionRanges(policy.content.paragraphs, anchor, focus, undefined, {
+            includeEmpty: true,
+          })
+        : [];
+    },
     paragraphReplacementAvailable: () => content.paragraphReplacementAvailable === true,
-    selectionText: (anchor, focus) => paragraphSelectionText(content.paragraphs, anchor, focus),
+    selectionText: (anchor, focus) => {
+      const policy = viewPolicy();
+      return policy.allowsRange(anchor, focus)
+        ? paragraphSelectionText(policy.content.paragraphs, anchor, focus)
+        : null;
+    },
     selectionCharacterState: (anchor, focus, property) =>
       (property === 'strike'
         ? content.characterStrikeRangesAvailable
@@ -2119,8 +2165,10 @@ export function createRenderer(
           sourcePositions: false,
         }),
       ),
-    tableCreationWidthHint: (point) => createdTableWidthHint(content, point),
+    tableCreationWidthHint: (point) =>
+      viewPolicy().allowsPoint(point) ? createdTableWidthHint(content, point) : null,
     cell: (point, { includeTableNode = false } = {}) => {
+      if (!viewPolicy().allowsPoint(point)) return null;
       if (content.format !== 'hwpx' && content.format !== 'hwp5') return null;
       const p = paragraphLookup.find(content.paragraphs, point);
       const table = content.tables?.find(
@@ -2138,7 +2186,8 @@ export function createRenderer(
           }
         : null;
     },
-    formula: (point) => formulaAtParagraph(content, point),
+    formula: (point) =>
+      viewPolicy().allowsPoint(point) ? formulaAtParagraph(content, point) : null,
     preview(value) {
       draft = value;
       reflow();

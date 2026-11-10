@@ -3,7 +3,7 @@ import { rowPageClipContains } from './row-page-clip.mjs';
 export function hitTransformedBox(boxes, x, y) {
   if (![x, y].every(Number.isFinite)) return null;
   for (const box of boxes.toReversed()) {
-    if (!rowPageClipContains(box, x, y)) continue;
+    if (box.previewOnly === true || !rowPageClipContains(box, x, y)) continue;
     const local =
       box.transform === undefined ? [x, y] : affinePoint(inverseAffine(box.transform), [x, y]);
     if (

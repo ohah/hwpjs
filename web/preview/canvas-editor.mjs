@@ -102,8 +102,48 @@ export function createCanvasEditor({
   const activeElement =
     environment.activeElement ??
     (() => input.getRootNode?.().activeElement ?? ownerDocument?.activeElement);
+  let guardPreviewEvent = null,
+    reconcilePreviewPolicy = null;
+  const viewActive = () => {
+    try {
+      return renderer.viewEditPolicyActive?.() === true;
+    } catch {
+      return true;
+    }
+  };
+  const viewAllowsPoint = (point) => {
+    try {
+      return renderer.viewAllowsPoint ? renderer.viewAllowsPoint(point) === true : !viewActive();
+    } catch {
+      return false;
+    }
+  };
+  const viewAllowsRange = (a, f) => {
+    try {
+      return renderer.viewAllowsRange ? renderer.viewAllowsRange(a, f) === true : !viewActive();
+    } catch {
+      return false;
+    }
+  };
+  const viewAllowsRequest = (message) => {
+    try {
+      return renderer.viewAllowsRequest
+        ? renderer.viewAllowsRequest(message) === true
+        : !viewActive();
+    } catch {
+      return false;
+    }
+  };
   const events = new AbortController(),
-    listen = (node, type, fn) => node.addEventListener(type, fn, { signal: events.signal });
+    listen = (node, type, fn) =>
+      node.addEventListener(
+        type,
+        (event) => {
+          if (guardPreviewEvent?.(node, type, event) === false) return;
+          fn(event);
+        },
+        { signal: events.signal },
+      );
   let generatedGridSelectionEpoch = 0;
   // Interaction identity must survive neither A→B→A nor a cancelled composition.
   for (const type of ['select', 'beforeinput', 'compositionstart', 'compositionend', 'keydown'])
@@ -115,7 +155,8 @@ export function createCanvasEditor({
     ready: () => !events.signal.aborted && hostControls.ready(),
     busy: () =>
       events.signal.aborted || hostControls.busy() || historyPaintBarrier?.pending === true,
-    request: (message) => !events.signal.aborted && hostControls.request(message),
+    request: (message) =>
+      !events.signal.aborted && viewAllowsRequest(message) && hostControls.request(message),
   };
   let target = null,
     committed = '',
@@ -159,6 +200,8 @@ export function createCanvasEditor({
   // Buffer only a draft descended from an active text edit. Native submission
   // still uses textEditable(), including a fresh selection-scoped permission.
   const pendingDraftEditable = () =>
+    viewAllowsRange(anchor, focus) &&
+    viewAllowsPoint(target) &&
     Boolean(target) &&
     controls.ready() &&
     !historyPending &&
@@ -342,7 +385,11 @@ export function createCanvasEditor({
     );
   };
   const wholeTextEditable = () =>
-    Boolean(target) && !multipleParagraphs() && renderer.paragraph(target)?.editable === true;
+    viewAllowsPoint(target) &&
+    viewAllowsRange(anchor, focus) &&
+    Boolean(target) &&
+    !multipleParagraphs() &&
+    renderer.paragraph(target)?.editable === true;
   const editRange = () => {
     if (target?.createdCell) return null;
     if (!target || !anchor || !focus || multipleParagraphs()) return null;
@@ -361,9 +408,16 @@ export function createCanvasEditor({
     };
   };
   const textEditable = () =>
-    wholeTextEditable() || Boolean(editRange() && rangePermission.allowed(editRange()));
+    viewAllowsPoint(target) &&
+    viewAllowsRange(anchor, focus) &&
+    (wholeTextEditable() || Boolean(editRange() && rangePermission.allowed(editRange())));
   const multiCompositionAvailable = () => {
-    if (!multipleParagraphs() || renderer.paragraphReplacementAvailable?.() !== true) return false;
+    if (
+      !viewAllowsRange(anchor, focus) ||
+      !multipleParagraphs() ||
+      renderer.paragraphReplacementAvailable?.() !== true
+    )
+      return false;
     const ranges = renderer.replacementRanges?.(anchor, focus);
     return Boolean(
       ranges?.length && ranges.every((range) => renderer.paragraph(range)?.editable === true),
@@ -495,6 +549,7 @@ export function createCanvasEditor({
     input.style.top = `${Math.max(viewport.scrollTop, Math.min(bounds.y, viewport.scrollTop + viewport.clientHeight - bounds.height))}px`;
   };
   renderer.onGeometry(() => {
+    reconcilePreviewPolicy?.();
     place();
     historyPaintBarrier.notify();
   });
@@ -609,6 +664,11 @@ export function createCanvasEditor({
     return point.unit < minimum ? { ...point, unit: minimum } : point;
   };
   const setSelection = (a, f, nextX = null, origin = 'canvas') => {
+    if (!viewAllowsRange(a, f)) {
+      reconcilePreviewPolicy?.();
+      return false;
+    }
+    if (a && f && !composing) compositionInvalidated = false;
     a = editablePoint(a);
     f = editablePoint(f);
     selectionOrigin = origin;
@@ -774,11 +834,11 @@ export function createCanvasEditor({
   const point = (event, constrained = null) => {
     const { x, y } = coordinates(event);
     const layout = renderer.layout();
-    return (
+    const found =
       hitTableBoundary(layout, x, y, (target) => renderer.paragraph(target), constrained) ??
       hitDrawingBoundary(layout, x, y, constrained) ??
-      hitText(layout, x, y, constrained)
-    );
+      hitText(layout, x, y, constrained);
+    return found && viewAllowsPoint(found) ? found : null;
   };
   listen(canvas, 'pointermove', (event) => {
     if (historyPaintBarrier.pending) return;
@@ -2169,6 +2229,16 @@ export function createCanvasEditor({
   });
   listen(input, 'keydown', (event) => {
     if (
+      !target &&
+      (event.metaKey || event.ctrlKey) &&
+      !event.altKey &&
+      ['z', 'y'].includes(event.key?.toLowerCase())
+    ) {
+      event.preventDefault();
+      travel(event.key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo');
+      return;
+    }
+    if (
       !target ||
       event.defaultPrevented ||
       event.getModifierState?.('AltGraph') ||
@@ -2526,7 +2596,8 @@ export function createCanvasEditor({
   listen(input, 'focus', focusedSelection);
   listen(input, 'blur', paint);
   const selectedRange = () => {
-    if (target?.createdCell) return null;
+    if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus) || target?.createdCell)
+      return null;
     if (
       !target ||
       multipleParagraphs() ||
@@ -2583,6 +2654,7 @@ export function createCanvasEditor({
     paragraphBreakAvailable = breaks;
   };
   const settledSelection = (allowEmpty = false) => {
+    if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus)) return null;
     if (
       events.signal.aborted ||
       !target ||
@@ -2629,7 +2701,8 @@ export function createCanvasEditor({
     );
   };
   const selectionTextEditAvailable = () => {
-    if (!controls.ready()) return false;
+    if (!viewAllowsRange(anchor, focus) || !viewAllowsPoint(target) || !controls.ready())
+      return false;
     if (!multipleParagraphs()) return textEditable();
     if (renderer.paragraphReplacementAvailable?.() === false) return false;
     const ranges = renderer.replacementRanges?.(anchor, focus);
@@ -3177,6 +3250,7 @@ export function createCanvasEditor({
       const next = { section, paragraph },
         row = renderer.paragraph(next);
       if (
+        !viewAllowsRange({ ...next, unit: startUnit }, { ...next, unit: endUnit }) ||
         !row ||
         row.clipped ||
         !selectableText(row) ||
@@ -3267,6 +3341,7 @@ export function createCanvasEditor({
         : null;
     },
     tableCreationSelection() {
+      if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus)) return null;
       if (
         !target ||
         target.createdCell ||
@@ -3570,6 +3645,7 @@ export function createCanvasEditor({
     setCharacterTextColor,
     selectedTextColorRanges,
     selectedCell() {
+      if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus)) return null;
       if (
         !target ||
         composing ||
@@ -3583,6 +3659,7 @@ export function createCanvasEditor({
       return renderer.cell?.(target) ?? null;
     },
     selectedFormula() {
+      if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus)) return null;
       if (
         !target ||
         composing ||
@@ -3656,7 +3733,10 @@ export function createCanvasEditor({
         controls.busy()
       )
         return null;
-      return pictureResizeTarget(renderer.selectedPicture?.());
+      const selected = pictureResizeTarget(renderer.selectedPicture?.());
+      return selected && viewAllowsRequest({ kind: 'picture-resize', ...selected })
+        ? selected
+        : null;
     },
     resizePicture(width, height) {
       const picture = this.selectedPicture();
@@ -4452,6 +4532,7 @@ export function createCanvasEditor({
         preview();
         pump();
       } finally {
+        reconcilePreviewPolicy?.();
         if (versioned && !message.error) {
           historyRevision = revision;
           if (revisionChanged && !travelMessage)
@@ -4494,6 +4575,38 @@ export function createCanvasEditor({
       events.abort();
       renderer.onGeometry(() => {});
     },
+  };
+  let resettingPreview = false;
+  reconcilePreviewPolicy = () => {
+    if (resettingPreview || !target || (viewAllowsPoint(target) && viewAllowsRange(anchor, focus)))
+      return false;
+    resettingPreview = true;
+    try {
+      resetExternalSelection(controller);
+      input.readOnly = true;
+      input.setSelectionRange(0, 0);
+      compositionInvalidated = false; // The draft and target were explicitly cancelled.
+    } finally {
+      resettingPreview = false;
+    }
+    return true;
+  };
+  controller.reconcilePreviewPolicy = reconcilePreviewPolicy;
+  guardPreviewEvent = (node, type, event) => {
+    const denied = reconcilePreviewPolicy();
+    if (node !== input) return true;
+    const historyKey =
+      type === 'keydown' &&
+      (event.metaKey || event.ctrlKey) &&
+      !event.altKey &&
+      ['z', 'y'].includes(event.key?.toLowerCase());
+    if (historyKey) return true;
+    if (denied || (viewActive() && !target)) {
+      event.preventDefault?.();
+      if (type === 'copy' || type === 'cut') event.clipboardData?.clearData?.();
+      return false;
+    }
+    return true;
   };
   return controller;
 }

@@ -1,3 +1,4 @@
+import { createInlineTablePaperPreview } from './inline-table-paper-preview.mjs';
 import { projectCellPictureCaptions } from './cell-picture-caption-projection.mjs';
 import { effectiveCellPictureAlignments } from './cell-picture-effective-alignment.mjs';
 import { inlineTableHostLeading } from './inline-table-host-leading.mjs';
@@ -69,8 +70,11 @@ export function layoutTableBodyContent(
     columnBottom,
     paginateRows,
     pictureReferences,
+    oversizeInlineTablePreview = false,
   } = {},
 ) {
+  if (typeof oversizeInlineTablePreview !== 'boolean')
+    return { state: 'unavailable', error: 'InvalidInlineTablePaperPreview' };
   content = effectiveCellPictureAlignments(content);
   const unavailable = (error) => ({ state: 'unavailable', error });
   if (pictureReferences === undefined) pictureReferences = singleCellPictureColumn;
@@ -687,9 +691,17 @@ export function layoutTableBodyContent(
               paginatePictureRows(rows, setting, flows, bodyPictures, body, options),
           }
         : {};
+  const paperPreview =
+    oversizeInlineTablePreview &&
+    !bodyPictures.length &&
+    !paperEntries.length &&
+    paginateRows === undefined
+      ? createInlineTablePaperPreview(content, entries)
+      : null;
+  const clippedTables = [];
   let result = layoutMeasuredMultipleTables(entries, sequence, setting, flows, {
     maxRows,
-    rowFitsColumn: inlineTableRowFitsPaper,
+    rowFitsColumn: paperPreview?.fitsRow ?? inlineTableRowFitsPaper,
     // These plain table bands keep source widths through column remeasurement.
     // Positioned pictures/paper-table/custom paginators retain their own retry policy.
     ...(!bodyPictures.length && !paperEntries.length && paginateRows === undefined
@@ -721,11 +733,13 @@ export function layoutTableBodyContent(
   if (result.state !== 'placed') return result;
   result = projectInlinePictureCaptions(content, pictureIndex, result, glyphMeasure, maxRows);
   if (result.state === 'unavailable') return result;
-  for (const entry of entries) {
+  for (const [entryIndex, entry] of entries.entries()) {
     if (entry.paperFlow) continue;
     if (entry.inlineFlow) continue;
     result = entry.inline
-      ? placeInlineTablePages(entry.table, entry.host, result, entry.outerInsets)
+      ? placeInlineTablePages(entry.table, entry.host, result, entry.outerInsets, {
+          allowPaperClip: paperPreview?.mayClip(entryIndex) === true,
+        })
       : placeTablePagesHorizontally(entry.table, result, entry.outerInsets, entry.host);
     if (result.state !== 'placed')
       return {
@@ -734,18 +748,32 @@ export function layoutTableBodyContent(
         paragraph: entry.table.hostParagraph,
         tableNode: entry.table.tableNode,
       };
+    if (
+      paperPreview?.mayClip(entryIndex) &&
+      result.boxes.some(
+        (box) =>
+          box.section === entry.table.section &&
+          box.tableNode === entry.table.tableNode &&
+          box.previewOnly,
+      )
+    )
+      clippedTables.push(paperPreview.descriptor());
   }
   for (const entry of entries) {
     if (!entry.captionReservation) continue;
     result = projectTablePageCaption(entry.table, entry.captionReservation, result, { maxRows });
     if (result.state !== 'placed') return result;
   }
-  const tableAnchors = entries.map(({ table }) => ({
-    section: table.section,
-    tableNode: table.tableNode,
-    hostParagraph: table.hostParagraph,
-    anchorUnit: table.anchorUnit,
-  }));
+  const previewReadOnlyTables = clippedTables;
+  const deniedTables = new Set(previewReadOnlyTables.map((t) => `${t.section}:${t.tableNode}`));
+  const tableAnchors = entries
+    .filter(({ table }) => !deniedTables.has(`${table.section}:${table.tableNode}`))
+    .map(({ table }) => ({
+      section: table.section,
+      tableNode: table.tableNode,
+      hostParagraph: table.hostParagraph,
+      anchorUnit: table.anchorUnit,
+    }));
   if (completeLayout) {
     result = completeLayout({ ...result, tableAnchors });
     if (!result || typeof result !== 'object') return unavailable('InvalidTableLayoutCompletion');
@@ -839,8 +867,25 @@ export function layoutTableBodyContent(
     {
       ...result,
       cellFloatingDrawingReservations,
+      ...(previewReadOnlyTables.length
+        ? {
+            previewReadOnlyTables,
+            unverifiedTableSources: [
+              ...(result.unverifiedTableSources ?? []),
+              ...previewReadOnlyTables,
+            ],
+            tableAnchors: (result.tableAnchors ?? tableAnchors).filter(
+              (t) => !deniedTables.has(`${t.section}:${t.tableNode}`),
+            ),
+            flowAnchors: (result.flowAnchors ?? []).filter(
+              (t) => !deniedTables.has(`${t.section}:${t.tableNode}`),
+            ),
+          }
+        : {}),
       pages: result.pages.map((page) => ({ ...page, section: setting.section_ordinal })),
-      tableAnchors: result.tableAnchors ?? tableAnchors,
+      tableAnchors: (result.tableAnchors ?? tableAnchors).filter(
+        (t) => !deniedTables.has(`${t.section}:${t.tableNode}`),
+      ),
       tableCollisionFootprints: footprints,
       tableCollisionFootprintErrors: footprintErrors,
       ...(tableColumnEvidence.length ? { tableColumnEvidence } : {}),
