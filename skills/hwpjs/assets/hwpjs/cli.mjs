@@ -1856,6 +1856,16 @@ var init_abi_schema = __esmMin((() => {
 		"hwp5_edit_output_free",
 		"hwp5_edit_reflow"
 	]);
+	Object.freeze([
+		"hwp5_edit_text_transaction_capabilities",
+		"hwp5_edit_query_text_transaction",
+		"hwp5_edit_apply_text_transaction"
+	]);
+	Object.freeze([
+		"hwpx_edit_text_transaction_capabilities",
+		"hwpx_edit_query_text_transaction",
+		"hwpx_edit_apply_text_transaction"
+	]);
 	Object.freeze(["hwpx_edit_document_provenance"]);
 	Object.freeze({
 		header_bytes: 8,
@@ -2131,6 +2141,205 @@ function ownedJSON(value, seen = /* @__PURE__ */ new Set()) {
 }
 var init_atomic_formatting_api = __esmMin((() => {
 	init_native_edit_outcome();
+}));
+// ../../js/independent-text-request.mjs
+function prepareIndependentTextRequest(input, limits) {
+	for (const key of [
+		"requestBytes",
+		"requestDepth",
+		"requestStructure"
+	]) if (!Number.isSafeInteger(limits?.[key]) || limits[key] <= 0) throw Error("InvalidTextTransactionLimits");
+	if (limits.requestDepth > 64) throw Error("InvalidTextTransactionLimits");
+	if (!input || typeof input !== "object" || Array.isArray(input)) throw invalid$1();
+	let bytes = 0, structure = 0;
+	const active = /* @__PURE__ */ new Set();
+	const addBytes = (amount) => {
+		if (amount > limits.requestBytes - bytes) throw Error("LimitExceeded");
+		bytes += amount;
+	};
+	const addStructure = (amount) => {
+		if (amount > limits.requestStructure - structure) throw Error("LimitExceeded");
+		structure += amount;
+		addBytes(amount);
+	};
+	const string = (value) => {
+		addBytes(2);
+		for (let i = 0; i < value.length; i++) {
+			const code = value.charCodeAt(i);
+			if (code >= 55296 && code <= 56319) {
+				const next = value.charCodeAt(++i);
+				if (!(next >= 56320 && next <= 57343)) throw Error("InvalidUnicodeEncoding");
+				addBytes(4);
+			} else if (code >= 56320 && code <= 57343) throw Error("InvalidUnicodeEncoding");
+			else if (code === 34 || code === 92) addBytes(2);
+			else if (code < 32) addBytes([
+				8,
+				9,
+				10,
+				12,
+				13
+			].includes(code) ? 2 : 6);
+			else addBytes(code < 128 ? 1 : code < 2048 ? 2 : 3);
+		}
+		return value;
+	};
+	const copy = (value, depth) => {
+		if (value === null) {
+			addBytes(4);
+			return value;
+		}
+		if (typeof value === "string") return string(value);
+		if (typeof value === "boolean") {
+			addBytes(value ? 4 : 5);
+			return value;
+		}
+		if (typeof value === "number") {
+			if (!Number.isFinite(value)) throw Error("InvalidNumber");
+			addBytes(JSON.stringify(value).length);
+			return value;
+		}
+		if (typeof value !== "object" || active.has(value)) throw invalid$1();
+		if (depth > limits.requestDepth) throw Error("LimitExceeded");
+		const array = Array.isArray(value);
+		const proto = Object.getPrototypeOf(value);
+		if (!array && proto !== Object.prototype && proto !== null) throw invalid$1();
+		const keys = Reflect.ownKeys(value);
+		if (keys.length > limits.requestStructure) throw Error("LimitExceeded");
+		addStructure(2);
+		const output = array ? Object.setPrototypeOf([], null) : Object.create(null);
+		active.add(value);
+		try {
+			let count = 0;
+			for (const key of keys) {
+				if (array && key === "length") continue;
+				if (typeof key !== "string") throw invalid$1();
+				if (array && !/^(0|[1-9][0-9]*)$/.test(key)) throw invalid$1();
+				const descriptor = Object.getOwnPropertyDescriptor(value, key);
+				if (!descriptor || !Object.hasOwn(descriptor, "value")) throw Error("AccessorPayloadUnsupported");
+				if (descriptor.value === void 0) {
+					if (array) throw invalid$1();
+					continue;
+				}
+				if (count++) addStructure(1);
+				if (!array) {
+					string(key);
+					addStructure(1);
+				}
+				output[key] = copy(descriptor.value, depth + 1);
+			}
+			if (array) {
+				const length = Object.getOwnPropertyDescriptor(value, "length")?.value;
+				if (count !== length || output.length !== length) throw invalid$1();
+				for (let index = 0; index < length; index++) if (!Object.hasOwn(output, index)) throw invalid$1();
+			}
+			return output;
+		} finally {
+			active.delete(value);
+		}
+	};
+	const value = copy(input, 1);
+	const encoded = new TextEncoder().encode(JSON.stringify(value));
+	if (encoded.length !== bytes) throw Error("InvalidTextTransactionEncoding");
+	return {
+		value,
+		bytes: encoded
+	};
+}
+var invalid$1;
+var init_independent_text_request = __esmMin((() => {
+	invalid$1 = () => Error("InvalidTextTransactionDTO");
+}));
+// ../../js/independent-text-api.mjs
+function createIndependentTextApi({ wasm, memory, check, prefix }) {
+	const suffixes = [
+		"text_transaction_capabilities",
+		"query_text_transaction",
+		"apply_text_transaction",
+		"output_ptr",
+		"output_len",
+		"output_free"
+	];
+	const available = () => suffixes.every((name) => typeof wasm[`${prefix}_${name}`] === "function");
+	const ready = () => {
+		check();
+		if (!available()) throw Error("IndependentTextTransactionUnavailable");
+	};
+	const uint = (value) => Number.isSafeInteger(value) && value >= 0 && value <= 4294967295;
+	const revision = (value) => uint(value) && value < 4294967295;
+	const read = (action, limit) => {
+		try {
+			if (action() !== 1) throw memory.error();
+			const length = wasm[`${prefix}_output_len`]();
+			if (!Number.isSafeInteger(length) || length < 0 || length > limit) throw Error("LimitExceeded");
+			return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[`${prefix}_output_ptr`](), length)));
+		} finally {
+			wasm[`${prefix}_output_free`]();
+		}
+	};
+	const capabilities = () => {
+		ready();
+		const value = read(() => wasm[`${prefix}_text_transaction_capabilities`](), 2097152);
+		if (value?.schemaVersion !== 1 || value.atomic !== true || value.format !== prefix.replace(/_edit$/, "") || value.coordinateSpace !== "native-source-utf16" || value.requiresHistoryProtocol !== 2 || typeof value.binding?.session !== "string" || !value.binding.session || !revision(value.binding.revision) || !value.limits || ![
+			"requestBytes",
+			"requestDepth",
+			"requestStructure",
+			"replyBytes",
+			"groups",
+			"edits",
+			"textUnits",
+			"insertedBytes",
+			"sections",
+			"snapshotParagraphs"
+		].every((key) => Number.isSafeInteger(value.limits[key]) && value.limits[key] > 0) || value.limits.replyBytes > 2097152) throw Error("IndependentTextTransactionUnavailable");
+		return value;
+	};
+	const checkedCoverage = (coverage, limits) => {
+		if (!coverage || !Array.isArray(coverage.sections) || coverage.sections.length > limits.sections || !uint(coverage.totalParagraphs) || coverage.totalParagraphs > limits.snapshotParagraphs || !uint(coverage.createdCellParagraphs) || coverage.createdCellParagraphs > coverage.totalParagraphs) throw Error("MalformedTextTransactionQuery");
+		let total = 0;
+		const ranges = [];
+		for (let index = 0; index < coverage.sections.length; index++) {
+			const row = coverage.sections[index];
+			if (row?.section !== index || !Number.isSafeInteger(row.paragraphCount) || row.paragraphCount < 0 || row.paragraphCount > limits.snapshotParagraphs - total) throw Error("MalformedTextTransactionQuery");
+			ranges.push({
+				first: total + 1,
+				count: row.paragraphCount
+			});
+			total += row.paragraphCount;
+		}
+		if (total !== coverage.totalParagraphs) throw Error("MalformedTextTransactionQuery");
+		return ranges;
+	};
+	return {
+		supportsIndependentTextAbi() {
+			check();
+			return available();
+		},
+		independentTextCapabilities: capabilities,
+		queryIndependentText(request) {
+			const policy = capabilities();
+			const owned = prepareIndependentTextRequest(request, policy.limits);
+			const value = memory.withBytes(owned.bytes, (ptr, size) => read(() => wasm[`${prefix}_query_text_transaction`](ptr, size), policy.limits.replyBytes));
+			const selectors = owned.value.selectors;
+			if (value?.schemaVersion !== 1 || !Array.isArray(selectors) || !Array.isArray(value.targets) || value.targets.length !== selectors.length || typeof value.binding?.session !== "string" || !revision(value.binding?.revision) || value.binding?.session !== owned.value.binding?.session || value.binding?.revision !== owned.value.binding?.revision) throw Error("MalformedTextTransactionQuery");
+			const ranges = checkedCoverage(value.coverage, policy.limits);
+			const seen = /* @__PURE__ */ new Set();
+			for (let index = 0; index < selectors.length; index++) {
+				const target = value.targets[index];
+				const range = ranges[target?.section];
+				const first = policy.format === "hwpx" ? range?.first : 0;
+				if (typeof target?.ref !== "string" || !/^[A-Za-z0-9._:-]{1,256}$/.test(target.ref) || seen.has(target.ref) || !uint(target.section) || !uint(target.paragraph) || !range || target.paragraph < first || target.paragraph - first >= range.count || target.section !== selectors[index]?.section || target.paragraph !== selectors[index]?.paragraph || !uint(target.beforeUnits) || target.beforeUnits > policy.limits.textUnits) throw Error("MalformedTextTransactionQuery");
+				seen.add(target.ref);
+			}
+			return value;
+		},
+		applyIndependentText(request) {
+			return applyNativeEdit(memory, prepareIndependentTextRequest(request, capabilities().limits).bytes, (ptr, size) => wasm[`${prefix}_apply_text_transaction`](ptr, size), "InvalidTextTransactionResult");
+		}
+	};
+}
+var init_independent_text_api = __esmMin((() => {
+	init_native_edit_outcome();
+	init_independent_text_request();
 }));
 // ../../js/abi.mjs
 function validateAbi(wasm) {
@@ -5291,6 +5500,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check,
 			prefix: "hwp5_edit"
 		}),
+		...createIndependentTextApi({
+			wasm,
+			memory,
+			check,
+			prefix: "hwp5_edit"
+		}),
 		observedDocInfoDiagnostics() {
 			check();
 			if (typeof wasm.hwp5_edit_observed_docinfo_diagnostics !== "function") throw new Error("Hwp5ObservedDocInfoAbiUnavailable");
@@ -6230,6 +6445,7 @@ var init_hwp5_editor = __esmMin((() => {
 	init_cell_fill_command();
 	init_source_table_grid();
 	init_atomic_formatting_api();
+	init_independent_text_api();
 	init_abi();
 	init_cell_size_batch();
 	init_cell_border_batch();
@@ -9469,6 +9685,12 @@ async function createHwpxEditor(source) {
 			check: ready,
 			prefix: "hwpx_edit"
 		}),
+		...createIndependentTextApi({
+			wasm,
+			memory,
+			check: ready,
+			prefix: "hwpx_edit"
+		}),
 		...createParagraphBreakApi({
 			wasm,
 			memory,
@@ -11544,6 +11766,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_cell_fill_command();
 	init_source_table_grid();
 	init_atomic_formatting_api();
+	init_independent_text_api();
 	init_hwpx_read_scope();
 	init_hwpx_drawing_text_requested();
 	init_hwpx_line_display_batch();
