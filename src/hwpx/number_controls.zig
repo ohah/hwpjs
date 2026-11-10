@@ -77,6 +77,19 @@ fn kindOf(element: tree_mod.Element) ?Kind {
     return null;
 }
 
+/// Typed fields for a single already-identified source control. No XML copy or tree scan.
+pub fn pageAt(a: std.mem.Allocator, owned: std.mem.Allocator, tree: *const tree_mod.Tree, node: usize) !fields.Page {
+    if (node >= tree.elements.len or kindOf(tree.elements[node]) != .page_num) return error.InvalidNumberControl;
+    var budget: Budget = .{ .max = 3 * 4096 };
+    return fields.readPage(a, owned, tree, node, 4096, &budget);
+}
+
+pub fn restartAt(a: std.mem.Allocator, owned: std.mem.Allocator, tree: *const tree_mod.Tree, node: usize) !fields.Auto {
+    if (node >= tree.elements.len or kindOf(tree.elements[node]) != .new_num) return error.InvalidNumberControl;
+    var budget: Budget = .{ .max = 2 * 4096 };
+    return fields.readAuto(a, owned, tree, node, 4096, &budget);
+}
+
 /// Inspects exact selected-section number controls without calculating their rendered sequence.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {
     return inspectMode(a, sections, options, false);

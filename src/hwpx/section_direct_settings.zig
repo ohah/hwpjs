@@ -171,6 +171,24 @@ fn readAttributes(a: std.mem.Allocator, tree: *const part_tree.Tree, index: usiz
     }
 }
 
+/// Read one direct section property using the same descriptors as the public inspector.
+pub fn itemAt(a: std.mem.Allocator, tree: *const part_tree.Tree, node: usize, kind: Kind) !Item {
+    if (tree.part_kind != .section or node >= tree.elements.len) return error.InvalidPartKind;
+    const element = tree.elements[node];
+    const parent = element.parent orelse return error.InvalidPartKind;
+    if (elementKind(element) != kind or !tree.elements[parent].is(document_xml.paragraph_uri, "secPr"))
+        return error.InvalidPartKind;
+    var item: Item = .{
+        .kind = kind,
+        .section_ordinal = tree.section_ordinal orelse return error.InvalidPartKind,
+        .element_index = node,
+        .parent_element_index = parent,
+    };
+    errdefer item.deinit(a);
+    try readAttributes(a, tree, node, .{}, &item);
+    return item;
+}
+
 /// Only direct 2011 hp:secPr children are inspected; unfamiliar fields and
 /// descendant content remain in the source tree, without implied defaults.
 pub fn inspect(a: std.mem.Allocator, sections: []const part_tree.Tree, options: Options) !Report {

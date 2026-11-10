@@ -1,3 +1,4 @@
+import { attachHwpxPageNumbers } from './hwpx-page-number-layout.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { retainOverflowPreviewBarrier } from './overflow-preview-barrier.mjs';
 import { projectVisibleOverflowCells } from './visible-overflow-cell-edit.mjs';
@@ -387,6 +388,7 @@ export function createRenderer(
         : '';
     canvas.dataset.rows = String(layout.rows.length);
     canvas.dataset.pageLayoutError = layout.pageLayoutError ?? '';
+    canvas.dataset.pageNumberError = layout.pageNumberError ?? '';
     canvas.dataset.memoPaneCount = String(layout.memoPaneBoxes?.length ?? 0);
     canvas.dataset.memoPaneMode = layout.memoPaneMode ?? '';
     canvas.dataset.memoPaneError = layout.memoPaneError ?? '';
@@ -549,9 +551,10 @@ export function createRenderer(
     paintMemoPane(ctx, layout.memoPaneBoxes, viewport.scrollTop, height);
     paintPageNumberGlyphs(ctx, layout.pageNumberGlyphs, viewport.scrollTop, (glyph) =>
       fontAt(
-        display.paragraphs.find(
-          (p) => p.section === glyph.section && p.paragraph === glyph.paragraph,
-        ),
+        glyph.styleOwner ??
+          display.paragraphs.find(
+            (p) => p.section === glyph.section && p.paragraph === glyph.paragraph,
+          ),
         glyph.unit,
       ),
     );
@@ -1542,6 +1545,8 @@ export function createRenderer(
           };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
     layout = projectVisibleOverflowCells(content, layout, display);
+    if (pictureDisplay.format === 'hwpx')
+      layout = attachHwpxPageNumbers(pictureDisplay, layout, measure);
     layout = retainOverflowPreviewBarrier(content, layout, previousOverflowLayout);
     overflowPreviewDocument = resourceDocument;
     pictureLayers = previewPictureLayers(pictureDisplay, layout, logicalWidth);

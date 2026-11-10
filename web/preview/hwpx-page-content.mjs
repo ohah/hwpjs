@@ -48,6 +48,13 @@ export function attachHwpxPageSettings(editor, content) {
       content.paragraphFlowErrors.push({ section, error: error.message });
     }
   }
+  if (!content.window && !content.limited) {
+    try {
+      content.hwpxPageNumberSource = editor.pageNumberDisplaySource?.() ?? null;
+    } catch (error) {
+      content.hwpxPageNumberSource = { error: error.message };
+    }
+  }
   const sourceTables = content.tables?.length ? selectNoteSourceTables(content) : null;
   const notes = bindSourceNoteBodies(
     content,

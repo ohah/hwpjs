@@ -611,6 +611,12 @@ export fn hwpx_edit_connector_placement_source(section: u32, node: u32) u32 {
     output = @import("hwpx_connector_placement_wire.zig").read(a, &session.sections[section].tree, node) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_page_number_display_source() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = @import("../hwpx/page_number_display_source.zig").encode(a, session) catch |err| return fail(err);
+    return 1;
+}
 export fn hwpx_edit_page_settings() u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);

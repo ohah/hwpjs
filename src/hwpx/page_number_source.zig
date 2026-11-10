@@ -4,17 +4,22 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const fields = @import("section_direct_settings.zig");
 pub const Values = struct { start_page: ?u32 = null, hide_first_header: ?bool = null, hide_first_footer: ?bool = null, supported: bool = false };
 
+/// Shared beginNum interpretation on an already indexed header.
+pub fn headerStart(a: std.mem.Allocator, header: *const Tree) !?u32 {
+    var begin = try @import("header_begin_numbers.zig").inspect(a, header, .{});
+    defer begin.deinit(a);
+    const raw = begin.value(.page) orelse return null;
+    const number = @import("xml_values.zig").unsigned32(raw) catch return null;
+    return if (number == 0) null else number;
+}
+
 pub fn read(a: std.mem.Allocator, source: []const u8, trees: []const Tree, section: usize) !Values {
     if (section != 0 or trees.len == 0) return .{};
     var document = try @import("package.zig").inspectDocument(a, source, .{});
     defer document.deinit(a);
     var header = try document.readHeaderTree(a, .{});
     defer header.deinit(a);
-    var begin = try @import("header_begin_numbers.zig").inspect(a, &header, .{});
-    defer begin.deinit(a);
-    const raw = begin.value(.page) orelse return .{};
-    const number = @import("xml_values.zig").unsigned32(raw) catch return .{};
-    if (number == 0) return .{};
+    const number = try headerStart(a, &header) orelse return .{};
     var result = Values{ .start_page = number, .supported = true };
     var settings = try fields.inspect(a, trees, .{});
     defer settings.deinit(a);

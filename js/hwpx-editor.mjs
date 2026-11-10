@@ -1,3 +1,4 @@
+import { decodeHwpxPageNumberDisplaySource } from './hwpx-page-number-display-wire.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
 import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
@@ -1856,6 +1857,18 @@ export async function createHwpxEditor(source) {
             'InvalidConnectorPlacementSource',
           ),
         };
+      } finally {
+        wasm.hwpx_edit_output_free();
+      }
+    },
+    pageNumberDisplaySource() {
+      ready();
+      if (typeof wasm.hwpx_edit_page_number_display_source !== 'function') return null;
+      try {
+        if (!wasm.hwpx_edit_page_number_display_source()) throw memory.error();
+        return decodeHwpxPageNumberDisplaySource(
+          memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+        );
       } finally {
         wasm.hwpx_edit_output_free();
       }
