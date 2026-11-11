@@ -5626,7 +5626,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 	memory.withBytes(bytes, (ptr, size) => success(retainObservedDocInfo ? open(ptr, size, normalizeObservedCfb ? 1 : 0) : open(ptr, size)));
 	const copyText = (section, paragraph) => {
 		check();
-		return output(() => wasm.hwp5_edit_copy_text(u32$2(section, "section"), u32$2(paragraph, "paragraph"))).bytes;
+		return output(() => wasm.hwp5_edit_copy_text(u32$3(section, "section"), u32$3(paragraph, "paragraph"))).bytes;
 	};
 	return {
 		...createSourceTableGridApi({
@@ -5657,7 +5657,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			wasm,
 			memory,
 			check,
-			uint: u32$2,
+			uint: u32$3,
 			prefix: "hwp5_edit",
 			endAsCount: false,
 			unavailable: "Hwp5ParagraphBreakAbiUnavailable"
@@ -5686,14 +5686,14 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		textSourceProtection(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_text_source_protection !== "function") throw new Error("Hwp5TextSourceProtectionAbiUnavailable");
 			const bytes = output(() => wasm.hwp5_edit_text_source_protection(index)).bytes;
 			return decodeHwp5TextSourceProtection(bytes, wasm.hwp5_edit_paragraph_count(index));
 		},
 		validateTextSourcePolicy(section) {
 			check();
-			u32$2(section, "section");
+			u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_validate_text_source_policy !== "function") throw new Error("Hwp5TextSourcePolicyAbiUnavailable");
 			success(wasm.hwp5_edit_validate_text_source_policy(section));
 		},
@@ -5701,7 +5701,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			wasm,
 			memory,
 			check,
-			uint: u32$2,
+			uint: u32$3,
 			prefix: "hwp5_edit",
 			unavailable: "Hwp5HistoryAbiUnavailable"
 		}),
@@ -5711,7 +5711,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check,
 			output,
 			success,
-			u32: u32$2,
+			u32: u32$3,
 			referenceScope
 		}),
 		...createHwp5TableCreationApi({
@@ -5719,7 +5719,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			memory,
 			check,
 			output,
-			u32: u32$2
+			u32: u32$3
 		}),
 		supportsCurrentTextPreview() {
 			check();
@@ -5736,7 +5736,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		paragraphCount(section) {
 			check();
-			return count(wasm.hwp5_edit_paragraph_count(u32$2(section, "section")));
+			return count(wasm.hwp5_edit_paragraph_count(u32$3(section, "section")));
 		},
 		characterShapeCount() {
 			check();
@@ -5750,14 +5750,14 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		paragraphShapeId(section, paragraph) {
 			check();
 			if (typeof wasm.hwp5_edit_para_shape_id !== "function") throw new Error("Hwp5ParagraphFormatAbiUnavailable");
-			return count(wasm.hwp5_edit_para_shape_id(u32$2(section, "section"), u32$2(paragraph, "paragraph")));
+			return count(wasm.hwp5_edit_para_shape_id(u32$3(section, "section"), u32$3(paragraph, "paragraph")));
 		},
 		setParagraphFormat({ section, paragraph, paraShapeId }) {
 			check();
 			const values = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(paraShapeId, "paraShapeId")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(paraShapeId, "paraShapeId")
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_format !== "function") throw new Error("Hwp5ParagraphFormatAbiUnavailable");
 			success(wasm.hwp5_edit_set_paragraph_format(...values));
@@ -5774,8 +5774,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			].indexOf(alignment);
 			if (value < 0) throw new RangeError("InvalidParagraphAlignment");
 			const values = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
 				value
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_alignment !== "function") throw new Error("Hwp5ParagraphAlignmentAbiUnavailable");
@@ -5783,7 +5783,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setParagraphMargins({ section, paragraph, margins }) {
 			check();
-			const args = [u32$2(section, "section"), u32$2(paragraph, "paragraph")];
+			const args = [u32$3(section, "section"), u32$3(paragraph, "paragraph")];
 			const [mask, ...values] = paragraphMarginArgs(margins);
 			if (typeof wasm.hwp5_edit_set_paragraph_margins !== "function") throw new Error("Hwp5ParagraphMarginsAbiUnavailable");
 			success(wasm.hwp5_edit_set_paragraph_margins(...args, mask, ...values));
@@ -5791,8 +5791,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setParagraphSpacing({ section, paragraph, type, value }) {
 			check();
 			const args = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
 				...paragraphSpacingArgs(type, value)
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_spacing !== "function") throw new Error("Hwp5ParagraphSpacingAbiUnavailable");
@@ -5878,12 +5878,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		characterRanges(section, paragraph) {
 			check();
 			if (typeof wasm.hwp5_edit_character_ranges !== "function") throw new Error("Hwp5CharacterRangesAbiUnavailable");
-			return decodeCharacterRanges(output(() => wasm.hwp5_edit_character_ranges(u32$2(section, "section"), u32$2(paragraph, "paragraph"))).bytes);
+			return decodeCharacterRanges(output(() => wasm.hwp5_edit_character_ranges(u32$3(section, "section"), u32$3(paragraph, "paragraph"))).bytes);
 		},
 		tableBindings(section) {
 			check();
 			if (typeof wasm.hwp5_edit_table_bindings !== "function") throw new Error("Hwp5TableBindingsAbiUnavailable");
-			return decodeTableBindings(output(() => wasm.hwp5_edit_table_bindings(u32$2(section, "section"))).bytes);
+			return decodeTableBindings(output(() => wasm.hwp5_edit_table_bindings(u32$3(section, "section"))).bytes);
 		},
 		setCellStyles(input) {
 			check();
@@ -5936,10 +5936,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCellSize({ section, listNode, width, height }) {
 			check();
 			const values = [
-				u32$2(section, "section"),
-				u32$2(listNode, "listNode"),
-				u32$2(width, "width"),
-				u32$2(height, "height")
+				u32$3(section, "section"),
+				u32$3(listNode, "listNode"),
+				u32$3(width, "width"),
+				u32$3(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_set_cell_size !== "function") throw new Error("Hwp5CellSizeAbiUnavailable");
 			success(wasm.hwp5_edit_set_cell_size(...values));
@@ -5953,10 +5953,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setPictureCurrentSize({ section, pictureNode, width, height }) {
 			check();
 			const values = [
-				u32$2(section, "section"),
-				u32$2(pictureNode, "pictureNode"),
-				u32$2(width, "width"),
-				u32$2(height, "height")
+				u32$3(section, "section"),
+				u32$3(pictureNode, "pictureNode"),
+				u32$3(width, "width"),
+				u32$3(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_set_picture_current_size !== "function") throw new Error("Hwp5PictureCurrentSizeAbiUnavailable");
 			success(wasm.hwp5_edit_set_picture_current_size(...values));
@@ -5964,10 +5964,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		resizePicture({ section, pictureNode, width, height }) {
 			check();
 			const values = [
-				u32$2(section, "section"),
-				u32$2(pictureNode, "pictureNode"),
-				u32$2(width, "width"),
-				u32$2(height, "height")
+				u32$3(section, "section"),
+				u32$3(pictureNode, "pictureNode"),
+				u32$3(width, "width"),
+				u32$3(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_resize_picture !== "function") throw new Error("Hwp5PictureResizeAbiUnavailable");
 			success(wasm.hwp5_edit_resize_picture(...values));
@@ -5975,17 +5975,17 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		tablePlacements(section) {
 			check();
 			if (typeof wasm.hwp5_edit_table_placements !== "function") throw new Error("Hwp5TablePlacementsAbiUnavailable");
-			return decodeTablePlacements(output(() => wasm.hwp5_edit_table_placements(u32$2(section, "section"))).bytes, "hwp5");
+			return decodeTablePlacements(output(() => wasm.hwp5_edit_table_placements(u32$3(section, "section"))).bytes, "hwp5");
 		},
 		tableLayoutSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_table_layout_sources !== "function") throw new Error("Hwp5TableLayoutSourcesAbiUnavailable");
 			return decodeHwp5TableLayoutSources(output(() => wasm.hwp5_edit_table_layout_sources(index)).bytes);
 		},
 		cellLayoutSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_cell_layout_sources !== "function") throw new Error("Hwp5CellLayoutSourcesAbiUnavailable");
 			return decodeHwp5CellLayoutSources(output(() => wasm.hwp5_edit_cell_layout_sources(index)).bytes);
 		},
@@ -5996,25 +5996,25 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		tableAnchors(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_table_anchors !== "function") throw new Error("Hwp5TableAnchorsAbiUnavailable");
 			return decodeHwp5TableAnchors(output(() => wasm.hwp5_edit_table_anchors(index)).bytes);
 		},
 		structuralAnchors(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_structural_anchors !== "function") throw new Error("Hwp5StructuralAnchorsAbiUnavailable");
 			return decodeHwp5StructuralAnchors(output(() => wasm.hwp5_edit_structural_anchors(index)).bytes);
 		},
 		noteShapeSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_note_shape_sources !== "function") throw new Error("Hwp5NoteShapeSourcesAbiUnavailable");
 			return decodeHwp5NoteShapeSources(output(() => wasm.hwp5_edit_note_shape_sources(index)).bytes);
 		},
 		captionSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_caption_sources !== "function") throw new Error("Hwp5CaptionSourcesAbiUnavailable");
 			return decodeHwp5CaptionSources(output(() => wasm.hwp5_edit_caption_sources(index)).bytes);
 		},
@@ -6044,7 +6044,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		selectRadioButton(section, formNode) {
 			check();
-			const positions = [u32$2(section, "section"), u32$2(formNode, "formNode")];
+			const positions = [u32$3(section, "section"), u32$3(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_select_form_radio !== "function") throw new Error("Hwp5RadioSelectAbiUnavailable");
 			success(wasm.hwp5_edit_select_form_radio(...positions));
 		},
@@ -6054,7 +6054,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setCheckBoxState(section, formNode, state) {
 			check();
-			const positions = [u32$2(section, "section"), u32$2(formNode, "formNode")];
+			const positions = [u32$3(section, "section"), u32$3(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_set_form_choice !== "function") throw new Error("Hwp5FormChoiceEditAbiUnavailable");
 			const value = [
 				"UNCHECKED",
@@ -6066,7 +6066,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setFormText({ section, formNode, text }) {
 			check();
-			const positions = [u32$2(section, "section"), u32$2(formNode, "formNode")];
+			const positions = [u32$3(section, "section"), u32$3(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_set_form_text !== "function") throw new Error("Hwp5FormTextEditAbiUnavailable");
 			if (typeof text !== "string") throw new TypeError("Form text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -6077,97 +6077,97 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		formProperties(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_form_properties !== "function") throw new Error("Hwp5FormPropertiesAbiUnavailable");
 			return decodeHwp5FormProperties(output(() => wasm.hwp5_edit_form_properties(index)).bytes);
 		},
 		formSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_form_sources !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
 			return decodeHwp5FormSources(output(() => wasm.hwp5_edit_form_sources(index)).bytes);
 		},
 		formAnchors(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_form_anchors !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
 			return decodeHwp5FormAnchors(output(() => wasm.hwp5_edit_form_anchors(index)).bytes);
 		},
 		drawingSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_sources !== "function") throw new Error("Hwp5DrawingSourcesAbiUnavailable");
 			return decodeHwp5DrawingSources(output(() => wasm.hwp5_edit_drawing_sources(index)).bytes);
 		},
 		drawingObjectExtras(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_object_extras !== "function") throw new Error("Hwp5DrawingObjectExtrasAbiUnavailable");
 			return decodeHwp5DrawingObjectExtras(output(() => wasm.hwp5_edit_drawing_object_extras(index)).bytes);
 		},
 		drawingComponentSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_component_sources !== "function") throw new Error("Hwp5DrawingComponentSourcesAbiUnavailable");
 			return decodeHwp5DrawingComponentSources(output(() => wasm.hwp5_edit_drawing_component_sources(index)).bytes);
 		},
 		drawingAnchors(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_anchors !== "function") throw new Error("Hwp5DrawingAnchorsAbiUnavailable");
 			return decodeHwp5DrawingAnchors(output(() => wasm.hwp5_edit_drawing_anchors(index)).bytes);
 		},
 		drawingListSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_list_sources !== "function") throw new Error("Hwp5DrawingListSourcesAbiUnavailable");
 			return decodeHwp5DrawingListSources(output(() => wasm.hwp5_edit_drawing_list_sources(index)).bytes);
 		},
 		drawingMatrixSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_matrix_sources !== "function") throw new Error("Hwp5DrawingMatrixSourcesAbiUnavailable");
 			return decodeHwp5DrawingMatrixSources(output(() => wasm.hwp5_edit_drawing_matrix_sources(index)).bytes);
 		},
 		drawingLocalTransforms(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_local_transforms !== "function") throw new Error("Hwp5DrawingLocalTransformsAbiUnavailable");
 			return decodeHwp5DrawingLocalTransforms(output(() => wasm.hwp5_edit_drawing_local_transforms(index)).bytes);
 		},
 		drawingRectangleCorners(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_rectangle_corners !== "function") throw new Error("Hwp5DrawingRectangleCornersAbiUnavailable");
 			return decodeHwp5DrawingRectangleCorners(output(() => wasm.hwp5_edit_drawing_rectangle_corners(index)).bytes);
 		},
 		drawingCurvePoints(section, layout) {
 			check();
-			const index = u32$2(section, "section"), selected = curveLayoutArg(layout);
+			const index = u32$3(section, "section"), selected = curveLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_drawing_curve_points !== "function") throw new Error("Hwp5DrawingCurvePointsAbiUnavailable");
 			return decodeHwp5DrawingCurvePoints(output(() => wasm.hwp5_edit_drawing_curve_points(index, selected)).bytes);
 		},
 		drawingPolygonPoints(section, layout) {
 			check();
-			const index = u32$2(section, "section"), layoutId = polygonLayoutArg(layout);
+			const index = u32$3(section, "section"), layoutId = polygonLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_drawing_polygon_points !== "function") throw new Error("Hwp5DrawingPolygonPointsAbiUnavailable");
 			return decodeHwp5DrawingPolygonPoints(output(() => wasm.hwp5_edit_drawing_polygon_points(index, layoutId)).bytes);
 		},
 		drawingLineEndpoints(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_line_endpoints !== "function") throw new Error("Hwp5DrawingLineEndpointsAbiUnavailable");
 			return decodeHwp5DrawingLineEndpoints(output(() => wasm.hwp5_edit_drawing_line_endpoints(index)).bytes);
 		},
 		noteSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_note_sources !== "function") throw new Error("Hwp5NoteSourcesAbiUnavailable");
 			return decodeHwp5NoteSources(output(() => wasm.hwp5_edit_note_sources(index)).bytes);
 		},
 		drawingStyleSources(section, options) {
 			check();
-			const index = u32$2(section, "section"), [border, tail] = drawingStyleLayoutArgs(options);
+			const index = u32$3(section, "section"), [border, tail] = drawingStyleLayoutArgs(options);
 			if (typeof wasm.hwp5_edit_drawing_style_sources !== "function") throw new Error("Hwp5DrawingStyleSourcesAbiUnavailable");
 			return decodeHwp5DrawingStyleSources(output(() => wasm.hwp5_edit_drawing_style_sources(index, border, tail)).bytes);
 		},
@@ -6180,13 +6180,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		pictureSources(section, prefix) {
 			check();
-			const index = u32$2(section, "section"), selection = picturePrefixArg(prefix);
+			const index = u32$3(section, "section"), selection = picturePrefixArg(prefix);
 			if (typeof wasm.hwp5_edit_picture_sources !== "function") throw new Error("Hwp5PictureSourcesAbiUnavailable");
 			return decodeHwp5PictureSources(output(() => wasm.hwp5_edit_picture_sources(index, selection)).bytes);
 		},
 		pictureTailSources(section, layout) {
 			check();
-			const index = u32$2(section, "section"), selection = pictureTailLayoutArg(layout);
+			const index = u32$3(section, "section"), selection = pictureTailLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_picture_tail_sources !== "function") throw new Error("Hwp5PictureTailSourcesAbiUnavailable");
 			return decodeHwp5PictureTailSources(output(() => wasm.hwp5_edit_picture_tail_sources(index, selection)).bytes);
 		},
@@ -6194,7 +6194,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check();
 			if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => key !== "maxBytes")) throw new Error("Invalid binary options");
 			const { maxBytes = 33554432 } = options;
-			const id = u32$2(ordinal, "binary ordinal"), limit = u32$2(maxBytes, "binary limit");
+			const id = u32$3(ordinal, "binary ordinal"), limit = u32$3(maxBytes, "binary limit");
 			if (id > 65535) throw new RangeError("Invalid binary ordinal");
 			if (limit > 33554432) throw new RangeError("Invalid binary limit");
 			if (typeof wasm.hwp5_edit_binary_resource !== "function") throw new Error("Hwp5BinaryResourceAbiUnavailable");
@@ -6202,13 +6202,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		automaticNumberSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_automatic_number_sources !== "function") throw new Error("Hwp5AutomaticNumberSourcesAbiUnavailable");
 			return decodeHwp5AutomaticNumberSources(output(() => wasm.hwp5_edit_automatic_number_sources(index)).bytes);
 		},
 		pageControlSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_page_control_sources !== "function") throw new Error("Hwp5PageControlSourcesAbiUnavailable");
 			return decodeHwp5PageControlSources(output(() => wasm.hwp5_edit_page_control_sources(index)).bytes);
 		},
@@ -6219,44 +6219,44 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		masterPageSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_master_page_sources !== "function") throw new Error("Hwp5MasterPageSourcesAbiUnavailable");
 			return decodeHwp5MasterPageSources(output(() => wasm.hwp5_edit_master_page_sources(index)).bytes);
 		},
 		pageAreaSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_page_area_sources !== "function") throw new Error("Hwp5PageAreaSourcesAbiUnavailable");
 			return decodeHwp5PageAreaSources(output(() => wasm.hwp5_edit_page_area_sources(index)).bytes);
 		},
 		pageSettings(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_page_settings !== "function") throw new Error("Hwp5PageSettingsAbiUnavailable");
 			return decodeHwp5PageSettings(output(() => wasm.hwp5_edit_page_settings(index)).bytes);
 		},
 		sectionSettings(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_section_settings !== "function") throw new Error("Hwp5SectionSettingsAbiUnavailable");
 			return decodeHwp5SectionSettings(output(() => wasm.hwp5_edit_section_settings(index)).bytes);
 		},
 		paragraphFlow(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_paragraph_flow !== "function") throw new Error("Hwp5ParagraphFlowAbiUnavailable");
 			return decodeHwp5ParagraphFlow(output(() => wasm.hwp5_edit_paragraph_flow(index)).bytes);
 		},
 		columnSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_column_sources !== "function") throw new Error("Hwp5ColumnSourcesAbiUnavailable");
 			return decodeHwp5ColumnSources(output(() => wasm.hwp5_edit_column_sources(index)).bytes);
 		},
 		copyText,
 		fieldSpans(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_field_spans !== "function") throw new Error("Hwp5FieldSpansAbiUnavailable");
 			return decodeHwp5FieldSpans(output(() => wasm.hwp5_edit_field_spans(index)).bytes);
 		},
@@ -6271,19 +6271,19 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		fieldTopology(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_field_topology !== "function") throw new Error("Hwp5FieldTopologyAbiUnavailable");
 			return decodeHwp5FieldTopology(output(() => wasm.hwp5_edit_field_topology(index)).bytes);
 		},
 		formulaSources(section) {
 			check();
-			const index = u32$2(section, "section");
+			const index = u32$3(section, "section");
 			if (typeof wasm.hwp5_edit_formula_sources !== "function") throw new Error("Hwp5FormulaSourcesAbiUnavailable");
 			return decodeHwp5FormulaSources(output(() => wasm.hwp5_edit_formula_sources(index)).bytes);
 		},
 		setFormulaDefinition({ section, sourceNode, formula }) {
 			check();
-			const positions = [u32$2(section, "section"), u32$2(sourceNode, "sourceNode")];
+			const positions = [u32$3(section, "section"), u32$3(sourceNode, "sourceNode")];
 			if (typeof wasm.hwp5_edit_set_formula_definition !== "function") throw new Error("Hwp5FormulaDefinitionAbiUnavailable");
 			if (typeof formula !== "string") throw new TypeError("Formula must be a string");
 			if (!formula.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -6299,10 +6299,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		splice({ section, paragraph, startUnit, endUnit, text, rangePolicy = "reject" }) {
 			check();
 			const values = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (typeof text !== "string") throw new TypeError("Text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -6315,11 +6315,11 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		splitParagraph({ section, paragraph, atUnit, endUnit = atUnit }) {
 			check();
 			const values = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(atUnit, "atUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(atUnit, "atUnit")
 			];
-			u32$2(endUnit, "endUnit");
+			u32$3(endUnit, "endUnit");
 			if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
 			if (endUnit !== atUnit) {
 				if (typeof wasm.hwp5_edit_split_range !== "function") throw new Error("Hwp5StructureAbiUnavailable");
@@ -6331,21 +6331,21 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		mergeParagraph({ section, paragraph }) {
 			check();
-			const values = [u32$2(section, "section"), u32$2(paragraph, "paragraph")];
+			const values = [u32$3(section, "section"), u32$3(paragraph, "paragraph")];
 			if (typeof wasm.hwp5_edit_merge !== "function") throw new Error("Hwp5StructureAbiUnavailable");
 			success(wasm.hwp5_edit_merge(...values));
 		},
 		setCharacterFormat({ section, paragraph, startUnit, endUnit, charShapeId }) {
 			check();
-			success(wasm.hwp5_edit_format(u32$2(section, "section"), u32$2(paragraph, "paragraph"), u32$2(startUnit, "startUnit"), u32$2(endUnit, "endUnit"), u32$2(charShapeId, "charShapeId")));
+			success(wasm.hwp5_edit_format(u32$3(section, "section"), u32$3(paragraph, "paragraph"), u32$3(startUnit, "startUnit"), u32$3(endUnit, "endUnit"), u32$3(charShapeId, "charShapeId")));
 		},
 		setCharacterProperties({ section, paragraph, startUnit, endUnit, properties }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterPropertyArgs(properties);
@@ -6434,10 +6434,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterStrike({ section, paragraph, startUnit, endUnit, enabled }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			if (typeof enabled !== "boolean") throw new TypeError("InvalidCharacterProperties");
@@ -6447,10 +6447,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterUnderline({ section, paragraph, startUnit, endUnit, kind }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterUnderlineArg(kind);
@@ -6460,10 +6460,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterStrikeColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -6473,10 +6473,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterUnderlineColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -6486,10 +6486,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterFont({ section, paragraph, startUnit, endUnit, language, fontId }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterFontArgs(language, fontId);
@@ -6500,10 +6500,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterFontName({ section, paragraph, startUnit, endUnit, language, name }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterFontNameArgs(language, name);
@@ -6529,10 +6529,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterTextColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -6542,10 +6542,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterShade({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterShadeArgs(color);
@@ -6555,10 +6555,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterEffect({ section, paragraph, startUnit, endUnit, effect, enabled, exclusive = false }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterEffectArgs(effect, enabled);
@@ -6569,10 +6569,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterOutline({ section, paragraph, startUnit, endUnit, kind }) {
 			check();
 			const positions = [
-				u32$2(section, "section"),
-				u32$2(paragraph, "paragraph"),
-				u32$2(startUnit, "startUnit"),
-				u32$2(endUnit, "endUnit")
+				u32$3(section, "section"),
+				u32$3(paragraph, "paragraph"),
+				u32$3(startUnit, "startUnit"),
+				u32$3(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = hwp5CharacterOutlineArg(kind);
@@ -6591,7 +6591,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		}
 	};
 }
-var encoder$6, decoder, u32$2;
+var encoder$6, decoder, u32$3;
 var init_hwp5_editor = __esmMin((() => {
 	init_hwp5_named_fields();
 	init_cell_diagonal_command();
@@ -6689,7 +6689,7 @@ var init_hwp5_editor = __esmMin((() => {
 		fatal: true,
 		ignoreBOM: true
 	});
-	u32$2 = (value, name) => {
+	u32$3 = (value, name) => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295) throw new RangeError(`Invalid ${name}`);
 		return value;
 	};
@@ -6720,6 +6720,40 @@ var init_named_field_parameters = __esmMin((() => {
 	utf8$1 = new TextDecoder("utf-8", { fatal: true });
 	valid = (value) => value === null || typeof value === "string" && value.isWellFormed() && new TextEncoder().encode(value).length <= 4096;
 }));
+// ../../js/paragraph-bullet-definition-write.mjs
+/** Validates only command/Native DTO values; never reads document bytes. */
+function checkedBulletDefinition(d) {
+	if (!d || Object.keys(d).some((k) => ![
+		"marker",
+		"alignment",
+		"useInstanceWidth",
+		"autoIndent",
+		"widthAdjust",
+		"textOffsetType",
+		"textOffset",
+		"charShapeId"
+	].includes(k)) || !u32$2(d.marker) || d.marker <= 32 || d.marker > 1114111 || d.marker >= 127 && d.marker <= 159 || d.marker >= 55296 && d.marker <= 57343 || d.marker === 65534 || d.marker === 65535 || ![
+		"LEFT",
+		"CENTER",
+		"RIGHT"
+	].includes(d.alignment) || typeof d.useInstanceWidth !== "boolean" || typeof d.autoIndent !== "boolean" || !i32(d.widthAdjust) || !i32(d.textOffset) || !["PERCENT", "HWPUNIT"].includes(d.textOffsetType) || !u32$2(d.charShapeId)) throw Error("InvalidBulletDefinition");
+	return d;
+}
+function checkedBulletDefinitionEdit(edit) {
+	if (!edit || !["create", "update"].includes(edit.mode) || Object.keys(edit).some((k) => ![
+		"mode",
+		"id",
+		"definition",
+		"apply"
+	].includes(k)) || (edit.mode === "create" ? edit.id != null : !u32$2(edit.id)) || typeof edit.apply !== "boolean") throw Error("InvalidBulletDefinitionRequest");
+	checkedBulletDefinition(edit.definition);
+	return edit;
+}
+var u32$2, i32;
+var init_paragraph_bullet_definition_write = __esmMin((() => {
+	u32$2 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295;
+	i32 = (n) => Number.isInteger(n) && n >= -1e6 && n <= 1e6;
+}));
 // ../../js/paragraph-bullet-definitions.mjs
 /** Only validates a Native DTO. No source XML, inference or retained inventory. */
 function checkedParagraphBulletDefinitions(result) {
@@ -6728,11 +6762,20 @@ function checkedParagraphBulletDefinitions(result) {
 	};
 	if (result?.state === "unavailable" && typeof result.reason === "string" && result.reason.length) return result;
 	if (result?.schemaVersion !== 1 || result.state !== "available" || result.scope !== "current-header" || result.coverage !== "complete" || !Array.isArray(result.declarations) || result.declarations.length > 4096) invalid();
+	if (result.definitionWriter !== void 0 && result.definitionWriter !== "character-definitions-v1") invalid();
 	const counts = /* @__PURE__ */ new Map();
 	for (const [index, row] of result.declarations.entries()) {
 		if (!row || row.ordinal !== index || row.id !== null && !uint$30(row.id) || row.marker !== null && !scalar(row.marker) || typeof row.canApply !== "boolean") invalid();
 		if (row.canApply ? row.id === null || row.marker === null || row.reason !== null : !reasons.has(row.reason)) invalid();
 		if (row.id === null !== (row.reason === "InvalidBulletId")) invalid();
+		if (row.definition != null) {
+			try {
+				checkedBulletDefinition(row.definition);
+			} catch {
+				invalid();
+			}
+			if (!row.canApply || row.definition.marker !== row.marker) invalid();
+		}
 		if (row.id !== null) counts.set(row.id, (counts.get(row.id) ?? 0) + 1);
 	}
 	for (const row of result.declarations) {
@@ -6746,6 +6789,7 @@ function decodeParagraphBulletDefinitions(bytes) {
 }
 var reasons, uint$30, scalar;
 var init_paragraph_bullet_definitions = __esmMin((() => {
+	init_paragraph_bullet_definition_write();
 	reasons = /* @__PURE__ */ new Set([
 		"InvalidBulletId",
 		"DuplicateBulletId",
@@ -10932,6 +10976,24 @@ async function createHwpxEditor(source) {
 				wasm.hwpx_edit_output_free();
 			}
 		},
+		writeParagraphBulletDefinition(edit, section = 0, paragraph = 0) {
+			ready();
+			uint(section);
+			uint(paragraph);
+			checkedBulletDefinitionEdit(edit);
+			if (typeof wasm.hwpx_edit_bullet_definition_write !== "function") throw Error("BulletDefinitionWriteAbiUnavailable");
+			const bytes = new TextEncoder().encode(JSON.stringify({
+				...edit,
+				section,
+				paragraph
+			}));
+			return memory.withBytes(bytes, (ptr, len) => {
+				const status = wasm.hwpx_edit_bullet_definition_write(ptr, len);
+				if (status === 1) return true;
+				if (status === 2) return false;
+				throw memory.error();
+			});
+		},
 		paragraphBulletDefinitions() {
 			ready();
 			if (typeof wasm.hwpx_edit_bullet_definitions !== "function") return {
@@ -12489,6 +12551,7 @@ async function createHwpxEditor(source) {
 }
 var init_hwpx_editor = __esmMin((() => {
 	init_named_field_parameters();
+	init_paragraph_bullet_definition_write();
 	init_paragraph_bullet_definitions();
 	init_hwpx_document_insert();
 	init_hwpx_page_number_display_wire();

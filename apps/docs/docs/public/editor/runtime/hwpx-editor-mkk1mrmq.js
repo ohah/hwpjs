@@ -1,0 +1,1 @@
+export{createHwpxEditor2 as createHwpxEditor}from"./index-s12nfy20.js";import"./index-8c5kfwe8.js";

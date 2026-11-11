@@ -4,16 +4,16 @@
   "runtime": "node>=24.20.0",
   "files": {
     "cli.mjs": {
-      "sha256": "1a6d2c60d89011c99e2517ce067b4c04f44ebb9fd916b18edee18d32b20fd489",
-      "bytes": 814574
+      "sha256": "85c9f942ecb8f7d0dbacd965cf69b4d613d53f45814c70f5c5cd55548a306993",
+      "bytes": 817053
     },
     "mcp.mjs": {
-      "sha256": "5c96bcf0f75c658610872c2fe2a0dcf3af30b1e789a1adbb76a3bedc56b37828",
-      "bytes": 1771376
+      "sha256": "b3fa7f009cd57f06c5e3d097d2af5999fcb993c9823511367a36928b53726c0f",
+      "bytes": 1773855
     },
     "hwpjs.wasm": {
-      "sha256": "a3be6777229dbe1ec895f4850168809f70d9cf52b14b85996a670a5577e865f1",
-      "bytes": 4380257
+      "sha256": "5ece4c0a551716239c37af0e1ff40db7b2a642e1baf75bb27782bcf237bd1621",
+      "bytes": 4397475
     },
     "LICENSE": {
       "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56",
@@ -24,5 +24,5 @@
       "bytes": 32113
     }
   },
-  "sourceFingerprint": "b4f20b7bcb87096dfef93e345f444e003878479591f006b2c19c5947f6d15de4"
+  "sourceFingerprint": "b8883a02d037bf1d7783fd67c74d2d43297b8c04e5223a50791a69ba564d3464"
 }
