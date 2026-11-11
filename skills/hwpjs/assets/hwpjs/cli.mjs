@@ -1878,7 +1878,7 @@ var init_cell_style_command = __esmMin((() => {
 	init_cell_border_batch();
 	init_cell_border_patch_command();
 	init_cell_fill_command();
-})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS, REQUIRED_FUNCTIONS;
+})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, REQUIRED_FUNCTIONS;
 var init_abi_schema = __esmMin((() => {
 	CREATED_TABLE_GRID_ACTION = Object.freeze({
 		insert_row: 0,
@@ -1917,6 +1917,7 @@ var init_abi_schema = __esmMin((() => {
 	Object.freeze(["hwpx_edit_rename_named_field"]);
 	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
 	HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_merge_source_table_cells"]);
+	HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_split_source_table_cells"]);
 	Object.freeze(["hwpx_edit_document_provenance"]);
 	Object.freeze({
 		header_bytes: 8,
@@ -6907,6 +6908,62 @@ function createSourceTableCellMergeApi({ wasm, memory, check, documentInsert }) 
 		}
 	};
 }
+/**
+* @typedef {SourceTableCellMergeRequest & {
+* selectedCells: number, splitRows: number, splitColumns: number,
+* mode: 'each' | 'merge-then-split', equalizeRows: boolean
+* }} SourceTableCellSplitRequest
+*/
+function createSourceTableCellSplitApi({ wasm, memory, check, documentInsert }) {
+	const supported = documentInsert.supportsDocumentInsertionAbi() && HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS.every((name) => typeof wasm[name] === "function");
+	const requireSupport = () => {
+		check();
+		if (!supported) throw new Error("HwpxSourceTableCellSplitAbiUnavailable");
+	};
+	return {
+		supportsSourceTableCellSplit() {
+			check();
+			return supported;
+		},
+		sourceTableCellSplitBinding() {
+			requireSupport();
+			return documentInsert.documentInsertionCapabilities().binding;
+		},
+		/** @param {SourceTableCellSplitRequest} request */
+		splitSourceTableCells(request) {
+			requireSupport();
+			const numeric = [
+				...coordinates,
+				"selectedCells",
+				"splitRows",
+				"splitColumns"
+			];
+			const value = ownRecord(request, [
+				...numeric,
+				"binding",
+				"mode",
+				"equalizeRows"
+			]);
+			if (!numeric.every((key) => isU32(value[key])) || typeof value.equalizeRows !== "boolean" || !["each", "merge-then-split"].includes(value.mode)) throw new TypeError("InvalidSourceTableSplitRequest");
+			const ticket = ownRecord(value.binding, [
+				"session",
+				"revision",
+				"serial"
+			]);
+			const current = documentInsert.documentInsertionCapabilities().binding;
+			if (ticket.session !== current.session || ticket.revision !== current.revision || ticket.serial !== current.serial) return {
+				nativeCode: 0,
+				application: "unapplied",
+				changed: false,
+				error: "StaleSourceTableSplitBinding"
+			};
+			return applyNativeEdit({
+				withBytes: (_, invoke) => invoke(0, 0),
+				error: () => memory.error()
+			}, null, () => wasm.hwpx_edit_split_source_table_cells(...numeric.map((key) => value[key]), value.mode === "each" ? 0 : 1, value.equalizeRows ? 1 : 0, current.revision, ...words(current.session.slice(current.session.lastIndexOf(":") + 2)), ...words(current.serial)), "InvalidSourceTableSplitCompletion");
+		}
+	};
+}
 var coordinates, isU32, words;
 var init_source_table_cell_merge = __esmMin((() => {
 	init_abi_schema();
@@ -10156,6 +10213,12 @@ async function createHwpxEditor(source) {
 		}),
 		...documentInsert,
 		...createSourceTableCellMergeApi({
+			wasm,
+			memory,
+			check: ready,
+			documentInsert
+		}),
+		...createSourceTableCellSplitApi({
 			wasm,
 			memory,
 			check: ready,
