@@ -389,3 +389,51 @@ reference는 첫 변경 전의 원본과 Native binding에 묶습니다. 같은 
 ```
 
 CLI는 위 연산을 배열로 `--operations`에 전달하거나 `{"version":1,"operations":[...]}` patch 파일로 지정합니다. `hwpjs apply ./document.hwp --patch ./split-patch.json --expect-sha256 EXACT_INPUT_SHA256 --output ./split.hwp --allow-stale-layout --wasm /absolute/current-engine.wasm`입니다. MCP는 `hwpjs mcp --wasm /absolute/current-engine.wasm`에서 같은 연산을 `apply_document_changes`의 operations 배열에 넣습니다.
+
+
+## 문자 확장 서식: 밑줄·글자색·언어별 글꼴 이름
+
+현재 GitHub 구현 기준이며 npm 릴리스 지원을 뜻하지 않습니다. 설치 이름은 `npm install @ohah/hwpjs`입니다. 해당 CLI 구현과 optional atomic-formatting/lifetime query를 지원하는 Native를 포함한 단일 패키지 빌드가 필요합니다. 기존 `character-properties`의 size/bold/italic은 그대로 유지하고 underline/textColor/fontName을 추가합니다. 확장 필드가 실제 지정되면 기존 Native atomic patch 한 번으로 함께 적용합니다.
+
+`--operations`에 다음 배열을 JSON 문자열로 전달합니다. 기존 --patch는 {"version":1,"operations":[...]} envelope를 사용합니다.
+
+```json
+[
+  {
+    "kind": "character-properties",
+    "coordinates": "current-transaction",
+    "section": 0,
+    "paragraph": 2,
+    "startUnit": 0,
+    "endUnit": 3,
+    "expectedRangeText": "SAM",
+    "properties": {
+      "size": 1900,
+      "bold": true,
+      "italic": true,
+      "underline": "bottom",
+      "textColor": "#123456",
+      "fontName": {
+        "language": "latin",
+        "name": "Bridge Native Font"
+      }
+    }
+  }
+]
+```
+
+```sh
+hwpjs apply ./document.hwpx --patch ./character-patch.json \
+  --expect-sha256 EXACT_INPUT_SHA256 --output ./character-changed.hwpx \
+  --allow-stale-layout --wasm /absolute/path/current-engine.wasm
+```
+
+character-patch.json은 `{"version":1,"operations":[위 연산 객체]}` 형식입니다.
+
+`size`는 1/100pt이며1900은19pt입니다. `textColor`는 `#RRGGBB`이고 기존 SDK RGB24 codec을 사용합니다. `underline`은 HWP5 none/bottom/top, HWPX none/bottom/center/top입니다. `fontName`의 language는 hangul/latin/hanja/japanese/other/symbol/user 중 하나이고 이름을 임의 정규화하거나 다른 언어까지 변경하지 않습니다. 글꼴 파일 설치·문자 fallback은 이 쓰기 범위가 아닙니다. 각 optional 값의 null/생략은 기존 값 보존입니다. Native의 unknown/unavailable 관측은 검정색·기본 글꼴로 바꾸지 않으며 해당 대상이 쓰기 불가하면 원래 사유로 거절합니다.
+
+좌표는 Native 원본 UTF-16 단위로, HWP5 문단0부터/HWPX 문단1부터이며 CLI가1을 더하거나 빼지 않습니다. 예제의 paragraph2와 SAM은 합성 입력의 예시일 뿐입니다. 실제 `hwpjs paragraph INPUT --target s0:p2`로 본문·주소를 확인하고 정확한 expectedRangeText를 지정합니다. 확장 서식은 비어 있지 않은 최상위 body 범위만 지원합니다. 셀·각주 등으로 확대하지 않습니다.
+
+현재 후보는 확장 서식 앞에 구조·텍스트 변경이 있는 batch를 StaleCharacterExtensionTarget으로 거절합니다. 같은 본문의 다른 문단이 동일 숫자 슬롯을 차지해도 자동 재대상화하지 않습니다. 서식만 바꾸는 선행 연산과 여러 확장 연산은 기존 Native owner/lineage/session·비되감기 serial을 검증하며 순차 실행합니다. 외부 binding/ref를 입력으로 받지 않고 쓰기 직전 같은 SDK에서 새 binding/target 쌍을 얻습니다.
+
+전체 입력·ABI·요청 필드·현재 대상 입장 검사 후 기존 lazy history V2를 사용합니다. Native 쓰기/후행 연산/저장/종료 중 실패하면 새 출력 파일을 게시하지 않습니다. Native의 uncertain/cleanup/refresh 오류를 재시도하지 않습니다. 성공 operationResults에는 Native before/after 관측을 그대로 담고 known/mixed/unknown/unavailable 상태를 바꾸지 않습니다. size/bold/italic만 쓰는 기존 경로는 확장 ABI를 요구하지 않습니다.

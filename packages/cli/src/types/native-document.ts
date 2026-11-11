@@ -48,6 +48,10 @@ export type HwpxOpenedDocument = DocumentBase & {
 export type OpenedDocument = Hwp5OpenedDocument | HwpxOpenedDocument;
 
 type SharedMutationMethods =
+  | 'supportsAtomicFormatting'
+  | 'atomicFormattingCapabilities'
+  | 'queryFormatting'
+  | 'applyFormattingPatch'
   | 'splice'
   | 'replaceParagraphRanges'
   | 'splitParagraph'
@@ -76,6 +80,8 @@ type Hwp5MutationSdk = Pick<
   Hwp5Sdk,
   | SharedMutationMethods
   | 'text'
+  | 'supportsCurrentSourceReferences'
+  | 'currentSourceReferences'
   | 'validateTextSourcePolicy'
   | 'writeParagraphBulletDefinition'
   | 'paragraphBulletDefinitions'

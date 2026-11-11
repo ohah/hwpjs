@@ -1,3 +1,7 @@
+import {
+  checkedCharacterExtensions,
+  type ExtendedCharacterProperties,
+} from './character-extensions.ts';
 import type { SourceTableCellSplitOperation } from './source-table-cell-split.ts';
 import { parseObjectReference } from '../object-reference.ts';
 import { checkedBulletDefinitionEdit } from '../../../../js/paragraph-bullet-definition-write.mjs';
@@ -74,7 +78,7 @@ export type DocumentOperation = OperationBase &
     | ({ readonly kind: 'merge-paragraph'; readonly expectedText: string } & OperationPosition)
     | ({
         readonly kind: 'character-properties';
-        readonly properties: CharacterProperties;
+        readonly properties: ExtendedCharacterProperties;
       } & RangeCondition &
         WholeTextCondition)
     | ({ readonly kind: 'character-format'; readonly charShapeId: number } & RangeCondition &
@@ -373,7 +377,7 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
         break;
       case 'character-properties':
         range(operation);
-        characterPropertyArgs(operation.properties);
+        checkedCharacterExtensions(operation.properties);
         break;
       case 'character-format':
         range(operation);

@@ -132,6 +132,31 @@ function operationSchema() {
             size: z.number().int().min(0).max(409600).nullable().optional(),
             bold: z.boolean().nullable().optional(),
             italic: z.boolean().nullable().optional(),
+            ...(kind === 'character-properties'
+              ? {
+                  underline: z.enum(['none', 'bottom', 'center', 'top']).nullable().optional(),
+                  textColor: z
+                    .string()
+                    .regex(/^#[0-9a-fA-F]{6}$/)
+                    .nullable()
+                    .optional(),
+                  fontName: z
+                    .strictObject({
+                      language: z.enum([
+                        'hangul',
+                        'latin',
+                        'hanja',
+                        'japanese',
+                        'other',
+                        'symbol',
+                        'user',
+                      ]),
+                      name: z.string().min(1),
+                    })
+                    .nullable()
+                    .optional(),
+                }
+              : {}),
           })
           .describe('글자 크기 size는 1/100pt 단위입니다.');
       if (name === 'ranges')

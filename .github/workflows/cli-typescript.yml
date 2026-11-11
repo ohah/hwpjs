@@ -197,6 +197,29 @@ jobs:
           grep -Eq '^# tests 6$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
+      - name: 문자 확장 서식 CLI와 MCP 명시 E2E
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Negative ABI fixture removes only optional formatting exports from this pinned engine.
+          HWPJS_CHARACTER_TEST_OLD_WASM="$HWPJS_TEST_WASM" \
+          HWPJS_CHARACTER_TEST_OLD_WASM_SHA256="$HWPJS_TEST_WASM_SHA256" \
+          HWPJS_CHARACTER_TEST_EVIDENCE="$RUNNER_TEMP/hwpjs-cli-character-extensions" \
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/character-extensions.test.mjs | tee "$RUNNER_TEMP/hwpjs-cli-character-extensions.tap"
+          grep -Eq '^# tests 10$' "$RUNNER_TEMP/hwpjs-cli-character-extensions.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-character-extensions.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-character-extensions.tap"
+      - name: 문자 확장 요청 계획 비용과 Native lineage 명시 E2E
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          HWPJS_CHARACTER_NATIVE_SCALE_EVIDENCE="$RUNNER_TEMP/hwpjs-cli-character-plan-native" \
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/character-plan-native-scale.test.mjs | tee "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
+          grep -Eq '^# tests 10$' "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
       - name: 정규 공개 JavaScript 산출물 빌드
         timeout-minutes: 3
         run: bun tools/build-public-package.mjs --js-only --wasm="$HWPJS_TEST_WASM"
@@ -222,6 +245,10 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: |
+            ${{ runner.temp }}/hwpjs-cli-character-plan-native.tap
+            ${{ runner.temp }}/hwpjs-cli-character-plan-native
+            ${{ runner.temp }}/hwpjs-cli-character-extensions.tap
+            ${{ runner.temp }}/hwpjs-cli-character-extensions
             ${{ runner.temp }}/hwpjs-cli-split-portable.tap
             ${{ runner.temp }}/hwpjs-cli-split-portable
             ${{ runner.temp }}/hwpjs-cli-ts-source.tap

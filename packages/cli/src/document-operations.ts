@@ -1,3 +1,8 @@
+import {
+  hasCharacterExtensions,
+  prepareCharacterExtensions,
+  type CharacterExtensionResult,
+} from './mutations/character-extensions.ts';
 import { prepareSourceTableCellSplits } from './mutations/source-table-cell-split.ts';
 import { validateDocumentOperations } from './mutations/validate.ts';
 import { applyOperation, prepareOperationSession } from './mutations/dispatch.ts';
@@ -17,7 +22,7 @@ export interface DocumentOperationsResult {
   changed: boolean;
   layoutRequiresReflow: boolean;
   appliedOperations: number;
-  operationResults: AppliedOperationIdentity[];
+  operationResults: (AppliedOperationIdentity | CharacterExtensionResult)[];
 }
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -51,12 +56,18 @@ export async function applyDocumentOperations(
     if (document.sourceSha256 !== expectedSha256) throw new Error('SourceSha256Mismatch');
     prepareOperationSession(document, captured);
     const sourceSplits = await prepareSourceTableCellSplits(document, captured);
-    const identities: AppliedOperationIdentity[] = [];
+    const extensions = prepareCharacterExtensions(document, captured);
+    const identities: (AppliedOperationIdentity | CharacterExtensionResult)[] = [];
     for (const [index, operation] of captured.entries()) {
+      if (hasCharacterExtensions(operation)) {
+        identities.push(extensions.apply(document, operation, index));
+        extensions.advance(operation);
+        continue;
+      }
       const identity =
         operation.kind === 'source-table-cell-split'
           ? sourceSplits.apply(document, operation)
-          : applyOperation(document, operation);
+          : extensions.runLegacy(operation, () => applyOperation(document, operation));
       if (identity !== null) {
         if (
           typeof identity !== 'string' ||
@@ -66,6 +77,7 @@ export async function applyDocumentOperations(
           throw new Error('InvalidCreatedTableIdentity');
         identities.push({ operation: index, kind: 'table-insert', identity });
       }
+      extensions.advance(operation);
     }
     const saved: unknown = captured.length ? await document.save({ allowStaleLayout }) : original;
     const hwp5Saved = document.format === 'hwp5' && captured.length !== 0;

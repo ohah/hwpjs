@@ -1,3 +1,8 @@
+import {
+  basicCharacterProperties,
+  hasCharacterExtensions,
+  requireCharacterExtensions,
+} from './character-extensions.ts';
 import { parseObjectReference } from '../object-reference.ts';
 import { hwp5TableCreationRequest } from '../../../../web/preview/hwp5-table-creation-command.mjs';
 import type { OperationDocument } from '../types/native-document.ts';
@@ -85,6 +90,7 @@ export function prepareOperationSession(
     throw new Error('InvalidOperationSession');
   const protectedSections = new Set<number>();
   for (const operation of operations) {
+    if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
     if (
       operation.kind === 'source-table-cell-split' &&
       (typeof document.sdk.supportsSourceTableCellSplit !== 'function' ||
@@ -144,6 +150,7 @@ export function prepareOperationSession(
   if (
     operations.some(
       (operation) =>
+        hasCharacterExtensions(operation) ||
         operation.kind === 'source-table-cell-split' ||
         operation.kind === 'paragraph-bullet-definition',
     )
@@ -244,7 +251,7 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
         paragraph: operation.paragraph,
         startUnit: operation.startUnit,
         endUnit: operation.endUnit,
-        properties: operation.properties,
+        properties: basicCharacterProperties(operation.properties),
       });
       break;
     case 'character-format':
