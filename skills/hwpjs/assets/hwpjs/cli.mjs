@@ -16572,7 +16572,7 @@ function isCellBinding(input) {
 		"columnSpan"
 	].every((key) => uint(value[key])) && ["width", "height"].every((key) => value[key] === null || uint(value[key]));
 }
-function observeOwner(document, operation, section, tableNode) {
+function observeOwner(document, operation, section, tableNode, supportsMergedInput) {
 	const placements = document.sdk.tablePlacements(section).filter((row) => row.tableNode === tableNode);
 	const placement = placements[0];
 	if (placements.length !== 1 || placement.parentTableNode !== null || placement.parentListNode !== null) throw new Error("UnsupportedSourceTableSplitOwner");
@@ -16604,7 +16604,7 @@ function observeOwner(document, operation, section, tableNode) {
 		selectedCells++;
 	}
 	if (!selectedCells || operation.mode === "merge-then-split" && selectedCells < 2) throw new Error("InvalidSourceTableSplitSelection");
-	if (document.format === "hwp5" && (selectedCells !== 1 || operation.mode !== "each" || !operation.equalizeRows || [...cells.values()].some((cell) => cell.rowSpan !== 1 || cell.columnSpan !== 1))) throw new Error("UnsupportedSourceTableSplitSelection");
+	if (document.format === "hwp5" && (selectedCells !== 1 || operation.mode !== "each" || !operation.equalizeRows || !supportsMergedInput && [...cells.values()].some((cell) => cell.rowSpan !== 1 || cell.columnSpan !== 1))) throw new Error("UnsupportedSourceTableSplitSelection");
 	return {
 		selectedCells,
 		fingerprint: JSON.stringify({
@@ -16621,6 +16621,7 @@ async function prepareSourceTableCellSplits(document, operations) {
 	const plans = /* @__PURE__ */ new Map();
 	const sdk = document.sdk, format = document.format, sourceSha256 = document.sourceSha256;
 	let binding;
+	let supportsMergedInput = false;
 	const guard = (current) => {
 		if (current !== document || current.sdk !== sdk || current.format !== format || current.sourceSha256 !== sourceSha256) throw new Error("ForeignSourceTableSplitTarget");
 		if (!binding || !sameBinding(binding, sdk.sourceTableCellSplitBinding())) throw new Error("StaleSourceTableSplitReference");
@@ -16628,6 +16629,7 @@ async function prepareSourceTableCellSplits(document, operations) {
 	if (selected.length) {
 		const capability = sdk.sourceTableCellSplitCapabilities();
 		if (capability.format !== format) throw new Error("InvalidSourceTableSplitCapabilities");
+		supportsMergedInput = capability.supportsMergedInput === true;
 		binding = Object.freeze({ ...capability.binding });
 		for (const operation of selected) {
 			const parsed = parseObjectReference(operation.reference, {
@@ -16651,7 +16653,7 @@ async function prepareSourceTableCellSplits(document, operations) {
 				sectionCount: document.sectionCount
 			}, true);
 			if (resolved.expectedRows !== operation.expectedRows || resolved.expectedColumns !== operation.expectedColumns) throw new Error("SourceTableSplitDimensionsMismatch");
-			const observation = observeOwner(document, operation, resolved.section, resolved.tableNode);
+			const observation = observeOwner(document, operation, resolved.section, resolved.tableNode, supportsMergedInput);
 			guard(document);
 			const request = Object.freeze({
 				binding,
@@ -16679,7 +16681,7 @@ async function prepareSourceTableCellSplits(document, operations) {
 		guard(current);
 		const plan = plans.get(operation);
 		if (!plan) throw new Error("UnissuedSourceTableSplitTarget");
-		const now = observeOwner(current, operation, plan.request.section, plan.request.tableNode);
+		const now = observeOwner(current, operation, plan.request.section, plan.request.tableNode, supportsMergedInput);
 		guard(current);
 		if (now.fingerprint !== plan.fingerprint || now.selectedCells !== plan.request.selectedCells) throw new Error("StaleSourceTableSplitReference");
 		plans.delete(operation);
