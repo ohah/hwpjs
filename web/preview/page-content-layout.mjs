@@ -308,8 +308,13 @@ export function layoutPageContent(
   const bodyFlows = content.paragraphFlows ?? [];
   const columnZones = !bodyFlows.every((flow) => flow.single_column === true);
   const measured = columnZones
-    ? measureColumnContent(body, reference.boxes.page, bodyFlows, measure, maxRows)
-    : layoutContent(body, reference.boxes.page.width, measure, maxRows, { documentBody: true });
+    ? measureColumnContent(body, reference.boxes.page, bodyFlows, measure, maxRows, {
+        paragraphMarkers: true,
+      })
+    : layoutContent(body, reference.boxes.page.width, measure, maxRows, {
+        documentBody: true,
+        paragraphMarkers: true,
+      });
   if (measured.state === 'unavailable') return measured;
   const options = {
     columnZones,

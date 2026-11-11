@@ -1,6 +1,7 @@
 //! Owned display values; semantic parsing remains in the DocInfo reader.
 const std = @import("std");
 const info = @import("../docinfo/reader.zig");
+const Bullet = struct { marker: u16, head: @import("../docinfo/paragraph_head.zig").Head };
 pub const Shape = struct {
     id: u32,
     alignment: u3,
@@ -19,6 +20,7 @@ pub const Shape = struct {
     extended_heading_level: ?u32 = null,
     heading_level: u32 = 0,
     heading_marker: u16 = 0,
+    heading_head: ?@import("../docinfo/paragraph_head.zig").Head = null,
 };
 
 pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, expected_count: usize) ![]Shape {
@@ -27,12 +29,12 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
     errdefer a.free(output);
     var iterator = try info.Iterator.init(bytes, version, .{});
     var count: usize = 0;
-    var bullets: std.ArrayList(u16) = .empty;
+    var bullets: std.ArrayList(Bullet) = .empty;
     defer bullets.deinit(a);
     while (try iterator.next()) |record| {
         if (record.value == .bullet) {
             if (bullets.items.len < std.math.maxInt(u16))
-                try bullets.append(a, characterBullet(record.value.bullet));
+                try bullets.append(a, .{ .marker = characterBullet(record.value.bullet), .head = record.value.bullet.head });
             continue;
         }
         if (record.value != .para_shape) continue;
@@ -49,8 +51,11 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
     }
     if (count != output.len) return error.ResourceCountMismatch;
     for (output) |*shape| {
-        if (shape.heading_kind == 3 and shape.heading_id != 0 and shape.heading_id <= bullets.items.len)
-            shape.heading_marker = bullets.items[shape.heading_id - 1];
+        if (shape.heading_kind == 3 and shape.heading_id != 0 and shape.heading_id <= bullets.items.len) {
+            const bullet = bullets.items[shape.heading_id - 1];
+            shape.heading_marker = bullet.marker;
+            if (bullet.marker != 0) shape.heading_head = bullet.head;
+        }
     }
     return output;
 }

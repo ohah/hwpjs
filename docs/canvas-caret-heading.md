@@ -11,3 +11,5 @@
 HWP5는 확인된 10진 번호와 10진 수준 경로를 처리합니다. HWPX는 원본이 형식을 명시하고 지원되는 포매터가 결과를 계산할 수 있을 때 값을 반환합니다. 중첩된 본문 외 목록, 시작값 충돌, 해석되지 않은 재시작 제어, 다른 개요 정의로 전환된 구역은 계산할 근거가 없으면 `numbering-not-computed`를 반환합니다. 이 값은 조회 API가 제공하며 Canvas 위의 번호 표시·편집은 별도입니다.
 
 [한컴 GetHeadingString](https://developer.hancom.com/en-us/webhwp/devguide/hwpctrl/methods/getheadingstring)
+
+머리표의 화면·인쇄 배치와 지연 행 계산 수명은 [문단 머리표 Canvas 표시](canvas-paragraph-markers.md)를 따릅니다. 조회 문자열을 원문 텍스트에 삽입하지 않습니다.

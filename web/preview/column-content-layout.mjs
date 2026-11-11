@@ -1,12 +1,28 @@
 import { layoutContent } from './layout.mjs';
 import { columnReferenceBoxes } from './column-reference-boxes.mjs';
 import { nextTextRow } from './next-text-row.mjs';
+import { paragraphMarkerPlan } from './paragraph-marker.mjs';
 import { paragraphSpacePixels } from './paragraph-geometry.mjs';
 import { columnTextSpans } from './column-text-spans.mjs';
 
 /** Measure source paragraphs at their effective column width; pagination owns y. */
-export function measureColumnContent(content, body, flows, measure, maxRows) {
+export function measureColumnContent(
+  content,
+  body,
+  flows,
+  measure,
+  maxRows,
+  { paragraphMarkers = false } = {},
+) {
   if (!Number.isInteger(maxRows) || maxRows < 1) throw new RangeError('InvalidLayoutBounds');
+  // A layout invocation owns its marker plans. Reflow starts a fresh cache.
+  const markerPlans = new WeakMap();
+  const markerFor = (paragraph, width) => {
+    let widths = markerPlans.get(paragraph);
+    if (!widths) markerPlans.set(paragraph, (widths = new Map()));
+    if (!widths.has(width)) widths.set(width, paragraphMarkerPlan(paragraph, width, measure));
+    return widths.get(width);
+  };
   const byParagraph = new Map(flows.map((flow) => [flow.paragraph, flow]));
   const rows = [];
   const deferred = flows.some(
@@ -56,6 +72,7 @@ export function measureColumnContent(content, body, flows, measure, maxRows) {
           endUnit: span.endUnit,
           columnDeclaration: span.declaration,
           paragraphSource: paragraph,
+          ...(paragraphMarkers && spans.length === 1 ? { paragraphMarkers: true } : {}),
         });
       if (after) rows.push(gap(after, spans.at(-1).declaration));
       continue;
@@ -65,7 +82,7 @@ export function measureColumnContent(content, body, flows, measure, maxRows) {
       columns.boxes[0].width,
       measure,
       maxRows - rows.length,
-      { documentBody: true },
+      { documentBody: true, paragraphMarkers },
     );
     rows.push(...measured.rows);
     limited ||= measured.limited;
@@ -82,6 +99,11 @@ export function measureColumnContent(content, body, flows, measure, maxRows) {
               ? source
               : nextTextRow(source.paragraphSource, source.startUnit, width, measure, {
                   endUnit: source.endUnit,
+                  paragraphMarkers: source.paragraphMarkers === true,
+                  markerPlan:
+                    source.paragraphMarkers === true
+                      ? markerFor(source.paragraphSource, width)
+                      : null,
                 }),
         }
       : {}),

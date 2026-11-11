@@ -128,7 +128,7 @@ export function createTextStyle(content, baseFont, { projectionMemo = false } = 
   const strikes = new Map((content.characterStrikes ?? []).map((row) => [row.id, row.enabled]));
   const strikeStyles = new Map((content.characterStrikeStyles ?? []).map((row) => [row.id, row]));
   const shapeAt = (paragraph, unit, kind) => {
-    if (kind !== 'text' && kind !== 'number-prefix') return null;
+    if (!['text', 'number-prefix', 'paragraph-marker'].includes(kind)) return null;
     const range = rangeAt(paragraph, unit);
     return range?.charShapeId === null ? null : shapes.get(range?.charShapeId);
   };
@@ -142,7 +142,7 @@ export function createTextStyle(content, baseFont, { projectionMemo = false } = 
         ? nominal
         : metrics.relativeHeight(shape?.id, paragraph?.text, unit, shape.height) / 100;
     const family =
-      kind === 'text' || kind === 'number-prefix'
+      kind === 'text' || kind === 'number-prefix' || kind === 'paragraph-marker'
         ? documentFont(shape?.id, paragraph?.text, unit)
         : null;
     const build = () => {
@@ -209,6 +209,17 @@ export function createTextStyle(content, baseFont, { projectionMemo = false } = 
       : usesDocumentFontMetrics(content.format) || paragraph?.drawingText || paragraph?.tableCell
         ? size * (96 / 72)
         : Math.max(20, size * (96 / 72) * 1.25);
+  };
+  resolve.markerEm = (paragraph, unit) => {
+    const shape = shapeAt(paragraph, unit, 'paragraph-marker');
+    const size = points(shape);
+    if (
+      size === null ||
+      metrics.horizontalScale(shape.id, paragraph?.text, unit) !== 1 ||
+      metrics.relativeHeight(shape.id, paragraph?.text, unit, shape.height) !== shape.height
+    )
+      return null;
+    return size * (96 / 72);
   };
   resolve.textHeight = (paragraph, unit, kind = 'text') =>
     resolve.fontHeight(paragraph, unit, kind) +

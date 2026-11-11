@@ -526,19 +526,23 @@ export fn hwp5_edit_copy_text(section: u32, paragraph: u32) u32 {
     return 1;
 }
 export fn hwp5_edit_paragraph_shapes() u32 {
-    return paragraphShapes(false);
+    return paragraphShapes(.shapes);
 }
 
 export fn hwp5_edit_paragraph_shapes_with_heading() u32 {
-    return paragraphShapes(true);
+    return paragraphShapes(.heading);
 }
 
-fn paragraphShapes(with_heading: bool) u32 {
+export fn hwp5_edit_paragraph_shapes_with_marker_placement() u32 {
+    return paragraphShapes(.placement);
+}
+
+fn paragraphShapes(version: @import("paragraph_shapes_wire.zig").Version) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);
     const shapes = s.paragraphShapes(a) catch |err| return fail(err);
     defer a.free(shapes);
-    output = @import("paragraph_shapes_wire.zig").encode(a, shapes, with_heading) catch |err| return fail(err);
+    output = @import("paragraph_shapes_wire.zig").encode(a, shapes, version) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_paragraph_numbering_definitions() u32 {

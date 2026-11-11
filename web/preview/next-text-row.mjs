@@ -2,6 +2,7 @@ import { createNativeGraphemeSegmenter } from './text-boundary-platform.mjs';
 import { DEFAULT_ROW_HEIGHT, DEFAULT_TEXT_HEIGHT, TEXT_TOP } from './row-geometry.mjs';
 import { paragraphLineGeometry, paragraphLineAdvance } from './paragraph-geometry.mjs';
 import { measureDisplayRun, textMeasurement } from './text-measurement.mjs';
+import { paragraphMarkerPlan } from './paragraph-marker.mjs';
 import { measureAutomaticNumberPrefix } from './automatic-number-prefix.mjs';
 import { isHardLineBreak } from './hard-line-break.mjs';
 import { alignTextRow } from './line-alignment.mjs';
@@ -17,7 +18,12 @@ export function nextTextRow(
   startUnit,
   width,
   measure,
-  { minimumTextHeight = DEFAULT_TEXT_HEIGHT, endUnit = paragraph.text.length } = {},
+  {
+    minimumTextHeight = DEFAULT_TEXT_HEIGHT,
+    endUnit = paragraph.text.length,
+    paragraphMarkers = false,
+    markerPlan,
+  } = {},
 ) {
   if (
     !Number.isFinite(width) ||
@@ -34,7 +40,22 @@ export function nextTextRow(
     throw new RangeError('InvalidTextBoundary');
   if (endUnit < paragraph.text.length && segments.containing(endUnit)?.index !== endUnit)
     throw new RangeError('InvalidTextBoundary');
-  const numberPrefix = measureAutomaticNumberPrefix(paragraph, startUnit, measure);
+  const marker =
+    paragraphMarkers && endUnit === paragraph.text.length
+      ? markerPlan === undefined
+        ? paragraphMarkerPlan(paragraph, width, measure)
+        : markerPlan
+      : null;
+  const numberPrefix =
+    marker && startUnit === 0
+      ? marker.prefix
+      : measureAutomaticNumberPrefix(paragraph, startUnit, measure);
+  const lineGeometry = (measured) =>
+    marker
+      ? startUnit === 0
+        ? marker.first
+        : marker.following
+      : paragraphLineGeometry(paragraph.paragraphShape, width, measured, startUnit === 0);
   if (!Number.isFinite(minimumTextHeight) || minimumTextHeight < 0)
     throw new RangeError('InvalidLayoutBounds');
   const emptyHeight =
@@ -74,12 +95,7 @@ export function nextTextRow(
           })
         : undefined,
     );
-    const geometry = paragraphLineGeometry(
-      paragraph.paragraphShape,
-      width,
-      lineWidth.width(),
-      startUnit === 0,
-    );
+    const geometry = lineGeometry(lineWidth.width());
     if (
       text &&
       lineWidth.probe(measurement) > geometry.width &&
@@ -97,12 +113,7 @@ export function nextTextRow(
     hasContent ||= part.segment.trim().length > 0;
     lineWidth.add(measurement, part.index + part.segment.length);
   }
-  const geometry = paragraphLineGeometry(
-    paragraph.paragraphShape,
-    width,
-    lineWidth.width(),
-    startUnit === 0,
-  );
+  const geometry = lineGeometry(lineWidth.width());
   return alignTextRow(
     {
       kind: 'text',

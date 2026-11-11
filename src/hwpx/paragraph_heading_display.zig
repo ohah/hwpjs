@@ -6,13 +6,16 @@ const fields = @import("table_xml_fields.zig");
 const head = @import("document_xml.zig").head_uri;
 const core = "http://www.hancom.co.kr/hwpml/2011/core";
 const Allocator = std.mem.Allocator;
+const marker_placement = @import("paragraph_marker_placement.zig");
 pub const Heading = struct {
     kind: enum { none, outline, number, bullet },
     marker: ?u21 = null,
     id: ?u32 = null,
     level: ?u32 = null,
+    placement: ?marker_placement.Placement = null,
 };
-pub const Bullets = std.AutoHashMapUnmanaged(u32, ?u21);
+const Bullet = struct { scalar: u21, placement: ?marker_placement.Placement };
+pub const Bullets = std.AutoHashMapUnmanaged(u32, ?Bullet);
 
 pub fn bullets(a: Allocator, tree: *const Tree) !Bullets {
     var result: Bullets = .empty;
@@ -38,7 +41,7 @@ pub fn bullets(a: Allocator, tree: *const Tree) !Bullets {
     return result;
 }
 
-fn marker(a: Allocator, tree: *const Tree, index: usize) !?u21 {
+fn marker(a: Allocator, tree: *const Tree, index: usize) !?Bullet {
     const image = (try tree.attributeValue(a, index, "", "useImage")) orelse return null;
     if (try fields.boolean(a, image, 64) or try child(a, tree, index, core, "img") != null) return null;
     if (try tree.attributeValue(a, index, "", "checkedChar")) |raw_checked| {
@@ -54,7 +57,8 @@ fn marker(a: Allocator, tree: *const Tree, index: usize) !?u21 {
     defer a.free(text);
     if (text.len == 0 or text.len != try std.unicode.utf8ByteSequenceLength(text[0])) return null;
     const scalar = try std.unicode.utf8Decode(text);
-    return if (scalar > 0x20 and (scalar < 0x7f or scalar > 0x9f)) scalar else null;
+    if (scalar <= 0x20 or (scalar >= 0x7f and scalar <= 0x9f)) return null;
+    return .{ .scalar = scalar, .placement = try marker_placement.read(a, tree, settings) };
 }
 
 pub fn read(a: Allocator, tree: *const Tree, shape: usize, definitions: Bullets) !?Heading {
@@ -78,7 +82,8 @@ fn readHeading(a: Allocator, tree: *const Tree, shape: usize, definitions: Bulle
     };
     if (!std.mem.eql(u8, kind, "BULLET")) return null;
     const id = (try fields.optionalUnsigned(a, tree, index, "idRef", 64)) orelse return .{ .kind = .bullet };
-    return .{ .kind = .bullet, .marker = definitions.get(id) orelse null };
+    const definition = (definitions.get(id) orelse null) orelse return .{ .kind = .bullet };
+    return .{ .kind = .bullet, .marker = definition.scalar, .placement = definition.placement };
 }
 
 test "caret heading matches current typed header resources and withholds ambiguous markers" {

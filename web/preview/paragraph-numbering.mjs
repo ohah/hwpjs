@@ -1,4 +1,5 @@
 import { formatNumber } from './number-format.mjs';
+import { observedMarkerPlacement } from './paragraph-marker.mjs';
 import { paragraphSelectionOwner } from './paragraph-selection.mjs';
 
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
@@ -47,7 +48,12 @@ function definitionsFor(format, raw) {
       if (format === 'hwp5') {
         if (uint(level.attributes) && level.attributes <= 0x1f) numberFormat = 'DIGIT';
       } else if (typeof level.format === 'string') numberFormat = level.format;
-      levels[ordinal] = { start: level.start, format: numberFormat, template: level.template };
+      levels[ordinal] = {
+        start: level.start,
+        format: numberFormat,
+        template: level.template,
+        markerPlacement: observedMarkerPlacement(format, level.placement),
+      };
     }
     definitions.set(entry.id, { start: entry.start, levels });
   }
@@ -228,7 +234,25 @@ export function paragraphNumberingLabels(content, source) {
     }
     if (!advance(stream, depth, definition)) continue;
     const text = displayLabel(format, definition, stream.counters, depth);
-    if (text !== null) labels.set(key, { kind: heading.kind, text });
+    if (text === null) continue;
+    const markerPlacement = definition.levels[depth]?.markerPlacement;
+    labels.set(key, {
+      kind: heading.kind,
+      text,
+      ...(markerPlacement
+        ? {
+            markerPlacement,
+            widthText: markerPlacement.useInstanceWidth
+              ? text
+              : displayLabel(
+                  format,
+                  definition,
+                  stream.counters.map(() => 1),
+                  depth,
+                ),
+          }
+        : {}),
+    });
   }
   return labels;
 }

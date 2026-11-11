@@ -375,7 +375,10 @@ export async function createExperimentalHwp5Editor(
       check();
       if (typeof wasm.hwp5_edit_paragraph_shapes !== 'function')
         throw new Error('Hwp5ParagraphShapesAbiUnavailable');
-      const query = wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
+      const query =
+        wasm.hwp5_edit_paragraph_shapes_with_marker_placement ??
+        wasm.hwp5_edit_paragraph_shapes_with_heading ??
+        wasm.hwp5_edit_paragraph_shapes;
       return decodeParagraphShapes(output(query).bytes);
     },
     paragraphNumberingSource() {

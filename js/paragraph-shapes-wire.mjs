@@ -1,4 +1,4 @@
-/** HPS1/HPS2/HPS3 resources; raw absence and effective heading levels stay distinct. */
+/** HPS1/HPS2/HPS3/HPS4 resources; raw absence and effective heading levels stay distinct. */
 export function decodeParagraphShapes(bytes) {
   const fail = () => {
     throw new Error('InvalidParagraphShapes');
@@ -8,7 +8,15 @@ export function decodeParagraphShapes(bytes) {
   const count = view.getUint32(4, true);
   const magic = view.getUint32(0, true);
   const stride =
-    magic === 0x31535048 ? 48 : magic === 0x32535048 ? 72 : magic === 0x33535048 ? 76 : 0;
+    magic === 0x31535048
+      ? 48
+      : magic === 0x32535048
+        ? 72
+        : magic === 0x33535048
+          ? 76
+          : magic === 0x34535048
+            ? 92
+            : 0;
   if (!stride || count > 100000 || bytes.length !== 8 + count * stride) return fail();
   return Array.from({ length: count }, (_, index) => {
     const at = 8 + index * stride,
@@ -52,7 +60,7 @@ export function decodeParagraphShapes(bytes) {
         headingLevel: uint(68),
       });
     }
-    if (stride === 76) {
+    if (stride >= 76) {
       const marker = uint(72);
       if (
         marker > 0xffff ||
@@ -65,6 +73,17 @@ export function decodeParagraphShapes(bytes) {
       )
         return fail();
       shape.headingMarker = marker || null;
+    }
+    if (stride === 92 && shape.headingMarker) {
+      const width = int(80),
+        distance = int(84);
+      if (width < -32768 || width > 32767 || distance < -32768 || distance > 32767) return fail();
+      shape.headingPlacement = {
+        attributes: uint(76),
+        width_adjustment: width,
+        text_distance: distance,
+        char_shape_id: uint(88),
+      };
     }
     return shape;
   });

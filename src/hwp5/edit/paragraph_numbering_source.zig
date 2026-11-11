@@ -3,7 +3,12 @@ const std = @import("std");
 const info = @import("../docinfo/reader.zig");
 const Allocator = std.mem.Allocator;
 
-pub const Level = struct { start: ?u32, attributes: u32, template: []const u8 };
+pub const Level = struct {
+    start: ?u32,
+    attributes: u32,
+    template: []const u8,
+    placement: @import("../docinfo/paragraph_head.zig").Head,
+};
 pub const Definition = struct { id: u32, start: u32, levels: []const Level };
 
 pub fn read(a: Allocator, bytes: []const u8, version: @import("../version.zig").Version) ![]Definition {
@@ -35,6 +40,7 @@ fn project(a: Allocator, level: @import("../docinfo/numbering.zig").Level, start
     return .{
         .start = start,
         .attributes = level.head.attributes,
+        .placement = level.head,
         .template = try std.unicode.utf16LeToUtf8Alloc(a, units[0 .. raw.len / 2]),
     };
 }

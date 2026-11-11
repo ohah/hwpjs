@@ -7,7 +7,14 @@ const fields = @import("table_xml_fields.zig");
 const head = @import("document_xml.zig").head_uri;
 const para = @import("document_xml.zig").paragraph_uri;
 
-pub const Level = struct { level: u32, start: ?u32, format: ?[]const u8, template: ?[]const u8 };
+const marker_placement = @import("paragraph_marker_placement.zig");
+pub const Level = struct {
+    level: u32,
+    start: ?u32,
+    format: ?[]const u8,
+    template: ?[]const u8,
+    placement: ?marker_placement.Placement,
+};
 pub const Definition = struct { id: u32, start: ?u32, levels: []const Level };
 pub const Section = struct { section: usize, outline: ?u32 = null, controls_complete: bool = true };
 pub const Source = struct { definitions: []const Definition, sections: []const Section };
@@ -64,6 +71,7 @@ fn definitions(a: Allocator, tree: *const Tree) ![]Definition {
                 .start = try fields.optionalUnsigned(a, tree, j, "start", 64),
                 .format = if (unchecked and format != null) try format.?.toUtf8(a, 64) else null,
                 .template = try text(a, tree, j),
+                .placement = if (unchecked) try marker_placement.read(a, tree, j) else null,
             });
         }
         try list.append(a, .{

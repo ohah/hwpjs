@@ -114,6 +114,11 @@ jobs:
             ./packages/cli/tests/delete-table-service.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           node --max-old-space-size=512 --test --test-concurrency=1 "$@"
+      - name: Test paragraph marker layout and caret geometry
+        timeout-minutes: 2
+        run: |
+          node --test tests/wasm/paragraph-marker-paint.test.mjs tests/wasm/paragraph-numbering.test.mjs tests/wasm/caret-paragraph-heading.test.mjs tests/hwpx/number-prefix-paint.test.mjs tests/hwp5/table-cell-block.test.mjs
+
       - name: Test named field creation, value changes and renaming
         timeout-minutes: 2
         env:

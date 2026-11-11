@@ -8,6 +8,7 @@ import {
 } from './paragraph-geometry.mjs';
 import { paragraphPictureFlow } from './paragraph-picture-flow.mjs';
 import { textMeasurement, measureDisplayRun } from './text-measurement.mjs';
+import { paragraphMarkerPlan } from './paragraph-marker.mjs';
 import { measureAutomaticNumberPrefix } from './automatic-number-prefix.mjs';
 import { isHardLineBreak } from './hard-line-break.mjs';
 import { alignTextRow } from './line-alignment.mjs';
@@ -28,7 +29,13 @@ export function layoutContent(
   width,
   measure,
   maxRows = 20000,
-  { documentBody = false, noWrap = false, compactLines = false, includeTerminalAfter = true } = {},
+  {
+    documentBody = false,
+    paragraphMarkers = false,
+    noWrap = false,
+    compactLines = false,
+    includeTerminalAfter = true,
+  } = {},
 ) {
   if (!Number.isFinite(width) || width <= 0 || !Number.isInteger(maxRows) || maxRows < 1)
     throw new RangeError('InvalidLayoutBounds');
@@ -77,6 +84,7 @@ export function layoutContent(
   };
   const reuse = measure.paragraphFlowReuse?.scope(content, width, {
     documentBody,
+    paragraphMarkers,
     noWrap,
     compactLines,
     includeTerminalAfter,
@@ -84,12 +92,10 @@ export function layoutContent(
   outer: for (const p of content.paragraphs) {
     const startRow = rows.length,
       startHeight = height;
-    const cached = reuse?.lookup(
-      p,
-      maxRows - rows.length,
-      flowPictures,
-      p === content.paragraphs.at(-1),
-    );
+    const marker = paragraphMarkers ? paragraphMarkerPlan(p, width, measure) : null;
+    const cached = marker
+      ? null
+      : reuse?.lookup(p, maxRows - rows.length, flowPictures, p === content.paragraphs.at(-1));
     if (cached?.value) {
       for (const row of cached.value.rows) rows.push({ ...row, y: row.y + height });
       height += cached.value.height;
@@ -160,7 +166,9 @@ export function layoutContent(
         break outer;
       const firstUnit = kind === 'text' ? sourceStart : 0;
       let numberPrefix =
-        kind === 'text' ? measureAutomaticNumberPrefix(p, firstUnit, measure) : null;
+        kind === 'text'
+          ? (marker?.prefix ?? measureAutomaticNumberPrefix(p, firstUnit, measure))
+          : null;
       // Document body height comes from each run, not the first run or a UI floor.
       // Empty/hard-break rows are measured explicitly below.
       const documentMetrics =
@@ -184,7 +192,11 @@ export function layoutContent(
       let tabs = createTabRowState();
       const geometry = () =>
         kind === 'text'
-          ? paragraphLineGeometry(p.paragraphShape, width, lineWidth.width(), startUnit === 0)
+          ? marker
+            ? startUnit === 0
+              ? marker.first
+              : marker.following
+            : paragraphLineGeometry(p.paragraphShape, width, lineWidth.width(), startUnit === 0)
           : { x: 0, width };
       const row = () => ({
         text: line,

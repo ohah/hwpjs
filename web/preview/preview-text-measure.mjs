@@ -91,6 +91,7 @@ export function createPreviewTextMeasure(
     return {
       width,
       ...(advance !== width ? { advance } : {}),
+      ...(kind === 'paragraph-marker' ? { em: fontAt.markerEm?.(paragraph, unit) } : {}),
       height: Math.max(
         fontAt.textHeight(paragraph, unit, kind),
         Number.isFinite(inkHeight) ? inkHeight : 0,
