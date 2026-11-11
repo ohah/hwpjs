@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile, mkdir, mkdtemp, writeFile, realpath } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +15,7 @@ import { canonicalWorkerURLPlugin } from '../pages-demo/canonical-worker-url.mjs
 import { validateBundle } from '../pages-demo/bundle-validation.mjs';
 import { loadPrivateDemoBundle } from '../demo-private-bundle.mjs';
 import { loadDemoServerBundle } from '../demo-server-bundle.mjs';
+import { collectUiLicenseInputs } from '../pages-demo/ui-license-inputs.mjs';
 
 const digest = (b) => createHash('sha256').update(b).digest('hex');
 const active = Buffer.from('export const active = 69;'),
@@ -226,20 +227,10 @@ for (const oldManifest of [false, true])
         'runtime/runtime.js',
       ])
         bundle.files.set(path, Buffer.from('export const ok = true;'));
-      bundle.files.set('LICENSE.txt', await readFile(resolve(repo, 'LICENSE')));
-      let notices = await readFile(resolve(repo, 'docs/third-party-notices.md'), 'utf8');
-      for (const [name, license] of [
-        ['react', 'LICENSE'],
-        ['react-dom', 'LICENSE'],
-        ['svelte', 'LICENSE.md'],
-      ])
-        notices +=
-          '\n' +
-          (await readFile(
-            resolve(dirname(fileURLToPath(import.meta.resolve(name + '/package.json'))), license),
-            'utf8',
-          ));
-      bundle.files.set('THIRD_PARTY_NOTICES.txt', Buffer.from(notices));
+      const licenses = await collectUiLicenseInputs({ root: repo });
+      bundle.files.set('LICENSE.txt', licenses.project);
+      bundle.files.set('THIRD_PARTY_NOTICES.txt', licenses.notices);
+      bundle.manifest.licenses = licenses.manifest;
       bundle.files.set(
         'fixture-catalog.json',
         Buffer.from(
