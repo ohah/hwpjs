@@ -221,13 +221,14 @@ test('distinguishes unknown and incomplete scenes from a verified empty result',
     getScenePageText(document, scene([], { pages: [page(1)] }), 0).reason,
     'unknown-physical-page-identity',
   );
-  assert.equal(
-    getScenePageText(document, scene(new Array(20001)), 0).reason,
-    'scene-budget-exceeded',
-  );
+  const sparseRows = [];
+  sparseRows.length = 20001;
+  assert.equal(getScenePageText(document, scene(sparseRows), 0).reason, 'scene-budget-exceeded');
   assert.equal(getScenePageText(document, scene([]), 0, include('shape')).reason, 'invalid-filter');
+  const sparseFilter = [];
+  sparseFilter.length = 1;
   assert.equal(
-    getScenePageText(document, scene([]), 0, { include: new Array(1) }).reason,
+    getScenePageText(document, scene([]), 0, { include: sparseFilter }).reason,
     'invalid-filter',
   );
   assert.equal(getScenePageText(document, scene([]), 0, include()).coverage, 'complete');
