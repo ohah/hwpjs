@@ -56,8 +56,11 @@ export function openPrintPreview(
   toolbar.append(previous, next, print, download, close);
   dialog.append(title, status, toolbar, image);
 
-  const name = String(filename)
-    .replace(/[\\/:*?"<>|\x00-\x1f\x7f]/g, '_')
+  const name = Array.from(String(filename), (character) => {
+    const unit = character.charCodeAt(0);
+    return unit < 32 || unit === 127 || '/\\:*?"<>|'.includes(character) ? '_' : character;
+  })
+    .join('')
     .trim()
     .slice(0, 180);
   const update = () => {
