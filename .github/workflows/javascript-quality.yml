@@ -315,6 +315,7 @@ jobs:
           node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=50000 \
             ./tools/tests/native-wasm-pin.test.mjs \
             ./tools/tests/hwp5-native-text-reuse.test.mjs \
+            ./tools/tests/owner-window-cell-size-capabilities.test.mjs \
             ./tools/tests/hwp5-worker-cow-regression.test.mjs \
             ./tools/tests/hwp5-worker-public-full.test.mjs \
             ./tools/tests/hwp5-worker-history-window.test.mjs \

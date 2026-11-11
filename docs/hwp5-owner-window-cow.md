@@ -57,3 +57,11 @@ Node 실제 Worker 데이터 전달과 실제 browser main Worker admission은 �
 ## 증거 식별과 문서 수명
 
 source07 제품 명세는 로컬 `zig-out/verification/native-owner-window-worker-r1/candidate/PRODUCT-IMMUTABLE-07.json`이며 선택13=변경10+미변경 Worker 의존3입니다. 그 인계서의 sdkBuilds0/browserRuns0은 원 source 검증 시점의 기록으로 보존하고 후속 main build 성공으로 덮어쓰지 않습니다. ignored packet은 source-only clone에 포함되지 않으므로 이 문서만으로 같은 실행 준비가 완료됐다고 보지 않습니다. 정확 지문·원 계수·한계는 해당 세대의 불변 명세와 인계서가 소유합니다.
+
+## 원본 셀 크기 capability 추가 시의 증분 경로 보존
+
+HWP5 원본 셀 너비·높이 균등화가 full snapshot에 두 boolean capability를 추가한 뒤, COW의 명시 root schema가 이를 모르는 상태로 남아 실제 일반 입력·undo/redo가 full fallback으로 전환되는 회귀가 발생했습니다. CI의 stable header identity 실패를 같은 Native79c·Noori 파일에서 재현했습니다. 원본 크기 편집의 저장 결과 오류와 구분하며, 출력 내용이 같아도 재사용 경로가 깨진 상태를 정상으로 처리하지 않습니다.
+
+두 키를 기존 root schema에 명시하고 존재할 때 boolean인지 검사합니다. unknown key·잘못된 타입의 fallback과 전체 값·owner·receipt 검증은 유지합니다. 새 키를 포괄 허용하거나 full snapshot을 그대로 COW로 승인하지 않습니다. admission의 추가 비용은 두 필드의 상수 시간 검사입니다. 검증 입력과 실패/수정 결과는 `zig-out/verification/cell-size-cow-fix-r1`에 보존합니다. 실제 Noori 원본 owner4/15/18의 입력·undo/redo 및40회 입력·취소·분기 복구는 기존 집중 회귀를 재실행하며, 새로운 malformed/unknown capability 반례도 CI에 연결합니다.
+
+수정 전 실제 입력/이력 검사8건 중6건 실패를 재현했고 수정 후 Native/Worker/shape/원본 capability 반례40건이 skip 없이 통과했습니다. 최종 공개 번들의 Vanilla 높이 편집 뒤 신뢰된40키 입력과 키보드 실행 취소로 원문 및 저장 바이트를 복원했습니다. Svelte 높이·React 너비를 포함한 GUI3건의 독립 CFB 비교·undo/redo·저장 재열기가 완료됐고 모든 소유 브라우저/서버를 종료했습니다. 이 결과는 경로 복원 증거이며 입력 지연의 새 성능 수치를 측정한 것은 아닙니다.
