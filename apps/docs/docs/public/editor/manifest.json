@@ -746,6 +746,11 @@
       "sha256": "f6f6451ce81749a218b8a8ae1010783e27909fa88fcb3b71bea522ae6a29f2c3"
     },
     {
+      "path": "assets/dist-CrxFlc-5.js",
+      "bytes": 57,
+      "sha256": "797c97691147fdd7df3596e29e87c3df51538425cc5b7764a22aee22f9d9d6e9"
+    },
+    {
       "path": "assets/dist-CVCHQ4Im.js",
       "bytes": 57,
       "sha256": "eaa7be4dc0fd5b3b15db3392e661d42ee297e1288916acbb947a81a12981ce2b"
@@ -844,6 +849,11 @@
       "path": "assets/dist-DwdB-6oE.js",
       "bytes": 57,
       "sha256": "d2c02ef7336dd08ea07480e72d1693052dc40f28c0542497ce71171c3cc2caac"
+    },
+    {
+      "path": "assets/dist-DXR4Q85V.js",
+      "bytes": 1222081,
+      "sha256": "ee3378f289d7fec4040b4cd7aa34399467722220a9a235dc77274d20e8970b42"
     },
     {
       "path": "assets/dist-F-zZzzio.js",
@@ -1511,6 +1521,11 @@
       "sha256": "2ccb51c97a664676488da2f27d9e44854f4c05481d36f0427006baa58afa350d"
     },
     {
+      "path": "assets/main-DmOc5KIf.js",
+      "bytes": 586946,
+      "sha256": "f1bd06c6fa5c488b51d51715baeca12a4136b3c358f144e25b0fc06eb72df9f6"
+    },
+    {
       "path": "assets/main-DydWxswf.js",
       "bytes": 583272,
       "sha256": "20cb28ec1c107aa2e3f9c8d1d44d69528c556795c40252c0a77600fc1836bbbf"
@@ -2093,22 +2108,22 @@
     {
       "path": "demo/headless/index.html",
       "bytes": 1193,
-      "sha256": "ad3fd23165540515a7ffe7b585d0e37815f424d2d89e8902efb3d5834aae5881"
+      "sha256": "2da7ff888f2537c59eac1192d95f820e149702ed22a56c4ac095dbc86d684148"
     },
     {
       "path": "demo/react/index.html",
       "bytes": 1193,
-      "sha256": "ad3fd23165540515a7ffe7b585d0e37815f424d2d89e8902efb3d5834aae5881"
+      "sha256": "2da7ff888f2537c59eac1192d95f820e149702ed22a56c4ac095dbc86d684148"
     },
     {
       "path": "demo/svelte/index.html",
       "bytes": 1193,
-      "sha256": "ad3fd23165540515a7ffe7b585d0e37815f424d2d89e8902efb3d5834aae5881"
+      "sha256": "2da7ff888f2537c59eac1192d95f820e149702ed22a56c4ac095dbc86d684148"
     },
     {
       "path": "demo/vanilla/index.html",
       "bytes": 1193,
-      "sha256": "ad3fd23165540515a7ffe7b585d0e37815f424d2d89e8902efb3d5834aae5881"
+      "sha256": "2da7ff888f2537c59eac1192d95f820e149702ed22a56c4ac095dbc86d684148"
     },
     {
       "path": "fixture-catalog.json",
@@ -2628,7 +2643,7 @@
     {
       "path": "index.html",
       "bytes": 1149,
-      "sha256": "9796d08f2dfac6b7a0bc11b36aac225097a50175f7bc75625b0473a3f3c6dfe8"
+      "sha256": "4b6349791c16b84c7bf64daea2f4e89b6570cc14a0cf99e5558aa7b25bb18d48"
     },
     {
       "path": "LICENSE.txt",
