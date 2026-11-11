@@ -305,7 +305,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$36(result.section) || !uint$36(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$38(result.section) || !uint$38(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -320,7 +320,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$11, uint$36, format, identity;
+var KINDS, SHA, REFERENCE, object$11, uint$38, format, identity;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -334,9 +334,9 @@ var init_object_reference$1 = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
 	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$36 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$38 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format = (value) => value === "hwp5" || value === "hwpx";
-	identity = (value) => object$11(value) && format(value.format) && uint$36(value.section) && uint$36(value.node);
+	identity = (value) => object$11(value) && format(value.format) && uint$38(value.section) && uint$38(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -1393,6 +1393,51 @@ var init_document_format = __esmMin((() => {
 	cfbSignature = Uint8Array.of(208, 207, 17, 224, 161, 177, 26, 225);
 	hwp3Signature = new TextEncoder().encode("HWP Document File V3");
 	startsWith = (bytes, signature) => bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
+}));
+// ../../js/hwp5-named-fields.mjs
+function decodeHwp5NamedFields(bytes) {
+	const source = JSON.parse(utf8$2.decode(bytes));
+	const invalid = () => /* @__PURE__ */ new Error("InvalidHwp5NamedFields");
+	if (source?.format !== "hwp5" || !["complete", "partial"].includes(source.coverage) || !Array.isArray(source.rows) || source.rows.length > 2e4) throw invalid();
+	const ids = /* @__PURE__ */ new Set();
+	const rows = source.rows.map(({ section, node, kind, name, text, sourceLocation }) => {
+		const id = `hwp5:${section}:${node}`;
+		if (!uint$37(section) || !uint$37(node) || ids.has(id) || !["CLICK_HERE", "BOOKMARK"].includes(kind) || name !== null && (typeof name !== "string" || !name.isWellFormed()) || text !== null && (typeof text !== "string" || !text.isWellFormed())) throw invalid();
+		ids.add(id);
+		if (text === null !== (sourceLocation === null)) throw invalid();
+		if (sourceLocation !== null) {
+			if (!sourceLocation || typeof sourceLocation !== "object") throw invalid();
+			const { paragraph, sourceNode, startUnit, endUnit } = sourceLocation;
+			if (![
+				paragraph,
+				sourceNode,
+				startUnit,
+				endUnit
+			].every(uint$37) || endUnit - startUnit !== text.length) throw invalid();
+		}
+		return {
+			id,
+			section,
+			name,
+			kind,
+			protection: "unknown",
+			value: text === null ? { status: "unavailable" } : {
+				status: "available",
+				text
+			},
+			sourceLocation
+		};
+	});
+	return {
+		format: "hwp5",
+		coverage: source.coverage,
+		rows
+	};
+}
+var utf8$2, uint$37;
+var init_hwp5_named_fields = __esmMin((() => {
+	utf8$2 = new TextDecoder("utf-8", { fatal: true });
+	uint$37 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 })), BORDER_WIDTHS_HUNDREDTH_MM;
 var init_border_fill_values = __esmMin((() => {
 	Object.freeze([
@@ -1833,7 +1878,7 @@ var init_cell_style_command = __esmMin((() => {
 	init_cell_border_batch();
 	init_cell_border_patch_command();
 	init_cell_fill_command();
-})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, REQUIRED_FUNCTIONS;
+})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, REQUIRED_FUNCTIONS;
 var init_abi_schema = __esmMin((() => {
 	CREATED_TABLE_GRID_ACTION = Object.freeze({
 		insert_row: 0,
@@ -1866,6 +1911,9 @@ var init_abi_schema = __esmMin((() => {
 		"hwpx_edit_query_text_transaction",
 		"hwpx_edit_apply_text_transaction"
 	]);
+	Object.freeze(["hwp5_edit_named_fields"]);
+	Object.freeze(["hwpx_edit_named_fields"]);
+	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
 	Object.freeze(["hwpx_edit_document_provenance"]);
 	Object.freeze({
 		header_bytes: 8,
@@ -2931,32 +2979,32 @@ function validateHwp5FormSources(rows) {
 		"property_bytes",
 		"property_nodes",
 		"other_direct_children"
-	].every((k) => uint$35(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
+	].every((k) => uint$36(row[k])) && row.paragraph_node < row.control_node && row.source_unit <= 4294967287 && [
 		"unknown",
 		"push_button",
 		"check_box",
 		"combo_box",
 		"radio_button",
 		"edit"
-	].includes(row.kind) && uint$35(row.type_id) && uint$35(row.secondary_type_id) && [
+	].includes(row.kind) && uint$36(row.type_id) && uint$36(row.secondary_type_id) && [
 		"offset_x",
 		"offset_y",
 		"z_order",
 		"prevent_page_break"
-	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$35(row.description_bytes)));
+	].every((k) => signed(row[k], -2147483648, 2147483647)) && Array.isArray(row.margins) && row.margins.length === 4 && row.margins.every((v) => signed(v, -32768, 32767)) && (row.description_bytes === null || uint$36(row.description_bytes)));
 }
 function validateHwp5FormAnchors(rows) {
-	return uniqueRows(rows, (row) => uint$35(row.paragraph) && uint$35(row.source_unit) && row.source_unit <= 4294967287 && uint$35(row.current_unit) && row.current_unit <= 4294967287);
+	return uniqueRows(rows, (row) => uint$36(row.paragraph) && uint$36(row.source_unit) && row.source_unit <= 4294967287 && uint$36(row.current_unit) && row.current_unit <= 4294967287);
 }
-var uint$35, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
+var uint$36, signed, uniqueRows, decode$1, decodeHwp5FormSources, decodeHwp5FormAnchors;
 var init_hwp5_form_sources = __esmMin((() => {
-	uint$35 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$36 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	signed = (value, min, max) => Number.isInteger(value) && value >= min && value <= max;
 	uniqueRows = (rows, inspect) => {
 		const controls = /* @__PURE__ */ new Set(), objects = /* @__PURE__ */ new Set();
 		if (!Array.isArray(rows)) throw Error("InvalidHwp5FormSources");
 		for (const row of rows) {
-			if (!row || !uint$35(row.control_node) || !uint$35(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
+			if (!row || !uint$36(row.control_node) || !uint$36(row.object_node) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !inspect(row)) throw Error("InvalidHwp5FormSources");
 			controls.add(row.control_node);
 			objects.add(row.object_node);
 		}
@@ -2980,7 +3028,7 @@ function validateHwp5FormProperties(rows) {
 			"object_node",
 			"known_nodes",
 			"deferred_nodes"
-		].every((k) => uint$34(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
+		].every((k) => uint$35(row[k])) || row.control_node >= row.object_node || controls.has(row.control_node) || objects.has(row.object_node) || !Array.isArray(row.fields)) fail();
 		const fields = /* @__PURE__ */ new Set();
 		for (const property of row.fields) {
 			if (!property || typeof property.field !== "string" || !/^[a-z][a-z0-9_]{0,63}$/.test(property.field) || fields.has(property.field) || ![
@@ -3002,9 +3050,9 @@ function validateHwp5FormProperties(rows) {
 function decodeHwp5FormProperties(bytes) {
 	return validateHwp5FormProperties(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$34;
+var uint$35;
 var init_hwp5_form_properties = __esmMin((() => {
-	uint$34 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$35 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-note-shape-sources.mjs
 function validateHwp5NoteShapeSources(rows) {
@@ -4501,7 +4549,7 @@ function decodeHwp5ParagraphFlow(bytes) {
 	for (const [index, row] of rows.entries()) {
 		if (row?.empty_line_eligible !== void 0 && (typeof row.empty_line_eligible !== "boolean" || row.empty_line_eligible && row.top_level !== true)) throw new Error("InvalidHwp5ParagraphFlow");
 		if (row && (Object.hasOwn(row, "memo_index") || Object.hasOwn(row, "memo_node"))) {
-			if (!(row.memo_index === null && row.memo_node === null) && !(uint$33(row.memo_index) && uint$33(row.memo_node) && row.host === "other" && row.top_level === false && uint$33(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
+			if (!(row.memo_index === null && row.memo_node === null) && !(uint$34(row.memo_index) && uint$34(row.memo_node) && row.host === "other" && row.top_level === false && uint$34(row.list_node) && row.memo_node + 1 === row.list_node)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
 		if (row?.host !== void 0) {
 			if (![
@@ -4515,9 +4563,9 @@ function decodeHwp5ParagraphFlow(bytes) {
 				"master_page",
 				"drawing",
 				"other"
-			].includes(row.host) || !(row.list_node === null || uint$33(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
+			].includes(row.host) || !(row.list_node === null || uint$34(row.list_node)) || row.top_level !== (row.host === "body") || row.host === "body" !== (row.list_node === null)) throw new Error("InvalidHwp5ParagraphFlow");
 		}
-		if (!row || row.paragraph !== index || !uint$33(row.template_node) || !(row.source_node === null || uint$33(row.source_node)) || !(row.parent_node === null || uint$33(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
+		if (!row || row.paragraph !== index || !uint$34(row.template_node) || !(row.source_node === null || uint$34(row.source_node)) || !(row.parent_node === null || uint$34(row.parent_node)) || !Number.isInteger(row.break_flags) || row.break_flags < 0 || row.break_flags > 255 || typeof row.generated !== "boolean" || row.generated !== (row.source_node === null) || row.top_level !== (row.parent_node === null) || row.generated && (![
 			0,
 			4,
 			8
@@ -4535,14 +4583,14 @@ function decodeHwp5ColumnSources(bytes) {
 	const rows = parse$3(bytes);
 	if (!Array.isArray(rows)) throw new Error("InvalidHwp5ColumnSources");
 	for (const row of rows) {
-		if (!row || !uint$33(row.current_paragraph) || !uint$33(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
+		if (!row || !uint$34(row.current_paragraph) || !uint$34(row.current_unit)) throw new Error("InvalidHwp5ColumnSources");
 		if (!row || ![
 			"source_node",
 			"paragraph_node",
 			"flags",
 			"color",
 			"extra_bytes"
-		].every((name) => uint$33(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
+		].every((name) => uint$34(row[name])) || !Number.isInteger(row.count) || row.count < 1 || row.count > 255 || ![
 			0,
 			1,
 			2,
@@ -4558,9 +4606,9 @@ function decodeHwp5ColumnSources(bytes) {
 	}
 	return rows;
 }
-var uint$33, parse$3;
+var uint$34, parse$3;
 var init_hwp5_flow_sources = __esmMin((() => {
-	uint$33 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$34 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	parse$3 = (bytes) => JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 }));
 // ../../js/hwp5-formula-sources.mjs
@@ -4569,15 +4617,15 @@ function decodeHwp5FormulaSources(bytes) {
 	if (!Array.isArray(rows) || rows.length > 1e6) throw new Error("InvalidHwp5FormulaSources");
 	const seen = /* @__PURE__ */ new Set();
 	for (const row of rows) {
-		if (!row || !uint$32(row.source_node) || row.source_node === 0 || !uint$32(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
+		if (!row || !uint$33(row.source_node) || row.source_node === 0 || !uint$33(row.paragraph) || seen.has(row.source_node) || typeof row.formula !== "string" || !row.formula.startsWith("=") || row.formula.length < 2 || typeof row.last_result !== "string" || typeof row.derived !== "boolean" || !row.formula.isWellFormed() || !row.last_result.isWellFormed()) throw new Error("InvalidHwp5FormulaSources");
 		seen.add(row.source_node);
 	}
 	return rows;
 }
-var decoder$6, uint$32;
+var decoder$6, uint$33;
 var init_hwp5_formula_sources = __esmMin((() => {
 	decoder$6 = new TextDecoder("utf-8", { fatal: true });
-	uint$32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$33 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwp5-field-spans.mjs
 function validateHwp5FieldSpans(rows) {
@@ -4606,18 +4654,18 @@ function validateHwp5FieldTopology(value) {
 	if (!value || !Array.isArray(value.spans) || !Array.isArray(value.unresolved)) fail();
 	const starts = /* @__PURE__ */ new Set();
 	for (const row of value.spans) {
-		if (!row || !uint$31(row.field_id) || !uint$31(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
+		if (!row || !uint$32(row.field_id) || !uint$32(row.ordinal) || !position$2(row.begin) || !position$2(row.end) || before(row.end, row.begin)) fail();
 		const key = row.begin.paragraph + ":" + row.ordinal;
 		if (starts.has(key)) fail();
 		starts.add(key);
 	}
 	let previous = null;
 	for (const row of value.unresolved) {
-		if (!row || !position$2(row.position) || !uint$31(row.marker_id) || !(row.list_node === null || uint$31(row.list_node))) fail();
+		if (!row || !position$2(row.position) || !uint$32(row.marker_id) || !(row.list_node === null || uint$32(row.list_node))) fail();
 		if (previous && !before(previous, row.position)) fail();
 		previous = row.position;
 		if (row.kind === "unclosed_start") {
-			if (!uint$31(row.ordinal)) fail();
+			if (!uint$32(row.ordinal)) fail();
 			const key = row.position.paragraph + ":" + row.ordinal;
 			if (starts.has(key)) fail();
 			starts.add(key);
@@ -4633,10 +4681,10 @@ function validateHwp5FieldTopology(value) {
 function decodeHwp5FieldTopology(bytes) {
 	return validateHwp5FieldTopology(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$31, position$2, before;
+var uint$32, position$2, before;
 var init_hwp5_field_topology = __esmMin((() => {
-	uint$31 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	position$2 = (value) => value && uint$31(value.paragraph) && uint$31(value.unit);
+	uint$32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	position$2 = (value) => value && uint$32(value.paragraph) && uint$32(value.unit);
 	before = (lhs, rhs) => lhs.paragraph < rhs.paragraph || lhs.paragraph === rhs.paragraph && lhs.unit < rhs.unit;
 }));
 // ../../js/hwp5-text-source-protection.mjs
@@ -4767,7 +4815,7 @@ function decodeHwp5TextWindow(bytes) {
 	const v = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const n = (i) => v.getUint32(4 + i * 4, true);
 	const e = (BigInt(n(2)) << 32n | BigInt(n(1))).toString();
-	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$30(n(3)) || !uint$30(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
+	if (String.fromCharCode(...bytes.slice(0, 4)) !== "H5W1" || n(0) !== 1 || !epoch(e) || !uint$31(n(3)) || !uint$31(n(4)) || n(7) > n(8) || n(8) > n(6) || n(8) - n(7) > 4096 || n(9) !== 1 || n(10) !== (n(8) - n(7)) * 2 || bytes.length !== 48 + n(10)) bad();
 	const text = new TextDecoder("utf-16le", {
 		fatal: true,
 		ignoreBOM: true
@@ -4810,13 +4858,13 @@ function decodeHwp5TextDelta(bytes) {
 		"sourceNode",
 		"startUnit",
 		"totalUnits"
-	]) if (!uint$30(r[k])) bad();
-	if (r.parentNode !== null && !uint$30(r.parentNode)) bad();
+	]) if (!uint$31(r[k])) bad();
+	if (r.parentNode !== null && !uint$31(r.parentNode)) bad();
 	for (const k of ["removed", "inserted"]) if (!Array.isArray(r[k]) || r[k].length > 4096 || r[k].some((x) => !Number.isInteger(x) || x < 0 || x > 65535)) bad();
 	if (!Array.isArray(r.runs) || !r.runs.length || r.runs.length > 4096) bad();
 	let prev = -1;
 	for (const run of r.runs) {
-		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$30(run.start_unit) || !uint$30(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
+		if (Object.keys(run).sort().join() !== "char_shape_id,start_unit" || !uint$31(run.start_unit) || !uint$31(run.char_shape_id) || run.start_unit <= prev || run.start_unit > r.totalUnits) bad();
 		prev = run.start_unit;
 	}
 	if (r.runs[0].start_unit !== 0 || r.totalUnits < 1 || r.totalUnits > 4096) bad();
@@ -4854,7 +4902,7 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 			const length = w.text.length - 1;
 			let cursor = 0;
 			for (const range of raw) {
-				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$30(range.charShapeId)) bad();
+				if (range.start !== cursor || range.end < range.start || range.end > w.totalUnits || !uint$31(range.charShapeId)) bad();
 				cursor = range.end;
 				const start = Math.min(length, range.start), end = Math.min(length, range.end), charShapeId = range.charShapeId;
 				if (start === end) {
@@ -4905,10 +4953,10 @@ function createHwp5ExclusiveTextApi({ wasm, output, check, encode, currentSource
 		}
 	};
 }
-var uint$30, epoch, bad;
+var uint$31, epoch, bad;
 var init_hwp5_exclusive_text_delta = __esmMin((() => {
 	init_character_shapes_wire();
-	uint$30 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
+	uint$31 = (x) => Number.isSafeInteger(x) && x >= 0 && x < 4294967295;
 	epoch = (x) => typeof x === "string" && /^[1-9][0-9]{0,19}$/.test(x) && BigInt(x) <= 18446744073709551615n;
 	bad = () => {
 		throw Error("InvalidExclusiveTextDelta");
@@ -4919,7 +4967,7 @@ function validate$1(reference) {
 	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid();
 	if (Object.keys(reference).length !== fields$4.length || fields$4.some((key) => !Object.hasOwn(reference, key))) invalid();
 	const { epoch, kind, section, id, row, column } = reference;
-	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$29(section) || !uint$29(row) || !uint$29(column)) invalid();
+	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$30(section) || !uint$30(row) || !uint$30(column)) invalid();
 	if (![
 		"original",
 		"generated",
@@ -4930,15 +4978,15 @@ function validate$1(reference) {
 	return reference;
 }
 function decodeHwp5CurrentReferences(bytes) {
-	const value = JSON.parse(utf8.decode(bytes));
+	const value = JSON.parse(utf8$1.decode(bytes));
 	if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join() !== "first,references,total,version") invalid();
-	if (value.version !== 1 || !uint$29(value.total) || !uint$29(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
+	if (value.version !== 1 || !uint$30(value.total) || !uint$30(value.first) || value.first > value.total || !Array.isArray(value.references) || value.references.length > 1024 || value.first + value.references.length > value.total) invalid();
 	for (const reference of value.references) validate$1(reference);
 	if (value.references.some((reference) => reference.epoch !== value.references[0].epoch)) invalid();
 	return value;
 }
 function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u32, referenceScope }) {
-	const scope = referenceScope === void 0 ? String(++scopeSequence) : `${referenceScope}:${++scopeSequence}`;
+	const scope = referenceScope === void 0 ? String(++scopeSequence$1) : `${referenceScope}:${++scopeSequence$1}`;
 	const available = () => [
 		"hwp5_edit_current_references",
 		"hwp5_edit_copy_current_text",
@@ -5022,10 +5070,10 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8, utf16, encoder$9, fields$4, scopeSequence, invalid, uint$29, decimal;
+var utf8$1, utf16, encoder$9, fields$4, scopeSequence$1, invalid, uint$30, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
-	utf8 = new TextDecoder("utf-8", {
+	utf8$1 = new TextDecoder("utf-8", {
 		fatal: true,
 		ignoreBOM: true
 	});
@@ -5042,11 +5090,11 @@ var init_hwp5_current_references = __esmMin((() => {
 		"row",
 		"column"
 	];
-	scopeSequence = 0n;
+	scopeSequence$1 = 0n;
 	invalid = () => {
 		throw new Error("InvalidHwp5CurrentReference");
 	};
-	uint$29 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$30 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	decimal = (value) => typeof value === "string" && /^(0|[1-9][0-9]{0,19})$/.test(value) && BigInt(value) <= 18446744073709551615n;
 }));
 // ../../js/created-table-identity.mjs
@@ -5558,7 +5606,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 	memory.withBytes(bytes, (ptr, size) => success(retainObservedDocInfo ? open(ptr, size, normalizeObservedCfb ? 1 : 0) : open(ptr, size)));
 	const copyText = (section, paragraph) => {
 		check();
-		return output(() => wasm.hwp5_edit_copy_text(u32$1(section, "section"), u32$1(paragraph, "paragraph"))).bytes;
+		return output(() => wasm.hwp5_edit_copy_text(u32$2(section, "section"), u32$2(paragraph, "paragraph"))).bytes;
 	};
 	return {
 		...createSourceTableGridApi({
@@ -5589,7 +5637,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			wasm,
 			memory,
 			check,
-			uint: u32$1,
+			uint: u32$2,
 			prefix: "hwp5_edit",
 			endAsCount: false,
 			unavailable: "Hwp5ParagraphBreakAbiUnavailable"
@@ -5618,14 +5666,14 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		textSourceProtection(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_text_source_protection !== "function") throw new Error("Hwp5TextSourceProtectionAbiUnavailable");
 			const bytes = output(() => wasm.hwp5_edit_text_source_protection(index)).bytes;
 			return decodeHwp5TextSourceProtection(bytes, wasm.hwp5_edit_paragraph_count(index));
 		},
 		validateTextSourcePolicy(section) {
 			check();
-			u32$1(section, "section");
+			u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_validate_text_source_policy !== "function") throw new Error("Hwp5TextSourcePolicyAbiUnavailable");
 			success(wasm.hwp5_edit_validate_text_source_policy(section));
 		},
@@ -5633,7 +5681,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			wasm,
 			memory,
 			check,
-			uint: u32$1,
+			uint: u32$2,
 			prefix: "hwp5_edit",
 			unavailable: "Hwp5HistoryAbiUnavailable"
 		}),
@@ -5643,7 +5691,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check,
 			output,
 			success,
-			u32: u32$1,
+			u32: u32$2,
 			referenceScope
 		}),
 		...createHwp5TableCreationApi({
@@ -5651,7 +5699,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			memory,
 			check,
 			output,
-			u32: u32$1
+			u32: u32$2
 		}),
 		supportsCurrentTextPreview() {
 			check();
@@ -5668,7 +5716,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		paragraphCount(section) {
 			check();
-			return count(wasm.hwp5_edit_paragraph_count(u32$1(section, "section")));
+			return count(wasm.hwp5_edit_paragraph_count(u32$2(section, "section")));
 		},
 		characterShapeCount() {
 			check();
@@ -5682,14 +5730,14 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		paragraphShapeId(section, paragraph) {
 			check();
 			if (typeof wasm.hwp5_edit_para_shape_id !== "function") throw new Error("Hwp5ParagraphFormatAbiUnavailable");
-			return count(wasm.hwp5_edit_para_shape_id(u32$1(section, "section"), u32$1(paragraph, "paragraph")));
+			return count(wasm.hwp5_edit_para_shape_id(u32$2(section, "section"), u32$2(paragraph, "paragraph")));
 		},
 		setParagraphFormat({ section, paragraph, paraShapeId }) {
 			check();
 			const values = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(paraShapeId, "paraShapeId")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(paraShapeId, "paraShapeId")
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_format !== "function") throw new Error("Hwp5ParagraphFormatAbiUnavailable");
 			success(wasm.hwp5_edit_set_paragraph_format(...values));
@@ -5706,8 +5754,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			].indexOf(alignment);
 			if (value < 0) throw new RangeError("InvalidParagraphAlignment");
 			const values = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
 				value
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_alignment !== "function") throw new Error("Hwp5ParagraphAlignmentAbiUnavailable");
@@ -5715,7 +5763,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setParagraphMargins({ section, paragraph, margins }) {
 			check();
-			const args = [u32$1(section, "section"), u32$1(paragraph, "paragraph")];
+			const args = [u32$2(section, "section"), u32$2(paragraph, "paragraph")];
 			const [mask, ...values] = paragraphMarginArgs(margins);
 			if (typeof wasm.hwp5_edit_set_paragraph_margins !== "function") throw new Error("Hwp5ParagraphMarginsAbiUnavailable");
 			success(wasm.hwp5_edit_set_paragraph_margins(...args, mask, ...values));
@@ -5723,8 +5771,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setParagraphSpacing({ section, paragraph, type, value }) {
 			check();
 			const args = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
 				...paragraphSpacingArgs(type, value)
 			];
 			if (typeof wasm.hwp5_edit_set_paragraph_spacing !== "function") throw new Error("Hwp5ParagraphSpacingAbiUnavailable");
@@ -5803,12 +5851,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		characterRanges(section, paragraph) {
 			check();
 			if (typeof wasm.hwp5_edit_character_ranges !== "function") throw new Error("Hwp5CharacterRangesAbiUnavailable");
-			return decodeCharacterRanges(output(() => wasm.hwp5_edit_character_ranges(u32$1(section, "section"), u32$1(paragraph, "paragraph"))).bytes);
+			return decodeCharacterRanges(output(() => wasm.hwp5_edit_character_ranges(u32$2(section, "section"), u32$2(paragraph, "paragraph"))).bytes);
 		},
 		tableBindings(section) {
 			check();
 			if (typeof wasm.hwp5_edit_table_bindings !== "function") throw new Error("Hwp5TableBindingsAbiUnavailable");
-			return decodeTableBindings(output(() => wasm.hwp5_edit_table_bindings(u32$1(section, "section"))).bytes);
+			return decodeTableBindings(output(() => wasm.hwp5_edit_table_bindings(u32$2(section, "section"))).bytes);
 		},
 		setCellStyles(input) {
 			check();
@@ -5861,10 +5909,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCellSize({ section, listNode, width, height }) {
 			check();
 			const values = [
-				u32$1(section, "section"),
-				u32$1(listNode, "listNode"),
-				u32$1(width, "width"),
-				u32$1(height, "height")
+				u32$2(section, "section"),
+				u32$2(listNode, "listNode"),
+				u32$2(width, "width"),
+				u32$2(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_set_cell_size !== "function") throw new Error("Hwp5CellSizeAbiUnavailable");
 			success(wasm.hwp5_edit_set_cell_size(...values));
@@ -5878,10 +5926,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setPictureCurrentSize({ section, pictureNode, width, height }) {
 			check();
 			const values = [
-				u32$1(section, "section"),
-				u32$1(pictureNode, "pictureNode"),
-				u32$1(width, "width"),
-				u32$1(height, "height")
+				u32$2(section, "section"),
+				u32$2(pictureNode, "pictureNode"),
+				u32$2(width, "width"),
+				u32$2(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_set_picture_current_size !== "function") throw new Error("Hwp5PictureCurrentSizeAbiUnavailable");
 			success(wasm.hwp5_edit_set_picture_current_size(...values));
@@ -5889,10 +5937,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		resizePicture({ section, pictureNode, width, height }) {
 			check();
 			const values = [
-				u32$1(section, "section"),
-				u32$1(pictureNode, "pictureNode"),
-				u32$1(width, "width"),
-				u32$1(height, "height")
+				u32$2(section, "section"),
+				u32$2(pictureNode, "pictureNode"),
+				u32$2(width, "width"),
+				u32$2(height, "height")
 			];
 			if (typeof wasm.hwp5_edit_resize_picture !== "function") throw new Error("Hwp5PictureResizeAbiUnavailable");
 			success(wasm.hwp5_edit_resize_picture(...values));
@@ -5900,17 +5948,17 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		tablePlacements(section) {
 			check();
 			if (typeof wasm.hwp5_edit_table_placements !== "function") throw new Error("Hwp5TablePlacementsAbiUnavailable");
-			return decodeTablePlacements(output(() => wasm.hwp5_edit_table_placements(u32$1(section, "section"))).bytes, "hwp5");
+			return decodeTablePlacements(output(() => wasm.hwp5_edit_table_placements(u32$2(section, "section"))).bytes, "hwp5");
 		},
 		tableLayoutSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_table_layout_sources !== "function") throw new Error("Hwp5TableLayoutSourcesAbiUnavailable");
 			return decodeHwp5TableLayoutSources(output(() => wasm.hwp5_edit_table_layout_sources(index)).bytes);
 		},
 		cellLayoutSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_cell_layout_sources !== "function") throw new Error("Hwp5CellLayoutSourcesAbiUnavailable");
 			return decodeHwp5CellLayoutSources(output(() => wasm.hwp5_edit_cell_layout_sources(index)).bytes);
 		},
@@ -5921,25 +5969,25 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		tableAnchors(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_table_anchors !== "function") throw new Error("Hwp5TableAnchorsAbiUnavailable");
 			return decodeHwp5TableAnchors(output(() => wasm.hwp5_edit_table_anchors(index)).bytes);
 		},
 		structuralAnchors(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_structural_anchors !== "function") throw new Error("Hwp5StructuralAnchorsAbiUnavailable");
 			return decodeHwp5StructuralAnchors(output(() => wasm.hwp5_edit_structural_anchors(index)).bytes);
 		},
 		noteShapeSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_note_shape_sources !== "function") throw new Error("Hwp5NoteShapeSourcesAbiUnavailable");
 			return decodeHwp5NoteShapeSources(output(() => wasm.hwp5_edit_note_shape_sources(index)).bytes);
 		},
 		captionSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_caption_sources !== "function") throw new Error("Hwp5CaptionSourcesAbiUnavailable");
 			return decodeHwp5CaptionSources(output(() => wasm.hwp5_edit_caption_sources(index)).bytes);
 		},
@@ -5969,7 +6017,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		selectRadioButton(section, formNode) {
 			check();
-			const positions = [u32$1(section, "section"), u32$1(formNode, "formNode")];
+			const positions = [u32$2(section, "section"), u32$2(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_select_form_radio !== "function") throw new Error("Hwp5RadioSelectAbiUnavailable");
 			success(wasm.hwp5_edit_select_form_radio(...positions));
 		},
@@ -5979,7 +6027,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setCheckBoxState(section, formNode, state) {
 			check();
-			const positions = [u32$1(section, "section"), u32$1(formNode, "formNode")];
+			const positions = [u32$2(section, "section"), u32$2(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_set_form_choice !== "function") throw new Error("Hwp5FormChoiceEditAbiUnavailable");
 			const value = [
 				"UNCHECKED",
@@ -5991,7 +6039,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		setFormText({ section, formNode, text }) {
 			check();
-			const positions = [u32$1(section, "section"), u32$1(formNode, "formNode")];
+			const positions = [u32$2(section, "section"), u32$2(formNode, "formNode")];
 			if (typeof wasm.hwp5_edit_set_form_text !== "function") throw new Error("Hwp5FormTextEditAbiUnavailable");
 			if (typeof text !== "string") throw new TypeError("Form text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -6002,97 +6050,97 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		formProperties(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_form_properties !== "function") throw new Error("Hwp5FormPropertiesAbiUnavailable");
 			return decodeHwp5FormProperties(output(() => wasm.hwp5_edit_form_properties(index)).bytes);
 		},
 		formSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_form_sources !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
 			return decodeHwp5FormSources(output(() => wasm.hwp5_edit_form_sources(index)).bytes);
 		},
 		formAnchors(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_form_anchors !== "function") throw new Error("Hwp5FormSourcesAbiUnavailable");
 			return decodeHwp5FormAnchors(output(() => wasm.hwp5_edit_form_anchors(index)).bytes);
 		},
 		drawingSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_sources !== "function") throw new Error("Hwp5DrawingSourcesAbiUnavailable");
 			return decodeHwp5DrawingSources(output(() => wasm.hwp5_edit_drawing_sources(index)).bytes);
 		},
 		drawingObjectExtras(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_object_extras !== "function") throw new Error("Hwp5DrawingObjectExtrasAbiUnavailable");
 			return decodeHwp5DrawingObjectExtras(output(() => wasm.hwp5_edit_drawing_object_extras(index)).bytes);
 		},
 		drawingComponentSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_component_sources !== "function") throw new Error("Hwp5DrawingComponentSourcesAbiUnavailable");
 			return decodeHwp5DrawingComponentSources(output(() => wasm.hwp5_edit_drawing_component_sources(index)).bytes);
 		},
 		drawingAnchors(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_anchors !== "function") throw new Error("Hwp5DrawingAnchorsAbiUnavailable");
 			return decodeHwp5DrawingAnchors(output(() => wasm.hwp5_edit_drawing_anchors(index)).bytes);
 		},
 		drawingListSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_list_sources !== "function") throw new Error("Hwp5DrawingListSourcesAbiUnavailable");
 			return decodeHwp5DrawingListSources(output(() => wasm.hwp5_edit_drawing_list_sources(index)).bytes);
 		},
 		drawingMatrixSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_matrix_sources !== "function") throw new Error("Hwp5DrawingMatrixSourcesAbiUnavailable");
 			return decodeHwp5DrawingMatrixSources(output(() => wasm.hwp5_edit_drawing_matrix_sources(index)).bytes);
 		},
 		drawingLocalTransforms(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_local_transforms !== "function") throw new Error("Hwp5DrawingLocalTransformsAbiUnavailable");
 			return decodeHwp5DrawingLocalTransforms(output(() => wasm.hwp5_edit_drawing_local_transforms(index)).bytes);
 		},
 		drawingRectangleCorners(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_rectangle_corners !== "function") throw new Error("Hwp5DrawingRectangleCornersAbiUnavailable");
 			return decodeHwp5DrawingRectangleCorners(output(() => wasm.hwp5_edit_drawing_rectangle_corners(index)).bytes);
 		},
 		drawingCurvePoints(section, layout) {
 			check();
-			const index = u32$1(section, "section"), selected = curveLayoutArg(layout);
+			const index = u32$2(section, "section"), selected = curveLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_drawing_curve_points !== "function") throw new Error("Hwp5DrawingCurvePointsAbiUnavailable");
 			return decodeHwp5DrawingCurvePoints(output(() => wasm.hwp5_edit_drawing_curve_points(index, selected)).bytes);
 		},
 		drawingPolygonPoints(section, layout) {
 			check();
-			const index = u32$1(section, "section"), layoutId = polygonLayoutArg(layout);
+			const index = u32$2(section, "section"), layoutId = polygonLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_drawing_polygon_points !== "function") throw new Error("Hwp5DrawingPolygonPointsAbiUnavailable");
 			return decodeHwp5DrawingPolygonPoints(output(() => wasm.hwp5_edit_drawing_polygon_points(index, layoutId)).bytes);
 		},
 		drawingLineEndpoints(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_drawing_line_endpoints !== "function") throw new Error("Hwp5DrawingLineEndpointsAbiUnavailable");
 			return decodeHwp5DrawingLineEndpoints(output(() => wasm.hwp5_edit_drawing_line_endpoints(index)).bytes);
 		},
 		noteSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_note_sources !== "function") throw new Error("Hwp5NoteSourcesAbiUnavailable");
 			return decodeHwp5NoteSources(output(() => wasm.hwp5_edit_note_sources(index)).bytes);
 		},
 		drawingStyleSources(section, options) {
 			check();
-			const index = u32$1(section, "section"), [border, tail] = drawingStyleLayoutArgs(options);
+			const index = u32$2(section, "section"), [border, tail] = drawingStyleLayoutArgs(options);
 			if (typeof wasm.hwp5_edit_drawing_style_sources !== "function") throw new Error("Hwp5DrawingStyleSourcesAbiUnavailable");
 			return decodeHwp5DrawingStyleSources(output(() => wasm.hwp5_edit_drawing_style_sources(index, border, tail)).bytes);
 		},
@@ -6105,13 +6153,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		pictureSources(section, prefix) {
 			check();
-			const index = u32$1(section, "section"), selection = picturePrefixArg(prefix);
+			const index = u32$2(section, "section"), selection = picturePrefixArg(prefix);
 			if (typeof wasm.hwp5_edit_picture_sources !== "function") throw new Error("Hwp5PictureSourcesAbiUnavailable");
 			return decodeHwp5PictureSources(output(() => wasm.hwp5_edit_picture_sources(index, selection)).bytes);
 		},
 		pictureTailSources(section, layout) {
 			check();
-			const index = u32$1(section, "section"), selection = pictureTailLayoutArg(layout);
+			const index = u32$2(section, "section"), selection = pictureTailLayoutArg(layout);
 			if (typeof wasm.hwp5_edit_picture_tail_sources !== "function") throw new Error("Hwp5PictureTailSourcesAbiUnavailable");
 			return decodeHwp5PictureTailSources(output(() => wasm.hwp5_edit_picture_tail_sources(index, selection)).bytes);
 		},
@@ -6119,7 +6167,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			check();
 			if (!options || typeof options !== "object" || Array.isArray(options) || Object.keys(options).some((key) => key !== "maxBytes")) throw new Error("Invalid binary options");
 			const { maxBytes = 33554432 } = options;
-			const id = u32$1(ordinal, "binary ordinal"), limit = u32$1(maxBytes, "binary limit");
+			const id = u32$2(ordinal, "binary ordinal"), limit = u32$2(maxBytes, "binary limit");
 			if (id > 65535) throw new RangeError("Invalid binary ordinal");
 			if (limit > 33554432) throw new RangeError("Invalid binary limit");
 			if (typeof wasm.hwp5_edit_binary_resource !== "function") throw new Error("Hwp5BinaryResourceAbiUnavailable");
@@ -6127,13 +6175,13 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		automaticNumberSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_automatic_number_sources !== "function") throw new Error("Hwp5AutomaticNumberSourcesAbiUnavailable");
 			return decodeHwp5AutomaticNumberSources(output(() => wasm.hwp5_edit_automatic_number_sources(index)).bytes);
 		},
 		pageControlSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_page_control_sources !== "function") throw new Error("Hwp5PageControlSourcesAbiUnavailable");
 			return decodeHwp5PageControlSources(output(() => wasm.hwp5_edit_page_control_sources(index)).bytes);
 		},
@@ -6144,46 +6192,51 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		masterPageSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_master_page_sources !== "function") throw new Error("Hwp5MasterPageSourcesAbiUnavailable");
 			return decodeHwp5MasterPageSources(output(() => wasm.hwp5_edit_master_page_sources(index)).bytes);
 		},
 		pageAreaSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_page_area_sources !== "function") throw new Error("Hwp5PageAreaSourcesAbiUnavailable");
 			return decodeHwp5PageAreaSources(output(() => wasm.hwp5_edit_page_area_sources(index)).bytes);
 		},
 		pageSettings(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_page_settings !== "function") throw new Error("Hwp5PageSettingsAbiUnavailable");
 			return decodeHwp5PageSettings(output(() => wasm.hwp5_edit_page_settings(index)).bytes);
 		},
 		sectionSettings(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_section_settings !== "function") throw new Error("Hwp5SectionSettingsAbiUnavailable");
 			return decodeHwp5SectionSettings(output(() => wasm.hwp5_edit_section_settings(index)).bytes);
 		},
 		paragraphFlow(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_paragraph_flow !== "function") throw new Error("Hwp5ParagraphFlowAbiUnavailable");
 			return decodeHwp5ParagraphFlow(output(() => wasm.hwp5_edit_paragraph_flow(index)).bytes);
 		},
 		columnSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_column_sources !== "function") throw new Error("Hwp5ColumnSourcesAbiUnavailable");
 			return decodeHwp5ColumnSources(output(() => wasm.hwp5_edit_column_sources(index)).bytes);
 		},
 		copyText,
 		fieldSpans(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_field_spans !== "function") throw new Error("Hwp5FieldSpansAbiUnavailable");
 			return decodeHwp5FieldSpans(output(() => wasm.hwp5_edit_field_spans(index)).bytes);
+		},
+		namedFields() {
+			check();
+			if (typeof wasm.hwp5_edit_named_fields !== "function") throw new Error("NamedFieldsUnavailable");
+			return decodeHwp5NamedFields(output(() => wasm.hwp5_edit_named_fields()).bytes);
 		},
 		supportsFieldTopology() {
 			check();
@@ -6191,19 +6244,19 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		fieldTopology(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_field_topology !== "function") throw new Error("Hwp5FieldTopologyAbiUnavailable");
 			return decodeHwp5FieldTopology(output(() => wasm.hwp5_edit_field_topology(index)).bytes);
 		},
 		formulaSources(section) {
 			check();
-			const index = u32$1(section, "section");
+			const index = u32$2(section, "section");
 			if (typeof wasm.hwp5_edit_formula_sources !== "function") throw new Error("Hwp5FormulaSourcesAbiUnavailable");
 			return decodeHwp5FormulaSources(output(() => wasm.hwp5_edit_formula_sources(index)).bytes);
 		},
 		setFormulaDefinition({ section, sourceNode, formula }) {
 			check();
-			const positions = [u32$1(section, "section"), u32$1(sourceNode, "sourceNode")];
+			const positions = [u32$2(section, "section"), u32$2(sourceNode, "sourceNode")];
 			if (typeof wasm.hwp5_edit_set_formula_definition !== "function") throw new Error("Hwp5FormulaDefinitionAbiUnavailable");
 			if (typeof formula !== "string") throw new TypeError("Formula must be a string");
 			if (!formula.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -6219,10 +6272,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		splice({ section, paragraph, startUnit, endUnit, text, rangePolicy = "reject" }) {
 			check();
 			const values = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (typeof text !== "string") throw new TypeError("Text must be a string");
 			if (!text.isWellFormed()) throw new Error("InvalidUnicodeEncoding");
@@ -6235,11 +6288,11 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		splitParagraph({ section, paragraph, atUnit, endUnit = atUnit }) {
 			check();
 			const values = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(atUnit, "atUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(atUnit, "atUnit")
 			];
-			u32$1(endUnit, "endUnit");
+			u32$2(endUnit, "endUnit");
 			if (endUnit < atUnit) throw new RangeError("InvalidTextPosition");
 			if (endUnit !== atUnit) {
 				if (typeof wasm.hwp5_edit_split_range !== "function") throw new Error("Hwp5StructureAbiUnavailable");
@@ -6251,21 +6304,21 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		},
 		mergeParagraph({ section, paragraph }) {
 			check();
-			const values = [u32$1(section, "section"), u32$1(paragraph, "paragraph")];
+			const values = [u32$2(section, "section"), u32$2(paragraph, "paragraph")];
 			if (typeof wasm.hwp5_edit_merge !== "function") throw new Error("Hwp5StructureAbiUnavailable");
 			success(wasm.hwp5_edit_merge(...values));
 		},
 		setCharacterFormat({ section, paragraph, startUnit, endUnit, charShapeId }) {
 			check();
-			success(wasm.hwp5_edit_format(u32$1(section, "section"), u32$1(paragraph, "paragraph"), u32$1(startUnit, "startUnit"), u32$1(endUnit, "endUnit"), u32$1(charShapeId, "charShapeId")));
+			success(wasm.hwp5_edit_format(u32$2(section, "section"), u32$2(paragraph, "paragraph"), u32$2(startUnit, "startUnit"), u32$2(endUnit, "endUnit"), u32$2(charShapeId, "charShapeId")));
 		},
 		setCharacterProperties({ section, paragraph, startUnit, endUnit, properties }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterPropertyArgs(properties);
@@ -6354,10 +6407,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterStrike({ section, paragraph, startUnit, endUnit, enabled }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			if (typeof enabled !== "boolean") throw new TypeError("InvalidCharacterProperties");
@@ -6367,10 +6420,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterUnderline({ section, paragraph, startUnit, endUnit, kind }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterUnderlineArg(kind);
@@ -6380,10 +6433,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterStrikeColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -6393,10 +6446,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterUnderlineColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -6406,10 +6459,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterFont({ section, paragraph, startUnit, endUnit, language, fontId }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterFontArgs(language, fontId);
@@ -6420,10 +6473,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterFontName({ section, paragraph, startUnit, endUnit, language, name }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterFontNameArgs(language, name);
@@ -6449,10 +6502,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterTextColor({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = characterColorArg(color);
@@ -6462,10 +6515,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterShade({ section, paragraph, startUnit, endUnit, color }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterShadeArgs(color);
@@ -6475,10 +6528,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterEffect({ section, paragraph, startUnit, endUnit, effect, enabled, exclusive = false }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const args = characterEffectArgs(effect, enabled);
@@ -6489,10 +6542,10 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		setCharacterOutline({ section, paragraph, startUnit, endUnit, kind }) {
 			check();
 			const positions = [
-				u32$1(section, "section"),
-				u32$1(paragraph, "paragraph"),
-				u32$1(startUnit, "startUnit"),
-				u32$1(endUnit, "endUnit")
+				u32$2(section, "section"),
+				u32$2(paragraph, "paragraph"),
+				u32$2(startUnit, "startUnit"),
+				u32$2(endUnit, "endUnit")
 			];
 			if (endUnit < startUnit) throw new RangeError("InvalidTextPosition");
 			const value = hwp5CharacterOutlineArg(kind);
@@ -6511,8 +6564,9 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		}
 	};
 }
-var encoder$6, decoder, u32$1;
+var encoder$6, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
+	init_hwp5_named_fields();
 	init_cell_diagonal_command();
 	init_cell_border_patch_command();
 	init_cell_style_command();
@@ -6608,8 +6662,130 @@ var init_hwp5_editor = __esmMin((() => {
 		fatal: true,
 		ignoreBOM: true
 	});
-	u32$1 = (value, name) => {
+	u32$2 = (value, name) => {
 		if (!Number.isInteger(value) || value < 0 || value > 4294967295) throw new RangeError(`Invalid ${name}`);
+		return value;
+	};
+}));
+// ../../js/hwpx-document-insert.mjs
+function ownRecord(record, keys, optional = []) {
+	if (!record || typeof record !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(record))) throw new TypeError("InvalidDocumentInsertRequest");
+	const fields = Object.getOwnPropertyDescriptors(record);
+	const result = Object.create(null);
+	for (const key of Reflect.ownKeys(fields)) {
+		if (!keys.includes(key) && !optional.includes(key) || !Object.hasOwn(fields[key], "value")) throw new TypeError("InvalidDocumentInsertRequest");
+		result[key] = fields[key].value;
+	}
+	if (!keys.every((key) => Object.hasOwn(result, key))) throw new TypeError("InvalidDocumentInsertRequest");
+	return result;
+}
+function splitU64(text) {
+	if (typeof text !== "string" || !/^(?:0|[1-9]\d{0,19})$/.test(text)) throw new TypeError("InvalidDocumentInsertBinding");
+	const value = BigInt(text);
+	if (value > maxU64) throw new TypeError("InvalidDocumentInsertBinding");
+	return [Number(value & 4294967295n), Number(value >> 32n)];
+}
+function decodeBinding(binding) {
+	const { session, revision, serial } = ownRecord(binding, [
+		"session",
+		"revision",
+		"serial"
+	]);
+	if (typeof session !== "string" || !/^(?:[a-z0-9-]{1,64}:)?s[1-9]\d{0,19}$/.test(session) || u32$1(revision) === 4294967295) throw new TypeError("InvalidDocumentInsertBinding");
+	const epochWords = splitU64(session.slice(session.lastIndexOf(":") + 2));
+	return {
+		binding: {
+			session,
+			revision,
+			serial
+		},
+		wire: [
+			revision,
+			...epochWords,
+			...splitU64(serial)
+		]
+	};
+}
+function copySource(bytes) {
+	if (!ArrayBuffer.isView(bytes) || !(bytes instanceof Uint8Array) || typeof SharedArrayBuffer !== "undefined" && buffer.call(bytes) instanceof SharedArrayBuffer) throw new TypeError("InvalidDocumentInsertSource");
+	const length = byteLength$1.call(bytes);
+	if (length === 0 || length > maxSourceBytes) throw new RangeError("LimitExceeded");
+	return new Uint8Array(bytes);
+}
+function createHwpxDocumentInsertApi({ wasm, memory, check }) {
+	const supported = HWPX_DOCUMENT_INSERT_FUNCTIONS.every((name) => typeof wasm[name] === "function");
+	const scope = supported ? globalThis.crypto?.randomUUID?.() ?? String(++scopeSequence) : null;
+	function ready() {
+		check();
+		if (!supported) throw new Error("DocumentInsertionUnavailable");
+	}
+	return {
+		supportsDocumentInsertionAbi: () => supported,
+		/** @returns {DocumentInsertCapabilities} */
+		documentInsertionCapabilities() {
+			ready();
+			if (wasm.hwpx_edit_document_insert_capabilities() !== 1) throw memory.error();
+			try {
+				const length = wasm.hwpx_edit_output_len();
+				if (!Number.isSafeInteger(length) || length <= 0 || length > 512) throw new TypeError("InvalidDocumentInsertionCapabilities");
+				const data = memory.copy(wasm.hwpx_edit_output_ptr(), length);
+				const decoded = ownRecord(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data)), [
+					"schemaVersion",
+					"binding",
+					"maxSourceBytes"
+				]);
+				if (decoded.schemaVersion !== 1 || decoded.maxSourceBytes !== maxSourceBytes) throw new TypeError("InvalidDocumentInsertionCapabilities");
+				const binding = decodeBinding(decoded.binding).binding;
+				if (!binding.session.startsWith("s") || binding.session.includes(":")) throw new TypeError("InvalidDocumentInsertionCapabilities");
+				return Object.freeze({
+					schemaVersion: 1,
+					binding: Object.freeze({
+						...binding,
+						session: scope + ":" + binding.session
+					}),
+					maxSourceBytes
+				});
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
+		/**
+		* @param {DocumentInsertRequest} input Native 1-based paragraph, original UTF-16 caret.
+		* @returns {ReturnType<typeof applyNativeEdit>}
+		*/
+		insertDocument(input) {
+			ready();
+			const { binding, section, paragraph, unit, bytes } = ownRecord(input, [
+				"binding",
+				"section",
+				"paragraph",
+				"unit",
+				"bytes"
+			]);
+			const current = decodeBinding(binding);
+			if (!current.binding.session.startsWith(scope + ":")) throw new Error("StaleDocumentInsertBinding");
+			const args = [
+				u32$1(section),
+				u32$1(paragraph),
+				u32$1(unit),
+				...current.wire
+			];
+			return applyNativeEdit(memory, copySource(bytes), (ptr, length) => wasm.hwpx_edit_insert_document(...args, ptr, length), "InvalidDocumentInsertResult");
+		}
+	};
+}
+var maxSourceBytes, maxU64, typedArray, byteLength$1, buffer, scopeSequence, u32$1;
+var init_hwpx_document_insert = __esmMin((() => {
+	init_abi_schema();
+	init_native_edit_outcome();
+	maxSourceBytes = 8388608;
+	maxU64 = 18446744073709551615n;
+	typedArray = Object.getPrototypeOf(Uint8Array.prototype);
+	byteLength$1 = Object.getOwnPropertyDescriptor(typedArray, "byteLength").get;
+	buffer = Object.getOwnPropertyDescriptor(typedArray, "buffer").get;
+	scopeSequence = 0n;
+	u32$1 = (value) => {
+		if (!Number.isInteger(value) || value < 0 || value > 4294967295 || Object.is(value, -0)) throw new TypeError("InvalidDocumentInsertCoordinate");
 		return value;
 	};
 }));
@@ -6873,15 +7049,15 @@ var init_hwpx_drawing_text_snapshot = __esmMin((() => {
 }));
 // ../../js/hwpx-drawing-text-requested.mjs
 function drawingTextRequest(nodes, limit) {
-	if (!uint$28(limit) || limit < 1 || limit > 1024) throw Error("InvalidDrawingTextRequestLimit");
+	if (!uint$29(limit) || limit < 1 || limit > 1024) throw Error("InvalidDrawingTextRequestLimit");
 	if (!Array.isArray(nodes)) throw Error("InvalidDrawingTextRequest");
 	const count = nodes.length;
-	if (!uint$28(count) || count > limit) throw Error("InvalidDrawingTextRequest");
+	if (!uint$29(count) || count > limit) throw Error("InvalidDrawingTextRequest");
 	const requested = [];
 	for (let index = 0; index < count; index++) {
 		if (!Object.hasOwn(nodes, index)) throw Error("InvalidDrawingTextRequest");
 		const node = nodes[index];
-		if (!uint$28(node)) throw Error("InvalidDrawingTextRequest");
+		if (!uint$29(node)) throw Error("InvalidDrawingTextRequest");
 		requested.push(node);
 	}
 	if (nodes.length !== count) throw Error("InvalidDrawingTextRequest");
@@ -6921,10 +7097,10 @@ function decodeDrawingTextRequested(bytes, requested) {
 		};
 	});
 }
-var uint$28;
+var uint$29;
 var init_hwpx_drawing_text_requested = __esmMin((() => {
 	init_hwpx_drawing_text_snapshot();
-	uint$28 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$29 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/u32-index-request.mjs
 /** Shared bounded count+u32 request envelope; callers own semantic errors. */
@@ -7258,7 +7434,7 @@ function decodeTableBorderBatch(bytes, sections) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	if (!Array.isArray(value) || value.length !== sections.length) fail();
 	for (const [index, entry] of value.entries()) {
-		if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint$27(entry.section)) fail();
+		if (!entry || typeof entry !== "object" || Array.isArray(entry) || entry.section !== sections[index] || !uint$28(entry.section)) fail();
 		if (Object.hasOwn(entry, "error")) {
 			if (Object.hasOwn(entry, "value") || Object.keys(entry).length !== 2 || typeof entry.error !== "string" || !/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(entry.error) || entry.error === "OutOfMemory") fail();
 		} else {
@@ -7268,11 +7444,11 @@ function decodeTableBorderBatch(bytes, sections) {
 	}
 	return value;
 }
-var uint$27;
+var uint$28;
 var init_hwpx_table_border_batch = __esmMin((() => {
 	init_u32_index_request();
 	init_hwpx_table_border_sources();
-	uint$27 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$28 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/hwpx-shape-layout-values.mjs
 function validShapeLayoutValues(value) {
@@ -7310,9 +7486,9 @@ function validShapeCommonSource(value) {
 	if (!validShapeLayoutValues(value)) return false;
 	if (Object.hasOwn(value, "component_sizes")) {
 		const sizes = value.component_sizes;
-		if (!object$10(sizes) || !["original", "current"].every((key) => sizes[key] === null || object$10(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint$26(n)))) return false;
+		if (!object$10(sizes) || !["original", "current"].every((key) => sizes[key] === null || object$10(sizes[key]) && [sizes[key].width, sizes[key].height].every((n) => n === null || uint$27(n)))) return false;
 	}
-	if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint$26(value.stroke_style) && value.stroke_style <= 17)) return false;
+	if (Object.hasOwn(value, "stroke_style") && !(value.stroke_style === null || uint$27(value.stroke_style) && value.stroke_style <= 17)) return false;
 	if (value.stroke && value.stroke_style !== void 0 && value.stroke_style !== value.stroke.style) return false;
 	if ([
 		"stroke",
@@ -7320,19 +7496,19 @@ function validShapeCommonSource(value) {
 		"paint"
 	].some((key) => Object.hasOwn(value, key)) && !validShapePaintValues(value)) return false;
 	const r = value.rendering;
-	if (!object$10(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint$26(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate$2)) return false;
+	if (!object$10(r) || !Array.isArray(r.flip) || r.flip.length !== 2 || !Array.from(r.flip).every(optionalBoolean) || !(r.angle === null || uint$27(r.angle)) || !optionalBoolean(r.reverse) || !optionalBoolean(r.rotate_image) || !Array.isArray(r.center) || r.center.length !== 2 || !Array.from(r.center).every(coordinate$2)) return false;
 	return r.matrix === null ? [
 		"UnsupportedPictureMatrixSequence",
 		"IncompletePictureMatrix",
 		"NonFinitePictureMatrix"
 	].includes(r.matrix_error) : Array.isArray(r.matrix) && r.matrix.length === 6 && Array.from(r.matrix).every(Number.isFinite) && r.matrix_error === null;
 }
-var object$10, uint$26, coordinate$2, optionalBoolean;
+var object$10, uint$27, coordinate$2, optionalBoolean;
 var init_hwpx_shape_common_source = __esmMin((() => {
 	init_hwpx_shape_layout_values();
 	init_hwpx_shape_paint_values();
 	object$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$27 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate$2 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 	optionalBoolean = (value) => value === null || typeof value === "boolean";
 }));
@@ -7351,7 +7527,7 @@ var init_hwpx_group_context = __esmMin((() => {}));
 // ../../js/hwpx-curve-geometry.mjs
 function decodeCurveGeometry(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!object$9(value) || value.sourceOnly !== true || !uint$25(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object$9(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && [
+	if (!object$9(value) || value.sourceOnly !== true || !uint$26(value.node) || Object.hasOwn(value, "common") && (!validShapeCommonSource(value.common) || !validGroupContext(value.common.group_context, value.node)) || Object.hasOwn(value, "text") && value.text !== null && !validDrawingTextValues(value.text, value.node) || !Array.isArray(value.segments) || value.segments.length > 65536 || !Array.from(value.segments).every((segment) => object$9(segment) && (segment.kind === null || typeof segment.kind === "string" && new TextEncoder().encode(segment.kind).length <= 4096) && [
 		"x1",
 		"y1",
 		"x2",
@@ -7359,29 +7535,29 @@ function decodeCurveGeometry(bytes) {
 	].every((key) => coordinate$1(segment[key])))) throw new Error("InvalidCurveGeometry");
 	return value;
 }
-var object$9, uint$25, coordinate$1;
+var object$9, uint$26, coordinate$1;
 var init_hwpx_curve_geometry = __esmMin((() => {
 	init_hwpx_shape_common_source();
 	init_hwpx_group_context();
 	init_hwpx_drawing_text_values();
 	object$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$26 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	coordinate$1 = (value) => value === null || Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
 // ../../js/hwpx-curve-owner.mjs
 function decodeCurveOwner(bytes) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	const owner = value?.owner;
-	if (!object$8(value) || value.sourceOnly !== true || !uint$24(value.node) || owner !== null && (!object$8(owner) || ![
+	if (!object$8(value) || value.sourceOnly !== true || !uint$25(value.node) || owner !== null && (!object$8(owner) || ![
 		owner.paragraph,
 		owner.anchor_node,
 		owner.anchor_unit
-	].every(uint$24) || owner.paragraph === 0 || owner.anchor_node >= value.node)) throw new Error("InvalidCurveOwner");
+	].every(uint$25) || owner.paragraph === 0 || owner.anchor_node >= value.node)) throw new Error("InvalidCurveOwner");
 	return value;
 }
-var uint$24, object$8;
+var uint$25, object$8;
 var init_hwpx_curve_owner = __esmMin((() => {
-	uint$24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$25 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-tab-sources.mjs
@@ -7389,11 +7565,11 @@ function decodeTabSources(bytes) {
 	return validateTabSources(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
 function validateTabSources(value) {
-	if (!object$7(value) || !uint$23(value.section) || !uint$23(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows)) throw new Error("InvalidTabSources");
+	if (!object$7(value) || !uint$24(value.section) || !uint$24(value.paragraph) || value.paragraph === 0 || !Array.isArray(value.rows)) throw new Error("InvalidTabSources");
 	let previous = -1;
 	const nodes = /* @__PURE__ */ new Set();
 	for (const row of value.rows) {
-		if (!object$7(row) || !uint$23(row.unit) || !uint$23(row.node) || row.unit <= previous || nodes.has(row.node) || ![
+		if (!object$7(row) || !uint$24(row.unit) || !uint$24(row.node) || row.unit <= previous || nodes.has(row.node) || ![
 			row.width,
 			row.tab_type,
 			row.leader
@@ -7403,9 +7579,9 @@ function validateTabSources(value) {
 	}
 	return value;
 }
-var uint$23, object$7;
+var uint$24, object$7;
 var init_hwpx_tab_sources = __esmMin((() => {
-	uint$23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$24 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../js/hwpx-tab-definitions.mjs
@@ -7413,7 +7589,7 @@ function validateTabDefinitions(rows) {
 	if (!Array.isArray(rows)) throw new Error("InvalidTabDefinitions");
 	let previous = -1, count = 0;
 	for (const row of rows) {
-		if (!object$6(row) || !uint$22(row.id) || row.id <= previous || !raw$1(row.auto_left) || !raw$1(row.auto_right) || !Array.isArray(row.items)) throw new Error("InvalidTabDefinitions");
+		if (!object$6(row) || !uint$23(row.id) || row.id <= previous || !raw$1(row.auto_left) || !raw$1(row.auto_right) || !Array.isArray(row.items)) throw new Error("InvalidTabDefinitions");
 		previous = row.id;
 		count += row.items.length;
 		if (count > 1e6) throw new Error("InvalidTabDefinitions");
@@ -7424,9 +7600,9 @@ function validateTabDefinitions(rows) {
 function decodeTabDefinitions(bytes) {
 	return validateTabDefinitions(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$22, object$6, raw$1;
+var uint$23, object$6, raw$1;
 var init_hwpx_tab_definitions = __esmMin((() => {
-	uint$22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$23 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	object$6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	raw$1 = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 }));
@@ -7435,11 +7611,11 @@ function validateSectionTabs(rows) {
 	if (!Array.isArray(rows)) throw new Error("InvalidSectionTabSources");
 	let previous = null;
 	for (const row of rows) {
-		if (!row || typeof row !== "object" || Array.isArray(row) || !uint$21(row.section) || !uint$21(row.node) || ![
+		if (!row || typeof row !== "object" || Array.isArray(row) || !uint$22(row.section) || !uint$22(row.node) || ![
 			row.tab_stop,
 			row.tab_stop_val,
 			row.tab_stop_unit
-		].every(raw) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint$21(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node)) throw new Error("InvalidSectionTabSources");
+		].every(raw) || Object.hasOwn(row, "body_owner") && row.body_owner !== null && (!uint$22(row.body_owner) || row.body_owner >= row.node) || previous && (row.section < previous.section || row.section === previous.section && row.node <= previous.node)) throw new Error("InvalidSectionTabSources");
 		previous = row;
 	}
 	return rows;
@@ -7447,9 +7623,9 @@ function validateSectionTabs(rows) {
 function decodeSectionTabs(bytes) {
 	return validateSectionTabs(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
 }
-var uint$21, raw;
+var uint$22, raw;
 var init_hwpx_section_tabs = __esmMin((() => {
-	uint$21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$22 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	raw = (value) => value === null || typeof value === "string" && new TextEncoder().encode(value).length <= 4096;
 }));
 // ../../js/equation-engine.mjs
@@ -7664,7 +7840,7 @@ function validateChartRichText(value) {
 var init_hwpx_chart_rich_text = __esmMin((() => {}));
 // ../../js/chart-display-fields.mjs
 function field$3(value, accepts, owner) {
-	return value === null || object$5(value) && uint$20(value.node) && value.node > owner && (value.value === null || accepts(value.value));
+	return value === null || object$5(value) && uint$21(value.node) && value.node > owner && (value.value === null || accepts(value.value));
 }
 function number(value) {
 	return object$5(value) && (value.kind === "finite" ? typeof value.value === "number" && Number.isFinite(value.value) : [
@@ -7674,25 +7850,25 @@ function number(value) {
 	].includes(value.kind) && value.value === null);
 }
 function scaling(value, owner) {
-	return value === null || object$5(value) && uint$20(value.node) && value.node > owner && field$3(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
+	return value === null || object$5(value) && uint$21(value.node) && value.node > owner && field$3(value.orientation, oneOf(["minMax", "maxMin"]), value.node) && [
 		value.minimum,
 		value.maximum,
 		value.log_base
 	].every((item) => field$3(item, number, value.node));
 }
-var object$5, uint$20, text$1, nullableUint, oneOf;
+var object$5, uint$21, text$1, nullableUint, oneOf;
 var init_chart_display_fields = __esmMin((() => {
 	object$5 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$20 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	uint$21 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	text$1 = (value) => typeof value === "string" && value.isWellFormed();
-	nullableUint = (value) => value === null || uint$20(value);
+	nullableUint = (value) => value === null || uint$21(value);
 	oneOf = (values) => (value) => values.includes(value);
 }));
 // ../../js/chart-display-host.mjs
 function chartDisplayHost(value, wrapper) {
-	if (!object$5(value) || value.wrapper_node !== wrapper || !uint$20(value.chart_node) || value.chart_node <= wrapper) return false;
+	if (!object$5(value) || value.wrapper_node !== wrapper || !uint$21(value.chart_node) || value.chart_node <= wrapper) return false;
 	const g = value.geometry, p = value.position;
-	return object$5(g) && object$5(p) && [g.width, g.height].every(optional(uint$20)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
+	return object$5(g) && object$5(p) && [g.width, g.height].every(optional(uint$21)) && optional(bounded(4))(g.width_relative) && optional(bounded(2))(g.height_relative) && optional(boolean)(g.treat_as_character) && [g.horizontal_offset, g.vertical_offset].every(optional(offset)) && Array.isArray(p.flags) && p.flags.length === 4 && p.flags.every(optional(boolean)) && Array.isArray(p.relations) && p.relations.length === 4 && p.relations.every((v, i) => optional(bounded([
 		2,
 		3,
 		4,
@@ -7703,7 +7879,7 @@ var optional, bounded, boolean, offset;
 var init_chart_display_host = __esmMin((() => {
 	init_chart_display_fields();
 	optional = (accepts) => (value) => value === null || accepts(value);
-	bounded = (max) => (value) => uint$20(value) && value <= max;
+	bounded = (max) => (value) => uint$21(value) && value <= max;
 	boolean = (value) => typeof value === "boolean";
 	offset = (value) => Number.isInteger(value) && value >= -2147483648 && value <= 4294967295;
 }));
@@ -7715,7 +7891,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 	for (const [node, plotNode] of series) {
 		const row = values[index++], kind = plots.get(plotNode)?.kind;
 		if (!object$5(row) || row.series_node !== node || row.plot_node !== plotNode || !field$3(row.smooth, (v) => typeof v === "boolean", node)) return false;
-		if (!field$3(row.index, uint$20, node) || !field$3(row.order, uint$20, node)) return false;
+		if (!field$3(row.index, uint$21, node) || !field$3(row.order, uint$21, node)) return false;
 		const line = [
 			"lineChart",
 			"line3DChart",
@@ -7723,7 +7899,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 			"scatterChart"
 		].includes(kind);
 		if (row.smooth !== null && !line) return false;
-		if (!field$3(row.explosion, uint$20, node)) return false;
+		if (!field$3(row.explosion, uint$21, node)) return false;
 		if (row.explosion !== null && ![
 			"pieChart",
 			"pie3DChart",
@@ -7731,7 +7907,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 			"doughnutChart"
 		].includes(kind)) return false;
 		const marker = row.marker;
-		if (marker !== null && (!line && kind !== "radarChart" || !object$5(marker) || !uint$20(marker.node) || marker.node <= node || !field$3(marker.symbol, oneOf(symbols), marker.node) || !field$3(marker.size, (v) => uint$20(v) && v >= 2 && v <= 72, marker.node))) return false;
+		if (marker !== null && (!line && kind !== "radarChart" || !object$5(marker) || !uint$21(marker.node) || marker.node <= node || !field$3(marker.symbol, oneOf(symbols), marker.node) || !field$3(marker.size, (v) => uint$21(v) && v >= 2 && v <= 72, marker.node))) return false;
 		const leaves = [
 			row.index,
 			row.order,
@@ -7745,7 +7921,7 @@ function validChartSeriesSettings(values, plots, series, occupied = null) {
 		].filter((value) => value !== null);
 		const stroke = row.stroke, strokeNodes = [];
 		if (stroke !== void 0 && stroke !== null) {
-			if (!object$5(stroke) || !uint$20(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$20(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
+			if (!object$5(stroke) || !uint$21(stroke.node) || stroke.node <= node || !(stroke.no_fill_node === null || uint$21(stroke.no_fill_node) && stroke.no_fill_node > stroke.node)) return false;
 			strokeNodes.push(stroke.node);
 			if (stroke.no_fill_node !== null) strokeNodes.push(stroke.no_fill_node);
 		}
@@ -7779,7 +7955,7 @@ function validChartPointSettings(values, series, occupied = null) {
 	if (!Array.isArray(values)) return false;
 	let previous = -1;
 	for (const row of values) {
-		if (!object$5(row) || !uint$20(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field$3(row.index, uint$20, row.node) || !field$3(row.explosion, uint$20, row.node)) return false;
+		if (!object$5(row) || !uint$21(row.node) || row.node <= previous || !series.has(row.series_node) || series.get(row.series_node) !== row.plot_node || row.node <= row.series_node || typeof row.unparsed_children !== "boolean" || !field$3(row.index, uint$21, row.node) || !field$3(row.explosion, uint$21, row.node)) return false;
 		if (row.index !== null && row.explosion !== null && row.index.node === row.explosion.node) return false;
 		occupied?.add(row.node);
 		if (row.index !== null) occupied?.add(row.index.node);
@@ -7803,7 +7979,7 @@ function validChartStockSettings(stock, kind, plotNode, usedNodes) {
 	]) if (!nullableUint(stock[key])) return false;
 	if (stock.up_down_node === null && (stock.up_node !== null || stock.down_node !== null || stock.gap_width !== null)) return false;
 	const parent = stock.up_down_node ?? plotNode;
-	if (!field$3(stock.gap_width, (value) => uint$20(value) && value <= 500, parent)) return false;
+	if (!field$3(stock.gap_width, (value) => uint$21(value) && value <= 500, parent)) return false;
 	for (const key of ["up_node", "down_node"]) if (stock[key] !== null && stock[key] <= parent) return false;
 	for (const node of [
 		stock.high_low_node,
@@ -7824,7 +8000,7 @@ var init_chart_stock_settings = __esmMin((() => {
 // ../../js/chart-view-3d.mjs
 function validChartView3D(value, occupied = null) {
 	if (value === void 0 || value === null) return true;
-	if (!object$5(value) || !uint$20(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
+	if (!object$5(value) || !uint$21(value.node) || value.node === 0 || occupied?.has(value.node) || typeof value.unparsed_children !== "boolean") return false;
 	const ranges = {
 		rotation_x: [-90, 90],
 		rotation_y: [0, 360],
@@ -7855,7 +8031,7 @@ function validChartSpatialSettings(value, kind, owner, leaves) {
 		"line3DChart",
 		"area3DChart"
 	].includes(kind)) return value === null;
-	if (!object$5(value) || !field$3(value.gap_depth, (v) => uint$20(v) && v <= 500, owner) || !field$3(value.shape, oneOf([
+	if (!object$5(value) || !field$3(value.gap_depth, (v) => uint$21(v) && v <= 500, owner) || !field$3(value.shape, oneOf([
 		"box",
 		"cone",
 		"coneToMax",
@@ -7888,7 +8064,7 @@ function decodeChartDisplay(bytes) {
 		"rich_text"
 	]) require(Array.isArray(value[name]));
 	const pair = value.pair;
-	require(object$5(pair) && text$1(pair.chart_path) && pair.chart_path.length > 0 && text$1(pair.ole_path) && pair.ole_path.length > 0 && uint$20(pair.wrapper_node) && uint$20(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$20(n) && n <= 255));
+	require(object$5(pair) && text$1(pair.chart_path) && pair.chart_path.length > 0 && text$1(pair.ole_path) && pair.ole_path.length > 0 && uint$21(pair.wrapper_node) && uint$21(pair.section_ordinal) && typeof pair.declared_external === "boolean" && Array.isArray(pair.section_sha256) && pair.section_sha256.length === 32 && pair.section_sha256.every((n) => uint$21(n) && n <= 255));
 	require(chartDisplayHost(value.host, pair.wrapper_node));
 	require(value.plots.length === value.plot_settings.length);
 	const plots = /* @__PURE__ */ new Map(), series = /* @__PURE__ */ new Map(), references = /* @__PURE__ */ new Map();
@@ -7897,14 +8073,14 @@ function decodeChartDisplay(bytes) {
 	const occupied = value.view_3d == null && value.blank_policy == null && !hasStrokes && !hasMajorTicks ? null : /* @__PURE__ */ new Set();
 	let previousPlot = -1;
 	for (const [index, plot] of value.plots.entries()) {
-		require(object$5(plot) && uint$20(plot.node) && plot.node > previousPlot && uint$20(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
+		require(object$5(plot) && uint$21(plot.node) && plot.node > previousPlot && uint$21(plot.area_node) && plot.area_node < plot.node && plotKinds.has(plot.kind) && Array.isArray(plot.series_nodes));
 		plots.set(plot.node, plot);
 		previousPlot = plot.node;
 		occupied?.add(plot.node);
 		occupied?.add(plot.area_node);
 		let previousSeries = plot.node;
 		for (const node of plot.series_nodes) {
-			require(uint$20(node) && node > previousSeries && !series.has(node));
+			require(uint$21(node) && node > previousSeries && !series.has(node));
 			series.set(node, plot.node);
 			previousSeries = node;
 			occupied?.add(node);
@@ -7916,7 +8092,7 @@ function decodeChartDisplay(bytes) {
 			"stacked",
 			"percentStacked"
 		]), plot.node) && field$3(settings.vary_colors, (v) => typeof v === "boolean", plot.node) && Array.isArray(settings.axis_references));
-		require(field$3(settings.gap_width, (v) => uint$20(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
+		require(field$3(settings.gap_width, (v) => uint$21(v) && v <= 500, plot.node) && field$3(settings.overlap, (v) => Number.isInteger(v) && v >= -100 && v <= 100, plot.node));
 		require(field$3(settings.scatter_style, oneOf([
 			"line",
 			"lineMarker",
@@ -7925,9 +8101,9 @@ function decodeChartDisplay(bytes) {
 			"smoothMarker"
 		]), plot.node));
 		if (settings.scatter_style !== null) require(plot.kind === "scatterChart");
-		require(field$3(settings.first_slice_angle, (v) => uint$20(v) && v <= 360, plot.node));
+		require(field$3(settings.first_slice_angle, (v) => uint$21(v) && v <= 360, plot.node));
 		if (settings.first_slice_angle !== null) require(["pieChart", "doughnutChart"].includes(plot.kind));
-		require(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$20(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
+		require(field$3(settings.of_pie_type, oneOf(["pie", "bar"]), plot.node) && field$3(settings.second_pie_size, (v) => uint$21(v) && v >= 5 && v <= 200, plot.node) && field$3(settings.split_type, oneOf([
 			"auto",
 			"cust",
 			"percent",
@@ -7972,14 +8148,14 @@ function decodeChartDisplay(bytes) {
 			...settings.custom_split_node === null ? [] : [{ node: settings.custom_split_node }],
 			...settings.axis_references
 		]) if (leaf !== null) {
-			require(object$5(leaf) && uint$20(leaf.node) && !leaves.has(leaf.node));
+			require(object$5(leaf) && uint$21(leaf.node) && !leaves.has(leaf.node));
 			leaves.add(leaf.node);
 		}
 		require(validChartStockSettings(settings.stock, plot.kind, plot.node, leaves));
 		require(validChartSpatialSettings(settings.spatial, plot.kind, plot.node, leaves));
 		for (const node of leaves) occupied?.add(node);
 		for (const reference of settings.axis_references) {
-			require(reference !== null && field$3(reference, uint$20, plot.node));
+			require(reference !== null && field$3(reference, uint$21, plot.node));
 			const key = plot.node + ":" + reference.node;
 			require(!references.has(key));
 			references.set(key, reference.value);
@@ -7989,12 +8165,12 @@ function decodeChartDisplay(bytes) {
 	require(validChartSeriesSettings(value.series_settings, plots, series, occupied));
 	require(validChartPointSettings(value.point_settings, series, occupied));
 	for (const axis of value.axes) {
-		require(object$5(axis) && uint$20(axis.node) && !axes.has(axis.node) && uint$20(axis.area_node) && axis.area_node < axis.node && [
+		require(object$5(axis) && uint$21(axis.node) && !axes.has(axis.node) && uint$21(axis.area_node) && axis.area_node < axis.node && [
 			"catAx",
 			"valAx",
 			"dateAx",
 			"serAx"
-		].includes(axis.kind) && field$3(axis.id, uint$20, axis.node) && field$3(axis.cross_axis, uint$20, axis.node) && field$3(axis.position, oneOf([
+		].includes(axis.kind) && field$3(axis.id, uint$21, axis.node) && field$3(axis.cross_axis, uint$21, axis.node) && field$3(axis.position, oneOf([
 			"b",
 			"l",
 			"r",
@@ -8031,7 +8207,7 @@ function decodeChartDisplay(bytes) {
 	require(value.axis_links.length === references.size);
 	const seenLinks = /* @__PURE__ */ new Set();
 	for (const link of value.axis_links) {
-		require(object$5(link) && uint$20(link.plot_node) && plots.has(link.plot_node) && uint$20(link.reference_node) && nullableUint(link.id) && object$5(link.target));
+		require(object$5(link) && uint$21(link.plot_node) && plots.has(link.plot_node) && uint$21(link.reference_node) && nullableUint(link.id) && object$5(link.target));
 		const key = link.plot_node + ":" + link.reference_node;
 		require(references.has(key) && !seenLinks.has(key) && references.get(key) === link.id);
 		seenLinks.add(key);
@@ -8048,7 +8224,7 @@ function decodeChartDisplay(bytes) {
 			point.point_node,
 			point.value_node,
 			point.index
-		].every(uint$20) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$1(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
+		].every(uint$21) && point.cache_node < point.point_node && point.point_node < point.value_node && point.value_node > previousLeaf && !pointNodes.has(point.point_node) && pointKinds.has(point.kind) && text$1(point.value) && nullableUint(point.level_node) && (point.level_node === null || point.cache_node < point.level_node && point.level_node < point.point_node) && point.kind === "multilevel_cache" === (point.level_node !== null));
 		previousLeaf = point.value_node;
 		pointNodes.add(point.point_node);
 		for (const node of [
@@ -8567,6 +8743,60 @@ function decodeEquationSites(bytes) {
 }
 var init_hwpx_equation_sites = __esmMin((() => {
 	init_hwpx_equation_sources();
+}));
+// ../../js/hwpx-named-fields.mjs
+function decodeHwpxNamedFields(bytes) {
+	const source = JSON.parse(utf8.decode(bytes));
+	const invalid = () => /* @__PURE__ */ new Error("InvalidHwpxNamedFields");
+	if (source?.format !== "hwpx" || !["complete", "partial"].includes(source.coverage) || !Array.isArray(source.rows) || !Array.isArray(source.views)) throw invalid();
+	const projectionViews = source.views.map(({ section, paragraph, text }) => {
+		if (!uint$20(section) || !uint$20(paragraph) || paragraph === 0 || typeof text !== "string") throw invalid();
+		return {
+			section,
+			paragraph: paragraph - 1,
+			text
+		};
+	});
+	const rows = source.rows.map(({ section, element, name, kind, protection, text, location }) => {
+		if (!uint$20(section) || !uint$20(element) || name !== null && typeof name !== "string" || typeof kind !== "string" || !["protected", "unknown"].includes(protection) || text !== null && typeof text !== "string") throw invalid();
+		let target = null;
+		if (location !== null) {
+			if (!location || !uint$20(location.view)) throw invalid();
+			const view = projectionViews[location.view];
+			const { startUnit, endUnit } = location;
+			if (!view || view.section !== section || !uint$20(startUnit) || !uint$20(endUnit) || endUnit < startUnit || endUnit > view.text.length || text === null || view.text.slice(startUnit, endUnit) !== text) throw invalid();
+			target = {
+				owner: `section:${section}:body`,
+				section,
+				paragraph: view.paragraph,
+				startUnit,
+				endUnit,
+				projectionView: location.view
+			};
+		}
+		return {
+			id: `hwpx:${section}:${element}`,
+			name,
+			kind,
+			protection,
+			value: text === null ? { status: "unavailable" } : {
+				status: "available",
+				text
+			},
+			location: target
+		};
+	});
+	return {
+		format: "hwpx",
+		coverage: source.coverage,
+		rows,
+		projectionViews
+	};
+}
+var utf8, uint$20;
+var init_hwpx_named_fields = __esmMin((() => {
+	utf8 = new TextDecoder("utf-8", { fatal: true });
+	uint$20 = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 4294967295;
 }));
 // ../../js/hwpx-field-target-wire.mjs
 function validateFieldTargets(targets) {
@@ -9793,6 +10023,11 @@ async function createHwpxEditor(source) {
 			memory,
 			check: ready,
 			prefix: "hwpx_edit"
+		}),
+		...createHwpxDocumentInsertApi({
+			wasm,
+			memory,
+			check: ready
 		}),
 		...createParagraphBreakApi({
 			wasm,
@@ -11759,6 +11994,16 @@ async function createHwpxEditor(source) {
 				if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
 			});
 		},
+		namedFields() {
+			ready();
+			if (typeof wasm.hwpx_edit_named_fields !== "function") throw new Error("NamedFieldsUnavailable");
+			try {
+				if (!wasm.hwpx_edit_named_fields()) throw memory.error();
+				return decodeHwpxNamedFields(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
 		fieldLabels,
 		manualFormulaResultDisplaySnapshot(section) {
 			ready();
@@ -11873,6 +12118,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_hwpx_document_insert();
 	init_hwpx_page_number_display_wire();
 	init_cell_diagonal_command();
 	init_cell_border_patch_command();
@@ -11910,6 +12156,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_hwpx_equation_sources();
 	init_hwpx_equation_scripts();
 	init_hwpx_equation_sites();
+	init_hwpx_named_fields();
 	init_hwpx_field_target_wire();
 	init_formula_result_paragraphs();
 	init_formula_result_display_snapshot();
