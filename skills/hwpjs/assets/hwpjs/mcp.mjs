@@ -32843,6 +32843,14 @@ var init_hwpx_equation_sites = __esmMin((() => {
 	init_hwpx_equation_sources();
 }));
 // ../../js/hwpx-named-fields.mjs
+function isHwpxNamedFieldValue(text) {
+	if (typeof text !== "string" || !text.isWellFormed()) return false;
+	for (let index = 0; index < text.length; index++) {
+		const unit = text.charCodeAt(index);
+		if (unit < 32 || unit >= 127 && unit <= 159 || unit === 8232 || unit === 8233 || unit === 65532) return false;
+	}
+	return true;
+}
 function decodeHwpxNamedFields(bytes) {
 	const source = JSON.parse(utf8.decode(bytes));
 	const invalid = () => /* @__PURE__ */ new Error("InvalidHwpxNamedFields");
@@ -32855,8 +32863,8 @@ function decodeHwpxNamedFields(bytes) {
 			text
 		};
 	});
-	const rows = source.rows.map(({ section, element, name, kind, protection, text, location }) => {
-		if (!uint$21(section) || !uint$21(element) || name !== null && typeof name !== "string" || typeof kind !== "string" || !["protected", "unknown"].includes(protection) || text !== null && typeof text !== "string") throw invalid();
+	const rows = source.rows.map(({ section, element, name, kind, protection, sourceEditable, text, location }) => {
+		if (!uint$21(section) || !uint$21(element) || name !== null && typeof name !== "string" || typeof kind !== "string" || !["protected", "unknown"].includes(protection) || sourceEditable != null && typeof sourceEditable !== "boolean" || text !== null && typeof text !== "string") throw invalid();
 		let target = null;
 		if (location !== null) {
 			if (!location || !uint$21(location.view)) throw invalid();
@@ -32869,7 +32877,8 @@ function decodeHwpxNamedFields(bytes) {
 				paragraph: view.paragraph,
 				startUnit,
 				endUnit,
-				projectionView: location.view
+				projectionView: location.view,
+				beginElement: element
 			};
 		}
 		return {
@@ -32877,6 +32886,7 @@ function decodeHwpxNamedFields(bytes) {
 			name,
 			kind,
 			protection,
+			canSetValue: kind === "CLICK_HERE" && protection !== "protected" && sourceEditable === true && target !== null && isHwpxNamedFieldValue(text),
 			value: text === null ? { status: "unavailable" } : {
 				status: "available",
 				text

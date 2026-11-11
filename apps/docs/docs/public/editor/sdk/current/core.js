@@ -1,1 +1,1 @@
-export * from '../../assets/core-index.js';
+export * from '../../assets/core-BOqQUYM0.js';

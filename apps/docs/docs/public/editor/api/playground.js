@@ -4,14 +4,22 @@ export const readApiProjection = (state) => ({
   selection: state.selection,
   paragraphs: state.content?.paragraphs ?? [],
 });
+const fixtures = ['noori', 'page', 'textbox', 'table-caption', 'multicolumns-layout'];
+
 export function apiLoadOptions(args = {}) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw Error('InvalidArguments');
   for (const key of Object.keys(args))
-    if (!['format', 'editable'].includes(key)) throw Error('InvalidArgument:' + key);
+    if (!['format', 'editable', 'fixture'].includes(key)) throw Error('InvalidArgument:' + key);
   if (!['hwp5', 'hwpx'].includes(args.format)) throw Error('InvalidArgument:format');
   if (args.editable !== undefined && typeof args.editable !== 'boolean')
     throw Error('InvalidArgument:editable');
-  return { format: args.format, editable: args.editable ?? true };
+  if (args.fixture !== undefined && !fixtures.includes(args.fixture))
+    throw Error('InvalidArgument:fixture');
+  return {
+    format: args.format,
+    editable: args.editable ?? true,
+    ...(args.fixture === undefined ? {} : { fixture: args.fixture }),
+  };
 }
 export function apiSelectionTarget(editor, args, createParagraphSelection) {
   if (typeof createParagraphSelection !== 'function') throw Error('SelectionIssuerUnavailable');
@@ -59,6 +67,7 @@ export function createApiPlayground({
   createParagraphSelection,
   planReplaceAll: queryReplaceAllPlan,
   replaceAllCommand,
+  surface,
   operations,
 }) {
   let saved = null,
@@ -89,8 +98,16 @@ export function createApiPlayground({
   const target = (args) => apiSelectionTarget(editor, args, createParagraphSelection);
   const registry = Object.freeze({
     async load(args) {
-      const options = apiLoadOptions(args);
-      return editor.load(await loadFixture(options.format), options);
+      const { fixture, ...options } = apiLoadOptions(args);
+      const bytes =
+        fixture === undefined
+          ? await loadFixture(options.format)
+          : await loadFixture(options.format, fixture);
+      return editor.load(bytes, options);
+    },
+    getPageText({ pageIndex, include, ...unknown }) {
+      if (Object.keys(unknown).length) throw Error('InvalidArgument:' + Object.keys(unknown)[0]);
+      return surface.getPageText(pageIndex, include === undefined ? undefined : { include });
     },
     async invalidLoad(args) {
       if (!['hwp5', 'hwpx'].includes(args.format)) throw Error('InvalidArgument:format');
@@ -174,7 +191,8 @@ export function createApiPlayground({
     (operations ?? Object.keys(registry)).filter(
       (operation) =>
         Object.hasOwn(registry, operation) &&
-        (hasReplaceAll || !replaceAllOperations.includes(operation)),
+        (hasReplaceAll || !replaceAllOperations.includes(operation)) &&
+        (operation !== 'getPageText' || typeof surface?.getPageText === 'function'),
     ),
   );
   return Object.freeze({
@@ -194,12 +212,16 @@ export function createApiPlayground({
         effectiveArgs = operation === 'load' ? apiLoadOptions(args) : args;
         const value = await registry[operation](effectiveArgs);
         const result = value?.getEditorState ? undefined : value;
+        const error =
+          operation === 'getPageText' && result?.state === 'unavailable'
+            ? result.reason
+            : (result?.error ?? null);
         return {
           operation,
           args: effectiveArgs,
-          ok: !result?.error,
+          ok: !error,
           result,
-          error: result?.error ?? null,
+          error,
           before,
           after: snapshot(),
           startedAt,
@@ -234,6 +256,7 @@ export function createApiPlayground({
 const examples = Object.freeze({
   load: { format: 'hwpx', editable: true },
   invalidLoad: { format: 'hwpx' },
+  getPageText: { pageIndex: 0, include: ['body', 'table', 'textbox', 'caption'] },
   read: {},
   select: { section: 0, paragraph: 0, start: 0, end: 0 },
   splice: { section: 0, paragraph: 0, start: 0, end: 0, text: 'API 검증' },
@@ -259,6 +282,17 @@ const snippets = Object.freeze({
   reopen: 'await editor.load(saved.bytes, { format: saved.format });',
 });
 export function apiSampleCode(operation, args = {}) {
+  if (operation === 'getPageText') {
+    const { pageIndex, include } = args;
+    const filter = include === undefined ? '' : ', ' + JSON.stringify({ include });
+    return (
+      '// 전제: 같은 editor에 연결된 Canvas Surface를 사용합니다.\n' +
+      'const result = surface.getPageText(' +
+      JSON.stringify(pageIndex) +
+      filter +
+      ');'
+    );
+  }
   if (operation === 'getReplaceAllCapabilities') {
     replaceAllArgs(args, []);
     return (
@@ -297,7 +331,11 @@ export function apiSampleCode(operation, args = {}) {
   }
   const call =
     operation === 'load'
-      ? 'await editor.load(bytes, ' + JSON.stringify(apiLoadOptions(args)) + ');'
+      ? (() => {
+          const { fixture, ...options } = apiLoadOptions(args);
+          const sample = fixture === undefined ? '' : '// 샘플: ' + fixture + '\n';
+          return sample + 'await editor.load(bytes, ' + JSON.stringify(options) + ');';
+        })()
       : operation === 'save'
         ? 'await editor.save(' + JSON.stringify(args) + ');'
         : snippets[operation];
@@ -321,15 +359,30 @@ export function apiSampleCode(operation, args = {}) {
   );
 }
 export function mountApiPlayground(root, options) {
-  const doc = root.ownerDocument,
-    api = createApiPlayground(options),
-    section = doc.createElement('section');
+  const doc = root.ownerDocument;
+  const section = doc.createElement('section');
+  const scene = doc.createElement('div');
+  scene.setAttribute('role', 'region');
+  scene.setAttribute('aria-label', '문서 Canvas');
+  scene.style.cssText = 'height:300px;border:1px solid #9ca3af;margin-block:1rem';
+  root.append(section);
+  let surface;
+  if (options.createSurface) {
+    section.append(scene);
+    try {
+      surface = options.createSurface({ root: scene, editor: options.editor });
+    } catch (error) {
+      section.remove();
+      throw error;
+    }
+  }
+  const api = createApiPlayground({ ...options, surface });
   section.className = 'api-playground';
   const title = doc.createElement('h1');
-  title.textContent = 'Headless API 실행';
+  title.textContent = surface ? '공개 API 실행' : 'Headless API 실행';
   const intro = doc.createElement('p');
   intro.textContent =
-    '실제 WASM 엔진을 호출합니다. 고정 샘플과 JSON 인수만 실행하며 임의 JavaScript는 실행하지 않습니다. 문서는 브라우저 안에서 처리됩니다. 문단 목록은 현재 content/window 관측 범위이며 전체 문서 목록을 보장하지 않습니다. save의 allowStaleLayout은 명시적 boolean 옵션만 지원합니다.';
+    '실제 WASM 엔진을 호출합니다. 고정 샘플과 입력한 인수만 실행하며 임의 JavaScript는 실행하지 않습니다. 문서는 브라우저 안에서 처리됩니다. 문단 목록은 현재 content/window 관측 범위이며 전체 문서 목록을 보장하지 않습니다. save의 allowStaleLayout은 명시적 boolean 옵션만 지원합니다.';
   const label = doc.createElement('label'),
     operation = doc.createElement('select');
   label.textContent = '실행할 API ';
@@ -364,6 +417,40 @@ export function mountApiPlayground(root, options) {
   args.setAttribute('aria-label', 'JSON 인수');
   args.rows = 7;
   argsLabel.append(args);
+  const pageFields = doc.createElement('fieldset');
+  const pageLegend = doc.createElement('legend');
+  pageLegend.textContent = '쪽 텍스트';
+  const pageLabel = doc.createElement('label');
+  pageLabel.textContent = '물리 쪽 인덱스 (0부터) ';
+  const pageIndex = doc.createElement('input');
+  pageIndex.type = 'number';
+  pageIndex.min = '0';
+  pageIndex.step = '1';
+  pageIndex.value = '0';
+  pageLabel.append(pageIndex);
+  const kindChoices = doc.createElement('div');
+  kindChoices.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.75rem;margin-block:0.5rem';
+  const kindInputs = [];
+  for (const [kind, text] of [
+    ['body', '본문'],
+    ['table', '표'],
+    ['textbox', '글상자'],
+    ['caption', '캡션'],
+  ]) {
+    const choice = doc.createElement('label');
+    const input = doc.createElement('input');
+    input.type = 'checkbox';
+    input.value = kind;
+    input.checked = true;
+    choice.append(input, doc.createTextNode(text));
+    kindChoices.append(choice);
+    kindInputs.push(input);
+  }
+  pageFields.append(pageLegend, pageLabel, kindChoices);
+  const pageTextArgs = () => ({
+    pageIndex: Number.isSafeInteger(pageIndex.valueAsNumber) ? pageIndex.valueAsNumber : null,
+    include: kindInputs.filter((input) => input.checked).map((input) => input.value),
+  });
   const code = doc.createElement('pre');
   code.setAttribute('aria-label', '실행 예제');
   const execute = doc.createElement('button');
@@ -387,7 +474,7 @@ export function mountApiPlayground(root, options) {
   };
   const updateCode = () => {
     try {
-      const parsed = JSON.parse(args.value);
+      const parsed = operation.value === 'getPageText' ? pageTextArgs() : JSON.parse(args.value);
       code.textContent = apiSampleCode(operation.value, parsed);
       if (operation.value === 'load') loadMode.value = String(apiLoadOptions(parsed).editable);
     } catch {
@@ -396,6 +483,9 @@ export function mountApiPlayground(root, options) {
   };
   const choose = () => {
     modeLabel.hidden = modeNote.hidden = operation.value !== 'load';
+    const readingPage = operation.value === 'getPageText';
+    argsLabel.hidden = readingPage;
+    pageFields.hidden = !readingPage;
     args.value = JSON.stringify(examples[operation.value], null, 2);
     updateCode();
   };
@@ -413,30 +503,43 @@ export function mountApiPlayground(root, options) {
   loadMode.addEventListener('change', changeMode);
   operation.addEventListener('change', choose);
   args.addEventListener('input', updateCode);
+  pageFields.addEventListener('input', updateCode);
   const run = async () => {
     execute.disabled = true;
     status.textContent = '실제 엔진 실행 중';
     try {
+      const name = operation.value;
       let value;
       try {
-        value = JSON.parse(args.value);
+        value = name === 'getPageText' ? pageTextArgs() : JSON.parse(args.value);
       } catch {
         throw Error('InvalidJSON');
       }
-      const record = await api.execute(operation.value, value);
+      const record = await api.execute(name, value);
       if (disposed) return;
       record.sequence = ++sequence;
       output.textContent = JSON.stringify(record, null, 2);
       output.dataset.sequence = String(sequence);
       output.dataset.ok = String(record.ok);
-      status.textContent =
-        record.operation === 'replaceAll' && record.result?.status === 'committed-refresh-required'
-          ? '변경은 이미 반영되었습니다. 상태 복구가 필요하므로 같은 요청을 다시 실행하지 마세요.'
-          : record.ok
-            ? '완료'
-            : record.error === 'ReadOnlyDocument'
-              ? '읽기 전용: 쓰기가 거부되었습니다.'
-              : '오류: ' + record.error;
+      if (record.operation === 'getPageText' && record.result) {
+        const result = record.result;
+        status.textContent =
+          result.state === 'unavailable'
+            ? '조회할 수 없음 (unavailable) · ' + result.reason
+            : result.coverage === 'partial'
+              ? '부분 결과 (partial)'
+              : '전체 결과 (complete)';
+      } else {
+        status.textContent =
+          record.operation === 'replaceAll' &&
+          record.result?.status === 'committed-refresh-required'
+            ? '변경은 이미 반영되었습니다. 상태 복구가 필요하므로 같은 요청을 다시 실행하지 마세요.'
+            : record.ok
+              ? '완료'
+              : record.error === 'ReadOnlyDocument'
+                ? '읽기 전용: 쓰기가 거부되었습니다.'
+                : '오류: ' + record.error;
+      }
       download.disabled = !api.getSaved();
     } catch (error) {
       if (!disposed) {
@@ -471,14 +574,15 @@ export function mountApiPlayground(root, options) {
     modeLabel,
     modeNote,
     argsLabel,
+    pageFields,
     code,
     execute,
     download,
     status,
+    ...(surface ? [scene] : []),
     output,
     state,
   );
-  root.append(section);
   const unsubscribe = options.editor.registerStateListener(renderState);
   choose();
   renderState();
@@ -493,8 +597,11 @@ export function mountApiPlayground(root, options) {
       operation.removeEventListener('change', choose);
       loadMode.removeEventListener('change', changeMode);
       args.removeEventListener('input', updateCode);
+      pageFields.removeEventListener('input', updateCode);
       download.removeEventListener('click', saveDownload);
+      const disposal = surface?.dispose();
       section.remove();
+      return disposal;
     },
   };
 }

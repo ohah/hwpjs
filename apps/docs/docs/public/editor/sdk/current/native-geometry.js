@@ -1,1 +1,1 @@
-export * from '../../assets/_internal/native-geometry.js';
+export * from '../../assets/native-geometry-DEjqBIzH.js';
