@@ -162,6 +162,24 @@ jobs:
           grep -Eq '^# tests 12$' "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
+      - name: HWP5 merged source-cell CLI and MCP
+        timeout-minutes: 3
+        env:
+          HWPJS_MERGED_CLI_OLD_WASM: ${{ runner.temp }}/hwpjs-before-merged-cli.wasm
+          HWPJS_MERGED_CLI_OLD_WASM_SHA256: 8ab4d335f7fba4aa764ed3e1191c390f17ee80f053b9ada89748a490547d1980
+          HWPJS_MERGED_CLI_EVIDENCE: ${{ runner.temp }}/hwpjs-merged-cli
+        shell: bash
+        run: |
+          set -euo pipefail
+          previous_engine=9dc8b89433da1926b1db72fc7be45081b063f45e
+          git fetch --no-tags --depth=1 origin "$previous_engine"
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_MERGED_CLI_OLD_WASM"
+          printf '%s  %s\n' "$HWPJS_MERGED_CLI_OLD_WASM_SHA256" "$HWPJS_MERGED_CLI_OLD_WASM" | sha256sum --check --strict
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 packages/cli/e2e/merged-source-cell-split.test.mjs | tee "$RUNNER_TEMP/hwpjs-merged-cli.tap"
+          grep -Eq '^# tests 7$' "$RUNNER_TEMP/hwpjs-merged-cli.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-merged-cli.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-merged-cli.tap"
+
       - name: HWP5 글머리표 CLI와 MCP 명시 E2E
         timeout-minutes: 3
         env:

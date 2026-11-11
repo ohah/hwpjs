@@ -104,6 +104,11 @@ jobs:
             ./apps/demo/tests/table-grid-port.test.mjs \
             ./tests/hwpx/table-grid-view.test.mjs \
             ./packages/core/tests/internal/owner-window-source-grid-capability.test.mjs
+      - name: Test expanded source grids and plain captions with independent file oracles
+        timeout-minutes: 3
+        run: |
+          bun tools/run-source-grid-regressions.mjs --wasm "$PWD/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" --out "$RUNNER_TEMP/hwpjs-source-grid-current"
+
       - name: Test immutable source table file facade and shared reference resolution
         timeout-minutes: 2
         run: |
