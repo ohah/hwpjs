@@ -185,7 +185,10 @@ export function createDocumentInsertTool(options: {
         }
       } catch (error) {
         if (owned())
-          status.textContent = rejection(error instanceof Error ? error.message : String(error), hint.textContent);
+          status.textContent = rejection(
+            error instanceof Error ? error.message : String(error),
+            hint.textContent,
+          );
       } finally {
         if (owned()) {
           applying = cancel.disabled = false;

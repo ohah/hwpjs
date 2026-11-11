@@ -64,11 +64,13 @@ function fixture(t, { capability, result } = {}) {
       getEditorState: () => state,
       getDocumentInsertionCapabilities: async (options) => {
         queries.push(options);
-        return capability ?? {
-          available: true,
-          sourceProfile: 'single-section-ordinary-body',
-          maxSourceBytes: 8,
-        };
+        return (
+          capability ?? {
+            available: true,
+            sourceProfile: 'single-section-ordinary-body',
+            maxSourceBytes: 8,
+          }
+        );
       },
       async dispatchCommand(command, payload) {
         dispatches.push({ command, payload });

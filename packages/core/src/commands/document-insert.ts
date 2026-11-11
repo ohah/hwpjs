@@ -20,7 +20,9 @@ export type DocumentInsertionCapabilities =
       available: true;
       atomic: true;
       sourceFormat: 'hwpx';
-      sourceProfile: 'single-section-ordinary-body' | 'single-section-body-with-inline-static-tables';
+      sourceProfile:
+        | 'single-section-ordinary-body'
+        | 'single-section-body-with-inline-static-tables';
       maxSourceBytes: number;
     }>
   | Readonly<{
@@ -149,11 +151,12 @@ export function checkedDocumentInsertCapability(
       ? Object.getOwnPropertyDescriptor(input, 'schemaVersion')?.value
       : undefined;
   const keys = ['schemaVersion', 'maxSourceBytes', 'binding'];
-  const { schemaVersion, maxSourceBytes: limit, binding, sourceProfile } = fields(
-    input,
-    version === 2 ? [...keys, 'sourceProfile'] : keys,
-    invalid,
-  );
+  const {
+    schemaVersion,
+    maxSourceBytes: limit,
+    binding,
+    sourceProfile,
+  } = fields(input, version === 2 ? [...keys, 'sourceProfile'] : keys, invalid);
   const native = fields(binding, ['session', 'revision', 'serial'], invalid);
   const decimal = (value: unknown) =>
     typeof value === 'string' &&
