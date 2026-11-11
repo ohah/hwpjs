@@ -28362,7 +28362,7 @@ function decodeTablePlacements(bytes, format = "hwpx") {
 }
 var init_table_placements_wire = __esmMin((() => {}));
 // ../../js/paragraph-shapes-wire.mjs
-/** HPS1/HPS2/HPS3 resources; raw absence and effective heading levels stay distinct. */
+/** HPS1/HPS2/HPS3/HPS4 resources; raw absence and effective heading levels stay distinct. */
 function decodeParagraphShapes(bytes) {
 	const fail = () => {
 		throw new Error("InvalidParagraphShapes");
@@ -28371,7 +28371,7 @@ function decodeParagraphShapes(bytes) {
 	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const count = view.getUint32(4, true);
 	const magic = view.getUint32(0, true);
-	const stride = magic === 827543624 ? 48 : magic === 844320840 ? 72 : magic === 861098056 ? 76 : 0;
+	const stride = magic === 827543624 ? 48 : magic === 844320840 ? 72 : magic === 861098056 ? 76 : magic === 877875272 ? 92 : 0;
 	if (!stride || count > 1e5 || bytes.length !== 8 + count * stride) return fail();
 	return Array.from({ length: count }, (_, index) => {
 		const at = 8 + index * stride, uint = (offset) => view.getUint32(at + offset, true), int = (offset) => view.getInt32(at + offset, true);
@@ -28401,10 +28401,20 @@ function decodeParagraphShapes(bytes) {
 				headingLevel: uint(68)
 			});
 		}
-		if (stride === 76) {
+		if (stride >= 76) {
 			const marker = uint(72);
 			if (marker > 65535 || marker > 0 && (shape.headingKind !== 3 || shape.headingId === 0 || marker <= 32 || marker >= 127 && marker <= 159 || marker >= 55296 && marker <= 57343)) return fail();
 			shape.headingMarker = marker || null;
+		}
+		if (stride === 92 && shape.headingMarker) {
+			const width = int(80), distance = int(84);
+			if (width < -32768 || width > 32767 || distance < -32768 || distance > 32767) return fail();
+			shape.headingPlacement = {
+				attributes: uint(76),
+				width_adjustment: width,
+				text_distance: distance,
+				char_shape_id: uint(88)
+			};
 		}
 		return shape;
 	});
@@ -29887,7 +29897,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		paragraphShapes() {
 			check();
 			if (typeof wasm.hwp5_edit_paragraph_shapes !== "function") throw new Error("Hwp5ParagraphShapesAbiUnavailable");
-			const query = wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
+			const query = wasm.hwp5_edit_paragraph_shapes_with_marker_placement ?? wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
 			return decodeParagraphShapes(output(query).bytes);
 		},
 		paragraphNumberingSource() {
