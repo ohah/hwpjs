@@ -1,6 +1,6 @@
+import { collectUiLicenseInputs } from './ui-license-inputs.mjs';
 import { readFile, writeFile, mkdir, readdir, lstat, rename, rm } from 'node:fs/promises';
 import { resolve, dirname, relative, posix } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 
@@ -54,36 +54,14 @@ export async function buildLegacyDist({ root, args }) {
     });
     files.set('fixtures/' + f.name, await input(fixtureSource + f.name));
   }
-  // License inputs are exact metadata/license files, never package source trees.
-  const projectLicense = await input('LICENSE'),
-    recordedNotices = await input('docs/third-party-notices.md');
-  const noticeParts = [recordedNotices.toString()];
-  const licensePackages = [];
-  for (const [name, licenseName] of [
-    ['react', 'LICENSE'],
-    ['react-dom', 'LICENSE'],
-    ['svelte', 'LICENSE.md'],
-  ]) {
-    const metadataPath = fileURLToPath(import.meta.resolve(name + '/package.json'));
-    const metadata = JSON.parse((await input(relative(root, metadataPath))).toString());
-    if (
-      metadata.name !== name ||
-      metadata.license !== 'MIT' ||
-      typeof metadata.version !== 'string'
-    )
-      throw Error('UnexpectedPackageLicense:' + name);
-    const original = await input(relative(root, resolve(dirname(metadataPath), licenseName)));
-    noticeParts.push(
-      `\n\n===== ${name} ${metadata.version} — ${metadata.license} =====\n\n` + original.toString(),
-    );
-    licensePackages.push({
-      name,
-      version: metadata.version,
-      license: metadata.license,
-      licenseSha256: sha(original),
-    });
-  }
-  const notices = Buffer.from(noticeParts.join(''));
+  // The active producer and legacy producer share current dependency metadata.
+  const uiLicenses = await collectUiLicenseInputs({
+    root,
+    read: (path) => input(relative(root, path)),
+  });
+  const projectLicense = uiLicenses.project,
+    notices = uiLicenses.notices,
+    licensePackages = uiLicenses.manifest.packages;
   for (const original of [projectLicense, notices])
     if (
       /(?:\.ts\.net|tailscale|\/Users\/|localhost|127\.0\.0\.1|https?:\/\/(?:10\.|192\.168\.|172\.(?:1[6-9]|2[0-9]|3[01])\.))/i.test(

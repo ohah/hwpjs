@@ -17,6 +17,7 @@ import { validateExplicitFixturePolicy } from './pages-demo/fixture-policy.mjs';
 import { canonicalWorkerURLPlugin } from './pages-demo/canonical-worker-url.mjs';
 import { installWorkerAssets, discoverActiveRuntimePaths } from './pages-demo/worker-assets.mjs';
 import { publicFixtureModules } from './pages-demo/public-fixture-modules.mjs';
+import { collectUiLicenseInputs } from './pages-demo/ui-license-inputs.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2),
@@ -239,12 +240,16 @@ const workerAssets = installWorkerAssets(files, {
   legacyBytes: baseline.files.get('runtime/worker.js'),
   activeRuntimePaths,
 });
+const uiLicenses = await collectUiLicenseInputs({ root, read: input });
+files.set('LICENSE.txt', uiLicenses.project);
+files.set('THIRD_PARTY_NOTICES.txt', uiLicenses.notices);
 for (const [path, bytes] of files) {
   assertBundlePath(path);
   assertPublicText(path, bytes);
 }
 const manifest = {
   ...baseline.manifest,
+  licenses: uiLicenses.manifest,
   workerAssets,
   wasmSha256: digest(wasm),
   inputChecksums: inputs.sort((a, b) => a.sha256.localeCompare(b.sha256)),

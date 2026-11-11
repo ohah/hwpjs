@@ -1,9 +1,10 @@
+import { UI_LICENSE_FILES } from './ui-license-inputs.mjs';
 import { validateExplicitFixturePolicy } from './fixture-policy.mjs';
 import { readFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkJavaScriptModule } from './javascript-syntax.mjs';
-import { validateBundle } from './bundle-validation.mjs';
+import { validateBundle, digest } from './bundle-validation.mjs';
 
 const required = [
   'index.html',
@@ -43,7 +44,7 @@ function validateFixtures(files) {
   )
     throw Error('InvalidFixtureCatalog');
 }
-async function validateLicenses(root, files) {
+async function validateLicenses(root, files, manifest) {
   const notices = files.get('THIRD_PARTY_NOTICES.txt').toString();
   if (
     !files.get('LICENSE.txt').equals(await readFile(resolve(root, 'LICENSE'))) ||
@@ -51,18 +52,29 @@ async function validateLicenses(root, files) {
   ) {
     throw Error('MissingLicenseNotices');
   }
+  const rows = manifest?.licenses?.packages;
+  if (!Array.isArray(rows) || rows.length !== UI_LICENSE_FILES.length)
+    throw Error('InvalidUiLicenseMetadata');
+  const declared = new Map();
+  for (const row of rows) {
+    if (!row || typeof row.name !== 'string' || declared.has(row.name))
+      throw Error('InvalidUiLicenseMetadata');
+    declared.set(row.name, row);
+  }
   // Package resolution only runs during production, never dependency-free --verify.
-  for (const [name, licenseName] of [
-    ['react', 'LICENSE'],
-    ['react-dom', 'LICENSE'],
-    ['svelte', 'LICENSE.md'],
-  ]) {
+  for (const [name, licenseName] of UI_LICENSE_FILES) {
     const path = fileURLToPath(import.meta.resolve(name + '/package.json'));
     const metadata = JSON.parse(await readFile(path, 'utf8'));
+    const original = await readFile(resolve(dirname(path), licenseName));
+    const entry = declared.get(name);
     if (
       metadata.name !== name ||
       metadata.license !== 'MIT' ||
-      !notices.includes(await readFile(resolve(dirname(path), licenseName), 'utf8'))
+      !entry ||
+      entry.version !== metadata.version ||
+      entry.license !== metadata.license ||
+      entry.licenseSha256 !== digest(original) ||
+      !notices.includes(original.toString())
     ) {
       throw Error('MissingDependencyLicense:' + name);
     }
@@ -108,7 +120,7 @@ export async function validateProductionBundle(directory, { root, fixturePolicy 
   }
   if (fixturePolicy === undefined) validateFixtures(bundle.files);
   else validateExplicitFixturePolicy(bundle.files, fixturePolicy);
-  await validateLicenses(root, bundle.files);
+  await validateLicenses(root, bundle.files, bundle.manifest);
   validateReferences(bundle.files);
   return bundle;
 }
