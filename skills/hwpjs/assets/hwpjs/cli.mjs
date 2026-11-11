@@ -1255,6 +1255,27 @@ var init_host_output = __esmMin((() => {
 	line = (key, value) => `${key}: ${scalar$2(value)}\n`;
 	warningLines = (warnings = []) => warnings.map((warning) => line("warning", typeof warning === "string" ? warning : Object.entries(warning).map(([key, value]) => `${key}=${scalar$2(value)}`).join(" "))).join("");
 }));
+// ../document/src/model/read-observation-scope.ts
+/** Own optional SDK method captured once for one synchronous collection. */
+function createObservationReadScope(sdk) {
+	const scope = Object.hasOwn(sdk, "withReadObservations") ? Reflect.get(sdk, "withReadObservations") : void 0;
+	return function observe(section, read) {
+		if (typeof scope !== "function") return read();
+		let invoked = false;
+		let completed = false;
+		let observed;
+		const value = Reflect.apply(scope, sdk, [section, () => {
+			if (invoked) throw new Error("DuplicateReadObservationCallback");
+			invoked = true;
+			observed = read();
+			completed = true;
+			return observed;
+		}]);
+		if (!completed || observed === void 0 || value !== observed) throw new Error("InvalidReadObservationScopeResult");
+		return observed;
+	};
+}
+var init_read_observation_scope = __esmMin((() => {}));
 // ../document/src/render-escape.ts
 function createDisplayEscaper(options) {
 	if (options === null || typeof options !== "object" || Array.isArray(options) || !("format" in options) || !FORMATS.includes(options.format)) throw new TypeError("InvalidRenderFormat");
@@ -1364,6 +1385,7 @@ function readFormInventory(document) {
 		if (encoded.length > 4194304 || provenanceUnits > 16777216) throw new Error("FormProvenanceLimitExceeded");
 		return encoded;
 	};
+	const observeHwpx = d.format === "hwpx" ? createObservationReadScope(d.sdk) : void 0;
 	for (let section = 0; section < d.sectionCount; section++) {
 		let hosts;
 		const ownerHost = (paragraph) => {
@@ -1433,81 +1455,86 @@ function readFormInventory(document) {
 				});
 			}
 		} else {
-			const sites = sdkMethod(d, "formSites")(section);
-			for (const site of sites) {
-				const attrs = sdkMethod(d, "formSourceAttributes")(section, site.formNode);
-				if (attrs.kind !== site.kind) throw new Error("MismatchedFormProvenance");
-				const host = ownerHost(site.paragraph);
-				const reference = buildObjectReference({
-					sourceSha256: d.sourceSha256,
-					format: d.format,
-					section,
-					kind: "form",
-					node: site.formNode
-				});
-				let state = hxString(attrs, "value");
-				if (site.kind === "check_button") try {
-					const actual = sdkMethod(d, "checkBoxState")(section, site.formNode);
-					state = [
-						"UNCHECKED",
-						"CHECKED",
-						"INDETERMINATE"
-					].includes(actual) ? known$1(actual) : {
-						state: "unknown",
-						value: null,
-						reason: "UnknownFormChoiceState",
-						scope: "current",
-						raw: String(actual)
-					};
-				} catch (error) {
-					state = unknown$1(error instanceof Error ? error.message : "FormStateObservationFailed", "current", attrs.strings.value ?? void 0);
-				}
-				let currentText = unknown$1("HwpxFormTextCurrentQueryAbiUnavailable");
-				if (site.kind === "radio_button") try {
-					state = known$1(sdkMethod(d, "radioButtonState")(section, site.formNode));
-				} catch (error) {
-					state = unknown$1(error instanceof Error ? error.message : "FormStateObservationFailed", "current", attrs.strings.value ?? void 0);
-				}
-				if (["edit_box", "combo_box"].includes(site.kind)) try {
-					currentText = known$1(sdkMethod(d, "formText")(section, site.formNode));
-				} catch (error) {
-					currentText = unknown$1(error instanceof Error ? error.message : "FormTextObservationFailed");
-				}
-				forms.push({
-					reference,
-					kind: site.kind,
-					source: {
+			const observeSection = () => {
+				const sites = sdkMethod(d, "formSites")(section);
+				for (const site of sites) {
+					const attrs = sdkMethod(d, "formSourceAttributes")(section, site.formNode);
+					if (attrs.kind !== site.kind) throw new Error("MismatchedFormProvenance");
+					const host = ownerHost(site.paragraph);
+					const reference = buildObjectReference({
+						sourceSha256: d.sourceSha256,
+						format: d.format,
 						section,
-						node: site.formNode,
-						paragraph: site.paragraph,
-						anchorUnit: site.anchorUnit
-					},
-					current: {
-						state,
-						text: currentText,
-						groupName: hxString(attrs, "radioGroupName"),
-						name: hxString(attrs, "name")
-					},
-					permissions: {
-						enabled: hxBool(attrs, "enabled"),
-						editable: hxBool(attrs, "editable"),
-						triState: hxBool(attrs, "triState"),
-						readOnly: hxBool(attrs, "readOnly"),
-						editEnable: hxBool(attrs, "editEnable")
-					},
-					writers: {
-						checkbox: writers.checkbox && site.kind === "check_button",
-						radio: writers.radio && site.kind === "radio_button",
-						text: writers.text && ["edit_box", "combo_box"].includes(site.kind)
-					},
-					ownership: site.state === "located" && !!host ? "located" : "unavailable",
-					fingerprint: fingerprint({
-						site,
-						attrs,
-						host
-					})
-				});
-			}
+						kind: "form",
+						node: site.formNode
+					});
+					let state = hxString(attrs, "value");
+					if (site.kind === "check_button") try {
+						const actual = sdkMethod(d, "checkBoxState")(section, site.formNode);
+						state = [
+							"UNCHECKED",
+							"CHECKED",
+							"INDETERMINATE"
+						].includes(actual) ? known$1(actual) : {
+							state: "unknown",
+							value: null,
+							reason: "UnknownFormChoiceState",
+							scope: "current",
+							raw: String(actual)
+						};
+					} catch (error) {
+						state = unknown$1(error instanceof Error ? error.message : "FormStateObservationFailed", "current", attrs.strings.value ?? void 0);
+					}
+					let currentText = unknown$1("HwpxFormTextCurrentQueryAbiUnavailable");
+					if (site.kind === "radio_button") try {
+						state = known$1(sdkMethod(d, "radioButtonState")(section, site.formNode));
+					} catch (error) {
+						state = unknown$1(error instanceof Error ? error.message : "FormStateObservationFailed", "current", attrs.strings.value ?? void 0);
+					}
+					if (["edit_box", "combo_box"].includes(site.kind)) try {
+						currentText = known$1(sdkMethod(d, "formText")(section, site.formNode));
+					} catch (error) {
+						currentText = unknown$1(error instanceof Error ? error.message : "FormTextObservationFailed");
+					}
+					forms.push({
+						reference,
+						kind: site.kind,
+						source: {
+							section,
+							node: site.formNode,
+							paragraph: site.paragraph,
+							anchorUnit: site.anchorUnit
+						},
+						current: {
+							state,
+							text: currentText,
+							groupName: hxString(attrs, "radioGroupName"),
+							name: hxString(attrs, "name")
+						},
+						permissions: {
+							enabled: hxBool(attrs, "enabled"),
+							editable: hxBool(attrs, "editable"),
+							triState: hxBool(attrs, "triState"),
+							readOnly: hxBool(attrs, "readOnly"),
+							editEnable: hxBool(attrs, "editEnable")
+						},
+						writers: {
+							checkbox: writers.checkbox && site.kind === "check_button",
+							radio: writers.radio && site.kind === "radio_button",
+							text: writers.text && ["edit_box", "combo_box"].includes(site.kind)
+						},
+						ownership: site.state === "located" && !!host ? "located" : "unavailable",
+						fingerprint: fingerprint({
+							site,
+							attrs,
+							host
+						})
+					});
+				}
+				return forms;
+			};
+			if (observeHwpx) observeHwpx(section, observeSection);
+			else observeSection();
 		}
 		if (forms.length > 1e5) throw new Error("FormInventoryLimitExceeded");
 	}
@@ -1550,6 +1577,7 @@ function renderFormInventory(inventory) {
 }
 var sdkMethod, has$1, capability, unknown$1, known$1;
 var init_document_forms = __esmMin((() => {
+	init_read_observation_scope();
 	init_render_escape();
 	init_object_reference();
 	sdkMethod = (document, name) => {
@@ -13919,32 +13947,15 @@ function collectSection(sdk, section, warnings) {
 }
 function collectHwpx({ sdk, sectionCount }) {
 	const warnings = [], sections = [];
-	const scope = Object.hasOwn(sdk, "withReadObservations") ? Reflect.get(sdk, "withReadObservations") : void 0;
-	for (let section = 0; section < sectionCount; section++) {
-		const read = () => collectSection(sdk, section, warnings);
-		if (typeof scope !== "function") {
-			sections.push(read());
-			continue;
-		}
-		let invoked = false;
-		let completed = false;
-		let observed;
-		const value = Reflect.apply(scope, sdk, [section, () => {
-			if (invoked) throw new Error("DuplicateReadObservationCallback");
-			invoked = true;
-			observed = read();
-			completed = true;
-			return observed;
-		}]);
-		if (!completed || observed === void 0 || value !== observed) throw new Error("InvalidReadObservationScopeResult");
-		sections.push(observed);
-	}
+	const observe = createObservationReadScope(sdk);
+	for (let section = 0; section < sectionCount; section++) sections.push(observe(section, () => collectSection(sdk, section, warnings)));
 	return {
 		sections,
 		warnings
 	};
 }
 var init_hwpx = __esmMin((() => {
+	init_read_observation_scope();
 	init_common$2();
 }));
 // ../document/src/model/project.ts
