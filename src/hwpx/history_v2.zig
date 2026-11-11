@@ -210,6 +210,10 @@ pub const History = struct {
     fn insertDocument(self: *Self, command: commands_mod.Command) !bool {
         const s = self.owner;
         if (command.section != 0) return error.UnsupportedInsertSections;
+        // Reopening the composed package must not replace pending table owner identities.
+        for (s.sections) |section| {
+            if (section.created_tables.entries.items.len != 0) return error.UnsupportedInsertPendingTable;
+        }
         const policy_limit = self.stack.policy;
         try document.validateParkable(s, policy_limit.max_checkpoint_bytes);
 

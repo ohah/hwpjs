@@ -2,7 +2,10 @@ import { HWPX_DOCUMENT_INSERT_FUNCTIONS } from './abi-schema.mjs';
 import { applyNativeEdit } from './native-edit-outcome.mjs';
 
 /** @typedef {{session: string, revision: number, serial: string}} DocumentInsertBinding */
-/** @typedef {{schemaVersion: 1, binding: DocumentInsertBinding, maxSourceBytes: number}} DocumentInsertCapabilities */
+/** @typedef {(
+ *   {schemaVersion: 1} |
+ *   {schemaVersion: 2, sourceProfile: 'single-section-body-with-inline-static-tables'}
+ * ) & {binding: DocumentInsertBinding, maxSourceBytes: number}} DocumentInsertCapabilities */
 /** @typedef {{binding: DocumentInsertBinding, section: number, paragraph: number, unit: number, bytes: Uint8Array}} DocumentInsertRequest */
 /** @typedef {DocumentInsertRequest & {kind: 'insert-document', origin?: string, requestId?: string | number}} DocumentInsertRuntimeRequest */
 
@@ -101,6 +104,13 @@ export function copyDocumentInsertRuntimeMessage(message) {
   };
 }
 
+function decodeProfile({ schemaVersion, sourceProfile }) {
+  if (schemaVersion === 1) return /** @type {const} */ ({ schemaVersion: 1 });
+  if (schemaVersion === 2 && sourceProfile === 'single-section-body-with-inline-static-tables')
+    return /** @type {const} */ ({ schemaVersion: 2, sourceProfile });
+  throw new TypeError('InvalidDocumentInsertionCapabilities');
+}
+
 export function createHwpxDocumentInsertApi({ wasm, memory, check }) {
   const supported = HWPX_DOCUMENT_INSERT_FUNCTIONS.every(
     (name) => typeof wasm[name] === 'function',
@@ -121,17 +131,20 @@ export function createHwpxDocumentInsertApi({ wasm, memory, check }) {
         if (!Number.isSafeInteger(length) || length <= 0 || length > 512)
           throw new TypeError('InvalidDocumentInsertionCapabilities');
         const data = memory.copy(wasm.hwpx_edit_output_ptr(), length);
+        const response = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(data));
+        const keys = ['schemaVersion', 'binding', 'maxSourceBytes'];
         const decoded = ownRecord(
-          JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(data)),
-          ['schemaVersion', 'binding', 'maxSourceBytes'],
+          response,
+          response?.schemaVersion === 2 ? [...keys, 'sourceProfile'] : keys,
         );
-        if (decoded.schemaVersion !== 1 || decoded.maxSourceBytes !== maxSourceBytes)
+        if (decoded.maxSourceBytes !== maxSourceBytes)
           throw new TypeError('InvalidDocumentInsertionCapabilities');
+        const profile = decodeProfile(decoded);
         const binding = decodeBinding(decoded.binding).binding;
         if (!binding.session.startsWith('s') || binding.session.includes(':'))
           throw new TypeError('InvalidDocumentInsertionCapabilities');
         return Object.freeze({
-          schemaVersion: 1,
+          ...profile,
           binding: Object.freeze({ ...binding, session: scope + ':' + binding.session }),
           maxSourceBytes,
         });

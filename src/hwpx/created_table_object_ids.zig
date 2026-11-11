@@ -27,8 +27,29 @@ pub fn validateSource(a: std.mem.Allocator, trees: []const Tree, instance: u32) 
 
 /// Smallest unused positive ID. Planning only; no reservation or mutation.
 pub fn nextSource(a: std.mem.Allocator, trees: []const Tree, current: []const u32) !u32 {
-    var used: std.AutoHashMapUnmanaged(u32, void) = .empty;
+    var used = try sourceInventory(a, trees, current);
     defer used.deinit(a);
+    return firstFree(&used, 1);
+}
+
+/// Reserve a source-ordered batch with one immutable shape-ID scan.
+pub fn nextManySource(a: std.mem.Allocator, trees: []const Tree, requested: usize) ![]u32 {
+    var used = try sourceInventory(a, trees, &.{});
+    defer used.deinit(a);
+    const ids = try a.alloc(u32, requested);
+    errdefer a.free(ids);
+    var start: u32 = 1;
+    for (ids, 0..) |*id, i| {
+        id.* = try firstFree(&used, start);
+        if (i + 1 < ids.len) start = std.math.add(u32, id.*, 1) catch return error.LimitExceeded;
+    }
+    return ids;
+}
+
+const Used = std.AutoHashMapUnmanaged(u32, void);
+fn sourceInventory(a: std.mem.Allocator, trees: []const Tree, current: []const u32) !Used {
+    var used: Used = .empty;
+    errdefer used.deinit(a);
     for (trees) |*tree| for (tree.elements, 0..) |element, index| {
         if (!ownsShapeId(element)) continue;
         if (try sourceId(a, tree, index)) |id| try used.put(a, id, {});
@@ -37,7 +58,11 @@ pub fn nextSource(a: std.mem.Allocator, trees: []const Tree, current: []const u3
         if (id == 0 or used.contains(id)) return error.InvalidCreatedTableIdentity;
         try used.put(a, id, {});
     }
-    var candidate: u32 = 1;
+    return used;
+}
+
+fn firstFree(used: *const Used, start: u32) !u32 {
+    var candidate = start;
     while (used.contains(candidate)) candidate = std.math.add(u32, candidate, 1) catch return error.LimitExceeded;
     return candidate;
 }

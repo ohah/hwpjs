@@ -1,11 +1,16 @@
 import { getSelectionFormatting, INSERT_DOCUMENT_COMMAND } from '@hwpjs/core';
-import type { HeadlessEditor, SelectionTarget } from '@hwpjs/core';
+import type { DocumentInsertionCapabilities, HeadlessEditor, SelectionTarget } from '@hwpjs/core';
 import { createDialogLayer } from './dialog-layer.ts';
 import type { ActionAvailability } from './shell-contract.ts';
 
 const title = 'HWPX 문서 끼워 넣기';
-const profile =
-  '한 구역의 일반 본문 HWPX를 끼워 넣을 수 있습니다. 표·그림 등 지원 범위 밖의 내용이 있으면 파일 전체가 거부됩니다.';
+type SourceProfile = Extract<DocumentInsertionCapabilities, { available: true }>['sourceProfile'];
+const helpByProfile: Record<SourceProfile, string> = {
+  'single-section-ordinary-body':
+    '한 구역의 일반 본문 HWPX를 끼워 넣을 수 있습니다. 표·그림 등 지원 범위 밖의 내용이 있으면 파일 전체가 거부됩니다.',
+  'single-section-body-with-inline-static-tables':
+    '한 구역의 일반 본문과 본문 줄 안에 놓인 정적 표를 포함하는 HWPX를 끼워 넣을 수 있습니다. 삽입 위치는 일반 본문 문단입니다. 중첩 표·그림·필드 등 지원 범위 밖의 내용이 있으면 파일 전체가 거부됩니다.',
+};
 const stale = '끼워 넣을 위치가 바뀌었습니다. 창을 닫고 커서를 다시 선택하세요.';
 type State = ReturnType<HeadlessEditor['getEditorState']>;
 
@@ -19,7 +24,7 @@ function targetReason(state: State, target: SelectionTarget | null) {
   if (target.owner !== 'section:0:body') return '첫 구역의 일반 본문 커서에서 사용할 수 있습니다.';
 }
 
-function rejection(reason: string) {
+function rejection(reason: string, help?: string) {
   switch (reason) {
     case 'StaleTarget':
     case 'StaleDocumentInsertSelection':
@@ -33,13 +38,14 @@ function rejection(reason: string) {
     case 'UnsupportedAtomicRuntime':
       return '현재 문서 엔진에서는 HWPX 문서 끼워 넣기를 지원하지 않습니다.';
     case 'UnsupportedDocumentInsertOwner':
+    case 'UnsupportedInsertCaretOwner':
     case 'DocumentInsertionRequiresCaret':
       return '끼워 넣을 수 있는 일반 본문 커서 위치를 선택하세요.';
     case 'DocumentInsertSourceLimitExceeded':
       return '파일 크기가 끼워 넣기 한도를 초과했습니다.';
     default:
       if (reason.startsWith('UnsupportedInsert'))
-        return `지원하는 HWPX 범위에 맞지 않습니다. ${profile} (${reason})`;
+        return `지원하는 HWPX 범위에 맞지 않습니다. ${help ? help + ' ' : ''}(${reason})`;
       return `문서를 끼워 넣지 못했습니다. (${reason})`;
   }
 }
@@ -90,7 +96,8 @@ export function createDocumentInsertTool(options: {
       },
     });
     const hint = doc.createElement('p');
-    hint.textContent = profile;
+    hint.dataset.role = 'document-insert-profile';
+    hint.hidden = true;
     const label = doc.createElement('label');
     label.textContent = '끼워 넣을 HWPX 파일 ';
     const file = doc.createElement('input');
@@ -131,7 +138,7 @@ export function createDocumentInsertTool(options: {
       const selected = file.files?.[0];
       const error = !current() ? stale : selected && fileError(selected);
       submit.disabled = !selected || Boolean(error);
-      status.textContent = error || (selected ? '선택한 파일을 끼워 넣을 수 있습니다.' : '');
+      status.textContent = error || (selected ? '파일을 선택했습니다.' : '');
     });
     const apply = async () => {
       const selected = file.files?.[0];
@@ -173,12 +180,12 @@ export function createDocumentInsertTool(options: {
           );
         } else {
           status.textContent = result.error
-            ? rejection(result.error)
+            ? rejection(result.error, hint.textContent)
             : '문서에 적용된 변경이 없습니다.';
         }
       } catch (error) {
         if (owned())
-          status.textContent = rejection(error instanceof Error ? error.message : String(error));
+          status.textContent = rejection(error instanceof Error ? error.message : String(error), hint.textContent);
       } finally {
         if (owned()) {
           applying = cancel.disabled = false;
@@ -205,6 +212,8 @@ export function createDocumentInsertTool(options: {
           status.textContent = rejection(capability.reason);
         } else {
           maxSourceBytes = capability.maxSourceBytes;
+          hint.textContent = helpByProfile[capability.sourceProfile];
+          hint.hidden = false;
           file.disabled = false;
           status.textContent = '끼워 넣을 .hwpx 파일을 선택하세요.';
         }

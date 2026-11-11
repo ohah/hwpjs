@@ -2193,7 +2193,8 @@ export fn hwpx_edit_document_insert_capabilities() u32 {
     var serial_buffer: [20]u8 = undefined;
     const serial = std.fmt.bufPrint(&serial_buffer, "{d}", .{session.mutation_serial}) catch unreachable;
     output = std.json.Stringify.valueAlloc(a, .{
-        .schemaVersion = @as(u32, 1),
+        .schemaVersion = @as(u32, 2),
+        .sourceProfile = "single-section-body-with-inline-static-tables",
         .binding = .{ .session = epoch, .revision = h.revision(), .serial = serial },
         .maxSourceBytes = document_insert_options.max_input_bytes,
     }, .{}) catch |err| return fail(err);

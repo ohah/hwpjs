@@ -12,9 +12,20 @@ pub fn opening(tree: *const Tree, index: usize) []const u8 {
 }
 
 pub fn tag(a: std.mem.Allocator, tree: *const Tree, index: usize, names: []const []const u8) !Tag {
+    return tagWithNamespace(a, tree, index, names, null);
+}
+
+pub fn tagWithNamespace(a: std.mem.Allocator, tree: *const Tree, index: usize, names: []const []const u8, local_namespace: ?[]const u8) !Tag {
     var parsed = try @import("xml_part_attributes.zig").parseStartTag(a, tree, index);
     errdefer parsed.deinit(a);
     for (parsed.attributes) |attribute| {
+        if (try xml.namespaces.isDeclaration(attribute.name)) {
+            const allowed = local_namespace orelse return error.UnsupportedInsertAttribute;
+            const value = try attribute.value.toUtf8(a, 128);
+            defer a.free(value);
+            if (!std.mem.eql(u8, allowed, value)) return error.UnsupportedInsertAttribute;
+            continue;
+        }
         const name = try xml.qname.parse(attribute.name);
         if (name.prefix != null) return error.UnsupportedInsertAttribute;
         for (names) |allowed| {

@@ -20,7 +20,7 @@ export type DocumentInsertionCapabilities =
       available: true;
       atomic: true;
       sourceFormat: 'hwpx';
-      sourceProfile: 'single-section-ordinary-body';
+      sourceProfile: 'single-section-ordinary-body' | 'single-section-body-with-inline-static-tables';
       maxSourceBytes: number;
     }>
   | Readonly<{
@@ -34,7 +34,7 @@ interface InsertionBinding {
   readonly serial: string;
 }
 
-// ABI schema v1. Enforced before cloning a caller's donor, independently
+// Enforced before cloning a caller's donor, independently
 // of the (also validated) live Native capability response.
 const maxSourceBytes = 8 * 1024 * 1024;
 const typedArray = Object.getPrototypeOf(Uint8Array.prototype);
@@ -144,18 +144,25 @@ export function checkedDocumentInsertCapability(
   binding: InsertionBinding;
 } {
   const invalid = 'MalformedDocumentInsertionCapabilities';
-  const {
-    schemaVersion,
-    maxSourceBytes: limit,
-    binding,
-  } = fields(input, ['schemaVersion', 'maxSourceBytes', 'binding'], invalid);
+  const version =
+    input && typeof input === 'object'
+      ? Object.getOwnPropertyDescriptor(input, 'schemaVersion')?.value
+      : undefined;
+  const keys = ['schemaVersion', 'maxSourceBytes', 'binding'];
+  const { schemaVersion, maxSourceBytes: limit, binding, sourceProfile } = fields(
+    input,
+    version === 2 ? [...keys, 'sourceProfile'] : keys,
+    invalid,
+  );
   const native = fields(binding, ['session', 'revision', 'serial'], invalid);
   const decimal = (value: unknown) =>
     typeof value === 'string' &&
     /^(?:0|[1-9]\d{0,19})$/.test(value) &&
     BigInt(value) <= 0xffff_ffff_ffff_ffffn;
   if (
-    schemaVersion !== 1 ||
+    schemaVersion !== version ||
+    (schemaVersion !== 1 &&
+      (schemaVersion !== 2 || sourceProfile !== 'single-section-body-with-inline-static-tables')) ||
     !Number.isSafeInteger(limit) ||
     (limit as number) <= 0 ||
     (limit as number) > maxSourceBytes ||
@@ -174,7 +181,10 @@ export function checkedDocumentInsertCapability(
       available: true,
       atomic: true,
       sourceFormat: 'hwpx',
-      sourceProfile: 'single-section-ordinary-body',
+      sourceProfile:
+        sourceProfile === 'single-section-body-with-inline-static-tables'
+          ? sourceProfile
+          : 'single-section-ordinary-body',
       maxSourceBytes: limit as number,
     }),
     binding: {

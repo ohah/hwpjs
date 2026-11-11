@@ -9,6 +9,7 @@ const Tree = @import("xml_part_tree.zig").Tree;
 const Change = @import("xml_source_writer.zig").Change;
 const names = @import("document_xml.zig");
 const hp = names.paragraph_uri;
+const static_table = @import("document_insert_table.zig");
 
 pub const Caret = struct { paragraph: usize, unit: u32 };
 pub const Options = struct {
@@ -21,6 +22,7 @@ pub const Prepared = struct {
     bytes: []u8,
     first_inserted_paragraph: usize,
     inserted_paragraphs: usize,
+    inserted_cell_paragraphs: usize = 0,
 
     pub fn deinit(self: *Prepared, allocator: std.mem.Allocator) void {
         allocator.free(self.bytes);
@@ -28,8 +30,11 @@ pub const Prepared = struct {
     }
 };
 
+const Root = struct { node: usize, ordinal: usize, has_table: bool };
 const Body = struct {
-    paragraphs: []const usize,
+    roots: []const Root = &.{},
+    paragraphs: usize = 0,
+    tables: usize = 0,
     section_properties: ?usize = null,
     columns: ?usize = null,
 };
@@ -81,10 +86,22 @@ pub fn prepare(allocator: std.mem.Allocator, destination: []const u8, donor: []c
     if (!std.mem.eql(u8, patch.opening(target_tree, 0), patch.opening(source_tree, 0)))
         return error.IncompatibleInsertNamespace;
     try equalPrologue(target_tree, target_body, source_tree, source_body);
-    if (caret.paragraph == 0 or caret.paragraph > target_body.paragraphs.len)
+    if (caret.paragraph == 0 or caret.paragraph > target_body.paragraphs)
         return error.InvalidParagraphIndex;
+    const root_index = for (target_body.roots, 0..) |root, index| {
+        if (root.ordinal == caret.paragraph) {
+            if (root.has_table) return error.UnsupportedInsertCaretOwner;
+            break index;
+        }
+    } else return error.UnsupportedInsertCaretOwner;
 
     const section = &target.sections[0];
+    if (section.last_paragraph != target_body.paragraphs or source.sections[0].last_paragraph != source_body.paragraphs)
+        return error.SourceBindingMismatch;
+    const owner = try @import("paragraph_site_owner.zig").resolve(target_tree, &section.sites, section.locations, caret.paragraph);
+    if (owner != target_body.roots[root_index].node) return error.SourceBindingMismatch;
+    try validateTableReferences(a, &target_package, target_tree, target_body);
+    try validateTableReferences(a, &source_package, source_tree, source_body);
     const positions = @import("paragraph_text_positions.zig");
     const segments = try positions.build(a, target_tree, &section.sites, section.locations, caret.paragraph);
     defer a.free(segments);
@@ -106,18 +123,24 @@ pub fn prepare(allocator: std.mem.Allocator, destination: []const u8, donor: []c
     const basis = if (staged) |*session| session else &target;
     const basis_tree = &basis.sections[0].tree;
     const basis_body = if (split) try readBody(a, basis_tree, options.max_paragraphs) else target_body;
-    if (basis_body.paragraphs.len != target_body.paragraphs.len + @intFromBool(split))
+    if (basis_body.paragraphs != target_body.paragraphs + @intFromBool(split) or
+        basis_body.roots.len != target_body.roots.len + @intFromBool(split))
         return error.InsertSplitFailed;
-    const ids = try @import("paragraph_instance_ids.zig").nextMany(a, &.{basis_tree.*}, &.{}, source_body.paragraphs.len, options.max_paragraphs);
+    const ids = try @import("paragraph_instance_ids.zig").nextMany(a, &.{basis_tree.*}, &.{}, source_body.paragraphs, options.max_paragraphs);
+    const object_ids = if (source_body.tables == 0) &.{} else try @import("created_table_object_ids.zig").nextManySource(a, &.{basis_tree.*}, source_body.tables);
     var imported: std.ArrayList(u8) = .empty;
-    for (source_body.paragraphs, ids, 0..) |index, id, ordinal| {
-        const fragment = try copyParagraph(a, source_tree, index, id, &remapping, if (ordinal == 0) source_body else .{ .paragraphs = &.{} }, options.max_xml_bytes);
+    var rewrite: IdRewrite = .{ .paragraphs = ids, .tables = object_ids };
+    for (source_body.roots, 0..) |root, ordinal| {
+        const fragment = try copyParagraph(a, source_tree, root.node, &rewrite, &remapping, if (ordinal == 0) source_body else .{}, options.max_xml_bytes);
         try patch.append(a, &imported, fragment, options.max_xml_bytes);
     }
-    const insertion = if (first <= basis_body.paragraphs.len)
-        basis_tree.elements[basis_body.paragraphs[first - 1]].start_tag.start
+    if (rewrite.paragraph_cursor != ids.len or rewrite.table_cursor != object_ids.len)
+        return error.InvalidInsertResult;
+    const insert_root = root_index + @as(usize, @intFromBool(!before));
+    const insertion = if (insert_root < basis_body.roots.len)
+        basis_tree.elements[basis_body.roots[insert_root].node].start_tag.start
     else
-        basis_tree.elements[basis_body.paragraphs[basis_body.paragraphs.len - 1]].end;
+        basis_tree.elements[basis_body.roots[basis_body.roots.len - 1].node].end;
     const change: Change = .{ .start = insertion, .end = insertion, .text = "", .serialized_xml = imported.items };
     const changed_section = try @import("xml_source_writer.zig").write(a, basis_tree.source, &.{change}, options.max_xml_bytes);
     if (remapping.header.len > options.max_xml_bytes -| changed_section.len) return error.LimitExceeded;
@@ -129,15 +152,22 @@ pub fn prepare(allocator: std.mem.Allocator, destination: []const u8, donor: []c
     }, .{ .max_output_bytes = options.max_output_bytes });
     var checked = try editor.open(a, bytes, open_options);
     defer checked.deinit();
-    if (checked.sections.len != 1 or checked.sections[0].last_paragraph != basis_body.paragraphs.len + source_body.paragraphs.len)
+    if (checked.sections.len != 1 or checked.sections[0].last_paragraph != basis_body.paragraphs + source_body.paragraphs)
         return error.InvalidInsertResult;
     var checked_package = try package.inspectDocument(a, bytes, .{});
     defer checked_package.deinit(a);
     try validateReferences(a, &checked_package);
+    const checked_body = try readBody(a, &checked.sections[0].tree, options.max_paragraphs);
+    if (checked_body.roots.len != basis_body.roots.len + source_body.roots.len or
+        checked_body.tables != basis_body.tables + source_body.tables or
+        checked_body.roots[insert_root].ordinal != first)
+        return error.InvalidInsertResult;
+    try validateTableReferences(a, &checked_package, &checked.sections[0].tree, checked_body);
     return .{
         .bytes = try allocator.dupe(u8, bytes),
         .first_inserted_paragraph = first,
-        .inserted_paragraphs = source_body.paragraphs.len,
+        .inserted_paragraphs = source_body.roots.len,
+        .inserted_cell_paragraphs = source_body.paragraphs - source_body.roots.len,
     };
 }
 
@@ -196,18 +226,29 @@ fn validateReferences(a: std.mem.Allocator, doc: *const package.Document) !void 
     for (fonts.references.references) |counts| if (!counts.allPresentResolved()) return error.UnresolvedInsertReference;
 }
 
-fn readBody(a: std.mem.Allocator, tree: *const Tree, max_paragraphs: usize) !Body {
-    if (!tree.elements[0].is(names.section_uri, "sec") or tree.xml_report.processing_instructions != 0)
-        return error.UnsupportedInsertBody;
-    var paragraphs: std.ArrayList(usize) = .empty;
-    var result: Body = .{ .paragraphs = &.{} };
-    var child = tree.elements[0].first_child;
-    while (child) |index| : (child = tree.elements[index].next_sibling) {
-        if (paragraphs.items.len == max_paragraphs) return error.LimitExceeded;
+fn validateTableReferences(a: std.mem.Allocator, doc: *const package.Document, tree: *const Tree, body: Body) !void {
+    if (body.tables == 0) return;
+    var header = try doc.inspectHeaderResources(a, .{});
+    defer header.deinit(a);
+    try static_table.validateDocument(a, tree, &header);
+}
+
+const BodyReader = struct {
+    a: std.mem.Allocator,
+    tree: *const Tree,
+    limit: usize,
+    body: Body = .{},
+    used_tables: std.AutoHashMapUnmanaged(u32, void) = .empty,
+
+    fn readParagraph(self: *BodyReader, index: usize, top_level: bool, first: bool) anyerror!void {
+        if (self.body.paragraphs == self.limit) return error.LimitExceeded;
+        self.body.paragraphs += 1;
+        const a = self.a;
+        const tree = self.tree;
         const node = tree.elements[index];
         if (!node.is(hp, "p")) return error.UnsupportedInsertBody;
         var attributes = try patch.tag(a, tree, index, &.{ "id", "paraPrIDRef", "styleIDRef", "pageBreak", "columnBreak", "merged" });
-        defer attributes.deinit(a);
+        attributes.deinit(a);
         for ([_][]const u8{ "pageBreak", "columnBreak", "merged" }) |name| {
             if (try tree.attributeValue(a, index, "", name)) |raw| {
                 if (try @import("table_xml_fields.zig").boolean(a, raw, 32)) return error.UnsupportedInsertBody;
@@ -217,8 +258,7 @@ fn readBody(a: std.mem.Allocator, tree: *const Tree, max_paragraphs: usize) !Bod
         _ = try patch.number(a, tree, index, "styleIDRef");
         _ = try patch.number(a, tree, index, "paraPrIDRef");
         var run = node.first_child;
-        if (run == null) return error.UnsupportedInsertBody;
-        var text_count: usize = 0;
+        var started = false;
         while (run) |r| : (run = tree.elements[r].next_sibling) {
             const run_node = tree.elements[r];
             if (!run_node.is(hp, "run")) return error.UnsupportedInsertBody;
@@ -228,15 +268,23 @@ fn readBody(a: std.mem.Allocator, tree: *const Tree, max_paragraphs: usize) !Bod
             var content = run_node.first_child;
             while (content) |c| : (content = tree.elements[c].next_sibling) {
                 const element = tree.elements[c];
-                const leading = paragraphs.items.len == 0 and r == node.first_child.? and text_count == 0;
+                const leading = first and r == node.first_child.? and !started;
                 if (element.is(hp, "t") and element.first_child == null) {
                     var text_attrs = try patch.tag(a, tree, c, &.{});
                     text_attrs.deinit(a);
-                    text_count += 1;
-                } else if (leading and element.is(hp, "secPr") and result.section_properties == null and result.columns == null) {
+                    started = true;
+                } else if (top_level and element.is(hp, "tbl")) {
+                    const id = try patch.number(a, tree, c, "id");
+                    if ((try self.used_tables.getOrPut(a, id)).found_existing)
+                        return error.DuplicateInsertTableId;
+                    const cell_paragraphs = try static_table.read(a, tree, c, self.limit - self.body.paragraphs);
+                    self.body.tables += 1;
+                    for (cell_paragraphs) |p| try self.readParagraph(p, false, false);
+                    started = true;
+                } else if (leading and element.is(hp, "secPr") and self.body.section_properties == null and self.body.columns == null) {
                     try validateSectionProperties(a, tree, c);
-                    result.section_properties = c;
-                } else if (leading and element.is(hp, "ctrl") and result.columns == null and result.section_properties != null) {
+                    self.body.section_properties = c;
+                } else if (leading and element.is(hp, "ctrl") and self.body.columns == null and self.body.section_properties != null) {
                     const col = element.first_child orelse return error.UnsupportedInsertBody;
                     if (!tree.elements[col].is(hp, "colPr") or tree.elements[col].next_sibling != null or tree.elements[col].first_child != null)
                         return error.UnsupportedInsertBody;
@@ -245,17 +293,31 @@ fn readBody(a: std.mem.Allocator, tree: *const Tree, max_paragraphs: usize) !Bod
                     var col_attrs = try patch.tag(a, tree, col, &.{ "id", "type", "layout", "colCount", "sameSz", "sameGap" });
                     col_attrs.deinit(a);
                     if (try patch.number(a, tree, col, "colCount") != 1) return error.UnsupportedInsertBody;
-                    result.columns = c;
+                    self.body.columns = c;
                 } else return error.UnsupportedInsertBody;
             }
         }
-        if (text_count == 0) return error.UnsupportedInsertBody;
-        try paragraphs.append(a, index);
+        if (!started) return error.UnsupportedInsertBody;
     }
-    if (paragraphs.items.len == 0) return error.UnsupportedInsertBody;
+};
+
+fn readBody(a: std.mem.Allocator, tree: *const Tree, max_paragraphs: usize) !Body {
+    if (!tree.elements[0].is(names.section_uri, "sec") or tree.xml_report.processing_instructions != 0)
+        return error.UnsupportedInsertBody;
+    var reader: BodyReader = .{ .a = a, .tree = tree, .limit = max_paragraphs };
+    defer reader.used_tables.deinit(a);
+    var roots: std.ArrayList(Root) = .empty;
+    var child = tree.elements[0].first_child;
+    while (child) |index| : (child = tree.elements[index].next_sibling) {
+        const ordinal = reader.body.paragraphs + 1;
+        const tables = reader.body.tables;
+        try reader.readParagraph(index, true, roots.items.len == 0);
+        try roots.append(a, .{ .node = index, .ordinal = ordinal, .has_table = tables != reader.body.tables });
+    }
+    if (roots.items.len == 0) return error.UnsupportedInsertBody;
     try tree.visitContent(a, .{ .context = @constCast(tree), .on_content = checkContent });
-    result.paragraphs = paragraphs.items;
-    return result;
+    reader.body.roots = roots.items;
+    return reader.body;
 }
 
 fn checkContent(raw: *anyopaque, event: Tree.ContentEvent) !void {
@@ -299,21 +361,37 @@ fn equalPrologue(left: *const Tree, lhs: Body, right: *const Tree, rhs: Body) !v
     }
 }
 
-fn copyParagraph(a: std.mem.Allocator, tree: *const Tree, paragraph: usize, id: u32, plan: *const resources.Plan, prologue: Body, limit: usize) ![]u8 {
+const IdRewrite = struct {
+    paragraphs: []const u32,
+    tables: []const u32,
+    paragraph_cursor: usize = 0,
+    table_cursor: usize = 0,
+};
+
+fn copyParagraph(a: std.mem.Allocator, tree: *const Tree, paragraph: usize, ids: *IdRewrite, plan: *const resources.Plan, prologue: Body, limit: usize) ![]u8 {
     var changes: std.ArrayList(Change) = .empty;
-    try patch.replaceNumber(a, tree, paragraph, "id", id, &changes);
-    try replaceReference(a, tree, paragraph, "paraPrIDRef", plan, .paragraph, &changes);
-    try replaceReference(a, tree, paragraph, "styleIDRef", plan, .style, &changes);
-    var child = tree.elements[paragraph].first_child;
-    while (child) |index| : (child = tree.elements[index].next_sibling)
-        try replaceReference(a, tree, index, "charPrIDRef", plan, .character, &changes);
+    const end = tree.elements[paragraph].end;
+    for (tree.elements[paragraph..], paragraph..) |node, index| {
+        if (node.start_tag.start >= end) break;
+        if (node.is(hp, "p")) {
+            if (ids.paragraph_cursor >= ids.paragraphs.len) return error.InvalidInsertResult;
+            try patch.replaceNumber(a, tree, index, "id", ids.paragraphs[ids.paragraph_cursor], &changes);
+            ids.paragraph_cursor += 1;
+            try resources.remap(a, tree, index, "paraPrIDRef", plan, .paragraph, &changes);
+            try resources.remap(a, tree, index, "styleIDRef", plan, .style, &changes);
+        } else if (node.is(hp, "run")) {
+            try resources.remap(a, tree, index, "charPrIDRef", plan, .character, &changes);
+        } else if (node.is(hp, "tbl") or node.is(hp, "tc") or node.is(hp, "cellzone")) {
+            try resources.remap(a, tree, index, "borderFillIDRef", plan, .border_fill, &changes);
+            if (node.is(hp, "tbl")) {
+                if (ids.table_cursor >= ids.tables.len) return error.InvalidInsertResult;
+                try patch.replaceNumber(a, tree, index, "id", ids.tables[ids.table_cursor], &changes);
+                ids.table_cursor += 1;
+            }
+        }
+    }
     for ([_]?usize{ prologue.section_properties, prologue.columns }) |node| {
         if (node) |i| try changes.append(a, .{ .start = tree.elements[i].start_tag.start, .end = tree.elements[i].end, .text = "", .serialized_xml = "" });
     }
     return patch.fragment(a, tree, paragraph, changes.items, limit);
-}
-
-fn replaceReference(a: std.mem.Allocator, tree: *const Tree, index: usize, attribute: []const u8, plan: *const resources.Plan, kind: resources.Kind, changes: *std.ArrayList(Change)) !void {
-    const source = try patch.number(a, tree, index, attribute);
-    try patch.replaceNumber(a, tree, index, attribute, try plan.resolve(kind, source), changes);
 }

@@ -64,7 +64,11 @@ function fixture(t, { capability, result } = {}) {
       getEditorState: () => state,
       getDocumentInsertionCapabilities: async (options) => {
         queries.push(options);
-        return capability ?? { available: true, maxSourceBytes: 8 };
+        return capability ?? {
+          available: true,
+          sourceProfile: 'single-section-ordinary-body',
+          maxSourceBytes: 8,
+        };
       },
       async dispatchCommand(command, payload) {
         dispatches.push({ command, payload });
@@ -89,6 +93,7 @@ function fixture(t, { capability, result } = {}) {
     },
     source: () => role('document-insert-source'),
     submit: () => role('document-insert-confirm'),
+    hint: () => role('document-insert-profile'),
     status: () => find((node) => node.getAttribute('role') === 'status')?.textContent,
     select(file) {
       const input = role('document-insert-source');
@@ -150,6 +155,7 @@ test('denied capability and invalid file names or sizes do not read or dispatch 
   denied.tool.open();
   await tick();
   assert.equal(denied.source().disabled, true);
+  assert.equal(denied.hint().hidden, true);
   assert.match(denied.status(), /문서 엔진.*지원하지 않습니다/);
 
   const f = fixture(t);
@@ -196,4 +202,42 @@ test('profile rejection is explained and an applied refresh error cannot resend'
   assert.equal(committed.dispatches.length, 1);
   assert.equal(committed.root.children.length, 0);
   assert.match(committed.statuses[0], /반영됐습니다.*다시 넣지 마세요/);
+});
+
+test('profile help appears only after a current capability and follows its version', async (t) => {
+  const pending = Promise.withResolvers();
+  const f = fixture(t, {
+    capability: pending.promise,
+    result: { status: 'rejected-unapplied', error: 'UnsupportedInsertTablePlacement' },
+  });
+  f.tool.open();
+  assert.equal(f.hint().hidden, true);
+  pending.resolve({
+    available: true,
+    sourceProfile: 'single-section-body-with-inline-static-tables',
+    maxSourceBytes: 8,
+  });
+  await tick();
+  assert.equal(f.hint().hidden, false);
+  assert.match(f.hint().textContent, /정적 표/);
+  f.select(source());
+  fire(f.submit(), 'click');
+  await tick();
+  assert.match(f.status(), /정적 표.*UnsupportedInsertTablePlacement/);
+});
+
+test('a stale or denied capability does not publish profile help', async (t) => {
+  const pending = Promise.withResolvers();
+  const f = fixture(t, { capability: pending.promise });
+  f.tool.open();
+  f.move();
+  pending.resolve({
+    available: true,
+    sourceProfile: 'single-section-body-with-inline-static-tables',
+    maxSourceBytes: 8,
+  });
+  await tick();
+  assert.equal(f.hint().hidden, true);
+  assert.equal(f.source().disabled, true);
+  assert.match(f.status(), /위치가 바뀌었습니다/);
 });
