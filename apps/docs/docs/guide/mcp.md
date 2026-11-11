@@ -472,3 +472,18 @@ SHA와 Native 문단 주소는 같은 원본의 구조 보기·문단 조회 결
 서버의 strict 스키마와 CLI의 동일 mutation service가 요청을 검증합니다. HWPX 병합 셀 전체·각 셀·합친 후 나누기와 HWP5 단일 비병합 원본 셀 profile은 [CLI의 원본 셀 나누기 계약](./cli.md#원본-셀-나누기)을 따릅니다. 사각형 끝은 미포함이며 물리 셀 수와 Native binding은 서버가 현재 관측에서 발급합니다.
 
 앞선 작업이 binding을 바꾼 뒤 이전 serialized reference를 다른 표의 숫자 주소로 재대상화하지 않습니다. 새 원본 SHA/reference가 필요하면 변경을 새 파일에 먼저 저장한 뒤 새 요청을 시작합니다. stale·foreign·수명 종료·후행 오류는 `isError: true`이며 부분 파일을 게시하지 않습니다. H497의 HWP5 외곽 선언/셀 합 제한도 그대로 거절합니다.
+
+
+## CLI/MCP 원본 병합 셀 한 개 나누기
+
+현재 GitHub 구현 기준이며 npm 게시 버전의 지원 선언이 아닙니다. 단일 `npm install @ohah/hwpjs` 빌드의 기존 `hwpjs apply` / `apply_document_changes`에서 `source-table-cell-split` 연산을 사용합니다. optional Native capability의 `supportsMergedInput === true`일 때 HWP5의 full-span 단일 물리 셀을 허용합니다. false인 기존 엔진은 표 전체 비병합 제한을 그대로 유지합니다. Native/SDK profile을 임의로 확대하거나 자동 fallback하지 않습니다.
+
+`reference`는 같은 원본 SHA로 read 구조 보기에서 읽은 table reference입니다. expectedRows/expectedColumns는 현재 격자 전체 행열, top/left/bottom/right는 선택 물리 셀의 전체 span 사각형(bottom/right 제외 경계)이어야 합니다. rows/columns는 분할 개수입니다. HWP5는 selected physical cell 정확히1, mode=each, equalizeRows=true만 지원합니다. 일부 span·여러 물리 셀·merge-then-split·기존 높이 보존은 거절합니다. 지원 capability가 true이면 선택하지 않은 다른 병합 셀도 보존할 수 있습니다.
+
+예를 들어 실제2×2 격자 전체를 한 물리 셀이 차지한다면 top0/left0/bottom2/right2로2×2 나누기를 요청합니다. 새 필드나 숫자 Native tableNode/binding을 입력에 추가하지 않습니다. 기존 resolveTableReference·expected grid·현재 owner·fingerprint·session/revision/serial·단일 사용 ticket을 그대로 검사합니다. 앞선 변경으로 Native binding이 달라지면 예전 reference 숫자를 다른 표로 재해석하지 않습니다. 후행 오류에는 새 출력 파일을 게시하지 않고 원본·기존 출력도 덮어쓰지 않습니다.
+
+```json
+{"kind":"source-table-cell-split","coordinates":"current-transaction","reference":"EXACT_TABLE_REFERENCE_FROM_READ","expectedRows":2,"expectedColumns":2,"top":0,"left":0,"bottom":2,"right":2,"rows":2,"columns":2,"mode":"each","equalizeRows":true}
+```
+
+CLI는 위 연산을 배열로 `--operations`에 전달하거나 `{"version":1,"operations":[...]}` patch 파일로 지정합니다. `hwpjs apply ./document.hwp --patch ./split-patch.json --expect-sha256 EXACT_INPUT_SHA256 --output ./split.hwp --allow-stale-layout --wasm /absolute/current-engine.wasm`입니다. MCP는 `hwpjs mcp --wasm /absolute/current-engine.wasm`에서 같은 연산을 `apply_document_changes`의 operations 배열에 넣습니다.

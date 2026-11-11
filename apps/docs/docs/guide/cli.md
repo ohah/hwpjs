@@ -374,3 +374,18 @@ hwpjs apply ./document.hwpx --patch ./split-cells.json \
 HWPX는 위 경로를 지원하며 높이 유지의 일부 요청은 Native에서 거절할 수 있습니다. HWP5는 파일 확장자를 `.hwp`로 바꾸고 같은 연산을 사용하되 표 전체가 비병합·선택 물리 셀 하나·`mode: "each"`·`equalizeRows: true`인 현재 profile만 지원합니다. H497의 외곽 선언과 셀 크기 합이 다른 HWP5 입력은 `UnsupportedSourceTableGrid`로 계속 거절하며 연결 도구가 원본 크기를 보정하지 않습니다.
 
 reference는 첫 변경 전의 원본과 Native binding에 묶습니다. 같은 batch의 앞선 편집 후 이를 현재 숫자 주소로 다시 해석하지 않으며 `StaleSourceTableSplitReference`로 전체 파일 transaction을 거절합니다. 서로 다른 표에 대한 연속 나누기도 첫 변경 뒤에는 새 파일로 저장하고 구조 보기에서 새 SHA/reference를 받아 다시 요청하세요. 후행 오류에는 부분 출력 파일을 만들지 않으며 입력·기존 출력도 덮어쓰지 않습니다. `layoutRequiresReflow: true`는 조판이 필요하다는 뜻으로, 저장·재열기 성공과 화면 재조판 완료를 구분합니다.
+
+
+## CLI/MCP 원본 병합 셀 한 개 나누기
+
+현재 GitHub 구현 기준이며 npm 게시 버전의 지원 선언이 아닙니다. 단일 `npm install @ohah/hwpjs` 빌드의 기존 `hwpjs apply` / `apply_document_changes`에서 `source-table-cell-split` 연산을 사용합니다. optional Native capability의 `supportsMergedInput === true`일 때 HWP5의 full-span 단일 물리 셀을 허용합니다. false인 기존 엔진은 표 전체 비병합 제한을 그대로 유지합니다. Native/SDK profile을 임의로 확대하거나 자동 fallback하지 않습니다.
+
+`reference`는 같은 원본 SHA로 read 구조 보기에서 읽은 table reference입니다. expectedRows/expectedColumns는 현재 격자 전체 행열, top/left/bottom/right는 선택 물리 셀의 전체 span 사각형(bottom/right 제외 경계)이어야 합니다. rows/columns는 분할 개수입니다. HWP5는 selected physical cell 정확히1, mode=each, equalizeRows=true만 지원합니다. 일부 span·여러 물리 셀·merge-then-split·기존 높이 보존은 거절합니다. 지원 capability가 true이면 선택하지 않은 다른 병합 셀도 보존할 수 있습니다.
+
+예를 들어 실제2×2 격자 전체를 한 물리 셀이 차지한다면 top0/left0/bottom2/right2로2×2 나누기를 요청합니다. 새 필드나 숫자 Native tableNode/binding을 입력에 추가하지 않습니다. 기존 resolveTableReference·expected grid·현재 owner·fingerprint·session/revision/serial·단일 사용 ticket을 그대로 검사합니다. 앞선 변경으로 Native binding이 달라지면 예전 reference 숫자를 다른 표로 재해석하지 않습니다. 후행 오류에는 새 출력 파일을 게시하지 않고 원본·기존 출력도 덮어쓰지 않습니다.
+
+```json
+{"kind":"source-table-cell-split","coordinates":"current-transaction","reference":"EXACT_TABLE_REFERENCE_FROM_READ","expectedRows":2,"expectedColumns":2,"top":0,"left":0,"bottom":2,"right":2,"rows":2,"columns":2,"mode":"each","equalizeRows":true}
+```
+
+CLI는 위 연산을 배열로 `--operations`에 전달하거나 `{"version":1,"operations":[...]}` patch 파일로 지정합니다. `hwpjs apply ./document.hwp --patch ./split-patch.json --expect-sha256 EXACT_INPUT_SHA256 --output ./split.hwp --allow-stale-layout --wasm /absolute/current-engine.wasm`입니다. MCP는 `hwpjs mcp --wasm /absolute/current-engine.wasm`에서 같은 연산을 `apply_document_changes`의 operations 배열에 넣습니다.
