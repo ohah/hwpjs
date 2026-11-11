@@ -171,3 +171,21 @@ test('actual reference row resizing preserves every independent XML cell width',
       assert.equal(result.cells[index].width, cell.row >= 19 ? 6421 : 5006);
     }
 });
+
+test('explicit ordered input skips sorting while retaining row coverage validation', () => {
+  const table = fixture();
+  assert.deepEqual(
+    sourceTableRowHorizontals(table, { orderedCells: true }),
+    sourceTableRowHorizontals(table),
+  );
+  const reversed = { ...table, cells: [...table.cells].reverse() };
+  assert.equal(sourceTableRowHorizontals(reversed).state, 'resolved');
+  assert.equal(
+    sourceTableRowHorizontals(reversed, { orderedCells: true }).error,
+    'IncompleteSourceTableRowCoverage',
+  );
+  assert.equal(
+    sourceTableRowHorizontals(table, { orderedCells: 1 }).error,
+    'InvalidSourceTableRowHorizontals',
+  );
+});

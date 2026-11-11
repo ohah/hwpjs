@@ -21,7 +21,9 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'block-selection': entry('블록 설정', '편집'),
   'table-cell-block': entry('셀 블록 설정', '표'),
   'table-cell-block-extend': entry('셀 블록 확장', '표'),
+  'table-cell-split': entry('셀 나누기', '표'),
   'table-cell-merge': entry('셀 합치기', '표'),
+  'table-cell-width-equal': entry('셀 너비를 같게', '표'),
   undo: entry('실행 취소', '편집'),
   redo: entry('다시 실행', '편집'),
   cut: entry('잘라내기', '클립보드', true),
@@ -231,6 +233,8 @@ const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
   'table-cell-properties',
   'table-cell-appearance',
   'table-cell-merge',
+  'table-cell-split',
+  'table-cell-width-equal',
 ]);
 const generatedTableContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,

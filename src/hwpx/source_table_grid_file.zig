@@ -21,7 +21,15 @@ pub const MergeRequest = struct {
     expected_columns: u32,
     rectangle: Rectangle,
 };
-const Operation = union(enum) { edit: Command, merge: Rectangle };
+pub const SplitOptions = @import("source_table_cell_split.zig").Options;
+pub const SplitRequest = struct {
+    section: usize,
+    target: Target,
+    expected_rows: u32,
+    expected_columns: u32,
+    options: SplitOptions,
+};
+const Operation = union(enum) { edit: Command, merge: Rectangle, split: SplitOptions };
 const Transform = struct {
     section: usize,
     target: Target,
@@ -143,6 +151,10 @@ pub fn transformMerge(a: std.mem.Allocator, input: []const u8, request: MergeReq
     return transformOperation(a, input, .{ .section = request.section, .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .operation = .{ .merge = request.rectangle } }, options);
 }
 
+pub fn transformSplit(a: std.mem.Allocator, input: []const u8, request: SplitRequest, options: Options) ![]u8 {
+    return transformOperation(a, input, .{ .section = request.section, .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .operation = .{ .split = request.options } }, options);
+}
+
 fn transformOperation(a: std.mem.Allocator, input: []const u8, request: Transform, options: Options) ![]u8 {
     if (input.len == 0 or input.len > options.max_input_bytes) return error.LimitExceeded;
     var d = try open(a, input, options);
@@ -160,6 +172,7 @@ fn transformOperation(a: std.mem.Allocator, input: []const u8, request: Transfor
     const source = try d.archive.decode(d.archive.entries[entry], options.max_xml_bytes);
     defer a.free(source);
     const candidate = switch (request.operation) {
+        .split => |settings| try prepareSplit(a, source, request, settings, options, &inventory),
         .edit => |command| try prepareGrid(a, source, request, command, options, &inventory),
         .merge => |rectangle| try grid.prepareMerge(a, source, .{ .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .rectangle = rectangle, .max_bytes = options.max_xml_bytes, .max_cells = options.max_cells }),
     };
@@ -188,14 +201,35 @@ fn transformOperation(a: std.mem.Allocator, input: []const u8, request: Transfor
 
 fn prepareGrid(a: std.mem.Allocator, source: []const u8, request: Transform, command: Command, options: Options, inventory: *Inventory) ![]u8 {
     const plan = try @import("../model/table_grid_edit_plan.zig").create(request.expected_rows, request.expected_columns, command, options.max_cells);
-    if (plan.inserted_count > options.max_paragraphs - inventory.count) return error.LimitExceeded;
-    const ids = try a.alloc(u32, plan.inserted_count);
+    const ids = try freshIds(a, plan.inserted_count, options, inventory);
     defer a.free(ids);
+    return grid.prepare(a, source, .{ .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .command = command, .fresh_paragraph_ids = ids, .max_bytes = options.max_xml_bytes, .max_cells = options.max_cells });
+}
+
+fn freshIds(a: std.mem.Allocator, count: usize, options: Options, inventory: *Inventory) ![]u32 {
+    if (count > options.max_paragraphs - inventory.count) return error.LimitExceeded;
+    const ids = try a.alloc(u32, count);
+    errdefer a.free(ids);
     var next: u32 = 1;
     for (ids) |*id| {
         while (inventory.used.contains(next)) next = std.math.add(u32, next, 1) catch return error.LimitExceeded;
         id.* = next;
         try inventory.used.put(a, next, {});
     }
-    return grid.prepare(a, source, .{ .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .command = command, .fresh_paragraph_ids = ids, .max_bytes = options.max_xml_bytes, .max_cells = options.max_cells });
+    return ids;
+}
+fn prepareSplit(a: std.mem.Allocator, source: []const u8, request: Transform, settings: SplitOptions, options: Options, inventory: *Inventory) ![]u8 {
+    try settings.validate(request.expected_rows, request.expected_columns, options.max_cells);
+    const count = try settings.addedParagraphs(options.max_cells);
+    const ids = try freshIds(a, count, options, inventory);
+    defer a.free(ids);
+    return @import("source_table_cell_split.zig").prepare(a, source, .{
+        .target = request.target,
+        .expected_rows = request.expected_rows,
+        .expected_columns = request.expected_columns,
+        .options = settings,
+        .fresh_paragraph_ids = ids,
+        .max_bytes = options.max_xml_bytes,
+        .max_cells = options.max_cells,
+    });
 }

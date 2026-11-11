@@ -52,6 +52,11 @@ export const HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze([
   'hwpx_edit_document_insert_capabilities',
   'hwpx_edit_merge_source_table_cells',
 ]);
+// Optional source-cell subdivision retains the existing session/revision/serial ticket.
+export const HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS = Object.freeze([
+  'hwpx_edit_document_insert_capabilities',
+  'hwpx_edit_split_source_table_cells',
+]);
 // Optional HWPX provenance; intentionally not part of REQUIRED_FUNCTIONS.
 export const HWPX_DOCUMENT_PROVENANCE_FUNCTIONS = Object.freeze(['hwpx_edit_document_provenance']);
 export const DOCUMENT = Object.freeze({

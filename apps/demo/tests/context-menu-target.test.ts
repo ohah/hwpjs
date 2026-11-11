@@ -168,6 +168,7 @@ function harness(surfaceText = false) {
         title: '',
         status: '',
         actions: {
+          'table-cell-width-equal': { enabled },
           'generated-table-insert-row': { enabled },
           'generated-table-delete-row': { enabled },
           'generated-table-insert-column': { enabled },
@@ -587,6 +588,43 @@ test('현재 생성 셀 메뉴는 기존 command dispatcher에 한 번 전달한
     h.open();
     h.click('generated-table-insert-column');
     assert.deepEqual(h.calls, ['generated-table-insert-column']);
+  } finally {
+    h.control.close();
+  }
+});
+
+test('width-only cell block menu keeps the target fence through focus restoration', () => {
+  const h = harness();
+  let live = true;
+  try {
+    h.setTarget({
+      kind: 'source-table-cell',
+      key: 'width:1',
+      widthTarget: {} as import('@hwpjs/core').SourceTableCellWidthTarget,
+      current: () => live,
+    });
+    h.open();
+    h.setFocus(() => {
+      live = false;
+    });
+    h.click('table-cell-width-equal');
+    assert.deepEqual(h.calls, []);
+  } finally {
+    h.control.close();
+  }
+});
+test('current width menu dispatches its captured command once', () => {
+  const h = harness();
+  try {
+    h.setTarget({
+      kind: 'source-table-cell',
+      key: 'width:1',
+      widthTarget: {} as import('@hwpjs/core').SourceTableCellWidthTarget,
+      current: () => true,
+    });
+    h.open();
+    h.click('table-cell-width-equal');
+    assert.deepEqual(h.calls, ['table-cell-width-equal']);
   } finally {
     h.control.close();
   }

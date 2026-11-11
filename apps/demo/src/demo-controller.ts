@@ -1,3 +1,4 @@
+import { createTableCellSplitTool, type TableCellSplitCapture } from './table-cell-split-tool.ts';
 import { createTableGridPort, type TableGridHost } from './table-grid-port.ts';
 import { createGeneratedTableGridTool } from './generated-table-grid-tool.ts';
 import { createPresentationRefresh } from './presentation-refresh.ts';
@@ -21,6 +22,8 @@ import { mountShortcutSettings } from './shortcut-settings.ts';
 import {
   getHistoryAvailability,
   MERGE_SOURCE_TABLE_CELLS_COMMAND,
+  EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND,
+  type SourceTableCellWidthTarget,
   type SourceTableCellMergeTarget,
   getSelectionFormatting,
   SET_CHARACTER_FONT_NAME_COMMAND,
@@ -89,9 +92,15 @@ export interface DemoHost
   requestCellBlock?(extend?: boolean, fromContext?: boolean): boolean;
   hasCellBlock?(): boolean;
   registerCellBlockMenu?(menu: HTMLElement, ownsInput?: (input: HTMLElement) => boolean): void;
+  captureSourceTableCellSplit?(): TableCellSplitCapture | null;
   captureSourceTableCellMerge?(): {
     state: ReturnType<HeadlessEditor['getEditorState']>;
     target: SourceTableCellMergeTarget;
+    current(): boolean;
+  } | null;
+  captureSourceTableCellWidth?(): {
+    state: ReturnType<HeadlessEditor['getEditorState']>;
+    target: SourceTableCellWidthTarget;
     current(): boolean;
   } | null;
   setScale(value: number): boolean;
@@ -305,6 +314,7 @@ export async function mountDemo(
     onStatus: note,
     onPresentationChange: () => shell.update(),
   });
+  const cellSplit = createTableCellSplitTool(root, editor, () => host, note);
   const presentation = (): DemoShellState => {
     const sharedFormatting = captureFormattingPresentation(editor, () => host);
     const state = sharedFormatting.state,
@@ -334,6 +344,14 @@ export async function mountDemo(
       ...(host?.requestCellBlock
         ? { 'table-cell-block': cellBlock, 'table-cell-block-extend': cellBlock }
         : {}),
+      'table-cell-split': {
+        enabled: host?.captureSourceTableCellSplit?.() != null,
+        reason: '편집 가능한 HWPX 원본 표의 셀이나 직사각형 셀 블록을 선택하세요.',
+      },
+      'table-cell-width-equal': {
+        enabled: host?.captureSourceTableCellWidth?.() != null,
+        reason: '원본 HWPX 표에서 물리 경계가 같은 직사각형의 두 칸 이상을 선택하세요.',
+      },
       'table-cell-merge': {
         enabled: host?.captureSourceTableCellMerge?.() != null,
         reason: '편집 가능한 HWPX 표에서 연속된 셀을 두 개 이상 선택하세요.',
@@ -496,6 +514,8 @@ export async function mountDemo(
     action: DemoAction,
     fromContext = false,
     mergeTarget?: SourceTableCellMergeTarget,
+    splitCapture?: TableCellSplitCapture,
+    widthTarget?: SourceTableCellWidthTarget,
   ) {
     if (closed) return;
     const available = presentation().actions?.[action.command];
@@ -518,6 +538,24 @@ export async function mountDemo(
         host?.requestCellBlock?.(action.command === 'table-cell-block-extend', fromContext) !== true
       )
         note('표에서 선택할 수 있는 셀에 커서를 놓으세요.');
+      return;
+    }
+    if (action.command === 'table-cell-split') {
+      cellSplit.open(fromContext ? splitCapture : undefined);
+      return;
+    }
+    if (action.command === 'table-cell-width-equal') {
+      const target = fromContext ? widthTarget : host?.captureSourceTableCellWidth?.()?.target;
+      if (!target) {
+        note('현재 셀 블록을 다시 선택하세요.');
+        return;
+      }
+      const result = await editor.dispatchCommand(EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND, target);
+      if (result.status === 'committed-with-snapshot') note('선택한 셀의 너비를 같게 했습니다.');
+      else if (result.status === 'known-no-op') note('선택한 셀의 너비가 이미 같습니다.');
+      else if (result.status === 'committed-refresh-required')
+        note('셀 너비 변경이 반영됐습니다. 화면을 복구한 뒤 계속하세요.');
+      else note(result.error || '셀 너비를 변경하지 못했습니다.');
       return;
     }
     if (action.command === 'table-cell-merge') {
@@ -698,20 +736,32 @@ export async function mountDemo(
         getState: presentation,
         captureTextSelection: () => captureFormattingPresentation(editor, () => host).capture,
         getTarget: () => {
+          const split = host?.captureSourceTableCellSplit?.();
           const merge = host?.captureSourceTableCellMerge?.();
-          if (merge)
+          const width = host?.captureSourceTableCellWidth?.();
+          if (merge || split || width)
             return {
               kind: 'source-table-cell',
-              key: JSON.stringify([merge.state.token, merge.state.stateVersion, 'cell-block']),
-              current: merge.current,
-              mergeTarget: merge.target,
+              key: JSON.stringify([
+                editor.getEditorState().token,
+                editor.getEditorState().stateVersion,
+                'cell-block',
+              ]),
+              current: () =>
+                (!merge || merge.current()) &&
+                (!split || split.current()) &&
+                (!width || width.current()),
+              mergeTarget: merge?.target,
+              splitCapture: split ?? undefined,
+              widthTarget: width?.target,
             };
           return (
             generatedTableGrid.contextTarget() ??
             contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null)
           );
         },
-        execute: (action, target) => runAction(action, true, target.mergeTarget),
+        execute: (action, target) =>
+          runAction(action, true, target.mergeTarget, target.splitCapture, target.widthTarget),
         subscribe: (listener) => editor.registerStateListener(() => listener()),
         onError: (error) =>
           note(error instanceof Error ? error.message : '명령을 실행하지 못했습니다.'),
@@ -790,6 +840,7 @@ export async function mountDemo(
     shell.update();
   } catch (error) {
     closed = true;
+    cellSplit.dispose();
     documentInsert.dispose();
     cancelFixtureRefresh();
     presentationRefresh.dispose();
@@ -829,6 +880,7 @@ export async function mountDemo(
     async dispose() {
       if (closed) return;
       closed = true;
+      cellSplit.dispose();
       documentInsert.dispose();
       formatting.dispose();
       cancelFixtureRefresh();

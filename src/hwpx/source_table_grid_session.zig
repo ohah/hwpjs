@@ -8,11 +8,17 @@ pub const Request = struct { section: usize, node: usize, expected_rows: u32, ex
 
 pub const Rectangle = file.Rectangle;
 pub const MergeRequest = struct { section: usize, node: usize, expected_rows: u32, expected_columns: u32, rectangle: Rectangle };
-const Operation = union(enum) { edit: Command, merge: Rectangle };
+pub const SplitOptions = file.SplitOptions;
+pub const SplitRequest = struct { section: usize, node: usize, expected_rows: u32, expected_columns: u32, options: SplitOptions };
+const Operation = union(enum) { edit: Command, merge: Rectangle, split: SplitOptions };
 const Target = struct { section: usize, node: usize, expected_rows: u32, expected_columns: u32, operation: Operation };
 
 pub fn merge(session: *editor.Session, request: MergeRequest) !bool {
     return applyOperation(session, .{ .section = request.section, .node = request.node, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .operation = .{ .merge = request.rectangle } });
+}
+
+pub fn split(session: *editor.Session, request: SplitRequest) !bool {
+    return applyOperation(session, .{ .section = request.section, .node = request.node, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .operation = .{ .split = request.options } });
 }
 
 /// Match Session's direct managed-write guard; history owns its transaction.
@@ -73,11 +79,12 @@ fn body(session: *editor.Session, request: Target) !bool {
     const limit = @min(4096, session.options.max_sites);
     switch (request.operation) {
         .edit => |command| _ = try @import("../model/table_grid_edit_plan.zig").create(request.expected_rows, request.expected_columns, command, limit),
+        .split => |settings| try settings.validate(request.expected_rows, request.expected_columns, limit),
         .merge => |rectangle| try rectangle.validate(request.expected_rows, request.expected_columns, limit),
     }
     const selection = try select(&old.tree, request.node);
     const a = session.allocator;
-    const identity = if (request.operation == .merge) try uniqueTableIdentity(a, &old.tree, request.node) else null;
+    const identity = if (request.operation != .edit) try uniqueTableIdentity(a, &old.tree, request.node) else null;
     const saved = try session.save();
     defer a.free(saved);
     var current = try editor.open(a, saved, session.options);
@@ -98,6 +105,7 @@ fn body(session: *editor.Session, request: Target) !bool {
     };
     const changed = switch (request.operation) {
         .edit => |command| try file.transform(a, saved, .{ .section = request.section, .target = .{ .element = node }, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .command = command }, options),
+        .split => |settings| try file.transformSplit(a, saved, .{ .section = request.section, .target = .{ .element = node }, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .options = settings }, options),
         .merge => |rectangle| try file.transformMerge(a, saved, .{ .section = request.section, .target = .{ .element = node }, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .rectangle = rectangle }, options),
     };
     defer a.free(changed);

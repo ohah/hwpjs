@@ -1,3 +1,5 @@
+import type { SourceTableCellSplitCapture } from './commands/source-table-cell-split.ts';
+import type { SourceTableCellWidthTarget } from './commands/source-table-cell-width.ts';
 import type { RuntimeMessage, RuntimeReply } from './contracts.ts';
 import type { EditorState, StateToken } from './state/editor-state.ts';
 import type { CommandResult } from './editor/create-editor.ts';
@@ -26,10 +28,18 @@ export interface InputSurfaceLease {
     message: RuntimeMessage,
     options: SurfaceRequestOptions,
   ): Promise<CommandResult | RuntimeReply>;
+  captureSourceTableCellSplit?(
+    witness: SourceTableCellBlockWitness,
+    current: () => boolean,
+  ): SourceTableCellSplitCapture | null;
   captureSourceTableCellMerge?(
     witness: SourceTableCellBlockWitness,
     current: () => boolean,
   ): SourceTableCellMergeTarget | null;
+  captureSourceTableCellWidth?(
+    witness: SourceTableCellBlockWitness,
+    current: () => boolean,
+  ): SourceTableCellWidthTarget | null;
   publishSelection(target: SelectionTarget | null): Promise<EditorState>;
   release(): void;
 }

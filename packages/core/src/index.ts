@@ -25,6 +25,8 @@ export {
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
   MERGE_SOURCE_TABLE_CELLS_COMMAND,
+  SPLIT_SOURCE_TABLE_CELLS_COMMAND,
+  EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -153,6 +155,12 @@ export { getTableInsertAvailability } from './commands/table-insert.ts';
 export { toHtml } from './conversion.ts';
 export type { HTMLConversionOptions } from './conversion.ts';
 
+export type {
+  SourceTableCellSplitTarget,
+  SourceTableCellSplitCapture,
+  SourceTableCellSplitSelection,
+  SplitSourceTableCellsPayload,
+} from './commands/source-table-cell-split.ts';
 export type { SourceTableCellMergeTarget } from './commands/source-table-cell-merge.ts';
 export type {
   EditSourceTableGridPayload,
@@ -195,3 +203,5 @@ export type {
   DocumentInsertionCapabilityOptions,
   InsertDocumentPayload,
 } from './commands/document-insert.ts';
+
+export type { SourceTableCellWidthTarget } from './commands/source-table-cell-width.ts';

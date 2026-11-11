@@ -1954,6 +1954,78 @@ export function createCanvasSurface({
       const target = lease?.captureSourceTableCellMerge?.(captured.witness, live);
       return target ? Object.freeze({ state, target, current: live }) : null;
     },
+    captureSourceTableCellSplit() {
+      const state = editor.getEditorState();
+      let dialog: HTMLDialogElement | undefined;
+      let opened = false;
+      const modalCurrent = () => {
+        if (!dialog) return !modalOpen();
+        if (!dialog.isConnected || dialog.ownerDocument !== doc) return false;
+        if (!dialog.open) return !opened && !modalOpen();
+        opened = true;
+        const active = doc.querySelectorAll('dialog:modal');
+        return active.length === 1 && active[0] === dialog;
+      };
+      const current = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        modalCurrent() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        renderer.historyModelMatches(state) &&
+        direct.settled();
+      if (!current()) return null;
+      const captured = direct.captureSourceTableCellSplit();
+      if (!captured || !captured.current() || !current()) return null;
+      const live = () => current() && captured.current() && current();
+      const issued = lease?.captureSourceTableCellSplit?.(captured.witness, live);
+      return issued
+        ? Object.freeze({
+            state,
+            ...issued,
+            current: live,
+            bindDialog(element: HTMLDialogElement) {
+              if (
+                dialog ||
+                !live() ||
+                element.ownerDocument !== doc ||
+                !element.isConnected ||
+                element.open
+              )
+                return false;
+              dialog = element;
+              return live();
+            },
+          })
+        : null;
+    },
+    captureSourceTableCellWidth() {
+      const state = editor.getEditorState();
+      const current = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        !modalOpen() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        renderer.historyModelMatches(state) &&
+        direct.settled();
+      if (!current()) return null;
+      const captured = direct.captureSourceTableCellBlock('width');
+      if (!captured || !captured.current() || !current()) return null;
+      const live = () => current() && captured.current() && current();
+      const target = lease?.captureSourceTableCellWidth?.(captured.witness, live);
+      return target ? Object.freeze({ state, target, current: live }) : null;
+    },
     hasCellBlock(): boolean {
       return !closed && lease?.isActive() === true && direct.hasCellBlock();
     },

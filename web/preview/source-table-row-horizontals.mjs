@@ -1,5 +1,8 @@
 // 논리 열 주소는 공유하되 행마다 다른 물리 셀 경계를 보존합니다. 단위는 원본 HU입니다.
-export function sourceTableRowHorizontals(table, { maxCoveredCells = 1000000 } = {}) {
+export function sourceTableRowHorizontals(
+  table,
+  { maxCoveredCells = 1000000, orderedCells = false } = {},
+) {
   const fail = (error) => ({ state: 'unavailable', error });
   if (
     !Number.isSafeInteger(table?.rows) ||
@@ -11,6 +14,7 @@ export function sourceTableRowHorizontals(table, { maxCoveredCells = 1000000 } =
     !Array.isArray(table.cells) ||
     !table.cells.length ||
     table.cells.length > 100000 ||
+    typeof orderedCells !== 'boolean' ||
     !Number.isSafeInteger(maxCoveredCells) ||
     maxCoveredCells < 1
   )
@@ -49,7 +53,7 @@ export function sourceTableRowHorizontals(table, { maxCoveredCells = 1000000 } =
   const boxes = new Map(),
     rowWidths = [];
   for (const [row, cells] of rows.entries()) {
-    cells.sort((a, b) => a.column - b.column);
+    if (!orderedCells) cells.sort((a, b) => a.column - b.column);
     let column = 0,
       x = 0;
     for (const cell of cells) {

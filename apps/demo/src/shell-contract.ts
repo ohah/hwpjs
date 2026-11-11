@@ -13,6 +13,8 @@ export type DemoCommand =
   | 'table-cell-block'
   | 'table-cell-block-extend'
   | 'table-cell-merge'
+  | 'table-cell-split'
+  | 'table-cell-width-equal'
   | 'undo'
   | 'redo'
   | 'cut'

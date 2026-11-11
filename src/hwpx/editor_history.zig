@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, named_field_rename, named_field_create, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, source_table_grid, source_table_cell_merge, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, insert_document } = .plain,
+    kind: enum { plain, anchored, field, named_field_rename, named_field_create, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, insert_document } = .plain,
     independent_text_edits: []const @import("../model/independent_text_edits.zig").Edit = &.{},
     /// Borrowed only for the owned independent-text batch.
     independent_text_insertion: ?*const @import("../model/formatting_patch.zig").Patch = null,
@@ -50,6 +50,7 @@ pub const Command = struct {
     source_grid_expected_rows: u32 = 0,
     source_grid_expected_columns: u32 = 0,
     expected_field_name: []const u8 = "",
+    source_split_options: ?@import("source_table_grid_session.zig").SplitOptions = null,
     source_merge_rectangle: ?@import("source_table_grid_session.zig").Rectangle = null,
     expected_field_creation_text: []const u8 = "",
     field_creation_parameters: @import("named_field_create.zig").Parameters = .{},
@@ -204,6 +205,16 @@ pub const History = struct {
             .source_table_grid => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidSourceTableGridCommand;
                 break :block try @import("source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
+            },
+            .source_table_cell_split => block: {
+                if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidSourceTableGridCommand;
+                break :block try @import("source_table_grid_session.zig").split(session, .{
+                    .section = command.section,
+                    .node = command.source_grid_node,
+                    .expected_rows = command.source_grid_expected_rows,
+                    .expected_columns = command.source_grid_expected_columns,
+                    .options = command.source_split_options orelse return error.InvalidSourceTableSplit,
+                });
             },
             .source_table_cell_merge => block: {
                 if (command.start != 0 or command.deleted != 0 or command.inserted.len != 0) return error.InvalidSourceTableGridCommand;

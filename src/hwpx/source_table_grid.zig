@@ -18,8 +18,8 @@ pub const Request = struct {
     max_bytes: usize = 16 * 1024 * 1024,
     max_cells: usize = 4096,
 };
-const Cell = struct { node: usize, addr: usize, span: usize, size: usize, list: usize, paragraph: usize, blank_spans: []const tree_mod.Span, width: u32, height: u32 };
-const Grid = struct { rows: []usize, cells: []Cell, size: usize, width: u32, height: u32 };
+pub const Cell = struct { row: u32, column: u32, row_span: u32, column_span: u32, node: usize, addr: usize, span: usize, size: usize, list: usize, paragraph: usize, blank_spans: []const tree_mod.Span, width: u32, height: u32 };
+pub const Grid = struct { rows: []usize, cells: []Cell, size: usize, width: u32, height: u32 };
 fn number(a: std.mem.Allocator, t: *const Tree, node: usize, name: []const u8) !u32 {
     return try fields.optionalUnsigned(a, t, node, name, 4096) orelse error.InvalidSourceTableGrid;
 }
@@ -78,7 +78,7 @@ fn zero(a: std.mem.Allocator, t: *const Tree, node: usize, names: []const []cons
         if (try fields.unsigned(a, v, 4096) != 0) return error.ProtectedSourceTable;
     };
 }
-fn select(t: *const Tree, target: Target) !usize {
+pub fn select(t: *const Tree, target: Target) !usize {
     switch (target) {
         .element => |i| if (i < t.elements.len and fields.childIs(t, i, "tbl")) {
             return i;
@@ -148,7 +148,28 @@ fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize, merging: 
     }
     return .{ .first = first, .blanks = blanks.items };
 }
-fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize, merging: bool) !Grid {
+const Profile = enum { row_column, merge, split };
+
+pub fn inspectForSplit(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize) !Grid {
+    const grid = try inspect(a, t, table, rows, cols, limit, .split);
+    try validateSpanGrid(a, t, table, rows, cols, grid.cells.len, limit);
+    return grid;
+}
+
+pub fn validateSpanGrid(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, cells: usize, limit: usize) !void {
+    if (try number(a, t, table, "rowCnt") != rows or try number(a, t, table, "colCnt") != cols)
+        return error.InvalidSourceTableGrid;
+    const report = try @import("table_geometry.zig").inspectElement(a, t, table, .{ .max_grid_slots = limit });
+    if (report.rows != rows or report.cells != cells or report.uncovered_slots != 0 or
+        report.overlaps != 0 or report.outside_grid != 0 or report.row_count_mismatch != 0 or
+        report.row_address_mismatch != 0 or report.zero_span != 0 or report.missing_address != 0 or
+        report.missing_coordinate != 0 or report.missing_span != 0 or report.missing_span_value != 0 or
+        report.duplicate_address != 0 or report.duplicate_span != 0)
+        return error.InvalidSourceTableGrid;
+}
+
+fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize, profile: Profile) !Grid {
+    const merging = profile != .row_column;
     if (rows == 0 or cols == 0 or @as(u64, rows) * cols > limit) return error.LimitExceeded;
     if (try number(a, t, table, "rowCnt") != rows or try number(a, t, table, "colCnt") != cols) return error.StaleSourceTableGrid;
     if (merging) {
@@ -183,6 +204,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     const rs = try a.alloc(usize, rows);
     const cells = try a.alloc(Cell, @as(usize, rows) * cols);
     var r: usize = 0;
+    var cell_count: usize = 0;
     var cursor = t.elements[table].first_child;
     while (cursor) |row| : (cursor = t.elements[row].next_sibling) {
         if (!fields.childIs(t, row, "tr")) continue;
@@ -192,6 +214,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
         if (merging) try rejectLocalNamespaces(a, t, row);
         try allowed(t, row, &.{"tc"});
         var c: usize = 0;
+        var previous_column: ?u32 = null;
         var next = t.elements[row].first_child;
         while (next) |cell| : (next = t.elements[cell].next_sibling) {
             if (c == cols) return error.InvalidSourceTableGrid;
@@ -224,18 +247,34 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
                 try attributes(a, t, m, &.{ "left", "right", "top", "bottom" });
                 try allowed(t, m, &.{});
             }
-            if (try number(a, t, span, "colSpan") != 1 or try number(a, t, span, "rowSpan") != 1) return error.MergedSourceTable;
-            if (try number(a, t, addr, "rowAddr") != r or try number(a, t, addr, "colAddr") != c) return error.InvalidSourceTableGrid;
+            const col_span = try number(a, t, span, "colSpan");
+            const row_span = try number(a, t, span, "rowSpan");
+            if (profile != .split and (col_span != 1 or row_span != 1)) return error.MergedSourceTable;
+            const row_index = try number(a, t, addr, "rowAddr");
+            const column = try number(a, t, addr, "colAddr");
+            if (row_index != r or column >= cols or cell_count == cells.len or
+                (if (profile == .split) (previous_column != null and previous_column.? >= column) else column != c))
+                return error.InvalidSourceTableGrid;
+            previous_column = column;
             const w = try number(a, t, sz, "width");
             const h = try number(a, t, sz, "height");
-            if (w == 0 or h == 0 or (r > 0 and w != cells[c].width) or (c > 0 and h != cells[r * cols].height)) return error.UnsupportedSourceTableGeometry;
-            cells[r * cols + c] = .{ .node = cell, .addr = addr, .span = span, .size = sz, .list = sub, .paragraph = paragraphs.first, .blank_spans = paragraphs.blanks, .width = w, .height = h };
+            if (w == 0 or h == 0 or (profile != .split and ((r > 0 and w != cells[c].width) or (c > 0 and h != cells[r * cols].height))))
+                return error.UnsupportedSourceTableGeometry;
+            cells[cell_count] = .{ .row = row_index, .column = column, .row_span = row_span, .column_span = col_span, .node = cell, .addr = addr, .span = span, .size = sz, .list = sub, .paragraph = paragraphs.first, .blank_spans = paragraphs.blanks, .width = w, .height = h };
+            cell_count += 1;
             c += 1;
         }
-        if (c != cols) return error.InvalidSourceTableGrid;
+        if (profile != .split and c != cols) return error.InvalidSourceTableGrid;
         r += 1;
     }
     if (r != rows) return error.InvalidSourceTableGrid;
+    if (profile == .split) return .{
+        .rows = rs,
+        .cells = cells[0..cell_count],
+        .size = size,
+        .width = try number(a, t, size, "width"),
+        .height = try number(a, t, size, "height"),
+    };
     var width: u32 = 0;
     var height: u32 = 0;
     for (cells[0..cols]) |c| width = std.math.add(u32, width, c.width) catch return error.UnsupportedSourceTableGeometry;
@@ -243,14 +282,14 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     if (try number(a, t, size, "width") != width or try number(a, t, size, "height") != height) return error.UnsupportedSourceTableGeometry;
     return .{ .rows = rs, .cells = cells, .size = size, .width = width, .height = height };
 }
-fn patch(a: std.mem.Allocator, t: *const Tree, changes: *std.ArrayList(writer.Change), node: usize, comptime names: []const []const u8, values: [names.len]u32, limit: usize) !void {
+pub fn patch(a: std.mem.Allocator, t: *const Tree, changes: *std.ArrayList(writer.Change), node: usize, comptime names: []const []const u8, values: [names.len]u32, limit: usize) !void {
     const s = t.elements[node].start_tag;
     try changes.append(a, .{ .start = s.start, .end = s.end, .text = "", .serialized_xml = try unsigned.write(a, t, node, names, values, limit) });
 }
 fn less(_: void, l: writer.Change, r: writer.Change) bool {
     return l.start < r.start;
 }
-fn fragment(a: std.mem.Allocator, t: *const Tree, node: usize, changes: []writer.Change, limit: usize, ordered: bool) ![]u8 {
+pub fn fragment(a: std.mem.Allocator, t: *const Tree, node: usize, changes: []writer.Change, limit: usize, ordered: bool) ![]u8 {
     const e = t.elements[node];
     for (changes) |*c| {
         c.start -= e.start_tag.start;
@@ -293,7 +332,7 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     const rows = request.expected_rows;
     const cols = request.expected_columns;
     if (t.elements[table].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
-    const g = try inspect(a, &t, table, rows, cols, request.max_cells, false);
+    const g = try inspect(a, &t, table, rows, cols, request.max_cells, .row_column);
     const row_edit = switch (request.command) {
         .insert_row, .delete_row => true,
         else => false,
@@ -380,7 +419,7 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     while (attribute < 2) : (attribute += 1) try ordered.append(a, changes.items[attribute]);
     const result = try writer.write(a, source, ordered.items, request.max_bytes);
     var check = try @import("section_tree.zig").parse(a, result, 0, 0, .{ .max_xml_bytes = request.max_bytes });
-    _ = try inspect(a, &check, table, nr, nc, request.max_cells, false);
+    _ = try inspect(a, &check, table, nr, nc, request.max_cells, .row_column);
     return allocator.dupe(u8, result);
 }
 
@@ -421,7 +460,7 @@ pub fn prepareMerge(allocator: std.mem.Allocator, source: []const u8, request: M
     const table = try select(&tree, request.target);
     try @import("field_free_section.zig").validate(a, &tree, request.max_bytes);
     if (tree.elements[table].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
-    const grid = try inspect(a, &tree, table, rows, cols, request.max_cells, true);
+    const grid = try inspect(a, &tree, table, rows, cols, request.max_cells, .merge);
     var ids: std.AutoHashMapUnmanaged(u32, void) = .empty;
     for (tree.elements, 0..) |_, index| {
         if (!fields.childIs(&tree, index, "p")) continue;

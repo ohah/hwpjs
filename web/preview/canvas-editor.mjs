@@ -802,34 +802,50 @@ export function createCanvasEditor({
     next.paint = tableCellBlockPaint(next);
     return applyBlockSelection(point, point, null, null, next);
   };
-  const captureSourceTableCellBlock = () => {
+  const captureSourceTableCellBlock = (purpose = 'merge') => {
+    const split = purpose === 'split';
+    const equalizeWidth = purpose === 'width';
     const block = cellBlock;
+    const context = currentCellBlockContext();
+    const savedFocus = focus;
     const content = renderer.viewContent?.();
     if (
-      !block ||
-      block.created ||
-      block.paint.cells.size < 2 ||
+      !context ||
+      context.created ||
+      (!split && (!block || block.paint.cells.size < 2)) ||
       content?.format !== 'hwpx' ||
-      content.sourceTableCellMergeAvailable !== true ||
+      (split
+        ? content.sourceTableCellSplitAvailable !== true
+        : equalizeWidth
+          ? content.sourceTableCellWidthAvailable !== true
+          : content.sourceTableCellMergeAvailable !== true) ||
       renderer.viewEditPolicyActive?.() === true
     )
       return null;
-    if (mergeCapture?.block === block && mergeCapture.content === content)
+    if (
+      mergeCapture?.block === block &&
+      mergeCapture.focus === savedFocus &&
+      mergeCapture.purpose === purpose &&
+      mergeCapture.content === content
+    )
       return mergeCapture.value.current() ? mergeCapture.value : null;
+    const table = context.table;
+    const selected = block?.paint.cells ?? new Set([context.cell.listNode]);
     const current = () =>
       cellBlock === block &&
       renderer.viewContent?.() === content &&
-      currentCellBlockContext()?.table === block.table &&
+      currentCellBlockContext()?.table === table &&
+      (block != null || focus === savedFocus) &&
       cellBlock === block;
     if (!current()) return null;
-    const { section, tableNode, rows, columns, cells } = block.table;
+    const { section, tableNode, rows, columns, cells } = table;
     const witness = {
       section,
       tableNode,
       rows,
       columns,
       cells: cells
-        .filter((cell) => block.paint.cells.has(cell.listNode))
+        .filter((cell) => selected.has(cell.listNode))
         .map(({ listNode, row, column, paragraphs }) => ({
           listNode,
           row,
@@ -837,9 +853,9 @@ export function createCanvasEditor({
           paragraphs: [...paragraphs],
         })),
     };
-    if (witness.cells.length !== block.paint.cells.size || !current()) return null;
+    if (witness.cells.length !== selected.size || !current()) return null;
     const value = { witness, current };
-    mergeCapture = { block, content, value };
+    mergeCapture = { block, focus: savedFocus, purpose, content, value };
     return value;
   };
   const requestCellBlock = (extend = false, fromContext = false) => {
@@ -4358,6 +4374,7 @@ export function createCanvasEditor({
     },
     hasCellBlock: () => cellBlock !== null,
     captureSourceTableCellBlock,
+    captureSourceTableCellSplit: () => captureSourceTableCellBlock('split'),
     reset({
       preserveHistory = false,
       preserveHistoryIntents = false,

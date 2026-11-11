@@ -334,6 +334,45 @@ export fn hwpx_edit_merge_source_table_cells(section: u32, table_node: u32, rows
     };
     return if (changed) 1 else 2;
 }
+export fn hwpx_edit_split_source_table_cells(section: u32, table_node: u32, rows: u32, columns: u32, top: u32, left: u32, bottom: u32, right: u32, selected: u32, split_rows: u32, split_columns: u32, mode: u32, equalize: u32, revision: u32, epoch_lo: u32, epoch_hi: u32, serial_lo: u32, serial_hi: u32) u32 {
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| {
+        _ = fail(err);
+        return if (err == error.HistoryMutationUncertain) 3 else 0;
+    };
+    if (mode > 1 or equalize > 1) return fail(error.InvalidSourceTableSplit);
+    const epoch = @as(u64, epoch_hi) << 32 | epoch_lo;
+    const serial = @as(u64, serial_hi) << 32 | serial_lo;
+    if (!formatting_lifetime.opened or formatting_lifetime.epoch != epoch or
+        h.revision() != revision or session.mutation_serial != serial)
+        return fail(error.StaleSourceTableSplitBinding);
+    const settings: @import("../hwpx/source_table_cell_split.zig").Options = .{
+        .rectangle = .{ .top = top, .left = left, .bottom = bottom, .right = right },
+        .selected_cells = selected,
+        .rows = split_rows,
+        .columns = split_columns,
+        .mode = if (mode == 0) .each else .merge_then_split,
+        .equalize_rows = equalize == 1,
+    };
+    settings.validate(rows, columns, 4096) catch |err| return fail(err);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
+        .kind = .source_table_cell_split,
+        .section = section,
+        .paragraph = 0,
+        .start = 0,
+        .deleted = 0,
+        .inserted = "",
+        .source_grid_node = table_node,
+        .source_grid_expected_rows = rows,
+        .source_grid_expected_columns = columns,
+        .source_split_options = settings,
+    }}) catch |err| {
+        _ = fail(err);
+        return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
+    };
+    return if (changed) 1 else 2;
+}
 export fn hwpx_edit_created_table_grid(section: u32, low: u32, high: u32, action: u32, index: u32) u32 {
     hwpx_edit_output_free();
     const request = @import("created_table_grid_request.zig");
@@ -1004,7 +1043,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .independent_text, .insert_document, .named_field_rename, .named_field_create, .source_table_cell_merge => return error.HistoryNotEnabled,
+        .independent_text, .insert_document, .named_field_rename, .named_field_create, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },

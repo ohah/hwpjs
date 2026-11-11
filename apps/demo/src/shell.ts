@@ -135,6 +135,8 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
     [
       'insert-table',
       'table-cell-merge',
+      'table-cell-split',
+      'table-cell-width-equal',
       'table-cell-properties',
       'table-cell-appearance',
       'generated-table-insert-row',

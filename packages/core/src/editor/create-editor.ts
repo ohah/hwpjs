@@ -1,4 +1,8 @@
 import {
+  sourceTableCellWidthRequest,
+  type SourceTableCellWidthTarget,
+} from '../commands/source-table-cell-width.ts';
+import {
   checkedNamedFieldInventory,
   checkedNamedFieldSelector,
   resolveNamedField,
@@ -94,6 +98,8 @@ import {
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
   MERGE_SOURCE_TABLE_CELLS_COMMAND,
+  SPLIT_SOURCE_TABLE_CELLS_COMMAND,
+  EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -124,7 +130,15 @@ import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
 import { fontNameMessage } from '../commands/font-name.ts';
 import { tableInsertMessage } from '../commands/table-insert.ts';
-import { sourceTableCellMergePlan } from '../commands/source-table-cell-merge.ts';
+import { captureSourceTableCellSplitPayload } from '../commands/source-table-cell-split.ts';
+import type {
+  SplitSourceTableCellsPayload,
+  SourceTableCellSplitTarget,
+} from '../commands/source-table-cell-split.ts';
+import {
+  sourceTableCellMergePlan,
+  sourceTableCellSplitPlan,
+} from '../commands/source-table-cell-merge.ts';
 import type {
   SourceTableCellBlockWitness,
   SourceTableCellMergeTarget,
@@ -951,7 +965,12 @@ export function createEditor(options: CreateEditorOptions) {
             : await active!.request(message, ctx);
         verifyReply(reply, ctx);
         if (
-          ['insert-document', 'source-table-cell-merge'].includes(message.kind) &&
+          [
+            'insert-document',
+            'source-table-cell-merge',
+            'source-table-cell-split',
+            'source-table-cell-width',
+          ].includes(message.kind) &&
           reply.kind !== message.kind
         )
           throw Error('MismatchedRuntimeReply');
@@ -1148,10 +1167,19 @@ export function createEditor(options: CreateEditorOptions) {
     }
   }
   const mergeTargets = new WeakMap<
-    SourceTableCellMergeTarget,
+    object,
+    {
+      kind: 'merge' | 'split';
+      state: EditorState;
+      plan: ReturnType<typeof sourceTableCellSplitPlan>;
+      current: () => boolean;
+    }
+  >();
+  const widthTargets = new WeakMap<
+    SourceTableCellWidthTarget,
     {
       state: EditorState;
-      plan: ReturnType<typeof sourceTableCellMergePlan>;
+      plan: ReturnType<typeof sourceTableCellWidthRequest>;
       current: () => boolean;
     }
   >();
@@ -1161,18 +1189,23 @@ export function createEditor(options: CreateEditorOptions) {
     snapshot: EditorState = state,
   ): PendingCommand {
     if (!command || typeof command.id !== 'symbol') throw Error('InvalidCommand');
+    const split = command.id === SPLIT_SOURCE_TABLE_CELLS_COMMAND.id;
     const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
-    const owned = merge
-      ? payload
-      : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
-        ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
-        : command.id === INSERT_DOCUMENT_COMMAND.id
-          ? captureDocumentInsertPayload(payload)
-          : copyOwned(payload);
+    const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
+    const tableCell = merge || split || width;
+    const owned = split
+      ? captureSourceTableCellSplitPayload(payload)
+      : merge || width
+        ? payload
+        : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+          ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
+          : command.id === INSERT_DOCUMENT_COMMAND.id
+            ? captureDocumentInsertPayload(payload)
+            : copyOwned(payload);
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
-      token: merge
+      token: tableCell
         ? snapshot.token
         : ((owned as { target?: StateToken; token?: StateToken })?.target ??
           (owned as { token?: StateToken })?.token ??
@@ -1434,9 +1467,56 @@ export function createEditor(options: CreateEditorOptions) {
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
       }
+      if (pending.command.id === SPLIT_SOURCE_TABLE_CELLS_COMMAND.id) {
+        const payload = pending.payload as SplitSourceTableCellsPayload;
+        const target = mergeTargets.get(payload.target);
+        if (!target || target.kind !== 'split') throw Error('ForeignSourceTableCellSplitTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== target.state || !target.current())
+            throw Error('StaleSourceTableCellSplitTarget');
+        };
+        guard();
+        if (payload.mode === 'merge-then-split' && target.plan.selectedCells < 2)
+          throw Error('InvalidSourceTableSplitMode');
+        const admission = await readDocumentInsertCapability(pending.token, guard);
+        if ('reason' in admission) throw Error(admission.reason);
+        return await mutate(
+          {
+            kind: 'source-table-cell-split',
+            request: {
+              ...target.plan,
+              splitRows: payload.rows,
+              splitColumns: payload.columns,
+              mode: payload.mode,
+              equalizeRows: payload.equalizeRows,
+              binding: admission.binding,
+            },
+          },
+          pending.token,
+          false,
+          guard,
+        );
+      }
+      if (pending.command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id) {
+        const target = widthTargets.get(pending.payload as SourceTableCellWidthTarget);
+        if (!target) throw Error('ForeignSourceTableCellWidthTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== target.state || target.current() !== true)
+            throw Error('StaleSourceTableCellWidthTarget');
+        };
+        guard();
+        return await mutate(
+          { kind: 'source-table-cell-width', request: target.plan },
+          pending.token,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id) {
         const target = mergeTargets.get(pending.payload as SourceTableCellMergeTarget);
-        if (!target) throw Error('ForeignSourceTableCellMergeTarget');
+        if (!target || target.kind !== 'merge') throw Error('ForeignSourceTableCellMergeTarget');
         const guard = () => {
           requireReady(pending.token, true);
           if (state !== target.state || target.current() !== true)
@@ -1448,7 +1528,7 @@ export function createEditor(options: CreateEditorOptions) {
         return await mutate(
           {
             kind: 'source-table-cell-merge',
-            request: { ...target.plan, binding: admission.binding },
+            request: { ...sourceTableMergeWirePlan(target.plan), binding: admission.binding },
           },
           pending.token,
           false,
@@ -1523,10 +1603,24 @@ export function createEditor(options: CreateEditorOptions) {
     const pending = capture(command, payload);
     if (command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id) {
       const target = mergeTargets.get(pending.payload as SourceTableCellMergeTarget);
-      if (!target)
+      if (!target || target.kind !== 'merge')
         return Promise.resolve(reject(context(pending.token), 'ForeignSourceTableCellMergeTarget'));
       if (state !== target.state || !target.current())
         return Promise.resolve(reject(context(pending.token), 'StaleSourceTableCellMergeTarget'));
+    }
+    if (command.id === SPLIT_SOURCE_TABLE_CELLS_COMMAND.id) {
+      const target = mergeTargets.get((pending.payload as SplitSourceTableCellsPayload).target);
+      if (!target || target.kind !== 'split')
+        return Promise.resolve(reject(context(pending.token), 'ForeignSourceTableCellSplitTarget'));
+      if (state !== target.state || !target.current())
+        return Promise.resolve(reject(context(pending.token), 'StaleSourceTableCellSplitTarget'));
+    }
+    if (command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id) {
+      const target = widthTargets.get(pending.payload as SourceTableCellWidthTarget);
+      if (!target)
+        return Promise.resolve(reject(context(pending.token), 'ForeignSourceTableCellWidthTarget'));
+      if (state !== target.state || !target.current())
+        return Promise.resolve(reject(context(pending.token), 'StaleSourceTableCellWidthTarget'));
     }
     return admit(() => execute(pending));
   }
@@ -1733,6 +1827,7 @@ export function createEditor(options: CreateEditorOptions) {
         'set-named-field-value',
         'rename-named-field',
         'create-named-field',
+        'source-table-cell-width',
       ].includes(owned.kind)
     )
       throw Error('UseTypedEditorOperation');
@@ -2211,6 +2306,44 @@ export function createEditor(options: CreateEditorOptions) {
       return Promise.reject(Error('UnsupportedReadOperation'));
     return enqueue(() => readRequest(owned, expected));
   }
+  function sourceTableMergeWirePlan(plan: ReturnType<typeof sourceTableCellSplitPlan>) {
+    const { selectedCells: _, ...wire } = plan;
+    return wire;
+  }
+  function issueTableCellTarget(
+    record: SurfaceRecord,
+    witness: SourceTableCellBlockWitness,
+    current: () => boolean,
+    kind: 'merge' | 'split',
+  ) {
+    const snapshot = state;
+    let invalid = false;
+    const live = () => {
+      if (invalid) return false;
+      try {
+        assertSurface(record);
+        if (snapshot === state && current() === true && snapshot === state) return true;
+      } catch {
+        // Detached surfaces and invalid witnesses both fail closed.
+      }
+      invalid = true;
+      return false;
+    };
+    if (state.status !== 'ready' || !hasRuntimeAdmission(active) || !live()) return null;
+    try {
+      const checked = copyOwned(witness);
+      const plan =
+        kind === 'split'
+          ? sourceTableCellSplitPlan(snapshot, checked)
+          : { ...sourceTableCellMergePlan(snapshot, checked), selectedCells: checked.cells.length };
+      if (!live()) return null;
+      const target = Object.freeze({});
+      mergeTargets.set(target, { kind, state: snapshot, plan, current: live });
+      return target;
+    } catch {
+      return null;
+    }
+  }
   function acquireInputSurface(hooks: InputSurfaceHooks): InputSurfaceLease {
     assertPublicMutation();
     assertLive();
@@ -2278,6 +2411,32 @@ export function createEditor(options: CreateEditorOptions) {
         });
       },
       captureSourceTableCellMerge(witness: SourceTableCellBlockWitness, current: () => boolean) {
+        return issueTableCellTarget(
+          record,
+          witness,
+          current,
+          'merge',
+        ) as SourceTableCellMergeTarget | null;
+      },
+      captureSourceTableCellSplit(witness: SourceTableCellBlockWitness, current: () => boolean) {
+        const target = issueTableCellTarget(
+          record,
+          witness,
+          current,
+          'split',
+        ) as SourceTableCellSplitTarget | null;
+        if (!target) return null;
+        const plan = mergeTargets.get(target)!.plan;
+        return Object.freeze({
+          target,
+          selection: Object.freeze({
+            selectedCells: plan.selectedCells,
+            rows: plan.bottom - plan.top,
+            columns: plan.right - plan.left,
+          }),
+        });
+      },
+      captureSourceTableCellWidth(witness: SourceTableCellBlockWitness, current: () => boolean) {
         const snapshot = state;
         let invalid = false;
         const live = () => {
@@ -2286,17 +2445,17 @@ export function createEditor(options: CreateEditorOptions) {
             assertSurface(record);
             if (snapshot === state && current() === true && snapshot === state) return true;
           } catch {
-            // Detached surfaces and invalid witnesses both fail closed.
+            // Detached surfaces and changed selections invalidate this observation.
           }
           invalid = true;
           return false;
         };
         if (state.status !== 'ready' || !hasRuntimeAdmission(active) || !live()) return null;
         try {
-          const plan = sourceTableCellMergePlan(snapshot, copyOwned(witness));
+          const plan = sourceTableCellWidthRequest(snapshot, copyOwned(witness));
           if (!live()) return null;
-          const target = Object.freeze({}) as SourceTableCellMergeTarget;
-          mergeTargets.set(target, { state: snapshot, plan, current: live });
+          const target = Object.freeze({}) as SourceTableCellWidthTarget;
+          widthTargets.set(target, { state: snapshot, plan, current: live });
           return target;
         } catch {
           return null;

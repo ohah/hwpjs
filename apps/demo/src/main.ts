@@ -102,8 +102,12 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         ref.current?.surface?.requestCellBlock(extend, fromContext) ?? false,
       hasCellBlock: () => ref.current?.surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
+      captureSourceTableCellSplit: () =>
+        ref.current?.surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () =>
         ref.current?.surface?.captureSourceTableCellMerge() ?? null,
+      captureSourceTableCellWidth: () =>
+        ref.current?.surface?.captureSourceTableCellWidth() ?? null,
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
@@ -165,7 +169,9 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         surface?.requestCellBlock(extend, fromContext) ?? false,
       hasCellBlock: () => surface?.hasCellBlock() ?? false,
       registerCellBlockMenu: cellBlockMenus.register,
+      captureSourceTableCellSplit: () => surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () => surface?.captureSourceTableCellMerge() ?? null,
+      captureSourceTableCellWidth: () => surface?.captureSourceTableCellWidth() ?? null,
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();

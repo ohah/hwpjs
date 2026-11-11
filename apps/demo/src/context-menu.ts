@@ -1,8 +1,10 @@
+import type { TableCellSplitCapture } from './table-cell-split-tool.ts';
 import { demoCommandAction } from './demo-command-action.ts';
 import {
   getSelectionFormatting,
   type HeadlessEditor,
   type SourceTableCellMergeTarget,
+  type SourceTableCellWidthTarget,
 } from '@hwpjs/core';
 import type { DemoAction, DemoShellState } from './shell-contract.ts';
 import {
@@ -32,6 +34,8 @@ export interface ContextTarget {
   /** Surface selection fence; includes generated-cell A→B→A and pending input. */
   readonly current?: () => boolean;
   readonly mergeTarget?: SourceTableCellMergeTarget;
+  readonly splitCapture?: TableCellSplitCapture;
+  readonly widthTarget?: SourceTableCellWidthTarget;
 }
 /** 그림 관측 undefined는 미연결/불확실, null만 그림 선택 없음입니다. */
 export function contextTarget(
@@ -191,7 +195,11 @@ export function mountDemoContextMenu(options: {
     targets: [options.root],
     commandIds: [...CONTEXT_COMMAND_IDS],
     registry: {
-      keepsCellBlockFocus: () => captured?.mergeTarget !== undefined && current(),
+      keepsCellBlockFocus: () =>
+        (captured?.mergeTarget !== undefined ||
+          captured?.splitCapture !== undefined ||
+          captured?.widthTarget !== undefined) &&
+        current(),
       commands: () => {
         const ticket = sequence,
           text = textSelection;

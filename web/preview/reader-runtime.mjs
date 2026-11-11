@@ -1,3 +1,4 @@
+import { sourceTableCellWidthPlan } from './source-table-cell-width.mjs';
 import { attachParagraphNumbering } from './paragraph-numbering.mjs';
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
 import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
@@ -1013,7 +1014,11 @@ export function createReaderRuntime({
     );
     // The reusable load snapshot describes ABI availability; reply capability also gates history.
     result.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
+    result.sourceTableCellSplitAvailable = editor?.supportsSourceTableCellSplit?.() === true;
     result.sourceTableCellMergeAvailable = editor?.supportsSourceTableCellMerge?.() === true;
+    result.sourceTableCellWidthAvailable = WebAssembly.Module.exports(module).some(
+      (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
+    );
     hwpxCreatedTablesPending = result.createdTableHostPending;
     return attachParagraphNumbering(editor, result);
   }
@@ -1264,6 +1269,50 @@ export function createReaderRuntime({
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, requestId: message.requestId, content: hwp5Display() });
         }
+        return;
+      }
+      if (message.kind === 'source-table-cell-split') {
+        if (
+          format !== 'hwpx' ||
+          !historyEnabled ||
+          editor?.supportsSourceTableCellSplit?.() !== true
+        )
+          throw Error('SourceTableCellSplitUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.splitSourceTableCells(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        reply({ kind: message.kind, content: hwpxDisplay() });
+        return;
+      }
+      if (message.kind === 'source-table-cell-width') {
+        if (format !== 'hwpx' || !historyEnabled || !editor)
+          throw Error('SourceTableCellWidthUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        const content = hwpxDisplay();
+        const tables = content.tables?.filter(
+          (t) =>
+            t.section === message.request?.section && t.tableNode === message.request?.tableNode,
+        );
+        if (tables?.length !== 1) throw Error('InvalidSourceTableCellWidthRectangle');
+        const cells = sourceTableCellWidthPlan(tables[0], message.request);
+        if (cells.length === 0) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        editor.setCellSizes(cells);
+        applied = true;
+        reply({ kind: message.kind, content: hwpxDisplay() });
         return;
       }
       if (message.kind === 'source-table-cell-merge') {

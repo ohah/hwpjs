@@ -44,9 +44,15 @@ export const REDO_COMMAND = createCommand<HistoryPayload>('redo');
 import type { InsertTablePayload } from './table-insert.ts';
 export const INSERT_TABLE_COMMAND = createCommand<InsertTablePayload>('insert-table');
 
+import type { SplitSourceTableCellsPayload } from './source-table-cell-split.ts';
+export const SPLIT_SOURCE_TABLE_CELLS_COMMAND =
+  createCommand<SplitSourceTableCellsPayload>('source-table-cell-split');
 import type { SourceTableCellMergeTarget } from './source-table-cell-merge.ts';
 export const MERGE_SOURCE_TABLE_CELLS_COMMAND =
   createCommand<SourceTableCellMergeTarget>('source-table-cell-merge');
+import type { SourceTableCellWidthTarget } from './source-table-cell-width.ts';
+export const EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND =
+  createCommand<SourceTableCellWidthTarget>('source-table-cell-width');
 import type { EditSourceTableGridPayload } from './source-table-grid.ts';
 export const EDIT_SOURCE_TABLE_GRID_COMMAND =
   createCommand<EditSourceTableGridPayload>('source-table-grid');
