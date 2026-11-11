@@ -8,6 +8,7 @@ import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { parseDemoServerArguments } from '../../tools/demo-server-options.mjs';
 import { loadDemoServerBundle } from '../../tools/demo-server-bundle.mjs';
+import { collectUiLicenseInputs } from '../../tools/pages-demo/ui-license-inputs.mjs';
 import { demoFixtures } from '../../web/preview/fixture-catalog.mjs';
 const sourceRoot = fileURLToPath(new URL('../../', import.meta.url));
 const actualRoot = process.env.HWPJS_HOST_POLICY_ACTUAL_ROOT ?? process.cwd();
@@ -15,17 +16,10 @@ const parent = await realpath(process.env.HWPJS_HOST_POLICY_TEST_OUTPUT ?? tmpdi
 const workspace = await mkdtemp(join(parent, 'host-policy-'));
 after(() => rm(workspace, { recursive: true, force: true }));
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
-const license = await readFile(resolve(sourceRoot, 'LICENSE'));
+const licenses = await collectUiLicenseInputs({ root: sourceRoot });
+const license = licenses.project;
 const sourceNotices = await readFile(resolve(sourceRoot, 'docs/third-party-notices.md'), 'utf8');
-let notices = sourceNotices;
-for (const [name, file] of [
-  ['react', 'LICENSE'],
-  ['react-dom', 'LICENSE'],
-  ['svelte', 'LICENSE.md'],
-]) {
-  const metadata = fileURLToPath(import.meta.resolve(name + '/package.json'));
-  notices += '\n' + (await readFile(resolve(dirname(metadata), file), 'utf8'));
-}
+const notices = licenses.notices;
 const actualPolicy = JSON.parse(
   await readFile(resolve(actualRoot, 'tools/pages-demo/public-gallery-fixtures.json'), 'utf8'),
 );
@@ -55,6 +49,7 @@ async function put(directory, files, extra = {}) {
     mode: 'frozen-dist-closure',
     base: 'relative',
     wasmSha256: hash(files.get('hwpjs/hwpjs.wasm')),
+    licenses: licenses.manifest,
     ...extra,
     files: [...files].map(([path, bytes]) => ({ path, bytes: bytes.length, sha256: hash(bytes) })),
   };
@@ -289,5 +284,34 @@ test('실제 serve entry도 누락·위조 정책을 전달해 bind 전에 거�
     assert.notEqual(child.status, 0);
     assert.match(child.stderr, new RegExp(message));
     assert.doesNotMatch(child.stderr, /InvalidServerArgument|EADDRINUSE/);
+  }
+});
+
+test('public loader refuses missing, duplicate and stale dependency license metadata', async () => {
+  for (const [metadata, reason] of [
+    [undefined, /InvalidUiLicenseMetadata/],
+    [
+      {
+        ...licenses.manifest,
+        packages: licenses.manifest.packages.map(() => licenses.manifest.packages[0]),
+      },
+      /InvalidUiLicenseMetadata/,
+    ],
+    [
+      {
+        ...licenses.manifest,
+        packages: licenses.manifest.packages.map((row, index) =>
+          index === 0 ? { ...row, version: '0.0.0-stale' } : row,
+        ),
+      },
+      /MissingDependencyLicense:react/,
+    ],
+  ]) {
+    const candidate = await publicCase(noori);
+    await put(candidate.directory, candidate.files, { licenses: metadata });
+    await assert.rejects(
+      loadDemoServerBundle(candidate.directory, { root: candidate.root }),
+      reason,
+    );
   }
 });
