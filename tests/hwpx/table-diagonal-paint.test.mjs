@@ -9,7 +9,10 @@ import { paintTableBackground } from '../../web/preview/table-background-paint.m
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { tableBorderPaintPlan } from '../../web/preview/table-border-plan.mjs';
-import { paintTableBorder } from '../../web/preview/table-border-paint.mjs';
+import {
+  paintTableBorder,
+  paintTransparentTableLines,
+} from '../../web/preview/table-border-paint.mjs';
 import { paintTableDiagonals } from '../../web/preview/table-diagonal-paint.mjs';
 const source = (slash = 'NONE', back_slash = 'NONE') => ({
   fill_node: null,
@@ -344,6 +347,8 @@ const bindTableBoxPainter = Function(
   'height',
   'viewport',
   'displayOptions',
+  'output',
+  'paintTransparentTableLines',
   'tableBoxPaintBounds',
   'tableBorderPlanForBox',
   'tableBorders',
@@ -381,6 +386,8 @@ function rendererTableFixture(
     200,
     { scrollTop: 20 },
     { showTableGrid: false },
+    null,
+    paintTransparentTableLines,
     tableBoxPaintBounds,
     tableBorderPlanForBox,
     index,
@@ -588,6 +595,8 @@ const bindPartialTableBoxPainter = Function(
   'height',
   'viewport',
   'displayOptions',
+  'output',
+  'paintTransparentTableLines',
   'tableBoxPaintBounds',
   'tableBorderPlanForBox',
   'tableBorders',
@@ -613,6 +622,8 @@ function partialSourceFixture(
     200,
     { scrollTop: 20 },
     { showTableGrid: false },
+    null,
+    paintTransparentTableLines,
     tableBoxPaintBounds,
     tableBorderPlanForBox,
     index,
