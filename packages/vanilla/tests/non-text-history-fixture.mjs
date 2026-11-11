@@ -193,6 +193,10 @@ export function fixture() {
     },
     layout,
     viewScale: () => 1,
+    // This text/picture-only fixture deliberately has no form hit targets.
+    checkBoxAtLogicalPoint: () => null,
+    checkBoxProxies: () => [],
+    formTextAtLogicalPoint: () => null,
     show() {},
     observeSourceState() {},
     setGeometryEvidence() {},
