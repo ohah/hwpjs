@@ -24,6 +24,8 @@ HWP5·HWPX의 기존 용지 설정을 같은 정수 HWPUNIT 요청으로 변경�
 
 데모 라이선스는 현재 해석된 의존성의 실제 버전·SPDX·전문 해시로 생성합니다. Svelte5.57.2 기록이5.57.3 산출물에 남던 생성 경로를 수정했으며, 이전 메타데이터 거절과 새 메타데이터 승인을 확인했습니다. 이 보정 전후의 HTML·JS·CSS·WASM은 바이트가 동일합니다. `LICENSE-METADATA-VERIFIED.json`에 근거를 남겼습니다.
 
+Headless 데모의 `getPageSettings` 항목은 실제 Core 조회를 호출합니다. 선택 구역 생략, 잘못된 인수 거부, 두 형식의 조회 전후 상태·저장 바이트 보존을 실제 공개 후보 화면에서 확인했습니다. 일반 용지 SDK 검사와 같은 정규 실행기에 연결하며, 근거는 `zig-out/verification/page-playground-main-integration-r1/`에 있습니다. 이 후속 변경은 WASM·Worker 바이트를 바꾸지 않습니다. 공개 배포 시점은 해당 GitHub Actions 결과와 구분합니다.
+
 ## 남은 범위
 
-PAGE_DEF/pagePr 부재 생성, 새 구역, 중복·조건부 owner 확대, 해석할 수 없는 캐시, pending generated-table/cell-style를 유지한 쓰기는 남아 있습니다. UI의 용지 프리셋 확대와 실제 API 플레이그라운드의 용지 호출 항목도 후속입니다. 이번 재배치 확인은 전체 문서·글꼴·한컴 화면과의 조판 동치나 React Native 기기 검증을 뜻하지 않습니다. 표 분할 뒤 번호가 이동하는 caret 복원은 별도 미배포 후보이며 이 변경에 포함하지 않았습니다.
+PAGE_DEF/pagePr 부재 생성, 새 구역, 중복·조건부 owner 확대, 해석할 수 없는 캐시, pending generated-table/cell-style를 유지한 쓰기는 남아 있습니다. UI의 용지 프리셋 확대는 후속입니다. 이번 재배치 확인은 전체 문서·글꼴·한컴 화면과의 조판 동치나 React Native 기기 검증을 뜻하지 않습니다. 표 분할 뒤 번호가 이동하는 caret 복원은 별도 미배포 후보이며 이 변경에 포함하지 않았습니다.
