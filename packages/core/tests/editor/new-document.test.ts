@@ -300,7 +300,7 @@ test('reader factory exposes construction separately and leaves runtime descript
   assert.equal(typeof factory.createDocumentBytes, 'function');
   await assert.rejects(factory.createDocumentBytes!('hwpx'), /ExplicitWasmRequired/);
   const runtime = await factory();
-  assert.deepEqual(Object.keys(runtime).sort(), ['dispose', 'request']);
+  assert.deepEqual(Object.keys(runtime).sort(), ['dispose', 'readNamedFields', 'request']);
   await runtime.dispose();
 });
 
