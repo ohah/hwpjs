@@ -26011,6 +26011,7 @@ var init_abi_schema = __esmMin((() => {
 	]);
 	Object.freeze(["hwp5_edit_named_fields"]);
 	Object.freeze(["hwpx_edit_named_fields"]);
+	Object.freeze(["hwpx_edit_rename_named_field"]);
 	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
 	Object.freeze(["hwpx_edit_document_provenance"]);
 	Object.freeze({
@@ -28359,7 +28360,7 @@ function decodeTablePlacements(bytes, format = "hwpx") {
 }
 var init_table_placements_wire = __esmMin((() => {}));
 // ../../js/paragraph-shapes-wire.mjs
-/** HPS1/HPS2 resources; raw absence and effective heading levels stay distinct. */
+/** HPS1/HPS2/HPS3 resources; raw absence and effective heading levels stay distinct. */
 function decodeParagraphShapes(bytes) {
 	const fail = () => {
 		throw new Error("InvalidParagraphShapes");
@@ -28368,7 +28369,7 @@ function decodeParagraphShapes(bytes) {
 	const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
 	const count = view.getUint32(4, true);
 	const magic = view.getUint32(0, true);
-	const stride = magic === 827543624 ? 48 : magic === 844320840 ? 72 : 0;
+	const stride = magic === 827543624 ? 48 : magic === 844320840 ? 72 : magic === 861098056 ? 76 : 0;
 	if (!stride || count > 1e5 || bytes.length !== 8 + count * stride) return fail();
 	return Array.from({ length: count }, (_, index) => {
 		const at = 8 + index * stride, uint = (offset) => view.getUint32(at + offset, true), int = (offset) => view.getInt32(at + offset, true);
@@ -28388,7 +28389,7 @@ function decodeParagraphShapes(bytes) {
 				value: int(44)
 			} : null
 		};
-		if (stride === 72) {
+		if (stride >= 72) {
 			if (uint(48) > 3 || uint(52) > 65535 || uint(56) > 7 || uint(60) > 1 || !uint(60) && uint(64) !== 0 || uint(68) !== (uint(60) ? uint(64) : uint(56))) return fail();
 			Object.assign(shape, {
 				headingKind: uint(48),
@@ -28397,6 +28398,11 @@ function decodeParagraphShapes(bytes) {
 				extendedHeadingLevel: uint(60) ? uint(64) : null,
 				headingLevel: uint(68)
 			});
+		}
+		if (stride === 76) {
+			const marker = uint(72);
+			if (marker > 65535 || marker > 0 && (shape.headingKind !== 3 || shape.headingId === 0 || marker <= 32 || marker >= 127 && marker <= 159 || marker >= 55296 && marker <= 57343)) return fail();
+			shape.headingMarker = marker || null;
 		}
 		return shape;
 	});
@@ -29879,7 +29885,8 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 		paragraphShapes() {
 			check();
 			if (typeof wasm.hwp5_edit_paragraph_shapes !== "function") throw new Error("Hwp5ParagraphShapesAbiUnavailable");
-			return decodeParagraphShapes(output(() => wasm.hwp5_edit_paragraph_shapes()).bytes);
+			const query = wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
+			return decodeParagraphShapes(output(query).bytes);
 		},
 		characterShapes() {
 			check();
@@ -33190,10 +33197,16 @@ function decodeHwpxParagraphShapes(bytes) {
 		"keep_lines",
 		"page_break_before"
 	].every((key) => value[key] === null || typeof value[key] === "boolean");
+	const heading = (value) => value === null || value && [
+		"none",
+		"outline",
+		"number",
+		"bullet"
+	].includes(value.kind) && (value.marker === null || value.kind === "bullet" && Number.isInteger(value.marker) && value.marker > 32 && value.marker <= 1114111 && !(value.marker >= 127 && value.marker <= 159) && !(value.marker >= 55296 && value.marker <= 57343));
 	if (!Array.isArray(result)) invalid();
 	const ids = /* @__PURE__ */ new Set();
 	for (const row of result) {
-		if (!row || typeof row !== "object" || !Number.isInteger(row.id) || row.id < 0 || row.id > 4294967295 || ids.has(row.id) || Object.hasOwn(row, "tab_pr_id") && row.tab_pr_id !== null && (!Number.isInteger(row.tab_pr_id) || row.tab_pr_id < 0 || row.tab_pr_id > 4294967295) || Object.hasOwn(row, "break_settings") && !breaks(row.break_settings) || !text(row.horizontal) || !text(row.spacing_type) || !measure(row.spacing) || !Array.isArray(row.margins) || row.margins.length !== 5 || !row.margins.every(measure)) invalid();
+		if (!row || typeof row !== "object" || !Number.isInteger(row.id) || row.id < 0 || row.id > 4294967295 || ids.has(row.id) || Object.hasOwn(row, "tab_pr_id") && row.tab_pr_id !== null && (!Number.isInteger(row.tab_pr_id) || row.tab_pr_id < 0 || row.tab_pr_id > 4294967295) || Object.hasOwn(row, "heading") && !heading(row.heading) || Object.hasOwn(row, "break_settings") && !breaks(row.break_settings) || !text(row.horizontal) || !text(row.spacing_type) || !measure(row.spacing) || !Array.isArray(row.margins) || row.margins.length !== 5 || !row.margins.every(measure)) invalid();
 		ids.add(row.id);
 	}
 	return result;
@@ -36112,6 +36125,25 @@ async function createHwpxEditor(source) {
 			memory.withBytes(bytes, (ptr, size) => {
 				if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
 			});
+		},
+		renameNamedField(section, paragraph, beginElement, expectedName, newName) {
+			ready();
+			[
+				section,
+				paragraph,
+				beginElement
+			].forEach(uint);
+			if (typeof wasm.hwpx_edit_rename_named_field !== "function") throw new Error("NamedFieldRenameUnavailable");
+			const expected = encodedText(expectedName);
+			const name = encodedText(newName);
+			if (!expected.length || !name.length) throw new Error("InvalidNamedFieldName");
+			if (expected.length > 4096 || name.length > 4096) throw new Error("LimitExceeded");
+			return memory.withBytes(expected, (expectedPtr, expectedLen) => memory.withBytes(name, (namePtr, nameLen) => {
+				const status = wasm.hwpx_edit_rename_named_field(section, paragraph, beginElement, expectedPtr, expectedLen, namePtr, nameLen);
+				if (status === 1) return true;
+				if (status === 2) return false;
+				throw memory.error();
+			}));
 		},
 		namedFields() {
 			ready();
