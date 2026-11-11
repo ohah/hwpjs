@@ -1284,13 +1284,13 @@ var init_render_escape = __esmMin((() => {
 init_files();
 init_host_output();
 init_render_escape();
-const record$14 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const record$15 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const MAX_INPUT_BYTES$2 = 67108864;
 /** 단일·배치 읽기가 공유하는 스냅샷 → 기존 엔진 → 기존 표시 경로입니다.
 * 파일 호스트만 주입하며 새 파서·편집 모델·Native 수명 관리자를 만들지 않습니다.
 */
 async function readDocumentOperation(options, { files, engine, renderDocument, loadWasm }) {
-	if (!record$14(options)) throw Error("InvalidReadFormat");
+	if (!record$15(options)) throw Error("InvalidReadFormat");
 	const { inputPath, inputSnapshot, wasm, format = "text", view = "content" } = options;
 	if (format !== "text" && format !== "markdown") throw Error("InvalidReadFormat");
 	if (view !== "content" && view !== "structure") throw Error("InvalidReadView");
@@ -1299,15 +1299,15 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 		return files.readInputSnapshot(inputPath, { maxBytes: MAX_INPUT_BYTES$2 });
 	};
 	const input = inputSnapshot ?? await loadSnapshot();
-	if (!record$14(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
+	if (!record$15(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
 	const binary = wasm ?? await loadWasm();
 	if (!(binary instanceof Uint8Array)) throw Error("InvalidWasmBytes");
 	const result = await engine.read({
 		bytes: input.bytes,
 		wasm: binary
 	});
-	if (!record$14(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
-	if (!record$14(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
+	if (!record$15(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
+	if (!record$15(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
 	const text = await renderDocument(result.model, {
 		format,
 		view
@@ -1321,9 +1321,9 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 }
 /** CLI와 웹 실습이 공유하는 단일 읽기 응답입니다. 원문으로 대체하지 않습니다. */
 function renderReadResponse(result, options = {}) {
-	if (!record$14(options)) throw Error("InvalidReadView");
+	if (!record$15(options)) throw Error("InvalidReadView");
 	const { view = "content" } = options;
-	if (!record$14(result)) throw Error("InvalidReadResult");
+	if (!record$15(result)) throw Error("InvalidReadResult");
 	const { format, sourceSha256, text } = result;
 	if (format !== "hwp5" && format !== "hwpx") throw Error("InvalidEngineFormat");
 	if (typeof sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(sourceSha256)) throw Error("InvalidReadSourceSHA256");
@@ -2287,7 +2287,7 @@ function captureSourceTableGridRequest(input, format) {
 	if (!input || typeof input !== "object" || Array.isArray(input) || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw new TypeError("InvalidSourceTableGridRequest");
 	const captured = Object.create(null);
 	for (const key of Reflect.ownKeys(input)) {
-		if (!fields$6.includes(key) && key !== "layout") throw new TypeError("InvalidSourceTableGridRequest");
+		if (!fields$7.includes(key) && key !== "layout") throw new TypeError("InvalidSourceTableGridRequest");
 		const descriptor = Object.getOwnPropertyDescriptor(input, key);
 		if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidSourceTableGridRequest");
 		captured[key] = descriptor.value;
@@ -2330,10 +2330,10 @@ function createSourceTableGridApi({ wasm, memory, check, prefix, unavailable }) 
 		}
 	};
 }
-var fields$6, actions$2;
+var fields$7, actions$2;
 var init_source_table_grid = __esmMin((() => {
 	init_abi_schema();
-	fields$6 = [
+	fields$7 = [
 		"section",
 		"tableNode",
 		"expectedRows",
@@ -2962,9 +2962,9 @@ function decodeCharacterFontMetrics(bytes, format) {
 	]) || wire.version !== 1 || wire.format !== format || !["hwp5", "hwpx"].includes(format) || !Array.isArray(wire.shapes) || wire.shapes.length > 1e5) return fail();
 	let previous = -1;
 	for (const row of wire.shapes) {
-		if (!metadataKeys(row, ["id", "values"]) || !Number.isInteger(row.id) || row.id < 0 || row.id > 4294967295 || row.id <= previous || !metadataKeys(row.values, fields$5)) return fail();
+		if (!metadataKeys(row, ["id", "values"]) || !Number.isInteger(row.id) || row.id < 0 || row.id > 4294967295 || row.id <= previous || !metadataKeys(row.values, fields$6)) return fail();
 		previous = row.id;
-		for (const key of fields$5) {
+		for (const key of fields$6) {
 			const values = row.values[key];
 			if (values === null && format === "hwpx") continue;
 			if (!Array.isArray(values) || values.length !== 7) return fail();
@@ -2976,10 +2976,10 @@ function decodeCharacterFontMetrics(bytes, format) {
 	}
 	return wire.shapes;
 }
-var fields$5;
+var fields$6;
 var init_character_font_metrics = __esmMin((() => {
 	init_font_metadata_wire();
-	fields$5 = [
+	fields$6 = [
 		"ratio",
 		"spacing",
 		"relativeSize",
@@ -5314,7 +5314,7 @@ var init_hwp5_exclusive_text_delta = __esmMin((() => {
 // ../../js/hwp5-current-references.mjs
 function validate$1(reference) {
 	if (!reference || typeof reference !== "object" || Array.isArray(reference)) invalid();
-	if (Object.keys(reference).length !== fields$4.length || fields$4.some((key) => !Object.hasOwn(reference, key))) invalid();
+	if (Object.keys(reference).length !== fields$5.length || fields$5.some((key) => !Object.hasOwn(reference, key))) invalid();
 	const { epoch, kind, section, id, row, column } = reference;
 	if (!decimal(epoch) || epoch === "0" || !decimal(id) || !uint$30(section) || !uint$30(row) || !uint$30(column)) invalid();
 	if (![
@@ -5346,8 +5346,8 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		if (!available()) throw new Error("Hwp5CurrentReferenceAbiUnavailable");
 	};
 	const encode = (reference) => {
-		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$4.length + 1) throw new Error("InvalidCurrentReferenceScope");
-		const wire = Object.fromEntries(fields$4.map((key) => [key, reference[key]]));
+		if (!reference || reference.scope !== scope || Object.keys(reference).length !== fields$5.length + 1) throw new Error("InvalidCurrentReferenceScope");
+		const wire = Object.fromEntries(fields$5.map((key) => [key, reference[key]]));
 		validate$1(wire);
 		return encoder$9.encode(JSON.stringify(wire));
 	};
@@ -5419,7 +5419,7 @@ function createHwp5CurrentReferenceApi({ wasm, memory, check, output, success, u
 		}
 	};
 }
-var utf8$2, utf16, encoder$9, fields$4, scopeSequence$1, invalid, uint$30, decimal;
+var utf8$2, utf16, encoder$9, fields$5, scopeSequence$1, invalid, uint$30, decimal;
 var init_hwp5_current_references = __esmMin((() => {
 	init_hwp5_exclusive_text_delta();
 	utf8$2 = new TextDecoder("utf-8", {
@@ -5431,7 +5431,7 @@ var init_hwp5_current_references = __esmMin((() => {
 		ignoreBOM: true
 	});
 	encoder$9 = new TextEncoder();
-	fields$4 = [
+	fields$5 = [
 		"epoch",
 		"kind",
 		"section",
@@ -5459,9 +5459,9 @@ var init_created_table_identity = __esmMin((() => {}));
 function captureCreatedTableGridRequest(input) {
 	if (!input || typeof input !== "object" || Array.isArray(input) || ![Object.prototype, null].includes(Object.getPrototypeOf(input))) throw new TypeError("InvalidCreatedTableGridRequest");
 	const keys = Reflect.ownKeys(input);
-	if (keys.length !== fields$3.length || keys.some((key) => !fields$3.includes(key))) throw new TypeError("InvalidCreatedTableGridRequest");
+	if (keys.length !== fields$4.length || keys.some((key) => !fields$4.includes(key))) throw new TypeError("InvalidCreatedTableGridRequest");
 	const captured = Object.create(null);
-	for (const key of fields$3) {
+	for (const key of fields$4) {
 		const descriptor = Object.getOwnPropertyDescriptor(input, key);
 		if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidCreatedTableGridRequest");
 		captured[key] = descriptor.value;
@@ -5492,7 +5492,7 @@ function createCreatedTableGridApi({ wasm, memory, check, prefix, unavailable })
 		}
 	};
 }
-var actions$1, fields$3;
+var actions$1, fields$4;
 var init_created_table_grid = __esmMin((() => {
 	init_abi_schema();
 	init_created_table_identity();
@@ -5502,7 +5502,7 @@ var init_created_table_grid = __esmMin((() => {
 		"insert-column": CREATED_TABLE_GRID_ACTION.insert_column,
 		"delete-column": CREATED_TABLE_GRID_ACTION.delete_column
 	});
-	fields$3 = [
+	fields$4 = [
 		"section",
 		"identity",
 		"action",
@@ -7227,11 +7227,11 @@ function decodeHwpxPageNumberDisplaySource(bytes) {
 	let count = 0;
 	for (const [index, section] of packet.sections.entries()) {
 		const position = section?.position;
-		if (section?.section !== index || !u32(section.startPage) || !string$1(section.parity, 16) || typeof section.hideFirst !== "boolean" || !Array.isArray(section.controls) || position !== null && (!owner(position) || !string$1(position.position, 32) || !string$1(position.format, 32) || !string$1(position.sideChar, 32))) invalid();
+		if (section?.section !== index || !u32(section.startPage) || !string$1(section.parity, 16) || typeof section.hideFirst !== "boolean" || !Array.isArray(section.controls) || position !== null && (!owner$1(position) || !string$1(position.position, 32) || !string$1(position.format, 32) || !string$1(position.sideChar, 32))) invalid();
 		count += section.controls.length;
 		if (count > 2e4) invalid();
 		for (const control of section.controls) {
-			if (!owner(control)) invalid();
+			if (!owner$1(control)) invalid();
 			if (control.kind === "hide" && typeof control.value === "boolean") continue;
 			if (control.kind === "restart" && u32(control.value)) continue;
 			invalid();
@@ -7239,10 +7239,10 @@ function decodeHwpxPageNumberDisplaySource(bytes) {
 	}
 	return packet;
 }
-var u32, owner, string$1;
+var u32, owner$1, string$1;
 var init_hwpx_page_number_display_wire = __esmMin((() => {
 	u32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	owner = (value) => value && u32(value.sourceNode) && (value.paragraph === null || u32(value.paragraph));
+	owner$1 = (value) => value && u32(value.sourceNode) && (value.paragraph === null || u32(value.paragraph));
 	string$1 = (value, limit) => typeof value === "string" && value.length <= limit;
 }));
 // ../../js/hwpx-read-scope.mjs
@@ -9889,12 +9889,12 @@ var init_hwpx_connector_source = __esmMin((() => {
 function decodeDrawingStrokeSource(bytes, expectedNode) {
 	const value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
 	const attr = value?.attributes;
-	if (!value || value.sourceOnly !== true || !uint$14(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint$14(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint$14(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields$2.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096)) throw new Error("InvalidDrawingStrokeSource");
+	if (!value || value.sourceOnly !== true || !uint$14(value.node) || value.node !== expectedNode || !(value.lineShapeNode === null || uint$14(value.lineShapeNode)) || !(value.knownColor === null || typeof value.knownColor === "boolean") || !uint$14(value.unknownEnums) || value.unknownEnums > 8 || !attr || typeof attr !== "object" || Array.isArray(attr) || !fields$3.every((name) => attr[name] === null || typeof attr[name] === "string" && new TextEncoder().encode(attr[name]).length <= 4096)) throw new Error("InvalidDrawingStrokeSource");
 	return value;
 }
-var fields$2, uint$14;
+var fields$3, uint$14;
 var init_hwpx_drawing_stroke_source = __esmMin((() => {
-	fields$2 = [
+	fields$3 = [
 		"color",
 		"width",
 		"style",
@@ -13931,7 +13931,7 @@ function byteInput(value, name) {
 	return Uint8Array.from(value);
 }
 function captureTarget$1(target) {
-	if (!record$13(target)) throw new TypeError("InvalidTarget");
+	if (!record$14(target)) throw new TypeError("InvalidTarget");
 	const { section, paragraph } = target;
 	if (typeof section !== "number" || !Number.isInteger(section) || section < 0 || section > 4294967295 || typeof paragraph !== "number" || !Number.isInteger(paragraph) || paragraph < 0 || paragraph > 4294967295) throw new RangeError("InvalidTarget");
 	return {
@@ -13949,7 +13949,7 @@ function outputBytes(value) {
 	return value;
 }
 async function openDocument(options = {}) {
-	if (!record$13(options)) throw new TypeError("InvalidDocumentOpenOptions");
+	if (!record$14(options)) throw new TypeError("InvalidDocumentOpenOptions");
 	const { bytes, wasm, expectedSha256 } = options;
 	const input = byteInput(bytes, "Document");
 	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256))) throw new TypeError("InvalidExpectedSha256");
@@ -14087,7 +14087,7 @@ async function read(options) {
 	}
 }
 async function edit(options) {
-	if (!record$13(options)) throw new TypeError("InvalidEditOptions");
+	if (!record$14(options)) throw new TypeError("InvalidEditOptions");
 	const { bytes, wasm, target, replace, with: replacement, allowStaleLayout = false } = options;
 	const capturedTarget = captureTarget$1(target);
 	const document = await openDocument({
@@ -14120,7 +14120,7 @@ async function edit(options) {
 		document.close();
 	}
 }
-var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$13;
+var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$14;
 var init_engine = __esmMin((() => {
 	init_document_format();
 	init_hwp5_editor();
@@ -14130,7 +14130,7 @@ var init_engine = __esmMin((() => {
 	MAX_INPUT_BYTES$1 = 67108864;
 	MAX_OUTPUT_BYTES$1 = 134217728;
 	wasmModules = createWasmModuleCache();
-	record$13 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$14 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/render-content.ts
 function simpleCells(table, allowNested = false) {
@@ -14614,7 +14614,7 @@ var init_picture_replacement_input = __esmMin((() => {
 }));
 // src/table-reference-resolution.ts
 function field$2(value, key, optional = false) {
-	if (!record$12(value)) throw new TypeError("InvalidTableDeletionModel");
+	if (!record$13(value)) throw new TypeError("InvalidTableDeletionModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableDeletionModel");
@@ -14659,7 +14659,7 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	let selectedObservation;
 	while (stack.length) {
 		const entry = stack.pop();
-		if (!record$12(entry.value) || visited.has(entry.value) || entry.depth > 64) throw new Error("InvalidTableDeletionModel");
+		if (!record$13(entry.value) || visited.has(entry.value) || entry.depth > 64) throw new Error("InvalidTableDeletionModel");
 		visited.add(entry.value);
 		const id = field$2(entry.value, "id"), type = field$2(entry.value, "type");
 		if (typeof id !== "string" || !id || identities.has(id) || typeof type !== "string" || ![
@@ -14701,10 +14701,10 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	};
 	return selected;
 }
-var record$12, uint$12;
+var record$13, uint$12;
 var init_table_reference_resolution = __esmMin((() => {
 	init_object_reference();
-	record$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$13 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$12 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/table-file-grid.mjs
@@ -14712,12 +14712,12 @@ function captureRequest(request) {
 	if (!request || typeof request !== "object" || Array.isArray(request)) throw new TypeError("InvalidTableFileGridRequest");
 	const captured = Object.create(null);
 	for (const key of Reflect.ownKeys(request)) {
-		if (!fields$1.includes(key) && key !== "layout") throw new TypeError("InvalidTableFileGridRequest");
+		if (!fields$2.includes(key) && key !== "layout") throw new TypeError("InvalidTableFileGridRequest");
 		const descriptor = Object.getOwnPropertyDescriptor(request, key);
 		if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableFileGridRequest");
 		captured[key] = descriptor.value;
 	}
-	if (fields$1.some((key) => !Object.hasOwn(captured, key))) throw new TypeError("InvalidTableFileGridRequest");
+	if (fields$2.some((key) => !Object.hasOwn(captured, key))) throw new TypeError("InvalidTableFileGridRequest");
 	if (!["hwp5", "hwpx"].includes(captured.format)) throw new TypeError("InvalidTableFileGridFormat");
 	for (const key of [
 		"section",
@@ -14793,7 +14793,7 @@ async function createSourceTableGridFileApi(source, { instantiate = WebAssembly.
 		}
 	};
 }
-var TABLE_FILE_GRID_LIMITS, fields$1, actions, uint$11;
+var TABLE_FILE_GRID_LIMITS, fields$2, actions, uint$11;
 var init_table_file_grid = __esmMin((() => {
 	init_abi_schema();
 	init_wasm_memory();
@@ -14803,7 +14803,7 @@ var init_table_file_grid = __esmMin((() => {
 		wasmBytes: PICTURE_REPLACEMENT_LIMITS.wasmBytes,
 		outputBytes: 134217728
 	});
-	fields$1 = [
+	fields$2 = [
 		"format",
 		"section",
 		"tableNode",
@@ -14823,14 +14823,14 @@ var init_table_file_grid = __esmMin((() => {
 // src/edit-table-grid.ts
 var edit_table_grid_exports = /* @__PURE__ */ __exportAll({ editDocumentTableGrid: () => editDocumentTableGrid });
 function field$1(value, key, optional = false) {
-	if (!record$11(value)) throw new TypeError("InvalidTableGridModel");
+	if (!record$12(value)) throw new TypeError("InvalidTableGridModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableGridModel");
 	return descriptor.value;
 }
 async function editDocumentTableGrid(input, dependencies = {}) {
-	if (!record$11(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
+	if (!record$12(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
 		"bytes",
 		"wasm",
 		"reference",
@@ -14882,7 +14882,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		});
 		own(document);
 		const sectionCount = field$1(document, "sectionCount"), sdk = field$1(document, "sdk");
-		if (field$1(document, "format") !== format || field$1(document, "sourceSha256") !== sourceSha256 || !uint$10(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$11(sdk)) throw new Error("InvalidTableGridDocument");
+		if (field$1(document, "format") !== format || field$1(document, "sourceSha256") !== sourceSha256 || !uint$10(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$12(sdk)) throw new Error("InvalidTableGridDocument");
 		const selected = resolveTableReference(await observe({
 			format,
 			sourceSha256,
@@ -14931,7 +14931,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 	if (!result) throw new Error("InvalidTableGridResult");
 	return result;
 }
-var record$11, uint$10;
+var record$12, uint$10;
 var init_edit_table_grid = __esmMin((() => {
 	init_table_reference_resolution();
 	init_document_format();
@@ -14940,7 +14940,7 @@ var init_edit_table_grid = __esmMin((() => {
 	init_engine();
 	init_document_model();
 	init_object_reference();
-	record$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$10 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // src/grid-file-host.ts
@@ -14972,7 +14972,7 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 		expectedColumns: options.expectedColumns,
 		...options.layout === void 0 ? {} : { layout: options.layout }
 	});
-	if (!record$10(value)) throw new Error("InvalidFileTransformResult");
+	if (!record$11(value)) throw new Error("InvalidFileTransformResult");
 	const { format: returnedFormat, bytes, sourceSha256, layoutRequiresReflow, previewStale } = value;
 	if (returnedFormat !== format || sourceSha256 !== source.sha256 || layoutRequiresReflow !== true || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864 || typeof SharedArrayBuffer !== "undefined" && bytes.buffer instanceof SharedArrayBuffer) throw new Error("InvalidFileTransformResult");
 	const output = copyFileTransformInput(bytes, MAX_DOCUMENT_BYTES$1, "Output");
@@ -14985,12 +14985,12 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 	await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + line("layoutRequiresReflow", true) + line("previewStale", true) + warningLines(receipt.warnings));
 	return 0;
 }
-var record$10;
+var record$11;
 var init_grid_file_host = __esmMin((() => {
 	init_document_format();
 	init_picture_replacement_input();
 	init_object_reference();
-	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/bytes.ts
 function copyDocumentBytes(value, limit, name) {
@@ -15192,7 +15192,7 @@ function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits 
 		if (sites.length > budget.maxImages - rows.size) fail("ImageCountLimitExceeded");
 		if (format === "hwp5") validateHwp5PictureSources(sites);
 		for (const row of sites) {
-			if (!record$9(row)) fail("InvalidImageIdentity");
+			if (!record$10(row)) fail("InvalidImageIdentity");
 			const node = format === "hwp5" ? row.component_node : row.pictureNode;
 			if (!uint$9(node)) fail("InvalidImageIdentity");
 			if (format === "hwpx" && (typeof row.state !== "string" || !siteStates.has(row.state) || !(row.paragraph === null || uint$9(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint$9(row.anchorUnit)))) fail("InvalidImageInventory");
@@ -15324,7 +15324,7 @@ function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits 
 		}
 	};
 }
-var DOCUMENT_IMAGE_LIMITS, uint$9, digest$2, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$9, errorMessage, invoke$1;
+var DOCUMENT_IMAGE_LIMITS, uint$9, digest$2, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$10, errorMessage, invoke$1;
 var init_document_images$1 = __esmMin((() => {
 	init_hwp5_picture_sources();
 	init_object_reference$1();
@@ -15386,7 +15386,7 @@ var init_document_images$1 = __esmMin((() => {
 		6: [8, 16]
 	};
 	isRows = (value) => Array.isArray(value);
-	record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	errorMessage = (error) => error !== null && typeof error === "object" && "message" in error && typeof error.message === "string" ? error.message : void 0;
 	invoke$1 = (sdk, method, args) => {
 		const fn = Reflect.get(sdk, method);
@@ -16142,14 +16142,14 @@ var init_table_file_deletion = __esmMin((() => {
 // src/delete-table.ts
 var delete_table_exports = /* @__PURE__ */ __exportAll({ deleteDocumentTable: () => deleteDocumentTable });
 function field(value, key, optional = false) {
-	if (!record$8(value)) throw new TypeError("InvalidTableDeletionModel");
+	if (!record$9(value)) throw new TypeError("InvalidTableDeletionModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableDeletionModel");
 	return descriptor.value;
 }
 async function deleteDocumentTable(input, dependencies = {}) {
-	if (!record$8(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
+	if (!record$9(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
 		"bytes",
 		"wasm",
 		"reference"
@@ -16182,7 +16182,7 @@ async function deleteDocumentTable(input, dependencies = {}) {
 		});
 		own(document);
 		const sectionCount = field(document, "sectionCount"), sdk = field(document, "sdk");
-		if (field(document, "format") !== format || field(document, "sourceSha256") !== sourceSha256 || !uint$6(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$8(sdk)) throw new Error("InvalidTableDeletionDocument");
+		if (field(document, "format") !== format || field(document, "sourceSha256") !== sourceSha256 || !uint$6(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$9(sdk)) throw new Error("InvalidTableDeletionDocument");
 		const selected = resolveTableReference(await observe({
 			format,
 			sourceSha256,
@@ -16225,7 +16225,7 @@ async function deleteDocumentTable(input, dependencies = {}) {
 	if (!result) throw new Error("InvalidTableDeletionResult");
 	return result;
 }
-var record$8, uint$6;
+var record$9, uint$6;
 var init_delete_table = __esmMin((() => {
 	init_table_reference_resolution();
 	init_document_format();
@@ -16234,7 +16234,7 @@ var init_delete_table = __esmMin((() => {
 	init_engine();
 	init_document_model();
 	init_object_reference();
-	record$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$6 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/image-file-insertion.mjs
@@ -16490,7 +16490,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 			wasm,
 			embedImages: options.embedImages
 		});
-		if (!record$7(result)) throw new Error("InvalidHTMLConversionResult");
+		if (!record$8(result)) throw new Error("InvalidHTMLConversionResult");
 		const { html, sourceSha256, semanticOnly, warnings } = result;
 		const warningCount = Array.isArray(warnings) ? warnings.length : void 0;
 		if (result.format !== format || sourceSha256 !== source.sha256 || semanticOnly !== true || typeof html !== "string" || !html.isWellFormed() || html.length === 0 || html.length > 33554432 || !Array.isArray(warnings) || typeof warningCount !== "number" || !Number.isInteger(warningCount) || warningCount < 0 || warningCount > 4096) throw new Error("InvalidHTMLConversionResult");
@@ -16532,7 +16532,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 			height: options.height
 		});
 	}
-	if (!record$7(value)) throw new Error("InvalidFileTransformResult");
+	if (!record$8(value)) throw new Error("InvalidFileTransformResult");
 	const { bytes, sourceSha256, layoutRequiresReflow, previewStale } = value;
 	if (value.format !== format || sourceSha256 !== source.sha256 || layoutRequiresReflow !== true || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864 || typeof SharedArrayBuffer !== "undefined" && bytes.buffer instanceof SharedArrayBuffer || image !== void 0 && value.imageSha256 !== image.sha256) throw new Error("InvalidFileTransformResult");
 	const output = copyFileTransformInput(bytes, MAX_DOCUMENT_BYTES$1, "Output");
@@ -16545,7 +16545,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 	await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + (image ? line("imageSHA256", image.sha256) : "") + line("layoutRequiresReflow", true) + line("previewStale", true) + warningLines(receipt.warnings));
 	return 0;
 }
-var encoder$3, record$7;
+var encoder$3, record$8;
 var init_structural_host = __esmMin((() => {
 	init_document_format();
 	init_picture_replacement_input();
@@ -16553,7 +16553,347 @@ var init_structural_host = __esmMin((() => {
 	init_object_reference();
 	init_host_output();
 	encoder$3 = new TextEncoder();
-	record$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+}));
+// ../../web/preview/hwp5-current-body-reference.mjs
+function validateHwp5CurrentBodyReference(editor, message, referenceError, ownerError, sections) {
+	if (Object.hasOwn(message, "reference")) {
+		const ref = message.reference;
+		const keys = [
+			"epoch",
+			"scope",
+			"kind",
+			"section",
+			"id",
+			"row",
+			"column"
+		];
+		const fail = () => {
+			throw new Error(referenceError);
+		};
+		if (!ref || typeof ref !== "object" || Array.isArray(ref) || Reflect.ownKeys(ref).length !== keys.length) fail();
+		const values = {};
+		for (const key of keys) {
+			const descriptor = Object.getOwnPropertyDescriptor(ref, key);
+			if (!descriptor || !("value" in descriptor)) fail();
+			values[key] = descriptor.value;
+		}
+		if (!["original", "generated"].includes(values.kind) || values.section !== message.section || values.row !== 0 || values.column !== 0 || !Number.isInteger(message.paragraph) || message.paragraph < 0 || message.paragraph > 4294967295) fail();
+		if (!editor.supportsCurrentSourceReferences?.()) throw new Error("Hwp5CurrentSourceReferenceAbiUnavailable");
+		let section = sections?.get(message.section);
+		if (sections && !section) {
+			section = { windows: /* @__PURE__ */ new Map() };
+			sections.set(message.section, section);
+		}
+		const first = sections ? Math.floor(message.paragraph / 1024) * 1024 : message.paragraph;
+		let window = section?.windows.get(first);
+		if (!window) {
+			window = editor.currentSourceReferences(message.section, {
+				first,
+				count: sections ? 1024 : 1
+			});
+			section?.windows.set(first, window);
+		}
+		const actual = window.references?.[message.paragraph - first];
+		if (window.version !== 1 || window.first !== first || window.total <= message.paragraph || !Array.isArray(window.references) || window.references.length !== Math.min(sections ? 1024 : 1, window.total - first) || !actual || keys.some((key) => values[key] !== actual[key])) fail();
+		const flow = section?.flow ?? editor.paragraphFlow(message.section);
+		if (section) section.flow = flow;
+		const host = flow[message.paragraph];
+		if (flow.length !== window.total || host?.paragraph !== message.paragraph || host.host !== "body" || host.top_level !== true) throw new Error(ownerError);
+	}
+}
+var init_hwp5_current_body_reference = __esmMin((() => {}));
+// src/mutations/character-extensions.ts
+function checkedCharacterExtensions(value) {
+	if (!record$7(value) || Object.keys(value).some((k) => ![
+		"size",
+		"bold",
+		"italic",
+		"underline",
+		"textColor",
+		"fontName"
+	].includes(k))) throw new TypeError("InvalidCharacterProperties");
+	characterPropertyArgs(Object.fromEntries(Object.entries(value).filter(([key]) => [
+		"size",
+		"bold",
+		"italic"
+	].includes(key))));
+	if (value.underline != null) characterUnderlineArg(value.underline);
+	if (value.textColor != null) characterColorArg(value.textColor);
+	if (value.fontName != null) {
+		if (!record$7(value.fontName) || Object.keys(value.fontName).sort().join() !== "language,name") throw new TypeError("InvalidFontName");
+		characterFontNameArgs(value.fontName.language, value.fontName.name);
+	}
+	return value;
+}
+function basicCharacterProperties(value) {
+	return Object.fromEntries(Object.entries(value).filter(([key]) => [
+		"size",
+		"bold",
+		"italic"
+	].includes(key)));
+}
+function patch(value) {
+	const character = {};
+	for (const key of [
+		"size",
+		"bold",
+		"italic"
+	]) if (value[key] != null) character[key] = value[key];
+	if (value.underline != null) character.underline = { kind: value.underline };
+	if (value.textColor != null) character.textColor = characterColorArg(value.textColor);
+	if (value.fontName != null) character.fonts = { [value.fontName.language]: { name: value.fontName.name } };
+	return { character };
+}
+function fields$1(operation) {
+	const p = operation.properties;
+	return [
+		...[
+			"size",
+			"bold",
+			"italic"
+		].filter((k) => p[k] != null).map((k) => "character." + k),
+		...p.underline == null ? [] : ["character.underline.kind"],
+		...p.textColor == null ? [] : ["character.textColor"],
+		...p.fontName == null ? [] : [`character.fonts.${p.fontName.language}.name`]
+	];
+}
+function requireCharacterExtensions(document, operation, admitted = false) {
+	if (document.sdk.supportsAtomicFormatting?.() !== true || document.sdk.supportsSourceTableCellSplit?.() !== true) throw new Error("CharacterExtensionsAbiUnavailable");
+	const cap = document.sdk.atomicFormattingCapabilities();
+	if (cap.format !== document.format || cap.coordinateSpace !== "native-source-utf16" || cap.requiresHistoryProtocol !== 2) throw new Error("CharacterExtensionsAbiUnavailable");
+	for (const name of fields$1(operation)) {
+		const field = cap.fields[name];
+		if (field?.writable !== true && (admitted || field?.reason !== "OwnedHistoryUnavailable")) throw new Error(field?.reason ?? "FormattingFieldUnavailable");
+	}
+	if (operation.properties.underline != null && !cap.fields["character.underline.kind"].enumValues?.includes(operation.properties.underline)) throw new Error("UnsupportedCharacterUnderlineKind");
+	if (operation.properties.size != null && cap.fields["character.size"].unit !== "hundredth-point") throw new Error("UnsupportedCharacterSizeUnit");
+	if (operation.properties.textColor != null && cap.fields["character.textColor"].unit !== "RGB24") throw new Error("UnsupportedCharacterColorUnit");
+	if (document.format === "hwp5" && document.sdk.supportsCurrentSourceReferences?.() !== true) throw new Error("Hwp5CurrentSourceReferenceAbiUnavailable");
+}
+function indexOwners(flow) {
+	const positions = /* @__PURE__ */ new Map();
+	for (let index = 0; index < flow.length; index++) {
+		const row = flow[index];
+		if (!row || positions.has(row.paragraph)) throw new Error("InvalidCharacterExtensionFlow");
+		positions.set(row.paragraph, {
+			index,
+			row
+		});
+	}
+	return {
+		length: flow.length,
+		positions
+	};
+}
+function owner(document, operation, row, flow) {
+	if (!row || row.paragraph !== operation.paragraph || row.host !== "body" || row.top_level !== true) throw new Error("UnsupportedCharacterExtensionOwner");
+	if (document.format === "hwp5") {
+		const sdk = document.sdk;
+		const window = sdk.currentSourceReferences(operation.section, {
+			first: operation.paragraph,
+			count: 1
+		});
+		const reference = window.references[0];
+		validateHwp5CurrentBodyReference({
+			supportsCurrentSourceReferences: () => sdk.supportsCurrentSourceReferences(),
+			currentSourceReferences(section, options) {
+				if (section !== operation.section || options.first !== operation.paragraph || options.count !== 1) throw new Error("StaleCharacterExtensionTarget");
+				return window;
+			},
+			paragraphFlow(section) {
+				if (section !== operation.section) throw new Error("StaleCharacterExtensionTarget");
+				return flow;
+			}
+		}, {
+			...operation,
+			reference
+		}, "StaleCharacterExtensionTarget", "UnsupportedCharacterExtensionOwner");
+		return {
+			reference: { ...reference },
+			source_node: row.source_node,
+			template_node: "template_node" in row ? row.template_node : void 0
+		};
+	}
+	return {
+		source_node: row.source_node,
+		host: row.host,
+		top_level: row.top_level
+	};
+}
+function lineage(value) {
+	const copy = value;
+	if (!copy.reference) return value;
+	const { epoch: _, ...reference } = copy.reference;
+	return {
+		...copy,
+		reference
+	};
+}
+function query(document, operation) {
+	const text = document.format === "hwp5" ? document.sdk.text(operation.section, operation.paragraph) : document.sdk.anchorText(operation.section, operation.paragraph);
+	if (typeof text !== "string" || text.slice(operation.startUnit, operation.endUnit) !== operation.expectedRangeText || operation.endUnit > text.length || operation.expectedText !== void 0 && text !== operation.expectedText) throw new Error("OperationRangePreconditionFailed");
+	const cap = document.sdk.atomicFormattingCapabilities();
+	return document.sdk.queryFormatting({
+		schemaVersion: 1,
+		binding: cap.binding,
+		selectors: [{
+			kind: "original-paragraph",
+			section: operation.section,
+			paragraph: operation.paragraph,
+			ranges: [{
+				startUnit: operation.startUnit,
+				endUnit: operation.endUnit
+			}]
+		}],
+		fields: fields$1(operation)
+	});
+}
+function prepareCharacterExtensions(document, operations) {
+	const prepared = /* @__PURE__ */ new Map();
+	const sections = /* @__PURE__ */ new Map();
+	const sdk = document.sdk, sourceSha = document.sourceSha256, format = document.format;
+	const planned = new Set(operations);
+	const safeKinds = /* @__PURE__ */ new Set([
+		"character-properties",
+		"character-format",
+		"paragraph-format",
+		"paragraph-alignment",
+		"paragraph-margins",
+		"paragraph-spacing"
+	]);
+	let binding = operations.some(hasCharacterExtensions) ? sdk.sourceTableCellSplitBinding() : null;
+	let knownCommits = 0;
+	let receipt;
+	function current(value) {
+		if (value !== document || value.sdk !== sdk || value.format !== format || value.sourceSha256 !== sourceSha || !same(binding, sdk.sourceTableCellSplitBinding())) throw new Error("StaleCharacterExtensionTarget");
+	}
+	function committedLease(next, changed) {
+		if (!binding || next.session !== binding.session) throw new Error("StaleCharacterExtensionTarget");
+		const unchanged = same(next, binding);
+		const oneCommit = next.revision === binding.revision + 1 && BigInt(next.serial) === BigInt(binding.serial) + 1n;
+		if (changed === false && !unchanged || changed === true && !oneCommit || changed === void 0 && !unchanged && !oneCommit) throw new Error("StaleCharacterExtensionTarget");
+		return oneCommit;
+	}
+	const initialFlows = /* @__PURE__ */ new Map();
+	let unsafe = false;
+	for (const operation of operations) {
+		if (hasCharacterExtensions(operation)) {
+			requireCharacterExtensions(document, operation, true);
+			if (unsafe) throw new Error("StaleCharacterExtensionTarget");
+			if (operation.endUnit <= operation.startUnit) throw new Error("EmptyCharacterExtensionRange");
+			current(document);
+			let section = sections.get(operation.section);
+			let flow;
+			if (!section) {
+				flow = sdk.paragraphFlow(operation.section);
+				section = indexOwners(flow);
+				sections.set(operation.section, section);
+			} else flow = initialFlows.get(operation.section);
+			initialFlows.set(operation.section, flow);
+			const observedOwner = owner(document, operation, section.positions.get(operation.paragraph)?.row, flow), read = query(document, operation);
+			current(document);
+			for (const name of fields$1(operation)) {
+				const observation = read.observations?.perTarget?.[0]?.fields?.[name];
+				if (observation?.writable !== true) throw Object.assign(new Error(observation?.writeUnavailableReason ?? observation?.reason ?? "FormattingTargetNotWritable"), { observations: structuredClone(read.observations) });
+			}
+			if (read.targets.length !== 1 || typeof read.targets[0].ref !== "string") throw new Error("InvalidFormattingTargets");
+			prepared.set(operation, {
+				owner: observedOwner,
+				ref: read.targets[0].ref,
+				session: read.binding.session
+			});
+		}
+		if (![
+			"character-properties",
+			"character-format",
+			"paragraph-format",
+			"paragraph-alignment",
+			"paragraph-margins",
+			"paragraph-spacing"
+		].includes(operation.kind)) unsafe = true;
+	}
+	initialFlows.clear();
+	if (prepared.size) current(document);
+	return {
+		apply(value, operation, index) {
+			current(value);
+			requireCharacterExtensions(value, operation, true);
+			const issued = prepared.get(operation), section = sections.get(operation.section);
+			const position = section?.positions.get(operation.paragraph);
+			if (!issued || !section || !position || receipt) throw new Error("StaleCharacterExtensionTarget");
+			const flow = sdk.paragraphFlow(operation.section);
+			if (flow.length !== section.length) throw new Error("StaleCharacterExtensionTarget");
+			const fresh = owner(value, operation, flow[position.index], flow);
+			if (!same(knownCommits ? lineage(issued.owner) : issued.owner, knownCommits ? lineage(fresh) : fresh)) throw new Error("StaleCharacterExtensionTarget");
+			current(value);
+			const before = query(value, operation);
+			if (before.targets.length !== 1 || before.binding.session !== issued.session || before.targets[0]?.ref !== issued.ref) throw new Error("StaleCharacterExtensionTarget");
+			current(value);
+			const outcome = sdk.applyFormattingPatch({
+				schemaVersion: 1,
+				binding: before.binding,
+				targets: before.targets,
+				patch: patch(operation.properties)
+			});
+			if (outcome.refreshRequired || outcome.cleanupError || !(outcome.nativeCode === 1 && outcome.application === "applied" && outcome.changed === true || outcome.nativeCode === 2 && outcome.application === "unapplied" && outcome.changed === false)) throw new Error(outcome.error ?? "UnconfirmedCharacterFormattingCompletion");
+			const after = query(value, operation);
+			const next = sdk.sourceTableCellSplitBinding();
+			const committed = committedLease(next, outcome.changed);
+			receipt = {
+				operation,
+				next: Object.freeze({ ...next }),
+				committed
+			};
+			prepared.delete(operation);
+			return {
+				operation: index,
+				kind: "character-properties",
+				before: before.observations,
+				after: after.observations,
+				changed: outcome.changed
+			};
+		},
+		runLegacy(operation, action) {
+			if (!prepared.size) return action();
+			current(document);
+			if (receipt || !planned.has(operation) || !safeKinds.has(operation.kind) || hasCharacterExtensions(operation)) throw new Error("StaleCharacterExtensionTarget");
+			const result = action();
+			const next = sdk.sourceTableCellSplitBinding();
+			const committed = committedLease(next);
+			receipt = {
+				operation,
+				next: Object.freeze({ ...next }),
+				committed
+			};
+			return result;
+		},
+		advance(operation) {
+			if (!receipt) {
+				if (prepared.size) throw new Error("UnissuedCharacterExtensionAdvance");
+				return;
+			}
+			if (operation !== void 0 && operation !== receipt.operation || document.sdk !== sdk || document.format !== format || document.sourceSha256 !== sourceSha || !same(receipt.next, sdk.sourceTableCellSplitBinding())) throw new Error("StaleCharacterExtensionTarget");
+			binding = receipt.next;
+			if (receipt.committed) knownCommits++;
+			receipt = void 0;
+		}
+	};
+}
+var record$7, hasCharacterExtensions, same;
+var init_character_extensions = __esmMin((() => {
+	init_character_property_args();
+	init_character_color_args();
+	init_character_underline_args();
+	init_character_font_name_args();
+	init_hwp5_current_body_reference();
+	record$7 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+	hasCharacterExtensions = (operation) => operation.kind === "character-properties" && [
+		"underline",
+		"textColor",
+		"fontName"
+	].some((key) => Reflect.get(operation.properties, key) != null);
+	same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 }));
 // src/mutations/source-table-cell-split.ts
 function isCellBinding(input) {
@@ -16827,7 +17167,7 @@ function validateDocumentOperations(input) {
 				break;
 			case "character-properties":
 				range(operation);
-				characterPropertyArgs(operation.properties);
+				checkedCharacterExtensions(operation.properties);
 				break;
 			case "character-format":
 				range(operation);
@@ -16920,6 +17260,7 @@ function validateDocumentOperations(input) {
 }
 var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$6, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
 var init_validate = __esmMin((() => {
+	init_character_extensions();
 	init_object_reference();
 	init_paragraph_bullet_definition_write();
 	init_created_table_grid();
@@ -17107,6 +17448,7 @@ function prepareOperationSession(document, operations) {
 	if (!["hwp5", "hwpx"].includes(document?.format) || !Number.isInteger(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096 || !document.sdk || typeof document.close !== "function" || typeof document.save !== "function") throw new Error("InvalidOperationSession");
 	const protectedSections = /* @__PURE__ */ new Set();
 	for (const operation of operations) {
+		if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
 		if (operation.kind === "source-table-cell-split" && (typeof document.sdk.supportsSourceTableCellSplit !== "function" || !document.sdk.supportsSourceTableCellSplit())) throw new Error(document.format === "hwp5" ? "Hwp5SourceTableCellSplitAbiUnavailable" : "HwpxSourceTableCellSplitAbiUnavailable");
 		if (operation.kind === "paragraph-bullet-definition") {
 			const inventory = document.sdk.paragraphBulletDefinitions();
@@ -17129,7 +17471,7 @@ function prepareOperationSession(document, operations) {
 		}
 		if ((Object.hasOwn(operation, "expectedText") || Object.hasOwn(operation, "expectedRangeText") || operation.kind === "replace-paragraph-ranges") && typeof (document.format === "hwp5" ? document.sdk.text : document.sdk.anchorText) !== "function") throw new Error("OperationTextObservationUnavailable");
 	}
-	if (operations.some((operation) => operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
+	if (operations.some((operation) => hasCharacterExtensions(operation) || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
 	if (document.format === "hwp5") {
 		if (protectedSections.size && typeof document.sdk.validateTextSourcePolicy !== "function") throw new Error("OperationTextSourcePolicyUnavailable");
 		for (const section of protectedSections) document.sdk.validateTextSourcePolicy(section);
@@ -17202,7 +17544,7 @@ function applyOperation(document, operation) {
 				paragraph: operation.paragraph,
 				startUnit: operation.startUnit,
 				endUnit: operation.endUnit,
-				properties: operation.properties
+				properties: basicCharacterProperties(operation.properties)
 			});
 			break;
 		case "character-format":
@@ -17300,6 +17642,7 @@ function applyOperation(document, operation) {
 }
 var METHODS;
 var init_dispatch = __esmMin((() => {
+	init_character_extensions();
 	init_object_reference();
 	init_hwp5_table_creation_command();
 	METHODS = Object.freeze({
@@ -17347,9 +17690,15 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 		if (document.sourceSha256 !== expectedSha256) throw new Error("SourceSha256Mismatch");
 		prepareOperationSession(document, captured);
 		const sourceSplits = await prepareSourceTableCellSplits(document, captured);
+		const extensions = prepareCharacterExtensions(document, captured);
 		const identities = [];
 		for (const [index, operation] of captured.entries()) {
-			const identity = operation.kind === "source-table-cell-split" ? sourceSplits.apply(document, operation) : applyOperation(document, operation);
+			if (hasCharacterExtensions(operation)) {
+				identities.push(extensions.apply(document, operation, index));
+				extensions.advance(operation);
+				continue;
+			}
+			const identity = operation.kind === "source-table-cell-split" ? sourceSplits.apply(document, operation) : extensions.runLegacy(operation, () => applyOperation(document, operation));
 			if (identity !== null) {
 				if (typeof identity !== "string" || !/^[1-9][0-9]{0,19}$/u.test(identity) || BigInt(identity) > 18446744073709551615n) throw new Error("InvalidCreatedTableIdentity");
 				identities.push({
@@ -17358,6 +17707,7 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 					identity
 				});
 			}
+			extensions.advance(operation);
 		}
 		const saved = captured.length ? await document.save({ allowStaleLayout }) : original;
 		const hwp5Saved = document.format === "hwp5" && captured.length !== 0;
@@ -17392,6 +17742,7 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 }
 var record$5;
 var init_document_operations = __esmMin((() => {
+	init_character_extensions();
 	init_source_table_cell_split();
 	init_validate();
 	init_dispatch();
