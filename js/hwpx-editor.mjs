@@ -5,6 +5,7 @@ import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
 import { createSourceTableGridApi } from './source-table-grid.mjs';
+import { createSourceTableCellMergeApi } from './source-table-cell-merge.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { createIndependentTextApi } from './independent-text-api.mjs';
 import { createHwpxReadScopeApi } from './hwpx-read-scope.mjs';
@@ -209,6 +210,7 @@ export async function createHwpxEditor(source) {
       wasm.hwpx_edit_output_free();
     }
   }
+  const documentInsert = createHwpxDocumentInsertApi({ wasm, memory, check: ready });
   return {
     ...createCreatedTableGridApi({
       wasm,
@@ -227,7 +229,8 @@ export async function createHwpxEditor(source) {
     }),
     ...createAtomicFormattingApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
     ...createIndependentTextApi({ wasm, memory, check: ready, prefix: 'hwpx_edit' }),
-    ...createHwpxDocumentInsertApi({ wasm, memory, check: ready }),
+    ...documentInsert,
+    ...createSourceTableCellMergeApi({ wasm, memory, check: ready, documentInsert }),
     ...createParagraphBreakApi({
       wasm,
       memory,

@@ -1929,6 +1929,31 @@ export function createCanvasSurface({
         direct.requestCellBlock(extend, fromContext)
       );
     },
+    registerCellBlockMenu(menu: HTMLElement, ownsInput?: (input: HTMLElement) => boolean): void {
+      if (!closed && lease?.isActive() === true) direct.registerCellBlockMenu(menu, ownsInput);
+    },
+    captureSourceTableCellMerge() {
+      const state = editor.getEditorState();
+      const current = () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        lease?.isActive() === true &&
+        !bridge?.busy() &&
+        !modalOpen() &&
+        editor.getEditorState() === state &&
+        state.status === 'ready' &&
+        state.stateVersion === observedStateVersion &&
+        displayed ===
+          `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+        renderer.historyModelMatches(state) &&
+        direct.settled();
+      if (!current()) return null;
+      const captured = direct.captureSourceTableCellBlock();
+      if (!captured || !captured.current() || !current()) return null;
+      const live = () => current() && captured.current() && current();
+      const target = lease?.captureSourceTableCellMerge?.(captured.witness, live);
+      return target ? Object.freeze({ state, target, current: live }) : null;
+    },
     hasCellBlock(): boolean {
       return !closed && lease?.isActive() === true && direct.hasCellBlock();
     },

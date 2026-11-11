@@ -12,6 +12,7 @@ export type DemoCommand =
   | 'block-selection'
   | 'table-cell-block'
   | 'table-cell-block-extend'
+  | 'table-cell-merge'
   | 'undo'
   | 'redo'
   | 'cut'

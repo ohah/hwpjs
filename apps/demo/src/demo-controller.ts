@@ -20,6 +20,8 @@ import { isMenuZoomPercent, stepViewZoom } from './view-zoom.ts';
 import { mountShortcutSettings } from './shortcut-settings.ts';
 import {
   getHistoryAvailability,
+  MERGE_SOURCE_TABLE_CELLS_COMMAND,
+  type SourceTableCellMergeTarget,
   getSelectionFormatting,
   SET_CHARACTER_FONT_NAME_COMMAND,
 } from '@hwpjs/core';
@@ -86,6 +88,12 @@ export interface DemoHost
   canRequestCellBlock?(requireFocus?: boolean): boolean;
   requestCellBlock?(extend?: boolean, fromContext?: boolean): boolean;
   hasCellBlock?(): boolean;
+  registerCellBlockMenu?(menu: HTMLElement, ownsInput?: (input: HTMLElement) => boolean): void;
+  captureSourceTableCellMerge?(): {
+    state: ReturnType<HeadlessEditor['getEditorState']>;
+    target: SourceTableCellMergeTarget;
+    current(): boolean;
+  } | null;
   setScale(value: number): boolean;
   setDisplayOptions?(options: CanvasDisplayOptions): boolean;
   getDisplayOptions?(): Readonly<CanvasDisplayOptions> | undefined;
@@ -330,6 +338,10 @@ export async function mountDemo(
       ...(host?.requestCellBlock
         ? { 'table-cell-block': cellBlock, 'table-cell-block-extend': cellBlock }
         : {}),
+      'table-cell-merge': {
+        enabled: host?.captureSourceTableCellMerge?.() != null,
+        reason: '편집 가능한 HWPX 표에서 연속된 셀을 두 개 이상 선택하세요.',
+      },
       'object-properties': objectProperties.presentation(),
       ...generatedTableGrid.presentation(),
       'table-cell-properties': tableCellProperties.presentation(),
@@ -484,7 +496,11 @@ export async function mountDemo(
       return new Uint8Array(await response.arrayBuffer());
     });
   }
-  async function runAction(action: DemoAction, fromContext = false) {
+  async function runAction(
+    action: DemoAction,
+    fromContext = false,
+    mergeTarget?: SourceTableCellMergeTarget,
+  ) {
     if (closed) return;
     const available = presentation().actions?.[action.command];
     if (!available?.enabled) {
@@ -506,6 +522,19 @@ export async function mountDemo(
         host?.requestCellBlock?.(action.command === 'table-cell-block-extend', fromContext) !== true
       )
         note('표에서 선택할 수 있는 셀에 커서를 놓으세요.');
+      return;
+    }
+    if (action.command === 'table-cell-merge') {
+      const target = fromContext ? mergeTarget : host?.captureSourceTableCellMerge?.()?.target;
+      if (!target) {
+        note('현재 셀 블록을 다시 선택하세요.');
+        return;
+      }
+      const result = await editor.dispatchCommand(MERGE_SOURCE_TABLE_CELLS_COMMAND, target);
+      if (result.status === 'committed-with-snapshot') note('셀을 합쳤습니다.');
+      else if (result.status === 'committed-refresh-required')
+        note('셀 합치기가 반영됐습니다. 화면을 복구한 뒤 계속하세요.');
+      else note(result.error || '셀을 합치지 못했습니다.');
       return;
     }
     if (action.command === 'block-selection') {
@@ -672,10 +701,21 @@ export async function mountDemo(
         root: shell.surfaceMount,
         getState: presentation,
         captureTextSelection: () => captureFormattingPresentation(editor, () => host).capture,
-        getTarget: () =>
-          generatedTableGrid.contextTarget() ??
-          contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null),
-        execute: (action) => runAction(action, true),
+        getTarget: () => {
+          const merge = host?.captureSourceTableCellMerge?.();
+          if (merge)
+            return {
+              kind: 'source-table-cell',
+              key: JSON.stringify([merge.state.token, merge.state.stateVersion, 'cell-block']),
+              current: merge.current,
+              mergeTarget: merge.target,
+            };
+          return (
+            generatedTableGrid.contextTarget() ??
+            contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null)
+          );
+        },
+        execute: (action, target) => runAction(action, true, target.mergeTarget),
         subscribe: (listener) => editor.registerStateListener(() => listener()),
         onError: (error) =>
           note(error instanceof Error ? error.message : '명령을 실행하지 못했습니다.'),
@@ -694,6 +734,10 @@ export async function mountDemo(
   void refreshFixtures();
   try {
     if (shell.surfaceMount && mountHost) host = await mountHost(shell.surfaceMount, editor, note);
+    if (shell.tableMenu) host?.registerCellBlockMenu?.(shell.tableMenu);
+    contextMenu?.registerCellBlockMenu((menu, ownsInput) =>
+      host?.registerCellBlockMenu?.(menu, ownsInput),
+    );
     unsubscribePages =
       host?.subscribePageStatus?.(() => {
         presentationRefresh.request();

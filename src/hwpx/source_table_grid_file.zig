@@ -13,6 +13,22 @@ pub const Request = struct {
     expected_columns: u32,
     command: Command,
 };
+pub const Rectangle = grid.Rectangle;
+pub const MergeRequest = struct {
+    section: usize,
+    target: Target,
+    expected_rows: u32,
+    expected_columns: u32,
+    rectangle: Rectangle,
+};
+const Operation = union(enum) { edit: Command, merge: Rectangle };
+const Transform = struct {
+    section: usize,
+    target: Target,
+    expected_rows: u32,
+    expected_columns: u32,
+    operation: Operation,
+};
 pub const Options = struct {
     max_input_bytes: usize = 64 * 1024 * 1024,
     max_output_bytes: usize = 128 * 1024 * 1024,
@@ -120,6 +136,14 @@ fn uniqueSectionEntries(a: std.mem.Allocator, d: *const package.Document, struct
 /// Borrow input; return a newly owned ZIP only after package/payload/XML reopen.
 /// IDs are reserved in a temporary package-wide paragraph-only inventory.
 pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, options: Options) ![]u8 {
+    return transformOperation(a, input, .{ .section = request.section, .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .operation = .{ .edit = request.command } }, options);
+}
+
+pub fn transformMerge(a: std.mem.Allocator, input: []const u8, request: MergeRequest, options: Options) ![]u8 {
+    return transformOperation(a, input, .{ .section = request.section, .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .operation = .{ .merge = request.rectangle } }, options);
+}
+
+fn transformOperation(a: std.mem.Allocator, input: []const u8, request: Transform, options: Options) ![]u8 {
     if (input.len == 0 or input.len > options.max_input_bytes) return error.LimitExceeded;
     var d = try open(a, input, options);
     defer d.deinit(a);
@@ -135,17 +159,10 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     const entry = d.manifest.items[item].entry_index orelse return error.ExternalSpineXml;
     const source = try d.archive.decode(d.archive.entries[entry], options.max_xml_bytes);
     defer a.free(source);
-    const plan = try @import("../model/table_grid_edit_plan.zig").create(request.expected_rows, request.expected_columns, request.command, options.max_cells);
-    if (plan.inserted_count > options.max_paragraphs - inventory.count) return error.LimitExceeded;
-    const ids = try a.alloc(u32, plan.inserted_count);
-    defer a.free(ids);
-    var next: u32 = 1;
-    for (ids) |*id| {
-        while (inventory.used.contains(next)) next = std.math.add(u32, next, 1) catch return error.LimitExceeded;
-        id.* = next;
-        try inventory.used.put(a, next, {});
-    }
-    const candidate = try grid.prepare(a, source, .{ .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .command = request.command, .fresh_paragraph_ids = ids, .max_bytes = options.max_xml_bytes, .max_cells = options.max_cells });
+    const candidate = switch (request.operation) {
+        .edit => |command| try prepareGrid(a, source, request, command, options, &inventory),
+        .merge => |rectangle| try grid.prepareMerge(a, source, .{ .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .rectangle = rectangle, .max_bytes = options.max_xml_bytes, .max_cells = options.max_cells }),
+    };
     defer a.free(candidate);
     const output = try @import("../zip/replace_writer.zig").write(a, input, &.{.{ .entry_index = entry, .bytes = candidate }}, .{ .read = .{ .max_entries = options.max_parts, .max_entry_bytes = options.max_total_payload_bytes }, .max_output_bytes = options.max_output_bytes });
     errdefer a.free(output);
@@ -167,4 +184,18 @@ pub fn transform(a: std.mem.Allocator, input: []const u8, request: Request, opti
     defer a.free(saved);
     if (!std.mem.eql(u8, saved, candidate)) return error.SourceTableFileValidationFailed;
     return output;
+}
+
+fn prepareGrid(a: std.mem.Allocator, source: []const u8, request: Transform, command: Command, options: Options, inventory: *Inventory) ![]u8 {
+    const plan = try @import("../model/table_grid_edit_plan.zig").create(request.expected_rows, request.expected_columns, command, options.max_cells);
+    if (plan.inserted_count > options.max_paragraphs - inventory.count) return error.LimitExceeded;
+    const ids = try a.alloc(u32, plan.inserted_count);
+    defer a.free(ids);
+    var next: u32 = 1;
+    for (ids) |*id| {
+        while (inventory.used.contains(next)) next = std.math.add(u32, next, 1) catch return error.LimitExceeded;
+        id.* = next;
+        try inventory.used.put(a, next, {});
+    }
+    return grid.prepare(a, source, .{ .target = request.target, .expected_rows = request.expected_rows, .expected_columns = request.expected_columns, .command = command, .fresh_paragraph_ids = ids, .max_bytes = options.max_xml_bytes, .max_cells = options.max_cells });
 }

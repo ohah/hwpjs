@@ -1,3 +1,4 @@
+import { allowsCellBlockMenuFocus, bindCellBlockMenuFocus } from './cell-block-menu-focus.mjs';
 import {
   adjacentBlockCell,
   tableCellBlockContext,
@@ -590,7 +591,9 @@ export function createCanvasEditor({
     listen(ownerDocument, 'visibilitychange', () => {
       if (ownerDocument.visibilityState !== 'hidden') historyPaintBarrier.notify();
     });
+  let mergeCapture = null;
   const paint = ({ deferGeometry = false, preserveQueuedTyping = false } = {}) => {
+    if (mergeCapture?.block !== cellBlock) mergeCapture = null;
     if (composing || pending || historyPending || historyPaintBarrier?.pending || inputIntents.size)
       generatedGridSelectionEpoch++;
 
@@ -724,6 +727,7 @@ export function createCanvasEditor({
     a = editablePoint(a);
     f = editablePoint(f);
     blockSelection = block;
+    if (cellBlock !== nextCellBlock) mergeCapture = null;
     cellBlock = nextCellBlock;
     selectionOrigin = origin;
     if (draftSelection && !sameParagraph(draftSelection.focus, f)) draftSelection = null;
@@ -797,6 +801,46 @@ export function createCanvasEditor({
     const next = { ...context, stage, start, cell };
     next.paint = tableCellBlockPaint(next);
     return applyBlockSelection(point, point, null, null, next);
+  };
+  const captureSourceTableCellBlock = () => {
+    const block = cellBlock;
+    const content = renderer.viewContent?.();
+    if (
+      !block ||
+      block.created ||
+      block.paint.cells.size < 2 ||
+      content?.format !== 'hwpx' ||
+      content.sourceTableCellMergeAvailable !== true ||
+      renderer.viewEditPolicyActive?.() === true
+    )
+      return null;
+    if (mergeCapture?.block === block && mergeCapture.content === content)
+      return mergeCapture.value.current() ? mergeCapture.value : null;
+    const current = () =>
+      cellBlock === block &&
+      renderer.viewContent?.() === content &&
+      currentCellBlockContext()?.table === block.table &&
+      cellBlock === block;
+    if (!current()) return null;
+    const { section, tableNode, rows, columns, cells } = block.table;
+    const witness = {
+      section,
+      tableNode,
+      rows,
+      columns,
+      cells: cells
+        .filter((cell) => block.paint.cells.has(cell.listNode))
+        .map(({ listNode, row, column, paragraphs }) => ({
+          listNode,
+          row,
+          column,
+          paragraphs: [...paragraphs],
+        })),
+    };
+    if (witness.cells.length !== block.paint.cells.size || !current()) return null;
+    const value = { witness, current };
+    mergeCapture = { block, content, value };
+    return value;
   };
   const requestCellBlock = (extend = false, fromContext = false) => {
     const saved = focus;
@@ -2967,7 +3011,15 @@ export function createCanvasEditor({
   // In a settled projection the Canvas anchor/focus is the view authority;
   // reapply it before a queued select event can publish the restored DOM range.
   // Do not touch composing text, pending drafts or asynchronous acknowledgments.
+  let cellBlockMenuFocus = null;
+  const clearCellBlockOnFocusExit = () => {
+    cellBlockMenuFocus = null;
+    if (!cellBlock) return;
+    cellBlock = mergeCapture = null;
+    updateReadOnly();
+  };
   const focusedSelection = () => {
+    cellBlockMenuFocus = null;
     if (
       activeElement() === input &&
       target &&
@@ -2999,14 +3051,29 @@ export function createCanvasEditor({
     return true;
   };
   listen(input, 'focus', focusedSelection);
-  listen(input, 'blur', () => {
+  listen(input, 'blur', (event) => {
     blockSelection = null;
-    if (cellBlock) {
-      cellBlock = null;
-      updateReadOnly();
-    }
+    if (cellBlock && allowsCellBlockMenuFocus(event.relatedTarget, input))
+      cellBlockMenuFocus = cellBlock;
+    else clearCellBlockOnFocusExit();
     paint();
   });
+  const exitCellBlockMenu = (event) => {
+    if (
+      !cellBlockMenuFocus ||
+      event.target === input ||
+      allowsCellBlockMenuFocus(event.target, input)
+    )
+      return;
+    if (cellBlock === cellBlockMenuFocus) {
+      clearCellBlockOnFocusExit();
+      paint();
+    } else cellBlockMenuFocus = null;
+  };
+  if (ownerDocument?.addEventListener) {
+    listen(ownerDocument, 'focusin', exitCellBlockMenu);
+    listen(ownerDocument, 'pointerdown', exitCellBlockMenu);
+  }
   const selectedRange = () => {
     if (cellBlock) return null;
     if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus) || target?.createdCell)
@@ -4283,7 +4350,14 @@ export function createCanvasEditor({
     canRequestCellBlock: (requireFocus = false) =>
       (!requireFocus || activeElement() === input) && currentCellBlockContext() !== null,
     requestCellBlock,
+    registerCellBlockMenu(menu, ownsInput = () => true) {
+      bindCellBlockMenuFocus(
+        menu,
+        (candidate) => candidate === input && !events.signal.aborted && ownsInput(input) === true,
+      );
+    },
     hasCellBlock: () => cellBlock !== null,
+    captureSourceTableCellBlock,
     reset({
       preserveHistory = false,
       preserveHistoryIntents = false,

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createDocumentContextMenu } from '../../web/preview/document-context-menu.mjs';
 
 // Event-path fixture, not a browser/OS IME model. Non-bubbling blur reaches ancestor capture only.
-function fixture() {
+function fixture(keepsCellBlockFocus) {
   const document = { activeElement: null };
   class Element {
     get isConnected() {
@@ -87,6 +87,7 @@ function fixture() {
     targets: [rootA, rootB],
     commandIds: ['copy'],
     registry: {
+      keepsCellBlockFocus,
       commands: () => [{ id: 'copy', label: '복사', enabled: copyAllowed }],
       execute: (id) => calls.push({ id, focus: document.activeElement }),
       subscribe: (fn) => {
@@ -279,6 +280,27 @@ test('unknown connectivity remains guarded instead of inventing detachment', () 
     assert(h.menu.hidden);
     h.send(h.rootA, 'compositionend', { target: h.inputA });
     assert(openB().defaultPrevented);
+  } finally {
+    h.control.close();
+  }
+});
+
+test('cell-block menu ownership is registered through the owning Surface across module instances', async () => {
+  const owningBundle = await import('../../web/preview/cell-block-menu-focus.mjs?surface-bundle');
+  const otherBundle = await import('../../web/preview/cell-block-menu-focus.mjs?unrelated-bundle');
+  let current = true;
+  const h = fixture(() => current);
+  try {
+    h.control.registerCellBlockMenu(owningBundle.bindCellBlockMenuFocus);
+    h.open();
+    assert.equal(owningBundle.allowsCellBlockMenuFocus(h.menu, h.inputA), true);
+    assert.equal(owningBundle.allowsCellBlockMenuFocus(h.menu, h.inputB), false);
+    assert.equal(otherBundle.allowsCellBlockMenuFocus(h.menu, h.inputA), false);
+    current = false;
+    assert.equal(owningBundle.allowsCellBlockMenuFocus(h.menu, h.inputA), false);
+    current = true;
+    h.control.close();
+    assert.equal(owningBundle.allowsCellBlockMenuFocus(h.menu, h.inputA), false);
   } finally {
     h.control.close();
   }

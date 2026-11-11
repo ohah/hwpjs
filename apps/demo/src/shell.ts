@@ -1,3 +1,4 @@
+// @ts-ignore The same focus policy is used by Canvas and both menus.
 import { DEMO_COMMAND_REGISTRY } from './command-support.ts';
 import { fontLanguageLabels, selectionFontNameTooltip } from './formatting-observation-label.ts';
 import type { CharacterFontLanguage } from '@hwpjs/core';
@@ -133,6 +134,7 @@ const menus: readonly [string, readonly DemoCommand[]][] = [
     '표',
     [
       'insert-table',
+      'table-cell-merge',
       'table-cell-properties',
       'table-cell-appearance',
       'generated-table-insert-row',
@@ -349,6 +351,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       }
     });
   };
+  let tableMenu: HTMLDetailsElement | undefined;
   for (const [label, items] of menus) {
     const details = el('details', 'hwp-demo-menu'),
       summary = el('summary', '', label),
@@ -412,6 +415,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
       }
       popup.append(scales, toolbarMenu);
     }
+    if (items.includes('table-cell-merge')) tableMenu = details;
     details.append(summary, popup);
     menuNav.append(details);
     trackDisclosure(details, summary, popup, items.includes('print-preview'));
@@ -733,6 +737,7 @@ export function createDemoShell(root: HTMLElement, options: DemoShellOptions) {
     surfaceMount,
     headlessMount,
     saveOptionsMount: picker,
+    tableMenu,
     update,
     destroy,
     /** Preserve an available selection; never touch the document/host subtree. */

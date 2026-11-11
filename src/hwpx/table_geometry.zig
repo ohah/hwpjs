@@ -147,6 +147,14 @@ fn inspectTable(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, 
     };
 }
 
+/// Validate a single selected table against the same grid and cell counters.
+pub fn inspectElement(a: std.mem.Allocator, tree: *const tree_mod.Tree, table: usize, options: Options) !Report {
+    if (table >= tree.elements.len or !table_fields.childIs(tree, table, "tbl")) return error.InvalidSourceTableTarget;
+    var report = initReport(null);
+    try inspectTable(a, tree, table, options, null, &report);
+    return report;
+}
+
 /// Scan all 2011 hp:tbl descendants (including nested tables) of each selected
 /// section; only direct hp:tr/hp:tc/hp:cellAddr/hp:cellSpan children define a grid.
 pub fn inspect(a: std.mem.Allocator, sections: []const tree_mod.Tree, options: Options) !Report {

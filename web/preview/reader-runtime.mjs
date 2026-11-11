@@ -1013,6 +1013,7 @@ export function createReaderRuntime({
     );
     // The reusable load snapshot describes ABI availability; reply capability also gates history.
     result.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
+    result.sourceTableCellMergeAvailable = editor?.supportsSourceTableCellMerge?.() === true;
     hwpxCreatedTablesPending = result.createdTableHostPending;
     return attachParagraphNumbering(editor, result);
   }
@@ -1239,6 +1240,30 @@ export function createReaderRuntime({
           await refreshHwp5PreviewFallback();
           reply({ kind: message.kind, requestId: message.requestId, content: hwp5Display() });
         }
+        return;
+      }
+      if (message.kind === 'source-table-cell-merge') {
+        if (
+          format !== 'hwpx' ||
+          !historyEnabled ||
+          editor?.supportsSourceTableCellMerge?.() !== true
+        )
+          throw Error('SourceTableCellMergeUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        atomicOutcome = editor.mergeSourceTableCells(message.request);
+        applied = atomicOutcome.application === 'applied';
+        mutationUncertain = atomicOutcome.application === 'unknown';
+        if (mutationUncertain) historyPoisoned = true;
+        if (atomicOutcome.error || atomicOutcome.cleanupError)
+          throw Error(atomicOutcome.error || atomicOutcome.cleanupError);
+        if (atomicOutcome.nativeCode === 2) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        reply({ kind: message.kind, content: hwpxDisplay() });
         return;
       }
       if (message.kind === 'source-table-grid') {

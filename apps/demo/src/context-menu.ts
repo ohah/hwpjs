@@ -1,5 +1,9 @@
 import { demoCommandAction } from './demo-command-action.ts';
-import { getSelectionFormatting, type HeadlessEditor } from '@hwpjs/core';
+import {
+  getSelectionFormatting,
+  type HeadlessEditor,
+  type SourceTableCellMergeTarget,
+} from '@hwpjs/core';
 import type { DemoAction, DemoShellState } from './shell-contract.ts';
 import {
   CONTEXT_COMMAND_IDS,
@@ -27,6 +31,7 @@ export interface ContextTarget {
   readonly key: string;
   /** Surface selection fence; includes generated-cell A→B→A and pending input. */
   readonly current?: () => boolean;
+  readonly mergeTarget?: SourceTableCellMergeTarget;
 }
 /** 그림 관측 undefined는 미연결/불확실, null만 그림 선택 없음입니다. */
 export function contextTarget(
@@ -95,7 +100,7 @@ export function mountDemoContextMenu(options: {
   getTarget: () => ContextTarget;
   /** 표시 수명만 보존한다. 실행·선택 권한은 기존 Surface/action이 재검증한다. */
   captureTextSelection?: () => { current(): boolean } | null | undefined;
-  execute: (action: DemoAction) => void | Promise<void>;
+  execute: (action: DemoAction, target: ContextTarget) => void | Promise<void>;
   subscribe: (listener: () => void) => () => void;
   onError: (error: unknown) => void;
 }) {
@@ -186,6 +191,7 @@ export function mountDemoContextMenu(options: {
     targets: [options.root],
     commandIds: [...CONTEXT_COMMAND_IDS],
     registry: {
+      keepsCellBlockFocus: () => captured?.mergeTarget !== undefined && current(),
       commands: () => {
         const ticket = sequence,
           text = textSelection;
@@ -223,7 +229,7 @@ export function mountDemoContextMenu(options: {
         try {
           const action = demoCommandAction(id);
           if (!action || sequence !== ticket || textSelection !== text || !current()) return;
-          void Promise.resolve(options.execute(action)).catch(options.onError);
+          void Promise.resolve(options.execute(action, captured)).catch(options.onError);
         } catch (error) {
           options.onError(error);
         }
@@ -238,6 +244,11 @@ export function mountDemoContextMenu(options: {
     },
   });
   return {
+    registerCellBlockMenu(
+      register: (menu: HTMLElement, ownsInput?: (input: HTMLElement) => boolean) => void,
+    ) {
+      control.registerCellBlockMenu(register);
+    },
     close() {
       closed = true;
       sequence++;

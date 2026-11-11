@@ -292,6 +292,10 @@ export function createDocumentContextMenu({
         })
       : () => {};
   return {
+    registerCellBlockMenu(register) {
+      if (!closed && typeof registry.keepsCellBlockFocus === 'function')
+        register(menu, (input) => previous === input && registry.keepsCellBlockFocus());
+    },
     close() {
       if (closed) return;
       finish(true);

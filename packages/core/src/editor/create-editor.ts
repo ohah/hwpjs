@@ -91,6 +91,7 @@ import {
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
+  MERGE_SOURCE_TABLE_CELLS_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -121,6 +122,11 @@ import { formattingMessage } from '../commands/formatting.ts';
 import { underlineMessage } from '../commands/underline.ts';
 import { fontNameMessage } from '../commands/font-name.ts';
 import { tableInsertMessage } from '../commands/table-insert.ts';
+import { sourceTableCellMergePlan } from '../commands/source-table-cell-merge.ts';
+import type {
+  SourceTableCellBlockWitness,
+  SourceTableCellMergeTarget,
+} from '../commands/source-table-cell-merge.ts';
 import { sourceTableGridMessage } from '../commands/source-table-grid.ts';
 import type { EditSourceTableGridPayload } from '../commands/source-table-grid.ts';
 // @ts-ignore Preserve strict descriptors before the general payload copier normalizes them.
@@ -942,7 +948,10 @@ export function createEditor(options: CreateEditorOptions) {
               )
             : await active!.request(message, ctx);
         verifyReply(reply, ctx);
-        if (message.kind === 'insert-document' && reply.kind !== message.kind)
+        if (
+          ['insert-document', 'source-table-cell-merge'].includes(message.kind) &&
+          reply.kind !== message.kind
+        )
           throw Error('MismatchedRuntimeReply');
       } catch (error) {
         if (error instanceof RuntimeAdmissionRejected) return reject(ctx, error);
@@ -1136,14 +1145,24 @@ export function createEditor(options: CreateEditorOptions) {
       return reject(ctx, error);
     }
   }
+  const mergeTargets = new WeakMap<
+    SourceTableCellMergeTarget,
+    {
+      state: EditorState;
+      plan: ReturnType<typeof sourceTableCellMergePlan>;
+      current: () => boolean;
+    }
+  >();
   function capture<T>(
     command: EditorCommand<T>,
     payload: T,
     snapshot: EditorState = state,
   ): PendingCommand {
     if (!command || typeof command.id !== 'symbol') throw Error('InvalidCommand');
-    const owned =
-      command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
+    const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
+    const owned = merge
+      ? payload
+      : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
         ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
         : command.id === INSERT_DOCUMENT_COMMAND.id
           ? captureDocumentInsertPayload(payload)
@@ -1151,10 +1170,11 @@ export function createEditor(options: CreateEditorOptions) {
     return {
       command: command as EditorCommand<unknown>,
       payload: owned,
-      token:
-        (owned as { target?: StateToken; token?: StateToken })?.target ??
-        (owned as { token?: StateToken })?.token ??
-        snapshot.token,
+      token: merge
+        ? snapshot.token
+        : ((owned as { target?: StateToken; token?: StateToken })?.target ??
+          (owned as { token?: StateToken })?.token ??
+          snapshot.token),
       handlers: registry.capture(command),
     };
   }
@@ -1360,6 +1380,27 @@ export function createEditor(options: CreateEditorOptions) {
         const position = selectionMessage(payload.target, state);
         return await mutate({ kind: 'splice', ...position, text: payload.text }, payload.target);
       }
+      if (pending.command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id) {
+        const target = mergeTargets.get(pending.payload as SourceTableCellMergeTarget);
+        if (!target) throw Error('ForeignSourceTableCellMergeTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== target.state || target.current() !== true)
+            throw Error('StaleSourceTableCellMergeTarget');
+        };
+        guard();
+        const admission = await readDocumentInsertCapability(pending.token, guard);
+        if ('reason' in admission) throw Error(admission.reason);
+        return await mutate(
+          {
+            kind: 'source-table-cell-merge',
+            request: { ...target.plan, binding: admission.binding },
+          },
+          pending.token,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id) {
         requireReady(pending.token, true);
         const message = sourceTableGridMessage(
@@ -1426,6 +1467,13 @@ export function createEditor(options: CreateEditorOptions) {
   function dispatchCommand<T>(command: EditorCommand<T>, payload: T): Promise<CommandResult> {
     assertPublicMutation();
     const pending = capture(command, payload);
+    if (command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id) {
+      const target = mergeTargets.get(pending.payload as SourceTableCellMergeTarget);
+      if (!target)
+        return Promise.resolve(reject(context(pending.token), 'ForeignSourceTableCellMergeTarget'));
+      if (state !== target.state || !target.current())
+        return Promise.resolve(reject(context(pending.token), 'StaleSourceTableCellMergeTarget'));
+    }
     return admit(() => execute(pending));
   }
   function update<T>(
@@ -2173,6 +2221,31 @@ export function createEditor(options: CreateEditorOptions) {
           assertSurface(record);
           return answer;
         });
+      },
+      captureSourceTableCellMerge(witness: SourceTableCellBlockWitness, current: () => boolean) {
+        const snapshot = state;
+        let invalid = false;
+        const live = () => {
+          if (invalid) return false;
+          try {
+            assertSurface(record);
+            if (snapshot === state && current() === true && snapshot === state) return true;
+          } catch {
+            // Detached surfaces and invalid witnesses both fail closed.
+          }
+          invalid = true;
+          return false;
+        };
+        if (state.status !== 'ready' || !hasRuntimeAdmission(active) || !live()) return null;
+        try {
+          const plan = sourceTableCellMergePlan(snapshot, copyOwned(witness));
+          if (!live()) return null;
+          const target = Object.freeze({}) as SourceTableCellMergeTarget;
+          mergeTargets.set(target, { state: snapshot, plan, current: live });
+          return target;
+        } catch {
+          return null;
+        }
       },
       publishSelection(target: SelectionTarget | null): Promise<EditorState> {
         assertPublicMutation();

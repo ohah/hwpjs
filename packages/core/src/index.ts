@@ -23,6 +23,7 @@ export {
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
+  MERGE_SOURCE_TABLE_CELLS_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -151,6 +152,7 @@ export { getTableInsertAvailability } from './commands/table-insert.ts';
 export { toHtml } from './conversion.ts';
 export type { HTMLConversionOptions } from './conversion.ts';
 
+export type { SourceTableCellMergeTarget } from './commands/source-table-cell-merge.ts';
 export type {
   EditSourceTableGridPayload,
   SourceTableGridAction,

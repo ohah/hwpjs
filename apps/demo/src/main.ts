@@ -12,6 +12,26 @@ import './shell.css';
 import './demo-viewport.css';
 import './editor-layout.css';
 
+type CellBlockMenuHost = Pick<ReturnType<typeof createCanvasSurface>, 'registerCellBlockMenu'>;
+function createCellBlockMenuRelay() {
+  const menus = new Map<HTMLElement, (input: HTMLElement) => boolean>();
+  let surface: CellBlockMenuHost | undefined;
+  return {
+    connect(next: CellBlockMenuHost) {
+      surface = next;
+      for (const [menu, ownsInput] of menus) next.registerCellBlockMenu(menu, ownsInput);
+    },
+    register(menu: HTMLElement, ownsInput: (input: HTMLElement) => boolean = () => true) {
+      menus.set(menu, ownsInput);
+      surface?.registerCellBlockMenu(menu, ownsInput);
+    },
+    dispose() {
+      surface = undefined;
+      menus.clear();
+    },
+  };
+}
+
 const root = document.querySelector<HTMLElement>('#app');
 if (!root) throw Error('DemoRootMissing');
 const segment = location.pathname.split('/').filter(Boolean).at(-1);
@@ -21,7 +41,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
   vanilla: (root, editor, onStatus) =>
     createCanvasSurface({ root, editor, onStatus, environment: createDemoSurfaceEnvironment() }),
   react: (root, editor, onStatus) => {
-    const pages = createPageStatusRelay();
+    const pages = createPageStatusRelay(),
+      cellBlockMenus = createCellBlockMenuRelay();
     const tree = createRoot(root),
       ref = createRef<CanvasSurfaceHandle>();
     tree.render(
@@ -32,7 +53,10 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
           editor,
           environment: createDemoSurfaceEnvironment(),
           onStatus,
-          onReady: (surface) => pages.connect(surface as DemoPageStatusHost),
+          onReady: (surface) => {
+            pages.connect(surface as DemoPageStatusHost);
+            cellBlockMenus.connect(surface);
+          },
           ref,
           style: { height: '100%' },
         }),
@@ -77,15 +101,20 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       requestCellBlock: (extend, fromContext) =>
         ref.current?.surface?.requestCellBlock(extend, fromContext) ?? false,
       hasCellBlock: () => ref.current?.surface?.hasCellBlock() ?? false,
+      registerCellBlockMenu: cellBlockMenus.register,
+      captureSourceTableCellMerge: () =>
+        ref.current?.surface?.captureSourceTableCellMerge() ?? null,
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
+        cellBlockMenus.dispose();
         tree.unmount();
       },
     };
   },
   svelte: (root, editor, onStatus) => {
-    const pages = createPageStatusRelay();
+    const pages = createPageStatusRelay(),
+      cellBlockMenus = createCellBlockMenuRelay();
     let surface: SvelteSurface | undefined;
     const component = mount(CanvasEditor, {
       target: root,
@@ -97,6 +126,7 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         onReady: (value: SvelteSurface) => {
           surface = value;
           pages.connect(value as DemoPageStatusHost);
+          cellBlockMenus.connect(value);
         },
       },
     });
@@ -134,9 +164,12 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       requestCellBlock: (extend, fromContext) =>
         surface?.requestCellBlock(extend, fromContext) ?? false,
       hasCellBlock: () => surface?.hasCellBlock() ?? false,
+      registerCellBlockMenu: cellBlockMenus.register,
+      captureSourceTableCellMerge: () => surface?.captureSourceTableCellMerge() ?? null,
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
+        cellBlockMenus.dispose();
         surface = undefined;
         return unmount(component);
       },

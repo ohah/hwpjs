@@ -46,6 +46,11 @@ export const HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze([
   'hwpx_edit_document_insert_capabilities',
   'hwpx_edit_insert_document',
 ]);
+// Optional HWPX source-table merge uses the document insertion binding export.
+export const HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze([
+  'hwpx_edit_document_insert_capabilities',
+  'hwpx_edit_merge_source_table_cells',
+]);
 // Optional HWPX provenance; intentionally not part of REQUIRED_FUNCTIONS.
 export const HWPX_DOCUMENT_PROVENANCE_FUNCTIONS = Object.freeze(['hwpx_edit_document_provenance']);
 export const DOCUMENT = Object.freeze({
