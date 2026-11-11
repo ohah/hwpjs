@@ -47,7 +47,16 @@ pub fn encode(session: *const Session) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(a);
     defer arena.deinit();
     const scratch = arena.allocator();
-    const markers = lease.source.report.markers;
+    const inventory = try collect(session, scratch, lease.source.report.markers);
+    return std.json.Stringify.valueAlloc(a, .{
+        .format = "hwpx",
+        .coverage = if (inventory.complete) "complete" else "partial",
+        .rows = inventory.rows.items,
+        .views = inventory.views.items,
+    }, .{});
+}
+
+fn collect(session: *const Session, scratch: std.mem.Allocator, markers: []const Marker) !Inventory {
     var inventory: Inventory = .{ .complete = !session.source_has_master_pages };
     var first: usize = 0;
     for (0..session.sections.len) |section| {
@@ -57,12 +66,41 @@ pub fn encode(session: *const Session) ![]u8 {
         try collectSection(session, scratch, section, markers, start, first, &inventory);
     }
     if (first != markers.len) return error.SourceBindingMismatch;
-    return std.json.Stringify.valueAlloc(a, .{
-        .format = "hwpx",
-        .coverage = if (inventory.complete) "complete" else "partial",
-        .rows = inventory.rows.items,
-        .views = inventory.views.items,
-    }, .{});
+    return inventory;
+}
+
+/// The selected element has already been resolved by the caller's name and
+/// occurrence. Revalidate its current owner and reject destination aliases.
+pub fn authorizeRename(session: *const Session, section: usize, paragraph: usize, element: usize, expected: []const u8, name: []const u8) !bool {
+    const a = session.allocator;
+    var lease = try @import("source_field_analysis.zig").leaseForExterior(session);
+    defer lease.deinit(a);
+    var arena = std.heap.ArenaAllocator.init(a);
+    defer arena.deinit();
+    const inventory = try collect(session, arena.allocator(), lease.source.report.markers);
+    if (!inventory.complete) return error.IncompleteNamedFieldInventory;
+
+    var target: ?Row = null;
+    var duplicate = false;
+    for (inventory.rows.items) |row| {
+        if (row.section == section and row.element == element) {
+            target = row;
+        } else if (row.name) |current| {
+            duplicate = duplicate or std.mem.eql(u8, current, name);
+        }
+    }
+    const row = target orelse return error.StaleNamedFieldTarget;
+    if (!std.mem.eql(u8, row.name orelse return error.StaleNamedFieldTarget, expected))
+        return error.StaleNamedFieldTarget;
+    if (row.protection == .protected) return error.NamedFieldProtected;
+    const location = row.location orelse return error.NamedFieldRenameUnavailable;
+    if (row.sourceEditable != true or !std.mem.eql(u8, row.kind, "CLICK_HERE"))
+        return error.NamedFieldRenameUnavailable;
+    const view = inventory.views.items[location.view];
+    if (view.section != section or view.paragraph != paragraph) return error.StaleNamedFieldTarget;
+    if (std.mem.eql(u8, expected, name)) return false;
+    if (duplicate) return error.DuplicateNamedFieldName;
+    return true;
 }
 
 fn collectSection(

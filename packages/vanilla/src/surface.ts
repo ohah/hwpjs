@@ -105,6 +105,27 @@ export interface CanvasSurfaceEnvironment extends Record<string, any> {
    */
   resourceProviderEpoch?: () => Readonly<Record<string, never>>;
 }
+export type CanvasParagraphHeadingResult =
+  | Readonly<{ state: 'available'; kind: 'none'; text: '' }>
+  | Readonly<{
+      state: 'available';
+      kind: 'bullet';
+      text: string;
+      provenance: 'hwp5-docinfo' | 'hwpx-header';
+    }>
+  | Readonly<{
+      state: 'unavailable';
+      reason:
+        | 'surface-detached'
+        | 'editor-not-ready'
+        | 'input-pending'
+        | 'scene-not-current'
+        | 'no-caret'
+        | 'caret-not-observed'
+        | 'heading-not-observed'
+        | 'numbering-not-computed'
+        | 'unsupported-bullet';
+    }>;
 export type CanvasPageTextKind = 'body' | 'table' | 'textbox' | 'caption';
 export type CanvasPageTextFilter = Readonly<{ include: readonly CanvasPageTextKind[] }>;
 export type CanvasPageTextIssue = Readonly<{
@@ -1884,6 +1905,25 @@ export function createCanvasSurface({
         !closed && lease?.isActive() === true && !modalOpen() && direct.requestBlockSelection()
       );
     },
+    canRequestCellBlock(requireFocus = false): boolean {
+      return (
+        !closed &&
+        lease?.isActive() === true &&
+        !modalOpen() &&
+        direct.canRequestCellBlock(requireFocus)
+      );
+    },
+    requestCellBlock(extend = false, fromContext = false): boolean {
+      return (
+        !closed &&
+        lease?.isActive() === true &&
+        !modalOpen() &&
+        direct.requestCellBlock(extend, fromContext)
+      );
+    },
+    hasCellBlock(): boolean {
+      return !closed && lease?.isActive() === true && direct.hasCellBlock();
+    },
     focusForPaste(): boolean {
       if (closed || !direct.canPasteInput()) return false;
       return direct.focusInput() && !closed && direct.canPasteInput();
@@ -1936,6 +1976,43 @@ export function createCanvasSurface({
     },
     getSelection() {
       return editor.getEditorState().selection ?? null;
+    },
+    /** Query the current collapsed caret's paragraph marker without changing input state. */
+    getHeadingString(): CanvasParagraphHeadingResult {
+      const unavailable = (
+        reason: Extract<CanvasParagraphHeadingResult, { state: 'unavailable' }>['reason'],
+      ) => Object.freeze({ state: 'unavailable' as const, reason });
+      if (closed || !lease?.isActive()) return unavailable('surface-detached');
+      const state = editor.getEditorState();
+      if (state.status !== 'ready') return unavailable('editor-not-ready');
+      if (!isOutputInputSettled() || modalOpen()) return unavailable('input-pending');
+      const key = `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}`;
+      if (key !== displayed || state.stateVersion !== observedStateVersion)
+        return unavailable('scene-not-current');
+      const target = state.selection as SelectionTarget | null | undefined;
+      if (!target || target.startUnit !== target.endUnit) return unavailable('no-caret');
+      if (
+        target.coordinateSpace !== 'display' ||
+        target.editorId !== state.editorId ||
+        target.documentId !== state.documentId ||
+        target.generation !== state.generation ||
+        target.operationRevision !== state.operationRevision ||
+        target.viewRevision !== state.viewRevision
+      )
+        return unavailable('caret-not-observed');
+      const points = direct.currentFormattingSelection();
+      const matches = (point: { section: number; paragraph: number; unit: number }) =>
+        point.section === target.section &&
+        point.paragraph === target.paragraph &&
+        point.unit === target.startUnit;
+      if (
+        !points ||
+        !matches(points.anchor) ||
+        !matches(points.focus) ||
+        !viewAllowsSelection(target)
+      )
+        return unavailable('caret-not-observed');
+      return renderer.getHeadingString(state, target, points.anchor);
     },
     /** Read from the current physical page scene without committing input or changing selection. */
     getPageText(pageIndex: number, filter?: CanvasPageTextFilter): CanvasPageTextResult {

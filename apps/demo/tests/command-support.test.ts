@@ -5,6 +5,7 @@ import {
   DEMO_COMMAND_REGISTRY,
   resolveCommandSupport,
   commandSupportActions,
+  contextCommandIds,
   unsupportedCommandCategories,
   UNCONNECTED_COMMAND_REASON,
 } from '../src/command-support.ts';
@@ -145,5 +146,20 @@ test('shell preserves explicit capabilities and guards generic action callbacks'
       availability: { enabled: true },
     }).enabled,
     true,
+  );
+});
+
+test('cell block appears only for table context kinds and requires live availability', () => {
+  for (const kind of ['table-cell', 'source-table-cell', 'generated-table-cell'] as const)
+    assert(contextCommandIds(kind).includes('table-cell-block'));
+  for (const kind of ['body', 'none', 'picture'] as const)
+    assert(!contextCommandIds(kind).includes('table-cell-block'));
+  const support = { connected: true, document: 'ready' as const, hasSelection: false };
+  assert.equal(resolveCommandSupport('table-cell-block', support).enabled, false);
+  const available = { ...support, availability: { enabled: true } };
+  assert.equal(resolveCommandSupport('table-cell-block', available).enabled, true);
+  assert.equal(
+    resolveCommandSupport('table-cell-block', { ...available, busy: true }).enabled,
+    false,
   );
 });

@@ -3,6 +3,7 @@ export type {
   CanvasSurfaceOptions,
   CanvasSurfaceEnvironment,
   CanvasDisplayOptions,
+  CanvasParagraphHeadingResult,
   CanvasPageTextKind,
   CanvasPageTextFilter,
   CanvasPageTextIssue,

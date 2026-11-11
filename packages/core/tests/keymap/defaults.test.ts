@@ -19,6 +19,14 @@ for (const platform of ['mac', 'windows', 'linux'] as const)
     expect(resolveKeyboardShortcut(compiled, f3)?.command).toBe('block-selection');
     expect(resolveKeyboardShortcut(compiled, { ...f3, repeat: true })).toBeNull();
     expect(resolveKeyboardShortcut(compiled, { ...f3, isComposing: true })).toBeNull();
+    for (const shiftKey of [false, true]) {
+      const f5 = { ...f3, code: 'F5', shiftKey };
+      expect(resolveKeyboardShortcut(compiled, f5)?.command).toBe(
+        shiftKey ? 'table-cell-block-extend' : 'table-cell-block',
+      );
+      expect(resolveKeyboardShortcut(compiled, { ...f5, repeat: true })).toBeNull();
+      expect(resolveKeyboardShortcut(compiled, { ...f5, isComposing: true })).toBeNull();
+    }
     for (const [code, command] of [
       ['KeyS', 'save'],
       ['KeyZ', 'undo'],

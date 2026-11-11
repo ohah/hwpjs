@@ -8,6 +8,7 @@ import {
   HWP5_TEXT_TRANSACTION_FUNCTIONS,
   HWPX_TEXT_TRANSACTION_FUNCTIONS,
   HWPX_NAMED_FIELDS_FUNCTIONS,
+  HWPX_NAMED_FIELD_RENAME_FUNCTIONS,
   HWP5_NAMED_FIELDS_FUNCTIONS,
 } from '../js/abi-schema.mjs';
 
@@ -34,6 +35,9 @@ const generated =
   '};\n' +
   'pub const hwpx_named_fields_exports = [_][]const u8{\n' +
   HWPX_NAMED_FIELDS_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
+  '};\n' +
+  'pub const hwpx_named_field_rename_exports = [_][]const u8{\n' +
+  HWPX_NAMED_FIELD_RENAME_FUNCTIONS.map((name) => `    ${JSON.stringify(name)},\n`).join('') +
   '};\n' +
   'pub const document = struct {\n' +
   Object.entries(DOCUMENT)

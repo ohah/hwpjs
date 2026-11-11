@@ -7,6 +7,7 @@ import { createHwpxEditor } from '../../../../js/hwpx-editor.mjs';
 import {
   createEditor,
   SET_NAMED_FIELD_VALUE_COMMAND,
+  RENAME_NAMED_FIELD_COMMAND,
   SPLICE_TEXT_COMMAND,
 } from '../../src/index.ts';
 import type { HeadlessEditor, NamedFieldSelector, SelectionTarget } from '../../src/index.ts';
@@ -554,5 +555,255 @@ test('named field write R4 keeps default worker fencing separate from native aut
   } finally {
     await standard.dispose();
     await custom.dispose();
+  }
+});
+
+const renameField = (editor: HeadlessEditor, selector: NamedFieldSelector, newName: string) => {
+  const state = editor.getEditorState();
+  return editor.dispatchCommand(RENAME_NAMED_FIELD_COMMAND, {
+    selector,
+    newName,
+    token: state.token,
+    selectionVersion: state.stateVersion,
+  });
+};
+
+function verifyRenameXml(before: Uint8Array, after: Uint8Array, name: string) {
+  const oracle = `
+import base64, io, json, sys, zipfile
+from xml.etree import ElementTree as ET
+from xml.sax.saxutils import escape
+request = json.load(sys.stdin)
+section = 'Contents/section0.xml'
+def read(field):
+    with zipfile.ZipFile(io.BytesIO(base64.b64decode(request[field]))) as z:
+        return {name: z.read(name) for name in z.namelist()}
+before, after = read('before'), read('after')
+assert before.keys() == after.keys()
+assert {k: v for k, v in before.items() if k != section} == {k: v for k, v in after.items() if k != section}
+needle = b'<hp:fieldBegin id="12" type="CLICK_HERE" name="amount"'
+assert before[section].count(needle) == 1
+name = escape(request['name'], {chr(34): '&quot;', chr(9): '&#9;'}).encode()
+assert after[section] == before[section].replace(needle, needle[:-len(b'amount"')] + name + b'"')
+ns = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+root = ET.fromstring(after[section])
+begins = {node.get('id'): node.get('name') for node in root.iter(ns + 'fieldBegin')}
+assert begins == {'11': 'amount', '12': request['name'], '13': 'locked', '14': 'implicit'}
+assert [node.get('beginIDRef') for node in root.iter(ns + 'fieldEnd')] == ['11', '12', '13', '14']
+`;
+  execFileSync('python3', ['-I', '-c', oracle], {
+    input: JSON.stringify({
+      before: Buffer.from(before).toString('base64'),
+      after: Buffer.from(after).toString('base64'),
+      name,
+    }),
+  });
+}
+
+const renamed = '새😀&<"\'\t';
+for (const [label, factory] of [
+  ['ReaderRuntime', reader],
+  ['Worker', worker],
+] as const) {
+  test(`named field rename ${label} uses one history entry and changes only the selected XML attribute`, async () => {
+    const editor = createEditor({ runtimeFactory: factory() });
+    try {
+      await editor.load(writeInput, { format: 'hwpx', editable: true });
+      const before = editor.getEditorState();
+      const source = { name: 'amount', occurrence: 1 };
+      const result = await renameField(editor, source, renamed);
+      assert.equal(result.status, 'committed-with-snapshot', result.error);
+      assert.equal(
+        editor.getEditorState().nativeHistoryRevision,
+        before.nativeHistoryRevision! + 1,
+      );
+      assert.deepEqual(
+        (await editor.listNamedFields()).rows.map((r) => r.name),
+        ['amount', renamed, 'locked', 'implicit'],
+      );
+      const found = await editor.readNamedField({ name: renamed });
+      assert.equal(found.status, 'found');
+      if (found.status === 'found')
+        assert.deepEqual(found.field.value, { status: 'available', text: '' });
+      assert.equal((await editor.moveToNamedField({ name: renamed })).status, 'moved');
+      const saved = (await editor.save()).bytes;
+      verifyRenameXml(writeInput, saved, renamed);
+
+      assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+      assert.deepEqual((await editor.save()).bytes, writeInput);
+      const restored = editor.getEditorState();
+      assert.equal((await renameField(editor, source, 'amount')).status, 'known-no-op');
+      assert.equal(editor.getEditorState(), restored);
+      assert.equal((await editor.redo()).status, 'committed-with-snapshot');
+      assert.deepEqual((await editor.save()).bytes, saved);
+      await editor.load(saved, { format: 'hwpx', editable: true });
+      assert.equal((await editor.readNamedField({ name: renamed })).status, 'found');
+    } finally {
+      await editor.dispose();
+    }
+  });
+}
+
+test('named field rename preserves unsaved value and dirty metadata in the same source section', async () => {
+  const editor = createEditor({ runtimeFactory: reader() });
+  try {
+    await editor.load(writeInput, { format: 'hwpx', editable: true });
+    const source = { name: 'amount', occurrence: 1 };
+    assert.equal((await setValue(editor, source, '', '기존😀')).status, 'committed-with-snapshot');
+    const before = (await editor.save()).bytes;
+    assert.equal((await renameField(editor, source, renamed)).status, 'committed-with-snapshot');
+    const found = await editor.readNamedField({ name: renamed });
+    assert.equal(found.status, 'found');
+    if (found.status === 'found')
+      assert.deepEqual(found.field.value, { status: 'available', text: '기존😀' });
+    verifyRenameXml(before, (await editor.save()).bytes, renamed);
+    await editor.undo();
+    assert.deepEqual((await editor.save()).bytes, before);
+    await editor.undo();
+    assert.deepEqual((await editor.save()).bytes, writeInput);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field rename rejects ambiguous, protected, duplicate destination and stale requests', async () => {
+  const editor = createEditor({ runtimeFactory: reader() });
+  try {
+    await editor.load(writeInput, { format: 'hwpx', editable: true });
+    const state = editor.getEditorState();
+    const source = { name: 'amount', occurrence: 1 };
+    for (const [selector, newName, error] of [
+      [{ name: 'amount' }, 'valid', 'AmbiguousNamedField'],
+      [source, 'locked', 'DuplicateNamedFieldName'],
+      [{ name: 'locked' }, 'valid', 'NamedFieldProtected'],
+      [{ name: 'implicit' }, 'valid', 'NamedFieldRenameUnavailable'],
+      [{ name: 'absent' }, 'valid', 'NamedFieldMissing'],
+      [source, '', 'InvalidNamedFieldName'],
+      [source, '\u0000', 'InvalidXmlCharacter'],
+    ] as const) {
+      const rejected = await renameField(editor, selector, newName);
+      assert.equal(rejected.status, 'rejected-unapplied', rejected.error);
+      assert.equal(rejected.error, error);
+      assert.equal(editor.getEditorState(), state);
+    }
+    await editor.setSelection(null);
+    const stale = await editor.dispatchCommand(RENAME_NAMED_FIELD_COMMAND, {
+      selector: source,
+      newName: 'valid',
+      token: state.token,
+      selectionVersion: state.stateVersion,
+    });
+    assert.equal(stale.error, 'StaleNamedFieldSelection');
+    assert.deepEqual((await editor.save()).bytes, writeInput);
+    await editor.load(writeInput, { format: 'hwpx', editable: true });
+    const staleDocument = await editor.dispatchCommand(RENAME_NAMED_FIELD_COMMAND, {
+      selector: source,
+      newName: 'valid',
+      token: state.token,
+      selectionVersion: state.stateVersion,
+    });
+    assert.equal(staleDocument.error, 'StaleTarget');
+    const partial = zipWith(writeBody, 'master');
+    await editor.load(partial, { format: 'hwpx', editable: true });
+    assert.equal(
+      (await renameField(editor, source, 'valid')).error,
+      'IncompleteNamedFieldInventory',
+    );
+    assert.deepEqual((await editor.save()).bytes, partial);
+    await editor.load(writeInput, { format: 'hwpx', editable: false });
+    assert.equal((await renameField(editor, source, 'valid')).error, 'ReadOnlyDocument');
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field rename SDK checks history, current source spelling and destination independently', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(writeInput);
+    const target = sdk.namedFields().rows[1].location;
+    const rename = (oldName: string, name: string) =>
+      sdk.renameNamedField(
+        target.section,
+        target.paragraph + 1,
+        target.beginElement,
+        oldName,
+        name,
+      );
+    assert.throws(() => rename('amount', 'valid'), /HistoryNotEnabled/);
+    sdk.enableHistoryDefault();
+    assert.throws(() => rename('stale', 'valid'), /StaleNamedFieldTarget/);
+    assert.throws(() => rename('amount', 'locked'), /DuplicateNamedFieldName/);
+    assert.equal(rename('amount', 'amount'), false);
+    assert.deepEqual(sdk.save(), writeInput);
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field rename retains byte-exact undo and redo through explicit legacy history', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(writeInput);
+    sdk.enableHistory();
+    assert.equal(sdk.historyStats().protocolVersion, 1);
+    const location = sdk.namedFields().rows[1].location;
+    assert.equal(
+      sdk.renameNamedField(
+        location.section,
+        location.paragraph + 1,
+        location.beginElement,
+        'amount',
+        renamed,
+      ),
+      true,
+    );
+    const saved = sdk.save();
+    verifyRenameXml(writeInput, saved, renamed);
+    assert.equal(sdk.undo(), true);
+    assert.deepEqual(sdk.save(), writeInput);
+    assert.equal(sdk.redo(), true);
+    assert.deepEqual(sdk.save(), saved);
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field rename resolves duplicate occurrence across sections with global paragraph coordinates', async () => {
+  const editor = createEditor({ runtimeFactory: reader() });
+  try {
+    const input = zipWith(
+      paragraph(1, field(11, 'both', 'value', 'CLICK_HERE', ' editable="1"')),
+      'second',
+    );
+    await editor.load(input, { format: 'hwpx', editable: true });
+    assert.deepEqual(
+      (await editor.listNamedFields()).rows.map((row) => [
+        row.name,
+        row.target?.section,
+        row.target?.paragraph,
+      ]),
+      [
+        ['both', 0, 1],
+        ['both', 1, 2],
+      ],
+    );
+    const renamed = await renameField(editor, { name: 'both', occurrence: 1 }, 'second');
+    assert.equal(renamed.status, 'committed-with-snapshot', renamed.error);
+    assert.deepEqual(
+      (await editor.listNamedFields()).rows.map((row) => [
+        row.name,
+        row.target?.section,
+        row.target?.paragraph,
+      ]),
+      [
+        ['both', 0, 1],
+        ['second', 1, 2],
+      ],
+    );
+    await editor.undo();
+    assert.deepEqual((await editor.save()).bytes, input);
+  } finally {
+    await editor.dispose();
   }
 });

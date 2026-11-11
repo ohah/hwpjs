@@ -4,6 +4,7 @@ const borrowed = @import("paragraph_display_shape.zig");
 pub const Measure = struct { value: ?i64, unit: ?[]u8 };
 pub const Shape = struct {
     id: u32,
+    heading: ?@import("paragraph_heading_display.zig").Heading = null,
     tab_pr_id: ?u32 = null,
     break_settings: ?@import("paragraph_break_settings.zig").Values = null,
     horizontal: ?[]u8 = null,

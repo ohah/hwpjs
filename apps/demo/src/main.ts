@@ -72,6 +72,11 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       focusForPaste: () => ref.current?.surface?.focusForPaste() ?? false,
       canRequestBlockSelection: () => ref.current?.surface?.canRequestBlockSelection() ?? false,
       requestBlockSelection: () => ref.current?.surface?.requestBlockSelection() ?? false,
+      canRequestCellBlock: (requireFocus) =>
+        ref.current?.surface?.canRequestCellBlock(requireFocus) ?? false,
+      requestCellBlock: (extend, fromContext) =>
+        ref.current?.surface?.requestCellBlock(extend, fromContext) ?? false,
+      hasCellBlock: () => ref.current?.surface?.hasCellBlock() ?? false,
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
@@ -125,6 +130,10 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       focusForPaste: () => surface?.focusForPaste() ?? false,
       canRequestBlockSelection: () => surface?.canRequestBlockSelection() ?? false,
       requestBlockSelection: () => surface?.requestBlockSelection() ?? false,
+      canRequestCellBlock: (requireFocus) => surface?.canRequestCellBlock(requireFocus) ?? false,
+      requestCellBlock: (extend, fromContext) =>
+        surface?.requestCellBlock(extend, fromContext) ?? false,
+      hasCellBlock: () => surface?.hasCellBlock() ?? false,
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();

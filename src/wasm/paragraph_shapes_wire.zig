@@ -1,14 +1,15 @@
-//! HPS2 scalar resources; no parsing or layout policy.
+//! HPS2/HPS3 scalar resources; no parsing or layout policy.
 const std = @import("std");
-pub fn encode(a: std.mem.Allocator, shapes: anytype) ![]u8 {
+pub fn encode(a: std.mem.Allocator, shapes: anytype, with_heading: bool) ![]u8 {
     if (shapes.len > 100_000) return error.LimitExceeded;
-    const bytes = try a.alloc(u8, 8 + shapes.len * 72);
+    const stride: usize = if (with_heading) 76 else 72;
+    const bytes = try a.alloc(u8, 8 + shapes.len * stride);
     errdefer a.free(bytes);
-    @memcpy(bytes[0..4], "HPS2");
+    @memcpy(bytes[0..4], if (with_heading) "HPS3" else "HPS2");
     std.mem.writeInt(u32, bytes[4..8], @intCast(shapes.len), .little);
     for (shapes, 0..) |shape, index| {
         if (shape.id != index) return error.InvalidParagraphShapes;
-        const row = bytes[8 + index * 72 ..][0..72];
+        const row = bytes[8 + index * stride ..][0..stride];
         std.mem.writeInt(u32, row[0..4], shape.id, .little);
         std.mem.writeInt(u32, row[4..8], shape.alignment, .little);
         const values = [_]i32{ shape.left, shape.right, shape.indent, shape.before, shape.after };
@@ -24,6 +25,7 @@ pub fn encode(a: std.mem.Allocator, shapes: anytype) ![]u8 {
         std.mem.writeInt(u32, row[60..64], @intFromBool(shape.extended_heading_level != null), .little);
         std.mem.writeInt(u32, row[64..68], shape.extended_heading_level orelse 0, .little);
         std.mem.writeInt(u32, row[68..72], shape.heading_level, .little);
+        if (with_heading) std.mem.writeInt(u32, row[72..76], shape.heading_marker, .little);
     }
     return bytes;
 }
@@ -31,12 +33,22 @@ pub fn encode(a: std.mem.Allocator, shapes: anytype) ![]u8 {
 fn allocationCase(a: std.mem.Allocator) !void {
     const Shape = @import("../hwp5/edit/paragraph_display_shapes.zig").Shape;
     const shapes = [_]Shape{.{ .id = 0, .alignment = 7, .left = 0, .right = 0, .indent = -720, .before = 0, .after = 0, .legacy_spacing_kind = 2, .legacy_spacing = 160, .modern_spacing = .{ .attributes = 3, .value = 0 } }};
-    const bytes = try encode(a, &shapes);
+    const bytes = try encode(a, &shapes, false);
     defer a.free(bytes);
+    try std.testing.expectEqualStrings("HPS2", bytes[0..4]);
     try std.testing.expectEqual(@as(usize, 80), bytes.len);
     try std.testing.expectEqual(@as(i32, -720), std.mem.readInt(i32, bytes[24..28], .little));
     try std.testing.expectEqual(@as(u32, 1), std.mem.readInt(u32, bytes[44..48], .little));
     try std.testing.expectEqual(@as(i32, 0), std.mem.readInt(i32, bytes[52..56], .little));
+    var bullet = shapes;
+    bullet[0].heading_kind = 3;
+    bullet[0].heading_id = 1;
+    bullet[0].heading_marker = 0x25b6;
+    const extended = try encode(a, &bullet, true);
+    defer a.free(extended);
+    try std.testing.expectEqualStrings("HPS3", extended[0..4]);
+    try std.testing.expectEqual(@as(usize, 84), extended.len);
+    try std.testing.expectEqual(@as(u32, 0x25b6), std.mem.readInt(u32, extended[80..84], .little));
 }
 test "HWP5 paragraph shapes wire preserves signed and optional zero with allocation failures" {
     try @import("../testing/allocation_failures.zig").check(allocationCase, .{});

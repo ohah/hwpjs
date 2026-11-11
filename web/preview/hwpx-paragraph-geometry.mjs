@@ -12,6 +12,7 @@ export function hwpxParagraphGeometry(shape) {
   const spacing = kind === 0 ? shape.spacing?.value : unitValue(shape.spacing);
   return {
     spacingFormat: 'hwpx',
+    ...(shape.heading ? { heading: { ...shape.heading } } : {}),
     ...(Object.hasOwn(shape, 'break_settings')
       ? { breakSettings: shape.break_settings === null ? null : { ...shape.break_settings } }
       : {}),

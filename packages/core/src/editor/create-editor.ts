@@ -10,6 +10,7 @@ import type {
   NamedFieldResolution,
   NamedFieldSelector,
   SetNamedFieldValuePayload,
+  RenameNamedFieldPayload,
 } from './named-fields.ts';
 import {
   captureDocumentInsertPayload,
@@ -86,6 +87,7 @@ import { CommandRegistry } from '../commands/registry.ts';
 import {
   SPLICE_TEXT_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
+  RENAME_NAMED_FIELD_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -1260,24 +1262,47 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
-      if (pending.command.id === SET_NAMED_FIELD_VALUE_COMMAND.id) {
-        const payload = pending.payload as SetNamedFieldValuePayload;
+      if (
+        pending.command.id === SET_NAMED_FIELD_VALUE_COMMAND.id ||
+        pending.command.id === RENAME_NAMED_FIELD_COMMAND.id
+      ) {
+        const rename = pending.command.id === RENAME_NAMED_FIELD_COMMAND.id;
+        const kind = rename ? 'rename-named-field' : 'set-named-field-value';
+        const unavailable = rename ? 'NamedFieldRenameUnavailable' : 'NamedFieldValueUnavailable';
+        const payload = pending.payload as SetNamedFieldValuePayload | RenameNamedFieldPayload;
         if (
           !payload ||
           !payload.token ||
           !Number.isSafeInteger(payload.selectionVersion) ||
-          payload.selectionVersion < 0 ||
-          typeof payload.expectedValue !== 'string' ||
-          !isWellFormedText(payload.expectedValue) ||
-          typeof payload.text !== 'string' ||
-          !isWellFormedText(payload.text)
+          payload.selectionVersion < 0
+        )
+          throw Error(rename ? 'InvalidNamedFieldRenameCommand' : 'InvalidNamedFieldValueCommand');
+        const operation = rename
+          ? { newName: (payload as RenameNamedFieldPayload).newName }
+          : {
+              expectedValue: (payload as SetNamedFieldValuePayload).expectedValue,
+              text: (payload as SetNamedFieldValuePayload).text,
+            };
+        if ('newName' in operation) {
+          if (
+            typeof operation.newName !== 'string' ||
+            !operation.newName ||
+            !isWellFormedText(operation.newName)
+          )
+            throw Error('InvalidNamedFieldName');
+        } else if (
+          typeof operation.expectedValue !== 'string' ||
+          !isWellFormedText(operation.expectedValue) ||
+          typeof operation.text !== 'string' ||
+          !isWellFormedText(operation.text)
         )
           throw Error('InvalidNamedFieldValueCommand');
+
         if (
           (state.content as { format?: string } | undefined)?.format !== 'hwpx' ||
-          !hasRuntimeAdmission(active, 'set-named-field-value')
+          !hasRuntimeAdmission(active, kind)
         )
-          throw Error('NamedFieldValueUnavailable');
+          throw Error(unavailable);
         const selector = checkedNamedFieldSelector(payload.selector);
         const guard = () => {
           requireReady(payload.token, true);
@@ -1294,13 +1319,21 @@ export function createEditor(options: CreateEditorOptions) {
         const { field } = resolved;
         if (field.protection === 'protected') throw Error('NamedFieldProtected');
         if (!field.canSetValue || !field.target || field.value.status !== 'available')
-          throw Error('NamedFieldValueUnavailable');
-        if (field.value.text !== payload.expectedValue) throw Error('NamedFieldValueMismatch');
+          throw Error(unavailable);
+        if ('newName' in operation) {
+          if (
+            operation.newName !== selector.name &&
+            inventory.rows.some((row) => row.name === operation.newName)
+          )
+            throw Error('DuplicateNamedFieldName');
+        } else if (field.value.text !== operation.expectedValue) {
+          throw Error('NamedFieldValueMismatch');
+        }
         validateSelection(field.target, state, true);
         const { section, paragraph, startUnit, endUnit } = field.target;
         return await mutate(
           {
-            kind: 'set-named-field-value',
+            kind,
             id: field.id,
             name: selector.name,
             occurrence: selector.occurrence,
@@ -1308,8 +1341,7 @@ export function createEditor(options: CreateEditorOptions) {
             paragraph,
             startUnit,
             endUnit,
-            expectedValue: payload.expectedValue,
-            text: payload.text,
+            ...operation,
           },
           payload.token,
           false,
@@ -1597,6 +1629,7 @@ export function createEditor(options: CreateEditorOptions) {
         'redo',
         'splice',
         'set-named-field-value',
+        'rename-named-field',
       ].includes(owned.kind)
     )
       throw Error('UseTypedEditorOperation');

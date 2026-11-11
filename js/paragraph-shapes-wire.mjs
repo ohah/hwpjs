@@ -1,4 +1,4 @@
-/** HPS1/HPS2 resources; raw absence and effective heading levels stay distinct. */
+/** HPS1/HPS2/HPS3 resources; raw absence and effective heading levels stay distinct. */
 export function decodeParagraphShapes(bytes) {
   const fail = () => {
     throw new Error('InvalidParagraphShapes');
@@ -7,7 +7,8 @@ export function decodeParagraphShapes(bytes) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const count = view.getUint32(4, true);
   const magic = view.getUint32(0, true);
-  const stride = magic === 0x31535048 ? 48 : magic === 0x32535048 ? 72 : 0;
+  const stride =
+    magic === 0x31535048 ? 48 : magic === 0x32535048 ? 72 : magic === 0x33535048 ? 76 : 0;
   if (!stride || count > 100000 || bytes.length !== 8 + count * stride) return fail();
   return Array.from({ length: count }, (_, index) => {
     const at = 8 + index * stride,
@@ -33,7 +34,7 @@ export function decodeParagraphShapes(bytes) {
       legacySpacing: int(32),
       modernSpacing: uint(36) ? { attributes: uint(40), value: int(44) } : null,
     };
-    if (stride === 72) {
+    if (stride >= 72) {
       if (
         uint(48) > 3 ||
         uint(52) > 65535 ||
@@ -50,6 +51,20 @@ export function decodeParagraphShapes(bytes) {
         extendedHeadingLevel: uint(60) ? uint(64) : null,
         headingLevel: uint(68),
       });
+    }
+    if (stride === 76) {
+      const marker = uint(72);
+      if (
+        marker > 0xffff ||
+        (marker > 0 &&
+          (shape.headingKind !== 3 ||
+            shape.headingId === 0 ||
+            marker <= 0x20 ||
+            (marker >= 0x7f && marker <= 0x9f) ||
+            (marker >= 0xd800 && marker <= 0xdfff)))
+      )
+        return fail();
+      shape.headingMarker = marker || null;
     }
     return shape;
   });

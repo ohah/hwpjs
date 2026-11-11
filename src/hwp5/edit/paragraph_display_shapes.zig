@@ -18,6 +18,7 @@ pub const Shape = struct {
     packed_heading_level: u3 = 0,
     extended_heading_level: ?u32 = null,
     heading_level: u32 = 0,
+    heading_marker: u16 = 0,
 };
 
 pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../version.zig").Version, expected_count: usize) ![]Shape {
@@ -26,7 +27,14 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
     errdefer a.free(output);
     var iterator = try info.Iterator.init(bytes, version, .{});
     var count: usize = 0;
+    var bullets: std.ArrayList(u16) = .empty;
+    defer bullets.deinit(a);
     while (try iterator.next()) |record| {
+        if (record.value == .bullet) {
+            if (bullets.items.len < std.math.maxInt(u16))
+                try bullets.append(a, characterBullet(record.value.bullet));
+            continue;
+        }
         if (record.value != .para_shape) continue;
         if (count >= output.len) return error.ResourceCountMismatch;
         const shape = record.value.para_shape;
@@ -40,7 +48,23 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
         count += 1;
     }
     if (count != output.len) return error.ResourceCountMismatch;
+    for (output) |*shape| {
+        if (shape.heading_kind == 3 and shape.heading_id != 0 and shape.heading_id <= bullets.items.len)
+            shape.heading_marker = bullets.items[shape.heading_id - 1];
+    }
     return output;
+}
+
+fn characterBullet(bullet: info.Bullet) u16 {
+    const ch = bullet.character;
+    if (ch <= 0x20 or (ch >= 0x7f and ch <= 0x9f) or
+        (ch >= 0xd800 and ch <= 0xdfff) or bullet.extra.len != 0 or
+        (bullet.check_character orelse 0) != 0) return 0;
+    if (bullet.image) |image| {
+        if (image.identifier != 0 or image.bin_data_id != 0 or image.brightness != 0 or
+            image.contrast != 0 or image.effect != 0) return 0;
+    }
+    return ch;
 }
 
 fn allocationCase(a: std.mem.Allocator) !void {
@@ -84,4 +108,33 @@ test "HWP5 paragraph display rejects counts framing and truncated input" {
     }
     bytes[1] &= ~@as(u8, 4);
     try std.testing.expectError(error.InvalidDocInfoLevel, read(a, &bytes, version, 1));
+}
+
+test "caret heading retains the referenced character bullet and withholds non-character definitions" {
+    const t = std.testing;
+    var bullet: info.Bullet = .{ .head = .{ .attributes = 0, .width_adjustment = 0, .text_distance = 0, .char_shape_id = 0 }, .character = 0x25b6, .image = null, .check_character = null, .extra = &.{} };
+    try t.expectEqual(@as(u16, 0x25b6), characterBullet(bullet));
+    bullet.check_character = 0x2713;
+    try t.expectEqual(@as(u16, 0), characterBullet(bullet));
+    bullet.check_character = 0;
+    bullet.image = .{ .identifier = 1, .contrast = 0, .brightness = 0, .effect = 0, .bin_data_id = 1 };
+    try t.expectEqual(@as(u16, 0), characterBullet(bullet));
+    bullet.image = null;
+    bullet.character = 0xd800;
+    try t.expectEqual(@as(u16, 0), characterBullet(bullet));
+
+    var records: [64]u8 = @splat(0);
+    std.mem.writeInt(u32, records[0..4], 24 | (1 << 10) | (14 << 20), .little);
+    std.mem.writeInt(u16, records[16..18], 0x25b6, .little);
+    std.mem.writeInt(u32, records[18..22], 25 | (1 << 10) | (42 << 20), .little);
+    // 42 bytes after the four-byte PARA_SHAPE header require 64 bytes total.
+    std.mem.writeInt(u32, records[22..26], 3 << 23, .little);
+    std.mem.writeInt(u16, records[52..54], 1, .little);
+    const shapes = try read(t.allocator, &records, .{ .raw = 0x05000000 }, 1);
+    defer t.allocator.free(shapes);
+    try t.expectEqual(@as(u16, 0x25b6), shapes[0].heading_marker);
+    std.mem.writeInt(u16, records[52..54], 2, .little);
+    const missing = try read(t.allocator, &records, .{ .raw = 0x05000000 }, 1);
+    defer t.allocator.free(missing);
+    try t.expectEqual(@as(u16, 0), missing[0].heading_marker);
 }

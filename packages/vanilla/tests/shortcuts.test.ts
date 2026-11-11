@@ -126,6 +126,38 @@ test('disabled or remapped F3 cannot fall through to the Canvas default', () => 
   assert.deepEqual(f.calls, ['block-selection']);
   f.adapter.dispose();
 });
+test('F5 cell modes honor remapping and suppress the browser refresh fallback', () => {
+  const config = (code: string, enabled = true) =>
+    parseKeymapConfig({
+      version: 1,
+      bindings: [
+        { id: 'table-cell-block', command: 'table-cell-block', code, modifiers: [], enabled },
+        {
+          id: 'table-cell-block-extend',
+          command: 'table-cell-block-extend',
+          code,
+          modifiers: ['Shift'],
+          enabled,
+        },
+      ],
+    });
+  const f = fixture(true, { config: config('F6'), fallback: config('F5') });
+  for (const shiftKey of [false, true]) {
+    assert.equal(f.key({ code: 'F5', metaKey: false, shiftKey }).defaultPrevented, true);
+    assert.equal(
+      f.key({ code: 'F6', metaKey: false, shiftKey, repeat: true }).defaultPrevented,
+      true,
+    );
+  }
+  assert.deepEqual(f.calls, []);
+  f.key({ code: 'F6', metaKey: false });
+  f.key({ code: 'F6', metaKey: false, shiftKey: true });
+  assert.deepEqual(f.calls, ['table-cell-block', 'table-cell-block-extend']);
+  f.adapter.setConfig(config('F5', false));
+  assert.equal(f.key({ code: 'F5', metaKey: false, shiftKey: true }).defaultPrevented, true);
+  assert.equal(f.calls.length, 2);
+  f.adapter.dispose();
+});
 test('composing, AltGraph, unrelated modifiers and ordinary inputs preserve browser input', () => {
   const f = fixture();
   for (const patch of [

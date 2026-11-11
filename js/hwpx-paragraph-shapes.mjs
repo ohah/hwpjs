@@ -23,6 +23,17 @@ export function decodeHwpxParagraphShapes(bytes) {
       ['widow_orphan', 'keep_with_next', 'keep_lines', 'page_break_before'].every(
         (key) => value[key] === null || typeof value[key] === 'boolean',
       ));
+  const heading = (value) =>
+    value === null ||
+    (value &&
+      ['none', 'outline', 'number', 'bullet'].includes(value.kind) &&
+      (value.marker === null ||
+        (value.kind === 'bullet' &&
+          Number.isInteger(value.marker) &&
+          value.marker > 0x20 &&
+          value.marker <= 0x10ffff &&
+          !(value.marker >= 0x7f && value.marker <= 0x9f) &&
+          !(value.marker >= 0xd800 && value.marker <= 0xdfff))));
   if (!Array.isArray(result)) invalid();
   const ids = new Set();
   for (const row of result) {
@@ -36,6 +47,7 @@ export function decodeHwpxParagraphShapes(bytes) {
       (Object.hasOwn(row, 'tab_pr_id') &&
         row.tab_pr_id !== null &&
         (!Number.isInteger(row.tab_pr_id) || row.tab_pr_id < 0 || row.tab_pr_id > 0xffffffff)) ||
+      (Object.hasOwn(row, 'heading') && !heading(row.heading)) ||
       (Object.hasOwn(row, 'break_settings') && !breaks(row.break_settings)) ||
       !text(row.horizontal) ||
       !text(row.spacing_type) ||

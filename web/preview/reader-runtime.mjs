@@ -1,5 +1,5 @@
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
-import { setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
+import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
 import { projectHwp5NamedFields } from './hwp5-named-fields.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
@@ -1126,12 +1126,15 @@ export function createReaderRuntime({
         });
         return;
       }
-      if (message.kind === 'set-named-field-value') {
+      if (message.kind === 'set-named-field-value' || message.kind === 'rename-named-field') {
+        const rename = message.kind === 'rename-named-field';
         if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
-          throw Error('NamedFieldValueUnavailable');
+          throw Error(rename ? 'NamedFieldRenameUnavailable' : 'NamedFieldValueUnavailable');
         if (!historyEnabled) throw Error('HistoryNotEnabled');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
-        applied = setHwpxNamedFieldValue(editor, message);
+        applied = rename
+          ? renameHwpxNamedField(editor, message)
+          : setHwpxNamedFieldValue(editor, message);
         if (!applied) {
           reply({ kind: message.kind, changed: false });
           return;

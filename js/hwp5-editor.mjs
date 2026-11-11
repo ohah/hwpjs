@@ -375,7 +375,8 @@ export async function createExperimentalHwp5Editor(
       check();
       if (typeof wasm.hwp5_edit_paragraph_shapes !== 'function')
         throw new Error('Hwp5ParagraphShapesAbiUnavailable');
-      return decodeParagraphShapes(output(() => wasm.hwp5_edit_paragraph_shapes()).bytes);
+      const query = wasm.hwp5_edit_paragraph_shapes_with_heading ?? wasm.hwp5_edit_paragraph_shapes;
+      return decodeParagraphShapes(output(query).bytes);
     },
     characterShapes() {
       check();

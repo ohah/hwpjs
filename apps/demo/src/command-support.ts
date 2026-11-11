@@ -19,6 +19,8 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'print-preview': entry('인쇄 미리보기', '문서'),
   'insert-document': entry('HWPX 문서 끼워 넣기', '문서', true),
   'block-selection': entry('블록 설정', '편집'),
+  'table-cell-block': entry('셀 블록 설정', '표'),
+  'table-cell-block-extend': entry('셀 블록 확장', '표'),
   undo: entry('실행 취소', '편집'),
   redo: entry('다시 실행', '편집'),
   cut: entry('잘라내기', '클립보드', true),
@@ -223,11 +225,13 @@ const editableContextCommands: readonly ContextCommand[] = Object.freeze([
 ]);
 const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
   ...editableContextCommands,
+  'table-cell-block',
   'table-cell-properties',
   'table-cell-appearance',
 ]);
 const generatedTableContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,
+  'table-cell-block',
   'generated-table-insert-row',
   'generated-table-delete-row',
   'generated-table-insert-column',

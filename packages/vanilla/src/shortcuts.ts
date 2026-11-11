@@ -54,7 +54,16 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         event.stopPropagation();
         if (
           event.repeat ||
-          ['copy', 'cut', 'paste', 'undo', 'redo', 'block-selection'].includes(original.command)
+          [
+            'copy',
+            'cut',
+            'paste',
+            'undo',
+            'redo',
+            'block-selection',
+            'table-cell-block',
+            'table-cell-block-extend',
+          ].includes(original.command)
         )
           event.preventDefault();
       }

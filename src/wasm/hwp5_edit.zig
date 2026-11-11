@@ -526,11 +526,19 @@ export fn hwp5_edit_copy_text(section: u32, paragraph: u32) u32 {
     return 1;
 }
 export fn hwp5_edit_paragraph_shapes() u32 {
+    return paragraphShapes(false);
+}
+
+export fn hwp5_edit_paragraph_shapes_with_heading() u32 {
+    return paragraphShapes(true);
+}
+
+fn paragraphShapes(with_heading: bool) u32 {
     hwp5_edit_output_free();
     const s = session() catch |err| return fail(err);
     const shapes = s.paragraphShapes(a) catch |err| return fail(err);
     defer a.free(shapes);
-    output = @import("paragraph_shapes_wire.zig").encode(a, shapes) catch |err| return fail(err);
+    output = @import("paragraph_shapes_wire.zig").encode(a, shapes, with_heading) catch |err| return fail(err);
     return 1;
 }
 export fn hwp5_edit_character_shapes() u32 {

@@ -1,3 +1,4 @@
+import { tableCellBlockContainsBox } from './table-cell-block.mjs';
 import { getScenePageText, pageTextUnavailable } from './page-text-scene.mjs';
 import { indexPrintPageScene } from './print-page-scene.mjs';
 import { attachHwpxPageNumbers } from './hwpx-page-number-layout.mjs';
@@ -98,7 +99,12 @@ import {
   characterRangesState,
 } from './character-property-selection.mjs';
 import { characterSizeState, characterSizeRangesState } from './character-size-selection.mjs';
-import { paragraphSelectionRanges, paragraphSelectionText } from './paragraph-selection.mjs';
+import {
+  paragraphSelectionOwner,
+  paragraphSelectionRanges,
+  paragraphSelectionText,
+} from './paragraph-selection.mjs';
+import { observedParagraphHeading, unavailableHeading } from './paragraph-heading.mjs';
 import { adjacentOwnedParagraph } from './paragraph-navigation.mjs';
 import { paintUnderline } from './underline-paint.mjs';
 import { paintNumberPrefix } from './number-prefix-paint.mjs';
@@ -1318,8 +1324,29 @@ export function createRenderer(
         tableBorders: layout.tableBorderCoverage,
       };
     }
+    let paintedCells = 0;
+    if (paintSelection.cellBlock && interaction.active) {
+      ctx.fillStyle = 'rgba(20, 91, 150, 0.24)';
+      for (const box of layout.boxes ?? []) {
+        const y = box.y - viewport.scrollTop;
+        if (
+          y >= height ||
+          y + box.height <= 0 ||
+          !tableCellBlockContainsBox(paintSelection.cellBlock, box)
+        )
+          continue;
+        if (
+          paintRowTransform(ctx, box, viewport.scrollTop, () =>
+            ctx.fillRect(box.x, y, box.width, box.height),
+          )
+        )
+          paintedCells++;
+      }
+    }
+    canvas.dataset.paintedCellBlockCount = String(paintedCells);
     let paintedCaret = '';
     if (
+      !paintSelection.cellBlock &&
       !interaction.historyPending &&
       interaction.active &&
       (caretVisible || interaction.composition)
@@ -2194,6 +2221,27 @@ export function createRenderer(
     equationAtLogicalPoint: (x, y) => {
       flushProjection();
       return equationAnchorAtPoint(display, layout, x, y);
+    },
+    getHeadingString(state, target, point) {
+      if (
+        closed ||
+        projectionDeferred ||
+        draft ||
+        sourceObservationState !== state ||
+        state.content !== content
+      )
+        return unavailableHeading('scene-not-current');
+      const paragraph = paragraphLookup.find(content.paragraphs, point);
+      if (
+        !paragraph ||
+        paragraph.clipped ||
+        point.createdCell ||
+        paragraphSelectionOwner(paragraph) !== target.owner ||
+        !viewPolicy().allowsPoint(point) ||
+        !caretGeometry(layout, point)
+      )
+        return unavailableHeading('caret-not-observed');
+      return observedParagraphHeading(content.format, paragraph.paragraphShape);
     },
     getPageText(state, pageIndex, filter) {
       if (closed || projectionDeferred || draft || sourceObservationState !== state)

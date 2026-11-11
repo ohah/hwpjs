@@ -65,6 +65,14 @@ export interface SetNamedFieldValuePayload {
   readonly text: string;
 }
 
+export interface RenameNamedFieldPayload {
+  /** The current exact name and optional occurrence are the source precondition. */
+  readonly selector: NamedFieldSelector;
+  readonly token: StateToken;
+  readonly selectionVersion: number;
+  readonly newName: string;
+}
+
 export type NamedFieldResolution =
   | { readonly status: 'found'; readonly field: NamedField }
   | { readonly status: 'ambiguous'; readonly matches: readonly NamedField[] }

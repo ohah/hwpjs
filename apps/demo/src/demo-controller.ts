@@ -38,7 +38,7 @@ import { createObjectPropertiesTool } from './object-properties-tool.ts';
 import { createTableCellPropertiesTool } from './table-cell-properties-tool.ts';
 import { createTableCellAppearanceTool } from './table-cell-appearance-tool.ts';
 import { createClipboardBridge } from './clipboard-bridge.ts';
-import { commandSupportActions } from './command-support.ts';
+import { commandSupportActions, DEMO_COMMANDS, DEMO_COMMAND_REGISTRY } from './command-support.ts';
 import { mountDemoContextMenu, contextTarget, type ContextPicture } from './context-menu.ts';
 import { createDemoShell } from './shell.ts';
 import type {
@@ -83,6 +83,9 @@ export interface DemoHost
   focusForPaste?(): boolean;
   canRequestBlockSelection?(): boolean;
   requestBlockSelection?(): boolean;
+  canRequestCellBlock?(requireFocus?: boolean): boolean;
+  requestCellBlock?(extend?: boolean, fromContext?: boolean): boolean;
+  hasCellBlock?(): boolean;
   setScale(value: number): boolean;
   setDisplayOptions?(options: CanvasDisplayOptions): boolean;
   getDisplayOptions?(): Readonly<CanvasDisplayOptions> | undefined;
@@ -306,6 +309,10 @@ export async function mountDemo(
       history = getHistoryAvailability(state),
       fontAvailability = fontName.presentation(sharedFormatting);
     const print = host?.openPrintPreview && host.getPrintAvailability?.();
+    const cellBlock = {
+      enabled: host?.canRequestCellBlock?.() === true,
+      reason: '표에서 선택할 수 있는 셀에 커서를 놓으세요.',
+    };
     const availability = {
       ...formatState.actions,
       ...textColor.presentation(sharedFormatting),
@@ -320,6 +327,9 @@ export async function mountDemo(
       },
       ...textTools.presentation(),
       'insert-table': tableInsert.presentation(),
+      ...(host?.requestCellBlock
+        ? { 'table-cell-block': cellBlock, 'table-cell-block-extend': cellBlock }
+        : {}),
       'object-properties': objectProperties.presentation(),
       ...generatedTableGrid.presentation(),
       'table-cell-properties': tableCellProperties.presentation(),
@@ -389,6 +399,14 @@ export async function mountDemo(
         reason: !host ? 'Canvas 표시 기능이 연결되지 않았습니다.' : '최소 배율입니다.',
       },
     };
+    // Cell blocks carry display cells only. Keep edit commands scoped to ordinary caret selections.
+    if (host?.hasCellBlock?.())
+      for (const command of DEMO_COMMANDS) {
+        if (DEMO_COMMAND_REGISTRY[command].selection && command in availability)
+          Object.assign(availability, {
+            [command]: { enabled: false, reason: '셀 블록을 해제한 뒤 실행하세요.' },
+          });
+      }
     const actions = commandSupportActions({
       connectedCommands: new Set(Object.keys(availability) as DemoCommand[]),
       availability,
@@ -466,7 +484,7 @@ export async function mountDemo(
       return new Uint8Array(await response.arrayBuffer());
     });
   }
-  async function runAction(action: DemoAction) {
+  async function runAction(action: DemoAction, fromContext = false) {
     if (closed) return;
     const available = presentation().actions?.[action.command];
     if (!available?.enabled) {
@@ -481,6 +499,13 @@ export async function mountDemo(
     }
     if (action.command === 'insert-document') {
       documentInsert.open();
+      return;
+    }
+    if (action.command === 'table-cell-block' || action.command === 'table-cell-block-extend') {
+      if (
+        host?.requestCellBlock?.(action.command === 'table-cell-block-extend', fromContext) !== true
+      )
+        note('표에서 선택할 수 있는 셀에 커서를 놓으세요.');
       return;
     }
     if (action.command === 'block-selection') {
@@ -650,7 +675,7 @@ export async function mountDemo(
         getTarget: () =>
           generatedTableGrid.contextTarget() ??
           contextTarget(editor.getEditorState(), host ? host.getContextPicture?.() : null),
-        execute: runAction,
+        execute: (action) => runAction(action, true),
         subscribe: (listener) => editor.registerStateListener(() => listener()),
         onError: (error) =>
           note(error instanceof Error ? error.message : '명령을 실행하지 못했습니다.'),
@@ -690,7 +715,7 @@ export async function mountDemo(
         root: shell.saveOptionsMount,
         surface: shell.surfaceMount,
         tableRowContext: () => {
-          if (closed || busy) return 'blocked';
+          if (closed || busy || host?.hasCellBlock?.()) return 'blocked';
           const table = generatedTableGrid.contextTarget();
           if (table?.current?.() === true) return 'table';
           const state = editor.getEditorState(),
@@ -713,8 +738,10 @@ export async function mountDemo(
           !closed &&
           !busy &&
           (command === 'new-document' || editor.getEditorState().status === 'ready') &&
-          ((command === 'paste' && host?.canPasteInput?.() === true) ||
-            presentation().actions?.[command]?.enabled === true),
+          (command === 'table-cell-block' || command === 'table-cell-block-extend'
+            ? host?.canRequestCellBlock?.(true) === true
+            : (command === 'paste' && host?.canPasteInput?.() === true) ||
+              presentation().actions?.[command]?.enabled === true),
         execute: runAction,
         nativePaste: () => host?.focusForPaste?.() ?? false,
         onStatus: note,

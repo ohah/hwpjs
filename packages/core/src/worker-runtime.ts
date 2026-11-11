@@ -272,7 +272,9 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       !custom &&
       // This command re-resolves its complete value target inside the worker.
       // Its transport fence conveys no native binding or geometry authority.
-      (kind === 'set-named-field-value' || (canonicalCode && transportWitness.current(worker))),
+      (kind === 'set-named-field-value' ||
+        kind === 'rename-named-field' ||
+        (canonicalCode && transportWitness.current(worker))),
   );
   origins.set(runtime, {
     valid,

@@ -972,7 +972,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .independent_text, .insert_document => return error.HistoryNotEnabled,
+        .independent_text, .insert_document, .named_field_rename => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -1976,6 +1976,25 @@ export fn hwpx_edit_save() u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     output = session.save() catch |err| return fail(err);
     return 1;
+}
+export fn hwpx_edit_rename_named_field(section: u32, paragraph: u32, begin_element: u32, expected_ptr: [*]const u8, expected_len: usize, name_ptr: [*]const u8, name_len: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    const limit = @import("../hwpx/named_field_rename.zig").max_name_bytes;
+    if (expected_len > limit or name_len > limit) return fail(error.LimitExceeded);
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
+        .kind = .named_field_rename,
+        .section = section,
+        .paragraph = paragraph,
+        .begin_element = begin_element,
+        .start = 0,
+        .deleted = 0,
+        .expected_field_name = expected_ptr[0..expected_len],
+        .inserted = name_ptr[0..name_len],
+    }}) catch |err| return fail(err);
+    return if (changed) 1 else 2;
 }
 export fn hwpx_edit_named_fields() u32 {
     hwpx_edit_output_free();

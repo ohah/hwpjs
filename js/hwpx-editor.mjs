@@ -2670,6 +2670,32 @@ export async function createHwpxEditor(source) {
         if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
       });
     },
+    renameNamedField(section, paragraph, beginElement, expectedName, newName) {
+      ready();
+      [section, paragraph, beginElement].forEach(uint);
+      if (typeof wasm.hwpx_edit_rename_named_field !== 'function')
+        throw new Error('NamedFieldRenameUnavailable');
+      const expected = encodedText(expectedName);
+      const name = encodedText(newName);
+      if (!expected.length || !name.length) throw new Error('InvalidNamedFieldName');
+      if (expected.length > 4096 || name.length > 4096) throw new Error('LimitExceeded');
+      return memory.withBytes(expected, (expectedPtr, expectedLen) =>
+        memory.withBytes(name, (namePtr, nameLen) => {
+          const status = wasm.hwpx_edit_rename_named_field(
+            section,
+            paragraph,
+            beginElement,
+            expectedPtr,
+            expectedLen,
+            namePtr,
+            nameLen,
+          );
+          if (status === 1) return true;
+          if (status === 2) return false;
+          throw memory.error();
+        }),
+      );
+    },
     namedFields() {
       ready();
       if (typeof wasm.hwpx_edit_named_fields !== 'function')

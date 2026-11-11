@@ -10,6 +10,8 @@ export type DemoCommand =
   | 'print-preview'
   | 'insert-document'
   | 'block-selection'
+  | 'table-cell-block'
+  | 'table-cell-block-extend'
   | 'undo'
   | 'redo'
   | 'cut'

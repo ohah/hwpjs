@@ -10,6 +10,22 @@
       "labelKey": "command.block-selection"
     },
     {
+      "id": "table-cell-block",
+      "command": "table-cell-block",
+      "code": "F5",
+      "modifiers": [],
+      "platform": "all",
+      "labelKey": "command.table-cell-block"
+    },
+    {
+      "id": "table-cell-block-extend",
+      "command": "table-cell-block-extend",
+      "code": "F5",
+      "modifiers": ["Shift"],
+      "platform": "all",
+      "labelKey": "command.table-cell-block-extend"
+    },
+    {
       "id": "new-document",
       "command": "new-document",
       "code": "KeyN",
@@ -180,6 +196,8 @@
   "messages": {
     "ko": {
       "command.block-selection": "블록 설정",
+      "command.table-cell-block": "셀 블록 설정",
+      "command.table-cell-block-extend": "셀 블록 확장",
       "command.save": "저장",
       "command.undo": "실행 취소",
       "command.redo": "다시 실행",
@@ -195,6 +213,8 @@
     },
     "en": {
       "command.block-selection": "Set block",
+      "command.table-cell-block": "Select table cells",
+      "command.table-cell-block-extend": "Extend cell block",
       "command.save": "Save",
       "command.undo": "Undo",
       "command.redo": "Redo",

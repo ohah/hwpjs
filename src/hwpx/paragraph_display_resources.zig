@@ -1,6 +1,7 @@
 //! Validated header resources projected into caller-owned display snapshots.
 const std = @import("std");
 const owned = @import("paragraph_display_owned.zig");
+const heading = @import("paragraph_heading_display.zig");
 const raw = @import("paragraph_display_shape.zig");
 const head = @import("document_xml.zig").head_uri;
 
@@ -31,6 +32,8 @@ pub fn read(session: *const @import("editor_session.zig").Session) ![]owned.Shap
 }
 
 fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree, ids: []const u32) ![]owned.Shape {
+    var definitions = try heading.bullets(a, tree);
+    defer definitions.deinit(a);
     var output: std.ArrayList(owned.Shape) = .empty;
     errdefer {
         for (output.items) |*shape| shape.deinit(a);
@@ -44,6 +47,7 @@ fn collect(a: std.mem.Allocator, tree: *const @import("xml_part_tree.zig").Tree,
         if (output.items.len >= ids.len) return error.ParagraphDisplayResourceMismatch;
         var snapshot = try owned.clone(a, source);
         errdefer snapshot.deinit(a);
+        snapshot.heading = try heading.read(a, tree, index, definitions);
         try output.append(a, snapshot);
     }
     if (output.items.len != ids.len) return error.ParagraphDisplayResourceMismatch;
