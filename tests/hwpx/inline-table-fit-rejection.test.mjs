@@ -250,7 +250,28 @@ test('source-fit changes retire proof, and rejected-column work is bounded by ac
       },
     },
     undefined,
-    { ...small, gutter_type: 'top_bottom' },
+    { ...small, gutter_type: 'unknown' },
   );
   assert.equal(invalidGeometry.result.error, 'unsupported_page_geometry');
+});
+
+test('top-bottom gutter reaches fit proof with the validated top reference box', () => {
+  let captures = 0;
+  const page = { ...small, gutter_type: 'top_bottom', margin: { ...small.margin, gutter: 75 } };
+  const observed = run(
+    [row(20)],
+    {
+      createRowFitRejection(source, context) {
+        captures++;
+        assert.equal(context.columns[0].y - context.paper.y, 1);
+        assert.equal(context.columns[0].height, 99);
+        return createInlineTableFitRejection(source, context);
+      },
+    },
+    undefined,
+    page,
+  );
+  assert.equal(observed.result.state, 'paginated', observed.result.error);
+  assert.equal(captures, 1);
+  assert.equal(observed.fits, 1);
 });

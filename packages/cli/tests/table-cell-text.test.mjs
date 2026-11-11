@@ -60,7 +60,7 @@ function harness(format = 'hwpx', overrides = {}) {
 }
 
 test('표 초기 본문은 공통 작업 계약의 선택 필드다', () => {
-  assert.equal(Object.keys(DOCUMENT_OPERATION_SPECS).length, 17);
+  assert.equal(DOCUMENT_OPERATION_SPECS['table-insert'].required.includes('cellTexts'), false);
   assert.ok(DOCUMENT_OPERATION_SPECS['table-insert'].optional.includes('cellTexts'));
   assert.doesNotThrow(() => validateDocumentOperations([operation()]));
   const input = operation({
