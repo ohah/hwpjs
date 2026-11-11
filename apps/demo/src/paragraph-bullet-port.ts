@@ -70,6 +70,7 @@ export function createParagraphBulletPort(
       declarations,
       choices,
       writable,
+      definitionWriter: inventory.definitionWriter,
       reason: !writable
         ? selected === null
           ? 'UnobservedBulletValue'

@@ -2,6 +2,7 @@ import {
   decodeNamedFieldParameters,
   checkedNamedFieldParameterValues,
 } from './named-field-parameters.mjs';
+import { checkedBulletDefinitionEdit } from './paragraph-bullet-definition-write.mjs';
 import { decodeParagraphBulletDefinitions } from './paragraph-bullet-definitions.mjs';
 import { createHwpxDocumentInsertApi } from './hwpx-document-insert.mjs';
 import { decodeHwpxPageNumberDisplaySource } from './hwpx-page-number-display-wire.mjs';
@@ -1005,6 +1006,21 @@ export async function createHwpxEditor(source) {
       } finally {
         wasm.hwpx_edit_output_free();
       }
+    },
+    writeParagraphBulletDefinition(edit, section = 0, paragraph = 0) {
+      ready();
+      uint(section);
+      uint(paragraph);
+      checkedBulletDefinitionEdit(edit);
+      if (typeof wasm.hwpx_edit_bullet_definition_write !== 'function')
+        throw Error('BulletDefinitionWriteAbiUnavailable');
+      const bytes = new TextEncoder().encode(JSON.stringify({ ...edit, section, paragraph }));
+      return memory.withBytes(bytes, (ptr, len) => {
+        const status = wasm.hwpx_edit_bullet_definition_write(ptr, len);
+        if (status === 1) return true;
+        if (status === 2) return false;
+        throw memory.error();
+      });
     },
     paragraphBulletDefinitions() {
       ready();

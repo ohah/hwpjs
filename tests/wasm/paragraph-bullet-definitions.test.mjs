@@ -54,6 +54,7 @@ test('distinguishes an actual empty header from unavailable older ABI', async ()
       scope: 'current-header',
       coverage: 'complete',
       declarations: [],
+      definitionWriter: 'character-definitions-v1',
     });
   } finally {
     editor.close();

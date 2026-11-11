@@ -1,5 +1,5 @@
 .hwp-paragraph-bullet-dialog {
-  width: min(30rem, calc(100vw - 2rem));
+  width: min(36rem, calc(100vw - 2rem));
 }
 .hwp-paragraph-bullet-dialog label {
   display: grid;
@@ -12,4 +12,33 @@
 .hwp-bullet-scope {
   color: #555;
   font-size: 0.875rem;
+}
+.hwp-paragraph-bullet-dialog fieldset {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid;
+  gap: 0.6rem;
+  margin-block: 0.75rem;
+}
+.hwp-paragraph-bullet-dialog input {
+  font: inherit;
+  padding: 0.35rem;
+  max-width: 100%;
+}
+.hwp-paragraph-bullet-dialog fieldset label:has([data-role='bullet-marker']) {
+  grid-column: 1 / -1;
+}
+.hwp-paragraph-bullet-dialog fieldset label:has(input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 480px) {
+  .hwp-paragraph-bullet-dialog fieldset {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.hwp-paragraph-bullet-dialog label[hidden] {
+  display: none;
+}
+.hwp-paragraph-bullet-dialog .hwp-dialog-footer {
+  flex-wrap: wrap;
 }

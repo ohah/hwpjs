@@ -9,6 +9,7 @@ pub const Declaration = struct {
     marker: ?u21,
     canApply: bool,
     reason: ?Reason,
+    definition: ?@import("bullet_definition_write.zig").Definition = null,
 };
 pub const Snapshot = struct {
     schemaVersion: u32 = 1,
@@ -16,6 +17,7 @@ pub const Snapshot = struct {
     scope: enum { @"current-header" } = .@"current-header",
     coverage: enum { complete } = .complete,
     declarations: []Declaration,
+    definitionWriter: enum { @"character-definitions-v1" } = .@"character-definitions-v1",
 };
 
 pub fn read(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session) !Snapshot {
@@ -46,7 +48,20 @@ pub fn readTree(a: std.mem.Allocator, tree: *const Tree) !Snapshot {
             count.value_ptr.* += 1;
             if ((definitions.get(identity) orelse null)) |definition| marker = definition.scalar;
         }
+        var observed: ?@import("bullet_definition_write.zig").Definition = null;
+        if (marker) |scalar| {
+            const ph = try @import("paragraph_display_children.zig").child(a, tree, index, @import("document_xml.zig").head_uri, "paraHead");
+            if (ph) |node| if (tree.elements[node].parent == index) {
+                if (try @import("paragraph_marker_placement.zig").read(a, tree, node)) |placement| {
+                    const d = @import("bullet_definition_write.zig").definition(scalar, placement);
+                    if (@import("bullet_definition_write.zig").validate(d)) |_| {
+                        observed = d;
+                    } else |_| {}
+                }
+            };
+        }
         try rows.append(a, .{
+            .definition = observed,
             .ordinal = @intCast(rows.items.len),
             .id = id,
             .marker = marker,
@@ -58,6 +73,7 @@ pub fn readTree(a: std.mem.Allocator, tree: *const Tree) !Snapshot {
         if (row.id) |id| if (counts.get(id).? > 1) {
             row.canApply = false;
             row.marker = null;
+            row.definition = null;
             row.reason = .DuplicateBulletId;
         };
     }

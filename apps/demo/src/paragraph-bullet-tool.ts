@@ -1,4 +1,11 @@
-import { getSelectionFormatting, type HeadlessEditor, type ParagraphBullet } from '@hwpjs/core';
+import {
+  EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND,
+  getSelectionFormatting,
+  type HeadlessEditor,
+  type ParagraphBullet,
+  type ParagraphBulletDefinitionEdit,
+  type ParagraphBulletDefinition,
+} from '@hwpjs/core';
 import { createParagraphShapeApi, type ParagraphShapeCoreApi } from './paragraph-shape-api.ts';
 import { captureSurfaceFormatting } from './surface-formatting-capture.ts';
 import type { SurfaceFormattingHost } from './surface-formatting-port.ts';
@@ -122,7 +129,8 @@ export function createParagraphBulletTool(o: Options) {
       status.dataset.role = 'bullet-status';
       status.setAttribute('role', 'status');
       const support = doc.createElement('p');
-      support.textContent = '새 정의 만들기·번호 이어가기·HWP5 편집은 준비 중입니다.';
+      support.textContent =
+        '문자 글머리표 정의를 만듭니다. 기존 정의 수정은 이 ID를 사용하는 모든 문단에 반영됩니다. 그림·체크 글머리표·번호 이어가기·HWP5 쓰기는 준비 중입니다.';
       support.className = 'hwp-bullet-scope';
       const apply = doc.createElement('button'),
         remove = doc.createElement('button'),
@@ -134,8 +142,95 @@ export function createParagraphBulletTool(o: Options) {
       apply.dataset.role = 'bullet-apply';
       remove.dataset.role = 'bullet-remove';
       cancel.dataset.role = 'bullet-cancel';
-      layer.body.append(currentLabel, label, scope, status, support);
-      layer.footer.append(apply, remove, cancel);
+      const form = doc.createElement('fieldset');
+      const legend = doc.createElement('legend');
+      legend.textContent = '글머리표 정의 만들기·수정';
+      form.append(legend);
+      const add = <T extends HTMLElement>(text: string, element: T, role: string): T => {
+        const label = doc.createElement('label');
+        label.textContent = text;
+        element.dataset.role = role;
+        element.setAttribute('aria-label', text);
+        label.append(element);
+        form.append(label);
+        return element;
+      };
+      const marker = add('글머리표 문자 하나', doc.createElement('input'), 'bullet-marker');
+      marker.value = '•';
+      const alignment = add('글머리표 정렬', doc.createElement('select'), 'bullet-alignment');
+      const unit = add('본문 간격 단위', doc.createElement('select'), 'bullet-offset-unit');
+      for (const v of ['LEFT', 'CENTER', 'RIGHT']) alignment.add(new Option(v, v));
+      for (const v of ['PERCENT', 'HWPUNIT']) unit.add(new Option(v, v));
+      const number = (label: string, role: string, initial: string) => {
+        const input = add(label, doc.createElement('input'), role);
+        input.type = 'number';
+        input.step = '1';
+        input.value = initial;
+        return input;
+      };
+      const offset = number('본문 간격', 'bullet-offset', '50');
+      const adjust = number('너비 보정 HWPUNIT', 'bullet-width', '0');
+      const shape = number('기존 글자 모양 ID', 'bullet-char-shape', '0');
+      const inherit = add(
+        '본문 글자 모양 상속',
+        doc.createElement('input'),
+        'bullet-inherit-shape',
+      );
+      inherit.type = 'checkbox';
+      inherit.checked = true;
+      const showShape = () => {
+        shape.parentElement!.hidden = inherit.checked;
+      };
+      inherit.addEventListener('change', showShape);
+      showShape();
+      const width = add('실제 문자 너비 사용', doc.createElement('input'), 'bullet-instance-width');
+      width.type = 'checkbox';
+      width.checked = true;
+      const indent = add('자동 내어쓰기', doc.createElement('input'), 'bullet-auto-indent');
+      indent.type = 'checkbox';
+      indent.checked = true;
+      const create = doc.createElement('button'),
+        update = doc.createElement('button');
+      create.type = update.type = 'button';
+      create.textContent = '새 정의 생성·적용';
+      update.textContent = '정의 수정';
+      create.dataset.role = 'bullet-create';
+      update.dataset.role = 'bullet-update';
+      const readDefinition = (): ParagraphBulletDefinition => {
+        if ([...marker.value].length !== 1) throw Error('문자를 하나 입력해주세요.');
+        if (
+          [adjust, offset, ...(!inherit.checked ? [shape] : [])].some(
+            (input) => input.value.trim() === '',
+          )
+        )
+          throw Error('모양의 숫자 값을 입력해주세요.');
+        return {
+          marker: marker.value.codePointAt(0)!,
+          alignment: alignment.value as ParagraphBulletDefinition['alignment'],
+          useInstanceWidth: width.checked,
+          autoIndent: indent.checked,
+          widthAdjust: Number(adjust.value),
+          textOffsetType: unit.value as ParagraphBulletDefinition['textOffsetType'],
+          textOffset: Number(offset.value),
+          charShapeId: inherit.checked ? 0xffffffff : Number(shape.value),
+        };
+      };
+      const loadDefinition = () => {
+        const d = captured?.declarations.find((row) => row.id === Number(select.value))?.definition;
+        if (!d) return;
+        marker.value = String.fromCodePoint(d.marker);
+        alignment.value = d.alignment;
+        unit.value = d.textOffsetType;
+        offset.value = String(d.textOffset);
+        adjust.value = String(d.widthAdjust);
+        inherit.checked = d.charShapeId === 0xffffffff;
+        shape.value = inherit.checked ? '0' : String(d.charShapeId);
+        showShape();
+        width.checked = d.useInstanceWidth;
+        indent.checked = d.autoIndent;
+      };
+      layer.body.append(currentLabel, label, scope, form, status, support);
+      layer.footer.append(create, update, apply, remove, cancel);
       const render = () => {
         if (closed) return;
         const stale = o.editor.getEditorState() !== state || (!loading && !current());
@@ -145,6 +240,18 @@ export function createParagraphBulletTool(o: Options) {
         apply.disabled =
           !allowed || select.value === '' || select.selectedOptions[0]?.disabled === true;
         remove.disabled = !allowed || captured?.selected?.kind !== 'existing';
+        const writer = allowed && captured?.definitionWriter === 'character-definitions-v1';
+        form.disabled = !writer;
+        support.textContent =
+          captured && captured.definitionWriter !== 'character-definitions-v1'
+            ? '현재 엔진은 새 글머리표 정의 쓰기를 제공하지 않습니다. 새 Native 엔진 결합 후 사용할 수 있습니다.'
+            : '문자 글머리표 정의를 만듭니다. 기존 정의 수정은 이 ID를 사용하는 모든 문단에 반영됩니다. 그림·체크 글머리표·번호 이어가기·HWP5 쓰기는 준비 중입니다.';
+        create.disabled = !writer;
+        update.disabled =
+          !writer ||
+          !captured?.declarations.some(
+            (row) => row.id === Number(select.value) && row.canApply && row.definition,
+          );
         cancel.disabled = busy;
         currentLabel.textContent = loading
           ? '현재 글머리표를 조회하는 중…'
@@ -198,7 +305,7 @@ export function createParagraphBulletTool(o: Options) {
         composing = false;
       });
       cancel.addEventListener('click', () => close());
-      const submit = async (intent: ParagraphBullet) => {
+      const submit = async (intent: ParagraphBullet | ParagraphBulletDefinitionEdit) => {
         if (loading || busy || composing || refreshRequired || !captured) return;
         if (!current()) {
           error = 'StaleParagraphBullet';
@@ -209,12 +316,23 @@ export function createParagraphBulletTool(o: Options) {
         render();
         o.onPresentationChange?.();
         try {
-          const result = await port.apply(captured, intent, current);
+          const result =
+            'mode' in intent
+              ? await o.editor.dispatchCommand(EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND, {
+                  target: captured.target,
+                  selectionVersion: captured.state.stateVersion,
+                  edit: intent,
+                })
+              : await port.apply(captured, intent, current);
           if (closed) return;
           if (result.status === 'committed-with-snapshot' || result.status === 'known-no-op') {
             busy = false;
             o.onStatus?.(
-              intent.kind === 'none' ? '글머리표를 해제했습니다.' : '글머리표를 적용했습니다.',
+              'mode' in intent
+                ? '글머리표 정의를 저장했습니다.'
+                : intent.kind === 'none'
+                  ? '글머리표를 해제했습니다.'
+                  : '글머리표를 적용했습니다.',
             );
             close();
           } else {
@@ -239,7 +357,33 @@ export function createParagraphBulletTool(o: Options) {
       remove.addEventListener('click', () => {
         if (!remove.disabled) void submit({ kind: 'none' });
       });
-      select.addEventListener('change', render);
+      create.addEventListener('click', () => {
+        if (create.disabled) return;
+        try {
+          void submit({ mode: 'create', definition: readDefinition(), apply: true });
+        } catch (failure) {
+          error = String(failure);
+          render();
+        }
+      });
+      update.addEventListener('click', () => {
+        if (update.disabled) return;
+        try {
+          void submit({
+            mode: 'update',
+            id: Number(select.value),
+            definition: readDefinition(),
+            apply: false,
+          });
+        } catch (failure) {
+          error = String(failure);
+          render();
+        }
+      });
+      select.addEventListener('change', () => {
+        loadDefinition();
+        render();
+      });
       layer.show();
       const bound = capture?.bindDialog(layer.element) === true;
       render();
@@ -283,6 +427,7 @@ export function createParagraphBulletTool(o: Options) {
                 : value.choices.length
                   ? String(value.choices[0].id)
                   : '';
+            loadDefinition();
           },
           (failure) => {
             if (!closed) error = failure instanceof Error ? failure.message : String(failure);

@@ -54,7 +54,7 @@ export type BackgroundPatch =
       readonly step: number;
       readonly stepCenter: number;
     };
-const styles = new Set<BorderLineStyle>(borderValues.BORDER_LINE_STYLES);
+const styles = new Set<string>(borderValues.BORDER_LINE_STYLES);
 const widths = new Set<number>(borderValues.BORDER_WIDTHS_HUNDREDTH_MM);
 const hatch = new Set(['HORIZONTAL', 'VERTICAL', 'BACK_SLASH', 'SLASH', 'CROSS', 'CROSS_DIAGONAL']);
 function object(value: unknown): Record<string, unknown> {

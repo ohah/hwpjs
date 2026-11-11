@@ -15,6 +15,8 @@ import {
   resolveNamedField,
 } from './named-fields.ts';
 // @ts-ignore Shared Native DTO validator, with no source reader or state.
+import { checkedBulletDefinitionEdit } from '../../../../js/paragraph-bullet-definition-write.mjs';
+import type { EditParagraphBulletDefinitionPayload } from '../commands/paragraph-bullet-definition.ts';
 import { checkedParagraphBulletDefinitions } from '../../../../js/paragraph-bullet-definitions.mjs';
 import type {
   ParagraphBulletDefinitions,
@@ -109,6 +111,7 @@ import {
   SPLICE_TEXT_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
+  EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND,
   CREATE_NAMED_FIELD_COMMAND,
   SET_NAMED_FIELD_PARAMETERS_COMMAND,
   INSERT_TABLE_COMMAND,
@@ -1398,6 +1401,40 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
+      if (pending.command.id === EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND.id) {
+        const payload = pending.payload as EditParagraphBulletDefinitionPayload;
+        if (
+          !payload?.target ||
+          Object.keys(payload).some((k) => !['target', 'selectionVersion', 'edit'].includes(k)) ||
+          !Number.isSafeInteger(payload.selectionVersion) ||
+          payload.selectionVersion < 0
+        )
+          throw Error('InvalidBulletDefinitionRequest');
+        checkedBulletDefinitionEdit(payload.edit);
+        const kind = 'edit-paragraph-bullet-definition';
+        if (!hasRuntimeAdmission(active, kind) || payload.target.format !== 'hwpx')
+          throw Error('BulletDefinitionWriteUnavailable');
+        const guard = () => {
+          requireReady(payload.target, true);
+          if (state.stateVersion !== payload.selectionVersion)
+            throw Error('StaleBulletDefinitionSelection');
+          const row = validateSelection(payload.target, state);
+          if (payload.target.owner !== `section:${payload.target.section}:body` || row.createdCell)
+            throw Error('UnsupportedBulletOwner');
+        };
+        guard();
+        return await mutate(
+          {
+            kind,
+            section: payload.target.section,
+            paragraph: payload.target.paragraph,
+            edit: payload.edit,
+          },
+          payload.target,
+          true,
+          guard,
+        );
+      }
       if (pending.command.id === CREATE_NAMED_FIELD_COMMAND.id) {
         const payload = pending.payload as CreateNamedFieldPayload;
         if (
@@ -1933,6 +1970,7 @@ export function createEditor(options: CreateEditorOptions) {
         'set-named-field-value',
         'rename-named-field',
         'set-named-field-parameters',
+        'edit-paragraph-bullet-definition',
         'create-named-field',
         'source-table-cell-width',
         'source-table-cell-height',

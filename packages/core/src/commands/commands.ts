@@ -35,6 +35,9 @@ export interface HistoryPayload {
 export const SET_NAMED_FIELD_PARAMETERS_COMMAND = createCommand<SetNamedFieldParametersPayload>(
   'set-named-field-parameters',
 );
+import type { EditParagraphBulletDefinitionPayload } from './paragraph-bullet-definition.ts';
+export const EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND =
+  createCommand<EditParagraphBulletDefinitionPayload>('edit-paragraph-bullet-definition');
 export const CREATE_NAMED_FIELD_COMMAND =
   createCommand<CreateNamedFieldPayload>('create-named-field');
 export const RENAME_NAMED_FIELD_COMMAND =

@@ -1,3 +1,4 @@
+import { checkedBulletDefinition } from './paragraph-bullet-definition-write.mjs';
 const reasons = new Set(['InvalidBulletId', 'DuplicateBulletId', 'UnsupportedBulletDeclaration']);
 const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 0xffffffff;
 const scalar = (value) =>
@@ -23,6 +24,11 @@ export function checkedParagraphBulletDefinitions(result) {
     result.declarations.length > 4096
   )
     invalid();
+  if (
+    result.definitionWriter !== undefined &&
+    result.definitionWriter !== 'character-definitions-v1'
+  )
+    invalid();
   const counts = new Map();
   for (const [index, row] of result.declarations.entries()) {
     if (
@@ -40,6 +46,14 @@ export function checkedParagraphBulletDefinitions(result) {
     )
       invalid();
     if ((row.id === null) !== (row.reason === 'InvalidBulletId')) invalid();
+    if (row.definition != null) {
+      try {
+        checkedBulletDefinition(row.definition);
+      } catch {
+        invalid();
+      }
+      if (!row.canApply || row.definition.marker !== row.marker) invalid();
+    }
     if (row.id !== null) counts.set(row.id, (counts.get(row.id) ?? 0) + 1);
   }
   for (const row of result.declarations) {

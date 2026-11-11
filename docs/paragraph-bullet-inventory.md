@@ -23,3 +23,5 @@ canApply는 정의의 적용 가능성이며 현재 문단에 대한 쓰기 권�
 최종 검증 중 기존 독립 XML 비교기의 Python assert가 -O에서 제거되어 잘못된 기대값을 통과시키는 반례를 확인했습니다. 비교 조건을 명시적 예외로 바꾸고 기존 writer 회귀에서 정상 결과·잘못된 글머리표 기대값을 Python 일반/-O 모두 검사하도록 보강했습니다. 이는 검증기 결함이며 문서 writer가 잘못 저장했다는 판정과 구분합니다. 실패 원자료와 수정 후 반례 결과를 함께 보존합니다.
 
 최종 결합 Native는 선언/할당 실패/예산3개 및 필드 속성 rebase434 할당 실패·latebatch 복원4개를 통과했습니다. 포맷 이후 재빌드 엔진은 이전 후보와 바이트가 같으며 기존493개 export 보존과 조회 export1개 추가를 확인합니다. SDK/Core/UI·표·필드 교차79건, 등록된 새 엔진의 HWP5 실제 입력/이력·Worker22건, 강화된 writer9건이 통과했습니다. 최종 공개 번들에서 Vanilla·React·Svelte3경로의 전체24개 정의 표시·미참조99 적용·문단 모양 전환·해제·Escape 원본 보존·독립 XML 일반/-O와 잘못된 기대값 반려·실제 keyboard undo/redo·다운로드 재열기 및 소유 브라우저/서버 종료를 확인했습니다. 이전 검증 wrapper14시나리오를 이 최종3경로에 합산하지 않습니다.
+
+새 문자 정의 생성·기존 정의 수정과 optional definitionWriter/definition 조회 확장은 [정의 편집 계약](paragraph-bullet-definition-editing.md)을 따릅니다. 기존 정의 선택과 새 리소스 쓰기의 Native 이력 비용을 구분합니다.

@@ -20,6 +20,7 @@ export {
   SPLICE_TEXT_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
+  EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND,
   CREATE_NAMED_FIELD_COMMAND,
   SET_NAMED_FIELD_PARAMETERS_COMMAND,
   INSERT_TABLE_COMMAND,
@@ -218,3 +219,9 @@ export type {
   ParagraphBulletDefinitions,
   ParagraphBulletDefinitionsOptions,
 } from './editor/paragraph-bullet-definitions.ts';
+
+export type {
+  ParagraphBulletDefinition,
+  ParagraphBulletDefinitionEdit,
+  EditParagraphBulletDefinitionPayload,
+} from './commands/paragraph-bullet-definition.ts';

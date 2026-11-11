@@ -1862,3 +1862,7 @@ HWP5 어댑터 회귀는 동일한 명시 `HWPJS_TEST_WASM`에서 `bun test --no
 ## 문단 글머리표 전체 정의
 
 `zig test src/hwpx_bullet_definitions_probe.zig -O ReleaseSafe -fllvm --test-filter 'bullet definitions'`로 Native 선언·할당 실패·예산을 검사합니다. `python3 tests/helpers/unused-bullet-definitions-fixture.py --input apps/docs/docs/public/editor/fixtures/lists-bullet.hwpx --output /absolute/path/unused.hwpx`로 참조0·선언24 입력을 만듭니다. 명시적인 `HWPJS_TEST_WASM`, `HWPJS_TEST_OLD_WASM`, `HWPJS_TEST_UNUSED_BULLETS`에서 `bun test --no-install tests/wasm/paragraph-bullet-definitions.test.mjs packages/core/tests/editor/paragraph-bullet-definitions.test.ts apps/demo/tests/paragraph-bullet-inventory.test.ts`를 실행합니다. 신/구 엔진·원본 SHA와 GUI·저장 검증은 [지원 계약](paragraph-bullet-inventory.md)에서 구분합니다.
+
+## 글머리표 정의 생성·수정
+
+`zig test src/hwpx_bullet_definition_write_probe.zig -O ReleaseSafe -fllvm --test-filter 'bullet definition'`로 Native 원문/이력·할당 실패를 검사합니다. 명시 `HWPJS_TEST_WASM`, 이전 inventory 엔진인 `HWPJS_TEST_OLD_WASM`, 새 출력 경로 `HWPJS_TEST_EVIDENCE`에서 `bun test --no-install tests/wasm/paragraph-bullet-definition-write.test.mjs packages/core/tests/editor/paragraph-bullet-definition-write.test.ts`를 실행합니다. SDK 검사는 독립 `tests/hwpx/paragraph-bullet-definition-oracle.py`를 Python 일반/-O로 실행하고 잘못된 기대값 반려도 확인합니다. [지원/비용 계약](paragraph-bullet-definition-editing.md)을 따릅니다.

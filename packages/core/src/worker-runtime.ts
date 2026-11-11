@@ -277,6 +277,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       (kind === 'set-named-field-value' ||
         kind === 'rename-named-field' ||
         kind === 'set-named-field-parameters' ||
+        kind === 'edit-paragraph-bullet-definition' ||
         kind === 'create-named-field' ||
         (canonicalCode && transportWitness.current(worker))),
   );

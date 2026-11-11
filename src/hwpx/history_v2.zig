@@ -195,7 +195,7 @@ pub const History = struct {
         s.history_transaction_active = true;
         defer s.history_transaction_active = false;
         try self.stack.prepare();
-        for (commands) |command| if (command.kind == .insert_document) {
+        for (commands) |command| if (command.kind == .insert_document or command.kind == .bullet_definition) {
             if (commands.len != 1 or command.break_before != null or command.deleted != 0)
                 return error.InvalidInsertDocumentBatch;
             if (!self.managed) return error.HistoryProtocol2Required;
@@ -219,9 +219,14 @@ pub const History = struct {
 
         const before = try s.save();
         defer s.allocator.free(before);
-        var prepared = try @import("document_insert.zig").prepare(self.allocator, before, command.inserted, .{ .paragraph = command.paragraph, .unit = command.start }, .{});
-        defer prepared.deinit(self.allocator);
-        var candidate = try editor.open(s.allocator, prepared.bytes, s.options);
+        var candidate = if (command.kind == .bullet_definition) blk: {
+            const request = command.bullet_definition orelse return error.InvalidBulletDefinitionRequest;
+            break :blk (try @import("bullet_definition_write.zig").prepare(s.allocator, before, request.*, s.options)) orelse return false;
+        } else blk: {
+            var prepared = try @import("document_insert.zig").prepare(self.allocator, before, command.inserted, .{ .paragraph = command.paragraph, .unit = command.start }, .{});
+            defer prepared.deinit(self.allocator);
+            break :blk try editor.open(s.allocator, prepared.bytes, s.options);
+        };
         var adopted = false;
         defer if (!adopted) candidate.deinit();
         candidate.history_delta_managed = true;

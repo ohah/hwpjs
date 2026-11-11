@@ -89,10 +89,10 @@ test('public Core exposes unavailable ABI separately from empty and HWP5 invento
     ),
   );
   try {
-    assert.deepEqual(
-      JSON.parse(JSON.stringify(await editor.listParagraphBulletDefinitions())),
-      available,
-    );
+    assert.deepEqual(JSON.parse(JSON.stringify(await editor.listParagraphBulletDefinitions())), {
+      ...available,
+      definitionWriter: 'character-definitions-v1',
+    });
   } finally {
     await editor.dispose();
   }

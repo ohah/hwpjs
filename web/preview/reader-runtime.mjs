@@ -1187,6 +1187,27 @@ export function createReaderRuntime({
         reply({ kind: message.kind, changed: true, content: hwpxDisplay() });
         return;
       }
+      if (message.kind === 'edit-paragraph-bullet-definition') {
+        if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
+          throw Error('BulletDefinitionWriteUnavailable');
+        if (!historyEnabled) throw Error('HistoryNotEnabled');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        applied = editor.writeParagraphBulletDefinition(
+          message.edit,
+          message.section,
+          message.paragraph + 1,
+        );
+        if (!applied) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        documentWindow = null;
+        reader = await createHwpxReader(module);
+        preview = reader.readTextEvents(editor.saveForDisplay());
+        displayResources.invalidate();
+        reply({ kind: message.kind, changed: true, content: hwpxDisplay() });
+        return;
+      }
       if (message.kind === 'create-named-field') {
         if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
           throw Error('NamedFieldCreateUnavailable');

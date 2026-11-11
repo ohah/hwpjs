@@ -152,6 +152,21 @@ jobs:
           python3 tests/helpers/unused-bullet-definitions-fixture.py --input apps/docs/docs/public/editor/fixtures/lists-bullet.hwpx --output "$HWPJS_TEST_UNUSED_BULLETS"
           bun test --no-install tests/wasm/paragraph-bullet-definitions.test.mjs packages/core/tests/editor/paragraph-bullet-definitions.test.ts apps/demo/tests/paragraph-bullet-inventory.test.ts
 
+      - name: Test paragraph bullet definition writes and independent XML preservation
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-before-bullet-definition.wasm
+          HWPJS_TEST_EVIDENCE: ${{ runner.temp }}/hwpjs-bullet-definition-evidence
+        run: |
+          inventory_engine=77eae1cb82e05c980071910228e1189ac5c2222d
+          if ! git cat-file -e "$inventory_engine^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$inventory_engine"
+          fi
+          git show "$inventory_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_TEST_OLD_WASM"
+          printf '%s  %s\n' 'a3be6777229dbe1ec895f4850168809f70d9cf52b14b85996a670a5577e865f1' "$HWPJS_TEST_OLD_WASM" | sha256sum --check
+          bun test --no-install tests/wasm/paragraph-bullet-definition-write.test.mjs packages/core/tests/editor/paragraph-bullet-definition-write.test.ts
+
       - name: Test named field creation, value changes and renaming
         timeout-minutes: 2
         env:

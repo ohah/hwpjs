@@ -520,3 +520,5 @@ CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명
 [HWP5 셀 크기 균등화](hwp5-cell-size-equalization.md)는 형식별 metadata 입장 검사만 소유하며 HWPX의 공통 격자·분배·최소높이와 기존 Native 배치/이력을 재사용합니다.
 
 [문단 글머리표 정의 목록](paragraph-bullet-inventory.md)은 현재 헤더의 읽기 전용 선언 조회와 UI 연결을 소유합니다. Native header read lease와 기존 heading 판정을 재사용하며 본문 사용 ID로 정의를 추측하지 않습니다.
+
+[문단 글머리표 정의 편집](paragraph-bullet-definition-editing.md)은 현재 헤더 source patch와 기존 parked-document transaction을 연결합니다. 별도 JS 문서 모델/ZIP writer 없이 Session/history가 선언과 현재 문단 참조를 함께 소유합니다.

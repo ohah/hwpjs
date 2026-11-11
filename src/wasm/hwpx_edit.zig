@@ -1043,7 +1043,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .paragraph_bullet, .independent_text, .insert_document, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
+        .bullet_definition, .paragraph_bullet, .independent_text, .insert_document, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2395,5 +2395,18 @@ export fn hwpx_edit_insert_document(section: u32, paragraph: u32, unit: u32, rev
         _ = fail(err);
         return if (err == error.MutationUncertain or err == error.HistoryMutationUncertain or h.stats().poisoned) 3 else 0;
     };
+    return if (changed) 1 else 2;
+}
+
+/// Optional resource editor. Returns 1 changed, 2 known no-op, 0 error.
+export fn hwpx_edit_bullet_definition_write(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = if (history) |*value| value else return fail(error.HistoryNotEnabled);
+    if (len > 4096) return fail(error.LimitExceeded);
+    const parsed = std.json.parseFromSlice(@import("../hwpx/bullet_definition_write.zig").Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{ .kind = .bullet_definition, .bullet_definition = &parsed.value, .section = 0, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "" }}) catch |err| return fail(err);
     return if (changed) 1 else 2;
 }

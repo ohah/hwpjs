@@ -5,7 +5,7 @@ const checkpoints = @import("editor_checkpoint.zig");
 const Stacks = @import("../model/history_stack.zig").Stack(checkpoints.Checkpoint, release);
 
 pub const Command = struct {
-    kind: enum { plain, anchored, field, named_field_rename, named_field_create, named_field_parameters, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_bullet, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, insert_document } = .plain,
+    kind: enum { plain, anchored, field, named_field_rename, named_field_create, named_field_parameters, split, merge, format, character_properties, character_font_name, cell_size, cell_background, cell_border, cell_borders, cell_fills, cell_styles, paragraph_format, paragraph_alignment, paragraph_bullet, bullet_definition, paragraph_flags, paragraph_border_fill, paragraph_margins, paragraph_spacing, split_anchored, formula_definition, picture_dimensions, picture_resize, check_box_state, created_table_stage, created_table_grid, source_table_grid, source_table_cell_merge, source_table_cell_split, created_cell_text, formula_result_override, chart_numeric_point, chart_point, chart_points, chart_series_text, chart_rich_text, dutmal_text, equation_script, formula_result_splice, independent_text, insert_document } = .plain,
     independent_text_edits: []const @import("../model/independent_text_edits.zig").Edit = &.{},
     /// Borrowed only for the owned independent-text batch.
     independent_text_insertion: ?*const @import("../model/formatting_patch.zig").Patch = null,
@@ -23,6 +23,7 @@ pub const Command = struct {
     font_name: []const u8 = "",
     paragraph_shape_id: u32 = 0,
     paragraph_alignment: @import("paragraph_resource_clone.zig").Alignment = .LEFT,
+    bullet_definition: ?*const @import("bullet_definition_write.zig").Request = null,
     paragraph_bullet: @import("../model/formatting_patch.zig").Bullet = .{ .id = null },
     paragraph_flags: @import("../model/paragraph_flags.zig").Patch = .{},
     paragraph_border_fill: @import("../model/border_fill_patch.zig").Patch = .{},
@@ -116,7 +117,7 @@ pub const History = struct {
         if (self.owned) |h| return h.applyBatch(session, commands);
         try self.bind(session);
         for (commands) |command| {
-            if (command.kind == .insert_document or command.kind == .named_field_create or command.kind == .named_field_parameters)
+            if (command.kind == .insert_document or command.kind == .bullet_definition or command.kind == .named_field_create or command.kind == .named_field_parameters)
                 return error.HistoryProtocol2Required;
         }
         for (commands) |command| if (command.break_before != null and command.kind != .split) return error.InvalidStructureCommand;
@@ -362,6 +363,7 @@ pub const History = struct {
                 command.expected_field_name,
                 (command.field_parameters orelse return error.InvalidNamedFieldParametersCommand).*,
             ),
+            .bullet_definition => return error.HistoryProtocol2Required,
             .named_field_create => try @import("named_field_create.zig").apply(
                 session,
                 command.section,
