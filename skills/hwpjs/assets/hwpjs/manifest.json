@@ -12,8 +12,8 @@
       "bytes": 1845049
     },
     "hwpjs.wasm": {
-      "sha256": "fa496b896f6f73f65daf61b7497fb010ee7ea25c4436d8e4d68b962ae8c0b5a7",
-      "bytes": 4529581
+      "sha256": "ac652edcd8f1e8cd844900e5795075db135cf1c1efe26fcf1cf4db5d69de39e0",
+      "bytes": 4538948
     },
     "LICENSE": {
       "sha256": "2a4c2e9a315ae209d1b4af7b691d15d980b9cd0859e31c6bc48f285f57f11e56",
@@ -24,5 +24,5 @@
       "bytes": 32113
     }
   },
-  "sourceFingerprint": "cae0d909e7c94c4cd958292000ee887e7bf0b0fdbbb76bb0fff428a2712a7561"
+  "sourceFingerprint": "d1b18d4d30e174079022d8025bc1f27203cbf7794ca36157eeb748657dee4cc4"
 }
