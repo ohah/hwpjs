@@ -2,11 +2,18 @@
 export function attachCheckBoxes(editor, content, available) {
   content.checkBoxStateAvailable = available;
   content.checkBoxes = [];
+  content.formTexts = [];
+  content.hwpxFormTextEditAvailable =
+    editor.supportsFormTextEdit?.() === true && editor.supportsFormTextLayoutRetention?.() === true;
   if (!available) return;
   for (const section of new Set(content.paragraphs.map((p) => p.section))) {
     for (const site of editor.formSites(section)) {
-      if (site.kind !== 'check_button') continue;
+      const radio = site.kind === 'radio_button',
+        text = ['edit_box', 'combo_box'].includes(site.kind);
+      if (site.kind !== 'check_button' && !radio && !text) continue;
       const row = {
+        format: 'hwpx',
+        kind: site.kind,
         section,
         formNode: site.formNode,
         paragraph: site.paragraph === null ? null : site.paragraph - 1,
@@ -29,19 +36,39 @@ export function attachCheckBoxes(editor, content, available) {
       } else row.layoutError = 'HwpxFormLayoutAbiUnavailable';
       try {
         const source = editor.formSourceAttributes(section, site.formNode);
-        row.caption = source.strings.caption ?? source.strings.name;
+        row.sourceAttrs = source;
+        row.drawFrame = source.booleans.drawFrame;
+        row.caption = text
+          ? editor.formText(section, site.formNode)
+          : (source.strings.caption ?? source.strings.name);
         row.foreColor = source.strings.foreColor ?? null;
         row.backColor = source.strings.backColor ?? null;
         row.backStyle = source.strings.backStyle ?? null;
         row.triState = source.booleans.triState === true;
         if (site.state === 'located') {
-          row.state = editor.checkBoxState(section, site.formNode);
-          row.editable = source.booleans.enabled === true && source.booleans.editable === true;
+          row.state = text
+            ? null
+            : radio
+              ? editor.radioButtonState(section, site.formNode)
+              : editor.checkBoxState(section, site.formNode);
+          row.editable =
+            source.booleans.enabled === true &&
+            source.booleans.editable === true &&
+            (text
+              ? content.hwpxFormTextEditAvailable &&
+                (site.kind === 'edit_box'
+                  ? source.booleans.readOnly === false
+                  : source.booleans.editEnable === true)
+              : radio
+                ? editor.supportsRadioButtonSelect?.() === true &&
+                  (source.strings.radioGroupName?.length > 0 ||
+                    editor.supportsUnnamedRadioSelect?.() === true)
+                : true);
         } else row.error = site.state;
       } catch (error) {
         row.error = error.message;
       }
-      content.checkBoxes.push(row);
+      (text ? content.formTexts : content.checkBoxes).push(row);
     }
   }
 }

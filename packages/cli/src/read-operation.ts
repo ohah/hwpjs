@@ -1,10 +1,17 @@
+import { renderFormInventory, type FormInventory } from './document-forms.ts';
 import type { ReadResult, ReadFormat, ReadView } from './types/document-view.ts';
 import type { BatchReadResult } from './batch-read.ts';
 export interface ReadOperationDependencies {
   files: {
     readInputSnapshot(path: string, options: { maxBytes: number }): unknown | Promise<unknown>;
   };
-  engine: { read(input: { bytes: Uint8Array; wasm: Uint8Array }): unknown | Promise<unknown> };
+  engine: {
+    read(input: {
+      bytes: Uint8Array;
+      wasm: Uint8Array;
+      includeFormControls?: boolean;
+    }): unknown | Promise<unknown>;
+  };
   renderDocument(
     model: unknown,
     options: { format: ReadFormat; view: ReadView },
@@ -44,7 +51,11 @@ export async function readDocumentOperation(
     throw Error('InvalidInputSnapshot');
   const binary = wasm ?? (await loadWasm());
   if (!(binary instanceof Uint8Array)) throw Error('InvalidWasmBytes');
-  const result = await engine.read({ bytes: input.bytes, wasm: binary });
+  const result = await engine.read({
+    bytes: input.bytes,
+    wasm: binary,
+    ...(view === 'structure' ? { includeFormControls: true } : {}),
+  });
   if (!record(result) || (result.format !== 'hwp5' && result.format !== 'hwpx'))
     throw Error('InvalidEngineFormat');
   if (
@@ -56,7 +67,15 @@ export async function readDocumentOperation(
     throw Error('InvalidEngineModel');
   const text = await renderDocument(result.model, { format, view });
   if (typeof text !== 'string' || !text.isWellFormed()) throw Error('InvalidRenderedDocument');
-  return { format: result.format, sourceSha256: input.sha256, text };
+  return {
+    format: result.format,
+    sourceSha256: input.sha256,
+    text:
+      text +
+      (view === 'structure' && result.formControls !== undefined
+        ? '\n' + renderFormInventory(result.formControls as FormInventory)
+        : ''),
+  };
 }
 
 /** CLI와 웹 실습이 공유하는 단일 읽기 응답입니다. 원문으로 대체하지 않습니다. */

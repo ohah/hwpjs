@@ -63,22 +63,23 @@ export function inlineCheckBoxIndex(content) {
       fail('UnsupportedFormColor');
       continue;
     }
-    let font;
-    if (c.follow_context === true) font = fontAt(paragraph, row.anchorUnit);
-    else if (
+    let font, fontHeight;
+    if (c.follow_context === true) {
+      font = fontAt(paragraph, row.anchorUnit);
+      fontHeight = fontAt.fontHeight(paragraph, row.anchorUnit);
+    } else if (
       c.follow_context === false &&
       content.characterShapes?.some(
         (shape) => shape.id === c.id && Number.isInteger(shape.height) && shape.height > 0,
       )
-    )
-      font = fontAt(
-        {
-          text: row.caption,
-          characterRanges: [{ start: 0, end: Math.max(1, row.caption.length), charShapeId: c.id }],
-        },
-        0,
-      );
-    else {
+    ) {
+      const styled = {
+        text: row.caption,
+        characterRanges: [{ start: 0, end: Math.max(1, row.caption.length), charShapeId: c.id }],
+      };
+      font = fontAt(styled, 0);
+      fontHeight = fontAt.fontHeight(styled, 0);
+    } else {
       fail('MissingFormCharacterStyle');
       continue;
     }
@@ -94,6 +95,7 @@ export function inlineCheckBoxIndex(content) {
       height: hwpUnitPixels(g.height),
       affectLineSpacing: p.flags[0],
       font,
+      fontHeight,
       checkBox: row,
     });
   }

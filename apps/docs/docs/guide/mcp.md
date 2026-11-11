@@ -59,7 +59,7 @@ npx -y --package=@ohah/hwpjs hwpjs-mcp
 | ------------------------ | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `read_document`          | `inputPath`, 선택적 `format`: `text` 또는 `markdown`, `view`: `content` 또는 `structure`                    | 기본 본문과 개체 참조, `structure`는 편집 ID·SHA·상세                            |
 | `read_documents`         | `inputPaths`, 선택적 `format`, `view`, `concurrency`, `maxOutputBytes`                                      | 입력 순서의 문서 내용 또는 편집 구조와 파일별 실패                               |
-| `edit_document`          | `inputPath`, `outputPath`, `target`, `expectedSha256`, `findText`, `replacement`, 선택적 `allowStaleLayout` | 새 문서 경로·SHA·변경 및 줄 배치 상태를 담은 text content                        |
+| `apply_document_changes` | `inputPath`, `outputPath`, `target`, `expectedSha256`, `findText`, `replacement`, 선택적 `allowStaleLayout` | 새 문서 경로·SHA·변경 및 줄 배치 상태를 담은 text content                        |
 | `get_document_info`      | `inputPath`, 선택적 `expectedSha256`                                                                        | 포맷·SHA·크기·구역 수와 관측 가능한 메타데이터                                   |
 | `list_document_images`   | `inputPath`, 선택적 `expectedSha256`                                                                        | 원문 SHA와 그림 ID·상태·MIME·확장자·바이트 수·제한된 관측 범위                   |
 | `extract_document_image` | `inputPath`, `outputPath`, `reference` 또는 `id`와 `expectedSha256`                                         | 새 이미지 **파일** 경로·SHA 또는 실패 및 게시 영수증                             |
@@ -599,3 +599,31 @@ HWP5는 위 예제의 입력·출력 확장자를 `.hwp`로 바꿔 같은 `page-
 `scope: "document"`는 현재 구역 모두가 지원되어야 하며 미지원 구역을 건너뛰지 않습니다. `scope: "section"`은 명시한0기준 구역만 대상으로 합니다. Native binding·expected snapshot·targets는 외부 입력으로 받지 않고 같은 살아 있는 SDK에서 admission 및 각 쓰기 직전에 다시 조회합니다. 앞선 편집 뒤 이전 node index를 재사용하지 않습니다.
 
 구형 ABI는 선행 작업이 있어도 history/write/save 전에 거절합니다. 후행 Native 오류·불확실 완료·cleanup/close 실패는 새 출력을 게시하지 않습니다. HWP5 변경 저장에는 기존 `allowStaleLayout` 동의가 필요하며 이 옵션은 전체 조판 완료를 뜻하지 않습니다. 원본·기존 출력은 덮어쓰지 않습니다.
+
+## 폼 상태 편집
+
+단일 `@ohah/hwpjs` 패키지의 현재 GitHub 구현 기준입니다. 설치 이름은 `npm install @ohah/hwpjs`이며 npm 버전 릴리스에 포함됐다는 뜻은 아닙니다. `read_document`의 `view: "structure"` 또는 `get_document_info`에서 form reference와 원본 SHA를 얻고 기존 `apply_document_changes`를 호출합니다.
+
+```json
+{
+  "inputPath": "/absolute/input.hwp",
+  "outputPath": "/absolute/checked.hwp",
+  "expectedSha256": "READ_DOCUMENT_SHA256",
+  "allowStaleLayout": true,
+  "operations": [
+    {
+      "kind": "form-checkbox-state",
+      "coordinates": "current-transaction",
+      "reference": "READ_DOCUMENT_FORM_REFERENCE",
+      "expectedState": "UNCHECKED",
+      "state": "CHECKED"
+    }
+  ]
+}
+```
+
+위 SHA/reference 표시는 조회 결과로 교체합니다. HWP5/HWPX `form-radio-select`는 `reference`, `expectedState`, `expectedGroupName`으로 Native 그룹 선택을 요청합니다. `form-text`는 `reference`, `expectedText`, `text`로 폼텍스트를 바꿉니다. 모든 연산에 `coordinates: "current-transaction"`이 필요합니다. 체크박스 상태는 UNCHECKED/CHECKED/INDETERMINATE이며 마지막 상태는 Native triState 허용이 필요합니다. 라디오는 UNCHECKED/CHECKED만 읽고 선택 요청만 지원합니다. HWPX 라디오/폼텍스트는 새 optional Native getter/writer가 있어야 하며 구형 엔진에서는 쓰기 전에 거절합니다.
+
+CLI와 같은 strict schema·입장 검사·Native writer·새 파일 게시를 사용합니다. 추가 formNode 필드는 거절하며 원본 파일을 덮어쓰지 않습니다. 폼보다 앞선 비폼 변경과 stale/foreign 참조를 거절합니다. 실패한 batch의 변경 바이트는 게시하지 않습니다.
+
+폼 상태는 CLI와 동일한 `apply_document_changes`의 operations 배열을 사용합니다. `read_document`의 structure 또는 `get_document_object`에서 발급받은 form reference를 제출하며 숫자 formNode는 영속 대상이 아닙니다. HWP5/HWPX의 `form-checkbox-state`, `form-radio-select`, `form-text`를 연결하고, HWPX radio/text는 새 optional Native getter/writer를 요구합니다. 현재 값·그룹·텍스트 기대 조건과 문서 수명을 전체 batch 입장 및 쓰기 직전에 검사합니다. 구형 ABI·외부/만료 참조·후행 실패는 새 파일을 게시하지 않습니다. 구체적인 동일 JSON 연산 예제는 [CLI 폼 상태 변경](./cli.md#폼-상태-변경)을 따릅니다. 현재 GitHub 구현 기준이며 npm 출시 버전 지원 선언이 아닙니다.

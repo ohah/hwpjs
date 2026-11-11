@@ -11,11 +11,12 @@ fn equal(a: std.mem.Allocator, raw: @import("../xml/attribute_value.zig").Value,
 fn serialize(a: std.mem.Allocator, quote: u8, state: State) ![]u8 {
     return std.fmt.allocPrint(a, "{c}{s}{c}", .{ quote, attributes.stateText(state), quote });
 }
-pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, state: State, limit: usize) ![]u8 {
+fn writeKind(a: std.mem.Allocator, tree: *const Tree, node: usize, state: State, limit: usize, radio: bool) ![]u8 {
     if (tree.source.len > limit) return error.LimitExceeded;
     var value = try attributes.read(a, tree, node, .{});
     defer value.deinit(a);
-    if (value.kind != .check_button) return error.NotCheckBoxForm;
+    if (value.kind != (if (radio) @import("run_anchor.zig").Kind.radio_button else .check_button)) return error.NotCheckBoxForm;
+    if (radio and state == .indeterminate) return error.UnsupportedRadioState;
     if (value.boolean(.enabled) == false or value.boolean(.editable) == false) return error.FormValueProtected;
     if (value.boolean(.enabled) == null or value.boolean(.editable) == null) return error.MissingFormEditPermission;
     _ = try value.buttonState();
@@ -27,4 +28,11 @@ pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, state: State,
     defer a.free(tag);
     const span = tree.elements[node].start_tag;
     return @import("xml_source_writer.zig").write(a, tree.source, &.{.{ .start = span.start, .end = span.end, .text = "", .serialized_xml = tag }}, limit);
+}
+
+pub fn write(a: std.mem.Allocator, tree: *const Tree, node: usize, state: State, limit: usize) ![]u8 {
+    return writeKind(a, tree, node, state, limit, false);
+}
+pub fn writeRadio(a: std.mem.Allocator, tree: *const Tree, node: usize, state: State, limit: usize) ![]u8 {
+    return writeKind(a, tree, node, state, limit, true);
 }

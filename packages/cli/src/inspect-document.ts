@@ -1,3 +1,4 @@
+import { readFormInventory, publicFormInventory } from './document-forms.ts';
 import type { Diagnostic, ObservationSdk } from './types/document-view.ts';
 import type { DocumentFormat } from './types/native-document.ts';
 import { openDocument as defaultOpenDocument } from './engine.ts';
@@ -10,6 +11,7 @@ interface InspectionDocument {
   sourceSha256: string;
   sectionCount: number;
   sdk: ObservationSdk;
+  nativeExports?: readonly string[];
   close(): void | Promise<void>;
 }
 interface InspectionOptions {
@@ -181,6 +183,7 @@ export async function inspectDocument(
         passwordProtection: unknown('PasswordProtectionNotExposedBySdk'),
         digitalSignature: unknown('DigitalSignatureNotExposedBySdk'),
       },
+      formControls: publicFormInventory(readFormInventory(document)),
       editing: {
         documentEditable: unknown('RequiresNativeValidationForEachTargetAndOperation'),
         textSourceProtection: textSourceProtection(document, diagnostics),

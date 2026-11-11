@@ -40,6 +40,7 @@ import { FONT, displayRunText } from './layout.mjs';
 import { createPreviewTextMeasure } from './preview-text-measure.mjs';
 import { createRendererGlyphMetrics } from './renderer-glyph-metrics.mjs';
 import { inlineHwp5FormIndex, formPositionKey } from './hwp5-form-inline.mjs';
+import { inlineHwpxFormTextIndex } from './hwpx-form-inline.mjs';
 import { paintHwp5Form } from './hwp5-form-paint.mjs';
 import { visiblePictureTargets } from './visible-picture-targets.mjs';
 import {
@@ -497,8 +498,8 @@ export function createRenderer(
     if (!metrics) return;
     // Every painter in this frame receives the same logical scroll origin.
     const viewport = { scrollTop: metrics.logicalScrollTop };
-    checkBoxPaintScrollTop = viewportElement.scrollTop;
-    checkBoxPaintScrollLeft = viewportElement.scrollLeft ?? 0;
+    const formPaintScrollTop = viewportElement.scrollTop,
+      formPaintScrollLeft = viewportElement.scrollLeft ?? 0;
     const { logicalWidth: width, logicalHeight: height, ratio, pixelWidth, pixelHeight } = metrics;
     if (!output) {
       const { pendingPictures, resourcesPending } = prepareVisibleResources(metrics);
@@ -1410,6 +1411,9 @@ export function createRenderer(
         ctx.fillRect(x - 3, y - viewport.scrollTop - 3, 6, 6);
       });
     }
+    // Publish hit targets only with the scroll origin of this completed frame.
+    checkBoxPaintScrollTop = formPaintScrollTop;
+    checkBoxPaintScrollLeft = formPaintScrollLeft;
     canvas.dataset.paintedCaret = paintedCaret;
     canvas.dataset.formattingMarks = String(displayOptions.formattingMarks === true);
     canvas.dataset.formattingMarkCount = String(paintedFormattingMarks);
@@ -1455,8 +1459,10 @@ export function createRenderer(
       paintedFormTargets
         .filter(
           (target) =>
-            (content.hwp5FormTextEditAvailable === true &&
-              ['edit', 'combo_box'].includes(target.form.form.source.kind)) ||
+            ((content.hwp5FormTextEditAvailable === true ||
+              content.hwpxFormTextEditAvailable === true) &&
+              ['edit', 'edit_box', 'combo_box'].includes(target.form.form.source.kind) &&
+              target.form.form.editable !== false) ||
             target.form.checkBox?.editable === true,
         )
         .map((target) => `${target.form.form.section}:${target.form.form.formNode}`),
@@ -1543,7 +1549,9 @@ export function createRenderer(
       chartResources.status(section, wrapper),
     );
     inlineCheckBoxes = inlineCheckBoxIndex(pictureDisplay);
-    inlineForms = inlineHwp5FormIndex(pictureDisplay, { draft });
+    inlineForms = pictureDisplay.formTexts
+      ? inlineHwpxFormTextIndex(pictureDisplay)
+      : inlineHwp5FormIndex(pictureDisplay, { draft });
     const measurementPolicy = readMeasurementPolicy();
     const measuredEnvironment = [
       canvas.ownerDocument,

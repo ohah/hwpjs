@@ -146,11 +146,9 @@ HWP5 저장은 독립 CFB 레코드 비교기로 대상 문단과 무관한 스�
 
 기존 apply와 MCP apply_document_changes는 source-table-cell-split 연산을 통해 동일 Native/SDK 원본 셀 나누기를 실행합니다. 공통 표 reference 발급·해결을 사용하며 현재 Native binding에 묶인 첫 변경 전의 대상을 저장합니다. batch 앞선 변경 이후 reference 숫자를 현재 표로 다시 해석하지 않습니다. 지원 profile·직사각형·수명·파일 transaction 검증은 [CLI·MCP 원본 셀 나누기](cli-source-cell-split.md)가 소유합니다.
 
-
 ## 문자 확장 서식: 밑줄·글자색·언어별 글꼴 이름
 
 현재 GitHub 구현 기준이며 npm 릴리스 지원을 뜻하지 않습니다. 설치 이름은 `npm install @ohah/hwpjs`입니다. 해당 CLI 구현과 optional atomic-formatting/lifetime query를 지원하는 Native를 포함한 단일 패키지 빌드가 필요합니다. 기존 `character-properties`의 size/bold/italic은 그대로 유지하고 underline/textColor/fontName을 추가합니다. 확장 필드가 실제 지정되면 기존 Native atomic patch 한 번으로 함께 적용합니다.
-
 
 `size`는 1/100pt이며1900은19pt입니다. `textColor`는 `#RRGGBB`이고 기존 SDK RGB24 codec을 사용합니다. `underline`은 HWP5 none/bottom/top, HWPX none/bottom/center/top입니다. `fontName`의 language는 hangul/latin/hanja/japanese/other/symbol/user 중 하나이고 이름을 임의 정규화하거나 다른 언어까지 변경하지 않습니다. 글꼴 파일 설치·문자 fallback은 이 쓰기 범위가 아닙니다. 각 optional 값의 null/생략은 기존 값 보존입니다. Native의 unknown/unavailable 관측은 검정색·기본 글꼴로 바꾸지 않으며 해당 대상이 쓰기 불가하면 원래 사유로 거절합니다.
 
@@ -169,3 +167,7 @@ SDK 계약은 js/atomic-formatting-api.mjs 및 기존 character-property/color/u
 기존 여섯 서식 종류의 선행 연산은 실제 action 직전/직후 lease로 단일 commit(revision과 비되감기 serial 각각 +1) 또는 no-op만 확인합니다. 확인되지 않은 advance, 외부 변경, undo/redo ABA는 거절합니다. 앞선 변경이 있더라도 후행 실패 시 파일 저장·출력은 하지 않습니다. sourceTableCellSplitBinding의 기존 읽기 권한 경계는 유지합니다.
 
 추가 JS 계획 비용은 최초 구역 행 합계+작업 수에 비례합니다. 기존 Native/SDK paragraphFlow의 전체 행 조회·디코딩은 매 대상 쓰기 전 필요하므로 그 비용까지 선형화했다는 의미가 아닙니다. 재현은 packages/cli/tests/character-plan-scale.test.mjs(제어 SDK 카운터)와 packages/cli/e2e/character-plan-native-scale.test.mjs(실제 Native N32/64/128 양방향·후행 실패·CFB/XML normal/-O)입니다. 후자는 HWPJS_TEST_WASM, 정확 SHA256인 HWPJS_TEST_WASM_SHA256, 존재하지 않는 절대 증거 경로 HWPJS_CHARACTER_NATIVE_SCALE_EVIDENCE를 명시해야 합니다. SDK 시간 경계는 Native 실행과 기존 SDK 디코딩·검증을 포함하며 순수 Native 속도 측정으로 해석하지 않습니다.
+
+## 폼 현재 상태 CLI·MCP
+
+기존 apply/apply_document_changes의 폼 연산과 읽기용 참조·수명·형식별 제한은 [폼 상태 연결 계약](cli-form-state.md)이 소유합니다. read --view structure 및 info가 발급한 같은 원본의 form reference를 사용합니다.

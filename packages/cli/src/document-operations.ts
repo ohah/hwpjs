@@ -1,4 +1,9 @@
 import {
+  isFormOperation,
+  prepareFormOperations,
+  type FormStateResult,
+} from './mutations/form-state.ts';
+import {
   hasCharacterExtensions,
   prepareCharacterExtensions,
   type CharacterExtensionResult,
@@ -22,7 +27,7 @@ export interface DocumentOperationsResult {
   changed: boolean;
   layoutRequiresReflow: boolean;
   appliedOperations: number;
-  operationResults: (AppliedOperationIdentity | CharacterExtensionResult)[];
+  operationResults: (AppliedOperationIdentity | CharacterExtensionResult | FormStateResult)[];
 }
 const record = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -55,10 +60,17 @@ export async function applyDocumentOperations(
   try {
     if (document.sourceSha256 !== expectedSha256) throw new Error('SourceSha256Mismatch');
     prepareOperationSession(document, captured);
+    // Capture form provenance before the existing asynchronous split admission.
+    const forms = prepareFormOperations(document, captured);
     const sourceSplits = await prepareSourceTableCellSplits(document, captured);
     const extensions = prepareCharacterExtensions(document, captured);
-    const identities: (AppliedOperationIdentity | CharacterExtensionResult)[] = [];
+    const identities: (AppliedOperationIdentity | CharacterExtensionResult | FormStateResult)[] =
+      [];
     for (const [index, operation] of captured.entries()) {
+      if (isFormOperation(operation)) {
+        identities.push(forms.apply(document, operation, index));
+        continue;
+      }
       if (hasCharacterExtensions(operation)) {
         identities.push(extensions.apply(document, operation, index));
         extensions.advance(operation);

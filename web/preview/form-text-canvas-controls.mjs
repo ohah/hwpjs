@@ -20,7 +20,11 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
     if (!input || !selected || composing || pending || !available || !ready()) return false;
     const text = input.value,
       target = selected.form.form;
-    if (!text.isWellFormed() || text.length > 65535) {
+    if (
+      !text.isWellFormed() ||
+      text.length > 65535 ||
+      (selected.form.multiline === true && /[\r\t]/.test(text))
+    ) {
       note.textContent = '올바른 Unicode 문자열을 입력하세요(최대65535유닛).';
       return false;
     }
@@ -72,15 +76,29 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
         viewport.scrollLeft ?? 0,
       );
       const target = renderer.formTextAtLogicalPoint(point.x, point.y);
-      if (!target || !['edit', 'combo_box'].includes(target.form.form.source.kind)) return;
+      if (
+        !target ||
+        target.form.form.editable === false ||
+        !['edit', 'edit_box', 'combo_box'].includes(target.form.form.source.kind)
+      )
+        return;
       event.preventDefault();
       event.stopImmediatePropagation();
       dismiss();
       selected = target;
-      input = canvas.ownerDocument.createElement('input');
-      input.type = 'text';
+      const multiline = target.form.multiline === true;
+      input = canvas.ownerDocument.createElement(multiline ? 'textarea' : 'input');
+      if (multiline) {
+        input.wrap = 'off';
+        input.spellcheck = false;
+      } else input.type = 'text';
       input.value = target.form.label;
-      input.setAttribute('aria-label', '양식 값 · Enter 적용 · Escape 취소');
+      input.setAttribute(
+        'aria-label',
+        multiline
+          ? '양식 여러 줄 값 · Ctrl+Enter 적용 · Escape 취소'
+          : '양식 값 · Enter 적용 · Escape 취소',
+      );
       Object.assign(input.style, {
         position: 'fixed',
         zIndex: '1000',
@@ -92,6 +110,14 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
         font: target.form.font,
         color: target.form.foreground,
         background: target.form.background,
+        ...(multiline
+          ? {
+              lineHeight: `${target.form.lineHeight * scale}px`,
+              whiteSpace: 'pre',
+              resize: 'none',
+              overflow: 'auto',
+            }
+          : {}),
       });
       input.addEventListener(
         'compositionstart',
@@ -114,7 +140,12 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
             e.preventDefault();
             dismiss();
             canvas.focus();
-          } else if (e.key === 'Enter' && !e.isComposing && !composing) {
+          } else if (
+            e.key === 'Enter' &&
+            (!multiline || e.ctrlKey || e.metaKey) &&
+            !e.isComposing &&
+            !composing
+          ) {
             e.preventDefault();
             if (submit()) canvas.focus();
           }
@@ -124,8 +155,9 @@ export function createFormTextCanvasControls({ canvas, viewport, renderer, note,
       canvas.ownerDocument.body.append(input);
       input.focus();
       input.select();
-      note.textContent =
-        '양식 값 입력: Enter 적용, Escape 취소. 편집 권한은 적용 시 원본 속성으로 검사합니다.';
+      note.textContent = multiline
+        ? '여러 줄 양식: Enter 줄바꿈, Ctrl+Enter 적용, Escape 취소.'
+        : '양식 값 입력: Enter 적용, Escape 취소. 편집 권한은 적용 시 원본 속성으로 검사합니다.';
     },
     { ...options, capture: true },
   );

@@ -282,6 +282,34 @@ export fn hwpx_edit_form_source_layout(section: u32, node: u32) u32 {
     output = std.json.Stringify.valueAlloc(a, value, .{}) catch |err| return fail(err);
     return 1;
 }
+export fn hwpx_edit_radio_state(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const state = s.radioButtonState(section, node) catch |err| return fail(err);
+    output = a.dupe(u8, @import("../hwpx/form_attribute_values.zig").stateText(state)) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_select_form_radio(section: u32, node: u32) u32 {
+    apply(.{ .kind = .form_radio_select, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = "", .form_node = node }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_form_text(section: u32, node: u32) u32 {
+    hwpx_edit_output_free();
+    const s = if (active) |*value| value else return fail(error.EditorNotOpen);
+    output = s.formText(section, node) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_form_text(section: u32, node: u32, ptr: [*]const u8, size: usize) u32 {
+    if (size > @import("../hwpx/form_text_source.zig").max_bytes) return fail(error.LimitExceeded);
+    apply(.{ .kind = .form_text, .section = section, .paragraph = 0, .start = 0, .deleted = 0, .inserted = ptr[0..size], .form_node = node }) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_form_text_retains_layout_flags() u32 {
+    return 1;
+}
+export fn hwpx_edit_radio_unnamed_singleton() u32 {
+    return 1;
+}
 export fn hwpx_edit_checkbox_state(section: u32, node: u32) u32 {
     hwpx_edit_output_free();
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
@@ -1132,6 +1160,12 @@ fn apply(command: histories.Command) !void {
         },
         .picture_dimensions => {
             _ = try session.setPictureDimensions(command.section, command.picture_node, command.picture_dimensions);
+        },
+        .form_radio_select => {
+            _ = try session.selectRadioButton(command.section, command.form_node);
+        },
+        .form_text => {
+            _ = try session.setFormText(command.section, command.form_node, command.inserted);
         },
         .check_box_state => {
             _ = try session.setCheckBoxState(command.section, command.form_node, command.checkbox_state);

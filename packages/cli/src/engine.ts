@@ -1,3 +1,4 @@
+import { readFormInventory, type FormInventory } from './document-forms.ts';
 import { detectDocumentFormat } from '../../../js/document-format.mjs';
 import { createExperimentalHwp5Editor } from '../../../js/hwp5-editor.mjs';
 import { createHwpxEditor } from '../../../js/hwpx-editor.mjs';
@@ -130,7 +131,12 @@ export async function openDocument(options: unknown = {}): Promise<OpenedDocumen
         state.sdk.close();
       }
     };
-    const common = { sourceSha256, sectionCount, replaceText, close };
+    const nativeExports = Object.freeze(
+      WebAssembly.Module.exports(module)
+        .filter((row) => row.kind === 'function')
+        .map((row) => row.name),
+    );
+    const common = { sourceSha256, sectionCount, replaceText, close, nativeExports };
     if (state.format === 'hwp5') {
       const sdk = state.sdk;
       return {
@@ -164,7 +170,7 @@ export async function openDocument(options: unknown = {}): Promise<OpenedDocumen
 
 export async function read(
   options: unknown,
-): Promise<{ format: DocumentFormat; model: DocumentView }> {
+): Promise<{ format: DocumentFormat; model: DocumentView; formControls?: FormInventory }> {
   const document = await openDocument(options);
   try {
     const { readDocumentModel } = await import('./document-model.ts');
@@ -174,7 +180,13 @@ export async function read(
       sectionCount: document.sectionCount,
       sdk: document.sdk,
     });
-    return { format: document.format, model };
+    return {
+      format: document.format,
+      model,
+      ...(record(options) && options.includeFormControls === true
+        ? { formControls: readFormInventory(document) }
+        : {}),
+    };
   } finally {
     document.close();
   }

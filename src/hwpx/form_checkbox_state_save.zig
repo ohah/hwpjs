@@ -20,7 +20,7 @@ pub fn write(a: std.mem.Allocator, source: *const Tree, xml: []const u8, entries
         const node = mapping.get(entry.form_node) orelse return error.SourceBindingMismatch;
         const existing = try seen.getOrPut(a, entry.form_node);
         if (existing.found_existing) return error.DuplicateFormStateEdit;
-        const output = try @import("form_checkbox_state_write.zig").write(a, &current, node, entry.state, limit);
+        const output = try (if (@import("run_anchor.zig").kind(&current, node) == .radio_button) @import("form_checkbox_state_write.zig").writeRadio(a, &current, node, entry.state, limit) else @import("form_checkbox_state_write.zig").write(a, &current, node, entry.state, limit));
         defer a.free(output);
         var next = try @import("section_tree.zig").parse(a, output, ordinal, source.item_index, .{});
         current.deinit(a);

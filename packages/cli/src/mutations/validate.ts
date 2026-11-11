@@ -1,3 +1,4 @@
+import type { FormStateOperation } from './form-state.ts';
 import {
   checkedCharacterExtensions,
   type ExtendedCharacterProperties,
@@ -64,6 +65,7 @@ type AtParagraph = OperationPosition & WholeTextCondition;
 export type DocumentOperation = OperationBase &
   (
     | PageSettingsOperation
+    | FormStateOperation
     | SourceTableCellSplitOperation
     | ({ readonly kind: 'splice'; readonly text: string } & RangeCondition & WholeTextCondition)
     | {
@@ -145,6 +147,9 @@ const spec = (required: readonly string[], optional: readonly string[] = []): Op
 // CLI와 MCP가 공유하는 필수 및 선택 키의 단일 출처입니다.
 export const DOCUMENT_OPERATION_SPECS = Object.freeze({
   'page-settings': spec([...common, 'scope', 'values'], ['section']),
+  'form-checkbox-state': spec([...common, 'reference', 'expectedState', 'state']),
+  'form-radio-select': spec([...common, 'reference', 'expectedState', 'expectedGroupName']),
+  'form-text': spec([...common, 'reference', 'expectedText', 'text']),
   'source-table-cell-split': spec([
     ...common,
     'reference',
@@ -305,6 +310,32 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
         else if (operation.scope !== 'document' || Object.hasOwn(operation, 'section'))
           throw new TypeError('InvalidPageSettingsScope');
         checkedPageSettingsValues(operation.values);
+        break;
+      }
+      case 'form-checkbox-state':
+      case 'form-radio-select':
+      case 'form-text': {
+        const reference = parseObjectReference(operation.reference);
+        if (reference.kind !== 'form') throw new Error('ExpectedFormReference');
+        if (operation.kind === 'form-text') {
+          string(operation.expectedText);
+          string(operation.text);
+          if (
+            operation.text.length > 65535 ||
+            new TextEncoder().encode(operation.text).length > 196605
+          )
+            throw new RangeError('FormTextLimitExceeded');
+        } else {
+          const states =
+            operation.kind === 'form-radio-select'
+              ? ['UNCHECKED', 'CHECKED']
+              : ['UNCHECKED', 'CHECKED', 'INDETERMINATE'];
+          if (!states.includes(String(operation.expectedState)))
+            throw new Error('InvalidFormState');
+          if (operation.kind === 'form-checkbox-state' && !states.includes(String(operation.state)))
+            throw new Error('InvalidFormState');
+          if (operation.kind === 'form-radio-select') string(operation.expectedGroupName);
+        }
         break;
       }
       case 'source-table-cell-split': {

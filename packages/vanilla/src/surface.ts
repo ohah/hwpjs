@@ -44,6 +44,11 @@ import {
   createParagraphSelection,
   getSelectionFormatting,
 } from '@hwpjs/core';
+// Existing form controls use the same leased Native request bridge.
+// @ts-ignore canonical JavaScript controls
+import { createCheckBoxCanvasControls } from '../../../web/preview/checkbox-canvas-controls.mjs';
+// @ts-ignore canonical JavaScript controls
+import { createFormTextCanvasControls } from '../../../web/preview/form-text-canvas-controls.mjs';
 import { createControlBridge } from './core-bridge.ts';
 import { canvasSurfacePageFrame } from './page-frame.ts';
 // @ts-ignore Canonical owner projection shared with headless selection validation.
@@ -268,6 +273,7 @@ export function createCanvasSurface({
   let displayed = '',
     selectionKey = '',
     observedStateVersion = -1;
+  let checkBoxControls: any, formTextControls: any;
   let nonTextHistoryAdmissionReady = false;
   let nonTextHistoryPending: object | undefined;
   let nonTextSelectionProjection: ReturnType<HeadlessEditor['getEditorState']> | undefined;
@@ -509,6 +515,8 @@ export function createCanvasSurface({
     const changedDocument =
       displayed.split(':').slice(0, -2).join(':') !== key.split(':').slice(0, -2).join(':');
     if (changedDocument) {
+      checkBoxControls?.message({ kind: 'load' });
+      formTextControls?.message({ kind: 'load' });
       atomicProfile = undefined;
       // Reset the old projection without clearing the new document's Core selection.
       nonTextSelectionProjection = state;
@@ -524,6 +532,9 @@ export function createCanvasSurface({
     if (!nonTextHistoryPending && !retained && !changedDocument && displayed && !bridge?.busy())
       direct?.external({ kind: 'external-update', origin: 'core' });
     displayed = key;
+    checkBoxControls?.message({ kind: 'snapshot', content: state.content });
+    formTextControls?.message({ kind: 'enable', ...(state.capabilities as object) });
+    formTextControls?.message({ kind: 'snapshot', content: state.content });
     renderer.show(geometry?.content ?? state.content, {
       sourceState: state,
       geometryEvidence: geometry?.evidence,
@@ -601,6 +612,8 @@ export function createCanvasSurface({
     historySelectionPublication = undefined;
     frameObserver?.disconnect();
     bridge?.close();
+    checkBoxControls?.close();
+    formTextControls?.close();
     unsubscribe?.();
     try {
       direct?.close();
@@ -679,6 +692,8 @@ export function createCanvasSurface({
           };
           try {
             if (state) render(state);
+            checkBoxControls?.message(reply);
+            formTextControls?.message(reply);
             const prepared = direct.message(reply);
             if (prepared && typeof prepared.then === 'function') {
               void Promise.resolve(prepared).then(
@@ -702,6 +717,22 @@ export function createCanvasSurface({
         if (formattingReceipt?.kind === message.kind) formattingReceipt.result = result;
       },
     );
+    const formControlsOptions = {
+      canvas,
+      viewport,
+      renderer,
+      note,
+      ready: () =>
+        !closed &&
+        !nonTextHistoryPending &&
+        bridge!.ready() &&
+        !bridge!.busy() &&
+        direct?.settled() === true,
+      request: (message: RuntimeMessage) =>
+        !closed && !nonTextHistoryPending && viewAllowsRequest(message) && bridge!.request(message),
+    };
+    checkBoxControls = createCheckBoxCanvasControls(formControlsOptions);
+    formTextControls = createFormTextCanvasControls(formControlsOptions);
     direct = createCanvasEditor({
       canvas,
       viewport,

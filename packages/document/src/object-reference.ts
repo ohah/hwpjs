@@ -1,10 +1,10 @@
 import type { ObjectKind, ObjectReference } from './types/document-view.ts';
 import type { DocumentFormat } from './types/native.ts';
 // 논리 개체 참조이며 네트워크 URL이나 파일 경로가 아닙니다.
-const KINDS = new Set(['image', 'table', 'chart', 'equation', 'drawing', 'ole', 'unknown']);
+const KINDS = new Set(['image', 'table', 'chart', 'equation', 'drawing', 'ole', 'form', 'unknown']);
 const SHA = /^[a-f0-9]{64}$/u;
 const REFERENCE =
-  /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
+  /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|form|unknown)\/(0|[1-9]\d*)$/u;
 const object = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === 'object' && !Array.isArray(value);
 const uint = (value: unknown): value is number =>

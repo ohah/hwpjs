@@ -5,7 +5,15 @@ import type { decodeTablePlacements } from '../../../../js/table-placements-wire
 
 export type ReadFormat = 'text' | 'markdown';
 export type ReadView = 'content' | 'structure';
-export type ObjectKind = 'image' | 'table' | 'chart' | 'equation' | 'drawing' | 'ole' | 'unknown';
+export type ObjectKind =
+  | 'image'
+  | 'table'
+  | 'chart'
+  | 'equation'
+  | 'drawing'
+  | 'ole'
+  | 'form'
+  | 'unknown';
 type CommonObservationMethods =
   | 'paragraphFlow'
   | 'tableBindings'

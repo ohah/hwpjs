@@ -97,6 +97,14 @@ function operationSchema() {
           })
           .describe('HWP5/HWPX 원본 축 HWPUNIT 정수 전체 값. 단위 변환·축 전치 없음.');
       }
+      if (kind.startsWith('form-')) {
+        if (name === 'reference') return z.string().min(1).max(128);
+        if (name === 'expectedState' || name === 'state')
+          return kind === 'form-radio-select'
+            ? z.enum(['UNCHECKED', 'CHECKED'])
+            : z.enum(['UNCHECKED', 'CHECKED', 'INDETERMINATE']);
+        return z.string();
+      }
       if (kind === 'source-table-cell-split') {
         if (name === 'reference')
           return z

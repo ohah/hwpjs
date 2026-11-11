@@ -63,7 +63,7 @@ pub fn supportsFlatSection(session: *const editor.Session, section: usize, old: 
     if (old.structure_values != null or
         old.cell_sizes.items.len != 0 or old.picture_dimensions.items.len != 0 or
         old.picture_matrices.items.len != 0 or old.picture_frames.items.len != 0 or
-        old.checkbox_states.items.len != 0 or old.dutmal_texts.entries.items.len != 0 or
+        old.form_texts.entries.items.len != 0 or old.checkbox_states.items.len != 0 or old.dutmal_texts.entries.items.len != 0 or
         old.equation_scripts.entries.items.len != 0 or old.formula_definitions.entries.items.len != 0 or
         old.formula_result_overrides.entries.items.len != 0 or old.created_tables.entries.items.len != 0)
         return false;

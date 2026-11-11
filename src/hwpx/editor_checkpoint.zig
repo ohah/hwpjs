@@ -173,6 +173,7 @@ const State = struct {
     picture_matrices: @import("picture_matrix_edit_values.zig").Values,
     picture_frames: @import("picture_frame_values.zig").Values = .empty,
     checkbox_states: @import("form_checkbox_state_values.zig").Values,
+    form_texts: @import("form_text_values.zig").Values,
     dutmal_texts: @import("dutmal_text_values.zig").Values,
     equation_scripts: @import("equation_script_values.zig").Values = .{},
     formula_definitions: @import("formula_definition_values.zig").Values,
@@ -188,6 +189,7 @@ const State = struct {
         self.picture_matrices.deinit(a);
         self.picture_frames.deinit(a);
         self.checkbox_states.deinit(a);
+        self.form_texts.deinit(a);
         self.dutmal_texts.deinit(a);
         self.equation_scripts.deinit(a);
         self.formula_definitions.deinit(a);
@@ -267,6 +269,7 @@ pub const Checkpoint = struct {
             section.refreshSourceAliases();
             std.mem.swap(sites_mod.Sites, &state.sites, &section.sites);
             std.mem.swap(@import("form_checkbox_state_values.zig").Values, &state.checkbox_states, &section.checkbox_states);
+            std.mem.swap(@import("form_text_values.zig").Values, &state.form_texts, &section.form_texts);
             std.mem.swap(@import("dutmal_text_values.zig").Values, &state.dutmal_texts, &section.dutmal_texts);
             std.mem.swap(@import("equation_script_values.zig").Values, &state.equation_scripts, &section.equation_scripts);
             std.mem.swap(?Values, &state.structure_values, &section.structure_values);
@@ -368,6 +371,8 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
         errdefer a.free(picture_frames);
         const checkbox_states = try a.dupe(@import("form_checkbox_state_values.zig").Entry, section.checkbox_states.items);
         errdefer a.free(checkbox_states);
+        var form_texts = try section.form_texts.clone(a);
+        errdefer form_texts.deinit(a);
         var dutmal_texts = try section.dutmal_texts.clone(a);
         errdefer dutmal_texts.deinit(a);
         var equation_scripts = try section.equation_scripts.clone(a);
@@ -383,7 +388,7 @@ pub fn capture(session: *const editor.Session, max_bytes: usize) !Checkpoint {
             overrides.deinit(a);
         }
         const created_tables = try section.created_tables.clone(a);
-        state.* = .{ .original_basis = section.original_basis, .owned_rebased_basis = rebased, .source_first_paragraph = section.source_first_paragraph, .sites = sites, .structure_values = structure_values, .first_paragraph = section.first_paragraph, .last_paragraph = section.last_paragraph, .dirty = .{ .items = dirty, .capacity = dirty.len, .pointer_stability = .{} }, .cell_sizes = .{ .items = cell_sizes, .capacity = cell_sizes.len, .pointer_stability = .{} }, .picture_dimensions = .{ .items = picture_dimensions, .capacity = picture_dimensions.len, .pointer_stability = .{} }, .picture_matrices = .{ .items = picture_matrices, .capacity = picture_matrices.len, .pointer_stability = .{} }, .checkbox_states = .{ .items = checkbox_states, .capacity = checkbox_states.len, .pointer_stability = .{} }, .dutmal_texts = dutmal_texts, .formula_definitions = formula_definitions, .formula_result_overrides = formula_result_overrides, .created_tables = created_tables };
+        state.* = .{ .original_basis = section.original_basis, .owned_rebased_basis = rebased, .source_first_paragraph = section.source_first_paragraph, .sites = sites, .structure_values = structure_values, .first_paragraph = section.first_paragraph, .last_paragraph = section.last_paragraph, .dirty = .{ .items = dirty, .capacity = dirty.len, .pointer_stability = .{} }, .cell_sizes = .{ .items = cell_sizes, .capacity = cell_sizes.len, .pointer_stability = .{} }, .picture_dimensions = .{ .items = picture_dimensions, .capacity = picture_dimensions.len, .pointer_stability = .{} }, .picture_matrices = .{ .items = picture_matrices, .capacity = picture_matrices.len, .pointer_stability = .{} }, .checkbox_states = .{ .items = checkbox_states, .capacity = checkbox_states.len, .pointer_stability = .{} }, .form_texts = form_texts, .dutmal_texts = dutmal_texts, .formula_definitions = formula_definitions, .formula_result_overrides = formula_result_overrides, .created_tables = created_tables };
         state.equation_scripts = equation_scripts;
         state.picture_frames = .{ .items = picture_frames, .capacity = picture_frames.len, .pointer_stability = .{} };
         initialized += 1;
@@ -416,6 +421,7 @@ pub fn size(session: *const editor.Session, limit: usize) !usize {
         try add(&total, try multiply(section.picture_matrices.capacity, @sizeOf(@import("picture_matrix_edit_values.zig").Entry)), limit);
         try add(&total, try multiply(section.picture_frames.capacity, @sizeOf(@import("picture_frame_values.zig").Entry)), limit);
         try add(&total, try multiply(section.checkbox_states.capacity, @sizeOf(@import("form_checkbox_state_values.zig").Entry)), limit);
+        try add(&total, try section.form_texts.byteSize(limit - total), limit);
         try add(&total, try section.dutmal_texts.byteSize(limit - total), limit);
         try add(&total, try section.equation_scripts.byteSize(limit - total), limit);
         try add(&total, try multiply(section.formula_definitions.entries.capacity, @sizeOf(@import("formula_definition_values.zig").Entry)), limit);

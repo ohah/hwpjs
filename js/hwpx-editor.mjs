@@ -2685,6 +2685,84 @@ export async function createHwpxEditor(source) {
         wasm.hwpx_edit_output_free();
       }
     },
+    supportsRadioButtonSelect() {
+      ready();
+      return ['hwpx_edit_select_form_radio', 'hwpx_edit_radio_state'].every(
+        (name) => typeof wasm[name] === 'function',
+      );
+    },
+    supportsUnnamedRadioSelect() {
+      ready();
+      return (
+        typeof wasm.hwpx_edit_select_form_radio === 'function' &&
+        typeof wasm.hwpx_edit_radio_unnamed_singleton === 'function' &&
+        wasm.hwpx_edit_radio_unnamed_singleton() === 1
+      );
+    },
+    supportsFormTextEdit() {
+      ready();
+      return ['hwpx_edit_set_form_text', 'hwpx_edit_form_text'].every(
+        (name) => typeof wasm[name] === 'function',
+      );
+    },
+    supportsFormTextLayoutRetention() {
+      ready();
+      return (
+        typeof wasm.hwpx_edit_set_form_text === 'function' &&
+        typeof wasm.hwpx_edit_form_text_retains_layout_flags === 'function' &&
+        wasm.hwpx_edit_form_text_retains_layout_flags() === 1
+      );
+    },
+    radioButtonState(section, formNode) {
+      ready();
+      [section, formNode].forEach(uint);
+      if (typeof wasm.hwpx_edit_radio_state !== 'function')
+        throw new Error('HwpxRadioStateAbiUnavailable');
+      try {
+        if (!wasm.hwpx_edit_radio_state(section, formNode)) throw memory.error();
+        const value = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
+          memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+        );
+        if (!['UNCHECKED', 'CHECKED'].includes(value)) throw new Error('InvalidRadioButtonState');
+        return value;
+      } finally {
+        wasm.hwpx_edit_output_free();
+      }
+    },
+    selectRadioButton(section, formNode) {
+      ready();
+      [section, formNode].forEach(uint);
+      if (typeof wasm.hwpx_edit_select_form_radio !== 'function')
+        throw new Error('HwpxRadioSelectAbiUnavailable');
+      if (!wasm.hwpx_edit_select_form_radio(section, formNode)) throw memory.error();
+    },
+    formText(section, formNode) {
+      ready();
+      [section, formNode].forEach(uint);
+      if (typeof wasm.hwpx_edit_form_text !== 'function')
+        throw new Error('HwpxFormTextAbiUnavailable');
+      try {
+        if (!wasm.hwpx_edit_form_text(section, formNode)) throw memory.error();
+        return new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(
+          memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+        );
+      } finally {
+        wasm.hwpx_edit_output_free();
+      }
+    },
+    setFormText({ section, formNode, text }) {
+      ready();
+      [section, formNode].forEach(uint);
+      if (typeof wasm.hwpx_edit_set_form_text !== 'function')
+        throw new Error('HwpxFormTextEditAbiUnavailable');
+      if (typeof text !== 'string') throw new TypeError('Form text must be a string');
+      if (text.length > 65535) throw new RangeError('LimitExceeded');
+      const bytes = encodedText(text);
+      if (bytes.length > 196605) throw new RangeError('LimitExceeded');
+      memory.withBytes(bytes, (ptr, size) => {
+        if (!wasm.hwpx_edit_set_form_text(section, formNode, ptr, size)) throw memory.error();
+      });
+    },
     checkBoxState(section, formNode) {
       ready();
       [section, formNode].forEach(uint);

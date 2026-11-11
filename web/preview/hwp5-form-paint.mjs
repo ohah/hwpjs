@@ -43,11 +43,19 @@ export function paintHwp5Form(ctx, item, x, y) {
         item.height,
       );
       ctx.clip();
-      ctx.fillText(
-        item.label,
-        x + (ctx.textAlign === 'center' ? item.width / 2 : 3),
-        y + item.height / 2,
-      );
+      if (item.multiline === true) {
+        if (!Number.isFinite(item.lineHeight) || item.lineHeight <= 0) return false;
+        const lines = item.label.split('\n');
+        const visible = Math.min(lines.length, Math.ceil(item.height / item.lineHeight));
+        for (let i = 0; i < visible; i++)
+          ctx.fillText(lines[i], x + 3, y + item.lineHeight * (i + 0.5));
+      } else {
+        ctx.fillText(
+          item.label,
+          x + (ctx.textAlign === 'center' ? item.width / 2 : 3),
+          y + item.height / 2,
+        );
+      }
     } finally {
       ctx.restore();
     }

@@ -2653,11 +2653,12 @@ export function createReaderRuntime({
         preview = reader.readTextEvents(editor.saveForDisplay());
         reply({ kind: message.kind, requestId: message.requestId, dutmal, content: hwpxDisplay() });
       } else if (message.kind === 'radio-select') {
-        if (format !== 'hwp5') throw new Error('UnsupportedRadioSelectEditing');
+        if (format !== 'hwp5' && format !== 'hwpx')
+          throw new Error('UnsupportedRadioSelectEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
         editor.selectRadioButton(message.section, message.formNode);
         applied = true;
-        reply({ kind: message.kind, content: hwp5Display() });
+        reply({ kind: message.kind, content: format === 'hwp5' ? hwp5Display() : hwpxDisplay() });
       } else if (message.kind === 'checkbox-state') {
         if (format !== 'hwpx' && format !== 'hwp5')
           throw new Error('UnsupportedCheckBoxStateEditing');
@@ -2669,7 +2670,7 @@ export function createReaderRuntime({
           content: format === 'hwp5' ? hwp5Display() : hwpxDisplay(),
         });
       } else if (message.kind === 'form-text') {
-        if (format !== 'hwp5') throw new Error('UnsupportedFormTextEditing');
+        if (format !== 'hwp5' && format !== 'hwpx') throw new Error('UnsupportedFormTextEditing');
         if (!editor || !historyEnabled) throw new Error('EditorNotOpen');
         editor.setFormText({
           section: message.section,
@@ -2677,7 +2678,7 @@ export function createReaderRuntime({
           text: message.text,
         });
         applied = true;
-        reply({ kind: message.kind, content: hwp5Display() });
+        reply({ kind: message.kind, content: format === 'hwp5' ? hwp5Display() : hwpxDisplay() });
       } else if (message.kind === 'picture-resize') {
         if (format !== 'hwpx' && format !== 'hwp5')
           throw new Error('UnsupportedPictureResizeEditing');
@@ -2895,6 +2896,9 @@ export function createReaderRuntime({
             kind: 'enable',
             paragraphBreakAvailable: editor.supportsParagraphBreaks(),
             dutmalTextAvailable,
+            formTextAvailable:
+              editor.supportsFormTextEdit?.() === true &&
+              editor.supportsFormTextLayoutRetention?.() === true,
             equationScriptAvailable,
             equationSectionCount: equationScriptAvailable ? preview.sectionCount : 0,
             charShapeCount: charShapeIds.length,

@@ -1,3 +1,4 @@
+import { isFormOperation, requireFormOperation } from './form-state.ts';
 import {
   basicCharacterProperties,
   hasCharacterExtensions,
@@ -30,6 +31,9 @@ function replaceParagraphRanges(
 
 const METHODS = Object.freeze({
   'page-settings': 'writePageSettings',
+  'form-checkbox-state': 'setCheckBoxState',
+  'form-radio-select': 'selectRadioButton',
+  'form-text': 'setFormText',
   'source-table-cell-split': 'splitSourceTableCells',
   splice: 'splice',
   'replace-paragraph-ranges': 'replaceParagraphRanges',
@@ -60,6 +64,8 @@ interface Target {
 function targets(operation: DocumentOperation): readonly Target[] {
   if (operation.kind === 'page-settings')
     return operation.scope === 'section' ? [{ section: operation.section! }] : [];
+  if (isFormOperation(operation))
+    return [{ section: parseObjectReference(operation.reference).section }];
   if (operation.kind === 'source-table-cell-split')
     return [{ section: parseObjectReference(operation.reference).section }];
   if (operation.kind === 'cell-sizes') return operation.cells;
@@ -94,6 +100,7 @@ export function prepareOperationSession(
     throw new Error('InvalidOperationSession');
   const protectedSections = new Set<number>();
   for (const operation of operations) {
+    if (isFormOperation(operation)) requireFormOperation(document, operation);
     if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
     if (operation.kind === 'page-settings') requirePageSettingsWrite(document);
     if (
@@ -155,6 +162,7 @@ export function prepareOperationSession(
   if (
     operations.some(
       (operation) =>
+        isFormOperation(operation) ||
         hasCharacterExtensions(operation) ||
         operation.kind === 'page-settings' ||
         operation.kind === 'source-table-cell-split' ||
@@ -174,6 +182,7 @@ export function prepareOperationSession(
   }
 }
 export function applyOperation(document: OperationDocument, operation: DocumentOperation): unknown {
+  if (isFormOperation(operation)) throw new Error('PreparedFormStateRequired');
   const textCache = new Map<string, string>();
   let observedUnits = 0;
   const currentText = (row: OperationPosition): string => {

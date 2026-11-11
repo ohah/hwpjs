@@ -497,3 +497,45 @@ HWP5는 위 예제의 입력·출력 확장자를 `.hwp`로 바꿔 같은 `page-
 `scope: "document"`는 현재 구역 모두가 지원되어야 하며 미지원 구역을 건너뛰지 않습니다. `scope: "section"`은 명시한0기준 구역만 대상으로 합니다. Native binding·expected snapshot·targets는 외부 입력으로 받지 않고 같은 살아 있는 SDK에서 admission 및 각 쓰기 직전에 다시 조회합니다. 앞선 편집 뒤 이전 node index를 재사용하지 않습니다.
 
 구형 ABI는 선행 작업이 있어도 history/write/save 전에 거절합니다. 후행 Native 오류·불확실 완료·cleanup/close 실패는 새 출력을 게시하지 않습니다. HWP5 변경 저장에는 기존 `allowStaleLayout` 동의가 필요하며 이 옵션은 전체 조판 완료를 뜻하지 않습니다. 원본·기존 출력은 덮어쓰지 않습니다.
+
+## 폼 상태 변경
+
+현재 GitHub 구현 기준이며 npm 릴리스 지원 표시가 아닙니다. 단일 패키지 설치 이름은 `npm install @ohah/hwpjs`입니다. 해당 CLI와 optional Native 기능을 함께 포함한 빌드에서 사용합니다.
+
+```sh
+hwpjs read ./input.hwp --view structure
+hwpjs info ./input.hwp
+# 위 조회에서 얻은 documentSHA256과 checkbox form reference를 그대로 지정합니다.
+hwpjs apply ./input.hwp --expect-sha256 "$SHA" \
+  --operations "[{\"kind\":\"form-checkbox-state\",\"coordinates\":\"current-transaction\",\"reference\":\"$CHECK_REF\",\"expectedState\":\"UNCHECKED\",\"state\":\"CHECKED\"}]" \
+  --output ./checked.hwp --allow-stale-layout
+```
+
+현재 GitHub 구현은 HWP5와 HWPX 모두 체크박스·라디오 선택·편집/콤보 텍스트를 연결합니다. 라디오는 `form-radio-select`에 `expectedState`와 `expectedGroupName`을, 폼텍스트는 `form-text`에 `expectedText`와 `text`를 지정합니다. 텍스트는 UTF-16 최대65535단위이며 기존 전체 요청 예산도 적용합니다. HWPX 라디오·폼텍스트는 새 optional Native getter/writer가 있어야 하며 구형 엔진은 쓰기 전에 명시 거절합니다. 라디오는 같은 이름의 문서 전체 그룹에서 하나만 선택하고 스타일·글꼴·원본 폼 속성은 보존합니다.
+
+폼 reference는 원본 SHA·형식·구역·Native source identity에 묶이며 숫자 formNode를 입력하지 않습니다. 저장된 새 파일에서는 다시 조회합니다. 폼보다 앞선 비폼 연산은 이 후보의 수명 계약에서 거절합니다. 후행 실패 시 앞선 세션 변경도 파일로 게시하지 않습니다. GUI 조판 갱신이나 열린 세션 undo를 뜻하지 않습니다.
+
+새 파일에서 다시 읽은 form reference를 같은 `apply`/MCP `apply_document_changes` 스키마에 사용합니다. 다음은 원본 조회가 `UNCHECKED`, 그룹명이 `Group A`, 텍스트가 `old`였던 경우입니다.
+
+```json
+{
+  "operations": [
+    {
+      "kind": "form-radio-select",
+      "coordinates": "current-transaction",
+      "reference": "FORM_REFERENCE_FROM_READ",
+      "expectedState": "UNCHECKED",
+      "expectedGroupName": "Group A"
+    },
+    {
+      "kind": "form-text",
+      "coordinates": "current-transaction",
+      "reference": "TEXT_FORM_REFERENCE_FROM_READ",
+      "expectedText": "old",
+      "text": "새 값"
+    }
+  ]
+}
+```
+
+`@ohah/hwpjs` 단일 패키지의 설치·CLI/MCP 호출 방법은 위 설명을 따릅니다. 위 기능은 현재 GitHub 구현 기준이며 npm 버전 출시를 뜻하지 않습니다.

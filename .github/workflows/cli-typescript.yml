@@ -9,6 +9,7 @@ on:
       - 'web/preview/**'
       - 'tools/build-public-package.mjs'
       - 'tools/public-package-notices.mjs'
+      - 'tools/tests/forms-known-profile.test.mjs'
       - 'packages/cli/e2e/installed.test.mjs'
       - 'apps/docs/docs/public/editor/manifest.json'
       - 'apps/docs/docs/public/editor/hwpjs/hwpjs.wasm'
@@ -27,6 +28,7 @@ on:
       - 'web/preview/**'
       - 'tools/build-public-package.mjs'
       - 'tools/public-package-notices.mjs'
+      - 'tools/tests/forms-known-profile.test.mjs'
       - 'packages/cli/e2e/installed.test.mjs'
       - 'apps/docs/docs/public/editor/manifest.json'
       - 'apps/docs/docs/public/editor/hwpjs/hwpjs.wasm'
@@ -234,6 +236,25 @@ jobs:
           grep -Eq '^# tests 10$' "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-character-plan-native.tap"
+      - name: 폼 통합 Native의 제품 known profile 직접 검사
+        timeout-minutes: 1
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test --test-reporter=tap tools/tests/forms-known-profile.test.mjs | tee "$RUNNER_TEMP/hwpjs-forms-known-profile.tap"
+          grep -Eq '^# tests 2$' "$RUNNER_TEMP/hwpjs-forms-known-profile.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-forms-known-profile.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-forms-known-profile.tap"
+      - name: 폼 상태 CLI와 MCP 명시 E2E
+        timeout-minutes: 3
+        shell: bash
+        run: |
+          set -euo pipefail
+          HWPJS_FORM_EVIDENCE="$RUNNER_TEMP/hwpjs-cli-form-state" \
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/form-state-bridges.test.mjs | tee "$RUNNER_TEMP/hwpjs-cli-form-state.tap"
+          grep -Eq '^# tests 23$' "$RUNNER_TEMP/hwpjs-cli-form-state.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-form-state.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-form-state.tap"
       - name: 정규 공개 JavaScript 산출물 빌드
         timeout-minutes: 3
         run: bun tools/build-public-package.mjs --js-only --wasm="$HWPJS_TEST_WASM"
@@ -260,6 +281,9 @@ jobs:
           if-no-files-found: warn
           path: |
             ${{ runner.temp }}/hwpjs-page-settings-cli
+            ${{ runner.temp }}/hwpjs-forms-known-profile.tap
+            ${{ runner.temp }}/hwpjs-cli-form-state.tap
+            ${{ runner.temp }}/hwpjs-cli-form-state
             ${{ runner.temp }}/hwpjs-cli-character-plan-native.tap
             ${{ runner.temp }}/hwpjs-cli-character-plan-native
             ${{ runner.temp }}/hwpjs-cli-character-extensions.tap

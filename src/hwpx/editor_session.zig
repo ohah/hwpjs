@@ -37,6 +37,7 @@ pub const Section = struct {
     picture_matrices: @import("picture_matrix_edit_values.zig").Values = .empty,
     picture_frames: @import("picture_frame_values.zig").Values = .empty,
     checkbox_states: @import("form_checkbox_state_values.zig").Values = .empty,
+    form_texts: @import("form_text_values.zig").Values = .{},
     dutmal_texts: @import("dutmal_text_values.zig").Values = .{},
     equation_scripts: @import("equation_script_values.zig").Values = .{},
     formula_definitions: @import("formula_definition_values.zig").Values = .{},
@@ -95,6 +96,7 @@ pub const Section = struct {
         self.picture_matrices.deinit(a);
         self.picture_frames.deinit(a);
         self.checkbox_states.deinit(a);
+        self.form_texts.deinit(a);
         self.dutmal_texts.deinit(a);
         self.equation_scripts.deinit(a);
         self.formula_definitions.deinit(a);
@@ -749,6 +751,32 @@ pub const Session = struct {
     fn setCheckBoxStateHistoryBody(self: *Session, section: usize, node: usize, state: @import("form_checkbox_state_session.zig").State) !bool {
         return @import("form_checkbox_state_session.zig").set(self, section, node, state);
     }
+    pub fn radioButtonState(self: *const Session, section: usize, node: usize) !@import("form_attribute_values.zig").ButtonState {
+        return @import("form_state_session.zig").radioState(self, section, node);
+    }
+    pub fn formText(self: *const Session, section: usize, node: usize) ![]u8 {
+        return @import("form_state_session.zig").text(self, section, node);
+    }
+    pub fn selectRadioButton(self: *Session, section: usize, node: usize) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("form_state_session.zig").selectRadio(self, section, node);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try @import("form_state_session.zig").selectRadio(self, section, node);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
+    pub fn setFormText(self: *Session, section: usize, node: usize, text: []const u8) !bool {
+        if (!self.history_delta_managed or self.history_transaction_active) return @import("form_state_session.zig").setText(self, section, node, text);
+        if (self.mutation_serial == std.math.maxInt(u64)) return error.HistoryRevisionExhausted;
+        try @import("suffix_text_delta.zig").normalize(self);
+        self.history_transaction_active = true;
+        defer self.history_transaction_active = false;
+        const changed = try @import("form_state_session.zig").setText(self, section, node, text);
+        if (changed) self.mutation_serial += 1;
+        return changed;
+    }
     pub fn dutmalText(self: *const Session, section: usize, node: usize, kind: @import("dutmal_text_session.zig").Kind) ![]u8 {
         return @import("dutmal_text_session.zig").read(self, section, node, kind);
     }
@@ -1018,8 +1046,12 @@ pub const Session = struct {
                 defer a.free(layout);
                 break :block try @import("form_checkbox_state_save.zig").write(a, &section.tree, layout, section.checkbox_states.items, self.options.max_xml_bytes -| xml_bytes);
             };
-            const dutmal = if (section.dutmal_texts.entries.items.len == 0) checked else block: {
+            const form_text = if (section.form_texts.entries.items.len == 0) checked else block: {
                 defer a.free(checked);
+                break :block try @import("form_text_save.zig").write(a, &section.tree, checked, section.form_texts.entries.items, self.options.max_xml_bytes -| xml_bytes);
+            };
+            const dutmal = if (section.dutmal_texts.entries.items.len == 0) form_text else block: {
+                defer a.free(form_text);
                 break :block try @import("dutmal_text_save.zig").write(a, &section.tree, checked, section.dutmal_texts.entries.items, self.options.max_xml_bytes -| xml_bytes);
             };
             const equations = if (section.equation_scripts.entries.items.len == 0) dutmal else block: {

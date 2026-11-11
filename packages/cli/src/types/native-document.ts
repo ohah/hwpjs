@@ -30,6 +30,7 @@ export interface Hwp5SaveResult {
   layoutRequiresReflow: boolean;
 }
 interface DocumentBase {
+  nativeExports?: readonly string[];
   sourceSha256: string;
   sectionCount: number;
   replaceText: (input: ReplaceTextInput) => ReplaceTextResult;
@@ -95,6 +96,7 @@ type HwpxMutationSdk = Pick<
   | 'enableHistoryV2'
 >;
 interface OperationDocumentBase {
+  nativeExports?: readonly string[];
   sourceSha256: string;
   sectionCount: number;
   // Native 경계의 저장 응답은 서비스의 런타임 검증 후에만 바이트로 인정합니다.
