@@ -26,16 +26,19 @@ pub const Values = struct {
         return self.addWithResources(a, original_count, source_id, alignment, margins, spacing, flags, .{});
     }
     pub fn addWithResources(self: *Values, a: std.mem.Allocator, original_count: usize, source_id: u32, alignment: u32, margins: @import("paragraph_margin_payload.zig").Patch, spacing: ?@import("paragraph_spacing_payload.zig").Spacing, flags: @import("../../model/paragraph_flags.zig").Patch, border_fill: @import("../../model/border_fill_patch.zig").Patch) !u16 {
+        return self.addWithBullet(a, original_count, source_id, alignment, margins, spacing, flags, border_fill, null);
+    }
+    pub fn addWithBullet(self: *Values, a: std.mem.Allocator, original_count: usize, source_id: u32, alignment: u32, margins: @import("paragraph_margin_payload.zig").Patch, spacing: ?@import("paragraph_spacing_payload.zig").Spacing, flags: @import("../../model/paragraph_flags.zig").Patch, border_fill: @import("../../model/border_fill_patch.zig").Patch, bullet: ?@import("../../model/formatting_patch.zig").Bullet) !u16 {
         if (source_id >= original_count or source_id > std.math.maxInt(u16)) return error.InvalidParagraphShapeReference;
         if (alignment > 5) return error.InvalidParagraphAlignment;
         if (spacing) |value| if (value.kind > 3) return error.InvalidParagraphSpacing;
-        for (self.entries.items, 0..) |entry, index| if (entry.source_id == source_id and entry.alignment == alignment and std.meta.eql(entry.margins, margins) and std.meta.eql(entry.spacing, spacing) and std.meta.eql(entry.flags, flags) and std.meta.eql(entry.border_fill, border_fill)) {
+        for (self.entries.items, 0..) |entry, index| if (entry.source_id == source_id and entry.alignment == alignment and std.meta.eql(entry.margins, margins) and std.meta.eql(entry.spacing, spacing) and std.meta.eql(entry.flags, flags) and std.meta.eql(entry.border_fill, border_fill) and std.meta.eql(entry.bullet, bullet)) {
             const id = std.math.add(usize, original_count, index) catch return error.InvalidParagraphShapeReference;
             return std.math.cast(u16, id) orelse error.InvalidParagraphShapeReference;
         };
         const id = std.math.add(usize, original_count, self.entries.items.len) catch return error.InvalidParagraphShapeReference;
         const wire = std.math.cast(u16, id) orelse return error.InvalidParagraphShapeReference;
-        try self.entries.append(a, .{ .source_id = @intCast(source_id), .alignment = @intCast(alignment), .margins = margins, .spacing = spacing, .flags = flags, .border_fill = border_fill });
+        try self.entries.append(a, .{ .source_id = @intCast(source_id), .alignment = @intCast(alignment), .margins = margins, .spacing = spacing, .flags = flags, .border_fill = border_fill, .bullet = bullet });
         return wire;
     }
     pub fn write(self: *const Values, a: std.mem.Allocator, original: []const u8, version: @import("../version.zig").Version, original_count: usize, limit: usize) ![]u8 {
@@ -56,6 +59,11 @@ pub const Values = struct {
             }
             a.free(bytes);
             bytes = result.bytes;
+            if (entry.bullet) |value| {
+                const next = try @import("paragraph_bullet_payload.zig").write(a, bytes, version, result.id, value);
+                a.free(bytes);
+                bytes = next;
+            }
         }
         if (bytes.len > limit) return error.LimitExceeded;
         return bytes;

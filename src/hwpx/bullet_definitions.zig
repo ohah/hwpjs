@@ -2,23 +2,10 @@
 const std = @import("std");
 const Tree = @import("xml_part_tree.zig").Tree;
 const source = @import("paragraph_heading_display.zig");
-pub const Reason = enum { InvalidBulletId, DuplicateBulletId, UnsupportedBulletDeclaration };
-pub const Declaration = struct {
-    ordinal: u32,
-    id: ?u32,
-    marker: ?u21,
-    canApply: bool,
-    reason: ?Reason,
-    definition: ?@import("bullet_definition_write.zig").Definition = null,
-};
-pub const Snapshot = struct {
-    schemaVersion: u32 = 1,
-    state: enum { available } = .available,
-    scope: enum { @"current-header" } = .@"current-header",
-    coverage: enum { complete } = .complete,
-    declarations: []Declaration,
-    definitionWriter: enum { @"character-definitions-v1" } = .@"character-definitions-v1",
-};
+const dto = @import("../model/paragraph_bullet_definition.zig");
+pub const Reason = dto.Reason;
+pub const Declaration = dto.Declaration;
+pub const Snapshot = dto.Snapshot;
 
 pub fn read(a: std.mem.Allocator, session: *const @import("editor_session.zig").Session) !Snapshot {
     var lease = try @import("header_read_context.zig").lease(session);

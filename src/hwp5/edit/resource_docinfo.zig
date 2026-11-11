@@ -26,6 +26,11 @@ fn writeScoped(a: std.mem.Allocator, original: []const u8, version: @import("../
         a.free(current);
         current = next.bytes;
     }
+    if (document.bullet_resources.len != 0) {
+        const next = try @import("bullet_definitions.zig").write(a, current, version, document.bullet_resources, limit);
+        a.free(current);
+        current = next;
+    }
     return current;
 }
 

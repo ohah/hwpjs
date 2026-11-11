@@ -206,7 +206,9 @@ pub const Backend = struct {
         try @import("control_boundaries.zig").validateRetainedText(bytes);
         try @import("control_boundaries.zig").validate(bytes, range.startUnit, range.endUnit);
     }
-    pub fn authorizeField(_: Backend, _: std.mem.Allocator, _: m.Owner, _: []const u8) !void {}
+    pub fn authorizeField(self: Backend, _: std.mem.Allocator, owner_value: m.Owner, field: []const u8) !void {
+        if (eq(field, "paragraph.bullet")) try self.session.authorizeBullet(owner_value.section, owner_value.paragraph);
+    }
     pub fn preflight(self: Backend, a: std.mem.Allocator, selected: m.Owner, ranges: []const m.Range, patch: m.Patch) !void {
         if (self.snapshot) |snapshot| {
             if (patch.hasCharacter() and snapshot.preflight_source == null) _ = try self.readFormattingSource(a);
@@ -312,7 +314,17 @@ pub const Backend = struct {
         return error.InvalidCharacterShapeReference;
     }
     pub fn paragraphField(self: Backend, a: std.mem.Allocator, selected: m.Owner, field: []const u8) !p.Observation {
-        if (eq(field, "paragraph.bullet")) return p.unavailable("ParagraphBulletWriterUnavailable");
+        if (eq(field, "paragraph.bullet")) {
+            self.session.authorizeBullet(selected.section, selected.paragraph) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), @errorName(err));
+            var source = try self.readFormattingSource(a);
+            defer if (self.snapshot == null) source.deinit();
+            const id = try self.session.paragraphShapeId(selected.section, selected.paragraph);
+            const bullet = @import("bullet_apply.zig").reference(a, source.bytes, source.version, id) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), @errorName(err));
+            var value = p.map(a);
+            try p.put(a, &value, "kind", try p.text(a, if (bullet.id != null) "existing" else "none"));
+            if (bullet.id) |identity| try p.put(a, &value, "id", p.integer(identity));
+            return p.known(value, true, null, null);
+        }
         if (eq(field, "reset.style")) {
             const resources = self.resetResources(selected, a) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), "MissingSourceField");
             var row = p.map(a);

@@ -43,6 +43,8 @@ pub const Command = union(enum) {
     set_picture_current_size: @import("picture_current_size_values.zig").Edit,
     resize_picture: @import("picture_resize_values.zig").Edit,
     set_paragraph_format: @import("paragraph_format.zig").Edit,
+    set_paragraph_bullet: struct { section: usize, paragraph: usize, value: @import("../../model/formatting_patch.zig").Bullet },
+    edit_bullet_definition: @import("../../model/paragraph_bullet_definition.zig").Request,
     set_paragraph_alignment: struct { section: usize, paragraph: usize, alignment: u32 },
     set_paragraph_border_fill: struct { section: usize, paragraph: usize, patch: @import("../../model/border_fill_patch.zig").Patch, flags: @import("../../model/paragraph_flags.zig").Patch = .{} },
     set_paragraph_flags: struct { section: usize, paragraph: usize, flags: @import("../../model/paragraph_flags.zig").Patch },
@@ -1146,6 +1148,18 @@ pub const Session = opaque {
     }
     /// Readonly source-specific admission. No resource IDs or History are created.
     pub fn validateFormattingSource(self: *const Session, a: std.mem.Allocator, owner: @import("../../model/formatting_patch.zig").Owner, ranges: []const @import("../../model/formatting_patch.zig").Range, patch: @import("../../model/formatting_patch.zig").Patch, cached: ?*const FormattingSource) !void {
+        if (patch.paragraph.bullet) |value| {
+            try self.authorizeBullet(owner.section, owner.paragraph);
+            var local: ?FormattingSource = null;
+            defer if (local) |*v| v.deinit();
+            const source = if (cached) |v| v else blk: {
+                local = try self.formattingSource(a);
+                break :blk &local.?;
+            };
+            const id = try self.paragraphShapeId(owner.section, owner.paragraph);
+            _ = try @import("bullet_apply.zig").reference(a, source.bytes, source.version, id);
+            if (value.id) |identity| try @import("bullet_apply.zig").eligible(a, source.bytes, source.version, identity);
+        }
         if (patch.paragraph.spacing) |value| {
             const shapes = try self.paragraphShapes(a);
             defer a.free(shapes);
@@ -1275,6 +1289,15 @@ pub const Session = opaque {
     }
 
     /// Caller owns the immutable resource snapshot.
+    pub fn bulletDefinitions(self: *const Session, a: std.mem.Allocator) !@import("../../model/paragraph_bullet_definition.zig").Snapshot {
+        var current = try self.formattingSource(a);
+        defer current.deinit();
+        return @import("bullet_definitions.zig").read(a, current.bytes, current.version);
+    }
+    pub fn authorizeBullet(self: *const Session, section: usize, paragraph_index: usize) !void {
+        try self.materializeLiveText();
+        try @import("bullet_apply.zig").authorize(&self.stateConst().document, section, paragraph_index);
+    }
     pub fn paragraphShapes(self: *const Session, a: std.mem.Allocator) ![]@import("paragraph_display_shapes.zig").Shape {
         try self.materializeLiveText();
         const state = self.stateConst();
@@ -1592,6 +1615,18 @@ pub const Session = opaque {
                 defer if (prepared_info.owned) a.free(decoded);
                 try @import("paragraph_alignment_apply.zig").applyWithMargins(a, &state.document, decoded, state.source.header.version(), state.para_count, edit.section, edit.paragraph, null, edit.margins, max_stream);
             },
+            .set_paragraph_bullet => |value| {
+                const state = self.getState();
+                const prepared = try self.originalInfo();
+                defer if (prepared.owned) state.allocator.free(prepared.bytes);
+                try @import("bullet_apply.zig").applyReference(state.allocator, &state.document, prepared.bytes, state.source.header.version(), state.para_count, state.char_count, value.section, value.paragraph, value.value, max_stream);
+            },
+            .edit_bullet_definition => |request| {
+                const state = self.getState();
+                const prepared = try self.originalInfo();
+                defer if (prepared.owned) state.allocator.free(prepared.bytes);
+                try @import("bullet_apply.zig").definition(state.allocator, &state.document, prepared.bytes, state.source.header.version(), state.para_count, state.char_count, request, max_stream);
+            },
             .set_paragraph_alignment => |edit| {
                 if (edit.alignment > 5) return error.InvalidParagraphAlignment;
                 if (edit.paragraph >= try self.paragraphCount(edit.section)) return error.InvalidParagraph;
@@ -1792,7 +1827,7 @@ pub const Session = opaque {
     pub fn save(self: *const Session, a: std.mem.Allocator, options: SaveOptions) !Saved {
         try self.materializeLiveText();
         const state = self.stateConst();
-        const resource_changed = state.cell_backgrounds.entries.len != 0 or state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
+        const resource_changed = state.document.bullet_resources.len != 0 or state.cell_backgrounds.entries.len != 0 or state.document.paragraph_resources.len != 0 or state.document.character_resources.len != 0 or state.document.font_resources.entries.items.len != 0;
         var changed = resource_changed;
         for (state.document.sections, 0..) |section, index| {
             changed = changed or sectionChanged(state, index, section);

@@ -208,8 +208,10 @@ pub fn capture(a: std.mem.Allocator, owner: *const anyopaque, source: *const mod
     errdefer a.free(resources);
     const characters = try a.dupe(model.CharacterResourceIntent, source.character_resources);
     errdefer a.free(characters);
+    const bullets = try a.dupe(@import("../../model/paragraph_bullet_definition.zig").ResourceIntent, source.bullet_resources);
+    errdefer a.free(bullets);
     const fonts = try source.font_resources.clone(a);
-    state.* = .{ .allocator = a, .owner = owner, .document = .{ .format = source.format, .coverage = source.coverage, .sections = sections, .paragraph_resources = resources, .character_resources = characters, .font_resources = fonts }, .max_bytes = max_bytes };
+    state.* = .{ .allocator = a, .owner = owner, .document = .{ .format = source.format, .coverage = source.coverage, .sections = sections, .bullet_resources = bullets, .paragraph_resources = resources, .character_resources = characters, .font_resources = fonts }, .max_bytes = max_bytes };
     return @ptrCast(state);
 }
 
@@ -299,6 +301,7 @@ pub fn size(document: *const model.Document, limit: usize) !usize {
     var total: usize = 0;
     try add(&total, 1, @sizeOf(State), limit);
     try add(&total, document.sections.len, @sizeOf(model.Section), limit);
+    try add(&total, document.bullet_resources.len, @sizeOf(@import("../../model/paragraph_bullet_definition.zig").ResourceIntent), limit);
     try add(&total, document.paragraph_resources.len, @sizeOf(model.ParagraphResourceIntent), limit);
     try add(&total, document.character_resources.len, @sizeOf(model.CharacterResourceIntent), limit);
     try add(&total, document.font_resources.entries.capacity, @sizeOf(@import("../../model/font_face_value.zig").Value), limit);

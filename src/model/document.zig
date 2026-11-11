@@ -119,16 +119,18 @@ pub const ParagraphSpacing = struct { kind: u32, value: i32 };
 pub const CharacterUnderlineKind = enum(u2) { none, bottom, center, top };
 pub const CharacterPropertyPatch = struct { border_fill: ?@import("border_fill_patch.zig").Patch = null, size: ?i32 = null, bold: ?bool = null, italic: ?bool = null, emboss: ?bool = null, engrave: ?bool = null, superscript: ?bool = null, subscript: ?bool = null, outline_kind: ?@import("character_outline_kind.zig").Kind = null, strike_enabled: ?bool = null, strike_color: ?u32 = null, underline_kind: ?CharacterUnderlineKind = null, underline_color: ?u32 = null, text_color: ?u32 = null, shade: ?@import("shade_color.zig").Intent = null, font_ids: ?@import("character_fonts.zig").Values = null, shadow: ?@import("character_shadow.zig").Patch = null, ratio: ?@import("character_metric_patch.zig").Values = null, char_spacing: ?@import("character_metric_patch.zig").Values = null, relative_size: ?@import("character_metric_patch.zig").Values = null, offset: ?@import("character_metric_patch.zig").Values = null, underline_style: ?@import("character_line_style.zig").Kind = null, strike_style: ?@import("character_line_style.zig").Kind = null };
 pub const CharacterResourceIntent = struct { source_id: u32, properties: CharacterPropertyPatch };
-pub const ParagraphResourceIntent = struct { border_fill: @import("border_fill_patch.zig").Patch = .{}, source_id: u16, alignment: u3, flags: @import("paragraph_flags.zig").Patch = .{}, margins: ParagraphMarginPatch = .{}, spacing: ?ParagraphSpacing = null };
+pub const ParagraphResourceIntent = struct { bullet: ?@import("formatting_patch.zig").Bullet = null, border_fill: @import("border_fill_patch.zig").Patch = .{}, source_id: u16, alignment: u3, flags: @import("paragraph_flags.zig").Patch = .{}, margins: ParagraphMarginPatch = .{}, spacing: ?ParagraphSpacing = null };
 pub const Document = struct {
     format: Format,
     coverage: Coverage = .paragraph_text_and_style_references,
     sections: []Section,
+    bullet_resources: []@import("paragraph_bullet_definition.zig").ResourceIntent = &.{},
     paragraph_resources: []ParagraphResourceIntent = &.{},
     character_resources: []CharacterResourceIntent = &.{},
     font_resources: @import("font_resource_values.zig").Values = .{},
 
     pub fn deinit(self: *Document, a: std.mem.Allocator) void {
+        a.free(self.bullet_resources);
         a.free(self.paragraph_resources);
         a.free(self.character_resources);
         self.font_resources.deinit(a);

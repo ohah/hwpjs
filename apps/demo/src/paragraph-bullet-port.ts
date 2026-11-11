@@ -33,7 +33,6 @@ export function createParagraphBulletPort(
     guard();
     const target = api.target(state);
     if (!target) throw Error('MissingSelection');
-    if (target.format !== 'hwpx') throw Error('Hwp5BulletWriterUnavailable');
     const capabilities = await api.capabilities({ token: state.token });
     guard();
     if (!capabilities.atomic || !capabilities.fields['paragraph.bullet']?.readable)

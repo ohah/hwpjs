@@ -69,7 +69,7 @@ async function harness(t, { native = module, editable = true, format = 'hwpx' } 
   });
   return { editor, api };
 }
-const bytes = async (editor) => (await editor.save()).bytes;
+const bytes = async (editor) => (await editor.save({ allowStaleLayout: true })).bytes;
 const plain = (v) => JSON.parse(JSON.stringify(v));
 async function oracle(name, before, after, mode, expected, apply) {
   const dir = process.env.HWPJS_TEST_EVIDENCE;
@@ -149,7 +149,7 @@ test('actual Core query and typed create/update from playground, one undo/redo, 
   assert.deepEqual(await bytes(editor), updated);
 });
 
-test('playground rejects missing explicit coordinates/version, invalid edit, readonly, unsupported owner and HWP5', async (t) => {
+test('playground rejects invalid and readonly requests while current HWP5 inventory and definition writes work', async (t) => {
   const { editor, api } = await harness(t);
   const request = args(editor);
   for (const invalid of [
@@ -179,11 +179,36 @@ test('playground rejects missing explicit coordinates/version, invalid edit, rea
   assert.equal(owner.ok, false, JSON.stringify(owner));
   assert.deepEqual(await bytes(editor), input);
   const hwp5 = await harness(t, { format: 'hwp5' });
-  const unsupported = await hwp5.api.execute('listParagraphBulletDefinitions');
-  assert.equal(unsupported.ok, false);
-  assert.equal(unsupported.error, 'Hwp5BulletDefinitionsUnavailable');
-  const deniedHwp5 = await hwp5.api.execute('editParagraphBulletDefinition', args(hwp5.editor));
-  assert.equal(deniedHwp5.ok, false);
+  const beforeHwp5 = await bytes(hwp5.editor);
+  const listHwp5 = await hwp5.api.execute('listParagraphBulletDefinitions');
+  assert.equal(listHwp5.ok, true);
+  assert.equal(listHwp5.result.coverage, 'complete');
+  assert.equal(listHwp5.result.definitionWriter, 'character-definitions-v1');
+  assert.deepEqual(await bytes(hwp5.editor), beforeHwp5);
+  const createdHwp5 = await hwp5.api.execute(
+    'editParagraphBulletDefinition',
+    args(hwp5.editor, { mode: 'create', definition, apply: false }),
+  );
+  assert.equal(createdHwp5.ok, true, JSON.stringify(createdHwp5));
+  const changedHwp5 = await bytes(hwp5.editor);
+  assert.notDeepEqual(changedHwp5, beforeHwp5);
+  assert.equal((await hwp5.api.execute('undo')).ok, true);
+  assert.deepEqual(await bytes(hwp5.editor), beforeHwp5);
+  assert.equal((await hwp5.api.execute('redo')).ok, true);
+  assert.deepEqual(await bytes(hwp5.editor), changedHwp5);
+  const oldH5 = await harness(t, {
+    format: 'hwp5',
+    native: await WebAssembly.compile(await readFile(process.env.HWPJS_TEST_OLD_WASM)),
+  });
+  const oldList = await oldH5.api.execute('listParagraphBulletDefinitions');
+  assert.equal(oldList.ok, false);
+  assert.equal(oldList.error, 'ParagraphBulletDefinitionsAbiUnavailable');
+  const oldBytes = await bytes(oldH5.editor);
+  assert.equal(
+    (await oldH5.api.execute('editParagraphBulletDefinition', args(oldH5.editor))).ok,
+    false,
+  );
+  assert.deepEqual(await bytes(oldH5.editor), oldBytes);
 });
 
 test('old inventory remains complete; writer missing and disposed/reloaded document requests cannot edit', async (t) => {

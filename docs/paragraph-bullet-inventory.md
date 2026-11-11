@@ -6,13 +6,13 @@
 
 available 결과는 schemaVersion1, scope `current-header`, coverage `complete`, source 순서의 declarations입니다. ordinal·nullable id/marker·canApply·nullable reason을 반환합니다. 미참조·불가·중복·ID 없는 선언도 포함하며 InvalidBulletId, DuplicateBulletId, UnsupportedBulletDeclaration을 구분합니다. 4096개 초과는 부분 목록 없이 LimitExceeded로 거부합니다. Native 순회·ID 계수는 선형이며 Map으로 중복을 확인합니다.
 
-canApply는 정의의 적용 가능성이며 현재 문단에 대한 쓰기 권한과는 다릅니다. Core의 문서 token·상태·수명 검사를 통과한 결과만 소유 DTO로 반환하며 조회 자체로 문서·선택·이력을 바꾸지 않습니다. 실제 선언이 없는 available 빈 배열과 optional ABI가 없는 `ParagraphBulletDefinitionsAbiUnavailable`, HWP5의 `Hwp5BulletDefinitionsUnavailable`을 구분합니다.
+canApply는 정의의 적용 가능성이며 현재 문단에 대한 쓰기 권한과는 다릅니다. Core의 문서 token·상태·수명 검사를 통과한 결과만 소유 DTO로 반환하며 조회 자체로 문서·선택·이력을 바꾸지 않습니다. 실제 선언이 없는 available 빈 배열과 optional ABI가 없는 `ParagraphBulletDefinitionsAbiUnavailable`을 구분합니다.
 
 ## 편집 UI
 
 서식 메뉴 ‘글머리표 적용/해제’와 문단 모양 창에서 같은 도구를 엽니다. 현재 헤더 전체 목록을 표시하고 지원하지 않는 선언은 비활성 옵션과 사유로 남깁니다. PUA 문자는 Unicode 값을 표시합니다. 적용/해제는 기존 `APPLY_FORMATTING_PATCH_COMMAND`의 paragraph.bullet writer를 사용하며 capture·selectionVersion·모달·stale·IME·Native 이력 규칙을 재사용합니다. API 조회가 불가능한 엔진에서 사용 ID를 추측해 목록을 합성하지 않습니다.
 
-현재 HWPX 원본 일반 문단에 지원되는 기존 문자 정의를 적용하거나 해제하는 범위입니다. 새 정의 생성·수정, 번호 이어가기/재시작·다수 수준·HWP5 목록 writer·모든 glyph/폰트 조판은 별도 미완료 목표입니다. [글머리표 편집](paragraph-bullet-editing.md)의 저장·리소스 소유권 계약을 따릅니다.
+HWPX와 HWP5의 지원되는 일반 본문 문단에서 기존 문자 정의를 적용·해제합니다. 새 정의 생성·수정은 [HWPX 정의 편집](paragraph-bullet-definition-editing.md)과 [HWP5 글머리표](hwp5-paragraph-bullets.md)를 따릅니다. 번호 이어가기/재시작·다수 수준·모든 glyph/폰트 조판은 별도 미완료 목표입니다. [글머리표 편집](paragraph-bullet-editing.md)의 저장·리소스 소유권 계약을 따릅니다.
 
 ## 검증
 

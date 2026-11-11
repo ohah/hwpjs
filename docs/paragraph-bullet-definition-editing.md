@@ -1,5 +1,7 @@
 # HWPX 문자 글머리표 정의 생성·수정
 
+HWP5의 같은 공개 명령은 [HWP5 글머리표 계약](hwp5-paragraph-bullets.md)을 따릅니다. 이 문서의 XML/parked-document 규칙은 HWPX 소유입니다.
+
 `EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND`는 기존 전체 헤더 조회와 글머리표 적용 도구를 확장합니다. create/update와 명시적인 definition, apply를 받아 현재 문단 적용까지 단일 Native 이력으로 묶을 수 있습니다. 본문 참조를 추측하거나 JS ZIP/XML writer를 추가하지 않습니다.
 
 ## 정의와 공개 계약
@@ -20,13 +22,13 @@ Native current Session의 기존 paragraph/character/font intent를 먼저 저�
 
 기존 글머리표 대화상자에 문자·정렬·간격·너비·내어쓰기·기존 글자 모양을 추가합니다. 생성·수정 action은 footer에서 실행하고 기존 정의 수정의 전체 문서 영향을 안내합니다. 현재 Surface 입력 owner·modal·stale·IME·FIFO를 재사용합니다. 정의 없는 문서에서도 새 정의 생성·적용을 제공합니다.
 
-HWP5 조회/정의 writer, 그림/체크 글머리표, 새 font/char shape 생성, 번호 이어가기·재시작, 임의 중첩 owner는 후속 목표입니다. 이 기능의 문자 정의 범위를 전체 기안기 완료로 계산하지 않습니다.
+그림/체크 글머리표, 새 font/char shape 생성, 번호 이어가기·재시작, 임의 중첩 owner는 후속 목표입니다. 이 기능의 문자 정의 범위를 전체 기안기 완료로 계산하지 않습니다.
 
 ## API 플레이그라운드와 파일 도구 연결
 
 API 플레이그라운드는 Core의 전체 헤더 조회와 typed 정의 명령을 그대로 호출합니다. 명시 화면 좌표에서 현재 target을 발급하며 사용자가 제공한 selectionVersion을 유지해 오래된 요청을 거부합니다. query의 definitionWriter는 쓰기 ABI의 관측이며 선택 owner·읽기 전용 권한은 실제 명령에서 다시 검사합니다. 기존 누름틀·속성·Canvas 조회 callback을 유지합니다.
 
-CLI apply와 MCP apply_document_changes는 공통 paragraph-bullet-definition 연산을 사용합니다. 주소는 기존 Native 원본 문단 좌표이며 화면 문단 번호와 다릅니다. 전체 batch 사전 검사에서 HWP5와 구형 writer를 거절하고, 이 연산이 있는 HWPX 세션에만 history V2를 활성화합니다. 새 writer의 문서 park edge에 필요한 준비이며 기존 연산만 있는 세션의 이력 정책은 바꾸지 않습니다. 독립 세션의 전체 실행·저장·종료 성공 뒤 기존 새 파일 게시 호스트를 재사용합니다. 실패 시 transient 세션을 닫고 결과를 게시하지 않는 파일 transaction이며 열린 UI 세션의 batch rollback을 약속하지 않습니다.
+CLI apply와 MCP apply_document_changes는 공통 paragraph-bullet-definition 연산을 양 형식에 사용합니다. HWP5 리소스와 수치 범위는 [HWP5 계약](hwp5-paragraph-bullets.md)이 소유합니다. 주소는 기존 Native 원본 문단 좌표이며 화면 문단 번호와 다릅니다. 전체 batch의 writer capability를 검사해 구형 ABI를 거절하고, 지원하는 정의 연산이 있는 세션에 history V2를 활성화합니다. HWPX writer의 문서 park edge 등 형식별 Native 이력 계약에 필요한 준비이며 기존 연산만 있는 세션의 이력 정책은 바꾸지 않습니다. 독립 세션의 전체 실행·저장·종료 성공 뒤 기존 새 파일 게시 호스트를 재사용합니다. 실패 시 transient 세션을 닫고 결과를 게시하지 않는 파일 transaction이며 열린 UI 세션의 batch rollback을 약속하지 않습니다.
 
 공개 사용 예제의 소유자는 Rspress의 api/editor.md·api/playground.mdx·guide/cli.md·guide/mcp.md입니다. 설명은 현재 GitHub 구현 기준이며 npm 게시 버전을 뜻하지 않습니다.
 
@@ -40,4 +42,4 @@ Native 집중9개 entry에는 source writer의 전체 할당 실패 sweep·opaqu
 
 최종 결합본은 SDK/Core·기존 표·필드 교차78건, inventory 호환9건, 실제 HWP5 Native/Worker 재사용40건과 필드 rebase434 할당 실패/latebatch4 entry를 통과했습니다. CLI strict는 신규 SDK 선언으로 드러난 기존 테두리 값 목록의 Set 제네릭 불일치를 정정한 뒤 통과했습니다. 런타임 허용 값과 공개 BorderLineStyle union은 변경하지 않았습니다.
 
-최종 공개 후보의 Vanilla·React·Svelte3경로는 실제 파일 열기, 빈 목록에서 모양 입력, Escape 원본 보존, 정의 생성·적용, 한 번의 undo로 원본 복원과 redo, 정의 수정과 undo/redo, 저장본 GUI 재열기를 통과했습니다. 일반/-O 독립 XML·기타 ZIP payload 대조와 틀린 marker 반례를 각 생성/수정 저장본에 실행했습니다. 같은 manifest·Worker·WASM으로 검사했고 소유 브라우저·서버를 모두 종료했습니다. 이3경로를 이전 sidecar14시나리오와 중복 합산하지 않습니다. 정렬·단위의 raw enum 표시 등 공식 UI와의 표현 차이는 후속 범위로 남습니다.
+최종 공개 후보의 Vanilla·React·Svelte3경로는 실제 파일 열기, 빈 목록에서 모양 입력, Escape 원본 보존, 정의 생성·적용, 한 번의 undo로 원본 복원과 redo, 정의 수정과 undo/redo, 저장본 GUI 재열기를 통과했습니다. 일반/-O 독립 XML·기타 ZIP payload 대조와 틀린 marker 반례를 각 생성/수정 저장본에 실행했습니다. 같은 manifest·Worker·WASM으로 검사했고 소유 브라우저·서버를 모두 종료했습니다. 이3경로를 이전 sidecar14시나리오와 중복 합산하지 않습니다. 정렬·단위는 한국어 설명으로 표시하며 저장 enum과 수치는 유지합니다. 모든 공식 UI의 표현·조판 동치는 후속 범위로 남습니다.

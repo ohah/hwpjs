@@ -7,32 +7,12 @@ const fields = @import("table_xml_fields.zig");
 const writer = @import("xml_source_writer.zig");
 const child = @import("paragraph_display_children.zig").child;
 const Placement = @import("paragraph_marker_placement.zig").Placement;
-pub const Definition = struct {
-    marker: u32,
-    alignment: @FieldType(Placement, "alignment"),
-    useInstanceWidth: bool,
-    autoIndent: bool,
-    widthAdjust: i32,
-    textOffsetType: @FieldType(Placement, "offset_type"),
-    textOffset: i32,
-    charShapeId: u32,
-};
-pub const Request = struct {
-    mode: enum { create, update },
-    id: ?u32 = null,
-    definition: Definition,
-    apply: bool = false,
-    section: usize = 0,
-    paragraph: usize = 0,
-};
+pub const Definition = @import("../model/paragraph_bullet_definition.zig").Definition;
+pub const Request = @import("../model/paragraph_bullet_definition.zig").Request;
 pub fn definition(marker: u32, p: Placement) Definition {
-    return .{ .marker = marker, .alignment = p.alignment, .useInstanceWidth = p.use_instance_width, .autoIndent = p.auto_indent, .widthAdjust = p.width_adjust, .textOffsetType = p.offset_type, .textOffset = p.text_offset, .charShapeId = p.char_shape_id };
+    return .{ .marker = marker, .alignment = @fromBackingInt(@intCast(@backingInt(p.alignment))), .useInstanceWidth = p.use_instance_width, .autoIndent = p.auto_indent, .widthAdjust = p.width_adjust, .textOffsetType = @fromBackingInt(@intCast(@backingInt(p.offset_type))), .textOffset = p.text_offset, .charShapeId = p.char_shape_id };
 }
-pub fn validate(d: Definition) !void {
-    if (d.marker <= 0x20 or d.marker > 0x10ffff or (d.marker >= 0x7f and d.marker <= 0x9f) or (d.marker >= 0xd800 and d.marker <= 0xdfff) or d.marker == 0xfffe or d.marker == 0xffff) return error.InvalidBulletMarker;
-    // Explicit writer policy, kept inside the bounded renderer's useful range.
-    if (d.widthAdjust < -1000000 or d.widthAdjust > 1000000 or d.textOffset < -1000000 or d.textOffset > 1000000) return error.InvalidBulletGeometry;
-}
+pub const validate = @import("../model/paragraph_bullet_definition.zig").validate;
 pub const Header = struct { bytes: []u8, id: u32, changed: bool };
 pub fn write(a: std.mem.Allocator, tree: *const Tree, request: Request, limit: usize) !Header {
     try validate(request.definition);

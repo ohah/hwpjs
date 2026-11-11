@@ -1613,3 +1613,25 @@ fn applyRichCharacter(input: @import("text_transaction_commands.zig").Input, req
     }
     return changed;
 }
+
+/// Optional current DocInfo full inventory; caller owns decoded JS DTO.
+export fn hwp5_edit_bullet_definitions() u32 {
+    hwp5_edit_output_free();
+    const s = session() catch |err| return fail(err);
+    const result = s.bulletDefinitions(a) catch |err| return fail(err);
+    defer a.free(result.declarations);
+    output = std.json.Stringify.valueAlloc(a, result, .{}) catch |err| return fail(err);
+    return 1;
+}
+export fn hwp5_edit_bullet_definition_write(ptr: [*]const u8, len: usize) u32 {
+    hwp5_edit_output_free();
+    _ = session() catch |err| return fail(err);
+    const h = if (history) |*v| v else return fail(error.HistoryNotEnabled);
+    if (h.stats().protocolVersion != 2) return fail(error.HistoryProtocol2Required);
+    if (len > 4096) return fail(error.LimitExceeded);
+    const parsed = std.json.parseFromSlice(@import("../model/paragraph_bullet_definition.zig").Request, a, ptr[0..len], .{ .allocate = .alloc_always, .ignore_unknown_fields = false }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const before = h.revision();
+    apply(.{ .edit_bullet_definition = parsed.value }) catch |err| return fail(err);
+    return if (h.revision() == before) 2 else 1;
+}

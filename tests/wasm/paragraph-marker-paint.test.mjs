@@ -141,7 +141,9 @@ test('uses verified number strings and a source-derived fixed-width reference', 
   assert.equal(scene.rows[0].numberPrefix.offset, 10);
   assert.equal(scene.rows[0].boundaries[0].x, 45);
   paragraph.numberingLabel.markerPlacement.widthAdjust = 0;
-  assert.equal(layout(paragraph).rows[0].numberPrefix, undefined);
+  const narrow = layout(paragraph).rows[0];
+  assert.equal(narrow.numberPrefix.offset, -10);
+  assert.equal(narrow.boundaries[0].x, 25);
 });
 
 test('excludes missing provenance, PUA, custom font, duplicate retained numbers and oversized slots', () => {
@@ -297,4 +299,74 @@ test('deferred columns reuse marker measurements per paragraph and width, and re
     20,
   );
   assert.equal(markerMeasurements, 3);
+});
+
+test('signed marker width correction keeps the stored glyph anchor and body gap in both formats', () => {
+  for (const format of ['hwpx', 'hwp5'])
+    for (const [alignment, factor] of [
+      ['LEFT', 0],
+      ['CENTER', 0.5],
+      ['RIGHT', 1],
+    ]) {
+      const raw =
+        format === 'hwp5'
+          ? {
+              attributes: ['LEFT', 'CENTER', 'RIGHT'].indexOf(alignment) | 8 | 16,
+              width_adjustment: -50,
+              text_distance: 750,
+              char_shape_id: 0xffffffff,
+            }
+          : placement(alignment, {
+              use_instance_width: false,
+              width_adjust: -50,
+              offset_type: 'HWPUNIT',
+              text_offset: 750,
+            });
+      const shape =
+        format === 'hwp5'
+          ? {
+              spacingFormat: 'hwp5',
+              alignment: 0,
+              headingKind: 3,
+              headingId: 1,
+              headingMarker: 0x2605,
+              headingPlacement: raw,
+            }
+          : {
+              spacingFormat: 'hwpx',
+              alignment: 1,
+              heading: { kind: 'bullet', marker: 0x2605, placement: raw },
+            };
+      const paragraph = p({ text: 'x', paragraphShape: shape });
+      const plan = paragraphMarkerPlan(paragraph, 180, measure);
+      assert(plan, format + ' ' + alignment);
+      assert.equal(plan.prefix.text, '★');
+      assert(Math.abs(plan.prefix.offset - (-2 / 3) * factor) < 1e-9);
+      assert(Math.abs(plan.prefix.width - (20 - 2 / 3)) < 1e-9);
+      assert(Math.abs(plan.following.x - (20 - 2 / 3)) < 1e-9);
+      const calls = [];
+      const ctx = {
+        font: 'initial',
+        fillStyle: 'black',
+        save() {},
+        restore() {},
+        fillText(...args) {
+          calls.push(args);
+        },
+      };
+      paintNumberPrefix(
+        ctx,
+        { x: 0, y: 0, textTop: 0, numberPrefix: plan.prefix },
+        0,
+        paragraph,
+        () => '10px serif',
+        0,
+      );
+      assert.equal(calls[0][0], '★');
+      assert(Math.abs(calls[0][1] - plan.prefix.offset) < 1e-9);
+      if (format === 'hwpx') {
+        paragraph.paragraphShape.heading.placement.width_adjust = -750;
+        assert.equal(paragraphMarkerPlan(paragraph, 180, measure), null);
+      }
+    }
 });

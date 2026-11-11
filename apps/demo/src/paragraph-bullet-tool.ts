@@ -15,6 +15,11 @@ import {
   bulletCatalogScope,
   type BulletChoice,
 } from './paragraph-bullet-port.ts';
+import {
+  bulletAlignmentLabels,
+  bulletOffsetLabels,
+  bulletOffsetLabel,
+} from './paragraph-bullet-labels.ts';
 import './paragraph-bullet.css';
 
 export function bulletReason(reason: string): string {
@@ -130,7 +135,7 @@ export function createParagraphBulletTool(o: Options) {
       status.setAttribute('role', 'status');
       const support = doc.createElement('p');
       support.textContent =
-        '문자 글머리표 정의를 만듭니다. 기존 정의 수정은 이 ID를 사용하는 모든 문단에 반영됩니다. 그림·체크 글머리표·번호 이어가기·HWP5 쓰기는 준비 중입니다.';
+        '문자 글머리표 정의를 만듭니다. 기존 정의 수정은 이 ID를 사용하는 모든 문단에 반영됩니다. 그림·체크 글머리표·번호 이어가기는 준비 중입니다.';
       support.className = 'hwp-bullet-scope';
       const apply = doc.createElement('button'),
         remove = doc.createElement('button'),
@@ -159,8 +164,8 @@ export function createParagraphBulletTool(o: Options) {
       marker.value = '•';
       const alignment = add('글머리표 정렬', doc.createElement('select'), 'bullet-alignment');
       const unit = add('본문 간격 단위', doc.createElement('select'), 'bullet-offset-unit');
-      for (const v of ['LEFT', 'CENTER', 'RIGHT']) alignment.add(new Option(v, v));
-      for (const v of ['PERCENT', 'HWPUNIT']) unit.add(new Option(v, v));
+      for (const [value, text] of bulletAlignmentLabels) alignment.add(new Option(text, value));
+      for (const [value, text] of bulletOffsetLabels) unit.add(new Option(text, value));
       const number = (label: string, role: string, initial: string) => {
         const input = add(label, doc.createElement('input'), role);
         input.type = 'number';
@@ -169,7 +174,14 @@ export function createParagraphBulletTool(o: Options) {
         return input;
       };
       const offset = number('본문 간격', 'bullet-offset', '50');
-      const adjust = number('너비 보정 HWPUNIT', 'bullet-width', '0');
+      const adjust = number('너비 보정 (문서 단위)', 'bullet-width', '0');
+      const showOffsetUnit = () => {
+        const text = bulletOffsetLabel(unit.value);
+        offset.setAttribute('aria-label', text);
+        offset.parentElement!.firstChild!.textContent = text;
+      };
+      unit.addEventListener('change', showOffsetUnit);
+      showOffsetUnit();
       const shape = number('기존 글자 모양 ID', 'bullet-char-shape', '0');
       const inherit = add(
         '본문 글자 모양 상속',
@@ -228,6 +240,7 @@ export function createParagraphBulletTool(o: Options) {
         showShape();
         width.checked = d.useInstanceWidth;
         indent.checked = d.autoIndent;
+        showOffsetUnit();
       };
       layer.body.append(currentLabel, label, scope, form, status, support);
       layer.footer.append(create, update, apply, remove, cancel);
@@ -245,7 +258,7 @@ export function createParagraphBulletTool(o: Options) {
         support.textContent =
           captured && captured.definitionWriter !== 'character-definitions-v1'
             ? '현재 엔진은 새 글머리표 정의 쓰기를 제공하지 않습니다. 새 Native 엔진 결합 후 사용할 수 있습니다.'
-            : '문자 글머리표 정의를 만듭니다. 기존 정의 수정은 이 ID를 사용하는 모든 문단에 반영됩니다. 그림·체크 글머리표·번호 이어가기·HWP5 쓰기는 준비 중입니다.';
+            : '문자 글머리표 정의를 만듭니다. 기존 정의 수정은 이 ID를 사용하는 모든 문단에 반영됩니다. 그림·체크 글머리표·번호 이어가기는 준비 중입니다.';
         create.disabled = !writer;
         update.disabled =
           !writer ||

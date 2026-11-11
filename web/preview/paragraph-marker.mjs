@@ -132,7 +132,7 @@ export function paragraphMarkerPlan(paragraph, width, measure) {
   const hang = placement.autoIndent ? reserve : 0;
   if (
     !Number.isFinite(slot) ||
-    slot + 1e-6 < ink ||
+    slot <= 0 ||
     !Number.isFinite(reserve) ||
     reserve > Math.min(maxReserve, first.width / 3) ||
     first.width - reserve < em ||
@@ -147,7 +147,9 @@ export function paragraphMarkerPlan(paragraph, width, measure) {
       first.width - reserve
   )
     return null;
-  const slack = Math.max(0, slot - ink);
+  // Stored width correction may make the slot narrower than the glyph.
+  // Preserve LEFT/CENTER/RIGHT anchor positions with a signed ink offset.
+  const slack = slot - ink;
   const offset =
     placement.alignment === 'RIGHT' ? slack : placement.alignment === 'CENTER' ? slack / 2 : 0;
   return {

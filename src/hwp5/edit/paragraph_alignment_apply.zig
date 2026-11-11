@@ -15,6 +15,9 @@ pub fn applyWithFlags(a: std.mem.Allocator, document: *model.Document, decoded: 
     return applyWithResources(a, document, decoded, version, original_count, section, index, alignment, patch, requested_spacing, requested_flags, .{}, limit);
 }
 pub fn applyWithResources(a: std.mem.Allocator, document: *model.Document, decoded: []const u8, version: @import("../version.zig").Version, original_count: usize, section: usize, index: usize, alignment: ?u32, patch: model.ParagraphMarginPatch, requested_spacing: ?model.ParagraphSpacing, requested_flags: @import("../../model/paragraph_flags.zig").Patch, requested_border: @import("../../model/border_fill_patch.zig").Patch, limit: usize) !void {
+    return applyWithBullet(a, document, decoded, version, original_count, section, index, alignment, patch, requested_spacing, requested_flags, requested_border, null, limit);
+}
+pub fn applyWithBullet(a: std.mem.Allocator, document: *model.Document, decoded: []const u8, version: @import("../version.zig").Version, original_count: usize, section: usize, index: usize, alignment: ?u32, patch: model.ParagraphMarginPatch, requested_spacing: ?model.ParagraphSpacing, requested_flags: @import("../../model/paragraph_flags.zig").Patch, requested_border: @import("../../model/border_fill_patch.zig").Patch, requested_bullet: ?@import("../../model/formatting_patch.zig").Bullet, limit: usize) !void {
     if (alignment) |value| if (value > 5) return error.InvalidParagraphAlignment;
     if (requested_spacing) |value| if (value.kind > 3) return error.InvalidParagraphSpacing;
     if (section >= document.sections.len) return error.InvalidSection;
@@ -40,7 +43,9 @@ pub fn applyWithResources(a: std.mem.Allocator, document: *model.Document, decod
     }
     unchanged = unchanged and @import("../../model/paragraph_flags.zig").matches(current_shape.flags, requested_flags);
     if (@import("../../model/border_fill_patch.zig").has(requested_border)) unchanged = unchanged and @import("../../model/border_fill_patch.zig").matches(try @import("border_fill_paragraph_current.zig").observe(current, version, selected.para_shape_id), requested_border);
+    if (requested_bullet) |v| unchanged = unchanged and std.meta.eql(try @import("paragraph_bullet_payload.zig").read(current, version, selected.para_shape_id), v);
     if (unchanged) return;
+    var bullet: ?@import("../../model/formatting_patch.zig").Bullet = null;
     var source_id: u32 = selected.para_shape_id;
     var border_fill: @import("../../model/border_fill_patch.zig").Patch = .{};
     var margins: model.ParagraphMarginPatch = .{};
@@ -53,6 +58,7 @@ pub fn applyWithResources(a: std.mem.Allocator, document: *model.Document, decod
         spacing = intent.spacing;
         flags = intent.flags;
         border_fill = intent.border_fill;
+        bullet = intent.bullet;
     }
     inline for (@import("../../reflection.zig").fields(model.ParagraphMarginPatch)) |field| if (@field(patch, field.name)) |value| {
         @field(margins, field.name) = value;
@@ -62,7 +68,8 @@ pub fn applyWithResources(a: std.mem.Allocator, document: *model.Document, decod
     var pending = try borrowed.clone(a);
     defer pending.deinit(a);
     border_fill = @import("../../model/border_fill_patch.zig").merge(border_fill, requested_border);
-    const id = try pending.addWithResources(a, original_count, source_id, effective_alignment, margins, spacing, flags, border_fill);
+    if (requested_bullet) |value| bullet = value;
+    const id = try pending.addWithBullet(a, original_count, source_id, effective_alignment, margins, spacing, flags, border_fill, bullet);
     const verified = try pending.write(a, decoded, version, original_count, limit);
     defer a.free(verified);
     const entries = try pending.entries.toOwnedSlice(a);

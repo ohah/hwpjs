@@ -168,7 +168,7 @@ export function getTableInsertionState(editor: HeadlessEditor) {
 
 아래는 현재 GitHub 구현 기준이며 npm 릴리스에 포함됐다는 뜻이 아닙니다. 공개 설치 이름은 `npm install @ohah/hwpjs`이며 해당 기능과 대응 WASM을 포함한 빌드가 필요합니다.
 
-HWPX의 `editor.listParagraphBulletDefinitions({ token? })`는 본문에서 사용하지 않는 선언도 포함한 현재 헤더 전체 목록을 반환합니다. `state: 'available'`와 `coverage: 'complete'`를 확인하세요. `definitionWriter: 'character-definitions-v1'`이면 새 정의 쓰기를 지원하며 각 선언의 nullable `definition`에서 편집 가능한 모양을 읽습니다.
+HWP5·HWPX의 `editor.listParagraphBulletDefinitions({ token? })`는 본문에서 사용하지 않는 선언도 포함한 현재 DocInfo/헤더 전체 목록을 반환합니다. `state: 'available'`와 `coverage: 'complete'`를 확인하세요. `definitionWriter: 'character-definitions-v1'`이면 새 정의 쓰기를 지원하며 각 선언의 nullable `definition`에서 편집 가능한 모양을 읽습니다.
 
 ```ts
 import { EDIT_PARAGRAPH_BULLET_DEFINITION_COMMAND, createParagraphSelection } from '@ohah/hwpjs';
@@ -198,4 +198,4 @@ if (result.status !== 'committed-with-snapshot') throw new Error(String(result.e
 
 생성과 문단 적용은 한 번의 실행 취소로 복원합니다. `mode: 'update'`와 기존 `id`는 그 정의를 사용하는 모든 문단에 영향을 줍니다. `apply: false`는 정의만 수정합니다. 전체 geometry 값은 필수이며 `charShapeId: 0xffffffff`는 본문 글자 모양 상속입니다. 문서 전체 저장·재열기 경계의 명시 명령이므로 키 입력마다 호출하지 마세요.
 
-현재 원본 일반 문단과 문자 정의를 지원합니다. HWP5 정의 쓰기·그림/체크 글머리표·번호 이어가기는 후속입니다. 구형 inventory WASM의 조회는 계속 가능하지만 새 writer는 비활성입니다. 이 설명은 GitHub의 최신 구현 기준이며 npm 설치본의 게시 시점과 구분합니다.
+HWP5·HWPX의 지원되는 일반 본문 문단과 문자 정의를 지원합니다. HWP5는 원본 및 생성 continuation 문단에 연결하며 WCHAR와 signed HWPUNIT16로 표현할 수 없는 값은 명시 거부합니다. 그림/체크 글머리표·번호 이어가기는 후속입니다. 구형 inventory WASM의 조회는 계속 가능하지만 새 writer는 비활성입니다. 이 설명은 GitHub의 최신 구현 기준이며 npm 설치본의 게시 시점과 구분합니다.

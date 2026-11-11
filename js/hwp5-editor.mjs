@@ -5,6 +5,8 @@ import { encodeCellBorderPatches } from './cell-border-patch-command.mjs';
 import { validateCellStyles } from './cell-style-command.mjs';
 import { validateCellFills, encodeCellFills } from './cell-fill-command.mjs';
 import { createSourceTableGridApi } from './source-table-grid.mjs';
+import { checkedBulletDefinitionEdit } from './paragraph-bullet-definition-write.mjs';
+import { decodeParagraphBulletDefinitions } from './paragraph-bullet-definitions.mjs';
 import { createAtomicFormattingApi } from './atomic-formatting-api.mjs';
 import { createIndependentTextApi } from './independent-text-api.mjs';
 import { validateAbi } from './abi.mjs';
@@ -372,6 +374,29 @@ export async function createExperimentalHwp5Editor(
       if (typeof wasm.hwp5_edit_set_paragraph_spacing !== 'function')
         throw new Error('Hwp5ParagraphSpacingAbiUnavailable');
       success(wasm.hwp5_edit_set_paragraph_spacing(...args));
+    },
+    paragraphBulletDefinitions() {
+      check();
+      if (typeof wasm.hwp5_edit_bullet_definitions !== 'function')
+        return { state: 'unavailable', reason: 'ParagraphBulletDefinitionsAbiUnavailable' };
+      return decodeParagraphBulletDefinitions(
+        output(() => wasm.hwp5_edit_bullet_definitions()).bytes,
+      );
+    },
+    writeParagraphBulletDefinition(edit, section = 0, paragraph = 0) {
+      check();
+      checkedBulletDefinitionEdit(edit);
+      u32(section, 'section');
+      u32(paragraph, 'paragraph');
+      if (typeof wasm.hwp5_edit_bullet_definition_write !== 'function')
+        throw Error('BulletDefinitionWriteAbiUnavailable');
+      const bytes = new TextEncoder().encode(JSON.stringify({ ...edit, section, paragraph }));
+      return memory.withBytes(bytes, (ptr, len) => {
+        const status = wasm.hwp5_edit_bullet_definition_write(ptr, len);
+        if (status === 1) return true;
+        if (status === 2) return false;
+        throw memory.error();
+      });
     },
     paragraphShapes() {
       check();

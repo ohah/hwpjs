@@ -1415,7 +1415,7 @@ export function createEditor(options: CreateEditorOptions) {
           throw Error('InvalidBulletDefinitionRequest');
         checkedBulletDefinitionEdit(payload.edit);
         const kind = 'edit-paragraph-bullet-definition';
-        if (!hasRuntimeAdmission(active, kind) || payload.target.format !== 'hwpx')
+        if (!hasRuntimeAdmission(active, kind) || !['hwpx', 'hwp5'].includes(payload.target.format))
           throw Error('BulletDefinitionWriteUnavailable');
         const guard = () => {
           requireReady(payload.target, true);

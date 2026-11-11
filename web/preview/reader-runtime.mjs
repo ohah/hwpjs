@@ -1150,13 +1150,7 @@ export function createReaderRuntime({
     try {
       if (message.kind === 'paragraph-bullet-definitions') {
         if (!editor) throw Error('EditorNotOpen');
-        reply({
-          kind: message.kind,
-          bulletDefinitions:
-            format === 'hwpx'
-              ? editor.paragraphBulletDefinitions()
-              : { state: 'unavailable', reason: 'Hwp5BulletDefinitionsUnavailable' },
-        });
+        reply({ kind: message.kind, bulletDefinitions: editor.paragraphBulletDefinitions() });
         return;
       }
       if (message.kind === 'named-fields') {
@@ -1193,24 +1187,37 @@ export function createReaderRuntime({
         return;
       }
       if (message.kind === 'edit-paragraph-bullet-definition') {
-        if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
+        if (
+          !editor ||
+          !['hwpx', 'hwp5'].includes(format) ||
+          (format === 'hwpx' && hwpxCreatedTablesPending)
+        )
           throw Error('BulletDefinitionWriteUnavailable');
         if (!historyEnabled) throw Error('HistoryNotEnabled');
         if (historyPoisoned) throw Error('HistoryMutationUncertain');
         applied = editor.writeParagraphBulletDefinition(
           message.edit,
           message.section,
-          message.paragraph + 1,
+          message.paragraph + (format === 'hwpx' ? 1 : 0),
         );
         if (!applied) {
           reply({ kind: message.kind, changed: false });
           return;
         }
         documentWindow = null;
-        reader = await createHwpxReader(module);
-        preview = reader.readTextEvents(editor.saveForDisplay());
+        if (format === 'hwpx') {
+          reader = await createHwpxReader(module);
+          preview = reader.readTextEvents(editor.saveForDisplay());
+        } else {
+          hwp5PreviewDirty = true;
+          await refreshHwp5PreviewFallback();
+        }
         displayResources.invalidate();
-        reply({ kind: message.kind, changed: true, content: hwpxDisplay() });
+        reply({
+          kind: message.kind,
+          changed: true,
+          content: format === 'hwpx' ? hwpxDisplay() : hwp5Display(),
+        });
         return;
       }
       if (message.kind === 'create-named-field') {

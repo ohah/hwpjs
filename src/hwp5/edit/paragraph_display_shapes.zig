@@ -60,7 +60,7 @@ pub fn read(a: std.mem.Allocator, bytes: []const u8, version: @import("../versio
     return output;
 }
 
-fn characterBullet(bullet: info.Bullet) u16 {
+pub fn characterBullet(bullet: info.Bullet) u16 {
     const ch = bullet.character;
     if (ch <= 0x20 or (ch >= 0x7f and ch <= 0x9f) or
         (ch >= 0xd800 and ch <= 0xdfff) or bullet.extra.len != 0 or
