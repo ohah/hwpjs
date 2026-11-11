@@ -89,7 +89,9 @@ def h5(before,after,request,cells):
         else:
             headers=[i for i in range(start+1,stop)if rs[i][0]==66];first=headers[0];last=headers[-1];header=bytearray(payload(raw,rs[first]));struct.pack_into('<I',header,0,(o.u32(payload(raw,rs[last]),0)&0x80000000)|1);struct.pack_into('<3H',header,12,1,0,0)
             ns,ne=actual[plan['at']];nh=[i for i in range(ns+1,ne)if new[i][0]==66];o.require(len(nh)==1,'blank paragraph count');newid=o.u32(payload(changed,new[nh[0]]),18);o.require(newid>0 and newid not in used and newid not in fresh,'fresh identity');fresh.add(newid);struct.pack_into('<I',header,18,newid);expected.append(frame(rs[first],header))
-            text=next(rs[i]for i in range(first+1,stop)if rs[i][0]==67);runs=next(rs[i]for i in range(first+1,stop)if rs[i][0]==68);expected.append(frame(text,b'\r\0'));expected.append(frame(runs,payload(raw,runs)[:8]))
+            # Only NEW one-unit empty paragraphs omit PARA_TEXT (implicit break).
+            # Surviving source paragraphs above remain byte-exact, including CR-only TEXT.
+            runs=next(rs[i]for i in range(first+1,stop)if rs[i][0]==68);expected.append(frame(runs,payload(raw,runs)[:8]))
     prefix=raw[:rs[ci][2]];suffix=raw[rs[end][2]:]if end<len(rs)else b'';o.require(prefix+b''.join(expected)+suffix==changed,'whole target records and surrounding bytes')
     for name,content in a.streams.items():
         if name!=part:o.require(content==b.streams[name],'other CFB stream '+name)
