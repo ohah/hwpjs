@@ -182,6 +182,21 @@ jobs:
           printf '%s  %s\n' '5ece4c0a551716239c37af0e1ff40db7b2a642e1baf75bb27782bcf237bd1621' "$HWPJS_TEST_OLD_WASM" | sha256sum --check
           bun test --timeout=30000 --no-install tests/hwp5/source-table-cell-split.test.mjs
 
+      - name: Test merged HWP5 cells and empty caret source formatting
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_NARROW_SPLIT_WASM: ${{ runner.temp }}/hwpjs-before-merged-cell-split.wasm
+          HWPJS_TEST_EVIDENCE: ${{ runner.temp }}/hwpjs-merged-empty-caret
+        run: |
+          previous_engine=9dc8b89433da1926b1db72fc7be45081b063f45e
+          if ! git cat-file -e "$previous_engine^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$previous_engine"
+          fi
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_TEST_NARROW_SPLIT_WASM"
+          printf '%s  %s\n' '8ab4d335f7fba4aa764ed3e1191c390f17ee80f053b9ada89748a490547d1980' "$HWPJS_TEST_NARROW_SPLIT_WASM" | sha256sum --check
+          bun test --timeout=30000 --no-install tests/hwp5/source-table-merged-cell-split.test.mjs tests/hwp5/empty-caret-formatting.test.mjs tests/empty-insertion-wire.test.mjs packages/core/tests/state/empty-caret-formatting.test.ts
+
       - name: Test bullet definition API, CLI and MCP against Native
         timeout-minutes: 3
         env:

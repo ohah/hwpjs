@@ -33,7 +33,8 @@ test('actual HWP5 cell-size capabilities retain plain-owner admission and reject
         assert.equal(probe({ [key]: value }), false);
     }
     assert.equal(state.content.sourceTableCellSplitAvailable, true);
-    assert.equal(state.content.sourceTableCellSplitProfile, 'single-unmerged-source-cell');
+    assert.equal(state.content.sourceTableCellSplitProfile, 'single-source-cell-with-spans');
+    assert.equal(probe({ sourceTableCellSplitProfile: 'single-source-cell-with-spans' }), true);
     assert.equal(probe({ sourceTableCellSplitProfile: 'single-unmerged-source-cell' }), true);
     for (const value of [undefined, null, false, '', 'static-source-cell-rectangle', {}, []])
       assert.equal(probe({ sourceTableCellSplitProfile: value }), false);
