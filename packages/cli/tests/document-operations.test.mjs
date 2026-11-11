@@ -145,7 +145,7 @@ test('요청 getter와 순환과 숨은 키 및 희소 배열은 실행 전에 �
 });
 
 test('MCP 필드 명세와 공통 검증은 같은 불변 필수 및 선택 키를 사용한다', () => {
-  assert.equal(Object.keys(DOCUMENT_OPERATION_SPECS).length, 16);
+  assert.equal(Object.keys(DOCUMENT_OPERATION_SPECS).length, 17);
   const valid = splice();
   for (const name of DOCUMENT_OPERATION_SPECS.splice.required) {
     const missing = { ...valid };

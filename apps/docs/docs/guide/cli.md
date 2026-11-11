@@ -297,7 +297,7 @@ bun run cli edit-table-grid ./input.hwpx --ref "$TABLE_REF" \
 
 HWP5와 HWPX 모두 `--allow-stale-layout`이 필수이며 결과는 `layoutRequiresReflow: true`, `previewStale: true`입니다. 선택 `--layout`은 `spec6` 또는 HWP5 전용 `observed8`이며 생략하면 서비스 기본값을 사용합니다. 기존 원본·출력을 덮어쓰지 않고 새 파일 게시 영수증에 출력 경로·SHA·원본 SHA를 보고합니다. 이 연결의 집중 검증은 주입 서비스를 이용한 CLI·공식 MCP 전송 검사이며 실제 Native 저장 검증은 별도입니다.
 
-## HWPX 문자 글머리표 정의 작업
+## 문자 글머리표 정의 작업
 
 이 연산은 **현재 GitHub 구현 기준**이며 npm 릴리스에 포함됐다는 뜻이 아닙니다. 공개 설치 이름은 `npm install @ohah/hwpjs`이며 아래 호출에는 이 기능과 대응 WASM을 포함한 빌드가 필요합니다. 별도 CLI 패키지는 설치하지 않습니다.
 
@@ -335,4 +335,42 @@ hwpjs apply ./document.hwpx --patch ./bullet-changes.json \
   --expect-sha256 ACTUAL_DOCUMENT_SHA256 --output ./document-with-bullet.hwpx
 ```
 
-동일 연산의 수정은 `edit.mode: "update"`와 실제 기존 `edit.id`를 지정하며 definition 전체를 보냅니다. `apply: false`는 정의만 바꾸고, 수정은 같은 ID를 사용하는 모든 문단에 영향을 줍니다. 선택적 `expectedText`는 기존 Native 원문 조건입니다. `charShapeId: 4294967295`는 본문 글자 모양 상속이며 새 글자 모양을 생성하지 않습니다. HWP5·구형 writer 없는 WASM은 거절합니다. 전체 작업 검증과 순차 Native 실행·저장·종료가 성공해야 새 출력이 게시됩니다. 후행 연산 실패 시 출력 파일을 만들지 않으며 원본·기존 출력의 덮어쓰기도 거절합니다.
+동일 연산의 수정은 `edit.mode: "update"`와 실제 기존 `edit.id`를 지정하며 definition 전체를 보냅니다. `apply: false`는 정의만 바꾸고, 수정은 같은 ID를 사용하는 모든 문단에 영향을 줍니다. 선택적 `expectedText`는 기존 Native 원문 조건입니다. `charShapeId: 4294967295`는 본문 글자 모양 상속이며 새 글자 모양을 생성하지 않습니다. HWP5도 같은 연산을 사용합니다. HWP5의 원본 Native 문단은0부터, HWPX는1부터이며 자동으로1을 더하거나 빼지 않습니다. HWP5의 BMP 문자와 signed HWPUNIT16 범위는 Native에서 검사합니다. 구형 writer 없는 WASM은 definitionWriter 게이트에서 거절합니다. 전체 작업 검증과 순차 Native 실행·저장·종료가 성공해야 새 출력이 게시됩니다. 후행 연산 실패 시 출력 파일을 만들지 않으며 원본·기존 출력의 덮어쓰기도 거절합니다.
+
+## 원본 셀 나누기
+
+다음은 **현재 GitHub 구현 기준**이며 npm 게시 버전의 지원을 뜻하지 않습니다. 설치 이름은 `npm install @ohah/hwpjs`이고, 실행에는 이 기능과 대응 WASM을 포함한 빌드가 필요합니다. 기존 단일 패키지의 `hwpjs apply`를 사용합니다.
+
+먼저 같은 원본에서 `hwpjs read ./document.hwpx --view structure`를 실행해 문서 SHA와 원하는 표의 `hwpjs-object:…/table/…` reference를 복사합니다. 아래 배열을 `split-cells.json`에 저장하고 reference를 실제 값으로 바꿉니다.
+
+```json
+[
+  {
+    "kind": "source-table-cell-split",
+    "coordinates": "current-transaction",
+    "reference": "TABLE_REFERENCE_FROM_STRUCTURE",
+    "expectedRows": 2,
+    "expectedColumns": 2,
+    "top": 0,
+    "left": 0,
+    "bottom": 1,
+    "right": 1,
+    "rows": 2,
+    "columns": 3,
+    "mode": "each",
+    "equalizeRows": true
+  }
+]
+```
+
+```sh
+hwpjs apply ./document.hwpx --patch ./split-cells.json \
+  --expect-sha256 ACTUAL_DOCUMENT_SHA256 --output ./document-split.hwpx \
+  --allow-stale-layout
+```
+
+`expectedRows`/`expectedColumns`는 현재 표 전체의 실제 격자입니다. `top`/`left`는0부터, `bottom`/`right`는 미포함 끝이므로 예제는 왼쪽 위 물리 셀 하나를2줄3칸으로 나눕니다. 두 축의 개수는 각각1~63이며1×1은 거절합니다. `mode: "each"`는 선택한 각 물리 셀을 나누고, `"merge-then-split"`은 물리 셀 둘 이상의 직사각형을 합친 뒤 나눕니다. 병합된 셀은 전체 span을 포함해야 합니다. Native node 번호나 binding을 직접 넣지 않습니다.
+
+HWPX는 위 경로를 지원하며 높이 유지의 일부 요청은 Native에서 거절할 수 있습니다. HWP5는 파일 확장자를 `.hwp`로 바꾸고 같은 연산을 사용하되 표 전체가 비병합·선택 물리 셀 하나·`mode: "each"`·`equalizeRows: true`인 현재 profile만 지원합니다. H497의 외곽 선언과 셀 크기 합이 다른 HWP5 입력은 `UnsupportedSourceTableGrid`로 계속 거절하며 연결 도구가 원본 크기를 보정하지 않습니다.
+
+reference는 첫 변경 전의 원본과 Native binding에 묶습니다. 같은 batch의 앞선 편집 후 이를 현재 숫자 주소로 다시 해석하지 않으며 `StaleSourceTableSplitReference`로 전체 파일 transaction을 거절합니다. 서로 다른 표에 대한 연속 나누기도 첫 변경 뒤에는 새 파일로 저장하고 구조 보기에서 새 SHA/reference를 받아 다시 요청하세요. 후행 오류에는 부분 출력 파일을 만들지 않으며 입력·기존 출력도 덮어쓰지 않습니다. `layoutRequiresReflow: true`는 조판이 필요하다는 뜻으로, 저장·재열기 성공과 화면 재조판 완료를 구분합니다.

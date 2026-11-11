@@ -263,6 +263,7 @@
 - [저장 거부 후 동의 위치 안내](save-failure-guidance.md)
 
 - [빈 이미지 글머리표 배치 호환](hwp5-bullet-compatibility.md)
+- [문자 글머리표 전체 조회·정의 편집](hwp5-paragraph-bullets.md)
 
 - [글꼴 메타데이터 전달](hwp5-font-face-metadata.md) · [HWPX 계약](hwpx-font-face-metadata.md)
 
@@ -563,3 +564,5 @@
 [HWP5 생성 본문의 일괄 서식](hwp5-generated-atomic-formatting.md)은 query·결합 patch·스타일 초기화와 현재 참조·조회별 캐시·성능 경계를 소유합니다.
 
 [HWPX 생성 본문의 일괄 서식](hwpx-generated-atomic-formatting.md)은 생성 BODY 소유권·query/patch/reset·요청별 인덱스와 오류 순서·단일 이력·독립 ZIP/XML 검증을 소유합니다.
+
+- [CLI·MCP 원본 셀 나누기](cli-source-cell-split.md)

@@ -1,3 +1,4 @@
+import { parseObjectReference } from '../object-reference.ts';
 import { hwp5TableCreationRequest } from '../../../../web/preview/hwp5-table-creation-command.mjs';
 import type { OperationDocument } from '../types/native-document.ts';
 import type {
@@ -22,6 +23,7 @@ function replaceParagraphRanges(
 }
 
 const METHODS = Object.freeze({
+  'source-table-cell-split': 'splitSourceTableCells',
   splice: 'splice',
   'replace-paragraph-ranges': 'replaceParagraphRanges',
   'split-paragraph': 'splitParagraph',
@@ -49,6 +51,8 @@ interface Target {
   readonly paragraph?: number;
 }
 function targets(operation: DocumentOperation): readonly Target[] {
+  if (operation.kind === 'source-table-cell-split')
+    return [{ section: parseObjectReference(operation.reference).section }];
   if (operation.kind === 'cell-sizes') return operation.cells;
   if (operation.kind === 'cell-styles') {
     const rows = [
@@ -81,8 +85,17 @@ export function prepareOperationSession(
     throw new Error('InvalidOperationSession');
   const protectedSections = new Set<number>();
   for (const operation of operations) {
+    if (
+      operation.kind === 'source-table-cell-split' &&
+      (typeof document.sdk.supportsSourceTableCellSplit !== 'function' ||
+        !document.sdk.supportsSourceTableCellSplit())
+    )
+      throw new Error(
+        document.format === 'hwp5'
+          ? 'Hwp5SourceTableCellSplitAbiUnavailable'
+          : 'HwpxSourceTableCellSplitAbiUnavailable',
+      );
     if (operation.kind === 'paragraph-bullet-definition') {
-      if (document.format !== 'hwpx') throw new Error('Hwp5BulletDefinitionWriteUnavailable');
       const inventory = document.sdk.paragraphBulletDefinitions();
       if (
         inventory.state !== 'available' ||
@@ -129,11 +142,14 @@ export function prepareOperationSession(
       throw new Error('OperationTextObservationUnavailable');
   }
   if (
-    document.format === 'hwpx' &&
-    operations.some((operation) => operation.kind === 'paragraph-bullet-definition')
+    operations.some(
+      (operation) =>
+        operation.kind === 'source-table-cell-split' ||
+        operation.kind === 'paragraph-bullet-definition',
+    )
   ) {
-    // The definition writer parks the previous Native document in a history edge.
-    // Enable only after all batch admission checks, before applying any operation.
+    // These existing Native structural writers require managed history.
+    // Enable after synchronous ABI/coordinate checks, before reference capture or mutation.
     document.sdk.enableHistoryV2();
   }
   if (document.format === 'hwp5') {
@@ -179,6 +195,8 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
   else if ('expectedText' in operation || 'expectedRangeText' in operation)
     checkExpected(operation);
   switch (operation.kind) {
+    case 'source-table-cell-split':
+      throw new Error('PreparedSourceTableSplitRequired');
     case 'splice':
       if (document.format === 'hwp5')
         document.sdk.splice({
@@ -239,7 +257,6 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
       });
       break;
     case 'paragraph-bullet-definition':
-      if (document.format !== 'hwpx') throw new Error('Hwp5BulletDefinitionWriteUnavailable');
       document.sdk.writeParagraphBulletDefinition(
         operation.edit,
         operation.section,

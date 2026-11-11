@@ -76,6 +76,20 @@ function operationSchema() {
       coordinates: z.literal('current-transaction'),
     };
     const field = (name: string): z.ZodType => {
+      if (kind === 'source-table-cell-split') {
+        if (name === 'reference')
+          return z
+            .string()
+            .min(1)
+            .max(128)
+            .describe(
+              '같은 원본 read_document structure의 table reference. 앞선 변경 후 자동 재대상화하지 않습니다.',
+            );
+        if (name === 'equalizeRows') return z.boolean();
+        if (name === 'mode') return z.enum(['each', 'merge-then-split']);
+        if (name === 'rows' || name === 'columns') return z.number().int().min(1).max(63);
+        return uint();
+      }
       if (name === 'edit') {
         const definition = z.strictObject({
           marker: uint(),

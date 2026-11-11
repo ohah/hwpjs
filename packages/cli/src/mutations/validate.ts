@@ -1,3 +1,5 @@
+import type { SourceTableCellSplitOperation } from './source-table-cell-split.ts';
+import { parseObjectReference } from '../object-reference.ts';
 import { checkedBulletDefinitionEdit } from '../../../../js/paragraph-bullet-definition-write.mjs';
 import type { ParagraphBulletDefinitionEdit } from '../../../core/src/commands/paragraph-bullet-definition.ts';
 import {
@@ -55,6 +57,7 @@ interface WholeTextCondition {
 type AtParagraph = OperationPosition & WholeTextCondition;
 export type DocumentOperation = OperationBase &
   (
+    | SourceTableCellSplitOperation
     | ({ readonly kind: 'splice'; readonly text: string } & RangeCondition & WholeTextCondition)
     | {
         readonly kind: 'replace-paragraph-ranges';
@@ -134,6 +137,20 @@ const spec = (required: readonly string[], optional: readonly string[] = []): Op
   Object.freeze({ required: Object.freeze(required), optional: Object.freeze(optional) });
 // CLI와 MCP가 공유하는 필수 및 선택 키의 단일 출처입니다.
 export const DOCUMENT_OPERATION_SPECS = Object.freeze({
+  'source-table-cell-split': spec([
+    ...common,
+    'reference',
+    'expectedRows',
+    'expectedColumns',
+    'top',
+    'left',
+    'bottom',
+    'right',
+    'rows',
+    'columns',
+    'mode',
+    'equalizeRows',
+  ]),
   splice: spec([...textRange, 'text'], ['expectedText']),
   'replace-paragraph-ranges': spec([...common, 'ranges', 'text'], ['properties']),
   'split-paragraph': spec([...paragraph, 'atUnit', 'expectedText'], ['endUnit']),
@@ -275,6 +292,41 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
     const shape = DOCUMENT_OPERATION_SPECS[operation.kind as DocumentOperationKind];
     fields(operation, shape.required, shape.optional);
     switch (operation.kind) {
+      case 'source-table-cell-split': {
+        const reference = parseObjectReference(operation.reference);
+        if (reference.kind !== 'table') throw new TypeError('ExpectedTableReference');
+        for (const key of [
+          'expectedRows',
+          'expectedColumns',
+          'top',
+          'left',
+          'bottom',
+          'right',
+          'rows',
+          'columns',
+        ])
+          uint(operation[key]);
+        const { expectedRows, expectedColumns, top, left, bottom, right, rows, columns } =
+          operation as Record<string, number>;
+        if (
+          !expectedRows ||
+          !expectedColumns ||
+          expectedRows * expectedColumns > 4096 ||
+          bottom <= top ||
+          right <= left ||
+          bottom > expectedRows ||
+          right > expectedColumns ||
+          !rows ||
+          !columns ||
+          rows > 63 ||
+          columns > 63 ||
+          (rows === 1 && columns === 1) ||
+          !['each', 'merge-then-split'].includes(String(operation.mode)) ||
+          typeof operation.equalizeRows !== 'boolean'
+        )
+          throw new TypeError('InvalidSourceTableSplitOperation');
+        break;
+      }
       case 'splice':
         range(operation);
         string(operation.text);

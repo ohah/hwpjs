@@ -141,3 +141,7 @@ HWP5 저장은 독립 CFB 레코드 비교기로 대상 문단과 무관한 스�
 수정 후 소스 통합 검사는 **144개 통과, 실패·생략 0개**입니다. 기준 커밋에 CLI 변경만 얹어 만든 실제 설치 패키지에서도 네 픽스쳐 E2E **11개**, Node/Bun 설치 실행 시나리오 **11개**가 각각 통과했습니다. 독립 CFB/XML 저장 비교와 잘못된 기대값 거부를 다시 확인했습니다. 이전 패키지의 102개 산출물과 비교하면 `cli.mjs`만 달라졌고 Worker·WASM·나머지 SDK 파일은 동일했습니다.
 
 깊은 소유권·희소 표와 입력/출력 버퍼 별칭도 대조했습니다. 명령 처리와 모델 투영은 기존 SSOT 경계를 유지하며 새 Native 구현이나 문서 JSON 출력은 추가하지 않았습니다. 세부 증거는 `zig-out/verification/cli-ai-adversarial-r1/`에 보존합니다. 위 경계와 네 실제 픽스쳐를 확인한 결과이며 모든 문서·모든 편집 기능의 완성을 의미하지 않습니다.
+
+## 원본 셀 나누기 명시 작업
+
+기존 apply와 MCP apply_document_changes는 source-table-cell-split 연산을 통해 동일 Native/SDK 원본 셀 나누기를 실행합니다. 공통 표 reference 발급·해결을 사용하며 현재 Native binding에 묶인 첫 변경 전의 대상을 저장합니다. batch 앞선 변경 이후 reference 숫자를 현재 표로 다시 해석하지 않습니다. 지원 profile·직사각형·수명·파일 transaction 검증은 [CLI·MCP 원본 셀 나누기](cli-source-cell-split.md)가 소유합니다.

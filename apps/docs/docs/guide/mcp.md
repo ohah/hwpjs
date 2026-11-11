@@ -395,7 +395,7 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 
 `reference`는 같은 원본 SHA를 포함한 실제 표 참조로 바꿔야 합니다. `action`·0 기반 `index`·현재 예상 크기와 선택 `layout`의 범위는 [CLI 계약](./cli.md#원본-표-행열-파일-편집-소스-후보)을 따릅니다. 알 수 없는 키는 거부하며 `allowStaleLayout` 기본값은 false입니다. HWP5/HWPX 모두 명시 동의해야 저장합니다. MCP는 공통 CLI 파일 호스트를 호출하고 별도 파일 쓰기를 수행하지 않습니다. 응답에는 새 파일의 경로·SHA·원본 SHA와 `layoutRequiresReflow: true`, `previewStale: true`가 포함됩니다. 열린 세션을 편집하는 도구가 아닙니다.
 
-## HWPX 문자 글머리표 정의 생성·수정
+## 문자 글머리표 정의 생성·수정
 
 현재 GitHub 구현은 기존 `apply_document_changes`에 `paragraph-bullet-definition` 연산을 연결합니다. npm 릴리스 지원을 뜻하지 않습니다. 공개 설치 이름은 `npm install @ohah/hwpjs`, 서버 호출은 `hwpjs mcp`이며 해당 구현과 대응 WASM을 포함한 빌드가 필요합니다. 별도 MCP 패키지는 없습니다.
 
@@ -432,4 +432,43 @@ MCP의 `outputPath`는 **새 단일 파일**입니다. CLI `extract-images --out
 }
 ```
 
-SHA와 Native 문단 주소는 같은 원본의 구조 보기·문단 조회 결과로 바꿉니다. `edit.mode: "update"`와 기존 `edit.id`를 보내면 같은 ID를 사용하는 모든 문단에 영향을 줍니다. `apply: false`는 정의만 수정합니다. 필수 속성·수치 한도와 저장 경계는 [CLI의 공통 계약](./cli.md#hwpx-문자-글머리표-정의-작업)을 따릅니다. MCP의 strict 스키마 뒤에도 동일 mutation service가 요청을 검증하며, HWP5·구형 ABI·후행 오류는 새 파일 게시 없이 실패합니다.
+SHA와 Native 문단 주소는 같은 원본의 구조 보기·문단 조회 결과로 바꿉니다. `edit.mode: "update"`와 기존 `edit.id`를 보내면 같은 ID를 사용하는 모든 문단에 영향을 줍니다. `apply: false`는 정의만 수정합니다. 필수 속성·수치 한도와 저장 경계는 [CLI의 공통 계약](./cli.md#문자-글머리표-정의-작업)을 따릅니다. MCP의 strict 스키마 뒤에도 동일 mutation service가 요청을 검증하며, 구형 ABI·후행 오류는 새 파일 게시 없이 실패합니다. HWP5는 .hwp 입력/출력과 원본 Native 문단0-based 주소를 사용하며 HWPX는1-based입니다. 전체 inventory의 definitionWriter를 확인하며 HWP5 저장에는 allowStaleLayout=true가 필요합니다.
+
+## 원본 셀 나누기
+
+**현재 GitHub 구현 기준**입니다. npm 릴리스 제공을 뜻하지 않으며, 공개 설치 이름은 `npm install @ohah/hwpjs`, 서버 호출은 `hwpjs mcp`입니다. 이 기능과 대응 WASM을 포함한 빌드를 사용합니다. 별도 MCP 패키지나 서버를 설치하지 않습니다.
+
+기존 `apply_document_changes`에 공통 명시 연산을 전달합니다. 같은 원본의 `read_document` 구조 보기에서 얻은 SHA와 표 reference를 사용합니다.
+
+```json
+{
+  "name": "apply_document_changes",
+  "arguments": {
+    "inputPath": "/absolute/document.hwpx",
+    "outputPath": "/absolute/document-split.hwpx",
+    "expectedSha256": "ACTUAL_DOCUMENT_SHA256",
+    "allowStaleLayout": true,
+    "operations": [
+      {
+        "kind": "source-table-cell-split",
+        "coordinates": "current-transaction",
+        "reference": "TABLE_REFERENCE_FROM_STRUCTURE",
+        "expectedRows": 2,
+        "expectedColumns": 2,
+        "top": 0,
+        "left": 0,
+        "bottom": 1,
+        "right": 1,
+        "rows": 2,
+        "columns": 3,
+        "mode": "each",
+        "equalizeRows": true
+      }
+    ]
+  }
+}
+```
+
+서버의 strict 스키마와 CLI의 동일 mutation service가 요청을 검증합니다. HWPX 병합 셀 전체·각 셀·합친 후 나누기와 HWP5 단일 비병합 원본 셀 profile은 [CLI의 원본 셀 나누기 계약](./cli.md#원본-셀-나누기)을 따릅니다. 사각형 끝은 미포함이며 물리 셀 수와 Native binding은 서버가 현재 관측에서 발급합니다.
+
+앞선 작업이 binding을 바꾼 뒤 이전 serialized reference를 다른 표의 숫자 주소로 재대상화하지 않습니다. 새 원본 SHA/reference가 필요하면 변경을 새 파일에 먼저 저장한 뒤 새 요청을 시작합니다. stale·foreign·수명 종료·후행 오류는 `isError: true`이며 부분 파일을 게시하지 않습니다. H497의 HWP5 외곽 선언/셀 합 제한도 그대로 거절합니다.

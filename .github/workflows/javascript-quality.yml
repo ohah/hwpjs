@@ -195,6 +195,21 @@ jobs:
           export HWPJS_TEST_WASM_EXPECTED_SHA256="$(sha256sum "$HWPJS_TEST_WASM" | cut -d ' ' -f 1)"
           node --experimental-transform-types --max-old-space-size=512 --test --test-concurrency=1 apps/demo/tests/api-playground-bullet-definition.test.mjs packages/cli/tests/paragraph-bullet-definition-bridges.test.mjs
 
+      - name: Test HWP5 bullet resources and independent CFB preservation
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-before-h5-bullet.wasm
+          HWPJS_TEST_EVIDENCE: ${{ runner.temp }}/hwpjs-h5-bullet-evidence
+        run: |
+          previous_engine=cce7ead1fc1ca17b73bebd01ea3d72945272e1da
+          if ! git cat-file -e "$previous_engine^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$previous_engine"
+          fi
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_TEST_OLD_WASM"
+          printf '%s  %s\n' 'afd903edc5658543b768491efb6ee6fbdbe185a8f393334a363acbd2eb5510ae' "$HWPJS_TEST_OLD_WASM" | sha256sum --check
+          bun test --timeout=30000 --no-install tests/wasm/hwp5-bullet-write.test.mjs packages/core/tests/editor/hwp5-bullet-definition-write.test.ts
+
       - name: Test named field creation, value changes and renaming
         timeout-minutes: 2
         env:

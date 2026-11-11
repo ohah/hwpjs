@@ -139,6 +139,46 @@ jobs:
           grep -Eq '^# tests [1-9][0-9]*$' "$RUNNER_TEMP/hwpjs-cli-ts-source.tap"
           grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-ts-source.tap"
           grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-ts-source.tap"
+      - name: 원본 셀 나누기 명시 E2E와 portable 합성 입력
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-cli-split-old.wasm
+          HWPJS_TEST_OLD_SPLIT_WASM_SHA256: '5ece4c0a551716239c37af0e1ff40db7b2a642e1baf75bb27782bcf237bd1621'
+          HWPJS_TEST_HWP5_EXTENT_EXPECTATION: accept
+          HWPJS_TEST_HWP5_EXTENT_ORACLE: ${{ github.workspace }}/packages/cli/e2e/helpers/source-cell-split-extent-oracle.py
+          HWPJS_TEST_HWP5_EXTENT_ORACLE_SHA256: 1ca5c1d89d44de4b889765ad62c2aa22490d9d292aae7aee9238e8c857758a43
+          HWPJS_TEST_EVIDENCE: ${{ runner.temp }}/hwpjs-cli-split-portable
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Split old ABI is F495, independent of the a3be bullet inventory ABI.
+          previous_engine=687255a5fefac1cac249c1afb59459389f35889f
+          git fetch --no-tags --depth=1 origin "$previous_engine"
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_TEST_OLD_WASM"
+          printf '%s  %s\n' "$HWPJS_TEST_OLD_SPLIT_WASM_SHA256" "$HWPJS_TEST_OLD_WASM" | sha256sum --check --strict
+          test -n "$HWPJS_TEST_WASM_SHA256"
+          # No HWPJS_TEST_FIXTURES sidecar: the test constructs six documents.
+          env -u HWPJS_TEST_FIXTURES node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/source-cell-split-bridges.test.mjs | tee "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
+          grep -Eq '^# tests 12$' "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-split-portable.tap"
+      - name: HWP5 글머리표 CLI와 MCP 명시 E2E
+        timeout-minutes: 3
+        env:
+          HWPJS_H5_BULLET_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-cli-before-h5-bullet.wasm
+          HWPJS_H5_BULLET_TEST_OLD_WASM_SHA256: afd903edc5658543b768491efb6ee6fbdbe185a8f393334a363acbd2eb5510ae
+          HWPJS_H5_BULLET_TEST_EVIDENCE: ${{ runner.temp }}/hwpjs-cli-h5-bullet
+        shell: bash
+        run: |
+          set -euo pipefail
+          previous_engine=cce7ead1fc1ca17b73bebd01ea3d72945272e1da
+          git fetch --no-tags --depth=1 origin "$previous_engine"
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_H5_BULLET_TEST_OLD_WASM"
+          printf '%s  %s\n' "$HWPJS_H5_BULLET_TEST_OLD_WASM_SHA256" "$HWPJS_H5_BULLET_TEST_OLD_WASM" | sha256sum --check --strict
+          node --max-old-space-size=512 --test --test-concurrency=1 --test-timeout=90000 --test-reporter=tap packages/cli/e2e/hwp5-bullet-definition-bridges.test.mjs | tee "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
+          grep -Eq '^# tests 6$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
+          grep -Eq '^# fail 0$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
+          grep -Eq '^# skipped 0$' "$RUNNER_TEMP/hwpjs-cli-h5-bullet.tap"
       - name: 정규 공개 JavaScript 산출물 빌드
         timeout-minutes: 3
         run: bun tools/build-public-package.mjs --js-only --wasm="$HWPJS_TEST_WASM"
@@ -164,6 +204,8 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
           path: |
+            ${{ runner.temp }}/hwpjs-cli-split-portable.tap
+            ${{ runner.temp }}/hwpjs-cli-split-portable
             ${{ runner.temp }}/hwpjs-cli-ts-source.tap
             ${{ runner.temp }}/hwpjs-cli-ts-canonical.tap
             ${{ env.HWPJS_CREATE_EVIDENCE }}

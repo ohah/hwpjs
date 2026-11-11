@@ -63,8 +63,23 @@ type SharedMutationMethods =
   | 'resizePicture'
   | 'insertTable'
   | 'editCreatedTableGrid'
-  | 'supportsCreatedTableGrid';
-type Hwp5MutationSdk = Pick<Hwp5Sdk, SharedMutationMethods | 'text' | 'validateTextSourcePolicy'>;
+  | 'supportsCreatedTableGrid'
+  | 'enableHistoryV2'
+  | 'supportsSourceTableCellSplit'
+  | 'sourceTableCellSplitCapabilities'
+  | 'sourceTableCellSplitBinding'
+  | 'splitSourceTableCells'
+  | 'tableBindings'
+  | 'tablePlacements'
+  | 'paragraphFlow';
+type Hwp5MutationSdk = Pick<
+  Hwp5Sdk,
+  | SharedMutationMethods
+  | 'text'
+  | 'validateTextSourcePolicy'
+  | 'writeParagraphBulletDefinition'
+  | 'paragraphBulletDefinitions'
+>;
 type HwpxMutationSdk = Pick<
   HwpxSdk,
   | SharedMutationMethods

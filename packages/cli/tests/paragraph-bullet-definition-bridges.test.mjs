@@ -148,7 +148,7 @@ test('shared validation captures edit; rejects malformed and hidden values befor
   assert.equal(opened, false);
 });
 
-test('real CLI create/update, exact SDK save/reopen and independent XML oracle; late error/old ABI/HWP5/no-overwrite publish nothing', async () => {
+test('real CLI create/update, exact SDK save/reopen and independent XML oracle; late error/old ABI/old HWP5/no-overwrite publish nothing', async () => {
   const createdPath = `${evidence}/cli-created.hwpx`;
   const result = cli(inputPath, createdPath, [op()]);
   assert.equal(result.status, 0, result.stderr);
@@ -210,9 +210,9 @@ test('real CLI create/update, exact SDK save/reopen and independent XML oracle; 
   const original = await readFile(hwp5Path),
     hwp5Output = `${evidence}/hwp5-forbidden.hwp`;
   readCache.set(hwp5Path, original);
-  const hwp5 = cli(hwp5Path, hwp5Output, [op()]);
+  const hwp5 = cli(hwp5Path, hwp5Output, [op()], oldPath);
   assert.notEqual(hwp5.status, 0);
-  assert.match(hwp5.stderr, /Hwp5BulletDefinitionWriteUnavailable/);
+  assert.match(hwp5.stderr, /BulletDefinitionWriteAbiUnavailable/);
   await missing(hwp5Output);
   assert.deepEqual(await readFile(inputPath), input);
   assert.deepEqual(await readFile(hwp5Path), original);
@@ -370,10 +370,10 @@ test('mixed pending paragraph formatting survives the Native definition document
   );
 });
 
-test('real MCP old writer and HWP5 rejections publish no file', async () => {
+test('real MCP old writer and old HWP5 ABI rejections publish no file', async () => {
   for (const [name, engine, before] of [
     ['old', oldPath, inputPath],
-    ['hwp5', wasmPath, hwp5Path],
+    ['hwp5', oldPath, hwp5Path],
   ]) {
     const transport = new StdioClientTransport({
       command: process.execPath,
@@ -400,7 +400,7 @@ test('real MCP old writer and HWP5 rejections publish no file', async () => {
         JSON.stringify(result),
         name === 'old'
           ? /BulletDefinitionWriteAbiUnavailable/
-          : /Hwp5BulletDefinitionWriteUnavailable/,
+          : /BulletDefinitionWriteAbiUnavailable/,
       );
       await writeFile(`${evidence}/mcp-${name}-rejected.json`, JSON.stringify(result, null, 2));
     } finally {

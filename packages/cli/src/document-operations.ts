@@ -1,3 +1,4 @@
+import { prepareSourceTableCellSplits } from './mutations/source-table-cell-split.ts';
 import { validateDocumentOperations } from './mutations/validate.ts';
 import { applyOperation, prepareOperationSession } from './mutations/dispatch.ts';
 import type { DocumentFormat, OperationDependencies } from './types/native-document.ts';
@@ -49,9 +50,13 @@ export async function applyDocumentOperations(
   try {
     if (document.sourceSha256 !== expectedSha256) throw new Error('SourceSha256Mismatch');
     prepareOperationSession(document, captured);
+    const sourceSplits = await prepareSourceTableCellSplits(document, captured);
     const identities: AppliedOperationIdentity[] = [];
     for (const [index, operation] of captured.entries()) {
-      const identity = applyOperation(document, operation);
+      const identity =
+        operation.kind === 'source-table-cell-split'
+          ? sourceSplits.apply(document, operation)
+          : applyOperation(document, operation);
       if (identity !== null) {
         if (
           typeof identity !== 'string' ||
@@ -71,7 +76,10 @@ export async function applyDocumentOperations(
       output.byteLength > 128 * 1024 * 1024
     )
       throw new RangeError('OperationOutputLimitExceeded');
-    const reflow: unknown = hwp5Saved && record(saved) ? saved.layoutRequiresReflow : false;
+    const reflow: unknown =
+      hwp5Saved && record(saved)
+        ? saved.layoutRequiresReflow
+        : captured.some((operation) => operation.kind === 'source-table-cell-split');
     if (typeof reflow !== 'boolean') throw new Error('InvalidOperationLayoutState');
     const owned = Uint8Array.from(output);
     const changed =
