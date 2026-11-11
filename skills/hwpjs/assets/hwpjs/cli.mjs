@@ -1878,7 +1878,7 @@ var init_cell_style_command = __esmMin((() => {
 	init_cell_border_batch();
 	init_cell_border_patch_command();
 	init_cell_fill_command();
-})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, REQUIRED_FUNCTIONS;
+})), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS, REQUIRED_FUNCTIONS;
 var init_abi_schema = __esmMin((() => {
 	CREATED_TABLE_GRID_ACTION = Object.freeze({
 		insert_row: 0,
@@ -1915,6 +1915,7 @@ var init_abi_schema = __esmMin((() => {
 	Object.freeze(["hwpx_edit_named_fields"]);
 	Object.freeze(["hwpx_edit_rename_named_field"]);
 	HWPX_DOCUMENT_INSERT_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_insert_document"]);
+	HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS = Object.freeze(["hwpx_edit_document_insert_capabilities", "hwpx_edit_merge_source_table_cells"]);
 	Object.freeze(["hwpx_edit_document_provenance"]);
 	Object.freeze({
 		header_bytes: 8,
@@ -6681,7 +6682,7 @@ var init_hwp5_editor = __esmMin((() => {
 	};
 }));
 // ../../js/hwpx-document-insert.mjs
-function ownRecord(record, keys, optional = []) {
+function ownRecord$1(record, keys, optional = []) {
 	if (!record || typeof record !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(record))) throw new TypeError("InvalidDocumentInsertRequest");
 	const fields = Object.getOwnPropertyDescriptors(record);
 	const result = Object.create(null);
@@ -6699,7 +6700,7 @@ function splitU64(text) {
 	return [Number(value & 4294967295n), Number(value >> 32n)];
 }
 function decodeBinding(binding) {
-	const { session, revision, serial } = ownRecord(binding, [
+	const { session, revision, serial } = ownRecord$1(binding, [
 		"session",
 		"revision",
 		"serial"
@@ -6756,7 +6757,7 @@ function createHwpxDocumentInsertApi({ wasm, memory, check }) {
 					"binding",
 					"maxSourceBytes"
 				];
-				const decoded = ownRecord(response, response?.schemaVersion === 2 ? [...keys, "sourceProfile"] : keys);
+				const decoded = ownRecord$1(response, response?.schemaVersion === 2 ? [...keys, "sourceProfile"] : keys);
 				if (decoded.maxSourceBytes !== maxSourceBytes) throw new TypeError("InvalidDocumentInsertionCapabilities");
 				const profile = decodeProfile(decoded);
 				const binding = decodeBinding(decoded.binding).binding;
@@ -6779,7 +6780,7 @@ function createHwpxDocumentInsertApi({ wasm, memory, check }) {
 		*/
 		insertDocument(input) {
 			ready();
-			const { binding, section, paragraph, unit, bytes } = ownRecord(input, [
+			const { binding, section, paragraph, unit, bytes } = ownRecord$1(input, [
 				"binding",
 				"section",
 				"paragraph",
@@ -6841,6 +6842,79 @@ var init_hwpx_page_number_display_wire = __esmMin((() => {
 	u32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 	owner = (value) => value && u32(value.sourceNode) && (value.paragraph === null || u32(value.paragraph));
 	string$1 = (value, limit) => typeof value === "string" && value.length <= limit;
+}));
+// ../../js/source-table-cell-merge.mjs
+function ownRecord(input, keys) {
+	if (!input || typeof input !== "object" || ![null, Object.prototype].includes(Object.getPrototypeOf(input))) throw new TypeError("InvalidSourceTableMergeRequest");
+	const descriptors = Object.getOwnPropertyDescriptors(input);
+	if (Reflect.ownKeys(descriptors).length !== keys.length) throw new TypeError("InvalidSourceTableMergeRequest");
+	const result = Object.create(null);
+	for (const key of keys) {
+		if (!Object.hasOwn(descriptors, key) || !Object.hasOwn(descriptors[key], "value")) throw new TypeError("InvalidSourceTableMergeRequest");
+		result[key] = descriptors[key].value;
+	}
+	return result;
+}
+function createSourceTableCellMergeApi({ wasm, memory, check, documentInsert }) {
+	const supported = documentInsert.supportsDocumentInsertionAbi() && HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS.every((name) => typeof wasm[name] === "function");
+	const requireSupport = () => {
+		check();
+		if (!supported) throw new Error("HwpxSourceTableCellMergeAbiUnavailable");
+	};
+	return {
+		supportsSourceTableCellMerge() {
+			check();
+			return supported;
+		},
+		/** @returns {MergeBinding} */
+		sourceTableCellMergeBinding() {
+			requireSupport();
+			return documentInsert.documentInsertionCapabilities().binding;
+		},
+		/** @param {SourceTableCellMergeRequest} request */
+		mergeSourceTableCells(request) {
+			requireSupport();
+			const value = ownRecord(request, [...coordinates, "binding"]);
+			if (!coordinates.every((key) => isU32(value[key]))) throw new RangeError("InvalidSourceTableMergeCoordinate");
+			const { binding } = value;
+			const ticket = ownRecord(binding, [
+				"session",
+				"revision",
+				"serial"
+			]);
+			const current = documentInsert.documentInsertionCapabilities().binding;
+			if (ticket.session !== current.session || ticket.revision !== current.revision || ticket.serial !== current.serial) return {
+				nativeCode: 0,
+				application: "unapplied",
+				changed: false,
+				error: "StaleSourceTableMergeBinding"
+			};
+			return applyNativeEdit({
+				withBytes: (_, invoke) => invoke(0, 0),
+				error: () => memory.error()
+			}, null, () => wasm.hwpx_edit_merge_source_table_cells(...coordinates.map((key) => value[key]), current.revision, ...words(current.session.slice(current.session.lastIndexOf(":") + 2)), ...words(current.serial)), "InvalidSourceTableMergeCompletion");
+		}
+	};
+}
+var coordinates, isU32, words;
+var init_source_table_cell_merge = __esmMin((() => {
+	init_abi_schema();
+	init_native_edit_outcome();
+	coordinates = [
+		"section",
+		"tableNode",
+		"expectedRows",
+		"expectedColumns",
+		"top",
+		"left",
+		"bottom",
+		"right"
+	];
+	isU32 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295 && !Object.is(value, -0);
+	words = (text) => {
+		const value = BigInt(text);
+		return [Number(value & 4294967295n), Number(value >> 32n)];
+	};
 }));
 // ../../js/hwpx-read-scope.mjs
 /** Optional, synchronous optimization. Existing observation methods remain authoritative. */
@@ -10031,6 +10105,11 @@ async function createHwpxEditor(source) {
 			wasm.hwpx_edit_output_free();
 		}
 	}
+	const documentInsert = createHwpxDocumentInsertApi({
+		wasm,
+		memory,
+		check: ready
+	});
 	return {
 		...createCreatedTableGridApi({
 			wasm,
@@ -10064,10 +10143,12 @@ async function createHwpxEditor(source) {
 			check: ready,
 			prefix: "hwpx_edit"
 		}),
-		...createHwpxDocumentInsertApi({
+		...documentInsert,
+		...createSourceTableCellMergeApi({
 			wasm,
 			memory,
-			check: ready
+			check: ready,
+			documentInsert
 		}),
 		...createParagraphBreakApi({
 			wasm,
@@ -12195,6 +12276,7 @@ var init_hwpx_editor = __esmMin((() => {
 	init_cell_style_command();
 	init_cell_fill_command();
 	init_source_table_grid();
+	init_source_table_cell_merge();
 	init_atomic_formatting_api();
 	init_independent_text_api();
 	init_hwpx_read_scope();
