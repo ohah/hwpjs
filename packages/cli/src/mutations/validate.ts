@@ -2,6 +2,8 @@ import {
   checkedCharacterExtensions,
   type ExtendedCharacterProperties,
 } from './character-extensions.ts';
+import { checkedPageSettingsValues } from '../../../../js/page-settings-edit.mjs';
+import type { PageSettingsOperation } from './page-settings.ts';
 import type { SourceTableCellSplitOperation } from './source-table-cell-split.ts';
 import { parseObjectReference } from '../object-reference.ts';
 import { checkedBulletDefinitionEdit } from '../../../../js/paragraph-bullet-definition-write.mjs';
@@ -61,6 +63,7 @@ interface WholeTextCondition {
 type AtParagraph = OperationPosition & WholeTextCondition;
 export type DocumentOperation = OperationBase &
   (
+    | PageSettingsOperation
     | SourceTableCellSplitOperation
     | ({ readonly kind: 'splice'; readonly text: string } & RangeCondition & WholeTextCondition)
     | {
@@ -141,6 +144,7 @@ const spec = (required: readonly string[], optional: readonly string[] = []): Op
   Object.freeze({ required: Object.freeze(required), optional: Object.freeze(optional) });
 // CLI와 MCP가 공유하는 필수 및 선택 키의 단일 출처입니다.
 export const DOCUMENT_OPERATION_SPECS = Object.freeze({
+  'page-settings': spec([...common, 'scope', 'values'], ['section']),
   'source-table-cell-split': spec([
     ...common,
     'reference',
@@ -296,6 +300,13 @@ export function validateDocumentOperations(input: unknown): readonly DocumentOpe
     const shape = DOCUMENT_OPERATION_SPECS[operation.kind as DocumentOperationKind];
     fields(operation, shape.required, shape.optional);
     switch (operation.kind) {
+      case 'page-settings': {
+        if (operation.scope === 'section') uint(operation.section);
+        else if (operation.scope !== 'document' || Object.hasOwn(operation, 'section'))
+          throw new TypeError('InvalidPageSettingsScope');
+        checkedPageSettingsValues(operation.values);
+        break;
+      }
       case 'source-table-cell-split': {
         const reference = parseObjectReference(operation.reference);
         if (reference.kind !== 'table') throw new TypeError('ExpectedTableReference');

@@ -91,7 +91,10 @@ export async function applyDocumentOperations(
     const reflow: unknown =
       hwp5Saved && record(saved)
         ? saved.layoutRequiresReflow
-        : captured.some((operation) => operation.kind === 'source-table-cell-split');
+        : captured.some(
+            (operation) =>
+              operation.kind === 'source-table-cell-split' || operation.kind === 'page-settings',
+          );
     if (typeof reflow !== 'boolean') throw new Error('InvalidOperationLayoutState');
     const owned = Uint8Array.from(output);
     const changed =

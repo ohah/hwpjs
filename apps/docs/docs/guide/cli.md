@@ -375,7 +375,6 @@ HWPX는 위 경로를 지원하며 높이 유지의 일부 요청은 Native에�
 
 reference는 첫 변경 전의 원본과 Native binding에 묶습니다. 같은 batch의 앞선 편집 후 이를 현재 숫자 주소로 다시 해석하지 않으며 `StaleSourceTableSplitReference`로 전체 파일 transaction을 거절합니다. 서로 다른 표에 대한 연속 나누기도 첫 변경 뒤에는 새 파일로 저장하고 구조 보기에서 새 SHA/reference를 받아 다시 요청하세요. 후행 오류에는 부분 출력 파일을 만들지 않으며 입력·기존 출력도 덮어쓰지 않습니다. `layoutRequiresReflow: true`는 조판이 필요하다는 뜻으로, 저장·재열기 성공과 화면 재조판 완료를 구분합니다.
 
-
 ## CLI/MCP 원본 병합 셀 한 개 나누기
 
 현재 GitHub 구현 기준이며 npm 게시 버전의 지원 선언이 아닙니다. 단일 `npm install @ohah/hwpjs` 빌드의 기존 `hwpjs apply` / `apply_document_changes`에서 `source-table-cell-split` 연산을 사용합니다. optional Native capability의 `supportsMergedInput === true`일 때 HWP5의 full-span 단일 물리 셀을 허용합니다. false인 기존 엔진은 표 전체 비병합 제한을 그대로 유지합니다. Native/SDK profile을 임의로 확대하거나 자동 fallback하지 않습니다.
@@ -385,11 +384,24 @@ reference는 첫 변경 전의 원본과 Native binding에 묶습니다. 같은 
 예를 들어 실제2×2 격자 전체를 한 물리 셀이 차지한다면 top0/left0/bottom2/right2로2×2 나누기를 요청합니다. 새 필드나 숫자 Native tableNode/binding을 입력에 추가하지 않습니다. 기존 resolveTableReference·expected grid·현재 owner·fingerprint·session/revision/serial·단일 사용 ticket을 그대로 검사합니다. 앞선 변경으로 Native binding이 달라지면 예전 reference 숫자를 다른 표로 재해석하지 않습니다. 후행 오류에는 새 출력 파일을 게시하지 않고 원본·기존 출력도 덮어쓰지 않습니다.
 
 ```json
-{"kind":"source-table-cell-split","coordinates":"current-transaction","reference":"EXACT_TABLE_REFERENCE_FROM_READ","expectedRows":2,"expectedColumns":2,"top":0,"left":0,"bottom":2,"right":2,"rows":2,"columns":2,"mode":"each","equalizeRows":true}
+{
+  "kind": "source-table-cell-split",
+  "coordinates": "current-transaction",
+  "reference": "EXACT_TABLE_REFERENCE_FROM_READ",
+  "expectedRows": 2,
+  "expectedColumns": 2,
+  "top": 0,
+  "left": 0,
+  "bottom": 2,
+  "right": 2,
+  "rows": 2,
+  "columns": 2,
+  "mode": "each",
+  "equalizeRows": true
+}
 ```
 
 CLI는 위 연산을 배열로 `--operations`에 전달하거나 `{"version":1,"operations":[...]}` patch 파일로 지정합니다. `hwpjs apply ./document.hwp --patch ./split-patch.json --expect-sha256 EXACT_INPUT_SHA256 --output ./split.hwp --allow-stale-layout --wasm /absolute/current-engine.wasm`입니다. MCP는 `hwpjs mcp --wasm /absolute/current-engine.wasm`에서 같은 연산을 `apply_document_changes`의 operations 배열에 넣습니다.
-
 
 ## 문자 확장 서식: 밑줄·글자색·언어별 글꼴 이름
 
@@ -437,3 +449,51 @@ character-patch.json은 `{"version":1,"operations":[위 연산 객체]}` 형식�
 현재 후보는 확장 서식 앞에 구조·텍스트 변경이 있는 batch를 StaleCharacterExtensionTarget으로 거절합니다. 같은 본문의 다른 문단이 동일 숫자 슬롯을 차지해도 자동 재대상화하지 않습니다. 서식만 바꾸는 선행 연산과 여러 확장 연산은 기존 Native owner/lineage/session·비되감기 serial을 검증하며 순차 실행합니다. 외부 binding/ref를 입력으로 받지 않고 쓰기 직전 같은 SDK에서 새 binding/target 쌍을 얻습니다.
 
 전체 입력·ABI·요청 필드·현재 대상 입장 검사 후 기존 lazy history V2를 사용합니다. Native 쓰기/후행 연산/저장/종료 중 실패하면 새 출력 파일을 게시하지 않습니다. Native의 uncertain/cleanup/refresh 오류를 재시도하지 않습니다. 성공 operationResults에는 Native before/after 관측을 그대로 담고 known/mixed/unknown/unavailable 상태를 바꾸지 않습니다. size/bold/italic만 쓰는 기존 경로는 확장 ABI를 요구하지 않습니다.
+
+## HWP5/HWPX 편집 용지 변경
+
+이 연산을 포함한 빌드 기준이며 npm 게시 버전의 지원을 뜻하지 않습니다. `@ohah/hwpjs` 단일 패키지에 해당 형식의 page-settings optional Native writer가 필요합니다. HWP5/HWPX 모두 같은 연산을 사용하며 구형 엔진은 `PageSettingsWriteUnavailable`로 첫 변경 전에 거절합니다.
+
+`page-changes.json`에 다음 전체 배열을 저장합니다. 예제의 구역0은 명시 입력이며 자동 선택 기본값이 아닙니다.
+
+```json
+[
+  {
+    "kind": "page-settings",
+    "coordinates": "current-transaction",
+    "scope": "section",
+    "section": 0,
+    "values": {
+      "orientation": "narrowly",
+      "width": 64800,
+      "height": 86400,
+      "gutter_type": "top_bottom",
+      "margin": {
+        "header": 1800,
+        "footer": 1800,
+        "gutter": 720,
+        "left": 7200,
+        "right": 3600,
+        "top": 3600,
+        "bottom": 5400
+      }
+    }
+  }
+]
+```
+
+```sh
+hwpjs apply ./document.hwpx --patch ./page-changes.json \
+  --expect-sha256 EXACT_INPUT_SHA256 --output ./page-changed.hwpx \
+  --allow-stale-layout --wasm /absolute/path/page-settings-engine.wasm
+```
+
+모든 치수는 원본 HWPUNIT 정수입니다. 단위 변환이나 방향에 따른 width/height 교환을 하지 않습니다. `narrowly`는 가로, `widely`는 세로이며 원본 축은 유지합니다. 값·여백의 모든 필드는 필수이고, 내용 영역의 유효성은 기존 SDK와 Native가 검증합니다.
+
+`scope: "section"`에는 0부터 시작하는 명시 `section`이 필수입니다. `scope: "document"`는 `section` 키를 생략하고 모든 구역을 한 번에 처리하며 미지원 구역을 건너뛰지 않습니다. 호출자가 binding·node index·expected snapshot을 직렬화해 전달하지 않습니다. 공통 서비스가 같은 살아 있는 SDK에서 현재 capability를 얻습니다. 전체 batch의 입력·ABI·대상 입장 검사를 먼저 수행하며, 후행 실행·저장·종료 실패 시 결과 파일을 게시하지 않습니다. 원본이나 기존 출력 덮어쓰기도 거절합니다. 편집 후 조판을 다시 계산해야 합니다.
+
+HWP5는 위 예제의 입력·출력 확장자를 `.hwp`로 바꿔 같은 `page-settings` 연산을 사용합니다. 치수는 HWPUNIT 정수(7200=25.4mm)이며 width/height 저장 축을 전치하지 않습니다. 공용 widely는 세로, narrowly는 가로입니다. HWP5의 raw orientation 이름과는 SDK에서 명시 변환하므로 CLI/MCP가 raw flags를 만들지 않습니다.
+
+`scope: "document"`는 현재 구역 모두가 지원되어야 하며 미지원 구역을 건너뛰지 않습니다. `scope: "section"`은 명시한0기준 구역만 대상으로 합니다. Native binding·expected snapshot·targets는 외부 입력으로 받지 않고 같은 살아 있는 SDK에서 admission 및 각 쓰기 직전에 다시 조회합니다. 앞선 편집 뒤 이전 node index를 재사용하지 않습니다.
+
+구형 ABI는 선행 작업이 있어도 history/write/save 전에 거절합니다. 후행 Native 오류·불확실 완료·cleanup/close 실패는 새 출력을 게시하지 않습니다. HWP5 변경 저장에는 기존 `allowStaleLayout` 동의가 필요하며 이 옵션은 전체 조판 완료를 뜻하지 않습니다. 원본·기존 출력은 덮어쓰지 않습니다.

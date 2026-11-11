@@ -76,6 +76,27 @@ function operationSchema() {
       coordinates: z.literal('current-transaction'),
     };
     const field = (name: string): z.ZodType => {
+      if (kind === 'page-settings') {
+        if (name === 'scope') return z.enum(['section', 'document']);
+        if (name === 'section') return uint();
+        return z
+          .strictObject({
+            orientation: z.enum(['widely', 'narrowly']),
+            width: uint(),
+            height: uint(),
+            gutter_type: z.enum(['left_only', 'left_right', 'top_bottom']),
+            margin: z.strictObject({
+              header: uint(),
+              footer: uint(),
+              gutter: uint(),
+              left: uint(),
+              right: uint(),
+              top: uint(),
+              bottom: uint(),
+            }),
+          })
+          .describe('HWP5/HWPX 원본 축 HWPUNIT 정수 전체 값. 단위 변환·축 전치 없음.');
+      }
       if (kind === 'source-table-cell-split') {
         if (name === 'reference')
           return z

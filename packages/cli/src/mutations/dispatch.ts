@@ -3,6 +3,7 @@ import {
   hasCharacterExtensions,
   requireCharacterExtensions,
 } from './character-extensions.ts';
+import { requirePageSettingsWrite, admitPageSettings, applyPageSettings } from './page-settings.ts';
 import { parseObjectReference } from '../object-reference.ts';
 import { hwp5TableCreationRequest } from '../../../../web/preview/hwp5-table-creation-command.mjs';
 import type { OperationDocument } from '../types/native-document.ts';
@@ -28,6 +29,7 @@ function replaceParagraphRanges(
 }
 
 const METHODS = Object.freeze({
+  'page-settings': 'writePageSettings',
   'source-table-cell-split': 'splitSourceTableCells',
   splice: 'splice',
   'replace-paragraph-ranges': 'replaceParagraphRanges',
@@ -56,6 +58,8 @@ interface Target {
   readonly paragraph?: number;
 }
 function targets(operation: DocumentOperation): readonly Target[] {
+  if (operation.kind === 'page-settings')
+    return operation.scope === 'section' ? [{ section: operation.section! }] : [];
   if (operation.kind === 'source-table-cell-split')
     return [{ section: parseObjectReference(operation.reference).section }];
   if (operation.kind === 'cell-sizes') return operation.cells;
@@ -91,6 +95,7 @@ export function prepareOperationSession(
   const protectedSections = new Set<number>();
   for (const operation of operations) {
     if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
+    if (operation.kind === 'page-settings') requirePageSettingsWrite(document);
     if (
       operation.kind === 'source-table-cell-split' &&
       (typeof document.sdk.supportsSourceTableCellSplit !== 'function' ||
@@ -151,6 +156,7 @@ export function prepareOperationSession(
     operations.some(
       (operation) =>
         hasCharacterExtensions(operation) ||
+        operation.kind === 'page-settings' ||
         operation.kind === 'source-table-cell-split' ||
         operation.kind === 'paragraph-bullet-definition',
     )
@@ -159,6 +165,8 @@ export function prepareOperationSession(
     // Enable after synchronous ABI/coordinate checks, before reference capture or mutation.
     document.sdk.enableHistoryV2();
   }
+  for (const operation of operations)
+    if (operation.kind === 'page-settings') admitPageSettings(document, operation);
   if (document.format === 'hwp5') {
     if (protectedSections.size && typeof document.sdk.validateTextSourcePolicy !== 'function')
       throw new Error('OperationTextSourcePolicyUnavailable');
@@ -202,6 +210,9 @@ export function applyOperation(document: OperationDocument, operation: DocumentO
   else if ('expectedText' in operation || 'expectedRangeText' in operation)
     checkExpected(operation);
   switch (operation.kind) {
+    case 'page-settings':
+      applyPageSettings(document, operation);
+      return null;
     case 'source-table-cell-split':
       throw new Error('PreparedSourceTableSplitRequired');
     case 'splice':
