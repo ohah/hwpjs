@@ -57,6 +57,8 @@ const uint = (value: unknown): value is number =>
 export function sourceTableGridReason(code: string) {
   const messages: Record<string, string> = {
     SourceTableGridUnavailable: '현재 엔진은 원본 표의 행·열 변경을 제공하지 않습니다.',
+    AmbiguousSourceTableTracks: '병합 셀의 줄 높이·칸 너비를 원본에서 확정할 수 없습니다.',
+    ConflictingSourceTableTracks: '원본 셀들의 줄 높이·칸 너비가 서로 맞지 않습니다.',
     SelectSourceTableCell: '지원되는 원본 표의 셀을 선택하세요.',
     SourceTableGridRefreshRequired: '표 변경 뒤 표시 확인이 필요합니다. 다시 적용하지 마세요.',
     SourceTableGridPending: '표의 행·열 변경을 반영하고 있습니다.',

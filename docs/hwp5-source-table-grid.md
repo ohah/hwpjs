@@ -1,5 +1,9 @@
 # HWP5 원본 표 격자 후보
 
+현재 줄·칸 편집은 [알려진 단순 캡션의 원시 보존](source-table-grid-live-edit.md#알려진-단순-캡션의-보존-입장)을 허용합니다. 캡션 속성 setter 확장이 아니며 field/자동번호·cache·중첩·unknown extension은 계속 거부합니다. 아래 초기 캡션 전체 거부 기록은 이 좁은 보존 입장으로 대체됩니다.
+
+현재 줄·칸 삽입/삭제는 [live 편집의 지원 경계](source-table-grid-live-edit.md#지원-경계)를 따릅니다. 명시된 단일 span 또는 정확한 원본 구간 합으로 모든 경계를 결정할 수 있는 병합 격자와 보호되지 않은 중첩 leaf 대상까지 확장했습니다. 아래 초기 비병합/최상위 제한과 당시 검증 기록은 이전 단계의 이력이며, 필드·개체·부모 크기 자동 조정까지 지원한다는 뜻은 아닙니다. 기존 merge/split 명령의 선택 권한과 지원 경계는 확장하지 않습니다.
+
 `src/hwp5/edit/source_table_grid.zig`는 명시된 원본 Section의 TABLE 레코드와 예상 행·열 수를 받아 새 구역 바이트만 반환하는 private 후보입니다. 세션·이력·WASM 연결은 [live 편집 계약](source-table-grid-live-edit.md)을 따릅니다. 파일 컨테이너 저장은 아래 어댑터에서 별도로 검증합니다. 생성 표의 웹 명령 지원과 구분합니다.
 
 공식 HWP5 revision1.2의 표75/79/80과 기존 프로젝트 framing/tree/list-group 모듈을 사용합니다. ListHeader는 spec6/observed8을 호출자가 명시하며 길이나 버전으로 추측하지 않습니다. 전체 문서의 새 문단 ID 발급은 호출자 책임이고 후보는 현재 구역 내 충돌·중복·0값을 추가 거부합니다. 현재 레코드 번호와 예상 크기는 내용 지문이나 영구 identity가 아닙니다.

@@ -55,6 +55,11 @@ pub const Properties = struct {
         return ((self.flags >> 3) & 3) == 2 and self.flags & (@as(u32, 1) << 20) != 0;
     }
 
+    /// Table 70: the caption declaration bit does not replace typed list ownership.
+    pub fn hasCaption(self: Properties) bool {
+        return self.flags & (@as(u32, 1) << 29) != 0;
+    }
+
     pub fn parse(bytes: []const u8) !Properties {
         return parseWithPolicy(bytes, .required);
     }

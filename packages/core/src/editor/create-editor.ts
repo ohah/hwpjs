@@ -991,6 +991,7 @@ export function createEditor(options: CreateEditorOptions) {
         if (
           [
             'insert-document',
+            'source-table-grid',
             'source-table-cell-merge',
             'source-table-cell-split',
             'source-table-cell-width',

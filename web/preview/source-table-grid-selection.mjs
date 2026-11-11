@@ -84,12 +84,24 @@ function sourceCell(content, paragraph, point) {
   if (
     !cell ||
     ![own(cell, 'listNode'), own(cell, 'row'), own(cell, 'column')].every(uint) ||
-    own(cell, 'rowSpan') !== 1 ||
-    own(cell, 'columnSpan') !== 1 ||
+    !uint(own(cell, 'rowSpan')) ||
+    cell.rowSpan < 1 ||
+    !uint(own(cell, 'columnSpan')) ||
+    cell.columnSpan < 1 ||
+    cell.rowSpan > table.rows - cell.row ||
+    cell.columnSpan > table.columns - cell.column ||
     cell.row >= table.rows ||
     cell.column >= table.columns ||
     !Array.isArray(cell.paragraphs) ||
     !cell.paragraphs.includes(point.paragraph)
+  )
+    return null;
+  if (
+    (cell.rowSpan > 1 || cell.columnSpan > 1) &&
+    [binding, geometry].some(
+      (value) =>
+        own(value, 'rowSpan') !== cell.rowSpan || own(value, 'columnSpan') !== cell.columnSpan,
+    )
   )
     return null;
   return {

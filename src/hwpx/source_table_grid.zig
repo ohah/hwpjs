@@ -148,11 +148,45 @@ fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize, merging: 
     }
     return .{ .first = first, .blanks = blanks.items };
 }
-const Profile = enum { row_column, merge, split };
+fn inspectCaption(a: std.mem.Allocator, t: *const Tree, table: usize) !void {
+    const value = (try @import("table_caption_values.zig").read(a, t, table)) orelse return;
+    const caption = value.caption_node;
+    const sub = value.list_node orelse return error.UnsupportedSourceTableStructure;
+    try attributes(a, t, caption, &.{ "side", "fullSz", "width", "gap", "lastWidth" });
+    try allowed(t, caption, &.{"subList"});
+    try allowed(t, sub, &.{"p"});
+    try attributes(a, t, sub, &.{ "id", "textDirection", "lineWrap", "vertAlign", "linkListIDRef", "linkListNextIDRef", "textWidth", "textHeight", "hasTextRef", "hasNumRef" });
+    try emptyId(a, t, sub);
+    // The existing typed list reader validates enums/scalars without guessing defaults.
+    var list = try @import("para_list_attributes.zig").readTree(a, t, sub, 4096);
+    defer list.deinit(a);
+    inline for (.{ .link_list_id_ref, .link_list_next_id_ref, .text_width, .text_height }) |field| {
+        if (list.get(field)) |raw| if (try @import("xml_values.zig").unsigned32(raw) != 0) return error.UnsupportedSourceTableStructure;
+    }
+    inline for (.{ .has_text_ref, .has_num_ref }) |field| {
+        if (list.get(field)) |raw| if (try @import("xml_values.zig").boolean(raw)) return error.UnsupportedSourceTableStructure;
+    }
+    _ = try inspectParagraphs(a, t, sub, false);
+    var paragraph = t.elements[sub].first_child;
+    while (paragraph) |p| : (paragraph = t.elements[p].next_sibling) {
+        const owner = (try @import("caption_list_owner.zig").resolve(t, p, .table)) orelse return error.UnsupportedSourceTableStructure;
+        if (owner.component_node != table or owner.caption_node != caption or owner.list_node != sub) return error.UnsupportedSourceTableStructure;
+    }
+}
+const Profile = enum { row_column, grid_spans, merge, split };
 
 pub fn inspectForSplit(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize) !Grid {
     const grid = try inspect(a, t, table, rows, cols, limit, .split);
     try validateSpanGrid(a, t, table, rows, cols, grid.cells.len, limit);
+    return grid;
+}
+
+pub fn inspectForGridEdit(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize) !Grid {
+    const grid = try inspect(a, t, table, rows, cols, limit, .grid_spans);
+    validateSpanGrid(a, t, table, rows, cols, grid.cells.len, limit) catch |err| {
+        for (grid.cells) |cell| if (cell.row_span != 1 or cell.column_span != 1) return error.MergedSourceTable;
+        return err;
+    };
     return grid;
 }
 
@@ -168,8 +202,29 @@ pub fn validateSpanGrid(a: std.mem.Allocator, t: *const Tree, table: usize, rows
         return error.InvalidSourceTableGrid;
 }
 
+fn validateGridPlacement(t: *const Tree, selected: usize) !void {
+    var table = selected;
+    var depth: usize = 0;
+    while (true) {
+        depth += 1;
+        if (depth > 64) return error.LimitExceeded;
+        const run = t.elements[table].parent orelse return error.UnsupportedSourceTableStructure;
+        const paragraph = t.elements[run].parent orelse return error.UnsupportedSourceTableStructure;
+        if (!fields.childIs(t, run, "run") or !fields.childIs(t, paragraph, "p")) return error.UnsupportedSourceTableStructure;
+        const parent = t.elements[paragraph].parent orelse return error.UnsupportedSourceTableStructure;
+        if (parent == 0) return;
+        if (!fields.childIs(t, parent, "subList")) return error.UnsupportedSourceTableStructure;
+        const cell = t.elements[parent].parent orelse return error.UnsupportedSourceTableStructure;
+        const row = t.elements[cell].parent orelse return error.UnsupportedSourceTableStructure;
+        table = t.elements[row].parent orelse return error.UnsupportedSourceTableStructure;
+        if (!fields.childIs(t, cell, "tc") or !fields.childIs(t, row, "tr") or !fields.childIs(t, table, "tbl")) return error.UnsupportedSourceTableStructure;
+    }
+}
+
 fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: u32, limit: usize, profile: Profile) !Grid {
-    const merging = profile != .row_column;
+    if (profile == .grid_spans) try validateGridPlacement(t, table);
+    const merging = profile == .merge or profile == .split;
+    const spanning = profile == .split or profile == .grid_spans;
     if (rows == 0 or cols == 0 or @as(u64, rows) * cols > limit) return error.LimitExceeded;
     if (try number(a, t, table, "rowCnt") != rows or try number(a, t, table, "colCnt") != cols) return error.StaleSourceTableGrid;
     if (merging) {
@@ -181,7 +236,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     var ancestor: ?usize = table;
     while (ancestor) |i| : (ancestor = t.elements[i].parent) {
         const e = t.elements[i];
-        if (i != table and fields.childIs(t, i, "tbl")) return error.UnsupportedSourceTableStructure;
+        if (merging and i != table and fields.childIs(t, i, "tbl")) return error.UnsupportedSourceTableStructure;
         if (e.name.local.equals("switch", false) or e.name.local.equals("case", false) or e.name.local.equals("default", false)) return error.UnsupportedSourceTableStructure;
         try zero(a, t, i, &.{ "lock", "protect" });
     }
@@ -189,10 +244,11 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     try t.visitContent(a, .{ .context = &content, .on_content = ContentCheck.onContent });
     // Preserve opaque table attributes but reject unhandled geometry/children.
     try zero(a, t, table, &.{"cellSpacing"});
-    try allowed(t, table, &.{ "sz", "pos", "outMargin", "inMargin", "tr" });
+    try allowed(t, table, if (profile == .grid_spans) &.{ "sz", "pos", "outMargin", "inMargin", "tr", "caption" } else &.{ "sz", "pos", "outMargin", "inMargin", "tr" });
+    if (profile == .grid_spans) try inspectCaption(a, t, table);
     var direct = t.elements[table].first_child;
     while (direct) |i| : (direct = t.elements[i].next_sibling) {
-        if (!fields.childIs(t, i, "tr")) try allowed(t, i, &.{});
+        if (!fields.childIs(t, i, "tr") and !(profile == .grid_spans and fields.childIs(t, i, "caption"))) try allowed(t, i, &.{});
     }
     const size = try child(t, table, "sz");
     try zero(a, t, size, &.{"protect"});
@@ -208,7 +264,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
     var cursor = t.elements[table].first_child;
     while (cursor) |row| : (cursor = t.elements[row].next_sibling) {
         if (!fields.childIs(t, row, "tr")) continue;
-        if (r == rows or t.elements[row].end_tag == null) return error.InvalidSourceTableGrid;
+        if (r == rows or (profile != .grid_spans and t.elements[row].end_tag == null)) return error.InvalidSourceTableGrid;
         rs[r] = row;
         try attributes(a, t, row, &.{});
         if (merging) try rejectLocalNamespaces(a, t, row);
@@ -249,26 +305,26 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
             }
             const col_span = try number(a, t, span, "colSpan");
             const row_span = try number(a, t, span, "rowSpan");
-            if (profile != .split and (col_span != 1 or row_span != 1)) return error.MergedSourceTable;
+            if (!spanning and (col_span != 1 or row_span != 1)) return error.MergedSourceTable;
             const row_index = try number(a, t, addr, "rowAddr");
             const column = try number(a, t, addr, "colAddr");
             if (row_index != r or column >= cols or cell_count == cells.len or
-                (if (profile == .split) (previous_column != null and previous_column.? >= column) else column != c))
+                (if (spanning) (previous_column != null and previous_column.? >= column) else column != c))
                 return error.InvalidSourceTableGrid;
             previous_column = column;
             const w = try number(a, t, sz, "width");
             const h = try number(a, t, sz, "height");
-            if (w == 0 or h == 0 or (profile != .split and ((r > 0 and w != cells[c].width) or (c > 0 and h != cells[r * cols].height))))
+            if (w == 0 or h == 0 or (!spanning and ((r > 0 and w != cells[c].width) or (c > 0 and h != cells[r * cols].height))))
                 return error.UnsupportedSourceTableGeometry;
             cells[cell_count] = .{ .row = row_index, .column = column, .row_span = row_span, .column_span = col_span, .node = cell, .addr = addr, .span = span, .size = sz, .list = sub, .paragraph = paragraphs.first, .blank_spans = paragraphs.blanks, .width = w, .height = h };
             cell_count += 1;
             c += 1;
         }
-        if (profile != .split and c != cols) return error.InvalidSourceTableGrid;
+        if (!spanning and c != cols) return error.InvalidSourceTableGrid;
         r += 1;
     }
     if (r != rows) return error.InvalidSourceTableGrid;
-    if (profile == .split) return .{
+    if (spanning) return .{
         .rows = rs,
         .cells = cells[0..cell_count],
         .size = size,
@@ -298,9 +354,11 @@ pub fn fragment(a: std.mem.Allocator, t: *const Tree, node: usize, changes: []wr
     if (!ordered) std.mem.sort(writer.Change, changes, {}, less);
     return writer.write(a, t.sourceOf(node), changes, limit);
 }
-fn cellXml(a: std.mem.Allocator, t: *const Tree, cell: Cell, r: u32, c: u32, fresh: ?u32, limit: usize) ![]u8 {
+fn cellXml(a: std.mem.Allocator, t: *const Tree, cell: Cell, value: @import("../model/source_table_span_grid.zig").Cell, fresh: ?u32, limit: usize) ![]u8 {
     var changes: std.ArrayList(writer.Change) = .empty;
-    try patch(a, t, &changes, cell.addr, &.{ "rowAddr", "colAddr" }, .{ r, c }, limit);
+    try patch(a, t, &changes, cell.addr, &.{ "rowAddr", "colAddr" }, .{ value.row, value.column }, limit);
+    try patch(a, t, &changes, cell.span, &.{ "rowSpan", "colSpan" }, .{ value.row_span, value.column_span }, limit);
+    try patch(a, t, &changes, cell.size, &.{ "width", "height" }, .{ value.width, value.height }, limit);
     if (fresh) |id| {
         try patch(a, t, &changes, cell.paragraph, &.{"id"}, .{id}, limit);
     }
@@ -329,10 +387,10 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     var t = try @import("section_tree.zig").parse(a, source, 0, 0, .{ .max_xml_bytes = request.max_bytes });
     const table = try select(&t, request.target);
     try @import("field_free_section.zig").validate(a, &t, request.max_bytes);
+    if (t.elements[table].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
     const rows = request.expected_rows;
     const cols = request.expected_columns;
-    if (t.elements[table].name.local.encoding != .utf8) return error.UnsupportedEditEncoding;
-    const g = try inspect(a, &t, table, rows, cols, request.max_cells, .row_column);
+    const g = try inspectForGridEdit(a, &t, table, rows, cols, request.max_cells);
     const row_edit = switch (request.command) {
         .insert_row, .delete_row => true,
         else => false,
@@ -347,56 +405,72 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     const dimension = if (row_edit) rows else cols;
     if (index > dimension or (!insertion and index == dimension)) return error.InvalidSourceTableCommand;
     if (!insertion and dimension == 1) return error.LastSourceTableDimension;
-    const plan = try plans.create(rows, cols, request.command, request.max_cells);
-    const nr = plan.rows;
-    const nc = plan.columns;
-    if (request.fresh_paragraph_ids.len != plan.inserted_count) return error.InvalidTableParagraphIds;
+    var merged = false;
+    for (g.cells) |cell| {
+        if (cell.row_span != 1 or cell.column_span != 1) {
+            merged = true;
+            break;
+        }
+    }
+    if (merged) for (t.elements, 0..) |e, i| {
+        if (e.start_tag.start > t.elements[table].start_tag.start and e.end <= t.elements[table].end) try rejectLocalNamespaces(a, &t, i);
+    };
+    const coordinate = try plans.create(rows, cols, request.command, request.max_cells);
+    const spans = @import("../model/source_table_span_grid.zig");
+    const input = try a.alloc(spans.Cell, g.cells.len);
+    for (g.cells, 0..) |c, i| input[i] = .{ .row = c.row, .column = c.column, .row_span = c.row_span, .column_span = c.column_span, .width = c.width, .height = c.height };
+    const plan = spans.prepare(a, rows, cols, input, g.width, g.height, request.command, request.max_cells) catch |err| return switch (err) {
+        error.InvalidSourceSpanGrid => error.InvalidSourceTableGrid,
+        error.UnsupportedSourceSpanGeometry, error.ConflictingSourceTableTracks => error.UnsupportedSourceTableGeometry,
+        else => err,
+    };
+    if (request.fresh_paragraph_ids.len != coordinate.inserted_count) return error.InvalidTableParagraphIds;
     var ids: std.AutoHashMap(u32, void) = .init(a);
     for (t.elements, 0..) |_, i| if (fields.childIs(&t, i, "p")) {
         const id = try number(a, &t, i, "id");
         if ((try ids.getOrPut(id)).found_existing) return error.InvalidTableParagraphIds;
     };
-    for (request.fresh_paragraph_ids) |id| if (id == 0 or (try ids.getOrPut(id)).found_existing) {
-        return error.InvalidTableParagraphIds;
-    };
-    const neighbor = if (insertion) index - @intFromBool(index != 0) else index;
-    const delta = if (row_edit) g.cells[@as(usize, neighbor) * cols].height else g.cells[neighbor].width;
-    const total = if (row_edit) g.height else g.width;
-    const changed = if (insertion) std.math.add(u32, total, delta) catch return error.UnsupportedSourceTableGeometry else total - delta;
+    for (request.fresh_paragraph_ids) |id| if (id == 0 or (try ids.getOrPut(id)).found_existing) return error.InvalidTableParagraphIds;
     var changes: std.ArrayList(writer.Change) = .empty;
-    try patch(a, &t, &changes, table, &.{ "rowCnt", "colCnt" }, .{ nr, nc }, request.max_bytes);
-    try patch(a, &t, &changes, g.size, &.{ "width", "height" }, .{ if (row_edit) g.width else changed, if (row_edit) changed else g.height }, request.max_bytes);
-    var fresh_index: usize = 0;
+    try patch(a, &t, &changes, table, &.{ "rowCnt", "colCnt" }, .{ plan.rows, plan.columns }, request.max_bytes);
+    try patch(a, &t, &changes, g.size, &.{ "width", "height" }, .{ plan.width, plan.height }, request.max_bytes);
+    const starts = try a.alloc(usize, rows + 1);
+    var cursor: usize = 0;
+    for (0..rows) |r| {
+        starts[r] = cursor;
+        while (cursor < g.cells.len and g.cells[cursor].row == r) cursor += 1;
+    }
+    starts[rows] = cursor;
     var output_rows: std.ArrayList([]u8) = .empty;
-    for (0..nr) |r| {
-        const sr = (try plan.templateIndex(@intCast(r), 0)) / cols;
+    var fresh: usize = 0;
+    var cell_cursor: usize = 0;
+    for (0..plan.rows) |r| {
+        const sr = (try coordinate.templateIndex(@intCast(r), 0)) / cols;
         const row = g.rows[sr];
-        var row_changes: std.ArrayList(writer.Change) = .empty;
-        var cell_bytes: std.ArrayList(u8) = .empty;
-        for (0..nc) |c| {
-            const new_cell = (try plan.sourceIndex(@intCast(r), @intCast(c))) == null;
-            const source_cell = try plan.templateIndex(@intCast(r), @intCast(c));
-            const id: ?u32 = if (new_cell) request.fresh_paragraph_ids[fresh_index] else null;
-            if (new_cell) fresh_index += 1;
-            const bytes = try cellXml(a, &t, g.cells[source_cell], @intCast(r), @intCast(c), id, request.max_bytes);
-            try cell_bytes.appendSlice(a, bytes);
+        var bytes: std.ArrayList(u8) = .empty;
+        while (cell_cursor < plan.cells.len and plan.cells[cell_cursor].cell.row == r) : (cell_cursor += 1) {
+            const c = plan.cells[cell_cursor];
+            const id: ?u32 = if (c.fresh) request.fresh_paragraph_ids[fresh] else null;
+            if (c.fresh) fresh += 1;
+            try bytes.appendSlice(a, try cellXml(a, &t, g.cells[c.source], c.cell, id, request.max_bytes));
         }
-        // Replace each original cell separately: row whitespace/comments survive.
-        // Inserted/deleted columns use the first cell slot as an ordered carrier.
-        for (0..cols) |c| {
-            const e = t.elements[g.cells[sr * cols + c].node];
-            try row_changes.append(a, .{ .start = e.start_tag.start, .end = e.end, .text = "", .serialized_xml = if (c == 0) cell_bytes.items else "" });
+        var row_changes: std.ArrayList(writer.Change) = .empty;
+        for (g.cells[starts[sr]..starts[sr + 1]], 0..) |c, i| {
+            const e = t.elements[c.node];
+            try row_changes.append(a, .{ .start = e.start_tag.start, .end = e.end, .text = "", .serialized_xml = if (i == 0) bytes.items else "" });
+        }
+        if (starts[sr] == starts[sr + 1] and bytes.items.len != 0) {
+            const at = (t.elements[row].end_tag orelse return error.UnsupportedSourceTableStructure).start;
+            try row_changes.append(a, .{ .start = at, .end = at, .text = "", .serialized_xml = bytes.items });
         }
         try output_rows.append(a, try fragment(a, &t, row, row_changes.items, request.max_bytes, true));
     }
-    // Preserve gaps between original rows by binding each destination to its
-    // source row; an inserted row is carried alongside the nearest source row.
+    if (cell_cursor != plan.cells.len or fresh != plan.inserted_count) return error.InvalidSourceTableGrid;
     var destination: usize = 0;
     for (g.rows, 0..) |row, r| {
         var bytes: std.ArrayList(u8) = .empty;
-        // Source row mapping is monotone. Each output row is consumed once.
         while (destination < output_rows.items.len) {
-            const sr = (try plan.templateIndex(@intCast(destination), 0)) / cols;
+            const sr = (try coordinate.templateIndex(@intCast(destination), 0)) / cols;
             if (sr < r) return error.InvalidSourceTableGrid;
             if (sr != r) break;
             try bytes.appendSlice(a, output_rows.items[destination]);
@@ -406,20 +480,17 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
         try changes.append(a, .{ .start = e.start_tag.start, .end = e.end, .text = "", .serialized_xml = bytes.items });
     }
     if (destination != output_rows.items.len) return error.InvalidSourceTableGrid;
-    // Only two attribute replacements need sorting. Merge them into the
-    // already source-ordered row spans instead of sorting all rows/cells.
     std.mem.sort(writer.Change, changes.items[0..2], {}, less);
     var ordered: std.ArrayList(writer.Change) = .empty;
     var attribute: usize = 0;
     for (changes.items[2..]) |row| {
-        while (attribute < 2 and changes.items[attribute].start < row.start) : (attribute += 1)
-            try ordered.append(a, changes.items[attribute]);
+        while (attribute < 2 and changes.items[attribute].start < row.start) : (attribute += 1) try ordered.append(a, changes.items[attribute]);
         try ordered.append(a, row);
     }
     while (attribute < 2) : (attribute += 1) try ordered.append(a, changes.items[attribute]);
     const result = try writer.write(a, source, ordered.items, request.max_bytes);
     var check = try @import("section_tree.zig").parse(a, result, 0, 0, .{ .max_xml_bytes = request.max_bytes });
-    _ = try inspect(a, &check, table, nr, nc, request.max_cells, .row_column);
+    _ = try inspectForGridEdit(a, &check, table, plan.rows, plan.columns, request.max_cells);
     return allocator.dupe(u8, result);
 }
 

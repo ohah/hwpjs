@@ -155,7 +155,8 @@ export function sourceTableGridHistory({ before, after, request }) {
     let row = source.row,
       column = source.column;
     const axis = rowAxis ? row : column;
-    const removed = !insert && axis === input.index;
+    const removed =
+      !insert && axis === input.index && (rowAxis ? priorCell.rowSpan : priorCell.columnSpan) === 1;
     const mapped = insert
       ? axis + (axis >= input.index ? 1 : 0)
       : removed
@@ -163,7 +164,17 @@ export function sourceTableGridHistory({ before, after, request }) {
         : axis - (axis > input.index ? 1 : 0);
     if (rowAxis) row = mapped;
     else column = mapped;
-    const cell = unique(table.cells, (c) => c.row === row && c.column === column);
+    const cell = unique(
+      table.cells,
+      (c) =>
+        c.row <= row &&
+        row < c.row + c.rowSpan &&
+        c.column <= column &&
+        column < c.column + c.columnSpan,
+    );
+    if (!cell) return null;
+    row = cell.row;
+    column = cell.column;
     const nextParagraphs = cellParagraphs(after.content, source.section, table.tableNode, cell);
     if (
       !nextParagraphs ||
