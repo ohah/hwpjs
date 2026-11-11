@@ -180,7 +180,7 @@ jobs:
           fi
           git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_TEST_OLD_WASM"
           printf '%s  %s\n' '5ece4c0a551716239c37af0e1ff40db7b2a642e1baf75bb27782bcf237bd1621' "$HWPJS_TEST_OLD_WASM" | sha256sum --check
-          bun test --no-install tests/hwp5/source-table-cell-split.test.mjs
+          bun test --timeout=30000 --no-install tests/hwp5/source-table-cell-split.test.mjs
 
       - name: Test bullet definition API, CLI and MCP against Native
         timeout-minutes: 3

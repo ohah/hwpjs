@@ -103,8 +103,23 @@ jobs:
           test -f ./packages/cli/dist/mcp.mjs
           node --check ./packages/cli/dist/cli.mjs
           node --check ./packages/cli/dist/mcp.mjs
+      - name: 글머리표 호환 검사 과거 엔진 준비
+        shell: bash
+        run: |
+          set -euo pipefail
+          inventory_engine=77eae1cb82e05c980071910228e1189ac5c2222d
+          if ! git cat-file -e "$inventory_engine^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$inventory_engine"
+          fi
+          git show "$inventory_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$RUNNER_TEMP/hwpjs-cli-before-bullet-definition.wasm"
+          printf '%s  %s\n' 'a3be6777229dbe1ec895f4850168809f70d9cf52b14b85996a670a5577e865f1' "$RUNNER_TEMP/hwpjs-cli-before-bullet-definition.wasm" | sha256sum --check --strict
       - name: CLI 소스와 Native opt-in 검사
         timeout-minutes: 3
+        env:
+          HWPJS_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-cli-before-bullet-definition.wasm
+          HWPJS_TEST_HWPX: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/page.hwpx
+          HWPJS_TEST_HWP5: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/lists.hwp
+          HWPJS_TEST_EVIDENCE: ${{ runner.temp }}/hwpjs-cli-bullet-definition-evidence
         shell: bash
         run: |
           set -euo pipefail
