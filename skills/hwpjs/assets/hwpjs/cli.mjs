@@ -329,10 +329,11 @@ var init_object_reference$1 = __esmMin((() => {
 		"equation",
 		"drawing",
 		"ole",
+		"form",
 		"unknown"
 	]);
 	SHA = /^[a-f0-9]{64}$/u;
-	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
+	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|form|unknown)\/(0|[1-9]\d*)$/u;
 	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$40 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format = (value) => value === "hwp5" || value === "hwpx";
@@ -1280,9 +1281,302 @@ var init_render_escape$1 = __esmMin((() => {
 var init_render_escape = __esmMin((() => {
 	init_render_escape$1();
 }));
+// src/document-forms.ts
+function formWriterCapabilities(d) {
+	if (d.format === "hwp5") return {
+		checkbox: capability(d, "supportsCheckBoxStateEdit"),
+		radio: capability(d, "supportsRadioButtonSelect"),
+		text: capability(d, "supportsFormTextEdit") && capability(d, "supportsFormTextLayoutRetention")
+	};
+	return {
+		checkbox: d.nativeExports?.includes("hwpx_edit_set_checkbox_state") === true,
+		radio: capability(d, "supportsRadioButtonSelect"),
+		text: capability(d, "supportsFormTextEdit") && capability(d, "supportsFormTextLayoutRetention")
+	};
+}
+function field$4(properties, name, kind) {
+	const row = properties.fields.find((x) => x.field === name);
+	if (!row || row.kind !== kind) return unknown$1("MissingOrMismatchedFormProperty:" + name);
+	let raw = "";
+	for (let i = 0; i < row.units.length; i += 4096) raw += String.fromCharCode(...row.units.slice(i, i + 4096));
+	if (!raw.isWellFormed()) return {
+		state: "unknown",
+		value: null,
+		reason: "InvalidFormUnicode",
+		scope: "current"
+	};
+	if (kind === "boolean") return /^[0-9]{1,10}$/.test(raw) && Number(raw) <= 1 ? known$1(Number(raw) === 1, "current", raw) : {
+		state: "unknown",
+		value: null,
+		reason: "UnknownFormBoolean",
+		scope: "current",
+		raw
+	};
+	return known$1(raw, "current", raw);
+}
+function choice(raw, radio) {
+	if (raw.state !== "known") return raw;
+	if (typeof raw.value !== "string" || !/^[0-9]{1,10}$/.test(raw.value) || Number(raw.value) > (radio ? 1 : 2)) return {
+		state: "unknown",
+		value: null,
+		reason: "UnknownFormChoiceState",
+		scope: "current",
+		raw: String(raw.value)
+	};
+	return known$1([
+		"UNCHECKED",
+		"CHECKED",
+		"INDETERMINATE"
+	][Number(raw.value)], "current", raw.value);
+}
+function hxString(row, key) {
+	return typeof row.strings[key] === "string" ? known$1(row.strings[key], "source") : unknown$1("FormSourceAttributeUnavailable:" + key, "source");
+}
+function hxBool(row, key) {
+	return typeof row.booleans[key] === "boolean" ? known$1(row.booleans[key], "source") : unknown$1("FormSourceAttributeUnavailable:" + key, "source");
+}
+function readFormInventory(document) {
+	const d = document;
+	if (!Number.isInteger(d.sectionCount) || d.sectionCount < 1 || d.sectionCount > 4096) throw new Error("InvalidFormSectionCount");
+	if (d.format === "hwp5" && (!capability(d, "supportsFormSources") || !capability(d, "supportsFormProperties"))) return {
+		status: "unavailable",
+		reason: "Hwp5FormInventoryAbiUnavailable",
+		forms: []
+	};
+	if (d.format === "hwpx" && (![
+		"formSites",
+		"formSourceAttributes",
+		"checkBoxState"
+	].every((k) => has$1(d, k)) || d.nativeExports && ![
+		"hwpx_edit_form_sites",
+		"hwpx_edit_form_source_attributes",
+		"hwpx_edit_checkbox_state"
+	].every((k) => d.nativeExports.includes(k)))) return {
+		status: "unavailable",
+		reason: "HwpxFormInventoryAbiUnavailable",
+		forms: []
+	};
+	const writers = formWriterCapabilities(d), forms = [], seen = /* @__PURE__ */ new Set();
+	let provenanceUnits = 0;
+	const fingerprint = (value) => {
+		const encoded = JSON.stringify(value);
+		provenanceUnits += encoded.length;
+		if (encoded.length > 4194304 || provenanceUnits > 16777216) throw new Error("FormProvenanceLimitExceeded");
+		return encoded;
+	};
+	for (let section = 0; section < d.sectionCount; section++) {
+		let hosts;
+		const ownerHost = (paragraph) => {
+			if (!hosts) {
+				hosts = /* @__PURE__ */ new Map();
+				const flow = has$1(d, "paragraphFlow") ? sdkMethod(d, "paragraphFlow")(section) : [];
+				for (const row of flow) {
+					if (hosts.has(row.paragraph)) throw new Error("AmbiguousFormOwner");
+					hosts.set(row.paragraph, row);
+				}
+			}
+			return hosts.get(paragraph);
+		};
+		if (d.format === "hwp5") {
+			const sources = sdkMethod(d, "formSources")(section), anchors = sdkMethod(d, "formAnchors")(section), properties = sdkMethod(d, "formProperties")(section);
+			if (sources.length !== anchors.length || sources.length !== properties.length) throw new Error("IncompleteFormInventory");
+			const anchorMap = new Map(anchors.map((r) => [r.object_node, r])), propertyMap = new Map(properties.map((r) => [r.object_node, r]));
+			for (const source of sources) {
+				const anchor = anchorMap.get(source.object_node), property = propertyMap.get(source.object_node);
+				if (!anchor || !property || source.control_node !== anchor.control_node || source.control_node !== property.control_node || source.source_unit !== anchor.source_unit || property.known_nodes + property.deferred_nodes !== source.property_nodes) throw new Error("MismatchedFormProvenance");
+				const host = ownerHost(anchor.paragraph), located = !!host && host.source_node === source.paragraph_node;
+				const reference = buildObjectReference({
+					sourceSha256: d.sourceSha256,
+					format: d.format,
+					section,
+					kind: "form",
+					node: source.object_node
+				});
+				const stableProperties = {
+					...property,
+					fields: property.fields.filter((r) => !["value", "text"].includes(r.field))
+				};
+				forms.push({
+					reference,
+					kind: source.kind,
+					source: {
+						section,
+						node: source.object_node,
+						paragraph: anchor.paragraph,
+						anchorUnit: anchor.current_unit
+					},
+					current: {
+						state: choice(field$4(property, "value", "integer"), source.kind === "radio_button"),
+						text: field$4(property, "text", "wstring"),
+						groupName: field$4(property, "radio_group_name", "wstring"),
+						name: field$4(property, "name", "wstring")
+					},
+					permissions: {
+						enabled: field$4(property, "enabled", "boolean"),
+						editable: field$4(property, "editable", "boolean"),
+						triState: field$4(property, "tri_state", "boolean"),
+						readOnly: field$4(property, "read_only", "boolean"),
+						editEnable: field$4(property, "edit_enable", "boolean")
+					},
+					writers: {
+						checkbox: writers.checkbox && source.kind === "check_box",
+						radio: writers.radio && source.kind === "radio_button",
+						text: writers.text && ["edit", "combo_box"].includes(source.kind)
+					},
+					ownership: located ? "located" : "unavailable",
+					fingerprint: fingerprint({
+						source,
+						anchor,
+						host,
+						properties: stableProperties
+					})
+				});
+			}
+		} else {
+			const sites = sdkMethod(d, "formSites")(section);
+			for (const site of sites) {
+				const attrs = sdkMethod(d, "formSourceAttributes")(section, site.formNode);
+				if (attrs.kind !== site.kind) throw new Error("MismatchedFormProvenance");
+				const host = ownerHost(site.paragraph);
+				const reference = buildObjectReference({
+					sourceSha256: d.sourceSha256,
+					format: d.format,
+					section,
+					kind: "form",
+					node: site.formNode
+				});
+				let state = hxString(attrs, "value");
+				if (site.kind === "check_button") try {
+					const actual = sdkMethod(d, "checkBoxState")(section, site.formNode);
+					state = [
+						"UNCHECKED",
+						"CHECKED",
+						"INDETERMINATE"
+					].includes(actual) ? known$1(actual) : {
+						state: "unknown",
+						value: null,
+						reason: "UnknownFormChoiceState",
+						scope: "current",
+						raw: String(actual)
+					};
+				} catch (error) {
+					state = unknown$1(error instanceof Error ? error.message : "FormStateObservationFailed", "current", attrs.strings.value ?? void 0);
+				}
+				let currentText = unknown$1("HwpxFormTextCurrentQueryAbiUnavailable");
+				if (site.kind === "radio_button") try {
+					state = known$1(sdkMethod(d, "radioButtonState")(section, site.formNode));
+				} catch (error) {
+					state = unknown$1(error instanceof Error ? error.message : "FormStateObservationFailed", "current", attrs.strings.value ?? void 0);
+				}
+				if (["edit_box", "combo_box"].includes(site.kind)) try {
+					currentText = known$1(sdkMethod(d, "formText")(section, site.formNode));
+				} catch (error) {
+					currentText = unknown$1(error instanceof Error ? error.message : "FormTextObservationFailed");
+				}
+				forms.push({
+					reference,
+					kind: site.kind,
+					source: {
+						section,
+						node: site.formNode,
+						paragraph: site.paragraph,
+						anchorUnit: site.anchorUnit
+					},
+					current: {
+						state,
+						text: currentText,
+						groupName: hxString(attrs, "radioGroupName"),
+						name: hxString(attrs, "name")
+					},
+					permissions: {
+						enabled: hxBool(attrs, "enabled"),
+						editable: hxBool(attrs, "editable"),
+						triState: hxBool(attrs, "triState"),
+						readOnly: hxBool(attrs, "readOnly"),
+						editEnable: hxBool(attrs, "editEnable")
+					},
+					writers: {
+						checkbox: writers.checkbox && site.kind === "check_button",
+						radio: writers.radio && site.kind === "radio_button",
+						text: writers.text && ["edit_box", "combo_box"].includes(site.kind)
+					},
+					ownership: site.state === "located" && !!host ? "located" : "unavailable",
+					fingerprint: fingerprint({
+						site,
+						attrs,
+						host
+					})
+				});
+			}
+		}
+		if (forms.length > 1e5) throw new Error("FormInventoryLimitExceeded");
+	}
+	for (const form of forms) {
+		if (seen.has(form.reference)) throw new Error("AmbiguousFormReference");
+		seen.add(form.reference);
+	}
+	return {
+		status: "available",
+		forms
+	};
+}
+function resolveFormReference(document, reference, inventory = readFormInventory(document)) {
+	const parsed = parseObjectReference(reference, {
+		sourceSha256: document.sourceSha256,
+		format: document.format
+	});
+	if (parsed.kind !== "form" || parsed.section >= document.sectionCount) throw new Error("ExpectedFormReference");
+	if (inventory.status !== "available") throw new Error(inventory.reason);
+	const rows = inventory.forms.filter((row) => row.reference === reference);
+	if (rows.length !== 1) throw new Error("FormReferenceNotFound");
+	return rows[0];
+}
+function publicFormInventory(inventory) {
+	return {
+		...inventory,
+		forms: inventory.forms.map((form) => {
+			const { fingerprint, ...row } = form;
+			return row;
+		})
+	};
+}
+function renderFormInventory(inventory) {
+	const text = "formControls: " + createDisplayEscaper({
+		format: "text",
+		view: "structure"
+	})(JSON.stringify(publicFormInventory(inventory))) + "\n";
+	if (new TextEncoder().encode(text).length > 4194304) throw new Error("FormInspectionOutputLimitExceeded");
+	return text;
+}
+var sdkMethod, has$1, capability, unknown$1, known$1;
+var init_document_forms = __esmMin((() => {
+	init_render_escape();
+	init_object_reference();
+	sdkMethod = (document, name) => {
+		const fn = Reflect.get(document.sdk, name);
+		if (typeof fn !== "function") throw new Error("FormSdkMethodUnavailable:" + name);
+		return (...args) => Reflect.apply(fn, document.sdk, args);
+	};
+	has$1 = (d, name) => typeof Reflect.get(d.sdk, name) === "function";
+	capability = (d, name) => has$1(d, name) && sdkMethod(d, name)() === true;
+	unknown$1 = (reason, scope = "current", raw) => ({
+		state: "unavailable",
+		value: null,
+		reason,
+		scope,
+		...raw === void 0 ? {} : { raw }
+	});
+	known$1 = (value, scope = "current", raw) => ({
+		state: "known",
+		value,
+		scope,
+		...raw === void 0 ? {} : { raw }
+	});
+}));
 // src/read-operation.ts
 init_files();
 init_host_output();
+init_document_forms();
 init_render_escape();
 const record$16 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const MAX_INPUT_BYTES$2 = 67108864;
@@ -1304,7 +1598,8 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 	if (!(binary instanceof Uint8Array)) throw Error("InvalidWasmBytes");
 	const result = await engine.read({
 		bytes: input.bytes,
-		wasm: binary
+		wasm: binary,
+		...view === "structure" ? { includeFormControls: true } : {}
 	});
 	if (!record$16(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
 	if (!record$16(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
@@ -1316,7 +1611,7 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 	return {
 		format: result.format,
 		sourceSha256: input.sha256,
-		text
+		text: text + (view === "structure" && result.formControls !== void 0 ? "\n" + renderFormInventory(result.formControls) : "")
 	};
 }
 /** CLI와 웹 실습이 공유하는 단일 읽기 응답입니다. 원문으로 대체하지 않습니다. */
@@ -12702,6 +12997,70 @@ async function createHwpxEditor(source) {
 				wasm.hwpx_edit_output_free();
 			}
 		},
+		supportsRadioButtonSelect() {
+			ready();
+			return ["hwpx_edit_select_form_radio", "hwpx_edit_radio_state"].every((name) => typeof wasm[name] === "function");
+		},
+		supportsUnnamedRadioSelect() {
+			ready();
+			return typeof wasm.hwpx_edit_select_form_radio === "function" && typeof wasm.hwpx_edit_radio_unnamed_singleton === "function" && wasm.hwpx_edit_radio_unnamed_singleton() === 1;
+		},
+		supportsFormTextEdit() {
+			ready();
+			return ["hwpx_edit_set_form_text", "hwpx_edit_form_text"].every((name) => typeof wasm[name] === "function");
+		},
+		supportsFormTextLayoutRetention() {
+			ready();
+			return typeof wasm.hwpx_edit_set_form_text === "function" && typeof wasm.hwpx_edit_form_text_retains_layout_flags === "function" && wasm.hwpx_edit_form_text_retains_layout_flags() === 1;
+		},
+		radioButtonState(section, formNode) {
+			ready();
+			[section, formNode].forEach(uint);
+			if (typeof wasm.hwpx_edit_radio_state !== "function") throw new Error("HwpxRadioStateAbiUnavailable");
+			try {
+				if (!wasm.hwpx_edit_radio_state(section, formNode)) throw memory.error();
+				const value = new TextDecoder("utf-8", {
+					fatal: true,
+					ignoreBOM: true
+				}).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+				if (!["UNCHECKED", "CHECKED"].includes(value)) throw new Error("InvalidRadioButtonState");
+				return value;
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
+		selectRadioButton(section, formNode) {
+			ready();
+			[section, formNode].forEach(uint);
+			if (typeof wasm.hwpx_edit_select_form_radio !== "function") throw new Error("HwpxRadioSelectAbiUnavailable");
+			if (!wasm.hwpx_edit_select_form_radio(section, formNode)) throw memory.error();
+		},
+		formText(section, formNode) {
+			ready();
+			[section, formNode].forEach(uint);
+			if (typeof wasm.hwpx_edit_form_text !== "function") throw new Error("HwpxFormTextAbiUnavailable");
+			try {
+				if (!wasm.hwpx_edit_form_text(section, formNode)) throw memory.error();
+				return new TextDecoder("utf-8", {
+					fatal: true,
+					ignoreBOM: true
+				}).decode(memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()));
+			} finally {
+				wasm.hwpx_edit_output_free();
+			}
+		},
+		setFormText({ section, formNode, text }) {
+			ready();
+			[section, formNode].forEach(uint);
+			if (typeof wasm.hwpx_edit_set_form_text !== "function") throw new Error("HwpxFormTextEditAbiUnavailable");
+			if (typeof text !== "string") throw new TypeError("Form text must be a string");
+			if (text.length > 65535) throw new RangeError("LimitExceeded");
+			const bytes = encodedText(text);
+			if (bytes.length > 196605) throw new RangeError("LimitExceeded");
+			memory.withBytes(bytes, (ptr, size) => {
+				if (!wasm.hwpx_edit_set_form_text(section, formNode, ptr, size)) throw memory.error();
+			});
+		},
 		checkBoxState(section, formNode) {
 			ready();
 			[section, formNode].forEach(uint);
@@ -14272,11 +14631,13 @@ async function openDocument(options = {}) {
 				state.sdk.close();
 			}
 		};
+		const nativeExports = Object.freeze(WebAssembly.Module.exports(module).filter((row) => row.kind === "function").map((row) => row.name));
 		const common = {
 			sourceSha256,
 			sectionCount,
 			replaceText,
-			close
+			close,
+			nativeExports
 		};
 		if (state.format === "hwp5") {
 			const sdk = state.sdk;
@@ -14323,7 +14684,8 @@ async function read(options) {
 		});
 		return {
 			format: document.format,
-			model
+			model,
+			...record$15(options) && options.includeFormControls === true ? { formControls: readFormInventory(document) } : {}
 		};
 	} finally {
 		document.close();
@@ -14365,6 +14727,7 @@ async function edit(options) {
 }
 var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$15;
 var init_engine = __esmMin((() => {
+	init_document_forms();
 	init_document_format();
 	init_hwp5_editor();
 	init_hwpx_editor();
@@ -16798,6 +17161,137 @@ var init_structural_host = __esmMin((() => {
 	encoder$3 = new TextEncoder();
 	record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
+// src/mutations/form-state.ts
+function requireFormOperation(document, operation) {
+	if (formWriterCapabilities(document)[operation.kind === "form-checkbox-state" ? "checkbox" : operation.kind === "form-radio-select" ? "radio" : "text"] !== true) throw new Error("FormWriterAbiUnavailable:" + operation.kind);
+	if (document.sdk.supportsSourceTableCellSplit?.() !== true) throw new Error("FormLifetimeBindingAbiUnavailable");
+}
+function precondition(form, operation) {
+	if (form.ownership !== "located") throw new Error("UnsupportedFormSourceOwner");
+	if (form.permissions.enabled.state !== "known" || form.permissions.enabled.value !== true || form.permissions.editable.state !== "known" || form.permissions.editable.value !== true) throw new Error("FormNotEditable");
+	if (operation.kind === "form-text") {
+		if (![
+			"edit",
+			"edit_box",
+			"combo_box"
+		].includes(form.kind)) throw new Error("UnsupportedFormTextKind");
+		if (["edit", "edit_box"].includes(form.kind) && (form.permissions.readOnly.state !== "known" || form.permissions.readOnly.value !== false)) throw new Error("FormReadOnlyOrUnknown");
+		if (form.kind === "combo_box" && (form.permissions.editEnable.state !== "known" || form.permissions.editEnable.value !== true)) throw new Error("FormEditEnableUnavailable");
+		if (form.current.text.state !== "known" || form.current.text.value !== operation.expectedText) throw new Error("FormTextPreconditionFailed");
+	} else {
+		if (!(operation.kind === "form-checkbox-state" && ["check_box", "check_button"].includes(form.kind) || operation.kind === "form-radio-select" && form.kind === "radio_button")) throw new Error("UnsupportedFormChoiceKind");
+		if (form.current.state.state !== "known" || form.current.state.scope !== "current" || form.current.state.value !== operation.expectedState) throw new Error("FormStatePreconditionFailed");
+		if (operation.kind === "form-checkbox-state" && operation.state === "INDETERMINATE" && (form.permissions.triState.state !== "known" || form.permissions.triState.value !== true)) throw new Error("FormTriStateUnavailable");
+		if (operation.kind === "form-radio-select" && (form.current.groupName.state !== "known" || form.current.groupName.value !== operation.expectedGroupName)) throw new Error("FormGroupPreconditionFailed");
+	}
+}
+function prepareFormOperations(document, operations) {
+	const selected = operations.filter(isFormOperation), plans = /* @__PURE__ */ new Map();
+	const sdk = document.sdk, format = document.format, sourceSha256 = document.sourceSha256;
+	let binding = selected.length ? Object.freeze({ ...sdk.sourceTableCellSplitBinding() }) : null;
+	function scope(current) {
+		if (current !== document || current.sdk !== sdk || current.format !== format || current.sourceSha256 !== sourceSha256) throw new Error("ForeignFormStateTarget");
+	}
+	function lease(current) {
+		scope(current);
+		if (!binding || !same$1(binding, sdk.sourceTableCellSplitBinding())) throw new Error("StaleFormStateReference");
+	}
+	if (selected.length) {
+		for (const op of selected) {
+			requireFormOperation(document, op);
+			const parsed = parseObjectReference(op.reference, {
+				format,
+				sourceSha256
+			});
+			if (parsed.kind !== "form" || parsed.section >= document.sectionCount) throw new Error("ExpectedFormReference");
+		}
+		let unsafe = false;
+		for (const op of operations) if (isFormOperation(op)) {
+			if (unsafe) throw new Error("StaleFormStateReference");
+		} else unsafe = true;
+		const inventory = readFormInventory(document);
+		if (inventory.status !== "available") throw new Error(inventory.reason);
+		lease(document);
+		const indexed = new Map(inventory.forms.map((row) => [row.reference, row]));
+		for (const op of selected) {
+			const row = indexed.get(op.reference);
+			if (!row) throw new Error("FormReferenceNotFound");
+			precondition(row, op);
+			if (op.kind === "form-radio-select" && row.current.groupName.state === "known" && row.current.groupName.value === "" && (typeof Reflect.get(sdk, "supportsUnnamedRadioSelect") !== "function" || sdkMethod(document, "supportsUnnamedRadioSelect")() !== true)) throw new Error("UnnamedRadioSelectAbiUnavailable");
+			plans.set(op, Object.freeze({
+				reference: op.reference,
+				fingerprint: row.fingerprint
+			}));
+		}
+	}
+	return { apply(current, operation, index) {
+		lease(current);
+		requireFormOperation(current, operation);
+		const beforeInventory = readFormInventory(current), before = resolveFormReference(current, operation.reference, beforeInventory);
+		if (!plans.has(operation) || plans.get(operation).reference !== operation.reference || plans.get(operation).fingerprint !== before.fingerprint) throw new Error("StaleFormSourceFingerprint");
+		precondition(before, operation);
+		lease(current);
+		const { section, node } = before.source;
+		if ((operation.kind === "form-checkbox-state" ? sdkMethod(current, "setCheckBoxState")(section, node, operation.state) : operation.kind === "form-radio-select" ? sdkMethod(current, "selectRadioButton")(section, node) : sdkMethod(current, "setFormText")({
+			section,
+			formNode: node,
+			text: operation.text
+		})) !== void 0) throw new Error("InvalidFormWriterResult");
+		const afterInventory = readFormInventory(current), after = resolveFormReference(current, operation.reference, afterInventory);
+		if (after.fingerprint !== before.fingerprint) throw new Error("FormOwnerChangedDuringWrite");
+		const actual = operation.kind === "form-text" ? after.current.text : after.current.state;
+		const expected = operation.kind === "form-text" ? operation.text : operation.kind === "form-checkbox-state" ? operation.state : "CHECKED";
+		if (actual.state !== "known" || actual.value !== expected) throw new Error("UnconfirmedFormStateWrite");
+		const beforeMap = new Map(beforeInventory.forms.map((row) => [row.reference, row]));
+		if (afterInventory.forms.length !== beforeMap.size) throw new Error("FormInventoryChangedDuringWrite");
+		const affected = afterInventory.forms.flatMap((row) => {
+			const old = beforeMap.get(row.reference);
+			if (!old || old.fingerprint !== row.fingerprint) throw new Error("FormOwnerChangedDuringWrite");
+			return !same$1(old.current, row.current) ? [{
+				reference: row.reference,
+				before: old.current,
+				after: row.current
+			}] : [];
+		});
+		scope(current);
+		for (const row of afterInventory.forms) {
+			const old = beforeMap.get(row.reference);
+			const target = row.reference === operation.reference;
+			const sameRadioGroup = operation.kind === "form-radio-select" && row.kind === "radio_button" && row.current.groupName.state === "known" && row.current.groupName.value === operation.expectedGroupName && (operation.expectedGroupName !== "" || target);
+			const allowedState = operation.kind === "form-checkbox-state" && target || sameRadioGroup;
+			const allowedText = operation.kind === "form-text" && target;
+			const { state: oldState, text: oldText, ...oldRest } = old.current;
+			const { state: newState, text: newText, ...newRest } = row.current;
+			if (!same$1(oldRest, newRest) || !allowedState && !same$1(oldState, newState) || !allowedText && !same$1(oldText, newText)) throw new Error("UnexpectedFormStateSideEffect");
+			if (sameRadioGroup && (newState.state !== "known" || newState.scope !== "current" || newState.value !== (target ? "CHECKED" : "UNCHECKED"))) throw new Error("UnconfirmedFormRadioGroup");
+		}
+		const next = sdk.sourceTableCellSplitBinding();
+		const unchanged = same$1(binding, next);
+		if (next.session !== binding.session || !unchanged && !(next.revision === binding.revision + 1 && BigInt(next.serial) === BigInt(binding.serial) + 1n) || affected.length > 0 && unchanged) throw new Error("StaleFormStateReference");
+		plans.delete(operation);
+		binding = Object.freeze({ ...next });
+		return {
+			operation: index,
+			kind: operation.kind,
+			reference: operation.reference,
+			changed: affected.length > 0,
+			before: before.current,
+			after: after.current,
+			affected
+		};
+	} };
+}
+var isFormOperation, same$1;
+var init_form_state = __esmMin((() => {
+	init_object_reference();
+	init_document_forms();
+	isFormOperation = (operation) => [
+		"form-checkbox-state",
+		"form-radio-select",
+		"form-text"
+	].includes(operation.kind);
+	same$1 = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+}));
 // ../../web/preview/hwp5-current-body-reference.mjs
 function validateHwp5CurrentBodyReference(editor, message, referenceError, ownerError, sections) {
 	if (Object.hasOwn(message, "reference")) {
@@ -17358,6 +17852,25 @@ function validateDocumentOperations(input) {
 				else if (operation.scope !== "document" || Object.hasOwn(operation, "section")) throw new TypeError("InvalidPageSettingsScope");
 				checkedPageSettingsValues(operation.values);
 				break;
+			case "form-checkbox-state":
+			case "form-radio-select":
+			case "form-text":
+				if (parseObjectReference(operation.reference).kind !== "form") throw new Error("ExpectedFormReference");
+				if (operation.kind === "form-text") {
+					string(operation.expectedText);
+					string(operation.text);
+					if (operation.text.length > 65535 || new TextEncoder().encode(operation.text).length > 196605) throw new RangeError("FormTextLimitExceeded");
+				} else {
+					const states = operation.kind === "form-radio-select" ? ["UNCHECKED", "CHECKED"] : [
+						"UNCHECKED",
+						"CHECKED",
+						"INDETERMINATE"
+					];
+					if (!states.includes(String(operation.expectedState))) throw new Error("InvalidFormState");
+					if (operation.kind === "form-checkbox-state" && !states.includes(String(operation.state))) throw new Error("InvalidFormState");
+					if (operation.kind === "form-radio-select") string(operation.expectedGroupName);
+				}
+				break;
 			case "source-table-cell-split": {
 				if (parseObjectReference(operation.reference).kind !== "table") throw new TypeError("ExpectedTableReference");
 				for (const key of [
@@ -17547,6 +18060,24 @@ var init_validate = __esmMin((() => {
 			"scope",
 			"values"
 		], ["section"]),
+		"form-checkbox-state": spec([
+			...common,
+			"reference",
+			"expectedState",
+			"state"
+		]),
+		"form-radio-select": spec([
+			...common,
+			"reference",
+			"expectedState",
+			"expectedGroupName"
+		]),
+		"form-text": spec([
+			...common,
+			"reference",
+			"expectedText",
+			"text"
+		]),
 		"source-table-cell-split": spec([
 			...common,
 			"reference",
@@ -17729,6 +18260,7 @@ function requireInitialCellTexts(document) {
 }
 function targets(operation) {
 	if (operation.kind === "page-settings") return operation.scope === "section" ? [{ section: operation.section }] : [];
+	if (isFormOperation(operation)) return [{ section: parseObjectReference(operation.reference).section }];
 	if (operation.kind === "source-table-cell-split") return [{ section: parseObjectReference(operation.reference).section }];
 	if (operation.kind === "cell-sizes") return operation.cells;
 	if (operation.kind === "cell-styles") return [
@@ -17747,6 +18279,7 @@ function prepareOperationSession(document, operations) {
 	if (!["hwp5", "hwpx"].includes(document?.format) || !Number.isInteger(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096 || !document.sdk || typeof document.close !== "function" || typeof document.save !== "function") throw new Error("InvalidOperationSession");
 	const protectedSections = /* @__PURE__ */ new Set();
 	for (const operation of operations) {
+		if (isFormOperation(operation)) requireFormOperation(document, operation);
 		if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
 		if (operation.kind === "page-settings") requirePageSettingsWrite(document);
 		if (operation.kind === "source-table-cell-split" && (typeof document.sdk.supportsSourceTableCellSplit !== "function" || !document.sdk.supportsSourceTableCellSplit())) throw new Error(document.format === "hwp5" ? "Hwp5SourceTableCellSplitAbiUnavailable" : "HwpxSourceTableCellSplitAbiUnavailable");
@@ -17771,7 +18304,7 @@ function prepareOperationSession(document, operations) {
 		}
 		if ((Object.hasOwn(operation, "expectedText") || Object.hasOwn(operation, "expectedRangeText") || operation.kind === "replace-paragraph-ranges") && typeof (document.format === "hwp5" ? document.sdk.text : document.sdk.anchorText) !== "function") throw new Error("OperationTextObservationUnavailable");
 	}
-	if (operations.some((operation) => hasCharacterExtensions(operation) || operation.kind === "page-settings" || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
+	if (operations.some((operation) => isFormOperation(operation) || hasCharacterExtensions(operation) || operation.kind === "page-settings" || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
 	for (const operation of operations) if (operation.kind === "page-settings") admitPageSettings(document, operation);
 	if (document.format === "hwp5") {
 		if (protectedSections.size && typeof document.sdk.validateTextSourcePolicy !== "function") throw new Error("OperationTextSourcePolicyUnavailable");
@@ -17779,6 +18312,7 @@ function prepareOperationSession(document, operations) {
 	}
 }
 function applyOperation(document, operation) {
+	if (isFormOperation(operation)) throw new Error("PreparedFormStateRequired");
 	const textCache = /* @__PURE__ */ new Map();
 	let observedUnits = 0;
 	const currentText = (row) => {
@@ -17946,12 +18480,16 @@ function applyOperation(document, operation) {
 }
 var METHODS;
 var init_dispatch = __esmMin((() => {
+	init_form_state();
 	init_character_extensions();
 	init_page_settings();
 	init_object_reference();
 	init_hwp5_table_creation_command();
 	METHODS = Object.freeze({
 		"page-settings": "writePageSettings",
+		"form-checkbox-state": "setCheckBoxState",
+		"form-radio-select": "selectRadioButton",
+		"form-text": "setFormText",
 		"source-table-cell-split": "splitSourceTableCells",
 		splice: "splice",
 		"replace-paragraph-ranges": "replaceParagraphRanges",
@@ -17995,10 +18533,15 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 	try {
 		if (document.sourceSha256 !== expectedSha256) throw new Error("SourceSha256Mismatch");
 		prepareOperationSession(document, captured);
+		const forms = prepareFormOperations(document, captured);
 		const sourceSplits = await prepareSourceTableCellSplits(document, captured);
 		const extensions = prepareCharacterExtensions(document, captured);
 		const identities = [];
 		for (const [index, operation] of captured.entries()) {
+			if (isFormOperation(operation)) {
+				identities.push(forms.apply(document, operation, index));
+				continue;
+			}
 			if (hasCharacterExtensions(operation)) {
 				identities.push(extensions.apply(document, operation, index));
 				extensions.advance(operation);
@@ -18048,6 +18591,7 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 }
 var record$5;
 var init_document_operations = __esmMin((() => {
+	init_form_state();
 	init_character_extensions();
 	init_source_table_cell_split();
 	init_validate();
@@ -19660,186 +20204,204 @@ async function inspectDocumentObject({ bytes, wasm, reference, format = "text" }
 			format: document.format
 		});
 		if (!uint(document.sectionCount) || document.sectionCount < 1 || document.sectionCount > 4096 || target.section >= document.sectionCount) throw new Error("InvalidObjectSection");
-		const block = findObject(await collect({
-			sdk: document.sdk,
-			format: document.format,
-			sourceSha256: document.sourceSha256,
-			sectionCount: document.sectionCount
-		}), reference, {
-			sourceSha256: document.sourceSha256,
-			format: document.format
-		});
-		const escape = createDisplayEscaper({
-			format,
-			view: "content"
-		});
-		const lines = [];
-		let size = 0, status = "available";
-		const line = (value) => {
-			if (typeof value !== "string" || value.length > MAX_TEXT_BYTES) throw new RangeError("ObjectDetailLimitExceeded");
-			const output = escape(value);
-			size += new TextEncoder().encode(output).length + 1;
-			if (size > MAX_TEXT_BYTES) throw new RangeError("ObjectDetailLimitExceeded");
-			lines.push(output);
-		};
-		const unavailable = (reason) => {
-			status = "unavailable";
-			line(`상세 조회 불가: ${reason}`);
-		};
-		const scalarFields = (source, keys) => {
-			if (!record$1(source)) throw new Error("InvalidObjectDetail");
-			for (const key of keys) {
-				const value = source[key];
-				if (value === null || value === void 0) continue;
-				if (![
-					"string",
-					"boolean",
-					"number"
-				].includes(typeof value) || typeof value === "number" && !Number.isFinite(value)) throw new Error("InvalidObjectDetail");
-				line(`${key}: ${value}`);
-			}
-		};
-		const rows = (value) => {
-			if (!Array.isArray(value) || value.length > MAX_ROWS) throw new Error("InvalidObjectDetail");
-			if (!value.every(record$1)) throw new Error("InvalidObjectDetail");
-			return value;
-		};
-		const query = (method, ...args) => {
-			const getter = Reflect.get(document.sdk, method);
-			if (typeof getter !== "function") {
-				unavailable(`${method} 미지원`);
-				return { ok: false };
-			}
-			try {
-				return {
-					ok: true,
-					value: Reflect.apply(getter, document.sdk, args)
-				};
-			} catch (error) {
-				unavailable(`${method}: ${record$1(error) && typeof error.message === "string" ? error.message : "원인 미확인"}`);
-				return { ok: false };
-			}
-		};
-		line(`개체 종류: ${target.kind}`);
-		line(`참조: ${reference}`);
-		line(`원본 위치: 구역 ${target.section}, 노드 ${target.node}`);
-		if (block.type === "unknown" && block.detailUnavailable === true) unavailable(block.diagnostic?.code ?? "원본 재고에 상세 조회 오류가 관측됨");
-		else if (target.kind === "image") {
-			if (block.type !== "image") throw new Error("InvalidObjectDetail");
-			scalarFields(block.sourceInfo, [
-				"recordNode",
-				"componentNode",
-				"ownerNode",
-				"resourceId"
-			]);
-			scalarFields(block, [
-				"width",
-				"height",
-				"sizeUnit",
-				"alt"
-			]);
-			line(`이미지 ID: ${canonicalImageId(target)}`);
-			line(`이미지 추출: hwpjs extract-images 입력파일 --ref ${reference} --output 새출력폴더`);
-			line("이미지 바이트는 읽지 않았습니다. 렌더링 지원 여부와 추출 가능 여부는 별도입니다.");
-		} else if (target.kind === "table") {
-			if (block.type !== "table") throw new Error("InvalidObjectDetail");
-			scalarFields(block, ["rows", "columns"]);
-			for (const cell of rows(block.cells)) {
-				line(`셀 원본: ${record$1(cell.source) ? cell.source.listNode ?? "미확인" : "미확인"}`);
-				scalarFields(cell, [
-					"row",
-					"column",
-					"rowSpan",
-					"columnSpan",
-					"geometryKnown",
-					"contentState"
-				]);
-				for (const child of rows(cell.blocks)) if (child.type === "paragraph") {
-					if (child.displayText === null) {
-						status = "unavailable";
-						line("문단 내용 미관측");
-					} else if (typeof child.displayText !== "string") throw new Error("InvalidObjectDetail");
-					else line(child.displayText);
-				} else line(`포함 개체: ${child.type === "unknown" ? child.kind : child.type}${child.reference ? `, 참조: ${child.reference}` : ", 상세 참조 없음"}`);
-			}
-		} else if (target.kind === "chart" && document.format === "hwpx") {
-			const result = query("chartDisplay", target.section, target.node);
-			if (result.ok) {
-				const detail = result.value;
-				if (!record$1(detail) || detail.kind !== "chart_display" || !record$1(detail.pair) || detail.pair.wrapper_node !== target.node || detail.pair.section_ordinal !== target.section) throw new Error("InvalidObjectDetail");
-				scalarFields(detail.pair, [
-					"chart_path",
-					"ole_path",
-					"declared_external"
-				]);
-				for (const row of rows(detail.rich_text)) scalarFields(row, [
-					"owner_role",
-					"owner_node",
-					"text",
-					"plain_text_complete"
-				]);
-				for (const row of rows(detail.series_text)) scalarFields(row, ["series_node", "text"]);
-				const bindings = /* @__PURE__ */ new Map();
-				if (detail.bindings !== void 0) for (const binding of rows(detail.bindings)) {
-					if (!record$1(binding) || !uint(binding.point) || bindings.has(binding.point)) throw new Error("InvalidObjectDetail");
-					bindings.set(binding.point, binding);
-				}
-				let pointOrdinal = 0;
-				for (const row of rows(detail.points)) {
-					line(`값 순번: ${pointOrdinal}`);
-					scalarFields(row, [
-						"kind",
-						"index",
-						"value"
-					]);
-					const binding = bindings.get(pointOrdinal++);
-					if (binding) scalarFields(binding, [
-						"series_node",
-						"plot_node",
-						"role_node",
-						"role"
-					]);
-					else line("계열과 역할 관계 미관측");
-				}
-				for (const ordinal of bindings.keys()) if (ordinal >= pointOrdinal) throw new Error("InvalidObjectDetail");
-				line("차트 메타데이터 조회이며 외부 자원 다운로드나 바이너리 추출은 하지 않았습니다.");
-			}
-		} else if (target.kind === "equation" && document.format === "hwpx") {
-			const result = query("equationScript", target.section, target.node);
-			if (result.ok) {
-				if (typeof result.value !== "string") throw new Error("InvalidObjectDetail");
-				line(`수식 원문: ${result.value}`);
-			}
-		} else if (target.kind === "ole" && document.format === "hwpx") {
-			const result = query("oleSource", target.section, target.node);
-			if (result.ok) {
-				const keys = [
-					"binary_item_id",
-					"object_type",
-					"draw_aspect",
-					"has_moniker",
-					"transform_identity"
-				];
-				scalarFields(result.value, keys);
-				const detail = result.value;
-				if (!record$1(detail)) throw new Error("InvalidObjectDetail");
-				if (!keys.some((key) => detail[key] !== null && detail[key] !== void 0)) unavailable("OLE 원본 상세 필드가 관측되지 않았습니다.");
-			}
-			line("OLE 바이너리는 읽지 않았습니다.");
+		if (target.kind === "form") {
+			const { fingerprint: _, ...form } = resolveFormReference(document, reference, readFormInventory(document));
+			const text = "form: " + createDisplayEscaper({
+				format,
+				view: "structure"
+			})(JSON.stringify(form)) + "\n";
+			if (new TextEncoder().encode(text).length > MAX_TEXT_BYTES) throw new Error("ObjectDetailLimitExceeded");
+			output = {
+				schemaVersion: 1,
+				format: document.format,
+				sourceSha256: document.sourceSha256,
+				reference,
+				kind: "form",
+				status: "available",
+				text
+			};
 		} else {
-			scalarFields(block, ["nativeKind", "subtype"]);
-			unavailable("종류와 원본 위치는 관측했으나 현재 공통 상세 조회가 지원되지 않습니다.");
+			const block = findObject(await collect({
+				sdk: document.sdk,
+				format: document.format,
+				sourceSha256: document.sourceSha256,
+				sectionCount: document.sectionCount
+			}), reference, {
+				sourceSha256: document.sourceSha256,
+				format: document.format
+			});
+			const escape = createDisplayEscaper({
+				format,
+				view: "content"
+			});
+			const lines = [];
+			let size = 0, status = "available";
+			const line = (value) => {
+				if (typeof value !== "string" || value.length > MAX_TEXT_BYTES) throw new RangeError("ObjectDetailLimitExceeded");
+				const output = escape(value);
+				size += new TextEncoder().encode(output).length + 1;
+				if (size > MAX_TEXT_BYTES) throw new RangeError("ObjectDetailLimitExceeded");
+				lines.push(output);
+			};
+			const unavailable = (reason) => {
+				status = "unavailable";
+				line(`상세 조회 불가: ${reason}`);
+			};
+			const scalarFields = (source, keys) => {
+				if (!record$1(source)) throw new Error("InvalidObjectDetail");
+				for (const key of keys) {
+					const value = source[key];
+					if (value === null || value === void 0) continue;
+					if (![
+						"string",
+						"boolean",
+						"number"
+					].includes(typeof value) || typeof value === "number" && !Number.isFinite(value)) throw new Error("InvalidObjectDetail");
+					line(`${key}: ${value}`);
+				}
+			};
+			const rows = (value) => {
+				if (!Array.isArray(value) || value.length > MAX_ROWS) throw new Error("InvalidObjectDetail");
+				if (!value.every(record$1)) throw new Error("InvalidObjectDetail");
+				return value;
+			};
+			const query = (method, ...args) => {
+				const getter = Reflect.get(document.sdk, method);
+				if (typeof getter !== "function") {
+					unavailable(`${method} 미지원`);
+					return { ok: false };
+				}
+				try {
+					return {
+						ok: true,
+						value: Reflect.apply(getter, document.sdk, args)
+					};
+				} catch (error) {
+					unavailable(`${method}: ${record$1(error) && typeof error.message === "string" ? error.message : "원인 미확인"}`);
+					return { ok: false };
+				}
+			};
+			line(`개체 종류: ${target.kind}`);
+			line(`참조: ${reference}`);
+			line(`원본 위치: 구역 ${target.section}, 노드 ${target.node}`);
+			if (block.type === "unknown" && block.detailUnavailable === true) unavailable(block.diagnostic?.code ?? "원본 재고에 상세 조회 오류가 관측됨");
+			else if (target.kind === "image") {
+				if (block.type !== "image") throw new Error("InvalidObjectDetail");
+				scalarFields(block.sourceInfo, [
+					"recordNode",
+					"componentNode",
+					"ownerNode",
+					"resourceId"
+				]);
+				scalarFields(block, [
+					"width",
+					"height",
+					"sizeUnit",
+					"alt"
+				]);
+				line(`이미지 ID: ${canonicalImageId(target)}`);
+				line(`이미지 추출: hwpjs extract-images 입력파일 --ref ${reference} --output 새출력폴더`);
+				line("이미지 바이트는 읽지 않았습니다. 렌더링 지원 여부와 추출 가능 여부는 별도입니다.");
+			} else if (target.kind === "table") {
+				if (block.type !== "table") throw new Error("InvalidObjectDetail");
+				scalarFields(block, ["rows", "columns"]);
+				for (const cell of rows(block.cells)) {
+					line(`셀 원본: ${record$1(cell.source) ? cell.source.listNode ?? "미확인" : "미확인"}`);
+					scalarFields(cell, [
+						"row",
+						"column",
+						"rowSpan",
+						"columnSpan",
+						"geometryKnown",
+						"contentState"
+					]);
+					for (const child of rows(cell.blocks)) if (child.type === "paragraph") {
+						if (child.displayText === null) {
+							status = "unavailable";
+							line("문단 내용 미관측");
+						} else if (typeof child.displayText !== "string") throw new Error("InvalidObjectDetail");
+						else line(child.displayText);
+					} else line(`포함 개체: ${child.type === "unknown" ? child.kind : child.type}${child.reference ? `, 참조: ${child.reference}` : ", 상세 참조 없음"}`);
+				}
+			} else if (target.kind === "chart" && document.format === "hwpx") {
+				const result = query("chartDisplay", target.section, target.node);
+				if (result.ok) {
+					const detail = result.value;
+					if (!record$1(detail) || detail.kind !== "chart_display" || !record$1(detail.pair) || detail.pair.wrapper_node !== target.node || detail.pair.section_ordinal !== target.section) throw new Error("InvalidObjectDetail");
+					scalarFields(detail.pair, [
+						"chart_path",
+						"ole_path",
+						"declared_external"
+					]);
+					for (const row of rows(detail.rich_text)) scalarFields(row, [
+						"owner_role",
+						"owner_node",
+						"text",
+						"plain_text_complete"
+					]);
+					for (const row of rows(detail.series_text)) scalarFields(row, ["series_node", "text"]);
+					const bindings = /* @__PURE__ */ new Map();
+					if (detail.bindings !== void 0) for (const binding of rows(detail.bindings)) {
+						if (!record$1(binding) || !uint(binding.point) || bindings.has(binding.point)) throw new Error("InvalidObjectDetail");
+						bindings.set(binding.point, binding);
+					}
+					let pointOrdinal = 0;
+					for (const row of rows(detail.points)) {
+						line(`값 순번: ${pointOrdinal}`);
+						scalarFields(row, [
+							"kind",
+							"index",
+							"value"
+						]);
+						const binding = bindings.get(pointOrdinal++);
+						if (binding) scalarFields(binding, [
+							"series_node",
+							"plot_node",
+							"role_node",
+							"role"
+						]);
+						else line("계열과 역할 관계 미관측");
+					}
+					for (const ordinal of bindings.keys()) if (ordinal >= pointOrdinal) throw new Error("InvalidObjectDetail");
+					line("차트 메타데이터 조회이며 외부 자원 다운로드나 바이너리 추출은 하지 않았습니다.");
+				}
+			} else if (target.kind === "equation" && document.format === "hwpx") {
+				const result = query("equationScript", target.section, target.node);
+				if (result.ok) {
+					if (typeof result.value !== "string") throw new Error("InvalidObjectDetail");
+					line(`수식 원문: ${result.value}`);
+				}
+			} else if (target.kind === "ole" && document.format === "hwpx") {
+				const result = query("oleSource", target.section, target.node);
+				if (result.ok) {
+					const keys = [
+						"binary_item_id",
+						"object_type",
+						"draw_aspect",
+						"has_moniker",
+						"transform_identity"
+					];
+					scalarFields(result.value, keys);
+					const detail = result.value;
+					if (!record$1(detail)) throw new Error("InvalidObjectDetail");
+					if (!keys.some((key) => detail[key] !== null && detail[key] !== void 0)) unavailable("OLE 원본 상세 필드가 관측되지 않았습니다.");
+				}
+				line("OLE 바이너리는 읽지 않았습니다.");
+			} else {
+				scalarFields(block, ["nativeKind", "subtype"]);
+				unavailable("종류와 원본 위치는 관측했으나 현재 공통 상세 조회가 지원되지 않습니다.");
+			}
+			line(`상태: ${status}`);
+			output = {
+				schemaVersion: 1,
+				format: document.format,
+				sourceSha256: document.sourceSha256,
+				reference,
+				kind: target.kind,
+				status,
+				text: lines.join("\n") + "\n"
+			};
 		}
-		line(`상태: ${status}`);
-		output = {
-			schemaVersion: 1,
-			format: document.format,
-			sourceSha256: document.sourceSha256,
-			reference,
-			kind: target.kind,
-			status,
-			text: lines.join("\n") + "\n"
-		};
 	} catch (error) {
 		failed = true;
 		failure = error;
@@ -19856,6 +20418,7 @@ async function inspectDocumentObject({ bytes, wasm, reference, format = "text" }
 }
 var MAX_ROWS, MAX_TEXT_BYTES, uint, record$1;
 var init_document_objects = __esmMin((() => {
+	init_document_forms();
 	init_object_reference();
 	init_render_escape();
 	init_document_model();
@@ -19961,6 +20524,7 @@ async function inspectDocument({ bytes, wasm, expectedSha256 } = {}, { openDocum
 				passwordProtection: unknown("PasswordProtectionNotExposedBySdk"),
 				digitalSignature: unknown("DigitalSignatureNotExposedBySdk")
 			},
+			formControls: publicFormInventory(readFormInventory(document)),
 			editing: {
 				documentEditable: unknown("RequiresNativeValidationForEachTargetAndOperation"),
 				textSourceProtection: textSourceProtection(document, diagnostics)
@@ -19988,6 +20552,7 @@ async function inspectDocument({ bytes, wasm, expectedSha256 } = {}, { openDocum
 }
 var record, message, invoke, has, MAX_INPUT_BYTES, observed, unknown, unsupported;
 var init_inspect_document = __esmMin((() => {
+	init_document_forms();
 	init_engine();
 	init_document_format();
 	init_hwp5_text_source_protection();
