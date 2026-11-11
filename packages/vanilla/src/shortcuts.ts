@@ -52,7 +52,10 @@ export function createKeyboardShortcuts(options: KeyboardShortcutsOptions) {
         (fallback && resolveKeyboardShortcut(fallback, initialInput));
       if (original) {
         event.stopPropagation();
-        if (event.repeat || ['copy', 'cut', 'paste', 'undo', 'redo'].includes(original.command))
+        if (
+          event.repeat ||
+          ['copy', 'cut', 'paste', 'undo', 'redo', 'block-selection'].includes(original.command)
+        )
           event.preventDefault();
       }
       return;

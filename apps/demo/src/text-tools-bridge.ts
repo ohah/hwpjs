@@ -302,7 +302,8 @@ export function createTextToolsBridge({
     if (closed || event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
     if (statistics.isOpen || root.ownerDocument.querySelector?.('dialog:modal')) return;
     const target = event.target as Element | null,
-      inside = view?.element.contains(target);
+      inside = view?.element.contains(target),
+      documentInput = target?.closest?.('[data-hwpjs-document-input]');
     if (inside) {
       const command = resolveShortcut?.(event);
       if (command === 'find' || command === 'replace') {
@@ -318,8 +319,9 @@ export function createTextToolsBridge({
       event.metaKey ||
       event.altKey ||
       (!inside &&
-        target?.closest?.('input,textarea,select,[contenteditable]') &&
-        !target.closest('[data-hwpjs-document-input]'))
+        (documentInput
+          ? !event.shiftKey || Boolean(resolveShortcut?.(event))
+          : target?.closest?.('input,textarea,select,[contenteditable]')))
     )
       return;
     event.preventDefault();

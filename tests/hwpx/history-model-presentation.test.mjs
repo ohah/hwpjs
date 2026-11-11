@@ -84,7 +84,7 @@ function fixture(t, initial = 'AB', unit = 1, modelPort = true) {
       selectable: true,
       selectionOwner: 'section:0:body',
     },
-    content = { format: 'hwpx', paragraphs: [row] };
+    content = { format: 'hwpx', paragraphs: [row], totalParagraphs: 1 };
   const canvas = new Node(),
     input = new Node(),
     viewport = new Node(),
@@ -109,6 +109,7 @@ function fixture(t, initial = 'AB', unit = 1, modelPort = true) {
     modelState = null,
     layoutReadHook = null;
   const renderer = {
+    viewContent: () => content,
     clearDraft() {
       clearDraftCalls++;
       this.preview(null);
@@ -431,6 +432,48 @@ async function prepared(t, modelPort = true) {
   await tick();
   return f;
 }
+
+test('Canvas F3 advances only on separate presses and Escape exits at the active endpoint', (t) => {
+  const f = fixture(t, 'alpha 한글 😀', 2);
+  const press = (key, extra = {}) => f.fire('keydown', { code: key, key, ...extra });
+  assert.equal(press('F3').defaultPrevented, true);
+  assert.equal(f.canvas.dataset.blockSelection, 'caret');
+  assert.equal(press('F3', { repeat: true }).defaultPrevented, true);
+  assert.equal(f.canvas.dataset.blockSelection, 'caret');
+  press('ArrowRight');
+  assert.equal(f.canvas.dataset.selection, '2:3');
+  press('F3');
+  assert.equal(f.canvas.dataset.blockSelection, 'word');
+  assert.equal(f.canvas.dataset.selection, '0:5');
+  press('F3');
+  assert.equal(f.canvas.dataset.blockSelection, 'paragraph');
+  assert.equal(f.canvas.dataset.selection, '0:11');
+  press('F3');
+  assert.equal(f.canvas.dataset.blockSelection, 'document');
+  press('Escape');
+  assert.equal(f.canvas.dataset.blockSelection, '');
+  assert.equal(f.canvas.dataset.selection, '11:11');
+  assert.equal(f.requests.length, 0);
+});
+
+test('composition and externally selected text do not inherit an armed F3 sequence', (t) => {
+  const f = fixture(t, 'alpha beta', 2);
+  const press = (extra = {}) => f.fire('keydown', { code: 'F3', key: 'F3', ...extra });
+  press();
+  f.fire('compositionstart');
+  assert.equal(f.canvas.dataset.blockSelection, '');
+  assert.equal(press({ isComposing: true }).defaultPrevented, false);
+  assert.equal(f.direct.requestBlockSelection(), false);
+  f.fire('compositionend', { data: '' });
+  press();
+  assert.equal(f.canvas.dataset.blockSelection, 'caret');
+  f.direct.selectTextRange({ section: 0, paragraph: 0, startUnit: 8, endUnit: 8 });
+  press();
+  assert.equal(f.canvas.dataset.blockSelection, 'caret');
+  press();
+  assert.equal(f.canvas.dataset.selection, '6:10');
+  assert.equal(f.requests.length, 0);
+});
 
 for (const queued of [false, true]) {
   test(`committed redo without a caret ${queued ? 'holds queued typing' : 'allows save and reselection'}`, async (t) => {

@@ -1874,6 +1874,16 @@ export function createCanvasSurface({
     canPasteInput(): boolean {
       return !closed && direct.canPasteInput();
     },
+    canRequestBlockSelection(): boolean {
+      return (
+        !closed && lease?.isActive() === true && !modalOpen() && direct.canRequestBlockSelection()
+      );
+    },
+    requestBlockSelection(): boolean {
+      return (
+        !closed && lease?.isActive() === true && !modalOpen() && direct.requestBlockSelection()
+      );
+    },
     focusForPaste(): boolean {
       if (closed || !direct.canPasteInput()) return false;
       return direct.focusInput() && !closed && direct.canPasteInput();

@@ -81,6 +81,8 @@ export interface DemoHost
   focus?(): boolean;
   canPasteInput?(): boolean;
   focusForPaste?(): boolean;
+  canRequestBlockSelection?(): boolean;
+  requestBlockSelection?(): boolean;
   setScale(value: number): boolean;
   setDisplayOptions?(options: CanvasDisplayOptions): boolean;
   getDisplayOptions?(): Readonly<CanvasDisplayOptions> | undefined;
@@ -344,6 +346,14 @@ export async function mountDemo(
       ...viewOptions.presentation(ready),
       ...clipboard.getPresentation().actions,
       'new-document': { enabled: !busy },
+      ...(host?.requestBlockSelection
+        ? {
+            'block-selection': {
+              enabled: host.canRequestBlockSelection?.() === true,
+              reason: '문서의 현재 입력 위치에서 블록을 설정할 수 없습니다.',
+            },
+          }
+        : {}),
       'insert-document': documentInsert.presentation(state, sharedFormatting.formatting.target),
       save: { enabled: ready, reason: ready ? undefined : '문서를 먼저 열어주세요.' },
       ...(print
@@ -471,6 +481,11 @@ export async function mountDemo(
     }
     if (action.command === 'insert-document') {
       documentInsert.open();
+      return;
+    }
+    if (action.command === 'block-selection') {
+      if (host?.requestBlockSelection?.() !== true)
+        note('문서의 현재 입력 위치에서 블록을 설정할 수 없습니다.');
       return;
     }
     if (action.command === 'new-document') {

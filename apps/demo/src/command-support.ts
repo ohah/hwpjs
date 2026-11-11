@@ -18,6 +18,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   save: entry('저장', '문서'),
   'print-preview': entry('인쇄 미리보기', '문서'),
   'insert-document': entry('HWPX 문서 끼워 넣기', '문서', true),
+  'block-selection': entry('블록 설정', '편집'),
   undo: entry('실행 취소', '편집'),
   redo: entry('다시 실행', '편집'),
   cut: entry('잘라내기', '클립보드', true),

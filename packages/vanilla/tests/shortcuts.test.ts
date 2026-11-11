@@ -107,6 +107,25 @@ test('captured physical shortcut dispatches once; config changes and disposal ar
   assert.equal(f.handlers.size, 0);
   other.adapter.dispose();
 });
+test('disabled or remapped F3 cannot fall through to the Canvas default', () => {
+  const make = (code: string, enabled = true) =>
+    parseKeymapConfig({
+      version: 1,
+      bindings: [
+        { id: 'block-selection', command: 'block-selection', code, modifiers: [], enabled },
+      ],
+    });
+  const f = fixture(true, { config: make('F4'), fallback: make('F3') });
+  assert.equal(f.key({ code: 'F3', metaKey: false }).defaultPrevented, true);
+  assert.deepEqual(f.calls, []);
+  f.key({ code: 'F4', metaKey: false });
+  f.key({ code: 'F4', metaKey: false, repeat: true });
+  assert.deepEqual(f.calls, ['block-selection']);
+  f.adapter.setConfig(make('F3', false));
+  assert.equal(f.key({ code: 'F3', metaKey: false }).stopped, true);
+  assert.deepEqual(f.calls, ['block-selection']);
+  f.adapter.dispose();
+});
 test('composing, AltGraph, unrelated modifiers and ordinary inputs preserve browser input', () => {
   const f = fixture();
   for (const patch of [

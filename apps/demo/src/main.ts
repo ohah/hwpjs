@@ -70,6 +70,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       captureTransferSelection: (options) =>
         ref.current?.surface?.captureTransferSelection?.(options) ?? null,
       focusForPaste: () => ref.current?.surface?.focusForPaste() ?? false,
+      canRequestBlockSelection: () => ref.current?.surface?.canRequestBlockSelection() ?? false,
+      requestBlockSelection: () => ref.current?.surface?.requestBlockSelection() ?? false,
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
@@ -121,6 +123,8 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         surface?.transferSelection?.(options) ?? Promise.resolve(false),
       captureTransferSelection: (options) => surface?.captureTransferSelection?.(options) ?? null,
       focusForPaste: () => surface?.focusForPaste() ?? false,
+      canRequestBlockSelection: () => surface?.canRequestBlockSelection() ?? false,
+      requestBlockSelection: () => surface?.requestBlockSelection() ?? false,
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();

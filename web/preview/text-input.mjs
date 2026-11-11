@@ -74,6 +74,18 @@ export function wordBoundary(text, unit, forward) {
   }
   return forward ? text.length : previous;
 }
+/** The word at a UTF-16 caret, including its trailing boundary. */
+export function wordSelectionRange(text, unit) {
+  let trailing = null;
+  for (const part of (words ??= createSegmenter('word')).segment(text)) {
+    if (part.index > unit) break;
+    if (!part.isWordLike) continue;
+    const end = part.index + part.segment.length;
+    if (unit < end) return [part.index, end];
+    if (unit === end) trailing = [part.index, end];
+  }
+  return trailing;
+}
 export function snapUnit(text, unit, forward = false) {
   const bounds = graphemeUnits(text);
   return forward

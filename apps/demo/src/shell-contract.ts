@@ -9,6 +9,7 @@ export type DemoCommand =
   | 'save'
   | 'print-preview'
   | 'insert-document'
+  | 'block-selection'
   | 'undo'
   | 'redo'
   | 'cut'

@@ -15,6 +15,10 @@ for (const platform of ['mac', 'windows', 'linux'] as const)
         altKey: false,
         shiftKey: false,
       };
+    const f3 = { code: 'F3', ctrlKey: false, metaKey: false, altKey: false, shiftKey: false };
+    expect(resolveKeyboardShortcut(compiled, f3)?.command).toBe('block-selection');
+    expect(resolveKeyboardShortcut(compiled, { ...f3, repeat: true })).toBeNull();
+    expect(resolveKeyboardShortcut(compiled, { ...f3, isComposing: true })).toBeNull();
     for (const [code, command] of [
       ['KeyS', 'save'],
       ['KeyZ', 'undo'],

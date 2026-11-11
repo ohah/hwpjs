@@ -32,11 +32,15 @@ import {
   selectableText,
   paragraphTarget,
 } from './text-geometry.mjs';
-import { textChange, snapUnit, wordBoundary } from './text-input.mjs';
+import { textChange, snapUnit, wordBoundary, wordSelectionRange } from './text-input.mjs';
 import { navigateText, adjacentParagraphBoundary } from './text-navigation.mjs';
 import { sourceTextChange } from './text-offsets.mjs';
 import { normalizeParagraphReplacement } from '../../js/paragraph-replacement.mjs';
-import { paragraphSelectionEdge, paragraphSelectionRanges } from './paragraph-selection.mjs';
+import {
+  documentBlockRange,
+  paragraphSelectionEdge,
+  paragraphSelectionRanges,
+} from './paragraph-selection.mjs';
 import { paragraphCompositionProjection } from './paragraph-composition.mjs';
 import { navigationIntent } from './navigation-intent.mjs';
 import { characterFontNameArgs } from '../../js/character-font-name-args.mjs';
@@ -169,6 +173,7 @@ export function createCanvasEditor({
     pending = null,
     composing = false,
     drag = null;
+  let blockSelection = null;
   let preferredX = null,
     dragScale = 1;
   let selectionOrigin = 'canvas';
@@ -589,6 +594,7 @@ export function createCanvasEditor({
     else renderer.select(interaction);
     canvas.dataset.caret = focus ? `${focus.section}:${focus.paragraph}:${focus.unit}` : '';
     canvas.dataset.selection = anchor && focus ? `${anchor.unit}:${focus.unit}` : '';
+    canvas.dataset.blockSelection = blockSelection?.stage ?? '';
     canvas.dataset.composing = String(composing);
     if (!deferGeometry) place();
     onComposition({
@@ -622,6 +628,7 @@ export function createCanvasEditor({
       input.setSelectionRange(start, end, backward ? 'backward' : 'forward');
     const anchorUnit = backward ? end : start,
       focusUnit = backward ? start : end;
+    if (anchor?.unit !== anchorUnit || focus?.unit !== focusUnit) blockSelection = null;
     if (anchor?.unit !== anchorUnit || focus?.unit !== focusUnit) preferredX = null;
     if (
       !(
@@ -673,7 +680,7 @@ export function createCanvasEditor({
     const minimum = hwp5StructuralEditableStart(renderer.paragraph(point));
     return point.unit < minimum ? { ...point, unit: minimum } : point;
   };
-  const setSelection = (a, f, nextX = null, origin = 'canvas') => {
+  const setSelection = (a, f, nextX = null, origin = 'canvas', block = null) => {
     if (!viewAllowsRange(a, f)) {
       reconcilePreviewPolicy?.();
       return false;
@@ -681,6 +688,7 @@ export function createCanvasEditor({
     if (a && f && !composing) compositionInvalidated = false;
     a = editablePoint(a);
     f = editablePoint(f);
+    blockSelection = block;
     selectionOrigin = origin;
     if (draftSelection && !sameParagraph(draftSelection.focus, f)) draftSelection = null;
     if (typingFont && !sameParagraph(typingFont, f)) {
@@ -706,6 +714,73 @@ export function createCanvasEditor({
       );
     updateReadOnly();
     paint();
+    return true;
+  };
+  const canRequestBlockSelection = () =>
+    !events.signal.aborted &&
+    activeElement() === input &&
+    !input.disabled &&
+    Boolean(target && anchor && focus) &&
+    !compositionInvalidated &&
+    drag === null &&
+    controller.settled() &&
+    controls.ready() &&
+    !controls.busy() &&
+    viewAllowsRange(anchor, focus);
+  const applyBlockSelection = (a, f, block, nextX = null) => {
+    if (!viewAllowsRange(a, f)) return false;
+    if (sameParagraph(a, f) && !sameParagraph(target, f)) {
+      const row = renderer.paragraph(f);
+      if (!selectableText(row)) return false;
+      target = paragraphTarget(f);
+      committed = input.value = row.text;
+    }
+    resetTypingForUserSelection(a, f);
+    if (!setSelection(a, f, nextX, 'canvas', block)) return false;
+    reveal();
+    return true;
+  };
+  const requestBlockSelection = () => {
+    if (!canRequestBlockSelection()) return false;
+    const base = blockSelection?.base ?? focus;
+    switch (blockSelection?.stage) {
+      case 'caret': {
+        const row = renderer.paragraph(base);
+        if (!selectableText(row)) return false;
+        const range = wordSelectionRange(row.text, base.unit);
+        const [start, end] = range ?? [base.unit, base.unit];
+        return applyBlockSelection(
+          { ...base, unit: start },
+          { ...base, unit: end },
+          { stage: 'word', base },
+        );
+      }
+      case 'word': {
+        const row = renderer.paragraph(base);
+        if (!selectableText(row)) return false;
+        return applyBlockSelection(
+          { ...base, unit: 0 },
+          { ...base, unit: row.text.length },
+          { stage: 'paragraph', base },
+        );
+      }
+      case 'paragraph': {
+        const range = documentBlockRange(renderer.viewContent?.(), base);
+        if (
+          !range ||
+          editablePoint(range.anchor).unit !== range.anchor.unit ||
+          !applyBlockSelection(range.anchor, range.focus, { stage: 'document', base })
+        )
+          report('현재 미리보기에서는 문서 전체를 하나의 블록으로 선택할 수 없습니다.');
+        return true;
+      }
+      case 'document':
+        return true;
+      default:
+        if (!applyBlockSelection(base, base, { stage: 'caret', base })) return false;
+        report('블록 시작 위치를 설정했습니다.');
+        return true;
+    }
   };
   const richTypingAvailable = () =>
     Number.isInteger(historyRevision) &&
@@ -1085,6 +1160,7 @@ export function createCanvasEditor({
       report('입력 반영이 끝난 뒤 실행 취소/다시 실행하세요.');
       return false;
     }
+    blockSelection = null;
     historyModelWitness = null;
     historyModelPreparation = null;
     historyPending = true;
@@ -2052,6 +2128,7 @@ export function createCanvasEditor({
   };
   listen(input, 'beforeinput', (event) => {
     if (event.defaultPrevented) return;
+    blockSelection = null;
     if (compositionInvalidated) {
       event.preventDefault();
       return;
@@ -2189,6 +2266,7 @@ export function createCanvasEditor({
     }
   });
   listen(input, 'input', () => {
+    blockSelection = null;
     if (compositionInvalidated) {
       input.value = committed;
       renderer.preview(null);
@@ -2248,6 +2326,7 @@ export function createCanvasEditor({
     if (!composing) pump();
   });
   listen(input, 'compositionstart', () => {
+    blockSelection = null;
     if (!target || !controls.ready()) return;
     compositionInvalidated = false;
     if (historyInputPending()) {
@@ -2410,6 +2489,26 @@ export function createCanvasEditor({
       return;
     const navigation = navigationIntent(event, platform);
     const key = navigation?.key ?? event.key;
+    if (!event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      if (event.code === 'F3') {
+        event.preventDefault();
+        if (!event.repeat) requestBlockSelection();
+        return;
+      }
+      if (blockSelection && key === 'Escape' && canRequestBlockSelection()) {
+        event.preventDefault();
+        if (applyBlockSelection(focus, focus, null)) report('블록 설정을 종료했습니다.');
+        return;
+      }
+      if (blockSelection?.stage === 'caret' && ['ArrowLeft', 'ArrowRight'].includes(key)) {
+        event.preventDefault();
+        if (canRequestBlockSelection()) {
+          const next = extendedNavigation(key, false, true);
+          if (next) applyBlockSelection(next.anchor, next.focus, blockSelection, next.preferredX);
+        }
+        return;
+      }
+    }
     if (
       historyInputPending() &&
       navigation &&
@@ -2755,7 +2854,10 @@ export function createCanvasEditor({
     return true;
   };
   listen(input, 'focus', focusedSelection);
-  listen(input, 'blur', paint);
+  listen(input, 'blur', () => {
+    blockSelection = null;
+    paint();
+  });
   const selectedRange = () => {
     if (!viewAllowsPoint(target) || !viewAllowsRange(anchor, focus) || target?.createdCell)
       return null;
@@ -4025,6 +4127,8 @@ export function createCanvasEditor({
     canRequestHistory,
     historyModelReady,
     requestHistory: travel,
+    canRequestBlockSelection,
+    requestBlockSelection,
     reset({
       preserveHistory = false,
       preserveHistoryIntents = false,
@@ -4040,6 +4144,7 @@ export function createCanvasEditor({
       if (events.signal.aborted) return;
       historyModelWitness = null;
       historyModelPreparation = null;
+      blockSelection = null;
       historyPaintBarrier.reset();
       canvas.dataset.selectionAuthority = 'current';
       if (!preserveHistoryIntents) historyIntents.clear();

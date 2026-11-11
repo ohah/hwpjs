@@ -138,3 +138,39 @@ export function paragraphSelectionText(
     )
     .join('\n');
 }
+
+/** A document block can use the existing text range only on a complete body projection. */
+export function documentBlockRange(content, point) {
+  const rows = content?.paragraphs;
+  if (
+    !point ||
+    point.createdCell ||
+    content?.window ||
+    content?.limited ||
+    content?.viewKind ||
+    !Array.isArray(rows) ||
+    !rows.length ||
+    rows.length !== content.totalParagraphs
+  )
+    return null;
+  const first = rows[0],
+    last = rows.at(-1);
+  const owner = `section:${point.section}:body`;
+  if (
+    !first ||
+    !last ||
+    first.section !== point.section ||
+    paragraphSelectionOwner(first) !== owner ||
+    !rows.some((row) => row?.section === point.section && row.paragraph === point.paragraph) ||
+    typeof last.text !== 'string'
+  )
+    return null;
+  const anchor = { section: first.section, paragraph: first.paragraph, unit: 0 };
+  const focus = { section: last.section, paragraph: last.paragraph, unit: last.text.length };
+  return paragraphSelectionRanges(rows, anchor, focus, undefined, {
+    sourcePositions: false,
+    includeEmpty: true,
+  })
+    ? { anchor, focus }
+    : null;
+}
