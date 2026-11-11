@@ -53,6 +53,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'toggle-paragraph-marks': entry('문단 부호', '보기'),
   'toggle-marks': entry('조판 부호', '보기'),
   'toggle-grid': entry('격자', '보기'),
+  'toggle-transparent-lines': entry('투명 선', '보기'),
   'insert-comment': entry('주석', '삽입', true),
   'word-count': entry('문서 통계', '문서'),
   bold: entry('굵게', '서식', true),

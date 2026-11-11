@@ -1,5 +1,15 @@
 import type { DemoHost } from './demo-controller.ts';
 import type { DemoAction, DemoCommand, ActionAvailability } from './shell-contract.ts';
+const optionForCommand = new Map<
+  DemoCommand,
+  'paragraphMarks' | 'formattingMarks' | 'showTableGrid' | 'showTransparentTableLines'
+>([
+  ['toggle-paragraph-marks', 'paragraphMarks'],
+  ['toggle-marks', 'formattingMarks'],
+  ['toggle-grid', 'showTableGrid'],
+  ['toggle-transparent-lines', 'showTransparentTableLines'],
+]);
+
 /** 표시 설정만 소유하며 편집·선택·런타임·저장 포트는 소유하지 않습니다. */
 export function createViewOptionsBridge({
   getHost,
@@ -45,7 +55,17 @@ export function createViewOptionsBridge({
         (typeof current?.value.showTableGrid === 'boolean'
           ? undefined
           : '표 격자 표시 정책이 연결되지 않았습니다.');
+      const transparentReason =
+        reason ??
+        (typeof current?.value.showTransparentTableLines === 'boolean'
+          ? undefined
+          : '투명 선 표시 정책이 연결되지 않았습니다.');
       return {
+        'toggle-transparent-lines': {
+          enabled: !transparentReason,
+          reason: transparentReason,
+          pressed: transparentReason ? undefined : current!.value.showTransparentTableLines,
+        },
         'toggle-grid': {
           enabled: !gridReason,
           reason: gridReason,
@@ -66,19 +86,12 @@ export function createViewOptionsBridge({
       };
     },
     action(action: DemoAction): boolean {
-      if (
-        action.command !== 'toggle-paragraph-marks' &&
-        action.command !== 'toggle-marks' &&
-        action.command !== 'toggle-grid'
-      )
-        return false;
+      const key = optionForCommand.get(action.command);
+      if (!key) return false;
       if (closed) return true;
       const current = observe();
-      if (
-        !current ||
-        (action.command === 'toggle-marks' && typeof current.value.formattingMarks !== 'boolean') ||
-        (action.command === 'toggle-grid' && typeof current.value.showTableGrid !== 'boolean')
-      ) {
+      const value = current?.value[key];
+      if (!current || typeof value !== 'boolean') {
         onStatus('Canvas 표시 상태를 확인할 수 없습니다.');
         return true;
       }
@@ -87,14 +100,7 @@ export function createViewOptionsBridge({
         return true;
       }
       try {
-        const next = {
-          ...current.value,
-          ...(action.command === 'toggle-grid'
-            ? { showTableGrid: !current.value.showTableGrid }
-            : action.command === 'toggle-marks'
-              ? { formattingMarks: !current.value.formattingMarks }
-              : { paragraphMarks: !current.value.paragraphMarks }),
-        };
+        const next = { ...current.value, [key]: !value };
         if (current.host.setDisplayOptions!(next)) {
           current.host.focus?.();
           if (action.command === 'toggle-marks' && next.formattingMarks)

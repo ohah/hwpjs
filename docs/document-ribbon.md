@@ -98,3 +98,7 @@ tablist/tab/tabpanel 연결과 roving tabindex를 사용합니다. 방향키·Ho
 ## 도구 상자 표시
 
 **보기 → 도구 상자**에서 기본 도구 상자와 서식 도구 상자를 각각 접거나 펼칩니다. 버튼의 누름 상태는 해당 도구 상자의 표시 상태와 동기화됩니다. 표시 상태는 현재 데모의 화면에만 적용되며 문서를 열거나 편집 상태를 갱신해도 유지됩니다. 메뉴로 돌아가 다시 펼칠 수 있습니다. [한컴 도구 상자 도움말](https://webhwpctrl.cloud.hancom.com/webhwpctrl/js/rights/view/toolbar.htm)
+
+## 투명 선 표시
+
+**보기 → 투명 선**을 켜면 HWP5·HWPX 원본 표에서 선 없음으로 확인된 셀 변을 빨간 점선으로 표시합니다. 쪽을 넘어가는 셀의 절단면은 건너뜁니다. 격자 보기와 독립된 화면 옵션이며, 원본 테두리 서식이나 인쇄 결과를 변경하지 않습니다. [한컴 투명 선 도움말](https://webhwpctrl.cloud.hancom.com/webhwpctrl/js/rights/view/virtual_lines.htm)

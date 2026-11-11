@@ -95,6 +95,8 @@ export interface CanvasDisplayOptions {
   readonly formattingMarks?: boolean;
   /** 화면 전용 표 셀 경계 안내선. 저장·인쇄 서식에는 포함하지 않습니다. */
   readonly showTableGrid?: boolean;
+  /** 원본에서 선 없음으로 확인된 표 셀 경계를 화면에서 표시합니다. */
+  readonly showTransparentTableLines?: boolean;
 }
 export interface CanvasSurfaceEnvironment extends Record<string, any> {
   /** 측정 함수 내부 의미가 바뀌기 전에 새 frozen 빈 객체를 반환해야 합니다. */

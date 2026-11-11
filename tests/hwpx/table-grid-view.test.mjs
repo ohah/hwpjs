@@ -1,6 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { paintTableBorder } from '../../web/preview/table-border-paint.mjs';
+import {
+  paintTableBorder,
+  paintTransparentTableLines,
+} from '../../web/preview/table-border-paint.mjs';
 import { paintRowTransform } from '../../web/preview/row-transform-paint.mjs';
 import { measureTableCells } from '../../web/preview/table-cell-measurement.mjs';
 import { projectTablePageFragments } from '../../web/preview/table-page-fragments.mjs';
@@ -414,4 +417,60 @@ test('toolbar/menu grid checked state and toggle only call display port', () => 
   b.dispose();
   b.action({ command: 'toggle-grid' });
   assert.equal(writes, 2);
+});
+
+test('transparent lines paint confirmed NONE edges and omit page-fragment seams', () => {
+  const { ctx, calls } = recorder();
+  ctx.setLineDash = (dash) => calls.push(['dash', dash]);
+  ctx.moveTo = (...point) => calls.push(['move', ...point]);
+  ctx.lineTo = (...point) => calls.push(['line', ...point]);
+  const box = { x: 10, y: 20, width: 40, height: 30, continuesBefore: true };
+  for (const state of ['proxy', 'unavailable']) paintTransparentTableLines(ctx, box, { state }, 5);
+  assert.deepEqual(calls, []);
+  paintTransparentTableLines(ctx, box, { state: 'strokes', strokes: [{ edge: 1 }] }, 5);
+  assert.deepEqual(calls, [
+    ['dash', [1, 2]],
+    ['move', 10, 15],
+    ['line', 10, 45],
+    ['move', 10, 45],
+    ['line', 50, 45],
+    ['ink', '#ff0000', 1],
+  ]);
+});
+
+test('transparent lines toggle independently of grid and paragraph marks', () => {
+  let options = DEFAULT_CANVAS_DISPLAY_OPTIONS;
+  const b = createViewOptionsBridge({
+    getHost: () => ({
+      getDisplayOptions: () => options,
+      setDisplayOptions(next) {
+        options = canvasDisplayOptions(next);
+        return true;
+      },
+    }),
+    onStatus(message) {
+      throw Error(message);
+    },
+  });
+  assert.equal(b.presentation(true)['toggle-transparent-lines'].pressed, false);
+  assert(b.action({ command: 'toggle-transparent-lines' }));
+  assert.equal(b.presentation(true)['toggle-transparent-lines'].pressed, true);
+  assert.equal(options.showTableGrid, false);
+  assert(b.action({ command: 'toggle-grid' }));
+  assert.equal(options.showTransparentTableLines, true);
+  assert.equal(options.showTableGrid, true);
+  assert.equal(options.paragraphMarks, false);
+  let reads = 0;
+  assert.throws(
+    () =>
+      canvasDisplayOptions({
+        paragraphMarks: false,
+        get showTransparentTableLines() {
+          reads++;
+          return true;
+        },
+      }),
+    /InvalidCanvasDisplayOptions/,
+  );
+  assert.equal(reads, 0);
 });

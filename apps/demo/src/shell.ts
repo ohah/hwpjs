@@ -97,7 +97,17 @@ const commands = [...toolGroups.flatMap(([, tools]) => tools), ...extraTools];
 const menus: readonly [string, readonly DemoCommand[]][] = [
   ['파일', ['new-document', 'insert-document', 'save', 'print-preview']],
   ['편집', ['undo', 'redo', 'cut', 'copy', 'paste', 'format-copy', 'find', 'replace']],
-  ['보기', ['zoom-in', 'zoom-out', 'toggle-marks', 'toggle-paragraph-marks', 'toggle-grid']],
+  [
+    '보기',
+    [
+      'zoom-in',
+      'zoom-out',
+      'toggle-marks',
+      'toggle-paragraph-marks',
+      'toggle-transparent-lines',
+      'toggle-grid',
+    ],
+  ],
   ['입력', ['insert-image', 'insert-table', 'insert-shape', 'insert-link', 'insert-symbol']],
   [
     '서식',

@@ -46,7 +46,7 @@ import {
   tableBorderPlanForBox,
   tableBackgroundFillForSource,
 } from './table-border-plan.mjs';
-import { paintTableBorder } from './table-border-paint.mjs';
+import { paintTableBorder, paintTransparentTableLines } from './table-border-paint.mjs';
 import { paintTableDiagonals } from './table-diagonal-paint.mjs';
 import { createdTableWidthHint } from './created-table-width-hint.mjs';
 import { dutmalAt, dutmalPaintPlan, paintDutmal } from './dutmal-paint.mjs';
@@ -678,6 +678,9 @@ export function createRenderer(
       unavailableCount: 0,
       unavailable: [],
     };
+    const showTableGrid = !output && displayOptions.showTableGrid === true;
+    const showTransparentTableLines = !output && displayOptions.showTransparentTableLines === true;
+    const showTableGuide = showTableGrid || showTransparentTableLines;
     const paintTableBox = (box, underlay = false) => {
       const top = box.y - viewport.scrollTop;
       const visual = tableBoxPaintBounds(box);
@@ -696,23 +699,24 @@ export function createRenderer(
             ? pictureStatus(box.section, box.listNode, 'table-background')
             : null;
         const bitmap = backgroundResource?.bitmap;
-        if (backgroundResource?.refreshing && (underlay || displayOptions.showTableGrid !== true))
+        if (backgroundResource?.refreshing && (underlay || !showTableGuide))
           paintRowTransform(ctx, box, viewport.scrollTop, () =>
             paintPendingPicture(box, box.x, top, true),
           );
         // Paint every background/guide in this layer before any cell ink. Adjacent
         // cells can share an edge; a later gray guide must not cover earlier ink.
         if (underlay) {
-          paintRowTransform(ctx, box, viewport.scrollTop, () =>
+          paintRowTransform(ctx, box, viewport.scrollTop, () => {
             paintTableBorder(ctx, box, { state: 'none', fill: border.fill }, viewport.scrollTop, {
               bitmap,
-              showTableGrid: true,
-            }),
-          );
+              showTableGrid,
+            });
+            if (showTransparentTableLines)
+              paintTransparentTableLines(ctx, box, border, viewport.scrollTop);
+          });
           return;
         }
-        const inkOnly = displayOptions.showTableGrid === true;
-        const inkBorder = inkOnly ? { ...border, fill: undefined } : border;
+        const inkBorder = showTableGuide ? { ...border, fill: undefined } : border;
         if (border.state !== 'proxy') {
           const coverage = layout.tableBorderCoverage;
           const unavailable = (error, component) => {
@@ -1236,11 +1240,7 @@ export function createRenderer(
       );
     let guideBatchEnd = 0;
     for (const [sceneIndex, command] of scene.entries()) {
-      if (
-        displayOptions.showTableGrid === true &&
-        command.kind === 'box' &&
-        sceneIndex >= guideBatchEnd
-      ) {
+      if (showTableGuide && command.kind === 'box' && sceneIndex >= guideBatchEnd) {
         guideBatchEnd = sceneIndex;
         while (guideBatchEnd < scene.length) {
           const next = scene[guideBatchEnd];
@@ -1413,7 +1413,8 @@ export function createRenderer(
     canvas.dataset.effectiveParagraphMarks = String(
       displayOptions.paragraphMarks || displayOptions.formattingMarks === true,
     );
-    canvas.dataset.showTableGrid = String(displayOptions.showTableGrid === true);
+    canvas.dataset.showTableGrid = String(showTableGrid);
+    canvas.dataset.showTransparentTableLines = String(showTransparentTableLines);
     canvas.dataset.paragraphMarks = String(displayOptions.paragraphMarks);
     canvas.dataset.paragraphMarkCount = String(paintedParagraphMarks);
     paintedFrame = {
@@ -1727,11 +1728,16 @@ export function createRenderer(
     setDisplayOptions(options) {
       if (closed) return false;
       const parsed = canvasDisplayOptions(options);
-      const next = Object.freeze({ ...parsed, showTableGrid: parsed.showTableGrid === true });
+      const next = Object.freeze({
+        ...parsed,
+        showTableGrid: parsed.showTableGrid === true,
+        showTransparentTableLines: parsed.showTransparentTableLines === true,
+      });
       if (
         next.paragraphMarks === displayOptions.paragraphMarks &&
         (next.formattingMarks === true) === (displayOptions.formattingMarks === true) &&
-        (next.showTableGrid === true) === (displayOptions.showTableGrid === true)
+        next.showTableGrid === displayOptions.showTableGrid &&
+        next.showTransparentTableLines === displayOptions.showTransparentTableLines
       )
         return true;
       displayOptions = next;

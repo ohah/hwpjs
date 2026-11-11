@@ -3,6 +3,7 @@ export const DEFAULT_CANVAS_DISPLAY_OPTIONS = Object.freeze({
   paragraphMarks: false,
   formattingMarks: false,
   showTableGrid: false,
+  showTransparentTableLines: false,
 });
 export function canvasDisplayOptions(value) {
   if (
@@ -15,7 +16,7 @@ export function canvasDisplayOptions(value) {
   if (
     !keys.includes('paragraphMarks') ||
     keys.some(
-      (key) => key !== 'paragraphMarks' && key !== 'formattingMarks' && key !== 'showTableGrid',
+      (key) => typeof key !== 'string' || !Object.hasOwn(DEFAULT_CANVAS_DISPLAY_OPTIONS, key),
     )
   )
     throw new TypeError('InvalidCanvasDisplayOptions');
@@ -24,17 +25,12 @@ export function canvasDisplayOptions(value) {
     throw new TypeError('InvalidCanvasDisplayOptions');
   // 기존 단일 옵션 입력의 반환 형태도 유지합니다.
   const result = { paragraphMarks: descriptor.value };
-  if (keys.includes('formattingMarks')) {
-    const marks = Object.getOwnPropertyDescriptor(value, 'formattingMarks');
-    if (!marks || !('value' in marks) || typeof marks.value !== 'boolean')
+  for (const key of keys) {
+    if (key === 'paragraphMarks') continue;
+    const option = Object.getOwnPropertyDescriptor(value, key);
+    if (!option || !('value' in option) || typeof option.value !== 'boolean')
       throw new TypeError('InvalidCanvasDisplayOptions');
-    result.formattingMarks = marks.value;
-  }
-  if (keys.includes('showTableGrid')) {
-    const grid = Object.getOwnPropertyDescriptor(value, 'showTableGrid');
-    if (!grid || !('value' in grid) || typeof grid.value !== 'boolean')
-      throw new TypeError('InvalidCanvasDisplayOptions');
-    result.showTableGrid = grid.value;
+    result[key] = option.value;
   }
   return Object.freeze(result);
 }

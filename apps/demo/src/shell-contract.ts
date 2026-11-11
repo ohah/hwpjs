@@ -43,6 +43,7 @@ export type DemoCommand =
   | 'insert-footer'
   | 'toggle-marks'
   | 'toggle-grid'
+  | 'toggle-transparent-lines'
   | 'insert-comment'
   | 'word-count'
   | 'bold'

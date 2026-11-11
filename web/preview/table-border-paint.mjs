@@ -4,6 +4,45 @@ import { validDrawingFill } from './drawing-fill-validation.mjs';
 import { paintTableBackground } from './table-background-paint.mjs';
 import { validTableImageFill } from './table-image-fill.mjs';
 import { tableBorderStrokeParts } from './table-border-stroke.mjs';
+function tableEdgeEndpoints(x, y, right, bottom) {
+  return [
+    [x, y, x, bottom],
+    [right, y, right, bottom],
+    [x, y, right, y],
+    [x, bottom, right, bottom],
+  ];
+}
+
+// Only complete source plans establish that omitted sides are explicitly NONE.
+export function paintTransparentTableLines(ctx, box, plan, scrollTop) {
+  if (plan.state !== 'none' && plan.state !== 'strokes') return;
+  const { x, width, height } = box;
+  const y = box.y - scrollTop;
+  const right = x + width;
+  const bottom = y + height;
+  if (![x, y, right, bottom].every(Number.isFinite) || width <= 0 || height <= 0) return;
+  let covered = (box.continuesBefore ? 1 << 2 : 0) | (box.continuesAfter ? 1 << 3 : 0);
+  for (const { edge } of plan.strokes ?? []) covered |= 1 << edge;
+  if (covered === 15) return;
+  ctx.save();
+  try {
+    ctx.setLineDash([1, 2]);
+    ctx.lineDashOffset = 0;
+    ctx.lineWidth = 1;
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = '#ff0000';
+    ctx.beginPath();
+    for (const [edge, [x1, y1, x2, y2]] of tableEdgeEndpoints(x, y, right, bottom).entries()) {
+      if ((covered & (1 << edge)) !== 0) continue;
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+    }
+    ctx.stroke();
+  } finally {
+    ctx.restore();
+  }
+}
+
 export function paintTableBorder(
   ctx,
   box,
@@ -61,12 +100,7 @@ export function paintTableBorder(
     y = box.y - scrollTop,
     right = x + box.width,
     bottom = y + box.height;
-  const ends = [
-    [x, y, x, bottom],
-    [right, y, right, bottom],
-    [x, y, right, y],
-    [x, bottom, right, bottom],
-  ];
+  const ends = tableEdgeEndpoints(x, y, right, bottom);
   ctx.save();
   try {
     if (
