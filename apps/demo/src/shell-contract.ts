@@ -42,6 +42,7 @@ export type DemoCommand =
   | 'insert-symbol'
   | 'character-properties'
   | 'paragraph-properties'
+  | 'paragraph-bullets'
   | 'object-properties'
   | 'insert-header'
   | 'insert-footer'

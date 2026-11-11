@@ -1,0 +1,15 @@
+.hwp-paragraph-bullet-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+}
+.hwp-paragraph-bullet-dialog label {
+  display: grid;
+  gap: 0.5rem;
+}
+.hwp-paragraph-bullet-dialog select {
+  font: inherit;
+  padding: 0.5rem;
+}
+.hwp-bullet-scope {
+  color: #555;
+  font-size: 0.875rem;
+}

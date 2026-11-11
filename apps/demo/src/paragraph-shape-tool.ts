@@ -12,6 +12,7 @@ interface Options {
     Partial<Pick<HeadlessEditor, 'getFormattingCapabilities' | 'queryFormatting'>>;
   core: Partial<ParagraphShapeCoreApi>;
   onClose?(): void;
+  onBullet?(): void;
   onPresentationChange?(): void;
   onResult?(result: CommandResult): void;
   onUIError?(error: unknown): void;
@@ -34,6 +35,7 @@ export function createParagraphShapeTool(options: Options) {
         onClose: () => {
           if (!modalOpen()) options.onClose?.();
         },
+        onBullet: options.onBullet,
         onPresentationChange: options.onPresentationChange,
         onResult: options.onResult,
         onUIError: options.onUIError,

@@ -16,6 +16,7 @@ interface Callbacks {
   field(name: string, value: ParagraphShapeValue | undefined): void;
   apply(): void;
   cancel(): void;
+  bullet?(): void;
 }
 const groups = [
   ['alignment', '정렬'],
@@ -170,6 +171,18 @@ export function createParagraphShapeView(
       callbacks.apply();
     }
   });
+  let bulletButton: HTMLButtonElement | undefined;
+  if (callbacks.bullet) {
+    const bullet = doc.createElement('button');
+    bullet.type = 'button';
+    bullet.textContent = '글머리표 적용/해제…';
+    bullet.dataset.role = 'paragraph-shape-bullets';
+    bulletButton = bullet;
+    listen(bullet, 'click', () => {
+      if (!composing && !pending) callbacks.bullet?.();
+    });
+    body.append(bullet);
+  }
   layer.body.append(body, status);
   layer.footer.append(apply, cancel);
   layer.show();
@@ -177,6 +190,8 @@ export function createParagraphShapeView(
     update(next) {
       if (disposed) return;
       model = next;
+      if (bulletButton)
+        bulletButton.disabled = next.loading || next.pending || next.stale || next.refreshRequired;
       if (captured !== next.captured) {
         edited.clear();
         captured = next.captured;

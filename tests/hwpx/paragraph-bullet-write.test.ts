@@ -75,12 +75,31 @@ async function oracle(
       sections: { 'Contents/section0.xml': { [paragraph]: expected } },
     }),
   );
-  const result = execFileSync(
-    'python3',
-    [new URL('./paragraph-bullet-oracle.py', import.meta.url).pathname, plan],
-    { encoding: 'utf8' },
+  const oraclePath = new URL('./paragraph-bullet-oracle.py', import.meta.url).pathname;
+  const invalidPlan = join(evidence, `${name}-invalid-oracle.json`);
+  await writeFile(
+    invalidPlan,
+    JSON.stringify({
+      before,
+      after,
+      variants,
+      sections: { 'Contents/section0.xml': { [paragraph]: { ...expected, bullet: 0xfffffffe } } },
+    }),
   );
-  await writeFile(join(evidence, `${name}-oracle-result.json`), result);
+  for (const flags of [[], ['-O']]) {
+    const result = execFileSync('python3', [...flags, oraclePath, plan], { encoding: 'utf8' });
+    await writeFile(
+      join(evidence, `${name}-oracle${flags.length ? '-optimized' : ''}-result.json`),
+      result,
+    );
+    assert.throws(
+      () =>
+        execFileSync('python3', [...flags, oraclePath, invalidPlan], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+        }),
+      (error: any) => error.status === 1 && String(error.stderr).includes('AssertionError'),
+    );
+  }
   return saved;
 }
 

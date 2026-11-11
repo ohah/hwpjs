@@ -1667,6 +1667,15 @@ export fn hwpx_edit_paragraph_shapes() u32 {
     return 1;
 }
 
+export fn hwpx_edit_bullet_definitions() u32 {
+    hwpx_edit_output_free();
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const snapshot = @import("../hwpx/bullet_definitions.zig").read(a, session) catch |err| return fail(err);
+    defer a.free(snapshot.declarations);
+    output = std.json.Stringify.valueAlloc(a, snapshot, .{}) catch |err| return fail(err);
+    return 1;
+}
+
 export fn hwpx_edit_paragraph_numbering_source() u32 {
     hwpx_edit_output_free();
     const s = if (active) |*value| value else return fail(error.EditorNotOpen);

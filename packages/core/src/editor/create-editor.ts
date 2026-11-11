@@ -14,6 +14,12 @@ import {
   checkedNamedFieldSelector,
   resolveNamedField,
 } from './named-fields.ts';
+// @ts-ignore Shared Native DTO validator, with no source reader or state.
+import { checkedParagraphBulletDefinitions } from '../../../../js/paragraph-bullet-definitions.mjs';
+import type {
+  ParagraphBulletDefinitions,
+  ParagraphBulletDefinitionsOptions,
+} from './paragraph-bullet-definitions.ts';
 import type {
   NamedFieldInventory,
   NamedFieldNavigation,
@@ -2004,6 +2010,34 @@ export function createEditor(options: CreateEditorOptions) {
       throw Error('InvalidNamedFieldOptions');
     return copyOwned(settings.token ?? state.token);
   }
+  function listParagraphBulletDefinitions(
+    options: ParagraphBulletDefinitionsOptions = {},
+  ): Promise<ParagraphBulletDefinitions> {
+    assertPublicMutation();
+    const settings = copyOwned(options);
+    if (
+      !settings ||
+      typeof settings !== 'object' ||
+      Array.isArray(settings) ||
+      Object.keys(settings).some((key) => key !== 'token') ||
+      settings.token === null
+    )
+      throw Error('InvalidParagraphBulletDefinitionsOptions');
+    const token = copyOwned(settings.token ?? state.token);
+    return enqueue(async () => {
+      requireReady(token, true);
+      const before = state;
+      const guard = () => {
+        requireReady(token, true);
+        if (state !== before) throw Error('StaleParagraphBulletDefinitions');
+      };
+      const reply = await readRequest({ kind: 'paragraph-bullet-definitions' }, token, guard);
+      guard();
+      return freezeDTO(
+        checkedParagraphBulletDefinitions(reply.bulletDefinitions),
+      ) as ParagraphBulletDefinitions;
+    });
+  }
   function listNamedFields(options: NamedFieldOptions = {}): Promise<NamedFieldInventory> {
     assertPublicMutation();
     const token = namedFieldToken(options);
@@ -2784,6 +2818,7 @@ export function createEditor(options: CreateEditorOptions) {
     getDocumentInsertionCapabilities: geometryGuard(getDocumentInsertionCapabilities),
     queryFormatting: geometryGuard(queryFormatting),
     setSelection: geometryGuard(setSelection),
+    listParagraphBulletDefinitions: geometryGuard(listParagraphBulletDefinitions),
     listNamedFields: geometryGuard(listNamedFields),
     readNamedField: geometryGuard(readNamedField),
     readNamedFieldParameters: geometryGuard(readNamedFieldParameters),

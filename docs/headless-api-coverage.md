@@ -158,3 +158,5 @@ HWPX의 완료 poll은 감시·전송을 포함한 관측이므로 응답 속도
 원본 HWPX 표의 전체 열을 포함한 비병합 행 블록에는 `EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND`를 제공합니다. 현재 Surface가 발급한 측정 포함 target만 허용하며 범위·실패 원자성과 실제 검증은 [셀 높이 균등화](cell-height-equalization.md)를 따릅니다.
 
 두 셀 크기 균등화 명령은 같은 원본 선택/측정 target으로 HWP5도 연결합니다. Native 소유권·보호/미해석 metadata·저장 동의와 검증 범위는 [HWP5 셀 크기 균등화](hwp5-cell-size-equalization.md)가 소유합니다.
+
+`listParagraphBulletDefinitions({token?})`는 HWPX 현재 헤더 전체 선언을 complete inventory로 반환합니다. 기존 선언의 UI 적용/해제 및 형식별 unavailable·수명·저장 검증은 [글머리표 정의 목록](paragraph-bullet-inventory.md)을 따릅니다.

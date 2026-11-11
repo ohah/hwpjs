@@ -142,6 +142,16 @@ jobs:
           printf '%s  %s\n' '585c80637a1cad6edecb503fe4b3fa1694d2d2ef4610ee6cbcb3b21728d0c5c6' "$HWPJS_TEST_OLD_WASM" | sha256sum --check
           bun test --no-install ./tests/hwpx/paragraph-bullet-write.test.ts
 
+      - name: Test complete paragraph bullet inventory and UI admission
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-before-bullet.wasm
+          HWPJS_TEST_UNUSED_BULLETS: ${{ runner.temp }}/hwpjs-unused-bullets.hwpx
+        run: |
+          python3 tests/helpers/unused-bullet-definitions-fixture.py --input apps/docs/docs/public/editor/fixtures/lists-bullet.hwpx --output "$HWPJS_TEST_UNUSED_BULLETS"
+          bun test --no-install tests/wasm/paragraph-bullet-definitions.test.mjs packages/core/tests/editor/paragraph-bullet-definitions.test.ts apps/demo/tests/paragraph-bullet-inventory.test.ts
+
       - name: Test named field creation, value changes and renaming
         timeout-minutes: 2
         env:

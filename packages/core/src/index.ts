@@ -213,3 +213,8 @@ export type {
 export type { SourceTableCellWidthTarget } from './commands/source-table-cell-width.ts';
 
 export type { SourceTableCellHeightTarget } from './commands/source-table-cell-height.ts';
+export type {
+  ParagraphBulletDeclaration,
+  ParagraphBulletDefinitions,
+  ParagraphBulletDefinitionsOptions,
+} from './editor/paragraph-bullet-definitions.ts';

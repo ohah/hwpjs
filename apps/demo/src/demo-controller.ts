@@ -9,6 +9,7 @@ import type { SurfaceClipboardPort } from './clipboard-bridge.ts';
 import { createCharacterShapePort } from './character-shape-port.ts';
 import { decorateParagraphAlignmentFallback } from './paragraph-shape-fallback-view.ts';
 import * as paragraphShapeCore from '@hwpjs/core';
+import { createParagraphBulletTool } from './paragraph-bullet-tool.ts';
 import { createParagraphShapeTool } from './paragraph-shape-tool.ts';
 import type {
   CanvasDisplayOptions,
@@ -223,7 +224,17 @@ export async function mountDemo(
     },
     onPresentationChange: () => shell.update(),
   });
+  const paragraphBullet = createParagraphBulletTool({
+    root,
+    editor,
+    core: paragraphShapeCore,
+    getHost: () => host,
+    onClose: () => host?.focus?.(),
+    onStatus: note,
+    onPresentationChange: () => shell.update(),
+  });
   const paragraphShape = createParagraphShapeTool({
+    onBullet: () => requestAnimationFrame(() => paragraphBullet.open()),
     root,
     editor,
     core: paragraphShapeCore,
@@ -414,6 +425,7 @@ export async function mountDemo(
             : undefined,
       },
       ...formatDialogs.presentation(),
+      'paragraph-bullets': paragraphBullet.presentation(),
       ...(paragraphShape.available
         ? {
             'paragraph-properties': {
@@ -691,6 +703,10 @@ export async function mountDemo(
       return;
     }
     if (textColor.action(action.command)) return;
+    if (action.command === 'paragraph-bullets') {
+      paragraphBullet.open();
+      return;
+    }
     if (paragraphShape.action(action.command)) return;
     if (formatDialogs.action(action)) return;
     if (viewOptions.action(action)) {
@@ -926,6 +942,7 @@ export async function mountDemo(
     tableCellAppearance.dispose();
     tableInsert.dispose();
     objectProperties.dispose();
+    paragraphBullet.dispose();
     paragraphShape.dispose();
     formatDialogs.dispose();
     textColor.dispose();
@@ -969,6 +986,7 @@ export async function mountDemo(
       tableCellAppearance.dispose();
       tableInsert.dispose();
       objectProperties.dispose();
+      paragraphBullet.dispose();
       paragraphShape.dispose();
       formatDialogs.dispose();
       textColor.dispose();

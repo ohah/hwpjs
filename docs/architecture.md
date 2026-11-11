@@ -518,3 +518,5 @@ CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명
 [원본 셀 높이 균등화](cell-height-equalization.md)는 현재 F5 선택의 내용 최소높이·후보 조판·typed 권한을 소유합니다. 너비/높이는 공통 주소 슬롯을 공유하고 저장은 기존 Native 셀 크기 배치를 재사용합니다.
 
 [HWP5 셀 크기 균등화](hwp5-cell-size-equalization.md)는 형식별 metadata 입장 검사만 소유하며 HWPX의 공통 격자·분배·최소높이와 기존 Native 배치/이력을 재사용합니다.
+
+[문단 글머리표 정의 목록](paragraph-bullet-inventory.md)은 현재 헤더의 읽기 전용 선언 조회와 UI 연결을 소유합니다. Native header read lease와 기존 heading 판정을 재사용하며 본문 사용 ID로 정의를 추측하지 않습니다.

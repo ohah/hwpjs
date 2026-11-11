@@ -17,17 +17,22 @@ pub const Heading = struct {
 const Bullet = struct { scalar: u21, placement: ?marker_placement.Placement };
 pub const Bullets = std.AutoHashMapUnmanaged(u32, ?Bullet);
 
+pub fn isBulletDeclaration(tree: *const Tree, index: usize) bool {
+    const element = tree.elements[index];
+    if (!element.is(head, "bullet")) return false;
+    const group = element.parent orelse return false;
+    const refs = tree.elements[group].parent orelse return false;
+    const root = tree.elements[refs].parent orelse return false;
+    return tree.elements[group].is(head, "bullets") and
+        tree.elements[refs].is(head, "refList") and
+        tree.elements[root].is(head, "head") and tree.elements[root].parent == null;
+}
+
 pub fn bullets(a: Allocator, tree: *const Tree) !Bullets {
     var result: Bullets = .empty;
     errdefer result.deinit(a);
-    for (tree.elements, 0..) |element, index| {
-        if (!element.is(head, "bullet")) continue;
-        const group = element.parent orelse continue;
-        const refs = tree.elements[group].parent orelse continue;
-        const root = tree.elements[refs].parent orelse continue;
-        if (!tree.elements[group].is(head, "bullets") or
-            !tree.elements[refs].is(head, "refList") or
-            !tree.elements[root].is(head, "head") or tree.elements[root].parent != null) continue;
+    for (tree.elements, 0..) |_, index| {
+        if (!isBulletDeclaration(tree, index)) continue;
         const id = (fields.optionalUnsigned(a, tree, index, "id", 64) catch |err| switch (err) {
             error.OutOfMemory => return err,
             else => continue,

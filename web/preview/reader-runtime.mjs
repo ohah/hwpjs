@@ -1143,6 +1143,17 @@ export function createReaderRuntime({
     };
     displayResources.beginRequest(message, { format, editor, historyEnabled });
     try {
+      if (message.kind === 'paragraph-bullet-definitions') {
+        if (!editor) throw Error('EditorNotOpen');
+        reply({
+          kind: message.kind,
+          bulletDefinitions:
+            format === 'hwpx'
+              ? editor.paragraphBulletDefinitions()
+              : { state: 'unavailable', reason: 'Hwp5BulletDefinitionsUnavailable' },
+        });
+        return;
+      }
       if (message.kind === 'named-fields') {
         if (!editor || (format !== 'hwpx' && format !== 'hwp5'))
           throw new Error('NamedFieldsUnavailable');

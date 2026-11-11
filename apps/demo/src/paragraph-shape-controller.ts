@@ -27,8 +27,10 @@ interface Options {
     field(name: string, value: ParagraphShapeValue | undefined): void;
     apply(): void;
     cancel(): void;
+    bullet?(): void;
   }): ParagraphShapeView;
   onResult?(result: CommandResult): void;
+  onBullet?(): void;
   onUnavailable?(reason: string): void;
   onClose?(): void;
   onPresentationChange?(): void;
@@ -210,6 +212,20 @@ export function createParagraphShapeController(o: Options) {
           apply() {
             void apply(c);
           },
+          bullet: o.onBullet
+            ? () => {
+                if (
+                  !active(c) ||
+                  c.pending ||
+                  c.loading ||
+                  c.view?.isComposing() ||
+                  o.getState() !== c.state
+                )
+                  return;
+                close(true);
+                notify(o.onBullet);
+              }
+            : undefined,
           cancel() {
             if (active(c) && !c.pending && !c.view?.isComposing()) close(true);
           },

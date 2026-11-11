@@ -6,28 +6,29 @@ import sys
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
+def require(condition, message='Invalid paragraph bullet save'):
+    if not condition:
+        raise AssertionError(message)
 H = '{http://www.hancom.co.kr/hwpml/2011/head}'
 P = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
 
-
 def same(left, right):
-    assert ET.tostring(left) == ET.tostring(right), 'Unexpected XML change'
-
+    require(ET.tostring(left) == ET.tostring(right), 'Unexpected XML change')
 
 def verify(plan):
     with ZipFile(plan['before']) as old_zip, ZipFile(plan['after']) as new_zip:
-        assert old_zip.namelist() == new_zip.namelist(), 'Package inventory changed'
+        require(old_zip.namelist() == new_zip.namelist(), 'Package inventory changed')
         old = ET.fromstring(old_zip.read('Contents/header.xml'))
         new = ET.fromstring(new_zip.read('Contents/header.xml'))
         old_group = old.find('.//' + H + 'paraProperties')
         new_group = new.find('.//' + H + 'paraProperties')
         originals = {node.attrib['id']: node for node in old_group}
         resources = {node.attrib['id']: node for node in new_group}
-        assert len(resources) == len(list(new_group)), 'Duplicate paraPr ID'
-        assert int(new_group.attrib['itemCnt']) == len(resources)
-        for identity, node in originals.items():
+        require(len(resources) == len(list(new_group)), 'Duplicate paraPr ID')
+        require(int(new_group.attrib['itemCnt']) == len(resources))
+        for (identity, node) in originals.items():
             same(node, resources[identity])
-        for identity, node in resources.items():
+        for (identity, node) in resources.items():
             if identity in originals:
                 continue
             matched = False
@@ -44,7 +45,7 @@ def verify(plan):
                     if 'alignment' in variant:
                         expected.find(H + 'align').set('horizontal', variant['alignment'])
                     matched |= ET.tostring(expected) == ET.tostring(node)
-            assert matched, 'Unexpected cloned resource fields'
+            require(matched, 'Unexpected cloned resource fields')
         restored = copy.deepcopy(new)
         restored_group = restored.find('.//' + H + 'paraProperties')
         for node in list(restored_group):
@@ -57,30 +58,27 @@ def verify(plan):
             if name == 'Contents/header.xml':
                 continue
             if name not in plan['sections']:
-                assert old_zip.read(name) == new_zip.read(name), name
+                require(old_zip.read(name) == new_zip.read(name), name)
                 continue
             before = ET.fromstring(old_zip.read(name))
             after = ET.fromstring(new_zip.read(name))
             expected = copy.deepcopy(before)
             before_rows = list(expected.iter(P + 'p'))
             rows = list(after.iter(P + 'p'))
-            assert len(before_rows) == len(rows)
-            for index, value in plan['sections'][name].items():
+            require(len(before_rows) == len(rows))
+            for (index, value) in plan['sections'][name].items():
                 index = int(index)
                 new_id = rows[index].attrib['paraPrIDRef']
                 before_rows[index].set('paraPrIDRef', new_id)
                 heading = resources[new_id].find(H + 'heading')
-                assert heading.attrib['type'] == ('BULLET' if value['bullet'] is not None else 'NONE')
-                assert heading.attrib['idRef'] == str(value['bullet'] or 0)
-                assert heading.attrib['level'] == '0'
+                require(heading.attrib['type'] == ('BULLET' if value['bullet'] is not None else 'NONE'))
+                require(heading.attrib['idRef'] == str(value['bullet'] or 0))
+                require(heading.attrib['level'] == '0')
                 if 'alignment' in value:
-                    assert resources[new_id].find(H + 'align').attrib['horizontal'] == value['alignment']
+                    require(resources[new_id].find(H + 'align').attrib['horizontal'] == value['alignment'])
                 checked.add((name, index))
             same(expected, after)
-        assert checked
-        print(json.dumps({'verified': len(checked), 'newParagraphResources': len(resources) - len(originals),
-                          'bulletDefinitions': len(list(new.iter(H + 'bullet')))}))
-
-
+        require(checked)
+        print(json.dumps({'verified': len(checked), 'newParagraphResources': len(resources) - len(originals), 'bulletDefinitions': len(list(new.iter(H + 'bullet')))}))
 if __name__ == '__main__':
     verify(json.loads(Path(sys.argv[1]).read_text()))

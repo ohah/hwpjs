@@ -2,6 +2,7 @@ import {
   decodeNamedFieldParameters,
   checkedNamedFieldParameterValues,
 } from './named-field-parameters.mjs';
+import { decodeParagraphBulletDefinitions } from './paragraph-bullet-definitions.mjs';
 import { createHwpxDocumentInsertApi } from './hwpx-document-insert.mjs';
 import { decodeHwpxPageNumberDisplaySource } from './hwpx-page-number-display-wire.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
@@ -999,6 +1000,19 @@ export async function createHwpxEditor(source) {
       try {
         if (!wasm.hwpx_edit_paragraph_shapes()) throw memory.error();
         return decodeHwpxParagraphShapes(
+          memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+        );
+      } finally {
+        wasm.hwpx_edit_output_free();
+      }
+    },
+    paragraphBulletDefinitions() {
+      ready();
+      if (typeof wasm.hwpx_edit_bullet_definitions !== 'function')
+        return { state: 'unavailable', reason: 'ParagraphBulletDefinitionsAbiUnavailable' };
+      try {
+        if (!wasm.hwpx_edit_bullet_definitions()) throw memory.error();
+        return decodeParagraphBulletDefinitions(
           memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
         );
       } finally {
