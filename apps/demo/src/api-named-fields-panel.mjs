@@ -1,3 +1,4 @@
+import { createNamedFieldParametersPort } from './named-field-parameters-port.mjs';
 import { createNamedFieldInsertionPort } from './named-field-insertion-port.mjs';
 
 const panelStyle = `
@@ -54,6 +55,30 @@ const panelStyle = `
   white-space: pre-wrap;
 }
 
+.api-named-fields dialog {
+  max-inline-size: min(36rem, calc(100vw - 2rem));
+  border: 1px solid;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  font: inherit;
+}
+.api-named-fields dialog textarea {
+  box-sizing: border-box;
+  inline-size: 100%;
+}
+.api-named-fields dialog label {
+  display: grid;
+  gap: 0.25rem;
+  margin-block: 0.75rem;
+}
+.api-named-fields dialog label:has(input[type='checkbox']):not([hidden]) {
+  display: flex;
+  align-items: center;
+}
+.api-named-fields dialog::backdrop {
+  background: #0006;
+}
+
 .api-named-fields [role='status'] {
   margin-block-end: 0;
   overflow-wrap: anywhere;
@@ -95,7 +120,14 @@ function sameView(token, state) {
 /** Mount beside the existing playground controls, with the same ready Core editor. */
 export function mountNamedFieldsPanel(
   host,
-  { editor, setNamedFieldValueCommand, createNamedFieldCommand, getSelectionClipboard },
+  {
+    editor,
+    setNamedFieldValueCommand,
+    createNamedFieldCommand,
+    getSelectionClipboard,
+    setNamedFieldParametersCommand,
+    readNamedFieldParameters,
+  },
 ) {
   const doc = host.ownerDocument;
   const panel = doc.createElement('section');
@@ -106,6 +138,9 @@ export function mountNamedFieldsPanel(
     <h2>이름 필드</h2>
     <div class="api-named-fields-controls">
       <label>HWPX 파일 열기 <input type="file" accept=".hwpx"></label>
+      <label>열기 모드 <select data-load-editable aria-label="누름틀 문서 열기 모드">
+        <option value="true">편집 가능</option><option value="false">읽기 전용</option>
+      </select></label>
       <button type="button" data-action="list">필드 목록 조회</button>
     </div>
     <p data-inventory-status>목록을 조회하세요.</p>
@@ -124,6 +159,7 @@ export function mountNamedFieldsPanel(
       <label>필드 이름 <input data-name type="text" autocomplete="off"></label>
       <label>이름 내 순번 (1부터) <input data-occurrence type="number" min="1" step="1"></label>
       <button type="button" data-action="read">필드 값 읽기</button>
+      <button type="button" data-action="parameters-read">누름틀 속성 읽기</button>
     </div>
     <div class="api-named-fields-controls">
       <label>기대 기존 값 <input data-expected type="text" autocomplete="off"></label>
@@ -144,10 +180,31 @@ export function mountNamedFieldsPanel(
       </div>
       <p>선택한 내용과 서식을 유지합니다. 안내문과 도움말은 누름틀 정보에 저장합니다.</p>
     </fieldset>
+    <dialog data-parameters-dialog aria-label="누름틀 속성">
+      <h2>누름틀 속성</h2>
+      <p data-parameters-target></p>
+      <label>안내문 <textarea data-parameters-direction rows="3"></textarea></label>
+      <p data-direction-observed></p>
+      <label data-direction-empty-label hidden>
+        <input type="checkbox" data-direction-empty>안내문을 빈 문자열로 설정
+      </label>
+      <label>도움말 <textarea data-parameters-memo rows="3"></textarea></label>
+      <p data-memo-observed></p>
+      <label data-memo-empty-label hidden>
+        <input type="checkbox" data-memo-empty>도움말을 빈 문자열로 설정
+      </label>
+      <p data-parameters-hint hidden>미지정 속성을 비우려면 빈 문자열 설정을 확인하세요.</p>
+      <div class="api-named-fields-controls">
+        <button type="button" data-action="parameters-apply">속성 적용</button>
+        <button type="button" data-action="parameters-close">닫기</button>
+      </div>
+      <p role="status" data-parameters-status></p>
+    </dialog>
     <p role="status" data-result>이름을 입력하고 값을 읽으세요.</p>
   `;
   const find = (selector) => panel.querySelector(selector);
   const file = find('input[type=file]');
+  const loadEditable = find('[data-load-editable]');
   const list = find('[data-action=list]');
   const previous = find('[data-action=previous]');
   const next = find('[data-action=next]');
@@ -158,6 +215,26 @@ export function mountNamedFieldsPanel(
   const value = find('[data-value]');
   const write = find('[data-action=write]');
   const result = find('[data-result]');
+  const parametersRead = find('[data-action=parameters-read]');
+  const parametersDialog = find('[data-parameters-dialog]');
+  const parametersTarget = find('[data-parameters-target]');
+  const parametersDirection = find('[data-parameters-direction]');
+  const parametersMemo = find('[data-parameters-memo]');
+  const directionObserved = find('[data-direction-observed]');
+  const memoObserved = find('[data-memo-observed]');
+  const directionEmpty = find('[data-direction-empty]');
+  const memoEmpty = find('[data-memo-empty]');
+  const parametersHint = find('[data-parameters-hint]');
+  const parametersApply = find('[data-action=parameters-apply]');
+  const parametersClose = find('[data-action=parameters-close]');
+  const parametersStatus = find('[data-parameters-status]');
+  const properties = createNamedFieldParametersPort({
+    editor,
+    command: setNamedFieldParametersCommand,
+    readParameters: readNamedFieldParameters,
+  });
+  let parametersCapture = null;
+  let parametersApplying = false;
   const captureCreate = find('[data-action=capture-create]');
   const create = find('[data-action=create]');
   const createName = find('[data-create-name]');
@@ -194,9 +271,11 @@ export function mountNamedFieldsPanel(
   function updateControls() {
     const state = editor.getEditorState();
     const canRead = state.status === 'ready' && !busy;
-    file.disabled = name.disabled = occurrence.disabled = busy;
+    file.disabled = loadEditable.disabled = name.disabled = occurrence.disabled = busy;
     list.disabled = !canRead || typeof editor.listNamedFields !== 'function';
     read.disabled = !canRead || typeof editor.readNamedField !== 'function';
+    parametersRead.disabled = !canRead || Boolean(properties.reason());
+    updateParameters();
     expected.disabled =
       value.disabled =
       write.disabled =
@@ -209,6 +288,31 @@ export function mountNamedFieldsPanel(
       createSelection.textContent = creation.reason ?? '현재 선택을 가져오세요.';
     previous.disabled = busy || page === 0;
     next.disabled = busy || (page + 1) * pageSize >= (inventory?.rows.length ?? 0);
+  }
+
+  function updateParameters() {
+    const current = parametersCapture && properties.current(parametersCapture);
+    const editable = current && parametersCapture.canEdit && !parametersApplying;
+    parametersDirection.disabled = parametersMemo.disabled = !editable;
+    directionEmpty.disabled = !editable || parametersDirection.value !== '';
+    memoEmpty.disabled = !editable || parametersMemo.value !== '';
+    parametersClose.disabled = parametersApplying;
+    const explicitDirection =
+      parametersCapture?.expected.direction !== null ||
+      parametersDirection.value !== '' ||
+      directionEmpty.checked;
+    const explicitMemo =
+      parametersCapture?.expected.memo !== null || parametersMemo.value !== '' || memoEmpty.checked;
+    parametersApply.disabled = !editable || !explicitDirection || !explicitMemo;
+    if (parametersCapture && !current && !parametersApplying)
+      parametersStatus.textContent = '문서나 선택이 바뀌었습니다. 창을 닫고 속성을 다시 읽으세요.';
+  }
+
+  function closeParameters() {
+    properties.release(parametersCapture);
+    parametersCapture = null;
+    if (parametersDialog.open) parametersDialog.close();
+    updateParameters();
   }
 
   function showInventory() {
@@ -292,10 +396,11 @@ export function mountNamedFieldsPanel(
     const selected = file.files?.[0];
     if (!selected) return;
     file.value = '';
+    const editable = loadEditable.value === 'true';
     void run(async () => {
       const bytes = await selected.arrayBuffer();
       if (disposed) return '';
-      await editor.load(bytes, { format: 'hwpx', editable: true });
+      await editor.load(bytes, { format: 'hwpx', editable });
       return 'HWPX 문서를 열었습니다.';
     });
   });
@@ -341,6 +446,97 @@ export function mountNamedFieldsPanel(
       result.textContent = '대상이 바뀌었습니다. 값을 다시 읽으세요.';
     });
   }
+
+  for (const input of [name, occurrence]) {
+    input.addEventListener('input', closeParameters);
+  }
+
+  parametersRead.addEventListener(
+    'click',
+    () =>
+      void run(async () => {
+        closeParameters();
+        const selected = await properties.read(selectorOf(name, occurrence));
+        if (disposed) return '';
+        if (selected.status !== 'found') return readMessages[selected.status];
+        parametersCapture = selected;
+        parametersTarget.textContent =
+          selected.selector.name +
+          (selected.selector.occurrence === undefined
+            ? ''
+            : ` · 순번 ${selected.selector.occurrence + 1}`);
+        for (const [key, input, observed, confirm] of [
+          ['direction', parametersDirection, directionObserved, directionEmpty],
+          ['memo', parametersMemo, memoObserved, memoEmpty],
+        ]) {
+          const value = selected.expected[key];
+          input.value = value === null ? '' : value;
+          observed.textContent =
+            value === null ? '미지정 (null)' : value === '' ? '빈 문자열' : '현재 값';
+          confirm.checked = false;
+          confirm.closest('label').hidden = value !== null;
+        }
+        parametersHint.hidden =
+          selected.expected.direction !== null && selected.expected.memo !== null;
+        parametersStatus.textContent = selected.canEdit
+          ? '안내문과 도움말을 수정한 뒤 적용하세요.'
+          : '이 필드의 속성은 읽기 전용입니다.';
+        parametersDialog.showModal();
+        if (!properties.bind(selected, parametersDialog)) {
+          closeParameters();
+          throw Error('현재 상태가 바뀌었습니다. 속성을 다시 읽으세요.');
+        }
+        updateParameters();
+        return '누름틀 속성을 읽었습니다.';
+      }),
+  );
+
+  for (const input of [parametersDirection, parametersMemo, directionEmpty, memoEmpty])
+    input.addEventListener('input', updateParameters);
+
+  parametersClose.addEventListener('click', closeParameters);
+  parametersDialog.addEventListener('cancel', (event) => {
+    if (parametersApplying) event.preventDefault();
+    else closeParameters();
+  });
+  parametersDialog.addEventListener('close', () => {
+    if (!parametersDialog.open) closeParameters();
+  });
+  parametersApply.addEventListener(
+    'click',
+    () =>
+      void run(async () => {
+        if (parametersApply.disabled || !parametersCapture) return '속성을 다시 읽으세요.';
+        const selected = parametersCapture;
+        parametersApplying = true;
+        parametersStatus.textContent = '속성을 적용하고 있습니다.';
+        updateParameters();
+        try {
+          const outcome = await properties.apply(selected, {
+            direction: parametersDirection.value,
+            memo: parametersMemo.value,
+          });
+          if (disposed) return '';
+          if (outcome.status === 'committed-with-snapshot') {
+            closeParameters();
+            return '누름틀 속성을 적용했습니다.';
+          }
+          if (outcome.status === 'known-no-op') {
+            closeParameters();
+            return '속성값이 동일합니다.';
+          }
+          if (outcome.status.startsWith('committed')) {
+            closeParameters();
+            return '속성이 반영되었을 수 있습니다. 문서 상태를 확인한 뒤 다시 읽으세요.';
+          }
+          parametersStatus.textContent = outcome.error ?? outcome.status;
+          return outcome.error ?? outcome.status;
+        } finally {
+          parametersApplying = false;
+          if (!disposed) updateParameters();
+        }
+      }),
+  );
 
   read.addEventListener(
     'click',
@@ -471,6 +667,8 @@ export function mountNamedFieldsPanel(
       if (disposed) return;
       disposed = true;
       insertion.dispose();
+      properties.dispose();
+      if (parametersDialog.open) parametersDialog.close();
       unsubscribe();
       panel.remove();
     },

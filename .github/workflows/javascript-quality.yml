@@ -127,13 +127,28 @@ jobs:
           bun test --no-install ./tests/hwpx/source-table-cell-split.test.mjs ./tests/hwpx/source-table-cell-width.test.mjs
           node --test tests/hwpx/source-table-row-horizontals.test.mjs
 
+      - name: Test paragraph bullet editing with a pinned previous engine
+        timeout-minutes: 3
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_OLD_WASM: ${{ runner.temp }}/hwpjs-before-bullet.wasm
+          HWPJS_BULLET_EVIDENCE_DIR: ${{ runner.temp }}/hwpjs-bullet-evidence
+        run: |
+          previous_engine=f2c3075a972d353c1a51661153e9e9a1d5ee767e
+          if ! git cat-file -e "$previous_engine^{commit}" 2>/dev/null; then
+            git fetch --no-tags --depth=1 origin "$previous_engine"
+          fi
+          git show "$previous_engine:apps/docs/docs/public/editor/hwpjs/hwpjs.wasm" > "$HWPJS_TEST_OLD_WASM"
+          printf '%s  %s\n' '585c80637a1cad6edecb503fe4b3fa1694d2d2ef4610ee6cbcb3b21728d0c5c6' "$HWPJS_TEST_OLD_WASM" | sha256sum --check
+          bun test --no-install ./tests/hwpx/paragraph-bullet-write.test.ts
+
       - name: Test named field creation, value changes and renaming
         timeout-minutes: 2
         env:
           HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
         run: |
           bun build packages/core/src/worker.ts --target browser --format esm --outfile packages/core/src/worker.js
-          bun test --no-install ./packages/core/tests/editor/named-fields-runtime.test.ts ./packages/core/tests/editor/identity.test.ts ./packages/core/tests/editor/selection-version.test.ts
+          bun test --no-install ./packages/core/tests/editor/named-fields-runtime.test.ts ./packages/core/tests/editor/identity.test.ts ./packages/core/tests/editor/selection-version.test.ts ./packages/core/tests/editor/named-field-bullet-history.test.ts ./packages/core/tests/runtime/native-module-profiles.test.ts
       - name: Test new document and table appearance contracts
         timeout-minutes: 2
         run: |

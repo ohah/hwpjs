@@ -17,7 +17,9 @@ pub const Font = union(enum) { id: u32, name: []const u8 };
 pub const Alignment = enum { LEFT, RIGHT, CENTER, JUSTIFY, DISTRIBUTE, DISTRIBUTE_SPACE };
 pub const ResetScope = enum { character, paragraph, all };
 pub const ResetResources = struct { style_id: u32, character: ?u32 = null, paragraph: ?u32 = null };
+pub const Bullet = struct { id: ?u32 };
 pub const Paragraph = struct {
+    bullet: ?Bullet = null,
     border_fill: @import("border_fill_patch.zig").Patch = .{},
     alignment: ?Alignment = null,
     margins: model.ParagraphMarginPatch = .{},
@@ -39,6 +41,7 @@ pub const Patch = struct {
     }
     pub fn hasParagraph(self: Patch) bool {
         if (self.reset) |v| return v != .character;
+        if (self.paragraph.bullet != null) return true;
         if (@import("border_fill_patch.zig").has(self.paragraph.border_fill)) return true;
         if (@import("paragraph_flags.zig").has(self.paragraph.flags) or self.paragraph.alignment != null or self.paragraph.spacing != null) return true;
         inline for (@import("../reflection.zig").fields(model.ParagraphMarginPatch)) |field| {
@@ -51,6 +54,7 @@ pub const Apply = struct { binding: Binding, targets: []const Target, patch: Pat
 /// The owner comes from the live Native SSOT resolver, never decoded client IDs.
 pub const Owner = struct { section: usize, paragraph: usize };
 pub const Operation = union(enum) {
+    paragraph_bullet: struct { owner: Owner, value: Bullet },
     character_resource: struct { owner: Owner, range: Range, id: u32 },
     paragraph_resource: struct { owner: Owner, id: u32 },
     paragraph_border_fill: struct { owner: Owner, value: @import("border_fill_patch.zig").Patch, flags: @import("paragraph_flags.zig").Patch = .{} },
@@ -117,6 +121,7 @@ pub fn plan(a: std.mem.Allocator, input: Apply, resolver: anytype) ![]Operation 
         }
         if (@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill)) try append(a, &ops, .{ .paragraph_border_fill = .{ .owner = owner, .value = input.patch.paragraph.border_fill, .flags = input.patch.paragraph.flags } });
         if (@import("paragraph_flags.zig").has(input.patch.paragraph.flags) and !@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill)) try append(a, &ops, .{ .paragraph_flags = .{ .owner = owner, .value = input.patch.paragraph.flags } });
+        if (input.patch.paragraph.bullet) |value| try append(a, &ops, .{ .paragraph_bullet = .{ .owner = owner, .value = value } });
         if (input.patch.paragraph.alignment) |value| try append(a, &ops, .{ .alignment = .{ .owner = owner, .value = value } });
         var margins = false;
         inline for (@import("../reflection.zig").fields(model.ParagraphMarginPatch)) |field| {
@@ -189,7 +194,7 @@ pub fn operationCount(input: Apply) !usize {
     var margins = false;
     inline for (@import("../reflection.zig").fields(model.ParagraphMarginPatch)) |field| margins = margins or @field(input.patch.paragraph.margins, field.name) != null;
     const per_range: usize = @as(usize, @intFromBool(character)) + names;
-    const per_owner: usize = @as(usize, @intFromBool(@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill))) + @as(usize, @intFromBool(@import("paragraph_flags.zig").has(input.patch.paragraph.flags) and !@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill))) + @as(usize, @intFromBool(input.patch.paragraph.alignment != null)) + @as(usize, @intFromBool(margins)) + @as(usize, @intFromBool(input.patch.paragraph.spacing != null));
+    const per_owner: usize = @as(usize, @intFromBool(input.patch.paragraph.bullet != null)) + @as(usize, @intFromBool(@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill))) + @as(usize, @intFromBool(@import("paragraph_flags.zig").has(input.patch.paragraph.flags) and !@import("border_fill_patch.zig").has(input.patch.paragraph.border_fill))) + @as(usize, @intFromBool(input.patch.paragraph.alignment != null)) + @as(usize, @intFromBool(margins)) + @as(usize, @intFromBool(input.patch.paragraph.spacing != null));
     var total: usize = 0;
     for (input.targets) |target| {
         const ranges = std.math.mul(usize, target.ranges.len, per_range) catch return error.LimitExceeded;

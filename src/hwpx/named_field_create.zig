@@ -153,13 +153,7 @@ fn serialize(a: std.mem.Allocator, qname: []const u8, id: u32, name: []const u8,
 fn serializeParameters(a: std.mem.Allocator, prefix: []const u8, parameters: Parameters, limit: usize) ![]u8 {
     // KS X 6101 10.7.3.1 and 10.7.3.2.1. Count the unescaped command
     // payload on the UTF-16 axis, including the separator after each value.
-    const units = @import("text_site_edit.zig").utf16Length;
-    const direction = try units(parameters.direction);
-    const memo = try units(parameters.memo);
-    const payload = try std.fmt.allocPrint(a, "Direction:wstring:{d}:{s} HelpState:wstring:{d}:{s} ", .{
-        direction, parameters.direction, memo, parameters.memo,
-    });
-    const command = try std.fmt.allocPrint(a, "Clickhere:set:{d}:{s} ", .{ try units(payload), payload });
+    const command = try commandValue(a, parameters);
     const encode = @import("../xml/text_writer.zig").encode;
     const command_xml = try encode(a, command, limit);
     const direction_xml = try encode(a, parameters.direction, limit);
@@ -169,6 +163,17 @@ fn serializeParameters(a: std.mem.Allocator, prefix: []const u8, parameters: Par
         "<{0s}stringParam name=\"Command\" xml:space=\"preserve\">{1s}</{0s}stringParam>" ++
         "<{0s}stringParam name=\"Direction\">{2s}</{0s}stringParam>" ++
         "<{0s}stringParam name=\"HelpState\">{3s}</{0s}stringParam></{0s}parameters>", .{ prefix, command_xml, direction_xml, memo_xml });
+}
+
+/// Shared CLICK_HERE command spelling for creation and property edits.
+/// Owns the returned UTF-8 value, before XML escaping.
+pub fn commandValue(a: std.mem.Allocator, parameters: Parameters) ![]u8 {
+    const units = @import("text_site_edit.zig").utf16Length;
+    const payload = try std.fmt.allocPrint(a, "Direction:wstring:{d}:{s} HelpState:wstring:{d}:{s} ", .{
+        try units(parameters.direction), parameters.direction, try units(parameters.memo), parameters.memo,
+    });
+    defer a.free(payload);
+    return std.fmt.allocPrint(a, "Clickhere:set:{d}:{s} ", .{ try units(payload), payload });
 }
 
 // KS X 6101 10.7.3.1 CLICK_HERE example uses the same fieldid as %clk.

@@ -21,6 +21,7 @@ export {
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
   CREATE_NAMED_FIELD_COMMAND,
+  SET_NAMED_FIELD_PARAMETERS_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -110,6 +111,7 @@ export type { CharacterFontNameValue } from './state/font-name-state.ts';
 
 export { APPLY_FORMATTING_PATCH_COMMAND } from './commands/commands.ts';
 export type {
+  ParagraphBullet,
   ParagraphFormattingPatch,
   FormattingPatch,
   ApplyFormattingPatchPayload,
@@ -195,6 +197,9 @@ export type {
   SetNamedFieldValuePayload,
   RenameNamedFieldPayload,
   CreateNamedFieldPayload,
+  NamedFieldParameters,
+  SetNamedFieldParametersPayload,
+  NamedFieldParametersRead,
 } from './editor/named-fields.ts';
 
 export { INSERT_DOCUMENT_COMMAND } from './commands/commands.ts';

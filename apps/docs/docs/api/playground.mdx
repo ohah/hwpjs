@@ -23,6 +23,14 @@ import ApiPlayground from '../../components/ApiPlayground';
 
 문단 안의 한 텍스트 요소에 속한 선택을 지원합니다. 선택한 글자와 서식을 유지하며 빈 위치에는 빈 누름틀을 만듭니다. 보호된 필드와 겹치는 선택, 여러 요소에 걸친 선택이나 중복 이름은 생성할 수 없는 이유가 표시됩니다. 생성 후에는 같은 패널에서 값을 읽고 바꿀 수 있으며 실행 취소·다시 실행과 저장을 사용할 수 있습니다.
 
+## 누름틀 안내문·도움말 수정
+
+HWPX 파일을 연 뒤 필드 이름과 필요한 순번을 입력하고 **누름틀 속성 읽기**를 누르세요. 안내문과 도움말을 수정하고 **속성 적용**으로 저장합니다. 미지정(`null`)과 빈 문자열을 구분하며, 미지정 값을 비우려면 해당 확인란을 선택해야 합니다. 원문 텍스트와 필드 이름은 유지합니다.
+
+파일을 수정하지 않고 확인하려면 패널의 **열기 모드 → 읽기 전용**을 선택하고 파일을 여세요. 보호 필드와 읽기 전용 문서에서도 지원되는 속성은 조회할 수 있고 적용은 비활성화됩니다. 다른 문서나 선택으로 바뀌면 속성을 다시 읽어야 합니다.
+
+헤드리스 API는 `readNamedFieldParameters`와 `SET_NAMED_FIELD_PARAMETERS_COMMAND`를 사용합니다. `read` 결과의 `token`, `selectionVersion`, 기존 `parameters`를 수정 요청의 기대값으로 전달합니다. 문단 글머리표는 `APPLY_FORMATTING_PATCH_COMMAND`의 `paragraph.bullet`로 기존 선언 적용·해제를 지원하며 새 선언 생성은 후속입니다.
+
 <ApiPlayground />
 
 [HeadlessEditor 가이드](./editor.md) · [선택과 서식](./selection.md) · [패키지 이름과 게시 상태](../guide/package-names.md)

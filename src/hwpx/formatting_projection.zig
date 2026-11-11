@@ -210,6 +210,7 @@ pub const Backend = struct {
         try @import("character_style_session.zig").validate(self.session, selected.section, selected.paragraph, range.startUnit, range.endUnit, id);
     }
     pub fn authorizeField(self: Backend, a: std.mem.Allocator, selected: m.Owner, field: []const u8) !void {
+        if (eq(field, "paragraph.bullet")) return @import("paragraph_bullet_session.zig").authorize(self.session, selected.section, selected.paragraph);
         if (!std.mem.startsWith(u8, field, "paragraph.margins.")) return;
         var local: ?@import("formatting_preflight.zig").Context = null;
         defer if (local) |*owned| owned.deinit();
@@ -409,6 +410,17 @@ pub const Backend = struct {
         }
 
         const id = try self.session.paragraphShapeId(selected.section, selected.paragraph);
+        if (eq(field, "paragraph.bullet")) {
+            var local: ?@import("formatting_preflight.zig").Context = null;
+            defer if (local) |*value| value.deinit();
+            const context = try self.currentContext(a, &local);
+            const node = try @import("formatting_preflight.zig").node(a, &context.tree, "paraPr", id);
+            const bullet = @import("paragraph_bullet_patch.zig").read(a, &context.tree, node) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), @errorName(err));
+            var value = p.map(a);
+            try p.put(a, &value, "kind", try p.text(a, if (bullet.id != null) "existing" else "none"));
+            if (bullet.id) |identity| try p.put(a, &value, "id", p.integer(identity));
+            return p.known(value, true, null, null);
+        }
         if (eq(field, "paragraph.grid") or eq(field, "paragraph.borderConnect")) {
             var local: ?@import("formatting_preflight.zig").Context = null;
             defer if (local) |*value| value.deinit();

@@ -1,3 +1,5 @@
+// @ts-ignore Shared HWPX metadata boundary validation.
+import { checkedNamedFieldParameterValues } from '../../../../js/named-field-parameters.mjs';
 import {
   sourceTableCellWidthRequest,
   type SourceTableCellWidthTarget,
@@ -16,6 +18,9 @@ import type {
   SetNamedFieldValuePayload,
   RenameNamedFieldPayload,
   CreateNamedFieldPayload,
+  NamedFieldParameters,
+  SetNamedFieldParametersPayload,
+  NamedFieldParametersRead,
 } from './named-fields.ts';
 import {
   captureDocumentInsertPayload,
@@ -94,6 +99,7 @@ import {
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
   CREATE_NAMED_FIELD_COMMAND,
+  SET_NAMED_FIELD_PARAMETERS_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -1317,6 +1323,59 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
+      if (pending.command.id === SET_NAMED_FIELD_PARAMETERS_COMMAND.id) {
+        const payload = pending.payload as SetNamedFieldParametersPayload;
+        if (
+          !payload?.token ||
+          !Number.isSafeInteger(payload.selectionVersion) ||
+          payload.selectionVersion < 0 ||
+          typeof payload.direction !== 'string' ||
+          typeof payload.memo !== 'string' ||
+          !isWellFormedText(payload.direction) ||
+          !isWellFormedText(payload.memo)
+        )
+          throw Error('InvalidNamedFieldParametersCommand');
+        const expected = checkedNamedFieldParameterValues(payload.expected);
+        const kind = 'set-named-field-parameters';
+        if ((state.content as any)?.format !== 'hwpx' || !hasRuntimeAdmission(active, kind))
+          throw Error('NamedFieldParametersUnavailable');
+        const selector = checkedNamedFieldSelector(payload.selector);
+        const guard = () => {
+          requireReady(payload.token, true);
+          if (state.stateVersion !== payload.selectionVersion)
+            throw Error('StaleNamedFieldSelection');
+        };
+        guard();
+        const inventory = await readNamedFieldInventory(payload.token);
+        guard();
+        const resolved = resolveNamedField(inventory, selector);
+        if (resolved.status === 'incomplete') throw Error('IncompleteNamedFieldInventory');
+        if (resolved.status === 'ambiguous') throw Error('AmbiguousNamedField');
+        if (resolved.status === 'missing') throw Error('NamedFieldMissing');
+        const { field } = resolved;
+        if (field.protection === 'protected') throw Error('NamedFieldProtected');
+        if (!field.canSetValue || !field.target) throw Error('NamedFieldParametersUnavailable');
+        validateSelection(field.target, state, true);
+        const { section, paragraph, startUnit, endUnit } = field.target;
+        return await mutate(
+          {
+            kind,
+            id: field.id,
+            name: selector.name,
+            occurrence: selector.occurrence,
+            section,
+            paragraph,
+            startUnit,
+            endUnit,
+            expected,
+            direction: payload.direction,
+            memo: payload.memo,
+          },
+          payload.token,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === CREATE_NAMED_FIELD_COMMAND.id) {
         const payload = pending.payload as CreateNamedFieldPayload;
         if (
@@ -1826,6 +1885,7 @@ export function createEditor(options: CreateEditorOptions) {
         'splice',
         'set-named-field-value',
         'rename-named-field',
+        'set-named-field-parameters',
         'create-named-field',
         'source-table-cell-width',
       ].includes(owned.kind)
@@ -1915,6 +1975,54 @@ export function createEditor(options: CreateEditorOptions) {
     const owned = checkedNamedFieldSelector(copyOwned(selector));
     const token = namedFieldToken(options);
     return enqueue(async () => resolveNamedField(await readNamedFieldInventory(token), owned));
+  }
+  function readNamedFieldParameters(
+    selector: NamedFieldSelector,
+    options: NamedFieldOptions = {},
+  ): Promise<NamedFieldParametersRead> {
+    assertPublicMutation();
+    const owned = checkedNamedFieldSelector(copyOwned(selector));
+    const token = namedFieldToken(options);
+    return enqueue(async () => {
+      requireReady(token, true);
+      if ((state.content as any)?.format !== 'hwpx') throw Error('NamedFieldParametersUnavailable');
+      const resolved = resolveNamedField(await readNamedFieldInventory(token), owned);
+      if (resolved.status !== 'found') return resolved;
+      const before = state;
+      const guard = () => {
+        requireReady(token, true);
+        if (state.stateVersion !== before.stateVersion) throw Error('StaleNamedFieldSelection');
+      };
+      const reply = await readRequest(
+        {
+          kind: 'named-field-parameters',
+          id: resolved.field.id,
+          name: owned.name,
+          occurrence: owned.occurrence,
+        },
+        token,
+        guard,
+      );
+      guard();
+      const value = reply.namedFieldParameters as {
+        parameters: NamedFieldParameters;
+        canEdit: boolean;
+      };
+      if (!value || typeof value.canEdit !== 'boolean') throw Error('InvalidNamedFieldParameters');
+      const parameters = checkedNamedFieldParameterValues(value.parameters);
+      return freezeDTO({
+        status: 'found' as const,
+        field: resolved.field,
+        parameters,
+        canEdit:
+          value.canEdit &&
+          resolved.field.canSetValue === true &&
+          (state.content as any)?.readOnly !== true &&
+          (state.capabilities as any)?.readOnly !== true,
+        token,
+        selectionVersion: before.stateVersion,
+      });
+    });
   }
   function moveToNamedField(
     selector: NamedFieldSelector,
@@ -2603,6 +2711,7 @@ export function createEditor(options: CreateEditorOptions) {
     setSelection: geometryGuard(setSelection),
     listNamedFields: geometryGuard(listNamedFields),
     readNamedField: geometryGuard(readNamedField),
+    readNamedFieldParameters: geometryGuard(readNamedFieldParameters),
     moveToNamedField: geometryGuard(moveToNamedField),
     acquireInputSurface: geometryGuard(acquireInputSurface),
     dispose: geometryGuard(dispose),

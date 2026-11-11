@@ -276,6 +276,7 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
       // Its transport fence conveys no native binding or geometry authority.
       (kind === 'set-named-field-value' ||
         kind === 'rename-named-field' ||
+        kind === 'set-named-field-parameters' ||
         kind === 'create-named-field' ||
         (canonicalCode && transportWitness.current(worker))),
   );

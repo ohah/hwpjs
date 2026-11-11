@@ -65,6 +65,30 @@ export interface SetNamedFieldValuePayload {
   readonly text: string;
 }
 
+export interface NamedFieldParameters {
+  /** null means absent from both the scalar parameter and a supported Command. */
+  readonly direction: string | null;
+  readonly memo: string | null;
+}
+export interface SetNamedFieldParametersPayload {
+  readonly selector: NamedFieldSelector;
+  readonly token: StateToken;
+  readonly selectionVersion: number;
+  readonly expected: NamedFieldParameters;
+  readonly direction: string;
+  readonly memo: string;
+}
+export type NamedFieldParametersRead =
+  | Exclude<NamedFieldResolution, { status: 'found' }>
+  | {
+      readonly status: 'found';
+      readonly field: NamedField;
+      readonly parameters: NamedFieldParameters;
+      readonly canEdit: boolean;
+      readonly token: StateToken;
+      readonly selectionVersion: number;
+    };
+
 export interface CreateNamedFieldPayload {
   readonly target: SelectionTarget;
   /** Selection version from the same current editor observation. */

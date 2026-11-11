@@ -51,6 +51,10 @@ pub const hwpx_named_field_rename_exports = [_][]const u8{
 pub const hwpx_named_field_create_exports = [_][]const u8{
     "hwpx_edit_create_named_field",
 };
+pub const hwpx_named_field_parameters_exports = [_][]const u8{
+    "hwpx_edit_named_field_parameters",
+    "hwpx_edit_set_named_field_parameters",
+};
 pub const document = struct {
     pub const header_bytes: usize = 8;
     pub const node_bytes: usize = 56;

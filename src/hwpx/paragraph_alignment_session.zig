@@ -14,13 +14,22 @@ pub fn applyWithFlags(session: *editor.Session, section: usize, paragraph: usize
     return applyWithResources(session, section, paragraph, requested_alignment, patch, requested_spacing, requested_flags, .{});
 }
 pub fn applyWithResources(session: *editor.Session, section: usize, paragraph: usize, requested_alignment: ?@import("paragraph_resource_clone.zig").Alignment, patch: @import("paragraph_margin_patch.zig").Patch, requested_spacing: ?@import("paragraph_spacing_patch.zig").Spacing, requested_flags: @import("../model/paragraph_flags.zig").Patch, requested_border: @import("../model/border_fill_patch.zig").Patch) !bool {
+    return applyWithBullet(session, section, paragraph, requested_alignment, patch, requested_spacing, requested_flags, requested_border, null);
+}
+pub fn applyWithBullet(session: *editor.Session, section: usize, paragraph: usize, requested_alignment: ?@import("paragraph_resource_clone.zig").Alignment, patch: @import("paragraph_margin_patch.zig").Patch, requested_spacing: ?@import("paragraph_spacing_patch.zig").Spacing, requested_flags: @import("../model/paragraph_flags.zig").Patch, requested_border: @import("../model/border_fill_patch.zig").Patch, requested_bullet: ?@import("../model/formatting_patch.zig").Bullet) !bool {
     if (requested_spacing) |value| try @import("paragraph_spacing_patch.zig").validate(value);
     const a = session.allocator;
     const current = try session.paragraphShapeId(section, paragraph);
+    if (requested_bullet) |value| {
+        var context = try @import("formatting_preflight.zig").Context.init(a, session);
+        defer context.deinit();
+        const node = try @import("formatting_preflight.zig").node(a, &context.tree, "paraPr", current);
+        try @import("paragraph_bullet_patch.zig").validate(a, &context.tree, node, value);
+    }
     const shapes = try session.paragraphShapes();
     defer @import("paragraph_display_resources.zig").deinit(a, shapes);
     var alignment = requested_alignment;
-    var flags_only = (@import("../model/paragraph_flags.zig").has(requested_flags) or @import("../model/border_fill_patch.zig").has(requested_border)) and requested_alignment == null and requested_spacing == null;
+    var flags_only = (requested_bullet != null or @import("../model/paragraph_flags.zig").has(requested_flags) or @import("../model/border_fill_patch.zig").has(requested_border)) and requested_alignment == null and requested_spacing == null;
     inline for (@import("../reflection.zig").fields(@import("paragraph_margin_patch.zig").Patch)) |field| if (@field(patch, field.name) != null) {
         flags_only = false;
     };
@@ -52,8 +61,15 @@ pub fn applyWithResources(session: *editor.Session, section: usize, paragraph: u
     if (!found) return error.InvalidParagraphShapeReference;
     if (@import("../model/paragraph_flags.zig").has(requested_flags)) unchanged = unchanged and try @import("paragraph_flags_session.zig").matchesCurrent(session, current, requested_flags);
     if (@import("../model/border_fill_patch.zig").has(requested_border)) unchanged = unchanged and try @import("paragraph_border_fill_session.zig").matchesCurrent(session, current, requested_border);
+    if (requested_bullet) |value| {
+        var context = try @import("formatting_preflight.zig").Context.init(a, session);
+        defer context.deinit();
+        const node = try @import("formatting_preflight.zig").node(a, &context.tree, "paraPr", current);
+        unchanged = unchanged and std.meta.eql(try @import("paragraph_bullet_patch.zig").read(a, &context.tree, node), value);
+    }
     if (unchanged) return false;
     var source_id = current;
+    var bullet: ?@import("../model/formatting_patch.zig").Bullet = null;
     var border_fill: @import("../model/border_fill_patch.zig").Patch = .{};
     var keep_lines: ?bool = null;
     var flags: @import("../model/paragraph_flags.zig").Patch = .{};
@@ -61,6 +77,7 @@ pub fn applyWithResources(session: *editor.Session, section: usize, paragraph: u
     var spacing: ?@import("paragraph_spacing_patch.zig").Spacing = null;
     for (session.paragraph_resources.entries.items) |entry| if (entry.id == current) {
         source_id = entry.source_id;
+        bullet = entry.bullet;
         margins = entry.margins;
         spacing = entry.spacing;
         keep_lines = entry.keep_lines;
@@ -81,7 +98,8 @@ pub fn applyWithResources(session: *editor.Session, section: usize, paragraph: u
     if (requested_spacing) |value| spacing = value;
     flags = @import("../model/paragraph_flags.zig").merge(flags, requested_flags);
     border_fill = @import("../model/border_fill_patch.zig").merge(border_fill, requested_border);
-    const id = try pending.addWithResources(a, ids, source_id, alignment, margins, spacing, keep_lines, flags, border_fill);
+    if (requested_bullet) |value| bullet = value;
+    const id = try pending.addWithBullet(a, ids, source_id, alignment, margins, spacing, keep_lines, flags, border_fill, bullet);
     std.mem.swap(@import("paragraph_resource_values.zig").Values, &pending, &session.paragraph_resources);
     const changed = session.setParagraphFormat(section, paragraph, id) catch |err| {
         std.mem.swap(@import("paragraph_resource_values.zig").Values, &pending, &session.paragraph_resources);

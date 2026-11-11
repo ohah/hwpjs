@@ -1,7 +1,12 @@
 import type { CharacterFormattingPatch, FormattingReset } from './character-formatting-patch.ts';
 import type { SelectionTarget } from './commands.ts';
 import type { BorderPatch, BackgroundPatch } from './formatting-resource-intent.ts';
+/** Existing HWPX character-bullet declaration. No declaration creation or list continuation. */
+export type ParagraphBullet =
+  | { readonly kind: 'none' }
+  | { readonly kind: 'existing'; readonly id: number };
 export interface ParagraphFormattingPatch {
+  readonly bullet?: ParagraphBullet;
   readonly alignment?: 'LEFT' | 'RIGHT' | 'CENTER' | 'JUSTIFY' | 'DISTRIBUTE' | 'DISTRIBUTE_SPACE';
   readonly margins?: {
     readonly left?: number;

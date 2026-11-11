@@ -19,6 +19,7 @@ pub fn lowerInto(comptime format: Format, operations: []const m.Operation, outpu
     if (operations.len != output.len) return error.InvalidFormattingCommandBuffer;
     for (operations, output) |op, *command| {
         command.* = if (format == .hwp5) switch (op) {
+            .paragraph_bullet => return error.ParagraphBulletWriterUnavailable,
             .character_resource => |v| .{ .set_character_format = .{ .section = v.owner.section, .paragraph = v.owner.paragraph, .start_unit = v.range.startUnit, .end_unit = v.range.endUnit, .char_shape_id = v.id } },
             .paragraph_resource => |v| .{ .set_paragraph_format = .{ .section = v.owner.section, .paragraph = v.owner.paragraph, .para_shape_id = std.math.cast(u16, v.id) orelse return error.InvalidParagraphShapeReference } },
             .paragraph_border_fill => |v| .{ .set_paragraph_border_fill = .{ .section = v.owner.section, .paragraph = v.owner.paragraph, .patch = v.value, .flags = v.flags } },
@@ -29,6 +30,7 @@ pub fn lowerInto(comptime format: Format, operations: []const m.Operation, outpu
             .margins => |v| .{ .set_paragraph_margins = .{ .section = v.owner.section, .paragraph = v.owner.paragraph, .margins = v.value } },
             .spacing => |v| .{ .set_paragraph_spacing = .{ .section = v.owner.section, .paragraph = v.owner.paragraph, .spacing = v.value } },
         } else switch (op) {
+            .paragraph_bullet => |v| .{ .kind = .paragraph_bullet, .section = v.owner.section, .paragraph = v.owner.paragraph, .start = 0, .deleted = 0, .inserted = "", .paragraph_bullet = v.value },
             .character_resource => |v| .{ .kind = .format, .section = v.owner.section, .paragraph = v.owner.paragraph, .start = v.range.startUnit, .deleted = v.range.endUnit - v.range.startUnit, .inserted = "", .char_shape_id = v.id },
             .paragraph_resource => |v| .{ .kind = .paragraph_format, .section = v.owner.section, .paragraph = v.owner.paragraph, .start = 0, .deleted = 0, .inserted = "", .paragraph_shape_id = v.id },
             .paragraph_border_fill => |v| .{ .kind = .paragraph_border_fill, .section = v.owner.section, .paragraph = v.owner.paragraph, .start = 0, .deleted = 0, .inserted = "", .paragraph_border_fill = v.value, .paragraph_flags = v.flags },

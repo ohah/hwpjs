@@ -27,6 +27,7 @@ export function validateParagraphFormattingPatch(value: unknown): void {
   const root = object(value, ['paragraph']);
   if (!Object.hasOwn(root, 'paragraph')) throw Error('InvalidFormattingPatch');
   const p = object(root.paragraph, [
+    'bullet',
     'alignment',
     'margins',
     'spacing',
@@ -35,6 +36,19 @@ export function validateParagraphFormattingPatch(value: unknown): void {
     'border',
     'background',
   ]);
+  if (p.bullet !== undefined) {
+    const bullet = object(p.bullet, ['kind', 'id']);
+    if (bullet.kind === 'none') {
+      if (Object.hasOwn(bullet, 'id')) throw Error('InvalidParagraphBullet');
+    } else if (
+      bullet.kind !== 'existing' ||
+      !Number.isInteger(bullet.id) ||
+      (bullet.id as number) < 0 ||
+      (bullet.id as number) > 0xffffffff
+    ) {
+      throw Error('InvalidParagraphBullet');
+    }
+  }
   if (p.alignment !== undefined && paragraphAlignmentValue(p.alignment) === undefined)
     throw Error('InvalidParagraphAlignment');
   if (p.margins !== undefined) {
@@ -76,6 +90,7 @@ function hasParagraphFormattingPatch(patch: FormattingPatch): boolean {
   const p = patch.paragraph;
   if (!p) return false;
   if (
+    p.bullet !== undefined ||
     p.alignment !== undefined ||
     p.spacing !== undefined ||
     p.grid !== undefined ||

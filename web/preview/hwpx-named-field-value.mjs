@@ -3,7 +3,7 @@ import { isHwpxNamedFieldValue } from '../../js/hwpx-named-fields.mjs';
 const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
 
 /** Re-observe the source under the same runtime request as the owned mutation. */
-function resolveTarget(editor, request, invalid, unavailable) {
+export function resolveHwpxNamedFieldTarget(editor, request, invalid, unavailable) {
   const { id, name, occurrence, section, paragraph, startUnit, endUnit } = request;
   if (
     typeof id !== 'string' ||
@@ -15,13 +15,7 @@ function resolveTarget(editor, request, invalid, unavailable) {
   )
     throw Error(invalid);
 
-  const inventory = editor.namedFields();
-  if (inventory.coverage !== 'complete') throw Error('IncompleteNamedFieldInventory');
-  const matches = inventory.rows.filter((row) => row.name === name);
-  if (occurrence === undefined && matches.length > 1) throw Error('AmbiguousNamedField');
-  const row = matches[occurrence ?? 0];
-  if (!row) throw Error('NamedFieldMissing');
-  if (row.id !== id) throw Error('StaleNamedFieldTarget');
+  const row = resolveNamedFieldSource(editor, request, invalid);
   if (row.protection === 'protected') throw Error('NamedFieldProtected');
   if (!row.canSetValue || row.value.status !== 'available' || !row.location)
     throw Error(unavailable);
@@ -36,11 +30,31 @@ function resolveTarget(editor, request, invalid, unavailable) {
   return row;
 }
 
+/** Re-resolve names and source IDs for metadata reads without writable geometry. */
+export function resolveNamedFieldSource(editor, request, invalid) {
+  const { id, name, occurrence } = request;
+  if (
+    typeof id !== 'string' ||
+    typeof name !== 'string' ||
+    !name.length ||
+    (occurrence !== undefined && !uint(occurrence))
+  )
+    throw Error(invalid);
+  const inventory = editor.namedFields();
+  if (inventory.coverage !== 'complete') throw Error('IncompleteNamedFieldInventory');
+  const matches = inventory.rows.filter((row) => row.name === name);
+  if (occurrence === undefined && matches.length > 1) throw Error('AmbiguousNamedField');
+  const row = matches[occurrence ?? 0];
+  if (!row) throw Error('NamedFieldMissing');
+  if (row.id !== id) throw Error('StaleNamedFieldTarget');
+  return row;
+}
+
 export function setHwpxNamedFieldValue(editor, request) {
   const { expectedValue, text, section, paragraph, startUnit, endUnit } = request;
   if (!isHwpxNamedFieldValue(expectedValue) || !isHwpxNamedFieldValue(text))
     throw Error('InvalidNamedFieldValueCommand');
-  const row = resolveTarget(
+  const row = resolveHwpxNamedFieldTarget(
     editor,
     request,
     'InvalidNamedFieldValueCommand',
@@ -63,7 +77,7 @@ export function renameHwpxNamedField(editor, request) {
   const { section, paragraph, name, newName } = request;
   if (typeof newName !== 'string' || !newName || !newName.isWellFormed())
     throw Error('InvalidNamedFieldName');
-  const row = resolveTarget(
+  const row = resolveHwpxNamedFieldTarget(
     editor,
     request,
     'InvalidNamedFieldRenameCommand',

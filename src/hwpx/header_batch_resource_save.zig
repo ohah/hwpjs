@@ -31,7 +31,7 @@ fn basicCharacter(patch: @import("../model/document.zig").CharacterPropertyPatch
     return true;
 }
 fn basicParagraph(value: paras.Entry) bool {
-    return value.keep_lines == null and std.meta.eql(value.margins, @as(@TypeOf(value.margins), .{})) and value.spacing == null and !@import("../model/paragraph_flags.zig").has(value.flags) and !@import("../model/border_fill_patch.zig").has(value.border_fill);
+    return value.bullet == null and value.keep_lines == null and std.meta.eql(value.margins, @as(@TypeOf(value.margins), .{})) and value.spacing == null and !@import("../model/paragraph_flags.zig").has(value.flags) and !@import("../model/border_fill_patch.zig").has(value.border_fill);
 }
 fn append(a: std.mem.Allocator, output: *std.ArrayList(u8), bytes: []const u8, limit: usize) !void {
     if (bytes.len > limit -| output.items.len) return error.LimitExceeded;

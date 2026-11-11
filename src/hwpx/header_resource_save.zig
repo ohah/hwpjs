@@ -85,6 +85,16 @@ fn replacementSequential(a: std.mem.Allocator, source: []const u8, values: *cons
             tree.deinit(a);
             tree = updated;
         }
+        if (intent.bullet) |value| {
+            const node = try @import("formatting_preflight.zig").node(a, &tree, "paraPr", intent.id);
+            const fragment = try @import("paragraph_bullet_patch.zig").write(a, &tree, node, value, max_bytes);
+            defer a.free(fragment);
+            const patched = try @import("xml_source_writer.zig").write(a, tree.source, &.{.{ .start = tree.elements[node].start_tag.start, .end = tree.elements[node].end, .text = "", .serialized_xml = fragment }}, max_bytes);
+            defer a.free(patched);
+            const updated = try @import("header_tree.zig").parse(a, patched, tree.item_index, .{ .max_xml_bytes = max_bytes });
+            tree.deinit(a);
+            tree = updated;
+        }
         if (intent.keep_lines) |value| {
             var target: ?usize = null;
             for (tree.elements, 0..) |element, index| {

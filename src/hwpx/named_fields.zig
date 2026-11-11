@@ -106,6 +106,24 @@ pub fn authorizeRename(session: *const Session, section: usize, paragraph: usize
     return true;
 }
 
+/// Source identity observation only; writable label ownership remains separate.
+pub fn selected(session: *const Session, section: usize, element: usize, expected: []const u8) !void {
+    var lease = try @import("source_field_analysis.zig").leaseForExterior(session);
+    defer lease.deinit(session.allocator);
+    var arena = std.heap.ArenaAllocator.init(session.allocator);
+    defer arena.deinit();
+    const inventory = try collect(session, arena.allocator(), lease.source.report.markers, false);
+    if (!inventory.complete) return error.IncompleteNamedFieldInventory;
+    for (inventory.rows.items) |row| {
+        if (row.section != section or row.element != element) continue;
+        if (!std.mem.eql(u8, row.name orelse return error.StaleNamedFieldTarget, expected))
+            return error.StaleNamedFieldTarget;
+        if (!std.mem.eql(u8, row.kind, "CLICK_HERE")) return error.NamedFieldParametersUnavailable;
+        return;
+    }
+    return error.StaleNamedFieldTarget;
+}
+
 /// Check the same name coverage as the public inventory and reserve a source
 /// link ID against every marker, including inactive XML alternatives.
 pub fn creationId(session: *const Session, name: []const u8) !u32 {

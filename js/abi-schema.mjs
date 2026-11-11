@@ -40,6 +40,10 @@ export const HWPX_TEXT_TRANSACTION_FUNCTIONS = Object.freeze([
 export const HWP5_NAMED_FIELDS_FUNCTIONS = Object.freeze(['hwp5_edit_named_fields']);
 // Optional read-only source-section field inventory.
 export const HWPX_NAMED_FIELDS_FUNCTIONS = Object.freeze(['hwpx_edit_named_fields']);
+export const HWPX_NAMED_FIELD_PARAMETERS_FUNCTIONS = Object.freeze([
+  'hwpx_edit_named_field_parameters',
+  'hwpx_edit_set_named_field_parameters',
+]);
 export const HWPX_NAMED_FIELD_CREATE_FUNCTIONS = Object.freeze(['hwpx_edit_create_named_field']);
 export const HWPX_NAMED_FIELD_RENAME_FUNCTIONS = Object.freeze(['hwpx_edit_rename_named_field']);
 // Optional HWPX source-body insertion; required ABI and version are unchanged.

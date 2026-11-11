@@ -98,6 +98,8 @@ const namedFieldsPanel = mountNamedFieldsPanel(namedFieldsSlot, {
   setNamedFieldValueCommand: core.SET_NAMED_FIELD_VALUE_COMMAND,
   createNamedFieldCommand: core.CREATE_NAMED_FIELD_COMMAND,
   getSelectionClipboard: core.getSelectionClipboard,
+  setNamedFieldParametersCommand: core.SET_NAMED_FIELD_PARAMETERS_COMMAND,
+  readNamedFieldParameters: (selector, options) => editor.readNamedFieldParameters(selector, options),
 });
 addEventListener('pagehide', () => {
   namedFieldsPanel.dispose();

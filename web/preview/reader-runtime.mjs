@@ -1,4 +1,8 @@
 import { sourceTableCellWidthPlan } from './source-table-cell-width.mjs';
+import {
+  readHwpxNamedFieldParameters,
+  setHwpxNamedFieldParameters,
+} from './hwpx-named-field-parameters.mjs';
 import { attachParagraphNumbering } from './paragraph-numbering.mjs';
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
 import { renameHwpxNamedField, setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
@@ -1132,6 +1136,28 @@ export function createReaderRuntime({
           namedFields:
             format === 'hwp5' ? projectHwp5NamedFields(source, hwp5DisplayProjection()) : source,
         });
+        return;
+      }
+      if (message.kind === 'named-field-parameters') {
+        if (format !== 'hwpx' || !editor) throw Error('NamedFieldParametersUnavailable');
+        reply({
+          kind: message.kind,
+          namedFieldParameters: readHwpxNamedFieldParameters(editor, message),
+        });
+        return;
+      }
+      if (message.kind === 'set-named-field-parameters') {
+        if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
+          throw Error('NamedFieldParametersUnavailable');
+        if (!historyEnabled) throw Error('HistoryNotEnabled');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        applied = setHwpxNamedFieldParameters(editor, message);
+        if (!applied) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, changed: true, content: hwpxDisplay() });
         return;
       }
       if (message.kind === 'create-named-field') {

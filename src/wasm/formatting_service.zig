@@ -148,7 +148,7 @@ pub fn Service(comptime format: @import("../model/document.zig").Format) type {
             try p.put(aa, &root, "limits", limits);
             var fields = p.map(aa);
             for (p.fields) |field| {
-                const unsupported = false;
+                const unsupported = format == .hwp5 and std.mem.eql(u8, field, "paragraph.bullet");
                 const readonly = unsupported;
                 var row = p.map(aa);
                 try p.put(aa, &row, "readable", p.boolean(!unsupported));

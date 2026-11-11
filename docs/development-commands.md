@@ -1848,3 +1848,7 @@ Native 집중 검사는 `zig build test-generated-atomic-formatting -Doptimize=R
 ## HWPX 생성 본문의 일괄 서식
 
 Native 집중 검사는 `zig build test-hwpx-generated-atomic-formatting -Doptimize=ReleaseSafe -j1 --summary all`입니다. 실제 Core·독립 ZIP/XML 검사는 정확한 절대경로 `HWPJS_TEST_WASM`과 `HWPJS_TEST_WASM_SHA256`을 지정해 `node --max-old-space-size=512 --test --test-concurrency=1 ./tools/tests/hwpx-generated-atomic-formatting.test.mjs`로 실행합니다. Python 표준 라이브러리와 Git에 추적된 정확한 오라클을 사용합니다. [범위·소유권·비용 계약](hwpx-generated-atomic-formatting.md)을 따릅니다.
+
+## 문단 서식 뒤 누름틀 속성 수정
+
+`zig test src/hwpx_named_field_parameter_rebase_probe.zig -O ReleaseSafe --test-filter 'named field parameter rebase'`는 합성 문서만 사용해 구역 재배치의 할당 실패와 기존 redo 보존을 검사합니다. 실제 Core 조합은 명시한 `HWPJS_TEST_WASM`에서 `bun test --no-install ./packages/core/tests/editor/named-field-bullet-history.test.ts`로 실행합니다. [누름틀 속성 계약](named-fields.md#hwpx-안내문과-도움말)을 따릅니다.

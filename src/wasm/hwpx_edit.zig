@@ -1043,7 +1043,7 @@ fn apply(command: histories.Command) !void {
         _ = try @import("../hwpx/display_resource_generation.zig").applyOwned(value, session, &.{command});
     } else switch (command.kind) {
         // Independent source-axis batches require the existing owned History.
-        .independent_text, .insert_document, .named_field_rename, .named_field_create, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
+        .paragraph_bullet, .independent_text, .insert_document, .named_field_rename, .named_field_create, .named_field_parameters, .source_table_cell_merge, .source_table_cell_split => return error.HistoryNotEnabled,
         .source_table_grid => {
             _ = try @import("../hwpx/source_table_grid_session.zig").apply(session, .{ .section = command.section, .node = command.source_grid_node, .expected_rows = command.source_grid_expected_rows, .expected_columns = command.source_grid_expected_columns, .action = command.source_grid_action });
         },
@@ -2056,6 +2056,46 @@ export fn hwpx_edit_save() u32 {
     const session = if (active) |*value| value else return fail(error.EditorNotOpen);
     output = session.save() catch |err| return fail(err);
     return 1;
+}
+export fn hwpx_edit_named_field_parameters(section: u32, paragraph: u32, element: u32, name_ptr: [*]const u8, name_len: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    if (session.history_transaction_active) return fail(error.MutationInProgress);
+    if (history) |*h| if (h.stats().poisoned) return fail(error.HistoryReloadRequired);
+    if (name_len == 0 or name_len > @import("../hwpx/named_field_rename.zig").max_name_bytes)
+        return fail(error.InvalidNamedFieldName);
+    output = @import("../hwpx/named_field_parameters.zig").query(session, section, paragraph, element, name_ptr[0..name_len]) catch |err| return fail(err);
+    return 1;
+}
+export fn hwpx_edit_set_named_field_parameters(ptr: [*]const u8, len: usize) u32 {
+    hwpx_edit_output_free();
+    requireNoReadScope() catch |err| return fail(err);
+    const session = if (active) |*value| value else return fail(error.EditorNotOpen);
+    const h = requireManagedHistory() catch |err| return fail(err);
+    const parameters = @import("../hwpx/named_field_parameters.zig");
+    if (len == 0 or len > parameters.max_request_bytes) return fail(error.LimitExceeded);
+    const parsed = std.json.parseFromSlice(parameters.Request, a, ptr[0..len], .{
+        .allocate = .alloc_always,
+        .ignore_unknown_fields = false,
+    }) catch |err| return fail(err);
+    defer parsed.deinit();
+    const value = parsed.value;
+    if (value.expectedName.len == 0 or value.expectedName.len > @import("../hwpx/named_field_rename.zig").max_name_bytes)
+        return fail(error.InvalidNamedFieldName);
+    const update: parameters.Update = .{ .expected = value.expected, .direction = value.direction, .memo = value.memo };
+    const changed = @import("../hwpx/display_resource_generation.zig").applyOwned(h, session, &.{.{
+        .kind = .named_field_parameters,
+        .section = value.section,
+        .paragraph = value.paragraph,
+        .begin_element = value.beginElement,
+        .expected_field_name = value.expectedName,
+        .field_parameters = &update,
+        .start = 0,
+        .deleted = 0,
+        .inserted = "",
+    }}) catch |err| return fail(err);
+    return if (changed) 1 else 2;
 }
 export fn hwpx_edit_create_named_field(section: u32, paragraph: u32, start: u32, end: u32, expected_ptr: [*]const u8, expected_len: usize, name_ptr: [*]const u8, name_len: usize, direction_ptr: [*]const u8, direction_len: usize, memo_ptr: [*]const u8, memo_len: usize) u32 {
     hwpx_edit_output_free();

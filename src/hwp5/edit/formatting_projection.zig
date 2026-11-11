@@ -312,6 +312,7 @@ pub const Backend = struct {
         return error.InvalidCharacterShapeReference;
     }
     pub fn paragraphField(self: Backend, a: std.mem.Allocator, selected: m.Owner, field: []const u8) !p.Observation {
+        if (eq(field, "paragraph.bullet")) return p.unavailable("ParagraphBulletWriterUnavailable");
         if (eq(field, "reset.style")) {
             const resources = self.resetResources(selected, a) catch |err| return if (err == error.OutOfMemory) err else p.unknown(@errorName(err), "MissingSourceField");
             var row = p.map(a);

@@ -34,6 +34,7 @@ pub const fields = [_][]const u8{
     "character.shadow",
     "character.border",
     "character.background",
+    "paragraph.bullet",
     "paragraph.alignment",
     "paragraph.margins.left",
     "paragraph.margins.right",
@@ -176,6 +177,7 @@ pub fn requestedFields(a: std.mem.Allocator, patch: m.Patch) ![]const []const u8
     var output: std.ArrayList([]const u8) = .empty;
     errdefer output.deinit(a);
     const c = patch.character;
+    if (patch.paragraph.bullet != null) try output.append(a, "paragraph.bullet");
     if (patch.reset != null) try output.append(a, "reset.style");
     if (c.border_fill) |resource| {
         var border = false;

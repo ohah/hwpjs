@@ -1,3 +1,7 @@
+import {
+  decodeNamedFieldParameters,
+  checkedNamedFieldParameterValues,
+} from './named-field-parameters.mjs';
 import { createHwpxDocumentInsertApi } from './hwpx-document-insert.mjs';
 import { decodeHwpxPageNumberDisplaySource } from './hwpx-page-number-display-wire.mjs';
 import { encodeCellDiagonals } from './cell-diagonal-command.mjs';
@@ -2686,6 +2690,60 @@ export async function createHwpxEditor(source) {
       if (bytes.length > 32) throw new RangeError('LimitExceeded');
       memory.withBytes(bytes, (ptr, size) => {
         if (!wasm.hwpx_edit_set_checkbox_state(section, formNode, ptr, size)) throw memory.error();
+      });
+    },
+    namedFieldParameters(section, paragraph, beginElement, expectedName) {
+      ready();
+      [section, paragraph, beginElement].forEach(uint);
+      if (typeof wasm.hwpx_edit_named_field_parameters !== 'function')
+        throw Error('NamedFieldParametersUnavailable');
+      const name = encodedText(expectedName);
+      return memory.withBytes(name, (ptr, len) => {
+        try {
+          if (!wasm.hwpx_edit_named_field_parameters(section, paragraph, beginElement, ptr, len))
+            throw memory.error();
+          return decodeNamedFieldParameters(
+            memory.copy(wasm.hwpx_edit_output_ptr(), wasm.hwpx_edit_output_len()),
+          );
+        } finally {
+          wasm.hwpx_edit_output_free();
+        }
+      });
+    },
+    setNamedFieldParameters(
+      section,
+      paragraph,
+      beginElement,
+      expectedName,
+      expected,
+      direction,
+      memo,
+    ) {
+      ready();
+      [section, paragraph, beginElement].forEach(uint);
+      if (typeof wasm.hwpx_edit_set_named_field_parameters !== 'function')
+        throw Error('NamedFieldParametersUnavailable');
+      const request = {
+        section,
+        paragraph,
+        beginElement,
+        expectedName,
+        expected: checkedNamedFieldParameterValues(expected),
+        direction,
+        memo,
+      };
+      if (typeof expectedName !== 'string' || !expectedName.length || !expectedName.isWellFormed())
+        throw Error('InvalidNamedFieldName');
+      for (const value of [direction, memo]) {
+        if (typeof value !== 'string' || !value.isWellFormed())
+          throw Error('InvalidNamedFieldParameters');
+        if (new TextEncoder().encode(value).length > 4096) throw Error('LimitExceeded');
+      }
+      return memory.withBytes(encodedText(JSON.stringify(request)), (ptr, len) => {
+        const status = wasm.hwpx_edit_set_named_field_parameters(ptr, len);
+        if (status === 1) return true;
+        if (status === 2) return false;
+        throw memory.error();
       });
     },
     createNamedField(

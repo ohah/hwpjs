@@ -160,7 +160,12 @@ fn decodePatch(root: V) !m.Patch {
     }
     if (get(root, "paragraph")) |p| {
         result.paragraph.border_fill = try @import("formatting_resource_request.zig").decode(p);
-        try keys(p, &.{ "alignment", "margins", "spacing", "grid", "borderConnect", "border", "background" });
+        try keys(p, &.{ "alignment", "margins", "spacing", "grid", "borderConnect", "border", "background", "bullet" });
+        if (get(p, "bullet")) |bullet| {
+            const kind = try enumeration(enum { none, existing }, try required(bullet, "kind"));
+            try keys(bullet, if (kind == .none) &.{"kind"} else &.{ "kind", "id" });
+            result.paragraph.bullet = .{ .id = if (kind == .existing) @intCast(try uint(try required(bullet, "id"), 0xffffffff)) else null };
+        }
         if (get(p, "grid")) |v| result.paragraph.flags.grid = try boolean(v);
         if (get(p, "borderConnect")) |v| result.paragraph.flags.border_connect = try boolean(v);
         if (get(p, "alignment")) |v| result.paragraph.alignment = try enumeration(m.Alignment, v);

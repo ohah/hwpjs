@@ -8,6 +8,7 @@ import {
   createEditor,
   createParagraphSelection,
   CREATE_NAMED_FIELD_COMMAND,
+  SET_NAMED_FIELD_PARAMETERS_COMMAND,
   SET_NAMED_FIELD_VALUE_COMMAND,
   RENAME_NAMED_FIELD_COMMAND,
   SPLICE_TEXT_COMMAND,
@@ -1156,6 +1157,496 @@ test('named field create rejects a nested source owner and exhausted begin ID wi
     sdk.enableHistoryDefault();
     assert.throws(() => sdk.createNamedField(0, 2, 0, 4, 'body', 'new'), /NamedFieldIdExhausted/);
     assert.deepEqual(sdk.save(), exhausted);
+  } finally {
+    sdk.close();
+  }
+});
+
+const clickCommand = (direction: string, memo: string) => {
+  const payload = `Direction:wstring:${direction.length}:${direction} HelpState:wstring:${memo.length}:${memo} `;
+  return `Clickhere:set:${payload.length}:${payload} `;
+};
+const xmlText = (text: string) =>
+  text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('\r', '&#13;');
+const propertyBegin = (id: number, name: string, parameters: string, editable = '1') =>
+  `<hp:ctrl><hp:fieldBegin id="${id}" type="CLICK_HERE" name="${name}" editable="${editable}" dirty="1" zorder="-1" fieldid="627272811" opaque="keep">${parameters}<hp:metaTag>{"keep":"meta"}</hp:metaTag></hp:fieldBegin></hp:ctrl>`;
+const oldDirection = 'old 😀: guide';
+const oldMemo = 'help & data';
+const propertyParameters =
+  '<hp:parameters cnt="5" name="opaque" keep="list">' +
+  '<hp:integerParam name="Prop" keep="prop">7</hp:integerParam>' +
+  '<hp:stringParam name="Command" xml:space="preserve" keep="cmd">' +
+  xmlText(clickCommand(oldDirection, oldMemo)) +
+  '</hp:stringParam>' +
+  '<hp:stringParam name="Direction" keep="dir">' +
+  xmlText(oldDirection) +
+  '</hp:stringParam>' +
+  '<hp:stringParam name="HelpState" keep="memo">' +
+  xmlText(oldMemo) +
+  '</hp:stringParam>' +
+  '<hp:stringParam name="Opaque" keep="untouched"><![CDATA[unknown <&>]]></hp:stringParam>' +
+  '</hp:parameters>';
+const parametersInput = zipWith(
+  paragraph(
+    21,
+    text('A') +
+      propertyBegin(81, 'props', propertyParameters) +
+      text('value😀') +
+      end(81) +
+      text('B'),
+  ) +
+    paragraph(
+      22,
+      propertyBegin(82, 'locked-params', propertyParameters, '0') + text('LOCK') + end(82),
+    ) +
+    paragraph(23, field(83, 'absent-params', 'empty', 'CLICK_HERE', ' editable="1"')) +
+    paragraph(24, propertyBegin(84, 'props', propertyParameters) + text('duplicate') + end(84)),
+);
+
+async function setParameters(
+  editor: HeadlessEditor,
+  selector: NamedFieldSelector,
+  expected: { direction: string | null; memo: string | null },
+  direction: string,
+  memo: string,
+) {
+  const state = editor.getEditorState();
+  return editor.dispatchCommand(SET_NAMED_FIELD_PARAMETERS_COMMAND, {
+    selector,
+    token: state.token,
+    selectionVersion: state.stateVersion,
+    expected,
+    direction,
+    memo,
+  });
+}
+
+function verifyParameterXml(
+  before: Uint8Array,
+  after: Uint8Array,
+  direction: string,
+  memo: string,
+) {
+  execFileSync(
+    'python3',
+    [
+      '-I',
+      '-c',
+      `
+import base64, io, json, sys, zipfile
+from xml.etree import ElementTree as ET
+from xml.sax.saxutils import escape
+r = json.load(sys.stdin)
+def read(key):
+    with zipfile.ZipFile(io.BytesIO(base64.b64decode(r[key]))) as z:
+        return {n:z.read(n) for n in z.namelist()}
+old, new = read('before'), read('after')
+part = 'Contents/section0.xml'
+assert old.keys() == new.keys()
+assert all(old[k] == new[k] for k in old if k != part)
+ns = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+def begin(parts):
+    return next(n for n in ET.fromstring(parts[part]).iter(ns+'fieldBegin') if n.get('id') == '81')
+a, b = begin(old), begin(new)
+assert a.attrib == b.attrib and ET.tostring(a[1]) == ET.tostring(b[1])
+assert a[0].attrib == b[0].attrib
+assert [p.attrib for p in a[0]] == [p.attrib for p in b[0]]
+def units(s): return len(s.encode('utf-16-le'))//2
+d, m = r['direction'], r['memo']
+payload = f'Direction:wstring:{units(d)}:{d} HelpState:wstring:{units(m)}:{m} '
+command = f'Clickhere:set:{units(payload)}:{payload} '
+replacements = {}
+for oldnode, newnode in zip(a[0], b[0]):
+    key = oldnode.get('name')
+    if key in ('Direction','HelpState','Command'):
+        value = {'Direction':d,'HelpState':m,'Command':command}[key]
+        assert newnode.text == value
+        replacements[key] = value
+    else:
+        assert ET.tostring(oldnode) == ET.tostring(newnode)
+# Exact XML only differs inside the three selected scalar contents.
+original = old[part]
+marker = b'<hp:fieldBegin id="81"'
+start = original.index(marker)
+finish = original.index(b'</hp:fieldBegin>', start) + len(b'</hp:fieldBegin>')
+field = original[start:finish]
+for key, value in replacements.items():
+    element = next(p for p in a[0] if p.get('name') == key)
+    left = ('<hp:stringParam name="'+key+'"').encode()
+    i = field.index(left)
+    body = field.index(b'>', i)+1
+    end = field.index(b'</hp:stringParam>',body)
+    escaped = escape(value).replace('\\r','&#13;').encode()
+    field = field[:body] + escaped + field[end:]
+assert new[part] == original[:start] + field + original[finish:]
+`,
+    ],
+    {
+      input: JSON.stringify({
+        before: Buffer.from(before).toString('base64'),
+        after: Buffer.from(after).toString('base64'),
+        direction,
+        memo,
+      }),
+    },
+  );
+}
+
+for (const [label, factory] of [
+  ['ReaderRuntime', reader],
+  ['Worker', worker],
+] as const) {
+  test(`named field parameters ${label} edits only selected metadata with one revision exact undo redo and reopen`, async () => {
+    const editor = createEditor({ runtimeFactory: factory() });
+    try {
+      await editor.load(parametersInput, { format: 'hwpx', editable: true });
+      const selector = { name: 'props', occurrence: 0 };
+      const read = await editor.readNamedFieldParameters(selector);
+      assert.equal(read.status, 'found');
+      if (read.status !== 'found') throw Error('ExpectedParameters');
+      assert.deepEqual(read.parameters, { direction: oldDirection, memo: oldMemo });
+      assert.equal(read.canEdit, true);
+      const before = editor.getEditorState();
+      const direction = '새 😀:<&\r안내';
+      const memo = 'help é 한글: memo';
+      const result = await setParameters(editor, selector, read.parameters, direction, memo);
+      assert.equal(result.status, 'committed-with-snapshot', result.error);
+      assert.equal(
+        editor.getEditorState().nativeHistoryRevision,
+        before.nativeHistoryRevision! + 1,
+      );
+      const saved = (await editor.save()).bytes;
+      verifyParameterXml(parametersInput, saved, direction, memo);
+      const value = await editor.readNamedField(selector);
+      assert.equal(value.status, 'found');
+      if (value.status === 'found')
+        assert.deepEqual(value.field.value, { status: 'available', text: 'value😀' });
+      const protectedRead = await editor.readNamedFieldParameters({ name: 'locked-params' });
+      assert.equal(protectedRead.status, 'found');
+      if (protectedRead.status === 'found') {
+        assert.equal(protectedRead.canEdit, false);
+        assert.deepEqual(protectedRead.parameters, { direction: oldDirection, memo: oldMemo });
+      }
+      assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+      const undoBytes = (await editor.save()).bytes;
+      assert.deepEqual(undoBytes, parametersInput);
+      const noop = await setParameters(editor, selector, read.parameters, oldDirection, oldMemo);
+      assert.equal(noop.status, 'known-no-op', noop.error);
+      assert.equal((await editor.redo()).status, 'committed-with-snapshot');
+      const redoBytes = (await editor.save()).bytes;
+      assert.deepEqual(redoBytes, saved);
+      await editor.load(saved, { format: 'hwpx', editable: true });
+      const reopened = await editor.readNamedFieldParameters(selector);
+      assert.equal(reopened.status, 'found');
+      if (reopened.status === 'found') assert.deepEqual(reopened.parameters, { direction, memo });
+      if (process.env.HWPJS_PARAMETERS_EVIDENCE && label === 'Worker') {
+        writeFileSync(process.env.HWPJS_PARAMETERS_EVIDENCE + '/before.hwpx', parametersInput);
+        writeFileSync(process.env.HWPJS_PARAMETERS_EVIDENCE + '/edited.hwpx', saved);
+        writeFileSync(process.env.HWPJS_PARAMETERS_EVIDENCE + '/undo.hwpx', undoBytes);
+        writeFileSync(process.env.HWPJS_PARAMETERS_EVIDENCE + '/redo.hwpx', redoBytes);
+        writeFileSync(
+          process.env.HWPJS_PARAMETERS_EVIDENCE + '/reopened.hwpx',
+          (await editor.save()).bytes,
+        );
+      }
+    } finally {
+      await editor.dispose();
+    }
+  });
+}
+
+test('named field parameters absent strings are null and adding explicit empty parameters preserves source text', async () => {
+  const editor = createEditor({ runtimeFactory: worker() });
+  try {
+    await editor.load(parametersInput, { format: 'hwpx', editable: true });
+    const selector = { name: 'absent-params' };
+    const read = await editor.readNamedFieldParameters(selector);
+    assert.equal(read.status, 'found');
+    if (read.status !== 'found') throw Error('ExpectedParameters');
+    assert.deepEqual(read.parameters, { direction: null, memo: null });
+    const result = await setParameters(editor, selector, read.parameters, '', '');
+    assert.equal(result.status, 'committed-with-snapshot', result.error);
+    const current = await editor.readNamedFieldParameters(selector);
+    assert.equal(current.status, 'found');
+    if (current.status === 'found')
+      assert.deepEqual(current.parameters, { direction: '', memo: '' });
+    const value = await editor.readNamedField(selector);
+    if (value.status === 'found')
+      assert.deepEqual(value.field.value, { status: 'available', text: 'empty' });
+    assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+    assert.deepEqual((await editor.save()).bytes, parametersInput);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field parameters ambiguous protected expected mismatch and stale selections reject without partial writes', async () => {
+  const editor = createEditor({ runtimeFactory: worker() });
+  try {
+    await editor.load(parametersInput, { format: 'hwpx', editable: true });
+    assert.equal((await editor.readNamedFieldParameters({ name: 'props' })).status, 'ambiguous');
+    const expected = { direction: oldDirection, memo: oldMemo };
+    for (const [selector, before, error] of [
+      [{ name: 'props' }, expected, 'AmbiguousNamedField'],
+      [{ name: 'locked-params' }, expected, 'NamedFieldProtected'],
+      [
+        { name: 'props', occurrence: 1 },
+        { ...expected, memo: 'stale' },
+        'NamedFieldParametersMismatch',
+      ],
+    ] as const) {
+      const result = await setParameters(editor, selector, before, 'new', 'new');
+      assert.equal(result.status, 'rejected-unapplied');
+      assert.equal(result.error, error);
+      assert.deepEqual((await editor.save()).bytes, parametersInput);
+    }
+    const state = editor.getEditorState();
+    const payload = {
+      selector: { name: 'props', occurrence: 0 },
+      token: state.token,
+      selectionVersion: state.stateVersion,
+      expected,
+      direction: 'new',
+      memo: 'new',
+    };
+    await editor.setSelection(
+      createParagraphSelection(state, { section: 0, paragraph: 1, startUnit: 0 }),
+    );
+    const stale = await editor.dispatchCommand(SET_NAMED_FIELD_PARAMETERS_COMMAND, payload);
+    assert.equal(stale.status, 'rejected-unapplied');
+    assert.match(stale.error!, /Stale/);
+    assert.deepEqual((await editor.save()).bytes, parametersInput);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field parameters rejects duplicate parameter IDs malformed Command and count without mutation', async () => {
+  const variants = [
+    propertyParameters
+      .replace('cnt="5"', 'cnt="6"')
+      .replace(
+        '</hp:parameters>',
+        '<hp:stringParam name="Direction">second</hp:stringParam></hp:parameters>',
+      ),
+    propertyParameters.replace('Clickhere:set:', 'Unknown:set:'),
+    propertyParameters.replace('cnt="5"', 'cnt="9"'),
+    propertyParameters.replace(
+      xmlText(oldDirection) + '</hp:stringParam>',
+      'contradiction</hp:stringParam>',
+    ),
+  ];
+  for (const parameters of variants) {
+    const input = zipWith(
+      paragraph(21, propertyBegin(81, 'bad', parameters) + text('value') + end(81)),
+    );
+    const sdk = await createHwpxEditor(wasmModule);
+    try {
+      sdk.open(input);
+      sdk.enableHistoryDefault();
+      const element = sdk.namedFields().rows[0].location!.beginElement;
+      assert.throws(
+        () => sdk.namedFieldParameters(0, 2, element, 'bad'),
+        /UnsupportedNamedFieldParameters/,
+      );
+      assert.throws(
+        () =>
+          sdk.setNamedFieldParameters(
+            0,
+            2,
+            element,
+            'bad',
+            { direction: oldDirection, memo: oldMemo },
+            'new',
+            'help',
+          ),
+        /UnsupportedNamedFieldParameters/,
+      );
+      assert.deepEqual(sdk.save(), input);
+    } finally {
+      sdk.close();
+    }
+  }
+});
+
+test('named field parameters keeps pending text and dirty flags when adding parameters to self-closing begin', async () => {
+  const input = zipWith(
+    paragraph(11, '') + paragraph(21, field(85, 'pending', '', 'CLICK_HERE', ' editable="1"')),
+  );
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(input);
+    sdk.enableHistoryDefault();
+    sdk.splice(0, 2, 0, 0, 'prefix😀');
+    let row = sdk.namedFields().rows[0];
+    sdk.spliceFieldLabel(0, 3, row.location!.beginElement, 0, 0, 'content');
+    row = sdk.namedFields().rows[0];
+    const read = sdk.namedFieldParameters(0, 3, row.location!.beginElement, 'pending');
+    assert.deepEqual(read.parameters, { direction: null, memo: null });
+    const before = sdk.save();
+    assert(
+      sdk.setNamedFieldParameters(
+        0,
+        3,
+        row.location!.beginElement,
+        'pending',
+        read.parameters,
+        'guide',
+        'memo',
+      ),
+    );
+    const after = sdk.save();
+    row = sdk.namedFields().rows[0];
+    assert.deepEqual(row.value, { status: 'available', text: 'content' });
+    execFileSync(
+      'python3',
+      [
+        '-I',
+        '-c',
+        `
+import io, sys, zipfile
+from xml.etree import ElementTree as ET
+with zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())) as z:
+    root = ET.fromstring(z.read('Contents/section0.xml'))
+n = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+assert ''.join(t.text or '' for t in root.iter(n+'t')) == 'prefix😀content'
+begin, = root.iter(n+'fieldBegin')
+assert begin.get('dirty') == '1' and begin.get('name') == 'pending'
+assert begin[0].get('cnt') == '2'
+`,
+      ],
+      { input: after },
+    );
+    sdk.undo();
+    assert.deepEqual(sdk.save(), before);
+    sdk.redo();
+    assert.deepEqual(sdk.save(), after);
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field parameters preserves absent scalar backed by Command and keeps unknown payload unsupported', async () => {
+  const command = clickCommand('guide😀', 'memo');
+  const parameters =
+    '<hp:parameters cnt="2" name="">' +
+    '<hp:integerParam name="Prop">7</hp:integerParam>' +
+    '<hp:stringParam name="Command" xml:space="preserve">' +
+    xmlText(command) +
+    '</hp:stringParam></hp:parameters>';
+  const input = zipWith(
+    paragraph(21, propertyBegin(86, 'command-only', parameters) + text('body') + end(86)),
+  );
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(input);
+    sdk.enableHistoryDefault();
+    const row = sdk.namedFields().rows[0];
+    const element = row.location!.beginElement;
+    const before = sdk.namedFieldParameters(0, 2, element, 'command-only');
+    assert.deepEqual(before.parameters, { direction: 'guide😀', memo: 'memo' });
+    assert.equal(
+      sdk.setNamedFieldParameters(
+        0,
+        2,
+        element,
+        'command-only',
+        before.parameters,
+        'guide😀',
+        'memo',
+      ),
+      false,
+    );
+    assert.deepEqual(sdk.save(), input);
+    assert.equal(
+      sdk.setNamedFieldParameters(
+        0,
+        2,
+        element,
+        'command-only',
+        before.parameters,
+        'new😀',
+        'memo',
+      ),
+      true,
+    );
+    const current = sdk.namedFields().rows[0];
+    assert.deepEqual(
+      sdk.namedFieldParameters(0, 2, current.location!.beginElement, 'command-only').parameters,
+      { direction: 'new😀', memo: 'memo' },
+    );
+    execFileSync(
+      'python3',
+      [
+        '-I',
+        '-c',
+        `
+import io, sys, zipfile
+from xml.etree import ElementTree as ET
+with zipfile.ZipFile(io.BytesIO(sys.stdin.buffer.read())) as z:
+    root=ET.fromstring(z.read('Contents/section0.xml'))
+n='{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+begin,=root.iter(n+'fieldBegin')
+assert begin[0].get('cnt') == '3'
+assert [p.get('name') for p in begin[0]] == ['Prop','Command','Direction']
+assert begin[0][0].text == '7'
+`,
+      ],
+      { input: sdk.save() },
+    );
+  } finally {
+    sdk.close();
+  }
+});
+
+test('named field parameters read-only permits metadata read and rejects typed writes', async () => {
+  const editor = createEditor({ runtimeFactory: worker() });
+  try {
+    await editor.load(parametersInput, { format: 'hwpx', editable: false });
+    const read = await editor.readNamedFieldParameters({ name: 'props', occurrence: 0 });
+    assert.equal(read.status, 'found');
+    if (read.status !== 'found') throw Error('ExpectedParameters');
+    assert.equal(read.canEdit, false);
+    const result = await setParameters(
+      editor,
+      { name: 'props', occurrence: 0 },
+      read.parameters,
+      'new',
+      'new',
+    );
+    assert.equal(result.status, 'rejected-unapplied');
+    assert.equal(result.error, 'ReadOnlyDocument');
+    assert.deepEqual((await editor.save()).bytes, parametersInput);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field parameters optional ABI and managed-history gates preserve bytes', async () => {
+  const sdk = await createHwpxEditor(wasmModule);
+  try {
+    sdk.open(parametersInput);
+    const row = sdk.namedFields().rows[0];
+    const element = row.location!.beginElement;
+    const expected = { direction: oldDirection, memo: oldMemo };
+    const observation = sdk.namedFieldParameters(0, 2, element, 'props');
+    assert.deepEqual(observation.parameters, expected);
+    assert.equal(observation.canEdit, false);
+    assert.throws(
+      () => sdk.setNamedFieldParameters(0, 2, element, 'props', expected, 'new', 'memo'),
+      /HistoryNotEnabled/,
+    );
+    sdk.enableHistory();
+    assert.equal(sdk.namedFieldParameters(0, 2, element, 'props').canEdit, false);
+    assert.throws(
+      () => sdk.setNamedFieldParameters(0, 2, element, 'props', expected, 'new', 'memo'),
+      /HistoryProtocol2Required/,
+    );
+    assert.deepEqual(sdk.save(), parametersInput);
   } finally {
     sdk.close();
   }

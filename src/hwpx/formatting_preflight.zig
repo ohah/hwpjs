@@ -21,6 +21,7 @@ pub fn authorizeParagraph(a: std.mem.Allocator, tree: *const Tree, index: usize,
     }
 }
 pub fn paragraph(a: std.mem.Allocator, tree: *const Tree, index: usize, id: u32, patch: m.Paragraph, limit: usize) !void {
+    if (patch.bullet) |value| try @import("paragraph_bullet_patch.zig").validate(a, tree, index, value);
     if (@import("../model/paragraph_flags.zig").has(patch.flags)) {
         const fragment = try @import("paragraph_flags_patch.zig").write(a, tree, index, patch.flags, limit);
         defer a.free(fragment);
@@ -59,6 +60,7 @@ pub fn validate(a: std.mem.Allocator, session: *@import("editor_session.zig").Se
 }
 pub fn validateContext(a: std.mem.Allocator, session: *@import("editor_session.zig").Session, context: *Context, owner: m.Owner, ranges: []const m.Range, patch: m.Patch) !void {
     const tree = &context.tree;
+    if (patch.paragraph.bullet != null) try @import("paragraph_bullet_session.zig").authorize(session, owner.section, owner.paragraph);
     if (patch.hasParagraph()) {
         const id = try session.paragraphShapeId(owner.section, owner.paragraph);
         try paragraph(a, tree, try node(a, tree, "paraPr", id), id, patch.paragraph, session.options.max_xml_bytes);

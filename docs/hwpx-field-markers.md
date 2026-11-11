@@ -37,3 +37,13 @@ Core의 `CREATE_NAMED_FIELD_COMMAND`는 같은 관측에서 만든 HWPX 본문 `
 [KS X 6101 기계가독 원문](https://www.standard.go.kr/KSCI/api/std/viewMachine.do?reformNo=03&tmprKsNo=KSX6101&formType=STD)의 10.7.3.1, 10.7.3.2.1, 10.7.5 및 부속서 E에 따라 `fieldBegin/@id`와 `fieldEnd/@beginIDRef`를 연결합니다. 두 마커의 `fieldid`는 누름틀 종류 값이며, 현재 인스턴스의 연결 ID는 모든 현행 섹션 마커를 확인한 뒤 배정합니다. `Prop`, `Command`, `Direction`, `HelpState`를 쓰고 `cnt`에 실제 인자 수를 기록합니다. 선택적 `direction`과 `memo`는 원본 XML에 저장됩니다. 안내문 표시·인쇄와 한컴 앱 재저장 검증은 별도 범위입니다.
 
 여러 텍스트 요소를 가로지르는 선택, 원본 요소가 여럿인 경계 캐럿, 내부 컨트롤 또는 기존 필드와 겹치는 범위, 중첩 본문, 부분 이름 인벤토리, 구조 편집이 진행 중인 대상 섹션은 명시적으로 거부합니다. SDK의 `createNamedField`는 현재 Native 좌표(문단 1부터)와 예상 문자열을 직접 받습니다. Core는 여기에 편집기 수명과 관측 버전 검사를 추가합니다.
+
+## 이름 기반 누름틀 안내문·도움말
+
+`editor.readNamedFieldParameters(selector, { token? })`는 기존 이름·중복 순번 해결과 현재 Native 소유권 관측을 재사용합니다. 성공 결과에는 `parameters`, `canEdit`, `token`, `selectionVersion`이 있습니다. `parameters.direction`은 `Direction`, `parameters.memo`는 `HelpState`이며, 스칼라나 지원하는 `Command` 모두에 없으면 `null`, 명시된 빈 문자열이면 `""`입니다. 보호된 필드도 속성을 읽을 수 있습니다.
+
+`SET_NAMED_FIELD_PARAMETERS_COMMAND`는 `selector`, 현재 `token`·`selectionVersion`, 직전에 읽은 `expected`, 새 `direction`·`memo` 문자열 두 개를 받습니다. Native는 현재 이름·문단·라벨 소유권과 보호 상태, 예상 속성 두 개를 다시 확인하며 managed History V2 한 건으로 적용합니다. 동일 값은 이력을 추가하지 않습니다.
+
+공식 근거는 [KS X 6101 §10.7.3.1·10.7.3.2.1 및 부속서 E](https://www.standard.go.kr/KSCI/api/std/viewMachine.do?reformNo=03&tmprKsNo=KSX6101&formType=STD)와 [한컴 공개 ParameterList 모델](https://github.com/hancom-io/hwpx-owpml-model/blob/1453388472c703a4b299a0834f425cdac16644b9/OWPML/Class/Para/ParameterList.cpp)입니다. 이미 있는 `Command`의 두 wstring 인자는 실제 UTF-16 길이로 갱신합니다. `Command`가 없으면 두 스칼라만 설정하며 Prop나 다른 기본값을 합성하지 않습니다.
+
+이름, 연결 ID, editable/dirty, 본문 값·서식, 다른 파라미터와 알 수 없는 형제 XML은 보존합니다. 변경하는 스칼라의 엔티티·CDATA 표기는 XML 문자열 writer가 정규화할 수 있습니다. 알려진 속성의 중복·모순, cnt 불일치, 미지원 Command 확장, 편집할 스칼라 안의 주석·처리명령, 구조 편집 중인 섹션은 명시적으로 거부합니다. 현재 지원은 기존 이름 기반 값·이름 편집이 소유권을 증명하는 본문 라벨 범위입니다. 안내문 화면 표시나 한컴 앱에서 빈 필드의 안내문을 바꾸는 동작은 별도 검증 범위입니다.
