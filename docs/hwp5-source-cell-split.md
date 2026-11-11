@@ -1,10 +1,10 @@
-# HWP5 원본 단순 셀 나누기 Native 후보
+# HWP5 원본 셀 나누기
 
 `src/hwp5/edit/source_table_cell_split_service.zig`는 현재 관리 이력과 원본 셀 binding으로 검증하는 Native typed 경계다. `Service.capture`는 기존 Session의 `tableBindings`에서 실제 셀을 읽고 `Target`을 반환한다. `Service.apply`는 이 target과 줄·칸 개수를 받아 기존 `History.apply`에 `.split_source_table_cell` 명령 하나를 전달한다.
 
 ## 지원과 정책
 
-첫 범위는 최상위 본문의 원본 비병합 직사각형 정적 표에서 물리 셀 하나를 나누는 것이다. 줄·칸은 1~63이며 유지 방향은 1, 활성 방향은 2~63이다. 총 논리 격자는 4096 이하로 제한한다. 기존 병합이 있는 입력 표, 여러 셀의 각각 나누기와 합친 후 나누기, 불균등 높이 유지 옵션은 후속 범위다. 분할 결과의 주변 span은 정확히 보존·재열기하지만 이 span이 있는 표의 추가 분할은 현재 거절한다.
+현재 공개 범위는 최상위 본문의 원본 정적 표에서 물리 셀 하나를 나누는 것이다. 선택 셀과 주변 셀의 병합을 허용하며 선택 셀의 전체 span과 모든 소유 문단을 검증한다. 줄·칸은 1~63이며 유지 방향은 1, 활성 방향은 2~63이다. 총 논리 격자는 4096 이하로 제한한다. 여러 셀 각각 나누기와 합친 후 나누기, 불균등 높이 유지 옵션은 후속 범위다. 분할 결과의 주변 span은 보존하며, 지원 조건을 만족하면 다시 나눌 수 있다.
 
 원본 표 크기는 고정하고 선택 셀의 크기를 양수 정수 단위로 나눈다. 나머지는 앞쪽 조각에 하나씩 배분하는 후보 정책이다. 원래 문단 전체·글자 모양·문단 모양·style·instance ID는 첫 조각에 남기고, 나머지 조각은 첫 문단/첫 run 서식을 물려받은 빈 문단 하나를 가진다. 새 ID는 기존 파일 어댑터가 DocInfo와 모든 구역의 ID를 색인해 발급한다. 비선택 셀은 폭·높이·본문·서식을 유지하고 분할로 생긴 축을 가로지르는 span만 조정한다.
 
@@ -28,11 +28,11 @@ Target은 현재 Session의 History mutation ticket, revision, 기존 `formattin
 
 독립 Python 오라클은 프로젝트 CFB/record parser를 import하지 않고 MS-CFB와 공식 HWP5 framing을 직접 읽는다. 비대상 스트림과 메타데이터, 실제 셀 주소/span/크기, 원본 문단 원시 바이트와 신규 빈 문단·ID·run 승계를 검사한다. [MS-CFB 공식 문서](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-cfb/53989ce4-7b05-4f8d-829b-d08d6148375b)
 
-이 후보는 Native typed service와 Session/History 기반이다. 공개 WASM export·JS SDK·Core/Surface/UI 활성화와 실제 외부 문서/OS 입력은 다음 통합 단계다. HWPX R4 소스는 별도 동결 의존성으로 보존한다.
+초기 Native 후보에서 공개 WASM·SDK·Core·Surface 연결을 확장한 이력은 아래 R2/R6 절에 있다. 실제 외부 문서 전체나 OS 입력 호환을 합성 입력 검증으로 보증하지 않는다.
 
 writer는 입력 record·문단을 검증하고 출력 논리 격자 `L=(R+a-1)(C+b-1)`를 순회한다. live 경로는 기존 tableBindings와 저장·재개방·checkpoint 비용을 포함한다. 기존 cell-size intent와 binding 대조의 반복 비용까지 포함한 전체 서비스 선형성을 이 집중 검증으로 주장하지 않는다.
 
-## R2 공용 split 연결 후보
+## R2 공용 split 연결 이력
 
 R2는 기존 `SPLIT_SOURCE_TABLE_CELLS_COMMAND`, opaque Surface 선택 증명과 소유 메뉴 등록, 같은 대화상자를 형식 어댑터로 재사용한다. `HeadlessEditor.getSourceTableCellSplitCapabilities()`와 SDK의 `sourceTableCellSplitCapabilities()`는 현재 binding 및 지원 profile을 반환한다. HWP5 profile은 `single-unmerged-source-cell`이며 `maxSelectedCells=1`, 병합 입력·합친 후 나누기·원본 불균등 높이 유지 지원은 false다. HWPX는 기존 직사각형 profile을 유지한다.
 
@@ -57,3 +57,23 @@ H의 WASM은 기존 `Service.capture()`가 단일 비병합 셀을 거절/허용
 이 단계는 H497 optional ABI, WASM delegate, JS/Core/UI/Bridge/기존 profile 파일을 변경하지 않는다. 공개 경로에서는 비병합 셀의 extent mismatch 수정이 적용되며, 병합 셀 지원은 Native typed opt-in으로만 준비한다. 다중셀·merge-then-split·높이 유지·pending-created/중첩/필드/컨트롤/캐시/캡션/zone 등 복합 셀은 여전히 후속 범위다. 단일 History·stale/foreign/protocol/보호 및 이전 redo 보존은 기존 managed 경계를 사용한다.
 
 집중 검사는 새 rebase probe에서 Native managed geometry/extent/호환 거절과 기존 split/grid를 선택 실행한다. 실제 Native WASM 재빌드는 Main 최종 합본 한 번으로 남기며 이전 R4의 실제 SDK/Core/브라우저 증거를 이 H 결합 바이너리의 실측으로 바꾸어 부르지 않는다. 새 Native 검증과 비용의 범위·해시·전후파일은 인수 원장을 따른다. Root/Git/npm/다른 agent의 J 소스·공용 cache는 수정하거나 삭제하지 않는다.
+
+## R6 병합 원본 단일 셀의 공개 연결
+
+현재 J의 H5 bullet common Native intent·CLI·R5 closure 위에 공개 연결 hunk만 추가한 별도 후보다. 기존 Native-only 준비를 공개 완료로 간주하지 않고 실제 optional WASM/JS SDK/typed Core/runtime/Surface 메뉴와 세 프레임워크에서 검증했다. 인수 manifest는 `zig-out/verification/hwp5-merged-cell-split-r6/ADOPTION-MANIFEST.json`이다. 앞선 R5의 공개 비병합 제한 설명은 그 동결 단계의 기록이며 R6에서는 아래 구분으로 확장한다.
+
+WASM의 기존 scalar split export/arity는 유지한다. 신형 capability는 schemaVersion1, format hwp5, sourceProfile `single-source-cell-with-spans`, supportsMergedInput=true, maxSelectedCells1이다. 구형의 `single-unmerged-source-cell`/false와 HWPX의 `static-source-cell-rectangle`을 별도 엄격 DTO로 디코드한다. flags/format/profile을 혼합하거나 unknown profile을 넣으면 거절한다. 새 JS/Core는 구형 엔진도 지원하지만 Native/SDK 변경은 함께 채택해야 한다.
+
+Native apply는 기존 issuer인 `captureWithSpans()`로 현재 source 셀을 캡처한다. 요청 top/left가 실제 source owner를 가리키고 expectedRows/Columns 및 bottom-top/right-left가 현재 셀의 rowSpan/columnSpan 전체와 같아야 한다. 기존 epoch/revision/non-rewinding serial·managed History·protection/source 정책·viewEpoch 사전 예약·0/1/2/3 완료 처리는 유지한다. 부분/확대 사각형으로 병합 셀을 가리키는 요청을 거절한다. Service의 legacy capture는 그대로 남고 새 issuer/state/history를 만들지 않는다.
+
+capability Native 조회는 currentRevision/check/historyTicket/기존 lifetime과 응답 버퍼만 사용한다. source paragraph/context 조회·편집 명령·새 persistent 모델 생성은 하지 않는다. SDK profile은 실제 Native DTO에서 읽으며 history 전에 초기 readonly projection이 이 질의를 호출하지 않게 구분한다. 관리되지 않은/readonly 상태는 capability 질의로 활성화되지 않는다. history 활성 상태에서 질의를 반복해도 저장/바인딩/history stats가 같다.
+
+Core는 기존 완전 셀 블록 validator에서 immutable 현재 Native projection의 row/column/span과 모든 문단 소유권으로 전체 사각형을 계산한다. weak target/Surface lease/state snapshot/FIFO·IME settlement 검사와 Native 직전 fresh capability·binding을 재사용한다. Native format/profile/revision이 현재 content와 맞아야 한다. stale/foreign/reopen·부분 문단/틀린 anchor를 거절한다. Core는 profile이 신형일 때만 HWP5 단일 병합 셀을 허용하며 구형 엔진의 표 전체 비병합 admission은 유지한다.
+
+기존 Surface 소유 컨텍스트/표 메뉴·모달을 사용한다. 도움말은 실제 runtime profile에 따라 병합 지원 여부를 구분하고 여러 셀·합친 후 나누기·높이 유지 옵션은 계속 거절/비활성화한다. Native 범위는 여전히 최상위 BODY의 허용된 원본 정적/plain 표다. 필드/컨트롤/중첩/보호/cache/opaque/zone/pending-created 지원을 새로 선언하지 않는다. unsupported에서 평문 치환 fallback을 하지 않는다.
+
+J499 exports/arity와 H5 bullet API는 보존한다. Native 파일은 기존 split capability/apply 두 함수 이외 바이트가 동일하고 다른 제품 소스는 인수 manifest의 정확한 hunk만 변경한다. R5 geometry/extent 및 행·열 정책은 그대로다. 실제 SDK/Core19+적대적6, 기존 HWPX47, Vanilla/React/Svelte의 실제 merged source 업로드·F5·메뉴·모달·다운로드 CFB·undo/redo/재열기와 취소/다중셀 거절은 별도 로그에 고정한다. CFB oracle은 normal/-O에서3배치와 metadata/outer 변조2종을 검사한다. stale-layout 허용 저장을 명시적으로 사용했으며 한글 재조판·모든 실제 문서나 OS IME·completion2/3 fault injection 완료를 의미하지 않는다.
+
+## 현재 정규 검증 경로
+
+`tests/hwp5/source-table-merged-cell-split.test.mjs`는 현재 Native로 다시 생성한 full/vertical/horizontal/unselected-span/offset 입력 5개와 SHA를 사용한다. SDK와 Core의 전체 span·문단 소유권, 단일 이력, 부분/foreign/undo ABA 거절, 구형 비병합 엔진의 제한을 검사한다. 독립 CFB·레코드 검사는 일반 Python과 `-O`에서 원본 보존·격자·크기·본문/서식/ID를 대조하며 무변경 파일과 틀린 형태를 거절한다. 정규 원래 셀 나누기 10건도 확장된 profile과 다시 선택 가능한 분할 결과를 검사한다. 실제 Vanilla/React/Svelte의 F5·메뉴·모달·저장·이력·재열기는 별도의 공개 번들 GUI 검증이다.

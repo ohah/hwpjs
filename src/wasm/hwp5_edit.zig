@@ -356,9 +356,9 @@ export fn hwp5_edit_source_table_cell_split_capabilities() u32 {
     output = std.json.Stringify.valueAlloc(a, .{
         .schemaVersion = @as(u32, 1),
         .format = "hwp5",
-        .sourceProfile = "single-unmerged-source-cell",
+        .sourceProfile = "single-source-cell-with-spans",
         .maxSelectedCells = @as(u32, 1),
-        .supportsMergedInput = false,
+        .supportsMergedInput = true,
         .supportsMergeThenSplit = false,
         .supportsPreserveRowHeights = false,
         .maxAxis = @as(u32, 63),
@@ -382,13 +382,13 @@ export fn hwp5_edit_split_source_table_cells(section: u32, table_node: u32, rows
     const serial = @as(u64, serial_hi) << 32 | serial_lo;
     if (formatting_lifetime.epoch != epoch or current != revision or ticket.epoch != serial)
         return fail(error.StaleSourceTableSplitBinding);
-    if (selected != 1 or bottom <= top or right <= left or bottom - top != 1 or right - left != 1)
+    if (selected != 1 or bottom <= top or right <= left)
         return fail(error.UnsupportedSourceTableSplitSelection);
     if (mode != 0) return fail(error.UnsupportedSourceTableSplitMode);
     if (equalize != 1) return fail(error.UnsupportedSourceTableSplitHeights);
     const next_view_epoch = view_epoch.next() catch |err| return fail(err);
-    const target = service.capture(a, section, table_node, top, left) catch |err| return fail(err);
-    if (target.expected_rows != rows or target.expected_columns != columns) return fail(error.SourceBindingMismatch);
+    const target = service.captureWithSpans(a, section, table_node, top, left) catch |err| return fail(err);
+    if (target.expected_rows != rows or target.expected_columns != columns or target.row_span != bottom - top or target.column_span != right - left) return fail(error.SourceBindingMismatch);
     const changed = service.apply(a, target, split_rows, split_columns) catch |err| {
         const poisoned = service.history.stats().poisoned;
         _ = fail(err);

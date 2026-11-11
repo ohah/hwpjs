@@ -2388,7 +2388,10 @@ export function createEditor(options: CreateEditorOptions) {
     const cap = decodeSourceTableCellSplitCapability(reply.capabilities);
     if (
       cap.format !== (state.content as { format?: string })?.format ||
-      cap.binding.revision !== state.nativeHistoryRevision
+      cap.binding.revision !== state.nativeHistoryRevision ||
+      (cap.format === 'hwp5' &&
+        cap.sourceProfile !==
+          (state.content as { sourceTableCellSplitProfile?: string })?.sourceTableCellSplitProfile)
     )
       throw Error('StaleSourceTableSplitBinding');
     return Object.freeze({ available: true as const, ...cap });
@@ -2725,7 +2728,13 @@ export function createEditor(options: CreateEditorOptions) {
           selection: Object.freeze({
             profile:
               (state.content as { format?: string })?.format === 'hwp5'
-                ? ('single-unmerged-source-cell' as const)
+                ? (
+                    state.content as {
+                      sourceTableCellSplitProfile:
+                        | 'single-unmerged-source-cell'
+                        | 'single-source-cell-with-spans';
+                    }
+                  ).sourceTableCellSplitProfile
                 : ('static-source-cell-rectangle' as const),
             selectedCells: plan.selectedCells,
             rows: plan.bottom - plan.top,

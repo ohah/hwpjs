@@ -233,7 +233,8 @@ export function isPlainOwnerBaseline(content: any, section: number, paragraph: n
       (Object.hasOwn(content, 'sourceTableCellSplitAvailable') &&
         typeof content.sourceTableCellSplitAvailable !== 'boolean') ||
       (Object.hasOwn(content, 'sourceTableCellSplitProfile') &&
-        content.sourceTableCellSplitProfile !== 'single-unmerged-source-cell') ||
+        content.sourceTableCellSplitProfile !== 'single-unmerged-source-cell' &&
+        content.sourceTableCellSplitProfile !== 'single-source-cell-with-spans') ||
       Object.keys(content).some((k) => !ROOT_KEYS.has(k))
     )
       return false;

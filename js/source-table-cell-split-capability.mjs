@@ -21,6 +21,17 @@ const descriptors = Object.freeze({
     maxAxis: 63,
     maxGridCells: 4096,
   }),
+  hwp5Merged: Object.freeze({
+    schemaVersion: 1,
+    format: 'hwp5',
+    sourceProfile: 'single-source-cell-with-spans',
+    maxSelectedCells: 1,
+    supportsMergedInput: true,
+    supportsMergeThenSplit: false,
+    supportsPreserveRowHeights: false,
+    maxAxis: 63,
+    maxGridCells: 4096,
+  }),
 });
 export function sourceTableCellSplitProfile(format) {
   return descriptors[format];
@@ -33,7 +44,9 @@ export function decodeSourceTableCellSplitCapability(input) {
   )
     throw Error('InvalidSourceTableSplitCapabilities');
   const fields = Object.getOwnPropertyDescriptors(input),
-    profile = descriptors[fields.format?.value];
+    profile = Object.values(descriptors).find(
+      (value) => value.sourceProfile === fields.sourceProfile?.value,
+    );
   if (
     !profile ||
     Reflect.ownKeys(fields).length !== Object.keys(profile).length + 1 ||

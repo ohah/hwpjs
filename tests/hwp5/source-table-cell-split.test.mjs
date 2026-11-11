@@ -93,7 +93,7 @@ test('actual SDK H5 caps and atomic save undo redo reopen exact', async (t) => {
   const cap = e.sourceTableCellSplitCapabilities();
   assert.equal(cap.format, 'hwp5');
   assert.equal(cap.maxSelectedCells, 1);
-  assert.equal(cap.supportsMergedInput, false);
+  assert.equal(cap.supportsMergedInput, true);
   const input = e.save({ allowStaleLayout: true }).bytes;
   const result = e.splitSourceTableCells(request(e));
   assert.equal(result.nativeCode, 1, result.error);
@@ -175,7 +175,7 @@ test('actual public Core capability and common split command H5 one undo redo', 
   const input = (await editor.save({ allowStaleLayout: true })).bytes;
   const capture = lease.captureSourceTableCellSplit(witness(editor), () => true);
   assert(capture);
-  assert.equal(capture.selection.profile, 'single-unmerged-source-cell');
+  assert.equal(capture.selection.profile, 'single-source-cell-with-spans');
   const result = await editor.dispatchCommand(SPLIT, payload(capture));
   assert.equal(result.status, 'committed-with-snapshot', result.error);
   assert.equal(editor.getEditorState().nativeHistoryRevision, 1);
@@ -184,10 +184,11 @@ test('actual public Core capability and common split command H5 one undo redo', 
   assert.deepEqual((await editor.save({ allowStaleLayout: true })).bytes, input);
   await editor.dispatchCommand(REDO_COMMAND, { token: editor.getEditorState().token });
   assert.deepEqual((await editor.save({ allowStaleLayout: true })).bytes, output);
-  assert.equal(
-    lease.captureSourceTableCellSplit(witness(editor), () => true),
-    null,
-  );
+  const currentState = editor.getEditorState();
+  const nextCapture = lease.captureSourceTableCellSplit(witness(editor), () => true);
+  assert(nextCapture);
+  assert.equal(nextCapture.selection.profile, 'single-source-cell-with-spans');
+  assert.equal(editor.getEditorState(), currentState);
 });
 test('Core refuses multi-cell capture foreign target and delayed input stale witness', async (t) => {
   const gate = Promise.withResolvers(),
@@ -245,7 +246,7 @@ test('capability decoder rejects widened H5 profile and accessors without invoki
     /InvalidSourceTableSplitCapabilities/,
   );
   assert.throws(
-    () => decodeSourceTableCellSplitCapability({ ...cap, supportsMergedInput: true }),
+    () => decodeSourceTableCellSplitCapability({ ...cap, supportsMergedInput: false }),
     /InvalidSourceTableSplitCapabilities/,
   );
   let read = false;

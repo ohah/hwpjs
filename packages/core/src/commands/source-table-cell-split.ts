@@ -3,6 +3,7 @@ export interface SourceTableCellSplitTarget {
   readonly [splitTarget]: true;
 }
 export type SourceTableCellSplitProfile =
+  | 'single-source-cell-with-spans'
   | 'single-unmerged-source-cell'
   | 'static-source-cell-rectangle';
 export type SourceTableCellSplitCapabilities =

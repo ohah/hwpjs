@@ -20,7 +20,7 @@ const refusal = (error: string) => {
     error === 'UnsupportedSourceTableSplitSelection' ||
     error === 'UnsupportedSourceTableSplitMode'
   )
-    return '현재 HWP5는 비병합 원본 표의 셀 하나를 지원합니다. 병합 입력과 여러 셀 나누기는 후속 지원 범위입니다.';
+    return 'HWP5는 원본 셀 하나를 지원합니다. 여러 셀 나누기는 후속 지원 범위입니다.';
   if (error === 'UnsupportedSourceTableGrid')
     return '이 표에는 현재 나눌 수 없는 병합·보호·중첩 또는 복잡한 셀 구조가 있습니다.';
   if (
@@ -54,7 +54,9 @@ export function createTableCellSplitTool(
         note('지원되는 원본 표에서 셀이나 직사각형 셀 블록을 선택하세요.');
         return;
       }
-      const hwp5 = capture.selection.profile === 'single-unmerged-source-cell';
+      const hwp5 =
+        capture.selection.profile === 'single-unmerged-source-cell' ||
+        capture.selection.profile === 'single-source-cell-with-spans';
       const doc = root.ownerDocument;
       const openingState = editor.getEditorState();
       const layer = createDialogLayer(root, {
@@ -74,7 +76,9 @@ export function createTableCellSplitTool(
         const scope = doc.createElement('p');
         scope.dataset.role = 'cell-split-scope';
         scope.textContent =
-          'HWP5는 현재 원본 비병합 표의 셀 하나를 균등하게 나눕니다. 병합 입력·여러 셀 나누기는 후속 지원 범위입니다.';
+          capture.selection.profile === 'single-source-cell-with-spans'
+            ? 'HWP5 본문의 원본 셀 하나를 균등하게 나눕니다. 병합 셀도 포함하며, 여러 셀 나누기는 후속 지원 범위입니다.'
+            : 'HWP5는 현재 원본 비병합 표의 셀 하나를 균등하게 나눕니다. 병합 입력·여러 셀 나누기는 후속 지원 범위입니다.';
         scope.className = 'hwp-cell-split-scope';
         layer.body.append(scope);
       }

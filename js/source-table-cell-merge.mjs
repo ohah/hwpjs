@@ -144,14 +144,18 @@ export function createSourceTableCellSplitApi({
     },
     sourceTableCellSplitProfile() {
       requireSupport();
-      return sourceTableCellSplitProfile(format).sourceProfile;
+      return format === 'hwp5'
+        ? documentInsert.documentInsertionCapabilities().sourceProfile
+        : sourceTableCellSplitProfile(format).sourceProfile;
     },
     sourceTableCellSplitCapabilities() {
       requireSupport();
-      return decodeSourceTableCellSplitCapability({
-        ...sourceTableCellSplitProfile(format),
-        binding: documentInsert.documentInsertionCapabilities().binding,
-      });
+      const current = documentInsert.documentInsertionCapabilities();
+      return decodeSourceTableCellSplitCapability(
+        format === 'hwp5'
+          ? current
+          : { ...sourceTableCellSplitProfile(format), binding: current.binding },
+      );
     },
     sourceTableCellSplitBinding() {
       requireSupport();

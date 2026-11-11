@@ -282,7 +282,7 @@ export function createReaderRuntime({
     content.sourceTableCellHeightAvailable = content.sourceTableCellWidthAvailable;
     content.sourceTableGridAvailable = editor?.supportsSourceTableGrid?.() === true;
     content.sourceTableCellSplitAvailable = editor?.supportsSourceTableCellSplit?.() === true;
-    if (content.sourceTableCellSplitAvailable)
+    if (content.sourceTableCellSplitAvailable && historyEnabled)
       content.sourceTableCellSplitProfile = editor.sourceTableCellSplitProfile();
     const observedDocInfoAvailable = [
       'hwp5_edit_open_observed_docinfo',
