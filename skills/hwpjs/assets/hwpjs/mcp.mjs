@@ -30810,6 +30810,14 @@ function copySource(bytes) {
 	if (length === 0 || length > maxSourceBytes) throw new RangeError("LimitExceeded");
 	return new Uint8Array(bytes);
 }
+function decodeProfile({ schemaVersion, sourceProfile }) {
+	if (schemaVersion === 1) return { schemaVersion: 1 };
+	if (schemaVersion === 2 && sourceProfile === "single-section-body-with-inline-static-tables") return {
+		schemaVersion: 2,
+		sourceProfile
+	};
+	throw new TypeError("InvalidDocumentInsertionCapabilities");
+}
 function createHwpxDocumentInsertApi({ wasm, memory, check }) {
 	const supported = HWPX_DOCUMENT_INSERT_FUNCTIONS.every((name) => typeof wasm[name] === "function");
 	const scope = supported ? globalThis.crypto?.randomUUID?.() ?? String(++scopeSequence) : null;
@@ -30827,16 +30835,19 @@ function createHwpxDocumentInsertApi({ wasm, memory, check }) {
 				const length = wasm.hwpx_edit_output_len();
 				if (!Number.isSafeInteger(length) || length <= 0 || length > 512) throw new TypeError("InvalidDocumentInsertionCapabilities");
 				const data = memory.copy(wasm.hwpx_edit_output_ptr(), length);
-				const decoded = ownRecord(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data)), [
+				const response = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(data));
+				const keys = [
 					"schemaVersion",
 					"binding",
 					"maxSourceBytes"
-				]);
-				if (decoded.schemaVersion !== 1 || decoded.maxSourceBytes !== maxSourceBytes) throw new TypeError("InvalidDocumentInsertionCapabilities");
+				];
+				const decoded = ownRecord(response, response?.schemaVersion === 2 ? [...keys, "sourceProfile"] : keys);
+				if (decoded.maxSourceBytes !== maxSourceBytes) throw new TypeError("InvalidDocumentInsertionCapabilities");
+				const profile = decodeProfile(decoded);
 				const binding = decodeBinding(decoded.binding).binding;
 				if (!binding.session.startsWith("s") || binding.session.includes(":")) throw new TypeError("InvalidDocumentInsertionCapabilities");
 				return Object.freeze({
-					schemaVersion: 1,
+					...profile,
 					binding: Object.freeze({
 						...binding,
 						session: scope + ":" + binding.session

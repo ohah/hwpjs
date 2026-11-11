@@ -1,4 +1,4 @@
-import{E as e,L as t,P as n,T as r,j as i,p as a,x as o,y as s}from"../assets/dist-BwJ66fri.js";import{a as c}from"../assets/runtime-Ce1yttdS.js";import{t as l}from"../assets/dist-BbZ8772i.js";import{t as u}from"../assets/api-playground-DVu_Ls2l.js";var d=`
+import{E as e,L as t,P as n,T as r,j as i,p as a,x as o,y as s}from"../assets/dist-BJc4bwOs.js";import{a as c}from"../assets/runtime-BKWU-tXv.js";import{t as l}from"../assets/dist-IfhM7V7G.js";import{t as u}from"../assets/api-playground-DVu_Ls2l.js";var d=`
 .api-named-fields {
   margin-block: 1rem 1.5rem;
   padding: 1rem;
