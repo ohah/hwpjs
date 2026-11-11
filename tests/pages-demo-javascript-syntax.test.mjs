@@ -50,3 +50,17 @@ test('syntax checking is independent of project tsconfig and unresolved type inp
     rmSync(directory, { recursive: true, force: true });
   }
 });
+
+test('current public SDK exposes Core commands and the same Runtime as the stable route', async () => {
+  const root = new URL('../apps/docs/docs/public/editor/', import.meta.url);
+  const [core, runtime, runtimeAlias] = await Promise.all([
+    import(new URL('sdk/current/core.js', root)),
+    import(new URL('sdk/current/runtime.js', root)),
+    import(new URL('runtime/runtime.js', root)),
+  ]);
+  assert.equal(typeof core.createEditor, 'function');
+  assert.equal(typeof core.INSERT_DOCUMENT_COMMAND.id, 'symbol');
+  assert.equal(typeof core.SET_NAMED_FIELD_VALUE_COMMAND.id, 'symbol');
+  assert.equal(typeof runtime.createWorkerRuntimeFactory, 'function');
+  assert.equal(runtime.createWorkerRuntimeFactory, runtimeAlias.createWorkerRuntimeFactory);
+});

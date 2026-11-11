@@ -14,6 +14,7 @@ const Row = struct {
     name: ?[]const u8,
     kind: []const u8,
     protection: enum { protected, unknown },
+    sourceEditable: ?bool,
     text: ?[]const u8 = null,
     location: ?Location = null,
 };
@@ -112,6 +113,7 @@ fn collectSection(
             .name = begin.name,
             .kind = if (kind.len == 0) "UNKNOWN" else kind,
             .protection = if (begin.editable == false) .protected else .unknown,
+            .sourceEditable = begin.editable,
         });
         const owner_element = owner orelse continue;
         const paragraph = paragraphs.get(owner_element) orelse continue;

@@ -266,7 +266,13 @@ export function createWorkerEditorRuntime(options: WorkerRuntimeOptions = {}): E
     runtime,
     (message, context, admission, projection) =>
       requestInternal(message, context, admission, projection),
-    () => !closed && !poisoned && !custom && canonicalCode && transportWitness.current(worker),
+    (kind) =>
+      !closed &&
+      !poisoned &&
+      !custom &&
+      // This command re-resolves its complete value target inside the worker.
+      // Its transport fence conveys no native binding or geometry authority.
+      (kind === 'set-named-field-value' || (canonicalCode && transportWitness.current(worker))),
   );
   origins.set(runtime, {
     valid,

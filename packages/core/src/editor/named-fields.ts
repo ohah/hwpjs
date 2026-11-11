@@ -22,6 +22,8 @@ export interface NamedFieldSourceRow {
   readonly kind: string;
   readonly value: NamedFieldValue;
   readonly protection: 'protected' | 'unprotected' | 'unknown';
+  /** This current field has a supported value-write target. Document write policy still applies. */
+  readonly canSetValue?: boolean;
   /** Current display coordinates proven by the runtime, or null if unmappable. */
   readonly location: NamedFieldLocation | null;
 }
@@ -52,6 +54,15 @@ export interface NamedFieldSelector {
   readonly name: string;
   /** Zero-based occurrence in document order, including protected and unreadable fields. */
   readonly occurrence?: number;
+}
+
+export interface SetNamedFieldValuePayload {
+  readonly selector: NamedFieldSelector;
+  readonly token: StateToken;
+  /** Capture from the same editor observation before dispatch. */
+  readonly selectionVersion: number;
+  readonly expectedValue: string;
+  readonly text: string;
 }
 
 export type NamedFieldResolution =
@@ -127,6 +138,7 @@ export function checkedNamedFieldInventory(
       !validText(row.kind) ||
       !row.kind ||
       !['protected', 'unprotected', 'unknown'].includes(row.protection) ||
+      (row.canSetValue !== undefined && typeof row.canSetValue !== 'boolean') ||
       !row.value ||
       (row.value.status !== 'unavailable' &&
         (row.value.status !== 'available' || !validText(row.value.text)))
@@ -190,6 +202,11 @@ export function checkedNamedFieldInventory(
         protection: row.protection,
         value,
         target,
+        ...(row.canSetValue === undefined
+          ? {}
+          : {
+              canSetValue: row.canSetValue && target !== null && source.coverage === 'complete',
+            }),
       }),
     );
   }

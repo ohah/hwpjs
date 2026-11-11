@@ -67,10 +67,40 @@ const modules = publicFixtureModules(policy),
 const apiId = '\0public-demo-api';
 const api = `import * as core from '@hwpjs/core';
 import {createWorkerRuntimeFactory} from '@hwpjs/core/runtime';
+import {createCanvasSurface} from '@hwpjs/vanilla';
 import {mountApiPlayground} from ${JSON.stringify(resolve(source, 'apps/demo/src/api-playground.mjs'))};
-const editor=core.createEditor({runtimeFactory:createWorkerRuntimeFactory({wasmURL:new URL('../hwpjs/hwpjs.wasm',import.meta.url)})});
-const panel=mountApiPlayground(document.querySelector('main'),{editor,spliceCommand:core.SPLICE_TEXT_COMMAND,getHistoryAvailability:core.getHistoryAvailability,getTableInsertAvailability:core.getTableInsertAvailability,createParagraphSelection:core.createParagraphSelection,planReplaceAll:core.planReplaceAll,replaceAllCommand:core.REPLACE_ALL_COMMAND,async loadFixture(format){const name=format==='hwp5'?'noori.hwp':'noori.hwpx';const response=await fetch(new URL('../fixtures/'+name,import.meta.url));if(!response.ok)throw Error('FixtureFetchFailed');return new Uint8Array(await response.arrayBuffer());}});
-addEventListener('pagehide',()=>{panel.dispose();void editor.dispose();},{once:true});`;
+import {mountNamedFieldsPanel} from ${JSON.stringify(resolve(source, 'apps/demo/src/api-named-fields-panel.mjs'))};
+const editor = core.createEditor({
+  runtimeFactory: createWorkerRuntimeFactory({
+    wasmURL: new URL('../hwpjs/hwpjs.wasm', import.meta.url),
+  }),
+});
+const panel = mountApiPlayground(document.querySelector('main'), {
+  editor,
+  createSurface: createCanvasSurface,
+  spliceCommand: core.SPLICE_TEXT_COMMAND,
+  getHistoryAvailability: core.getHistoryAvailability,
+  getTableInsertAvailability: core.getTableInsertAvailability,
+  createParagraphSelection: core.createParagraphSelection,
+  planReplaceAll: core.planReplaceAll,
+  replaceAllCommand: core.REPLACE_ALL_COMMAND,
+  async loadFixture(format, fixture = 'noori') {
+    const name = fixture + (format === 'hwp5' ? '.hwp' : '.hwpx');
+    const response = await fetch(new URL('../fixtures/' + name, import.meta.url));
+    if (!response.ok) throw Error('FixtureFetchFailed');
+    return new Uint8Array(await response.arrayBuffer());
+  },
+});
+const namedFieldsSlot = document.createElement('div');
+document.querySelector('main .api-playground h1').after(namedFieldsSlot);
+const namedFieldsPanel = mountNamedFieldsPanel(namedFieldsSlot, {
+  editor,
+  setNamedFieldValueCommand: core.SET_NAMED_FIELD_VALUE_COMMAND,
+});
+addEventListener('pagehide', () => {
+  namedFieldsPanel.dispose();
+  void Promise.resolve(panel.dispose()).finally(() => editor.dispose());
+}, { once: true });`;
 const alias = [
   { find: '@hwpjs/core/runtime', replacement: runtimePath },
   {
@@ -142,10 +172,13 @@ const result = await build({
     sourcemap: false,
     minify: true,
     rollupOptions: {
+      preserveEntrySignatures: 'exports-only',
       input: {
         main: resolve(source, 'apps/demo/index.html'),
         api: 'public-demo-api',
+        core: resolve(core, 'index.js'),
         runtime: runtimePath,
+        'native-geometry': resolve(core, '_internal/native-geometry.js'),
       },
       output: {
         entryFileNames: (chunk) =>
@@ -155,14 +188,21 @@ const result = await build({
   },
 });
 if (seen.size !== 2) throw Error('PublicFixtureAliasesNotConsumed');
-let runtimeEntry;
+const sdkEntries = new Map();
+const sdkNames = ['core', 'runtime', 'native-geometry'];
 for (const item of result.output) {
   const bytes = Buffer.from(item.type === 'asset' ? item.source : item.code);
   files.set(item.fileName, bytes);
-  if (item.type === 'chunk' && item.isEntry && item.name === 'runtime')
-    runtimeEntry = item.fileName;
+  if (item.type === 'chunk' && item.isEntry && sdkNames.includes(item.name)) {
+    if (!item.exports.length) throw Error('EmptyPublicSdkEntry:' + item.name);
+    sdkEntries.set(item.name, item.fileName);
+  }
 }
-if (!runtimeEntry) throw Error('MissingRuntimeEntry');
+for (const name of sdkNames) {
+  const entry = sdkEntries.get(name);
+  if (!entry) throw Error('MissingPublicSdkEntry:' + name);
+  files.set(`sdk/current/${name}.js`, Buffer.from(`export * from '../../${entry}';\n`));
+}
 // Preserve old assets and stable worker for already-open pages; active chunks use hash URLs.
 for (const name of ['vanilla', 'react', 'svelte', 'headless'])
   files.set(
@@ -183,7 +223,7 @@ async function copyRuntime(dir, prefix = '') {
   }
 }
 await copyRuntime(core);
-files.set('runtime/runtime.js', Buffer.from(`export * from '../${runtimeEntry}';\n`));
+files.set('runtime/runtime.js', Buffer.from(`export * from '../${sdkEntries.get('runtime')}';\n`));
 files.set('hwpjs/hwpjs.wasm', wasm);
 files.set('api/playground.js', await input(resolve(source, 'apps/demo/src/api-playground.mjs')));
 validateExplicitFixturePolicy(files, policy);

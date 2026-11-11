@@ -11,6 +11,12 @@ import ApiPlayground from '../../components/ApiPlayground';
 
 이 도구는 함께 배포한 현재 개발 버전의 패키지·WASM을 사용합니다. 화면의 `@ohah/hwpjs`와 `@ohah/hwpjs/runtime`은 준비 중인 새 API의 이름이며, 현재 npm의 Rust/NAPI·WASI 패키지와 API가 다릅니다. 새 Zig/WASM API는 아직 npm에 게시하지 않았습니다.
 
+## 쪽 텍스트 조회
+
+`load`에 `{"format":"hwpx","fixture":"page"}`를 입력하고 실행하세요. `getPageText`를 선택하면 같은 Canvas에 표시된 문서에서 물리 쪽 인덱스와 본문·표·글상자·캡션을 선택할 수 있습니다. 첫 쪽은 0이며, 이 샘플의 쪽 2는 본문이 비어 있습니다. 글상자와 캡션을 비교하려면 `fixture`를 `textbox`로 바꾸세요. 두 샘플은 `format`을 `hwp5`로 바꿔도 실행할 수 있습니다. 표 셀 텍스트를 보려면 HWPX `multicolumns-layout` 샘플의 쪽 4에서 표를 선택하세요.
+
+결과의 `complete`는 선택한 종류의 범위를 확인했음을 뜻합니다. `partial`이면 반환된 텍스트와 함께 `issues`에 범위 제한이 표시됩니다. `unavailable`에는 현재 쪽을 읽을 수 없는 이유가 표시됩니다.
+
 <ApiPlayground />
 
 [HeadlessEditor 가이드](./editor.md) · [선택과 서식](./selection.md) · [패키지 이름과 게시 상태](../guide/package-names.md)

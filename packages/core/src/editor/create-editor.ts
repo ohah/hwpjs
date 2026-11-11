@@ -9,6 +9,7 @@ import type {
   NamedFieldOptions,
   NamedFieldResolution,
   NamedFieldSelector,
+  SetNamedFieldValuePayload,
 } from './named-fields.ts';
 import {
   captureDocumentInsertPayload,
@@ -84,6 +85,7 @@ import { FifoScheduler } from '../scheduler/fifo.ts';
 import { CommandRegistry } from '../commands/registry.ts';
 import {
   SPLICE_TEXT_COMMAND,
+  SET_NAMED_FIELD_VALUE_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -1258,6 +1260,62 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
+      if (pending.command.id === SET_NAMED_FIELD_VALUE_COMMAND.id) {
+        const payload = pending.payload as SetNamedFieldValuePayload;
+        if (
+          !payload ||
+          !payload.token ||
+          !Number.isSafeInteger(payload.selectionVersion) ||
+          payload.selectionVersion < 0 ||
+          typeof payload.expectedValue !== 'string' ||
+          !isWellFormedText(payload.expectedValue) ||
+          typeof payload.text !== 'string' ||
+          !isWellFormedText(payload.text)
+        )
+          throw Error('InvalidNamedFieldValueCommand');
+        if (
+          (state.content as { format?: string } | undefined)?.format !== 'hwpx' ||
+          !hasRuntimeAdmission(active, 'set-named-field-value')
+        )
+          throw Error('NamedFieldValueUnavailable');
+        const selector = checkedNamedFieldSelector(payload.selector);
+        const guard = () => {
+          requireReady(payload.token, true);
+          if (state.stateVersion !== payload.selectionVersion)
+            throw Error('StaleNamedFieldSelection');
+        };
+        guard();
+        const inventory = await readNamedFieldInventory(payload.token);
+        guard();
+        const resolved = resolveNamedField(inventory, selector);
+        if (resolved.status === 'incomplete') throw Error('IncompleteNamedFieldInventory');
+        if (resolved.status === 'ambiguous') throw Error('AmbiguousNamedField');
+        if (resolved.status === 'missing') throw Error('NamedFieldMissing');
+        const { field } = resolved;
+        if (field.protection === 'protected') throw Error('NamedFieldProtected');
+        if (!field.canSetValue || !field.target || field.value.status !== 'available')
+          throw Error('NamedFieldValueUnavailable');
+        if (field.value.text !== payload.expectedValue) throw Error('NamedFieldValueMismatch');
+        validateSelection(field.target, state, true);
+        const { section, paragraph, startUnit, endUnit } = field.target;
+        return await mutate(
+          {
+            kind: 'set-named-field-value',
+            id: field.id,
+            name: selector.name,
+            occurrence: selector.occurrence,
+            section,
+            paragraph,
+            startUnit,
+            endUnit,
+            expectedValue: payload.expectedValue,
+            text: payload.text,
+          },
+          payload.token,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === SPLICE_TEXT_COMMAND.id) {
         const payload = pending.payload as SpliceTextPayload;
         if (
@@ -1529,7 +1587,17 @@ export function createEditor(options: CreateEditorOptions) {
     if (!owned || typeof owned.kind !== 'string' || typeof settings.mutation !== 'boolean')
       throw Error('InvalidExperimentalRequest');
     if (
-      ['load', 'unlock', 'enable', 'save', 'refresh', 'undo', 'redo', 'splice'].includes(owned.kind)
+      [
+        'load',
+        'unlock',
+        'enable',
+        'save',
+        'refresh',
+        'undo',
+        'redo',
+        'splice',
+        'set-named-field-value',
+      ].includes(owned.kind)
     )
       throw Error('UseTypedEditorOperation');
     const operation = surfaceOperation(owned.kind);

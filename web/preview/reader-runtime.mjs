@@ -1,4 +1,5 @@
 import { copyDocumentInsertRuntimeMessage } from '../../js/hwpx-document-insert.mjs';
+import { setHwpxNamedFieldValue } from './hwpx-named-field-value.mjs';
 import { projectHwp5NamedFields } from './hwp5-named-fields.mjs';
 import { richTypingOwnerAllowed } from './caret-formatting-intent.mjs';
 import { prepareReplaceAllTransaction } from './replace-all-transaction.mjs';
@@ -1123,6 +1124,20 @@ export function createReaderRuntime({
           namedFields:
             format === 'hwp5' ? projectHwp5NamedFields(source, hwp5DisplayProjection()) : source,
         });
+        return;
+      }
+      if (message.kind === 'set-named-field-value') {
+        if (format !== 'hwpx' || !editor || hwpxCreatedTablesPending)
+          throw Error('NamedFieldValueUnavailable');
+        if (!historyEnabled) throw Error('HistoryNotEnabled');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        applied = setHwpxNamedFieldValue(editor, message);
+        if (!applied) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        displayResources.invalidate();
+        reply({ kind: message.kind, changed: true, content: hwpxDisplay() });
         return;
       }
       if (message.kind === 'formatting-capabilities') {

@@ -73,9 +73,9 @@ RN의 후속 iOS 시뮬레이터 검증은 저수준 Native Context port의 두 
 | 글자 크기·bold·italic·밑줄·취소선 | core typed character/underline/strike 명령; `src/wasm`; `apps/demo/src/formatting-bridge.ts` | public 소스 확인, 과거 개별 서식/독립 저장·E2E 기록; 취소선은 공개 G2에서 원본 비어 있지 않은 선택의 Boolean on/off·readonly 거부·저장/재열기 확인 | 부분 | 전체 글자 속성·모든 source shape의 typed 공개와 같은 최신 snapshot 검증. 취소선 caret 다음 입력 서식은 미지원; 필드 내부·원본 한/글 시각 동치는 미검증 |
 | 문단 정렬 | core `SET_PARAGRAPH_ALIGNMENT_COMMAND`; 형식별 문단 속성; formatting bridge | public 소스 확인과 한정된 과거 서식 검사 | 부분 | 여백·간격·split/join 등 전체 문단 명령군 공개 |
 | 찾기·바꾸기·통계 | core text-tools/query와 setSelection/splice; `apps/demo/src/text-tools-bridge.ts` | snapshot 기반 literal 검색 계약, 과거 UI 표본 | 부분 | 긴/windowed 문서의 완전성, regex·전체 replace transaction은 별도 |
-| 필드·양식 | HWP5/HWPX 이름 있는 필드 목록·조회·이동 | 실제 CFB/ZIP과 기본 Worker에서 중복 이름, 빈 값, 보호·부분 상태 확인 | 부분 | 이름 기반 쓰기·생성, 나머지 소유 범위 |
+| 필드·양식 | HWP5/HWPX 이름 있는 필드 목록·조회·이동 | 실제 CFB/ZIP과 기본 Worker에서 중복 이름, 빈 값, 보호·부분 상태 확인 | 부분 | HWPX 일부 이름 기반 쓰기 지원. 생성·이름 변경과 쓰기 범위 확대 |
 | 문서 끼워 넣기 | HWPX 일반 본문 삽입과 파일 메뉴 | Native 리소스 ID 독립 대조, 저장과 실행 취소·다시 실행 | 부분 | 표·그림·다단 및 형식 간 삽입 |
-| 쪽별 텍스트 | 웹 Canvas의 물리적 쪽 위치와 본문·표·글상자·캡션 필터 | 두 형식 실제 Canvas 및 HWPX 원본 XML 대조 | 부분 | 복합 조판의 읽기 순서 및 호스트 확대 |
+| 쪽별 텍스트 | 웹 Canvas의 물리적 쪽 위치와 본문·표·글상자·캡션 필터 및 공개 API 플레이그라운드 | 두 형식 실제 Canvas 및 HWPX 원본 XML 대조 | 부분 | 복합 조판의 읽기 순서 및 호스트 확대 |
 | 표·셀 구조 | core `INSERT_TABLE_COMMAND`의 본문 caret 삽입과 기존 형식별 저수준 경로 | 소스 모델 16개·실제 두 형식의 Native 삽입 2개, 각주 선택과 합친 명시 38개 통과 및 CI 확인 | 부분 | 현재 배포 SDK·Worker·표 삽입 UI 연결, typed cell target·행열·병합·중첩·새 셀 편집 검증 |
 | 기존 HWP5 각주·미주 선택 | 전체 source snapshot의 검증된 note/list·현재 참조에서 공개 selection owner 파생 | 실제 WASM 선택·편집·독립 저장·이력·재열기 4개와 순수 16개, CI 확인 | 부분 | 배포 SDK·Worker·Canvas, 생성 note·표 안 note·window와 모든 원본 지원 검증 |
 | 그림·도형·차트 | 형식별 source/query/edit, 제한된 Canvas 표시; `apps/demo/src/command-support.ts`의 메뉴 목록은 실행 증거가 아님 | 개별 주제 보고서와 public inventory | 부분 | 객체별 public identity/resource/명령과 독립 저장·E2E |

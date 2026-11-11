@@ -4,8 +4,13 @@ import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { createNewDocumentBytes } from '../../../../js/new-document.mjs';
 import { createHwpxEditor } from '../../../../js/hwpx-editor.mjs';
-import { createEditor, SPLICE_TEXT_COMMAND } from '../../src/index.ts';
-import type { SelectionTarget } from '../../src/index.ts';
+import {
+  createEditor,
+  SET_NAMED_FIELD_VALUE_COMMAND,
+  SPLICE_TEXT_COMMAND,
+} from '../../src/index.ts';
+import type { HeadlessEditor, NamedFieldSelector, SelectionTarget } from '../../src/index.ts';
+import { hasRuntimeAdmission } from '../../src/internal/runtime-admission.ts';
 import { createReaderRuntimeFactory, createWorkerRuntimeFactory } from '../../src/runtime.ts';
 
 const path = process.env.HWPJS_TEST_WASM;
@@ -259,5 +264,295 @@ test('named fields leaves a multi-paragraph field value unknown instead of expos
     }
   } finally {
     await editor.dispose();
+  }
+});
+
+const writeBody =
+  paragraph(
+    1,
+    text('A') +
+      field(11, 'amount', '😀', 'CLICK_HERE', ' editable="1"') +
+      text('B') +
+      field(12, 'amount', '', 'CLICK_HERE', ' editable="1"') +
+      text('C'),
+  ) +
+  paragraph(2, field(13, 'locked', '고정', 'CLICK_HERE', ' editable="0"')) +
+  paragraph(3, field(14, 'implicit', '미지정'));
+const writeInput = zipWith(writeBody);
+const setValue = (
+  editor: HeadlessEditor,
+  selector: NamedFieldSelector,
+  expectedValue: string,
+  text: string,
+) => {
+  const state = editor.getEditorState();
+  return editor.dispatchCommand(SET_NAMED_FIELD_VALUE_COMMAND, {
+    selector,
+    token: state.token,
+    selectionVersion: state.stateVersion,
+    expectedValue,
+    text,
+  });
+};
+const inspectWrite = `
+import base64, io, json, sys, xml.etree.ElementTree as ET, zipfile
+p = '{http://www.hancom.co.kr/hwpml/2011/paragraph}'
+with zipfile.ZipFile(io.BytesIO(base64.b64decode(sys.stdin.buffer.read()))) as z:
+    section = ET.fromstring(z.read('Contents/section0.xml'))
+    values = []
+    active = None
+    exterior = []
+    for element in section.iter():
+        if element.tag == p + 'fieldBegin':
+            assert active is None
+            active = [element.get('id'), element.get('name'), element.get('editable'), '']
+        if element.tag == p + 't':
+            value = element.text or ''
+            if active is not None:
+                active[3] += value
+            else:
+                exterior.append(value)
+        if element.tag == p + 'fieldEnd':
+            assert element.get('beginIDRef') == active[0]
+            values.append(active)
+            active = None
+    assert active is None
+    print(json.dumps([values, ''.join(exterior), {n: base64.b64encode(z.read(n)).decode()
+        for n in z.namelist() if n != 'Contents/section0.xml'}]))
+`;
+const inspect = (bytes: Uint8Array) =>
+  JSON.parse(
+    execFileSync('python3', ['-I', '-c', inspectWrite], {
+      input: Buffer.from(bytes).toString('base64'),
+    }).toString(),
+  );
+
+for (const [label, factory] of [
+  ['ReaderRuntime', reader],
+  ['Worker', worker],
+] as const) {
+  test(`named field write R4 ${label} uses one history change and byte-exact undo and redo`, async () => {
+    const editor = createEditor({ runtimeFactory: factory() });
+    try {
+      await editor.load(writeInput, { format: 'hwpx', editable: true });
+      const inventory = await editor.listNamedFields();
+      assert.deepEqual(
+        inventory.rows.map((row) => row.canSetValue),
+        [true, true, false, false],
+      );
+      const start = editor.getEditorState();
+      const selector = { name: 'amount', occurrence: 1 };
+      const command = await setValue(editor, selector, '', '새😀<&');
+      assert.equal(command.status, 'committed-with-snapshot', command.error);
+      assert.equal(editor.getEditorState().nativeHistoryRevision, start.nativeHistoryRevision! + 1);
+      const found = await editor.readNamedField(selector);
+      assert.equal(found.status, 'found');
+      if (found.status === 'found')
+        assert.deepEqual(found.field.value, { status: 'available', text: '새😀<&' });
+      const saved = (await editor.save()).bytes;
+      const [originalValues, originalExterior, originalOtherParts] = inspect(writeInput);
+      const [savedValues, savedExterior, savedOtherParts] = inspect(saved);
+      assert.deepEqual(
+        savedValues,
+        originalValues.map((row: string[]) =>
+          row[0] === '12' ? [...row.slice(0, 3), '새😀<&'] : row,
+        ),
+      );
+      assert.equal(savedExterior, originalExterior);
+      assert.deepEqual(savedOtherParts, originalOtherParts);
+
+      assert.equal((await editor.undo()).status, 'committed-with-snapshot');
+      assert.deepEqual((await editor.save()).bytes, writeInput);
+      const beforeNoop = editor.getEditorState();
+      assert.equal((await setValue(editor, selector, '', '')).status, 'known-no-op');
+      assert.equal(editor.getEditorState(), beforeNoop);
+      assert.equal((await editor.redo()).status, 'committed-with-snapshot');
+      assert.deepEqual((await editor.save()).bytes, saved);
+
+      assert.equal(
+        (await setValue(editor, selector, '새😀<&', '')).status,
+        'committed-with-snapshot',
+      );
+      const erased = (await editor.save()).bytes;
+      assert.deepEqual(inspect(erased)[0], originalValues);
+      await editor.undo();
+      assert.deepEqual((await editor.save()).bytes, saved);
+      await editor.redo();
+      assert.deepEqual((await editor.save()).bytes, erased);
+    } finally {
+      await editor.dispose();
+    }
+  });
+}
+
+test('named field write R4 rejects duplicate, protected, unproved, stale and malformed requests', async () => {
+  const editor = createEditor({ runtimeFactory: reader() });
+  try {
+    await editor.load(writeInput, { format: 'hwpx', editable: true });
+    const before = editor.getEditorState();
+    const valid = { name: 'amount', occurrence: 0 };
+    for (const [selector, expected, text, error] of [
+      [{ name: 'amount' }, '😀', 'new', 'AmbiguousNamedField'],
+      [{ name: 'amount', occurrence: 2 }, '', 'new', 'NamedFieldMissing'],
+      [{ name: 'locked' }, '고정', 'new', 'NamedFieldProtected'],
+      [{ name: 'implicit' }, '미지정', 'new', 'NamedFieldValueUnavailable'],
+      [valid, 'not current', 'new', 'NamedFieldValueMismatch'],
+      [valid, '😀', '\n', 'InvalidNamedFieldValueCommand'],
+      [valid, '😀', '\u2028', 'InvalidNamedFieldValueCommand'],
+      [valid, '😀', '\ud800', 'InvalidNamedFieldValueCommand'],
+    ] as const) {
+      const result = await setValue(editor, selector, expected, text);
+      assert.equal(result.status, 'rejected-unapplied');
+      assert.equal(result.error, error);
+      assert.equal(editor.getEditorState(), before);
+    }
+    await editor.setSelection(null);
+    const changed = editor.getEditorState();
+    const stale = await editor.dispatchCommand(SET_NAMED_FIELD_VALUE_COMMAND, {
+      selector: valid,
+      token: before.token,
+      selectionVersion: before.stateVersion,
+      expectedValue: '😀',
+      text: 'new',
+    });
+    assert.equal(stale.error, 'StaleNamedFieldSelection');
+    assert.equal(editor.getEditorState(), changed);
+    assert.throws(
+      () =>
+        editor.requestExperimental(
+          {
+            kind: 'set-named-field-value',
+            id: 'hwpx:0:9999',
+            name: 'amount',
+            occurrence: 0,
+            section: 0,
+            paragraph: 1,
+            startUnit: 1,
+            endUnit: 3,
+            expectedValue: '😀',
+            text: 'new',
+          },
+          { token: changed.token, mutation: true },
+        ),
+      /UseTypedEditorOperation/,
+    );
+    assert.equal(editor.getEditorState(), changed);
+    assert.deepEqual((await editor.save()).bytes, writeInput);
+
+    await editor.load(writeInput, { format: 'hwpx', editable: true });
+    const staleDocument = await editor.dispatchCommand(SET_NAMED_FIELD_VALUE_COMMAND, {
+      selector: valid,
+      token: changed.token,
+      selectionVersion: changed.stateVersion,
+      expectedValue: '😀',
+      text: 'new',
+    });
+    assert.equal(staleDocument.error, 'StaleTarget');
+    assert.deepEqual((await editor.save()).bytes, writeInput);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field write R4 rejects incomplete inventory and leaves read-only and HWP5 gates in force', async () => {
+  const editor = createEditor({ runtimeFactory: worker() });
+  try {
+    const partial = zipWith(writeBody, 'master');
+    await editor.load(partial, { format: 'hwpx', editable: true });
+    const selector = { name: 'amount', occurrence: 0 };
+    assert.equal(
+      (await setValue(editor, selector, '😀', 'new')).error,
+      'IncompleteNamedFieldInventory',
+    );
+    assert.deepEqual((await editor.save()).bytes, partial);
+    await editor.load(writeInput, { format: 'hwpx', editable: false });
+    assert.equal((await setValue(editor, selector, '😀', 'new')).error, 'ReadOnlyDocument');
+    assert.deepEqual((await editor.save()).bytes, writeInput);
+    const hwp5 = await createNewDocumentBytes(wasmModule, 'hwp5');
+    await editor.load(hwp5, { format: 'hwp5', editable: true });
+    assert.equal(
+      (await setValue(editor, selector, '😀', 'new')).error,
+      'NamedFieldValueUnavailable',
+    );
+    assert.deepEqual((await editor.save()).bytes, hwp5);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field write R4 rechecks identity and history inside the actual runtime', async () => {
+  const runtime = await reader()();
+  try {
+    const loaded = await runtime.request({ kind: 'load', format: 'hwpx', bytes: writeInput });
+    assert.equal(loaded.error, undefined);
+    const request = {
+      kind: 'set-named-field-value',
+      id: 'hwpx:0:9999',
+      name: 'amount',
+      occurrence: 0,
+      section: 0,
+      paragraph: 1,
+      startUnit: 1,
+      endUnit: 3,
+      expectedValue: '😀',
+      text: 'new',
+    };
+    assert.equal((await runtime.request(request)).error, 'HistoryNotEnabled');
+    assert.equal((await runtime.request({ kind: 'enable' })).error, undefined);
+    const rejected = await runtime.request(request);
+    assert.equal(rejected.error, 'StaleNamedFieldTarget');
+    assert.equal(rejected.meta?.application, 'unapplied');
+    assert.equal(
+      (await runtime.request({ ...request, occurrence: undefined })).error,
+      'AmbiguousNamedField',
+    );
+    assert.deepEqual((await runtime.request({ kind: 'save' })).bytes, writeInput);
+  } finally {
+    await runtime.dispose();
+  }
+});
+
+test('named field write R4 rechecks the selection after composition settlement', async () => {
+  const editor = createEditor({ runtimeFactory: worker() });
+  try {
+    await editor.load(writeInput, { format: 'hwpx', editable: true });
+    const surface = editor.acquireInputSurface({
+      async commitComposition() {
+        await surface.publishSelection(null);
+        return 'unchanged';
+      },
+      cancelComposition() {},
+    });
+    try {
+      const stale = await setValue(editor, { name: 'amount', occurrence: 0 }, '😀', 'new');
+      assert.equal(stale.status, 'rejected-unapplied');
+      assert.equal(stale.error, 'StaleNamedFieldSelection');
+    } finally {
+      surface.release();
+    }
+    assert.deepEqual((await editor.save()).bytes, writeInput);
+  } finally {
+    await editor.dispose();
+  }
+});
+
+test('named field write R4 keeps default worker fencing separate from native authority', async () => {
+  const standard = await worker()();
+  const custom = await createWorkerRuntimeFactory({
+    wasmModule,
+    workerURL: new URL('../../src/worker.js', import.meta.url),
+  })();
+  try {
+    for (const runtime of [standard, custom]) {
+      const loaded = await runtime.request({ kind: 'load', format: 'hwpx', bytes: writeInput });
+      assert.equal(loaded.error, undefined);
+      assert.equal(hasRuntimeAdmission(runtime), false);
+      assert.equal(hasRuntimeAdmission(runtime, 'independent-text'), false);
+    }
+    assert.equal(hasRuntimeAdmission(standard, 'set-named-field-value'), true);
+    assert.equal(hasRuntimeAdmission(custom, 'set-named-field-value'), false);
+  } finally {
+    await standard.dispose();
+    await custom.dispose();
   }
 });

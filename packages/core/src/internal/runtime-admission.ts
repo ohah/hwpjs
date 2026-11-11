@@ -26,7 +26,7 @@ type Request = (
   admission: () => void,
   projection?: RuntimeProjectionPreference,
 ) => Promise<RuntimeReply>;
-type Port = { valid: () => boolean; request: Request };
+type Port = { valid: (kind?: string) => boolean; request: Request };
 const ports = new WeakMap<object, Port>();
 /** Internal pre-dispatch failure only. No Native request has started. */
 export class RuntimeAdmissionRejected extends Error {
@@ -39,21 +39,21 @@ export class RuntimeAdmissionRejected extends Error {
 export function bindRuntimeAdmission(
   runtime: EditorRuntime,
   request: Request,
-  transportValid: () => boolean,
+  transportValid: (kind?: string) => boolean,
 ): void {
   const originalRequest = runtime.request,
     originalDispose = runtime.dispose;
   let tainted = false;
-  const valid = () => {
+  const valid = (kind?: string) => {
     if (!canonicalRuntimeDescriptors(runtime, originalRequest, originalDispose, Object.prototype))
       tainted = true;
-    return !tainted && transportValid();
+    return !tainted && transportValid(kind);
   };
   ports.set(runtime, { valid, request });
 }
-export function hasRuntimeAdmission(runtime: EditorRuntime | undefined): boolean {
+export function hasRuntimeAdmission(runtime: EditorRuntime | undefined, kind?: string): boolean {
   try {
-    return !!runtime && ports.get(runtime)?.valid() === true;
+    return !!runtime && ports.get(runtime)?.valid(kind) === true;
   } catch {
     return false;
   }
@@ -66,9 +66,10 @@ export function requestAtRuntimeAdmission(
   projection: RuntimeProjectionPreference = false,
 ): Promise<RuntimeReply> {
   const port = ports.get(runtime);
+  const kind = message.kind;
   const admission = () => {
     try {
-      if (!port?.valid()) throw Error('UnsupportedAtomicRuntime');
+      if (!port?.valid(kind)) throw Error('UnsupportedAtomicRuntime');
       guard();
     } catch (error) {
       throw new RuntimeAdmissionRejected(error);

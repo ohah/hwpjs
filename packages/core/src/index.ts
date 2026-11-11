@@ -18,6 +18,7 @@ export type { StateToken, StateData, EditorStatus } from './state/editor-state.t
 export {
   createCommand,
   SPLICE_TEXT_COMMAND,
+  SET_NAMED_FIELD_VALUE_COMMAND,
   INSERT_TABLE_COMMAND,
   EDIT_CREATED_TABLE_GRID_COMMAND,
   EDIT_SOURCE_TABLE_GRID_COMMAND,
@@ -179,6 +180,7 @@ export type {
   NamedFieldSource,
   NamedFieldSourceRow,
   NamedFieldValue,
+  SetNamedFieldValuePayload,
 } from './editor/named-fields.ts';
 
 export { INSERT_DOCUMENT_COMMAND } from './commands/commands.ts';

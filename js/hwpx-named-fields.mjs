@@ -1,6 +1,22 @@
 const utf8 = new TextDecoder('utf-8', { fatal: true });
 const uint = (n) => Number.isSafeInteger(n) && n >= 0 && n <= 0xffffffff;
 
+export function isHwpxNamedFieldValue(text) {
+  if (typeof text !== 'string' || !text.isWellFormed()) return false;
+  for (let index = 0; index < text.length; index++) {
+    const unit = text.charCodeAt(index);
+    if (
+      unit < 0x20 ||
+      (unit >= 0x7f && unit <= 0x9f) ||
+      unit === 0x2028 ||
+      unit === 0x2029 ||
+      unit === 0xfffc
+    )
+      return false;
+  }
+  return true;
+}
+
 export function decodeHwpxNamedFields(bytes) {
   const source = JSON.parse(utf8.decode(bytes));
   const invalid = () => new Error('InvalidHwpxNamedFields');
@@ -16,49 +32,59 @@ export function decodeHwpxNamedFields(bytes) {
       throw invalid();
     return { section, paragraph: paragraph - 1, text };
   });
-  const rows = source.rows.map(({ section, element, name, kind, protection, text, location }) => {
-    if (
-      !uint(section) ||
-      !uint(element) ||
-      (name !== null && typeof name !== 'string') ||
-      typeof kind !== 'string' ||
-      !['protected', 'unknown'].includes(protection) ||
-      (text !== null && typeof text !== 'string')
-    )
-      throw invalid();
-    let target = null;
-    if (location !== null) {
-      if (!location || !uint(location.view)) throw invalid();
-      const view = projectionViews[location.view];
-      const { startUnit, endUnit } = location;
+  const rows = source.rows.map(
+    ({ section, element, name, kind, protection, sourceEditable, text, location }) => {
       if (
-        !view ||
-        view.section !== section ||
-        !uint(startUnit) ||
-        !uint(endUnit) ||
-        endUnit < startUnit ||
-        endUnit > view.text.length ||
-        text === null ||
-        view.text.slice(startUnit, endUnit) !== text
+        !uint(section) ||
+        !uint(element) ||
+        (name !== null && typeof name !== 'string') ||
+        typeof kind !== 'string' ||
+        !['protected', 'unknown'].includes(protection) ||
+        (sourceEditable != null && typeof sourceEditable !== 'boolean') ||
+        (text !== null && typeof text !== 'string')
       )
         throw invalid();
-      target = {
-        owner: `section:${section}:body`,
-        section,
-        paragraph: view.paragraph,
-        startUnit,
-        endUnit,
-        projectionView: location.view,
+      let target = null;
+      if (location !== null) {
+        if (!location || !uint(location.view)) throw invalid();
+        const view = projectionViews[location.view];
+        const { startUnit, endUnit } = location;
+        if (
+          !view ||
+          view.section !== section ||
+          !uint(startUnit) ||
+          !uint(endUnit) ||
+          endUnit < startUnit ||
+          endUnit > view.text.length ||
+          text === null ||
+          view.text.slice(startUnit, endUnit) !== text
+        )
+          throw invalid();
+        target = {
+          owner: `section:${section}:body`,
+          section,
+          paragraph: view.paragraph,
+          startUnit,
+          endUnit,
+          projectionView: location.view,
+          beginElement: element,
+        };
+      }
+      return {
+        id: `hwpx:${section}:${element}`,
+        name,
+        kind,
+        protection,
+        canSetValue:
+          kind === 'CLICK_HERE' &&
+          protection !== 'protected' &&
+          sourceEditable === true &&
+          target !== null &&
+          isHwpxNamedFieldValue(text),
+        value: text === null ? { status: 'unavailable' } : { status: 'available', text },
+        location: target,
       };
-    }
-    return {
-      id: `hwpx:${section}:${element}`,
-      name,
-      kind,
-      protection,
-      value: text === null ? { status: 'unavailable' } : { status: 'available', text },
-      location: target,
-    };
-  });
+    },
+  );
   return { format: 'hwpx', coverage: source.coverage, rows, projectionViews };
 }
