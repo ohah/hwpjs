@@ -284,18 +284,22 @@ test('mounted JSON panel fills the current version and executes the real query/t
     createParagraphSelection,
     spliceCommand: SPLICE_TEXT_COMMAND,
   });
-  assert.deepEqual(legacy.operations, [
-    'load',
-    'invalidLoad',
-    'read',
-    'select',
-    'getTableInsertAvailability',
-    'splice',
-    'undo',
-    'redo',
-    'save',
-    'reopen',
-  ]);
+  assert(legacy.operations.includes('getPageSettings'));
+  assert.deepEqual(
+    legacy.operations.filter((operation) => operation !== 'getPageSettings'),
+    [
+      'load',
+      'invalidLoad',
+      'read',
+      'select',
+      'getTableInsertAvailability',
+      'splice',
+      'undo',
+      'redo',
+      'save',
+      'reopen',
+    ],
+  );
   legacy.dispose();
   const { root } = documentFixture();
   const panel = mountApiPlayground(root, {
