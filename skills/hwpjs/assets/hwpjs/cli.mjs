@@ -305,7 +305,7 @@ function parseObjectReference(reference, expected = {}) {
 		kind: match[4],
 		node: Number(match[5])
 	};
-	if (!uint$39(result.section) || !uint$39(result.node)) throw new TypeError("InvalidObjectReference");
+	if (!uint$40(result.section) || !uint$40(result.node)) throw new TypeError("InvalidObjectReference");
 	if (expectedSha256 !== void 0 && expectedSha256 !== result.sourceSha256) throw new Error("StaleObjectReference");
 	if (expectedFormat !== void 0 && expectedFormat !== result.format) throw new Error("ObjectReferenceFormatMismatch");
 	return result;
@@ -320,7 +320,7 @@ function canonicalImageId(value) {
 	})) throw new TypeError("InvalidImageIdentity");
 	return `${documentFormat}:s${section}:i${node}`;
 }
-var KINDS, SHA, REFERENCE, object$11, uint$39, format, identity;
+var KINDS, SHA, REFERENCE, object$11, uint$40, format, identity;
 var init_object_reference$1 = __esmMin((() => {
 	KINDS = /* @__PURE__ */ new Set([
 		"image",
@@ -334,9 +334,9 @@ var init_object_reference$1 = __esmMin((() => {
 	SHA = /^[a-f0-9]{64}$/u;
 	REFERENCE = /^hwpjs-object:([a-f0-9]{64})\/(hwp5|hwpx)\/s(0|[1-9]\d*)\/(image|table|chart|equation|drawing|ole|unknown)\/(0|[1-9]\d*)$/u;
 	object$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-	uint$39 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
+	uint$40 = (value) => typeof value === "number" && Number.isSafeInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 	format = (value) => value === "hwp5" || value === "hwpx";
-	identity = (value) => object$11(value) && format(value.format) && uint$39(value.section) && uint$39(value.node);
+	identity = (value) => object$11(value) && format(value.format) && uint$40(value.section) && uint$40(value.node);
 }));
 // src/object-reference.ts
 var init_object_reference = __esmMin((() => {
@@ -1284,13 +1284,13 @@ var init_render_escape = __esmMin((() => {
 init_files();
 init_host_output();
 init_render_escape();
-const record$15 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+const record$16 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 const MAX_INPUT_BYTES$2 = 67108864;
 /** 단일·배치 읽기가 공유하는 스냅샷 → 기존 엔진 → 기존 표시 경로입니다.
 * 파일 호스트만 주입하며 새 파서·편집 모델·Native 수명 관리자를 만들지 않습니다.
 */
 async function readDocumentOperation(options, { files, engine, renderDocument, loadWasm }) {
-	if (!record$15(options)) throw Error("InvalidReadFormat");
+	if (!record$16(options)) throw Error("InvalidReadFormat");
 	const { inputPath, inputSnapshot, wasm, format = "text", view = "content" } = options;
 	if (format !== "text" && format !== "markdown") throw Error("InvalidReadFormat");
 	if (view !== "content" && view !== "structure") throw Error("InvalidReadView");
@@ -1299,15 +1299,15 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 		return files.readInputSnapshot(inputPath, { maxBytes: MAX_INPUT_BYTES$2 });
 	};
 	const input = inputSnapshot ?? await loadSnapshot();
-	if (!record$15(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
+	if (!record$16(input) || !(input.bytes instanceof Uint8Array) || input.bytes.length < 1 || input.bytes.length > MAX_INPUT_BYTES$2 || typeof input.sha256 !== "string" || !/^[a-f0-9]{64}$/.test(input.sha256 ?? "")) throw Error("InvalidInputSnapshot");
 	const binary = wasm ?? await loadWasm();
 	if (!(binary instanceof Uint8Array)) throw Error("InvalidWasmBytes");
 	const result = await engine.read({
 		bytes: input.bytes,
 		wasm: binary
 	});
-	if (!record$15(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
-	if (!record$15(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
+	if (!record$16(result) || result.format !== "hwp5" && result.format !== "hwpx") throw Error("InvalidEngineFormat");
+	if (!record$16(result.model) || result.model.version !== 1 || result.model.format !== result.format || result.model.sourceSha256 !== input.sha256) throw Error("InvalidEngineModel");
 	const text = await renderDocument(result.model, {
 		format,
 		view
@@ -1321,9 +1321,9 @@ async function readDocumentOperation(options, { files, engine, renderDocument, l
 }
 /** CLI와 웹 실습이 공유하는 단일 읽기 응답입니다. 원문으로 대체하지 않습니다. */
 function renderReadResponse(result, options = {}) {
-	if (!record$15(options)) throw Error("InvalidReadView");
+	if (!record$16(options)) throw Error("InvalidReadView");
 	const { view = "content" } = options;
-	if (!record$15(result)) throw Error("InvalidReadResult");
+	if (!record$16(result)) throw Error("InvalidReadResult");
 	const { format, sourceSha256, text } = result;
 	if (format !== "hwp5" && format !== "hwpx") throw Error("InvalidEngineFormat");
 	if (typeof sourceSha256 !== "string" || !/^[a-f0-9]{64}$/.test(sourceSha256)) throw Error("InvalidReadSourceSHA256");
@@ -1393,6 +1393,442 @@ var init_document_format = __esmMin((() => {
 	cfbSignature = Uint8Array.of(208, 207, 17, 224, 161, 177, 26, 225);
 	hwp3Signature = new TextEncoder().encode("HWP Document File V3");
 	startsWith = (bytes, signature) => bytes.length >= signature.length && signature.every((value, index) => bytes[index] === value);
+}));
+// ../../js/hwp5-page-settings.mjs
+/** Source declaration only; no physical page number or current paragraph flow. */
+function decodeHwp5PageSettings(bytes) {
+	return validateHwp5PageSettings(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+}
+function validateHwp5PageSettings(row) {
+	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	if (!row || ![
+		"source_node",
+		"width",
+		"height",
+		"left",
+		"right",
+		"top",
+		"bottom",
+		"header",
+		"footer",
+		"gutter",
+		"flags",
+		"extra_bytes"
+	].every((name) => uint(row[name])) || !["narrowly", "widely"].includes(row.orientation) || ![
+		"one_side",
+		"facing",
+		"top"
+	].includes(row.binding)) throw new Error("InvalidHwp5PageSettings");
+	if (row.orientation !== (row.flags & 1 ? "widely" : "narrowly") || row.binding !== [
+		"one_side",
+		"facing",
+		"top"
+	][row.flags >>> 1 & 3]) throw new Error("InvalidHwp5PageSettings");
+	return row;
+}
+var init_hwp5_page_settings = __esmMin((() => {}));
+// ../../js/hwpx-page-settings.mjs
+/** Source observations, not a page layout or default-value resolver. */
+function validateColumn(column) {
+	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	if (!column || !uint(column.declaration_node) || !uint(column.owner_node) || ![column.count, column.gap].every((value) => value === null || uint(value)) || ![
+		null,
+		true,
+		false
+	].includes(column.same_size) || ![
+		null,
+		"left",
+		"right",
+		"mirror"
+	].includes(column.direction) || ![
+		null,
+		"newspaper",
+		"balanced_newspaper",
+		"parallel"
+	].includes(column.kind) || typeof column.ambiguous !== "boolean") throw new Error("InvalidParagraphFlow");
+	if (column.sizes !== void 0 && (!Array.isArray(column.sizes) || column.sizes.some((size) => !size || ![size.width, size.gap].every((value) => value === null || uint(value))))) throw new Error("InvalidParagraphFlow");
+}
+function decodeParagraphFlow(bytes) {
+	const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+	if (!Array.isArray(rows)) throw new Error("InvalidParagraphFlow");
+	for (const row of rows) {
+		if (!row) throw new Error("InvalidParagraphFlow");
+		if (row.empty_line_eligible !== void 0 && typeof row.empty_line_eligible !== "boolean") throw new Error("InvalidParagraphFlow");
+		if (row.note_context !== void 0 && row.note_context !== null) {
+			const note = row.note_context;
+			if (![note.note_node, note.list_node].every((value) => Number.isInteger(value) && value >= 0 && value <= 4294967295) || !["footnote", "endnote"].includes(note.kind) || row.host !== note.kind || row.top_level !== false) throw new Error("InvalidParagraphFlow");
+		}
+		if (row.single_column !== void 0 && typeof row.single_column !== "boolean") throw new Error("InvalidParagraphFlow");
+		if (row.host !== void 0 && ![
+			"body",
+			"header",
+			"footer",
+			"footnote",
+			"endnote",
+			"drawing",
+			"other"
+		].includes(row.host)) throw new Error("InvalidParagraphFlow");
+		if (row.column_declaration !== void 0 && row.column_declaration !== null) validateColumn(row.column_declaration);
+		if (row.column_start_declaration !== void 0 && row.column_start_declaration !== null) validateColumn(row.column_start_declaration);
+		if (row.column_changes !== void 0) {
+			if (!Array.isArray(row.column_changes)) throw new Error("InvalidParagraphFlow");
+			let previous = 0;
+			for (const change of row.column_changes) {
+				if (!change || !Number.isInteger(change.unit) || change.unit < previous || change.unit > 4294967295) throw new Error("InvalidParagraphFlow");
+				validateColumn(change.declaration);
+				previous = change.unit;
+			}
+		}
+		if (row.page_number_source !== void 0 && row.page_number_source !== null) {
+			const source = row.page_number_source;
+			if (typeof source.supported !== "boolean" || source.start_page !== null && (!Number.isInteger(source.start_page) || source.start_page < 1 || source.start_page > 4294967295) || ![
+				null,
+				true,
+				false
+			].includes(source.hide_first_header) || ![
+				null,
+				true,
+				false
+			].includes(source.hide_first_footer)) throw new Error("InvalidParagraphFlow");
+		}
+		if (row.page_area !== void 0 && row.page_area !== null) {
+			const area = row.page_area;
+			const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+			if (!area || !uint(area.owner_node) || !uint(area.list_node) || ![area.width, area.height].every((value) => value === null || uint(value)) || ![
+				null,
+				"both",
+				"odd",
+				"even"
+			].includes(area.apply) || ![
+				null,
+				"top",
+				"center",
+				"bottom"
+			].includes(area.vertical_alignment)) throw new Error("InvalidParagraphFlow");
+		}
+		if (!row || !Number.isInteger(row.paragraph) || row.paragraph <= 0 || row.paragraph > 4294967295 || !Number.isInteger(row.source_node) || row.source_node < 0 || row.source_node > 4294967295 || typeof row.top_level !== "boolean" || ![
+			null,
+			true,
+			false
+		].includes(row.page_break) || ![
+			null,
+			true,
+			false
+		].includes(row.column_break)) throw new Error("InvalidParagraphFlow");
+	}
+	if (rows.some((row, i) => i > 0 && row.paragraph !== rows[i - 1].paragraph + 1)) throw new Error("InvalidParagraphFlow");
+	return rows;
+}
+function decodePageSettings(bytes) {
+	const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
+	const optional = (value) => value === null || uint(value);
+	if (!Array.isArray(rows)) throw new Error("InvalidPageSettings");
+	for (const row of rows) {
+		if (!row || !uint(row.section_ordinal) || !uint(row.element_index) || !uint(row.duplicate_margins) || !optional(row.width) || !optional(row.height) || ![
+			null,
+			"widely",
+			"narrowly"
+		].includes(row.orientation) || ![
+			null,
+			"left_only",
+			"left_right",
+			"top_bottom"
+		].includes(row.gutter_type)) throw new Error("InvalidPageSettings");
+		if (row.hide_first_empty_line !== void 0 && ![
+			null,
+			true,
+			false
+		].includes(row.hide_first_empty_line)) throw new Error("InvalidPageSettings");
+		if (Object.hasOwn(row, "hide_first_empty_line") !== Object.hasOwn(row, "visibility_count")) throw new Error("InvalidPageSettings");
+		if (row.visibility_count !== void 0 && (!uint(row.visibility_count) || row.visibility_count !== 1 && row.hide_first_empty_line != null)) throw new Error("InvalidPageSettings");
+		if (row.margin !== null && (!row.margin || ![
+			"header",
+			"footer",
+			"gutter",
+			"left",
+			"right",
+			"top",
+			"bottom"
+		].every((name) => optional(row.margin[name])))) throw new Error("InvalidPageSettings");
+	}
+	return rows;
+}
+var init_hwpx_page_settings = __esmMin((() => {}));
+// ../../js/native-edit-outcome.mjs
+function applyNativeEdit(memory, bytes, invoke, invalidResult) {
+	let started = false, readingDiagnostic = false, completed;
+	try {
+		return memory.withBytes(bytes, (ptr, size) => {
+			started = true;
+			const code = invoke(ptr, size);
+			if (![
+				0,
+				1,
+				2,
+				3
+			].includes(code)) return completed = {
+				application: "unknown",
+				changed: null,
+				error: invalidResult
+			};
+			completed = {
+				nativeCode: code,
+				application: code === 1 ? "applied" : code === 3 ? "unknown" : "unapplied",
+				changed: code === 3 ? null : code === 1
+			};
+			if (code === 0 || code === 3) {
+				readingDiagnostic = true;
+				completed.error = memory.error().message;
+				readingDiagnostic = false;
+			}
+			return completed;
+		});
+	} catch (error) {
+		if (!started) throw error;
+		const message = error?.message || String(error);
+		if (completed) return {
+			...completed,
+			...readingDiagnostic ? { error: message } : { cleanupError: message },
+			refreshRequired: true
+		};
+		return {
+			application: "unknown",
+			changed: null,
+			error: message
+		};
+	}
+}
+var init_native_edit_outcome = __esmMin((() => {}));
+// ../../js/page-settings-edit.mjs
+function ownPageRecord(value, keys) {
+	if (!value || typeof value !== "object" || ![Object.prototype, null].includes(Object.getPrototypeOf(value))) throw Error("InvalidPageSettingsRequest");
+	const descriptors = Object.getOwnPropertyDescriptors(value);
+	if (Reflect.ownKeys(descriptors).length !== keys.length) throw Error("InvalidPageSettingsRequest");
+	const out = {};
+	for (const key of keys) {
+		if (!Object.hasOwn(descriptors, key) || !Object.hasOwn(descriptors[key], "value")) throw Error("InvalidPageSettingsRequest");
+		out[key] = descriptors[key].value;
+	}
+	return out;
+}
+function checkedPageSettingsValues(input) {
+	const v = ownPageRecord(input, [
+		"orientation",
+		"width",
+		"height",
+		"gutter_type",
+		"margin"
+	]);
+	const m = ownPageRecord(v.margin, [
+		"header",
+		"footer",
+		"gutter",
+		"left",
+		"right",
+		"top",
+		"bottom"
+	]);
+	if (!["widely", "narrowly"].includes(v.orientation) || ![
+		"left_only",
+		"left_right",
+		"top_bottom"
+	].includes(v.gutter_type) || ![
+		v.width,
+		v.height,
+		...Object.values(m)
+	].every(uint$39)) throw Error("InvalidPageSettingsGeometry");
+	const [w, h] = v.orientation === "narrowly" ? [v.height, v.width] : [v.width, v.height];
+	if (w <= m.left + m.right + (v.gutter_type === "top_bottom" ? 0 : m.gutter) || h <= m.top + m.bottom + m.header + m.footer + (v.gutter_type === "top_bottom" ? m.gutter : 0)) throw Error("InvalidPageSettingsGeometry");
+	return Object.freeze({
+		...v,
+		margin: Object.freeze(m)
+	});
+}
+function checkedPageSettingsCapabilities(cap) {
+	if (!cap || cap.schemaVersion !== 1 || !["hwpx", "hwp5"].includes(cap.format) || !Array.isArray(cap.sections) || cap.sections.length > 512 || !cap.binding || !uint$39(cap.binding.revision) || typeof cap.binding.session !== "string" || !decimal$1(cap.binding.serial)) throw Error("InvalidPageSettingsCapabilities");
+	const seen = /* @__PURE__ */ new Set();
+	for (const row of cap.sections) {
+		if (!row || !uint$39(row.section) || seen.has(row.section) || row.section >= cap.sections.length) throw Error("InvalidPageSettingsCapabilities");
+		seen.add(row.section);
+		if (row.target === null) {
+			if (!(cap.format === "hwpx" ? [
+				"MissingPageSettings",
+				"AmbiguousPageSettings",
+				"DuplicatePageMargin",
+				"UnsupportedPageSettingsOwner"
+			] : [
+				"MissingPageDefinition",
+				"DuplicatePageDefinition",
+				"MissingSectionDefinition",
+				"DuplicateSectionDefinition",
+				"OrphanSectionRecord",
+				"MisplacedSectionDefinition",
+				"OrphanSectionDefinition",
+				"UnsupportedPageBinding",
+				"UnsupportedPageSettingsOwner"
+			]).includes(row.reason)) throw Error("InvalidPageSettingsCapabilities");
+			continue;
+		}
+		const t = row.target;
+		if (cap.format === "hwp5") {
+			if (row.reason !== null || !t || t.section !== row.section) throw Error("InvalidPageSettingsCapabilities");
+			validateHwp5PageSettings(t.expected);
+			continue;
+		}
+		if (row.reason !== null || !t || t.section !== row.section || ![t.owner_node, t.page_node].every(uint$39) || t.margin_node !== null && !uint$39(t.margin_node) || !t.expected || t.expected.section_ordinal !== row.section || t.expected.element_index !== t.page_node || t.expected.duplicate_margins !== 0) throw Error("InvalidPageSettingsCapabilities");
+	}
+	return cap;
+}
+function copyPageTarget(input, format) {
+	if (format === "hwp5") {
+		const t = ownPageRecord(input, ["section", "expected"]);
+		const expected = ownPageRecord(t.expected, [
+			"source_node",
+			"width",
+			"height",
+			"left",
+			"right",
+			"top",
+			"bottom",
+			"header",
+			"footer",
+			"gutter",
+			"flags",
+			"orientation",
+			"binding",
+			"extra_bytes"
+		]);
+		if (!uint$39(t.section)) throw Error("InvalidPageSettingsTargets");
+		validateHwp5PageSettings(expected);
+		return {
+			section: t.section,
+			expected
+		};
+	}
+	const t = ownPageRecord(input, [
+		"section",
+		"owner_node",
+		"page_node",
+		"margin_node",
+		"expected"
+	]);
+	const e = ownPageRecord(t.expected, [
+		"section_ordinal",
+		"element_index",
+		"orientation",
+		"width",
+		"height",
+		"gutter_type",
+		"margin",
+		"duplicate_margins",
+		"hide_first_empty_line",
+		"visibility_count"
+	]);
+	if (e.margin !== null) e.margin = ownPageRecord(e.margin, [
+		"header",
+		"footer",
+		"gutter",
+		"left",
+		"right",
+		"top",
+		"bottom"
+	]);
+	decodePageSettings(new TextEncoder().encode(JSON.stringify([e])));
+	if (![
+		t.section,
+		t.owner_node,
+		t.page_node
+	].every(uint$39) || t.margin_node !== null && !uint$39(t.margin_node)) throw Error("InvalidPageSettingsTargets");
+	return {
+		...t,
+		expected: e
+	};
+}
+function createPageSettingsEditApi({ wasm, memory, check, format = "hwpx" }) {
+	if (!["hwpx", "hwp5"].includes(format)) throw Error("InvalidPageSettingsFormat");
+	const prefix = format + "_edit_";
+	const scope = "pg-" + (globalThis.crypto?.randomUUID?.() ?? String(++scopes)) + ":";
+	const supported = [prefix + "page_settings_capabilities", prefix + "write_page_settings"].every((k) => typeof wasm[k] === "function");
+	function capabilities() {
+		check();
+		if (!supported) throw Error("PageSettingsWriteUnavailable");
+		try {
+			if (wasm[prefix + "page_settings_capabilities"]() !== 1) throw memory.error();
+			const len = wasm[prefix + "output_len"]();
+			if (len <= 0 || len > 524288) throw Error("InvalidPageSettingsCapabilities");
+			const cap = checkedPageSettingsCapabilities(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(memory.copy(wasm[prefix + "output_ptr"](), len))));
+			if (cap.format !== format) throw Error("InvalidPageSettingsCapabilities");
+			if (!/^s[1-9][0-9]{0,19}$/.test(cap.binding.session)) throw Error("InvalidPageSettingsCapabilities");
+			return {
+				...cap,
+				binding: {
+					...cap.binding,
+					session: scope + cap.binding.session
+				}
+			};
+		} finally {
+			wasm[prefix + "output_free"]();
+		}
+	}
+	return {
+		supportsPageSettingsWrite() {
+			check();
+			return supported;
+		},
+		pageSettingsCapabilities: capabilities,
+		writePageSettings(input) {
+			check();
+			if (!supported) throw Error("PageSettingsWriteUnavailable");
+			const r = ownPageRecord(input, [
+				"binding",
+				"scope",
+				"targets",
+				"values"
+			]);
+			const b = ownPageRecord(r.binding, [
+				"session",
+				"revision",
+				"serial"
+			]);
+			const values = checkedPageSettingsValues(r.values);
+			const current = capabilities();
+			if (b.session !== current.binding.session || b.serial !== current.binding.serial || b.revision !== current.binding.revision) return {
+				nativeCode: 0,
+				application: "unapplied",
+				changed: false,
+				error: "StalePageSettingsBinding"
+			};
+			if (!["section", "document"].includes(r.scope) || !Array.isArray(r.targets) || r.targets.length === 0 || r.targets.length > 512) throw Error("InvalidPageSettingsTargets");
+			const targets = [];
+			for (let i = 0; i < r.targets.length; i++) {
+				const d = Object.getOwnPropertyDescriptor(r.targets, String(i));
+				if (!d || !Object.hasOwn(d, "value")) throw Error("InvalidPageSettingsTargets");
+				targets.push(copyPageTarget(d.value, format));
+			}
+			const request = {
+				...r,
+				targets,
+				values,
+				binding: {
+					...b,
+					session: b.session.slice(scope.length)
+				}
+			};
+			const bytes = new TextEncoder().encode(JSON.stringify(request));
+			if (bytes.length > 524288) throw Error("LimitExceeded");
+			return applyNativeEdit(memory, bytes, (ptr, size) => wasm[prefix + "write_page_settings"](ptr, size), "InvalidPageSettingsCompletion");
+		}
+	};
+}
+var scopes, uint$39, decimal$1;
+var init_page_settings_edit = __esmMin((() => {
+	init_hwp5_page_settings();
+	init_hwpx_page_settings();
+	init_native_edit_outcome();
+	scopes = 0n;
+	uint$39 = (n) => Number.isInteger(n) && n >= 0 && n <= 4294967295 && !Object.is(n, -0);
+	decimal$1 = (s) => typeof s === "string" && /^(0|[1-9][0-9]{0,19})$/.test(s) && BigInt(s) <= 18446744073709551615n;
 })), CREATED_TABLE_GRID_ACTION, EXPERIMENTAL_EDITOR_FUNCTIONS, HWPX_DOCUMENT_INSERT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_MERGE_FUNCTIONS, HWP5_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, HWPX_SOURCE_TABLE_CELL_SPLIT_FUNCTIONS, REQUIRED_FUNCTIONS;
 var init_abi_schema = __esmMin((() => {
 	CREATED_TABLE_GRID_ACTION = Object.freeze({
@@ -1567,51 +2003,6 @@ var init_source_table_cell_split_capability = __esmMin((() => {
 		})
 	});
 }));
-// ../../js/native-edit-outcome.mjs
-function applyNativeEdit(memory, bytes, invoke, invalidResult) {
-	let started = false, readingDiagnostic = false, completed;
-	try {
-		return memory.withBytes(bytes, (ptr, size) => {
-			started = true;
-			const code = invoke(ptr, size);
-			if (![
-				0,
-				1,
-				2,
-				3
-			].includes(code)) return completed = {
-				application: "unknown",
-				changed: null,
-				error: invalidResult
-			};
-			completed = {
-				nativeCode: code,
-				application: code === 1 ? "applied" : code === 3 ? "unknown" : "unapplied",
-				changed: code === 3 ? null : code === 1
-			};
-			if (code === 0 || code === 3) {
-				readingDiagnostic = true;
-				completed.error = memory.error().message;
-				readingDiagnostic = false;
-			}
-			return completed;
-		});
-	} catch (error) {
-		if (!started) throw error;
-		const message = error?.message || String(error);
-		if (completed) return {
-			...completed,
-			...readingDiagnostic ? { error: message } : { cleanupError: message },
-			refreshRequired: true
-		};
-		return {
-			application: "unknown",
-			changed: null,
-			error: message
-		};
-	}
-}
-var init_native_edit_outcome = __esmMin((() => {}));
 // ../../js/source-table-cell-merge.mjs
 function ownRecord$1(input, keys) {
 	if (!input || typeof input !== "object" || ![null, Object.prototype].includes(Object.getPrototypeOf(input))) throw new TypeError("InvalidSourceTableMergeRequest");
@@ -4653,39 +5044,6 @@ function decodeParagraphShapes(bytes) {
 	});
 }
 var init_paragraph_shapes_wire = __esmMin((() => {}));
-// ../../js/hwp5-page-settings.mjs
-/** Source declaration only; no physical page number or current paragraph flow. */
-function decodeHwp5PageSettings(bytes) {
-	return validateHwp5PageSettings(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
-}
-function validateHwp5PageSettings(row) {
-	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	if (!row || ![
-		"source_node",
-		"width",
-		"height",
-		"left",
-		"right",
-		"top",
-		"bottom",
-		"header",
-		"footer",
-		"gutter",
-		"flags",
-		"extra_bytes"
-	].every((name) => uint(row[name])) || !["narrowly", "widely"].includes(row.orientation) || ![
-		"one_side",
-		"facing",
-		"top"
-	].includes(row.binding)) throw new Error("InvalidHwp5PageSettings");
-	if (row.orientation !== (row.flags & 1 ? "widely" : "narrowly") || row.binding !== [
-		"one_side",
-		"facing",
-		"top"
-	][row.flags >>> 1 & 3]) throw new Error("InvalidHwp5PageSettings");
-	return row;
-}
-var init_hwp5_page_settings = __esmMin((() => {}));
 // ../../js/hwp5-section-settings.mjs
 function decodeHwp5SectionSettings(bytes) {
 	const row = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -5965,6 +6323,12 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 			prefix: "hwp5_edit",
 			unavailable: "Hwp5SourceTableGridAbiUnavailable"
 		}),
+		...createPageSettingsEditApi({
+			wasm,
+			memory,
+			check,
+			format: "hwp5"
+		}),
 		...createHwp5SourceTableCellSplitApi({
 			wasm,
 			memory,
@@ -6953,6 +7317,7 @@ async function createExperimentalHwp5Editor(source, input, { distribution = fals
 }
 var encoder$6, decoder, u32$2;
 var init_hwp5_editor = __esmMin((() => {
+	init_page_settings_edit();
 	init_hwp5_source_table_cell_split();
 	init_hwp5_named_fields();
 	init_cell_diagonal_command();
@@ -9910,134 +10275,6 @@ var init_hwpx_drawing_stroke_source = __esmMin((() => {
 	];
 	uint$14 = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
 }));
-// ../../js/hwpx-page-settings.mjs
-/** Source observations, not a page layout or default-value resolver. */
-function validateColumn(column) {
-	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	if (!column || !uint(column.declaration_node) || !uint(column.owner_node) || ![column.count, column.gap].every((value) => value === null || uint(value)) || ![
-		null,
-		true,
-		false
-	].includes(column.same_size) || ![
-		null,
-		"left",
-		"right",
-		"mirror"
-	].includes(column.direction) || ![
-		null,
-		"newspaper",
-		"balanced_newspaper",
-		"parallel"
-	].includes(column.kind) || typeof column.ambiguous !== "boolean") throw new Error("InvalidParagraphFlow");
-	if (column.sizes !== void 0 && (!Array.isArray(column.sizes) || column.sizes.some((size) => !size || ![size.width, size.gap].every((value) => value === null || uint(value))))) throw new Error("InvalidParagraphFlow");
-}
-function decodeParagraphFlow(bytes) {
-	const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	if (!Array.isArray(rows)) throw new Error("InvalidParagraphFlow");
-	for (const row of rows) {
-		if (!row) throw new Error("InvalidParagraphFlow");
-		if (row.empty_line_eligible !== void 0 && typeof row.empty_line_eligible !== "boolean") throw new Error("InvalidParagraphFlow");
-		if (row.note_context !== void 0 && row.note_context !== null) {
-			const note = row.note_context;
-			if (![note.note_node, note.list_node].every((value) => Number.isInteger(value) && value >= 0 && value <= 4294967295) || !["footnote", "endnote"].includes(note.kind) || row.host !== note.kind || row.top_level !== false) throw new Error("InvalidParagraphFlow");
-		}
-		if (row.single_column !== void 0 && typeof row.single_column !== "boolean") throw new Error("InvalidParagraphFlow");
-		if (row.host !== void 0 && ![
-			"body",
-			"header",
-			"footer",
-			"footnote",
-			"endnote",
-			"drawing",
-			"other"
-		].includes(row.host)) throw new Error("InvalidParagraphFlow");
-		if (row.column_declaration !== void 0 && row.column_declaration !== null) validateColumn(row.column_declaration);
-		if (row.column_start_declaration !== void 0 && row.column_start_declaration !== null) validateColumn(row.column_start_declaration);
-		if (row.column_changes !== void 0) {
-			if (!Array.isArray(row.column_changes)) throw new Error("InvalidParagraphFlow");
-			let previous = 0;
-			for (const change of row.column_changes) {
-				if (!change || !Number.isInteger(change.unit) || change.unit < previous || change.unit > 4294967295) throw new Error("InvalidParagraphFlow");
-				validateColumn(change.declaration);
-				previous = change.unit;
-			}
-		}
-		if (row.page_number_source !== void 0 && row.page_number_source !== null) {
-			const source = row.page_number_source;
-			if (typeof source.supported !== "boolean" || source.start_page !== null && (!Number.isInteger(source.start_page) || source.start_page < 1 || source.start_page > 4294967295) || ![
-				null,
-				true,
-				false
-			].includes(source.hide_first_header) || ![
-				null,
-				true,
-				false
-			].includes(source.hide_first_footer)) throw new Error("InvalidParagraphFlow");
-		}
-		if (row.page_area !== void 0 && row.page_area !== null) {
-			const area = row.page_area;
-			const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-			if (!area || !uint(area.owner_node) || !uint(area.list_node) || ![area.width, area.height].every((value) => value === null || uint(value)) || ![
-				null,
-				"both",
-				"odd",
-				"even"
-			].includes(area.apply) || ![
-				null,
-				"top",
-				"center",
-				"bottom"
-			].includes(area.vertical_alignment)) throw new Error("InvalidParagraphFlow");
-		}
-		if (!row || !Number.isInteger(row.paragraph) || row.paragraph <= 0 || row.paragraph > 4294967295 || !Number.isInteger(row.source_node) || row.source_node < 0 || row.source_node > 4294967295 || typeof row.top_level !== "boolean" || ![
-			null,
-			true,
-			false
-		].includes(row.page_break) || ![
-			null,
-			true,
-			false
-		].includes(row.column_break)) throw new Error("InvalidParagraphFlow");
-	}
-	if (rows.some((row, i) => i > 0 && row.paragraph !== rows[i - 1].paragraph + 1)) throw new Error("InvalidParagraphFlow");
-	return rows;
-}
-function decodePageSettings(bytes) {
-	const rows = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-	const uint = (value) => Number.isInteger(value) && value >= 0 && value <= 4294967295;
-	const optional = (value) => value === null || uint(value);
-	if (!Array.isArray(rows)) throw new Error("InvalidPageSettings");
-	for (const row of rows) {
-		if (!row || !uint(row.section_ordinal) || !uint(row.element_index) || !uint(row.duplicate_margins) || !optional(row.width) || !optional(row.height) || ![
-			null,
-			"widely",
-			"narrowly"
-		].includes(row.orientation) || ![
-			null,
-			"left_only",
-			"left_right",
-			"top_bottom"
-		].includes(row.gutter_type)) throw new Error("InvalidPageSettings");
-		if (row.hide_first_empty_line !== void 0 && ![
-			null,
-			true,
-			false
-		].includes(row.hide_first_empty_line)) throw new Error("InvalidPageSettings");
-		if (Object.hasOwn(row, "hide_first_empty_line") !== Object.hasOwn(row, "visibility_count")) throw new Error("InvalidPageSettings");
-		if (row.visibility_count !== void 0 && (!uint(row.visibility_count) || row.visibility_count !== 1 && row.hide_first_empty_line != null)) throw new Error("InvalidPageSettings");
-		if (row.margin !== null && (!row.margin || ![
-			"header",
-			"footer",
-			"gutter",
-			"left",
-			"right",
-			"top",
-			"bottom"
-		].every((name) => optional(row.margin[name])))) throw new Error("InvalidPageSettings");
-	}
-	return rows;
-}
-var init_hwpx_page_settings = __esmMin((() => {}));
 // ../../js/hwpx-note-shapes.mjs
 function decodeNoteShapes(bytes) {
 	const report = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
@@ -10440,6 +10677,11 @@ async function createHwpxEditor(source) {
 		check: ready
 	});
 	return {
+		...createPageSettingsEditApi({
+			wasm,
+			memory,
+			check: ready
+		}),
 		...createCreatedTableGridApi({
 			wasm,
 			memory,
@@ -12706,6 +12948,7 @@ async function createHwpxEditor(source) {
 	};
 }
 var init_hwpx_editor = __esmMin((() => {
+	init_page_settings_edit();
 	init_named_field_parameters();
 	init_paragraph_bullet_definition_write();
 	init_paragraph_bullet_definitions();
@@ -13931,7 +14174,7 @@ function byteInput(value, name) {
 	return Uint8Array.from(value);
 }
 function captureTarget$1(target) {
-	if (!record$14(target)) throw new TypeError("InvalidTarget");
+	if (!record$15(target)) throw new TypeError("InvalidTarget");
 	const { section, paragraph } = target;
 	if (typeof section !== "number" || !Number.isInteger(section) || section < 0 || section > 4294967295 || typeof paragraph !== "number" || !Number.isInteger(paragraph) || paragraph < 0 || paragraph > 4294967295) throw new RangeError("InvalidTarget");
 	return {
@@ -13949,7 +14192,7 @@ function outputBytes(value) {
 	return value;
 }
 async function openDocument(options = {}) {
-	if (!record$14(options)) throw new TypeError("InvalidDocumentOpenOptions");
+	if (!record$15(options)) throw new TypeError("InvalidDocumentOpenOptions");
 	const { bytes, wasm, expectedSha256 } = options;
 	const input = byteInput(bytes, "Document");
 	if (expectedSha256 !== void 0 && (typeof expectedSha256 !== "string" || !/^[a-f0-9]{64}$/.test(expectedSha256))) throw new TypeError("InvalidExpectedSha256");
@@ -14087,7 +14330,7 @@ async function read(options) {
 	}
 }
 async function edit(options) {
-	if (!record$14(options)) throw new TypeError("InvalidEditOptions");
+	if (!record$15(options)) throw new TypeError("InvalidEditOptions");
 	const { bytes, wasm, target, replace, with: replacement, allowStaleLayout = false } = options;
 	const capturedTarget = captureTarget$1(target);
 	const document = await openDocument({
@@ -14120,7 +14363,7 @@ async function edit(options) {
 		document.close();
 	}
 }
-var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$14;
+var MAX_INPUT_BYTES$1, MAX_OUTPUT_BYTES$1, wasmModules, record$15;
 var init_engine = __esmMin((() => {
 	init_document_format();
 	init_hwp5_editor();
@@ -14130,7 +14373,7 @@ var init_engine = __esmMin((() => {
 	MAX_INPUT_BYTES$1 = 67108864;
 	MAX_OUTPUT_BYTES$1 = 134217728;
 	wasmModules = createWasmModuleCache();
-	record$14 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$15 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/render-content.ts
 function simpleCells(table, allowNested = false) {
@@ -14614,7 +14857,7 @@ var init_picture_replacement_input = __esmMin((() => {
 }));
 // src/table-reference-resolution.ts
 function field$2(value, key, optional = false) {
-	if (!record$13(value)) throw new TypeError("InvalidTableDeletionModel");
+	if (!record$14(value)) throw new TypeError("InvalidTableDeletionModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableDeletionModel");
@@ -14659,7 +14902,7 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	let selectedObservation;
 	while (stack.length) {
 		const entry = stack.pop();
-		if (!record$13(entry.value) || visited.has(entry.value) || entry.depth > 64) throw new Error("InvalidTableDeletionModel");
+		if (!record$14(entry.value) || visited.has(entry.value) || entry.depth > 64) throw new Error("InvalidTableDeletionModel");
 		visited.add(entry.value);
 		const id = field$2(entry.value, "id"), type = field$2(entry.value, "type");
 		if (typeof id !== "string" || !id || identities.has(id) || typeof type !== "string" || ![
@@ -14701,10 +14944,10 @@ function resolveTableReference(model, reference, expected, includeDimensions = f
 	};
 	return selected;
 }
-var record$13, uint$12;
+var record$14, uint$12;
 var init_table_reference_resolution = __esmMin((() => {
 	init_object_reference();
-	record$13 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$14 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$12 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/table-file-grid.mjs
@@ -14823,14 +15066,14 @@ var init_table_file_grid = __esmMin((() => {
 // src/edit-table-grid.ts
 var edit_table_grid_exports = /* @__PURE__ */ __exportAll({ editDocumentTableGrid: () => editDocumentTableGrid });
 function field$1(value, key, optional = false) {
-	if (!record$12(value)) throw new TypeError("InvalidTableGridModel");
+	if (!record$13(value)) throw new TypeError("InvalidTableGridModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableGridModel");
 	return descriptor.value;
 }
 async function editDocumentTableGrid(input, dependencies = {}) {
-	if (!record$12(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
+	if (!record$13(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
 		"bytes",
 		"wasm",
 		"reference",
@@ -14882,7 +15125,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 		});
 		own(document);
 		const sectionCount = field$1(document, "sectionCount"), sdk = field$1(document, "sdk");
-		if (field$1(document, "format") !== format || field$1(document, "sourceSha256") !== sourceSha256 || !uint$10(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$12(sdk)) throw new Error("InvalidTableGridDocument");
+		if (field$1(document, "format") !== format || field$1(document, "sourceSha256") !== sourceSha256 || !uint$10(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$13(sdk)) throw new Error("InvalidTableGridDocument");
 		const selected = resolveTableReference(await observe({
 			format,
 			sourceSha256,
@@ -14931,7 +15174,7 @@ async function editDocumentTableGrid(input, dependencies = {}) {
 	if (!result) throw new Error("InvalidTableGridResult");
 	return result;
 }
-var record$12, uint$10;
+var record$13, uint$10;
 var init_edit_table_grid = __esmMin((() => {
 	init_table_reference_resolution();
 	init_document_format();
@@ -14940,7 +15183,7 @@ var init_edit_table_grid = __esmMin((() => {
 	init_engine();
 	init_document_model();
 	init_object_reference();
-	record$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$13 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$10 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // src/grid-file-host.ts
@@ -14972,7 +15215,7 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 		expectedColumns: options.expectedColumns,
 		...options.layout === void 0 ? {} : { layout: options.layout }
 	});
-	if (!record$11(value)) throw new Error("InvalidFileTransformResult");
+	if (!record$12(value)) throw new Error("InvalidFileTransformResult");
 	const { format: returnedFormat, bytes, sourceSha256, layoutRequiresReflow, previewStale } = value;
 	if (returnedFormat !== format || sourceSha256 !== source.sha256 || layoutRequiresReflow !== true || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864 || typeof SharedArrayBuffer !== "undefined" && bytes.buffer instanceof SharedArrayBuffer) throw new Error("InvalidFileTransformResult");
 	const output = copyFileTransformInput(bytes, MAX_DOCUMENT_BYTES$1, "Output");
@@ -14985,12 +15228,12 @@ async function runGridFileCommand(options, { files, io, loadWasm, dependencies =
 	await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + line("layoutRequiresReflow", true) + line("previewStale", true) + warningLines(receipt.warnings));
 	return 0;
 }
-var record$11;
+var record$12;
 var init_grid_file_host = __esmMin((() => {
 	init_document_format();
 	init_picture_replacement_input();
 	init_object_reference();
-	record$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$12 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../document/src/bytes.ts
 function copyDocumentBytes(value, limit, name) {
@@ -15192,7 +15435,7 @@ function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits 
 		if (sites.length > budget.maxImages - rows.size) fail("ImageCountLimitExceeded");
 		if (format === "hwp5") validateHwp5PictureSources(sites);
 		for (const row of sites) {
-			if (!record$10(row)) fail("InvalidImageIdentity");
+			if (!record$11(row)) fail("InvalidImageIdentity");
 			const node = format === "hwp5" ? row.component_node : row.pictureNode;
 			if (!uint$9(node)) fail("InvalidImageIdentity");
 			if (format === "hwpx" && (typeof row.state !== "string" || !siteStates.has(row.state) || !(row.paragraph === null || uint$9(row.paragraph) && row.paragraph > 0) || !(row.anchorUnit === null || uint$9(row.anchorUnit)))) fail("InvalidImageInventory");
@@ -15324,7 +15567,7 @@ function createDocumentImages({ sdk, format, sourceSha256, sectionCount, limits 
 		}
 	};
 }
-var DOCUMENT_IMAGE_LIMITS, uint$9, digest$2, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$10, errorMessage, invoke$1;
+var DOCUMENT_IMAGE_LIMITS, uint$9, digest$2, siteStates, unsupported$1, DocumentImageError, pngDepths, isRows, record$11, errorMessage, invoke$1;
 var init_document_images$1 = __esmMin((() => {
 	init_hwp5_picture_sources();
 	init_object_reference$1();
@@ -15386,7 +15629,7 @@ var init_document_images$1 = __esmMin((() => {
 		6: [8, 16]
 	};
 	isRows = (value) => Array.isArray(value);
-	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$11 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	errorMessage = (error) => error !== null && typeof error === "object" && "message" in error && typeof error.message === "string" ? error.message : void 0;
 	invoke$1 = (sdk, method, args) => {
 		const fn = Reflect.get(sdk, method);
@@ -16142,14 +16385,14 @@ var init_table_file_deletion = __esmMin((() => {
 // src/delete-table.ts
 var delete_table_exports = /* @__PURE__ */ __exportAll({ deleteDocumentTable: () => deleteDocumentTable });
 function field(value, key, optional = false) {
-	if (!record$9(value)) throw new TypeError("InvalidTableDeletionModel");
+	if (!record$10(value)) throw new TypeError("InvalidTableDeletionModel");
 	const descriptor = Object.getOwnPropertyDescriptor(value, key);
 	if (!descriptor && optional) return void 0;
 	if (!descriptor || !Object.hasOwn(descriptor, "value")) throw new TypeError("InvalidTableDeletionModel");
 	return descriptor.value;
 }
 async function deleteDocumentTable(input, dependencies = {}) {
-	if (!record$9(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
+	if (!record$10(input) || Reflect.ownKeys(input).some((key) => typeof key !== "string" || ![
 		"bytes",
 		"wasm",
 		"reference"
@@ -16182,7 +16425,7 @@ async function deleteDocumentTable(input, dependencies = {}) {
 		});
 		own(document);
 		const sectionCount = field(document, "sectionCount"), sdk = field(document, "sdk");
-		if (field(document, "format") !== format || field(document, "sourceSha256") !== sourceSha256 || !uint$6(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$9(sdk)) throw new Error("InvalidTableDeletionDocument");
+		if (field(document, "format") !== format || field(document, "sourceSha256") !== sourceSha256 || !uint$6(sectionCount) || sectionCount < 1 || sectionCount > 4096 || target.section >= sectionCount || !record$10(sdk)) throw new Error("InvalidTableDeletionDocument");
 		const selected = resolveTableReference(await observe({
 			format,
 			sourceSha256,
@@ -16225,7 +16468,7 @@ async function deleteDocumentTable(input, dependencies = {}) {
 	if (!result) throw new Error("InvalidTableDeletionResult");
 	return result;
 }
-var record$9, uint$6;
+var record$10, uint$6;
 var init_delete_table = __esmMin((() => {
 	init_table_reference_resolution();
 	init_document_format();
@@ -16234,7 +16477,7 @@ var init_delete_table = __esmMin((() => {
 	init_engine();
 	init_document_model();
 	init_object_reference();
-	record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$10 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	uint$6 = (value) => typeof value === "number" && Number.isInteger(value) && !Object.is(value, -0) && value >= 0 && value <= 4294967295;
 }));
 // ../../js/image-file-insertion.mjs
@@ -16490,7 +16733,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 			wasm,
 			embedImages: options.embedImages
 		});
-		if (!record$8(result)) throw new Error("InvalidHTMLConversionResult");
+		if (!record$9(result)) throw new Error("InvalidHTMLConversionResult");
 		const { html, sourceSha256, semanticOnly, warnings } = result;
 		const warningCount = Array.isArray(warnings) ? warnings.length : void 0;
 		if (result.format !== format || sourceSha256 !== source.sha256 || semanticOnly !== true || typeof html !== "string" || !html.isWellFormed() || html.length === 0 || html.length > 33554432 || !Array.isArray(warnings) || typeof warningCount !== "number" || !Number.isInteger(warningCount) || warningCount < 0 || warningCount > 4096) throw new Error("InvalidHTMLConversionResult");
@@ -16532,7 +16775,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 			height: options.height
 		});
 	}
-	if (!record$8(value)) throw new Error("InvalidFileTransformResult");
+	if (!record$9(value)) throw new Error("InvalidFileTransformResult");
 	const { bytes, sourceSha256, layoutRequiresReflow, previewStale } = value;
 	if (value.format !== format || sourceSha256 !== source.sha256 || layoutRequiresReflow !== true || previewStale !== true || !(bytes instanceof Uint8Array) || bytes.byteLength === 0 || bytes.byteLength > 67108864 || typeof SharedArrayBuffer !== "undefined" && bytes.buffer instanceof SharedArrayBuffer || image !== void 0 && value.imageSha256 !== image.sha256) throw new Error("InvalidFileTransformResult");
 	const output = copyFileTransformInput(bytes, MAX_DOCUMENT_BYTES$1, "Output");
@@ -16545,7 +16788,7 @@ async function runStructuralCommand(options, { files, io, loadWasm, dependencies
 	await io.stdout.write(line("output", receipt.path) + line("format", format) + line("sha256", receipt.sha256) + line("sourceSHA256", sourceSha256) + (image ? line("imageSHA256", image.sha256) : "") + line("layoutRequiresReflow", true) + line("previewStale", true) + warningLines(receipt.warnings));
 	return 0;
 }
-var encoder$3, record$8;
+var encoder$3, record$9;
 var init_structural_host = __esmMin((() => {
 	init_document_format();
 	init_picture_replacement_input();
@@ -16553,7 +16796,7 @@ var init_structural_host = __esmMin((() => {
 	init_object_reference();
 	init_host_output();
 	encoder$3 = new TextEncoder();
-	record$8 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$9 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 }));
 // ../../web/preview/hwp5-current-body-reference.mjs
 function validateHwp5CurrentBodyReference(editor, message, referenceError, ownerError, sections) {
@@ -16605,7 +16848,7 @@ function validateHwp5CurrentBodyReference(editor, message, referenceError, owner
 var init_hwp5_current_body_reference = __esmMin((() => {}));
 // src/mutations/character-extensions.ts
 function checkedCharacterExtensions(value) {
-	if (!record$7(value) || Object.keys(value).some((k) => ![
+	if (!record$8(value) || Object.keys(value).some((k) => ![
 		"size",
 		"bold",
 		"italic",
@@ -16621,7 +16864,7 @@ function checkedCharacterExtensions(value) {
 	if (value.underline != null) characterUnderlineArg(value.underline);
 	if (value.textColor != null) characterColorArg(value.textColor);
 	if (value.fontName != null) {
-		if (!record$7(value.fontName) || Object.keys(value.fontName).sort().join() !== "language,name") throw new TypeError("InvalidFontName");
+		if (!record$8(value.fontName) || Object.keys(value.fontName).sort().join() !== "language,name") throw new TypeError("InvalidFontName");
 		characterFontNameArgs(value.fontName.language, value.fontName.name);
 	}
 	return value;
@@ -16880,14 +17123,14 @@ function prepareCharacterExtensions(document, operations) {
 		}
 	};
 }
-var record$7, hasCharacterExtensions, same;
+var record$8, hasCharacterExtensions, same;
 var init_character_extensions = __esmMin((() => {
 	init_character_property_args();
 	init_character_color_args();
 	init_character_underline_args();
 	init_character_font_name_args();
 	init_hwp5_current_body_reference();
-	record$7 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+	record$8 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 	hasCharacterExtensions = (operation) => operation.kind === "character-properties" && [
 		"underline",
 		"textColor",
@@ -17075,7 +17318,7 @@ function capture(value, budget, active = /* @__PURE__ */ new Set(), depth = 0) {
 	return Object.freeze(output);
 }
 function fields(value, required, optional = []) {
-	if (!record$6(value) || required.some((key) => !Object.hasOwn(value, key)) || Object.keys(value).some((key) => !required.includes(key) && !optional.includes(key))) throw new TypeError("InvalidOperationFields");
+	if (!record$7(value) || required.some((key) => !Object.hasOwn(value, key)) || Object.keys(value).some((key) => !required.includes(key) && !optional.includes(key))) throw new TypeError("InvalidOperationFields");
 }
 function uint$4(value) {
 	if (typeof value !== "number" || !Number.isInteger(value) || Object.is(value, -0) || value < 0 || value > 4294967295) throw new RangeError("InvalidOperationInteger");
@@ -17104,12 +17347,17 @@ function validateDocumentOperations(input) {
 	if (!Array.isArray(captured)) throw new TypeError("InvalidOperationData");
 	const operations = captured;
 	for (const operation of operations) {
-		if (!record$6(operation) || typeof operation.kind !== "string") throw new TypeError("InvalidOperationKind");
+		if (!record$7(operation) || typeof operation.kind !== "string") throw new TypeError("InvalidOperationKind");
 		if (operation.coordinates !== "current-transaction") throw new TypeError("OperationCoordinatesRequired");
 		if (!Object.hasOwn(DOCUMENT_OPERATION_SPECS, operation.kind)) throw new Error(`UnsupportedDocumentOperation:${operation.kind}`);
 		const shape = DOCUMENT_OPERATION_SPECS[operation.kind];
 		fields(operation, shape.required, shape.optional);
 		switch (operation.kind) {
+			case "page-settings":
+				if (operation.scope === "section") uint$4(operation.section);
+				else if (operation.scope !== "document" || Object.hasOwn(operation, "section")) throw new TypeError("InvalidPageSettingsScope");
+				checkedPageSettingsValues(operation.values);
+				break;
 			case "source-table-cell-split": {
 				if (parseObjectReference(operation.reference).kind !== "table") throw new TypeError("ExpectedTableReference");
 				for (const key of [
@@ -17258,9 +17506,10 @@ function validateDocumentOperations(input) {
 	}
 	return operations;
 }
-var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$6, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
+var MAX_OPERATIONS, MAX_NODES, MAX_UNITS, record$7, encoder$2, common, paragraph, textRange, spec, DOCUMENT_OPERATION_SPECS;
 var init_validate = __esmMin((() => {
 	init_character_extensions();
+	init_page_settings_edit();
 	init_object_reference();
 	init_paragraph_bullet_definition_write();
 	init_created_table_grid();
@@ -17274,7 +17523,7 @@ var init_validate = __esmMin((() => {
 	MAX_OPERATIONS = 256;
 	MAX_NODES = 1e5;
 	MAX_UNITS = 4194304;
-	record$6 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
+	record$7 = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 	encoder$2 = new TextEncoder();
 	common = ["kind", "coordinates"];
 	paragraph = [
@@ -17293,6 +17542,11 @@ var init_validate = __esmMin((() => {
 		optional: Object.freeze(optional)
 	});
 	DOCUMENT_OPERATION_SPECS = Object.freeze({
+		"page-settings": spec([
+			...common,
+			"scope",
+			"values"
+		], ["section"]),
 		"source-table-cell-split": spec([
 			...common,
 			"reference",
@@ -17356,6 +17610,50 @@ var init_validate = __esmMin((() => {
 			"resources"
 		], ["expectedText", "cellTexts"])
 	});
+}));
+// src/mutations/page-settings.ts
+function method$1(document, name) {
+	const fn = Reflect.get(document.sdk, name);
+	if (typeof fn !== "function") throw new Error("PageSettingsWriteUnavailable");
+	return (...args) => Reflect.apply(fn, document.sdk, args);
+}
+function requirePageSettingsWrite(document) {
+	if (!["hwpx", "hwp5"].includes(document.format)) throw new Error("PageSettingsWriteUnavailable");
+	for (const name of ["pageSettingsCapabilities", "writePageSettings"]) method$1(document, name);
+	if (method$1(document, "supportsPageSettingsWrite")() !== true) throw new Error("PageSettingsWriteUnavailable");
+}
+function request(document, operation) {
+	const cap = checkedPageSettingsCapabilities(method$1(document, "pageSettingsCapabilities")());
+	if (cap.format !== document.format || cap.sections.length !== document.sectionCount) throw new Error("InvalidPageSettingsCapabilities");
+	const seen = /* @__PURE__ */ new Set();
+	for (const row of cap.sections) {
+		if (!record$6(row) || !Number.isInteger(row.section) || typeof row.section !== "number" || row.section < 0 || row.section >= document.sectionCount || seen.has(row.section)) throw new Error("InvalidPageSettingsCapabilities");
+		seen.add(row.section);
+	}
+	const rows = operation.scope === "document" ? cap.sections : cap.sections.filter((row) => row.section === operation.section);
+	if (rows.length === 0) throw new Error("InvalidPageSettingsTargets");
+	for (const row of rows) {
+		if (row.target === null) throw new Error(String(row.reason ?? "InvalidPageSettingsTargets"));
+		if (!record$6(row.target) || row.target.section !== row.section || row.reason !== null) throw new Error("InvalidPageSettingsCapabilities");
+	}
+	return {
+		binding: cap.binding,
+		scope: operation.scope,
+		targets: rows.map((row) => row.target),
+		values: operation.values
+	};
+}
+function admitPageSettings(document, operation) {
+	request(document, operation);
+}
+function applyPageSettings(document, operation) {
+	const result = method$1(document, "writePageSettings")(request(document, operation));
+	if (!record$6(result) || result.refreshRequired !== void 0 || result.cleanupError !== void 0 || result.error !== void 0 || !(result.nativeCode === 1 && result.application === "applied" && result.changed === true || result.nativeCode === 2 && result.application === "unapplied" && result.changed === false)) throw new Error(record$6(result) && typeof result.error === "string" ? result.error : "UnconfirmedPageSettingsCompletion");
+}
+var record$6;
+var init_page_settings = __esmMin((() => {
+	init_page_settings_edit();
+	record$6 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 }));
 // ../../web/preview/hwp5-table-creation-command.mjs
 function hwp5TableCreationRequest(message) {
@@ -17430,6 +17728,7 @@ function requireInitialCellTexts(document) {
 	if (typeof supports !== "function" || Reflect.apply(supports, document.sdk, []) !== true) throw new Error("CreatedCellTextUnavailable");
 }
 function targets(operation) {
+	if (operation.kind === "page-settings") return operation.scope === "section" ? [{ section: operation.section }] : [];
 	if (operation.kind === "source-table-cell-split") return [{ section: parseObjectReference(operation.reference).section }];
 	if (operation.kind === "cell-sizes") return operation.cells;
 	if (operation.kind === "cell-styles") return [
@@ -17449,6 +17748,7 @@ function prepareOperationSession(document, operations) {
 	const protectedSections = /* @__PURE__ */ new Set();
 	for (const operation of operations) {
 		if (hasCharacterExtensions(operation)) requireCharacterExtensions(document, operation);
+		if (operation.kind === "page-settings") requirePageSettingsWrite(document);
 		if (operation.kind === "source-table-cell-split" && (typeof document.sdk.supportsSourceTableCellSplit !== "function" || !document.sdk.supportsSourceTableCellSplit())) throw new Error(document.format === "hwp5" ? "Hwp5SourceTableCellSplitAbiUnavailable" : "HwpxSourceTableCellSplitAbiUnavailable");
 		if (operation.kind === "paragraph-bullet-definition") {
 			const inventory = document.sdk.paragraphBulletDefinitions();
@@ -17471,7 +17771,8 @@ function prepareOperationSession(document, operations) {
 		}
 		if ((Object.hasOwn(operation, "expectedText") || Object.hasOwn(operation, "expectedRangeText") || operation.kind === "replace-paragraph-ranges") && typeof (document.format === "hwp5" ? document.sdk.text : document.sdk.anchorText) !== "function") throw new Error("OperationTextObservationUnavailable");
 	}
-	if (operations.some((operation) => hasCharacterExtensions(operation) || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
+	if (operations.some((operation) => hasCharacterExtensions(operation) || operation.kind === "page-settings" || operation.kind === "source-table-cell-split" || operation.kind === "paragraph-bullet-definition")) document.sdk.enableHistoryV2();
+	for (const operation of operations) if (operation.kind === "page-settings") admitPageSettings(document, operation);
 	if (document.format === "hwp5") {
 		if (protectedSections.size && typeof document.sdk.validateTextSourcePolicy !== "function") throw new Error("OperationTextSourcePolicyUnavailable");
 		for (const section of protectedSections) document.sdk.validateTextSourcePolicy(section);
@@ -17501,6 +17802,9 @@ function applyOperation(document, operation) {
 	if (operation.kind === "replace-paragraph-ranges") for (const row of operation.ranges) checkExpected(row);
 	else if ("expectedText" in operation || "expectedRangeText" in operation) checkExpected(operation);
 	switch (operation.kind) {
+		case "page-settings":
+			applyPageSettings(document, operation);
+			return null;
 		case "source-table-cell-split": throw new Error("PreparedSourceTableSplitRequired");
 		case "splice":
 			if (document.format === "hwp5") document.sdk.splice({
@@ -17643,9 +17947,11 @@ function applyOperation(document, operation) {
 var METHODS;
 var init_dispatch = __esmMin((() => {
 	init_character_extensions();
+	init_page_settings();
 	init_object_reference();
 	init_hwp5_table_creation_command();
 	METHODS = Object.freeze({
+		"page-settings": "writePageSettings",
 		"source-table-cell-split": "splitSourceTableCells",
 		splice: "splice",
 		"replace-paragraph-ranges": "replaceParagraphRanges",
@@ -17713,7 +18019,7 @@ async function applyDocumentOperations(input = {}, dependencies = {}) {
 		const hwp5Saved = document.format === "hwp5" && captured.length !== 0;
 		const output = hwp5Saved && record$5(saved) ? saved.bytes : saved;
 		if (!(output instanceof Uint8Array) || output.byteLength === 0 || output.byteLength > 134217728) throw new RangeError("OperationOutputLimitExceeded");
-		const reflow = hwp5Saved && record$5(saved) ? saved.layoutRequiresReflow : captured.some((operation) => operation.kind === "source-table-cell-split");
+		const reflow = hwp5Saved && record$5(saved) ? saved.layoutRequiresReflow : captured.some((operation) => operation.kind === "source-table-cell-split" || operation.kind === "page-settings");
 		if (typeof reflow !== "boolean") throw new Error("InvalidOperationLayoutState");
 		const owned = Uint8Array.from(output);
 		const changed = original.length !== owned.length || original.some((byte, index) => byte !== owned[index]);
