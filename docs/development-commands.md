@@ -1921,3 +1921,15 @@ node tools/run-page-settings-regressions.mjs cli
 ```
 
 SDK18개와 CLI·MCP14개는 원래 검사 파일을 그대로 실행하는 별도 분모입니다. Node24.20.0·Bun1.4.4를 사용하며, 구형 엔진 반례는 optional page-settings ABI가 없는 정확 바이너리를 지정합니다. actual browser·설치 archive·Native 할당 실패 검사는 이 두 실행의 성공으로 대신하지 않습니다.
+
+## 원본 누리 행 편집과 캐시 소유권
+
+지원·보존 경계는 [캐시와 원문 보존 계약](source-table-grid-caches.md)을 따릅니다. 실제 파일 검사는 검증할 WASM의 절대 경로와 정확한 `HWPJS_TEST_WASM_SHA256`, 고정 Noori 두 파일의 `HWPJS_TEST_NOORI`·`HWPJS_TEST_NOORI_HWPX`, 존재하지 않는 절대 증거 경로 `HWPJS_NOORI_ROW_EVIDENCE`를 요구합니다. 입력 누락·SHA 불일치는 skip가 아니라 실패입니다.
+
+```sh
+node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/noori-row-native.test.mjs
+zig test src/noori_cache_owner_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'Noori cache owner'
+zig test src/noori_owner_path_probe.zig -O ReleaseSafe -fllvm -j1 --test-filter 'Noori Main owner path'
+```
+
+첫 검사는 실제 공통 CLI 파일 호스트의 양 형식 삽입·원래 내용 행 삭제·재열기와 독립 CFB/XML 일반/-O 및 틀린 결과 반례를 검사합니다. 추가 HWPX foreign cache 입력은 거래 거부·원문 바이트·이력 불변을 검사합니다. Native 집중 검사는 알려진 물리 소유자·형제/중첩의 잘못된 대상과 미지 HWP5 제어 아래의 빈/비어 있지 않은 캐시를 구분합니다. 실제 Canvas 입력·배포 검증과 분모가 다릅니다.

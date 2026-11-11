@@ -290,6 +290,16 @@ jobs:
           test -f ./packages/core/dist/build-manifest.json || exit 1
           HWPJS_TEST_WASM_EXPECTED_SHA256="$(node ./tools/tests/helpers/native-wasm-pin.mjs --manifest ./packages/core/dist/build-manifest.json)" || exit 1
           printf 'HWPJS_TEST_WASM_EXPECTED_SHA256=%s\n' "$HWPJS_TEST_WASM_EXPECTED_SHA256" >> "$GITHUB_ENV"
+      - name: Test original Noori rows and opaque cache ownership
+        timeout-minutes: 2
+        env:
+          HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
+          HWPJS_TEST_NOORI: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwp
+          HWPJS_TEST_NOORI_HWPX: ${{ github.workspace }}/apps/docs/docs/public/editor/fixtures/noori.hwpx
+          HWPJS_NOORI_ROW_EVIDENCE: ${{ runner.temp }}/hwpjs-noori-rows
+        run: |
+          export HWPJS_TEST_WASM_SHA256="$HWPJS_TEST_WASM_EXPECTED_SHA256"
+          node --max-old-space-size=512 --test --test-concurrency=1 tools/tests/noori-row-native.test.mjs
       - name: Test page settings SDK and independent saved-file oracles
         timeout-minutes: 3
         env:
@@ -669,6 +679,13 @@ jobs:
             ./tests/hwp5/history-input-intent-readiness.test.mjs
           for path in "$@"; do test -f "$path" || exit 1; done
           bun test --no-install "$@"
+      - name: Test Canvas history after external Native revisions
+        run: |
+          test -f ./packages/vanilla/tests/external-revision-caret.test.ts || exit 1
+          test -f ./packages/vanilla/tests/undo-onset-surface-integration.test.mjs || exit 1
+          bun test --no-install \
+            ./packages/vanilla/tests/external-revision-caret.test.ts \
+            ./packages/vanilla/tests/undo-onset-surface-integration.test.mjs
       - name: 공개 예제 정책 정규 회귀
         run: |
           test -f ./tests/tools/pages-demo-fixture-policy.test.mjs || exit 1

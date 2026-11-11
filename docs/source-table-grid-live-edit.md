@@ -30,7 +30,7 @@ HWP5 웹 선택은 기존 Reader의 `observed8` 정책을 사용하며 파일 �
 
 중첩 표는 보호되지 않은 table/cell 조상 아래의 **leaf 대상 표**를 허용합니다. 대상 밖 부모/형제의 원시 바이트·본문은 보존하며 부모 크기를 자동 변경하지 않습니다. 공식 [표 안에 표 만들기](https://help.hancom.com/hoffice120/ko-KR/Hwp/table/table.htm)의 중첩 가능성과 부모보다 큰 자식이 가려질 수 있는 제한을 구분합니다. 대상 셀 자체에 중첩 개체가 있으면 여전히 거부합니다. 병합 HWPX의 row 재배치에서 국소 namespace 문맥을 옮기는 입력도 거부합니다.
 
-[여러 plain 문단](source-table-grid-cell-paragraphs.md)·HWPX 다중 run/t 보존은 유지합니다. source 필드·개체·줄 캐시·불명확한 구조, 보호 셀/조상과 서명 등 기존 거부 정책은 유지합니다. 보류 중인 생성 표나 별도 cell style/background intent는 기존 remap 제한을 따릅니다. 생성표 전용 명령과 identity는 그대로 분리됩니다. 전체 병합/복합 표와 조판 동치는 후속 목표이며 현재 완료 범위가 아닙니다.
+[여러 plain 문단](source-table-grid-cell-paragraphs.md)·HWPX 다중 run/t 보존은 유지합니다. source 필드·개체·불명확한 구조, 보호 셀/조상과 서명 등 기존 거부 정책은 유지합니다. 알려진 줄 캐시와 원본 문단 ID·관측 확장의 입장은 [캐시와 원문 보존 계약](source-table-grid-caches.md)을 따릅니다. 보류 중인 생성 표나 별도 cell style/background intent는 기존 remap 제한을 따릅니다. 생성표 전용 명령과 identity는 그대로 분리됩니다. 전체 병합/복합 표와 조판 동치는 후속 목표이며 현재 완료 범위가 아닙니다.
 
 격리 확장 회귀는 `tests/table-grid/source-grid-native.test.mjs`와 `source-grid-interval-native.test.mjs`, 독립 literal matrix와 CFB/XML oracle를 사용합니다. 구간 합 기반 경계의 유일성, 원본 R1 WASM의 실제 거부 대조군, 모순·비양수 해 거부를 추가로 검증합니다. 이전 WASM 거부, 24개 실제 Native 긍정 경로, 원본/이력 불변 거부, 마지막 근거 삭제 거부, 실제 commit 뒤 잘못된 reply kind의 refresh-required/no-retry를 검사합니다. Core/Native 검사와 framework GUI·배포 증거는 별도로 보고합니다.
 

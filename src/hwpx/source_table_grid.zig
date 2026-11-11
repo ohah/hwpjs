@@ -105,15 +105,17 @@ const ContentCheck = struct {
 };
 // Each paragraph is checked once through direct sibling links. Only the first
 // paragraph contributes t-body blanks; later paragraphs contribute whole spans.
-fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*std.ArrayList(tree_mod.Span), merging: bool) !void {
+fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*std.ArrayList(tree_mod.Span), merging: bool, cache: bool) !void {
     try attributes(a, t, p, &.{ "id", "paraPrIDRef", "styleIDRef", "pageBreak", "columnBreak", "merged" });
     try zero(a, t, p, &.{ "pageBreak", "columnBreak", "merged" });
-    try allowed(t, p, &.{"run"});
+    try allowed(t, p, if (cache) &.{ "run", "linesegarray" } else &.{"run"});
+    if (cache) try @import("source_grid_line_cache.zig").validate(a, t, p);
     // Direct plain runs only. Empty runs are valid formatting shells,
     // including those preserved by an earlier blank-cell insertion.
     if (t.elements[p].first_child == null) return error.UnsupportedSourceTableStructure;
     var runs = t.elements[p].first_child;
     while (runs) |run| : (runs = t.elements[run].next_sibling) {
+        if (cache and fields.childIs(t, run, "linesegarray")) continue;
         try attributes(a, t, run, &.{"charPrIDRef"});
         try allowed(t, run, &.{"t"});
         var next_text = t.elements[run].first_child;
@@ -135,12 +137,12 @@ fn inspectParagraph(a: std.mem.Allocator, t: *const Tree, p: usize, blanks: ?*st
     }
 }
 const Paragraphs = struct { first: usize, blanks: []const tree_mod.Span };
-fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize, merging: bool) !Paragraphs {
+fn inspectParagraphs(a: std.mem.Allocator, t: *const Tree, sub: usize, merging: bool, cache: bool) !Paragraphs {
     const first = t.elements[sub].first_child orelse return error.UnsupportedSourceTableStructure;
     var blanks: std.ArrayList(tree_mod.Span) = .empty;
     var cursor: ?usize = first;
     while (cursor) |p| : (cursor = t.elements[p].next_sibling) {
-        try inspectParagraph(a, t, p, if (!merging and p == first) &blanks else null, merging);
+        try inspectParagraph(a, t, p, if (!merging and p == first) &blanks else null, merging, cache);
         if (!merging and p != first) {
             const e = t.elements[p];
             try blanks.append(a, .{ .start = e.start_tag.start, .end = e.end });
@@ -166,7 +168,7 @@ fn inspectCaption(a: std.mem.Allocator, t: *const Tree, table: usize) !void {
     inline for (.{ .has_text_ref, .has_num_ref }) |field| {
         if (list.get(field)) |raw| if (try @import("xml_values.zig").boolean(raw)) return error.UnsupportedSourceTableStructure;
     }
-    _ = try inspectParagraphs(a, t, sub, false);
+    _ = try inspectParagraphs(a, t, sub, false, false);
     var paragraph = t.elements[sub].first_child;
     while (paragraph) |p| : (paragraph = t.elements[p].next_sibling) {
         const owner = (try @import("caption_list_owner.zig").resolve(t, p, .table)) orelse return error.UnsupportedSourceTableStructure;
@@ -293,7 +295,7 @@ fn inspect(a: std.mem.Allocator, t: *const Tree, table: usize, rows: u32, cols: 
                 try rejectLocalNamespaces(a, t, cell);
                 try rejectLocalNamespaces(a, t, sub);
             }
-            const paragraphs = try inspectParagraphs(a, t, sub, merging);
+            const paragraphs = try inspectParagraphs(a, t, sub, merging, profile == .grid_spans);
             inline for (.{ .{ addr, &.{ "rowAddr", "colAddr" } }, .{ span, &.{ "rowSpan", "colSpan" } }, .{ sz, &.{ "width", "height" } } }) |item| {
                 try attributes(a, t, item[0], item[1]);
                 try allowed(t, item[0], &.{});
@@ -360,7 +362,16 @@ fn cellXml(a: std.mem.Allocator, t: *const Tree, cell: Cell, value: @import("../
     try patch(a, t, &changes, cell.span, &.{ "rowSpan", "colSpan" }, .{ value.row_span, value.column_span }, limit);
     try patch(a, t, &changes, cell.size, &.{ "width", "height" }, .{ value.width, value.height }, limit);
     if (fresh) |id| {
-        try patch(a, t, &changes, cell.paragraph, &.{"id"}, .{id}, limit);
+        if (try t.attributeValue(a, cell.paragraph, "", "id")) |_| {
+            try patch(a, t, &changes, cell.paragraph, &.{"id"}, .{id}, limit);
+        } else {
+            // Only the newly authored cell fragment receives this reserved ID.
+            // Surviving source paragraphs remain absent/duplicate exactly as read.
+            const span = t.elements[cell.paragraph].start_tag;
+            const scalar = try std.fmt.allocPrint(a, "{d}", .{id});
+            const start_tag = try @import("xml_scalar_attributes_upsert.zig").write(a, t, cell.paragraph, &.{"id"}, .{scalar}, limit);
+            try changes.append(a, .{ .start = span.start, .end = span.end, .text = "", .serialized_xml = start_tag });
+        }
     }
     // Only two shell attributes need constant-size sorting. First-p t bodies
     // and later-p subtrees were collected once in source order.
@@ -427,8 +438,8 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     if (request.fresh_paragraph_ids.len != coordinate.inserted_count) return error.InvalidTableParagraphIds;
     var ids: std.AutoHashMap(u32, void) = .init(a);
     for (t.elements, 0..) |_, i| if (fields.childIs(&t, i, "p")) {
-        const id = try number(a, &t, i, "id");
-        if ((try ids.getOrPut(id)).found_existing) return error.InvalidTableParagraphIds;
+        // Existing source metadata is not a global object identity.
+        if (try fields.optionalUnsigned(a, &t, i, "id", 4096)) |id| try ids.put(id, {});
     };
     for (request.fresh_paragraph_ids) |id| if (id == 0 or (try ids.getOrPut(id)).found_existing) return error.InvalidTableParagraphIds;
     var changes: std.ArrayList(writer.Change) = .empty;
@@ -491,7 +502,7 @@ pub fn prepare(allocator: std.mem.Allocator, source: []const u8, request: Reques
     const result = try writer.write(a, source, ordered.items, request.max_bytes);
     var check = try @import("section_tree.zig").parse(a, result, 0, 0, .{ .max_xml_bytes = request.max_bytes });
     _ = try inspectForGridEdit(a, &check, table, plan.rows, plan.columns, request.max_cells);
-    return allocator.dupe(u8, result);
+    return @import("source_grid_line_cache.zig").write(allocator, result, request.max_bytes);
 }
 
 /// Zero-based half-open rectangle, covering at least two complete physical cells.

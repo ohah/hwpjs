@@ -529,8 +529,10 @@ export function createCanvasSurface({
       selectionKey = '';
     }
     const retained = state.selection ? (state.selection as SelectionTarget) : undefined;
-    if (!nonTextHistoryPending && !retained && !changedDocument && displayed && !bridge?.busy())
-      direct?.external({ kind: 'external-update', origin: 'core' });
+    const externalUpdate = Boolean(
+      !nonTextHistoryPending && !retained && !changedDocument && displayed && !bridge?.busy(),
+    );
+    if (externalUpdate) direct?.external({ kind: 'external-update', origin: 'core' });
     displayed = key;
     checkBoxControls?.message({ kind: 'snapshot', content: state.content });
     formTextControls?.message({ kind: 'enable', ...(state.capabilities as object) });
@@ -559,7 +561,9 @@ export function createCanvasSurface({
         if (changedDocument) nonTextSelectionProjection = undefined;
       }
     }
-    if (changedDocument)
+    // Resetting an external projection must adopt its actual Native revision.
+    // Otherwise the next input's pre-edit bookmark is filed under the old revision.
+    if (changedDocument || externalUpdate)
       direct?.initializeCapabilities({
         ...(state.capabilities as object),
         historyRevision: state.nativeHistoryRevision,

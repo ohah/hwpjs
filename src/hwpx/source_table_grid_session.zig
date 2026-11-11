@@ -92,6 +92,7 @@ fn body(session: *editor.Session, request: Target) !bool {
     if (current.sections.len != session.sections.len) return error.SourceBindingMismatch;
     const current_tree = &current.sections[request.section].tree;
     const node = try resolve(current_tree, selection);
+    if (request.operation == .edit) try @import("source_table_grid_owner_path.zig").verify(&old.tree, request.node, current_tree, node);
     if (identity) |expected| {
         if (try uniqueTableIdentity(a, current_tree, node) != expected) return error.SourceBindingMismatch;
     }

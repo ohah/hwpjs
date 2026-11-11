@@ -29,3 +29,11 @@ Native에서 구역·source basis·활성 분기·문단 ancestor를 확인한�
 공식 [KS X 6101](https://standard.go.kr/KSCI/standardIntro/getStandardSearchView.do?ksNo=KSX6101&menuId=503&tmprKsNo=KSX6101&topMenuId=502), [한컴 형식 공개 안내](https://www.hancom.com/support/downloadCenter/hwpOwpml), [한컴 양식 속성 도움말](https://help.hancom.com/hoffice130/ko-KR/Hwp/view/workwindow/workwindow%28attribute%29.htm)과 자체 Native tree/attribute/XML writer 계약을 사용했다. 도움말의 폼 속성 의미와 이 후보의 보수적 편집 정책을 구분한다. 공식 XSD 전체에 대한 유효성 검증 완료를 주장하지 않는다. 외부 비교 구현은 읽거나 사용하지 않았다. 프로젝트 전체의 엄격한 클린룸 인증을 주장하지 않는다.
 
 LF 멀티라인 화면 확장은 [별도 preview profile](hwpx-form-multiline-preview.md)을 따른다. Native/CLI 범위와 화면의 명시 LF profile은 구분한다.
+
+### HWP5 폼 텍스트의 표시·입력 권한
+
+HWP5 edit/combo의 Canvas 표시는 원본 metadata·geometry·font를 그대로 사용한다. 입력창 진입은 같은 표시 descriptor의 `form.editable`로 제한하며 기존 HWPX와 같은 `form-text-canvas-controls` guard를 재사용한다. 원본 Native content를 수정하거나 별도 문서 모델을 만들지 않는다.
+
+`hwp5FormTextEditAvailable`와 `hwp5FormTextLayoutRetentionAvailable`가 모두 명시적으로 true이고 원본 enabled/editable이 알려진 true일 때만 입력을 허용한다. edit는 read_only가 알려진 false, combo는 edit_enable이 알려진 true여야 한다. 누락·미지 값·형식 불일치는 false로 투영하며 기본값을 추정하지 않는다. readonly/disabled 및 미지 permission의 필드 자체는 계속 표시한다. Native는 적용 시 현재 권한과 문서 수명을 다시 검사한다.
+
+F509 기반의 별도 증분에서 두 형식 × Vanilla/React/Svelte 정상 6흐름을 유지하고, 두 형식 readonly/disabled 음성 4흐름은 입력창이 열리지 않으며 실제 저장 결과가 원본과 바이트 단위로 같다. 독립 CFB/XML 일반/-O와 Native 현재 관측·미지 permission·구형/미지 optional flag의 집중 검증은 별도 handoff의 exact manifest를 따른다. OS IME·문서 암호 전수 검증이나 CRLF/wordWrap 확장의 완료를 뜻하지 않는다.

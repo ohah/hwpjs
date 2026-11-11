@@ -90,6 +90,8 @@ export function fixture(ready = true) {
       this.selectionStart = a;
       this.selectionEnd = b;
     }
+    setPointerCapture() {}
+    releasePointerCapture() {}
     hasPointerCapture() {
       return false;
     }
@@ -196,6 +198,27 @@ export function fixture(ready = true) {
     },
     revoke() {
       active = false;
+    },
+    externalState(patch: any) {
+      state = new EditorState({ ...snapshot(), ...patch });
+      listener?.(state);
+    },
+    ackHistory(patch: any) {
+      const pending = waiting.shift();
+      if (!pending || !['undo', 'redo'].includes(pending.message.kind))
+        throw Error('ExpectedHistory');
+      state = new EditorState({ ...snapshot(), ...patch });
+      listener?.(state);
+      pending.resolve({
+        status: 'committed-with-snapshot',
+        state,
+        reply: {
+          kind: pending.message.kind,
+          changed: true,
+          historyRevision: state.nativeHistoryRevision,
+          historyRevisions: state.nativeHistoryRevisions,
+        },
+      });
     },
     replaceState() {
       state = new EditorState({ ...snapshot(), stateVersion: state.stateVersion + 1 });

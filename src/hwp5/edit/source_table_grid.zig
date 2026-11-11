@@ -72,7 +72,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         // Refuse the whole edit before cloning templates or deleting any cell.
         if (body.CellAttributes.fromList(view).isProtected()) return error.UnsupportedSourceTableGrid;
         const cell = try body.Cell.parse(view.extra);
-        if (cell.extra.len != 0 or cell.row_span == 0 or cell.column_span == 0 or cell.row >= table.row_count or cell.column >= table.column_count) return error.UnsupportedSourceTableGrid;
+        if (!try @import("source_grid_cell_extension.zig").known(cell, version, request.layout, command) or cell.row_span == 0 or cell.column_span == 0 or cell.row >= table.row_count or cell.column >= table.column_count) return error.UnsupportedSourceTableGrid;
         if (cell.width == 0 or cell.height == 0) return error.UnsupportedSourceTableGrid;
         const index = @as(usize, cell.row) * table.column_count + cell.column;
         if (found != 0) {
@@ -85,7 +85,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
         var first_runs: ?usize = null;
         var last_header = paragraph;
         while (paragraph < group.end) {
-            const runs = try validateParagraph(tree, paragraph, group.end);
+            const runs = (try @import("source_grid_paragraph.zig").inspect(tree, paragraph, group.end, false, .validated_cache)).runs;
             if (first_runs == null) first_runs = runs;
             last_header = paragraph;
             paragraph = tree.nodes[paragraph].subtree_end;
@@ -199,7 +199,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
             std.mem.writeInt(u32, header[Header.instance_id_offset..][0..4], request.new_paragraph_ids[fresh], .little);
             fresh += 1;
             try framing.append(scratch, &out, 66, header_record.level, header, limits.max_bytes);
-            try framing.append(scratch, &out, 67, header_record.level + 1, &.{ 13, 0 }, limits.max_bytes);
+            try @import("source_grid_fresh_text.zig").append(scratch, &out, header_record.level + 1, &.{ 13, 0 }, limits.max_bytes);
             try framing.append(scratch, &out, 68, header_record.level + 1, tree.nodes[template.runs].record.framing.payload[0..8], limits.max_bytes);
         }
     }
@@ -208,7 +208,7 @@ pub fn prepare(a: std.mem.Allocator, source: []const u8, version: Version, reque
     defer verified.deinit(scratch);
     var verified_groups = try @import("../body/list_groups.zig").Groups.build(scratch, verified);
     defer verified_groups.deinit(scratch);
-    return a.dupe(u8, out.items);
+    return @import("source_grid_line_cache.zig").write(a, out.items, version, limits.max_bytes);
 }
 fn validateCaptionGroup(tree: Tree, group: @import("../body/list_groups.zig").Group, table: usize, layout: body.list_header.Layout) !CaptionGroup {
     const list = tree.nodes[group.header_node].record.value.list_header;

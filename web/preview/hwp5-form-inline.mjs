@@ -156,13 +156,34 @@ export function inlineHwp5FormIndex(content, { draft } = {}) {
           backStyle: 'OPAQUE',
         };
       }
+      // Display permission only. Native remains authoritative at apply time.
+      // Missing, mismatched or unknown source booleans never grant input access.
+      let textEditable = false;
+      if (
+        ['edit', 'combo_box'].includes(source.kind) &&
+        content.hwp5FormTextEditAvailable === true &&
+        content.hwp5FormTextLayoutRetentionAvailable === true
+      ) {
+        try {
+          textEditable =
+            number('enabled', 'boolean', 1) === 1 &&
+            number('editable', 'boolean', 1) === 1 &&
+            (source.kind === 'edit'
+              ? number('read_only', 'boolean', 1) === 0
+              : number('edit_enable', 'boolean', 1) === 1);
+        } catch {
+          textEditable = false;
+        }
+      }
       const key = formPositionKey(form.section, form.paragraph, form.anchorUnit);
       if (result.has(key)) {
         result.set(key, null);
         throw Error('AmbiguousFormPreviewAnchor');
       }
       result.set(key, {
-        form,
+        form: ['edit', 'combo_box'].includes(source.kind)
+          ? { ...form, editable: textEditable }
+          : form,
         label,
         font,
         foreground,

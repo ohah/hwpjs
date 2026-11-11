@@ -1,5 +1,9 @@
 # Canvas 편집 이력 입력
 
+현재 이력 요청과 화면 준비 계약은 [첫 실행 취소와 화면 투영](undo-onset-projection.md), 외부 명령 뒤 Native revision 동기화는 [별도 계약](visible-history-external-revision.md)이 소유합니다. 아래 초기 연결 기록의 당시 미지원 항목을 현재 지원 범위로 읽지 않습니다.
+
+## 초기 연결과 검증 이력
+
 [HWPX Worker](hwpx-worker-history.md)와 [HWP5 Worker](hwp5-edit-history.md)의 native 실행 취소·재실행을 Canvas 단축키와 버튼에 연결합니다. 문단 분할·병합은 아직 미구현입니다. HWP5 software 제목의 실제 브라우저·다운로드 검증 기록은 HWP5 주제 문서가 소유합니다.
 
 편집 세션 enable 응답의 historyAvailable=true를 확인한 경우 Ctrl/Meta+Z는 undo, Ctrl/Meta+Shift+Z 및 Ctrl/Meta+Y는 redo를 요청합니다. beforeinput의 historyUndo/historyRedo도 같은 명령 경로를 사용하며 textarea의 브라우저 자체 이력은 적용하지 않습니다.
