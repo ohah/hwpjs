@@ -48,6 +48,25 @@ function replaceAllArgs(args, keys) {
   }
 }
 
+export function apiPageSettingsOptions(args = {}) {
+  if (
+    !args ||
+    typeof args !== 'object' ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(args))
+  )
+    throw Error('InvalidArguments');
+  const own = Object.getOwnPropertyDescriptors(args);
+  for (const key of Reflect.ownKeys(own)) {
+    if (key !== 'section' || !Object.hasOwn(own[key], 'value'))
+      throw Error('InvalidArgument:' + String(key));
+  }
+  if (!Object.hasOwn(own, 'section')) return {};
+  const section = own.section.value;
+  if (!Number.isSafeInteger(section) || section < 0 || Object.is(section, -0))
+    throw Error('InvalidArgument:section');
+  return { section };
+}
+
 const replaceAllKeys = ['query', 'replacement'];
 const replaceAllOperations = ['getReplaceAllCapabilities', 'planReplaceAll', 'replaceAll'];
 const replaceAllRequest = (state, { query, replacement }) => ({
@@ -106,6 +125,10 @@ export function createApiPlayground({
           ? await loadFixture(options.format)
           : await loadFixture(options.format, fixture);
       return editor.load(bytes, options);
+    },
+    getPageSettings(args) {
+      const options = apiPageSettingsOptions(args);
+      return editor.getPageSettings({ ...options, token: editor.getEditorState().token });
     },
     getPageText({ pageIndex, include, ...unknown }) {
       if (Object.keys(unknown).length) throw Error('InvalidArgument:' + Object.keys(unknown)[0]);
@@ -227,6 +250,7 @@ export function createApiPlayground({
         (operation !== 'editParagraphBulletDefinition' ||
           (typeof editParagraphBulletDefinitionCommand?.id === 'symbol' &&
             typeof createParagraphSelection === 'function')) &&
+        (operation !== 'getPageSettings' || typeof editor.getPageSettings === 'function') &&
         (operation !== 'getPageText' || typeof surface?.getPageText === 'function'),
     ),
   );
@@ -248,8 +272,9 @@ export function createApiPlayground({
         const value = await registry[operation](effectiveArgs);
         const result = value?.getEditorState ? undefined : value;
         const error =
-          ['getPageText', 'listParagraphBulletDefinitions'].includes(operation) &&
-          result?.state === 'unavailable'
+          ['getPageText', 'getPageSettings', 'listParagraphBulletDefinitions'].includes(
+            operation,
+          ) && result?.state === 'unavailable'
             ? result.reason
             : (result?.error ?? null);
         return {
@@ -293,6 +318,7 @@ const examples = Object.freeze({
   load: { format: 'hwpx', editable: true },
   invalidLoad: { format: 'hwpx' },
   getPageText: { pageIndex: 0, include: ['body', 'table', 'textbox', 'caption'] },
+  getPageSettings: { section: 0 },
   read: {},
   select: { section: 0, paragraph: 0, start: 0, end: 0 },
   splice: { section: 0, paragraph: 0, start: 0, end: 0, text: 'API 검증' },
@@ -337,6 +363,19 @@ const snippets = Object.freeze({
   reopen: 'await editor.load(saved.bytes, { format: saved.format });',
 });
 export function apiSampleCode(operation, args = {}) {
+  if (operation === 'getPageSettings') {
+    const options = apiPageSettingsOptions(args);
+    return (
+      '// 전제: 문서를 이미 연 ready editor를 주입합니다.\n' +
+      '// section은 구역 인덱스(0부터)이며 source 치수·여백은 정수 HWPUNIT(7200=25.4mm)입니다.\n' +
+      'const options = ' +
+      JSON.stringify(options) +
+      ';\n' +
+      'const settings = await editor.getPageSettings({...options, token:editor.getEditorState().token});\n' +
+      '// settings.target은 이 editor의 현재 상태에만 유효하며 JSON으로 복제해 쓰기 권한으로 사용할 수 없습니다.'
+    );
+  }
+
   if (operation === 'listParagraphBulletDefinitions') {
     replaceAllArgs(args, []);
     return 'await editor.listParagraphBulletDefinitions({ token: editor.getEditorState().token });';

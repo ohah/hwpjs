@@ -56,6 +56,10 @@ const jobs =
     ? [
         { name: 'hwp5-sdk', files: ['tools/tests/hwp5-page-settings-native.test.mjs'] },
         {
+          name: 'api-playground',
+          files: ['apps/demo/tests/api-playground-page-settings.test.mjs'],
+        },
+        {
           name: 'hwpx-sdk',
           files: [
             'tools/tests/hwpx-page-settings-native.test.mjs',
@@ -81,6 +85,7 @@ for (const job of jobs) {
   const jobEnv = {
     ...env,
     HWPJS_TEST_EVIDENCE_DIR: join(out, job.name + '-evidence'),
+    HWPJS_TEST_PAGE_FIXTURE_DIR: resolve(root, 'tests/fixtures/page-settings-playground'),
     HWPJS_PAGE_TEST_EVIDENCE: join(out, 'hwpx-cli'),
     HWPJS_PAGE_H5_EVIDENCE: join(out, 'hwp5-cli'),
   };

@@ -21,6 +21,7 @@ export function mountHeadlessPanel(
       editor.listParagraphBulletDefinitions(options),
     operations: [
       'read',
+      'getPageSettings',
       'listParagraphBulletDefinitions',
       'editParagraphBulletDefinition',
       'select',
