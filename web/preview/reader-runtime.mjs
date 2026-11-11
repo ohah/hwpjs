@@ -1,3 +1,4 @@
+import { sourceTableCellHeightPlan } from './source-table-cell-height.mjs';
 import { sourceTableCellWidthPlan } from './source-table-cell-width.mjs';
 import {
   readHwpxNamedFieldParameters,
@@ -1023,6 +1024,7 @@ export function createReaderRuntime({
     result.sourceTableCellWidthAvailable = WebAssembly.Module.exports(module).some(
       (entry) => entry.name === 'hwpx_edit_set_cell_sizes' && entry.kind === 'function',
     );
+    result.sourceTableCellHeightAvailable = result.sourceTableCellWidthAvailable;
     hwpxCreatedTablesPending = result.createdTableHostPending;
     return attachParagraphNumbering(editor, result);
   }
@@ -1332,6 +1334,26 @@ export function createReaderRuntime({
         );
         if (tables?.length !== 1) throw Error('InvalidSourceTableCellWidthRectangle');
         const cells = sourceTableCellWidthPlan(tables[0], message.request);
+        if (cells.length === 0) {
+          reply({ kind: message.kind, changed: false });
+          return;
+        }
+        editor.setCellSizes(cells);
+        applied = true;
+        reply({ kind: message.kind, content: hwpxDisplay() });
+        return;
+      }
+      if (message.kind === 'source-table-cell-height') {
+        if (format !== 'hwpx' || !historyEnabled || !editor)
+          throw Error('SourceTableCellHeightUnavailable');
+        if (historyPoisoned) throw Error('HistoryMutationUncertain');
+        const content = hwpxDisplay();
+        const tables = content.tables?.filter(
+          (t) =>
+            t.section === message.request?.section && t.tableNode === message.request?.tableNode,
+        );
+        if (tables?.length !== 1) throw Error('InvalidSourceTableCellHeightRectangle');
+        const cells = sourceTableCellHeightPlan(tables[0], message.request);
         if (cells.length === 0) {
           reply({ kind: message.kind, changed: false });
           return;

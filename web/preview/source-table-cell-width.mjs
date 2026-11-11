@@ -1,3 +1,4 @@
+import { orderedSourceTableCells } from './source-table-rectangular-grid.mjs';
 import { sourceTableCellInsets } from './table-source-insets.mjs';
 import { hwpUnitPixels } from './hwp-units.mjs';
 import { sourceTableRowHorizontals } from './source-table-row-horizontals.mjs';
@@ -37,20 +38,7 @@ export function sourceTableCellWidthPlan(table, request) {
     fail('InvalidSourceTableCellWidthRectangle');
   if (table.cells.some((cell) => cell.rowSpan !== 1 || cell.columnSpan !== 1 || !uint(cell.height)))
     fail('UnsupportedSourceTableCellWidthGeometry');
-  // Nonspanning source cells have one slot each. Index once, without per-row scans.
-  const slots = Array.from({ length: table.cells.length });
-  for (const cell of table.cells) {
-    if (
-      !uint(cell.row) ||
-      !uint(cell.column) ||
-      cell.row >= table.rows ||
-      cell.column >= table.columns
-    )
-      fail('InvalidSourceTableCellWidthRectangle');
-    const index = cell.row * table.columns + cell.column;
-    if (slots[index]) fail('InvalidSourceTableCellWidthRectangle');
-    slots[index] = cell;
-  }
+  const slots = orderedSourceTableCells(table, 'InvalidSourceTableCellWidthRectangle');
   const geometry = sourceTableRowHorizontals({ ...table, cells: slots }, { orderedCells: true });
   if (geometry.state !== 'resolved') fail(geometry.error);
   const boxes = new Map(geometry.cells.map((cell) => [cell.listNode, cell]));

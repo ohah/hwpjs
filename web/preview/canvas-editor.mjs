@@ -805,6 +805,7 @@ export function createCanvasEditor({
   const captureSourceTableCellBlock = (purpose = 'merge') => {
     const split = purpose === 'split';
     const equalizeWidth = purpose === 'width';
+    const equalizeHeight = purpose === 'height';
     const block = cellBlock;
     const context = currentCellBlockContext();
     const savedFocus = focus;
@@ -816,9 +817,11 @@ export function createCanvasEditor({
       content?.format !== 'hwpx' ||
       (split
         ? content.sourceTableCellSplitAvailable !== true
-        : equalizeWidth
-          ? content.sourceTableCellWidthAvailable !== true
-          : content.sourceTableCellMergeAvailable !== true) ||
+        : equalizeHeight
+          ? content.sourceTableCellHeightAvailable !== true
+          : equalizeWidth
+            ? content.sourceTableCellWidthAvailable !== true
+            : content.sourceTableCellMergeAvailable !== true) ||
       renderer.viewEditPolicyActive?.() === true
     )
       return null;
@@ -4375,6 +4378,28 @@ export function createCanvasEditor({
     hasCellBlock: () => cellBlock !== null,
     captureSourceTableCellBlock,
     captureSourceTableCellSplit: () => captureSourceTableCellBlock('split'),
+    captureSourceTableCellHeight() {
+      const block = captureSourceTableCellBlock('height');
+      if (!block) throw Error('MissingSourceTableCellHeightSelection');
+      const { witness } = block;
+      const selected = witness.cells;
+      const top = Math.min(...selected.map((cell) => cell.row));
+      const bottom = Math.max(...selected.map((cell) => cell.row)) + 1;
+      const rectangle = {
+        section: witness.section,
+        tableNode: witness.tableNode,
+        expectedRows: witness.rows,
+        expectedColumns: witness.columns,
+        top,
+        left: Math.min(...selected.map((cell) => cell.column)),
+        bottom,
+        right: Math.max(...selected.map((cell) => cell.column)) + 1,
+      };
+      const measured = renderer.captureSourceTableCellHeightMinimums(cellBlock.table, rectangle);
+      const current = () => block.current() && measured.current() && block.current();
+      if (!current()) throw Error('StaleSourceTableCellHeightMeasurement');
+      return { witness, minimums: measured.minimums, current };
+    },
     reset({
       preserveHistory = false,
       preserveHistoryIntents = false,

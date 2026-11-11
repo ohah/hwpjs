@@ -57,6 +57,10 @@ export const MERGE_SOURCE_TABLE_CELLS_COMMAND =
 import type { SourceTableCellWidthTarget } from './source-table-cell-width.ts';
 export const EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND =
   createCommand<SourceTableCellWidthTarget>('source-table-cell-width');
+import type { SourceTableCellHeightTarget } from './source-table-cell-height.ts';
+export const EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND = createCommand<SourceTableCellHeightTarget>(
+  'source-table-cell-height',
+);
 import type { EditSourceTableGridPayload } from './source-table-grid.ts';
 export const EDIT_SOURCE_TABLE_GRID_COMMAND =
   createCommand<EditSourceTableGridPayload>('source-table-grid');

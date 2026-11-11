@@ -514,3 +514,5 @@ CFB 단계의 현재 경계: 읽기 기본값은 레거시 호환, strict는 명
 ## 플랫폼 공통 기능과 문서 도구
 
 [플랫폼 기능 계약](platform-compatibility.md)은 Node·Web·CLI·React Native에서 제공할 기능과 현재 검증 범위를 구분합니다. Rust의 호출 형식이나 출력 문자열을 그대로 복제하는 것을 요구하지 않습니다. [정보·이미지 도구](cli-resource-tools.md)는 공통 관측, Native 수명, 파일 호스트와 결과 보고의 책임을 분리합니다.
+
+[원본 셀 높이 균등화](cell-height-equalization.md)는 현재 F5 선택의 내용 최소높이·후보 조판·typed 권한을 소유합니다. 너비/높이는 공통 주소 슬롯을 공유하고 저장은 기존 Native 셀 크기 배치를 재사용합니다.

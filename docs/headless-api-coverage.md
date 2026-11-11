@@ -154,3 +154,5 @@ C2에서는 문단18:2→19:26의 다중 선택에서 우클릭 굵게 mixed→t
 각 한 문서의 별도 cohort에서 JUSTIFY→DISTRIBUTE→DISTRIBUTE_SPACE→undo DISTRIBUTE→redo DISTRIBUTE_SPACE를 확인했습니다. operation/view는 각 단계1→2→3→4→5였고 원래 ready 조건·예상 pressed·textarea focus·논리/painted caret0:18:2를 유지했습니다. 각 적용·undo·redo는 한 번씩이며 추가 클릭이나 Native 재시도는 없었습니다. 메뉴6의 실제 노출·양수rect·PNG와, HWPX에서 막대의 새2 항목도 확인했습니다.
 
 HWPX의 완료 poll은 감시·전송을 포함한 관측이므로 응답 속도나 성능 보장으로 쓰지 않습니다. 원래 준비·조기관측·포커스 실패와 성공은 각각 보존합니다. 저장·재열기·Native 필드 독립 해독과 모든6 정렬의 조판 동등성·전체 UI 완료는 이 검증 범위가 아닙니다. 양 형식의 소유 Chrome 종료·독립 PS 빈 목록·정확한 postHTTP manifest는 기능 근거와 별도로 확인했습니다. QA 후보의 검증을 운영·공개 배포 완료로 승계하지 않습니다.
+
+원본 HWPX 표의 전체 열을 포함한 비병합 행 블록에는 `EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND`를 제공합니다. 현재 Surface가 발급한 측정 포함 target만 허용하며 범위·실패 원자성과 실제 검증은 [셀 높이 균등화](cell-height-equalization.md)를 따릅니다.

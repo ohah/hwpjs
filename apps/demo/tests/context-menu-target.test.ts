@@ -169,6 +169,7 @@ function harness(surfaceText = false) {
         status: '',
         actions: {
           'table-cell-width-equal': { enabled },
+          'table-cell-height-equal': { enabled },
           'generated-table-insert-row': { enabled },
           'generated-table-delete-row': { enabled },
           'generated-table-insert-column': { enabled },
@@ -629,3 +630,31 @@ test('current width menu dispatches its captured command once', () => {
     h.control.close();
   }
 });
+
+for (const phase of ['current', 'focus', 'state']) {
+  test(`height-only menu preserves the selected target fence during ${phase}`, () => {
+    const h = harness();
+    let live = true;
+    try {
+      h.setTarget({
+        kind: 'source-table-cell',
+        key: 'height:1',
+        heightTarget: {} as import('@hwpjs/core').SourceTableCellHeightTarget,
+        current: () => live,
+      });
+      h.open();
+      if (phase === 'focus')
+        h.setFocus(() => {
+          live = false;
+        });
+      if (phase === 'state')
+        h.onState(() => {
+          live = false;
+        });
+      h.click('table-cell-height-equal');
+      assert.deepEqual(h.calls, phase === 'current' ? ['table-cell-height-equal'] : []);
+    } finally {
+      h.control.close();
+    }
+  });
+}

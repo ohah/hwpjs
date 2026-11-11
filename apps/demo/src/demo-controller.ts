@@ -23,6 +23,8 @@ import {
   getHistoryAvailability,
   MERGE_SOURCE_TABLE_CELLS_COMMAND,
   EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND,
+  EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND,
+  type SourceTableCellHeightTarget,
   type SourceTableCellWidthTarget,
   type SourceTableCellMergeTarget,
   getSelectionFormatting,
@@ -103,6 +105,12 @@ export interface DemoHost
     target: SourceTableCellWidthTarget;
     current(): boolean;
   } | null;
+  captureSourceTableCellHeight?(): {
+    state: ReturnType<HeadlessEditor['getEditorState']>;
+    target: SourceTableCellHeightTarget;
+    current(): boolean;
+  } | null;
+  getSourceTableCellHeightAvailability?(): { available: boolean; reason: string | null };
   setScale(value: number): boolean;
   setDisplayOptions?(options: CanvasDisplayOptions): boolean;
   getDisplayOptions?(): Readonly<CanvasDisplayOptions> | undefined;
@@ -327,6 +335,17 @@ export async function mountDemo(
       enabled: host?.canRequestCellBlock?.() === true,
       reason: '표에서 선택할 수 있는 셀에 커서를 놓으세요.',
     };
+    const height = host?.getSourceTableCellHeightAvailability?.();
+    const heightReasons: Record<string, string> = {
+      SourceTableCellHeightContentOverflow: '균등 높이가 셀 내용과 상하 여백보다 작습니다.',
+      SourceTableCellHeightLayoutOverflow:
+        '균등 높이를 적용하면 현재 조판의 셀 높이와 일치하지 않습니다.',
+      SourceTableCellHeightLayoutUnavailable: '현재 조판에서 셀 높이 전체를 확인할 수 없습니다.',
+      UnsupportedSourceTableCellHeightSpans: '병합 셀이 있는 표의 높이 균등화는 지원하지 않습니다.',
+      ConflictingSourceTableRowHeights: '같은 행의 원본 셀 높이가 서로 다릅니다.',
+      InvalidSourceTableCellHeightRectangle:
+        '표의 모든 열을 포함하는 두 행 이상의 셀 블록을 선택하세요.',
+    };
     const availability = {
       ...formatState.actions,
       ...textColor.presentation(sharedFormatting),
@@ -347,6 +366,12 @@ export async function mountDemo(
       'table-cell-split': {
         enabled: host?.captureSourceTableCellSplit?.() != null,
         reason: '편집 가능한 HWPX 원본 표의 셀이나 직사각형 셀 블록을 선택하세요.',
+      },
+      'table-cell-height-equal': {
+        enabled: height?.available === true,
+        reason:
+          heightReasons[height?.reason ?? ''] ??
+          '원본 HWPX 표에서 모든 열을 포함하는 두 행 이상을 선택하세요.',
       },
       'table-cell-width-equal': {
         enabled: host?.captureSourceTableCellWidth?.() != null,
@@ -516,6 +541,7 @@ export async function mountDemo(
     mergeTarget?: SourceTableCellMergeTarget,
     splitCapture?: TableCellSplitCapture,
     widthTarget?: SourceTableCellWidthTarget,
+    heightTarget?: SourceTableCellHeightTarget,
   ) {
     if (closed) return;
     const available = presentation().actions?.[action.command];
@@ -556,6 +582,23 @@ export async function mountDemo(
       else if (result.status === 'committed-refresh-required')
         note('셀 너비 변경이 반영됐습니다. 화면을 복구한 뒤 계속하세요.');
       else note(result.error || '셀 너비를 변경하지 못했습니다.');
+      return;
+    }
+    if (action.command === 'table-cell-height-equal') {
+      const target = fromContext ? heightTarget : host?.captureSourceTableCellHeight?.()?.target;
+      if (!target) {
+        note('현재 셀 블록을 다시 선택하세요.');
+        return;
+      }
+      const result = await editor.dispatchCommand(
+        EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND,
+        target,
+      );
+      if (result.status === 'committed-with-snapshot') note('선택한 셀의 높이를 같게 했습니다.');
+      else if (result.status === 'known-no-op') note('선택한 셀의 높이가 이미 같습니다.');
+      else if (result.status === 'committed-refresh-required')
+        note('셀 높이 변경이 반영됐습니다. 화면을 복구한 뒤 계속하세요.');
+      else note(result.error || '셀 높이를 변경하지 못했습니다.');
       return;
     }
     if (action.command === 'table-cell-merge') {
@@ -739,7 +782,8 @@ export async function mountDemo(
           const split = host?.captureSourceTableCellSplit?.();
           const merge = host?.captureSourceTableCellMerge?.();
           const width = host?.captureSourceTableCellWidth?.();
-          if (merge || split || width)
+          const height = host?.captureSourceTableCellHeight?.();
+          if (merge || split || width || height)
             return {
               kind: 'source-table-cell',
               key: JSON.stringify([
@@ -750,10 +794,12 @@ export async function mountDemo(
               current: () =>
                 (!merge || merge.current()) &&
                 (!split || split.current()) &&
-                (!width || width.current()),
+                (!width || width.current()) &&
+                (!height || height.current()),
               mergeTarget: merge?.target,
               splitCapture: split ?? undefined,
               widthTarget: width?.target,
+              heightTarget: height?.target,
             };
           return (
             generatedTableGrid.contextTarget() ??
@@ -761,7 +807,14 @@ export async function mountDemo(
           );
         },
         execute: (action, target) =>
-          runAction(action, true, target.mergeTarget, target.splitCapture, target.widthTarget),
+          runAction(
+            action,
+            true,
+            target.mergeTarget,
+            target.splitCapture,
+            target.widthTarget,
+            target.heightTarget,
+          ),
         subscribe: (listener) => editor.registerStateListener(() => listener()),
         onError: (error) =>
           note(error instanceof Error ? error.message : '명령을 실행하지 못했습니다.'),

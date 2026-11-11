@@ -1,6 +1,11 @@
 // @ts-ignore Shared HWPX metadata boundary validation.
 import { checkedNamedFieldParameterValues } from '../../../../js/named-field-parameters.mjs';
 import {
+  sourceTableCellHeightRequest,
+  type SourceTableCellHeightTarget,
+  type SourceTableCellHeightMinimum,
+} from '../commands/source-table-cell-height.ts';
+import {
   sourceTableCellWidthRequest,
   type SourceTableCellWidthTarget,
 } from '../commands/source-table-cell-width.ts';
@@ -106,6 +111,7 @@ import {
   MERGE_SOURCE_TABLE_CELLS_COMMAND,
   SPLIT_SOURCE_TABLE_CELLS_COMMAND,
   EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND,
+  EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -976,6 +982,7 @@ export function createEditor(options: CreateEditorOptions) {
             'source-table-cell-merge',
             'source-table-cell-split',
             'source-table-cell-width',
+            'source-table-cell-height',
           ].includes(message.kind) &&
           reply.kind !== message.kind
         )
@@ -1189,6 +1196,14 @@ export function createEditor(options: CreateEditorOptions) {
       current: () => boolean;
     }
   >();
+  const heightTargets = new WeakMap<
+    SourceTableCellHeightTarget,
+    {
+      state: EditorState;
+      plan: ReturnType<typeof sourceTableCellHeightRequest>;
+      current: () => boolean;
+    }
+  >();
   function capture<T>(
     command: EditorCommand<T>,
     payload: T,
@@ -1198,10 +1213,11 @@ export function createEditor(options: CreateEditorOptions) {
     const split = command.id === SPLIT_SOURCE_TABLE_CELLS_COMMAND.id;
     const merge = command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id;
     const width = command.id === EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND.id;
-    const tableCell = merge || split || width;
+    const height = command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id;
+    const tableCell = merge || split || width || height;
     const owned = split
       ? captureSourceTableCellSplitPayload(payload)
-      : merge || width
+      : merge || width || height
         ? payload
         : command.id === EDIT_SOURCE_TABLE_GRID_COMMAND.id
           ? captureSourceTableGridRequest(payload, (snapshot.content as any)?.format)
@@ -1573,6 +1589,22 @@ export function createEditor(options: CreateEditorOptions) {
           guard,
         );
       }
+      if (pending.command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id) {
+        const target = heightTargets.get(pending.payload as SourceTableCellHeightTarget);
+        if (!target) throw Error('ForeignSourceTableCellHeightTarget');
+        const guard = () => {
+          requireReady(pending.token, true);
+          if (state !== target.state || target.current() !== true)
+            throw Error('StaleSourceTableCellHeightTarget');
+        };
+        guard();
+        return await mutate(
+          { kind: 'source-table-cell-height', request: target.plan },
+          pending.token,
+          false,
+          guard,
+        );
+      }
       if (pending.command.id === MERGE_SOURCE_TABLE_CELLS_COMMAND.id) {
         const target = mergeTargets.get(pending.payload as SourceTableCellMergeTarget);
         if (!target || target.kind !== 'merge') throw Error('ForeignSourceTableCellMergeTarget');
@@ -1680,6 +1712,15 @@ export function createEditor(options: CreateEditorOptions) {
         return Promise.resolve(reject(context(pending.token), 'ForeignSourceTableCellWidthTarget'));
       if (state !== target.state || !target.current())
         return Promise.resolve(reject(context(pending.token), 'StaleSourceTableCellWidthTarget'));
+    }
+    if (command.id === EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND.id) {
+      const target = heightTargets.get(pending.payload as SourceTableCellHeightTarget);
+      if (!target)
+        return Promise.resolve(
+          reject(context(pending.token), 'ForeignSourceTableCellHeightTarget'),
+        );
+      if (state !== target.state || !target.current())
+        return Promise.resolve(reject(context(pending.token), 'StaleSourceTableCellHeightTarget'));
     }
     return admit(() => execute(pending));
   }
@@ -1888,6 +1929,7 @@ export function createEditor(options: CreateEditorOptions) {
         'set-named-field-parameters',
         'create-named-field',
         'source-table-cell-width',
+        'source-table-cell-height',
       ].includes(owned.kind)
     )
       throw Error('UseTypedEditorOperation');
@@ -2564,6 +2606,39 @@ export function createEditor(options: CreateEditorOptions) {
           if (!live()) return null;
           const target = Object.freeze({}) as SourceTableCellWidthTarget;
           widthTargets.set(target, { state: snapshot, plan, current: live });
+          return target;
+        } catch {
+          return null;
+        }
+      },
+      captureSourceTableCellHeight(
+        witness: SourceTableCellBlockWitness,
+        minimums: readonly SourceTableCellHeightMinimum[],
+        current: () => boolean,
+      ) {
+        const snapshot = state;
+        let invalid = false;
+        const live = () => {
+          if (invalid) return false;
+          try {
+            assertSurface(record);
+            if (snapshot === state && current() === true && snapshot === state) return true;
+          } catch {
+            // Detached surfaces and changed selections invalidate this observation.
+          }
+          invalid = true;
+          return false;
+        };
+        if (state.status !== 'ready' || !hasRuntimeAdmission(active) || !live()) return null;
+        try {
+          const plan = sourceTableCellHeightRequest(
+            snapshot,
+            copyOwned(witness),
+            copyOwned(minimums),
+          );
+          if (!live()) return null;
+          const target = Object.freeze({}) as SourceTableCellHeightTarget;
+          heightTargets.set(target, { state: snapshot, plan, current: live });
           return target;
         } catch {
           return null;

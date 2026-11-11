@@ -1,4 +1,8 @@
 import type { SourceTableCellSplitCapture } from './commands/source-table-cell-split.ts';
+import type {
+  SourceTableCellHeightTarget,
+  SourceTableCellHeightMinimum,
+} from './commands/source-table-cell-height.ts';
 import type { SourceTableCellWidthTarget } from './commands/source-table-cell-width.ts';
 import type { RuntimeMessage, RuntimeReply } from './contracts.ts';
 import type { EditorState, StateToken } from './state/editor-state.ts';
@@ -40,6 +44,11 @@ export interface InputSurfaceLease {
     witness: SourceTableCellBlockWitness,
     current: () => boolean,
   ): SourceTableCellWidthTarget | null;
+  captureSourceTableCellHeight?(
+    witness: SourceTableCellBlockWitness,
+    minimums: readonly SourceTableCellHeightMinimum[],
+    current: () => boolean,
+  ): SourceTableCellHeightTarget | null;
   publishSelection(target: SelectionTarget | null): Promise<EditorState>;
   release(): void;
 }

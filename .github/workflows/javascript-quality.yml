@@ -119,13 +119,13 @@ jobs:
         run: |
           node --test tests/wasm/paragraph-marker-paint.test.mjs tests/wasm/paragraph-numbering.test.mjs tests/wasm/caret-paragraph-heading.test.mjs tests/hwpx/number-prefix-paint.test.mjs tests/hwp5/table-cell-block.test.mjs
 
-      - name: Test source table cell splitting and width equalization
+      - name: Test source table cell splitting and dimension equalization
         timeout-minutes: 2
         env:
           HWPJS_TEST_WASM: ${{ github.workspace }}/apps/docs/docs/public/editor/hwpjs/hwpjs.wasm
         run: |
-          bun test --no-install ./tests/hwpx/source-table-cell-split.test.mjs ./tests/hwpx/source-table-cell-width.test.mjs
-          node --test tests/hwpx/source-table-row-horizontals.test.mjs
+          bun test --no-install ./tests/hwpx/source-table-cell-split.test.mjs ./tests/hwpx/source-table-cell-width.test.mjs ./tests/hwpx/source-table-cell-height.test.mjs ./tests/hwpx/source-table-rectangular-grid.test.mjs
+          node --test tests/hwpx/source-table-row-horizontals.test.mjs apps/demo/tests/table-cell-height-menu-label.test.mjs
 
       - name: Test paragraph bullet editing with a pinned previous engine
         timeout-minutes: 3

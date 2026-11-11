@@ -1852,3 +1852,7 @@ Native 집중 검사는 `zig build test-hwpx-generated-atomic-formatting -Doptim
 ## 문단 서식 뒤 누름틀 속성 수정
 
 `zig test src/hwpx_named_field_parameter_rebase_probe.zig -O ReleaseSafe --test-filter 'named field parameter rebase'`는 합성 문서만 사용해 구역 재배치의 할당 실패와 기존 redo 보존을 검사합니다. 실제 Core 조합은 명시한 `HWPJS_TEST_WASM`에서 `bun test --no-install ./packages/core/tests/editor/named-field-bullet-history.test.ts`로 실행합니다. [누름틀 속성 계약](named-fields.md#hwpx-안내문과-도움말)을 따릅니다.
+
+## 원본 셀 높이 균등화
+
+명시적인 `HWPJS_TEST_WASM`을 지정하고 `bun test --no-install tests/hwpx/source-table-cell-height.test.mjs tests/hwpx/source-table-cell-width.test.mjs tests/hwpx/source-table-cell-split.test.mjs tests/hwpx/source-table-rectangular-grid.test.mjs`를 실행합니다. 실제 셸 label은 Node24.20 이상에서 `node --test apps/demo/tests/table-cell-height-menu-label.test.mjs`로 검사합니다. 해당 시험의 Node registerHooks 의존성을 Bun으로 실행하지 않습니다. 독립 `tools/hwpx-cell-height-oracle.py`는 원본/저장본 base64·part·rectangle·기대 heights를 JSON stdin으로 받아 전체 XML과 다른 ZIP payload를 비교하며 Python 일반/-O와 잘못된 기대 높이 반례를 함께 검사합니다. [지원 계약](cell-height-equalization.md)을 따릅니다.

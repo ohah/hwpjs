@@ -28,6 +28,7 @@ export {
   MERGE_SOURCE_TABLE_CELLS_COMMAND,
   SPLIT_SOURCE_TABLE_CELLS_COMMAND,
   EQUALIZE_SOURCE_TABLE_CELL_WIDTH_COMMAND,
+  EQUALIZE_SOURCE_TABLE_CELL_HEIGHT_COMMAND,
   UNDO_COMMAND,
   REDO_COMMAND,
   SET_CHARACTER_PROPERTIES_COMMAND,
@@ -210,3 +211,5 @@ export type {
 } from './commands/document-insert.ts';
 
 export type { SourceTableCellWidthTarget } from './commands/source-table-cell-width.ts';
+
+export type { SourceTableCellHeightTarget } from './commands/source-table-cell-height.ts';

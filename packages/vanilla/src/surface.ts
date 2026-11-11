@@ -1255,6 +1255,37 @@ export function createCanvasSurface({
       ? { available: true }
       : { available: false, reason: 'busy' };
   };
+  const captureCellHeight = () => {
+    const state = editor.getEditorState();
+    const current = () =>
+      !closed &&
+      !nonTextHistoryPending &&
+      lease?.isActive() === true &&
+      !bridge?.busy() &&
+      !modalOpen() &&
+      editor.getEditorState() === state &&
+      state.status === 'ready' &&
+      state.stateVersion === observedStateVersion &&
+      displayed ===
+        `${state.documentId}:${state.generation}:${state.operationRevision}:${state.viewRevision}` &&
+      renderer.historyModelMatches(state) &&
+      direct.settled();
+    try {
+      if (!current()) throw Error('SourceTableCellHeightBusy');
+      const captured = direct.captureSourceTableCellHeight();
+      const live = () => current() && captured.current() && current();
+      if (!live()) throw Error('StaleSourceTableCellHeightMeasurement');
+      const target = lease?.captureSourceTableCellHeight?.(
+        captured.witness,
+        captured.minimums,
+        live,
+      );
+      if (!target) throw Error('SourceTableCellHeightUnavailable');
+      return { capture: Object.freeze({ state, target, current: live }), reason: null };
+    } catch (error) {
+      return { capture: null, reason: error instanceof Error ? error.message : String(error) };
+    }
+  };
   return {
     /** Measured visible page only; never a source page number or caret page. */
     getPageStatus,
@@ -2025,6 +2056,13 @@ export function createCanvasSurface({
       const live = () => current() && captured.current() && current();
       const target = lease?.captureSourceTableCellWidth?.(captured.witness, live);
       return target ? Object.freeze({ state, target, current: live }) : null;
+    },
+    captureSourceTableCellHeight() {
+      return captureCellHeight().capture;
+    },
+    getSourceTableCellHeightAvailability() {
+      const { capture, reason } = captureCellHeight();
+      return { available: capture !== null, reason };
     },
     hasCellBlock(): boolean {
       return !closed && lease?.isActive() === true && direct.hasCellBlock();

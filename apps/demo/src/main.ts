@@ -108,6 +108,13 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
         ref.current?.surface?.captureSourceTableCellMerge() ?? null,
       captureSourceTableCellWidth: () =>
         ref.current?.surface?.captureSourceTableCellWidth() ?? null,
+      captureSourceTableCellHeight: () =>
+        ref.current?.surface?.captureSourceTableCellHeight() ?? null,
+      getSourceTableCellHeightAvailability: () =>
+        ref.current?.surface?.getSourceTableCellHeightAvailability() ?? {
+          available: false,
+          reason: 'SourceTableCellHeightUnavailable',
+        },
       setScale: (value) => ref.current?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();
@@ -172,6 +179,12 @@ const hosts: Record<Exclude<DemoFramework, 'headless'>, MountDemoHost> = {
       captureSourceTableCellSplit: () => surface?.captureSourceTableCellSplit() ?? null,
       captureSourceTableCellMerge: () => surface?.captureSourceTableCellMerge() ?? null,
       captureSourceTableCellWidth: () => surface?.captureSourceTableCellWidth() ?? null,
+      captureSourceTableCellHeight: () => surface?.captureSourceTableCellHeight() ?? null,
+      getSourceTableCellHeightAvailability: () =>
+        surface?.getSourceTableCellHeightAvailability() ?? {
+          available: false,
+          reason: 'SourceTableCellHeightUnavailable',
+        },
       setScale: (value) => surface?.setScale(value) ?? false,
       dispose: () => {
         pages.dispose();

@@ -1,3 +1,4 @@
+import { measureSourceTableCellHeights } from './source-table-cell-height-measurement.mjs';
 import { tableCellBlockContainsBox } from './table-cell-block.mjs';
 import { getScenePageText, pageTextUnavailable } from './page-text-scene.mjs';
 import { indexPrintPageScene } from './print-page-scene.mjs';
@@ -218,6 +219,8 @@ export function createRenderer(
   const readMeasurementPolicy = () =>
     canvasMeasurementPolicy.current(hostEpochs.geometryMeasurementEpoch());
 
+  let cellHeightMeasurement = null,
+    cellHeightCapture = null;
   let interactionRevision = 0,
     paintedInteractionStamp = null;
   const interactionStamp = () => [
@@ -1493,6 +1496,7 @@ export function createRenderer(
       resourceDocument !== undefined && resourceDocument === overflowPreviewDocument
         ? layout
         : null;
+    cellHeightMeasurement = cellHeightCapture = null;
     queuedTypingHold = null;
     refreshFontWatch();
     layoutGeneration++;
@@ -1616,6 +1620,25 @@ export function createRenderer(
             pageLayoutPolicyReason: pageLayout.policyReason,
           };
     layout = attachCreatedTableFlow(pictureDisplay, layout, measure);
+    if (!draft && pictureDisplay.format === 'hwpx' && pageLayout.state === 'paginated')
+      cellHeightMeasurement = {
+        source: content,
+        content: pictureDisplay,
+        createMeasure: () =>
+          createPreviewTextMeasure(ctx, fontAt, {
+            pictures,
+            charts: inlineCharts,
+            checkBoxes: inlineCheckBoxes,
+            forms: inlineForms,
+            projectionMemo: true,
+            stableContext: true,
+          }),
+        project: (candidate, measure) =>
+          layoutPageContent(candidate, measure, undefined, {
+            chartDisplay: (section, wrapper) => chartResources.status(section, wrapper),
+            oversizeInlineTablePreview: true,
+          }),
+      };
     layout = projectVisibleOverflowCells(content, layout, display);
     if (pictureDisplay.format === 'hwpx')
       layout = attachHwpxPageNumbers(pictureDisplay, layout, measure);
@@ -2186,10 +2209,74 @@ export function createRenderer(
       sourceObservationState = state;
       return true;
     },
+    captureSourceTableCellHeightMinimums(table, rectangle) {
+      flushProjection();
+      const saved = cellHeightMeasurement,
+        savedLayout = layout;
+      const sourceCurrent = () =>
+        !closed &&
+        !draft &&
+        saved === cellHeightMeasurement &&
+        saved?.source === content &&
+        layout === savedLayout;
+      if (!saved || !sourceCurrent()) throw Error('SourceTableCellHeightLayoutUnavailable');
+      const key = JSON.stringify(rectangle);
+      if (
+        cellHeightCapture?.table === table &&
+        cellHeightCapture.key === key &&
+        cellHeightCapture.value.current()
+      )
+        return cellHeightCapture.value;
+      const sourceTable = saved.content.tables?.find(
+        (value) => value.section === table.section && value.tableNode === table.tableNode,
+      );
+      if (!sourceTable) throw Error('SourceTableCellHeightLayoutUnavailable');
+      const probe = () => {
+        ctx.save();
+        try {
+          const measure = saved.createMeasure();
+          return measureSourceTableCellHeights(
+            saved.content,
+            sourceTable,
+            rectangle,
+            measure,
+            (candidate) => saved.project(candidate, measure),
+          );
+        } finally {
+          ctx.restore();
+        }
+      };
+      const minimums = probe();
+      const policy = readMeasurementPolicy();
+      const current = () => {
+        if (!sourceCurrent()) return false;
+        if (policy && policy === readMeasurementPolicy()) return true;
+        // The default host has no cache-authorizing measurement epoch. Recheck at admission.
+        try {
+          const next = probe();
+          return (
+            sourceCurrent() &&
+            next.length === minimums.length &&
+            next.every(
+              (value, index) =>
+                value.listNode === minimums[index].listNode &&
+                value.height === minimums[index].height,
+            )
+          );
+        } catch {
+          return false;
+        }
+      };
+      if (!current()) throw Error('StaleSourceTableCellHeightMeasurement');
+      const value = { minimums, current };
+      cellHeightCapture = { table, key, value };
+      return value;
+    },
     historyModelMatches(state) {
       return !closed && sourceObservationState === state && state?.content === content;
     },
     clear() {
+      cellHeightMeasurement = cellHeightCapture = null;
       queuedTypingHold = null;
       rendererGlyphMetrics.clear();
       nativeGeometry.clear();
@@ -2524,6 +2611,7 @@ export function createRenderer(
       onGeometry = callback;
     },
     close() {
+      cellHeightMeasurement = cellHeightCapture = null;
       queuedTypingHold = null;
       rendererGlyphMetrics.close();
       nativeGeometry.clear();

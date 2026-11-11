@@ -24,6 +24,7 @@ export const DEMO_COMMAND_REGISTRY = Object.freeze({
   'table-cell-split': entry('셀 나누기', '표'),
   'table-cell-merge': entry('셀 합치기', '표'),
   'table-cell-width-equal': entry('셀 너비를 같게', '표'),
+  'table-cell-height-equal': entry('셀 높이를 같게', '표'),
   undo: entry('실행 취소', '편집'),
   redo: entry('다시 실행', '편집'),
   cut: entry('잘라내기', '클립보드', true),
@@ -235,6 +236,7 @@ const tableCellContextCommands: readonly ContextCommand[] = Object.freeze([
   'table-cell-merge',
   'table-cell-split',
   'table-cell-width-equal',
+  'table-cell-height-equal',
 ]);
 const generatedTableContextCommands: readonly ContextCommand[] = Object.freeze([
   ...documentContextCommands,

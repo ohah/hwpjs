@@ -5,6 +5,7 @@ import {
   type HeadlessEditor,
   type SourceTableCellMergeTarget,
   type SourceTableCellWidthTarget,
+  type SourceTableCellHeightTarget,
 } from '@hwpjs/core';
 import type { DemoAction, DemoShellState } from './shell-contract.ts';
 import {
@@ -36,6 +37,7 @@ export interface ContextTarget {
   readonly mergeTarget?: SourceTableCellMergeTarget;
   readonly splitCapture?: TableCellSplitCapture;
   readonly widthTarget?: SourceTableCellWidthTarget;
+  readonly heightTarget?: SourceTableCellHeightTarget;
 }
 /** 그림 관측 undefined는 미연결/불확실, null만 그림 선택 없음입니다. */
 export function contextTarget(
@@ -198,7 +200,8 @@ export function mountDemoContextMenu(options: {
       keepsCellBlockFocus: () =>
         (captured?.mergeTarget !== undefined ||
           captured?.splitCapture !== undefined ||
-          captured?.widthTarget !== undefined) &&
+          captured?.widthTarget !== undefined ||
+          captured?.heightTarget !== undefined) &&
         current(),
       commands: () => {
         const ticket = sequence,
